@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 set name {Main}
 set bbox {17 17 402 693}
 set creationDate {Tue Aug 31 2004}
-set creationTime {09:33:55}
+set creationTime {11:55:50}
 set runDate {}
 set runTime {}
 set notes {}
@@ -60,7 +63,7 @@ set c14 [addConnection $m1 2 $m8 2]
 set c15 [addConnection $m9 0 $m10 2]
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m1-filename "/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10107.h5"
+set $m1-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
 set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z}}
 set $m1-dumpname {/tmp/NIMROD_10107.h5.dump}
 set $m1-ports {   0   1   2   3   3   3}
@@ -80,14 +83,13 @@ set $m3-vectors-on {1}
 set $m3-normalize-vectors {0}
 set $m3-has_vector_data {1}
 set $m3-active_tab {Vectors}
-set $m3-node_scale {0.03}
 set $m3-edge_scale {0.03}
 set $m3-vectors_scale {0.05}
 set $m3-show_progress {0}
 set $m3-field-name {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector}
 
 $m4 addViewer
-set $m4-ViewWindow_0-geometry 654x647+2412+20
+set $m4-ViewWindow_0-geometry 654x646+2416+40
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m4-ViewWindow_0-view-eyep-x {8.75627830819}
@@ -163,36 +165,6 @@ set $m9-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-S
 set $m10-datasets {{Points : -NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {Connections : (none)} {Data : -NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector} {Original Field : (none)} }
 
 # Set GUI variables for the SCIRun->FieldsCreate->FieldSubSample Module
-set $m11-wrap {1}
-set $m11-dims {2}
-set $m11-i-dim {145}
-set $m11-j-dim {85}
-set $m11-k-dim {1}
-set $m11-i-stop {144}
-set $m11-j-stop {84}
-set $m11-k-stop {0}
-set $m11-i-stride {2}
-set $m11-j-stride {2}
-set $m11-wrap {1}
-set $m11-dims {2}
-set $m11-i-dim {145}
-set $m11-j-dim {85}
-set $m11-k-dim {1}
-set $m11-i-stop {144}
-set $m11-j-stop {84}
-set $m11-k-stop {0}
-set $m11-i-stride {2}
-set $m11-j-stride {2}
-set $m11-wrap {1}
-set $m11-dims {2}
-set $m11-i-dim {145}
-set $m11-j-dim {85}
-set $m11-k-dim {1}
-set $m11-i-stop {144}
-set $m11-j-stop {84}
-set $m11-k-stop {0}
-set $m11-i-stride {2}
-set $m11-j-stride {2}
 set $m11-wrap {1}
 set $m11-dims {2}
 set $m11-i-dim {145}

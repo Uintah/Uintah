@@ -2,9 +2,9 @@
 
 
 set name {Main}
-set bbox {13 14 772 1040}
+set bbox {13 14 773 1040}
 set creationDate {Tue Aug 31 2004}
-set creationTime {11:10:03}
+set creationTime {11:53:53}
 set runDate {}
 set runTime {}
 set notes {}
@@ -51,28 +51,32 @@ set m13 [addModuleAtPosition "SCIRun" "Math" "Submatrix" 67 443]
 # Create a Teem->NrrdData->NrrdSetProperty Module
 set m14 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetProperty" 378 136]
 
+# Create a Fusion->Fields->NIMRODConverter Module
+set m15 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 607 263]
+
 # Create the Connections between Modules
 set c1 [addConnection $m4 0 $m5 0]
 set c2 [addConnection $m4 1 $m6 0]
 set c3 [addConnection $m4 2 $m14 0]
 set c4 [addConnection $m4 3 $m9 0]
 set c5 [addConnection $m7 0 $m2 0]
-set c6 [addConnection $m10 0 $m11 0]
-set c7 [addConnection $m12 0 $m1 0]
-set c8 [addConnection $m8 0 $m12 0]
-set c9 [addConnection $m5 0 $m7 0]
-set c10 [addConnection $m9 0 $m3 0]
-set c11 [addConnection $m2 0 $m8 0]
-set c12 [addConnection $m2 1 $m13 0]
-set c13 [addConnection $m13 0 $m3 1]
-set c14 [addConnection $m11 0 $m12 1]
-set c15 [addConnection $m8 0 $m11 1]
-set c16 [addConnection $m6 0 $m7 1]
-set c17 [addConnection $m14 0 $m7 2]
-set c18 [addConnection $m3 0 $m8 2]
+set c6 [addConnection $m15 0 $m3 0]
+set c7 [addConnection $m10 0 $m11 0]
+set c8 [addConnection $m12 0 $m1 0]
+set c9 [addConnection $m8 0 $m12 0]
+set c10 [addConnection $m5 0 $m7 0]
+set c11 [addConnection $m9 0 $m15 0]
+set c12 [addConnection $m2 0 $m8 0]
+set c13 [addConnection $m2 1 $m13 0]
+set c14 [addConnection $m13 0 $m3 1]
+set c15 [addConnection $m11 0 $m12 1]
+set c16 [addConnection $m8 0 $m11 1]
+set c17 [addConnection $m6 0 $m7 1]
+set c18 [addConnection $m14 0 $m7 2]
+set c19 [addConnection $m3 0 $m8 2]
 
 $m1 addViewer
-set $m1-ViewWindow_0-geometry 654x647+872+20
+set $m1-ViewWindow_0-geometry 654x645+880+60
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m1-ViewWindow_0-view-eyep-x {7.79859905062}
@@ -155,9 +159,6 @@ set $m1-ViewWindow_0-global-clip {1}
 set $m1-ViewWindow_0-global-cull {0}
 set $m1-ViewWindow_0-global-dl {0}
 set $m1-ViewWindow_0-global-type {Gouraud}
-set "$m1-ViewWindow_0--NIMROD-SLICES-P:Scalar Nodes (1)" {0}
-set "$m1-ViewWindow_0--NIMROD-GRID-X-Y-Z:Vector Nodes (1)" {1}
-set "$m1-ViewWindow_0--NIMROD-SLICES-P:Scalar Nodes (2)" {1}
 
 # Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
 set $m2-num-axes {4}
@@ -173,51 +174,9 @@ set $m2-absmaxAxis2 {192}
 set $m2-minAxis3 {0}
 set $m2-maxAxis3 {10}
 set $m2-absmaxAxis3 {10}
-set $m2-minAxis0 {0}
-set $m2-maxAxis0 {2}
-set $m2-absmaxAxis0 {2}
-set $m2-minAxis1 {0}
-set $m2-maxAxis1 {384}
-set $m2-absmaxAxis1 {384}
-set $m2-minAxis2 {0}
-set $m2-maxAxis2 {192}
-set $m2-absmaxAxis2 {192}
-set $m2-minAxis3 {0}
-set $m2-maxAxis3 {10}
-set $m2-absmaxAxis3 {10}
-set $m2-minAxis0 {0}
-set $m2-maxAxis0 {2}
-set $m2-absmaxAxis0 {2}
-set $m2-minAxis1 {0}
-set $m2-maxAxis1 {384}
-set $m2-absmaxAxis1 {384}
-set $m2-minAxis2 {0}
-set $m2-maxAxis2 {192}
-set $m2-absmaxAxis2 {192}
-set $m2-minAxis3 {0}
-set $m2-maxAxis3 {10}
-set $m2-absmaxAxis3 {10}
 
 # Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
 set $m3-num-axes {3}
-set $m3-minAxis0 {0}
-set $m3-maxAxis0 {384}
-set $m3-absmaxAxis0 {384}
-set $m3-minAxis1 {0}
-set $m3-maxAxis1 {192}
-set $m3-absmaxAxis1 {192}
-set $m3-minAxis2 {0}
-set $m3-maxAxis2 {10}
-set $m3-absmaxAxis2 {10}
-set $m3-minAxis0 {0}
-set $m3-maxAxis0 {384}
-set $m3-absmaxAxis0 {384}
-set $m3-minAxis1 {0}
-set $m3-maxAxis1 {192}
-set $m3-absmaxAxis1 {192}
-set $m3-minAxis2 {0}
-set $m3-maxAxis2 {10}
-set $m3-absmaxAxis2 {10}
 set $m3-minAxis0 {0}
 set $m3-maxAxis0 {384}
 set $m3-absmaxAxis0 {384}
@@ -314,7 +273,7 @@ set $m7-datasets {{\NIMROD::TOP.OUTPUTS.CODE.GRID:PHI:Scalar} {\NIMROD::TOP.OUTP
 set $m7-allowUnrolling {1}
 
 # Set GUI variables for the Teem->DataIO->NrrdToField Module
-set $m8-datasets {{Points : \NIMROD::TOP.OUTPUTS.CODE.GRID:XYZ:Vector} {Connections : (none)} {Data : \NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE} {Original Field : (none)} }
+set $m8-datasets {{Points : \NIMROD::TOP.OUTPUTS.CODE.GRID:XYZ:Vector} {Connections : (none)} {Data : \NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE:Scalar} {Original Field : (none)} }
 
 # Set GUI variables for the Teem->NrrdData->NrrdSetProperty Module
 set $m9-num-entries {3}
@@ -328,7 +287,7 @@ set $m9-value-1 {MDSPlus}
 set $m9-readonly-1 {0}
 set $m9-property-2 {Name}
 set $m9-type-2 {string}
-set $m9-value-2 {\NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE}
+set $m9-value-2 {\NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE:Scalar}
 set $m9-readonly-2 {0}
 
 # Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
@@ -341,11 +300,9 @@ set $m12-faces-on {0}
 set $m12-normalize-vectors {}
 set $m12-has_scalar_data {1}
 set $m12-active_tab {Faces}
-set $m12-node_scale {0.03}
-set $m12-edge_scale {0.015}
 set $m12-scalars_scale {0.3}
 set $m12-show_progress {}
-set $m12-field-name {\NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE}
+set $m12-field-name {\NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE:Scalar}
 
 # Set GUI variables for the SCIRun->Math->Submatrix Module
 set $m13-mincol {0}
@@ -373,27 +330,13 @@ set $m14-property-3 {Source}
 set $m14-type-3 {string}
 set $m14-value-3 {MDSPlus}
 set $m14-readonly-3 {0}
-set $m14-num-entries {5}
-set $m14-property-0 {Coordinate System}
-set $m14-type-0 {string}
-set $m14-value-0 {Cylindrical - NIMROD}
-set $m14-readonly-0 {0}
-set $m14-property-1 {Geometry}
-set $m14-type-1 {string}
-set $m14-value-1 {Irregular}
-set $m14-readonly-1 {0}
-set $m14-property-2 {Topology}
-set $m14-type-2 {string}
-set $m14-value-2 {Structured}
-set $m14-readonly-2 {0}
-set $m14-property-3 {Source}
-set $m14-type-3 {string}
-set $m14-value-3 {MDSPlus}
-set $m14-readonly-3 {0}
 set $m14-property-4 {Name}
 set $m14-type-4 {string}
 set $m14-value-4 {\NIMROD::TOP.OUTPUTS.CODE.GRID:Z:Scalar}
 set $m14-readonly-4 {0}
+
+# Set GUI variables for the Fusion->Fields->NIMRODConverter Module
+set $m15-datasets {\NIMROD::TOP.OUTPUTS.CODE.SLICES.T00000.REALSPACE.SCALARS:PRESSURE:Scalar}
 
 
 ::netedit scheduleok

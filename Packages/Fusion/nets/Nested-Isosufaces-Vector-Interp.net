@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 set name {Main}
 set bbox {23 21 834 761}
 set creationDate {Tue Aug 31 2004}
-set creationTime {09:48:43}
+set creationTime {11:56:02}
 set runDate {}
 set runTime {}
 set notes {}
@@ -86,7 +89,7 @@ set $m1-min {-0.005836251916}
 set $m1-max {0.725436424848}
 
 $m2 addViewer
-set $m2-ViewWindow_0-geometry 654x647+265+149
+set $m2-ViewWindow_0-geometry 654x646+269+169
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m2-ViewWindow_0-view-eyep-x {5.05822686395}
@@ -136,61 +139,7 @@ set $m2-ViewWindow_0-global-clip {1}
 set $m2-ViewWindow_0-global-cull {0}
 set $m2-ViewWindow_0-global-dl {0}
 set $m2-ViewWindow_0-global-type {Gouraud}
-set $m2-ViewWindow_0-view-eyep-x {5.05822686395}
-set $m2-ViewWindow_0-view-eyep-y {13.722506987}
-set $m2-ViewWindow_0-view-eyep-z {7.66634551644}
-set $m2-ViewWindow_0-view-lookat-x {0.000294272149032}
-set $m2-ViewWindow_0-view-lookat-y {-0.00994361677714}
-set $m2-ViewWindow_0-view-lookat-z {0.000176464792009}
-set $m2-ViewWindow_0-view-up-x {-0.31831030109}
-set $m2-ViewWindow_0-view-up-y {-0.370001644246}
-set $m2-ViewWindow_0-view-up-z {0.872798565234}
-set $m2-ViewWindow_0-view-fov {20.0}
-set $m2-ViewWindow_0-view-eyep_offset-x {}
-set $m2-ViewWindow_0-view-eyep_offset-y {}
-set $m2-ViewWindow_0-view-eyep_offset-z {}
-set $m2-ViewWindow_0-sr {1}
-set $m2-ViewWindow_0-do_stereo {0}
-set $m2-ViewWindow_0-ortho-view {0}
-set $m2-ViewWindow_0-trackViewWindow0 {1}
-set $m2-ViewWindow_0-raxes {1}
-set $m2-ViewWindow_0-ambient-scale {1.0}
-set $m2-ViewWindow_0-diffuse-scale {1.0}
-set $m2-ViewWindow_0-specular-scale {0.4}
-set $m2-ViewWindow_0-emission-scale {1.0}
-set $m2-ViewWindow_0-shininess-scale {1.0}
-set $m2-ViewWindow_0-polygon-offset-factor {1.0}
-set $m2-ViewWindow_0-polygon-offset-units {0.0}
-set $m2-ViewWindow_0-point-size {1.0}
-set $m2-ViewWindow_0-line-width {1.0}
-set $m2-ViewWindow_0-sbase {0.4}
-set $m2-ViewWindow_0-bgcolor-r {0.0}
-set $m2-ViewWindow_0-bgcolor-g {0.0}
-set $m2-ViewWindow_0-bgcolor-b {0.0}
-set $m2-ViewWindow_0-currentvisual {0}
-set $m2-ViewWindow_0-caxes {0}
-set $m2-ViewWindow_0-pos {}
-set $m2-ViewWindow_0-global-light0 {1}
-set $m2-ViewWindow_0-global-light1 {0}
-set $m2-ViewWindow_0-global-light2 {0}
-set $m2-ViewWindow_0-global-light3 {0}
-set $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m2-ViewWindow_0-global-light {1}
-set $m2-ViewWindow_0-global-fog {0}
-set $m2-ViewWindow_0-global-debug {0}
-set $m2-ViewWindow_0-global-clip {1}
-set $m2-ViewWindow_0-global-cull {0}
-set $m2-ViewWindow_0-global-dl {0}
-set $m2-ViewWindow_0-global-type {Gouraud}
-set "$m2-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Nodes (2)" {0}
-set "$m2-ViewWindow_0-Transparent Faces (3)" {1}
-set "$m2-ViewWindow_0-Faces (3)" {1}
-set "$m2-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Faces (3)" {1}
-set "$m2-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Transparent Faces (3)" {1}
 set "$m2-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar Transparent Faces (2)" {1}
-set "$m2-ViewWindow_0-Nodes (1)" {1}
-set "$m2-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector Nodes (1)" {1}
 set "$m2-ViewWindow_0--NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector Vectors (1)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
@@ -229,8 +178,6 @@ set $m6-vectors-on {1}
 set $m6-normalize-vectors {0}
 set $m6-has_vector_data {1}
 set $m6-active_tab {Vectors}
-set $m6-node_scale {0.03}
-set $m6-edge_scale {0.015}
 set $m6-vectors_scale {0.05}
 set $m6-scalars_scale {0.3}
 set $m6-show_progress {7}
@@ -243,20 +190,15 @@ set $m7-use-transparency {1}
 set $m7-normalize-vectors {23}
 set $m7-has_scalar_data {1}
 set $m7-active_tab {Faces}
-set $m7-node_scale {0.03}
-set $m7-edge_scale {0.015}
 set $m7-vectors_scale {0.3}
 set $m7-scalars_scale {0.3}
 set $m7-show_progress {0}
 set $m7-field-name {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m9-filename "/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10107.h5"
+set $m9-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
 set $m9-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
 set $m9-dumpname {/tmp/NIMROD_10107.h5.dump}
-
-# Open the DataIO->Readers->HDF5DataReader UI
-$m9 initialize_ui
 
 # Set GUI variables for the Teem->DataIO->NrrdToField Module
 set $m10-datasets {{Points : -NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {Connections : (none)} {Data : -NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-BFIELD-XYZ:Vector} {Original Field : (none)} }

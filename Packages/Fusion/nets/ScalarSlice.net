@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 set name {Main}
 set bbox {17 15 405 624}
 set creationDate {Tue Aug 31 2004}
-set creationTime {09:04:17}
+set creationTime {11:59:19}
 set runDate {}
 set runTime {}
 set notes {}
@@ -51,7 +54,7 @@ set c11 [addConnection $m1 2 $m7 2]
 set c12 [addConnection $m8 0 $m9 2]
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m1-filename "/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10107.h5"
+set $m1-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
 set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
 set $m1-dumpname {/tmp/NIMROD_10107.h5.dump}
 set $m1-ports {   0   1   2   3}
@@ -75,7 +78,7 @@ set $m3-show_progress {0}
 set $m3-field-name {-NIMROD-OUTPUTS-CODE-SLICES-T03861-REALSPACE-PRESSURE-Values:Scalar}
 
 $m4 addViewer
-set $m4-ViewWindow_0-geometry 654x646+2546+514
+set $m4-ViewWindow_0-geometry 654x645+2550+534
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m4-ViewWindow_0-view-eyep-x {1.70006859303}

@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
 addSubnetToDatabase {
    set name {ScaledMapDataToMeshCoor}
    set bbox {4 29 492 371}
    set creationDate {Tue Aug 31 2004}
-   set creationTime {10:31:28}
+   set creationTime {11:51:36}
    set runDate {}
    set runTime {}
    set notes {}
@@ -45,7 +48,7 @@ addSubnetToDatabase {
 set name {Main}
 set bbox {10 9 1269 740}
 set creationDate {Tue Aug 31 2004}
-set creationTime {10:31:25}
+set creationTime {11:51:33}
 set runDate {}
 set runTime {}
 set notes {}
@@ -134,7 +137,7 @@ set c20 [addConnection $m7 0 $m1 2]
 set c21 [addConnection $m14 0 $m10 2]
 
 # Set GUI variables for the Teem->DataIO->NrrdToField Module
-set $m1-datasets {{Points : -time_coordinates_98-coordinates-values:Scalar} {Connections : (none)} {Data : -time_node_data_98-node_data_0-values:Scalar} {Original Field : (none)} }
+set $m1-datasets {{Points : -time_coordinates_98-coordinates-values:Scalar} {Connections : (none)} {Data : -time_node_data_18-node_data_0-values:Scalar} {Original Field : (none)} }
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
 set $m2-minRes {12}
@@ -150,13 +153,11 @@ set $m4-edges-on {0}
 set $m4-normalize-vectors {}
 set $m4-has_scalar_data {1}
 set $m4-active_tab {Faces}
-set $m4-node_scale {0.03}
-set $m4-edge_scale {0.015}
 set $m4-scalars_scale {0.3}
 set $m4-show_progress {}
 
 $m5 addViewer
-set $m5-ViewWindow_0-geometry 654x628+907+285
+set $m5-ViewWindow_0-geometry 654x626+915+325
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m5-ViewWindow_0-view-eyep-x {-11.894618793}
@@ -247,9 +248,10 @@ set $m6-range_max {89}
 set $m6-current {88}
 set $m6-execmode {stop}
 set $m6-inc-amount {8}
-set $m6-filename "/z/GTC/ahg.h5"
+set $m6-filename "$DATADIR/$DATASET/ahg.h5"
 set $m6-datasets {{/ {time_coordinates[10]} coordinates values} {/ {time_coordinates[11]} coordinates values} {/ {time_coordinates[12]} coordinates values} {/ {time_coordinates[13]} coordinates values} {/ {time_coordinates[14]} coordinates values} {/ {time_coordinates[15]} coordinates values} {/ {time_coordinates[16]} coordinates values} {/ {time_coordinates[17]} coordinates values} {/ {time_coordinates[18]} coordinates values} {/ {time_coordinates[19]} coordinates values} {/ {time_coordinates[20]} coordinates values} {/ {time_coordinates[21]} coordinates values} {/ {time_coordinates[22]} coordinates values} {/ {time_coordinates[23]} coordinates values} {/ {time_coordinates[24]} coordinates values} {/ {time_coordinates[25]} coordinates values} {/ {time_coordinates[26]} coordinates values} {/ {time_coordinates[27]} coordinates values} {/ {time_coordinates[28]} coordinates values} {/ {time_coordinates[29]} coordinates values} {/ {time_coordinates[30]} coordinates values} {/ {time_coordinates[31]} coordinates values} {/ {time_coordinates[32]} coordinates values} {/ {time_coordinates[33]} coordinates values} {/ {time_coordinates[34]} coordinates values} {/ {time_coordinates[35]} coordinates values} {/ {time_coordinates[36]} coordinates values} {/ {time_coordinates[37]} coordinates values} {/ {time_coordinates[38]} coordinates values} {/ {time_coordinates[39]} coordinates values} {/ {time_coordinates[40]} coordinates values} {/ {time_coordinates[41]} coordinates values} {/ {time_coordinates[42]} coordinates values} {/ {time_coordinates[43]} coordinates values} {/ {time_coordinates[44]} coordinates values} {/ {time_coordinates[45]} coordinates values} {/ {time_coordinates[46]} coordinates values} {/ {time_coordinates[47]} coordinates values} {/ {time_coordinates[48]} coordinates values} {/ {time_coordinates[49]} coordinates values} {/ {time_coordinates[50]} coordinates values} {/ {time_coordinates[51]} coordinates values} {/ {time_coordinates[52]} coordinates values} {/ {time_coordinates[53]} coordinates values} {/ {time_coordinates[54]} coordinates values} {/ {time_coordinates[55]} coordinates values} {/ {time_coordinates[56]} coordinates values} {/ {time_coordinates[57]} coordinates values} {/ {time_coordinates[58]} coordinates values} {/ {time_coordinates[59]} coordinates values} {/ {time_coordinates[60]} coordinates values} {/ {time_coordinates[61]} coordinates values} {/ {time_coordinates[62]} coordinates values} {/ {time_coordinates[63]} coordinates values} {/ {time_coordinates[64]} coordinates values} {/ {time_coordinates[65]} coordinates values} {/ {time_coordinates[66]} coordinates values} {/ {time_coordinates[67]} coordinates values} {/ {time_coordinates[68]} coordinates values} {/ {time_coordinates[69]} coordinates values} {/ {time_coordinates[70]} coordinates values} {/ {time_coordinates[71]} coordinates values} {/ {time_coordinates[72]} coordinates values} {/ {time_coordinates[73]} coordinates values} {/ {time_coordinates[74]} coordinates values} {/ {time_coordinates[75]} coordinates values} {/ {time_coordinates[76]} coordinates values} {/ {time_coordinates[77]} coordinates values} {/ {time_coordinates[78]} coordinates values} {/ {time_coordinates[79]} coordinates values} {/ {time_coordinates[80]} coordinates values} {/ {time_coordinates[81]} coordinates values} {/ {time_coordinates[82]} coordinates values} {/ {time_coordinates[83]} coordinates values} {/ {time_coordinates[84]} coordinates values} {/ {time_coordinates[85]} coordinates values} {/ {time_coordinates[86]} coordinates values} {/ {time_coordinates[87]} coordinates values} {/ {time_coordinates[88]} coordinates values} {/ {time_coordinates[89]} coordinates values} {/ {time_coordinates[90]} coordinates values} {/ {time_coordinates[91]} coordinates values} {/ {time_coordinates[92]} coordinates values} {/ {time_coordinates[93]} coordinates values} {/ {time_coordinates[94]} coordinates values} {/ {time_coordinates[95]} coordinates values} {/ {time_coordinates[96]} coordinates values} {/ {time_coordinates[97]} coordinates values} {/ {time_coordinates[98]} coordinates values} {/ {time_coordinates[99]} coordinates values}}
 set $m6-dumpname {/tmp/ahg.h5.dump}
+set $m6-ports {   0}
 set $m6-ndims {3}
 set $m6-animate {1}
 set $m6-0-dim {321}
@@ -262,9 +264,10 @@ set $m6-2-count {2}
 set $m7-selectable_max {89.0}
 set $m7-range_max {89}
 set $m7-playmode {inc_w_exec}
+set $m7-current {88}
 set $m7-execmode {current}
 set $m7-inc-amount {8}
-set $m7-filename "/z/GTC/ahg.h5"
+set $m7-filename "$DATADIR/$DATASET/ahg.h5"
 set $m7-datasets {{/ {time_node_data[10]} {node_data[0]} values} {/ {time_node_data[11]} {node_data[0]} values} {/ {time_node_data[12]} {node_data[0]} values} {/ {time_node_data[13]} {node_data[0]} values} {/ {time_node_data[14]} {node_data[0]} values} {/ {time_node_data[15]} {node_data[0]} values} {/ {time_node_data[16]} {node_data[0]} values} {/ {time_node_data[17]} {node_data[0]} values} {/ {time_node_data[18]} {node_data[0]} values} {/ {time_node_data[19]} {node_data[0]} values} {/ {time_node_data[20]} {node_data[0]} values} {/ {time_node_data[21]} {node_data[0]} values} {/ {time_node_data[22]} {node_data[0]} values} {/ {time_node_data[23]} {node_data[0]} values} {/ {time_node_data[24]} {node_data[0]} values} {/ {time_node_data[25]} {node_data[0]} values} {/ {time_node_data[26]} {node_data[0]} values} {/ {time_node_data[27]} {node_data[0]} values} {/ {time_node_data[28]} {node_data[0]} values} {/ {time_node_data[29]} {node_data[0]} values} {/ {time_node_data[30]} {node_data[0]} values} {/ {time_node_data[31]} {node_data[0]} values} {/ {time_node_data[32]} {node_data[0]} values} {/ {time_node_data[33]} {node_data[0]} values} {/ {time_node_data[34]} {node_data[0]} values} {/ {time_node_data[35]} {node_data[0]} values} {/ {time_node_data[36]} {node_data[0]} values} {/ {time_node_data[37]} {node_data[0]} values} {/ {time_node_data[38]} {node_data[0]} values} {/ {time_node_data[39]} {node_data[0]} values} {/ {time_node_data[40]} {node_data[0]} values} {/ {time_node_data[41]} {node_data[0]} values} {/ {time_node_data[42]} {node_data[0]} values} {/ {time_node_data[43]} {node_data[0]} values} {/ {time_node_data[44]} {node_data[0]} values} {/ {time_node_data[45]} {node_data[0]} values} {/ {time_node_data[46]} {node_data[0]} values} {/ {time_node_data[47]} {node_data[0]} values} {/ {time_node_data[48]} {node_data[0]} values} {/ {time_node_data[49]} {node_data[0]} values} {/ {time_node_data[50]} {node_data[0]} values} {/ {time_node_data[51]} {node_data[0]} values} {/ {time_node_data[52]} {node_data[0]} values} {/ {time_node_data[53]} {node_data[0]} values} {/ {time_node_data[54]} {node_data[0]} values} {/ {time_node_data[55]} {node_data[0]} values} {/ {time_node_data[56]} {node_data[0]} values} {/ {time_node_data[57]} {node_data[0]} values} {/ {time_node_data[58]} {node_data[0]} values} {/ {time_node_data[59]} {node_data[0]} values} {/ {time_node_data[60]} {node_data[0]} values} {/ {time_node_data[61]} {node_data[0]} values} {/ {time_node_data[62]} {node_data[0]} values} {/ {time_node_data[63]} {node_data[0]} values} {/ {time_node_data[64]} {node_data[0]} values} {/ {time_node_data[65]} {node_data[0]} values} {/ {time_node_data[66]} {node_data[0]} values} {/ {time_node_data[67]} {node_data[0]} values} {/ {time_node_data[68]} {node_data[0]} values} {/ {time_node_data[69]} {node_data[0]} values} {/ {time_node_data[70]} {node_data[0]} values} {/ {time_node_data[71]} {node_data[0]} values} {/ {time_node_data[72]} {node_data[0]} values} {/ {time_node_data[73]} {node_data[0]} values} {/ {time_node_data[74]} {node_data[0]} values} {/ {time_node_data[75]} {node_data[0]} values} {/ {time_node_data[76]} {node_data[0]} values} {/ {time_node_data[77]} {node_data[0]} values} {/ {time_node_data[78]} {node_data[0]} values} {/ {time_node_data[79]} {node_data[0]} values} {/ {time_node_data[80]} {node_data[0]} values} {/ {time_node_data[81]} {node_data[0]} values} {/ {time_node_data[82]} {node_data[0]} values} {/ {time_node_data[83]} {node_data[0]} values} {/ {time_node_data[84]} {node_data[0]} values} {/ {time_node_data[85]} {node_data[0]} values} {/ {time_node_data[86]} {node_data[0]} values} {/ {time_node_data[87]} {node_data[0]} values} {/ {time_node_data[88]} {node_data[0]} values} {/ {time_node_data[89]} {node_data[0]} values} {/ {time_node_data[90]} {node_data[0]} values} {/ {time_node_data[91]} {node_data[0]} values} {/ {time_node_data[92]} {node_data[0]} values} {/ {time_node_data[93]} {node_data[0]} values} {/ {time_node_data[94]} {node_data[0]} values} {/ {time_node_data[95]} {node_data[0]} values} {/ {time_node_data[96]} {node_data[0]} values} {/ {time_node_data[97]} {node_data[0]} values} {/ {time_node_data[98]} {node_data[0]} values} {/ {time_node_data[99]} {node_data[0]} values}}
 set $m7-dumpname {/tmp/ahg.h5.dump}
 set $m7-ndims {2}
@@ -276,9 +279,10 @@ set $m7-1-count {121}
 set $m7-2-count {2}
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m8-filename "/z/GTC/ahg.h5"
+set $m8-filename "$DATADIR/$DATASET/ahg.h5"
 set $m8-datasets {{/ {time_coordinates[10]} coordinates values} {/ {time_coordinates[11]} coordinates values} {/ {time_coordinates[12]} coordinates values} {/ {time_coordinates[13]} coordinates values} {/ {time_coordinates[14]} coordinates values} {/ {time_coordinates[15]} coordinates values} {/ {time_coordinates[16]} coordinates values} {/ {time_coordinates[17]} coordinates values} {/ {time_coordinates[18]} coordinates values} {/ {time_coordinates[19]} coordinates values} {/ {time_coordinates[20]} coordinates values} {/ {time_coordinates[21]} coordinates values} {/ {time_coordinates[22]} coordinates values} {/ {time_coordinates[23]} coordinates values} {/ {time_coordinates[24]} coordinates values} {/ {time_coordinates[25]} coordinates values} {/ {time_coordinates[26]} coordinates values} {/ {time_coordinates[27]} coordinates values} {/ {time_coordinates[28]} coordinates values} {/ {time_coordinates[29]} coordinates values} {/ {time_coordinates[30]} coordinates values} {/ {time_coordinates[31]} coordinates values} {/ {time_coordinates[32]} coordinates values} {/ {time_coordinates[33]} coordinates values} {/ {time_coordinates[34]} coordinates values} {/ {time_coordinates[35]} coordinates values} {/ {time_coordinates[36]} coordinates values} {/ {time_coordinates[37]} coordinates values} {/ {time_coordinates[38]} coordinates values} {/ {time_coordinates[39]} coordinates values} {/ {time_coordinates[40]} coordinates values} {/ {time_coordinates[41]} coordinates values} {/ {time_coordinates[42]} coordinates values} {/ {time_coordinates[43]} coordinates values} {/ {time_coordinates[44]} coordinates values} {/ {time_coordinates[45]} coordinates values} {/ {time_coordinates[46]} coordinates values} {/ {time_coordinates[47]} coordinates values} {/ {time_coordinates[48]} coordinates values} {/ {time_coordinates[49]} coordinates values} {/ {time_coordinates[50]} coordinates values} {/ {time_coordinates[51]} coordinates values} {/ {time_coordinates[52]} coordinates values} {/ {time_coordinates[53]} coordinates values} {/ {time_coordinates[54]} coordinates values} {/ {time_coordinates[55]} coordinates values} {/ {time_coordinates[56]} coordinates values} {/ {time_coordinates[57]} coordinates values} {/ {time_coordinates[58]} coordinates values} {/ {time_coordinates[59]} coordinates values} {/ {time_coordinates[60]} coordinates values} {/ {time_coordinates[61]} coordinates values} {/ {time_coordinates[62]} coordinates values} {/ {time_coordinates[63]} coordinates values} {/ {time_coordinates[64]} coordinates values} {/ {time_coordinates[65]} coordinates values} {/ {time_coordinates[66]} coordinates values} {/ {time_coordinates[67]} coordinates values} {/ {time_coordinates[68]} coordinates values} {/ {time_coordinates[69]} coordinates values} {/ {time_coordinates[70]} coordinates values} {/ {time_coordinates[71]} coordinates values} {/ {time_coordinates[72]} coordinates values} {/ {time_coordinates[73]} coordinates values} {/ {time_coordinates[74]} coordinates values} {/ {time_coordinates[75]} coordinates values} {/ {time_coordinates[76]} coordinates values} {/ {time_coordinates[77]} coordinates values} {/ {time_coordinates[78]} coordinates values} {/ {time_coordinates[79]} coordinates values} {/ {time_coordinates[80]} coordinates values} {/ {time_coordinates[81]} coordinates values} {/ {time_coordinates[82]} coordinates values} {/ {time_coordinates[83]} coordinates values} {/ {time_coordinates[84]} coordinates values} {/ {time_coordinates[85]} coordinates values} {/ {time_coordinates[86]} coordinates values} {/ {time_coordinates[87]} coordinates values} {/ {time_coordinates[88]} coordinates values} {/ {time_coordinates[89]} coordinates values} {/ {time_coordinates[90]} coordinates values} {/ {time_coordinates[91]} coordinates values} {/ {time_coordinates[92]} coordinates values} {/ {time_coordinates[93]} coordinates values} {/ {time_coordinates[94]} coordinates values} {/ {time_coordinates[95]} coordinates values} {/ {time_coordinates[96]} coordinates values} {/ {time_coordinates[97]} coordinates values} {/ {time_coordinates[98]} coordinates values} {/ {time_coordinates[99]} coordinates values}}
 set $m8-dumpname {/tmp/ahg.h5.dump}
+set $m8-ports {   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0}
 set $m8-ndims {3}
 set $m8-mergeData {2}
 set $m8-assumeSVT {0}
@@ -289,9 +293,10 @@ set $m8-1-count {121}
 set $m8-2-count {2}
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m9-filename "/z/GTC/ahg.h5"
+set $m9-filename "$DATADIR/$DATASET/ahg.h5"
 set $m9-datasets {{/ {time_node_data[10]} {node_data[0]} values} {/ {time_node_data[11]} {node_data[0]} values} {/ {time_node_data[12]} {node_data[0]} values} {/ {time_node_data[13]} {node_data[0]} values} {/ {time_node_data[14]} {node_data[0]} values} {/ {time_node_data[15]} {node_data[0]} values} {/ {time_node_data[16]} {node_data[0]} values} {/ {time_node_data[17]} {node_data[0]} values} {/ {time_node_data[18]} {node_data[0]} values} {/ {time_node_data[19]} {node_data[0]} values} {/ {time_node_data[20]} {node_data[0]} values} {/ {time_node_data[21]} {node_data[0]} values} {/ {time_node_data[22]} {node_data[0]} values} {/ {time_node_data[23]} {node_data[0]} values} {/ {time_node_data[24]} {node_data[0]} values} {/ {time_node_data[25]} {node_data[0]} values} {/ {time_node_data[26]} {node_data[0]} values} {/ {time_node_data[27]} {node_data[0]} values} {/ {time_node_data[28]} {node_data[0]} values} {/ {time_node_data[29]} {node_data[0]} values} {/ {time_node_data[30]} {node_data[0]} values} {/ {time_node_data[31]} {node_data[0]} values} {/ {time_node_data[32]} {node_data[0]} values} {/ {time_node_data[33]} {node_data[0]} values} {/ {time_node_data[34]} {node_data[0]} values} {/ {time_node_data[35]} {node_data[0]} values} {/ {time_node_data[36]} {node_data[0]} values} {/ {time_node_data[37]} {node_data[0]} values} {/ {time_node_data[38]} {node_data[0]} values} {/ {time_node_data[39]} {node_data[0]} values} {/ {time_node_data[40]} {node_data[0]} values} {/ {time_node_data[41]} {node_data[0]} values} {/ {time_node_data[42]} {node_data[0]} values} {/ {time_node_data[43]} {node_data[0]} values} {/ {time_node_data[44]} {node_data[0]} values} {/ {time_node_data[45]} {node_data[0]} values} {/ {time_node_data[46]} {node_data[0]} values} {/ {time_node_data[47]} {node_data[0]} values} {/ {time_node_data[48]} {node_data[0]} values} {/ {time_node_data[49]} {node_data[0]} values} {/ {time_node_data[50]} {node_data[0]} values} {/ {time_node_data[51]} {node_data[0]} values} {/ {time_node_data[52]} {node_data[0]} values} {/ {time_node_data[53]} {node_data[0]} values} {/ {time_node_data[54]} {node_data[0]} values} {/ {time_node_data[55]} {node_data[0]} values} {/ {time_node_data[56]} {node_data[0]} values} {/ {time_node_data[57]} {node_data[0]} values} {/ {time_node_data[58]} {node_data[0]} values} {/ {time_node_data[59]} {node_data[0]} values} {/ {time_node_data[60]} {node_data[0]} values} {/ {time_node_data[61]} {node_data[0]} values} {/ {time_node_data[62]} {node_data[0]} values} {/ {time_node_data[63]} {node_data[0]} values} {/ {time_node_data[64]} {node_data[0]} values} {/ {time_node_data[65]} {node_data[0]} values} {/ {time_node_data[66]} {node_data[0]} values} {/ {time_node_data[67]} {node_data[0]} values} {/ {time_node_data[68]} {node_data[0]} values} {/ {time_node_data[69]} {node_data[0]} values} {/ {time_node_data[70]} {node_data[0]} values} {/ {time_node_data[71]} {node_data[0]} values} {/ {time_node_data[72]} {node_data[0]} values} {/ {time_node_data[73]} {node_data[0]} values} {/ {time_node_data[74]} {node_data[0]} values} {/ {time_node_data[75]} {node_data[0]} values} {/ {time_node_data[76]} {node_data[0]} values} {/ {time_node_data[77]} {node_data[0]} values} {/ {time_node_data[78]} {node_data[0]} values} {/ {time_node_data[79]} {node_data[0]} values} {/ {time_node_data[80]} {node_data[0]} values} {/ {time_node_data[81]} {node_data[0]} values} {/ {time_node_data[82]} {node_data[0]} values} {/ {time_node_data[83]} {node_data[0]} values} {/ {time_node_data[84]} {node_data[0]} values} {/ {time_node_data[85]} {node_data[0]} values} {/ {time_node_data[86]} {node_data[0]} values} {/ {time_node_data[87]} {node_data[0]} values} {/ {time_node_data[88]} {node_data[0]} values} {/ {time_node_data[89]} {node_data[0]} values} {/ {time_node_data[90]} {node_data[0]} values} {/ {time_node_data[91]} {node_data[0]} values} {/ {time_node_data[92]} {node_data[0]} values} {/ {time_node_data[93]} {node_data[0]} values} {/ {time_node_data[94]} {node_data[0]} values} {/ {time_node_data[95]} {node_data[0]} values} {/ {time_node_data[96]} {node_data[0]} values} {/ {time_node_data[97]} {node_data[0]} values} {/ {time_node_data[98]} {node_data[0]} values} {/ {time_node_data[99]} {node_data[0]} values}}
 set $m9-dumpname {/tmp/ahg.h5.dump}
+set $m9-ports {   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0}
 set $m9-ndims {2}
 set $m9-mergeData {2}
 set $m9-assumeSVT {0}
@@ -313,7 +318,7 @@ set $m11-scalars_scale {0.3}
 set $m11-show_progress {}
 
 $m12 addViewer
-set $m12-ViewWindow_0-geometry 654x640+2401+265
+set $m12-ViewWindow_0-geometry 654x638+2409+305
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m12-ViewWindow_0-view-eyep-x {9.12897027875}
@@ -383,267 +388,9 @@ set $m16-minAxis1 {0}
 set $m16-maxAxis1 {0}
 set $m16-minAxis2 {0}
 set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
-set $m16-minAxis0 {0}
-set $m16-maxAxis0 {1}
-set $m16-minAxis1 {0}
-set $m16-maxAxis1 {0}
-set $m16-minAxis2 {0}
-set $m16-maxAxis2 {0}
 
 # Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
 set $m17-dim {3}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
-set $m17-minAxis0 {0}
-set $m17-maxAxis0 {1}
-set $m17-minAxis1 {0}
-set $m17-maxAxis1 {0}
-set $m17-minAxis2 {0}
-set $m17-maxAxis2 {0}
 set $m17-minAxis0 {0}
 set $m17-maxAxis0 {1}
 set $m17-minAxis1 {0}

@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 set name {Main}
 set bbox {24 14 439 802}
 set creationDate {Tue Aug 31 2004}
-set creationTime {09:21:04}
+set creationTime {11:53:16}
 set runDate {}
 set runTime {}
 set notes {}
@@ -58,9 +61,10 @@ set c15 [addConnection $m1 2 $m8 2]
 set c16 [addConnection $m9 0 $m10 2]
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m1-filename "/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10107.h5"
+set $m1-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
 set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z}}
 set $m1-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m1-ports {   0   1   2   3   3   3}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
 set $m2-width {389}
@@ -105,7 +109,7 @@ set $m6-min {0.0}
 set $m6-max {191.0}
 
 $m7 addViewer
-set $m7-ViewWindow_0-geometry 654x647+1879+494
+set $m7-ViewWindow_0-geometry 654x645+1887+534
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m7-ViewWindow_0-view-eyep-x {11.4656546978}
