@@ -57,7 +57,7 @@ class Screen {
   int cover_flag;
   
  public:
-  Screen() {}
+  Screen();
   ~Screen() {}
   
   int scan( Pt *_pt, int ne, int edge_list[], int edge_depth[] );
