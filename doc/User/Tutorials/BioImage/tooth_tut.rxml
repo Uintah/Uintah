@@ -73,8 +73,8 @@ DEALINGS IN THE SOFTWARE.
     <para>
       After loading data, BioImage will display visualizations of the
       data as shown in <xref linkend="fig.viewing-pane"/>.  The top
-      window displays a three dimensional reconstruction of the data
-      as orthogonal slices. The bottom three windows present the
+      pane displays a three dimensional representation of the data
+      as orthogonal slices. The bottom three panes present the
       slices individually.
     </para>
 
@@ -202,7 +202,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
     
     <para>
-      Click the <guibutton>Update</guibutton> button to finalize and
+      Click the <guibutton>Update</guibutton> button to
       apply the crop filter to the resampled dataset.
     </para>
 
@@ -236,8 +236,7 @@ DEALINGS IN THE SOFTWARE.
 	  <imagedata fileref="Figures/delete_filter.gif" format="GIF"/>
 	</imageobject>
 	<textobject><phrase>Filter delete button.</phrase></textobject>
-      </inlinemediaobject>.
-      This will remove the filter from the pipeline completely. See
+      </inlinemediaobject>, then press <guibutton>Update</guibutton>.  See
       <xref linkend="sec.dynamic_filters"/> for more information
       regarding dynamic filters and how to insert and delete them.
     </para>
@@ -251,23 +250,45 @@ DEALINGS IN THE SOFTWARE.
       <title>Selecting Slices</title>
 
       <para>
-	The Rendering Window is composed of four main windows. The
-	upper window is the 3D viewer window. By default the 3D viewer
-	displays slice planes of the axial, sagittal and coronal
-	planes oriented relative to each other in 3-space.
+	The Visualization Pane is composed of four sub-panes: the
+	volume pane on top, and the sagittal, coronal, and axial slice
+	panes (respectively) on the bottom.  Initially, the volume
+	pane displays a three dimensional representation of the data
+	as orthogonal slices.
       </para>
 
       <para>
-	The remaining viewer windows display 2D images of the
-	individual slice planes and can be used to change the location
-	of the slice planes inside of the dataset. The lower right
-	window controls the axial plane, the lower center window
-	controls the coronal plane, and the lower left window controls
-	the saggital plane.
+	Controls in the slice panes allow selection of any slice.
+	Changes in the slice panes are reflected in the volume pane
+	(when it is displaying orthogonal slices).  Slices are
+	selected using slider controls or mouse actions.  <xref
+	linkend="fig.2dview"/> shows the saggital slice pane, its
+	slider, and cross-hairs controls.
+      </para>
+
+      <para>
+	Initially, the slice plane is placed at the center of the
+	volume, which, for the tooth dataset, corresponds to the
+	51<superscript>st</superscript> slice along the saggital axis.
+	Move the saggital slice plane slider  to the right until it
+	reads 68. The 68th saggital slice is now displayed in both the
+	slice and volume panes, as shown in <xref linkend="fig.68saggitalBoth"/>.
+      </para>
+
+      <para>
+	Cross-hairs correspond to planes orthogonal to a slice
+	displayed in a slice pane.  Use the middle mouse button to
+	click and drag the cross hairs, selecting slices in 
+	orthogonal planes.
+      </para>
+
+      <para>
+	<xref linkend="tbl.slice_pane_controls"/> lists mouse actions
+	and keyboard keys that select slices or alter display of slices.
       </para>
 
       <figure id="fig.2dview">
-	<title>2D Viewer Windows</title>
+	<title>A Slice Pane and its Controls</title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>2d Viewer Window showing tooth dataset.</phrase>
@@ -280,38 +301,6 @@ DEALINGS IN THE SOFTWARE.
 	  </imageobject>
 	</mediaobject>
       </figure>
-
-      <para>Each slice plane can be manipulated via sliders</para>
-
-      <figure id="fig.2dslider">
-	<title>Slice plane slider</title>
-	<mediaobject>
-	  <textobject>
-	    <phrase>Slider used to move change location of slice plane.</phrase>
-	  </textobject>
-	  <imageobject>
-	    <imagedata fileref="Figures/2dslider.eps" align="center" format="EPS"/>
-	  </imageobject>
-	  <imageobject>
-	    <imagedata fileref="Figures/2dslider.jpg" align="center" format="JPG"/>
-	  </imageobject>
-	</mediaobject>
-      </figure>
-
-      <para>
-	Looking at the lower left slice window, we see the 2D slice
-	and corresponding slider controls for the saggital plane.  The
-	location of the slice plane inside of the volume is displayed
-	on the left side of the slider.  By default, the slice is
-	placed at the center of the volume, which for the tooth
-	dataset corresponds to the 51st slice along the saggital axis.
-      </para>
-
-      <para>
-	If we move the slice plane slider over to the left until it
-	reads 68, we see the 68th saggital slice displayed in both the
-	2D and 3D viewers.
-      </para>
 
       <figure id="fig.68saggitalBoth">
 	<title>Slice plane slider moved to 68th saggital slice</title>
@@ -328,47 +317,60 @@ DEALINGS IN THE SOFTWARE.
 	</mediaobject>
       </figure>
 
-      <para>
-	Other controls for moving the slice plane:
-	<simplelist type="vert" columns="1">
-	  <member>Keyboard &lt; &gt; : previous/next slice</member>
-	  <member>Keyboard +/-: zoom in and out on the slice</member>
-	  <member>Keyboard Arrow Keys: move the slice up/down right/left</member>
-	  <member>Mouse Scroll Wheel : previous/next slice</member>
-	  <member>Shift-Mouse Scroll Wheel : zoom in and out on the slice</member>
-	</simplelist>
-      </para>
+      <table id="tbl.slice_pane_controls">
+	<title>Slice Pane Controls</title>
+	<tgroup cols="2">
+	  <thead>
+	    <row>
+	      <entry>Control</entry>
+	      <entry>Effect</entry>
+	    </row>
+	  </thead>
+	  <tbody>
+	    <row>
+	      <entry>Keys <keycap>&lt;</keycap> and <keycap>&gt;</keycap></entry>
+	      <entry>Previous and next slice</entry>
+	    </row>
+	    <row>
+	      <entry>Keys <keycap>+</keycap> and <keycap>-</keycap></entry>
+	      <entry>Zoom in and out</entry>
+	    </row>
+	    <row>
+	      <entry>Arrow keys</entry>
+	      <entry>?????</entry>
+	    </row>
+	    <row>
+	      <entry>Mouse scroll wheel</entry>
+	      <entry>Previous or next slice</entry>
+	    </row>
+	    <row>
+	      <entry>Shift+mouse scroll wheel</entry>
+	      <entry>Zoom in and out</entry>
+	    </row>
+	  </tbody>
+	</tgroup>
+      </table>
 
-      <section>
-	<title>Moving the slice planes with the center mouse button</title>
-	<para>
-	  The slice planes can be moved via the mouse. In each 2D
-	  viewer there are crosshairs which correspond to the two
-	  planes orthogonal to the current 2D view. Use the center
-	  mouse button to click and drag the cross hairs and change
-	  the location of the corresponding planes.
-	</para>
-      </section><!-- end:Moving the slice planes with the mouse -->
       
     </section><!-- end: Selecting Slices -->
 
     <section>
       <title>Coloring Slices</title>
       <para>
-	The colors displayed in the viewers are greyscale and
-	represent the underlying values of the data. The colors may
-	represent density, in which case the highest densities
-	correspond to white colored areas and the lowest density
-	regions are colored in black, with in between areas in
-	shades of grey.
+	The colors displayed in the slice panes are greyscale and
+	represent the underlying density data values: highest
+	density corresponds to white, lowest density are colored
+	black, and in between areas are colored shades of grey.
       </para>
       <para>
-	It is possible to change the colormaps to use other ranges
-	of colors. Instead of ranging from white to black there is
-	an option that goes from blue to red, or uses a rainbow
-	colors. To change the colormap, choose the "Planes" tab
-	and select the desired colormap using the radiobuttons in
-	the Color Planes By frame.
+	It is possible to change the color range used.  A color range
+	that goes from blue to red, or one that uses rainbow colors
+	can be used.  To change the color range, click the
+	Visualization pane's <guilabel>Planes</guilabel> tab.  Then
+	select a color range by clicking one of the <guilabel>Color
+	Planes By</guilabel> radio buttons&#x2014;see <xref
+	linkend="fig.planesTab"/>
+	
 	<figure id="fig.planesTab">
 	  <title>Options for controlling planes</title>
 	  <mediaobject>
@@ -383,6 +385,7 @@ DEALINGS IN THE SOFTWARE.
 	    </imageobject>
 	  </mediaobject>
 	</figure>
+	
 	<figure id="fig.rainbow_color_applied"><title>Rainbow colormap</title>
 	<mediaobject>
 	  <textobject>
