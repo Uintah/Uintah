@@ -122,12 +122,6 @@ WARNING
 				     std::string algorithm);
 
     //////////
-    // Initialize erosion algorithm
-    virtual void initializeCMDataWithErosion(const Patch* patch,
-			     const MPMMaterial* matl,
-			     DataWarehouse* new_dw);
-
-    //////////
     // Computes and requires to erosion update
     virtual void addComputesAndRequiresWithErosion(Task* task,
 					const MPMMaterial* matl,

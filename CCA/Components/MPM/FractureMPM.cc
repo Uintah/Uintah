@@ -1084,59 +1084,41 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
 				   DataWarehouse* new_dw)
 {
   particleIndex totalParticles=0;
-  if (d_doErosion) {
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-		 <<"\t\t\t MPM"<< endl;
+    cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
+	       <<"\t\t\t MPM"<< endl;
 
-      CCVariable<short int> cellNAPID;
-      new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
-      cellNAPID.initialize(0);
+    CCVariable<short int> cellNAPID;
+    new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
+    cellNAPID.initialize(0);
 
-      for(int m=0;m<matls->size();m++){
-	//cerrLock.lock();
-	//NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
-	//cerrLock.unlock();
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	particleIndex numParticles = mpm_matl->countParticles(patch);
-	totalParticles+=numParticles;
+    for(int m=0;m<matls->size();m++){
+      //cerrLock.lock();
+      //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
+      //cerrLock.unlock();
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      particleIndex numParticles = mpm_matl->countParticles(patch);
+      totalParticles+=numParticles;
 
-	mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
+      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
-	mpm_matl->getConstitutiveModel()->initializeCMDataWithErosion(patch,
-								      mpm_matl,
-                                                                      new_dw);
+      mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+							 mpm_matl,
+							 new_dw);
+      if (d_doErosion) {
+	int index = mpm_matl->getDWIndex();
+	ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
+	ParticleVariable<double> pErosion;
+	new_dw->allocateAndPut(pErosion, lb->pErosionLabel, pset);
+	ParticleSubset::iterator iter = pset->begin();
+	for (; iter != pset->end(); iter++) {
+	  pErosion[*iter] = 1.0;
+	}
       }
-    }
-  } else {
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-		 <<"\t\t\t MPM"<< endl;
-
-      CCVariable<short int> cellNAPID;
-      new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
-      cellNAPID.initialize(0);
-
-      for(int m=0;m<matls->size();m++){
-	//cerrLock.lock();
-	//NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
-	//cerrLock.unlock();
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	particleIndex numParticles = mpm_matl->countParticles(patch);
-	totalParticles+=numParticles;
-
-	mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
-
-	mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-							   mpm_matl,
-							   new_dw);
-      }
-    }
-  }
+    } // material loop
+  } //patch loop
 
   if (d_accStrainEnergy) {
     // Initialize the accumulated strain energy
@@ -1314,6 +1296,14 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       Gdisplacement.initialize(Vector(0,0,0));
       GSp_vol.initialize(0.);
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
       // Need to compute the lumped global mass matrix and velocity
@@ -1327,99 +1317,51 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       double S[MAX_BASIS];
       Vector pmom;
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-       
-	ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+      for (ParticleSubset::iterator iter = pset->begin();
+                                    iter != pset->end(); 
+                                    iter++){
+	particleIndex idx = *iter;
 
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-	    patch->findCellAndWeights(px[idx], ni, S);
-	  }
-	  else if(d_8or27==27){
-	    patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-	  }
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndWeights(px[idx], ni, S);
+	}
+	else if(d_8or27==27){
+	  patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
+	}
 
-	  pmom = pvelocity[idx]*pmass[idx];
-	  total_mom += pvelocity[idx]*pmass[idx];
+	pmom = pvelocity[idx]*pmass[idx];
+	total_mom += pvelocity[idx]*pmass[idx];
 
-	  // Add each particles contribution to the local mass & velocity 
-	  // Must use the node indices
-	  for(int k = 0; k < d_8or27; k++) {
-	    if(patch->containsNode(ni[k])) {
-              S[k] *= pErosion[idx];
-              if(pgCode[idx][k]==1) {   // for primary field
-                gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
-  	        gmass[ni[k]]          += pmass[idx]                     * S[k];
-	        gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
-	        gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-	        gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-	        gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	        //gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-	        gnumnearparticles[ni[k]] += 1.0;
-	        gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
-              }
-              else if(pgCode[idx][k]==2) {  // for additional field
-                Gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
-                Gmass[ni[k]]          += pmass[idx]                     * S[k];
-                Gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-                Gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-                Gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
-                GTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-                //Gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-                GSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
-              }
+	// Add each particles contribution to the local mass & velocity 
+	// Must use the node indices
+	for(int k = 0; k < d_8or27; k++) {
+	  if(patch->containsNode(ni[k])) {
+	    S[k] *= pErosion[idx];
+	    if(pgCode[idx][k]==1) {   // for primary field
+	      gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
+	      gmass[ni[k]]          += pmass[idx]                     * S[k];
+	      gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
+	      gvolume[ni[k]]        += pvolume[idx]                   * S[k];
+	      gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
+	      gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	      //gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
+	      gnumnearparticles[ni[k]] += 1.0;
+	      gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
+	    }
+	    else if(pgCode[idx][k]==2) {  // for additional field
+	      Gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
+	      Gmass[ni[k]]          += pmass[idx]                     * S[k];
+	      Gvolume[ni[k]]        += pvolume[idx]                   * S[k];
+	      Gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
+	      Gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
+	      GTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	      //Gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
+	      GSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
 	    }
 	  }
 	}
-      } else {
-	ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-	    patch->findCellAndWeights(px[idx], ni, S);
-	  }
-	  else if(d_8or27==27){
-	    patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-	  }
-
-	  pmom = pvelocity[idx]*pmass[idx];
-	  total_mom += pvelocity[idx]*pmass[idx];
-
-	  // Add each particles contribution to the local mass & velocity 
-	  // Must use the node indices
-	  for(int k = 0; k < d_8or27; k++) {
-	    if(patch->containsNode(ni[k])) {
-              if(pgCode[idx][k]==1) {   // for primary field
-                gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
- 	        gmass[ni[k]]          += pmass[idx]                     * S[k];
-	        gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
-	        gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-	        gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-	        gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-	        //gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-	        gnumnearparticles[ni[k]] += 1.0;
-	        gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
-              }
-              else if(pgCode[idx][k]==2) {  // for additional field
-                Gdisplacement[ni[k]]  += (px[idx]-px0[idx]) * pmass[idx]* S[k];
-                Gmass[ni[k]]          += pmass[idx]                     * S[k];
-                Gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-                Gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-                Gvelocity[ni[k]]      += pvelocity[idx] * pmass[idx]    * S[k];
-                GTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-                //Gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-                GSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
-              }
-	    }
-	  }
-	}
-      }
+      } // Particle loop ends
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter; 
@@ -1718,6 +1660,13 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 	p_q = p_q_create; // reference created data
       }
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
 
       internalforce.initialize(Vector(0,0,0));
       IntVector ni[MAX_BASIS];
@@ -1726,78 +1675,41 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       Matrix3 stressmass;
       Matrix3 stresspress;
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-          particleIndex idx = *iter;
+      for (ParticleSubset::iterator iter = pset->begin();
+	                            iter != pset->end(); 
+	                            iter++){
+	particleIndex idx = *iter;
   
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
-                                                           psize[idx]);
-          }
-
-          stressmass  = pstress[idx]*pmass[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
-
-          for (int k = 0; k < d_8or27; k++){
-	    if(patch->containsNode(ni[k])){
-	      Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-			 d_S[k].z()*oodx[2]);
-              div *= pErosion[idx];
-              // with crack
-              if(pgCode[idx][k]==1) {
-                 internalforce[ni[k]] -=
-                     (div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
-              }
-              else if(pgCode[idx][k]==2) {
-                Ginternalforce[ni[k]] -=
-                     (div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
-              }
-              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
-	    }
-          }
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
 	}
-      } else {
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-  
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
-                                                           psize[idx]);
-          }
-
-          stressmass  = pstress[idx]*pmass[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
-
-          for (int k = 0; k < d_8or27; k++){
-	    if(patch->containsNode(ni[k])){
-	      Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-			 d_S[k].z()*oodx[2]);
-              // with crack
-              if(pgCode[idx][k]==1) {
-                 internalforce[ni[k]] -=
-                     (div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
-              }
-              else if(pgCode[idx][k]==2) {
-                Ginternalforce[ni[k]] -=
-                     (div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
-              }
-              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
-	    }
-          }
+	else if(d_8or27==27){
+	  patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
+							 psize[idx]);
 	}
-      }
+
+	stressmass  = pstress[idx]*pmass[idx];
+	stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+
+	for (int k = 0; k < d_8or27; k++){
+	  if(patch->containsNode(ni[k])){
+	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+		       d_S[k].z()*oodx[2]);
+	    div *= pErosion[idx];
+	    // with crack
+	    if(pgCode[idx][k]==1) {
+	      internalforce[ni[k]] -=
+		(div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
+	    }
+	    else if(pgCode[idx][k]==2) {
+	      Ginternalforce[ni[k]] -=
+		(div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
+	    }
+	    gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+	  }
+	}
+      } // end of particle loop
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
@@ -1930,71 +1842,47 @@ void FractureMPM::computeInternalHeatRate(const ProcessorGroup*,
                                                                   dwi, patch);
       GinternalHeatRate.initialize(0.);
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
       // First compute the temperature gradient at each particle
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+      for (ParticleSubset::iterator iter = pset->begin();
+	                            iter != pset->end(); 
+	                            iter++){
+	particleIndex idx = *iter;
 
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-            patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-	  }
-	  else if(d_8or27==27){
-            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
-	  }
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+	}
+	else if(d_8or27==27){
+	  patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
+	}
 
-	  pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
-	  for (int k = 0; k < d_8or27; k++){
-	    d_S[k] *= pErosion[idx];
-	    for (int j = 0; j<3; j++) {
-               // with crack 
-               if(pgCode[idx][k]==1) {
-                 pTemperatureGradient[idx][j] +=
-                     gTemperature[ni[k]] * d_S[k][j] * oodx[j];
-               }
-               else if(pgCode[idx][k]==2) {
-                 pTemperatureGradient[idx][j] +=
-                     GTemperature[ni[k]] * d_S[k][j] * oodx[j];
-               }
+	pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
+	for (int k = 0; k < d_8or27; k++){
+	  d_S[k] *= pErosion[idx];
+	  for (int j = 0; j<3; j++) {
+	    // with crack 
+	    if(pgCode[idx][k]==1) {
+	      pTemperatureGradient[idx][j] +=
+		gTemperature[ni[k]] * d_S[k][j] * oodx[j];
+	    }
+	    else if(pgCode[idx][k]==2) {
+	      pTemperatureGradient[idx][j] +=
+		GTemperature[ni[k]] * d_S[k][j] * oodx[j];
 	    }
 	  }
 	}
-      } else {
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-	  // Get the node indices that surround the cell
-	  if(d_8or27==8){
-            patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-	  }
-	  else if(d_8or27==27){
-            patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
-	  }
-
-	  pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
-	  for (int k = 0; k < d_8or27; k++){
-	    for (int j = 0; j<3; j++) {
-               // with crack
-               if(pgCode[idx][k]==1) {
-                 pTemperatureGradient[idx][j] +=
-                     gTemperature[ni[k]] * d_S[k][j] * oodx[j];
-               }
-               else if(pgCode[idx][k]==2) {
-                 pTemperatureGradient[idx][j] +=
-                     GTemperature[ni[k]] * d_S[k][j] * oodx[j];
-               }
-	    }
-	  }
-	}
-      }
-
+      } // End of particle loop
 
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
@@ -2013,12 +1901,12 @@ void FractureMPM::computeInternalHeatRate(const ProcessorGroup*,
 	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 		       d_S[k].z()*oodx[2]);
             if(pgCode[idx][k]==1) {
-               internalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx]) *
-                                          pvol[idx] * thermalConductivity;
+	      internalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx]) *
+		pvol[idx] * thermalConductivity;
             }
             else if(pgCode[idx][k]==2) {
               GinternalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx]) *
-                                          pvol[idx] * thermalConductivity;
+		pvol[idx] * thermalConductivity;
             }
 	  }
 	}
@@ -2778,6 +2666,14 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	massBurnFraction = massBurnFraction_create; // reference created data
       }
 
+      // Get the particle erosion information
+      constParticleVariable<double> pErosion;
+      if (d_doErosion) {
+        old_dw->get(pErosion, lb->pErosionLabel, pset);
+      } else {
+        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
+      }
+
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
 
@@ -2791,142 +2687,73 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	rho_frac_min = .1;
       }
 
-      if (d_doErosion) {
-	constParticleVariable<double> pErosion;
-	old_dw->get(pErosion, lb->pErosionLabel, pset);
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
+      for(ParticleSubset::iterator iter = pset->begin();
+	                           iter != pset->end(); 
+	                           iter++){
+	particleIndex idx = *iter;
 
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                           psize[idx]);
-          }
-
-          Vector vel(0.0,0.0,0.0);
-          Vector acc(0.0,0.0,0.0);
-          double tempRate = 0;
-          double burnFraction = 0;
-          double sp_vol_dt = 0.0;
-
-          // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < d_8or27; k++) {
-	    S[k] *= pErosion[idx];
-            // with crack
-            if(pgCode[idx][k]==1) {
-               vel      += gvelocity_star[ni[k]]  * S[k];
-               acc      += gacceleration[ni[k]]   * S[k];
-               tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
-                            frictionTempRate[ni[k]])   * S[k];
-               burnFraction += massBurnFraction[ni[k]] * S[k];
-               sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
-            }
-            else if(pgCode[idx][k]==2) {
-               vel      += Gvelocity_star[ni[k]]  * S[k];
-               acc      += Gacceleration[ni[k]]   * S[k];
-               tempRate += (GTemperatureRate[ni[k]] + dTdt[ni[k]] +
-                            frictionTempRate[ni[k]])   * S[k];
-               burnFraction += massBurnFraction[ni[k]] * S[k];
-               sp_vol_dt += GSp_vol_src[ni[k]]   * S[k];
-            }
-          }
-
-          // Update the particle's position and velocity
-          pxnew[idx]           = px[idx] + vel * delT;
-          pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
-          pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
-          pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
-
-          double rho;
-          if(pvolume[idx] > 0.){
-	    rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
-          }
-	  else{
-	    rho = rho_init;
-	  }
-          pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
-          pvolumeNew[idx]      = pmassNew[idx]/rho;
-          if(pmassNew[idx] <= d_min_part_mass ||
-	     (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
-	    delset->addParticle(idx);
-	  }
-	    
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	  CMV += pvelocitynew[idx]*pmass[idx];
+	// Get the node indices that surround the cell
+	if(d_8or27==8){
+	  patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 	}
-      } else {
-        ParticleSubset::iterator iter = pset->begin();
-	for(; iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-
-          // Get the node indices that surround the cell
-          if(d_8or27==8){
-            patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-          }
-          else if(d_8or27==27){
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                           psize[idx]);
-          }
-
-          Vector vel(0.0,0.0,0.0);
-          Vector acc(0.0,0.0,0.0);
-          double tempRate = 0;
-          double burnFraction = 0;
-          double sp_vol_dt = 0.0;
-
-          // Accumulate the contribution from each surrounding vertex
-          for (int k = 0; k < d_8or27; k++) {
-              //with Fracture -------------------------------------
-              if(pgCode[idx][k]==1) {
-                 vel      += gvelocity_star[ni[k]]  * S[k];
-                 acc      += gacceleration[ni[k]]   * S[k];
-                 tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
-                              frictionTempRate[ni[k]])   * S[k];
-                 burnFraction += massBurnFraction[ni[k]] * S[k];
-                 sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
-              }
-              else if(pgCode[idx][k]==2) {
-                 vel      += Gvelocity_star[ni[k]]  * S[k];
-                 acc      += Gacceleration[ni[k]]   * S[k];
-                 tempRate += (GTemperatureRate[ni[k]] + dTdt[ni[k]] +
-                              frictionTempRate[ni[k]])   * S[k];
-                 burnFraction += massBurnFraction[ni[k]] * S[k];
-                 sp_vol_dt += GSp_vol_src[ni[k]]   * S[k];
-              }
-          }
-
-          // Update the particle's position and velocity
-          pxnew[idx]           = px[idx] + vel * delT;
-          pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
-          pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
-          pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
-
-          double rho;
-          if(pvolume[idx] > 0.){
-	    rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
-          }
-	  else{
-	    rho = rho_init;
-	  }
-          pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
-          pvolumeNew[idx]      = pmassNew[idx]/rho;
-          if(pmassNew[idx] <= d_min_part_mass ||
-	     (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
-	    delset->addParticle(idx);
-	  }
-	    
-          thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
-	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	  CMV += pvelocitynew[idx]*pmass[idx];
+	else if(d_8or27==27){
+	  patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
+							 psize[idx]);
 	}
-      }
+
+	Vector vel(0.0,0.0,0.0);
+	Vector acc(0.0,0.0,0.0);
+	double tempRate = 0;
+	double burnFraction = 0;
+	double sp_vol_dt = 0.0;
+
+	// Accumulate the contribution from each surrounding vertex
+	for (int k = 0; k < d_8or27; k++) {
+	  S[k] *= pErosion[idx];
+	  // with crack
+	  if(pgCode[idx][k]==1) {
+	    vel      += gvelocity_star[ni[k]]  * S[k];
+	    acc      += gacceleration[ni[k]]   * S[k];
+	    tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
+			 frictionTempRate[ni[k]])   * S[k];
+	    burnFraction += massBurnFraction[ni[k]] * S[k];
+	    sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
+	  }
+	  else if(pgCode[idx][k]==2) {
+	    vel      += Gvelocity_star[ni[k]]  * S[k];
+	    acc      += Gacceleration[ni[k]]   * S[k];
+	    tempRate += (GTemperatureRate[ni[k]] + dTdt[ni[k]] +
+			 frictionTempRate[ni[k]])   * S[k];
+	    burnFraction += massBurnFraction[ni[k]] * S[k];
+	    sp_vol_dt += GSp_vol_src[ni[k]]   * S[k];
+	  }
+	}
+
+	// Update the particle's position and velocity
+	pxnew[idx]           = px[idx] + vel * delT;
+	pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
+	pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
+	pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
+
+	double rho;
+	if(pvolume[idx] > 0.){
+	  rho = max(pmass[idx]/pvolume[idx],rho_frac_min*rho_init);
+	}
+	else{
+	  rho = rho_init;
+	}
+	pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
+	pvolumeNew[idx]      = pmassNew[idx]/rho;
+	if(pmassNew[idx] <= d_min_part_mass ||
+	   (rho_frac_min < 1.0 && pvelocitynew[idx].length() > d_max_vel)){
+	  delset->addParticle(idx);
+	}
+	    
+	thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
+	ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+	CMV += pvelocitynew[idx]*pmass[idx];
+      } // End particle loop
 
       new_dw->deleteParticles(delset);      
     }
@@ -2958,6 +2785,21 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // cout << "THERMAL ENERGY " << thermal_energy << endl;
   }
   
+}
+
+void 
+FractureMPM::setParticleDefaultWithTemp(constParticleVariable<double>& pvar,
+				      ParticleSubset* pset,
+				      DataWarehouse* new_dw,
+				      double val)
+{
+  ParticleVariable<double>  temp;
+  new_dw->allocateTemporary(temp,  pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end();iter++){
+    temp[*iter]=val;
+  }
+  pvar = temp; 
 }
 
 void FractureMPM::setSharedState(SimulationStateP& ssp)
