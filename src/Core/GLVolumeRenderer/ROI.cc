@@ -35,11 +35,11 @@ void
 ROI::setAlpha( const Brick& b)
 {
   double alphaScale;
-  if(b.level() == volren->tex->depth())
+  if(b.level() == volren->tex()->depth())
     alphaScale = 1.0/pow(2.0, b.level());
   else
     alphaScale = 1.0/pow(2.0, b.level()*2);
-  glColor4f(1,1,1, volren->slice_alpha*alphaScale);
+  glColor4f(1,1,1, volren->slice_alpha() * alphaScale);
 }
 
 void
@@ -55,15 +55,15 @@ ROI::draw()
 
   computeView(viewRay);
   
-  ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  ROIIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
    BBox box;
-  volren->tex->get_bounds(box);
+  volren->tex()->get_bounds(box);
   SliceTable st(box.min(),
 		box.max(), 
 		viewRay,
-		volren->slices,
-                volren->tex->depth());
+		volren->slices(),
+                volren->tex()->depth());
 
   
   vector<Polygon* > polys;
@@ -99,7 +99,7 @@ ROI::drawWireFrame()
   Ray viewRay;
   computeView(viewRay);
   
-  ROIIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
+  ROIIterator it( volren->tex().get_rep(), viewRay,  volren->control_point());
 
   Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){

@@ -131,7 +131,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
   glMultMatrixd(mvmat);
 
   unsigned int i;
-  volren->di_->polycount += polys.size();
+  volren->di()->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
     case 1:
@@ -192,13 +192,14 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 void
 GLVolRenState::loadColorMap(Brick& brick)
 {
+  const unsigned char *arr = volren->transfer_functions(brick.level());
 #ifdef GL_TEXTURE_COLOR_TABLE_SGI
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
                GL_RGBA,  // need an alpha value...
                GL_UNSIGNED_BYTE, // try shorts...
-               volren->TransferFunctions[brick.level()]);
+               arr);
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
   ASSERT(glColorTableEXT != NULL );
   glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
@@ -206,7 +207,7 @@ GLVolRenState::loadColorMap(Brick& brick)
                256, // try larger sizes?
                GL_RGBA,  // need an alpha value...
                GL_UNSIGNED_BYTE, // try shorts...
-               volren->TransferFunctions[brick.level()]);
+               arr);
 //   glCheckForError("After glColorTableEXT");
 #endif
 }
@@ -223,7 +224,7 @@ GLVolRenState::loadTexture(Brick& brick)
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 //      glCheckForError("After glBindTexture");
 
-    if( volren->_interp ){
+    if(volren->interp()){
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 //        glCheckForError("glTexParameteri GL_LINEAR");
