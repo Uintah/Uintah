@@ -1139,8 +1139,8 @@ else
    PETSC_SUB="libg"
 fi
 PETSC_DIR=$withpetsc
-if test "$withpetsc" = "yes"; then
-   PETSC_ARCH=`$(PETSC_DIR)/bin/petscarch`
+if test "xx$withpetsc" != "xx"; then
+   PETSC_ARCH=`$withpetsc/bin/petscarch`
    if test "$is_64bit" != "yes" -a "$PETSC_ARCH" = "IRIX64"; then
       PETSC_ARCH="IRIX"
    fi
