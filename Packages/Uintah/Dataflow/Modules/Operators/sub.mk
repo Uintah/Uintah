@@ -27,6 +27,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/Util          \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
 	Dataflow/Network  \
