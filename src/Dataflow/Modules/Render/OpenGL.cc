@@ -934,15 +934,18 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   }
   // Setup the view...
   View view(viewwindow->view.get());
-  //double aspect=double(xres)/double(yres);
+#ifdef __sgi
+  double aspect=double(xres)/double(yres);
   // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
-  //double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
+  double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
+#endif
   
   viewer->geomlock.readLock();
   
   // Compute znear and zfar...
   double znear;
   double zfar;
+  double aspect=1,fovy=45;
   if(compute_depth(ViewWindow, view, znear, zfar)){
     // Setup picking...
     TCLTask::lock();
