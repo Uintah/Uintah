@@ -67,9 +67,8 @@ ScalarFieldRGT<unsigned char>::ScalarFieldRGT(int x, int y, int z)
 {
 }
 
-
 template <>
-PersistentTypeID ScalarFieldRGT<double>::type_id("ScalarFieldRGdouble", "ScalarField", maker);
+PersistentTypeID ScalarFieldRGT<double>::type_id("ScalarFieldRG", "ScalarField", maker);
 
 template <>
 PersistentTypeID ScalarFieldRGT<float>::type_id("ScalarFieldRGfloat", "ScalarField", maker);
