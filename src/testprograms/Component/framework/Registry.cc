@@ -1,13 +1,17 @@
 
+#include <testprograms/Component/framework/Registry.h>
+#include <testprograms/Component/framework/cca_sidl.h>
+
 #include <Core/Exceptions/InternalError.h> 
 #include <Core/Thread/CrowdMonitor.h>
-#include <testprograms/Component/framework/cca_sidl.h>
-#include <testprograms/Component/framework/Registry.h>
+
+#include <iostream>
 
 
 namespace sci_cca {
 
 using namespace SCIRun;
+using namespace std;
 
 ComponentRecord::ComponentRecord( const ComponentID &id )
 {

@@ -1,13 +1,13 @@
 
-#include <sys/utsname.h> 
-
+#include <testprograms/Component/framework/FrameworkImpl.h>
 #include <testprograms/Component/framework/SciServicesImpl.h>
 #include <testprograms/Component/framework/PortInfoImpl.h>
 #include <testprograms/Component/framework/ComponentIdImpl.h>
 #include <testprograms/Component/framework/ConnectionServicesImpl.h>
+#include <testprograms/Component/framework/RegistryServicesImpl.h>
 #include <testprograms/Component/framework/Registry.h>
-#include <testprograms/Component/framework/FrameworkImpl.h>
 
+#include <sys/utsname.h> 
 #include <iostream>
 
 namespace sci_cca {
@@ -41,7 +41,13 @@ FrameworkImpl::FrameworkImpl()
 
   ports_["ConnectionServices"] = cs;
 
-  // repository
+  // Registry
+  RegistryServicesImpl *rsi = new RegistryServicesImpl;
+  rsi->init( Framework( this ) );
+  RegistryServices rs = rsi;
+
+  ports_["RegistryServices"] = cs;
+
   // directoty
   // creation
 }

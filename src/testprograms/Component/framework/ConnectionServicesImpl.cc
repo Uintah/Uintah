@@ -5,9 +5,9 @@
 
 #include <iostream>
 
-using std::cerr;
-
 namespace sci_cca {
+
+using namespace std;
 
 typedef Registry::component_iterator component_iterator;
 

@@ -81,6 +81,9 @@ CCA::init( int &argc, char *argv[] )
   // init framework
 
   try {
+
+    cout << "pidl::init()\n";
+
     PIDL::PIDL::initialize( argc, argv );
     if ( is_server_ ) {
       // start server
