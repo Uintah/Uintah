@@ -2232,11 +2232,10 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
   SCI_TRY_LINK(PETSC_UNI,optional petsc-uni libraries and headers,[
   #include <petsc.h>
   ],$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPIUNI_H $MPIUNI_LIB_DIR_FLAG $MPIUNI_LIB_FLAG $F_LIB_FLAG,,optional)
-
   if test "$HAVE_PETSC_UNI" = "yes" ; then
     DEF_PETSC_UNI="#define PETSC_UNI 1"
-    PETSC_UNI_LIB_FLAG="$PETSC_LIB_FLAG"
-    PETSC_UNI_LIB_DIR_FLAG="$PETSC_LIB_DIR_FLAG"
+#    PETSC_UNI_LIB_FLAG="$PETSC_UNI_LIB_FLAG"
+#    PETSC_UNI_LIB_DIR_FLAG="$PETSC_UNI_LIB_DIR_FLAG"
   fi
    
 else
