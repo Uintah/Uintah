@@ -36,8 +36,6 @@ using std::string;
 class Crack
 {
  public:
-    double d_outputCFInterval;
-
     // Constructor
     Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
                            MPMLabel* lb,int n8or27);
@@ -158,7 +156,11 @@ class Crack
      /************************ PRIVATE DATA MEMBERS *************************/
     MPI_Comm mpi_crack_comm;
 
+    double d_outputInterval;
+    double d_outputCrackInterval;
+
     SimulationStateP d_sharedState;
+    string udaDir;
     int d_8or27;
     int NGP;
     int NGN;
@@ -178,9 +180,9 @@ class Crack
 
     string d_calFractParameters;   // Flag if calculating fracture parameters
     string d_doCrackPropagation;   // Flag if doing crack propagation
-    string d_outputCrackResults;   // Flag if outputting crack front geometry
     short calFractParameters;      // Flag if calculating fract para at this step
     short doCrackPropagation;      // Flag if doing crack propagation at this step
+    bool doCrackVisualization;     // Flag if output of crack elems, points
 
     // Data members of cracks
     vector<string> crackType;      // Crack contact type
@@ -294,7 +296,7 @@ class Crack
     void ReadArcCracks(const int&,const ProblemSpecP&); 
     void ReadEllipticCracks(const int&,const ProblemSpecP&); 
     void ReadPartialEllipticCracks(const int&,const ProblemSpecP&); 
-    void OutputInitialCracks(const int&);
+    void OutputInitialCrackPlane(const int&);
 
     // Discretize crack plane
     void DiscretizeRectangularCracks(const int&,int&);
@@ -302,11 +304,14 @@ class Crack
     void DiscretizeArcCracks(const int&,int&);
     void DiscretizeEllipticCracks(const int&,int&);
     void DiscretizePartialEllipticCracks(const int&,int&);
-    void OutputCrackPlaneMesh(const int&);
+    void OutputInitialCrackMesh(const int&);
 
     // Calculate crack-front normals, tangential normals and bi-normals
     short CalculateCrackFrontNormals(const int& m);
     
+    // Output crack elems and crack points for visualization
+    void OutputCrackGeometry(const int&, const int&);
+
     // Cubic-spline fitting function
     short CubicSpline(const int& n, const int& m, const int& n1,
                       double [], double [], double [],
