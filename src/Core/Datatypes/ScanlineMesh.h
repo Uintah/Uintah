@@ -181,6 +181,11 @@ public:
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
+  // Unsafe due to non-constness of unproject.
+  Transform &get_transform() { return transform_; }
+  Transform &set_transform(const Transform &trans) 
+  { transform_ = trans; return transform_; }
+
 protected:
 
   //! the min Node::index_type ( incase this is a subLattice )
