@@ -46,7 +46,7 @@ public:
   
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
-  virtual GeomObj* search( double, bool ) = 0;
+  virtual GeomHandle search( double ival, bool field, bool geom) = 0;
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
@@ -75,11 +75,11 @@ protected:
   
 public:
   Noise() : space_(0), tess_(0) {}
-  virtual ~Noise() {}
+  virtual ~Noise() { release(); }
   
   virtual void release();
   virtual void set_field( Field *);
-  GeomObj *search( double, bool );
+  GeomHandle search( double ival, bool field, bool geom );
   
   int count();
   
@@ -200,12 +200,12 @@ int Noise<Tesselator>::count( )
 
 
 template <class Tesselator>
-GeomObj *Noise<Tesselator>::search( double iso, bool buildtrisurf )
+GeomHandle Noise<Tesselator>::search( double iso, bool bf, bool bg )
 {
   v = iso;
   
   int n = count();
-  tess_->reset(n, buildtrisurf);
+  tess_->reset(n, bf, bg);
   
   search_min_max( &space_->span[0], space_->span.size() );
 
