@@ -2,6 +2,8 @@
 #ifndef MAPBLENDMATERIAL_H
 #define MAPBLENDMATERIAL_H 1
 
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/UVMapping.h>
@@ -54,20 +56,13 @@ class MapBlendMaterial : public Material
     double u=uv.u();
     double v=uv.v();
     double percent;
-    unsigned width = map_.get_width();
-    unsigned height = map_.get_height();
 
     if (!(map_.valid() && mat1_ && mat2_)) return;
 
     double tu = u-(unsigned)u;
     double tv = v-(unsigned)v;
 
-#if 0
-    percent = (map_((unsigned)(tu*width),
-                    (unsigned)(tv*height))).red();
-#else
     percent = (interp_color(tu,tv)).red();
-#endif
 
     mat1_->shade(result,ray,hit,depth,atten,accumcolor,cx);
     final = result*percent;
