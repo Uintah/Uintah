@@ -50,8 +50,7 @@ LOSIterator::LOSIterator(const GLTexture3D* tex, Ray view,
   } else {
     int child;
     BBox box((*node)()->bbox());
-    box.PrepareIntersect( view.origin() );
-    if( !box.Intersect( view.origin(), v, p )){
+    if( !box.intersect( view.origin(), v, p )){
       next = (*node)();
       return;
     }
@@ -62,7 +61,7 @@ LOSIterator::LOSIterator(const GLTexture3D* tex, Ray view,
       order.back()->pop_front();
       node = (*node)[child];
       BBox b((*node)()->bbox());
-      if( !b.Intersect( view.origin(), v, p )){
+      if( !b.intersect( view.origin(), v, p )){
 	break;
       }
     } while (node->type() == Octree<Brick* >::PARENT);
@@ -119,9 +118,7 @@ LOSIterator::SetNext()
   
   while( node->type() == Octree<Brick* >::PARENT ){
    BBox b( (*node)()->bbox() );
-   b.PrepareIntersect( view.origin() );
-
-    if(!b.Intersect( view.origin(), v, p )){
+    if(!b.intersect( view.origin(), v, p )){
       break;
     }
     order.push_back( traversal( node ));
