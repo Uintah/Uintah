@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  Runnable.h: The base class for all threads
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "Runnable.h"
 #include "Thread.h"
 #include <iostream.h>
@@ -29,4 +44,12 @@ Runnable::~Runnable()
         d_myThread->error("Runnable is being destroyed while thread is still running\n");
     }
 }
+
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:37:59  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 

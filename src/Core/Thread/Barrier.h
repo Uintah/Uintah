@@ -1,6 +1,20 @@
 
-#ifndef SCI_THREAD_BARRIER_H
-#define SCI_THREAD_BARRIER_H
+// $Id$
+
+/*
+ *  Barrier.h: Barrier synchronization primitive
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
+#ifndef SCICore_Thread_Barrier_h
+#define SCICore_Thread_Barrier_h
 
 /**************************************
  
@@ -25,37 +39,50 @@ WARNING
    
 ****************************************/
 
-class ThreadGroup;
-class Barrier_private;
-#include <string>
+namespace SCICore {
+    namespace Thread {
+	class ThreadGroup;
+	class Barrier_private;
 
-class Barrier {
-    Barrier_private* d_priv;
-    std::string d_name;
-protected:
-    int d_num_threads;
-    ThreadGroup* d_thread_group;
-public:
-    //////////
-    // Create a barrier which will be used by nthreads threads.
-    // <tt>name</tt> should be a string which describes the
-    // primitive for debugging purposes.
-    Barrier(const std::string& name, int nthreads);
+	class Barrier {
+	    Barrier_private* d_priv;
+	    const char* d_name;
+	protected:
+	    int d_num_threads;
+	    ThreadGroup* d_thread_group;
+	public:
+	    //////////
+	    // Create a barrier which will be used by nthreads threads.
+	    // <tt>name</tt> should be a static string which describes the
+	    // primitive for debugging purposes.
+	    Barrier(const char* name, int numThreads);
     
-    //////////
-    // Create a Barrier to be associated with a particular ThreadGroup.
-    Barrier(const std::string& name, ThreadGroup* group);
+	    //////////
+	    // Create a Barrier to be associated with a particular
+	    // ThreadGroup.
+	    Barrier(const char* name, ThreadGroup* group);
     
-    //////////
-    // Destroy the barrier
-    virtual ~Barrier();
+	    //////////
+	    // Destroy the barrier
+	    virtual ~Barrier();
     
-    //////////
-    // This causes all of the threads to block at this method until all
-    // nthreads threads have called the method.  After all threads have
-    // arrived, they are all allowed to return.
-    void wait();
-};
+	    //////////
+	    // This causes all of the threads to block at this method
+	    // until all numThreads threads have called the method.
+	    // After all threads have arrived, they are all allowed
+	    // to return.
+	    void wait();
+	};
+    }
+}
 
 #endif
+
+//
+// $Log$
+// Revision 1.4  1999/08/25 02:37:54  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 
