@@ -69,6 +69,10 @@ template<class T> void Pio(Piostream& stream, Handle<T>& data);
 template<class T> class Handle {
   T* rep;
 public:
+
+  typedef T   value_type;
+  typedef T * pointer_type;
+
   //////////
   //Create the handle, initializing with a null pointer.
   Handle();

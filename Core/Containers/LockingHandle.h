@@ -46,24 +46,24 @@ void Pio(Piostream& stream, LockingHandle<T>& data);
 
 template<class T>
 class LockingHandle {
-    T* rep;
+  T* rep;
 public:
-    LockingHandle();
-    LockingHandle(T*);
-    LockingHandle(const LockingHandle<T>&);
-    LockingHandle<T>& operator=(const LockingHandle<T>&);
-    LockingHandle<T>& operator=(T*);
-    ~LockingHandle();
 
-    void detach();
+  typedef T   value_type;
+  typedef T * pointer_type;
 
-    inline T* operator->() const {
-	ASSERT(rep != 0);
-	return rep;
-    }
-    inline T* get_rep() const {
-	return rep;
-    }
+  LockingHandle();
+  LockingHandle(T*);
+  LockingHandle(const LockingHandle<T>&);
+  LockingHandle<T>& operator=(const LockingHandle<T>&);
+  LockingHandle<T>& operator=(T*);
+  ~LockingHandle();
+
+  void detach();
+
+  inline T* operator->() const { ASSERT(rep != 0); return rep; }
+  inline T* get_rep() const { return rep; }
+
 
 #if defined(_AIX)
   template <typename Type> 
