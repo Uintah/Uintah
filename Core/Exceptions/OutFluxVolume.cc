@@ -15,7 +15,7 @@ OutFluxVolume::OutFluxVolume(IntVector c,double fluxout,double vol, int indx)
     << "], total_outflux (" << fluxout << ") > vol (" << vol << ")"
     << " matl indx "<< indx;
 
-  d_msg =  "inFluxOutFluxVolume" + s.str();
+  d_msg =  "inFluxOutFluxVolume" + s.str() + "\nThis usually means that the timestep is too large\n";
   
 }
 
