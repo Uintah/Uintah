@@ -49,7 +49,12 @@ DESCRIPTION
 	    virtual std::string message() const;
 	protected:
 	private:
+	    //////////
+	    // The offending URL
 	    std::string d_url;
+
+	    //////////
+	    // The error explanation
 	    std::string d_error;
 	};
     }
@@ -59,6 +64,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  1999/09/24 20:15:58  sparker
+// Cocoon documentation updates
+//
 // Revision 1.4  1999/09/24 06:26:25  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance
