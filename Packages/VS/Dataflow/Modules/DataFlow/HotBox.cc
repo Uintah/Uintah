@@ -113,6 +113,12 @@ private:
   // these store the array values
   GuiString gui_parent0_;
   GuiString gui_parent1_;
+  GuiString gui_parent2_;
+  GuiString gui_parent3_;
+  GuiString gui_parent4_;
+  GuiString gui_parent5_;
+  GuiString gui_parent6_;
+  GuiString gui_parent7_;
   // this stores the name of the list
   GuiString gui_parent_list_;
   // these store the array values
@@ -131,6 +137,14 @@ private:
   GuiString gui_child5_;
   GuiString gui_child6_;
   GuiString gui_child7_;
+  GuiString gui_child8_;
+  GuiString gui_child9_;
+  GuiString gui_child10_;
+  GuiString gui_child11_;
+  GuiString gui_child12_;
+  GuiString gui_child13_;
+  GuiString gui_child14_;
+  GuiString gui_child15_;
   // this stores the name of the list
   GuiString gui_child_list_;
 
@@ -170,6 +184,8 @@ private:
   VH_AdjacencyMapping *adjacencytable;
   VH_AnatomyBoundingBox *boundBoxList;
   VH_AnatomyBoundingBox *maxSegmentVol;
+  // transform bounding boxes into field volume
+  Point boxTran, boxScale;
 
   // physiology parameter mapping
   VH_HIPvarMap *hipVarFileList;
@@ -253,6 +269,12 @@ HotBox::HotBox(GuiContext* ctx)
   gui_name_(ctx->subVar("gui_name")),
   gui_parent0_(ctx->subVar("gui_parent(0)")),
   gui_parent1_(ctx->subVar("gui_parent(1)")),
+  gui_parent2_(ctx->subVar("gui_parent(2)")),
+  gui_parent3_(ctx->subVar("gui_parent(3)")),
+  gui_parent4_(ctx->subVar("gui_parent(4)")),
+  gui_parent5_(ctx->subVar("gui_parent(5)")),
+  gui_parent6_(ctx->subVar("gui_parent(6)")),
+  gui_parent7_(ctx->subVar("gui_parent(7)")),
   gui_parent_list_(ctx->subVar("gui_parlist_name")),
   gui_sibling0_(ctx->subVar("gui_sibling(0)")),
   gui_sibling1_(ctx->subVar("gui_sibling(1)")),
@@ -267,6 +289,14 @@ HotBox::HotBox(GuiContext* ctx)
   gui_child5_(ctx->subVar("gui_child(5)")),
   gui_child6_(ctx->subVar("gui_child(6)")),
   gui_child7_(ctx->subVar("gui_child(7)")),
+  gui_child8_(ctx->subVar("gui_child(8)")),
+  gui_child9_(ctx->subVar("gui_child(9)")),
+  gui_child10_(ctx->subVar("gui_child(10)")),
+  gui_child11_(ctx->subVar("gui_child(11)")),
+  gui_child12_(ctx->subVar("gui_child(12)")),
+  gui_child13_(ctx->subVar("gui_child(13)")),
+  gui_child14_(ctx->subVar("gui_child(14)")),
+  gui_child15_(ctx->subVar("gui_child(15)")),
   gui_child_list_(ctx->subVar("gui_childlist_name")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
@@ -475,7 +505,6 @@ HotBox::execute()
   }
 
   double segVolXextent, segVolYextent, segVolZextent;
-  Point boxTran, boxScale;
   if(!boundBoxList || boundingBoxDataSrc != activeBoundBoxSrc)
   { // bounding boxes have not been read or data source has changed
     if (stat(boundingBoxDataSrc.c_str(), &buf)) {
@@ -494,11 +523,11 @@ HotBox::execute()
     // find the largest bounding volume of the segmentation
     if((maxSegmentVol = VH_Anatomy_findMaxBoundingBox(boundBoxList)) != NULL)
     {
-      segVolXextent =
+      segVolXextent = (double)
         maxSegmentVol->get_maxX() - maxSegmentVol->get_minX() + 0.001;
-      segVolYextent =
+      segVolYextent = (double)
         maxSegmentVol->get_maxY() - maxSegmentVol->get_minY() + 0.001;
-      segVolZextent =
+      segVolZextent = (double)
         maxSegmentVol->get_maxZ() - maxSegmentVol->get_minZ() + 0.001;
       maxSegBBextent = Point(segVolXextent, segVolYextent, segVolZextent);
 
@@ -607,16 +636,14 @@ HotBox::execute()
   if( hipVarPath == "" )
   {
     error("No HIP data path has been selected.  Please choose a directory.");
-    return;
   }
   else
   {
     // assume there is a file named HIP_file_map.txt in the hipVarPath
-    hipFileMapName = hipVarPath + "HIP_file_map.txt";
+    hipFileMapName = hipVarPath + "/HIP_file_map.txt";
     if (stat(hipFileMapName.c_str(), &buf))
     {
       error("File '" + hipFileMapName + "' not found.");
-      return;
     }
     if(!hipVarFileList->get_num_names())
     { // label maps have not been read
@@ -1159,6 +1186,38 @@ HotBox::executeOQAFMA()
      gui_child7_.set(oqafma_relation[7]);
   else
      gui_child7_.set("");
+  if(num_struQLret > 8)
+     gui_child8_.set(oqafma_relation[8]);
+  else
+     gui_child8_.set("");
+  if(num_struQLret > 9)
+     gui_child9_.set(oqafma_relation[9]);
+  else
+     gui_child9_.set("");
+  if(num_struQLret > 10)
+     gui_child10_.set(oqafma_relation[10]);
+  else
+     gui_child10_.set("");
+  if(num_struQLret > 11)
+     gui_child11_.set(oqafma_relation[11]);
+  else
+     gui_child11_.set("");
+  if(num_struQLret > 12)
+     gui_child12_.set(oqafma_relation[12]);
+  else
+     gui_child12_.set("");
+  if(num_struQLret > 13)
+     gui_child13_.set(oqafma_relation[13]);
+  else
+     gui_child13_.set("");
+  if(num_struQLret > 14)
+     gui_child14_.set(oqafma_relation[14]);
+  else
+     gui_child14_.set("");
+  if(num_struQLret > 15)
+     gui_child15_.set(oqafma_relation[15]);
+  else
+     gui_child15_.set("");
 
   //////////////////////////////////////////////////////////////////////////
   // get the hierarchical parent of the selection from the FMA
@@ -1295,6 +1354,30 @@ HotBox::executeOQAFMA()
      gui_parent1_.set(oqafma_relation[1]);
   else
      gui_parent1_.set("");
+  if(num_struQLret > 2)
+     gui_parent2_.set(oqafma_relation[2]);
+  else
+     gui_parent2_.set("");
+  if(num_struQLret > 3)
+     gui_parent3_.set(oqafma_relation[3]);
+  else
+     gui_parent3_.set("");
+  if(num_struQLret > 4)
+     gui_parent4_.set(oqafma_relation[4]);
+  else
+     gui_parent4_.set("");
+  if(num_struQLret > 5)
+     gui_parent5_.set(oqafma_relation[5]);
+  else
+     gui_parent5_.set("");
+  if(num_struQLret > 6)
+     gui_parent6_.set(oqafma_relation[6]);
+  else
+     gui_parent6_.set("");
+  if(num_struQLret > 7)
+     gui_parent7_.set(oqafma_relation[7]);
+  else
+     gui_parent7_.set("");
 
   // **** magic occurs here **** //
   // grab control of the Tcl GUI program asynchronously
@@ -1304,7 +1387,13 @@ HotBox::executeOQAFMA()
   std::string
    evalStr = "set " + gui_parent_list_.get() + " [list [set " + 
              gui_name_.get() + "-gui_parent(0)] [set " +
-             gui_name_.get() + "-gui_parent(1)]]";
+             gui_name_.get() + "-gui_parent(1)] [set " +
+             gui_name_.get() + "-gui_parent(2)] [set " +
+             gui_name_.get() + "-gui_parent(3)] [set " +
+             gui_name_.get() + "-gui_parent(4)] [set " +
+             gui_name_.get() + "-gui_parent(5)] [set " +
+             gui_name_.get() + "-gui_parent(6)] [set " +
+             gui_name_.get() + "-gui_parent(7)]]";
   cerr << "gui->eval(" << evalStr << ")" << endl;
   gui->eval(evalStr, tclResult);
   istringstream iss(tclResult);
@@ -1324,7 +1413,15 @@ HotBox::executeOQAFMA()
             gui_name_.get() + "-gui_child(4)] [set " +
             gui_name_.get() + "-gui_child(5)] [set " +
             gui_name_.get() + "-gui_child(6)] [set " +
-            gui_name_.get() + "-gui_child(7)]]", tclResult);
+            gui_name_.get() + "-gui_child(7)] [set " +
+            gui_name_.get() + "-gui_child(8)] [set " +
+            gui_name_.get() + "-gui_child(9)] [set " +
+            gui_name_.get() + "-gui_child(10)] [set " +
+            gui_name_.get() + "-gui_child(11)] [set " +
+            gui_name_.get() + "-gui_child(12)] [set " +
+            gui_name_.get() + "-gui_child(13)] [set " +
+            gui_name_.get() + "-gui_child(14)] [set " +
+            gui_name_.get() + "-gui_child(15)]]", tclResult);
 
   gui->unlock();
 
