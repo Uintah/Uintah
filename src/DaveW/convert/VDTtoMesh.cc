@@ -16,6 +16,7 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/Datatypes/Mesh.h>
+#include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <iostream>
@@ -43,22 +44,46 @@ int readLine(FILE **f, char *buf) {
 
 int main(int argc, char **argv)
 {
-    if (argc != 2) {
-	cerr << "usage: " << argv[0] << " basename\n";
+    if (argc < 2 || (argc==3)) {
+	cerr << "usage: " << argv[0] << " basename [-regionconds defaultcond region0cond region1cond ...]\n";
 	exit(0);
     }
     MeshHandle mesh=new Mesh;
+
+    char buf[10000];
+    int i, dum1, dum2, npts, ntets;
+    double x, y, z;
+    int i1, i2, i3, i4, c;
+    int remap=0;
+    int defaultCond;
+
+    Array1<int> newConds;
+    if (argc>2) {
+	remap=1;
+	newConds.resize(argc-4);
+	for (i=4; i<argc; i++) newConds[i-4]=atoi(argv[i]);
+	defaultCond=atoi(argv[3]);
+	cerr << "DefaultCond = "<<defaultCond<<"\n";
+	for (i=0; i<newConds.size(); i++)
+	    cerr << "  Region "<<i<<" gets conductivity "<<newConds[i]<<"\n";
+    }
 
     FILE *f=fopen(clString(clString(argv[1])+".t3d")(), "rt");
     if (!f) {
 	cerr << "Error - failed to open "<<argv[1]<<".t3d\n";
 	exit(0);
     }
-    
-    char buf[10000];
-    int i, dum1, dum2, npts, ntets;
-    double x, y, z;
-    int i1, i2, i3, i4, c;
+    SurfaceHandle surfH;
+    Piostream* surfstr=auto_istream(clString(clString(argv[1])+".st"));
+    if (!surfstr)
+	surfstr = auto_istream(clString(clString(argv[1])+".stree"));
+    if (surfstr) Pio(*surfstr, surfH);
+    SurfTree *st;
+    if (surfH.get_rep() && (st=dynamic_cast<SurfTree*>(surfH.get_rep()))) {
+	cerr << "Getting material indices for each component from surftree\n";
+	newConds.resize(st->surfI.size());
+	for (i=0; i<newConds.size(); i++) newConds[i]=st->surfI[i].matl;
+    }
 
     // ! VDT (C) 1998 Petr Krysl
     readLine(&f, buf);
@@ -82,10 +107,8 @@ int main(int argc, char **argv)
     for (i=0; i<npts; i++) {
 	readLine(&f, buf);
 	sscanf(buf, "%d %lf %lf %lf", &dum1, &x, &y, &z);
-	while (dum1-1 != mesh->nodes.size()) {
-	    allNodes[cnt]->p=Point(-347,-348,-349);
-	    mesh->nodes.add(NodeHandle(allNodes[cnt++]));
-	}
+	while (dum1-1 != mesh->nodes.size())
+	    mesh->nodes.add(NodeHandle(0));
 	allNodes[cnt]->p=Point(x,y,z);
 	mesh->nodes.add(NodeHandle(allNodes[cnt++]));
     }
@@ -101,10 +124,16 @@ int main(int argc, char **argv)
 	       &c);
 	Element *e = new Element(mesh.get_rep(), i1-1, i2-1, i3-1, i4-1);
 	e->cond=c;
+	if (remap) {
+	    if (c >= newConds.size()) e->cond=defaultCond;
+	    else e->cond=newConds[c];
+	}
 	mesh->elems.add(e);
     }
-
-    TextPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
+    cerr << "Had "<<mesh->nodes.size()<<" nodes.\n";
+    mesh->pack_all();
+    cerr << "Now "<<mesh->nodes.size()<<" nodes.\n";
+    BinaryPiostream stream(clString(argv[1])+".mesh", Piostream::Write);
     Pio(stream, mesh);
     return 0;
 }
