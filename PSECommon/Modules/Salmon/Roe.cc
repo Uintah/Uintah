@@ -69,9 +69,12 @@ Roe::Roe(Salmon* s, const clString& id)
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
+  do_stereo("do_stereo", id, this), 
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-  do_stereo("do_stereo", id, this), do_bawgl("do_bawgl", id, this),
+  do_bawgl("do_bawgl", id, this),
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+#endif
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
@@ -85,9 +88,11 @@ Roe::Roe(Salmon* s, const clString& id)
     mouse_obj=0;
     ball = new BallData();
     ball->Init();
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     bawgl = new SCIBaWGL();
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+#endif
 }
 
 clString Roe::set_id(const clString& new_id)
@@ -559,6 +564,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
     }
 }
 
+#ifdef __sgi
 //>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 static int prevPrinc;
 void Roe::bawgl_pick(int action, GLint iv[3], GLfloat fv[3])
@@ -630,6 +636,7 @@ void Roe::bawgl_pick(int action, GLint iv[3], GLfloat fv[3])
     }
 }
 //<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<
+#endif
 
 void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 {
@@ -896,6 +903,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	return;
       }
       current_renderer->setvisual(args[2], idx, width, height);
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
    } else if(args[1] == "startbawgl") {
         if( bawgl->start(this, "bench.config")  == 0 )
@@ -909,8 +917,9 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	  }
    } else if(args[1] == "stopbawgl"){
      if( !bawgl_error ) bawgl->stop();
-    } else {
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+#endif
+    } else {
       args.error("Unknown minor command '" + args[1] + "' for Roe");
     }
 }
@@ -1187,6 +1196,9 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.9  1999/11/16 00:47:26  yarden
+// put "#ifdef __sgi" around code for BAWGL
+//
 // Revision 1.8  1999/10/21 22:39:06  ikits
 // Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
 //

@@ -26,10 +26,11 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECommon/Modules/Salmon/BallAux.h>
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 #include <PSECommon/Modules/Salmon/SCIBaWGL.h>
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-
+#endif
 
 namespace SCICore {
   namespace GeomSpace {
@@ -127,10 +128,12 @@ protected:
 
     int maxtag;
 
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     SCIBaWGL* bawgl;
     int bawgl_error;
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+#endif
 
     Point orig_eye;
     Vector frame_up;
@@ -187,7 +190,9 @@ public:
     clString id;
     int need_redraw;
 
+#ifdef __sgi
     SCIBaWGL* get_bawgl(void) { return(bawgl); }
+#endif
 
     Roe(Salmon *s, const clString& id);
     Roe(const Roe&);
@@ -208,9 +213,11 @@ public:
     void redraw_if_needed();
     void force_redraw();
 
+#ifdef __sgi
     //>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     void bawgl_pick(int action, GLint iv[3], GLfloat fv[4]);
     //<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#endif
 
     void mouse_translate(int, int, int, int, int, int);
     void mouse_scale(int, int, int, int, int, int);
@@ -247,9 +254,11 @@ public:
 
     // Stereo
     TCLint do_stereo;
+#ifdef __sgi
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     TCLint do_bawgl;
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+#endif
 
     TCLint drawimg;
 
@@ -287,6 +296,9 @@ public:
 
 //
 // $Log$
+// Revision 1.9  1999/11/16 00:47:26  yarden
+// put "#ifdef __sgi" around code for BAWGL
+//
 // Revision 1.8  1999/10/21 22:39:06  ikits
 // Put bench.config into PSE/src (where the executable gets invoked from). Fixed bug in the bawgl code and added preliminary navigation and picking.
 //
