@@ -43,19 +43,11 @@
         <name>Measurement Vector</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
-      <port>
-        <name>Misfit Matrix</name>
-	<datatype>SCIRun::Matrix</datatype>
-      </port>
     </inputs>
     <outputs>
       <port>
         <name>Misfit Field</name>
 	<datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
-        <name>Basis</name>
-	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
