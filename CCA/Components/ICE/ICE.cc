@@ -16,10 +16,10 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Variables/CellIterator.h>
 
@@ -97,6 +97,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_modelSetup = 0;
   d_recompile = false;
 
+  d_customInitialize_basket  = scinew customInitialize_basket();
   d_customBC_var_basket  = scinew customBC_var_basket();
   d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
@@ -105,6 +106,7 @@ ICE::ICE(const ProcessorGroup* myworld)
 ICE::~ICE()
 {
   cout_doing << "Doing: ICE destructor " << endl;
+  delete d_customInitialize_basket;
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
   delete d_customBC_var_basket;
@@ -236,6 +238,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     } 
   }
  
+ //__________________________________
+ //  custom Initialization
+  customInitialization_problemSetup(cfd_ice_ps, d_customInitialize_basket);
+  
   //__________________________________
   // Pull out implicit solver parameters
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
@@ -1470,8 +1476,7 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
                                      const LevelP& level,
                                      const MaterialSet* matls,
                                      vector<PatchSubset*> & /*maxMach_PSS*/)
-{
-  cout << "d_customBC_var_basket->usingLODI " << d_customBC_var_basket->usingLodi << endl; 
+{ 
   if(d_customBC_var_basket->usingLodi) {
     cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" << endl;
     Task* task = scinew Task("ICE::maxMach_on_Lodi_BC_Faces",
@@ -1853,7 +1858,11 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 Temp_CC[m],    speedSound[m], 
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC, numALLMatls, patch, new_dw);
-                                
+      
+      // if specified, overide the initialization             
+      customInitialization( patch,rho_CC[m], Temp_CC[m],vel_CC[m], press_CC,
+                          d_customInitialize_basket);
+                                                    
       setBC(rho_CC[m],     "Density",     patch, d_sharedState, indx, new_dw);
       setBC(rho_micro[m],  "Density",     patch, d_sharedState, indx, new_dw);
       setBC(Temp_CC[m],    "Temperature", patch, d_sharedState, indx, new_dw);
