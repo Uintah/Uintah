@@ -72,6 +72,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	global $this-contrastfp
 	global $this-draw_mode
 	global $this-num_slices
+	set $this-num_slices -1
     }
     method ui {} {
 	set w .ui[modname]
@@ -86,20 +87,19 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         set s "$this state"
 
 	global $this-render_style
-	label $w.f.l -text "Blending"
+	label $w.f.l -text "Blending Mode"
 	pack $w.f.l -side top -fill x
 
         frame $w.f.fmode
         pack $w.f.fmode -padx 2 -pady 2 -fill x
-        label $w.f.fmode.mode -text "Mode"
 	radiobutton $w.f.fmode.modeo -text "Over Operator" -relief flat \
 		-variable $this-render_style -value 0 \
 		-anchor w -command $n
 	radiobutton $w.f.fmode.modem -text "MIP" -relief flat \
 		-variable $this-render_style -value 1 \
 		-anchor w -command $n
-	pack $w.f.fmode.mode $w.f.fmode.modeo $w.f.fmode.modem \
-            -side left -fill x -padx 4 -pady 4
+	pack $w.f.fmode.modeo $w.f.fmode.modem \
+            -side left -fill x -padx 10 -pady 4 -expand y
 
         frame $w.f.fres
         pack $w.f.fres -padx 2 -pady 2 -fill x
@@ -178,13 +178,15 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
  	frame $w.f3 -relief groove -borderwidth 2
  	pack $w.f3 -padx 2 -pady 2 -fill x
  	label $w.f3.l -text "Interpolation Mode"
- 	radiobutton $w.f3.interp -text "Trilinear" -relief flat \
+	frame $w.f3.f
+ 	radiobutton $w.f3.f.interp -text "Trilinear" -relief flat \
  		-variable $this-interp_mode -value 1 \
  		-anchor w -command $n
- 	radiobutton $w.f3.near -text "Nearest" -relief flat \
+ 	radiobutton $w.f3.f.near -text "Nearest" -relief flat \
  		-variable $this-interp_mode -value 0 \
  		-anchor w -command $n
- 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
+	pack $w.f3.f.interp $w.f3.f.near -side left -fill x -padx 10 -expand y
+ 	pack $w.f3.l $w.f3.f -side top -fill x -padx 4
 
         #-----------------------------------------------------------
         # Sampling

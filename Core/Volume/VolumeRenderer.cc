@@ -526,4 +526,19 @@ VolumeRenderer::draw_wireframe()
 
 #endif // SCI_OPENGL
 
+
+double
+VolumeRenderer::num_slices_to_rate(int num_slices)
+{
+  const Vector diag = tex_->bbox().diagonal();
+  const Vector cell_diag(diag.x()/tex_->nx(),
+			 diag.y()/tex_->ny(),
+			 diag.z()/tex_->nz());
+  const double dt = diag.length() / num_slices;
+  const double rate = cell_diag.length() / dt;
+
+  return rate;
+}
+
+
 } // namespace SCIRun
