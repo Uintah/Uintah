@@ -62,7 +62,6 @@ class Roe : public TCL {
 
     BBox bb;
 
-    int need_redraw;
     int last_x, last_y;
     double total_x, total_y, total_z;
     Point rot_point;
@@ -82,6 +81,7 @@ class Roe : public TCL {
 public:
     Renderer* get_renderer(const clString&);
     clString id;
+    int need_redraw;
 
     Roe(Salmon *s, const clString& id);
     Roe(const Roe&);

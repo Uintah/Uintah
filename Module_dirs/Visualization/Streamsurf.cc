@@ -25,12 +25,14 @@
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/Sphere.h>
 #include <Geom/TriStrip.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Math/Trig.h>
+#include <TCL/TCLvar.h>
 #include <iostream.h>
 
 class Streamsurf : public Module {
@@ -39,17 +41,18 @@ class Streamsurf : public Module {
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
 
-public:
-    enum Algorithm {
-	AEuler,
-	ARK4,
-	AStreamFunction,
-    };
-private:
-    int alg;
+    TCLstring widgettype;
+    clString oldwidgettype;
+    TCLstring markertype;
+    TCLdouble lineradius;
+    TCLstring algorithm;
 
-    int maxsteps;
-    double maxangle;
+    TCLvardouble stepsize;
+    TCLvarint maxsteps;
+    TCLvardouble maxangle;
+
+    TCLdouble range_min;
+    TCLdouble range_max;
 
     int need_p1;
     int need_widget;
@@ -65,10 +68,10 @@ private:
     GeomCylinder* widget_slider1body;
     GeomDisc* widget_slider1cap1;
     GeomDisc* widget_slider1cap2;
-    GeomPick* widget_p1_pick;
-    GeomPick* widget_p2_pick;
-    GeomPick* widget_edge1_pick;
-    GeomPick* widget_slider1_pick;
+    GeomPick* pick_p1;
+    GeomPick* pick_p2;
+    GeomPick* pick_edge1;
+    GeomPick* pick_slider1;
     int widget_id;
     double widget_scale;
 
@@ -81,6 +84,7 @@ private:
     MaterialHandle matl;
 
     virtual void geom_moved(int, double, const Vector&, void*);
+    virtual void geom_release(void*);
 public:
     Streamsurf(const clString& id);
     Streamsurf(const Streamsurf&, int deep);
@@ -124,7 +128,12 @@ struct SSurf {
 };
 
 Streamsurf::Streamsurf(const clString& id)
-: Module("Streamsurf", id, Filter)
+: Module("Streamsurf", id, Filter),
+  widgettype("source", id, this),
+  markertype("markertype", id, this), lineradius("lineradius", id, this),
+  algorithm("algorithm", id, this), stepsize("stepsize", id, this),
+  maxsteps("maxsteps", id, this), range_min("range_min", id, this),
+  range_max("range_max", id, this), maxangle("maxangle", id, this)
 {
     // Create the input ports
     infield=new VectorFieldIPort(this, "Vector Field", ScalarFieldIPort::Atomic);
@@ -138,28 +147,6 @@ Streamsurf::Streamsurf(const clString& id)
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-    alg=AEuler;
-#ifdef OLDUI
-    MUI_choice* choice=new MUI_choice("Algorithm: ", &alg, MUI_widget::Immediate);
-    choice->add_choice("Euler");
-    choice->add_choice("4th Order Runge-Kutta");
-    choice->add_choice("Stream Function");
-    add_ui(choice);
-
-    maxsteps=100;
-    MUI_slider_int* islider=new MUI_slider_int("Max steps", &maxsteps,
-					       MUI_widget::Immediate, 0);
-    islider->set_minmax(0, 1000);
-    add_ui(islider);
-
-    maxangle=5;
-    MUI_slider_real* slider=new MUI_slider_real("Maximum surface angle",
-						&maxangle,
-						MUI_widget::Immediate, 0);
-    slider->set_minmax(0, 90);
-    add_ui(slider);
-    need_p1=1;
-#endif
 
     widget_point_matl=new Material(Color(0,0,0), Color(.54, .60, 1),
 				   Color(.5,.5,.5), 20);
@@ -175,7 +162,12 @@ Streamsurf::Streamsurf(const clString& id)
 }
 
 Streamsurf::Streamsurf(const Streamsurf& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep),
+  widgettype("source", id, this),
+  markertype("markertype", id, this), lineradius("lineradius", id, this),
+  algorithm("algorithm", id, this), stepsize("stepsize", id, this),
+  maxsteps("maxsteps", id, this), range_min("range_min", id, this),
+  range_max("range_max", id, this), maxangle("maxangle", id, this)
 {
     NOT_FINISHED("Streamsurf::Streamsurf");
 }
@@ -206,78 +198,79 @@ void Streamsurf::execute()
 	slider1_dist=sp.length()/10;
 	need_p1=0;
     }
-    widget_scale=0.01*field->longest_dimension();
-    if(need_widget){
-	need_widget=0;
-	cerr << "Rebuilding widget" << endl;
+    widget_scale=0.05*field->longest_dimension();
+    if(widgettype.get() != oldwidgettype){
+	oldwidgettype=widgettype.get();
 	if(widget_id)
 	    ogeom->delObj(widget_id);
 	widget=new GeomGroup;
-	widget_p1=new GeomSphere;
-	GeomPick* p=new GeomPick(this);
-	p->set_highlight(widget_highlight_matl);
-	p->set_cbdata((void*)1);
-	widget_p1->set_pick(p);
-	widget_p1->set_matl(widget_point_matl);
-	widget_p2=new GeomSphere;
-	p=new GeomPick(this);
-	p->set_highlight(widget_highlight_matl);
-	p->set_cbdata((void*)2);
-	widget_p2->set_pick(p);
-	widget_p2->set_matl(widget_point_matl);
-	widget_edge1=new GeomCylinder;
-	p=new GeomPick(this);
-	p->set_highlight(widget_highlight_matl);
-	p->set_cbdata((void*)3);
-	widget_edge1->set_pick(p);
-	widget_edge1->set_matl(widget_edge_matl);
-	widget_slider1=new GeomGroup;
-	widget_slider1body=new GeomCylinder;
-	widget_slider1cap1=new GeomDisc;
-	widget_slider1cap2=new GeomDisc;
-	widget_slider1->add(widget_slider1body);
-	widget_slider1->add(widget_slider1cap1);
-	widget_slider1->add(widget_slider1cap2);
-	p=new GeomPick(this);
-	p->set_highlight(widget_highlight_matl);
-	p->set_cbdata((void*)4);
-	widget_slider1->set_pick(p);
-	widget_slider1->set_matl(widget_slider_matl);
-	widget->add(widget_p1);
-	widget->add(widget_p2);
-	widget->add(widget_edge1);
-	widget->add(widget_slider1);
-	widget->set_pick(new GeomPick(this));
+	if(widgettype.get() == "Point"){
+	    widget_p1=new GeomSphere(p1, 1*widget_scale);
+	    GeomMaterial* matl=new GeomMaterial(widget_p1, widget_point_matl);
+	    GeomPick* pick=new GeomPick(matl, this, Vector(1,0,0),
+					Vector(0,1,0),
+					Vector(0,0,1));
+	    pick->set_highlight(widget_highlight_matl);
+	    widget->add(pick);
+	} else if(widgettype.get() == "Line"){
+	    GeomGroup* pts=new GeomGroup;
+	    widget_p1=new GeomSphere(p1, 1*widget_scale);
+	    pick_p1=new GeomPick(widget_p1, this);
+	    pick_p1->set_highlight(widget_highlight_matl);
+	    pick_p1->set_cbdata((void*)1);
+	    pts->add(pick_p1);
+	    widget_p2=new GeomSphere(p2, 1*widget_scale);
+	    pick_p2=new GeomPick(widget_p2, this);
+	    pick_p2->set_highlight(widget_highlight_matl);
+	    pick_p2->set_cbdata((void*)2);
+	    pts->add(pick_p2);
+	    GeomMaterial* m1=new GeomMaterial(pts, widget_point_matl);
+	    widget_edge1=new GeomCylinder(p1, p2, 0.5*widget_scale);
+	    pick_edge1=new GeomPick(widget_edge1, this);
+	    pick_edge1->set_highlight(widget_highlight_matl);
+	    pick_edge1->set_cbdata((void*)3);
+	    GeomMaterial* m2=new GeomMaterial(pick_edge1, widget_edge_matl);
+	    widget_slider1=new GeomGroup;
+	    Vector spvec(p2-p1);
+	    spvec.normalize();
+	    Point sp(p1+spvec*slider1_dist);
+	    Point sp2(sp+spvec*(widget_scale*0.5));
+	    Point sp1(sp-spvec*(widget_scale*0.5));
+	    widget_slider1body=new GeomCylinder(sp1, sp2, 1*widget_scale);
+	    widget_slider1cap1=new GeomDisc(sp2, spvec, 1*widget_scale);
+	    widget_slider1cap2=new GeomDisc(sp1, -spvec, 1*widget_scale);
+	    widget_slider1->add(widget_slider1body);
+	    widget_slider1->add(widget_slider1cap1);
+	    widget_slider1->add(widget_slider1cap2);
+	    pick_slider1=new GeomPick(widget_slider1, this);
+	    pick_slider1->set_highlight(widget_highlight_matl);
+	    pick_slider1->set_cbdata((void*)4);
+	    GeomMaterial* m3=new GeomMaterial(pick_slider1, widget_slider_matl);
+	    widget->add(m1);
+	    widget->add(m2);
+	    widget->add(m3);
+	    Vector v1,v2;
+	    spvec.find_orthogonal(v1, v2);
+	    pick_p1->set_principal(spvec, v1, v2);
+	    pick_p2->set_principal(spvec, v1, v2);
+	    pick_edge1->set_principal(spvec, v1, v2);
+	    pick_slider1->set_principal(spvec);
+	} else if(widgettype.get() == "Square"){
+	    NOT_FINISHED("Square widget");
+	} else {
+	    error("Unknown widget type: "+widgettype.get());
+	}
 	widget_id=ogeom->addObj(widget, widget_name);
     }
-    // Update the widget...
-    widget_p1->move(p1, 1*widget_scale);
-    widget_p2->move(p2, 1*widget_scale);
-    widget_edge1->move(p1, p2, 0.5*widget_scale);
-    Vector spvec(p2-p1);
-    spvec.normalize();
-    Point sp(p1+spvec*slider1_dist);
-    Point sp2(sp+spvec*(widget_scale*0.5));
-    Point sp1(sp-spvec*(widget_scale*0.5));
-    widget_slider1body->move(sp1, sp2, 1*widget_scale);
-    widget_slider1cap1->move(sp2, spvec, 1*widget_scale);
-    widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
-    Vector v1,v2;
-    spvec.find_orthogonal(v1, v2);
-    widget_p1->get_pick()->set_principal(spvec, v1, v2);
-    widget_p2->get_pick()->set_principal(spvec, v1, v2);
-    widget_edge1->get_pick()->set_principal(spvec, v1, v2);
-    widget_slider1->get_pick()->set_principal(spvec);
-
-
     GeomGroup* group=new GeomGroup;
+    GeomMaterial* matlobj=new GeomMaterial(group, matl);
     int groupid=0;
 
     Array1<SSLine*> slines;
     Point op1(p1);
     Point op2(p2);
     double d2=4*slider1_dist*slider1_dist;
-    double ca=Cos(maxangle);
+    double ca=Cos(maxangle.get());
     double ss=slider1_dist/2;
     Vector line(op2-op1);
     double l=line.length();
@@ -293,15 +286,16 @@ void Streamsurf::execute()
 	    ssurfs[i]->right=ssurfs[i+1];
     }
     int n=0;
-    for(int iter=0;iter<maxsteps;iter++){
-	update_progress(iter, maxsteps);
+    int alg=(algorithm.get()=="RK4");
+    for(int iter=0;iter<maxsteps.get();iter++){
+	update_progress(iter, maxsteps.get());
 	if(abort_flag)
 	    break;
 	if(n > 500 && !ogeom->busy()){
 	    n=0;
 	    if(groupid)
 		ogeom->delObj(groupid);
-	    groupid=ogeom->addObj(group->clone(), streamsurf_name);
+	    groupid=ogeom->addObj(matlobj->clone(), streamsurf_name);
 	    ogeom->flushViews();
 	}
 	int oldn=n;
@@ -370,40 +364,72 @@ void Streamsurf::execute()
 	delete group;
 	streamsurf_id=0;
     } else {
-	streamsurf_id=ogeom->addObj(group, streamsurf_name);
+	streamsurf_id=ogeom->addObj(matlobj, streamsurf_name);
     }
 }
 
 void Streamsurf::geom_moved(int axis, double dist, const Vector& delta,
 			    void* cbdata)
 {
-    switch((int)cbdata){
-    case 1:
+    if(widgettype.get() == "Point"){
 	p1+=delta;
-	break;
-    case 2:
-	p2+=delta;
-	break;
-    case 3:
-	p1+=delta;
-	p2+=delta;
-	break;
-    case 4:
-	{
-	    if(axis==0){
-		slider1_dist+=dist;
-	    } else {
-		slider1_dist-=dist;
+	widget_p1->move(p1, 1*widget_scale);
+    } else if(widgettype.get() == "Line"){
+	switch((int)cbdata){
+	case 1:
+	    p1+=delta;
+	    break;
+	case 2:
+	    p2+=delta;
+	    break;
+	case 3:
+	    p1+=delta;
+	    p2+=delta;
+	    break;
+	case 4:
+	    {
+		if(axis==0){
+		    slider1_dist+=dist;
+		} else {
+		    slider1_dist-=dist;
+		}
+		Vector pv(p2-p1);
+		double l=pv.length();
+		if(slider1_dist < 0.01*l)
+		    slider1_dist=0.01*l;
+		else if(slider1_dist > l)
+		    slider1_dist=l;
+		break;
 	    }
-	    Vector pv(p2-p1);
-	    double l=pv.length();
-	    if(slider1_dist < 0.01*l)
-		slider1_dist=0.01*l;
-	    else if(slider1_dist > l)
-		slider1_dist=l;
 	}
-	break;
+	// Reconfigure...
+	widget_p1->move(p1, 1*widget_scale);
+	widget_p2->move(p2, 1*widget_scale);
+	widget_edge1->move(p1, p2, 0.5*widget_scale);
+	Vector spvec(p2-p1);
+	spvec.normalize();
+	Point sp(p1+spvec*slider1_dist);
+	Point sp2(sp+spvec*(widget_scale*0.5));
+	Point sp1(sp-spvec*(widget_scale*0.5));
+	widget_slider1body->move(sp1, sp2, 1*widget_scale);
+	widget_slider1cap1->move(sp2, spvec, 1*widget_scale);
+	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
+	Vector v1,v2;
+	spvec.find_orthogonal(v1, v2);
+	pick_p1->set_principal(spvec, v1, v2);
+	pick_p2->set_principal(spvec, v1, v2);
+	pick_edge1->set_principal(spvec, v1, v2);
+	pick_slider1->set_principal(spvec);
+	widget->reset_bbox();
+    } else if(widgettype.get() == "Square"){
+	NOT_FINISHED("Square widget");
+    } else {
+	error("Unknown widgettype in Streamline");
     }
+}
+
+void Streamsurf::geom_release(void*)
+{
     if(!abort_flag){
 	abort_flag=1;
 	want_to_execute();
@@ -417,39 +443,27 @@ SSLine::SSLine(const Point& p)
     have_normal=0;
 }
 
-int SSLine::advance(const VectorFieldHandle& field, int alg,
+int SSLine::advance(const VectorFieldHandle& field, int rk4,
 		   double stepsize)
 {
     if(outside)
 	return 0;
     have_normal=0;
-    switch(alg){
-    case Streamsurf::AEuler:
-	{
-	    Vector v;
-	    if(!field->interpolate(p, v)){
-		outside=1;
-		return 0;
-	    }
-	    if(v.length2() > 0){
-		v.normalize();
-		p+=(v*stepsize);
-	    } else {
-		// Stagnation...
-		outside=1;
-	    }
+    if(rk4){
+	NOT_FINISHED("SSLine::advance for RK4");
+    } else {
+	Vector v;
+	if(!field->interpolate(p, v)){
+	    outside=1;
+	    return 0;
 	}
-	break;
-    case Streamsurf::ARK4:
-	{
-	    NOT_FINISHED("SSLine::advance for RK4");
+	if(v.length2() > 0){
+	    v.normalize();
+	    p+=(v*stepsize);
+	} else {
+	    // Stagnation...
+	    outside=1;
 	}
-	break;
-    case Streamsurf::AStreamFunction:
-	{
-	    NOT_FINISHED("SSLine::advance for Stream Function");
-	}
-	break;
     }
     return 1;
 }

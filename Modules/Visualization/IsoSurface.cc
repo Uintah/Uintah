@@ -31,6 +31,7 @@
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/Sphere.h>
 #include <Geom/Tri.h>
@@ -63,6 +64,8 @@ class IsoSurface : public Module {
     GeomCylinder* widget_cylinder;
     GeomCone* widget_cone;
     GeomDisc* widget_disc;
+    GeomPick* shaft_pick;
+    GeomPick* sphere_pick;
     double widget_scale;
 
     int widget_id;
@@ -244,16 +247,20 @@ void IsoSurface::execute()
 				     0.75*widget_scale, 0);
 	    widget_disc=new GeomDisc(cyl_top, -grad,
 				     0.75*widget_scale);
+	    GeomGroup* shaft=new GeomGroup;
+	    shaft->add(widget_cylinder);
+	    shaft->add(widget_cone);
+	    shaft->add(widget_disc);
+	    shaft_pick=new GeomPick(shaft, this, grad);
+	    shaft_pick->set_highlight(widget_highlight_matl);
+	    Vector v1, v2;
+	    grad.find_orthogonal(v1, v2);
+	    sphere_pick=new GeomPick(shaft, this, grad, v1, v2);
 	    widget=new GeomGroup;
-	    widget->add(widget_sphere);
-	    widget->add(widget_cylinder);
-	    widget->add(widget_cone);
-	    widget->add(widget_disc);
-	    widget->set_matl(widget_matl);
-	    GeomPick* pick=new GeomPick(this, grad);
-	    pick->set_highlight(widget_highlight_matl);
-	    widget->set_pick(pick);
-	    widget_id=ogeom->addObj(widget, widget_name);
+	    widget->add(shaft_pick);
+	    widget->add(sphere_pick);
+	    GeomMaterial* matl=new GeomMaterial(widget, widget_matl);
+	    widget_id=ogeom->addObj(matl, widget_name);
 	}
 	Point sp(seed_point.get());
 	widget_sphere->cen=sp;
@@ -264,14 +271,15 @@ void IsoSurface::execute()
 	    // Just the point...
 	    widget_scale=0.00001;
 	    grad=Vector(0,0,1);
-	    widget->get_pick()->set_principal(Vector(1,0,0),
-					      Vector(0,1,0),
-					      Vector(0,0,1));
+	    sphere_pick->set_principal(Vector(1,0,0),
+				       Vector(0,1,0),
+				       Vector(0,0,1));
 	} else {
 	    grad.normalize();
 	    Vector v1, v2;
 	    grad.find_orthogonal(v1, v2);
-	    widget->get_pick()->set_principal(grad, v1, v2);
+	    sphere_pick->set_principal(grad, v1, v2);
+	    shaft_pick->set_principal(grad);
 	}
 	Point cyl_top(sp+grad*(2*widget_scale));
 	widget_cylinder->bottom=sp;
@@ -299,14 +307,15 @@ void IsoSurface::execute()
     }
 
     GeomGroup* group=new GeomGroup;
+    GeomObj* topobj=group;
     if(have_colormap && !have_colorfield){
 	// Paint entire surface based on colormap
-	group->set_matl(cmap->lookup(iv, old_min, old_max));
+	topobj=new GeomMaterial(group, cmap->lookup(iv, old_min, old_max));
     } else if(have_colormap && have_colorfield){
 	// Nothing - done per vertex
     } else {
 	// Default material
-	group->set_matl(matl);
+	topobj=new GeomMaterial(group, matl);
     }
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();

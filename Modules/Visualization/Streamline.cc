@@ -24,6 +24,7 @@
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 #include <Geom/TriStrip.h>
 #include <Geom/Group.h>
 #include <Geom/Pick.h>
@@ -78,16 +79,16 @@ class Streamline : public Module {
     GeomDisc* widget_slider1cap2;
     GeomDisc* widget_slider2cap1;
     GeomDisc* widget_slider2cap2;
-    GeomPick* widget_p1_pick;
-    GeomPick* widget_p2_pick;
-    GeomPick* widget_p3_pick;
-    GeomPick* widget_p4_pick;
-    GeomPick* widget_edge1_pick;
-    GeomPick* widget_edge2_pick;
-    GeomPick* widget_edge3_pick;
-    GeomPick* widget_edge4_pick;
-    GeomPick* widget_slider1_pick;
-    GeomPick* widget_slider2_pick;
+    GeomPick* pick_p1;
+    GeomPick* pick_p2;
+    GeomPick* pick_p3;
+    GeomPick* pick_p4;
+    GeomPick* pick_edge1;
+    GeomPick* pick_edge2;
+    GeomPick* pick_edge3;
+    GeomPick* pick_edge4;
+    GeomPick* pick_slider1;
+    GeomPick* pick_slider2;
     int widget_id;
     double widget_scale;
 
@@ -371,32 +372,30 @@ void Streamline::execute()
 	widget=new GeomGroup;
 	if(widgettype.get() == "Point"){
 	    widget_p1=new GeomSphere(p1, 1*widget_scale);
-	    widget_p1->set_matl(widget_point_matl);
-	    GeomPick* pick=new GeomPick(this, Vector(1,0,0),
+	    GeomMaterial* matl=new GeomMaterial(widget_p1, widget_point_matl);
+	    GeomPick* pick=new GeomPick(matl, this, Vector(1,0,0),
 					Vector(0,1,0),
 					Vector(0,0,1));
 	    pick->set_highlight(widget_highlight_matl);
-	    widget->set_pick(pick);
-	    widget->add(widget_p1);
+	    widget->add(pick);
 	} else if(widgettype.get() == "Line"){
+	    GeomGroup* pts=new GeomGroup;
 	    widget_p1=new GeomSphere(p1, 1*widget_scale);
-	    GeomPick* p=new GeomPick(this);
-	    p->set_highlight(widget_highlight_matl);
-	    p->set_cbdata((void*)1);
-	    widget_p1->set_pick(p);
-	    widget_p1->set_matl(widget_point_matl);
+	    pick_p1=new GeomPick(widget_p1, this);
+	    pick_p1->set_highlight(widget_highlight_matl);
+	    pick_p1->set_cbdata((void*)1);
+	    pts->add(pick_p1);
 	    widget_p2=new GeomSphere(p2, 1*widget_scale);
-	    p=new GeomPick(this);
-	    p->set_highlight(widget_highlight_matl);
-	    p->set_cbdata((void*)2);
-	    widget_p2->set_pick(p);
-	    widget_p2->set_matl(widget_point_matl);
+	    pick_p2=new GeomPick(widget_p2, this);
+	    pick_p2->set_highlight(widget_highlight_matl);
+	    pick_p2->set_cbdata((void*)2);
+	    pts->add(pick_p2);
+	    GeomMaterial* m1=new GeomMaterial(pts, widget_point_matl);
 	    widget_edge1=new GeomCylinder(p1, p2, 0.5*widget_scale);
-	    p=new GeomPick(this);
-	    p->set_highlight(widget_highlight_matl);
-	    p->set_cbdata((void*)3);
-	    widget_edge1->set_pick(p);
-	    widget_edge1->set_matl(widget_edge_matl);
+	    pick_edge1=new GeomPick(widget_edge1, this);
+	    pick_edge1->set_highlight(widget_highlight_matl);
+	    pick_edge1->set_cbdata((void*)3);
+	    GeomMaterial* m2=new GeomMaterial(pick_edge1, widget_edge_matl);
 	    widget_slider1=new GeomGroup;
 	    Vector spvec(p2-p1);
 	    spvec.normalize();
@@ -409,22 +408,19 @@ void Streamline::execute()
 	    widget_slider1->add(widget_slider1body);
 	    widget_slider1->add(widget_slider1cap1);
 	    widget_slider1->add(widget_slider1cap2);
-	    p=new GeomPick(this);
-	    p->set_highlight(widget_highlight_matl);
-	    p->set_cbdata((void*)4);
-	    widget_slider1->set_pick(p);
-	    widget_slider1->set_matl(widget_slider_matl);
-	    widget->add(widget_p1);
-	    widget->add(widget_p2);
-	    widget->add(widget_edge1);
-	    widget->add(widget_slider1);
+	    pick_slider1=new GeomPick(widget_slider1, this);
+	    pick_slider1->set_highlight(widget_highlight_matl);
+	    pick_slider1->set_cbdata((void*)4);
+	    GeomMaterial* m3=new GeomMaterial(pick_slider1, widget_slider_matl);
+	    widget->add(m1);
+	    widget->add(m2);
+	    widget->add(m3);
 	    Vector v1,v2;
 	    spvec.find_orthogonal(v1, v2);
-	    widget_p1->get_pick()->set_principal(spvec, v1, v2);
-	    widget_p2->get_pick()->set_principal(spvec, v1, v2);
-	    widget_edge1->get_pick()->set_principal(spvec, v1, v2);
-	    widget_slider1->get_pick()->set_principal(spvec);
-	    widget->set_pick(new GeomPick(this));
+	    pick_p1->set_principal(spvec, v1, v2);
+	    pick_p2->set_principal(spvec, v1, v2);
+	    pick_edge1->set_principal(spvec, v1, v2);
+	    pick_slider1->set_principal(spvec);
 	} else if(widgettype.get() == "Square"){
 	    NOT_FINISHED("Square widget");
 	} else {
@@ -433,7 +429,7 @@ void Streamline::execute()
 	widget_id=ogeom->addObj(widget, widget_name);
     }
     GeomGroup* group=new GeomGroup;
-    group->set_matl(matl);
+    GeomMaterial* matlobj=new GeomMaterial(group, matl);
 
     // Temporary algorithm...
     if(markertype.get() == "Line"){
@@ -474,7 +470,7 @@ void Streamline::execute()
 		    n=0;
 		    if(groupid)
 			ogeom->delObj(groupid);
-		    groupid=ogeom->addObj(group->clone(), streamline_name);
+		    groupid=ogeom->addObj(matlobj->clone(), streamline_name);
 		    ogeom->flushViews();
 		}
 	    }
@@ -528,7 +524,7 @@ void Streamline::execute()
 		    n=0;
 		    if(groupid)
 			ogeom->delObj(groupid);
-		    groupid=ogeom->addObj(group->clone(), streamline_name);
+		    groupid=ogeom->addObj(matlobj->clone(), streamline_name);
 		    ogeom->flushViews();
 		}
 	    }
@@ -542,7 +538,7 @@ void Streamline::execute()
 	delete group;
 	streamline_id=0;
     } else {
-	streamline_id=ogeom->addObj(group, streamline_name);
+	streamline_id=ogeom->addObj(matlobj, streamline_name);
     }
 }
 
@@ -594,10 +590,10 @@ void Streamline::geom_moved(int axis, double dist, const Vector& delta,
 	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
 	Vector v1,v2;
 	spvec.find_orthogonal(v1, v2);
-	widget_p1->get_pick()->set_principal(spvec, v1, v2);
-	widget_p2->get_pick()->set_principal(spvec, v1, v2);
-	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
-	widget_slider1->get_pick()->set_principal(spvec);
+	pick_p1->set_principal(spvec, v1, v2);
+	pick_p2->set_principal(spvec, v1, v2);
+	pick_edge1->set_principal(spvec, v1, v2);
+	pick_slider1->set_principal(spvec);
 	widget->reset_bbox();
     } else if(widgettype.get() == "Square"){
 	NOT_FINISHED("Square widget");

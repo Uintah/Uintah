@@ -25,6 +25,7 @@
 #include <Datatypes/TriSurface.h>
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 #include <Geom/Group.h>
 #include <Geom/Tri.h>
 #include <Geom/VCTri.h>
@@ -152,10 +153,12 @@ void SurfToGeom::execute()
     } else {
 	error("Unknown representation for Surface in SurfToGeom");
     }
+    GeomObj* topobj=group;
     if (surf->name == "sagital.scalp") {
-	group->set_matl(new Material(Color(0,0,0), Color(0,.6,0), 
-				     Color(.5,.5,.5), 20));
+	topobj=new GeomMaterial(group, new Material(Color(0,0,0),
+						    Color(0,.6,0), 
+						    Color(.5,.5,.5), 20));
     }
     ogeom->delAll();
-    ogeom->addObj(group, surf->name);
+    ogeom->addObj(topobj, surf->name);
 }

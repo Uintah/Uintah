@@ -19,6 +19,7 @@
 #include <Classlib/HashTable.h>
 #include <Datatypes/GeometryPort.h>
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 #include <Geom/Lighting.h>
 #include <Multitask/ITC.h>
 
@@ -77,6 +78,8 @@ public:
 
     // Lighting
     Lighting lighting;
+
+    int process_event(int block);
 };
 
 class RedrawMessage : public MessageBase {
