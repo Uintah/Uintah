@@ -42,8 +42,12 @@
     </inputs>
     <outputs>
       <port>
-        <name>Output</name>
+        <name>Output Field</name>
 	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Output Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

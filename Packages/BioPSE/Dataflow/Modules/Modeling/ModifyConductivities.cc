@@ -32,9 +32,9 @@
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Core/Geometry/Tensor.h>
 #include <sci_hash_map.h>
 #include <iostream>
 
@@ -211,7 +211,6 @@ ModifyConductivities::different_tensors(const vector<pair<string, Tensor> > &a,
 void
 ModifyConductivities::execute()
 {
-  // Read in the LatVolField<double>, clone it.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   if (!ifp) {
     error("Unable to initialize iport 'Input'.");
@@ -243,49 +242,49 @@ ModifyConductivities::execute()
     error("Unable ti initialize iport 'Tensor Matrix'.");
     return;
   }
-  MatrixHandle matrix;
-  if (imp->get(matrix) && matrix.get_rep())
+  MatrixHandle imatrix;
+  if (imp->get(imatrix) && imatrix.get_rep())
   {
     ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
     double minval, maxval;
     sfi->compute_min_max(minval, maxval);
-    if (matrix->nrows() > maxval && matrix->ncols() == 9)
+    if (imatrix->nrows() > maxval && imatrix->ncols() == 9)
     {
-      for (unsigned int i = 0; i < matrix->nrows(); i++)
+      for (unsigned int i = 0; i < imatrix->nrows(); i++)
       {
 	Tensor t;
-	t.mat_[0][0] = matrix->get(i, 0);
-	t.mat_[0][1] = matrix->get(i, 1);
-	t.mat_[0][2] = matrix->get(i, 2);
+	t.mat_[0][0] = imatrix->get(i, 0);
+	t.mat_[0][1] = imatrix->get(i, 1);
+	t.mat_[0][2] = imatrix->get(i, 2);
 
-	t.mat_[1][0] = matrix->get(i, 3);
-	t.mat_[1][1] = matrix->get(i, 4);
-	t.mat_[1][2] = matrix->get(i, 5);
+	t.mat_[1][0] = imatrix->get(i, 3);
+	t.mat_[1][1] = imatrix->get(i, 4);
+	t.mat_[1][2] = imatrix->get(i, 5);
 
-	t.mat_[2][0] = matrix->get(i, 6);
-	t.mat_[2][1] = matrix->get(i, 7);
-	t.mat_[2][2] = matrix->get(i, 8);
+	t.mat_[2][0] = imatrix->get(i, 6);
+	t.mat_[2][1] = imatrix->get(i, 7);
+	t.mat_[2][2] = imatrix->get(i, 8);
 	const string s = "matrix-row-" + to_string(i+1);
 	field_tensors.push_back(pair<string, Tensor>(s, t));
       }
       created_p = true;
     }
-    else if (matrix->nrows() == 9 && matrix->ncols() > maxval)
+    else if (imatrix->nrows() == 9 && imatrix->ncols() > maxval)
     {
-      for (unsigned int i = 0; i < matrix->ncols(); i++)
+      for (unsigned int i = 0; i < imatrix->ncols(); i++)
       {
 	Tensor t;
-	t.mat_[0][0] = matrix->get(0, i);
-	t.mat_[0][1] = matrix->get(1, i);
-	t.mat_[0][2] = matrix->get(2, i);
+	t.mat_[0][0] = imatrix->get(0, i);
+	t.mat_[0][1] = imatrix->get(1, i);
+	t.mat_[0][2] = imatrix->get(2, i);
 
-	t.mat_[1][0] = matrix->get(3, i);
-	t.mat_[1][1] = matrix->get(4, i);
-	t.mat_[1][2] = matrix->get(5, i);
+	t.mat_[1][0] = imatrix->get(3, i);
+	t.mat_[1][1] = imatrix->get(4, i);
+	t.mat_[1][2] = imatrix->get(5, i);
 
-	t.mat_[2][0] = matrix->get(6, i);
-	t.mat_[2][1] = matrix->get(7, i);
-	t.mat_[2][2] = matrix->get(8, i);
+	t.mat_[2][0] = imatrix->get(6, i);
+	t.mat_[2][1] = imatrix->get(7, i);
+	t.mat_[2][2] = imatrix->get(8, i);
 	const string s = "matrix-column-" + to_string(i+1);
 	field_tensors.push_back(pair<string, Tensor>(s, t));
       }
@@ -406,10 +405,34 @@ ModifyConductivities::execute()
     changed_table_p = true;
   }
 
-  // Forward the results.
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+  DenseMatrix *omatrix = scinew DenseMatrix(gui_tensors.size(), 9);
+  for (unsigned int j = 0; j < gui_tensors.size(); j++)
+  {
+    omatrix->put(j, 0, gui_tensors[j].second.mat_[0][0]);
+    omatrix->put(j, 1, gui_tensors[j].second.mat_[0][1]);
+    omatrix->put(j, 2, gui_tensors[j].second.mat_[0][2]);
+				  
+    omatrix->put(j, 3, gui_tensors[j].second.mat_[1][0]);
+    omatrix->put(j, 4, gui_tensors[j].second.mat_[1][1]);
+    omatrix->put(j, 5, gui_tensors[j].second.mat_[1][2]);
+				  
+    omatrix->put(j, 6, gui_tensors[j].second.mat_[2][0]);
+    omatrix->put(j, 7, gui_tensors[j].second.mat_[2][1]);
+    omatrix->put(j, 8, gui_tensors[j].second.mat_[2][2]);
+  }
+
+  // Forward the matrix results.
+  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
+  if (!omp) {
+    error("Unable to initialize " + name + "'s Output Matrix port.");
+    return;
+  }
+  omp->send(omatrix);
+
+  // Forward the field results.
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
   if (!ofp) {
-    error("Unable to initialize " + name + "'s Output port.");
+    error("Unable to initialize " + name + "'s Output Field port.");
     return;
   }
   ofp->send(field);
