@@ -480,7 +480,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	// 2 -> curve
 	mHandle = scinew CurveMesh();
 	connectivity = 2;
-	topology_ = STRUCTURED;
+	topology_ = UNSTRUCTURED;
 	geometry_ = IRREGULAR;
 	break;
       case 3:
@@ -556,15 +556,16 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	return 0;
       }
       
+      // create mesh
       const TypeDescription *mtd = mHandle->get_type_description();
       
       remark( "Creating an unstructured " + mtd->get_name() );
       
       CompileInfoHandle ci_mesh =
 	NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
-						     mtd,
-						     pointsH->nrrd->type,
-						     connectH->nrrd->type);
+					      mtd,
+					      pointsH->nrrd->type,
+					      connectH->nrrd->type);
       
       Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
       
@@ -595,12 +596,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    return 0;
 	  }
 	}
-	
+
 	if (nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
 	  offset = 1;
 	}
 	Nrrd* data = dataH->nrrd;
 	int dim = data->dim - offset;
+
 	if (dim == 1) {
 	  // data 1D ask if point cloud or structcurvemesh
 	  if (struct_unstruct == "PointCloud") {
@@ -674,6 +676,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	    } else {
 	      warning("Unable to determine if creating Point Cloud or Struct Curve. Defaulting to Point Cloud");
 	      mHandle = scinew PointCloudMesh();
+	      topology_ = UNSTRUCTURED;
 	      connectivity = 0;
 	    }
 	  } 
@@ -716,25 +719,47 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	}
 
 	// create mesh
-	const TypeDescription *mtd = mHandle->get_type_description();
-	
-	remark( "Creating a structured " + mtd->get_name() );
-	
-	CompileInfoHandle ci_mesh =
-	  NrrdToFieldMeshAlgo::get_compile_info( "Structured",
-							mtd,
-							pointsH->nrrd->type,
-							pointsH->nrrd->type);
-	
-	Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
-	
-	if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
-
-	int data_size = 1;
-	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1)
-	  data_size = dataH->nrrd->axis[0].size;
-	
-	algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
+	if (topology_ == UNSTRUCTURED) {
+	  // This would only get here for point clouds with no connectivity
+	  const TypeDescription *mtd = mHandle->get_type_description();
+	  
+	  remark( "Creating an unstructured " + mtd->get_name() );
+	  
+	  CompileInfoHandle ci_mesh =
+	    NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
+						  mtd,
+						  pointsH->nrrd->type,
+						  dataH->nrrd->type);
+	  
+	  Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
+	  
+	  if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
+	  
+	  //algo_mesh->execute(mHandle, pointsH, connectH, connectivity, data_size);
+	  int connectivity = 0;
+	  int which = 0;
+	  algo_mesh->execute(mHandle, pointsH, connectH, connectivity, which);
+	} else {
+	  const TypeDescription *mtd = mHandle->get_type_description();
+	  
+	  remark( "Creating a structured " + mtd->get_name() );
+	  
+	  CompileInfoHandle ci_mesh =
+	    NrrdToFieldMeshAlgo::get_compile_info( "Structured",
+						   mtd,
+						   pointsH->nrrd->type,
+						   pointsH->nrrd->type);
+	  
+	  Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
+	  
+	  if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
+	  
+	  int data_size = 1;
+	  if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1)
+	    data_size = dataH->nrrd->axis[0].size;
+	  
+	  algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
+	}
       } else {
 	int non_scalar_data = 0;
 	if (has_data_ && nrrdKindSize(dataH->nrrd->axis[0].kind) > 1) {
@@ -887,14 +912,20 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 		      // Struct Curve
 		      mHandle = scinew StructCurveMesh( points->axis[1].size );
 		      idim = points->axis[1].size;
-		    } 
+		    }
+		    else {
+		      mHandle = scinew PointCloudMesh();
+		      topology_ = UNSTRUCTURED;
+		    }
 		  } else {
-		    // Struct Curve Mesh
-		    mHandle = scinew StructCurveMesh( points->axis[1].size );
-		    idim = points->axis[1].size;
+		    mHandle = scinew PointCloudMesh();
+		    topology_ = UNSTRUCTURED;
 		  }
 		}
 	      }
+	    } else {
+	      mHandle = scinew PointCloudMesh();
+	      topology_ = UNSTRUCTURED;
 	    }
 	  }
 	} else if (pointsH->nrrd->dim == 3) {
@@ -917,21 +948,43 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  return 0;
 	}
 	// create mesh
-	const TypeDescription *mtd = mHandle->get_type_description();
-	
-	remark( "Creating a structured " + mtd->get_name() );
-	
-	CompileInfoHandle ci_mesh =
-	  NrrdToFieldMeshAlgo::get_compile_info( "Structured",
-							mtd,
-							pointsH->nrrd->type,
-							pointsH->nrrd->type);
-	
-	Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
-	
-	if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
-
-	algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
+	if (topology_ == UNSTRUCTURED) {
+	  // this would only get here for Point Clouds with no connectivity
+	  const TypeDescription *mtd = mHandle->get_type_description();
+	  
+	  remark( "Creating an unstructured " + mtd->get_name() );
+	  
+	  CompileInfoHandle ci_mesh =
+	    NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
+						  mtd,
+						  pointsH->nrrd->type,
+						  pointsH->nrrd->type);
+	  
+	  Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
+	  
+	  if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
+	  
+	  //algo_mesh->execute(mHandle, pointsH, connectH, connectivity, data_size);
+	  int connectivity = 0;
+	  int which = 0;
+	  algo_mesh->execute(mHandle, pointsH, connectH, connectivity, which);
+	} else {
+	  const TypeDescription *mtd = mHandle->get_type_description();
+	  
+	  remark( "Creating a structured " + mtd->get_name() );
+	  
+	  CompileInfoHandle ci_mesh =
+	    NrrdToFieldMeshAlgo::get_compile_info( "Structured",
+						   mtd,
+						   pointsH->nrrd->type,
+						   pointsH->nrrd->type);
+	  
+	  Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
+	  
+	  if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
+	  
+	  algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
+	}
       } else {
 	// no data given
 	error("Not enough information given to create a Field.");
