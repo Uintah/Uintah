@@ -1015,7 +1015,6 @@ itcl_class ViewWindow {
 	$menun add checkbutton -label "Display List" -variable $this-$objid-dl\
 		-command "$this-c redraw"
 	$menun add separator
-	$menun add radiobutton -label Default -variable $this-$objid-type
 	$menun add radiobutton -label Wire -variable $this-$objid-type
 	$menun add radiobutton -label Flat -variable $this-$objid-type
 	$menun add radiobutton -label Gouraud -variable $this-$objid-type
@@ -1027,7 +1026,7 @@ itcl_class ViewWindow {
 	global "$this-$objid-cull"
 	global "$this-$objid-dl"
 
-	set "$this-$objid-type" Default
+	set "$this-$objid-type" Gouraud
 	set "$this-$objid-light" 1
 	set "$this-$objid-fog" 0
 	set "$this-$objid-debug" 0
