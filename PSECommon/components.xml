@@ -1719,6 +1719,23 @@
   </dataflow-component>
 
 
+  <dataflow-component name="IsoSurfaceSAGE">
+    <meta>
+      <authors>
+        <author>Yarden Livnat</author>
+      </authors>
+      <version-date>July 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_IsoSurfaceSAGE</creationFunction>
+    </implementation>
+  </dataflow-component>
+
   <dataflow-component name="GenTransferFunc">
     <meta>
       <authors>
