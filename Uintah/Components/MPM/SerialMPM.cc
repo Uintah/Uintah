@@ -934,6 +934,42 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 }
       }
 
+      // Apply grid boundary conditions to the velocity
+      // before storing the data
+
+      //      cout << "Patch id = " << patch->getID() << endl;
+      for(Patch::FaceType face = Patch::startFace;
+	face <= Patch::endFace; face=Patch::nextFace(face)){
+	vector<BoundCond* > bcs;
+	bcs = patch->getBCValues(face);
+	//cout << "number of bcs on face " << face << " = " 
+	//	     << bcs.size() << endl;
+
+	for (int i = 0; i<(int)bcs.size(); i++ ) {
+	  string bcs_type = bcs[i]->getType();
+	  if (bcs_type == "Kinematic") {
+	    KinematicBoundCond* bc = 
+	      dynamic_cast<KinematicBoundCond*>(bcs[i]);
+	    //	    cout << "bc value = " << bc->getVelocity() << endl;
+	    gvelocity.fillFace(face,bc->getVelocity());
+	  }
+	  if (bcs_type == "Symmetric") {
+	    SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	     gvelocity.fillFaceNormal(face);
+	  }
+	  if (bcs_type == "Temperature") {
+	   // TempThermalBoundCond* bc = 
+	    //  dynamic_cast<TempThermalBoundCond*>(bcs[i]);
+	    //cout << "bc value = " << bc->getTemp() << endl;
+	  }
+	  if (bcs_type == "Flux") {
+	   // FluxThermalBoundCond* bc = 
+	    //  dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	    //cout << "bc value = " << bc->getFlux() << endl;
+	  }
+	}
+      }
+
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 //	 if(gmass[*iter] != 0.0){
@@ -1613,6 +1649,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.118  2000/08/19 03:20:17  tan
+// Fix a fault by my misdeleting the code on boundary conditions in function
+// interpolateParticlesToGrid.
+//
 // Revision 1.117  2000/08/19 01:04:56  guilkey
 // Fixed the calculation of kinetic energy for multiple materials.
 //
