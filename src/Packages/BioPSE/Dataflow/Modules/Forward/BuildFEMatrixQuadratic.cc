@@ -250,13 +250,11 @@ void BuildFEMatrixQuadratic::parallel(int proc)
     //qtvm_->compute_nodes();
   }
 
-
   QuadraticTetVolMesh::Node::size_type nnodes;
   qtvm_->size(nnodes);
   int start_node=nnodes*proc/np; 
   int end_node=nnodes*(proc+1)/np; 
   //int ndof=end_node-start_node;
-
 
   int r=start_node;
   int i;
@@ -268,7 +266,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
     if((bcArray[i] && DirSub) || (i==refnode && PinZero)) {
       mycols.push_back(i); // Just a diagonal term
     } else if (i==refnode && AverageGround) { // 1's all across
-      for (int ii=0; ii<nnodes; ii++) 
+      for (unsigned int ii=0; ii<nnodes; ii++) 
 	mycols.push_back(ii);
     } /*else if (qtvm_->nodes[i]->pdBC && DirSub) {
       int nd=qtvm_->nodes[i]->pdBC->diffNode;
@@ -390,7 +388,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
       }
       (*rhs)[i]=qtvm_->nodes[i]->pdBC->diffVal;
       } */else if (AverageGround && i==refnode) {
-      for (int ii=rows[i]; ii<rows[i]+nnodes; ii++)
+      for (unsigned int ii=rows[i]; ii<rows[i]+nnodes; ii++)
 	a[ii]=1;
     }
   }
