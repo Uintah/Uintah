@@ -714,11 +714,14 @@ void Viewer::flushPort(int portid)
   {
     if (regression_testing_flag)
     {
+      geomlock_.writeUnlock();
       for (i = 0; i < view_window_.size(); i++)
       {
 	const string name = string("snapshot") + to_string(i) + ".ppm";
+	view_window_[i]->redraw_if_needed();
 	view_window_[i]->current_renderer->saveImage(name, "ppm", 640, 512);
       }
+      geomlock_.writeLock();
     }
 
     for (i = 0; i < syncronized_map_.size(); i++)
