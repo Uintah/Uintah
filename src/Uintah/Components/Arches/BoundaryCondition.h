@@ -430,6 +430,12 @@ private:
       const VarLabel* d_wVelNonLinSrcLabel;
       const VarLabel* d_presCoefLabel;
 
+      // Labels for data computed by setProfile()
+      const VarLabel* d_densitySPLabel;
+      const VarLabel* d_uVelocitySPLabel;
+      const VarLabel* d_vVelocitySPLabel;
+      const VarLabel* d_wVelocitySPLabel;
+
 }; // End of class BoundaryCondition
 } // End namespace ArchesSpace
 } // End namespace Uintah
@@ -437,6 +443,10 @@ private:
   
 //
 // $Log$
+// Revision 1.23  2000/06/16 21:50:47  bbanerje
+// Changed the Varlabels so that sequence in understood in init stage.
+// First cycle detected in task graph.
+//
 // Revision 1.22  2000/06/16 04:25:39  bbanerje
 // Uncommented BoundaryCondition related stuff.
 //

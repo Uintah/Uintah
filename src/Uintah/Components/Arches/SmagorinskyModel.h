@@ -134,13 +134,21 @@ private:
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
 
-      // const VarLabel* variables
+      // Labels that have to be changed
       const VarLabel* d_uVelocityLabel;
       const VarLabel* d_vVelocityLabel;
       const VarLabel* d_wVelocityLabel;
       const VarLabel* d_densityLabel;
+
+      // const VarLabel* variables
+      const VarLabel* d_uVelocitySPLabel;
+      const VarLabel* d_vVelocitySPLabel;
+      const VarLabel* d_wVelocitySPLabel;
+      const VarLabel* d_densityCPLabel;
       const VarLabel* d_viscosityLabel;
       const VarLabel* d_cellTypeLabel;
+
+      const VarLabel* d_viscosityCTSLabel;
       const VarLabel* d_uLinSrcLabel;
       const VarLabel* d_vLinSrcLabel;
       const VarLabel* d_wLinSrcLabel;

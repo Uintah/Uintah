@@ -211,8 +211,11 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
   }
+  // Set the profile (output Varlabel have SP appended to them)
   d_boundaryCondition->sched_setProfile(level, sched, dw, dw);
+  // Compute props (output Varlabel have CP appended to them)
   d_props->sched_computeProps(level, sched, dw, dw);
+  // Compute Turb subscale model (output Varlabel have CTS appended to them)
   d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
   d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
@@ -358,6 +361,10 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.40  2000/06/16 21:50:47  bbanerje
+// Changed the Varlabels so that sequence in understood in init stage.
+// First cycle detected in task graph.
+//
 // Revision 1.39  2000/06/16 07:06:16  bbanerje
 // Added init of props, pressure bcs and turbulence model in Arches.cc
 // Changed duplicate task names (setProfile) in BoundaryCondition.cc
