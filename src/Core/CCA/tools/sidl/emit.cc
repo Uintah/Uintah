@@ -1317,7 +1317,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  _refL = _rm->getAllReferences();\n";
     e.out << "  iter = _refL->begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL->size(); i++, iter++) {\n";
-    e.out << "    msgs[i] = (*iter).chan->getMessage();\n";
+    e.out << "    msgs[i] = (*iter)->chan->getMessage();\n";
     e.out << "    ::SCIRun::Message* message = msgs[i];\n";
     e.out << "    message->createMessage();\n";
     e.out << "    //Marshal distribution name\n";
