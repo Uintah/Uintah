@@ -49,6 +49,9 @@ int main(int argc, char** argv)
 	}
 	int i1, i2, i3;
 	tfile >> i1 >> i2 >> i3;
+	i1--; // Fortran people...
+	i2--;
+	i3--;	
 	if(pointnum[i1]==-1){
 	    surf->add_point(points[i1]);
 	    pointnum[i1]=pointno++;
