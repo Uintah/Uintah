@@ -205,8 +205,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
 					0.0));
 	      cm->members.add(new InvisibleMaterial);
 	      cm->members.add(new PhongMaterial(Color(diffuse), 0.3, 0.3,
-						(int)(token->GetShine()*1000),
-						true));
+						(int)(token->GetShine()*1000)));
 	      ase_matls[token->GetIndex()] = cm;
 	    } else {
 	      ase_matls[token->GetIndex()] = 
@@ -219,7 +218,7 @@ rtrt::readASEFile(const string fname, const Transform t, Group *objgroup,
             ase_matls[token->GetIndex()] = 
 #if 1
               new PhongMaterial(Color(diffuse),1.-token->GetTransparency(),
-                                .3,token->GetShine()*1000,true);
+                                .3,token->GetShine()*1000);
 #else
               new DielectricMaterial(1.,
                                      1.,
