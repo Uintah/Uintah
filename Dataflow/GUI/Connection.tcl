@@ -543,7 +543,7 @@ proc findModulesToInsertOnConnection { conn } {
 	    lappend modules "$maybe $onum $inum"
 	}
     }
-    return $modules
+    return [lsort -command moduleCompareCommand $modules]
 }
 
 

@@ -1545,6 +1545,29 @@ proc moduleDuplicate { module } {
 
 }
 
+
+# moduleCompareCommand compares two module lists {package category module} and
+# returns -1, 0, or 1  if the mod1 is considered 
+# less than, equal to, or greater than mod2, respectively.
+# Handles the configure specific sorting of SCIRun packages
+proc moduleCompareCommand { mod1 mod2 } {
+    set packages [split [netedit getenv SCIRUN_LOAD_PACKAGE] ,]
+    set mod1p [lsearch $packages [lindex $mod1 0]]
+    set mod2p [lsearch $packages [lindex $mod2 0]]
+    if { $mod1p == -1 || $mod2p == -1 } {
+	puts "ERROR in moduleCompareCommand, package not found"
+	return -1;
+    }
+    
+    if { $mod1p < $mod2p } { 
+	return -1 
+    } elseif { $mod1p > $mod2p } { 
+	return 1
+    }
+
+    return [string compare -nocase [lrange $mod1 1 2] [lrange $mod2 1 2]]
+}
+
 proc findModuleReplacements { module } {
     global Subnet ModuleIPorts ModuleOPorts
 
@@ -1590,7 +1613,7 @@ proc findModuleReplacements { module } {
 
     #TODO: SUBNETS
 
-    return $candidates
+    return [lsort -command moduleCompareCommand $candidates]
 }
 
 
