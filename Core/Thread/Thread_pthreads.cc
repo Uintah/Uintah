@@ -544,6 +544,12 @@ Thread::allow_sgi_OpenGL_page0_sillyness()
 }
 
 void
+Thread::disallow_sgi_OpenGL_page0_sillyness()
+{
+  // Nothing necessary here
+}
+
+void
 Thread::initialize()
 {
   if(initialized)
