@@ -43,7 +43,7 @@ using std::endl;
 using namespace SCIRun;
 
 int readLine(FILE **f, char *buf) {
-    char c;
+    char c = 0;
     int cnt=0;
     do {
       if(!feof(*f) && ((c=fgetc(*f))=='#')) {
