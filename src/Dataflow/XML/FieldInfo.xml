@@ -52,10 +52,13 @@
 	Field Attributes displayed:
       </p>
       <p>
-	Name - The Field Name. May be blank.
+	Name - The Field name. May be blank.
       </p>
       <p>
-	Typeneame - The C++ typename of the input Field Type.
+	Generation - The Field internal object id.
+      </p>
+      <p>
+	Typename - The C++ typename of the input Field Type.
       </p>
       <p>
 	Center - The X,Y,Z coordinates of the average center of the

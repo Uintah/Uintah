@@ -33,14 +33,8 @@
 #ifndef Datatypes_QuadraticTetVolField_h
 #define Datatypes_QuadraticTetVolField_h
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/QuadraticTetVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Geometry/Tensor.h>
-#include <Core/Util/Assert.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -221,7 +215,7 @@ QuadraticTetVolField<T>::get_type_description(int n) const
 template <class T>
 bool QuadraticTetVolField<T>::get_gradient(Vector &g, Point &p) {
   QuadraticTetVolMesh::Cell::index_type ci;
-  if (mesh_->locate(ci, p)) {
+  if (this->mesh_->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
   } else {
@@ -240,26 +234,26 @@ template <class T>
 Vector QuadraticTetVolField<T>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(basis_order() == 1);
+  ASSERT(this->basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   QuadraticTetVolMesh::Node::array_type nodes;
-  mesh_->get_nodes(nodes, ci);
+  this->mesh_->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3, gb4, gb5, gb6, gb7, gb8, gb9;
 
   // get basis at the cell center...
   Point center;
-  mesh_->get_center(center, ci);
-  mesh_->get_gradient_basis(ci, center, gb0, gb1, gb2, gb3, gb4, 
-			    gb5, gb6, gb7, gb8, gb9);
+  this->mesh_->get_center(center, ci);
+  this->mesh_->get_gradient_basis(ci, center, gb0, gb1, gb2, gb3, gb4, 
+				  gb5, gb6, gb7, gb8, gb9);
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work
-  return Vector(gb0 * value(nodes[0]) + gb1 * value(nodes[1]) + 
-		gb2 * value(nodes[2]) + gb3 * value(nodes[3]) +
-		gb4 * value(nodes[4]) + gb5 * value(nodes[5]) +
-		gb6 * value(nodes[6]) + gb7 * value(nodes[7]) +
-		gb8 * value(nodes[8]) + gb9 * value(nodes[9]));
+  return Vector(gb0 * this->value(nodes[0]) + gb1 * this->value(nodes[1]) + 
+		gb2 * this->value(nodes[2]) + gb3 * this->value(nodes[3]) +
+		gb4 * this->value(nodes[4]) + gb5 * this->value(nodes[5]) +
+		gb6 * this->value(nodes[6]) + gb7 * this->value(nodes[7]) +
+		gb8 * this->value(nodes[8]) + gb9 * this->value(nodes[9]));
 }
 
 

@@ -66,11 +66,11 @@
 	Widget Port (the middle output port) to the viewer window.
       </p>
       <p>	
-	To move the widget: Shift+RightClick on the edges of the widget
+	To move the widget: Shift+LeftClick on the edges of the widget
 	frame and move the transformation box around.
       </p>
       <p>
-	To scale the widget:  Shift+RightClick on the spheres located on
+	To scale the widget:  Shift+LeftClick on the spheres located on
 	each face of the widget and drag.  This will scale the output
 	field in a direction normal to the face the sphere is located
 	on.

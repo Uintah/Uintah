@@ -1,4 +1,4 @@
-<?xml version="1.0"?> <!-- -*- nxml -*- -->
+<?xml version="1.0" encoding="utf-8"?>
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -32,6 +32,9 @@
      docbook-chunk.xsl --> 
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+
+  <!-- Include xref gen text customizations. -->
+  <xsl:param name="local.l10n.xml" select="document('srgentext.xml')"/>
 
   <!-- treetop is relative path to top of sr tree -->
   <xsl:param name="treetop"/>

@@ -101,18 +101,7 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
 			       int which, unsigned int time_axis, bool cache)
 {
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
-
-  if (!onrrd) {
-    error("Unable to initialize oport 'Time Slice'.");
-    return;
-  }
-
   MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
-  if (!osel) {
-    error("Unable to initialize oport 'Selected Index'.");
-    return;
-  }
-
   NrrdDataHandle onrrd_handle(0);
 
   // do the slice
@@ -188,10 +177,6 @@ NrrdSelectTime::execute()
   update_state(NeedData);
 
   NrrdIPort *inrrd = (NrrdIPort *)get_iport("Time Axis nrrd");
-  if (!inrrd) {
-    error("Unable to initialize iport 'Time Axis nrrd'.");
-    return;
-  }
   NrrdDataHandle nrrd_handle;
   if (!(inrrd->get(nrrd_handle) && nrrd_handle.get_rep()))
   {
@@ -215,9 +200,8 @@ NrrdSelectTime::execute()
   
   if (time_axis == -1) {
     warning("This nrrd has no time axis (Must be labeled 'Time')");
-    warning("Using the first axis as the time axis.");
-    time_axis = 0;
-    //    return;
+    warning("Using the last axis as the time axis.");
+    time_axis = nrrd_handle->nrrd->dim - 1;
   }
 
   if (nrrd_handle->generation != last_input_)
@@ -234,13 +218,7 @@ NrrdSelectTime::execute()
 
   // If there is a current index matrix, use it.
   MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
-  if (!icur) {
-    error("Unable to initialize iport 'Current Index'.");
-    return;
-  }
-
   MatrixHandle currentH;
-
   if (icur->get(currentH) && currentH.get_rep()) {
     which = (int) (currentH->get(0, 0));
     send_selection(nrrd_handle, which, time_axis, true);

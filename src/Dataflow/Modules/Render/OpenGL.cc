@@ -47,9 +47,9 @@
 #include <sci_defs/bits_defs.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
-#include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <sci_values.h>
 
 #ifdef HAVE_MAGICK
@@ -62,7 +62,6 @@ namespace C_Magick {
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
 namespace SCIRun {
@@ -106,17 +105,19 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   make_MPEG_p_(false),
   current_movie_frame_(0),
   movie_name_("./movie.%04d"),
+  tk_gl_context_(0),
+  old_tk_gl_context_(0),
+  myname_("Not Intialized"),
+#ifdef __APPLE__
+  apple_wait_a_second_(false),
+#endif
   // private member variables
   gui_(gui),
   helper_(0),
   helper_thread_(0),
-  tkwin_(0),
-  x11_dpy_(0),
-  myname_("INVAID"),
   viewer_(viewer),
   view_window_(vw),
   drawinfo_(scinew DrawInfoOpenGL),
-  x11_visuals_(),
   have_pbuffer_(false),
   dead_(false),
   do_hi_res_(false),
@@ -168,17 +169,7 @@ OpenGL::~OpenGL()
   delete drawinfo_;
   drawinfo_ = 0;
 
-  gui_->lock();
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
-				      Tk_MainWindow(the_interp));
-  if(!new_tkwin)
-  {
-    cerr << "Unable to locate window!\n";
-    gui_->unlock();
-    return;
-  }
-  glXMakeCurrent(Tk_Display(new_tkwin), None, NULL);
-  gui_->unlock();
+  if (tk_gl_context_) { delete tk_gl_context_; }
 
   if (pbuffer_) { delete pbuffer_; }
 }
@@ -220,18 +211,31 @@ OpenGL::redraw(double _tbeg, double _tend, int _nframes, double _framerate)
   animate_time_end_=_tend;
   animate_num_frames_=_nframes;
   animate_framerate_=_framerate;
-  // This is the first redraw - if there is not an OpenGL thread,
-  // start one...
-  if(!helper_)
-  {
-    helper_=new OpenGLHelper(this);
-    helper_thread_ = new Thread(helper_, string("OpenGL: "+myname_).c_str());
-  }
   send_mailbox_.send(DO_REDRAW);
   int rc=recv_mailbox_.receive();
   if(rc != REDRAW_DONE)
   {
     cerr << "Wanted redraw_done, but got: " << rc << "\n";
+  }
+}
+
+void
+OpenGL::start_helper()
+{
+  // This is the first redraw - if there is not an OpenGL thread,
+  // start one...
+
+#ifdef __APPLE__  
+  apple_wait_a_second_ = true;
+#endif
+  if(!helper_)
+  {
+    helper_=new OpenGLHelper(this);
+    helper_thread_ = new Thread(helper_, 
+				string("OpenGL: "+myname_).c_str(),
+				0, Thread::NotActivated);
+    helper_thread_->setStackSize(1024*1024);
+    helper_thread_->activate(false);
   }
 }
 
@@ -406,10 +410,17 @@ OpenGL::redraw_loop()
       render_and_save_image(resx,resy,fname,ftype);
       do_hi_res_=false;
     }
+#ifdef __APPLE__
+    while (apple_wait_a_second_) { 
+      apple_wait_a_second_=false; 
+      sleep(1);
+    }
+#endif
     redraw_frame();
     for(int i=0;i<nreply;i++) {
       recv_mailbox_.send(REDRAW_DONE);
     }
+    view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
   } // end for(;;)
 }
 
@@ -436,16 +447,20 @@ OpenGL::render_and_save_image(int x, int y,
   // Don't need to raise if using pbuffer.
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
-  Tk_RestackWindow(tkwin_,Above,NULL);
+  if (tk_gl_context_)
+    Tk_RestackWindow(tk_gl_context_->tkwin_,Above,NULL);
 #endif
 
   gui_->lock();
+
   // Make sure our GL context is current
-  if(current_drawer != this)
+  if(current_drawer != this || tk_gl_context_ != old_tk_gl_context_) 
   {
+    old_tk_gl_context_ = tk_gl_context_;
+    tk_gl_context_->make_current();
     current_drawer=this;
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
   }
+
   deriveFrustum();
 
   // Get Viewport dimensions
@@ -508,10 +523,7 @@ OpenGL::render_and_save_image(int x, int y,
     scinew unsigned char[hi_res_.resx*vp[3]*pix_size];
 
   // Start writing image_file
-  static unsigned char* tmp_row = 0;
-  if (!tmp_row )
-    tmp_row = scinew unsigned char[hi_res_.resx*pix_size];
-
+  unsigned char* tmp_row = scinew unsigned char[hi_res_.resx*pix_size];
 
   for (hi_res_.row = nrows - 1; hi_res_.row >= 0; --hi_res_.row)
   {
@@ -604,79 +616,64 @@ OpenGL::render_and_save_image(int x, int y,
 
   gui_->unlock();
 
-  if (tmp_row)
-  {
-    delete[] tmp_row;
-    tmp_row = 0;
-  }
+  delete[] tmp_row;
 
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
-    Thread::exitAll(0);
+    static int regressioncounter = 1;
+    regressioncounter--;
+    if (regressioncounter <= 0)
+    {
+      std::cout.flush();
+      std::cerr.flush();
+      Thread::exitAll(0);
+    }
+    else
+    {
+      gui_->execute("updateRunDateAndTime 0; netedit scheduleall");
+    }
   }
-}
+} // end render_and_save_image()
 
 
 void
 OpenGL::redraw_frame()
 {
   if (dead_) return;
+  if (!tk_gl_context_) return;
   gui_->lock();
   if (dead_) { // ViewWindow was deleted from gui_
     gui_->unlock(); 
     return;
   }
-  Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
-				      Tk_MainWindow(the_interp));
-  if(!new_tkwin)
+  // Make sure our GL context is current
+  if((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_)) 
   {
-    cerr << "Unable to locate window!\n";
-    gui_->unlock();
-    return;
-  }
-  if(tkwin_ != new_tkwin)
-  {
-    tkwin_=new_tkwin;
-    x11_dpy_=Tk_Display(tkwin_);
-    x11_win_=Tk_WindowId(tkwin_);
-    // Race condition,  create context before the window is done.
-    while (x11_win_==0)
-    {
-      gui_->unlock();
-      Thread::yield();
-      gui_->lock();
-      x11_win_ = Tk_WindowId(tkwin_);
-    }
-    x11_gl_context_=OpenGLGetContext(the_interp, ccast_unsafe(myname_));
-    if(!x11_gl_context_)
-    {
-      cerr << "Unable to create OpenGL Context!\n";
-      gui_->unlock();
-      return;
-    }
-    //cerr << "The next line will crash!: " << (unsigned int)x11_dpy_ <<  ", " 
-    //	 << (unsigned int)x11_win_ << ", " << (unsigned int)x11_gl_context_ 
-    //	 << std::endl;
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    //    cerr << "See! it crashed";
-    glXWaitX();
-#if defined(HAVE_GLEW)
-    sci_glew_init();
-#endif
     current_drawer=this;
-    GLint data[1];
-    glGetIntegerv(GL_MAX_LIGHTS, data);
-    max_gl_lights_=data[0];
-    // Look for multisample extension...
-#ifdef __sgi
-    if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
-    {
-      cerr << "Enabling multisampling...\n";
-      glEnable(GL_MULTISAMPLE_SGIS);
-      glSamplePatternSGIS(GL_1PASS_SGIS);
-    }
+    tk_gl_context_->make_current();
+    if (tk_gl_context_ != old_tk_gl_context_) {
+      old_tk_gl_context_ = tk_gl_context_;
+#if defined(HAVE_GLEW)
+      sci_glew_init();
 #endif
+      GLint data[1];
+      glGetIntegerv(GL_MAX_LIGHTS, data);
+      max_gl_lights_=data[0];
+      // Look for multisample extension...
+#ifdef __sgi
+      if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
+      {
+	cerr << "Enabling multisampling...\n";
+	glEnable(GL_MULTISAMPLE_SGIS);
+	glSamplePatternSGIS(GL_1PASS_SGIS);
+      }
+#endif
+    }
   }
+
+  // Get the window size
+  xres_ = tk_gl_context_->width();
+  yres_ = tk_gl_context_->height();
 
   gui_->unlock();
 
@@ -685,45 +682,37 @@ OpenGL::redraw_frame()
   timer.clear();
   timer.start();
 
-  // Get the window size
-  xres_=Tk_Width(tkwin_);
-  yres_=Tk_Height(tkwin_);
-
-  // Make ourselves current
-  if(current_drawer != this)
-  {
-    current_drawer=this;
-    gui_->lock();
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    gui_->unlock();
-  }
-  // Set up a pbuffer associated with x11_dpy_
+  // Set up a pbuffer associated with tk_gl_context_
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
   viewer_->geomlock_.readLock();
 
   gui_->lock();
 #if defined(HAVE_PBUFFER)
-  int screen = Tk_ScreenNumber(tkwin_);
-  if( xres_ != pbuffer_->width() || yres_ != pbuffer_->height() ){
-    //cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
-    pbuffer_->destroy();
-    if( !pbuffer_->create( x11_dpy_, screen, x11_gl_context_,
-			   xres_, yres_, 8, 8 ) )
+  if (doing_movie_p_ || doing_image_p_)
+  {
+    if (xres_ != pbuffer_->width() || yres_ != pbuffer_->height())
     {
-      //  printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
-    } else
-    {
-      have_pbuffer_ = true;
+      cerr << "creating new pbuffer: w = "<<xres_<<", h = "<<yres_<<"\n";
+      pbuffer_->destroy();
+      if (pbuffer_->create(tk_gl_context_->display_, 
+			   tk_gl_context_->screen_number_,
+			   tk_gl_context_->context_,
+      			   xres_, yres_, 8, 8))
+      {
+      	have_pbuffer_ = true;
+      }
     }
   }
 
-  if((doing_movie_p_ || doing_image_p_) && 
-     pbuffer_->is_valid()){
+  if ((doing_movie_p_ || doing_image_p_) && pbuffer_->is_valid())
+  {
     pbuffer_->makeCurrent();
     glDrawBuffer( GL_FRONT );
-  } else if( have_pbuffer_ && pbuffer_->is_current() ) {
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+  }
+  else if (have_pbuffer_ && pbuffer_->is_current())
+  {
+    tk_gl_context_->make_current();
   }
 #endif
 
@@ -742,6 +731,22 @@ OpenGL::redraw_frame()
   drawinfo_->reset();
 
   int do_stereo=view_window_->gui_do_stereo_.get();
+  if (do_stereo)
+  {
+    GLboolean supported;
+    glGetBooleanv(GL_STEREO, &supported);
+    if (!supported)
+    {
+      do_stereo = false;
+      static bool warnonce = true;
+      if (warnonce)
+      {
+        cout << "Stereo display selected but not supported.\n";
+        warnonce = false;
+      }
+    }
+  }
+
   drawinfo_->ambient_scale_ = view_window_->gui_ambient_scale_.get();
   drawinfo_->diffuse_scale_ = view_window_->gui_diffuse_scale_.get();
   drawinfo_->specular_scale_ = view_window_->gui_specular_scale_.get();
@@ -770,9 +775,9 @@ OpenGL::redraw_frame()
     CHECK_OPENGL_ERROR("after setting up the graphics state: ")
 
 #if defined(HAVE_PBUFFER)
-    if( pbuffer_->is_current() &&
-	(!doing_movie_p_ && !doing_image_p_) ){
-      glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
+    if (pbuffer_->is_current() && (!doing_movie_p_ && !doing_image_p_))
+    {
+      tk_gl_context_->make_current();
     }
 #endif
     // Do the redraw loop for each time value
@@ -806,17 +811,23 @@ OpenGL::redraw_frame()
 	else
 	{
 #if defined(HAVE_PBUFFER)
-	  if(have_pbuffer_){
-	    if(!doing_movie_p_ && !doing_image_p_){
-	      if( pbuffer_->is_current() )
+	  if (have_pbuffer_)
+	  {
+	    if (!doing_movie_p_ && !doing_image_p_)
+	    {
+	      if (pbuffer_->is_current())
                 cerr<<"pbuffer is current while not doing Movie\n";
 #endif
-	    glDrawBuffer(GL_BACK);
+	      glDrawBuffer(GL_BACK);
 #if defined(HAVE_PBUFFER)
-	    } else {
-	    glDrawBuffer(GL_FRONT);
 	    }
-	  } else {
+	    else
+	    {
+	      glDrawBuffer(GL_FRONT);
+	    }
+	  }
+	  else
+	  {
 	    glDrawBuffer(GL_BACK);
 	  }
 #endif	
@@ -962,13 +973,13 @@ OpenGL::redraw_frame()
       }
       //gui->lock();
       gui_->execute("update idletasks");
+      view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ ||
-	  (!doing_movie_p_ && !doing_image_p_) )
+      if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
-	glXSwapBuffers(x11_dpy_, x11_win_);
+	tk_gl_context_->swap();
     }
     throttle.stop();
     double fps;
@@ -978,9 +989,9 @@ OpenGL::redraw_frame()
       fps=animate_num_frames_;
     //int fps_whole=(int)fps;
     //int fps_hund=(int)((fps-fps_whole)*100);
-    ostringstream str;
+    //ostringstream str;
     // str << view_window_->id << " setFrameRate "<<fps_whole<<"."<< fps_hund;
-    gui_->execute(str.str());
+    //gui_->execute(str.str());
     view_window_->set_current_time(animate_time_end_);
   }
   else
@@ -990,9 +1001,9 @@ OpenGL::redraw_frame()
 	
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #if defined(HAVE_PBUFFER)
-      if( !have_pbuffer_ || (!doing_movie_p_ && !doing_image_p_))
+      if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
-    glXSwapBuffers(x11_dpy_, x11_win_);
+	tk_gl_context_->swap();
   }
 
   viewer_->geomlock_.readUnlock();
@@ -1046,10 +1057,7 @@ OpenGL::redraw_frame()
     //      cerr << "Saving a movie!\n";
     if(make_MPEG_p_ ) {
 
-      if(encoding_mpeg_) {
-	AddMpegFrame();
-      } else {
-
+      if(!encoding_mpeg_) {
 	string fname = movie_name_;
 
 	// only add extension if not allready there
@@ -1069,16 +1077,31 @@ OpenGL::redraw_frame()
         //}
 
 	if( fname.find("%") != std::string::npos ) {
-	  cerr << "Remove the C Style format for the frames." << std::endl;
-	  cerr << "The format should be of the form: 'my_movie'" << std::endl;
+	  string message = "Bad Format - Remove the Frame Format.";
+	  view_window_->setMessage( message );
+	  view_window_->setMovie( 0 );
+
 	} else {
-	  cerr << "Dumping mpeg " << fname << std::endl;
+	  string message = "Dumping mpeg " + fname;
+	  view_window_->setMessage( message );
 
 	  StartMpeg( fname );
-	  AddMpegFrame();
 
+	  current_movie_frame_ = 0;
 	  encoding_mpeg_ = true;
 	}
+      }
+
+      if(encoding_mpeg_) {
+
+	string message = "Adding Mpeg Frame " + to_string( current_movie_frame_ );
+	view_window_->setMessage( message );
+
+	view_window_->setMovieFrame(current_movie_frame_);
+	AddMpegFrame();
+
+	current_movie_frame_++;
+	view_window_->setMovieFrame(current_movie_frame_);
       }
 
     } else { // dump each frame
@@ -1092,17 +1115,21 @@ OpenGL::redraw_frame()
       if( pos == std::string::npos ||
 	  movie_name_[pos+2] != 'd' ||
 	  movie_name_.find("%") != movie_name_.find_last_of("%") ) {
-	cerr << "Bad C Style format for the frames." << std::endl;
-	cerr << "The format should be of the form: './my_movie.%04d'";
-	cerr << std::endl;
+	  string message = "Bad Format - Illegal Frame Format.";
+	  view_window_->setMessage( message );
+	  view_window_->setMovie( 0 );
       } else {
 
 	char fname[256];
-	sprintf(fname, movie_name_.c_str(), current_movie_frame_++);
+	sprintf(fname, movie_name_.c_str(), current_movie_frame_);
 	string fullpath = string(fname) + string(".ppm");
-	cerr << "Dumping " << fullpath << "....  ";
+	
+	string message = "Dumping " + fullpath;
+	view_window_->setMessage( message );
 	dump_image(fullpath);
-	cerr << " done!\n";
+
+	current_movie_frame_++;
+	view_window_->setMovieFrame(current_movie_frame_);
       }
     }
   } else {
@@ -1153,14 +1180,17 @@ OpenGL::real_get_pick(int x, int y,
   pick_pick=0;
   pick_index = 0x12345678;
   // Make ourselves current
-  if(current_drawer != this)
+
+  // Make sure our GL context is current
+  if ((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_))
   {
     current_drawer=this;
+    old_tk_gl_context_ = tk_gl_context_;
     gui_->lock();
-    glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    cerr<<"viewer current\n";
+    tk_gl_context_->make_current();
     gui_->unlock();
   }
+
   // Setup the view...
   View view(view_window_->gui_view_.get());
   viewer_->geomlock_.readLock();
@@ -1331,8 +1361,9 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 
 #if defined(HAVE_PBUFFER)
-  if( have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current() ){
-    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
+  if (have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current())
+  {
+    tk_gl_context_->make_current();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -1349,8 +1380,8 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glEnable(GL_DEPTH_TEST);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glXSwapBuffers(x11_dpy_,x11_win_);
+    glPopMatrix();    
+    tk_gl_context_->swap();
   }
 #endif
 
@@ -1452,11 +1483,22 @@ OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 void
 ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
+  tclID_ = (string) tclID;
+
+  GuiInt useglobal(ctx_->subVar(tclID+"-useglobal", false));
+  if (useglobal.valid() && useglobal.get())
+  {
+    setState(drawinfo, "global");
+    return;
+  }
+
   GuiString type(ctx_->subVar(tclID+"-type",false));
   if (type.valid()) {
-    if (type.get() == "Default")
+    if (type.get() == "Default") 
     {
-      setState(drawinfo,"global");	
+      // 'Default' should be unreachable now, subsumed by useglobal variable.
+      type.set("Gouraud"); // semi-backwards compatability.
+      setState(drawinfo,"global");
       return; // if they are using the default, con't change
     } 
     else if(type.get() == "Wire")
@@ -1535,6 +1577,39 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   drawinfo->init_lighting(drawinfo->lighting);
 }
 
+
+void
+ViewWindow::setMovie( int state )
+{
+  GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
+  if (movie.valid()) {
+    movie.set( state );
+    movie.reset();
+    renderer_->doing_movie_p_ = state;
+    renderer_->make_MPEG_p_ = state;
+  }
+}
+
+void
+ViewWindow::setMovieFrame( int movieframe )
+{
+  GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
+  if (movieFrame.valid()) {
+    movieFrame.set( movieframe );
+    movieFrame.reset();
+  }
+}
+
+
+void
+ViewWindow::setMessage( string message )
+{
+  GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
+  if (movieMessage.valid()) {
+    movieMessage.set( message );
+    movieMessage.reset();
+  }
+}
 
 
 void
@@ -1696,165 +1771,6 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
     glDisable(GL_CULL_FACE);
   }
 }
-
-
-
-#define GETCONFIG(attrib) \
-if(glXGetConfig(x11_dpy_, &vinfo[i], attrib, &value) != 0){\
-  args.error("Error getting attribute: " #attrib); \
-  return; \
-}
-
-
-void
-OpenGL::listvisuals(GuiArgs& args)
-{
-  gui_->lock();
-
-  Thread::allow_sgi_OpenGL_page0_sillyness();
-  Tk_Window topwin=Tk_NameToWindow(the_interp, ccast_unsafe(args[2]),
-				   Tk_MainWindow(the_interp));
-  if(!topwin)
-  {
-    cerr << "Unable to locate window!\n";
-    gui_->unlock();
-    return;
-  }
-  x11_dpy_=Tk_Display(topwin);
-  int screen=Tk_ScreenNumber(topwin);
-  vector<string> visualtags;
-  vector<int> scores;
-  x11_visuals_.clear();
-  int nvis;
-  XVisualInfo* vinfo=XGetVisualInfo(x11_dpy_, 0, NULL, &nvis);
-  if(!vinfo)
-  {
-    args.error("XGetVisualInfo failed");
-    gui_->unlock();
-    return;
-  }
-  int i;
-  for(i=0;i<nvis;i++)
-  {
-    int score=0;
-    int value;
-    GETCONFIG(GLX_USE_GL);
-    if(!value)
-      continue;
-    GETCONFIG(GLX_RGBA);
-    if(!value)
-      continue;
-    GETCONFIG(GLX_LEVEL);
-    if(value != 0)
-      continue;
-    if(vinfo[i].screen != screen)
-      continue;
-    char buf[20];
-    sprintf(buf, "id=%02x, ", (unsigned int)(vinfo[i].visualid));
-    string tag(buf);
-    GETCONFIG(GLX_DOUBLEBUFFER);
-    if(value)
-    {
-      score+=200;
-      tag += "double, ";
-    }
-    else
-    {
-      tag += "single, ";
-    }
-    GETCONFIG(GLX_STEREO);
-    if(value)
-    {
-      score+=1;
-      tag += "stereo, ";
-    }
-    tag += "rgba=";
-    GETCONFIG(GLX_RED_SIZE);
-    tag+=to_string(value)+":";
-    score+=value;
-    GETCONFIG(GLX_GREEN_SIZE);
-    tag+=to_string(value)+":";
-    score+=value;
-    GETCONFIG(GLX_BLUE_SIZE);
-    tag+=to_string(value)+":";
-    score+=value;
-    GETCONFIG(GLX_ALPHA_SIZE);
-    tag+=to_string(value);
-    score+=value;
-    GETCONFIG(GLX_DEPTH_SIZE);
-    tag += ", depth=" + to_string(value);
-    score+=value*5;
-    GETCONFIG(GLX_STENCIL_SIZE);
-    score += value * 2;
-    tag += ", stencil="+to_string(value);
-    tag += ", accum=";
-    GETCONFIG(GLX_ACCUM_RED_SIZE);
-    tag += to_string(value) + ":";
-    GETCONFIG(GLX_ACCUM_GREEN_SIZE);
-    tag += to_string(value) + ":";
-    GETCONFIG(GLX_ACCUM_BLUE_SIZE);
-    tag += to_string(value) + ":";
-    GETCONFIG(GLX_ACCUM_ALPHA_SIZE);
-    tag += to_string(value);
-#ifdef __sgi
-    tag += ", samples=";
-    GETCONFIG(GLX_SAMPLES_SGIS);
-    if(value)
-      score+=50;
-#endif
-    tag += to_string(value);
-
-    tag += ", score=" + to_string(score);
-
-    visualtags.push_back(tag);
-    x11_visuals_.push_back(&vinfo[i]);
-    scores.push_back(score);
-  }
-  for(i=0;(unsigned int)i<scores.size()-1;i++)
-  {
-    for(unsigned int j=i+1;j<scores.size();j++)
-    {
-      if(scores[i] < scores[j])
-      {
-	// Swap.
-	int tmp1=scores[i];
-	scores[i]=scores[j];
-	scores[j]=tmp1;
-	string tmp2=visualtags[i];
-	visualtags[i]=visualtags[j];
-	visualtags[j]=tmp2;
-	XVisualInfo* tmp3=x11_visuals_[i];
-	x11_visuals_[i]=x11_visuals_[j];
-	x11_visuals_[j]=tmp3;
-      }
-    }
-  }
-  args.result(GuiArgs::make_list(visualtags));
-  gui_->unlock();
-}
-
-
-
-void
-OpenGL::setvisual(const string& wname, unsigned int which, int wid, int height)
-{
-  if (which >= x11_visuals_.size())
-  {
-    cerr << "Invalid OpenGL visual, using default.\n";
-    which = 0;
-  }
-
-  tkwin_=0;
-  current_drawer=0;
-
-  gui_->execute("opengl " + wname +
-	       " -visual " + to_string((int)x11_visuals_[which]->visualid) +
-	       " -direct true" +
-	       " -geometry " + to_string(wid) + "x" + to_string(height));
-
-  myname_ = wname;
-}
-
 
 
 void
@@ -2022,7 +1938,6 @@ OpenGL::AddMpegFrame()
   int width, height;
   ImVfbPtr ptr;
 
-  cerr<<"Adding Mpeg Frame\n";
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
 
@@ -2047,8 +1962,9 @@ OpenGL::AddMpegFrame()
   glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
 
 #if defined(HAVE_PBUFFER)
-  if( have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current() ){
-    glXMakeCurrent( x11_dpy_, x11_win_, x11_gl_context_ ); 
+  if (have_pbuffer_ && pbuffer_->is_valid() && pbuffer_->is_current())
+  {
+    tk_gl_context_->make_current();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -2066,14 +1982,12 @@ OpenGL::AddMpegFrame()
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    glXSwapBuffers(x11_dpy_,x11_win_);
+    tk_gl_context_->swap();
   }
 #endif
 
   int r=3*width;
-  static unsigned char* row = 0;
-  if( !row )
-    row = scinew unsigned char[r];
+  unsigned char* row = scinew unsigned char[r];
   unsigned char* p0, *p1;
 
   int k, j;
@@ -2085,10 +1999,13 @@ OpenGL::AddMpegFrame()
     memcpy( p0, p1, r);
     memcpy( p1, row, r);
   }
+  delete[] row;
 
   if( !MPEGe_image(image, &mpeg_options_) )
   {
-    cerr << "MPEGe_image failure:" << mpeg_options_.error << "\n";
+    ostringstream str;
+    str << "ERROR creating MPEG frame: " << mpeg_options_.error;
+    view_window_->setMessage( str.str() );
   }
 #endif // HAVE_MPEG
 }
@@ -2101,10 +2018,15 @@ OpenGL::EndMpeg()
 #ifdef HAVE_MPEG
   if( !MPEGe_close(&mpeg_options_) )
   {
-    cerr << "Had a bit of difficulty closing the file:" << mpeg_options_.error;
+    ostringstream str;
+    str << "ERROR closing MPEG file: " << mpeg_options_.error;
+    view_window_->setMessage( str.str() );
+  } else {
+    string message = "Ending Mpeg.";
+    view_window_->setMessage( message );
   }
 
-  cerr << "Ending Mpeg\n";
+  view_window_->setMovie( 0 );
 #endif // HAVE_MPEG
 }
 

@@ -52,6 +52,9 @@ using std::string;
 class Vector;
 class IntVector;
 class Point;
+class NrrdData;
+class Matrix;
+
 
 //////////
 // Template function specializations for built-in types
@@ -179,5 +182,20 @@ template<> const string find_type_name(string*)
   static const string name = "string";
   return name;
 }
+
+
+
+template<> const string find_type_name(LockingHandle<Matrix> *)
+{
+  static const string name = string("LockingHandle") + FTNS + string("Matrix") + FTNE;
+  return name;
+}
+
+template<> const string find_type_name(LockingHandle<NrrdData> *)
+{
+  static const string name = string("LockingHandle") + FTNS + string("NrrdData") + FTNE;
+  return name;
+}
+
 
 } // namespace SCIRun

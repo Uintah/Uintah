@@ -65,6 +65,8 @@ class RigorousTest;
 
 template<class T> class Array3;
 template<class T> void Pio(Piostream& stream, Array3<T>& array);
+template<class T> void Pio(Piostream& stream, Array3<T>& array, const string&);
+template<class T> void Pio(Piostream& stream, Array3<T>*& array);
 
 /**************************************
 

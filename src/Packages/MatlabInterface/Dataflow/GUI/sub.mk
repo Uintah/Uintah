@@ -38,7 +38,7 @@ SRCDIR := Packages/MatlabInterface/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/Matlab.tcl\
-	$(SRCDIR)/Matlab2.tcl\
+	$(SRCDIR)/MatlabBundle.tcl\
 	$(SRCDIR)/MatlabDataReader.tcl\
 	$(SRCDIR)/MatlabDataWriter.tcl\
 	$(SRCDIR)/MatlabFieldsReader.tcl\
@@ -47,6 +47,8 @@ SRCS := \
 	$(SRCDIR)/MatlabNrrdsReader.tcl\
 	$(SRCDIR)/MatlabNrrdsWriter.tcl\
 	$(SRCDIR)/MatlabMatricesWriter.tcl\
+	$(SRCDIR)/MatlabBundlesWriter.tcl\
+	$(SRCDIR)/MatlabBundlesReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

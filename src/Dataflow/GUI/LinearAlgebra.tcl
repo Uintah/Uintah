@@ -59,7 +59,6 @@ itcl_class SCIRun_Math_LinearAlgebra {
 	iwidgets::scrolledtext $w.row1 -height 150 -width 500 \
 	    -hscrollmode dynamic
 
-	bind $w.row1 <Leave> "$this update_text"
 	$w.row1 insert end [set $this-function]
 
 	pack $w.row1 -side top -e y -f both -padx 5 -pady 5

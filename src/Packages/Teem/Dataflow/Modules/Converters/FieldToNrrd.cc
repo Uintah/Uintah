@@ -99,24 +99,6 @@ void FieldToNrrd::execute()
   oconnect_ = (NrrdOPort *)get_oport("Connections");
   odata_ = (NrrdOPort *)get_oport("Data");
   
-  if (!ifield_) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-  
-  if (!opoints_) {
-    error("Unable to initialize oport 'Points'.");
-    return;
-  }
-  if (!oconnect_) {
-    error("Unable to initialize oport 'Connections'.");
-    return;
-  }
-  if (!odata_) {
-    error("Unable to initialize oport 'Data'.");
-    return;
-  }
-  
   FieldHandle field_handle; 
   if (!(ifield_->get(field_handle) && field_handle.get_rep())) {
     return;

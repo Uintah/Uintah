@@ -44,6 +44,7 @@
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Datatypes/MeshTypes.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
@@ -74,6 +75,7 @@ public:
   virtual void mesh_detach();
 
   virtual bool is_scalar() const;
+  virtual unsigned int data_size() const;
 
   virtual const TypeDescription *order_type_description() const;
 
@@ -286,6 +288,32 @@ GenericField<Mesh, FData>::is_scalar() const
   return ::SCIRun::is_scalar<value_type>();
 }
 
+
+template <class Mesh, class FData>
+unsigned int
+GenericField<Mesh, FData>::data_size() const
+{
+  switch (basis_order())
+  {
+  case -1:
+    return 0;
+    
+  case 0:
+    {
+      typename mesh_type::Elem::size_type s;
+      mesh_->size(s);
+      return (unsigned int)s;
+    }
+  default:
+    {
+      typename mesh_type::Node::size_type s;
+      mesh_->size(s);
+      return (unsigned int)s;
+    }
+  }
+}
+
+
 // Turn off warning for CHECKARRAYBOUNDS
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1183 1506
@@ -461,19 +489,9 @@ template <class Mesh, class FData>
 const TypeDescription *
 GenericField<Mesh, FData>::order_type_description() const
 {
-  const int order = basis_order();
-  const int dim = mesh_->dimensionality();
-  if (order == 0 && dim == 3)
+  if (this->basis_order() == 0)
   {
-    return SCIRun::get_type_description((typename Mesh::Cell *)0);
-  }
-  else if (order == 0 && dim == 2)
-  {
-    return SCIRun::get_type_description((typename Mesh::Face *)0);
-  }
-  else if (order == 0 && dim == 1)
-  {
-    return SCIRun::get_type_description((typename Mesh::Edge *)0);
+    return SCIRun::get_type_description((typename Mesh::Elem *)0);
   }
   else
   {
@@ -485,19 +503,3 @@ GenericField<Mesh, FData>::order_type_description() const
 } // end namespace SCIRun
 
 #endif // Datatypes_GenericField_h
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

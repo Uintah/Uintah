@@ -41,14 +41,21 @@
 
 #define PERM S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH
 
-namespace SCIRun {
-  using std::string;
-  /*! these functions all assume that the files and/or directories
-      about to be generated, do not already exist */ 
+#define DEBUG 0
 
-int GenPackage(char* package, char* psepath)
+namespace SCIRun {
+
+using std::string;
+
+/*! these functions all assume that the files and/or directories
+    about to be generated, do not already exist */ 
+
+int
+GenPackage(char* package, char* psepath)
 {
-  printf ("GenPack\n");
+#if DEBUG
+  printf ("Begin GenPack\n");
+#endif
   int check=0,checkall=0;
   char* strbuf = 0;
   FILE* file = 0;
@@ -67,44 +74,44 @@ int GenPackage(char* package, char* psepath)
   strbuf = new char[strlen(packdir)+strlen(psepath)+50];
 
   /* create all directories associated with a package */
-  sprintf(strbuf,"%s/src/%s",psepath,packdir);
+  sprintf(strbuf,"%s/%s",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
-  sprintf(strbuf,"%s/src/%sDataflow",psepath,packdir);
+  sprintf(strbuf,"%s/%sDataflow",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
-  sprintf(strbuf,"%s/src/%sCore",psepath,packdir);
+  sprintf(strbuf,"%s/%sCore",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
-  sprintf(strbuf,"%s/src/%sDataflow/Modules",psepath,packdir);
+  sprintf(strbuf,"%s/%sDataflow/Modules",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
   
-  sprintf(strbuf,"%s/src/%sDataflow/GUI",psepath,packdir);
+  sprintf(strbuf,"%s/%sDataflow/GUI",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
-  sprintf(strbuf,"%s/src/%sDataflow/XML",psepath,packdir);
+  sprintf(strbuf,"%s/%sDataflow/XML",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
 #if 0
-  sprintf(strbuf,"%s/src/%sshare",psepath,packdir);
+  sprintf(strbuf,"%s/%sshare",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 #endif
 
-  sprintf(strbuf,"%s/src/%sCore/Datatypes",psepath,packdir);
+  sprintf(strbuf,"%s/%sCore/Datatypes",psepath,packdir);
   checkall |= check = mkdir(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
@@ -116,13 +123,13 @@ int GenPackage(char* package, char* psepath)
 
 #if 0
   /* create all the non-directory files associated with a package */
-  sprintf(strbuf,"%s/src/%sshare/share.h",psepath,package);
+  sprintf(strbuf,"%s/%sshare/share.h",psepath,package);
   file = fopen(strbuf,"w");
   fprintf(file,share_skeleton,package,package,package,
 	  package,package);
   fclose(file);
 
-  sprintf(strbuf,"%s/src/%sshare/DllEntry.cc",psepath,packdir);
+  sprintf(strbuf,"%s/%sshare/DllEntry.cc",psepath,packdir);
   file = fopen(strbuf,"w");
   fprintf(file,dllentry_skeleton,package);
   fclose(file);
@@ -130,48 +137,55 @@ int GenPackage(char* package, char* psepath)
 
   if (!pse_core_dir)
     {
-      sprintf(strbuf,"%s/src/%ssub.mk",psepath,packdir);
+      sprintf(strbuf,"%s/%ssub.mk",psepath,packdir);
       file = fopen(strbuf,"w");
       fprintf(file,package_submk_skeleton,package);
       fclose(file);
     }
 
-  sprintf(strbuf,"%s/src/%sDataflow/sub.mk",
+  sprintf(strbuf,"%s/%sDataflow/sub.mk",
 	  psepath,packdir);
   file = fopen(strbuf,"w");
   fprintf(file,dataflow_submk_skeleton,packdir);
   fclose(file);
 
-  sprintf(strbuf,"%s/src/%sCore/sub.mk",
+  sprintf(strbuf,"%s/%sCore/sub.mk",
 	  psepath,packdir);
   file = fopen(strbuf,"w");
   fprintf(file,core_submk_skeleton,packdir);
   fclose(file);
 
-  sprintf(strbuf,"%s/src/%sDataflow/Modules/sub.mk",
+  sprintf(strbuf,"%s/%sDataflow/Modules/sub.mk",
 	  psepath,packdir);
   file = fopen(strbuf,"w");
   fprintf(file,modules_submk_skeleton,packdir);
   fclose(file);
 
-  sprintf(strbuf,"%s/src/%sCore/Datatypes/sub.mk",psepath,packdir);
+  sprintf(strbuf,"%s/%sCore/Datatypes/sub.mk",psepath,packdir);
   file = fopen(strbuf,"w");
   fprintf(file,datatypes_submk_skeleton,packdir);
   fclose(file);
 
-  sprintf(strbuf,"%s/src/%sDataflow/GUI/sub.mk",psepath,packdir);
+  sprintf(strbuf,"%s/%sDataflow/GUI/sub.mk",psepath,packdir);
   file = fopen(strbuf,"w");
   fprintf(file,gui_submk_skeleton,packdir,packdir);
   fclose(file);
 
   delete[] strbuf;
 
+#if DEBUG
+  printf ("End GenPack\n");
+#endif
+
   return 1;
 }
 
-int GenCategory(char* catname, char* package, char* psepath)
+int
+GenCategory(char* catname, char* package, char* psepath)
 {
-  printf ("GenCat\n");
+#if DEBUG
+  printf ("begin GenCat\n");
+#endif
   int check;
   char* strbuf = 0;
   FILE* file = 0;
@@ -186,7 +200,7 @@ int GenCategory(char* catname, char* package, char* psepath)
 		    strlen(catname)+50];
 
   /* create category directory */
-  sprintf(strbuf,"%s/src/%sDataflow/Modules/%s",
+  sprintf(strbuf,"%s/%sDataflow/Modules/%s",
 	  psepath,packdir,catname);
   check = mkdir(strbuf,PERM);
   if (check) {
@@ -195,7 +209,7 @@ int GenCategory(char* catname, char* package, char* psepath)
   }
 
   /* create category sub.mk file */
-  sprintf(strbuf,"%s/src/%sDataflow/Modules/%s/sub.mk",
+  sprintf(strbuf,"%s/%sDataflow/Modules/%s/sub.mk",
 	  psepath,packdir,catname);
   file = fopen(strbuf,"w");
   fprintf(file,category_submk_skeleton,packdir,catname);
@@ -206,17 +220,23 @@ int GenCategory(char* catname, char* package, char* psepath)
   char* modname = new char[strlen(catname)+50];
   sprintf(modname,"\t$(SRCDIR)/%s\\\n",catname);
   strbuf = new char[strlen(psepath)+strlen(packdir)+50];
-  sprintf(strbuf,"%s/src/%sDataflow/Modules/sub.mk",
+  sprintf(strbuf,"%s/%sDataflow/Modules/sub.mk",
 	  psepath,packdir);
   InsertStringInFile(strbuf,"#[INSERT NEW CATEGORY DIR HERE]",modname);
   delete[] strbuf;
 
+#if DEBUG
+  printf ("end GenCat\n");
+#endif
   return 1;
 }
 
-int GenComponent(component_node* n, char* package, char* psepath)
+int
+GenComponent(component_node* n, char* package, char* psepath)
 {
-  printf ("GenComp\n");
+#if DEBUG
+  printf ("Begin GenComp\n");
+#endif
   
   char* filename = 0;
   char* strbuf = 0;
@@ -232,9 +252,15 @@ int GenComponent(component_node* n, char* package, char* psepath)
   length = strlen(n->name)+strlen(psepath)+
     strlen(packdir)+strlen(n->category)+50;
   filename = new char[length];
-  sprintf(filename,"%s/src/%sDataflow/Modules/%s/%s.cc",
+  sprintf(filename,"%s/%sDataflow/Modules/%s/%s.cc",
 	  psepath,packdir,n->category,n->name);
   file = fopen(filename,"w");
+
+  if( file == NULL ) {
+    printf("Error, fopen failed for file %s!\n", filename);
+    return 0;
+  }
+
   fprintf(file,component_skeleton,n->name,
 	  sci_getenv("USER"),"TODAY'S DATE HERE",
 	  package,
@@ -249,7 +275,7 @@ int GenComponent(component_node* n, char* package, char* psepath)
   length = strlen(n->name)+strlen(psepath)+
     strlen(packdir)+50;
   filename = new char[length];
-  sprintf(filename,"%s/src/%sDataflow/XML/%s.xml",psepath,
+  sprintf(filename,"%s/%sDataflow/XML/%s.xml",psepath,
 	  packdir,n->name);
   WriteComponentNodeToFile(n,filename);
   delete[] filename;
@@ -259,7 +285,7 @@ int GenComponent(component_node* n, char* package, char* psepath)
     length = strlen(n->name)+strlen(psepath)+
       strlen(packdir)+50;
     filename = new char[length];
-    sprintf(filename,"%s/src/%sDataflow/GUI/%s.tcl",psepath,
+    sprintf(filename,"%s/%sDataflow/GUI/%s.tcl",psepath,
 	    packdir,n->name);
     file = fopen(filename,"w");
     fprintf(file,gui_skeleton,package,n->category,n->name,n->name,filename);
@@ -271,7 +297,7 @@ int GenComponent(component_node* n, char* package, char* psepath)
   char* modname = new char[strlen(n->name)+50];
   sprintf(modname,"\t$(SRCDIR)/%s.cc\\\n",n->name);
   strbuf = new char[strlen(psepath)+strlen(packdir)+strlen(n->category)+50];
-  sprintf(strbuf,"%s/src/%sDataflow/Modules/%s/sub.mk",
+  sprintf(strbuf,"%s/%sDataflow/Modules/%s/sub.mk",
 	  psepath,packdir,n->category);
   InsertStringInFile(strbuf,"#[INSERT NEW CODE FILE HERE]",modname);
   delete[] strbuf;
@@ -282,13 +308,15 @@ int GenComponent(component_node* n, char* package, char* psepath)
     modname = new char[strlen(n->name)+50];
     sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\n",n->name);
     strbuf = new char[strlen(psepath)+strlen(packdir)+strlen(n->category)+50];
-    sprintf(strbuf,"%s/src/%sDataflow/GUI/sub.mk",psepath,packdir);
+    sprintf(strbuf,"%s/%sDataflow/GUI/sub.mk",psepath,packdir);
     InsertStringInFile(strbuf,"#[INSERT NEW TCL FILE HERE]",modname);
     delete[] strbuf;
   }
-
+#if DEBUG
+  printf ("End GenComp\n");
+#endif
   return 1;
-}
+} // end GenComponent
 
 } // End namespace SCIRun
 

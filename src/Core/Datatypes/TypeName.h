@@ -47,6 +47,8 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Datatypes/FieldIndex.h>
+#include <Core/Containers/LockingHandle.h>
+
 
 #ifndef TYPENAME_H
 #define TYPENAME_H
@@ -69,12 +71,15 @@ template <class T> const string find_type_name(T*)
   return T::type_name(-1);
 }
 
+
 template<class T, class S> const string find_type_name( pair<T,S> *);
 
 class Vector;
 class IntVector;
 class Point;
 class Transform;
+class Matrix;
+class NrrdData;
 
 template<> const string find_type_name(float*);
 template<> const string find_type_name(double*);
@@ -95,6 +100,10 @@ template<> const string find_type_name(IntVector*);
 template<> const string find_type_name(Point*);
 template<> const string find_type_name(Transform*);
 template<> const string find_type_name(string*);
+
+template<> const string find_type_name(LockingHandle<Matrix> *);
+template<> const string find_type_name(LockingHandle<NrrdData> *);
+
 
 //////////
 // Function overloading for templates 

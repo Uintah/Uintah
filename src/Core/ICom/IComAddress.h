@@ -69,7 +69,7 @@
 #define INET_ADDRSTRLEN 16
 #endif
 
-#if defined(__sgi)||(defined(__APPLE))
+#if defined(__sgi)||(defined(__APPLE__))
     // No simulation of getaddrinfo needed
     // On OSX and IRIX the function in the clib
     // works just fine
@@ -77,12 +77,12 @@
     // Some LINUX Systems have buggy versions of this
     // function. If so we use a simulation of that function
     // whose functionality is pretty limitted.
-#define HAVE_BAD_GETADDRINFO    1
+#   define HAVE_BAD_GETADDRINFO    1
 
-struct ga_search {
-  const char	*host;	/* hostname or address string */
-  int			family;	/* AF_xxx */
-};
+    struct ga_search {
+      const char	*host;	/* hostname or address string */
+      int			family;	/* AF_xxx */
+    };
 
 #endif
 

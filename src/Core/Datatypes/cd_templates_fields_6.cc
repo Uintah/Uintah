@@ -50,6 +50,8 @@ using namespace SCIRun;
 #pragma set woff 1468
 #endif
 
+#include <Core/Geometry/Tensor.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/StructCurveField.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructHexVolField.h>

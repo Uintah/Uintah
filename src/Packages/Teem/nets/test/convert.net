@@ -44,11 +44,11 @@ set DATADIR [netedit getenv SCIRUN_DATA]
 global notes
 set notes ""
 
-set m0 [addModuleAtPosition "Teem" "Unu" "UnuConvert" 65 158]
+set m0 [addModuleAtPosition "Teem" "UnuAtoM" "UnuConvert" 65 158]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 9]
 set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 84]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 288 89]
-set m4 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 432 317]
+set m3 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 288 89]
+set m4 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 432 317]
 set m5 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 65 236]
 set m6 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 401 238]
 

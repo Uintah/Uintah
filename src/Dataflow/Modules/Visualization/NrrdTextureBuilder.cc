@@ -41,10 +41,9 @@
 
 #include <Dataflow/Ports/NrrdPort.h>
 
-#include <Core/Volume/Utils.h>
 #include <Core/Volume/VideoCardInfo.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
 #include <sstream>
@@ -104,12 +103,6 @@ NrrdTextureBuilder::execute()
   NrrdIPort* igfield = (NrrdIPort*)get_iport("Gradmag Nrrd");
   TextureOPort* otexture = (TextureOPort *)get_oport("Texture");
 
-  if (!ivfield)
-  {
-    error("Unable to initialize input ports.");
-    return;
-  }
-
   // check rep
   NrrdDataHandle nvfield;
   ivfield->get(nvfield);
@@ -137,22 +130,24 @@ NrrdTextureBuilder::execute()
     igfield->get(gmfield);
     if (gmfield.get_rep()) 
     {
-#ifndef HAVE_AVR_SUPPORT
-      // TODO: Runtime check, change message to reflect that.
-      warning("This build does not support advanced volume rendering.  The gradient magnitude will be ignored.");
-      gmfield = 0;
-#else
-      if (gmfield->generation != gmfield_last_generation_)
+      if (!ShaderProgramARB::shaders_supported())
       {
-        gmfield_last_generation_ = gmfield->generation;
+        warning("This machine does not support advanced volume rendering.  The gradient magnitude will be ignored.");
+        gmfield = 0;
       }
-      // check type
-      if (gmfield->nrrd->type != nrrdTypeUChar)
+      else
       {
-        error("Gradmag input nrrd type is not unsigned char.");
-        return;
+        if (gmfield->generation != gmfield_last_generation_)
+        {
+          gmfield_last_generation_ = gmfield->generation;
+        }
+        // check type
+        if (gmfield->nrrd->type != nrrdTypeUChar)
+        {
+          error("Gradmag input nrrd type is not unsigned char.");
+          return;
+        }
       }
-#endif
     }
   }
 

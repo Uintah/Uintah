@@ -202,15 +202,18 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     size = Vector(bbox.max()-bbox.min());
     if (fabs(size.x())<1.e-4) {
       size.x(2.e-4); 
-      bbox.extend(bbox.min()-Vector(1.e-4,0,0));
+      bbox.extend(bbox.min()-Vector(1.0e-4, 0.0, 0.0));
+      bbox.extend(bbox.max()+Vector(1.0e-4, 0.0, 0.0));
     }
     if (fabs(size.y())<1.e-4) {
       size.y(2.e-4); 
-      bbox.extend(bbox.min()-Vector(0,1.e-4,0));
+      bbox.extend(bbox.min()-Vector(0.0, 1.0e-4, 0.0));
+      bbox.extend(bbox.max()+Vector(0.0, 1.0e-4, 0.0));
     }
     if (fabs(size.z())<1.e-4) {
       size.z(2.e-4); 
-      bbox.extend(bbox.min()-Vector(0,0,1.e-4));
+      bbox.extend(bbox.min()-Vector(0.0, 0.0, 1.0e-4));
+      bbox.extend(bbox.max()+Vector(0.0, 0.0, 1.0e-4));
     }
     center = Point(bbox.min() + size/2.);
 
@@ -256,10 +259,6 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
   widget_group->add(box_->GetWidget());
 
   GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
-  if (!ogport) {
-    error("Unable to initialize oport 'Transformation Widget'.");
-    return;
-  }
   widgetid_ = ogport->addObj(widget_group,"ChangeFieldBounds Transform widget",
 			     &widget_lock_);
   ogport->flushViews();
@@ -270,11 +269,7 @@ void
 ChangeFieldBounds::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-  if (!iport) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
-  
+
   // The input port (with data) is required.
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
@@ -285,11 +280,6 @@ ChangeFieldBounds::execute()
 
   // The output port is required.
   FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
-  if (!oport) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
-
   update_state(Executing);
 
   // build the transform widget and set the the initial
@@ -404,10 +394,6 @@ ChangeFieldBounds::execute()
 
   // The output port is required.
   MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
-  if (!moport) {
-    error("Unable to initialize oport 'Transformation Matrix'.");
-    return;
-  }  
 
   // convert the transform into a matrix and send it out   
   DenseMatrix *matrix_transform = scinew DenseMatrix(t);

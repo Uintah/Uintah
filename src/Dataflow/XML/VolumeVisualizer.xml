@@ -35,31 +35,40 @@
   <overview>
     <authors>
       <author>Kurt Zimmerman</author>
+      <author>Milan Ikits</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>This module implements a volume renderer using 3D texture
-    hardware.
+    <summary>This module implements a volume renderer using 3D texture hardware.
     </summary>
     <description>
-      <p>
-        The Rendering Style Frame allows the selection of standard
-        (Over Operator), maximum intensity projection (MIP) or
-        attenuated (Attenuate) rendering styles.
-     </p>
-      <p> The Interpolation Mode specifies linear interpolation
-      (Interpolate) or nearest neighbor interpolation (Nearest).
-        
-     </p>
-      <p> The slice transparency slider allows the user to control the
-      slice transparency in concert with the transparency specified in the
-      transfer function that was  provided to the GLTextureBuilder.  The range
-      is from -1 (full transparency for each slice) to 0 (accept
-      the values in the transfer function) to 1 (full opacity for each
-      slice--except for regions that are zero in the transfer function)
-     </p>
-      <p> The number of slices slider controls rendering
-      quality. Increase the number of slices to improve rendering
-      quality. Decrease the number of slice to improve interaction.
-     </p>
+        <p>The VolumeViewer module implements a volume renderer for
+        SCIRun using 3D texture hardware.</p>
+
+        <p> The Basic frame allows the selection of standard
+        (Over Operator) or maximum intensity projection (MIP)
+        rendering styles.  It also allows for selection of 16 or 32 bit
+        blending modes, however in the future this option will be moved to the
+        visual selection in the <modref package="SCIRun" name="Viewer"/>.
+        There is also a selection for
+        Trilinear or Nearest interpolation and a slider for changing the
+        opacity of the volume.  Software ColorMap2 Rasterization can be forced
+        on in the unusual event that the default rendering mode does not
+        work.</p>
+
+        <p> The Sampling frame allows the user to change the sampling
+        rate for interactive and non-interactive use.  The number is a
+        multiplier and the formula used to compute the actual number of slices
+        is "rate * sqrt(nx * nx + ny * ny + nz * nz) / sqrt(3.0)", or
+        approximately Sampling Rate slices per texture element.  Adaptive
+        sampling refers to the rate at which the volume is sampled while the
+        viewer is being interacted with. </p>
+
+        <p> The Shading frame is used to control the lighting
+        properties of the volume visualization.  The Shading button toggles
+        lighting of the volume's drawn elements and the material is used to
+        modulate the lighting color.  This option requires that the texture be
+        built with normals.  It also requires a graphics card with
+        fragment shader support.</p>
     </description>
   </overview>
   <implementation>
@@ -67,7 +76,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name> Texture</name>
+        <name>Texture</name>
 	<datatype>SCIRun::Texture</datatype>
       </port>
       <port>

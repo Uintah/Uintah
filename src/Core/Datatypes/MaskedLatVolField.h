@@ -31,8 +31,8 @@
 #ifndef Datatypes_MaskedLatVolField_h
 #define Datatypes_MaskedLatVolField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
@@ -55,9 +55,9 @@ public:
   typedef const Data * const_iterator;
 
   iterator begin() { return &(*this)(0,0,0); } 
-  iterator end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  iterator end() { return &((*this)(this->dim1()-1,this->dim2()-1,this->dim3()-1))+1; }
   const_iterator begin() const { return &(*this)(0,0,0); } 
-  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  const_iterator end() const { return &((*this)(this->dim1()-1,this->dim2()-1,this->dim3()-1))+1; }
 
     
   MFData3d() : Array3<Data>() {}
@@ -65,23 +65,23 @@ public:
   MFData3d(const MFData3d& data) {Array3<Data>::copy(data); }
   virtual ~MFData3d();
   
-  const value_type &operator[](typename MaskedLatVolMesh::Cell::index_type idx) const
-  { return operator()(idx.k_,idx.j_,idx.i_); } 
-  const value_type &operator[](typename MaskedLatVolMesh::Face::index_type idx) const
-  { return operator()(0, 0, unsigned(idx)); }
-  const value_type &operator[](typename MaskedLatVolMesh::Edge::index_type idx) const
-  { return operator()(0, 0, unsigned(idx)); }    
-  const value_type &operator[](typename MaskedLatVolMesh::Node::index_type idx) const
-  { return operator()(idx.k_,idx.j_,idx.i_); }    
+  const value_type &operator[](const MaskedLatVolMesh::Cell::index_type &idx) const
+  { return this->operator()(idx.k_,idx.j_,idx.i_); } 
+  const value_type &operator[](const MaskedLatVolMesh::Face::index_type &idx) const
+  { return this->operator()(0, 0, unsigned(idx)); }
+  const value_type &operator[](const MaskedLatVolMesh::Edge::index_type &idx) const
+  { return this->operator()(0, 0, unsigned(idx)); }    
+  const value_type &operator[](const MaskedLatVolMesh::Node::index_type &idx) const
+  { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
-  value_type &operator[](typename MaskedLatVolMesh::Cell::index_type idx)
-  { return operator()(idx.k_,idx.j_,idx.i_); } 
-  value_type &operator[](typename MaskedLatVolMesh::Face::index_type idx)
-  { return operator()(0, 0, unsigned(idx)); }
-  value_type &operator[](typename MaskedLatVolMesh::Edge::index_type idx)
-  { return operator()(0, 0, unsigned(idx)); }    
-  value_type &operator[](typename MaskedLatVolMesh::Node::index_type idx)
-  { return operator()(idx.k_,idx.j_,idx.i_); }    
+  value_type &operator[](const MaskedLatVolMesh::Cell::index_type &idx)
+  { return this->operator()(idx.k_,idx.j_,idx.i_); } 
+  value_type &operator[](const MaskedLatVolMesh::Face::index_type &idx)
+  { return this->operator()(0, 0, unsigned(idx)); }
+  value_type &operator[](const MaskedLatVolMesh::Edge::index_type &idx)
+  { return this->operator()(0, 0, unsigned(idx)); }    
+  value_type &operator[](const MaskedLatVolMesh::Node::index_type &idx)
+  { return this->operator()(idx.k_,idx.j_,idx.i_); }    
 
   void resize(const MaskedLatVolMesh::Node::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
@@ -92,7 +92,7 @@ public:
   void resize(const MaskedLatVolMesh::Cell::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
 
-  unsigned int size() const { return dim1() * dim2() * dim3(); }
+  unsigned int size() const { return this->dim1() * this->dim2() * this->dim3(); }
 
   static const string type_name(int n = -1);
 };
@@ -249,7 +249,7 @@ MaskedLatVolField<T>::get_type_description(int n) const
   return td;
 }
 
-#define LAT_VOL_FIELD_VERSION 3
+#define MLAT_VOL_FIELD_VERSION 3
 
 template <class Data>
 Persistent* 
@@ -268,18 +268,18 @@ template <class Data>
 void
 MaskedLatVolField<Data>::io(Piostream &stream)
 {
-  int version = stream.begin_class(type_name(-1), LAT_VOL_FIELD_VERSION);
+  int version = stream.begin_class(type_name(-1), MLAT_VOL_FIELD_VERSION);
   GenericField<MaskedLatVolMesh, MFData3d<Data> >::io(stream);
   stream.end_class();                                                    
   if (version < 2) {
     MFData3d<Data> temp;
-    temp.copy(fdata());
-    resize_fdata();
+    temp.copy(this->fdata());
+    this->resize_fdata();
     int i, j, k;
-    for (i=0; i<fdata().dim1(); i++)
-      for (j=0; j<fdata().dim2(); j++)
-	for (k=0; k<fdata().dim3(); k++)
-	  fdata()(i,j,k)=temp(k,j,i);
+    for (i=0; i<this->fdata().dim1(); i++)
+      for (j=0; j<this->fdata().dim2(); j++)
+	for (k=0; k<this->fdata().dim3(); k++)
+	  this->fdata()(i,j,k)=temp(k,j,i);
   }
 }
 

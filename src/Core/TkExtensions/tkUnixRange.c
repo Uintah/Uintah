@@ -40,10 +40,10 @@
  *
  */
 
-#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
-
 #include "tkRange.h"
 #include "tkInt.h"
+
+#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -86,7 +86,9 @@ TkpCreateRange(tkwin)
  *
  * TkpDestroyRange --
  *
- *	Destroy a TkRange structure.
+ *	Destroy a TkRange structure.  It's necessary to do this with
+ *	Tcl_EventuallyFree to allow the Tcl_Preserve(rangePtr) to work
+ *	as expected in TkpDisplayRange. (hobbs)
  *
  * Results:
  *	None
@@ -101,7 +103,7 @@ void
 TkpDestroyRange(rangePtr)
     TkRange *rangePtr;
 {
-    ckfree((char *) rangePtr);
+    Tcl_EventuallyFree((ClientData) rangePtr, TCL_DYNAMIC);
 }
 
 /*
@@ -137,7 +139,7 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
 {
     Tk_Window tkwin = rangePtr->tkwin;
     int x, y1, y2, width, height, shadowWidth;
-    double tickValue;
+    double tickValue, tickInterval = rangePtr->tickInterval;
     Tk_3DBorder sliderBorder;
     int rangeFillHeight;
 
@@ -160,15 +162,28 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
 	 * Display the tick marks.
 	 */
 
-	if (rangePtr->tickInterval != 0) {
+	if (tickInterval != 0) {
+	    double ticks, maxTicks;
+
+	    /*
+	     * Ensure that we will only draw enough of the tick values
+	     * such that they don't overlap
+	     */
+	    ticks = fabs((rangePtr->toValue - rangePtr->fromValue)
+		    / tickInterval);
+	    maxTicks = (double) Tk_Height(tkwin)
+		/ (double) rangePtr->fontHeight;
+	    if (ticks > maxTicks) {
+		tickInterval *= (ticks / maxTicks);
+	    }
 	    for (tickValue = rangePtr->fromValue; ;
-		    tickValue += rangePtr->tickInterval) {
+		 tickValue += tickInterval) {
 		/*
-		 * The TkRoundToResolution call gets rid of accumulated
+		 * The TkRangeRoundToResolution call gets rid of accumulated
 		 * round-off errors, if any.
 		 */
 
-		tickValue = TkRoundToResolution(rangePtr, tickValue);
+		tickValue = TkRangeRoundToResolution(rangePtr, tickValue);
 		if (rangePtr->toValue >= rangePtr->fromValue) {
 		    if (tickValue > rangePtr->toValue) {
 			break;
@@ -189,9 +204,9 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
      */
 
     if (rangePtr->showValue) {
-	DisplayVerticalValue(rangePtr, drawable, rangePtr->min_value,
+	DisplayVerticalValue(rangePtr, drawable, rangePtr->minvalue,
 		rangePtr->vertValueRightX);
-	DisplayVerticalValue(rangePtr, drawable, rangePtr->max_value,
+	DisplayVerticalValue(rangePtr, drawable, rangePtr->maxvalue,
 		rangePtr->vertValueRightX);
     }
 
@@ -210,7 +225,7 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
 	    (unsigned) rangePtr->width,
 	    (unsigned) (Tk_Height(tkwin) - 2*rangePtr->inset
 		- 2*rangePtr->borderWidth));
-    if (rangePtr->state == tkActiveUid) {
+    if (rangePtr->state == STATE_ACTIVE) {
 	sliderBorder = rangePtr->activeBorder;
     } else {
 	sliderBorder = rangePtr->bgBorder;
@@ -218,15 +233,15 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
     width = rangePtr->width;
     height = rangePtr->sliderLength/2;
     x = rangePtr->vertTroughX + rangePtr->borderWidth;
-    y1 = TkpRangeValueToPixel(rangePtr, rangePtr->min_value) - height;
-    y2 = TkpRangeValueToPixel(rangePtr, rangePtr->max_value);
+    y1 = TkRangeValueToPixel(rangePtr, rangePtr->minvalue) - height;
+    y2 = TkRangeValueToPixel(rangePtr, rangePtr->maxvalue);
     shadowWidth = rangePtr->borderWidth/2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
     }
-    rangeFillHeight = y2 - y1 - height - 2 * shadowWidth;
-    if (rangeFillHeight>0) {		/* enough space to draw range fill */
-	XFillRectangle(rangePtr->display, drawable, rangePtr->rangeGC,
+    rangeFillHeight = y2 - y1 -height - 2 * shadowWidth;
+    if (rangeFillHeight > 0) { /* enough space to draw range fill */
+      	XFillRectangle(rangePtr->display, drawable, rangePtr->rangeGC,
 		       rangePtr->vertTroughX + rangePtr->borderWidth,
 		       y1 + height + shadowWidth,
 		       (unsigned) rangePtr->width,
@@ -241,12 +256,10 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
     y2 += shadowWidth;
     width -= 2*shadowWidth;
     height -= shadowWidth;
-    Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, 
-		       x, y1, width, height, shadowWidth, 
-		       rangePtr->sliderRelief);
-    Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, 
-		       x, y2, width, height, shadowWidth, 
-		       rangePtr->sliderRelief);
+    Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y1, width,
+	    height, shadowWidth, rangePtr->sliderRelief);
+    Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y2,
+	    width, height, shadowWidth, rangePtr->sliderRelief);
 
     /*
      * Draw the label to the right of the range.
@@ -257,8 +270,9 @@ DisplayVerticalRange(rangePtr, drawable, drawnAreaPtr)
 
 	Tk_GetFontMetrics(rangePtr->tkfont, &fm);
 	Tk_DrawChars(rangePtr->display, drawable, rangePtr->textGC,
-		rangePtr->tkfont, rangePtr->label, rangePtr->labelLength,
-		rangePtr->vertLabelX, rangePtr->inset + (3*fm.ascent)/2);
+		rangePtr->tkfont, rangePtr->label, 
+                rangePtr->labelLength, rangePtr->vertLabelX,
+                rangePtr->inset + (3*fm.ascent)/2);
     }
 }
 
@@ -299,7 +313,7 @@ DisplayVerticalValue(rangePtr, drawable, value, rightEdge)
     Tk_FontMetrics fm;
 
     Tk_GetFontMetrics(rangePtr->tkfont, &fm);
-    y = TkpRangeValueToPixel(rangePtr, value) + fm.ascent/2;
+    y = TkRangeValueToPixel(rangePtr, value) + fm.ascent/2;
     sprintf(valueString, rangePtr->format, value);
     length = strlen(valueString);
     width = Tk_TextWidth(rangePtr->tkfont, valueString, length);
@@ -352,7 +366,7 @@ DisplayHorizontalRange(rangePtr, drawable, drawnAreaPtr)
 {
     register Tk_Window tkwin = rangePtr->tkwin;
     int x1, x2, y, width, height, shadowWidth;
-    double tickValue;
+    double tickValue, tickInterval = rangePtr->tickInterval;
     Tk_3DBorder sliderBorder;
     int rangeFillWidth;
 
@@ -375,15 +389,31 @@ DisplayHorizontalRange(rangePtr, drawable, drawnAreaPtr)
 	 * Display the tick marks.
 	 */
 
-	if (rangePtr->tickInterval != 0) {
+	if (tickInterval != 0) {
+	    char valueString[PRINT_CHARS];
+	    double ticks, maxTicks;
+
+	    /*
+	     * Ensure that we will only draw enough of the tick values
+	     * such that they don't overlap.  We base this off the width that
+	     * fromValue would take.  Not exact, but better than no constraint.
+	     */
+	    ticks = fabs((rangePtr->toValue - rangePtr->fromValue)
+		    / tickInterval);
+	    sprintf(valueString, rangePtr->format, rangePtr->fromValue);
+	    maxTicks = (double) Tk_Width(tkwin)
+		/ (double) Tk_TextWidth(rangePtr->tkfont, valueString, -1);
+	    if (ticks > maxTicks) {
+		tickInterval *= (ticks / maxTicks);
+	    }
 	    for (tickValue = rangePtr->fromValue; ;
-		    tickValue += rangePtr->tickInterval) {
+		 tickValue += tickInterval) {
 		/*
-		 * The TkRoundToResolution call gets rid of accumulated
+		 * The TkRangeRoundToResolution call gets rid of accumulated
 		 * round-off errors, if any.
 		 */
 
-		tickValue = TkRoundToResolution(rangePtr, tickValue);
+		tickValue = TkRangeRoundToResolution(rangePtr, tickValue);
 		if (rangePtr->toValue >= rangePtr->fromValue) {
 		    if (tickValue > rangePtr->toValue) {
 			break;
@@ -404,9 +434,9 @@ DisplayHorizontalRange(rangePtr, drawable, drawnAreaPtr)
      */
 
     if (rangePtr->showValue) {
-	DisplayHorizontalValue(rangePtr, drawable, rangePtr->min_value,
+	DisplayHorizontalValue(rangePtr, drawable, rangePtr->minvalue,
 		rangePtr->horizValueY);
-	DisplayHorizontalValue(rangePtr, drawable, rangePtr->max_value,
+	DisplayHorizontalValue(rangePtr, drawable, rangePtr->maxvalue,
 		rangePtr->horizValueY);
     }
 
@@ -426,26 +456,26 @@ DisplayHorizontalRange(rangePtr, drawable, drawnAreaPtr)
 	    (unsigned) (Tk_Width(tkwin) - 2*rangePtr->inset
 		- 2*rangePtr->borderWidth),
 	    (unsigned) rangePtr->width);
-    if (rangePtr->state == tkActiveUid) {
+    if (rangePtr->state == STATE_ACTIVE) {
 	sliderBorder = rangePtr->activeBorder;
     } else {
 	sliderBorder = rangePtr->bgBorder;
     }
     width = rangePtr->sliderLength/2;
     height = rangePtr->width;
-    x1 = TkpRangeValueToPixel(rangePtr, rangePtr->min_value) - width;
-    x2 = TkpRangeValueToPixel(rangePtr, rangePtr->max_value);
+    x1 = TkRangeValueToPixel(rangePtr, rangePtr->minvalue) - width;
+    x2 = TkRangeValueToPixel(rangePtr, rangePtr->maxvalue);
     y += rangePtr->borderWidth;
     shadowWidth = rangePtr->borderWidth/2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
     }
+
     rangeFillWidth = x2 - x1 - width - 2*shadowWidth;
     if (rangeFillWidth>0) {		/* enough space to draw range fill */
 	XFillRectangle(rangePtr->display, drawable, rangePtr->rangeGC,
 		       x1 + width + shadowWidth,
-		       y,
-		       (unsigned) rangeFillWidth,
+		       y, (unsigned) rangeFillWidth,
 		       (unsigned) rangePtr->width);
     }
     Tk_Draw3DRectangle(tkwin, drawable, sliderBorder,
@@ -471,8 +501,9 @@ DisplayHorizontalRange(rangePtr, drawable, drawnAreaPtr)
 
 	Tk_GetFontMetrics(rangePtr->tkfont, &fm);
 	Tk_DrawChars(rangePtr->display, drawable, rangePtr->textGC,
-		rangePtr->tkfont, rangePtr->label, rangePtr->labelLength,
-		rangePtr->inset + fm.ascent/2, rangePtr->horizLabelY + fm.ascent);
+		rangePtr->tkfont, rangePtr->label, 
+                rangePtr->labelLength, rangePtr->inset + fm.ascent/2, 
+                rangePtr->horizLabelY + fm.ascent);
     }
 }
 
@@ -512,7 +543,7 @@ DisplayHorizontalValue(rangePtr, drawable, value, top)
     char valueString[PRINT_CHARS];
     Tk_FontMetrics fm;
 
-    x = TkpRangeValueToPixel(rangePtr, value);
+    x = TkRangeValueToPixel(rangePtr, value);
     Tk_GetFontMetrics(rangePtr->tkfont, &fm);
     y = top + fm.ascent;
     sprintf(valueString, rangePtr->format, value);
@@ -564,6 +595,7 @@ TkpDisplayRange(clientData)
     char string[PRINT_CHARS];
     XRectangle drawnArea;
 
+    rangePtr->flags &= ~REDRAW_PENDING;
     if ((rangePtr->tkwin == NULL) || !Tk_IsMapped(rangePtr->tkwin)) {
 	goto done;
     }
@@ -571,30 +603,29 @@ TkpDisplayRange(clientData)
     /*
      * Invoke the range's command if needed.
      */
-
     Tcl_Preserve((ClientData) rangePtr);
-    Tcl_Preserve((ClientData) interp);
     if ((rangePtr->flags & INVOKE_COMMAND) && (rangePtr->command != NULL)) {
-	sprintf(string, rangePtr->format, rangePtr->min_value);
-	result = Tcl_VarEval(interp, rangePtr->command,	" ", string,
-                             (char *) NULL);
+	Tcl_Preserve((ClientData) interp);
+	sprintf(string, rangePtr->format, rangePtr->minvalue);
+	result = Tcl_VarEval(interp, rangePtr->command, " ", string,
+		(char *) NULL);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by range)");
 	    Tcl_BackgroundError(interp);
 	}
-	sprintf(string, rangePtr->format, rangePtr->max_value);
-	result = Tcl_VarEval(interp, rangePtr->command,	" ", string,
-                             (char *) NULL);
+	sprintf(string, rangePtr->format, rangePtr->maxvalue);
+	result = Tcl_VarEval(interp, rangePtr->command, " ", string,
+		(char *) NULL);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by range)");
 	    Tcl_BackgroundError(interp);
 	}
+	Tcl_Release((ClientData) interp);
     }
-    Tcl_Release((ClientData) interp);
     rangePtr->flags &= ~INVOKE_COMMAND;
-    if (rangePtr->tkwin == NULL) {
+    if (rangePtr->flags & RANGE_DELETED) {
 	Tcl_Release((ClientData) rangePtr);
-	return;
+	goto done;
     }
     Tcl_Release((ClientData) rangePtr);
 
@@ -618,7 +649,7 @@ TkpDisplayRange(clientData)
      * different.
      */
 
-    if (rangePtr->vertical) {
+    if (rangePtr->orient == ORIENT_VERTICAL) {
 	DisplayVerticalRange(rangePtr, pixmap, &drawnArea);
     } else {
 	DisplayHorizontalRange(rangePtr, pixmap, &drawnArea);
@@ -644,7 +675,8 @@ TkpDisplayRange(clientData)
 	    if (rangePtr->flags & GOT_FOCUS) {
 		gc = Tk_GCForColor(rangePtr->highlightColorPtr, pixmap);
 	    } else {
-		gc = Tk_GCForColor(rangePtr->highlightBgColorPtr, pixmap);
+		gc = Tk_GCForColor(
+                        Tk_3DBorderColor(rangePtr->highlightBorder), pixmap);
 	    }
 	    Tk_DrawFocusHighlight(tkwin, gc, rangePtr->highlightWidth, pixmap);
 	}
@@ -690,7 +722,8 @@ TkpRangeElement(rangePtr, x, y)
 {
     int sliderMin;
     int sliderMax;
-    if (rangePtr->vertical) {
+
+    if (rangePtr->orient == ORIENT_VERTICAL) {
 	if ((x < rangePtr->vertTroughX)
 		|| (x >= (rangePtr->vertTroughX + 2*rangePtr->borderWidth +
 		rangePtr->width))) {
@@ -700,15 +733,15 @@ TkpRangeElement(rangePtr, x, y)
 		|| (y >= (Tk_Height(rangePtr->tkwin) - rangePtr->inset))) {
 	    return OTHER;
 	}
-	sliderMin = TkpRangeValueToPixel(rangePtr, rangePtr->min_value)
+	sliderMin = TkRangeValueToPixel(rangePtr, rangePtr->minvalue)
 		- rangePtr->sliderLength/2;
-	sliderMax = TkpRangeValueToPixel(rangePtr, rangePtr->max_value)
+	sliderMax = TkRangeValueToPixel(rangePtr, rangePtr->maxvalue)
 		- rangePtr->sliderLength/2;
 	if (y < sliderMin) {
 	    return TROUGH1;
 	}
 	if (y > sliderMax) {
-	    return TROUGH2;
+	  return TROUGH2;
 	}
 	sliderMin += rangePtr->sliderLength/2;
 	sliderMax -= rangePtr->sliderLength/2;
@@ -730,10 +763,10 @@ TkpRangeElement(rangePtr, x, y)
 	    || (x >= (Tk_Width(rangePtr->tkwin) - rangePtr->inset))) {
 	return OTHER;
     }
-    sliderMin = TkpRangeValueToPixel(rangePtr, rangePtr->min_value)-
-	rangePtr->sliderLength/2;
-    sliderMax = TkpRangeValueToPixel(rangePtr, rangePtr->max_value)+
-	rangePtr->sliderLength/2;
+    sliderMin = TkRangeValueToPixel(rangePtr, rangePtr->minvalue)
+	    - rangePtr->sliderLength/2;
+    sliderMax = TkRangeValueToPixel(rangePtr, rangePtr->maxvalue)
+	    + rangePtr->sliderLength/2;
     if (x < sliderMin) {
 	return TROUGH1;
     }
@@ -749,230 +782,4 @@ TkpRangeElement(rangePtr, x, y)
 	return MAX_SLIDER;
     }
     return RANGE;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * TkpSetRangeValue --
- *
- *	This procedure changes the value of a range and invokes
- *	a Tcl command to reflect the current position of a range
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A Tcl command is invoked, and an additional error-processing
- *	command may also be invoked.  The range's slider is redrawn.
- *
- *--------------------------------------------------------------
- */
-
-void
-TkpSetRangeMinValue(rangePtr, value, setVar, invokeCommand)
-    register TkRange *rangePtr;	/* Info about widget. */
-    double value;		/* New value for range.  Gets adjusted
-				 * if it's off the range. */
-    int setVar;			/* Non-zero means reflect new value through
-				 * to associated variable, if any. */
-    int invokeCommand;		/* Non-zero means invoked -command option
-				 * to notify of new value, 0 means don't. */
-{
-    char string[PRINT_CHARS];
-
-    value = TkRoundToResolution(rangePtr, value);
-    if ((value < rangePtr->fromValue)
-	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
-	value = rangePtr->fromValue;
-    }
-    if ((value > rangePtr->toValue)
-	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
-	value = rangePtr->toValue;
-    }
-    if (rangePtr->flags & NEVER_SET) {
-	rangePtr->flags &= ~NEVER_SET;
-    } else if (rangePtr->min_value == value) {
-	return;
-    }
-    rangePtr->min_value = value;
-    if (invokeCommand) {
-	rangePtr->flags |= INVOKE_COMMAND;
-    }
-    TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
-
-    if (setVar && (rangePtr->min_varName != NULL)) {
-	sprintf(string, rangePtr->format, rangePtr->min_value);
-	rangePtr->flags |= SETTING_VAR;
-	Tcl_SetVar(rangePtr->interp, rangePtr->min_varName, string,
-	       TCL_GLOBAL_ONLY);
-	rangePtr->flags &= ~SETTING_VAR;
-    }
-}
-
-
-/*
- *--------------------------------------------------------------
- *
- * TkpSetRangeValue --
- *
- *	This procedure changes the value of a range and invokes
- *	a Tcl command to reflect the current position of a range
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A Tcl command is invoked, and an additional error-processing
- *	command may also be invoked.  The range's slider is redrawn.
- *
- *--------------------------------------------------------------
- */
-
-void
-TkpSetRangeMaxValue(rangePtr, value, setVar, invokeCommand)
-    register TkRange *rangePtr;	/* Info about widget. */
-    double value;		/* New value for range.  Gets adjusted
-				 * if it's off the range. */
-    int setVar;			/* Non-zero means reflect new value through
-				 * to associated variable, if any. */
-    int invokeCommand;		/* Non-zero means invoked -command option
-				 * to notify of new value, 0 means don't. */
-{
-    char string[PRINT_CHARS];
-
-    value = TkRoundToResolution(rangePtr, value);
-    if ((value < rangePtr->fromValue)
-	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
-	value = rangePtr->fromValue;
-    }
-    if ((value > rangePtr->toValue)
-	    ^ (rangePtr->toValue < rangePtr->fromValue)) {
-	value = rangePtr->toValue;
-    }
-    if (rangePtr->flags & NEVER_SET) {
-	rangePtr->flags &= ~NEVER_SET;
-    } else if (rangePtr->max_value == value) {
-	return;
-    }
-    rangePtr->max_value = value;
-    if (invokeCommand) {
-	rangePtr->flags |= INVOKE_COMMAND;
-    }
-    TkEventuallyRedrawRange(rangePtr, REDRAW_SLIDER);
-
-    if (setVar && (rangePtr->max_varName != NULL)) {
-	sprintf(string, rangePtr->format, rangePtr->max_value);
-	rangePtr->flags |= SETTING_VAR;
-	Tcl_SetVar(rangePtr->interp, rangePtr->max_varName, string,
-	       TCL_GLOBAL_ONLY);
-	rangePtr->flags &= ~SETTING_VAR;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkRangePixelToValue --
- *
- *	Given a pixel within a range window, return the range
- *	reading corresponding to that pixel.
- *
- * Results:
- *	A double-precision range reading.  If the value is outside
- *	the legal range for the range then it's rounded to the nearest
- *	end of the range.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-/* Dd: Does this really need to be static? */
-double
-TkRangePixelToValue(rangePtr, x, y)
-    register TkRange *rangePtr;		/* Information about widget. */
-    int x, y;				/* Coordinates of point within
-					 * window. */
-{
-    double value, pixelRange;
-
-    if (rangePtr->vertical) {
-	pixelRange = Tk_Height(rangePtr->tkwin) - rangePtr->sliderLength
-		- 2*rangePtr->inset - 2*rangePtr->borderWidth;
-	value = y;
-    } else {
-	pixelRange = Tk_Width(rangePtr->tkwin) - rangePtr->sliderLength
-		- 2*rangePtr->inset - 2*rangePtr->borderWidth;
-	value = x;
-    }
-
-    if (pixelRange <= 0) {
-	/*
-	 * Not enough room for the slider to actually slide:  just return
-	 * the range's current value.
-	 */
-
-	return rangePtr->min_value;
-    }
-    value -= rangePtr->sliderLength/2 + rangePtr->inset
-		+ rangePtr->borderWidth;
-    value /= pixelRange;
-    if (value < 0) {
-	value = 0;
-    }
-    if (value > 1) {
-	value = 1;
-    }
-    value = rangePtr->fromValue +
-		value * (rangePtr->toValue - rangePtr->fromValue);
-    return TkRoundToResolution(rangePtr, value);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpRangeValueToPixel --
- *
- *	Given a reading of the range, return the x-coordinate or
- *	y-coordinate corresponding to that reading, depending on
- *	whether the range is vertical or horizontal, respectively.
- *
- * Results:
- *	An integer value giving the pixel location corresponding
- *	to reading.  The value is restricted to lie within the
- *	defined range for the range.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpRangeValueToPixel(rangePtr, value)
-    register TkRange *rangePtr;		/* Information about widget. */
-    double value;			/* Reading of the widget. */
-{
-    int y, pixelRange;
-    double valueRange;
-
-    valueRange = rangePtr->toValue - rangePtr->fromValue;
-    pixelRange = (rangePtr->vertical ? Tk_Height(rangePtr->tkwin)
-	    : Tk_Width(rangePtr->tkwin)) - rangePtr->sliderLength
-	    - 2*rangePtr->inset - 2*rangePtr->borderWidth;
-    if (valueRange == 0) {
-	y = 0;
-    } else {
-	y = (int) ((value - rangePtr->fromValue) * pixelRange
-		  / valueRange + 0.5);
-	if (y < 0) {
-	    y = 0;
-	} else if (y > pixelRange) {
-	    y = pixelRange;
-	}
-    }
-    y += rangePtr->sliderLength/2 + rangePtr->inset + rangePtr->borderWidth;
-    return y;
 }

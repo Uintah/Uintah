@@ -1,4 +1,6 @@
-<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--
@@ -29,34 +31,37 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-<appendix id="sec.hdf5_inst">
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.hdf5_inst">
   <title>HDF5 Installation</title>
 
-  <para>The <ulink url="http://hdf.ncsa.uiuc.edu">Hierarchicial Data
+  <para>The <ulink url="http://hdf.ncsa.uiuc.edu/HDF5">Hierarchicial Data
   Format (HDF)</ulink> project provides file formats and software for
   scientific data management.  <acronym>HDF5</acronym> libraries
-  provide modules of &sr;'s DataIO package the ability to read
+  provide modules of SCIRun's DataIO package the ability to read
   <acronym>HDF5</acronym> data.</para>
-  <para>HDF5 libraries must be built from their source code.  &sr;
+  <para>HDF5 libraries must be built from their source code.  SCIRun
   supports HDF5 versions 1.6.x.</para>
   <note>
     <itemizedlist>
-      <listitem>
-	<para>The &sr; RPMs include support for HDF5 and the HDF5
-	libraries are distributed with the &sr; RPMs.</para>
+      <listitem os="linux">
+	<para>The SCIRun RPMs include support for HDF5 and the HDF5
+	libraries are distributed with the SCIRun RPMs.</para>
       </listitem>
       <listitem>
-	<para>HDF5 must be installed before building &sr;</para>
+	<para>HDF5 must be installed before building SCIRun</para>
       </listitem>
       <listitem>
-	<para>HDF5 must be built thread safe&mdash;HDF5 binary
+	<para>HDF5 must be built thread safe&#x2014;HDF5 binary
 	distributions that are not thread safe cannot be used with
-	&sr;.</para>
+	SCIRun.</para>
       </listitem>
       <listitem>
-	<para>&sr; must be configured to support HDF5.  See <xref
+	<para>SCIRun must be configured to support HDF5.  See <xref
 	linkend="sec.sr_hdf5_config"/> for information on configuring
-	&sr; to use HDF5.</para>
+	SCIRun to use HDF5.</para>
       </listitem>
     </itemizedlist>
   </note>
@@ -87,7 +92,7 @@ doc.doIfPrint {
 	  <para>
 	    Unpack.  In a terminal window type:
 	    <literallayout>
-gunzip -c hdf5-1.6.2.tar.gz | tar xvf -	      
+gunzip -c hdf5-1.6.3.tar.gz | tar xvf -	      
 	    </literallayout>
 	  </para>
 	</listitem>
@@ -106,7 +111,7 @@ gunzip -c hdf5-1.6.2.tar.gz | tar xvf -
 	<para>
 	  Change the working directory to the HDF5 directory:
 	  <literallayout class="monospaced">
-cd <replaceable>path-to</replaceable>/hdf5-1.6.2
+cd <replaceable>path-to</replaceable>/hdf5-1.6.3
 	  </literallayout>
 	</para>
       </listitem>
@@ -157,10 +162,10 @@ make install
   </section>
 
   <section id="sec.sr_hdf5_config">
-    <title>&sr; HDF5 Configure Options</title>
+    <title>SCIRun HDF5 Configure Options</title>
     <para>
-      The configure option below adds support for HDF5 in &sr;.
-      Include this option in the &sr; <command>configure</command>
+      The configure option below adds support for HDF5 in SCIRun.
+      Include this option in the SCIRun <command>configure</command>
       command (<xref linkend="sec.build-sr"/>):
       <literallayout class="monospaced">
 --with-hdf5=/usr/local/hdf5
@@ -168,4 +173,4 @@ make install
     </para>
   </section>
 
-</appendix>
+</section>

@@ -34,7 +34,7 @@
 
     <param name="lower_threshold">
       <text-entry>
-        <default>5.0</default>
+        <default>0.0</default>
       </text-entry>
     </param>
 

@@ -45,9 +45,9 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -94,31 +94,6 @@ AssignLeadFieldSources::execute()
   ofp3 = (FieldOPort*)get_oport("PointCloud(Vector)");
   ofp4 = (FieldOPort*)get_oport("PrimaryPointCloud(Vector)");
 
-  if (!ifp) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!imp) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!ofp) {
-    error("Unable to initialize oport 'VectorField'.");
-    return;
-  }
-  if (!ofp2) {
-    error("Unable to initialize oport 'Field(double)'.");
-    return;
-  }
-  if (!ofp3) {
-    error("Unable to initialize oport 'PointCloud(Vector)'.");
-    return;
-  }
-  if (!ofp4) {
-    error("Unable to initialize oport 'PrimaryPointCloud(Vector)'.");
-    return;
-  }
-  
   // Get input matrix.
   MatrixHandle imatrix;
   if (!(imp->get(imatrix)) || !(imatrix.get_rep())) {
@@ -206,11 +181,11 @@ AssignLeadFieldSources::execute()
   }
   msgStream_ << "End of focusing spikes.\n";
   PointCloudMeshHandle pcmH(pcm);
-  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, 1);
+  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, 0);
   pc->fdata()=vecs;
 
   PointCloudMeshHandle pcm2H(pcm2);
-  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 1);
+  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 0);
   pc2->fdata()=vecs2;
 
   for (unsigned int ui=0; ui<nsize; ui++) 

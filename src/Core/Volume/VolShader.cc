@@ -31,7 +31,7 @@
 
 #include <sstream>
 #include <Core/Volume/VolShader.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 
 using std::string;
 using std::vector;

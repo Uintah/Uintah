@@ -118,23 +118,6 @@ void
   ncols_ = (NrrdIPort *)get_iport("Columns");
   omat_ = (MatrixOPort *)get_oport("Matrix");
 
-  if (!ndata_) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!nrows_) {
-    error("Unable to initialize iport 'Rows'.");
-    return;
-  }
-  if (!ncols_) {
-    error("Unable to initialize iport 'Columns'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Matrix'.");
-    return;
-  }
-
   NrrdDataHandle dataH;
   NrrdDataHandle rowsH;
   NrrdDataHandle colsH;
@@ -368,7 +351,7 @@ NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
   DenseMatrix* matrix = scinew DenseMatrix(rows,cols);
   
   PTYPE *val = (PTYPE*)dataH->nrrd->data;
-  double *data = matrix->getData();
+  double *data = matrix->get_data_pointer();
 
   for(int r=0; r<rows; r++) {
     for(int c=0; c<cols; c++) {

@@ -31,9 +31,8 @@
 #ifndef Datatypes_PointCloudField_h
 #define Datatypes_PointCloudField_h
 
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>

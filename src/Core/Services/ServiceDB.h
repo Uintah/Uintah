@@ -32,12 +32,10 @@
 #define CORE_SERVICES_SERVICEDB_H 1
 
 
-#include <Core/Util/Environment.h>
 #include <Core/Services/Service.h>
 #include <Core/Services/ServiceNode.h>
 #include <Core/Services/ServiceBase.h>
 #include <Core/Util/soloader.h>
-#include <Core/Util/RWS.h>
 #include <Core/ICom/IComRHostList.h>
 #include <Core/Containers/LockingHandle.h>
 

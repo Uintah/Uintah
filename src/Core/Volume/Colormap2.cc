@@ -45,34 +45,60 @@ static Persistent* maker()
 
 PersistentTypeID ColorMap2::type_id("ColorMap2", "Datatype", maker);
 
-#define COLORMAP2_VERSION 1
+#define COLORMAP2_VERSION 4
 
 void
 ColorMap2::io(Piostream &stream)
 {
-  stream.begin_class("ColorMap2", COLORMAP2_VERSION);
-  
-  SCIRun::Pio(stream, faux_);
+  const int version = stream.begin_class("ColorMap2", COLORMAP2_VERSION);
+
+  if (version >= 2)
+    PropertyManager::io(stream);
+
+  bool faux = false;
+  if (version <= 3)
+    SCIRun::Pio(stream, faux);
+
   SCIRun::Pio(stream, widgets_);
+
+  if (version <= 3)
+    for (unsigned int w = 0; w < widgets_.size(); ++w)
+      widgets_[w]->set_faux(faux);
+      
+  if (version >= 3)
+    SCIRun::Pio(stream, selected_);
+
+  if (version >= 4)
+    SCIRun::Pio(stream, value_range_);
 
   stream.end_class();
 }
 
 ColorMap2::ColorMap2()
-  : updating_(false)
+  : updating_(false),
+    widgets_(),
+    selected_(-1),
+    value_range_(0.0, -1.0)
+{}
+
+ColorMap2::ColorMap2(const ColorMap2 &copy)
+  : updating_(copy.updating_),
+    widgets_(copy.widgets_),
+    selected_(copy.selected_),
+    value_range_(copy.value_range_)
 {}
 
 ColorMap2::ColorMap2(const vector<CM2WidgetHandle>& widgets,
-		     bool updating, bool faux)
+		     bool updating,
+		     bool selected,
+		     pair<float, float> value_range)
   : updating_(updating),
-    faux_(faux)
-{
-  for(unsigned int i=0; i<widgets.size(); i++)
-    widgets_.push_back(widgets[i]->clone());
-}
+    widgets_(widgets),
+    selected_(selected),
+    value_range_(value_range_)
+{}
 
 ColorMap2::~ColorMap2()
-{
-}
+{}
 
 } // End namespace SCIRun

@@ -101,15 +101,6 @@ UnuQuantize::execute()
   inrrd_ = (NrrdIPort *)get_iport("Nrrd");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {
@@ -172,6 +163,7 @@ UnuQuantize::execute()
     return;
   }
 
+  nrrdKeyValueCopy(nrrd->nrrd, nin);
   last_minf_ = minf;
   last_maxf_ = maxf;
   last_nbits_ = nbits;

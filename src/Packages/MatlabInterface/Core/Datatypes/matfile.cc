@@ -111,9 +111,9 @@ void matfile::mfwrite(void *buffer,long elsize,long size)
 void matfile::mfwrite(void *buffer,long elsize,long size,long offset)
 {
     FILE *fptr;
-	fptr = m_->fptr_;
+  	fptr = m_->fptr_;
 	
-	if (fptr == 0) return;
+	  if (fptr == 0) return;
     if (fseek(fptr,offset,SEEK_SET) != 0) throw io_error();
     if (ferror(fptr)) throw io_error();
     if (static_cast<long>(fwrite(buffer,elsize,size,fptr)) != size) throw io_error();
@@ -158,7 +158,7 @@ void matfile::mfread(void *buffer,long elsize,long size,long offset)
 	else
 	{   // Read from the decompressed buffer instead of the file
 		
-		m_->fcmpcount_ = offset-(m_->fcmpoffset_);
+		m_->fcmpcount_ = offset-(m_->fcmpalignoffset_);
 		if ((m_->fcmpcount_) + (size*elsize) > m_->fcmpsize_)	throw io_error();
 		memcpy(buffer,static_cast<void *>((m_->fcmpbuffer_)+m_->fcmpcount_),(size*elsize));
 		m_->fcmpcount_ += (size*elsize);
@@ -175,7 +175,7 @@ void matfile::mfwriteheader()
     
     if (m_->fptr_ == 0) return;
     mfwrite(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),116,0);
-	mfwrite(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(int32_t),2,116);    
+	  mfwrite(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(int32_t),2,116);    
     mfwrite(static_cast<void *>(&(m_->version_)),sizeof(short),1,124);
     mfwrite(static_cast<void *>(&endian),sizeof(short),1,126);
 }
@@ -193,7 +193,7 @@ void matfile::mfreadheader()
     if (endian != 19785) if (endian == 18765) m_->byteswap_ = 1; else throw invalid_file_format();
 
     mfread(static_cast<void *>(&(m_->headertext_[0])),sizeof(char),116,0);
-	mfread(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(int32_t),2,116);
+	  mfread(static_cast<void *>(&(m_->subsysdata_[0])),sizeof(int32_t),2,116);
     mfread(static_cast<void *>(&(m_->version_)),sizeof(short),1,124);
 }
 
@@ -209,6 +209,7 @@ matfile::matfile()
 	m_->fcmpsize_ = 0;
 	m_->byteswap_ = 0;
 	m_->ref_ = 1;
+  m_->compressmode_ = false;
 }
  
 matfile::matfile(std::string filename,std::string mode)
@@ -218,7 +219,7 @@ matfile::matfile(std::string filename,std::string mode)
 	m_->fptr_ = 0;
 	m_->byteswap_ = 0;
 	m_->ref_ = 1;
-	
+	m_->compressmode_ = false;
     open(filename,mode);
 } 
 
@@ -292,6 +293,8 @@ void matfile::open(std::string filename,std::string mode)
     {
         m_->fname_ = filename;
         m_->fmode_ = mode;
+        m_->compressmode_ = false;
+        
         if (isreadaccess())
         {
             char fileid[4];
@@ -320,6 +323,7 @@ void matfile::open(std::string filename,std::string mode)
             m_->curptr_.startptr = 128;
             m_->curptr_.endptr = m_->flength_;
             m_->curptr_.size   = 0;
+            m_->curptr_.type   = miUNKNOWN;
         }
         else if (iswriteaccess())
         {
@@ -330,8 +334,8 @@ void matfile::open(std::string filename,std::string mode)
             // All files are written in the native format, byteswapping is done
             // when reading files.
             
-			m_->subsysdata_[0] = 0;
-			m_->subsysdata_[1] = 0;
+            m_->subsysdata_[0] = 0;
+            m_->subsysdata_[1] = 0;
             m_->version_ = 0x0100;
             m_->byteswap_ = 0;
                 	
@@ -344,6 +348,7 @@ void matfile::open(std::string filename,std::string mode)
             m_->curptr_.startptr = 128;
             m_->curptr_.endptr = -1;
             m_->curptr_.size   = 0;
+            m_->curptr_.type   = miUNKNOWN;
         }
         else
         {
@@ -393,6 +398,7 @@ void matfile::rewind()
             m_->curptr_.datptr = -1;
             m_->curptr_.endptr = -1;
             m_->curptr_.size   = 0;
+            m_->curptr_.type   = miUNKNOWN;
     }
     
 	if (isreadaccess())
@@ -401,21 +407,27 @@ void matfile::rewind()
             m_->curptr_.datptr = -1;
             m_->curptr_.endptr = m_->flength_;
             m_->curptr_.size   = 0;
+            m_->curptr_.type   = miUNKNOWN;
     }
 	
+  m_->compressmode_ = false;
 	m_->fcmpbuffer_ = 0;
 	m_->fcmpsize_ = 0;
 }
 
 long matfile::nexttag()
 {
-    if (m_->curptr_.hdrptr == m_->curptr_.endptr) return(0);
-    if (m_->curptr_.datptr == -1) 
+  bool compresstag = false;
+
+  if (m_->curptr_.hdrptr == m_->curptr_.endptr) return(0);
+  
+  if (m_->curptr_.datptr == -1) 
 	{
 		if (isreadaccess())
 		{   // try to read next one
 			matfiledata md;
 			readtag(md);
+      m_->curptr_.type = md.type();
 			if (m_->curptr_.datptr == -1) 
 			{   // reading next one failed
 				// return current one
@@ -429,8 +441,18 @@ long matfile::nexttag()
 		}
     }
 	
-	m_->curptr_.hdrptr = m_->curptr_.datptr+m_->curptr_.size;
-    m_->curptr_.hdrptr = (((m_->curptr_.hdrptr-1)/8)+1)*8;	// hdrptr cannot be zero or negative, so this should give the proper alignment
+    if (m_->curptr_.type == miCOMPRESSED) compresstag = true;
+  
+  	m_->curptr_.hdrptr = m_->curptr_.datptr+m_->curptr_.size;
+    // BUG FIX, APPARENTLY MATLAB DOES NOT ALIGN COMPRESSED DATA
+    // E.G A COMPRESSED DATA BLOCK DOES NOT NEED TO END AT A 8 BYTE BOUNDARY
+    // CONTRADICTING ITS OWN FILEFORMAT DEFINITION!
+    // THE NEXT SHOULD FIX THIS
+    if (!compresstag)
+    {   
+      m_->curptr_.hdrptr = (((m_->curptr_.hdrptr-1)/8)+1)*8;	// hdrptr cannot be zero or negative, so this should give the proper alignment
+    }
+ 
     m_->curptr_.datptr = -1;
     m_->curptr_.size = 0;
     if ( isreadaccess()) { if (m_->curptr_.hdrptr > m_->curptr_.endptr) m_->curptr_.hdrptr = m_->curptr_.endptr; }
@@ -447,8 +469,9 @@ bool matfile::openchild()
     childptr.endptr = m_->curptr_.datptr+m_->curptr_.size;
     childptr.datptr = -1;
     childptr.size   = 0;
+    childptr.type   = miUNKNOWN;
  
-	if (iswriteaccess()) { childptr.endptr = -1;}
+  	if (iswriteaccess()) { childptr.endptr = -1;}
 	   
     m_->ptrstack_.push(m_->curptr_);
     m_->curptr_ = childptr;
@@ -589,20 +612,28 @@ bool matfile::opencompression()
 	}
 	
     matfileptr childptr;
-    childptr.hdrptr = m_->curptr_.datptr;
-    childptr.startptr = m_->curptr_.datptr;
-    childptr.endptr = m_->curptr_.datptr+m_->fcmpsize_;
+    long datptr = m_->curptr_.datptr;
+    datptr = (((datptr-1)/8)+1)*8;
+    
+    childptr.hdrptr = datptr;
+    childptr.startptr = datptr;
+    childptr.endptr = datptr+m_->fcmpsize_;
     childptr.datptr = -1;
     childptr.size   = 0;
- 	   
+    childptr.type   = miUNKNOWN;
+   
     m_->ptrstack_.push(m_->curptr_);
     m_->curptr_ = childptr;
+    m_->compressmode_ = true;
+    m_->fcmpalignoffset_ = datptr;
+    
     return(true);	
 }
 
 
 void matfile::closecompression()
 {
+
     matfileptr parptr;
     
     if (m_->ptrstack_.empty()) return;		// We are already at the top level;
@@ -613,9 +644,10 @@ void matfile::closecompression()
     m_->ptrstack_.pop();
     m_->curptr_ = parptr; 
     m_->fcmpbuffer_ = 0;
-	m_->fcmpsize_ = 0;
-	m_->fcmpoffset_ = 0;
-	m_->fcmpcount_ = 0;
+    m_->fcmpsize_ = 0;
+    m_->fcmpoffset_ = 0;
+    m_->fcmpcount_ = 0;
+    m_->compressmode_ = false;
 }
 
 
@@ -691,18 +723,19 @@ void matfile::readtag(matfiledata& md)
 			{
 				size = static_cast<int32_t>(csizetype[0]);
 				type = static_cast<int32_t>(csizetype[1]);
-            }
-            m_->curptr_.datptr = m_->curptr_.hdrptr+4;
-        }
-        m_->curptr_.size = static_cast<long>(size);
+      }
+      m_->curptr_.datptr = m_->curptr_.hdrptr+4;
+    }
+      m_->curptr_.size = static_cast<long>(size);
 
-        // If type still invalid then something else is going on
-        // Throw an exception as we cannot read this field
-        if (type >= miEND) throw unknown_type();
-        
-        md.clear();
-        md.type(static_cast<mitype>(type));
-	    }
+      // If type still invalid then something else is going on
+      // Throw an exception as we cannot read this field
+      if (type >= miEND) throw unknown_type();
+      
+      md.clear();
+      md.type(static_cast<mitype>(type));
+      m_->curptr_.type = static_cast<mitype>(type);
+    }
     catch(...)
     {
         md.clear();		// Clean up everything allocated in this function
@@ -731,23 +764,24 @@ void matfile::readdat(matfiledata& md)
             // are in the proper order.
             mfread(static_cast<void *>(&(csizetype[0])),sizeof(int32_t),1,m_->curptr_.hdrptr);
             if (byteswapmachine())
-			{
-				size = static_cast<int32_t>(csizetype[1]);
-				type = static_cast<int32_t>(csizetype[0]);			
-			}
-			else
-			{
-				size = static_cast<int32_t>(csizetype[0]);
-				type = static_cast<int32_t>(csizetype[1]);
+            {
+              size = static_cast<int32_t>(csizetype[1]);
+              type = static_cast<int32_t>(csizetype[0]);			
             }
-			m_->curptr_.datptr = m_->curptr_.hdrptr+4;
+            else
+            {
+              size = static_cast<int32_t>(csizetype[0]);
+              type = static_cast<int32_t>(csizetype[1]);
+            }
+            m_->curptr_.datptr = m_->curptr_.hdrptr+4;
         }
         m_->curptr_.size = static_cast<long>(size);
 
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
         if (type >= miEND) throw unknown_type();
-        
+
+        m_->curptr_.type = static_cast<mitype>(type);        
         md.newdatabuffer(size,static_cast<mitype>(type));
         if (md.size() > 0) mfread(md.databuffer(),md.elsize(),md.size(),m_->curptr_.datptr);
 

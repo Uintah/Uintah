@@ -95,9 +95,9 @@ const TypeDescription* get_type_description(SequentialIndex<N, E>*)
 template<class N, class E>
 void Pio(Piostream& stream, SequentialIndex<N, E>& data)
 {
-  Pio(stream, which_);
-  Pio(stream, node_index_);
-  Pio(stream, edge_index_);
+  Pio(stream, data->which_);
+  Pio(stream, data->node_index_);
+  Pio(stream, data->edge_index_);
 }
 
 template <class N, class E>
@@ -198,9 +198,9 @@ public:
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
-    typedef SequentialIndex<NodeIndex, EdgeIndex<unsigned int> > index_type;
-    typedef SequentialIter<NodeIter, EdgeIterator<unsigned int>, index_type> iterator;
-    typedef SequentialSize<NodeSize, EdgeIndex<unsigned int> >   size_type;
+    typedef SequentialIndex<LatVolMeshNodeIndex, EdgeIndex<unsigned int> > index_type;
+    typedef SequentialIter<LatVolMeshNodeIter, EdgeIterator<unsigned int>, index_type> iterator;
+    typedef SequentialSize<LatVolMeshNodeSize, EdgeIndex<unsigned int> >   size_type;
     typedef vector<index_type> array_type;
   };			
 

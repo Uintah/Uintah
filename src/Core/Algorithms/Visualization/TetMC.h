@@ -201,6 +201,8 @@ template<class Field>
 TriSurfMesh::Node::index_type
 TetMC<Field>::find_or_add_edgepoint(int u0, int u1, double d0, const Point &p) 
 {
+  if (d0 <= 0.0) { u1 = -1; }
+  if (d0 >= 1.0) { u0 = -1; }
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
@@ -356,7 +358,8 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
 	i1 = find_or_add_edgepoint(node[o], node[i], v1, p1);
 	i2 = find_or_add_edgepoint(node[o], node[j], v2, p2);
 	i3 = find_or_add_edgepoint(node[o], node[k], v3, p3);
-	trisurf_->add_triangle(i1, i2, i3);
+        if (i1 != i2 && i2 != i3 && i3 != i1)
+          trisurf_->add_triangle(i1, i2, i3);
       }
     }
     break;
@@ -388,8 +391,10 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
 	i2 = find_or_add_edgepoint(node[o], node[j], v2, p2);
 	i3 = find_or_add_edgepoint(node[k], node[j], v3, p3);
 	i4 = find_or_add_edgepoint(node[k], node[i], v4, p4);
-	trisurf_->add_triangle(i1, i2, i3);
-	trisurf_->add_triangle(i1, i3, i4);
+        if (i1 != i2 && i2 != i3 && i3 != i1)
+          trisurf_->add_triangle(i1, i2, i3);
+        if (i1 != i3 && i3 != i4 && i4 != i1)
+          trisurf_->add_triangle(i1, i3, i4);
       }
     }
     break;
@@ -441,12 +446,27 @@ TetMC<Field>::get_interpolant()
       ++eiter;
     }
 
-    for (int i = 0; i <= nrows; i++)
+    int nnz = 0;
+    int i;
+    for (i = 0; i < nrows; i++)
     {
-      rr[i] = i * 2;
+      rr[i] = nnz;
+      if (cc[i * 2 + 0] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 0];
+        dd[nnz] = dd[i * 2 + 0];
+        nnz++;
+      }
+      if (cc[i * 2 + 1] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 1];
+        dd[nnz] = dd[i * 2 + 1];
+        nnz++;
+      }
     }
+    rr[i] = nnz;
 
-    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
   }
   else
   {

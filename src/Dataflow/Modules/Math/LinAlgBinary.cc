@@ -81,19 +81,6 @@ void LinAlgBinary::execute() {
   imatA_ = (MatrixIPort *)get_iport("A");
   imatB_ = (MatrixIPort *)get_iport("B");
   omat_ = (MatrixOPort *)get_oport("Output");
-
-  if (!imatA_) {
-    error("Unable to initialize iport 'A'.");
-    return;
-  }
-  if (!imatB_) {
-    error("Unable to initialize iport 'B'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
   
   update_state(NeedData);
   MatrixHandle aH, bH;
@@ -139,6 +126,8 @@ void LinAlgBinary::execute() {
     if (aH->ncols() != bH->nrows())
     {
       error("Matrix multiply requires the number of columns in A to be the same as the number of rows in B.");
+      error("A contains " + to_string(aH->ncols()) +
+            " columns, B contains " + to_string(bH->nrows()) + " rows.");
       return;
     }
     omat_->send(aH * bH);
@@ -148,6 +137,11 @@ void LinAlgBinary::execute() {
       error("Function only works if input matrices have the same number of elements.");
       return;
     }
+    
+    MatrixHandle aHtmp = aH;
+    MatrixHandle bHtmp = bH;
+    if (aH->is_sparse()) { aHtmp = aH->dense(); }
+    if (bH->is_sparse()) { bHtmp = bH->dense(); }
 
     // Remove trailing white-space from the function string.
     string func = function_.get();
@@ -159,7 +153,7 @@ void LinAlgBinary::execute() {
     // Compile the function.
     int hoffset = 0;
     Handle<LinAlgBinaryAlgo> algo;
-    while (1)
+    for( ;; )
     {
       CompileInfoHandle ci =
 	LinAlgBinaryAlgo::get_compile_info(func, hoffset);
@@ -178,10 +172,18 @@ void LinAlgBinary::execute() {
     }
 
     // Get the data from the matrix, iterate over it calling the function.
-    MatrixHandle m = aH->clone();
-    double *a = &((*(aH.get_rep()))[0][0]);
-    double *b = &((*(bH.get_rep()))[0][0]);
-    double *x = &((*(m.get_rep()))[0][0]);
+    MatrixHandle m;
+    if (aH->ncols() == 1)
+    {
+      m = scinew ColumnMatrix(aH->nrows());
+    }
+    else
+    {
+      m = scinew DenseMatrix(aH->nrows(), aH->ncols());
+    }
+    double *a = aHtmp->get_data_pointer();
+    double *b = bHtmp->get_data_pointer();
+    double *x = m->get_data_pointer();
     const int n = m->nrows() * m->ncols();
     for (int i = 0; i < n; i++)
     {
@@ -260,15 +262,26 @@ void LinAlgBinary::execute() {
       error("Can't have an empty input matrix for NormalizeAtoB.");
       return;
     }
+
+    if (aH->is_sparse() || bH->is_sparse())
+    {
+      error("NormalizeAtoB does not currently support SparseRowMatrices.");
+      return;
+    }
+    
+    if (aH->get_data_size() == 0 || bH->get_data_size() == 0)
+    {
+      error("Cannot NormalizeAtoB with empty matrices.");
+      return;
+    }
+    
     double amin, amax, bmin, bmax;
-    MatrixHandle anewH = aH->clone();
-    double *a = &((*(aH.get_rep()))[0][0]);
-    double *anew = &((*(anewH.get_rep()))[0][0]);
-    double *b = &((*(bH.get_rep()))[0][0]);
-    int na = aH->nrows()*aH->ncols();
-    int nb = bH->nrows()*bH->ncols();
-    amin=amax=a[0];
-    bmin=bmax=b[0];
+    double *a = aH->get_data_pointer();
+    double *b = bH->get_data_pointer();
+    const int na = aH->get_data_size();
+    const int nb = bH->get_data_size();
+    amin = amax = a[0];
+    bmin = bmax = b[0];
     int i;
     for (i=1; i<na; i++) {
       if (a[i]<amin) amin=a[i];
@@ -278,9 +291,10 @@ void LinAlgBinary::execute() {
       if (b[i]<bmin) bmin=b[i];
       else if (b[i]>bmax) bmax=b[i];
     }
-    double da=amax-amin;
-    double db=bmax-bmin;
-    double scale = db/da;
+
+    MatrixHandle anewH = aH->clone();
+    double *anew = anewH->get_data_pointer();
+    const double scale = (bmax - bmin)/(amax - amin);
     for (i=0; i<na; i++)
       anew[i] = (a[i]-amin)*scale+bmin;
     omat_->send(anewH);

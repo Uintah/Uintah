@@ -38,6 +38,8 @@
 
 #include <Core/ICom/sshAgent.h>
 #include <Core/Containers/StringUtil.h>
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
@@ -172,8 +174,9 @@ bool sshAgent::startagent() {
 
 bool sshAgent::iskeyfile(string str)
 {
-  FILE*   fid;
-  if (fid = fopen(str.c_str(),"r")) {
+  FILE * fid = NULL;
+
+  if ( (fid = fopen(str.c_str(),"r")) != NULL ) {
     fclose(fid);
     return true;
   } else {

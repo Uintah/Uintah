@@ -194,8 +194,8 @@ DESCRIPTION
 	    template<class T>
 	    static void parallel(T* ptr, void (T::*pmf)(int),
 				 int numThreads, bool block) {
-		parallel(Parallel<T>(ptr, pmf),
-			 numThreads, block);
+                Parallel<T> p(ptr, pmf);
+		parallel(p, numThreads, block);
 	    }
 
 	    //////////
@@ -204,8 +204,8 @@ DESCRIPTION
 	    static void parallel(T* ptr, void (T::*pmf)(int, Arg1),
 				 int numThreads, bool block,
 				 Arg1 a1) {
-		parallel(Parallel1<T, Arg1>(ptr, pmf, a1),
-			 numThreads, block);
+	        Parallel1<T, Arg1> p(ptr, pmf, a1);
+		parallel(p, numThreads, block);
 	    }
 
 	    //////////
@@ -214,8 +214,8 @@ DESCRIPTION
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2),
 				 int numThreads, bool block,
 				 Arg1 a1, Arg2 a2) {
-		parallel(Parallel2<T, Arg1, Arg2>(ptr, pmf, a1, a2),
-			 numThreads, block);
+                Parallel2<T, Arg1, Arg2> p(ptr, pmf, a1, a2);
+		parallel(p, numThreads, block);
 	    }
 
 	    //////////
@@ -224,8 +224,8 @@ DESCRIPTION
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2, Arg3),
 				 int numThreads, bool block,
 				 Arg1 a1, Arg2 a2, Arg3 a3) {
-		parallel(Parallel3<T, Arg1, Arg2, Arg3>(ptr, pmf, a1, a2, a3),
-			 numThreads, block);
+                Parallel3<T, Arg1, Arg2, Arg3> p(ptr, pmf, a1, a2, a3);
+		parallel(p, numThreads, block);
 	    }
 
 	    //////////

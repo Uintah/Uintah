@@ -44,6 +44,7 @@
 #define Core_Thread_Parallel_h
 
 #include <Core/Thread/ParallelBase.h>
+#include <Core/Thread/Semaphore.h>
 
 namespace SCIRun {
 /**************************************

@@ -98,11 +98,6 @@ void
   while (pi != range.second)
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
-    if (!inrrd) {
-      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-      return;
-    }
-
     NrrdDataHandle nrrd;
     
     if (inrrd->get(nrrd) && nrrd.get_rep()) {

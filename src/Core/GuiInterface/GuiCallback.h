@@ -67,7 +67,10 @@ namespace SCIRun {
     ~GuiArgs();
     int count();
     string operator[](int i);
-  
+    string get_string(int i);
+    int get_int(int i);
+    double get_double(int i);
+    
     void error(const string&);
     void result(const string&);
     void append_result(const string&);

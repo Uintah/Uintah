@@ -127,7 +127,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	    -showvalue true -orient horizontal -relief groove -length 200 \
 	    -command "$this maybeRestart"
 
-	bind $w.cur <ButtonRelease> -command "set $this-execmode init; $this-c needexecute"
+	bind $w.cur <ButtonRelease> "set $this-execmode init; $this-c needexecute"
 	update_range
 
 	# Restore range to pre-loaded value
@@ -148,7 +148,15 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
 
-	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	# Save the delay since the iwidget resets it
+	global $this-delay
+	set delay [set $this-delay]
+	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} \
+	    -range {0 86400000} -justify right -width 5 -step 10 \
+	    -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
+	
+	$playmode.delay delete 0 end
+	$playmode.delay insert 0 $delay
 	trace variable $this-delay w "$this maybeRestart;\#"
 
 

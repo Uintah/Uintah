@@ -1,73 +1,82 @@
-#
-#  For more information, please see: http://software.sci.utah.edu
+# SCIRun Network v1.24.1
+
+# The MIT License
 # 
-#  The MIT License
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
 # 
-#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
-#  University of Utah.
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a 
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation 
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+# and/or sell copies of the Software, and to permit persons to whom the 
+# Software is furnished to do so, subject to the following conditions:
 # 
-#  License for the specific language governing rights and limitations under
-#  Permission is hereby granted, free of charge, to any person obtaining a
-#  copy of this software and associated documentation files (the "Software"),
-#  to deal in the Software without restriction, including without limitation
-#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-#  and/or sell copies of the Software, and to permit persons to whom the
-#  Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included 
+# in all copies or substantial portions of the Software.
 # 
-#  The above copyright notice and this permission notice shall be included
-#  in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+# DEALINGS IN THE SOFTWARE.
 # 
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-#  DEALINGS IN THE SOFTWARE.
-#
 
+set name {Main}
+set bbox {30 10 434 338}
+set creationDate {Thu Mar 03 2005}
+set creationTime {13:59:46}
+set runDate {}
+set runTime {}
+set notes {}
 
-# SCI Network 1.0
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m1 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 45 195]
 
-::netedit dontschedule
+# Create a Teem->NrrdData->NrrdInfo Module
+set m2 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 61 281]
 
-set m0 [addModuleAtPosition "Teem" "Unu" "UnuPad" 45 195]
-set m1 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 61 281]
-set m2 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 269 203]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 30 10]
-set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 31 88]
+# Create a Teem->NrrdData->NrrdInfo Module
+set m3 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 269 203]
 
-addConnection $m0 0 $m1 0
-addConnection $m3 0 $m4 0
-addConnection $m4 0 $m0 0
-addConnection $m4 2 $m2 0
+# Create a SCIRun->FieldsCreate->SampleLattice Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 30 10]
 
-set $m0-notes {}
-set $m0-show_status {1}
-set $m0-dim {3}
-set $m0-minAxis0 {10}
-set $m0-maxAxis0 {10}
-set $m0-minAxis1 {0}
-set $m0-maxAxis1 {0}
-set $m0-minAxis2 {0}
-set $m0-maxAxis2 {5}
-set $m1-notes {}
-set $m1-show_status {1}
-set $m2-notes {}
-set $m2-show_status {1}
-set $m3-notes {}
-set $m3-show_status {1}
-set $m3-sizex {16}
-set $m3-sizey {16}
-set $m3-sizez {16}
-set $m3-padpercent {0}
-set $m3-data-at {Nodes}
-set $m4-notes {}
-set $m4-show_status {1}
-set $m4-label {empty}
-$m0 initialize_ui
+# Create a Teem->Converters->FieldToNrrd Module
+set m5 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 31 88]
+
+# Create the Connections between Modules
+set c1 [addConnection $m4 0 $m5 0]
+set c2 [addConnection $m5 2 $m3 0]
+set c3 [addConnection $m5 2 $m1 0]
+set c4 [addConnection $m1 0 $m2 0]
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m1-dim {3}
+set $m1-minAxis0 {10}
+set $m1-maxAxis0 {10}
+set $m1-minAxis1 {0}
+set $m1-maxAxis1 {0}
+set $m1-minAxis2 {0}
+set $m1-maxAxis2 {5}
+
+# Open the Teem->UnuNtoZ->UnuPad UI
 $m1 initialize_ui
+
+# Open the Teem->NrrdData->NrrdInfo UI
 $m2 initialize_ui
+
+# Open the Teem->NrrdData->NrrdInfo UI
 $m3 initialize_ui
+
+# Open the SCIRun->FieldsCreate->SampleLattice UI
+$m4 initialize_ui
+
+# Set GUI variables for the Teem->Converters->FieldToNrrd Module
+set $m5-label {empty}
+
 
 ::netedit scheduleok

@@ -105,9 +105,8 @@ bool BuildTriFEMatrix::build_FEMatrix(TriSurfFieldIntHandle hFieldInt,
     new BuildTriFEMatrix(hFieldInt, hFieldTensor, index_based, tens, 
 			 hA, np, unitsScale);
 
-  Thread::parallel(Parallel<BuildTriFEMatrix>(hMaker.get_rep(), 
-					   &BuildTriFEMatrix::parallel),
- 		   np, true);
+  Parallel<BuildTriFEMatrix> p(hMaker.get_rep(), &BuildTriFEMatrix::parallel);
+  Thread::parallel(p, np, true);
   
   // -- refer to the object one more time not to make it die before
   hMaker = 0;
@@ -134,7 +133,8 @@ void BuildTriFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
-  Array1<int> mycols(0, 15*ndof);
+  vector<unsigned int> mycols;
+  mycols.reserve(ndof*15);
 
   if (proc==0){
     hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
@@ -142,7 +142,7 @@ void BuildTriFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  TriSurfMesh::Node::array_type neib_nodes;
+  vector<TriSurfMesh::Node::index_type> neib_nodes;
 
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
@@ -153,8 +153,12 @@ void BuildTriFEMatrix::parallel(int proc)
     neib_nodes.push_back(TriSurfMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
-    for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
-      mycols.add(neib_nodes[jj]);
+    for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
+    {
+      if (jj == 0 || neib_nodes[jj] != mycols.back())
+      {
+        mycols.push_back(neib_nodes[jj]);
+      }
     }
   }
 
@@ -243,10 +247,8 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
   if (index_based_) el_cond = tens_[hFieldInt_->value(f_ind)].second.mat_;
   else el_cond = hFieldTensor_->value(f_ind).mat_;
 
-  if(fabs(area) < 1.e-10){
-    for(int i = 0; i<3; i++)
-      for(int j = 0; j<3; j++)
-	lcl_a[i][j]=0;
+  if (fabs(area) < 1.e-10) {
+    memset(lcl_a, 0, sizeof(double) * 9);
     return;
   }
   
@@ -295,7 +297,7 @@ void BuildTriFEMatrix::add_lcl_gbl(double lcl_a[3][3], TriSurfMesh::Face::index_
     if (ii>=s && ii<e)          //! the row to update belongs to the process, proceed...
       for (int j=0; j<3; j++) {      
 	int jj = face_nodes[j];
-	pA_->get(ii, jj) += lcl_a[i][j];
+	pA_->add(ii, jj, lcl_a[i][j]);
       }
   }
 

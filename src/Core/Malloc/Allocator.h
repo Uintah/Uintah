@@ -44,8 +44,11 @@
 #define Malloc_Allocator_h 1
 
 #ifndef _WIN32
-#include <unistd.h>
+#  include <sgi_stl_warnings_off.h>
+#  include <unistd.h>
+#  include <sgi_stl_warnings_on.h>
 #endif
+
 #include <stdlib.h>
 
 namespace SCIRun {

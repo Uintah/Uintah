@@ -60,21 +60,21 @@ static Persistent* maker()
 
 PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Matrix", maker);
 
-ColumnMatrix::ColumnMatrix(int rows) 
-  : rows(rows)
+ColumnMatrix::ColumnMatrix(int rows) :
+  Matrix(rows, 1)
 {
-    if(rows)
-	data=scinew double[rows];
+    if(nrows_)
+	data=scinew double[nrows_];
     else
 	data=0;
 }
 
-ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) 
-  : rows(c.rows)
+ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) :
+  Matrix(c.nrows_, 1)
 {
-  if(rows){
-    data=scinew double[rows];
-    for(int i=0;i<rows;i++)
+  if(nrows_){
+    data=scinew double[nrows_];
+    for(int i=0;i<nrows_;i++)
       data[i]=c.data[i];
   } else {
     data=0;
@@ -87,8 +87,8 @@ ColumnMatrix *ColumnMatrix::column() {
 
 DenseMatrix *ColumnMatrix::dense()
 {
-  DenseMatrix *dm = scinew DenseMatrix(rows, 1);
-  for (int i=0; i<rows; i++)
+  DenseMatrix *dm = scinew DenseMatrix(nrows_, 1);
+  for (int i=0; i<nrows_; i++)
     (*dm)[i][0] = data[i];
   return dm;
 }
@@ -96,15 +96,15 @@ DenseMatrix *ColumnMatrix::dense()
 SparseRowMatrix *ColumnMatrix::sparse() {
   int nnz = 0;
   int r;
-  int *row = scinew int[rows+1];
-  for (r=0; r<rows; r++)
+  int *row = scinew int[nrows_+1];
+  for (r=0; r<nrows_; r++)
     if (data[r] != 0) nnz++;
   
   int *columns = scinew int[nnz];
   double *a = scinew double[nnz];
   
   int count=0;
-  for (r=0; r<rows; r++) {
+  for (r=0; r<nrows_; r++) {
     row[r] = count;
     if (data[r] != 0) {
       columns[count]=0;
@@ -112,13 +112,28 @@ SparseRowMatrix *ColumnMatrix::sparse() {
       count++;
     }
   }
-  row[rows]=count;
-  return scinew SparseRowMatrix(rows, 1, row, columns, nnz, a);
+  row[nrows_]=count;
+  return scinew SparseRowMatrix(nrows_, 1, row, columns, nnz, a);
 }
 
+
+double *
+ColumnMatrix::get_data_pointer()
+{
+  return data;
+}
+
+
+size_t
+ColumnMatrix::get_data_size()
+{
+  return nrows();
+}
+
+
 Matrix *ColumnMatrix::transpose() {
-  DenseMatrix *dm = scinew DenseMatrix(1, rows);
-  for (int i=0; i<rows; i++)
+  DenseMatrix *dm = scinew DenseMatrix(1, nrows_);
+  for (int i=0; i<nrows_; i++)
     (*dm)[0][i] = data[i];
   return dm;
 }
@@ -129,12 +144,12 @@ ColumnMatrix* ColumnMatrix::clone() {
 
 ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
 {
-    if(rows != c.rows){
+    if(nrows_ != c.nrows_){
 	if(data)delete[] data;
-	rows=c.rows;
-	data=scinew double[rows];
+	nrows_=c.nrows_;
+	data=scinew double[nrows_];
     }
-    for(int i=0;i<rows;i++)
+    for(int i=0;i<nrows_;i++)
 	data[i]=c.data[i];
     return *this;
 }
@@ -153,18 +168,13 @@ void ColumnMatrix::resize(int new_rows)
 	data=new double[new_rows];
     else
 	data=0;
-    rows=new_rows;
-}
-
-int ColumnMatrix::nrows() const
-{
-    return rows;
+    nrows_ = new_rows;
 }
 
 void ColumnMatrix::zero()
 {
-    for(int i=0;i<rows;i++)
-	data[i]=0.0;
+    for(int i=0; i<nrows_; i++)
+	data[i] = 0.0;
 }
 
 extern "C" double cm_vnorm(int beg, int end, double* data);
@@ -172,22 +182,19 @@ extern "C" double dnrm2(int n, double* x, int incx);
 
 double ColumnMatrix::vector_norm() const
 {
-//    double norm=Sqrt(cm_vnorm(0, rows, data));
-//    double norm=dnrm2(rows, data, 1);
-    double norm=linalg_norm2(rows, data);
-    return norm; 
+  return linalg_norm2(nrows_, data);
 }
 
 double ColumnMatrix::vector_norm(int& flops, int& memrefs) const
 {
-    flops+=rows*2;
-    memrefs+=rows*sizeof(double);
+    flops += nrows_ * 2;
+    memrefs += nrows_ * sizeof(double);
     return vector_norm();
 }
 
 double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end) const
 {
-    ASSERTRANGE(end, 0, rows+1);
+    ASSERTRANGE(end, 0, nrows_+1);
     ASSERTRANGE(beg, 0, end);
     flops+=(end-beg)*2;
     memrefs+=(end-beg)*sizeof(double);
@@ -196,13 +203,14 @@ double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end) con
 
 void ColumnMatrix::print() const
 {
-    std::cout << "Column Matrix: " << rows << endl;
+    std::cout << "Column Matrix: " << nrows_ << endl;
     print(std::cout);
 }
 
 void ColumnMatrix::print(std::ostream& str) const
 {
-    for(int i=0;i<rows;i++){
+    for(int i=0; i<nrows_; i++)
+    {
 	str << data[i] << endl;
     }
 }
@@ -211,41 +219,31 @@ void ColumnMatrix::print() {
   print(cerr);
 }
 
-double& ColumnMatrix::get(int r, int c) const
+double ColumnMatrix::get(int r, int c) const
 {
-    ASSERTRANGE(r, 0, rows);
+    ASSERTRANGE(r, 0, nrows_);
     ASSERTEQ(c, 0);
-    return data[r];
-}
-
-double& ColumnMatrix::get(int r) const
-{
-    ASSERTRANGE(r, 0, rows);
     return data[r];
 }
 
 void ColumnMatrix::put(int r, int c, double d)
 {
-    ASSERTRANGE(r, 0, rows);
+    ASSERTRANGE(r, 0, nrows_);
     ASSERTEQ(c, 0);
-    data[r]=d;
+    data[r] = d;
 }
 
-void ColumnMatrix::put(int r, double d)
+void ColumnMatrix::add(int r, int c, double d)
 {
-    ASSERTRANGE(r, 0, rows);
-    data[r]=d;
-}
-
-int ColumnMatrix::ncols() const
-{
-    return 1;
+    ASSERTRANGE(r, 0, nrows_);
+    ASSERTEQ(c, 0);
+    data[r] += d;
 }
 
 double ColumnMatrix::sumOfCol(int c) {
   ASSERTEQ(c, 0);
   double sum = 0;
-  for (int i=0; i<rows; i++)
+  for (int i=0; i< nrows_; i++)
     sum+=data[i];
   return sum;
 }
@@ -287,39 +285,39 @@ void ColumnMatrix::io(Piostream& stream)
       Matrix::io(stream);
     }
 
-    stream.io(rows);
+    stream.io(nrows_);
     if(stream.reading()){
-      data=scinew double[rows];
+      data=scinew double[nrows_];
     }
     int i;
-    for(i=0;i<rows;i++)
+    for(i=0; i<nrows_; i++)
       stream.io(data[i]);
     stream.end_class();
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_mult(result.rows, result.data, a.data, b.data);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_mult(result.nrows_, result.data, a.data, b.data);
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 	  int& flops, int& memrefs)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_mult(result.rows, result.data, a.data, b.data);
-    flops+=result.rows;
-    memrefs+=result.rows*3*sizeof(double);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_mult(result.nrows_, result.data, a.data, b.data);
+    flops+=result.nrows_;
+    memrefs+=result.nrows_ * 3 * sizeof(double);
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 	  int& flops, int& memrefs, int beg, int end)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    ASSERTRANGE(end, 0, result.rows+1);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    ASSERTRANGE(end, 0, result.nrows_+1);
     ASSERTRANGE(beg, 0, end);
     linalg_mult(end-beg, result.data+beg, a.data+beg, b.data+beg);
     flops+=(end-beg);
@@ -328,46 +326,46 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 
 void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_sub(result.rows, result.data, a.data, b.data);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_sub(result.nrows_, result.data, a.data, b.data);
 }
 
 void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 	  int& flops, int& memrefs)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_sub(result.rows, result.data, a.data, b.data);
-    flops+=result.rows;
-    memrefs+=result.rows*3*sizeof(double);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_sub(result.nrows_, result.data, a.data, b.data);
+    flops+=result.nrows_;
+    memrefs += result.nrows_ * 3 * sizeof(double);
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 		const ColumnMatrix& b)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_smadd(result.rows, result.data, s, a.data, b.data);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_smadd(result.nrows_, result.data, s, a.data, b.data);
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 		const ColumnMatrix& b, int& flops, int& memrefs)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_smadd(result.rows, result.data, s, a.data, b.data);
-    flops+=result.rows*2;
-    memrefs+=result.rows*3*sizeof(double);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_smadd(result.nrows_, result.data, s, a.data, b.data);
+    flops+=result.nrows_ * 2;
+    memrefs+=result.nrows_ * 3 * sizeof(double);
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 		const ColumnMatrix& b, int& flops, int& memrefs,
 		int beg, int end)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    ASSERTRANGE(end, 0, result.rows+1);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    ASSERTRANGE(end, 0, result.nrows_+1);
     ASSERTRANGE(beg, 0, end);
     linalg_smadd(end-beg, result.data+beg, s, a.data+beg, b.data+beg);
     flops+=(end-beg)*2;
@@ -376,24 +374,24 @@ void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERTEQ(a.rows, b.rows);
-    return linalg_dot(a.rows, a.data, b.data);
+    ASSERTEQ(a.nrows_, b.nrows_);
+    return linalg_dot(a.nrows_, a.data, b.data);
 }
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
 	   int& flops, int& memrefs)
 {
-    ASSERTEQ(a.rows, b.rows);
-    flops+=a.rows*2;
-    memrefs+=2*sizeof(double)*a.rows;
-    return linalg_dot(a.rows, a.data, b.data);
+    ASSERTEQ(a.nrows_, b.nrows_);
+    flops += a.nrows_ * 2;
+    memrefs += 2 * sizeof(double) * a.nrows_;
+    return linalg_dot(a.nrows_, a.data, b.data);
 }
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
 	   int& flops, int& memrefs, int beg, int end)
 {
-    ASSERTEQ(a.rows, b.rows);
-    ASSERTRANGE(end, 0, a.rows+1);
+    ASSERTEQ(a.nrows_, b.nrows_);
+    ASSERTRANGE(end, 0, a.nrows_+1);
     ASSERTRANGE(beg, 0, end);
     flops+=(end-beg)*2;
     memrefs+=2*sizeof(double)*(end-beg);
@@ -402,24 +400,24 @@ double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
 
 void Copy(ColumnMatrix& out, const ColumnMatrix& in)
 {
-    ASSERTEQ(out.rows, in.rows);
-    for(int i=0;i<out.rows;i++)
-	out.data[i]=in.data[i];
+    ASSERTEQ(out.nrows_, in.nrows_);
+    for(int i=0; i<out.nrows_; i++)
+	out.data[i] = in.data[i];
 }
 
 void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs)
 {
-    ASSERTEQ(out.rows, in.rows);
-    for(int i=0;i<out.rows;i++)
+    ASSERTEQ(out.nrows_, in.nrows_);
+    for(int i=0; i<out.nrows_; i++)
 	out.data[i]=in.data[i];
-    refs+=sizeof(double)*out.rows;
+    refs+=sizeof(double)*out.nrows_;
 }
 
 void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs,
 	  int beg, int end)
 {
-    ASSERTEQ(out.rows, in.rows);
-    ASSERTRANGE(end, 0, out.rows+1);
+    ASSERTEQ(out.nrows_, in.nrows_);
+    ASSERTRANGE(end, 0, out.nrows_+1);
     ASSERTRANGE(beg, 0, end);
     for(int i=beg;i<end;i++)
 	out.data[i]=in.data[i];
@@ -429,38 +427,38 @@ void Copy(ColumnMatrix& out, const ColumnMatrix& in, int&, int& refs,
 void AddScMult(ColumnMatrix& result, const ColumnMatrix& a,
 	       double s, const ColumnMatrix& b)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_smadd(result.rows, result.data, s, b.data, a.data);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_smadd(result.nrows_, result.data, s, b.data, a.data);
 }
 
 void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    linalg_add(result.rows, result.data, a.data, b.data);
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    linalg_add(result.nrows_, result.data, a.data, b.data);
 }
 
 void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 	 const ColumnMatrix& c)
 {
-    ASSERTEQ(result.rows, a.rows);
-    ASSERTEQ(result.rows, b.rows);
-    ASSERTEQ(result.rows, c.rows);
-    for(int i=0;i<result.rows;i++)
+    ASSERTEQ(result.nrows_, a.nrows_);
+    ASSERTEQ(result.nrows_, b.nrows_);
+    ASSERTEQ(result.nrows_, c.nrows_);
+    for(int i=0;i<result.nrows_;i++)
 	result.data[i]=a.data[i]+b.data[i]+c.data[i];
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 {
-    ASSERTEQ(result.rows, a.rows);
-    for(int i=0;i<result.rows;i++)
-	result.data[i]=a.data[i]*s;
+    ASSERTEQ(result.nrows_, a.nrows_);
+    for(int i=0; i<result.nrows_; i++)
+	result.data[i] = a.data[i]*s;
 }
 
 void ColumnMatrix::scalar_multiply(double s)
 {
-  for (int i=0;i<rows;i++)
+  for (int i=0; i<nrows_; i++)
   {
     data[i] *= s;
   }
@@ -471,7 +469,7 @@ MatrixHandle
 ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)
 {
   ASSERTRANGE(r1, 0, r2+1);
-  ASSERTRANGE(r2, r1, rows);
+  ASSERTRANGE(r2, r1, nrows_);
   ASSERTEQ(c1, 0);
   ASSERTEQ(c2, 0);
 
@@ -485,16 +483,15 @@ ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)
 DenseMatrix
 ColumnMatrix::exterior(const ColumnMatrix &m) const
 {
-  const int rows = nrows();
-  DenseMatrix ret(rows, rows);
+  DenseMatrix ret(nrows_, nrows_);
 
-  if (rows != m.nrows())
+  if (nrows_ != m.nrows())
   {
     ASSERTFAIL("Cannot compute exterior of two vectors of unequal dimensions.");
   }
-  for (int i=0; i < rows; i++)
-    for (int j=0; j< rows; j++)
-      ret.put(i, j, get(j)*m.get(i));
+  for (int i=0; i < nrows_; i++)
+    for (int j=0; j< nrows_; j++)
+      ret.put(i, j, get(j) * m.get(i));
 
   return ret;
 }

@@ -37,12 +37,11 @@
 
 #include <Core/Volume/Utils.h>
 #include <Core/Volume/Pbuffer.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Volume/VolShader.h>
 #include <Core/Volume/CM2Shader.h>
 
 #include <iostream>
-using std::cerr;
 using std::string;
 
 namespace SCIRun {
@@ -256,10 +255,10 @@ TextureRenderer::compute_view()
 }
 
 void
-TextureRenderer::load_brick(TextureBrickHandle brick)
+TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 {
-  int nc = brick->nc();
-#if !defined(GL_ARB_fragment_program) || !defined(GL_ATI_fragment_shader)
+  int nc = use_cmap2?brick->nc():1;
+#if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader)
   nc = 1;
 #endif
   int idx[2];
@@ -295,7 +294,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
     } else {
       // find matching texture object
       for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
-        if(tex_pool_[i].id != 0
+        if(tex_pool_[i].id != 0 && c == tex_pool_[i].comp
            && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
            && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb) {
           idx[c] = i;
@@ -398,7 +397,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
       else
 #endif
 #ifndef __sgi
-#ifdef GL_EXT_shared_texture_palette
+#if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
       {
 	if (reuse)
 	{
@@ -413,7 +412,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 		       brick->tex_type(), brick->tex_data(c));
 	}
       }
-#else
+#elif defined(GL_VERSION_1_2) // Workaround for old bad nvidia headers.
       {
 	if (reuse)
 	{
@@ -672,8 +671,6 @@ TextureRenderer::build_colormap2()
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
         glDisable(GL_BLEND);
-        //glEnable(GL_BLEND);
-        //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
         glActiveTexture(GL_TEXTURE0);
 #endif
@@ -682,11 +679,10 @@ TextureRenderer::build_colormap2()
         vector<CM2WidgetHandle> widgets = cmap2_->widgets();
         for (unsigned int i=0; i<widgets.size(); i++) {
           raster_buffer_->bind(GL_FRONT);
-          widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), raster_buffer_);
+	  widgets[i]->rasterize(*shader_factory_, raster_buffer_);
           raster_buffer_->release(GL_FRONT);
           raster_buffer_->swapBuffers();
         }
-        //glDisable(GL_BLEND);
         raster_buffer_->deactivate();
         raster_buffer_->set_use_texture_matrix(true);
       }
@@ -755,7 +751,7 @@ TextureRenderer::build_colormap2()
         vector<CM2WidgetHandle>& widget = cmap2_->widgets();
         // rasterize widgets
         for(unsigned int i=0; i<widget.size(); i++) {
-          widget[i]->rasterize(raster_array_, cmap2_->faux());
+          widget[i]->rasterize(raster_array_);
         }
         for(int i=0; i<raster_array_.dim1(); i++) {
           for(int j=0; j<raster_array_.dim2(); j++) {
@@ -855,7 +851,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
   else
 #endif
 #ifndef __sgi
-#ifdef GL_EXT_shared_texture_palette
+#if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
   {
     glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
     glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
@@ -867,7 +863,11 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
   }
 #else
   {
-    std::cerr << "No volume colormaps available." << std::endl;
+    static bool warned = false;
+    if( !warned ) {
+      std::cerr << "No volume colormaps available." << std::endl;
+      warned = true;
+    }
   }
 #endif
 #endif
@@ -922,7 +922,7 @@ TextureRenderer::release_colormap1()
   else
 #endif
 #ifndef __sgi
-#ifdef GL_EXT_shared_texture_palette
+#if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
   {
     glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
   }

@@ -63,9 +63,9 @@ public:
   Tensor(const Tensor&);
   Tensor(int);
   Tensor(double);
-  Tensor(const Array1<double> &);
-  Tensor(const std::vector<double> &);
-  Tensor(const double *);
+  Tensor(const Array1<double> &); // 6 values
+  Tensor(const std::vector<double> &); // 6 values
+  Tensor(const double *); // 6 values
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);
   Tensor& operator=(const Tensor&);

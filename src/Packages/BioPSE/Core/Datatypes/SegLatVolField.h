@@ -41,10 +41,7 @@
 #ifndef Datatypes_SegLatVolField_h
 #define Datatypes_SegLatVolField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Containers/Array1.h>
 #include <vector>

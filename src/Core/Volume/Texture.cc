@@ -68,13 +68,14 @@ void
 Texture::get_sorted_bricks(vector<TextureBrickHandle> &bricks, const Ray& view,
 			   int idx)
 {
-  bricks.resize(0);
+  bricks.clear();
   vector<TextureBrickHandle> &brick_ = bricks_[idx];
   vector<double> dist;
   for (unsigned int i=0; i<brick_.size(); i++)
   {
     bricks.push_back(brick_[i]);
-    dist.push_back(-(brick_[i]->bbox().center()-view.origin()).length());
+    dist.push_back(-Dot(brick_[i]->bbox().center()-view.origin(),
+                        view.direction()));
   }
   Sort(dist, bricks);
 }

@@ -54,6 +54,7 @@ GuiVar::GuiVar(GuiContext* ctx)
 
 GuiVar::~GuiVar()
 {
+  delete ctx;
 }
 
 void GuiVar::reset()

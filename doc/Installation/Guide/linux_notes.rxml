@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<appendix id="app.linux_notes">
+  <title>Linux Notes</title>
+  
+  <section id="intro.nvidia_notes">
+    <title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>
+
+    <para>Nvidia drivers, versions 1.0-5328 and 1.0-5336, will not
+    work for hardware based texture volume rendering in SCIRun.
+    Please do not update to these drivers if you wish your volume
+    rendering to work.</para>
+
+    <para>Driver versions 1.0-4496, 1.0-4363 are known to work.</para>
+
+    <para>Driver version 1.0-4191 does not work.  SCI has not tested
+    versions earlier than 1.0-4191&#x2014;they may or may not
+    work.</para>
+
+  </section>
+
+  <section id="intro.ati_notes">
+    <title id="intro.ati_notes.title">Linux and ATI Graphics Cards Notes</title>
+
+    <para>The SCI Institute has spent some time experimenting with the use
+    of ATI graphics cards under the Linux operating system.  Several
+    different ATI cards and several different flavors of Linux have been
+    tried with mixed results:
+    <itemizedlist>
+      <listitem>
+	<para>On one system, ATI drivers installed with apparent success, but
+	the system did not report using the drivers and only software
+	rendering appeared to be used.</para>
+      </listitem>
+      <listitem>
+	<para>Under Red Hat Enterprise the drivers installed and worked, but the
+	graphics were very choppy, producing a mostly unusable rendering.</para>
+      </listitem>
+      <listitem>
+	<para>On another system, drivers installed and were used but vertex
+	arrays did not work, which caused some objects to be rendered
+	incorrectly</para>
+      </listitem>
+      <listitem>
+	<para>One card did work well under Redhat 9.</para>
+      </listitem>
+      <listitem>
+	<para>Setting environment variable
+	<envar>SCIRUN_DRAWARRAYS_DISABLE</envar> can be used to
+	improve the usability of ATI cards.</para>
+      </listitem>
+    </itemizedlist>
+    Based on these experiences, SCI does not recommend the use of ATI
+    cards with &sr; software at this time.  We suggest the use of an
+    NVidia card instead.  SCI will investigate ATI cards further when
+    ATI releases new drivers.
+    </para>
+  </section>
+
+  <section id="intro.redhat_ent_notes">
+    <title id="intro.redhat_ent_notes.title">Redhat Enterprise
+    Notes</title> 
+
+    <para>SCI has experienced a number of strange behaviors when running
+    &sr; on Red Hat Enterprise Linux.  We do not recommend running &sr; on
+    this system at this time.  SCI will evaluate future versions of Redhat
+    Enterprise</para>
+  </section>
+
+</appendix>

@@ -100,8 +100,8 @@ itcl_class SubnetModule {
 
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
-	global $this-done_bld_icon Disabled Subnet Color ToolTipText
-	set $this-done_bld_icon 0
+	global Disabled Subnet Color ToolTipText
+	set done_building_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
@@ -215,6 +215,8 @@ itcl_class SubnetModule {
 # Automatically updates the Subnet Icon and the Subnet Network Editor names
 proc updateSubnetName { subnet_number name1 name2 op } {
     global Subnet
+    set Subnet($name2) [join [split $Subnet($name2) \"\{\}] ""]
+
     # Set the title bar for the Subnet Network Editor Window
     if [winfo exists .subnet${subnet_number}] {
 	wm title .subnet${subnet_number} "$Subnet($name2) Sub-Network Editor"
@@ -847,7 +849,8 @@ proc writeSubnetOnDisk { id } {
     if { [info exists Subnet(Subnet${id}_Filename)] } {
 	set filename $Subnet(Subnet${id}_Filename)
     }
-    set dir [file join [lrange [file split $filename] 0 end-1]]
+    set dir [lrange [file split $filename] 0 end-1]
+    set dir [eval file join $dir]
     catch "file mkdir $dir"
     if { [validDir $dir] } {
 	writeNetwork $filename $id
