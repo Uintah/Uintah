@@ -200,7 +200,7 @@ void Poisson3::refine(const ProcessorGroup*,
       IntVector h = finePatch->getNodeHighIndex(); 
       // For all finegrid nodes
       for(NodeIterator iter(l, h); !iter.done(); iter++){
-	finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
+//	finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
       }
     }
   }
@@ -265,7 +265,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 
 	    // For all finegrid nodes
 	    for(NodeIterator iter(l, h); !iter.done(); iter++){
-	      finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
+//	      finePhi[*iter] = interpolator_.refine(coarsePhi, *iter, Interpolator::inner);
 	    }
 	  }
         }
@@ -326,7 +326,7 @@ void Poisson3::coarsen(const ProcessorGroup*,
 
       // For all coarsegrid nodes
       for(NodeIterator iter(l, h); !iter.done(); iter++){
-	coarsePhi[*iter] = interpolator_.coarsen(finePhi, *iter, Interpolator::inner);
+//	coarsePhi[*iter] = interpolator_.coarsen(finePhi, *iter, Interpolator::inner);
       }
 
       coarseDW->put(coarsePhi, lb_->phi, matl, coarsePatch);
