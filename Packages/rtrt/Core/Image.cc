@@ -173,7 +173,8 @@ void Image::draw_depth( float max_depth ) {
     } else {
       val = 0;
     }
-    pic[0] = Pixel(val, val, val, 255);
+    unsigned char val_uc = (unsigned char)val;
+    pic[0] = Pixel(val_uc, val_uc, val_uc, 255);
   }
 #if 0
   glDrawBuffer(GL_BACK);
@@ -185,7 +186,6 @@ void Image::draw_depth( float max_depth ) {
 }
 
 void Image::draw_sils_on_image( float max_depth ) {
-  int num_pixels = xres*yres;
   float *pixel = &depth[0][0];
   float inv_md;
   if (max_depth > 0)
@@ -194,14 +194,16 @@ void Image::draw_sils_on_image( float max_depth ) {
     inv_md = 0;
   pixel = &depth[0][0];
 
+#if 0
   float max_val = -MAXFLOAT;
   float min_val = MAXFLOAT;
+#endif
   for(int j = 0; j < yres; j++) {
     int ylow = j>0?j-1:0;
     int yhigh = j<yres-1?j+1:yres-1;
     for(int i = 0; i < xres; i++) {
-      float val;
 #if 0
+      float val;
       val = depth[j][i];
       if (val > 0) {
         if (val < max_depth)
