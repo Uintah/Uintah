@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -48,19 +49,18 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb,
 		ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
 		ParticleVariable<Matrix3>::getTypeDescription());
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
+  if(flag->d_8or27==8){
     NGN=1;
-  } else if(d_8or27==27){
+  } else if(flag->d_8or27==27){
     NGN=2;
   }
+
 }
 
 CompNeoHookPlas::CompNeoHookPlas(const CompNeoHookPlas* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
   d_useModifiedEOS = cm->d_useModifiedEOS ;
@@ -135,14 +135,18 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
 
 void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
 						const MPMMaterial* matl,
-						const PatchSet* patch,
+						const PatchSet* ,
 						MPMLabel* lb) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,p_statedata_label, Ghost::None);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
-  task->requires(Task::OldDW,bElBarLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW,p_statedata_label_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,bElBarLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 
@@ -150,11 +154,10 @@ void CompNeoHookPlas::allocateCMDataAdd(DataWarehouse* new_dw,
 					ParticleSubset* addset,
 					map<const VarLabel*, ParticleVariableBase*>* newState,
 					ParticleSubset* delset,
-					DataWarehouse* old_dw)
+					DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 zero(0.);
 
   ParticleVariable<StateData> statedata;
   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
@@ -167,17 +170,18 @@ void CompNeoHookPlas::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pstress,addset);
   new_dw->allocateTemporary(bElBar,addset);
 
-  old_dw->get(o_statedata,p_statedata_label,delset);
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_stress,lb->pStressLabel,delset);
-  old_dw->get(o_bElBar,bElBarLabel,delset);
+  new_dw->get(o_statedata,p_statedata_label_preReloc,delset);
+  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
+              delset);
+  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
+  new_dw->get(o_bElBar,bElBarLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     statedata[*n].Alpha = o_statedata[*o].Alpha;
     deformationGradient[*n] = o_deformationGradient[*o];
     bElBar[*n] = o_bElBar[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_stress[*o];
   }
 
   (*newState)[p_statedata_label]=statedata.clone();
@@ -269,7 +273,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    if(d_8or27==27){
+    if(flag->d_8or27==27){
       old_dw->get(psize,               lb->pSizeLabel,                   pset);
     }
     old_dw->get(px,                    lb->pXLabel,                      pset);
@@ -315,16 +319,16 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
        IntVector ni[MAX_BASIS];
        Vector d_S[MAX_BASIS];
 
-       if(d_8or27==8){
+       if(flag->d_8or27==8){
           patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
         }
-        else if(d_8or27==27){
+        else if(flag->d_8or27==27){
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
         }
 
        Vector gvel;
        velGrad.set(0.0);
-       for(int k = 0; k < d_8or27; k++) {
+       for(int k = 0; k < flag->d_8or27; k++) {
 #ifdef FRACTURE
 	 if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
 	 if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
@@ -457,6 +461,7 @@ void CompNeoHookPlas::carryForward(const PatchSubset* patches,
     new_dw->allocateAndPut(bElBar_new, bElBarLabel_preReloc,           pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     statedata.copyData(statedata_old);
+
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -493,7 +498,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW, bElBarLabel,                 matlset,Ghost::None);
-  if(d_8or27==27){
+  if(flag->d_8or27==27){
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);

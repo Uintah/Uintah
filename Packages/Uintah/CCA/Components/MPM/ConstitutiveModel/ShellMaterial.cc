@@ -49,9 +49,8 @@ ShellMaterial::ShellMaterial(ProblemSpecP& ps,  MPMLabel* Mlb,
   ps->get("includeFlowWork",d_includeFlowWork);
 
   // Set up support size for interpolation
-  d_8or27 = flag->d_8or27;
   NGN = 1;
-  if (d_8or27 == 27) NGN = 2;
+  if (flag->d_8or27 == 27) NGN = 2;
 
   // Allocate local VarLabels
   pNormalRotRateLabel = VarLabel::create("p.normalRotRate",
@@ -101,7 +100,6 @@ ShellMaterial::ShellMaterial(const ShellMaterial* cm)
 
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
   // Allocate local VarLabels
@@ -294,21 +292,29 @@ ShellMaterial::initializeCMData(const Patch* patch,
 
 void ShellMaterial::allocateCMDataAddRequires(Task* task,
 					      const MPMMaterial* matl,
-					      const PatchSet* patch,
+					      const PatchSet* ,
 					      MPMLabel* lb) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial();
+  const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::OldDW,pNormalRotRateLabel, Ghost::None);
-  task->requires(Task::OldDW,pDefGradTopLabel,    Ghost::None);
-  task->requires(Task::OldDW,pDefGradCenLabel,    Ghost::None);
-  task->requires(Task::OldDW,pDefGradBotLabel,    Ghost::None);
-  task->requires(Task::OldDW,pStressTopLabel,     Ghost::None);
-  task->requires(Task::OldDW,pStressCenLabel,     Ghost::None);
-  task->requires(Task::OldDW,pStressBotLabel,     Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel,     Ghost::None);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None);
-
+  task->requires(Task::NewDW,pNormalRotRateLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pDefGradTopLabel_preReloc,    
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pDefGradCenLabel_preReloc,    
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pDefGradBotLabel_preReloc,    
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pStressTopLabel_preReloc,     
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pStressCenLabel_preReloc,     
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pStressBotLabel_preReloc,     
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,     
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
+                 matlset, Ghost::None);
 }
 
 
@@ -317,11 +323,10 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
 				 ParticleSubset* addset,
 				 map<const VarLabel*, ParticleVariableBase*>* newState,
 				 ParticleSubset* delset,
-				 DataWarehouse* old_dw)
+				 DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Zero(0.0); 
 
   ParticleVariable<Vector>  pRotRate; 
   ParticleVariable<Matrix3> pDefGradTop, pDefGradCen, pDefGradBot, 
@@ -342,16 +347,15 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pDefGrad, addset);
   new_dw->allocateTemporary(pStress,  addset);
 
-  old_dw->get(o_RotRate,pNormalRotRateLabel,delset);
-  old_dw->get(o_DefGradTop,pDefGradTopLabel,delset);
-  old_dw->get(o_DefGradCen,pDefGradCenLabel,delset);
-  old_dw->get(o_DefGradBot,pDefGradBotLabel,delset);
-  old_dw->get(o_StressTop,pStressTopLabel,delset);
-  old_dw->get(o_StressCen,pStressCenLabel,delset);
-  old_dw->get(o_StressBot,pStressBotLabel,delset);
-  old_dw->get(o_Stress,lb->pStressLabel,delset);
-  old_dw->get(o_DefGrad,lb->pDeformationMeasureLabel,delset);
-
+  new_dw->get(o_RotRate,pNormalRotRateLabel_preReloc,delset);
+  new_dw->get(o_DefGradTop,pDefGradTopLabel_preReloc,delset);
+  new_dw->get(o_DefGradCen,pDefGradCenLabel_preReloc,delset);
+  new_dw->get(o_DefGradBot,pDefGradBotLabel_preReloc,delset);
+  new_dw->get(o_StressTop,pStressTopLabel_preReloc,delset);
+  new_dw->get(o_StressCen,pStressCenLabel_preReloc,delset);
+  new_dw->get(o_StressBot,pStressBotLabel_preReloc,delset);
+  new_dw->get(o_Stress,lb->pStressLabel_preReloc,delset);
+  new_dw->get(o_DefGrad,lb->pDeformationMeasureLabel,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o=delset->begin(); o != delset->end(); o++,n++) {
@@ -363,7 +367,7 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
     pStressCen[*n]  = o_StressCen[*o];
     pStressBot[*n]  = o_StressBot[*o];
     pDefGrad[*n] = o_DefGrad[*o];
-    pStress[*n] = Zero;
+    pStress[*n] = o_Stress[*o];
   }
 
   (*newState)[pNormalRotRateLabel]=pRotRate.clone();
@@ -375,7 +379,6 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[pStressBotLabel]=pStressBot.clone();
   (*newState)[lb->pDeformationMeasureLabel]=pDefGrad.clone();
   (*newState)[lb->pStressLabel]=pStress.clone();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -432,7 +435,7 @@ ShellMaterial::addComputesRequiresParticleRotToGrid(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,   lb->pMassLabel,          matlset, gan, NGN);
   task->requires(Task::OldDW,   lb->pXLabel,             matlset, gan, NGN);
-  if (d_8or27==27) 
+  if (flag->d_8or27==27) 
     task->requires(Task::OldDW, lb->pSizeLabel,          matlset, gan, NGN);
   task->requires(Task::OldDW,   pNormalRotRateLabel,     matlset, gan, NGN);
   task->requires(Task::NewDW,   lb->gMassLabel,          matlset, gan, NGN);
@@ -471,7 +474,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     // Get the required data
     old_dw->get(pMass,          lb->pMassLabel,          pset);
     old_dw->get(pX,             lb->pXLabel,             pset);
-    if(d_8or27==27)
+    if(flag->d_8or27==27)
       old_dw->get(pSize,        lb->pSizeLabel,          pset);
     old_dw->get(pRotRate,       pNormalRotRateLabel,     pset);
     new_dw->get(gMass,          lb->gMassLabel, dwi,     patch, gan, NGN);
@@ -490,14 +493,15 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
-      if(d_8or27==27) patch->findCellAndWeights27(pX[idx], ni, S, pSize[idx]);
+      if(flag->d_8or27==27) patch->findCellAndWeights27(pX[idx], ni, S, 
+                                                        pSize[idx]);
       else            patch->findCellAndWeights(pX[idx], ni, S);
 
       // Calculate momentum
       pMom = pRotRate[idx]*pMass[idx];
 
       // Add each particles contribution to the grid rotation rate
-      for(int k = 0; k < d_8or27; k++) {
+      for(int k = 0; k < flag->d_8or27; k++) {
 	if(patch->containsNode(ni[k])) gRotRate[ni[k]] += pMom * S[k];
       }
     } // End of particle loop
@@ -522,7 +526,7 @@ ShellMaterial::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);
   task->requires(Task::OldDW, lb->pMassLabel,               matlset, gnone);
-  if (d_8or27 == 27)
+  if (flag->d_8or27 == 27)
     task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
   task->requires(Task::OldDW, lb->pThickTopLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pInitialThickTopLabel,    matlset, gnone);
@@ -608,7 +612,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pThickTop0,  lb->pInitialThickTopLabel,    pset);
     old_dw->get(pThickBot0,  lb->pInitialThickBotLabel,    pset);
     old_dw->get(pX,          lb->pXLabel,                  pset);
-    if (d_8or27 == 27)
+    if (flag->d_8or27 == 27)
       old_dw->get(pSize,     lb->pSizeLabel,               pset);
     old_dw->get(pNormal,     lb->pNormalLabel,             pset);
     old_dw->get(pVelocity,   lb->pVelocityLabel,           pset);
@@ -671,7 +675,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       // Find the surrounding nodes, interpolation functions and derivatives
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
-      if (d_8or27 == 27)
+      if (flag->d_8or27 == 27)
         patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S, pSize[idx]);
       else
         patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
@@ -679,7 +683,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       // Calculate the spatial gradient of the velocity and the 
       // normal rotation rate
       Matrix3 velGrad(0.0), rotGrad(0.0);
-      for(int k = 0; k < d_8or27; k++) {
+      for(int k = 0; k < flag->d_8or27; k++) {
 	Vector gvel = gVelocity[ni[k]];
 	Vector grot = gRotRate[ni[k]];
 	for (int j = 0; j<3; j++){
@@ -865,7 +869,7 @@ ShellMaterial::addComputesRequiresRotInternalMoment(Task* task,
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,   lb->pXLabel,               matlset, gan, NGN);
-  if(d_8or27==27) 
+  if(flag->d_8or27==27) 
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset, gan, NGN);
   task->requires(Task::NewDW,   pAverageMomentLabel,       matlset, gan, NGN);
   task->computes(lb->gNormalRotMomentLabel, matlset);
@@ -899,7 +903,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
     constParticleVariable<Vector>  pSize;
     constParticleVariable<Matrix3> pAvMoment;
     old_dw->get(pX,         lb->pXLabel,                      pset);
-    if(d_8or27==27)
+    if(flag->d_8or27==27)
       old_dw->get(pSize,    lb->pSizeLabel,                   pset);
     new_dw->get(pAvMoment,  pAverageMomentLabel,              pset);
 
@@ -918,14 +922,14 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
   
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
-      if(d_8or27==27)
+      if(flag->d_8or27==27)
 	patch->findCellAndWeightsAndShapeDerivatives27(pX[idx], ni, S, d_S,
 						       pSize[idx]);
       else
 	patch->findCellAndWeightsAndShapeDerivatives(pX[idx], ni, S, d_S);
 
       // Loop thru nodes
-      for (int k = 0; k < d_8or27; k++){
+      for (int k = 0; k < flag->d_8or27; k++){
 	if(patch->containsNode(ni[k])){
 	  Vector gradS(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 		       d_S[k].z()*oodx[2]);
@@ -950,7 +954,7 @@ ShellMaterial::addComputesRequiresRotAcceleration(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   task->requires(Task::OldDW,   lb->pXLabel,                matlset, gac, NGN);
-  if(d_8or27==27) 
+  if(flag->d_8or27==27) 
     task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gac, NGN);
   task->requires(Task::OldDW,   lb->pNormalLabel,           matlset, gac, NGN);
   task->requires(Task::NewDW,   pNormalDotAvStressLabel,    matlset, gac, NGN);
@@ -986,7 +990,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     constParticleVariable<Vector>  pSize, pNormal, pNDotAvSig;
     constNCVariable<Vector>        gRotMoment;
     old_dw->get(pX,          lb->pXLabel,                      pset);
-    if(d_8or27==27)
+    if(flag->d_8or27==27)
       old_dw->get(pSize,     lb->pSizeLabel,                   pset);
     old_dw->get(pNormal,     lb->pNormalLabel,                 pset);
     new_dw->get(pRotMass,    pRotMassLabel,                    pset);
@@ -1006,7 +1010,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
   
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
-      if(d_8or27==27)
+      if(flag->d_8or27==27)
 	patch->findCellAndWeightsAndShapeDerivatives27(pX[idx], ni, S, d_S,
 						       pSize[idx]);
       else
@@ -1018,7 +1022,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
 
       // Loop thru nodes
       pRotAcc[idx] = Vector(0.0,0.0,0.0);
-      for (int k = 0; k < d_8or27; k++) {
+      for (int k = 0; k < flag->d_8or27; k++) {
 	//if(patch->containsNode(ni[k])){
           pRotAcc[idx] += gRotMoment[ni[k]]*S[k];
         //}

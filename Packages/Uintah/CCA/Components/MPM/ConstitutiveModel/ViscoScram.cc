@@ -65,10 +65,9 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
                             ParticleVariable<double>::getTypeDescription() );
   pRandLabel_preReloc        = VarLabel::create( "p.rand+",
                             ParticleVariable<double>::getTypeDescription() );
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
+  if(flag->d_8or27==8){
     NGN=1;
-  } else if(d_8or27==27){
+  } else if(flag->d_8or27==27){
     NGN=2;
   }
 }
@@ -77,7 +76,6 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
 
   d_useModifiedEOS = cm->d_useModifiedEOS ;
@@ -175,16 +173,9 @@ void ViscoScram::allocateCMDataAddRequires(Task* task,
   task->requires(Task::NewDW, lb->pCrackRadiusLabel_preReloc,        
                               matlset, Ghost::None);
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
-                              Ghost::None);
+                              matlset, Ghost::None);
   task->requires(Task::NewDW, lb->pStressLabel_preReloc,             
-                              Ghost::None);
-  /*
-  task->requires(Task::OldDW, p_statedata_label,            Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,             Ghost::None);
-  task->requires(Task::OldDW, lb->pCrackRadiusLabel,        Ghost::None);
-  task->requires(Task::OldDW, pRandLabel,                   Ghost::None);
-  */
+                              matlset, Ghost::None);
 }
 
 
@@ -219,13 +210,6 @@ void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
   new_dw->get(o_CrackRadius,lb->pCrackRadiusLabel_preReloc,delset);
   new_dw->get(o_Rand,pRandLabel_preReloc,delset);
-  /*
-  old_dw->get(o_statedata,p_statedata_label,delset);
-  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_stress,lb->pStressLabel,delset);
-  old_dw->get(o_CrackRadius,lb->pCrackRadiusLabel,delset);
-  old_dw->get(o_Rand,pRandLabel,delset);
-  */
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -238,9 +222,8 @@ void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
     }
     
     deformationGradient[*n] = o_deformationGradient[*o];
-    pstress[*n] = zero;
+    pstress[*n] = o_stress[*o];
     pCrackRadius[*n] = o_CrackRadius[*o];
-    //pRand[*n] = drand48();
     pRand[*n] = o_Rand[*o];
   }
 
@@ -360,7 +343,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    if(d_8or27==27){
+    if(flag->d_8or27==27){
       old_dw->get(psize,             lb->pSizeLabel,               pset);
     }
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
@@ -413,16 +396,16 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
-      if(d_8or27==8){
+      if(flag->d_8or27==8){
           patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
        }
-       else if(d_8or27==27){
+       else if(flag->d_8or27==27){
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
        }
 
        Vector gvel;
        velGrad.set(0.0);
-       for(int k = 0; k < d_8or27; k++) {
+       for(int k = 0; k < flag->d_8or27; k++) {
 #ifdef FRACTURE
 	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
 	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
@@ -752,6 +735,7 @@ void ViscoScram::carryForward(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
     old_dw->copyOut(pRand,                pRandLabel,                     pset);
     old_dw->copyOut(statedata,            p_statedata_label,              pset);
+
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -793,7 +777,7 @@ void ViscoScram::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  if(d_8or27==27){
+  if(flag->d_8or27==27){
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
 

@@ -70,7 +70,6 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
         ParticleVariable<double>::getTypeDescription());
   pFailureLabel_preReloc = VarLabel::create("p.fail+",
         ParticleVariable<double>::getTypeDescription());
-
 }
 
 TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
@@ -133,13 +132,16 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
 
 
 void TransIsoHyper::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patch,
+                                            const MPMMaterial* matl ,
+                                            const PatchSet* ,
                                             MPMLabel* lb) const
 // _________________________________________STILL EXPERIMENTAL
 {
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial(); 
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+                 matlset, Ghost::None);
 }
 
 
@@ -147,7 +149,7 @@ void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
                                     ParticleSubset* addset,
                                     map<const VarLabel*, ParticleVariableBase*>* newState,
                                     ParticleSubset* delset,
-                                    DataWarehouse* old_dw)
+                                    DataWarehouse* )
 // _________________________________________STILL EXPERIMENTAL
 {
   // Put stuff in here to initialize each particle's
@@ -155,16 +157,18 @@ void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
   Matrix3 zero(0.);
     
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  constParticleVariable<Matrix3> o_deformationGradient, o_stress;
+  constParticleVariable<Matrix3> o_defGrad, o_stress;
   
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,addset);
   
+  new_dw->get(o_defGrad, lb->pDeformationMeasureLabel_preReloc, delset);
+  new_dw->get(o_stress, lb->pStressLabel_preReloc, delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_deformationGradient[*o];
-    pstress[*n] = zero;
+    deformationGradient[*n] = o_defGrad[*o];
+    pstress[*n] = o_stress[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
@@ -331,7 +335,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      
+
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
@@ -639,7 +643,6 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
     task->computes(pStretchLabel_preReloc,                matlset);
     //_______________________________________________________________________fail_labels
     task->computes(pFailureLabel_preReloc,          matlset);
-
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* ,

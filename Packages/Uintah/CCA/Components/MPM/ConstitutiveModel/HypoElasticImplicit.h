@@ -53,11 +53,15 @@ namespace Uintah {
                                             DataWarehouse* new_dw);
 
          virtual void computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw,
-					  Solver* solver,
-					  const bool recursion);
+	     			          const MPMMaterial* matl,
+				          DataWarehouse* old_dw,
+				          DataWarehouse* new_dw,
+#ifdef HAVE_PETSC
+                                          MPMPetscSolver* solver,
+#else
+                                          SimpleSolver* solver,
+#endif
+				          const bool recursion);
 
          virtual void computeStressTensor(const PatchSubset* patches,
 					  const MPMMaterial* matl,
