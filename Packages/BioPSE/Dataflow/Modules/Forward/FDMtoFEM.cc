@@ -101,8 +101,9 @@ void FDMtoFEM::execute() {
     return;
   }
  
-  if (ifdmH->get_type_name(0) != "LatVolField" &&
-      ifdmH->get_type_name(0) != "MaskedLatVolField") {
+  if (ifdmH->mesh()->get_type_description()->get_name() !=
+      get_type_description((LatVolMesh *)0)->get_name())
+  {
     msgStream_ << "Error: need a lattice vol as input" << endl;
     return;
   }
