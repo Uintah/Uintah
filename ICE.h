@@ -3,7 +3,7 @@
 #define UINTAH_HOMEBREW_ICE_H
 
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-#include <Packages/Uintah/CCA/Components/ICE/LODI.h>
+#include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
@@ -143,15 +143,15 @@ namespace Uintah {
                                                                                          
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
-                                          const vector<PatchSubset*> &,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
                                           const MaterialSet*); 
                              
-      void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
-                                       const MaterialSubset*,
-                                       const MaterialSet*);
+      void schedulePrintConservedQuantities(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSubset*,
+                                            const MaterialSet*);
                                        
 //__________________________________ 
 //  I M P L I C I T   I C E
