@@ -8,7 +8,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := SCICore/Exceptions
 
 SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
-	$(SRCDIR)/AssertionFailed.cc $(SRCDIR)/Exception.cc \
+	$(SRCDIR)/AssertionFailed.cc $(SRCDIR)/ErrnoException.cc \
+	$(SRCDIR)/Exception.cc \
 	$(SRCDIR)/InternalError.cc
 
 PSELIBS := 
@@ -18,6 +19,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/05/15 19:25:57  sparker
+# Exception class for system calls (ones that use the errno variable)
+#
 # Revision 1.3  2000/03/23 10:25:41  sparker
 # New exception facility - retired old "Exception.h" classes
 #
