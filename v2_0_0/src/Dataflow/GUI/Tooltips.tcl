@@ -30,60 +30,41 @@ set Tooltip(Color) white
 set Font(Tooltip) $time_font
 
 # MS == Miliseconds
-set tooltipDelayMS 1000
+global tooltipDelayMS
+set tooltipDelayMS 2000
 
-proc showTooltip { id } {
-    if [winfo exists .tooltip] { destroy .tooltip }
-    global Tooltip Font
-    toplevel .tooltip -bg black
-    label .tooltip.text -text $Tooltip($id) \
-	-bg $Tooltip(Color) -fg black -justify left -font $Font(Tooltip)
-    pack .tooltip.text -padx 1 -pady 1
-    wm overrideredirect .tooltip yes
-    update idletasks
-    wm geometry .tooltip +$Tooltip(X)+[expr $Tooltip(Y)-2-[winfo height .tooltip]]
+
+proc Tooltip {w msg} {
+    global tooltipDelayMS
+    bind $w <Enter> "after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\""
+    bind $w <Leave> "after cancel \"balloon_aux %W %X %Y [list $msg]\"
+                         after 100 {catch {destroy .balloon_help}}"
 }
 
-proc enterTooltip { x y id } {
-    global Tooltip tooltipDelayMS
-
-    set Tooltip(X) $x
-    set Tooltip(Y) $y
-    set Tooltip(ID) [after $tooltipDelayMS "showTooltip $id"]
+proc canvasTooltip {canvas w msg} {       
+    global tooltipDelayMS
+    $canvas bind $w <Enter> "after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\""
+    $canvas bind $w <Leave> "after cancel \"balloon_aux %W %X %Y [list $msg]\"
+                         after 100 {catch {destroy .balloon_help}}"
 }
 
-proc motionTooltip { x y id } {
-    update idletasks
-    global Tooltip
-    set Tooltip(X) $x
-    set Tooltip(Y) $y
-    if ![winfo exists .tooltip] { return }
-    wm geometry .tooltip +$Tooltip(X)+[expr $Tooltip(Y)-2-[winfo height .tooltip]]
-}
 
-proc leaveTooltip { } {
-    if [winfo exists .tooltip] { destroy .tooltip }
-    global Tooltip
-    after cancel $Tooltip(ID)
-}
+# the following code is curtosey the TCLer's Wiki (http://mini.net/tcl/)
+proc balloon_aux {w x y msg} {
+    set t .balloon_help
+    catch {destroy $t}
+    toplevel $t
+    wm overrideredirect $t 1
+    if {$::tcl_platform(platform) == "macintosh"} {
+	unsupported1 style $t floating sideTitlebar
+    }
+    pack [label $t.l -text $msg -justify left -relief groove -bd 1 -bg white] -fill both
+#    set x [expr [winfo rootx $w]+6+[winfo width $w]/2]
+#    set y [expr [winfo rooty $w]+6+[winfo height $w]/2]
+    set x [expr $x+6]
+    set y [expr $y+6]
 
-proc canvasTooltip { id text } {
-    return
-    global Tooltip maincanvas
-    set Tooltip($id) $text
-    $maincanvas bind $id <Enter> "enterTooltip %X %Y $id"
-    $maincanvas bind $id <Motion> "motionTooltip %X %Y $id"
-    $maincanvas bind $id <Leave> "leaveTooltip"
-    $maincanvas bind $id <Button> "leaveTooltip"
-}
-
-proc Tooltip { id text } {
-    return
-    global Tooltip
-    set Tooltip($id) $text
-    bind Tooltip$id <Enter> "enterTooltip %X %Y $id"
-    bind Tooltip$id <Motion> "motionTooltip %X %Y $id"
-    bind Tooltip$id <Leave> "leaveTooltip"
-    bind Tooltip$id <Button> "leaveTooltip"
-    bindtags $id "[bindtags $id] Tooltip$id"
+    wm geometry $t +$x\+$y
+    bind $t <Enter> {after cancel {catch {destroy .balloon_help}}}
+    bind $t <Leave> "catch {destroy .balloon_help}"
 }
