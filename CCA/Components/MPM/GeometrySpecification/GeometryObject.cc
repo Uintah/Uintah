@@ -23,6 +23,7 @@ GeometryObject::GeometryObject(MPMMaterial* mpm_matl,
 
 GeometryObject::~GeometryObject()
 {
+  delete d_piece;
 }
 
 IntVector GeometryObject::getNumParticlesPerCell()
