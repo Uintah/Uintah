@@ -57,7 +57,7 @@ void CutMaterial::shade(Color& result, const Ray& ray,
       CutGroup* cutgrp = (CutGroup *)hit.hit_obj;
       
       //use sub_intersect instead of intersect to ignore the cutting plane
-      cutgrp->sub_intersect(bray, bhit, &cx->stats->ds[depth], cx->worker->get_ppc());
+      cutgrp->sub_intersect(bray, bhit, &cx->stats->ds[depth], cx->ppc);
       
       if (bhit.was_hit) {
 	//hit a relative, we are inside, try to ColorMap the interior value
