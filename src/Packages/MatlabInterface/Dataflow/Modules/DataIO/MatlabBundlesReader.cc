@@ -415,12 +415,12 @@ void MatlabBundlesReader::indexmatlabfile(bool postmsg)
 		// Scan the file and see which matrices are compatible
 		// Only those will be shown (you cannot select incompatible matrices).
 			
-		std::string infotext;
+		std::string infotext = "";
 		
 		for (long p=0;p<mfile.getnummatlabarrays();p++)
 		{
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-			if ((cindex = translate_.sciBundleCompatible(ma,infotext,static_cast<SCIRun::Module *>(this))))
+			if ((cindex = translate_.sciBundleCompatible(ma,infotext,reinterpret_cast<SCIRun::ProgressReporter *>(this))))
 			{
 				// in case we need to propose a matrix to load, select
 				// the one that is most compatible with the data
