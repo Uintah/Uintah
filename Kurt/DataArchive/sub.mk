@@ -14,12 +14,16 @@ PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
 	SCICore/Containers Uintah/Grid Uintah/Interface \
 	Uintah/Exceptions Kurt/Datatypes 
-LIBS := 
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/05/21 08:13:49  sparker
+# Removed depend.mk - it doesn't belong in the repository
+# Added xml libraries to sub.mk
+#
 # Revision 1.1  2000/05/20 02:31:47  kuzimmer
 # Multiple changes for new vis tools
 #
