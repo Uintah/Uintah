@@ -47,6 +47,15 @@ void ConstitutiveModel::addComputesAndRequiresImplicit(Task* task,
 
 }
 
+
+void ConstitutiveModel::addComputesAndRequiresImplicitOnly(Task* task, 
+						       const MPMMaterial* matl,
+						       const PatchSet* patches,
+						       const bool recursion) 
+{
+
+}
+
 //______________________________________________________________________
 //          HARDWIRE FOR AN IDEAL GAS -Todd 
 double ConstitutiveModel::computeRhoMicro(double press, double gamma,
