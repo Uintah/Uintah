@@ -308,6 +308,11 @@ class ViewSlices : public Module
   UIint			crop_max_pad_z_;
 
   UIint			texture_filter_;
+  UIint			anatomical_coordinates_;
+  UIdouble		font_r_;
+  UIdouble		font_g_;
+  UIdouble		font_b_;
+  UIdouble		font_a_;
 
   UIdouble		min_;
   UIdouble		max_;
@@ -351,6 +356,7 @@ class ViewSlices : public Module
   void			delete_all_fonts();
   void			set_font_sizes(double size);
   void			draw_all_labels(SliceWindow &);
+  void			draw_window_label(SliceWindow &);
   void			draw_orientation_labels(SliceWindow &);
   void			draw_position_label(SliceWindow &);
   void			draw_label(SliceWindow &, string, int, int, 
@@ -361,8 +367,7 @@ class ViewSlices : public Module
   float *		apply_colormap(NrrdSlice &, double min, double max, 
 				       float *);
 
-  void			draw_guide_lines(SliceWindow &, float, float, float, 
-					bool cursor=true);
+  void			draw_guide_lines(SliceWindow &, float, float, float);
   void			draw_slice_lines(SliceWindow &);
 
   // Crop Widget routines
@@ -664,6 +669,11 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   crop_max_pad_y_(ctx->subVar("crop_maxPadAxis1"),50),
   crop_max_pad_z_(ctx->subVar("crop_maxPadAxis2"),60),
   texture_filter_(ctx->subVar("texture_filter"),1),
+  anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
+  font_r_(ctx->subVar("color_font-r"), 1.0),
+  font_g_(ctx->subVar("color_font-g"), 1.0),
+  font_b_(ctx->subVar("color_font-b"), 1.0),
+  font_a_(ctx->subVar("color_font-a"), 1.0),
   min_(ctx->subVar("min"), -1.0),
   max_(ctx->subVar("max"), -1.0),
   background_threshold_(ctx->subVar("background_threshold"), 0.0),
@@ -791,8 +801,8 @@ ViewSlices::real_draw_all()
 	if (window.slices_[s])
 	  draw_slice(window, *window.slices_[s]);
 
-      draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
       draw_slice_lines(window);
+      draw_guide_lines(window, cursor_.x(), cursor_.y(), cursor_.z());
       
       if (crop_) {
 	draw_crop_bbox(window, crop_draw_bbox_);
@@ -901,29 +911,16 @@ ViewSlices::redraw_window(SliceWindow &window) {
 // selected slices in other dimensions
 // if x, y, or z < 0, then that dimension wont be rendered
 void
-ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z, 
-			   bool cursor) {
+ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   if (!window.show_guidelines_()) return;
   if (!mouse_in_window(window)) return;
-  if (cursor && !current_window_) return;
-  if (cursor && !current_window_->show_guidelines_()) return;
 
-  //  setup_gl_view(window);
-  GL_ERROR();
-  const bool inside = mouse_in_window(window);
-
-  float unscaled_one = 1.0;
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
-  float screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
-  if (cursor || screen_space_one > unscaled_one) 
-    unscaled_one = screen_space_one;
+  const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
-  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
-  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
   GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
   GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -931,46 +928,26 @@ ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z,
   int p = (axis+1)%3;
   int s = (axis+2)%3;
 
-
-  double one;
   double c[3];
   c[0] = x;
   c[1] = y;
   c[2] = z;
+  glColor4dv(yellow);
   for (int i = 0; i < 2; ++i) {
-    if (cursor) {
-      one = unscaled_one;
-      glColor4dv(yellow);
-    } else {
-      one = unscaled_one*scale_[p];
-      switch (p) {
-      case 0: glColor4dv(red); break;
-      case 1: glColor4dv(green); break;
-      default:
-      case 2: glColor4dv(blue); break;
-      }
-    }
     glBegin(GL_QUADS);    
-     if (c[p] >= 0 && c[p] <= max_slice_[p]*scale_[p]) {
-       glVertex3f(p==0?x:0.0, p==1?y:0.0, p==2?z:0.0);
-       glVertex3f(p==0?x+one:0.0, p==1?y+one:0.0, p==2?z+one:0.0);
-       glVertex3f(p==0?x+one:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
-		  p==1?y+one:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
-		  p==2?z+one:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
-       
-       glVertex3f(p==0?x:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
-		  p==1?y:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
-		  p==2?z:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
-     }
-     glEnd();
-     SWAP(p,s);
-  }
-
-
-
-
-  if (!inside || !cursor) {
-    return;
+    if (c[p] >= 0 && c[p] <= max_slice_[p]*scale_[p]) {
+      glVertex3f(p==0?x:0.0, p==1?y:0.0, p==2?z:0.0);
+      glVertex3f(p==0?x+one:0.0, p==1?y+one:0.0, p==2?z+one:0.0);
+      glVertex3f(p==0?x+one:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==1?y+one:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==2?z+one:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
+      
+      glVertex3f(p==0?x:(axis==0?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==1?y:(axis==1?0.0:(max_slice_[s]+1)*scale_[s]),
+		 p==2?z:(axis==2?0.0:(max_slice_[s]+1)*scale_[s]));
+    }
+    glEnd();
+    SWAP(p,s);
   }
 
     
@@ -1543,76 +1520,64 @@ ViewSlices::setup_gl_view(SliceWindow &window)
 
 
 void
+ViewSlices::draw_window_label(SliceWindow &window)
+{
+  string text;
+  if (anatomical_coordinates_()) { 
+    switch (window.axis_) {
+    case 0: text = "Sagittal"; break;
+    case 1: text = "Coronal"; break;
+    default:
+    case 2: text = "Axial"; break;
+    }
+  } else {
+    switch (window.axis_) {
+    case 0: text = "YZ Plane"; break;
+    case 1: text = "XZ Plane"; break;
+    default:
+    case 2: text = "XY Plane"; break;
+    }
+  }
+
+  if (window.mode_ == slab_e) text = "SLAB - "+text;
+  if (window.mode_ == mip_e) text = "MIP - "+text;
+  draw_label(window, text, window.viewport_->width() - 2, 0, 
+	     FreeTypeText::se, fonts_["view"]);
+
+  if (string(sci_getenv("USER")) == string("mdavis"))
+    draw_label(window, "fps: "+to_string(fps_), 
+	       0, window.viewport_->height() - 2,
+	       FreeTypeText::nw, fonts_["default"]);
+}
+
+
+
+
+void
 ViewSlices::draw_position_label(SliceWindow &window)
 {
   FreeTypeFace *font = fonts_["default"];
   if (!font) return;
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glScaled(2.0, 2.0, 2.0);
-  glTranslated(-.5, -.5, -.5);
-
-  BBox label_bbox;
-  //  BBox line_bbox;
-  FreeTypeText zoom("Zoom: "+to_string(window.zoom_())+string("%"), font);
-  zoom.get_bounds(label_bbox);
-  Point pos(0, label_bbox.max().y()+2, 0);
-  FreeTypeText cursor("X: "+to_string(Ceil(cursor_.x()))+
-		      " Y: "+to_string(Ceil(cursor_.y()))+
-		      " Z: "+to_string(Ceil(cursor_.z())),
-		      font, &pos);
-  cursor.get_bounds(label_bbox);
-  unsigned int wid = pow2(Round(label_bbox.max().x()));
-  unsigned int hei = pow2(Round(label_bbox.max().y()));
-  GLubyte *buf = scinew GLubyte[wid*hei*4];
-  memset(buf, 0, wid*hei*4);
-  zoom.render(wid, hei, buf);
-  cursor.render(wid, hei, buf);
   
-  GLuint tex_id;
-  glGenTextures(1, &tex_id);
+  const string zoom_text = "Zoom: "+to_string(window.zoom_())+"%";
+  string position_text;
+  if (anatomical_coordinates_()) {
+    position_text = ("S: "+to_string(Floor(cursor_.x()/scale_[0]))+
+		     " C: "+to_string(Floor(cursor_.y()/scale_[1]))+
+		     " A: "+to_string(Floor(cursor_.z()/scale_[2])));
+  } else {
+    position_text = ("X: "+to_string(Ceil(cursor_.x()))+
+		     " Y: "+to_string(Ceil(cursor_.y()))+
+		     " Z: "+to_string(Ceil(cursor_.z())));
+  }
+    
 
-  glBindTexture(GL_TEXTURE_2D, tex_id);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glPixelTransferi(GL_MAP_COLOR, 0);
-  
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wid, hei, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-  delete[] buf;
-  
-  const double dx = 1.0/window.viewport_->width();
-  const double dy = 1.0/window.viewport_->height();
-  
-  glBegin(GL_QUADS);
-
-  glTexCoord2f(0.0, 0.0);
-  glVertex3f(0.0, 0.0, 0.0);
-
-  glTexCoord2f(1.0, 0.0);
-  glVertex3f(dx*wid, 0.0, 0.0);
-
-  glTexCoord2f(1.0, 1.0);
-  glVertex3f(dx*wid, dy*hei , 0.0);
-
-  glTexCoord2f(0.0, 1.0);
-  glVertex3f(0.0, dy*hei, 0.0);
-
-  glEnd();
-
-  glDeleteTextures(1, &tex_id);
-  //  glRasterPos2d(0.0, 0.0);
-  //  glDrawPixels (wid, hei, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  FreeTypeText position(position_text, font);
+  BBox bbox;
+  position.get_bounds(bbox);
+  int y_pos = Ceil(bbox.max().y())+2;
+  draw_label(window, position_text, 0, 0, FreeTypeText::sw, font);
+  draw_label(window, zoom_text, 0, y_pos, FreeTypeText::sw, font);
 }  
 
 
@@ -1634,20 +1599,38 @@ ViewSlices::draw_orientation_labels(SliceWindow &window)
   int sec = y_axis(window);
   
   string ltext, rtext, ttext, btext;
-  switch (prim % 3) {
-  case 0: ltext = "R"; rtext = "L"; break;
-  case 1: ltext = "P"; rtext = "A"; break;
-  default:
-  case 2: ltext = "I"; rtext = "S"; break;
-  }
-  if (prim >= 3) SWAP (ltext, rtext);
 
-  switch (sec % 3) {
-  case 0: btext = "R"; ttext = "L"; break;
-  case 1: btext = "P"; ttext = "A"; break;
-  default:
-  case 2: btext = "I"; ttext = "S"; break;
-  }
+  if (anatomical_coordinates_()) {
+    switch (prim % 3) {
+    case 0: ltext = "R"; rtext = "L"; break;
+    case 1: ltext = "P"; rtext = "A"; break;
+    default:
+    case 2: ltext = "I"; rtext = "S"; break;
+    }
+    
+    switch (sec % 3) {
+    case 0: btext = "R"; ttext = "L"; break;
+    case 1: btext = "P"; ttext = "A"; break;
+    default:
+    case 2: btext = "I"; ttext = "S"; break;
+    }
+  } else {
+    switch (prim % 3) {
+    case 0: ltext = "-X"; rtext = "+X"; break;
+    case 1: ltext = "-Y"; rtext = "+Y"; break;
+    default:
+    case 2: ltext = "-Z"; rtext = "+Z"; break;
+    }
+    switch (sec % 3) {
+    case 0: btext = "-X"; ttext = "+X"; break;
+    case 1: btext = "-Y"; ttext = "+Y"; break;
+    default:
+    case 2: btext = "-Z"; ttext = "+Z"; break;
+    }
+  }    
+
+
+  if (prim >= 3) SWAP (ltext, rtext);
   if (sec >= 3) SWAP (ttext, btext);
 
   draw_label(window, ltext, 2, window.viewport_->height()/2, 
@@ -1687,25 +1670,27 @@ ViewSlices::draw_label(SliceWindow &window, string text, int x, int y,
 
   unsigned int wid = pow2(Round(bbox.max().x()));
   unsigned int hei = pow2(Round(bbox.max().y()));
-  GLubyte *buf = scinew GLubyte[wid*hei*4];
-  memset(buf, 0, wid*hei*4);
+  GLubyte *buf = scinew GLubyte[wid*hei];
+  memset(buf, 0, wid*hei);
   fttext.render(wid, hei, buf);
   
+  glEnable(GL_TEXTURE_2D);
   GLuint tex_id;
   glGenTextures(1, &tex_id);
-
+  
   glBindTexture(GL_TEXTURE_2D, tex_id);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glPixelTransferi(GL_MAP_COLOR, 0);
   
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wid, hei, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, wid, hei, 0, 
+	       GL_ALPHA, GL_UNSIGNED_BYTE, buf);
   delete [] buf;
   
   double px = x;
@@ -2094,32 +2079,11 @@ ViewSlices::draw_slice(SliceWindow &window, NrrdSlice &slice)
 
 void
 ViewSlices::draw_all_labels(SliceWindow &window) {
-    // set material color to be white
-  GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
-  glColor4fv(ones);
-  glEnable(GL_BLEND);
-  glEnable(GL_TEXTURE_2D);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
+  glColor4d(font_r_, font_g_, font_b_, font_a_);
   draw_position_label(window);
   draw_orientation_labels(window);
+  draw_window_label(window);
 
-  string text;
-  switch (window.axis_) {
-  case 0: text = "Sagittal"; break;
-  case 1: text = "Coronal"; break;
-  default:
-  case 2: text = "Axial"; break;
-  }
-  if (window.mode_ == slab_e) text = "SLAB - "+text;
-  if (window.mode_ == mip_e) text = "MIP - "+text;
-  draw_label(window, text, window.viewport_->width() - 2, 0, 
-	     FreeTypeText::se, fonts_["view"]);
-
-  if (string(sci_getenv("USER")) == string("mdavis"))
-    draw_label(window, "fps: "+to_string(fps_), 
-	       0, window.viewport_->height() - 2,
-	       FreeTypeText::nw, fonts_["default"]);
 }
   
 void
@@ -2505,6 +2469,7 @@ ViewSlices::zoom_in(SliceWindow &window)
 {
   window.zoom_ *= 1.1;
   window.pixel_ratio_ *= 1.1;
+  window.cursor_moved_ = true;
   redraw_window(window);
 }
 
@@ -2513,6 +2478,7 @@ ViewSlices::zoom_out(SliceWindow &window)
 {
   window.zoom_ /= 1.1;
   window.pixel_ratio_ /= 1.1;
+  window.cursor_moved_ = true;
   redraw_window(window);
 }
 
@@ -3600,6 +3566,10 @@ ViewSlices::initialize_fonts() {
 
 void
 ViewSlices::set_font_sizes(double size) {
+  font_r_();
+  font_g_();
+  font_b_();
+  font_a_();
   try {
     if (fonts_["default"]) 
       fonts_["default"]->set_points(size);
