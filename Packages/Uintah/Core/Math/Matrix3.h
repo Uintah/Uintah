@@ -104,6 +104,9 @@ class Matrix3 {
   //Determinant
   inline bool Orthogonal() const;
 
+  // Solve using Cramer's rule
+  inline bool solveCramer(Vector& rhs, Vector& x) const;
+
   //Inverse
   Matrix3 Inverse() const;
 
@@ -558,6 +561,25 @@ inline bool Matrix3::Orthogonal() const
 
   // Check that RRT = I
   if (RRT != I) return false;
+  return true;
+}
+
+inline bool Matrix3::solveCramer(Vector& b, Vector& x) const
+{
+  double det = this->Determinant();
+  if (det == 0.0) return false;
+  double odet = 1.0/det;
+  x[0] = odet*(b[0]*(mat3[1][1]*mat3[2][2] - mat3[2][1]*mat3[1][2])
+               - mat3[0][1]*(b[1]*mat3[2][2] - b[2]*mat3[1][2])
+               + mat3[0][2]*(b[1]*mat3[2][1] - b[2]*mat3[1][1]));
+ 
+  x[1] = odet*(mat3[0][0]*(b[1]*mat3[2][2] - b[2]*mat3[1][2])
+               - b[0]*(mat3[1][0]*mat3[2][2] - mat3[2][0]*mat3[1][2])
+               + mat3[0][2]*(mat3[1][0]*b[2]  - mat3[2][0]*b[1]));
+ 
+  x[2] = odet*(mat3[0][0]*(mat3[1][1]*b[2]  - mat3[2][1]*b[1])
+               - mat3[0][1]*(mat3[1][0]*b[2]  - mat3[2][0]*b[1])
+               + b[0]*(mat3[1][0]*mat3[2][1] - mat3[2][0]*mat3[1][1]));
   return true;
 }
 
