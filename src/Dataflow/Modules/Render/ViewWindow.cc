@@ -177,12 +177,12 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
     visible[si->name] = vis;
     ostringstream str;
     str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
-    gui->execute(str.str().c_str());
+    gui->execute(str.str());
   } else {
     vis = (*viter).second;
     ostringstream str;
     str << id << " addObject2 " << vis->tagid;
-    gui->execute(str.str().c_str());
+    gui->execute(str.str());
   }
   // invalidate the bounding box
   bb.reset();
@@ -201,7 +201,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
     vis = (*viter).second;
     ostringstream str;
     str << id << " removeObject " << vis->tagid;
-    gui->execute(str.str().c_str());
+    gui->execute(str.str());
   }
 				// invalidate the bounding box
   bb.reset();
@@ -411,7 +411,7 @@ void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
       need_redraw=1;
       ostringstream str;
       str << "translate: " << total_x << ", " << total_y;
-      update_mode_string(str.str().c_str());
+      update_mode_string(str.str());
     }
     break;
   case MouseEnd:
@@ -544,7 +544,7 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
       need_redraw=1;
       ostringstream str;
       str << "scale: " << total_scale*100 << "%";
-      update_mode_string(str.str().c_str());
+      update_mode_string(str.str());
     }
     break;
   case MouseEnd:
@@ -1050,7 +1050,7 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       ostringstream str;
       char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
       str << "unicam: " << unicamMode[unicam_state];
-      update_mode_string(str.str().c_str());
+      update_mode_string(str.str());
     }
     break;
 
@@ -2159,7 +2159,7 @@ void ViewWindow::update_mode_string(const string& msg)
 {
   ostringstream str;
   str << id << " updateMode \"" << msg << "\"";
-  gui->execute(str.str().c_str());
+  gui->execute(str.str());
 }
 
 ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, MouseHandler handler,
