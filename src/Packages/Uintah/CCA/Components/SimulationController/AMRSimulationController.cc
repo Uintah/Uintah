@@ -249,7 +249,7 @@ void AMRSimulationController::run()
 
      if (regridder->needsToReGrid() && !first) {
        cout << "REGRIDDING!!!!!\n";
-	currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler);
+	currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler, ups);
 	scheduler->advanceDataWarehouse(currentGrid);
 
 	cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
