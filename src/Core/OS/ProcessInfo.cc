@@ -43,7 +43,8 @@
 #  include <sys/procfs.h>
 #endif
 
-#if defined( __APPLE__ )
+#if defined( __APPLE__ ) && (__GNUC__ >= 3) && (__GNUC_MINOR__ > 1)
+#  define MAC_SUPPORTED 1
 #  include <mach/mach_init.h>
 #  include <mach/ppc/task.h>
 #endif
@@ -54,7 +55,7 @@ namespace SCIRun {
   bool ProcessInfo::IsSupported ( int info_type )
   {
 
-#if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX ) || defined( __APPLE__ )
+#if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX ) || defined( MAC_SUPPORTED )
 
     switch ( info_type ) {
     case MEM_SIZE: return true;
@@ -151,7 +152,7 @@ namespace SCIRun {
 
     return 0;
 
-#elif defined( __APPLE__ )
+#elif defined( MAC_SUPPORTED )
 
     task_basic_info_data_t processInfo;
     mach_msg_type_number_t count;
