@@ -176,7 +176,7 @@ void Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p)
   Vector dn(s-sv);	// difference (in normal direction) btwn s and sv
   double d=Dot(dn,p.normal());
   if (fabs(d)<0.00001) {
-    cerr << "Error - shear vector lies in shear fixed plane.  Returning identity.\n";
+      cerr << "Transform - shear vector lies in shear fixed plane.  Returning identity." << endl;
     return;
   }
   double yshear=sv.length()/d; // compute the length of the shear vector,
@@ -476,7 +476,7 @@ void Transform::compute_imat()
     imat[1][0]=imat[1][2]=imat[1][3]=0;
     imat[2][0]=imat[2][1]=imat[2][3]=0;
     imat[3][0]=imat[3][1]=imat[3][2]=0;
-    cerr << "ERROR - matrix is singular!!!\n";
+    cerr << "Transform - matrix is singular!!!" << endl;
     return;
   }
   imat[0][0]=(f*k*p - f*l*o - j*g*p + j*h*o + n*g*l - n*h*k)/q;
