@@ -10,9 +10,9 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
 #include <iostream>
@@ -28,10 +28,10 @@ class FieldFromBasis : public Module {
     MeshIPort* mesh_iport;
     MatrixIPort* basis_iport;
     int matrixGen;
-    ColumnMatrixIPort* rms_iport;
+    MatrixIPort* rms_iport;
     MatrixOPort* elem_oport;
-    ColumnMatrixOPort* vec_oport;
-    ColumnMatrixHandle vecH;
+    MatrixOPort* vec_oport;
+    MatrixHandle vecH;
 public:
     FieldFromBasis(const clString& id);
     virtual ~FieldFromBasis();
@@ -53,14 +53,14 @@ FieldFromBasis::FieldFromBasis(const clString& id)
     basis_iport = new MatrixIPort(this,"Basis Matrix",
 				  MatrixIPort::Atomic);
     add_iport(basis_iport);
-    rms_iport = new ColumnMatrixIPort(this, "Element Min Error",
-				       ColumnMatrixIPort::Atomic);
+    rms_iport = new MatrixIPort(this, "Element Min Error",
+				MatrixIPort::Atomic);
     add_iport(rms_iport);
     elem_oport = new MatrixOPort(this,"Element Vectors",
 				 MatrixIPort::Atomic);
     add_oport(elem_oport);
-    vec_oport = new ColumnMatrixOPort(this, "Error Vector",
-				      ColumnMatrixIPort::Atomic);
+    vec_oport = new MatrixOPort(this, "Error Vector",
+				      MatrixIPort::Atomic);
     add_oport(vec_oport);
     matrixGen=-1;
 }
@@ -108,13 +108,15 @@ void FieldFromBasis::execute() {
 	    else elem_oport->send(bas);
 	    
 	    // read error
-	    ColumnMatrixHandle err_in;
-	    if (!rms_iport->get(err_in) || !(err_in.get_rep()) || 
+	    MatrixHandle err_in;
+	    ColumnMatrix* err_inp;
+	    if (!rms_iport->get(err_in) || 
+		!(err_inp=dynamic_cast<ColumnMatrix*>(err_in.get_rep())) || 
 		(err_in->nrows() != 1)) {
 		cerr <<"FieldFromBasis -- couldn't get error vector.\n";
 		return;
 	    }
-	    errors[counter]=(*err_in.get_rep())[0];
+	    errors[counter]=(*err_inp)[0];
 	    counter++;
 	} else if (nelems == basis->ncols()/3) {
 	    int nelecs=basis->nrows();
@@ -127,13 +129,15 @@ void FieldFromBasis::execute() {
 	    else elem_oport->send(bas);
 	    
 	    // read error
-	    ColumnMatrixHandle err_in;
-	    if (!rms_iport->get(err_in) || !(err_in.get_rep()) || 
+	    MatrixHandle err_in;
+	    ColumnMatrix* err_inp;
+	    if (!rms_iport->get(err_in) || 
+		!(err_inp=dynamic_cast<ColumnMatrix*>(err_in.get_rep())) || 
 		(err_in->nrows() != 1)) {
 		cerr <<"FieldFromBasis -- couldn't get error vector.\n";
 		return;
 	    }
-	    errors[counter]=(*err_in.get_rep())[0];
+	    errors[counter]=(*err_inp)[0];
 	    counter++;	    
 	} else if (nnodes == basis->ncols()) {
 	    int nelecs=basis->nrows();
@@ -147,13 +151,15 @@ void FieldFromBasis::execute() {
 	    else elem_oport->send(bas);
 	    
 	    // read error
-	    ColumnMatrixHandle err_in;
-	    if (!rms_iport->get(err_in) || !(err_in.get_rep()) || 
+	    MatrixHandle err_in;
+	    ColumnMatrix* err_inp;
+	    if (!rms_iport->get(err_in) || 
+		!(err_inp=dynamic_cast<ColumnMatrix*>(err_in.get_rep())) || 
 		(err_in->nrows() != 1)) {
 		cerr <<"FieldFromBasis -- couldn't get error vector.\n";
 		return;
 	    }
-	    errors[counter]=(*err_in.get_rep())[0];
+	    errors[counter]=(*err_inp)[0];
 	    counter++;
 	} else {
 	    cerr << "FieldFromBasis -- error, basis doesn't have the same number of rows \as mesh elements or mesh nodes: basis->nrows()="<<basis->nrows()<<" mesh->elems.size()="<<nelems<<" mesh->nodes.size()="<<nnodes<<"\n";

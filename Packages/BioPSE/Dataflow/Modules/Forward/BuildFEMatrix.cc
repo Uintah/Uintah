@@ -12,9 +12,9 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MeshPort.h>
 #include <Core/Datatypes/Mesh.h>
@@ -37,8 +37,8 @@ using namespace SCIRun;
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
-    ColumnMatrixIPort* refnodeport;
-    ColumnMatrixOPort* rhsoport;
+    MatrixIPort* refnodeport;
+    MatrixOPort* rhsoport;
     MatrixOPort * outmatrix;
     void build_local_matrix(Element*, double lcl[4][4],
 			    const MeshHandle&);
@@ -63,7 +63,7 @@ class BuildFEMatrix : public Module {
     int UseCond;
     int PinZero;
     MatrixHandle gbl_matrixH;
-    ColumnMatrixHandle rhsH;
+    MatrixHandle rhsH;
     int gen;
     clString lastBCFlag;
     int refnode;
@@ -87,14 +87,13 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inmesh);
-    refnodeport=scinew 
-	ColumnMatrixIPort(this, "RefNode", ColumnMatrixIPort::Atomic);
+    refnodeport=scinew MatrixIPort(this, "RefNode", MatrixIPort::Atomic);
     add_iport(refnodeport);
 
     // Create the output ports
     outmatrix=scinew MatrixOPort(this, "FEM Matrix", MatrixIPort::Atomic);
     add_oport(outmatrix);
-    rhsoport=scinew ColumnMatrixOPort(this, "RHS", ColumnMatrixIPort::Atomic);
+    rhsoport=scinew MatrixOPort(this, "RHS", MatrixIPort::Atomic);
     add_oport(rhsoport);
     gen=-1;
 }
@@ -257,9 +256,11 @@ void BuildFEMatrix::execute()
      lastBCFlag=BCFlag.get();
 
 #if 1
-     ColumnMatrixHandle refnodeH;
-     if (refnodeport->get(refnodeH)&&refnodeH.get_rep()&&refnodeH->nrows()>0){
-	 refnode=(*refnodeH.get_rep())[0];
+     MatrixHandle refnodeH;
+     if (refnodeport->get(refnodeH) && 
+	 refnodeH.get_rep()&&refnodeH->nrows()>0 &&
+	 refnodeH->ncols()>0){
+	 refnode=(*refnodeH.get_rep())[0][0];
      }
 #endif
 
@@ -273,7 +274,7 @@ void BuildFEMatrix::execute()
      outmatrix->send(gbl_matrixH);
      //outmatrix->send(gbl_matrix);
      //cerr << "sent gbl_matrix to matrix port" << endl;
-     rhsH=ColumnMatrixHandle(rhs);
+     rhsH=MatrixHandle(rhs);
      rhsoport->send(rhsH);
      //rhsoport->send(rhs);
      //cerr << "sent rhs to coloumn matrix port" << endl;

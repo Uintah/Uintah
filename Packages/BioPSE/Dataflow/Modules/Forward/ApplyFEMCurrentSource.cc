@@ -10,7 +10,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
@@ -26,12 +26,12 @@ using namespace SCIRun;
 
 class ApplyFEMCurrentSource : public Module {
   MeshIPort* inmesh;
-  ColumnMatrixIPort * isource;
+  MatrixIPort * isource;
   MatrixIPort * isrcmat;  
-  ColumnMatrixIPort* irhs;
-  ColumnMatrixIPort* imap;
-  ColumnMatrixOPort* orhs;
-  ColumnMatrixOPort* oidx;
+  MatrixIPort* irhs;
+  MatrixIPort* imap;
+  MatrixOPort* orhs;
+  MatrixOPort* oidx;
   GuiString sourceNodeTCL;
   GuiString sinkNodeTCL;
   GuiString modeTCL;
@@ -57,19 +57,19 @@ ApplyFEMCurrentSource::ApplyFEMCurrentSource(const clString& id)
   // Create the input port
   inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
   add_iport(inmesh);
-  isource=scinew ColumnMatrixIPort(this, "Source", ColumnMatrixIPort::Atomic);
+  isource=scinew MatrixIPort(this, "Source", MatrixIPort::Atomic);
   add_iport(isource);
-  irhs=scinew ColumnMatrixIPort(this, "Input RHS",ColumnMatrixIPort::Atomic);
+  irhs=scinew MatrixIPort(this, "Input RHS", MatrixIPort::Atomic);
   add_iport(irhs);
   isrcmat=scinew MatrixIPort(this, "SourceMat", MatrixIPort::Atomic);
   add_iport(isrcmat);
-  imap=scinew ColumnMatrixIPort(this, "Electrode Map",ColumnMatrixIPort::Atomic);
+  imap=scinew MatrixIPort(this, "Electrode Map", MatrixIPort::Atomic);
   add_iport(imap);
   
   // Create the output ports
-  orhs=scinew ColumnMatrixOPort(this,"Output RHS",ColumnMatrixIPort::Atomic);
+  orhs=scinew MatrixOPort(this,"Output RHS", MatrixIPort::Atomic);
   add_oport(orhs);
-  oidx=scinew ColumnMatrixOPort(this,"Elem Index",ColumnMatrixIPort::Atomic);
+  oidx=scinew MatrixOPort(this,"Elem Index", MatrixIPort::Atomic);
   add_oport(oidx);
 }
 
@@ -83,13 +83,14 @@ void ApplyFEMCurrentSource::execute()
   //     cerr << "ApplyFEMCurrentSource: about to read inputs...\n";
   if (!inmesh->get(mesh) || !mesh.get_rep()) return;
   
-  ColumnMatrixHandle rhsh;
+  MatrixHandle rhsh;
   ColumnMatrix* rhs = scinew ColumnMatrix(mesh->nodes.size());
   rhsh=rhs;
-  ColumnMatrixHandle rhshIn;
+  MatrixHandle rhshIn;
   ColumnMatrix* rhsIn;
   // if the user passed in a vector the right size, copy it into ours
-  if (irhs->get(rhshIn) && (rhsIn=rhshIn.get_rep()) && 
+  if (irhs->get(rhshIn) && 
+      (rhsIn=dynamic_cast<ColumnMatrix*>(rhshIn.get_rep())) && 
       (rhsIn->nrows()==mesh->nodes.size()))
     for (int i=0; i<mesh->nodes.size(); i++) (*rhs)[i]=(*rhsIn)[i];
   else
@@ -109,30 +110,32 @@ void ApplyFEMCurrentSource::execute()
       cerr << "ApplyFEMCurrentSource error - need source/sink pair.\n";
       return;
     }
-    ColumnMatrixHandle imapH;
-    if (!imap->get(imapH) || !imapH.get_rep()) {
+    MatrixHandle imapH;
+    ColumnMatrix *imapp;
+    if (!imap->get(imapH) || 
+	!(imapp=dynamic_cast<ColumnMatrix*>(imapH.get_rep()))) {
       cerr << "ApplyFEMCurrentSource error - need electrode map.\n";
       return;
     }
-    if (sourceNode < 1 || sinkNode < 1 || sourceNode > imapH->nrows() ||
-	sinkNode > imapH->nrows()) {
-      cerr << "ApplyFEMCurrentSource error - nodes must be within range [0,"<<imapH->nrows()<<"]\n";
+    if (sourceNode < 1 || sinkNode < 1 || sourceNode > imapp->nrows() ||
+	sinkNode > imapp->nrows()) {
+      cerr << "ApplyFEMCurrentSource error - nodes must be within range [0,"<<imapp->nrows()<<"]\n";
       return;
     }
-    (*rhs)[(*imapH.get_rep())[sourceNode-1]]=1;
-    (*rhs)[(*imapH.get_rep())[sinkNode-1]]=-1;
-    cerr << "ApplyFEMCurrentSource - using source/sink pair "<<(*imapH.get_rep())[sourceNode-1]<<"/"<<(*imapH.get_rep())[sinkNode-1]<<"\n";
+    (*rhs)[(*imapp)[sourceNode-1]]=1;
+    (*rhs)[(*imapp)[sinkNode-1]]=-1;
+    cerr << "ApplyFEMCurrentSource - using source/sink pair "<<(*imapp)[sourceNode-1]<<"/"<<(*imapp)[sinkNode-1]<<"\n";
     orhs->send(rhsh);    
     return;
   }
       
-  ColumnMatrixHandle mh=0;
+  MatrixHandle mh=0;
   ColumnMatrix *mp=0;
   
   MatrixHandle mmh=0;
   Matrix* mmp=0;
 
-  if ((!isource->get(mh) || !(mp=mh.get_rep())) &&
+  if ((!isource->get(mh) || !(mp=dynamic_cast<ColumnMatrix*>(mh.get_rep()))) &&
       (!isrcmat->get(mmh) || !(mmp=mmh.get_rep()))) return; 
   
   if ((mp && mp->nrows()<6) || (mmp && mmp->ncols()<6)) {
@@ -218,7 +221,7 @@ void ApplyFEMCurrentSource::execute()
     (*idxvec)[3]=dir.y();
     (*idxvec)[4]=loc*3+2;
     (*idxvec)[5]=dir.z();
-    oidx->send(ColumnMatrixHandle(idxvec));
+    oidx->send(MatrixHandle(idxvec));
   }
 }
 } // End namespace BioPSE
