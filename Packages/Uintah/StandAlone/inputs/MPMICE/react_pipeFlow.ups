@@ -137,7 +137,6 @@
       <save label="mass_L_CC"/> 
       <save label="mom_L_ME_CC"/>
       <save label="int_eng_L_ME_CC"/>
-      <save label="dTdt_CC"/>
       <save label="mom_L_CC"/>
       <save label="int_eng_L_CC"/>
       <save label="vel_CC"/>
