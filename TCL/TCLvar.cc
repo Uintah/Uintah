@@ -105,6 +105,19 @@ int TCLint::get()
     return value;
 }
 
+void TCLint::set(int val)
+{
+    is_reset=0;
+    if(val != value){
+	TCLTask::lock();
+	value=val;
+	char buf[20];
+	sprintf(buf, "%f", val);
+	Tcl_SetVar(the_interp, varname(), buf, TCL_GLOBAL_ONLY);
+	TCLTask::unlock();
+    }
+}
+
 TCLstring::TCLstring(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
