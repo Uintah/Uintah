@@ -975,17 +975,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
       if (switchDebugInitialize){
         cout_norm << " Initial Conditions" << endl;       
-        ostringstream description;
-        description << "Initialization_Mat_" << indx << "_patch_"
-                  << patch->getID();
-        printData(patch, 1, description.str(), "rho_CC",rho_top_cycle[m]);
-        printData(patch, 1, description.str(), "rho_micro_CC",rho_micro[m]);
-     // printData(patch, 1, description.str(), "sp_vol_CC", sp_vol_CC[m]);
-        printData(patch, 1, description.str(), "Temp_CC",   Temp_CC[m]);
-        printData(patch, 1, description.str(), "vol_frac_CC",vol_frac_CC[m]);
-        printVector(patch, 1, description.str(), "uvel_CC", 0,  vel_CC[m]);
-        printVector(patch, 1, description.str(), "vvel_CC", 1,  vel_CC[m]);
-        printVector(patch, 1, description.str(), "wvel_CC", 2,  vel_CC[m]);
+        ostringstream desc;
+        desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
+        printData(patch,   1, desc.str(), "rho_CC",      rho_top_cycle[m]);
+        printData(patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
+     // printData(patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[m]);
+        printData(patch,   1, desc.str(), "Temp_CC",     Temp_CC[m]);
+        printData(patch,   1, desc.str(), "vol_frac_CC", vol_frac_CC[m]);
+        printVector(patch, 1, desc.str(), "uvel_CC", 0,  vel_CC[m]);
+        printVector(patch, 1, desc.str(), "vvel_CC", 1,  vel_CC[m]);
+        printVector(patch, 1, desc.str(), "wvel_CC", 2,  vel_CC[m]);
       }   
     }
     setBC(press_CC,   rho_micro[SURROUND_MAT], 
@@ -1108,19 +1107,18 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     
       new_dw->allocate(n_iters_equil_press, lb->scratchLabel, 0, patch);
 #if 0
-      ostringstream description;
-      description << "TOP_equilibration_patch_" << patch->getID();
-      printData( patch, 1, description.str(), "Press_CC_top", press);
+      ostringstream desc;
+      desc << "TOP_equilibration_patch_" << patch->getID();
+      printData( patch, 1, desc.str(), "Press_CC_top", press);
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
-       description << "TOP_equilibration_Mat_" << indx << "_patch_"
-                 <<  patch->getID();
-       printData(patch, 1, description.str(), "rho_CC",          rho_CC[m]);
-       printData(patch, 1, description.str(), "rho_micro_CC",   rho_micro[m]);
-       printData(patch, 0, description.str(), "speedSound", speedSound_new[m]);
-       printData(patch, 1, description.str(), "Temp_CC",         Temp[m]);
-       printData(patch, 1, description.str(), "vol_frac_CC",     vol_frac[m]);
+       desc << "TOP_equilibration_Mat_" << indx << "_patch_"<<patch->getID();
+       printData(patch, 1, desc.str(), "rho_CC",       rho_CC[m]);    
+       printData(patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);  
+       printData(patch, 0, desc.str(), "speedSound",   speedSound_new[m]);
+       printData(patch, 1, desc.str(), "Temp_CC",      Temp[m]);       
+       printData(patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);   
       }
 #endif
     }
@@ -1293,22 +1291,20 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------   
     if (switchDebug_EQ_RF_press) {
-      ostringstream description;
-      description << "BOT_equilibration_patch_" << patch->getID();
-      printData( patch, 1, description.str(), "Press_CC_equil", press_new);
+      ostringstream desc;
+      desc << "BOT_equilibration_patch_" << patch->getID();
+      printData( patch, 1, desc.str(), "Press_CC_equil", press_new);
 
      for (int m = 0; m < numMatls; m++)  {
        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
        int indx = matl->getDWIndex(); 
-       ostringstream description;
-       description << "BOT_equilibration_Mat_" << indx << "_patch_" 
-                 << patch->getID();
-       printData( patch, 1, description.str(), "rho_CC",  rho_CC[m]);
-       //printData( patch, 1, description.str(), "speedSound",speedSound_new[m]);
-       printData( patch, 1, description.str(), "rho_micro_CC", rho_micro[m]);
-       printData( patch, 1, description.str(), "vol_frac_CC",  vol_frac[m]);
-       //printData( patch, 1, description.str(), "iterations",
-       //  n_iters_equil_press);
+       ostringstream desc;
+       desc << "BOT_equilibration_Mat_"<< indx << "_patch_"<< patch->getID();
+       printData( patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
+     //printData( patch, 1, desc.str(), "speedSound",   speedSound_new[m]);
+       printData( patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
+       printData( patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
+     //printData( patch, 1, desc.str(), "iterations",   n_iters_equil_press);
        
      }
     }
@@ -1370,15 +1366,15 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
 #if 0
-        ostringstream description;
-        description << "TOP_vel_FC_Mat_" << indx << "_patch_" 
+        ostringstream desc;
+        desc << "TOP_vel_FC_Mat_" << indx << "_patch_" 
                    << patch->getID(); 
-        printData(  patch, 1, description.str(), "rho_CC",      rho_CC);
-        printData(  patch, 1, description.str(), "rho_micro_CC",rho_micro_CC);
-        printData(  patch, 1, description.str(), "sp_vol_CC",  sp_vol_CC);
-        printVector( patch,1, description.str(), "uvel_CC", 0, vel_CC);
-        printVector( patch,1, description.str(), "vvel_CC", 1, vel_CC);
-        printVector( patch,1, description.str(), "wvel_CC", 2, vel_CC);
+        printData(  patch, 1, desc.str(), "rho_CC",      rho_CC);
+        printData(  patch, 1, desc.str(), "rho_micro_CC",rho_micro_CC);
+        printData(  patch, 1, desc.str(), "sp_vol_CC",  sp_vol_CC);
+        printVector( patch,1, desc.str(), "uvel_CC", 0, vel_CC);
+        printVector( patch,1, desc.str(), "vvel_CC", 1, vel_CC);
+        printVector( patch,1, desc.str(), "wvel_CC", 2, vel_CC);
 #endif
       }
       
@@ -1488,12 +1484,12 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
-        ostringstream description;
-        description <<  "bottom_of_vel_FC_Mat_" << indx << "_patch_" 
+        ostringstream desc;
+        desc <<  "bottom_of_vel_FC_Mat_" << indx << "_patch_" 
                   << patch->getID();
-        printData_FC( patch,1, description.str(), "uvel_FC", uvel_FC);
-        printData_FC( patch,1, description.str(), "vvel_FC", vvel_FC);
-        printData_FC( patch,1, description.str(), "wvel_FC", wvel_FC);
+        printData_FC( patch,1, desc.str(), "uvel_FC", uvel_FC);
+        printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
+        printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
       }
     } // matls loop
   }  // patch loop
@@ -1746,12 +1742,11 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       for (int m = 0; m < numMatls; m++)  {
        Material* matl = d_sharedState->getMaterial( m );
        int indx = matl->getDWIndex();
-       ostringstream description;
-       description << "Exchange_FC_after_BC_Mat_" << indx  << "_patch_" 
-                  <<  patch->getID();
-       printData_FC( patch,1, description.str(), "uvel_FCME", uvel_FCME[m]);
-       printData_FC( patch,1, description.str(), "vvel_FCME", vvel_FCME[m]);
-       printData_FC( patch,1, description.str(), "wvel_FCME", wvel_FCME[m]);
+       ostringstream desc;
+       desc <<"Exchange_FC_after_BC_Mat_" << indx <<"_patch_"<<patch->getID();
+       printData_FC( patch,1, desc.str(), "uvel_FCME", uvel_FCME[m]);
+       printData_FC( patch,1, desc.str(), "vvel_FCME", vvel_FCME[m]);
+       printData_FC( patch,1, desc.str(), "wvel_FCME", wvel_FCME[m]);
       }
     }
     for(int m = 0; m < numMatls; m++) {
@@ -1870,12 +1865,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
-        ostringstream description;
-        description << "middle_of_explicit_Pressure_Mat_" << indx << "_patch_"
-                  <<  patch->getID();
-        printData_FC( patch,1, description.str(), "uvel_FC", uvel_FC);
-        printData_FC( patch,1, description.str(), "vvel_FC", vvel_FC);
-        printData_FC( patch,1, description.str(), "wvel_FC", wvel_FC);
+        ostringstream desc;
+        desc<<"middle_explicit_Pressure_Mat_"<<indx<<"_patch_"<<patch->getID();
+        printData_FC( patch,1, desc.str(), "uvel_FC", uvel_FC);
+        printData_FC( patch,1, desc.str(), "vvel_FC", vvel_FC);
+        printData_FC( patch,1, desc.str(), "wvel_FC", wvel_FC);
       }
       
       //__________________________________
@@ -1938,11 +1932,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
-      ostringstream description;
-      description << "Bottom_of_explicit_Pressure_patch_" << patch->getID();
-      printData( patch, 1,description.str(), "delP_Dilatate", delP_Dilatate);
-      //printData( patch, 1,description.str(), "delP_MassX",    delP_MassX);
-      printData( patch, 1,description.str(), "Press_CC",      press_CC);
+      ostringstream desc;
+      desc << "Bottom_of_explicit_Pressure_patch_" << patch->getID();
+      printData( patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
+    //printData( patch, 1,desc.str(), "delP_MassX",    delP_MassX);
+      printData( patch, 1,desc.str(), "Press_CC",      press_CC);
     }
   }  // patch loop
 }
@@ -2043,11 +2037,11 @@ void ICE::computePressFC(const ProcessorGroup*,
 
    //---- P R I N T   D A T A ------ 
     if (switchDebug_PressFC) {
-      ostringstream description;
-      description << "press_FC_patch_" <<patch->getID();
-      printData_FC( patch,0,description.str(), "press_FC_RIGHT", pressX_FC);
-      printData_FC( patch,0,description.str(), "press_FC_TOP",   pressY_FC);
-      printData_FC( patch,0,description.str(), "press_FC_FRONT", pressZ_FC);
+      ostringstream desc;
+      desc << "press_FC_patch_" <<patch->getID();
+      printData_FC( patch,0,desc.str(), "press_FC_RIGHT", pressX_FC);
+      printData_FC( patch,0,desc.str(), "press_FC_TOP",   pressY_FC);
+      printData_FC( patch,0,desc.str(), "press_FC_FRONT", pressZ_FC);
     }
   }  // patch loop
 }
@@ -2159,11 +2153,10 @@ void ICE::massExchange(const ProcessorGroup*,
       if (switchDebugSource_Sink) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
-        ostringstream description;
-        description <<  "sources/sinks_Mat_" << indx << "_patch_" 
-                  <<  patch->getID();
-        printData(patch, 0, description.str(),"burnedMass", burnedMass[m]);
-        printData(patch, 0, description.str(),"releasedHeat", releasedHeat[m]);
+        ostringstream desc;
+        desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        printData(patch, 0, desc.str(),"burnedMass", burnedMass[m]);
+        printData(patch, 0, desc.str(),"releasedHeat", releasedHeat[m]);
       }
 #endif
     }
@@ -2389,12 +2382,11 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
-        ostringstream description;
-       description << "sources/sinks_Mat_" << indx << "_patch_" 
-                  <<  patch->getID();
-        printVector(patch, 1, description.str(), "xmom_source", 0, mom_source);
-        printVector(patch, 1, description.str(), "ymom_source", 1, mom_source);
-        printVector(patch, 1, description.str(), "zmom_source", 2, mom_source);
+        ostringstream desc;
+        desc << "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        printVector(patch, 1, desc.str(), "xmom_source", 0, mom_source);
+        printVector(patch, 1, desc.str(), "ymom_source", 1, mom_source);
+        printVector(patch, 1, desc.str(), "zmom_source", 2, mom_source);
       }
     }
   }
@@ -2475,10 +2467,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
-        ostringstream description;
-        description <<  "sources/sinks_Mat_" << indx << "_patch_" 
-                    <<  patch->getID();
-        printData(patch,1,description.str(),"int_eng_source", int_eng_source);
+        ostringstream desc;
+        desc <<  "sources/sinks_Mat_" << indx << "_patch_"<<  patch->getID();
+        printData(patch,1,desc.str(),"int_eng_source", int_eng_source);
       }
 
       new_dw->put(int_eng_source, lb->int_eng_source_CCLabel, indx,patch);
@@ -2651,13 +2642,12 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           new_dw->get(int_eng_L_Debug,lb->int_eng_L_CCLabel,indx,patch,Ghost::None,0);
           new_dw->get(mom_L_Debug,lb->mom_L_CCLabel,indx,patch,Ghost::None,0);
         }
-        ostringstream description;
-       description <<  "Bot_Lagrangian_Values_Mat_" << indx << "_patch_" 
-                  << patch->getID();
-        printVector(patch,1, description.str(), "xmom_L_CC", 0, mom_L_Debug);
-        printVector(patch,1, description.str(), "ymom_L_CC", 1, mom_L_Debug);
-        printVector(patch,1, description.str(), "zmom_L_CC", 2, mom_L_Debug);
-        printData(patch,1, description.str(), "int_eng_L_CC",int_eng_L_Debug); 
+        ostringstream desc;
+        desc <<"Bot_Lagrangian_Values_Mat_"<<indx<< "_patch_"<<patch->getID();
+        printVector(patch,1, desc.str(), "xmom_L_CC", 0, mom_L_Debug);
+        printVector(patch,1, desc.str(), "ymom_L_CC", 1, mom_L_Debug);
+        printVector(patch,1, desc.str(), "zmom_L_CC", 2, mom_L_Debug);
+        printData(  patch,1, desc.str(), "int_eng_L_CC", int_eng_L_Debug); 
            
       }
       
@@ -3138,18 +3128,17 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
-       ostringstream description;
-       description << "AFTER_Advection_after_BC_Mat_" << indx << "_patch_"
-                  <<  patch->getID();
-       printVector( patch,1, description.str(), "xmom_L_CC", 0, mom_L_ME);
-       printVector( patch,1, description.str(), "ymom_L_CC", 1, mom_L_ME);
-       printVector( patch,1, description.str(), "zmom_L_CC", 2, mom_L_ME);
-       printData(   patch,1, description.str(), "int_eng_L_CC",int_eng_L_ME);
-       printData(   patch,1, description.str(), "rho_CC",      rho_CC);
-       printData(   patch,1, description.str(), "Temp_CC",temp);
-       printVector( patch,1, description.str(), "uvel_CC", 0, vel_CC);
-       printVector( patch,1, description.str(), "vvel_CC", 1, vel_CC);
-       printVector( patch,1, description.str(), "wvel_CC", 2, vel_CC);
+       ostringstream desc;
+       desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();
+       printVector( patch,1, desc.str(), "xmom_L_CC", 0,mom_L_ME); 
+       printVector( patch,1, desc.str(), "ymom_L_CC", 1,mom_L_ME); 
+       printVector( patch,1, desc.str(), "zmom_L_CC", 2,mom_L_ME); 
+       printData(   patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
+       printData(   patch,1, desc.str(), "rho_CC",      rho_CC);
+       printData(   patch,1, desc.str(), "Temp_CC",     temp);
+       printVector( patch,1, desc.str(), "uvel_CC", 0,  vel_CC);
+       printVector( patch,1, desc.str(), "vvel_CC", 1,  vel_CC);
+       printVector( patch,1, desc.str(), "wvel_CC", 2,  vel_CC);
       }
 
       new_dw->put(rho_CC,   lb->rho_CC_top_cycleLabel, indx,patch);
@@ -3500,8 +3489,8 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
         variable.fillFaceFlux(patch, face,new_bcs->getValue().z(),dx,offset);
       }
 #endif
- /*==========TESTING==========`*/
-    }
+/*==========TESTING==========`*/ 
+     }
   }
 }
 
@@ -3590,10 +3579,7 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
             of the 4 cells surrounding that edge, however we only use 2 cells
             to compute it.  When you take the difference of the edge velocities 
             there are two common cells that automatically cancel themselves out.
-          - The viscosity we're using isn't right if it varies spatially.
-          
-   WARNING: THIS DOESN'T COMPUTE THE SHEAR STRESS ON THE LAST X INTERIOR FACE
-            THIS ISN'T BIG DEAL BUT SHOULD BE FIXED.    
+          - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
 void ICE::computeTauX_Components( const Patch* patch,
                           const CCVariable<Vector>& vel_CC,
@@ -3605,7 +3591,7 @@ void ICE::computeTauX_Components( const Patch* patch,
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
   // loop over each cell
-  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+  for(CellIterator iter = patch->getSFCXIterator();!iter.done();iter++){
     IntVector cell = *iter;
     int i = cell.x();
     int j = cell.y();
@@ -3654,9 +3640,10 @@ void ICE::computeTauX_Components( const Patch* patch,
     grad_1 = (uvel_EC_front    - uvel_EC_back)    /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[left].z())/delX;
     tau_X_FC[cell].z(viscosity * (grad_1 + grad_2));
-//    cout<<"tau_XX: "<<tau_X_FC[cell].x()<<
-//          " tau_XY: "<<tau_X_FC[cell].y()<<
-//          " tau_XZ: "<<tau_X_FC[cell].z()<<endl;
+    
+//  cout<<cell<<" tau_XX: "<<tau_X_FC[cell].x()<<
+//  " tau_XY: "<<tau_X_FC[cell].y()<<
+//  " tau_XZ: "<<tau_X_FC[cell].z()<<endl;     
   }
 }
 
@@ -3682,7 +3669,7 @@ void ICE::computeTauY_Components( const Patch* patch,
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
   // loop over the bottom then top cell face
-  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+  for(CellIterator iter = patch->getSFCYIterator();!iter.done();iter++){
     IntVector cell = *iter;
     int i = cell.x();
     int j = cell.y();
@@ -3731,9 +3718,10 @@ void ICE::computeTauY_Components( const Patch* patch,
     grad_1 = (vvel_EC_front    - vvel_EC_back)    /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
     tau_Y_FC[cell].z(viscosity * (grad_1 + grad_2));
-//  cout<<"tau_YX: "<<tau_Y_FC[cell].x()<<
-//        " tau_YY: "<<tau_Y_FC[cell].y()<<
-//        " tau_YZ: "<<tau_Y_FC[cell].z()<<endl;
+    
+//  cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
+//  " tau_YY: "<<tau_Y_FC[cell].y()<<
+//  " tau_YZ: "<<tau_Y_FC[cell].z()<<endl;
   }
 }
 
@@ -3745,8 +3733,6 @@ void ICE::computeTauY_Components( const Patch* patch,
             to compute it.  When you take the difference of the edge velocities 
             there are two common cells that automatically cancel themselves out.
           - The viscosity we're using isn't right if it varies spatially.
- WARNING: THIS DOESN'T COMPUTE THE SHEAR STRESS ON THE LAST Z INTERIOR FACE
-            THIS ISN'T BIG DEAL BUT SHOULD BE FIXED. 
  ---------------------------------------------------------------------  */
 void ICE::computeTauZ_Components( const Patch* patch,
                           const CCVariable<Vector>& vel_CC,
@@ -3758,7 +3744,7 @@ void ICE::computeTauZ_Components( const Patch* patch,
   double grad_uvel, grad_vvel, grad_wvel;
   //__________________________________
   // loop over the  faces
-  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){  
+  for(CellIterator iter = patch->getSFCZIterator();!iter.done();iter++){  
     IntVector cell = *iter; 
     int i = cell.x();
     int j = cell.y();
