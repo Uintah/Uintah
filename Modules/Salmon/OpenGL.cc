@@ -15,6 +15,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
+#include <strstream.h>
+
+const int STRINGSIZE=100;
 
 class OpenGL : public Renderer {
     Tk_Window tkwin;
@@ -22,6 +25,7 @@ class OpenGL : public Renderer {
     Display* dpy;
     GLXContext cx;
     clString myname;
+    char* strbuf;
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -50,10 +54,12 @@ RegisterRenderer OpenGL_renderer("OpenGL", &make_OpenGL);
 OpenGL::OpenGL()
 : tkwin(0)
 {
+    strbuf=new char[STRINGSIZE];
 }
 
 OpenGL::~OpenGL()
 {
+    delete[] strbuf;
 }
 
 clString OpenGL::create_window(const clString& name,
@@ -194,14 +200,12 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Report statistics
     timer.stop();
-    clString perf1(to_string(drawinfo.polycount)+" polygons in "
-		  +to_string(timer.time())+" seconds");
-    clString perf2(to_string(double(drawinfo.polycount)/timer.time())
-		   +" polygons/second");
-    static clString q("\"");
-    static clString s(" ");
-    static clString c("updatePerf ");
-    TCL::execute(c+roe->id+s+q+perf1+q+s+q+perf2+q);
+    ostrstream str(strbuf, STRINGSIZE);
+    str << "updatePerf " << roe->id << " \"";
+    str << drawinfo.polycount << " polygons in " << timer.time()
+	<< " seconds\" \"" << drawinfo.polycount/timer.time()
+	<< " polygons/second\"";
+    TCL::execute(str.str());
 }
 
 void OpenGL::hide()

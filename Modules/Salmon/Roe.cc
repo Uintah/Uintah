@@ -31,10 +31,13 @@
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
+#include <strstream.h>
 
 #define MouseStart 0
 #define MouseEnd 1
 #define MouseMove 2
+
+const int MODEBUFSIZE = 100;
 
 Roe::Roe(Salmon* s, const clString& id)
 : id(id), manager(s), view("view", id, this), shading("shading", id, this),
@@ -43,6 +46,7 @@ Roe::Roe(Salmon* s, const clString& id)
     view.set(homeview);
     TCL::add_command(id, this, 0);
     current_renderer=0;
+    modebuf=new char[MODEBUFSIZE];
 }
 
 #ifdef OLDUI
@@ -118,6 +122,7 @@ void Roe::spawnChCB(CallbackData*, void*)
     
 Roe::~Roe()
 {
+    delete[] modebuf;
 }
 
 #ifdef OLDUI
@@ -355,8 +360,9 @@ void Roe::mouse_translate(int action, int x, int y)
 	    view.set(tmpview);
 
 	    need_redraw=1;
-	    update_mode_string(clString("translate: ")+to_string(total_x)
-			       +", "+to_string(total_y));
+	    ostrstream str(modebuf, MODEBUFSIZE);
+	    str << "translate: " << total_x << ", " << total_y;
+	    update_mode_string(str.str());
 	}
 	break;
     case MouseEnd:
@@ -393,7 +399,9 @@ void Roe::mouse_scale(int action, int x, int y)
 	    tmpview.fov=RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov/2.))));
 	    view.set(tmpview);
 	    need_redraw=1;
-	    update_mode_string(clString("scale: ")+to_string(total_x*100)+"%");
+	    ostrstream str(modebuf, MODEBUFSIZE);
+	    str << "scale: " << total_x*100 << "%";
+	    update_mode_string(str.str());
 	}
 	break;
     case MouseEnd:
@@ -426,6 +434,7 @@ void Roe::mouse_rotate(int action, int x, int y)
 	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
 	    rot_view=tmpview;
 	    rot_point_valid=1;
+	    
 	    cerr << "rot_point=" << rot_point << endl;
 	}
 	break;
@@ -539,7 +548,7 @@ void Roe::mouse_pick(int action, int x, int y)
 		update_mode_string("picked someting...");
 		pick_pick->moved(prin_dir, dist, mtn);
 	    } else {
-		update_mode_string(clString("Bad direction..."));
+		update_mode_string("Bad direction...");
 	    }
 	    last_x = x;
 	    last_y = y;
@@ -738,7 +747,7 @@ void Roe::redraw()
     current_renderer->redraw(manager, this);
 }
 
-void Roe::update_mode_string(const clString& msg)
+void Roe::update_mode_string(const char*)
 {
     NOT_FINISHED("Roe::update_mode_string");
 }
