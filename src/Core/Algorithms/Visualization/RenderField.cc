@@ -242,6 +242,10 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
 {
   Vector ecolor;
   GeomTransform *gt = 0;
+
+  // don't render glyphs that are too small
+  if ((t.mat_[0][0] + t.mat_[1][1] + t.mat_[2][2]) < 0.001) return;
+
   if (t.have_eigens())
   {
     const Vector &e1 = t.get_eigenvector1();
@@ -253,7 +257,7 @@ RenderTensorFieldBase::add_item(GeomHandle glyph,
 
     static const Point origin(0.0, 0.0, 0.0);
     Transform trans(origin, e1, e2, e3);
-    trans.post_scale(Vector(v1, v2, v3) * scale);
+    trans.post_scale(Vector(fabs(v1), fabs(v2), fabs(v3)) * scale);
     trans.pre_translate(p.asVector());
 
     gt = scinew GeomTransform(glyph, trans);
