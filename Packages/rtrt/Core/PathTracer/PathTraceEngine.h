@@ -28,9 +28,9 @@ namespace rtrt {
     Point center;
     double radius;
     double area;
-    Color color;
+    float luminance;
     
-    PathTraceLight(const Point &cen, double radius, const Color &c);
+    PathTraceLight(const Point &cen, double radius, float lum);
     Vector random_vector(double r1, double r2, double r3);
     Point random_point(double r1, double r2, double r3);
     Point point_from_normal(const Vector& dir);
@@ -39,20 +39,16 @@ namespace rtrt {
   
   class PathTraceContext {
   public:
-    PathTraceContext(const Color &color, const PathTraceLight &light,
+    PathTraceContext(float luminance, const PathTraceLight &light,
 		     Object* geometry, Background *background,
 		     int num_samples, int max_depth, bool dilate,
 		     int support, int use_weighted_ave,
 		     float threshold, Semaphore* sem);
-    // Add a colormap
-    void addColormap(Array1<unsigned char>& value, Array1<Color>& map);
-    Color lookupColor(HitInfo& hit);
-    Color lookupColor(int sphere_index);
-    
+
     // Light source
     PathTraceLight light;
-    // Object color
-    Color color;
+    // Surface luminance
+    float luminance;
     // Acceleration geometry
     Object* geometry;
     // Background
@@ -70,12 +66,7 @@ namespace rtrt {
 
     // Semephore for threading
     Semaphore *sem;
-    
-    // Stuff for color map
-    Array1<unsigned char> value;
-    Array1<Color> map;
-    bool useColormap;
-    
+
     // Stuff for PerProcessorContext
     int pp_size;
     int pp_scratchsize;
@@ -111,7 +102,7 @@ namespace rtrt {
   class TextureSphere: public Sphere {
   protected:
     // Pointer to its texture
-    Array2<Color> texture;
+    Array2<float> texture;
     Array2<float> inside;
     friend class PathTraceWorker;
   public:
