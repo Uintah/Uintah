@@ -210,7 +210,7 @@ FieldExtractor::get_periodic_bcs_range(IntVector cellmax, IntVector datamax,
 #if 0
 template<class T>
 void getVariable(QueryInfo &qinfo, IntVector &low,
-		 IntVector &range, BBox &box, string &filename) {
+                 IntVector &range, BBox &box, string &filename) {
 }
 
 #endif
@@ -1136,7 +1136,7 @@ FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
       newGrid->addLevel(level->getAnchor(), level->dCell());
 
 //     cerr<<"Level "<<i<<":\n";
-    int count = 0;
+//    int count = 0;
     SuperPatchContainer::const_iterator superIter;
     for (superIter = superPatches->begin();
          superIter != superPatches->end(); superIter++) {
