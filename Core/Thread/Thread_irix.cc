@@ -132,6 +132,8 @@ static
 void
 lock_scheduler()
 {
+    if(!initialized)
+	Thread::initialize();
     if(uspsema(schedlock) == -1)
 	throw ThreadError(std::string("lock_scheduler failed")
 			  +strerror(errno));
@@ -232,12 +234,25 @@ wait_shutdown()
     }
 }
 
+void
+Thread::allow_sgi_OpenGL_page0_sillyness()
+{
+    if(mprotect(0, getpagesize(), PROT_READ|PROT_WRITE) != 0){
+	fprintf(stderr, "\007\007!!! Strange error re-mapping page 0 - tell Steve this number: %d\n", errno);
+    }
+}
+
 /*
  * Intialize threads for irix
  */
 void
 Thread::initialize()
 {
+    if(mprotect(0, getpagesize(), PROT_NONE) != -1){
+	//fprintf(stderr, "\007\007!!! WARNING: page 0 protected - talk to Steve if GL programs fail!\n");
+    } else if(errno != EINVAL){
+	fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
+    }
     usconfig(CONF_ARENATYPE, US_SHAREDONLY);
     usconfig(CONF_INITSIZE, 30*1024*1024);
     usconfig(CONF_INITUSERS, (unsigned int)140);
@@ -317,7 +332,7 @@ Thread::initialize()
     unlock_scheduler();
 
     thread_local->current_thread=mainthread;
-    if(!getenv("THREAD_NO_CATCH_SIGNALS"))
+    if(!getenv("THREAD_NO_CATCH_SIGNALS") && !getenv("DEBUGGER_SHELL"))
 	install_signal_handlers();
 }
 
@@ -666,6 +681,9 @@ install_signal_handlers()
     if(sigaction(SIGSEGV, &action, NULL) == -1)
 	throw ThreadError(std::string("sigaction(SIGSEGV) failed")
 			  +strerror(errno));
+    if(sigaction(SIGFPE, &action, NULL) == -1)
+	throw ThreadError(std::string("sigaction(SIGFPE) failed")
+			  +strerror(errno));
 
     action.sa_handler=(SIG_PF)handle_quit;
     if(sigaction(SIGQUIT, &action, NULL) == -1)
@@ -859,7 +877,7 @@ namespace SCICore {
 	    // Only for fetchop implementation
 	    atomic_var_t* pvar;
 	    char pad[128];
-	    int flag;  // We want this on it's own cache line
+	    volatile int flag;  // We want this on it's own cache line
 	    char pad2[128];
 	};
     }
@@ -1297,8 +1315,23 @@ SCICore::Thread::ConditionVariable::conditionBroadcast()
 			      +strerror(errno));
     }
 }
+
 //
 // $Log$
+// Revision 1.15  2000/02/15 00:23:51  sparker
+// Added:
+//  - new Thread::parallel method using member template syntax
+//  - Parallel2 and Parallel3 helper classes for above
+//  - min() reduction to SimpleReducer
+//  - ThreadPool class to help manage a set of threads
+//  - unmap page0 so that programs will crash when they deref 0x0.  This
+//    breaks OpenGL programs, so any OpenGL program linked with this
+//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
+//    before calling any glX functions.
+//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
+//  - Added "volatile" to fetchop barrier implementation to workaround
+//    SGI optimizer bug
+//
 // Revision 1.14  1999/11/09 08:15:51  dmw
 // bumped up the arena size in order to fix Mesh problem
 //
