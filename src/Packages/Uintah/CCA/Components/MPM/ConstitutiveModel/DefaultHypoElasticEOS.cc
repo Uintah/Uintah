@@ -16,23 +16,18 @@ DefaultHypoElasticEOS::~DefaultHypoElasticEOS()
 
 //////////
 // Calculate the pressure using the elastic constitutive equation
-Matrix3 
+double 
 DefaultHypoElasticEOS::computePressure(const MPMMaterial* ,
-				       const double& bulk,
-				       const double& shear,
+				       const PlasticityState* state,
 				       const Matrix3& ,
 				       const Matrix3& rateOfDeformation,
-				       const Matrix3& tensorHy,
-				       const double& ,
-				       const double& ,
 				       const double& delT)
 {
 
-  // Calculate lambda
-  double lambda = bulk - (2.0/3.0)*shear;
+  // Get the state data
+  double K = state->bulkModulus;
 
   // Calculate pressure
-  double p = rateOfDeformation.Trace()*(lambda*delT);
-  Matrix3 one; one.Identity();
-  return (one*p + tensorHy);
+  double p = rateOfDeformation.Trace()*(K*delT);
+  return p;
 }

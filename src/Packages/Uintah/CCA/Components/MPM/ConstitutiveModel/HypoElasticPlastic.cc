@@ -726,6 +726,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->temperature = temperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
+      state->bulkModulus = bulk ;
+      state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
@@ -741,10 +743,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->meltingTemp = Tm_cur ;
 
       // Calculate the updated hydrostatic stress
-      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, mu_cur, 
-						tensorF_new, tensorD, 
-						tensorP, temperature,
-						rho_cur, delT);
+      double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
+                                        delT);
+      Matrix3 tensorHy = one*p;
 
       // Integrate the stress rate equation to get a trial deviatoric stress
       Matrix3 trialS = tensorS + tensorEta*(2.0*mu_cur*delT);
@@ -1382,6 +1383,8 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
       state->temperature = temperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
+      state->bulkModulus = bulk ;
+      state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
       state->initialShearModulus = shear;
       state->meltingTemp = Tm ;
@@ -1397,10 +1400,9 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
       state->meltingTemp = Tm_cur ;
 
       // Calculate the updated hydrostatic stress
-      Matrix3 tensorHy = d_eos->computePressure(matl, bulk, mu_cur, 
-						tensorF_new, tensorD, 
-						tensorP, temperature,
-						rho_cur, delT);
+      double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
+                                        delT);
+      Matrix3 tensorHy = one*p;
 
       // Integrate the stress rate equation to get a trial deviatoric stress
       Matrix3 trialS = tensorS + tensorEta*(2.0*mu_cur*delT);
