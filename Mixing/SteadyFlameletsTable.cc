@@ -32,6 +32,15 @@ using namespace SCIRun;
 //****************************************************************************
 SteadyFlameletsTable::SteadyFlameletsTable():MixingModel()
 {
+	d_calcthermalNOx=false;
+}
+
+//****************************************************************************
+// Default constructor for SteadyFlamaletsTable
+//****************************************************************************
+SteadyFlameletsTable::SteadyFlameletsTable(bool d_thermalNOx):MixingModel()
+{
+	d_calcthermalNOx=d_thermalNOx;
 }
 
 //****************************************************************************
@@ -63,6 +72,7 @@ SteadyFlameletsTable::problemSetup(const ProblemSpecP& params)
   cout<<"CO2 index is " << co2_index<<endl;
   cout<<"H2O index is " << h2o_index<<endl;
   cout<<"C2H2 index is " << c2h2_index<<endl;
+  cout<<"NO index is " << NO_index<<endl;
 
 }
 
@@ -266,9 +276,14 @@ void SteadyFlameletsTable::tableLookUp(double mixfrac, double mixfracVars, doubl
   outStream.d_density=(dsd_lo*s2[1]-dsd_hi*s1[1])/(dsd_lo-dsd_hi) *1000.0;  
   outStream.d_cp= 0.0; // Not in the table  
   outStream.d_enthalpy= 0.0; // Not in the table  
-  outStream.d_co2= (dsd_lo*s2[co2_index]-dsd_hi*s1[co2_index])/(dsd_lo-dsd_hi);  
-  outStream.d_h2o= (dsd_lo*s2[h2o_index]-dsd_hi*s1[h2o_index])/(dsd_lo-dsd_hi); 
-  outStream.d_c2h2= (dsd_lo*s2[c2h2_index]-dsd_hi*s1[c2h2_index])/(dsd_lo-dsd_hi); 
+  if(co2_index!=0)
+  	outStream.d_co2= (dsd_lo*s2[co2_index]-dsd_hi*s1[co2_index])/(dsd_lo-dsd_hi);  
+  if(h2o_index!=0)
+  	outStream.d_h2o= (dsd_lo*s2[h2o_index]-dsd_hi*s1[h2o_index])/(dsd_lo-dsd_hi); 
+  if(c2h2_index!=0)
+  	outStream.d_c2h2= (dsd_lo*s2[c2h2_index]-dsd_hi*s1[c2h2_index])/(dsd_lo-dsd_hi); 
+  if(NO_index!=0)
+  	outStream.d_noxrxnRate= (dsd_lo*s2[NO_index]-dsd_hi*s1[NO_index])/(dsd_lo-dsd_hi); 
 
 }
 
@@ -354,6 +369,8 @@ void SteadyFlameletsTable::readMixingTable(std::string inputfile)
 	  	  h2o_index = i_vc;
     	  else if(variables_list[i_vc]== "C2H2")
 	  	  c2h2_index = i_vc;
+    	  else if(variables_list[i_vc]== "NO")
+	  	  NO_index = i_vc;
   }
   cout<<endl;
   fd >> d_mixfraccount >>d_mixvarcount >> d_scaldispcount >> dummy;
