@@ -121,10 +121,10 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
       cerr << "Error allocating data array\n";
       exit(1);
     }
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
     cerr << "Reading " << filebase << "...";
     read(din_fd, indata, sizeof(float)*nx*ny*nz);
-    double dt=Time::currentSeconds()-start;
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done in " << dt << " seconds (" << (double)(sizeof(float)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
     int s = close(din_fd);
     if(s == -1) {
@@ -151,16 +151,16 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
       exit(1);
     }
     cerr << "Writing " << buf << "...";
-    start=Time::currentSeconds();
+    start=SCIRun::Time::currentSeconds();
     write(bout_fd, blockdata, sizeof(float)*totalsize);
-    dt=Time::currentSeconds()-start;
+    dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(sizeof(float)*totalsize)/dt/1024/1024 << " MB/sec)\n";
   } else {
     // read the bricked data from the file
     cerr << "Reading " << buf << "...";
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
     read(bin_fd, blockdata, sizeof(float)*totalsize);
-    double dt=Time::currentSeconds()-start;
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(sizeof(float)*totalsize)/dt/1024/1024 << " MB/sec)\n";
     int s = close(bin_fd);
     if(s == -1) {
@@ -389,7 +389,7 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
     exit(1);
   }
   // brick the data
-  double start=Time::currentSeconds();
+  double start=SCIRun::Time::currentSeconds();
   //cerr << "Bricking data...\n";
   //cerr.flush();
     
@@ -400,7 +400,7 @@ HVolumeBrick::HVolumeBrick(Material* matl, VolumeDpy* dpy,
   Parallel<HVolumeBrick> phelper(this, &HVolumeBrick::brickit);
   Thread::parallel(phelper, bnp, true);
   
-  double dt=Time::currentSeconds()-start;
+  double dt=SCIRun::Time::currentSeconds()-start;
   cerr << "Bricking data...done (" << dt << " sec)\n";
   cerr.flush();
   delete[] indata;
