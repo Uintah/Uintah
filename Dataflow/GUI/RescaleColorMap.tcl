@@ -27,16 +27,19 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	global $this-isFixed
 	global $this-min
 	global $this-max
+	global $this-makeSymmetric
 	set bVar 0
 	set $this-isFixed 0
 	set $this-min 0
 	set $this-max 1
+	set $this-makeSymmetric 0
     }   
 
     method ui {} { 
 	global $this-isFixed
 	global $this-min
 	global $this-max
+	global $this-makeSymmetric
 
 	set w .ui[modname]
 	
@@ -49,11 +52,21 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	toplevel $w 
 	wm minsize $w 200 50 
  
-	frame $w.f1 -relief flat
-	pack $w.f1 -side top -expand yes -fill x
-	radiobutton $w.f1.b -text "Auto Scale" -variable $this-isFixed \
+	frame $w.f1
+	
+	frame $w.f1.a -relief flat
+	pack $w.f1.a -side left -expand yes -fill x
+	radiobutton $w.f1.a.b -text "Auto Scale" -variable $this-isFixed \
 	    -value 0 -command "$this autoScale"
-	pack $w.f1.b -side left
+	pack $w.f1.a.b -side left
+
+	frame $w.f1.s -relief flat
+	pack $w.f1.s -side top -expand yes -fill x
+	checkbutton $w.f1.s.b -text "Symmetric Auto Scale" \
+	    -variable $this-makeSymmetric
+	pack $w.f1.s.b -side left
+	
+	pack $w.f1 -side top -expand yes -fill x
 
 	frame $w.f2 -relief flat
 	pack $w.f2 -side top -expand yes -fill x
@@ -83,7 +96,7 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	    $w.f2.b select
 	    $this fixedScale
 	} else {
-	    $w.f1.b select
+	    $w.f1.a.b select
 	    $this autoScale
 	}
     }
@@ -94,6 +107,7 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	
 	set color "#505050"
 
+	$w.f1.s.b configure -state normal
 	$w.f3.l1 configure -foreground $color
 	$w.f3.e1 configure -state disabled -foreground $color
 	$w.f3.l2 configure -foreground $color
@@ -104,6 +118,7 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	global $this-isFixed
 	set w .ui[modname]
 
+	$w.f1.s.b configure -state disabled
 	$w.f3.l1 configure -foreground black
 	$w.f3.e1 configure -state normal -foreground black
 	$w.f3.l2 configure -foreground black

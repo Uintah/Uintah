@@ -41,6 +41,7 @@ private:
   GuiInt isFixed;
   GuiDouble min;
   GuiDouble max;
+  GuiInt makeSymmetric;
   pair<double,double> minmax_;
 };
 
