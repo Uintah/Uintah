@@ -189,7 +189,7 @@ itcl_class Module {
 		    -relief raised -background black -borderwidth 0
 	    place $modframe.iportlight$i -in $modframe.iport$i \
 		    -x 0 -rely 1.0 -anchor nw
-	    bind $modframe.iport$i <2> "startIPortConnection $this $i"
+	    bind $modframe.iport$i <2> "startIPortConnection $this $i %x %y"
 	    bind $modframe.iport$i <B2-Motion> \
 		    "trackIPortConnection $this $i %x %y"
 	    bind $modframe.iport$i <ButtonRelease-2> \
@@ -230,7 +230,7 @@ itcl_class Module {
 		    -relief raised -background black -borderwidth 0
 	    place $modframe.oportlight$i -in $modframe.oport$i \
 		    -x 0 -y 0 -anchor sw
-	    bind $modframe.oport$i <2> "startOPortConnection $this $i"
+	    bind $modframe.oport$i <2> "startOPortConnection $this $i %x %y"
 	    bind $modframe.oport$i <B2-Motion> \
 		    "trackOPortConnection $this $i %x %y"
 	    bind $modframe.oport$i <ButtonRelease-2> \
@@ -317,12 +317,18 @@ itcl_class Module {
     }
 }
 
-proc startIPortConnection {imodid iwhich} {
+proc startIPortConnection {imodid iwhich x y} {
     # Find all of the OPorts of the same type and draw a temporary line
     # to them....
     global conn_oports
     set conn_oports [netedit findoports $imodid $iwhich]
     global netedit_canvas
+    puts "making an iport name at $x $y"
+    set coords [computeIPortCoords $imodid $iwhich]
+    set typename [lindex [lindex [$imodid-c iportinfo] $iwhich] 2]
+    eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
+	    -anchor s -text $typename -tags "tempname"
+    $netedit_canvas raise $imodid
     foreach i $conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
@@ -334,12 +340,18 @@ proc startIPortConnection {imodid iwhich} {
     set potential_connection ""
 }
 
-proc startOPortConnection {omodid owhich} {
+proc startOPortConnection {omodid owhich x y} {
     # Find all of the IPorts of the same type and draw a temporary line
     # to them....
     global conn_iports
     set conn_iports [netedit findiports $omodid $owhich]
     global netedit_canvas
+    puts "making an oport name at $x $y"
+    set coords [computeOPortCoords $omodid $owhich]
+    set typename [lindex [lindex [$omodid-c oportinfo] $owhich] 2]
+    eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
+	    -anchor n -text $typename -tags "tempname"
+    $netedit_canvas raise $omodid
     foreach i $conn_iports {
 	set imodid [lindex $i 0]
 	set iwhich [lindex $i 1]
@@ -459,6 +471,8 @@ proc trackOPortConnection {omodid which x y} {
 proc endPortConnection {portcolor} {
     global netedit_canvas
     $netedit_canvas delete tempconnections
+    puts "removing names from canvas"
+    $netedit_canvas delete tempname
     global potential_connection
     if {$potential_connection != ""} {
 	set omodid [lindex $potential_connection 0]

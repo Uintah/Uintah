@@ -182,7 +182,8 @@ void Module::tcl_command(TCLArgs& args, void*)
 	for(int i=0;i<iports.size();i++){
 	    IPort* port=iports[i];
 	    info[i]=args.make_list(port->get_colorname(),
-				   to_string(port->nconnections()>0));
+				   to_string(port->nconnections()>0),
+				   port->get_typename());
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "oportinfo"){
@@ -190,7 +191,8 @@ void Module::tcl_command(TCLArgs& args, void*)
 	for(int i=0;i<oports.size();i++){
 	    OPort* port=oports[i];
 	    info[i]=args.make_list(port->get_colorname(),
-				   to_string(port->nconnections()>0));
+				   to_string(port->nconnections()>0),
+				   port->get_typename());
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "needexecute"){
