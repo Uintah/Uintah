@@ -233,6 +233,7 @@ ClipField::execute()
     do_clip_p = true;
   }
 
+  bool using_function_p = false;
   if (usefunction_.get())
   {
     ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
@@ -240,6 +241,7 @@ ClipField::execute()
     {
       clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui, id);
       do_clip_p = true;
+      using_function_p = true;
     }
     else
     {
@@ -305,7 +307,7 @@ ClipField::execute()
     clipper_ = box_->get_clipper();
     do_clip_p = true;
   }
-  else if (exec_mode_.get() == "execute" && !usefunction_.get())
+  else if (exec_mode_.get() == "execute" && !using_function_p)
   {
     undo_stack_.push(clipper_);
     ClipperHandle ctmp = box_->get_clipper();
