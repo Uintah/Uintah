@@ -22,47 +22,20 @@ Stylesheet imported by most other stylesheets.
 */
 
 body {
-background-color:#CCCCCC;
-font-family: Arial, Helvetica, sans-serif;
-margin-left:50px; 
-margin-right:50px; 
-margin-top:0em}
+background-color: #213341; 
+font-family: "Verdana", "Helvetica", "Geneva", "Swiss",
+"SunSans-Regular";
+}
 
 a:link {
-color:#003333}
-
-a.alt:link { 
-color:#FFCC33;}
-
-a.disclaimer:link { 
-color:#003300;}
-
+  color:#00008b
+}
 a:visited {
-color:#336666}
-
-a.alt:visited { 
-color:#FFCC33;}
-
-div.top-banner-margins {
-margin-left:-50px;
-margin-right:-50px;
-margin-top:0em;}
-
-div.top-banner-margins table {
-border-style: none}
-
-div.top-banner-margins td {
-border-style: none}
-
-div.bottom-banner-margins {
-margin-left:-50px;
-margin-right:-50px;}
-
-div.bottom-banner-margins table {
-border-style: none}
-
-div.bottom-banner-margins td {
-border-style: none}
+  color:#00008b
+}
+a:active {
+  color:#990000
+}
 
 .block-center {
 display: table;

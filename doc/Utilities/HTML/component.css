@@ -21,21 +21,48 @@ University of Utah. All Rights Reserved.
 
 @import url(common.css);
 
+body {
+  font-size: 85%;
+}
+
+img.top-banner {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+div.content {
+  background-color: rgb(73, 91, 105);
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 0.25in;
+  padding-bottom: 0.25in;
+}
+
+div.content-layer1 {
+  padding-left: 5px;
+  padding-right: 5px;
+  background-color: white;
+  margin-left: 0.5in;
+  margin-right: 0.5in;
+}
+
 .title {
 font-weight:bold;
 font-size:175%;
 font-variant: small-caps;
-color:#003333;
+color:rgb(73, 91, 105);
 text-align:center}
 
 .subtitle {
 text-align:center;
 font-size:125%;
 font-weight:bold;
-color:#003333}
+color:rgb(73, 91, 105)}
 
 .head {
-color:#003333;
+color:rgb(73, 91, 105);
 font-weight: bold;
 font-size:160%;
 font-variant: small-caps;
@@ -47,25 +74,25 @@ border-bottom: 1px dotted}
 text-align:left;
 font-size:140%;
 font-weight:bold;
-color:#003333}
+color:rgb(73, 91, 105)}
 
 .secttitle2 {
 text-align:left;
 font-size:120%;
 font-weight:bold;
-color:#003333}
+color:rgb(73, 91, 105)}
 
 .secttitle3 {
 text-align:left;
 font-size:105%;
 font-weight:bold;
-color:#003333}
+color:rgb(73, 91, 105)}
 
 .nettitle { 
 text-align:left;
 font-size:140%;
 font-weight:bold;
-color:#003333}
+color:rgb(73, 91, 105)}
 
 .authors { 
 text-align:center;
@@ -80,7 +107,7 @@ margin-right: 8%}
 
 .admontitle {  
 font-weight:bold;
-color:#003333;
+color:rgb(73, 91, 105);
 }
 
 .firstterm {
@@ -110,7 +137,7 @@ font-weight: bolder}
 th {
 font-family: sans-serif;
 color: white;
-background: #003333}
+background: rgb(73, 91, 105)}
 
 td { 
 font-size: small;}
