@@ -123,8 +123,14 @@ public:
 
   void get_point(Point &result, node_index index) const
   { result = points_[index]; }
+  void get_normal(Vector &result, node_index index) const
+  { result = normals_[index]; }
   void set_point(const Point &point, node_index index)
   { points_[index] = point; }
+
+  virtual void finish_mesh(); // to get normals calculated.
+  void compute_normals();
+  virtual bool has_normals() const { return true; }
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -161,10 +167,11 @@ private:
   bool inside4_p(int, const Point &p);
 
 
-  vector<Point> points_;
-  vector<int>   faces_;
-  vector<int>   neighbors_;
-
+  vector<Point>  points_;
+  vector<int>    faces_;
+  vector<int>    neighbors_;
+  //! normalized per node normal.
+  vector<Vector> normals_;
 };
 
 
