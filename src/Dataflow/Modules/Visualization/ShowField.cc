@@ -188,7 +188,7 @@ ShowField::execute()
   }
 
   node_id_ = ogeom_->addObj(node_switch_, "Nodes");
-  edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
+  //edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
   //face_id_ = ogeom_->addObj(edge_switch_, "Edges");
   ogeom_->flushViews();
 }
@@ -212,7 +212,7 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm) {
     if (node_display_type_.get() == "Spheres") {
       add_sphere(p, 0.03, verts, cm->lookup(val));
     } else if (node_display_type_.get() == "Axis") {
-      add_axis(p, 0.03, verts, cm->lookup(val));
+      add_axis(p, 1., verts, cm->lookup(val));
     } else {
       add_point(p, verts, cm->lookup(val));
     }
@@ -253,9 +253,8 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 void 
 ShowField::add_edge(const Point &p0, const Point &p1,  
 		    double scale, GeomGroup *g, MaterialHandle mh) {
-  GeomLine *l = new GeomLine(p0, p1);
+  GeomLine *l = scinew GeomLine(p0, p1);
   l->setLineWidth(scale);
-  g->add(l);
   g->add(scinew GeomMaterial(l, mh));
 }
 
@@ -294,7 +293,7 @@ ShowField::add_axis(const Point &p0, double scale,
 void 
 ShowField::add_point(const Point &p0, GeomGroup *g, MaterialHandle mh) {
 #if 0
-  GeomVertex *v = new GeomVertex(p0);
+  GeomVertex *v = new Geom(p0);
   g->add(scinew GeomMaterial(v, mh));
 #endif
   add_edge(p0, p0, 1.0, g, mh);
