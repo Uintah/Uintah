@@ -105,6 +105,7 @@ template void Pio(Piostream&, TYPEHandle&);
 
 #endif
 
+#if 0
 #ifdef __sgi
 #if _MIPS_SZPTR == 64
 #include <SCICore/Containers/LockingHandle.cc>
@@ -116,4 +117,4 @@ static void _dummy_(Piostream& p1, TYPEHandle& p2)
 
 #endif
 #endif
-
+#endif

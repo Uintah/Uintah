@@ -218,12 +218,12 @@ void SurfToGeom::execute()
 			    MaterialHandle mat1;
 //			    int ok=1;
 			    int ix=0;
-			    if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
+			    if (sfield->interpolate(ts->points[i],
 						    interp, ix, 1.e-4, 1.e-4)){
 				mat1=cmap->lookup(interp);
 			    } else {
 				ix=0;
-				if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
+				if (sfield->interpolate(ts->points[i],
 							interp, ix, 1.e-4, 30.)) {
 				    mat1=cmap->lookup(interp);
 				} else {
@@ -660,6 +660,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/02/02 05:51:56  dmw
+// added new module to index.cc and fixed bugs
+//
 // Revision 1.7  1999/10/07 02:07:01  sparker
 // use standard iostreams and complex type
 //
