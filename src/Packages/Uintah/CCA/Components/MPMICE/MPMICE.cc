@@ -872,8 +872,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 #if 0
       if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
-        desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_%d_patch_%d "<<
-                    indx<< patch->getID();
+        desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_"<<indx<<"_patch_"
+            <<  patch->getID();
         printData(     patch, 1,desc.str(), "gmass",       gmass);
         printData(     patch, 1,desc.str(), "gvolume",     gvolume);
         printData(     patch, 1,desc.str(), "gtemperatue", gtemperature);
@@ -946,8 +946,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
      //---- P R I N T   D A T A ------
      if(switchDebug_InterpolateNCToCC_0) {
         ostringstream desc;
-        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_%d_patch_%d "<<
-                    indx << patch->getID();
+        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
+            <<  patch->getID();
         d_ice->printData(   patch, 1,desc.str(), "cmass",     cmass);
         d_ice->printData(   patch, 1,desc.str(), "cvolume",   cvolume);
         d_ice->printData(   patch, 1,desc.str(), "Temp_CC",   Temp_CC);
@@ -1036,12 +1036,10 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       IntVector nodeIdx[8];
 
       //---- P R I N T   D A T A ------ 
-/*`==========TESTING==========*/
-#if 0
       if(d_ice->switchDebugLagrangianValues) {
          ostringstream desc;
-         desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_%d_patch_%d "<< 
-                   indx<<patch->getID();
+         desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
+              <<  indx<<patch->getID();
          d_ice->printData(patch,1,desc.str(), "cmass",    cmass);
          printData(     patch,  1,desc.str(), "gmass",    gmass);
          printData(     patch,  1,desc.str(), "gtemStar", gtempstar);
@@ -1049,8 +1047,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
          printNCVector( patch,  1,desc.str(), "gvelocityStar.Y", 1, gvelocity);
          printNCVector( patch,  1,desc.str(), "gvelocityStar.Z", 2, gvelocity);
       }
-#endif 
-/*==========TESTING==========`*/
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
                                                           iter++){ 
@@ -1139,8 +1135,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if(d_ice->switchDebugLagrangianValues) {
         ostringstream desc;
-        desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_%d_patch_%d "<<
-                indx<< patch->getID();
+        desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
+            <<  patch->getID();
         d_ice->printData(   patch, 1,desc.str(), "rho_CC",    rho_CC);
         d_ice->printData(   patch, 1,desc.str(), "int_eng_L", int_eng_L);
         d_ice->printVector( patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
@@ -1222,8 +1218,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       //---- P R I N T   D A T A ------ 
       if(switchDebug_InterpolateCCToNC) {
         ostringstream desc;
-        desc<< "BOT_MPMICE::interpolateCCToNC_mat_%d_patch_%d "
-            << indx<< patch->getID();                   
+        desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
+            <<patch->getID();                   
         printData(     patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
         printNCVector( patch, 1,desc.str(),"gvelocity.X",    0,gvelocity);
         printNCVector( patch, 1,desc.str(),"gvelocity.Y",    1,gvelocity);
@@ -1402,14 +1398,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }  // cell iterator
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  {
-        ostringstream desc;
-        desc<< "TOP_equilibration_patch_%d "<< patch->getID();
-        d_ice->printData( patch, 1, desc.str(), "Press_CC_top", press); 
+        ostringstream desc1;
+        desc1<< "TOP_equilibration_patch_"<< patch->getID();
+        d_ice->printData( patch, 1, desc1.str(), "Press_CC_top", press); 
 
         for (int m = 0; m < numALLMatls; m++)  {
           Material* matl = d_sharedState->getMaterial( m );
           int indx = matl->getDWIndex();
-          desc<<"TOP_equilibration_Mat_%d_patch_%d "<< indx<< patch->getID();
+          ostringstream desc;
+          desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
           d_ice->printData( patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);    
           d_ice->printData( patch,1,desc.str(),"rho_micro", rho_micro[m]);     
         //  d_ice->printData( patch,0,desc.str(),"speedSound",speedSound_new[m]); 
@@ -1659,15 +1656,16 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  { 
-      ostringstream desc;
-      desc<< "BOT_equilibration_patch_%d "<<patch->getID();
-      d_ice->printData( patch, 1, desc.str(), "Press_CC_equil", press_new);
-      d_ice->printData( patch, 1, desc.str(), "delPress",       delPress_tmp);
+      ostringstream desc1;
+      desc1<< "BOT_equilibration_patch_ "<<patch->getID();
+      d_ice->printData( patch, 1, desc1.str(), "Press_CC_equil", press_new);
+      d_ice->printData( patch, 1, desc1.str(), "delPress",       delPress_tmp);
    #if 0                 
       for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
-         int indx = matl->getDWIndex(); 
-         desc<< "BOT_equilibration_Mat_%d_patch_%d "<< indx,patch->getID());
+         int indx = matl->getDWIndex();
+         ostringstream desc1; 
+         desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID());
          d_ice->printData( patch,1,desc.str(), "rho_CC",      rho_CC_new[m]);
          d_ice->printData( patch,1,desc.str(), "rho_micro_CC",rho_micro[m]);
          d_ice->printData( patch,1,desc.str(), "vol_frac_CC", vol_frac[m]);
