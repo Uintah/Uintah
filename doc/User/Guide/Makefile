@@ -80,7 +80,7 @@ endef
 
 # ########## Targets for making various forms of the users guide.
 
-.PHONY: all latex html pdf bib
+.PHONY: all latex html dvi pdf clean veryclean
 
 all: dvi pdf html  bib
 
@@ -90,23 +90,17 @@ html: ${htmldir}
 
 pdf: ${pdffile}
 
-bib: ${bn}.bbl
-
 # Note: ${bn}.bbl must be the last dependency!
-${dvifile}: ${macrosfile} ${mainfile} ${srcs} ${psfigs} \
-  ${packagetargets} ${bn}.bbl 
+${dvifile}: ${macrosfile} ${mainfile} ${srcs} ${psfigs}
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
+	-bibtex ${bn}
+	-${latex} ${bn}
 	-${latex} ${bn}
 
 ${macrosfile}: ${rmacrosfile} ${edition}
 	eruby --delimiters tex $< >$@
 	cp ${macrosfile} ${styfile}
-
-${bn}.bbl: ${mainfile}
-	-${latex} ${bn}
-	${call rmfiles,${bn}.bbl}
-	-bibtex ${bn}
 
 ${htmldir}: ${dvifile} ${htmlfigs}
 	${call rmdirs,${htmldir}}
