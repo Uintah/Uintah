@@ -21,13 +21,9 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Core/CCA
 
-SUBDIRS := 
-
-ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := \
 	$(SRCDIR)/tools \
 	$(SRCDIR)/Component
-endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
