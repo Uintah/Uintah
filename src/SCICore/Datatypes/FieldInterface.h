@@ -38,7 +38,12 @@ public:
 
 class SLInterpolate:public FieldInterface{
 public:
-  virtual int slinterpolate(const Point&, double&, double eps=1.e-6) = 0; 
+  virtual int slinterpolate(const Point&, double&, double eps=1.e-6) = 0;
+};
+
+class VLInterpolate:public FieldInterface{
+public:
+  virtual int vlinterpolate(const Point&, Vector&) = 0;
 };
 
 class Gradient:public FieldInterface{
