@@ -33,21 +33,25 @@ static void do_lock()
 {
     if(owner == Task::self()){
 	lock_count++;
+	//cerr << "Recursively locked...\n";
 	return;
     }
     tlock->lock();
     lock_count=1;
     owner=Task::self();
-//    cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
+    //cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
 }
 
 static void do_unlock()
 {
     ASSERT(lock_count>0);
+    ASSERT(Task::self() == owner);
     if(--lock_count == 0){
 	owner=0;
-//	cerr << "Unlocked" << endl;
+	//cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Task::self() << endl;
 	tlock->unlock();
+    } else {
+	//cerr << "Recursively unlocked" << endl;
     }
 }
 
@@ -60,6 +64,12 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
     return 0; // Never reached...
 }
 
+static int exitproc(ClientData, Tcl_Interp*, int, char* [])
+{
+    Task::exit_all(0);
+    return TCL_OK; // not reached
+}
+
 TCLTask::TCLTask(int argc, char* argv[])
 : Task("TCLTask", 1), argc(argc), argv(argv), start(0), cont(0)
 {
@@ -67,6 +77,7 @@ TCLTask::TCLTask(int argc, char* argv[])
     // The default one exits, and makes it very hard to 
     // track down errors.  We need core dumps!
     XSetErrorHandler(x_error_handler);
+
     if(!tlock)
 	tlock=scinew Mutex;
     Tcl_SetLock(do_lock, do_unlock);
@@ -101,6 +112,8 @@ void TCLTask::release_mainloop()
 void TCLTask::mainloop_wait()
 {
     TCL::initialize();
+    Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
+
     // The main program will want to know that we are started...
     start.up();
 
