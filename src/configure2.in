@@ -35,7 +35,7 @@
 ##    search for required libraries and headers
 ##    search for optional libraries and headers
 ##    configure packages
-##    declare output files
+##    generate output files
 ##
 ##  NOTE: When committing this file, do NOT commit both configure.in
 ##  and configure at the same time.  Please commit configure.in FIRST,
@@ -123,7 +123,8 @@ EOF
     rm -f conftest.out a.out
     ac_try="$ac_link -L$1 -l$2 $6 >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
-    ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+#   part of this is a hack to prevent the bizarre libg2c "errors"
+    ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$" | grep -v "libg2c\.a(open\.o" | grep -v "open\.o(\.text+"`
     if test -z "$ac_err"; then
       if test "$1" != "/usr/lib" &&
          test "$1" != "/usr/lib/" &&
@@ -143,7 +144,7 @@ EOF
       AC_MSG_RESULT(no)
       eval $_SCI_NOTFOUND_
     fi
-#    rm -f conftest* a.out
+    rm -f conftest* a.out
   ])
 
 ##
@@ -197,7 +198,7 @@ EOF
       AC_MSG_RESULT(no)
       eval $_SCI_NOTFOUND_
     fi
-#    rm -f conftest* a.out
+    rm -f conftest* a.out
   ])
 
 ##
@@ -556,16 +557,16 @@ SCI_ARG_WITH(mpiuni,
   [mpiuni=""])
 SCI_ARG_WITH(petsc,
   [  --with-petsc=<path-to-petsc>      <path-to-petsc>],
-  [withpetsc="$withval"],
-  [withpetsc=""])
+  [petsc="$withval"],
+  [petsc=""])
 SCI_ARG_WITH(unipetsc,
   [  --with-unipetsc=<path-to-tcl>     <path-to-tcl>/lib/libpetsc.so],
   [unipetsc="$withval"],
   [unipetsc=""])
-SCI_ARG_WITH(tau,
-  [  --with-tau=<tau-makefile>         Specify Tau Makefile],
-  [tau="$withval"],
-  [tau=""])
+#SCI_ARG_WITH(tau,
+#  [  --with-tau=<tau-makefile>         Specify Tau Makefile],
+#  [tau="$withval"],
+#  [tau=""])
 #SCI_ARG_WITH(with_nektar,
 #  [  --with-nektar=DIR                 Use the nektar installation in DIR],
 #  [with_nektar="$withval"],
@@ -728,6 +729,8 @@ TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 LDRUN_PREFIX="-Wl,-rpath -Wl,"
 
+ASSERTION_LEVEL=$enable_assertion_level
+
 extra_cflags="";
 
 if ! test "$output_avg_walltime" = "no"; then
@@ -766,38 +769,10 @@ else
   MALLOC_DEFINE="#define DISABLE_SCI_MALLOC"
 fi
 
-if test "$is_64bit" = "yes"; then
-  NBITS=64
-else
-  NBITS=32
-fi
-
 if test "$enterleave" = "yes" ; then
   NOPRINTDIR=EMPTY
 else
   NOPRINTDIR="--no-print-directory"
-fi
-
-if test "$enable_parallel" = "yes"; then
-  if test "$with_globus" = "no"; then
-    AC_MSG_ERROR(Must include --with-globus with --enable-parallel)
-    exit 1
-  fi
-
-  PARALLEL_DEFINE="#define SCI_PARALLEL"
-  BUILD_PARALLEL="yes"
-  GLOBUS_INCLUDE="-I$with_globus/include"
-  GLOBUS_LIB="$with_globus/lib$NBITS"
-
-  is_linux=`echo $host | sed 's/.*linux.*/linux/'`
-  if test "$is_linux" = "linux"; then
-    GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto"
-  fi
-else
-  PARALLEL_DEFINE=""
-  BUILD_PARALLEL="no"
-  GLOBUS_INCLUDE=""
-  GLOBUS_LIB=""
 fi
 
 case $host in
@@ -825,6 +800,7 @@ case $host in
     SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
                         /local/SCIRun_Thirdparty_32 \
                         /local"
+    WOFF=" -w"
     CFLAGS="-Wall $extra_cflags"
     FFLAGS="$extra_cflags"
     SOFLAGS="-shared ${SOFLAGS}"
@@ -838,13 +814,9 @@ case $host in
     ;;
 esac
 
-AC_SUBST(GLOBUS_EXTRA_DIRS)
-AC_SUBST(GLOBUS_INCLUDE)
-AC_SUBST(GLOBUS_LIB)
-AC_SUBST(PARALLEL_DEFINE)
-AC_SUBST(BUILD_PARALLEL)
+AC_SUBST(ASSERTION_LEVEL)
+AC_SUBST(NEED_SONAME)
 AC_SUBST(NOPRINTDIR)
-AC_SUBST(NBITS)
 AC_SUBST(MALLOC_DEFINE)
 AC_SUBST(PACKAGE_DIRS)
 AC_SUBST(LOAD_PACKAGE)
@@ -917,15 +889,18 @@ case $host in
     AC_PROG_CXXCPP
     AC_CHECK_PROG(AS,as,as)
     AC_CHECK_PROG(LD,ld,ld)
+    CPPFLAGS="$CPPFLAGS $WOFF"
     ;;
 esac
 
 AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
+rm -rf configure-test-dir
 echo "#include <stdio.h>" > configure-test.c
 mkdir configure-test-dir
 CC_DEPEND_REGEN='unknown'
 CC_DEPEND_REGEN_MOVE='y'
+
 case $host in
   *-irix*)
     if test "${CC_DEPEND_REGEN}" = "unknown" ; then
@@ -958,6 +933,8 @@ case $host in
   *)
 esac
 AC_MSG_RESULT($CC_DEPEND_REGEN)
+rm -f configure-test.*
+rm -rf configure-test-dir
 
 F77_DEPEND_REGEN=$CC_DEPEND_REGEN
 
@@ -1092,6 +1069,8 @@ else
   INCX_H=""
 fi
 
+AC_SUBST(X_PRE_LIBS)
+AC_SUBST(X_EXTRA_LIBS)
 AC_SUBST(LIBX)
 AC_SUBST(INCX_H)
 
@@ -1137,7 +1116,7 @@ case $host in
     if test "$threads" = "unknown" ||
        test "$threads" = "pthreads"; then
       threads=pthreads
-      SCI_CHECK_LIB($thirdparty/lib,pthread,main,THREAD_DEFINE=yes; THREAD_LIBS=-lpthread],,)
+      SCI_CHECK_LIB($thirdparty/lib,pthread,main,THREAD_DEFINE=yes; THREAD_LIBS=-lpthread,,)
       if test -z "$THREAD_LIBS"; then
         AC_MSG_ERROR(unable to find required thread library: -lpthread. exiting.)
       fi 
@@ -1160,15 +1139,26 @@ AC_SUBST(CFLAGS)
 
 ##  --  search for OpenGL  -----------------------------------------------
 
-SCI_CHECK_LIB($thirdparty/lib,GL,main,HAVE_LIBGL=yes,,)
-SCI_CHECK_LIB($thirdparty/lib,GLU,main,HAVE_LIBGLU=yes,,-lGL)
-AC_CHECK_HEADERS(GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
+FOUND_ALL_GL=no
+for i in $thirdparty /usr/X11/lib $SCI_LAB_TP_DEFAULT; do
+  SCI_CHECK_LIB($thirdparty/lib,GL,main,HAVE_LIBGL=yes,continue,)
+  SCI_CHECK_LIB($thirdparty/lib,GLU,main,HAVE_LIBGLU=yes,continue,-lGL)
+  AC_CHECK_HEADERS(GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no;continue)
 
-if test -z "$HAVE_LIBGL" ||
-   test -z "$HAVE_LIBGLU" ||
-   test "$HAVE_GL_H" = "no"; then
+  if test "$HAVE_LIBGL" &&
+     test "$HAVE_LIBGLU" &&
+     test "$HAVE_GL_H" != "no"; then
+    FOUND_ALL_GL=yes
+    break
+  fi
+done
+
+if test "$FOUND_ALL_GL" = "no"; then
   AC_MSG_ERROR(one or more OpenGL components is missing. exiting.)
 fi
+
+AC_SUBST(LIBGL)
+AC_SUBST(INCGL_H)
 
 ##  --  search for dlopen  -----------------------------------------------
 
@@ -1178,15 +1168,16 @@ if test -z "$HAVE_LIBDL"; then
 fi
 AC_CHECK_HEADERS(dlfcn.h,HAVE_DLFCN_H=yes)
 
-if test -z "$HAVE_LIBDL" ||
-   test -z "$HAVE_DLFCN_H"; then
+if (test -z "$HAVE_LIBDL" &&
+    test -z "$HAVE_LIBC") ||
+    test -z "$HAVE_DLFCN_H"; then
   AC_MSG_ERROR(couldn't find the required dynamic library components. exiting.)
 fi
 
 PLATFORM_LDFLAGS="-ldl"
 
 AC_SUBST(PLATFORM_LDFLAGS)
-AC_SUBST(DL_LIBRARY)
+AC_SUBST(LIBDL)
 
 ##  --  search for required headers  --------------------------------------
 
@@ -1278,12 +1269,24 @@ if test "$FOUND_ALL_TCL" != "yes"; then
   echo
 fi
 
+AC_SUBST(TCL_SRC_DIR)
+AC_SUBST(TCL_INIT_DIR)
 AC_SUBST(LIBTCL)
 AC_SUBST(INCTCL_H)
+AC_SUBST(TK_SRC_DIR)
+AC_SUBST(TK_VERSION)
+AC_SUBST(TK_INIT_DIR)
+AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(LIBTK)
 AC_SUBST(INCTK_H)
+AC_SUBST(ITCL_SRC_DIR)
+AC_SUBST(ITCL_INIT_DIR)
+AC_SUBST(ITCLSH)
+AC_SUBST(ITCL_BIN_DIR)
+AC_SUBST(ITCL_WIDGETS)
 AC_SUBST(LIBITCL)
 AC_SUBST(INCITCL_H)
+AC_SUBST(ITK_SRC_DIR)
 AC_SUBST(LIBITK)
 AC_SUBST(INCITK_H)
 AC_SUBST(LIBBLT)
@@ -1326,9 +1329,15 @@ AC_SUBST(INCXERCESC_H)
 
 ##  --  search for mpi  --------------------------------------------------
 
-echo
-AC_CHECKING(for MPI components...)
-echo
+if test "$uintah" = "yes"; then
+  echo
+  AC_CHECKING(for required MPI components...)
+  echo
+else
+  echo
+  AC_CHECKING(for optional components...)
+  echo
+fi
 
 MPI=''
 FOUND_ALL_MPI=no
@@ -1336,16 +1345,19 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  AC_CHECKING(in $i...)
   SCI_CHECK_LIB($i/lib,mpi,main,MPI=-lmpi,,)
   if test -z "$LIBMPI"; then
     SCI_CHECK_LIB($i/lib,mpich,main,MPI=-lmpich,continue,)
   fi
   SCI_CHECK_HEADER($i/include,mpi.h,,continue,)
-  if test "$LIBMPI" &&
+  if (test "$LIBMPI" ||
+      test "$LIBMPICH") &&
      test "$INCBLT_H"; then
+    LIBMPI="-L$i/lib"
     FOUND_ALL_MPI=yes
     break
+  else
+    HAVE_LIBMPI=''
   fi
 done
 
@@ -1357,58 +1369,59 @@ if test "$FOUND_ALL_MPI" != "yes" &&
 fi
 
 AC_SUBST(MPI)
+AC_SUBST(HAVE_LIBMPI)
 AC_SUBST(LIBMPI)
 AC_SUBST(INCMPI_H)
 
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
-if test "$uintah" = "yes"; then
-  if test "$tau" ; then
-    if ! test -f "$tau" ; then
-      AC_MSG_ERROR('$tau' does not exist.  Bye!)
-    fi
-
-    AC_MSG_RESULT(Using TAU makefile: $tau)
-
-    TAU_MAKEFILE=${tau}
-
-    cat > conftest-tau.cc <<EOF
-
-    #include <Profile/Profiler.h>
-
-    int main(int argc, char **argv)
-    {
-      TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-      TAU_PROFILE_INIT(argc, argv);
-      return 0;
-    }
-EOF
-
-    cat > conftest-tau-makefile <<EOF
-include $(TAU_MAKEFILE)
-all:
-        $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
-EOF
-
-    if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
-      rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-      AC_MSG_ERROR(TAU libraries not working. Bye!)
-    fi
-    rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-  fi
-fi
+#if test "$uintah" = "yes"; then
+#  if test "$tau" ; then
+#    if ! test -f "$tau" ; then
+#      AC_MSG_ERROR('$tau' does not exist.  Bye!)
+#    fi
+#
+#    AC_MSG_RESULT(Using TAU makefile: $tau)
+#
+#    TAU_MAKEFILE=${tau}
+#
+#    cat > conftest-tau.cc <<EOF
+#
+#    #include <Profile/Profiler.h>
+#
+#    int main(int argc, char **argv)
+#    {
+#      TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
+#      TAU_PROFILE_INIT(argc, argv);
+#      return 0;
+#    }
+#EOF
+#
+#    cat > conftest-tau-makefile <<EOF
+#include $(TAU_MAKEFILE)
+#all:
+#        $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
+#EOF
+#
+#    if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
+#      rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+#      AC_MSG_ERROR(TAU libraries not working. Bye!)
+#    fi
+#    rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+#  fi
+#fi
 
 AC_SUBST(TAU_MAKEFILE)
-
-##  -- globus nexus ------------------------------------------------------
 
 ##  ----------------------------------------------------------------------
 ##  ----------  search for optional libraries and headers  ---------------
 ##  ----------------------------------------------------------------------
 
-echo
-AC_CHECKING(for optional components...)
-echo
+if test "$uintah" = "yes"; then
+  echo
+  AC_CHECKING(for optional components...)
+  echo
+fi
 
 ##  --  search for teem  -------------------------------------------------
 
@@ -1444,8 +1457,11 @@ done
 if test -z "$HAVE_LIBMPEGE" ||
    test -z "$INCMPEGE_H"; then
   HAVE_LIBMPEGE=''
+else
+  MPEG_DEF_FLAG="-DMPEG"
 fi
 
+AC_SUBST(MPEG_DEF_FLAG)
 AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
 AC_SUBST(INCMPEGE_H)
@@ -1463,8 +1479,11 @@ done
 if test -z "$HAVE_LIBIMAGE" ||
    test -z "$INCIMAGE_H"; then
   HAVE_LIBIMAGE=''
+else
+  LIBIMAGE_DEF_FLAG="-DLIBIMAGE"
 fi
 
+AC_SUBST(LIBIMAGE_DEF_FLAG)
 AC_SUBST(HAVE_LIBIMAGE)
 AC_SUBST(LIBIMAGE)
 AC_SUBST(INCIMAGE_H)
@@ -1484,13 +1503,120 @@ if ! test "$perfex" = "no" &&
 fi
 
 AC_SUBST(PERFEX_LIBRARY)
-##  --  search for SGI's IFL  --------------------------------------------
 
-##  --  search for traceback  -------------------------------------------- 
+##  --  search for ssl  --------------------------------------------------
+
+SCI_CHECK_LIB($thirdparty/lib,ssl,main)
+
+AC_SUBST(HAVE_LIBSSL)
+AC_SUBST(LIBSSL)
+
+##  --  search for crypto  -----------------------------------------------
+
+SCI_CHECK_LIB($thirdparty/lib,crypto,main)
+
+AC_SUBST(HAVE_LIBCRYPTO)
+AC_SUBST(LIBCRYPTO)
+
+##  --  search for SGI's image format library  ---------------------------
+
+SCI_CHECK_LIB($thirdparty/lib,ifl,main)
+
+if test "$LIBIFL"; then
+  IMAGE_LIBS=" -lifl"
+fi
+
+AC_SUBST(HAVE_LIBIFL)
+AC_SUBST(LIBIFL)
+
+##  --  search for SGI's compression library  ----------------------------
+
+SCI_CHECK_LIB($thirdparty/lib,cl,main)
+
+if test "$LIBCL"; then
+  IMAGE_LIBS="$IMAGE_LIBS -lcl"
+fi
+
+AC_SUBST(HAVE_LIBCL)
+AC_SUBST(LIBCL)
+AC_SUBST(IMAGE_LIBS)
+
+##  --  search for SGI'S traceback library  ------------------------------ 
+
+SCI_CHECK_LIB($thirdparty/lib,exc,main)
+
+if test "$HAVE_LIBEXC"; then
+  TRACEBACK_LIB=-lexc
+fi
+
+AC_SUBST(HAVE_LIBEXC)
+AC_SUBST(LIBEXC)
+
+##  --  globus nexus  ----------------------------------------------------
+
+if test "$is_64bit" = "yes"; then
+  NBITS=64
+else
+  NBITS=32
+fi
+
+FOUND_ALL_GLOBUS=no
+GLOBUS_INCLUDE=""
+GLOBUS_LIB=""
+for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then
+    continue
+  fi
+  SCI_CHECK_LIB($i/lib$NBITS,globus_utp,main,,continue,-lssl -lcrypto)
+  SCI_CHECK_LIB($i/lib$NBITS,globus_mp,main,,continue,
+    -lglobus_utp -lssl -lcrypto)
+  SCI_CHECK_LIB($i/lib$NBITS,globus_gss_assist,main,,continue,
+    -lglobus_mp -lglobus_utp -lssl -lcrypto)
+  SCI_CHECK_LIB($i/lib$NBITS,globus_gss,main,,continue,
+    -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto)
+  SCI_CHECK_LIB($i/lib$NBITS,globus_gaa,main,,continue,
+    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto)
+  #
+  # which globus headers should be tested for?
+  #
+  if test "$HAVE_LIBGLOBUS_UTP" &&
+     test "$HAVE_LIBGLOBUS_MP" &&
+     test "$HAVE_LIBGLOBUS_GSS_ASSIST" &&
+     test "$HAVE_LIBGLOBUS_GSS" &&
+     test "$HAVE_LIBGLOBUS_GAA"; then
+    FOUND_ALL_GLOBUS=yes
+    GLOBUS_INCLUDE="-I`dirname $LIBGLOBUS_UTP`/include"
+    GLOBUS_LIB="$LIBGLOBUS_UTP"
+    is_linux=`echo $host | sed 's/.*linux.*/linux/'`
+    if test "$is_linux" = "linux"; then
+      GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto"
+    fi
+    break
+  fi
+done
+
+if test "$enable_parallel" = "yes" &&
+   test "$FOUND_ALL_GLOBUS" = "yes"; then
+  if test "$with_globus" = "no"; then
+    AC_MSG_ERROR(Must include --with-globus with --enable-parallel)
+    exit 1
+  fi
+  PARALLEL_DEFINE="#define SCI_PARALLEL"
+  BUILD_PARALLEL="yes"
+else
+  PARALLEL_DEFINE=""
+  BUILD_PARALLEL="no"
+fi
+
+AC_SUBST(NBITS)
+AC_SUBST(GLOBUS_EXTRA_DIRS)
+AC_SUBST(GLOBUS_INCLUDE)
+AC_SUBST(GLOBUS_LIB)
+AC_SUBST(PARALLEL_DEFINE)
+AC_SUBST(BUILD_PARALLEL)
 
 ##  --  search for Nektar  -----------------------------------------------
 
-#FOUND_ALL_LIBIMAGE=no
 #for i in $nektar $thirdparty $SCI_LAB_TP_DEFAULT; do
 #  if test ! -d "$i"; then 
 #    continue
@@ -1553,11 +1679,27 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   SCI_CHECK_LIB($i/lib,petsc,main,break,continue,
-    $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX -lX11 $LIBMPI -l$MPI $FLIBS)
+    -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
+    -lpetscts -lpetscvec $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX \
+    -lX11 $LIBMPI $MPI $FLIBS -lm)
   SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
   if test "$LIBPETSC" &&
-     test "$INCPETSC_H"; then 
+     test "$INCPETSC_H" &&
+     test -x "$i/bin/petscarch"; then 
     FOUND_ALL_PETSC=yes
+    PETSC_DIR=$i
+    if test "$debug" = "yes"; then
+      PETSC_SUB=libg
+    else
+      PETSC_SUB=libO
+    fi
+    PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
+      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LIBLAPACK -llapack \
+      $LIBBLAS -lblas $LIBX -lX11 $LIBMPI $MPI $FLIBS -lm"
+    PETSC_ARCH=`$i/bin/petscarch`
+    if test "$is_64bit" != "yes" -a "$PETSC_ARCH" = "IRIX64"; then
+      PETSC_ARCH="IRIX"
+    fi
     break
   fi 
 done
@@ -1569,13 +1711,69 @@ if test "$FOUND_ALL_PETSC" != "yes"; then
 fi
 
 AC_SUBST(HAVE_LIBPETSC)
+AC_SUBST(PETSC_EXTRA_LIBS)
+AC_SUBST(PETSC_DIR)
+AC_SUBST(PETSC_SUB)
+AC_SUBST(PETSC_ARCH)
 AC_SUBST(LIBPETSC)
 AC_SUBST(INCPETSC_H)
 
-##  --  uni-petsc  ------------------------------------------------------
+##  --  search for uni-petsc  --------------------------------------------
+FOUND_ALL_PETSC=no
+for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then 
+    continue
+  fi
+  SCI_CHECK_LIB($i/lib,petsc,main,break,continue,
+    -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
+    -lpetscts -lpetscvec $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX \
+    -lX11 -lmpiuni $FLIBS -lm)
+  SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
+  if test "$LIBPETSC" &&
+     test "$INCPETSC_H" &&
+     test -x "$i/bin/petscarch"; then 
+    FOUND_ALL_PETSC=yes
+    UNIPETSC_DIR=$i
+    if test "$debug" = "yes"; then
+      UNIPETSC_SUB=libg
+    else
+      UNIPETSC_SUB=libO
+    fi
+    UNIPETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
+      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LIBLAPACK -llapack \
+      $LIBBLAS -lblas $LIBX -lX11 -lmpiuni $FLIBS -lm"
+
+    UNIPETSC_ARCH=`$i/bin/petscarch`
+    if test "$is_64bit" != "yes" -a "$UNIPETSC_ARCH" = "IRIX64"; then
+      UNIPETSC_ARCH="IRIX"
+    fi
+    HAVE_LIBUNIPETSC=yes
+    LIBUNIPETSC=$LIBPETSC
+    INCUNIPETSC_H=$INCPETSC_H
+    UNI_PETSC_DEF="#define UNI_PETSC 1"
+    break
+  fi 
+done
+
+if test "$FOUND_ALL_PETSC" != "yes"; then
+  LIBUNIPETSC=""
+  INCUNIPETSC_H=""
+  HAVE_LIBUNIPETSC=''
+fi
+
+AC_SUBST(UNI_PETSC_DEF)
+AC_SUBST(HAVE_LIBUNIPETSC)
+AC_SUBST(UNIPETSC_EXTRA_LIBS)
+AC_SUBST(UNIPETSC_DIR)
+AC_SUBST(UNIPETSC_SUB)
+AC_SUBST(UNIPETSC_ARCH)
+AC_SUBST(LIBUNIPETSC)
+AC_SUBST(INCUNIPETSC_H)
 
 ##  --  search for optional headers  ------------------------------------
 AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
+
+AC_SUBST(SSTREAM_COMPAT)
 
 ##  --  finish LD flags  ------------------------------------------------
 case $host in
@@ -1595,11 +1793,14 @@ esac
 
 
 ##  ---------------------------------------------------------------------
-##  --------------------  declare output files  -------------------------
+##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
 
 ##  set the output header to "sci_config.h"
 AC_CONFIG_HEADER(sci_config.h)
+
+abs_conftop_dir=`pwd`;
+AC_SUBST(abs_conftop_dir)
 
 ##  make list of all the output files
 output_files="configVars.mk \
