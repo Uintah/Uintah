@@ -18,8 +18,8 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
-clString SimpleIPort<SpanForestHandle>::port_type("Span");
-clString SimpleIPort<SpanForestHandle>::port_color("SteelBlue4");
+template<> clString SimpleIPort<SpanForestHandle>::port_type("Span");
+template<> clString SimpleIPort<SpanForestHandle>::port_color("SteelBlue4");
 
 } // End namespace Datatypes
 } // End namespace PSECore
