@@ -47,6 +47,12 @@ namespace PSECommon {
   }
 }
 
+namespace PSECommon {
+  namespace AInterface {
+    class AI;
+  }
+}
+
 namespace PSECore {
 namespace Dataflow {
 
@@ -63,12 +69,14 @@ using SCICore::Containers::Array1;
 
 using PSECore::Comm::MessageBase;
 using PSECommon::Modules::Roe;
+using PSECommon::AInterface::AI;
 
 class Connection;
 class Network;
 class NetworkEditor;
 class OPort;
 class IPort;
+class AI;
 
 class PSECORESHARE Module : public TCL, public Pickable {
     /*
@@ -176,8 +184,8 @@ public:
     clString categoryName;   
     clString packageName;    
     clString moduleName;  
-    int abort_flag;
 public:
+    int abort_flag;
     int niports();
     int noports();
     IPort* iport(int);
@@ -196,6 +204,7 @@ public:
     bool isSkeleton()	{ return skeleton; }
     void tcl_command(TCLArgs&, void*);
 
+    friend class AI;
 };
 
 typedef Module* (*ModuleMaker)(const clString& id);
@@ -205,6 +214,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.11  2000/07/22 17:51:23  yarden
+// move make abort_flag public
+//
 // Revision 1.10  1999/12/07 02:53:33  dmw
 // made show_status variable persistent with network maps
 //
