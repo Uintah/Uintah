@@ -834,6 +834,7 @@ EditTransferFunc2::motion(int x, int y)
   if (pick_widget_ != -1)
   {
     widget_[pick_widget_]->move(pick_object_, x, 255-y, 512, 256);
+    cmap_dirty_ = true;
   }
   update();
   redraw();
@@ -850,6 +851,7 @@ EditTransferFunc2::release(int x, int y, int button)
   if (pick_widget_ != -1)
   {
     widget_[pick_widget_]->release(pick_object_, x, 255-y, 512, 256);
+    cmap_dirty_ = true;
   }
 
   update();
@@ -994,7 +996,7 @@ EditTransferFunc2::update()
       cmap_dirty_ = true;
     }
 
-    if(cmap_dirty_) {
+    if (cmap_dirty_) {
       cmap_->lock_array();
       // realloc cmap
       if(cmap_size_dirty_)
