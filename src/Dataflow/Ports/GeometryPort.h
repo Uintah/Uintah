@@ -37,6 +37,8 @@
 #include <Core/Thread/Mailbox.h>
 #include <Core/Geom/GeomObj.h>
 #include <string>
+#include <vector>
+#include <list>
 
 namespace SCIRun {
 
@@ -53,35 +55,37 @@ typedef int GeomID;
 
 class PSECORESHARE GeometryIPort : public IPort {
 public:
-    GeometryIPort(Module*, const string& name);
-    virtual ~GeometryIPort();
+  GeometryIPort(Module*, const string& name);
+  virtual ~GeometryIPort();
 
-    virtual void reset();
-    virtual void finish();
+  virtual void reset();
+  virtual void finish();
 };
+
 
 struct GeometryData {
-    ColorImage* colorbuffer;
-    DepthImage* depthbuffer;
+  ColorImage* colorbuffer;
+  DepthImage* depthbuffer;
 
-    View* view;
-    int xres, yres;
-    double znear, zfar;
+  View* view;
+  int xres, yres;
+  double znear, zfar;
 #ifdef HAVE_COLLAB_VIS
-    // CollabVis code begin
-    double modelview[16];
-    double projection[16];
-    int viewport[4];
+  // CollabVis code begin
+  double modelview[16];
+  double projection[16];
+  int viewport[4];
   
-    ~GeometryData() {}
-    // CollabVis code end
+  ~GeometryData() {}
+  // CollabVis code end
 #else
-    ~GeometryData();
+  ~GeometryData();
 #endif
   
-    GeometryData();
-    void Print();
+  GeometryData();
+  void Print();
 };
+
 
 #define GEOM_VIEW		1
 #define GEOM_COLORBUFFER	2
@@ -91,48 +95,48 @@ struct GeometryData {
 // CollabVis code begin
 #define GEOM_MATRICES           16
 // CollabVis code end
+
   
 class PSECORESHARE GeometryOPort : public OPort {
 private:
 
-    GeomID serial;
-    bool dirty;
+  GeomID serial_;
+  bool dirty_;
 
-    GeometryComm* save_msgs;
+  std::list<GeometryComm* > saved_msgs_;
 
-    GeometryComm* save_msgs_tail;
+  vector<int> portid_;
+  vector<Mailbox<MessageBase*>*> outbox_;
 
-    int portid;
-    Mailbox<MessageBase*>* outbox;
-
-    void save_msg(GeometryComm*);
+  void save_msg(GeometryComm*);
 
 public:
-    GeometryOPort(Module*, const string& name);
-    virtual ~GeometryOPort();
+  GeometryOPort(Module*, const string& name);
+  virtual ~GeometryOPort();
 
-    GeomID addObj(GeomHandle, const string& name, CrowdMonitor* lock=0);
-    void delObj(GeomID, int del=1);
-    void delAll();
-    void flush();
-    void flushViews();
-    void flushViewsAndWait();
+  GeomID addObj(GeomHandle, const string& name, CrowdMonitor* lock=0);
+  void delObj(GeomID, int del=1);
+  void delAll();
+  void flush();
+  void flushViews();
+  void flushViewsAndWait();
 
-    void forward(GeometryComm* msg);
-    bool direct_forward(GeometryComm* msg);
+  void forward(GeometryComm* msg);
+  bool direct_forward(GeometryComm* msg);
 
-    virtual void reset();
-    virtual void finish();
+  virtual void reset();
+  virtual void finish();
 
-    virtual void attach(Connection*);
-    virtual void detach(Connection*);
+  virtual void attach(Connection*);
+  virtual void detach(Connection*);
 
-    virtual bool have_data();
-    virtual void resend(Connection*);
+  virtual bool have_data();
+  virtual void resend(Connection*);
 
-    int getNViewWindows();
-    GeometryData* getData(int which_viewwindow, int mask);
-    void setView(int which_viewwindow, View view);
+  int getNViewers();
+  int getNViewWindows(int viewer);
+  GeometryData* getData(int which_viewer, int which_viewwindow, int mask);
+  void setView(int which_viewer, int which_viewwindow, View view);
 };
 
 } // End namespace SCIRun

@@ -252,7 +252,7 @@ void EditPath::execute()
       // ******************************************************	
       case mk_circle_path:{
 	
-	data=ogeom->getData(0, 1);
+	data=ogeom->getData(0, 0, 1);
 	if (data && data->view){
 	  c_view=*(data->view);
 	  if (!cross_widget->GetState() && !Msg_Box("No visible widget message","No active widget is visible for specifying path center. Would you like to use its current position?")){
@@ -304,7 +304,7 @@ void EditPath::execute()
 
       // ******************************************************	
       case add_vp:
-	data=ogeom->getData(0, 1);
+	data=ogeom->getData(0, 0, 1);
     
 	if (data && data->view){
 	  c_view=*(data->view);
@@ -327,7 +327,7 @@ void EditPath::execute()
       
       // ******************************************************		
       case rem_vp:    
-	data=ogeom->getData(0, 1);
+	data=ogeom->getData(0, 0, 1);
 	if (data && data->view){
 	  if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){
 	      //      && *(data->view)==c_view){
@@ -356,7 +356,7 @@ void EditPath::execute()
 
       // ******************************************************		
       case ins_vp:
-	data=ogeom->getData(0, 1);
+	data=ogeom->getData(0, 0, 1);
 	if (data && data->view){
 	  speed_val=tcl_speed_val.get();
 	  if (curr_path_h->ins_keyF(curr_view, *(data->view), speed_val)){
@@ -376,7 +376,7 @@ void EditPath::execute()
 
       // ******************************************************		
       case rpl_vp:
-	data=ogeom->getData(0, 1);
+	data=ogeom->getData(0, 0, 1);
 	if (data && data->view){
 	  if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){ 
 	    curr_path_h->del_keyF(curr_view);
@@ -533,7 +533,7 @@ void EditPath::send_view(){
   
   switch (tcl_send_dir.get()){
   case to_ogeom:
-    ogeom->setView(0, c_view);
+    ogeom->setView(0, 0, c_view);
     break;
   case to_oview:
     {

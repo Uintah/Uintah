@@ -92,18 +92,7 @@ ClipLattice::ClipLattice(GuiContext* ctx)
 
 ClipLattice::~ClipLattice()
 {
-  if (widgetid_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Selection Widget");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    ogport->delObj(widgetid_);
-    ogport->flushViews();
-    widgetid_ = 0;
-  }
+  delete widget_;
 }
 
 
