@@ -360,7 +360,7 @@ extern int HitCell(const Ray& r, const Point& pmin, const Point& pmax,
 		   float rho[2][2], double tmin, double tmax, double& t);
 extern Vector GradientCell(const Point& pmin, const Point& pmax,
 			   const Point& p, float rho[2][2]);
-};
+}
 
 template<class A, class B>
 void Heightfield<A,B>::isect_up(int depth, double t,
