@@ -382,7 +382,7 @@ void GridVisualizer::execute()
     GeomLines* edges = scinew GeomLines();
 
     // nodes consists of the nodes in all the patches in the level
-    GeomPoints* nodes = scinew GeomPoints(1); // 1 is the number of points
+    GeomPoints* nodes = scinew GeomPoints();
 
     // spheres that will be the selectable nodes
     GeomGroup* spheres = scinew GeomGroup;
