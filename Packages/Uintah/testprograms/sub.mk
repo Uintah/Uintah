@@ -1,6 +1,7 @@
 SRCDIR := Packages/Uintah/testprograms
 
 SUBDIRS := $(SRCDIR)/TestSuite \
+	$(SRCDIR)/TestFastMatrix \
 	$(SRCDIR)/TestMatrix3 \
 	$(SRCDIR)/TestConsecutiveRangeSet \
 	$(SRCDIR)/TestRangeTree \
