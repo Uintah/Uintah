@@ -1762,10 +1762,10 @@ proc trackIPortConnection {imodid which x y} {
     # Get coords in canvas
     global netedit_canvas
     set ox1 [winfo x $netedit_canvas.module$imodid.iport$which]
-    set ox2 [winfo x $netedit_canvas.module$imodid]
+    set ox2 [lindex [$netedit_canvas coords $imodid] 0]
     set x [expr $x+$ox1+$ox2]
     set oy1 [winfo y $netedit_canvas.module$imodid.iport$which]
-    set oy2 [winfo y $netedit_canvas.module$imodid]
+    set oy2 [lindex [$netedit_canvas coords $imodid] 1]
     set y [expr $y+$oy1+$oy2]
 
     if { $mm == 1 } {
@@ -1834,10 +1834,10 @@ proc trackOPortConnection {omodid which x y} {
     # Get coords in canvas
     global netedit_canvas
     set ox1 [winfo x $netedit_canvas.module$omodid.oport$which]
-    set ox2 [winfo x $netedit_canvas.module$omodid]
+    set ox2 [lindex [$netedit_canvas coords $omodid] 0]
     set x [expr $x+$ox1+$ox2]
     set oy1 [winfo y $netedit_canvas.module$omodid.oport$which]
-    set oy2 [winfo y $netedit_canvas.module$omodid]
+    set oy2 [lindex [$netedit_canvas coords $omodid] 1]
     set y [expr $y+$oy1+$oy2]
 
 
@@ -2085,7 +2085,7 @@ proc routeConnection {omodid owhich imodid iwhich} {
     set iy [lindex $inpos 1]
 
     set minextend 10
-    if {$ox == $ix} {
+    if {$ox == $ix && $oy < $iy} {
 	return [list $ox $oy $ix $iy]
     } elseif {[expr $oy+2*$minextend] < $iy} {
 	set my [expr ($oy+$iy)/2]
