@@ -205,7 +205,7 @@ void AMRSimulationController::run()
 	 output->finalizeTimestep(t, 0, level, scheduler);
    }
 
-   scheduler->compile(d_myworld, true);
+   scheduler->compile(d_myworld, false);
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
@@ -352,7 +352,7 @@ void AMRSimulationController::run()
        
 	 // Begin next time step...
 	 sim->scheduleComputeStableTimestep(level, scheduler);
-	 scheduler->compile(d_myworld, false);
+	 scheduler->compile(d_myworld, true);
 
 	 double dt=Time::currentSeconds()-start;
 	 if(d_myworld->myrank() == 0)
