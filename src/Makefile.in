@@ -274,10 +274,10 @@ $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
 
 clean::
-	rm -f $(CLEANOBJS)
+	$(foreach dir,$(ALLSUBDIRS),$(shell rm -f $(filter $(dir)/%,$(CLEANOBJS))))
 	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLSUBDIRS))
+	$(foreach dir,$(ALLSUBDIRS),$(shell rm -f $(dir)/ii_files/*.ii))
 	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
 	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
 	rm -f $(LIBDIR)so_locations
@@ -350,6 +350,9 @@ endif
 
 #
 # $Log$
+# Revision 1.31  2000/07/03 19:09:45  jehall
+# - Fixed "argument list too long" problems in make clean
+#
 # Revision 1.30  2000/06/14 23:12:42  bbanerje
 # Added cleanall for ARCHES specific make clean (for CRSIM machines)
 #
