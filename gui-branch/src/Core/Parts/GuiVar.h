@@ -71,17 +71,11 @@ public:
   const string &get_var() 
   {
     return part->get_var( id_, varname_ );
-//     string cmd = id_ + " get " + varname_;
-//     static string res;
-//     Part::tcl_eval( cmd, res );
-//     return res;
   }
 
   void set_var( const string& v ) 
   {
     part->set_var( id_, varname_, v );
-//     string cmd = id_ + " set " + varname_ + " " + v;
-//     Part::tcl_execute( cmd );
   }
 };
   
@@ -160,11 +154,6 @@ public:
   }
 };
 
-#if 0
-typedef GuiSingle<string> GuiString;
-typedef GuiSingle<double> GuiDouble;
-typedef GuiSingle<int> GuiInt;
-#endif
 
 typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
 typedef GuiSingle<int> GuiVarint;   // NEED TO GET RID OF
@@ -213,3 +202,5 @@ typedef GuiTriple<Vector> GuiVector;
 
 
 #endif
+
+

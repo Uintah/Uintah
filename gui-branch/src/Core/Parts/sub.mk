@@ -23,8 +23,8 @@ SRCDIR := Core/Parts
 
 SRCS     += $(SRCDIR)/EventManager.cc \
 	$(SRCDIR)/Part.cc \
-	$(SRCDIR)/GuiVar.cc \
 	$(SRCDIR)/TCLstrbuff.cc \
+	$(SRCDIR)/GuiVar.cc \
 #	$(SRCDIR)/PartManager.cc \
 
 PSELIBS := Core/Framework \

@@ -33,7 +33,6 @@
  */
 
 #include <Core/Parts/GuiVar.h>
-#include <Core/Parts/Part.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -42,45 +41,16 @@ using std::cerr;
 using std::endl;
 using std::ostream;
 
-#ifdef _WIN32
-#include <string.h>
-#endif
-#ifndef _WIN32
-#include <values.h>
-#else
-#include <limits.h>
-#include <float.h>
-#endif
-
-#ifndef MAXDOUBLE
-#define MAXDOUBLE	DBL_MAX
-#endif
-#ifndef MAXINT
-#define MAXINT		INT_MAX
-#endif
-
-#ifdef _WIN32
-#undef ASSERT
-#include <afxwin.h>
-#define GLXContext HGLRC
-#else
-#include <GL/gl.h>
-#include <GL/glx.h>
-#endif
 
 namespace SCIRun {
 
-GuiVar::GuiVar(const string& name, const string& id, Part* part)
-  : varname_(id+"-"+name), is_reset_(1), part(part)
+GuiVar::GuiVar(const string& name, const string& id, Part *part)
+  : varname_(name), is_reset_(1), part(part), id_(id)
 {
-  if(part)
-    part->add_gui_var(this);
 }
 
 GuiVar::~GuiVar()
 {
-  if(part)
-    part->rem_gui_var(this);
 }
 
 void 
@@ -95,12 +65,6 @@ GuiVar::str()
   return varname_;
 }
 
-// if GuiVar has a varname like:
-//    ::PSECommon_Visualization_GenStandardColorMaps_0-width
-// then we want to return:
-//    width
-// i.e. take off everything upto and including the last occurence of _#-
-//    
 string 
 GuiVar::format_varname() 
 {
@@ -122,9 +86,6 @@ GuiVar::format_varname()
   return varname_.substr(end_of_modulename+1);
 }
 
-template class GuiSingle<string>;
-template class GuiSingle<double>;
-template class GuiSingle<int>;
 template class GuiTriple<Point>;
 template class GuiTriple<Vector>;
 
