@@ -16,9 +16,10 @@
 
 namespace SCIRun {
 
-PersistentTypeID TetVolMesh::type_id("TetVolMesh", "Datatype", NULL);
+PersistentTypeID TetVolMesh::type_id("TetVolMesh", "MeshBase", NULL);
 
-const string TetVolMesh::type_name(int)
+const string
+TetVolMesh::type_name(int)
 {
   return "TetVolMesh";
 }
@@ -282,60 +283,57 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-TetVolMesh::locate(node_index &node, const Point &p)
+TetVolMesh::locate(node_iterator &loc, const Point &p)
 {
-  // TODO: Use search structure instead of exaustive search.
-  double min_dist;
-
-  if (points_.size() == 0)
+  node_iterator ni = node_begin();
+  loc = ni;
+  if (ni == node_end())
   {
-    node = *node_end();
-  }
-  else
-  {
-    node = 0;
-    min_dist = distance2(p, points_[0]);
+    return;
   }
 
-  for (int i = 1; i < points_.size(); i++)
+  double min_dist = distance2(p, points_[*ni]);
+  loc = ni;
+  ++ni;
+
+  while (ni != node_end())
   {
-    const double dist = distance2(p, points_[i]);
+    const double dist = distance2(p, points_[*ni]);
     if (dist < min_dist)
     {
-      min_dist = dist;
-      node = i;
+      loc = ni;
     }
+    ++ni;
   }
-  node = node;
 }
 
-#if 0
+
 void
-TetVolMesh::locate(edge_index &edge, const Point & /* p */)
+TetVolMesh::locate(edge_iterator &edge, const Point & /* p */)
 {
   edge = edge_end();
 }
 
+
 void
-TetVolMesh::locate(face_index &face, const Point & /* p */)
+TetVolMesh::locate(face_iterator &face, const Point & /* p */)
 {
   face = face_end();
 }
-#endif
 
 
 void
-TetVolMesh::locate(cell_index &cell, const Point &p)
+TetVolMesh::locate(cell_iterator &cell, const Point &p)
 {
-  for (int i=0; i < cells_.size(); i+=4)
+  cell_iterator ci = cell_begin();
+  while (ci != cell_end())
   {
-    if (inside4_p(i, p))
+    if (inside4_p((*ci) * 4, p))
     {
-      cell = i >> 2;
-      return;
+      break;
     }
   }
-  cell = *cell_end();
+  cell = ci;
 }
 
 

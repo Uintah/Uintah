@@ -16,7 +16,15 @@
 
 namespace SCIRun {
 
-PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "Datatype", NULL);
+PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "MeshBase", NULL);
+
+
+const string
+TriSurfMesh::type_name(int)
+{
+  return "TriSurfMesh";
+}
+
 
 
 TriSurfMesh::TriSurfMesh()
@@ -85,6 +93,18 @@ TriSurfMesh::face_end() const
   return faces_.size() / 3;
 }
 
+TriSurfMesh::cell_iterator
+TriSurfMesh::cell_begin() const
+{
+  return 0;
+}
+
+TriSurfMesh::cell_iterator
+TriSurfMesh::cell_end() const
+{
+  return 0;
+}
+
 
 void
 TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
@@ -140,62 +160,51 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-TriSurfMesh::locate_node(node_index &node, const Point &p)
+TriSurfMesh::locate(node_iterator &loc, const Point &p)
 {
-  // TODO: Use search structure instead of exaustive search.
-  double min_dist;
-
-  if (points_.size() == 0)
+  node_iterator ni = node_begin();
+  loc = ni;
+  if (ni == node_end())
   {
-    node = *node_end();
-  }
-  else
-  {
-    node = 0;
-    min_dist = distance2(p, points_[0]);
+    return;
   }
 
-  for (int i = 1; i < points_.size(); i++)
+  double min_dist = distance2(p, points_[*ni]);
+  loc = ni;
+  ++ni;
+
+  while (ni != node_end())
   {
-    const double dist = distance2(p, points_[i]);
+    const double dist = distance2(p, points_[*ni]);
     if (dist < min_dist)
     {
-      min_dist = dist;
-      node = i;
+      loc = ni;
     }
+    ++ni;
   }
 }
 
 
-#if 0
-
 void
-TriSurfMesh::locate_edge(edge_index &edge, const Point & /* p */)
+TriSurfMesh::locate(edge_iterator &loc, const Point &)
 {
-  edge = edge_end();
-}
-
-void
-TriSurfMesh::locate_face(face_index &face, const Point & /* p */)
-{
-  face = face_end();
+  loc = edge_end();
 }
 
 
 void
-TriSurfMesh::locate_cell(cell_index &cell, const Point &p)
+TriSurfMesh::locate(face_iterator &loc, const Point &)
 {
-  for (int i=0; i < faces_.size(); i+=4)
-  {
-    if (inside4_p(i, p))
-    {
-      cell = i >> 2;
-      return;
-    }
-  }
-  cell = cell_end();
+  loc = face_end();
 }
-#endif
+
+
+void
+TriSurfMesh::locate(cell_iterator &loc, const Point &)
+{
+  loc = cell_end();
+}
+
 
 
 void
@@ -278,11 +287,11 @@ TriSurfMesh::inside4_p(int i, const Point &p)
 TriSurfMesh::node_index
 TriSurfMesh::add_find_point(const Point &p, double err)
 {
-  node_index i;
-  locate_node(i, p);
-  if (distance2(points_[i], p) < err)
+  node_iterator i;
+  locate(i, p);
+  if (i != node_end() || distance2(points_[*i], p) < err)
   {
-    return i;
+    return *i;
   }
   else
   {
