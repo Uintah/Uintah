@@ -51,7 +51,8 @@ namespace SCIRun {
     //the sender field is automaticly filled.
     void putMessage(DTMessage *msg);
 
-    void wakeup();
+    //callback function
+    void (*service)(DTMessage *msg);
 
   private:
     Semaphore *sema;

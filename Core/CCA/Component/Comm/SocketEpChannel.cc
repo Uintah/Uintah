@@ -60,8 +60,37 @@
 using namespace std;
 using namespace SCIRun;
 
+static void service(DTMessage *dtmsg){
+  void* v=dtmsg->recver->object;
+  ServerContext* sc=static_cast< ServerContext*>(v); 
+  SocketEpChannel *chan = dynamic_cast<SocketEpChannel*>(sc->chan);
+  if (chan) {
+    int id=*((int *)dtmsg->buf);
+    if(id<=-100){
+      switch(id){
+      case -101:
+	sc->d_objptr->addReference();
+	break;
+      case -102:
+	sc->d_objptr->deleteReference();
+	break;
+      }
+    }
+    else{
+      if (id >= chan->getTableSize())
+	throw CommError("Handler function does not exist",1101);
+      
+      SocketMessage* msg=new SocketMessage(dtmsg);
+      Thread *t = new Thread(new SocketThread(chan, msg, id), "HANDLER_THREAD");
+      t->detach(); 
+    }
+  }
+}
+
+
 SocketEpChannel::SocketEpChannel(){ 
   ep=new DTPoint;
+  ep->service=::service;
   handler_table=NULL;
 }
 
@@ -70,12 +99,13 @@ SocketEpChannel::~SocketEpChannel(){
   delete ep;
 }
 
+
 void SocketEpChannel::openConnection() {
   //...do nothing
 }
 
 void SocketEpChannel::closeConnection() {
-  //...do nothing 
+  // ...
 }
 
 string SocketEpChannel::getUrl() {
@@ -86,8 +116,6 @@ void SocketEpChannel::activateConnection(void* obj){
   ep->object=obj;
   ServerContext* sc=(ServerContext*)(obj);
   sc->d_objid=(int)ep;
-  Thread *service_thread = new Thread(new SocketThread(this, NULL,  -1), "SocketServiceThread", 0, Thread::Activated);
-  service_thread->detach();
 }
 
 Message* SocketEpChannel::getMessage() {
@@ -112,40 +140,9 @@ SocketEpChannel::bind(SpChannel* spchan){
   chan->ep_addr=PIDL::getDT()->getAddress();
 }
 
-void 
-SocketEpChannel::runService(){
-  //cerr<<"ServiceThread starts\n";
-  bool alive=true;
-  while(alive){
-    DTMessage *msg=ep->getMessage();
-    if(msg==NULL){
-      cerr<<"runService get NULL msg\n";
-      break;
-    }
-    int id=*((int *)msg->buf);
-    //cerr<<"Servicing id="<<id<<endl;
-    //filter internal messages
-    if(id<=-100){
-      ServerContext* sc=(ServerContext*)(ep->object);
-      switch(id){
-      case -101:
-	sc->d_objptr->_addReference();
-	break;
-      case -102:
-	sc->d_objptr->_deleteReference();
-	if(sc->d_objptr->getRefCount()==0) alive=false;
-	break;
-      }
-    }
-    else{
-      SocketMessage* new_msg=new SocketMessage(this, msg);
-      //The SocketHandlerThread is responsible to free the buf.   
 
-      Thread* t = new Thread(new SocketThread(this, new_msg, id), "SocketHandlerThread", 0, Thread::Activated);
-      t->detach();
-    }
-  }  
-  //cerr<<"ServiceThread stops\n";
+int 
+SocketEpChannel::getTableSize(){
+  return table_size;
 }
-
 

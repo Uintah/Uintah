@@ -48,9 +48,6 @@ SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id){
 void 
 SocketThread::run()
 {
-  if(id==-1) ep->runService();
-  else{
-    //cerr<<"calling handler #"<<id<<"\n";
-    ep->handler_table[id](msg);
-  }
+  //cerr<<"calling handler #"<<id<<"\n";
+  ep->handler_table[id](msg);
 }

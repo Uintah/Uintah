@@ -355,9 +355,16 @@ DataTransmitter::runRecvingThread(){
 	  /*
 	    recvQ_cond->conditionSignal();
 	   */
-	  SemaphoreMap::iterator found=semamap.find(msg->recver);
+
+	  DTPoint *pt=msg->recver;
+	  SemaphoreMap::iterator found=semamap.find(pt);
 	  if(found!=semamap.end()){
-	    found->second->up();
+	    if(pt->service!=NULL){
+	      pt->service(msg);
+	    }
+	    else{
+	      found->second->up();
+	    }
 	  }
 	  else{
 	    //discard the message

@@ -39,7 +39,6 @@ namespace SCIRun{
   class DTThread : public Runnable{
   public:
     DTThread(DataTransmitter *dt, int id);
-    DTThread(DataTransmitter *dt, DTMessage* dtmsg);
     
     void run();
   private:
