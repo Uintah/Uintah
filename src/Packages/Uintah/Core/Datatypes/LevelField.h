@@ -71,6 +71,7 @@ public:
   virtual bool interpolate(double &result, const Point &p) const;
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const;
+  virtual void find_closest(double &result, const Point&) const { result = 0; }
 private:
   const LevelField<Data>* fld_;
 };
@@ -613,6 +614,8 @@ bool LevelFieldSFI<Data>::interpolate_many(vector<double> &results,
 {
   return false;
 }
+
+
 
 } // namespace Uintah
 
