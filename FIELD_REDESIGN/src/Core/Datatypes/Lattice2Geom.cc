@@ -57,7 +57,7 @@ Point Lattice2Geom::get_point(int i, int j){
   double x, y;
   x=bbox.min().x()+i*dx;
   y=bbox.min().y()+j*dy;
-  return Point(x,y);
+  return Point(x, y, 0, 0);
 }
 
 bool Lattice2Geom::locate(const Point& p, int& ix, int& iy){
