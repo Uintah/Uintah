@@ -137,7 +137,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   double lx=-0.25, ly=0.5, lz=-0.1;
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
   char *tex_basename="./sphere";
-  int tex_res = -1;
+  int tex_res = 16;
   char *infilename=0;
   int nsides = 6;
   int gdepth = 2;
@@ -182,7 +182,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -bg <filename>       environment map image file (envmap.ppm)"<<endl;
       cerr<<"  -i <filename>        input sphere file name (null)"<<endl;
       cerr<<"  -tex <filename>      basename of gray-scale texture files (./sphere)"<<endl;
-      cerr<<"  -tex_res <int>       resolution of the textures (-1)"<<endl;
+      cerr<<"  -tex_res <int>       resolution of the textures (16)"<<endl;
       cerr<<"  -radius <float>      sphere radius (1.0)"<<endl;
       cerr<<"  -numvars <int>       number of variables (3)"<<endl;
       cerr<<"  -nsides <int>        number of sides for grid cells (6)"<<endl;
@@ -272,8 +272,125 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   return scene;
 }
 
+int countData(char* fname, size_t dsize, int multiplier=1) {
+  // Open the data file
+  int in_fd=open(fname, O_RDONLY);
+  if (in_fd==-1) {
+    cerr<<"failed to open \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  struct stat statbuf;
+  if (fstat(in_fd, &statbuf) == -1) {
+    cerr<<"cannot stat \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  // Close the data file
+  close(in_fd);
+
+  // Return number of data items
+  return (int)(statbuf.st_size/(multiplier*dsize));
+}
+
+int slurpFloatData(char* fname, float* data, int multiplier=1) {
+  // Open the data file
+  int in_fd=open(fname, O_RDONLY);
+  if (in_fd==-1) {
+    cerr<<"failed to open \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  struct stat statbuf;
+  if (fstat(in_fd, &statbuf) == -1) {
+    cerr<<"cannot stat \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  // Slurp the data
+  int ndata=(int)(statbuf.st_size/(multiplier*sizeof(float)));
+  unsigned long total_dsize=ndata*multiplier*sizeof(float);
+  unsigned long num_read;
+  num_read=read(in_fd, data, total_dsize);
+  if(num_read==-1 || num_read!=total_dsize) {
+    cerr<<"did not read "<<total_dsize<<" bytes from "
+	<<fname<<endl;
+    return 0;
+  }
+  
+  // Close the data file
+  close(in_fd);
+
+  // Return number of data items read
+  return (int)(num_read/sizeof(float));
+}
+
+int slurpIntegerData(char* fname, int* data, int multiplier=1) {
+  // Open the data file
+  int in_fd=open(fname, O_RDONLY);
+  if (in_fd==-1) {
+    cerr<<"failed to open \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  struct stat statbuf;
+  if (fstat(in_fd, &statbuf) == -1) {
+    cerr<<"cannot stat \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  // Slurp the data
+  int ndata=(int)(statbuf.st_size/(multiplier*sizeof(int)));
+  unsigned long total_dsize=ndata*multiplier*sizeof(int);
+  unsigned long num_read;
+  num_read=read(in_fd, data, total_dsize);
+  if(num_read==-1 || num_read!=total_dsize) {
+    cerr<<"did not read "<<total_dsize<<" bytes from "
+	<<fname<<endl;
+    return 0;
+  }
+  
+  // Close the data file
+  close(in_fd);
+
+  // Return number of data items read
+  return (int)(num_read/sizeof(int));
+}
+
+int slurpUCharData(char* fname, unsigned char* data, int multiplier=1) {
+  // Open the data file
+  int in_fd=open(fname, O_RDONLY);
+  if (in_fd==-1) {
+    cerr<<"failed to open \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  struct stat statbuf;
+  if (fstat(in_fd, &statbuf) == -1) {
+    cerr<<"cannot stat \""<<fname<<"\""<<endl;
+    return 0;
+  }
+  
+  // Slurp the data
+  int ndata=(int)(statbuf.st_size/(multiplier*sizeof(unsigned char)));
+  unsigned long total_dsize=ndata*multiplier*sizeof(unsigned char);
+  unsigned long num_read;
+  num_read=read(in_fd, data, total_dsize);
+  if(num_read==-1 || num_read!=total_dsize) {
+    cerr<<"did not read "<<total_dsize<<" bytes from "
+	<<fname<<endl;
+    return 0;
+  }
+  
+  // Close the data file
+  close(in_fd);
+
+  // Return number of data items read
+  return (int)(num_read/sizeof(unsigned char));
+}
+
 // Parse input file and populate data structues
-// Renturns a pointer to a newly allocated TextureGridSpheres
+// Returns a pointer to a newly allocated TextureGridSpheres
 //   on success, NULL on any failure
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 				    int numvars, int nsides, int gdepth,
@@ -349,24 +466,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the sphere data file
-      int in_fd=open(s_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<s_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<s_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      total_nspheres+=(int)(statbuf.st_size/(numvars*sizeof(float)));
-      
-      // Close the sphere data file
-      close(in_fd);
-      
+      total_nspheres+=countData(s_fname, sizeof(float), numvars);
       s_flag = true;
     } else if (strcmp(token, "index_file:")==0) {
       if (!group_flag) {
@@ -381,24 +481,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the index data file
-      int in_fd=open(idx_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<idx_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<idx_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      total_nindices+=(int)(statbuf.st_size/sizeof(int));
-      
-      // Close the index data file
-      close(in_fd);
-      
+      total_nindices+=countData(idx_fname, sizeof(int));      
       idx_flag = true;
     } else if (strcmp(token, "texture_file:")==0) {
       if (!group_flag) {
@@ -413,24 +496,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the texture data file
-      int in_fd=open(tex_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<tex_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<tex_fname<<"\""<<endl;
-	return 0;
-      }
-
-      total_ntextures+=(int)(statbuf.st_size/(tex_res*tex_res*sizeof(unsigned char)));
-      
-      // Close the texture data file
-      close(in_fd);
-            
+      total_ntextures+=countData(tex_fname, sizeof(unsigned char), tex_res*tex_res);
       tex_flag=true;
     } else if (strcmp(token, "bases_file:")==0) {
       if (!group_flag) {
@@ -445,24 +511,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the texture data file
-      int in_fd=open(tex_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<tex_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<tex_fname<<"\""<<endl;
-	return 0;
-      }
-
-      total_ntextures+=(int)(statbuf.st_size/(tex_res*tex_res*sizeof(unsigned char)));
-      
-      // Close the texture data file
-      close(in_fd);
-            
+      total_ntextures+=countData(tex_fname, sizeof(unsigned char), tex_res*tex_res);
       tex_flag=true;
     } else if (strcmp(token, "mean_file:")==0) {
       if (!group_flag) {
@@ -490,11 +539,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      total_nmeans+=(int)(statbuf.st_size/(sizeof(unsigned char)));
-      
-      // Close the mean data file
-      close(in_fd);
-      
+      total_nmeans+=countData(m_fname, sizeof(unsigned char));      
       m_flag = true;
     } else if (strcmp(token, "transform_file:")==0) {
       if (!group_flag) {
@@ -509,30 +554,14 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the transform data file
-      int in_fd=open(xform_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<xform_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<xform_fname<<"\""<<endl;
-	return 0;
-      }
-
-      total_nxforms+=(int)(statbuf.st_size/(sizeof(unsigned char)));
-      
-      // Close the transform data file
-      close(in_fd);
-      
+      total_nxforms+=countData(xform_fname, sizeof(unsigned char));
       xform_flag = true;
     } else if (strcmp(token, "bases_minmax:")==0) {
       if (bases_minmax_flag) {
 	cerr << "Can only have one bases_minmax per file.\n";
 	return 0;
       }
+      
       char *min=strtok(0, " ");
       if (min)
 	tex_min = atof(min);
@@ -540,6 +569,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	cerr << "Expected a min for bases_minmax, but not found.\n";
 	return 0;
       }
+      
       char *max=strtok(0, " ");
       if (max)
 	tex_max = atof(max);
@@ -554,6 +584,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	cerr << "Can only have one transform_minmax per file.\n";
 	return 0;
       }
+      
       char *min=strtok(0, " ");
       if (min)
 	xform_min = atof(min);
@@ -561,6 +592,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	cerr << "Expected a min for transform_minmax, but not found.\n";
 	return 0;
       }
+      
       char *max=strtok(0, " ");
       if (max)
 	xform_max = atof(max);
@@ -625,10 +657,14 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   } else if (!m_flag && xform_flag) {
     cerr<<"transform_file specified, but no mean_file found"<<endl;
     return 0;
-  } else if (m_flag && xform_flag &&
-             !bases_minmax_flag && !xform_minmax_flag) {
-    cerr << "bases_minmax or transform_minmax was not found and is needed for PCA stuff.\n";
-    return 0;
+  } else if (m_flag && xform_flag) {
+    if (!bases_minmax_flag) {
+      cerr<<"bases_minmax was not found"<<endl;
+      return 0;
+    } else if (!xform_minmax_flag) {
+      cerr<<"transform_minmax was not found"<<endl;
+      return 0;
+    }
   }
 
   if (total_nxforms != total_nmeans*total_ntextures) {
@@ -704,13 +740,13 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     cerr<<"failed to open \""<<fname<<"\""<<endl;
     return 0;
   }
-  infile2.getline(line,MAX_LINE_LEN);
+  
   int s_index = 0;
   int idx_index = 0;
   int tex_index = 0;
   int m_index = 0;
   int xform_index = 0;
-  
+  infile2.getline(line,MAX_LINE_LEN);
   while(!infile2.eof()) {
     // Parse the line
     char *token=strtok(line, " ");
@@ -726,39 +762,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the sphere data file
-      int in_fd=open(s_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<s_fname<<"\""<<endl;
-	return 0;
-      }
-
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<s_fname<<"\""<<endl;
-	return 0;
-      }
-
       // Slurp the sphere data
-      float* data=&(sphere_data[s_index]);
-      int nspheres=(int)(statbuf.st_size/(numvars*sizeof(float)));
-      unsigned long data_size=nspheres*numvars*sizeof(float);
-
-      cerr<<"slurping sphere data ("<<nspheres<<" spheres = " <<data_size
-	  <<" bytes) from "<<s_fname<<endl;
-      unsigned long num_read;
-      num_read=read(in_fd, data, data_size);
-      if(num_read==-1 || num_read!=data_size) {
-	cerr<<"did not read "<<data_size<<" bytes from "
-	    <<s_fname<<endl;
-	return 0;
-      }
-      
-      // Set start of next slurp
-      s_index+=(int)(num_read/sizeof(float));
-
-      // Close the sphere data file
-      close(in_fd);
+      s_index+=slurpFloatData(s_fname, &(sphere_data[s_index]), numvars);
     } else if (idx_flag && strcmp(token, "index_file:")==0) {
       // Get the index data file
       char *idx_fname=strtok(0, " ");
@@ -767,40 +772,10 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
       
-      // Open the index data file
-      int in_fd=open(idx_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<idx_fname<<"\""<<endl;
-	return 0;
-      }
-
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<idx_fname<<"\""<<endl;
-	return 0;
-      }
-
       // Slurp the index data
-      int* data=&(index_data[idx_index]);
-      int nindices=(int)(statbuf.st_size/sizeof(int));
-      unsigned long data_size=nindices*sizeof(int);
-
-      cerr<<"slurping index data ("<<nindices<<" indices = " <<data_size
-	  <<" bytes) from "<<idx_fname<<endl;
-      unsigned long num_read;
-      num_read=read(in_fd, data, data_size);
-      if(num_read==-1 || num_read!=data_size) {
-	cerr<<"did not read "<<data_size<<" bytes from "
-	    <<idx_fname<<endl;
-	return 0;
-      }
-
-      // Set start of next slurp
-      idx_index+=(int)(num_read/sizeof(int));
-
-      // Close the index data file
-      close(in_fd);
-    } else if (strcmp(token, "texture_file:")==0) {
+      idx_index+=slurpIntegerData(idx_fname, &(index_data[idx_index]));
+    } else if (strcmp(token, "texture_file:")==0 ||
+	       strcmp(token, "bases_file:") == 0) {
       // Get the texture data file
       char *tex_fname=strtok(0, " ");
       if (!tex_fname) {
@@ -822,66 +797,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       }
 
       // Slurp the texture data
-      unsigned char* data=&(tex_data[tex_index]);
-      int ntextures=(int)(statbuf.st_size/(tex_res*tex_res*sizeof(unsigned char)));
-      unsigned long data_size=ntextures*tex_res*tex_res*sizeof(unsigned char);
-
-      cerr<<"slurping texture data ("<<ntextures<<" textures = " <<data_size
-	  <<" bytes) from "<<tex_fname<<endl;
-      unsigned long num_read;
-      num_read=read(in_fd, data, data_size);
-      if(num_read==-1 || num_read!=data_size) {
-	cerr<<"did not read "<<data_size<<" bytes from "
-	    <<tex_fname<<endl;
-	return 0;
-      }
-      
-      // Set start of next slurp
-      tex_index+=num_read;
-
-      // Close the texture data file
-      close(in_fd);
-    } else if (strcmp(token, "bases_file:")==0) {
-      // Get the bases data file
-      char *tex_fname=strtok(0, " ");
-      if (!tex_fname) {
-	cerr<<"bases_file requires a filename"<<endl;
-	return 0;
-      }
-      
-      // Open the bases data file
-      int in_fd=open(tex_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<tex_fname<<"\""<<endl;
-	return 0;
-      }
-
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<tex_fname<<"\""<<endl;
-	return 0;
-      }
-
-      // Slurp the bases data
-      unsigned char* data=&(tex_data[tex_index]);
-      int ntextures=(int)(statbuf.st_size/(tex_res*tex_res*sizeof(unsigned char)));
-      unsigned long data_size=ntextures*tex_res*tex_res*sizeof(unsigned char);
-
-      cerr<<"slurping bases data ("<<ntextures<<" bases = " <<data_size
-	  <<" bytes) from "<<tex_fname<<endl;
-      unsigned long num_read;
-      num_read=read(in_fd, data, data_size);
-      if(num_read==-1 || num_read!=data_size) {
-	cerr<<"did not read "<<data_size<<" bytes from "
-	    <<tex_fname<<endl;
-	return 0;
-      }
-      
-      // Set start of next slurp
-      tex_index+=num_read;
-
-      // Close the texture data file
-      close(in_fd);
+      tex_index+=slurpUCharData(tex_fname, &(tex_data[tex_index]), tex_res*tex_res);
     } else if (strcmp(token, "mean_file:")==0) {
       // Get the mean data file
       char *m_fname=strtok(0, " ");
@@ -890,39 +806,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      // Open the mean data file
-      int in_fd=open(m_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<m_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<m_fname<<"\""<<endl;
-	return 0;
-      }
-
       // Slurp the mean data
-      unsigned char* data=&(mean_data[m_index]);
-      int nmeans=(int)(statbuf.st_size/(sizeof(unsigned char)));
-      unsigned long data_size=nmeans*sizeof(unsigned char);
-
-      cerr<<"slurping mean data ("<<nmeans<<" elements = " <<data_size
-	  <<" bytes) from "<<m_fname<<endl;
-      unsigned long num_read;
-      num_read=read(in_fd, data, data_size);
-      if(num_read==-1 || num_read!=data_size) {
-	cerr<<"did not read "<<data_size<<" bytes from "
-	    <<m_fname<<endl;
-	return 0;
-      }
-      
-      // Set start of next slurp
-      m_index+=(int)(num_read/sizeof(unsigned char));
-
-      // Close the mean data file
-      close(in_fd);
+      m_index+=slurpUCharData(m_fname, &(mean_data[m_index]));
     } else if (strcmp(token, "transform_file:")==0) {
       // Get the transform data file
       char *xform_fname=strtok(0, " ");
@@ -931,39 +816,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
       
-      // Open the transform data file
-      int in_fd=open(xform_fname, O_RDONLY);
-      if (in_fd==-1) {
-	cerr<<"failed to open \""<<xform_fname<<"\""<<endl;
-	return 0;
-      }
-      
-      struct stat statbuf;
-      if (fstat(in_fd, &statbuf) == -1) {
-	cerr<<"cannot stat \""<<xform_fname<<"\""<<endl;
-	return 0;
-      }
-      
       // Slurp the transform data
-      unsigned char* data=&(xform_data[xform_index]);
-      int nxforms=(int)(statbuf.st_size/(sizeof(unsigned char)));
-      unsigned long data_size=nxforms*sizeof(unsigned char);
-      
-      cerr<<"slurping transform data ("<<nxforms<<" elements = " <<data_size
-	  <<" bytes) from "<<xform_fname<<endl;
-      unsigned long num_read;
-      num_read=read(in_fd, data, data_size);
-      if(num_read==-1 || num_read!=data_size) {
-	cerr<<"did not read "<<data_size<<" bytes from "
-	    <<xform_fname<<endl;
-	return 0;
-      }
-      
-      // Set start of next slurp
-      xform_index+=(int)(num_read/sizeof(unsigned char));
-      
-      // Close the transform data file
-      close(in_fd);
+      xform_index+=slurpUCharData(xform_fname, &(xform_data[xform_index]));
     }
     
     // Get the next line
