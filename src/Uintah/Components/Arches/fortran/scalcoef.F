@@ -235,6 +235,8 @@ c     double precision rone(domLo(2):domHi(2))
       integer i, j, k
       integer IST, JST, KST
       integer IEND, JEND, KEND
+      integer ioff, joff, koff
+      integer indexflo, indext1, indext2
 *-----------------------------------------------------------------------
 
       prinv = 0.01
@@ -261,7 +263,12 @@ c              vol(i,j,k) = ra(j)*sns(j)*sew(i)*stb(k)
                vol = sns(j)*sew(i)*stb(k)
 
 c-----calculate e-w coefficients----------------------------------------
-
+               ioff = 1
+               joff = 0
+               koff = 0
+               indexflo = 1
+               indext1 = 2
+               indext2 = 3
                call coeffb(domLoU, domHiU, uu,
      &              domLo, domHi, den,vis,ae,aw,cesav,cwsav,
      $              cee,cwe,cww,efac,wfac,sns,stb,
@@ -269,11 +276,17 @@ c    &              ra,
      &              vol,
      $              dxpw,
 c    &              rone,
-     &              prinv,crn0,i,j,k,1,0,0,i,j,k,
-     $              1, 2, 3,
+     &              prinv,crn0,i,j,k,ioff,joff,koff,i,j,k,
+     $              indexflo, indext1, indext2,
      $              l2up)
 
 c-----calculate n-s coefficients----------------------------------------
+               ioff = 0
+               joff = 1
+               koff = 0
+               indexflo = 2
+               indext1 = 3
+               indext2 = 1
 
                call coeffb(domLoV, domHiV, vv,
      &              domLo, domHi, den,vis,an,as,cnsav,cssav,
@@ -282,11 +295,17 @@ c    &              rv,
      &              vol,
      $              dyps,
 c    &              rone,
-     &              prinv,crn0,j,k,i,0,1,0,i,j,k,
-     $              2, 3, 1,
+     &              prinv,crn0,j,k,i,ioff,joff,koff,i,j,k,
+     $              indexflo, indext1, indext2,
      $              l2up)
 
 c-----calculate t-b coefficients----------------------------------------
+               ioff = 0
+               joff = 0
+               koff = 1
+               indexflo = 3
+               indext1 = 1
+               indext2 = 2
 
                call coeffb(domLoW, domHiW, ww,
      &              den,vis,at,ab,ctsav,cbsav,
@@ -295,8 +314,8 @@ c    &              rone,
      &              vol,
      $              dzpb,
 c    &              ra,
-     &              prinv,crn0,k,i,j,0,0,1,i,j,k,
-     $              3, 1, 2,
+     &              prinv,crn0,k,i,j,ioff,joff,koff,i,j,k,
+     $              indexflo, indext1, indext2,
      $              l2up)
 
                crn = crn + crn0/six
@@ -312,6 +331,9 @@ c-----------------------------------------------------------------------
 
 c
 c $Log$
+c Revision 1.2  2000/08/08 23:34:20  rawat
+c fixed some bugs in profv.F and Properties.cc
+c
 c Revision 1.1  2000/07/14 05:23:52  bbanerje
 c Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
 c in Kumar's code.

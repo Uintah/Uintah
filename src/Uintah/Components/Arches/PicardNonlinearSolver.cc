@@ -154,6 +154,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
 
+
     // update properties
     // require : densityIN
     // compute : densityCP
@@ -349,6 +350,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.39  2000/08/08 23:34:18  rawat
+// fixed some bugs in profv.F and Properties.cc
+//
 // Revision 1.38  2000/08/01 06:18:37  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //
