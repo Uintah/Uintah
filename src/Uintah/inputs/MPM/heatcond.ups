@@ -22,20 +22,18 @@
         <outputInterval>.1</outputInterval>
    </DataArchiver>
 
-    <MPM>
+   <MPM>
 	<time_integrator>explicit</time_integrator>
-    </MPM>
+   </MPM>
 
-
-
-    <PhysicalConstants>
+   <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
 	<ideal_gas_constant>1.0</ideal_gas_constant>
 	<pressure>1.0</pressure>
 	<viscosity>0.3</viscosity>
-    </PhysicalConstants>
+   </PhysicalConstants>
 
-    <MaterialProperties>
+   <MaterialProperties>
 	<MPM>
 	    <material>
                 <burn>
@@ -46,9 +44,6 @@
                     <bulk_modulus>2000.0</bulk_modulus>
                     <shear_modulus>1500.0</shear_modulus>
                 </comp_neo_hook>
-		<toughness>10.e6</toughness>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
 		<geom_object>
 		    <box label="gp1">
 			<min>[0,0,0]</min>
@@ -77,12 +72,19 @@
 		    <temperature>300.</temperature>
  		</geom_object>
 		<velocity_field>0</velocity_field>
+
 	    </material>
 
 	    <contact>
 	      <type>single_velocity</type>
 	      <vel_fields>[1,2,3]</vel_fields>
 	    </contact>
+
+            <heat_conduction>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <heat_transfer_coefficient>0.2</heat_transfer_coefficient>
+            </heat_conduction>
 	    
 	</MPM>
 
@@ -114,3 +116,10 @@
     </InitialConditions>
 
 </Uintah_specification>
+
+
+<!-- $Log$
+<!-- Revision 1.5  2000/06/23 15:27:29  tan
+<!-- Moved heat conduction material parameters to <MaterialProperties> <MPM>
+<!-- <heat_conduction>
+<!-- -->
