@@ -49,9 +49,6 @@ class VarLabel;
     virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups);
 
   private:
-    void MarkPatches( const GridP& origGrid, int levelIdx  ); 
-    void ExtendPatches( const GridP& origGrid, int levelIdx  ); 
-    Grid* CreateGrid(Grid* oldGrid, const ProblemSpecP& ups);
     Grid* CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups);
     void GatherSubPatches(const GridP& origGrid, SchedulerP& sched);
     void MarkPatches2(const ProcessorGroup*,
@@ -59,11 +56,6 @@ class VarLabel;
                       const MaterialSubset* ,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
-    inline void dummyTask(const ProcessorGroup*,
-                          const PatchSubset* /*patches*/,
-                          const MaterialSubset* ,
-                          DataWarehouse* /*old_dw*/,
-                          DataWarehouse* /*new_dw*/) {}
 
     inline IntVector StartCellToLattice ( SCIRun::IntVector startCell, int levelIdx );
     

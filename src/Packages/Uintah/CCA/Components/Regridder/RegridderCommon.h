@@ -149,7 +149,7 @@ WARNING
     int d_lastRegridTimestep;
     int d_maxTimestepsBetweenRegrids;
 
-    bool flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high);
+    bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
     SCIRun::IntVector calculateNumberOfPatches(SCIRun::IntVector& cell_num, SCIRun::IntVector& patch_size);
 
     IntVector Less    (const IntVector& a, const IntVector& b);
