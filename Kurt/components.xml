@@ -170,6 +170,22 @@
       <creationFunction>make_KurtScalarFieldReader</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="ParticleColorMapKey">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>June 13, 2000</version-date>
+      <version>1.0</version>
+      <description>color map key for particles</description>
+    </meta>
+    <inputs>VisParticleSet, Colormap</inputs>
+    <outputs> Colormap  </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleColorMapKey</creationFunction>
+    </implementation>
+  </dataflow-component>
   <dataflow-component name="GridVisualizer">
     <meta>
       <authors>
