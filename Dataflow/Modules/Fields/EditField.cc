@@ -56,18 +56,18 @@ public:
   GuiDouble datamin_;    // the out data min
   GuiDouble datamax_;    // the out data max
   GuiString dataat_;     // the out data at
-  GuiDouble minx_;       // the out bounding box
-  GuiDouble miny_;
-  GuiDouble minz_;
-  GuiDouble maxx_;
-  GuiDouble maxy_;
-  GuiDouble maxz_;
+  GuiDouble cx_;         // the out geometry (center point and size)
+  GuiDouble cy_;
+  GuiDouble cz_;
+  GuiDouble sizex_;
+  GuiDouble sizey_;
+  GuiDouble sizez_;
 
   GuiInt cfldname_;      // change name
   GuiInt ctypename_;     // change type
   GuiInt cdataat_;       // change data at
   GuiInt cdataminmax_;   // change data value extents
-  GuiInt cbbox_;         // change bbox
+  GuiInt cgeom_;         // change geometry
 
   CrowdMonitor     widget_lock_;
   ScaledBoxWidget *box_;
@@ -105,17 +105,17 @@ EditField::EditField(const string& id)
     datamin_("datamin2", id, this),
     datamax_("datamax2", id, this),
     dataat_("dataat2", id, this),
-    minx_("minx2", id, this),
-    miny_("miny2", id, this),
-    minz_("minz2", id, this),
-    maxx_("maxx2", id, this),
-    maxy_("maxy2", id, this),
-    maxz_("maxz2", id, this),
+    cx_("cx2", id, this),
+    cy_("cy2", id, this),
+    cz_("cz2", id, this),
+    sizex_("sizex2", id, this),
+    sizey_("sizey2", id, this),
+    sizez_("sizez2", id, this),
     cfldname_("cfldname", id, this),
     ctypename_("ctypename", id, this),
     cdataat_("cdataat", id, this),
     cdataminmax_("cdataminmax", id, this),
-    cbbox_("cbbox", id, this),
+    cgeom_("cgeom", id, this),
     widget_lock_("EditField widget lock"),
     generation_(-1),
     minmax_(1,0)
@@ -139,12 +139,12 @@ void EditField::clear_vals()
   TCL::execute(string("set ")+id+"-numnodes \"---\"");
   TCL::execute(string("set ")+id+"-numelems \"---\"");
   TCL::execute(string("set ")+id+"-dataat \"---\"");
-  TCL::execute(string("set ")+id+"-minx \"---\"");
-  TCL::execute(string("set ")+id+"-miny \"---\"");
-  TCL::execute(string("set ")+id+"-minz \"---\"");
-  TCL::execute(string("set ")+id+"-maxx \"---\"");
-  TCL::execute(string("set ")+id+"-maxy \"---\"");
-  TCL::execute(string("set ")+id+"-maxz \"---\"");
+  TCL::execute(string("set ")+id+"-cx \"---\"");
+  TCL::execute(string("set ")+id+"-cy \"---\"");
+  TCL::execute(string("set ")+id+"-cz \"---\"");
+  TCL::execute(string("set ")+id+"-sizex \"---\"");
+  TCL::execute(string("set ")+id+"-sizey \"---\"");
+  TCL::execute(string("set ")+id+"-sizez \"---\"");
   TCL::execute(id+" update_multifields");
 }
 
@@ -166,16 +166,26 @@ void EditField::update_input_attributes(FieldHandle f)
   default: ;
   }
 
-  const BBox bbox = f->mesh()->get_bounding_box();
-  Point min = bbox.min();
-  Point max = bbox.max();
-
-  TCL::execute(string("set ")+id+"-minx "+to_string(min.x()));
-  TCL::execute(string("set ")+id+"-miny "+to_string(min.y()));
-  TCL::execute(string("set ")+id+"-minz "+to_string(min.z()));
-  TCL::execute(string("set ")+id+"-maxx "+to_string(max.x()));
-  TCL::execute(string("set ")+id+"-maxy "+to_string(max.y()));
-  TCL::execute(string("set ")+id+"-maxz "+to_string(max.z()));
+  Point center,right,down,in;
+  Vector size;
+  if (box_) {
+    // use geom info from widget
+    box_->GetPosition(center, right, down, in);
+    size = Vector((right-center).x()*2.,
+                  (down-center).y()*2.,
+                  (in-center).z()*2.);
+  } else {
+    // use geom info from bbox
+    const BBox bbox = f->mesh()->get_bounding_box();
+    size = Vector(bbox.max()-bbox.min());
+    center = Point(bbox.min()+size/2.);
+  }
+  TCL::execute(string("set ")+id+"-cx "+to_string(center.x()));
+  TCL::execute(string("set ")+id+"-cy "+to_string(center.y()));
+  TCL::execute(string("set ")+id+"-cz "+to_string(center.z()));
+  TCL::execute(string("set ")+id+"-sizex "+to_string(size.x()));
+  TCL::execute(string("set ")+id+"-sizey "+to_string(size.y()));
+  TCL::execute(string("set ")+id+"-sizez "+to_string(size.z()));
 
   ScalarFieldInterface *sdi = f->query_scalar_interface();
   if (sdi && f->data_at() != Field::NONE) {
@@ -202,14 +212,14 @@ void EditField::update_input_attributes(FieldHandle f)
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
-    cout << "Could not compile algorithm." << std::endl;
+    msgStream_ << "Could not compile algorithm." << std::endl;
     return;
   }
   EditFieldAlgoCount *algo =
     dynamic_cast<EditFieldAlgoCount *>(algo_handle.get_rep());
   if (algo == 0)
   {
-    cout << "Could not get algorithm." << std::endl;
+    msgStream_ << "Could not get algorithm." << std::endl;
     return;
   }
   int num_nodes;
@@ -221,6 +231,9 @@ void EditField::update_input_attributes(FieldHandle f)
   TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
 
   TCL::execute(id+" update_multifields");
+
+  // copy valid settings to the un-checked output field attributes
+  TCL::execute(id+" copy_attributes; update idletasks");
 }
 
 bool EditField::check_types(FieldHandle f)
@@ -248,49 +261,41 @@ void
 EditField::build_widget(FieldHandle f)
 {
   double l2norm;
-  Point center, right, down, in;
-  Point min, max;
+  Point center;
+  Vector size;
+  BBox bbox = f->mesh()->get_bounding_box();
+  box_initial_bounds_ = bbox;
 
-  if (!cbbox_.get()) {
+  if (!cgeom_.get()) {
     // build a widget identical to the BBox
-    const BBox bbox = f->mesh()->get_bounding_box();
-    min = bbox.min();
-    max = bbox.max();
+    size = Vector(bbox.max()-bbox.min());
+    center = Point(bbox.min() + size/2.);
   } else {
     // build a widget as described by the UI
-    min = Point(minx_.get(),miny_.get(),minz_.get());
-    max = Point(maxx_.get(),maxy_.get(),maxz_.get());
+    // watch for degenerate sizes!
+    cx_.reset();
+    cy_.reset();
+    cz_.reset();
+    sizex_.reset();
+    sizey_.reset();
+    sizez_.reset();
+    if (sizex_.get()<=0) sizex_.set(1);
+    if (sizey_.get()<=0) sizey_.set(1);
+    if (sizez_.get()<=0) sizez_.set(1);    
+    center = Point(cx_.get(),cy_.get(),cz_.get());
+    size = Vector(sizex_.get(),sizey_.get(),sizez_.get());
   }
 
-  box_initial_bounds_ = BBox(min, max);
+  Vector sizex(size.x(),0,0);
+  Vector sizey(0,size.y(),0);
+  Vector sizez(0,0,size.z());
 
-  // Fix degenerate boxes.
-  const double size_estimate = Max((max-min).length() * 0.01, 1.0e-5);
-  if (fabs(max.x() - min.x()) < 1.0e-6)
-  {
-    min.x(min.x() - size_estimate);
-    max.x(max.x() + size_estimate);
-  }
-  if (fabs(max.y() - min.y()) < 1.0e-6)
-  {
-    min.y(min.y() - size_estimate);
-    max.y(max.y() + size_estimate);
-  }
-  if (fabs(max.z() - min.z()) < 1.0e-6)
-  {
-    min.z(min.z() - size_estimate);
-    max.z(max.z() + size_estimate);
-  }
+  Point right(center + sizex/2.);
+  Point down(center + sizey/2.);
+  Point in(center +sizez/2.);
 
-  center = Point(min.x()+(max.x()-min.x())/2.,
-		 min.y()+(max.y()-min.y())/2.,
-		 min.z()+(max.z()-min.z())/2.);
-  right = center + Vector((max.x()-min.x())/2.,0,0);
-  down = center + Vector(0,(max.y()-min.y())/2.,0);
-  in = center + Vector(0,0,(max.z()-min.z())/2.);
+  l2norm = size.length();
 
-  l2norm = (max-min).length();
-  
   // Rotate * Scale * Translate.
   Transform r;
   Point unused;
@@ -348,9 +353,6 @@ EditField::execute()
   // get and display the attributes of the input field
   update_input_attributes(fh);
 
-  // copy valid settings to the un-checked output field attributes
-  TCL::execute(id+" copy_attributes; update idletasks");
-
   // build the transform widget
   if (generation_ != fh.get_rep()->generation) {
     generation_ = fh.get_rep()->generation;
@@ -361,10 +363,12 @@ EditField::execute()
       !ctypename_.get() &&
       !cdataminmax_.get() &&
       !cdataat_.get() &&
-      !cbbox_.get())
+      !cgeom_.get())
   {
     // no changes, just send the original through (it may be nothing!)
     oport->send(fh);
+    msgStream_ << "Passing field from input port to output port unchanged." 
+	       << endl;
     return;
   }
 
@@ -424,14 +428,14 @@ EditField::execute()
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
-    cout << "Could not compile algorithm." << std::endl;
+    msgStream_ << "Could not compile algorithm." << std::endl;
     return;
   }
   EditFieldAlgoCreate *algo =
     dynamic_cast<EditFieldAlgoCreate *>(algo_handle.get_rep());
   if (algo == 0)
   {
-    cout << "Could not get algorithm." << std::endl;
+    msgStream_ << "Could not get algorithm." << std::endl;
     return;
   }
   TCL::execute(id + " set_state Executing 0");
@@ -450,14 +454,14 @@ EditField::execute()
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      msgStream_ << "Could not compile algorithm." << std::endl;
       return;
     }
     EditFieldAlgoCopy *algo =
       dynamic_cast<EditFieldAlgoCopy *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      msgStream_ << "Could not get algorithm." << std::endl;
       return;
     }
     TCL::execute(id + " set_state Executing 0");
@@ -466,28 +470,25 @@ EditField::execute()
   
 
   // Transform the mesh if necessary.
-  if (cbbox_.get())
+  // Rotate * Scale * Translate.
+  Point center, right, down, in;
+  box_->GetPosition(center, right, down, in);
+  Transform t, r;
+  Point unused;
+  t.load_identity();
+  r.load_frame(unused, (right-center).normal(),
+	 (down-center).normal(),
+	 (in-center).normal());
+  t.pre_trans(r);
+  t.pre_scale(Vector((right-center).length(),
+       (down-center).length(),
+       (in-center).length()));
+  t.pre_translate(center.asVector());
+  Transform inv(box_initial_transform_);
+  inv.invert();
+  t.post_trans(inv);
+  if (cgeom_.get())
   {
-    Point center, right, down, in;
-    box_->GetPosition(center, right, down, in);
-
-    // Rotate * Scale * Translate.
-    Transform t, r;
-    Point unused;
-    t.load_identity();
-    r.load_frame(unused, (right-center).normal(),
-		 (down-center).normal(),
-		 (in-center).normal());
-    t.pre_trans(r);
-    t.pre_scale(Vector((right-center).length(),
-		       (down-center).length(),
-		       (in-center).length()));
-    t.pre_translate(center.asVector());
-
-    Transform inv(box_initial_transform_);
-    inv.invert();
-    t.post_trans(inv);
-
     ef->mesh_detach();
     ef->mesh()->transform(t);
   }
@@ -509,7 +510,7 @@ EditField::execute()
   oport->send(ef);
 
   // The output port is required.
-  MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation matrix");
+  MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
   if (!moport) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
@@ -519,7 +520,7 @@ EditField::execute()
   DenseMatrix *matrix_transform = scinew DenseMatrix(4,4);
   MatrixHandle mh = matrix_transform;
   double dummy[16];   
-  box_initial_transform_.get(dummy);   
+  t.get(dummy);   
   double *p=&(dummy[0]);   
   for (int i=0; i<4; ++i)     
     for (int j=0; j<4; ++j,++p)       
@@ -536,25 +537,22 @@ void EditField::tcl_command(TCLArgs& args, void* userdata)
     return;
   }
  
-  if (args[1] == "execute") {
-    want_to_execute();
-  } else if (args[1] == "update_widget") {
+  if (args[1] == "execute" || args[1] == "update_widget") {
     Point center, right, down, in;
-    minx_.reset(); miny_.reset(); minz_.reset();
-    maxx_.reset(); maxy_.reset(); maxz_.reset();
-    Point min(minx_.get(),miny_.get(),minz_.get());
-    Point max(maxx_.get(),maxy_.get(),maxz_.get());
-    if (max.x()<=min.x() ||
-	max.y()<=min.y() ||
-	max.z()<=min.z()) {
-      widget_moved(1);           // force values back to widget settings
+    cx_.reset(); cy_.reset(); cz_.reset();
+    sizex_.reset(); sizey_.reset(); sizez_.reset();
+    if (sizex_.get() <= 0 || sizey_.get() <= 0 || sizez_.get() <= 0) {
       postMessage("EditField: Degenerate BBox requested!");
+      widget_moved(1);           // force values back to widget settings
       return;                    // degenerate 
     }
-    center = min+((max-min)/2.);
-    right = Point(max.x(),center.y(),center.z());
-    down = Point(center.x(),max.y(),center.z());
-    in = Point(center.x(),center.y(),max.z());
+    Vector sizex(sizex_.get(),0,0);
+    Vector sizey(0,sizey_.get(),0);
+    Vector sizez(0,0,sizez_.get());
+    center = Point(cx_.get(),cy_.get(),cz_.get());
+    right = Point(center + sizex/2.);
+    down = Point(center + sizey/2.);
+    in = Point(center + sizez/2.);
     box_->SetPosition(center,right,down,in);
     want_to_execute();
   } else {
@@ -566,16 +564,16 @@ void EditField::widget_moved(int i)
 {
   if (i==1) {
     Point center, right, down, in;
-    minx_.reset(); miny_.reset(); minz_.reset();
-    maxx_.reset(); maxy_.reset(); maxz_.reset();
+    cx_.reset(); cy_.reset(); cz_.reset();
+    sizex_.reset(); sizey_.reset(); sizez_.reset();
     box_->GetPosition(center,right,down,in);
-    minx_.set((center-(right-center)).x());
-    miny_.set((center-(down-center)).y());
-    minz_.set((center-(in-center)).z());
-    maxx_.set(right.x());
-    maxy_.set(down.y());
-    maxz_.set(in.z());
-    cbbox_.set(1);
+    cx_.set(center.x());
+    cy_.set(center.y());
+    cz_.set(center.z());
+    sizex_.set((right.x()-center.x())*2.);
+    sizey_.set((down.y()-center.y())*2.);
+    sizez_.set((in.z()-center.z())*2.);
+    cgeom_.set(1);
     want_to_execute();
   } else {
     //Module::widget_moved(i);
