@@ -110,6 +110,9 @@ Patch::~Patch()
 {
   d_BoundaryFaces.clear();
 
+  for (FaceType face = startFace; face <= endFace; face = nextFace(face))
+    d_CornerCells[face].clear();
+
   if(in_database){
 //     patches.erase( patches.find(getID()));
     patches.erase( getID() );
@@ -1995,3 +1998,72 @@ IntVector Patch::getHighIndex(VariableBasis basis,
   }
 }
 
+
+void Patch::finalizePatch()
+{
+  //////////
+  // Calculate with of this patche's cells are on the corner
+  // of the domain and keep a list of these cells for each
+  // face of the patch.
+
+  IntVector low,hi;
+  low = getLowIndex();
+  hi  = getHighIndex() - IntVector(1,1,1);  
+
+  IntVector patchNeighborLow  = neighborsLow();
+  IntVector patchNeighborHigh = neighborsHigh();
+
+  for (FaceType face = startFace; face <= endFace; face = nextFace(face)) {
+ 
+    IntVector axes = faceAxes(face);
+    int P_dir = axes[0];  // principal direction
+    int dir1  = axes[1];  // other vector directions
+    int dir2  = axes[2]; 
+
+    //__________________________________
+    // main index for that face plane
+    int plusMinus = faceDirection(face)[P_dir];
+    int main_index = 0;
+    if( plusMinus == 1 ) { // plus face
+      main_index = hi[P_dir];
+    } else {               // minus faces
+      main_index = low[P_dir];
+    }
+
+    //__________________________________
+    // Looking down on the face examine 
+    // each corner (clockwise) and if there
+    // are no neighboring patches then set the
+    // index
+    // 
+    // Top-right corner
+    IntVector corner(-9,-9,-9);
+    if ( patchNeighborHigh[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
+      corner[P_dir] = main_index;
+      corner[dir1]  = hi[dir1];
+      corner[dir2]  = hi[dir2];
+      d_CornerCells[face].push_back(corner);
+    }
+    // bottom-right corner
+    if ( patchNeighborLow[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
+      corner[P_dir] = main_index;
+      corner[dir1]  = low[dir1];
+      corner[dir2]  = hi[dir2];
+      d_CornerCells[face].push_back(corner);
+    } 
+    // bottom-left corner
+    if ( patchNeighborLow[dir1] == 1 && patchNeighborLow[dir2] == 1) {
+      corner[P_dir] = main_index;
+      corner[dir1]  = low[dir1];
+      corner[dir2]  = low[dir2];
+      d_CornerCells[face].push_back(corner);
+    } 
+    // Top-left corner
+    if ( patchNeighborHigh[dir1] == 1 && patchNeighborLow[dir2] == 1) {
+      corner[P_dir] = main_index;
+      corner[dir1]  = hi[dir1];
+      corner[dir2]  = low[dir2];
+      d_CornerCells[face].push_back(corner);
+    } 
+  }
+}
