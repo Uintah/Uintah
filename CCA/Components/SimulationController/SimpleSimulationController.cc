@@ -134,13 +134,15 @@ SimpleSimulationController::run()
    }
 #endif
 
+   SimulationStateP sharedState = scinew SimulationState(ups);
+   
    Output* output = dynamic_cast<Output*>(getPort("output"));
 
    if( !output ){
      cout << "dynamic_cast of 'output' failed!\n";
      throw InternalError("dynamic_cast of 'output' failed!");
    }
-   output->problemSetup(ups);
+   output->problemSetup(ups, sharedState);
    
    // Setup the initial grid
    GridP grid=scinew Grid();
@@ -158,8 +160,6 @@ SimpleSimulationController::run()
    if (d_myworld->myrank() == 0)
      grid->printStatistics();
 
-   SimulationStateP sharedState = scinew SimulationState(ups);
-   
    // Initialize the CFD and/or MPM components
    SimulationInterface* sim = 
      dynamic_cast<SimulationInterface*>(getPort("sim"));
@@ -177,7 +177,7 @@ SimpleSimulationController::run()
    
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>
      (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
-   lb->problemSetup(ups);
+   lb->problemSetup(ups/*, sharedState*/);
 
    // done after the sim->problemSetup to get defaults into the
    // input.xml, which it writes along with index.xml
@@ -187,8 +187,11 @@ SimpleSimulationController::run()
      cout << "Compiling taskgraph...\n";
 
    double start = Time::currentSeconds();
+
    scheduler->initialize();
    scheduler->advanceDataWarehouse(grid);
+   // for dynamic lb's, set up initial patch config
+   //lb->dynamicReallocation(grid, scheduler); 
 
    double t;
 
@@ -223,14 +226,12 @@ SimpleSimulationController::run()
       archive.restartInitialize(d_restartTimestep, grid,
                             scheduler->get_dw(1), &t, &delt);
       
+      sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
                         d_restartFromScratch, d_restartRemoveOldDir);
 
-      sharedState->setCurrentTopLevelTimeStep( output->getCurrentTimestep() );
       // Tell the scheduler the generation of the re-started simulation.
-      // (Add +1 because the scheduler will be starting on the next
-      // timestep.)
-      scheduler->setGeneration( output->getCurrentTimestep()+1 );
+      scheduler->setGeneration( output->getCurrentTimestep()+1);
 
       scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
       scheduler->get_dw(1)->finalize();
@@ -274,7 +275,7 @@ SimpleSimulationController::run()
    scheduler->execute();
 
    if(output)
-     output->executedTimestep();
+     output->executedTimestep(0);
 
    // vars used to calculate standard deviation
    int n = 0;
@@ -366,20 +367,20 @@ SimpleSimulationController::run()
       unsigned long avg_highwater = highwater;
       unsigned long max_highwater = highwater;
       if (d_myworld->size() > 1) {
-       MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
-                 d_myworld->getComm());
-       if(highwater){
-         MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
-                   MPI_SUM, 0, d_myworld->getComm());
-       }
-       avg_memuse /= d_myworld->size(); // only to be used by processor 0
-       avg_highwater /= d_myworld->size();
-       MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
-                 d_myworld->getComm());
-       if(highwater){
-         MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
-                   MPI_MAX, 0, d_myworld->getComm());
-       }
+        MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
+                   d_myworld->getComm());
+        if(highwater){
+          MPI_Reduce(&highwater, &avg_highwater, 1, MPI_UNSIGNED_LONG,
+                     MPI_SUM, 0, d_myworld->getComm());
+        }
+        avg_memuse /= d_myworld->size(); // only to be used by processor 0
+        avg_highwater /= d_myworld->size();
+        MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
+                   d_myworld->getComm());
+        if(highwater){
+          MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
+                     MPI_MAX, 0, d_myworld->getComm());
+        }
       }
       
       if(log_dw_mem){
@@ -393,14 +394,35 @@ SimpleSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
       }
 
+       // calculate mean/std dev
+      double stdDev, mean;
+      if (n > 2) // ignore times 0,1,2
+      {
+        //wallTimes.push_back(wallTime - prevWallTime);
+        sum_of_walltime += (wallTime - prevWallTime);
+        sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
+      }
+      if (n > 3) {
+        // divide by n-2 and not n, because we wait till n>2 to keep track
+        // of our stats
+        stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
+        mean = sum_of_walltime / (n-2);
+        //         ofstream timefile("avg_elapsed_walltime.txt");
+        //         timefile << mean << " +- " << stdDev << endl;
+      }
+      
       // output timestep statistics
       if(d_myworld->myrank() == 0){
 //       cout << "Current Top Level Time Step: " 
 //            << sharedState->getCurrentTopLevelTimeStep() << "\n";
 
-       cout << "Time=" << t << ", delT=" << delt 
-            << ", elap T = " << wallTime 
-            << ", DW: " << newDW->getID() << ", Mem Use = ";
+       cout << "Time=" << t 
+            << " (timestep " << sharedState->getCurrentTopLevelTimeStep() 
+            << "), delT=" << delt << ", elap T = " << wallTime;
+
+       if (n > 3)
+         cout << ", mean: " << mean << " +- " << stdDev;
+       cout << "\nMem Use = ";
        if (avg_memuse == max_memuse && avg_highwater == max_highwater){
          cout << avg_memuse;
          if(avg_highwater)
@@ -416,24 +438,6 @@ SimpleSimulationController::run()
        }
        cout << endl;
 
-       // calculate mean/std dev
-       if (n > 2) // ignore times 0,1,2
-       {
-         //wallTimes.push_back(wallTime - prevWallTime);
-         sum_of_walltime += (wallTime - prevWallTime);
-         sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
-       }
-       if (n > 3) {
-         double stdDev, mean;
-
-         // divide by n-2 and not n, because we wait till n>2 to keep track
-          // of our stats
-         stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
-         mean = sum_of_walltime / (n-2);
-         //         ofstream timefile("avg_elapsed_walltime.txt");
-         //         timefile << mean << " +- " << stdDev << endl;
-         cout << "Timestep mean: " << mean << " +- " << stdDev << endl;
-       }
        prevWallTime = wallTime;
        n++;
       }
@@ -452,6 +456,7 @@ SimpleSimulationController::run()
           cout << "COMPILING TASKGRAPH...\n";
         double start = Time::currentSeconds();
         scheduler->initialize();
+        //lb->dynamicReallocation(grid, scheduler); 
         
         sim->scheduleTimeAdvance(level, scheduler, 0, 1);
         
@@ -474,12 +479,14 @@ SimpleSimulationController::run()
       // Execute the current timestep.  If the timestep needs to be
       // restarted, this loop will execute multiple times.
       bool success = true;
+      double orig_delt = delt;
       do {
 	bool restartable = sim->restartableTimesteps();
 	if (restartable)
 	  scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
 	else
           scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+          //scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
 	  	
 	scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
 
@@ -492,6 +499,7 @@ SimpleSimulationController::run()
 	  if(d_myworld->myrank() == 0)
 	    cerr << "Restarting timestep at " << t << ", changing delt from " 
 		 << delt << " to " << new_delt << '\n';
+          output->reEvaluateOutputTimestep(orig_delt, new_delt);
 	  delt = new_delt;
 	  scheduler->get_dw(0)->override(delt_vartype(new_delt), 
 					 sharedState->get_delt_label());
@@ -506,7 +514,7 @@ SimpleSimulationController::run()
 	}
       } while(!success);
       if(output) {
-	output->executedTimestep();
+	output->executedTimestep(delt);
       }
 
       t += delt;
