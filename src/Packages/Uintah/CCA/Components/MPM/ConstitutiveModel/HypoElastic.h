@@ -27,9 +27,6 @@ namespace Uintah {
 	    double K;
          };
 
-	 struct StateData {
-	    Matrix3 DevStress[5];
-	 };
       private:
          friend const TypeDescription* fun_getTypeDescription(CMData*);
 
@@ -85,12 +82,6 @@ namespace Uintah {
 				       std::vector<const VarLabel*>& to);
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
-
-         const VarLabel* p_statedata_label;
-         const VarLabel* p_statedata_label_preReloc;
-//         const VarLabel* bElBarLabel;
-//         const VarLabel* bElBarLabel_preReloc;
-
       };
 
 } // End namespace Uintah
