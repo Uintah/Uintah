@@ -2380,14 +2380,48 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
             { 
               m = fs.field.getm();
               n = fs.field.getn();
-              if ((m != 1)&&(n != 1)) 
-                {   // ignore the data and only load the mesh
-                  basis_order = -1;
-                }
-              else
-                {
-                  if (m != 1) fs.field.transpose();
-                }
+              long npts = 0;
+              long nelements = 0;
+              
+              if (fs.edge.isdense()) nelements = fs.edge.getn();
+              if (fs.face.isdense()) nelements = fs.face.getn();
+              if (fs.cell.isdense()) nelements = fs.cell.getn();
+              if (fs.node.isdense()) npts = fs.node.getn();
+              
+              if (((n == 1)||(n == 3)||(n == 6)||(n == 9))&&(n != nelements)&&(n != npts)) fs.field.transpose();
+              m = fs.field.getm();
+              n = fs.field.getn();
+                         
+              if (m==3)
+              {
+                  if ((n==npts)||(n==nelements))
+                  {
+                    valuetype = "Vector";
+                    if (n==npts) basis_order = 1;
+                    if (n==nelements) basis_order = 0;
+                  }  
+                  else 
+                  {
+                    basis_order = -1;
+                  }
+              }
+              else if ((m==6)||(m==9))
+              {
+                  if ((n==npts)||(n==nelements))
+                  {
+                    valuetype = "Tensor";
+                    if (n==npts) basis_order = 1;
+                    if (n==nelements) basis_order = 0;
+                  }  
+                  else 
+                  {
+                    basis_order = -1;
+                  }
+              }
+              else if (m != 1) 
+              {   // ignore the data and only load the mesh
+                basis_order = -1;
+              }
             }
           else
             {   // ignore the data and only load the mesh 
