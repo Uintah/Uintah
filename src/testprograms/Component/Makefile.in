@@ -2,6 +2,6 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ../..
 
-SUBDIRS = pingpong
+SUBDIRS = mitest objects pingpong
 
 include $(OBJTOP)/scripts/recurse.mk

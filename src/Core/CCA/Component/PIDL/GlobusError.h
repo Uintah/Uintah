@@ -19,10 +19,35 @@
 
 namespace Component {
     namespace PIDL {
+/**************************************
+ 
+CLASS
+   GlobusError
+   
+KEYWORDS
+   Exception, Error, globus, PIDL
+   
+DESCRIPTION
+   Exception class for globus functions.  An unhandled negative return
+   code from a globus function will get mapped to this exception.  The
+   message is a description of the call, and the code is the result
+   returned from globus.
+
+****************************************/
 	class GlobusError : public PIDLException {
 	public:
-	    GlobusError(const std::string&, int code);
+	    //////////
+	    // Construct the exception with the given reason and the
+	    // return code from globus
+	    GlobusError(const std::string& msg, int code);
+
+	    //////////
+	    // Destructor
 	    virtual ~GlobusError();
+
+	    //////////
+	    // An explanation message, containing the msg string and the
+	    // return code passed into the constructor.
 	    std::string message() const;
 	protected:
 	private:
@@ -36,6 +61,19 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.3  1999/09/24 06:26:24  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.2  1999/09/17 05:08:07  sparker
 // Implemented component model to work with sidl code generator
 //

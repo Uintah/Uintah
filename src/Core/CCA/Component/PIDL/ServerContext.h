@@ -16,6 +16,7 @@
 #ifndef Component_PIDL_ServerContext_h
 #define Component_PIDL_ServerContext_h
 
+#include <Component/PIDL/Object.h>
 #include <globus_nexus.h>
 
 namespace Component {
@@ -27,6 +28,8 @@ namespace Component {
 	    int d_objid;
 	    Object_interface* d_objptr;
 	    void* d_ptr;
+	    bool d_endpoint_active;
+	    void activateEndpoint();
 	};
     }
 }
@@ -35,6 +38,19 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.3  1999/09/24 06:26:26  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.2  1999/09/21 06:13:00  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization
