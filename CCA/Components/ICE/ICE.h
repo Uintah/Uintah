@@ -200,14 +200,18 @@ namespace Uintah {
                                          const MaterialSubset* mpm_matls,
                                          const MaterialSet* all_matls);  
                                    
-      // Model support
+//__________________________________ 
+//   M O D E L S
       void scheduleComputeModelSources(SchedulerP& sched,
                                        const LevelP& level,
                                        const MaterialSet* matls);
       void scheduleUpdateVolumeFraction(SchedulerP& sched,
 				            const LevelP& level,
 				            const MaterialSet* matls);
-
+                                        
+      void scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
+                                                      const PatchSet* patches,
+                                                      const MaterialSet*);
 
       void setICELabel(ICELabel* Ilb) {
        delete lb;
@@ -478,6 +482,12 @@ namespace Uintah {
                                 const MaterialSubset* matls,
                                 DataWarehouse*,
                                 DataWarehouse*);
+                                
+      void computeLagrangian_Transported_Vars(const ProcessorGroup*,  
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* matls,
+                                              DataWarehouse* old_dw, 
+                                              DataWarehouse* new_dw);
 
 //__________________________________ 
 //   O T H E R                            
@@ -729,7 +739,7 @@ namespace Uintah {
        const MaterialSubset* matls;
        const VarLabel* var;
        const VarLabel* src;
-       const VarLabel* Lvar;
+       const VarLabel* var_Lagrangian;
       };
       
       class ICEModelSetup : public ModelSetup {
