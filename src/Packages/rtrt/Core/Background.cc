@@ -1,14 +1,14 @@
-#ifndef BACKGROUND_H
+
 #include <Packages/rtrt/Core/Background.h>
 #include <Packages/rtrt/Core/PPMImage.h>
 #include <Core/Math/MiscMath.h>
-#endif
 
 #include <fstream>
 #include <Core/Geometry/Vector.h>
 
 using namespace rtrt;
 using namespace SCIRun;
+using namespace std;
 
 Background::Background(const Color& avg)
   : avg(avg), origAvg_( avg )

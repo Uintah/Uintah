@@ -6,9 +6,11 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/TrivialAllocator.h>
+
 #include <iostream>
 
 using namespace rtrt;
+using namespace std;
 
 SCIRun::Persistent* uvc_maker() {
   return new UVCylinder();
@@ -120,7 +122,7 @@ void UVCylinder::print(ostream& out)
     out << "UVCylinder: top=" << top << ", bottom=" << bottom << ", radius=" << radius << '\n';
 }
 
-void UVCylinder::uv(UV &uv, const Point &p, const HitInfo &hit)
+void UVCylinder::uv(UV &uv, const Point &p, const HitInfo &/*hit*/)
 {
     Point xp = xform.project(p);
     double theta = acos(xp.x());

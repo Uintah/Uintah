@@ -10,11 +10,11 @@
 #include <Packages/rtrt/Core/FastTurbulence.h>
 
 namespace rtrt {
-class CrowMarble;
+  class CrowMarble;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::CrowMarble*&);
+  void Pio(Piostream&, rtrt::CrowMarble*&);
 }
 
 namespace rtrt {

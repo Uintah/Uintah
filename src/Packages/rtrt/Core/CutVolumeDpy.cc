@@ -1,25 +1,31 @@
+
 #include <Packages/rtrt/Core/CutVolumeDpy.h>
+
 #include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/ColorMap.h>
-
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Packages/rtrt/Core/VolumeBase.h>
 #include <Packages/rtrt/Core/DpyBase.h>
+#include <Packages/rtrt/Core/FontString.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <Core/Math/MinMax.h>
+
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <iostream>
+
 #include <stdlib.h>
 #include <values.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <Packages/rtrt/Core/FontString.h>
 
 using namespace rtrt;
 using namespace SCIRun;
+using namespace std;
 
 CutVolumeDpy::CutVolumeDpy(float isoval, ColorMap *cmap)
   : VolumeDpy(isoval), cmap(cmap)

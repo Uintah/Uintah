@@ -3,8 +3,11 @@
 #define TILEIMAGEMATERIAL_H 1
 
 #include <Packages/rtrt/Core/ImageMaterial.h>
+#include <string>
 
 namespace rtrt { 
+
+using std::string;
 
 class TileImageMaterial : public ImageMaterial {
 

@@ -1,26 +1,31 @@
 
 #include <Packages/rtrt/Core/GridSpheres.h>
+
+#include <Packages/rtrt/Core/GridSpheresDpy.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Runnable.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Runnable.h>
+
 #include <iostream>
-#include <stdlib.h>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
 #include <X11/Xlib.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
 
-#include <Packages/rtrt/Core/GridSpheresDpy.h>
+#include <stdlib.h>
 
 using namespace rtrt;
 using namespace SCIRun;
+using namespace std;
 
 
 //class Barrier;

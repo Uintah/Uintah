@@ -9,12 +9,10 @@
 #include <math.h>
 
 namespace rtrt {
-class Material;
+  class Material;
 }
 namespace SCIRun {
-class Point;
-class Vector;
-void Pio(Piostream&, rtrt::Material*&);
+  void Pio(Piostream&, rtrt::Material*&);
 }
 
 namespace rtrt {

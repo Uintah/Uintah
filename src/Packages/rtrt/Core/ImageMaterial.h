@@ -4,14 +4,17 @@
 
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Array2.h>
+
 #include <string>
 
+using namespace std;
+
 namespace rtrt {
-class ImageMaterial;
+  class ImageMaterial;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::ImageMaterial*&);
+  void Pio(Piostream&, rtrt::ImageMaterial*&);
 }
 
 namespace rtrt { 

@@ -10,6 +10,8 @@
 #include <iostream>
 
 using namespace rtrt;
+using namespace std;
+
 using SCIRun::Thread;
 using SCIRun::Time;
 

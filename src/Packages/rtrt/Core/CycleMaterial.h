@@ -6,11 +6,11 @@
 #include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
-class CycleMaterial;
+  class CycleMaterial;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::CycleMaterial*&);
+  void Pio(Piostream&, rtrt::CycleMaterial*&);
 }
 
 namespace rtrt {

@@ -13,11 +13,11 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 namespace rtrt {
-class DynamicInstance;
+  class DynamicInstance;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::DynamicInstance*&);
+  void Pio(Piostream&, rtrt::DynamicInstance*&);
 }
 
 namespace rtrt {

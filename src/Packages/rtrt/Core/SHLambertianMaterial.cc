@@ -16,9 +16,7 @@
 //
 //========================================================================
 
-#ifndef SHLAMBERTIANMATERIAL_H
 #include <Packages/rtrt/Core/SHLambertianMaterial.h>
-#endif
 
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -29,9 +27,11 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/ppm.h>
 #include <Packages/rtrt/Core/prefilter.h>
+
 #include <math.h>
 
 using namespace rtrt;
+using namespace std;
 
 const float c1 = 0.429043;
 const float c2 = 0.511664;

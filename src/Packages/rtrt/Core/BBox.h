@@ -9,17 +9,14 @@
 #include <Core/Math/MiscMath.h>
 
 namespace rtrt {
-class BBox;
-}
-
-namespace rtrt {
-class BBox;
+  class BBox;
 }
 namespace SCIRun {
-void Pio(Piostream&, rtrt::BBox&);
-} // end namespace SCIRun
+  void Pio(Piostream&, rtrt::BBox&);
+}
 
 namespace rtrt {
+
 using SCIRun::Transform;
 using SCIRun::Point;
 using SCIRun::Min;

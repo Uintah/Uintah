@@ -6,16 +6,21 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/pcube.h>
 
+#include <iostream>
+
 namespace rtrt {
-class Grid;
+  class Grid;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Grid*&);
+  void Pio(Piostream&, rtrt::Grid*&);
 }
 
 namespace rtrt {
+
 struct GridTree;
+
+using std::cerr;
 
 extern "C" {
   extern int	
@@ -26,7 +31,7 @@ extern "C" {
   extern int
   polygon_intersects_cube(int nverts, const real verts[/* nverts */][3],
 			  const real polynormal[3],
-			  int already_know_vertices_are_outside_cube, /*unused*/
+			  int already_know_vertices_are_outside_cube,/*unused*/
 			  int already_know_edges_are_outside_cube);
 }	
 
@@ -51,7 +56,6 @@ public:
   static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, Grid*&);
-
 
   virtual void intersect(const Ray& ray,
 			 HitInfo& hit, DepthStats* st,

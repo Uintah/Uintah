@@ -9,11 +9,11 @@
 #include <Core/Geometry/Transform.h>
 
 namespace rtrt {
-class Group;
+  class Group;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Group*&);
+  void Pio(Piostream&, rtrt::Group*&);
 }
 
 namespace rtrt {

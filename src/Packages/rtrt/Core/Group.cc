@@ -1,10 +1,13 @@
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+
 #include <iostream>
+
 #include <values.h>
 
 using namespace rtrt;
+using namespace std;
 
 SCIRun::Persistent* group_maker() {
   return new Group();

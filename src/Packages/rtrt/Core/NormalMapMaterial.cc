@@ -10,11 +10,11 @@
 #include <Packages/rtrt/Core/UV.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/vec.h>
+
 #include <math.h>
 
 using namespace rtrt;
-
-
+using namespace std;
 
 NormalMapMaterial::NormalMapMaterial(Material *m, char *filename, double persist)
 {

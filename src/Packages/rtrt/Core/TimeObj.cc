@@ -1,13 +1,17 @@
 
 #include <Packages/rtrt/Core/TimeObj.h>
+
 #include <Core/Geometry/Vector.h>
-#include <iostream>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
 
+#include <iostream>
+
 using SCIRun::Thread;
 using SCIRun::Parallel;
+
 using namespace rtrt;
+using namespace std;
 
 SCIRun::Persistent* timeObj_maker() {
   return new TimeObj();
