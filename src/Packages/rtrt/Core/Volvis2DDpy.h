@@ -66,11 +66,11 @@ namespace rtrt {
     // Called whenever the sliders need to be redrawn
     void display_controls();
     // Called whenever the user adjusts the master opacity control
-    void adjustMasterOpacity( float dx );
+    void adjustMasterOpacity( float x );
     // Called whenever the user adjusts the cutplane opacity
-    void adjustCutplaneOpacity( float dx );
+    void adjustCutplaneOpacity( float x );
     // Called whenever the user adjusts the cutplane grayscale
-    void adjustCutplaneGS( float dx );
+    void adjustCutplaneGS( float x );
     // Assigns a color and opacity corresponding to a given voxel
     void voxel_lookup( Voxel2D<float> voxel, Color &color, float &opacity );
     // Attaches a volume to be rendered through this user interface
@@ -88,15 +88,18 @@ namespace rtrt {
     virtual void animate(bool &changed);
 
 
+    // if true, only last widget texture must be repainted
+    bool widgetsMaintained;
+    Texture <GLfloat> *transTexture3; // stores unchanging widget textures
 
     // maintains user interface parameters to manage menus/graphs/etc
-    struct windowParams {
+    struct WindowParams {
       float border;
       float height;
       float width;
       float menu_height;
     };
-    windowParams* UIwind;
+    WindowParams* UIwind;
 
     // used only for rendering hack
     unsigned int render_mode;
@@ -139,8 +142,8 @@ namespace rtrt {
     vector<Widget*> widgets;
 
     int pickedIndex;                   // index of currently selected widget
-    int old_x;                         // saved most recent x-coordinate
-    int old_y;                         // saved most recent y-coordinate
+/*      int old_x;                         // saved most recent x-coordinate */
+/*      int old_y;                         // saved most recent y-coordinate */
     float pixel_width;                 // screenspace-to-worldspace x-dim ratio
     float pixel_height;                // screenspace-to-worldspace y-dim ratio
 
