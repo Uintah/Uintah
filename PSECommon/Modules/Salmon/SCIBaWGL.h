@@ -28,27 +28,27 @@ using SCICore::Thread::Thread;
 class SCIBaWGL;
 
 class SCIBaWGLTimer : public Runnable {
-protected:
+public:
   friend class Salmon;
   friend class Roe;
   Roe* roe;
   SCIBaWGL* bawgl;
-  int running, exit;
+  volatile int running, exit;
   
   int pinchID, stylusID;
   
   int pinch, pinch0, pinchChange;
   int stylus, stylus0, stylusChange;
 
-  
   GLfloat realStylusMatrix[16], realStylus0Matrix[16];
   GLfloat virtualStylusMatrix[16], virtualStylusChangeMatrix[16];
 
   GLfloat realPinchMatrix[16], realPinch0Matrix[16];
   GLfloat surfacePinchMatrix[16];
+  GLfloat virtualPinchMatrix[16];
   GLfloat virtualPinchChangeMatrix[16];
   
-  GLfloat scaleFrom, scaleOriginal;
+  GLfloat scaleFrom, scaleOriginal, navigateFrom;
   GLfloat velocity, azim, elev, roll, azim0, elev0, roll0, fly[16];
 
   GLfloat navSpeed;
@@ -78,6 +78,8 @@ class SCIBaWGL : public BaWGL {
 
      bool shutting_down, redraw_enable;
      int pick;
+     int scale, navigate;
+     GLfloat scaleFrom, navigateFrom, velocity;
 
      int start( Roe*, char* );
      void stop( void );

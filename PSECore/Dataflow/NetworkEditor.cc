@@ -353,6 +353,7 @@ Module_Scheduler_Message::~Module_Scheduler_Message()
 
 void NetworkEditor::add_text(const clString& str)
 {
+    TCL::execute("global netedit_errortext");
     TCL::execute("$netedit_errortext configure -state normal");
     TCL::execute("$netedit_errortext insert end \""+str+"\n\"");
     TCL::execute("$netedit_errortext configure -state disabled");
@@ -676,6 +677,11 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.10  1999/11/12 01:38:30  ikits
+// Added ANL AVTC site visit modifications to make the demos work.
+// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
+// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
+//
 // Revision 1.9  1999/10/07 02:07:19  sparker
 // use standard iostreams and complex type
 //

@@ -372,27 +372,34 @@ void BaWGL::surfaceTransform( void )
   surfaceBottomLeft[1] = -surfaceTopRight[1];
   surfaceBottomLeft[2] = 0;
 
-  glAxis2Rot(invSurfaceMatrix, rotAxis, surfaceAngle/180.0*M_PI);
-  invSurfaceMatrix[12] = rotCenter[0];
-  invSurfaceMatrix[13] = rotCenter[1];
-  invSurfaceMatrix[14] = rotCenter[2];
+  if( haveSurfaceMatrix == false )
+    {
+      glAxis2Rot(invSurfaceMatrix, rotAxis, surfaceAngle/180.0*M_PI);
+      invSurfaceMatrix[12] = rotCenter[0];
+      invSurfaceMatrix[13] = rotCenter[1];
+      invSurfaceMatrix[14] = rotCenter[2];
 
-  p[0] = -rotCenter[0];
-  p[1] = -rotCenter[1];
-  p[2] = -rotCenter[2];
+      p[0] = -rotCenter[0];
+      p[1] = -rotCenter[1];
+      p[2] = -rotCenter[2];
   
-  glTransform(tmp, invSurfaceMatrix, p);
+      glTransform(tmp, invSurfaceMatrix, p);
 
-  invSurfaceMatrix[12] = tmp[0];
-  invSurfaceMatrix[13] = tmp[1];
-  invSurfaceMatrix[14] = tmp[2];
+      invSurfaceMatrix[12] = tmp[0];
+      invSurfaceMatrix[13] = tmp[1];
+      invSurfaceMatrix[14] = tmp[2];
+      
+      invSurfaceMatrix[3] = 0.0;
+      invSurfaceMatrix[7] = 0.0;
+      invSurfaceMatrix[11] = 0.0;
+      invSurfaceMatrix[15] = 1.0;
 
-  invSurfaceMatrix[3] = 0.0;
-  invSurfaceMatrix[7] = 0.0;
-  invSurfaceMatrix[11] = 0.0;
-  invSurfaceMatrix[15] = 1.0;
-
-  glInverse(surfaceMatrix, invSurfaceMatrix);
+      glInverse(surfaceMatrix, invSurfaceMatrix);
+    }
+  else
+    {
+      glInverse(invSurfaceMatrix, surfaceMatrix);
+    }
 }
 
 /* Calculate frustum left bottom and top right points on the near clipping plane. */
@@ -585,33 +592,30 @@ void BaWGL::getControllerState( int id, void* s )
 
 void BaWGL::getControllerStateChange( int id, void* s, void* ps, void* c )
 {
-  if( tracker.data )
-      {
-	switch( controller[id].type )
-	  {
-	  case CONTROLLER_STYLUS:
-	    switch( tracker.type )
-	      {
-	      case TRACKER_FASTRAK:
-		*(Stylus*)c = *(Stylus*)ps ^ *(Stylus*)s;
-		break;
-	      case TRACKER_FOB:
-	      case TRACKER_NONE:
-	      default:
-		break;
-	      }
-	    break;
-	  case CONTROLLER_PINCH:
-	    *(Gesture*)c = *(Gesture*)ps ^ *(Gesture*)s;
-	    break;
-	  case CONTROLLER_I3STICK:
-	    break;
-	  case CONTROLLER_NONE:
-	    break;
-	  default:
-	    break;
-	  }
-      }
+  switch( controller[id].type )
+    {
+    case CONTROLLER_STYLUS:
+      switch( tracker.type )
+	{
+	case TRACKER_FASTRAK:
+	  *(Stylus*)c = *(Stylus*)ps ^ *(Stylus*)s;
+	  break;
+	case TRACKER_FOB:
+	case TRACKER_NONE:
+	default:
+	  break;
+	}
+      break;
+    case CONTROLLER_PINCH:
+      *(Gesture*)c = *(Gesture*)ps ^ *(Gesture*)s;
+      break;
+    case CONTROLLER_I3STICK:
+      break;
+    case CONTROLLER_NONE:
+      break;
+    default:
+      break;
+    }
 }
 
 

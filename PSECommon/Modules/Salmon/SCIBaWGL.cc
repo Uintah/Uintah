@@ -63,9 +63,10 @@ SCIBaWGLTimer::SCIBaWGLTimer( Roe* r, SCIBaWGL* b )
   stylusID = bawgl->getControllerID(BAWGL_STYLUS);
   pinchID = bawgl->getControllerID(BAWGL_PINCH);
 
-  navSpeed = 10;
+  navSpeed = 8;
 
-  bawgl->setVirtualViewScaleLimits(0.1, 1000.0);
+  bawgl->setVirtualViewScaleLimits(0.01, 10000.0);
+  bawgl->loadVirtualViewScale(50.0);
 }
 
 void SCIBaWGLTimer::navigate( void )
@@ -80,23 +81,29 @@ void SCIBaWGLTimer::navigate( void )
     {
       if( BAWGL_PINCH_LEFT_THUMB_LEFT_PINKY(pinchChange) ) 
 	{
-	  scaleFrom = realPinchMatrix[13];
+	  bawgl->scaleFrom = scaleFrom = realPinchMatrix[13];
 	  scaleOriginal = bawgl->getVirtualViewScale();
+	  bawgl->scale = 1;
 	}
 
       // change the denominator to change the scale rate
 	      
       bawgl->loadVirtualViewScale(scaleOriginal*exp((scaleFrom - realPinchMatrix[13])/6));
     }
+  else
+    bawgl->scale = 0;
 
-  // navigation #1
+  // navigation
 	  
   if( BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinch) )
     {
       if( BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinchChange) )
-	scaleFrom = realPinchMatrix[13];
+	{
+	  bawgl->navigateFrom = navigateFrom = realPinchMatrix[13];
+	  bawgl->navigate = 1;
+	}
 
-      velocity = (scaleFrom - realPinchMatrix[13]) / (navSpeed * bawgl->virtualViewScale);
+      bawgl->velocity = velocity = (navigateFrom - realPinchMatrix[13]) / (navSpeed * bawgl->virtualViewScale);
 
       glEye(fly);
       
@@ -107,7 +114,9 @@ void SCIBaWGLTimer::navigate( void )
       
       bawgl->multVirtualViewMatrix(fly);
     }
-	  
+  else
+    bawgl->navigate = 0;
+
   // stylus based orientation
   
   if( stylus == BAWGL_STYLUS_ON )
@@ -250,12 +259,7 @@ void SCIBaWGLTimer::run( void )
 
 	  if( bawgl->redraw_enable == true )
 	    {
-	      if(roe->manager->mailbox.numItems() >= 
-		 roe->manager->mailbox.size()-1)
-		{
-		  cerr << "Redraw event dropped, mailbox full!\n";
-		} 
-	      else 
+	      if( roe->manager->mailbox.numItems() == 0 )
 		{
 		  roe->manager->mailbox.send(scinew SalmonMessage(roe->id));
 		}
@@ -276,26 +280,27 @@ void SCIBaWGLTimer::run( void )
 	  // stylus matrices
 
 	  memcpy(realStylus0Matrix, realStylusMatrix, 16*sizeof(GLfloat));
-  
-	  bawgl->getControllerMatrix(stylusID, BAWGL_LEFT, 
-				     realStylusMatrix, BAWGL_REAL_SPACE);
 
 	  bawgl->getControllerMatrix(stylusID, BAWGL_LEFT, 
-				     virtualStylusMatrix, BAWGL_VIRTUAL_SPACE);
+				     realStylusMatrix, BAWGL_REAL_SPACE);
+	  
+	  bawgl->transformMatrix(realStylusMatrix, BAWGL_REAL_SPACE,
+				 virtualStylusMatrix, BAWGL_VIRTUAL_SPACE);
 
 	  bawgl->getControllerMatrixChange(stylusID, BAWGL_LEFT, realStylusMatrix,
 					   realStylus0Matrix, virtualStylusChangeMatrix,
 					   BAWGL_REAL_SPACE, BAWGL_VIRTUAL_SPACE);
-	  
+
 	  // pinch matrices
 	  
 	  memcpy(realPinch0Matrix, realPinchMatrix, 16*sizeof(GLfloat));
   
 	  bawgl->getControllerMatrix(pinchID, BAWGL_LEFT, 
 				     realPinchMatrix, BAWGL_REAL_SPACE);
-
-	  bawgl->getControllerMatrix(pinchID, BAWGL_LEFT, 
-				     surfacePinchMatrix, BAWGL_SURFACE_SPACE);
+	  bawgl->transformMatrix(realPinchMatrix, BAWGL_REAL_SPACE,
+				 surfacePinchMatrix, BAWGL_SURFACE_SPACE);
+	  bawgl->transformMatrix(realPinchMatrix, BAWGL_REAL_SPACE,
+				 virtualPinchMatrix, BAWGL_VIRTUAL_SPACE);
 	  
 	  bawgl->getControllerMatrixChange(stylusID, BAWGL_LEFT, realPinchMatrix,
 					   realPinch0Matrix, virtualPinchChangeMatrix,

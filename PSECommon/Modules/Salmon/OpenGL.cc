@@ -53,6 +53,8 @@ using std::ofstream;
 #include <SCICore/Geom/GeomCone.h>
 #include <SCICore/Geom/GeomCylinder.h>
 #include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geom/GeomText.h>
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -79,7 +81,11 @@ using SCICore::Thread::Thread;
 
 using SCICore::GeomSpace::GeomCone;
 using SCICore::GeomSpace::GeomCylinder;
+using SCICore::GeomSpace::GeomCappedCylinder;
 using SCICore::GeomSpace::GeomSphere;
+using SCICore::GeomSpace::GeomTri;
+using SCICore::GeomSpace::GeomText;
+
 
 class OpenGLHelper;
 
@@ -164,10 +170,13 @@ public:
     View lastview;
     double znear, zfar;
 
-    GeomCone* stylusCone1, *stylusCone2;
-    GeomCylinder* stylusCylinder1, *stylusCylinder2;
+    GeomCappedCylinder* stylusCylinder[2];
+    GeomTri* stylusTriangle[4];
     GeomSphere* pinchSphere;
-    Material* stylusMaterial1, *stylusMaterial2, *pinchMaterial;
+    Material* stylusMaterial[16], *pinchMaterial;
+    
+    GeomText* pinchText[2];
+    GeomCappedCylinder* pinchCylinder[4];
 
     // these functions were added to clean things up a bit...
 
@@ -181,7 +190,7 @@ protected:
 
 static OpenGL* current_drawer=0;
 static const int pick_buffer_size = 512;
-static const double pick_window = 5.0;
+static const double pick_window = 10.0;
 
 static Renderer* make_OpenGL()
 {
@@ -208,16 +217,41 @@ OpenGL::OpenGL()
     drawinfo=scinew SCICore::GeomSpace::DrawInfoOpenGL;
     fpstimer.start();
 
-    stylusMaterial1 = scinew Material(Color(0,0,0), Color(.8,0,0), Color(.5,.5,.5), 20);
-    stylusCone1 = scinew GeomCone(Point(0,2,0), Point(0,3,0), 0.5, 0, 20, 4);
-    stylusCylinder1 = scinew GeomCylinder(Point(0,0,0), Point(0,2,0), 0.3, 20, 10);
-    
-    stylusMaterial2 = scinew Material(Color(0,0,0), Color(0,0,.8), Color(.5,.5,.5), 20);
-    stylusCone2 = scinew GeomCone(Point(0,-2,0), Point(0,-3,0), 0.5, 0, 20, 4);
-    stylusCylinder2 = scinew GeomCylinder(Point(0,0,0), Point(0,-2,0), 0.3, 20, 10);
+    /* Grey */
+    stylusMaterial[0] = scinew Material(Color(0,0,0), Color(.3,.3,.3), Color(.5,.5,.5), 20);
+    /* White */
+    stylusMaterial[1] = scinew Material(Color(0,0,0), Color(1.0,1.0,1.0), Color(.5,.5,.5), 20);
+    /* Yellow */
+    stylusMaterial[2] = scinew Material(Color(0,0,0), Color(1.0,1.0,0.0), Color(.5,.5,.5), 20);
+    /* Light red */
+    stylusMaterial[3] = scinew Material(Color(0,0,0), Color(.8,0,0), Color(.5,.5,.5), 20);
+    /* Dark red */
+    stylusMaterial[4] = scinew Material(Color(0,0,0), Color(.2,0,0), Color(.5,.5,.5), 20);
+    /* Light green */
+    stylusMaterial[5] = scinew Material(Color(0,0,0), Color(0,.8,0), Color(.5,.5,.5), 20);
+    /* Dark green */
+    stylusMaterial[6] = scinew Material(Color(0,0,0), Color(0,.2,0), Color(.5,.5,.5), 20);
+    /* Light blue */
+    stylusMaterial[7] = scinew Material(Color(0,0,0), Color(0,0,.8), Color(.5,.5,.5), 20);
+    /* Dark blue */
+    stylusMaterial[8] = scinew Material(Color(0,0,0), Color(0,0,.2), Color(.5,.5,.5), 20);
+
+    stylusCylinder[0] = scinew GeomCappedCylinder(Point(0,-3,0), Point(0,3,0), 0.3, 20, 10);
+    stylusCylinder[1] = scinew GeomCappedCylinder(Point(0,3,0), Point(0,3.3,0), 0.3, 20, 10);
+
+    stylusTriangle[0] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(1.5,0,0));
+    stylusTriangle[1] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(-1.5,0,0));
+    stylusTriangle[2] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(0,0,1.5));
+    stylusTriangle[3] = scinew GeomTri(Point(0,-1.5,0), Point(0,1.5,0), Point(0,0,-1.5));
 
     pinchMaterial = scinew Material(Color(0,0,0), Color(0,.8,0), Color(.5,.5,.5), 20);
-    pinchSphere = scinew GeomSphere(Point(0,0,0), 0.6, 20, 10);
+    pinchSphere = scinew GeomSphere(Point(0,0,0), 0.4, 20, 10);
+
+    pinchText[0] = scinew GeomText(clString(""),Point(1,1,1));
+    pinchText[1] = scinew GeomText(clString(""),Point(1,1,1));
+    
+    pinchCylinder[0] = scinew GeomCappedCylinder(Point(0,0,0), Point(1,0,0), 0.2, 20, 10);
+    pinchCylinder[1] = scinew GeomCappedCylinder(Point(0,0,0), Point(-1,0,0), 0.2, 20, 10);
 }
 
 OpenGL::~OpenGL()
@@ -535,8 +569,26 @@ void OpenGL::redraw_frame()
 	}
 	
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+	GLfloat realStylusMatrix[16], realPinchMatrix[16];
+	int stylusID, pinchID;
+	int stylus, pinch;
+	GLfloat scale;
+	char scalestr[512];
+	
 	if( do_bawgl )
-	  bawgl->getAllEyePositions();
+	  {
+	    bawgl->getAllEyePositions();
+
+	    stylusID = bawgl->getControllerID(BAWGL_STYLUS);
+	    pinchID = bawgl->getControllerID(BAWGL_PINCH);
+
+	    bawgl->getControllerMatrix(stylusID, BAWGL_ONE, 
+				       realStylusMatrix, BAWGL_REAL_SPACE);
+	    bawgl->getControllerState(stylusID, &stylus);
+	    bawgl->getControllerMatrix(pinchID, BAWGL_LEFT, 
+				       realPinchMatrix, BAWGL_REAL_SPACE);
+	    bawgl->getControllerState(pinchID, &pinch);
+	  }
 
 	for(int t=0;t<nframes;t++){
 	  int n=1;
@@ -570,6 +622,9 @@ void OpenGL::redraw_frame()
 		  }
 		
 		bawgl->setSurfaceView();
+		
+		glPushMatrix();
+		
 		bawgl->setVirtualView();
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 
@@ -625,33 +680,130 @@ void OpenGL::redraw_frame()
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
 	    if( do_bawgl ) // render stylus and pinch 'metaphores'
 	      {
-		GLfloat virtualStylusMatrix[16];
-		bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_STYLUS),
-					   BAWGL_ONE, virtualStylusMatrix, BAWGL_VIRTUAL_SPACE);
+		glPopMatrix();
+
 		glPushMatrix();
-		  glMultMatrixf(virtualStylusMatrix);
-		  glScalef(1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale);
-		  stylusCone1->draw(drawinfo, stylusMaterial1, current_time);
-		  stylusCylinder1->draw(drawinfo, stylusMaterial1, current_time);
-		  stylusCone2->draw(drawinfo, stylusMaterial2, current_time);
-		  stylusCylinder2->draw(drawinfo, stylusMaterial2, current_time);
+		  glMultMatrixf(realStylusMatrix);
+		  stylusCylinder[0]->draw(drawinfo, stylusMaterial[0], 
+					  current_time);
+
+		  if( stylus == BAWGL_STYLUS_ON )
+		    {
+		      stylusCylinder[1]->draw(drawinfo, stylusMaterial[2], 
+					      current_time);
+		      stylusTriangle[0]->draw(drawinfo, stylusMaterial[3], 
+					      current_time);
+		      stylusTriangle[1]->draw(drawinfo, stylusMaterial[4], 
+					      current_time);
+		      stylusTriangle[2]->draw(drawinfo, stylusMaterial[7], 
+					      current_time);
+		      stylusTriangle[3]->draw(drawinfo, stylusMaterial[8], 
+					      current_time);
+		    }
+		  else
+		    {
+		      stylusCylinder[1]->draw(drawinfo, stylusMaterial[1], 
+					      current_time);
+		    }
 		glPopMatrix();
 		
 		if( !bawgl->pick )
 		  {
-		    GLfloat virtualPinchMatrix[16];
-		    bawgl->getControllerMatrix(bawgl->getControllerID(BAWGL_PINCH),
-					   BAWGL_LEFT, virtualPinchMatrix, BAWGL_VIRTUAL_SPACE);
-
-		    drawinfo->multiple_transp = 1;
-		
 		    glPushMatrix();
-		      glMultMatrixf(virtualPinchMatrix);
-		      glScalef(1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale, 1.0/bawgl->virtualViewScale);
-		      pinchSphere->draw(drawinfo, pinchMaterial, current_time);
+		      glMultMatrixf(realPinchMatrix);
+		      pinchSphere->draw(drawinfo, pinchMaterial, 
+					current_time);
+		    glPopMatrix();
+		  }
+		
+		if( bawgl->scale )
+		  {
+		    glPushMatrix();
+		      glMultMatrixf(realPinchMatrix);
+		      scale = bawgl->scaleFrom - realPinchMatrix[13];
+		      
+		      glPushMatrix();
+		        if( scale > 0 )
+			  {
+			    glPushMatrix();
+			      glScalef(scale, 1.0, 1.0);
+			      pinchCylinder[0]->draw(drawinfo, 
+						     stylusMaterial[3], 
+						     current_time);
+			    glPopMatrix();
+ 
+			    glTranslatef(scale, 0.0, 0.0);
+			    pinchSphere->draw(drawinfo, 
+					      pinchMaterial, current_time);
+			  }
+			else
+			  {
+			    glPushMatrix();
+			      glScalef(-scale, 1.0, 1.0);
+			      pinchCylinder[1]->draw(drawinfo, 
+						     stylusMaterial[3], 
+						     current_time);
+			    glPopMatrix();
+
+			    glTranslatef(scale, 0.0, 0.0);
+			    pinchSphere->draw(drawinfo, 
+					      pinchMaterial, 
+					      current_time);
+			  }
+		      glPopMatrix();
+
+		      delete pinchText[0];
+		      sprintf(scalestr, "Scale: %.2f", bawgl->virtualViewScale);
+		      
+		      pinchText[0] = scinew GeomText(clString(scalestr),Point(1,1,1));
+		      pinchText[0]->draw(drawinfo, pinchMaterial, current_time);
+		      
+		    glPopMatrix();
+		  }
+
+		if( bawgl->navigate )
+		  {
+		    glPushMatrix();
+		      glMultMatrixf(realPinchMatrix);
+		      
+		      scale = bawgl->navigateFrom - realPinchMatrix[13];
+		      
+		      glPushMatrix();
+		        if( scale > 0 )
+			  {
+			    glPushMatrix();
+			      glScalef(scale, 1.0, 1.0);
+			      pinchCylinder[0]->draw(drawinfo, stylusMaterial[7], 
+						     current_time);
+			    glPopMatrix();
+
+			    glTranslatef(scale, 0.0, 0.0);
+			    pinchSphere->draw(drawinfo, pinchMaterial, 
+					      current_time);
+			  }
+			else
+			  {
+			    glPushMatrix();
+			      glScalef(-scale, 1.0, 1.0);
+			      pinchCylinder[1]->draw(drawinfo, stylusMaterial[7], 
+						     current_time);
+			    glPopMatrix();
+
+			    glTranslatef(scale, 0.0, 0.0);
+			    pinchSphere->draw(drawinfo, pinchMaterial, 
+					      current_time);
+			  }
+		      glPopMatrix();      
+		      
+		      delete pinchText[1];
+		      sprintf(scalestr, "Velocity: %.2f", -1000*bawgl->velocity);
+		      
+		      pinchText[1] = scinew GeomText(clString(scalestr),Point(1,1,1));
+		      pinchText[1]->draw(drawinfo, pinchMaterial, 
+					 current_time);
+		      
 		    glPopMatrix();
 
-		    drawinfo->multiple_transp = 0;
 		  }
 	      }
 // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
@@ -723,7 +875,7 @@ void OpenGL::redraw_frame()
 	roe->set_current_time(tend);
 
 // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
-	if(do_stereo || do_bawgl) {
+	if( do_stereo || do_bawgl ) {
 	    glDrawBuffer(GL_BACK_LEFT);
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    glDrawBuffer(GL_BACK_RIGHT);
@@ -1572,6 +1724,11 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.14  1999/11/12 01:38:29  ikits
+// Added ANL AVTC site visit modifications to make the demos work.
+// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
+// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
+//
 // Revision 1.13  1999/10/22 05:43:19  jmk
 // Made Isosurface by seedpoint work somewhat
 // Removed "inside called..." print statement from Mesh
