@@ -123,15 +123,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
         double drho_dx = (rho[r] - rho[l])/delta;
         double dp_dx   = (press[r] - press[l])/delta;
         Vector dVel_dx = (vel[r] - vel[l])/(delta);
-
-        //Due to numerical noice , we filter them out by hard coding
-        //    
-        if(fabs(drho_dx) < 1.0e-10) drho_dx = 0.0;
-        if(fabs(dp_dx) < 1.0e-10)   dp_dx = 0.0;
-        if(fabs(dVel_dx[dir0]) < 1.0e-10) dVel_dx[dir0]=0.0;
-        if(fabs(dVel_dx[dir1]) < 1.0e-10) dVel_dx[dir1]=0.0;
-        if(fabs(dVel_dx[dir2]) < 1.0e-10) dVel_dx[dir2]=0.0;
-
+        
         //__________________________________
         // L1 Wave Amplitude
         int L1_sign;
@@ -342,20 +334,21 @@ void  lodi_bc_preprocess( const Patch* patch,
     if (is_LODI_face[face] ) {
       //__________________________________
       // Create an iterator that iterates over the face
-      // + 3 cells inward.  We don't need to hit every
+      // + 2 cells inward.  We don't need to hit every
       // cell on the patch.
       CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells");
       IntVector lo = iter.begin();
       IntVector hi = iter.end();
-      
+    
       int P_dir = patch->faceAxes(face)[0];  //principal dir.
       if(face==Patch::xminus || face==Patch::yminus || face==Patch::zminus){
-        hi[P_dir] += 3;
+        hi[P_dir] += 2;
       }
       if(face==Patch::xplus || face==Patch::yplus || face==Patch::zplus){
-        lo[P_dir] -= 3;
+        lo[P_dir] -= 2;
       }
       CellIterator iterLimits(lo,hi);
+
       //__________________________________
       // Initialize
       for(CellIterator iter = iterLimits; !iter.done(); iter++) {
@@ -365,7 +358,7 @@ void  lodi_bc_preprocess( const Patch* patch,
         e[c] = -9;
         
         for (int i = 0; i <= 5; i++){
-          di[i][c] =Vector(-9,-9,-9);
+          di[i][c] =Vector(0.,0.,0.);
         } 
       }
       //__________________________________
