@@ -72,7 +72,7 @@ SparseSolve::~SparseSolve(){
 }
 
 void SparseSolve::execute(){
-#ifdef __sgi
+#if 1
   MatrixHandle matrix;
   matrixport = (MatrixIPort *)get_iport("Matrix");
   rhsport = (MatrixIPort *)get_iport("RHS");
@@ -80,7 +80,7 @@ void SparseSolve::execute(){
   if(!matrixport->get(matrix))
     return;
   
-  SparseRowMatrix* srm = matrix->getSparseRow(); 
+  SparseRowMatrix* srm = matrix->sparse(); 
   
   if (!srm) {
     msgStream_ << "The supplied matrix is not of type SparseRow" << endl;
@@ -92,7 +92,8 @@ void SparseSolve::execute(){
     return;
 
   
-  if (!matrix.get_rep() || !rhs.get_rep() || !rhs->getColumn()) {
+//  if (!matrix.get_rep() || !rhs.get_rep() || !rhs->getColumn()) {
+  if (!matrix.get_rep() || !rhs.get_rep() || !rhs->column()) {
     msgStream_ << "Netsolve_MatrixSolver::execute() input problems\n";
     return;
   }
@@ -103,7 +104,7 @@ void SparseSolve::execute(){
   
   solution=scinew ColumnMatrix(rhs->nrows());
   solution->zero();
-  ColumnMatrix* pRhs = rhs->getColumn();
+  ColumnMatrix* pRhs = rhs->column();
   
   netslmajor("Row");
    
@@ -118,7 +119,7 @@ void SparseSolve::execute(){
 		      srm->get_val(),    	//matrix->a
 		      srm->get_col(),	//matrix->columns,
 		      srm->get_row(),	//matrix->rows,
-		      pRhs->get_rhs(),
+		      pRhs->get_data(),
 		      &tolerance,
 		      &maxit,
 		      lhs,
@@ -133,7 +134,7 @@ void SparseSolve::execute(){
   }
   else {
     msgStream_ << "NetSolve call succeeded.  Passing solution through port" << endl;
-    solution->put_lhs(lhs);
+    solution->set_data(lhs);
     msgStream_ << "Tolerance: " << tolerance << ", iterations = " << iterations << endl;
     //for (int ii=0; ii<solution->nrows(); ii++){
     //  msgStream_ << (*solution)[ii] << "\t";
