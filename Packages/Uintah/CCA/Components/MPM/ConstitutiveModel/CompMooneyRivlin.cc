@@ -224,10 +224,12 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
+      // F_n^np1 = dudx * dt + Identity
+      deformationGradientInc = velGrad * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx]=deformationGradient[idx] +
-				   velGrad * delT;
+      deformationGradient_new[idx] =
+				deformationGradientInc*deformationGradient[idx];
 
       // Actually calculate the stress from the n+1 deformation gradient.
 

@@ -635,8 +635,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pVolumeLabel,           Ghost::None);
-  //t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,            Ghost::AroundCells,1);
@@ -1869,7 +1868,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
-      old_dw->get(pvolume,               lb->pVolumeLabel,               pset);
+      new_dw->get(pvolume,               lb->pVolumeDeformedLabel,       pset);
       old_dw->get(pexternalForce,        lb->pExternalForceLabel,        pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,          pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,             pset);
