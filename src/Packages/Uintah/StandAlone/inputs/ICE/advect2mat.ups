@@ -143,14 +143,15 @@
    </DataArchiver>
    
    <Debug>
-       <debug label = "switchDebug_equilibration_press"/>
+   <!--<debug label = "switchDebugInitialize"/>         -->
+   <!--<debug label = "switchDebug_equilibration_press"/>-->
    <!--<debug label = "switchDebugInitialize"/>         -->
    <!--<debug label = "switchDebug_vel_FC"/>            -->
    <!--<debug label = "switchDebug_explicit_press"/>    -->
    <!--<debug label = "switchDebug_PressFC"/>           -->
    <!--<debug label = "switchDebugLagrangianValues"/>   -->
    <!--<debug label = "switchDebugSource_Sink"/>        -->
-       <debug label = "switchDebug_advance_advect"/>
+   <!--<debug label = "switchDebug_advance_advect"/>    -->
     </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -173,9 +174,9 @@
 
 
     <!--____________________________________________________________________-->
-    <!--      I N I T I A L   C O N D I T I O N S                           -->
+    <!--     MaterialProperties and Initial Conditions                      -->
     <!--____________________________________________________________________-->
-    <InitialConditions>
+    <MaterialProperties>
 	<ICE>
 	  <material>
 	    <ideal_gas>
@@ -234,6 +235,6 @@
 	     <heat>              [0.0, 0.0]              </heat>
 	 </exchange_coefficients>
 	</ICE>	
-    </InitialConditions>           
+    </MaterialProperties>           
 	
 </Uintah_specification>

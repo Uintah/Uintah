@@ -175,9 +175,9 @@
     </PhysicalConstants>
     
     <!--____________________________________________________________________-->
-    <!--      I N I T I A L   C O N D I T I O N S                           -->
+    <!--      material Properties and Initial Conditions                    -->
     <!--____________________________________________________________________-->                      
-    <InitialConditions>
+    <MaterialProperties>
 	<ICE>
 	  <material>
 	    <ideal_gas>
@@ -207,5 +207,5 @@
 	     <heat>              [0.0, 0.0]              </heat>
 	 </exchange_coefficients>
 	</ICE>	
-    </InitialConditions>	
+    </MaterialProperties>	
 </Uintah_specification>

@@ -190,13 +190,14 @@
 	        <res>		   [2,2,2]    </res>
 	        <velocity>         [1,1,0]    </velocity>
 	        <temperature>      300.0      </temperature>
+               <density> 1.1792946927374306000e+00 </density>
+               <pressure>          101325.0    </pressure>
 	    </geom_object>
 	  </material>
 	  <material>
 	    <ideal_gas>
 		<gas_constant>287 </gas_constant>
 	    </ideal_gas>
-	    <density> 1.1792946927374306000e+00 </density>
 	    <viscosity>      0.0         </viscosity>
 	    <thermal_conductivity>0.0    </thermal_conductivity>
 	    <specific_heat>  716.0         </specific_heat>
@@ -211,6 +212,8 @@
 	        <res>		   [2,2,2]    </res>
 	        <velocity>         [-1,-1,0]    </velocity>
 	        <temperature>      300.0      </temperature>
+               <pressure>          101325.0    </pressure>
+               <density> 1.1792946927374306000e+00 </density>
 	    </geom_object>
 	  </material>
 	  <exchange_coefficients>
@@ -218,12 +221,6 @@
 	     <heat>     [10000000000.  , 10000000000]  </heat>
 	 </exchange_coefficients>
 	</ICE>	
-    </MaterialProperties>
-
-    <InitialConditions>
-        <ICE>
-         <pressure>          101325.0    </pressure>
-        </ICE>
-    </InitialConditions>                   
+    </MaterialProperties>               
 	
 </Uintah_specification>
