@@ -25,6 +25,7 @@ SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
 	SCICore/Containers SCICore/Thread Uintah/Grid Uintah/Interface \
+	PSECore/Dataflow \
         Uintah/Exceptions PSECore/XMLUtil Uintah/Components/MPM
 
 LIBS := $(XML_LIBRARY)
@@ -39,6 +40,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/12/01 20:11:54  kuzimmer
+# added PSECore/Dataflow to PSELIBS so that all Port info is defined
+#
 # Revision 1.5  2000/10/14 03:11:30  kuzimmer
 # Added code to reduce memory usage when viewing particle data
 #
