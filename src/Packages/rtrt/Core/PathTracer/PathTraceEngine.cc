@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/Background.h>
 
 #include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -27,9 +28,10 @@ PathTraceContext::PathTraceContext(const Color &color,
 				   const PathTraceLight &light,
 				   Object* geometry,
 				   Background *background,
-                                   int num_samples, int max_depth):
+                                   int num_samples, int max_depth,
+				   Semaphore *semi):
   light(light), color(color), geometry(geometry), background(background),
-  num_samples(num_samples), max_depth(max_depth)
+  num_samples(num_samples), max_depth(max_depth), semi(semi)
 {
   // Fix num_samples to be a complete square
   num_samples_root = (int)(ceil(sqrt((double)num_samples)));
@@ -83,9 +85,14 @@ PathTraceWorker::PathTraceWorker(Group *group, PathTraceContext *ptc,
 }
 
 PathTraceWorker::~PathTraceWorker() {
+  cerr << "PathTraceWorker::~PathTraceWorker()\n";
   if (ppc) delete ppc;
   if (depth_stats) delete depth_stats;
   if (basename) free(basename);
+  // Delete all the geometry used to store the texture data
+  for(int i = 0; i < local_spheres->objs.size(); i++)
+    if (local_spheres->objs[i])
+      delete local_spheres->objs[i];
 }
 
 void PathTraceWorker::run() {
@@ -170,7 +177,7 @@ void PathTraceWorker::run() {
 	      if (!s_hit.was_hit)
 		result +=
 		  ptc->color *
-		  reflected_surface_dot *
+		  //		  reflected_surface_dot *
 		  light->color *
 		  light_norm_dot_sr *
 		  light->area *
@@ -328,6 +335,8 @@ void PathTraceWorker::run() {
       sphere->writeTexture(basename, sindex);
     }
   }
+  if (ptc->semi)
+    ptc->semi->up();
 }
 
 TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
