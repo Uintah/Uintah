@@ -76,6 +76,7 @@ private:
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
   GuiInt                        direction_;
+  GuiInt                        color_;
   GuiInt                        remove_colinear_;
 };
 
@@ -89,6 +90,7 @@ StreamLines::StreamLines(GuiContext* ctx) :
   tolerance_(ctx->subVar("tolerance")),
   maxsteps_(ctx->subVar("maxsteps")),
   direction_(ctx->subVar("direction")),
+  color_(ctx->subVar("color")),
   remove_colinear_(ctx->subVar("remove-colinear"))
 {
 }
@@ -291,6 +293,8 @@ void StreamLines::execute()
   int maxsteps = maxsteps_.get();
   direction_.reset();
   int direction = direction_.get();
+  color_.reset();
+  int color = color_.get();
 
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();
@@ -310,7 +314,7 @@ void StreamLines::execute()
   }
 
   oport_->send(algo->execute(sf_->mesh(), vfi,
-			     tolerance, stepsize, maxsteps, direction,
+			     tolerance, stepsize, maxsteps, direction, color,
 			     remove_colinear_.get()));
 }
 

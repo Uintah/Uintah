@@ -24,6 +24,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-tolerance
 	global $this-maxsteps
 	global $this-direction
+	global $this-color
 	global $this-colinear
 
         set_defaults
@@ -34,6 +35,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-stepsize 0.0001
 	set $this-maxsteps 2000
 	set $this-direction 1
+	set $this-color 1
 	set $this-colinear 0
     }
 
@@ -67,6 +69,15 @@ itcl_class SCIRun_Visualization_StreamLines {
 	radiobutton $w.direction.pos -text "Positive" -variable $this-direction \
 		-value 2
 
+	frame $w.color
+
+	label $w.color.label -text "Color Style"
+	radiobutton $w.color.const -text "Constant" -variable $this-color \
+		-value 0
+	radiobutton $w.color.incr -text "Increment" -variable $this-color \
+		-value 1
+
+
 	checkbutton $w.colinear -text "Filter Colinear Points" \
 		-variable $this-remove-colinear
 
@@ -81,7 +92,9 @@ itcl_class SCIRun_Visualization_StreamLines {
 	pack $w.direction.label $w.direction.neg $w.direction.both \
 		$w.direction.pos -side left
 
-	pack $w.row1 $w.row2 $w.row3 $w.direction $w.colinear $w.row4 \
+	pack $w.color.label $w.color.const $w.color.incr -side left
+
+	pack $w.row1 $w.row2 $w.row3 $w.direction $w.color $w.colinear $w.row4 \
 		-side top -e y -f both \
 		-padx 5 -pady 5
     }
