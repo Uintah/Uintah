@@ -120,19 +120,7 @@ namespace Uintah {
 					 const Patch* patch,
 					 DataWarehouseP&,
 					 DataWarehouseP&);
-      
-      
-      
-      void actually_Bottom_of_main_loop(const ProcessorGroup*,
-					const Patch* patch,
-					DataWarehouseP&,
-					DataWarehouseP&);
-      
-      void actually_Top_of_main_loop(const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
-      
+                  
       // compute speedSound
       void actuallyStep1a(const ProcessorGroup*,
 			  const Patch* patch,
@@ -274,6 +262,9 @@ namespace Uintah {
       SimulationStateP d_sharedState;
       double d_SMALL_NUM;
       double d_pressure;
+      double d_initialDt;
+      double d_CFL;
+     
       Vector d_K_mom, d_K_heat; // exchange coefficients -- off diagonal terms
       
       ICE(const ICE&);
@@ -317,6 +308,9 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.41  2000/12/18 23:25:55  jas
+// 2d ice works for simple advection.
+//
 // Revision 1.40  2000/12/05 15:45:30  jas
 // Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
 // to be working up to the middle of step 2.
