@@ -2615,10 +2615,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         right    = c + IntVector(1,0,0);    left     = c + IntVector(0,0,0);
         top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
         front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
-        //__________________________________
-        //  WARNING:  Note that vol_frac * div Tau
-        //   is not right.  It should be div (vol_frac * Tau)
-        //   Just trying it out.
+
         //__________________________________
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
@@ -2672,8 +2669,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           top      = c + IntVector(0,1,0);    bottom   = c + IntVector(0,0,0);
           front    = c + IntVector(0,0,1);    back     = c + IntVector(0,0,0);
 
-          // TODD:  Note that here, as in computeFCVelocities, I'm putting
-          // a negative sign in front of press_diff_source, since sigma=-p*I
           //__________________________________
           //    X - M O M E N T U M 
           press_diff_source = (press_diffX_FC[right] - press_diffX_FC[left]);
@@ -3982,20 +3977,47 @@ void ICE::computeQ_conduction_FC(DataWarehouse* new_dw,
   q_X_FC.initialize(0.0);
   q_Y_FC.initialize(0.0);
   q_Z_FC.initialize(0.0);
-          
+
+  //__________________________________
+  // For multipatch problems adjust the iter limits
+  // on the (left/bottom/back) patches to 
+  // include the (right/top/front) faces
+  // of the cells at the patch boundary. 
+  // We compute q_X[right]-q_X[left] on each patch
+  IntVector low,hi;      
+  low = patch->getSFCXIterator().begin();    // X Face iterator
+  hi  = patch->getSFCXIterator().end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?1:0,
+		   patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  CellIterator X_FC_iterLimits(low,hi);
+         
+  low = patch->getSFCYIterator().begin();   // Y Face iterator
+  hi  = patch->getSFCYIterator().end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->yplus) ==patch->Neighbor?1:0,
+		   patch->getBCType(patch->zplus) ==patch->Neighbor?0:0); 
+  CellIterator Y_FC_iterLimits(low,hi); 
+        
+  low = patch->getSFCZIterator().begin();   // Z Face iterator
+  hi  = patch->getSFCZIterator().end();
+  hi +=IntVector(patch->getBCType(patch->xplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->yplus) ==patch->Neighbor?0:0,
+		   patch->getBCType(patch->zplus) ==patch->Neighbor?1:0); 
+  CellIterator Z_FC_iterLimits(low,hi);            
   //__________________________________
   //  For each face compute conduction
-  q_conduction<SFCXVariable<double> >(patch->getSFCXIterator(),
+  q_conduction<SFCXVariable<double> >(X_FC_iterLimits,
                                      adj_offset[0],  thermalCond, dx.x(),
                                      rho_CC, sp_vol_CC, Temp_CC,
                                      q_X_FC);
 
-  q_conduction<SFCYVariable<double> >(patch->getSFCYIterator(),
+  q_conduction<SFCYVariable<double> >(Y_FC_iterLimits,
                                      adj_offset[1], thermalCond, dx.y(),
                                      rho_CC, sp_vol_CC, Temp_CC,
                                      q_Y_FC);
-
-  q_conduction<SFCZVariable<double> >(patch->getSFCZIterator(),
+  
+  q_conduction<SFCZVariable<double> >(Z_FC_iterLimits,
                                      adj_offset[2],  thermalCond, dx.z(),
                                      rho_CC, sp_vol_CC, Temp_CC,
                                      q_Z_FC); 
