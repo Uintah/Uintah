@@ -125,6 +125,7 @@ usage( const std::string & message,
       cerr << "-mpm                 : \n";
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
+      cerr << "-AMR                 : use AMR simulation controller\n";
       cerr << "-nthreads <#>        : Only good with MixedScheduler\n";
       cerr << "-scheduler <name>    : Don't specify, use system default!\n";
       cerr << "-loadbalancer <name> : Usually use system default.\n";
@@ -341,6 +342,7 @@ main( int argc, char** argv )
 	    loadbalancer="SimpleLoadBalancer";
 	  Uintah::Parallel::noThreading();
        } else {
+	  TAU_PROFILE_SET_NODE(0);
 	  scheduler="SingleProcessorScheduler"; // Default for serial runs
 	  if(loadbalancer == "")
 	    loadbalancer="SingleProcessorLoadBalancer";
