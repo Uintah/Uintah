@@ -556,6 +556,7 @@ static MPI_Datatype makeMPI_CMData()
    ASSERTEQ(sizeof(ViscoScram::StateData), sizeof(double)*2);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -572,6 +573,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.10  2000/09/26 17:08:36  sparker
+// Need to commit MPI types
+//
 // Revision 1.9  2000/09/25 20:23:19  sparker
 // Quiet g++ warnings
 //

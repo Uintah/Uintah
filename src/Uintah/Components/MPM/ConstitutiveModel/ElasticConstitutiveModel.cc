@@ -486,6 +486,7 @@ static MPI_Datatype makeMPI_CMData()
    ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -538,6 +539,9 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.22  2000/09/26 17:08:35  sparker
+// Need to commit MPI types
+//
 // Revision 1.21  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //

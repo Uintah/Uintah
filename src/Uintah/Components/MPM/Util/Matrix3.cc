@@ -455,6 +455,7 @@ MPI_Datatype makeMPI_Matrix3()
    ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
+   MPI_Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -470,6 +471,9 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.11  2000/09/26 17:08:37  sparker
+//Need to commit MPI types
+//
 //Revision 1.10  2000/09/20 18:01:49  witzel
 //Changed the ordering of the eigenvalues (e1 > e2 > e3) and added
 //the relative_scale parameter to getEigenVectors and solve methods
