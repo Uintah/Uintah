@@ -67,7 +67,7 @@ public:
 protected:
     friend class GeometryOPort;
 public:
-    GeometryIPort(Module*, const clString& name, int protocol);
+    GeometryIPort(Module*, const clString& name, int protocol=GeometryIPort::Atomic);
     virtual ~GeometryIPort();
 
     virtual void reset();
@@ -109,7 +109,7 @@ class PSECORESHARE GeometryOPort : public OPort {
     Mailbox<MessageBase*>* outbox;
     virtual void attach(Connection*);
 public:
-    GeometryOPort(Module*, const clString& name, int protocol);
+    GeometryOPort(Module*, const clString& name, int protocol=GeometryIPort::Atomic);
     virtual ~GeometryOPort();
 
     GeomID addObj(GeomObj*, const clString& name, CrowdMonitor* lock=0);
@@ -135,6 +135,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/09/16 23:03:49  mcq
+// Fixed a few little bugs, hopefully didn't introduce more.  Started ../doc
+//
 // Revision 1.5  1999/08/28 17:54:31  sparker
 // Integrated new Thread library
 //
