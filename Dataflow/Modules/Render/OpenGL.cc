@@ -768,7 +768,7 @@ void OpenGL::redraw_frame()
 	  if(saveprefix != ""){
 	    // Save out the image...
 	    char filename[200];
-	    sprintf(filename, "%s%04d.rgb", saveprefix(), t);
+	    sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
 	    unsigned short* reddata=scinew unsigned short[xres*yres];
 	    unsigned short* greendata=scinew unsigned short[xres*yres];
 	    unsigned short* bluedata=scinew unsigned short[xres*yres];
@@ -1754,9 +1754,9 @@ void OpenGL::StartMpeg(const string& fname)
 {
   // let's get a file pointer pointing to the output file
 #ifdef MPEG
-  output=fopen(fname(), "w");
+  output=fopen(fname.c_str(), "w");
   if (!output){
-    cerr<<"Failed to open file "<< fname()<<" for writing\n";
+    cerr<<"Failed to open file "<< fname<<" for writing\n";
     return;
   }
   // get the default options
