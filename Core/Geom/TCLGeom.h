@@ -14,8 +14,8 @@
 #ifndef SCI_Geom_TCLGeom_h
 #define SCI_Geom_TCLGeom_h 1
 
-#include <TclInterface/TCLvar.h>
-#include <Containers/String.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Containers/String.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -25,7 +25,7 @@ using namespace SCICore::TclInterface;
 
 class Color;
 
-class TCLColor : public TCLvar {
+class SCICORESHARE TCLColor : public TCLvar {
     TCLdouble r;
     TCLdouble g;
     TCLdouble b;
@@ -39,7 +39,7 @@ public:
 };
 
 class Material;
-class TCLMaterial : public TCLvar {
+class SCICORESHARE TCLMaterial : public TCLvar {
     TCLColor ambient;
     TCLColor diffuse;
     TCLColor specular;
@@ -62,6 +62,10 @@ class TCLMaterial : public TCLvar {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:23  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:52  mcq
 // Initial commit
 //

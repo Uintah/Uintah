@@ -14,8 +14,8 @@
 #ifndef SCI_project_DebugSettings_h
 #define SCI_project_DebugSettings_h 1
 
-#include <Containers/Array1.h>
-#include <TclInterface/TCL.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/TclInterface/TCL.h>
 
 namespace SCICore {
 namespace TclInterface {
@@ -24,7 +24,7 @@ using SCICore::Containers::Array1;
 
 class TCLvarintp;
 
-class DebugSettings : public TCL {
+class SCICORESHARE DebugSettings : public TCL {
     Array1<TCLvarintp*> variables;
 public:
     DebugSettings();
@@ -39,6 +39,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:13  mcq
 // Initial commit
 //

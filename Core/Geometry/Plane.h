@@ -14,15 +14,15 @@
 #ifndef SCI_project_Plane_h
 #define SCI_project_Plane_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
 namespace Geometry {
 
-class SHARE Plane {
+class SCICORESHARE Plane {
    Vector n;
    double d;
 public:
@@ -50,6 +50,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:56  mcq
 // Initial commit
 //

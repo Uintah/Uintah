@@ -14,10 +14,12 @@
 #ifndef Geometry_Vector_h
 #define Geometry_Vector_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Util/Assert.h>
-#include <Containers/String.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Containers/String.h>
 
 #ifdef KCC
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
@@ -34,7 +36,7 @@ using SCICore::PersistentSpace::Piostream;
 
 class Point;
 
-class SHARE Vector {
+class SCICORESHARE Vector {
     double _x,_y,_z;
 #if SCI_ASSERTION_LEVEL >= 4
     int uninit;
@@ -49,9 +51,9 @@ public:
     inline Vector();
     double length() const;
     double length2() const;
-    friend inline double Dot(const Vector&, const Vector&);
-    friend inline double Dot(const Point&, const Vector&);
-    friend inline double Dot(const Vector&, const Point&);
+    friend SCICORESHARE inline double Dot(const Vector&, const Vector&);
+    friend SCICORESHARE inline double Dot(const Point&, const Vector&);
+    friend SCICORESHARE inline double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
 
     // checks if one vector is exactly the same as another
@@ -68,8 +70,8 @@ public:
     Vector& operator-=(const Vector&);
     inline double normalize();
     Vector normal() const;
-    friend inline Vector Cross(const Vector&, const Vector&);
-    friend inline Vector Abs(const Vector&);
+    friend SCICORESHARE inline Vector Cross(const Vector&, const Vector&);
+    friend SCICORESHARE inline Vector Abs(const Vector&);
     void x(double);
     inline double x() const;
     void y(double);
@@ -92,11 +94,11 @@ public:
     friend class Point;
     friend class Transform;
     
-    friend inline Vector Interpolate(const Vector&, const Vector&, double);
+    friend SCICORESHARE inline Vector Interpolate(const Vector&, const Vector&, double);
     
     void find_orthogonal(Vector&, Vector&) const;
     
-    friend void Pio( Piostream&, Vector& );
+    friend SCICORESHARE void Pio( Piostream&, Vector& );
 
     inline Point asPoint() const;
     inline double minComponent() const {
@@ -127,15 +129,15 @@ public:
     }
 };
 
-SHARE ostream& operator<<(ostream& os, const Vector& p);
-SHARE istream& operator>>(istream& os, Vector& p);
+SCICORESHARE ostream& operator<<(ostream& os, const Vector& p);
+SCICORESHARE istream& operator>>(istream& os, Vector& p);
 
 } // End namespace Geometry
 } // End namespace SCICore
 
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <Geometry/Point.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace Geometry {
@@ -151,6 +153,10 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:29  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:57  mcq
 // Initial commit
 //

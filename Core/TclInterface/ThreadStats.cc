@@ -12,10 +12,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TclInterface/ThreadStats.h>
+#include <SCICore/TclInterface/ThreadStats.h>
 
-#include <Util/NotFinished.h>
-#include <Multitask/Task.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Multitask/Task.h>
 
 #include <iostream.h>
 #include <stdio.h>
@@ -104,6 +104,10 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:46  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:17  mcq
 // Initial commit
 //

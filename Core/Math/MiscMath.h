@@ -15,40 +15,40 @@
 #ifndef SCI_Math_MiscMath_h
 #define SCI_Math_MiscMath_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 namespace SCICore {
 namespace Math {
 
 // Absolute value
-inline SHARE double Abs(double d)
+inline SCICORESHARE double Abs(double d)
 {
   return d<0?-d:d;
 }
 
-inline SHARE int Abs(int i)
+inline SCICORESHARE int Abs(int i)
 {
     return i<0?-i:i;
 }
 
 // Signs
-inline SHARE int Sign(double d)
+inline SCICORESHARE int Sign(double d)
 {
   return d<0?-1:1;
 }
 
-inline SHARE int Sign(int i)
+inline SCICORESHARE int Sign(int i)
 {
   return i<0?-1:1;
 }
 
 // Clamp a number to a specific range
-inline SHARE double Clamp(double d, double min, double max)
+inline SCICORESHARE double Clamp(double d, double min, double max)
 {
   return d<=min?min:d>=max?max:d;
 }
 
-inline SHARE int Clamp(int i, int min, int max)
+inline SCICORESHARE int Clamp(int i, int min, int max)
 {
   return i<min?min:i>max?max:i;
 }
@@ -57,7 +57,7 @@ inline SHARE int Clamp(int i, int min, int max)
 // return:   min - if d<=min
 //	     max - if d>=max
 //	     hermite curve if d>min && d<max
-inline SHARE double SmoothStep(double d, double min, double max)
+inline SCICORESHARE double SmoothStep(double d, double min, double max)
 {
   double ret;
   if(d <= min){
@@ -73,13 +73,13 @@ inline SHARE double SmoothStep(double d, double min, double max)
 }
 
 // Interpolation:
-inline SHARE double Interpolate(double d1, double d2, double weight)
+inline SCICORESHARE double Interpolate(double d1, double d2, double weight)
 {
   return d2*weight+d1*(1.0-weight);
 }
 
 // Integer/double conversions
-inline SHARE double Fraction(double d)
+inline SCICORESHARE double Fraction(double d)
 {
   if(d>0){
     return d-(int)d;
@@ -88,7 +88,7 @@ inline SHARE double Fraction(double d)
   }
 }
 
-inline SHARE int RoundDown(double d)
+inline SCICORESHARE int RoundDown(double d)
 {
   if(d>=0){
     return (int)d;
@@ -101,7 +101,7 @@ inline SHARE int RoundDown(double d)
   }
 }
 
-inline SHARE int RoundUp(double d)
+inline SCICORESHARE int RoundUp(double d)
 {
     if(d>=0){
 	if((d-(int)d) == 0)
@@ -113,13 +113,13 @@ inline SHARE int RoundUp(double d)
     }
 }
 
-inline SHARE int Round(double d)
+inline SCICORESHARE int Round(double d)
 {
   return (int)(d+0.5);
 }
 
 
-inline SHARE int Floor(double d)
+inline SCICORESHARE int Floor(double d)
 {
   if(d>=0){
     return (int)d;
@@ -128,7 +128,7 @@ inline SHARE int Floor(double d)
   }
 }
 
-inline SHARE int Ceil(double d)
+inline SCICORESHARE int Ceil(double d)
 {
   if(d==(int)d){
     return (int)d;
@@ -141,7 +141,7 @@ inline SHARE int Ceil(double d)
   }
 }
 
-inline SHARE int Tile(int tile, int tf)
+inline SCICORESHARE int Tile(int tile, int tf)
 {
   if(tf<0){
     // Tile in negative direction
@@ -161,11 +161,15 @@ inline SHARE int Tile(int tile, int tf)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:34  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:03  mcq
 // Initial commit
 //
 // Revision 1.4  1999/07/01 16:44:23  moulding
-// added SHARE to enable win32 shared libraries (dll's)
+// added SCICORESHARE to enable win32 SCICORESHAREd libraries (dll's)
 //
 // Revision 1.3  1999/05/06 19:56:19  dav
 // added back .h files

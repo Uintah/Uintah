@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomX11.h>
-#include <Util/NotFinished.h>
-#include <Geom/GeomObj.h>
-#include <Geom/Light.h>
-#include <Geom/GeomLine.h>
-#include <Geom/GeomTri.h>
-#include <Geometry/Transform.h>
+#include <SCICore/Geom/GeomX11.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geometry/Transform.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -205,6 +205,10 @@ void GeomTri::objdraw(DrawInfoX11* di, Material*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:18  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:48  mcq
 // Initial commit
 //

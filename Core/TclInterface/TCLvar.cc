@@ -17,20 +17,45 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <TclInterface/GuiManager.h>
-#include <TclInterface/Remote.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLTask.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/TclInterface/GuiManager.h>
+#include <SCICore/TclInterface/Remote.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 #include <tcl.h>
 #include <iostream.h>
+#ifdef _WIN32
+#include <string.h>
+#endif
+#ifndef _WIN32
 #include <values.h>
+#else
+#include <limits.h>
+#include <float.h>
+#endif
 
-extern Tcl_Interp* the_interp;
+#ifndef MAXDOUBLE
+#define MAXDOUBLE	DBL_MAX
+#endif
+#ifndef MAXINT
+#define MAXINT		INT_MAX
+#endif
+
+#ifdef _WIN32
+#undef ASSERT
+#include <afxwin.h>
+#define GLXContext HGLRC
+#else
+#include <GL/gl.h>
+#include <GL/glx.h>
+#endif
+
+extern "C" Tcl_Interp* the_interp;
+extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace SCICore {
 namespace TclInterface {
@@ -101,6 +126,7 @@ double TCLdouble::get()
     // need access to network scope to get remote info.  I can't even look
     // up mod_id in hash table because the network has that.
     if(is_reset){
+#ifndef _WIN32
 	if (gm != NULL) {
             int skt = gm->getConnection();
 #ifdef DEBUG
@@ -127,6 +153,7 @@ double TCLdouble::get()
 #endif
 
         } else {
+#endif
 	    TCLTask::lock();
 	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
 	    if(l){
@@ -134,7 +161,9 @@ double TCLdouble::get()
 	       	is_reset=0;
 	    }
 	    TCLTask::unlock();
+#ifndef _WIN32
 	}
+#endif
     }
     return value;
 }
@@ -171,6 +200,7 @@ TCLint::~TCLint()
 int TCLint::get()
 {
     if(is_reset){
+#ifndef _WIN32
         if (gm != NULL) {
             int skt = gm->getConnection();
 #ifdef DEBUG
@@ -197,6 +227,7 @@ int TCLint::get()
 #endif
 
         } else {
+#endif
 
 	    TCLTask::lock();
 	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
@@ -205,7 +236,9 @@ int TCLint::get()
 	        is_reset=0;
 	    }
 	    TCLTask::unlock();
+#ifndef _WIN32
 	}
+#endif
     }
     return value;
 }
@@ -240,6 +273,7 @@ TCLstring::~TCLstring()
 clString TCLstring::get()
 {
     if(is_reset){
+#ifndef _WIN32
         if (gm != NULL) {
             int skt = gm->getConnection();
 #ifdef DEBUG
@@ -267,6 +301,7 @@ clString TCLstring::get()
 #endif
 
         } else {
+#endif
 	    TCLTask::lock();
 	    char* l=Tcl_GetVar(the_interp, const_cast<char *>(varname()), TCL_GLOBAL_ONLY);
 	    if(!l){
@@ -275,7 +310,9 @@ clString TCLstring::get()
 	    value=clString(l);
 	    is_reset=0;
 	    TCLTask::unlock();
+#ifndef _WIN32
    	}
+#endif
     }
     return value;
 }
@@ -479,6 +516,10 @@ void TCLVector::emit(ostream& out)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:45  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:16  mcq
 // Initial commit
 //

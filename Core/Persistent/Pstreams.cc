@@ -14,16 +14,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Persistent/Pstreams.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
 
 // KCC stuff
 // #include <fstream.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <string.h>
+#include <io.h>
+#else
 #include <sys/mman.h>
+#endif
 
 #define PERSISTENT_VERSION 1
 
@@ -660,10 +665,12 @@ BinaryPiostream::~BinaryPiostream()
 	xdr_destroy(xdr);
 	delete xdr;
 	if(dir==Read && mmapped){
+#ifndef SCI_NOMMAP_IO
 	    if(munmap((caddr_t)addr, len) != 0){
 		perror("munmap");
 		exit(-1);
 	    }
+#endif
 	}
     }
 }

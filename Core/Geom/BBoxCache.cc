@@ -12,9 +12,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Geom/BBoxCache.h>
-#include <Util/NotFinished.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/BBoxCache.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -105,6 +105,7 @@ void GeomBBoxCache::io(Piostream& stream)
 {
     using SCICore::PersistentSpace::Pio;
     using SCICore::Geometry::Pio;
+    using SCICore::GeomSpace::Pio;
 
     stream.begin_class("GeomBBoxCache", GEOMBBOXCACHE_VERSION);
     Pio(stream, bbox_cached);
@@ -126,6 +127,10 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:03  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:36  mcq
 // Initial commit
 //

@@ -12,20 +12,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/Mesh.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
 
-#include <Containers/FastHashTable.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Containers/TrivialAllocator.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomPolyline.h>
-#include <Geom/GeomTri.h>
-#include <Malloc/Allocator.h>
-#include <Math/Mat.h>
+#include <SCICore/Containers/FastHashTable.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomPolyline.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Mat.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -197,6 +197,7 @@ void Mesh::io(Piostream& stream)
 
 void Node::io(Piostream& stream)
 {
+    using SCICore::Containers::Pio;
     using SCICore::PersistentSpace::Pio;
     using SCICore::Containers::Pio;
     using SCICore::Geometry::Pio;
@@ -1560,15 +1561,11 @@ void Mesh::get_boundary_lines(Array1<Point>&)
     NOT_FINISHED("Mesh::get_boundary_lines");
 }
 
-} // End namespace CoreDatatypes
-} // End namespace SCICore
-
-
-namespace SCICore {
-namespace PersistentSpace {
-
-void Pio(Piostream& stream, SCICore::CoreDatatypes::Element*& data)
+void Pio(Piostream& stream, Element*& data)
 {
+    using SCICore::PersistentSpace::Pio;
+    using SCICore::CoreDatatypes::Pio;
+
     if(stream.reading())
 	data=new SCICore::CoreDatatypes::Element(0,0,0,0,0);
     stream.begin_cheap_delim();
@@ -1592,10 +1589,10 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::NodeVersion1& node)
 void Pio(Piostream& stream, SCICore::CoreDatatypes::ElementVersion1& elem)
 {
     stream.begin_cheap_delim();
-    Pio(stream, elem.n0);
-    Pio(stream, elem.n1);
-    Pio(stream, elem.n2);
-    Pio(stream, elem.n3);
+    SCICore::PersistentSpace::Pio(stream, elem.n0);
+    SCICore::PersistentSpace::Pio(stream, elem.n1);
+    SCICore::PersistentSpace::Pio(stream, elem.n2);
+    SCICore::PersistentSpace::Pio(stream, elem.n3);
     stream.end_cheap_delim();
 }
 
@@ -1604,6 +1601,10 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:48  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:23  mcq
 // Initial commit
 //

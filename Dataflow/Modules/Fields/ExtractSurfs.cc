@@ -12,39 +12,41 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <Tester/RigorousTest.h>
-#include <Containers/BitArray1.h>
-#include <Containers/HashTable.h>
-#include <Util/NotFinished.h>
-#include <Containers/Queue.h>
-#include <Containers/Stack.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ColorMapPort.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CoreDatatypes/ScalarField.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CoreDatatypes/ScalarFieldRGchar.h>
-#include <CoreDatatypes/ScalarFieldRGint.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-//Dd: #include <CoreDatatypes/SurfOctree.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Geom/Pt.h>
-#include <Geom/GeomTriangles.h>
-#include <Geom/GeomTriStrip.h>
-#include <Geometry/Point.h>
-#include <Geometry/Plane.h>
-#include <Malloc/Allocator.h>
-#include <Math/Expon.h>
-#include <Math/MiscMath.h>
-#include <TclInterface/TCLvar.h>
-#include <Widgets/ArrowWidget.h>
 #include <iostream.h>
 #include <strstream.h>
+
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Containers/BitArray1.h>
+#include <SCICore/Containers/HashTable.h>
+#include <SCICore/Containers/Queue.h>
+#include <SCICore/Containers/Stack.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
+//Dd: #include <SCICore/CoreDatatypes/SurfOctree.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Geom/GeomTriStrip.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Plane.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/TclInterface/TCLvar.h>
+
+#include <PSECore/Widgets/ArrowWidget.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
 
 // just so I can see the proccess id...
 
@@ -54,8 +56,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -284,6 +286,10 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:26  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:41  mcq
 // Initial commit
 //

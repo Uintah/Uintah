@@ -1,7 +1,19 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <Math/hf.h>
+
+#ifdef LINUX
+  #include <values.h>
+  #define fsqrt(x) ((float)sqrt(x))
+#endif
+
+#include <SCICore/Math/hf.h>
+
+#ifdef _WIN32
+  #include <float.h>
+  #define MAXFLOAT FLT_MAX
+  #define fsqrt(x) ((float)sqrt(x))
+#endif
 
 #ifdef _WIN32
 #include <float.h>

@@ -14,9 +14,9 @@
 #ifndef SCI_project_VectorFieldOcean_h
 #define SCI_project_VectorFieldOcean_h 1
 
-#include <CoreDatatypes/VectorField.h>
-#include <Containers/String.h>
-#include <Containers/Array1.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Containers/Array1.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -30,7 +30,7 @@ namespace CoreDatatypes {
 using SCICore::GeomSpace::GeomObj;
 using SCICore::Containers::clString;
 
-class VectorFieldOcean : public VectorField {
+class SCICORESHARE VectorFieldOcean : public VectorField {
 public:
     clString filename;
     float* data;
@@ -61,6 +61,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:58  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:32  mcq
 // Initial commit
 //

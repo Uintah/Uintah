@@ -14,12 +14,12 @@
 #ifndef Geometry_Point_h
 #define Geometry_Point_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Util/Assert.h>
-#include <Tester/RigorousTest.h>
-#include <Persistent/Persistent.h>
-#include <Containers/String.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Tester/RigorousTest.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Containers/String.h>
 
 #ifdef KCC
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
@@ -37,7 +37,7 @@ using SCICore::Tester::RigorousTest;
 
 class Vector;
 
-class SHARE Point {
+class SCICORESHARE Point {
     double _x,_y,_z;
 #if SCI_ASSERTION_LEVEL >= 4
     int uninit;
@@ -74,24 +74,24 @@ public:
     
     clString string() const;
     
-    friend class Vector;
-    friend inline double Dot(const Point&, const Point&);
-    friend inline double Dot(const Vector&, const Point&);
-    friend inline double Dot(const Point&, const Vector&);
+    friend SCICORESHARE class Vector;
+    friend SCICORESHARE inline double Dot(const Point&, const Point&);
+    friend SCICORESHARE inline double Dot(const Vector&, const Point&);
+    friend SCICORESHARE inline double Dot(const Point&, const Vector&);
 //    friend inline double Dot(const Point&, const Vector&);
-    friend inline Point Min(const Point&, const Point&);
-    friend inline Point Max(const Point&, const Point&);
-    friend Point Interpolate(const Point&, const Point&, double);
-    friend Point AffineCombination(const Point&, double,
+    friend SCICORESHARE inline Point Min(const Point&, const Point&);
+    friend SCICORESHARE inline Point Max(const Point&, const Point&);
+    friend SCICORESHARE Point Interpolate(const Point&, const Point&, double);
+    friend SCICORESHARE Point AffineCombination(const Point&, double,
 				   const Point&, double,
 				   const Point&, double,
 				   const Point&, double);
-    friend Point AffineCombination(const Point&, double,
+    friend SCICORESHARE Point AffineCombination(const Point&, double,
 				   const Point&, double,
 				   const Point&, double);
-    friend Point AffineCombination(const Point&, double,
+    friend SCICORESHARE Point AffineCombination(const Point&, double,
 				   const Point&, double);
-    friend void Pio( Piostream&, Point& );
+    friend SCICORESHARE void Pio( Piostream&, Point& );
 
 
     // is one point within a small interval of another?
@@ -104,14 +104,14 @@ public:
 
 };
 
-SHARE ostream& operator<<(ostream& os, const Point& p);
-SHARE istream& operator>>(istream& os, Point& p);
+SCICORESHARE ostream& operator<<(ostream& os, const Point& p);
+SCICORESHARE istream& operator>>(istream& os, Point& p);
 
 } // End namespace Geometry
 } // End namespace SCICore
 
-#include <Geometry/Vector.h>
-#include <Math/MinMax.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/MinMax.h>
 
 namespace SCICore {
 namespace Geometry {
@@ -123,6 +123,10 @@ namespace Geometry {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:56  mcq
 // Initial commit
 //

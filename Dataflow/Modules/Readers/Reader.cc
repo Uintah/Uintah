@@ -15,13 +15,13 @@
  *           new file is compiled.
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/TYPEPort.h>
-#include <CommonDatatypes/TYPE.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/CommonDatatypes/TYPEPort.h>
+#include <PSECommon/CommonDatatypes/TYPE.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 class TYPEReader : public Module {
     TYPEOPort* outport;
@@ -106,7 +106,7 @@ void TYPEReader::execute()
 
 #ifdef __GNUG__
 
-#include <Containers/LockingHandle.cc>
+#include <SCICore/Containers/LockingHandle.cc>
 
 template void Pio(Piostream&, TYPEHandle&);
 
@@ -114,7 +114,7 @@ template void Pio(Piostream&, TYPEHandle&);
 
 #ifdef __sgi
 #if _MIPS_SZPTR == 64
-#include <Containers/LockingHandle.cc>
+#include <SCICore/Containers/LockingHandle.cc>
 
 static void _dummy_(Piostream& p1, TYPEHandle& p2)
 {

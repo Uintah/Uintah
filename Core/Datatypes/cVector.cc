@@ -12,7 +12,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <CoreDatatypes/cVector.h>
+#include <SCICore/CoreDatatypes/cVector.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -233,6 +233,10 @@ void cVector::io(Piostream&) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:02  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:34  mcq
 // Initial commit
 //

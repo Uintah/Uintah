@@ -10,15 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <Geometry/Point.h>
-#include <TclInterface/TCLvar.h>
-#include <Math/Expon.h>
-#include <Multitask/Task.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
+#include <PSECommon/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Multitask/Task.h>
 #include <values.h>
 
 class Downsample : public Module {

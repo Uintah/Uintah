@@ -14,10 +14,10 @@
 #ifndef SCI_Geom_Line_h
 #define SCI_Geom_Line_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
-#include <Geom/Color.h>
-#include <Multitask/ITC.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Multitask/ITC.h>
 
 #include <stdlib.h>	// For size_t
 
@@ -26,7 +26,7 @@ namespace GeomSpace {
 
 using SCICore::Multitask::Mutex;
 
-class GeomLine : public GeomObj {
+class SCICORESHARE GeomLine : public GeomObj {
 public:
     Point p1, p2;
 
@@ -57,7 +57,7 @@ public:
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);
 };
 
-class GeomLines : public GeomObj {
+class SCICORESHARE GeomLines : public GeomObj {
 public:
   Array1<Point> pts;
   GeomLines();
@@ -85,7 +85,7 @@ public:
 
 // can generate "lit" streamlines this way
 
-class TexGeomLines : public GeomObj {
+class SCICORESHARE TexGeomLines : public GeomObj {
 protected:
   Array1<unsigned char>  tmap1d; // 1D texture - should be in Salmon?
   int tmapid;                    // id for this texture map
@@ -141,6 +141,10 @@ protected:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:09  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:40  mcq
 // Initial commit
 //

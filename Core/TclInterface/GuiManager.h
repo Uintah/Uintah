@@ -18,9 +18,9 @@
 #ifndef SCI_project_GuiManager_h
 #define SCI_project_GuiManager_h 1
 
-#include <Containers/Array1.h>
-#include <Multitask/ITC.h>
-#include <TclInterface/Remote.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/TclInterface/Remote.h>
 
 namespace SCICore {
 namespace TclInterface {
@@ -28,7 +28,7 @@ namespace TclInterface {
 using SCICore::Containers::Array1;
 using SCICore::Multitask::Mutex;
 
-class GuiManager {
+class SCICORESHARE GuiManager {
 	Mutex access;
     private:
 	Array1<int> connect_pool;	// available sockets
@@ -47,6 +47,10 @@ class GuiManager {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:42  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:14  mcq
 // Initial commit
 //

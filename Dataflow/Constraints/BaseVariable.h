@@ -15,11 +15,13 @@
 #ifndef SCI_project_Base_Variable_h
 #define SCI_project_Base_Variable_h 1
 
-#include <Constraints/VarCore.h>
-#include <Containers/Array1.h>
-#include <Containers/String.h>
+#include <SCICore/share/share.h>
 
-namespace PSECommon {
+#include <PSECore/Constraints/VarCore.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/String.h>
+
+namespace PSECore {
 namespace Constraints {
 
 using SCICore::Containers::clString;
@@ -38,7 +40,7 @@ enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 
 class BaseConstraint;
 
-class BaseVariable {
+class SCICORESHARE BaseVariable {
    friend class BaseConstraint;
    friend class ConstraintSolver;
 public:
@@ -94,14 +96,14 @@ private:
    void RegisterPriority( const Index index, const VPriority p );
    void printc( ostream& os, const Index c );
 };
-inline ostream& operator<<( ostream& os, BaseVariable& v );
+inline SCICORESHARE ostream& operator<<( ostream& os, BaseVariable& v );
 
 
 /* Miscellaneous */
 char* PriorityString( const VPriority p );
 char* SchemeString( const Scheme s );
 
-inline int HigherPriority( const VPriority p1, const VPriority p2 )
+inline SCICORESHARE int HigherPriority( const VPriority p1, const VPriority p2 )
 {
    return (p1 > p2);
 }
@@ -135,7 +137,7 @@ BaseVariable::operator Real() const
 }
 
 
-inline ostream&
+inline SCICORESHARE ostream&
 operator<<( ostream& os, BaseVariable& v )
 {
    v.print(os);
@@ -143,15 +145,19 @@ operator<<( ostream& os, BaseVariable& v )
 }
 
 } // End namespace Constraints
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:16  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:53  mcq
 // Initial commit
 //
 // Revision 1.3  1999/05/06 20:17:05  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:52  dav
 // Import sources

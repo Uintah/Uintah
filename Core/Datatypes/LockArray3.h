@@ -14,8 +14,8 @@
 #ifndef SCI_CoreDatatypes_Array3_h
 #define SCI_CoreDatatypes_Array3_h 1
 
-#include <Util/Assert.h>
-#include <CoreDatatypes/Datatype.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -70,12 +70,12 @@ public:
 // Start of included LockArray3.cc
 //
 
-#include <CoreDatatypes/LockArray3.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
-#include <Util/NotFinished.h>
+#include <SCICore/CoreDatatypes/LockArray3.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
 
-#include <Geometry/Point.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
@@ -237,6 +237,10 @@ void Pio(Piostream& stream, SCICore::CoreDatatypes::LockArray3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:47  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:22  mcq
 // Initial commit
 //

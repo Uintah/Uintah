@@ -12,23 +12,55 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomCone.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomCone.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
+
+/**************************************
+CLASS
+   GenAxes
+        GenAxes creates an icon in the scene, which displays
+        arrows for the X, Y, and Z euclidian directions.
+
+GENERAL INFORMATION
+
+   GenAxes
+  
+   Author:  David Weinstein<br>
+            Department of Computer Science<br>
+            University of Utah
+
+   Date:    Mar 1995
+   
+   C-SAFE
+   
+   Copyright <C> 1995 SCI Group
+
+KEYWORDS
+   Visualization
+
+DESCRIPTION
+   GenAxes creates an icon in the scene, which displays
+   arrows for the X, Y, and Z euclidian directions.
+
+WARNING
+   None
+
+****************************************/
 
 class GenAxes : public Module {
     TCLdouble size;
@@ -41,11 +73,43 @@ class GenAxes : public Module {
     MaterialHandle lt_green;
     MaterialHandle lt_blue;
 public:
+
+        // GROUP:  Constructors:
+        ///////////////////////////
+        //
+        // Constructs an instance of class GenAxes
+        //
+        // Constructor taking
+        //    [in] id as an identifier
+        //
     GenAxes(const clString& id);
+
+        ///////////////////////////
+        //
+        // Constructor taking
+        //    [in] GenAxes for copying
+        //    [in] deep a copying flag
+        //
     GenAxes(const GenAxes&, int deep);
+
+        // GROUP:  Destructor:
+        ///////////////////////////
+        // Destructor
     virtual ~GenAxes();
     virtual Module* clone(int deep);
+
+
+        // GROUP:  Access functions:
+        ///////////////////////////
+        //
+        // execute() - execution scheduled by scheduler
     virtual void execute();
+
+
+        //////////////////////////
+        //
+        // tcl_commands - overides tcl_command in base class Module, takes:
+        //                          size_changed
     virtual void tcl_command(TCLArgs&, void*);
 };
 
@@ -145,6 +209,10 @@ void GenAxes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:48  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:12  mcq
 // Initial commit
 //

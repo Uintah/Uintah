@@ -1,6 +1,6 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
+OBJTOP   = ../../..
 
 TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
@@ -14,8 +14,7 @@ SRCS     = AddWells.cc AddWells2.cc BitVisualize.cc BoundGrid.cc \
            Streamline.cc VectorSeg.cc VolRendTexSlices.cc VolVis.cc \
            WidgetTest.cc FastRender.c HedgehogLitLines.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs/SCICore -I$(SRCTOP)/libs/PSECore \
-           -I$(SRCTOP)/packages/PSECommon \
+INCLUDES = -I$(OBJTOP) \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk

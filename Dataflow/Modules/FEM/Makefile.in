@@ -1,10 +1,10 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../../..
+OBJTOP   = ../../..
 
 SRCS     = ApplyBC.cc BuildFEMatrix.cc ComposeError.cc ErrorInterval.cc \
            FEMError.cc MeshRefiner.cc
 
-INCLUDES = -I$(OBJTOP) -I$(SRCTOP)/libs/SCICore -I$(SRCTOP)/libs/PSECore
+INCLUDES = -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk

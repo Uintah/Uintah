@@ -7,7 +7,7 @@
 
 #include <config.h>
 
-#include <Util/share.h>
+#include <SCICore/share/share.h>
 
 #include <stdio.h>
 #include <tkPort.h>
@@ -530,7 +530,7 @@ GLXContext OpenGLGetContext2(interp, name, dpy)
     return OpenGLPtr->cx;
 }
 
-SHARE GLXContext OpenGLGetContext(interp, name)
+SCICORESHARE GLXContext OpenGLGetContext(interp, name)
     Tcl_Interp* interp;
     char* name;
 {

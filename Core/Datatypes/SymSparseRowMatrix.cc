@@ -12,15 +12,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/SymSparseRowMatrix.h>
-#include <Math/ssmult.h>
-#include <Math/MiscMath.h>
-#include <Math/MinMax.h>
-#include <Util/Assert.h>
-#include <Exceptions/Exceptions.h>
-#include <Containers/String.h>
-#include <CoreDatatypes/ColumnMatrix.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/SymSparseRowMatrix.h>
+#include <SCICore/Math/ssmult.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Exceptions/Exceptions.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/CoreDatatypes/ColumnMatrix.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -194,7 +194,7 @@ void SymSparseRowMatrix::zero()
 
 void SymSparseRowMatrix::solve(ColumnMatrix&)
 {
-    EXCEPTION(General("SymSparseRowMatrix can't do a direct solve!"));
+    EXCEPTION(SCICore::ExceptionsSpace::General("SymSparseRowMatrix can't do a direct solve!"));
 }
 
 void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -320,6 +320,10 @@ void SymSparseRowMatrix::compute_upper()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:55  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:29  mcq
 // Initial commit
 //

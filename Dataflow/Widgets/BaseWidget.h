@@ -15,18 +15,18 @@
 #ifndef SCI_project_Base_Widget_h
 #define SCI_project_Base_Widget_h 1
 
-#include <Constraints/BaseVariable.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/Material.h>
-#include <Geom/Pickable.h>
-#include <Geom/GeomPick.h>
-#include <Geom/Switch.h>
-#include <Geom/TCLGeom.h>
-#include <TclInterface/TCL.h>
-#include <TclInterface/TCLvar.h>
+#include <PSECore/Constraints/BaseVariable.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/Pickable.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/Switch.h>
+#include <SCICore/Geom/TCLGeom.h>
+#include <SCICore/TclInterface/TCL.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 namespace SCICore {
   namespace Multitask {
@@ -34,7 +34,7 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
   namespace Dataflow {
     class Module;
   }
@@ -46,12 +46,15 @@ namespace PSECommon {
     class BaseVariable;
     class BaseConstraint;
   }
+}
+namespace PSECommon {
   namespace Modules {
     class Roe;
   }
 }
 
-namespace PSECommon {
+
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::TclInterface::TCL;
@@ -70,13 +73,13 @@ using SCICore::GeomSpace::TCLMaterial;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 
-using PSECommon::CommonDatatypes::GeometryOPort;
-using PSECommon::Dataflow::Module;
-using PSECommon::Constraints::ConstraintSolver;
-using PSECommon::Constraints::BaseVariable;
-using PSECommon::Constraints::BaseConstraint;
-using PSECommon::Constraints::Index;
-using PSECommon::Constraints::Real;
+using PSECore::CommonDatatypes::GeometryOPort;
+using PSECore::Dataflow::Module;
+using PSECore::Constraints::ConstraintSolver;
+using PSECore::Constraints::BaseVariable;
+using PSECore::Constraints::BaseConstraint;
+using PSECore::Constraints::Index;
+using PSECore::Constraints::Real;
 using PSECommon::Modules::Roe;
 
 class BaseWidget : public TCL, public Pickable {
@@ -223,10 +226,14 @@ protected:
 ostream& operator<<( ostream& os, BaseWidget& w );
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:05  mcq
 // Initial commit
 //
@@ -234,7 +241,7 @@ ostream& operator<<( ostream& os, BaseWidget& w );
 // Added geom_moved methods to BaseWidget
 //
 // Revision 1.3  1999/05/06 20:17:23  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.1.1.1  1999/04/24 23:12:29  dav
 // Import sources

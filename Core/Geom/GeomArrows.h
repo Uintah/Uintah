@@ -14,18 +14,18 @@
 #ifndef SCI_Geom_Arrows_h
 #define SCI_Geom_Arrows_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geom/Material.h>
-#include <Containers/Array1.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
 using SCICore::PersistentSpace::Piostream;
 
-class GeomArrows : public GeomObj {
+class SCICORESHARE GeomArrows : public GeomObj {
     double headwidth;
     double headlength;
     double rad;

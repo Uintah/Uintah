@@ -1,16 +1,16 @@
 
 #include <config.h>
-#include <Util/share.h>
+#include <SCICore/share/share.h>
 
 #include <tk.h>
 #include <tk3d.h>
 
-SHARE GC Tk_BorderDarkGC(Tk_3DBorder border);
-SHARE GC Tk_BorderLightGC(Tk_3DBorder border);
-SHARE GC Tk_BorderBgGC(Tk_3DBorder border);
-SHARE void Tk_BorderShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
+SCICORESHARE GC Tk_BorderDarkGC(Tk_3DBorder border);
+SCICORESHARE GC Tk_BorderLightGC(Tk_3DBorder border);
+SCICORESHARE GC Tk_BorderBgGC(Tk_3DBorder border);
+SCICORESHARE void Tk_BorderShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
 			int distance, XPoint *p3Ptr);
-SHARE int Tk_BorderIntersect(XPoint *a1Ptr, XPoint *a2Ptr, XPoint *b1Ptr,
+SCICORESHARE int Tk_BorderIntersect(XPoint *a1Ptr, XPoint *a2Ptr, XPoint *b1Ptr,
 		       XPoint *b2Ptr, XPoint *iPtr);
 
 

@@ -19,15 +19,15 @@
 #ifndef SCI_project_ScalarFieldRGchar_h
 #define SCI_project_ScalarFieldRGchar_h 1
 
-#include <CoreDatatypes/ScalarFieldRGBase.h>
-#include <Containers/Array3.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
+#include <SCICore/Containers/Array3.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
 using SCICore::Containers::Array3;
 
-class ScalarFieldRGchar : public ScalarFieldRGBase {
+class SCICORESHARE ScalarFieldRGchar : public ScalarFieldRGBase {
 public:
     Array3<char> grid;
 
@@ -77,6 +77,10 @@ ScalarFieldRGchar::get_value( int x, int y, int z )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:51  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:26  mcq
 // Initial commit
 //

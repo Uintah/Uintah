@@ -12,9 +12,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Comm/MessageBase.h>
+#include <PSECore/Comm/MessageBase.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Comm {
 
 MessageBase::MessageBase(MessageTypes::MessageType type)
@@ -27,10 +27,14 @@ MessageBase::~MessageBase()
 }
 
 } // End namespace Comm
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:05  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:44  mcq
 // Initial commit
 //

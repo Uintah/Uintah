@@ -12,7 +12,6 @@ itcl_class PSECommon_Visualizations_FieldCage {
 	set $this-numx 3
 	set $this-numy 3
 	set $this-numz 3
-	$this-c needexecute
     }
     method ui {} {
 	set w .ui[modname]

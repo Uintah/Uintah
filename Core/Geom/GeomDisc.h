@@ -14,14 +14,14 @@
 #ifndef SCI_Geom_Disc_h
 #define SCI_Geom_Disc_h 1
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
 
 namespace SCICore {
 namespace GeomSpace {
 
-class GeomDisc : public GeomObj {
+class SCICORESHARE GeomDisc : public GeomObj {
     Vector v1;
     Vector v2;
     Vector zrotaxis;
@@ -65,6 +65,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:07  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:39  mcq
 // Initial commit
 //

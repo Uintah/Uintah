@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <TclInterface/MemStats.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/TclInterface/MemStats.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdio.h>
 
@@ -30,6 +30,7 @@ using SCICore::Malloc::DumpAllocator;
 
 MemStats::MemStats()
 {
+#ifndef _WIN32
     a=DefaultAllocator();
     if(a){
 	nbins=GetNbins(a);
@@ -57,6 +58,7 @@ MemStats::MemStats()
 	    }
 	}
     }
+#endif
 }
 
 MemStats::~MemStats()
@@ -69,6 +71,7 @@ void MemStats::init_tcl()
 
 void MemStats::tcl_command(TCLArgs& args, void*)
 {
+#ifndef _WIN32
     if(args.count() < 2){
 	args.error("memstats needs a minor command");
 	return;
@@ -209,6 +212,7 @@ void MemStats::tcl_command(TCLArgs& args, void*)
     } else {
 	args.error("Unknown minor command for memstats");
     }
+#endif
 }
 
 } // End namespace TclInterface
@@ -216,6 +220,10 @@ void MemStats::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:15  mcq
 // Initial commit
 //

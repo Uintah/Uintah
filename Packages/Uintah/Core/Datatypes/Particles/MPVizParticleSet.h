@@ -14,14 +14,13 @@
 #ifndef SCI_Datatypes_MPVizParticleSet_h
 #define SCI_Datatypes_MPVizParticleSet_h 1
 
-#include <Datatypes/Particles/ParticleSet.h>
-#include <Datatypes/Particles/cfdlibParticleSet.h>
-#include <Containers/LockingHandle.h>
+#include <SCICore/Containers/LockingHandle.h>
+
+#include <Uintah/Datatypes/Particles/ParticleSet.h>
+#include <Uintah/Datatypes/Particles/cfdlibParticleSet.h>
 
 namespace Uintah {
 namespace Datatypes {
-
-
 
 class MPVizParticleSet : public cfdlibParticleSet {
 public:
@@ -60,6 +59,10 @@ private:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:07  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:59  mcq
 // Initial commit
 //

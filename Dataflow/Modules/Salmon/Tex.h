@@ -6,12 +6,12 @@
  * Peter-Pike Sloan
  */
 
-#include <Geom/GeomObj.h>
-#include <Geometry/Point.h>
-#include <Geometry/Vector.h>
-#include <Geometry/BBox.h>
-#include <Containers/Handle.h>
-#include <Persistent/Persistent.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Containers/Handle.h>
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
   namespace Geometry {
@@ -225,6 +225,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:40  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:53  mcq
 // Initial commit
 //

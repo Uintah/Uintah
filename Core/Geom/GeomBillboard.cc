@@ -12,8 +12,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <Geom/GeomBillboard.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomBillboard.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -89,7 +89,7 @@ void GeomBillboard::io(Piostream& stream)
     using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomBillboard", GEOMBBOXCACHE_VERSION);
-    Pio(stream, child);
+    GeomSpace::Pio(stream, child);
     stream.end_class();
 }
 
@@ -104,6 +104,10 @@ bool GeomBillboard::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:05  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:37  mcq
 // Initial commit
 //

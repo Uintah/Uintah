@@ -14,15 +14,15 @@
 #ifndef sci_Geometry_Ray_h
 #define sci_Geometry_Ray_h
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace Geometry {
 
-class SHARE Ray {
+class SCICORESHARE Ray {
     Point o;
     Vector d;
 public:
@@ -42,6 +42,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:57  mcq
 // Initial commit
 //

@@ -14,8 +14,9 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <Dataflow/Port.h>
-#include <Multitask/ITC.h>
+#include <SCICore/share/share.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
   namespace Containers {
@@ -34,14 +35,14 @@ namespace SCICore {
   }
 }
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
-using PSECommon::Dataflow::IPort;
-using PSECommon::Dataflow::OPort;
-using PSECommon::Dataflow::Module;
-using PSECommon::Dataflow::Connection;
-using PSECommon::Comm::MessageBase;
+using PSECore::Dataflow::IPort;
+using PSECore::Dataflow::OPort;
+using PSECore::Dataflow::Module;
+using PSECore::Dataflow::Connection;
+using PSECore::Comm::MessageBase;
 
 using SCICore::Containers::clString;
 using SCICore::Multitask::Mutex;
@@ -56,7 +57,7 @@ class GeometryComm;
 
 typedef int GeomID;
 
-class GeometryIPort : public IPort {
+class SCICORESHARE GeometryIPort : public IPort {
 public:
     enum Protocol {
 	Atomic=0x01
@@ -89,7 +90,7 @@ struct GeometryData {
 #define GEOM_DEPTHBUFFER 4
 #define GEOM_ALLDATA 7
 
-class GeometryOPort : public OPort {
+class SCICORESHARE GeometryOPort : public OPort {
     GeometryIPort* in;
     int portid;
     GeomID serial;
@@ -129,15 +130,19 @@ public:
 };
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:08  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:47  mcq
 // Initial commit
 //
 // Revision 1.4  1999/05/06 20:17:01  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.2  1999/04/27 23:18:35  dav
 // looking for lost files to commit

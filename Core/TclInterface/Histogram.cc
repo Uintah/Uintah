@@ -12,8 +12,12 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <TclInterface/Histogram.h>
-#include <Multitask/ITC.h>
+#ifdef _WIN32
+#pragma warning(disable:4355) // quit complaining about 'this' in initializers
+#endif
+
+#include <SCICore/TclInterface/Histogram.h>
+#include <SCICore/Multitask/ITC.h>
 
 #include <string.h>
 
@@ -274,6 +278,10 @@ Histogram::SetNumBuckets( const int nb )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:14  mcq
 // Initial commit
 //

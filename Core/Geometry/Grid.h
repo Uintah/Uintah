@@ -14,12 +14,14 @@
 #ifndef SCI_project_Grid_h
 #define SCI_project_Grid_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Containers/Array1.h>
-#include <Containers/Array3.h>
-#include <Containers/LockingHandle.h>
-#include <Geometry/Point.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array3.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geometry/Point.h>
 
 // I have used the term element for a single cube in the grid and the 
 // term member for the id of a triangle that passes through an element
@@ -30,7 +32,7 @@ namespace Geometry {
 using SCICore::Containers::Array1;
 using SCICore::Containers::Array3;
 
-class SHARE Grid {
+class SCICORESHARE Grid {
     double spacing;
     Point min;
     Array3<Array1<int> *> *e;
@@ -70,6 +72,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:55  mcq
 // Initial commit
 //

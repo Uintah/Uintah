@@ -1,5 +1,3 @@
-#ifndef cSMATRIX_H
-#define ccSMatrix_H 1
 
 /*
  *  cSMatrix.h : ?
@@ -13,16 +11,21 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#ifndef CSMATRIX_H
+#define CSMATRIX_H 1
+
+#include <SCICore/share/share.h>
+
 #include <iostream.h>
 #include <fstream.h>
-#include <CoreDatatypes/cMatrix.h>
-#include <Math/Complex.h>
-#include <CoreDatatypes/cVector.h>
+#include <SCICore/CoreDatatypes/cMatrix.h>
+#include <SCICore/Math/Complex.h>
+#include <SCICore/CoreDatatypes/cVector.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
-class cSMatrix:public cMatrix{
+class SCICORESHARE cSMatrix:public cMatrix{
   
 private:
   Complex *a;
@@ -37,7 +40,7 @@ public:
   cSMatrix(int nrows, int ncols,int nnz,Complex *a, int * row, int *col );
   ~cSMatrix();
     
-  friend ostream &operator<< (ostream &output, cSMatrix &B);
+  friend SCICORESHARE ostream &operator<< (ostream &output, cSMatrix &B);
   
  
  cVector  operator*(cVector &V);
@@ -52,6 +55,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:01  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:34  mcq
 // Initial commit
 //

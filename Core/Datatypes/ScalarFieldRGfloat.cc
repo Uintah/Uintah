@@ -16,9 +16,9 @@
  *           the generation process.)
  */
 
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-//#include <Containers/String.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
+//#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 namespace SCICore {
@@ -326,6 +326,10 @@ void ScalarFieldRGfloat::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:51  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:26  mcq
 // Initial commit
 //

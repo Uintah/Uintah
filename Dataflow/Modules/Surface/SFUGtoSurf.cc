@@ -13,27 +13,27 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CoreDatatypes/TriSurface.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <stdio.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::SurfaceHandle;
-using PSECommon::CommonDatatypes::TriSurface;
-using PSECommon::CommonDatatypes::ScalarFieldIPort;
-using PSECommon::CommonDatatypes::ScalarFieldHandle;
-using PSECommon::CommonDatatypes::ScalarFieldUG;
+using PSECore::Dataflow::Module;
+using PSECore::CommonDatatypes::SurfaceIPort;
+using PSECore::CommonDatatypes::SurfaceOPort;
+using PSECore::CommonDatatypes::SurfaceHandle;
+using PSECore::CommonDatatypes::TriSurface;
+using PSECore::CommonDatatypes::ScalarFieldIPort;
+using PSECore::CommonDatatypes::ScalarFieldHandle;
+using PSECore::CommonDatatypes::ScalarFieldUG;
 
 using SCICore::Containers::clString;
 
@@ -105,6 +105,10 @@ void SFUGtoSurf::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:43  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:58  mcq
 // Initial commit
 //

@@ -14,22 +14,22 @@
  *                                                              *
  ****************************************************************/
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
-#include <CoreDatatypes/cSMatrix.h>
-#include <CoreDatatypes/cDMatrix.h>
-#include <CommonDatatypes/cMatrixPort.h>
-#include <CoreDatatypes/cVector.h>
-#include <CommonDatatypes/cVectorPort.h>
-#include <Math/Complex.h>
+#include <SCICore/CoreDatatypes/cSMatrix.h>
+#include <SCICore/CoreDatatypes/cDMatrix.h>
+#include <PSECore/CommonDatatypes/cMatrixPort.h>
+#include <SCICore/CoreDatatypes/cVector.h>
+#include <PSECore/CommonDatatypes/cVectorPort.h>
+#include <SCICore/Math/Complex.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -267,6 +267,10 @@ void cConjGrad::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:32  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:46  mcq
 // Initial commit
 //

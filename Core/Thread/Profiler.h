@@ -30,7 +30,7 @@ WARNING
    
 ****************************************/
 
-class Profiler  : public Runnable {
+class SCICORESHARE Profiler  : public Runnable {
     
     FILE* in;
     FILE* out;

@@ -12,18 +12,18 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CoreDatatypes/BasicSurfaces.h>
-#include <CommonDatatypes/ManhattanDist.h>
-#include <CoreDatatypes/Surface.h>
-#include <CommonDatatypes/SurfacePort.h>
-#include <CommonDatatypes/TriSurface.h>
-#include <Geometry/BBox.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECommon/Dataflow/Module.h>
+#include <SCICore/CoreDatatypes/BasicSurfaces.h>
+#include <PSECommon/CommonDatatypes/ManhattanDist.h>
+#include <SCICore/CoreDatatypes/Surface.h>
+#include <PSECommon/CommonDatatypes/SurfacePort.h>
+#include <PSECommon/CommonDatatypes/TriSurface.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
-#include <Containers/Array2.h>
+#include <SCICore/Containers/Array2.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -275,6 +275,10 @@ void AugmentSurf::voxelCoalesce(TriSurface* ts, int gs) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:41  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:56  mcq
 // Initial commit
 //

@@ -16,8 +16,8 @@
 
 #include <config.h>
 
-#include <Util/Assert.h>
-#include <Tester/RigorousTest.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Tester/RigorousTest.h>
 
 namespace SCICore {
 
@@ -25,7 +25,9 @@ namespace PersistentSpace {
   class Piostream;
 }
 
-namespace GeomSpace {}
+namespace GeomSpace {
+  void Pio();  // This is a dummy declaration to get things to compile.
+}
 namespace CoreDatatypes {
   void Pio();  // This is a dummy declaration to get things to compile.
 }
@@ -163,11 +165,11 @@ public:
 // Start of included Array1.cc
 //
 
-#include <Containers/String.h>
-#include <Persistent/Persistent.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Persistent/Persistent.h>
+#include <SCICore/Malloc/Allocator.h>
 
-#include <Tester/RigorousTest.h>
+#include <SCICore/Tester/RigorousTest.h>
 
 namespace SCICore {
 namespace Containers {
@@ -326,8 +328,8 @@ T* Array1<T>::get_objs()
 template<class T>
 void Pio(Piostream& stream, Array1<T>& array)
 {
+  using SCICore::GeomSpace::Pio;
   using SCICore::PersistentSpace::Pio;
-  using namespace SCICore::GeomSpace;
   using SCICore::Geometry::Pio;
   using SCICore::Containers::Pio;
   using SCICore::CoreDatatypes::Pio;
@@ -356,6 +358,10 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:34  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:11  mcq
 // Initial commit
 //

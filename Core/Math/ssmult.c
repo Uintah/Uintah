@@ -1,5 +1,6 @@
+#include <SCICore/share/share.h>
 
-void ssmult(int beg, int end, int* rows, int* columns,
+SCICORESHARE void ssmult(int beg, int end, int* rows, int* columns,
 	    double* a, double* xp, double* bp)
 {
     int i, j;
@@ -15,7 +16,7 @@ void ssmult(int beg, int end, int* rows, int* columns,
     }
 }
 
-void ssmult_upper(int beg, int end, int* rows, int* columns,
+SCICORESHARE void ssmult_upper(int beg, int end, int* rows, int* columns,
 		  double* a, double* xp, double* bp)
 {
     int i, j;
@@ -39,7 +40,7 @@ void ssmult_upper(int beg, int end, int* rows, int* columns,
 
 
 /* This is too slow....*/
-void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
+SCICORESHARE void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
 		     double* a, double* xp, double* bp)
 {
     int i, j;
@@ -79,7 +80,7 @@ void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
 	int l, h;
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
-	register double r=xp[i];
+	//register double r=xp[i];
 	register double sum=bp[i]+a[row_idx]*xp[columns[row_idx]];
 	for(j=row_idx+1;j<next_idx;j++){
 	    register double aj=a[j];

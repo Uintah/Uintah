@@ -13,16 +13,16 @@
  */
 
 
-#include <Widgets/BoxWidget.h>
-#include <Constraints/DistanceConstraint.h>
-#include <Constraints/PythagorasConstraint.h>
-#include <Geom/GeomCylinder.h>
-#include <Geom/GeomSphere.h>
-#include <Geom/GeomGroup.h>
-#include <Malloc/Allocator.h>
-#include <Dataflow/Module.h>
+#include <PSECore/Widgets/BoxWidget.h>
+#include <PSECore/Constraints/DistanceConstraint.h>
+#include <PSECore/Constraints/PythagorasConstraint.h>
+#include <SCICore/Geom/GeomCylinder.h>
+#include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <PSECore/Dataflow/Module.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace Widgets {
 
 using SCICore::GeomSpace::GeomGroup;
@@ -30,7 +30,7 @@ using SCICore::GeomSpace::GeomSphere;
 using SCICore::GeomSpace::GeomCylinder;
 using SCICore::GeomSpace::GeomCappedCylinder;
 
-using namespace PSECommon::Constraints;
+using namespace PSECore::Constraints;
 
 const Index NumCons = 9;
 const Index NumVars = 10;
@@ -536,10 +536,14 @@ BoxWidget::AxisAligned( const Index yesno )
 }
 
 } // End namespace Widgets
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:28  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:05  mcq
 // Initial commit
 //

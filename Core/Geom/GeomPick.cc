@@ -12,8 +12,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Geom/GeomPick.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -210,6 +210,10 @@ bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:10  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:41  mcq
 // Initial commit
 //

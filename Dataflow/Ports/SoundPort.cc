@@ -12,18 +12,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CommonDatatypes/SoundPort.h>
+#include <PSECore/CommonDatatypes/SoundPort.h>
 
-#include <Util/Assert.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Dataflow/Connection.h>
-#include <Dataflow/Port.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <PSECore/Dataflow/Connection.h>
+#include <PSECore/Dataflow/Port.h>
+#include <SCICore/Malloc/Allocator.h>
 
 #include <iostream.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
 static clString sound_type("Sound");
@@ -244,10 +244,14 @@ void SoundOPort::resend(Connection*)
 }
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:12  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:50  mcq
 // Initial commit
 //

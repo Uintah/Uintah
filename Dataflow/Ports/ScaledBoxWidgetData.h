@@ -14,11 +14,12 @@
 #ifndef SCI_CommonDatatypes_ScaledBoxWidgetData_h
 #define SCI_CommonDatatypes_ScaledBoxWidgetData_h 1
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
-#include <Geometry/Point.h>
+#include <SCICore/share/share.h>
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Geometry/Point.h>
 
-namespace PSECommon {
+namespace PSECore {
 namespace CommonDatatypes {
 
 using SCICore::Containers::LockingHandle;
@@ -30,7 +31,7 @@ using namespace SCICore::CoreDatatypes;
 class ScaledBoxWidgetData;
 typedef LockingHandle<ScaledBoxWidgetData> ScaledBoxWidgetDataHandle;
 
-class ScaledBoxWidgetData : public Datatype {
+class SCICORESHARE ScaledBoxWidgetData : public Datatype {
 public:
     Point Center;
     Point R;
@@ -53,15 +54,19 @@ public:
 };
 
 } // End namespace CommonDatatypes
-} // End namespace PSECommon
+} // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:11  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:55:49  mcq
 // Initial commit
 //
 // Revision 1.4  1999/05/06 20:17:02  dav
-// added back PSECommon .h files
+// added back PSECore .h files
 //
 // Revision 1.2  1999/04/27 23:18:36  dav
 // looking for lost files to commit

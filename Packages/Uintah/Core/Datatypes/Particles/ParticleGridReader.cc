@@ -12,12 +12,13 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Datatypes/Particles/ParticleGridReader.h>
-#include <Util/NotFinished.h>
-#include <Containers/String.h>
-#include <Malloc/Allocator.h>
-
 #include <iostream.h>
+
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Malloc/Allocator.h>
+
+#include <Uintah/Datatypes/Particles/ParticleGridReader.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -54,6 +55,10 @@ void ParticleGridReader::SetFile( const clString& /*file*/ )
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:07  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:59  mcq
 // Initial commit
 //

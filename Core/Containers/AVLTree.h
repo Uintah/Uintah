@@ -83,8 +83,8 @@ public:
 // Start of included AVLTree.cc
 //
 
-#include <Util/Assert.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
 namespace Containers {
@@ -532,6 +532,10 @@ void AVLTree<Key, Data>::remove_all()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:34  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:11  mcq
 // Initial commit
 //

@@ -15,7 +15,7 @@
 #ifndef COMPLEX_H
 #define COMPLEX_H 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 #include<math.h>
 
@@ -27,7 +27,7 @@
 namespace SCICore {
 namespace Math {
 
-class SHARE Complex{
+class SCICORESHARE Complex{
 private:
   double a;
   double b;
@@ -53,11 +53,11 @@ public:
   Complex operator/ (const Complex&) const;
   Complex operator* (double) const;
   Complex operator/ (double) const;
-  friend  Complex operator* (double , Complex&); 
-  friend  Complex operator/ (double , Complex&);
+  friend  SCICORESHARE Complex operator* (double , Complex&); 
+  friend  SCICORESHARE Complex operator/ (double , Complex&);
   
-  friend ostream &operator<<(ostream &output, Complex&);
-  friend istream &operator>>(istream &input, Complex&);
+  friend SCICORESHARE ostream &operator<<(ostream &output, Complex&);
+  friend SCICORESHARE istream &operator>>(istream &input, Complex&);
 };
 
 } // End namespace Math
@@ -65,6 +65,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:32  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:02  mcq
 // Initial commit
 //

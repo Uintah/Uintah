@@ -15,21 +15,21 @@
 #ifndef SCI_Math_Expon_h
 #define SCI_Math_Expon_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
 #include <math.h>
 
-inline SHARE double Pow(double d, double p)
+inline SCICORESHARE double Pow(double d, double p)
 {
     return pow(d,p);
 }
 
-inline SHARE int Sqrt(int i)
+inline SCICORESHARE int Sqrt(int i)
 {
     return (int)sqrt((double)i);
 }
 
-inline SHARE double Sqrt(double d)
+inline SCICORESHARE double Sqrt(double d)
 {
     return sqrt(d);
 }
@@ -46,22 +46,22 @@ inline double Cbrt(double d)
 }
 #endif
 
-inline SHARE double Exp(double d)
+inline SCICORESHARE double Exp(double d)
 {
     return exp(d);
 }
 
-inline SHARE double Exp10(double p)
+inline SCICORESHARE double Exp10(double p)
 {
     return pow(10.0, p);
 }
 
-inline SHARE double Hypot(double x, double y)
+inline SCICORESHARE double Hypot(double x, double y)
 {
     return hypot(x, y);
 }
 
-inline SHARE double Sqr(double x)
+inline SCICORESHARE double Sqr(double x)
 {
     return x*x;
 }

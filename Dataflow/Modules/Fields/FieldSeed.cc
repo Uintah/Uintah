@@ -17,42 +17,42 @@
  *  it also spits out geometry for you...
  */
 
-#include <Util/NotFinished.h>
-#include <Util/Timer.h>
-#include <Containers/BitArray1.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <Geom/Color.h>
-#include <Geom/GeomObj.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Pt.h>
-#include <Geom/Material.h>
-#include <Geom/GeomTri.h>
-#include <Geom/GeomTriangles.h>
-#include <CommonDatatypes/MeshPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldUG.h>
-#include <CoreDatatypes/VectorField.h>
-#include <CoreDatatypes/VectorFieldUG.h>
-#include <CoreDatatypes/VectorFieldRG.h>
-#include <CommonDatatypes/VectorFieldPort.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/ITC.h>
-#include <Multitask/Task.h>
-#include <Widgets/ScaledBoxWidget.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Util/Timer.h>
+#include <SCICore/Containers/BitArray1.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomObj.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Pt.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geom/GeomTri.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <PSECore/CommonDatatypes/MeshPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
+#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
+#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
+#include <SCICore/CoreDatatypes/VectorFieldUG.h>
+#include <SCICore/CoreDatatypes/VectorFieldRG.h>
+#include <PSECore/CommonDatatypes/VectorFieldPort.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Multitask/ITC.h>
+#include <SCICore/Multitask/Task.h>
+#include <PSECore/Widgets/ScaledBoxWidget.h>
 
 #include <stdlib.h>
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
-using namespace PSECommon::Widgets;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
@@ -606,6 +606,10 @@ void FieldSeed::Visualize(int which, int onoff)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:27  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:42  mcq
 // Initial commit
 //

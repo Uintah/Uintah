@@ -27,8 +27,8 @@
 namespace SCIRun {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Multitask;
@@ -204,6 +204,10 @@ void Threshold::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:03  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:55  mcq
 // Initial commit
 //

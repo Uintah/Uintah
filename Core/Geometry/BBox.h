@@ -14,10 +14,12 @@
 #ifndef Geometry_BBox_h
 #define Geometry_BBox_h 1
 
-#include <share/share.h>
+#include <SCICore/share/share.h>
 
-#include <Geometry/Point.h>
-#include <Geometry/Plane.h>
+#include <SCICore/share/share.h>
+
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Geometry/Plane.h>
 
 namespace SCICore {
 
@@ -35,10 +37,10 @@ namespace Geometry {
 
 class Vector;
 
-class SHARE BBox {
+class SCICORESHARE BBox {
 
 protected:
-    friend void Pio( Piostream &, BBox& );
+    friend SCICORESHARE void Pio( Piostream &, BBox& );
 
     int have_some;
     Point cmin;
@@ -90,6 +92,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:39:26  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:55  mcq
 // Initial commit
 //

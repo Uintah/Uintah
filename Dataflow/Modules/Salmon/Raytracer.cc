@@ -12,17 +12,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Modules/Salmon/Raytracer.h>
-#include <Modules/Salmon/Roe.h>
-#include <Modules/Salmon/Salmon.h>
-#include <Util/NotFinished.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomRaytracer.h>
-#include <Geom/Lighting.h>
-#include <Geom/Light.h>
-#include <Geometry/Ray.h>
-#include <Malloc/Allocator.h>
-#include <Math/Trig.h>
+#include <PSECommon/Modules/Salmon/Raytracer.h>
+#include <PSECommon/Modules/Salmon/Roe.h>
+#include <PSECommon/Modules/Salmon/Salmon.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomRaytracer.h>
+#include <SCICore/Geom/Lighting.h>
+#include <SCICore/Geom/Light.h>
+#include <SCICore/Geometry/Ray.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Trig.h>
 #include <strstream.h>
 
 namespace PSECommon {
@@ -277,6 +277,10 @@ void Raytracer::add_to_group(GeomObj* obj)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:51  mcq
 // Initial commit
 //

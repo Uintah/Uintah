@@ -11,9 +11,9 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Modules/Salmon/Renderer.h>
-#include <Util/NotFinished.h>
-#include <Malloc/Allocator.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Malloc/Allocator.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -88,6 +88,10 @@ void Postscript::put_scanline(int, int, Color*, int)
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:37  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:51  mcq
 // Initial commit
 //

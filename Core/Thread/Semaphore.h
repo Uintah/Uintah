@@ -43,7 +43,7 @@ WARNING
    
 ****************************************/
 
-class Semaphore {
+class SCICORESHARE Semaphore {
     Semaphore_private* priv;
     const char* name;
 public:

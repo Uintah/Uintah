@@ -12,12 +12,12 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <CommonDatatypes/MeshPort.h>
-#include <CoreDatatypes/Mesh.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/CommonDatatypes/MeshPort.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <iostream.h>
 #include <fstream.h>
 #include <stdio.h>
@@ -26,8 +26,8 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -131,6 +131,10 @@ void PointsReader::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:35  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:49  mcq
 // Initial commit
 //

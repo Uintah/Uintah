@@ -1,6 +1,6 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
-OBJTOP   = ../../..
+OBJTOP   = ../..
 
 TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
@@ -10,7 +10,6 @@ SRCS     = tk3d2.c tkAppInit.c tkBevel.c tkCanvBLine.c tkCursor.c tkOpenGL.c \
            tkRange.c tkUnixRange.c tclTimer.c tclUnixNotfy.c tk3d.c
 
 INCLUDES = -I$(OBJTOP) \
-           -I$(SRCDIR)/.. \
            -I$(SRCDIR)/internal-includes \
            -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
 

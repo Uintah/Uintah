@@ -1,6 +1,3 @@
-#ifndef SCI_project_ColumnMatrix_h
-#define SCI_project_ColumnMatrix_h 1
-
 /*
  *  ColumnMatrix.h: for RHS and LHS
  *
@@ -13,8 +10,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <CoreDatatypes/Datatype.h>
-#include <Containers/LockingHandle.h>
+#ifndef SCI_project_ColumnMatrix_h
+#define SCI_project_ColumnMatrix_h 1
+
+#include <SCICore/share/share.h>
+
+#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Containers/LockingHandle.h>
 
 #ifdef KCC
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
@@ -32,7 +34,7 @@ using SCICore::PersistentSpace::PersistentTypeID;
 class ColumnMatrix;
 typedef LockingHandle<ColumnMatrix> ColumnMatrixHandle;
 
-class ColumnMatrix : public Datatype {
+class SCICORESHARE ColumnMatrix : public Datatype {
     int rows;
     double* data;
 public:
@@ -52,34 +54,34 @@ public:
     double vector_norm(int& flops, int& memrefs);
     double vector_norm(int& flops, int& memrefs, int beg, int end);
 
-    friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
-    friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-    friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+    friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
+    friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 		     int& flops, int& memrefs);
-    friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+    friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 		     int& flops, int& memrefs, int beg, int end);
-    friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-    friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+    friend SCICORESHARE void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend SCICORESHARE void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 		    int& flops, int& memrefs);
-    friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
-    friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+    friend SCICORESHARE double Dot(const ColumnMatrix&, const ColumnMatrix&);
+    friend SCICORESHARE double Dot(const ColumnMatrix&, const ColumnMatrix&,
 		      int& flops, int& memrefs);
-    friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
+    friend SCICORESHARE double Dot(const ColumnMatrix&, const ColumnMatrix&,
 		      int& flops, int& memrefs, int beg, int end);
-    friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+    friend SCICORESHARE void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 			   const ColumnMatrix&);
-    friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+    friend SCICORESHARE void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 			   const ColumnMatrix&, int& flops, int& memrefs);
-    friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+    friend SCICORESHARE void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 			   const ColumnMatrix&, int& flops, int& memrefs,
 			   int beg, int end);
 
-    friend void Copy(ColumnMatrix&, const ColumnMatrix&);
-    friend void Copy(ColumnMatrix&, const ColumnMatrix&, int& flops, int& refs,
+    friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&);
+    friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&, int& flops, int& refs,
 		     int beg, int end);
-    friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
-    friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-    friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend SCICORESHARE void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
+    friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
 
     void zero();
     void print(ostream&);
@@ -90,7 +92,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-#include <Util/Assert.h>
+#include <SCICore/Util/Assert.h>
 
 inline double& ColumnMatrix::operator[](int i) const
 {
@@ -103,6 +105,10 @@ inline double& ColumnMatrix::operator[](int i) const
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:44  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:20  mcq
 // Initial commit
 //

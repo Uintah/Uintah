@@ -39,7 +39,7 @@ PATTERNS
 WARNING
    
 ****************************************/
-class ThreadListener {
+class SCICORESHARE ThreadListener {
     friend class Thread;
     //////////
     //<i>No documentation provided</i>

@@ -6,7 +6,7 @@
 #include <SCICore/Containers/String.h>
 #include "PackageDB.h"
 
-namespace PSECommon {
+namespace PSECore {
 namespace Dataflow {
 
 using namespace SCICore::Containers;
@@ -53,7 +53,9 @@ void PackageDB::loadPackage(const clString& packPath) {
     int firstColon=packagePath.index(':');
     if(firstColon!=-1) {
       packageElt=packagePath.substr(0,firstColon);
+cerr << "Before '" << packagePath << "'\n";
       packagePath=packagePath.substr(firstColon+1,-1);
+cerr << "After '" << packagePath << "'\n";
     } else {
       packageElt=packagePath;
       packagePath="";
@@ -176,13 +178,7 @@ Module* PackageDB::instantiateModule(const clString& packageName,
     moduleInfo->uiFile="";                       // Don't do it again
   }
 
-  Module *module = (moduleInfo->maker)(instanceName);
-  module->packageName = packageName;
-  module->moduleName = moduleName;
-  module->categoryName = categoryName;
-
-  return module;
-    
+  return (moduleInfo->maker)(instanceName);
 }
 
 Array1<clString> PackageDB::packageNames(void) const {
@@ -251,4 +247,4 @@ Array1<clString> PackageDB::moduleNames(const clString& packageName,
 }
 
 } // Dataflow namespace
-} // PSECommon namespace
+} // PSECore namespace

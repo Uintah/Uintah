@@ -14,9 +14,9 @@
 #ifndef sci_Modules_Salmon_Raytracer_h
 #define sci_Modules_Salmon_Raytracer_h 1
 
-#include <Modules/Salmon/Renderer.h>
-#include <Geom/Color.h>
-#include <Geom/Material.h>
+#include <PSECommon/Modules/Salmon/Renderer.h>
+#include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/Material.h>
 
 namespace SCICore {
   namespace Geometry {
@@ -81,6 +81,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:37:38  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:57:52  mcq
 // Initial commit
 //

@@ -24,8 +24,8 @@
 namespace SCIRun {
 namespace Modules {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECore::Dataflow;
+using namespace PSECore::CommonDatatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::PersistentSpace;
 
@@ -160,6 +160,10 @@ void TiffReader::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:40:03  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:58:56  mcq
 // Initial commit
 //
@@ -167,7 +171,7 @@ void TiffReader::execute()
 // checking for missed updates
 //
 // Revision 1.1  1999/04/30 01:11:53  dav
-// moved TiffReader to SCIRun from PSECommon
+// moved TiffReader to SCIRun from PSECore
 //
 // Revision 1.2  1999/04/27 22:57:54  dav
 // updates in Modules for CoreDatatypes

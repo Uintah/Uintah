@@ -14,15 +14,15 @@
 #ifndef SCI_project_VectorFieldUG_h
 #define SCI_project_VectorFieldUG_h 1
 
-#include <CoreDatatypes/VectorField.h>
+#include <SCICore/CoreDatatypes/VectorField.h>
 
-#include <Containers/Array1.h>
-#include <CoreDatatypes/Mesh.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/CoreDatatypes/Mesh.h>
 
 namespace SCICore {
 namespace CoreDatatypes {
 
-class VectorFieldUG : public VectorField {
+class SCICORESHARE VectorFieldUG : public VectorField {
 public:
     MeshHandle mesh;
     Array1<Vector> data;
@@ -52,6 +52,10 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/08/17 06:38:59  sparker
+// Merged in modifications from PSECore to make this the new "blessed"
+// version of SCIRun/Uintah.
+//
 // Revision 1.1  1999/07/27 16:56:33  mcq
 // Initial commit
 //
