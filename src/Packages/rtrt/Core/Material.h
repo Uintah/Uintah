@@ -81,7 +81,16 @@ public:
   double phong_term( const SCIRun::Vector& e, const SCIRun::Vector& l,
                      const SCIRun::Vector& n, int exponent) const;
 
-  // This allows a material to be animated at the frame change
+  // This allows a material to be animated at the frame change.
+  
+  // By principal, this function should be fast in the common case.
+  // In other words, if you are doing something every frame it needs
+  // to be quick, but if you do something very infreqently (such as a
+  // user generated event) then it may be ok for the function to
+  // selectively perform the longer operation.  It will cause a hickup
+  // in the framerate, but because it happens with a user event, the
+  // user will be anticipating it.  In general this should be as fast
+  // an operation as possible, though.
   virtual void animate(double t, bool& changed);
 
   // To implement a new material, you must override this method.
