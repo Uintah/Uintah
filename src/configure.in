@@ -93,6 +93,17 @@ if ! test "$output_avg_walltime" = "no"; then
   extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
 fi
 
+# Check whether --enable-perfex or --disable-perfex was given.
+AC_ARG_ENABLE(perfex,
+	[  --enable-perfex	Use perfex hardware counters for applicable profiling tools],
+	[perfex="$enableval"],
+	[perfex=${perfex='no'}])
+if ! test "$perfex" = "no"; then
+  extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
+  PERFEX_LIBRARY=-lperfex
+  AC_SUBST(PERFEX_LIBRARY)
+fi
+
 ##-- check for user supplied tcl paths --------------------------------------
 
 AC_ARG_WITH(thirdparty,
