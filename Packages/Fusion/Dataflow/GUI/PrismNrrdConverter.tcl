@@ -126,7 +126,7 @@ itcl_class Fusion_Fields_PrismNrrdConverter {
 			-side left
 		}
 
-		pack $w.datasets.$i -side top
+		pack $w.datasets.$i -side top -fill x
 
 		incr i 1
 	    }

@@ -168,7 +168,7 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 			-command "$this select_dataset $i"
 		}
 
-		pack $w.datasets.$i -side top
+		pack $w.datasets.$i -side top -fill x
 
 		incr i 1
 	    }
