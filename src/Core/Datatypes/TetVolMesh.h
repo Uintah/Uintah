@@ -440,6 +440,7 @@ protected:
   void			orient(Cell::index_type ci);
   double		volume(TetVolMesh::Cell::index_type ci);
   bool			inside4_p(int, const Point &p);
+  pair<Point,double>	circumsphere(const Cell::index_type);
 
   //! Used to recompute data for individual cells
   void			create_cell_edges(Cell::index_type);
