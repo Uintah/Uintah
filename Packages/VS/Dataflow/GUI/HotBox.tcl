@@ -26,6 +26,15 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_label7
     global $this-gui_label8
     global $this-gui_label9
+    global $this-gui_is_injured1
+    global $this-gui_is_injured2
+    global $this-gui_is_injured3
+    global $this-gui_is_injured4
+    global $this-gui_is_injured5
+    global $this-gui_is_injured6
+    global $this-gui_is_injured7
+    global $this-gui_is_injured8
+    global $this-gui_is_injured9
     global $this-FME_on
     global $this-Files_on
     global $this-enableDraw
@@ -51,6 +60,15 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_label7 "label7"
     set $this-gui_label8 "label8"
     set $this-gui_label9 "label9"
+    set $this-gui_is_injured1 "0"
+    set $this-gui_is_injured2 "0"
+    set $this-gui_is_injured3 "0"
+    set $this-gui_is_injured4 "0"
+    set $this-gui_is_injured5 "0"
+    set $this-gui_is_injured6 "0"
+    set $this-gui_is_injured7 "0"
+    set $this-gui_is_injured8 "0"
+    set $this-gui_is_injured9 "0"
     set $this-FME_on "no"
     set $this-Files_on "no"
     set $this-enableDraw "no"
@@ -150,7 +168,6 @@ itcl_class VS_DataFlow_HotBox {
       # toggle Files control off
       set $this-Files_on "no"
     } else {set $this-Files_on "yes"}
-    $this-c needexecute
   }
   # end method toggle_Files_on
 
@@ -279,17 +296,49 @@ itcl_class VS_DataFlow_HotBox {
     frame $w.f
     # the UI buttons for selecting anatomical names (adjacencies)
     frame $w.f.row1
+    if { [set $this-gui_is_injured1] == "1" } {
+    button $w.f.row1.nw -background red -textvariable $this-gui_label1 -command "$this set_selection 1"
+    } else {
     button $w.f.row1.nw  -textvariable $this-gui_label1 -command "$this set_selection 1"
+    }
+    if { [set $this-gui_is_injured2] == "1" } {
+    button $w.f.row1.n -background red -textvariable $this-gui_label2 -command "$this set_selection 2"
+    } else {
     button $w.f.row1.n   -textvariable $this-gui_label2 -command "$this set_selection 2"
+    }
+    if { [set $this-gui_is_injured3] == "1" } {
+    button $w.f.row1.ne -background red -textvariable $this-gui_label3 -command "$this set_selection 3"
+    } else {
     button $w.f.row1.ne  -textvariable $this-gui_label3 -command "$this set_selection 3"
+    }
     frame $w.f.row2
+    if { [set $this-gui_is_injured4] == "1" } {
+    button $w.f.row2.west -background red -textvariable $this-gui_label4 -command "$this set_selection 4"
+    } else {
     button $w.f.row2.west -textvariable $this-gui_label4 -command "$this set_selection 4"
+    }
     button $w.f.row2.c  -background yellow  -textvariable $this-gui_label5 -command "$this set_selection 5"
+    if { [set $this-gui_is_injured6] == "1" } {
+    button $w.f.row2.e  -background red -textvariable $this-gui_label6 -command "$this set_selection 6"
+    } else {
     button $w.f.row2.e   -textvariable $this-gui_label6 -command "$this set_selection 6"
+    }
     frame $w.f.row3
+    if { [set $this-gui_is_injured7] == "1" } {
+    button $w.f.row3.sw -background red -textvariable $this-gui_label7 -command "$this set_selection 7"
+    } else {
     button $w.f.row3.sw  -textvariable $this-gui_label7 -command "$this set_selection 7"
+    }
+    if { [set $this-gui_is_injured8] == "1" } {
+    button $w.f.row3.s  -background red -textvariable $this-gui_label8 -command "$this set_selection 8"
+    } else {
     button $w.f.row3.s   -textvariable $this-gui_label8 -command "$this set_selection 8"
+    }
+    if { [set $this-gui_is_injured9] == "1" } {
+    button $w.f.row3.se -background red -textvariable $this-gui_label9 -command "$this set_selection 9"
+    } else {
     button $w.f.row3.se  -textvariable $this-gui_label9 -command "$this set_selection 9"
+    }
 
     pack $w.f.row1 $w.f.row2 $w.f.row3 -side top -anchor w
     pack $w.f.row1.nw $w.f.row1.n $w.f.row1.ne\
