@@ -171,7 +171,7 @@ namespace rtrt {
 //////////////////////////////////////////////////////////////////
 
 Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
-	  int nworkers, bool bench, int ncounters, int c0, int c1,
+	  bool bench, int ncounters, int c0, int c1,
 	  float, float, bool display_frames, 
 	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
 	  bool rserver, bool stereo):
@@ -184,12 +184,13 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
   turnOnLight_( false ), turnOffLight_( false ),
   toggleRenderWindowSize_(fullscreen), renderWindowSize_(1),
   turnOnTransmissionMode_(false), 
-  numThreadsRequested_(nworkers), numThreadsRequested_new(nworkers),
+  numThreadsRequested_(rtrt_engine->nworkers),
+  numThreadsRequested_new(rtrt_engine->nworkers),
   changeNumThreads_(false),
   stealth_(NULL), attachedObject_(NULL), holoToggle_(false),
   scene(scene), rtrt_engine(rtrt_engine),
   criteria1(criteria1), criteria2(criteria2),
-  nworkers(nworkers), pp_size_(pp_size), scratchsize_(scratchsize),
+  pp_size_(pp_size), scratchsize_(scratchsize),
   bench(bench), bench_warmup(10), bench_num_frames(110),
   exit_after_bench(true), ncounters(ncounters),
   c0(c0), c1(c1),
@@ -233,7 +234,7 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
   //obj=scene->get_object();
   priv->maxdepth=scene->maxdepth;
 
-  workers_.resize( nworkers );
+  workers_.resize( rtrt_engine->nworkers );
 
   guiCam_ = new Camera;
 
@@ -277,7 +278,7 @@ Dpy::register_worker(int i, Worker* worker)
 }
 
 int Dpy::get_num_procs() {
-  return nworkers;
+  return rtrt_engine->nworkers;
 }
 
 void Dpy::release(Window win)
@@ -548,6 +549,7 @@ Dpy::checkGuiFlags()
     {
       // Only create new threads if showing_scene is 0.  This will
       // create them in sync with the Dpy thread.
+      int nworkers = rtrt_engine->nworkers;
       if( nworkers != numThreadsRequested_ ) {
 
 	changeNumThreads_ = true;
@@ -607,7 +609,7 @@ Dpy::stop_bench() {
 
 bool Dpy::should_close() {
   // The only time you should close is if the number of workers equals zero
-  return nworkers == 0;
+  return rtrt_engine->nworkers == 0;
 }
 
 void
@@ -616,14 +618,15 @@ Dpy::renderFrameless() {
   // If we need to change the number of worker threads:
   if( changeNumThreads_ ) {
     //    cout << "changeNumThreads\n";
+    int nworkers = rtrt_engine->nworkers;
     int oldNumWorkers = nworkers;
-    nworkers = numThreadsRequested_;
+    rtrt_engine->nworkers = nworkers = numThreadsRequested_;
 
     if( oldNumWorkers < nworkers ) { // Create more workers
       int numNeeded     = nworkers - oldNumWorkers;
       int stopAt        = oldNumWorkers + numNeeded;
 
-      workers_.resize( nworkers );
+      workers_.resize( rtrt_engine->nworkers );
       for( int cnt = oldNumWorkers; cnt < stopAt; cnt++ ) {
 	char buf[100];
 	sprintf(buf, "worker %d", cnt);
@@ -644,7 +647,7 @@ Dpy::renderFrameless() {
       //}
     }
     //    cout << "sync with workers for change: " << oldNumWorkers+1 << "\n";
-    cout << "Number of workers is now "<<nworkers<<"\n";
+    cout << "Number of workers is now "<<rtrt_engine->nworkers<<"\n";
     addSubThreads_->wait( oldNumWorkers + 1 );
     changeNumThreads_ = false;
   }
@@ -675,7 +678,8 @@ Dpy::renderFrameless() {
     cerr << "Display on first\n";
     io.unlock();
 #endif
-    barrier->wait(nworkers+1); // wait here for all of the procs...
+    // wait here for all of the procs...
+    barrier->wait(rtrt_engine->nworkers+1);
 #if 0
     io.lock();
     cerr << "Display out of first\n";
@@ -739,13 +743,13 @@ Dpy::renderFrameless() {
 
   if(ncounters){
     fprintf(stderr, "%2d: %12lld", c0, counters->count0());	
-    for(int i=0;i<nworkers;i++){
+    for(size_t i=0; i < workers_.size(); i++) {
       fprintf(stderr, "%12lld", workers_[i]->get_counters()->count0());
     }
     fprintf(stderr, "\n");
     if(ncounters>1){
       fprintf(stderr, "%2d: %12lld", c1, counters->count1());	
-      for(int i=0;i<nworkers;i++){
+      for(size_t i=0; i < workers_.size(); i++) {
 	fprintf(stderr, "%12lld", workers_[i]->get_counters()->count1());
       }
       fprintf(stderr, "\n\n");
@@ -857,7 +861,7 @@ Dpy::renderFrameless() {
     cerr << "Display on second\n";
     io.unlock();
 #endif
-    barrier->wait(nworkers+1);
+    barrier->wait(rtrt_engine->nworkers+1);
 #if 0
     io.lock();
     cerr << "Display out of second\n";
@@ -868,7 +872,7 @@ Dpy::renderFrameless() {
 #if 0
   if (do_some_type_of_synch) {
     // just block in the begining???
-    barrier->wait(nworkers+1); // block - this lets them get camera params...
+    barrier->wait(rtrt_engine->nworkers+1); // block - this lets them get camera params...
     synch_frameless = priv->doing_frameless; // new ones always catch on 1st barrier...
   }
 #endif
@@ -909,8 +913,9 @@ Dpy::renderFrame() {
   // If we need to change the number of worker threads:
   if( changeNumThreads_ ) {
     //    cout << "changeNumThreads\n";
+    int nworkers = rtrt_engine->nworkers;
     int oldNumWorkers = nworkers;
-    nworkers = numThreadsRequested_;
+    rtrt_engine->nworkers = nworkers = numThreadsRequested_;
 
     if( oldNumWorkers < nworkers ) { // Create more workers
       int numNeeded     = nworkers - oldNumWorkers;
@@ -942,10 +947,10 @@ Dpy::renderFrame() {
     changeNumThreads_ = false;
   }
 
-  barrier->wait(nworkers+1);
+  barrier->wait(rtrt_engine->nworkers+1);
 
   // Exit if you are supposed to.
-  if (nworkers == 0) {
+  if (rtrt_engine->nworkers == 0) {
     cout << "Dpy has no more workers, going away\n";
     return;
   }
@@ -964,7 +969,7 @@ Dpy::renderFrame() {
 
   changed |= checkGuiFlags();
 
-  scene->refill_work(rendering_scene, nworkers);
+  scene->refill_work(rendering_scene, rtrt_engine->nworkers);
 
   if(!changed && !scene->no_aa){
     double x1, x2, w;
@@ -984,7 +989,7 @@ Dpy::renderFrame() {
 
   drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,0));
 
-  barrier->wait(nworkers+1);
+  barrier->wait(rtrt_engine->nworkers+1);
 
   Image * displayedImage = scene->get_image(showing_scene);
 
@@ -1110,13 +1115,13 @@ Dpy::renderFrame() {
   last_frame=tnow;
   if(ncounters){
     fprintf(stderr, "%2d: %12lld", c0, counters->count0());	
-    for(int i=0;i<nworkers;i++){
+    for(size_t i=0; i < workers_.size(); i++) {
       fprintf(stderr, "%12lld", workers_[i]->get_counters()->count0());
     }
     fprintf(stderr, "\n");
     if(ncounters>1){
       fprintf(stderr, "%2d: %12lld", c1, counters->count1());	
-      for(int i=0;i<nworkers;i++){
+      for(size_t i=0; i < workers_.size(); i++) {
 	fprintf(stderr, "%12lld", workers_[i]->get_counters()->count1());
       }
       fprintf(stderr, "\n\n");
@@ -1198,6 +1203,8 @@ void Dpy::change_nworkers(int num) {
   int newnum = numThreadsRequested_new+num;
   if (newnum >= 1 && newnum <= SCIRun::Thread::numProcessors())
     numThreadsRequested_new += num;
+  else
+    cerr << "Dpy::change_nworkers:: Number of threads requested ("<<num<<") is outside the acceptable range [1, "<<SCIRun::Threads::numProcessors()<<"].\n";
 }
 
 #if 0 /////////////////////////////////////////////////////////
