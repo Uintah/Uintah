@@ -48,7 +48,7 @@ int MdsSetSocket( int *socket );
 /* If an MDSPlus call is successful the first bit is set. */
 #define status_ok( status ) ((status & 1) == 1)
 
-/* Simple interface to interface bewteen the C and C++ calls. */
+/* Simple interface to interface bewteen the C++ and C calls. */
 int MDS_Connect( const char *server )
 {
   /* Connect to MDSplus */
