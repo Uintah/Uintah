@@ -154,6 +154,7 @@ Camera::setWindowAspectRatio( double ratio )
 {
   windowAspectRatio_ = ratio;
   verticalFov_ = fov * ratio;
+  setup();
 }
 
 void
