@@ -248,7 +248,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   int r=start_node;
   int i;
   
-  QuadraticTetVolMesh::Node::array_type mycols(0,15*ndof);
+  QuadraticTetVolMesh::Node::array_type mycols;
 
 
   for(i=start_node;i<end_node;i++){
@@ -329,7 +329,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 
   TetVolMesh::Cell::iterator ii, iie;
 
-  TetVolMesh::Node::array_type cell_nodes(10);
+  TetVolMesh::Node::array_type cell_nodes;
 
   qtvm_->begin(ii); qtvm_->end(iie);
   for (; ii != iie; ++ii){
@@ -544,15 +544,14 @@ BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
 				    TetVolMesh::Cell::index_type c_ind,
 				    int s, int e)
 {
+  TetVolMesh::Node::array_type cell_nodes;
+  qtvm_->get_nodes(cell_nodes, c_ind);
 
   for (int i=0; i<10; i++) // this four should eventually be a
     // variable ascociated with each element that indicates 
     // how many nodes are on that element. it will change with 
     // higher order elements
   {	  
-    TetVolMesh::Node::array_type cell_nodes(10);
-    qtvm_->get_nodes(cell_nodes, c_ind);
-
     int ii = cell_nodes[i];
 
     if(ii >= s && ii < e){
