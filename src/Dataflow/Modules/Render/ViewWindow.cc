@@ -113,6 +113,9 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_line_width_(ctx->subVar("line-width")),
     gui_sbase_(ctx->subVar("sbase")),
     gui_bgcolor_(ctx->subVar("bgcolor")), 
+    gui_fogusebg_(ctx->subVar("fogusebg")),
+    gui_fogcolor_(ctx->subVar("fogcolor")), 
+
     // Private Variables
     viewer_(viewer),
     renderer_(new OpenGL(gui, viewer, this)),

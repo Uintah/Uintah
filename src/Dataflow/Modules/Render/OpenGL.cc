@@ -893,9 +893,19 @@ OpenGL::redraw_frame()
 	glFogf(GL_FOG_START,float(znear_));
 	glFogf(GL_FOG_END,float((zfar_-znear_) * 1.40 + znear_));
 	GLfloat bgArray[4];
-	bgArray[0]=bg.r();
-	bgArray[1]=bg.g();
-	bgArray[2]=bg.b();
+	if (view_window_->gui_fogusebg_.get())
+	{
+	  bgArray[0] = bg.r();
+	  bgArray[1] = bg.g();
+	  bgArray[2] = bg.b();
+	}
+	else
+	{
+	  Color fogcolor(view_window_->gui_fogcolor_.get());
+	  bgArray[0] = fogcolor.r();
+	  bgArray[1] = fogcolor.g();
+	  bgArray[2] = fogcolor.b();
+	}	  
 	bgArray[3]=1.0;
 	glFogfv(GL_FOG_COLOR, bgArray);
 
