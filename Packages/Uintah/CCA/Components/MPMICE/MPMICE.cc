@@ -619,7 +619,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     constNCVariable<double> pressNC;
     IntVector ni[8];
     double S[8];
-    Vector zero(0.,0.,0.);
     IntVector cIdx[8];
     double p_ref = d_sharedState->getRefPress();
     new_dw->get(pressNC,MIlb->press_NCLabel,0,patch,Ghost::AroundCells,1);
