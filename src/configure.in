@@ -2808,14 +2808,67 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 AC_SUBST(INC_MPI_H)
 AC_SUBST(DEF_MPI)
 
-##  --  search for mpi-uni  --------------------------------------------
 
-if test "$with_xercesc"; then
-  dirs="$with_mpiuni/lib $SCI_LAB_TP_LIBS"
-else
-  dirs="$SCI_LAB_TP_LIBS"
+##  --  setup petsc variables before searching for MPI-uni   ------------------------------
+if test "$with_unipetsc" && test "$with_petsc"; then
+   AC_MSG_ERROR(Cannot configure with both --with-petsc and --with-unipetsc.)
 fi
 
+# We only use the optimized petsc lib even if we are building a debug SCIRun
+#if test "$debug" = "yes"; then
+#  PETSC_SUB=libg
+#else
+  PETSC_SUB=libO
+#fi
+case $host in
+  *-irix*)
+    if test "$enable_64bit" = "yes"; then
+      PETSC_ARCH=IRIX64
+    else
+      PETSC_ARCH=IRIX32
+    fi
+    ;;
+  *linux*)
+    PETSC_ARCH=linux
+    ;;
+  *-dec*)
+    if test "$petsc"; then
+      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
+    else
+      PETSC_ARCH=dec
+    fi
+    ;;
+  *-aix*)
+    PETSC_ARCH=rs6000_sp
+    ;;
+  *-darwin*)
+    PETSC_ARCH=ppc
+    ;;
+  *)
+    PETSC_ARCH=""
+    ;;
+esac
+
+if test -z "$PETSC_ARCH"; then
+   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
+fi
+
+PETSC_VERSION_DIR=petsc-2.1.1
+
+
+
+
+##  --  search for mpi-uni  --------------------------------------------
+
+dirs="$SCI_LAB_TP_LIBS"
+
+if test "$with_mpiuni"; then
+  dirs="$with_mpiuni/lib $dirs"
+fi
+
+if test "$with_unipetsc"; then
+  dirs="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH $dirs"
+fi
 
 SCI_CHECK_LIB($dirs,mpiuni,main,,,optional)
 
@@ -2832,7 +2885,13 @@ if test "$HAVE_LIB_MPIUNI"; then
    fi
 fi
 
-SCI_CHECK_HEADERS($LIB_DIR_MPIUNI/../include,mpiuni.h,,,optional)
+dirs=""
+if test "$with_unipetsc"; then
+  dirs=
+fi
+
+
+SCI_CHECK_HEADERS($with_unipetsc/src/sys/src/mpiuni $LIB_DIR_MPIUNI/../include,mpi.h,"-I$with_unipetsc/bmake/$PETSC_ARCH",no,optional)
 
 if test "$HAVE_LIB_MPIUNI" && test "$HAVE_MPIUNI_H"; then
    if test "$HAVE_LIB_MPIUNICH"; then
@@ -3369,7 +3428,7 @@ AC_SUBST(DEF_Z)
 ##  --  search for blas stuff  -------------------------------------------
 
 if test "$with_blas"; then
-  dirs="$with_blas/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_blas/lib $with_blas $SCI_LAB_TP_LIBS"
 else
   dirs="$SCI_LAB_TP_LIBS"
 fi
@@ -3390,6 +3449,16 @@ case $host in
      if test "$HAVE_LIB_BLAS"; then
        DEF_BLAS="#define HAVE_BLAS 1"
      fi
+
+     SCI_CHECK_LIB($dirs,fblas,main,$F_LIB_FLAG,,optional)
+     if test "$HAVE_LIB_FBLAS"; then
+	LIB_DIR_BLAS=$LIB_DIR_FBLAS
+	HAVE_LIB_BLAS=$HAVE_LIB_FBLAS
+	BLAS_LIB_FLAG=$FBLAS_LIB_FLAG
+	BLAS_LIB_DIR_FLAG=$FBLAS_LIB_DIR_FLAG
+        DEF_BLAS="#define HAVE_BLAS 1"	
+     fi
+
      ;;
 esac
 
@@ -3413,7 +3482,6 @@ if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
   fi
 
   SCI_CHECK_LIB($dirs,lapack,main,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-
   if test ! "$HAVE_LIB_LAPACK"; then
     SCI_CHECK_LIB($dirs,complib.sgimath,main,,,optional)
 #    SCI_CHECK_LIB($dirs,complib.sgimath_mp,main,,,optional)
@@ -3425,6 +3493,14 @@ if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
        LAPACK_LIB_FLAG="$COMPLIB_SGIMATH_LIB_FLAG"
        LAPACK_LIB_DIR_FLAG="$COMPLIB_SGIMATH_LIB_DIR_FLAG"
     fi
+  fi
+
+  SCI_CHECK_LIB($dirs,flapack,main,$F_LIB_FLAG,,optional)
+  if test "$HAVE_LIB_FLAPACK"; then
+    LIB_DIR_LAPACK=$LIB_DIR_FLAPACK
+    HAVE_LIB_LAPACK=$HAVE_LIB_FLAPACK
+    LAPACK_LIB_FLAG=$FLAPACK_LIB_FLAG
+    LAPACK_LIB_DIR_FLAG=$FLAPACK_LIB_DIR_FLAG
   fi
 
   if test "$HAVE_LIB_LAPACK"; then
@@ -3478,48 +3554,9 @@ AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
 AC_SUBST(INC_HYPRE_H)
 
-##  --  search for petsc stuff  ------------------------------------------
-# We only use the optimized petsc lib even if we are building a debug SCIRun
-#if test "$debug" = "yes"; then
-#  PETSC_SUB=libg
-#else
-  PETSC_SUB=libO
-#fi
 
-PETSC_VERSION_DIR=petsc-2.1.1
 
-case $host in
-  *-irix*)
-    if test "$enable_64bit" = "yes"; then
-      PETSC_ARCH=IRIX64
-    else
-      PETSC_ARCH=IRIX32
-    fi
-    ;;
-  *linux*)
-    PETSC_ARCH=linux
-    ;;
-  *-dec*)
-    if test "$petsc"; then
-      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
-    else
-      PETSC_ARCH=dec
-    fi
-    ;;
-  *-aix*)
-    PETSC_ARCH=rs6000_sp
-    ;;
-  *-darwin*)
-    PETSC_ARCH=ppc
-    ;;
-  *)
-    PETSC_ARCH=""
-    ;;
-esac
-
-if test -z "$PETSC_ARCH"; then
-   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
-fi
+## -- stuff for Multiprocessor PETSc --------------------------------------
 
 
 # It seems that under AIX, you don't need lapack for petsc...
@@ -3614,52 +3651,55 @@ AC_SUBST(PETSC_EXTRA_LIB_FLAG)
 AC_SUBST(DEF_PETSC)
 AC_SUBST(INC_PETSC_H)
 
-##  --  search for uni-petsc stuff  --------------------------------------------
-
-if test "$DEF_PETSC" &&
-   test "$HAVE_LIB_MPIUNI" &&
+##  --  search for uni-petsc stuff  -------------------------------------------
+if test ! "$DEF_PETSC" &&
    test "$HAVE_LIB_BLAS" &&
-   test "$HAVE_LIB_LAPACK"; then 
-
+   test "$HAVE_LIB_LAPACK" &&
+   test "$HAVE_LIB_MPIUNI" &&
+   test "$HAVE_MPI_H"; then 
+  AC_CHECKING(for Uni-Processor PETSc...)	
   dirs=""
-
   # Modify dirs to have correct path information:
   for i in $SCI_LAB_TP_DEFAULT; do
     if test ! -d "$i"; then
       continue
     fi
-
     #this is where the lib actually lives
     if test ! -d "$i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"; then
       continue
     fi
-
     dirs="$dirs $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"
   done
 
   if test "$with_unipetsc"; then
     dirs="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH $dirs"
   fi
+  SCI_CHECK_LIB($dirs,petsc,main,,no,optional)
 
-  SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include /usr/include/petsc, petsc.h petscsles.h, $INC_MPIUNI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,,optional)
+  if test "$HAVE_LIB_PETSC"; then
+    SCI_CHECK_LIB($dirs,petscvec,main,$PETSC_LIB_FLAG,no,optional)
+    SCI_CHECK_LIB($dirs,petscmat,main,$PETSC_LIB_FLAG $PETSCVEC_LIB_FLAG,no,optional)
+    SCI_CHECK_LIB($dirs,petscdm,main,$PETSC_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSCMAT_LIB_FLAG,no,optional)
+    SCI_CHECK_LIB($dirs,petscsles,main,$PETSC_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCDM_LIB_FLAG,no,optional)
+    SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include /usr/include/petsc, petsc.h petscsles.h, $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,,not-optional)	
+  fi
 
-  if test "$HAVE_LIB_PETSC" &&
-      test "$HAVE_PETSC_H"          && test "$HAVE_PETSCSLES_H" &&
-      test "$HAVE_LIB_PETSCCONTRIB" && test "$HAVE_LIB_PETSCDM" &&
-      test "$HAVE_LIB_PETSCMAT"     && test "$HAVE_LIB_PETSCSLES" &&
-      test "$HAVE_LIB_PETSCSNES"    && test "$HAVE_LIB_PETSCTS" &&
-      test "$HAVE_LIB_PETSCVEC"; then
-      DEF_PETSC_UNI="#define PETSC_UNI 1"
-      INC_PETSC_UNI_H="$INC_PETSC_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH"
-      PETSC_UNI_LIB_FLAG="$PETSC_LIB_FLAG"
-      PETSC_UNI_LIB_DIR_FLAG="$PETSC_LIB_DIR_FLAG"
-      PETSC_UNI_EXTRA_LIB_FLAG="$PETSC_EXTRA_LIB_FLAG"
+  if test "$HAVE_LIB_PETSC"	&& test "$HAVE_PETSC_H" &&
+     test "$HAVE_LIB_PETSCVEC"	&& test "$HAVE_LIB_PETSCMAT" && 
+     test "$HAVE_LIB_PETSCDM"	&& test "$HAVE_LIB_PETSCSLES"; then
+    HAVE_LIB_PETSC_UNI="yes"
+    DEF_PETSC_UNI="#define UNI_PETSC 1"
+    LIB_DIR_PETSC_UNI="$LIB_DIR_PETSC"
+    PETSC_UNI_LIB_DIR_FLAG="$PETSC_LIB_DIR_FLAG"
+    PETSC_UNI_LIB_FLAG="$PETSC_LIB_FLAG  $PETSCVEC_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCSLES_LIB_FLAG"
+    INC_PETSC_UNI_H="$INC_PETSC_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH -I$LIB_DIR_PETSC/../../../src/sys/src/mpiuni"
+    PETSC_UNI_EXTRA_LIB_FLAG="$PETSC_UNI_EXTRA_LIB_FLAG $MPIUNI_LIB_DIR_FLAG $MPIUNI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG"
   fi 
 fi
 
-if test "$with_unipetsc" && test ! "$DEF_UNI_PETSC"; then
+if test "$with_unipetsc" && test ! "$HAVE_LIB_PETSC_UNI"; then
   echo
-AC_MSG_ERROR(One or more of the UNI_PETSC components is missing.)
+  AC_MSG_ERROR(One or more of the UNI_PETSC components is missing.)
   echo
 fi
 
