@@ -56,3 +56,17 @@ will create the installation under:
 {specified path}/{tp version}/{platform}/{compiler and specified size} 
 
 
+
+######################################################################
+SuSE Linux/Opteron problems with 3P using pgCC
+
+- For mpeg:
+
+The Makefile in ./mpeg_encode/jpeg/ has the wrong compiler...
+Must #include <errno.h> in libpnmrw.c and replace sys_errlist[errno]
+with strerror(errno).
+
+- For tcl:
+
+Must add -fPIC to CFLAGS and/or the line with -shared on it.
+######################################################################
