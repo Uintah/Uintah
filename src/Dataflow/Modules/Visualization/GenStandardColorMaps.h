@@ -112,6 +112,8 @@ private:
   GuiInt resolution;
   GuiInt realres;
   GuiDouble gamma;
+  GuiInt faux;
+  
 }; //class GenStandardColorMaps
 
 } // End namespace SCIRun
