@@ -327,10 +327,13 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
   long end;
   if(!get(vnode, "end", end))
     throw InternalError("Cannot get end");
-  string filename;
-  
+  string filename;  
   if(!get(vnode, "filename", filename))
     throw InternalError("Cannot get filename");
+  string compressionMode;  
+  if(!get(vnode, "compression", compressionMode))
+    compressionMode = "";
+  
   XMLURL dataurl(url, filename.c_str());
   if(dataurl.getProtocol() != XMLURL::File)
     throw InternalError(string("Cannot read over: ")
@@ -349,7 +352,7 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
     throw ErrnoException("DataArchive::query (lseek64 call)", errno);
   
   InputContext ic(fd, start);
-  var.read(ic);
+  var.read(ic, end, compressionMode);
   ASSERTEQ(end, ic.cur);
   int s = close(fd);
   if(s == -1)
