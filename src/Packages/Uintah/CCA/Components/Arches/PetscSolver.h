@@ -14,7 +14,7 @@
 
 #ifdef HAVE_PETSC
 extern "C" {
-#include "petscsles.h"
+#include "sles.h"
 }
 #endif
 
