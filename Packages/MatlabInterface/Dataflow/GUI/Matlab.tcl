@@ -23,6 +23,8 @@
  #   01Jan05
  ##
 
+package require Iwidgets 3.0
+
 catch {rename MatlabInterface_DataIO_Matlab ""}
 
 itcl_class MatlabInterface_DataIO_Matlab {
@@ -37,6 +39,13 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	set $this-cmdTCL ""
 	set $this-hpTCL "127.0.0.1:5517"
     }
+
+    method send_text {tw} {
+	set chars [$tw get 1.0 end]
+	#puts stdout $chars
+	$this-c "mat-command" $chars
+    }
+
     method ui {} {
         set n "$this-c needexecute "
         set w .ui[modname]
@@ -63,9 +72,12 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	pack $w.f.hp.l -side left -padx 5 -pady 5
 	pack $w.f.hp.e -side left -fill x -expand yes -padx 5 -pady 5
 
-	label $w.f.cmd.l -text "command : "
-	entry $w.f.cmd.e -relief sunken -width 21 -textvariable $this-cmdTCL 
-        pack $w.f.cmd.l -side left -padx 5 -pady 5
-	pack $w.f.cmd.e -side left -fill x -expand yes -padx 5 -pady 5
+	option add *textBackground white	
+	iwidgets::scrolledtext $w.f.cmd.st -vscrollmode dynamic \
+		-labeltext "Matlab Commands" 
+	set cmmd "$this send_text $w.f.cmd.st" 
+	button $w.f.cmd.execute -text "Send Commands" -command $cmmd
+	pack $w.f.cmd.st -padx 10 -pady 10 -fill both -expand yes
+	pack $w.f.cmd.execute -side top
     }
 }
