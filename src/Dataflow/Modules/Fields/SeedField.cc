@@ -149,7 +149,6 @@ void SeedField::execute()
   
   Vector dir(max-min);
   int num_seeds = (int)(rake_.GetRatio()*15);
-  cerr << "num_seeds = " << num_seeds << endl;
   dir*=1./(num_seeds-1);
 
   PointCloudMesh* mesh = scinew PointCloudMesh;

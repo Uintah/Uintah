@@ -285,6 +285,8 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   double tolerance;
   double stepsize;
   int maxsteps;
+  int numtasks = 0;
+  float progress = 0;
 
   sf_mesh_type *smesh =
     dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
@@ -296,6 +298,10 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
   // try to find the streamline for each seed point
   sf_node_iterator seed_iter = smesh->node_begin();
+
+  TCL::execute(id + " set_state Executing 0");
+
+  numtasks = smesh->nodes_size();
 
   while (seed_iter!=smesh->node_end()) {
 
@@ -319,16 +325,12 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
       }
     } 
 
-    cerr << "new streamline." << endl;
-
     get_gui_doublevar(id,"tolerance",tolerance);
     get_gui_doublevar(id,"stepsize",stepsize);
     get_gui_intvar(id,"maxsteps",maxsteps);
 
     nodes.clear();
     FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vf);
-
-    cerr << "done finding streamline." << endl;
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
@@ -338,16 +340,14 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
       if (node_iter!=nodes.end()) {
 	n2 = cmesh_->add_node(*node_iter);
 	cmesh_->add_edge(n1,n2);
-	//cerr << "edge = " << n1 << " " << n2 
-	//     << nodes[n1] << " " << nodes[n2] << endl;
 	n1 = n2;
 	//fdata[index] = index++;
       }
     }
 
-    cerr << "done adding streamline to contour field." << endl;
-
     ++seed_iter;
+    progress++;
+    TCL::execute(id + " set_progress " + to_string(progress/numtasks) + " 1");
   }
 }
 
@@ -417,7 +417,6 @@ void StreamLines::execute()
   }
 
   oport_->send(cf_);
-  cerr << "done with everything." << endl;
 }
 
 void StreamLines::tcl_command(TCLArgs& args, void* userdata)
