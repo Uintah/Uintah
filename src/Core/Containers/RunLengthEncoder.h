@@ -25,7 +25,6 @@
 #include <string>
 #include <unistd.h>
 #include <errno.h>
-#include <math.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
