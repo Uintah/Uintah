@@ -66,7 +66,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
                       ImageMaterial::Tile,
                       ImageMaterial::Tile, 1,
-                      Color(1,1,1), 4000);
+                      Color(1,1,1), 4000,0, true);
 
   ImageMaterial *matl0 = new ImageMaterial(
 #if INSCILAB                                         
@@ -76,7 +76,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
                                            ImageMaterial::Tile,
                                            ImageMaterial::Tile,
-                                           4,Color(.5,.5,.5),40,0,0);
+                                           4,Color(.5,.5,.5),40,0,0, true);
 
   CrowMarble *crow = new CrowMarble(10,Vector(0,1,0),Color(.1,.1,.8),
                                     Color(.9,.8,.9),Color(.6,.6,.8));
@@ -87,9 +87,6 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   //matl1->insert(stadium,255);
   //matl1->insert(crow,0);
-
-  matl0->flip();
-  bookcoverimg->flip();
 
   UVCylinderArc* uvcylarc0 = new UVCylinderArc(matl1,Point(ROOMCENTER,0),
                                                Point(ROOMCENTER,DOORHEIGHT),
