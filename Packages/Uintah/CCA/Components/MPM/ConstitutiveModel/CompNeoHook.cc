@@ -294,8 +294,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(bElBar_old, lb->bElBarLabel, pset);
     if (recursion)
-      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,
-		  Ghost::AroundCells,1);
+      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     else
       new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
     
@@ -569,11 +568,11 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 #if 0
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
-	  cout << "kmat[" << I << "][" << J << "]= " << kmat[I][J] << endl;
-	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo[I][J] << endl;
+	  cout << "kmat[" << I << "][" << J << "]= " << kmat(I,J) << endl;
+	  cout << "kgeo[" << I << "][" << J << "]= " << kgeo(I,J) << endl;
 #endif
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I, J) + kgeo(I, J));
-#if 0
+#if 1
 	  cout << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
 	       << endl;
 #endif
