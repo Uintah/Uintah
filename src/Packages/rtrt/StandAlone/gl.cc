@@ -4,6 +4,7 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Semaphore.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -61,10 +62,10 @@ public:
     ggt = new_ggt;
   }
 
+  void startGGT();
+  
 protected:
   GGT* ggt;
-  Display* gg_dpy;
-  Window gg_win;
 public:
 #endif
 
@@ -212,9 +213,9 @@ protected:
 #ifdef GLUT_GLUI_THREAD
 
 // This needs to be global to satisfy glut
-static GGT* activeGui;
-extern "C" Display *__glutDisplay;
-extern "C" Window** __glutWindowList;
+static GGT* activeGui = NULL;
+//extern "C" Display *__glutDisplay;
+//extern "C" Window** __glutWindowList;
 
 class GGT: public Runnable {
 public:
@@ -247,14 +248,16 @@ public:
     DpyBase::xlock();
     GLUI_Master.close_all();
     cerr << "GLUI_Master.close_all finished\n";
-    glutDestroyWindow(activeGui->mainWindowId);
+    glutDestroyWindow(mainWindowId);
     cerr << "glutDestroyWindow finished\n";
-    XCloseDisplay(dpy);
-    cerr << "XCloseDisplay for GGT finished\n";
+    //    XCloseDisplay(dpy);
+    //    cerr << "XCloseDisplay for GGT finished\n";
     DpyBase::xunlock();
   }
   
   virtual void run() {
+    DpyBase::xlock();
+
     printf("before glutInit\n");
     char *argv = "GGT Thread run";
     int argc = 1;
@@ -267,13 +270,11 @@ public:
     glutInitWindowSize(135, 70 );
     glutInitWindowPosition( 100, 0 );
     
-    DpyBase::xlock();
     mainWindowId = glutCreateWindow("GG Controls");
-    DpyBase::xunlock();
 
-    dpy = __glutDisplay;
-    win = __glutWindowList[mainWindowId-1][1];
-    cerr << "initial win = "<<win<<"\n";
+//     dpy = __glutDisplay;
+//     win = __glutWindowList[mainWindowId-1][1];
+//     cerr << "initial win = "<<win<<"\n";
 
     // Setup callback functions
     glutDisplayFunc( GGT::display );
@@ -283,6 +284,7 @@ public:
 
     opened = true;
     
+    DpyBase::xunlock();
     printf("end glut inits\n");
     
     glutMainLoop();
@@ -328,8 +330,8 @@ public:
   static void reshape( int width, int height ) {
     static bool first=true;
     if(first){
-      activeGui->win = __glutWindowList[activeGui->mainWindowId-1][1];
-      cerr << "winid=" << activeGui->win << '\n';
+//       activeGui->win = __glutWindowList[activeGui->mainWindowId-1][1];
+//       cerr << "winid=" << activeGui->win << '\n';
       first=false;
     }
   }
@@ -343,7 +345,6 @@ public:
   }
 protected:
   void createMenus() {
-    DpyBase::xlock();
     // Register call backs with the glui controls.
     GLUI_Master.set_glutKeyboardFunc( GGT::keyboard );
     GLUI_Master.set_glutReshapeFunc( GGT::reshape );
@@ -358,8 +359,6 @@ protected:
     GLUI_Panel * main_panel   = glui_subwin->add_panel( "" );
     glui_subwin->add_button_to_panel(main_panel, "Exit Thread", 0, GGT::close);
     glui_subwin->add_button_to_panel(main_panel, "Exit All", 2, GGT::close);
-    
-    DpyBase::xunlock();
   }
 
   MyGui* gui;
@@ -370,6 +369,14 @@ public:
   Display *dpy;
   Window win;
 };
+
+void MyGui::startGGT() {
+  if (ggt || activeGui) return; // already have one
+  setGlutGlui(new GGT());
+  ggt->setGui(this);
+  Thread* gg_thread = new Thread(ggt, "GG Thread");
+  gg_thread->detach();
+}
 
 #endif // ifdef GLUT_GLUI_THREAD
 
@@ -407,7 +414,8 @@ void MyGui::key_pressed(unsigned long key) {
   switch (key) {
 #ifdef GLUT_GLUI_THREAD
   case XK_g:
-    if (ggt) ggt->stop();
+    if (shift_pressed) startGGT();
+    else if (ggt) ggt->stop();
     break;
 #endif
   case XK_r:
@@ -466,7 +474,9 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  DpyBase::initUseXThreads();
+  //  DpyBase::initUseXThreads();
+
+  ThreadGroup *main_group = new ThreadGroup("main group");
   
 #if 1
   // Create the Dpy first
@@ -476,26 +486,19 @@ int main(int argc, char *argv[]) {
   // Set up the relationship
   gui->setChild(dpy);
   // Make a new Display
-  Thread* dpythread = new Thread(dpy, "Dpy");
-  dpythread->detach();
+  Thread* dpythread = new Thread(dpy, "Dpy", main_group);
   gui->setChildThread(dpythread);
-  (new Thread(gui, "Gui"))->detach();
+  new Thread(gui, "Gui", main_group);
 #endif
 
 #ifdef GLUT_GLUI_THREAD
   if (strcmp(argv[1], "glut") == 0) {
     // start up the glut glui thread
-    GGT* gg_runner = new GGT();
-#if 0
-    gg_runner->run();
-#else
-    gg_runner->setGui(gui);
-    Thread* gg_thread = new Thread(gg_runner, "GG Thread");
-    gg_thread->detach();
-    gui->setGlutGlui(gg_runner);
-#endif
+    gui->startGGT();
   }
 #endif
-  
+
+  main_group->join();
+
   return 0;
 }
