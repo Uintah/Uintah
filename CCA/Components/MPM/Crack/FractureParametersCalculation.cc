@@ -701,8 +701,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
         } // End of loop over ranks (i)
 
         // Output fracture parameters and crack-front position
-        if(m==mS && pid==0 && (calFractParameters || doCrackPropagation)) {
-          OutputCrackFrontResults(m);
+        if(m==mS && (calFractParameters || doCrackPropagation)) {
+          if(pid==0) OutputCrackFrontResults(m);
         }
 
       } // End if(calFractParameters || doCrackPropagation)
@@ -713,12 +713,15 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 // Output fracture parameters and crack-front position
 void Crack::OutputCrackFrontResults(const int& m)
 {
-  static double timeforoutputcrack=0.0;
+  static double timeOutputCF=-d_outputCrackInterval;
 
   double time=d_sharedState->getElapsedTime();
-  ofstream outCrkFrt("CrackFrontResults.dat", ios::app);
 
-  if(time>=timeforoutputcrack) {
+  char outFileName[200]="";
+  strcat(outFileName,(udaDir+"/CrackFrontResults.dat").c_str());
+  ofstream outCrkFrt(outFileName, ios::app);
+
+  if(time>=timeOutputCF) {
     int num=(int)cfSegNodes[m].size();
     int numSubCracks=0;
     for(int i=0;i<num;i++) {
@@ -744,7 +747,7 @@ void Crack::OutputCrackFrontResults(const int& m)
         if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
       }
     }
-    timeforoutputcrack+=d_outputCFInterval;
+    timeOutputCF+=d_outputCrackInterval;
   }
 }
 
