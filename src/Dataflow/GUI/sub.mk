@@ -106,6 +106,7 @@ SRCS := \
 	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
+	$(SRCDIR)/Tooltips.tcl \
 	$(SRCDIR)/TransformData.tcl \
 	$(SRCDIR)/TransformData2.tcl \
 	$(SRCDIR)/TransformData3.tcl \
