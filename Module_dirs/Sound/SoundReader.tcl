@@ -1,4 +1,6 @@
 
+catch {rename SoundReader ""}
+
 itcl_class SoundReader {
     inherit Module
     constructor {config} {

@@ -1,4 +1,6 @@
 
+catch {rename WidgetTest ""}
+
 itcl_class WidgetTest {
     inherit Module
     constructor {config} {
@@ -25,10 +27,11 @@ itcl_class WidgetTest {
 	scale $w.f.slide -label Scale -from 0.001 -to 0.05 -length 6c \
 		-showvalue true \
 		-orient horizontal -resolution 0.001 \
-		-digits 8 -variable $this-widget_scale -command $n
+		-digits 8 -variable $this-widget_scale -command "$this-c scale"
 	pack $w.f.slide -in $w.f -side top -padx 2 -pady 2 -anchor w
 
-	make_labeled_radio $w.f.wids "Widgets:" $n top $this-widget_type \
+	make_labeled_radio $w.f.wids "Widgets:" "$this-c select;$n" \
+		top $this-widget_type \
 		{{PointWidget 0} {ArrowWidget 1} \
 		{CriticalPointWidget 2} \
 		{CrossHairWidget 3} {GuageWidget 4} \

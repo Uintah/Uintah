@@ -4,9 +4,9 @@
 #ifdef SCI_DIR_Modules_Visualization
 
 OBJS = GenColormap.o  Hedgehog.o  IsoSurface.o  \
-	Streamline.o  Streamsurf.o  WidgetTest.o
+	Streamline.o  WidgetTest.o
 SRCS = GenColormap.cc Hedgehog.cc IsoSurface.cc \
-	Streamline.cc Streamsurf.cc WidgetTest.cc
+	Streamline.cc WidgetTest.cc
 
 LIBNAME = Visualization
 

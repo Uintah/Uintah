@@ -1,4 +1,6 @@
 
+catch {rename TYPEWriter ""}
+
 itcl_class TYPEWriter {
     inherit Module
     constructor {config} {

@@ -1,4 +1,6 @@
 
+catch {rename GenColormap ""}
+
 itcl_class GenColormap {
     inherit Module
     constructor {config} {

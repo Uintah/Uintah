@@ -121,35 +121,28 @@ void WidgetTest::execute()
 	 w->add(widgets[i]->GetWidget());
       widget_id = ogeom->addObj(w, module_name, &widget_lock);
    }
+//   widget_lock.write_lock();
 
-   widget_lock.write_lock();
-   for(int i = 0; i < NumWidgetTypes; i++)
-      widgets[i]->SetState(0);
-   
-   widgets[widget_type.get()]->SetState(1);
-   widgets[widget_type.get()]->SetScale(widget_scale.get());
-   widget_lock.write_unlock();
-   widgets[widget_type.get()]->execute();
-   ogeom->flushViews();
-}
-
-
-void WidgetTest::geom_moved(int axis, double dist, const Vector& delta,
-			    void* cbdata)
-{
-   widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
-   cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
-   cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
-   cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
-   
+   // Update Arrow/Critical point widget
    if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
       ((ArrowWidget*)widgets[WT_Arrow])->SetDirection((Point(0,0,0)-widgets[WT_Arrow]->ReferencePoint()).normal());
    if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
       ((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
+
+//   widget_lock.write_unlock();
+
    widgets[widget_type.get()]->execute();
    ogeom->flushViews();
 }
 
+void WidgetTest::geom_moved(int, double, const Vector&, void*)
+{
+    widget_lock.read_lock();
+    cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
+    cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
+    cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
+    widget_lock.read_unlock();
+}
 
 void WidgetTest::geom_release(void*)
 {
@@ -172,6 +165,20 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 	 abort_flag=1;
 	 want_to_execute();
       }
+   } else if(args[1] == "select"){
+       // Select the appropriate widget
+       reset_vars();
+       widget_lock.write_lock();
+       for(int i = 0; i < NumWidgetTypes; i++)
+	   widgets[i]->SetState(0);
+   
+       widgets[widget_type.get()]->SetState(1);
+       widgets[widget_type.get()]->SetScale(widget_scale.get());
+       widget_lock.write_unlock();
+   } else if(args[1] == "scale"){
+       widget_lock.write_lock();
+       widgets[widget_type.get()]->SetScale(widget_scale.get());
+       widget_lock.write_unlock();
    } else {
       Module::tcl_command(args, userdata);
    }

@@ -1,4 +1,6 @@
 
+catch {rename IsoSurface ""}
+
 itcl_class IsoSurface {
     inherit Module
     constructor {config} {

@@ -1,4 +1,6 @@
 
+catch {rename SoundInput ""}
+
 itcl_class SoundInput {
     inherit Module
     constructor {config} {
