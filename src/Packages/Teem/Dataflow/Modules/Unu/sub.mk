@@ -28,10 +28,15 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 
 
 SRCS     += \
+	$(SRCDIR)/UnuAxdelete.cc\
 	$(SRCDIR)/UnuAxinfo.cc\
+	$(SRCDIR)/UnuAxinsert.cc\
+	$(SRCDIR)/UnuAxmerge.cc\
+	$(SRCDIR)/UnuAxsplit.cc\
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
 	$(SRCDIR)/UnuCrop.cc\
+	$(SRCDIR)/UnuFlip.cc\
 	$(SRCDIR)/UnuInset.cc\
 	$(SRCDIR)/UnuJoin.cc\
 	$(SRCDIR)/UnuMake.cc\
@@ -44,6 +49,8 @@ SRCS     += \
 	$(SRCDIR)/UnuReshape.cc\
 	$(SRCDIR)/UnuSlice.cc\
 	$(SRCDIR)/UnuSplice.cc\
+	$(SRCDIR)/UnuShuffle.cc\
+	$(SRCDIR)/UnuSwap.cc\
 	$(SRCDIR)/UnuUnquantize.cc\
 #[INSERT NEW CODE FILE HERE]
 

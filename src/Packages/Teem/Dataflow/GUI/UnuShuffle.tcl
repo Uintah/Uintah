@@ -13,29 +13,33 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : UnuFlip.tcl
-#    Author : Martin Cole
-#    Date   : Mon Sep  8 09:46:23 2003
+#    File   : UnuShuffle.tcl
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
-catch {rename Teem_Unu_UnuFlip ""}
-
-itcl_class Teem_Unu_UnuFlip {
+itcl_class Teem_Unu_UnuShuffle {
     inherit Module
     constructor {config} {
-        set name UnuFlip
+        set name UnuShuffle
         set_defaults
     }
+
     method set_defaults {} {
-        global $this-axis
-        set $this-axis 0
+	global $this-ordering
+	set $this-ordering "0"
+
+	global $this-axis
+	set $this-axis 0
+
+	global $this-inverse
+	set $this-inverse 0
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            return;
+            return
         }
-
         toplevel $w
 
         frame $w.f
@@ -44,12 +48,22 @@ itcl_class Teem_Unu_UnuFlip {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "Axis to flip along:" -textvariable $this-axis
+        iwidgets::entryfield $w.f.options.ordering -labeltext "New Slice Ordering:" -textvariable $this-ordering
+        pack $w.f.options.ordering -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
 
-	makeSciButtonPanel $w $w $this
+	checkbutton $w.f.options.inverse \
+		-text "Use Inverse of Given Permutation" \
+		-variable $this-inverse
+	pack $w.f.options.inverse -side top -expand yes -fill x
+
+	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
     }
 }
+
+

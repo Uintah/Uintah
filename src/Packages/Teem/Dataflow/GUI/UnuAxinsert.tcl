@@ -13,21 +13,25 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : UnuFlip.tcl
+#    File   : UnuAxinsert.tcl
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_UnuFlip ""}
+catch {rename Teem_Unu_UnuAxinsert ""}
 
-itcl_class Teem_Unu_UnuFlip {
+itcl_class Teem_Unu_UnuAxinsert {
     inherit Module
     constructor {config} {
-        set name UnuFlip
+        set name UnuAxinsert
         set_defaults
     }
     method set_defaults {} {
         global $this-axis
         set $this-axis 0
+
+	global $this-label
+	set $this-label "Unknown"
+
     }
 
     method ui {} {
@@ -44,8 +48,11 @@ itcl_class Teem_Unu_UnuFlip {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.axis -labeltext "Axis to flip along:" -textvariable $this-axis
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
+
+	iwidgets::entryfield $w.f.options.label -labeltext "Label for new Axis: " -textvariable $this-label
+	pack $w.f.options.label -side top -expand yes -fill x
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
@@ -53,3 +60,6 @@ itcl_class Teem_Unu_UnuFlip {
 	pack $w.f -expand 1 -fill x
     }
 }
+
+
+
