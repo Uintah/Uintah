@@ -537,6 +537,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_petsc=no
   sci_required_plplot=no
   sci_required_qt=no
+  sci_required_ruby=no
   sci_required_ssl=no
   sci_required_tau=no
   sci_required_teem=no
@@ -546,6 +547,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_unipetc=no
   sci_required_uuid=no
   sci_required_vdt=no
+  sci_required_vtk=no 
 
 ])
 ##
@@ -586,6 +588,7 @@ case $1 in
   SCIRun2)
     sci_required_babel=yes
     sci_required_uuid=yes
+    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
