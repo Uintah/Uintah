@@ -3,7 +3,7 @@
 
 using namespace Uintah;
 
-HierarchicalRegridder::HierarchicalRegridder(ProcessorGroup* pg) : RegridderCommon(pg)
+HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
 
 }
