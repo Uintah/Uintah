@@ -94,8 +94,22 @@ static Mutex workerlock;
 
 #include <sys/sysmp.h>
 
-void Task::multiprocess(int nprocessors, void (*starter)(void*, int), void* userdata)
+void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
+			void* userdata, bool block)
 {
+    if(!block){
+	for(int i=0;i<nprocessors;i++){
+	    Multiprocess* w=new Multiprocess;
+	    w->activate(0);
+	    w->starter=starter;
+	    w->userdata=userdata;
+	    w->processor=i;
+	    w->sema1.up();
+	    sysmp(MP_MUSTRUN, i);
+	    w->next=0;
+	}
+	return;
+    }
     workerlock.lock();
 
     Multiprocess* workers=0;

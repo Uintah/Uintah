@@ -95,7 +95,7 @@ static void make_arena()
     if(!arena_created){
 	usconfig(CONF_ARENATYPE, US_SHAREDONLY);
 	usconfig(CONF_INITSIZE, 16*1024*1024);
-	usconfig(CONF_INITUSERS, (unsigned int)800);
+	usconfig(CONF_INITUSERS, (unsigned int)80);
 	//char* lockfile=tempnam(NULL, "sci");
 	//arena=usinit(lockfile);
 	//free(lockfile);
@@ -492,7 +492,7 @@ void Task::initialize(char* pn)
     }
     stack_t ss;
     ss.ss_sp=stackbot;
-    ss.ss_sp+=stacklen-1;
+    ss.ss_sp=(char*)ss.ss_sp+stacklen-1;
     ss.ss_size=stacklen;
     ss.ss_flags=0;
 #if 0

@@ -116,7 +116,7 @@ public:
     static void set_concurrency();
     static void get_concurrency();
     static int nprocessors();
-    static void multiprocess(int ntasks, void (*startfn)(void*, int), void* data);
+    static void multiprocess(int ntasks, void (*startfn)(void*, int), void* data, bool block=true);
 
     static void exit_all(int code);
     
