@@ -6,6 +6,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Thread/Time.h>
 #include <Core/OS/Dir.h>
+#include <Core/OS/ProcessInfo.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -338,7 +339,7 @@ SimpleSimulationController::run()
                      level);
       }
 
-     // get memory stats for output
+      // get memory stats for output
 #ifndef DISABLE_SCI_MALLOC
       size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
        nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
@@ -351,7 +352,12 @@ SimpleSimulationController::run()
       unsigned long memuse = sizealloc - sizefree;
       unsigned long highwater = highwater_mmap;
 #else
-      unsigned long memuse = (char*)sbrk(0)-start_addr;
+      unsigned long memuse = 0;
+      if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
+	memuse = ProcessInfo::GetMemoryUsed();
+      } else {
+	memuse = (char*)sbrk(0)-start_addr;
+      }
       unsigned long highwater = 0;
 #endif
 
