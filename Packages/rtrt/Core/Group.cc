@@ -121,7 +121,7 @@ void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
   all_children_are_groups=1;
   for(int i=0;i<objs.size();i++) {
     objs[i]->preprocess(maxradius, pp_offset, scratchsize);
-    objs[i]->compute_bounds(bbox, pp_offset);
+    objs[i]->compute_bounds(bbox, 1.e-5);
     if (dynamic_cast<Group *>(objs[i]) == 0) all_children_are_groups=0;
   }
   if (all_children_are_groups) {

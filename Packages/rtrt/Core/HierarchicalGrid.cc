@@ -2,8 +2,10 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
+#include <Core/Thread/WorkQueue.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
@@ -32,13 +34,14 @@ struct GridData
 
 HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
 				    int nSidesLevel2, int nSidesLevel3,
-				    int minObjects1, int minObjects2 ):
+				    int minObjects1, int minObjects2, int np ):
     Grid( obj, nsides ),
     _nSidesLevel2( nSidesLevel2 ),
     _nSidesLevel3( nSidesLevel3 ),
     _minObjects1( minObjects1 ),
     _minObjects2( minObjects2 ),
-    _level( 1 )
+    _level( 1 ),
+    np(np)
 {
 }
 
@@ -247,34 +250,47 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     double dy=diag.y()/ny;
     double dz=diag.z()/nz;
 
-    for (int ii=0; ii<nx; ii++) {
-      for (int jj=0; jj<ny; jj++) {
-	for (int kk=0; kk<nz; kk++, i++) {
-	  if (_level == 1 && (i%100) == 50) {
-	    cerr << "Completed "<<i<<"/"<<whichCell.size()<<" ("<<i*100./whichCell.size()<<"%)\n";
-	    cerr <<"   "<<L1CellsWithChildren*100./L1Cells<<"% of L1 cells have children\n";
-	    cerr <<"   "<<L2CellsWithChildren*100./L2Cells<<"% of L2 cells have children\n";
-	    cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
-	  }
-	  if( whichCell[i] > 0 && !grid[whichCellPos[i]] ) {
-	    BBox b(Point(bbox.min()+Vector(ii*dx, jj*dy, kk*dz)),
-		   Point(bbox.min()+Vector((ii+1)*dx,(jj+1)*dy,(kk+1)*dz)));
-	    HierarchicalGrid *g = new HierarchicalGrid( objList[i],
-							nsides,
-							_nSidesLevel2,
-							_nSidesLevel3,
-							_minObjects1,
-							_minObjects2, b, _level+1 );
-	    g->preprocess( maxradius, pp_offset, scratchsize);
-	    grid[whichCellPos[i]] = g;
-	    if (_level == 1) {
-	      L1CellsWithChildren++;
-	    } else if (_level == 2) {
-	      L2CellsWithChildren++;
+
+    if (_level == 1) {
+      work = new WorkQueue("HGrid");
+      work->refill(ngrid, 4, 5);
+//      work->refill(ngrid, np, 5);
+      pdata.dx = dx;
+      pdata.dy = dy;
+      pdata.dz = dz;
+      pdata.maxradius = maxradius;
+      pdata.pp_offset = pp_offset;
+      pdata.scratchsize = scratchsize;
+      pdata.whichCell = whichCell;
+      pdata.whichCellPos = whichCellPos;
+      pdata.objList = objList;
+      Parallel<HierarchicalGrid> phelper(this, &HierarchicalGrid::gridit);
+      Thread::parallel(phelper, 4, true);
+//      Thread::parallel(phelper, np, true);
+      delete work;
+    } else {
+      for (int ii=0; ii<nx; ii++) {
+	for (int jj=0; jj<ny; jj++) {
+	  for (int kk=0; kk<nz; kk++, i++) {
+	    if( whichCell[i] > 0 && !grid[whichCellPos[i]] ) {
+	      BBox b(Point(bbox.min()+Vector(ii*dx, jj*dy, kk*dz)),
+		     Point(bbox.min()+Vector((ii+1)*dx,(jj+1)*dy,(kk+1)*dz)));
+	      HierarchicalGrid *g = new HierarchicalGrid( objList[i],
+							  nsides,
+							  _nSidesLevel2,
+							  _nSidesLevel3,
+							  _minObjects1,
+							  _minObjects2, 
+							  b, _level+1 );
+	      g->preprocess( maxradius, pp_offset, scratchsize);
+	      grid[whichCellPos[i]] = g;
+	      if (_level == 2) {
+		L2CellsWithChildren++;
+	      }
+	    } else {
+	      LeafCells++;
+	      TotalLeafPrims+=counts[i*2+1];
 	    }
-	  } else {
-	    LeafCells++;
-	    TotalLeafPrims+=counts[i*2+1];
 	  }
 	}
       }
@@ -305,3 +321,40 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     }
 }
 
+void HierarchicalGrid::gridit(int proc)
+{
+  int nynz=ny*nz;
+  int sx, ex;
+  while(work->nextAssignment(sx, ex)){
+    for(int i=sx;i<ex;i++){
+      int ii, jj, kk;
+      ii=i/nynz;
+      jj=(i-ii*nynz)/nz;
+      kk=i-ii*nynz-jj*nz;
+      if (proc==0 && (i%10 == 5)) {
+	cerr << "HGrid parallel preprocess: ("<<i<<" of "<<sx<<"-"<<ex<<") of "<<nx*ny*nz <<"\n";
+	cerr <<"   "<<L1CellsWithChildren*100./L1Cells<<"% of L1 cells have children\n";
+	cerr <<"   "<<L2CellsWithChildren*100./L2Cells<<"% of L2 cells have children\n";
+	cerr <<"   "<<TotalLeafPrims*1./LeafCells<<" tris / leaf.\n";
+      }
+      if( pdata.whichCell[i] > 0 && !grid[pdata.whichCellPos[i]] ) {
+	BBox b(Point(bbox.min()+Vector(ii*pdata.dx, jj*pdata.dy, kk*pdata.dz)),
+	       Point(bbox.min()+Vector((ii+1)*pdata.dx,(jj+1)*pdata.dy,
+				       (kk+1)*pdata.dz)));
+	HierarchicalGrid *g = new HierarchicalGrid( pdata.objList[i],
+						    nsides,
+						    _nSidesLevel2,
+						    _nSidesLevel3,
+						    _minObjects1,
+						    _minObjects2, 
+						    b, 2 );
+	g->preprocess( pdata.maxradius, pdata.pp_offset, pdata.scratchsize);
+	grid[pdata.whichCellPos[i]] = g;
+	L1CellsWithChildren++;
+      } else {
+	LeafCells++;
+	TotalLeafPrims+=counts[i*2+1];
+      }
+    }
+  }
+}

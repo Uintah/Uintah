@@ -4,8 +4,12 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/BBox.h>
+#include <Core/Thread/WorkQueue.h>
+#include <Packages/rtrt/Core/Group.h>
 
 namespace rtrt {
+
+using SCIRun::WorkQueue;
 
 struct GridTree;
 struct BoundedObject;
@@ -29,7 +33,7 @@ public:
     HierarchicalGrid( Object* obj, 
 		      int nside,
 		      int nSideLevel2, int nSideLevel3,
-		      int minObjects1, int minObjects2 );
+		      int minObjects1, int minObjects2, int np );
 
     HierarchicalGrid( Object* obj, 
 		      int nside,
@@ -50,13 +54,27 @@ public:
 
 private:
 
-    int _nSidesLevel2, _nSidesLevel3;
-    int _minObjects1, _minObjects2;
-    int _level;
-    static int L1Cells, L2Cells;
-    static int L1CellsWithChildren, L2CellsWithChildren;
-    static int LeafCells, TotalLeafPrims;
-
+  typedef struct {
+    double dx;
+    double dy;
+    double dz;
+    double maxradius;
+    int pp_offset;
+    int scratchsize;
+    Array1<int> whichCell;
+    Array1<int> whichCellPos;
+    Array1<Group*> objList;
+  } PData;
+  PData pdata;
+  WorkQueue* work;
+  void gridit(int);
+  int _nSidesLevel2, _nSidesLevel3;
+  int _minObjects1, _minObjects2;
+  int _level;
+  int np;
+  static int L1Cells, L2Cells;
+  static int L1CellsWithChildren, L2CellsWithChildren;
+  static int LeafCells, TotalLeafPrims;
 };
 
 inline void HierarchicalGrid::calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
