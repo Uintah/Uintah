@@ -526,8 +526,8 @@ public:
 	    cerr << "HypreSolver not converged in " << num_iterations 
                 << "iterations, final residual= " << final_res_norm 
                 << ", requesting smaller timestep\n";
-	  new_dw->abortTimestep();
-	  new_dw->restartTimestep();
+	  //new_dw->abortTimestep();
+	  //new_dw->restartTimestep();
 	} else {
 	  throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
 				   num_iterations, final_res_norm,
