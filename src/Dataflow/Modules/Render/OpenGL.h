@@ -168,6 +168,9 @@ public:
   TkOpenGLContext *	tk_gl_context_;
   TkOpenGLContext *	old_tk_gl_context_;
   string		myname_;
+#ifdef __APPLE__
+  bool                  apple_wait_a_second_;
+#endif
 
 private:
   void			redraw_frame();
