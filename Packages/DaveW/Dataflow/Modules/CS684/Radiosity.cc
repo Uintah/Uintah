@@ -37,6 +37,7 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
+#include <map.h>
 #include <iostream>
 using std::cerr;
 #include <string.h>
@@ -75,7 +76,7 @@ class Radiosity : public Module {
     clString msg;
     Array1<int> geom_idx;
     Array1<int> geom_link_idx;
-    HashTable<int, RadObj*> hash;
+    map<int, RadObj*> hash;
     RadObj* selRadObj;
     Array1<RadObj* > ancestory;
     int drawLevel;	// -1 -> draw all links; -2 -> draw no links
@@ -384,7 +385,7 @@ void Radiosity::radToGeom(RadObj *ro, GeomGroup *gg) {
 	}
 	GeomPick *gp=new GeomPick(gt, this);
 #if (_MIPS_SZPTR != 64)
-	hash.insert((int)gp, ro);
+	hash[(int)gp] = ro;
 #endif
 //	cerr << "inserting "<<(int) gp<<"...\n";
 	geom_idx.add(ogeom->addObj(gp, rm->obj->name));
@@ -401,7 +402,7 @@ void Radiosity::meshToGeom(int i) {
 
 void Radiosity::buildGeom() {
     removeGeom();
-    hash.remove_all();
+    hash.clear();
     for (int i=0; i<rt->scene.mesh.size(); i++) {
 	meshToGeom(i);
     }
@@ -411,13 +412,14 @@ void Radiosity::geom_pick(GeomPick* gp, void*) {
 #if (_MIPS_SZPTR == 64)
     return;
 #else
-    RadObj* rid;
-    if (!hash.lookup((int)gp, rid)) {
-	cerr << "Error -- couldn't find that GeomPick "<<(int)gp<<" in hash table!\n";
+    map<int, RadObj*>::iterator iter = hash.find((int)gp);
+    if (iter == hash.end()) {
+	cerr << "Error -- couldn't find that GeomPick "
+	     << (int)gp<<" in hash table!\n";
 	cerr << "(hash.size() = "<<hash.size()<<")\n";
 	return;
     }
-    selRadObj = rid;
+    selRadObj = (*iter).second;
     msg = clString("polyselect");
     want_to_execute();
 #endif

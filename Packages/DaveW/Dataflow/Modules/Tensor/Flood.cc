@@ -19,7 +19,6 @@
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <PSECore/Datatypes/VectorFieldPort.h>
 #include <PSECore/Widgets/PointWidget.h>
-#include <SCICore/Containers/HashTable.h>
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/GeomPick.h>
@@ -402,6 +401,10 @@ void Flood::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 18:44:23  dahart
+// Replaced all instances of HashTable<class X, class Y> with the STL
+// map<class X, class Y>.  Removed all includes of HashTable.h
+//
 // Revision 1.2  2000/03/17 09:26:03  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
