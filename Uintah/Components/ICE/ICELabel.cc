@@ -65,12 +65,16 @@ ICELabel::ICELabel()
 #endif
     int_eng_source_CCLabel = 
      scinew VarLabel("intE_source_CC",CCVariable<double>::getTypeDescription());
+    mom_L_CCLabel = 
+     scinew VarLabel("mom_L_CC",CCVariable<Vector>::getTypeDescription());
+#if 0
     xmom_L_CCLabel = 
      scinew VarLabel("xmom_L_CC",CCVariable<double>::getTypeDescription());
     ymom_L_CCLabel = 
      scinew VarLabel("ymom_L_CC",CCVariable<double>::getTypeDescription());
     zmom_L_CCLabel = 
      scinew VarLabel("zmom_L_CC",CCVariable<double>::getTypeDescription());
+#endif
     int_eng_L_CCLabel = 
      scinew VarLabel("intE_L_CC",CCVariable<double>::getTypeDescription());
     mass_L_CCLabel = 
@@ -147,9 +151,12 @@ ICELabel::~ICELabel()
     delete zmom_source_CCLabel;
 #endif
     delete int_eng_source_CCLabel;
+    delete mom_L_CCLabel;
+#if 0
     delete xmom_L_CCLabel;
     delete ymom_L_CCLabel;
     delete zmom_L_CCLabel;
+#endif
     delete int_eng_L_CCLabel;
     delete mass_L_CCLabel;
     delete rho_L_CCLabel;
@@ -176,6 +183,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.21  2001/01/08 18:30:37  jas
+// Replace {x,y,z}mom_L with a single CCVariable<Vector> mom_L.
+//
 // Revision 1.20  2001/01/05 20:01:30  jas
 // Replaced {x,y,z}mom_source with a single mom_source that is a
 // CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.

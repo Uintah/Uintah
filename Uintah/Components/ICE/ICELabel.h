@@ -39,9 +39,12 @@ namespace Uintah {
     const VarLabel* zmom_source_CCLabel;
 #endif
     const VarLabel* int_eng_source_CCLabel;
+    const VarLabel* mom_L_CCLabel;
+#if 0
     const VarLabel* xmom_L_CCLabel;
     const VarLabel* ymom_L_CCLabel;
     const VarLabel* zmom_L_CCLabel;
+#endif
     const VarLabel* int_eng_L_CCLabel;
     const VarLabel* mass_L_CCLabel;
     const VarLabel* rho_L_CCLabel;
@@ -75,6 +78,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.19  2001/01/08 18:30:37  jas
+// Replace {x,y,z}mom_L with a single CCVariable<Vector> mom_L.
+//
 // Revision 1.18  2001/01/05 20:01:30  jas
 // Replaced {x,y,z}mom_source with a single mom_source that is a
 // CCVariable<Vector>.  Fixed printData so it can handle CCVariable<Vector>.
