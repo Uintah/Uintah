@@ -84,13 +84,13 @@ Token::ParseChildren(ifstream &str)
     }
     if (valid_child_moniker(curstring)) {
       Token *newtoken = token_manager_.MakeToken(curstring);
-#if DEBUG
+
       if (!newtoken) {
 	cerr << "Token Manager: unknown token: " << curstring << endl;
 	str >> curstring;
 	continue;
       }
-#endif
+
       newtoken->SetParent(this);
       children_.push_back(newtoken);
       if (!newtoken->Parse(str)) return false;
