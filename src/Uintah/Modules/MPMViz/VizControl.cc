@@ -241,7 +241,6 @@ void VizControl::tcl_command( TCLArgs& args, void* userdata)
 	  result = "";
 	  if ( vars.size() > 0)
 	    result = vars[0];
-	  cerr<< "subresult = " << result << endl;
 	  for( j = 1; j < vars.size(); j++){
 	    result += clString( " " + vars[j]);
 	  }
