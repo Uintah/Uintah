@@ -1,5 +1,6 @@
+catch {rename SolveMatrix ""}
 
-itcl_class SolveMatrix {
+itcl_class PSECommon_Matrix_SolveMatrix {
     inherit Module
     constructor {config} {
 	set name SolveMatrix

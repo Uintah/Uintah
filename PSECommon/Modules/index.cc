@@ -34,6 +34,9 @@ MP(MeshIterator)
 // Matrix
 MP(BldTransform)
 MP(EditMatrix)
+MP(MatMat)
+MP(MatSelectVec)
+MP(MatVec)
 MP(SolveMatrix)
 MP(VisualizeMatrix)
 MP(cConjGrad)
@@ -131,12 +134,15 @@ void initPackage(const clString& tcl) {
   RM("Fields",        "Transform Field",         make_TransformField,       tcl+"/TransformField.tcl");
 
   // Iterators
-  RM("Iterators",     "Mesh Iterator",           make_TransformField,       "");
+  RM("Iterators",     "Mesh Iterator",           make_MeshIterator,         "");
 
   // Matrix
   RM("Matrix",        "BldTransform",            make_BldTransform,         tcl+"/BldTransform.tcl");
   RM("Matrix",        "Edit Matrix",             make_EditMatrix,           tcl+"/EditMatrix.tcl");
-  RM("Matrix",        "Solve Matrix",            make_SolveMatrix,          "");
+  RM("Matrix", 	      "MatMat",			 make_MatMat,		    tcl+"/MatMat.tcl");
+  RM("Matrix", 	      "MatSelectVec",		 make_MatSelectVec,	    tcl+"/MatSelectVec.tcl");
+  RM("Matrix", 	      "MatVec",			 make_MatVec,		    tcl+"/MatVec.tcl");
+  RM("Matrix",        "Solve Matrix",            make_SolveMatrix,          tcl+"/SolveMatrix.tcl");
   RM("Matrix",        "Visualize Matrix",        make_VisualizeMatrix,      "");
   RM("Matrix",        "cConjGrad",               make_cConjGrad,            tcl+"/cConjGrad.tcl");
   RM("Matrix",        "cPhase",                  make_cPhase,               tcl+"/cPhase.tcl");
