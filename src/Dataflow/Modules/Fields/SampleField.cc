@@ -168,7 +168,6 @@ SampleField::widget_moved(bool last, BaseWidget*)
     if (rake_)
     {
       rake_->GetEndpoints(endpoint0_, endpoint1_);
-
       double ratio = rake_->GetRatio();
       if (ratio < 0.0001) ratio = 0.0001; // To avoid infinte loop
       double num_seeds = Max(0.0, 1.0/ratio+1.0);
@@ -187,6 +186,11 @@ SampleField::widget_moved(bool last, BaseWidget*)
     {
       want_to_execute();
     }
+  } else { // rescaling the widget forces a "last=false" widget_moved event
+    if (rake_)
+      {
+	widgetscale_.set(rake_->GetScale());
+      }
   }
 }
 
@@ -279,6 +283,7 @@ SampleField::execute_rake(FieldHandle ifield)
     rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), true);
     rake_->Connect(ogport_);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
+    rake_->SetScale(widgetscale_.get());
     rake_->SetRatio(1/16.0);
   }
 

@@ -420,6 +420,7 @@ BaseWidget::SetScale( const double scale )
   solve->SetEpsilon(epsilon_ * widget_scale_);
   // gui->execute(id+" scale_changed "+to_string(widget_scale));
   execute(0);
+  module_->widget_moved(false, this);
 }
 
 
