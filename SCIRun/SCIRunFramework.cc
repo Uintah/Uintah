@@ -62,7 +62,8 @@
 
 #include "CCACommunicator.h"
 
-using namespace SCIRun;
+
+namespace SCIRun {
 
 SCIRunFramework::SCIRunFramework()
   //:d_slave_sema("Wait for a slave to regester Semaphore",0)
@@ -170,7 +171,8 @@ SCIRunFramework::createComponentInstance(const std::string& name,
   return compIDs[compIDs.size()-1];
 }
 
-void SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
+void
+SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
                                                &cid, float timeout )
 {
   //assuming no connections between this component and 
@@ -254,7 +256,8 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
   std::cerr << "TODO: register a creation event for component " << name << '\n';
 }
 
-ComponentInstance * SCIRunFramework::unregisterComponent(const std::string& instanceName)
+ComponentInstance *
+SCIRunFramework::unregisterComponent(const std::string& instanceName)
 {
   std::map<std::string, ComponentInstance*>::iterator found=activeInstances.find(instanceName);
   if(found != activeInstances.end()){
@@ -412,6 +415,7 @@ SCIRunFramework::createComponent(const std::string& name, const std::string& t)
 */
 
 
+} // end namespace SCIRun
 
 
 
