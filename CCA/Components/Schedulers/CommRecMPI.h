@@ -120,7 +120,7 @@ donesome( MPI_Comm & comm, int donecount )
       delete handlers[idx];
       handlers[idx]=0;
     }
-    ids[idx] = MPI_REQUEST_NULL;;
+    ids[idx] = MPI_REQUEST_NULL;
   }
   if(donecount == (int)ids.size() || donecount == MPI_UNDEFINED){
     ids.clear();
