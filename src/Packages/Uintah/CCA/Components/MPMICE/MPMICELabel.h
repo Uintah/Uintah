@@ -30,6 +30,7 @@ namespace Uintah {
       const VarLabel* releasedHeatCCLabel;
       const VarLabel* sumBurnedMassLabel;
       const VarLabel* sumReleasedHeatLabel;  // for computeMassBurnRate
+      const VarLabel* sumCreatedVolLabel;    // for computeMassBurnRate
 
     };
 

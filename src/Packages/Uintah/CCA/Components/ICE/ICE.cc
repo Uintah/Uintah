@@ -452,6 +452,7 @@ void  ICE::scheduleMassExchange(SchedulerP& sched,
   task->requires(Task::OldDW, lb->temp_CCLabel, Ghost::None);
   task->computes(lb->burnedMass_CCLabel);
   task->computes(lb->releasedHeat_CCLabel);
+  task->computes(lb->created_vol_CCLabel);
   
   sched->addTask(task, patches, matls);
 }
@@ -657,6 +658,8 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->int_eng_L_ME_CCLabel,Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,   Ghost::AroundCells,1);
+  task->requires(Task::OldDW, lb->mass_CCLabel,        Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::AroundCells,1);
  
   task->computes(lb->rho_CC_top_cycleLabel);
   task->computes(lb->mass_CCLabel);
@@ -800,6 +803,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     CCVariable<double>    press_CC;  
     StaticArray<double>        cv(numMatls);
     new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
+    press_CC.initialize(0.0);
 
   //__________________________________
   // Note:
@@ -1630,6 +1634,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       #ifdef setBC_FC_John
+      cout << "Doing setBC_FC_John . . ." << endl;
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
 	  iter++){  
 	IntVector cell = *iter; 
@@ -1647,7 +1652,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       #endif
       // Turn off the old way if setBC_FC_John is turned on.
       #ifndef setBC_FC_John 
-      cout << "Not doing setBC_FC_John . . ." << endl;
+//      cout << "Not doing setBC_FC_John . . ." << endl;
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
@@ -1965,10 +1970,10 @@ void ICE::computePressFC(const ProcessorGroup*,
  Function~  ICE::massExchange--
  ---------------------------------------------------------------------  */
 void ICE::massExchange(const ProcessorGroup*,  
-			  const PatchSubset* patches,
+		       const PatchSubset* patches,
                        const MaterialSubset* /*matls*/,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw)
+		       DataWarehouse* old_dw,
+		       DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1986,6 +1991,7 @@ void ICE::massExchange(const ProcessorGroup*,
    StaticArray<CCVariable<double> > releasedHeat(numMatls);
    StaticArray<CCVariable<double> > rho_CC(numMatls);
    StaticArray<CCVariable<double> > Temp_CC(numMatls);
+   StaticArray<CCVariable<double> > created_vol(numMatls);
    StaticArray<double> cv(numMatls);
    
    int reactant_indx = -1;
@@ -2003,8 +2009,10 @@ void ICE::massExchange(const ProcessorGroup*,
       old_dw->get(Temp_CC[m],     lb->temp_CCLabel,indx,patch,Ghost::None, 0);
       new_dw->allocate(burnedMass[m],  lb->burnedMass_CCLabel,  indx,patch);
       new_dw->allocate(releasedHeat[m],lb->releasedHeat_CCLabel,indx,patch);
+      new_dw->allocate(created_vol[m],   lb->created_vol_CCLabel, indx,patch);
       burnedMass[m].initialize(0.0);
       releasedHeat[m].initialize(0.0); 
+      created_vol[m].initialize(0.0);
 
       cv[m] = ice_matl->getSpecificHeat();
     }
@@ -2023,6 +2031,10 @@ void ICE::massExchange(const ProcessorGroup*,
 	   releasedHeat[reactant_indx][*iter] = -burnedMass_tmp
 					      *  cv[reactant_indx]
 					      *  Temp_CC[reactant_indx][*iter];
+           // Commented out for now as I'm not sure that this is appropriate
+	   // for regular ICE - Jim 7/30/01
+//	   created_vol[reactant_indx][*iter]  =
+//			     -burnedMass_tmp/rho_micro_CC[reactant_indx][*iter];
         }
       }
       //__________________________________
@@ -2037,6 +2049,9 @@ void ICE::massExchange(const ProcessorGroup*,
 	      burnedMass[prods][*iter]  -= burnedMass[m][*iter];
               releasedHeat[prods][*iter] -=
                                 burnedMass[m][*iter]*cv[m]*Temp_CC[m][*iter];
+           // Commented out for now as I'm not sure that this is appropriate
+	   // for regular ICE - Jim 7/30/01
+//	      created_vol[prods][*iter]  -= created_vol[m][*iter];
 	    }
 	  }
 	}
@@ -2047,8 +2062,9 @@ void ICE::massExchange(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      new_dw->put(burnedMass[m], lb->burnedMass_CCLabel, indx,patch);
+      new_dw->put(burnedMass[m],   lb->burnedMass_CCLabel,   indx,patch);
       new_dw->put(releasedHeat[m], lb->releasedHeat_CCLabel, indx,patch);
+      new_dw->put(created_vol[m],  lb->created_vol_CCLabel,  indx,patch);
     }
     //---- P R I N T   D A T A ------ 
     for(int m = 0; m < numMatls; m++) {
@@ -2772,6 +2788,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       CCVariable<double> rho_CC, mass_CC, temp, sp_vol_CC, rho_micro;
       CCVariable<Vector> vel_CC, mom_L_ME;
       CCVariable<double > int_eng_L_ME, mass_L,speedSound;
+      CCVariable<double > mass_CC_old, createdVol;
 
       SFCXVariable<double > uvel_FC;
       SFCYVariable<double > vvel_FC;
@@ -2781,8 +2798,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->get(vvel_FC,lb->vvel_FCMELabel,indx,patch,Ghost::AroundCells,2);
       new_dw->get(wvel_FC,lb->wvel_FCMELabel,indx,patch,Ghost::AroundCells,2);
       new_dw->get(mom_L_ME,  lb->mom_L_ME_CCLabel, indx,patch,
-		  Ghost::AroundCells,1);
-      new_dw->get(mass_L,lb->mass_L_CCLabel,indx,patch,Ghost::AroundCells,1);
+							  Ghost::AroundCells,1);
+      new_dw->get(mass_L, lb->mass_L_CCLabel,  indx,patch,Ghost::AroundCells,1);
+      old_dw->get(mass_CC_old,lb->mass_CCLabel,indx,patch,Ghost::AroundCells,1);
+      new_dw->get(createdVol, lb->created_vol_CCLabel,
+					       indx,patch,Ghost::AroundCells,1);
       new_dw->get(rho_micro,
 		  lb->rho_micro_CCLabel,indx,patch,Ghost::AroundCells,1);
       new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,indx,patch,
@@ -2854,18 +2874,21 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
           sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
         }
         for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
-          q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
+//          q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
+	  q_CC[*iter] = (mass_CC_old[*iter]/rho_micro[*iter]
+						 + createdVol[*iter])*invvol;
         }
 
         advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
 
+	// After the following expression, sp_vol_CC is the matl volume
         for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-          sp_vol_CC[*iter] = (q_CC[*iter] + q_advected[*iter]/vol);
+          sp_vol_CC[*iter] = (q_CC[*iter]*vol + q_advected[*iter]);
         }
-       // Divide by the new rho_CC.
-       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-	  sp_vol_CC[*iter] /= rho_CC[*iter];
-       }
+        // Divide by the new mass_CC.
+        for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+	  sp_vol_CC[*iter] /= mass_CC[*iter];
+        }
       }
 
       //---- P R I N T   D A T A ------   
