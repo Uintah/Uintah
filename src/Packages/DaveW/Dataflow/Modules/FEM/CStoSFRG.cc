@@ -335,14 +335,14 @@ void CStoSFRG::execute()
 
     cerr << "min="<<min<<"  max="<<max;
 
-    int nz=(int)(max.z()-min.z()+3);
+    int nz=(int)((max.z()-min.z())/contours->space+3);
     cerr << "nz="<<nz<<"\n";
     Vector diag(max-min+Vector(1,1,1));
     
     cerr << " first diag="<<diag<<"\n";
     diag.x(((diag.x()*nx/(nx-2))-diag.x())/2);
     diag.y(((diag.y()*ny/(ny-2))-diag.y())/2);
-    diag.z((nz-2.)/nz);
+    diag.z(contours->space*2);
     
     cerr << "  diag="<<diag<<"\n";
     sf->set_bounds(min-diag/2, max+diag/2);
