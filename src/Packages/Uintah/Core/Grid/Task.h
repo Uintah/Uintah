@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/ProblemSpec/constHandle.h>
 #include <Packages/Uintah/Core/Grid/SimpleString.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Containers/TrivialAllocator.h>
@@ -498,19 +499,19 @@ WARNING
       inline void addComp(Edge* edge);
       inline void addReq(Edge* edge);
 
-      inline const PatchSubset*
+      inline constHandle<PatchSubset>
       getPatchesUnderDomain(const PatchSubset* domainPatches) const
       { return getComputeSubsetUnderDomain("patches_dom", patches_dom, patches,
 					   domainPatches); }
       
-      inline const MaterialSubset*
+      inline constHandle<MaterialSubset>
       getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const
       { return getComputeSubsetUnderDomain("matls_dom", matls_dom, matls,
 					   domainMaterials); }
 
     private:
       template <class T>
-      inline static const ComputeSubset<T>*
+      inline static constHandle< ComputeSubset<T> >
       getComputeSubsetUnderDomain(string domString, DomainSpec dom,
 				  const ComputeSubset<T>* subset,
 				  const ComputeSubset<T>* domainSubset);
