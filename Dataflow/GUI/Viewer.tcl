@@ -217,6 +217,12 @@ itcl_class BaseViewWindow {
 
 	initGlobal $this-trackViewWindow0 1
 
+	# Fog variables
+	initGlobal $this-fogusebg 1
+	initGlobal $this-fogcolor-r 0.0
+	initGlobal $this-fogcolor-g 0.0
+	initGlobal $this-fogcolor-b 1.0
+
 	setGlobal $this-global-light 1
 	setGlobal $this-global-fog 0
 	setGlobal $this-global-type Gouraud
@@ -443,6 +449,8 @@ itcl_class ViewWindow {
 		-command "$this makePolygonOffsetPopup"
 	$editmenu add command -label "Scene Materials..." -underline 0 \
 		-command "$this makeSceneMaterialsPopup"
+	$editmenu add command -label "Fog Controls..." -underline 0 \
+		-command "$this makeFogControlsPopup"
 
 	# Open-GL Visual Menu
 	menubutton $w.menu.visual -text "Visual" -underline 0 \
@@ -942,6 +950,57 @@ itcl_class ViewWindow {
 	    pack $w.$property.l $w.$property.e -side left -fill x
 	    pack $w.$property -side top -fill both
 	}
+    }
+
+    method makeFogControlsPopup {} {
+	set w .fogcontrols[modname]
+	if [winfo exists $w] {
+	    SciRaise $w
+	    return
+	}
+	toplevel $w
+	wm title $w "Fog Controls"
+	wm iconname $w fog
+
+	checkbutton $w.usebg -text "Use background color" \
+	    -variable $this-fogusebg -command "$this-c redraw"
+
+	set ir [expr int([set $this-fogcolor-r] * 65535)]
+	set ig [expr int([set $this-fogcolor-g] * 65535)]
+	set ib [expr int([set $this-fogcolor-b] * 65535)]
+
+	frame $w.colorFrame
+	frame $w.colorFrame.col -relief ridge -borderwidth 4 \
+	    -height 0.8c -width 1.0c \
+	    -background [format #%04x%04x%04x $ir $ig $ib]
+
+	button $w.colorFrame.set_color -text "Fog Color" \
+            -command "$this makeFogColorPopup"
+
+	pack $w.colorFrame.set_color $w.colorFrame.col -side left -padx 2
+	pack $w.usebg $w.colorFrame -side top -padx 4 -pady 4 -anchor w
+    }
+
+    method makeFogColorPopup {} {
+	set w .fogcolor[modname]
+	if [winfo exists $w] {
+	    SciRaise $w
+	    return
+	}
+
+	makeColorPicker $w $this-fogcolor \
+            "$this updateFogColor; $this-c redraw" "destroy $w"
+	wm title $w "Choose Fog Color"
+    }
+
+    method updateFogColor {} {
+	set w .fogcontrols[modname]
+	
+	set ir [expr int([set $this-fogcolor-r] * 65535)]
+	set ig [expr int([set $this-fogcolor-g] * 65535)]
+	set ib [expr int([set $this-fogcolor-b] * 65535)]
+	
+	$w.colorFrame.col config -background [format #%04x%04x%04x $ir $ig $ib]
     }
 
     method makeBackgroundPopup {} {
