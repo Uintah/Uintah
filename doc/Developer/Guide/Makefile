@@ -62,4 +62,5 @@ clean:
 	-rm -f srdg.aux srdg.log srdg.out srdg.dvi  dev/Figures/*.ps *~
 
 veryclean: clean
-	-rm -f *.[ph]xml dev/*.[ph]xml src/*.[ph]xml *.html srdg.tex srdg.pdf
+	-rm -f dev.*html src.*html *.[ph]xml dev/*.[ph]xml src/*.[ph]xml \
+           index.html intro.html srdg.html srdg.tex srdg.pdf
