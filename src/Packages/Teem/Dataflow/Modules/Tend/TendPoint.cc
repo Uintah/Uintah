@@ -229,7 +229,7 @@ TendPoint::execute()
 	  mat[3], mat[4], mat[5]);
   fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n",
 	  mat[6], mat[7], mat[8]);
-  tenAnisoCalc(c, eval);
+  tenAnisoCalc_f(c, eval);
   fprintf(stderr, "anisotropies = \n");
   cl1_.set(c[1]);
   cp1_.set(c[2]);
