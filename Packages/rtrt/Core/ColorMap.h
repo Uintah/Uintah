@@ -31,8 +31,8 @@ class ColorCell {
 
 class ColorMap {
   char filename[80];
-  ScalarTransform1D<float, Color> slices;
 public:
+  ScalarTransform1D<float, Color> slices;
   Array1<ColorCell*> ColorCells;
   ColorMap(const int num_bins = 256);
   ColorMap(char* filebase, const int num_bins = 256);
