@@ -12,10 +12,9 @@
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -27,30 +26,33 @@ namespace SCIRun {
 
 class LocateNbrhd : public Module
 {
-  MeshIPort* imesh_;
-  SurfaceIPort* isurf_;
-
-  MatrixOPort* omatrix_;
-  MatrixHandle omatrixH_;
-
-  MatrixOPort* omat_;
-  MatrixHandle omatH_;
-
-  SurfaceOPort *osurf_;
-  SurfaceHandle osurfH_;
-
-  GuiString method_;
-  GuiInt zeroTCL_;
-  GuiInt potMatTCL_;
-
-  int mesh_generation_;
-  int surf_generation_;
-
 public:
 
   LocateNbrhd(const clString& id);
   virtual ~LocateNbrhd();
   virtual void execute();
+
+private:
+  //! expects tet vol.
+  FieldIPort     *imesh_;
+  //! expects tri surf.
+  FieldIPort     *isurf_;
+
+  MatrixOPort    *omatrix_;
+  MatrixHandle    omatrixH_;
+
+  MatrixOPort    *omat_;
+  MatrixHandle    omatH_;
+
+  FieldOPort     *osurf_;
+  FieldHandle     osurfH_;
+
+  GuiString       method_;
+  GuiInt          zeroTCL_;
+  GuiInt          potMatTCL_;
+
+  int             mesh_generation_;
+  int             surf_generation_;
 };
 
 
@@ -60,16 +62,16 @@ extern "C" Module* make_LocateNbrhd(const clString& id)
 }
 
 
-LocateNbrhd::LocateNbrhd(const clString& id)
-  : Module("LocateNbrhd", id, Filter),
-    method_("method", id, this),
-    zeroTCL_("zeroTCL", id, this),
-    potMatTCL_("potMatTCL", id, this)
+LocateNbrhd::LocateNbrhd(const clString& id) : 
+  Module("LocateNbrhd", id, Filter),
+  method_("method", id, this),
+  zeroTCL_("zeroTCL", id, this),
+  potMatTCL_("potMatTCL", id, this)
 {
-  imesh_ = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+  imesh_ = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
   add_iport(imesh_);
 
-  isurf_ = scinew SurfaceIPort(this, "Surface2", SurfaceIPort::Atomic);
+  isurf_ = scinew FieldIPort(this, "Surface2", FieldIPort::Atomic);
   add_iport(isurf_);
 
   // Create the output ports.
@@ -79,7 +81,7 @@ LocateNbrhd::LocateNbrhd(const clString& id)
   omatrix_ = scinew MatrixOPort(this, "Map", MatrixIPort::Atomic);
   add_oport(omatrix_);
 
-  osurf_ = scinew SurfaceOPort(this, "NearestNodes", SurfaceIPort::Atomic);
+  osurf_ = scinew FieldOPort(this, "NearestNodes", FieldIPort::Atomic);
   add_oport(osurf_);
 
   mesh_generation_ = -1;
@@ -95,11 +97,11 @@ LocateNbrhd::~LocateNbrhd()
 void
 LocateNbrhd::execute()
 {
-  MeshHandle meshH;
+  FieldHandle meshH;
   if (!imesh_->get(meshH))
     return;
 
-  SurfaceHandle surfH;
+  FieldHandle surfH;
   if (!isurf_->get(surfH))
     return;
 
@@ -119,20 +121,20 @@ LocateNbrhd::execute()
   clString m(method_.get());
 
 #if 0
-  TriSurface *ots = new TriSurface;
+  TriSurf *ots = new TriSurf;
   osurfH_ = ots;
   if (m == "project")
   {	
-    TriSurface *ts = scinew TriSurface;
+    TriSurf *ts = scinew TriSurf;
 	
     // First, set up the data point locations and values in an array.
     Array1<Point> p;
 
-    // Get the right trisurface and grab those vals.
-    if (!(ts = surfH->getTriSurface()))
+    // Get the right TriSurf and grab those vals.
+    if (!(ts = surfH->getTriSurf()))
     {
 
-      cerr << "Error - need a trisurface!\n";
+      cerr << "Error - need a TriSurf!\n";
       return;
     }
     if (ts->bcIdx.size()==0)
