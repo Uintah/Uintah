@@ -166,6 +166,7 @@ int main(int argc, char *argv[]) {
     exit(2);
   }
   
+  if (verbose) cout << "Wrote out mean to "<<meanname<<"\n";
   
   // Allocate our covariance matrix
   Nrrd *cov = nrrdNew();
@@ -179,36 +180,23 @@ int main(int argc, char *argv[]) {
   // loop over each pixel to compute cov(x,y)
   int height = nin->axis[2].size;
   int width = nin->axis[1].size;
-  Nrrd *slab = nrrdNew();
-  Nrrd *pixel = nrrdNew();
+  float *data = (float*)nin->data;
   for (int y=0; y < height; y++) {
-    if (nrrdSlice(slab, nin, 2, y)) {
-      err = biffGetDone(NRRD);
-      fprintf(stderr, "%s: error slicing nrrd:\n%s", me, err);
-      exit(2);
-    }
-
     for (int x = 0; x < width; x++ ) {
-      if (nrrdSlice(pixel, slab, 1, x)) {
-	err = biffGetDone(NRRD);
-	fprintf(stderr, "%s: error slicing nrrd:\n%s", me, err);
-	exit(2);
-      }
-
       // compute cov(x,y) for current pixel
       double *cov_data = (double*)(cov->data);
-      float *pixel_data = (float*)(pixel->data);
       for(int c = 0; c < num_channels; c++)
 	for(int r = 0; r < num_channels; r++)
 	  {
-	    *cov_data = *cov_data + pixel_data[c] * pixel_data[r];
+	    *cov_data = *cov_data + data[c] * data[r];
 	    cov_data++;
 	  }
+      data += num_channels;
     }
   }
-  nrrdEmpty(slab);
-  nrrdEmpty(pixel);
 
+  if (verbose) cout << "Done computing first part of covariance matrix.\n";
+  
   if (verbose > 10) {
     double *cov_data = (double*)(cov->data);
     for(int c = 0; c < cov->axis[1].size; c++)
@@ -234,9 +222,10 @@ int main(int argc, char *argv[]) {
 	}
   }
 
+  if (verbose) cout << "After minus mean\n";
+
   if (verbose > 10)
   {
-    cout << "After minux mean\n";
     double *cov_data = (double*)(cov->data);
     for(int r = 0; r < cov->axis[0].size; r++)
       {
@@ -257,6 +246,8 @@ int main(int argc, char *argv[]) {
   double *cov_data = (double*)(cov->data);
   double *evec_data = 0;
 
+  if (verbose) cout << "Computing eigen stuffs\n";
+  
   if (usegk) {
     // Here's where the general solution diverges to the RGB case.
     evec_data = new double[9];
@@ -270,9 +261,14 @@ int main(int argc, char *argv[]) {
     const char uplo = 'L';
     const int N = num_channels;
     const int lda = N;
-    const int lwork = 3*N-1;
-    double *work = new double[lwork];
     int info;
+    const int lwork = (3*N-1)*2;
+    cout << "Wanting to allocate "<<lwork<<" doubles.\n";
+    double *work = new double[lwork];
+    if (!work) {
+      cerr << "Could not allocate the memory for work\n";
+      exit(2);
+    }
     dsyev_(jobz, uplo, N, cov_data, lda, eval, work, lwork, info);
     delete[] work;
     if (info != 0) {
@@ -283,7 +279,9 @@ int main(int argc, char *argv[]) {
     evec_data = cov_data;
   }
 
-  if (verbose) {
+  if (verbose) cout << "Done computing eigen vectors and values.\n";
+  
+  if (verbose > 10) {
     cout << "Eigen values are [";
     for (int i = 0; i < num_channels; i++)
       cout << eval[i]<<", ";
@@ -326,7 +324,7 @@ int main(int argc, char *argv[]) {
     cov = nrrdNuke(cov);
     cov_data = evec_data = 0;
     
-    if (verbose) {
+    if (verbose > 10) {
       cout << "\ntransform matrix\n";
       tdata = (float*)(transform->data);
       for(int c = 0; c < num_bases; c++)
@@ -342,6 +340,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  if (verbose) cout << "Done filling transfer matrix.\n";
+  
   // Compute our basis textures
   Nrrd *basesTextures = nrrdNew();
   if (nrrdAlloc(basesTextures, nrrdTypeFloat, 3, num_bases, width, height)) {
@@ -354,41 +354,27 @@ int main(int argc, char *argv[]) {
   
   {
     float *btdata = (float*)(basesTextures->data);
-    
+    float *data = (float*)(nin->data);
     for (int y=0; y < height; y++) {
-      if (nrrdSlice(slab, nin, 2, y)) {
-	err = biffGetDone(NRRD);
-	fprintf(stderr, "%s: error slicing nrrd:\n%s", me, err);
-	exit(2);
-      }
-      
       for (int x = 0; x < width; x++ ) {
-	if (nrrdSlice(pixel, slab, 1, x)) {
-	  err = biffGetDone(NRRD);
-	  fprintf(stderr, "%s: error slicing nrrd:\n%s", me, err);
-	  exit(2);
-	}
-	
 	// Subtract the mean
-	float *pixel_data = (float*)(pixel->data);
 	float *mdata = (float*)(mean->data);
 	for(int i = 0; i < mean->axis[0].size; i++) {
-	  pixel_data[i] -= mdata[i];
+	  data[i] -= mdata[i];
 	}
 	
-	// Now do transform * pixel_data
+	// Now do transform * data
 	float *tdata = (float*)(transform->data);
 
 	for(int c = 0; c < num_bases; c++)
 	  for(int r = 0; r < num_channels; r++)
 	    {
-	      btdata[c] += tdata[c*num_channels+r]*pixel_data[r];
+	      btdata[c] += tdata[c*num_channels+r]*data[r];
 	    }
 	btdata += num_bases;
+	data += num_channels;
       }
     }
-    nrrdEmpty(slab);
-    nrrdEmpty(pixel);
   }
 
   // Free input nrrd and mean
