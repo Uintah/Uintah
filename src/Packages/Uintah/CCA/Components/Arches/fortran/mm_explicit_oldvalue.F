@@ -72,23 +72,3 @@ c*********************************************************************
       return
       end
 
-c*********************************************************************
-c
-c Revision 1.2  2000/10/09 17:06:30  rawat
-c modified momentum solver for multi-patch
-c
-c Revision 1.1  2000/08/15 00:23:38  rawat
-c added explicit solve for momentum and scalar eqns
-c
-c Revision 1.2  2000/08/11 21:26:41  rawat
-c added linear solver for pressure eqn
-c
-c Revision 1.2  2000/08/01 23:28:46  skumar
-c Added residual calculation procedure and modified templates in linear
-c solver.  Added template for order-of-magnitude term calculation.
-c
-c Revision 1.1  2000/04/12 20:31:50  rawat
-c modified PressureSolver and added fortran subroutines
-c
-c
-c*********************************************************************

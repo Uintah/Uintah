@@ -51,6 +51,9 @@ C     VELOCITY TO ZERO
      $                 as(i,j,k),at(i,j,k),ab(i,j,k),
      $                 su(i,j,k),sp(i,j,k),const)
                else
+c     This first if 0 is called modbc (modified bc for normal
+c     boundary conditions)
+#if 0
 C     CELL ON FAR WEST IS A WALL: SET COEFFICIENT IN THAT 
 C     DIRECTION TO ZERO
                   if (pcell(i-2*ioff,j-2*joff,k-2*koff).eq.
@@ -62,6 +65,11 @@ C     TO ZERO
                   if (pcell(i+ioff,j+joff,k+koff).eq.mmwallid) then
                      ae(i,j,k) = 0.0D0
                   endif
+#endif
+c     This second if 0 is called modbc2 (modified bc for 
+c     tangential boundary conditions) (modbc2 requires modbc
+c     as well)
+#if 0
 C     WALL ON SOUTH
                   if ((pcell(i-idt1,j-jdt1,k-kdt1).eq.mmwallid).or.
      $                (pcell(i-ioff-idt1,j-joff-jdt1,k-koff-kdt1)
@@ -86,6 +94,8 @@ C     WALL ON TOP
      $                 .eq.mmwallid)) then
                      at(i,j,k) = 0.0D0
                   endif
+#endif
+
                endif
  800        continue
  810     continue
