@@ -56,18 +56,22 @@ using namespace SCIRun;
 #pragma set woff 1682
 #endif
 
-ParticleVis::ParticleVis(const string& id)
-  : Module("ParticleVis", id, Filter), current_time("current_time", id, this),
-    radius("radius", id, this), drawspheres("drawspheres", id, this),
-    drawVectors("drawVectors",id,this), length_scale("length_scale", id, this),
-    head_length("head_length", id, this), width_scale("width_scale",id,this),
-    shaft_rad("shaft_rad", id,this), drawcylinders("drawcylinders", id, this),
-    polygons("polygons", id, this),
-    show_nth("show_nth", id, this),
-    isFixed("isFixed", id, this),
-    min_("min_", id, this),  max_("max_", id, this),
-    MIN_POLYS(8), MAX_POLYS(400),
-    MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
+ParticleVis::ParticleVis(const string& id) :
+  Module("ParticleVis", id, Filter), 
+  min_("min_", id, this),  max_("max_", id, this),
+  isFixed("isFixed", id, this),
+  current_time("current_time", id, this),
+  radius("radius", id, this), 
+  drawcylinders("drawcylinders", id, this),
+  length_scale("length_scale", id, this),
+  head_length("head_length", id, this), width_scale("width_scale",id,this),
+  shaft_rad("shaft_rad", id,this),
+  show_nth("show_nth", id, this),
+  drawVectors("drawVectors",id,this), 
+  drawspheres("drawspheres", id, this),
+  polygons("polygons", id, this),
+  MIN_POLYS(8), MAX_POLYS(400),
+  MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
   // Create the input port
   spin0=scinew ScalarParticlesIPort(this, "ScalarParticles",
