@@ -51,6 +51,7 @@ SRCS     += \
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/HexToTet.cc\
+	$(SRCDIR)/InterpolantToTransferMatrix.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
 	$(SRCDIR)/QuadToTri.cc\
