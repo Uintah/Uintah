@@ -248,7 +248,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 4;
 
-  if( argc > 1 && strcmp(argv[1],"-fast") ) {
+  if( argc < 2 || strcmp(argv[1],"-fast") ) {
+    cout << "Creating TRIGGERS:\n";
+
     //////////////// TRIGGERS ////////////////////////
     // livingroom main_text
     Trigger * last;
@@ -363,7 +365,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     ///// DAVID
     ppm = new PPMImage(ifpath+"museum/museum_david_high.ppm", true);
-    loc.clear(); loc.push_back(Point(-16,-12,4));
+    loc.clear(); loc.push_back(Point(-17,-22,4));
     trig = new Trigger( "David", loc, 4,100,ppm,true );
     trig->setBasePriority( Trigger::MediumTriggerPriority );
     scene->addTrigger( trig );
@@ -416,25 +418,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     trig = new Trigger( "Science Wall 2", loc, 1,30,ppm,true );
     trig->setBasePriority( Trigger::MediumTriggerPriority );
     scene->addTrigger( trig );
-    ///// VIS WOMEN
-    ppm = new PPMImage(ifpath+"scienceroom/science_vis-woman.ppm", true);
-    loc.clear(); loc.push_back(Point(-30,-30,1.9));
-    trig = new Trigger( "Visible Woman", loc, 1,30,ppm,true );
-    trig->setBasePriority( Trigger::MediumTriggerPriority );
-    scene->addTrigger( trig );
-    ///// GEOPHYSICS
-    ppm = new PPMImage(ifpath+"scienceroom/science_geophysics.ppm", true);
-    loc.clear(); loc.push_back(Point(-40,-40,1.9));
-    trig = new Trigger( "Geophysics", loc, 1,30,ppm,true );
-    trig->setBasePriority( Trigger::MediumTriggerPriority );
-    scene->addTrigger( trig );
-    ///// C-SAFE
-    ppm = new PPMImage(ifpath+"scienceroom/science_firespread.ppm", true);
-    loc.clear(); loc.push_back(Point(-50,-50,1.9));
-    trig = new Trigger( "C-SAFE Fire", loc, 1,30,ppm,true );
-    trig->setBasePriority( Trigger::MediumTriggerPriority );
-    scene->addTrigger( trig );
-
 
     // GALAXY TRIGGERS
     ///// Intro
@@ -454,11 +437,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     ///// Intro
     ppm = new PPMImage(ifpath+"atlantis/intro.ppm", true);
     loc.clear(); 
-    loc.push_back(Point( -8, 10, 2));
-    loc.push_back(Point( 10,  6, 2));
-    loc.push_back(Point(  8, 10, 2));
-    loc.push_back(Point(-10, -6, 2));
-    trig = new Trigger( "Atlantis Intro", loc, 4,100,ppm,true );
+    loc.push_back(Point(  2, -5, 2)); // south
+    loc.push_back(Point(  1, 10, 2)); // north
+    loc.push_back(Point( -9,  2, 2)); // west
+    loc.push_back(Point( 10,  1, 2)); // east
+    trig = new Trigger( "Atlantis Intro", loc, 3,100,ppm,true );
     scene->addTrigger( trig );
   }
 
@@ -554,7 +537,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     // GALAXY ROOM SOUND
     loc.clear();
-    loc.push_back(Point(29,29,2)); // Center of Museum
+    loc.push_back(Point(29,29,2)); // Center of Galaxy Room.
     sound = new Sound( path+"eerie-sounds-deep-space-cd006_05.wav", "Space", 
 		       loc, 30, true, 0.5 );
     scene->addSound( sound );
