@@ -24,15 +24,18 @@ This stylesheet is used by html documents generated from docbook sources.
 @import url(common.css);
 
 .title {
-color:#003300}
+color:#003300;
+text-align: left}
 
 h2.title {
 border-bottom: 1px dotted;
 border-left: 1px dotted;
-padding-left: 4px}
+padding-left: 4px;
+text-align: left}
 
 .subtitle {
-color:#003300}
+color:#003300;
+text-align: left}
 
 .screen {
 color:#006633}
