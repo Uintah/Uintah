@@ -74,7 +74,7 @@ public:
   // return the Scalars
   vector<ShareAssignParticleVariable<double> >& get(){ return scalars; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
-
+  LevelP getLevel(){ return level; }
 
   // GROUP: Modify
   //////////  
