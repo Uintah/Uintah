@@ -1,6 +1,13 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_PTHREADS
+#define TASK_IMPLEMENTATION_O  Task_pthreads.o
+#define TASK_IMPLEMENTATION_CC Task_pthreads.cc
+
+THREADLIB = -lpthread
+#else
+
 #ifdef SCI_QUARKS
 #define TASK_IMPLEMENTATION_O  Task_Quarks.o
 #define TASK_IMPLEMENTATION_CC Task_Quarks.cc
@@ -27,6 +34,7 @@ lock_mips.o: lock_mips.s
 #endif
 
 #endif
+#endif
 
 #ifndef TASK_IMPLEMENTATION_O
 #error "This machine does not have a Task library port..."
@@ -41,7 +49,7 @@ SRCS = ITC.cc Task.cc TASK_IMPLEMENTATION_CC
 LIBNAME = Multitask
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lMalloc SCI_CCLibs
+SO_LDFLAGS = -L$(TOP)/lib $(THREADLIB) -lMalloc SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

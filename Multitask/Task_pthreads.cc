@@ -165,8 +165,9 @@ Task* Task::self()
 {
     Task* t=(Task*)pthread_getspecific(selfkey);
     if(!t){
-	perror("pthread_getspecific");
-	exit(1);
+	//perror("pthread_getspecific");
+	//exit(1);
+	return 0;
     }
     return t;
 }
@@ -472,8 +473,7 @@ int Task::nprocessors()
 
 void Task::main_exit()
 {
-    fprintf(stderr, "Task::main_exit not done!\n");
-    exit(1);
+    pthread_exit(0);
 }
 
 
@@ -497,6 +497,11 @@ int Task::wait_for_task(Task* task)
     return task->priv->retval;
 }
 #endif
+
+static void perror2(char* label, int code)
+{
+    fprintf(stderr, "%s:: %s\n", label, strerror(code));
+}
 
 //
 // Semaphore implementation
@@ -525,29 +530,31 @@ Semaphore::~Semaphore()
 
 void Semaphore::down()
 {
-    if(pthread_mutex_lock(&priv->lock) != 0){
-	perror("pthread_mutex_lock");
+    int err;
+    if((err=pthread_mutex_lock(&priv->lock)) != 0){
+	perror2("pthread_mutex_lock", err);
 	exit(1);
     }
     while(priv->count==0){
 	priv->nwaiters++;
-	if(pthread_cond_wait(&priv->cond, &priv->lock) != 0){
-	    perror("pthread_cond_wait");
+	if((err=pthread_cond_wait(&priv->cond, &priv->lock)) != 0){
+	    perror2("pthread_cond_wait", err);
 	    exit(1);
 	}
 	priv->nwaiters--;
     }
     priv->count--;
-    if(pthread_mutex_unlock(&priv->lock) != 0){
-	perror("pthread_mutex_unlock");
+    if((err=pthread_mutex_unlock(&priv->lock)) != 0){
+	perror2("1. pthread_mutex_unlock", err);
 	exit(1);
     }
 }
 
 int Semaphore::try_down()
 {
-    if(pthread_mutex_lock(&priv->lock) != 0){
-	perror("pthread_mutex_lock");
+    int err;
+    if((err=pthread_mutex_lock(&priv->lock)) != 0){
+	perror2("pthread_mutex_lock", err);
 	exit(1);
     }
     int result;
@@ -557,8 +564,8 @@ int Semaphore::try_down()
 	priv->count--;
 	result=1;
     }
-    if(pthread_mutex_unlock(&priv->lock) != 0){
-	perror("pthread_mutex_unlock");
+    if((err=pthread_mutex_unlock(&priv->lock)) != 0){
+	perror2("2. pthread_mutex_unlock", err);
 	exit(1);
     }
     return result;
@@ -566,19 +573,20 @@ int Semaphore::try_down()
 
 void Semaphore::up()
 {
-    if(pthread_mutex_lock(&priv->lock) != 0){
-	perror("pthread_mutex_lock");
+    int err;
+    if((err=pthread_mutex_lock(&priv->lock)) != 0){
+	perror2("pthread_mutex_lock", err);
 	exit(1);
     }
     priv->count++;
     if(priv->nwaiters){
-	if(pthread_cond_signal(&priv->cond) != 0){
-	    perror("pthread_cond_signal");
+	if((err=pthread_cond_signal(&priv->cond)) != 0){
+	    perror2("pthread_cond_signal", err);
 	    exit(1);
 	}
     }
-    if(pthread_mutex_unlock(&priv->lock) != 0){
-	perror("pthread_mutex_unlock");
+    if((err=pthread_mutex_unlock(&priv->lock)) != 0){
+	perror2("3. pthread_mutex_unlock", err);
 	exit(1);
     }
 }
@@ -607,8 +615,9 @@ void Mutex::lock()
 
 void Mutex::unlock()
 {
-    if(pthread_mutex_unlock(&priv->lock) != 0)
-	perror("pthread_mutex_unlock");
+    int err;
+    if((err=pthread_mutex_unlock(&priv->lock)) != 0)
+	perror2("4. pthread_mutex_unlock", err);
 }
 
 int Mutex::try_lock()
