@@ -12,7 +12,6 @@
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/VField.h>
-#include <Core/Datatypes/GenVField.h>
 #include <Core/Datatypes/LatticeGeom.h>
 #include <Core/Datatypes/FlatAttrib.h>
 
@@ -52,6 +51,7 @@ GenField::~GenField(){
 
 void GenField::execute()
 {
+#if 0
   // create an example 3D field of Vectors, which is 64^3
   // and has extents equal to [-3.15,3.15]x[-3.15,3.15]x[-3.15,3.15]
   int x,y,z;
@@ -82,6 +82,7 @@ void GenField::execute()
   // send the field out the output port.
   FieldHandle* handle = scinew FieldHandle(field);
   oport->send(*handle);
+#endif
 }
 
 void GenField::tcl_command(TCLArgs& args, void* userdata)

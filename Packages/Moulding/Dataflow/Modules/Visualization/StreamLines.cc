@@ -10,8 +10,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenSField.h>
-#include <Core/Datatypes/GenVField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
