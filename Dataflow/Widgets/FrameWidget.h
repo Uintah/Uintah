@@ -78,6 +78,9 @@ public:
   // Material indexs
   enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl, NumMatls };
 
+  virtual string GetStateString();
+  virtual int SetStateString(const string &str);
+
 protected:
   virtual string GetMaterialName( const Index mindex ) const;   
    

@@ -175,6 +175,41 @@ BaseWidget::ui() const
 }
 
 
+// Return the state of the widget as a string.  This can then be read
+// back in by the SetStateString function later.  Useful for dumping
+// the widget state as a tcl variable into the .nets.
+
+string
+BaseWidget::GetStateString()
+{
+  return to_string(GetScale()) + " " + to_string(GetState());
+}
+
+
+// Slurp in a string created with GetStateString and set the widget
+// state from that string.  The return value will be the number of
+// characters used and is typically ignored by the applications.
+// However it is useful for nesting SetStateString calls as
+// demonstrated by the code in RingWidget.cc that inherits the
+// BaseWidget::SetStateString call to handle the base variables.
+
+int
+BaseWidget::SetStateString(const string &str)
+{
+  istringstream is(str);
+
+  double scale = 0;
+  is >> scale;
+  if (!is.fail()) { SetScale(scale); }
+
+  int state;
+  is >> state;
+  if (!is.fail()) { SetState(state); }
+
+  return is.tellg();
+}
+
+
 void
 pmat( const MaterialHandle& mat )
 {
