@@ -117,9 +117,47 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     if( gfield.get_rep() ){
       if( gmrfield = 
 	  dynamic_cast< MRLatVolField<Vector>* > (gfield.get_rep()) ){
-	nc = 2;
-	nb[0] = 4;
-	nb[1] = 1;
+	// In order to use the gradient field, it have the exact structure
+	// as the value field.
+	bool same = true;
+	// Same number of levels?
+	if( vmrfield->nlevels() == gmrfield->nlevels() ) {
+	  for(unsigned int i = 0; i < vmrfield->nlevels(); ++i){
+	    const MultiResLevel<value_type>* lev = vmrfield->level( i );
+	    const MultiResLevel<Vector> * glev = gmrfield->level(i);
+	    // Does each level have the same number of patches?
+	    if( lev->patches.size() == glev->patches.size() ){
+	      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+		LatVolField<value_type>* vmr = lev->patches[j].get_rep(); 
+		LatVolField< Vector >* gmr = glev->patches[j].get_rep();
+	
+		LatVolMeshHandle mesh = vmr->get_typed_mesh();
+		LatVolMeshHandle gmesh = gmr->get_typed_mesh();
+		// Is each patch the same size?
+		if( mesh->get_ni() != gmesh->get_ni() ||
+		    mesh->get_nj() != gmesh->get_nj() ||
+		    mesh->get_nk() != gmesh->get_nk()) {
+		  same = false;
+		  break;
+		}
+	      }
+	      if (!same) {
+		break;
+	      }
+	    } else {
+	      same = false;
+	      break;
+	    }
+	  }
+	} else {
+	  same = false;
+	}
+	// If same is still true, we can use the gradient field
+	if( same ) {
+	  nc = 2;
+	  nb[0] = 4;
+	  nb[1] = 1;
+	}
       }
     }
 
@@ -130,6 +168,11 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
       texture->unlock_bricks();
     }
     
+    // Grab the transform from the lowest resolution field
+    Transform tform;
+      vmrfield->level(0)->patches[0].get_rep()->get_typed_mesh()->
+	get_canonical_transform(tform);
+
     for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
       const MultiResLevel<value_type>* lev = vmrfield->level( i );
       const MultiResLevel<Vector> * glev =
@@ -138,37 +181,26 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
       if( i == texture->nlevels() ) {
 	texture->add_level(new_level);
       }
-//       cerr<<"Texture has "<<texture->nlevels()<<" levels \n";      
       vector<TextureBrickHandle>& bricks = texture->bricks(i);
-//       cerr<<"Bricks set\n";
-
-      //
-      cerr<<"Building bricks ... \n";
       unsigned int k = 0;
       for(unsigned int j = 0; j < lev->patches.size(); j++ ){
 	LatVolField<value_type>* vmr = lev->patches[j].get_rep(); 
-// 	cerr<<"Field grabbed value = "<<vmr<<"\n";
 	LatVolField< Vector >* gmr = ( glev ? glev->patches[j].get_rep() : 0 );
-//  	LatVolMeshHandle mesh = (LatVolMesh*)(vmr->get_typed_mesh().get_rep());
 	LatVolMeshHandle mesh = vmr->get_typed_mesh();
-// 	cerr<<"Mesh grabbed with value = "<<mesh.get_rep()<<"\n";
-	Transform tform;
-// 	cerr<<"Setting transform ... ";
-	mesh->get_canonical_transform(tform);
-// 	cerr<<"done!\n";
+
 	int nx = mesh->get_ni();
 	int ny = mesh->get_nj();
 	int nz = mesh->get_nk();
 	 if(vfield->basis_order() == 0) {
 	  --nx; --ny; --nz;
 	}
+	
+	// make sure each sub level has a corrected bounding box
+	BBox bbox(tform.unproject( mesh->get_bounding_box().min() ),
+		  tform.unproject( mesh->get_bounding_box().max() ));
 
-	
-	
-	vector<TextureBrickHandle> patch_bricks;
-	//cannonical bounding box
-	BBox bbox(Point(0,0,0), Point(1,1,1));
-	build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+       	vector<TextureBrickHandle> patch_bricks;
+  	build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox, card_mem);
 	
 	if( i == 0 ){
 	  texture->set_size(nx, ny, nz, nc, nb);
@@ -177,22 +209,17 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 	  texture->set_minmax(vmin, vmax, gmin, gmax);
 	  texture->set_transform(tform);
 	}
-// 	cerr<<"fill bricks and add to texture\n";
+
 	texture->lock_bricks();
 	for(k = 0; k < patch_bricks.size(); k++){
 	  fill_brick(patch_bricks[k], vmr, vmin, vmax, gmr, gmin, gmax);
 	  patch_bricks[k]->set_dirty(true);
 	  bricks.push_back( patch_bricks[k] );
 	}
-// 	cerr<<"Mesh is "<<mesh.get_rep()<<" after filled bricks\n";
-// 	cerr<<"done filling bricks\n";
+
 	texture->unlock_bricks();
       }
- 	cerr<<bricks.size()<<" bricks added to level "<<i<<"\n";
-
-//       cerr<<"done with level\n\n";
     }
-//     cerr<<"done with field\n";
   } else {
     
     LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
@@ -216,8 +243,8 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
        || nc != texture->nc() || card_mem != texture->card_mem() ||
        bbox.min() != texture->bbox().min()) {
-      //     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
-//        build_bricks(bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(), card_mem);
+
+//        build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
       build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
       texture->set_size(nx, ny, nz, nc, nb);
       texture->set_card_mem(card_mem);
@@ -294,9 +321,7 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrickHandle>& bricks,
   num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
   num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
   num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
-//   cerr << "Number of bricks: " << num_brick[0] << " x " << num_brick[1]
-//        << " x " << num_brick[2] << endl;
-  // padded sizes of last bricks
+
   brick_pad[0] = NextPowerOf2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
   brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
   brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
@@ -359,10 +384,9 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrickHandle>& bricks,
                Point(bmax[0], bmax[1], bmax[2])),
           BBox(Point(tmin[0], tmin[1], tmin[2]),
                Point(tmax[0], tmax[1], tmax[2])));
-//         cerr << "Adding brick: " << b->nx() << " " << b->ny() << " " << b->nz() << " | "
-//              << b->ox() << " " << b->oy() << " " << b->oz() << " -> "
-//              << b->mx() << " " << b->my() << " " << b->mz() << endl;
-        bricks.push_back(b);
+	//          true);
+
+	bricks.push_back(b);
 
         // update x parameters                     
         brick_offset[0] += brick_size[0]-1;
