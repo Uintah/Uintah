@@ -182,42 +182,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
       const Patch* patch=*iter;
     
-#if 0
-      {
-	 /*
-	  * labelBrokenCells
-	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
-	  *   operation(label the nodes and cells that has self-contact)
-	  *   out(C.SELFCONTACTLABEL)
-	  */
-	 Task* t = scinew Task("SerialMPM::labelBrokenCells",
-			    patch, old_dw, new_dw,
-			    this,
-			    &SerialMPM::labelBrokenCells);
-
-	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
-	    if(mpm_matl->getFractureModel()) {
-
-              t->requires( old_dw, lb->pSurfaceNormalLabel, idx, patch,
-			 Ghost::None);
-
-              t->requires( old_dw, lb->cSurfaceNormalLabel,
-                         d_sharedState->getMaterial(fieldIndependentVariable)
-                                   ->getDWIndex(), patch, Ghost::None);
-
-              t->computes( new_dw, lb->cSelfContactLabel,
-                         d_sharedState->getMaterial(fieldIndependentVariable)
-                                   ->getDWIndex(), patch );
-	    }
-	 }
-
-	 sched->addTask(t);
-      }
-#endif
-
       {
 	 /*
 	  * interpolateParticlesToGrid
@@ -1802,6 +1766,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.126  2000/09/05 07:43:51  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.125  2000/09/05 07:00:16  tan
 // Applied BrokenCellShapeFunction to SerialMPM::interpolateToParticlesAndUpdate
 // where fracture is involved.

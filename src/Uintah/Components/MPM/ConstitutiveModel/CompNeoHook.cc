@@ -19,6 +19,9 @@
 #include <fstream>
 #include <iostream>
 
+#include <Uintah/Components/MPM/Fracture/Lattice.h>
+#include <Uintah/Components/MPM/Fracture/BrokenCellShapeFunction.h>
+
 using std::cerr;
 using namespace Uintah::MPM;
 using SCICore::Math::Min;
@@ -142,7 +145,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& new_dw)
 {
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
-  double J,p,IEl,muBar,U,W,se=0.;
+  double J,p,muBar,IEl,U,W,se=0.;
   double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
@@ -186,6 +189,19 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
+  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<int> pIsBroken;
+  Lattice* lattice;
+  BrokenCellShapeFunction* brokenCellShapeFunction;
+  if(matl->getFractureModel()) {
+        old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+	
+        lattice = new Lattice(px);
+	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+	   pIsBroken,pCrackSurfaceNormal);
+  }
+
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
      particleIndex idx = *iter;
@@ -194,16 +210,27 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-         continue;
+     bool visiable[8];
+
+     if(matl->getFractureModel()) {
+        if(!brokenCellShapeFunction->findCellAndShapeDerivatives(idx, ni, 
+	   visiable, d_S) ) continue;
+     }
+     else {
+        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
+           continue;
+        for(int i=0;i<8;++i) visiable[i] = true;
+     }
 
       for(int k = 0; k < 8; k++) {
-          Vector& gvel = gvelocity[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
+         if(visiable[k]) {
+            Vector& gvel = gvelocity[ni[k]];
+            for (int j = 0; j<3; j++){
+              for (int i = 0; i<3; i++) {
                 velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+              }
             }
-          }
+	 }
       }
 
     // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
@@ -277,6 +304,11 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   new_dw->put(cmdata, p_cmdata_label_preReloc);
   // Store updated particle volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
+
+  if(matl->getFractureModel()) {
+        delete lattice;
+	delete brokenCellShapeFunction;
+  }
 }
 
 double CompNeoHook::computeStrainEnergy(const Patch* patch,
@@ -309,6 +341,13 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->requires(old_dw, bElBarLabel, matl->getDWIndex(), patch,
                   Ghost::None);
    task->requires(old_dw, lb->delTLabel);
+
+   if(matl->getFractureModel()) {
+      task->requires(old_dw, lb->pIsBrokenLabel, matl->getDWIndex(), patch,
+		Ghost::AroundNodes, 1 );
+      task->requires(old_dw, lb->pCrackSurfaceNormalLabel, matl->getDWIndex(), 
+                patch,Ghost::AroundNodes, 1 );
+   }
 
    task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
@@ -346,6 +385,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.35  2000/09/05 07:46:33  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.34  2000/08/21 19:01:37  guilkey
 // Removed some garbage from the constitutive models.
 //

@@ -16,6 +16,10 @@
 #include <Uintah/Components/MPM/MPMLabel.h>
 #include <values.h>
 #include <iostream>
+
+#include <Uintah/Components/MPM/Fracture/Lattice.h>
+#include <Uintah/Components/MPM/Fracture/BrokenCellShapeFunction.h>
+
 using std::cerr;
 using namespace Uintah::MPM;
 using SCICore::Math::Min;
@@ -107,7 +111,7 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
      // Compute wave speed + particle velocity at each particle, 
      // store the maximum
      double mu = 2.*(C1 + C2);
-     double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+     //double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
      c_dil = sqrt(2.*mu*(1.- PR)*pvolume[idx]/((1.-2.*PR)*pmass[idx]));
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
@@ -164,6 +168,19 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
+  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<int> pIsBroken;
+  Lattice* lattice;
+  BrokenCellShapeFunction* brokenCellShapeFunction;
+  if(matl->getFractureModel()) {
+        old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+	
+        lattice = new Lattice(px);
+	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+	   pIsBroken,pCrackSurfaceNormal);
+  }
+
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
      particleIndex idx = *iter;
@@ -172,17 +189,32 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S)){
-	cerr << "p=" << px[idx] << '\n';
-	cerr << "patch=" << patch << '\n';
-	throw InternalError("Particle not in this patch?");
+     bool visiable[8];
+          
+     if(matl->getFractureModel()) {
+       if(!brokenCellShapeFunction->findCellAndShapeDerivatives(idx, ni, 
+	   visiable, d_S)) {
+	  cerr << "p=" << px[idx] << '\n';
+          cerr << "patch=" << patch << '\n';
+	  throw InternalError("Particle not in this patch?");
+       }
+     }
+     else {
+       if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S)){
+	  cerr << "p=" << px[idx] << '\n';
+          cerr << "patch=" << patch << '\n';
+	  throw InternalError("Particle not in this patch?");
+       }
+       for(int i=0;i<8;++i) visiable[i] = true;
      }
 
       for(int k = 0; k < 8; k++) {
-	 Vector& gvel = gvelocity[ni[k]];
-	 for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	       velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+         if(visiable[k]) {
+	    Vector& gvel = gvelocity[ni[k]];
+	    for (int j = 0; j<3; j++){
+	       for (int i = 0; i<3; i++) {
+	          velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+	       }
 	    }
 	 }
       }
@@ -252,6 +284,11 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
     new_dw->put(pvolume, lb->pVolumeDeformedLabel);
+
+    if(matl->getFractureModel()) {
+        delete lattice;
+	delete brokenCellShapeFunction;
+    }
 }
 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
@@ -281,6 +318,13 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), patch,
 		  Ghost::AroundCells, 1);
    task->requires(old_dw, lb->delTLabel);
+
+   if(matl->getFractureModel()) {
+      task->requires(old_dw, lb->pIsBrokenLabel, matl->getDWIndex(), patch,
+			Ghost::AroundNodes, 1 );
+      task->requires(old_dw, lb->pCrackSurfaceNormalLabel, matl->getDWIndex(), patch,
+			Ghost::AroundNodes, 1 );
+   }
 
    task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
@@ -324,6 +368,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.54  2000/09/05 07:45:49  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.53  2000/08/21 19:01:36  guilkey
 // Removed some garbage from the constitutive models.
 //

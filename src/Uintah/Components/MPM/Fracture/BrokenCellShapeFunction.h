@@ -24,6 +24,11 @@ public:
                             bool visiable[8],
                             double S[8] ) const;
 
+  bool  findCellAndShapeDerivatives( int partIdx, 
+                             IntVector nodeIdx[8], 
+                             bool visiable[8],
+                             Vector d_S[8] ) const;
+
   bool  findCellAndWeightsAndShapeDerivatives( int partIdx, 
                              IntVector nodeIdx[8], 
                              bool visiable[8],
@@ -44,6 +49,10 @@ private:
 #endif //__Uintah_MPM_BrokenCellShapeFunction__
 
 // $Log$
+// Revision 1.4  2000/09/05 07:44:17  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.3  2000/09/05 06:59:15  tan
 // Applied BrokenCellShapeFunction to SerialMPM::interpolateToParticlesAndUpdate
 // where fracture is involved.

@@ -112,7 +112,7 @@ MPMMaterial::~MPMMaterial()
   }
 }
 
-ConstitutiveModel * MPMMaterial::getConstitutiveModel()
+ConstitutiveModel * MPMMaterial::getConstitutiveModel() const
 {
   // Return the pointer to the constitutive model associated
   // with this material
@@ -120,7 +120,7 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
   return d_cm;
 }
 
-HEBurn * MPMMaterial::getBurnModel()
+HEBurn * MPMMaterial::getBurnModel() const
 {
   // Return the pointer to the burn model associated
   // with this material
@@ -128,7 +128,7 @@ HEBurn * MPMMaterial::getBurnModel()
   return d_burn;
 }
 
-Fracture * MPMMaterial::getFractureModel()
+Fracture * MPMMaterial::getFractureModel() const
 {
   // Return the pointer to the fracture model associated
   // with this material
@@ -375,6 +375,10 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.47  2000/09/05 07:45:13  tan
+// Applied BrokenCellShapeFunction to constitutive models where fracture
+// is involved.
+//
 // Revision 1.46  2000/09/05 05:14:58  tan
 // Moved Fracture Model to MPMMaterial class.
 //
