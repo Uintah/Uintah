@@ -381,7 +381,7 @@ Isosurface::execute()
 
   if( (build_field  && !fHandle_.get_rep()) ||
       (build_interp && !mHandle_.get_rep()) ||
-      (build_geom   && !(geomID_ == -1)   ) ||
+      (build_geom   && geomID_ == -1   ) ||
       update ||
       error_ ) {
 
