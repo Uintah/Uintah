@@ -6226,7 +6226,6 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   bool bound = glIsTexture(texname_);
 
   if(!bound){
-    cerr << texname_ << "Not bound!\n"; 
     glGenTextures(1, &texname_);
   }
 
@@ -6241,7 +6240,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0,
-		 GL_LUMINANCE, GL_UNSIGNED_BYTE, texture );
+		 GL_RGBA, GL_UNSIGNED_BYTE, texture );
   }
 
 
