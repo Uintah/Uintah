@@ -52,17 +52,21 @@ private:
   GraphPart *graph_;
 
   // control
-  bool user_ready;
+  bool user_ready_;
   bool has_lkappa_;
+
+  bool stop_;
+  bool paused_;
+  int current_iter_;
 
   int seed;
   double kappa;
-  int burning;
-  int monitor;
-  int thin;
   int iterations;
 
   int nparms;
+
+  double post_;
+  double lpr_;
 
   vector< vector<double> > theta;
   int old, star;
@@ -83,7 +87,7 @@ public:
   void metropolis();
   Array2<double> &get_lkappa();
   double logpost( vector<double> & );
-  void go();
+  void go( int );
 
   void tcl_command( TCLArgs &args, void *data);
 };

@@ -38,9 +38,8 @@ namespace MIT {
 SamplerInterface::SamplerInterface( Sampler *part, PartInterface *parent )
   : PartInterface( part, parent, "SamplerInterface" ), sampler_(part)
 {
-  burning_ = 0;
-  monitor_ = 1000;
-  thin_ = 1;
+  num_iterations_ = 1000;
+  current_iter_ = 0;
 }
  
 SamplerInterface::~SamplerInterface()
@@ -48,9 +47,9 @@ SamplerInterface::~SamplerInterface()
 }
 
 void
-SamplerInterface::go()
+SamplerInterface::go( int i)
 {
-  sampler_->go();
+  sampler_->go( i );
 }
 
 } // namespace MIT
