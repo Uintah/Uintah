@@ -1,7 +1,7 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include <Uintah/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h> // TEMPORARY
+#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
@@ -198,7 +198,7 @@ void SerialMPM::timeStep(double t, double dt,
 #warning
 	    t->requires(old_dw, "p.cmdata", region, 0,
 			ParticleVariable<Uintah::Components::
-                            CompMooneyRivlin::CMData>::getTypeDescription());
+                            ConstitutiveModel::CMData>::getTypeDescription());
 */
 	    t->requires(new_dw, "p.deformationMeasure", region, 0,
 			ParticleVariable<Matrix3>::getTypeDescription());
@@ -346,8 +346,8 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
     double width = Min(dCell.x(), dCell.y(), dCell.z());
     double delt = 0.5*width/MaxWaveSpeed;
 /*
-#warning this needs to be fixed:
-//    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
+ DataWarehouse needs a Min function implemented
+    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
 */
 }
 
@@ -356,38 +356,47 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
-    // Create arrays for the particle data
-    ParticleVariable<Vector> px;
-    old_dw->get(px, "p.x", region, 0);
-    ParticleVariable<double> pmass;
-    old_dw->get(pmass, "p.mass", region, 0);
-    ParticleVariable<Vector> pvelocity;
-    old_dw->get(pvelocity, "p.velocity", region, 0);
-    ParticleVariable<Vector> pexternalforce;
-    old_dw->get(pexternalforce, "p.externalforce", region, 0);
+#if 0  // This needs the datawarehouse to allow indexing by material
+       // for the particle data and velocity field by the grid data
 
-    // Create arrays for the grid data
-    NCVariable<double> gmass;
-    new_dw->allocate(gmass, "g.mass", region, 0);
-    NCVariable<Vector> gvelocity;
-    new_dw->allocate(gvelocity, "g.velocity", region, 0);
-    NCVariable<Vector> externalforce;
-    new_dw->allocate(externalforce, "g.externalforce", region, 0);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = materials[m];
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      // Create arrays for the particle data
+      ParticleVariable<Vector> px;
+      old_dw->get(px, "p.x", matlindex, region, 0);
+      ParticleVariable<double> pmass;
+      old_dw->get(pmass, "p.mass", matlindex, region, 0);
+      ParticleVariable<Vector> pvelocity;
+      old_dw->get(pvelocity, "p.velocity", matlindex, region, 0);
+      ParticleVariable<Vector> pexternalforce;
+      old_dw->get(pexternalforce, "p.externalforce", matlindex, region, 0);
 
-    ParticleSubset* pset = px.getParticleSubset();
-    ASSERT(pset == pmass.getParticleSubset());
-    ASSERT(pset == pvelocity.getParticleSubset());
+      // Create arrays for the grid data
+      NCVariable<double> gmass;
+      new_dw->allocate(gmass, "g.mass", vfindex, region, 0);
+      NCVariable<Vector> gvelocity;
+      new_dw->allocate(gvelocity, "g.velocity", vfindex, region, 0);
+      NCVariable<Vector> externalforce;
+      new_dw->allocate(externalforce, "g.externalforce", vfindex, region, 0);
 
-    // Interpolate particle data to Grid data.
-    // This currently consists of the particle velocity and mass
-    // Need to compute the lumped global mass matrix and velocity
-    // Vector from the individual mass matrix and velocity vector (per cell).
-    // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
+      ParticleSubset* pset = px.getParticleSubset(matlindex);
+      ASSERT(pset == pmass.getParticleSubset(matlindex));
+      ASSERT(pset == pvelocity.getParticleSubset(matlindex));
 
-    gmass.initialize(0);
-    gvelocity.initialize(Vector(0,0,0));
-    externalforce.initialize(Vector(0,0,0));
-    for(ParticleSubset::iterator iter = pset->begin();
+      // Interpolate particle data to Grid data.
+      // This currently consists of the particle velocity and mass
+      // Need to compute the lumped global mass matrix and velocity
+      // Vector from the individual mass matrix and velocity vector (per cell).
+      // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
+
+      gmass.initialize(0);
+      gvelocity.initialize(Vector(0,0,0));
+      externalforce.initialize(Vector(0,0,0));
+      for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
 	Uintah::Grid::particleIndex idx = *iter;
 
@@ -405,18 +414,21 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 		externalforce[ni[k]] += pexternalforce[idx] * S[k];
 		//}
 	}
-    }
+      }
 
-    for(NodeIterator iter = region->begin();
+      for(NodeIterator iter = region->begin();
 	iter != region->end(); iter++){
 	if(gmass[*iter] != 0.0){
 	    gvelocity[*iter] *= 1./gmass[*iter];
 	}
-    }
+      }
 
-    new_dw->put(gmass, "g.mass", region, 0);
-    new_dw->put(gvelocity, "g.velocity", region, 0);
-    new_dw->put(externalforce, "g.externalforce", region, 0);
+      new_dw->put(gmass, "g.mass", vfindex, region, 0);
+      new_dw->put(gvelocity, "g.velocity", vfindex, region, 0);
+      new_dw->put(externalforce, "g.externalforce", vfindex, region, 0);
+    }
+  }
+#endif
 }
 
 
@@ -425,10 +437,8 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-/*
-#warning this needs to be fixed:
-*/
-#if 0
+#if 0 // This needs the datawarehouse to allow indexing by material
+      // for both the particle and the grid data.
     for(int m = 0; m < numMatls; m++){
         Material* matl = materials[m];
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -452,42 +462,54 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
 
-    // Create arrays for the particle position, volume
-    // and the constitutive model
-    ParticleVariable<Vector> px;
-    old_dw->get(px, "p.x", region, 0);
-    ParticleVariable<double> pvol;
-    old_dw->get(pvol, "p.volume", region, 0);
-    ParticleVariable<Matrix3> pstress;
-    old_dw->get(pstress, "p.stress", region, 0);
+#if 0  // This needs the datawarehouse to allow indexing by material
+       // for the particle data and velocity field for the grid data.
 
-    NCVariable<Vector> internalforce;
-    new_dw->allocate(internalforce, "g.internalforce", region, 0);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = materials[m];
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      // Create arrays for the particle position, volume
+      // and the constitutive model
+      ParticleVariable<Vector> px;
+      old_dw->get(px, "p.x", matlindex, region, 0);
+      ParticleVariable<double> pvol;
+      old_dw->get(pvol, "p.volume", matlindex, region, 0);
+      ParticleVariable<Matrix3> pstress;
+      old_dw->get(pstress, "p.stress", matlindex, region, 0);
 
-    ParticleSubset* pset = px.getParticleSubset();
-    ASSERT(pset == px.getParticleSubset());
-    ASSERT(pset == pvol.getParticleSubset());
-    ASSERT(pset == pstress.getParticleSubset());
+      NCVariable<Vector> internalforce;
+      new_dw->allocate(internalforce, "g.internalforce", vfindex, region, 0);
+  
+      ParticleSubset* pset = px.getParticleSubset(matlindex);
+      ASSERT(pset == px.getParticleSubset(matlindex));
+      ASSERT(pset == pvol.getParticleSubset(matlindex));
+      ASSERT(pset == pstress.getParticleSubset(matlindex));
 
-    internalforce.initialize(Vector(0,0,0));
+      internalforce.initialize(Vector(0,0,0));
 
-    for(ParticleSubset::iterator iter = pset->begin();
-       iter != pset->end(); iter++){
-       Uintah::Grid::particleIndex idx = *iter;
+      for(ParticleSubset::iterator iter = pset->begin();
+         iter != pset->end(); iter++){
+         Uintah::Grid::particleIndex idx = *iter;
+  
+         // Get the node indices that surround the cell
+         Array3Index ni[8];
+         Vector d_S[8];
+         if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
+  	   continue;
 
-       // Get the node indices that surround the cell
-       Array3Index ni[8];
-       Vector d_S[8];
-       if(!region->findCellAndShapeDerivatives(px[idx], ni, d_S))
-	   continue;
+         for (int k = 0; k < 8; k++){
+  	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+  	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+         }
+      }
 
-       for (int k = 0; k < 8; k++){
-	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
-       }
+      new_dw->put(internalforce, "g.internalforce", vfindex, region, 0);
     }
-
-    new_dw->put(internalforce, "g.internalforce", region, 0);
+  }
+#endif
 }
 
 void SerialMPM::solveEquationsMotion(const ProcessorContext*,
@@ -497,33 +519,44 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 {
     Vector zero(0.,0.,0.);
 
-    // Get required variables for this region
-    NCVariable<double> mass;
-    new_dw->get(mass, "g.mass", region, 0);
-    NCVariable<Vector> internalforce;
-    new_dw->get(internalforce, "g.internalforce", region, 0);
-    NCVariable<Vector> externalforce;
-    new_dw->get(externalforce, "g.externalforce", region, 0);
+#if 0  // This needs the datawarehouse to allow indexing by velocity
+       // field for the grid data
 
-    // Create variables for the results
-    NCVariable<Vector> acceleration;
-    new_dw->allocate(acceleration, "g.acceleration", region, 0);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = materials[m];
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      // Get required variables for this region
+      NCVariable<double> mass;
+      new_dw->get(mass, "g.mass", vfindex, region, 0);
+      NCVariable<Vector> internalforce;
+      new_dw->get(internalforce, "g.internalforce", vfindex, region, 0);
+      NCVariable<Vector> externalforce;
+      new_dw->get(externalforce, "g.externalforce", vfindex, region, 0);
 
-    // Do the computation of a = F/m for nodes where m!=0.0
-    for(NodeIterator iter = region->begin();
-        iter != region->end(); iter++){
+      // Create variables for the results
+      NCVariable<Vector> acceleration;
+      new_dw->allocate(acceleration, "g.acceleration", vfindex, region, 0);
+
+      // Do the computation of a = F/m for nodes where m!=0.0
+      for(NodeIterator  iter  = region->begin();
+			iter != region->end(); iter++){
 	if(mass[*iter]>0.0){
-	  acceleration[*iter] = (internalforce[*iter] + externalforce[*iter])/
-						mass[*iter];
+	  acceleration[*iter] =
+		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter];
 	}
 	else{
 	  acceleration[*iter] = zero;
 	}
+      }
+
+      // Put the result in the datawarehouse
+      new_dw->put(acceleration, "g.acceleration", vfindex, region, 0);
+
     }
-
-    // Put the result in the datawarehouse
-    new_dw->put(acceleration, "g.acceleration", region, 0);
-
+  }
+#endif
 }
 
 void SerialMPM::integrateAcceleration(const ProcessorContext*,
@@ -531,26 +564,36 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
-    // Get required variables for this region
-    NCVariable<Vector> acceleration;
-    new_dw->get(acceleration, "g.acceleration", region, 0);
-    NCVariable<Vector> velocity;
-    new_dw->get(velocity, "g.velocity", region, 0);
-    SoleVariable<double> delt;
-    old_dw->get(delt, "delt");
+#if 0  // This needs the datawarehouse to allow indexing by material
 
-    // Create variables for the results
-    NCVariable<Vector> velocity_star;
-    new_dw->allocate(velocity_star, "g.velocity_star", region, 0);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = materials[m];
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      // Get required variables for this region
+      NCVariable<Vector> acceleration;
+      new_dw->get(acceleration, "g.acceleration", vfindex, region, 0);
+      NCVariable<Vector> velocity;
+      new_dw->get(velocity, "g.velocity", vfindex, region, 0);
+      SoleVariable<double> delt;
+      old_dw->get(delt, "delt");
 
-    // Do the computation
+      // Create variables for the results
+      NCVariable<Vector> velocity_star;
+      new_dw->allocate(velocity_star, "g.velocity_star", vfindex, region, 0);
 
-    for(NodeIterator iter = region->begin();
-	iter != region->end(); iter++)
+      // Do the computation
+
+      for(NodeIterator  iter  = region->begin();
+			iter != region->end(); iter++)
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
 
-    // Put the result in the datawarehouse
-    new_dw->put(velocity_star, "g.velocity_star", region, 0);
+      // Put the result in the datawarehouse
+      new_dw->put(velocity_star, "g.velocity_star", vfindex, region, 0);
+    }
+  }
+#endif
 }
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
@@ -558,88 +601,103 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 						const DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw)
 {
-    // Performs the interpolation from the cell vertices of the grid
-    // acceleration and velocity to the particles to update their
-    // velocity and position respectively
+  // Performs the interpolation from the cell vertices of the grid
+  // acceleration and velocity to the particles to update their
+  // velocity and position respectively
+  Vector vel(0.0,0.0,0.0);
+  Vector acc(0.0,0.0,0.0);
 
-    // Get the arrays of particle values to be changed
-    ParticleVariable<Vector> px;
-    old_dw->get(px, "p.x", region, 0);
-    ParticleVariable<Vector> pvelocity;
-    old_dw->get(pvelocity, "p.velocity", region, 0);
+#if 0  // This needs the datawarehouse to allow indexing by material
 
-    // Get the arrays of grid data on which the new particle values depend
-    NCVariable<Vector> gvelocity_star;
-    new_dw->get(gvelocity_star, "g.velocity_star", region, 0);
-    NCVariable<Vector> gacceleration;
-    new_dw->get(gacceleration, "g.acceleration", region, 0);
-    SoleVariable<double> delt;
-    old_dw->get(delt, "delt");
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = materials[m];
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      // Get the arrays of particle values to be changed
+      ParticleVariable<Vector> px;
+      old_dw->get(px, "p.x", matlindex, region, 0);
+      ParticleVariable<Vector> pvelocity;
+      old_dw->get(pvelocity, "p.velocity", matlindex, region, 0);
 
-    ParticleSubset* pset = px.getParticleSubset();
-    ASSERT(pset == pvelocity.getParticleSubset());
+      // Get the arrays of grid data on which the new particle values depend
+      NCVariable<Vector> gvelocity_star;
+      new_dw->get(gvelocity_star, "g.velocity_star", vfindex, region, 0);
+      NCVariable<Vector> gacceleration;
+      new_dw->get(gacceleration, "g.acceleration", vfindex, region, 0);
+      SoleVariable<double> delt;
+      old_dw->get(delt, "delt");
 
-    Vector vel(0.0,0.0,0.0);
-    Vector acc(0.0,0.0,0.0);
+      ParticleSubset* pset = px.getParticleSubset(matlindex);
+      ASSERT(pset == pvelocity.getParticleSubset(matlindex));
 
-    double ke=0;
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
-      Uintah::Grid::particleIndex idx = *iter;
+      double ke=0;
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        Uintah::Grid::particleIndex idx = *iter;
 
-      // Get the node indices that surround the cell
-      Array3Index ni[8];
-      double S[8];
-      if(!region->findCellAndWeights(px[idx], ni, S))
+        // Get the node indices that surround the cell
+        Array3Index ni[8];
+        double S[8];
+        if(!region->findCellAndWeights(px[idx], ni, S))
 	  continue;
 
+        vel = Vector(0.0,0.0,0.0);
+        acc = Vector(0.0,0.0,0.0);
 
-      vel = Vector(0.0,0.0,0.0);
-      acc = Vector(0.0,0.0,0.0);
-
-      // Accumulate the contribution from each surrounding vertex
-      for (int k = 0; k < 8; k++) {
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < 8; k++) {
           vel += gvelocity_star[ni[k]]  * S[k];
           acc += gacceleration[ni[k]]   * S[k];
+        }
+
+        // Update the particle's position and velocity
+        px[idx]        += vel * delt;
+        pvelocity[idx] += acc * delt;
+        ke += pvelocity[idx].length2();
+
+       // If we were storing particles in cellwise lists, this
+       // is where we would update the lists so that each particle
+       // is in the correct cells list
+
       }
-
-      // Update the particle's position and velocity
-      px[idx]        += vel * delt;
-      pvelocity[idx] += acc * delt;
-      ke += pvelocity[idx].length2();
-
-     // If we were storing particles in cellwise lists, this
-     // is where we would update the lists so that each particle
-     // is in the correct cells list
-
-    }
-    static ofstream tmpout("tmp.out");
-    static int ts=0;
-    tmpout << ts << " " << ke << std::endl;
+      static ofstream tmpout("tmp.out");
+      static int ts=0;
+      tmpout << ts << " " << ke << std::endl;
     
-    static ofstream tmpout2("tmp2.out");
-    tmpout2 << ts << " " << px[5] << std::endl;
-    ts++;
+      static ofstream tmpout2("tmp2.out");
+      tmpout2 << ts << " " << px[5] << std::endl;
+      ts++;
 
-    // Store the new result
-    new_dw->put(px, "p.x", region, 0);
-    new_dw->put(pvelocity, "p.velocity", region, 0);
+      // Store the new result
+      new_dw->put(px, "p.x", matlindex, region, 0);
+      new_dw->put(pvelocity, "p.velocity", matlindex, region, 0);
 
-    ParticleVariable<double> pmass;
-    old_dw->get(pmass, "p.mass", region, 0);
-    new_dw->put(pmass, "p.mass", region, 0);
-    ParticleVariable<double> pvolume;
-    old_dw->get(pvolume, "p.volume", region, 0);
-    new_dw->put(pvolume, "p.volume", region, 0);
-    ParticleVariable<Vector> pexternalforce;
-    old_dw->get(pexternalforce, "p.externalforce", region, 0);
-    new_dw->put(pexternalforce, "p.externalforce", region, 0);
+      ParticleVariable<double> pmass;
+      old_dw->get(pmass, "p.mass", matlindex, region, 0);
+      new_dw->put(pmass, "p.mass", matlindex, region, 0);
+      ParticleVariable<double> pvolume;
+      old_dw->get(pvolume, "p.volume", matlindex, region, 0);
+      new_dw->put(pvolume, "p.volume", matlindex, region, 0);
+      ParticleVariable<Vector> pexternalforce;
+      old_dw->get(pexternalforce, "p.externalforce", matlindex, region, 0);
+      new_dw->put(pexternalforce, "p.externalforce", matlindex, region, 0);
+    }
+  }
+#endif
 }
 
 } // end namespace Components
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.12  2000/04/12 16:57:23  guilkey
+// Converted the SerialMPM.cc to have multimaterial/multivelocity field
+// capabilities.  Tried to guard all the functions against breaking the
+// compilation, but then who really cares?  It's not like sus has compiled
+// for more than 5 minutes in a row for two months.
+//
 // Revision 1.11  2000/03/23 20:42:16  sparker
 // Added copy ctor to exception classes (for Linux/g++)
 // Helped clean up move of ProblemSpec from Interface to Grid

@@ -46,7 +46,7 @@ DESCRIPTION
    Long description...
   
 WARNING
-  
+
 ****************************************/
 
 class Contact {
@@ -65,8 +65,18 @@ public:
 
   // Auxilliary methods to supply data needed by some of the
   // advanced contact models
-  void computeSurfaceNormals();
-  void computeTraction();
+  virtual void computeSurfaceNormals()
+  {
+    // Null function is the default.  Particular contact
+    // classes will define these functions when needed.
+    return;
+  };
+  virtual void computeTraction()
+  {
+    // Null function is the default.  Particular contact
+    // classes will define these functions when needed.
+    return;
+  };
 };
 
 inline bool compare(double num1, double num2)
@@ -76,10 +86,17 @@ inline bool compare(double num1, double num2)
   return (fabs(num1-num2) <= EPSILON);
 }
 
+
 } // end namespace Components
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.5  2000/04/12 16:57:27  guilkey
+// Converted the SerialMPM.cc to have multimaterial/multivelocity field
+// capabilities.  Tried to guard all the functions against breaking the
+// compilation, but then who really cares?  It's not like sus has compiled
+// for more than 5 minutes in a row for two months.
+//
 // Revision 1.4  2000/03/21 01:29:41  dav
 // working to make MPM stuff compile successfully
 //
