@@ -1366,10 +1366,11 @@ Gui::createObjectWindow( GLUI * window )
 	window->add_separator_to_panel( panel );
 
 	window->add_statictext_to_panel( panel, name );
-	
-	window->add_button_to_panel( panel, "Auto Cycle On/Off",
-				     num,
-				     SGAutoCycleCB );
+
+	window->add_checkbox_to_panel( panel, "Cycle Objects", NULL,
+				       num,
+				       SGAutoCycleCB );
+
 	window->add_button_to_panel( panel, "Next Item",
 				     num,
 				     SGNextItemCB );	
