@@ -1024,7 +1024,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           GACC[c]+=gacc[m][c];
         }
       }
-      
+
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
 
@@ -1038,7 +1038,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gvolume[m][c]=GVOLUME[c];
         gextforce[m][c]=GEXTFORCE[c];
         gvel_old[m][c]=GVEL_OLD[c]/(GMASS[c] + 1.e-200);
-        gacc[m][c]=GACC[c]/GMASS[c];
+        gacc[m][c]=GACC[c]/(GMASS[c] + 1.e-200);
       }
      }
     }  // End loop over materials
@@ -2209,7 +2209,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                              Max(fabs(pvelocity[idx].z()),ParticleSpeed.z()));
       }
       ParticleSpeed = dx/ParticleSpeed;
-      double delT_new = .5*ParticleSpeed.minComponent();
+      double delT_new = .8*ParticleSpeed.minComponent();
       double old_dt=old_delT;
       if(d_numIterations <= d_num_iters_to_increase_delT){
         old_dt = d_delT_increase_factor*old_delT;
