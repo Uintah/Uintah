@@ -255,10 +255,10 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-	   <defaultValue name="heat loss">0.0</defaultValue>
-           <derivedValue name="reference heat capacity Cv(j/kg-K)">[heat capacity Cv(j/kg-K)]</derivedValue>
-           <derivedValue name="reference gamma">[gamma]</derivedValue>
-           <constantValue name="reference Temp(K)">300</constantValue>
+	   <defaultValue name="heat_loss">0.0</defaultValue>
+           <derivedValue name="reference_heat_capacity_Cv">[heat_capacity_Cv]</derivedValue>
+           <derivedValue name="reference_gamma">[gamma]</derivedValue>
+           <constantValue name="reference_Temp">300</constantValue>
 	   <filename>inputs/Models/he.rxn</filename>
 	</table>
         <material>BackgroundGas</material>
