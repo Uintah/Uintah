@@ -2295,7 +2295,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
  Function~  fillFacePressLODI--
  Purpose~   Back out the pressure from f_theta and P_EOS
 ---------------------------------------------------------------------  */
-void fillFacePress_LODI(CCVariable<double>& press_CC,
+void fillFacePress_LODI(const Patch* patch,
+                        CCVariable<double>& press_CC,
                         const StaticArray<CCVariable<double> >& rho_micro,
                         const StaticArray<constCCVariable<double> >& Temp_CC,
                         const StaticArray<CCVariable<double> >& f_theta,
@@ -2312,7 +2313,6 @@ void fillFacePress_LODI(CCVariable<double>& press_CC,
     StaticArray<double> gamma(numALLMatls);
     double press_ref= sharedState->getRefPress();    
   
-  
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -2321,185 +2321,32 @@ void fillFacePress_LODI(CCVariable<double>& press_CC,
         gamma[m]  = ice_matl->getGamma();;        
       }
     } 
-  
-    switch (face) {
-    case Patch::xplus:
-      for (int j = low.y(); j<hi.y(); j++) {
-        for (int k = low.z(); k<hi.z(); k++) {
-          IntVector c = IntVector(hi.x()-1,j,k);
+    
+   for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+    !iter.done();iter++) {
+      IntVector c = *iter;
           
-          press_CC[c] = 0.0;
-          for (int m = 0; m < numALLMatls; m++) {
-            Material* matl = sharedState->getMaterial( m );
-            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            double tmp;
-            if(ice_matl){                // I C E
-              ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp_CC[m][c],
-                                             press_eos[m],tmp,tmp);        
-            } 
-            if(mpm_matl){                //  M P M
-              mpm_matl->getConstitutiveModel()->
-                computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                                  tmp, tmp,mpm_matl);
-            }              
-              press_CC[c] += f_theta[m][c]*press_eos[m];
-     //         cout << "press_CC" << c << press_CC[c] << endl;           
-          }  // for ALLMatls...
-        } // k loop
-      }  //j loop
-      break;
-      
-    case Patch::xminus:
-      for (int j = low.y(); j<hi.y(); j++) {
-        for (int k = low.z(); k<hi.z(); k++) {
-          IntVector c = IntVector(low.x(),j,k);
-          
-          press_CC[c] = 0.0;
-          for (int m = 0; m < numALLMatls; m++) {
-            Material* matl = sharedState->getMaterial( m );
-            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            double tmp;
-            if(ice_matl){                // I C E
-              ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp_CC[m][c],
-                                             press_eos[m],tmp,tmp);        
-            } 
-            if(mpm_matl){                //  M P M
-              mpm_matl->getConstitutiveModel()->
-                computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                                  tmp, tmp,mpm_matl);
-            }              
-            press_CC[c] += f_theta[m][c]*press_eos[m];
-     //     cout << "press_CC" << c << press_CC[c] << endl;           
-          }  // for ALLMatls...
-        } // k loop
-      }  //j loop
-      
-      break;
-    case Patch::yplus:
-      for (int i = low.x(); i<hi.x(); i++) {
-        for (int k = low.z(); k<hi.z(); k++) {
-
-          IntVector c = IntVector(i,hi.y()-1,k);
-          
-          press_CC[c] = 0.0;
-          for (int m = 0; m < numALLMatls; m++) {
-            Material* matl = sharedState->getMaterial( m );
-            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            double tmp;
-            if(ice_matl){                // I C E
-              ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp_CC[m][c],
-                                             press_eos[m],tmp,tmp);        
-            } 
-            if(mpm_matl){                //  M P M
-              mpm_matl->getConstitutiveModel()->
-                computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                                  tmp, tmp,mpm_matl);
-            }              
-            press_CC[c] += f_theta[m][c]*press_eos[m];
-     //     cout << "press_CC" << c << press_CC[c] << endl;           
-          }  // for ALLMatls...
-        } // k loop
-      } // i loop
-      
-      break;
-    case Patch::yminus:
-      for (int i = low.x(); i<hi.x(); i++) {
-        for (int k = low.z(); k<hi.z(); k++) {
-
-          IntVector c = IntVector(i,low.y(),k);
-          
-          press_CC[c] = 0.0;
-          for (int m = 0; m < numALLMatls; m++) {
-            Material* matl = sharedState->getMaterial( m );
-            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            double tmp;
-            if(ice_matl){                // I C E
-              ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp_CC[m][c],
-                                             press_eos[m],tmp,tmp);        
-            } 
-            if(mpm_matl){                //  M P M
-              mpm_matl->getConstitutiveModel()->
-                computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                                  tmp, tmp,mpm_matl);
-            }              
-            press_CC[c] += f_theta[m][c]*press_eos[m];
-   //       cout << "press_CC" << c << press_CC[c] << endl;           
-          } 
-        } // k loop
-      } // i loop
-      
-      break;
-    case Patch::zplus:
-      for (int i = low.x(); i<hi.x(); i++) {
-        for (int j = low.y(); j<hi.y(); j++) {
-
-          IntVector c = IntVector(i,j,hi.z()-1);
-          
-          press_CC[c] = 0.0;
-          for (int m = 0; m < numALLMatls; m++) {
-            Material* matl = sharedState->getMaterial( m );
-            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            double tmp;
-            if(ice_matl){                // I C E
-              ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp_CC[m][c],
-                                             press_eos[m],tmp,tmp);        
-            } 
-            if(mpm_matl){                //  M P M
-              mpm_matl->getConstitutiveModel()->
-                computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                                  tmp, tmp,mpm_matl);
-            }              
-            press_CC[c] += f_theta[m][c]*press_eos[m];
-   //       cout << "press_CC" << c << press_CC[c] << endl;           
-          }  // for ALLMatls...
-        } // j loop
-      } // i loop
-      
-      break;
-    case Patch::zminus:       //   Z M I N U S
-      for (int i = low.x(); i<hi.x(); i++) {
-        for (int j = low.y(); j<hi.y(); j++) {
-
-          IntVector c = IntVector(i,j,low.z());
-          
-          press_CC[c] = 0.0;
-          for (int m = 0; m < numALLMatls; m++) {
-            Material* matl = sharedState->getMaterial( m );
-            ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            double tmp;
-            if(ice_matl){                // I C E
-              ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp_CC[m][c],
-                                             press_eos[m],tmp,tmp);        
-            } 
-            if(mpm_matl){                //  M P M
-              mpm_matl->getConstitutiveModel()->
-                computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                                  tmp, tmp,mpm_matl);
-            }              
-            press_CC[c] += f_theta[m][c]*press_eos[m];
- //         cout << "press_CC" << c << press_CC[c] << endl;           
-          } 
-        } // j loop
-      } // i loop
-      break;
-      
-    case Patch::numFaces:
-      break;
-    case Patch::invalidFace:
-      break;
+      press_CC[c] = 0.0;
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = sharedState->getMaterial( m );
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        double tmp;
+        if(ice_matl){                // I C E
+          ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
+                                         cv[m],Temp_CC[m][c],
+                                         press_eos[m],tmp,tmp);        
+        } 
+        if(mpm_matl){                //  M P M
+          mpm_matl->getConstitutiveModel()->
+            computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
+                              tmp, tmp,mpm_matl);
+        }              
+        press_CC[c] += f_theta[m][c]*press_eos[m];
+ //     cout << "press_CC" << c << press_CC[c] << endl;           
+      }  // for ALLMatls...
     }
-  }
+  } 
+
 #endif    // LODI_BCS
 }  // using namespace Uintah
