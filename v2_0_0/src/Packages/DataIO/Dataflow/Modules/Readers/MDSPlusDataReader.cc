@@ -886,12 +886,12 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
 void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
-    args.error("HDF5DataReader needs a minor command");
+    args.error("MDSPlusDataReader needs a minor command");
     return;
   }
 
   if (args[1] == "search") {
-#ifdef HAVE_HDF5
+#ifdef HAVE_MDSPLUS
 
     searchServer_.reset();
     searchTree_.reset();

@@ -107,7 +107,7 @@ protected:
 
   bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
 
-  GuiString filename_;
+  GuiFilename filename_;
   GuiString datasets_;
   GuiString dumpname_;
   GuiString ports_;
