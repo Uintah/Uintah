@@ -750,7 +750,6 @@ void Module::tcl_command(GuiArgs& args, void*)
 
 void Module::setPid(int pid)
 {
-  std::cerr << "Setting Moudle PID: " << pid << std::endl;
   pid_=pid;
 }
 
