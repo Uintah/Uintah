@@ -92,7 +92,6 @@ Arches::~Arches()
   delete d_boundaryCondition;
   delete d_nlSolver;
   delete d_physicalConsts;
-  nofTimeSteps = 0;
 #ifdef multimaterialform
   delete d_mmInterface;
 #endif

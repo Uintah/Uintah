@@ -243,7 +243,7 @@ private:
       Filter* d_filter;
 #endif
 
-      bool nofTimeSteps;
+      bool nofTimeSteps = 0;
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif
