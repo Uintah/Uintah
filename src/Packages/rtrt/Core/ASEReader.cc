@@ -100,10 +100,16 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
           
         }
       }
+      cerr << "size of vert list = " << v1->size()/3 << endl;
+      cerr << "size of face list = " << v2->size()/3 << endl;
+      cerr << "size of tvert list = " << v3->size()/3 << endl;
+      cerr << "size of tface list = " << v4->size()/3 << endl;
       if (v1 && v1->size() && v2 && v2->size()) {
         Group *group = new Group();
         unsigned loop4, length4;
-        unsigned index, findex1, findex2, findex3;
+        unsigned index, index2;
+        unsigned findex1, findex2, findex3;
+        unsigned findex4, findex5, findex6;
         length4 = v2->size()/3;
         for (loop4=0; loop4<length4; ++loop4) {
           index   = loop4*3;
@@ -113,6 +119,11 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
           
           if (v3 && v3->size() && v4 && v4->size() &&
               ((ImageMaterial*)ase_matls[matl_index])->valid()) {
+            index   = loop4*3;
+            findex4 = (*v4)[index++]*3;
+            findex5 = (*v4)[index++]*3;
+            findex6 = (*v4)[index]*3;
+           
             p0 = t.project(Point((*v1)[findex1],(*v1)[findex1+1],
                                  (*v1)[findex1+2]));
             p1 = t.project(Point((*v1)[findex2],(*v1)[findex2+1],
@@ -124,13 +135,14 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
               TexturedTri* tri;
               
               if (v5 && v5->size()) {
+                index2 = loop4*9;
                 
-                vn0 = t.project(Vector((*v5)[loop4*9],(*v5)[loop4*9+1],
-                                       (*v5)[loop4*9+2]));
-                vn1 = t.project(Vector((*v5)[loop4*9+3],(*v5)[loop4*9+4],
-                                       (*v5)[loop4*9+5]));
-                vn2 = t.project(Vector((*v5)[loop4*9+6],(*v5)[loop4*9+7],
-                                       (*v5)[loop4*9+8]));
+                vn0 = t.project(Vector((*v5)[index2],(*v5)[index2+1],
+                                       (*v5)[index2+2]));
+                vn1 = t.project(Vector((*v5)[index2+3],(*v5)[index2+4],
+                                       (*v5)[index2+5]));
+                vn2 = t.project(Vector((*v5)[index2+6],(*v5)[index2+7],
+                                       (*v5)[index2+8]));
                 
                 tri = new TexturedTri( ase_matls[matl_index],
                                        p0,p1,p2,vn0,vn1,vn2);
@@ -140,11 +152,13 @@ void handleGEOMOBJECT(token_list* children1, unsigned loop1,
               }
               
               group->add(tri);
+
+              p0 = Point((*v3)[findex4],(*v3)[findex4+1],(*v3)[findex4+2]);
+              p1 = Point((*v3)[findex5],(*v3)[findex5+1],(*v3)[findex5+2]);
+              p2 = Point((*v3)[findex6],(*v3)[findex6+1],(*v3)[findex6+2]);
               
-              p0 = Point((*v3)[findex1],(*v3)[findex1+1],(*v3)[findex1+2]);
-              p1 = Point((*v3)[findex2],(*v3)[findex2+1],(*v3)[findex2+2]);
-              p2 = Point((*v3)[findex3],(*v3)[findex3+1],(*v3)[findex3+2]);
-              
+              //cerr << "texcoord index = " << loop4 << " :" << endl;
+              //cerr << p0 << endl << p1 << endl << p2 << endl;
               tri->set_texcoords( p0, p1, p2 );
             }
           } else {
