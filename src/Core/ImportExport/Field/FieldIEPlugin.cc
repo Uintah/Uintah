@@ -42,33 +42,62 @@
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <Core/Containers/StringUtil.h>
 
+#ifdef __APPLE__
+  // Part of the hack to get static constructors from this library to
+  // load (under Mac OSX)
+#  include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
+#  include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
+#endif
+
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
 using namespace std;
+using namespace SCIRun;
 
 #define DEBUG 0
 
-namespace SCIRun {
-
-
 #ifdef __APPLE__
-  // On the Mac, this comes from Core/Util/DynamicLoader.cc because
-  // the constructor will actually fire from there.  When it is declared
-  // in this file, it does not "construct" and thus causes seg faults.
-  // (Yes, this is a hack.  Perhaps this problem will go away in later
-  // OSX releases, but probably not as it has something to do with the
-  // Mac philosophy on when to load dynamic libraries.)
-  extern map<string, FieldIEPlugin *> *field_plugin_table;
-  extern Mutex fieldIEPluginMutex;
-#else
-  // Same problem on Linux really.  We need control of the static
-  // initializer order.
-  static map<string, FieldIEPlugin *> *field_plugin_table = 0;
-  extern Mutex fieldIEPluginMutex;
+  // We need a symbol from the matrices to force the instantiation of the static
+  // constructors (under Mac OSX).
+  extern MatrixHandle TextColumnMatrix_reader(ProgressReporter *pr, const char *filename);
+  extern bool TextColumnMatrix_writer(ProgressReporter *pr,
+                                      MatrixHandle matrix, const char *filename);
+  extern ColorMapHandle TextColorMap_reader(ProgressReporter *pr, const char *filename);
+  extern bool TextColorMap_writer(ProgressReporter *pr,
+                                  ColorMapHandle colormap, const char *filename);
 #endif
 
+namespace SCIRun {
+
+static map<string, FieldIEPlugin *> *field_plugin_table = 0;
+extern Mutex fieldIEPluginMutex; // From Core/Util/DynamicLoader.cc
+
+#ifdef __APPLE__
+void
+macImportExportForceLoad()
+{
+  // On non-Mac computers, the following function comes from TextPointCloudString_plugin.cc
+  extern FieldHandle TextPointCloudString_reader(ProgressReporter *pr, const char *filename);
+  extern bool TextPointCloudString_writer(ProgressReporter *pr,
+                                          FieldHandle field, const char *filename);
+  FieldIEPlugin TextPointCloudString_plugin("TextPointCloudString",
+                                            ".pcs.txt", "",
+                                            TextPointCloudString_reader,
+                                            TextPointCloudString_writer);
+
+  MatrixIEPlugin TextColumnMatrix_plugin("TextColumnMatrix",
+                                         "", "",
+                                         TextColumnMatrix_reader,
+                                         TextColumnMatrix_writer);
+
+  ColorMapIEPlugin TextColorMap_plugin("TextColorMap",
+                                       "", "",
+                                       TextColorMap_reader,
+                                       TextColorMap_writer);
+}
+#endif
 
 //----------------------------------------------------------------------
 FieldIEPlugin::FieldIEPlugin(const string& pname,
@@ -86,6 +115,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     filewriter(fwriter)
 {
   fieldIEPluginMutex.lock();
+  printf("in fieldiedplugin %s\n", pname.c_str());
   if (!field_plugin_table)
   {
     field_plugin_table = scinew map<string, FieldIEPlugin *>();
