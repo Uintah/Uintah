@@ -26,7 +26,7 @@ using namespace SCIRun;
 
 VolumeDpy::VolumeDpy(float isoval)
     : DpyBase("VolumeDpy"), need_hist(true), redraw_isoval(false),
-      isoval(isoval), new_isoval(isoval)
+      new_isoval(isoval), isoval(isoval)
 {
   set_resolution(400,100);
   hist=0;
