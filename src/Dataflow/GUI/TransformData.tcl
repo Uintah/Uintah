@@ -65,7 +65,7 @@ itcl_class SCIRun_FieldsData_TransformData {
 	labelcombo $w.otype "Output Data Type" \
 	    {"Same as Input" "unsigned char" "unsigned short" \
 		 "unsigned int" \
-		 char short int float double Vector Tensor} \
+		 char short int float double Vector Tensor string} \
 	    $this-outputdatatype
 
 	option add *textBackground white	
