@@ -291,6 +291,12 @@ public:
 	}
       }
 
+      HYPRE_StructMatrixDestroy(HA);
+      HYPRE_StructVectorDestroy(HB);
+      HYPRE_StructVectorDestroy(HX);
+      HYPRE_StructStencilDestroy(stencil);
+      HYPRE_StructGridDestroy(grid);
+
       double dt=Time::currentSeconds()-tstart;
       if(pg->myrank() == 0){
 	cerr << "Solve of " << X_label->getName() 
