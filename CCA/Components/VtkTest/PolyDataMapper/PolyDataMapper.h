@@ -29,51 +29,38 @@
 #ifndef SCIRun_VTK_Components_PolyDataMapper_h
 #define SCIRun_VTK_Components_PolyDataMapper_h
 
-#include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/InPort.h>
+#include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
-
-#define IPort PolyDataMapper_IPort
 
 class vtkPolyDataMapper;
 
 namespace SCIRun {
   namespace vtk{
-  class IPort : public vtk::Port {
-  public:
-    IPort(vtkPolyDataMapper *mapper);
-    virtual ~IPort();
-    bool isInput();
-    std::string getName();
-    bool accept(Port* port);
-    void connect(Port* p);
-    vtkPolyDataMapper *mapper;
-  };
+    class PolyDataMapper: public Component, public InPort, public OutPort{
+      
+    public:
+      //constructor
+      PolyDataMapper();
 
-  class OPort : public vtk::Port {
-  public:
-    OPort(vtkPolyDataMapper *mapper);
-    virtual ~OPort();
-    bool isInput();
-    std::string getName();
-    vtkObject* getObj();
-    vtkPolyDataMapper *mapper;
-  };
-  
-  class PolyDataMapper: public vtk::Component{
+      //destructor
+      ~PolyDataMapper();
+
+      //InPort interface
+      bool accept(OutPort* port);
+
+      //InPort interface
+      void connect(OutPort* port);
+
+    private:
+      vtkPolyDataMapper *mapper;
+      
+      PolyDataMapper(const PolyDataMapper&);
+      PolyDataMapper& operator=(const PolyDataMapper&);
+    };
     
-  public:
-    PolyDataMapper();
-    virtual ~PolyDataMapper();
-  private:
-    vtkPolyDataMapper *mapper;
-
-    PolyDataMapper(const PolyDataMapper&);
-    PolyDataMapper& operator=(const PolyDataMapper&);
-  };
-  
-  
-} //namespace vtk
+  } //namespace vtk
 } //namespace SCIRun
 
 

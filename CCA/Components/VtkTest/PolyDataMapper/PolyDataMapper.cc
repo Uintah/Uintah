@@ -27,12 +27,11 @@
  */
 
 #include <iostream>
+#include <vtkPolyDataMapper.h>
+#include <vtkPolyData.h>
+#include <vtkContourFilter.h>
 #include <SCIRun/Vtk/Port.h>
 #include <CCA/Components/VtkTest/PolyDataMapper/PolyDataMapper.h>
-
-#include "vtkPolyDataMapper.h"
-#include "vtkPolyData.h"
-#include "vtkContourFilter.h"
 
 using namespace std;
 using namespace SCIRun;
@@ -43,76 +42,32 @@ extern "C" vtk::Component* make_Vtk_PolyDataMapper()
   return new PolyDataMapper;
 }
 
-//Input Port
-IPort::IPort(vtkPolyDataMapper *mapper){
-  this->mapper=mapper;  
-}
-
-IPort::~IPort(){
-
-}
-
-bool
-IPort::isInput(){
-  return true;
-}
-
-std::string
-IPort::getName(){
-  return "PolyDataMapper::input";
-}
-
 bool 
-IPort::accept(Port* port){
-  return dynamic_cast<vtkPolyData*>(port->getObj())!=0;
+PolyDataMapper::accept(OutPort* port){
+  return dynamic_cast<vtkPolyData*>(port->getOutput())!=0;
 }
 
 void
-IPort::connect(Port* port){
-  mapper->SetInput(dynamic_cast<vtkPolyData*>(port->getObj()));
+PolyDataMapper::connect(OutPort* port){
+  mapper->SetInput(dynamic_cast<vtkPolyData*>(port->getOutput()));
   mapper->ScalarVisibilityOff();
 }
 
-
-//Output Port
-
-OPort::OPort(vtkPolyDataMapper *mapper){
-  this->mapper=mapper;
-}
-
-OPort::~OPort(){
-
-}
-
-bool
-OPort::isInput(){
-  return false;
-}
-
-std::string
-OPort::getName(){
-  return "PolyDataMapper::output";
-}
-
-vtkObject *
-OPort::getObj(){
-  return mapper;
-}
-
-
 PolyDataMapper::PolyDataMapper(){
+  //set input port name
+  InPort::setName("PolyDataMapper::input");
+
+  //set output port name
+  OutPort::setName("PolyDataMapper::output");
 
   mapper=vtkPolyDataMapper::New();
-  iports.push_back(new IPort(mapper));
-  oports.push_back(new OPort(mapper));
+
+  setOutput(mapper);
+
+  addPort(dynamic_cast<InPort*>(this));
+  addPort(dynamic_cast<OutPort*>(this));
 }
 
 PolyDataMapper::~PolyDataMapper(){
-  for(unsigned int i=0; i<iports.size(); i++){
-    delete iports[i];
-  }
-  for(unsigned int i=0; i<oports.size(); i++){
-    delete oports[i];
-  }
   mapper->Delete();
 }
