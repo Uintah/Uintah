@@ -3617,6 +3617,204 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
 }
 
 
+/* 
+ ======================================================================*
+ Function:  backoutGCPressFromVelFC--           
+ You need to set the pressure in the ghostcells so that it is
+ consistent with the face centered velocies. If you don't then you can easily
+ set the ghostcell pressure so there is flow out of a solid boundary.
+ Currently this computes the pressure based on ice_matl[0] which
+ is the surrounding matl.
+ Note: this function doesn't set the pressure in either the edges or 
+       corners of the domain. 
+       
+  W A R N I N G:
+  This is only setup for ice_matls.  I need to modify this 
+  when we have mpm_matls on the edge of the domain.
+_______________________________________________________________________ */
+void   ICE::backoutGCPressFromVelFC(const Patch* patch,
+                                Patch::FaceType face,
+                                DataWarehouse* old_dw,
+                                CCVariable<double>& press_CC, 
+                          const vector<CCVariable<double> >& rho_micro_CC,
+                          const vector<CCVariable<double> >& rho_CC,
+                          const vector<CCVariable<double> >& vol_frac_CC,
+                          const vector<CCVariable<Vector> >& vel_CC)
+{
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  int numMatls = d_sharedState->getNumMatls();
+  IntVector offset;
+  
+  double term1, term2, term3, term4, term5;
+  double grav, del_Q;
+  double rho_FC, rho_micro_FC;
+  double plus_minus_one;
+  int m = 0;          /*   H A R D W I R E   */
+  double tmp, beta;
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
+  DenseMatrix K(numICEMatls,numICEMatls);
+  K.zero();
+  
+  vector<CCVariable<double> > vel_FC(numICEMatls);
+  for(int m = 0; m < numICEMatls; m++) {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int indx = matl->getDWIndex();
+    old_dw->allocate(vel_FC[m],  lb->scratchLabel,  indx,patch);
+    vel_FC[m].initialize(0.0);
+  }
+
+  //__________________________________
+  //  Grab the exchange coefficient
+  // Check if the # of coefficients = # of upper triangular terms needed
+  int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
+  vector<double>::iterator it = d_K_mom.begin();
+
+  if (num_coeff == (int)d_K_mom.size() ) {
+    // Fill in the upper triangular matrix
+    for (int i = 0; i < numMatls; i++ )  {
+     for (int j = i + 1; j < numMatls; j++) {
+	K[i][j] = K[j][i] = *it++;
+     }
+    }
+  } else if (2*num_coeff == (int)d_K_mom.size() ) {
+    // Fill in the whole matrix but skip the diagonal terms
+    for (int i = 0; i < numMatls; i++ )  {
+     for (int j = 0; j < numMatls; j++) {
+	if (i == j) continue;
+	K[i][j] = *it++;
+     }
+    }
+  } else {
+    cerr << "Number of exchange components don't match " << endl;
+    abort();
+  }
+    
+//__________________________________
+//  For each wall
+//  - convert the vectors into a doubles, vel_CC into vel_FC
+//  - define the offsets to the interior cells and 
+//    which component of gravity
+
+  Vector gravity = d_sharedState->getGravity();
+  Vector dx = patch->dCell();
+  
+  if (face == Patch::xplus) {           //  X P L U S
+    offset = IntVector(-1,0,0);
+    grav   = gravity.x();
+    del_Q  = dx.x();
+    plus_minus_one  = -1.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+      vel_FC[m][*iter] = vel_CC[m][*iter].x();
+    }
+    //cout << "XPLUS:" <<endl;
+  }
+  if(face == Patch::xminus){            //  X M I N U S
+    offset = IntVector(1,0,0);
+    grav   = gravity.x();
+    del_Q  = dx.x();
+    plus_minus_one  = 1.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+       vel_FC[m][*iter] = vel_CC[m][*iter].x();
+    }
+    //cout << "XMINUS:" <<endl;
+  }
+  if(face == Patch::yplus) {            //  Y P L U S
+    offset = IntVector(0,-1,0);
+    grav   = gravity.y();
+    del_Q  = dx.y();
+    plus_minus_one  = -1.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+       vel_FC[m][*iter] = vel_CC[m][*iter].y();
+    }
+    //cout << "YPLUS:" <<endl;
+  }
+  if(face == Patch::yminus) {           //  Y M I N U S
+    offset = IntVector(0,1,0);
+    grav   = gravity.y();
+    del_Q  = dx.y();
+    plus_minus_one  = 1.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+      vel_FC[m][*iter] = vel_CC[m][*iter].y();
+    }
+    //cout << "YMINUS:" <<endl;
+  }
+  if (face == Patch::zplus) {           //  Z P L U S
+    offset = IntVector(0,0,-1);
+    grav   = gravity.z();
+    del_Q  = dx.z();
+    plus_minus_one  = -1.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+      vel_FC[m][*iter] = vel_CC[m][*iter].z();
+    }
+    //cout << "ZPLUS:" <<endl;
+  } 
+  if (face == Patch::zminus) {          //  Z M I N U S
+    offset = IntVector(0,0,1);
+    grav   = gravity.z();
+    del_Q  = dx.z();
+    plus_minus_one  = 1.0;
+    for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+      vel_FC[m][*iter] = vel_CC[m][*iter].z();
+    }
+    //cout << "ZMINUS:" <<endl;
+  }
+  
+  //__________________________________
+  // Now loop over the ghostcells in that face
+  // and backout the pressure this doesn't include 
+  // the corner or edge ghostcells 
+  for(CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+    IntVector gcell = *iter;                  // current ghost cell
+    IntVector adjcell(gcell.x()+offset.x(),   // interior adjacent cell
+                      gcell.y()+offset.y(),
+                      gcell.z()+offset.z());
+
+    rho_micro_FC = rho_micro_CC[m][adjcell] + rho_micro_CC[m][gcell];
+    rho_FC       = rho_CC[m][adjcell]       + rho_CC[m][gcell];
+    ASSERT(rho_FC > 0.0);
+
+    term1 =  vel_FC[m][gcell];
+    //__________________________________
+    // interpolation to the face
+    term2 = (rho_CC[m][adjcell] * vel_FC[m][adjcell] +
+             rho_CC[m][gcell]   * vel_FC[m][gcell])/(rho_FC);
+
+    //__________________________________
+    // Exchange term
+    term3 = 0.0;
+    for(int n = 0; n < numICEMatls; n++) {
+      tmp    = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][gcell]) * K[n][m];
+      beta   = delT * tmp/ (rho_micro_CC[m][gcell] + rho_micro_CC[m][adjcell]);
+      term3 += beta*(vel_FC[n][gcell] - vel_FC[m][gcell] );
+    }
+
+    //__________________________________
+    //gravity & denominator
+    term4 =  delT * grav;
+    term5 =  2.0 * delT/(rho_micro_FC);
+    ASSERT(term5 > 0.0);
+   // cout<< *iter<<adjcell<<" "<<term1<<" "<<term2<<" " <<term3<<" "<<term4<<" "<<term5<<endl;
+    press_CC[gcell]  = press_CC[adjcell] + plus_minus_one * del_Q * 
+                      (term1- term2 - term3 - term4)/term5;
+  }
+   //---- P R I N T   D A T A ------ 
+ #if 0
+  if( face == Patch::endFace) {
+   char description[50];
+   sprintf(description, "backoutGCPress");
+   printData(   patch, 1, description, "press_CC",    press_CC);
+   printData(   patch, 1, description, "vel_FC",      vel_FC[m]);
+   getchar();
+  }
+ #endif
+}
+
+
+
+
+
+
 #if 0
 /*__________________________________
 *   ONLY NEEDED BY SECOND ORDER ADVECTION
