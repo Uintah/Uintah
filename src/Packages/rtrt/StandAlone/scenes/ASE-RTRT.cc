@@ -14,6 +14,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/ASETokens.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
+#include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <fstream>
 #include <iostream>
@@ -24,6 +25,7 @@ using namespace rtrt;
 using namespace std;
 
 Array1<Material*> ase_matls;
+string env_map;
 
 bool
 degenerate(const Point &p0, const Point &p1, const Point &p2) 
@@ -46,8 +48,8 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 {
   token_list *children1, *children2, *children3;
   Point p0,p1,p2;
-  vector<float>    *v1=0;
-  vector<float>    *v3=0;
+  vector<double>    *v1=0;
+  vector<double>    *v3=0;
   vector<unsigned> *v2=0;
   vector<unsigned> *v4=0;
   unsigned loop1, length1;
@@ -57,7 +59,11 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
   children1 = infile.GetChildren();
   length1 = children1->size();
   for (loop1=0; loop1<length1; ++loop1) {
-    if ((*children1)[loop1]->GetMoniker() == "*GEOMOBJECT") {
+    if ((*children1)[loop1]->GetMoniker() == "*SCENE") {
+      children2 = (*children1)[loop1]->GetChildren();
+      children3 = (*children2)[0]->GetChildren();
+      env_map = (*(((BitmapToken*)((*children3))[0])->GetArgs()))[0];
+    } else if ((*children1)[loop1]->GetMoniker() == "*GEOMOBJECT") {
       matl_index = 
         ((GeomObjectToken*)((*children1)[loop1]))->GetMaterialIndex();
       if (ase_matls.size()<=matl_index)
@@ -97,7 +103,8 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
 	      findex2 = (*v2)[index++]*3;
 	      findex3 = (*v2)[index]*3;
 	      
-              if (v3 && v3->size() && v4 && v4->size()) {
+              if (v3 && v3->size() && v4 && v4->size() &&
+                  ((ImageMaterial*)ase_matls[matl_index])->valid()) {
                 p0 = Point((*v1)[findex1],(*v1)[findex1+1],(*v1)[findex1+2]);
                 p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
                 p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
@@ -120,9 +127,12 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                 p1 = Point((*v1)[findex2],(*v1)[findex2+1],(*v1)[findex2+2]);
                 p2 = Point((*v1)[findex3],(*v1)[findex3+1],(*v1)[findex3+2]);
 
-                Tri *tri = new Tri( ase_matls[matl_index], p0, p1, p2);
+                if (!degenerate(p0,p1,p2)) {
 
-                group->add(tri);
+                  Tri *tri = new Tri( ase_matls[matl_index], p0, p1, p2);
+
+                  group->add(tri);
+                }
               }
 	    }
 	    scene->add(group);
@@ -146,13 +156,21 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
           token->GetAmbient(ambient);
           token->GetDiffuse(diffuse);
           token->GetSpecular(specular);
-          if (token->GetTMapFilename()=="") {
+          if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
             ase_matls[token->GetIndex()] = 
               new Phong(Color(ambient),
                         Color(diffuse),
                         Color(specular),
                         token->GetShine(),
-                        token->GetTransparency());
+                        0);
+          } else if (token->GetTMapFilename()=="") {
+            ase_matls[token->GetIndex()] = 
+              new DielectricMaterial(token->GetTransparency(),
+                                     token->GetTransparency(),
+                                     .3,
+                                     token->GetShine(),
+                                     Color(diffuse),
+                                     Color(diffuse));
           } else {
             ase_matls[token->GetIndex()] = 
               new ImageMaterial((char*)(token->GetTMapFilename().c_str()),
@@ -162,8 +180,9 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
                                 1.,
                                 Color(specular),
                                 token->GetShine(),
-                                0,
-                                token->GetTransparency());
+                                token->GetTransparency(),
+                                0);
+            ((ImageMaterial*)(ase_matls[token->GetIndex()]))->flip();
           }
         }
       }
@@ -192,8 +211,8 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   Camera cam(Point(1,0,0), Point(0,0,0),
              Vector(0,0,1), 40);
   
-  Color groundcolor(0,0,0);
-  double ambient_scale=.5;
+  Color groundcolor(.7,.6,.5);
+  double ambient_scale=.9;
   
   Color bgcolor(.2,.2,.4);
   
@@ -202,7 +221,7 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
                          bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
                          ambient_scale);
   scene->add_light(new Light(Point(-2250,-11800,15000), Color(.8,.8,.8), 0));
-  scene->set_background_ptr(new EnvironmentMapBackground("/home/sci/dmw/stadium/SKY.ppm"));
+  scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));
   scene->shadow_mode=0;
   scene->set_materials(ase_matls);
   return scene;
