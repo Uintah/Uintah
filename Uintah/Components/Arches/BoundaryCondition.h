@@ -73,6 +73,8 @@ public:
   // Destructor
    ~BoundaryCondition();
    
+   void problemSetup(const ProblemSpecP& params,
+		     DataWarehouseP& dw);
    // GROUP:  Methods
    ////////////////////////////////////////////////////////////////////////
    // Set boundary conditions terms. 

@@ -166,8 +166,8 @@ void Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
     int koff = 1;
     // 3-d array for volume - fortran uses it for temporary storage
     Array3<double> volume(region->getLowIndex(), region->getHighIndex());
-    FORT_VELCOEF(velocity, viscosity, density, gravity.z(), 
-		 wVelocityConvectCoeff, wVelocityCoeff,
+    FORT_VELCOEF(wVelocityConvectCoeff, wVelocityCoeff,
+		 velocity, viscosity, density, gravity.z(), 
 		 ioff, joff, koff, lowIndex, highIndex,
 		 cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
 		 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
