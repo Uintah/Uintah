@@ -49,7 +49,7 @@ PSELIBS := \
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 ifneq ($(PETSC_DIR),)
-LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpetsc -lblas
+LIBS := $(LIBS) $(PETSC_LIBS) 
 endif
 LIBS := $(LIBS) $(FLIBS) 
 ifneq ($(PETSC_DIR),)
