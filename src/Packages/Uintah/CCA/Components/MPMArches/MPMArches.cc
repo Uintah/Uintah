@@ -340,7 +340,9 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // use modified celltype
   t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel,      arches_matls->getUnion(), 
 	      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::OldDW, d_Alab->d_pressureSPBCLabel,  arches_matls->getUnion(), 
+  //  t->requires(Task::OldDW, d_Alab->d_pressureSPBCLabel,  arches_matls->getUnion(), 
+  //      Ghost::AroundCells, numGhostCells);
+  t->requires(Task::OldDW, d_Alab->d_pressPlusHydroLabel,  arches_matls->getUnion(), 
 	      Ghost::AroundCells, numGhostCells);
   
   t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, arches_matls->getUnion(),
@@ -971,10 +973,10 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
     new_dw->get(cellType, d_Alab->d_mmcellTypeLabel,          matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
-    old_dw->get(pressure, d_Alab->d_pressureSPBCLabel,        matlIndex, 
+    //    old_dw->get(pressure, d_Alab->d_pressureSPBCLabel,        matlIndex, 
+    //		patch, Ghost::AroundCells, numGhostCellsG);
+    old_dw->get(pressure, d_Alab->d_pressPlusHydroLabel,        matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
-
-    // Rajesh: should this be new_dw or old_dw? 
 
     old_dw->get(xvelCC_gas, d_Alab->d_newCCUVelocityLabel,   matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
