@@ -23,7 +23,8 @@ itcl_class SCIRun_Fields_ClipField {
 	global $this-clip-location  # Where to clip
 	global $this-clipmode       # Which clip mode to use.
 	global $this-autoexecute    # Execute on widget button up?
-	global $this-execmode    # Which of three executes to use.
+	global $this-autoinvert     # Invert again when executing?
+	global $this-execmode       # Which of three executes to use.
 
         set_defaults
     }
@@ -32,6 +33,7 @@ itcl_class SCIRun_Fields_ClipField {
 	set $this-clip-location cell
 	set $this-clipmode replace
 	set $this-autoexecute 0
+	set $this-autoinvert 0
 	set $this-execmode 0
     }
 
@@ -85,8 +87,10 @@ itcl_class SCIRun_Fields_ClipField {
 	pack $w.execmode.replace $w.execmode.union $w.execmode.intersect $w.execmode.remove  -side top -anchor w 
 
 	checkbutton $w.whenexecute.check -text "Execute automatically" -variable $this-autoexecute
-	
-	pack $w.whenexecute.check -side top -expand yes -fill both
+
+
+	checkbutton $w.whenexecute.icheck -text "Invert automatically" -variable $this-autoinvert -command "$this locationclip"
+	pack $w.whenexecute.check $w.whenexecute.icheck -side top -anchor w -padx 10
 	
 	button $w.executes.execute -text "Execute" -command "$this execrunmode"
 	button $w.executes.invert -text "Invert" -command "$this invert"
