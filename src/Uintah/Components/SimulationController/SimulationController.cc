@@ -30,6 +30,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/VarTypes.h>
 #include <iostream>
 #include <values.h>
+
+#include <SCICore/Malloc/Allocator.h> // for memory leak tests...
+
 using std::cerr;
 using std::cout;
 
@@ -46,9 +49,6 @@ SimulationController::SimulationController(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
    d_restarting = false;
-#if 0
-   d_dwMpiHandler = scinew DWMpiHandler();
-#endif
 }
 
 SimulationController::~SimulationController()
@@ -109,22 +109,6 @@ void SimulationController::run()
    DataWarehouseP null_dw = 0;
    DataWarehouseP old_dw = scheduler->createDataWarehouse(null_dw);
 
-#if 0
-   d_dwMpiHandler->registerDW( old_dw );
-#endif
-   // Should I check to see if MpiProcesses is > 1 before making this
-   // thread?  If not, the thread will just die when it realizes
-   // that there are only one MpiProcesses.  Should I have if tests
-   // around all the d_dwMpiHandler calls to test for this, or just
-   // let it do the single assignment operation that will actually
-   // have no effect?
-   // This should get moved into a (future) scheduler - Steve
-#if 0
-   if( d_myworld->size() > 1 ) {
-     d_MpiThread = scinew Thread( d_dwMpiHandler, "DWMpiHandler" );
-   }
-#endif
-
    old_dw->setGrid(grid);
    
    scheduler->initialize();
@@ -159,6 +143,8 @@ void SimulationController::run()
    scheduler->execute(d_myworld, old_dw, old_dw);
 
    while(t < timeinfo.maxTime) {
+      cerr << "SimulationController: Beginning of time step\n";
+
       double wallTime = Time::currentSeconds() - start_time;
 
       delt_vartype delt_var;
@@ -180,17 +166,33 @@ void SimulationController::run()
 	 delt = timeinfo.delt_max;
       }
       old_dw->override(delt_vartype(delt), sharedState->get_delt_label());
-      if(d_myworld->myrank() == 0)
-	 cout << "Time=" << t << ", delt=" << delt 
-	      << ", elapsed time = " << wallTime << '\n';
+      if(d_myworld->myrank() == 0){
+	cout << "Time=" << t << ", delT=" << delt 
+	     << ", elapsed time = " << wallTime << '\n';
+	cout << "DW Generation: " << old_dw->getID() << "\n";
+
+	size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
+	  nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
+	  highwater_mmap, nlonglocks, nnaps, bytes_overhead, bytes_free,
+	  bytes_fragmented, bytes_inuse, bytes_inhunks;
+
+	SCICore::Malloc::GetGlobalStats(SCICore::Malloc::DefaultAllocator(),
+					nalloc, sizealloc, nfree, sizefree,
+					nfillbin, nmmap, sizemmap, nmunmap,
+					sizemunmap, highwater_alloc,
+					highwater_mmap, nlonglocks, nnaps,
+					bytes_overhead, bytes_free,
+					bytes_fragmented, bytes_inuse,
+					bytes_inhunks);
+	cerr << "Memory Leak: (sizealloc - sizefree) = " 
+	     << sizealloc - sizefree << "\n";
+      }
 
       scheduler->initialize();
 
-      DataWarehouseP new_dw = scheduler->createDataWarehouse(old_dw);
+      /* I THINK THIS SHOULD BE null_dw, NOT old_dw... Dd: */
+      DataWarehouseP new_dw = scheduler->createDataWarehouse(/*old_dw*/null_dw);
 
-#if 0
-      d_dwMpiHandler->registerDW( new_dw );
-#endif
       scheduleTimeAdvance(t, delt, level, scheduler, old_dw, new_dw,
 			  cfd, mpm, md);
       t += delt;
@@ -209,12 +211,6 @@ void SimulationController::run()
       
       old_dw = new_dw;
    }
-
-#if 0
-   if( d_myworld->myrank() == 0 && d_myworld->size() > 1 ) {
-     d_dwMpiHandler->shutdown( d_myworld->size() );
-   }
-#endif
 }
 
 void SimulationController::problemSetup(const ProblemSpecP& params,
@@ -475,6 +471,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.41  2000/08/24 21:21:31  dav
+// Removed DWMpiHandler stuff
+//
 // Revision 1.40  2000/07/28 07:37:50  bbanerje
 // Rajesh must have missed these .. adding the changed version of
 // createDataWarehouse calls
