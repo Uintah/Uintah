@@ -41,3 +41,10 @@ td {font-family:"arial", "helvetica", "sans-serif"}
 .dropcap {font-family: "times"; font-size:40px; margin:0; color:#660000}
 
 .question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#660000}
+
+.box  {border-width: thin;
+	border-style: solid;
+	border-color: #000000;
+	background-color: #CCCCCC;
+	margin-left: 50px;
+	margin-right: 50px}
