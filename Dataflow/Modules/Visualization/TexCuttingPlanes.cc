@@ -52,18 +52,23 @@ extern "C" Module* make_TexCuttingPlanes( const string& id) {
 }
 
 
-TexCuttingPlanes::TexCuttingPlanes(const string& id)
-  : Module("TexCuttingPlanes", id, Filter, "Visualization", "SCIRun"), 
-  tex(0),
-  control_lock("TexCuttingPlanes resolution lock"),
-  control_widget(0),
-  control_id(-1),
-  drawX("drawX", id, this),
-  drawY("drawY", id, this),
-  drawZ("drawZ", id, this),
-  drawView("drawView", id, this),
-  interp_mode("interp_mode", id, this),
-  volren(0)
+TexCuttingPlanes::TexCuttingPlanes(const string& id) : 
+  Module("TexCuttingPlanes", id, Filter, "Visualization", "SCIRun"), 
+  tex_(0),
+  control_lock_("TexCuttingPlanes resolution lock"),
+  control_widget_(0),
+  control_id_(-1),
+  drawX_("drawX", id, this),
+  drawY_("drawY", id, this),
+  drawZ_("drawZ", id, this),
+  drawView_("drawView", id, this),
+  interp_mode_("interp_mode", id, this),
+  draw_phi0_("draw_phi_0", id, this),
+  draw_phi1_("draw_phi_1", id, this),
+  phi0_("phi_0", id, this),
+  phi1_("phi_1", id, this),
+  cyl_active_("cyl_active", id, this),
+  volren_(0)
 {
 }
 
@@ -75,29 +80,29 @@ void
 TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
 {
   if (args[1] == "MoveWidget") {
-      if (!control_widget) return;
-      Point w(control_widget->ReferencePoint());
+      if (!control_widget_) return;
+      Point w(control_widget_->ReferencePoint());
       if (args[2] == "xplus") {
-	w+=ddx*atof(args[3].c_str());
+	w+=ddx_*atof(args[3].c_str());
       } else if (args[2] == "xat") {
-	w=dmin+ddx*atof(args[3].c_str());
+	w=dmin_+ddx_*atof(args[3].c_str());
       } else if (args[2] == "yplus") {
-	w+=ddy*atof(args[3].c_str());
+	w+=ddy_*atof(args[3].c_str());
       } else if (args[2] == "yat") {
-	w=dmin+ddy*atof(args[3].c_str());
+	w=dmin_+ddy_*atof(args[3].c_str());
       } else if (args[2] == "zplus") {
-	w+=ddz*atof(args[3].c_str());
+	w+=ddz_*atof(args[3].c_str());
       } else if (args[2] == "zat") {
-	w=dmin+ddz*atof(args[3].c_str());
+	w=dmin_+ddz_*atof(args[3].c_str());
       } else if (args[2] == "vplus"){
-	GeometryData* data = ogeom->getData( 0, 1);
+	GeometryData* data = ogeom_->getData( 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
 	view.normalize();
-	w += view*ddview*atof(args[3].c_str());
+	w += view*ddview_*atof(args[3].c_str());
       }
-      control_widget->SetPosition(w);
+      control_widget_->SetPosition(w);
       widget_moved(1);
-      ogeom->flushViews();				  
+      ogeom_->flushViews();				  
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -105,130 +110,144 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
 
 void TexCuttingPlanes::widget_moved(int)
 {
-  if( volren ){
-      volren->SetControlPoint(tex->get_field_transform().unproject(control_widget->ReferencePoint()));
+  if( volren_ ){
+      volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     }
 }
 
 
 void TexCuttingPlanes::execute(void)
 {
-  intexture = (GLTexture3DIPort *)get_iport("GL Texture");
-  incolormap = (ColorMapIPort *)get_iport("Color Map");
-  ogeom = (GeometryOPort *)get_oport("Geometry");
+  intexture_ = (GLTexture3DIPort *)get_iport("GL Texture");
+  incolormap_ = (ColorMapIPort *)get_iport("Color Map");
+  ogeom_ = (GeometryOPort *)get_oport("Geometry");
 
-  if (!intexture) {
+  if (!intexture_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!incolormap) {
+  if (!incolormap_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!ogeom) {
+  if (!ogeom_) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
   
   //AuditAllocator(default_allocator);
   static GLTexture3DHandle oldtex = 0;
-  if (!intexture->get(tex)) {
+  if (!intexture_->get(tex_)) {
     return;
   }
-  else if (!tex.get_rep()) {
+  else if (!tex_.get_rep()) {
     return;
   }
   
   ColorMapHandle cmap;
-  if( !incolormap->get(cmap)){
+  if( !incolormap_->get(cmap)){
     return;
   }
 
 
-  if(!control_widget){
-    control_widget=scinew PointWidget(this, &control_lock, 0.2);
+  if(!control_widget_){
+    control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
     
     BBox b;
-    tex->get_bounds(b);
+    tex_->get_bounds(b);
     Vector dv(b.diagonal());
     int nx, ny, nz;
-    Transform t(tex->get_field_transform());
-    dmin=t.project(Point(0,0,0));
-    ddx=t.project(Point(1,0,0))-dmin;
-    ddy=t.project(Point(0,1,0))-dmin;
-    ddz=t.project(Point(0,0,1))-dmin;
-    tex->get_dimensions(nx,ny,nz);
-    ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-    control_widget->SetPosition(Interpolate(b.min(), b.max(), 0.5));
-    control_widget->SetScale(dv.length()/80.0);
+    Transform t(tex_->get_field_transform());
+    dmin_=t.project(Point(0,0,0));
+    ddx_=t.project(Point(1,0,0))-dmin_;
+    ddy_=t.project(Point(0,1,0))-dmin_;
+    ddz_=t.project(Point(0,0,1))-dmin_;
+    tex_->get_dimensions(nx,ny,nz);
+    ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
+    control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
+    control_widget_->SetScale(dv.length()/80.0);
   }
 
 
   //AuditAllocator(default_allocator);
-  if( !volren ){
-    volren = scinew GLVolumeRenderer(0x12345676,
-				  tex,
+  if( !volren_ ){
+    volren_ = scinew GLVolumeRenderer(0x12345676,
+				  tex_,
 				  cmap);
 
-    volren->SetControlPoint(tex->get_field_transform().unproject(control_widget->ReferencePoint()));
-    volren->SetInterp( bool(interp_mode.get()));
+    volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+    volren_->SetInterp( bool(interp_mode_.get()));
 
-    if(tex->CC()){
-      volren->SetInterp(false);
-      interp_mode.set(0);
+    if(tex_->CC()){
+      volren_->SetInterp(false);
+      interp_mode_.set(0);
     } else {
-      volren->SetInterp(interp_mode.get());
+      volren_->SetInterp(interp_mode_.get());
     }
 
-    ogeom->addObj( volren, "Volume Slicer");
-    volren->_GLPlanes();
-    volren->DrawPlanes();
+    ogeom_->addObj( volren_, "Volume Slicer");
+    volren_->set_tex_ren_state(GLVolumeRenderer::TRS_GLPlanes);
+    volren_->DrawPlanes();
+    cyl_active_.reset();
+    draw_phi0_.reset();
+    phi0_.reset();
+    draw_phi1_.reset();
+    phi1_.reset();
+    volren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
+			     draw_phi1_.get(), phi1_.get());
   } else {    
-    if( tex.get_rep() != oldtex.get_rep() ){
-      oldtex = tex;
+    if( tex_.get_rep() != oldtex.get_rep() ){
+      oldtex = tex_;
       BBox b;
-      tex->get_bounds(b);
+      tex_->get_bounds(b);
       Vector dv(b.diagonal());
       int nx, ny, nz;
-      Transform t(tex->get_field_transform());
-      dmin=t.project(Point(0,0,0));
-      ddx=t.project(Point(1,0,0))-dmin;
-      ddy=t.project(Point(0,1,0))-dmin;
-      ddz=t.project(Point(0,0,1))-dmin;
-      tex->get_dimensions(nx,ny,nz);
-      ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
-      if (!b.inside(control_widget->GetPosition())) {
-	control_widget->SetPosition(Interpolate(b.min(), b.max(), 0.5));
-	control_widget->SetScale(dv.length()/80.0);
+      Transform t(tex_->get_field_transform());
+      dmin_=t.project(Point(0,0,0));
+      ddx_=t.project(Point(1,0,0))-dmin_;
+      ddy_=t.project(Point(0,1,0))-dmin_;
+      ddz_=t.project(Point(0,0,1))-dmin_;
+      tex_->get_dimensions(nx,ny,nz);
+      ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
+      if (!b.inside(control_widget_->GetPosition())) {
+	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
+	control_widget_->SetScale(dv.length()/80.0);
       }
-      volren->SetVol( tex.get_rep() );
-      volren->SetControlPoint(tex->get_field_transform().unproject(control_widget->ReferencePoint()));
+      volren_->SetVol( tex_.get_rep() );
+      volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     }
 
-    volren->SetInterp( bool(interp_mode.get()));
-    volren->SetColorMap( cmap.get_rep() );
+    volren_->SetInterp( bool(interp_mode_.get()));
+    volren_->SetColorMap( cmap.get_rep() );
   }
  
   //AuditAllocator(default_allocator);
-  if(drawX.get() || drawY.get() || drawZ.get()){
-    if( control_id == -1 ){
-      GeomObj *w=control_widget->GetWidget();
-      control_id = ogeom->addObj( w, control_name, &control_lock);
+  if(drawX_.get() || drawY_.get() || drawZ_.get()){
+    if( control_id_ == -1 ){
+      GeomObj *w=control_widget_->GetWidget();
+      control_id_ = ogeom_->addObj( w, control_name, &control_lock_);
     }
   } else {
-    if( control_id != -1){
-      ogeom->delObj( control_id, 0);
-      control_id = -1;
+    if( control_id_ != -1){
+      ogeom_->delObj( control_id_, 0);
+      control_id_ = -1;
     }
   }  
 
-  volren->SetX(drawX.get());
-  volren->SetY(drawY.get());
-  volren->SetZ(drawZ.get());
-  volren->SetView(drawView.get());
+  volren_->SetX(drawX_.get());
+  volren_->SetY(drawY_.get());
+  volren_->SetZ(drawZ_.get());
+  volren_->SetView(drawView_.get());
+  cyl_active_.reset();
+  draw_phi0_.reset();
+  phi0_.reset();
+  draw_phi1_.reset();
+  phi1_.reset();
+  volren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
+			   draw_phi1_.get(), phi1_.get());
   //AuditAllocator(default_allocator);
 
-  ogeom->flushViews();				  
+  ogeom_->flushViews();				  
   //AuditAllocator(default_allocator);
 }
 

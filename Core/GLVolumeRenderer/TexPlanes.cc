@@ -60,62 +60,102 @@ TexPlanes::draw()
     Point viewPt = viewRay.origin();
     Point mid = b[0] + (b[7] - b[0])*0.5;
     Point c(volren->control_point());
+    bool draw_z = false;
 
-    if(volren->drawView()){
-      t = intersectParam(-viewRay.direction(), volren->control_point(), viewRay);
-      b.ComputePoly(viewRay, t, poly);
-      draw(b, poly);
-    } else {
-
-      if(volren->drawX()){
-	Point o(b[0].x(), mid.y(), mid.z());
-	Vector v(c.x() - o.x(), 0,0);
-	if(c.x() > b[0].x() && c.x() < b[7].x() ){
-	  if( viewPt.x() > c.x() ){
-	    o.x(b[7].x());
-	    v.x(c.x() - o.x());
-	  } 
-	  Ray r(o,v);
-	  t = intersectParam(-r.direction(), volren->control_point(), r);
-	  b.ComputePoly( r, t, poly);
-	  draw( b, poly );
-	}
+    if (volren->draw_cyl()) {
+      const double to_rad = M_PI / 180.0;
+      Point cyl_mid = bounding_box_.min() + bounding_box_.diagonal() * 0.5;
+      if(volren->draw_phi_0()) {
+	Vector phi(1.,0,0);
+	
+	Transform rot;
+	rot.pre_rotate(volren->phi0() * to_rad, Vector(0,0,1.));
+	phi = rot.project(phi);
+      
+	Ray r(cyl_mid, phi);
+	t = intersectParam(-r.direction(), volren->control_point(), r);
+	b.ComputePoly( r, t, poly);
+	draw( b, poly );
       }
-      if(volren->drawY()){
-	Point o(mid.x(), b[0].y(), mid.z());
-	Vector v(0, c.y() - o.y(), 0);
-	if(c.y() > b[0].y() && c.y() < b[7].y() ){
-	  if( viewPt.y() > c.y() ){
-	    o.y(b[7].y());
-	    v.y(c.y() - o.y());
-	  } 
-	  Ray r(o,v);
-	  t = intersectParam(-r.direction(), volren->control_point(), r);
-	  b.ComputePoly( r, t, poly);
-	  draw( b, poly );
-	}
+      if(volren->draw_phi_1()) {
+	Vector phi(1.,0,0);
+	
+	Transform rot;
+	rot.pre_rotate(volren->phi1() * to_rad, Vector(0,0,1.));
+	phi = rot.project(phi);
+      
+	Ray r(cyl_mid, phi);
+	t = intersectParam(-r.direction(), volren->control_point(), r);
+	b.ComputePoly( r, t, poly);
+	draw( b, poly );
       }
       if(volren->drawZ()){
-	Point o(mid.x(), mid.y(), b[0].z());
-	Vector v(0, 0, c.z() - o.z());
-	if(c.z() > b[0].z() && c.z() < b[7].z() ){
-	  if( viewPt.z() > c.z() ){
-	    o.z(b[7].z());
-	    v.z(c.z() - o.z());
-	  } 
-	  Ray r(o,v);
-	  t = intersectParam(-r.direction(), volren->control_point(), r);
-	  b.ComputePoly( r, t, poly);
-	  draw( b, poly );
+	draw_z = true;
+      }
+
+    } else {
+
+      if(volren->drawView()){
+	t = intersectParam(-viewRay.direction(), volren->control_point(), viewRay);
+	b.ComputePoly(viewRay, t, poly);
+	draw(b, poly);
+      } else {
+      
+	if(volren->drawX()){
+	  Point o(b[0].x(), mid.y(), mid.z());
+	  Vector v(c.x() - o.x(), 0,0);
+	  if(c.x() > b[0].x() && c.x() < b[7].x() ){
+	    if( viewPt.x() > c.x() ){
+	      o.x(b[7].x());
+	      v.x(c.x() - o.x());
+	    } 
+	    Ray r(o,v);
+	    t = intersectParam(-r.direction(), volren->control_point(), r);
+	    b.ComputePoly( r, t, poly);
+	    draw( b, poly );
+	  }
+	}
+	if(volren->drawY()){
+	  Point o(mid.x(), b[0].y(), mid.z());
+	  Vector v(0, c.y() - o.y(), 0);
+	  if(c.y() > b[0].y() && c.y() < b[7].y() ){
+	    if( viewPt.y() > c.y() ){
+	      o.y(b[7].y());
+	      v.y(c.y() - o.y());
+	    } 
+	    Ray r(o,v);
+	    t = intersectParam(-r.direction(), volren->control_point(), r);
+	    b.ComputePoly( r, t, poly);
+	    draw( b, poly );
+	  }
+	}
+	if(volren->drawZ()){
+	  draw_z = true;
 	}
       }
     }
+    
+    if (draw_z) {
+      Point o(mid.x(), mid.y(), b[0].z());
+      Vector v(0, 0, c.z() - o.z());
+      if(c.z() > b[0].z() && c.z() < b[7].z() ){
+	if( viewPt.z() > c.z() ){
+	  o.z(b[7].z());
+	  v.z(c.z() - o.z());
+	} 
+	Ray r(o,v);
+	t = intersectParam(-r.direction(), volren->control_point(), r);
+	b.ComputePoly( r, t, poly);
+	draw( b, poly );  
+      }
+    }
+    
   }
 }
+  
 
-
-void
-TexPlanes::draw(Brick& b, Polygon* poly)
+  void
+    TexPlanes::draw(Brick& b, Polygon* poly)
 {
   vector<Polygon *> polys;
   polys.push_back( poly );
@@ -128,8 +168,8 @@ TexPlanes::draw(Brick& b, Polygon* poly)
   disableTexCoords();
 }
 
-void
-TexPlanes::setAlpha( const Brick&)
+  void
+    TexPlanes::setAlpha( const Brick&)
 {
   glColor4f(1,1,1,1);
 }

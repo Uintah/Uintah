@@ -19,6 +19,7 @@
 #define GLVOLRENSTATE_H
 
 #include <Core/Geometry/Ray.h>
+#include <Core/Geometry/BBox.h>
 #include <vector>
 #include <GL/glu.h>
 
@@ -80,7 +81,7 @@ public:
   void Reload(){reload = (unsigned char *)1;}
   void NewBricks(){ newbricks_ = true; }
 
-  
+  void set_bounding_box(BBox &bb) { bounding_box_ = bb; }
 protected:
 
   virtual void setAlpha(const Brick& brick) = 0;
@@ -100,6 +101,8 @@ protected:
   vector<GLuint> textureNames;
   unsigned char* reload;
   bool newbricks_;
+
+  BBox bounding_box_;
 };
 
 } // End namespace SCIRun
