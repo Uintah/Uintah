@@ -296,7 +296,7 @@ HexMeshCuthillMcKee::execute()
     HexVolMesh::Node::array_type neighbors;
     bwmesh->get_neighbors(neighbors, *nbi);
     for (unsigned int i = 0; i < neighbors.size(); i++) {
-      new_bw = abs((int)(*nbi) - (int)(neighbors[i]));
+      new_bw = abs(*nbi - (int)neighbors[i]);
       if (new_bw > new_max_half_bw) new_max_half_bw = new_bw;
     }    
     ++nbi;
