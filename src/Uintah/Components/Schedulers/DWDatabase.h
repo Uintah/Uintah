@@ -11,6 +11,9 @@
 
 namespace Uintah {
    using SCICore::Exceptions::InternalError;
+
+   using std::vector;
+   using std::iostream;
    
    /**************************************
      
@@ -54,9 +57,9 @@ public:
    VarType* get(const VarLabel* label, int matlindex,
 		const Patch* patch) const;
    void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
-   void print(std::ostream&);
+   void print(ostream&);
 private:
-   typedef std::vector<VarType*> dataDBtype;
+   typedef vector<VarType*> dataDBtype;
 
    struct PatchRecord {
       const Patch* patch;
@@ -66,7 +69,7 @@ private:
       ~PatchRecord();
    };
 
-   typedef std::map<const Patch*, PatchRecord*> patchDBtype;
+   typedef map<const Patch*, PatchRecord*> patchDBtype;
    struct NameRecord {
       const VarLabel* label;
       patchDBtype patches;
@@ -75,7 +78,7 @@ private:
       ~NameRecord();
    };
 
-   typedef std::map<const VarLabel*, NameRecord*, VarLabel::Compare> nameDBtype;
+   typedef map<const VarLabel*, NameRecord*, VarLabel::Compare> nameDBtype;
    nameDBtype names;
 
    DWDatabase(const DWDatabase&);
@@ -282,7 +285,7 @@ void DWDatabase<VarType>::print(std::ostream& out)
       for(patchDBtype::const_iterator patchiter = nr->patches.begin();
 	  patchiter != nr->patches.end();patchiter++){
 	 PatchRecord* rr = patchiter->second;
-	 out <<  "  " << rr->patch << '\n';
+	 out <<  "  " << *(rr->patch) << '\n';
 	 for(int i=0;i<(int)rr->vars.size();i++){
 	    if(rr->vars[i]){
 	       cerr << "    Material " << i << '\n';
@@ -296,6 +299,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.15  2000/09/27 02:07:18  dav
+// cosmetics and printout fix
+//
 // Revision 1.14  2000/09/25 20:43:44  sparker
 // Quiet g++ warnings
 //
