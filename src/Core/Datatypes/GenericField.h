@@ -12,6 +12,7 @@
 #ifndef Datatypes_GenericField_h
 #define Datatypes_GenericField_h
 
+#include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/TypeName.h>
@@ -65,6 +66,8 @@ public:
   virtual interp_type* query_interpolate() const;
 //  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
+  virtual bool is_scalar() const { return ::SCIRun::is_scalar<value_type>(); }
+
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::node_index i) const
   { val = fdata_[i]; return true; }
@@ -115,9 +118,6 @@ private:
   mesh_handle_type             mesh_;
   //! Data container.
   fdata_type                   fdata_;
-  //! minmax
-//  bool has_minmax;
-//  double min_, max_;
 }; 
 
 //! Virtual interface.

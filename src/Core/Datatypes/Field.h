@@ -38,8 +38,8 @@ public:
   static  PersistentTypeID type_id;
   //! All instantiable classes need to define this.
   virtual const string get_type_name(int n = -1) const = 0;
+  virtual bool is_scalar() const = 0;
 
-  
 protected:
 
   //! Where data is associated.
