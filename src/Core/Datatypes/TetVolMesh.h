@@ -535,7 +535,7 @@ protected:
 #endif
   Edge::eqEdge		edge_eq_;
   Edge::HalfEdgeSet	all_edges_;
-#if defined(__digital__) || defined(_AIX)
+#if defined(__digital__) || defined(_AIX) || defined(__ECC)
   mutable
 #endif
   Edge::EdgeSet		edges_;
@@ -548,7 +548,7 @@ protected:
 #endif
   Face::eqFace		face_eq_;
   Face::HalfFaceSet	all_faces_;
-#if defined(__digital__) || defined(_AIX)
+#if defined(__digital__) || defined(_AIX) || defined(__ECC)
   mutable
 #endif
   Face::FaceSet		faces_;
