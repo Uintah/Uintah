@@ -48,6 +48,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/BallMath.cc \
 	$(SRCDIR)/Light.cc \
 	$(SRCDIR)/Group.cc \
+	$(SRCDIR)/DpyGui.cc \
 	$(SRCDIR)/Gui.cc \
 	$(SRCDIR)/Glyph.cc \
 	$(SRCDIR)/Rect.cc \
