@@ -9,6 +9,7 @@ SRCDIR   := Uintah/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/GridVisualizer.cc \
+	$(SRCDIR)/PatchVisualizer.cc \
 	$(SRCDIR)/NodeHedgehog.cc \
 	$(SRCDIR)/TimestepSelector.cc \
 	$(SRCDIR)/ScalarFieldExtractor.cc \
@@ -36,6 +37,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.13  2001/02/02 19:48:53  bigler
+# Added PatchVisualizer
+#
 # Revision 1.12  2000/11/21 21:52:39  witzel
 # Added TensorFieldOperator which replaces InPlaneEigenEvaluator
 # and TensorElementExtractor as well as adding other tensor operations.
