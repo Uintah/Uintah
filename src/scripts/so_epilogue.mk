@@ -78,6 +78,8 @@ CLEANOBJS := $(CLEANOBJS) $(OBJS)
 # Try to prevent user error
 SRCS := INVALID_SRCS.cc
 
+ALLOBJS := $(ALLOBJS) $(OBJS)
+
 ifneq ($(GENHDRS),)
 ALLGEN := $(ALLGEN) $(GENHDRS)
 $(OBJS): $(GENHDRS)
