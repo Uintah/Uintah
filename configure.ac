@@ -156,6 +156,7 @@ INIT_PACKAGE_CHECK_VARS()
 ## sh pwd can print the wd with symbolic links depending on
 ## how you got to that directory, and thus has the potential
 ## to print different pwd's for the same wd, and change files
+## like sci_defs.h
 
 sci_pwd=""
 for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
@@ -492,7 +493,7 @@ SCI_ARG_ENABLE(chromium,
   [enable_chromium=${enable_chromium='no'}])
 SCI_ARG_ENABLE(ati-card-fix,
   AC_HELP_STRING(--enable-ati-card-fix,
-                 Enable the ati car fix to repair bad polygons),
+                 Enable the ati car fix to repair bad polygons - Deprecated - use SCIRUN_DRAWARRAYS_DISABLE environment variable - see scirunrc file),
   [enable_ati_card_fix="$enableval"],
   [enable_ati_card_fix=${enable_ati_card_fix='no'}])
 SCI_ARG_ENABLE(no-dynamic-cast,
@@ -515,9 +516,11 @@ AC_SUBST(DEF_CHROMIUM)
 sci_defs_files="$sci_defs_files include/sci_defs/chromium_testdefs.h"
 
 if test "$enable_ati_card_fix" = "yes"; then
-   DEF_NEED_ATI_CARD_FIX="#define NEED_ATI_CARD_FIX 1"
+   AC_MSG_WARN("The ATI card hack is no longer controlled by configure.")
+   AC_MSG_WARN("You can turn it on/off by setting the environment variable")
+   AC_MSG_WARN("SCIRUN_DRAWARRAYS_DISABLE to true.  This can be done either")
+   AC_MSG_ERROR("in your environment or in your .scirunrc file.)
 fi
-AC_SUBST(DEF_NEED_ATI_CARD_FIX)
 
 if test "$enable_no_dynamic_cast" = "yes"; then
    DEF_NO_DYNAMIC_CAST="#define NO_DYNAMIC_CAST 1"
@@ -1997,7 +2000,7 @@ else
   fi 
 fi
 
-SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
 
 # Now check for the correct version.
 if test "$HAVE_PNG" = "yes"; then
@@ -2040,6 +2043,24 @@ EOF
     break
 fi
  
+if test "$HAVE_PNG" = "no"; then
+  # Try looking in a sci specific location
+  BASE_LIB_PATH(png_lib_dir,/usr/sci/local)
+
+  SCI_TRY_LINK(PNG,png library and headers (SCI),png.h,/usr/sci/local/include,png,
+               $png_lib_dir,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
+else
+  if test "$_sci_optional" = "specific"; then
+       # verify that it was found in the location requested.
+       if test ! -e $with_png/lib/libpng.so &&
+          test ! -e $with_png/lib/libpng.a &&
+          test ! -e $with_png/lib/libpng.dylib; then
+            echo
+            AC_MSG_ERROR(Found libpng but not in requested directory: $with_png/lib)
+       fi
+    fi
+fi
+
 if test "$with_png" && test ! "$DEF_PNG"; then
   echo
   AC_MSG_ERROR(One or more of the png components is missing.)
@@ -2216,12 +2237,16 @@ if test "$with_blas" && test "$with_atlas"; then
   AC_MSG_ERROR(You cannot use both --with-blas and --with-atlas.)
 fi
 
-if test "$with_atlas"; then
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_atlas" = "yes"; then
+  _sci_optional=required
+elif test "$with_atlas"; then
   _sci_lib="$with_atlas/lib"
   _sci_inc="$with_atlas/include"
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
+  _sci_optional=specific
 fi
 
 case $host in
@@ -2229,12 +2254,12 @@ case $host in
      if test "$with_atlas" && test "$with_atlas" != yes ; then
        AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
      fi
-     SCI_TRY_LINK(BLAS,atlas version oflibraries and headers (OSX),vecLib/cblas.h,
-                  -faltivec,,,-framework vecLib,,optional)
+     SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
+                  -faltivec,,,-framework vecLib,,$_sci_optional)
      ;;
    *)
      SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
-             $_sci_inc,cblas f77blas atlas f2c,$_sci_lib,$F_LIB_FLAG,,optional)
+             $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_FLAG,,$_sci_optional)
      ;;
 esac
 
@@ -2247,23 +2272,20 @@ if test "$HAVE_BLAS" = "yes"; then
   sci_required_blas=no
 fi
 
+
 ##  --  search for blas stuff  -------------------------------------------
 
-# if HAVE_BLAS is yes, then atlas has been found
-
-# DAV, FIX ME
-# _sci_optional=optional
-#if test "$sci_required_blas" = "yes" ; then
-#   _sci_optional=required
-#fi
+_sci_lib=
+_sci_inc=
 
 if test "$HAVE_BLAS" != "yes"; then
-  if test "$with_blas"; then
+  # if HAVE_BLAS is yes at this point, then atlas has been found and we
+  # don't want to check for blas.
+
+  if test "$with_blas" && test "$with_blas" != "yes"; then
     _sci_lib="$with_blas/lib"
     _sci_inc="$with_blas/include"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_specific=yes
   fi
   
   case $host in
@@ -2276,12 +2298,15 @@ if test "$HAVE_BLAS" != "yes"; then
                       cxml,$_sci_lib,$F_LIB_FLAG,,required)
        ;;
     *)
+       # Can't use the "specific" key word as we are testing for a number
+       # of different configurations.
        SCI_TRY_LINK(BLAS,blas and cblas libraries-1,cblas.h,
                     $_sci_inc,cblas blas,$_sci_lib,$F_LIB_FLAG,,optional)
        if test "$HAVE_BLAS" = "yes"; then
           HAVE_CBLAS=yes
 	  AC_SUBST(HAVE_CBLAS)
 	  DEF_CBLAS="#define HAVE_CBLAS 1"
+	  AC_SUBST(DEF_CBLAS)
        else
           SCI_TRY_LINK(BLAS,blas and cblas libraries-2,cblas.h,
              $_sci_inc,blas,$_sci_lib,$F_LIB_FLAG,,optional)
@@ -2289,11 +2314,17 @@ if test "$HAVE_BLAS" != "yes"; then
              HAVE_CBLAS=yes
 	     AC_SUBST(HAVE_CBLAS)
 	     DEF_CBLAS="#define HAVE_CBLAS 1"
+	     AC_SUBST(DEF_CBLAS)
           else
              SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
              if test "$HAVE_BLAS" = "no"; then
 	        SCI_TRY_LINK(BLAS,optional fblas library,,,
 			     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+             else
+                # Verify it was in the right spot
+                if test "$_sci_specific" = "yes"; then
+                  SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                fi
              fi
 	  fi
        fi
@@ -2312,6 +2343,7 @@ if test "$HAVE_BLAS" != "yes"; then
 
 fi # end sci_required_blas
 
+# these are set above by atlas check if atlas check succeeded
 AC_SUBST(HAVE_BLAS)
 AC_SUBST(HAVE_CBLAS)
 AC_SUBST(INC_BLAS_H)
@@ -2740,6 +2772,8 @@ if test "$sci_required_insight" = "yes"; then
     if ! test "$HAVE_PNG" = "yes"; then
       echo "note: using libitkpng"
       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
+    else
+      INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG"
     fi
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
@@ -3573,7 +3607,6 @@ AC_SUBST(INC_VDT_H)
 AC_SUBST(VDT_LIB_FLAG)
 AC_SUBST(VDT_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/vdt_testdefs.h"
-
 
 ##  --  search for hypre stuff  ------------------------------------------
 
