@@ -470,13 +470,13 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     {
-    old_dw->getCopy(EnthalpyVars.temperature, d_lab->d_tempINLabel, 
+    old_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     old_dw->get(constEnthalpyVars.cp, d_lab->d_cpINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
     else {
-    new_dw->getCopy(EnthalpyVars.temperature, d_lab->d_tempINLabel, 
+    new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(constEnthalpyVars.cp, d_lab->d_cpINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
