@@ -302,7 +302,7 @@ HexMeshCuthillMcKee::execute()
 
   msgStream_ << "Bandwidth after re-ordering: "<<new_max_half_bw*2+1<<"\n";
 
-  *(PropertyManager *)bwfield = *(PropertyManager *)hvfield;
+  bwfield->copy_properties(hvfield);
   bwfieldH = bwfield;
   ofp->send(bwfieldH);
 }

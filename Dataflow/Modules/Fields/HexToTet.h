@@ -189,7 +189,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   
   TetVolField<typename FSRC::value_type> *tvfield = 
     scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->data_at());
-  *(PropertyManager *)tvfield = *(PropertyManager *)hvfield;
+  tvfield->copy_properties(hvfield);
   dstH = tvfield;
 
   typename FSRC::value_type val;
@@ -322,7 +322,7 @@ LatToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   
   TetVolField<typename FSRC::value_type> *tvfield = 
     scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->data_at());
-  *(PropertyManager *)tvfield = *(PropertyManager *)hvfield;
+  tvfield->copy_properties(hvfield);
   dstH = tvfield;
 
   typename FSRC::value_type val;

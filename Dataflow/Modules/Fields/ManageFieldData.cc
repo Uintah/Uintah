@@ -205,8 +205,7 @@ ManageFieldData::execute()
     }
 
     // Copy the properties.
-    *((PropertyManager *)(result_field.get_rep())) =
-      *((PropertyManager *)(ifieldhandle.get_rep()));
+    result_field->copy_properties(ifieldhandle.get_rep());
 
     // Copy units property from the matrix.
     string units;

@@ -773,15 +773,14 @@ ShowMatrix::get_matrix_data(MatrixHandle mh)
     std::ostringstream buffer;
     buffer.precision(2);
     grid_text->set_font_index(3);
-    PropertyManager *pm = mh.get_rep();
     string units;
     double xstart = 0.0;
     double xend = 1.0;
-    if (pm && pm->get_property(string("time-units"), units)) {
+    if (mh.get_rep() && mh->get_property(string("time-units"), units)) {
       Point p(-0.1, -0.1, -0.1);
       grid_text->add(units, p);
     }  
-    if (pm && pm->get_property(string("time-start"), xstart)) {
+    if (mh.get_rep() && mh->get_property(string("time-start"), xstart)) {
       
       buffer.str("");
       buffer << xstart;

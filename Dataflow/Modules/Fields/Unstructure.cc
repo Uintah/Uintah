@@ -126,8 +126,7 @@ Unstructure::execute()
 
       if (ofieldhandle_.get_rep())
       {
-	*((PropertyManager *)(ofieldhandle_.get_rep())) =
-	  *((PropertyManager *)(ifieldhandle.get_rep()));
+	ofieldhandle_->copy_properties(ifieldhandle.get_rep());
       }
     }
   }

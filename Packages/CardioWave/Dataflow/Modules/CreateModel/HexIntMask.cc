@@ -272,7 +272,7 @@ HexIntMask::execute()
     if (elemmap.size() > 0)
     {
       ofield = scinew HexVolField<int>(clipped, Field::CELL);
-      *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
+      ofield->copy_properties(hvfield);
       
       int val;
       for (unsigned int i = 0; i < elemmap.size(); i++)
@@ -378,7 +378,7 @@ HexIntMask::execute()
     if (nodemap.size() > 0)
     {
       ofield = scinew HexVolField<int>(clipped, Field::NODE);
-      *(PropertyManager *)ofield = *(PropertyManager *)hvfield;
+      ofield->copy_properties(hvfield);
       
       int val;
       for (unsigned int i = 0; i < nodemap.size(); i++)

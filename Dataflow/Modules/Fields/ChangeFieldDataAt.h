@@ -68,7 +68,7 @@ ChangeFieldDataAtAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
   FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), at);
   fout->resize_fdata();
 
-  *((PropertyManager *)fout) = *(PropertyManager *)fsrc;
+  fout->copy_properties(fsrc);
 
   same_value_type_p =
     (get_type_description((typename FSRC::value_type *)0)->get_name() ==
