@@ -1,6 +1,6 @@
-#include "AdvectionFactory.h"
-#include "FirstOrderAdvector.h"
-#include "FirstOrderCEAdvector.h"
+#include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
+#include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderCEAdvector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>

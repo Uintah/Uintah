@@ -1,6 +1,6 @@
 //  ICEMaterial.cc
-#include "ICE.h"
-#include "ICEMaterial.h"
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
