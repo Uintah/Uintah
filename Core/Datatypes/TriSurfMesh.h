@@ -142,7 +142,7 @@ public:
   void add_triangle_unconnected(const Point &p0, const Point &p1,
 				const Point &p2);
 
-  void connect(double err = 1.0e-3);
+  void connect(double err = 1.0e-8);
 
 
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,

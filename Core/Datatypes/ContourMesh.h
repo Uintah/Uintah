@@ -108,7 +108,7 @@ public:
   ContourMesh() {}
   ContourMesh(const ContourMesh &copy) 
     : nodes_(copy.nodes_), edges_(copy.edges_) {}
-  virtual MeshBase *clone() { return new ContourMesh(*this); }
+  virtual ContourMesh *clone() { return new ContourMesh(*this); }
   virtual ~ContourMesh() {}
 
   node_iterator node_begin() const { return 0; }
@@ -168,6 +168,8 @@ public:
 
   void get_point(Point &result, node_index idx) const
     { get_center(result,idx); }
+  void set_point(const Point &point, node_index index)
+    { nodes_[index] = point; }
 
   //! use these to build up a new contour mesh
   node_index add_node(Point p) 

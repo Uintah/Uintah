@@ -75,7 +75,7 @@ public:
   PointCloudMesh() {}
   PointCloudMesh(const PointCloudMesh &copy) 
     : points_(copy.points_) {}
-  virtual MeshBase *clone() { return new PointCloudMesh(*this); }
+  virtual PointCloudMesh *clone() { return new PointCloudMesh(*this); }
   virtual ~PointCloudMesh() {}
 
   node_iterator node_begin() const { return 0; }
