@@ -11,8 +11,6 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-
-
 template <class xceptT, class proxyT>
 xceptT* _unmarshal_exception(::SCIRun::Message* message) {
 
@@ -66,4 +64,5 @@ void _marshal_exception(::SCIRun::Message* message, xceptT* _e_ptr, int _x_flag)
   message->sendMessage(0);
   message->destroyMessage();
 }
+
 

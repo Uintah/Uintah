@@ -75,6 +75,12 @@ PIDL::rank(0);
 int
 PIDL::size(1);
 
+Object::pointer
+PIDL::optr(NULL);
+
+bool
+PIDL::sampleProxy(false);
+
 void
 PIDL::initialize(int rank,int size)
 {
@@ -114,6 +120,12 @@ PIDL::initialize(int rank,int size)
 void
 PIDL::finalize()
 {
+  if(sampleProxy) {
+#ifdef HAVE_MPI
+    if(PIDL::size > 1) { ::std::cerr << "YOYO\n"; optr->getException(); }
+    optr->_deleteReference();
+#endif
+  }
   switch (comm_type) {
   case COMM_SOCKET:
     theDataTransmitter->exit();

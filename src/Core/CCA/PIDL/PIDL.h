@@ -31,7 +31,7 @@
 #ifndef CCA_PIDL_PIDL_h
 #define CCA_PIDL_PIDL_h
 
-#include "Object.h"
+#include <Core/CCA/PIDL/Object.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -53,6 +53,18 @@ KEYWORDS
 DESCRIPTION
    A class to encapsulate several static methods for PIDL.
 ****************************************/
+
+  //Forward declaration of template
+  /*
+  template <class Tptr>
+  class ProxySample;
+  
+  template <class Tptr>
+  void ProxySample<Tptr>::setProxySample(Tptr aptr);
+  
+  template <class Tptr>
+  void ProxySample<Tptr>::callgetException();
+  */
 
   class DataTransmitter;
   class PIDL {
@@ -114,6 +126,13 @@ DESCRIPTION
     // into these variables. Set by PIDL::initialize().
     static int rank;
     static int size;
+
+    //////////
+    // Used to save one proxy in order to call get exception
+    // upon PIDL::finalize()
+    static bool sampleProxy;
+    //static ProxySample<Object::pointer>* ps;
+    static Object::pointer optr;
 
   protected:
   private:

@@ -33,6 +33,7 @@
 
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
+#include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Exceptions/InternalError.h>
 
 // To get rid of:
@@ -78,6 +79,12 @@ pidl_cast(const F& ptr)
     ptr_type* p=dynamic_cast<ptr_type*>(result);
     if(!p)
       throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
+#ifdef HAVE_MPI
+    if(!(SCIRun::PIDL::sampleProxy)) {
+      SCIRun::PIDL::optr = T(p);
+      SCIRun::PIDL::sampleProxy = true;
+    } 
+#endif
     return T(p);
   } else {
     return T(0);
