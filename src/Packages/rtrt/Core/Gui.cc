@@ -37,6 +37,7 @@ static Transform prev_trans;
 
 #define SENSITIVITY_SPINNER_ID    60
 #define FOV_SPINNER_ID            61
+#define DEPTH_SPINNER_ID          62
 
 #define LIGHT_LIST_ID            100
 #define LIGHTS_BUTTON_ID         101
@@ -67,6 +68,7 @@ static Transform prev_trans;
 
 #define TOGGLE_GUI                 1
 #define TOGGLE_HOT_SPOTS           2
+#define QUIT_MENU_ID               3
 
 // Defines how much you can manually increase/decrease movement
 // controls sensitivity.
@@ -101,6 +103,13 @@ Gui::handleMenuCB( int item )
     break;
   case TOGGLE_GUI:
     activeGui->toggleGui();
+    break;
+  case QUIT_MENU_ID:
+    // Stop threads...
+    activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
+    // Stop Glut mainloop.
+    usleep(1000);
+    Thread::exitAll( 0 );
     break;
   }
 }
@@ -874,8 +883,10 @@ Gui::createMenus( int winId )
 
   int modemenu = glutCreateMenu( Gui::handleMenuCB );
 
-  glutAddMenuEntry("Toggle Gui", TOGGLE_GUI);
-  glutAddMenuEntry("Toggle Hot Spots", TOGGLE_HOT_SPOTS);
+  glutAddMenuEntry( "Toggle Gui", TOGGLE_GUI );
+  glutAddMenuEntry( "Toggle Hot Spots", TOGGLE_HOT_SPOTS );
+  glutAddMenuEntry( "----------------", -1);
+  glutAddMenuEntry( "Quit", QUIT_MENU_ID );
   //glutAddSubMenu("Texture mode", modemenu);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
@@ -1003,7 +1014,7 @@ Gui::createMenus( int winId )
 			   &(activeGui->fovValue_), FOV_SPINNER_ID,
 			  updateFovCB );
   activeGui->fovSpinner_->set_int_limits( 20, 150 );
-  activeGui->fovSpinner_->set_speed( 1.0 );
+  activeGui->fovSpinner_->set_speed( 0.1 );
 
   // Other Controls
   GLUI_Panel * otherControls = activeGui->mainWindow->
@@ -1015,8 +1026,17 @@ Gui::createMenus( int winId )
   // ...This probably goes to the objects window...
   activeGui->mainWindow->add_button_to_panel(otherControls,"Toggle Materials");
 
+  // 
+  activeGui->depthValue_ = 2;
+  GLUI_Spinner * depthSpinner = activeGui->mainWindow->
+    add_spinner_to_panel( display_panel, "Ray Depth", GLUI_SPINNER_INT, 
+			  &(activeGui->depthValue_), DEPTH_SPINNER_ID, 
+			  updateDepthCB );
+  depthSpinner->set_int_limits( 0, 12 );
+  depthSpinner->set_speed( 0.1 );
+
   /////////////////////////////////////////////////////////
-  // Buttons
+  // Route/Light/Objects Window Buttons
   //
 
   activeGui->mainWindow->
@@ -1080,6 +1100,12 @@ Gui::updateFovCB( int /*id*/ )
 {
   activeGui->camera_->set_fov( activeGui->fovValue_ );
   activeGui->camera_->setup();
+}
+
+void
+Gui::updateDepthCB( int /*id*/ )
+{
+  activeGui->priv->maxdepth = activeGui->depthValue_;
 }
 
 void

@@ -129,6 +129,7 @@ private:
   GLUI_Spinner  * fovSpinner_;
 
   int             fovValue_;
+  int             depthValue_;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -215,6 +216,8 @@ private:
   static void updateRotateSensitivityCB( int id );
   static void updateTranslateSensitivityCB( int id );
   static void updateFovCB( int id );
+
+  static void updateDepthCB( int id );
 
   ////////////////////////////////////////////////////////////////
 
