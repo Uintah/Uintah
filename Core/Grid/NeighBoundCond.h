@@ -34,17 +34,18 @@ WARNING
   
 ****************************************/
 
-   class NeighBoundCond : public BoundCondBase {
-   public:
-      NeighBoundCond() : BoundCondBase("Neighbor") {}; 
-      NeighBoundCond(ProblemSpecP&) {};
-      virtual ~NeighBoundCond() {};
-      virtual NeighBoundCond* clone() {return new NeighBoundCond(*this);};
-
-   private:
+  class NeighBoundCond : public BoundCondBase {
+  public:
+    NeighBoundCond() : BoundCondBase("Neighbor") {}; 
+    NeighBoundCond(ProblemSpecP&) {};
+    virtual ~NeighBoundCond() {};
+    virtual NeighBoundCond* clone() {return new NeighBoundCond(*this);};
+    virtual string getKind() const { return "";};
+      
+  private:
 #if 0
-      NeighBoundCond(const NeighBoundCond&);
-      NeighBoundCond& operator=(const NeighBoundCond&);
+    NeighBoundCond(const NeighBoundCond&);
+    NeighBoundCond& operator=(const NeighBoundCond&);
 #endif
       
      

@@ -40,7 +40,7 @@ WARNING
       NoneBoundCond(ProblemSpecP&){};
       virtual ~NoneBoundCond() {};
       virtual NoneBoundCond* clone() {return new NoneBoundCond(*this);};
-               
+      virtual string getKind() const { return "";}
    private:
 #if 0
       NoneBoundCond(const NoneBoundCond&);
