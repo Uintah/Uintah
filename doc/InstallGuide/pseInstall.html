@@ -23,13 +23,14 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       <LI><A HREF="#RunningSCIRun">Running SCIRun</A></LI>
       <LI><A HREF="#AdditionalDocs">Additional Documentation</A></LI>
       <LI><A HREF="#GettingHelp">Getting Help</A></LI>
+      <LI><A HREF="#Gotchas">Known Issues</A></LI>
       <LI><A HREF="#Appendix">Appendix</A></LI>
 </ol>
 
 <br><br><br>
 <p class="head"><a name="Prerequisites">Prerequisites</a></p>
     <p class="firstpara">
-      Use of these documents requires experience with the SGI
+      Use of this document requires experience with the SGI
       Irix operating system and/or the Linux operating system.
       Knowledge of file systems, programming in C/C++, building
       software from tarball distributions and shell scripting will
@@ -327,9 +328,60 @@ http://www.cs.utah.edu/scirun_docs/doc</A>
       which version of SCIRun you have (SCIRun 1.0.0 alpha).
     </P>
 
-<br><br><br><p class="head"><a name="Appendix">Appendix</a></p>
+<br><br><br>
+<p class="head"><a name="Gotchas">Known Issues</a></p>
+  <p class="firstpara">
+    This section describes known issues with installing and building SCIRun.
+    It also includes solutions when available. 
+  </p>
 
-<br><br><br><p class="subhead"><a name="Obtain">Obtaining a copy of the SCIRun source
+<p class="subhead">Configuring SCIRun</p>
+  <p class="firstpara">
+    The configure script expects the OpenGL headers to live in /usr/include/GL
+    or /usr/X11R6/include/GL.
+    Some linux distributions have the OpenGL headers installed in
+    /usr/local/include/GL.  This is 
+    non-standard and should be corrected, as this may cause version
+    conflicts with other pieces of  
+    software located in /usr/local.
+  </p>
+
+<p class="subhead">Full source of Tcl and Tk required</p>
+  <p class="firstpara">
+    SCIRun currently requires the full source of Tcl and Tk to be installed.
+    This is required because SCIRun defines a few Tk widgets of it's own, and
+    needs some headers from the source that aren't included with typical
+    installations.  If your system already has the correct Tcl and Tk versions
+    installed, you will have to re-install (see above) in order to have the
+    sources included.
+  </p>
+
+<p class="subhead">Recommended linux distributions, processors and graphics 
+cards</p>
+  <p class="firstpara">
+    SCIRun has been successfully built on several versions of linux including
+    Mandrake 7.2, SuSE 7.0,
+    and Debian 2.2.x (stable and unstable).  It has also been successfully
+    installed (after much coaxing)
+    on Redhat systems.
+  </p>
+
+  <p class="firstpara">
+    SCIRun has been successfully installed on
+    single and dual processor Intel
+    machines, and on single processor AMD machines.
+  </p>
+
+  <p class="Firstpara">
+    SCIRun has only been able to successfully use NVIDIA GeForce and Quadro
+    graphics cards for hardware accelerated 3D OpenGL in XFree86 version 4.0.2
+    using the 0-9.6 drivers, on both Intel and AMD machines.
+  </p>
+
+<br><br><br>
+<p class="head"><a name="Appendix">Appendix</a></p>
+
+<p class="subhead"><a name="Obtain">Obtaining a copy of the SCIRun source
 tree</a></p>
     <p class="firstpara">
       If you have access to the SCIRun CVS repository (i.e. you are
