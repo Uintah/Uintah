@@ -33,13 +33,13 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/InterpolantTypes.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/Dispatch2.h>
-#include <Dataflow/Modules/Fields/InterpolantTypes.h>
 #include <iostream>
 #include <stdio.h>
 

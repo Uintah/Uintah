@@ -34,6 +34,7 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/Geom.c          	    \
         $(SRCDIR)/Image.cc		    \
         $(SRCDIR)/ImageMesh.cc		    \
+	$(SRCDIR)/InterpolantTypes.cc\
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
         $(SRCDIR)/Path.cc		    \

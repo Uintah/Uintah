@@ -33,7 +33,6 @@ SRCS     += \
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
-	$(SRCDIR)/InterpolantTypes.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
