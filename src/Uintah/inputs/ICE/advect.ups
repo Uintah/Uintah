@@ -98,7 +98,7 @@
                            <value> 0. </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Dirichlet">
-                           <value> [1.,1.,0.] </value>
+                           <value> [0.,0.,0.] </value>
                         </BCType>
 			<BCType label = "Temperature" var = "Dirichlet">
                            <value> 300. </value>
@@ -112,7 +112,7 @@
                            <value> 0. </value>
                         </BCType>
 			<BCType label = "Velocity" var = "Dirichlet">
-                           <value> [1.,1.,0.] </value>
+                           <value> [0.,0.,0.] </value>
                         </BCType>
 			<BCType label = "Temperature" var = "Dirichlet">
                            <value> 300. </value>
@@ -126,7 +126,7 @@
 	    <Box label="1">
 	    	<lower>       [1,1,1]     </lower>
 	    	<upper>       [2,2,2]   </upper>
-	       	<resolution>  [1,1,1]   </resolution>
+	       	<resolution>  [2,2,1]   </resolution>
                 <extraCells>  [1,1,1]	  </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
@@ -194,6 +194,10 @@
 	    <gamma>          1.4         </gamma>	    
 	    <velocity_field>0</velocity_field>
 	  </material>
+	  <exchange_coefficients>
+	     <momentum>	[0,0,0] </momentum>
+	     <heat>     [0,0,0]  </heat>
+	 </exchange_coefficients>
 	</ICE>	
     </MaterialProperties>
 	
