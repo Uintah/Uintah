@@ -82,149 +82,151 @@ WARNING
        endFace = zplus,
        numFaces // 6
      };
-
-      //////////
-      // Insert Documentation Here:
-      Vector dCell() const {
-	 // This will need to change for stretched grids
-	 return d_level->dCell();
-      }
-      
-      //////////
-      // Find the index of a cell contaning the given Point. 
-      bool findCell(const Point& pos, IntVector& ci) const;
-
-      //////////
-      // Find the 8 neighboring cell indexes according to a 
-      // given node index.
-      //    --tan
-      void findCellsFromNode( const IntVector& nodeIndex,
-                              IntVector cellIndex[8]) const;
-
-      //////////
-      // Find the 8 neighboring node indexes according to a 
-      // given cell index.
-      //    --tan
-      void findNodesFromCell( const IntVector& cellIndex,
-                               IntVector nodeIndex[8]) const;
-      
-      //////////
-      // Insert Documentation Here:
-      bool findCellAndWeights(const SCICore::Geometry::Point& pos,
-			      IntVector ni[8], double S[8]) const;
-
-      //////////
-      // Insert Documentation Here:
-      bool findCellAndShapeDerivatives
-			(const SCICore::Geometry::Point& pos,
+     
+     //////////
+     // Insert Documentation Here:
+     Vector dCell() const {
+       // This will need to change for stretched grids
+       return d_level->dCell();
+     }
+     
+     //////////
+     // Find the index of a cell contaning the given Point. 
+     bool findCell(const Point& pos, IntVector& ci) const;
+     
+     //////////
+     // Find the 8 neighboring cell indexes according to a 
+     // given node index.
+     //    --tan
+     void findCellsFromNode( const IntVector& nodeIndex,
+			     IntVector cellIndex[8]) const;
+     
+     //////////
+     // Find the 8 neighboring node indexes according to a 
+     // given cell index.
+     //    --tan
+     void findNodesFromCell( const IntVector& cellIndex,
+			     IntVector nodeIndex[8]) const;
+     
+     //////////
+     // Insert Documentation Here:
+     bool findCellAndWeights(const SCICore::Geometry::Point& pos,
+			     IntVector ni[8], double S[8]) const;
+     
+     //////////
+     // Insert Documentation Here:
+     bool findCellAndShapeDerivatives
+     (const SCICore::Geometry::Point& pos,
 		         IntVector ni[8],
 			 SCICore::Geometry::Vector S[8]) const;
 
-      //////////
-      // Insert Documentation Here:
-      CellIterator getCellIterator(const Box& b) const;
+     //////////
+     // Insert Documentation Here:
+     CellIterator getCellIterator(const Box& b) const;
+     
+     //////////
+     // Insert Documentation Here:
+     NodeIterator getNodeIterator() const;
+     
+     NodeIterator getNodeIterator(const Box& b) const;
 
-      //////////
-      // Insert Documentation Here:
-      NodeIterator getNodeIterator() const;
-
-      IntVector getNodeLowIndex() const {
-	 return d_lowIndex;
-      }
-      IntVector getNodeHighIndex() const;
-      IntVector getCellLowIndex() const {
-	 return d_lowIndex;
-      }
-      IntVector getCellHighIndex() const {
-	 return d_highIndex;
-      }
-      
-      inline Box getBox() const {
-	 return Box(d_level->getNodePosition(d_lowIndex),
-		    d_level->getNodePosition(d_highIndex));
-      }
-
-      inline IntVector getNFaces() const {
-	// This is wrong for now
-	return getNodeHighIndex()-getNodeLowIndex();
-      }
-
-      inline IntVector getNNodes() const {
-	 return getNodeHighIndex()-getNodeLowIndex();
-      }
-      
-      long totalCells() const;
-      
-      void performConsistencyCheck() const;
-
-      BCType getBCType(FaceType face) const;
-      void setBCType(FaceType face, BCType newbc);
-      bool atEdge(FaceType face) const;
-      static FaceType nextFace(FaceType face) {
-	 return (FaceType)((int)face+1);
-      }
-      
-      //////////
-      // Insert Documentation Here:
-      inline bool containsNode(const IntVector& idx) const {
-	 IntVector l(getNodeLowIndex());
-	 IntVector h(getNodeHighIndex());
-	 return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	    && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-      }
-
-      //////////
-      // Insert Documentation Here:
-      inline bool containsCell(const IntVector& idx) const {
-	 IntVector l(getCellLowIndex());
-	 IntVector h(getCellHighIndex());
-	 return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	    && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-      }
-
-      //////////
-      // Insert Documentation Here:
-      Point nodePosition(const IntVector& idx) const {
-	 return d_level->getNodePosition(idx);
-      }
-
-      Box getGhostBox(const IntVector& lowOffset,
-		      const IntVector& highOffset) const;
-
-      string toString() const;
-
-      int getID() const {
-	 return d_id;
-      }
-      const Level* getLevel() const {
-	 return d_level;
-      }
-      void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
+     IntVector getNodeLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getNodeHighIndex() const;
+     IntVector getCellLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getCellHighIndex() const {
+       return d_highIndex;
+     }
+     
+     inline Box getBox() const {
+       return Box(d_level->getNodePosition(d_lowIndex),
+		  d_level->getNodePosition(d_highIndex));
+     }
+     
+     inline IntVector getNFaces() const {
+       // This is wrong for now
+       return getNodeHighIndex()-getNodeLowIndex();
+     }
+     
+     inline IntVector getNNodes() const {
+       return getNodeHighIndex()-getNodeLowIndex();
+     }
+     
+     long totalCells() const;
+     
+     void performConsistencyCheck() const;
+     
+     BCType getBCType(FaceType face) const;
+     void setBCType(FaceType face, BCType newbc);
+     bool atEdge(FaceType face) const;
+     static FaceType nextFace(FaceType face) {
+       return (FaceType)((int)face+1);
+     }
+     
+     //////////
+     // Insert Documentation Here:
+     inline bool containsNode(const IntVector& idx) const {
+       IntVector l(getNodeLowIndex());
+       IntVector h(getNodeHighIndex());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+     //////////
+     // Insert Documentation Here:
+     inline bool containsCell(const IntVector& idx) const {
+       IntVector l(getCellLowIndex());
+       IntVector h(getCellHighIndex());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+     //////////
+     // Insert Documentation Here:
+     Point nodePosition(const IntVector& idx) const {
+       return d_level->getNodePosition(idx);
+     }
+     
+     Box getGhostBox(const IntVector& lowOffset,
+		     const IntVector& highOffset) const;
+     
+     string toString() const;
+     
+     int getID() const {
+       return d_id;
+     }
+     const Level* getLevel() const {
+       return d_level;
+     }
+     void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
    protected:
-      friend class Level;
-      
-      //////////
-      // Insert Documentation Here:
-      Patch(const Level*,
-	    const SCICore::Geometry::IntVector& d_lowIndex,
-	    const SCICore::Geometry::IntVector& d_highIndex,
-	    int id=-1);
-      ~Patch();
-
+     friend class Level;
+     
+     //////////
+     // Insert Documentation Here:
+     Patch(const Level*,
+	   const SCICore::Geometry::IntVector& d_lowIndex,
+	   const SCICore::Geometry::IntVector& d_highIndex,
+	   int id=-1);
+     ~Patch();
+     
    private:
-      Patch(const Patch&);
-      Patch& operator=(const Patch&);
-
-      const Level* d_level;
-
-      //////////
-      // Insert Documentation Here:
-      IntVector d_lowIndex;
-      IntVector d_highIndex;
-
-      int d_id;
-      BCType d_bctypes[numFaces];
-      friend class NodeIterator;
+     Patch(const Patch&);
+     Patch& operator=(const Patch&);
+     
+     const Level* d_level;
+     
+     //////////
+     // Insert Documentation Here:
+     IntVector d_lowIndex;
+     IntVector d_highIndex;
+     
+     int d_id;
+     BCType d_bctypes[numFaces];
+     friend class NodeIterator;
    };
    
 } // end namespace Uintah
@@ -233,6 +235,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch* r);
 
 //
 // $Log$
+// Revision 1.11  2000/06/26 17:09:01  bigler
+// Added getNodeIterator which takes a Box and returns the iterator
+// that will loop over the nodes that lie withing the Box.
+//
 // Revision 1.10  2000/06/16 05:19:21  sparker
 // Changed arrays to fortran order
 //
