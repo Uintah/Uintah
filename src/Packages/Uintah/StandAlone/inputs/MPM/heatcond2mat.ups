@@ -19,7 +19,7 @@
 
    <DataArchiver>
         <filebase>heatcond2mat.uda</filebase>
-        <outputInterval>.01</outputInterval>
+        <outputTimestepInterval>25</outputTimestepInterval>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "StrainEnergy"/>
