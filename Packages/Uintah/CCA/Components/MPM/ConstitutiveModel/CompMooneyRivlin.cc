@@ -296,9 +296,11 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>&,
-					std::vector<const VarLabel*>&)
+void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
+					std::vector<const VarLabel*>& to)
 {
+   from.push_back(lb->pDeformationMeasureLabel);
+   to.push_back(lb->pDeformationMeasureLabel_preReloc);
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -306,20 +308,20 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pXLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
-  task->requires(Task::NewDW, lb->gMomExedVelocityLabel, matlset,
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
 		 Ghost::AroundCells, 1);
   task->requires(Task::OldDW, lb->delTLabel);
 
-  task->computes(lb->pStressLabel_afterStrainRate, matlset);
+  task->computes(lb->pStressLabel_afterStrainRate,      matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
    
   if(matl->getFractureModel()) {
-    task->requires(Task::NewDW, lb->pConnectivityLabel, matlset,Ghost::None);
+    task->requires(Task::NewDW, lb->pConnectivityLabel,  matlset,Ghost::None);
     task->requires(Task::NewDW, lb->pContactNormalLabel, matlset,Ghost::None);
     task->computes(lb->pRotationRateLabel, matlset);
     task->computes(lb->pStrainEnergyLabel, matlset);
