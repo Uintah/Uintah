@@ -239,7 +239,7 @@ ClipField::execute()
     clipper_ = box_->get_clipper();
     do_clip_p = true;
   }
-  else if (exec_mode_.get() == "execute")
+  else if (exec_mode_.get() == "execute" && !clipper_->mesh_p())
   {
     undo_stack_.push(clipper_);
     ClipperHandle ctmp = box_->get_clipper();
