@@ -273,9 +273,9 @@ void NetworkCanvasView::addChild( Module* mod2add, int x , int y, bool repositio
 
 
 void NetworkCanvasView::addModule( const string& name, int x, int y,
-				  SIDL::array1<std::string> & up,
-				  SIDL::array1<std::string> &pp ,
-				  const gov::cca::ComponentID::pointer &cid,
+				  SSIDL::array1<std::string> & up,
+				  SSIDL::array1<std::string> &pp ,
+				  const sci::cca::ComponentID::pointer &cid,
 				   bool reposition)
 {
   Module *module=new Module(this,name,up,pp, services, cid);
@@ -309,11 +309,11 @@ void NetworkCanvasView::removeModule(Module * module)
 void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)
 {
 
-  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
-  gov::cca::ConnectionID::pointer connID=bs->connect(m1->cid, portname1, m2->cid, portname2);
+  sci::cca::ConnectionID::pointer connID=bs->connect(m1->cid, portname1, m2->cid, portname2);
 
   services->releasePort("cca.BuilderService");
   
@@ -335,7 +335,7 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
                 
 		cerr<<"connection.size()="<<connections.size()<<endl;
 		cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
-		gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+		sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
 		if(bs.isNull()){
 		  cerr << "Fatal Error: Cannot find builder service\n";
 		}
@@ -357,7 +357,7 @@ void NetworkCanvasView::removeAllConnections(Module *module)
   bool needUpdate=false;
   for(int i=connections.size()-1; i>=0; i--){
     if( connections[i]->isConnectedTo(module) ){
-      gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+      sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
       if(bs.isNull()){
 	cerr << "Fatal Error: Cannot find builder service\n";
       }
@@ -372,7 +372,7 @@ void NetworkCanvasView::removeAllConnections(Module *module)
   if(needUpdate) canvas()->update();
 }
 
-void NetworkCanvasView::setServices(const gov::cca::Services::pointer &services)
+void NetworkCanvasView::setServices(const sci::cca::Services::pointer &services)
 {
 	this->services=services;
 }
@@ -380,22 +380,22 @@ void NetworkCanvasView::setServices(const gov::cca::Services::pointer &services)
 
 void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &portname, Module::PortType porttype)
 {
-  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
 
   cerr<<"Possible Ports:"<<endl;
   for(unsigned int i=0; i<modules.size(); i++){
-      SIDL::array1<std::string> portList=bs->getCompatiblePortList(m->cid,portname,modules[i]->cid );
+      SSIDL::array1<std::string> portList=bs->getCompatiblePortList(m->cid,portname,modules[i]->cid );
       for(unsigned int j=0; j<portList.size(); j++){
 	Connection *con;
 	if(porttype==Module::USES)
 	   con=new Connection(m,portname, modules[i],portList[j], 
-			      gov::cca::ConnectionID::pointer(0),this);      
+			      sci::cca::ConnectionID::pointer(0),this);      
 	else			       
 	   con=new Connection(modules[i],portList[j], m, portname, 
-			     gov::cca::ConnectionID::pointer(0),this);
+			     sci::cca::ConnectionID::pointer(0),this);
 	con->show();
 	possibleConns.push_back(con);
 	canvas()->update();

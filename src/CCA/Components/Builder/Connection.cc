@@ -5,7 +5,7 @@ using namespace std;
 
 Connection::Connection(Module *pU, const std::string &portname1, Module *pP, 
 		       const std::string &portname2,
-		       const gov::cca::ConnectionID::pointer &connID,QCanvasView *cview)
+		       const sci::cca::ConnectionID::pointer &connID,QCanvasView *cview)
   :QCanvasPolygon(cview->canvas())
 
 {
@@ -170,7 +170,7 @@ void Connection::drawShape ( QPainter & p)
 	//p.drawPolygon(points());
 }
 
-gov::cca::ConnectionID::pointer Connection::getConnectionID()
+sci::cca::ConnectionID::pointer Connection::getConnectionID()
 {
   return connID;
 }

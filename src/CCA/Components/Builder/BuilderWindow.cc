@@ -54,9 +54,9 @@
 
 using namespace std;
 using namespace SCIRun;
-using namespace gov::cca;
+using namespace sci::cca;
 
-BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
+BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   : QMainWindow(0, "SCIRun", WDestructiveClose|WType_TopLevel),
     services(services)
 {
@@ -158,7 +158,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   e->setReadOnly(true);
   e->setUndoRedoEnabled(false);
 
-  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
   }
@@ -176,12 +176,12 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   setCentralWidget( vsplit );
   statusBar()->message( "SCIRun 2.0.0 Ready");
 
-  gov::cca::ports::ComponentEventService::pointer ces = pidl_cast<gov::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
+  sci::cca::ports::ComponentEventService::pointer ces = pidl_cast<sci::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
   if(ces.isNull()){
     cerr << "Cannot get componentEventService!\n";
   } else {
-    gov::cca::ports::ComponentEventListener::pointer listener(this);
-    ces->addComponentEventListener(gov::cca::ports::AllComponentEvents,
+    sci::cca::ports::ComponentEventListener::pointer listener(this);
+    ces->addComponentEventListener(sci::cca::ports::AllComponentEvents,
 				   listener, true);
     services->releasePort("cca.ComponentEventService");
   }
@@ -227,7 +227,7 @@ MenuTree::~MenuTree()
 }
   
 void MenuTree::add(const vector<string>& name, int nameindex,
-		   const gov::cca::ComponentClassDescription::pointer& desc,
+		   const sci::cca::ComponentClassDescription::pointer& desc,
 		   const std::string& fullname)
 {
   if(nameindex == (int)name.size()){
@@ -285,16 +285,16 @@ void MenuTree::instantiateComponent()
   builder->instantiateComponent(cd, url);
 }
 
-void BuilderWindow::buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+void BuilderWindow::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
 					    const std::string &frameworkURL)
 {
   if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
     return;
   }
-  vector<gov::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
+  vector<sci::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
   map<string, MenuTree*> menus;
-  for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
+  for(vector<sci::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
       iter != list.end(); iter++){
     //model name could be obtained somehow locally.
     //and we can assume that the remote component model is always "CCA"
@@ -322,15 +322,15 @@ void BuilderWindow::buildRemotePackageMenus(const  gov::cca::ports::ComponentRep
 
 void BuilderWindow::buildPackageMenus()
 {
-  gov::cca::ports::ComponentRepository::pointer reg = pidl_cast<gov::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
+  sci::cca::ports::ComponentRepository::pointer reg = pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
   if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
     return;
   }
 
-  vector<gov::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
+  vector<sci::cca::ComponentClassDescription::pointer> list = reg->getAvailableComponentClasses();
   map<string, MenuTree*> menus;
-  for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
+  for(vector<sci::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
     iter != list.end(); iter++){
     //model name could be obtained somehow locally.
     //and we can assume that the remote component model is always "CCA"
@@ -442,10 +442,10 @@ void BuilderWindow::load()
   {
     is >> tmp_moduleName >> tmp_moduleName_x >> tmp_moduleName_y;
 
-    gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-    gov::cca::ComponentID::pointer cid=builder->createInstance(tmp_moduleName, tmp_moduleName, gov::cca::TypeMap::pointer(0));
-    SIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
-    SIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+    sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    sci::cca::ComponentID::pointer cid=builder->createInstance(tmp_moduleName, tmp_moduleName, sci::cca::TypeMap::pointer(0));
+    SSIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+    SSIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
     services->releasePort("cca.BuilderService");
 
     if( tmp_moduleName != "SCIRun.Builder" )
@@ -509,39 +509,46 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescription::pointer& cd, const std::string &url)
+void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd, const std::string &url)
 {
   // TEK
   cerr << "BuilderWindow::instantiateCompnent(): Entering..." << endl;
   // TEK
   cerr << "Should wait for component to be committed...\n";
-  gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
     return;
   }
   cerr << "Should put properties on component before creating\n";
 
-  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), gov::cca::TypeMap::pointer(0)) ;//,url);
+  sci::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), sci::cca::TypeMap::pointer(0)) ;//,url);
   if(cid.isNull()){
     cerr << "instantiateFailed...\n";
     return;
   }
-  SIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
-  SIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+  SSIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+  cerr << "getUsesPorts done ..."<<endl;
+  SSIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+  cerr << "getProvidedPorts done ..."<<endl;
 
   services->releasePort("cca.BuilderService");
   if(cd->getComponentClassName()!="SCIRun.Builder"){
+
+    cerr << "getComponentClassName done ..."<<endl;
+
     int x = 20;
     int y = 20;
+    
     big_canvas_view->addModule(cd->getComponentClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
+      cerr << "addModule done ..."<<endl;
   }
   // TEK
   cerr << "BuilderWindow::instantiateCompnent(): Leaving..." << endl;
   // TEK
 }
 
-void BuilderWindow::componentActivity(const gov::cca::ports::ComponentEvent::pointer& e)
+void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
 {
   cerr << "Got component activity event " << e->getEventType() << " for " << e->getComponentID()->getInstanceName() << '\n';
   displayMsg("Some event occurs\n");

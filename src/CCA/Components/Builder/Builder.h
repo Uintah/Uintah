@@ -34,22 +34,22 @@
 
 namespace SCIRun {
   class BuilderWindow;
-  class myBuilderPort : public virtual gov::cca::ports::BuilderPort {
+  class myBuilderPort : public virtual sci::cca::ports::BuilderPort {
   public:
     virtual ~myBuilderPort(){}
-    virtual void setServices(const gov::cca::Services::pointer& svc);
-    virtual void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual void buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
 				    const string &frameworkURL);
   protected:
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
     BuilderWindow* builder;
   };
 
-  class Builder : public gov::cca::Component {
+  class Builder : public sci::cca::Component {
   public:
     Builder();
     virtual ~Builder();
-    virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual void setServices(const sci::cca::Services::pointer& svc);
   private:
     Builder(const Builder&);
     Builder& operator=(const Builder&);

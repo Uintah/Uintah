@@ -37,9 +37,9 @@ using namespace SCIRun;
 #include <qapplication.h>
 #include <qpushbutton.h>
 
-extern "C" gov::cca::Component::pointer make_SCIRun_Builder()
+extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 {
-  return gov::cca::Component::pointer(new Builder());
+  return sci::cca::Component::pointer(new Builder());
 }
 
 Builder::Builder()
@@ -52,18 +52,18 @@ Builder::~Builder()
   cerr<<"~Builder()"<<endl;
 }
 
-void Builder::setServices(const gov::cca::Services::pointer& services)
+void Builder::setServices(const sci::cca::Services::pointer& services)
 {
   cerr<<"Builder::setServices"<<endl;
   builderPort.setServices(services);
-  gov::cca::TypeMap::pointer props = services->createTypeMap();
+  sci::cca::TypeMap::pointer props = services->createTypeMap();
   myBuilderPort::pointer bp(&builderPort);
-  services->addProvidesPort(bp,"builderPort","gov.cca.BuilderPort", props);
-  services->registerUsesPort("builder", "gov.cca.BuilderPort", props);
+  services->addProvidesPort(bp,"builderPort","sci.cca.ports.BuilderPort", props);
+  services->registerUsesPort("builder", "sci.cca.ports.BuilderPort", props);
 
 
-  gov::cca::ports::BuilderService::pointer builder 
-    = pidl_cast<gov::cca::ports::BuilderService::pointer>
+  sci::cca::ports::BuilderService::pointer builder 
+    = pidl_cast<sci::cca::ports::BuilderService::pointer>
     (services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
@@ -76,7 +76,7 @@ void Builder::setServices(const gov::cca::Services::pointer& services)
       
 }
 
-void myBuilderPort::setServices(const gov::cca::Services::pointer& svc)
+void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   cerr<<"BuilderPort::setServices"<<endl;
@@ -96,7 +96,7 @@ void myBuilderPort::setServices(const gov::cca::Services::pointer& svc)
 #endif
 }
 
-void myBuilderPort::buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+void myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
 				    const std::string &frameworkURL)
 {
   builder->buildRemotePackageMenus(reg, frameworkURL);
