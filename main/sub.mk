@@ -34,13 +34,18 @@ CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/PSECore/GUI\" \
                       -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
                       -DDEFAULT_PACKAGE_PATH=\"$(PACKAGE_PATH)\"
 
-$(SRCDIR)/main.o:	$(SRCDIR)/main.cc
+$(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
 	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/20 19:19:31  yarden
+# make main.o depend on the toplevel Makefile. This will ensure
+# that main.cc is recompiled when a new set of packages is configured
+# in.  (main.cc is compiled with PACKAGE_PATH=... flag )
+#
 # Revision 1.5  2000/06/20 22:36:06  yarden
 # add %(GL_LIBS) as the first item while linking pse.
 # this is a kludge that enables the Linux version to work
