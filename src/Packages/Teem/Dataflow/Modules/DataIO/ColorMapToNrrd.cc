@@ -112,7 +112,7 @@ ColorMapToNrrd::execute()
     nd->nrrd->axis[0].kind = nrrdKind4Color;
 
     float *val = (float *)nd->nrrd->data;
-    float *data = cmapH->rawRGBA_;
+    float *data = (float *)cmapH->rawRGBA_;
     memcpy(val, data, sizeof(float) * size * 4);
 
     // Send the data nrrd.
