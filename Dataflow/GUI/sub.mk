@@ -48,8 +48,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldMeasures.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
-	$(SRCDIR)/FieldSetReader.tcl \
-	$(SRCDIR)/FieldSetWriter.tcl \
 	$(SRCDIR)/FrameWidget.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/GaugeWidget.tcl \
@@ -61,7 +59,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LinAlgUnary.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
-	$(SRCDIR)/ManageFieldSet.tcl \
 	$(SRCDIR)/ManipFields.tcl \
         $(SRCDIR)/ManipMatrix.tcl \
 	$(SRCDIR)/MatrixReader.tcl \

@@ -33,8 +33,6 @@ SRCS     += \
 	$(SRCDIR)/ColorMapWriter.cc\
 	$(SRCDIR)/FieldReader.cc\
 	$(SRCDIR)/FieldWriter.cc\
-	$(SRCDIR)/FieldSetReader.cc\
-	$(SRCDIR)/FieldSetWriter.cc\
 	$(SRCDIR)/MatrixReader.cc\
 	$(SRCDIR)/MatrixWriter.cc\
 	$(SRCDIR)/PathReader.cc\

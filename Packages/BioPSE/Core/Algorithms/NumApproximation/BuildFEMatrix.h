@@ -31,7 +31,6 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/FieldSet.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
