@@ -114,7 +114,8 @@ private:
   Mutex                 map_lock_;
 
   //! static vars.
-  static DynamicLoader  scirun_loader_;
+  static DynamicLoader *scirun_loader_;
+  static Mutex          scirun_loader_init_lock_;
   static string		otf_dir_;
   static bool		otf_dir_found_;
 };

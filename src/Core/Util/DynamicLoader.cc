@@ -45,7 +45,8 @@ using namespace std;
 
 env_map scirunrc;
 
-DynamicLoader DynamicLoader::scirun_loader_;
+DynamicLoader *DynamicLoader::scirun_loader_ = 0;
+Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
 string DynamicLoader::otf_dir_ = string(SCIRUN_OBJDIR) + "/on-the-fly-libs";
 bool DynamicLoader::otf_dir_found_ = false;
 
@@ -118,7 +119,20 @@ DynamicLoader::~DynamicLoader()
 DynamicLoader& 
 DynamicLoader::scirun_loader()
 {
-  return scirun_loader_;
+  if (scirun_loader_)
+  {
+    return *scirun_loader_;
+  }
+  else
+  {
+    scirun_loader_init_lock_.lock();
+    if (!scirun_loader_)
+    {
+      scirun_loader_ = new DynamicLoader();
+    }
+    scirun_loader_init_lock_.unlock();
+    return *scirun_loader_;
+  }
 }
 
 //! DynamicLoader::entry_exists
