@@ -1,7 +1,7 @@
 <!--
 
   This is supposed to be a valid xhtml file!  Please visit
-  http://validator.w3.org after editing this file.
+  http://validator.w3.org/file-upload.html after editing this file.
 
 -->
 
@@ -816,7 +816,7 @@
       <p>
 	Create a SCIRun field object using the appropriate converter
 	program (converter programs are located in directory
-	<tt>SCIRun/src/StandAlone/convert</tt>).  For example, use
+	<tt>SCIRun/bin/StandAlone/convert</tt>).  For example, use
 	<tt>TextToTetVolField</tt> to create a field from a "pts" file
 	and a "tet" file.
       </p>
@@ -865,7 +865,7 @@
       </pre>
 
       <p>
-	Each tensor is implicitly numbered (indexed) starting with 1.
+	Each tensor is implicitly numbered (indexed) starting with 0.
       </p>
 
       <p>
@@ -902,14 +902,14 @@
       </pre>
 
       <p>
-	Above, volume elements 1, 3&ndash;6, 9, and 10 are assigned
-	the third tensor in the tensor data file.  Volume elements 2,
-	7, and 8 are assigned the fourth tensor.
+	Above, volume elements 0, 2&ndash;5, 8, and 9 are assigned
+	the fourth tensor in the tensor data file.  Volume elements 1,
+	6, and 7 are assigned the fifth tensor.
       </p>
 
       <p>
 	Create SCIRun data objects containing conductivity data and
-	indicies.  Use converter programs <tt>TextToDenseMatrix</tt>
+	indicies using converter programs <tt>TextToDenseMatrix</tt>
 	and <tt>TextToColumnMatrix</tt>.
       </p>
 
@@ -956,7 +956,7 @@
 
       <p>
 	Prepare a "pts" file specifying the location of a dipole
-	source.  The file will contain one coordinate.
+	source.  The file will contain one location.
       </p>
 
       <p>
