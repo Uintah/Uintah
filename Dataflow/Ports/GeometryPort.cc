@@ -25,7 +25,7 @@
 
 #include <iostream>
 using std::cerr;
-using std::endl;
+//using std::endl;
 
 namespace SCIRun {
 
@@ -337,8 +337,8 @@ void
 GeometryData::Print()
 {
   cerr << "GEOMETRY data review\n\n";
-  cerr << "X resolution: " << xres << " Y resolution: " << yres << endl;
-  cerr << "Clipping planes.  Near = " << znear << " Far = " << zfar << endl;
+  cerr << "X resolution: " << xres << " Y resolution: " << yres << std::endl;
+  cerr << "Clipping planes.  Near = " << znear << " Far = " << zfar << std::endl;
 
   if ( depthbuffer == NULL )
     cerr << "depthbuffer has nothing\n";
@@ -349,7 +349,7 @@ GeometryData::Print()
   if ( view == NULL )
     cerr << "view has nothing\n";
 
-  cerr << endl;
+  cerr << std::endl;
 }
 
 } // End namespace SCIRun
