@@ -2388,14 +2388,16 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       new_dw->get(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch, Ghost::None,
 		  nofGhostCells);
     }
-    if (d_enthalpySolve)
+    IntVector domLoEnth;
+    IntVector domHiEnth;
+    
+    if (d_enthalpySolve) {
       new_dw->get(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch, Ghost::None,
 		  nofGhostCells);
-
     // Get the low and high index for the patch and the variables
-    IntVector domLoEnth = enthalpy.getFortLowIndex();
-    IntVector domHiEnth = enthalpy.getFortHighIndex();
-
+      domLoEnth = enthalpy.getFortLowIndex();
+      domHiEnth = enthalpy.getFortHighIndex();
+    }
     IntVector domLo = density.getFortLowIndex();
     IntVector domHi = density.getFortHighIndex();
     IntVector domLoScal = scalar[0].getFortLowIndex();
