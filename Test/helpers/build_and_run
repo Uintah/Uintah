@@ -16,7 +16,7 @@ if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
     echo "Configuring ${mode} build at `date` using these arguments"
     echo "  $CONFIGURE_ARGS"
     echo "#!/bin/tcsh" > configure_command
-    echo "../../src/configure $CONFIGURE_ARGS" > configure_command
+    echo "../../src/configure $CONFIGURE_ARGS" >> configure_command
     chmod a+x configure_command
     ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
     retval=$?
