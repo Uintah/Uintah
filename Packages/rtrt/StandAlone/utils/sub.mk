@@ -42,7 +42,12 @@ LIBS := $(TEEM_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX
 ifeq ($(HAVE_LAPACK),yes)
 PROGRAM := $(SRCDIR)/pca-image
 SRCS := $(SRCDIR)/pca-image.cc
-#Does need teem
+# Does need teem
 LIBS += $(LAPACK_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 endif
+
+PROGRAM := $(SRCDIR)/pca-reconstruct
+SRCS := $(SRCDIR)/pca-reconstruct.cc
+# Does need teem
+include $(SCIRUN_SCRIPTS)/program.mk
