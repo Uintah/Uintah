@@ -243,8 +243,8 @@ void DipoleMatToGeom::widget_moved(int last)
 
 //
 // $Log$
-// Revision 1.4.2.1  2000/09/28 03:20:20  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.4.2.2  2000/10/26 14:02:07  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/08/01 18:03:03  dmw
 // fixed errors

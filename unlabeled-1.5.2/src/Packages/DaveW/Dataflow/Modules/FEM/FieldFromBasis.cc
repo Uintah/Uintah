@@ -174,8 +174,8 @@ void FieldFromBasis::execute() {
 
 //
 // $Log$
-// Revision 1.5.2.1  2000/09/28 03:19:26  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.5.2.2  2000/10/26 14:02:08  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.6  2000/08/01 18:03:03  dmw
 // fixed errors

@@ -125,8 +125,8 @@ void RecipBasis::execute() {
 
 //
 // $Log$
-// Revision 1.8.2.1  2000/09/28 03:19:26  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.8.2.2  2000/10/26 14:02:08  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.9  2000/08/01 18:03:04  dmw
 // fixed errors
