@@ -105,7 +105,8 @@ namespace SCIRun {
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
     static string typeName();
-  
+    static Persistent* maker();
+
   private:
     GenFunctionHandle func;
     mutable StrV  fstrings;
@@ -123,10 +124,15 @@ string AnalytAttrib<T>::typeName(){
   return typeName;
 }
 
+template <class T>
+Persistent* AnalytAttrib<T>::maker(){
+  return new AnalytAttrib<T>();
+}
+
 template <class T> 
 PersistentTypeID AnalytAttrib<T>::type_id(AnalytAttrib<T>::typeName(), 
 					  "Attrib",
-					  0);
+					  maker);
 
 #define ANALYTATTRIB_VERSION 1
 
