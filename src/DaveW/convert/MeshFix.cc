@@ -38,7 +38,7 @@ using namespace SCICore::PersistentSpace;
 using namespace SCICore::Datatypes;
 using namespace SCICore::Geometry;
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
     int i,j;
     MeshHandle mesh;
@@ -156,7 +156,8 @@ main(int argc, char **argv) {
     mesh->cond_tensors[5].initialize(0);
     mesh->cond_tensors[5][0]=mesh->cond_tensors[5][3]=mesh->cond_tensors[5][5]=WHITE_CONDUCTIVITY;
     
-    BinaryPiostream stream2(clString(argv[2]), Piostream::Write);
+    clString base2(argv[2]);
+    BinaryPiostream stream2(base2, Piostream::Write);
     Pio(stream2, mesh);
     return 0;
 }    
