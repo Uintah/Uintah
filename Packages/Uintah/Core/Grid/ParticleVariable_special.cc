@@ -1,5 +1,9 @@
+#ifndef Uintah_Core_Grid_ParticleVariable_special_cc
+#define Uintah_Core_Grid_ParticleVariable_special_cc
+
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -88,3 +92,6 @@ using namespace std;
     }
     ASSERT(dstiter+extra == pset->end());    
   }
+
+#endif // this file does need to be included to satisfy template instantiations
+       // for some compilers
