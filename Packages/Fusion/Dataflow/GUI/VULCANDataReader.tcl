@@ -27,6 +27,10 @@
 #
 
 
+# GUI for VULCANDataReader module
+# by Allen R. Sanderson
+# March 2004
+
 catch {rename Fusion_DataIO_VULCANDataReader ""}
 
 itcl_class Fusion_DataIO_VULCANDataReader {
