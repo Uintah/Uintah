@@ -57,7 +57,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   scene->set_background_ptr( new LinearBackground( Color(1.0, 1.0, 1.0),
 						   Color(0.0,0.0,0.0),
 						   Vector(0,0,1)) );
-  scene->shadow_mode=1;
+  scene->select_shadow_mode("hard");
   return scene;
 }
 

@@ -96,7 +96,7 @@ Scene* make_scene(int argc, char* argv[])
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane, 
 			   ambient_scale);
     scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, 0));
-    scene->shadow_mode=0;
+    scene->select_shadow_mode("none");
     scene->ambient_hack=false;
     scene->maxdepth=0;
 

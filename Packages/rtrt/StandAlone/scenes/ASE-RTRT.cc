@@ -280,7 +280,7 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   scene->add_light(new Light(Point(-6250,-11800,15000), Color(.4,.4,.4), 0));
   if (env_map!="")
     scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));
-  scene->shadow_mode=0;
+  scene->select_shadow_mode("none");
   scene->set_materials(ase_matls);
   return scene;
 }

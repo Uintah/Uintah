@@ -176,6 +176,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, light_radius));
     scene->ambient_hack = true;
 
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("soft");
     return scene;
 }

@@ -152,7 +152,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 						  Color(0.0,0.0,0.0),
 						  Vector(0,0,1)) );
   
-  scene->shadow_mode = 1;
+  scene->select_shadow_mode("hard");
   scene->add_light(new Light(Point(5000,-3,3), Color(1,1,.8), 0));
   return scene;
 

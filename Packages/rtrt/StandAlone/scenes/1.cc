@@ -48,6 +48,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Scene* scene=new Scene(group, cam,
 			   bgcolor, Color(0,0,0), bgcolor, groundplane,
 			   ambient_scale);
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("hard");
     return scene;
 }

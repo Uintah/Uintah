@@ -96,8 +96,8 @@ static Object* make_obj(int size)
     Group* world=new Group();
     Vector objset[9];
     create_dirs(objset);
-    //    Material* matl0=new LambertianMaterial (Color(.4,.4,.4));
-    Material* matl0=new Phong(Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), 40, 0);
+    Material* matl0=new LambertianMaterial (Color(.4,.4,.4));
+    //Material* matl0=new Phong(Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), Color(0.32,0.32,0.32), 40, 0);
     create_objs(world, Point(0,0,.5), BV_RADIUS/2.0, Vector(0,0,1),
 		size, objset, matl0);
 
@@ -176,6 +176,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                                Vector(0,0,1)) );
 
 
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("soft");
     return scene;
 }

@@ -77,7 +77,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                                Color(0.0,0.0,0.0),
                                Vector(0,0,1)) );
 
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("hard");
     scene->ambient_hack = true;
     return scene;
 }

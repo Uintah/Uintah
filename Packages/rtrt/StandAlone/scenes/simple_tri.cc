@@ -29,13 +29,9 @@ static const double BV_RADIUS = 1.0;
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
-    int scenesize=2;
     double light_radius=0.8;
     for(int i=1;i<argc;i++){
-	if(strcmp(argv[i], "-size")==0){
-	    i++;
-	    scenesize=atoi(argv[i]);
-	} else if(strcmp(argv[i], "-light")==0){
+	if(strcmp(argv[i], "-light")==0){
 	    i++;
 	    light_radius=atof(argv[i]);
 	} else {
@@ -90,6 +86,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                                Vector(0,0,1)) );
 
 
-    scene->shadow_mode=1;
+    scene->select_shadow_mode("hard");
     return scene;
 }
