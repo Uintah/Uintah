@@ -1,0 +1,399 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Wed  Apr 12 19100"
+
+global runTime
+set runTime " 23:14:26"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 666 0]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 526 80]
+set m2 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 886 441]
+set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 870 334]
+set m4 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 868 525]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 613 568]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 613 641]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 462 561]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 422 470]
+set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 577 724]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 294 482]
+set m11 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 631 507]
+set m12 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 941 251]
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 959 4]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 503 0]
+set m15 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 312 378]
+set m16 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 312 305]
+set m17 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrix" 312 159]
+set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 490 161]
+set m19 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 136 558]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 136 643]
+set m22 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 613 354]
+set m23 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 649 443]
+set m24 [addModuleAtPosition "BioPSE" "Forward" "BuildFEMatrix" 977 87]
+set m25 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 1040 325]
+set m26 [addModuleAtPosition "SCIRun" "Visualization" "IsoSurface" 1040 397]
+set m27 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 1037 478]
+set m28 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1049 543]
+set m29 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1013 613]
+set m30 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 1022 682]
+set m31 [addModuleAtPosition "SCIRun" "Fields" "TransformField" 836 750]
+set m32 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 1022 747]
+
+addConnection $m3 0 $m2 0
+addConnection $m5 0 $m6 0
+addConnection $m8 0 $m7 2
+addConnection $m20 0 $m9 0
+addConnection $m7 0 $m9 1
+addConnection $m6 0 $m9 2
+addConnection $m0 0 $m10 0
+addConnection $m10 0 $m7 0
+addConnection $m7 1 $m6 2
+addConnection $m0 0 $m1 1
+addConnection $m2 0 $m4 1
+addConnection $m11 0 $m5 1
+addConnection $m13 0 $m12 1
+addConnection $m15 0 $m10 1
+addConnection $m1 0 $m15 1
+addConnection $m1 1 $m18 3
+addConnection $m16 0 $m15 0
+addConnection $m14 0 $m17 0
+addConnection $m14 0 $m18 0
+addConnection $m18 0 $m16 1
+addConnection $m17 0 $m16 0
+addConnection $m14 0 $m1 0
+addConnection $m19 0 $m20 0
+addConnection $m7 1 $m20 2
+addConnection $m18 0 $m3 1
+addConnection $m1 0 $m2 1
+addConnection $m15 0 $m4 0
+addConnection $m3 0 $m11 0
+addConnection $m23 0 $m11 1
+addConnection $m22 0 $m5 0
+addConnection $m4 0 $m12 3
+addConnection $m12 0 $m3 0
+addConnection $m14 0 $m12 0
+addConnection $m14 0 $m24 0
+addConnection $m24 0 $m12 2
+addConnection $m12 1 $m27 2
+addConnection $m14 0 $m27 1
+addConnection $m28 0 $m29 2
+addConnection $m29 0 $m9 4
+addConnection $m26 1 $m27 0
+addConnection $m30 0 $m32 0
+addConnection $m32 0 $m31 1
+addConnection $m27 0 $m31 0
+addConnection $m31 0 $m29 0
+addConnection $m25 0 $m26 0
+
+set ::SCIRun_DataIO_FieldReader_0-notes {}
+set ::SCIRun_DataIO_FieldReader_0-show_status 1
+set ::SCIRun_DataIO_FieldReader_0-filename {/res/sci/u2/dmw/mydata/newDS/h.elec62.surf}
+set ::SCIRun_Fields_BuildInterpolant_0-notes {}
+set ::SCIRun_Fields_BuildInterpolant_0-show_status 1
+set ::SCIRun_Fields_BuildInterpolant_0-method {project}
+set ::SCIRun_Fields_BuildInterpolant_0-zeroTCL 0
+set ::SCIRun_Fields_BuildInterpolant_0-potMatTCL 0
+set ::SCIRun_Math_ManipMatrix_0-notes {}
+set ::SCIRun_Math_ManipMatrix_0-show_status 1
+set ::SCIRun_Math_ManipMatrix_0-opTCL {AtimesB}
+set ::SCIRun_Math_SolveMatrix_0-notes {}
+set ::SCIRun_Math_SolveMatrix_0-show_status 1
+set ::SCIRun_Math_SolveMatrix_0-target_error 1e-06
+set ::SCIRun_Math_SolveMatrix_0-flops 284740
+set ::SCIRun_Math_SolveMatrix_0-floprate 4.68984
+set ::SCIRun_Math_SolveMatrix_0-memrefs 4.9078e+06
+set ::SCIRun_Math_SolveMatrix_0-memrate 80.8344
+set ::SCIRun_Math_SolveMatrix_0-orig_error 1.73205
+set ::SCIRun_Math_SolveMatrix_0-current_error {7.4502e-05}
+set ::SCIRun_Math_SolveMatrix_0-method {conjugate_gradient_sci}
+set ::SCIRun_Math_SolveMatrix_0-precond {Diag_P}
+set ::SCIRun_Math_SolveMatrix_0-iteration 28
+set ::SCIRun_Math_SolveMatrix_0-maxiter 1000
+set ::SCIRun_Math_SolveMatrix_0-use_previous_soln 1
+set ::SCIRun_Math_SolveMatrix_0-emit_partial 0
+set ::SCIRun_Math_SolveMatrix_0-status {}
+set ::SCIRun_Math_SolveMatrix_0-np 16
+set ::SCIRun_Math_ErrorMetric_0-notes {}
+set ::SCIRun_Math_ErrorMetric_0-show_status 1
+set ::SCIRun_Math_ErrorMetric_0-haveUI 1
+set ::SCIRun_Math_ErrorMetric_0-methodTCL {RMSrel}
+set ::SCIRun_Math_ErrorMetric_0-pTCL {1}
+set ::SCIRun_Fields_ManageFieldData_0-notes {}
+set ::SCIRun_Fields_ManageFieldData_0-show_status 1
+set ::SCIRun_Fields_ManageFieldData_0-surfid {}
+set ::SCIRun_Visualization_ShowField_0-notes {}
+set ::SCIRun_Visualization_ShowField_0-show_status 1
+set ::SCIRun_Visualization_ShowField_0-range_min -0.19344
+set ::SCIRun_Visualization_ShowField_0-range_max 0.170187
+set ::SCIRun_Visualization_ShowField_0-rad 0.04
+set ::SCIRun_Visualization_ShowField_0-range {cmap}
+set ::SCIRun_Visualization_ShowField_0-named 0
+set ::SCIRun_Visualization_ShowField_0-invert 0
+set ::SCIRun_Visualization_ShowField_0-nodes 0
+set ::SCIRun_Visualization_ShowField_0-resol 9
+set ::SCIRun_Visualization_ShowField_0-clr-r 0.5
+set ::SCIRun_Visualization_ShowField_0-clr-g 0.7
+set ::SCIRun_Visualization_ShowField_0-clr-b 0.3
+set ::SCIRun_Visualization_ShowField_0-normals 1
+set ::SCIRun_Visualization_ShowField_0-ntype {spheres}
+set ::SCIRun_Visualization_ShowField_1-notes {}
+set ::SCIRun_Visualization_ShowField_1-show_status 1
+set ::SCIRun_Visualization_ShowField_1-range_min -0.015
+set ::SCIRun_Visualization_ShowField_1-range_max 0.018
+set ::SCIRun_Visualization_ShowField_1-rad 7
+set ::SCIRun_Visualization_ShowField_1-range {manual}
+set ::SCIRun_Visualization_ShowField_1-named 0
+set ::SCIRun_Visualization_ShowField_1-invert 0
+set ::SCIRun_Visualization_ShowField_1-nodes 1
+set ::SCIRun_Visualization_ShowField_1-resol 9
+set ::SCIRun_Visualization_ShowField_1-clr-r 0.5
+set ::SCIRun_Visualization_ShowField_1-clr-g 0.7
+set ::SCIRun_Visualization_ShowField_1-clr-b 0.3
+set ::SCIRun_Visualization_ShowField_1-normals 0
+set ::SCIRun_Visualization_ShowField_1-ntype {spheres}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-notes {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-show_status 1
+set ::SCIRun_Visualization_GenStandardColorMaps_0-tcl_status {Calling GenStandardColorMaps!}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-positionList {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-nodeList {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-width 366
+set ::SCIRun_Visualization_GenStandardColorMaps_0-height 40
+set ::SCIRun_Visualization_GenStandardColorMaps_0-mapType 3
+set ::SCIRun_Visualization_GenStandardColorMaps_0-minRes 12
+set ::SCIRun_Visualization_GenStandardColorMaps_0-resolution 255
+set ::SCIRun_Render_Viewer_0-notes {}
+set ::SCIRun_Render_Viewer_0-show_status 1
+SCIRun_Render_Viewer_0 ui ::SCIRun_Render_Viewer_0-Roe_0
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-x 253.365
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-y 1674.6
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-z 2223.79
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-x 224.349
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-y 13.0594
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-z -27.8716
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-x -0.0321398
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-y 0.804425
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-z -0.593185
+set ::SCIRun_Render_Viewer_0-Roe_0-view-fov 6.56476
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-x 253.365
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-y 1674.6
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-z 2223.79
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-x 253.365
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-y 1674.6
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep-z 2223.79
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-x 224.349
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-y 13.0594
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-z -27.8716
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-x 224.349
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-y 13.0594
+set ::SCIRun_Render_Viewer_0-Roe_0-view-lookat-z -27.8716
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-x -0.0321398
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-y 0.804425
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-z -0.593185
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-x -0.0321398
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-y 0.804425
+set ::SCIRun_Render_Viewer_0-Roe_0-view-up-z -0.593185
+set ::SCIRun_Render_Viewer_0-Roe_0-view-fov 6.56476
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep_offset-x -1.79769e+308
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep_offset-y -1.79769e+308
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep_offset-z -1.79769e+308
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep_offset-x -1.79769e+308
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep_offset-y -1.79769e+308
+set ::SCIRun_Render_Viewer_0-Roe_0-view-eyep_offset-z -1.79769e+308
+set ::SCIRun_Render_Viewer_0-Roe_0-bgcolor-r 0
+set ::SCIRun_Render_Viewer_0-Roe_0-bgcolor-g 0
+set ::SCIRun_Render_Viewer_0-Roe_0-bgcolor-b 0
+set ::SCIRun_Render_Viewer_0-Roe_0-bgcolor-r 0
+set ::SCIRun_Render_Viewer_0-Roe_0-bgcolor-g 0
+set ::SCIRun_Render_Viewer_0-Roe_0-bgcolor-b 0
+set ::SCIRun_Render_Viewer_0-Roe_0-shading {}
+set ::SCIRun_Render_Viewer_0-Roe_0-do_stereo 0
+set ::SCIRun_Render_Viewer_0-Roe_0-do_bawgl 0
+set ::SCIRun_Render_Viewer_0-Roe_0-drawimg -2147483647
+set ::SCIRun_Render_Viewer_0-Roe_0-saveprefix {}
+set {::SCIRun_Render_Viewer_0-Roe_0-Axes (4)} 0
+set {::SCIRun_Render_Viewer_0-Roe_0- (5)} 1
+set {::SCIRun_Render_Viewer_0-Roe_0-sourceSink (1)} 1
+set {::SCIRun_Render_Viewer_0-Roe_0-Fwd (2)} 1
+set {::SCIRun_Render_Viewer_0-Roe_0-Fwd (3)} 1
+set ::SCIRun_Fields_ManageFieldData_1-notes {}
+set ::SCIRun_Fields_ManageFieldData_1-show_status 1
+set ::SCIRun_Fields_ManageFieldData_1-surfid {}
+set ::SCIRun_Math_ManipMatrix_1-notes {}
+set ::SCIRun_Math_ManipMatrix_1-show_status 1
+set ::SCIRun_Math_ManipMatrix_1-opTCL {AtimesB}
+set ::BioPSE_Inverse_ConductivitySearch_0-notes {}
+set ::BioPSE_Inverse_ConductivitySearch_0-show_status 1
+set ::BioPSE_Inverse_ConductivitySearch_0-refnodeTCL {0}
+set ::BioPSE_Inverse_ConductivitySearch_0-pinzeroTCL 1
+set ::SCIRun_DataIO_MatrixReader_0-notes {}
+set ::SCIRun_DataIO_MatrixReader_0-show_status 1
+set ::SCIRun_DataIO_MatrixReader_0-filename {/home/sci/dmw/mydata/newDS/h.condParam.mat}
+set ::SCIRun_DataIO_FieldReader_1-notes {}
+set ::SCIRun_DataIO_FieldReader_1-show_status 1
+set ::SCIRun_DataIO_FieldReader_1-filename {/home/sci/dmw/mydata/newDS/h64.mesh}
+set ::SCIRun_Math_ManipMatrix_2-notes {}
+set ::SCIRun_Math_ManipMatrix_2-show_status 1
+set ::SCIRun_Math_ManipMatrix_2-opTCL {AtimesB}
+set ::SCIRun_Math_SolveMatrix_1-notes {}
+set ::SCIRun_Math_SolveMatrix_1-show_status 1
+set ::SCIRun_Math_SolveMatrix_1-target_error 1e-06
+set ::SCIRun_Math_SolveMatrix_1-flops 1.97786e+07
+set ::SCIRun_Math_SolveMatrix_1-floprate 144.974
+set ::SCIRun_Math_SolveMatrix_1-memrefs 3.44195e+08
+set ::SCIRun_Math_SolveMatrix_1-memrate 2522.89
+set ::SCIRun_Math_SolveMatrix_1-orig_error 1
+set ::SCIRun_Math_SolveMatrix_1-current_error {8.45635e-05}
+set ::SCIRun_Math_SolveMatrix_1-method {conjugate_gradient_sci}
+set ::SCIRun_Math_SolveMatrix_1-precond {Diag_P}
+set ::SCIRun_Math_SolveMatrix_1-iteration 157
+set ::SCIRun_Math_SolveMatrix_1-maxiter 1000
+set ::SCIRun_Math_SolveMatrix_1-use_previous_soln 1
+set ::SCIRun_Math_SolveMatrix_1-emit_partial 0
+set ::SCIRun_Math_SolveMatrix_1-status {}
+set ::SCIRun_Math_SolveMatrix_1-np 16
+set ::BioPSE_Forward_BuildFEMatrix_0-notes {}
+set ::BioPSE_Forward_BuildFEMatrix_0-show_status 1
+set ::BioPSE_Forward_BuildFEMatrix_0-BCFlag {PinZero}
+set ::BioPSE_Forward_BuildFEMatrix_0-UseCondTCL 1
+set ::BioPSE_Forward_BuildFEMatrix_0-refnodeTCL {0}
+set ::BioPSE_Forwarad_ApplyFEMCurrentSource_0-notes {}
+set ::BioPSE_Forwarad_ApplyFEMCurrentSource_0-show_status 1
+set ::BioPSE_Forwarad_ApplyFEMCurrentSource_0-sourceNodeTCL {6}
+set ::BioPSE_Forwarad_ApplyFEMCurrentSource_0-sinkNodeTCL {51}
+set ::BioPSE_Forwarad_ApplyFEMCurrentSource_0-modeTCL {electrodes}
+set ::SCIRun_DataIO_FieldReader_2-notes {}
+set ::SCIRun_DataIO_FieldReader_2-show_status 1
+set ::SCIRun_DataIO_FieldReader_2-filename {/home/sci/dmw/mydata/newDS/h.sourceSink.surf}
+set ::SCIRun_Visualization_ShowField_2-notes {}
+set ::SCIRun_Visualization_ShowField_2-show_status 1
+set ::SCIRun_Visualization_ShowField_2-range_min -1
+set ::SCIRun_Visualization_ShowField_2-range_max 1
+set ::SCIRun_Visualization_ShowField_2-rad 10
+set ::SCIRun_Visualization_ShowField_2-range {cmap}
+set ::SCIRun_Visualization_ShowField_2-named 0
+set ::SCIRun_Visualization_ShowField_2-invert 0
+set ::SCIRun_Visualization_ShowField_2-nodes 1
+set ::SCIRun_Visualization_ShowField_2-resol 8
+set ::SCIRun_Visualization_ShowField_2-clr-r 0.5
+set ::SCIRun_Visualization_ShowField_2-clr-g 0.7
+set ::SCIRun_Visualization_ShowField_2-clr-b 0.3
+set ::SCIRun_Visualization_ShowField_2-normals 0
+set ::SCIRun_Visualization_ShowField_2-ntype {spheres}
+set ::SCIRun_DataIO_FieldReader_3-notes {}
+set ::SCIRun_DataIO_FieldReader_3-show_status 1
+set ::SCIRun_DataIO_FieldReader_3-filename {/home/sci/dmw/mydata/newDS/h64.bdry.surf}
+set ::SCIRun_DataIO_MatrixReader_1-notes {}
+set ::SCIRun_DataIO_MatrixReader_1-show_status 1
+set ::SCIRun_DataIO_MatrixReader_1-filename {/home/sci/dmw/mydata/newDS/h64.bdryinterp.mat}
+set ::BioPSE_Forward_BuildFEMatrix_1-notes {}
+set ::BioPSE_Forward_BuildFEMatrix_1-show_status 1
+set ::BioPSE_Forward_BuildFEMatrix_1-BCFlag {none}
+set ::BioPSE_Forward_BuildFEMatrix_1-UseCondTCL 1
+set ::BioPSE_Forward_BuildFEMatrix_1-refnodeTCL {0}
+set ::SCIRun_DataIO_FieldReader_4-notes {}
+set ::SCIRun_DataIO_FieldReader_4-show_status 1
+set ::SCIRun_DataIO_FieldReader_4-filename {/home/sci/dmw/mydata/newDS/h64.sfug}
+set ::SCIRun_Visualization_IsoSurface_0-notes {}
+set ::SCIRun_Visualization_IsoSurface_0-show_status 1
+set ::SCIRun_Visualization_IsoSurface_0-seed_point-x -1.79769e+308
+set ::SCIRun_Visualization_IsoSurface_0-seed_point-y -1.79769e+308
+set ::SCIRun_Visualization_IsoSurface_0-seed_point-z -1.79769e+308
+set ::SCIRun_Visualization_IsoSurface_0-seed_point-x -1.79769e+308
+set ::SCIRun_Visualization_IsoSurface_0-seed_point-y -1.79769e+308
+set ::SCIRun_Visualization_IsoSurface_0-seed_point-z -1.79769e+308
+set ::SCIRun_Visualization_IsoSurface_0-have_seedpoint 0
+set ::SCIRun_Visualization_IsoSurface_0-isoval 100
+set ::SCIRun_Visualization_IsoSurface_0-do_3dwidget 1
+set ::SCIRun_Visualization_IsoSurface_0-emit_surface 1
+set ::SCIRun_Visualization_IsoSurface_0-show_progress -2147483647
+set ::SCIRun_Fields_BuildInterpolant_1-notes {}
+set ::SCIRun_Fields_BuildInterpolant_1-show_status 1
+set ::SCIRun_Fields_BuildInterpolant_1-splitDirTCL {X}
+set ::SCIRun_Fields_BuildInterpolant_1-splitValTCL 118
+set ::SCIRun_Visualization_GenStandardColorMaps_1-notes {}
+set ::SCIRun_Visualization_GenStandardColorMaps_1-show_status 1
+set ::SCIRun_Visualization_GenStandardColorMaps_1-tcl_status {Calling GenStandardColorMaps!}
+set ::SCIRun_Visualization_GenStandardColorMaps_1-positionList {}
+set ::SCIRun_Visualization_GenStandardColorMaps_1-nodeList {}
+set ::SCIRun_Visualization_GenStandardColorMaps_1-width 366
+set ::SCIRun_Visualization_GenStandardColorMaps_1-height 40
+set ::SCIRun_Visualization_GenStandardColorMaps_1-mapType 2
+set ::SCIRun_Visualization_GenStandardColorMaps_1-minRes 12
+set ::SCIRun_Visualization_GenStandardColorMaps_1-resolution 255
+set ::SCIRun_Math_BuildTransform_0-notes {}
+set ::SCIRun_Math_BuildTransform_0-show_status 1
+set ::SCIRun_Math_BuildTransform_0-rx 0
+set ::SCIRun_Math_BuildTransform_0-ry 0
+set ::SCIRun_Math_BuildTransform_0-rz 1
+set ::SCIRun_Math_BuildTransform_0-th 0
+set ::SCIRun_Math_BuildTransform_0-tx 230
+set ::SCIRun_Math_BuildTransform_0-ty 0
+set ::SCIRun_Math_BuildTransform_0-tz 0
+set ::SCIRun_Math_BuildTransform_0-scale 0
+set ::SCIRun_Math_BuildTransform_0-scalex 0
+set ::SCIRun_Math_BuildTransform_0-scaley 0
+set ::SCIRun_Math_BuildTransform_0-scalez 0
+set ::SCIRun_Math_BuildTransform_0-sha 0
+set ::SCIRun_Math_BuildTransform_0-shb 0
+set ::SCIRun_Math_BuildTransform_0-shc 1
+set ::SCIRun_Math_BuildTransform_0-shd 1
+set ::SCIRun_Math_BuildTransform_0-xmapTCL 1
+set ::SCIRun_Math_BuildTransform_0-ymapTCL 2
+set ::SCIRun_Math_BuildTransform_0-zmapTCL 3
+set ::SCIRun_Math_BuildTransform_0-pre 1
+set ::SCIRun_Math_BuildTransform_0-whichxform 0
+set ::SCIRun_Math_BuildTransform_0-widgetShowResizeHandles 0
+set ::SCIRun_Math_BuildTransform_0-widgetScale 1
+set ::SCIRun_Fields_TransformField_0-notes {}
+set ::SCIRun_Fields_TransformField_0-show_status 1
+set ::SCIRun_Visualization_ShowField_3-notes {}
+set ::SCIRun_Visualization_ShowField_3-show_status 1
+set ::SCIRun_Visualization_ShowField_3-range_min -1.82
+set ::SCIRun_Visualization_ShowField_3-range_max 1.04
+set ::SCIRun_Visualization_ShowField_3-rad 1
+set ::SCIRun_Visualization_ShowField_3-range {manual}
+set ::SCIRun_Visualization_ShowField_3-named 0
+set ::SCIRun_Visualization_ShowField_3-invert 0
+set ::SCIRun_Visualization_ShowField_3-nodes 0
+set ::SCIRun_Visualization_ShowField_3-resol 8
+set ::SCIRun_Visualization_ShowField_3-clr-r 0.5
+set ::SCIRun_Visualization_ShowField_3-clr-g 0.7
+set ::SCIRun_Visualization_ShowField_3-clr-b 0.3
+set ::SCIRun_Visualization_ShowField_3-normals 0
+set ::SCIRun_Visualization_ShowField_3-ntype {points}
+set ::SCIRun_Math_BuildTransform_1-notes {}
+set ::SCIRun_Math_BuildTransform_1-show_status 1
+set ::SCIRun_Math_BuildTransform_1-rx 0
+set ::SCIRun_Math_BuildTransform_1-ry 0
+set ::SCIRun_Math_BuildTransform_1-rz 1
+set ::SCIRun_Math_BuildTransform_1-th 0
+set ::SCIRun_Math_BuildTransform_1-tx 0
+set ::SCIRun_Math_BuildTransform_1-ty 0
+set ::SCIRun_Math_BuildTransform_1-tz 0
+set ::SCIRun_Math_BuildTransform_1-scale 0
+set ::SCIRun_Math_BuildTransform_1-scalex 0
+set ::SCIRun_Math_BuildTransform_1-scaley 0
+set ::SCIRun_Math_BuildTransform_1-scalez 0
+set ::SCIRun_Math_BuildTransform_1-sha 0
+set ::SCIRun_Math_BuildTransform_1-shb 0
+set ::SCIRun_Math_BuildTransform_1-shc 1
+set ::SCIRun_Math_BuildTransform_1-shd 1
+set ::SCIRun_Math_BuildTransform_1-xmapTCL 1
+set ::SCIRun_Math_BuildTransform_1-ymapTCL 2
+set ::SCIRun_Math_BuildTransform_1-zmapTCL 3
+set ::SCIRun_Math_BuildTransform_1-pre 1
+set ::SCIRun_Math_BuildTransform_1-whichxform 0
+set ::SCIRun_Math_BuildTransform_1-widgetShowResizeHandles 0
+set ::SCIRun_Math_BuildTransform_1-widgetScale 1
+$m3 ui
+$m4 ui
+$m12 ui
+$m16 ui
+$m26 ui
+
+::netedit scheduleok
