@@ -69,6 +69,7 @@ SRCS     += \
 	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SampleLattice.cc\
 	$(SRCDIR)/SamplePlane.cc\
+	$(SRCDIR)/SampleStructHex.cc\
 	$(SRCDIR)/ScalarFieldStats.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SelectField.cc\
