@@ -15,6 +15,7 @@ SRCS += \
 	$(SRCDIR)/fixradval.F \
 	$(SRCDIR)/radarray.F \
 	$(SRCDIR)/radcoef.F \
+	$(SRCDIR)/radcoefthin.F \
 	$(SRCDIR)/radcal.F \
 	$(SRCDIR)/rdombc.F \
 	$(SRCDIR)/rdombmcalc.F \
@@ -40,6 +41,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 $(SRCDIR)/radarray.o: $(SRCDIR)/radarray_fort.h
 $(SRCDIR)/radcal.o: $(SRCDIR)/radcal_fort.h
 $(SRCDIR)/radcoef.o: $(SRCDIR)/radcoef_fort.h
+$(SRCDIR)/radcoefthin.o: $(SRCDIR)/radcoefthin_fort.h
 $(SRCDIR)/rordr.o: $(SRCDIR)/rordr_fort.h
 $(SRCDIR)/rordrss.o: $(SRCDIR)/rordrss_fort.h
 $(SRCDIR)/rordrtn.o: $(SRCDIR)/rordrtn_fort.h
