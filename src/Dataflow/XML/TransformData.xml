@@ -34,14 +34,13 @@
 
         <p>The data transform is specified in the GUI as the body of a
 	C++ function.  The input values to the function are the x, y,
-	and z positions of the data point, v0 for the first field's
-	data element and v1 for the second field's data element.  No
-	value is returned, rather set the 'result' variable to the
-	return type.  For example, "result = x + v;" would return a
-	new field containing the x position of each element added with
-	the value that was already there.  "result = v.x();" could be
-	used to extract the x component of a vector field into a
-	scalar field.</p>
+	and z positions of the data point, v is the value of the input
+	field's data element.  No value is returned, rather set the
+	'result' variable to the return type.  For example, "result
+	= x + v;" would return a new field containing the x position
+	of each element added with the value that was already
+	there. "result = v.x();" could be used to extract the x
+	component of a vector field into a scalar field.</p>
 
     </description>
   </overview>
