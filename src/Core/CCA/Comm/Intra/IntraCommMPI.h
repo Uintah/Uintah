@@ -47,6 +47,9 @@ namespace SCIRun {
     int broadcast(int root, char* bytestream, int length);
     int async_send(int rank, char* bytestream, int length);
     int async_receive(int rank, char* bytestream, int length);
+    int get_rank();
+    int get_size();
+    void barrier();
   private:
   };
 }
