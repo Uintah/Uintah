@@ -85,13 +85,15 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/hilbert.cc \
 	$(SRCDIR)/Wood.cc \
 	$(SRCDIR)/HTVolumeBrick.cc  \
-	$(SRCDIR)/Disc.cc
+	$(SRCDIR)/Disc.cc 
 
 PSELIBS :=  \
-	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo
+	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
 
-LIBS := $(GL_LIBS) -lfastm -lm -lelf -lfetchop -lperfex
+LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm -lelf $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+
 
 

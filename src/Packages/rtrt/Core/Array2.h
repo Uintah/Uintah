@@ -44,7 +44,8 @@ public:
   }
   void share(const Array2<T>& copy);
 };
-  
+
+#include "Array2.cc"  
 
 } // end namespace rtrt
 

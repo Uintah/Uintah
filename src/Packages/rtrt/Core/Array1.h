@@ -86,4 +86,6 @@ template<class T> void Pio(Piostream&, Array1<T>*&);
 
 } // end namespace rtrt
 
+#include "Array1.cc"
+
 #endif /* SCI_Classlib_Array1_h */

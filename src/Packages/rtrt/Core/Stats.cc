@@ -7,11 +7,13 @@
 using namespace rtrt;
 
 extern "C" {
+#if HAVE_PERFEX
          int start_counters( int e0, int e1 );
          int read_counters( int e0, long long *c0, int e1, long long *c1);
          int print_counters( int e0, long long c0, int e1, long long c1);
          int print_costs( int e0, long long c0, int e1, long long c1);
          int load_costs(char *CostFileName);
+#endif
 }
 
 
@@ -114,7 +116,9 @@ Counters::Counters(int ncounters, int ic0, int ic1)
 	    else
 		c1=0;
 	}
+#if HAVE_PERFEX
 	start_counters(c0, c1);
+#endif
     }
 }
 
@@ -122,8 +126,10 @@ void Counters::end_frame()
 {
 #if 0
     if(ncounters){
+#if HAVE_PERFEX
 	read_counters(c0, &val0, c1, &val1);
 	start_counters(c0, c1);
+#endif
     }
 #endif
 }

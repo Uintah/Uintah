@@ -1,6 +1,8 @@
 
 #include <Packages/rtrt/Core/Array1.cc>
 
+using rtrt::Array1;
+
 class Light;
 template class Array1<Light*>;
 
@@ -17,10 +19,10 @@ class Volume;
 template class Array1<Volume*>;
 
 #include <Core/Geometry/Point.h>
-template class Array1<Point>;
+template class Array1<SCIRun::Point>;
 
 #include <Core/Geometry/Vector.h>
-template class Array1<Vector>;
+template class Array1<SCIRun::Vector>;
 
 template class Array1<int>;
 template class Array1<double>;
@@ -32,7 +34,11 @@ template class Array1<Material*>;
 #include <Packages/rtrt/Core/HashTable.cc>
 #include <Packages/rtrt/Core/HashTableEntry.cc>
 
-template class HashTable<RandomTable::TableInfo, double*>;
-template class HashTableEntry<RandomTable::TableInfo, double*>;
-template class HashTable<RandomTable::TableInfo, int*>;
-template class HashTableEntry<RandomTable::TableInfo, int*>;
+template class rtrt::HashTable<rtrt::RandomTable::TableInfo, double*>;
+template class rtrt::HashTableEntry<rtrt::RandomTable::TableInfo, double*>;
+template class rtrt::HashTable<rtrt::RandomTable::TableInfo, int*>;
+template class rtrt::HashTableEntry<rtrt::RandomTable::TableInfo, int*>;
+
+
+
+
