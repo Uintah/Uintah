@@ -20,8 +20,9 @@
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <Packages/rtrt/Core/CutGroup.h>
-#ifndef linux
-#include <Packages/rtrt/Sound/Sound.h>
+#if !defined(linux)
+#  include <Packages/rtrt/Sound/SoundThread.h>
+#  include <Packages/rtrt/Sound/Sound.h>
 #endif
 
 #include <Core/Math/Trig.h>
@@ -117,7 +118,7 @@ Gui::Gui() :
   objectsWindowVisible(false), mainWindowVisible(true),
   lightList(NULL), routeList(NULL), objectList(NULL), soundList_(NULL),
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
-  lightIntensity_(NULL),
+  lightIntensity_(NULL), enableSounds_(false),
   lightBrightness_(1.0), ambientBrightness_(1.0),
   mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
@@ -244,6 +245,14 @@ Gui::idleFunc()
   static double lasttime  = SCIRun::Time::currentSeconds();
   static double cum_ttime = 0;
   static double cum_dt    = 0;
+
+  if( activeGui->enableSounds_ )
+    {
+      activeGui->enableSounds_ = false;
+      activeGui->openSoundPanelBtn_->enable();
+      activeGui->soundVolumeSpinner_->enable();
+      activeGui->startSoundThreadBtn_->set_name( "Sounds Started" );
+    }
 
   // I know this is a hack... 
   if( dpy->showImage_ ){
@@ -836,7 +845,7 @@ Gui::handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z )
 }
 
 void
-Gui::handleSpaceballButtonCB( int button, int state )
+Gui::handleSpaceballButtonCB( int button, int /*state*/ )
 {
   cout << "spaceball button: " << button << "\n"; 
 }
@@ -878,7 +887,10 @@ Gui::toggleSoundWindowCB( int /*id*/ )
   if( activeGui->soundsWindowVisible )
     activeGui->soundsWindow->hide();
   else
-    activeGui->soundsWindow->show();
+    {
+      activeGui->soundsWindow->show();
+      updateSoundCB( -1 );
+    }
   activeGui->soundsWindowVisible = !activeGui->soundsWindowVisible;
 }
 
@@ -929,6 +941,15 @@ Gui::updateObjectCB( int /*id*/ )
 void
 Gui::updateSoundCB( int /*id*/ )
 {
+  activeGui->currentSound_ = activeGui->sounds_[ activeGui->selectedSoundId_ ];
+
+  Point & location = activeGui->currentSound_->locations_[0];
+
+  cout << "point is " << location << "\n";
+
+  activeGui->soundOriginX_->set_float_val( location.x() );
+  activeGui->soundOriginY_->set_float_val( location.y() );
+  activeGui->soundOriginZ_->set_float_val( location.z() );
 }
 
 void
@@ -1024,6 +1045,8 @@ Gui::createRouteWindow( GLUI * window )
 			       LOAD_ROUTE_BUTTON_ID, getStringCB );
   window->add_button_to_panel( route_file, "Save",
 			       SAVE_ROUTE_BUTTON_ID, getStringCB );
+  window->add_button_to_panel( panel, "Close",
+			       -1 , toggleRoutesWindowCB );
 
 }
 
@@ -1032,10 +1055,19 @@ Gui::createGetStringWindow( GLUI * window )
 {
   getStringPanel = window->add_panel( "" );
 
-  window->add_edittext_to_panel( getStringPanel, "", GLUI_EDITTEXT_TEXT,
+  getStringText_ = 
+    window->add_edittext_to_panel( getStringPanel, "", GLUI_EDITTEXT_TEXT,
 				 &(activeGui->inputString_) );
+
+  GLUI_Panel * buttonsPanel = window->add_panel_to_panel( getStringPanel, "" );
+
   getStringButton = 
-    window->add_button_to_panel( getStringPanel, "OK", CLOSE_GETSTRING_BTN );
+    window->add_button_to_panel( buttonsPanel, "OK", CLOSE_GETSTRING_BTN );
+
+  window->add_column_to_panel( buttonsPanel );
+
+  window->add_button_to_panel( buttonsPanel, "Cancel", 
+			       -1, hideGetStringWindowCB );
 }
 
 void
@@ -1069,7 +1101,7 @@ Gui::createObjectWindow( GLUI * window )
 
   window->add_statictext_to_panel( moreControls, "Rotating" );
 
-  GLUI_Rotation * objectRotator = 
+  /*GLUI_Rotation * objectRotator = */
     window->add_rotation_to_panel( moreControls, "Rotator", 
 				   (float*)(dpy_->objectRotationMatrix_) );
 
@@ -1112,6 +1144,9 @@ Gui::createObjectWindow( GLUI * window )
   CutToggleButton_ = window->add_button_to_panel( moreControls, "N/A",
 						  0,
 						  CutToggleCB );
+
+  window->add_button_to_panel( panel, "Close",
+			       -1, toggleObjectsWindowCB );
 } // end createObjectWindow()
 
 void
@@ -1123,14 +1158,27 @@ Gui::createSoundsWindow( GLUI * window )
 					     &selectedSoundId_,
 					     SOUND_LIST_ID, updateSoundCB );
 
+  GLUI_Panel * soundOriginPanel = window->
+    add_panel_to_panel( panel, "Location" );
+
+  activeGui->soundOriginX_ = window->add_edittext_to_panel
+    ( soundOriginPanel, "X position:", GLUI_EDITTEXT_FLOAT );
+  activeGui->soundOriginY_ = window->add_edittext_to_panel
+    ( soundOriginPanel, "Y position:", GLUI_EDITTEXT_FLOAT );
+  activeGui->soundOriginZ_ = window->add_edittext_to_panel
+    ( soundOriginPanel, "Z position:", GLUI_EDITTEXT_FLOAT );
+
+
   GLUI_Panel * volumePanel = window->add_panel_to_panel( panel, "Volume" );
 
+  currentSound_ = sounds_[0];
+
 #ifndef linux
-  const vector<Sound*> & sounds = dpy_->scene->getSounds();
-  for( int num = 0; num < sounds.size(); num++ )
+  sounds_ = dpy_->scene->getSounds();
+  for( int num = 0; num < sounds_.size(); num++ )
     {
       char name[ 1024 ];
-      sprintf( name, "%s", sounds[ num ]->getName().c_str() );
+      sprintf( name, "%s", sounds_[ num ]->getName().c_str() );
       soundList_->add_item( num, name );
     }
 #endif
@@ -1140,6 +1188,33 @@ Gui::createSoundsWindow( GLUI * window )
 
   activeGui->rightVolume_ = window->
     add_edittext_to_panel( volumePanel, "Right:", GLUI_EDITTEXT_FLOAT );
+
+  window->add_button_to_panel( panel, "Close",
+			       -1, toggleSoundWindowCB );
+}
+
+void
+Gui::startSoundThreadCB( int /*id*/ )
+{
+#if !defined(linux)
+  activeGui->startSoundThreadBtn_->disable();
+  activeGui->startSoundThreadBtn_->set_name( "Starting Sounds" );
+
+  SoundThread * soundthread = NULL;
+
+  cout << "Starting Sound Thread!\n";
+  soundthread = new SoundThread( activeGui->dpy_->getGuiCam(), 
+				 activeGui->dpy_->scene,
+				 activeGui );
+  Thread * t = new Thread( soundthread, "Sound thread");
+  t->detach();
+#endif
+}
+
+void
+Gui::soundThreadNowActive()
+{
+  activeGui->enableSounds_ = true;
 }
 
 void
@@ -1356,11 +1431,15 @@ Gui::createLightWindow( GLUI * window )
     window->add_button_to_panel(moreControls, "Goto Light" );
   gotoLightBtn->disable();
 
+  window->add_button_to_panel( panel, "Close",
+			       1, toggleLightsWindowCB );
+
 }
 
 
 void
-Gui::createMenus( int winId, bool showGui /* = true */ )
+Gui::createMenus( int winId, bool soundOn /* = false */,
+		  bool showGui /* = true */ )
 {
   printf("createmenus\n");
 
@@ -1410,7 +1489,6 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
   activeGui->createRouteWindow( activeGui->routeWindow );
   activeGui->createLightWindow( activeGui->lightsWindow );
   activeGui->createObjectWindow( activeGui->objectsWindow );
-  activeGui->createSoundsWindow( activeGui->soundsWindow );
   activeGui->createGetStringWindow( activeGui->getStringWindow );
 
   /////////////////////////////////////////////////////////
@@ -1555,12 +1633,26 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
 			  SOUND_VOLUME_SPINNER_ID );
   activeGui->soundVolumeSpinner_->set_speed( 0.01 );
   activeGui->soundVolumeSpinner_->set_int_limits( 0, 100 );
-#if defined(linux)
   activeGui->soundVolumeSpinner_->disable();
-#else
+
+  //adding in the start sounds button after volume spinner
+  //disabled if no sounds or sounds selected in beginning
+  activeGui->startSoundThreadBtn_ = activeGui->mainWindow->
+    add_button_to_panel(otherControls, "Start Sounds",-1, startSoundThreadCB);
   if( activeGui->dpy_->scene->getSounds().size() == 0 )
-    activeGui->soundVolumeSpinner_->disable();
-#endif
+    {
+      activeGui->startSoundThreadBtn_->disable();
+      activeGui->startSoundThreadBtn_->set_name( "No Sounds" );
+    }
+  else
+    {
+      activeGui->createSoundsWindow( activeGui->soundsWindow );
+      if( soundOn )
+	{
+	  activeGui->startSoundThreadBtn_->disable();
+	  startSoundThreadCB( -1 );
+	}
+    }
 
   // 
   activeGui->depthValue_ = 2;
@@ -1587,9 +1679,10 @@ Gui::createMenus( int winId, bool showGui /* = true */ )
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
   activeGui->mainWindow->add_column_to_panel( button_panel );
-  activeGui->mainWindow->
+  activeGui->openSoundPanelBtn_ = activeGui->mainWindow->
     add_button_to_panel( button_panel, "Sounds",
 			 OBJECTS_BUTTON_ID, toggleSoundWindowCB );
+  activeGui->openSoundPanelBtn_->disable();
   printf("done createmenus\n");
 }
 
@@ -1696,11 +1789,22 @@ Gui::update()
   sprintf( status, "%d of %d", pos+1, numPts );
   routePositionET->set_text( status );
 
-  // Update Sound Panel
-  leftVolume_->set_float_val( 0.0 );
-  rightVolume_->set_float_val( 0.0 );
+  updateSoundPanel();
 
 } // end update()
+
+void
+Gui::updateSoundPanel()
+{
+  if( soundsWindowVisible )
+    {
+      double right, left;
+      currentSound_->currentVolumes( right, left );
+
+      rightVolume_->set_float_val(right);
+      leftVolume_->set_float_val(left);
+    }
+}
 
 // Display image as a "transmission".  Ie: turn off every other scan line.
 void
@@ -1772,12 +1876,15 @@ Gui::getStringCB( int id )
   if( id == LOAD_ROUTE_BUTTON_ID ) {
     activeGui->getStringPanel->set_name( "Load File Name" );
     activeGui->getStringButton->callback = loadRouteCB;
+    activeGui->getStringText_->callback = loadRouteCB;
   } else if( id == NEW_ROUTE_BUTTON_ID ) {
     activeGui->getStringPanel->set_name( "Enter Route Name" );
     activeGui->getStringButton->callback = newRouteCB;
+    activeGui->getStringText_->callback = newRouteCB;
   } else if( id == SAVE_ROUTE_BUTTON_ID ) {
     activeGui->getStringPanel->set_name( "Save File Name" );
     activeGui->getStringButton->callback = saveRouteCB;
+    activeGui->getStringText_->callback = saveRouteCB;
   } else {
     cout << "don't know what string to get\n";
     return;
@@ -1786,10 +1893,22 @@ Gui::getStringCB( int id )
   activeGui->getStringWindow->show();
 }
 
+void 
+Gui::hideGetStringWindowCB( int /*id*/ )
+{
+  activeGui->getStringWindow->hide();
+}
+
+
 void
 Gui::loadRouteCB( int /*id*/ )
 {
-  activeGui->getStringWindow->hide();
+  // glui is screwy when you have this type of window where you want
+  // either the "ok" button or "return" to do the same thing.  By
+  // removing the callbacks like this, you avoid an infinite loop.
+  activeGui->getStringButton->callback = NULL;
+  activeGui->getStringText_->callback = NULL;
+
   string routeName = activeGui->stealth_->loadPath( activeGui->inputString_ );
 
   if( routeName == "" )
@@ -1797,6 +1916,10 @@ Gui::loadRouteCB( int /*id*/ )
       cout << "loading of route failed\n";
       return;
     }
+
+  cout << "loaded route: " << routeName << "\n";
+
+  activeGui->getStringWindow->hide();
 
   char name[1024];
   sprintf( name, "%s", routeName.c_str() );
@@ -1817,6 +1940,12 @@ Gui::loadRouteCB( int /*id*/ )
 void
 Gui::newRouteCB( int /*id*/ )
 {
+  // glui is screwy when you have this type of window where you want
+  // either the "ok" button or "return" to do the same thing.  By
+  // removing the callbacks like this, you avoid an infinite loop.
+  activeGui->getStringButton->callback = NULL;
+  activeGui->getStringText_->callback = NULL;
+
   activeGui->getStringWindow->hide();
 
   string routeName = activeGui->inputString_;
@@ -1845,6 +1974,12 @@ Gui::newRouteCB( int /*id*/ )
 void
 Gui::saveRouteCB( int /*id*/ )
 {
+  // glui is screwy when you have this type of window where you want
+  // either the "ok" button or "return" to do the same thing.  By
+  // removing the callbacks like this, you avoid an infinite loop.
+  activeGui->getStringButton->callback = NULL;
+  activeGui->getStringText_->callback = NULL;
+
   activeGui->getStringWindow->hide();
   
   if( strcmp( activeGui->inputString_, "" ) )
