@@ -28,7 +28,7 @@
 
 
 <section id="sec.intro">
-<title>Introduction</title> 
+<title>Introduction</title>
 
 <para>This guide provides instructions for installing &sr;, its third
 party libraries, the (optional) <acronym>PETSc</acronym> and Insight
@@ -111,17 +111,16 @@ of Red Hat Enterprise Linux.</para>
 <listitem>
 <para>OS X 10.3 (Panther)</para>
 </listitem>
+
 <listitem>
-<para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
+<para>&osx; 10.3 developer tools.</para>
 </listitem>
 <listitem>
 
-<para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.
-X11 is distributed with &osx; 10.3 but must be installed separately</para>
+<para>Apple's X11 and X11 <acronym>SDK</acronym> for &osx; 10.3.</para>
 </listitem>
 <listitem>
-<para>G4 processor</para>
-<para>&sr; has not been tested on G5</para>
+<para>G4 or G5 processor</para>
 </listitem>
 <listitem>
 <para>512 Mb (or more) RAM</para>
@@ -159,8 +158,8 @@ be <link linkend="sec.rpminst">installed via an <acronym>RPM</acronym>
 package</link> or <link linkend="sec.source_inst">from &sr;'s source
 code distribution</link>.  The &sr; <acronym>RPM</acronym>
 distribution does <emphasis>not</emphasis> provide support for
-<acronym>PETSc</acronym> or <acronym>ITK</acronym>.
-<acronym>PETSc</acronym> and <acronym>ITK</acronym> support is
+<acronym>PETSc</acronym>.
+<acronym>PETSc</acronym> support is
 available only through the &sr; source code distribution.
 </para>
 
@@ -176,28 +175,13 @@ endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
 installing &sr;.
 </para>
 
-<para>
-Start with <citetitle
+<para>Proceed to <citetitle
 pubwork="section"><xref linkend="sec.rpminst"
 endterm="title.rpminst"/></citetitle> if installing &sr; from an
-<acronym>RPM</acronym>.  Otherwise, proceed as follows:
-<orderedlist>
-<listitem>
-<para>Read <citetitle pubwork="section"><xref linkend="sec.opt_inst"
-endterm="title.opt_inst"/></citetitle> if installing
-<acronym>PETSc</acronym> or Insight Toolkit (<acronym>ITK</acronym>)
-support.  Note that support for <acronym>PETSc</acronym> and
-<acronym>ITK</acronym> is not provided by Linux <acronym>RPM</acronym>
-&sr; distributions.</para>
-</listitem>
-<listitem>
-<para>Proceed to <citetitle
+<acronym>RPM</acronym>.  Otherwise, start with <citetitle
 pubwork="section"><xref linkend="sec.source_inst"
 endterm="title.source_inst"/></citetitle> to install &sr; from 
 source code.</para>
-</listitem>
-</orderedlist>
-</para>
 
 <section id="intro.nvidia_notes">
 <title id="intro.nvidia_notes.title">Linux and Nvidia Driver Notes</title>
@@ -241,6 +225,11 @@ incorrectly</para>
 </listitem>
 <listitem>
 <para>One card did work well under Redhat 9.</para>
+</listitem>
+<listitem>
+<para>The &sr; configure option,
+<option>--enable-ati-card-fix</option> can be used to improve the
+usability of ATI cards.</para>
 </listitem>
 </itemizedlist>
 Based on these experiences, SCI does not recommend the use of ATI
