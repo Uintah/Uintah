@@ -54,7 +54,7 @@
 	        <upper>[3,3,3]</upper>
 	        <resolution>[60,60,60]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[2,2,2]</patches>
+		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -84,7 +84,7 @@
 	        <radiation>true</radiation>
 	        <mixing_model>pdfMixingModel</mixing_model>
 	        <PDFMixingModel>
-		  <adiabatic>false</adiabatic>
+		  <adiabatic>true</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>1</rxnvars>
 		  <reaction_model>ILDMReactionModel</reaction_model>
@@ -190,6 +190,7 @@
 			<top>[0,1.5,1.5]</top>
 			<radius> .5 </radius>
 		      </cylinder>
+                    </geom_object>
 		</FlowInlet>
 		<WallBC>
 		    <geom_object>
