@@ -303,9 +303,9 @@ PDFMixingModel::computeProps(const InletStream& inStream,
     double adiabaticEnthalpy = normStream.getEnthalpy();
     double sensEnthalpy = normStream.getSensEnthalpy(); 
     double normEnthalpy;
-    if (Abs(absEnthalpy) < 1e-10)
+    if (inStream.d_initEnthalpy)
       normEnthalpy = 0.0;
-    else 
+	else
       normEnthalpy = (absEnthalpy - adiabaticEnthalpy)/sensEnthalpy;
     if (normEnthalpy < d_tableInfo->getMinValue(0))
       normEnthalpy =  d_tableInfo->getMinValue(0);
@@ -321,7 +321,7 @@ PDFMixingModel::computeProps(const InletStream& inStream,
     double maxStatValue;
     for (int ii = 0; ii < d_numMixStatVars; ii++) {
       //maxStatValue = inStream.d_mixVars[ii]*(1-inStream.d_mixVars[ii]);
-      maxStatValue = 0.8*inStream.d_mixVars[ii]*(1-inStream.d_mixVars[ii]);
+      maxStatValue = 0.7*inStream.d_mixVars[ii]*(1-inStream.d_mixVars[ii]);
       if (mixRxnVar[statcount+ii] < 0.0)
 	mixRxnVar[statcount+ii] = 0.0;
       if (mixRxnVar[statcount+ii] > maxStatValue)
