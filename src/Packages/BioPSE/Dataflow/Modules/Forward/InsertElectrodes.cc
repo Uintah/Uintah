@@ -204,7 +204,7 @@ InsertElectrodes::insertNodesIntoTetMesh(vector<pair<int, double> > &dirichlet,
   for (int i=0; i<np; i++) {
     if (tet_mesh->locate(cidx, new_points[i])) {
       node_map[i]=tet_mesh->add_point(new_points[i]);
-      dirichlet.push_back(pair<int,double>(node_map[i], new_values[i]));
+      dirichlet.push_back(pair<int,double>((int)node_map[i], new_values[i]));
       int already_split_elem=0;
       for (int j=0; j<split_elems.size() && !already_split_elem; j++) {
 	if (cidx == split_elems[j]) {
@@ -393,12 +393,12 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
     electrode_node_split_idx[ni] = tet_mesh->add_point(proj_pt);
     if (is_electrode_node[electrode_nodes[i]] == 2)
     {
-      dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
+      dirichlet.push_back(pair<int,double>((int)electrode_node_split_idx[ni], 
 					   voltage));
 //      cerr << "node: " << (unsigned int)(electrode_node_split_idx[ni]);
 //      cerr << "  val=:" << voltage << "\n";
       if (active_side == "both") {
-	dirichlet.push_back(pair<int,double>(ni, voltage));
+	dirichlet.push_back(pair<int,double>((int)ni, voltage));
 //	cerr << "   also node: "<<(unsigned int)(ni)<<"  val=:"<<voltage<<"\n";
       }
     }
