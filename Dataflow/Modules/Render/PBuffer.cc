@@ -28,7 +28,10 @@
  *  Copyright (C) 2003 SCI Group
  */
 
+#include <sci_defs.h>
+
 #include <Dataflow/Modules/Render/PBuffer.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -42,7 +45,9 @@ PBuffer::PBuffer( int doubleBuffer ):
   doubleBuffer_(doubleBuffer),
   depthBits_(8),
   valid_(false),
-  cx_(0)
+  cx_(0),
+  fbc_(0),
+  pbuffer_(0)
 {}
 
 void
@@ -57,7 +62,9 @@ PBuffer::create(Display* dpy, int screen,
   
   // Set up a pbuffer associated with dpy
   int minor = 0 , major = 0;
+#ifndef HAVE_CHROMIUM
   glXQueryVersion(dpy, &major, &minor);
+#endif
   if( major >= 1 || (major == 1 &&  minor >1)) { // we can have a pbuffer
     //    cerr<<"We can have a pbuffer!\n";
     int attrib[32];
@@ -71,7 +78,9 @@ PBuffer::create(Display* dpy, int screen,
     attrib[i++] = GLX_DOUBLEBUFFER; attrib[i++] = doubleBuffer_;
     attrib[i] = None;
     int nelements;
+#ifndef HAVE_CHROMIUM
     fbc_ = glXChooseFBConfig( dpy, screen, attrib, &nelements );
+#endif
     if( fbc_ == 0 ){
       //      cerr<<"Can not configure for Pbuffer\n";
       return;
@@ -79,6 +88,7 @@ PBuffer::create(Display* dpy, int screen,
 
     int match = 0, a[8];
     for(int i = 0; i < nelements; i++) {
+#ifndef HAVE_CHROMIUM
       glXGetFBConfigAttrib(dpy, fbc_[i],
 			   GLX_RED_SIZE, &a[0]);
       glXGetFBConfigAttrib(dpy, fbc_[i],
@@ -95,6 +105,7 @@ PBuffer::create(Display* dpy, int screen,
 			   GLX_ACCUM_GREEN_SIZE, &a[6]);
       glXGetFBConfigAttrib(dpy, fbc_[i],
 			   GLX_ACCUM_BLUE_SIZE, &a[7]);
+#endif
       // printf("r = %d, b = %d, g = %d, a = %d, z = %d, ar = %d, ag = %d, ab = %d\n",
       //	     a[0],a[1],a[2],a[3],a[4], a[5], a[6], a[7]);
       if((a[0] >= 8) && (a[1] >= 8) &&
@@ -112,21 +123,25 @@ PBuffer::create(Display* dpy, int screen,
     attrib[i++] = GLX_PBUFFER_WIDTH; attrib[i++] = width_;
     attrib[i++] = GLX_PBUFFER_HEIGHT; attrib[i++] = height_;
     attrib[i] = None;
+#ifndef HAVE_CHROMIUM
     pbuffer_ = glXCreatePbuffer( dpy, fbc_[match], attrib );
+#endif
     if( pbuffer_ == 0 ) {
       //      cerr<<"Cannot create Pbuffer\n";
       return;
     }
 
+#ifndef HAVE_CHROMIUM
     cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, NULL, True);
+#endif
     if( !cx_ ){
-      //      cerr<<"Cannot create Pbuffer context\n";
+//      cerr<<"Cannot create Pbuffer context\n";
       return;
     }
-    //    else cerr<<"Pbuffer successfully created\n";
+//    else cerr<<"Pbuffer successfully created\n";
     valid_ = true;
   } else {
-    //    cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
+//    cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
     cx_ = 0;
   }
 
@@ -136,12 +151,16 @@ void
 PBuffer::destroy()
 {
   if( cx_ ) {
+#ifndef HAVE_CHROMIUM
     glXDestroyContext( dpy_, cx_ );
+#endif
     cx_ = 0;
   }
 
   if( pbuffer_ ) {
+#ifndef HAVE_CHROMIUM
     glXDestroyPbuffer( dpy_, pbuffer_);
+#endif
     pbuffer_ = 0;
   }
   valid_ = false;
@@ -150,18 +169,20 @@ PBuffer::destroy()
 void
 PBuffer::makeCurrent()
 {
-  if( valid_ )
+  if( valid_ ) {
+#ifndef HAVE_CHROMIUM
     glXMakeCurrent( dpy_, pbuffer_, cx_ );
+#endif
+  }
 }
 
 bool
 PBuffer::is_current()
 {
-  if ( cx_ == glXGetCurrentContext() ){
-    return true;
-  } else {
-    return false;
-  }
+#ifndef HAVE_CHROMIUM
+  cx_ == glXGetCurrentContext();
+#endif
+  return (cx_ ? true : false);
 }
 
 } // end namespace SCIRun
