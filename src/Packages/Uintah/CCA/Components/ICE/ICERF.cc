@@ -666,8 +666,8 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
 					  const PatchSet* patches,
-                                     const MaterialSubset* mpm_matls,
-                                     const MaterialSet* ice_matls)
+                                          const MaterialSubset* mpm_matls,
+                                          const MaterialSet* ice_matls)
 {
   cout_doing << "ICE::scheduleComputeLagrangianValues" << endl;
   Task* task = scinew Task("ICE::computeLagrangianValues",
@@ -680,9 +680,9 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   task->requires(Task::NewDW,lb->burnedMass_CCLabel,      Ghost::None);
   task->requires(Task::NewDW,lb->releasedHeat_CCLabel,    Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_source_CCLabel,  Ghost::None);
+  task->requires(Task::NewDW,lb->rho_micro_CCLabel,       Ghost::None);
   if (switchDebugLagrangianValues ) {
-  task->requires(Task::NewDW,lb->mom_L_CCLabel,     mpm_matls,
-                                                          Ghost::None);
+  task->requires(Task::NewDW,lb->mom_L_CCLabel, mpm_matls,Ghost::None);
   task->requires(Task::NewDW,lb->int_eng_L_CCLabel, mpm_matls,
                                                           Ghost::None);
   }
@@ -692,6 +692,30 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   task->computes(lb->mass_L_CCLabel);
  
   sched->addTask(task, patches, ice_matls);
+}
+
+void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
+                                               const PatchSet* patches,
+                                               const MaterialSubset* press_matl,
+                                               const MaterialSet* matls)
+{
+  cout_doing << "ICE::scheduleComputeLagrangianSpecificVolume" << endl;
+  Task* task = scinew Task("ICE::computeLagrangianSpecificVolume",
+                      this,&ICE::computeLagrangianSpecificVolume);
+
+  task->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
+  task->requires(Task::NewDW, lb->rho_micro_CCLabel,            Ghost::None);
+  task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
+  task->requires(Task::OldDW, lb->temp_CCLabel,                 Ghost::None);
+  task->requires(Task::NewDW, lb->Tdot_CCLabel,                 Ghost::None);
+  task->requires(Task::NewDW, lb->f_theta_CCLabel,              Ghost::None);
+
+  task->computes(lb->spec_vol_L_CCLabel);
+  task->computes(lb->spec_vol_source_CCLabel);
+
+  sched->addTask(task, patches, matls);
 }
 
 /* ---------------------------------------------------------------------
@@ -733,9 +757,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->wvel_FCMELabel,      Ghost::AroundCells,2);
   task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->int_eng_L_ME_CCLabel,Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,   Ghost::AroundCells,1);
-  task->requires(Task::OldDW, lb->mass_CCLabel,        Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::AroundCells,1);
  
   task->computes(lb->rho_CC_top_cycleLabel);
@@ -2145,12 +2169,13 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         }
 
         // New term3 comes from Kashiwa 4.11
-//        term3[*iter] += vol_frac[*iter]*compressibility;
-          term3[*iter] += vol_frac[*iter] /(rho_micro[m][*iter] *
-                                speedSound[*iter]*speedSound[*iter]);
+        term3[*iter] += vol_frac[*iter]*compressibility;
+//          term3[*iter] += vol_frac[*iter] /(rho_micro[m][*iter] *
+//                                speedSound[*iter]*speedSound[*iter]);
 
       }  //iter loop
     }  //matl loop
+
     press_CC.copyData(pressure);
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       delP_MassX[*iter]    = (delT * term1[*iter])/term3[*iter];
@@ -2615,20 +2640,16 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx    = matl->getDWIndex();   
-      CCVariable<double> int_eng_source;              
-      new_dw->get(rho_micro_CC,lb->rho_micro_CCLabel, indx,patch,
-		  Ghost::None, 0);                                            
-      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,
-		  Ghost::None, 0); 
-      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,
-		  Ghost::None, 0);
+      CCVariable<double> int_eng_source;
+      new_dw->get(rho_micro_CC,lb->rho_micro_CCLabel, indx,patch,Ghost::None,0);
+      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
+      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,Ghost::None,0);
 
 #ifdef ANNULUSICE
       CCVariable<double> rho_CC;
-      new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,
-		  Ghost::None, 0);                                            
+      new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);                                            
 #endif
-      new_dw->allocate(int_eng_source, lb->int_eng_source_CCLabel,indx,patch);
+      new_dw->allocate(int_eng_source,  lb->int_eng_source_CCLabel, indx,patch);
 
       //__________________________________
       //   Compute source from volume dilatation
@@ -2658,7 +2679,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         printData( patch, 1, description, "int_eng_source", int_eng_source);
       }
 
-      new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,indx,patch);
+      new_dw->put(int_eng_source, lb->int_eng_source_CCLabel, indx,patch);
     }  // matl loop
   }  // patch loop
 }
@@ -2670,10 +2691,10 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             prior to this function
  ---------------------------------------------------------------------  */
 void ICE::computeLagrangianValues(const ProcessorGroup*,  
-				      const PatchSubset* patches,
+				  const PatchSubset* patches,
                                   const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw, 
-				      DataWarehouse* new_dw)
+				  DataWarehouse* old_dw, 
+				  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2684,7 +2705,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();    
-    
+
     //__________________________________ 
     //  Compute the Lagrangian quantities
     for(int m = 0; m < numALLMatls; m++) {
@@ -2696,7 +2717,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
      CCVariable<double> int_eng_L; 
      CCVariable<double> mass_L;
      if(ice_matl)  {               //  I C E
-      constCCVariable<double> rho_CC, temp_CC;
+      constCCVariable<double> rho_CC, temp_CC, rho_micro;
       constCCVariable<Vector> vel_CC;
       constCCVariable<double> int_eng_source, burnedMass;
       constCCVariable<double> releasedHeat;
@@ -2705,14 +2726,16 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       new_dw->get(rho_CC,  lb->rho_CCLabel,     indx,patch,Ghost::None, 0);
       old_dw->get(vel_CC,  lb->vel_CCLabel,     indx,patch,Ghost::None, 0);
       old_dw->get(temp_CC, lb->temp_CCLabel,    indx,patch,Ghost::None, 0);
-      new_dw->get(burnedMass,     lb->burnedMass_CCLabel,indx,patch,
+      new_dw->get(burnedMass,     lb->burnedMass_CCLabel,     indx,patch,
 		                                             Ghost::None, 0);
-      new_dw->get(releasedHeat,   lb->releasedHeat_CCLabel,indx,patch,
+      new_dw->get(releasedHeat,   lb->releasedHeat_CCLabel,   indx,patch,
 		                                             Ghost::None, 0);
-      new_dw->get(mom_source,     lb->mom_source_CCLabel,indx,patch,
+      new_dw->get(mom_source,     lb->mom_source_CCLabel,     indx,patch,
 		                                             Ghost::None, 0);
-      new_dw->get(int_eng_source, lb->int_eng_source_CCLabel,indx,patch,
+      new_dw->get(int_eng_source, lb->int_eng_source_CCLabel, indx,patch,
 		                                             Ghost::None, 0);
+      new_dw->get(rho_micro,      lb->rho_micro_CCLabel,      indx,patch,
+							     Ghost::None, 0);
       new_dw->allocate(mom_L,     lb->mom_L_CCLabel,     indx,patch);
       new_dw->allocate(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
       new_dw->allocate(mass_L,    lb->mass_L_CCLabel,    indx,patch);
@@ -2824,8 +2847,10 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 	 constCCVariable<double> int_eng_L_Debug = int_eng_L; 
 	 constCCVariable<Vector> mom_L_Debug = mom_L;
          if(mpm_matl) {
-          new_dw->get(int_eng_L_Debug,lb->int_eng_L_CCLabel,indx,patch,Ghost::None,0);
-          new_dw->get(mom_L_Debug,    lb->mom_L_CCLabel,    indx,patch,Ghost::None,0);
+          new_dw->get(int_eng_L_Debug,lb->int_eng_L_CCLabel,indx,patch,
+								Ghost::None,0);
+          new_dw->get(mom_L_Debug,    lb->mom_L_CCLabel,    indx,patch,
+								Ghost::None,0);
         }
         char description[50];
         sprintf(description, "Bot_Lagrangian_Values_Mat_%d_patch_%d ", 
@@ -2842,6 +2867,91 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, indx,patch);
         new_dw->put(mass_L,    lb->mass_L_CCLabel,    indx,patch);
       }
+    }  // end numALLMatl loop
+  }  // patch loop
+}
+
+void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,  
+					  const PatchSubset* patches,
+		                          const MaterialSubset* /*matls*/,
+					  DataWarehouse* old_dw, 
+					  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    cout_doing << "Doing Lagrangian mass, momentum and energy on patch " <<
+      patch->getID() << "\t ICE" << endl;
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+
+    int numALLMatls = d_sharedState->getNumMatls();
+    Vector  dx = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();    
+    double alpha;
+
+    constCCVariable<double> rho_CC, rho_micro, Tdot;
+    constCCVariable<double> delP_Dilatate, press_CC;
+    constCCVariable<double> f_theta,vol_frac, Temp_CC;
+    CCVariable<double> sum_therm_exp;
+
+    new_dw->get(press_CC,        lb->press_CCLabel,      0,patch,Ghost::None,0);
+    new_dw->get(delP_Dilatate,   lb->delP_DilatateLabel, 0,patch,Ghost::None,0);
+    new_dw->allocate(sum_therm_exp,lb->SumThermExpLabel, 0,patch);
+
+    // The following assumes that only the fluids have a thermal
+    // expansivity, which is true at this time. (11-08-01)
+    for(int m = 0; m < numALLMatls; m++) {
+     Material* matl = d_sharedState->getMaterial( m );
+     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+     if(ice_matl){
+       int indx = matl->getDWIndex();
+       new_dw->get(Tdot,      lb->Tdot_CCLabel,     indx,patch,Ghost::None, 0);
+       new_dw->get(rho_micro, lb->rho_micro_CCLabel,indx,patch,Ghost::None, 0);
+       new_dw->get(vol_frac,  lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
+       old_dw->get(Temp_CC,   lb->temp_CCLabel,     indx,patch,Ghost::None, 0);
+
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+	 alpha = 1.0/Temp_CC[*iter];  // this assumes an ideal gas
+	 sum_therm_exp[*iter] += vol_frac[*iter]*alpha*Tdot[*iter];
+       }
+     }
+    }
+
+    //__________________________________ 
+    //  Compute the Lagrangian specific volume
+    for(int m = 0; m < numALLMatls; m++) {
+     Material* matl = d_sharedState->getMaterial( m );
+     int indx = matl->getDWIndex();
+     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+     CCVariable<double> spec_vol_L, spec_vol_source;
+     new_dw->allocate(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
+     new_dw->allocate(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
+     spec_vol_L.initialize(0.);
+     spec_vol_source.initialize(0.);
+     if(ice_matl){
+       new_dw->get(rho_CC,   lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
+       new_dw->get(rho_micro,lb->rho_micro_CCLabel,indx,patch,Ghost::None, 0);
+       new_dw->get(vol_frac, lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
+       new_dw->get(Tdot,     lb->Tdot_CCLabel,     indx,patch,Ghost::None, 0);
+       new_dw->get(f_theta,  lb->f_theta_CCLabel,  indx,patch,Ghost::None, 0);
+
+       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+	// Note that at this point, spec_vol_L is actually just a
+	// volume of material, this is consistent with 4.8c
+        double K = ice_matl->getEOS()->getCompressibility(press_CC[*iter]);
+        double term1 = -vol * vol_frac[*iter] * K * delP_Dilatate[*iter];
+	alpha = 1.0/Temp_CC[*iter];  // this assumes an ideal gas
+	double term2 = delT * vol * (vol_frac[*iter]*alpha*Tdot[*iter] -
+					vol_frac[*iter]*sum_therm_exp[*iter]);
+	spec_vol_source[*iter] = term1 + term2;
+	spec_vol_source[*iter] = term2;
+	spec_vol_L[*iter] = (rho_CC[*iter]*vol)/rho_micro[*iter] + term1;
+       }
+     }
+     new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
+     new_dw->put(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
     }  // end numALLMatl loop
   }  // patch loop
 }
@@ -3113,9 +3223,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     double vol = dx.x()*dx.y()*dx.z(),mass;
     double invvol = 1.0/vol;
 
-    int numALLmatls = d_sharedState->getNumMatls();
-    int numICEmatls = d_sharedState->getNumICEMatls();
-
     // These arrays get re-used for each material, and for each
     // advected quantity
     CCVariable<double> q_CC, q_advected;
@@ -3125,18 +3232,14 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     CCVariable<eflux> OFE;
     CCVariable<cflux> OFC;
 
-    new_dw->allocate(q_CC,       lb->q_CCLabel,       0, patch,
-		     Ghost::AroundCells,1);
+    new_dw->allocate(q_CC,      lb->q_CCLabel,  0, patch, Ghost::AroundCells,1);
+    new_dw->allocate(qV_CC,     lb->qV_CCLabel, 0, patch, Ghost::AroundCells,1);
+    new_dw->allocate(OFS,       OFS_CCLabel,    0, patch, Ghost::AroundCells,1);
+    new_dw->allocate(OFE,       OFE_CCLabel,    0, patch, Ghost::AroundCells,1);
+    new_dw->allocate(OFC,       OFE_CCLabel,    0, patch, Ghost::AroundCells,1);
+
     new_dw->allocate(q_advected, lb->q_advectedLabel, 0, patch);
-    new_dw->allocate(qV_CC,      lb->qV_CCLabel,      0, patch,
-		     Ghost::AroundCells,1);
     new_dw->allocate(qV_advected,lb->qV_advectedLabel,0, patch);
-    new_dw->allocate(OFS,        OFS_CCLabel,         0, patch,
-		     Ghost::AroundCells,1);
-    new_dw->allocate(OFE,        OFE_CCLabel,         0, patch,
-		     Ghost::AroundCells,1);
-    new_dw->allocate(OFC,        OFE_CCLabel,         0, patch,
-		     Ghost::AroundCells,1);
 
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -3146,8 +3249,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       constCCVariable<double> rho_micro;
       CCVariable<Vector> vel_CC;
       constCCVariable<Vector> mom_L_ME;
-      constCCVariable<double > int_eng_L_ME, mass_L;
-      constCCVariable<double > mass_CC_old, createdVol;
+      constCCVariable<double > int_eng_L_ME, mass_L, spec_vol_L;
+      constCCVariable<double > createdVol;
       
       constSFCXVariable<double > uvel_FC;
       constSFCYVariable<double > vvel_FC;
@@ -3159,8 +3262,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->get(mom_L_ME,  lb->mom_L_ME_CCLabel, indx,patch,
 							  Ghost::AroundCells,1);
       new_dw->get(mass_L, lb->mass_L_CCLabel,  indx,patch,Ghost::AroundCells,1);
-      old_dw->get(mass_CC_old,lb->mass_CCLabel,indx,patch,Ghost::AroundCells,1);
-
+      new_dw->get(spec_vol_L, lb->spec_vol_L_CCLabel,
+					       indx,patch,Ghost::AroundCells,1);
       new_dw->get(createdVol, lb->created_vol_CCLabel,
 					       indx,patch,Ghost::AroundCells,1);
       new_dw->get(rho_micro,
@@ -3227,6 +3330,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
       setBC(temp,     "Temperature",          patch,indx);
 
+#if 0
       //__________________________________
       // Advection of specific volume.  Advected quantity is a volume fraction
       if (numICEmatls != numALLmatls)  {
@@ -3238,21 +3342,44 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
           sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
         }
         for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
-//          q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
-	  q_CC[*iter] = (mass_CC_old[*iter]/rho_micro[*iter]
-						 + createdVol[*iter])*invvol;
+          q_CC[*iter] = (mass_CC_old[*iter]/rho_micro[*iter]
+                                                 + createdVol[*iter])*invvol;
         }
 
         advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
 
-	// After the following expression, sp_vol_CC is the matl volume
+        // After the following expression, sp_vol_CC is the matl volume
         for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
           sp_vol_CC[*iter] = (q_CC[*iter]*vol + q_advected[*iter]);
         }
         // Divide by the new mass_CC.
         for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-	  sp_vol_CC[*iter] /= mass_CC[*iter];
+          sp_vol_CC[*iter] /= mass_CC[*iter];
         }
+      }
+#endif
+
+      //__________________________________
+      // Advection of specific volume.  Advected quantity is a volume fraction
+      // I am doing this so that we get a reasonable answer for sp_vol
+      // in the extra cells.  This calculation will get overwritten in
+      // the interior cells.
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done(); iter++){
+        sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
+      }
+      for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
+	q_CC[*iter] = spec_vol_L[*iter]*invvol;
+      }
+
+      advectQFirst(q_CC, patch, OFS,OFE, OFC, q_advected);
+
+      // After the following expression, sp_vol_CC is the matl volume
+      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+        sp_vol_CC[*iter] = (q_CC[*iter]*vol + q_advected[*iter]);
+      }
+      // Divide by the new mass_CC.
+      for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+	sp_vol_CC[*iter] /= mass_CC[*iter];
       }
 
       //---- P R I N T   D A T A ------   
