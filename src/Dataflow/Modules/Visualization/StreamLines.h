@@ -135,6 +135,7 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshBaseHandle vmesh_h,
     nodes.clear();
     FindStreamLineNodes(nodes, seed, tolerance, -stepsize, maxsteps, vfi);
 
+    node_iter = nodes.begin();
     if (node_iter != nodes.end())
     {
       n1 = cmesh->add_node(*node_iter);
