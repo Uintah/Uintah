@@ -174,6 +174,7 @@ class BioImageApp {
 	set choose_port 6
 	set which_row 7
 	set visibility 8
+	set filter_label 9
 
 
 	set load_choose_input 5
@@ -204,6 +205,8 @@ class BioImageApp {
         set needs_update 1
 
 
+	set cur_data_tab "Nrrd"
+	set c_vis_tab "Planes"
 
 	### Define Tooltips
 	##########################
@@ -488,9 +491,9 @@ class BioImageApp {
 		    set bounds_vals [list [expr [set $which-size0]-1] \
 					 [expr [set $which-size1]-1] \
 					 [expr [set $which-size2]-1]]
-		    set filters($i) [lreplace $filters($i) 9 9 $bounds_vals]
+		    set filters($i) [lreplace $filters($i) 10 10 $bounds_vals]
 		    # set the bounds_set flag to on
-		    set filters($i) [lreplace $filters($i) 10 10 1]
+		    set filters($i) [lreplace $filters($i) 11 11 1]
 		    break
 		}
 	    }
@@ -1385,7 +1388,7 @@ class BioImageApp {
 	    set $m37-port-index 1
 
 	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
-	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1]
+	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1 "Data - Unknown"]
 
             $this build_viewers $m25 $m26
 	}
@@ -1459,7 +1462,7 @@ class BioImageApp {
 
 	# Nrrd
 	set page [$data.ui.tnb add -label "Nrrd" \
-		      -command "$this configure_readers Nrrd"]       
+		      -command "$this set_cur_data_tab Nrrd; $this configure_readers Nrrd"]       
 
 	global [set NrrdReader]-filename
 	frame $page.file
@@ -1485,7 +1488,7 @@ class BioImageApp {
 	
 	### Dicom
 	set page [$data.ui.tnb add -label "Dicom" \
-		      -command "$this configure_readers Dicom"]
+		      -command "$this set_cur_data_tab Dicom; $this configure_readers Dicom"]
 	
 	button $page.load -text "Dicom Loader" \
 	    -command "$this check_crop; $this enable_update 1 2 3; $this dicom_ui"
@@ -1495,7 +1498,7 @@ class BioImageApp {
 	
 	### Analyze
 	set page [$data.ui.tnb add -label "Analyze" \
-		      -command "$this configure_readers Analyze"]
+		      -command "$this set_cur_data_tab Analyze; $this configure_readers Analyze"]
 	
 	button $page.load -text "Analyze Loader" \
 	    -command "$this check_crop; $$this enable_update 1 2 3; this analyze_ui"
@@ -1821,7 +1824,7 @@ class BioImageApp {
 	}
 
 	# Re-execute
-	if {$has_executed} {
+	if {!$loading && $has_executed} {
 	    set m [lindex [lindex $filters(0) $modules] 5]
 	    $m-c needexecute
 	}
@@ -1990,7 +1993,7 @@ class BioImageApp {
             set vis_frame_tab$case $vis.tnb
 
 
-	    set page [$vis.tnb add -label "Planes" -command "$this check_crop"]
+	    set page [$vis.tnb add -label "Planes" -command "$this change_vis_frame Planes; $this check_crop"]
 
             frame $page.planes 
             pack $page.planes -side top -anchor nw -expand no -fill x
@@ -2220,7 +2223,7 @@ class BioImageApp {
 
 
             #######
-            set page [$vis.tnb add -label "Volume Rendering" -command "$this check_crop"]
+            set page [$vis.tnb add -label "Volume Rendering" -command "$this change_vis_frame \"Volume Rendering\"; $this check_crop"]
 
             global show_volume_ren
 	    checkbutton $page.toggle -text "Show Volume Rendering" \
@@ -2263,23 +2266,24 @@ class BioImageApp {
 	    pack $page.fres.res $page.fres.b0 $page.fres.b1 $page.fres.b2 \
                 -side left -fill x -padx 4 -pady 4
 
-        #-----------------------------------------------------------
-        # Shading
-        #-----------------------------------------------------------
-	checkbutton $page.shading -text "Shading" -relief flat \
-            -variable [set VolumeVisualizer]-shading -onvalue 1 -offvalue 0 \
-            -anchor w -command "$s; $n"
-        pack $page.shading -side top -fill x -padx 4
-
         #----------------------------------------------------------
         # Disable Lighting
         #----------------------------------------------------------
         set ChooseNrrdLighting [lindex [lindex $filters(0) $modules] 36]
         global [set ChooseNrrdLighting]-port-index
-	checkbutton $page.lighting -text "Use Shading" -relief flat \
+	checkbutton $page.lighting -text "Compute data for shaded volume rendering" \
+            -relief flat \
             -variable [set ChooseNrrdLighting]-port-index -onvalue 1 -offvalue 0 \
-            -anchor w -command "[set ChooseNrrdLighting]-c needexecute"
+            -anchor w -command "$this toggle_compute_shading"
         pack $page.lighting -side top -fill x -padx 4
+
+        #-----------------------------------------------------------
+        # Shading
+        #-----------------------------------------------------------
+	checkbutton $page.shading -text "Show shaded volume rendering" -relief flat \
+            -variable [set VolumeVisualizer]-shading -onvalue 1 -offvalue 0 \
+            -anchor n -command "$s; $n"
+        pack $page.shading -side top -fill x -padx 4
 
         #-----------------------------------------------------------
         # Light
@@ -2408,6 +2412,26 @@ class BioImageApp {
             }
 	}
     }
+
+    method toggle_compute_shading {} {
+        set ChooseNrrdLighting [lindex [lindex $filters(0) $modules] 36]
+        global [set ChooseNrrdLighting]-port-index
+
+        if {[set [set ChooseNrrdLighting]-port-index] == 1} {
+	    # lighing computed
+	    $attachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+		configure -state normal
+	    $detachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+		configure -state normal
+	} else {
+	    # lighting not computed
+	    $attachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+		configure -state disabled
+	    $detachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+		configure -state disabled
+	}
+        [set ChooseNrrdLighting]-c needexecute
+    }
     
 
     ##########################
@@ -2472,6 +2496,12 @@ class BioImageApp {
             append geom $new_width x $c_height
 	    wm geometry $win $geom
 	    set IsVAttached 1
+	}
+    }
+
+    method set_cur_data_tab {which} {
+	if {$initialized} {
+	    set cur_data_tab $which
 	}
     }
 
@@ -2617,7 +2647,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list resample [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1]
+        set filters($num_filters) [list resample [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Resample - Unknown"]
 
 
 	# Make current frame regular
@@ -2701,7 +2731,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list crop [list $m1 $m2] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 [list 0 0 0] 0 [list 0 0 0 0 0 0]]
+        set filters($num_filters) [list crop [list $m1 $m2] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Crop - Unknown" [list 0 0 0] 0 [list 0 0 0 0 0 0]]
 
 	# Make current frame regular
 	set p $which.f$which
@@ -2807,7 +2837,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1]
+        set filters($num_filters) [list cmedian [list $m1] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Cmedian - Unknown"]
 
 	# Make current frame regular
 	set p $which.f$which
@@ -2920,7 +2950,7 @@ class BioImageApp {
 	}
 
         # add to filters array
-        set filters($num_filters) [list histo [list $m1 $m2 $m3 $m4] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1]
+        set filters($num_filters) [list histo [list $m1 $m2 $m3 $m4] [list $m1 0] [list $m1 0] $which [lindex $filters($which) $next_index] $choose $row 1 "Histo - Unknown"]
 
 	# Make current frame regular
 	set p $which.f$which
@@ -3247,7 +3277,7 @@ class BioImageApp {
 
             # turn on Cropping widgets in ViewSlices windows
 	    # corresponding with padding values from filter $which
-            set pad_vals [lindex $filters($which) 11]
+            set pad_vals [lindex $filters($which) 12]
 
             set $mods(ViewSlices)-crop_minPadAxis0 [lindex $pad_vals 0]
 	    set $mods(ViewSlices)-crop_maxPadAxis0 [lindex $pad_vals 1]
@@ -3276,7 +3306,7 @@ class BioImageApp {
 		global $mods(ViewSlices)-crop_minAxis0 $mods(ViewSlices)-crop_maxAxis0
 		global $mods(ViewSlices)-crop_minAxis1 $mods(ViewSlices)-crop_maxAxis1
 		global $mods(ViewSlices)-crop_minAxis2 $mods(ViewSlices)-crop_maxAxis2
-		    
+
                 set updating_crop_ui 1
                 $mods(ViewSlices)-c startcrop
 		set $mods(ViewSlices)-crop_minAxis0 [set [set UnuCrop]-minAxis0]
@@ -3539,7 +3569,7 @@ class BioImageApp {
     }
 
     method set_pads { which n0 x0 n1 x1 n2 x2 } {
-	set filters($which) [lreplace $filters($which) 9 9 [list $n0 $x0 $n1 $x1 $n2 $x2]
+	set filters($which) [lreplace $filters($which) 10 10 [list $n0 $x0 $n1 $x1 $n2 $x2]
     }
 
 
@@ -3556,7 +3586,7 @@ class BioImageApp {
              set UnuCrop [lindex [lindex $filters($current_crop) $modules] 0]
           
              # get list of pad values
-             set pad_vals [lindex $filters($current_crop) 11]
+             set pad_vals [lindex $filters($current_crop) 12]
 
              # update the correct UnuCrop variable
              if {[string first "crop_minAxis0" $varname] != -1} {
@@ -3904,13 +3934,13 @@ class BioImageApp {
 		 [lindex $filters($i) $which_row] != -1} {
                  set UnuCrop [lindex [lindex $filters($i) $modules] 0]
 
-		 set bounds_set [lindex $filters($i) 10]
+		 set bounds_set [lindex $filters($i) 11]
 		 set pad_vals ""
 		 if {$bounds_set == 1} {
 		     global [set UnuCrop]-minAxis0 [set UnuCrop]-maxAxis0
 		     global [set UnuCrop]-minAxis1 [set UnuCrop]-maxAxis1
 		     global [set UnuCrop]-minAxis2 [set UnuCrop]-maxAxis2
-		     set bounds [lindex $filters($i) 9]
+		     set bounds [lindex $filters($i) 10]
 		     set bounds0 [lindex $bounds 0]
 		     set bounds1 [lindex $bounds 1]
 		     set bounds2 [lindex $bounds 2]
@@ -3928,7 +3958,7 @@ class BioImageApp {
 		 } else {
 		     set pad_vals [list 0 0 0 0 0 0]
 		 }
-		 set filters($i) [lreplace $filters($i) 11 11 $pad_vals]
+		 set filters($i) [lreplace $filters($i) 12 12 $pad_vals]
   	    }
   	}
 
@@ -4088,6 +4118,7 @@ class BioImageApp {
 		# change label
 		$history0.$which.f$which.childsite.expand.l configure -text $new_label
 		$history1.$which.f$which.childsite.expand.l configure -text $new_label
+		set filters($which) [lreplace $filters($which) $filter_label $filter_label $new_label]
 	    }
 	} else {
 	    SciRaise .standalone.change_label
@@ -4260,10 +4291,73 @@ class BioImageApp {
 	}
 
         # save globals
-        puts "FIX ME: add more global"
         global eye
         puts $fileid "global eye"
         puts $fileid "set eye \{[set eye]\}"
+
+        global top
+        puts $fileid "global top"
+        puts $fileid "set top \{[set top]\}"
+
+        global front
+        puts $fileid "global front"
+        puts $fileid "set front \{[set front]\}"
+
+        global side
+        puts $fileid "global side"
+        puts $fileid "set side \{[set side]\}"
+
+        global show_plane_x
+        puts $fileid "global show_plane_x"
+        puts $fileid "set show_plane_x \{[set show_plane_x]\}"
+
+        global show_plane_y
+        puts $fileid "global show_plane_y"
+        puts $fileid "set show_plane_y \{[set show_plane_y]\}"
+
+        global show_plane_z
+        puts $fileid "global show_plane_z"
+        puts $fileid "set show_plane_z \{[set show_plane_z]\}"
+
+        global show_MIP_x
+        puts $fileid "global show_MIP_x"
+        puts $fileid "set show_MIP_x \{[set show_MIP_x]\}"
+
+        global show_MIP_y
+        puts $fileid "global show_MIP_y"
+        puts $fileid "set show_MIP_y \{[set show_MIP_y]\}"
+
+        global show_MIP_z
+        puts $fileid "global show_MIP_z"
+        puts $fileid "set show_MIP_z \{[set show_MIP_z]\}"
+
+        global filter2Dtextures
+        puts $fileid "global filter2Dtextures"
+        puts $fileid "set filter2Dtextures \{[set filter2Dtextures]\}"
+
+        global planes_mapType
+        puts $fileid "global planes_mapType"
+        puts $fileid "set planes_mapType \{[set planes_mapType]\}"
+
+        global planes_threshold
+        puts $fileid "global planes_threshold"
+        puts $fileid "set planes_threshold \{[set planes_threshold]\}"
+
+        global show_vol_ren
+        puts $fileid "global show_vol_ren"
+        puts $fileid "set show_vol_ren \{[set show_vol_ren]\}"
+
+        global link_winlevel
+        puts $fileid "global link_winlevel"
+        puts $fileid "set link_winlevel \{[set link_winlevel]\}"
+
+        global vol_width
+        puts $fileid "global vol_width"
+        puts $fileid "set vol_width \{[set vol_width]\}"
+
+        global vol_level
+        puts $fileid "global vol_level"
+        puts $fileid "set vol_level \{[set vol_level]\}"
 
 	puts $fileid "app set_saved_class_var loading 1"
     }
@@ -4358,6 +4452,7 @@ class BioImageApp {
 
        set loading_ui 1
        set last_valid 0
+       set data_tab $cur_data_tab
 		
        # iterate over filters array and create UIs
 	    for {set i 0} {$i < $num_filters} {incr i} {
@@ -4367,36 +4462,64 @@ class BioImageApp {
                 set p $i.f$i
 		if {$status != -1} {
 		    set t [lindex $filters($i) $filter_type]
+		    set v [lindex $filters($i) $visibility]
+		    set l [lindex $filters($i) $filter_label]
 		    set last_valid $i
+		    
 		    if {[string equal $t "load"]} {
 			set f [add_Load_UI $history0 $status $i]
                         $this add_insert_bar $f $i
 			set f [add_Load_UI $history1 $status $i]
                         $this add_insert_bar $f $i
+			if {$v == 0} {
+			    set filters($i) [lreplace $filters($i) $visibility $visibility 1]
+			    $this change_visibility $i
+			}
 		    } elseif {[string equal $t "resample"]} {
 			set f [add_Resample_UI $history0 $status $i]
                         $this add_insert_bar $f $i
 			set f [add_Resample_UI $history1 $status $i]
                         $this add_insert_bar $f $i
 			$this update_kernel $i
+			if {$v == 0} {
+			    set filters($i) [lreplace $filters($i) $visibility $visibility 1]
+			    $this change_visibility $i
+			}
 		    } elseif {[string equal $t "crop"]} {
 			set f [add_Crop_UI $history0 $status $i]
                         $this add_insert_bar $f $i
 			set f [add_Crop_UI $history1 $status $i]
                         $this add_insert_bar $f $i
+			if {$v == 0} {
+			    set filters($i) [lreplace $filters($i) $visibility $visibility 1]
+			    $this change_visibility $i
+			}
 		    } elseif {[string equal $t "cmedian"]} {
 			set f [add_Cmedian_UI $history0 $status $i]
                         $this add_insert_bar $f $i
 			set f [add_Cmedian_UI $history1 $status $i]
                         $this add_insert_bar $f $i
+			if {$v == 0} {
+			    set filters($i) [lreplace $filters($i) $visibility $visibility 1]
+			    $this change_visibility $i
+			}
 		    } elseif {[string equal $t "histo"]} {
 			set f [add_Histo_UI $history0 $status $i]
                         $this add_insert_bar $f $i
 			set f [add_Histo_UI $history1 $status $i]
                         $this add_insert_bar $f $i
+			if {$v == 0} {
+			    set filters($i) [lreplace $filters($i) $visibility $visibility 1]
+			    $this change_visibility $i
+			}
 		    } else {
 			puts "Error: Unknown filter type - $t"
 		    }
+
+                    # fix label
+		    $history0.$p.childsite.expand.l configure -text $l
+		    $history1.$p.childsite.expand.l configure -text $l
+
 		    $history0.$p configure -background grey75 -foreground black -borderwidth 2
 		    $history1.$p configure -background grey75 -foreground black -borderwidth 2
             }
@@ -4419,7 +4542,20 @@ class BioImageApp {
 
  	$indicatorL0 configure -text "Press Update to run to save point..."
  	$indicatorL1 configure -text "Press Update to run to save point..."
+
+        # update components using globals
+        $this update_orientations
+        $this update_planes_color_by
+        $this update_planes_threshold
+        $this change_volume_window_width_and_level -1
+
+        # bring proper tabs forward
+        set cur_data_tab $data_tab
+        $attachedPFr.f.p.sf.lwchildsite.clipper.canvas.sfchildsite.0.f0.childsite.ui.tnb view $cur_data_tab
+        $detachedPFr.f.p.sf.lwchildsite.clipper.canvas.sfchildsite.0.f0.childsite.ui.tnb view $cur_data_tab
+        $this change_vis_frame $c_vis_tab
     }	
+
 
     #########################
     ### toggle_show_plane_n
@@ -4528,7 +4664,9 @@ class BioImageApp {
                 set $m1-positionList [lreplace [set $m1-positionList] 2 2 "[expr $new_x + 5] 0"]
                 set $m1-nodeList {514 797 1072 1425}
             }
-	    $m1-c needexecute
+            if {!$loading} {
+	        $m1-c needexecute
+            }
        }
     }
 
@@ -4566,7 +4704,7 @@ class BioImageApp {
         global [set GenStandard]-mapType
 
         set [set GenStandard]-mapType $planes_mapType
-        if {$has_executed == 1} {
+        if {!$loading && $has_executed == 1} {
 	    [set GenStandard]-c needexecute
 	}
     }
@@ -4704,6 +4842,7 @@ class BioImageApp {
     # set to -1 when deleted
     variable which_row  
     variable visibility
+    variable filter_label
     variable filter_type
 
     variable load_choose_input
@@ -4732,6 +4871,9 @@ class BioImageApp {
     variable turn_off_crop
     variable updating_crop_ui
     variable needs_update
+
+    variable cur_data_tab
+    variable c_vis_tab
 }
 
 
