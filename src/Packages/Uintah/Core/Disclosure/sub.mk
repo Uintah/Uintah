@@ -10,6 +10,7 @@ SRCS     += \
 
 PSELIBS := \
 	Core/Malloc     \
+	Core/Thread     \
 	Core/Exceptions \
 	Core/Util       \
 	Core/Geometry   
