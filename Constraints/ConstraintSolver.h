@@ -53,6 +53,7 @@ public:
    friend class BaseVariable;
 private:
    void AddVariable( BaseVariable* v );
+   void RemoveVariable( BaseVariable* v );
    void Solve( BaseVariable* var, const VarCore& newValue, const Scheme scheme );
 
    Real Epsilon;

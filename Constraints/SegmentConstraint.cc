@@ -45,6 +45,7 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
    PointVariable& end1 = *vars[0];
    PointVariable& end2 = *vars[1];
    PointVariable& p = *vars[2];
+   Vector v1, v2;
 
    if (sc_debug) {
       ChooseChange(index, scheme);
@@ -53,10 +54,22 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
    
    switch (ChooseChange(index, scheme)) {
    case 0:
-      NOT_FINISHED("Segment Constraint:  segment_p1");
+      v1 = (Point)end2 - end1;
+      v2 = (Point)p - end1;
+      if (v1.length2() < v2.length2()) {
+	 c = (Point)p;
+	 var = vars[0];
+	 return 1;
+      }
       break;
    case 1:
-      NOT_FINISHED("Segment Constraint:  segment_p2");
+      v1 = (Point)end1 - end2;
+      v2 = (Point)p - end2;
+      if (v1.length2() < v2.length2()) {
+	 c = (Point)p;
+	 var = vars[1];
+	 return 1;
+      }
       break;
    case 2:
       Vector norm((Point)end2 - end1);

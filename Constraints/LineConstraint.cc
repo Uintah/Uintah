@@ -59,7 +59,7 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 	 c = (Point)p3;
       } else {
 	 norm.normalize();
-	 Real t = Dot((Point)p1 - p2, norm);
+	 Real t(Dot((Point)p1 - p2, norm));
 	 c = (Point)p2 + (norm * t);
       }
       var = vars[0];
@@ -70,7 +70,7 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 	 c = (Point)p3;
       } else {
 	 norm.normalize();
-	 Real t = Dot((Point)p2 - p1, norm);
+	 Real t(Dot((Point)p2 - p1, norm));
 	 c = (Point)p1 + (norm * t);
       }
       var = vars[1];
@@ -81,7 +81,7 @@ LineConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsi
 	 c = (Point)p2;
       } else {
 	 norm.normalize();
-	 Real t = Dot((Point)p3 - p1, norm);
+	 Real t(Dot((Point)p3 - p1, norm));
 	 c = (Point)p1 + (norm * t);
       }
       var = vars[2];

@@ -82,6 +82,18 @@ ConstraintSolver::AddVariable( BaseVariable* v )
 }
 
 
+void
+ConstraintSolver::RemoveVariable( BaseVariable* v )
+{
+   for (Index i=0; i<variables.size(); i++)
+      if (variables[i] == v) {
+	 variables.remove(i);
+	 NumVariables--;
+	 return;
+      }
+}
+
+
 const Index MaxDepth = 25;
 
 void

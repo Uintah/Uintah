@@ -40,6 +40,7 @@ BaseVariable::BaseVariable( const clString& name,
 
 BaseVariable::~BaseVariable()
 {
+   solver->RemoveVariable(this);
 }
 
 
@@ -138,14 +139,10 @@ BaseVariable::MoveDelta( const Real deltaValue )
 Index
 BaseVariable::Register( BaseConstraint* constraint, const Index index )
 {
-   constraints.grow(1);
-   constraints[numconstraints] = constraint;
-   constraint_indexs.grow(1);
-   constraint_indexs[numconstraints] = index;
-   constraint_priorities.grow(1);
-   constraint_priorities[numconstraints] = P_Default;
-   constraint_order.grow(1);
-   constraint_order[numconstraints] = 0;
+   constraints.add(constraint);
+   constraint_indexs.add(index);
+   constraint_priorities.add(P_Default);
+   constraint_order.add(0);
    numconstraints++;
 
    return numconstraints-1;
