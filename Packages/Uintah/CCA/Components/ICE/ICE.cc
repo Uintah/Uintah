@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
@@ -2962,7 +2961,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->getModifiable(press_CC,      lb->press_CCLabel,     0,patch);
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
     new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,   0, patch);
     new_dw->allocateAndPut(press_CC,     lb->press_CCLabel,     0, patch);
