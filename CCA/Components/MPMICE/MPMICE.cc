@@ -1727,9 +1727,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-
-      for(Patch::FaceType face = Patch::startFace;
-        face <= Patch::endFace; face=Patch::nextFace(face)){  
+        
+      vector<Patch::FaceType>::const_iterator f;
+      for (f  = patch->getBoundaryFaces()->begin(); 
+           f != patch->getBoundaryFaces()->end(); ++f){
+        Patch::FaceType face = *f;
         CellIterator iterLim = patch->getFaceCellIterator(face,"plusEdgeCells");
                
         if(ice_matl){
