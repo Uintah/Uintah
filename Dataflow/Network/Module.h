@@ -252,10 +252,11 @@ protected:
   string id;
   bool abort_flag;
   void want_to_execute();
-  void update_progress(double);
-  void update_progress(double, Timer &);
-  void update_progress(int, int);
-  void update_progress(int, int, Timer &);
+  virtual void update_progress(double);
+  virtual void update_progress(double, Timer &);
+  virtual void update_progress(int, int);
+  virtual void update_progress(int, int, Timer &);
+  virtual void accumulate_progress(int);
   enum State {
     NeedData,
     JustStarted,

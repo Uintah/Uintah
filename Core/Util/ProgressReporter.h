@@ -37,6 +37,8 @@
 #include <string>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+#include <Core/Util/Timer.h>
+#include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
 
@@ -46,7 +48,10 @@ class SCICORESHARE ProgressReporter
 {
 public:
   typedef enum {Starting, Compiling, CompilationDone, Done } ProgressState;
-public:
+  ProgressReporter() :
+    current_(0),
+    progress_lock_("ProgressReporter")
+  {}
   virtual ~ProgressReporter();
 
   virtual void error(const std::string& msg)      { std::cerr << "Error: " << msg << std::endl; }
@@ -59,6 +64,17 @@ public:
 
 
   virtual void report_progress( ProgressState ) {}
+
+  virtual void update_progress(double) {}
+  virtual void update_progress(double, Timer &) {}
+  virtual void update_progress(int, int) {}
+  virtual void update_progress(int, int, Timer &) {}
+  virtual void accumulate_progress(int) {}
+protected:
+  // accumulation storage;
+  int                current_;
+  int                max_;
+  Mutex              progress_lock_;
 };
 
 
