@@ -386,13 +386,17 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
       }
       vp->AddVar( positions, vectors, *r);
     } else 
-      sp = 0;
+      vp = 0;
+
+    if(have_tp){
+      if( tp == 0 ){
+	tp = scinew TensorParticles();
+	tp->SetCallbackClass( this );
+      }
+      tp->AddVar( positions, tensors, *r);
+    } else
+      tp = 0;
   }
-  if(have_tp){
-    tp =  scinew TensorParticles( positions, tensors, this);
-    tp->SetCallbackClass( this );
-  } else
-    tp = 0;
 } 
 
 //--------------------------------------------------------------- 
