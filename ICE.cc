@@ -2475,6 +2475,10 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // after advection.  Thus there is always a mininum amount
       if(d_massExchange)  {
         double massGain = 0.;
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+         IntVector c = *iter;
+         massGain += burnedMass[c];
+        }
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
            iter++) {
          IntVector c = *iter;
@@ -2484,8 +2488,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           mass_L[c] = std::max( (mass + burnedMass[c] ), min_mass);
 
-          massGain += burnedMass[c];
-          
           //  must have a minimum momentum   
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
             double min_mom_L = vel_CC[c](dir) * min_mass;
@@ -2523,7 +2525,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
          }
-       cout << "Mass gained by the gas this timestep = " << massGain << endl;
+         cout << "Mass gained by the gas this timestep = " << massGain << endl;
        }  //  if (mass exchange)
 
         //---- P R I N T   D A T A ------ 
