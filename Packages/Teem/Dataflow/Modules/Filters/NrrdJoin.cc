@@ -44,8 +44,9 @@ private:
   vector<int>       in_generation_; //! all input generation nums.
   int               onrrd_type_;    //! target type for output nrrd.
 
-  GuiString         join_axis_;
+  GuiInt            join_axis_;
   GuiInt            incr_dim_;
+  GuiInt            dim_;
 };
 
 } // End namespace SCITeem
@@ -59,7 +60,8 @@ NrrdJoin::NrrdJoin(SCIRun::GuiContext *ctx) :
   in_generation_(0),
   onrrd_type_(nrrdTypeLast),
   join_axis_(ctx->subVar("join-axis")),
-  incr_dim_(ctx->subVar("incr-dim"))
+  incr_dim_(ctx->subVar("incr-dim")),
+  dim_(ctx->subVar("dim"))
 {
 }
 
@@ -84,7 +86,7 @@ NrrdJoin::execute()
   unsigned int i = 0;
   vector<NrrdDataHandle> nrrds;
   bool do_join = false;
-
+  int max_dim = 0;
   port_map_type::iterator pi = range.first;
   while (pi != range.second)
   {
@@ -95,7 +97,7 @@ NrrdJoin::execute()
     }
 
     NrrdDataHandle nrrd;
-
+    
     if (inrrd->get(nrrd)) {
       // check to see if we need to do the join or can output the cached onrrd.
       if (in_generation_.size() <= i) {
@@ -127,14 +129,22 @@ NrrdJoin::execute()
 	}
       }
       
-
+      if (nrrd->nrrd->dim > max_dim) { max_dim = nrrd->nrrd->dim; }
       nrrds.push_back(nrrd);
     }
     ++pi; ++i;
   }
   
+  dim_.reset();
+  if (max_dim != dim_.get()) {    
+    dim_.set(max_dim);
+    dim_.reset();
+    gui->execute(id + " axis_radio");
+  }
+  
+  
   Array1<Nrrd*> arr(nrrds.size());
-//  Nrrd* arr[nrrds.size()];
+
   if (do_join) {
 
     NrrdData *onrrd = new NrrdData(true);
@@ -170,22 +180,12 @@ NrrdJoin::execute()
       ++i;
     }
     
-    int axis = 0;
     join_axis_.reset();
     incr_dim_.reset();
 
-    if (join_axis_.get() == "x") {
-      axis = 1;
-    } else if (join_axis_.get() == "y") {
-      axis = 2;
-    } else if (join_axis_.get() == "z") {
-      axis = 3;
-    } else if (join_axis_.get() == "sink") {
-      axis = 0;
-    }
-    
     onrrd->nrrd = nrrdNew();
-    if (nrrdJoin(onrrd->nrrd, &(arr[0]), nrrds.size(), axis, incr_dim_.get())) {
+    if (nrrdJoin(onrrd->nrrd, &arr[0], nrrds.size(),
+		 join_axis_.get(), incr_dim_.get())) {
       char *err = biffGetDone(NRRD);
       error(string("Join Error: ") +  err);
       free(err);

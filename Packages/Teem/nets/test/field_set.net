@@ -58,8 +58,9 @@ set $m5-show_status {1}
 set $m5-label {potentials}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-join-axis {sink}
+set $m6-join-axis {0}
 set $m6-incr-dim {0}
+set $m6-dim {2}
 set $m7-notes {}
 set $m7-show_status {1}
 set $m7-use_interp {1}
