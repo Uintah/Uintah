@@ -375,6 +375,26 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method set_querytype
 
+  # called by the Hierarchy Browser listboxes
+  method yscroll {w args} \
+  {
+    set w .ui[modname]
+    if {![winfo exists $w.hier.vs]} { return }
+    eval [linsert $args 0 $w.hier.vs set]
+    yview $w moveto [lindex [$w.hier.vs get] 0]
+  }
+
+  # called by the Hierarchy Browser scroll bar
+  method yview {w args} \
+  {
+    set w .ui[modname]
+    variable {}
+    if {$($w:yview)} { return }
+    set ($w:yview) 1
+    foreach i {1 2 3} { eval $w.hier.multi.l$i yview $args }
+    set ($w:yview) 0
+  }
+  # end method yview
 
   #############################################################################
   # method ui
@@ -548,22 +568,27 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     # FMA Hierarchy UI
     ######################################
+    variable {}
+    set ($w:yview) 0
     frame $w.hier
     frame $w.hier.titles
     frame $w.hier.multi
     canvas $w.hier.titles.l1 -width 150 -height 20
     $w.hier.titles.l1 create text 20 10 -text "Parent"
-    listbox $w.hier.multi.l1 -listvariable $this-gui_parent_list
+    listbox $w.hier.multi.l1 -listvariable $this-gui_parent_list \
+            -yscrollc [list $this yscroll $w]
     bind $w.hier.multi.l1 <<ListboxSelect>> "$this set_hier_selection 1"
     canvas $w.hier.titles.l2 -width 150 -height 20
-    $w.hier.titles.l2 create text 20 10 -text "Sibling"
-    listbox $w.hier.multi.l2 -listvariable $this-gui_sibling_list
+    $w.hier.titles.l2 create text 25 10 -text "Selection"
+    listbox $w.hier.multi.l2 -listvariable $this-gui_sibling_list \
+            -yscrollc [list $this yscroll $w]
     bind $w.hier.multi.l2 <<ListboxSelect>> "$this set_hier_selection 2"
     canvas $w.hier.titles.l3 -width 100 -height 20
     $w.hier.titles.l3 create text 20 10 -text "Child"
-    listbox $w.hier.multi.l3 -listvariable $this-gui_child_list
+    listbox $w.hier.multi.l3 -listvariable $this-gui_child_list \
+            -yscrollc [list $this yscroll $w]
     bind $w.hier.multi.l3 <<ListboxSelect>> "$this set_hier_selection 3"
-    scrollbar $w.hier.vs
+    scrollbar $w.hier.vs -command [list $this yview $w]
     grid $w.hier.titles -column 0 -row 0 -sticky nsew
     grid $w.hier.multi -column 0 -row 1 -sticky nsew
     grid $w.hier.vs -column 1 -row 0 -rowspan 2 -sticky ns
