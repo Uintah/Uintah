@@ -3,7 +3,8 @@
 #include <config/sci.cf>
 
 SUBDIRS = IsoSurface LaceContours MeshView Readers Salmon \
-	SoundInput SoundFilter SoundMixer SoundOutput SoundReader
+	SoundInput SoundFilter SoundMixer SoundOutput SoundReader \
+	SurfToGeom
 
 SCISubdirs($(SUBDIRS))
 
@@ -20,7 +21,8 @@ MODULES = \
 	SoundFilter/SoundFilter.o \
 	SoundMixer/SoundMixer.o \
 	SoundOutput/SoundOutput.o \
-	SoundReader/SoundReader.o
+	SoundReader/SoundReader.o \
+	SurfToGeom/SurfToGeom.o
 
 $(MODULES):
 	@echo "Making in "`dirname $<`
