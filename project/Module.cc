@@ -110,6 +110,7 @@ IPort* Module::iport(int i)
 void Module::want_to_execute()
 {
     sched_state=SchedNewData;
+    state=NeedData;
     netedit->mailbox.send(new Module_Scheduler_Message);
 }
 

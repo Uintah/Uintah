@@ -41,6 +41,11 @@ Field3D::Representation Field3D::get_rep()
     return rep;
 }
 
+Field3D::FieldType Field3D::get_type()
+{
+    return fieldtype;
+}
+
 Field3D::Field3D()
 : rep(RegularGrid), fieldtype(ScalarField), nx(0), ny(0), nz(0), ntetra(0)
 {

@@ -505,7 +505,11 @@ void UserModule::do_execute()
 	port->reset();
     }
     // Call the User's execute function...
+    state=Executing;
+    update_progress(0.0);
     execute();
+    state=Completed;
+    update_progress(1.0);
 
     // Call finish on all output ports...
     for(i=0;i<oports.size();i++){
