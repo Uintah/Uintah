@@ -94,13 +94,32 @@ itcl_class Roe {
 		-menu $w.menu.dialbox.menu
 	menu $w.menu.dialbox.menu
 	$w.menu.dialbox.menu add command -label "Translate/Scale..." -underline 0 \
-		-command "$this dialbox_ts"
+		-command "$w.dialbox connect"
+	$w.menu.dialbox.menu add command -label "Camera..." -underline 0 \
+		-command "$w.dialbox2 connect"
 	pack $w.menu.edit -side left
 	pack $w.menu.renderer -side left
 	pack $w.menu.spawn -side left
 	pack $w.menu.dialbox -side left
 	tk_menuBar $w.menu $w.menu.edit $w.menu.renderer \
 		$w.menu.spawn $w.menu.dialbox
+
+	# Create Dialbox and attach to it
+	Dialbox $w.dialbox "Salmon - Translate/Scale"
+	$w.dialbox unbounded_dial 0 "Translate X" 0.0 1.0 "$this translate x"
+	$w.dialbox unbounded_dial 2 "Translate Y" 0.0 1.0 "$this translate y" 
+	$w.dialbox unbounded_dial 4 "Translate Z" 0.0 1.0 "$this translate z"
+	$w.dialbox wrapped_dial 1 "Rotate X" 0.0 0.0 360.0 1.0 "$this rotate x"
+	$w.dialbox wrapped_dial 3 "Rotate Y" 0.0 0.0 360.0 1.0 "$this rotate y"
+	$w.dialbox wrapped_dial 5 "Rotate Z" 0.0 0.0 360.0 1.0 "$this rotate z"
+	$w.dialbox bounded_dial 6 "Scale" 1.0 [expr 1.0/1000.0] 1000.0 1.0 "$this scale"
+	
+	# Create Dialbox2 and attach to it
+	Dialbox $w.dialbox2 "Salmon - Camera"
+	$w.dialbox2 bounded_dial 0 "Zoom" 0.0 0.0 1000.0 100.0 "$this zoom"
+	$w.dialbox2 wrapped_dial 1 "Pan" 0.0 0.0 360.0 1.0 "$this pan" 
+	$w.dialbox2 wrapped_dial 2 "Tilt" 0.0 0.0 360.0 1.0 "$this tilt"
+	$w.dialbox2 bounded_dial 3 "FOV" 0.0 0.0 180.0 1.0 "$this fov"
 	
 	frame $w.mframe
 	frame $w.mframe.f
@@ -445,6 +464,26 @@ itcl_class Roe {
 		-showvalue true -tickinterval 2
 	button $w.anim.go -text "Go" -command "$this-c redraw"
     }
-
+    method translate {axis amt} {
+	puts "translate $axis by $amt"
+    }
+    method rotate {axis amt} {
+	puts "rotate $axis by $amt"
+    }
+    method scale {amt} {
+	puts "scale by $amt"
+    }
+    method zoom {amt} {
+	puts "zoom by $amt"
+    }
+    method pan {amt} {
+	puts "pan by $amt"
+    }
+    method tilt {amt} {
+	puts "tilt by $amt"
+    }
+    method fov {amt} {
+	puts "fov by $amt"
+    }
 }
 

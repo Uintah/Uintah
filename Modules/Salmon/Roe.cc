@@ -18,9 +18,6 @@
 #include <Classlib/Debug.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Timer.h>
-#include <Devices/DBCallback.h>
-#include <Devices/DBContext.h>
-#include <Devices/Dialbox.h>
 #include <Math/Expon.h>
 #include <Math/MiscMath.h>
 #include <Geometry/BBox.h>
@@ -485,8 +482,8 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn)
 {
     BState bs;
     bs.shift=1; // Always for widgets...
-    bs.control=(state&4);
-    bs.alt=(state&8);
+    bs.control= ((state&4)!=0);
+    bs.alt= ((state&8)!=0);
     bs.btn=btn;
     switch(action){
     case MouseStart:
@@ -501,7 +498,7 @@ void Roe::mouse_pick(int action, int x, int y, int state, int btn)
 
 	    if (pick_obj){
 		NOT_FINISHED("update mode string for pick");
-		pick_pick->pick(bs);
+		pick_pick->pick(this,bs);
 		need_redraw=1;
 	    } else {
 		update_mode_string("pick: none");
@@ -769,29 +766,9 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	view.set(homeview);
 	manager->mailbox.send(new SalmonMessage(id)); // Redraw
     } else if(args[1] == "autoview"){
-	View cv(view.get());
-	// Animate lookat point to center of BBox...
 	BBox bbox;
 	get_bounds(bbox);
-	if(bbox.valid()){
-	    cv.lookat=bbox.center();
-	    animate_to_view(cv, 2.0);
-
-	    // Move forward/backwards until entire view is in scene...
-	    Vector lookdir(cv.lookat-cv.eyep);
-	    double old_dist=lookdir.length();
-	    PRINTVAR(autoview_sw, old_dist);
-	    double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
-	    PRINTVAR(autoview_sw, old_w);
-	    Vector diag(bbox.diagonal());
-	    double w=diag.length();
-	    PRINTVAR(autoview_sw, w);
-	    double dist=old_dist*w/old_w;
-	    PRINTVAR(autoview_sw, dist);
-	    cv.eyep=cv.lookat-lookdir*dist/old_dist;
-	    PRINTVAR(autoview_sw, cv.eyep);
-	    animate_to_view(cv, 2.0);
-	}
+	autoview(bbox);
     } else if(args[1] == "dolly"){
 	if(args.count() != 3){
 	    args.error("dolly needs an amount");
@@ -857,6 +834,31 @@ void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 	cerr << "Mouse event dropped, mailbox full!\n";
     } else {
 	manager->mailbox.send(new RoeMouseMessage(id, handler, action, x, y, state, btn));
+    }
+}
+
+void Roe::autoview(const BBox& bbox)
+{
+    if(bbox.valid()){
+        View cv(view.get());
+        // Animate lookat point to center of BBox...
+        cv.lookat=bbox.center();
+        animate_to_view(cv, 2.0);
+        
+        // Move forward/backwards until entire view is in scene...
+        Vector lookdir(cv.lookat-cv.eyep);
+        double old_dist=lookdir.length();
+        PRINTVAR(autoview_sw, old_dist);
+        double old_w=2*Tan(DtoR(cv.fov/2.))*old_dist;
+        PRINTVAR(autoview_sw, old_w);
+        Vector diag(bbox.diagonal());
+        double w=diag.length();
+        PRINTVAR(autoview_sw, w);
+        double dist=old_dist*w/old_w;
+        PRINTVAR(autoview_sw, dist);
+        cv.eyep=cv.lookat-lookdir*dist/old_dist;
+        PRINTVAR(autoview_sw, cv.eyep);
+        animate_to_view(cv, 2.0);
     }
 }
 

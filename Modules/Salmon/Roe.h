@@ -113,6 +113,8 @@ public:
     void tcl_command(TCLArgs&, void*);
     void get_bounds(BBox&);
 
+    void autoview(const BBox&);
+
     // Which of the objects do we draw?
     HashTable<clString, ObjTag*> visible;
 
