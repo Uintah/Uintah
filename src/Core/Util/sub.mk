@@ -27,6 +27,8 @@ SRCS     += \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/Timer.cc \
 	$(SRCDIR)/sci_system.c \
+	$(SRCDIR)/RCParse.cc \
+	$(SRCDIR)/RWS.cc \
 
 PSELIBS := Core/Containers Core/Exceptions
 LIBS := $(DL_LIBRARY) $(THREAD_LIBS)
