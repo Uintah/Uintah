@@ -22,6 +22,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/CCA/Component/Comm
 
+ifeq ($(HAVE_GLOBUS),yes)
 SRCS     += \
 	$(SRCDIR)/Message.cc \
 	$(SRCDIR)/SocketSpChannel.cc \
@@ -36,9 +37,25 @@ SRCS     += \
 	$(SRCDIR)/ReplyEP.cc \
 	$(SRCDIR)/NexusHandlerThread.cc \
 	$(SRCDIR)/CommNexus.cc
-
-PSELIBS := Core/Exceptions Core/Util Core/Thread Core/globus_threads
 LIBS := $(GLOBUS_COMMON_LIBRARY) $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARY)
+
+else
+
+SRCS     += \
+	$(SRCDIR)/Message.cc \
+	$(SRCDIR)/SocketSpChannel.cc \
+	$(SRCDIR)/SocketEpChannel.cc \
+	$(SRCDIR)/CommError.cc \
+	$(SRCDIR)/SocketMessage.cc \
+	$(SRCDIR)/SocketThread.cc \
+LIBS :=
+endif
+
+ifeq ($(HAVE_GLOBUS),yes)
+PSELIBS := Core/Exceptions Core/Util Core/Thread Core/globus_threads
+else
+PSELIBS := Core/Exceptions Core/Util Core/Thread
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
