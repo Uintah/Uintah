@@ -250,6 +250,7 @@ case $host in
              CXX=/opt/MIPSpro/bin/CC
              AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
+	     CXXCPP="/opt/MIPSpro/bin/CC -E"
            else
              AC_MSG_RESULT(no)
            fi
@@ -338,9 +339,10 @@ AC_ARG_WITH(mpi,
 	[mpi="$withval"],
 	[mpi=""])
 
+oldcppflags=$CPPFLAGS
+oldLibs=$LIBS
 if test -z "$mpi"; then
   MPI_INCLUDE_DIR=""
-  oldcppflags=$CPPFLAGS
   CPPFLAGS="$CPPFLAGS -DMPIPP_H"
   for trylib in mpi mpich; do
      AC_MSG_CHECKING(for MPI in -l$trylib)
@@ -353,12 +355,9 @@ if test -z "$mpi"; then
      MPI_Init(&argc, &argv);
 , mpi_dir=""; mpi_lib=$trylib; echo "found"; break, echo "not found")
   done
-  CPPFLAGS=$oldcppflags
 else
-  oldcppflags=$CPPFLAGS
   MPI_INCLUDE_DIR=$mpi/include
   CPPFLAGS="$CPPFLAGS -I$MPI_INCLUDE_DIR -DMPIPP_H"
-  oldLibs=$LIBS
   for trydir in lib lib32 lib64; do
      for trylib in mpi mpich; do
         AC_MSG_CHECKING(for MPI in -L$mpi/$trydir -l$trylib)
@@ -373,9 +372,9 @@ else
 	AC_MSG_RESULT(found); break 2, AC_MSG_RESULT(not found))
      done
   done
-  LIBS=$oldLibs
-  CPPFLAGS=$oldcppflags
 fi
+LIBS=$oldLibs
+CPPFLAGS=$oldcppflags
 
 if test "$uintah" = "yes" ; then
 
@@ -404,19 +403,6 @@ MPI_LIB_FLAG="-l$mpi_lib"
 AC_SUBST(MPI_LIB_DIR)
 AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_INCLUDE_DIR)
-
-##-- Finish LD flags --------------------------------------------
-## These cannot be in the first case block, because the $() variables
-## confuse configure
-case $host in
-  *-irix*)
-           LDFLAGS="$LDFLAGS -J\$(MAKE_PARALLELISM) $(TLINK)"
-           ;;
-  *-linux-gnu)
-           ;;
-  *)
-     ;;
-esac
 
 ##-- Part II thread configuration --------------------------------------------
 
@@ -1427,23 +1413,6 @@ if test "$enable_parallel" = "yes"; then
   fi
 
   PARALLEL_DEFINE="#define SCI_PARALLEL"
-  parallel_output="
-	        Base/Core/globus_threads/Makefile \
-	      Component/Makefile \
-	        Component/CIA/Makefile \
-	        Component/PIDL/Makefile \
-	        Base/Dataflow/Interface/Makefile \
-	        Base/Dataflow/Controller/Makefile \
-	        Base/Dataflow/Builder/Makefile \
-	      newmain/Makefile \
-	        tools/sidl/Makefile \
-		testprograms/Component/Makefile \
-		  testprograms/Component/argtest/Makefile \
-		  testprograms/Component/memstress/Makefile \
-		  testprograms/Component/mitest/Makefile \
-		  testprograms/Component/objects/Makefile \
-		  testprograms/Component/pingpong/Makefile \
-		"
   BUILD_PARALLEL="yes"
   GLOBUS_INCLUDE="-I$with_globus/include"
   GLOBUS_LIB="$with_globus/lib$NBITS"
@@ -1498,6 +1467,19 @@ AC_SUBST(YACC)
 AC_PROG_LEX()
 AC_SUBST(LEX)
 AC_SUBST(LEXLIB)
+
+##-- Finish LD flags --------------------------------------------
+## These cannot be in the first case block, because the $() variables
+## confuse configure
+case $host in
+  *-irix*)
+           LDFLAGS="$LDFLAGS -J\$(MAKE_PARALLELISM) $(TLINK)"
+           ;;
+  *-linux-gnu)
+           ;;
+  *)
+     ;;
+esac
 
 ##-------- check/create subdirs that have special Makefiles ---------
 
