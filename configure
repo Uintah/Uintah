@@ -9080,6 +9080,9 @@ if test -f "$_sci_lib/tkConfig.sh"; then
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
 fi
 
+#
+# Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
+#
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -9149,7 +9152,7 @@ done
 CFLAGS="$CFLAGS $_sci_includes"
 CXXFLAGS="$CXXFLAGS $_sci_includes"
 LDFLAGS="$LDFLAGS $_sci_lib_path"
-LIBS="$LIBS $_sci_libs $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG"
+LIBS="$LIBS $_sci_libs $TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG"
 
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
