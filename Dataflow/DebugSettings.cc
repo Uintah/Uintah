@@ -13,8 +13,8 @@
 
 #include <Dataflow/DebugSettings.h>
 
-#include <Classlib/NotFinished.h>
-#include <TCL/Debug.h>
+#include <Classlib/Debug.h>
+#include <TCL/TCLvar.h>
 
 #include <iostream.h>
 #include <string.h>
@@ -35,25 +35,46 @@ void DebugSettings::init_tcl()
 
 void DebugSettings::tcl_command(TCLArgs& args, void*)
 {
-   if(args.count() > 1){
-      args.error("debugsettings needs no minor command");
-      return;
-   }
+    if(args.count() > 1){
+	args.error("debugsettings needs no minor command");
+	return;
+    }
+    int makevars=0;
+    if(variables.size() == 0)
+	makevars=1;
 
-   int size=0;
-   DebugInfo* dinfo=DebugSwitch::get_debuginfo(size);
-   cout << "Size: " << size << endl;
-   Array1<clString> debugs(size);
+    Debug* debug=DebugSwitch::get_debuginfo();
+    if(!debug){
+	args.result("");
+	return;
+    }
+    Array1<clString> debuglist(debug->size());
+    
+    DebugIter iter(debug);
+    int i=0;
+    for(iter.first();iter.ok();++iter){
+	DebugVars& debug(*iter.get_data());
+	Array1<clString> vars(debug.size());
+	for(int j=0;j<debug.size();j++){
+	    DebugSwitch* sw=debug[j];
+	    vars[j]=sw->get_var();
+	    if(makevars)
+		variables.add(new TCLvarintp(sw->get_flagpointer(),
+					     sw->get_module(), sw->get_var(),
+					     0));
+	}
 
-   args.result("!");
-   /*
-   int i;
-   for(i=0,dinfo->first();dinfo->ok();i++,++(*dinfo)){
-      Array1<clString>* debug(dinfo->get_data());
-      debug.add(dinfo->get_key());
-      cout << i << " " << dinfo->get_key() << endl;
-      debugs[i]=args.make_list(*debug);
-   }
+	// Make a list of the variables
+	clString varlist(args.make_list(vars));
+	
+	// Make a list with the module name and this list
+	clString mlist(args.make_list(iter.get_key(), varlist));
 
-   args.result(args.make_list(debugs));*/
+	// Put this in the array
+	debuglist[i]=mlist;
+	cout << i << " " << iter.get_key() << endl;
+
+    }
+
+    args.result(args.make_list(debuglist));
 }

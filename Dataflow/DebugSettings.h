@@ -14,9 +14,13 @@
 #ifndef SCI_project_DebugSettings_h
 #define SCI_project_DebugSettings_h 1
 
+#include <Classlib/Array1.h>
 #include <TCL/TCL.h>
 
+class TCLvarintp;
+
 class DebugSettings : public TCL {
+    Array1<TCLvarintp*> variables;
 public:
     DebugSettings();
     ~DebugSettings();
