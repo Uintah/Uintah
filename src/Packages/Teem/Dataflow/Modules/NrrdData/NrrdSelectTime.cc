@@ -223,8 +223,10 @@ NrrdSelectTime::execute()
   }
   
   if (!time_axis) {
-    error("This nrrd has no time axis (Must be labeled 'Time')");
-    return;
+    warning("This nrrd has no time axis (Must be labeled 'Time')");
+    warning("Using the last axis as the time axis.");
+    time_axis = nrrd_handle->nrrd->dim - 1;
+    //    return;
   }
 
   if (nrrd_handle->generation != last_input_)
