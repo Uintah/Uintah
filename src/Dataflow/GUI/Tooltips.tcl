@@ -64,6 +64,7 @@ proc leaveTooltip { } {
 }
 
 proc canvasTooltip { id text } {
+    return
     global Tooltip maincanvas
     set Tooltip($id) $text
     $maincanvas bind $id <Enter> "enterTooltip %X %Y $id"
@@ -73,6 +74,7 @@ proc canvasTooltip { id text } {
 }
 
 proc Tooltip { id text } {
+    return
     global Tooltip
     set Tooltip($id) $text
     bind Tooltip$id <Enter> "enterTooltip %X %Y $id"
