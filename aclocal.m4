@@ -495,7 +495,6 @@ case $1 in
     sci_check_netsolve=yes
   ;;
   rtrt)
-    sci_check_teem=yes
     sci_check_glut=yes
     sci_check_glui=yes
     sci_check_oogl=yes
