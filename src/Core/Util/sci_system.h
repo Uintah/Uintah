@@ -23,14 +23,8 @@
 #include <stdlib.h>
 #else
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 int sci_system (const char * string);
-#ifdef __cplusplus
-}
-#endif
 
-#endif /* __sgi */
+#endif /* __linux */
 
 #endif /* SCIRun_Core_Util_sci_system */
