@@ -62,6 +62,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-has_scalar_data
 	global $this-interactive_mode
 	global $this-bidirectional
+	global $this-vector-usedefcolor
 	global $this-text-use-default-color
 	global $this-text-color-r
 	global $this-text-color-g
@@ -114,6 +115,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
+	set $this-vector-usedefcolor 0
 	set $this-text-use-default-color 1
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
@@ -345,8 +347,13 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_bidirectional" \
 		-variable $this-bidirectional
 
+	checkbutton $vector.usedefcol \
+		-text "Use default color" \
+		-command "$this-c toggle_bidirectional" \
+		-variable $this-vector-usedefcolor
+
 	pack $vector.show_vectors $vector.radio $vector.normalize_vectors \
-	        $vector.bidirectional \
+	        $vector.bidirectional $vector.usedefcol \
 		-side top -fill y -anchor w
 
 	expscale $vector.slide -label "Vector Scale" \
@@ -597,7 +604,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 360 -width 330 \
+	iwidgets::tabnotebook  $dof.tabs -height 380 -width 330 \
 	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 

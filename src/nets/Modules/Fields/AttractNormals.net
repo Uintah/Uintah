@@ -32,12 +32,24 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "AttractNormals" 63 260]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 41 12]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 19 351]
 set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 179 463]
 set m4 [addModuleAtPosition "SCIRun" "Fields" "Probe" 282 174]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "TransformScalarData" 63 90]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "TransformScalarData" 67 89]
 
 addConnection $m0 0 $m2 0
 addConnection $m2 0 $m3 0
@@ -48,15 +60,14 @@ addConnection $m5 0 $m0 0
 addConnection $m1 0 $m5 0
 
 set $m0-notes {}
-set $m0-show_status {1}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-nodes-on {0}
+set $m2-nodes-transparency {0}
 set $m2-nodes-as-disks {1}
 set $m2-edges-on {0}
+set $m2-edges-transparency {0}
 set $m2-faces-on {0}
 set $m2-use-normals {0}
 set $m2-use-transparency {0}
@@ -64,9 +75,12 @@ set $m2-vectors-on {1}
 set $m2-normalize-vectors {0}
 set $m2-has_vector_data {1}
 set $m2-bidirectional {0}
-set $m2-arrow-heads-on {1}
+set $m2-vector-usedefcolor {1}
 set $m2-tensors-on {0}
 set $m2-has_tensor_data {0}
+set $m2-scalars-on {0}
+set $m2-scalars-transparency {0}
+set $m2-has_scalar_data {0}
 set $m2-text-on {0}
 set $m2-text-use-default-color {1}
 set $m2-text-color-r {1.0}
@@ -89,18 +103,21 @@ set $m2-node_display_type {Spheres}
 set $m2-edge_display_type {Lines}
 set $m2-data_display_type {Arrows}
 set $m2-tensor_display_type {Boxes}
+set $m2-scalar_display_type {Points}
 set $m2-active_tab {Vectors}
 set $m2-node_scale {0.0300}
 set $m2-edge_scale {0.0150}
 set $m2-vectors_scale {0.188}
 set $m2-tensors_scale {0.30}
+set $m2-scalars_scale {0.30}
 set $m2-show_progress {}
 set $m2-interactive_mode {Interactive}
+set $m2-field-name {}
+set $m2-field-name-update {1}
 set $m2-node-resolution {6}
 set $m2-edge-resolution {6}
 set $m2-data-resolution {6}
 set $m3-notes {}
-set $m3-show_status {1}
 $m3 ui
 set $m3-ViewWindow_0-pos {}
 set $m3-ViewWindow_0-caxes {0}
@@ -152,25 +169,29 @@ set $m3-ViewWindow_0-global-clip {0}
 set $m3-ViewWindow_0-global-cull {0}
 set $m3-ViewWindow_0-global-dl {0}
 set $m3-ViewWindow_0-global-type {Gouraud}
+set $m3-ViewWindow_0-ortho-view {0}
 set $m3-ViewWindow_0-unused {1}
 set $m3-ViewWindow_0-unused {1}
 set $m4-notes {}
-set $m4-show_status {1}
-set $m4-locx {        -0.345607}
-set $m4-locy {         0.188031}
-set $m4-locz {        -0.635535}
+set $m4-locx {-0.345607}
+set $m4-locy {0.188031}
+set $m4-locz {-0.635535}
 set $m4-value {1}
 set $m4-node {521}
 set $m4-edge {7769}
 set $m4-face {5178}
 set $m4-cell {5670}
-set $m4-moveto {}
+set $m4-show-value {1}
+set $m4-show-node {1}
+set $m4-show-edge {1}
+set $m4-show-face {1}
+set $m4-show-cell {1}
+set $m4-probe_scale {5.0}
 set $m5-notes {}
-set $m5-show_status {1}
 set $m5-method {function}
 set $m5-function {1.0}
-set $m5-imin {         -5.25315}
-set $m5-imax {          4.31926}
+set $m5-imin {-5.25315}
+set $m5-imax {4.31926}
 set $m5-omin {0}
 set $m5-omax {1}
 $m5 initialize_ui
