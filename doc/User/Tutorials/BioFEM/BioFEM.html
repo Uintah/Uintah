@@ -31,9 +31,10 @@
   <LI value="4"> <A HREF="#section_4">Visualization</A>
   <OL>
     <LI value="1"> <A HREF="#section_4_1">Rendering Window</A>
-    <LI value="3"> <A HREF="#section_4_3">Isosurface</A>
-    <LI value="4"> <A HREF="#section_4_4">Glyphs</A>
-    <LI value="5"> <A HREF="#section_4_5">Fibers</A>
+    <LI value="2"> <A HREF="#section_4_2">IsoSurface</A>
+    <LI value="3"> <A HREF="#section_4_3">StreamLines</A>
+    <LI value="4"> <A HREF="#section_4_4">Electrodes</A>
+    <LI value="5"> <A HREF="#section_4_5">ColorMap</A>
   </OL
 </OL>
 
@@ -166,52 +167,41 @@ positive voltages are red.
 
 <BR><H2><A NAME="section_4"> Section 4: Visualization </H2>
 
-As the visualization stage begins, the system will begin computing a
-number of derived quantities; this may take several moments, during
-which time the Progress indicator will indicate that the system is
-busy.  One of the first quantities the system will render are a set of
-three orthogonal cutting planes through the DT volume.  Once the
-Progress indicator changes to "Completed" (green), you can begin
-interacting with the visualization.
+After the dataset is selected some computation is done to solve the
+forward problem and then the results are visualized.  This may take
+several minutes during which time the Progress indicator will indicate
+that the system is busy and what it is doing.  The first result that
+should appear is the outer shell of the volume in a translucent grey.
+You can begin interacting with the visualization at any time, but
+waiting for the progress to be "Completed" (green) is more useful as
+that is when everything will be visible.
 
 <BR><H3><A NAME="section_4_1"> 4.1 Rendering Window </H3>
 
-To begin visualizing the data, press the AutoView button to move the
-rendered geometry into the middle of the window.  The Autoview button
-is located on the Viewer Options tab, but can also be invoked by
-pressing Ctrl-V while the mouse is in the Rendering window.  The
-controls for navigating within the Rendering window are the same as
-for the SCIRun ViewWindow
+The visualization data for the SCIRunData datasets should come up in
+the correct location.  If not you can begin visualizing the data by
+pressing the AutoView button to move the rendered geometry into the
+middle of the window.  The Autoview button is located on the Viewer
+Options tab, but can also be invoked by pressing Ctrl-V while the
+mouse is in the Rendering window.  The controls for navigating within
+the Rendering window are the same as for the SCIRun ViewWindow
 (http://software.sci.utah.edu/doc/User/Guide/usersguide/srug5.html#sec:viewer)
 though the full control pane normally found at the bottom of the
 ViewWindow has been replaced with the most frequently used subset of
 those controls and is now located on the Viewer Options tab.
 <P>
-Within the Vis Options tab of the Visualization pane, there are five
-sub-tabs for controlling the visualization settings.  The first tab,
-"Variance" was used when visualizing the DTI variance data in Section
-3.  We will now investigate the options on the four other tabs:
-Planes, Isosurface, Glyphs, and Fibers.
+Within the Vis Options tab of the Visualization pane, there are four categories for controlling the visualization settings.  We will now investigate the options on the four categories:  IsoSurface, StreamLines, Electrodes, and ColorMap.
 
-<BR><H3><A NAME="section_4_3"> 4.3 Isosurface Visualization </H2>
+<BR><H3><A NAME="section_4_2"> 4.2 IsoSurface Visualization </H3>
 
-Selecting the Isosurface tab reveals the options for generating an
+Selecting the IsoSurface tab reveals the options for generating an
 isosurface from the DT volume.  As shown in <A
 HREF="#figure_10">Figure 10</A> you can:
 
 <UL> 
-   <LI> Choose whether or not to show the isosurface.
-   <LI> Select which derived metric the isosurface is being computed for
- (e.g. Fractional Anisotropy).
-   <LI> Selcted an isovalue.
-   <LI> Color the isosurface based on a) the principle eigenvector
- direction (and again desaturated or colored black as described for
- the planes, above); b) another scalar metric (in which case the
- radio buttons for the colormap swatches are activated); or c) using a
- constant color (chosen using the "Color" button).
-   <LI> Use the planes as clipping planes to clip the isosurface; the
- orientation of each clipping plane can be toggled using the Flip
- buttons.
+   <LI> Choose whether or not to show the isosurface. </LI>
+   <LI> Selcted an isovalue. </LI>
+   <LI> Enable or disable rendering faces with interpolated normals for smoother renderings.</LI>
 </UL>
 
 <A NAME="figure_10">
@@ -221,57 +211,7 @@ HREF="#figure_10">Figure 10</A> you can:
 <B>Figure 10: Isosurface Visualization.</b>
 </CENTER>
 
-<em>Note: The 1.20.0 version of BioFEM renders the isosurface faces
-using a constant per-face normal.  In our 1.20.1 release, we will
-enable the rendering option to display faces with interpolated normals,
-which will produce smoother surface renderings, as demonstrated in <A
-HREF="#figure_10">Figure 10</A></em>.
-<P>
-
-Just as the planes can be used to clip the isosurface, the isosurface
-can also be used to clip the planes.  An example of this is shown in
-<A
-HREF="#figure_11">Figure 11</A>.  We have set the
-isosurface value very low (0.01), have turned off the "Show
-Isosurface" button, and on the Planes tab have selected the Clip to
-Isosurface button.
-
-<A NAME="figure_11">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-clipped-planes.jpg"><br>
-<B>Figure 11: Clipped Planes Visualization.</b>
-</CENTER>
-
-<BR><H3><A NAME="section_4_4"> 4.4 Glyph Visualization </H3>
-
-Under the Glyphs tab, you can select the type, placement, and coloring
-of tensor glyphs within the volume.  The default setting is to render
-box glyphs, seeded on the planes of the planes, colored based on the
-principle eigenvector direction (as above) as shown in <A
-HREF="#figure_12">Figure 12</A>.  A zoomed-in figure of the
-superquadric glyphs rendered on the cutting planes is shown in <A
-HREF="#figure_13">Figure 13</A>.  In addition to colored-box glyphs,
-the tensors can be rendered as RGB boxes, ellipsoids, or superquadric
-glyphs.  With the controls at the top of the panel, you can select the
-discretization level used for the round glyph shapes (which are
-approximated using triangular meshes), you can select whether or not
-to normalize the volume (to 1.0) of each tensor before rendering, as
-well as whether to scale the volume of each tensor, and whether to
-exaggerate the anisotropy of the tensor (and by how much).  Finally,
-using the options in the "Seed At" frame, you can choose where to
-place the glyphs: either at a single point (controlled by the position
-of a sphere widget in the Rendering window: use Shift-LeftMouse to
-select and move widgets), seeded along a line specified by a rake
-widget, seeded on the visible cutting planes, or seeded at the grid
-point located within the prescribed isovolume.
-
-<A NAME="figure_12">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biofem-vis-boxes.jpg"><br>
-<B>Figure 12: Glyph Box Visualization.</b>
-</CENTER>
+<BR><H3><A NAME="section_4_3"> 4.3 StreamLines Visualization </H3>
 
 <A NAME="figure_13">
 <BR><BR>
@@ -280,7 +220,7 @@ point located within the prescribed isovolume.
 <B>Figure 13: Superquadric Glyph Visualization.</b>
 </CENTER>
 
-<BR><H3><A NAME="section_4_5"> 4.5 Fiber Visualization </H3>
+<BR><H3><A NAME="section_4_4"> 4.4 Electrodes Visualization </H3>
 
 As with the tensor glyphs, you can select seed locations and
 colorization options for rendering fibers within the brain.  A variety
@@ -306,6 +246,8 @@ fiber tracing algorithm.  These parameters include:
        the volume which falls below a specified anisotropy threshold
        (either Linear Anisotropy or Fractional Anisotropy).
 </UL>
+
+<BR><H3><A NAME="section_4_5"> 4.5 ColorMap Selection </H3>
 
 <A NAME="figure_14">
 <BR><BR>
