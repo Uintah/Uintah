@@ -14,6 +14,7 @@ using std::cerr;
 using namespace SCICore::Exceptions;
 using std::string;
 
+static bool            allowThreads;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = -1;
@@ -44,10 +45,18 @@ Parallel::getMaxThreads()
 }
 
 void
+Parallel::noThreading()
+{
+  ::allowThreads = false;
+  ::maxThreads = 1;
+}
+
+void
 Parallel::initializeManager(int& argc, char**& argv)
 {
    if( char * max = getenv( "PSE_MAX_THREADS" ) ){
       ::maxThreads = atoi( max );
+      ::allowThreads = true;
       cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
 
       if( ::maxThreads <= 0 || ::maxThreads > 16 ){
@@ -121,6 +130,10 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.13  2000/09/28 22:21:34  dav
+// Added code that allows the MPIScheduler to run correctly even if
+// PSE_MAX_THREADS is set.  This was messing up the assigning of resources.
+//
 // Revision 1.12  2000/09/26 21:44:34  dav
 // removed PSE_MPI_DEBUG_LEVEL
 //
