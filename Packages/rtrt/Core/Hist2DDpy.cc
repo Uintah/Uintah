@@ -73,27 +73,37 @@ void Hist2DDpy::set_p()
     py1=-(a*vdatamax+c)/b;
     px1=vdatamax;
   }
-  set_clip();
+  set_clip(px0, py0, px1, py1);
 }
 
-void Hist2DDpy::set_line()
+void Hist2DDpy::set_lines()
 {
   float dx=px1-px0;
   float dy=py1-py0;
   new_isoline.a=-dy;
   new_isoline.b=dx;
   new_isoline.c=-(new_isoline.a*px0+new_isoline.b*py0);
-  set_clip();
+
+  if (new_use_perp) {
+    float dx = (gdatamax-gdatamin)/xres;
+    float dy = (vdatamax-vdatamin)/yres;
+    float ratio = dx*dx/dy/dy;
+    compute_perp(new_isoline, new_perp_line, px1, py1, ratio);
+    // Should use the perp's endpoints
+    set_clip(px0, py0, px1, py1);
+  } else {
+    set_clip(px0, py0, px1, py1);
+  }
 }
 
-void Hist2DDpy::set_clip()
+void Hist2DDpy::set_clip(float x0, float y0, float x1, float y1)
 {
-  float dx=px1-px0;
-  float dy=py1-py0;
+  float dx=x1-x0;
+  float dy=y1-y0;
   float l2=dx*dx+dy*dy;
   new_clipline.a=dx/l2;
   new_clipline.b=dy/l2;
-  new_clipline.c=-(new_clipline.a*px0+new_clipline.b*py0);
+  new_clipline.c=-(new_clipline.a*x0+new_clipline.b*y0);
 }
 
 void Hist2DDpy::attach(VolumeVGBase* vol)
@@ -127,20 +137,16 @@ void Hist2DDpy::init() {
   if(!have_p)
     set_p();
 
-  // Ok, figure out where the center is
+  // Ok, figure out where the center is.  These values never change
   cx = vdatamin+0.5f*(vdatamax-vdatamin);
   cy = gdatamin+0.5f*(gdatamax-gdatamin);
 
-  px0 = cx;
-  py0 = cy;
+  if (use_perp) {
+    px0 = cx;
+    py0 = cy;
+  }
 
-  set_line();
-  ix = px1;
-  iy = py1;
-  float dx = (gdatamax-gdatamin)/xres;
-  float dy = (vdatamax-vdatamin)/yres;
-  float ratio = dx*dx/dy/dy;
-  compute_perp(new_isoline, new_perp_line, ix, iy, ratio);
+  set_lines();
   
   glShadeModel(GL_FLAT);
 }
@@ -259,13 +265,7 @@ void Hist2DDpy::run()
 	  if (new_use_perp) {
 	    px0 = cx;
 	    py0 = cy;
-	    set_line();
-	    ix = px1;
-	    iy = py1;
-	    float dx = (gdatamax-gdatamin)/xres;
-	    float dy = (vdatamax-vdatamin)/yres;
-	    float ratio = dx*dx/dy/dy;
-	    compute_perp(new_isoline, new_perp_line, ix, iy, ratio);
+	    set_lines();
 	    redraw_isoval=true;
 	  }
 	  break;
@@ -484,15 +484,7 @@ void Hist2DDpy::button_motion(MouseButton button, const int x, const int y) {
     px1=xval;
     py1=yval;
   }
-  set_line();
-  if (new_use_perp) {
-    ix = px1;
-    iy = py1;
-    float dx = (gdatamax-gdatamin)/xres;
-    float dy = (vdatamax-vdatamin)/yres;
-    float ratio = dx*dx/dy/dy;
-    compute_perp(new_isoline, new_perp_line, ix, iy, ratio);
-  }
+  set_lines();
   redraw_isoval=true;
 }
 
