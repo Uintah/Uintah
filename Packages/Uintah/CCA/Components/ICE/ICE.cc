@@ -1186,7 +1186,8 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->modifies(lb->sp_vol_CCLabel,ice_matls);
   task->computes(lb->temp_CCLabel,  ice_matls);
   task->computes(lb->vel_CCLabel,   ice_matls);
-  
+  task->computes(lb->machLabel,     ice_matls);  
+
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -3957,6 +3958,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
     Advector* advector = d_advector->clone(new_dw,patch);
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
     new_dw->allocateTemporary(mass_new,     patch);
     new_dw->allocateTemporary(mass_advected,patch);
     new_dw->allocateTemporary(q_advected,   patch);
@@ -3970,17 +3972,15 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
      if(ice_matl){
       int indx = matl->getDWIndex(); 
 
-      CCVariable<double> rho_CC, temp, sp_vol_CC;
+      CCVariable<double> rho_CC, temp, sp_vol_CC,mach;
       CCVariable<Vector> vel_CC;
-      constCCVariable<double> int_eng_L_ME, mass_L,spec_vol_L;
+      constCCVariable<double> int_eng_L_ME, mass_L,spec_vol_L,speedSound;
       constCCVariable<Vector> mom_L_ME;
-      new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,2);
-      new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
-     
       constSFCXVariable<double > uvel_FC;
       constSFCYVariable<double > vvel_FC;
       constSFCZVariable<double > wvel_FC;
 
+      new_dw->get(speedSound,  lb->speedSound_CCLabel,    indx,patch,gn,0);
       new_dw->get(uvel_FC,     lb->uvel_FCMELabel,        indx,patch,gac,2);  
       new_dw->get(vvel_FC,     lb->vvel_FCMELabel,        indx,patch,gac,2);  
       new_dw->get(wvel_FC,     lb->wvel_FCMELabel,        indx,patch,gac,2);  
@@ -3993,7 +3993,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
       cv = ice_matl->getSpecificHeat();
       new_dw->allocateAndPut(temp,   lb->temp_CCLabel,  indx,patch);          
-      new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);  
+      new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
+      new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);  
               
       rho_CC.initialize(0.0);
       temp.initialize(0.0);
@@ -4150,11 +4151,18 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
           }
         }
       }
+      //__________________________________
+      // Compute Auxilary quantities
+      for(CellIterator iter = patch->getExtraCellIterator(); 
+                                                             !iter.done(); iter++) {
+        IntVector c = *iter;
+        mach[c]  = vel_CC[c].length()/speedSound[c];
+      }
 //______________________ L O D I__________________________________
 #ifdef LODI_BCS  
 cout << "using LODI BCS" <<endl;
       Ghost::GhostType  gn  = Ghost::None;  
-      constCCVariable<double> press_new, speedSound,vol_frac_new;
+      constCCVariable<double> press_new,vol_frac_new;
       CCVariable<double> rho_L;
       CCVariable<Vector> vel_L_CC;
       CCVariable<double> press_tmp;
@@ -4164,8 +4172,7 @@ cout << "using LODI BCS" <<endl;
       CCVariable<double> d1_z, d2_z, d3_z, d4_z, d5_z;      
 
       new_dw->get(vol_frac_new,lb->vol_frac_CCLabel,      indx,patch,gn,0);
-      new_dw->get(press_new,   lb->press_CCLabel,         0,   patch,gn,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel,    indx,patch,gn,0);  
+      new_dw->get(press_new,   lb->press_CCLabel,         0,   patch,gn,0);  
  
       new_dw->allocateTemporary(press_tmp,  patch);
       new_dw->allocateTemporary(rho_L,      patch);

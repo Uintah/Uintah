@@ -136,6 +136,8 @@ ICELabel::ICELabel()
                                   SFCZVariable<double>::getTypeDescription() );  
     
     // Misc labels
+  machLabel     =
+    VarLabel::create("mach",     CCVariable<double>::getTypeDescription() ); 
   scratchLabel     =
     VarLabel::create("scratch",  CCVariable<double>::getTypeDescription() );
   scratch_FCXLabel   =
@@ -249,6 +251,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_diffZ_FCLabel);
     // Misc labels
     VarLabel::destroy(IveBeenHereLabel);
+    VarLabel::destroy(machLabel);
     VarLabel::destroy(scratchLabel);
     VarLabel::destroy(scratch_FCVectorLabel);
     VarLabel::destroy(scratch_FCXLabel);
