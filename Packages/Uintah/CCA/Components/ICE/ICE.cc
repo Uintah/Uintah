@@ -2238,7 +2238,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     double invvol = 1./vol;
     
     Advector* advector = d_advector->clone(new_dw,patch);
-    CCVariable<double> q_CC, q_advected;
+    CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
     CCVariable<double> delP_MassX;
     CCVariable<double> sum_rho_CC;
@@ -2261,7 +2261,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
-    new_dw->allocateTemporary(q_CC,       patch, gac,2);
     new_dw->get(pressure,  lb->press_equil_CCLabel,0,patch,gn,0);
 
     term1.initialize(0.);
@@ -2303,33 +2302,17 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
       }
-      
-      //__________________________________
-      // If second order is used 
-      // iterate over two layers of ghostCells
-      int ncells = 1;   // default for first order advection
-      if (d_advect_type == "SecondOrder" || 
-          d_advect_type == "SecondOrderCE" ){
-        ncells = 2;
-      }
-      CellIterator iter = patch->getExtraCellIterator();
-      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter, ncells);
-            
+                 
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
       bool bulletProof_test=true;
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
                                     bulletProof_test); 
-
-      for(CellIterator iter = iterPlusGhost; !iter.done();iter++){
-       IntVector c = *iter;
-        q_CC[c] = vol_frac[c] * invvol;
-      } 
-      
       //__________________________________
-      //   First order advection of q_CC 
-      advector->advectQ(q_CC, patch, q_advected, new_dw); 
+      //   advect vol_frac
+      advector->advectQ(vol_frac, patch, q_advected, new_dw);  
+
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -3610,16 +3593,17 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     // These arrays get re-used for each material, and for each
     // advected quantity
     const IntVector gc(1,1,1);
-    CCVariable<double> q_CC, q_advected, mass_new, mass_advected;
-    CCVariable<Vector> qV_CC, qV_advected;
+    CCVariable<double>  q_advected, mass_new, mass_advected;
+    CCVariable<Vector>  qV_advected; 
+
     Advector* advector = d_advector->clone(new_dw,patch);
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->allocateTemporary(mass_new,     patch);
     new_dw->allocateTemporary(mass_advected,patch);
     new_dw->allocateTemporary(q_advected,   patch);
     new_dw->allocateTemporary(qV_advected,  patch);
-    new_dw->allocateTemporary(qV_CC,        patch,gac,2);
-    new_dw->allocateTemporary(q_CC,         patch,gac,2);
+
+
     int numALLMatls = d_sharedState->getNumMatls();
 
     for (int m = 0; m < numALLMatls; m++ ) {
@@ -3651,26 +3635,15 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
       cv = ice_matl->getSpecificHeat();
       new_dw->allocateAndPut(temp,   lb->temp_CCLabel,  indx,patch);          
-      new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);          
+      new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);  
+              
       rho_CC.initialize(0.0);
       temp.initialize(0.0);
-      q_advected.initialize(0.0); 
-       
+      q_advected.initialize(0.0);  
       mass_advected.initialize(0.0);
       vel_CC.initialize(Vector(0.0,0.0,0.0));
-      qV_advected.initialize(Vector(0.0,0.0,0.0));
-
-      //__________________________________
-      // If second order is used 
-      // iterate over two layers of ghostCells
-      int ncells = 1;   // default for first order advection
-      if (d_advect_type == "SecondOrder" || 
-          d_advect_type == "SecondOrderCE" ){
-        ncells = 2;
-      }
-      CellIterator iter = patch->getExtraCellIterator();
-      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter, ncells); 
-      
+      qV_advected.initialize(Vector(0.0,0.0,0.0)); 
+    
       //__________________________________
       //   Advection preprocessing
       bool bulletProof_test=true;
@@ -3679,12 +3652,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //__________________________________
       // Advect mass and backout rho_CC
-      for(CellIterator iter=iterPlusGhost; !iter.done();iter++){
-        IntVector c = *iter;
-        q_CC[c] = mass_L[c] * invvol;
-      }
-
-      advector->advectQ(q_CC,patch,mass_advected, new_dw);
+      advector->advectQ(mass_L,patch,mass_advected, new_dw);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
@@ -3696,13 +3664,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       
       //__________________________________
       // Advect  momentum and backout vel_CC
-      for(CellIterator iter=iterPlusGhost; !iter.done(); iter++){
-        IntVector c = *iter;
-        qV_CC[c] = mom_L_ME[c] * invvol;
-      }
-
-      advector->advectQ(qV_CC,patch,qV_advected, new_dw);
-
+      advector->advectQ(mom_L_ME,patch,qV_advected, new_dw);
 
       Vector vel_L_ME, vel_advected;
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
@@ -3719,13 +3681,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
-      for(CellIterator iter=iterPlusGhost; !iter.done(); iter++){
-        IntVector c = *iter;
-        q_CC[c] = int_eng_L_ME[c] * invvol;
-      }
+      advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);
 
-      advector->advectQ(q_CC,patch,q_advected, new_dw);
-      
       double Temp_advected, Temp_cv_L_ME, Temp_L_ME;
       if (d_EqForm){         // EQ FORM
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -3763,14 +3720,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
-      double sp_vol_tmp, sp_vol_advected;
-      for(CellIterator iter=iterPlusGhost; !iter.done();iter++){
-        IntVector c = *iter;
-        q_CC[c] = spec_vol_L[c]*invvol;
-      }
-
-      advector->advectQ(q_CC,patch,q_advected, new_dw);
+      advector->advectQ(spec_vol_L,patch,q_advected, new_dw); 
       
+      double sp_vol_tmp, sp_vol_advected;      
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
         IntVector c = *iter;
         sp_vol_tmp      = spec_vol_L[c]/mass_L[c];        
