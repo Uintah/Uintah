@@ -17,10 +17,11 @@
 
 # SCI Network 1.0
 
-set DATADIR .
-if [info exists env(INSIGHT_DATA)] {
-   set DATADIR $env(INSIGHT_DATA)
-}
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+#######################################################################
 
 ::netedit dontschedule
 
@@ -49,7 +50,6 @@ set m9 [addModuleAtPosition "Insight" "Converters" "ImageToField" 546 117]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 546 324]
 set m11 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 737 114]
 set m12 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 737 210]
-set m13 [addModuleAtPosition "Insight" "Filters" "CannySegmentationLevelSetImageFilter" 410 2]
 
 addConnection $m1 0 $m2 0
 addConnection $m2 0 $m3 1
@@ -68,9 +68,9 @@ addConnection $m9 0 $m12 1
 addConnection $m12 0 $m10 1
 
 set $m0-notes {}
-set $m0-filename $DATADIR/BrainProtonDensitySliceSeed.mhd
+set $m0-filename $DATADIR/insight/BrainProtonDensitySliceSeed.mhd
 set $m1-notes {}
-set $m1-filename $DATADIR/BrainProtonDensitySlice.png
+set $m1-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 set $m2-notes {}
 set $m2-time_step {0.25}
 set $m2-iterations {10}
@@ -81,9 +81,9 @@ set $m3-upper_threshold {190}
 set $m3-curvature_scaling {1}
 set $m3-propagation_scaling {1}
 set $m3-edge_weight {0.0}
-set $m3-max_iterations {1500}
+set $m3-max_iterations {500}
 set $m3-max_rms_change {0.02}
-set $m3-reverse_expansion_direction {1}
+set $m3-reverse_expansion_direction {0}
 set $m3-isovalue {127.5}
 set $m3-smoothing_iterations {0}
 set $m3-smoothing_time_step {0.1}
@@ -92,9 +92,9 @@ set $m4-notes {}
 set $m4-copy {0}
 set $m5-notes {}
 set $m5-tcl_status {Calling GenStandardColorMaps!}
-set $m5-positionList {{0 38} {394 4}}
-set $m5-nodeList {769 1320}
-set $m5-width {398}
+set $m5-positionList {{0 38} {0 39} {529 2} {532 0}}
+set $m5-nodeList {257 769 1330 518}
+set $m5-width {532}
 set $m5-height {40}
 set $m5-mapType {3}
 set $m5-minRes {12}
@@ -216,6 +216,7 @@ set $m8-ViewWindow_0-global-type {Gouraud}
 set $m8-ViewWindow_0-ortho-view {0}
 set $m8-ViewWindow_0-unused {1}
 set $m8-ViewWindow_0-unused {1}
+set $m8-ViewWindow_0-unused {1}
 set $m9-notes {}
 set $m9-copy {0}
 set $m10-notes {}
@@ -287,17 +288,7 @@ set $m11-gamma {0}
 set $m12-notes {}
 set $m12-isFixed {0}
 set $m12-min {0}
-set $m12-max {251}
+set $m12-max {255}
 set $m12-makeSymmetric {0}
-set $m13-notes {}
-set $m13-iterations {10}
-set $m13-reverse_expansion_direction {1}
-set $m13-max_rms_change {0.001}
-set $m13-threshold {0.001}
-set $m13-variance {10}
-set $m13-propagation_scaling {1.0}
-set $m13-advection_scaling {1.0}
-set $m13-curvature_scaling {1.0}
-set $m13-isovalue {1}
 
 ::netedit scheduleok

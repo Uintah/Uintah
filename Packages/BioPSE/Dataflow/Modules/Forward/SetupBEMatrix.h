@@ -2,14 +2,14 @@
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
-  
+
   Software distributed under the License is distributed on an "AS IS"
   basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
-  
+
   The Original Source Code is SCIRun, released March 12, 2001.
-  
+
   The Original Source Code was developed by the University of Utah.
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
@@ -59,7 +59,7 @@ class SetupBEMatrix : public Module
   vector<Vector>           avInn_;
   MatrixHandle       hZoi_;
   typedef LockingHandle<DenseMatrix>     DenseMatrixHandle;
-  
+
 private:
 
   bool ray_triangle_intersect(double &t,
@@ -190,15 +190,15 @@ public:
 DECLARE_MAKER(SetupBEMatrix)
 
 
-SetupBEMatrix::SetupBEMatrix(GuiContext *context):
-  Module("SetupBEMatrix", context, Source, "Forward", "BioPSE")
-{
-}
+//SetupBEMatrix::SetupBEMatrix(GuiContext *context):
+//  Module("SetupBEMatrix", context, Source, "Forward", "BioPSE")
+//{
+//}
 
 
-SetupBEMatrix::~SetupBEMatrix()
-{
-}
+//SetupBEMatrix::~SetupBEMatrix()
+//{
+//}
 
 
 // C++ized MollerTrumbore97 Ray Triangle intersection test.
@@ -667,11 +667,11 @@ inline double  SetupBEMatrix::get_new_auto_g(
     {
       gama_j = gama_j + gama;
       rhoj = h / cos(alfa - gama_j);
-      sum = sum + sqrt( fabs(rhoj * rhoj_1) );
+      sum = sum + sqrt( abs(rhoj * rhoj_1) );
       rhoj_1 = rhoj;
     }
-    sai_new = sum * sqrt( fabs(gama * sin(gama)) );
-    delta = fabs( (sai_new - sai_old) / (sai_new + sai_old) );
+    sai_new = sum * sqrt( abs(gama * sin(gama)) );
+    delta = abs( (sai_new - sai_old) / (sai_new + sai_old) );
     sai_old = sai_new;
   }
    return sai_new;

@@ -41,6 +41,9 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
+#if defined(__APPLE__)
+#  include <Core/Datatypes/MacForceLoad.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -108,13 +111,17 @@ void printUsageInfo(char *progName) {
 
 int
 main(int argc, char **argv) {
-  CurveMesh *cm = new CurveMesh();
   if (argc < 4 || argc > 9) {
     printUsageInfo(argv[0]);
     return 0;
   }
+#if defined(__APPLE__)  
+  macForceLoad(); // Attempting to force load (and thus instantiation of
+	          // static constructors) Core/Datatypes;
+#endif
   setDefaults();
 
+  CurveMesh *cm = new CurveMesh();
   char *ptsName = argv[1];
   char *edgesName = argv[2];
   char *fieldName = argv[3];

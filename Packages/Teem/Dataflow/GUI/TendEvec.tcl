@@ -26,6 +26,15 @@ itcl_class Teem_Tend_TendEvec {
         set_defaults
     }
     method set_defaults {} {
+	global $this-major
+	set $this-major 1
+
+	global $this-medium
+	set $this-medium 0
+
+	global $this-minor
+	set $this-minor 0
+
         global $this-threshold
         set $this-threshold 0.0
     }
@@ -45,7 +54,16 @@ itcl_class Teem_Tend_TendEvec {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.threshold -labeltext "threshold:" \
+	checkbutton $w.f.options.major -text "Major" -variable $this-major
+        pack $w.f.options.major -side top -expand yes -fill x
+
+	checkbutton $w.f.options.medium -text "Medium" -variable $this-medium
+        pack $w.f.options.medium -side top -expand yes -fill x
+
+	checkbutton $w.f.options.minor -text "Major" -variable $this-minor
+        pack $w.f.options.minor -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.threshold -labeltext "Threshold:" \
 	    -textvariable $this-threshold
         pack $w.f.options.threshold -side top -expand yes -fill x
 

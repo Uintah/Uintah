@@ -49,6 +49,7 @@ MaskedLatVolMesh::MaskedLatVolMesh():
   LatVolMesh(),
   synchronized_(0),
   nodes_(),
+  node_lock_("MaskedLatVolMesh node_lock_"),
   masked_cells_(), 
   masked_nodes_count_(0),
   masked_edges_count_(0),
@@ -64,6 +65,7 @@ MaskedLatVolMesh::MaskedLatVolMesh(unsigned int x,
   LatVolMesh(x, y, z, min, max),
   synchronized_(0),
   nodes_(),
+  node_lock_("MaskedLatVolMesh node_lock_"),
   masked_cells_(), 
   masked_nodes_count_(0),
   masked_edges_count_(0),
@@ -74,6 +76,7 @@ MaskedLatVolMesh::MaskedLatVolMesh(const MaskedLatVolMesh &copy) :
   LatVolMesh(copy),
   synchronized_(copy.synchronized_),
   nodes_(copy.nodes_),
+  node_lock_("MaskedLatVolMesh node_lock_"),
   masked_cells_(copy.masked_cells_), 
   masked_nodes_count_(copy.masked_nodes_count_),
   masked_edges_count_(copy.masked_edges_count_),
@@ -689,20 +692,22 @@ get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs,
 unsigned int
 MaskedLatVolMesh::get_sequential_node_index(const Node::index_type idx)
 {
-  if (!(synchronized_ & NODES_E))
-  {
-    nodes_.clear();
-    int i = 0;
-    Node::iterator node, nend;
-    begin(node);
-    end(nend);
-    while (node != nend)
-    {
-      nodes_[*node] = i++;
-      ++node;
-    }
-    synchronized_ |= NODES_E;
+  node_lock_.lock();
+  if (synchronized_ & NODES_E) {
+    node_lock_.unlock();
   }
+
+  nodes_.clear();
+  int i = 0;
+  Node::iterator node, nend;
+  begin(node);
+  end(nend);
+  while (node != nend) {
+    nodes_[*node] = i++;
+    ++node;
+  }
+  synchronized_ |= NODES_E;
+  node_lock_.unlock();
 
   return nodes_[idx];
 }

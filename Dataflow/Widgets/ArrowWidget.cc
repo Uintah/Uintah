@@ -181,6 +181,10 @@ ArrowWidget::geom_pick(GeomPickHandle p,
   BaseWidget::geom_pick(p, vw, data, bs);
   pick_pointvar_ = variables[PointVar]->point();
   pick_headvar_ = variables[HeadVar]->point();
+  pick_scale_ = widget_scale_;
+  pick_dir_ = pick_headvar_ - pick_pointvar_;
+  pick_length_ = pick_dir_.length();
+  pick_dir_.normalize();
 }
 
 
@@ -200,22 +204,27 @@ ArrowWidget::geom_pick(GeomPickHandle p,
  */
 void
 ArrowWidget::geom_moved( GeomPickHandle, int /* axis */, double /* dist */,
-			 const Vector& /*delta*/, int pick, const BState&,
+			 const Vector& delta, int pick, const BState&,
 			 const Vector &pick_offset)
 {
   ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetDirection());
   switch(pick)
   {
   case HeadP:
-    variables[PointVar]->Move(pick_pointvar_);
+//    variables[PointVar]->Move(pick_pointvar_);
     variables[HeadVar]->Move(pick_headvar_);
     variables[HeadVar]->SetDelta(pick_offset, Scheme1);
     break;
 
   case ResizeP:
-    variables[PointVar]->Move(pick_pointvar_);
-    variables[HeadVar]->Move(pick_headvar_);
-    variables[HeadVar]->SetDelta(pick_offset, Scheme2);
+    {
+      double dot = Dot(pick_offset,pick_dir_);
+      double total_len = pick_length_*1.5+dot;
+      double scale_len = total_len / (pick_length_*1.5);
+      SetScale(pick_scale_*scale_len);
+      SetLength(pick_length_*scale_len);
+      return;
+    } 
     break;
 
   case PointP:

@@ -1,4 +1,3 @@
-
 /*
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -27,22 +26,15 @@
  *   Alexei Samsonov
  *   March 2001
  *  Copyright (C) 1999, 2001 SCI Group
- *
- *   Lorena Kreda, Northeastern University, October 2003
  */
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Dataflow/Modules/Fields/FieldInfo.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
@@ -70,22 +62,13 @@ class ApplyFEMCurrentSource : public Module {
 
   int gen_;
   TetVolMesh::Cell::index_type loc;
-  TetVolMesh::Face::index_type locTri;
 
-  // Flag to indicate what type of field data is being processed
   bool tet;
-  bool hex;
-  bool tri;
 
 public:
   GuiInt sourceNodeTCL_;
   GuiInt sinkNodeTCL_;
-  GuiString modeTCL_; 
-  // Note: mode can be either: "dipole", "electrode pair", or "electrode set" 
-  // (Interpolant field input used only if mode is "electrode pair" or "electrode set")
-
-  // Note: the TCL file has not yet been modified to offer "electrode set" mode
-  // this feature is coming soon!
+  GuiString modeTCL_; //"dipole" or "electrodes" (if electrodes use interp map)
 
   //! Constructor/Destructor
   ApplyFEMCurrentSource(GuiContext *context);
@@ -112,9 +95,6 @@ ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
 
 void ApplyFEMCurrentSource::execute()
 {
-  // This module is currently able to process only TetVols, HexVols and
-  // TriSurfs
-
   iportField_ = (FieldIPort *)get_iport("Mesh");
   iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
   iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
@@ -155,58 +135,22 @@ void ApplyFEMCurrentSource::execute()
     return;
   }
 
-  // Declare type-specific handles
   TetVolMeshHandle hMesh;
-  LockingHandle<TetVolField<int> > hCondField;
   HexVolMeshHandle hHexMesh;
-  LockingHandle<HexVolField<int> > hHexCondField;
-  TriSurfMeshHandle hTriMesh;
-  LockingHandle<TriSurfField<int> > hTriCondField;
 
-  // Check for valid data type - must be <int>
-  if (hField->get_type_name(1) != "int") {
-    error("Data in supplied field is not of type int");
-    return;
-  }
-
-  // Check for valid field type and assign variables accordingly
-  tet = false;
-  hex = false;
-  tri = false;
   if (hField->get_type_name(0) == "TetVolField") {
-    remark("Input is a 'TetVolField<int>'");
-    hCondField = dynamic_cast<TetVolField<int>*> (hField.get_rep());
-    hMesh = hCondField->get_typed_mesh();
-    tet = true;    
-  }
-  else if (hField->get_type_name(0) == "HexVolField") {
-    remark("Input is a 'HexVolField<int>'");
-    hHexCondField = dynamic_cast<HexVolField<int>*>(hField.get_rep());
-    hHexMesh = hHexCondField->get_typed_mesh();
-    hex = true;
-  }
-  else if (hField->get_type_name(0) == "TriSurfField") {
-    remark("Input is a 'TriSurfField<int>'");
-    hTriCondField = dynamic_cast<TriSurfField<int>*> (hField.get_rep());
-    hTriMesh = hTriCondField->get_typed_mesh();
-    tri = true;
-  }
-  else {    
-    error("Supplied field is not 'TetVol', 'HexVol', nor 'TriSurf'");
+    remark("Input is a 'TetVolField'");
+    tet = true;
+    hMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep());
+  } else if (hField->get_type_name(0) == "HexVolField") {
+    remark("Input is a 'HexVolField'");
+    tet = false;
+    hHexMesh = dynamic_cast<HexVolMesh*>(hField->mesh().get_rep());
+  } else {
+    error("Supplied field is not 'TetVolField' or 'HexVolField'");
     return;
   }
-
-  if (modeTCL_.get() == "electrode set") {
-    error("Sorry! Electrode set mode is not supported at this time");
-    return;
-  }
-
-  // save the following error statement for use in later version  
-  if ((modeTCL_.get() == "electrode set") && (tri != true)) {
-    error("Only TriSurfField type is supported in electrode set mode");
-    return;
-  }
-
+  
   MatrixHandle  hRhsIn;
   ColumnMatrix* rhsIn;
   ColumnMatrix* rhs;
@@ -216,13 +160,9 @@ void ApplyFEMCurrentSource::execute()
 	TetVolMesh::Node::size_type nsizeTet; hMesh->size(nsizeTet);
 	nsize = nsizeTet;
   }
-  else if(hex) {
+  else {
 	HexVolMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
 	nsize = nsizeHex;
-  }
-  else if(tri) {
-        TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
-	nsize = nsizeTri;
   }
 
   rhs = scinew ColumnMatrix(nsize);
@@ -246,9 +186,8 @@ void ApplyFEMCurrentSource::execute()
   }
 
   // process tet mesh
-  if (tet) {
-        // If data type is TetVol and mode is "dipole"
-        // ===========================================
+  if(tet) {
+  
 	if (modeTCL_.get() == "dipole") {
 	  FieldHandle hSource;
 	  if (!iportSource_->get(hSource) || !hSource.get_rep()) {
@@ -319,10 +258,7 @@ void ApplyFEMCurrentSource::execute()
 	  for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
 	  oportWeights_->send(MatrixHandle(w));
 	  oportRhs_->send(MatrixHandle(rhs)); 
-	} 
-        // If data type is TetVol and mode is "electrode pair"
-        // ===================================================
-        else if(modeTCL_.get() == "electrode pair") {  // electrode pair source
+	} else {  // electrode sources
 	  FieldHandle hInterp;
 	  iportInterp_->get(hInterp);
 	  FieldHandle hSource;
@@ -421,31 +357,13 @@ void ApplyFEMCurrentSource::execute()
 	  }
 	  oportRhs_->send(MatrixHandle(rhs)); 
 	}
-        // If data type is TetVol and mode is "electrode set" (not implemented yet)
-        // ========================================================================
-        else if (modeTCL_.get() == "electrode set"){ 
-	  error("electrode set modelling is not yet available for TetFEM");
-	  return;
-	}
-
   }
-  else if (hex) { // process hex mesh
-        // If data type is HexVol and mode is "electrode pair" (not implemented yet)
-        // =========================================================================
-	if (modeTCL_.get() == "electrode pair") { // electrodes -> has to be implemented
+  else { // process hex mesh
+	if (modeTCL_.get() == "electrodes") { // electrodes -> has to be implemented
 	  error("source/sink modelling is not yet available for HexFEM");
 	  return;
 	}
-
-        // If data type is HexVol and mode is "electrode set" (not implemented yet)
-        // =========================================================================
-	if (modeTCL_.get() == "electrode set") { // electrode set -> has to be implemented
-	  error("electrode set modelling is not yet available for HexFEM");
-	  return;
-	}
-  
-        // If data type is HexVol and mode is "dipole"
-        // ===========================================
+	// dipoles
 	FieldHandle hSource;
 	if (!iportSource_->get(hSource) || !hSource.get_rep()) {
 	  error("Can't get handle to source field.");
@@ -468,9 +386,9 @@ void ApplyFEMCurrentSource::execute()
 	//else if (units == "cm") unitsScale = 1./100;
 	//else if (units == "dm") unitsScale = 1./10;
 	//else if (units == "m") unitsScale = 1./1;
-
+	
 	hHexMesh->synchronize(Mesh::LOCATE_E);
-
+	
 	//! Computing contributions of dipoles to RHS
 	PointCloudMesh::Node::iterator ii;
 	PointCloudMesh::Node::iterator ii_end;
@@ -512,135 +430,7 @@ void ApplyFEMCurrentSource::execute()
 	  
 	}
 	oportRhs_->send(MatrixHandle(rhs));
-
   }
-  else if (tri) {
-        // If data type is TriSurf and mode is "dipole"
-        // ============================================
 
-        if (modeTCL_.get() == "dipole") {
-
-          FieldHandle hSource;
-          if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-            error("Can't get handle to source field.");
-            return;
-          }
-  
-          LockingHandle<PointCloudField<Vector> > hDipField;
-    
-          if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector"){
-            error("Supplied field is not of type PointCloudField<Vector>.");
-            return;
-          }
-          else {
-            hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
-          }
-  
-          //! Computing contributions of dipoles to RHS
-          PointCloudMesh::Node::iterator ii;
-          PointCloudMesh::Node::iterator ii_end;
-          Array1<double> weights;
-          hDipField->get_typed_mesh()->begin(ii);
-          hDipField->get_typed_mesh()->end(ii_end);
-          for (; ii != ii_end; ++ii) {
-      
-            Vector dir = hDipField->value(*ii);
-            Point p;
-            hDipField->get_typed_mesh()->get_point(p, *ii);
-
-            if (hTriMesh->locate(locTri, p)) {
-              msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<< locTri <<endl;
-
-  	      if (fabs(dir.x()) > 0.000001) {
-	        weights.add(locTri*3);
-	        weights.add(dir.x());
-	      }
-	      if (fabs(dir.y()) > 0.000001) {
-	        weights.add(locTri*3+1);
-	        weights.add(dir.y());
-	      }
-	      if (fabs(dir.z()) > 0.000001) {
-	        weights.add(locTri*3+2);
-	        weights.add(dir.z());
-	      }
-	
-              double s1, s2, s3;
-	      Vector g1, g2, g3;
-   	      hTriMesh->get_gradient_basis(locTri, g1, g2, g3);
-
-              s1=Dot(g1,dir);
-	      s2=Dot(g2,dir);
-              s3=Dot(g3,dir);
-		
-	      TriSurfMesh::Node::array_type face_nodes;
-	      hTriMesh->get_nodes(face_nodes, locTri);
-	      (*rhs)[face_nodes[0]]+=s1;
-	      (*rhs)[face_nodes[1]]+=s2;
-	      (*rhs)[face_nodes[2]]+=s3;
-            } 
-            else {
-	      msgStream_ << "Dipole: "<< p <<" not located within mesh!"<<endl;
-            }
-
-          } // end for loop
-          gen_=hSource->generation;
-          ColumnMatrix* w = scinew ColumnMatrix(weights.size());
-          for (int i=0; i<weights.size(); i++) {
-            (*w)[i]=weights[i];
-	  }
-          oportWeights_->send(MatrixHandle(w));
-          oportRhs_->send(MatrixHandle(rhs)); 
-        }
-        // If data type is TriSurf and mode is "electrode pair"
-        // ====================================================
-        if (modeTCL_.get() == "electrode pair") {
-
-          FieldHandle hInterp;
-          iportInterp_->get(hInterp);
-          unsigned int sourceNode = Max(sourceNodeTCL_.get(), 0);
-          unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
-      
-          if (hInterp.get_rep()) {
-   
-            PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > >* interp;
-            interp = dynamic_cast<PointCloudField<vector<pair<TriSurfMesh::Node::index_type, double> > > *>(hInterp.get_rep());
-            if (!interp) {
-	      error("Input interp field wasn't interp'ing PointCloudField from a TriSurfMesh::Node.");
-	      return;
-            } 
-            else if (sourceNode < interp->fdata().size() &&
-	  	   sinkNode < interp->fdata().size()) {
-  	      sourceNode = interp->fdata()[sourceNode].begin()->first;
-	      sinkNode = interp->fdata()[sinkNode].begin()->first;
-            } 
-            else {
-	      error("SourceNode or SinkNode was out of interp range.");
-	      return;
-            }
-          }
-
-          if ((int)sourceNode >= nsize || (int)sinkNode >= nsize)
-          {
-            error("SourceNode or SinkNode was out of mesh range.");
-            return;
-          }
-          msgStream_ << "sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
-          (*rhs)[sourceNode] += -1;
-          (*rhs)[sinkNode] += 1;
-
-          oportRhs_->send(MatrixHandle(rhs)); 
-
-        }
-        // If data type is TriSurf and mode is "electrode set" (not implemented yet) 
-        // =========================================================================
-	if (modeTCL_.get() == "electrode set") { // electrode set -> has to be implemented
-	  error("electrode set modelling is not yet available for TriSurf");
-	  return;
-	}
-
-  } // end if statement over field data type 
-
-} // end of execute method
-
-
+}
 } // End namespace BioPSE

@@ -367,7 +367,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 	 << ") - Could not create file " << full << endl;
     return false;
   }
-  fstr << "// This is an autamatically generated file, do not edit!" << endl;
+  fstr << "// This is an automatically generated file, do not edit!" << endl;
 
   // generate standard includes
   list<string>::const_iterator iter = info.includes_.begin();
@@ -385,9 +385,16 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
   iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
     const string &s = *iter;
+
     if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
     {
-      fstr << "#include \"" << s << "\"" << endl;
+      string::size_type loc = s.find(SCIRUN_SRCDIR);
+      if( loc != string::npos ) {
+	string::size_type endloc = s.find("SCIRun/src") + 11;
+	fstr << "#include <" << s.substr(endloc) << ">\n";
+      } else {
+	fstr << "#include \"" << s << "\"\n";
+      }
     }
     ++iter;
   }
@@ -503,27 +510,9 @@ DynamicLoader::get_compile_dir()
 {
   if (!otf_dir_found_) 
   {
-    char *ENV_DIR = getenv("SCIRUN_ON_THE_FLY_LIBS_DIR");
-    if (ENV_DIR)
-      {
-	string env_dir(ENV_DIR);
-	if (!env_dir.empty()) otf_dir_found_ = validate_compile_dir(env_dir);
-	if (otf_dir_found_) otf_dir_ = env_dir;
-      }
+    otf_dir_ = getenv("SCIRUN_ON_THE_FLY_LIBS_DIR");
+    otf_dir_found_ = true;
   }
-
-  if (!otf_dir_found_) 
-  {
-    env_iter rc = scirunrc.find("SCIRUN_ON_THE_FLY_LIBS_DIR");
-    if (rc != scirunrc.end())
-    {
-      string rc_dir = (*rc).second;
-      if (!rc_dir.empty()) otf_dir_found_ = validate_compile_dir(rc_dir);
-      if (otf_dir_found_) otf_dir_ = rc_dir;
-    }
-  }
-      
-  otf_dir_found_ = true;
   return otf_dir_;
 }
       

@@ -26,6 +26,7 @@
  *
  *  Copyright (C) 1999 U of U
  */
+
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
@@ -35,6 +36,10 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/RCParse.h>
+#if defined(__APPLE__)
+#  include <Core/Datatypes/MacForceLoad.h>
+#endif
+
 #include <sci_defs.h>
 
 #include <iostream>
@@ -42,14 +47,17 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <afxwin.h>
 #endif
 
-#define VERSION "1.10.0" // this needs to be synced with the contents of
-                        // SCIRun/doc/edition.xml
+#define VERSION "1.20.0" // this needs to be synced with the contents of
+                         // SCIRun/doc/edition.xml
 
 using namespace SCIRun;
 
@@ -162,6 +170,11 @@ main(int argc, char *argv[] )
 {
   const int startnetno = parse_args( argc, argv );
 
+#if defined(__APPLE__)  
+  macForceLoad(); // Attempting to force load (and thus instantiation of
+	          // static constructors) Core/Datatypes;
+#endif
+
   // determine if we are loading an app
   char* app = 0;
   app = strstr(argv[startnetno],".app");
@@ -180,6 +193,8 @@ main(int argc, char *argv[] )
   gui->eval("global PSECoreTCL CoreTCL",result);
   gui->eval("set DataflowTCL "PSECORETCL,result);
   gui->eval("set CoreTCL "SCICORETCL,result);
+  gui->eval("set SCIRUN_SRCDIR "SCIRUN_SRCDIR,result);
+  gui->eval("set SCIRUN_OBJDIR "SCIRUN_OBJDIR,result);
   gui->eval("lappend auto_path "SCICORETCL,result);
   gui->eval("lappend auto_path "PSECORETCL,result);
   gui->eval("lappend auto_path "ITCL_WIDGETS,result);
@@ -194,11 +209,6 @@ main(int argc, char *argv[] )
   Scheduler* sched_task=new Scheduler(net);
 
   new NetworkEditor(net, gui);
-  // if loading an app, withdraw network editor
-  if(app) {
-    gui->eval("wm withdraw .", result);
-  }
-
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
@@ -248,20 +258,69 @@ main(int argc, char *argv[] )
 
     // Since the dot file is optional report only if it was found.
     if( foundrc )
+    {
       cout << str.str();
+    }
+    else
+    {
+      // check to make sure home directory is writeable.
+      char* HOME = getenv("HOME");
+      if (HOME)
+      {
+	string homerc = string(HOME) + "/.scirunrc";
+	int fd;
+	if ((fd = creat(homerc.c_str(), S_IREAD | S_IWRITE)) != -1)
+	{
+	  close(fd);
+	  unlink(homerc.c_str());
+
+	  string tclresult;
+	  gui->eval("licenseDialog 1", result);
+	  if (result == "cancel")
+	  {
+	    Thread::exitAll(1);
+	  }
+	  else if (result == "accept")
+	  {
+	    if ((fd = creat(homerc.c_str(), S_IREAD | S_IWRITE)) != -1)
+	    {
+	      close(fd);
+	    }
+	  }
+	}
+      }	  
+    }
   }
+
+  // set splash to be main one unless later changed due to a standalone
+  packageDB->setSplashPath("main/scisplash.ppm");
 
   // wait for the main window to display before continuing the startup.
   // if loading an app, don't wait
+
   if(!app) {
+    gui->eval("wm deiconify .", result);
     gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  } else {
+    // determine which standalone and set splash
+    if(strstr(argv[startnetno], "BioTensor")) {
+      packageDB->setSplashPath("Packages/Teem/Dataflow/GUI/splash-tensor.ppm");
+    }
   }
 
   // load the packages
   packageDB->loadPackage();
+  
+  // Check the dynamic compilation directory for validity
+  gui->eval("getOnTheFlyLibsDir",result);
+  string envarstr = "SCIRUN_ON_THE_FLY_LIBS_DIR=" + result;
+  char *envar = scinew char[envarstr.size()+1];
+  memcpy(envar, envarstr.c_str(), envarstr.size());
+  envar[envarstr.size()] = '\0';
+  putenv(envar);
 
   // Activate "File" menu sub-menus once packages are all loaded.
-  gui->eval("activate_file_submenus",result);
+  gui->execute("activate_file_submenus");
 
   if (startnetno)
   {
@@ -270,7 +329,7 @@ main(int argc, char *argv[] )
 
     if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
     {
-      gui->eval("ExecuteAll", result);
+      gui->eval("netedit scheduleall", result);
     }
   }
 

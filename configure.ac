@@ -50,10 +50,11 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.10],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.20],[scirun-users@sci.utah.edu])
 
-##  require autoconf version 2.53
-AC_PREREQ(2.53)
+##  require autoconf version 2.57 (I think this is the RH9 default.)
+##  type "autoconf --version" to find out what version you have.
+AC_PREREQ(2.57)
 
 AC_COPYRIGHT(
 ##
@@ -419,7 +420,7 @@ PACKAGE_DIRS=""
 # make sure the package dir exists
 for i in $package; do
    if test ! -d "$path_to_src/Packages/$i"; then
-      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src"Packages")!)
+      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
    # set the package dependent checks
@@ -506,6 +507,7 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
+    SCI_CHECK_OS_VERSION(7.0,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
     NUM_CPUS=2
     IS_OSX="yes"
     ;;
@@ -874,14 +876,11 @@ case $host in
     LDRUN_PREFIX="-L"
     CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
-    SCI_CHECK_VERSION($CC,--version,3.3,ver33=yes,ver33=no)
-    if test $ver33 == no; then
+
+    if test $NEED_OSX_HACK == yes; then
 	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
-	NEED_OSX_HACK="yes"
     else
 	SOFLAGS="-dynamiclib"
-	NEED_OSX_HACK="no"
-
     fi
     AC_SUBST(NEED_OSX_HACK)
     ;;
@@ -1176,12 +1175,12 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.10
+  sci_tp_version=1.20
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
   (eval $ac_try) 2>&5
-  vers=`grep "gcc version" conftest.out | cut -d' ' -f 3`
+  vers=`grep "gcc version" conftest.out | sed -e 's/.*gcc version //' | cut -d' ' -f1`
   rm -f conftest.out
   if test -n "$vers"; then
     sci_compiler_vers=gcc-$vers
@@ -1497,7 +1496,7 @@ else
   *-darwin*)
     SCI_TRY_LINK(DL,dlopen in libdl,[
     #include <dlfcn.h>
-    ],$thirdparty/include,dl,$thirdparty/lib,,[
+    ],$sci_thirdparty_includes,dl,$sci_thirdparty_libs,,[
       dlopen("bogus", 0);
     ],not-optional)
     ;;
@@ -2123,6 +2122,7 @@ if test "$with_lapack" && test ! "$DEF_LAPACK"; then
   echo
 fi
 
+AC_SUBST(DEF_LAPACK)
 AC_SUBST(LAPACK_LIB_FLAG)
 AC_SUBST(LAPACK_LIB_DIR_FLAG)
 

@@ -34,7 +34,6 @@ itcl_class SCIRun_FieldsOther_FieldCage {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -48,10 +47,15 @@ itcl_class SCIRun_FieldsOther_FieldCage {
 		-e y -f both -padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "X Size   "
+	Tooltip $w.row1.xsize_label "Number of lines in the X direction (Red lines)"
 	entry $w.row1.xsize -textvariable $this-sizex
+
 	label $w.row2.ysize_label -text "Y Size   "
+	Tooltip $w.row2.ysize_label "Number of lines in the Y direction (Green lines)"
 	entry $w.row2.ysize -textvariable $this-sizey
+
 	label $w.row3.zsize_label -text "Z Size   "
+	Tooltip $w.row3.zsize_label "Number of lines in the Z direction (Blue lines)"
 	entry $w.row3.zsize -textvariable $this-sizez
 
 	bind $w.row1.xsize <KeyPress-Return> "$this-c needexecute"
@@ -66,8 +70,8 @@ itcl_class SCIRun_FieldsOther_FieldCage {
 	pack $w.row2.ysize_label $w.row2.ysize -side left
 	pack $w.row3.zsize_label $w.row3.zsize -side left
 
-	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.row4.execute -side top -e n -f both
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

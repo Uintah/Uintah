@@ -226,6 +226,10 @@ void
 TetVolMesh::compute_faces()
 {  
   face_lock_.lock();
+  if ((synchronized_ & FACES_E) && (synchronized_ & FACE_NEIGHBORS_E)) {
+    face_lock_.unlock();
+    return;
+  }
   faces_.clear();
   all_faces_.clear();
   unsigned int i, num_cells = cells_.size();
@@ -244,6 +248,10 @@ void
 TetVolMesh::compute_edges()
 {
   edge_lock_.lock();
+  if ((synchronized_ & EDGES_E) && (synchronized_ & EDGE_NEIGHBORS_E)) {
+    edge_lock_.unlock();
+    return;
+  }
   edges_.clear();
   all_edges_.clear();
   unsigned int i, num_cells = (cells_.size()) / 4 * 6;
@@ -261,6 +269,10 @@ void
 TetVolMesh::compute_node_neighbors()
 {
   node_neighbor_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_neighbor_lock_.unlock();
+    return;
+  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   unsigned int i, num_cells = cells_.size();
@@ -382,6 +394,7 @@ void
 TetVolMesh::create_cell_edges(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
   for (int i = c*6; i < c*6+6; ++i)
   {
@@ -396,6 +409,7 @@ void
 TetVolMesh::delete_cell_edges(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
   for (int i = c*6; i < c*6+6; ++i)
   {
@@ -441,6 +455,7 @@ void
 TetVolMesh::create_cell_faces(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
   for (int i = c*4; i < c*4+4; ++i)
   {
@@ -454,6 +469,7 @@ void
 TetVolMesh::delete_cell_faces(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
   for (int i = c*4; i < c*4+4; ++i)
   {
@@ -498,6 +514,7 @@ void
 TetVolMesh::create_cell_node_neighbors(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
   for (int i = c*4; i < c*4+4; ++i)
   {
@@ -511,6 +528,7 @@ void
 TetVolMesh::delete_cell_node_neighbors(Cell::index_type c)
 {
   //ASSERT(!is_frozen());
+  if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
   for (int i = c*4; i < c*4+4; ++i)
   {
@@ -643,18 +661,17 @@ TetVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
 {
   ASSERT(array.size() == 4);
 
-  if (synchronized_ & EDGES_E) delete_cell_edges(idx);
-  if (synchronized_ & FACES_E) delete_cell_faces(idx);
-  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
+  delete_cell_edges(idx);
+  delete_cell_faces(idx);
+  delete_cell_node_neighbors(idx);
 
   for (int n = 0; n < 4; ++n)
     cells_[idx * 4 + n] = array[n];
   
   synchronized_ &= ~LOCATE_E;
-  if (synchronized_ & EDGES_E) create_cell_edges(idx);
-  if (synchronized_ & FACES_E) create_cell_faces(idx);
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
-
+  create_cell_edges(idx);
+  create_cell_faces(idx);
+  create_cell_node_neighbors(idx);
 }
 
 void
@@ -980,6 +997,18 @@ TetVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
+  static Cell::index_type cache(0);
+  cell = cache;
+  if (cell > Cell::index_type(0) &&
+      cell < Cell::index_type(cells_.size()/4) &&
+      inside(cell, p))
+  {
+    return true;
+  }
+
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
@@ -994,6 +1023,7 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
     if (inside(*iter, p))
     {
       cell = *iter;
+      cache = cell;
       return true;
     }
     ++iter;
@@ -1053,6 +1083,10 @@ void
 TetVolMesh::compute_grid()
 {
   grid_lock_.lock();
+  if (synchronized_ & LOCATE_E) {
+    grid_lock_.unlock();
+    return;
+  }
 
   BBox bb = get_bounding_box();
   if (bb.valid())
@@ -1317,8 +1351,11 @@ TetVolMesh::add_find_point(const Point &p, double err)
   else
   {
     points_.push_back(p);
-    if (synchronized_ & NODE_NEIGHBORS_E)
+    if (synchronized_ & NODE_NEIGHBORS_E) {
+      node_neighbor_lock_.lock();
       node_neighbors_.push_back(vector<Cell::index_type>());
+      node_neighbor_lock_.unlock();
+    }
     return points_.size() - 1;
   }
 }
@@ -1334,9 +1371,9 @@ TetVolMesh::add_tet(Node::index_type a, Node::index_type b,
   cells_.push_back(c);
   cells_.push_back(d);
 
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(tet);
-  if (synchronized_ & EDGES_E) create_cell_edges(tet);
-  if (synchronized_ & FACES_E) create_cell_faces(tet);
+  create_cell_node_neighbors(tet);
+  create_cell_edges(tet);
+  create_cell_faces(tet);
   synchronized_ &= ~LOCATE_E;
 
   return tet; 
@@ -1348,8 +1385,11 @@ TetVolMesh::Node::index_type
 TetVolMesh::add_point(const Point &p)
 {
   points_.push_back(p);
-  if (synchronized_ & NODE_NEIGHBORS_E)
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_neighbor_lock_.lock();
     node_neighbors_.push_back(vector<Cell::index_type>());
+    node_neighbor_lock_.unlock();
+  }
   return points_.size() - 1;
 }
 
@@ -1373,9 +1413,9 @@ TetVolMesh::add_elem(Node::array_type a)
   for (unsigned int n = 0; n < a.size(); n++)
     cells_.push_back(a[n]);
 
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(tet);
-  if (synchronized_ & EDGES_E) create_cell_edges(tet);
-  if (synchronized_ & FACES_E) create_cell_faces(tet);
+  create_cell_node_neighbors(tet);
+  create_cell_edges(tet);
+  create_cell_faces(tet);
   synchronized_ &= ~LOCATE_E;
 
   return tet;
@@ -1446,9 +1486,9 @@ TetVolMesh::insert_node(const Point &p)
   const unsigned index = cell*4;
   if (!inside(index, p)) return false;
 
-  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(cell);
-  if (synchronized_ & EDGES_E) delete_cell_edges(cell);
-  if (synchronized_ & FACES_E) delete_cell_faces(cell);
+  delete_cell_node_neighbors(cell);
+  delete_cell_edges(cell);
+  delete_cell_faces(cell);
 
   Cell::array_type tets(4,cell);
 
@@ -1458,9 +1498,9 @@ TetVolMesh::insert_node(const Point &p)
   
   cells_[index+3] = pi;
     
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(cell);
-  if (synchronized_ & EDGES_E) create_cell_edges(cell);
-  if (synchronized_ & FACES_E) create_cell_faces(cell);
+  create_cell_node_neighbors(cell);
+  create_cell_edges(cell);
+  create_cell_faces(cell);
 
   return true;
 }
@@ -1750,16 +1790,16 @@ TetVolMesh::mod_tet(Cell::index_type cell,
 		    Node::index_type c,
 		    Node::index_type d)
 {
-  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(cell);
-  if (synchronized_ & EDGES_E) delete_cell_edges(cell);
-  if (synchronized_ & FACES_E) delete_cell_faces(cell);
+  delete_cell_node_neighbors(cell);
+  delete_cell_edges(cell);
+  delete_cell_faces(cell);
   cells_[cell*4+0] = a;
   cells_[cell*4+1] = b;
   cells_[cell*4+2] = c;
   cells_[cell*4+3] = d;  
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(cell);
-  if (synchronized_ & EDGES_E) create_cell_edges(cell);
-  if (synchronized_ & FACES_E) create_cell_faces(cell);
+  create_cell_node_neighbors(cell);
+  create_cell_edges(cell);
+  create_cell_faces(cell);
   synchronized_ &= ~LOCATE_E;
   return cell;
 }

@@ -100,6 +100,7 @@ private:
   vector<ViewWindow*> view_window_;
   vector<ViewWindow*> top_view_window_;
   int                 max_portno_;
+  bool                stop_rendering_;
   vector<int>         portno_map_;
   vector<bool>        syncronized_map_;
 };

@@ -1,0 +1,162 @@
+# SCI Network 1.20
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+set bbox {9 8 547 548}
+set Name {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 8]
+set m1 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 27 98]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 346 504]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 184 262]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 184 339]
+set m5 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 203 98]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 9 419]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 27 187]
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 9 261]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 382 97]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m0 0 $m5 0]
+set c1 [addConnection $m0 0 $m8 0]
+set c2 [addConnection $m0 0 $m1 0]
+set c3 [addConnection $m0 0 $m9 0]
+set c4 [addConnection $m8 0 $m6 0]
+set c5 [addConnection $m1 0 $m7 0]
+set c6 [addConnection $m3 0 $m4 0]
+set c7 [addConnection $m6 0 $m2 0]
+set c8 [addConnection $m5 0 $m7 1]
+set c9 [addConnection $m5 1 $m2 1]
+set c10 [addConnection $m8 0 $m4 1]
+set c11 [addConnection $m4 0 $m6 1]
+set c12 [addConnection $m7 0 $m8 1]
+set c13 [addConnection $m9 0 $m2 2]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+set $m0-notes {}
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+
+set $m1-notes {}
+
+set $m2-notes {}
+$m2 ui
+set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m2-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m2-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m2-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m2-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m2-ViewWindow_0-view-up-x ${view-up-x}
+set $m2-ViewWindow_0-view-up-y ${view-up-y}
+set $m2-ViewWindow_0-view-up-z ${view-up-z}
+set $m2-ViewWindow_0-view-fov ${view-fov}
+set $m2-ViewWindow_0-specular-scale {0.4}
+
+set $m3-notes {}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {1}
+set $m3-height {1}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {128}
+set $m3-realres {128}
+set $m3-gamma {0}
+
+set $m4-notes {}
+set $m4-isFixed {0}
+set $m4-min {-4962.7556324859643}
+set $m4-max {1773.9919916893766}
+set $m4-makeSymmetric {0}
+
+set $m5-notes {}
+set $m5-maxseeds {50}
+set $m5-numseeds {35}
+set $m5-whichtab {Widget}
+
+set $m6-notes {}
+set $m6-nodes-on {0}
+set $m6-edges-on {1}
+set $m6-faces-on {0}
+set $m6-text-on {0}
+set $m6-def-color-r {0.5}
+set $m6-def-color-g {0.5}
+set $m6-def-color-b {0.5}
+set $m6-def-color-a {0.5}
+set $m6-edge_display_type {Cylinders}
+set $m6-active_tab {Edges}
+set $m6-edge_scale [expr 0.01 * ${global-scale}]
+set $m6-field-name {StreamLines}
+set $m6-edge-resolution {6}
+
+set $m7-notes {}
+set $m7-stepsize {0.8}
+set $m7-tolerance {0.8}
+set $m7-maxsteps {250}
+set $m7-direction {1}
+set $m7-color {1}
+set $m7-remove-colinear {1}
+set $m7-method {5}
+set $m7-np {1}
+
+set $m8-notes {}
+set $m8-interpolation_basis {linear}
+set $m8-map_source_to_single_dest {0}
+set $m8-exhaustive_search {1}
+set $m8-exhaustive_search_max_dist {-1}
+set $m8-np {1}
+
+set $m9-notes {}
+set $m9-nodes-on {1}
+set $m9-edges-on {0}
+set $m9-faces-on {0}
+set $m9-text-on {0}
+set $m9-def-color-r {0.3}
+set $m9-def-color-g {0.3}
+set $m9-def-color-b {0.3}
+set $m9-def-color-a {0.9}
+set $m9-node_display_type {Spheres}
+set $m9-active_tab {Nodes}
+set $m9-node_scale [expr 0.0075 * ${global-scale}]
+set $m9-field-name {UtahTorso}
+set $m9-node-resolution {6}
+
+::netedit scheduleok

@@ -165,9 +165,9 @@ public:
   }
   bool haveUI();
   void popupUI();
-
-  bool showStats() { return true; }
-
+  void delete_warn();
+  bool show_stats() { return show_stats_; }
+  void set_show_stats(bool v) {show_stats_ = v;}
   // ProgressReporter function
   virtual void error(const std::string&);
   virtual void warning(const std::string&);
@@ -212,11 +212,8 @@ public:
   virtual void connection(Port::ConnectionState, int, bool);
   virtual void widget_moved(bool last);
 
-  // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-  void getPosition(int& x, int& y){ return get_position(x, y); }
+  void getPosition(int& x, int& y){ get_position(x, y); }
   string getID() const { return id; }
-#endif
   // CollabVis code end
   
   template<class DC>
@@ -287,8 +284,6 @@ private:
   void remove_iport(int);
   void add_iport(IPort*);
   void add_oport(OPort*);
-  void reconfigure_iports();
-  void reconfigure_oports();
   State state;
   MsgState msg_state;  
   double progress;
@@ -304,7 +299,7 @@ private:
   Network* network;
 
   GuiString  notes ;
-
+  bool        show_stats_;
   Module(const Module&);
   Module& operator=(const Module&);
 };

@@ -125,7 +125,7 @@ set $m5-maxsteps {200}
 set $m5-direction {1}
 set $m5-color {1}
 set $m5-remove-colinear {1}
-set $m5-method {3}
+set $m5-method {5}
 set $m5-np {1}
 set $m6-notes {}
 set $m6-show_status 1

@@ -117,8 +117,8 @@ itcl_class SCIRun_Math_SolveMatrix {
              -side left 
 
 	iwidgets::tabnotebook  $w.tabs -raiseselect true -tabpos n\
-                               -width 400 -height 200
-        pack $w.tabs -side top
+                               -width 400 -height 150
+        pack $w.tabs -side top -fill x
 	set methods [$w.tabs add -label "Methods"]
 	set precons [$w.tabs add -label "Preconditioners (PETSc only)"]
 

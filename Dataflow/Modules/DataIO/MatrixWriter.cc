@@ -70,7 +70,9 @@ void MatrixWriter::execute()
     warning("No filename specified.");
     return;
   }
-   
+
+  if (!overwrite()) return;
+
   // Open up the output stream
   Piostream* stream;
   string ft(filetype_.get());

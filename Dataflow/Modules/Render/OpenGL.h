@@ -171,6 +171,8 @@ public:
   void setZTexView( const View &v );
 #endif
   // CollabVis code end
+
+  void kill_helper();
   
 protected:
   int xres, yres;
@@ -185,7 +187,6 @@ protected:
   void get_pick(Viewer*, ViewWindow*, int, int, GeomHandle&,
 		GeomPickHandle&, int& );
 
-  void kill_helper();
 
   void listvisuals(GuiArgs&);
   void setvisual(const string&, int i, int width, int height);
