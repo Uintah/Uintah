@@ -36,6 +36,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldDataAt.h>
+#include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <map>
 #include <iostream>
@@ -190,6 +191,26 @@ ChangeFieldDataAt::execute()
   MatrixHandle interpolant(0);
   FieldHandle ef(algo->execute(this, fh, dataat, interpolant));
 
+  // Automatically apply the interpolant matrix to the output field.
+  if (ef.get_rep() && interpolant.get_rep())
+  {
+    string actype = fh->get_type_description(1)->get_name();
+    if (fh->query_scalar_interface(this) != NULL) { actype = "double"; }
+    const TypeDescription *iftd = fh->get_type_description();
+    const TypeDescription *iltd = fh->data_at_type_description();
+    const TypeDescription *oftd = ef->get_type_description();
+    const TypeDescription *oltd = ef->data_at_type_description();
+    CompileInfoHandle ci =
+      ApplyInterpMatrixAlgo::get_compile_info(iftd, iltd,
+					      oftd, oltd,
+					      actype, false);
+    Handle<ApplyInterpMatrixAlgo> algo;
+    if (module_dynamic_compile(ci, algo))
+    {
+      algo->execute_aux(fh, ef, interpolant);
+    }
+  }
+
   if (interpolant.get_rep() == 0)
   {
     if (omport->nconnections() > 0)
@@ -198,7 +219,7 @@ ChangeFieldDataAt::execute()
     }
     else
     {
-      remark("Interpolant for that location combination is not supported.");
+      warning("Interpolant for that location combination is not supported.");
     }
   }
 
