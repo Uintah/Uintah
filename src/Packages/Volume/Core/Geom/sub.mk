@@ -7,9 +7,8 @@ SRCS   += \
 	$(SRCDIR)/TextureRenderer.cc \
 	$(SRCDIR)/VolumeRenderer.cc \
 	$(SRCDIR)/VolShader.cc \
-#	$(SRCDIR)/SliceRenderer.cc \
+	$(SRCDIR)/SliceRenderer.cc \
 #[INSERT NEW CODE FILE HERE]
-
 
 PSELIBS := \
 	Core/Containers \

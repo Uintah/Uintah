@@ -22,7 +22,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Packages/Volume/Core/Algorithms
 
 SRCS += $(SRCDIR)/TextureBuilderAlgo.cc \
-#	$(SRCDIR)/NrrdTextureBuilderAlgo.cc
+	$(SRCDIR)/NrrdTextureBuilderAlgo.cc
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
         Core/Exceptions Core/Geom Core/Util Core/Geometry \

@@ -54,7 +54,8 @@ using SCIRun::DrawInfoOpenGL;
 class SliceRenderer : public TextureRenderer
 {
 public:
-  SliceRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2);
+  SliceRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2,
+                int tex_mem);
   SliceRenderer(const SliceRenderer&);
   ~SliceRenderer();
 
@@ -98,10 +99,6 @@ public:
   virtual GeomObj* clone();
 
 protected:
-#ifdef SCI_OPENGL
-  void draw(Brick& b, Polygon* poly, bool use_fog);
-#endif
-
   Point control_point_;
   bool draw_x_;
   bool draw_y_;

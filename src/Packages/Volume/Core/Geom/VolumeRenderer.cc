@@ -46,7 +46,7 @@ using SCIRun::DrawInfoOpenGL;
 
 namespace Volume {
 
-static SCIRun::DebugStream dbg("VolumeRenderer", false);
+//static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,
                                ColorMapHandle cmap1, Colormap2Handle cmap2,
@@ -315,7 +315,6 @@ VolumeRenderer::draw()
   glMultMatrixd(mvmat);
   
   for(unsigned int i=0; i<bricks.size(); i++) {
-    dbg << "Loading brick: " << i << endl;
     Brick* b = bricks[i];
     load_brick(b);
     vertex.resize(0);

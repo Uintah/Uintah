@@ -48,11 +48,9 @@
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 
 #include <iostream>
-#ifdef __sgi
-#include <ios>
-#endif
 #include <algorithm>
 #include <Packages/Volume/Core/Util/Utils.h>
+#include <Packages/Volume/Core/Util/VideoCardInfo.h>
 
 namespace Volume {
 
@@ -76,6 +74,7 @@ private:
   ColorMapOPort* ocmap_;
   int cmap1_prevgen_;
   int cmap2_prevgen_;
+  int card_mem_;
   
   CrowdMonitor control_lock_; 
   PointWidget *control_widget_;
@@ -115,6 +114,9 @@ DECLARE_MAKER(VolumeSlicer)
 VolumeSlicer::VolumeSlicer(GuiContext* ctx)
   : Module("VolumeSlicer", ctx, Source, "Visualization", "Volume"),
     tex_(0),
+    cmap1_prevgen_(0),
+    cmap2_prevgen_(0),
+    card_mem_(video_card_memory_size()),
     control_lock_("VolumeSlicer resolution lock"),
     control_widget_(0),
     control_id_(-1),
@@ -137,14 +139,13 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     old_min_(Point(0,0,0)), old_max_(Point(0,0,0)),
     geom_id_(-1),
     slice_ren_(0)
+{}
+
+VolumeSlicer::~VolumeSlicer()
+{}
+
+void VolumeSlicer::execute()
 {
-}
-
-VolumeSlicer::~VolumeSlicer(){
-}
-
-void
- VolumeSlicer::execute(){
   intexture_ = (TextureIPort*)get_iport("Texture");
   icmap1_ = (ColorMapIPort*)get_iport("ColorMap");
   icmap2_ = (Colormap2IPort*)get_iport("ColorMap2");
@@ -191,9 +192,10 @@ void
       control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5) );
       control_widget_->SetScale(dv.length()/80.0);
     }
-    int nx, ny, nz;
-    tex_->get_dimensions(nx,ny,nz);
-    Transform t(tex_->get_field_transform());
+    int nx = tex_->nx();
+    int ny = tex_->ny();
+    int nz = tex_->nz();
+    Transform t(tex_->transform());
     dmin_=t.project(Point(0,0,0));
     ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
     ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
@@ -203,8 +205,8 @@ void
 
   //AuditAllocator(default_allocator);
   if(!slice_ren_) {
-    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2);
-    slice_ren_->set_control_point(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+    slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2, int(card_mem_*1024*1024*0.8));
+    slice_ren_->set_control_point(tex_->transform().unproject(control_widget_->ReferencePoint()));
     //    ogeom->delAll();
     geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
     cyl_active_.reset();
@@ -224,7 +226,7 @@ void
     BBox b;
     tex_->get_bounds(b);
     if(tex_.get_rep() != old_tex_.get_rep() ||
-	b.min() != old_min_ || b.max() != old_max_) {
+       b.min() != old_min_ || b.max() != old_max_) {
       old_tex_ = tex_;
       old_min_ = b.min();
       old_max_ = b.max();
@@ -233,9 +235,10 @@ void
 	geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
       }
       Vector dv(b.diagonal());
-      int nx, ny, nz;
-      tex_->get_dimensions(nx,ny,nz);
-      Transform t(tex_->get_field_transform());
+      int nx = tex_->nx();
+      int ny = tex_->ny();
+      int nz = tex_->nz();
+      Transform t(tex_->transform());
       dmin_=t.project(Point(0,0,0));
       ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
       ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
@@ -246,7 +249,7 @@ void
       }
       control_widget_->SetScale(dv.length()/80.0);
       slice_ren_->set_texture(tex_);
-      slice_ren_->set_control_point(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+      slice_ren_->set_control_point(tex_->transform().unproject(control_widget_->ReferencePoint()));
     }
 
     if(cmap1 != old_cmap_) {
@@ -287,8 +290,8 @@ void
   if(ocmap_ && cmap1.get_rep()) {
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap1.get_rep()); 
-    double vmin, vmax, gmin, gmax;
-    tex_->get_min_max(vmin, vmax, gmin, gmax);
+    double vmin = tex_->vmin();
+    double vmax = tex_->vmax();
     outcmap->Scale(vmin, vmax);
     ocmap_->send(outcmap);
   }
@@ -334,8 +337,8 @@ void
 VolumeSlicer::widget_moved(bool)
 {
   if(slice_ren_) {
-    slice_ren_->set_control_point(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
-    }
+    slice_ren_->set_control_point(tex_->transform().unproject(control_widget_->ReferencePoint()));
+  }
   Point w(control_widget_->ReferencePoint());
   control_x_.set(w.x());
   control_y_.set(w.y());
@@ -343,4 +346,4 @@ VolumeSlicer::widget_moved(bool)
   control_pos_saved_.set(1);
 }
 
-} // End namespace Volume
+} // namespace Volume

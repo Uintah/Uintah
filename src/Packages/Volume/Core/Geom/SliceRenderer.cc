@@ -36,41 +36,46 @@
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 
+#include <iostream>
+
+using std::cerr;
+using std::endl;
 using std::string;
 using SCIRun::DrawInfoOpenGL;
 
 namespace Volume {
 
 SliceRenderer::SliceRenderer(TextureHandle tex,
-                             ColorMapHandle cmap1, Colormap2Handle cmap2):
-  TextureRenderer(tex, cmap1, cmap2),
-  control_point_(Point(0,0,0)),
-  draw_x_(false),
-  draw_y_(false),
-  draw_z_(false),
-  draw_view_(false),
-  draw_phi0_(false),
-  phi0_(0),
-  draw_phi1_(false),
-  phi1_(0),
-  draw_cyl_(false)
+                             ColorMapHandle cmap1, Colormap2Handle cmap2,
+                             int tex_mem)
+  : TextureRenderer(tex, cmap1, cmap2, tex_mem),
+    control_point_(Point(0,0,0)),
+    draw_x_(false),
+    draw_y_(false),
+    draw_z_(false),
+    draw_view_(false),
+    draw_phi0_(false),
+    phi0_(0),
+    draw_phi1_(false),
+    phi1_(0),
+    draw_cyl_(false)
 {
   lighting_ = 1;
   mode_ = MODE_SLICE;
 }
 
-SliceRenderer::SliceRenderer(const SliceRenderer& copy ) :
-  TextureRenderer(copy.tex_, copy.cmap1_, copy.cmap2_),
-  control_point_( copy.control_point_),
-  draw_x_(copy.draw_x_),
-  draw_y_(copy.draw_y_),
-  draw_z_(copy.draw_x_),
-  draw_view_(copy.draw_view_),
-  draw_phi0_(copy.phi0_),
-  phi0_(copy.phi0_),
-  draw_phi1_(copy.draw_phi1_),
-  phi1_(copy.phi1_),
-  draw_cyl_(copy.draw_cyl_)
+SliceRenderer::SliceRenderer(const SliceRenderer& copy)
+  : TextureRenderer(copy),
+    control_point_(copy.control_point_),
+    draw_x_(copy.draw_x_),
+    draw_y_(copy.draw_y_),
+    draw_z_(copy.draw_x_),
+    draw_view_(copy.draw_view_),
+    draw_phi0_(copy.phi0_),
+    phi0_(copy.phi0_),
+    draw_phi1_(copy.draw_phi1_),
+    phi1_(copy.phi1_),
+    draw_cyl_(copy.draw_cyl_)
 {
   lighting_ = 1;
 }
@@ -89,13 +94,12 @@ void
 SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
   //AuditAllocator(default_allocator);
-  if( !pre_draw(di, mat, lighting_) ) return;
+  if(!pre_draw(di, mat, lighting_)) return;
   mutex_.lock();
   di_ = di;
   if(di->get_drawtype() == DrawInfoOpenGL::WireFrame) {
     draw_wireframe();
   } else {
-    //AuditAllocator(default_allocator);
     draw();
   }
   di_ = 0;
@@ -105,27 +109,21 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 SliceRenderer::draw()
 {
-  Ray viewRay;
-  compute_view( viewRay );
-
-  vector<Brick*> bricks;
-  tex_->get_sorted_bricks(bricks, viewRay);
-  vector<Brick*>::iterator it = bricks.begin();
-  vector<Brick*>::iterator it_end = bricks.end();
-  BBox brickbounds;
-  tex_->get_bounds(brickbounds);
-  if(bricks.size() == 0) return;
+  tex_->lock_bricks();
   
+  Ray view_ray = compute_view();
+  vector<Brick*> bricks;
+  tex_->get_sorted_bricks(bricks, view_ray);
+  if(bricks.size() == 0) return;
+
   //--------------------------------------------------------------------------
 
-  int nc = (*bricks.begin())->data()->nc();
-  int nb0 = (*bricks.begin())->data()->nb(0);
-  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
+  int nc = tex_->nc();
+  int nb0 = tex_->nb(0);
   bool use_cmap1 = cmap1_.get_rep();
-  GLboolean use_fog;
-  glGetBooleanv(GL_FOG, &use_fog);
-
+  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
   if(!use_cmap1 && !use_cmap2) return;
+  GLboolean use_fog = glIsEnabled(GL_FOG);
   
   //--------------------------------------------------------------------------
   // load colormap texture
@@ -168,30 +166,43 @@ SliceRenderer::draw()
 
   //--------------------------------------------------------------------------
   // render bricks
-  Polygon*  poly;
-  BBox box;
-  double t;
-  for( ; it != it_end; it++ ) {
-    Brick& b = *(*it);
-    box = b.bbox();
-    Point viewPt = viewRay.origin();
-    Point mid = b[0] + (b[7] - b[0])*0.5;
+
+  Array1<float> vertex(0, 128, 128);
+  Array1<float> texcoord(0, 128, 128);
+  Array1<int> size(0, 128, 128);
+  
+  Transform tform = tex_->transform();
+  double mvmat[16];
+  tform.get_trans(mvmat);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+  
+  for(unsigned int i=0; i<bricks.size(); i++) {
+    double t;
+    Brick* b = bricks[i];
+    load_brick(b);
+    vertex.resize(0);
+    texcoord.resize(0);
+    size.resize(0);
+    BBox box = b->bbox();
+    Point view = view_ray.origin();
+    Point mid = box.center();
     Point c(control_point_);
     bool draw_z = false;
     if(draw_cyl_) {
       const double to_rad = M_PI / 180.0;
       BBox bb;
       tex_->get_bounds(bb);
-      Point cyl_mid = bb.min() + bb.diagonal()*0.5;
+      Point cyl_mid = bb.center();
       if(draw_phi0_) {
 	Vector phi(1.,0,0);
 	Transform rot;
 	rot.pre_rotate(phi0_ * to_rad, Vector(0,0,1.));
 	phi = rot.project(phi);
 	Ray r(cyl_mid, phi);
-	t = intersectParam(-r.direction(), control_point_, r);
-	b.ComputePoly(r, t, poly);
-	draw(b, poly, use_fog);
+        r.planeIntersectParameter(-r.direction(), control_point_, t);
+        b->compute_polygon(r, t, vertex, texcoord, size);
       }
       if(draw_phi1_) {
 	Vector phi(1.,0,0);
@@ -199,45 +210,41 @@ SliceRenderer::draw()
 	rot.pre_rotate(phi1_ * to_rad, Vector(0,0,1.));
 	phi = rot.project(phi);
 	Ray r(cyl_mid, phi);
-	t = intersectParam(-r.direction(), control_point_, r);
-	b.ComputePoly(r, t, poly);
-	draw(b, poly, use_fog);
+        r.planeIntersectParameter(-r.direction(), control_point_, t);
+        b->compute_polygon(r, t, vertex, texcoord, size);
       }
       if(draw_z_) {
         draw_z = true;
       }
     } else {
       if(draw_view_) {
-	t = intersectParam(-viewRay.direction(), control_point_, viewRay);
-	b.ComputePoly(viewRay, t, poly);
-	draw(b, poly, use_fog);
+        view_ray.planeIntersectParameter(-view_ray.direction(), control_point_, t);
+        b->compute_polygon(view_ray, t, vertex, texcoord, size);
       } else {
 	if(draw_x_) {
-	  Point o(b[0].x(), mid.y(), mid.z());
+	  Point o((*b)[0].x(), mid.y(), mid.z());
 	  Vector v(c.x() - o.x(), 0,0);
-	  if(c.x() > b[0].x() && c.x() < b[7].x() ){
-	    if( viewPt.x() > c.x() ){
-	      o.x(b[7].x());
+	  if(c.x() > (*b)[0].x() && c.x() < (*b)[7].x() ){
+	    if(view.x() > c.x()) {
+	      o.x((*b)[7].x());
 	      v.x(c.x() - o.x());
 	    } 
 	    Ray r(o,v);
-	    t = intersectParam(-r.direction(), control_point_, r);
-	    b.ComputePoly( r, t, poly);
-	    draw(b, poly, use_fog);
+            r.planeIntersectParameter(-r.direction(), control_point_, t);
+            b->compute_polygon(r, t, vertex, texcoord, size);
 	  }
 	}
 	if(draw_y_) {
-	  Point o(mid.x(), b[0].y(), mid.z());
+	  Point o(mid.x(), (*b)[0].y(), mid.z());
 	  Vector v(0, c.y() - o.y(), 0);
-	  if(c.y() > b[0].y() && c.y() < b[7].y() ){
-	    if( viewPt.y() > c.y() ){
-	      o.y(b[7].y());
+	  if(c.y() > (*b)[0].y() && c.y() < (*b)[7].y() ){
+	    if(view.y() > c.y()) {
+	      o.y((*b)[7].y());
 	      v.y(c.y() - o.y());
 	    } 
 	    Ray r(o,v);
-	    t = intersectParam(-r.direction(), control_point_, r);
-	    b.ComputePoly( r, t, poly);
-	    draw(b, poly, use_fog);
+            r.planeIntersectParameter(-r.direction(), control_point_, t);
+            b->compute_polygon(r, t, vertex, texcoord, size);
 	  }
 	}
         if(draw_z_) {
@@ -247,21 +254,24 @@ SliceRenderer::draw()
     }
     
     if (draw_z) {
-      Point o(mid.x(), mid.y(), b[0].z());
+      Point o(mid.x(), mid.y(), (*b)[0].z());
       Vector v(0, 0, c.z() - o.z());
-      if(c.z() > b[0].z() && c.z() < b[7].z() ){
-	if(viewPt.z() > c.z()) {
-	  o.z(b[7].z());
+      if(c.z() > (*b)[0].z() && c.z() < (*b)[7].z() ) {
+	if(view.z() > c.z()) {
+	  o.z((*b)[7].z());
 	  v.z(c.z() - o.z());
 	} 
 	Ray r(o,v);
-	t = intersectParam(-r.direction(), control_point_, r);
-	b.ComputePoly(r, t, poly);
-	draw(b, poly, use_fog);  
+        r.planeIntersectParameter(-r.direction(), control_point_, t);
+        b->compute_polygon(r, t, vertex, texcoord, size);
       }
     }
+
+    draw_polygons(vertex, texcoord, size, true, use_fog, 0);
   }
 
+  glPopMatrix();
+  
   //--------------------------------------------------------------------------
   // release shaders
 
@@ -281,25 +291,14 @@ SliceRenderer::draw()
   glActiveTexture(GL_TEXTURE0_ARB);
   glDisable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, 0);
-}
-  
 
-void
-SliceRenderer::draw(Brick& b, Polygon* poly, bool use_fog)
-{
-  vector<Polygon *> polys;
-  polys.push_back(poly);
-  load_brick(b);
-  draw_polys(polys, use_fog, 0);
+  tex_->unlock_bricks();
 }
 
 void 
 SliceRenderer::draw_wireframe()
-{
-  Ray viewRay;
-  compute_view(viewRay);
-}
+{}
 
-#endif // #if defined(SCI_OPENGL)
+#endif // SCI_OPENGL
 
 } // namespace Volume

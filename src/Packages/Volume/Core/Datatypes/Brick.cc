@@ -162,6 +162,7 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
   double t = tmax; // start at tmax
   int k = 0, degree = 0;
 
+  
   // find up and right vectors
   Vector vdir = view.direction();
   Vector up;
@@ -176,7 +177,7 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
     up.x(-vdir.z()); up.y(0.0); up.z(vdir.x());
     break;
   case 2:
-    up.x(-vdir.z()); up.y(vdir.y()); up.z(0.0);
+    up.x(-vdir.y()); up.y(vdir.x()); up.z(0.0);
     break;
   }
   up.normalize();
@@ -238,8 +239,10 @@ Brick::compute_polygons(const Ray& view, double tmin, double tmax, double dt,
       }
     }
     // else we don't care
-    k += degree;
-    size.add(degree);
+    if(degree >= 3) {
+      k += degree;
+      size.add(degree);
+    }
     // decrement ray parameter
     t -= dt;
   }
