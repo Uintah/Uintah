@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
+include $(SRCTOP)/scripts/largeso_prologue.mk
 
 SRCDIR := SCICore
 
@@ -16,16 +16,19 @@ ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := $(SUBDIRS) $(SRCDIR)/globus_threads
 endif
 
-include $(OBJTOP_ABS)/scripts/recurse.mk
+include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := 
 LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
 	$(GL_LIBS) $(GLOBUS_COMMON) $(THREAD_LIBS) -lm
 
-include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk
+include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:37:31  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:28:15  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

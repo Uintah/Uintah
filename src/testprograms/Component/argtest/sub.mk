@@ -5,6 +5,9 @@
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 19:39:18  sparker
+# Added VPATH support
+#
 # Revision 1.1  2000/03/17 09:31:04  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

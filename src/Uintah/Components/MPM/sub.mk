@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/MPM
 
@@ -13,17 +13,20 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/GeometrySpecification $(SRCDIR)/Util
 
-include $(OBJTOP_ABS)/scripts/recurse.mk
+include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
 	SCICore/Geometry
 LIBS :=
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/20 19:38:23  sparker
+# Added VPATH support
+#
 # Revision 1.2  2000/03/20 17:17:05  sparker
 # Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 #
@@ -31,5 +34,4 @@ include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
 # Plus many other changes to make these two things work
-#
 #

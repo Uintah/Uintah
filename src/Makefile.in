@@ -28,6 +28,8 @@ LIBDIR := $(OBJTOP_ABS)/lib/
 endif
 LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
 
+VPATH := $(SRCTOP)
+
 #
 # Optional pieces
 #
@@ -114,7 +116,7 @@ endif
 TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
 
 
-INCLUDES += -Iinclude -I. -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE)
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE)
 
 INCLUDES := $(sort $(INCLUDES))
 
@@ -164,12 +166,21 @@ CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
 # Actually include the module makefile fragments
 #
 ALLSUBDIRS := . 
-include $(OBJTOP_ABS)/scripts/recurse.mk
+include $(SRCTOP)/scripts/recurse.mk
 
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 MAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 
-all: $(LIBDIR) $(MAKEFILES) $(ALLGEN) $(ALLTARGETS)
+all:: $(MAKEFILEDIRS)
+
+all:: $(LIBDIR) $(MAKEFILES)
+
+all:: $(ALLGEN) $(ALLTARGETS)
+
+$(MAKEFILEDIRS):
+	@echo creating directory $@
+	@mkdir -p $@
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
@@ -206,6 +217,9 @@ distclean:: clean
 
 #
 # $Log$
+# Revision 1.11  2000/03/20 19:35:41  sparker
+# Added VPATH support
+#
 # Revision 1.10  2000/03/17 09:25:07  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

@@ -7,6 +7,7 @@
 # The SRCDIR_STACK maintains the current state of the recursion.
 # This is used to reset SRCDIR after the include below is processed.
 #
+SUBDIRS := $(patsubst %,$(SRCTOP)/%,$(SUBDIRS))
 SRCDIR_STACK := $(SRCDIR) $(SRCDIR_STACK)
 ALLSUBDIRS := $(ALLSUBDIRS) $(SUBDIRS)
 
@@ -19,6 +20,9 @@ SRCDIR_STACK := $(wordlist 2,$(words $(SRCDIR_STACK)),$(SRCDIR_STACK))
 
 #
 # $Log$
+# Revision 1.4  2000/03/20 19:39:11  sparker
+# Added VPATH support
+#
 # Revision 1.3  2000/03/17 09:30:57  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
