@@ -77,9 +77,6 @@ class BasicBox;
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class CompositeBox;
 
-template <class a, class b, class c>
-class hash_map;
-
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class SuperBoxSet
 {
@@ -97,7 +94,7 @@ public:
     { return (size_t)box; }
   };
   
-  typedef std::hash_map<BoxP, BB*, BoxHash> BoxHashMap;
+  typedef hash_map<BoxP, BB*, BoxHash> BoxHashMap;
 #else
   typedef map<BoxP, BB*>               BoxHashMap;
 #endif
