@@ -41,7 +41,9 @@ SRCS     += \
 	$(SRCDIR)/VonMisesYield.cc \
 	$(SRCDIR)/StabilityCheck.cc \
 	$(SRCDIR)/StabilityCheckFactory.cc \
-	$(SRCDIR)/AcousticTensorCheck.cc
+	$(SRCDIR)/AcousticTensorCheck.cc \
+	$(SRCDIR)/BeckerCheck.cc \
+	$(SRCDIR)/DruckerCheck.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \

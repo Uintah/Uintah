@@ -98,6 +98,33 @@ namespace Uintah {
                                        const MPMMaterial* matl,
 				       TangentModulusTensor& Ce,
 				       TangentModulusTensor& Cep) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to scalar and
+        internal variables.
+
+      \return Three derivatives in Vector derivs 
+        (derivs[0] = \f$d\sigma_Y/d\dot\epsilon\f$,
+         derivs[1] = \f$d\sigma_Y/dT\f$, 
+         derivs[2] = \f$d\sigma_Y/d(int. var.)\f$)
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual void evalDerivativeWRTScalarVars(double edot,
+                                             double T,
+                                             const particleIndex idx,
+                                             Vector& derivs) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to plastic
+        strain.
+
+      \return \f$d\sigma_Y/d\epsilon\f$
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual double evalDerivativeWRTPlasticStrain(double edot, double T,
+                                                  const particleIndex idx) = 0;
   };
 } // End namespace Uintah
       
