@@ -1,11 +1,22 @@
+This README file explains how to use the CardioWave nets and the
+SCIRun conversion programs to get data into and out of CardioWave
+simulations.
+
+NOTE: I will refer to the place where the data files are being stored as
+        $DUKEDATA -- on the SCI machines, this is ~dmw/mydata/duke/mesh/
+	and the root of SCIRun as $SCIRUN -- I'm using ~dmw/SCIRun/
+
 Resampling the Original Data Files
 ==================================
 
-Original data is in ../OriginalAucklandHEART.dat
+Original data is in $DUKEDATA/../OriginalAucklandHEART.dat
 That data was split into position (.pts) and orientation (.f1, .f2) files
-	using ../splitData.csh
+	using $DUKEDATA/../splitData.csh
 The .pts, .f1, and .f2 files were resampled to produce smaller versions
-	using SCIRun/src/Packages/DaveW/StandAlone/convert/SubsetPts
+	using the "SubsetPts" utility:
+    % cd $DUKEDATA
+    % $SCIRUN/src/Packages/CardioWave/StandAlone/convert/SubsetPts \
+      ../OriginalAucklandHEART.pts 0.1 0.1.pts
 We're using 10% (randomly chosen) of the original data for these
 	simulations -- thus the names 0.1.*
 Our starting points file (0.1.pts) was tetrahedralized using a standard
@@ -21,10 +32,6 @@ From these 4 starting files: 0.1.{pts,tet,f1,f2} we will be generating
 
 Running SCIRun and CardioWave
 =============================
-
-NOTE: I will refer to the place where the data files are being stored as
-        $DUKEDATA -- on the SCI machines, this is ~dmw/mydata/duke/mesh/
-	and the root of SCIRun as $SCIRUN -- I'm using ~dmw/SCIRun/
 
 We start by building SCIRun matrices from the .f1 and .f2 files --
 	we do this with the StandAlone/convert/RawToColumnMatrix

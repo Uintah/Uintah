@@ -43,11 +43,11 @@ using namespace SCIRun;
 int
 main(int argc, char **argv) {
   if (argc != 4) {
-    cerr << "Usage: "<<argv[0]<<" ptsIn percentOut ptsOut\n";
+    cerr << "Usage: "<<argv[0]<<" ptsIn fractionOut ptsOut\n";
     return 0;
   }
   ifstream istream(argv[1]);
-  double percent = atof(argv[2]);
+  double fraction = atof(argv[2]);
 
   BBox b;
   Array1<Point> pts;
@@ -63,7 +63,7 @@ main(int argc, char **argv) {
     }
     istream >> y >> z;
     b.extend(Point(x,y,z));
-    if (mr() <= percent) pts.add(Point(x,y,z));
+    if (mr() <= fraction) pts.add(Point(x,y,z));
   }
 
   // shuffle the points
