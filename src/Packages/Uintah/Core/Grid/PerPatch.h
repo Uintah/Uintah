@@ -36,6 +36,8 @@ WARNING
   
 ****************************************/
 
+   class Variable;
+
    template<class T> class PerPatch : public PerPatchBase {
    public:
       inline PerPatch() {}
@@ -66,13 +68,32 @@ WARNING
       }
    private:
       T value;
+      // this function only exists to satisfy the TypeDescription, it will return null.
+      static Variable* maker();
    };
    
+   template<class T>
+     Variable*
+     PerPatch<T>::maker()
+     {
+       return NULL;
+     }
+
    template<class T>
       const TypeDescription*
       PerPatch<T>::getTypeDescription()
       {
-	 return 0;
+        static TypeDescription* td;
+        if(!td){
+          // this is a hack to get a non-null perpatch
+          // var for some functions the perpatches are used in (i.e., task->computes).
+          // Since they're not fully-qualified variables, maker 
+          // would fail anyway.
+          td = scinew TypeDescription(TypeDescription::PerPatch,
+                                      "PerPatch", &maker,
+                                      fun_getTypeDescription((int*)0));
+        }
+        return td;
       }
    
    template<class T>
