@@ -1645,16 +1645,19 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
       if (vsplit->isLeaf())
 	return; // leaf should have been checked already
 
-      // reset the splitSubIndex
-      splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
-	vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
-      vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
-      /*vsplit->lowerLevel_.bls->
-	findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
-      if ((splitSubIndex < 0) ||
-	  (splitSubIndex >= vsplit->lowerLevel_.bls->getSize()))
-	return; // no points in this sub tree are on the searching side of p[0]
-      
+      if (D1) {
+	// reset the splitSubIndex
+	splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
+	  vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
+	  vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
+	/*vsplit->lowerLevel_.bls->
+	  findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
+	if ((splitSubIndex < 0) ||
+	    (splitSubIndex >= vsplit->lowerLevel_.bls->getSize())) {
+	  // no points in this sub tree are on the searching side of p[0]
+	  return; 
+	}
+      }
       break;
     }
     if (!D1)
