@@ -341,17 +341,16 @@ TriSurfMesh::get_center(Point &p, Edge::index_type i) const
   Node::array_type nodes;
   get_nodes(nodes, i);
   Node::array_type::iterator nai = nodes.begin();
-  const double isize = 1.0 / nodes.size();
   Vector v(0.0, 0.0, 0.0);
   while (nai != nodes.end())
   {
     Point pp;
     get_point(pp, *nai);
-    Vector vv(pp);
-    v += vv * isize;
+    v += pp.asVector();
     ++nai;
   }
-  p = Point(v);
+  v *= 1.0 / nodes.size();
+  p = v.asPoint();
 }
 
 
@@ -361,17 +360,16 @@ TriSurfMesh::get_center(Point &p, Face::index_type i) const
   Node::array_type nodes;
   get_nodes(nodes, i);
   Node::array_type::iterator nai = nodes.begin();
-  const double isize = 1.0 / nodes.size();
   Vector v(0.0, 0.0, 0.0);
   while (nai != nodes.end())
   {
     Point pp;
     get_point(pp, *nai);
-    Vector vv(pp);
-    v += vv * isize;
+    v += pp.asVector();
     ++nai;
   }
-  p = Point(v);
+  v *= 1.0 / nodes.size();
+  p = v.asPoint();
 }
 
 

@@ -509,32 +509,37 @@ HexVolMesh::get_center(Point &p, Edge::index_type idx) const
 void
 HexVolMesh::get_center(Point &p, Face::index_type idx) const
 {
-  const double s = 1./3.;
-  Node::array_type arr;
-  get_nodes(arr, idx);
-  Point p1, p2;
-  get_point(p, arr[0]);
-  get_point(p1, arr[1]);
-  get_point(p2, arr[2]);
-
-  p = ((Vector(p) + Vector(p1) + Vector(p2)) * s).asPoint();
+  Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Node::array_type::iterator nai = nodes.begin();
+  Vector v(0.0, 0.0, 0.0);
+  while (nai != nodes.end())
+  {
+    Point pp;
+    get_point(pp, *nai);
+    v += pp.asVector();
+    ++nai;
+  }
+  v *= 1.0 / nodes.size();
+  p = v.asPoint();
 }
 
 void
 HexVolMesh::get_center(Point &p, Cell::index_type idx) const
 {
-  const double s = .25L;
-  Node::array_type arr;
-  get_nodes(arr, idx);
-  Point p1, p2, p3;
-  get_point(p, arr[0]);
-  get_point(p1, arr[1]);
-  get_point(p2, arr[2]);
-  get_point(p3, arr[3]);
-
-
-  p = ((Vector(p) + Vector(p1) + Vector(p2) +
-	Vector(p3)) * s).asPoint();
+  Node::array_type nodes;
+  get_nodes(nodes, idx);
+  Node::array_type::iterator nai = nodes.begin();
+  Vector v(0.0, 0.0, 0.0);
+  while (nai != nodes.end())
+  {
+    Point pp;
+    get_point(pp, *nai);
+    v += pp.asVector();
+    ++nai;
+  }
+  v *= 1.0 / nodes.size();
+  p = v.asPoint();
 }
 
 static double
