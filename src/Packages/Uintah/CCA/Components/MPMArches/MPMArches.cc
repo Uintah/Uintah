@@ -194,7 +194,6 @@ void MPMArches::scheduleInterpolateCCToFC(const LevelP& level,
                                        DataWarehouseP& old_dw,
                                        DataWarehouseP& new_dw)
 {
-   /* interpolateNCToCC */
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -217,9 +216,9 @@ void MPMArches::scheduleInterpolateCCToFC(const LevelP& level,
 
       // Rajesh, feel free to change the names of these FC variables
       // to something more in line with Arches
-      t->computes(new_dw, d_MAlb->d_xMomFCLabel,  idx, patch);
-      t->computes(new_dw, d_MAlb->d_yMomFCLabel,  idx, patch);
-      t->computes(new_dw, d_MAlb->d_zMomFCLabel,  idx, patch);
+      t->computes(new_dw, d_MAlb->d_xVelFCLabel,  idx, patch);
+      t->computes(new_dw, d_MAlb->d_yVelFCLabel,  idx, patch);
+      t->computes(new_dw, d_MAlb->d_zVelFCLabel,  idx, patch);
    }
 
    sched->addTask(t);
@@ -275,12 +274,11 @@ void MPMArches::scheduleMomExchange(const LevelP& level,
       Material* matl = d_sharedState->getMPMMaterial( m );
       int idx = matl->getDWIndex();
       // Rajesh:
-      // I created the CCToFC task to do get momentum on the faces
-      // I can also put a mass there to get a velocity, let me know
-      // what is needed exactly.  Jim
-      t->requires(new_dw, d_MAlb->d_xMomFCLabel,  idx, patch, Ghost::None, 0);
-      t->requires(new_dw, d_MAlb->d_yMomFCLabel,  idx, patch, Ghost::None, 0);
-      t->requires(new_dw, d_MAlb->d_zMomFCLabel,  idx, patch, Ghost::None, 0);
+      // I created the CCToFC task to do get velocity on the faces
+      // I can also put a mass there what is needed exactly.  Jim
+      t->requires(new_dw, d_MAlb->d_xVelFCLabel,  idx, patch, Ghost::None, 0);
+      t->requires(new_dw, d_MAlb->d_yVelFCLabel,  idx, patch, Ghost::None, 0);
+      t->requires(new_dw, d_MAlb->d_zVelFCLabel,  idx, patch, Ghost::None, 0);
       // will compute vector of pressure forces and drag forces
       // computed at face center
       t->computes(new_dw, d_MAlb->momExDragForceFCXLabel, idx, patch);
@@ -390,22 +388,23 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 
     CCVariable<double > cmass;
     CCVariable<Vector > vel_CC;
-    SFCXVariable<double> xmomFC;
-    SFCYVariable<double> ymomFC;
-    SFCZVariable<double> zmomFC;
+    SFCXVariable<double> xvelFC;
+    SFCYVariable<double> yvelFC;
+    SFCZVariable<double> zvelFC;
 
     new_dw->get(cmass,    d_MAlb->cMassLabel,         matlindex, patch,
 					Ghost::AroundCells, numGhostCells);
     new_dw->get(vel_CC,   d_MAlb->vel_CCLabel,        matlindex, patch,
 					Ghost::AroundCells, numGhostCells);
 
-    new_dw->allocate(xmomFC,    d_MAlb->d_xMomFCLabel,   matlindex, patch);
-    new_dw->allocate(ymomFC,    d_MAlb->d_yMomFCLabel,   matlindex, patch);
-    new_dw->allocate(zmomFC,    d_MAlb->d_zMomFCLabel,   matlindex, patch);
+    new_dw->allocate(xvelFC,    d_MAlb->d_xVelFCLabel,   matlindex, patch);
+    new_dw->allocate(yvelFC,    d_MAlb->d_yVelFCLabel,   matlindex, patch);
+    new_dw->allocate(zvelFC,    d_MAlb->d_zVelFCLabel,   matlindex, patch);
 
-    xmomFC.initialize(0.);
-    ymomFC.initialize(0.);
-    zmomFC.initialize(0.);
+    xvelFC.initialize(0.);
+    yvelFC.initialize(0.);
+    zvelFC.initialize(0.);
+    double mass;
 
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
       IntVector curcell = *iter;
@@ -416,8 +415,9 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
       if (curcell.y() >= (patch->getInteriorCellLowIndex()).y()) {
         IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z());
 
-        ymomFC[curcell] = 0.5*(vel_CC[curcell].y() * cmass[curcell] +
-			       vel_CC[adjcell].y() * cmass[adjcell]);
+	mass = cmass[curcell] + cmass[adjcell];
+        yvelFC[curcell] = (vel_CC[curcell].y() * cmass[curcell] +
+			   vel_CC[adjcell].y() * cmass[adjcell])/mass;
       }
       //__________________________________
       //   L E F T   F A C E S
@@ -426,8 +426,9 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
       if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
 	IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z());
 
-        xmomFC[curcell] = 0.5*(vel_CC[curcell].x() * cmass[curcell] +
-			       vel_CC[adjcell].x() * cmass[adjcell]);
+	mass = cmass[curcell] + cmass[adjcell];
+        xvelFC[curcell] = (vel_CC[curcell].x() * cmass[curcell] +
+			   vel_CC[adjcell].x() * cmass[adjcell])/mass;
       }
       //__________________________________
       //   L E F T   F A C E S
@@ -436,14 +437,15 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
       if (curcell.z() >= (patch->getInteriorCellLowIndex()).z()) {
         IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1);
 
-        zmomFC[curcell] = 0.5*(vel_CC[curcell].z() * cmass[curcell] +
-			       vel_CC[adjcell].z() * cmass[adjcell]);
+	mass = cmass[curcell] + cmass[adjcell];
+        zvelFC[curcell] = (vel_CC[curcell].z() * cmass[curcell] +
+			   vel_CC[adjcell].z() * cmass[adjcell])/mass;
       }
     }
 
-    new_dw->put(xmomFC,    d_MAlb->d_xMomFCLabel,   matlindex, patch);
-    new_dw->put(ymomFC,    d_MAlb->d_yMomFCLabel,   matlindex, patch);
-    new_dw->put(zmomFC,    d_MAlb->d_zMomFCLabel,   matlindex, patch);
+    new_dw->put(xvelFC,    d_MAlb->d_xVelFCLabel,   matlindex, patch);
+    new_dw->put(yvelFC,    d_MAlb->d_yVelFCLabel,   matlindex, patch);
+    new_dw->put(zvelFC,    d_MAlb->d_zVelFCLabel,   matlindex, patch);
   }
 }
 //
