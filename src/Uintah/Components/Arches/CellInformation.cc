@@ -39,7 +39,7 @@ CellInformation::CellInformation(const Patch* patch)
   }
   zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_GEOM_DEBUG
   cerr << "Lower x = " << patch->getBox().lower().x() << endl;
   cerr << "xx = [" ;
   for (int ii = 0; ii < Size.x(); ii++) cerr << xx[ii] << " " ;
@@ -158,7 +158,7 @@ CellInformation::CellInformation(const Patch* patch)
 	     jnsdv.get_objs(), jssdv.get_objs(), 
 	     ktsdw.get_objs(), kbsdw.get_objs());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_GEOM_DEBUG
   idxHi = idxHi + IntVector(1,1,1);
   idxLo = idxLo + IntVector(1,1,1);
   cerr << " After CELLG : " << endl;

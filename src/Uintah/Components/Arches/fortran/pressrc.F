@@ -244,6 +244,30 @@ c-----calculate source terms--------------------------------------------
                smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb - apo
 c    $              -sign*spm(i,j,k)
 
+               if ((i.eq.1).and.(j.eq.2).and.(k.eq.2)) then
+                  print*,'TESTING PRESSURE SOURCE'
+                  print*,'smp = ', smp
+                  print*,'ue = ',ue
+                  print*,'uw = ',uw
+                  print*,'vn = ',vn
+                  print*,'vs = ',vs
+                  print*,'wt = ',wt
+                  print*,'wb = ',wb
+                  print*,'ce = ',ce
+                  print*,'cw = ',cw
+                  print*,'cn = ',cn
+                  print*,'cs = ',cs
+                  print*,'ct = ',ct
+                  print*,'cb = ',cb
+                  print*,'apo = ',apo
+                  print*,'aupp =',aup(i,j,k)
+                  print*,'aupe =',aup(i+1,j,k)
+                  print*,'avpp =',avp(i,j,k)
+                  print*,'avpn =',avp(i,j+1,k)
+                  print*,'awpp =',awp(i,j,k)
+                  print*,'awpt =',awp(i,j,k+1)
+               endif
+
                if (ltest) then
                   sp(i,j,k) = zero
 c                 su(i,j,k) = -smp + cpl(i,j,k)*vol
@@ -266,6 +290,12 @@ c        convs = convs/((KEND-KST+1)*(JEND-JST+1)*(IEND-IST+1))
          end
 c
 c $Log$
+c Revision 1.5  2000/08/23 06:20:53  bbanerje
+c 1) Results now correct for pressure solve.
+c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+c 3) Removed some bugs in BCU, V, W.
+c 4) Coefficients for MOM Solve not computed correctly yet.
+c
 c Revision 1.4  2000/08/20 22:52:38  bbanerje
 c Fixed PressureSource bug .. domHi, domLo were not being assigned
 c correctly in the wrapper.

@@ -143,6 +143,8 @@ c
      &              (VISTI*DWDXT-VISBI*DWDXB)/STB(K)   +
      &              (old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/DELTAT +
      &              (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-DEN_REF)*GRAV))*VOL 
+
+
  100        continue
  110     continue
  120  continue
@@ -152,6 +154,12 @@ c
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/08/23 06:20:53  bbanerje
+c 1) Results now correct for pressure solve.
+c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+c 3) Removed some bugs in BCU, V, W.
+c 4) Coefficients for MOM Solve not computed correctly yet.
+c
 c Revision 1.5  2000/08/10 00:56:38  rawat
 c added pressure bc for scalar and changed discretization option for velocity
 c

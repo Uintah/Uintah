@@ -118,7 +118,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->fac4u.get_objs(),
 		    cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER U Velocity Source" << endl;
     for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
       cerr << "SU for U velocity for ii = " << ii << endl;
@@ -178,7 +178,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->fac4v.get_objs(),
 		    cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs()); 
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER V Velocity Source" << endl;
     for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
       cerr << "SU for V velocity for ii = " << ii << endl;
@@ -238,7 +238,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    cellinfo->fac4w.get_objs(),
 		    cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs()); 
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER W Velocity Source" << endl;
     for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
       cerr << "SU for W velocity for ii = " << ii << endl;
@@ -384,7 +384,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  cellinfo->stb.get_objs(),
 		  vars->cellType.getPointer(), &ffield, &delta_t);
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER Calculate Pressure Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for Pressure for ii = " << ii << endl;
@@ -445,7 +445,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
 		    cellinfo->stb.get_objs(),
 		    &delta_t);
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER Calculate Scalar Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for Scalar " << index << " for ii = " << ii << endl;
@@ -512,7 +512,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->uVelocityConvectCoeff[Arches::AS].getPointer(),
 		vars->uVelocityConvectCoeff[Arches::AT].getPointer(),
 		vars->uVelocityConvectCoeff[Arches::AB].getPointer());
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER Modify Velocity Mass Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for U velocity for ii = " << ii << endl;
@@ -559,7 +559,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->vVelocityConvectCoeff[Arches::AS].getPointer(),
 		vars->vVelocityConvectCoeff[Arches::AT].getPointer(),
 		vars->vVelocityConvectCoeff[Arches::AB].getPointer());
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER Modify Velocity Mass Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for V velocity for ii = " << ii << endl;
@@ -606,7 +606,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 		vars->wVelocityConvectCoeff[Arches::AS].getPointer(),
 		vars->wVelocityConvectCoeff[Arches::AT].getPointer(),
 		vars->wVelocityConvectCoeff[Arches::AB].getPointer());
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_SRC_DEBUG
     cerr << "AFTER Modify Velocity Mass Source" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SU for W velocity for ii = " << ii << endl;
@@ -772,6 +772,12 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.38  2000/08/23 06:20:52  bbanerje
+//1) Results now correct for pressure solve.
+//2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+//3) Removed some bugs in BCU, V, W.
+//4) Coefficients for MOM Solve not computed correctly yet.
+//
 //Revision 1.37  2000/08/20 22:52:33  bbanerje
 //Fixed PressureSource bug .. domHi, domLo were not being assigned
 //correctly in the wrapper.

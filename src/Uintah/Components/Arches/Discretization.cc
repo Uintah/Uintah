@@ -66,7 +66,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector domLo = coeff_vars->density.getFortLowIndex();
   IntVector domHi = coeff_vars->density.getFortHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE VELCOEF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -163,7 +163,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
 		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
 		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "After UVELCOEF" << endl;
     for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
       cerr << "U Vel AE Convection Coeff for ii = " << ii << endl;
@@ -359,7 +359,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs(), 
 		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
 		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "After VVELCOEF" << endl;
     for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
       cerr << "V Vel AE Convection Coeff for ii = " << ii << endl;
@@ -554,7 +554,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->ktsdw.get_objs(), cellinfo->kbsdw.get_objs(), 
 		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
 		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs());
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "After WVELCOEF" << endl;
     for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
       cerr << "W Vel AE Convection Coeff for ii = " << ii << endl;
@@ -776,7 +776,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   IntVector domLoW = coeff_vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
   IntVector domHiW = coeff_vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE FORT_PRESSCOEFF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -850,7 +850,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 		  cellinfo->stbw.get_objs(), cellinfo->dztp.get_objs(), 
 		  cellinfo->dzpb.get_objs());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "After PRESSCOEFF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << " Pressure AE Coeff for ii = " << ii << endl;
@@ -952,7 +952,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   IntVector domLoW = coeff_vars->wVelocity.getFortLowIndex();
   IntVector domHiW = coeff_vars->wVelocity.getFortHighIndex();
   
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE SCALARCOEFF for scalar " << index <<" " << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -1048,7 +1048,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 		   cellinfo->dyps.get_objs(), cellinfo->dynp.get_objs(),
 		   cellinfo->dzpb.get_objs(), cellinfo->dztp.get_objs());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "After SCALARCOEFF for scalar " << index <<" " << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "Scalar AE Convection Coeff for ii = " << ii << endl;
@@ -1221,7 +1221,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "BEFORE Calculate U Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SP - U Vel Linear Source for ii = " << ii << endl;
@@ -1246,7 +1246,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		   coeff_vars->uVelocityCoeff[Arches::AB].getPointer(),
 		   coeff_vars->uVelLinearSrc.getPointer());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "AP - U Vel Coeff for ii = " << ii << endl;
@@ -1268,7 +1268,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "BEFORE Calculate V Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SP - V Vel Linear Source for ii = " << ii << endl;
@@ -1293,7 +1293,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		   coeff_vars->vVelocityCoeff[Arches::AB].getPointer(),
 		   coeff_vars->vVelLinearSrc.getPointer());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "AFTER Calculate V Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "AP - V Vel Coeff for ii = " << ii << endl;
@@ -1315,7 +1315,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "BEFORE Calculate W Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SP - W Vel Linear Source for ii = " << ii << endl;
@@ -1340,7 +1340,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		   coeff_vars->wVelocityCoeff[Arches::AB].getPointer(),
 		   coeff_vars->wVelLinearSrc.getPointer());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
     cerr << "AFTER Calculate W Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "AP - W Vel Coeff for ii = " << ii << endl;
@@ -1379,7 +1379,7 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE Calculate Pressure Diagonal :" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "SP - Pressure Linear Source for ii = " << ii << endl;
@@ -1405,7 +1405,7 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 	     coeff_vars->pressCoeff[Arches::AB].getPointer(),
 	     coeff_vars->pressLinearSrc.getPointer());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "AFTER Calculate Pressure Diagonal :" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "AP - Pressure Coeff for ii = " << ii << endl;
@@ -1440,7 +1440,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE Calculate Scalar" << index << " Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "SP - Scalar Linear Source for ii = " << ii << endl;
@@ -1465,7 +1465,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 	     coeff_vars->scalarCoeff[Arches::AB].getPointer(),
 	     coeff_vars->scalarLinearSrc.getPointer());
 
-#ifdef ARCHES_DEBUG
+#ifdef ARCHES_COEF_DEBUG
   cerr << "AFTER Calculate Scalar" << index << " Diagonal :" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "AP - Scalar Coeff for ii = " << ii << endl;
@@ -1484,6 +1484,12 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.44  2000/08/23 06:20:52  bbanerje
+// 1) Results now correct for pressure solve.
+// 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+// 3) Removed some bugs in BCU, V, W.
+// 4) Coefficients for MOM Solve not computed correctly yet.
+//
 // Revision 1.43  2000/08/19 16:36:35  rawat
 // fixed some bugs in scalarcoef calculations
 //
