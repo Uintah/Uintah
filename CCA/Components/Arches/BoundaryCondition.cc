@@ -5117,3 +5117,42 @@ BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
       }
     }  
 }
+
+//****************************************************************************
+// schedule copy of inlet flow rates for nosolve
+//****************************************************************************
+void BoundaryCondition::sched_setInletFlowRates(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
+{
+  string taskname =  "BoundaryCondition::setInletFlowRates";
+  Task* tsk = scinew Task(taskname, this,
+			  &BoundaryCondition::setInletFlowRates);
+  
+  for (int ii = 0; ii < d_numInlets; ii++) {
+    tsk->requires(Task::OldDW, d_flowInlets[ii].d_flowRate_label);
+    tsk->computes(d_flowInlets[ii].d_flowRate_label);
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// copy inlet flow rates for nosolve
+//****************************************************************************
+void 
+BoundaryCondition::setInletFlowRates(const ProcessorGroup* pc,
+				     const PatchSubset* ,
+				     const MaterialSubset*,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw)
+{
+  delt_vartype flowRate;
+  for (int indx = 0; indx < d_numInlets; indx++) {
+    FlowInlet fi = d_flowInlets[indx];
+    old_dw->get(flowRate, d_flowInlets[indx].d_flowRate_label);
+    d_flowInlets[indx].flowRate = flowRate;
+    fi.flowRate = flowRate;
+    new_dw->put(flowRate, d_flowInlets[indx].d_flowRate_label);
+  }
+}
