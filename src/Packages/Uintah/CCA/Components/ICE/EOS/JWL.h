@@ -58,6 +58,8 @@ WARNING
                                    Patch::FaceType face=Patch::xplus);
        
 
+        virtual double getAlpha(double Temp,double sp_vol, double P, double cv);
+         
         virtual void hydrostaticTempAdjustment(Patch::FaceType face,
                                                const Patch* patch,
                                                Vector& gravity,
@@ -73,8 +75,6 @@ WARNING
         double   R2;
         double   om;
         double   rho0;  // kg/m^3
-        double   c_v;   // J/(kg K)
-
       };
 } // End namespace Uintah
       
