@@ -599,7 +599,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 	      else 
 		sootFV[currCell] = 0.0;
 	    }
-	    absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
 				   sootFV[currCell]*temperature[currCell]*opl));
 	    }
 	  if (d_MAlab) {
