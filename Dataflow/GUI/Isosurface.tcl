@@ -127,14 +127,15 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-update $opt.update
 #	$opt.update select Manual
 
-	checkbutton $opt.hash -text "Hash" -relief flat \
-	    -variable $this-hash
-	checkbutton $opt.emit -text "Emit Surface" -relief flat \
-	    -variable $this-emit
+# 	checkbutton $opt.hash -text "Hash" -relief flat \
+# 	    -variable $this-hash
+# 	checkbutton $opt.emit -text "Emit Surface" -relief flat \
+# 	    -variable $this-emit
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
 	    -relief flat -variable $this-extract-from-new-field 
 
-	pack $opt.update $opt.emit $opt.hash $opt.aefnf -side top -anchor w
+# 	pack $opt.update $opt.emit $opt.hash $opt.aefnf -side top -anchor w
+	pack $opt.update $opt.aefnf -side top -anchor w
 	pack $w.f.opt -side top -anchor w
 
 
@@ -165,23 +166,24 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 # 	pack $alg.prune $alg.opt -side left -anchor n
 	
-	set alg [$mf.tabs add -label "Opt"]
+#	set alg [$mf.tabs add -label "Opt"]
 
-	iwidgets::radiobox $alg.orient -labeltext "Tabs position:" \
+#	iwidgets::radiobox $alg.orient -labeltext "Tabs position:" \
 	    -command "$this orient $mf $alg" 
 
-	$alg.orient add n -text "n"
-	$alg.orient add w -text "w"
-	$alg.orient add e -text "e"
-	$alg.orient add s -text "s"
+# 	$alg.orient add n -text "n"
+# 	$alg.orient add w -text "w"
+# 	$alg.orient add e -text "e"
+# 	$alg.orient add s -text "s"
 
-	$alg.orient select n
+# 	$alg.orient select n
 
 
-	pack $alg.orient -padx 4 -pady 4 -anchor w
+# 	pack $alg.orient -padx 4 -pady 4 -anchor w
 
 	$mf.tabs view "MC"
-	$mf.tabs configure -tabpos [$alg.orient get]
+	$mf.tabs configure -tabpos "n"
+#[$alg.orient get]
 
 	
 	pack $mf.tabs -side top
