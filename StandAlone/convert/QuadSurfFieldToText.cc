@@ -35,7 +35,7 @@
 // user specifies the -noPtsCount command-line argument.
 // The .quad file will specify the i/j/k/l indices for each quad, 
 // also one per line, again with a one line header (unless a 
-// -noQuadsCount flag is used).  The quad entries will be zero-based, 
+// -noElementsCount flag is used).  The quad entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
 #include <Core/Datatypes/QuadSurfField.h>
@@ -54,12 +54,12 @@ using namespace SCIRun;
 
 bool ptsCountHeader;
 int baseIndex;
-bool quadsCountHeader;
+bool elementsCountHeader;
 
 void setDefaults() {
   ptsCountHeader=true;
   baseIndex=0;
-  quadsCountHeader=true;
+  elementsCountHeader=true;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -68,8 +68,8 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noQuadsCount")) {
-      quadsCountHeader=false;
+    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
+      elementsCountHeader=false;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
       baseIndex=1;
@@ -83,7 +83,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" QuadSurfField pts quads [-noPtsCount] [-noQuadsCount] [-oneBasedIndexing]\n\n";
+  cerr << "\n Usage: "<<progName<<" QuadSurfField pts quads [-noPtsCount] [-noElementsCount] [-oneBasedIndexing]\n\n";
   cerr << "\t This program will read in a SCIRun QuadSurfField, and will \n";
   cerr << "\t save out the QuadSurfMesh into two files: a .pts file and a \n";
   cerr << "\t .quad file. \n";
@@ -93,7 +93,7 @@ void printUsageInfo(char *progName) {
   cerr << "\t points, unless the user specifies the -noPtsCount \n";
   cerr << "\t command-line argument.  The .quad file will specify the \n";
   cerr << "\t i/j/k/l indices for each quad, also one per line, again with \n";
-  cerr << "\t a one line header (unless a -noQuadsCount flag is used). \n";
+  cerr << "\t a one line header (unless a -noElementsCount flag is used). \n";
   cerr << "\t The quad entries will be zero-based, unless the user \n";
   cerr << "\t specifies -oneBasedIndexing.\n\n";
 }
@@ -167,7 +167,7 @@ main(int argc, char **argv) {
     exit(0);
   }
   size=(unsigned)(fsize);
-  if (quadsCountHeader) fprintf(fQuads, "%d\n", size);
+  if (elementsCountHeader) fprintf(fQuads, "%d\n", size);
   cerr << "Number of quads = "<< fsize <<"\n";
   while(fiter != fiter_end) {
     qsm->get_nodes(face_nodes, *fiter);

@@ -35,7 +35,7 @@
 // user specifies the -noPtsCount command-line argument.
 // The .tet file will specify the i/j/k/l indices for each tet, 
 // also one per line, again with a one line header (unless a 
-// -noTetsCount flag is used).  The tet entries will be zero-based, 
+// -noElementsCount flag is used).  The tet entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
 #include <Core/Datatypes/TetVolField.h>
@@ -54,12 +54,12 @@ using namespace SCIRun;
 
 bool ptsCountHeader;
 int baseIndex;
-bool tetsCountHeader;
+bool elementsCountHeader;
 
 void setDefaults() {
   ptsCountHeader=true;
   baseIndex=0;
-  tetsCountHeader=true;
+  elementsCountHeader=true;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -68,8 +68,8 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noTetsCount")) {
-      tetsCountHeader=false;
+    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
+      elementsCountHeader=false;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
       baseIndex=1;
@@ -83,7 +83,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" TetVolField pts tets [-noPtsCount] [-noTetsCount] [-oneBasedIndexing]\n\n";
+  cerr << "\n Usage: "<<progName<<" TetVolField pts tets [-noPtsCount] [-noElementsCount] [-oneBasedIndexing]\n\n";
   cerr << "\t This program will read in a SCIRun TetVolField, and will \n";
   cerr << "\t save out the TetVolMesh into two files: a .pts file and a \n";
   cerr << "\t .tet file.  The .pts file will specify the x/y/z coordinates \n";
@@ -92,7 +92,7 @@ void printUsageInfo(char *progName) {
   cerr << "\t number of points, unless the user specifies the -noPtsCount \n";
   cerr << "\t command-line argument.  The .tet file will specify the \n";
   cerr << "\t i/j/k/l indices for each tet, also one per line, again with \n";
-  cerr << "\t a one line header (unless a -noTetsCount flag is used).  The \n";
+  cerr << "\t a one line header (unless a -noElementsCount flag is used).  The \n";
   cerr << "\t tet entries will be zero-based, unless the user specifies \n";
   cerr << "\t -oneBasedIndexing.\n\n";
 }
@@ -166,7 +166,7 @@ main(int argc, char **argv) {
     exit(0);
   }
   size=(unsigned)(csize);
-  if (tetsCountHeader) fprintf(fTets, "%d\n", size);
+  if (elementsCountHeader) fprintf(fTets, "%d\n", size);
   cerr << "Number of tets = "<< csize <<"\n";
   while(citer != citer_end) {
     tvm->get_nodes(cell_nodes, *citer);

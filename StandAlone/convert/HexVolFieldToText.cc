@@ -35,7 +35,7 @@
 // user specifies the -noPtsCount command-line argument.
 // The .hex file will specify the i/j/k/l/m/n/o/p indices for each hex,
 // also one per line, again with a one line header (unless a 
-// -noHexesCount flag is used).  The hex entries will be zero-based, 
+// -noElementsCount flag is used).  The hex entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
 #include <Core/Datatypes/HexVolField.h>
@@ -54,12 +54,12 @@ using namespace SCIRun;
 
 bool ptsCountHeader;
 int baseIndex;
-bool hexesCountHeader;
+bool elementsCountHeader;
 
 void setDefaults() {
   ptsCountHeader=true;
   baseIndex=0;
-  hexesCountHeader=true;
+  elementsCountHeader=true;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -68,8 +68,8 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noHexesCount")) {
-      hexesCountHeader=false;
+    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
+      elementsCountHeader=false;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
       baseIndex=1;
@@ -83,7 +83,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" HexVolField pts hexes [-noPtsCount] [-noHexesCount] [-oneBasedIndexing]\n\n";
+  cerr << "\n Usage: "<<progName<<" HexVolField pts hexes [-noPtsCount] [-noElementsCount] [-oneBasedIndexing]\n\n";
   cerr << "\t This program will read in a SCIRun HexVolField, and will \n";
   cerr << "\t save out the HexVolMesh into two files: a .pts file and a \n";
   cerr << "\t .hex file.  The .pts file will specify the x/y/z \n";
@@ -93,7 +93,7 @@ void printUsageInfo(char *progName) {
   cerr << "\t -noPtsCount command-line argument.  The .hex file will \n";
   cerr << "\t specify the i/j/k/l/m/n/o/p indices for each hex, also one \n";
   cerr << "\t per line, again with a one line header (unless a \n";
-  cerr << "\t -noHexesCount flag is used).  The hex entries will be \n";
+  cerr << "\t -noElementsCount flag is used).  The hex entries will be \n";
   cerr << "\t zero-based, unless the user specifies -oneBasedIndexing.\n\n";
 }
 
@@ -166,7 +166,7 @@ main(int argc, char **argv) {
     exit(0);
   }
   size=(unsigned)(csize);
-  if (hexesCountHeader) fprintf(fHexes, "%d\n", size);
+  if (elementsCountHeader) fprintf(fHexes, "%d\n", size);
   cerr << "Number of hexes = "<< csize <<"\n";
   while(citer != citer_end) {
     hvm->get_nodes(cell_nodes, *citer);
