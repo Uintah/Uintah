@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/Dataflow/Modules/Selectors
 
 SRCS     += \
 	$(SRCDIR)/TimestepSelector.cc       \
+	$(SRCDIR)/FieldExtractor.cc   \
 	$(SRCDIR)/ScalarFieldExtractor.cc   \
 	$(SRCDIR)/VectorFieldExtractor.cc   \
 	$(SRCDIR)/TensorFieldExtractor.cc   \

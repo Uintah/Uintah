@@ -66,7 +66,7 @@ extern "C" Module* make_VectorFieldExtractor( const string& id ) {
 
 //--------------------------------------------------------------- 
 VectorFieldExtractor::VectorFieldExtractor(const string& id) 
-  : Module("VectorFieldExtractor", id, Filter, "Selectors", "Uintah"),
+  : FieldExtractor("VectorFieldExtractor", id, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), sVar("sVar", id, this),
     sMatNum("sMatNum", id, this), type(0)
 { 
@@ -77,26 +77,15 @@ VectorFieldExtractor::~VectorFieldExtractor(){}
 
 //------------------------------------------------------------- 
 
-void VectorFieldExtractor::setVars()
+void VectorFieldExtractor::get_vars(vector< string >& names,
+				   vector< const TypeDescription *>& types)
 {
   string command;
-
   DataArchive& archive = *((*(archiveH.get_rep()))());
-
-  vector< string > names;
-  vector< const TypeDescription *> types;
-  archive.queryVariables(names, types);
-
-
-  vector< double > times;
-  vector< int > indices;
-  archive.queryTimesteps( indices, times );
-
+  // Set up data to build or rebuild GUI interface
   string sNames("");
   int index = -1;
   bool matches = false;
-
-
   // get all of the VectorField Variables
   for( int i = 0; i < (int)names.size(); i++ ){
     const TypeDescription *td = types[i];
@@ -125,30 +114,10 @@ void VectorFieldExtractor::setVars()
     type = types[index];
   }
 
-  // get the number of materials for the VectorField Variables
-  GridP grid = archive.queryGrid(times[0]);
-  LevelP level = grid->getLevel( 0 );
-  Patch* r = *(level->patchesBegin());
-  ConsecutiveRangeSet matls = 
-    archive.queryMaterials(sVar.get(), r, times[0]);
-
-  string visible;
-  TCL::eval(id + " isVisible", visible);
-  if( visible == "1"){
-    TCL::execute(id + " destroyFrames");
-    TCL::execute(id + " build");
-    
-    TCL::execute(id + " buildMaterials " + matls.expandedString().c_str());
-
-    TCL::execute(id + " setVectors " + sNames.c_str());
-    TCL::execute(id + " buildVarList");
-
-    TCL::execute("update idletasks");
-    reset_vars();
-  }
+  // inherited from FieldExtractor
+  update_GUI(sVar.get(), sNames);
 }
-
-
+//------------------------------------------------------------- 
 
 void VectorFieldExtractor::execute() 
 { 
@@ -158,146 +127,87 @@ void VectorFieldExtractor::execute()
   
   ArchiveHandle handle;
   if(!in->get(handle)){
-    std::cerr<<"VectorFieldExtractor::execute:Didn't get a handle\n";
+    std::cerr<<"VectorFieldExtractor::execute() Didn't get a handle\n";
+    grid = 0;
     return;
   }
   
   if (archiveH.get_rep()  == 0 ){
-    string visible;
-    TCL::eval(id + " isVisible", visible);
-    if( visible == "0" ){
-      TCL::execute(id + " buildTopLevel");
-    }
+    // first time through a frame must be built
+    build_GUI_frame();
   }
   
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
-  cerr << "Calling setVars\n";
-  setVars();
-  cerr << "done with setVars\n";
-  
-  
-  
-  
-  // what time is it?
-  vector< double > times;
-  vector< int > indices;
-  archive.queryTimesteps( indices, times );
+
+  // get time, set timestep, set generation, update grid and update gui
+  double time = update(); // yeah it does all that
   
   // set the index for the correct timestep.
-  int idx = handle->timestep();
   double dt = -1;
-  if (idx < (int)times.size() - 1)
-    dt = times[idx+1] - times[idx];
+  if (timestep < (int)times.size() - 1)
+    dt = times[timestep+1] - times[timestep];
   else if (times.size() > 1)
-    dt = times[idx] - times[idx-1];
+    dt = times[timestep] - times[timestep-1];
   
-  // set the generation of the grid
-  int generation = (*(archiveH.get_rep())).generation;
-  
-  int max_workers = Max(Thread::numProcessors()/2, 4);
-  Semaphore* thread_sema = scinew Semaphore( "vector extractor semahpore",
-					     max_workers); 
-
-  WallClockTimer my_timer;
-  GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
-  double time = times[idx];
-  switch( type->getType() ) {
-  case TypeDescription::NCVariable:
-    switch ( subtype->getType() ) {
-    case TypeDescription::Vector:
-      {	
-	my_timer.start();
-	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Vector> *vfd =
-	  scinew LevelField<Vector>( mesh, Field::NODE );
-	vector<ShareAssignArray3<Vector> >& data = vfd->fdata();
-	data.resize(level->numPatches());
-	double size = data.size();
-	int count = 0;
-	vector<ShareAssignArray3<Vector> >::iterator it = data.begin();
-	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++, ++it ){
-	  update_progress(count++/size, my_timer);
-	    thread_sema->down();
-	    Thread *thrd =scinew Thread(scinew PatchDataThread<NCVariable<Vector>,
-			                 vector<ShareAssignArray3<Vector> >::iterator>
-			  (archive, it, var, mat, *r, time, thread_sema),
-					"patch_data_worker");
-	    thrd->detach();
+  if(var != ""){
+    switch( type->getType() ) {
+    case TypeDescription::NCVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Vector:
+	{	
+	  NCVariable<Vector> gridVar;
+	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	  LevelField<Vector> *vfd =
+	    scinew LevelField<Vector>( mesh, Field::NODE );
+	  // set the generation and timestep in the field
+	  vfd->store("varname",string(var), true);
+	  vfd->store("generation",generation, true);
+	  vfd->store("timestep",timestep, true);
+	  vfd->store("delta_t",dt, true);
+	  build_field( archive, level, var, mat, time, gridVar, vfd);
+	  // send the field out to the port
+	  vfout->send(vfd);
+	  return;
 	}
-	thread_sema->down(max_workers);
-	if( thread_sema ) delete thread_sema;
-	// set the generation and timestep in the field
-	vfd->store("varname",string(var), true);
-	vfd->store("generation",generation, true);
-	vfd->store("timestep",idx, true);
-	vfd->store("delta_t",dt, true);
-	// do timer stuff
-	timer.add( my_timer.time() );
-	my_timer.stop();
-	// send the field out to the port
-	vfout->send(vfd);
+	break;
+      default:
+	cerr<<"NCVariable<?>  Unknown vector type\n";
+	return;
+      }
+      break;
+    case TypeDescription::CCVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Vector:
+	{	
+	  CCVariable<Vector> gridVar;
+	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	  LevelField<Vector> *vfd =
+	    scinew LevelField<Vector>( mesh, Field::CELL );
+	  // set the generation and timestep in the field
+	  vfd->store("varname",string(var), true);
+	  vfd->store("generation",generation, true);
+	  vfd->store("timestep",timestep, true);
+	  vfd->store("delta_t",dt, true);
+	  build_field(archive, level, var, mat, time, gridVar, vfd);
+	  // send the field out to the port
+	  vfout->send(vfd);
+	  return;
+	}
+	break;
+      default:
+	cerr<<"CCVariable<?> Unknown vector type\n";
 	return;
       }
       break;
     default:
-      cerr<<"NCVariable<?>  Unknown vector type\n";
+      cerr<<"Not a VectorField\n";
       return;
     }
-    break;
-  case TypeDescription::CCVariable:
-    switch ( subtype->getType() ) {
-    case TypeDescription::Vector:
-      {	
-	my_timer.start();
-	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Vector> *vfd =
-	  scinew LevelField<Vector>( mesh, Field::CELL );
-	vector<ShareAssignArray3<Vector> >& data = vfd->fdata();
-	data.resize(level->numPatches());
-	double size = data.size();
-	int count = 0;
-	vector<ShareAssignArray3<Vector> >::iterator it = data.begin();
-	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++, ++it ){
-	  update_progress(count++/size, my_timer);
-	    thread_sema->down();
-	    Thread *thrd =
-	      scinew Thread(scinew PatchDataThread<CCVariable<Vector>,
-			    vector<ShareAssignArray3<Vector> >::iterator>
-			    (archive, it, var, mat, *r, time, thread_sema),
-			    "patch_data_worker");
-	    thrd->detach();
-	}
-	thread_sema->down(max_workers);
-	if( thread_sema ) delete thread_sema;
-	// set the generation and timestep in the field
-	vfd->store("varname",string(var), true);
-	vfd->store("generation",generation, true);
-	vfd->store("timestep",idx, true);
-	vfd->store("delta_t",dt, true);
-	// do timer stuff
-	timer.add( my_timer.time() );
-	my_timer.stop();
-	// send the field out to the port
-	vfout->send(vfd);
-	return;
-      }
-      break;
-    default:
-      cerr<<"CCVariable<?> Unknown vector type\n";
-      return;
-    }
-    break;
-  default:
-    cerr<<"Not a VectorField\n";
-    return;
   }
-  return;
 }
 } // End namespace Uintah
