@@ -41,7 +41,7 @@
 #define SCI_LX11 -lX11
 #define SCI_LXDR -lsun
 #define SCI_LAUDIO -laudio -laudiofile
-#define SCI_LGL -lGL
+#define SCI_LGL -lGL -lGLU
 
 #ifndef SCI_OBJROOT
 #define SCI_OBJROOT /home/sci/data1/development/obj/sgi
