@@ -92,7 +92,7 @@ private:
 
 template<class T>
 Octree<T>::Octree(const T stored, nodeType t, const Octree<T> *parent):
-  t(t), stored(stored), Parent(parent)
+  stored(stored), t(t), Parent(parent)
 {
   if( t == LEAF ){
     children = 0;
