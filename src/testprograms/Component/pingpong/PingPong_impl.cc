@@ -50,6 +50,5 @@ PingPong_impl::~PingPong_impl()
 
 int PingPong_impl::pingpong(int arg)
 {
-    cerr << "Received: " << arg << "\n";
     return arg;
 }
