@@ -169,7 +169,7 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
     if ( args[2] == "hairline" ) {
       add_hairline();
     }
-    if ( args[2] == "axes" ) {
+    else if ( args[2] == "axes" ) {
       add_axes();
     }
     else if ( args[2] == "zoom" ) {
@@ -296,10 +296,10 @@ Diagram::set_windows( const string &menu, const string &tb,
       tcl_ << poly_[i]->name();
     else
       tcl_ << i;
+    tcl_ << " " << poly_[i]->tcl_color();
     tcl_exec();
   }
 }
-
 
 void
 Diagram::button_press( int x, int y, int button )
@@ -325,11 +325,11 @@ Diagram::button_press( int x, int y, int button )
   draw( true );
   
   int n = glRenderMode( GL_RENDER );
-  std::cerr << "number hits = " << n << std::endl;
+  //  std::cerr << "number hits = " << n << std::endl;
   
   if ( n > 0 ) {
     selected_widget_ = buffer[3];
-    std::cerr << "selected widget = " << selected_widget_ << std::endl;
+    //    std::cerr << "selected widget = " << selected_widget_ << std::endl;
     widget_[ selected_widget_ ]->select( x, y, button );
   }
   

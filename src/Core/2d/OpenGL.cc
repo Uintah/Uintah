@@ -74,7 +74,7 @@ Diagram::draw( bool pick)
 
   glMatrixMode(GL_PROJECTION);
 
-  bool has_some = false;
+  bool have_some = false;
 
   if  ( !pick ) {
     if ( select_mode_ == 2 ) { // select_mode_ = many
@@ -95,7 +95,7 @@ Diagram::draw( bool pick)
 	      poly_[i]->draw();
 	  glPopMatrix();
 	  
-	  has_some = true;
+	  have_some = true;
 	}
       }
       else { // scale_mode == each
@@ -112,7 +112,7 @@ Diagram::draw( bool pick)
 	      poly_[i]->draw();
 	      glPopMatrix();
 
-	      has_some = true;
+	      have_some = true;
 	    }
 	  }
       }
@@ -130,19 +130,19 @@ Diagram::draw( bool pick)
 	  poly_[selected_]->draw();
 	  glPopMatrix();
 
-	  has_some = true;
+	  have_some = true;
 	}
       }
     }  
 
-    if ( has_some ) {
+    if ( have_some ) {
       // display the widgets
       for (int i=0; i<widget_.size(); i++) 
 	widget_[i]->draw();
     }
   }
   else { // pick 
-    // in mode we only draw the widgets
+    // in this mode we only draw the widgets
     for (int i=0; i<widget_.size(); i++) {
       glLoadName( i );
       widget_[i]->draw( true );
