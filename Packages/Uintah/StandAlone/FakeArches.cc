@@ -1,8 +1,8 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 namespace Uintah {
 
-class Arches : public UintahParallelComponent, public CFDInterface {
+class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
@@ -97,7 +97,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
 
 namespace Uintah {
 
-class MPMArches : public UintahParallelComponent, public CFDInterface {
+class MPMArches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
