@@ -85,10 +85,9 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/GuiInterface
 
 
-LIBS := $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(FTGL_LIBRARY)
 
-#INCLUDES += -I/usr/include/freetype2 -I/usr/sci/projects/SCIRun/rpm/FTGL/include
-#LIBS := -lfreetype $(GL_LIBRARY) $(M_LIBRARY) /usr/sci/projects/SCIRun/rpm/FTGL/unix/src/*.o
+INCLUDES += $(FTGL_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

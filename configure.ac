@@ -403,6 +403,13 @@ SCI_ARG_ENABLE(scirun2,
    [SCI_SET_PACKAGE_CHECKS(SCIRun2)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
+SCI_ARG_WITH(ftgl,
+  AC_HELP_STRING(--with-ftgl=DIR,
+                 Use the Freetype GL installation in DIR),
+  [with_ftgl="$withval"
+   sci_check_ftgl=yes],
+  [with_ftgl=""])
+
 
 
 ##  --------------------------------------------------------------------
@@ -2099,6 +2106,31 @@ AC_SUBST(BLAS_LIB_DIR_FLAG)
 AC_SUBST(DEF_BLAS)
 
 
+##  --  search for ftgl stuff  -------------------------------------------
+if test "$sci_check_ftgl" = "yes"; then
+  if test "$with_ftgl"; then
+    _sci_lib="$with_ftgl/unix/src/.libs"
+    _sci_inc="$with_ftgl/include /usr/include/freetype2"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+  
+  SCI_TRY_LINK(FTGL,optional FTGL library,[
+#include <FTGLTextureFont.h>
+],$_sci_inc,freetype ftgl,$_sci_lib,,,not-optional)
+
+  if test "$HAVE_FTGL" = "yes"; then
+    DEF_BLAS="#define HAVE_FTGL 1"
+  fi
+fi # end sci_check_blas
+
+AC_SUBST(FTGL_LIB_FLAG)
+AC_SUBST(FTGL_LIB_DIR_FLAG)
+AC_SUBST(DEF_FTGL)
+AC_SUBST(INC_FTGL_H)
+
+
+
 ##  --  search for lapack stuff  -----------------------------------------
 
 if test "$sci_check_lapack" = "yes" &&
@@ -2530,7 +2562,8 @@ if test "$sci_check_babel" = "yes"; then
     _sci_lib="$sci_thirdparty_libs"
     _sci_inc="$sci_thirdparty_includes"
   fi
-  
+  echo $_sci_lib
+  echo $_sci_inc
   SCI_TRY_LINK(SIDL,optional sidl library and headers,[
      #include <SIDL.h>
      ],$_sci_inc,sidl,$_sci_lib,,,optional)
