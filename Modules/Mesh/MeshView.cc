@@ -37,7 +37,6 @@ typedef QUEUE * QPTR;
 class MeshView : public Module {
     MeshIPort* inport;
     GeometryOPort* ogeom;
-    int abort_flag;
     
     int numLevels, oldLev;
     int seedTet, oldSeed;
