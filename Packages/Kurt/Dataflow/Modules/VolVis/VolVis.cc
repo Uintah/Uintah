@@ -41,7 +41,8 @@ using namespace SCICore::Math;
 using std::cerr;
 
 static clString widget_name("VolVisLocatorWidget");
-
+static clString res_name("Resolution Widget");
+			 
 extern "C" Module* make_VolVis( const clString& id) {
   return new VolVis(id);
 }
@@ -54,7 +55,8 @@ VolVis::VolVis(const clString& id)
     num_slices("num_slices", id, this) ,
     avail_tex("avail_tex", id, this),
     max_brick_dim("max_brick_dim", id, this), level("level", id, this),
-    brick(0)
+    brick(0), res_lock("VolVis resolution lock"), widget(0), res(0),
+    widget_id(-1), res_id(-1)
 {
   // Create the input ports
   inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
@@ -71,8 +73,6 @@ VolVis::VolVis(const clString& id)
 			       GeometryIPort::Atomic);
   add_oport(ogeom);
 
-  init=0;
-  widgetMoved=1;
 }
 
 VolVis::~VolVis()
@@ -88,7 +88,38 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
       cerr<< "Set Mode = "<< mode << endl;
       if( brick ){
 	brick->SetMode( mode );
+      }	
+      cerr<< "res_id = "<<res_id<<endl;
+      cerr<< "widget_id = "<<widget_id<<endl;
+      if( mode == 3){
+	if(res_id >= 0){
+	  ogeom->delObj( res_id, 0 );
+	  res_id = -1;
+	}
+	if(widget_id >= 0){
+	  ogeom->delObj( widget_id, 0 );
+	  widget_id = -1;
+	}	  
+      } else if(!mode ) {
+	if( widget){
+	  GeomObj *w=widget->GetWidget();
+	  widget_id = ogeom->addObj(w, widget_name, &widget_lock);
+	}
+	if(res_id >= 0){
+	  ogeom->delObj( res_id, 0 );
+	  res_id = -1;
+	}
+      } else {
+	if( res ){
+	  GeomObj *r=res->GetWidget();
+	  res_id = ogeom->addObj(r, res_name, &res_lock);
+	}
+	if( widget_id >= 0 ){
+	  ogeom->delObj( widget_id, 0 );
+	  widget_id = -1;
+	}
       }
+      
     } else if (args[2] == "NumSlices") {
       int ns;
       args[3].get_int(ns);
@@ -130,16 +161,21 @@ void VolVis::tcl_command( TCLArgs& args, void* userdata)
   }
 }
 
-void VolVis::widget_moved(int /*last*/)
+void VolVis::widget_moved(int obj)
 {
+  cerr<<"the widget id is "<<obj<<endl;
   cerr<<"is brick set? "<< (( brick == 0)? "NO":"YES")<<endl;
   cerr<<"mode is "<<mode<<endl;
-  cerr<<"moving widget to "<<widget->ReferencePoint()<<endl;
   if( !mode && brick )
     {
       brick->SetPlaneIntersection(widget->ReferencePoint());
+      cerr<<"moving widget to "<<widget->ReferencePoint()<<endl;
+    } else {
+      cerr<<"moving widget to "<<res->ReferencePoint()<<endl;
     }
+  
 }
+
 
 void VolVis::SwapXZ( ScalarFieldHandle sfh )
 {
@@ -202,11 +238,11 @@ void VolVis::execute(void)
     Point pmin,pmax;
     rgchar->get_bounds(pmin, pmax);
 
-    if(!init){
-      init=1;
+    if(!widget){
       widget=scinew PointWidget(this, &widget_lock, 0.2);
       GeomObj *w=widget->GetWidget();
-      ogeom->addObj(w, widget_name, &widget_lock);
+      if( !draw_mode.get() )
+	widget_id = ogeom->addObj(w, widget_name, &widget_lock);
       widget->Connect(ogeom);
     
       // DAVE: HACK!
@@ -222,6 +258,16 @@ void VolVis::execute(void)
       ddv.z(dv.z()/(rgchar->nx - 1));
       widget->SetScale(rgchar->longest_dimension()/80.0);
 
+    }
+
+    if( !res ){
+      res = scinew PointWidget(this, &res_lock, 0.2);
+      GeomObj *r = res->GetWidget();
+      if(draw_mode.get() == 1 || draw_mode.get() ==2)
+	res_id = ogeom->addObj(r,res_name, &res_lock);
+      res->Connect(ogeom);
+      res->SetPosition(Point(0,0,0));
+      res->SetScale(rgchar->longest_dimension()/50.0);
     }
     
     
