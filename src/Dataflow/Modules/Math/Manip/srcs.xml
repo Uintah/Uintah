@@ -3,7 +3,7 @@
 
 <srcs>
   <src name="SliceIntoColumns">
-    <description>Slices the input matrix into column matrices. The number of columns is fixed within the manip.</description>
+    <description>Slices the input matrix into output column matrices. The number of columns is fixed within the manip.</description>
     <lib name="-lCore_Exceptions"/>
     <lib name="-lCore_Util"/>
     <lib name="-lCore_Datatypes"/>
