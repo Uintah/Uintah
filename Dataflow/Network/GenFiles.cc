@@ -38,6 +38,7 @@
 #include <Dataflow/Network/GenFiles.h>
 #include <Dataflow/Network/FileUtils.h>
 #include <Core/Util/Environment.h>
+#include <Core/OS/Dir.h> // for MKDIR
 
 #define PERM S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH
 
@@ -75,44 +76,44 @@ GenPackage(char* package, char* psepath)
 
   /* create all directories associated with a package */
   sprintf(strbuf,"%s/src/%s",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
   sprintf(strbuf,"%s/src/%sDataflow",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
   sprintf(strbuf,"%s/src/%sCore",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
   sprintf(strbuf,"%s/src/%sDataflow/Modules",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
   
   sprintf(strbuf,"%s/src/%sDataflow/GUI",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
   sprintf(strbuf,"%s/src/%sDataflow/XML",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
 #if 0
   sprintf(strbuf,"%s/src/%sshare",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 #endif
 
   sprintf(strbuf,"%s/src/%sCore/Datatypes",psepath,packdir);
-  checkall |= check = mkdir(strbuf,PERM);
+  checkall |= check = MKDIR(strbuf,PERM);
   if (check)
     printf("could not create directory \"%s\"\n",strbuf);
 
@@ -120,20 +121,6 @@ GenPackage(char* package, char* psepath)
     printf("Could not create one or more directories.  Giving up.");
     return 0;
   }
-
-#if 0
-  /* create all the non-directory files associated with a package */
-  sprintf(strbuf,"%s/src/%sshare/share.h",psepath,package);
-  file = fopen(strbuf,"w");
-  fprintf(file,share_skeleton,package,package,package,
-	  package,package);
-  fclose(file);
-
-  sprintf(strbuf,"%s/src/%sshare/DllEntry.cc",psepath,packdir);
-  file = fopen(strbuf,"w");
-  fprintf(file,dllentry_skeleton,package);
-  fclose(file);
-#endif
 
   if (!pse_core_dir)
     {
@@ -197,7 +184,7 @@ int GenCategory(char* catname, char* package, char* psepath)
   /* create category directory */
   sprintf(strbuf,"%s/src/%sDataflow/Modules/%s",
 	  psepath,packdir,catname);
-  check = mkdir(strbuf,PERM);
+  check = MKDIR(strbuf,PERM);
   if (check) {
     printf("could not create directory \"%s\".  Giving up.\n",strbuf);
     return 0;
