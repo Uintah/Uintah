@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-     <maxTime>             2.0e-4  </maxTime>
+     <maxTime>             2.2e-4  </maxTime>
      <initTime>            0.0     </initTime>
      <delt_min>            0.0     </delt_min>
      <delt_max>            1.0e-3  </delt_max>
@@ -22,7 +22,7 @@
 
    <DataArchiver>
      <filebase>test_sphere_shell_inflate_ice.uda</filebase>
-     <outputTimestepInterval> 3 </outputTimestepInterval>
+     <outputTimestepInterval> 10 </outputTimestepInterval>
      <save label = "KineticEnergy"/>
      <save label = "TotalMass"/>
      <save label = "StrainEnergy"/>
@@ -71,7 +71,7 @@
      <save label = "mom_L_CC"/>
      <save label = "mom_source_CC"/>
      <save label = "mom_L_ME_CC"/>
-     <checkpoint cycle = "2" timestepInterval = "3"/>
+     <checkpoint cycle = "2" timestepInterval = "10"/>
    </DataArchiver>
 
    <MPM>
