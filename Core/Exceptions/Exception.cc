@@ -42,6 +42,12 @@
 #include <string.h>
 #endif
 
+#if defined(_AIX)
+// Needed for strcasecmp on aix 4.3 (on 5.1 we don't need this.)
+// currently blue is 4.3.
+#  include <strings.h>
+#endif
+
 namespace SCIRun {
 
 using namespace std;
