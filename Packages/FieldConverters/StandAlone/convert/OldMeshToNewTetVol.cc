@@ -25,7 +25,7 @@ using std::endl;
 
 using namespace SCIRun;
 using namespace FieldConverters;
-
+int
 main(int argc, char **argv) {
   
   if (argc !=3) {
@@ -63,8 +63,10 @@ main(int argc, char **argv) {
 
   TetVolMeshHandle tvm = field->get_typed_mesh();
 
-  // Assume that the old Mesh and the new arrange data whe
-
+  // Assume that the old Mesh and the new arrange nodes the same way.
+  for (int i = 0; i < handle->nodesize(); i++) {
+    cout << "node " << i << ": " << handle->node(i).p << endl;
+  }
   
   // TO_DO:
   // make a new Field, set it to fH, and give it a mesh and data like base's
