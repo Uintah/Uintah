@@ -246,7 +246,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   mpm_matls_sub,
                                                                   all_matls);
   }
-  d_ice->scheduleComputeFaceCenteredVelocities(   sched, patches, ice_matls_sub,
+  d_ice->scheduleComputeFC_vel_Temp(              sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
@@ -553,6 +553,9 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   // Products
   t->requires(Task::OldDW,  Ilb->temp_CCLabel,        prod_matls, gn);
   t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,    prod_matls, gn);
+  t->requires(Task::NewDW,  Ilb->TempX_FCLabel,       prod_matls, gn); 
+  t->requires(Task::NewDW,  Ilb->TempY_FCLabel,       prod_matls, gn); 
+  t->requires(Task::NewDW,  Ilb->TempZ_FCLabel,       prod_matls, gn); 
   if (prod_matls->size() > 0){
     t->requires(Task::NewDW,Ilb->press_equil_CCLabel, press_matl, gn);
     t->requires(Task::OldDW,MIlb->NC_CCweightLabel,   one_matl,   gac, 1);                                                
@@ -561,6 +564,9 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   //__________________________________
   // Reactants
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matls, gn);
+  t->requires(Task::NewDW, Ilb->TempX_FCLabel,    react_matls, gn);
+  t->requires(Task::NewDW, Ilb->TempY_FCLabel,    react_matls, gn);
+  t->requires(Task::NewDW, Ilb->TempZ_FCLabel,    react_matls, gn);
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matls, gn);
   t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, gn);
@@ -632,7 +638,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //  Initialize CCVaribles for MPM Materials
     //  Even if mass = 0 in a cell you still need
     //  CC Variables defined.
-    double junk, tmp;
+    double junk=-9, tmp;
     int numALL_matls = d_sharedState->getNumMatls();
     int numMPM_matls = d_sharedState->getNumMPMMatls();
     for (int m = 0; m < numMPM_matls; m++ ) {
@@ -1411,7 +1417,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         total_mat_vol += mat_volume[m];
       }  // numAllMatls loop
 
-      double f_theta_denom = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
         vol_frac[m][c] = mat_volume[m]/total_mat_vol;
         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
@@ -1845,6 +1850,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     
     constCCVariable<double> gasPressure,gasTemperature,gasVolumeFraction;
     constNCVariable<double> NC_CCweight;
+    constSFCXVariable<double> TempX_FC;
+    constSFCYVariable<double> TempY_FC;
+    constSFCZVariable<double> TempZ_FC;
     
     CCVariable<double> sumBurnedMass, sumCreatedVol,sumReleasedHeat;
     CCVariable<Vector> sumMom_comb;
@@ -1889,11 +1897,16 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       // 1 product matl
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
         prod_indx = ice_matl->getDWIndex();
-        new_dw->get(gasPressure,    Ilb->press_equil_CCLabel,0,  patch,gn,0);
-        old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel, 0,  patch,gac,1);
+        
+        new_dw->get(TempX_FC,        Ilb->TempX_FCLabel,prod_indx,patch,gn,0);
+        new_dw->get(TempY_FC,        Ilb->TempY_FCLabel,prod_indx,patch,gn,0);
+        new_dw->get(TempZ_FC,        Ilb->TempZ_FCLabel,prod_indx,patch,gn,0);
+        new_dw->get(gasPressure,     Ilb->press_equil_CCLabel,0,  patch,gn,0);
+        old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,  patch,gac,1);
         old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx,patch,gn,0);
         new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
                                                         prod_indx,patch,gn,0);
+
         new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
                                                         prod_indx,patch);
         new_dw->allocateAndPut(sumCreatedVol,  Ilb->created_vol_CCLabel,
@@ -1914,6 +1927,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->get(solidTemperature,MIlb->temp_CCLabel, react_indx,patch,gn,0);
         new_dw->get(solidMass,       MIlb->cMassLabel,   react_indx,patch,gn,0);
         new_dw->get(sp_vol_CC,       Ilb->sp_vol_CCLabel,react_indx,patch,gn,0);
+        new_dw->get(TempX_FC,        Ilb->TempX_FCLabel, react_indx,patch,gn,0);
+        new_dw->get(TempY_FC,        Ilb->TempY_FCLabel, react_indx,patch,gn,0);
+        new_dw->get(TempZ_FC,        Ilb->TempZ_FCLabel, react_indx,patch,gn,0);
         new_dw->get(vel_CC,          MIlb->vel_CCLabel,  react_indx,patch,gn,0);
         new_dw->get(NCsolidMass,     Mlb->gMassLabel,   react_indx,patch,gac,1);
       }
@@ -1950,10 +1966,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
            }
          }         
 
-         double Temperature = 0;
-         if (gasVolumeFraction[c] < 1.e-5) 
-            Temperature = solidTemperature[c];
-          else Temperature = gasTemperature[c];
+
 
          /* Here is the new criterion for the surface:
             if (MnodeMax - MnodeMin) / Mcell > 0.5 - consider it a surface
@@ -1966,7 +1979,19 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
          if ((MaxMass-MinMass)/MaxMass > 0.4
           && (MaxMass-MinMass)/MaxMass < 1.0
           &&  MaxMass > 1.e-100){
-
+          
+         double Temperature = 0;
+         if (gasVolumeFraction[c] < 0.2){
+            Temperature = solidTemperature[c];
+         }
+          else {
+          Temperature =std::max(Temperature, TempX_FC[c] );    //L
+          Temperature =std::max(Temperature, TempY_FC[c] );    //Bot
+          Temperature =std::max(Temperature, TempZ_FC[c] );    //BK
+          Temperature =std::max(Temperature, TempX_FC[c + IntVector(1,0,0)] );
+          Temperature =std::max(Temperature, TempY_FC[c + IntVector(0,1,0)] );          
+          Temperature =std::max(Temperature, TempZ_FC[c + IntVector(0,0,1)] );
+         }
             double gradRhoX = 0.25 *
                               ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                 NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
