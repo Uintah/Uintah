@@ -889,9 +889,12 @@ OpenGL::redraw_frame()
 	  glDisable((GLenum)(GL_LIGHT0+ii));
 
 	// Now set up the fog stuff.
+	double fognear, fogfar;
+	compute_fog_depth(view, fognear, fogfar);
 	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_START,float(znear_));
-	glFogf(GL_FOG_END,float((zfar_-znear_) * 1.40 + znear_));
+	glFogf(GL_FOG_START, float(fognear));
+	// Arbitrarily brighened by 1.40, picked to look good.
+	glFogf(GL_FOG_END,float((fogfar - fognear) * 1.40 + fognear));
 	GLfloat bgArray[4];
 	if (view_window_->gui_fogusebg_.get())
 	{
@@ -2168,6 +2171,40 @@ OpenGL::compute_depth(const View& view, double& znear, double& zfar)
   }
 }
 
+
+bool
+OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar)
+{
+  znear=MAXDOUBLE;
+  zfar=-MAXDOUBLE;
+  BBox bb;
+  view_window_->get_bounds(bb);
+  if(bb.valid())
+  {
+    // We have something to draw.
+    Point eyep(view.eyep());
+    Vector dir(view.lookat()-eyep);
+    const double dirlen2 = dir.length2();
+    if (dirlen2 < 1.0e-6 || dirlen2 != dirlen2)
+      return false;
+    dir.normalize();
+    const double d = -Dot(eyep, dir);
+
+    // Compute distance to center of bbox.
+    double dist = Dot(bb.center(), dir);
+    // Compute bbox view radius.
+    double radius = bb.diagonal().length() * dir.length2() * 0.5;
+
+    znear = d + dist - radius;
+    zfar = d + dist + radius;
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 
 
 GetReq::GetReq()

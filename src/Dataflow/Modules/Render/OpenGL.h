@@ -146,6 +146,8 @@ public:
 				FutureValue<GeometryData*>* result);
   bool			compute_depth(const View& view,
 				      double& near, double& far);
+  bool			compute_fog_depth(const View& view,
+					  double& near, double& far);
   void			saveImage(const string& fname,
 				  const string& type = "ppm",
 				  int x=640, int y=512);
