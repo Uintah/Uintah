@@ -43,9 +43,63 @@ double computeConvection(const double& nuFrt,     const double& nuMid,
              
    return  0.5 * (qConFrt - qConLast)/deltaX - dissipation;
 } 
+
+/*_________________________________________________________________
+ Function~ getBoundaryEdges--
+ Purpose~  returns a list of edges where boundary conditions
+           should be applied.
+___________________________________________________________________*/  
+void getBoundaryEdges(const Patch* patch,
+                      const Patch::FaceType face,
+                      vector<Patch::FaceType>& face0)
+{
+  IntVector patchNeighborLow  = patch->neighborsLow();
+  IntVector patchNeighborHigh = patch->neighborsHigh();
+  
+  //__________________________________
+  // Looking down on the face, examine 
+  // each edge (clockwise).  If there
+  // are no neighboring patches then it's a valid edge
+  
+  IntVector axes = patch->faceAxes(face);
+  int P_dir = axes[0];  // principal direction
+  int dir1  = axes[1];  // other vector directions
+  int dir2  = axes[2];   
+  IntVector minus(Patch::xminus, Patch::yminus, Patch::zminus);
+  IntVector plus(Patch::xplus,  Patch::yplus,  Patch::zplus);
+  
+  if ( patchNeighborLow[dir1] == 1 ){
+   face0.push_back(Patch::FaceType(minus[dir1]));
+  }  
+  if ( patchNeighborHigh[dir1] == 1 ) {
+   face0.push_back(Patch::FaceType(plus[dir1]));
+  }
+  if ( patchNeighborLow[dir2] == 1 ){
+   face0.push_back(Patch::FaceType(minus[dir2]));
+  }  
+  if ( patchNeighborHigh[dir2] == 1 ) {
+   face0.push_back(Patch::FaceType(plus[dir2]));
+  }
+  
+
+  //__________________________________
+  //  P A T R I C K:  
+  // please uncomment this and 
+  // verify for yourself that we're hitting the
+  // correct edges for multipatch problems.
+#if 0
+  vector<Patch::FaceType>::iterator itr;
+  for(itr = face0.begin(); itr != face0.end(); ++ itr ) {
+    Patch::FaceType c = *itr;
+    cout << "getBoundaryEdges: face " 
+         << face << " patch " << patch->getID() << " face0 " << c << endl;
+  }
+#endif
+}
 /*_________________________________________________________________
  Function~ computeCornerCellIndices--
- Purpose~  compute the corner cells for any face
+ Purpose~ return a list of indicies of the corner cells that are on the
+           boundaries of the domain
 ___________________________________________________________________*/  
 void computeCornerCellIndices(const Patch* patch,
                               const Patch::FaceType face,
@@ -55,47 +109,73 @@ void computeCornerCellIndices(const Patch* patch,
   low = patch->getLowIndex();
   hi  = patch->getHighIndex() - IntVector(1,1,1);  
   
-  switch(face){
-  case Patch::xminus:
-    crn[0] = IntVector(low.x(), low.y(), hi.z());   
-    crn[1] = IntVector(low.x(), hi.y(),  hi.z());   
-    crn[2] = IntVector(low.x(), hi.y(),  low.z());
-    crn[3] = IntVector(low.x(), low.y(), low.z());
-    break;
-  case Patch::xplus:
-    crn[0] = IntVector(hi.x(), low.y(), hi.z());   
-    crn[1] = IntVector(hi.x(), hi.y(),  hi.z());   
-    crn[2] = IntVector(hi.x(), hi.y(),  low.z());
-    crn[3] = IntVector(hi.x(), low.y(), low.z());
-    break;
-  case Patch::yminus:
-    crn[0] = IntVector(hi.x(),  low.y(), hi.z());    
-    crn[1] = IntVector(low.x(), low.y(), hi.z());    
-    crn[2] = IntVector(low.x(), low.y(), low.z()); 
-    crn[3] = IntVector(hi.x(),  low.y(), low.z()); 
-    break;
-  case Patch::yplus:
-    crn[0] = IntVector(hi.x(),  hi.y(), hi.z());    
-    crn[1] = IntVector(low.x(), hi.y(), hi.z());    
-    crn[2] = IntVector(low.x(), hi.y(), low.z()); 
-    crn[3] = IntVector(hi.x(),  hi.y(), low.z()); 
-    break;
-  case Patch::zminus:
-    crn[0] = IntVector(hi.x(),  low.y(), low.z()); 
-    crn[1] = IntVector(hi.x(),  hi.y(),  low.z()); 
-    crn[2] = IntVector(low.x(), hi.y(),  low.z()); 
-    crn[3] = IntVector(low.x(), low.y(), low.z()); 
-    break;
-  case Patch::zplus:
-    crn[0] = IntVector(hi.x(),  low.y(), hi.z()); 
-    crn[1] = IntVector(hi.x(),  hi.y(),  hi.z()); 
-    crn[2] = IntVector(low.x(), hi.y(),  hi.z()); 
-    crn[3] = IntVector(low.x(), low.y(), hi.z()); 
-    break;
-  default:
-    throw InternalError("Illegal FaceType in LODIBaseFunc.h"
-                        " computeCornerCellIndices");
+  IntVector patchNeighborLow  = patch->neighborsLow();
+  IntVector patchNeighborHigh = patch->neighborsHigh();
+ 
+  IntVector axes = patch->faceAxes(face);
+  int P_dir = axes[0];  // principal direction
+  int dir1  = axes[1];  // other vector directions
+  int dir2  = axes[2]; 
+
+  //__________________________________
+  // main index for that face plane
+  int plusMinus = patch->faceDirection(face)[P_dir];
+  int main_index = 0;
+  if( plusMinus == 1 ) { // plus face
+    main_index = hi[P_dir];
+  } else {               // minus faces
+    main_index = low[P_dir];
   }
+
+  //__________________________________
+  // Looking down on the face examine 
+  // each corner (clockwise) and if there
+  // are no neighboring patches then set the
+  // index
+  // 
+  // Top-right corner
+  
+  IntVector corner(-9,-9,-9);
+  if ( patchNeighborHigh[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
+   corner[P_dir] = main_index;
+   corner[dir1]  = hi[dir1];
+   corner[dir2]  = hi[dir2];
+   crn.push_back(corner);
+  }
+  // bottom-right corner
+  if ( patchNeighborLow[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
+   corner[P_dir] = main_index;
+   corner[dir1]  = low[dir1];
+   corner[dir2]  = hi[dir2];
+   crn.push_back(corner);
+  } 
+  // bottom-left corner
+  if ( patchNeighborLow[dir1] == 1 && patchNeighborLow[dir2] == 1) {
+   corner[P_dir] = main_index;
+   corner[dir1]  = low[dir1];
+   corner[dir2]  = low[dir2];
+   crn.push_back(corner);
+  } 
+  // Top-left corner
+  if ( patchNeighborHigh[dir1] == 1 && patchNeighborLow[dir2] == 1) {
+   corner[P_dir] = main_index;
+   corner[dir1]  = hi[dir1];
+   corner[dir2]  = low[dir2];
+   crn.push_back(corner);
+  } 
+  
+ //__________________________________
+ //  P A T R I C K:  
+ // please uncomment this and 
+ // verify for yourself that we're hitting the
+ // correct corners for multipatch problems.
+#if 0
+  vector<IntVector>::iterator itr;
+  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+    IntVector c = *itr;
+    cout << " face " << face << " patch " << patch->getID() << " corner idx " << c << endl;
+  }
+#endif
 }
 /*_________________________________________________________________
  Function~ otherDirection--
@@ -169,9 +249,14 @@ void FaceDensityLODI(const Patch* patch,
   }
  
   //__________________________________
-  //    E D G E S
-  for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
-                                                  face0=Patch::nextFace(face0)){
+  //    E D G E S  -- on boundaryFaces only
+  vector<Patch::FaceType> b_faces;
+  getBoundaryEdges(patch,face,b_faces);
+  
+  vector<Patch::FaceType>::const_iterator iter;  
+  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
+    Patch::FaceType face0 = *iter;
+    
     //__________________________________
     //  Find the offset for the r and l cells
     //  and the Vector components Edir1 and Edir2
@@ -203,11 +288,12 @@ void FaceDensityLODI(const Patch* patch,
 
   //__________________________________
   // C O R N E R S    
-  vector<IntVector> crn(4);
+  vector<IntVector> crn;
   computeCornerCellIndices(patch, face, crn);
  
-  for(int corner = 0; corner <4; corner ++ ) {
-    IntVector c = crn[corner];
+  vector<IntVector>::iterator itr;
+  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+    IntVector c = *itr;
     rho_CC[c] = rho_tmp[c] 
               - delT * (d[1][c][P_dir] + d[1][c][dir1] + d[1][c][dir2]);
   }           
@@ -292,10 +378,14 @@ void FaceVelLODI(const Patch* patch,
     vel_CC[c] /= rho_tmp[c];
   }
   //__________________________________
-  //    E D G E S
-  for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
-                                                  face0=Patch::nextFace(face0)){
-    
+  //    E D G E S  -- on boundaryFaces only
+  vector<Patch::FaceType> b_faces;
+  getBoundaryEdges(patch,face,b_faces);
+  
+  vector<Patch::FaceType>::const_iterator iter;  
+  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
+    Patch::FaceType face0 = *iter;
+       
     //__________________________________
     //  Find the offset for the r and l cells
     //  and the Vector components Edir1 and Edir2
@@ -311,55 +401,56 @@ void FaceVelLODI(const Patch* patch,
                   patch->getEdgeCellIterator(face, face0, "minusCornerCells");
                   
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
-    IntVector c = *iter;
-    
-    //__________________________________
-    // convective terms
-    IntVector r1 = c;
-    IntVector l1 = c;
-    r1[Edir2] += offset[Edir2];  // tweak the r and l cell indices
-    l1[Edir2] -= offset[Edir2]; 
-       
-    Vector convect1(0,0,0);
-    for(int dir = 0; dir <3; dir ++ ) {
-      convect1[dir] = 
-        0.5 * ( (rho_tmp[r1] * vel[r1][dir] * vel[r1][Edir2]
-              -  rho_tmp[l1] * vel[l1][dir] * vel[l1][Edir2] )/dx[Edir2] );
-    }
-    //__________________________________
-    // Pressure gradient terms
-    Vector pressGradient(0,0,0); 
-    pressGradient[Edir2] = 0.5 * (p[r1] - p[l1])/dx[Edir2];  
-    
-    //__________________________________
-    // Equation 9.9 - 9.10
-    vel_CC[c][P_dir]= rho_tmp[c] * vel[c][P_dir] 
-                    - delT * ( vel[c][P_dir] * (d[1][c][P_dir] + d[1][c][Edir1])
-                           +   rho_tmp[c]    * (d[3][c][P_dir] + d[4][c][Edir1])
-                           +   convect1[P_dir]
-                           +   pressGradient[P_dir] );
-    vel_CC[c][Edir1]= rho_tmp[c] * vel[c][Edir1]
-                    - delT * ( vel[c][Edir1] * (d[1][c][P_dir] + d[1][c][Edir1])
-                           +  rho_tmp[c]     * (d[4][c][P_dir] + d[3][c][Edir1])
-                           +  convect1[Edir1]
-                           +  pressGradient[Edir1] );
-    vel_CC[c][Edir2]= rho_tmp[c] * vel[c][Edir2]
-                    - delT * ( vel[c][Edir2] * (d[1][c][P_dir] + d[1][c][Edir1])
-                           +  rho_tmp[c]     * (d[5][c][P_dir] + d[5][c][Edir1])
-                           +  convect1[Edir2]
-                           +  pressGradient[Edir2] );
-    vel_CC[c] /= rho_tmp[c];
+      IntVector c = *iter;
+
+      //__________________________________
+      // convective terms
+      IntVector r1 = c;
+      IntVector l1 = c;
+      r1[Edir2] += offset[Edir2];  // tweak the r and l cell indices
+      l1[Edir2] -= offset[Edir2]; 
+
+      Vector convect1(0,0,0);
+      for(int dir = 0; dir <3; dir ++ ) {
+        convect1[dir] = 
+          0.5 * ( (rho_tmp[r1] * vel[r1][dir] * vel[r1][Edir2]
+                -  rho_tmp[l1] * vel[l1][dir] * vel[l1][Edir2] )/dx[Edir2] );
+      }
+      //__________________________________
+      // Pressure gradient terms
+      Vector pressGradient(0,0,0); 
+      pressGradient[Edir2] = 0.5 * (p[r1] - p[l1])/dx[Edir2];  
+
+      //__________________________________
+      // Equation 9.9 - 9.10
+      vel_CC[c][P_dir]= rho_tmp[c] * vel[c][P_dir] 
+                      - delT * ( vel[c][P_dir] * (d[1][c][P_dir] + d[1][c][Edir1])
+                             +   rho_tmp[c]    * (d[3][c][P_dir] + d[4][c][Edir1])
+                             +   convect1[P_dir]
+                             +   pressGradient[P_dir] );
+      vel_CC[c][Edir1]= rho_tmp[c] * vel[c][Edir1]
+                      - delT * ( vel[c][Edir1] * (d[1][c][P_dir] + d[1][c][Edir1])
+                             +  rho_tmp[c]     * (d[4][c][P_dir] + d[3][c][Edir1])
+                             +  convect1[Edir1]
+                             +  pressGradient[Edir1] );
+      vel_CC[c][Edir2]= rho_tmp[c] * vel[c][Edir2]
+                      - delT * ( vel[c][Edir2] * (d[1][c][P_dir] + d[1][c][Edir1])
+                             +  rho_tmp[c]     * (d[5][c][P_dir] + d[5][c][Edir1])
+                             +  convect1[Edir2]
+                             +  pressGradient[Edir2] );
+      vel_CC[c] /= rho_tmp[c];
     }
   }  
    //________________________________________________________
    // C O R N E R S    
-   vector<IntVector> crn(4);
+   vector<IntVector> crn;
    double uVel, vVel, wVel;
    computeCornerCellIndices(patch, face, crn);
 
-   for( int corner = 0; corner < 4; corner ++ ) {
-     IntVector c = crn[corner];
-     uVel = * rho_tmp[c] * vel[c].x() - delT 
+   vector<IntVector>::iterator itr;
+   for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+     IntVector c = *itr;
+     uVel = rho_tmp[c] * vel[c].x()   - delT 
           * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
           +  (d[3][c].x() + d[4][c].y() + d[5][c].z()) * rho_tmp[c]);
 
@@ -448,9 +539,14 @@ void FaceTempLODI(const Patch* patch,
   }
   
   //__________________________________
-  //    E D G E S
-  for(Patch::FaceType face0 = Patch::startFace; face0 <= Patch::endFace; 
-                                                  face0=Patch::nextFace(face0)){
+  //    E D G E S  -- on boundaryFaces only
+  vector<Patch::FaceType> b_faces;
+  getBoundaryEdges(patch,face,b_faces);
+  
+  vector<Patch::FaceType>::const_iterator iter;  
+  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
+    Patch::FaceType face0 = *iter;
+    
     //__________________________________
     //  Find the offset for the r and l cells
     //  and the Vector components Edir1 and Edir2
@@ -511,11 +607,12 @@ void FaceTempLODI(const Patch* patch,
  
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> crn(4);
+  vector<IntVector> crn;
   computeCornerCellIndices(patch, face, crn);
 
-  for( int corner = 0; corner < 4; corner ++ ) {
-    IntVector c = crn[corner];
+  vector<IntVector>::iterator itr;
+  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+    IntVector c = *itr;
     double vel_sqr = vel[c].length2();
 
     term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_sqr;
