@@ -619,7 +619,7 @@ main( int argc, char** argv )
     } catch (Exception& e) {
 
       cerrLock.lock();
-      cerr << "Caught exception: " << e.message() << '\n';
+      cerr << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << '\n';
       if(e.stackTrace())
 	cerr << "Stack trace: " << e.stackTrace() << '\n';
       cerrLock.unlock();
@@ -632,7 +632,7 @@ main( int argc, char** argv )
     } catch (std::exception e){
 
       cerrLock.lock();
-      cerr << "Caught std exception: " << e.what() << '\n';
+      cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
       cerrLock.unlock();
       //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
       //abort();
@@ -641,7 +641,7 @@ main( int argc, char** argv )
     } catch(...){
 
       cerrLock.lock();
-      cerr << "Caught unknown exception\n";
+      cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
       cerrLock.unlock();
       //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
       //abort();
