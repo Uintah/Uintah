@@ -29,6 +29,9 @@ set Tooltip(ID) 0
 set Tooltip(Color) white
 set Font(Tooltip) $time_font
 
+# MS == Miliseconds
+set tooltipDelayMS 1000
+
 proc showTooltip { id } {
     if [winfo exists .tooltip] { destroy .tooltip }
     global Tooltip Font
@@ -42,10 +45,11 @@ proc showTooltip { id } {
 }
 
 proc enterTooltip { x y id } {
-    global Tooltip
+    global Tooltip tooltipDelayMS
+
     set Tooltip(X) $x
     set Tooltip(Y) $y
-    set Tooltip(ID) [after 500 "showTooltip $id"]
+    set Tooltip(ID) [after $tooltipDelayMS "showTooltip $id"]
 }
 
 proc motionTooltip { x y id } {
