@@ -239,14 +239,15 @@ void HypoElastic::addComputesAndRequires(Task* task,
 					 const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
-                 Ghost::AroundCells, 1);
   task->requires(Task::OldDW, lb->delTLabel);
+  task->requires(Task::OldDW, lb->pXLabel,           matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,        matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pStressLabel,      matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel,      matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pTemperatureLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->gMomExedVelocityLabel,   matlset,
+                  Ghost::AroundCells, 1);
 
   task->computes(lb->pStressAfterStrainRateLabel,       matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
