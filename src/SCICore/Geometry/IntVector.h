@@ -34,6 +34,14 @@ namespace SCICore {
 	    return *this;	
 	}
 
+	inline bool operator==(const IntVector& a) {
+	   return d_x == a.d_x && d_y == a.d_y && d_z == a.d_z;
+	}
+
+	inline bool operator!=(const IntVector& a) {
+	   return d_x != a.d_x || d_y != a.d_y || d_z != a.d_z;
+	}
+
 	inline IntVector(int x, int y, int z)
 	    : d_x(x), d_y(y), d_z(z)
 	{
@@ -100,6 +108,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.5  2000/05/20 08:05:31  sparker
+// Added == and != operators
+//
 // Revision 1.4  2000/05/10 22:15:39  sparker
 // Added min/max function for IntVector
 //
