@@ -340,7 +340,7 @@ itcl_class ConfigDir {
 	    foreach t $files {
 		exec ln -s $t $dir/[file tail $t]
 	    }
-	    foreach subdir {src} {
+	    foreach subdir [list src library help doc man] {
 		set rootsub $root/$subdir
 	        if {[catch {set files [glob $rootsub/Imakefile $rootsub/*.icc $rootsub/*.c $rootsub/*.cc $rootsub/*.h $rootsub/*.tcl $rootsub/lib*.o $rootsub/lib*.a]}]} {
 		    set files ""
