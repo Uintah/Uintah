@@ -461,7 +461,7 @@ void
 TriangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/, 
                             int /*w*/, int /*h*/)
 {
-  printf("TriangleCM2Widget::release NOT IMPLEMENTED!\n");
+  // Don't need to do anything here.
 }
 
 
@@ -912,7 +912,7 @@ void
 RectangleCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/,
                              int /*w*/, int /*h*/)
 {
-  printf("RectangleCM2Widget::release NOT IMPLEMENTED!\n");
+  // Don't need to do anything here.
 }
 
 
