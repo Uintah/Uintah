@@ -13,7 +13,7 @@
 #ifndef RTRT_Classlib_ScalarTransform_h
 #define RTRT_Classlib_ScalarTransform_h 1
 
-#include "Array1.h"
+#include <Packages/rtrt/Core/Array1.cc>
 
 namespace rtrt {
   
