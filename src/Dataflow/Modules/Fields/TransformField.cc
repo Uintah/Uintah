@@ -93,7 +93,7 @@ TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
   double *p=&(a[0]);
   for (int i=0; i<4; i++)
     for (int j=0; j<4; j++)
-      *p++=(*mH.get_rep())[i][j];
+      *p++= mH->get(i, j);
   t.set(a);
 }
 

@@ -127,7 +127,7 @@ void BuildNoise::execute() {
       // gaussian distribution about this percentage
       double rnd = 2.0 * musil() - 1.0;
       double perturb = rnd * sigma * sqrt((-2.0 * log(rnd*rnd)) / (rnd*rnd));
-      (*(matH.get_rep()))[r][c] = perturb;
+      matH->put(r, c, perturb);
     }
   onoise->send(matH);
 }
