@@ -137,11 +137,13 @@ void ErrorMetric::execute()
      }
      MatrixHandle ivec1H;
      ColumnMatrix* ivec1;
-     if (!ivec1P_->get(ivec1H) || !(ivec1=dynamic_cast<ColumnMatrix*>(ivec1H.get_rep()))) return;
+     if (!ivec1P_->get(ivec1H)) return;
+     ivec1=ivec1H->column();
 
      MatrixHandle ivec2H;
      ColumnMatrix *ivec2;
-     if (!ivec2P_->get(ivec2H) || !(ivec2=dynamic_cast<ColumnMatrix*>(ivec2H.get_rep()))) return;
+     if (!ivec2P_->get(ivec2H)) return;
+     ivec2=ivec2H->column();
      
      if (ivec1->nrows() != ivec2->nrows()) {
          error("Can't compute error on vectors of different lengths!");
