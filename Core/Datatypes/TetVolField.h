@@ -263,7 +263,7 @@ TetVolField<T>::insert_node_watson(Point &p)
     ret_val = get_typed_mesh()->insert_node_watson(p);
     resize_fdata();
 
-    TetVolMesh::Node::array_type nodes;
+    vector<TetVolMesh::Node::index_type> nodes;
     get_typed_mesh()->synchronize(Mesh::NODE_NEIGHBORS_E);
     get_typed_mesh()->get_neighbors(nodes, ret_val);
 
