@@ -40,9 +40,6 @@ MeshView::MeshView()
     FILE *dat, *tet;
     double x, y, z;
     int a, b, c, d;
-    // Create the output port
-    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-    add_oport(ogeom);
 
     numLevels=1;
     MUI_slider_int *slide = new MUI_slider_int("Number of Levels", &numLevels,
@@ -54,8 +51,8 @@ MeshView::MeshView()
     dat = fopen("/home/grad/cgitlin/classes/cs523/project/cube.pts","r");
     numVerts = 0;
 
-    data = (double *) malloc (3 * 100 * sizeof(double));
-    tetra = (int *) malloc (4 * 500 * sizeof(int));
+    data = (double *) malloc (3 * 10000 * sizeof(double));
+    tetra = (int *) malloc (4 * 50000 * sizeof(int));
 
     while (!feof(dat))
 	{
@@ -93,6 +90,11 @@ MeshView::MeshView()
     
     //tetra = (int *) realloc(tetra, 4 * numTetra * sizeof(int));
 	// makeLevels();	
+    sched_state=SchedNewData;
+
+    // Create the output port
+    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    add_oport(ogeom);
 }
 
 MeshView::MeshView(const MeshView& copy, int levDeep)
@@ -116,7 +118,7 @@ void MeshView::execute()
 	int i, j;
 	LPTR curr;
 
-//    ogeom->delAll();
+    ogeom->delAll();
 
 	ObjGroup *group = new ObjGroup;
 	for (i = 0; i < numVerts; i++)
@@ -243,4 +245,5 @@ void MeshView::makeLevels()
 void MeshView::mui_callback(void*, int which)
 {
     want_to_execute();
+    cerr << "MeshView::mui_callback" << endl;
 }
