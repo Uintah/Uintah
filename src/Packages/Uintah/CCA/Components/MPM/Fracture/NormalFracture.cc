@@ -93,6 +93,7 @@ void NormalFracture::computeBoundaryContact(
 
       int touchFacetsNum = 0;
       pTouchNormal_p_new[pIdx_p] = Vector(0.,0.,0.);
+      
 
       //other side
       for(int j=0; j<particlesNumber; j++) {
@@ -103,6 +104,7 @@ void NormalFracture::computeBoundaryContact(
           const Vector& n1 = pCrackNormal_pg[idx_pg];
       
           Vector dis = particlePoint - pX_pg[idx_pg];
+	  
 	  if( Dot( (pVelocity_pg[pIdx_pg]-pVelocity_pg[idx_pg]),
 	           dis ) >= 0 ) continue;
 
@@ -126,6 +128,7 @@ void NormalFracture::computeBoundaryContact(
           if( pIdx_pg == idx_pg ) continue;
  
           Vector dis = pX_pg[idx_pg] - particlePoint;
+	  
 	  if( Dot( (pVelocity_pg[idx_pg]-pVelocity_pg[pIdx_pg]),
 	           dis ) >= 0 ) continue;
 
@@ -421,7 +424,7 @@ void NormalFracture::computeFracture(
 	  I2 += pStress_p[pIdx_p](i,j) * pStress_p[pIdx_p](i,j);
           pStress_p_new[pIdx_p](i,j) -= N[i] * sigmay * N[j];
         }
-        double v = sqrt( pStrainEnergy_p[pIdx_p] * sigmay * sigmay / I2 / 
+        double v = sqrt( 2. * pStrainEnergy_p[pIdx_p] * sigmay * sigmay / I2 /
           pMass_p[pIdx_p] );
 	pVelocity_p_new[pIdx_p] -= N * v;
 
@@ -522,7 +525,7 @@ void NormalFracture::computeCrackExtension(
         {
 	  double r = pow(pVolume_pg[idx_pg],0.333333)/2;
 	  Vector dis = pX_pg[pIdx_pg] - (pX_pg[idx_pg] + pCrackNormal_pg[idx_pg] * r);
-	  if(dis.length()>r*2) continue;
+	  if(dis.length()>r*3) continue;
 	  if( Dot(dis,pExtensionDirection_pg[idx_pg]) > 0 ) {
             double vDis = fabs( Dot(dis, pCrackNormal_pg[idx_pg]) );
             if(vDis<vDistance) {

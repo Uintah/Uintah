@@ -63,43 +63,45 @@ Connectivity::
 modifyWeights(const int connectivity[8],double S[8],Cond cond)
 {
   double N[8];
+  for(int i=0;i<8;++i) {
+    N[i] = S[i];
+    S[i] = 0;
+  }
   
   int num = 0;
 
   if(cond==connect) {
     for(int i=0;i<8;++i) {
-      N[i] = 0;
       if(connectivity[i] == 1) ++num;
     }
+    if(num==0) return;
   
     for(int i=0;i<8;++i) {
-      if(connectivity[i] == 1) N[i] += S[i];
+      if(connectivity[i] == 1) S[i] += N[i];
       else {
-        double delta = S[i] / num;
+        double delta = N[i] / num;
         for(int j=0;j<8;j++) {
-          if(connectivity[j] == 1) N[j] += delta;
+          if(connectivity[j] == 1) S[j] += delta;
         }
       }
     }
   }
   else if(cond==contact) {
     for(int i=0;i<8;++i) {
-      N[i] = 0;
       if(connectivity[i] >= 1) ++num;
     }
+    if(num==0) return;
   
     for(int i=0;i<8;++i) {
-      if(connectivity[i] >= 1) N[i] += S[i];
+      if(connectivity[i] >= 1) S[i] += N[i];
       else {
-        double delta = S[i] / num;
+        double delta = N[i] / num;
         for(int j=0;j<8;j++) {
-          if(connectivity[j] >= 1) N[j] += delta;
+          if(connectivity[j] >= 1) S[j] += delta;
         }
       }
     }
   }
-
-  for(int i=0;i<8;++i) S[i] = N[i];
 }
 
 void
@@ -107,43 +109,46 @@ Connectivity::
 modifyShapeDerivatives(const int connectivity[8],Vector d_S[8],Cond cond)
 {
   Vector d_N[8];
+
+  for(int i=0;i<8;++i) {
+    d_N[i] = d_S[i];
+    d_S[i] = Vector(0.,0.,0.);
+  }
   
   int num = 0;
 
   if(cond==connect) {
     for(int i=0;i<8;++i) {
-      d_N[i] = Vector(0.,0.,0.);
       if(connectivity[i] == 1) ++num;
     }
+    if(num==0) return;
 
     for(int i=0;i<8;++i) {
-      if(connectivity[i] == 1) d_N[i] += d_S[i];
+      if(connectivity[i] == 1) d_S[i] += d_N[i];
       else {
-        Vector delta = d_S[i] / num;
+        Vector delta = d_N[i] / num;
         for(int j=0;j<8;j++) {
-          if(connectivity[j] == 1) d_N[j] += delta;
+          if(connectivity[j] == 1) d_S[j] += delta;
         }
       }
     }
   }
   else if(cond==contact) {
     for(int i=0;i<8;++i) {
-      d_N[i] = Vector(0.,0.,0.);
       if(connectivity[i] >= 1) ++num;
     }
+    if(num==0) return;
 
     for(int i=0;i<8;++i) {
-      if(connectivity[i] >= 1) d_N[i] += d_S[i];
+      if(connectivity[i] >= 1) d_S[i] += d_N[i];
       else {
-        Vector delta = d_S[i] / num;
+        Vector delta = d_N[i] / num;
         for(int j=0;j<8;j++) {
-          if(connectivity[j] >= 1) d_N[j] += delta;
+          if(connectivity[j] >= 1) d_S[j] += delta;
         }
       }
     }
   }
-
-  for(int i=0;i<8;++i) d_S[i] = d_N[i];
 }
 
 } // End namespace Uintah
