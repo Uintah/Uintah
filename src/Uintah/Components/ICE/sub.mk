@@ -21,7 +21,6 @@ INCLUDES += -I$(ICE_DIR)/Header_files
 
 PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions 
 LIBS 	:= $(XML_LIBRARY) \
-           $(SRCTOP)/Uintah/Components/ICE/ice_sm/libICE.a \
            -L$(ICE_DIR) -lICE -L$(ICE_LIBS) -ltecio \
            -lcpgplot -lpgplot  -lX11 -L. -lmalloc_cv \
            -lftn -lm
@@ -73,6 +72,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.9  2000/06/28 05:15:43  sparker
+# Fix the build
+#
 # Revision 1.8  2000/06/28 00:25:28  guilkey
 # MCQ fixed this.
 #
