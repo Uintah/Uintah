@@ -126,9 +126,6 @@ void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
       objs[i]->compute_bounds(bbox, 1E-5);
       if (dynamic_cast<Group *>(objs[i]) == 0) all_children_are_groups=0;
     }
-    if (all_children_are_groups) {
-      cerr << "YES!  ALL CHILDREN ARE GROUPS!\n";
-    }
     was_processed = true;
   }
 }
