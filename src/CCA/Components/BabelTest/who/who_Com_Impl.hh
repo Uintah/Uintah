@@ -2,13 +2,16 @@
 // File:          who_Com_Impl.hh
 // Symbol:        who.Com-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:08:14 CDT
-// Generated:     20020813 11:08:15 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021110 23:39:31 MST
+// Generated:     20021110 23:39:33 MST
 // Description:   Server-side implementation for who.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
+// babel-version = 0.7.4
+// source-line   = 13
+// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/who/who.sidl
 // 
 
 #ifndef included_who_Com_Impl_hh
@@ -86,7 +89,7 @@ namespace who {
      */
     void
     setServices (
-      /*in*/ govcca::Services svc
+      /*in*/ ::govcca::Services svc
     )
     throw () 
     ;

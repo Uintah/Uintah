@@ -2,13 +2,16 @@
 // File:          hello_GoPort_Impl.hh
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:08:18 CDT
-// Generated:     20020813 11:08:21 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021110 23:39:36 MST
+// Generated:     20021110 23:39:39 MST
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
+// babel-version = 0.7.4
+// source-line   = 7
+// source-url    = file:/home/sparker/SCIRun/src/Babel/Components/hello/hello.sidl
 // 
 
 #ifndef included_hello_GoPort_Impl_hh
@@ -84,7 +87,7 @@ namespace hello {
      */
     void
     setService (
-      /*in*/ govcca::Services svc
+      /*in*/ ::govcca::Services svc
     )
     throw () 
     ;

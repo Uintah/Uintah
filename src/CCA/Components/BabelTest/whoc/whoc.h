@@ -2,13 +2,16 @@
  * File:          whoc.h
  * Symbol:        whoc-v1.0
  * Symbol Type:   package
- * Babel Version: 0.7.0
- * SIDL Created:  20020813 11:08:01 CDT
- * Generated:     20020813 11:08:04 CDT
+ * Babel Version: 0.7.4
+ * SIDL Created:  20021110 23:39:22 MST
+ * Generated:     20021110 23:39:25 MST
  * Description:   Client-side glue code for whoc
  * 
  * WARNING: Automatically generated; changes will be lost
  * 
+ * babel-version = 0.7.4
+ * source-line   = 5
+ * source-url    = file:/home/sparker/SCIRun/src/Babel/Components/whoc/whoc.sidl
  */
 
 #ifndef included_whoc_h

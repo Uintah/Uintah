@@ -2,13 +2,16 @@
  * File:          whoc_IDPort.h
  * Symbol:        whoc.IDPort-v1.0
  * Symbol Type:   class
- * Babel Version: 0.7.0
- * SIDL Created:  20020813 11:08:01 CDT
- * Generated:     20020813 11:08:04 CDT
+ * Babel Version: 0.7.4
+ * SIDL Created:  20021110 23:39:22 MST
+ * Generated:     20021110 23:39:25 MST
  * Description:   Client-side glue code for whoc.IDPort
  * 
  * WARNING: Automatically generated; changes will be lost
  * 
+ * babel-version = 0.7.4
+ * source-line   = 7
+ * source-url    = file:/home/sparker/SCIRun/src/Babel/Components/whoc/whoc.sidl
  */
 
 #ifndef included_whoc_IDPort_h
@@ -43,18 +46,18 @@ whoc_IDPort
 whoc_IDPort__create(void);
 
 /**
- * <p>
+ * &amp;lt;p&amp;gt;
  * Add one to the intrinsic reference count in the underlying object.
- * Object in <code>SIDL</code> have an intrinsic reference count.
+ * Object in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
  * Objects continue to exist as long as the reference count is
  * positive. Clients should call this method whenever they
  * create another ongoing reference to an object or interface.
- * </p>
- * <p>
+ * &amp;lt;/p&amp;gt;
+ * &amp;lt;p&amp;gt;
  * This does not have a return value because there is no language
  * independent type that can refer to an interface or a
  * class.
- * </p>
+ * &amp;lt;/p&amp;gt;
  */
 void
 whoc_IDPort_addReference(
@@ -63,7 +66,7 @@ whoc_IDPort_addReference(
 /**
  * Decrease by one the intrinsic reference count in the underlying
  * object, and delete the object if the reference is non-positive.
- * Objects in <code>SIDL</code> have an intrinsic reference count.
+ * Objects in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
  * Clients should call this method whenever they remove a
  * reference to an object or interface.
  */
@@ -72,7 +75,7 @@ whoc_IDPort_deleteReference(
   whoc_IDPort self);
 
 /**
- * Return true if and only if <code>obj</code> refers to the same
+ * Return true if and only if &amp;lt;code&amp;gt;obj&amp;lt;/code&amp;gt; refers to the same
  * object as this object.
  */
 SIDL_bool
@@ -82,10 +85,10 @@ whoc_IDPort_isSame(
 
 /**
  * Check whether the object can support the specified interface or
- * class.  If the <code>SIDL</code> type name in <code>name</code>
+ * class.  If the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name in &amp;lt;code&amp;gt;name&amp;lt;/code&amp;gt;
  * is supported, then a reference to that object is returned with the
  * reference count incremented.  The callee will be responsible for
- * calling <code>deleteReference</code> on the returned object.  If
+ * calling &amp;lt;code&amp;gt;deleteReference&amp;lt;/code&amp;gt; on the returned object.  If
  * the specified type is not supported, then a null reference is
  * returned.
  */
@@ -96,8 +99,8 @@ whoc_IDPort_queryInterface(
 
 /**
  * Return whether this object is an instance of the specified type.
- * The string name must be the <code>SIDL</code> type name.  This
- * routine will return <code>true</code> if and only if a cast to
+ * The string name must be the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name.  This
+ * routine will return &amp;lt;code&amp;gt;true&amp;lt;/code&amp;gt; if and only if a cast to
  * the string type name would succeed.
  */
 SIDL_bool
