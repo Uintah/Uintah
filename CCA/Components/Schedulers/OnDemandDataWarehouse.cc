@@ -2008,6 +2008,16 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
 	    // If you require with ghost cells and modify, it can get into this situation.
 	    continue;
 	  }
+
+	  if( find_iter == currentTaskAccesses.end() ) {
+	    cout << "Error: did not find " << label->getName() << "\n";
+	  } else {
+	    cout << "Error: accessType is not GetAccess for " 
+		 << label->getName() << "\n";
+	  }
+	  cout << "For Task:\n";
+	  currentTask->displayAll( cout );
+
 	  // Makes request that is never followed through.
 	  string has, needs;
 	  if (accessType == GetAccess) {
