@@ -76,6 +76,23 @@
 	<datatype>SCIRun::ColorMap</datatype>
 	<componentname>GenStandardColorMap</componentname>
       </port>
+      <port>
+	<name>ColorMap2</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::ColorMap2</datatype>
+      </port>
+      <port>
+	<name>NrrdGradient</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>NrrdGradient</componentname>
+      </port>
     </inputs>
     <outputs>
       <port>
@@ -88,6 +105,10 @@
 	</description>
 	<datatype>SCIRun::Geometry</datatype>
 	<componentname>Viewer</componentname>
+      </port>
+      <port>
+	<name>ColorMap2</name>
+	<datatype>SCIRun::ColorMap2</datatype>
       </port>
     </outputs>
   </io>
