@@ -33,6 +33,7 @@
 #include <Core/Util/soloader.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLTask.h>
@@ -47,9 +48,6 @@
 using namespace std;
 using namespace SCIRun;
 
-namespace SCIRun {
-env_map scirunrc;                        // contents of .scirunrc
-}
 
 GuiInterface*
 SCIRunComponentModel::gui(0);
@@ -137,16 +135,16 @@ void SCIRunComponentModel::initGuiInterface() {
   gui->execute("lappend auto_path "+DataflowTCLpath);
   gui->execute("lappend auto_path "ITCL_WIDGETS);
   gui->source_once(DataflowTCLpath+string("/NetworkEditor.tcl"));
-  gui->execute("wm withdraw .");
+
   
   tcl_task->release_mainloop();
-  
   packageDB->setGui(gui);
   
   net = new Network();
-  
   Scheduler* sched_task=new Scheduler(net);
-  
+  new NetworkEditor(net, gui);
+  gui->execute("wm withdraw .");
+
   // Activate the scheduler.  Arguments and return
   // values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
