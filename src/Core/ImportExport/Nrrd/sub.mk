@@ -26,31 +26,13 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+SRCDIR   := Core/ImportExport/Nrrd
 
-SRCDIR := Core/ImportExport
+SRCS +=	$(SRCDIR)/ExecConverter.cc \
+	$(SRCDIR)/NrrdIEPlugin.cc
 
-# All sources are in the sub directories.
-SRCS :=
+# PSELIBS and LIBS come from the ImportExport sub.mk file (one dir up).
 
-SUBDIRS := \
-	$(SRCDIR)/ColorMap \
-	$(SRCDIR)/Field \
-	$(SRCDIR)/Matrix \
-	$(SRCDIR)/Nrrd
-
-PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
-	Core/Math Core/Util Core/Datatypes
-
-LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
-	$(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
-	$(Z_LIBRARY) $(M_LIBRARY) 
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
