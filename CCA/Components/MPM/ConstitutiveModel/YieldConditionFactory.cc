@@ -1,7 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/YieldConditionFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/VonMisesYield.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GursonYield.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RousselierYield.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -28,8 +27,6 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps)
       return(scinew VonMisesYield(child));
    else if (mat_type == "gurson")
       return(scinew GursonYield(child));
-   else if (mat_type == "rousselier")
-      return(scinew RousselierYield(child));
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")");
 }
@@ -42,9 +39,6 @@ YieldConditionFactory::createCopy(const YieldCondition* yc)
 
    else if (dynamic_cast<const GursonYield*>(yc))
       return(scinew GursonYield(dynamic_cast<const GursonYield*>(yc)));
-
-   else if (dynamic_cast<const RousselierYield*>(yc))
-      return(scinew RousselierYield(dynamic_cast<const RousselierYield*>(yc)));
 
    else 
       throw ProblemSetupException("Cannot create copy of unknown yield condition");

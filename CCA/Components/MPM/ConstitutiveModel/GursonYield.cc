@@ -46,9 +46,12 @@ GursonYield::evalYieldCondition(const double sigEqv,
   double fStar = porosity;
   if (porosity > f_c) fStar = f_c + k*(porosity - f_c);
 
+  double maxincosh = 30.0;
+  double incosh = 0.5*q2*traceSig/sigFlow;
+  if (fabs(incosh) > 30.0) incosh = copysign(maxincosh,incosh);
   ASSERT(sigFlow != 0);
   double a = 1.0 + q3*fStar*fStar;
-  double b = 2.0*q1*fStar*cosh(0.5*q2*traceSig/sigFlow);
+  double b = 2.0*q1*fStar*cosh(incosh);
   double aminusb = a - b;
   double Phi = -1.0;
   double sigYSq = sigFlow*sigFlow;
@@ -137,8 +140,11 @@ GursonYield::evalDerivativeWRTPorosity(double trSig,
   }
 
   ASSERT(sigY != 0);
+  double maxincosh = 30.0;
+  double incosh = 0.5*d_CM.q2*trSig/sigY;
+  if (fabs(incosh) > 30.0) incosh = copysign(maxincosh,incosh);
   double a = 2.0*d_CM.q3*fStar;
-  double b = 2.0*d_CM.q1*cosh(0.5*d_CM.q2*trSig/sigY);
+  double b = 2.0*d_CM.q1*cosh(incosh);
   double dPhi_dfStar = (b - a)*sigY*sigY;
   
   return (dPhi_dfStar*dfStar_df);
@@ -172,6 +178,10 @@ GursonYield::computeTangentModulus(const TangentModulusTensor& Ce,
                                    double h_q2,
                                    TangentModulusTensor& Cep)
 {
+  //cerr << getpid() << " Ce = " << Ce;
+  //cerr << getpid() << " f_sigma = " << f_sigma << endl;
+  //cerr << getpid() << " f_q1 = " << f_q1 << " f_q2 = " << f_q2 << endl;
+  //cerr << getpid() << " h_q1 = " << h_q1 << " h_q2 = " << h_q2 << endl << endl;
   double fqhq = f_q1*h_q1 + f_q2*h_q2;
   Matrix3 Cr(0.0), rC(0.0);
   double rCr = 0.0;
