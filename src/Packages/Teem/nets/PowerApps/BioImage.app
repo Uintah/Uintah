@@ -373,11 +373,10 @@ class BioImageApp {
 	
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] 5]
 
- 	if {[string first [set ChooseNrrd] $which] != -1 && $state == "Completed"} {
+ 	if {[string first $ChooseNrrd $which] != -1 && $state == "Completed"} {
 	    if {$execute_choose == 1} {
 		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
 		set execute_choose 0
-		#[set ChooseNrrd2]-c needexecute
 	    }
 	} elseif {[string first "NrrdSetupTexture" $which] != -1 && $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
@@ -482,22 +481,22 @@ class BioImageApp {
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
 	    set NrrdInfo $which
- 	    global [set NrrdInfo]-dimension
- 	    set dimension [set [set NrrdInfo]-dimension]
+ 	    global $NrrdInfo-dimension
+ 	    set dimension [set $NrrdInfo-dimension]
 
- 	    global [set NrrdInfo]-size1
+ 	    global $NrrdInfo-size1
 	    
- 	    if {[info exists [set NrrdInfo]-size1]} {
- 		global [set NrrdInfo]-size0
- 		global [set NrrdInfo]-size1
+ 	    if {[info exists $NrrdInfo-size1]} {
+ 		global $NrrdInfo-size0
+ 		global $NrrdInfo-size1
 		
- 		set 0_samples [set [set NrrdInfo]-size0]
-		set 1_samples [set [set NrrdInfo]-size1]
+ 		set 0_samples [set $NrrdInfo-size0]
+		set 1_samples [set $NrrdInfo-size1]
 
 		# configure samples info
  		if {$dimension == 3} {
- 		    global [set NrrdInfo]-size2
- 		    set 2_samples [set [set NrrdInfo]-size2]
+ 		    global $NrrdInfo-size2
+ 		    set 2_samples [set $NrrdInfo-size2]
  		    $history0.0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		    $history1.0.f0.childsite.ui.samples configure -text \
@@ -741,7 +740,7 @@ class BioImageApp {
 
         set initialized 1
 	global PowerAppSession
-	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
+	if {[info exists PowerAppSession] && $PowerAppSession != ""} { 
 	    set saveFile $PowerAppSession
 	    wm title .standalone "BioImage - [getFileName $saveFile]"
 	    $this load_session_data
@@ -1633,12 +1632,12 @@ class BioImageApp {
 	set page [$data.ui.tnb add -label "Generic" \
 		      -command "$this set_cur_data_tab Nrrd; $this configure_readers Nrrd"]       
 
-	global [set NrrdReader]-filename
+	global $NrrdReader-filename
 	frame $page.file
 	pack $page.file -side top -anchor nw -padx 3 -pady 0 -fill x
 
 	label $page.file.l -text ".vol/.vff/.nrrd file:" 
-	entry $page.file.e -textvariable [set NrrdReader]-filename 
+	entry $page.file.e -textvariable $NrrdReader-filename 
 	Tooltip $page.file.e "Currently loaded data set"
 	pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
 	    -fill x 
@@ -1646,7 +1645,7 @@ class BioImageApp {
 	bind $page.file.e <Return> "$this update_changes"
 	bind $page.file.e <ButtonPress-1> "$this check_crop"
 
-	trace variable [set NrrdReader]-filename w "$this enable_update $which"
+	trace variable $NrrdReader-filename w "$this enable_update $which"
 	
 	button $page.load -text "Browse" \
 	    -command "$this check_crop; $this open_nrrd_reader_ui $which" \
@@ -1685,12 +1684,12 @@ class BioImageApp {
 	set page [$data.ui.tnb add -label "Field" \
 		      -command "$this configure_readers Field"]
 	
-	global [set FieldReader]-filename
+	global $FieldReader-filename
 	frame $page.file
 	pack $page.file -side top -anchor nw -padx 3 -pady 0 -fill x
 
 	label $page.file.l -text "Field File:" 
-	entry $page.file.e -textvariable [set FieldReader]-filename 
+	entry $page.file.e -textvariable $FieldReader-filename 
 	pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
 	    -fill x 
 
@@ -1762,24 +1761,24 @@ class BioImageApp {
 	# disable execute button and change behavior of execute command
 	set m [lindex [lindex $filters($i) $modules] 0]
 	
-	[set m] initialize_ui
+	$m initialize_ui
 
-	.ui[set m].f7.execute configure -state disabled
+	.ui$m.f7.execute configure -state disabled
 
-	upvar #0 .ui[set m] data	
-	set data(-command) "wm withdraw .ui[set m]"
+	upvar \#0 .ui$m data	
+	set data(-command) "wm withdraw .ui$m"
     }
 
     method open_field_reader_ui {i} {
 	# disable execute button and change behavior of execute command
 	set m [lindex [lindex $filters($i) $modules] 3]
 
-	[set m] initialize_ui
+	$m initialize_ui
 
-	.ui[set m].f7.execute configure -state disabled
+	.ui$m.f7.execute configure -state disabled
 
-	upvar #0 .ui[set m] data
-	set data(-command) "wm withdraw .ui[set m]"
+	upvar \#0 .ui$m data
+	set data(-command) "wm withdraw .ui$m"
     }
 
     method dicom_ui { } {
@@ -1817,27 +1816,27 @@ class BioImageApp {
         # disable flip and permute modules and change choose ports
 	set UnuFlip1 [lindex [lindex $filters(0) $modules] 29]
 	set Choose1 [lindex [lindex $filters(0) $modules] 32]
-	global [set Choose1]-port-index
-        disableModule [set UnuFlip1] 1
-	set [set Choose1]-port-index 0
+	global $Choose1-port-index
+        disableModule $UnuFlip1 1
+	set $Choose1-port-index 0
 
 	set UnuFlip2 [lindex [lindex $filters(0) $modules] 30]
 	set Choose2 [lindex [lindex $filters(0) $modules] 33]
-	global [set Choose2]-port-index
-        disableModule [set UnuFlip2] 1
-	set [set Choose2]-port-index 0
+	global $Choose2-port-index
+        disableModule $UnuFlip2 1
+	set $Choose2-port-index 0
 
 	set UnuFlip3 [lindex [lindex $filters(0) $modules] 31]
 	set Choose3 [lindex [lindex $filters(0) $modules] 34]
-	global [set Choose3]-port-index
-        disableModule [set UnuFlip3] 1
-	set [set Choose3]-port-index 0
+	global $Choose3-port-index
+        disableModule $UnuFlip3 1
+	set $Choose3-port-index 0
 
 	set UnuPermute [lindex [lindex $filters(0) $modules] 28]
 	set Choose4 [lindex [lindex $filters(0) $modules] 35]
-	global [set Choose4]-port-index
-        disableModule [set UnuPermute] 1
-	set [set Choose4]-port-index 0
+	global Choose4-port-index
+        disableModule $UnuPermute 1
+	set $Choose4-port-index 0
 
 	set top "S"
 	set front "A"
@@ -1912,28 +1911,28 @@ class BioImageApp {
 		    [lindex $filters($i) $which_row] != -1} {
 		    set reset 1
 		    set UnuCrop [lindex [lindex $filters($i) $modules] 0]
-		    global [set UnuCrop]-minAxis0
-		    global [set UnuCrop]-maxAxis0
-		    global [set UnuCrop]-minAxis1
-		    global [set UnuCrop]-maxAxis1
-		    global [set UnuCrop]-minAxis2
-		    global [set UnuCrop]-maxAxis2
-		    set [set UnuCrop]-minAxis0 0
-		    set [set UnuCrop]-maxAxis0 M
-		    set [set UnuCrop]-minAxis1 0
-		    set [set UnuCrop]-maxAxis1 M
-		    set [set UnuCrop]-minAxis2 0
-		    set [set UnuCrop]-maxAxis2 M
+		    global $UnuCrop-minAxis0
+		    global $UnuCrop-maxAxis0
+		    global $UnuCrop-minAxis1
+		    global $UnuCrop-maxAxis1
+		    global $UnuCrop-minAxis2
+		    global $UnuCrop-maxAxis2
+		    set $UnuCrop-minAxis0 0
+		    set $UnuCrop-maxAxis0 M
+		    set $UnuCrop-minAxis1 0
+		    set $UnuCrop-maxAxis1 M
+		    set $UnuCrop-minAxis2 0
+		    set $UnuCrop-maxAxis2 M
 		} elseif {[lindex $filters($i) $filter_type] == "resample" &&
 			  [lindex $filters($i) $which_row] != -1} {
 		    set reset 1
 		    set UnuResample [lindex [lindex $filters($i) $modules] 0]
-		    global [set UnuResample]-resampAxis0
-		    global [set UnuResample]-resampAxis1
-		    global [set UnuResample]-resampAxis2
-		    set [set UnuResample]-resampAxis0 "x1"
-		    set [set UnuResample]-resampAxis1 "x1"
-		    set [set UnuResample]-resampAxis2 "x1"
+		    global $UnuResample-resampAxis0
+		    global $UnuResample-resampAxis1
+		    global $UnuResample-resampAxis2
+		    set $UnuResample-resampAxis0 "x1"
+		    set $UnuResample-resampAxis1 "x1"
+		    set $UnuResample-resampAxis2 "x1"
 		}
 	    }
 	}
@@ -2029,19 +2028,19 @@ class BioImageApp {
 	# only use permute if needed to avoid copying data
 	set UnuPermute [lindex [lindex $filters(0) $modules] 28]
 	set Choose [lindex [lindex $filters(0) $modules] 35]
-	global [set Choose]-port-index
+	global $Choose-port-index
 
 	if {$need_permute == 1} {
-	    set [set Choose]-port-index 1
-	    disableModule [set UnuPermute] 0
-	    global [set UnuPermute]-axis0 [set UnuPermute]-axis1 [set UnuPermute]-axis2
+	    set $Choose-port-index 1
+	    disableModule $UnuPermute 0
+	    global $UnuPermute-axis0 $UnuPermute-axis1 $UnuPermute-axis2
 
-	    set [set UnuPermute]-axis0 $new_side
-	    set [set UnuPermute]-axis1 $new_front
-	    set [set UnuPermute]-axis2 $new_top
+	    set $UnuPermute-axis0 $new_side
+	    set $UnuPermute-axis1 $new_front
+	    set $UnuPermute-axis2 $new_top
 	} else {
-	    set [set Choose]-port-index 0
-	    disableModule [set UnuPermute] 1
+	    set $Choose-port-index 0
+	    disableModule $UnuPermute 1
 	}
 
 	set flip_0 0
@@ -2076,16 +2075,16 @@ class BioImageApp {
 	# Re-execute
 	if {!$loading && $has_executed} {
 	    if {$need_permute == 1} {
-		[set UnuPermute]-c needexecute
+		$UnuPermute-c needexecute
 	    } elseif {$flip_0 == 1} {
 		set UnuFlip [lindex [lindex $filters(0) $modules] 29]
-		[set UnuFlip]-c needexecute
+		$UnuFlip-c needexecute
 	    } elseif {$flip_1 == 1} {
 		set UnuFlip [lindex [lindex $filters(0) $modules] 30]
-		[set UnuFlip]-c needexecute
+		$UnuFlip-c needexecute
 	    } elseif {$flip_2 == 1} {
 		set UnuFlip [lindex [lindex $filters(0) $modules] 31]
-		[set UnuFlip]-c needexecute
+		$UnuFlip-c needexecute
 	    } else {
 		set m [lindex [lindex $filters(0) $modules] 5]
 		$m-c needexecute
@@ -2096,42 +2095,42 @@ class BioImageApp {
     method flip0 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 29]
 	set Choose [lindex [lindex $filters(0) $modules] 32]
-	global [set Choose]-port-index
+	global $Choose-port-index
 	
 	if {$toflip == 1} {
-	    disableModule [set UnuFlip] 0
-	    set [set Choose]-port-index 1
+	    disableModule $UnuFlip 0
+	    set $Choose-port-index 1
 	} else {
-	    disableModule [set UnuFlip] 1
-	    set [set Choose]-port-index 0
+	    disableModule $UnuFlip 1
+	    set $Choose-port-index 0
 	}
     }
     
     method flip1 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 30]
 	set Choose [lindex [lindex $filters(0) $modules] 33]
-	global [set Choose]-port-index
+	global $Choose-port-index
 	
 	if {$toflip == 1} {
-	    disableModule [set UnuFlip] 0
-	    set [set Choose]-port-index 1
+	    disableModule $UnuFlip 0
+	    set $Choose-port-index 1
 	} else {
-	    disableModule [set UnuFlip] 1
-	    set [set Choose]-port-index 0
+	    disableModule $UnuFlip 1
+	    set $Choose-port-index 0
 	}
     }
     
     method flip2 { toflip } {
 	set UnuFlip [lindex [lindex $filters(0) $modules] 31]
 	set Choose [lindex [lindex $filters(0) $modules] 34]
-	global [set Choose]-port-index
+	global $Choose-port-index
 	
 	if {$toflip == 1} {
-	    disableModule [set UnuFlip] 0
-	    set [set Choose]-port-index 1
+	    disableModule $UnuFlip 0
+	    set $Choose-port-index 1
 	} else {
-	    disableModule [set UnuFlip] 1
-	    set [set Choose]-port-index 0
+	    disableModule $UnuFlip 1
+	    set $Choose-port-index 0
 	}
     }
     
@@ -2151,10 +2150,10 @@ class BioImageApp {
 	set AnalyzeNrrdReader  [lindex [lindex $filters(0) $modules] $load_analyze]
 	set FieldReader  [lindex [lindex $filters(0) $modules] $load_field]
 
-        global [set ChooseNrrd]-port-index
+        global $ChooseNrrd-port-index
 
 	if {$which == "Nrrd"} {
-	    set [set ChooseNrrd]-port-index 0
+	    set $ChooseNrrd-port-index 0
 	    disableModule $NrrdReader 0
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
@@ -2165,7 +2164,7 @@ class BioImageApp {
 # 		set c_data_tab "Nrrd"
 # 	    }
         } elseif {$which == "Dicom"} {
-	    set [set ChooseNrrd]-port-index 1
+	    set $ChooseNrrd-port-index 1
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 0
 	    disableModule $AnalyzeNrrdReader 1
@@ -2177,7 +2176,7 @@ class BioImageApp {
 # 	    }
         } elseif {$which == "Analyze"} {
 	    # Analyze
-	    set [set ChooseNrrd]-port-index 2
+	    set $ChooseNrrd-port-index 2
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 0
@@ -2189,7 +2188,7 @@ class BioImageApp {
 # 	    }
         } elseif {$which == "Field"} {
 	    # Field
-	    set [set ChooseNrrd]-port-index 3
+	    set $ChooseNrrd-port-index 3
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
@@ -2200,19 +2199,19 @@ class BioImageApp {
 # 		set c_data_tab "Field"
 # 	    }
 	} elseif {$which == "all"} {
-	    if {[set [set ChooseNrrd]-port-index] == 0} {
+	    if {[set $ChooseNrrd-port-index] == 0} {
 		# nrrd
 		disableModule $NrrdReader 0
 		disableModule $DicomNrrdReader 1
 		disableModule $AnalyzeNrrdReader 1
 		disableModule $FieldReader 1
-	    } elseif {[set [set ChooseNrrd]-port-index] == 1} {
+	    } elseif {[set $ChooseNrrd-port-index] == 1} {
 		# dicom
 		disableModule $NrrdReader 1
 		disableModule $DicomNrrdReader 0
 		disableModule $AnalyzeNrrdReader 1
 		disableModule $FieldReader 1
-	    } elseif {[set [set ChooseNrrd]-port-index] == 2} {
+	    } elseif {[set $ChooseNrrd-port-index] == 2} {
 		# analyze
 		disableModule $NrrdReader 1
 		disableModule $DicomNrrdReader 1
@@ -2465,18 +2464,18 @@ class BioImageApp {
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
             set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
-            set n "$this check_crop; [set VolumeVisualizer]-c needexecute"
+            set n "$this check_crop; $VolumeVisualizer-c needexecute"
 
-            global [set VolumeVisualizer]-render_style
+            global $VolumeVisualizer-render_style
 
             frame $page.fmode
             pack $page.fmode -padx 2 -pady 2 -fill x
             label $page.fmode.mode -text "Mode"
 	    radiobutton $page.fmode.modeo -text "Over Operator" -relief flat \
-		    -variable [set VolumeVisualizer]-render_style -value 0 \
+		    -variable $VolumeVisualizer-render_style -value 0 \
     	  	    -anchor w -command $n
    	    radiobutton $page.fmode.modem -text "MIP" -relief flat \
-		    -variable [set VolumeVisualizer]-render_style -value 1 \
+		    -variable $VolumeVisualizer-render_style -value 1 \
 		    -anchor w -command $n
    	    pack $page.fmode.mode $page.fmode.modeo $page.fmode.modem \
                 -side left -fill x -padx 4 -pady 4
@@ -2486,11 +2485,11 @@ class BioImageApp {
 	    # Disable Lighting
 	    #----------------------------------------------------------
 	    set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10]
-	    global [set NrrdSetupTexture]-valuesonly
+	    global $NrrdSetupTexture-valuesonly
 	    checkbutton $page.lighting \
 		-text "Compute data for shaded volume rendering" \
 		-relief flat -offvalue 1 \
-		-variable [set NrrdSetupTexture]-valuesonly -onvalue 0 \
+		-variable $NrrdSetupTexture-valuesonly -onvalue 0 \
 		-anchor w -command "$this toggle_compute_shading"
 	    Tooltip $page.lighting \
 		"Turn computing data for shaded volume\nrendering on/off."
@@ -2500,7 +2499,7 @@ class BioImageApp {
 	    # Shading
 	    #-----------------------------------------------------------
 	    checkbutton $page.shading -text "Show shaded volume rendering" \
-		-relief flat -variable [set VolumeVisualizer]-shading \
+		-relief flat -variable $VolumeVisualizer-shading \
 		-onvalue 1 -offvalue 0 -anchor n -command "$n"
 	    Tooltip $page.shading "If computed, turn use of shading on/off"
 	    pack $page.shading -side top -fill x -padx 4
@@ -2515,13 +2514,13 @@ class BioImageApp {
 	    set sratehi [$page.samplingrate childsite]
 	    
 	    scale $sratehi.srate_hi -label "Final Rate" \
-		-variable [set VolumeVisualizer]-sampling_rate_hi \
+		-variable $VolumeVisualizer-sampling_rate_hi \
 		-from 0.5 -to 20.0 \
 		-showvalue true -resolution 0.1 \
 		-orient horizontal -width 15 
 	    
 	    scale $sratehi.srate_lo -label "Interactive Rate" \
-		-variable [set VolumeVisualizer]-sampling_rate_lo \
+		-variable $VolumeVisualizer-sampling_rate_lo \
 		-from 0.1 -to 20.0 \
 		-showvalue true -resolution 0.1 \
 		-orient horizontal -width 15 
@@ -2541,7 +2540,7 @@ class BioImageApp {
 	    set oframe [$page.opacityframe childsite]
 	    
 	    scale $oframe.opacity \
-		-variable [set VolumeVisualizer]-alpha_scale \
+		-variable $VolumeVisualizer-alpha_scale \
 		-from -1.0 -to 1.0 -length 150 \
 		-showvalue false -resolution 0.001 \
 		-orient horizontal -width 15
@@ -2682,9 +2681,9 @@ class BioImageApp {
 
     method toggle_compute_shading {} {
         set NrrdSetupTexture [lindex [lindex $filters(0) $modules] 10]
-        global [set NrrdSetupTexture]-valuesonly
+        global $NrrdSetupTexture-valuesonly
 
-        if {[set [set NrrdSetupTexture]-valuesonly] == 0} {
+        if {[set $NrrdSetupTexture-valuesonly] == 0} {
 	    # lighting computed
 	    .standalone.detachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
 		configure -state normal
@@ -2697,7 +2696,7 @@ class BioImageApp {
 	    .standalone.attachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
 		configure -state disabled
 	}
-        [set NrrdSetupTexture]-c needexecute
+        $NrrdSetupTexture-c needexecute
     }
     
 
@@ -2856,8 +2855,8 @@ class BioImageApp {
 	set valid_data 0
 	
 	set ChooseNrrd  [lindex [lindex $filters(0) $modules] $load_choose_input]
-        global [set ChooseNrrd]-port-index
-        set port [set [set ChooseNrrd]-port-index]
+        global $ChooseNrrd-port-index
+        set port [set $ChooseNrrd-port-index]
         set mod ""
         if {$port == 0} {
 	    # Nrrd
@@ -3342,15 +3341,15 @@ class BioImageApp {
 
 	global mods
         set ScalarFieldStats [lindex [lindex $filters($i) $modules] 3]
-        global [set ScalarFieldStats]-min [set ScalarFieldStats]-max
+        global $ScalarFieldStats-min $ScalarFieldStats-max
 
-	global [set ScalarFieldStats]-args
-        global [set ScalarFieldStats]-nmin
-        global [set ScalarFieldStats]-nmax
+	global $ScalarFieldStats-args
+        global $ScalarFieldStats-nmin
+        global $ScalarFieldStats-nmax
 
-	set nmin [set [set ScalarFieldStats]-nmin]
-	set nmax [set [set ScalarFieldStats]-nmax]
-	set args [set [set ScalarFieldStats]-args]
+	set nmin [set $ScalarFieldStats-nmin]
+	set nmax [set $ScalarFieldStats-nmax]
+	set args [set $ScalarFieldStats-args]
 
 	if {$args == "?"} {
 	    return
@@ -3368,8 +3367,8 @@ class BioImageApp {
              $graph axis configure y -logscale no
          }
 
-         set min [set [set ScalarFieldStats]-min]
-         set max [set [set ScalarFieldStats]-max]
+         set min [set $ScalarFieldStats-min]
+         set max [set $ScalarFieldStats-max]
          set xvector {}
          set yvector {}
          set yvector [concat $yvector $args]
@@ -3520,10 +3519,10 @@ class BioImageApp {
      method update_BioImage_shading_button_state {varname varele varop} {
          set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
 
-         global [set VolumeVisualizer]-shading-button-state
+         global $VolumeVisualizer-shading-button-state
          
          set path f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading
-         if {[set [set VolumeVisualizer]-shading-button-state]} {
+         if {[set $VolumeVisualizer-shading-button-state]} {
  	     $attachedVFr.$path configure -fg "black"
  	     $detachedVFr.$path configure -fg "black"
  	 } else {
@@ -3561,13 +3560,13 @@ class BioImageApp {
             # and the values should be set to bounding box
             set first_time 0
    	    set UnuCrop [lindex [lindex $filters($which) $modules] 0]
-	    global [set UnuCrop]-minAxis0 [set UnuCrop]-maxAxis0
-	    global [set UnuCrop]-minAxis1 [set UnuCrop]-maxAxis1
-	    global [set UnuCrop]-minAxis2 [set UnuCrop]-maxAxis2
+	    global $UnuCrop-minAxis0 $UnuCrop-maxAxis0
+	    global $UnuCrop-minAxis1 $UnuCrop-maxAxis1
+	    global $UnuCrop-minAxis2 $UnuCrop-maxAxis2
 
-            if {[set [set UnuCrop]-minAxis0] == 0 && [set [set UnuCrop]-maxAxis0] == 0 &&
-                [set [set UnuCrop]-minAxis1] == 0 && [set [set UnuCrop]-maxAxis1] == 0 &&
-                [set [set UnuCrop]-minAxis2] == 0 && [set [set UnuCrop]-maxAxis2] == 0} {
+            if {[set $UnuCrop-minAxis0] == 0 && [set $UnuCrop-maxAxis0] == 0 &&
+                [set $UnuCrop-minAxis1] == 0 && [set $UnuCrop-maxAxis1] == 0 &&
+                [set $UnuCrop-minAxis2] == 0 && [set $UnuCrop-maxAxis2] == 0} {
                 set first_time 1
             }
 
@@ -3586,12 +3585,12 @@ class BioImageApp {
 		global $mods(ViewSlices)-crop_minAxis2 $mods(ViewSlices)-crop_maxAxis2
 
                 $mods(ViewSlices)-c startcrop 1
-		set $mods(ViewSlices)-crop_minAxis0 [set [set UnuCrop]-minAxis0]
-		set $mods(ViewSlices)-crop_minAxis1 [set [set UnuCrop]-minAxis1]
-		set $mods(ViewSlices)-crop_minAxis2 [set [set UnuCrop]-minAxis2]
-		set $mods(ViewSlices)-crop_maxAxis0 [set [set UnuCrop]-maxAxis0]
-		set $mods(ViewSlices)-crop_maxAxis1 [set [set UnuCrop]-maxAxis1]
-		set $mods(ViewSlices)-crop_maxAxis2 [set [set UnuCrop]-maxAxis2]
+		set $mods(ViewSlices)-crop_minAxis0 [set $UnuCrop-minAxis0]
+		set $mods(ViewSlices)-crop_minAxis1 [set $UnuCrop-minAxis1]
+		set $mods(ViewSlices)-crop_minAxis2 [set $UnuCrop-minAxis2]
+		set $mods(ViewSlices)-crop_maxAxis0 [set $UnuCrop-maxAxis0]
+		set $mods(ViewSlices)-crop_maxAxis1 [set $UnuCrop-maxAxis1]
+		set $mods(ViewSlices)-crop_maxAxis2 [set $UnuCrop-maxAxis2]
                 $mods(ViewSlices)-c updatecrop
             } else {
                 $mods(ViewSlices)-c startcrop
@@ -3616,12 +3615,12 @@ class BioImageApp {
  	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
         set updating_crop_ui 1
         if {$type == "min"} {
-    	    global [set UnuCrop]-minAxis$i $mods(ViewSlices)-crop_minAxis$i
-            set min [set [set UnuCrop]-minAxis$i]
+    	    global $UnuCrop-minAxis$i $mods(ViewSlices)-crop_minAxis$i
+            set min [set $UnuCrop-minAxis$i]
             set $mods(ViewSlices)-crop_minAxisi$ $min           
         } else {
-    	    global [set UnuCrop]-maxAxis$i $mods(ViewSlices)-crop_maxAxis$i
-            set max [set [set UnuCrop]-maxAxis$i]
+    	    global $UnuCrop-maxAxis$i $mods(ViewSlices)-crop_maxAxis$i
+            set max [set $UnuCrop-maxAxis$i]
             set $mods(ViewSlices)-crop_maxAxisi$ $max 
         }
         set updating_crop_ui 0
@@ -3690,11 +3689,11 @@ class BioImageApp {
 
         set UnuResample [lindex [lindex $filters($which) $modules] 0]
 	for {set i 0} {$i < $dimension} {incr i} {
-	    global [set UnuResample]-resampAxis$i
+	    global $UnuResample-resampAxis$i
 	    if {!$loading_ui} {
-               set [set UnuResample]-resampAxis$i "x1"
+               set $UnuResample-resampAxis$i "x1"
             }
-            trace variable [set UnuResample]-resampAxis$i w "$this enable_update $which"
+            trace variable $UnuResample-resampAxis$i w "$this enable_update $which"
 	    make_entry $w.ui.$i "Axis $i:" $UnuResample-resampAxis$i $which
 	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
 
@@ -3706,13 +3705,13 @@ class BioImageApp {
         $w.ui.1.l configure -text "Coronal" -width 10
         $w.ui.2.l configure -text "Axial" -width 10
 
-        global [set UnuResample]-sigma [set UnuResample]-extent
-        global [set UnuResample]-filtertype
+        global $UnuResample-sigma $UnuResample-extent
+        global $UnuResample-filtertype
         if {!$loading} {
-	    set [set UnuResample]-filtertype cubicBS
+	    set $UnuResample-filtertype cubicBS
         }
-        set [set UnuResample]-sigma 2
-        set [set UnuResample]-extent 2
+        set $UnuResample-sigma 2
+        set $UnuResample-extent 2
 
  	iwidgets::optionmenu $w.ui.kernel -labeltext "Filter Type:" \
  	    -labelpos w \
@@ -3840,29 +3839,29 @@ class BioImageApp {
 
              # update the correct UnuCrop variable
              if {[string first "crop_minAxis0" $varname] != -1} {
-		 global [set UnuCrop]-minAxis0
+		 global $UnuCrop-minAxis0
                  global $mods(ViewSlices)-crop_minAxis0
-                 set [set UnuCrop]-minAxis0 [expr [set $mods(ViewSlices)-crop_minAxis0] + [lindex $pad_vals 0]]
+                 set $UnuCrop-minAxis0 [expr [set $mods(ViewSlices)-crop_minAxis0] + [lindex $pad_vals 0]]
              } elseif {[string first "crop_maxAxis0" $varname] != -1} {
-		 global [set UnuCrop]-maxAxis0
+		 global $UnuCrop-maxAxis0
                  global $mods(ViewSlices)-crop_maxAxis0
-                 set [set UnuCrop]-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0] 
+                 set $UnuCrop-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0] 
              } elseif {[string first "crop_minAxis1" $varname] != -1} {
-		 global [set UnuCrop]-minAxis1
+		 global $UnuCrop-minAxis1
                  global $mods(ViewSlices)-crop_minAxis1
-                 set [set UnuCrop]-minAxis1 [expr [set $mods(ViewSlices)-crop_minAxis1] + [lindex $pad_vals 2]]
+                 set $UnuCrop-minAxis1 [expr [set $mods(ViewSlices)-crop_minAxis1] + [lindex $pad_vals 2]]
  	    } elseif {[string first "crop_maxAxis1" $varname] != -1} {
- 	        global [set UnuCrop]-maxAxis1
+ 	        global $UnuCrop-maxAxis1
 		global $mods(ViewSlices)-crop_maxAxis1
-                 set [set UnuCrop]-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
+                 set $UnuCrop-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
              } elseif {[string first "crop_minAxis2" $varname] != -1} {
-		 global [set UnuCrop]-minAxis2
+		 global $UnuCrop-minAxis2
                  global $mods(ViewSlices)-crop_minAxis2
-                 set [set UnuCrop]-minAxis2 [expr [set $mods(ViewSlices)-crop_minAxis2] + [lindex $pad_vals 4]]
+                 set $UnuCrop-minAxis2 [expr [set $mods(ViewSlices)-crop_minAxis2] + [lindex $pad_vals 4]]
  	    } elseif {[string first "crop_maxAxis2" $varname] != -1} {
- 	        global [set UnuCrop]-maxAxis2
+ 	        global $UnuCrop-maxAxis2
 		global $mods(ViewSlices)-crop_maxAxis2
-                set [set UnuCrop]-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]
+                set $UnuCrop-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]
              }
          }
     }
@@ -3908,13 +3907,13 @@ class BioImageApp {
 	pack $w.ui -side top -anchor nw -expand yes -fill x
 	
         set UnuCmedian [lindex [lindex $filters($which) $modules] 0]
-	global [set UnuCmedian]-radius
-        trace variable [set UnuCmedian]-radius w "$this enable_update $which"
+	global $UnuCmedian-radius
+        trace variable $UnuCmedian-radius w "$this enable_update $which"
 
 	frame $w.ui.radius
 	pack $w.ui.radius -side top -anchor nw -expand yes -fill x
 	label $w.ui.radius.l -text "Radius:"
-	entry $w.ui.radius.v -textvariable [set UnuCmedian]-radius \
+	entry $w.ui.radius.v -textvariable $UnuCmedian-radius \
 	    -width 6
 
         bind $w.ui.radius.v <ButtonPress-1> "$this check_crop"
@@ -3976,28 +3975,28 @@ class BioImageApp {
 
  	set histo [$w.ui.histo childsite]
 
-        global [set ScalarFieldStats]-min
-	global [set ScalarFieldStats]-max
-	global [set ScalarFieldStats]-nbuckets
+        global $ScalarFieldStats-min
+	global $ScalarFieldStats-max
+	global $ScalarFieldStats-nbuckets
 
 	frame $histo.row1
 	pack $histo.row1 -side top
 
 	blt::barchart $histo.graph -title "" \
-	    -height [expr [set [set ScalarFieldStats]-nbuckets]*3/5.0] \
+	    -height [expr [set $ScalarFieldStats-nbuckets]*3/5.0] \
 	    -width 200 -plotbackground gray80
         pack $histo.graph
 
-	global [set UnuHeq]-amount
-        trace variable [set UnuHeq]-amount w $updatecmd
+	global $UnuHeq-amount
+        trace variable $UnuHeq-amount w $updatecmd
       
         if {!$loading_ui} {
-   	    set [set UnuHeq]-amount 1.0
+   	    set $UnuHeq-amount 1.0
         }
 
 	scale $w.ui.amount -label "Amount" \
 	    -from 0.0 -to 1.0 \
-	    -variable [set UnuHeq]-amount \
+	    -variable $UnuHeq-amount \
 	    -showvalue true \
 	    -orient horizontal \
 	    -resolution 0.01
@@ -4050,7 +4049,7 @@ class BioImageApp {
   	set choose 0
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis]
 
-        foreach conn $Subnet([set ChooseNrrd]_connections) { ;# all module connections
+        foreach conn $Subnet(${ChooseNrrd}_connections) { ;# all module connections
   	    if {[lindex $conn 2] == $ChooseNrrd} {
   		set choose [expr $choose + 1]
   	    }
@@ -4492,7 +4491,6 @@ class BioImageApp {
         puts $fileid "global show_guidelines"
         puts $fileid "set show_guidelines \{[set show_guidelines]\}"
 
-
         global top
         puts $fileid "global top"
         puts $fileid "set top \{[set top]\}"
@@ -4861,23 +4859,23 @@ class BioImageApp {
 	set Rescale [lindex [lindex $filters(0) $modules] 36] 
 
         if {$show_vol_ren == 1} {
-	    disableModule [set VolumeVisualizer] 0
-	    disableModule [set NrrdSetupTexture] 0
-	    disableModule [set UnuQuantize] 0
-	    disableModule [set UnuJhisto] 0
-	    disableModule [set EditColorMap2D] 0
-	    disableModule [set NrrdTextureBuilder] 0
+	    disableModule $VolumeVisualizer 0
+	    disableModule $NrrdSetupTexture 0
+	    disableModule $UnuQuantize 0
+	    disableModule $UnuJhisto 0
+	    disableModule $EditColorMap2D 0
+	    disableModule $NrrdTextureBuilder 0
 
             change_indicator_labels "Volume Rendering..."
     	    [set Rescale]-c needexecute
-            [set NrrdSetupTexture]-c needexecute
+            $NrrdSetupTexture-c needexecute
         } else {
-	    disableModule [set VolumeVisualizer] 1
-	    disableModule [set NrrdSetupTexture] 1
-	    disableModule [set UnuQuantize] 1
-	    disableModule [set UnuJhisto] 1
-	    disableModule [set EditColorMap2D] 1
-	    disableModule [set NrrdTextureBuilder] 1
+	    disableModule $VolumeVisualizer 1
+	    disableModule $NrrdSetupTexture 1
+	    disableModule $UnuQuantize 1
+	    disableModule $UnuJhisto 1
+	    disableModule $EditColorMap2D 1
+	    disableModule $NrrdTextureBuilder 1
         }
     }
 
