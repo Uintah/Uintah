@@ -27,7 +27,7 @@
 */
 
 /*
- *  SCIRunFramework.h: An instance of the SCIRun framework
+ *  TypeMap.h:
  *
  *  Written by:
  *   Keming Zhang

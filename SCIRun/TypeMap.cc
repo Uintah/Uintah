@@ -28,7 +28,7 @@
 
 
 /*
- *  SCIRunFramework.h: An instance of the SCIRun framework
+ *  TypeMap.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -194,7 +194,7 @@ TypeMap::getStringArray(const std::string& key, const SSIDL::array1<std::string>
 {
     StringArrayMap::iterator found = stringArrayMap.find(key);
     if (found != stringArrayMap.end()) {
-	return found->second;
+        return found->second;
     }
     return dflt;
 }
@@ -277,7 +277,7 @@ TypeMap::putBool(const std::string& key, bool value)
    
 // void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)
 void
-TypeMap::putIntArray(const std::string& key, const ::SSIDL::array1< int>& value){
+TypeMap::putIntArray(const std::string& key, const ::SSIDL::array1<int>& value) {
   intArrayMap.insert(IntArrayMap::value_type(key, value));
   return;
 }
