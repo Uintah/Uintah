@@ -25,7 +25,8 @@ def nullCallback (test, susdir, inputsdir, compare_root, algo, mode, max_paralle
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, algo, callback = nullCallback):
   if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
-    print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <mode> <max_parallelsim> <test>" % argv[0]
+    print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <mode> " \
+	     "<max_parallelsim> <test>" % argv[0]
     print "    where <mode> is 'dbg' or 'opt' and <test> is optional"
     exit(1)
 
