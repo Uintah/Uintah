@@ -89,6 +89,15 @@ public:
    virtual void put(const CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*);
 
+   // FC Variables -- fron jas ... need to be fixed...
+   virtual void allocate(FCVariableBase&, const VarLabel*,
+			 int matlIndex, const Patch*);
+   virtual void get(FCVariableBase&, const VarLabel*, int matlIndex,
+		    const Patch*, Ghost::GhostType, int numGhostCells);
+   virtual void put(const FCVariableBase&, const VarLabel*,
+		    int matlIndex, const Patch*);
+
+
    // PerPatch Variables
    virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);
    virtual void put(const PerPatchBase&, const VarLabel*,
@@ -163,6 +172,7 @@ private:
 
    DWDatabase<NCVariableBase>       d_ncDB;
    DWDatabase<CCVariableBase>       d_ccDB;
+   DWDatabase<FCVariableBase>       d_fcDB;
    DWDatabase<ParticleVariableBase> d_particleDB;
    reductionDBtype                  d_reductionDB;
    DWDatabase<PerPatchBase>         d_perpatchDB;
@@ -193,6 +203,9 @@ private:
 
 //
 // $Log$
+// Revision 1.26  2000/06/14 23:39:26  jas
+// Added FCVariables.
+//
 // Revision 1.25  2000/06/05 19:50:22  guilkey
 // Added functionality for PerPatch variable.
 //
