@@ -63,8 +63,9 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Matrix3> deformationGradient, pstress;
 
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
+			 pset);
+  new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
   // for J-Integral
 #ifdef FRACTURE
   ParticleVariable<Matrix3> pdispGrads;
@@ -83,36 +84,61 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 
   computeStableTimestep(patch, matl, new_dw);
 }
+
+void CompMooneyRivlin::allocateCMDataAddRequires(Task* task,
+						   const MPMMaterial* matl,
+						   const PatchSet* patch,
+						   MPMLabel* lb) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+#ifdef FRACTURE
+  task->requires(Task::OldDW,lb->pDispGradsLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel, Ghost::None);
+#endif
+}
+
+
 void CompMooneyRivlin::allocateCMDataAdd(DataWarehouse* new_dw,
-					 ParticleSubset* subset,
+					 ParticleSubset* addset,
 					 map<const VarLabel*, ParticleVariableBase*>* newState,
 					 ParticleSubset* delset,
 					 DataWarehouse* old_dw)
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
+  Matrix3  zero(0.);
 
   ParticleVariable<Matrix3> deformationGradient, pstress;
+  constParticleVariable<Matrix3> o_deformationGradient, o_stress;
 
-  new_dw->allocateTemporary(deformationGradient,subset);
-  new_dw->allocateTemporary(pstress, subset);
+  new_dw->allocateTemporary(deformationGradient,addset);
+  new_dw->allocateTemporary(pstress, addset);
+
+  old_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel,delset);
+  old_dw->get(o_stress,lb->pStressLabel,delset);
   // for J-Integral
   
   ParticleVariable<Matrix3> pdispGrads;
   ParticleVariable<double>  pstrainEnergyDensity;
+
+  constParticleVariable<Matrix3> o_dispGrads;
+  constParticleVariable<double>  o_strainEnergyDensity;
 #ifdef FRACTURE
-  new_dw->allocateTemporary(pdispGrads, subset);
-  new_dw->allocateTemporary(pstrainEnergyDensity, subset);
+  new_dw->allocateTemporary(pdispGrads, addset);
+  new_dw->allocateTemporary(pstrainEnergyDensity, addset);
+  old_dw->get(o_dispGrads,lb->pDispGradsLabel,delset);
+  old_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel,delset);
 #endif
-  for(ParticleSubset::iterator iter =subset->begin();iter != subset->end();
-      iter++){
-    deformationGradient[*iter] = Identity;
-    pstress[*iter] = zero;
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    deformationGradient[*n] = o_deformationGradient[*o];
+    pstress[*n] = zero;
 #ifdef FRACTURE
-    pdispGrads[*iter] = zero;
-    pstrainEnergyDensity[*iter] = 0.0;
+    pdispGrads[*n] = o_dispGrads[*o];
+    pstrainEnergyDensity[*n] = o_strainEnergy[*o];
 #endif
   }
 
