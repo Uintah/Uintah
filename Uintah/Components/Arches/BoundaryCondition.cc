@@ -1920,6 +1920,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     cerr.width(10);
     cerr << "PPP"<<*iter << ": " << pressure[*iter] << "\n" ; 
   }
+  rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
 #if 0
   rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
   IntVector n1 (4,0,0);
@@ -1989,14 +1990,13 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 
   cerr << "After recomputecalpbc print pressure" << endl;
   if (patch->containsCell(IntVector(2,3,3))) {
-    cerr << "[2,3,3] press[2,3,3]" << pressure[IntVector(2,3,3)] << " " << 
-      pressure[IntVector(1,3,3)] << endl;
+    cerr << "[2,3,3] press[2,3,3]" << pressure[IntVector(2,3,3)] << endl;
   }
   if (patch->containsCell(IntVector(1,3,3))) {
     cerr << "[2,3,3] press[1,3,3]" << pressure[IntVector(1,3,3)] << endl;
   }
  
-  rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
+  //  rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
 
   cerr << "recompute calpbc: pressure=\n";
   pressure.print(cerr);
@@ -2412,6 +2412,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.67  2000/10/11 21:14:03  rawat
+// fixed a bug in scalar solver
+//
 // Revision 1.66  2000/10/11 17:40:28  sparker
 // Added rewindow hack to trim ghost cells from variables
 // fixed compiler warnings
