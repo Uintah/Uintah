@@ -52,14 +52,19 @@ public:
 
   virtual void execute();
 
+  void ReadandSendData( string& filename,
+			vector< string >& paths,
+			vector< string >& datasets,
+			bool report );
+
   void parseDatasets( string new_datasets,
 		      vector<string>& paths,
 		      vector<string>& datasets );
 
-  int animateDatasets( vector<string>& paths,
-		       vector<string>& datasets,
-		       vector< vector<string> >& frame_paths,
-		       vector< vector<string> >& frame_datasets );
+  unsigned int parseAnimateDatasets( vector<string>& paths,
+				     vector<string>& datasets,
+				     vector< vector<string> >& frame_paths,
+				     vector< vector<string> >& frame_datasets );
 
   vector<int> getDatasetDims( string filename, string group, string dataset );
 
@@ -88,7 +93,6 @@ private:
   GuiInt animateNframes_;
   GuiInt animateFrame_;
 
-
   vector< GuiInt* > gDims_;
   vector< GuiInt* > gStarts_;
   vector< GuiInt* > gCounts_;
@@ -109,6 +113,9 @@ private:
   int starts_[MAX_DIMS];
   int counts_[MAX_DIMS];
   int strides_[MAX_DIMS];
+
+  unsigned int animatestyle_;
+  unsigned int animateframe_;
 
   NrrdDataHandle nHandles_[MAX_PORTS];
 
