@@ -10,23 +10,26 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/DDDAS/Dataflow/Modules/DataIO
+SRCDIR   := Packages/DDDAS/Dataflow/Modules/PDESolver
 
 SRCS     += \
-	$(SRCDIR)/Reader.cc\
-	$(SRCDIR)/StreamReader.cc\
-	$(SRCDIR)/SendIntermediateTest.cc\
-	$(SRCDIR)/Mesh3dReader.cc\
+	$(SRCDIR)/FEM.cc\
 #[INSERT NEW CODE FILE HERE]
+
+AGGIEFEMDIR := $(HOME)/AggieFEM
+INCLUDES += -I$(AGGIEFEMDIR)
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/TkExtensions \
-	Packages/DDDAS/Core/Datatypes \
-    	Packages/DDDAS/Core/Utils
+        Core/Geom Core/Datatypes Core/Geometry \
+        Core/GeomInterface Core/TkExtensions
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) \
+	-L$(AGGIEFEMDIR)/linalg -llinalg \
+	-L$(AGGIEFEMDIR)/mesh -lmesh \
+	-L$(AGGIEFEMDIR)/fem -lfem \
+	-L$(AGGIEFEMDIR)/general -lgeneral
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
