@@ -200,6 +200,20 @@ ArchesLabel::ArchesLabel()
 				       sum_vartype::getTypeDescription() );
   d_scalarTruncLabel = scinew VarLabel("scalarTruncLabel",
 				       sum_vartype::getTypeDescription() );
+
+
+  d_pressureRes = scinew VarLabel("pressureRes",
+				   CCVariable<double>::getTypeDescription() );
+  d_uVelocityRes = scinew VarLabel("uVelocityRes",
+				   SFCXVariable<double>::getTypeDescription() );
+  d_vVelocityRes = scinew VarLabel("vVelocityRes",
+				   SFCYVariable<double>::getTypeDescription() );
+  d_wVelocityRes = scinew VarLabel("wVelocityRes",
+				   SFCZVariable<double>::getTypeDescription() );
+  d_scalarRes = scinew VarLabel("scalarRes",
+				   CCVariable<double>::getTypeDescription() );
+
+
   // Unsure stuff
   // Unsure stuff
   d_DUPBLMLabel = scinew VarLabel("DUPBLM",
@@ -225,6 +239,10 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.5  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.4  2000/08/01 06:18:37  bbanerje
 // Made ScalarSolver similar to PressureSolver and MomentumSolver.
 //

@@ -65,6 +65,7 @@ WARNING
 #define FORT_SCALARCOEFF scalcoef_
 #define FORT_SCALARSOURCE scalsrc_
 #define FORT_SCALARBC bcscalar_
+#define FORT_COMPUTERESID rescal_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
 #define FORT_RBGLISOLV lisolv_
@@ -756,12 +757,35 @@ extern "C"
 		  int* wall_celltypeval, int* symmetry_celltypeval,
 		  int* flow_celltypeval, const int* ffield, const int* sfield,
 		  const int* outletfield);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Compute the Residual of the Linearized System
+    //
+    void
+    FORT_COMPUTERESID(const int* domLo, const int* domHi,
+		      const int* idxLo, const int* idxHi,
+		      double* variable,
+		      double* residualArray,
+		      double* coeffEast,
+		      double* coeffWest,
+		      double* coeffNorth,
+		      double* coeffSouth,
+		      double* coeffTop,
+		      double* coeffBottom,
+		      double* coeffDiagonal,
+		      double* nonlinearSrc,
+		      double* residualNorm);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.27  2000/08/01 23:28:43  skumar
+// Added residual calculation procedure and modified templates in linear
+// solver.  Added template for order-of-magnitude term calculation.
+//
 // Revision 1.26  2000/07/30 22:59:31  bbanerje
 // Added scalar source term calcs.
 //
