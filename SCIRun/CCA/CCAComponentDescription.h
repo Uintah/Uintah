@@ -30,6 +30,7 @@
 #define SCIRun_Framework_CCAComponentDescription_h
 
 #include <SCIRun/ComponentDescription.h>
+#include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
   class CCAComponentModel;
@@ -40,11 +41,14 @@ namespace SCIRun {
 
     virtual std::string getType() const;
     virtual const ComponentModel* getModel() const;
+    virtual std::string getLoaderName() const;
+    void setLoaderName(const std::string& loaderName);
   protected:
     friend class CCAComponentModel;
+    friend class SCIRunLoader;
     CCAComponentModel* model;
     std::string type;
-
+    std::string loaderName;
   private:
     CCAComponentDescription(const CCAComponentDescription&);
     CCAComponentDescription& operator=(const CCAComponentDescription&);

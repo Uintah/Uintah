@@ -53,6 +53,7 @@ namespace SCIRun {
     sci::cca::Port::pointer getPortNonblocking(const std::string& name);
     void releasePort(const std::string& name);
     sci::cca::TypeMap::pointer createTypeMap();
+
     void registerUsesPort(const std::string& name, const std::string& type,
 			  const sci::cca::TypeMap::pointer& properties);
     void unregisterUsesPort(const std::string& name);
@@ -80,7 +81,6 @@ namespace SCIRun {
     private:
       Iterator(const Iterator&);
       Iterator& operator=(const Iterator&);
-      //sci::cca::ComponentID::pointer cid;
     };
     std::map<std::string, CCAPortInstance*> ports;
     sci::cca::Component::pointer component;

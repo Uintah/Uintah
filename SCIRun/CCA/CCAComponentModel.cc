@@ -37,6 +37,7 @@
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
+#include <SCIRun/resourceReference.h>
 #include <string>
 
 #ifdef __sgi
@@ -140,6 +141,7 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
   }
   for (int i=0;i<nlist;i++){
     DOMNode* d = list->item(i);
+    //should use correct Loader pointer below.
     CCAComponentDescription* cd = new CCAComponentDescription(this);
     DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
@@ -179,12 +181,20 @@ bool CCAComponentModel::haveComponent(const std::string& type)
   return components.find(type) != components.end();
 }
 
+
+
 ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
-						     const std::string& type)
+						     const std::string& type,
+						     const sci::cca::TypeMap::pointer& properties)
+
 {
-  std::string url=""; 
+  std::string loaderName="";
+  if(!properties.isNull()){
+    loaderName=properties->getString("LOADER NAME","");
+  }
+  cerr<<"creating component <"<<name<<","<<type<<"> with loader:"<<loaderName<<endl;
   sci::cca::Component::pointer component;
-  if(url==""){  //local component 
+  if(loaderName==""){  //local component
     componentDB_type::iterator iter = components.find(type);
     if(iter == components.end())
       return 0;
@@ -194,19 +204,19 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     string so_name("lib/libCCA_Components_");
     so_name=so_name+lastname+".so";
     cerr<<"type="<<type<<" soname="<<so_name<<endl;
-
+    
     LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
     if(!handle){
       cerr << "Cannot load component " << type << '\n';
       cerr << SOError() << '\n';
       return 0;
     }
-
+    
     string makername = "make_"+type;
     for(int i=0;i<(int)makername.size();i++)
       if(makername[i] == '.')
 	makername[i]='_';
-  
+    
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
     if(!maker_v){
       cerr <<"Cannot load component " << type << '\n';
@@ -216,32 +226,40 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
     component = (*maker)();
   }
-  else{ //remote component: need to be created by framework at url 
+  else{ 
+    //use loader to load the component
+    cerr<<"getLoader..."<<endl;
+    resourceReference* loader=getLoader(loaderName);
+    cerr<<"loader="<<loader<<endl;
+    std::vector<int> nodes;
+    nodes.push_back(0);
 
-    Object::pointer obj=PIDL::objectFrom(url);
-    if(obj.isNull()){
-      cerr<<"got null obj (framework) from "<<url<<endl;
-      return 0;
-    }
+    cerr<<"loader->createInstance...."<<endl;
+    Object::pointer comObj=loader->createInstance(name, type, nodes);
+    /*std::string comURL=loader->createInstance(name, type, nodes);
 
-    sci::cca::AbstractFramework::pointer remoteFramework=
-      pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-
-    std::string comURL; //=remoteFramework->createComponent(name, type);
-    //cerr<<"comURL="<<comURL<<endl;
+    cerr<<"comURL="<<comURL<<endl;
     Object::pointer comObj=PIDL::objectFrom(comURL);
+    cerr<<"objectFrom done="<<comURL<<endl;
+    
     if(comObj.isNull()){
-      cerr<<"got null obj(Component) from "<<url<<endl;
+      cerr<<"got null obj(Component) from "<<comURL<<endl;
       return 0;
     }
+    cerr<<"object is not null"<<comURL<<endl;    
+    */
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
-
   }
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
 						      sci::cca::TypeMap::pointer(0),
 						      component);
+  cerr<<"new CCAComponentInstance doen"<<endl;
   ci->addReference(); //what is this for?
+  cerr<<"ci->addReference done"<<endl;
+  cerr<<"component->setServices...";
   component->setServices(sci::cca::Services::pointer(ci));
+  cerr<<"Done"<<endl;
+  //This statement causes a deadlock?
   return ci;
 }
 
@@ -268,47 +286,74 @@ void CCAComponentModel::listAllComponentTypes(vector<ComponentDescription*>& lis
       iter != components.end(); iter++){
     list.push_back(iter->second);
   }
+
+  //list all remote components here
+  /*
+  ::SSIDL::array1<std::string> typeList;
+  ifstream f("loader.url");
+  std::string s;
+  f>>s;
+  f.close();
+  //slaveURLs[0].getString();
+  cout<<"calling objectFrom $"<<s<<"$"<<endl;
+  Object::pointer obj=PIDL::objectFrom(s);//.getString());
+  if(obj.isNull()){
+    cerr<<"Cannot get loader from url="<<s<<endl;
+    return;
+  }
+  cout<<"Loader obj obtained"<<endl;
+  sci::cca::Loader::pointer node0=pidl_cast<sci::cca::Loader::pointer>(obj);
+  cout<<"Loader obj casted"<<endl;
+  cout<<"Calling node0->listAllComponents"<<endl;
+  node0->listAllComponents(typeList);
+  cout<<"Component Type List from Loader "<<endl;//slaveFwkName<<endl;
+  for(int i=0; i<typeList.size();i++){
+    cout<<"Component Type "<<i<<": "<<typeList[i]<<endl;
+  }
+  */
+
+  for(int i=0; i<loaderList.size(); i++){
+    ::SSIDL::array1<std::string> typeList;
+    loaderList[i]->listAllComponentTypes(typeList);
+    //convert typeList to component description list
+    //by attaching a loader (resourceReferenece) to it.
+    for(int j=0; j<typeList.size(); j++){
+      CCAComponentDescription* cd = new CCAComponentDescription(this);
+      cd->type=typeList[j];
+      cd->setLoaderName(loaderList[i]->getName());
+      list.push_back(cd);
+    }
+  }
+
 }
 
+int CCAComponentModel::addLoader(resourceReference *rr){
+  loaderList.push_back(rr);
+  cerr<<"Loader "<<rr->getName()<<" is added into cca component model"<<endl;
+  return 0;
+}
 
-
-std::string CCAComponentModel::createComponent(const std::string& name,
-						      const std::string& type)
-						     
+int CCAComponentModel::removeLoader(const std::string &loaderName)
 {
-  
-  sci::cca::Component::pointer component;
-  componentDB_type::iterator iter = components.find(type);
-  if(iter == components.end())
-    return "";
-    //ComponentDescription* cd = iter->second;
-  
-  string lastname=type.substr(type.find('.')+1);  
-  string so_name("lib/libCCA_Components_");
-  so_name=so_name+lastname+".so";
-  //cerr<<"type="<<type<<" soname="<<so_name<<endl;
-  
-  LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
-  if(!handle){
-    cerr << "Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
-    return "";
+  resourceReference *rr=getLoader(loaderName);
+  if(rr!=0){
+    cerr<<"loader "<<rr->getName()<<" is removed from cca component model\n";
+    delete rr;
   }
+  else{
+    cerr<<"loader "<<loaderName<<" not found in cca component model\n";
+  }
+  return 0;
+}
 
-  string makername = "make_"+type;
-  for(int i=0;i<(int)makername.size();i++)
-    if(makername[i] == '.')
-      makername[i]='_';
-  
-  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if(!maker_v){
-    cerr << "Cannot load component " << type << '\n';
-    cerr << SOError() << '\n';
-    return "";
+resourceReference *
+CCAComponentModel::getLoader(std::string loaderName){
+  resourceReference *rr=0;
+  for(int i=0; i<loaderList.size(); i++){
+    if(loaderList[i]->getName()==loaderName){
+      rr=loaderList[i];
+      break;
+    }
   }
-  sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
-  component = (*maker)();
-  //need to make sure addReference() will not cause problem
-  component->addReference();
-  return component->getURL().getString();
+  return rr;
 }

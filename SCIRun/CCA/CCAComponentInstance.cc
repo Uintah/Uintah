@@ -28,6 +28,7 @@
 
 #include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/TypeMap.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <iostream>
@@ -46,7 +47,6 @@ CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
 
 CCAComponentInstance::~CCAComponentInstance()
 {
-  cerr << "CCAComponentInstance "<<instanceName<<" destroyed...\n";
 }
 
 PortInstance*
@@ -68,17 +68,15 @@ sci::cca::Port::pointer
 CCAComponentInstance::getPortNonblocking(const std::string& name)
 {
   sci::cca::Port::pointer svc = framework->getFrameworkService(name, instanceName);
-  if(!svc.isNull())
+  if(!svc.isNull()){
     return svc;
-
+  }
   map<string, CCAPortInstance*>::iterator iter = ports.find(name);
   if(iter == ports.end())
     return sci::cca::Port::pointer(0);
-
   CCAPortInstance* pr = iter->second;
   if(pr->porttype != CCAPortInstance::Uses)
     throw CCAException("Cannot call getPort on a Provides port");
-
   pr->incrementUseCount();
   if(pr->connections.size() != 1)
     return sci::cca::Port::pointer(0); 
@@ -107,8 +105,7 @@ void CCAComponentInstance::releasePort(const std::string& name)
 
 sci::cca::TypeMap::pointer CCAComponentInstance::createTypeMap()
 {
-  cerr << "createTypeMap not done\n";
-  return sci::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(new TypeMap);
 }
 
 void CCAComponentInstance::registerUsesPort(const std::string& portName,
@@ -170,12 +167,6 @@ sci::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::st
 
 sci::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
 {
-  //
-  //if(cid.isNull())
-  //  cid=sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
-  //return cid;
-  
-  // I am not sure this is right. 
   return sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 

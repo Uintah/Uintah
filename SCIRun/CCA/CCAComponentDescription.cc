@@ -49,3 +49,13 @@ const ComponentModel* CCAComponentDescription::getModel() const
 {
   return model;
 }
+
+std::string CCAComponentDescription::getLoaderName() const
+{
+  return loaderName;
+}
+
+void CCAComponentDescription::setLoaderName(const std::string& loaderName)
+{
+  this->loaderName=loaderName;
+}

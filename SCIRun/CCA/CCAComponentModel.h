@@ -50,15 +50,15 @@ namespace SCIRun {
 					       const sci::cca::TypeMap::pointer& properties);
     virtual bool haveComponent(const std::string& type);
     virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type);
-
-    virtual std::string createComponent(const std::string& name,
-					 const std::string& type);
-						     
+					      const std::string& type,
+					      const sci::cca::TypeMap::pointer& properties);
+    
     virtual bool destroyInstance(ComponentInstance *ci);
     virtual std::string getName() const;
     virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
 				       bool);
+    int addLoader(resourceReference *rr);
+    int removeLoader(const std::string &loaderName);
 
   private:
     SCIRunFramework* framework;
@@ -68,9 +68,12 @@ namespace SCIRun {
     void destroyComponentList();
     void buildComponentList();
     void readComponentDescription(const std::string& file);
-
+    resourceReference *getLoader(std::string loaderName);
     CCAComponentModel(const CCAComponentModel&);
     CCAComponentModel& operator=(const CCAComponentModel&);
+
+    std::vector<resourceReference* > loaderList;
+
   };
 }
 
