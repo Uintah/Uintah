@@ -797,6 +797,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                            ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
                            
   SchedulerP subsched = sched->createSubScheduler();
+  subsched->setRestartable(true);
   subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
   subsched->clearMappings();
   subsched->mapDataWarehouse(Task::ParentOldDW, 0);
@@ -836,16 +837,16 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                                         press_matl,  
                                                         all_matls);
 
-  subsched->compile();      
+  subsched->compile();
                                                       
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
-   delt_vartype dt;
-   subNewDW = subsched->get_dw(3);
-   ParentOldDW->get(dt, d_sharedState->get_delt_label());
-   subNewDW->put(dt, d_sharedState->get_delt_label()); 
-   subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,patch_sub, press_matl); 
-
+  delt_vartype dt;
+  subNewDW = subsched->get_dw(3);
+  ParentOldDW->get(dt, d_sharedState->get_delt_label());
+  subNewDW->put(dt, d_sharedState->get_delt_label()); 
+  subNewDW->transferFrom(ParentNewDW,lb->press_CCLabel,patch_sub, press_matl); 
+  
   //__________________________________
   //  Iteration Loop
   int counter = 0;
@@ -876,18 +877,21 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     
     if (counter > d_iters_before_timestep_restart ){
       restart = true;
-      cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
+      if(pg->myrank() == 0)
+        cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
     if (subsched->get_dw(3)->timestepRestarted() ) {
-      cout << "\nWARNING: Solver had requested a restart\n" <<endl;
+      if(pg->myrank() == 0)
+        cout << "\nWARNING: Solver had requested a restart\n" <<endl;
       restart = true;
     }
 
     if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
-      cout << "\nWARNING: outer interation is diverging now "
-           << "restarting the timestep"
-           << " Max_RHS " << max_RHS 
-           << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
+      if(pg->myrank() == 0)
+        cout << "\nWARNING: outer interation is diverging now "
+             << "restarting the timestep"
+             << " Max_RHS " << max_RHS 
+             << " smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
       restart = true;
     }
     if(restart){
