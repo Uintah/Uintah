@@ -32,9 +32,9 @@ RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
   lb = Mlb;
   flag = Mflag;
   NGN = 1;
-  d_initialData.G = 1.0e20;
+  d_initialData.G = 1.0e200;
   ps->get("shear_modulus",d_initialData.G);
-  d_initialData.K = 1.0e20;
+  d_initialData.K = 1.0e200;
   ps->get("bulk_modulus",d_initialData.K);
 }
 
@@ -62,7 +62,7 @@ RigidMaterial::initializeCMData(const Patch* patch,
     initSharedDataForImplicit(patch, matl, new_dw);
   else {
     initSharedDataForExplicit(patch, matl, new_dw);
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.0)), 
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.0e10)), 
               lb->delTLabel);
   }
 }
@@ -111,6 +111,7 @@ RigidMaterial::computeStressTensorImplicit(const PatchSubset* patches,
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
+    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
 
@@ -171,9 +172,6 @@ void
 RigidMaterial::addParticleState(std::vector<const VarLabel*>& from,
                                 std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
 }
 
 double 

@@ -150,9 +150,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
-  if(flag->d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
-  }
+  task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
   if (flag->d_fracture) {
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
     task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
@@ -258,6 +256,7 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
                                           const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
+  Matrix3 Id, Zero(0.0); Id.Identity();
 
   constParticleVariable<double>  pMass;
   constParticleVariable<Matrix3> pDefGrad_old;
@@ -279,7 +278,8 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
     pVol_new[idx] = (pMass[idx]/rho_orig);
     pIntHeatRate_new[idx] = 0.0;
     pDefGrad_new[idx] = pDefGrad_old[idx];
-    pStress_new[idx] = Matrix3(0.0);
+    //pDefGrad_new[idx] = Id;
+    pStress_new[idx] = Zero;
   }
 }
 
@@ -350,19 +350,6 @@ ConstitutiveModel::getDamageParameter(const Patch* ,
                                       DataWarehouse* ,
                                       DataWarehouse* )
 {
-}
-
-void 
-ConstitutiveModel::addSharedParticleState(std::vector<const VarLabel*>& from,
-                                          std::vector<const VarLabel*>& to)
-{
-  from.push_back(lb->pInternalHeatRateLabel);
-  from.push_back(lb->pDeformationMeasureLabel);
-  from.push_back(lb->pStressLabel);
-
-  to.push_back(lb->pInternalHeatRateLabel_preReloc);
-  to.push_back(lb->pDeformationMeasureLabel_preReloc);
-  to.push_back(lb->pStressLabel_preReloc);
 }
 
 Vector 

@@ -82,6 +82,9 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
 
 HypoElastic::HypoElastic(const HypoElastic* cm)
 {
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
   if (flag->d_fracture)
@@ -189,10 +192,6 @@ void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   if (flag->d_fracture) {
     from.push_back(lb->pDispGradsLabel);

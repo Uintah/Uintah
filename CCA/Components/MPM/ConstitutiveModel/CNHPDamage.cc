@@ -157,10 +157,10 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>       pFailureStrain_new;
   ParticleVariable<double>       pVol_new, pIntHeatRate, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
+  ParticleVariable<Matrix3>      pDeformRate;
 
   // Local variables 
   short pgFld[27];
-  double erosion = 1.0;
   double J = 0.0, p = 0.0, IEl = 0.0, U = 0.0, W = 0.0, c_dil=0.0;
   double fTrial = 0.0, muBar = 0.0, delgamma = 0.0, sTnorm = 0.0, Jinc = 0.0;
   Matrix3 velGrad(0.0), tauDev(0.0), defGradInc(0.0);
@@ -225,6 +225,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
                            pFailedLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pFailureStrain_new, 
                            pFailureStrainLabel_preReloc,          pset);
+    new_dw->allocateAndPut(pDeformRate, 
+                           pDeformRateLabel_preReloc,             pset);
 
     // Copy failure strains to new dw
     pFailureStrain_new.copyData(pFailureStrain);
@@ -243,8 +245,9 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
         for(int k = 0; k < flag->d_8or27; k++) pgFld[k] = pgCode[idx][k];
         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
       } else {
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, erosion);
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, pErosion[idx]);
       }
+      pDeformRate[idx] = (velGrad + velGrad.Transpose())*0.5;
       
       // 1) Compute the deformation gradient increment using the time_step
       //    velocity gradient (F_n^np1 = dudx * dt + Identity)

@@ -37,6 +37,7 @@ static DebugStream dbgSig("VSSig", false);
 ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
   : ConstitutiveModel(Mlb,Mflag)
 {
+  cout << "ViscoSCRAM:Label = " << Mlb << endl;
   ps->require("PR",d_initialData.PR);
   d_initialData.CoefThermExp = 1.0e-5;
   ps->get("CoeffThermalExpansion", d_initialData.CoefThermExp);
@@ -116,6 +117,10 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
 ViscoScram::ViscoScram(const ViscoScram* cm)
 {
   
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN ;
+  d_bulk = cm->d_bulk;
   d_random = cm->d_random;
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_doTimeTemperature = cm->d_doTimeTemperature;
@@ -1030,10 +1035,6 @@ void
 ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
                              std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(pVolChangeHeatRateLabel);
   from.push_back(pViscousHeatRateLabel);
@@ -1084,7 +1085,7 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
   if(d_useModifiedEOS && rho_cur < rho_orig){
     double A = p_ref;         // MODIFIED EOS
     double n = d_bulk/p_ref;
-    double rho_rat_to_the_n = pow(rho_cur/rho_orig,n);
+    double rho_rat_to_the_n = pow(rho_cur*inv_rho_orig,n);
     pressure = A*rho_rat_to_the_n;
     dp_drho  = (d_bulk/rho_cur)*rho_rat_to_the_n;
     tmp      = dp_drho;       // speed of sound squared
