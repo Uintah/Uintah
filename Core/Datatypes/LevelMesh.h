@@ -304,8 +304,9 @@ public:
     grid_(copy.grid_), level_(copy.level_), idxLow_(copy.idxLow_),
     nx_(copy.nx_), ny_(copy.ny_), nz_(copy.nz_), min_(copy.min_),
     max_(copy.max_) {}
+  virtual void transform( Transform &t );
   virtual LevelMesh *clone(){ return scinew LevelMesh(*this); }
-  virtual ~LevelMesh() {}
+  virtual ~LevelMesh() {cerr<<"Deleting Level Mesh\n";}
 
   Node::index_type node(int i, int j, int k)
   { return Node::index_type(this, i, j, k); }
@@ -335,9 +336,12 @@ public:
   int get_nz() const { return nz_; }
   Point get_min() const { return min_; }
   Point get_max() const { return max_; }
+  // Unsafe due to non-constness of unproject.
+  Transform &get_transform() { return transform_; }
+  Transform &set_transform(const Transform &trans) { transform_ = trans; }
+  
   Vector diagonal() const { return max_ - min_; }
   virtual BBox get_bounding_box() const;
-  virtual void transform(Transform &t);
 
   //! set the mesh statistics
   void set_nx(int x) { nx_ = x; }
@@ -407,7 +411,8 @@ private:
 
   //! the object space extents of a LevelMesh
   Point min_, max_;
-
+  Transform transform_;
+  
   // returns a LevelMesh
   static Persistent *maker() { return scinew LevelMesh(); }
 };
