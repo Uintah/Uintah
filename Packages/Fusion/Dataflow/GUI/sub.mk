@@ -39,7 +39,6 @@
 SRCDIR := Packages/Fusion/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/NrrdFieldConverter.tcl \
 	$(SRCDIR)/NIMRODConverter.tcl \
 	$(SRCDIR)/VULCANConverter.tcl \
 	$(SRCDIR)/VULCANDataReader.tcl \
