@@ -51,6 +51,12 @@ TclObj::TclObj( const string &script)
 {
 } 
 
+TclObj::TclObj( const string &script, const string &id ) 
+  : id_(""), window_(""), script_(script), has_window_(false)
+{
+  set_id( id );
+} 
+
 TclObj::~TclObj()
 {
   if ( id_ != "" ) {
