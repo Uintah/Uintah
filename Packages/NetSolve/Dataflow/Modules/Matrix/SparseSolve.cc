@@ -72,13 +72,16 @@ SparseSolve::~SparseSolve(){
 }
 
 void SparseSolve::execute(){
-#if 1
+
   MatrixHandle matrix;
   matrixport = (MatrixIPort *)get_iport("Matrix");
   rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
-  if(!matrixport->get(matrix))
+  if(!matrixport->get(matrix)) {
+    msgStream_ << "The Matrix input is required, but nothing is connected."
+               << endl;    
     return;
+  }
   
   SparseRowMatrix* srm = matrix->sparse(); 
   
@@ -88,13 +91,16 @@ void SparseSolve::execute(){
   }
   
   MatrixHandle rhs;
-  if(!rhsport->get(rhs))
+  if(!rhsport->get(rhs)) {
+    msgStream_ << "The RHS input is required, but nothing is connected."
+               << endl;
     return;
+  }
 
   
 //  if (!matrix.get_rep() || !rhs.get_rep() || !rhs->getColumn()) {
   if (!matrix.get_rep() || !rhs.get_rep() || !rhs->column()) {
-    msgStream_ << "Netsolve_MatrixSolver::execute() input problems\n";
+    msgStream_ << "One or more of the inputs are NULL";
     return;
   }
   
@@ -114,37 +120,30 @@ void SparseSolve::execute(){
  
   int status = netsl ("iterative_solve_parallel()",
 		      "PETSC",
-		      srm->nrows(),    	//matrix->nnrows,
+		      srm->nrows(),    	
 		      srm->get_nnz(),
-		      srm->get_val(),    	//matrix->a
-		      srm->get_col(),	//matrix->columns,
-		      srm->get_row(),	//matrix->rows,
+		      srm->get_val(),    
+		      srm->get_col(),	
+		      srm->get_row(),	
 		      pRhs->get_data(),
 		      &tolerance,
 		      &maxit,
 		      lhs,
 		      &iterations);
   
- 
   if (status < 0) {
     netslerr(status);
     delete solution;
     return;
-
-  }
-  else {
-    msgStream_ << "NetSolve call succeeded.  Passing solution through port" << endl;
+  } else {
+    msgStream_ << "NetSolve call succeeded.  Passing solution through port" 
+	       << endl;
     solution->set_data(lhs);
-    msgStream_ << "Tolerance: " << tolerance << ", iterations = " << iterations << endl;
-    //for (int ii=0; ii<solution->nrows(); ii++){
-    //  msgStream_ << (*solution)[ii] << "\t";
-    //  if (ii%5==0)
-    //	msgStream_ << endl;
-    //}
+    msgStream_ << "Tolerance: " << tolerance << ", iterations = " 
+	       << iterations << endl;
     
     solport->send(MatrixHandle(solution));
   }
-#endif // __sgi
 }
 
 void SparseSolve::tcl_command(TCLArgs& args, void* userdata)
