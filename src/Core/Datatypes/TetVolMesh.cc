@@ -822,7 +822,7 @@ TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
   {
     const int base = node_neighbors_[idx][i]/4*4;
     for (int c = base; c < base+4; c++)
-      if (c != idx && inserted.find(cells_[c]) == inserted.end())
+      if (cells_[c] != idx && inserted.find(cells_[c]) == inserted.end())
       {
 	inserted.insert(cells_[c]);
 	array.push_back(cells_[c]);
