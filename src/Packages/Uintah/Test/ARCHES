@@ -2,10 +2,16 @@
 
 from os import symlink
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests
+from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
 
-TESTS = [   ("methane_explicit", "methane_explicit_table.ups", "", 1.1, "chem_meth"), \
-            ("methane_explicit_8patch", "methane_explicit_table_8patch.ups", "", 8, "chem_meth")
+methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
+                           "methane_explicit_table.ups", \
+                           ["<patches>[2,2,2]</patches>", \
+                            "<maxTime>10.0</maxTime>"])
+
+TESTS = [
+            ("methane_explicit_8patch", methane8patch_ups, "", 8, "chem_meth")
     	]
 
 def chemfile (test):
