@@ -60,6 +60,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quite (only print data values)\n";
+    cerr << "  -noxml,--xml-cache-off (turn off XML caching in DataArchive)\n";
     exit(1);
 }
 
@@ -145,6 +146,10 @@ int main(int argc, char** argv)
   // 0.  This shouldn't cause the program to crash.  It will spit out
   // an exception and exit gracefully.
   int material = 0;
+
+  // Some datasets run out of memory storing the XML data.  This turns
+  // off storing that data.
+  bool storeXML = true;
   
   /*
    * Parse arguments
@@ -176,6 +181,8 @@ int main(int argc, char** argv)
       output_file_name = string(argv[++i]);
     } else if(s == "-binary") {
       do_binary=true;
+    } else if(s == "-noxml" || s == "--xml-cache-off") {
+      storeXML = false;
     } else {
       usage(s, argv[0]);
     }
@@ -188,6 +195,8 @@ int main(int argc, char** argv)
 
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
+
+    if (!storeXML) archive->turnOffXMLCaching();
     
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;
