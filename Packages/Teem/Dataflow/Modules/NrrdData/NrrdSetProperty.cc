@@ -73,6 +73,12 @@ NrrdSetProperty::~NrrdSetProperty()
 
 void NrrdSetProperty::execute() {
   // Save off the defaults
+  nEntries_.reset();               // Number of entries
+  sProperty_.reset();              // Default Property
+  sType_.reset();                  // Default Type 
+  sValue_.reset();                 // Default Value 
+  iReadOnly_.reset();              // Default Read Only
+
   entries_ = nEntries_.get();                // Number of entries
   property_ = sProperty_.get();              // Default Property
   type_ = sType_.get();                      // Default Type 
@@ -276,4 +282,5 @@ void NrrdSetProperty::execute() {
     onrrd_port->send( nHandle_ );
   }
 }
+
 } // End namespace SCIRun
