@@ -164,14 +164,18 @@ private:
       bool d_adiabatic;
       int d_tableDimension;
       std::vector <std::vector <double> > table;
-      std::vector <std::string> tags;
-      int d_enthalpycount, d_mixfraccount, d_mixvarcount, d_speciescount,d_varcount, mixfrac_size;
+      int d_heatlosscount, d_mixfraccount, d_mixvarcount, d_varscount;
       int co2_index, h2o_index;
       std::vector <std::vector<double> > meanMix;
-      std::vector<double> meanVars;
-      std::vector<double> enthalpyLoss;
-      std::vector<std::string> species_list;
-      bool d_nonadiabatic_table;
+      std::vector<double> heatLoss;
+      std::vector<int> eachindepvarcount;
+      std::vector<std::string> indepvars_names;
+      std::vector<std::string> vars_names;
+      int d_indepvarscount;
+      int Hl_index, F_index, Fvar_index;
+      int T_index, Rho_index, Cp_index, Enthalpy_index, Hs_index;
+      double d_H_fuel, d_H_air;
+      bool d_adiab_enth_inputs;
 }; // end class StaticMixingTable
 
 } // end namespace Uintah
