@@ -162,7 +162,8 @@ void
     *((PropertyManager *) nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (int i=0; i<nin->dim, i<nout->dim; i++) {
+  for (int i=0; i<nin->dim && i<nout->dim; i++)
+  {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
