@@ -142,8 +142,23 @@ SingleProcessorScheduler::performTask(TaskRecord* task,
       if(!dw->isFinalized()){
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 map<TaskProduct, TaskRecord*>::const_iterator aciter = d_allcomps.find(p);
-	 if(!aciter->second->task->isCompleted())
-	    performTask(aciter->second, pc);
+	 if(!aciter->second->task->isCompleted()){
+	   if(aciter->second->visited){
+	     ostrstream error;
+	     error << "Cycle detected in task graph: trying to do\n\t"
+		   << task->task->getName() << " on patch "
+		   << task->task->getPatch()->getID()
+		   << "\nbut already did:\n\t"
+		   << aciter->second->task->getName() << " on patch "
+		   << aciter->second->task->getPatch()->getID()
+		   << ",\nwhile looking for variable: \n\t" 
+		   << dep->d_var->getName() << ", material " 
+		   << dep->d_matlIndex << ", patch " << dep->d_patch->getID()
+		   << "\n";
+	     throw InternalError(error.str());
+	   }
+	   performTask(aciter->second, pc);
+	 }
       }
    }
 
@@ -279,6 +294,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.2  2000/06/16 22:59:39  guilkey
+// Expanded "cycle detected" print statement
+//
 // Revision 1.1  2000/06/15 23:14:07  sparker
 // Cleaned up scheduler code
 // Renamed BrainDamagedScheduler to SingleProcessorScheduler
