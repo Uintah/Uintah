@@ -42,14 +42,14 @@ GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
 {
   counts=0;
   cells=0;
-  min=new float[ndata+3];
-  max=new float[ndata+3];
+  min=new float[ndata];
+  max=new float[ndata];
   // if minimum data copy it over
   // otherwise compute it manually
   //  if(inmin){
 #if 0
   if(false){
-    for(int i=0;i<ndata+3;i++){
+    for(int i=0;i<ndata;i++){
       min[i]=inmin[i];
       max[i]=inmax[i];
     }
@@ -57,28 +57,30 @@ GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
 #endif
     cerr << "Recomputing min/max for GridSpheres\n";
     float* p=spheres;
-    for(int j = 0; j < ndata+3; j++){
+    for(int j = 0; j < ndata; j++){
       min[j]=MAXFLOAT;
       max[j]=-MAXFLOAT;
     }
     for(int i = 0; i < nspheres; i++){
-      for(int j = 0; j < ndata+3; j++){
+      for(int j = 0; j < ndata; j++){
 	min[j]=Min(min[j], p[j]);
 	max[j]=Max(max[j], p[j]);
       }
-      p+=ndata+3;
+      p+=ndata;
     }
 #if 0
   }
 #endif
   iradius=1./radius;
-  this->matls=new Material*[nmatls];
-  for(int i=0;i<nmatls;i++)
-    this->matls[i]=matls[i];
-  if (var_names != 0) {
-    this->var_names=new string[ndata+3];
-    for(int i=0;i<(ndata+3);i++)
-      this->var_names[i]=var_names[i];
+  if (nmatls>0) {
+    this->matls=new Material*[nmatls];
+    for(int i=0;i<nmatls;i++)
+      this->matls[i]=matls[i];
+    if (var_names != 0) {
+      this->var_names=new string[ndata];
+      for(int i=0;i<(ndata);i++)
+	this->var_names[i]=var_names[i];
+    }
   }
 }
 
@@ -239,7 +241,7 @@ void GridSpheres::preprocess(double, int&, int&)
       }
     }
     //cerr << '\n';
-    p+=3+ndata;
+    p+=ndata;
   }
   
   cerr << "2/6 Counting cells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
@@ -275,11 +277,11 @@ void GridSpheres::preprocess(double, int&, int&)
 	  int aidx=map[idx++];
 	  int cur=current[aidx]++;
 	  int pos=counts[aidx*2]+cur;
-	  cells[pos]=i*(ndata+3);
+	  cells[pos]=i*(ndata);
 	}
       }
     }
-    p+=3+ndata;
+    p+=ndata;
   }
   cerr << "4/6 Filling grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
   delete[] map;
@@ -314,7 +316,7 @@ void GridSpheres::preprocess(double, int&, int&)
     macrocells=new MCell*[depth+1];
     macrocells[0]=0;
     int size=cellsize*cellsize*cellsize;
-    int n=ndata+3;
+    int n=ndata;
     for(int d=depth;d>=1;d--){
       MCell* p=macrocells[d]=new MCell[size];
       float* mm=new float[size*n*2];
@@ -343,7 +345,7 @@ void GridSpheres::preprocess(double, int&, int&)
 void GridSpheres::calc_mcell(int depth, int startidx, MCell& mcell)
 {
   mcell.nspheres=0;
-  int n=ndata+3;
+  int n=ndata;
   mcell.min=new float[n*2];
   mcell.max=mcell.min+n;
   for(int i=0;i<n;i++){
@@ -502,7 +504,7 @@ void GridSpheres::intersect(Ray& ray, HitInfo& hit,
   dtdz=diz_dz*diag.z()/nz/dir.z();
   for(;;){
     int j=0;
-    int n=ndata+3;
+    int n=ndata;
     if(mcell->nspheres==0)
       j=n;
     for(;j<n;j++){
@@ -836,7 +838,7 @@ void GridSpheres::intersect_print(Ray& ray, HitInfo& hit,
   double z=min.z()+diag.z()*double(iz+ddz)/totalcells;
   next_z=(z-orig.z())/dir.z();
   dtdz=diz_dz*diag.z()/totalcells/dir.z();
-  int n=ndata+3;
+  int n=ndata;
   for(;;){
     //cerr << "ix=" << ix << ", iy=" << iy << ", iz=" << iz;
     int aidx=map_idx(ix, iy, iz, depth);
@@ -1028,7 +1030,7 @@ void GridSpheres::intersect(Ray& ray, HitInfo& hit,
   double z=min.z()+diag.z()*double(iz+ddz)/totalcells;
   next_z=(z-orig.z())/dir.z();
   dtdz=diz_dz*diag.z()/totalcells/dir.z();
-  int n=ndata+3;
+  int n=ndata;
   for(;;){
     int aidx=map_idx(ix, iy, iz, depth);
     int nsph=counts[aidx*2+1];
@@ -1137,7 +1139,7 @@ void GridSpheres::intersect(Ray& ray, HitInfo& hit,
 	  }
 	}
       }
-      p+=3+ndata;
+      p+=ndata;
     }
     if(hit.min_t != old_min){
       cerr << "OLD: " << old_min << '\n';
@@ -1192,7 +1194,7 @@ void GridSpheres::isect(int depth, double t,
 			DepthStats* st, PerProcessorContext* ppc)
 {
   //cerr << "Starting depth " << depth << '\n';
-  int n=ndata+3;
+  int n=ndata;
   if(depth==0){
     for(;;){
 #if 1
@@ -1400,6 +1402,11 @@ void GridSpheres::shade(Color& result, const Ray& ray,
 			double atten, const Color& accumcolor,
 			Context* cx)
 {
+  if (nmatls<=0) {
+    result = Color(1,0,1);
+    return;
+  }
+  
   int cell=*(int*)hit.scratchpad;
   int colordata=dpy->colordata;
   float* p=spheres+cell+colordata;
