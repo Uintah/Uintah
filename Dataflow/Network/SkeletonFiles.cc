@@ -225,7 +225,7 @@ char category_submk_skeleton[] = \
 "SRCS     += \\\n"
 "#[INSERT NEW CODE FILE HERE]\n"
 "\n"
-"PSELIBS := Core/Datatypes Dataflow/Ports \\\n"
+"PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \\\n"
 "        Core/Persistent Core/Containers Core/Util \\\n"
 "        Core/Exceptions Core/Thread Core/TclInterface \\\n"
 "        Core/Geom Core/Datatypes Core/Geometry \\\n"
