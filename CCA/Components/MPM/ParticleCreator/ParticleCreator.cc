@@ -320,7 +320,7 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   //old_dw->get(o_external_force,lb->pExternalForceLabel,delset);
   new_dw->get(o_volume,lb->pVolumeDeformedLabel,delset);
   //old_dw->get(o_volume,lb->pVolumeLabel,delset);
-  new_dw->get(o_erosion,lb->pErosionLabel,delset);
+  new_dw->get(o_erosion,lb->pErosionLabel_preReloc,delset);
   if (d_8or27 == 27) 
     old_dw->get(o_size,lb->pSizeLabel,delset);
   if (d_useLoadCurves) 
