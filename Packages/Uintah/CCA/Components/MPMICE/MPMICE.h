@@ -118,12 +118,12 @@ public:
                                     const MaterialSubset*,
 				        const MaterialSet*);
 
-  void scheduleComputeMassBurnRate(SchedulerP&, 
-                                  const PatchSet*,
-                                  const MaterialSubset*,
-                                  const MaterialSubset*,
-                                  const MaterialSubset*,
-				      const MaterialSet*);
+  void scheduleHEChemistry(SchedulerP&, 
+                           const PatchSet*,
+                           const MaterialSubset*,
+                           const MaterialSubset*,
+                           const MaterialSubset*,
+			      const MaterialSet*);
   
   void scheduleInterpolateMassBurnFractionToNC( SchedulerP&, const PatchSet*,
 						const MaterialSet*);
@@ -181,15 +181,15 @@ public:
 
   void interpolatePAndGradP(const ProcessorGroup*,
                             const PatchSubset* patch,
-			    const MaterialSubset* matls,
+			       const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
                             
-  void computeMassBurnRate(const ProcessorGroup*,
-			   const PatchSubset* patch,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+  void HEChemistry(const ProcessorGroup*,
+		     const PatchSubset* patch,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw,
+		     DataWarehouse* new_dw);
   
   void interpolateMassBurnFractionToNC(const ProcessorGroup*,
 		                       const PatchSubset* patch,
