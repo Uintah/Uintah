@@ -44,13 +44,18 @@ public:
   virtual void animate(double t, bool& changed);
 
 
-  inline void Child(int i) { if (i<objs.size()) child = i; /*neg means none*/ };
+  inline void Child(int i) { if (i<objs.size()) child = i;/*neg means none*/ };
   inline void nextChild() { 
     autoswitch = false; 
     child++;
     if (child == objs.size())
       child = 0;
   };
+
+  // Returns the currently active child object.
+  Object * getCurrentChild();
+
+
   inline void Autoswitch(bool b) {autoswitch = b;};
   inline int Autoswitch() {if (autoswitch) return 1; else return 0;};
   inline void toggleAutoswitch() {autoswitch = !autoswitch;};
