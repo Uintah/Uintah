@@ -715,10 +715,27 @@ class BioFEMApp {
 	    save_class_variables $fileid
 
 	    close $fileid
+
+	    global NetworkChanged
+	    set NetworkChanged 0
 	}
     }
 
 
+    #########################
+    ### save_class_variables
+    #########################
+    # Save out all of the class variables 
+    method save_class_variables { fileid} {
+	puts $fileid "\n# Class Variables\n"
+	foreach v [info variable] {
+	    set var [get_class_variable_name $v]
+	    if {$var != "this" } {
+		puts $fileid "set $var \{[set $var]\}"
+	    }
+	}
+	puts $fileid "set loading 1"
+    }
     
     
     method load_session {} {	
@@ -744,10 +761,13 @@ class BioFEMApp {
 	    set indicate 0
 	    set cycle 0
 	    set IsVAttached 1
+	    set executing_modules 0
 	    
 	    # configure all tabs by calling all configure functions
-	    $vis_frame_tab1 view $c_left_tab
-	    $vis_frame_tab2 view $c_left_tab
+	    if {$c_left_tab != ""} {
+		$vis_frame_tab1 view $c_left_tab
+		$vis_frame_tab2 view $c_left_tab
+	    }
 
 	    change_indicator_labels "Press Execute to Load Data..."
 	}	
