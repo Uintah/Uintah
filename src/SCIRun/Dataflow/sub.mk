@@ -23,3 +23,5 @@ SRCS     += $(SRCDIR)/SCIRunComponentModel.cc \
 	$(SRCDIR)/SCIRunComponentDescription.cc \
 	$(SRCDIR)/SCIRunComponentInstance.cc
 
+$(SRCDIR)/SCIRunComponentInstance.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/SCIRunComponentModel.o: Core/CCA/spec/cca_sidl.h
