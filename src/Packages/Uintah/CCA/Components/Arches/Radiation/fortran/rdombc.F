@@ -22,22 +22,22 @@
                   i = ist -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
                      if (lprobtwo)then
-                     tg(i,j,k) = 0.0
+                     tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0  
                      tg(i,j,k) = 293.0d0
- 
+
                  END IF
                endif
                if (xplus) then
                   i = iend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
                      if (lprobtwo)then
-                     tg(i,j,k) = 0.0
+                     tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
                      tg(i,j,k) = 293.0d0
@@ -54,9 +54,9 @@
                   j = jst -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
                      if (lprobtwo)then
-                     tg(i,j,k) = 0.0
+                     tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
                      tg(i,j,k) = 293.0d0
@@ -67,9 +67,9 @@
                   j = jend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
                      if (lprobtwo)then
-                     tg(i,j,k) = 0.0
+                     tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0
                      tg(i,j,k) = 293.0d0
@@ -86,9 +86,9 @@
                   k = kst -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
                      if (lprobtwo)then
-                     tg(i,j,k) = 0.0
+                     tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0 
                      tg(i,j,k) = 293.0d0
@@ -99,9 +99,9 @@
                   k = kend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
 
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
                      if (lprobtwo)then
-                     tg(i,j,k) = 0.0
+                     tg(i,j,k) = 0.0d0
                      end if
                      ABSKG(I,J,K) = 1.0d0 
                      tg(i,j,k) = 293.0d0

@@ -52,8 +52,10 @@ C     SAROFIM,J.H.T, vol.91, #1, p.100-104,1969,(spectral)
          RIK = 2.46
       END IF
 
-      ABSKP= (36.0d0*3.1416*RIN*RIK*FV/LAMBDA)
-     &/((RIN*RIN-RIK*RIK+2.0D0)**2+(2.0D0*RIN*RIK)**2)
+c      ABSKP= (36.0d0*3.1416*RIN*RIK*FV/LAMBDA)
+c     &/((RIN*RIN-RIK*RIK+2.0D0)**2+(2.0D0*RIN*RIK)**2)
+
+      ABSKP = 7.0d0*FV/LAMBDA
 
       RETURN
       END
