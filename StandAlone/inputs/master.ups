@@ -313,7 +313,7 @@
 
 	    <contact>
 	       <type>bonded</type>
-	       <parameter>.2</parameter>
+	       <max_normal_traction>.2</max_normal_traction>
 	     <contact>
 	</MPM>
 
