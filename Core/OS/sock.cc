@@ -31,7 +31,7 @@ using namespace std;
 				// todo: errno in windows?
 int errno;
 #else
-extern int errno;
+#include <errno.h>
 #endif
 
 //----------------------------------------------------------------------
