@@ -13,24 +13,27 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : UnuDhisto.tcl
+#    File   : UnuGamma.tcl
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_UnuDhisto ""}
+catch {rename Teem_Unu_UnuGamma ""}
 
-itcl_class Teem_Unu_UnuDhisto {
+itcl_class Teem_Unu_UnuGamma {
     inherit Module
     constructor {config} {
-        set name UnuDhisto
+        set name UnuGamma
         set_defaults
     }
     method set_defaults {} {
-        global $this-height
-        set $this-height 0
+        global $this-axis
+        set $this-axis 0
 
-        global $this-log
-        set $this-log 1
+        global $this-min
+        set $this-min 1.0
+
+        global $this-max
+        set $this-max 1.0
     }
 
     method ui {} {
@@ -47,12 +50,11 @@ itcl_class Teem_Unu_UnuDhisto {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.height -labeltext "height:" -textvariable $this-height
-        pack $w.f.options.height -side top -expand yes -fill x
-
-        checkbutton $w.f.options.log -text "Show log-scaled histogram:" -variable $this-log
-        pack $w.f.options.log -side top -expand yes -fill x
-
+        iwidgets::entryfield $w.f.options.axis -labeltext "Axis:" -textvariable $this-axis
+        pack $w.f.options.axis -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.min -labeltext "Min:" -textvariable $this-min
+        pack $w.f.options.min -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.max -labeltext "Max:" -textvariable $this-max
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -60,3 +62,4 @@ itcl_class Teem_Unu_UnuDhisto {
 	pack $w.f -expand 1 -fill x
     }
 }
+

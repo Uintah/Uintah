@@ -61,7 +61,12 @@ SRCS := \
 	$(SRCDIR)/UnuCmedian.tcl\
 	$(SRCDIR)/UnuConvert.tcl\
 	$(SRCDIR)/UnuCrop.tcl\
+	$(SRCDIR)/UnuDhisto.tcl\
 	$(SRCDIR)/UnuFlip.tcl\
+	$(SRCDIR)/UnuGamma.tcl\
+	$(SRCDIR)/UnuHeq.tcl\
+	$(SRCDIR)/UnuHistax.tcl\
+	$(SRCDIR)/UnuHisto.tcl\
 	$(SRCDIR)/UnuInset.tcl\
 	$(SRCDIR)/UnuJoin.tcl\
 	$(SRCDIR)/UnuMake.tcl\
