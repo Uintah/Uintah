@@ -56,7 +56,7 @@ MeshTet::get_bounding_box() const
     Point p;
     get_point(p, *ni);
     result.extend(p);
-    ni++;
+    ++ni;
   }
   return result;
 #endif
