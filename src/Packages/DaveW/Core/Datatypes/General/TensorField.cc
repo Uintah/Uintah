@@ -10,12 +10,14 @@
 #include <DaveW/Datatypes/General/TensorField.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 
 namespace DaveW {
 namespace Datatypes {
+    using namespace SCICore::Math;
 
 static Persistent* make_TensorField() {
     return scinew TensorField<double>(0,0,0);
@@ -214,7 +216,7 @@ void TensorField<DATA>::io(Piostream& stream)
     stream.begin_class("TensorField", TENSORFIELD_VERSION);
     TensorFieldBase::io(stream);
     if (m_tensorsGood) {
-	Pio(stream, m_tensor_field);
+	SCICore::Containers::Pio(stream, m_tensor_field);
     }
     stream.end_class();
 }
@@ -224,6 +226,9 @@ void TensorField<DATA>::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/09/01 16:45:50  sparker
+// namespace updates to get tensorfield to compile/link
+//
 // Revision 1.1  1999/09/01 05:27:36  dmw
 // more DaveW datatypes...
 //
