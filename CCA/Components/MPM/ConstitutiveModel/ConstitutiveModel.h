@@ -12,7 +12,8 @@
 
 #define MAX_BASIS 27
 
-
+#define FRACTURE
+#undef FRACTURE
 
 namespace Uintah {
 
@@ -133,6 +134,24 @@ WARNING
 				const MPMMaterial* matl,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
+
+#ifdef FRACTURE
+    virtual void ConvertJToK(const PatchSubset* patches,
+                                    const MPMMaterial* matl,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+    virtual void addComputesAndRequiresConvertJToK(Task* task,
+                                    const MPMMaterial* matl,
+                                    const PatchSet* patches) const;
+
+    virtual void ConvertJToKWithErosion(const PatchSubset* patches,
+                                    const MPMMaterial* matl,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+    virtual void addComputesAndRequiresConvertJToKWithErosion(Task* task,
+                                    const MPMMaterial* matl,
+                                    const PatchSet* patches) const;
+#endif
 
   protected:
 
