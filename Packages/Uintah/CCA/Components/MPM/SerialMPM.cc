@@ -79,8 +79,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
 
-   cerr << "In SerialMPM::problemSetup . . ." << endl;
-
    //Search for the MaterialProperties block and then get the MPM section
 
    ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
