@@ -70,47 +70,47 @@ namespace Uintah {
   private:
                          
     template<class T> 
-      void qAverageFlux(const bool useCompatibleFluxes,
-                        const CCVariable<T>& q_CC,
-                        const CCVariable<double>& mass_CC,
-                        const Patch* patch,
-			   CCVariable<facedata<T> >& q_OAFS,
-			   StaticArray<CCVariable<T> >& q_OAFE,
-			   StaticArray<CCVariable<T> >& q_OAFC,
-                        const CCVariable<T>& grad_x,
-                        const CCVariable<T>& grad_y,
-                        const CCVariable<T>& grad_z);
-                                 
+    void qAverageFlux(const bool useCompatibleFluxes,
+                      const CCVariable<T>& q_CC,
+                      const CCVariable<double>& mass_CC,
+                      const Patch* patch,
+                      CCVariable<facedata<T> >& q_OAFS,
+                      SCIRun::StaticArray<CCVariable<T> >& q_OAFE,
+                      SCIRun::StaticArray<CCVariable<T> >& q_OAFC,
+                      const CCVariable<T>& grad_x,
+                      const CCVariable<T>& grad_y,
+                      const CCVariable<T>& grad_z);
+    
     template <class T, typename F> 
-      void advect(  CCVariable<facedata<T> >& q_OAFS,
-                    StaticArray<CCVariable<T> >& q_OAFE,
-		      StaticArray<CCVariable<T> >& q_OAFC,
-                    const Patch* patch,
-                    const CCVariable<T>& q_CC,
-                    CCVariable<T>& q_advected,
-                    SFCXVariable<double>& q_XFC,
-                    SFCYVariable<double>& q_YFC,
-                    SFCZVariable<double>& q_ZFC,
-                    F save_q_FC);   // passed in function
-                    
+    void advect(  CCVariable<facedata<T> >& q_OAFS,
+                  SCIRun::StaticArray<CCVariable<T> >& q_OAFE,
+                  SCIRun::StaticArray<CCVariable<T> >& q_OAFC,
+                  const Patch* patch,
+                  const CCVariable<T>& q_CC,
+                  CCVariable<T>& q_advected,
+                  SFCXVariable<double>& q_XFC,
+                  SFCYVariable<double>& q_YFC,
+                  SFCZVariable<double>& q_ZFC,
+                  F save_q_FC);   // passed in function
+    
     template<class T>
-      void compute_q_FC(CellIterator iter, 
-                	   IntVector adj_offset,
-                	   const int face,
-                        const CCVariable<double>& q_CC,
-                	   CCVariable<facedata<double> >& q_OAFS,
-                        StaticArray<CCVariable<double> >& q_OAFE,
-			   StaticArray<CCVariable<double> >& q_OAFC,
-                	   T& q_FC);
-			
-      void compute_q_FC_PlusFaces(const CCVariable<double>& q_CC,
-                                  CCVariable<facedata<double> >& q_OAFS,
-                                  StaticArray<CCVariable<double> >& q_OAFE,
-				      StaticArray<CCVariable<double> >& q_OAFC,
-                        	      const Patch* patch,
-                        	      SFCXVariable<double>& q_XFC,
-                        	      SFCYVariable<double>& q_YFC,
-                        	      SFCZVariable<double>& q_ZFC);
+    void compute_q_FC(CellIterator iter, 
+                      IntVector adj_offset,
+                      const int face,
+                      const CCVariable<double>& q_CC,
+                      CCVariable<facedata<double> >& q_OAFS,
+                      SCIRun::StaticArray<CCVariable<double> >& q_OAFE,
+                      SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
+                      T& q_FC);
+    
+    void compute_q_FC_PlusFaces(const CCVariable<double>& q_CC,
+                                CCVariable<facedata<double> >& q_OAFS,
+                                SCIRun::StaticArray<CCVariable<double> >& q_OAFE,
+                                SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
+                                const Patch* patch,
+                                SFCXVariable<double>& q_XFC,
+                                SFCYVariable<double>& q_YFC,
+                                SFCZVariable<double>& q_ZFC);
   };
 }
 
