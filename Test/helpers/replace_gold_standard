@@ -9,7 +9,7 @@ if [ $# -ne 3 -o ! -d $gold_standard_dir/$testname -o ! -d $replacement_dir/$tes
   exit 1
 fi
 
-echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname?"
+echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to conitnue.) "
 read yesno
 
 if [ $yesno == "y" -o $yesno == "yes" ]; then
