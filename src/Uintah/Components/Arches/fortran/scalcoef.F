@@ -358,12 +358,20 @@ C-----------------------------------------------------------------------
                IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
                IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
                IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
-               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
-               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
-               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
-               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
-               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
-               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
+c === double precision stuff for aix ==               
+               AEC = -0.5*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
+               AWC = 0.5*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
+               ANC = -0.5*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
+               ASC = 0.5*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
+               ATC = -0.5*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
+               ABC = 0.5*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
+c === original code ===
+c               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
+c               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
+c               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
+c               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
+c               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
+c               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS DIFFERENCING SCHEMES
 C----------------------------------------------------------------------
@@ -384,18 +392,32 @@ c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
                   AB(I,J,K) = DB+CB*0.5
 c                  AC(I,J,K) = 0.0
                ELSE IF (L2UP) THEN
-                  AE(I,J,K) = DE*(1.0-MAX(0.0,SIGN(1.0,COEFE)))
-     &                 + MAX(0.0,COEFE) + MAX(0.0,-CE)
-                  AW(I,J,K) = DW*(1.0-MAX(0.0,SIGN(1.0,COEFW)))
-     &                 + MAX(0.0,COEFW) + MAX(0.0,CW)
-                  AN(I,J,K) = DN*(1.0-MAX(0.0,SIGN(1.0,COEFN)))
-     &                 + MAX(0.0,COEFN) + MAX(0.0,-CN)
-                  AS(I,J,K) = DS*(1.0-MAX(0.0,SIGN(1.0,COEFS)))
-     &                 + MAX(0.0,COEFS) + MAX(0.0,CS)
-                  AT(I,J,K) = DT*(1.0-MAX(0.0,SIGN(1.0,COEFT)))
-     &                 + MAX(0.0,COEFT) + MAX(0.0,-CT)
-                  AB(I,J,K) = DB*(1.0-MAX(0.0,SIGN(1.0,COEFB)))
-     &                 + MAX(0.0,COEFB) + MAX(0.0,CB)
+c === double precision stuff for aix                  
+                  AE(I,J,K) = DE*(1.0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
+     &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)
+                  AW(I,J,K) = DW*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFW)))
+     &                 + dMAX1(0.0D0,COEFW) + dMAX1(0.0D0,CW)
+                  AN(I,J,K) = DN*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFN)))
+     &                 + dMAX1(0.0D0,COEFN) + dMAX1(0.0D0,-CN)
+                  AS(I,J,K) = DS*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFS)))
+     &                 + dMAX1(0.0D0,COEFS) + dMAX1(0.0D0,CS)
+                  AT(I,J,K) = DT*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFT)))
+     &                 + dMAX1(0.0D0,COEFT) + dMAX1(0.0D0,-CT)
+                  AB(I,J,K) = DB*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFB)))
+     &                 + dMAX1(0.0D0,COEFB) + dMAX1(0.0D0,CB)
+C === original code ===
+c                  AE(I,J,K) = DE*(1.0-MAX(0.0,SIGN(1.0,COEFE)))
+c     &                 + MAX(0.0,COEFE) + MAX(0.0,-CE)
+c                  AW(I,J,K) = DW*(1.0-MAX(0.0,SIGN(1.0,COEFW)))
+c     &                 + MAX(0.0,COEFW) + MAX(0.0,CW)
+c                  AN(I,J,K) = DN*(1.0-MAX(0.0,SIGN(1.0,COEFN)))
+c     &                 + MAX(0.0,COEFN) + MAX(0.0,-CN)
+c                  AS(I,J,K) = DS*(1.0-MAX(0.0,SIGN(1.0,COEFS)))
+c     &                 + MAX(0.0,COEFS) + MAX(0.0,CS)
+c                  AT(I,J,K) = DT*(1.0-MAX(0.0,SIGN(1.0,COEFT)))
+c     &                 + MAX(0.0,COEFT) + MAX(0.0,-CT)
+c                  AB(I,J,K) = DB*(1.0-MAX(0.0,SIGN(1.0,COEFB)))
+c     &                 + MAX(0.0,COEFB) + MAX(0.0,CB)
 c                  AC(I,J,K) = 0.0
                ELSE
                   AE(I,J,K) = AEC + DE
@@ -416,6 +438,9 @@ c                  AC(I,J,K) = 0.0
 
 c
 c $Log$
+c Revision 1.5  2000/09/28 22:16:47  bigler
+c Changed certain functions to explicity be double precision functions.
+c
 c Revision 1.4  2000/08/19 16:36:40  rawat
 c fixed some bugs in scalarcoef calculations
 c
