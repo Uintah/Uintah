@@ -33,7 +33,8 @@ PSELIBS := \
 	Core/Datatypes    \
 	Core/Geom         \
 	Core/Util         \
-	Core/Geometry
+	Core/Geometry \
+	Core/GeomInterface
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

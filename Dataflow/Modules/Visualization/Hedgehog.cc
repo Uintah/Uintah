@@ -99,7 +99,7 @@ class Hedgehog : public Module {
   //////////////////////
   //
   // widget_moved -  
-  virtual void widget_moved(int last);
+  virtual void widget_moved(bool last);
   GuiDouble length_scale;
   GuiDouble width_scale;
   GuiDouble head_length;
@@ -157,7 +157,7 @@ public:
 static string module_name("Hedgehog");
 static string widget_name("Hedgehog Widget");
 
-  DECLARE_MAKER(Hedgehog);
+  DECLARE_MAKER(Hedgehog)
 
 Hedgehog::Hedgehog(GuiContext* ctx)
 : Module("Hedgehog", ctx, Filter, "Visualization", "Uintah"),
@@ -418,7 +418,7 @@ void Hedgehog::execute()
   grid_id = ogeom->addObj(arrows, module_name);
 }
 
-void Hedgehog::widget_moved(int last)
+void Hedgehog::widget_moved(bool last)
 {
     if(last && !abort_flag)
 	{
@@ -471,7 +471,7 @@ bool
 Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
 {
   const string field_type = vfld->get_type_name(0);
-  const string type = vfld->get_type_name(1);
+  //const string type = vfld->get_type_name(1);
   if( field_type == "LatVolField"){
     // use virtual field interpolation
     VectorFieldInterface *vfi;
@@ -486,8 +486,8 @@ Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
 bool  
 Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
 {
-  const string field_type = sfld->get_type_name(0);
-  const string type = sfld->get_type_name(1);
+  //const string field_type = sfld->get_type_name(0);
+  //const string type = sfld->get_type_name(1);
   if( sfld->get_type_name(0) == "LatVolField" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;

@@ -32,7 +32,7 @@ public:
   AnimatedStreams(GuiContext* ctx);
 
   virtual ~AnimatedStreams();
-  virtual void widget_moved(int last);    
+  virtual void widget_moved(bool last);    
   virtual void execute();
   void tcl_command( GuiArgs&, void* );
 

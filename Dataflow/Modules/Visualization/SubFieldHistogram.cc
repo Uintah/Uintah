@@ -81,7 +81,7 @@ using SCIRun::default_allocator;
 
 static string control_name("Control Widget");
 			 
-  DECLARE_MAKER(SubFieldHistogram);
+  DECLARE_MAKER(SubFieldHistogram)
 
   SubFieldHistogram::SubFieldHistogram(GuiContext* ctx)
   : Module("SubFieldHistogram", ctx, Filter, "Visualization", "Uintah"),
@@ -97,7 +97,7 @@ SubFieldHistogram::~SubFieldHistogram()
 
 }
 
-void SubFieldHistogram::widget_moved(int last)
+void SubFieldHistogram::widget_moved(bool last)
 {
     if(last && !abort_flag)
     {

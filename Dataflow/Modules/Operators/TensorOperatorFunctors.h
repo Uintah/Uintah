@@ -12,7 +12,6 @@
 /* Functors used by TensorFieldOperator and TensorParticlesOperator */
 
 namespace Uintah {
-using Uintah::Matrix3;
 
 struct TensorElementExtractionOp
 {

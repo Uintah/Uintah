@@ -57,7 +57,7 @@ using std::ostringstream;
 
 using namespace SCIRun;
 
-  DECLARE_MAKER(VectorFieldExtractor);
+  DECLARE_MAKER(VectorFieldExtractor)
 
 //--------------------------------------------------------------- 
 VectorFieldExtractor::VectorFieldExtractor(GuiContext* ctx) 
@@ -182,12 +182,10 @@ void VectorFieldExtractor::execute()
 	  vfout->send(vfd);
 	  return;
 	}
-	break;
       default:
 	cerr<<"NCVariable<?>  Unknown vector type\n";
 	return;
       }
-      break;
     case TypeDescription::CCVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::Vector:
@@ -206,12 +204,10 @@ void VectorFieldExtractor::execute()
 	  vfout->send(vfd);
 	  return;
 	}
-	break;
       default:
 	cerr<<"CCVariable<?> Unknown vector type\n";
 	return;
       }
-      break;
     default:
       cerr<<"Not a VectorField\n";
       return;

@@ -106,7 +106,7 @@ class NodeHedgehog : public Module {
   // GROUP:  Widgets:
   //////////////////////
   // widget_moved -  
-  virtual void widget_moved(int last);
+  virtual void widget_moved(bool last);
 
   // GROUP: Private Function:
 
@@ -312,7 +312,7 @@ private:
   
 static string module_name("NodeHedgehog");
 static string widget_name("NodeHedgehog Widget");
-  DECLARE_MAKER(NodeHedgehog);
+  DECLARE_MAKER(NodeHedgehog)
 
   NodeHedgehog::NodeHedgehog(GuiContext* ctx)
 : Module("NodeHedgehog", ctx, Filter, "Visualization", "Uintah"),
@@ -714,7 +714,7 @@ void NodeHedgehog::execute()
   cout << "NodeHedgehog::execute:end\n";
 }
 
-void NodeHedgehog::widget_moved(int last)
+void NodeHedgehog::widget_moved(bool last)
 {
   if(last && !abort_flag) {
     abort_flag=1;
