@@ -26291,7 +26291,7 @@ EOF
        echo "   paths:      $LIB_DIR_AIR"
        echo "   lib name:   ell"
        echo "   function:   main"
-       echo "   other-libs: $AIR_LIB_DIR_FLAG $NRRD_LIB_FLAG $BIFF_LIB_DIR_FLAG $AIR_LIB_FLAG"
+       echo "   other-libs: $AIR_LIB_DIR_FLAG $NRRD_LIB_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG"
        echo "   c++ lib:    "
        echo "   optional:   optional"
     fi
@@ -26375,7 +26375,7 @@ echo "configure:26368: checking for main in -lell" >&5
     ##########################
     ## OTHER-LIBRARIES parameter
 
-    _SCI_OTHER_LIBS_="$AIR_LIB_DIR_FLAG $NRRD_LIB_FLAG $BIFF_LIB_DIR_FLAG $AIR_LIB_FLAG"
+    _SCI_OTHER_LIBS_="$AIR_LIB_DIR_FLAG $NRRD_LIB_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG"
 
     if test -z "main"; then
 
