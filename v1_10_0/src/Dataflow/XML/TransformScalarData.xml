@@ -29,10 +29,38 @@
     <summary>Perform a specified functional transform on all of the
   data in a scalar field.</summary>
     <description>
-      <p>
-	Do the specified transformation to each data element in the
-	scalar field.
-      </p>
+
+	<p>Do the specified transformation to each data element in the
+	scalar field.  The transformation is specified in the GUI in
+	one of two ways, either as a function or as a min-max fit.</p>
+
+	<p>The function is specified using SCIRun's simple function
+	parser.  'x' is the variable used for each element in turn.
+	There are a number of mathematical functions available for
+	use.  They are:</p>
+
+	<p>+: Add two numbers.  Example: 4+3 = 7</p>
+	<p>-: Subtract one number from another.  Example: 4-3 = 1</p>
+	<p>*: Multiply two numbers.  Example: 4*3 = 12</p>
+        <p>/: Divide one number from another.  Example: 12/3 = 4</p>
+	<p>sin: Sine of a number in radians.  Example: sin(x)</p>
+	<p>cos: Cosine of a number in radians.  Example: cos(x)</p>
+	<p>sqrt: Square root of a number.  Example: sqrt(4) = 2</p>
+	<p>sqr: Square of a number.  Example: sqr(2) = 4, sqrt(sqr(x))
+	= x</p>
+	<p>ln: Natural logarithm of a number.  Example: ln(x)</p>
+	<p>exp: e raised to the nth power. Example: exp(ln(x)) = x</p>
+	<p>log: Log base 10 of a number.  Example: log(100) = 2</p>
+	<p>abs: Absolute value of a number.  Example: abs(-3) = 3</p>
+        <p>pow: One number raised to the power of another.  Example:
+	pow(3, 2) = 9</p>
+	<p>random: Return a uniform random number between 0 and 1.
+	Example: random()</p>
+
+	<p>In the case of a Min-Max fit, the data is linearly scaled
+        and transformed to fit within the range of the new min and max
+        values.</p>
+
     </description>
   </overview>
   <io>
