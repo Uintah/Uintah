@@ -988,7 +988,7 @@ C
             CALL CKCOMP (ELEM, ENAME, MM, M)
             IF (M .GT. 0) THEN
                KNCF(M,K) = IELEM
-               WTM(K) = WTM(K) + AWT(M)*FLOAT(IELEM)
+               WTM(K) = WTM(K) + AWT(M)*dble(IELEM)
             ELSE
                WRITE (LOUT, 100) ELEM,KNAME(K)(:10)
                KERR = .TRUE.
@@ -2377,7 +2377,7 @@ C
 C
 C     charge balance
 C
-      SBAL = 0
+      SBAL = 0.D0
       DO 50 N = 1, MXSPEC
          IF (KSPEC(N) .NE. 0)
      1   SBAL = SBAL + RCOEF(N)*KCHRG(KSPEC(N))
@@ -2387,7 +2387,7 @@ C
 C     element balance
 C
       DO 100 M = 1, MM
-         SMBAL = 0
+         SMBAL = 0D0
          DO 80 N = 1, MXSPEC
             IF (KSPEC(N) .NE. 0)
      1      SMBAL = SMBAL + RCOEF(N)*KNCF(M,KSPEC(N))
