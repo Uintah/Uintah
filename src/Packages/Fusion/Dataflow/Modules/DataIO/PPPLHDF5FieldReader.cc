@@ -135,6 +135,10 @@ void PPPLHDF5FieldReader::execute() {
 
   if( new_filename         != old_filename_ || 
       new_filemodification != old_filemodification_) {
+
+    old_filemodification_ = new_filemodification;
+    old_filename_         = new_filename;
+
     updateFile = true;
   }
 
@@ -179,13 +183,30 @@ void PPPLHDF5FieldReader::execute() {
     updateAll = true;
   }
 
+  if( idim_ != iDim_.get()  ||
+      jdim_ != jDim_.get()  ||
+      kdim_ != kDim_.get() ) {
+ 
+    idim_ = iDim_.get();
+    jdim_ = jDim_.get();
+    kdim_ = kDim_.get();
+
+    updateFile = true;
+   }
+
+  if( istart_ + icount_ * istride_ >= idim_ ||
+      jstart_ + jcount_ * jstride_ >= jdim_ ||
+      kstart_ + kcount_ * kstride_ >= kdim_ ) {
+    
+    error( "Data selection exceeds bounds." );
+    error( "Decrease the start or count or increase the stride." );
+    return;
+  }
+
 
   if( updateFile || updateAll )
   {
     remark( "Reading the file " +  new_filename );
-
-    old_filemodification_ = new_filemodification;
-    old_filename_         = new_filename;
 
     remark( "Reading the grid." );
 
@@ -430,8 +451,12 @@ float* PPPLHDF5FieldReader::readData( string filename ) {
   /* Open the file using default properties. */
   hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
 
+  char dataset[16];
+
+  sprintf( dataset, "node_data[%d]", dataset_ );
+  
   /* Open the node data group in the file. */
-  hid_t g_id = H5Gopen(file_id, "node_data[0]");
+  hid_t g_id = H5Gopen(file_id, dataset);
 
   /* Open the coordinate dataset in the file. */
   hid_t ds_id = H5Dopen(g_id, "values"  );
