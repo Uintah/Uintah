@@ -12,7 +12,8 @@ SRCS     += \
 	$(SRCDIR)/Interpolator.cc \
 	$(SRCDIR)/ExamplesLabel.cc
 
-PSELIBS := 
+PSELIBS :=  Packages/Uintah/Core/Grid Packages/Uintah/Core/ProblemSpec \
+	Core/Exceptions Packages/Uintah/CCA/Ports
 
 LIBS := 
 

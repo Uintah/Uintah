@@ -31,7 +31,7 @@ Poisson3::~Poisson3()
   delete lb_;
 }
 
-void Poisson3::problemSetup(const ProblemSpecP& params, GridP& grid,
+void Poisson3::problemSetup(const ProblemSpecP& params, GridP&,
 			 SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
@@ -72,9 +72,9 @@ void Poisson3::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 }
 
 void Poisson3::computeStableTimestep(const ProcessorGroup* pg,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw, DataWarehouse* new_dw)
+				  const PatchSubset*,
+				  const MaterialSubset*,
+				  DataWarehouse*, DataWarehouse* new_dw)
 {
   if(pg->myrank() == 0){
     sum_vartype residual;
@@ -87,7 +87,7 @@ void Poisson3::computeStableTimestep(const ProcessorGroup* pg,
 void Poisson3::initialize(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw)
+		       DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -170,7 +170,7 @@ void Poisson3::scheduleRefine(LevelP& coarseLevel, LevelP& fineLevel, SchedulerP
 }
 
 
-void Poisson3::refine(const ProcessorGroup* pg,
+void Poisson3::refine(const ProcessorGroup*,
                       const PatchSubset* finePatches, 
 		      const MaterialSubset* matls,
                       DataWarehouse* coarseDW,
@@ -211,7 +211,7 @@ void Poisson3::scheduleCoarsen(LevelP& coarseLevel, LevelP& fineLevel, Scheduler
 }
 
 
-void Poisson3::coarsen(const ProcessorGroup* pg,
+void Poisson3::coarsen(const ProcessorGroup*,
 	               const PatchSubset* finePatches, 
 		       const MaterialSubset* matls,
                        DataWarehouse* fineDW, 
@@ -237,7 +237,7 @@ void Poisson3::coarsen(const ProcessorGroup* pg,
       IntVector l;
       coarsePatch->findClosestNode(finePatch->nodePosition(fl), l);
 
-      IntVector fh = finePatch->getNodeHighIndex(); 
+      //IntVector fh = finePatch->getNodeHighIndex(); 
       IntVector h;
       coarsePatch->findClosestNode(finePatch->nodePosition(fl), h);
 

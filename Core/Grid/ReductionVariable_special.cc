@@ -5,7 +5,9 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+#ifdef __sgi
 template<>
+#endif
 void
 ReductionVariable<double, Reductions::Min<double> >
    ::getMPIBuffer(void*& buf, int& count,
@@ -17,7 +19,9 @@ ReductionVariable<double, Reductions::Min<double> >
    op = MPI_MIN;
 }
 
+#ifdef __sgi
 template<>
+#endif
 void
 ReductionVariable<double, Reductions::Sum<double> >
    ::getMPIBuffer(void*& buf, int& count,
@@ -29,7 +33,9 @@ ReductionVariable<double, Reductions::Sum<double> >
    op = MPI_SUM;
 }
 
+#ifdef __sgi
 template<>
+#endif
 void
 ReductionVariable<bool, Reductions::And<bool> >
    ::getMPIBuffer(void*& buf, int& count,
@@ -41,7 +47,9 @@ ReductionVariable<bool, Reductions::And<bool> >
    op = MPI_LAND;
 }
 
+#ifdef __sgi
 template<>
+#endif
 void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::getMPIBuffer(void*& buf, int& count,
@@ -53,7 +61,9 @@ ReductionVariable<long64, Reductions::Sum<long64> >
    op = MPI_SUM;
 }
 
+#ifdef __sgi
 template<>
+#endif
 void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::getMPIBuffer(void*& buf, int& count,

@@ -132,7 +132,7 @@ _______________________________________________________________________ */
 void    ICE::printVector(const Patch* patch, int include_EC,
         const string&    message1,       /* message1                     */
         const string&    message2,       /* message to user              */
-        int   component,                 /*  x = 0,y = 1, z = 1          */
+	int   /*component*/,                 /*  x = 0,y = 1, z = 1          */
         const CCVariable<Vector>& q_CC)
 {
 

@@ -62,8 +62,8 @@ public:
 		     BoundaryCondition* bc,
 		     TurbulenceModel* turbModel, 
 		     PhysicalConstants* physConst,
-		     const bool calcReactscalar,
-		     const bool calcEnthalpy,
+		     bool calcReactscalar,
+		     bool calcEnthalpy,
 		     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:

@@ -108,7 +108,7 @@ NullScheduler::scheduleParticleRelocation(const LevelP&,
 					  const vector<vector<const VarLabel*> >&,
 					  const VarLabel*,
 					  const vector<vector<const VarLabel*> >&,
-					  const VarLabel* particleIDLabel,
+					  const VarLabel* /*particleIDLabel*/,
 					  const MaterialSet*)
 {
 }

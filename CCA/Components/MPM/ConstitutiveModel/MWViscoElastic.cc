@@ -258,8 +258,8 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void MWViscoElastic::addInitialComputesAndRequires(Task* task,
-                                                   const MPMMaterial* matl,
+void MWViscoElastic::addInitialComputesAndRequires(Task*,
+                                                   const MPMMaterial*,
                                                    const PatchSet* ) const
 {
 
@@ -309,13 +309,13 @@ double MWViscoElastic::computeRhoMicroCM(double pressure,
 #endif
 }
 
-void MWViscoElastic::computePressEOSCM(const double rho_cur, double& pressure,
-                                    const double p_ref,
-                                    double& dp_drho,      double& tmp,
-                                    const MPMMaterial* matl)
+void MWViscoElastic::computePressEOSCM(double rho_cur, double& pressure,
+				       double p_ref,
+				       double& dp_drho,      double& tmp,
+				       const MPMMaterial* matl)
 {
 
-  double G = d_initialData.G;
+  //double G = d_initialData.G;
   double bulk = d_initialData.K;
   double rho_orig = matl->getInitialDensity();
 

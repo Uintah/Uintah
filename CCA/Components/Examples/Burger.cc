@@ -27,7 +27,7 @@ Burger::~Burger()
   delete lb_;
 }
 
-void Burger::problemSetup(const ProblemSpecP& params, GridP& grid,
+void Burger::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
 			 SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
@@ -65,18 +65,18 @@ void Burger::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
-void Burger::computeStableTimestep(const ProcessorGroup* pg,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw, DataWarehouse* new_dw)
+void Burger::computeStableTimestep(const ProcessorGroup*,
+				  const PatchSubset*,
+				  const MaterialSubset*,
+				  DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
 }
 
 void Burger::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw)
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

@@ -4,7 +4,7 @@
 
 using namespace Uintah;
 
-Interpolator::Interpolator(int factor)
+Interpolator::Interpolator(int /*factor*/)
 { 
     factor_ = 2; 
 
@@ -15,7 +15,7 @@ Interpolator::Interpolator(int factor)
 }
 
 
-double Interpolator::refine(const NCVariable<double>& variable, IntVector index, Interpolator::PointType type)
+double Interpolator::refine(const NCVariable<double>& variable, IntVector index, Interpolator::PointType /*type*/)
 {
     double result;
     if(index[0] & 1) {
@@ -70,7 +70,7 @@ double Interpolator::refine(const NCVariable<double>& variable, IntVector index,
     return result;
 }
 
-double Interpolator::coarsen(const NCVariable<double>& variable, IntVector index, Interpolator::PointType type)
+double Interpolator::coarsen(const NCVariable<double>& variable, IntVector index, Interpolator::PointType /*type*/)
 {
     IntVector fineIndex = coarseToFineIndex(index);
 

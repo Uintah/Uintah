@@ -20,7 +20,12 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#ifdef __GNUG__
 #include <multimap.h>
+#else
+#include <map>
+#include <hash_map>
+#endif
 #include <sstream>
 #include <unistd.h>
 
