@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="ViewSlices" category="Render">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+	The ViewSlices module displays orthogonal slices of a 3D Nrrd in a 2D OpenGL window.
+    </summary>
+    <description>
+      <developer>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Nrrd1</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>Nrrd1</componentname>
+      </port>
+      <port>
+	<name>Nrrd2</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>Nrrd2</componentname>
+      </port>
+      <port>
+	<name>Nrrd1ColorMap</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::ColorMap</datatype>
+	<componentname>GenStandardColorMap</componentname>
+      </port>
+      <port>
+	<name>Nrrd2ColorMap</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::ColorMap</datatype>
+	<componentname>GenStandardColorMap</componentname>
+      </port>
+      <port>
+	<name>InputColorMap2</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::ColorMap2</datatype>
+      </port>
+      <port>
+	<name>NrrdGradient</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+	<componentname>NrrdGradient</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Geometry</name>
+	<description>
+	  <p>
+             A scene graph is sent out through this port expecting to be 
+             rendered by the downstream port.
+          </p>
+	</description>
+	<datatype>SCIRun::Geometry</datatype>
+	<componentname>Viewer</componentname>
+      </port>
+      <port>
+	<name>ColorMap2</name>
+	<datatype>SCIRun::ColorMap2</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+    <img>../Modules/Visualization/doc/ShowFieldGUI.jpg</img>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+	<p>
+        </p>
+      </description>
+      <step>
+	<p>select Spheres</p>
+      </step>
+    </plan>
+  </testing>
+  <nets>
+  </nets>
+</component>
