@@ -623,6 +623,9 @@ int Element::orient()
 	int tmp=n[0];
 	n[0]=n[1];
 	n[1]=tmp;
+	tmp=faces[0];
+	faces[0]=faces[1];
+	faces[1]=tmp;
 	sgn=-sgn;
     }
     if(sgn < 1.e-6){
@@ -765,6 +768,9 @@ MaterialHandle ptmatl(scinew Material(Color(0,0,0), Color(1,1,0), Color(.6,.6,.6
 MaterialHandle inmatl(ptmatl);
 MaterialHandle remmatl(scinew Material(Color(0,0,0), Color(1,0,0), Color(.6, .6, .6), 10));
 MaterialHandle facematl(scinew Material(Color(0,0,0), Color(1,0,1), Color(.6, .6, .6), 10));
+MaterialHandle circummatl(scinew Material(Color(0,0,0), Color(0, 1, 1), Color(.6, .6, .6), 10));
+MaterialHandle lamatl(scinew Material(Color(0,0,0), Color(0, 0, 1), Color(.6, .6, .6), 10));
+
 
 void Mesh::draw_element(Element* e, GeomGroup* group)
 {
@@ -834,6 +840,9 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 
     Array1<int> to_remove;
     to_remove.add(in_element);
+//Debug only...
+    Array1<int> lookat;
+    lookat.add(in_element);
 
 #if 0
     Element* ee=elems[in_element];
@@ -941,12 +950,13 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 		// Process this neighbor
 		if(!skip){
 		    // See if this element is deleted by this point
+		    lookat.add(neighbor);
 		    Element* ne=elems[neighbor];
 		    Point cen;
 		    double rad2;
 		    ne->get_sphere2(cen, rad2);
-		    rad2*=0.999999;
 		    double ndist2=(p-cen).length2();
+		    cerr << "Element[" << neighbor << "], ndist2=" << ndist2 << ", rad2=" << rad2 << endl;
 		    if(ndist2 < rad2){
 			// This one must go...
 #ifdef PRINTOUT
@@ -981,6 +991,7 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	}
 	//debug only... delete elems[idx];
 	removed[i]=elems[idx];
+	cerr << "removed[" << i << "]=" << idx << endl;
 	elems[idx]=0;
     }
 #if 0
@@ -1145,11 +1156,35 @@ int Mesh::insert_delaunay(int node, GeometryOPort* ogeom)
 	    GeomMaterial* pt_matl=scinew GeomMaterial(pt, ptmatl);
 	    ids.add(ogeom->addObj(pt_matl, "delaunay - insert point"));
 
-	    GeomGroup* re=new GeomGroup;
-	    GeomMaterial* rematl=new GeomMaterial(re, remmatl);
-	    for(int i=0;i<removed.size();i++)
+	    for(int i=0;i<removed.size();i++){
+		GeomGroup* re=new GeomGroup;
+		GeomMaterial* rematl=new GeomMaterial(re, remmatl);
+		ids.add(ogeom->addObj(rematl, "delaunay - remove element "+to_string(i)+")"));
 		draw_element(removed[i], re);
-	    ids.add(ogeom->addObj(rematl, "delaunay - remove elements"));
+		Point cen;
+		double rad2;
+		removed[i]->get_sphere2(cen, rad2);
+		GeomSphere* cs=new GeomSphere(cen, Sqrt(rad2));
+		GeomMaterial* csmatl=new GeomMaterial(cs, circummatl);
+		ids.add(ogeom->addObj(csmatl, clString("delaunay - circumsphere (element "+to_string(i)+")")));
+	    }
+	    for(i=0;i<lookat.size();i++){
+		int idx=lookat[i];
+		int addit=1;
+		for(int ii=0;ii<to_remove.size();ii++){
+		    if(to_remove[ii]==idx){
+			addit=0;
+			break;
+		    }
+		}
+		if(addit && elems[idx]){
+		    cerr << "Adding lookat " << idx << endl;
+		    GeomGroup* re=new GeomGroup;
+		    GeomMaterial* rematl=new GeomMaterial(re, lamatl);
+		    draw_element(idx, re);
+		    ids.add(ogeom->addObj(rematl, "delaunay - not removed element "+to_string(idx)+")"));
+		}
+	    }
 	    
 	    cerr << "Degenerate element (node=" << node << ")\n";
 	    return 0;
@@ -1380,3 +1415,26 @@ template class HashTableIter<Face, int>;
 template int Hash(const Face&, int);
 
 #endif
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/Array1.cc>
+
+static void _dummy_(Piostream& p1, Array1<Element*>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _dummy_(Piostream& p1, Array1<NodeHandle>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _dummy_(Piostream& p1, Array1<NodeVersion1>& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif
+

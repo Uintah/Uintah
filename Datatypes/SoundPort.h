@@ -97,6 +97,9 @@ public:
 
     virtual void reset();
     virtual void finish();
+
+    virtual int have_data();
+    virtual void resend(Connection*);
 };
 
 inline double SoundIPort::next_sample()

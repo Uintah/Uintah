@@ -229,6 +229,16 @@ void SoundOPort::put_sample(double sl, double sr)
     put_sample(sr);
 }
 
+int SoundOPort::have_data()
+{
+    return 0;
+}
+
+void SoundOPort::resend(Connection*)
+{
+    cerr << "SoundOPort can't resend and shouldn't be asked to!\n";
+}
+
 #ifdef __GNUG__
 
 #include <Multitask/Mailbox.cc>
@@ -236,3 +246,4 @@ void SoundOPort::put_sample(double sl, double sr)
 template class Mailbox<SoundComm*>;
 
 #endif
+

@@ -28,7 +28,7 @@ public:
     ColumnMatrix(int);
     ~ColumnMatrix();
     ColumnMatrix(const ColumnMatrix&);
-    virtual ColumnMatrix* ColumnMatrix::clone();
+    virtual ColumnMatrix* clone() const;
     ColumnMatrix& operator=(const ColumnMatrix&);
     int nrows();
     double& operator[](int);

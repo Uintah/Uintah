@@ -57,6 +57,7 @@ public:
 template<class T>
 class SimpleOPort : public OPort {
     int sent_something;
+    T handle;
 public:
     SimpleOPort(Module*, const clString& name, int protocol=SimpleIPort<T>::Atomic);
     virtual ~SimpleOPort();
@@ -65,6 +66,9 @@ public:
     virtual void finish();
 
     void send(const T&);
+
+    virtual int have_data();
+    virtual void resend(Connection* conn);
 };
 
 #endif /* SCI_project_SimplePort_h */

@@ -585,3 +585,16 @@ template class HashTable<int, int>;
 template class HashKey<int, int>;
 
 #endif
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/Array1.cc>
+
+static void _dummy_(Piostream& p1, Array1<TSElement*>& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif
+

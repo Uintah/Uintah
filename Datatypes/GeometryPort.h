@@ -68,6 +68,9 @@ public:
     void flushViewsAndWait();
 
     int busy();
+
+    virtual int have_data();
+    virtual void resend(Connection*);
 };
 
 #endif /* SCI_project_GeometryPort_h */

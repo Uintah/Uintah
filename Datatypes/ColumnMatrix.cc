@@ -34,7 +34,7 @@ ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
 	data[i]=c.data[i];
 }
 
-ColumnMatrix* ColumnMatrix::clone()
+ColumnMatrix* ColumnMatrix::clone() const
 {
     return scinew ColumnMatrix(*this);
 }

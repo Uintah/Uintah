@@ -68,6 +68,7 @@ void SimpleIPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::reset()
 {
+    handle=0;
     sent_something=0;
 }
 
@@ -88,9 +89,11 @@ void SimpleOPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::send(const T& data)
 {
+    handle=data;
     if(nconnections() == 0)
 	return;
     if(sent_something){
+	// Tell the scheduler that we are going to do this...
 	cerr << "The data got sent twice - ignoring second one...\n";
 	return;
     }
@@ -121,6 +124,30 @@ int SimpleIPort<T>::get(T& data)
        turn_off();
        return 0;
    }
+}
+
+template<class T>
+int SimpleOPort<T>::have_data()
+{
+    if(handle.get_rep())
+	return 1;
+    else
+	return 0;
+}
+
+template<class T>
+void SimpleOPort<T>::resend(Connection* conn)
+{
+    turn_on();
+    cerr << "conn=" << (void*)conn << endl;
+    for(int i=0;i<nconnections();i++){
+	if(connections[i] == conn){
+	    cerr << "Sending...\n";
+	    SimplePortComm<T>* msg=scinew SimplePortComm<T>(handle);
+	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+	}
+    }
+    turn_off();
 }
 
 template<class T>

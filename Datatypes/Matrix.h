@@ -24,7 +24,8 @@ typedef LockingHandle<Matrix> MatrixHandle;
 
 class MatrixUpdater {
 public:
-    virtual void update(int, double, double, double)=0;
+    virtual void update(int, double, double, double,
+			const ColumnMatrix& solution)=0;
 };
 
 class Matrix : public Datatype {

@@ -187,6 +187,16 @@ void GeometryOPort::attach(Connection* c)
     turn_off();
 }
 
+int GeometryOPort::have_data()
+{
+    return 0;
+}
+
+void GeometryOPort::resend(Connection*)
+{
+    cerr << "GeometryOPort can't resend and shouldn't need to!\n";
+}
+
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 : MessageBase(MessageTypes::GeometryInit), reply(reply)
 {

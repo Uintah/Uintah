@@ -108,3 +108,17 @@ template class Array1<double>;
 template void Pio(Piostream&, Array1<double>&);
 
 #endif
+
+
+#ifdef __sgi
+#if _MIPS_SZPTR == 64
+#include <Classlib/Array1.cc>
+
+static void _dummy_(Piostream& p1, Array1<double>& p2)
+{
+    Pio(p1, p2);
+}
+
+#endif
+#endif
+

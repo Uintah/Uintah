@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Datatypes
-
 OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  ColumnMatrix.o  \
 	ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
@@ -33,11 +31,3 @@ SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

@@ -67,7 +67,7 @@ int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error,
     double err=2*max_error;
     double orig_err=err;
     if(updater)
-	updater->update(niter, orig_err, err, max_error);
+	updater->update(niter, orig_err, err, max_error, lhs);
     while(niter < toomany && err > max_error){
 	niter++;
 	// Ugly preconditioning...
@@ -101,7 +101,7 @@ int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error,
 	}
 	err=R.vector_norm()/bnorm;
 	if(updater && niter%10 == 0)
-	    updater->update(niter, orig_err, err, max_error);
+	    updater->update(niter, orig_err, err, max_error, lhs);
     }
     return niter;
 }
