@@ -49,9 +49,8 @@ class Worker : public Runnable {
   bool useAddSubBarrier_;
   int  oldNumWorkers_;
   
-public:
   int rendering_scene;
-
+public:
   Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	 int ncounters, int c0, int c1);
   virtual ~Worker();
@@ -61,20 +60,18 @@ public:
   // If stop is true, this thread will stop running.
   void syncForNumThreadChange( int oldNumWorkers, bool stop = false );
 
-  void traceRay(Color& result, Ray& ray, int depth,
-		double atten, const Color& accum,
-		Context* cx);
-  void traceRay(Color& result, Ray& ray, int depth,
-		double atten, const Color& accum,
-		Context* cx, double &dist);
-  void traceRay(Color& result, Ray& ray, int depth,
-		double atten, const Color& accum,
-		Context* cx, Object* obj);
-  void traceRay(Color& result, Ray& ray, int depth,
-		double atten, const Color& accum,
-		Context* cx, Object* obj, double &dist);
-  void traceRay(Color& result, Ray& ray,
-		Point& hitpos, Object*& hitobj);
+  static void traceRay(Color& result, Ray& ray, int depth,
+                       double atten, const Color& accum,
+                       Context* cx);
+  static void traceRay(Color& result, Ray& ray, int depth,
+                       double atten, const Color& accum,
+                       Context* cx, double &dist);
+  static void traceRay(Color& result, Ray& ray, int depth,
+                       double atten, const Color& accum,
+                       Context* cx, Object* obj);
+  static void traceRay(Color& result, Ray& ray, int depth,
+                       double atten, const Color& accum,
+                       Context* cx, Object* obj, double &dist);
   Stats* get_stats(int i);
   inline Counters* get_counters() {
     return counters;

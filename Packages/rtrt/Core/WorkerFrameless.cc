@@ -329,7 +329,7 @@
       double xoffset=scene->xoffset;
       double yoffset=scene->yoffset;
 
-      Context cx(this, scene, st);
+      Context cx(scene, st, ppc, rendering_scene, num);
 
       int synch_change=0;
 
