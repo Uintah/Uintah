@@ -2,7 +2,7 @@
 
 namespace Uintah {
 namespace MPM {
-
+ 
 double
 Fracture::
 d_crackDensity;
