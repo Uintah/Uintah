@@ -11,6 +11,7 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/Box.h>
 
 
 using Uintah::Interface::ProblemSpecP;
@@ -18,6 +19,7 @@ using Uintah::Interface::ProblemSpec;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::IntVector;
+using Uintah::Grid::Box;
 
 namespace SCICore {
     namespace Geometry {
@@ -35,7 +37,7 @@ class GeometryObject {
  public:
 
   GeometryObject();
-  ~GeometryObject();
+  virtual ~GeometryObject();
   
   void setObjInfo(int n, Point low, Point hi, Vector dx,IntVector ppc);
   Point getObjInfoBoundsLower();
@@ -55,6 +57,10 @@ class GeometryObject {
   void surface(Point part_pos, int surf[7], int &np);
   void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
 
+  virtual void add(GeometryObject* go);
+  virtual Box getBoundingBox() const;
+  virtual bool inside(const Point &p) const;
+
  private:
 
   int d_num_pieces;
@@ -73,6 +79,13 @@ class GeometryObject {
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.7  2000/04/19 21:31:08  jas
+// Revamping of the way objects are defined.  The different geometry object
+// subtypes only do a few simple things such as testing whether a point
+// falls inside the object and also gets the bounding box for the object.
+// The constructive solid geometry objects:union,difference, and intersection
+// have the same simple operations.
+//
 // Revision 1.6  2000/04/19 05:26:07  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
