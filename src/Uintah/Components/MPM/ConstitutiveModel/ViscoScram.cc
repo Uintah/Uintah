@@ -216,9 +216,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  //  FIX  Need thermal properties
   double Cp0 = matl->getSpecificHeat();
-  cout << "Cp0 = " << Cp0 << endl;
+  //  cout << "Cp0 = " << Cp0 << endl;
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -250,9 +249,9 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       // Sum of old deviatoric stresses
 
-      Matrix3 DevStress =statedata[idx].DevStress[1]+statedata[idx].DevStress[2]
-	                +statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
-			+statedata[idx].DevStress[5];
+      Matrix3 DevStress =statedata[idx].DevStress[0]+statedata[idx].DevStress[1]
+	                +statedata[idx].DevStress[2]+statedata[idx].DevStress[3]
+			+statedata[idx].DevStress[4];
 
       // old total stress norm
 
@@ -414,9 +413,9 @@ void ViscoScram::computeStressTensor(const Patch* patch,
       statedata[idx].CrackRadius +=
 		onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
 
-      DevStress = statedata[idx].DevStress[1]+statedata[idx].DevStress[2]
-	        + statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
-		+ statedata[idx].DevStress[5];
+      DevStress = statedata[idx].DevStress[0]+statedata[idx].DevStress[1]
+	        + statedata[idx].DevStress[2]+statedata[idx].DevStress[3]
+		+ statedata[idx].DevStress[4];
 
       c = statedata[idx].CrackRadius;
       double coa3   = (c*c*c)/(a*a*a);
@@ -608,6 +607,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.17  2000/12/01 00:05:34  bard
+// Fixed indexing error in maxwell (deviatoric) stresses.
+//
 // Revision 1.16  2000/11/30 22:59:20  guilkey
 // Got rid of the if(! in front of all of the patch->findCellAnd...
 // since this is no longer needed.
