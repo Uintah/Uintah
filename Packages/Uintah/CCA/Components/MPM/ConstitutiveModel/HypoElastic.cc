@@ -36,6 +36,10 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
+#ifdef FRACTURE
+  ps->get("KIc",d_initialData.KIc);
+  ps->get("KIIc",d_initialData.KIIc);
+#endif
   d_8or27 = n8or27;
   if(d_8or27==8){
     NGN=1;
@@ -94,7 +98,7 @@ void HypoElastic::allocateCMDataAddRequires(Task* task,
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
 #ifdef FRACTURE
-  task->requires(Task::OldDW,lb->pDispGradsLabel.Ghost::None);
+  task->requires(Task::OldDW,lb->pDispGradsLabel,Ghost::None);
   task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,Ghost::None);
 #endif
 
@@ -144,15 +148,12 @@ void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[lb->pStressLabel]=pstress.clone();
 
 #ifdef FRACTURE
-  (*newState)[lb->lb->pDispGradsLabel]=pdispGrads.clone();
+  (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
   (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
 #endif
 
 
 }
-
-
-
 
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
@@ -267,6 +268,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
     old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
 
+    ParticleVariable<Matrix3> pvelGrads;
+    new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
+
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
     new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
@@ -309,6 +313,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i+1,j+1)+=gvel[i] * d_S[k][j] * oodx[j];
+#ifdef FRACTURE
+             pvelGrads[idx](i+1,j+1)  = velGrad(i+1,j+1);
+#endif
 	    }
 	  }
       }
@@ -454,7 +461,71 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
   SIF=Vector(KI,KII,0.);
 }
 
+// Determine crack-propagating direction by maximum hoop stress criterion
+// for FRACTURE
+double
+HypoElastic::GetPropagationDirection(const double& KI,
+                                    const double& KII)
+{
+  double sinTheta,cosTheta;
+
+  if(fabs(KI)==0.0 || fabs(KII/KI)>50.0) { // pure mode II
+    cosTheta = 1./3.;
+    sinTheta = (KII>=0.) ? -0.942809 : 0.942809;
+  }
+  else {  // pure mode I or mixed mode
+    double KI2=KI*KI;
+    double KII2=KII*KII;
+    cosTheta=(3*KII2 + KI*sqrt(KI2+8.*KII2))/(KI2+9*KII2);
+    if(KII>=0.)
+      sinTheta=-fabs(KII*(3*cosTheta-1.)/KI);
+    else
+      sinTheta= fabs(KII*(3*cosTheta-1.)/KI);
+  }
+
+  double theta=asin(sinTheta);
+  if(fabs(theta)<=3.141592655/2) {
+    return theta;
+  }
+  else {
+    cout << "*** Crack propagation angle larger than PI/2."
+         << " Program terminated." << endl;
+    exit(1);
+  }
+}
 	 
+// Detect if crack propagates by maximum stress criterion
+// for FRACTURE
+short
+HypoElastic::CrackSegmentPropagates(const double& KI,
+                                  const double& KII)
+{
+  double KIc  = d_initialData.KIc;
+  double cosTheta,sinTheta,cosTheta2,Kq;
+
+  // The direction of the maximum hoop stress
+  if(fabs(KI)==0.0 || fabs(KII/KI)>50.0) { // pure mode II
+    cosTheta = 1./3.;
+    sinTheta = (KII>=0.) ? -0.942809 : 0.942809;
+  }
+  else {  // Pure mode I or mixed mode
+    double KI2=KI*KI;
+    double KII2=KII*KII;
+    cosTheta=(3*KII2 + KI*sqrt(KI2+8.*KII2))/(KI2+9*KII2);
+    if(KII>=0.)
+      sinTheta=-fabs(KII*(3*cosTheta-1.)/KI);
+    else
+      sinTheta= fabs(KII*(3*cosTheta-1.)/KI);
+  }
+
+  // Equivalent stress intensity factor
+  cosTheta2=sqrt((1.+cosTheta)/2.);
+  Kq=KI*pow(cosTheta2,3)-1.5*KII*cosTheta2*sinTheta;
+
+  if(Kq>=KIc) return 1;
+  else        return 0;
+}
+
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet* ) const
@@ -479,7 +550,9 @@ void HypoElastic::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDispGradsLabel,         matlset,Ghost::None);
   task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,Ghost::None);
+
   task->computes(lb->pDispGradsLabel_preReloc,             matlset);
+  task->computes(lb->pVelGradsLabel,                       matlset);
   task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
 #endif
 
