@@ -202,6 +202,16 @@ private:
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw);
   //////////
+  // This task is to be used for setting particle external force
+  // and external heat rate.  I'm creating a separate task so that
+  // user defined schemes for setting these can be implemented without
+  // editing the core routines
+  void applyExternalLoads(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* ,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw);
+  //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
 				       const PatchSubset* patches,
@@ -247,6 +257,9 @@ private:
                                          const PatchSet* patches,
                                          const MaterialSet* matls);
                                                  
+  void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
+		                               const MaterialSet*);
+
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
 
