@@ -147,8 +147,6 @@ static double   last_frame = SCIRun::Time::currentSeconds();
 static int      frame = 0;
 static int      rendering_scene = 0;
 static MusilRNG rng;
-static bool     midchanged = true;
-static bool     last_changed = true;
 static Object * obj;
 
 //////////////////////////////////////////////////////////////////
@@ -175,8 +173,8 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   drawstats[1]=new Stats(1000);
   priv = new DpyPrivate;
 
-  priv->waitDisplay = new Mutex( "wait for display" );
-  priv->waitDisplay->lock();
+  //priv->waitDisplay = new Mutex( "wait for display" );
+  //priv->waitDisplay->lock();
 
   priv->followPath = false;
 
@@ -244,6 +242,7 @@ Dpy::run()
   ambientMode_ = scene->ambient_mode;
   obj=scene->get_object();
 
+  priv->showing_scene=1;
   priv->animate=true;
   priv->maxdepth=scene->maxdepth;
   priv->base_threshold=0.005;
@@ -253,8 +252,6 @@ Dpy::run()
 
   priv->exposed=true;
   priv->stereo=false;
-
-  barrier->wait(nworkers+1); // Sync with the render threads...
 
   for(;;)
     {
@@ -292,6 +289,8 @@ Dpy::renderFrame() {
 
   frame++;
     
+  barrier->wait(nworkers+1);
+
   //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
 
   if( doJitter_ ) { scene->rtrt_engine->do_jitter = true; }
@@ -301,20 +300,20 @@ Dpy::renderFrame() {
   //bool changed=false;
   bool changed=true;
 
-  Camera* cam1=scene->get_camera(showing_scene);
-  Camera* cam2=scene->get_camera(rendering_scene);
+  Camera* cam1=scene->get_camera(rendering_scene);
 
-  if( *cam2 != *guiCam_ ){
-    *cam2 = *guiCam_;
+  if( *cam1 != *guiCam_ ){
+    //cout << "updating cam " << cam1 << "\n";
+    *cam1 = *guiCam_;
   }
 
-  if(*cam1 != *cam2){
-    *cam1=*cam2;
-    changed=true;
+  if(animate && scene->animate) {
+    Array1<Object*> & objects = scene->animateObjects_;
+    for( int num = 0; num < objects.size(); num++ )
+      obj->animate(SCIRun::Time::currentSeconds(), changed);
   }
 
-  if(animate && scene->animate)
-    obj->animate(SCIRun::Time::currentSeconds(), changed);
+
   if(scene->shadow_mode != shadowMode_){
     scene->shadow_mode = shadowMode_;
     changed=true;
@@ -363,9 +362,11 @@ Dpy::renderFrame() {
   //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,0));
 
   if( showLights_ && !lightsShowing_ ){
+    cout << "show lights\n";
     scene->renderLights( true );
     lightsShowing_ = true;
   } else if( !showLights_ && lightsShowing_ ){
+    cout << "don't show lights\n";
     scene->renderLights( false );
     lightsShowing_ = false;
   }
@@ -389,12 +390,13 @@ Dpy::renderFrame() {
 
   barrier->wait(nworkers+1);
 
-  // sync all the workers.  scene->get_image(rendering_scene) should now
-  // be completed
-  barrier->wait(nworkers+1);
-
-  Image * displayedImage = scene->get_image(rendering_scene);
+  Image * displayedImage = scene->get_image(showing_scene);
   // Tell Gui thread to display the image showImage_
+
+  if( showImage_ != NULL ){
+    cout << "Warning, gui has not displayed previous frame!\n";
+  }
+
   showImage_ = displayedImage;
 
   // dump the frame and quit for now
@@ -407,7 +409,7 @@ Dpy::renderFrame() {
   counter--;
 
   // Wait until the Gui (main) thread has displayed this image...
-  priv->waitDisplay->lock();
+  //priv->waitDisplay->lock();
 
   if( displayedImage->get_xres() != priv->xres ||
       displayedImage->get_yres() != priv->yres ) {
@@ -445,13 +447,10 @@ Dpy::renderFrame() {
     }
   }
 
-  Image* im=scene->get_image(showing_scene);
-  midchanged=changed;
-  last_changed=midchanged;
   // color blue
   st->add(SCIRun::Time::currentSeconds(), Color(0,0,1));
   //      st->add(SCIRun::Time::currentSeconds(), Color(0.4,0.2,1));
-  priv->camera=scene->get_camera(showing_scene);
+
   if (display_frames) {
     // color 
     st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0));
@@ -474,13 +473,6 @@ Dpy::renderFrame() {
 	guiCam_->followPath( *stealth_ );
       }
 
-    }
-
-    if(im->get_xres() != priv->xres || im->get_yres() != priv->yres || 
-       im->get_stereo() != stereo){
-      delete im;
-      im=new Image(priv->xres, priv->yres, stereo);
-      scene->set_image(showing_scene, im);
     }
 
     st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
