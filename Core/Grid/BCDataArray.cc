@@ -19,12 +19,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using std::cout;
-using std::endl;
-using std::find;
-using std::set;
-using std::vector;
-using std::plus;
+using namespace std;
 
 // export SCI_DEBUG="BCDA_DBG:+"
 static DebugStream BCDA_dbg("BCDA_DBG",false);
