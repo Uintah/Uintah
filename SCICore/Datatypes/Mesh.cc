@@ -173,8 +173,8 @@ Mesh* Mesh::clone()
 
 void Mesh::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
-    using SCICore::PersistentSpace::Pio;
+  //using SCICore::Containers::Pio;
+  //using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("Mesh", MESH_VERSION);
     if(version == 1){
@@ -1983,6 +1983,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.14  2000/03/20 22:00:48  yarden
+// Linux port: commented out 'using SCICore:*:Pio' in Mesh:io
+//
 // Revision 1.13  2000/03/11 00:41:29  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
