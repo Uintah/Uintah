@@ -48,6 +48,7 @@ WARNING
 	if(data)
 	  delete[] data;
 	data = new T[newSize];
+	size = newSize;
       }
 
    private:
