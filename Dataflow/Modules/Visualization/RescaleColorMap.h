@@ -27,9 +27,9 @@
 namespace SCIRun {
 
 class RescaleColorMap : public Module {
-  ColorMapOPort* omap;
+  //ColorMapOPort* omap;
   Array1<FieldIPort*> fieldports;
-  ColorMapIPort* imap;
+  //ColorMapIPort* imap;
 
 
 public:
