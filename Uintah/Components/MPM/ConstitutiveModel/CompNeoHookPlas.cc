@@ -265,7 +265,9 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
     c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
     c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+
   }
+
   WaveSpeed = sqrt(Max(c_rot,c_dil));
   // Fudge factor of .8 added, just in case
   double delt_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
@@ -277,6 +279,8 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label, matlindex, region);
+  // Volume is currently being carried forward, will be updated
+  new_dw->put(pvolume,pVolumeLabel, matlindex,region);
 
 }
 
@@ -346,9 +350,10 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 
    task->computes(new_dw, deltLabel);
    task->computes(new_dw, pStressLabel, matl->getDWIndex(),  region);
-   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(), region);
    task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  region);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
+   task->computes(new_dw, pVolumeLabel, matl->getDWIndex(), region);
 
 
 }
@@ -412,6 +417,15 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.13  2000/05/18 16:06:25  guilkey
+// Implemented computeStrainEnergy for CompNeoHookPlas.  In both working
+// constitutive models, moved the carry forward of the particle volume to
+// computeStressTensor.  This "carry forward" will be replaced by a real
+// update eventually.  Removed the carry forward in the SerialMPM and
+// then replaced where the particle volume was being required from the old_dw
+// with requires from the new_dw.  Don't update these files until I've
+// checked in a new SerialMPM.cc, which should be in a few minutes.
+//
 // Revision 1.12  2000/05/17 21:10:07  guilkey
 // Fixed computeStrainEnergy so that it can be used as a diagnostic.
 //
