@@ -45,7 +45,7 @@
 #include <Core/CCA/PIDL/MxNMetaSynch.h>
 #include <iostream>
 #include <sstream>
-#include <assert.h>
+#include <Core/Util/Assert.h>
 using namespace SCIRun;   
 
 MxNScheduler::MxNScheduler(sched_t sch)
@@ -162,7 +162,7 @@ Index* MxNScheduler::makeCyclic(int rank, int size, int length)
 void MxNScheduler::setArray(std::string distname, std::string uuid, int callid, void** arr)
 {
   //only callee can call this method.
-  assert(sch_type==callee); 
+  ASSERT(sch_type==callee); 
 
   //first wait for meta data completion. because array synchronization
   //needs to know which proxy will send data.
