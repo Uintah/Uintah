@@ -60,7 +60,7 @@ The \sr\ main window consists of 4 main components (see Figure~\ref{fig:srwindow
   consists of the following menu items:
 
   \begin{description}
-  \item[\menu{File}] 
+  \item[\menu{File}] The \menu{File} menu contains the following items:
     \begin{description}
     \item[Save] Saves the current network to a file.
     \item[Load] Loads a network from a file.
@@ -76,18 +76,14 @@ The \sr\ main window consists of 4 main components (see Figure~\ref{fig:srwindow
   \item[\menu{SCIRun}] The \menu{SCIRun} menu is used to create modules
     (from the \sr\ package) for use in the network pane.  This menu is
     composed of submenus. Each submenu corresponds to a \dfn{category}
-    \index{category} within the \sr\ package. 
-    
-    An overview of the contents of the \sr\ package is given in \secref{The
-      SCIRun Package}{sec:srpackage}.
-
-    Each menu item in a category submenu creates a specific module and
-    places it in the network pane.  A category is group of related modules.
-    
-    The network pane's popup menu (activated by clicking the right most
-    mouse button when the mouse pointer is in the network pane) also
-    provides access to the \menu{SCIRun} (and possibly other) package
-    menus.
+    \index{category} within the \sr\ package.  A category is group of
+    related modules.  Each menu item in a category submenu creates a
+    specific module and places it in the network pane.  The network pane's
+    popup menu (activated by clicking the right most mouse button when the
+    mouse pointer is in the network pane) also provides access to the
+    \menu{SCIRun} (and possibly other) package menus.  An overview of the
+    contents of the \sr\ package is given in \secref{The SCIRun
+      Package}{sec:srpackage}.
   \end{description}
 
   \begin{description}
@@ -97,7 +93,7 @@ The \sr\ main window consists of 4 main components (see Figure~\ref{fig:srwindow
 
 \item[Navigator Pane] The Navigator Pane is used to navigate complex
   networks.  The use of the Navigator Pane will be described in
-  \secref{Building Networks}{sec:bldnetworks}.
+  \secref{Navigating a Network}{sec:navnetwork}.
   
 \item[Error Pane] Errors during program startup are displayed in the Error
   Pane.  Errors on startup may mean that \sr\ has been installed
@@ -113,10 +109,10 @@ The \sr\ main window consists of 4 main components (see Figure~\ref{fig:srwindow
 \label{sec:termwinapp}
 
 After starting, \sr\ will also run a shell-like application in the terminal
-window.  It will display the prompt \screen{uintah\ra}.  This program is
+window.  It will display the prompt \screen{scirun\ra}.  This program is
 actually a modified \dfna{Tool Command Language}{TCL} shell program and it
 is possible to type in \acronym{TCL}'ish \sr\ commands at the prompt. The
-use of this program will be discribed in a later section.
+use of this program will be described in a later section.
 
 
 \subsection{\envvar{SCIRUN\_DATA}}
@@ -134,7 +130,7 @@ elsewhere).
 
 Quit \sr\ by selecting the \menuitem{Quit} item from the \menu{File} menu
 
-Don't press \keyboard{Ctrl-c} to exit \sr.  Doing this will drop you into
+Don't press \keyboard{control-c} to exit \sr.  Doing this will drop you into
 a debugger which is probably not what you want to do.
 
 
