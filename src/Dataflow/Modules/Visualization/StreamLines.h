@@ -114,7 +114,6 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
     // Is the seed point inside the field?
     if (!vfi->interpolate(test, seed))
     {
-      //cout << "StreamLines: WARNING: seed point was not inside the field.\n";
       ++seed_iter;
       continue;
     }
