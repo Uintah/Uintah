@@ -328,6 +328,33 @@ WARNING
      
      //////////
      // Insert Documentation Here:
+     inline bool containsSFCX(const IntVector& idx) const {
+       IntVector l(getSFCXLowIndex());
+       IntVector h(getSFCXHighIndex());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+     //////////
+     // Insert Documentation Here:
+     inline bool containsSFCY(const IntVector& idx) const {
+       IntVector l(getSFCYLowIndex());
+       IntVector h(getSFCYHighIndex());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+     //////////
+     // Insert Documentation Here:
+     inline bool containsSFCZ(const IntVector& idx) const {
+       IntVector l(getSFCZLowIndex());
+       IntVector h(getSFCZHighIndex());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+     //////////
+     // Insert Documentation Here:
      Point nodePosition(const IntVector& idx) const {
        return d_level->getNodePosition(idx);
      }
