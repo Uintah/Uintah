@@ -329,7 +329,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   // Create arrays for the particle data
   ParticleVariable<Point>  pX_patchAndGhost;
   ParticleVariable<int>    pIsBroken;
-  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<Vector> pCrackNormal;
   ParticleVariable<double> pVolume;
 
   ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(
@@ -337,7 +337,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 
   old_dw->get(pX_patchAndGhost, lb->pXLabel, pset_patchAndGhost);
   new_dw->get(pIsBroken, lb->pIsBrokenLabel_preReloc, pset_patchAndGhost);
-  new_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc, 
+  new_dw->get(pCrackNormal, lb->pCrackNormalLabel_preReloc, 
     pset_patchAndGhost);
   new_dw->get(pVolume, lb->pVolumeLabel_preReloc, pset_patchAndGhost);
 
@@ -352,7 +352,12 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
      lb->pCrackSurfaceContactForceLabel, pset_patchOnly);
 
   ParticleVariable<Point>  pX_patchOnly;
-  old_dw->get(pX_patchOnly, lb->pXLabel, pset_patchOnly);
+  new_dw->get(pX_patchOnly, lb->pXXLabel, pset_patchOnly);
+
+  vector<int> particleIndexExchange( pset_patchOnly->numParticles() );
+  fit(pset_patchOnly,pX_patchOnly,
+      pset_patchAndGhost,pX_patchAndGhost,
+      particleIndexExchange);
 
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
           iter != pset_patchOnly->end(); iter++)
@@ -361,16 +366,14 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   }
 
   IntVector cellIdx;
-  double C1 = ( d_initialData.C1 + d_initialData.C1 )/2;
-  double C2 = ( d_initialData.C2 + d_initialData.C2 )/2;
-  double C3 = .5*C1 + C2;
-  double PR = ( d_initialData.PR + d_initialData.PR )/2;
-  double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+  double C1 = d_initialData.C1;
+  double C2 = d_initialData.C2;
 
   for(ParticleSubset::iterator iter = pset_patchOnly->begin();
           iter != pset_patchOnly->end(); iter++)
   {
     particleIndex pIdx = *iter;
+    particleIndex pIdx1 = particleIndexExchange[pIdx];
 
     const Point& X1 = pX_patchOnly[pIdx];
 
@@ -378,19 +381,19 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
     particles.clear();
     particles.buildIn(cellIdx,lattice);
 
-    double size1 = pow(pVolume[pIdx],0.3333);
+    double size1 = pow(pVolume[pIdx1],0.3333);
 
     //crack surface contact force
     for(int pNeighbor=0; pNeighbor<(int)particles.size(); ++pNeighbor)
     {
       particleIndex pContact = particles[pNeighbor];
-      if(pContact == pIdx) continue;
+      if(pContact == pIdx1) continue;
 
       if(!particles.visible( pContact,
-                            X1,
+                            pIdx1,
 		            pX_patchAndGhost,
 		            pIsBroken,
-		            pCrackSurfaceNormal,
+		            pCrackNormal,
 		            pVolume) ) 
       {
         const Point& X2 = pX_patchAndGhost[pContact];
@@ -398,36 +401,15 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
         double size2 = pow(pVolume[pContact],0.3333);
         Vector N = X2-X1;
         double distance = N.length();
-        double l = (size1+size2) /2 * 0.8;
-        double delta = distance /l - 1;
+        double L = (size1+size2) /2 * 0.8;
+        double lambda = distance /L;
 	
-        if( delta < 0 ) {
+        if( lambda < 1 ) {
+  	  //cout<<"lambda"<<lambda<<endl;
           N /= distance;
-          Matrix3 deformationGradient = Identity;
-	  
-          for(int i=1;i<=3;++i)
-	  for(int j=1;j<=3;++j)
-	  deformationGradient(i,j) += N(i-1) * N(j-1) * delta;
-
-          // Compute the left Cauchy-Green deformation tensor
-          Matrix3 B = deformationGradient * deformationGradient.Transpose();
-
-          // Compute the invariants
-          double invar1 = B.Trace();
-          double invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
-          double J = deformationGradient.Determinant();
-          double invar3 = J*J;
-
-          double w1 = C1;
-          double w2 = C2;
-          double w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
-
-          double w1pi1w2 = w1 + invar1*w2;
-          double i3w3 = invar3*w3;
-
-          Matrix3 stress = (B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
-	  double area = M_PI* l * l * fabs(delta) /2;
-          Vector F = stress * N * area;
+	  double stress = 2*(C1+C2/lambda)*(lambda-1/lambda/lambda);
+	  double area = M_PI* L * L;
+          Vector F = N * ( stress * area );
           pCrackSurfaceContactForce[pIdx] += F;
 	}
       }
@@ -444,7 +426,7 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   ParticleVariable<double> pMass;
   new_dw->get(pMass, lb->pMassLabel_preReloc, pset_patchOnly);
 
-  double tolerance = 0.001;
+  double tolerance = 0.01;
   
   Vector dx = patch->dCell();
   double dxLength = dx.length() * tolerance;
@@ -468,14 +450,16 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 					     DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
-  
+
   task->requires(old_dw, lb->pXLabel, idx,  patch,
 			Ghost::AroundCells, 1 );
+  task->requires(new_dw, lb->pXXLabel, idx,  patch,
+			Ghost::None);
   task->requires(new_dw, lb->pVolumeLabel_preReloc, idx, patch,
 			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->pIsBrokenLabel_preReloc, idx, patch,
 			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch,
+  task->requires(new_dw, lb->pCrackNormalLabel_preReloc, idx, patch,
 			Ghost::AroundCells, 1 );
   task->requires(new_dw, lb->delTLabel );
   task->requires(new_dw, lb->pMassLabel_preReloc, idx, patch, Ghost::None);
@@ -513,6 +497,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.79  2001/01/15 22:44:44  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.78  2001/01/05 23:04:15  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives

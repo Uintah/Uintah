@@ -165,7 +165,7 @@ stressRelease(const Patch* patch,
   //patch variables
   ParticleVariable<Matrix3> pStress;
   ParticleVariable<int> pIsBroken;
-  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<Vector> pCrackNormal;
   ParticleVariable<double> pMass;
   ParticleVariable<double> pStrainEnergy;
   ParticleVariable<Vector> pImageVelocity;
@@ -173,7 +173,7 @@ stressRelease(const Patch* patch,
   ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
   new_dw->get(pStress, lb->pStressAfterStrainRateLabel, insidePset);
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, insidePset);
-  old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, insidePset);
+  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, insidePset);
 
   old_dw->get(pMass, lb->pMassLabel, insidePset);
   new_dw->get(pStrainEnergy, lb->pStrainEnergyLabel, insidePset);
@@ -207,7 +207,7 @@ stressRelease(const Patch* patch,
       ParticlesNeighbor particlesNeighbor;
       particlesNeighbor.buildIn(cellIdx,lattice);
       
-      Vector N = pCrackSurfaceNormal[idx];
+      Vector N = pCrackNormal[idx];
       particleIndex pairIdx = -1;
       double pairRatio = 0;
       double maxStress = Dot(pStress[idx]*N,N);
@@ -278,7 +278,7 @@ stressRelease(const Patch* patch,
   }
 */
   
-  new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc);
+  new_dw->put(pCrackNormal, lb->pCrackNormalLabel_preReloc);
   new_dw->put(pIsBroken, lb->pIsBrokenLabel_preReloc);
   new_dw->put(pStress, lb->pStressAfterFractureReleaseLabel);
   new_dw->put(pImageVelocity, lb->pImageVelocityLabel_preReloc);
@@ -296,6 +296,9 @@ ExplosiveFracture(ProblemSpecP& ps)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.4  2001/01/15 22:44:45  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.3  2001/01/05 23:04:17  guilkey
 // Using the code that Wayne just commited which allows the delT variable to
 // be "computed" multiple times per timestep, I removed the multiple derivatives

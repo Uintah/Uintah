@@ -225,6 +225,13 @@ public:
 
   //////////
   // Insert Documentation Here:
+  void setPositions( const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void carryForwardVariables( const ProcessorGroup*,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
@@ -236,6 +243,11 @@ public:
 		  const Patch* patch,
 		  DataWarehouseP& /*old_dw*/,
 		  DataWarehouseP& new_dw);
+
+  void scheduleSetPositions(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
 
   void scheduleComputeNodeVisibility(const Patch* patch,
 				     SchedulerP&,
@@ -352,6 +364,9 @@ public:
    
 //
 // $Log$
+// Revision 1.64  2001/01/15 22:44:38  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.63  2000/12/01 22:02:47  guilkey
 // Made the scheduling of each task a function.  This was done to make
 // scheduleTimeAdvance managable, as well as to make it easier to create

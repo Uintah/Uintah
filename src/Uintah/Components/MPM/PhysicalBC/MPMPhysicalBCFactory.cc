@@ -3,6 +3,7 @@
 #include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Uintah/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace std;
 using namespace Uintah::MPM;
@@ -16,17 +17,20 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
    for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
        child = child->findNextBlock("force") )
    {
-      mpmPhysicalBCs.push_back(new ForceBC(child));
+      mpmPhysicalBCs.push_back(scinew ForceBC(child));
    }
 
    for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
        child = child->findNextBlock("crack") )
    {
-      mpmPhysicalBCs.push_back(new CrackBC(child));
+      mpmPhysicalBCs.push_back(scinew CrackBC(child));
    }
 }
 
 // $Log$
+// Revision 1.4  2001/01/15 22:44:47  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.3  2000/12/30 05:08:12  tan
 // Fixed a problem concerning patch and ghost in fracture computations.
 //

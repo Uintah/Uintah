@@ -35,6 +35,8 @@ namespace Uintah {
       const VarLabel* pStrainEnergyLabel;
       const VarLabel* pNewlyBrokenSurfaceNormalLabel;
       
+      const VarLabel* pXXLabel;
+      
       //PermanentParticleState
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
@@ -45,7 +47,7 @@ namespace Uintah {
       const VarLabel* pXLabel;
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
-      const VarLabel* pCrackSurfaceNormalLabel; //for fracture
+      const VarLabel* pCrackNormalLabel; //for fracture
       const VarLabel* pCrackSurfaceContactForceLabel;
       const VarLabel* pTensileStrengthLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
@@ -67,7 +69,7 @@ namespace Uintah {
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
-      const VarLabel* pCrackSurfaceNormalLabel_preReloc; //for fracture
+      const VarLabel* pCrackNormalLabel_preReloc; //for fracture
       const VarLabel* pCrackSurfaceContactForceLabel_preReloc;
       const VarLabel* pTensileStrengthLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
@@ -90,6 +92,8 @@ namespace Uintah {
       const VarLabel* gExternalForceLabel;
       const VarLabel* gInternalForceLabel;
       const VarLabel* gSelfContactLabel; //for fracture
+      const VarLabel* gCrackNormalLabel;
+      const VarLabel* gTensileStrengthLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction
@@ -126,6 +130,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.42  2001/01/15 22:44:38  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.41  2001/01/15 16:34:59  bard
 // Added .dat file output invoked using <save label="NTractionZMinus"/>.
 // This is the average traction on the z=z_min plane computational
@@ -207,7 +214,7 @@ namespace Uintah {
 // for the purpose of saving to an uda.  This doesn't work yet.
 //
 // Revision 1.21  2000/08/08 19:55:59  tan
-// Added cCrackedCellLabel and pCrackSurfaceNormalLabel for fracture.
+// Added cCrackedCellLabel and pCrackNormalLabel for fracture.
 //
 // Revision 1.20  2000/08/04 16:42:42  guilkey
 // Added VarLabels specific to FrictionContact so that those variables

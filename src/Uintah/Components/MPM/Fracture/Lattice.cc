@@ -54,11 +54,14 @@ void fit(ParticleSubset* pset_patchOnly,
   for(ParticleSubset::iterator iter_patchOnly = pset_patchOnly->begin();
        iter_patchOnly != pset_patchOnly->end(); iter_patchOnly++)
   {
+    const Point& v = pX_patchOnly[*iter_patchOnly];
     for(ParticleSubset::iterator iter_patchAndGhost = pset_patchAndGhost->begin();
          iter_patchAndGhost != pset_patchAndGhost->end(); iter_patchAndGhost++)
     {
-      if( pX_patchOnly[*iter_patchOnly] == 
-          pX_patchAndGhost[*iter_patchAndGhost] )
+      const Point& p = pX_patchAndGhost[*iter_patchAndGhost];
+      if( v.x() == p.x() && 
+          v.y() == p.y() && 
+          v.z() == p.z() )
       {
         particleIndexExchange[*iter_patchOnly] = *iter_patchAndGhost;
 	break;
@@ -71,6 +74,9 @@ void fit(ParticleSubset* pset_patchOnly,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.13  2001/01/15 22:44:45  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.12  2000/12/30 05:08:10  tan
 // Fixed a problem concerning patch and ghost in fracture computations.
 //

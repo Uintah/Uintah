@@ -109,11 +109,60 @@ bool ParticlesNeighbor::visible(particleIndex idx,
   
   for(int i=0; i<(int)size(); i++) {
       int index = (*this)[i];
-      //cout<<"neighbor distance"<<(pX[index] - A).length()<<endl;
       
       if( index != idx && pIsBroken[index] ) {
         const Vector& N = pCrackSurfaceNormal[index];
-        double size2 = pow(pVolume[index],0.666666667) /4 * 2;
+        double size2 = pow(pVolume[index] *0.75/M_PI,0.666666667);
+        const Point& O = pX[index];
+
+	double A_N = Dot(A,N);
+	
+        double a = A_N - Dot(O,N);
+        double b = A_N - Dot(B,N);
+	
+	if(b != 0) {
+	  double lambda = a/b;
+	  if( lambda>=0 && lambda<=1 ) {
+	    Point p( A.x() * (1-lambda) + B.x() * lambda,
+                     A.y() * (1-lambda) + B.y() * lambda,
+		     A.z() * (1-lambda) + B.z() * lambda );
+ 	    if( (p - O).length2() < size2 ) return false;
+	  }
+	}
+      }
+  }
+  return true;
+}
+
+bool ParticlesNeighbor::visible(particleIndex idxA,
+                                particleIndex idxB,
+				const ParticleVariable<Point>& pX,
+				const ParticleVariable<int>& pIsBroken,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal,
+				const ParticleVariable<double>& pVolume) const
+{
+  const Point& A = pX[idxA];
+  const Point& B = pX[idxB];
+  Vector d = B - A;
+  d.normalize();
+  
+  if(pIsBroken[idxA] && pIsBroken[idxB])  {
+    if( Dot( d, pCrackSurfaceNormal[idxA] ) > 0.5 && 
+        Dot( d, pCrackSurfaceNormal[idxB] ) < -0.5 ) return false;
+  }
+  else if(pIsBroken[idxA]) {
+    if( Dot( d, pCrackSurfaceNormal[idxA] ) > 0.5 ) return false;
+  }
+  else if(pIsBroken[idxB]) {
+    if( Dot( d, pCrackSurfaceNormal[idxB] ) < -0.5 ) return false;
+  }
+  
+  for(int i=0; i<(int)size(); i++) {
+      int index = (*this)[i];
+      
+      if( index != idxA && index != idxB && pIsBroken[index] ) {
+        const Vector& N = pCrackSurfaceNormal[index];
+        double size2 = pow(pVolume[index] *0.75/M_PI,0.666666667);
         const Point& O = pX[index];
 
 	double A_N = Dot(A,N);
@@ -139,6 +188,9 @@ bool ParticlesNeighbor::visible(particleIndex idx,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.15  2001/01/15 22:44:45  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.14  2000/09/25 20:23:21  sparker
 // Quiet g++ warnings
 //

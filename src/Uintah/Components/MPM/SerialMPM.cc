@@ -24,7 +24,9 @@
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
+
 #include <Uintah/Parallel/ProcessorGroup.h>
+#include <Uintah/Parallel/Parallel.h>
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -123,16 +125,19 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					  lb->pIsIgnitedLabel_preReloc);
      }
      if(mpm_matl->getFractureModel()){
-       lb->registerPermanentParticleState(m,lb->pCrackSurfaceNormalLabel,
-					 lb->pCrackSurfaceNormalLabel_preReloc); 
+       d_fracture = true;
+       lb->registerPermanentParticleState(m,lb->pCrackNormalLabel,
+					 lb->pCrackNormalLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pTensileStrengthLabel,
 					  lb->pTensileStrengthLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
 					  lb->pIsBrokenLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pCrackSurfaceContactForceLabel,
 				  lb->pCrackSurfaceContactForceLabel_preReloc); 
+#if 0
        lb->registerPermanentParticleState(m,lb->pImageVelocityLabel,
 					  lb->pImageVelocityLabel_preReloc); 
+#endif
      }
      
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
@@ -201,6 +206,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
       if(d_analyze) d_analyze->performAnalyze(patch, sched, old_dw, new_dw);
 
       if(d_fracture) {
+         scheduleSetPositions(patch,sched,old_dw,new_dw);
          scheduleComputeNodeVisibility(patch,sched,old_dw,new_dw);
       }
       scheduleInterpolateParticlesToGrid(patch,sched,old_dw,new_dw);
@@ -247,6 +253,24 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				     numMatls);
 }
 
+void SerialMPM::scheduleSetPositions(const Patch* patch,
+					      SchedulerP& sched,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task( "SerialMPM::setPositions",
+			  patch, old_dw, new_dw,
+			  this,&SerialMPM::setPositions);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int idx = matl->getDWIndex();
+    t->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
+    t->computes(new_dw, lb->pXXLabel, idx, patch);
+  }
+  sched->addTask(t);
+}
+
 void SerialMPM::scheduleComputeNodeVisibility(const Patch* patch,
 					      SchedulerP& sched,
 					      DataWarehouseP& old_dw,
@@ -267,9 +291,10 @@ void SerialMPM::scheduleComputeNodeVisibility(const Patch* patch,
     MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
     int idx = matl->getDWIndex();
     t->requires(old_dw, lb->pXLabel,        idx, patch, Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->pXXLabel,       idx, patch, Ghost::None);
     t->requires(old_dw, lb->pVolumeLabel,   idx, patch, Ghost::AroundCells, 1);
     t->requires(old_dw, lb->pIsBrokenLabel, idx, patch, Ghost::AroundCells, 1);
-    t->requires(old_dw, lb->pCrackSurfaceNormalLabel,
+    t->requires(old_dw, lb->pCrackNormalLabel,
 					    idx, patch, Ghost::AroundCells, 1);
 
     t->computes(new_dw, lb->pVisibilityLabel, idx, patch);
@@ -304,19 +329,22 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
 //    t->requires(old_dw, lb->pExternalHeatRateLabel,
 //						idx,patch,Ghost::AroundNodes,1);
 
-    if(mpm_matl->getFractureModel()) {
-       t->requires(old_dw,lb->pCrackSurfaceContactForceLabel,idx, patch,
-		Ghost::AroundNodes, 1 );
-       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
-		Ghost::AroundNodes, 1 );
-    }
-
     t->computes(new_dw, lb->gMassLabel,            idx, patch);
     t->computes(new_dw, lb->gVolumeLabel,          idx, patch);
     t->computes(new_dw, lb->gVelocityLabel,        idx, patch);
     t->computes(new_dw, lb->gExternalForceLabel,   idx, patch);
     t->computes(new_dw, lb->gTemperatureLabel,     idx, patch);
     t->computes(new_dw, lb->gExternalHeatRateLabel,idx, patch);
+
+    if(mpm_matl->getFractureModel()) {
+       t->requires(old_dw,lb->pCrackSurfaceContactForceLabel,idx, patch,
+		Ghost::AroundNodes, 1 );
+       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+		Ghost::AroundNodes, 1 );
+       t->requires(old_dw, lb->pTensileStrengthLabel, idx, patch,
+		Ghost::AroundNodes, 1 );
+       t->computes(new_dw, lb->gTensileStrengthLabel, idx, patch);
+    }
   }
      
   t->computes(new_dw, lb->TotalMassLabel);
@@ -434,7 +462,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(const Patch* patch,
 					        SchedulerP& sched,
 					        DataWarehouseP& old_dw,
 					        DataWarehouseP& new_dw)
-{
+{  
   /*
    * computeInternalHeatRate
    * in(P.X, P.VOLUME, P.TEMPERATUREGRADIENT)
@@ -654,9 +682,11 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
 
     if(mpm_matl->getFractureModel()) {
        t->requires(new_dw, lb->pVisibilityLabel,    idx, patch, Ghost::None);
-       t->requires(old_dw, lb->pImageVelocityLabel, idx, patch, Ghost::None);
        t->requires(old_dw, lb->pCrackSurfaceContactForceLabel,
 						    idx, patch, Ghost::None);
+
+       t->requires(old_dw, lb->pTensileStrengthLabel,  idx, patch, Ghost::None);
+       t->computes(new_dw, lb->pTensileStrengthLabel_preReloc, idx, patch);
     }
 
     t->computes(new_dw, lb->pVelocityAfterUpdateLabel,          idx, patch);
@@ -721,14 +751,10 @@ void SerialMPM::scheduleCrackGrow(const Patch* patch,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
     if(mpm_matl->getFractureModel()) {
-      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-		idx, patch, Ghost::None);
-      t->requires( old_dw, lb->pIsBrokenLabel,        idx, patch, Ghost::None);
-      t->requires( old_dw, lb->pTensileStrengthLabel, idx, patch, Ghost::None);
-		 
-      t->computes( new_dw, lb->pIsNewlyBrokenLabel,            idx, patch);
-      t->computes( new_dw, lb->pNewlyBrokenSurfaceNormalLabel, idx, patch);
-      t->computes( new_dw, lb->pTensileStrengthLabel_preReloc, idx, patch);
+      t->requires( new_dw, lb->gStressForSavingLabel, idx, patch, Ghost::None);
+      t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+      t->requires( new_dw, lb->gTensileStrengthLabel, idx, patch, Ghost::None);
+      t->computes( new_dw, lb->gCrackNormalLabel, idx, patch);
     }
   }
 
@@ -753,38 +779,30 @@ void SerialMPM::scheduleStressRelease(const Patch* patch,
 			    this,&SerialMPM::stressRelease);
 
   for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     int idx = mpm_matl->getDWIndex();
 
     if(mpm_matl->getFractureModel()) {
-      t->requires( old_dw, lb->pXLabel, 
-			idx, patch, Ghost::AroundCells, 1 );
-      t->requires( new_dw, lb->pIsNewlyBrokenLabel,
-			idx, patch, Ghost::AroundCells, 1 );
-      t->requires( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
-			idx, patch, Ghost::AroundCells, 1 );
-      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::AroundCells, 1 );
+      t->requires( new_dw, lb->gCrackNormalLabel, idx, patch,
+			Ghost::AroundCells, 1);
 
-      //explosive fracture type
-      t->requires( old_dw, lb->pImageVelocityLabel, idx, patch, Ghost::None);
-
-      //normal fracture type
-      t->requires( old_dw, lb->pIsBrokenLabel,     idx, patch, Ghost::None);
-      t->requires( old_dw, lb->pCrackSurfaceNormalLabel,
-						   idx, patch, Ghost::None);
-      t->requires( new_dw, lb->pRotationRateLabel, idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pXLabel,            idx, patch, Ghost::None);
       t->requires( old_dw, lb->pMassLabel,         idx, patch, Ghost::None);
       t->requires( new_dw, lb->pStrainEnergyLabel, idx, patch, Ghost::None);
+      t->requires( new_dw, lb->pRotationRateLabel, idx, patch, Ghost::None);
+      t->requires( new_dw, lb->pVisibilityLabel,   idx, patch, Ghost::None);
+
       t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
 						   idx, patch, Ghost::None);
-			 
-      t->computes( new_dw, lb->pStressReleasedLabel,              idx, patch);
+      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
+						   idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pIsBrokenLabel,     idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pCrackNormalLabel,  idx, patch, Ghost::None);
+
       t->computes( new_dw, lb->pStressAfterFractureReleaseLabel,  idx, patch);
-      t->computes( new_dw, lb->pImageVelocityLabel_preReloc,      idx, patch);
       t->computes( new_dw, lb->pVelocityAfterFractureLabel,       idx, patch);
       t->computes( new_dw, lb->pIsBrokenLabel_preReloc,           idx, patch);
-      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch);
+      t->computes( new_dw, lb->pCrackNormalLabel_preReloc,        idx, patch);
     }
   }
   t->computes(new_dw, d_sharedState->get_delt_label() );
@@ -909,7 +927,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        mpm_matl->getBurnModel()->initializeBurnModelData(patch,
 						mpm_matl, new_dw);
        if(mpm_matl->getFractureModel()) {
-         d_fracture = true;
 	 mpm_matl->getFractureModel()->initializeFractureModelData( patch,
 						mpm_matl, new_dw);
        }       
@@ -980,6 +997,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<Vector> pexternalforce;
       ParticleVariable<double> pTemperature;
+      ParticleVariable<double> pTensileStrength;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
 					       Ghost::AroundNodes, 1,
@@ -998,6 +1016,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<Vector> gexternalforce;
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
+      NCVariable<double> gTensileStrength;
 
       new_dw->allocate(gmass,          lb->gMassLabel,        matlindex, patch);
       new_dw->allocate(gvolume,        lb->gVolumeLabel,      matlindex, patch);
@@ -1022,10 +1041,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
       
    double totalmass = 0;
+
    if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
 
       ParticleVariable<int> pVisibility;
       ParticleVariable<Vector> pCrackSurfaceContactForce;
+
+      old_dw->get(pTensileStrength, lb->pTensileStrengthLabel, pset);
+      new_dw->allocate(gTensileStrength, lb->gTensileStrengthLabel, matlindex, patch);
+      gTensileStrength.initialize(0);
+
       new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
       old_dw->get(pCrackSurfaceContactForce,
 			lb->pCrackSurfaceContactForceLabel, pset);
@@ -1054,6 +1079,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	       gexternalforce[ni[k]] += pCrackSurfaceContactForce[idx] * S[k];
 	       gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	       gTensileStrength[ni[k]] += pTensileStrength[idx] * pmass[idx] * S[k];
 
 	       totalmass += pmass[idx] * S[k];
 	    }
@@ -1092,6 +1118,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 if(gmass[*iter] >= 1.e-10){
 	    gvelocity[*iter] *= 1./gmass[*iter];
             gTemperature[*iter] /= gmass[*iter];
+	    
+            if(mpm_matl->getFractureModel()) {
+	      gTensileStrength[*iter] /= gmass[*iter];
+	    }
+	    
 	 }
       }
 
@@ -1131,6 +1162,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gTemperature,  lb->gTemperatureLabel,   matlindex, patch);
       new_dw->put(gexternalheatrate,lb->gExternalHeatRateLabel,
 							  matlindex, patch);
+      if(mpm_matl->getFractureModel()) {
+        new_dw->put(gTensileStrength, lb->gTensileStrengthLabel, matlindex, patch);
+      }
   }
 }
 
@@ -1171,6 +1205,34 @@ void SerialMPM::crackGrow(const ProcessorGroup*,
       }
    }
 }
+
+void SerialMPM::setPositions( const ProcessorGroup*,
+				    const Patch* patch,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
+{
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int matlindex = mpm_matl->getDWIndex();
+        
+    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+
+    ParticleVariable<Point> pX;
+    ParticleVariable<Point> pXX;
+    
+    old_dw->get(pX, lb->pXLabel, pset);
+    new_dw->allocate(pXX, lb->pXXLabel, pset);
+    
+    for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++)
+    {
+      pXX[*iter] = pX[*iter];
+    }
+
+    new_dw->put(pXX, lb->pXXLabel);
+  }
+}
+
 
 void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 				    const Patch* patch,
@@ -1225,7 +1287,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
-
   Vector dx = patch->dCell();
   double oodx[3];
   oodx[0] = 1.0/dx.x();
@@ -1671,7 +1732,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   // Performs the interpolation from the cell vertices of the grid
   // acceleration and velocity to the particles to update their
   // velocity and position respectively
-
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
@@ -1722,10 +1782,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     ParticleVariable<int> pVisibility;
     ParticleVariable<Vector> pCrackSurfaceContactForce;
+    ParticleVariable<double> pTensileStrength;
     if(mpm_matl->getFractureModel()) {
       new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
       old_dw->get(pCrackSurfaceContactForce,
 		 lb->pCrackSurfaceContactForceLabel, pset);
+      old_dw->get(pTensileStrength,lb->pTensileStrengthLabel, pset);
     }
 
     // Get the arrays of grid data on which the new part. values depend
@@ -1936,6 +1998,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pTemperatureRate,     lb->pTemperatureRateLabel_preReloc);
       new_dw->put(pTemperatureNew,      lb->pTemperatureLabel_preReloc);
       new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel_preReloc);
+
+      if(mpm_matl->getFractureModel()) {
+        new_dw->put(pTensileStrength, lb->pTensileStrengthLabel_preReloc);
+      }
   }
   // DON'T MOVE THESE!!!
   new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
@@ -2094,6 +2160,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.183  2001/01/15 22:44:38  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.182  2001/01/15 16:34:59  bard
 // Added .dat file output invoked using <save label="NTractionZMinus"/>.
 // This is the average traction on the z=z_min plane computational

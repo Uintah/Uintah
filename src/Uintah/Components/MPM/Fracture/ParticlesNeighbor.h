@@ -31,6 +31,13 @@ public:
 		const ParticleVariable<Vector>& pCrackSurfaceNormal,
 		const ParticleVariable<double>& pVolume) const;
 
+  bool visible(particleIndex idxA,
+               particleIndex idxB,
+	       const ParticleVariable<Point>& pX,
+	       const ParticleVariable<int>& pIsBroken,
+	       const ParticleVariable<Vector>& pCrackSurfaceNormal,
+	       const ParticleVariable<double>& pVolume) const;
+
 private:
 };
 
@@ -40,6 +47,9 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.11  2001/01/15 22:44:46  tan
+// Fixed parallel version of fracture code.
+//
 // Revision 1.10  2000/09/22 07:18:57  tan
 // MPM code works with fracture in three point bending.
 //
