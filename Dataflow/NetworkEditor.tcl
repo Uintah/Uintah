@@ -54,7 +54,7 @@ proc makeNetworkEditor {} {
     scrollbar .all_lists.l.f.scroll -relief sunken \
 	-command ".all_lists.l.f.list yview"
     listbox .all_lists.l.f.list -yscroll ".all_lists.l.f.scroll set" \
-	-relief sunken -geometry 20x35 -exportselection false
+	-relief sunken -width 20 -height 34 -exportselection false
     pack .all_lists.l.f.scroll -side right -fill y -padx 2
     pack .all_lists.l.f.list -side left -expand yes -fill both
     global netedit_completelist
@@ -74,7 +74,7 @@ proc makeNetworkEditor {} {
     scrollbar .l.lists.l1.f.scroll -relief sunken \
 	-command ".l.lists.l1.f.list yview"
     listbox .l.lists.l1.f.list -yscroll ".l.lists.l1.f.scroll set" \
-	-relief sunken -geometry 20x4 -exportselection false
+	-relief sunken -width 20 -height 4 -exportselection false
     pack .l.lists.l1.f.scroll -side right -fill y -padx 2
     pack .l.lists.l1.f.list -side left -expand yes -fill both
     
@@ -89,7 +89,7 @@ proc makeNetworkEditor {} {
     scrollbar .l.lists.l2.f.scroll -relief sunken \
 	-command ".l.lists.l2.f.list yview"
     listbox .l.lists.l2.f.list -yscroll ".l.lists.l2.f.scroll set" \
-	-relief sunken -geometry 20x4 -exportselection false
+	-relief sunken -width 20 -height 4 -exportselection false
     pack .l.lists.l2.f.scroll -side right -fill y -padx 2
     pack .l.lists.l2.f.list -side left -expand yes -fill both
     global netedit_modulelist
@@ -152,7 +152,7 @@ proc updateCategoryList {} {
 	$netedit_categorylist insert end $name
     }
     showCategoryList $firstcat
-    $netedit_categorylist select from 0
+    $netedit_categorylist selection set 0
 }
 
 proc showCategoryList {name} {
@@ -163,12 +163,12 @@ proc showCategoryList {name} {
     foreach i $mods {
 	$netedit_modulelist insert end $i
     }
-    $netedit_modulelist select from 0
+    $netedit_modulelist selection set 0
 }
 
 proc showCategoryListN {which} {
     global netedit_categorylist
-    $netedit_categorylist select from $which
+    $netedit_categorylist selection set 0
     set name [$netedit_categorylist get $which]
     showCategoryList $name
 }
