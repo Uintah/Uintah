@@ -38,7 +38,7 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
-#include <hash_map>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
