@@ -271,6 +271,7 @@ class ViewSlices : public Module
   int			pick_;
   int			pick_x_;
   int			pick_y_;
+  SliceWindow *		pick_window_;
   BBox			crop_bbox_;
   BBox			crop_draw_bbox_;
   PickBoxes		crop_pick_boxes_;
@@ -311,6 +312,10 @@ class ViewSlices : public Module
 
   UIdouble		min_;
   UIdouble		max_;
+
+  UIint			dim0_;
+  UIint			dim1_;
+  UIint			dim2_;
 
   UIdouble		background_threshold_;
   UIdouble		gradient_threshold_;
@@ -701,6 +706,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   pick_(0),
   pick_x_(0),
   pick_y_(0),
+  pick_window_(0),
   crop_bbox_(Point(0, 0, 0), Point(1, 1, 1)),
   crop_draw_bbox_(crop_bbox_),
   crop_pick_boxes_(),
@@ -714,12 +720,12 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   crop_max_x_(ctx->subVar("crop_maxAxis0"),0),
   crop_max_y_(ctx->subVar("crop_maxAxis1"),0),
   crop_max_z_(ctx->subVar("crop_maxAxis2"),0),
-  crop_min_pad_x_(ctx->subVar("crop_minPadAxis0"),10),
-  crop_min_pad_y_(ctx->subVar("crop_minPadAxis1"),20),
-  crop_min_pad_z_(ctx->subVar("crop_minPadAxis2"),30),
-  crop_max_pad_x_(ctx->subVar("crop_maxPadAxis0"),40),
-  crop_max_pad_y_(ctx->subVar("crop_maxPadAxis1"),50),
-  crop_max_pad_z_(ctx->subVar("crop_maxPadAxis2"),60),
+  crop_min_pad_x_(ctx->subVar("crop_minPadAxis0"),0),
+  crop_min_pad_y_(ctx->subVar("crop_minPadAxis1"),0),
+  crop_min_pad_z_(ctx->subVar("crop_minPadAxis2"),0),
+  crop_max_pad_x_(ctx->subVar("crop_maxPadAxis0"),0),
+  crop_max_pad_y_(ctx->subVar("crop_maxPadAxis1"),0),
+  crop_max_pad_z_(ctx->subVar("crop_maxPadAxis2"),0),
   texture_filter_(ctx->subVar("texture_filter"),1),
   anatomical_coordinates_(ctx->subVar("anatomical_coordinates"), 1),
   show_text_(ctx->subVar("show_text"), 1),
@@ -729,6 +735,9 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   font_a_(ctx->subVar("color_font-a"), 1.0),
   min_(ctx->subVar("min"), -1.0),
   max_(ctx->subVar("max"), -1.0),
+  dim0_(ctx->subVar("dim0"), 0),
+  dim1_(ctx->subVar("dim1"), 0),
+  dim2_(ctx->subVar("dim2"), 0),
   background_threshold_(ctx->subVar("background_threshold"), 0.0),
   gradient_threshold_(ctx->subVar("gradient_threshold"), 0.0),
   paint_widget_(0),
@@ -1283,13 +1292,22 @@ ViewSlices::compute_crop_pick_boxes(SliceWindow &window, BBox &bbox)
 void
 ViewSlices::update_crop_bbox_from_gui() 
 {
+  if (0) {
+    crop_min_x_ = Clamp(crop_min_x_(), 0, max_slice_[0]);
+    crop_min_y_ = Clamp(crop_min_y_(), 0, max_slice_[1]);
+    crop_min_z_ = Clamp(crop_min_z_(), 0, max_slice_[2]);
+    crop_max_x_ = Clamp(crop_max_x_(), 0, max_slice_[0]);
+    crop_max_y_ = Clamp(crop_max_y_(), 0, max_slice_[1]);
+    crop_max_z_ = Clamp(crop_max_z_(), 0, max_slice_[2]);
+  }
+
   crop_draw_bbox_ = 
     BBox(Point(double(crop_min_x_()),
 	       double(crop_min_y_()),
 	       double(crop_min_z_())),
-	 Point(double(crop_max_x_()),
-	       double(crop_max_y_()),
-	       double(crop_max_z_())));
+	 Point(double(crop_max_x_()+1),
+	       double(crop_max_y_()+1),
+	       double(crop_max_z_()+1)));
 }
 
 void
@@ -2492,10 +2510,12 @@ ViewSlices::execute()
 	      " has different dimensions than a previous nrrd.");
 	error("Both input nrrds must have same dimensions. Stopping.");
 	return;
-      }
-     
+      }     
       center_[a] = size*scale_[a]/2.0;
     }
+    dim0_ = max_slice_[0]+1;
+    dim1_ = max_slice_[1]+1;
+    dim2_ = max_slice_[2]+1;
       
     if (nrrdH.get_rep() && nrrdH->generation != nrrd_generations_[n]) {
       re_extract = true;
@@ -2614,9 +2634,9 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
   if (button1 && !crop_ && painting_ && 
       inside_window && (inside_window->mode_ == normal_e)) { 
     do_paint(*inside_window);
-  } else if (button1 && crop_ && inside_window && pick_) {
-    crop_draw_bbox_ = update_crop_bbox(*inside_window, pick_, X, Y);
-    crop_pick_boxes_ = compute_crop_pick_boxes(*inside_window,
+  } else if (button1 && crop_ && pick_window_ && pick_) {
+    crop_draw_bbox_ = update_crop_bbox(*pick_window_, pick_, X, Y);
+    crop_pick_boxes_ = compute_crop_pick_boxes(*pick_window_,
 					       crop_draw_bbox_);
     update_crop_bbox_to_gui();
   } else if (inside_window && probe_()) {
@@ -2669,6 +2689,7 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
 
   int button = args.get_int(3);
   window_level_ = 0;
+  pick_window_ = 0;
   probe_ = 0;
   zooming_ = 0;
   panning_ = 0;
@@ -2704,7 +2725,7 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
   int y = args.get_int(6);
   pick_x_ = x;
   pick_y_ = y;
-
+  
   ASSERT(layouts_.find(args[2]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[2]];
   
@@ -2728,6 +2749,7 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
 
       crop_pick_boxes_ = compute_crop_pick_boxes(window, crop_draw_bbox_);
       pick_ = mouse_in_pick_boxes(window, crop_pick_boxes_);
+      pick_window_ = layout.windows_[w];
       if (!pick_) {
 	window_level_ = layout.windows_[w];
 	original_ww_ = clut_ww_();
@@ -2873,7 +2895,7 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     }
   } else if(args[1] == "startcrop") {
     crop_ = 1;
-    if (args.count() == 2) {
+    if (args.count() == 3 && args.get_int(2)) {
       crop_bbox_ = BBox
 	(Point(0,0,0), 
 	 Point(max_slice_[0]+1, max_slice_[1]+1, max_slice_[2]+1));
