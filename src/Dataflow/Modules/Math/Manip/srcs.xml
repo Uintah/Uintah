@@ -6,6 +6,6 @@
     <description>Slices the input matrix into column matrices. The number of columns is fixed within the manip. </description>
   </src>
   <src name="fred">
-    <description>(null string)</description>
+    <description> This is a dummy matrix manip </description>
   </src>
 </srcs>
