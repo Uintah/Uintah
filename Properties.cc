@@ -190,7 +190,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 
   if (!(d_mixingModel->isAdiabatic()) && initialize)
     tsk->modifies(d_lab->d_enthalpySPLabel);
-  else
+  else if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -394,7 +394,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->getModifiable(mod_enthalpy, d_lab->d_enthalpySPLabel, 
 		            matlIndex, patch);
     }
-    else {
+    else if (!(d_mixingModel->isAdiabatic())) {
       new_dw->get(const_enthalpy, d_lab->d_enthalpySPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
