@@ -123,10 +123,11 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Visualization</title>
-    <para>The viewer is composed of four main windows. The upper left
-    window is the 3D viewer window. By default the 3D viewer displays
-    slice planes of the axial, sagittal and coronal planes oriented 
-    relative to each other in 3-space.
+    <para>
+      The viewer is composed of four main windows. The upper left
+      window is the 3D viewer window. By default the 3D viewer displays
+      slice planes of the axial, sagittal and coronal planes oriented 
+      relative to each other in 3-space.
     </para>
     <figure id="fig.3dview">
       <title>3d Viewer Window</title>
@@ -142,9 +143,11 @@ DEALINGS IN THE SOFTWARE.
 	</imageobject>
       </mediaobject>
     </figure>
-    <para>The remaining viewer windows display 2D images of the individual
-    slice planes and can be used to change the location of the slice planes
-    inside of the dataset.
+    <para>
+      The remaining viewer windows display 2D images of the individual
+      slice planes and can be used to change the location of the slice planes
+      inside of the dataset. The upper right window controls the axial plane, the lower right
+      window controls the coronal plane, and the bottom left window controls the saggital plane,
     </para>
     <figure id="fig.2dview">
       <title>2d Viewer Window</title>
@@ -163,16 +166,116 @@ DEALINGS IN THE SOFTWARE.
     <section>
       <title>Planes</title>
       <para>Each slice plane can be manipulated via sliders</para>
+      <figure id="fig.2dslider">
+        <title>Slice plane slider</title>
+        <mediaobject>
+	  <textobject>
+	    <phrase>Slider used to move change location of slice plane.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/2dslider.jpg" format="JPG"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/2dslider.eps" format="EPS"/>
+	  </imageobject>
+        </mediaobject>
+      </figure>
+      <para>
+	Looking at the lower left slice window, we
+	see the 2D slice and corresponding slider controls for the saggital plane.
+	The location of the slice plane inside of the volume is displayed
+	on the left side of the slider.
+	By default, the slice is placed at the center of the volume, which for the tooth
+	dataset corresponds to the 51st slice along the saggital axis.
+      </para>
+      <section>
+	<title>Moving the slice</title>
+      </section>
+      <para>
+	If we move the slice plane slider over to the left until it reads 68,
+	we see the 68th saggital slice displayed in both the 2D and 3D viewers.
+      </para>
+      <figure id="fig.68saggitalBoth">
+	<title>Slice plane slider moved to 68th saggital slice</title>
+	<mediaobject>
+	  <textobject>
+	    <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
+	  </textobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/68saggitalBoth.jpg" format="JPG"/>
+	  </imageobject>
+	  <imageobject>
+	    <imagedata fileref="Figures/68saggitalBoth.eps" format="EPS"/>
+	  </imageobject>
+	</mediaobject>
+      </figure>
+      
+
+    <section>
+      <title>Changing slice colormaps</title>
+      <para>
+	The colors displayed in the viewers are greyscale and represent the
+	underlying values of the data. The colors may represent density, in which case
+	the highest densities correspond to white colored areas and the lowest density
+	regions are colored in black, with in between areas in shades of grey.
+      </para>
+      <para>
+	It is possible to change the colormaps to use other ranges of colors. Instead of
+	ranging from white to black there is an option that goes from blue to red, 
+	or uses a rainbow colors. To change the colormap, choose the 
+	"Vis Options" tab in the left control section, then choose the "Planes" tab.
+	<figure id="fig.planesTab">
+	  <title>Options for controlling planes</title>
+	  <mediaobject>
+	    <textobject>
+	      <phrase>Options for controlling planes.</phrase>
+	    </textobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/planesTab.jpg" format="JPG"/>
+	    </imageobject>
+	    <imageobject>
+	      <imagedata fileref="Figures/planesTab.eps" format="EPS"/>
+	    </imageobject>
+	  </mediaobject>
+	</figure>	
+      </para>
+      <para>
+	Choose the Rainbow colormap and notice the difference in the resulting images displayed
+	in the viewer windows. (colormaps are not working on my build, Nov 29th, hartner).
+	---Include image of colormaps applied to data when colormaps are working---
+      </para>
+      <para>
+	Using a rainbow color map makes it easier to identify variations in the
+	underlying data, but also makes it more difficult to correlate differences in colors
+	to differences in data (ie is green high density?).
+      </para>
+    </section>
+
     </section>
 
     <section>
       <title>Volume Rendering</title>
-      <para></para>
+      <para>
+	(Talk about the paintbrush interface, link to transfer function stuff in the advanced
+	techniques section)
+      </para>
     </section>
 
     <section>
-      <title>Viewer Options</title>
-      <para></para>
+      <title>Using the 3D viewer</title>
+      <para>
+	The 3D viewer is located in the upper left window and can be controlled by the mouse.
+	<simplelist type="vert" columns="1">
+	  <member>Left Mouse Button: translate up/down, side-to-side</member>
+	  <member>Right Mouse Button: zoom in and out</member>
+	  <member>Center Mouse Button: rotate the object</member>
+	</simplelist>
+      </para>
+      <para>
+	If the object is not longer in view, you can go to the 
+	"Viewer Options" tab in the left control panel and click "Autoview" and a reasonable
+	default view will be set.
+      </para>
     </section>
 
   </section>
