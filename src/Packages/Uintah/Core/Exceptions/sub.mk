@@ -7,7 +7,8 @@ SRCDIR   := Packages/Uintah/Core/Exceptions
 SRCS     += $(SRCDIR)/InvalidGrid.cc $(SRCDIR)/InvalidValue.cc \
 	$(SRCDIR)/ParameterNotFound.cc \
 	$(SRCDIR)/ProblemSetupException.cc \
-	$(SRCDIR)/TypeMismatchException.cc 
+	$(SRCDIR)/TypeMismatchException.cc  \
+	$(SRCDIR)/InvalidCompressionMode.cc
 
 PSELIBS := Core/Exceptions
 LIBS := 
