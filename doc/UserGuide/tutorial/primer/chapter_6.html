@@ -51,40 +51,40 @@
 										
                 <p><b>Chapter Overview</b><br>
 
-		<p>In the previous chapter we implemented a
+		<p>In the previous chapter, we implemented a
 		network to solve a bioelectric finite element
 		problem.  The output of that network was a solution
 		vector, <img height="16" width="13"
 		src="images/phi.gif">, containing the potential at
 		each of the nodes in the finite element mesh.
 
-		<p>In Chapters 1-4 we constructed a set of
+		<p>In Chapters 1-4, we constructed a set of
 		visualization networks to explore scalar and vector
 		Fields.
 
-		<p>In this chapter we will put these two pieces
+		<p>In this chapter, we will put these two pieces
 		together.  We will reuse the finite element simulation
 		network from Chapter 5, as well as the visualization
 		network from Chapter 4.  The only missing piece is a
 		module that can connect the solution vector of scalar
 		values to the nodes of the tetrahedral finite element
-		mesh.  The module that does this is called
-		ManageFieldData and is described below.
+		mesh.  The module that does this is 
+		ManageFieldData, described below.
 
                 <p><b>ManageFieldData</b><br>
 
-                <p>This module performs two simultanious operations.
-                First the &quot;Input Field&quot; is split into it's
-                mesh part and it's data values.  The data values are
+                <p>This module performs two simultaneous operations.
+                First, the &quot;Input Field&quot; split into its
+                mesh part and its data values.  The data values are
                 packaged up and passed to the &quot;Output
-                Matrix&quot; port.  Second the input field geometry is
-                joined with the data from the Input Matrix, and the
-                result is passed out on the &quot;Output Field&quot;
-                port.  If the input matrix is not present, then the
-                second operation is not performed and the Output Field
+                Matrix&quot; port. Second, the input field geometry
+                joins with the data from the Input Matrix, and the
+                result passes out on the &quot;Output Field&quot;
+                port.  If the input matrix is absent, then the
+                second operation is not performed, and the Output Field
                 is the same as the Input Field.  The format of the
                 &quot;Output Matrix&quot; will be a column matrix if
-                the nput field was of scalar type.  It will be an Nx3
+                the input field was a scalar type.  It will be an Nx3
                 matrix if the input field contained vectors.  If the
                 field contained tensors it will be Nx9 matrix, where
                 the tensor is flattened out in left to right, top to
@@ -136,4 +136,17 @@
 
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
