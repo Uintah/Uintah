@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <iomanip>
 #include <iostream>
