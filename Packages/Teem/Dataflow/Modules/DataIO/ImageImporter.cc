@@ -134,46 +134,26 @@ ImageImporter::execute()
       return;
     }
 
-    if (sizeof(C_Magick::Quantum) == 1)
+    size_t dsize = image->rows * image->columns;
+    float *dptr = scinew float[dsize*3];
+    const float iqsize = (sizeof(C_Magick::Quantum) == 1)?1.0/0xff:1.0/0xffff;
+    for (unsigned int i=0; i < dsize; i++)
     {
-      // Unsigned char
-      size_t dsize = image->rows * image->columns * 4;
-      unsigned char *dptr = scinew unsigned char[dsize];
-      memcpy(dptr, pixels, dsize);
-      Nrrd *nrrd = nrrdNew();
-      if (nrrdWrap(nrrd, dptr, nrrdTypeUChar,
-		   3, 4, image->columns, image->rows))
-      {
-	char *err = biffGetDone(NRRD);
-	error(string("Error creating NRRD: ") + err + "\n");
-	free(err);
-      }
-      handle_ = scinew NrrdData();
-      handle_->nrrd = nrrd;
+      dptr[i*3+0] = pixels[i].red * iqsize;
+      dptr[i*3+1] = pixels[i].green *iqsize;
+      dptr[i*3+2] = pixels[i].blue *iqsize;
     }
-    else if (sizeof(C_Magick::Quantum) == 2)
+    Nrrd *nrrd = nrrdNew();
+    if (nrrdWrap(nrrd, dptr, nrrdTypeFloat,
+		 3, 3, image->columns, image->rows))
     {
-      // Unsigned short
-      size_t dsize = image->rows * image->columns * 4;
-      unsigned short *dptr = scinew unsigned short[dsize];
-      memcpy(dptr, pixels, dsize * 2);
-      Nrrd *nrrd = nrrdNew();
-      if (nrrdWrap(nrrd, dptr, nrrdTypeUShort,
-		   3, 4, image->columns, image->rows))
-      {
-	char *err = biffGetDone(NRRD);
-	error(string("Error creating NRRD: ") + err + "\n");
-	free(err);
-      }
-      handle_ = scinew NrrdData();
-      handle_->nrrd = nrrd;
+      char *err = biffGetDone(NRRD);
+      error(string("Error creating NRRD: ") + err + "\n");
+      free(err);
     }
-    else
-    {
-      remark("Quantum = " + to_string(sizeof(C_Magick::Quantum)));
-      handle_ = 0;
-    }
-
+    nrrd->axis[0].kind = nrrdKind3Vector;
+    handle_ = scinew NrrdData();
+    handle_->nrrd = nrrd;
     
     C_Magick::DestroyImage(image);
 
