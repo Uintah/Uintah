@@ -1814,7 +1814,7 @@ class FusionViewerApp {
 	
 	global $isomod-isoval-quantity
 
-	label $quantity.isoquant.l -text "Number of Isovalues:"
+	label $quantity.isoquant.l -text "Number of evenly-spaced isovalues:"
 	scale $quantity.isoquant.s \
 	    -from 1 -to 15 \
 	    -length 50 -width 15 \
