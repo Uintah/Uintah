@@ -18,6 +18,8 @@ SRCS     += \
 	$(SRCDIR)/RegionDB.cc
 
 PSELIBS := \
+	Core/Geometry \
+	Core/Util \
 	Core/Exceptions                   \
 	Packages/Uintah/CCA/Ports         \
 	Packages/Uintah/Core/Grid         \
@@ -26,7 +28,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Disclosure   \
 	Packages/Uintah/Core/Parallel
 
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

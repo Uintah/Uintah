@@ -12,7 +12,6 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 

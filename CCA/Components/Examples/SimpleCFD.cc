@@ -37,7 +37,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
-#include <values.h>
+#include <sci_values.h>
 #include <iomanip>
 
 using namespace Uintah;
