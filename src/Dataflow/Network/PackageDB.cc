@@ -388,7 +388,7 @@ void PackageDB::loadPackage(bool resolve)
   if(gui){
     gui->execute("toplevel .loading; "
 		 //"wm geometry .loading 250x75+275+200; "
-		 "wm geometry .loading +135+200; "
+		 "wm geometry .loading 504x382+135+200; "
 		 "wm title .loading {SCIRun Splash Screen}; "
 		 "update idletasks");
     gui->execute("image create photo ::img::splash -file \"" +
