@@ -119,6 +119,9 @@ public:
   
   virtual void* getBasePointer();
   virtual const TypeDescription* virtualGetTypeDescription() const;
+  virtual RefCounted* getRefCounted() {
+    return d_pdata;
+  }
 private:
       
     //////////

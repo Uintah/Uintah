@@ -87,6 +87,7 @@ WARNING
       virtual void* getBasePointer() = 0;
       void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
+     virtual RefCounted* getRefCounted() = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase(ParticleSubset* pset);

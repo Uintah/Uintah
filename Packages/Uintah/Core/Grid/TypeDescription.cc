@@ -105,7 +105,7 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
    return iter->second;
 }
 
-TypeDescription::Register::Register(const TypeDescription* td)
+TypeDescription::Register::Register(const TypeDescription*/* td*/)
 {
   // Registration happens in CTOR
 }

@@ -319,6 +319,9 @@ WARNING
     }
  
     static TypeDescription::Register registerMe;
+    virtual RefCounted* getRefCounted() {
+      return getWindow();
+    }
   private:
     static Variable* maker();
   };
