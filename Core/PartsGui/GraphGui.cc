@@ -38,6 +38,7 @@
 #include <Core/Parts/GraphPart.h>
 #include <Core/PartsGui/GraphGui.h>
 
+
 //#include <typeinfo>
 
 namespace SCIRun {
@@ -99,7 +100,23 @@ GraphGui::reset( int n )
   for (; i <n; i++) {
     LockedPolyline *p = scinew LockedPolyline(i);
     p->set_lock( monitor_ );
-    p->set_color( Color( drand48(), drand48(), drand48() ) );
+    Color c;
+    // byte 0 is valid flag, bytes 1-3 are rgb
+    vector<unsigned char> color;
+    color.resize(4);
+    color[0]=color[1]=color[2]=color[3]=0;
+    get_property(i,"color",color);
+    if (!color[0]) {
+      vector<unsigned char> new_color;
+      new_color.resize(3);
+      new_color[0]=(unsigned char)(drand48()*255.);
+      new_color[1]=(unsigned char)(drand48()*255.);
+      new_color[2]=(unsigned char)(drand48()*255.);
+      set_property(i,"color", new_color);
+      p->set_color( Color( new_color[0]/255., new_color[1]/255., 
+			   new_color[2]/255. ) );
+    } else 
+      p->set_color( Color( color[1]/255., color[2]/255., color[3]/255. ) );
     poly_.push_back( p );
     diagram_->add( p );
   } 
@@ -137,6 +154,8 @@ GraphGui::attach( PartInterface *interface )
 
   connect( graph->reset, this, &GraphGui::reset);
   connect( graph->new_values, this, &GraphGui::add_values);
+
+  PartGui::attach(interface);
 }
 
 void

@@ -58,6 +58,7 @@ public:
   void reset( int );
   void add_values( const vector<double> & );
 #endif
+
   void attach( PartInterface * );
 
   virtual void set_window( const string & );

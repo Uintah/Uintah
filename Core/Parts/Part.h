@@ -32,13 +32,21 @@
 #define SCI_Part_h 
 
 #include <string>
-#include <typeinfo>
-
-using std::string;
+//#include <typeinfo>
+#include <map>
+#include <stdio.h>
+#include <vector>
 
 namespace SCIRun {
+
+using std::string;
+using std::vector;
+using std::map;
   
 class PartInterface;
+
+typedef vector<map<string,vector<unsigned char> > > property_vector;
+typedef map<string,vector<unsigned char> >::iterator pv_iter;
 
 class Part {
 protected:
@@ -46,6 +54,7 @@ protected:
   PartInterface *interface_;
 
   string name_;
+  property_vector properties_;
 
 public:
   Part( PartInterface *parent=0, const string name="", PartInterface *i=0 ) 
@@ -56,6 +65,28 @@ public:
 
   PartInterface *interface() { return interface_; }
   string name() { return name_; }
+
+  void set_property(int id, string name, vector<unsigned char> data) 
+  { 
+    if ((int)properties_.size()<=id)
+	properties_.resize(id+1);
+    properties_[id].insert(pair<string, vector<unsigned char> >(name,data));
+  }
+
+  //! data[0] is the valid bool: set to 1 if this call succeeds, 0 otherwise
+  void get_property(int id, string name , vector<unsigned char>& data) 
+  {
+    if ((int)properties_.size()>id) {
+      pv_iter i = properties_[id].find(name);
+      if (i != properties_[id].end()) {
+        int length=data.size();
+        data[0]=1;
+        // copy from property to get buffer (data)
+	for (int loop=1;loop<length;++loop)
+          data[loop]=(*i).second[loop-1];
+      } else { data[0]=0; }
+    } else { data[0]=0; }
+  }
 };
 
 } // namespace SCIRun
