@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/fortran
 
@@ -77,6 +77,22 @@ SRCS += \
 	$(SRCDIR)/wallbc.F \
 	$(SRCDIR)/wvelcoef.F \
 	$(SRCDIR)/wvelsrc.F
+
+PSELIBS := \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Disclosure  \
+	Packages/Uintah/Core/Exceptions  \
+	Core/Thread 			 \
+	Core/Geometry                    \
+	Core/Exceptions
+
+LIBS := $(FLIBS) 
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
 
 $(SRCDIR)/add_hydrostatic_term_topressure.o: $(SRCDIR)/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/add_mm_enth_src.o: $(SRCDIR)/add_mm_enth_src_fort.h

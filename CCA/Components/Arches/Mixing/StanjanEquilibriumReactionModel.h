@@ -70,10 +70,10 @@ POSSIBLE REVISIONS:
 
 using namespace std;
 namespace Uintah {
+  class KD_Tree;
   class ChemkinInterface;
   class Stream;
   class MixingModel;
-  class MixRxnTable;
   class MixRxnTableInfo;
   // Reference temperature defined to be the lower limit of integration in the
   // determination of the system sensible enthalpy
@@ -138,20 +138,20 @@ namespace Uintah {
     // Gets the state space (dependent) variables by  interpolation from a 
     // table using the values of the independent variables
     //
-    virtual void getRxnStateSpace(Stream unreactedMixture, 
-				    vector<double> varsHFPi, 
+    virtual void getRxnStateSpace(Stream& unreactedMixture, 
+				    vector<double>& varsHFPi, 
 				    Stream& reactedStream);
-    // Computes the state space (dependent) variables using the Stanjan
-    // equilibrium code given the unreacted stream information and values 
-    // for the reaction variables
-    virtual void computeRxnStateSpace(Stream unreactedMixture, vector<double> mixRxnVar, 
-                              Stream& equilStateSpace);
 
 
   private:
+    // Computes the state space (dependent) variables using the Stanjan
+    // equilibrium code given the unreacted stream information and values 
+    // for the reaction variables
+    void computeRxnStateSpace(Stream& unreactedMixture, vector<double>& mixRxnVar, 
+			      Stream& equilStateSpace);
     // Looks for needed entry in KDTree and returns that entry. If entry 
     // does not exist, calls integrator to compute entry before returning it.
-    void tableLookUp(int* tableKeyIndex, Stream& equilStateSpace);
+    Stream tableLookUp(int* tableKeyIndex);
     void convertIndextoValues(int* tableKeyIndex);
     void computeEquilibrium(double initTemp, double initPress,
 			    const vector<double> initMassFract, 
@@ -164,6 +164,8 @@ namespace Uintah {
     // rates, and thermodynamic information.
     ChemkinInterface* d_reactionData;
     MixingModel* d_mixModel;
+    int d_numMixVars;
+    int d_numRxnVars;
     bool d_adiabatic;
     int d_rxnTableDimension;
     int d_depStateSpaceVars;
@@ -173,12 +175,12 @@ namespace Uintah {
     // Data structure class that stores the table entries for state-space
     // variables as a function of independent variables.
     // This could be implemented either as a k-d or a binary tree data structure.
-    MixRxnTable* d_rxnTable;
+    KD_Tree* d_rxnTable;
 
     static const int MAXITER = 1000;
     // includes all the vars except vectors...
     // increase the value if want to increase number of variables
-    static const int NUM_DEP_VARS = 9;
+    static const int NUM_DEP_VARS = 7;
  
   }; // End Class StanjanEquilibriumReactionModel
 
