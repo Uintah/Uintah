@@ -67,6 +67,7 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
                             lb->GThermalContactHeatExchangeRateLabel,dwi,patch);
       GthermalContactHeatExchangeRate[dwi].initialize(0);
       // -------------------------------------------------------------------
+#endif
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -89,8 +90,8 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 #endif
       }
       
-        double contactTemperature = numerator/denominator;
-        for(int m = 0; m < numMatls; m++) {
+      double contactTemperature = numerator/denominator;
+      for(int m = 0; m < numMatls; m++) {
 #ifndef FRACTURE 
          thermalContactHeatExchangeRate[m][*iter] =
                            (contactTemperature - gTemp[m][*iter])/delT;
@@ -98,7 +99,7 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
          GthermalContactHeatExchangeRate[m][*iter] =
                            (contactTemperature - GTemp[m][*iter])/delT;
 #endif
-        }
+      }
     }
   }
 }
