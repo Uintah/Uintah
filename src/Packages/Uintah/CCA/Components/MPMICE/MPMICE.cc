@@ -1719,6 +1719,39 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numALLMatls; m++)   {
+    
+/*`==========TESTING==========*/
+#if 0
+      //__________________________________
+      // set boundary conditions on rhoMicro.
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+
+      for(Patch::FaceType face = Patch::startFace;
+        face <= Patch::endFace; face=Patch::nextFace(face)){  
+        CellIterator iterLim = patch->getFaceCellIterator(face,"plusEdgeCells");
+               
+        if(ice_matl){
+          for(CellIterator iter=iterLim; !iter.done();iter++) {
+            IntVector c = *iter;
+            rho_micro[m][c] = 
+              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
+                                                 cv[m][c],Temp[m][c]);
+          }
+        }
+        if(mpm_matl){
+          for(CellIterator iter=iterLim; !iter.done();iter++) {
+            IntVector c = *iter;
+            rho_micro[m][c] =  
+              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                         press_new[c],press_ref,mpm_matl);
+          }
+        }  // mpm
+      } // face loop
+#endif   
+/*===========TESTING==========`*/
+      
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
