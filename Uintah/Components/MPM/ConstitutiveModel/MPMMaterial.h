@@ -3,6 +3,7 @@
 
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/Material.h>
+
 class ConstitutiveModel;
 
 /**************************************
@@ -59,6 +60,9 @@ private:
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.3  2000/04/14 02:19:42  jas
+// Now using the ProblemSpec for input.
+//
 // Revision 1.2  2000/03/30 18:31:22  guilkey
 // Moved Material base class to Grid directory.  Modified MPMMaterial
 // and sub.mk to coincide with these changes.

@@ -20,8 +20,7 @@
 
 #include "ConstitutiveModel.h"	
 #include <Uintah/Components/MPM/Util/Matrix3.h>
-
-#ifdef WONT_COMPILE_YET
+#ifdef WONT_COMPILE_YET     
 
 class ElasticConstitutiveModel : public ConstitutiveModel {
  private:
@@ -108,7 +107,7 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
 
   // class function to read correct number of parameters
   // from the input file
-  static void readParameters(std::ifstream& in, double *p_array);
+  static void readParameters(ProblemSpecP ps, double *p_array);
 
   // class function to write correct number of parameters
   // to the output file
@@ -116,7 +115,7 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
 
   // class function to read correct number of parameters
   // from the input file, and create a new object
-  static ConstitutiveModel* readParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
 
   // member function to write correct number of parameters
   // to output file, and to write any other particle information
@@ -127,7 +126,7 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   // from the input file, and any other particle information
   // need to restart the model for this particle 
   // and create a new object
-  static ConstitutiveModel* readRestartParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
 
   // class function to create a new object from parameters
   static ConstitutiveModel* create(double *p_array);
@@ -151,10 +150,12 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
 
 #endif
 
-
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.3  2000/04/14 02:19:42  jas
+// Now using the ProblemSpec for input.
+//
 // Revision 1.2  2000/03/20 17:17:08  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

@@ -16,9 +16,9 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
+#ifdef WONT_COMPILE_YET     
 
-#ifdef WONT_COMPILE_YET
-#include "Matrix.cc" // for bounded array multiplier	
+#include <Uintah/Component/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
 using std::endl;
 using std::ifstream;
@@ -355,9 +355,12 @@ void ElasticConstitutiveModel::computeStressTensor
 
 }
 
-void ElasticConstitutiveModel::readParameters(ifstream& in, double *p_array)
+void ElasticConstitutiveModel::readParameters(ProblemSpecP ps, double *p_array)
 {
-  in >> p_array[0] >> p_array[1];
+
+  ps->require("youngs_modulus",p_array[0]);
+  ps->require("poissons_ratio",p_array[1]);
+ 
 }
 
 void ElasticConstitutiveModel::writeParameters(ofstream& out, double *p_array)
@@ -365,10 +368,11 @@ void ElasticConstitutiveModel::writeParameters(ofstream& out, double *p_array)
   out << p_array[0] << " " << p_array[1] << " ";
 }
 
-ConstitutiveModel* ElasticConstitutiveModel::readParametersAndCreate(ifstream& in)
+ConstitutiveModel* ElasticConstitutiveModel::readParametersAndCreate(
+					     ProblemSpecP ps)
 {
   double p_array[2];
-  readParameters(in, p_array);
+  readParameters(ps, p_array);
   return(create(p_array));
 }
 
@@ -384,10 +388,12 @@ void ElasticConstitutiveModel::writeRestartParameters(ofstream& out) const
       << (getStressTensor())(3,3) << endl;
 }
 
-ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(ifstream& in)
+ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(
+                                             ProblemSpecP ps)
 {
+#if 0
   Matrix3 st(0.0);
-  ConstitutiveModel *cm = readParametersAndCreate(in);
+  ConstitutiveModel *cm = readParametersAndCreate(ps);
   
   in >> st(1,1) >> st(1,2) >> st(1,3)
      >> st(2,2) >> st(2,3) >> st(3,3);
@@ -397,6 +403,7 @@ ConstitutiveModel* ElasticConstitutiveModel::readRestartParametersAndCreate(ifst
   cm->setStressTensor(st);
   
   return(cm);
+#endif
 }
 
 ConstitutiveModel* ElasticConstitutiveModel::create(double *p_array)
@@ -456,6 +463,9 @@ int ElasticConstitutiveModel::getSize() const
 #endif
 
 // $Log$
+// Revision 1.3  2000/04/14 02:19:42  jas
+// Now using the ProblemSpec for input.
+//
 // Revision 1.2  2000/03/20 17:17:08  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

@@ -2,6 +2,11 @@
 #define __CONSTITUTIVE_MODEL_H__
 
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <Uintah/Interface/ProblemSpec.h>
+
+using Uintah::Interface::ProblemSpecP;
+using Uintah::Interface::ProblemSpec;
 
 namespace Uintah {
     namespace Grid {
@@ -47,6 +52,9 @@ using Uintah::Interface::DataWarehouseP;
 class ConstitutiveModel {
 public:
 
+  ConstitutiveModel();
+  virtual ~ConstitutiveModel();
+
   //////////
   // Basic constitutive model calculations
   virtual void computeStressTensor(const Region* region,
@@ -72,6 +80,9 @@ public:
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/04/14 02:19:41  jas
+// Now using the ProblemSpec for input.
+//
 // Revision 1.6  2000/03/20 17:17:08  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //
