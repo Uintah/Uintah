@@ -12,13 +12,16 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Scheduler.cc
 
-PSELIBS := Uintah/Parallel Uintah/Grid
+PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/04/12 23:01:55  sparker
+# Implemented more of problem spec - added Point and IntVector readers
+#
 # Revision 1.5  2000/04/11 07:10:54  sparker
 # Completing initialization and problem setup
 # Finishing Exception modifications

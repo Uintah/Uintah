@@ -4,14 +4,20 @@ static char *id="@(#) $Id$";
 #include "ProblemSpec.h"
 
 #include <iostream>
+#include <SCICore/Geometry/IntVector.h>
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/Point.h>
+#include <Uintah/Exceptions/ParameterNotFound.h>
 //#include <cstdlib>
 
 using std::cerr;
 using std::endl;
+using namespace Uintah::Interface;
 using std::string;
-
-namespace Uintah {
-namespace Interface {
+using SCICore::Geometry::Point;
+using SCICore::Geometry::Vector;
+using SCICore::Geometry::IntVector;
+using Uintah::Exceptions::ParameterNotFound;
 
 ProblemSpec::ProblemSpec()
 {
@@ -43,6 +49,11 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
   }
   else {
     start_element = this->d_node;
+  }
+  if (start_element.isNull()) {
+    cerr << "Didn't find the start . . " << name << endl;
+    cerr << "Setting to Null . . " << endl;
+    return 0;
   }
   DOM_Node found_node = findNode(name,start_element);
 
@@ -116,7 +127,7 @@ DOM_Node ProblemSpec::findNode(const std::string &name,DOM_Node node) const
     if (search_name.equals(child_name) ) {
       return child;
     }
-    DOM_Node tmp = findNode(name,child);
+    //DOM_Node tmp = findNode(name,child);
     child = child.getNextSibling();
   }
   
@@ -131,7 +142,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . ." << endl;
+      cerr << "Didn't find the tag . ." << name << endl;
     cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
@@ -156,7 +167,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . ." << endl;
+      cerr << "Didn't find the tag . ." << name << endl;
     cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
@@ -182,7 +193,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . ." << endl;
+      cerr << "Didn't find the tag . ." << name << endl;
     cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
@@ -213,7 +224,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name,this->d_node);
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . ." << endl;
+      cerr << "Didn't find the tag . ." << name << endl;
     cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
@@ -235,14 +246,23 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
 }
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
-			      SCICore::Geometry::Vector &value)
+			      Point &value)
+{
+    Vector v;
+    ProblemSpecP ps = get(name, v);
+    value = Point(v);
+    return ps;
+}
+
+ProblemSpecP ProblemSpec::get(const std::string& name, 
+			      Vector &value)
 {
 
   std::string string_value;
   ProblemSpecP ps = this;
   DOM_Node found_node = findNode(name, this->d_node);
   if (found_node.isNull()) {
-    cerr << "Didn't find the tag . ." << endl;
+      cerr << "Didn't find the tag . ." << name << endl;
     cerr << "Setting to Null . . " << endl;
     ps = 0;
     return ps;
@@ -277,13 +297,56 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
 }
 
+ProblemSpecP ProblemSpec::get(const std::string& name, 
+			      IntVector &value)
+{
+
+  std::string string_value;
+  ProblemSpecP ps = this;
+  DOM_Node found_node = findNode(name, this->d_node);
+  if (found_node.isNull()) {
+      cerr << "Didn't find the tag . ." << name << endl;
+    cerr << "Setting to Null . . " << endl;
+    ps = 0;
+    return ps;
+  }
+  else {
+    for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	 child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	DOMString val = child.getNodeValue();
+	char *s = val.transcode();
+	string_value = std::string(s);
+	delete[] s;
+	// Parse out the [num,num,num]
+	// Now pull apart the string_value
+	std::string::size_type i1 = string_value.find("[");
+	std::string::size_type i2 = string_value.find_first_of(",");
+	std::string::size_type i3 = string_value.find_last_of(",");
+	std::string::size_type i4 = string_value.find("]");
+	
+	std::string x_val(string_value,i1+1,i2-i1-1);
+	std::string y_val(string_value,i1+1,i3-i2-1);
+	std::string z_val(string_value,i1+1,i4-i3-1);
+
+	value.x(atoi(x_val.c_str()));
+	value.y(atoi(y_val.c_str()));
+	value.z(atoi(z_val.c_str()));	
+      }
+    }
+  }
+          
+  return ps;
+
+}
+
 void ProblemSpec::require(const std::string& name, double& value)
 {
 
   // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-    cerr << "Throw an exception . . " << endl;
+      throw ParameterNotFound(name);
  
 }
 
@@ -293,7 +356,7 @@ void ProblemSpec::require(const std::string& name, int& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-    cerr << "Throw an exception . . " << endl;
+      throw ParameterNotFound(name);
   
 }
 
@@ -302,7 +365,7 @@ void ProblemSpec::require(const std::string& name, bool& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-    cerr << "Throw an exception . . " << endl;
+      throw ParameterNotFound(name);
  
 
 }
@@ -312,23 +375,42 @@ void ProblemSpec::require(const std::string& name, std::string& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-    cerr << "Throw an exception . . " << endl;
+      throw ParameterNotFound(name);
  
 }
 
 void ProblemSpec::require(const std::string& name, 
-			      SCICore::Geometry::Vector  &value)
+			  Vector  &value)
 {
 
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-    cerr << "Throw an exception . . " << endl;
-
+      throw ParameterNotFound(name);
 
 }
 
+void ProblemSpec::require(const std::string& name, 
+			  IntVector  &value)
+{
 
+  // Check if the prob_spec is NULL
+
+ if (! this->get(name,value))
+      throw ParameterNotFound(name);
+
+}
+
+void ProblemSpec::require(const std::string& name, 
+			  Point  &value)
+{
+
+  // Check if the prob_spec is NULL
+
+ if (! this->get(name,value))
+      throw ParameterNotFound(name);
+
+}
 
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
@@ -336,11 +418,11 @@ const TypeDescription* ProblemSpec::getTypeDescription()
     return 0;
 }
 
-} // end namespace Interface 
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.10  2000/04/12 23:01:55  sparker
+// Implemented more of problem spec - added Point and IntVector readers
+//
 // Revision 1.9  2000/04/12 15:33:49  jas
 // Can now read a Vector type [num,num,num] from the ProblemSpec.
 //

@@ -5,7 +5,6 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
-#include <SCICore/Geometry/Vector.h>
 
 #ifdef __sgi
 #define IRIX
@@ -18,6 +17,14 @@
 #ifdef __sgi
 #pragma reset woff 1375
 #endif
+
+namespace SCICore {
+    namespace Geometry {
+	class IntVector;
+	class Vector;
+	class Point;
+    }
+}
 
 namespace Uintah {
     namespace Grid {
@@ -78,14 +85,20 @@ public:
     void require(const std::string& name, int& value);
     void require(const std::string& name, bool& value);
     void require(const std::string& name, std::string& value);
+    void require(const std::string& name, SCICore::Geometry::IntVector& value);
     void require(const std::string& name, SCICore::Geometry::Vector& value);
+    void require(const std::string& name, SCICore::Geometry::Point& value);
 
     ProblemSpecP get(const std::string& name, double& value);
     ProblemSpecP get(const std::string& name, int& value);
     ProblemSpecP get(const std::string& name, bool& value);
     ProblemSpecP get(const std::string& name, std::string& value);
     ProblemSpecP get(const std::string& name, 
+		     SCICore::Geometry::IntVector& value);
+    ProblemSpecP get(const std::string& name, 
 		     SCICore::Geometry::Vector& value);
+    ProblemSpecP get(const std::string& name, 
+		     SCICore::Geometry::Point& value);
 
     static const TypeDescription* getTypeDescription();
 
@@ -103,6 +116,9 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/04/12 23:01:55  sparker
+// Implemented more of problem spec - added Point and IntVector readers
+//
 // Revision 1.8  2000/04/12 15:33:49  jas
 // Can now read a Vector type [num,num,num] from the ProblemSpec.
 //
