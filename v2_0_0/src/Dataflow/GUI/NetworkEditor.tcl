@@ -383,6 +383,8 @@ proc createPackageMenu {index} {
 		-command "addModule \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\""
 	}
     }
+
+    createModulesMenu 0
     update idletasks
 }
 
@@ -419,40 +421,44 @@ proc createModulesMenu { subnet } {
 	menu $canvas.modulesMenu.subnet -tearoff false
     }
 
-    global SCIRUN_SRCDIR
+    createSubnetMenu $subnet
+	
+    update idletasks
+}
+
+proc createSubnetMenu { { subnet 0 } } {
+    global SCIRUN_SRCDIR Subnet 
     set filelist1 [glob -nocomplain -dir $SCIRUN_SRCDIR/Subnets *.net]
     set filelist2 [glob -nocomplain -dir ~/SCIRun/Subnets *.net]
-    set subnetfiles [lsort -dictionary [concat $filelist1 $filelist2]]
-
-    $canvas.modulesMenu.subnet delete 0 end
+    set subnetfiles [lsort -dictionary [concat $filelist1 $filelist2]]    
+    set menu $Subnet(Subnet${subnet}_canvas).modulesMenu
+    
+    $menu.subnet delete 0 end
     .main_menu.subnet.menu delete 0 end
 
     if ![llength $subnetfiles] {
-	$canvas.modulesMenu entryconfigure Sub-Networks -state disabled
+	$menu entryconfigure Sub-Networks -state disabled
 	.main_menu.subnet configure -state disabled
     } else {
-	$canvas.modulesMenu entryconfigure Sub-Networks -state normal
+	$menu entryconfigure Sub-Networks -state normal
 	.main_menu.subnet configure -state normal
 	foreach file $subnetfiles {
-	    set name [join [lrange [split [lindex [split $file "/"] end] "."] 0 end-1] "."]
-	    $canvas.modulesMenu.subnet add command \
-		-label "$name" \
+	    set filename [lindex [file split $file] end]
+	    set name [join [lrange [split  $filename "."] 0 end-1] "."]
+	    $menu.subnet add command -label "$name" \
 		-command "global Subnet
-                          set Subnet(Loading) $subnet
-                          loadSubnet {$file}
-                          set Subnet(Loading) 0"
-
-	    .main_menu.subnet.menu add command \
-		-label "$name" \
+			      set Subnet(Loading) $subnet
+			      loadSubnet {$file}
+                              set Subnet(Loading) 0"
+	    
+	    .main_menu.subnet.menu add command -label "$name" \
 		-command "global Subnet
                           set Subnet(Loading) 0
                           loadSubnet {$file}"
 	}
     }
-	
-    update idletasks
 }
-
+    
 
 proc networkHasChanged {args} {
     global NetworkChanged
