@@ -96,8 +96,7 @@ itcl_class SCIRun_Render_Viewer {
 	    # else, raise them all.
 	    for {set window 0} {$window < [llength $openViewersList] } { incr window } {
 		set rid [lindex $openViewersList $window]
-		wm deiconify .ui[$rid modname]
-		raise .ui[$rid modname]
+		SciRaise .ui[$rid modname]
 	    }
 	}
     }
@@ -1056,13 +1055,16 @@ itcl_class ViewWindow {
     }
 
     method makeBackgroundPopup {} {
+
 	set w .bg[modname]
-	toplevel $w
-	wm title $w "Background"
-	wm iconname $w background
-	wm minsize $w 100 100
+
+	if [winfo exists $w] {
+	    SciRaise $w
+	    return
+	}
 	set c "$this-c redraw "
-	makeColorPicker $w $this-bgcolor $c ""
+	makeColorPicker $w $this-bgcolor $c "destroy $w"
+	wm title $w "Choose Background Color"
     }
 
     method updateMode {msg} {
@@ -1191,7 +1193,7 @@ itcl_class ViewWindow {
     method makeLineWidthPopup {} {
 	set w .lineWidth[modname]
 	if {[winfo exists $w]} {
-	    raise $w
+	    SciRaise $w
 	    return
 	}
 	toplevel $w
@@ -1210,7 +1212,7 @@ itcl_class ViewWindow {
     method makePolygonOffsetPopup {} {
 	set w .polygonOffset[modname]
 	if {[winfo exists $w]} {
-	    raise $w
+	    SciRaise $w
 	    return
 	}
 	toplevel $w
@@ -1235,7 +1237,7 @@ itcl_class ViewWindow {
     method makePointSizePopup {} {
 	set w .psize[modname]
 	if {[winfo exists $w]} {
-	    raise $w
+	    SciRaise $w
 	    return
 	}
 	toplevel $w
@@ -1257,7 +1259,7 @@ itcl_class ViewWindow {
     method makeClipPopup {} {
 	set w .clip[modname]
 	if {[winfo exists $w]} {
-	    raise $w
+	    SciRaise $w
 	    return
 	}
 	toplevel $w
@@ -1626,11 +1628,14 @@ itcl_class ViewWindow {
 	set w .ui[modname]-lightSources
 
         if {[winfo exists $w]} {
-	    raise $w
+	    SciRaise $w
             return
         }
 
-	toplevel $w
+	# create the window (immediately withdraw it to avoid flicker)
+	toplevel $w; wm withdraw $w
+
+        wm title $w "Light Position and Colors"
 	frame $w.tf -relief flat
 	pack $w.tf -side top
 	frame $w.bf -relief flat
@@ -1651,6 +1656,8 @@ itcl_class ViewWindow {
  	button $w.breset -text "Reset Lights" -command "$this resetLights $w"
 	button $w.bclose -text Close -command "destroy $w"
 	pack $w.l $w.o $w.breset $w.bclose -side top -expand yes -fill x
+
+	moveToCursor $w "leave_up"
     }
 	
     method makeLightControl { w i } {
@@ -1698,7 +1705,7 @@ itcl_class ViewWindow {
  	set $color-b [lindex [lindex [set $this-lightColors] $i] 2]
 
 	if {[winfo exists $w.color]} { destroy $w.color } 
-	toplevel $w.color 
+
 	makeColorPicker $w.color $color \
 	    "$this setColor $w.color $c $i $color " \
 	    "destroy $w.color"
@@ -1721,7 +1728,6 @@ itcl_class ViewWindow {
        set window .ui[modname]
        $c itemconfigure lc -fill [format "#%04x%04x%04x" $ir $ig $ib]
        $this lightSwitch $i
-       destroy $w
    }
    method resetLights { w } {
 	for { set i 0 } { $i < 4 } { incr i 1 } {
@@ -1814,12 +1820,8 @@ itcl_class ViewWindow {
 	set w .ui[modname]-saveImage
 
 	if {[winfo exists $w]} {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
-           return
+	    SciRaise $w
+	    return
         }
 
 	toplevel $w -class TkFDialog
@@ -1879,7 +1881,7 @@ itcl_class ViewWindow {
 	set w .ui[modname]-saveMovie
 
 	if {[winfo exists $w]} {
-	   raise $w
+	   SciRaise $w
            return
         }
 
@@ -2376,12 +2378,8 @@ itcl_class EmbeddedViewWindow {
 	set w .ui[modname]-saveImage
 
 	if {[winfo exists $w]} {
-	    if { [winfo ismapped $w] == 1} {
-		raise $w
-	    } else {
-		wm deiconify $w
-	    }
-           return
+	    SciRaise $w
+	    return
         }
 
 	toplevel $w -class TkFDialog
