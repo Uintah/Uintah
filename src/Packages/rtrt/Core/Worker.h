@@ -2,10 +2,11 @@
 #ifndef WORKER_H
 #define WORKER_H 1
 
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Barrier.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/params.h>
+
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Barrier.h>
 
 namespace SCIRun {
   class Vector;
@@ -79,6 +80,11 @@ public:
     return counters;
   }
   PerProcessorContext* get_ppc() {return ppc;}
+
+  // This is probably a bad idea to use this as I can't enforce num to
+  // be between 0 and the number of workers or be unique, but for now
+  // it is.  --James Bigler
+  int rank() { return num; }
 
 };
 
