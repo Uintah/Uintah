@@ -289,49 +289,6 @@ ContourMesh::size(ContourMesh::Cell::size_type &s) const
 }
 
 
-MeshHandle
-ContourMesh::clip(ClipperHandle clipper)
-{
-  ContourMesh *clipped = scinew ContourMesh();
-
-  hash_map<under_type, under_type, hash<under_type>,
-    equal_to<under_type> > nodemap;
-
-  Elem::iterator bi, ei;
-  begin(bi); end(ei);
-  while (bi != ei)
-  {
-    Point p;
-    get_center(p, *bi);
-    if (clipper->inside_p(p))
-    {
-      // Add this element to the new mesh.
-      Node::array_type onodes;
-      get_nodes(onodes, *bi);
-      Node::array_type nnodes(onodes.size());
-
-      for (unsigned int i=0; i<onodes.size(); i++)
-      {
-	if (nodemap.find(onodes[i]) == nodemap.end())
-	{
-	  Point np;
-	  get_center(np, onodes[i]);
-	  nodemap[onodes[i]] = clipped->add_node(np);
-	}
-	nnodes[i] = nodemap[onodes[i]];
-      }
-
-      clipped->add_elem(nnodes);
-    }
-    
-    ++bi;
-  }
-
-  clipped->flush_changes();  // Really should copy normals
-  return clipped;
-}
-
-
 
 const TypeDescription*
 ContourMesh::get_type_description() const

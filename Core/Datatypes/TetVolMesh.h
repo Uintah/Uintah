@@ -202,6 +202,8 @@ public:
   void add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d);
   void add_tet(const Point &p0, const Point &p1, const Point &p2,
 	       const Point &p3);
+  Elem::index_type add_elem(Node::array_type a);
+  virtual bool is_editable() const { return true; }
 
   // Must call connect after adding tets this way.
   Node::index_type add_point(const Point &p);
@@ -216,8 +218,6 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
-
-  virtual MeshHandle clip(ClipperHandle clipper);
 
 private:
 

@@ -995,6 +995,18 @@ TetVolMesh::add_tet(const Point &p0, const Point &p1, const Point &p2,
 	  add_find_point(p3));
 }
 
+
+TetVolMesh::Elem::index_type
+TetVolMesh::add_elem(Node::array_type a)
+{
+  cells_.push_back(a[0]);
+  cells_.push_back(a[1]);
+  cells_.push_back(a[2]);
+  cells_.push_back(a[3]);
+  return (cells_.size() - 1) >> 2;
+}
+
+
 void
 TetVolMesh::add_tet_unconnected(const Point &p0,
 				const Point &p1,
@@ -1002,49 +1014,6 @@ TetVolMesh::add_tet_unconnected(const Point &p0,
 				const Point &p3)
 {
   add_tet(add_point(p0), add_point(p1), add_point(p2), add_point(p3));
-}
-
-
-MeshHandle
-TetVolMesh::clip(ClipperHandle clipper)
-{
-  TetVolMesh *clipped = scinew TetVolMesh();
-
-  hash_map<under_type, under_type, hash<under_type>,
-    equal_to<under_type> > nodemap;
-
-  Elem::iterator bi, ei;
-  begin(bi); end(ei);
-  while (bi != ei)
-  {
-    Point p;
-    get_center(p, *bi);
-    if (clipper->inside_p(p))
-    {
-      // Add this element to the new mesh.
-      Node::array_type onodes;
-      get_nodes(onodes, *bi);
-      Node::array_type nnodes(onodes.size());
-
-      for (unsigned int i=0; i<onodes.size(); i++)
-      {
-	if (nodemap.find(onodes[i]) == nodemap.end())
-	{
-	  Point np;
-	  get_center(np, onodes[i]);
-	  nodemap[onodes[i]] = clipped->add_point(np);
-	}
-	nnodes[i] = nodemap[onodes[i]];
-      }
-
-      clipped->add_tet(nnodes[0], nnodes[1], nnodes[2], nnodes[3]);
-    }
-    
-    ++bi;
-  }
-
-  clipped->flush_changes();  // Really should copy normals
-  return clipped;
 }
 
 

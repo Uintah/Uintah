@@ -192,11 +192,10 @@ public:
     { nodes_.push_back(p); return nodes_.size()-1; }
   Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
     { edges_.push_back(index_pair(i1,i2)); return nodes_.size()-1; }
-
-  void add_elem(Node::array_type a) { add_edge(a[0], a[1]); }
-
-  virtual MeshHandle clip(ClipperHandle c);
-
+  Elem::index_type add_elem(Node::array_type a)
+  { edges_.push_back(index_pair(a[0],a[1])); return nodes_.size()-1; }
+  virtual bool is_editable() const { return true; }
+    
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
