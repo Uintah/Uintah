@@ -35,7 +35,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(Z_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
