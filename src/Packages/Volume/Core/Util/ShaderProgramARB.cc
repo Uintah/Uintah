@@ -77,8 +77,8 @@ static PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB = 0;
 
 namespace Volume {
 
-bool ShaderProgramARB::mInit = false;
-bool ShaderProgramARB::mSupported = false;
+static bool mInit = false;
+static bool mSupported = false;
 
 ShaderProgramARB::ShaderProgramARB(const string& program)
   : mType(0), mId(0), mProgram(program)
@@ -93,8 +93,8 @@ ShaderProgramARB::valid()
   return mSupported ? glIsProgramARB(mId) : false;
 }
 
-void
-ShaderProgramARB::create ()
+bool
+ShaderProgramARB::create()
 {
   if(!mInit) {
 #ifdef HAVE_GLEW
@@ -172,8 +172,12 @@ ShaderProgramARB::create ()
       cerr << "program error at line " << l << ", character "
            << position-start << endl << endl << line << endl
            << underline << endl;
+      return false;
     }
+    return true;
   }
+  
+  return false;
 }
 
 void

@@ -8,7 +8,7 @@ SRCS     += \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/Utils.cc \
 	$(SRCDIR)/ShaderProgramARB.cc \
-#	$(SRCDIR)/Pbuffer.cc \
+	$(SRCDIR)/Pbuffer.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Geometry \
