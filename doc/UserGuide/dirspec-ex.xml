@@ -92,9 +92,9 @@
       such a function (in C like syntax) might look like this:
     </p>
 
-    <p>
+    <code>
         int Sort(string *words_to_sort, int alg_to_use);
-    </p>
+    </code>
 
     <p>
       Where words_to_sort is a random , possibly large, list of words
@@ -130,7 +130,7 @@
       (pseudo code):
     </p>
     
-    <p>
+    <code>
       void execute() {
         string *words_to_sort;
 	int alg_to_use;
@@ -142,7 +142,7 @@
 	
 	send_data_to_output_port(words_to_sort);
       }
-    </p>
+    </code>
 
     <p>
       Modules are often manifested as graphical boxes with ports, 
@@ -201,7 +201,8 @@
       that port's get() function with a handle to the type of data
       expected on the port.  On success, the handle passed to get()
       will represent the data that is on that input port:
-
+    </p>
+    <code>
       #include <Dataflow/Ports/MatrixPort.h>
 
       ...
@@ -224,7 +225,8 @@
         
 	...
       }
-    </p>
+    </code>
+
   </example>
 </dir>
 
