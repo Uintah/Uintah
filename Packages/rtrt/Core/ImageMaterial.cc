@@ -67,8 +67,10 @@ ImageMaterial::~ImageMaterial()
 Color ImageMaterial::interp_color(Array2<Color>& image,
 				  double u, double v)
 {
-    u *= (image.dim1()-1);
-    v *= (image.dim2()-1);
+    // u & v *= dimensions minus the slop(2) and the zero base difference (1)
+    // for a total of 3
+    u *= (image.dim1()-3);
+    v *= (image.dim2()-3);
     
     int iu = (int)u;
     int iv = (int)v;
