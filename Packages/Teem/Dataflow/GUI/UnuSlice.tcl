@@ -51,10 +51,11 @@ itcl_class Teem_Unu_UnuSlice {
 
         iwidgets::entryfield $w.f.options.axis -labeltext "axis:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.position -labeltext "position:" -textvariable $this-position
+  
+	iwidgets::entryfield $w.f.options.position -labeltext "position:" -textvariable $this-position
         pack $w.f.options.position -side top -expand yes -fill x
 
-	makeSciButtonPanel $w. $w $this
+	makeSciButtonPanel $w $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x

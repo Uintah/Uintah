@@ -30,7 +30,7 @@ itcl_class Teem_Tend_TendAnvol {
         set $this-aniso_metric  "tenAniso_FA"
 
         global $this-threshold
-        set $this-threshold 100
+        set $this-threshold 0.5
 
 
     }

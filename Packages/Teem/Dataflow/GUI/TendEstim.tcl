@@ -42,7 +42,7 @@ itcl_class Teem_Tend_TendEstim {
         set $this-bmatrix ""
 
         global $this-scale
-        set $this-scale 0.0
+        set $this-scale 1.0
 
 
     }
