@@ -46,6 +46,7 @@ SRCS := \
 	$(SRCDIR)/ShowDipoles.tcl\
 	$(SRCDIR)/ShowLeads.tcl\
 	$(SRCDIR)/TSVD.tcl\
+	$(SRCDIR)/Tensorlines.tcl\
 	$(SRCDIR)/Tikhonov.tcl\
 	$(SRCDIR)/TikhonovSVD.tcl\
 #[INSERT NEW TCL FILE HERE]

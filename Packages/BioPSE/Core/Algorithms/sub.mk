@@ -1,9 +1,10 @@
-#Makefile fragment for the Packages/Yarden/Core directory
+#Makefile fragment for the Packages/BioPSE/Core/Algorithms directory
 
 SRCDIR := Packages/BioPSE/Core/Algorithms
 
 SUBDIRS := \
-	$(SRCDIR)/NumApproximation \
 	$(SRCDIR)/Forward \
+	$(SRCDIR)/NumApproximation \
+	$(SRCDIR)/Visualization \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
