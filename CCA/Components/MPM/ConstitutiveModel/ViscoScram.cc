@@ -158,8 +158,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& new_dw)
 {
   //
-  //  FIX  To do:  Read in table for vres
-  //               Obtain and modify particle temperature (deg K)
+  //  FIX  To do:  Obtain and modify particle temperature (deg K)
   //
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
   double J,se=0.;
@@ -262,9 +261,17 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       double EffDevStress = sqrtopf*DevStressNorm;
 
-      // FIX Add code here to get vres from a lookup table
+      // Baseline
+      double vres_a = 0.90564746;
+      double vres_b =-2.90178468;
+      // Aged
+      //      double vres_a = 0.90863805;
+      //      double vres_b =-2.5061966;
 
-      double vres = 0.02861 + 0.02999 * EDeff;
+      double vres = 0.0;
+      if(EDeff > 1.e-8){
+	vres = exp(vres_a*log(EDeff) + vres_b);
+      }
 
       double p = -onethird * pstress[idx].Trace();
 
@@ -401,7 +408,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
         // Update Maxwell element Deviatoric Stresses
 
-        statedata[idx].DevStress[imw] =
+        statedata[idx].DevStress[imw] +=
 		 (rk1 + rk4)*onesixth + (rk2 + rk3)*onethird;
       }
 
