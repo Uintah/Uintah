@@ -49,6 +49,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-adjacencydatasource
     global $this-boundingboxdatasource
     global $this-injurylistdatasource
+    global $this-geometrypath
     global $this-querytype
     # The Probe Widget UI
     global $this-gui_probeLocx
@@ -84,6 +85,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-adjacencydatasource ""
     set $this-boundingboxdatasource ""
     set $this-injurylistdatasource ""
+    set $this-geometrypath ""
     set $this-querytype "1"
     set $this-gui_probeLocx "0"
     set $this-gui_probeLocy "0"
@@ -158,6 +160,15 @@ itcl_class VS_DataFlow_HotBox {
         -filetypes $types \
         -initialdir $initdir \
         -defaultextension $defext ]
+    if { [set  $this-injurylistdatasource] != "" } {
+         $this-c needexecute
+       }
+    } elseif {$whichdatasource == "geometry"} {
+    set title "Set Geometry path"
+    set defext ".xml"
+    set $this-geometrypath [ tk_chooseDirectory \
+        -title $title \
+        -initialdir $initdir ]
     if { [set  $this-injurylistdatasource] != "" } {
          $this-c needexecute
        }
@@ -296,7 +307,12 @@ itcl_class VS_DataFlow_HotBox {
     entry $w.files.row4.filenamentry -textvar $this-injurylistdatasource -width 50
     button  $w.files.row4.browsebutton -text "Browse..." -command "$this launch_filebrowser injurylist"
 
-    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 -side top -anchor w
+    frame $w.files.row5
+    label $w.files.row5.gepmpathlabel -text "Geometry Directory: "
+    entry $w.files.row5.dirnamentry -textvar $this-geometrypath -width 50
+    button  $w.files.row5.browsebutton -text "Browse..." -command "$this launch_filebrowser geometry"
+
+    pack $w.files.row1 $w.files.row2 $w.files.row3 $w.files.row4 $w.files.row5 -side top -anchor w
     pack $w.files.row1.anatomylabel $w.files.row1.filenamentry\
 	$w.files.row1.browsebutton\
         -side left -anchor n -expand yes -fill x
@@ -308,6 +324,9 @@ itcl_class VS_DataFlow_HotBox {
         -side left -anchor n -expand yes -fill x
     pack $w.files.row4.injurylistlabel $w.files.row4.filenamentry\
 	$w.files.row4.browsebutton\
+        -side left -anchor n -expand yes -fill x
+    pack $w.files.row5.gepmpathlabel $w.files.row5.dirnamentry\
+        $w.files.row5.browsebutton\
         -side left -anchor n -expand yes -fill x
     }
     # end if { [set $this-Files_on] == "yes" }
