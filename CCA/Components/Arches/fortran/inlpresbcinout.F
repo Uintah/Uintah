@@ -31,6 +31,14 @@ c*********************************************************************
      $                     sns(j)*stb(k)*max(0.0D0,uu(i,j,k))
                   flowout = flowout - pt5*(den(i-1,j,k)+den(i,j,k))*
      $                      sns(j)*stb(k)*min(0.0D0,uu(i,j,k))
+                 if (cb) then
+                  co2in = co2in + pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                     sns(j)*stb(k)*max(0.0D0,uu(i,j,k))*
+     $                     pt5*(co2(i-1,j,k)+co2(i,j,k))
+                  co2out = co2out - pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                      sns(j)*stb(k)*min(0.0D0,uu(i,j,k))*
+     $                     pt5*(co2(i-1,j,k)+co2(i,j,k))
+                 endif
                endif
  130        CONTINUE
  140     CONTINUE
@@ -44,6 +52,14 @@ c*********************************************************************
      $                     sns(j)*stb(k)*min(0.0D0,uu(i,j,k))
                   flowout = flowout + pt5*(den(i-1,j,k)+den(i,j,k))*
      $                      sns(j)*stb(k)*max(0.0D0,uu(i,j,k))
+                 if (cb) then
+                  co2in = co2in - pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                     sns(j)*stb(k)*min(0.0D0,uu(i,j,k))*
+     $                     pt5*(co2(i-1,j,k)+co2(i,j,k))
+                  co2out = co2out + pt5*(den(i-1,j,k)+den(i,j,k))*
+     $                      sns(j)*stb(k)*max(0.0D0,uu(i,j,k))*
+     $                     pt5*(co2(i-1,j,k)+co2(i,j,k))
+                 endif
                END IF
  180        CONTINUE
  190     CONTINUE
@@ -60,6 +76,14 @@ C
      $                     sew(i)*stb(k)*max(0.0D0,vv(i,j,k))
                   flowout = flowout - pt5*(den(i,j-1,k)+den(i,j,k))*
      $                      sew(i)*stb(k)*min(0.0D0,vv(i,j,k))
+                 if (cb) then
+                  co2in = co2in + pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                     sew(i)*stb(k)*max(0.0D0,vv(i,j,k))*
+     $                     pt5*(co2(i,j-1,k)+co2(i,j,k))
+                  co2out = co2out - pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                      sew(i)*stb(k)*min(0.0D0,vv(i,j,k))*
+     $                     pt5*(co2(i,j-1,k)+co2(i,j,k))
+                 endif
                END IF
  230        CONTINUE
  240     CONTINUE
@@ -76,6 +100,14 @@ C
      $                     sew(i)*stb(k)*min(0.0D0,vv(i,j,k))
                   flowout = flowout + pt5*(den(i,j-1,k)+den(i,j,k))*
      $                      sew(i)*stb(k)*max(0.0D0,vv(i,j,k))
+                 if (cb) then
+                  co2in = co2in - pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                     sew(i)*stb(k)*min(0.0D0,vv(i,j,k))*
+     $                     pt5*(co2(i,j-1,k)+co2(i,j,k))
+                  co2out = co2out + pt5*(den(i,j-1,k)+den(i,j,k))*
+     $                      sew(i)*stb(k)*max(0.0D0,vv(i,j,k))*
+     $                     pt5*(co2(i,j-1,k)+co2(i,j,k))
+                 endif
                END IF
  280        CONTINUE
  290     CONTINUE
@@ -93,6 +125,14 @@ C
      $                     sew(i)*sns(j)*max(0.0D0,ww(i,j,k))
                   flowout = flowout - pt5*(den(i,j,k-1)+den(i,j,k))*
      $                      sew(i)*sns(j)*min(0.0D0,ww(i,j,k))
+                 if (cb) then
+                  co2in = co2in + pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                     sew(i)*sns(j)*max(0.0D0,ww(i,j,k))*
+     $                     pt5*(co2(i,j,k-1)+co2(i,j,k))
+                  co2out = co2out - pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                      sew(i)*sns(j)*min(0.0D0,ww(i,j,k))*
+     $                     pt5*(co2(i,j,k-1)+co2(i,j,k))
+                 endif
                END IF
  330        CONTINUE
  340     CONTINUE
@@ -109,6 +149,14 @@ C
      $                     sew(i)*sns(j)*min(0.0D0,ww(i,j,k))
                   flowout = flowout + pt5*(den(i,j,k-1)+den(i,j,k))*
      $                      sew(i)*sns(j)*max(0.0D0,ww(i,j,k))
+                 if (cb) then
+                  co2in = co2in - pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                     sew(i)*sns(j)*min(0.0D0,ww(i,j,k))*
+     $                     pt5*(co2(i,j,k-1)+co2(i,j,k))
+                  co2out = co2out + pt5*(den(i,j,k-1)+den(i,j,k))*
+     $                      sew(i)*sns(j)*max(0.0D0,ww(i,j,k))*
+     $                     pt5*(co2(i,j,k-1)+co2(i,j,k))
+                 endif
                END IF
  380        CONTINUE
  390     CONTINUE
