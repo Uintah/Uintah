@@ -427,6 +427,41 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
   }
 }
 
+void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec, GridP& grid,
+                                     SimulationStateP&   sharedState)
+{
+  // Pull out the exchange coefficients
+
+  cout << "Updating Ex Coefficients" << endl;
+  ProblemSpecP mat_ps       =  prob_spec->findBlock("AddMaterialProperties");
+  ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
+  if (!exch_ps)
+    throw ProblemSetupException("Cannot find exchange_properties tag");
+  
+  ProblemSpecP exch_co_ps = exch_ps->findBlock("exch_coef_after_MPM_add");
+  d_K_mom.clear();
+  d_K_heat.clear();
+  exch_co_ps->require("momentum",d_K_mom);
+  exch_co_ps->require("heat",    d_K_heat);
+
+  for (int i = 0; i<(int)d_K_mom.size(); i++) {
+    cout_norm << "K_mom = " << d_K_mom[i] << endl;
+    if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
+      ostringstream warn;
+      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
+      throw ProblemSetupException(warn.str());
+    }
+  }
+  for (int i = 0; i<(int)d_K_heat.size(); i++) {
+    cout_norm << "K_heat = " << d_K_heat[i] << endl;
+    if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
+      ostringstream warn;
+      warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
+      throw ProblemSetupException(warn.str());
+    }
+  }
+}
+
 void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
 {
                                                                                 
@@ -5120,10 +5155,10 @@ void ICE::setNeedAddMaterialFlag(const ProcessorGroup*,
     new_dw->get(need_add_flag, lb->NeedAddIceMaterialLabel);
 
     if(need_add_flag>0.1){
-      d_sharedState->setNeedAddMaterial(true);
+      d_sharedState->setNeedAddMaterial(1);
     }
     else{
-      d_sharedState->setNeedAddMaterial(false);
+      d_sharedState->setNeedAddMaterial(0);
     }
  }
 
