@@ -13,25 +13,30 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : Unu2op.tcl
+#    File   : Unu3op.tcl
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_Unu2op ""}
+catch {rename Teem_Unu_Unu3op ""}
 
-itcl_class Teem_Unu_Unu2op {
+itcl_class Teem_Unu_Unu3op {
     inherit Module
     constructor {config} {
-        set name Unu2op
+        set name Unu3op
         set_defaults
     }
     method set_defaults {} {
         global $this-operator
-        set $this-operator "eq"
+        set $this-operator "+"
 
-	global $this-float_input
-	set $this-float_input {1.0}
+	global $this-float1
+	set $this-float1 "0.0"
 
+	global $this-float2
+	set $this-float2 "0.0"
+
+	global $this-float3
+	set $this-float3 "0.0"
     }
 
     method ui {} {
@@ -51,8 +56,17 @@ itcl_class Teem_Unu_Unu2op {
         iwidgets::entryfield $w.f.options.operator -labeltext "Operator:" -textvariable $this-operator
         pack $w.f.options.operator -side top -expand yes -fill x
 	
-	iwidgets::entryfield $w.f.options.float_input -labeltext "Float Input:" -textvariable $this-float_input
-        pack $w.f.options.float_input -side top -expand yes -fill x
+	iwidgets::entryfield $w.f.options.float1 \
+	    -labeltext "Float Input 1:" -textvariable $this-float1
+        pack $w.f.options.float1 -side top -expand yes -fill x
+
+	iwidgets::entryfield $w.f.options.float2 \
+	    -labeltext "Float Input 2:" -textvariable $this-float2
+        pack $w.f.options.float2 -side top -expand yes -fill x
+
+	iwidgets::entryfield $w.f.options.float3 \
+	    -labeltext "Float Input 3:" -textvariable $this-float3
+        pack $w.f.options.float3 -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w

@@ -13,25 +13,29 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 #  University of Utah. All Rights Reserved.
 #  
-#    File   : Unu2op.tcl
-#    Author : Martin Cole
-#    Date   : Mon Sep  8 09:46:23 2003
+#    File   : UnuJhisto.tcl
+#    Author : Darby Van Uitert
+#    Date   : April 2004
 
-catch {rename Teem_Unu_Unu2op ""}
-
-itcl_class Teem_Unu_Unu2op {
+itcl_class Teem_Unu_UnuJhisto {
     inherit Module
     constructor {config} {
-        set name Unu2op
+        set name UnuJhisto
         set_defaults
     }
+
     method set_defaults {} {
-        global $this-operator
-        set $this-operator "eq"
+	global $this-bins
+	set $this-bins ""
 
-	global $this-float_input
-	set $this-float_input {1.0}
+	global $this-mins
+	set $this-mins ""
 
+	global $this-maxs
+	set $this-maxs ""
+
+	global $this-type
+	set $this-type "nrrdTypeUInt"
     }
 
     method ui {} {
@@ -39,7 +43,6 @@ itcl_class Teem_Unu_Unu2op {
         if {[winfo exists $w]} {
             return
         }
-
         toplevel $w
 
         frame $w.f
@@ -48,11 +51,21 @@ itcl_class Teem_Unu_Unu2op {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-        iwidgets::entryfield $w.f.options.operator -labeltext "Operator:" -textvariable $this-operator
-        pack $w.f.options.operator -side top -expand yes -fill x
-	
-	iwidgets::entryfield $w.f.options.float_input -labeltext "Float Input:" -textvariable $this-float_input
-        pack $w.f.options.float_input -side top -expand yes -fill x
+        iwidgets::entryfield $w.f.options.bins -labeltext "Bins:" \
+	    -textvariable $this-bins
+        pack $w.f.options.bins -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.mins -labeltext "Mins:" \
+	    -textvariable $this-mins
+        pack $w.f.options.mins -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.maxs -labeltext "Maxs:" \
+	    -textvariable $this-maxs
+        pack $w.f.options.maxs -side top -expand yes -fill x
+
+        iwidgets::entryfield $w.f.options.type -labeltext "Type:" \
+	    -textvariable $this-type
+        pack $w.f.options.type -side top -expand yes -fill x
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
@@ -60,3 +73,6 @@ itcl_class Teem_Unu_Unu2op {
 	pack $w.f -expand 1 -fill x
     }
 }
+
+
+
