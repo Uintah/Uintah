@@ -129,7 +129,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& new_dw)
 {
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
-  double J,p,muBar,IEl,U,W,se=0.;
+  double J,p,IEl,U,W,se=0.;
   double c_dil=0.0,Jinc;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
@@ -269,9 +269,6 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 
     se += (U + W)*pvolume[idx]/J;
 
-    // Compute wave speed at each particle, store the maximum
-    muBar = IEl * shear;
-
     if(pmass[idx] > 0){
       c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
     }
@@ -302,45 +299,34 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
 
-double CompNeoHook::computeStrainEnergy(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouseP& new_dw)
-{
-  double se=0;
-
-  return se;
-}
-
 void CompNeoHook::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const Patch* patch,
 					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) const
 {
-   task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
+   int matlindex = matl->getDWIndex();
+   task->requires(old_dw, lb->pXLabel,      matlindex, patch, Ghost::None);
+   task->requires(old_dw, lb->pMassLabel,   matlindex,  patch, Ghost::None);
+   task->requires(old_dw, lb->pVolumeLabel, matlindex,  patch, Ghost::None);
+   task->requires(old_dw, lb->pStressLabel, matlindex,  patch, Ghost::None);
+   task->requires(old_dw, lb->pDeformationMeasureLabel, matlindex, patch,
                   Ghost::None);
-   task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),  patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pVolumeLabel, matl->getDWIndex(),  patch,
-                  Ghost::None);
-   task->requires(old_dw, lb->pStressLabel, matl->getDWIndex(),  patch,
-		  Ghost::None);
-   task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), patch,
+   task->requires(new_dw, lb->gMomExedVelocityLabel, matlindex, patch,
                   Ghost::AroundCells, 1);
-   task->requires(old_dw, bElBarLabel, matl->getDWIndex(), patch,
-                  Ghost::None);
+   task->requires(old_dw, bElBarLabel,      matlindex, patch, Ghost::None);
    task->requires(old_dw, lb->delTLabel);
-   task->computes(new_dw, lb->pStressAfterStrainRateLabel, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
-   task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
+
+   task->computes(new_dw, lb->pStressAfterStrainRateLabel, matlindex,  patch);
+   task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc,
+							  matlindex, patch);
+   task->computes(new_dw, bElBarLabel_preReloc,      matlindex,  patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel,  matlindex, patch);
    
    if(matl->getFractureModel()) {
-      task->requires(new_dw, lb->pVisibilityLabel, matl->getDWIndex(), patch,
+      task->requires(new_dw, lb->pVisibilityLabel,   matlindex, patch,
 		  Ghost::None);
-      task->computes(new_dw, lb->pRotationRateLabel, matl->getDWIndex(),  patch);
+      task->computes(new_dw, lb->pRotationRateLabel, matlindex,  patch);
    }
 }
 
@@ -394,6 +380,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::StateData*)
 }
 
 // $Log$
+// Revision 1.48  2000/11/15 18:37:23  guilkey
+// Reduced warnings in constitutive models.
+//
 // Revision 1.47  2000/10/11 01:30:28  guilkey
 // Made CMData no longer a per particle variable for these models.
 // None of them currently have anything worthy of being called StateData,
