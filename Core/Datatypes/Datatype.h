@@ -34,6 +34,7 @@
 #include <Core/share/share.h>
 
 #include <Core/Persistent/Persistent.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Thread/Mutex.h>
 
 namespace SCIRun {

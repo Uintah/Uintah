@@ -139,24 +139,7 @@ SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); 
 SCICORESHARE inline void Pio(Piostream& stream, string& data) { stream.io(data); }
 SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
 
-// GROUP: Templates for persistent io for C++ standard library units
-//////////
-//
 
-//////////
-// Persistent IO for maps
-template <class Key, class Data>
-SCICORESHARE void
-Pio(Piostream& stream, map<Key, Data>& data );
-
-//////////
-// Persistent IO of vector containers
-template <class T>
-SCICORESHARE void Pio(Piostream& stream, vector<T>& data);
-
-template<class T,class S>
-SCICORESHARE void 
-Pio( Piostream &stream, pair<T,S>& pair);
 
 } // End namespace SCIRun
 
