@@ -178,7 +178,7 @@ VULCANDataReader::execute(){
 	index_ += incr;
       }
 
-      if( index_ + incr >= stop )
+      if( index_ + incr > stop )
 	loop_ = false;
 
       char indexStr[8];
