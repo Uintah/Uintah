@@ -45,6 +45,7 @@ namespace SCIRun {
 
 class Piostream;
 class Point;
+class TypeDescription;
 
 class SCICORESHARE Vector {
   double _x,_y,_z;
@@ -417,6 +418,8 @@ inline SCICORESHARE Vector Max(const Vector &v1, const Vector &v2)
 		Max(v1.y(), v2.y()),
 		Max(v1.z(), v2.z()));
 }
+
+const TypeDescription* get_type_description(Vector*);
 
 } // End namespace SCIRun
 

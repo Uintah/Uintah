@@ -106,8 +106,14 @@ public:
   void compute_imat();
   void invert();
 
+  static const string get_h_file_path() {
+    static string path(__FILE__);
+    return path;
+  }
   friend void SCICORESHARE Pio(Piostream&, Transform&);
 };
+
+const TypeDescription* get_type_description(Transform*);
 
 } // End namespace SCIRun
 

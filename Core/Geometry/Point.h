@@ -41,6 +41,7 @@ using std::string;
     
 namespace SCIRun {
 
+class TypeDescription;
 class RigorousTest;
 class Piostream;
 class Vector;
@@ -78,6 +79,11 @@ public:
   inline Vector asVector() const;
     
   string get_string() const;
+
+  static const string get_h_file_path() {
+    static string path(__FILE__);
+    return path;
+  }
     
   friend SCICORESHARE class Vector;
   friend SCICORESHARE inline double Dot(const Point&, const Point&);
@@ -280,6 +286,8 @@ inline double Dot(const Point& p1, const Point& p2)
 {
   return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
 }
+
+const TypeDescription* get_type_description(Point*);
 
 } // End namespace SCIRun
 

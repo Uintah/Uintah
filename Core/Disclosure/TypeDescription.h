@@ -21,7 +21,6 @@
 #define Disclosure_TypeDescription_h
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/Tensor.h>
 #include <vector>
 #include <string>
 
@@ -37,10 +36,12 @@ public:
   typedef vector<const TypeDescription*> td_vec;
 
   TypeDescription(const string& name,
-		  const string& path);
+		  const string& path,
+		  const string& namesp);
   TypeDescription(const string& name, 
 		  td_vec *sub, // this takes ownership of the memory. 
-		  const string& path);
+		  const string& path,
+		  const string& namesp);
   ~TypeDescription();
      
   const td_vec* get_sub_type() const {
@@ -52,13 +53,14 @@ public:
 		  string type_sep_end = "> ") const;
 
   string get_h_file_path() const { return h_file_path_; }
+  string get_namespace() const { return namespace_; }
 
   struct Register {
     Register(const TypeDescription*);
     ~Register();
   };
 
-  void fill_includes(CompileInfo *ci) const;
+  void fill_compile_info(CompileInfo *ci) const;
   
   static const TypeDescription* lookup_type(const string&);
 
@@ -66,7 +68,8 @@ private:
   td_vec                     *subtype_;
   string                     name_;
   string                     h_file_path_;
-       
+  string                     namespace_;
+
   // Hide these methods
   TypeDescription(const TypeDescription&);
   TypeDescription& operator=(const TypeDescription&);
@@ -82,23 +85,17 @@ const TypeDescription* get_type_description(short*);
 const TypeDescription* get_type_description(int*);
 const TypeDescription* get_type_description(unsigned char*);
 const TypeDescription* get_type_description(bool*);
-const TypeDescription* get_type_description(Vector*);
-const TypeDescription* get_type_description(Tensor*);
-const TypeDescription* get_type_description(Point*);
-const TypeDescription* get_type_description(Transform*);
 const TypeDescription* get_type_description(string*);
 
 template <class T>
 const TypeDescription* get_type_description(vector<T>*)
 {
   static TypeDescription* td = 0;
-  static string v("vector");
-  static string path("std::vector"); // dynamic loader will parse off the std
   if(!td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription(v, subs, path);
+    td = scinew TypeDescription("vector", subs, "std::vector", "std");
   }
   return td;
 }
@@ -107,15 +104,13 @@ template <class T1, class T2>
 const TypeDescription* get_type_description (pair<T1,T2> *)
 {
   static TypeDescription* td = 0;
-  static string name("pair");
-  static string path("std::utility"); // dynamic loader will parse off the std
   if(!td){
     const TypeDescription *sub1 = SCIRun::get_type_description((T1*)0);
     const TypeDescription *sub2 = SCIRun::get_type_description((T2*)0);
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    td = scinew TypeDescription(name, subs, path);
+    td = scinew TypeDescription("pair", subs, "std::utility", "std");
   }
   return td;
 

@@ -26,7 +26,8 @@ SRCS     += $(SRCDIR)/BBox.cc $(SRCDIR)/Grid.cc $(SRCDIR)/IntVector.cc \
 	$(SRCDIR)/Transform.cc $(SRCDIR)/Plane.cc $(SRCDIR)/Vector.cc \
 	$(SRCDIR)/Ray.cc  $(SRCDIR)/Quaternion.cc
 
-PSELIBS := Core/Persistent Core/Containers Core/Exceptions Core/Tester
+PSELIBS := Core/Persistent Core/Disclosure Core/Containers \
+	   Core/Exceptions Core/Tester
 LIBS := $(DEFAULT_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

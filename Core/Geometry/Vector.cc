@@ -28,6 +28,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/Assert.h>
@@ -139,6 +140,14 @@ void Vector::rotz90(const int c)
     }
 }
 
+const TypeDescription* get_type_description(Vector*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("Vector", Vector::get_h_file_path(), "SCIRun");
+  }
+  return td;
+}
 
 } // End namespace SCIRun
 

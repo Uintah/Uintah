@@ -66,8 +66,15 @@ public:
   void get_eigenvalues(double &l1, double &l2, double &l3);
   double aniso_index();
   
+  static const string get_h_file_path() {
+    static string path(__FILE__);
+    return path;
+  }
+
   friend void SCICORESHARE Pio(Piostream&, Tensor&);
 };
+
+const TypeDescription* get_type_description(Tensor*);
 
 } // End namespace SCIRun
 

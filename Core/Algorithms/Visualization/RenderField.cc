@@ -31,7 +31,7 @@ RenderFieldBase::get_compile_info(const TypeDescription *td) {
 					 template_class_name(), 
 					 td->get_name());
   rval->add_include(get_h_file_path());
-  td->fill_includes(rval);
+  td->fill_compile_info(rval);
   return rval;
 }
 

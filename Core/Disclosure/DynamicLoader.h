@@ -20,7 +20,6 @@
 #if ! defined(Disclosure_DynamicLoader_h)
 #define Disclosure_DynamicLoader_h
 
-#include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
@@ -28,7 +27,6 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 namespace SCIRun {
 using namespace std;
@@ -36,15 +34,18 @@ using namespace std;
 struct CompileInfo
 {
 public:
+  typedef map<string, int> ci_map_type; //! unique keys.
   //! construct with filename, base class name, and template class name.
   CompileInfo(const string &fn, const string &bcn, 
 	      const string &tcn, const string &tcdec);
   
   //! add to the list of files to include.
-  void add_include(const string &inc) { includes_.push_back(inc); }
+  void add_include(const string &inc) { includes_[inc] = 1; }
+  void add_namespace(const string &inc) { namespaces_[inc] = 1; }
   
   string             filename_;
-  vector<string>     includes_;
+  ci_map_type        includes_;
+  ci_map_type        namespaces_;
   string             base_class_name_;
   string             template_class_name_;
   string             template_arg_;
@@ -53,9 +54,12 @@ public:
 //! A type that maker functions can create, and DynamicLoader can store.
 //! All algorithms that support the dynamic loading concept must 
 //! inherit from this.
-struct DynamicAlgoBase : public Datatype { // inherit from Datatype to get 
-  virtual ~DynamicAlgoBase() {}            // handle functionality. 
-  virtual void io(Piostream &) {}          // no Pio for algorithms
+struct DynamicAlgoBase { 
+  int       ref_cnt;
+  Mutex     lock;
+
+  DynamicAlgoBase();
+  virtual ~DynamicAlgoBase() {}
 };
 
 typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
