@@ -80,6 +80,7 @@ itcl_class SCIRun_Math_BuildTransform {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
 	    return;
 	}
@@ -151,7 +152,7 @@ itcl_class SCIRun_Math_BuildTransform {
 	pack $w.f.b -side top
 	pack $w.f.prepost -side top -fill x -expand 1
 
-	frame $w.f.t -relief groove -borderwidth 5
+	frame $w.f.t -relief groove -borderwidth 2
 	label $w.f.t.l -text "Translate Vector"
 	frame $w.f.t.f
 	expscale $w.f.t.f.x -orient horizontal -variable $this-translate_x \
@@ -161,7 +162,7 @@ itcl_class SCIRun_Math_BuildTransform {
 	expscale $w.f.t.f.z -orient horizontal -variable $this-translate_z \
 		-label "Z:"
 	pack $w.f.t.f.x $w.f.t.f.y $w.f.t.f.z -side top -fill x
-	pack $w.f.t.l $w.f.t.f -side top -fill both -expand 1
+	pack $w.f.t.l $w.f.t.f -side top -fill both -expand 1 -padx 2 -pady 2
 	pack $w.f.t -side top -fill x -expand 1
 	
 	global $this-rotate_x
@@ -308,6 +309,9 @@ itcl_class SCIRun_Math_BuildTransform {
 
 	pack $w.f -fill x -expand 1 -side top
 	$this set_transform $w [set $this-which_transform]
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }	
 
     method computelog { } {

@@ -39,8 +39,9 @@ itcl_class SCIRun_Math_LinAlgBinary {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
+	    wm deiconify $w
             raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -50,20 +51,18 @@ itcl_class SCIRun_Math_LinAlgBinary {
         global $this-op
         make_labeled_radio $w.f.r "Binary Operations:" "" \
                 top $this-op \
-		{{"A X B" Mult} \
+		{{"A x B" Mult} \
                 {"A + B" Add} \
                 {"Normalize A to B" NormalizeAtoB} \
                 {"Select Rows" SelectRows} \
                 {"Select Columns" SelectColumns} \
 		{"Function" Function}}
 	global $this-function
-	make_entry $w.f.f "    specify function:" $this-function "$this-c needexecute"	
-	pack $w.f.r $w.f.f -side top -expand 1 -fill x
+	make_entry $w.f.f "         Specify function:" $this-function "$this-c needexecute"	
+	pack $w.f.r $w.f.f -side top -expand 1 -fill x -padx 4
 	pack $w.f -expand 1 -fill x
 	
-	frame $w.exec
-	pack $w.exec -side bottom -padx 5 -pady 5
-	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.exec.execute -side top -e n
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
      }
 }

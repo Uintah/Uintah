@@ -31,16 +31,19 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
 	    doGL
-	    return;
+	    return
 	}
-
 
 	toplevel $w
 	frame $w.f
 	pack $w.f -padx 2 -pady 2
 	
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	global $this-rgbhsv
 	global $this-linespline
 
@@ -48,8 +51,8 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	set $this-linespline 0
 	
 	doGL
-
     }
+
     method doGL {} {
         
         set w .ui[modname]

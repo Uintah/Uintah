@@ -54,7 +54,6 @@ itcl_class SCIRun_Math_ChooseMatrix {
             "Index is 0 based (ie: the first port is index 0, the second port 1, etc.)"
 
 	makeSciButtonPanel $w $w $this
-
 	moveToCursor $w
     }
 }

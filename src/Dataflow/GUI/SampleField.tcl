@@ -49,6 +49,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
+	    wm deiconify $w
             raise $w
             return
         }
@@ -132,10 +133,8 @@ itcl_class SCIRun_FieldsCreate_SampleField {
         checkbutton $rtab.f3.clamp -text "Clamp to nodes" -var $this-clamp
         pack $rtab.f3.clamp -anchor w -padx 8
 
-	
-
-	button $w.execute -text "Execute" -command "$this-c needexecute"
-	pack $w.execute -padx 5 -pady 5
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

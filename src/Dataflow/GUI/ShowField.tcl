@@ -152,8 +152,9 @@ itcl_class SCIRun_Visualization_ShowField {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
+	     wm deiconify $window.color
 	     raise $window.color
-	     return;
+	     return
 	 } else {
 	     toplevel $window.color
 	     makeColorPicker $window.color $color \
@@ -619,8 +620,9 @@ itcl_class SCIRun_Visualization_ShowField {
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
+	    wm deiconify $window
 	    raise $window
-	    return;
+	    return
 	}
 	toplevel $window
 	#wm minsize $window 380 548
@@ -664,7 +666,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
 	$dof.tabs configure -tabpos "n"
 
-	pack $dof.tabs -side top -fill x -expand yes
+	pack $dof.tabs -side top -fill x -expand yes -padx 2 -pady 2
 
 	#pack notebook frame
 	pack $window.options.disp.frame_title -side top -expand yes -fill x
@@ -683,9 +685,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	frame $window.fname -borderwidth 2
 	label $window.fname.label -text "Field Name"
 	entry $window.fname.entry -textvar $this-field-name
+	TooltipMultiWidget "$window.fname.entry $window.fname.label" \
+	    "Enter (optional) Field Name here.  The name will be displayed\nin the Viewer Window's list of Objects."
 	
 	pack $window.fname.label $window.fname.entry -side left
-	pack $window.fname -anchor w -padx 10
+	pack $window.fname -anchor w -padx 6 -pady 6
 
 
 	## Cylinder and Sphere Resolution
@@ -713,17 +717,13 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	pack $window.control.exc_policy -side top -fill both
 
-
 	frame $window.control.excdis -borderwidth 2
-	button $window.control.excdis.execute -text Execute \
-	    -command "$this-c needexecute"
-	button $window.control.excdis.close -text Close \
-		-command "destroy $window"
+	pack $window.control.excdis -padx 4 -pady 4 -side top -fill both
 
-	pack $window.control.excdis.execute $window.control.excdis.close \
-		-side left -padx 5 -expand 1 -fill x
-	pack $window.control.excdis -padx 2 -pady 2 -side top -fill both
-	pack $window.control -padx 2 -pady 2 -side top -fill both
+	makeSciButtonPanel $window.control.excdis $window $this
+	moveToCursor $window
+
+	pack $window.control -padx 4 -pady 4 -side top -fill both
     }
 }
 
