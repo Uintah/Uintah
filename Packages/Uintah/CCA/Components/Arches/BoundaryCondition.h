@@ -407,66 +407,44 @@ public:
       void scalarPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
 		    int index,
-		    CellInformation* cellinfo,
 		    ArchesVariables* vars,
-		    ArchesConstVariables* constvars,
-			    const double delta_t);
+		    ArchesConstVariables* constvars);
 
       void enthalpyPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
-		    CellInformation* cellinfo,
 		    ArchesVariables* vars,
 		    ArchesConstVariables* constvars);
 
       void scalarOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    int index,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double delta_t,
-			    const double maxAbsU,
-			    const double maxAbsV,
-			    const double maxAbsW);
+			    ArchesConstVariables* constvars);
 
       void enthalpyOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double delta_t,
-			    const double maxAbsU,
-			    const double maxAbsV,
-			    const double maxAbsW);
+			    ArchesConstVariables* constvars);
 
       void velRhoHatInletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars,
 			    double time_shift);
 
       void velRhoHatPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
-			    const double delta_t,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
 
       void velRhoHatOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
-			    CellInformation* cellinfo,
-			    const double delta_t,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const double maxAbsU,
-			    const double maxAbsV,
-			    const double maxAbsW);
+			    ArchesConstVariables* constvars);
 
       void velocityPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    const int index,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
 
@@ -487,13 +465,17 @@ public:
 			   		 const PatchSet* patches,
 			   		 const MaterialSet* matls,
 			                 const TimeIntegratorLabel* timelabels);
+
+      void sched_setVelocityTangentialBC(SchedulerP& sched,
+			                 const PatchSet* patches,
+			                 const MaterialSet* matls,
+			                 const TimeIntegratorLabel* timelabels);
 private:
 
       // GROUP:  Actual Computations (Private)  :
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
       void uVelocityBC(const Patch* patch,
-		       double VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars,
 		       ArchesConstVariables* constvars);
@@ -502,7 +484,6 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute v velocity BC terms
       void vVelocityBC(const Patch* patch,
-		       double VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars,
 		       ArchesConstVariables* constvars);
@@ -510,7 +491,6 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute w velocity BC terms
       void wVelocityBC(const Patch* patch,
-		       double VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars,
 		       ArchesConstVariables* constvars);
@@ -607,6 +587,13 @@ private:
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw,
 			      const TimeIntegratorLabel* timelabels);
+
+      void setVelocityTangentialBC(const ProcessorGroup* pc,
+			           const PatchSubset* patches,
+			           const MaterialSubset* matls,
+			           DataWarehouse* old_dw,
+			           DataWarehouse* new_dw,
+			           const TimeIntegratorLabel* timelabels);
 private:
 
       // GROUP:  Local DataTypes :
@@ -713,7 +700,6 @@ private:
       // for enthalpy solve 
       bool d_enthalpySolve;
       // variable labels
-      std::vector<int> d_cellTypes;
       int d_flowfieldCellTypeVal;
 
       bool d_wallBoundary;
