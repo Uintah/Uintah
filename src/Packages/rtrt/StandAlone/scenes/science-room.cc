@@ -64,13 +64,23 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     return 0;
   }
 
+// Start inside:
 //  Point Eye(-5.85, 6.2, 2.0);
 //  Point Lookat(-13.5, 13.5, 2.0);
 //  Vector Up(0,0,1);
+//  double fov=60;
+
+// Start outside:
   Point Eye(-10.9055, -0.629515, 1.56536);
   Point Lookat(-8.07587, 15.7687, 1.56536);
   Vector Up(0, 0, 1);
   double fov=60;
+
+// Just table:
+//  Point Eye(-7.64928, 6.97951, 1.00543);
+//  Point Lookat(-19.9299, 16.5929, -2.58537);
+//  Vector Up(0, 0, 1);
+//  double fov=35;
 
   Camera cam(Eye,Lookat,Up,fov);
 
@@ -192,8 +202,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Transform room_trans;
   room_trans.pre_translate(center.vector());
+  Transform wine_trans;
+  wine_trans.pre_translate(center.vector());
+  wine_trans.pre_translate(Vector(0,0.8,0.322));
 
   string pathname("/usr/sci/data/Geometry/models/science-room/");
+
   Array1<string> names;
   names.add(string("386dx"));
   names.add(string("3dglasses1"));
@@ -221,13 +235,27 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   names.add(string("microscope"));
   names.add(string("molecule"));
   names.add(string("plant-01"));
+
+  Array1<string> wines;
+  wines.add(string("wineglass01"));
+  wines.add(string("wineglass02"));
+  wines.add(string("wineglass03"));
+  wines.add(string("wineglass04"));
   
   Array1<Material *> matls;
-  for (int i=0; i<names.size(); i++) {
+  int i;
+  for (i=0; i<names.size(); i++) {
     cerr << "Reading: "<<names[i]<<"\n";
     string objname(pathname+names[i]+string(".obj"));
     string mtlname(pathname+names[i]+string(".mtl"));
     if (!readObjFile(objname, mtlname, room_trans, g))
+      exit(0);
+  }
+  for (i=0; i<wines.size(); i++) {
+    cerr << "Reading: "<<wines[i]<<"\n";
+    string objname(pathname+wines[i]+string(".obj"));
+    string mtlname(pathname+wines[i]+string(".mtl"));
+    if (!readObjFile(objname, mtlname, wine_trans, g))
       exit(0);
   }
 
