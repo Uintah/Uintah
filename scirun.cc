@@ -30,6 +30,8 @@ int main(int argc, char** argv)
 
     // Start up TCL...
     TCLTask* tcl_task = new TCLTask(argc, argv);
+    tcl_task->activate(0);
+    tcl_task->mainloop_waitstart();
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the
@@ -46,7 +48,7 @@ int main(int argc, char** argv)
     gui_task->activate(0);
 
     // Now activate the TCL event loop
-    tcl_task->activate(0);
+    tcl_task->release_mainloop();
 
     // This will wait until all tasks have completed before exiting
     Task::main_exit();

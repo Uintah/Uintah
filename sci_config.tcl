@@ -14,9 +14,8 @@ ConfigChoice .assertions -choices {0 1 2 3 4} -text "Assertion level: " \
 ConfigBool .opengl -text "OpenGL? " -name OPENGL
 ConfigBool .normalize_prim -text "ogl normalizes primitives? " -name NORM_OGL
 ConfigBool .quarks -text "Quarks? " -name QUARKS
-ConfigBool .irix6 -text "Irix 6? " -name IRIX6
-ConfigBool .bit64 -text "64 Bit? " -name 64BIT
-ConfigBool .n32 -text "-n32 for Irix 6? " -name N32
+ConfigChoice .irix_binary -choices {o32 n32_mips3 n32_mips4 64_mips3 64_mips4} \
+	-text "Irix binary format: " -name "IRIX_BIN"
 
 frame .bottom -borderwidth 10
 pack .bottom -side bottom

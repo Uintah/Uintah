@@ -14,7 +14,9 @@ FieldFilter
 Gradient
 
 Category: Matrix
+EditMatrix
 SolveMatrix
+VisualizeMatrix
 
 Category: Mesh
 BuildMultiMesh
