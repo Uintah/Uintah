@@ -250,7 +250,7 @@ else
 endif
 
 # Copy Power App short cuts to the obj directory.
-ifneq ($(DEF_TEEM),)
+ifneq ($(DEF_TEEM),"")
   $(OBJTOP)/BioTensor : $(SRCDIR)/Packages/Teem/nets/PowerApps/BioTensor
 	@(sed -e "s%__SRC_DIR__%$(SRCDIR)%" $(SRCDIR)/Packages/Teem/nets/PowerApps/BioTensor > $(OBJTOP)/BioTensor)
 	@chmod +x BioTensor
