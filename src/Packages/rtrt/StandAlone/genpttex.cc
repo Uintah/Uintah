@@ -17,11 +17,13 @@
  echo 'for T in sphere?.ppm; do unu slice -a 1 -p M -i $T | unu reshape -s 3 1 64 | unu join -a 1 -i - $T -o $T;done' | bash
 */
 
-#include <Packages/rtrt/Core/PathTracer/PathTraceEngine.h>
-#include <Packages/rtrt/Core/Group.h>
-#include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/CatmullRomSpline.h>
 #include <Packages/rtrt/Core/GridSpheres.h>
 #include <Packages/rtrt/Core/GridSpheresDpy.h>
+#include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
+#include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/PathTracer/PathTraceEngine.h>
 
 #include <Core/Thread/Thread.h>
 
@@ -105,32 +107,36 @@ Object *make_geometry( )
   return group;
 }
 
-Object *make_geometry_fromfile(char *filename)
+Object *make_geometry_fromfile(char *filename, bool timevary)
 {
-  ifstream flist(filename);
-  char pfile[128];
-  flist.getline(pfile,128);
-  while(!flist.eof())
-  {
-    if(strcmp(pfile,"<TIMESTEP>")==0)
-    {
-     // skip line
-    }
-    else if(strcmp(pfile,"</TIMESTEP>")==0)
-    {
-     // skip line
-    }
-    else if(strcmp(pfile,"<PATCH>")==0)
-    {
-     // skip line
-    }
-    else if(strcmp(pfile,"</PATCH>")==0)
-    {
-     // skip line
-    }
-    else
-      readSpheres(pfile);
+  if (timevary) {
+    ifstream flist(filename);
+    char pfile[128];
     flist.getline(pfile,128);
+    while(!flist.eof())
+      {
+	if(strcmp(pfile,"<TIMESTEP>")==0)
+	  {
+	    // skip line
+	  }
+	else if(strcmp(pfile,"</TIMESTEP>")==0)
+	  {
+	    // skip line
+	  }
+	else if(strcmp(pfile,"<PATCH>")==0)
+	  {
+	    // skip line
+	  }
+	else if(strcmp(pfile,"</PATCH>")==0)
+	  {
+	    // skip line
+	  }
+	else
+	  readSpheres(pfile);
+	flist.getline(pfile,128);
+      }
+  } else {
+    readSpheres(filename);
   }
 
   // Now we need an accelaration structure.
@@ -323,6 +329,83 @@ readSpheres(char* spherefile)
   spheredatasize.add(nspheres);
 }
 
+void make_cmap_fromfile(Array1<Color>& cmap, char *file) {
+  ifstream infile(file);
+  if (!infile) {
+    cerr << "Color map file, "<<file<<" cannot be opened for reading\n";
+    exit(0);
+  }
+  
+  cout<<"Creating a color map from "<<file<<endl;
+
+  Array1<Color> tmp;
+  float r = 0;
+  infile >> r;
+  float max = r;
+  // slurp up the colors
+  do {
+    float g = 0;
+    float b = 0;
+    infile >> g >> b;
+    if (r > max)
+      max = r;
+    if (g > max)
+      max = g;
+    if (b > max)
+      max = b;
+    tmp.add(Color(r,g,b));
+    infile >> r;
+  } while(infile);
+  
+  if (max > 1) {
+    cerr << "Renormalizing colors for range of 0 to 255\n";
+    float inv255 = 1.0f/255.0f;
+    for(int i = 0; i < tmp.size(); i++)
+      tmp[i] = tmp[i]*inv255;
+  }
+  
+  ScalarTransform1D<int, Color> transform(tmp);
+  int ncolors = 256;
+  
+  transform.scale(0, ncolors);
+  cmap.resize(ncolors);
+  for (int i=0;i<ncolors;i++)
+    cmap[i]=Color(transform.interpolate(i));
+}
+
+void make_cmap(Array1<Color>& cmap) {
+  CatmullRomSpline<Color> spline(0);
+
+  spline.add(Color(0,0,1));
+  spline.add(Color(0,0,1));
+  spline.add(Color(0,0.4,1));
+  spline.add(Color(0,0.8,1));
+  spline.add(Color(0,1,0.8));
+  spline.add(Color(0,1,0.4));
+  spline.add(Color(0,1,0));
+  spline.add(Color(0.4,1,0));
+  spline.add(Color(0.8,1,0));
+  spline.add(Color(1,0.9176,0));
+  spline.add(Color(1,0.8,0));
+  spline.add(Color(1,0.4,0));
+  spline.add(Color(1,0,0));
+  spline.add(Color(1,0,0));
+  //{ 0 0 255}   { 0 102 255}
+  //{ 0 204 255}  { 0 255 204}
+  //{ 0 255 102}  { 0 255 0}
+  //{ 102 255 0}  { 204 255 0}
+  //{ 255 234 0}  { 255 204 0}
+  //{ 255 102 0}  { 255 0 0} }}
+
+  int ncolors=256;
+  cmap.resize(ncolors);
+  for(int i=0;i<ncolors;i++){
+    float frac=float(i)/(ncolors-1);
+    cmap[i]=Color(spline(frac));
+  }
+}
+
+
 /**************************************************************************/
 
 int main(int argc, char** argv)
@@ -333,6 +416,7 @@ int main(int argc, char** argv)
   int num_samples=100;
   int depth=3;
   char *filename = 0;
+  bool timevary=false;
   char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
   char *outfile = 0;
   int nworkers = 1;
@@ -340,6 +424,8 @@ int main(int argc, char** argv)
   int support = 2;
   int use_weighted_ave = 0;
   float threshold = 0.3;
+  char *val_filename=0;
+  char *cmap_filename=0;
   
   for(int i=1;i<argc;i++) {
     if(strcmp(argv[i], "-light_pos")==0) {
@@ -366,6 +452,10 @@ int main(int argc, char** argv)
     else if(strcmp(argv[i],"-file")==0 || strcmp(argv[i],"-i")==0) {
       filename = argv[++i];
       cerr << "Reading from file "<<filename<<endl;
+    } else if(strcmp(argv[i],"-timevary")==0) {
+      filename = argv[++i];
+      timevary=true;
+      cerr << "Reading from timelist "<<filename<<endl;
     } else if (strcmp(argv[i],"-bg")==0) {
       bg = argv[++i];
     } else if (strcmp(argv[i],"-o")==0) {
@@ -384,6 +474,10 @@ int main(int argc, char** argv)
       use_weighted_ave = 1;
     } else if (strcmp(argv[i],"-thresh")==0) {
       threshold = atof(argv[++i]);
+    } else if (strcmp(argv[i],"-val")==0) {
+      val_filename=argv[++i];
+    } else if (strcmp(argv[i],"-cmap")==0) {
+      cmap_filename=argv[++i];
     } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
@@ -396,14 +490,18 @@ int main(int argc, char** argv)
       cerr<<"  -tex_res <int>              texture resolution (16)\n";
       cerr<<"  -radius <float>             sphere radius (0.0)\n";
       cerr<<"  -i <filename>               input filename (null)\n";
+      cerr<<"  -timevary <filename>        input filename timelist  (null)\n";
       cerr<<"  -bg <filename>              background image name (envmap.ppm)\n";
       cerr<<"  -o <filename>               basename of texture files (null)\n";
+      cerr<<"  -np <int>                   number of processors to use (1)\n";
       cerr<<"  -nsides <int>               grid cell size (6)\n";
       cerr<<"  -gdepth <int>               grid depth (2)\n";
       cerr<<"  -dilate                     dilate textures before writing (false)\n";
       cerr<<"  -s <int>                    size of support kernel for dilation (2)\n";
       cerr<<"  -wa                         use weighted averaging during dilation (false)\n";
       cerr<<"  -t <float>                  threshold for contribution determination (0.3)\n";
+      cerr<<"  -val <filename>             load associated values (null)"<<endl;
+      cerr<<"  -cmap <filename>            use the specified colormap (null)"<<endl;
       exit(1);
     }
   }
@@ -414,7 +512,7 @@ int main(int argc, char** argv)
   // Create the geometry
   Object *geometry;
   if (filename)
-    geometry = make_geometry_fromfile(filename);
+    geometry = make_geometry_fromfile(filename, timevary);
   else
     geometry = make_geometry();
 
@@ -434,6 +532,33 @@ int main(int argc, char** argv)
   PathTraceContext ptcontext(Color(0.1,0.7,0.2), ptlight, geometry, emap,
 			     num_samples, depth, dilate, support, use_weighted_ave,
 			     threshold, &sem);
+
+  // Read data values and create a color map
+  if (val_filename) {
+    Array1<unsigned char> value;
+    value.resize(total_num_spheres);
+
+    FILE *valfile=fopen(val_filename, "r");
+    if (!valfile) {
+      cerr<<"Could not open \""<<val_filename<<"\" for reading"<<endl;
+      return 0;
+    }
+    size_t num_read=fread(value.get_objs(), sizeof(unsigned char),
+			  total_num_spheres, valfile);
+    if (num_read!=total_num_spheres) {
+      cerr<<"Didn't read "<<total_num_spheres<<" number of values"<<endl;
+      return 0;
+    }
+    
+    Array1<Color> cmap;
+    if (cmap_filename)
+      make_cmap_fromfile(cmap, cmap_filename);
+    else
+      make_cmap(cmap);
+    
+    // Add the data values and color map to the rendering context
+    ptcontext.addColormap(value, cmap);
+  }
   
   if (outfile == 0) {
     outfile = "sphere";
