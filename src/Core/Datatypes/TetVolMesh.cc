@@ -156,7 +156,7 @@ TetVolMesh::get_random_point(Point &p, Cell::index_type ei, int seed) const
   static MusilRNG rng;
 
   // get positions of the vertices
-  Node::array_type ra(4);
+  Node::array_type ra;
   get_nodes(ra,ei);
   const Point &p0 = point(ra[0]);
   const Point &p1 = point(ra[1]);
@@ -1132,7 +1132,7 @@ void
 TetVolMesh::get_center(Point &p, Edge::index_type idx) const
 {
   const double s = 1.0/2.0;
-  Node::array_type arr(2);
+  Node::array_type arr;
   get_nodes(arr, idx);
   get_point(p, arr[0]);
   const Point &p1 = point(arr[1]);
@@ -1146,7 +1146,7 @@ void
 TetVolMesh::get_center(Point &p, Face::index_type idx) const
 {
   const double s = 1.0/3.0;
-  Node::array_type arr(3);
+  Node::array_type arr;
   get_nodes(arr, idx);
   get_point(p, arr[0]);
   const Point &p1 = point(arr[1]);
