@@ -399,16 +399,20 @@ void    ICE::Message(
   fprintf(stderr,"%s\n",message2);
   fprintf(stderr,"%s\n",message3);
   fprintf(stderr,"\n\n ______________________________________________\n");
+  char* exitMode = getenv("ICE_DEBUGGER_ON_EXIT");
+  if(!exitMode)
+    exitMode = "no";    //default exit mode
   //______________________________
   // Now aborting program
   if(abort == 1) {
-    char c[2];
-    fprintf(stderr,"\n");
-    fprintf(stderr,"<c> = cvd\n");
-    scanf("%s",c);
-    system("date");
-    if(strcmp(c, "c") == 0) system("cvd -P sus");
-    
+    if(strcmp(exitMode,"yes")==0) {
+      char c[2];
+      fprintf(stderr,"\n");
+      fprintf(stderr,"<c> = cvd\n");
+      scanf("%s",c);
+      system("date");
+      if(strcmp(c, "c") == 0) system("cvd -P sus");
+    }
     exit(1); 
   }
 }
