@@ -101,6 +101,10 @@ PROGRAM := $(SRCDIR)/TextToPointCloudField
 SRCS := $(SRCDIR)/TextToPointCloudField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/TextToPointCloudString
+SRCS := $(SRCDIR)/TextToPointCloudString.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/TextToQuadSurfField
 SRCS := $(SRCDIR)/TextToQuadSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
