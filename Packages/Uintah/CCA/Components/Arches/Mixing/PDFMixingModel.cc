@@ -99,7 +99,7 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     d_streams[nofstrm].d_moleWeight=chemInterf->getMixMoleWeight(ymassVec);
     d_streams[nofstrm].d_cp=chemInterf->getMixSpecificHeat(strmTemp, ymassVec);
     // store as mass fraction
-    d_streams[nofstrm].print(cerr );
+    //d_streams[nofstrm].print(cerr );
     ++nofstrm;
   }
   // num_mix_scalars = num_streams -1
