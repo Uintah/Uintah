@@ -49,6 +49,8 @@ void Pio(Piostream&, TSElement*&);
 class TriSurface : public Surface {
     Array1<Point> points;
     Array1<TSElement*> elements;
+    int empty_index;
+    int ordered_cw;	// are the triangle all ordered clockwise?
 public:
     TriSurface();
     TriSurface(const TriSurface& copy);
@@ -56,9 +58,12 @@ public:
     virtual int inside(const Point& p);
     virtual ObjGroup* getGeomFromSurface();
     void add_point(const Point& p);
-    void add_triangle(int i1, int i2, int i3);
+    int add_triangle(int i1, int i2, int i3);
+    void remove_triangle(int i);
+    double distance(const Point &p, int i, int *type);
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID typeid;
+    friend class ContoursToSurf;
 };
 #endif /* SCI_project_Surface_h */
