@@ -116,6 +116,8 @@ using std::vector;
       const VarLabel* dispIncQNorm0;
       const VarLabel* dispIncNormMax;
 
+      const VarLabel* bElBarLabel;
+      const VarLabel* bElBarLabel_preReloc;
       const VarLabel* pAccelerationLabel_preReloc;
     };
 } // End namespace Uintah
