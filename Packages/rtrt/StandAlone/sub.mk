@@ -85,10 +85,14 @@ LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 
-# A convenience target (use make rtrt)
-rtrt: Packages/rtrt/StandAlone/rtrt
-
 SUBDIRS := \
 	Packages/rtrt/StandAlone/scenes
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
+# Convenience target:
+.PHONY: rtrt
+rtrt: prereqs Packages/rtrt/StandAlone/rtrt scenes
+.PHONY: scenes
+scenes: $(SCENES)
+.PHONY: librtrt
+librtrt: lib/libPackages_rtrt_Core.so
