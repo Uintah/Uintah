@@ -28,6 +28,7 @@ if($pid==0) {
   while(<IN>) {
     chop;
     if($_=~/^No such feature/) { $doEcho=0; }
+    if($_=~/^Cannot connect/) { $doEcho=0; }
     if(length($_) != 0 && $doEcho==1) { printf STDERR "%s\n",$_; }
     if($_=~/^ Graphics support/) { $doEcho=1; }
   }
