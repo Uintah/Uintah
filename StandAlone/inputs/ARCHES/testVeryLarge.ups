@@ -30,6 +30,25 @@
 	<file_description>run1</file_description>
    </OutputVars>
 
+    <PhysicalConstants>
+	<gravity>[-9.8,0,0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>1.0</pressure>
+    </PhysicalConstants>
+
+    <Grid>
+	<Level>
+	    <Box label="1">
+	        <lower>[0,0,0]</lower>
+	        <upper>[1,1,1]</upper>
+	        <resolution>[150,50,40]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+
    <CFD>
 	<!-- ARCHES specification -->
 
@@ -52,7 +71,7 @@
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
 		<Stream>
-		    <density>1</density>
+		    <density>0.5</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
@@ -62,39 +81,62 @@
 		<FlowInlet>
 		    <Flow_rate>1</Flow_rate>
 		    <MixtureFraction>
-			<Mixfrac>1</Mixfrac>
+			<Mixfrac>0.3</Mixfrac>
+	            </MixtureFraction>
+		    <MixtureFraction>
+			<Mixfrac>0.7</Mixfrac>
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <box label="gp1">
 			<min>[-4,0.49,0.49]</min>
-			<max>[0, 0.51, 0.51]</max>
+			<max>[0.0, 0.51, 0.51]</max>
 		      </box>
 		    </geom_object>
 		</FlowInlet>
+		<WallBC>
+		    <geom_object>
+		      <box label="gp4">
+			<min>[-5,0,0]</min>
+			<max>[0,1,1]</max>
+		      </box>
+		    </geom_object>
+		</WallBC>
 		<PressureBC>
 		    <flowRate>0</flowRate>
 		    <MixtureFraction>
-			<Mixfrac>0</Mixfrac>
+			<Mixfrac>0.3</Mixfrac>
+	            </MixtureFraction>
+		    <MixtureFraction>
+			<Mixfrac>0.7</Mixfrac>
 	            </MixtureFraction>
 		    <TurblengthScale>1</TurblengthScale>
 		    <RefPressure>1</RefPressure>
 		    <geom_object>
-		      <box label="gp2">
-			<min>[0,-5,-5]</min>
-			<max>[1,0,0]</max>
+		      <box label="gp21">
+			<min>[0,0,-5]</min>
+			<max>[1,1,0]</max>
 		      </box>
-		    </geom_object>
-		    <geom_object>
-		      <box label="gp2">
-			<min>[0,1,1]</min>
-			<max>[1,5,5]</max>
+		      <box label="gp22">
+			<min>[0,0,1]</min>
+			<max>[1,1,5]</max>
+		      </box>
+		      <box label="gp23">
+			<min>[0,-5,0]</min>
+			<max>[1,0,1]</max>
+		      </box>
+		      <box label="gp24">
+			<min>[0,1,0]</min>
+			<max>[1,5,1]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
 		<outletBC>
 		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0</Mixfrac>
+	            </MixtureFraction>
 		    <MixtureFraction>
 			<Mixfrac>0</Mixfrac>
 	            </MixtureFraction>
@@ -107,14 +149,6 @@
 		      </box>
 		    </geom_object>
 		</outletBC>
-		<WallBC>
-		    <geom_object>
-		      <box label="gp3">
-			<min>[-5,0,0]</min>
-			<max>[0,0,0]</max>
-		      </box>
-		    </geom_object>
-		</WallBC>
 	    </BoundaryConditions>
 
 	    <PhysicalConstants>
@@ -167,12 +201,6 @@
 
     </CFD>
 
-    <PhysicalConstants>
-	<gravity>[-9.8,0,0]</gravity>
-	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>1.0</pressure>
-    </PhysicalConstants>
-
     <MaterialProperties>
 
 	<ARCHES>
@@ -180,18 +208,6 @@
 
     </MaterialProperties>
 	
-    <Grid>
-	<Level>
-	    <Box label="1">
-	        <lower>[0,0,0]</lower>
-	        <upper>[1,1,1]</upper>
-	        <resolution>[61,41,41]</resolution>
-                <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
-	    </Box>
-	</Level>
-    </Grid>
-
     <!-- Question - how do we want to attach a bc to a region of the grid? -->
     <PhysicalBC>
     
