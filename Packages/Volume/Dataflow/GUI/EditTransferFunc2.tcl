@@ -44,7 +44,7 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	set $this-histo 0.5
 
 	global $this-num-entries
-	set $this-num-entries 0
+	set $this-num-entries 2
 	
 	global $this-marker
 	trace variable $this-marker w "$this unpickle"

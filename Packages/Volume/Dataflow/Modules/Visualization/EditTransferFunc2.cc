@@ -127,7 +127,7 @@ public:
   
   void resize_gui(int n = -1);
   void update_from_gui();
-  void update_to_gui(bool forward = false);
+  void update_to_gui(bool forward = true);
   void tcl_unpickle();
 
   void undo();
@@ -156,7 +156,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
 {
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
-  resize_gui();
+  resize_gui(2);
   update_to_gui(false);
 }
 
