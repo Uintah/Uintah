@@ -52,20 +52,20 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
   int z=ll.z();
   if(z <= l.z()){
     for(int y=ll.y();y<hh.y();y++){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
       const double* cx1;
       if(y > l.y())
-	cx1 = &X[IntVector(0,y-1,z)];
+	cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
       else
 	cx1 = 0;
       const double* cx2;
       if(y < h1.y())
-	cx2 = &X[IntVector(0,y+1,z)];
+	cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
       else
 	cx2 = 0;
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -89,12 +89,12 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
     // Ylow
     int y=ll.y();
     if(y <= l.y()){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
-      const double* cx3 = &X[IntVector(0,y,z-1)];
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -111,13 +111,13 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
     }
     // Ymid
     for(;y<h1.y();y++){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
-      const double* cx3 = &X[IntVector(0,y,z-1)];
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
+      const double* cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
 
       // Xlow
       int x=ll.x();
@@ -158,12 +158,12 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
     }
     // Yhigh
     if(y < hh.y()){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx3 = &X[IntVector(0,y,z-1)];
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -181,20 +181,20 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
   // Zhigh
   if(z < hh.z()){
     for(int y=ll.y();y<hh.y();y++){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
       const double* cx1;
       if(y > l.y())
-	cx1 = &X[IntVector(0,y-1,z)];
+	cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
       else
 	cx1 = 0;
       const double* cx2;
       if(y < h1.y())
-	cx2 = &X[IntVector(0,y+1,z)];
+	cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
       else
 	cx2 = 0;
-      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -252,20 +252,20 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
   int z=ll.z();
   if(z <= l.z()){
     for(int y=ll.y();y<hh.y();y++){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
       const double* cx1;
       const double* cx2;
       if(y > l.y())
-	cx1 = &X[IntVector(0,y-1,z)];
+	cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
       else
 	cx1 = 0;
       if(y < h1.y())
-	cx2 = &X[IntVector(0,y+1,z)];
+	cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
       else
 	cx2 = 0;
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -290,12 +290,12 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
     // Ylow
     int y=ll.y();
     if(y <= l.y()){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
-      const double* cx3 = &X[IntVector(0,y,z-1)];
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -313,13 +313,13 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
     }
     // Ymid
     for(;y<h1.y();y++){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx2 = &X[IntVector(0,y+1,z)];
-      const double* cx3 = &X[IntVector(0,y,z-1)];
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
+      const double* cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
 
       // Xlow
       int x=ll.x();
@@ -363,12 +363,12 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
     }
     // Yhigh
     if(y < hh.y()){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
-      const double* cx1 = &X[IntVector(0,y-1,z)];
-      const double* cx3 = &X[IntVector(0,y,z-1)];
-      const double* cx4 = &X[IntVector(0,y,z+1)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
+      const double* cx4 = &X[IntVector(ll.x(),y,z+1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -387,20 +387,20 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
   // Zhigh
   if(z < hh.z()){
     for(int y=ll.y();y<hh.y();y++){
-      const Stencil7* caa = &A[IntVector(0,y,z)];
-      double* cbb = &B[IntVector(0,y,z)];
-      const double* cx0 = &X[IntVector(0,y,z)];
+      const Stencil7* caa = &A[IntVector(ll.x(),y,z)]-ll.x();
+      double* cbb = &B[IntVector(ll.x(),y,z)]-ll.x();
+      const double* cx0 = &X[IntVector(ll.x(),y,z)]-ll.x();
       const double* cx1;
       if(y > l.y())
-	cx1 = &X[IntVector(0,y-1,z)];
+	cx1 = &X[IntVector(ll.x(),y-1,z)]-ll.x();
       else
 	cx1 = 0;
       const double* cx2;
       if(y < h1.y())
-	cx2 = &X[IntVector(0,y+1,z)];
+	cx2 = &X[IntVector(ll.x(),y+1,z)]-ll.x();
       else
 	cx2 = 0;
-      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx3 = &X[IntVector(ll.x(),y,z-1)]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
         const Stencil7* AA = &caa[x];
         double result = AA->p*cx0[x];
@@ -550,10 +550,10 @@ void ScMult_Add(Array3<double>& r, double s,
   IntVector hh(iter.end());
   for(int z=ll.z();z<hh.z();z++){
     for(int y=ll.y();y<hh.y();y++){
-      IntVector rowstart(0,y,z);
-      double* ppr = &r[rowstart];
-      const double* ppa = &a[rowstart];
-      const double* ppb = &b[rowstart];
+      IntVector rowstart(ll.x(),y,z);
+      double* ppr = &r[rowstart]-ll.x();
+      const double* ppa = &a[rowstart]-ll.x();
+      const double* ppb = &b[rowstart]-ll.x();
       for(int x=ll.x();x<hh.x();x++){
 	ppr[x]=s*ppa[x]+ppb[x];
       }
@@ -763,14 +763,14 @@ public:
 	double err = 0;
 	for(int z=ll.z();z<hh.z();z++){
 	  for(int y=ll.y();y<hh.y();y++){
-	    IntVector rowstart(0,y,z);
-	    double* ppXnew = &Xnew[rowstart];
-	    const double* ppD = &D[rowstart];
-	    double* ppRnew = &Rnew[rowstart];
-	    const double* ppR = &R[rowstart];
-	    double* ppQ = &Q[rowstart];
-	    const double* ppX = &X[rowstart];
-	    const double* ppdiagonal = &diagonal[rowstart];
+	    IntVector rowstart(ll.x(),y,z);
+	    double* ppXnew = &Xnew[rowstart]-ll.x();
+	    const double* ppD = &D[rowstart]-ll.x();
+	    double* ppRnew = &Rnew[rowstart]-ll.x();
+	    const double* ppR = &R[rowstart]-ll.x();
+	    double* ppQ = &Q[rowstart]-ll.x();
+	    const double* ppX = &X[rowstart]-ll.x();
+	    const double* ppdiagonal = &diagonal[rowstart]-ll.x();
 	    for(int x=ll.x();x<hh.x();x++){
 	      // X = a*D+X
 	      ppXnew[x] = a*ppD[x]+ppX[x];
