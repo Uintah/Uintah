@@ -29,30 +29,11 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   makePlanes();
   makeTriBoxes();
 
-  ProblemSpecP top = ps->getRootNode();
-  ProblemSpecP grid_ps = top->findBlock("Grid");
-  ProblemSpecP level_ps = grid_ps->findBlock("Level");
-  Vector spacing;
-  level_ps->require("spacing",spacing);
-  ProblemSpecP box_ps = level_ps->findBlock("Box");
-  Point lower,upper;
-  box_ps->require("lower",lower);
-  box_ps->require("upper",upper);
-  Point new_lower,new_upper;
-  new_lower = Point(lower.asVector() - spacing);
-  new_upper = Point(upper.asVector() + spacing);
-  Box grid_box(new_lower,new_upper);
-
-  if (grid_box.contains(d_box.lower()) && grid_box.contains(d_box.upper()))
-    ;
-  else
-    throw ProblemSetupException("triangular surface is not within the grid boundary, extend the grid boundary to encompass the triangular surface");
-
   list<Tri> tri_list;
   Tri tri;
 
   tri_list = tri.makeTriList(d_tri,d_points);
-  d_grid = scinew UniformGrid(grid_box);
+  d_grid = scinew UniformGrid(d_box);
   d_grid->buildUniformGrid(tri_list);
 			      
 
