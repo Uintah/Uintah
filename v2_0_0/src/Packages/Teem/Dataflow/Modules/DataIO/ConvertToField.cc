@@ -26,6 +26,10 @@ ConvertToFieldBase::~ConvertToFieldBase()
 {
 }
 
+ConvertToFieldEigenBase::~ConvertToFieldEigenBase()
+{
+}
+
 CompileInfoHandle
 ConvertToFieldBase::get_compile_info(const TypeDescription *td) 
 {
@@ -40,6 +44,24 @@ ConvertToFieldBase::get_compile_info(const TypeDescription *td)
 
 const string& 
 ConvertToFieldBase::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
+CompileInfoHandle
+ConvertToFieldEigenBase::get_compile_info(const TypeDescription *td) 
+{
+  CompileInfo *rval = scinew CompileInfo(dyn_file_name(td),
+					 base_class_name(), 
+					 template_class_name(), 
+					 td->get_name());
+  rval->add_include(get_h_file_path());
+  td->fill_compile_info(rval);
+  return rval;
+}
+
+const string& 
+ConvertToFieldEigenBase::get_h_file_path() {
   static const string path(TypeDescription::cc_to_h(__FILE__));
   return path;
 }
@@ -118,15 +140,23 @@ void get_val_and_eigens_and_inc_nrrdptr(Tensor &t, void *&ptr)
   float *&p = (float*&)ptr;
   float eval[3], evec[9], eval_scl[3], evec_scl[9];
   tenEigensolve(eval, evec, p);
+
+//  cerr << "p= ["<<p[0]<<", "<<p[1]<<", "<<p[2]<<", "<<p[3]<<", "<<p[4]<<", "<<p[5]<<", "<<p[6]<<"]\n";
+//  cerr << "evals = "<<eval[0]<<", "<<eval[1]<<", "<<eval[2]<<"\n";
+//  cerr << "evecs= ["<<evec[0]<<", "<<evec[1]<<", "<<evec[2]<<"]\n";
+//  cerr << "       ["<<evec[3]<<", "<<evec[4]<<", "<<evec[5]<<"]\n";
+//  cerr << "       ["<<evec[6]<<", "<<evec[7]<<", "<<evec[8]<<"]\n";
+
   float scl = p[0] > 0;
   for (int cc=0; cc<3; cc++) {
     ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
     eval_scl[cc] = scl*eval[cc];
   }
-  t.set_outside_eigens(Vector(evec_scl[0], evec_scl[1], evec_scl[2]),
-		       Vector(evec_scl[3], evec_scl[4], evec_scl[5]),
-		       Vector(evec_scl[6], evec_scl[7], evec_scl[8]),
-		       eval_scl[0], eval_scl[1], eval_scl[2]);
+  Vector e1(evec_scl[0], evec_scl[1], evec_scl[2]);
+  Vector e2(evec_scl[3], evec_scl[4], evec_scl[5]);
+  Vector e3(evec_scl[6], evec_scl[7], evec_scl[8]);
+//  cerr << "e1="<<e1<<"  e2="<<e2<<"  e3="<<e3<<"  l1="<<eval_scl[0]<<" l2="<<eval_scl[1]<<" l3="<<eval_scl[2]<<"\n";
+  t.set_outside_eigens(e1, e2, e3, eval_scl[0], eval_scl[1], eval_scl[2]);
   ++p; // skip first value (confidence)
   t.mat_[0][0] = (*p);
   ++p;
@@ -140,6 +170,7 @@ void get_val_and_eigens_and_inc_nrrdptr(Tensor &t, void *&ptr)
   ++p;
   t.mat_[2][2] = (*p);
   ++p;
+//  cerr << "tensor="<<t<<"\n";
 }
 
 template <>
