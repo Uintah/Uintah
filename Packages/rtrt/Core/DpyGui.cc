@@ -10,6 +10,10 @@
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Gui.h>
+#include <Packages/rtrt/Core/Context.h>
+#include <Packages/rtrt/Core/PerProcessorContext.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Worker.h>
 
 #include <Core/Thread/Thread.h>
 
@@ -249,6 +253,9 @@ void DpyGui::key_pressed(unsigned long key) {
       rtrt_dpy->guiCam_->print();
     }
     break;
+  case XK_j:
+    rtrt_engine->do_jitter = !rtrt_engine->do_jitter;
+    break;
   case XK_g:
     if (shift_pressed)
       startDefaultGui();
@@ -339,6 +346,26 @@ void DpyGui::button_pressed(MouseButton button,
 
   switch(button) {
   case MouseButton1:
+    {
+      if( control_pressed ) {
+        // Turn on debug stuff
+        Camera *C = rtrt_dpy->scene->get_camera( 0 );
+        Ray ray;
+        C->makeRay( ray, mouse_x, rtrt_dpy->priv->yres-mouse_y, 
+                    1.0/rtrt_dpy->priv->xres,
+                    1.0/rtrt_dpy->priv->yres );
+        // Turn on debugging
+        // DpyGui should really have its own.
+        rtrt_dpy->ppc->debugOn();
+        Color result;
+        Stats stats(1000);
+        Context cx(rtrt_dpy->scene, &stats, rtrt_dpy->ppc,
+                   1-rtrt_dpy->priv->showing_scene, -1);
+        Worker::traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+        rtrt_dpy->ppc->debugOff();
+        return;
+      }
+    }
   case MouseButton3:
     {
       last_x = mouse_x;
