@@ -54,5 +54,6 @@ function [q_slab, gradLim, grad_x] = qAverageFluxRho(q, rx, grad_x, gradLim, nCe
 fprintf('Inside qAverageFluxRho\n');
 q_slab      = zeros(1,nCells,1);
 for j = 1:nCells                                                % For cells 1 and nCells, disregard contributions in this matlab code (note: grads=0 there)
-    q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);          % Eq.(3.2.9)
+    q_slab(j) = q(j);                                           % Limiter=0, first order upwind scheme
+%    q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);          % Eq.(3.2.9)
 end
