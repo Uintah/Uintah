@@ -24,7 +24,7 @@ SRCS += \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadPool.cc \
 	$(SRCDIR)/GhostOffsetVarMap.cc \
-	$(SRCDIR)/DeniedAccess.cc \
+	$(SRCDIR)/DependencyException.cc \
 	$(SRCDIR)/IncorrectAllocation.cc \
 	$(SRCDIR)/Util.cc \
 	$(SRCDIR)/templates.cc
