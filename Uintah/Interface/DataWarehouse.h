@@ -204,21 +204,26 @@ WARNING
 	 return d_generation;
       }
    protected:
-      DataWarehouse(const ProcessorGroup* myworld, int generation );
+      DataWarehouse(const ProcessorGroup* myworld, int generation, DataWarehouseP& parent_dw);
       // These two things should be removed from here if possible - Steve
       const ProcessorGroup* d_myworld;
       int d_generation;
+
       
    private:
       
       DataWarehouse(const DataWarehouse&);
       DataWarehouse& operator=(const DataWarehouse&);
+      DataWarehouseP& d_parent;
    };
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.36  2000/07/28 03:01:07  rawat
+// modified createDatawarehouse and added getTop function
+//
 // Revision 1.35  2000/07/27 22:39:53  sparker
 // Implemented MPIScheduler
 // Added associated support

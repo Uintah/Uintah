@@ -9,9 +9,10 @@ using namespace Uintah;
 using std::cerr;
 using SCICore::Geometry::Vector;
 
-DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, int generation ) :
+DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, int generation, 
+			     DataWarehouseP& parent_dw) :
   d_myworld(myworld),
-  d_generation( generation )
+  d_generation( generation ), d_parent(parent_dw)
 {
 }
 
@@ -19,8 +20,20 @@ DataWarehouse::~DataWarehouse()
 {
 }
 
+DataWarehouseP
+DataWarehouse::getTop() const{
+  DataWarehouseP parent = d_parent;
+  while (parent->d_parent) {
+    parent = parent->d_parent;
+  }
+  return parent;
+}
+
 //
 // $Log$
+// Revision 1.8  2000/07/28 03:01:07  rawat
+// modified createDatawarehouse and added getTop function
+//
 // Revision 1.7  2000/06/17 07:06:45  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -68,8 +68,9 @@ WARNING
        
        //////////
        // Insert Documentation Here:
-       virtual DataWarehouseP createDataWarehouse( int generation ) = 0;
-       
+       virtual DataWarehouseP createDataWarehouse(DataWarehouseP& parent_dw) = 0;
+    protected:
+
        //////////
        // Insert Documentation Here:
        virtual void scheduleParticleRelocation(const LevelP& level,
@@ -100,6 +101,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.16  2000/07/28 03:01:07  rawat
+// modified createDatawarehouse and added getTop function
+//
 // Revision 1.15  2000/07/27 22:39:53  sparker
 // Implemented MPIScheduler
 // Added associated support
