@@ -50,7 +50,6 @@ main(int argc, char* argv[])
     //  cout << tmp << endl << endl;
   }
 
-  char c;
   long  node, mesh,elem;
 
   const char *fname=0;
