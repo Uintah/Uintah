@@ -44,7 +44,11 @@ public:
     //ambient color (irradiance/pi) at position with surface normal
   inline Color ambient_hack(Scene* scene, const Vector& normal) const {
     float cosine = scene->get_groundplane().cos_angle( normal );
+#ifdef __sgi
     float sine = fsqrt ( 1.F - cosine*cosine );
+#else
+    float sine = sqrt(1.-cosine*cosine);
+#endif
     //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
     float w0, w1;
     if(cosine > 0){
