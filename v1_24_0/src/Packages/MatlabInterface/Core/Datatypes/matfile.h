@@ -107,6 +107,7 @@ class matfile : public matfilebase {
             long	startptr;	// location of the first tag header (to go one level up)
             long	endptr;		// location of the end of the data segment (end+1)
             long	size;		// length of data segment
+            mitype type;
             };
 
 	// This next struct is used for buffering sections of the compressed
@@ -146,6 +147,7 @@ class matfile : public matfilebase {
 			long		fcmpsize_;		// Size of the buffer
 			long		fcmpoffset_;	// Offset of the buffer
 			long		fcmpcount_;		// Counter to check where next to read data
+      long    fcmpalignoffset_;    // Correction for alignment problem in filess
 			
 			FILE		*fptr_;			// File pointer
 			std::string fname_;			// Filename
@@ -155,9 +157,10 @@ class matfile : public matfilebase {
         
 			char	    headertext_[118]; 	// The text in the header of the matfile
 			int32_t		subsysdata_[2];		// NEW IN VERSION 7
-			short 	    version_;			// Version of the matfile.
-			short       byteswap_;			// =1 if bytes need to be swapped
-   	
+			short 	  version_;			// Version of the matfile.
+			short     byteswap_;			// =1 if bytes need to be swapped
+      bool      compressmode_;  // whether we are in compressed mode
+    
 			std::stack<matfileptr> ptrstack_;	// Stack containing information on where we are
 												// currently reading and writing, the stack contains
 												// all te pointers to locations in the file, for
