@@ -34,6 +34,7 @@
 #include <Core/Thread/Thread.h>
 
 #include <string>
+using namespace std;
 
 namespace SCIRun {
 
@@ -56,8 +57,8 @@ class CCACommunicator:public Runnable{
  protected:
   void readPacket(const Packet &pkt);
   Packet makePacket(int i);
-  std::vector<std::string> ccaFrameworkURL; //framework URLs
-  std::vector<std::string> ccaSiteList; //machine IP addresses
+  vector<string> ccaFrameworkURL; //framework URLs
+  vector<string> ccaSiteList; //machine IP addresses
   SCIRunFramework *framework;
   sci::cca::Services::pointer services;
 };

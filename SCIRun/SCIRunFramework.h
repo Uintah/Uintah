@@ -30,6 +30,7 @@
 #define SCIRun_Framework_SCIRunFramework_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/resourceReference.h>
 #include <vector>
 #include <map>
 #include <string>
@@ -58,7 +59,7 @@ namespace SCIRun {
     // Semi-private:
     // Used by builderService
     sci::cca::ComponentID::pointer 
-      createComponentInstance( const std::string& name, const std::string& type, const std::string& url="");
+      createComponentInstance( const std::string& name, const std::string& type, const sci::cca::TypeMap::pointer properties);
   
     
     void destroyComponentInstance(const sci::cca::ComponentID::pointer &cid, float timeout );
@@ -68,15 +69,24 @@ namespace SCIRun {
     bool releaseFrameworkService(const std::string& type,
 				 const std::string& componentName);
     void registerComponent(ComponentInstance* ci, const std::string& name);
+
+
+
+
     ComponentInstance * unregisterComponent(const std::string& instanceName);
     void shutdownComponent(const std::string& name);
     void listAllComponentTypes(std::vector<ComponentDescription*>&,
 			       bool);
+
+    virtual int registerLoader(const ::std::string& slaveName, const ::SSIDL::array1< ::std::string>& slaveURLs);
+    virtual int unregisterLoader(const ::std::string& slaveName);
+
     ComponentInstance* lookupComponent(const std::string& name);
     sci::cca::ComponentID::pointer lookupComponentID(const std::string& componentInstanceName);
     //do not delete the following 2 lines
     //void share(const sci::cca::Services::pointer &svc);
     //std::string createComponent(const std::string& name, const std::string& type);
+    int destroyLoader(const std::string &loaderName);
   protected:
     friend class Services;
     friend class BuilderService;
@@ -88,6 +98,7 @@ namespace SCIRun {
     InternalComponentModel* internalServices;
     CCAComponentModel* cca;
     BabelComponentModel* babel;
+    //Semaphore d_slave_sema;
     
   };
 }

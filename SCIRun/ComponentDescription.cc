@@ -36,3 +36,10 @@ ComponentDescription::ComponentDescription()
 ComponentDescription::~ComponentDescription()
 {
 }
+
+std::string
+ComponentDescription::getLoaderName() const
+{
+  //for the local loaders, the loader name is "";
+  return "";
+}

@@ -41,6 +41,7 @@ namespace SCIRun {
 
     virtual std::string getType() const = 0;
     virtual const ComponentModel* getModel() const = 0;
+    virtual std::string getLoaderName() const;
   private:
     ComponentDescription(const ComponentDescription&);
     ComponentDescription& operator=(const ComponentDescription&);
