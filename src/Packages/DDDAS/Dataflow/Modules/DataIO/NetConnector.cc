@@ -408,8 +408,14 @@ void listen_callback( NetInterface * interface, NetConnection * conn )
   {
     cout << "(listen_callback) Writing data" << endl;
     interface->writen( conn, "Hello from server\n", 18 );
-    //interface->write( conn, "Hello from server\n", 18 );
-    //interface->send( conn, "Hello from server\n", 18, 0 );
+
+    //interface->send_message( conn, PING );
+    //interface->writen( conn, "Hello from server\n", 18 );
+    //interface->send_message( conn, DISCONNECT );
+
+    // Print existing connections
+    //interface->print_connections();
+
     sleep( 2 );
   }
   
