@@ -7,11 +7,13 @@ SRCDIR   := Packages/Uintah/CCA/Components/ProblemSpecification
 SRCS	+= $(SRCDIR)/ProblemSpecReader.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Grid \
-	Dataflow/XMLUtil
+	Dataflow/XMLUtil                 \
+	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/ProblemSpec
+
 LIBS 	:= $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
