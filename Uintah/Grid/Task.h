@@ -86,6 +86,36 @@ WARNING
       };
 
       
+      template<class T, class Arg1>
+      class NPAction1 : public ActionBase {
+
+         T* ptr;
+	 Arg1 arg1;
+         void (T::*pmf)(const ProcessorContext*,
+                        DataWarehouseP&,
+                        DataWarehouseP&,
+			Arg1);
+      public:
+         NPAction1( T* ptr,
+                 void (T::*pmf)(const ProcessorContext*,
+                                DataWarehouseP&,
+                                DataWarehouseP&,
+				Arg1),
+		   Arg1 arg1)
+            : ptr(ptr), pmf(pmf), arg1(arg1) {}
+         virtual ~NPAction1() {}
+
+         //////////
+         // Insert Documentation Here:
+         virtual void doit(const ProcessorContext* pc,
+                           const Patch*,
+                           DataWarehouseP& fromDW,
+                           DataWarehouseP& toDW) {
+            (ptr->*pmf)(pc, fromDW, toDW, arg1);
+         }
+      };
+
+      
       template<class T>
       class Action : public ActionBase {
 	 
@@ -209,6 +239,20 @@ WARNING
       };
 
    public:
+      Task(const string&         taskName)
+	 : d_taskName(taskName),
+	   d_patch(0),
+	   d_action(0),
+	   d_fromDW(0),
+	   d_toDW(0)
+      {
+	 d_completed = false;
+	 d_usesThreads = false;
+	 d_usesMPI = false;
+	 d_subpatchCapable = false;
+	 d_isReductionTask = true;
+      }
+
       template<class T>
       Task(const string&         taskName,
 	   const Patch*         patch,
@@ -229,6 +273,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
+	 d_isReductionTask = false;
       }
 
      template<class T>
@@ -249,6 +294,31 @@ WARNING
          d_usesThreads = false;
          d_usesMPI = false;
          d_subpatchCapable = false;
+	 d_isReductionTask = false;
+      }
+
+      
+     template<class T, class Arg1>
+      Task(const string&         taskName,
+           DataWarehouseP&       fromDW,
+           DataWarehouseP&       toDW,
+           T*                    ptr,
+           void (T::*pmf)(const ProcessorContext*,
+                          DataWarehouseP&,
+                          DataWarehouseP&,
+			  Arg1),
+	   Arg1 arg1)
+         : d_taskName( taskName ),
+           d_patch( 0 ),
+           d_action( scinew NPAction1<T, Arg1>(ptr, pmf, arg1) ),
+           d_fromDW( fromDW ),
+           d_toDW( toDW )
+      {
+         d_completed = false;
+         d_usesThreads = false;
+         d_usesMPI = false;
+         d_subpatchCapable = false;
+	 d_isReductionTask = false;
       }
 
       
@@ -271,6 +341,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
+	 d_isReductionTask = false;
       }
       
       template<class T, class Arg1>
@@ -295,6 +366,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
+	 d_isReductionTask = false;
       }
       
       template<class T, class Arg1, class Arg2>
@@ -319,6 +391,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
+	 d_isReductionTask = false;
       }
       
       template<class T, class Arg1, class Arg2, class Arg3>
@@ -343,6 +416,7 @@ WARNING
 	 d_usesThreads = false;
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
+	 d_isReductionTask = false;
       }
       
       ~Task();
@@ -393,14 +467,12 @@ WARNING
       }
       
       struct Dependency {
-	 Task*            d_task;
 	 DataWarehouseP   d_dw;
 	 const VarLabel*  d_var;
 	 int		  d_matlIndex;
-	 const Patch*    d_patch;
+	 const Patch*     d_patch;
 	 
-	 Dependency(      Task*           task,
-			  const DataWarehouseP& dw,
+	 Dependency(      const DataWarehouseP& dw,
 			  const VarLabel* d_var,
 			  int matlIndex,
 			  const Patch*);
@@ -418,7 +490,10 @@ WARNING
       //////////
       // Insert Documentation Here:
       const vector<Dependency*>& getRequires() const;
-      
+
+      bool isReductionTask() const {
+	 return d_isReductionTask;
+      }
    private:
       //////////
       // Insert Documentation Here:
@@ -434,6 +509,7 @@ WARNING
       bool                d_usesMPI;
       bool                d_usesThreads;
       bool                d_subpatchCapable;
+      bool		  d_isReductionTask;
       
       Task(const Task&);
       Task& operator=(const Task&);
@@ -443,6 +519,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.17  2000/06/03 05:29:45  sparker
+// Changed reduction variable emit to require ostream instead of ofstream
+// emit now only prints number without formatting
+// Cleaned up a few extraneously included files
+// Added task constructor for an non-patch-based action with 1 argument
+// Allow for patches and actions to be null
+// Removed back pointer to this from Task::Dependency
+//
 // Revision 1.16  2000/06/01 23:16:18  guilkey
 // Added code to the ReductionVariable stuff to "emit" it's data.  Added
 // NPAction tasks.  NP=NonPatch, this is for tasks that don't need the patch.
