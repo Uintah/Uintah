@@ -127,7 +127,7 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
   texture->set_minmax(0.0, 255.0, 0.0, 255.0);
   for (unsigned int i=0; i<bricks.size(); i++)
   {
-    fill_brick(bricks[i], nv_nrrd, gm_nrrd, nx, ny, nz);
+    fill_brick(bricks[i], nvn, gmn, nx, ny, nz);
     bricks[i]->set_dirty(true);
   }
   texture->unlock_bricks();
@@ -245,20 +245,40 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
         (double)data_size[0]/(double)brick_size[0];
       for (int i=0; i<num_brick[0]; i++)
       {
-        TextureBrick* b = scinew TextureBrickT<unsigned char>(
-          i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
-          j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
-          k < num_brick[2]-1 ? brick_size[2] : brick_pad[2],
-          nc, nb,
-          brick_offset[0], brick_offset[1], brick_offset[2],
-          i < num_brick[0]-1 ? brick_size[0] : data_size[0] - (num_brick[0]-1)*(brick_size[0]-1),
-          j < num_brick[1]-1 ? brick_size[1] : data_size[1] - (num_brick[1]-1)*(brick_size[1]-1),
-          k < num_brick[2]-1 ? brick_size[2] : data_size[2] - (num_brick[2]-1)*(brick_size[2]-1),
-          BBox(Point(bmin[0], bmin[1], bmin[2]),
-               Point(bmax[0], bmax[1], bmax[2])),
-          BBox(Point(tmin[0], tmin[1], tmin[2]),
-               Point(tmax[0], tmax[1], tmax[2])));
-        bricks.push_back(b);
+        if (num_brick[0] * num_brick[1] * num_brick[2] == 1)
+	{
+	  NrrdTextureBrick *b = scinew NrrdTextureBrick(0, 0,
+            i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
+            j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
+            k < num_brick[2]-1 ? brick_size[2] : brick_pad[2],
+            nc, nb,
+            brick_offset[0], brick_offset[1], brick_offset[2],
+            i < num_brick[0]-1 ? brick_size[0] : data_size[0] - (num_brick[0]-1)*(brick_size[0]-1),
+            j < num_brick[1]-1 ? brick_size[1] : data_size[1] - (num_brick[1]-1)*(brick_size[1]-1),
+            k < num_brick[2]-1 ? brick_size[2] : data_size[2] - (num_brick[2]-1)*(brick_size[2]-1),
+            BBox(Point(bmin[0], bmin[1], bmin[2]),
+                 Point(bmax[0], bmax[1], bmax[2])),
+            BBox(Point(tmin[0], tmin[1], tmin[2]),
+                 Point(tmax[0], tmax[1], tmax[2])));
+          bricks.push_back(b);
+	}
+	else
+	{
+	  TextureBrick* b = scinew TextureBrickT<unsigned char>(
+            i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
+            j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
+            k < num_brick[2]-1 ? brick_size[2] : brick_pad[2],
+            nc, nb,
+            brick_offset[0], brick_offset[1], brick_offset[2],
+            i < num_brick[0]-1 ? brick_size[0] : data_size[0] - (num_brick[0]-1)*(brick_size[0]-1),
+            j < num_brick[1]-1 ? brick_size[1] : data_size[1] - (num_brick[1]-1)*(brick_size[1]-1),
+            k < num_brick[2]-1 ? brick_size[2] : data_size[2] - (num_brick[2]-1)*(brick_size[2]-1),
+            BBox(Point(bmin[0], bmin[1], bmin[2]),
+                 Point(bmax[0], bmax[1], bmax[2])),
+            BBox(Point(tmin[0], tmin[1], tmin[2]),
+                 Point(tmax[0], tmax[1], tmax[2])));
+          bricks.push_back(b);
+	}
 
         // update x parameters                     
         brick_offset[0] += brick_size[0]-1;
@@ -289,11 +309,25 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
   } // k
 }
 
+
 void
 NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
-				   Nrrd* nv_nrrd, Nrrd* gm_nrrd,
+				   const NrrdDataHandle &nvn,
+				   const NrrdDataHandle &gmn,
                                    int ni, int nj, int nk)
 {
+  NrrdTextureBrick *nbrick =
+    dynamic_cast<NrrdTextureBrick *>(brick.get_rep());
+  if (nbrick)
+  {
+    nbrick->set_nrrds(nvn, gmn);
+    return;
+  }
+  Nrrd *nv_nrrd = 0;
+  if (nvn.get_rep()) { nv_nrrd = nvn->nrrd; }
+  Nrrd *gm_nrrd = 0;
+  if (gmn.get_rep()) { gm_nrrd = gmn->nrrd; }
+
   TextureBrickT<unsigned char>* br =
     dynamic_cast<TextureBrickT<unsigned char>*>(brick.get_rep());
   int nc = brick->nc();
