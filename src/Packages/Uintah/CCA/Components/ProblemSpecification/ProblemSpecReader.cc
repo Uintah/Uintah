@@ -15,7 +15,7 @@
 
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMNode.hpp>
-
+#include <xercesc/dom/DOMException.hpp> 
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -52,18 +52,19 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       throw ProblemSetupException("Error reading file: "+filename);
     }
     
-    // Clone the Node so we can delete the parser but keep the document
+    // Adopt the Node so we can delete the parser but keep the document
     // contents.  THIS NODE WILL NEED TO BE RELEASED MANUALLY LATER!!!!
-    DOMNode* node = parser->getDocument()->cloneNode(true);
-#if !defined( _AIX )
-    DOMDocument* doc = dynamic_cast<DOMDocument*>(node);
-#else
-    DOMDocument* doc = static_cast<DOMDocument*>(node);
-#endif
+    //DOMNode* node = parser->getDocument()->cloneNode(true);
+    DOMDocument* doc = parser->adoptDocument();
+    //#if !defined( _AIX )
+    //DOMDocument* doc = dynamic_cast<DOMDocument*>(node);
+    //#else
+    //DOMDocument* doc = static_cast<DOMDocument*>(node);
+    //#endif
 
     if( !doc ) {
-      cout << "dynamic_cast to DOMDocument * failed!\n";
-      throw InternalError( "dynamic_cast to DOMDocument * failed!\n" );
+      cout << "Parse failed!\n";
+      throw InternalError( "Parse failed!\n" );
     }
 
     delete parser;
@@ -76,9 +77,45 @@ ProblemSpecP ProblemSpecReader::readInputFile()
     delete [] ch;
     throw ProblemSetupException(ex);
   }
+  string test1 = filename.substr(filename.length()-3,3);
+  if (test1 == "ups")
+    resolveIncludes(prob_spec);
   return prob_spec;
 }
 
+void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
+{
+  ProblemSpecP child = params->getFirstChild();
+  while (child != 0) {
+    if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
+      string str = child->getNodeName();
+      // look for the include tag
+      if (str == "include") {
+	map<string, string> attributes;
+	child->getAttributes(attributes);
+	string href = attributes["href"];
+	if (href == "")
+	  throw ProblemSetupException("No href attributes in include tag");
+	
+	// open the file, read it, and replace the index node
+	ProblemSpecReader *psr = new ProblemSpecReader(href);
+	ProblemSpecP include = psr->readInputFile();
+	
+	//make include be created from same document that created params
+	ProblemSpecP newnode = child->importNode(include, true);
+	resolveIncludes(newnode);
+	params->replaceChild(newnode, child);
+	child = child->getNextSibling();
+	continue;
+      }
+      // recurse on child's children
+      resolveIncludes(child);
+    }
+    child = child->getNextSibling();
+
+  }
+
+}
 
 
 
