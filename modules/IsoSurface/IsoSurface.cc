@@ -61,7 +61,7 @@ IsoSurface::IsoSurface()
     have_seedpoint=0;
 //    seed_point=Point(0,0,0);
 //    have_seedpoint=1;
-    seed_point=Point(8,8,8);
+    seed_point=Point(.5,.5,.5);
     add_ui(new MUI_point("Seed Point", &seed_point,
 			 MUI_widget::Immediate, 1));
     scalar_val=0;
@@ -443,8 +443,8 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     int counter=1;
     GeomID groupid=0;
     while(!surfQ.is_empty()) {
-	if (counter%100 == 0) {
-	    if (counter != 100)
+	if (counter%400 == 0) {
+	    if (counter != 400)
 		ogeom->delObj(groupid);
 	    groupid=ogeom->addObj(group->clone());
 	    ogeom->flushViews();
@@ -507,7 +507,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	}
 	counter++;
     }
-    if (counter > 100)
+    if (counter > 400)
 	ogeom->delObj(groupid);
 }
 
