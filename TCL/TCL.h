@@ -51,6 +51,8 @@ public:
     static void initialize();
     static void execute(const clString&);
     static void execute(char*);
+    static int eval(const clString&, clString& result);
+    static int eval(char*, clString& result);
     static void source_once(const clString&);
     static void add_command(const clString&, TCL*, void*);
 

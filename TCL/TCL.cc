@@ -66,6 +66,34 @@ void TCL::execute(char* string)
     TCLTask::unlock();
 }
 
+int TCL::eval(const clString& string, clString& result)
+{
+    TCLTask::lock();
+    int code = Tcl_Eval(the_interp, string());
+    if(code != TCL_OK){
+	Tk_BackgroundError(the_interp);
+	result="";
+    } else {
+	result=clString(the_interp->result);
+    }
+    TCLTask::unlock();
+    return code == TCL_OK;
+}
+
+int TCL::eval(char* str, clString& result)
+{
+    TCLTask::lock();
+    int code = Tcl_Eval(the_interp, str);
+    if(code != TCL_OK){
+	Tk_BackgroundError(the_interp);
+	result="";
+    } else {
+	result=clString(the_interp->result);
+    }
+    TCLTask::unlock();
+    return code != TCL_OK;
+}
+
 void TCL::source_once(const clString& filename)
 {
     TCLTask::lock();
