@@ -32,62 +32,74 @@
 #define SCI_Part_h 
 
 #include <string>
-//#include <typeinfo>
 #include <map>
-#include <stdio.h>
 #include <vector>
+#include <stdio.h>
+
+#include <Core/GuiInterface/TCLArgs.h>
+#include <Core/Util/Signals.h>
 
 namespace SCIRun {
 
 using std::string;
 using std::vector;
 using std::map;
-using std::pair;
   
-class PartInterface;
+class GuiVar;
+class PartPort;
 
-typedef vector<map<string,vector<unsigned char> > > property_vector;
-typedef map<string,vector<unsigned char> >::iterator pv_iter;
-
-class Part {
+class Part  {
 protected:
-  PartInterface *parent_interface_;
-  PartInterface *interface_;
-
   string name_;
-  property_vector properties_;
+  string type_;
+  Part *parent_;
+  PartPort *port_;
+  vector<Part*> children_;
+  vector<GuiVar *> vars_;
 
 public:
-  Part( PartInterface *parent=0, const string name="", PartInterface *i=0 ) 
-    : parent_interface_(parent), interface_(i), name_(name) 
-  { 
-  }
-  virtual ~Part() {/* if (interface_) delete interface_;*/ }
+  Part( Part *parent=0, const string &name="", const string &type="" );
+  virtual ~Part();
 
-  PartInterface *interface() { return interface_; }
-  string name() { return name_; }
+  const string &name() { return name_; }
+  const string &type() { return type_; }
 
-  void set_property(int id, string name, vector<unsigned char> data) 
-  { 
-    if ((int)properties_.size()<=id)
-	properties_.resize(id+1);
-    properties_[id].insert(pair<string, vector<unsigned char> >(name,data));
-  }
+  virtual void init();
 
-  //! data[0] is the valid bool: set to 1 if this call succeeds, 0 otherwise
-  void get_property(int id, string name , vector<unsigned char>& data) 
-  {
-    if ((int)properties_.size()>id) {
-      pv_iter i = properties_[id].find(name);
-      if (i != properties_[id].end()) {
-        int length=data.size();
-        data[0]=1;
-        // copy from property to get buffer (data)
-	for (int loop=1;loop<length;++loop)
-          data[loop]=(*i).second[loop-1];
-      } else { data[0]=0; }
-    } else { data[0]=0; }
-  }
+  void add_child( Part *child );
+  void rem_child( Part *child );
+
+  vector<GuiVar*> &get_gui_vars() { return vars_; }
+
+  virtual void add_gui_var( GuiVar * );
+  virtual void rem_gui_var( GuiVar * );
+
+  virtual void emit_vars( ostream& out, string &midx );
+
+  // tcl compatibility
+  virtual void tcl_command( TCLArgs &, void *) {}
+  void reset_vars();
+  
+  static Signal1<const string &> tcl_execute;
+  static Signal2<const string &, string &> tcl_eval;
+  static Signal3<const string &, Part *, void *> tcl_add_command;
+  static Signal1<const string &> tcl_delete_command;
+
+  static int get_gui_stringvar(const string &, const string &, string & );
+  static int get_gui_doublevar(const string &, const string &, double & );
+  static int get_gui_intvar(const string &, const string &, int & );
+  static void set_gui_var(const string &, const string &, const string & );
+};
+
+class PartPort {
+private:
+  Part *part_;
+
+public:
+  PartPort( Part *part) : part_(part) {}
+  virtual ~PartPort() {}
+
+  vector<GuiVar *> &get_gui_vars() { return part_->get_gui_vars(); }
 };
 
 } // namespace SCIRun

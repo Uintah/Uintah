@@ -22,14 +22,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Core/Parts
 
 SRCS     += $(SRCDIR)/EventManager.cc \
-	$(SRCDIR)/PartInterface.cc \
-	$(SRCDIR)/GraphPart.cc \
-	$(SRCDIR)/PartManager.cc \
+	$(SRCDIR)/Part.cc \
+	$(SRCDIR)/GuiVar.cc \
+	$(SRCDIR)/TCLstrbuff.cc \
+#	$(SRCDIR)/PartManager.cc \
 
-PSELIBS := Core/Exceptions \
+PSELIBS := Core/Framework \
+	Core/Exceptions \
 	Core/Util \
 	Core/Thread \
 	Core/Persistent \
+	Core/GuiInterface 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
