@@ -544,6 +544,7 @@ void NormalFracture::computeCrackExtension(
     {
       particleIndex pIdx_p = *iter;
       particleIndex pIdx_pg = indexExchange.getPatchAndGhostIndex(pIdx_p);
+
     
       if(pExtensionDirection_pg[pIdx_pg].length2()>0.5 && 
          pIsBroken_pg[pIdx_pg])
