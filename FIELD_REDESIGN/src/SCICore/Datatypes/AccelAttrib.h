@@ -78,7 +78,7 @@ public:
   virtual void resize(int, int);
   virtual void resize(int, int, int);
 
-  virtual string get_info();  
+  virtual string getInfo();  
 
   //////////
   // Persistent representation...
@@ -89,8 +89,8 @@ protected:
   void create_accel_structure();
 
   // Accel structure.
-  vector<vector<T *> > accel3;
-  vector<T *> accel2;
+  vector<vector<T *> > d_accel3;
+  vector<T *> d_accel2;
 };
 
 
@@ -102,25 +102,25 @@ template <class T>
 void
 AccelAttrib<T>::create_accel_structure()
 {
-  data.reserve(data.size());
-  if (dim == 3)
+  d_data.reserve(d_data.size());
+  if (d_dim == 3)
     {
-      accel3.resize(nz);
-      for (int i=0; i < nz; i++)
+      d_accel3.resize(d_nz);
+      for (int i=0; i < d_nz; i++)
 	{
-	  accel3[i].resize(ny);
-	  for (int j=0; j < ny; j++)
+	  d_accel3[i].resize(d_ny);
+	  for (int j=0; j < d_ny; j++)
 	    {
-	      accel3[i][j] = &(data[i*nx*ny + j*nx]);
+	      d_accel3[i][j] = &(d_data[i*d_nx*d_ny + j*d_nx]);
 	    }
 	}
     }
-  else if (dim == 2)
+  else if (d_dim == 2)
     {
-      accel2.resize(ny);
-      for (int i=0; i < ny; i++)
+      d_accel2.resize(d_ny);
+      for (int i=0; i < d_ny; i++)
 	{
-	  accel2[i] = &(data[i*nx]);
+	  d_accel2[i] = &(d_data[i*d_nx]);
 	}
     }
 }
@@ -172,28 +172,28 @@ AccelAttrib<T>::~AccelAttrib()
 template <class T> T &
 AccelAttrib<T>::fget1(int ix)
 {
-  ASSERTEQ(dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, nx);
-  return data[ix];
+  ASSERTEQ(d_dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  return d_data[ix];
 }
 
 template <class T> T &
 AccelAttrib<T>::fget2(int ix, int iy)
 {
-  ASSERTEQ(dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, nx);
-  CHECKARRAYBOUNDS(iy, 0, ny);
-  return accel2[iy][ix];  
+  ASSERTEQ(d_dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  CHECKARRAYBOUNDS(iy, 0, d_ny);
+  return d_accel2[iy][ix];  
 }
 
 template <class T> T &
 AccelAttrib<T>::fget3(int ix, int iy, int iz)
 {
-  ASSERTEQ(dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, nx);
-  CHECKARRAYBOUNDS(iy, 0, ny);
-  CHECKARRAYBOUNDS(iz, 0, nz);
-  return accel3[iz][iy][ix];  
+  ASSERTEQ(d_dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  CHECKARRAYBOUNDS(iy, 0, d_ny);
+  CHECKARRAYBOUNDS(iz, 0, d_nz);
+  return d_accel3[iz][iy][ix];  
 }
 
 
@@ -241,30 +241,30 @@ AccelAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 AccelAttrib<T>::fset1(int ix, const T& val)
 {
-  ASSERTEQ(dim, 1);
-  CHECKARRAYBOUNDS(ix, 0, nx);
-  data[ix] = val;
+  ASSERTEQ(d_dim, 1);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  d_data[ix] = val;
 }
 
 
 template <class T> void
 AccelAttrib<T>::fset2(int ix, int iy, const T& val)
 {
-  ASSERTEQ(dim, 2);
-  CHECKARRAYBOUNDS(ix, 0, nx);
-  CHECKARRAYBOUNDS(iy, 0, ny);
-  accel2[iy][ix] = val;
+  ASSERTEQ(d_dim, 2);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  CHECKARRAYBOUNDS(iy, 0, d_ny);
+  d_accel2[iy][ix] = val;
 }
 
 
 template <class T> void
 AccelAttrib<T>::fset3(int ix, int iy, int iz, const T& val)
 {
-  ASSERTEQ(dim, 3);
-  CHECKARRAYBOUNDS(ix, 0, nx);
-  CHECKARRAYBOUNDS(iy, 0, ny);
-  CHECKARRAYBOUNDS(iz, 0, nz);
-  accel3[iz][iy][ix] = val;
+  ASSERTEQ(d_dim, 3);
+  CHECKARRAYBOUNDS(ix, 0, d_nx);
+  CHECKARRAYBOUNDS(iy, 0, d_ny);
+  CHECKARRAYBOUNDS(iz, 0, d_nz);
+  d_accel3[iz][iy][ix] = val;
 }
 
 
@@ -289,16 +289,16 @@ AccelAttrib<T>::set3(int x, int y, int z, const T &val)
 
 // template <class T> bool AccelAttrib<T>::compute_minmax(){
 //   has_minmax = 1;
-//   if(data.empty()) {
+//   if(d_data.empty()) {
 //     min = 0;
 //     max = 0;
 //     return false;
 //   }
 //   else {
 //     vector<T>::iterator itr;
-//     T lmin = data[0];
+//     T lmin = d_data[0];
 //     T lmax = lmin;
-//     for(itr = data.begin(); itr != data.end(); itr++){
+//     for(itr = d_data.begin(); itr != d_data.end(); itr++){
 //       lmin = Min(lmin, *itr);
 //       lmax = Max(lmax, *itr);
 //     }
@@ -332,28 +332,28 @@ AccelAttrib<T>::resize(int x)
 }
 
 
-template <class T> string AccelAttrib<T>::get_info() {
+template <class T> string AccelAttrib<T>::getInfo() {
   ostringstream retval;
   retval <<
-    "Name = " << name << endl <<
+    "Name = " << d_name << endl <<
     "Type = AccelAttrib" << endl <<
-    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
+    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
     "Size = " << size() << endl;
 #if 1
   retval << "Data = ";
-  vector<T>::iterator itr = data.begin();
+  vector<T>::iterator itr = d_data.begin();
   int i = 0;
-  for(;itr!=data.end() && i < 1000; itr++, i++) {
+  for(;itr!=d_data.end() && i < 1000; itr++, i++) {
     retval << *itr << " ";
   }
-  if (itr != data.end()) { retval << "..."; }
+  if (itr != d_data.end()) { retval << "..."; }
   retval << endl;
 #else
-  for (int k = 0; k < nz; k++)
+  for (int k = 0; k < d_nz; k++)
     {
-      for (int j = 0; j < nz; j++)
+      for (int j = 0; j < d_nz; j++)
 	{
-	  retval << "  " << &(data[k * nx*ny + j * nx]);
+	  retval << "  " << &(d_data[k * d_nx*d_ny + j * d_nx]);
 	}
       retval << endl;
     }
@@ -365,29 +365,29 @@ template <class T> string AccelAttrib<T>::get_info() {
 
 template<>
 string
-AccelAttrib<unsigned char>::get_info()
+AccelAttrib<unsigned char>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << name << endl <<
+    "Name = " << d_name << endl <<
     "Type = AccelAttrib" << endl <<
-    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
+    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
     "Size = " << size() << endl;
 #if 1
   retval << "Data = ";
-  vector<unsigned char>::iterator itr = data.begin();
+  vector<unsigned char>::iterator itr = d_data.begin();
   int i = 0;
-  for(;itr!=data.end() && i < 1000; itr++, i++) {
+  for(;itr!=d_data.end() && i < 1000; itr++, i++) {
     retval << (int)(*itr) << " ";
   }
-  if (itr != data.end()) { retval << "..."; }
+  if (itr != d_data.end()) { retval << "..."; }
   retval << endl;
 #else
-  for (int k = 0; k < nz; k++)
+  for (int k = 0; k < d_nz; k++)
     {
-      for (int j = 0; j < nz; j++)
+      for (int j = 0; j < d_nz; j++)
 	{
-	  retval << "  " << (int)(&(data[k * nx*ny + j * nx]));
+	  retval << "  " << (int)(&(d_data[k * d_nx*d_ny + j * d_nx]));
 	}
       retval << endl;
     }

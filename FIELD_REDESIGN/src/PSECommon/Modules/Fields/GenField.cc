@@ -232,7 +232,7 @@ GenField::send_scalar_field()
   // Populate attrib, with analytic attrib and geometry.
   fill(attrib, geom, analyt);
 
-  dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
+  dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
   // Create index mapping.
   GenSField<double, Lattice3Geom> *isf =
@@ -248,7 +248,7 @@ GenField::send_scalar_field()
 
       indicize(iatt, attrib, minval, maxval, x, y, z);
 
-      dbg << "Indexed Attrib in Genfield:\n" << iatt->get_info() << endl;
+      dbg << "Indexed Attrib in Genfield:\n" << iatt->getInfo() << endl;
 
       // Create Field, send it.
       GenSField<double, Lattice3Geom> *osf =
@@ -326,7 +326,7 @@ GenField::send_vector_field()
   // Populate attrib, with analytic attrib and geometry.
   fill(attrib, geom, analyt);
 
-  dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
+  dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
   // Create Field, send it.
   GenVField<Vector, Lattice3Geom> *osf =
@@ -401,7 +401,7 @@ GenField::send_tensor_field()
   // Populate attrib, with analytic attrib and geometry.
   fill(attrib, geom, analyt);
 
-  dbg << "Attrib in Genfield:\n" << attrib->get_info() << endl;
+  dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
   // Create Field, send it.
   GenVField<Tensor, Lattice3Geom> *osf =

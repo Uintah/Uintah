@@ -35,7 +35,6 @@ using SCICore::Geometry::Point;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
-template <class T> class FlatAttrib;
 class Attrib;
 typedef LockingHandle<Attrib> AttribHandle;
 
@@ -61,15 +60,15 @@ public:
   
   /////////
   // set (and get) the name of the attribute
-  void set_name(std::string iname){name=iname; };
-  std::string get_name(){return name;};
+  void setName(std::string iname) {d_name = iname; };
+  std::string getName() { return d_name; };
 
   /////////
   // Get information about the attribute
-  virtual string get_info() =0;
+  virtual string getInfo() =0;
   
 protected:
-  std::string name;
+  std::string d_name;
 };
 
 }  // end Datatypes
