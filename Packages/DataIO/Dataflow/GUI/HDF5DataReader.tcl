@@ -49,6 +49,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set    $this-power_app 0
 	set    power_app_command ""
 
+	global animate_frame
+	set animate_frame ""
+
 	global have_groups
 	global have_attributes
 	global have_datasets
@@ -79,6 +82,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-delay              0
 	set $this-inc-amount         1
 	trace variable $this-current w "update idletasks;\#"
+
+	global animate_tab
+	global basic_tab
+	global extended_tab
+	global playmode_tab
+
+	set animate_tab ""
+	set basic_tab ""
+	set extended_tab ""
+	set playmode_tab ""
 
 
 	global $this-mergeData
@@ -250,10 +263,17 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	iwidgets::entryfield $f.fname -labeltext "File:" \
 	    -textvariable $this-filename
 
-	button $f.sel -text "Browse" \
+	frame $f.buttons
+
+	button $f.buttons.browse -text "Browse" \
 	    -command "$this make_file_open_box"
 
-	pack $f.fname $f.sel -side top -fill x -expand yes
+	button $f.buttons.clear -text "Clear" \
+	    -command "$this clear"
+
+	pack $f.buttons.browse $f.buttons.clear -side left -fill x -expand yes
+
+	pack $f.fname $f.buttons -side top -fill x -expand yes
 
   	pack $w.browser -side top -pady 10 -fill x -expand yes
 
@@ -352,10 +372,17 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $listbox insert end $dataset
 	}
 
-	button $sd.delete -text "Delete Selection" \
+	frame $sd.buttons
+
+	button $sd.buttons.delete -text "Delete Selection" \
 	    -command "$this DeleteSelection"
 
-	pack $sd.listbox $sd.delete -side top -fill x -expand yes
+	button $sd.buttons.deleteall -text "Delete All" \
+	    -command "$this DeleteAll"
+
+	pack $sd.buttons.delete $sd.buttons.deleteall -side left -fill x -expand yes
+
+	pack $sd.listbox $sd.buttons -side top -fill x -expand yes
 	pack $w.sd -fill x -expand yes -side top
 
 
@@ -528,7 +555,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		    set ids [eval $treeview find -exact -full "{$dataset}"]
 		    
 		    foreach id $ids {
-			if {"$id" != ""} {
+ 			if {"$id" != ""} {
 			    if { [eval $treeview entry isopen $id] == 0 } {
 				$treeview open $id
 			    }
@@ -547,9 +574,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    reset_cursor
 	}
 
-	# Makesure the datasets are saved once everything is built.
+	# Make sure the datasets are saved once everything is built.
 	set $this-datasets $datasets
  	set allow_selection true
+
+	global $this-ports
+	updateSelection [set $this-ports]
 
 	animate
 
@@ -598,6 +628,23 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set $var2 $count }
 	
 	set $var1 [set $var2]
+    }
+
+    method clear {} {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    set sd [$w.sd childsite]
+	    set listbox $sd.listbox
+	    $listbox.list delete 0 end
+	}
+	
+	global tree
+	$tree delete root
+
+	set $this-filename ""
+	set $this-datasets ""
+	set $this-dumpname ""
     }
 
     method build_tree { filename } {
@@ -1156,6 +1203,28 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
     }
 
+    method DeleteAll { } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    set sd [$w.sd childsite]
+	    set listbox $sd.listbox
+	    $listbox.list delete 0 end
+
+	    set treeframe [$w.treeview childsite]
+	    set treeview $treeframe.tree.tree
+
+	    set ids [$treeview curselection]
+
+	    if { $ids != "" } {
+		foreach id $ids {
+		    $treeview selection clear $id
+		    $treeview open $id
+		}
+	    }
+	}
+    }
+	    
     method DeleteSelection { } {
 	set w .ui[modname]
 
@@ -1286,13 +1355,24 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		    $this-c update_selection;
 
-		    make_animate_box ""
+		    set a [format "%s-animate" .ui[modname]]
+	    
+		    if {[winfo exists $a]} {
+			set child [lindex [winfo children $a] 0]
+		
+			# $w withdrawn by $child's procedures
+			raise $child
+			return
+		    }
+		    
+		    toplevel $a	
+		    build_animate_ui $a
 
 		} else {
-		    set w [format "%s-animate" .ui[modname]]
+		    set a [format "%s-animate" .ui[modname]]
 
-		    if {[winfo exists $w]} {
-			destroy $w
+		    if {[winfo exists $a]} {
+			destroy $a
 		    }
 		}
 	    }
@@ -1305,30 +1385,43 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	$this-c needexecute
     }
 
-    method make_animate_box { w } {
+    method change_tab { which } {
+	global animate_tab
+	set initialized 1
 
-	if { $w != "" } {
-	    set w [format "%s-animate" .ui[modname]]
-	    
-	    if {[winfo exists $w]} {
-		set child [lindex [winfo children $w] 0]
+	# change tab for attached/detached
+
+	if {$initialized != 0} {
+	    if {$which == 0} {
+		$animate_tab view "Basic"
 		
-		# $w withdrawn by $child's procedures
-		raise $child
-		return
+	    } elseif {$which == 1} {
+		$animate_tab view "Extended"
+		
+	    } elseif {$which == 2} {
+		$animate_tab view "Playmode"
 	    }
-
-	    toplevel $w
 	}
+    }
 
-	frame $w.loc -borderwidth 2
-	frame $w.playmode -relief groove -borderwidth 2
-	frame $w.execmode -relief groove -borderwidth 2
-	frame $w.vcr -relief groove -borderwidth 2
-        set playmode $w.playmode
-	set vcr $w.vcr
+    method build_animate_ui { w } {
 
+	global animate_frame
+	set animate_frame $w
 
+	### Tabs
+	iwidgets::tabnotebook $w.tnb -width 250 \
+	    -height 250 -tabpos n
+	pack $w.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
+
+	global animate_tab
+	set animate_tab $w.tnb
+
+	global basic_tab
+	set basic_tab [$w.tnb add -label "Basic" -command "$this change_tab 0"]
+
+	frame $basic_tab.vcr -relief groove -borderwidth 2
+	set vcr $basic_tab.vcr
 
 	# load the VCR button bitmaps
 	set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
@@ -1364,23 +1457,51 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
 
 
+	iwidgets::labeledframe $basic_tab.cur -labelpos nw -labeltext "Current"
+	set tmp [$basic_tab.cur childsite]
+	scale $tmp.cur -variable $this-current \
+	    -showvalue true -orient horizontal -length 200 \
+	    -command "$this maybeRestart"
+	pack $tmp.cur  -side left -fill both -expand 1
+
+
+	pack $basic_tab.vcr -padx 5 -pady 15 -fill x -expand 0
+	pack $basic_tab.cur -padx 5 -pady 20 -fill x -expand 0
+
+
 	# Save range, creating the scale resets it to defaults.
 	set rmin [set $this-range_min]
 	set rmax [set $this-range_max]
 
+
+	global extended_tab
+	set extended_tab [$w.tnb add -label "Extended" -command "$this change_tab 1"]
+	
 	# Create the various range sliders
-        scale $w.min -variable $this-range_min \
-	    -showvalue true -orient horizontal -relief groove -length 200 \
+	iwidgets::labeledframe $extended_tab.min -labelpos nw -labeltext "Start"
+	set tmp [$extended_tab.min childsite]
+        scale $tmp.min -variable $this-range_min \
+	    -showvalue true -orient horizontal -length 200 \
 	    -command "$this maybeRestart"
-        scale $w.cur -variable $this-current \
-	    -showvalue true -orient horizontal -relief groove -length 200 \
+	pack $tmp.min  -side left -fill both -expand 1
+
+	iwidgets::labeledframe $extended_tab.max -labelpos nw -labeltext "End"
+	set tmp [$extended_tab.max childsite]
+	scale $tmp.max -variable $this-range_max \
+	    -showvalue true -orient horizontal -length 200 \
 	    -command "$this maybeRestart"
-        scale $w.max -variable $this-range_max \
-	    -showvalue true -orient horizontal -relief groove -length 200 \
+	pack $tmp.max  -side left -fill both -expand 1
+
+	iwidgets::labeledframe $extended_tab.inc -labelpos nw -labeltext "Increment"
+	set tmp [$extended_tab.inc childsite]
+	scale $tmp.inc -variable $this-inc-amount \
+	    -showvalue true -orient horizontal -length 200 \
 	    -command "$this maybeRestart"
-        scale $w.inc -variable $this-inc-amount \
-	    -showvalue true -orient horizontal -relief groove -length 200 \
-	    -command "$this maybeRestart"
+	pack $tmp.inc  -side left -fill both -expand 1
+
+	pack $extended_tab.min $extended_tab.max $extended_tab.inc \
+	    -padx 5 -fill x -expand 0
+
 
 	update_range
 
@@ -1390,90 +1511,59 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	
 
+	set playmode [$w.tnb add -label "Playmode" -command "$this change_tab 2"]
+	global playmode_tab
+	set playmode_tab $playmode
 
-	label $w.playmode.label -text "Play Mode"
-	radiobutton $w.playmode.once -text "Once" \
+	radiobutton $playmode.once -text "Once" \
 		-variable $this-playmode -value once
-	radiobutton $w.playmode.loop -text "Loop" \
+	radiobutton $playmode.loop -text "Loop" \
 		-variable $this-playmode -value loop
-	radiobutton $w.playmode.bounce1 -text "Bounce" \
+	radiobutton $playmode.bounce1 -text "Bounce" \
 		-variable $this-playmode -value bounce1
-	radiobutton $w.playmode.bounce2 -text "Bounce with repeating endpoints" \
+	radiobutton $playmode.bounce2 -text "Bounce with repeating endpoints" \
 		-variable $this-playmode -value bounce2
 
-	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
+	radiobutton $playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
 
 	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} -range {0 86400000} -justify right -width 5 -step 10 -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
 	trace variable $this-delay w "$this maybeRestart;\#"
 
-	pack $w.playmode.label -side top -expand yes -fill both
-	pack $w.playmode.once $w.playmode.loop \
-	    $w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.inc_w_exec\
-	    $w.playmode.delay -side top -anchor w
+	pack $playmode.once $playmode.loop \
+	    $playmode.bounce1 $playmode.bounce2 $playmode.inc_w_exec\
+	    $playmode.delay -side top -anchor w
 
 
-	# Create the button to show/hide extened options
-	button $w.expanded
 	# Create the sci button panel
-	makeSciButtonPanel $w $w $this "-no_execute"
 
-	# Show the no-frills interface
-	show_small_interface
+	global $this-power_app
+	global power_app_command
+
+	if { ![set $this-power_app] } {
+	    makeSciButtonPanel $w $w $this "-no_execute"
+	}
 
 	update
-    }
-
-    method forget_packing {} {
-	set w [format "%s-animate" .ui[modname]]
-        if {[winfo exists $w]} {
-	    pack forget $w.vcr $w.cur $w.expanded \
-		$w.min $w.max $w.inc $w.playmode $w.buttonPanel
-	}
-    }
-
-    method show_small_interface {} {
-	forget_packing
-	set w [format "%s-animate" .ui[modname]]
-        if {[winfo exists $w]} {
-	    pack $w.vcr $w.cur $w.expanded $w.buttonPanel \
-		-padx 5 -pady 5 -fill x -expand 0
-	    $w.expanded configure -text "Show Extended Options" \
-		-command "$this show_expanded_interface"
-	    wm geometry $w {}
-	}
-    }
-
-    method show_expanded_interface {} {
-	forget_packing
-	set w [format "%s-animate" .ui[modname]]
-        if {[winfo exists $w]} {
-	    pack $w.vcr $w.min $w.cur $w.max $w.inc $w.playmode \
-		$w.expanded $w.buttonPanel \
-		-padx 5 -pady 5 -fill x -expand 0
-	    $w.expanded configure -text "Hide Extended Options" \
-		-command "$this show_small_interface"
-	    wm geometry $w {}
-	}
+	change_tab 0
     }
 
     method update_range {} {
-	set w [format "%s-animate" .ui[modname]]
-        if {[winfo exists $w]} {
-	    upvar \#0 $this-selectable_min min $this-selectable_max max 
+	global animate_frame
+        if {[winfo exists $animate_frame]} {
+	    upvar \#0 $this-selectable_min min $this-selectable_max max
 
-            $w.min configure -label "Start:" \
-		-from $min -to $max
+	    global basic_tab
+	    set tmp [$basic_tab.cur childsite]
+            $tmp.cur configure -from $min -to $max
 
-            $w.cur config -label "Current:" \
-		-from $min -to $max
-
-            $w.max config -label "End:" \
-		-from $min -to $max
-
-            $w.inc config -label "Increment:" \
-		-from 1 -to [expr $max-$min]
-
+	    global extended_tab
+	    set tmp [$extended_tab.min childsite]
+            $tmp.min configure -from $min -to $max
+	    set tmp [$extended_tab.max childsite]
+	    $tmp.max configure -from $min -to $max
+	    set tmp [$extended_tab.inc childsite]
+	    $tmp.inc configure -from 1 -to [expr $max-$min]
         }
     }
 

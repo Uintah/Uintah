@@ -319,6 +319,7 @@ void MDSPlusDataReader::execute(){
     string tmpStr;
 
     tmpStr = gServer_[ic]->get();
+
     if( tmpStr != servers_[ic] ) {
       servers_[ic] = tmpStr;
       update = true;
@@ -329,13 +330,13 @@ void MDSPlusDataReader::execute(){
       trees_[ic] = tmpStr;
       update = true;
     }
-
+    
     tmpStr = gShot_[ic]->get();
     if( atoi( tmpStr.c_str() ) != shots_[ic] ) {
       shots_[ic] = atoi( tmpStr.c_str() );
       update = true;
     }
-
+    
     tmpStr = gSignal_[ic]->get();
     if( tmpStr != signals_[ic] ) {
       signals_[ic] = tmpStr;
