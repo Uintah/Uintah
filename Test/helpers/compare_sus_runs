@@ -40,34 +40,41 @@ if [ -d "$TEST_UDADIR" ]; then
     find $UDADIR -name "*.xml" | xargs cvs add
     cvs commit -R -m "Automated Tester storing dat files" $UDADIR
   else
+    echo
     echo "Comparing dat files"
     echo
 
     compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR $ERRORS_TO
     compare_dats_retval=$?
     if [ $compare_dats_retval == "1" ]; then
+	echo "  failed"
 	exit 1
     fi
 
+    echo
     echo "Comparing udas"
     echo
     compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR $ERRORS_TO
     retval=$?
     if [ $retval == "1" ]; then
+	echo "  failed"
 	exit 1
     fi
 
+    echo
     echo "Comparing checkpoints"
     echo
     compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR $ERRORS_TO
     retval=$?
     if [ $retval == "1" ]; then
+	echo "  failed"
 	exit 1
     fi
 
     if [ $compare_dats_retval == "-1" ]; then
 	exit -1
     fi
+  fi
 else
   echo "$TEST_UDADIR was not created"
   exit 1
