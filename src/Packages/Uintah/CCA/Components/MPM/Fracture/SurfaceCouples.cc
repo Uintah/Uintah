@@ -6,15 +6,15 @@ namespace Uintah {
 using namespace SCIRun;
 
 SurfaceCouples::SurfaceCouples(const ParticleVariable<Vector>& pCrackNormal,
-                               const ParticleVariable<Point>& pX)
-: d_pCrackNormal(pCrackNormal),d_pX(pX)
+                               const Lattice& lattice)
+: d_pCrackNormal(pCrackNormal),d_lattice(lattice)
 {}
 
 void SurfaceCouples::setup()
 {
   double relate_cosine = 0.7;
   
-  ParticleSubset* pset = d_pX.getParticleSubset();
+  ParticleSubset* pset = getpX().getParticleSubset();
 
   for(ParticleSubset::iterator iterA = pset->begin();
           iterA != pset->end(); iterA++)
@@ -34,7 +34,7 @@ void SurfaceCouples::setup()
           if( Dot(crackNormalA,crackNormalB) < -relate_cosine ) {
 	    normal -= crackNormalB;
 	    normal.normalize();
-            Vector dis = d_pX[pIdxB] - d_pX[pIdxA];
+            Vector dis = getpX()[pIdxB] - getpX()[pIdxA];
 	    double AB = dis.length();
 	    double vAB = Dot(normal,dis);
             if(vAB/AB>relate_cosine) {
@@ -66,11 +66,11 @@ void SurfaceCouples::setup()
   }
 }
 
-void SurfaceCouples::find()
+void SurfaceCouples::build()
 {
   double relate_cosine = 0.7;
   
-  ParticleSubset* pset = d_pX.getParticleSubset();
+  ParticleSubset* pset = getpX().getParticleSubset();
 
   for(ParticleSubset::iterator iterA = pset->begin();
           iterA != pset->end(); iterA++)
@@ -85,7 +85,7 @@ void SurfaceCouples::find()
       {
         particleIndex pIdxB = *iterB;
         if(pIdxA != pIdxB) {
-          Vector dis = d_pX[pIdxB] - d_pX[pIdxA];
+          Vector dis = getpX()[pIdxB] - getpX()[pIdxA];
 	  double AB = dis.length();
 	  double vAB = Dot(crackNormalA,dis);
           if(vAB/AB>relate_cosine) {

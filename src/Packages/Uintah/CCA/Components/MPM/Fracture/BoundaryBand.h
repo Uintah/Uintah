@@ -21,14 +21,7 @@ public:
 	
   void  setup(particleIndex pIdx,
 	      const ParticleVariable<Vector>& pCrackNormal,
-	      const ParticleVariable<int>& pIsBroken,
-	      const ParticleVariable<double>& pVolume,
-	      const Lattice& lattice,
-	      double range);
-
-  void  setup(const Point& p,
-	      const ParticleVariable<Vector>& pCrackNormal,
-	      const ParticleVariable<int>& pIsBroken,
+	      const ParticleVariable<int>& pCrackEffective,
 	      const ParticleVariable<double>& pVolume,
 	      const Lattice& lattice,
 	      double range);
@@ -40,13 +33,13 @@ public:
   
 private:
   std::vector<particleIndex>      d_pIndexs;
+  std::vector<int>                d_wallIdx;
   const ParticleVariable<Vector>* d_pCrackNormal;
   const ParticleVariable<Point>*  d_pX;
   const ParticleVariable<double>* d_pVolume;
-  const ParticleVariable<int>*    d_pIsBroken;
+  const ParticleVariable<int>*    d_pCrackEffective;
   particleIndex                   d_idx;
   std::vector<Vector>             d_wallDir;
-
 
   static double                   d_correlate_cosine;
 };

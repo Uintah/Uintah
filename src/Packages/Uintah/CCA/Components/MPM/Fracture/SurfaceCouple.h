@@ -5,6 +5,8 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Core/Geometry/Point.h>
 
+#include "Lattice.h"
+
 #include <vector>
 
 namespace Uintah {
@@ -30,6 +32,12 @@ public:
     {
       return d_normal;
     }
+    
+  Point crackTip(const ParticleVariable<Point>& pX) const;
+  void  tipMatrix(const ParticleVariable<Matrix3>& pMatrix,
+                  Matrix3& matrix) const;
+  void  tipVector(const ParticleVariable<Vector>& pVector,
+                  Vector& vec) const;
   
   bool  extensible(
        particleIndex pIdx,
@@ -38,6 +46,26 @@ public:
        const ParticleVariable<Vector>& pCrackNormal,
        double volume,
        double& distanceToCrack) const;
+
+  bool computeCrackClosureIntegralAndCrackNormalFromForce(
+	const Vector& nxx,
+	const Lattice& lattice,
+	const ParticleVariable<Matrix3>& pStress,
+	const ParticleVariable<Vector>& pDisplacement,
+	const ParticleVariable<double>& pVolume,
+	const ParticleVariable<int>& pIsBroken,
+	double toughness,
+	double& GI,double& GII,double& GIII,Vector& N ) const;
+
+  bool computeCrackClosureIntegralAndCrackNormalFromEnergyReleaseRate(
+	const Vector& nxx,
+	const Lattice& lattice,
+	const ParticleVariable<Matrix3>& pStress,
+	const ParticleVariable<Vector>& pDisplacement,
+	const ParticleVariable<double>& pVolume,
+	const ParticleVariable<int>& pIsBroken,
+	double toughness,
+	double& GI,double& GII,double& GIII,Vector& N ) const;
 
 private:
   particleIndex   d_pIdxA;

@@ -68,10 +68,8 @@ public:
 private:
   void BoundaryBandConnection(
        const vector<BoundaryBand>& pBoundaryBand_pg,
-       const Array3<BoundaryBand>& gBoundaryBand,
        particleIndex pIdx_pg,
        const Point& part,
-       const IntVector& nodeIdx,
        const Point& node,
        int& conn) const;
 
@@ -79,7 +77,7 @@ private:
        const ParticlesNeighbor& particles,
        particleIndex pIdx_pg,
        const Point& node,
-       const ParticleVariable<int>& pIsBroken_pg,
+       const ParticleVariable<int>& pCrackEffective_pg,
        const ParticleVariable<Vector>& pCrackNormal_pg,
        const ParticleVariable<double>& pVolume_pg,
        const ParticleVariable<Point>& pX_pg,

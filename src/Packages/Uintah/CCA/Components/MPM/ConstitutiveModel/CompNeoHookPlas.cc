@@ -206,8 +206,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     double K     = d_initialData.K;
 
     for(ParticleSubset::iterator iter = pset->begin();
-       iter != pset->end(); iter++){
-       particleIndex idx = *iter; 
+	iter != pset->end(); iter++){
+       particleIndex idx = *iter;
 
        velGrad.set(0.0);
        // Get the node indices that surround the cell
@@ -217,38 +217,35 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
        if(matl->getFractureModel()) {
-         //ratation rate: (omega1,omega2,omega3)
-         double omega1 = 0;
-         double omega2 = 0;
-         double omega3 = 0;
+	 //ratation rate: (omega1,omega2,omega3)
+	 double omega1 = 0;
+	 double omega2 = 0;
+	 double omega3 = 0;
 
-         Connectivity connectivity(pConnectivity[idx]);
-         int conn[8];
-         connectivity.getInfo(conn);
-         connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
-
-         for(int k = 0; k < 8; k++) {
-	   if(conn[k] == Connectivity::connect) {
-	      Vector& gvel = gvelocity[ni[k]];
-	      for (int j = 0; j<3; j++){
-	         for (int i = 0; i<3; i++) {
-	            velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
-	         }
-	      }
-
-  	      //rotation rate computation, required for fracture
-              if(matl->getFractureModel()) {
-	        //NOTE!!! gvel(0) = gvel.x() !!!
-	        omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1)
-							* d_S[k](2) * oodx[2];
-	        omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2)
-							 * d_S[k](0) * oodx[0];
-	        omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0)
-							 * d_S[k](1) * oodx[1];
-	      }
+	 Connectivity connectivity(pConnectivity[idx]);
+	 int conn[8];
+	 connectivity.getInfo(conn);
+	 connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
+	
+	 for(int k = 0; k < 8; k++) {
+	   if( conn[k] ) {
+	     const Vector& gvel = gvelocity[ni[k]];
+	     for (int j = 0; j<3; j++){
+	       for (int i = 0; i<3; i++) {
+	         velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+               }
+	     }
+	     //rotation rate computation, required for fracture
+	     //NOTE!!! gvel(0) = gvel.x() !!!
+	     omega1 += gvel(2) * d_S[k](1) * oodx[1] - 
+	               gvel(1) * d_S[k](2) * oodx[2];
+	     omega2 += gvel(0) * d_S[k](2) * oodx[2] - 
+	               gvel(2) * d_S[k](0) * oodx[0];
+             omega3 += gvel(1) * d_S[k](0) * oodx[0] - 
+	               gvel(0) * d_S[k](1) * oodx[1];
 	   }
-         }
-         pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
+	 }
+	 pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
        }
        else {
          for(int k = 0; k < 8; k++) {
@@ -330,12 +327,16 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       W = .5*shear*(bElBar[idx].Trace() - 3.0);
 
       pvolume[idx]=Jinc*pvolume[idx];
+      
+      double e = (U + W)*pvolume[idx]/J;
+      
+      if(matl->getFractureModel()) pStrainEnergy[idx] = e;
 
-      se += (U + W)*pvolume[idx]/J;
+      se += e;
 
       // Compute wave speed at each particle, store the maximum
 
-      if(pmass[idx] > 0){
+      if(pmass[idx] > 0) {
         c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
       }
       else{
@@ -387,8 +388,9 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->computes(lb->pVolumeDeformedLabel,              matlset);
 
   if(matl->getFractureModel()) {
-    task->requires(Task::NewDW, lb->pConnectivityLabel, matlset,Ghost::None);
-    task->computes(lb->pRotationRateLabel,              matlset);
+     task->requires(Task::NewDW, lb->pConnectivityLabel,  matlset,Ghost::None);
+     task->computes(lb->pRotationRateLabel, matlset);
+     task->computes(lb->pStrainEnergyLabel, matlset);
   }
 }
 

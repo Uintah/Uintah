@@ -18,13 +18,13 @@ MPMLabel::MPMLabel()
   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			ParticleVariable<Matrix3>::getTypeDescription());
 
+  pCrackEffectiveLabel = scinew VarLabel("p.crackEffective",
+			ParticleVariable<int>::getTypeDescription());
+
   pConnectivityLabel = scinew VarLabel("p.connectivity",
 			ParticleVariable<int>::getTypeDescription());
 
-  pContactNormalLabel = scinew VarLabel("p.contactNormal",
-			ParticleVariable<Vector>::getTypeDescription());
-
-  pTouchNormalLabel = scinew VarLabel("p.touchNormal",
+  pContactForceLabel = scinew VarLabel("p.contactForce",
 			ParticleVariable<Vector>::getTypeDescription());
 
   pXXLabel = scinew VarLabel("p.positionXX",
@@ -95,9 +95,6 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel = scinew VarLabel( "p.isBroken",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pIsolatedLabel = scinew VarLabel( "p.isolated",
-			ParticleVariable<int>::getTypeDescription() );
-
   pCrackNormalLabel = scinew VarLabel( "p.crackNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
@@ -115,6 +112,9 @@ MPMLabel::MPMLabel()
 
   pCrackSurfacePressureLabel = scinew VarLabel( "p.crackSurfacePressure",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pDisplacementLabel = scinew VarLabel( "p.displacement",
+			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
@@ -160,9 +160,6 @@ MPMLabel::MPMLabel()
   pIsBrokenLabel_preReloc = scinew VarLabel( "p.isBroken+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pIsolatedLabel_preReloc = scinew VarLabel( "p.isolated+",
-			ParticleVariable<int>::getTypeDescription() );
-
   pCrackNormalLabel_preReloc = scinew VarLabel( "p.crackNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
@@ -181,6 +178,9 @@ MPMLabel::MPMLabel()
   pCrackSurfacePressureLabel_preReloc = scinew 
                         VarLabel( "p.crackSurfacePressure+",
                         ParticleVariable<double>::getTypeDescription() );
+
+  pDisplacementLabel_preReloc = scinew VarLabel( "p.displacement+",
+			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
 			ParticleVariable<long>::getTypeDescription() );
@@ -260,9 +260,6 @@ MPMLabel::MPMLabel()
   gWeightLabel = scinew VarLabel("g.weight",
 			NCVariable<double>::getTypeDescription());
 
-  gMassContactLabel = scinew VarLabel("g.massContact",
-			NCVariable<Vector>::getTypeDescription());
-
   gWeightLabel     = scinew VarLabel("g.weight",
 			NCVariable<double>::getTypeDescription());
 
@@ -313,8 +310,8 @@ MPMLabel::~MPMLabel()
   //non PermanentParticleState
   delete pDeformationMeasureLabel;
   delete pConnectivityLabel;
-  delete pContactNormalLabel;
-  delete pTouchNormalLabel;
+  delete pCrackEffectiveLabel;
+  delete pContactForceLabel;
   delete pXXLabel;
 
   delete pStressLabel_afterFracture;
@@ -338,13 +335,13 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel;
   delete pSurfLabel;
   delete pIsBrokenLabel;
-  delete pIsolatedLabel;
   delete pCrackNormalLabel;
   delete pTipNormalLabel;
   delete pExtensionDirectionLabel;
   delete pToughnessLabel;
   delete pEnergyReleaseRateLabel;
   delete pCrackSurfacePressureLabel;
+  delete pDisplacementLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -362,13 +359,13 @@ MPMLabel::~MPMLabel()
   delete pExternalHeatRateLabel_preReloc;
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
-  delete pIsolatedLabel_preReloc;
   delete pCrackNormalLabel_preReloc;
   delete pTipNormalLabel_preReloc;
   delete pExtensionDirectionLabel_preReloc;
   delete pToughnessLabel_preReloc;
   delete pEnergyReleaseRateLabel_preReloc;
   delete pCrackSurfacePressureLabel_preReloc;
+  delete pDisplacementLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;

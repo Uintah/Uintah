@@ -22,7 +22,8 @@ public:
   const Patch*                    getPatch() const;
   const ParticleVariable<Point>&  getpX() const;
 
-  void  getParticlesNeighbor(const Point& p, ParticlesNeighbor& particles);
+  void  getParticlesNeighbor(const Point& p, 
+                             ParticlesNeighbor& particles) const;
 
   bool  checkPossible(const Vector& N,
                    particleIndex thisIdx,
