@@ -3,12 +3,12 @@
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 <?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl"type="text/xsl"?>
 <?cocoon-process type="xslt"?>
-<component name="CannySegmentationLevelSetImageFilter" category="Filters">
+<component name="GradientAnisotropicDiffusionImageFilter" category="Filters">
   <overview>
     <authors>
     </authors>
     <summary>    
-  Segments structures in images based on image features derived from pseudo-canny-edges.
+  This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation implemented in itkGradientNDAnisotropicDiffusionFunction.
     </summary>
   </overview>
   <implementation>
@@ -18,25 +18,16 @@
       <port>
         <name>InputImage</name>
         <datatype>Insight::ITKDatatype</datatype>
-      </port>  
-      <port>
-        <name>FeatureImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
       </port>
     </inputs>
     <outputs>  
       <port>
-        <name>OutputModel</name>
-        <datatype>Insight::ITKDatatype</datatype>
-      </port>  
-      <port>
-        <name>OutputFeatures</name>
+        <name>OutputImage</name>
         <datatype>Insight::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>
 </component>
-
 
 
 

@@ -116,8 +116,8 @@ bool CannySegmentationLevelSetImageFilter::run( itk::Object *obj1, itk::Object *
     filter->Update();
 
   } catch ( itk::ExceptionObject & err ) {
-     std::cerr << "ExceptionObject caught!" << std::endl;
-     std::cerr << err << std::endl;
+     error("ExceptionObject caught!");
+     error(err.GetDescription());
   }
 
   // get filter output
