@@ -97,9 +97,9 @@ for test in *; do
 	    echo "Failed: ${test}-${mode} tests"
 	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
-		if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then
-		    cat "${BUILDROOT}/${mode}/${test}-short.log"
-		fi
+	    fi
+	    if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then
+		cat "${BUILDROOT}/${mode}/${test}-short.log"
 	    fi
 	    failed=1
 	fi
