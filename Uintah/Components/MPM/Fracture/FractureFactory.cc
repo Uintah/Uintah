@@ -5,15 +5,12 @@
 namespace Uintah {
 namespace MPM {
 
-Fracture* FractureFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
+Fracture* FractureFactory::create(const ProblemSpecP& ps)
 {
-
-   ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
-
-   if(ProblemSpecP fracture = mpm_ps->findBlock("fracture"))
-     return(new Fracture(fracture,ss));
+   if(ProblemSpecP fractureProb = ps->findBlock("fracture"))
+     return(new Fracture(fractureProb));
    else 
-     return 0;
+     return NULL;
 }
 
 } // end namespace MPM
@@ -21,6 +18,9 @@ Fracture* FractureFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 
 
 // $Log$
+// Revision 1.2  2000/09/05 05:13:55  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.1  2000/05/10 05:08:06  tan
 // Basic structure of FractureFactory class.
 //

@@ -18,9 +18,10 @@
 #include "ConstitutiveModelFactory.h"
 #include <Uintah/Components/MPM/Burn/HEBurnFactory.h>
 #include <Uintah/Components/MPM/Burn/HEBurn.h>
+#include <Uintah/Components/MPM/Fracture/FractureFactory.h>
+#include <Uintah/Components/MPM/Fracture/Fracture.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
 
-#include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
 
@@ -53,17 +54,14 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    d_burn = HEBurnFactory::create(ps);
    if (!d_burn)
 	throw ParameterNotFound("No burn model");
+	
+   d_fracture = FractureFactory::create(ps);
 
    // Step 2 -- get the general material properties
 
    ps->require("density",d_density);
-   
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
-
-   if( MPMPhysicalModules::thermalContactModel ) {
-//     ps->require("heat_transfer_coefficient",d_heatTransferCoefficient);
-   }
 
    // Step 3 -- Loop through all of the pieces in this geometry object
 
@@ -94,7 +92,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       int vf;
       ps->require("velocity_field",vf);
       setVFIndex(vf);
-
    }
 
    lb = scinew MPMLabel();
@@ -129,6 +126,14 @@ HEBurn * MPMMaterial::getBurnModel()
   // with this material
 
   return d_burn;
+}
+
+Fracture * MPMMaterial::getFractureModel()
+{
+  // Return the pointer to the fracture model associated
+  // with this material
+
+  return d_fracture;
 }
 
 particleIndex MPMMaterial::countParticles(const Patch* patch) const
@@ -221,17 +226,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 //   new_dw->put(pissurf, lb->pSurfLabel);
    new_dw->put(ptemperature, lb->pTemperatureLabel);
    new_dw->put(pparticleID, lb->pParticleIDLabel);
-   
-   if(MPMPhysicalModules::fractureModel) {
-     ParticleVariable<Vector> pCrackSurfaceNormal;
-     new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, subset);
-
-     for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
-       pCrackSurfaceNormal[pIdx] = Vector(0.,0.,0.);
-     }
-
-     new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
-   }
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -381,6 +375,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.46  2000/09/05 05:14:58  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.45  2000/08/18 20:30:52  tan
 // Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
 //

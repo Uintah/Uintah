@@ -50,17 +50,11 @@ MPMLabel::MPMLabel()
   pExternalHeatRateLabel = scinew VarLabel( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
   
-  //tan:
-  //  pSurfaceNormalLabel is used to define the surface normal of a
-  //  boundary particle.
-  //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
-  //  in this way we can distinguish boundary particles to interior particles
-  //
   pSurfLabel = scinew VarLabel( "p.surface",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pSurfaceNormalLabel = scinew VarLabel( "p.surfaceNormal",
-			ParticleVariable<Vector>::getTypeDescription() );
+  pIsBrokenLabel = scinew VarLabel( "p.isBroken",
+			ParticleVariable<int>::getTypeDescription() );
 
   pCrackSurfaceNormalLabel = scinew VarLabel( "p.crackSurfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
@@ -108,17 +102,11 @@ MPMLabel::MPMLabel()
   pExternalHeatRateLabel_preReloc = scinew VarLabel( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  //tan:
-  //  pSurfaceNormalLabel is used to define the surface normal of a
-  //  boundary particle.
-  //  For the interior particle, the p.surfaceNormal vector is set to (0,0,0)
-  //  in this way we can distinguish boundary particles to interior particles
-  //
   pSurfLabel_preReloc = scinew VarLabel( "p.surface+",
 			ParticleVariable<int>::getTypeDescription() );
 
-  pSurfaceNormalLabel_preReloc = scinew VarLabel( "p.surfaceNormal+",
-			ParticleVariable<Vector>::getTypeDescription() );
+  pIsBrokenLabel_preReloc = scinew VarLabel( "p.isBroken+",
+			ParticleVariable<int>::getTypeDescription() );
 
   pCrackSurfaceNormalLabel_preReloc = scinew VarLabel( "p.crackSurfaceNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
@@ -199,13 +187,6 @@ MPMLabel::MPMLabel()
 			NCVariable<double>::getTypeDescription());
 
   // Cell centered variables
-
-  cSelfContactLabel = scinew VarLabel( "c.selfContact",
-			CCVariable<bool>::getTypeDescription() );
-  
-  cSurfaceNormalLabel = scinew VarLabel( "c.surfaceNormalLabel",
-			CCVariable<Vector>::getTypeDescription() );
-  
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
 
@@ -249,7 +230,8 @@ MPMLabel::~MPMLabel()
   delete pTemperatureRateLabel;
   delete pExternalHeatRateLabel;
   delete pSurfLabel;
-  delete pSurfaceNormalLabel;
+  delete pIsBrokenLabel;
+  delete pCrackSurfaceNormalLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -265,7 +247,8 @@ MPMLabel::~MPMLabel()
   delete pTemperatureRateLabel_preReloc;
   delete pExternalHeatRateLabel_preReloc;
   delete pSurfLabel_preReloc;
-  delete pSurfaceNormalLabel_preReloc;
+  delete pIsBrokenLabel_preReloc;
+  delete pCrackSurfaceNormalLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;
@@ -290,8 +273,6 @@ MPMLabel::~MPMLabel()
   delete gInternalHeatRateLabel;
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
-  delete cSelfContactLabel;
-  delete cSurfaceNormalLabel;
   delete cBurnedMassLabel;
   delete delTLabel;
   delete StrainEnergyLabel;
@@ -321,6 +302,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.27  2000/09/05 05:16:02  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.26  2000/08/30 00:12:42  guilkey
 // Added some stuff for interpolating particle data to the grid solely
 // for the purpose of saving to an uda.  This doesn't work yet.

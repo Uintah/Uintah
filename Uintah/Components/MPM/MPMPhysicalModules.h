@@ -48,7 +48,6 @@ WARNING
 
       //Physical Models:
       static HeatConduction*  heatConductionModel;
-      static Fracture*        fractureModel;
       static Contact*         contactModel;
       static ThermalContact*  thermalContactModel;
 
@@ -63,6 +62,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/09/05 05:12:01  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.2  2000/06/22 22:59:28  tan
 // Moved heat conduction physical parameters (thermalConductivity, specificHeat,
 // and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
