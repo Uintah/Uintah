@@ -50,7 +50,7 @@ addConnection $m4 0 $m3 1
 set $m0-notes {}
 set $m0-show_status {1}
 set $m0-method {function}
-set $m0-function {random()}
+set $m0-function {x * x * x}
 set $m0-imin {         -5.25315}
 set $m0-imax {          4.31926}
 set $m0-omin {0}
