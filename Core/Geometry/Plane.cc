@@ -64,6 +64,7 @@ void Plane::flip() {
    n.x(-n.x());
    n.y(-n.y());
    n.z(-n.z());
+   d=-d;
 }
 
 double Plane::eval_point(const Point &p) const {
