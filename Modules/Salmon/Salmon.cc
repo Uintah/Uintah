@@ -225,8 +225,7 @@ Salmon::Salmon(const Salmon& copy, int deep)
     NOT_FINISHED("Salmon::Salmon");
 }
 
-void Salmon::connection(ConnectionMode mode, int which_port,
-			int output)
+void Salmon::connection(ConnectionMode mode, int which_port, int)
 {
     if(mode==Disconnected){
 	remove_iport(which_port);

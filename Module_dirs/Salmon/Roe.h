@@ -15,12 +15,14 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/HashTable.h>
+#include <Geom/Color.h>
 #include <Geometry/BBox.h>
 #include <TCL/TCL.h>
 
 class DBContext;
 class GeomObj;
 class GeomPick;
+class Light;
 class Salmon;
 class Vector;
 class Renderer;
@@ -79,6 +81,13 @@ public:
 
     void tcl_command(TCLArgs&, void*);
     void redraw();
+
+    // Lighting...
+    Color ambient_light;
+    Array1<Light*> light;
+
+    // The Camera
+    Point eyep;
 };
 
 #endif

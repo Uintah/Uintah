@@ -1,12 +1,12 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_MACHINE_LINUX
-OPENGLOBJS =
-OPENGLSRCS = 
-#else
+#ifdef SCI_OPENGL
 OPENGLOBJS = OpenGL.o
 OPENGLSRCS = OpenGL.cc
+#else
+OPENGLOBJS =
+OPENGLSRCS = 
 #endif
 
 OBJS = Postscript.o  Raytracer.o  Salmon.o  Renderer.o  Roe.o  X11.o  \
