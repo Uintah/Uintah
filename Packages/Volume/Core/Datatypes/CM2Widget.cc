@@ -225,6 +225,13 @@ CM2Widget::CM2Widget(CM2Widget& copy)
     selected_(copy.selected_)
 {}
 
+void
+CM2Widget::set_alpha(float a)
+{
+  alpha_ = CLAMP((double)a, 0.0, 1.0);
+}
+
+
 TriangleCM2Widget::TriangleCM2Widget()
   : base_(0.5), top_x_(0.15), top_y_(0.5), width_(0.25), bottom_(0.5)
 {
@@ -485,7 +492,7 @@ TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh)
   const double x2top = top_x_ - width_ * 0.5;
   const double x1 = base_ + x1top * (y / top_y_);
   const double x2 = base_ + x2top * (y / top_y_);
-  if (y < top_y_ && y > bottom_ * top_y_ &&
+  if (y < top_y_ &&
       x > Min(x1, x2) && x < Max(x1, x2))
   {
     last_x_ = base_;

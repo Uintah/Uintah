@@ -60,7 +60,11 @@ public:
 
   void select(int obj) { selected_ = obj; }
   void unselect_all() { selected_ = 0; }
-  
+  SCIRun::Color color() const { return color_; }
+  void set_color(const SCIRun::Color &c) { color_ = c; }
+  float alpha() const { return alpha_; }
+  void set_alpha(float a);
+
 protected:
   void selectcolor(int obj);
 

@@ -42,6 +42,90 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	set $this-faux 0
 	global $this-histo
 	set $this-histo 0.5
+
+	global $this-num-entries
+	set $this-num-entries 2
+    }
+
+    method raise_color {col color colMsg} {
+	 global $color
+	 set window .ui[modname]
+	 if {[winfo exists $window.color]} {
+	     SciRaise $window.color
+	     return
+	 } else {
+	     # makeColorPicker now creates the $window.color toplevel.
+	     makeColorPicker $window.color $color \
+		     "$this set_color $col $color $colMsg" \
+		     "destroy $window.color"
+	 }
+    }
+
+    method set_color {col color colMsg} {
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
+
+	 set window .ui[modname]
+	 $col config -background [format #%04x%04x%04x $ir $ig $ib]
+	 $this-c $colMsg
+    }
+
+    method create_entries {} {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+
+	    set widgets [$w.widgets childsite]
+
+	    # Create the new variables and entries if needed.
+	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
+		
+		if { [catch { set t [set $this-names-$i] } ] } {
+		    set $this-name-$i default-$i
+		}
+		if { [catch { set t [set $this-$i-color-r]}] } {
+		    set $this-$i-color-r 0.5
+		}
+		if { [catch { set t [set $this-$i-color-g]}] } {
+		    set $this-$i-color-g 0.5
+		}
+		if { [catch { set t [set $this-$i-color-b]}] } {
+		    set $this-$i-color-b 0.5
+		}
+		if { [catch { set t [set $this-$i-color-a]}] } {
+		    set $this-$i-color-a 0.6
+		}
+
+		if {![winfo exists $widgets.e-$i]} {
+		    frame $widgets.e-$i
+		    entry $widgets.e-$i.name \
+			-textvariable $this-name-$i -width 16
+		    set ir [expr int([set $this-$i-color-r] * 65535)]
+		    set ig [expr int([set $this-$i-color-g] * 65535)]
+		    set ib [expr int([set $this-$i-color-b] * 65535)]
+		    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change"
+		    button $widgets.e-$i.color -width 8 \
+			-command $cmmd \
+			-background [format #%04x%04x%04x $ir $ig $ib]
+		    entry $widgets.e-$i.opacity \
+			-textvariable $this-$i-color-a -width 8
+		    pack $widgets.e-$i.name $widgets.e-$i.color \
+			$widgets.e-$i.opacity \
+			-side left
+		    pack $widgets.e-$i 
+		}
+	    }
+
+	    # Destroy all the left over entries from prior runs.
+	    while {[winfo exists $widgets.e-$i]} {
+		destroy $widgets.e-$i
+		incr i
+	    }
+	}
     }
 
     method ui {} {
@@ -83,6 +167,8 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	pack $w.title  -fill x -padx 2 -pady 2
 	pack $w.widgets -side top -fill both -expand yes -padx 2
 	pack $w.controls -fill x 
+
+	create_entries
 
 	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset_gui\" \"\""
 	moveToCursor $w

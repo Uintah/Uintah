@@ -108,6 +108,13 @@ class EditTransferFunc2 : public Module {
 
   GuiInt gui_faux_;
   GuiDouble gui_histo_;
+
+  GuiInt			gui_num_entries_;
+  vector<GuiString *>		gui_name_;
+  vector<GuiDouble *>		gui_color_r_;
+  vector<GuiDouble *>		gui_color_g_;
+  vector<GuiDouble *>		gui_color_b_;
+  vector<GuiDouble *>		gui_color_a_;
   
 public:
   EditTransferFunc2(GuiContext* ctx);
@@ -117,6 +124,9 @@ public:
 
   void tcl_command(GuiArgs&, void*);
   
+  void resize_gui();
+  void update_from_gui();
+  void update_to_gui();
   void undo();
 
   void redraw();
@@ -138,7 +148,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     cmap_dirty_(true), cmap_tex_(0),
     pick_widget_(-1), pick_object_(0), first_motion_(true), updating_(false),
     gui_faux_(ctx->subVar("faux")),
-    gui_histo_(ctx->subVar("histo"))
+    gui_histo_(ctx->subVar("histo")),
+    gui_num_entries_(ctx->subVar("num-entries"))
 {
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
@@ -149,12 +160,6 @@ EditTransferFunc2::~EditTransferFunc2()
 {
   delete pbuffer_;
   delete shader_factory_;
-  // Clean up currently unmemorymanaged widgets.
-  //for (unsigned int i = 0; i < widget_.size(); i++)
-  //{
-  //delete widgets_[i];
-  //}
-  //widget_.clear();
 }
 
 
@@ -203,16 +208,20 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "closewindow") {
     //cerr << "EVENT: close" << endl;
     ctx_ = 0;
+  } else if (args[1] == "color_change") {
+    update_from_gui();
   } else if (args[1] == "addtriangle") {
     widgets_.push_back(scinew TriangleCM2Widget());
     undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
     redraw();
+    update_to_gui();
   } else if (args[1] == "addrectangle") {
     widgets_.push_back(scinew RectangleCM2Widget());
     undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
     redraw();
+    update_to_gui();
   } else if (args[1] == "deletewidget") {
     if (pick_widget_ != -1 && pick_widget_ < (int)widgets_.size())
     {
@@ -223,6 +232,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       pick_widget_ = -1;
       cmap_dirty_ = true;
       redraw();
+      update_to_gui();
     }
   } else if (args[1] == "undowidget") {
     undo();
@@ -236,6 +246,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 void
 EditTransferFunc2::undo()
 {
+  bool gui_update = false;
   if (!undo_stack_.empty())
   {
     const UndoItem &item = undo_stack_.top();
@@ -254,19 +265,77 @@ EditTransferFunc2::undo()
     case UndoItem::UNDO_ADD:
       delete widgets_[item.selected_];
       widgets_.erase(widgets_.begin() + item.selected_);
+      gui_update = true;
       break;
    
     case UndoItem::UNDO_DELETE:
       widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
+      gui_update = true;
       break;
       
     }
     undo_stack_.pop();
     cmap_dirty_ = true;
     redraw();
+    if (gui_update)
+    {
+      update_to_gui();
+    }
   }
 }
 
+
+void
+EditTransferFunc2::resize_gui()
+{
+  gui_num_entries_.set(widgets_.size());
+  unsigned int i;
+  // Expand the gui elements.
+  for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
+  {
+    const string num = to_string(i);
+    gui_name_.push_back(new GuiString(ctx->subVar("names-" + num)));
+    gui_color_r_.push_back(new GuiDouble(ctx->subVar(num +"-color-r")));
+    gui_color_g_.push_back(new GuiDouble(ctx->subVar(num +"-color-g")));
+    gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
+    gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
+  }
+}
+
+
+void
+EditTransferFunc2::update_to_gui()
+{
+  // Update GUI
+  resize_gui();
+  for (unsigned int i = 0; i < widgets_.size(); i++)
+  {
+    gui_name_[i]->set("Generic");
+    Color c(widgets_[i]->color());
+    gui_color_r_[i]->set(c.r());
+    gui_color_g_[i]->set(c.g());
+    gui_color_b_[i]->set(c.b());
+    gui_color_a_[i]->set(widgets_[i]->alpha());
+  }
+  gui->execute(id + " create_entries");
+}
+
+
+void
+EditTransferFunc2::update_from_gui()
+{
+  gui_num_entries_.reset();
+  resize_gui();
+  for (unsigned int i = 0; i < widgets_.size(); i++)
+  {
+    widgets_[i]->set_color(Color(gui_color_r_[i]->get(),
+				 gui_color_g_[i]->get(),
+				 gui_color_b_[i]->get()));
+    widgets_[i]->set_alpha(gui_color_a_[i]->get());
+  }
+  cmap_dirty_ = true;
+  redraw();
+}
 
 
 void
