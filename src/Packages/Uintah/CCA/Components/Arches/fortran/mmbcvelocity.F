@@ -38,16 +38,32 @@ c------------------------------------------------------------------
 c     interior intrusions
 c------------------------------------------------------------------ 
       const = ONE
+
       do 820 k=kst, kend
          do 810 j=jst, jend
             do 800 i=ist, iend
 
                if (pcell(i-ioff,j-joff,k-koff).eq.mmwallid.or. 
      $              pcell(i,j,k).eq.mmwallid) then
+
                   call fixval(zero,ae(i,j,k),aw(i,j,k),an(i,j,k),
      $                 as(i,j,k),at(i,j,k),ab(i,j,k),
      $                 su(i,j,k),sp(i,j,k),const)
-               else
+
+               endif
+
+ 800        continue
+ 810     continue
+ 820  continue
+
+      do 920 k=kst,kend
+         do 910 j=jst,jend
+            do 900 i=ist,iend
+               
+               if ((pcell(i,j,k).eq.ffield).and.
+     $              (pcell(i-ioff,j-joff,k-koff)
+     $              .eq.ffield)) then
+
                   if (pcell(i-2*ioff,j-2*joff,k-2*koff).eq.
      $                 mmwallid) 
      $                 aw(i,j,k) = 0.0D0
@@ -70,12 +86,11 @@ c------------------------------------------------------------------
      $                 .eq.mmwallid))
      $                 at(i,j,k) = 0.0D0
                endif
- 800        continue
- 810     continue
- 820  continue
 
+ 900        continue
+ 910     continue
+ 920  continue
 
-
-      RETURN
-      END
+      return
+      end
 
