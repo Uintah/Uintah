@@ -15,5 +15,6 @@
 #define sci_Math_Mat_h 1
 
 void matsolve3by3(double mat[3][3], double rhs[3]);
+void matsolve3by3(double mat[3][3], double rhs[3], double& rcond);
 
 #endif
