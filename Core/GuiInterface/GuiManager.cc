@@ -34,8 +34,8 @@
 #ifndef _WIN32
 
 #include <Core/GuiInterface/GuiManager.h>
-#include <Core/Containers/Array1.h>
-
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <string.h>
 #include <stdio.h>
 #ifndef _WIN32
@@ -43,77 +43,116 @@
 #endif
 #include <stdlib.h>	// needed for atoi
 #include <iostream>
+
+#include <tcl.h>
+
 using namespace std;
+
+extern "C" Tcl_Interp* the_interp;
 namespace SCIRun {
 
-GuiManager::GuiManager (char* hostname, char* portname) 
-    : access("GUI manager access lock")
+GuiManager* GuiManager::gm_ = 0;
+Mutex GuiManager::gm_lock_("GuiManager: static instance");
+
+
+GuiManager::GuiManager()
+    : access ("GUI manager access lock")
 {
-    base_port = atoi (portname);
-    strcpy (host, hostname);
-    strcat (host,".cs.utah.edu");
+  
 }
 
 GuiManager::~GuiManager()
-{ }
-
-int
-GuiManager::addConnection()
 {
-    // open one socket 
-    int conn = requestConnect (base_port-1, host);
-    if (conn == -1) {
-            perror ("outgoing connection setup failed");
-            return -1;
+}
+
+GuiManager& GuiManager::getGuiManager() {
+  if(gm_ == 0) {
+    gm_lock_.lock();
+    if(gm_ == 0) {
+      gm_ = new GuiManager;
     }
-    connect_pool.add(conn);
-    return conn;
+    gm_lock_.unlock();
+  }
+  return *gm_;
+  
 }
 
-/*   Traverse array of sockets looking for an unused socket.  If no unused
- *   sockets, add another socket, lock it, and return to caller.
- */
-int
-GuiManager::getConnection()
-{
-    int sock;
-
-#ifdef DEBUG
-cerr << "attempting to lock, lock = " << &access << " pid " << getpid() << endl;
-#endif
-
-    access.lock();
-
-#ifdef DEBUG
-cerr << "GuiManager::getConnection() pid " << getpid() << " is locking"
-     << endl;
-#endif
-
-    if (connect_pool.size() == 0) {
-	sock = addConnection();
-    } else {
-	sock = connect_pool[connect_pool.size()-1];	// get last elem
+string GuiManager::get(string& value, string varname, int& is_reset) {
+  if(is_reset) {
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
+		       TCL_GLOBAL_ONLY);
+    if(!l){
+      l="";
     }
+    value=string(l);
+    is_reset=0;
+    TCLTask::unlock();
+  }
+    //cerr << "GuiString get: " << varname << " to " << value << endl;
+  return value;
 
-    connect_pool.remove(connect_pool.size()-1);	// take out of pool
-
-#ifdef DEBUG
-cerr << "GuiManager::getConnection() pid " << getpid() << " is unlocking"
-     << endl;
-#endif
-
-    access.unlock();
-    return sock;
+}
+void GuiManager::set(string& value, string varname, int &is_reset) {
+  is_reset=0;
+  TCLTask::lock();
+  Tcl_SetVar(the_interp, ccast_unsafe(varname),
+	     ccast_unsafe(value), TCL_GLOBAL_ONLY);
+  TCLTask::unlock();
+  //cerr << "GuiString set: " << varname << " to " << value << endl;
 }
 
-/*  Return a connection to the pool.  */
-void 
-GuiManager::putConnection (int sock)
-{
-    access.lock();
-    connect_pool.add(sock);
-    access.unlock();
+double GuiManager::get(double& value, string varname, int& is_reset) {
+  if(is_reset) {
+    TCLTask::lock(); 
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
+		       TCL_GLOBAL_ONLY); 
+    if(l){ 
+      Tcl_GetDouble(the_interp, l, &value);
+      is_reset=0; 
+    } 
+    TCLTask::unlock();
+  }
+  //cerr << "GuiDouble get: " << varname << " to " << value << endl;
+  return value; 
 }
+void GuiManager::set(double& value, string varname, int& is_reset) {
+  is_reset = 0;
+  TCLTask::lock(); 
+  char buf[50]; 
+  sprintf(buf, "%g", value); 
+  
+  Tcl_SetVar(the_interp, ccast_unsafe(varname), 
+	     buf, TCL_GLOBAL_ONLY); 
+  TCLTask::unlock(); 
+  //cerr << "GuiDouble set: " << varname << " to " << value << endl;
+}
+
+int GuiManager::get(int& value, string varname, int &is_reset) {
+  if(is_reset) {
+    TCLTask::lock();
+    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
+		       TCL_GLOBAL_ONLY);
+    if(l){
+      Tcl_GetInt(the_interp, l, &value);
+      is_reset=0;
+    }
+    TCLTask::unlock();
+  }
+  //cerr << "GuiInt get: " << varname << " to " << value << endl;
+  return value;
+}
+
+void GuiManager::set(int& value, string varname, int &is_reset) {
+  is_reset=0;
+  TCLTask::lock();
+  char buf[20];
+  sprintf(buf, "%d", value);
+  Tcl_SetVar(the_interp, ccast_unsafe(varname), buf, TCL_GLOBAL_ONLY);
+  TCLTask::unlock();
+  //cerr << "GuiInt set: " << varname << " to " << value << endl;
+}
+
 
 } // End namespace SCIRun
 

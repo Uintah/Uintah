@@ -35,9 +35,10 @@
 #ifndef SCI_project_GuiManager_h
 #define SCI_project_GuiManager_h 1
 
-#include <Core/Containers/Array1.h>
-#include <Core/GuiInterface/Remote.h>
 #include <Core/Thread/Mutex.h>
+#include <string>
+
+using std::string;
 
 namespace SCIRun {
 
@@ -45,15 +46,22 @@ namespace SCIRun {
 class SCICORESHARE GuiManager {
     Mutex access;
     private:
-	Array1<int> connect_pool;	// available sockets
-	char host[HOSTNAME];
-	int base_port;
+        static GuiManager *gm_;
+        static Mutex       gm_lock_;
     public:
-	GuiManager (char* host, char* portname);
+        GuiManager ();
 	~GuiManager();
-	int addConnection();
-	int getConnection();
-	void putConnection (int sock);
+        static string get(string& value, string varname, int& is_reset);
+        static void set(string& value, string varname, int& is_reset);
+
+        static double get(double& value, string varname,int& is_reset);
+        static void set(double& value, string varname,int& is_reset);
+
+        static int get(int& value, string varname, int& is_reset);
+        static void set(int& value, string varname, int& is_reset);
+
+	static GuiManager& getGuiManager();
+  
 };
 
 } // End namespace SCIRun

@@ -53,7 +53,7 @@ TCLstrbuff::TCLstrbuff(const string& name, const string& id, TCL* tcl):
   buff_ = Tcl_Alloc(bSize_=256);
   *buff_='\0';
   
-  if ( Tcl_LinkVar(the_interp, ccast_unsafe(varname), (char*)&buff_, TCL_LINK_STRING | TCL_LINK_READ_ONLY)!=TCL_OK){
+  if ( Tcl_LinkVar(the_interp, ccast_unsafe(varname_), (char*)&buff_, TCL_LINK_STRING | TCL_LINK_READ_ONLY)!=TCL_OK){
     cout << "Not possible to link tcl var" << std::endl;
   }
   
@@ -61,8 +61,8 @@ TCLstrbuff::TCLstrbuff(const string& name, const string& id, TCL* tcl):
 }
 
 TCLstrbuff::~TCLstrbuff(){
-  Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
-  Tcl_UnsetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
+  Tcl_UnlinkVar(the_interp, ccast_unsafe(varname_));
+  Tcl_UnsetVar(the_interp, ccast_unsafe(varname_), TCL_GLOBAL_ONLY);
   Tcl_Free(buff_);
 }
 
@@ -83,7 +83,7 @@ TCLstrbuff& TCLstrbuff::flush(){
     buff_ = Tcl_Realloc(buff_, bSize_ = n);
   
   strcpy(buff_, ostringstream::str().c_str()); 
-  Tcl_UpdateLinkedVar(the_interp, ccast_unsafe(varname)); 
+  Tcl_UpdateLinkedVar(the_interp, ccast_unsafe(varname_)); 
   TCLTask::unlock();
   
   // reinitializing the stream
