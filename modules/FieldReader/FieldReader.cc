@@ -14,10 +14,19 @@
 #include <FieldReader/FieldReader.h>
 #include <Field3D.h>
 #include <Field3DPort.h>
+#include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <iostream.h>
 #include <fstream.h>
+
+static Module* make_FieldReader()
+{
+    return new FieldReader;
+}
+
+static RegisterModule db1("Fields", "FieldReader", make_FieldReader);
+static RegisterModule db2("Readers", "FieldReader", make_FieldReader);
 
 FieldReader::FieldReader()
 : UserModule("FieldReader", Source)
@@ -40,11 +49,6 @@ FieldReader::~FieldReader()
 {
 }
 
-Module* make_FieldReader()
-{
-    return new FieldReader;
-}
-
 Module* FieldReader::clone(int deep)
 {
     return new FieldReader(*this, deep);
@@ -53,8 +57,10 @@ Module* FieldReader::clone(int deep)
 void FieldReader::execute()
 {
     Piostream* stream=auto_istream(filename);
-    if(!stream)
+    if(!stream){
+	error(clString("Error reading file: ")+filename);
 	return; // Can't open file...
+    }
     Field3DHandle field(new Field3D);
     // Read the file...
     field->io(*stream);

@@ -2,16 +2,17 @@
 #include <config/sci.cf>
 
 LOCALINCLUDES = -I.. -I../../project
-MODULELIST = ../libmodules.a
 
 OBJS = FieldReader.o
 SRCS = FieldReader.cc
 
 .cc.o:
 	$(CCC) $(CCFLAGS) -c $<
-	$(ARR) $(ARFLAGS_REPLACE) $(MODULELIST) $@
 
-AllTarget($(OBJS))
+../modules.o: $(OBJS)
+	cd .. && make modules.o
+
+AllTarget(../modules.o)
 
 SCIDependTarget($(SRCS))
 
