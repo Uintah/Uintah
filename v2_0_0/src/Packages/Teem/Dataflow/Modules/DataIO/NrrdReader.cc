@@ -47,9 +47,7 @@ public:
   virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
   void read_nrrd();
-  void get_nrrd_info();
-
-  NrrdOPort      *outport_;
+  void get_nrrd_info(NrrdDataHandle handle);
 
   GuiString       label_;
   GuiString       type_;
@@ -83,9 +81,9 @@ NrrdReader::~NrrdReader()
 }
 
 void 
-NrrdReader::get_nrrd_info()
+NrrdReader::get_nrrd_info(NrrdDataHandle handle)
 {
-  if (!handle_.get_rep()) { return; }
+  if (!handle.get_rep()) { return; }
   // send the axis info to the gui.
 
   // clear any old info
@@ -95,15 +93,15 @@ NrrdReader::get_nrrd_info()
   
   // call the following tcl method
   // add_axis_info {id label center size spacing min max} 
-  for (int i = 0; i < handle_->nrrd->dim; i++) {
+  for (int i = 0; i < handle->nrrd->dim; i++) {
     ostringstream add; 
     add << id.c_str() << " add_axis_info ";
     add << i << " ";
-    if (!handle_->nrrd->axis[i].label) {
-      handle_->nrrd->axis[i].label = strdup("---");
+    if (!handle->nrrd->axis[i].label) {
+      handle->nrrd->axis[i].label = strdup("---");
     }
-    add << handle_->nrrd->axis[i].label << " ";
-    switch (handle_->nrrd->axis[i].center) {
+    add << handle->nrrd->axis[i].label << " ";
+    switch (handle->nrrd->axis[i].center) {
     case nrrdCenterUnknown :
       add << "Unknown ";
       break;
@@ -114,15 +112,15 @@ NrrdReader::get_nrrd_info()
       add << "Cell ";
       break;
     }
-    add << handle_->nrrd->axis[i].size << " ";
-    add << handle_->nrrd->axis[i].spacing << " ";
+    add << handle->nrrd->axis[i].size << " ";
+    add << handle->nrrd->axis[i].spacing << " ";
 
-    if (!(AIR_EXISTS(handle_->nrrd->axis[i].min) && 
-	  AIR_EXISTS(handle_->nrrd->axis[i].max)))
-      nrrdAxisMinMaxSet(handle_->nrrd, i, nrrdCenterNode);
+    if (!(AIR_EXISTS(handle->nrrd->axis[i].min) && 
+	  AIR_EXISTS(handle->nrrd->axis[i].max)))
+      nrrdAxisMinMaxSet(handle->nrrd, i, nrrdCenterNode);
     
-    add << handle_->nrrd->axis[i].min << " ";
-    add << handle_->nrrd->axis[i].max << endl;  
+    add << handle->nrrd->axis[i].min << " ";
+    add << handle->nrrd->axis[i].max << endl;  
     gui->execute(add.str());
   }
 }
@@ -194,15 +192,11 @@ NrrdReader::read_nrrd()
 void NrrdReader::execute()
 {
   update_state(NeedData);
-  outport_ = (NrrdOPort *)get_oport("Output Data");
-  if (!outport_) {
-    error("Unable to initialize oport 'Outport Data'.");
-    return;
-  }
+
   filename_.reset();
   if (! handle_.get_rep() && filename_.get() != "") {
     read_nrrd();
-    get_nrrd_info();
+    get_nrrd_info(handle_);
   }
   if (!handle_.get_rep()) { 
     error("Please load and set up the axes for a nrrd.");
@@ -239,29 +233,24 @@ void NrrdReader::execute()
     handle_ = newnrrd;
   }
 
-  label_.reset();
-  type_.reset();
-  // set tuple axis name.
-  string lbl(label_.get() + ":" + type_.get());
-  
-
   string ax(axis_.get());
   int axis = 0;
   if (ax.size()) {
-    ax.erase(ax.begin(), ax.begin() + 4); // get rid of the word axis
+    ax.erase(ax.begin(), ax.begin() + 4); // Trim 'axis' from the string.
     axis = atoi(ax.c_str());
   }
 
   if (axis != 0) {
-    // purmute so that 0 is the tuple axis
+    // Permute so that 0 is the tuple axis.
     const int sz = handle_->nrrd->dim;
     int perm[NRRD_DIM_MAX];
     Nrrd *pn = nrrdNew();
-    // init the perm array.
+    // Init the perm array.
     for(int i = 0; i < sz; i++) {
       perm[i] = i;
     }
-    //swap the selected axis with 0
+
+    // Swap the selected axis with 0.
     perm[0] = axis;
     perm[axis] = 0;
 
@@ -277,24 +266,38 @@ void NrrdReader::execute()
     handle_ = newnrrd;
   }
 
-  // if the tuple label is valid use it. If not use the string provided
+  // If the tuple label is valid use it. If not use the string provided
   // in the gui.
   vector<string> elems;
   if (add_.get() || (! handle_->get_tuple_indecies(elems))) {
     int axis_size = handle_->nrrd->axis[0].size;
-    string full_label = lbl;
+
+    // Set tuple axis name.
+    label_.reset();
+    type_.reset();
+    string label(label_.get() + ":" + type_.get());
+  
+
+    string full_label = label;
     int count;
     if (type_.get() == "Scalar") count=axis_size-1;
     else if (type_.get() == "Vector") count=axis_size/3-1;
     else /* if (type_.get() == "Tensor") */ count=axis_size/7-1;
     while (count > 0) {
-      full_label += string("," + lbl);
+      full_label += string("," + label);
       count--;
     }
     handle_->nrrd->axis[0].label = strdup(full_label.c_str());
   }
-  // Send the data downstream
-  outport_->send(handle_);
+
+  // Send the data downstream.
+  NrrdOPort *outport = (NrrdOPort *)get_oport("Output Data");
+  if (!outport) {
+    error("Unable to initialize oport 'Outport Data'.");
+    return;
+  }
+  outport->send(handle_);
+
   update_state(Completed);
 }
 
@@ -308,7 +311,7 @@ NrrdReader::tcl_command(GuiArgs& args, void* userdata)
   
   if (args[1] == "read_nrrd") {
     read_nrrd();
-    get_nrrd_info();
+    get_nrrd_info(handle_);
   }else {
     Module::tcl_command(args, userdata);
   }
