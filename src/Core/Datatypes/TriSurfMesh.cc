@@ -125,6 +125,18 @@ TriSurfMesh::cell_end() const
   return 0;
 }
 
+TriSurfMesh::elem_iterator
+TriSurfMesh::elem_begin() const
+{
+  return face_begin();
+}
+
+TriSurfMesh::elem_iterator
+TriSurfMesh::elem_end() const
+{
+  return face_end();
+}
+
 
 void
 TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
