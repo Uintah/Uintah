@@ -22,6 +22,7 @@ SRCS     += \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc \
+	$(SRCDIR)/VarLabelMatlPatch.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/PerPatchBase.cc \
 	$(SRCDIR)/GeometryPiece.cc \
