@@ -405,8 +405,11 @@ void NetworkEditor::save_network(const clString& filename)
         Module* module=net->module(i);
 	int x, y;
 	module->get_position(x,y);
-        out << "set m" << i << " [addModuleAtPosition " << module->name
-	  << " " << x << " " << y << "]\n";
+        out << "set m" << i << " [addModuleAtPosition \""
+            << module->packageName << "\" \""<< module->categoryName
+            <<"\" \""<< module->moduleName<<"\" "
+            << x << " " << y << "]\n";
+
     }
     out << "\n";
     for(i=0;i<net->nconnections();i++){
@@ -670,6 +673,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.7  1999/08/30 18:47:52  kuzimmer
+// Modified so that dataflow scripts can be read and written properly
+//
 // Revision 1.6  1999/08/29 00:46:50  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
