@@ -138,7 +138,7 @@ int AttributeTrf::matrix_union(Array1<int> &mat_init, Array1<int> &mat_res) {
 // function to sort column matrix
 void AttributeTrf::matrix_sort(Array1<int> &matrix) {
   int len = matrix.size();
-  double temp1;
+  int temp1;
 
   for (int count=0; count<len-1; count++){
     for (int j=0; j<len-count-1; j++) {
@@ -305,16 +305,16 @@ void AttributeTrf::execute(){
   ////////// laplacian Matrix in the file
   ////////////////////////////////////////////////////
 
-  int i, j;
-  FILE *fp;
-  fp = fopen("laplacian.txt","wt");
-  for(i=0; i<64; i++)
-  {  
-	for(j=0; j<64; j++)
-		fprintf(fp,"%f ",(*laplacian)[i][j]);
-    fprintf(fp,"\n");
-  }			
-  fclose(fp);
+//  int i, j;
+//  FILE *fp;
+//  fp = fopen("laplacian.txt","wt");
+//  for(i=0; i<64; i++)
+//  {  
+//	for(j=0; j<64; j++)
+//		fprintf(fp,"%f ",(*laplacian)[i][j]);
+//    fprintf(fp,"\n");
+//  }			
+//  fclose(fp);
 
   ////////////////////////////////////////////////////
 
