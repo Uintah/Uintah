@@ -394,6 +394,52 @@ AC_DEFUN([SCI_ARG_VAR], [
   sci_arg_var_list="$sci_arg_var_list $1"
 ])
 
+
+##
+##  INIT_PACKAGE_CHECK_VARS
+##  
+##  Initialize all the variables that guard dependency checks required
+##  by specific configurations.
+##
+AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
+
+  # This list is alphabetical.  Please keep it that way.
+  sci_check_audio=no
+  sci_check_awk=no
+  sci_check_babel=no
+  sci_check_blas=no
+  sci_check_crypto=no
+  sci_check_etags=no
+  sci_check_exc=no 
+  sci_check_fortran=no
+  sci_check_globus=no
+  sci_check_glui=no
+  sci_check_glut=no
+  sci_check_gmake=no 
+  sci_check_gzopen=no
+  sci_check_hypre=no
+  sci_check_insight=no
+  sci_check_jpeg=no
+  sci_check_lapack=no
+  sci_check_mdsplus=no
+  sci_check_mpi=no
+  sci_check_netsolve=no
+  sci_check_oogl=no
+  sci_check_perl=no
+  sci_check_petsc=no
+  sci_check_plplot=no
+  sci_check_qt=no
+  sci_check_ssl=no
+  sci_check_tau=no
+  sci_check_teem=no
+  sci_check_thirdparty=no
+  sci_check_tiff=no
+  sci_check_tools=no
+  sci_check_unipetc=no
+  sci_check_uuid=no
+  sci_check_vdt=no
+
+])
 ##
 ##  SCI_SET_PACKAGE_CHECKS
 ##  $1 is the name of a package.

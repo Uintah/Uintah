@@ -112,64 +112,8 @@ SCI_ARG_VAR(CXXCPP,C++ preprocessor)
 ## all the optional tests we have... These get set in the macro 
 # SCI_SET_PACKAGE_CHECKS found in aclocal.m4.  Each package sets the 
 # checks that they 
+INIT_PACKAGE_CHECK_VARS()
 
-# want or require in the macro.
-sci_check_unipetc=no
-sci_check_mpiuni=yes
-
-#sci_check_dependency mode=no
-sci_check_gmake=no 
-sci_check_awk=no
-sci_check_etags=no
-sci_check_thirdparty=no
-sci_check_exc=no 
-
-# typically Remote
-sci_check_jpeg=no
-sci_check_tiff=no
-
-# typically rtrt
-sci_check_glut=no
-sci_check_glui=no
-sci_check_oogl=no
-sci_check_audio=no
-
-# typically fusion
-sci_check_plplot=no
-sci_check_mdsplus=no
-
-# typically uintah
-sci_check_fortran=no
-sci_check_mpi=no
-sci_check_tau=no
-sci_check_gzopen=no
-sci_check_blas=no
-sci_check_lapack=no
-sci_check_hypre=no
-sci_check_petsc=no
-sci_check_perl=no
-sci_check_tools=no
-
-# typically teem
-sci_check_teem=no
-
-#typically VDT
-sci_check_vdt=no
-
-# typically Netsolve
-sci_check_netsolve=no
-
-# typically Insight
-sci_check_instight=no
-
-# SCIRun2
-sci_check_babel=no
-sci_check_fortran=no
-sci_check_ssl=no
-sci_check_crypto=no
-sci_check_globus=no
-sci_check_qt=no
-sci_check_uuid=no
 
 ## find the machine's pwd, and don't use the sh built-in pwd.
 ## sh pwd can print the wd with symbolic links depending on
@@ -416,39 +360,6 @@ myargs=`echo $args | sed 's%\^% %g'`
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
 
-##  --------------------------------------------------------------------
-##  -----------  check for unknown or mis-spelled arguments  -----------
-##  --------------------------------------------------------------------
-
-##
-##  If you use SCI_ARG_WITH or SCI_ARG_ENABLE to declare arguments, they
-##  will be added automatically to this check.  There should be no need
-##  to modify this section.
-##
-
-# this is choking on standard configure arguments. FIX_ME_MC
-#echo $CC
-#_sci_found_arg=no
-#for i in $myargs; do
-#  i_mod=`echo $i | sed 's% %%g' | sed 's%=.*%%g'`
-#  echo $i
-#  echo $i_mod
-#  for j in $sci_arg_with_list $sci_arg_enable_list $sci_arg_var_list; do
-#    echo $j
-#    if test $i_mod = $j; then 
-#      _sci_found_arg=yes
-#      break
-#    fi
-#  done
-#  if test "$_sci_found_arg" = "yes"; then
-#    _sci_found_arg=no
-#    continue
-#  else
-#    echo
-#    SCI_MSG_ERROR(unknown (or mis-spelled) argument: $i.)
-#  fi
-#done
-#
 PACKAGE_DIRS=""
 # make sure the package dir exists
 for i in $package; do
@@ -2126,47 +2037,46 @@ esac
 # Again required for the following uni-petsc checks, that attempt to support
 # the MatrixSolver module.
 
-if test "$sci_check_mpiuni" = "yes"; then
-  if test "$with_mpiuni"; then
-    _sci_lib="$with_mpiuni/lib"
-    _sci_inc="$with_mpiuni/include" 
-  elif test "$with_unipetsc"; then
-    _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-    _sci_inc="$with_unipetsc/src/sys/src/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
-  else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
-  fi
+if test "$with_mpiuni"; then
+  _sci_lib="$with_mpiuni/lib"
+  _sci_inc="$with_mpiuni/include" 
+elif test "$with_unipetsc"; then
+  _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+  _sci_inc="$with_unipetsc/src/sys/src/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
+else
+  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
+fi
 
-  SCI_TRY_LINK(MPIUNI,optional mpi-uni libraries and headers,[
-  #include <mpi.h>
-  ],$_sci_inc,mpiuni,$_sci_lib,,,optional)
+SCI_TRY_LINK(MPIUNI,optional mpi-uni libraries and headers,[
+#include <mpi.h>
+],$_sci_inc,mpiuni,$_sci_lib,,,optional)
 
-  if test "$HAVE_MPIUNI" = "no"; then
-     SCI_TRY_LINK(MPIUNICH,optional mpiunich and pmpiunich libraries,,
-                    $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
+if test "$HAVE_MPIUNI" = "no"; then
+   SCI_TRY_LINK(MPIUNICH,optional mpiunich and pmpiunich libraries,,
+                  $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
 
-     if test "$HAVE_MPIUNICH" = "yes"; then
-       LIB_DIR_MPIUNI="$LIB_DIR_MPIUNICH"
-       MPIUNI_LIB_FLAG="$MPIUNICH_LIB_FLAG"
-       MPIUNI_LIB_DIR_FLAG="$MPIUNICH_LIB_DIR_FLAG"
-     fi
-  fi
-  
-  if test "$HAVE_MPIUNI" = "yes"; then
-     if test "$HAVE_MPIUNICH" = "yes"; then
-       DEF_MPIUNI="#define HAVE_MPIUNICH 1"
-     else
-       DEF_MPIUNI="#define HAVE_MPIUNI 1"
-     fi
-  fi
-  
-  if test "$with_mpiuni" && test ! "$DEF_MPIUNI"; then
-    echo
-    AC_MSG_ERROR(One or more of the MPIUNI components is missing.)
-    echo
-  fi
-fi # end sci_check_mpiuni
+   if test "$HAVE_MPIUNICH" = "yes"; then
+     LIB_DIR_MPIUNI="$LIB_DIR_MPIUNICH"
+     MPIUNI_LIB_FLAG="$MPIUNICH_LIB_FLAG"
+     MPIUNI_LIB_DIR_FLAG="$MPIUNICH_LIB_DIR_FLAG"
+   fi
+fi
+
+if test "$HAVE_MPIUNI" = "yes"; then
+   if test "$HAVE_MPIUNICH" = "yes"; then
+     DEF_MPIUNI="#define HAVE_MPIUNICH 1"
+   else
+     DEF_MPIUNI="#define HAVE_MPIUNI 1"
+   fi
+fi
+
+if test "$with_mpiuni" && test ! "$DEF_MPIUNI"; then
+  echo
+  AC_MSG_ERROR(One or more of the MPIUNI components is missing.)
+  echo
+fi
+
 
 AC_SUBST(MPIUNI_LIB_FLAG)
 AC_SUBST(MPIUNI_LIB_DIR_FLAG)
