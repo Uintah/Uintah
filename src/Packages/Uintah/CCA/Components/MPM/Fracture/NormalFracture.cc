@@ -2,9 +2,9 @@
 
 #include "ParticlesNeighbor.h"
 #include "Connectivity.h"
-#include "CrackFace.h"
 #include "CellsNeighbor.h"
 #include "IndexExchange.h"
+#include "SurfaceCouples.h"
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -73,6 +73,11 @@ void NormalFracture::computeBoundaryContact(
     IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
 
     Lattice lattice(pX_pg);
+    /*
+    SurfaceCouples couples(pCrackNormal_pg,pX_pg);
+    couples.find();
+    cout<<couples<<endl;
+    */
 
     //Allocate new data
     ParticleVariable<Vector> pTouchNormal_p_new;
