@@ -56,7 +56,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 				       int eqnType, CellInformation* cellinfo,
 				       ArchesVariables* coeff_vars)
 {
-  // Get the domain size 
+  // Get the domain size with ghost cells
   IntVector domLoU = coeff_vars->uVelocity.getFortLowIndex();
   IntVector domHiU = coeff_vars->uVelocity.getFortHighIndex();
   IntVector domLoV = coeff_vars->vVelocity.getFortLowIndex();
@@ -65,6 +65,21 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   IntVector domHiW = coeff_vars->wVelocity.getFortHighIndex();
   IntVector domLo = coeff_vars->density.getFortLowIndex();
   IntVector domHi = coeff_vars->density.getFortHighIndex();
+  // get domain size without ghost cells
+  // using ng for no ghost cell
+
+  cerr << "BEFORE VELCOEF" << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "Density for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(10);
+	cerr << coeff_vars->density[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+  cerr << "BEFORE VELCOEF" << endl;
 
 #ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE VELCOEF" << endl;
@@ -115,12 +130,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 
   if (index == Arches::XDIR) {
 
+    IntVector domLoUng = coeff_vars->uVelocityCoeff[Arches::AP].
+                                              getFortLowIndex();
+    IntVector domHiUng = coeff_vars->uVelocityCoeff[Arches::AP].
+                                             getFortHighIndex();
     // Get the patch indices
     IntVector idxLoU = patch->getSFCXFORTLowIndex();
     IntVector idxHiU = patch->getSFCXFORTHighIndex();
 
     // Calculate the coeffs
     FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
+		  domLoUng.get_pointer(), domHiUng.get_pointer(),
 		  idxLoU.get_pointer(), idxHiU.get_pointer(),
 		  coeff_vars->uVelocity.getPointer(),
 		  coeff_vars->uVelocityConvectCoeff[Arches::AE].getPointer(), 
@@ -311,12 +331,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 #endif
   } else if (index == Arches::YDIR) {
 
+    IntVector domLoVng = coeff_vars->vVelocityCoeff[Arches::AP].
+                                             getFortLowIndex();
+    IntVector domHiVng = coeff_vars->vVelocityCoeff[Arches::AP].
+                                             getFortHighIndex();
     // Get the patch indices
     IntVector idxLoV = patch->getSFCYFORTLowIndex();
     IntVector idxHiV = patch->getSFCYFORTHighIndex();
 
     // Calculate the coeffs
     FORT_VVELCOEF(domLoV.get_pointer(), domHiV.get_pointer(),
+		  domLoVng.get_pointer(), domHiVng.get_pointer(),
 		  idxLoV.get_pointer(), idxHiV.get_pointer(),
 		  coeff_vars->vVelocity.getPointer(),
 		  coeff_vars->vVelocityConvectCoeff[Arches::AE].getPointer(), 
@@ -507,12 +532,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 #endif
   } else if (index == Arches::ZDIR) {
 
+    IntVector domLoWng = coeff_vars->wVelocityCoeff[Arches::AP].
+                                             getFortLowIndex();
+    IntVector domHiWng = coeff_vars->wVelocityCoeff[Arches::AP].
+                                             getFortHighIndex();
     // Get the patch indices
     IntVector idxLoW = patch->getSFCZFORTLowIndex();
     IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
     // Calculate the coeffs
     FORT_WVELCOEF(domLoW.get_pointer(), domHiW.get_pointer(),
+		  domLoWng.get_pointer(), domHiWng.get_pointer(),
 		  idxLoW.get_pointer(), idxHiW.get_pointer(),
 		  coeff_vars->wVelocity.getPointer(),
 		  coeff_vars->wVelocityConvectCoeff[Arches::AE].getPointer(), 
@@ -775,6 +805,9 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   IntVector domHiV = coeff_vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
   IntVector domLoW = coeff_vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
   IntVector domHiW = coeff_vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
+  // no ghost cells
+  IntVector domLong = coeff_vars->pressCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = coeff_vars->pressCoeff[Arches::AP].getFortHighIndex();
 
 #ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE FORT_PRESSCOEFF" << endl;
@@ -827,6 +860,7 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 #endif
 
   FORT_PRESSCOEFF(domLo.get_pointer(), domHi.get_pointer(),
+		  domLong.get_pointer(), domHing.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  coeff_vars->density.getPointer(),
 		  coeff_vars->pressCoeff[Arches::AE].getPointer(), 
@@ -1484,6 +1518,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.45  2000/09/26 04:35:28  rawat
+// added some more multi-patch support
+//
 // Revision 1.44  2000/08/23 06:20:52  bbanerje
 // 1) Results now correct for pressure solve.
 // 2) Modified BCU, BCV, BCW to add stuff for pressure BC.

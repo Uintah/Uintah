@@ -61,7 +61,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   double gravity = d_physicalConsts->getGravity(index);
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
-  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
+  //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
+  double den_ref = 1.184344;
   cerr << " ref_ density" << den_ref << endl;
   // Get the patch and variable indices
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
@@ -78,6 +79,15 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  // get domain size without ghost cells
+  // using ng for no ghost cell
+  IntVector domLoUng;
+  IntVector domHiUng;
+  IntVector domLoVng;
+  IntVector domHiVng;
+  IntVector domLoWng;
+  IntVector domHiWng;
+
   for (int iii = 0; iii < (domHi.z()-domLo.z()); iii++)
     std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
   for (int iii = 0; iii < (domHi.y()-domLo.y()); iii++)
@@ -85,10 +95,13 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   
   switch(index) {
   case Arches::XDIR:
+    domLoUng = vars->uVelLinearSrc.getFortLowIndex();
+    domHiUng = vars->uVelLinearSrc.getFortHighIndex();
 
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     FORT_UVELSOURCE(domLoU.get_pointer(), domHiU.get_pointer(),
+		    domLoUng.get_pointer(), domHiUng.get_pointer(),
 		    idxLoU.get_pointer(), idxHiU.get_pointer(),
 		    vars->uVelocity.getPointer(),
 		    vars->old_uVelocity.getPointer(),
@@ -145,10 +158,13 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
     break;
   case Arches::YDIR:
+    domLoVng = vars->vVelLinearSrc.getFortLowIndex();
+    domHiVng = vars->vVelLinearSrc.getFortHighIndex();
 
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     FORT_VVELSOURCE(domLoV.get_pointer(), domHiV.get_pointer(),
+		    domLoVng.get_pointer(), domHiVng.get_pointer(),
 		    idxLoV.get_pointer(), idxHiV.get_pointer(),
 		    vars->vVelocity.getPointer(),
 		    vars->old_vVelocity.getPointer(),
@@ -206,9 +222,12 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
     break;
   case Arches::ZDIR:
 
+    domLoWng = vars->wVelLinearSrc.getFortLowIndex();
+    domHiWng = vars->wVelLinearSrc.getFortHighIndex();
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     FORT_WVELSOURCE(domLoW.get_pointer(), domHiW.get_pointer(),
+		    domLoWng.get_pointer(), domHiWng.get_pointer(),
 		    idxLoW.get_pointer(), idxHiW.get_pointer(),
 		    vars->wVelocity.getPointer(),
 		    vars->old_wVelocity.getPointer(),
@@ -342,15 +361,26 @@ Source::calculatePressureSource(const ProcessorGroup*,
   IntVector domHiV = vars->vVelocity.getFortHighIndex();
   IntVector domLoW = vars->wVelocity.getFortLowIndex();
   IntVector domHiW = vars->wVelocity.getFortHighIndex();
+  // Get the patch and variable indices
+  IntVector domLong = vars->pressCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->pressCoeff[Arches::AP].getFortHighIndex();
+  IntVector domLoUng = vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHiUng = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
+  IntVector domLoVng = vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHiVng = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
+  IntVector domLoWng = vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHiWng = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
 
   //fortran call ** WARNING ** ffield = -1
   int ffield = -1;
   FORT_PRESSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		  domLong.get_pointer(), domHing.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->pressNonlinearSrc.getPointer(),
 		  vars->pressLinearSrc.getPointer(),
 		  vars->density.getPointer(), vars->old_density.getPointer(),
 		  domLoU.get_pointer(), domHiU.get_pointer(),
+		  domLoUng.get_pointer(), domHiUng.get_pointer(),
 		  vars->uVelocity.getPointer(), 
 		  vars->uVelocityCoeff[Arches::AP].getPointer(),
 		  vars->uVelocityCoeff[Arches::AE].getPointer(),
@@ -361,6 +391,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  vars->uVelocityCoeff[Arches::AB].getPointer(),
 		  vars->uVelNonlinearSrc.getPointer(),
 		  domLoV.get_pointer(), domHiV.get_pointer(),
+		  domLoVng.get_pointer(), domHiVng.get_pointer(),
 		  vars->vVelocity.getPointer(), 
 		  vars->vVelocityCoeff[Arches::AP].getPointer(),
 		  vars->vVelocityCoeff[Arches::AE].getPointer(),
@@ -371,6 +402,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  vars->vVelocityCoeff[Arches::AB].getPointer(),
 		  vars->vVelNonlinearSrc.getPointer(),
 		  domLoW.get_pointer(), domHiW.get_pointer(),
+		  domLoWng.get_pointer(), domHiWng.get_pointer(),
 		  vars->wVelocity.getPointer(), 
 		  vars->wVelocityCoeff[Arches::AP].getPointer(),
 		  vars->wVelocityCoeff[Arches::AE].getPointer(),
@@ -489,13 +521,19 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
   IntVector domHi;
   IntVector idxLo;
   IntVector idxHi;
+  IntVector domLong;
+  IntVector domHing;
   switch(index) {
   case Arches::XDIR:
     domLo = vars->uVelocity.getFortLowIndex();
     domHi = vars->uVelocity.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
+    // no ghost cell
+    domLong = vars->uVelLinearSrc.getFortLowIndex();
+    domHing = vars->uVelLinearSrc.getFortHighIndex();
     FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->uVelocity.getPointer(),
 		vars->uVelocityCoeff[Arches::AE].getPointer(),
@@ -542,7 +580,11 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
     domHi = vars->vVelocity.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
+    // no ghost cell
+    domLong = vars->vVelLinearSrc.getFortLowIndex();
+    domHing = vars->vVelLinearSrc.getFortHighIndex();
     FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->vVelocity.getPointer(),
 		vars->vVelocityCoeff[Arches::AE].getPointer(),
@@ -589,7 +631,11 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
     domHi = vars->wVelocity.getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
+    // no ghost cell
+    domLong = vars->wVelLinearSrc.getFortLowIndex();
+    domHing = vars->wVelLinearSrc.getFortHighIndex();
     FORT_MASCAL(domLo.get_pointer(), domHi.get_pointer(),
+		domLong.get_pointer(), domHing.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->wVelocity.getPointer(),
 		vars->wVelocityCoeff[Arches::AE].getPointer(),
@@ -772,6 +818,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.40  2000/09/26 04:35:28  rawat
+//added some more multi-patch support
+//
 //Revision 1.39  2000/09/07 23:07:17  rawat
 //fixed some bugs in bc and added pressure solver using petsc
 //

@@ -2,7 +2,8 @@ c
 c $Id $
 c 
 
-      SUBROUTINE mascal(dim_lo, dim_hi, valid_lo, valid_hi,
+      SUBROUTINE mascal(dim_lo, dim_hi, dim_long, dim_hing,
+     $     valid_lo, valid_hi,
      $     phi,ae,aw,an,as,at,ab,su,sp,
 c    $     spm,sign,
 c    $     tcons,
@@ -48,53 +49,55 @@ C--------------------------------------------------------------------
 *
       integer dim_lo(3)
       integer dim_hi(3)
+      integer dim_long(3)
+      integer dim_hing(3)
       integer valid_lo(3)
       integer valid_hi(3)
       
       double precision phi(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision ae(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision aw(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision an(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision as(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision at(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision ab(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision su(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision sp(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
 c     double precision spm(
 c    $     dim_lo(1):dim_hi(1),
@@ -104,34 +107,34 @@ c    $     dim_lo(3):dim_hi(3))
 c     double precision sign
 
       double precision cesav(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision cwsav(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision cnsav(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision cssav(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision ctsav(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
       double precision cbsav(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
+     $     dim_long(1):dim_hing(1),
+     $     dim_long(2):dim_hing(2),
+     $     dim_long(3):dim_hing(3))
 
 *
 *     declare local variables

@@ -4,7 +4,8 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE bcuvel(domLoU, domHiU, idxLoU, idxHiU, UU,
+      SUBROUTINE bcuvel(domLoU, domHiU, domLoUng, domHiUng,
+     $     idxLoU, idxHiU, UU,
      &     AP, AE, AW, AN, AS, AT, AB,
      &     SU, SP, 
      &     domLoV, domHiV, idxLoV, idxHiV, VV,
@@ -27,26 +28,36 @@ c*********************************************************************
 c     Arguments :
 c*********************************************************************
       integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
+      integer domLoUng(3), domHiUng(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      double precision AP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AE(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AW(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AN(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AS(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AT(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AB(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision SU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision SP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
+      double precision AP(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AE(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AW(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AN(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AS(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AT(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AB(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision SU(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision SP(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
       integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
@@ -334,6 +345,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/09/26 04:35:34  rawat
+c added some more multi-patch support
+c
 c Revision 1.6  2000/09/07 23:07:21  rawat
 c fixed some bugs in bc and added pressure solver using petsc
 c

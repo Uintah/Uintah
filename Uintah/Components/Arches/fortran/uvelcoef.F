@@ -4,7 +4,8 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE uvelcoef(domLoU, domHiU, idxLoU, idxHiU, UU,
+      SUBROUTINE uvelcoef(domLoU, domHiU, domLoUng, domHiUng,
+     $     idxLoU, idxHiU, UU,
      &     CESAV, CWSAV, CNSAV, CSSAV, CTSAV, CBSAV,
      &     AP, AE, AW, AN, AS, AT, AB,
 c     &     DU,
@@ -32,34 +33,48 @@ c*********************************************************************
 c     Arguments :
 c*********************************************************************
       integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
+      integer domLoUng(3), domHiUng(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      double precision AP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AE(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AW(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AN(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AS(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AT(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision AB(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CESAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CWSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CNSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CSSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CTSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision CBSAV(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
+      double precision AP(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AE(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AW(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AN(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AS(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AT(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision AB(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision CESAV(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision CWSAV(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision CNSAV(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision CSSAV(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision CTSAV(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision CBSAV(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
 c      double precision DU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
 c     &     domLoU(3):domHiU(3))
       integer domLoV(3), domHiV(3)
@@ -321,6 +336,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/09/26 04:35:34  rawat
+c added some more multi-patch support
+c
 c Revision 1.6  2000/08/10 21:29:14  rawat
 c fixed a bug in cellinformation
 c
