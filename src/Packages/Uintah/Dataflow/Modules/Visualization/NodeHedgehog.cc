@@ -394,6 +394,10 @@ void NodeHedgehog::add_arrow(Point &v_origin, Vector &vf_value,
   // crop the vector based on it's length
   // we only want to check against max_crop_length if it's greater than 0
   double length = vf_value.length();
+  //cout << "vf_value"<<vf_value<<"length("<<length<<")";flush(cout);
+  if (length <= 0.0)
+    // zero length vectors are not added
+    return;
   if (info.maxlen > 0)
     if (length > info.maxlen)
       return;
@@ -640,25 +644,41 @@ void NodeHedgehog::execute()
   // Make a switch based on the data location
   if( fld->data_at() == Field::CELL) {
     // Create the sub-mesh that represents where the widget is
-#if 0
+#if 1
     LatVolMesh::Cell::index_type min_index, max_index;
-    mesh->locate(min_index, lower);
-    mesh->locate(max_index, upper);
-    cout << "min_index = "<<min_index<<", max_index = "<<max_index<<endl;
-    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]\n";
-    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]\n";
+    bool min_valid = mesh->locate(min_index, lower);
+    bool max_valid = mesh->locate(max_index, upper);
+    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
+    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
+    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
+    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
 #endif
     LatVolMesh::Cell::range_iter iter;
     LatVolMesh::Cell::iterator end;
     mesh->get_cell_range(iter, end, BBox(lower, upper));
-#if 0
-    cout << "mesh::begin() = "<<*iter<<", end = "<<*end<<endl;
+#if 1
     cout << "begin["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"]\n";
     cout << "end["<<(*end).i_<<", "<<(*end).j_<<", "<<(*end).k_<<"]\n";
     LatVolMesh::Cell::iterator mesh_begin; mesh->begin(mesh_begin);
     LatVolMesh::Cell::iterator mesh_end;   mesh->end(mesh_end);
     cout << "mesh_begin["<<(*mesh_begin).i_<<", "<<(*mesh_begin).j_<<", "<<(*mesh_begin).k_<<"]\n";
     cout << "mesh_end["<<(*mesh_end).i_<<", "<<(*mesh_end).j_<<", "<<(*mesh_end).k_<<"]\n";
+    // Cropping upper and lower to the boundaries
+    cout << "mesh_boundary.min = "<<mesh_boundary.min()<<", max = "<<mesh_boundary.max()<<endl;
+    // crop by min boundary
+    upper = Max(upper, mesh_boundary.min()); 
+    lower = Max(lower, mesh_boundary.min());
+    // crop by max boundary
+    upper = Min(upper, mesh_boundary.max()); 
+    lower = Min(lower, mesh_boundary.max());
+    cout << "Cropping upper and lower to the boundaries\n";
+    cout << "lower = "<<lower<<", upper = "<<upper<<endl;
+    min_valid = mesh->locate(min_index, lower);
+    max_valid = mesh->locate(max_index, upper);
+    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
+    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
+    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
+    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
 #endif
     for(; iter != end; ++iter) {
       //cout << "*";
@@ -670,6 +690,44 @@ void NodeHedgehog::execute()
       add_arrow(v_origin, vf_value, arrows, info);
     }
   } else if( fld->data_at() == Field::NODE) {
+#if 1
+#if 1
+    LatVolMesh::Node::index_type min_index, max_index;
+    bool min_valid = mesh->locate(min_index, lower);
+    bool max_valid = mesh->locate(max_index, upper);
+    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
+    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
+    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
+    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
+#endif
+    LatVolMesh::Node::range_iter iter;
+    LatVolMesh::Node::iterator end;
+    mesh->get_node_range(iter, end, BBox(lower, upper));
+#if 1
+    cout << "begin["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"]\n";
+    cout << "end["<<(*end).i_<<", "<<(*end).j_<<", "<<(*end).k_<<"]\n";
+    LatVolMesh::Node::iterator mesh_begin; mesh->begin(mesh_begin);
+    LatVolMesh::Node::iterator mesh_end;   mesh->end(mesh_end);
+    cout << "mesh_begin["<<(*mesh_begin).i_<<", "<<(*mesh_begin).j_<<", "<<(*mesh_begin).k_<<"]\n";
+    cout << "mesh_end["<<(*mesh_end).i_<<", "<<(*mesh_end).j_<<", "<<(*mesh_end).k_<<"]\n";
+    // Cropping upper and lower to the boundaries
+    cout << "mesh_boundary.min = "<<mesh_boundary.min()<<", max = "<<mesh_boundary.max()<<endl;
+    // crop by min boundary
+    upper = Max(upper, mesh_boundary.min()); 
+    lower = Max(lower, mesh_boundary.min());
+    // crop by max boundary
+    upper = Min(upper, mesh_boundary.max()); 
+    lower = Min(lower, mesh_boundary.max());
+    cout << "Cropping upper and lower to the boundaries\n";
+    cout << "lower = "<<lower<<", upper = "<<upper<<endl;
+    min_valid = mesh->locate(min_index, lower);
+    max_valid = mesh->locate(max_index, upper);
+    cout << "min_index = ["<<min_index.i_<<", "<<min_index.j_<<", "<<min_index.k_<<"]";
+    if (min_valid) cout << " valid!\n"; else cout << " not valid\n";
+    cout << "max_index = ["<<max_index.i_<<", "<<max_index.j_<<", "<<max_index.k_<<"]";
+    if (max_valid) cout << " valid!\n"; else cout << " not valid\n";
+#endif
+#else
     // Now we need to loop over the data and extract the vector information
     // Create the sub-mesh that represents where the widget is
     LatVolMesh::Node::index_type min_index, max_index;
@@ -681,10 +739,13 @@ void NodeHedgehog::execute()
 		       max_index.k_ - min_index.k_);
     LatVolMesh::NodeIter iter; submesh.begin(iter);
     LatVolMesh::NodeIter end;  submesh.end(end);
+#endif
     for(; iter != end; ++iter) {
+      //cout << "iter["<<(*iter).i_<<", "<<(*iter).j_<<", "<<(*iter).k_<<"], ";
       //cout << "+";
       Point v_origin;
       mesh->get_center(v_origin, *iter);
+      //cout << ", v_origin = "<<v_origin<<endl;
       Vector vf_value = fld->value(*iter);
       add_arrow(v_origin, vf_value, arrows, info);
     }
