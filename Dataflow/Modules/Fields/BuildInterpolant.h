@@ -27,15 +27,12 @@
 
 namespace SCIRun {
 
-#define BIA_MAX_DISTANCE (1.0e6)
-
 class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
 			      Field::data_location loc,
-			      bool use_closest_outside,
-			      bool interp_nearest) = 0;
+			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc,
@@ -53,24 +50,23 @@ public:
   //! virtual interface. 
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
 			      Field::data_location loc,
-			      bool use_closest_outside,
-			      bool interp_nearest);
+			      bool interp, bool closest, double dist);
 
 private:
   double find_closest(typename LSRC::index_type &index,
-		      MSRC *mesh, const Point &p);
+		      MSRC *mesh, const Point &p, double dist);
 };
 
 
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 double
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p, double dist)
 {
   typename LSRC::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
-  double mindist = BIA_MAX_DISTANCE;
+  double mindist = dist;
   while (itr != eitr)
   {
     Point c;
@@ -89,7 +85,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::inde
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 FieldHandle
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc, bool use_closest_outside, bool interp_nearest)
+BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc, bool interp, bool closest, double dist)
 {
   MSRC *src_mesh = dynamic_cast<MSRC *>(src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
@@ -106,25 +102,12 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
     Point p;
 
     dst_mesh->get_center(p, *itr);
-
-    src_mesh->get_weights(p, locs, weights);
-
     vector<pair<typename LSRC::index_type, double> > v;
-    if (weights.size() > 0)
+
+    if (interp)
     {
-      if (interp_nearest)
-      {
-	int maxi = 0;
-	for (unsigned int i = 1; i < locs.size(); i++)
-	{
-	  if (weights[maxi] > weights[i])
-	  {
-	    maxi = i;
-	  }
-	}
-	v.push_back(pair<typename LSRC::index_type, double>(locs[maxi], 1.0));
-      }
-      else
+      src_mesh->get_weights(p, locs, weights);
+      if (weights.size() > 0)
       {
 	for (unsigned int i = 0; i < locs.size(); i++)
 	{
@@ -133,10 +116,10 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
 	}
       }
     }
-    else if (use_closest_outside)
+    else if (closest)
     {
       typename LSRC::index_type index;
-      if (find_closest(index, src_mesh, p) < BIA_MAX_DISTANCE)
+      if (find_closest(index, src_mesh, p, dist) < dist)
       {
 	v.push_back(pair<typename LSRC::index_type, double>(index, 1.0));
       }

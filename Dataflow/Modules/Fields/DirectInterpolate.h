@@ -33,7 +33,8 @@ namespace SCIRun {
 class DirectInterpScalarAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi) = 0;
+  virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi,
+			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *field,
@@ -46,14 +47,17 @@ class DirectInterpScalarAlgo : public DirectInterpScalarAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi);
+  virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi,
+			      bool interp, bool closest, double dist);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
 DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
-					  ScalarFieldInterface *sfi)
+					  ScalarFieldInterface *sfi,
+					  bool interp, bool closest,
+					  double dist)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->query_scalar_interface()) { return 0; }
@@ -69,11 +73,18 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     mesh->get_center(p, *itr);
 
     double val;
-    if (!sfi->interpolate(val, p))
+    if (interp && sfi->interpolate(val, p))
     {
-      sfi->find_closest(val, p);
+      fld->set_value((typename Fld::value_type)val, *itr);
     }
-    fld->set_value((typename Fld::value_type)val, *itr);
+    else if (closest)
+    {
+      const double d = sfi->find_closest(val, p);
+      if (d < dist)
+      {
+	fld->set_value((typename Fld::value_type)val, *itr);
+      }
+    }
 
     ++itr;
   }
@@ -87,7 +98,8 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 class DirectInterpVectorAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi) = 0;
+  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi,
+			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *field,
@@ -100,14 +112,17 @@ class DirectInterpVectorAlgo : public DirectInterpVectorAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi);
+  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi,
+			      bool interp, bool closest, double dist);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
 DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
-					  VectorFieldInterface *vfi)
+					  VectorFieldInterface *vfi,
+					  bool interp, bool closest,
+					  double dist)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->query_vector_interface()) { return 0; }
@@ -123,11 +138,18 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     mesh->get_center(p, *itr);
 
     Vector val;
-    if (!vfi->interpolate(val, p))
+    if (interp && sfi->interpolate(val, p))
     {
-      vfi->find_closest(val, p);
+      fld->set_value((typename Fld::value_type)val, *itr);
     }
-    fld->set_value(val, *itr);
+    else if (closest)
+    {
+      const double d = sfi->find_closest(val, p);
+      if (d < dist)
+      {
+	fld->set_value((typename Fld::value_type)val, *itr);
+      }
+    }
 
     ++itr;
   }
@@ -140,8 +162,8 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 class DirectInterpTensorAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi) = 0;
-
+  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi,
+			      bool interp, bool closest, double dist) = 0;
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *field,
 				       const TypeDescription *element);
@@ -153,14 +175,17 @@ class DirectInterpTensorAlgo : public DirectInterpTensorAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi);
+  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi,
+			      bool interp, bool closest, double dist);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
 DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
-					  TensorFieldInterface *tfi)
+					  TensorFieldInterface *tfi,
+					  bool interp, bool closest,
+					  double dist)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->query_tensor_interface()) { return 0; }
@@ -176,11 +201,18 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     mesh->get_center(p, *itr);
 
     Tensor val;
-    if (!tfi->interpolate(val, p))
+    if (interp && sfi->interpolate(val, p))
     {
-      tfi->find_closest(val, p);
+      fld->set_value((typename Fld::value_type)val, *itr);
     }
-    fld->set_value(val, *itr);
+    else if (closest)
+    {
+      const double d = sfi->find_closest(val, p);
+      if (d < dist)
+      {
+	fld->set_value((typename Fld::value_type)val, *itr);
+      }
+    }
 
     ++itr;
   }
