@@ -40,7 +40,10 @@ public:
     int pickmode;
 
     Material* current_matl;
-    Stack<Material*> stack;
+    Material* appl_matl;
+    Material** stack;
+    int sp;
+    void set_matl();
     void set_matl(Material*);
     void push_matl(Material*);
     void pop_matl();
