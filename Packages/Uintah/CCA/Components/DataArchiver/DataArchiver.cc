@@ -82,7 +82,7 @@ DataArchiver::~DataArchiver()
 }
 
 void DataArchiver::problemSetup(const ProblemSpecP& params,
-                                SimulationStateP& state)
+                                SimulationState* state)
 {
    d_sharedState = state;
    ProblemSpecP p = params->findBlock("DataArchiver");
@@ -699,6 +699,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
   static bool wereSavesAndCheckpointsInitialized = false;
   dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
+  d_tempElapsedTime = time+delt;
   //d_currentTime=time+delt;
   //if (delt != 0)
   //d_currentTimestep++;
@@ -786,7 +787,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
   // values to compare if there is a timestep restart.  See 
   // reEvaluateOutputTimestep
   if (d_outputInterval != 0.0 && delt != 0) {
-    if(time >= d_nextOutputTime) {
+    if(time+delt >= d_nextOutputTime) {
       // output timestep
       d_wasOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
@@ -808,7 +809,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
     }
   }
   
-  if ((d_checkpointInterval != 0.0 && time >= d_nextCheckpointTime) ||
+  if ((d_checkpointInterval != 0.0 && time+delt >= d_nextCheckpointTime) ||
       (d_checkpointTimestepInterval != 0 &&
        timestep >= d_nextCheckpointTimestep) ||
       (d_checkpointWalltimeInterval != 0 &&
@@ -820,6 +821,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
 		   d_checkpointReductionLabels.size() > 0);
     
     string iname = d_checkpointsDir.getName()+"/index.xml";
+
     ProblemSpecP index;
     
     if (d_writeMeta) {
@@ -986,19 +988,20 @@ void DataArchiver::outputTimestep(Dir& baseDir,
   }
 }
 
-void DataArchiver::reEvaluateOutputTimestep(double orig_delt, double new_delt)
+void DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
 {
   // call this on a timestep restart.  If lowering the delt goes beneath the 
   // threshold, mark it as not an output timestep
 
-  double time = d_sharedState->getElapsedTime();
+  // this is set in finalizeTimestep to time+delt
+  d_tempElapsedTime = d_sharedState->getElapsedTime() + new_delt;
 
   if (d_wasOutputTimestep && d_outputInterval != 0.0 ) {
-    if (time - (orig_delt - new_delt) < d_nextOutputTime)
+    if (d_tempElapsedTime < d_nextOutputTime)
       d_wasOutputTimestep = false;
   }
   if (d_wasCheckpointTimestep && d_checkpointInterval != 0.0) {
-    if (time - (orig_delt - new_delt) < d_nextCheckpointTime) {
+    if (d_tempElapsedTime < d_nextCheckpointTime) {
       d_wasCheckpointTimestep = false;    
       d_checkpointTimestepDirs.pop_back();
     }
@@ -1362,7 +1365,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 	throw InternalError("DataArchiver::outputReduction(): The file \"" + \
 	      filename.str() + "\" could not be opened for writing!");
       }
-      out << setprecision(17) << d_sharedState->getElapsedTime() << "\t";
+      out << setprecision(17) << d_tempElapsedTime << "\t";
       new_dw->print(out, var, 0, matlIndex);
       out << "\n";
     }
