@@ -41,11 +41,10 @@ namespace Uintah {
     
   protected:
     
-    void applyForceBC(particleIndex start, 
-		      ParticleVariable<Vector>& pextforce,
-		      ParticleVariable<double>& pmass, 
-		      ParticleVariable<Point>& position);
-
+    void applyForceBC(const Vector& dxpp, 
+                      const Point& pp,
+                      const double& pMass, 
+		      Vector& pExtForce);
     
     ParticleSubset* allocateVariables(particleIndex numParticles,
 				      int dwi, MPMLabel* lb, 
