@@ -38,6 +38,7 @@ int num_slices;
 int hdr_len;
 int width;
 Array1<int> table;
+Array1<int> hist;
 ScalarFieldRGchar *sf_c, *sf;
 char *in_name;
 double zScale;
@@ -73,14 +74,20 @@ int read_legend(FILE **fpp) {
     FILE *fp=*fpp;
     int OKflag=1;
     int num_structures, default_matl;
+    int struc, matl;
 
     OKflag &= fscanf(fp, "%d", &num_structures);
     table.resize(num_structures);
+    hist.resize(num_structures);
     OKflag &= fscanf(fp, "%d", &default_matl);
     for (int i=0; i<num_structures; i++) {
-	table[i]=0;
+        table[i]=default_matl;
+	hist[i]=0;
     }
-
+    while(!feof(fp)) {
+        if (fscanf(fp, "%d %d", &struc, &matl)==2)
+            table[struc]=matl;
+    }
     return OKflag;
 }
 
@@ -121,8 +128,8 @@ void read_seg_images(char *path) {
 		// change this so that instead of storing the data in the 
 		// sf field, we are just counting how many times we see each 
 		// data value
-		table[i1]++;
-		//sf_c->grid(x+padn,y+padn,j+padn)=(char)table[i1]+'0';
+		hist[i1]++;
+		sf_c->grid(x+padn,y+padn,j+padn)=(char)table[i1]+'0';
 	    }	
 	}
 	fclose(fp);
@@ -187,15 +194,15 @@ void read_mri_images(char *path) {
 }
 
 void write_seg_field() {
-  //    char outname[100];
-  // sprintf(outname, "%s.c_sfrg", out);
-  // printf("Writing file: %s\n", outname);
-  // TextPiostream stream(outname, Piostream::Write);
-  // ScalarFieldHandle sh=sf_c;
-  // sh->set_raw(1);
-  // Pio(stream, sh);
-  for (int i=0; i<table.size(); i++) {
-    if (table[i]!=0) printf("%d %d \n", i, table[i]);
+  char outname[100];
+  sprintf(outname, "%s.c_sfrg", out);
+  printf("Writing file: %s\n", outname);
+  TextPiostream stream(outname, Piostream::Write);
+  ScalarFieldHandle sh=sf_c;
+  sh->set_raw(1);
+  Pio(stream, sh);
+  for (int i=0; i<hist.size(); i++) {
+    if (hist[i]!=0) printf("%d %d \n", i, hist[i]);
     }
 }
 
