@@ -19,6 +19,9 @@ MPMLabel::MPMLabel()
 
   pDilationalWaveSpeedLabel = scinew VarLabel("p.dilationalWaveSpeed",
 			ParticleVariable<double>::getTypeDescription());
+
+  pVisibilityLabel = scinew VarLabel("p.visibility",
+			ParticleVariable<int>::getTypeDescription());
   
   pStressLabel = scinew VarLabel( "p.stress",
 			ParticleVariable<Matrix3>::getTypeDescription() );
@@ -318,6 +321,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.32  2000/09/09 19:34:11  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.31  2000/09/08 20:27:59  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.

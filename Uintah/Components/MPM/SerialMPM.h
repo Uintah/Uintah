@@ -93,6 +93,14 @@ protected:
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
 
+
+  //////////
+  // Insert Documentation Here:
+  void computerNodesVisibility(const ProcessorGroup*,
+			       const Patch* patch,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw);
+
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorGroup*,
@@ -210,6 +218,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.57  2000/09/09 19:34:11  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.56  2000/09/08 17:31:28  guilkey
 // Added interpolateParticlesForSaving task which interpolates particle
 // data, interpolates it to the grid using another particle scalar variable

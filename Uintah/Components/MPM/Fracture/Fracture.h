@@ -34,6 +34,11 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
+  void   computerNodesVisibility(const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw);
+
   void   crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
@@ -54,6 +59,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.26  2000/09/09 19:34:16  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.25  2000/09/05 19:38:10  tan
 // Fracture starts to run in Uintah/MPM!
 //

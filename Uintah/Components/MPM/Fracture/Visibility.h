@@ -21,6 +21,8 @@ public:
    void        modifyWeights(double S[8]) const;
    void        modifyShapeDerivatives(Vector d_S[8]) const;
    
+   int         flag() const {return d_flag;}
+   
 private:
    int         d_flag;
 };
@@ -30,6 +32,9 @@ private:
 #endif
 
 // $Log$
+// Revision 1.2  2000/09/09 19:34:16  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.1  2000/09/09 18:12:05  tan
 // Added Visibility class to handle the relationship between a particle
 // and the related nodes.

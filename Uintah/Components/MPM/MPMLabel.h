@@ -24,6 +24,7 @@ namespace Uintah {
       
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pDilationalWaveSpeedLabel;
+      const VarLabel* pVisibilityLabel;
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeDeformedLabel;
@@ -103,6 +104,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.28  2000/09/09 19:34:11  tan
+// Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+//
 // Revision 1.27  2000/09/08 20:27:59  tan
 // Added visibility calculation to fracture broken cell shape function
 // interpolation.

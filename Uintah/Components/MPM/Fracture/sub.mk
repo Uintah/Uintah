@@ -18,11 +18,14 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/QuarticSpline.cc \
 	$(SRCDIR)/ExponentialSpline.cc \
 	$(SRCDIR)/LeastSquare.cc \
-	$(SRCDIR)/BrokenCellShapeFunction.cc
-	
+	$(SRCDIR)/BrokenCellShapeFunction.cc \
+	$(SRCDIR)/Visibility.cc
 	
 #
 # $Log$
+# Revision 1.12  2000/09/09 19:34:16  tan
+# Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
+#
 # Revision 1.11  2000/09/06 18:54:06  tan
 # Included BrokenCellShapeFunction.cc into sub.mk
 #
