@@ -28,10 +28,10 @@ Component  specification dtd.
 <!ENTITY % admonition "note | tip | warning">
 <!ENTITY % block "p">
 <!ENTITY % flow "%block; | %lists;">
-<!ENTITY % BasicFlow "(%flow;)*">
-<!ENTITY % DescFlow "(%flow; | developer | %admonition;)*">
-<!ENTITY % DevFlow "(%flow; | %admonition;)*">
-<!ENTITY % AdmonFlow "(%flow;)*">
+<!ENTITY % BasicFlow "(p,(%flow;)*)">
+<!ENTITY % DescFlow "(p,(%flow; | developer | %admonition;)*)">
+<!ENTITY % DevFlow "(p,(%flow; | %admonition;)*)">
+<!ENTITY % AdmonFlow "(p,(%flow;)*)">
 
 <!-- ********** Elements ********** -->
 
