@@ -17,7 +17,7 @@ using std::vector;
 
 namespace rtrt {
   //  template<class T>
-    class Volvis2DDpy : public DpyBase {
+  class Volvis2DDpy : public DpyBase {
     // creates the background texture
     void createBGText(float vmin, float vmax, float gmin, float gmax);
     // restores visible background texture to the clean original
@@ -70,11 +70,15 @@ namespace rtrt {
     bool display_probe;
     RectWidget* cp_probe;
     
+    // determines whether or not we use hvolume acceleration
+    bool fast_render_mode;
+
     // texture replacement bounding box for Dpy acceleration
     int subT_left;
     int subT_top;
     int subT_right;
     int subT_bottom;
+    bool fastTextureMode; // Note: does not work on all machines
     bool waiting_for_redraw;
 
     // calculates the borders of a widget's texture (for texture acceleration)
