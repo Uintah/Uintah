@@ -11,6 +11,9 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 {
    delt_label = new VarLabel("delT", ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
 
+   strain_energy_label = new VarLabel("StrainEnergy",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+
   // Get the physical constants that are shared between codes.
   // For now it is just gravity.
 
@@ -27,6 +30,12 @@ void SimulationState::registerMaterial(Material* matl)
 
 //
 // $Log$
+// Revision 1.9  2000/05/31 20:25:32  guilkey
+// Added the beginnings of a Sum reduction, which would take data from
+// multiple patches, materials, etc. and add them together.  The immediate
+// application is for computing the strain energy and storing it.  I'm
+// going to need some help with this.
+//
 // Revision 1.8  2000/05/30 18:15:10  dav
 // Changed delt to delT.  Should the MPM code use this delT, or the delT it creates in MPMLabel?
 //
