@@ -37,6 +37,7 @@ itcl_class VolVis {
     ################################################################
     
     constructor {config} {
+	puts "WELCOME TO THE CONSTRUCTOR OF VOLVIS"
 	set name VolVis
 	set_defaults
     }
@@ -57,6 +58,7 @@ itcl_class VolVis {
 
 	global $this-minSV $this-maxSV
 	global $this-project $this-processors
+	global $this-pcmap
 
 	global $this-intervalCount
 	global $this-uiopen
@@ -89,6 +91,7 @@ itcl_class VolVis {
 
 	set $this-project 1
         set $this-processors 0
+	set $this-pcmap   0
 
 	# set protected variables and globals
 
@@ -126,7 +129,11 @@ itcl_class VolVis {
 
 	set $this-salmon     0
 	set $this-method     0
-	set $this-stepsize   8 
+	set $this-stepsize   8
+
+	set $this-eview-xres 100
+	set $this-eview-yres 100
+	set $this-atten      1
     }
     
     #
@@ -155,7 +162,8 @@ itcl_class VolVis {
 
 	    # create an OpenGL widget
 	    
-	    opengl $w.gl.gl -geometry 600x600 -doublebuffer false -direct true -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 0
+	    opengl $w.gl.gl -geometry 600x600 -doublebuffer true \
+		    -direct true -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 0
 
 	    # every time the OpenGL widget is displayed, redraw it
 	    
@@ -185,9 +193,6 @@ itcl_class VolVis {
 
 	global $this-uiopen
 	
-	set $this-uiopen 1
-	puts "UI open is true"
-	
 	if {[winfo exists $w]} {
 	    raise $w		    
 	    return;
@@ -211,13 +216,18 @@ itcl_class VolVis {
 	radiobutton $w.f.proj.ort -text Orthogonal  -variable $this-project \
 		-value 0
 
-	
+	frame $w.f.pete
+	radiobutton $w.f.pete.pyes -text Use  -variable $this-pcmap \
+		-value 1 -command "$this-c ReadColormap"
+	radiobutton $w.f.pete.pnot -text Dont  -variable $this-pcmap \
+		-value 0 -command "$this-c ReadTransfermap"
+
 	frame $w.f.proc
 
 	radiobutton $w.f.proc.single -text Single   -variable $this-processors\
-		-value 0
+		-value 0 -command "$this-c ControlButtonChanged"
 	radiobutton $w.f.proc.multi  -text Parallel -variable $this-processors\
-		-value 1
+		-value 1 -command "$this-c ControlButtonChanged"
 
 
 	# set the salmon interaction value
@@ -225,28 +235,28 @@ itcl_class VolVis {
 	frame $w.f.salmon_interaction
 
 	radiobutton $w.f.salmon_interaction.none -text None  \
-		-variable $this-salmon -value 0
+		-variable $this-salmon -value 0 -command "$this-c ControlButtonChanged"
 	radiobutton $w.f.salmon_interaction.view -text View  \
-		-variable $this-salmon -value 1
+		-variable $this-salmon -value 1 -command "$this-c ControlButtonChanged"
 	radiobutton $w.f.salmon_interaction.all -text All  \
-		-variable $this-salmon -value 2
+		-variable $this-salmon -value 2 -command "$this-c ControlButtonChanged"
 
 
 	#create the scale
 	    
 	frame $w.f.f -relief groove -borderwidth 2
 	
-	scale $w.f.f.steps -orient horizontal -variable $this-intervalCount \
-		-from 1 -to 40 -label "Slices per processor: " \
-		-showvalue true -tickinterval 10 \
-		-digits 2 -length 5c
+#	scale $w.f.f.steps -orient horizontal -variable $this-intervalCount \
+#		-from 1 -to 40 -label "Slices per processor: " \
+#		-showvalue true -tickinterval 10 \
+#		-digits 2 -length 5c -command "$this-c ControlButtonChanged"
 
 
 #	button $w.f.steps -text "StepSize" -command "$this adjustStepSize"
 	
-	button $w.f.b -text "Redraw" -command "$this-c redraw_all" -fg blue
-	button $w.f.execbutton -text "Execute" -command "$this-c wanna_exec" \
-		-fg blue
+#	button $w.f.b -text "Redraw" -command "$this-c redraw_all" -fg blue
+#	button $w.f.execbutton -text "Execute" -command "$this-c wanna_exec" \
+#		-fg blue
 
 	# place the buttons in a window
 #
@@ -254,21 +264,29 @@ itcl_class VolVis {
 #
 #	pack $w.f.proj.per $w.f.proj.ort -side left -fill x
 
+        pack $w.f.pete.pyes $w.f.pete.pnot -side left -fill x
+
 	pack $w.f.proc.single $w.f.proc.multi -side left -fill x
 
 	pack $w.f.salmon_interaction.none $w.f.salmon_interaction.view  \
 		$w.f.salmon_interaction.all -side left -fill x
 
-	pack $w.f.f.steps -side left -fill x
+#	pack $w.f.f.steps -side left -fill x
 	
 #        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj       \
 #		$w.f.allign $w.f.proc $w.f.salmon_interaction $w.f.methods  \
 #		$w.f.graph  $w.f.steps $w.f.b  $w.f.execbutton              \
 #		-expand yes -fill x -pady 2 -padx 2
 
+#        pack $w.f.viewstuff $w.f.rastersize $w.f.background                 \
+#		$w.f.proc $w.f.salmon_interaction                           \
+#		$w.f.graph  $w.f.f $w.f.b  $w.f.execbutton                  \
+#		-expand yes -fill x -pady 2 -padx 2
+#	pack $w.f
+
         pack $w.f.viewstuff $w.f.rastersize $w.f.background                 \
-		$w.f.proc $w.f.salmon_interaction                           \
-		$w.f.graph  $w.f.f $w.f.b  $w.f.execbutton                  \
+		$w.f.proc $w.f.salmon_interaction $w.f.pete                 \
+		$w.f.graph \
 		-expand yes -fill x -pady 2 -padx 2
 	pack $w.f
 
@@ -280,6 +298,12 @@ itcl_class VolVis {
 	# may be NULL and cause a seg fault.
 	
 	$this transferFunction
+
+	set $this-uiopen 1
+	puts "UI open is true"
+
+        $this get_data
+        $this-c UIOpen
     }
     
 
@@ -403,13 +427,14 @@ itcl_class VolVis {
 	    # allow to adjust the eye and look at point, as well
 	    # as the normal vector and the field of view angle.
 	    
-	    makePoint $w.eyep "Eye Point" $view-eyep ""
+	    makePoint $w.eyep "Eye Point" $view-eyep "$this-c ViewChanged"
+	    
 	    pack $w.eyep -side left -expand yes -fill x
 	    
-	    makePoint $w.lookat "Look at Point" $view-lookat ""
+	    makePoint $w.lookat "Look at Point" $view-lookat "$this-c ViewChanged"
 	    pack $w.lookat -side left -expand yes -fill x
 	    
-	    makeNormalVector $w.up "Up Vector" $view-up ""
+	    makeNormalVector $w.up "Up Vector" $view-up "$this-c ViewChanged"
 	    pack $w.up -side left -expand yes -fill x
 
 	    # place the points in a window
@@ -418,7 +443,7 @@ itcl_class VolVis {
 	    scale $w.f.fov -orient horizontal -variable $view-fov \
 		    -from 0 -to 180 -label "Field of View:" \
 		    -showvalue true -tickinterval 90 \
-		    -digits 3 
+		    -digits 3  -command "$this-c ViewChanged"
 
 	    pack $w.f.fov -expand yes -fill x -side bottom
 	    pack $w.f
@@ -489,28 +514,31 @@ itcl_class VolVis {
 	    frame $w.f -relief groove -borderwidth 2
 
 	    scale $w.f.x -orient horizontal -variable $this-eview-xres \
-		    -from 100 -to 600 -label "Horizontal:" \
+		    -from 100 -to 600 -label "Raster Size:" \
 		    -showvalue true -tickinterval 100 \
-		    -digits 3 -length 12c
+		    -digits 3 -length 12c  \
+		    -command "$this-c XRasterChanged"
 	    
-	    scale $w.f.y -orient horizontal -variable $this-eview-yres \
-		    -from 100 -to 600 -label "Vertical:" \
-		    -showvalue true -tickinterval 100 \
-		    -digits 3 -length 12c
+	    scale $w.f.y -orient horizontal -variable $this-atten \
+		    -from 1 -to 30 -label "Linear Attenuation" \
+	    -showvalue true -tickinterval 5 \
+		    -digits 3 -length 12c  \
+		    -command "$this-c LinearAChanged"
 
 	    scale $w.f.ss -orient horizontal -variable $this-stepsize \
 		    -from 1 -to 30 -label "Step Size" \
 		    -showvalue true -tickinterval 5 \
-		    -digits 2 -length 12c
+		    -digits 2 -length 12c           \
+		    -command "$this-c SSChanged"
 
 	    # place the scales in a window
 	    
-	    pack $w.f.x $w.f.y $w.f.ss -expand yes -fill x
+	    pack $w.f.x  $w.f.y $w.f.ss -expand yes -fill x
 	    pack $w.f
 
 	}
     }
-    
+
     #
     #
     #
@@ -546,17 +574,17 @@ itcl_class VolVis {
 	    scale $w.f.red -orient horizontal -variable $this-eview-bg-r \
 		    -from 0 -to 255 -label "Red" \
 		    -showvalue true -tickinterval 100 \
-		    -digits 3 -length 120
+		    -digits 3 -length 120 -command "$this-c RBackgroundChanged"
 	    
 	    scale $w.f.green -orient horizontal -variable $this-eview-bg-g \
 		    -from 0 -to 255 -label "Green" \
 		    -showvalue true -tickinterval 100 \
-		    -digits 3 -length 120
+		    -digits 3 -length 120 -command "$this-c GBackgroundChanged"
 	    
 	    scale $w.f.blue -orient horizontal -variable $this-eview-bg-b \
 		    -from 0 -to 255 -label "Blue" \
 		    -showvalue true -tickinterval 100 \
-		    -digits 3 -length 120
+		    -digits 3 -length 120 -command "$this-c BBackgroundChanged"
 
 	    # place the scales in a window
 	    
@@ -899,6 +927,13 @@ itcl_class VolVis {
 
 	ReportPosition $w.main.pos.position $CanvasWidth 20
 
+	#### create the "updated" button
+
+	frame $w.main.updated
+	button $w.main.updated.b -text "Changed"   \
+		-command "$this get_data; $this-c TMChanged"
+	pack $w.main.updated.b -expand yes -fill both
+
 	pack $w.main.top.entireSideRuler $w.main.top.gcanvas \
 		-side right -anchor nw
 
@@ -907,8 +942,9 @@ itcl_class VolVis {
 
 	pack $w.main.pos.position -side right -anchor nw
 
-	pack $w.main.top $w.main.bot $w.main.pos -side top
+	pack $w.main.top $w.main.bot $w.main.pos $w.main.updated -side top
 	pack $w.main
+
     }
 
     method ReportPosition { where width height } {
