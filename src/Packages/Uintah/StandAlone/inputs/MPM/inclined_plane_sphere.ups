@@ -95,34 +95,34 @@
     <Grid>
         <BoundaryConditions>
                  <Face side = "x-">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
                            <value> [0.0,0.0,0.0] </value>
-                        </BCType>
+                      </BCType>
                 </Face>
                 <Face side = "x+">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
                              <value> [0.0,0.0,0.0] </value>
-                        </BCType>
+                      </BCType>
                 </Face>
                 <Face side = "y-">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
                            <value> [0.0,0.0,0.0] </value>
-                        </BCType>
+                      </BCType>
                 </Face>
                 <Face side = "y+">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
                             <value> [0.0,0.0,0.0] </value>
-                        </BCType>
+                      </BCType>
                 </Face>
                 <Face side = "z-">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
                             <value> [0.0,0.0,0.0] </value>
-                        </BCType>
+                      </BCType>
                 </Face>
                 <Face side = "z+">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                      <BCType id = "all" label = "Velocity" var = "Dirichlet">
                             <value> [0.0,0.0,0.0] </value>
-                        </BCType>
+                      </BCType>
                 </Face>
         </BoundaryConditions>
 	<Level>

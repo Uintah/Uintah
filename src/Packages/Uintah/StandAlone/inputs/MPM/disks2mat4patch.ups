@@ -99,31 +99,32 @@
 	
     <Grid>
 	<BoundaryConditions>
-		 <Face side = "x-">
-                        <BCType var = "Dirichlet" label = "Velocity">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "x+">
-                        <BCType var = "Dirichlet" label = "Velocity">
-			     <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "y-">
-                        <BCType var = "Dirichlet" label = "Velocity">
-                           <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>                  
-		<Face side = "y+">
-                        <BCType var = "Dirichlet" label = "Velocity">            			    <value> [0.0,0.0,0.0] </value>
-                        </BCType>
-                </Face>
-                <Face side = "z-">
-                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>
-                <Face side = "z+">
-                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
-                </Face>                           
+	  <Face side = "x-">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+             </BCType>
+         </Face>
+         <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+		   <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+         <Face side = "y-">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>                  
+	 <Face side = "y+">
+           <BCType id = "all" var = "Dirichlet" label = "Velocity">  
+                  <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                          
 	</BoundaryConditions>
 	<Level>
 	    <Box label = "1">
