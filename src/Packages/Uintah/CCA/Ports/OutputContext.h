@@ -39,13 +39,14 @@ namespace Uintah {
     
    class OutputContext {
    public:
-      OutputContext(int fd, long cur, ProblemSpecP varnode, bool outputDoubleAsFloat = false)
-	: fd(fd), cur(cur), varnode(varnode), outputDoubleAsFloat(outputDoubleAsFloat)
+      OutputContext(int fd, const char* filename, long cur, ProblemSpecP varnode, bool outputDoubleAsFloat = false)
+	: fd(fd), filename(filename), cur(cur), varnode(varnode), outputDoubleAsFloat(outputDoubleAsFloat)
       {
       }
       ~OutputContext() {}
 
       int fd;
+      const char* filename;
       long cur;
       ProblemSpecP varnode;
       bool outputDoubleAsFloat;

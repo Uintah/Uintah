@@ -33,13 +33,14 @@ namespace Uintah {
     
    class InputContext {
    public:
-      InputContext(int fd, long cur)
-	 : fd(fd), cur(cur)
+      InputContext(int fd, const char* filename, long cur)
+	 : fd(fd), filename(filename), cur(cur)
       {
       }
       ~InputContext() {}
 
       int fd;
+      const char* filename;
       long cur;
    private:
       InputContext(const InputContext&);
