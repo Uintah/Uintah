@@ -27,11 +27,3 @@ ostream& operator<<(ostream& out, const IntVector& v)
   out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
   return out;
 }
-
-namespace junk {
-void foo()
-{
-  IntVector id;
-  std::cerr << id;
-}
-}
