@@ -1,0 +1,155 @@
+#
+# Sample .scirunrc file.
+#
+# All variables in this file have been commented out or set
+# to their default values.  The first portion of this file
+# includes a list of environment variables that can be either
+# set in your shell or here.  If you set these variables in 
+# your shell, they will override the values in this file.
+#
+# The second section includes GUI preferences that may only
+# be set in this file.
+#
+# Lines the begin with '#' are commented out.  Environment
+# type variables must use the syntax:
+#
+#    Enviro_Var_Name = Value
+#
+# GUI preferences use this syntax:
+#    GuiSetting <true,1,on,yes|false,0,off,no>
+#
+
+#################################################################################
+#### ENVIRONMENT VARIABLES SECTION ##############################################
+#
+# REMEMBER, if these variables are set in your shell environment, they will
+# override the valuse in this file.
+
+# Flips the XY values of the render window. (Not 100% sure on this one...)
+#
+# FLIP_CAM_MANIP = false
+
+# The following environment variables can be set in order to help
+# monitor and control the allocation of memory.  The environment
+# variables are ONLY USED if DISABLE_SCI_MALLOC was NOT defined when
+# SCIRun was configured.  If DISABLE_SCI_MALLOC is defined, then
+# SCIRun will use the built in new, free, alloc, etc and will ignore
+# these variables:
+#
+# MALLOC_STRICT: Places markers in unused memory and uses them to
+#  verify memory integrity.  Unless you wish to check memory integrity
+#  explicitly using the "audit()" function, MALLOC_LAZY should NOT be
+#  set.
+#
+# MALLOC_STRICT = false
+#
+# MALLOC_LAZY: By default, memory is audited for problems on each
+#  allocation and deallocation.  If MALLOC_LAZY is set, then auditing
+#  is turned off.  This can speed up code that allocates and
+#  deallocates memory frequently.
+#
+# MALLOC_LAZY = false
+#
+# MALLOC_TRACE [filename]: If MALLOC_TRACE is set, then every memory
+#  allocation, reallocation, and deallocation will be logged.  If
+#  "filename" is not provided, this information will be printed to
+#  "stderr".
+#
+# MALLOC_TRACE = trace.out
+#
+# MALLOC_STATS [filename]: If MALLOC_STATS is set, when SCIRun exits,
+#  it will output a list of statistics regarding memory usage during
+#  the run.  This includes the number of alloc/free calls, the amount
+#  of fragmentation, the amount of memory that is free and that is in
+#  use, etc.  If "filename" is not provided, then "stderr" is used.
+#
+# MALLOC_stats = stats.out
+
+#
+# The following variables should not be necessary in most situations.
+#
+# Path to use in searching for package libraries.
+# SCIRUN_PACKAGE_LIB_PATH = /path/to/package/libs
+#
+# 
+# SCIRUN_PACKAGE_SRC_PATH = /path/to/package/src
+#
+# The format of SCIRUN_LOAD_PACKAGE is a comma seperated list of
+# package names.  This list specifies the package libraries to load
+# when SCIRun is first brought up.
+#
+# SCIRUN_LOAD_PACKAGE = BioPSE,Uintah,Teem
+#
+
+# Location that 'Reader' modules will default to.
+#
+# SCIRUN_DATA    = /usr/sci/data/SCIRunData/1.20.1
+
+# Name of data set in SCIRUN_DATA to default to
+#
+# SCIRUN_DATASET = sphere
+
+# Location to build 'on the fly' .o and .so files.
+#
+# SCIRUN_ON_THE_FLY_LIBS_DIR = $HOME/on-the-fly-libs
+
+# Command to run when SCIRun dies and the user chooses
+# to run a debugger.
+#
+# SCI_DBXCOMMAND = "dbx"
+
+#
+# SCI_DEBUG
+
+# Default action to take if scirun crashes.
+# SCI_EXCEPTIONMODE = ask
+
+# If set, adds SCI copyright to any SCI .net files that are created.
+# SCI_INSERT_NET_COPYRIGHT = false
+
+# Turns off the splash screen.
+# SCI_NOSPLASH = false
+
+# On SGIs, override the system setting for number of processors on
+# machine.
+# 
+# SCI_NPROCESSORS = 1
+
+# Set if regression testing is being done.  Will cause SCIRun to exit
+# after producing an image.
+#
+# SCI_REGRESSION_TESTING = false
+
+# Action to take when a signal interrupts scirun.
+#
+# SCI_SIGNALMODE = ask
+
+# Turns off the SCI Trivial Allocator
+#
+# SCI_TA_DISABLE = true
+
+# Turns off the SCI Signal handlers.
+#
+# THREAD_NO_CATCH_SIGNALS = true
+
+# Debugging flag that, when turned on, shows information about the
+# initialization of the thread library.
+#
+# THREAD_SHOWINIT = true
+
+
+#################################################################################
+#### GUI PREFERENCES SECTION ####################################################
+#
+# GUI Preferences are detailed in: ./SCIRun/src/Dataflow/GUI/GuiPreferences.tcl
+
+### Allows the user to tell a module to fetch the GUI from wherever it
+#   happens to be on the screen and bring it to the mouse, and then
+#   return it to its previous location.
+
+UseGuiFetch on
+
+### Makes GUIs appear near the mouse on GUI creation.
+ 
+MoveGuiToMouse true
+
