@@ -165,7 +165,7 @@ CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
     mag_field = interp_value_[proc];
 
     Vector normal;
-    normal = Point(0,0,0) - pt;//detfld->value(ind);
+    normal = Point(0,0,0) - pt;//detfld_->value(ind);
     // start of B(P) stuff
 
     PFieldNIter dip_iter, dip_end;
@@ -193,8 +193,8 @@ CalcFMField<ElecField, CondField, PointField>::calc_parallel(int proc,
     // end of B(P) stuff
     const double one_over_4_pi = 1.0 / (4 * M_PI);
     pair<double, Vector> p;
-    p.first = Dot(mag_field, normal);
     mag_field *= one_over_4_pi;
+    p.first = Dot(mag_field, normal);
     p.second  = mag_field;
 
     //cout <<  "scalar: " << p.first << endl;
@@ -305,8 +305,12 @@ CalcFMField<ElecField, CondField, PointField>::set_parallel_data(
       PFieldNIndex ind = *fld_iter; 
       create_algo->set_val_scalar(magnitudes, ind, dat[i].first);
       fout->set_value(dat[i].second, ind);
+      //cout << "@ " << (unsigned)ind << " " << dat[i].first << endl; 
+      //cout << "@ " << (unsigned)ind << " " << dat[i].second << endl; 
       ++fld_iter; ++i;
     }
+    //cout << "set " << i << " values" << endl;
+    //cout << "vector has " << dat.size() << " values" << endl;
   }
 }  
 
@@ -323,7 +327,7 @@ CalcFMField<ElecField, CondField, PointField>::get_parallel_iter(int np)
     PFieldNIter iter, end;
     mesh->begin(iter);
     mesh->end(end);
-    //    cout << "begin end total: " << (unsigned)(*iter) << ", " 
+    //cout << "begin end total: " << (unsigned)(*iter) << ", " 
     // << (unsigned)(*end) << endl;
     typename PointField::mesh_type::Node::size_type sz;
     mesh->size(sz);
@@ -411,7 +415,6 @@ CalcFMField<ElecField, CondField, PointField>::interpolate(int proc, Point p)
       
       Vector valueJXR = Cross(c.cur_density_, radius);
       double length = radius.length();
-      
 
       interp_value_[proc] += ((valueJXR / (length * length * length)) * 
 			      c.volume_); 
