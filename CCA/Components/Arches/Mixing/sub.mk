@@ -11,6 +11,7 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
                 $(SRCDIR)/MixRxnTableInfo.cc $(SRCDIR)/MixRxnTable.cc \
 		$(SRCDIR)/PDFMixingModel.cc $(SRCDIR)/MeanMixingModel.cc \
 		$(SRCDIR)/FlameletMixingModel.cc \
+		$(SRCDIR)/StaticMixingTable.cc \
 		$(SRCDIR)/Integrator.cc $(SRCDIR)/PDFShape.cc \
 		$(SRCDIR)/BetaPDFShape.cc \
 		$(SRCDIR)/ReactionModel.cc \
