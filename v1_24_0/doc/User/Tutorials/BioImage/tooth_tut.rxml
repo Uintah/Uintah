@@ -154,11 +154,27 @@ DEALINGS IN THE SOFTWARE.
     <para>To add a cropping filter, click the "Crop" button.  A new
     window will appear immediately below the Resample filter.  Also,
     notice that a set of boxes appears over the dataset in the 2D
-    Viewers. The extents of the various boxes present a visual
+    Viewers.
+    </para>
+    <figure id="fig.crop_module_added">
+      <title>Adding a crop filter</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Adding a crop filter.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/crop_module_added.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/crop_module_added.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+    <para>The extents of the various boxes present a visual
     indication of the area of the dataset that will remain after the
     application of the Cropping filter.  The small yellow circles at
     the corners can be clicked-and-dragged in order to interactively
-    change the size of the cropping filter. 
+    change the size of the cropping filter as seen in <xref linkend="fig.crop_module_added"/>
     </para>
     <para>
       Section <xref linkend="chap.filters"/>
@@ -399,21 +415,6 @@ DEALINGS IN THE SOFTWARE.
 	      </imageobject>
 	    </mediaobject>
 	  </figure>
-	  <figure id="fig.enamel_window_level_view">
-	    <title>Enamel epmhasized with window and level</title>
-	    <mediaobject>
-	      <textobject>
-	        <phrase>Enamel emphasized with window and level.</phrase>
-	      </textobject>
-	      <imageobject>
-	      <imagedata fileref="Figures/enamel_window_level_view.eps" align="center" format="EPS"/>
-	      </imageobject>
-	      <imageobject>
-	      <imagedata fileref="Figures/enamel_window_level_view.jpg" align="center" format="JPG"/>
-	      </imageobject>
-	    </mediaobject>
-	  </figure>
-	  
 	</section>
       </section><!-- Slice Planes -->
     </section><!-- The 2D Viewers -->
@@ -483,7 +484,7 @@ DEALINGS IN THE SOFTWARE.
 	    To turn on Volume Rendering, select the Volume Rendering tab and put a checkmark in
 	    the box labelled "Show Volume Rendering".
 	  </para>
-	  <figure id="fig.show_vol_ren_button"><title>Turning on Volume Rendering</title>
+	  <figure id="fig.volrender_tab"><title>Turning on Volume Rendering</title>
 	    <mediaobject>
 	      <textobject>
 		<phrase>Turning on Volume Rendering</phrase>
