@@ -57,6 +57,20 @@ private:
   GuiInt    autoexec_;
   GuiInt    autoinvert_;
   GuiString exec_mode_;
+  GuiDouble center_x_;
+  GuiDouble center_y_;
+  GuiDouble center_z_;
+  GuiDouble right_x_;
+  GuiDouble right_y_;
+  GuiDouble right_z_;
+  GuiDouble down_x_;
+  GuiDouble down_y_;
+  GuiDouble down_z_;
+  GuiDouble in_x_;
+  GuiDouble in_y_;
+  GuiDouble in_z_;
+  GuiDouble scale_;
+  bool      first_pass_;
   int  last_input_generation_;
   int  last_clip_generation_;
   ClipperHandle clipper_;
@@ -65,6 +79,8 @@ private:
   FieldHandle ofield_;
 
   bool bbox_similar_to(const BBox &a, const BBox &b);
+  // check to see if any of the Points are not the default of -1
+  bool points_differ();
 
 public:
   ClipField(GuiContext* ctx);
@@ -85,6 +101,20 @@ ClipField::ClipField(GuiContext* ctx)
     autoexec_(ctx->subVar("autoexecute")),
     autoinvert_(ctx->subVar("autoinvert")),
     exec_mode_(ctx->subVar("execmode")),
+    center_x_(ctx->subVar("center_x")),
+    center_y_(ctx->subVar("center_y")),
+    center_z_(ctx->subVar("center_z")),
+    right_x_(ctx->subVar("right_x")),
+    right_y_(ctx->subVar("right_y")),
+    right_z_(ctx->subVar("right_z")),
+    down_x_(ctx->subVar("down_x")),
+    down_y_(ctx->subVar("down_y")),
+    down_z_(ctx->subVar("down_z")),
+    in_x_(ctx->subVar("in_x")),
+    in_y_(ctx->subVar("in_y")),
+    in_z_(ctx->subVar("in_z")),
+    scale_(ctx->subVar("scale")),
+    first_pass_(true),
     last_input_generation_(0),
     last_clip_generation_(0),
     widgetid_(0),
@@ -137,6 +167,19 @@ ClipField::bbox_similar_to(const BBox &a, const BBox &b)
     check_ratio(a.min().z(), b.min().z(), 0.5, 2.0);
 }
 
+bool
+ClipField::points_differ()
+{
+  reset_vars();
+  if (center_x_.get() != -1 || center_y_.get() != -1 || center_z_.get() != -1 ||
+      right_x_.get() != -1 || right_y_.get() != -1 || right_z_.get() != -1 ||
+      down_x_.get() != -1 || down_y_.get() != -1 || down_z_.get() != -1 ||
+      in_x_.get() != -1 || in_y_.get() != -1 || in_z_.get() != -1) {
+    return true;
+  }
+  return false;
+}
+
 
 void
 ClipField::execute()
@@ -183,7 +226,33 @@ ClipField::execute()
 
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-  if (!bbox_similar_to(last_bounds_, bbox) || exec_mode_.get() == "reset")
+  if (first_pass_ && points_differ()) {
+    Point center(center_x_.get(), center_y_.get(), center_z_.get());
+    Point right(right_x_.get(), right_y_.get(), right_z_.get());
+    Point down(down_x_.get(), down_y_.get(), down_z_.get());
+    Point in(in_x_.get(), in_y_.get(), in_z_.get());
+
+    box_->SetScale(scale_.get());
+    box_->SetPosition(center, right, down, in);
+
+    GeomGroup *widget_group = scinew GeomGroup;
+    widget_group->add(box_->GetWidget());
+
+    GeometryOPort *ogport=0;
+    ogport = (GeometryOPort*)get_oport("Selection Widget");
+    if (!ogport) {
+      error("Unable to initialize oport 'Selection Widget'.");
+      return;
+    }
+    widgetid_ = ogport->addObj(widget_group, "ClipField Selection Widget",
+			       &widget_lock_);
+    ogport->flushViews();
+
+    last_bounds_ = bbox;
+    // Force clipper to sync with new widget.
+    if (clipper_.get_rep() && !clipper_->mesh_p()) { clipper_ = 0; }
+    first_pass_ = false;
+  }  else if (!bbox_similar_to(last_bounds_, bbox) || exec_mode_.get() == "reset")
   {
     Point bmin = bbox.min();
     Point bmax = bbox.max();
@@ -232,6 +301,7 @@ ClipField::execute()
     last_bounds_ = bbox;
     // Force clipper to sync with new widget.
     if (clipper_.get_rep() && !clipper_->mesh_p()) { clipper_ = 0; }
+    first_pass_ = false;
   }
 
   if (!clipper_.get_rep())
@@ -333,13 +403,30 @@ ClipField::widget_moved(bool last)
 {
   if (last)
   {
+    if (!first_pass_) {
+      Point center, right, down, in;
+      box_->GetPosition(center, right, down, in);
+      center_x_.set(center.x());
+      center_y_.set(center.y());
+      center_z_.set(center.z());
+      right_x_.set(right.x());
+      right_y_.set(right.y());
+      right_z_.set(right.z());
+      down_x_.set(down.x());
+      down_y_.set(down.y());
+      down_z_.set(down.z());
+      in_x_.set(in.x());
+      in_y_.set(in.y());
+      in_z_.set(in.z());
+      scale_.set(box_->GetScale());
+    }
     autoexec_.reset();
     if (autoexec_.get())
     {
       exec_mode_.set("execute");
       want_to_execute();
     }
-  }
+  } 
 }
 
 
