@@ -54,8 +54,8 @@ public:
     return d_foreign;
   }
 
-  void emit(OutputContext&, string compressionMode);
-  void read(InputContext&, long end, string compressionMode);
+  void emit(OutputContext&, const string& compressionModeHint);
+  void read(InputContext&, long end, const string& compressionMode);
 
   virtual void emitNormal(ostream& out, DOM_Element varnode) = 0;
   virtual void readNormal(istream& in) = 0;
@@ -82,6 +82,11 @@ private:
   Variable(const Variable&);
   Variable& operator=(const Variable&);
 
+  // Compresses the string pointed to by pUncompressed and but the
+  // resulting compressed data into the string pointed to by pBuffer.
+  // Returns the pointer to whichever one is shortest and erases the
+  // other one.
+  string* gzipCompress(string* pUncompressed, string* pBuffer);
   bool d_foreign;
 };
 
