@@ -37,30 +37,49 @@ namespace Uintah {
       enum Basis {
 	 None,
 	 Cell,
-	 Node
+	 Node,
+	 Particle
       };
-      TypeDescription(bool reductionvar, Basis basis);
 
-      bool isReductionVariable() const {
-	 return d_reductionvar;
-      }
-      Basis getBasis() const {
-	 return d_basis;
-      }
+     enum Type { 
+       Scalar,
+       Point,
+       Vector,
+       Tensor,
+       Other 
+     };
 
-   private:
-      bool d_reductionvar;
-      Basis d_basis;
-      ~TypeDescription();
 
-      TypeDescription(const TypeDescription&);
-      TypeDescription& operator=(const TypeDescription&);
-      
-   };
+     TypeDescription(bool reductionvar, Basis basis,
+		     Type type = TypeDescription::Other);
+     
+     bool isReductionVariable() const {
+       return d_reductionvar;
+     }
+     Basis getBasis() const {
+       return d_basis;
+     }
+     Type getType() const {
+       return d_type;
+     }
+
+     private:
+       bool d_reductionvar;
+       Basis d_basis;
+       Type d_type;
+       ~TypeDescription();
+       
+       TypeDescription(const TypeDescription&);
+       TypeDescription& operator=(const TypeDescription&);
+       
+     };
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.2  2000/05/18 18:41:14  kuzimmer
+// Added Particle to Basis enum, created Type enum with Scalar,Point,Vector,Tensor,& Other
+//
 // Revision 1.1  2000/05/07 06:02:13  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler
