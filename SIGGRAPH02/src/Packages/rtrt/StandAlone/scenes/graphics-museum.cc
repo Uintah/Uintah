@@ -76,6 +76,7 @@ rtrt -np 14 -eye -10.2111 -16.2099 1.630637 -lookat -11.7826 -20.5142 0.630637 -
 #include <Packages/rtrt/Core/VideoMap.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TrisReader.h>
+#include <Packages/rtrt/Core/GridTris.h>
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -85,25 +86,27 @@ using namespace SCIRun;
 #define SCALE 500
 
 // all the following should be 1 for demos  (0 to speedup for debugging)
-#define IMGSONWALL 0 
+#define IMGSONWALL 0
 #define INSERTDAVID 0
-#define INSERTCEILING 0
+#define INSERTCEILING 1
 #define INSERTVIDEO 0
-#define INSERTMODERNMODELS 0
+#define INSERTMODERNMODELS 1
 #define INSERTHISTORYMODELS 0
+
+#define INSERTHUGEMODELS 0
 
 #if INSERTMODERNMODELS
 
-#define INSERT_CRANK
-#define INSERT_DRAGON
-#define INSERT_TORSO
+//  #define INSERT_CRANK
+//  #define INSERT_DRAGON
+//  #define INSERT_TORSO
 #define INSERT_BUDDHA
-#define INSERT_WELL
-#define INSERT_VENUS
-#define INSERT_BUNNY
-#define INSERT_SPIRAL
-//  #define INSERT_STADIUM
-//  #define INSERT_HEAD
+//  #define INSERT_WELL
+//  #define INSERT_VENUS
+// #define INSERT_BUNNY
+// #define INSERT_SPIRAL
+// #define INSERT_STADIUM
+// #define INSERT_HEAD
 
 #endif
 
@@ -739,7 +742,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   add_north_pedestal (solidg,clearg,
 		      "/usr/sci/data/Geometry/textures/museum/history/years-blur/1989.ppm",
 		      PedPoint+Vector(0,0,ped_ht), Vector(ped_size,ped_size,-ped_ht),
-		      PedPoint+Vector(0,0,ped_ht+gbox_ht), Vector(ped_size,ped_size,-gbox_ht),sign_ratio,scene);
+		      PedPoint+Vector(diff,diff,ped_ht+gbox_ht), Vector(gbox_size,gbox_size,-gbox_ht),sign_ratio,scene);
   Point CopterPt (PedPoint+Vector(0,ped_size,ped_ht));
 
   NorthPoint += Vector(-2*img_div-img_size, 0,0);
@@ -967,8 +970,9 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   WestPoint = Point (-20+IMG_EPS+.1, -27, img_ht+0.4);
 
 #if INSERTVIDEO
-  //  Material* video = new VideoMap ("/usr/sci/data/Geometry/textures/museum/history/morph/huge/sci-morph%d.ppm",1918,10,Color(0.7,.7,.7),20,0,10);
-  Material* video = new VideoMap ("/usr/sci/data/Geometry/textures/museum/history/morph/huge/sci-morph%d.ppm",100,10,Color(0.7,.7,.7),20,0);
+  Material* video = new VideoMap ("/usr/sci/data/Geometry/textures/museum/history/morph/huge/sci-morph%d.ppm",500,5,Color(0.7,.7,.7),20,0,20);
+//    Material* video = new VideoMap ("/usr/sci/data/Geometry/textures/museum/history/morph/huge/sci-morph%d.ppm",1918,10,Color(0.7,.7,.7),20,0,10);
+//    Material* video = new VideoMap ("/usr/sci/data/Geometry/textures/museum/history/morph/huge/sci-morph%d.ppm",100,10,Color(0.7,.7,.7),20,0);
   add_video_on_wall (video,WestPoint+Vector(0.125,0,1.3), Vector(0,2.5,0), 
 		     Vector(0,0,-2.5),historyg); 
 #else
@@ -1527,20 +1531,19 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 
   /* **************** alpha1 helicopter **************** */
   Material* turquoise = new LambertianMaterial(Color(.21,.55,.65));
-  
+//    Material* copter_matl = new MetalMaterial(Color(0.7,0.73,0.8));
+  Material* copter_matl = new Phong(Color(210/255.,180/255.,140/255.),
+				    Color(.2,.2,.2),40);
 
-  l = (new Light(CopterPt+Vector(-1,-1,4),Color(1.,1.,1.),0,0.7));
+  l = (new Light(CopterPt+Vector(1,-1,4),Color(1.,1.,1.),0,0.7));
   l->name_ = "Copter";
   scene->add_per_matl_light (l);
   turquoise->my_lights.add(l);
+  copter_matl->my_lights.add(l);
 
   historyg->add (new Parallelogram(turquoise,
 				   CopterPt+Vector(-diff,-diff,0.001),
 				   Vector(gbox_size,0,0),Vector(0,-gbox_size,0)));
-
-//    Material* copter_matl = new MetalMaterial(Color(0.7,0.73,0.8));
-  Material* copter_matl = new Phong(Color(210/255.,180/255.,140/255.),
-				    Color(.2,.2,.2),40);
 
   Group* copterg;
   // read in the copter geometry
@@ -1559,12 +1562,11 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   Transform copterT;
 
   copterT.pre_translate(-Vector((copter_max.x()+copter_min.x())/2.,
-				(copter_min.y()+copter_max.y())/2.,
+				(copter_min.y()),
 				(copter_max.z()+copter_min.z())/2.)); // center copter over 0
   copterT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-  copterT.pre_rotate(M_PI_2/2.,Vector(0,0,1));  // orient heli
-  copterT.pre_translate(Vector(0,0,copter_min.y()));
-  double copter_scale = .45*2./(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
+  copterT.pre_rotate(5*M_PI_4,Vector(0,0,1));  // orient heli
+  double copter_scale = .4*2./(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
   copterT.pre_scale(Vector(copter_scale,
 			  copter_scale,
 			  copter_scale));
@@ -1587,7 +1589,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
 /* **************** david room **************** */
 
 void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *light2) {
-  Material* david_white = new LambertianMaterial(Color(.8,.75,.7)); 
+  //  Material* david_white = new LambertianMaterial(Color(.8,.75,.7)); 
   //  Material* david_white = new Phong(Color(.8,.75,.7),
   //				    Color(.2,.2,.2),40); 
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
@@ -1651,14 +1653,33 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 
   /*  1 for David, 0 for Bender */
 #if INSERTDAVID
-    Group* davidg = new Group();
-    TriMesh* david_tm = new TriMesh();
-    read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",david_white, david_tm, davidg);
+  int cells=5;
+  int depth=3;
+
+  printf ("\n\n*********************************\n\n");
+  Transform davidT (Point(0,0,0),
+		    Vector(0.001000,0.,0.),
+		    Vector(0.,0.,0.001000),
+		    Vector(0.,-0.001000,0.));
+  davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
+  davidT.print();
+
+  Color bone(0.9608, 0.8706, 0.7020);
+  Material* david_white=new Phong(bone*.6, bone*.6, 100, 0);
+  GridTris* davidg = new GridTris(david_white, cells, depth);
+
+#if INSERTHUGEMODELS
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
+#else
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",davidg,&davidT);  
+#endif
 
   david_white->my_lights.add (l1);
   david_white->my_lights.add (l2);
   david_white->my_lights.add (l3);
   david_white->my_lights.add (l4);
+
+  /*  
   BBox david_bbox;
 
   davidg->compute_bounds(david_bbox,0);
@@ -1666,20 +1687,22 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   Point min = david_bbox.min();
   Point max = david_bbox.max();
   Vector diag = david_bbox.diagonal();
-  /*
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+
+  printf ("\n\n*********************************\n\n");
+  printf("BBox: min: %lf %lf %lf \n\tmax: %lf %lf %lf\n\tDimensions: %lf %lf %lf\n",
 	 min.x(),min.y(), min.z(),
 	 max.x(),max.y(), max.z(),
 	 diag.x(),diag.y(),diag.z());
-  */
-  Transform davidT;
 
+  davidT.load_identity();
   davidT.pre_translate(-Vector((max.x()+min.x())/2.,min.y(),(max.z()+min.z())/2.)); // center david over 0
   davidT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
   davidT.pre_scale(Vector(.001,.001,.001)); // make units meters
   davidT.pre_translate(dav_ped_top.asVector());
-
-  david_tm->transform(davidT);
+  printf ("\n\n*********************************\n\n");
+  davidT.print();
+  
+  davidg->transform(davidT);
 
   david_bbox.reset();
   davidg->compute_bounds(david_bbox,0);
@@ -1688,8 +1711,13 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   max = david_bbox.max();
   diag = david_bbox.diagonal();
 
-  main_group->add(new HierarchicalGrid(davidg,
-				       24,64,64,32,1024,4));
+  printf ("\n\n*********************************\n\n");
+  printf("BBox: min: %lf %lf %lf \n\tmax: %lf %lf %lf\n\tDimensions: %lf %lf %lf\n",
+	 min.x(),min.y(), min.z(),
+	 max.x(),max.y(), max.z(),
+	 diag.x(),diag.y(),diag.z());
+  */
+  main_group->add(davidg);
 
 #else
  Transform bender_trans;
@@ -1933,9 +1961,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   /*  Alpha_1 Crank  */
   Point crank_ped_top(-10,-8,ped_ht);
-  add_pedestal (moderng, 
+  add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/crank-shaft.ppm",
 		crank_ped_top-Vector(half_ped_size,half_ped_size,0),
-		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht),scene);
+		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht),sign_ratio,scene);
 
 #ifdef INSERT_CRANK
   Material* crank_matl = new MetalMaterial(Color(0.7,0.73,0.8));
@@ -1979,24 +2007,39 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   /*  David's head  */
   Point head_ped_top(-10,-11,ped_ht);
-  add_pedestal (moderng, head_ped_top-Vector(half_ped_size,half_ped_size,0),
-		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht),scene);
+  add_pedestal_and_label (moderng, "/usr/sci/data/Geometry/textures/museum/modern/pillar-text/david.ppm",
+			  head_ped_top-Vector(half_ped_size,half_ped_size,0),
+			  Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht),
+			  sign_ratio,scene);
 
 #ifdef INSERT_HEAD
+  int dhead_cells=5;
+  int dhead_depth=3;
+
+  printf ("\n\n********* David Head ************************\n\n");
+  Transform dheadT (Point(0,0,0),
+		    Vector(0.000707,0.000707,0.),
+		    Vector(-0.000707,0.000707,0),
+		    Vector(0.,0.,0.001000));
+  dheadT.pre_translate (Vector(-11.110928,-11.531475,1.015668));
+  //  dheadT.print();
+
   Material *dhead_white = new LambertianMaterial(Color(1,1,1));
-  Group* dheadg = new Group();
-  TriMesh* dhead_tm = new TriMesh();
+  GridTris* dheadg = new GridTris(dhead_white, dhead_cells, dhead_depth);
+  
   l1 = new Light(head_ped_top+Vector(-1,1,1),Color(1.,1.,1.),0,0.7);
   l2 = new Light(head_ped_top+Vector(-1,-1,1),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Head 1";
   l2->name_ = "Head 2";
   scene->add_per_matl_light (l1);
   scene->add_per_matl_light (l2);
-  dhead_white->my_lights.add(l1);
-  dhead_white->my_lights.add(l2);
-  dhead_white->local_ambient_mode=Arc_Ambient;
+  dheadg->my_lights.add(l1);
+  dheadg->my_lights.add(l2);
+  dheadg->local_ambient_mode=Arc_Ambient;
 
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dhead_white, dhead_tm, dheadg);
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color.ply",dheadg,&dheadT);
+
+  /*
   BBox dhead_bbox;
 
   dheadg->compute_bounds(dhead_bbox,0);
@@ -2010,9 +2053,14 @@ void build_modern_room (Group *main_group, Scene *scene) {
   dheadT.pre_scale(Vector(.001,.001,.001)); // make units meters
   dheadT.pre_translate(head_ped_top.asVector());
 
-  dhead_tm->transform(dheadT);
+  printf ("\n\n*********** DAVID HEAD **********************\n\n");
+  dheadT.print();
+  printf ("\n\n*********************************\n\n");
 
+  dhead_tm->transform(dheadT);
   main_group->add(new HierarchicalGrid(dheadg,23,64,64,32,1024,4));
+  */
+  main_group->add(dheadg);
 #endif
 
   // south wall 
@@ -2023,10 +2071,23 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht), sign_ratio,scene);
 
 #ifdef INSERT_DRAGON
+  int dragon_cells=5;
+  int dragon_depth=2;
+
+  printf ("\n\n*********************************\n\n");
+  Transform dragonT (Point(0,0,0),
+		     Vector(0.,-3.375918,0.),
+		     Vector(0.,0.,3.375918),
+		     Vector(-3.375918,0.,0.));
+  dragonT.pre_translate (Vector(-13.015208,-14.020845,0.821603));
+  dragonT.print();
+
   Color dragon_green(.15,.7,.15);
   Material* shiny_green = new Phong(dragon_green,
 				    Color(.2,.2,.2),
 				    60);
+  GridTris* dragong = new GridTris(shiny_green,dragon_cells,dragon_depth);
+
   l1 = new Light(dragon_ped_top+Vector(1,0,1),Color(1.,1.,1.),0,0.7);
   l2 = new Light(dragon_ped_top+Vector(-1,-1,1),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Dragon 1";
@@ -2037,11 +2098,13 @@ void build_modern_room (Group *main_group, Scene *scene) {
   shiny_green->my_lights.add(l2);
   shiny_green->local_ambient_mode=Arc_Ambient;
 
-  // read in the dragon geometry
-  TriMesh* dragon_tm = new TriMesh();
-  Group* dragong = new Group();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res2.ply",shiny_green,dragon_tm,dragong);
+#if INSERTHUGEMODELS
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip.ply",dragong,&dragonT);
+#else
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res2.ply",dragong,&dragonT);
+#endif
   
+  /*
   BBox dragon_bbox;
 
   dragong->compute_bounds(dragon_bbox,0);
@@ -2049,12 +2112,6 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point dmin = dragon_bbox.min();
   Point dmax = dragon_bbox.max();
   Vector ddiag = dragon_bbox.diagonal();
-  /*
-  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
-	 dmin.x(),dmin.y(), dmin.z(),
-	 dmax.x(),dmax.y(), dmax.z(),
-	 ddiag.x(),ddiag.y(),ddiag.z());
-  */
   Transform dragonT;
 
   dragonT.pre_translate(-Vector((dmax.x()+dmin.x())/2.,dmin.y(),(dmax.z()+dmin.z())/2.)); // center dragon over 0
@@ -2065,6 +2122,10 @@ void build_modern_room (Group *main_group, Scene *scene) {
 			   dragon_scale,
 			   dragon_scale));
   dragonT.pre_translate(dragon_ped_top.asVector());
+
+  printf ("\n\n*********** DRAGON **********************\n\n");
+  dragonT.print();
+  printf ("\n\n*********************************\n\n");
 
   dragon_tm->transform(dragonT);
 
@@ -2080,6 +2141,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
 	 dmax.x(),dmax.y(), dmax.z(),
 	 ddiag.x(),ddiag.y(),ddiag.z());
   main_group->add(new Grid(dragong,64));
+  */
+  main_group->add(dragong);
+
 #endif
 
   /* SCI torso */
@@ -2163,12 +2227,25 @@ void build_modern_room (Group *main_group, Scene *scene) {
 			  Vector(2.*half_ped_size,2.*half_ped_size,-0.3*ped_ht), sign_ratio,scene);
 
 #ifdef INSERT_BUDDHA
+  int buddha_cells=5;
+  int buddha_depth=2;
+
+  printf ("\n\n*********************************\n\n");
+  Transform buddhaT (Point(0,0,0),
+		     Vector(0.,6.518254,0.),
+		     Vector(0.,0.,6.518254),
+		     Vector(6.518254,0.,0.));
+  buddhaT.pre_translate (Vector(-17.956413,-12.964477,-0.024539));
+  buddhaT.print();
+
   // read in the buddha geometry
   Color buddha_diff(113./255.,  53./255.,  17./255.);
   Color buddha_spec(180./255.,  180./255.,  180./255.);
   Material* buddha_mat = new Phong(buddha_diff,
 				    buddha_spec,
 				    40);
+  GridTris* buddhag = new GridTris(buddha_mat,buddha_cells,buddha_depth);
+
   l1 = new Light(buddha_ped_top+Vector(1,-1,4),Color(1.,1.,1.),0,0.7);
   l2 = new Light(buddha_ped_top+Vector(1,1,2),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Buddha 1";
@@ -2179,10 +2256,13 @@ void build_modern_room (Group *main_group, Scene *scene) {
   buddha_mat->my_lights.add(l2);
   buddha_mat->local_ambient_mode=Arc_Ambient;
   
-  TriMesh* buddha_tm = new TriMesh();
-  Group* buddhag = new Group();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat,buddha_tm,buddhag);
+#if INSERTHUGEMODELS
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip.ply",buddhag,&buddhaT);
+#else
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddhag,&buddhaT);
+#endif
 
+  /*
   BBox buddha_bbox;
 
   buddhag->compute_bounds(buddha_bbox,0);
@@ -2190,12 +2270,12 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point bmin = buddha_bbox.min();
   Point bmax = buddha_bbox.max();
   Vector bdiag = buddha_bbox.diagonal();
-  /*
+
   printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
 	 bmin.x(),bmin.y(), bmin.z(),
 	 bmax.x(),bmax.y(), bmax.z(),
 	 bdiag.x(),bdiag.y(),bdiag.z());
-  */
+
   Transform buddhaT;
   buddhaT.pre_translate(-Vector((bmax.x()+bmin.x())/2.,bmin.y(),(bmax.z()+bmin.z())/2.)); // center buddha over 0
   buddhaT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
@@ -2205,6 +2285,10 @@ void build_modern_room (Group *main_group, Scene *scene) {
 			   buddha_scale,
 			   buddha_scale));
   buddhaT.pre_translate(buddha_ped_top.asVector());
+
+  printf ("\n\n*********** BUDDHA **********************\n\n");
+  buddhaT.print();
+  printf ("\n\n*********************************\n\n");
 
   buddha_tm->transform(buddhaT);
 
@@ -2219,6 +2303,8 @@ void build_modern_room (Group *main_group, Scene *scene) {
 	 bmax.x(),bmax.y(), bmax.z(),
 	 bdiag.x(),bdiag.y(),bdiag.z());
   main_group->add(new HierarchicalGrid(buddhag,16,16,64,16,1024,4));
+  */
+  main_group->add(buddhag);
 #endif
 
   /*  UNC well */
@@ -2253,12 +2339,26 @@ void build_modern_room (Group *main_group, Scene *scene) {
 #endif
 
   /*  Venus  */
-  Point venus_ped_top(-18,-7,0.2*ped_ht);
+  Point venus_ped_top(-18,-7,0.25*ped_ht);
   add_pedestal_and_label (moderng,"/usr/sci/data/Geometry/textures/museum/modern/pillar-text/venus.ppm",
 			  venus_ped_top-Vector(half_ped_size,half_ped_size,0),
-			  Vector(2.*half_ped_size,2.*half_ped_size,-0.2*ped_ht),sign_ratio,scene);
+			  Vector(2.*half_ped_size,2.*half_ped_size,-0.25*ped_ht),sign_ratio,scene);
+
 #ifdef INSERT_VENUS
+  int venus_cells=5;
+  int venus_depth=2;
+
+  printf ("\n\n*********************************\n\n");
+  Transform venusT (Point(0,0,0),
+		    Vector(5.537701,0.,0.),
+		    Vector(0.,0.,5.537701),
+		    Vector(0.,-5.537701,0.));
+  venusT.pre_translate (Vector(-17.990726,-6.970150,0.335281));
+  venusT.print();
+
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
+  GridTris* venusg = new GridTris(flat_white,venus_cells,venus_depth);
+
   l1 = new Light(venus_ped_top+Vector(1,-0.5,1.9),Color(1.,1.,1.),0,0.6);
   l2 = new Light(venus_ped_top+Vector(0.5,-1,3),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Venus 1";
@@ -2269,11 +2369,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
   flat_white->my_lights.add(l2);
   //  flat_white->local_ambient_mode=Arc_Ambient;
 
-  // read in the venus geometry
-  TriMesh* venus_tm = new TriMesh();
-  Group* venusg = new Group();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white, venus_tm, venusg);
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",venusg,&venusT);
 
+  /*
   BBox venus_bbox;
 
   venusg->compute_bounds(venus_bbox,0);
@@ -2281,12 +2379,12 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point vmin = venus_bbox.min();
   Point vmax = venus_bbox.max();
   Vector vdiag = venus_bbox.diagonal();
-  /*
+
   printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
 	 vmin.x(),vmin.y(), vmin.z(),
 	 vmax.x(),vmax.y(), vmax.z(),
 	 vdiag.x(),vdiag.y(),vdiag.z());
-  */
+
   Transform venusT;
 
   venusT.pre_translate(-Vector((vmax.x()+vmin.x())/2.,vmin.y(),(vmax.z()+vmin.z())/2.)); 
@@ -2294,6 +2392,10 @@ void build_modern_room (Group *main_group, Scene *scene) {
   double ven_scale = .375*2./(sqrt(vdiag.x()*vdiag.x()+vdiag.z()*vdiag.z()));
   venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
   venusT.pre_translate(venus_ped_top.asVector());
+
+  printf ("\n\n*********** VENUS **********************\n\n");
+  venusT.print();
+  printf ("\n\n*********************************\n\n");
 
   venus_tm->transform(venusT);
 
@@ -2309,6 +2411,8 @@ void build_modern_room (Group *main_group, Scene *scene) {
 	 vmax.x(),vmax.y(), vmax.z(),
 	 vdiag.x(),vdiag.y(),vdiag.z());
   main_group->add(new HierarchicalGrid(venusg,16,32,64,8,1024,4));
+  */
+  main_group->add(venusg);
 #endif
 
   // along north wall
@@ -2950,9 +3054,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *solidg = new Group();
   Group *clearg = new Group();
   
-  build_david_room (solidg,scene, DavL1, DavL2);
+  //  build_david_room (solidg,scene, DavL1, DavL2);
   build_history_hall (solidg, clearg, scene, HistoryL0,HistoryL1, HistoryL2); 
-  build_modern_room (solidg,scene);
+  //  build_modern_room (solidg,scene);
 
  /*
   Transform outlet_trans;
@@ -2998,6 +3102,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   all_wall_white->my_lights.add (DavL1);
   all_wall_white->my_lights.add (DavL2);
   all_wall_white->my_lights.add (ModL1);
+  some_wall_white->my_lights.add (HistoryL0);
+  some_wall_white->my_lights.add (HistoryL2);
+  some_wall_white->my_lights.add (DavL1);
+  some_wall_white->my_lights.add (ModL1);
   floor_mat->my_lights.add(HistoryL2);
   floor_mat->my_lights.add(DavL1);
   floor_mat->my_lights.add(DavL2);
@@ -3008,5 +3116,20 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 /* images to be moved to star:
    /home/sci/dmw/stadium/big/alltextures/
 
-*/
 
+3939146/4000880
+Allocating 14640415 grid indices (3.6593 per tri, 0.0599671 per cell)
+
+3719120/4000880
+Allocating 1755864 grid indices (2.01602 per tri, 0.899002 per cell)
+
+789062/870954
+Allocating 1755864 grid indices (2.01602 per tri, 0.899002 per cell)
+
+
+Allocating 1128848 grid indices (2.37074 per tri, 0.57797 per cell)
+
+helicopter
+-eye -10.474 -25.4725 1.7875 -lookat -20.6444 -22.5593 1.7875 -up 0 0 1 -fov 60
+
+*/
