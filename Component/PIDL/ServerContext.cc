@@ -18,6 +18,8 @@
 #include <Component/PIDL/TypeInfo.h>
 #include <Component/PIDL/TypeInfo_internal.h>
 #include <SCICore/Util/NotFinished.h>
+#include <iostream>
+using std::cerr;
 
 using Component::PIDL::ServerContext;
 
@@ -54,6 +56,10 @@ ServerContext::activateEndpoint()
 
 //
 // $Log$
+// Revision 1.3  1999/10/02 07:05:44  sparker
+// Removed print statement
+// Use iostream instead of iostream.h
+//
 // Revision 1.2  1999/09/26 06:12:56  sparker
 // Added (distributed) reference counting to PIDL objects.
 // Began campaign against memory leaks.  There seem to be no more

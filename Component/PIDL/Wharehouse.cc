@@ -116,12 +116,16 @@ int Wharehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
     }
     /* Increment the reference count for this object. */
     obj->_addReference();
-    std::cerr << "Approved connection to " << urlstring << '\n';
+    //std::cerr << "Approved connection to " << urlstring << '\n';
     return GLOBUS_SUCCESS;
 }
 
 //
 // $Log$
+// Revision 1.4  1999/10/02 07:05:44  sparker
+// Removed print statement
+// Use iostream instead of iostream.h
+//
 // Revision 1.3  1999/09/26 06:12:57  sparker
 // Added (distributed) reference counting to PIDL objects.
 // Began campaign against memory leaks.  There seem to be no more
