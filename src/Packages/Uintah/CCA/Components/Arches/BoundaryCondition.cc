@@ -1375,12 +1375,12 @@ BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_pressureINLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
   // changes to make it work for the task graph
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySIVBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySIVBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySIVBCLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySIVBCLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
   for (int ii = 0; ii < d_nofScalars; ii++)
     tsk->requires(Task::NewDW, d_lab->d_scalarINLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
