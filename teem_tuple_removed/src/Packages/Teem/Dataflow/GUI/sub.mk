@@ -53,6 +53,7 @@ SRCS := \
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/Unu1op.tcl\
 	$(SRCDIR)/Unu2op.tcl\
+	$(SRCDIR)/Unu3op.tcl\
 	$(SRCDIR)/UnuAxdelete.tcl\
 	$(SRCDIR)/UnuAxinfo.tcl\
 	$(SRCDIR)/UnuAxinsert.tcl\
@@ -60,6 +61,7 @@ SRCS := \
 	$(SRCDIR)/UnuAxsplit.tcl\
 	$(SRCDIR)/UnuCCadj.tcl\
 	$(SRCDIR)/UnuCCfind.tcl\
+	$(SRCDIR)/UnuCCmerge.tcl\
 	$(SRCDIR)/UnuCmedian.tcl\
 	$(SRCDIR)/UnuConvert.tcl\
 	$(SRCDIR)/UnuCrop.tcl\
@@ -71,6 +73,7 @@ SRCS := \
 	$(SRCDIR)/UnuHisto.tcl\
 	$(SRCDIR)/UnuImap.tcl\
 	$(SRCDIR)/UnuInset.tcl\
+	$(SRCDIR)/UnuJhisto.tcl\
 	$(SRCDIR)/UnuJoin.tcl\
 	$(SRCDIR)/UnuLut.tcl\
 	$(SRCDIR)/UnuMake.tcl\
