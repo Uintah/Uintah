@@ -12,7 +12,7 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-Mutex varLock( "varLock" );
+extern Mutex MPITypeLock;
 
 NCVariableBase::~NCVariableBase()
 {
@@ -25,8 +25,6 @@ NCVariableBase::NCVariableBase()
 void NCVariableBase::getMPIBuffer(BufferInfo& buffer,
 				  const IntVector& low, const IntVector& high)
 {
-  varLock.lock();
-
   const TypeDescription* td = virtualGetTypeDescription()->getSubType();
   MPI_Datatype basetype=td->getMPIType();
   IntVector l, h, s, strides, dataLow;
@@ -41,6 +39,7 @@ void NCVariableBase::getMPIBuffer(BufferInfo& buffer,
   //  cerr << "d = " << d << " strides = " << strides << endl;
 
   MPI_Datatype type1d;
+ MPITypeLock.lock();
   MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
   MPI_Datatype type2d;
   MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
@@ -49,10 +48,8 @@ void NCVariableBase::getMPIBuffer(BufferInfo& buffer,
   MPI_Type_hvector(d.z(), 1, strides.z(), type2d, &type3d);
   MPI_Type_free(&type2d);
   MPI_Type_commit(&type3d);
+ MPITypeLock.unlock();  
   buffer.add(startbuf, 1, type3d, true);
-
-  varLock.unlock();
-
 }
 
 

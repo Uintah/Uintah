@@ -3,9 +3,12 @@
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
 using namespace SCIRun;
+
+extern Mutex MPITypeLock;
 
 SFCZVariableBase::~SFCZVariableBase()
 {
@@ -28,6 +31,7 @@ void SFCZVariableBase::getMPIBuffer(BufferInfo& buffer,
   startbuf += strides.x()*off.x()+strides.y()*off.y()+strides.z()*off.z();
   IntVector d = high-low;
   MPI_Datatype type1d;
+ MPITypeLock.lock();
   MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
   MPI_Datatype type2d;
   MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
@@ -36,5 +40,6 @@ void SFCZVariableBase::getMPIBuffer(BufferInfo& buffer,
   MPI_Type_hvector(d.z(), 1, strides.z(), type2d, &type3d);
   MPI_Type_free(&type2d);
   MPI_Type_commit(&type3d);
+ MPITypeLock.unlock();  
   buffer.add(startbuf, 1, type3d, true);
 }

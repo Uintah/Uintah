@@ -2,8 +2,11 @@
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Core/Util/Assert.h>
+#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
+
+SCIRun::Mutex MPITypeLock( "MPITypeLock" );
 
 BufferInfo::BufferInfo()
 {
@@ -14,12 +17,17 @@ BufferInfo::BufferInfo()
 
 BufferInfo::~BufferInfo()
 {
+ MPITypeLock.lock();
+   
   if(free_datatype)
     MPI_Type_free(&datatype);
   for(int i=0;i<(int)datatypes.size();i++){
     if(free_datatypes[i])
       MPI_Type_free(&datatypes[i]);
   }
+
+ MPITypeLock.unlock();
+ 
   if(sendlist)
     delete sendlist;
 }
@@ -45,6 +53,7 @@ void
 BufferInfo::get_type(void*& out_buf, int& out_count,
 		     MPI_Datatype& out_datatype)
 {
+ MPITypeLock.lock();
   ASSERT(count() > 0);
   if(!have_datatype){
     if(count() == 1){
@@ -67,6 +76,7 @@ BufferInfo::get_type(void*& out_buf, int& out_count,
   out_buf=buf;
   out_count=cnt;
   out_datatype=datatype;
+ MPITypeLock.unlock(); 
 }
 
 Sendlist::~Sendlist()
