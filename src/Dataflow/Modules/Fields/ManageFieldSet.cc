@@ -36,7 +36,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 
 #include <map>

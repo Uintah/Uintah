@@ -45,8 +45,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-using std::cerr;
-
 namespace SCIRun {
 
 

@@ -41,7 +41,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {

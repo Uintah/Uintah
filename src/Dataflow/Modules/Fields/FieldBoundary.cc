@@ -40,7 +40,6 @@
 
 #include <Core/Datatypes/DispatchMesh1.h>
 #include <iostream>
-using std::cerr;
 
 namespace SCIRun {
 

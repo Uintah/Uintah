@@ -37,7 +37,6 @@
 #include <Core/Tester/RigorousTest.h>
 
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 
@@ -274,7 +273,7 @@ ChangeCellType::execute()
   if (!input_->get(input_handle))
     return;
   if (!input_handle.get_rep()) {
-    cerr << "Error: empty field" << endl;
+    error("Error: empty field\n");
     return;
   }
     
@@ -314,7 +313,7 @@ ChangeCellType::execute()
       output_->send(FieldHandle(tvol));
     } 
   } else {
-    cerr << "Error: field must be a LatticeVol\n";
+    error("Error: field must be a LatticeVol\n");
     return;
   }
 }
