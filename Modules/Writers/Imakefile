@@ -3,17 +3,17 @@
 
 OBJS = ColumnMatrixWriter.o  ContourSetWriter.o   \
 	MatrixWriter.o  MeshWriter.o   \
-	MultiMeshWriter.o   ScalarFieldWriter.o   \
+	MultiMeshWriter.o   ScalarFieldWriter.o   SigmaSetWriter.o   \
 	SurfaceWriter.o   VectorFieldWriter.o \
 	TetraWriter.o
 GENSRCS = ColumnMatrixWriter.cc ContourSetWriter.cc  \
 	MatrixWriter.cc MeshWriter.cc  \
-	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
+	MultiMeshWriter.cc  ScalarFieldWriter.cc  SigmaSetWriter.cc  \
 	SurfaceWriter.cc  VectorFieldWriter.cc
 SRCS = $(GENSRCS) TetraWriter.cc
 GENTCLS = ColumnMatrixWriter.tcl ContourSetWriter.tcl \
 	MatrixWriter.tcl MeshWriter.tcl \
-	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
+	MultiMeshWriter.tcl ScalarFieldWriter.tcl SigmaSetWriter.tcl \
 	SurfaceWriter.tcl VectorFieldWriter.tcl
 TCLS = $(GENTCLS) TetraWriter.tcl
 
@@ -67,6 +67,12 @@ ScalarFieldWriter.cc: Writer.cc
 
 ScalarFieldWriter.tcl: Writer.tcl
 	sed 's/TYPE/ScalarField/g' < Writer.tcl > ScalarFieldWriter.tcl
+
+SigmaSetWriter.cc: Writer.cc
+	sed 's/TYPE/SigmaSet/g' < Writer.cc > SigmaSetWriter.cc
+
+SigmaSetWriter.tcl: Writer.tcl
+	sed 's/TYPE/SigmaSet/g' < Writer.tcl > SigmaSetWriter.tcl
 
 SurfaceWriter.cc: Writer.cc
 	sed 's/TYPE/Surface/g' < Writer.cc > SurfaceWriter.cc
