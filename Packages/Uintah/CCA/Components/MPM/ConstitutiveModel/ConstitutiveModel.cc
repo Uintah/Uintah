@@ -84,6 +84,13 @@ ConstitutiveModel::addComputesAndRequires(Task*,
 {
 }
 
+void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task*, 
+                                                        const MPMMaterial*,
+                                                        const PatchSet*) const
+{
+  task->computes(lb->NeedAddMPMMaterialLabel);
+}
+
 void 
 ConstitutiveModel::addSharedCRForExplicit(Task* task,
                                           const MaterialSubset* matlset,
@@ -120,8 +127,17 @@ ConstitutiveModel::computeStressTensor(const PatchSubset*,
                                        const MPMMaterial*,
                                        DataWarehouse*,
                                        DataWarehouse*)
-
 {
+}
+
+void ConstitutiveModel::checkNeedAddMPMMaterial(const PatchSubset*,
+                                                const MPMMaterial*,
+                                                DataWarehouse*,
+                                                DataWarehouse*)
+{
+  double need_add=0.;
+                                                                                
+  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
 }
 
 void 

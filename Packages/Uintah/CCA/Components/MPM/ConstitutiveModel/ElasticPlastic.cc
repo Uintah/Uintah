@@ -1471,6 +1471,28 @@ double ElasticPlastic::getCompressibility()
   return 1.0/d_initialData.Bulk;
 }
 
+void
+ElasticPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
+                                                const MPMMaterial* matl,
+                                                const PatchSet* patch) const
+{
+  task->computes(lb->NeedAddMPMMaterialLabel);
+}
+
+void ElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
+{
+  cout_EP << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
+           << " id = " << matl->getDWIndex() <<  " patch = "
+           << (patches->get(0))->getID();
+
+  double need_add=0.;
+
+  new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
+}
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
 #endif

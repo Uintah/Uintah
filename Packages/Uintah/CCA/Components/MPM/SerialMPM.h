@@ -452,10 +452,18 @@ protected:
 					const PatchSet* patches,
 					const MaterialSet* matls);
 
-   void scheduleCheckNeedAddMaterial(SchedulerP&,
-                                     const LevelP& level,
-                                     const MaterialSet*);
+   void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
+					const PatchSet* patches,
+                                        const MaterialSet*);
                                                                              
+  //////////
+  // Insert Documentation Here:
+  virtual void checkNeedAddMPMMaterial(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
    void scheduleSetNeedAddMaterialFlag(SchedulerP&,
                                        const LevelP& level,
                                        const MaterialSet*);
@@ -487,7 +495,6 @@ protected:
   bool             d_fracture;
   bool             d_with_ice;
   bool             d_with_arches;
-  bool             d_canAddMPMMaterial;
   IntegratorType d_integrator;
 
 private:
