@@ -113,7 +113,7 @@ void CompNeoHook::computeStableTimestep(const Patch* patch,
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
   double c_dil = 0.0;
-  Vector WaveSpeed(0.0,0.0,0.0);
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -140,7 +140,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
   double J,p,IEl,muBar,U,W,se=0.;
   double c_dil=0.0;
-  Vector WaveSpeed(0.0,0.0,0.0);
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double onethird = (1.0/3.0);
   Matrix3 Identity;
 
@@ -365,6 +365,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.25  2000/06/23 22:11:07  guilkey
+// Added hack to the wavespeed to avoid floating point exception in case of no particles
+// on a patch.
+//
 // Revision 1.24  2000/06/19 21:22:33  bard
 // Moved computes for reduction variables outside of loops over materials.
 //

@@ -92,7 +92,7 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
   double c_dil = 0.0;
-  Vector WaveSpeed(0.0,0.0,0.0);
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -126,7 +126,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
   double c_dil = 0.0,se=0.0;
-  Vector WaveSpeed(0.0,0.0,0.0);
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -358,6 +358,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.47  2000/06/23 22:11:07  guilkey
+// Added hack to the wavespeed to avoid floating point exception in case of no particles
+// on a patch.
+//
 // Revision 1.46  2000/06/21 00:35:16  bard
 // Added timestep control.  Changed constitutive constant number (only 3 are
 // independent) and format.

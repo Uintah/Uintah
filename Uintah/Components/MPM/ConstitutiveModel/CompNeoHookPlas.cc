@@ -111,7 +111,7 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
   double c_dil = 0.0;
-  Vector WaveSpeed(0.0,0.0,0.0);
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -150,7 +150,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   double sqtwthds = sqrt(2.0/3.0);
   Matrix3 Identity;
   double c_dil = 0.0,se = 0.;
-  Vector WaveSpeed(0.0,0.0,0.0);
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double U,W;
 
   Identity.Identity();
@@ -412,6 +412,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.30  2000/06/23 22:11:08  guilkey
+// Added hack to the wavespeed to avoid floating point exception in case of no particles
+// on a patch.
+//
 // Revision 1.29  2000/06/19 21:22:33  bard
 // Moved computes for reduction variables outside of loops over materials.
 //
