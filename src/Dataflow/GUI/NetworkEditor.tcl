@@ -44,6 +44,18 @@ set minicanvas ".top.globalViewFrame.canvas"
 global loading
 set loading 0
 
+global inserting
+set inserting 0
+
+global insertPosition
+set insertPosition 0
+
+global modulesBBox
+set modulesBbox {0 0 0 0}
+
+global netedit_savefile
+set netedit_savefile ""
+
 proc resource {} {
 }
 
@@ -63,8 +75,14 @@ proc makeNetworkEditor {} {
         -underline 0 -command "CreateNewModule"
     .main_menu.file.menu add command -label "Save..." -underline 0 \
 	-command "popupSaveMenu"
+    .main_menu.file.menu add command -label "Save As..." -underline 0 \
+	-command "popupSaveAsMenu"
     .main_menu.file.menu add command -label "Load..." -underline 0 \
 	-command "popupLoadMenu"
+    .main_menu.file.menu add command -label "Insert" -underline 0 \
+	-command "popupInsertMenu"
+    .main_menu.file.menu add command -label "Clear" -underline 0 \
+	-command "ClearCanvas"
     .main_menu.file.menu add cascade -label "New" -underline 0\
         -menu .main_menu.file.menu.new
 
@@ -450,14 +468,30 @@ proc addModuleAtMouse { package category module } {
 proc addModuleAtPosition {package category module xpos ypos} {
     global mainCanvasWidth mainCanvasHeight
     global loading
-
+    global inserting
+    
     set mainCanvasWidth 4500
     set mainCanvasHeight 4500
     
-    # create the modules at their relative positions only when not loading from a script.
+    # create the modules at their relative positions only when not loading from a script or inserting.
     
+    if { $inserting == 1 } {
+	global modulesBbox
+	global insertPosition
+	if { $insertPosition == 1 } {
+	    #inserting net at current screen position
+	    set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
+	    set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+	} else {
+	    #inserting net off to the right
+	    set xpos [expr int([expr $xpos+[lindex $modulesBbox 2]])]
+	     set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+	}
+    } else {
+	# place modules as normal
 	set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
 	set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+    }
     
     set modid [netedit addmodule "$package" "$category" "$module"]
     # Create the itcl object
@@ -470,8 +504,11 @@ proc addModuleAtPosition {package category module xpos ypos} {
 	Module $modid -name "$module"
     }
     $modid make_icon .bot.neteditFrame.canvas \
-	             .top.globalViewFrame.canvas $xpos $ypos
+	    .top.globalViewFrame.canvas $xpos $ypos
     update idletasks
+    if { $inserting == 0 } {
+	computeModulesBbox
+    }
     return $modid
 }
 
@@ -514,13 +551,172 @@ proc popupSaveMenu {} {
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
-    set netedit_savefile [ tk_getSaveFile -defaultextension {.net} \
-			       -filetypes $types ]
+    global netedit_savefile
+    if { $netedit_savefile != "" } {
+	saveMacroModules
+	netedit savenetwork  $netedit_savefile
+    } else {
+	global tcl_interactive
+	if { $tcl_interactive == 0 } {
+	    global argv0
+	    # filename specified
+	    set netedit_savefile $argv0
+	} else {
+	    set netedit_savefile [ tk_getSaveFile -defaultextension {.net} \
+		    -filetypes $types ]
+	}
+	if { $netedit_savefile != "" } {
+	    saveMacroModules
+	    netedit savenetwork  $netedit_savefile
+	}
+    }
+}
 
+proc popupSaveAsMenu {} {
+    set types {
+	{{SCIRun Net} {.net} }
+	{{Uintah Script} {.uin} }
+	{{Dataflow Script} {.sr} }
+	{{Other} { * } }
+    } 
+    global netedit_savefile
+    set netedit_savefile [ tk_getSaveFile -defaultextension {.net} \
+	    -filetypes $types ]
     if { $netedit_savefile != "" } {
 	saveMacroModules
 	netedit savenetwork  $netedit_savefile
     }
+}
+
+proc popupInsertMenu {} {
+    global inserting
+    set inserting 1
+    
+    #get the net to be inserted
+    set types {
+	{{SCIRun Net} {.net} }
+	{{Uintah Script} {.uin} }
+	{{Dataflow Script} {.sr} }
+	{{Other} { * } }
+    } 
+    set netedit_loadnet [tk_getOpenFile -filetypes $types ]
+    
+    if { [file exists $netedit_loadnet] } {
+	# get the bbox for the net being inserted by
+	# parsing netedit_loadnet for bbox 
+	global modulesBbox
+	set insertBbox {0 0 4500 4500}
+	set fchannel [open $netedit_loadnet]
+	set curr_line ""
+	set curr_line [gets $fchannel]
+	while { ![eof $fchannel] } {
+	    if { [string match "set bbox*" $curr_line] } {
+		set bbox {0 0 4500 4500}
+		eval $curr_line
+		set insertBbox $bbox
+		break
+	    }
+	    set curr_line [gets $fchannel]
+	}
+	#determine if the inserted net should go on the 
+	#current canvas view or to the right of the bbox
+	global mainCanvasWidth mainCanvasHeight
+	global insertPosition
+	set x [expr [lindex [.bot.neteditFrame.canvas xview] 0]*\
+		$mainCanvasWidth]
+	set y [expr [lindex [.bot.neteditFrame.canvas yview] 0]*\
+		$mainCanvasHeight] 
+	if { $x > [lindex $modulesBbox 2] || $y > [lindex $modulesBbox 3] } {
+	    # far enough down or to the right to fit on current position
+	    set insertPosition 1
+	} else {
+	    set width [expr [lindex $insertBbox 2]-[lindex $insertBbox 0]]
+	    set height [expr [lindex $insertBbox 3]-[lindex $insertBbox 1]]
+	    set startX [expr $x+[lindex $insertBbox 0]]
+	    set endX [expr $startX+$width]
+	    set startY [expr $y+[lindex $insertBbox 1]]
+	    set endY [expr $startY+$height]
+	    if { [expr $startX+$width] < [lindex $modulesBbox 0] || \
+		    [expr $startY+$height] < [lindex $modulesBbox 1] } {
+		# net to be inserted will fit at current position
+		# and not be in bbox
+		set insertPosition 1
+	    } else {
+		global maincanvas
+		global modules
+		if { [info exists modules] == 1} {
+		    set fits 1
+		    foreach m $modules {
+			set curr_coords [$maincanvas coords $m]
+			if { [lindex $curr_coords 0] < $endX && \
+				[lindex $curr_coords 1] > $startX } {
+			    if { [lindex $curr_coords 1] < $endY && \
+				    [lindex $curr_coords 1] > $startY } {
+				set fits 0
+				break
+			    }
+			}
+		    }
+		    if { $fits == 1 } {
+			# enough room within the modulesBbox to
+			# fit the net
+			set insertPosition 1
+		    } else {
+			# insert net to the right
+			set insertPosition 0
+		    }
+		} else {
+		    # insert was first action so put net
+		    # at current position
+		    set insertPosition 1
+		}
+	    }
+	}
+    	loadnet $netedit_loadnet
+    }
+    set inserting 0
+    computeModulesBbox
+}
+
+proc computeModulesBbox {} {
+    global maincanvas
+    global modules
+    set maxx 0
+    set maxy 0
+    
+    set minx 4500
+    set miny 4500
+    
+    global modules
+    if { $modules == "" } {
+	set maxx 0
+	set maxy 0
+	set minx 0
+	set miny 0
+    } 
+    foreach m $modules {
+	set curr_coords [$maincanvas coords $m]
+	
+	#Find $maxx and $maxy
+	if { [lindex [$maincanvas bbox $m] 2] > $maxx} {
+	    set maxx [lindex [$maincanvas bbox $m] 2]
+	}
+	if { [lindex [$maincanvas bbox $m] 3] > $maxy} {
+	    set maxy [lindex [$maincanvas bbox $m] 3]
+	}
+	
+	#Find $minx and $miny
+	
+	if { [lindex $curr_coords 0] <= $minx} {
+	    set minx [lindex $curr_coords 0]
+	}
+	if { [lindex $curr_coords 1] <= $miny} {
+	    set miny [lindex $curr_coords 1]
+	}
+    }
+    
+    global modulesBbox
+    set modulesBbox "$minx $miny $maxx $maxy"
 }
 
 proc popupLoadMenu {} {
@@ -533,11 +729,79 @@ proc popupLoadMenu {} {
     } 
     
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
+    global netedit_savefile
+    set netedit_savefile $netedit_loadnet
     
     if { [file exists $netedit_loadnet] } {
 	loadnet $netedit_loadnet
     }
 }
+
+proc ClearCanvas {} {
+    # destroy all modules
+    global modules
+    foreach m $modules {
+	moduleDestroy .bot.neteditFrame.canvas .top.globalViewFrame.canvas $m
+    }
+    
+    # reset all the NetworkEditor globals to their initial values
+    set mainCanvasWidth    4500.0
+    set mainCanvasHeight   4500.0
+    set miniCanvasWidth     150.0
+    set miniCanvasHeight    150.0
+    set SCALEX [expr $mainCanvasWidth/$miniCanvasWidth]
+    set SCALEY [expr $mainCanvasHeight/$miniCanvasHeight]
+    
+    set mouseX 0
+    set mouseY 0
+    
+    global maincanvas
+    set maincanvas ".bot.neteditFrame.canvas"
+    global minicanvs
+    set minicanvas ".top.globalViewFrame.canvas"
+    
+    global loading
+    set loading 0
+    
+    global inserting
+    set inserting 0
+    
+    global insertPosition
+    set insertPosition 0
+    
+    global modulesBBox
+    set modulesBbox {0 0 0 0}
+    
+    global netedit_savefile
+    set netedit_savefile ""
+
+    #reset Module.tcl variables
+    global connection_list
+    set connection_list ""
+    
+    global selected_color
+    set selected_color darkgray
+    
+    global unselected_color
+    set unselected_color gray
+    
+    global MModuleFakeConnections
+    set MModuleFakeConnections ""
+    
+    global CurrentlySelectedModules
+    set CurrentlySelectedModules ""
+    
+    global CurrentMacroModules
+    set CurrentMacroModules ""
+    
+    global MacroedModules
+    set MacroedModules ""
+    
+    global modules
+    set modules ""
+
+}
+
 
 proc CreateNewModule {} {
     set types {
@@ -1164,11 +1428,4 @@ proc loadMacroModules {group_info} {
 	}
     }   
 }
-
-
-
-
-
-
-
 

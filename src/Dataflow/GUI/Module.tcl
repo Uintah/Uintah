@@ -79,6 +79,7 @@ itcl_class Module {
 	}
 	
 	$msgLogStream destructor
+	foreach i "[info vars $this-*]" {unset $i}
 	destroy $this
     }
     
@@ -2537,9 +2538,6 @@ proc moduleEndDrag {mframe maincanvas} {
     global sel_module_box
 
 
-
-
-
     #Update all network lines on the canvas if a group of modules was moved
     
 
@@ -2590,6 +2588,7 @@ proc moduleEndDrag {mframe maincanvas} {
 
     $maincanvas delete $sel_module_box
 
+    computeModulesBbox
 }
 
 proc configureIPorts {modid} {
@@ -2694,6 +2693,7 @@ proc moduleDestroy {maincanvas minicanvas modid} {
     if {[winfo exists .ui$modid]} {
 	destroy .ui$modid
     }
+    computeModulesBbox
 }
 
 proc moduleDestroySelected {maincanvas minicanvas module} {
@@ -2833,21 +2833,21 @@ proc SelectAll {} {
     }
 }
     
-proc ClearCanvas {} {
-    set maincanvas .bot.neteditFrame.canvas
-    set minicanvas .top.globalViewFrame.canvas
-    global mainCanvasWidth mainCanvasHeight
+#proc ClearCanvas {} {
+#    set maincanvas .bot.neteditFrame.canvas
+#    set minicanvas .top.globalViewFrame.canvas
+#    global mainCanvasWidth mainCanvasHeight
     
-    set overlap [$maincanvas find overlapping 0 0 $mainCanvasWidth \
-	    $mainCanvasHeight] 
-    foreach i $overlap {
-	set s "[$maincanvas itemcget $i -tags]"
+#    set overlap [$maincanvas find overlapping 0 0 $mainCanvasWidth \
+#    $mainCanvasHeight] 
+#    foreach i $overlap {
+#	set s "[$maincanvas itemcget $i -tags]"
 	 
-	if {[$maincanvas type $s] == "window"} {
-	    moduleDestroy $maincanvas $minicanvas $s
-	}
-    }
-}
+#	if {[$maincanvas type $s] == "window"} {
+#	    moduleDestroy $maincanvas $minicanvas $s
+#	}
+#    }
+#}
 
 proc compute_bbox {maincanvas} {
     #Compute and return the coordinated of a bounding box containing all
