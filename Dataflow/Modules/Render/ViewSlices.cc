@@ -1930,8 +1930,10 @@ ViewSlices::bind_slice(NrrdSlice &slice, float *tex, bool filter)
 
   if (!bound || slice.tex_dirty_) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
+#ifndef _WIN32
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#endif
     const GLint filter_mode=((filter&&texture_filter_())?GL_LINEAR:GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
