@@ -16,9 +16,6 @@
 #include <assert.h>
 #include <iosfwd>
 
-#include <stdio.h> // temporary for +=
-#include <stdlib.h> // temporary for +=
-
 class Matrix3 {
  private:
   // data areas
@@ -60,9 +57,7 @@ class Matrix3 {
   inline Matrix3 operator / (const double value);
 
   // modify by adding right hand side
-  inline void operator += (const Matrix3 &m3) { 
-    printf("Matrix3.h: += is broken, fix it\n"); exit(1); 
-  }
+  inline void operator += (const Matrix3 &m3);
 
   // modify by subtracting right hand side
   inline void operator -= (const Matrix3 &m3);
@@ -241,6 +236,18 @@ inline void Matrix3::operator *= (const double value)
 
 }
 
+inline void Matrix3::operator += (const Matrix3 &m3)
+{
+  // Multiply each component of the Matrix3 by the value
+
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+        mat3[i][j] += m3(i,j);
+    }
+  }
+
+}
+
 inline void Matrix3::operator /= (const double value)
 {
   // Divide each component of the Matrix3 by the value
@@ -356,6 +363,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.3  2000/05/05 15:08:30  guilkey
+// Added += operator to Matrix3.
+//
 // Revision 1.2  2000/05/05 06:55:04  dav
 // put in dummy code for Matrix3 += operator so everything would compile
 //
