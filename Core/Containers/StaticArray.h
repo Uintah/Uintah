@@ -62,6 +62,22 @@ public:
   StaticArray(unsigned int size)
     : data_(new T[size]), size_(size) {}
 
+  StaticArray(const StaticArray& array)
+    : data_(new T[array.size_]), size_(array.size_)
+  {
+    for (int i = 0; i < size_; i++)
+      data_[i] = array.data_[i];
+  }
+
+  StaticArray& operator=(const StaticArray& array)
+  {
+    delete[] data_;
+    data_ = new T[array.size_];
+    size_ = array.size_;
+    for (int i = 0; i < size_; i++)
+      data_[i] = array.data_[i];
+  }
+  
   ~StaticArray()
   { delete[] data_; }
 
