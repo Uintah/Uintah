@@ -365,6 +365,8 @@ proc redrawMinicanvas {} {
     global SCALEX SCALEY minicanvas maincanvas mainCanvasWidth mainCanvasHeight
     set w [expr [winfo width $minicanvas]-2]
     set h [expr [winfo height $minicanvas]-2]
+    set w [expr ($w<=0)?1:$w]
+    set h [expr ($h<=0)?1:$h]
     set SCALEX [expr $mainCanvasWidth/$w]
     set SCALEY [expr $mainCanvasHeight/$h]
     updateViewAreaBox
@@ -1235,6 +1237,7 @@ proc sourceSettingsFile {} {
 		1 "set data [showChooseDatasetPrompt $initialdir]"
 		2 { 
 		    displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
+		    uplevel \#0 source "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
 		    return
 		}
 		3 "netedit quit"
