@@ -484,8 +484,11 @@ void MDSPlusDataReader::execute(){
 	    onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
 	    nrrdName += string(":Vector");
 	  } else if (assumesvt_ && join_me.size() == 6) {
-	    onrrd->nrrd->axis[0].kind = nrrdKind3DSymTensor;
-	    nrrdName += string(":Tensor");
+	    onrrd->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+	    nrrdName += string(":Matrix");
+	  } else if (assumesvt_ && join_me.size() == 9) {
+	    onrrd->nrrd->axis[0].kind = nrrdKind3DMatrix;
+	    nrrdName += string(":Matrix");
 	  } else {
 	    onrrd->nrrd->axis[0].kind = nrrdKindDomain;
 	    nrrdName += string(":Scalar");
@@ -911,9 +914,14 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
       nout->nrrd->axis[0].kind = nrrdKind3Vector;
       break;
 	  
-    case 6: // Tensor data
-      nrrdName += ":Tensor";
-      nout->nrrd->axis[0].kind = nrrdKind3DSymTensor;
+    case 6: // Matrix data
+      nrrdName += ":Matrix";
+      nout->nrrd->axis[0].kind = nrrdKind3DSymMatrix;
+      break;
+	  
+    case 9: // Matrix data
+      nrrdName += ":Matrix";
+      nout->nrrd->axis[0].kind = nrrdKind3DMatrix;
       break;
 	  
     default: // treat the rest as Scalar data
