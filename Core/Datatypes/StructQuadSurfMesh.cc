@@ -56,10 +56,10 @@ StructQuadSurfMesh::StructQuadSurfMesh(unsigned int x, unsigned int y)
 
 StructQuadSurfMesh::StructQuadSurfMesh(const StructQuadSurfMesh &copy)
   : ImageMesh(copy),
-    //    points_(copy.points_),
-    //    normals_(copy.normals_),
     synchronized_(copy.synchronized_)
 {
+  points_.copy( copy.points_ );
+  normals_.copy( copy.normals_ );
 }
 
 BBox
@@ -142,12 +142,18 @@ StructQuadSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) con
 }
 
 void
+StructQuadSurfMesh::get_normal(Vector &result,
+			       const Node::index_type &idx ) const
+{
+  result = normals_(idx.i_, idx.j_);
+}
+
+void
 StructQuadSurfMesh::get_center(Point &result,
 			       const Node::index_type &idx) const
 {
   result = points_(idx.i_, idx.j_);
 }
-
 
 void
 StructQuadSurfMesh::get_center(Point &result, Edge::index_type idx) const
@@ -292,13 +298,15 @@ StructQuadSurfMesh::synchronize(unsigned int tosync)
 void
 StructQuadSurfMesh::compute_normals()
 {
-#if 0
-  normals_.resize(points_.size()); // 1 per node
+  normals_.resize(points_.dim1(), points_.dim2()); // 1 per node
 
   // build table of faces that touch each node
-  vector<vector<Face::index_type> > node_in_faces(points_.size());
+  Array2< vector<Face::index_type> >
+    node_in_faces(points_.dim1(), points_.dim2());
+
   //! face normals (not normalized) so that magnitude is also the area.
-  vector<Vector> face_normals(points_.size());
+  Array2<Vector> face_normals((points_.dim1()-1),(points_.dim2()-1));
+
   // Computing normal per face.
   Node::array_type nodes(4);
   Face::iterator iter, iter_end;
@@ -315,35 +323,37 @@ StructQuadSurfMesh::compute_normals()
     get_point(p3, nodes[3]);
 
     // build table of faces that touch each node
-    node_in_faces[nodes[0]].push_back(*iter);
-    node_in_faces[nodes[1]].push_back(*iter);
-    node_in_faces[nodes[2]].push_back(*iter);
-    node_in_faces[nodes[3]].push_back(*iter);
+    node_in_faces(nodes[0].i_,nodes[0].j_).push_back(*iter);
+    node_in_faces(nodes[1].i_,nodes[1].j_).push_back(*iter);
+    node_in_faces(nodes[2].i_,nodes[2].j_).push_back(*iter);
+    node_in_faces(nodes[3].i_,nodes[3].j_).push_back(*iter);
 
     Vector v0 = p1 - p0;
     Vector v1 = p2 - p1;
     Vector n = Cross(v0, v1);
-    face_normals[*iter] = n;
+    face_normals((*iter).i_, (*iter).j_) = n;
 
     ++iter;
   }
+
   //Averaging the normals.
-  vector<vector<Face::index_type> >::iterator nif_iter = node_in_faces.begin();
-  int i = 0;
-  while (nif_iter != node_in_faces.end()) {
-    const vector<Face::index_type> &v = *nif_iter;
+  Node::iterator nif_iter, nif_iter_end;
+  begin( nif_iter );
+  end( nif_iter_end );
+
+  while (nif_iter != nif_iter_end) {
+    vector<Face::index_type> v = node_in_faces((*nif_iter).i_, (*nif_iter).j_);
     vector<Face::index_type>::const_iterator fiter = v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {
-      ave += face_normals[*fiter];
+      ave += face_normals((*fiter).i_,(*fiter).j_);
       ++fiter;
     }
     ave.normalize();
-    normals_[i] = ave; ++i;
+    normals_((*nif_iter).i_, (*nif_iter).j_) = ave;
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
-#endif
 }
 
 #define STRUCT_QUAD_SURF_MESH_VERSION 1

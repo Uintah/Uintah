@@ -119,6 +119,8 @@ public:
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
+  void get_normal(Vector &, const Node::index_type &) const;
+
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
   void get_center(Point &, Edge::index_type) const;
@@ -155,7 +157,7 @@ public:
 
   virtual bool synchronize(unsigned int);
 
-private:
+protected:
   void compute_normals();
   void compute_edge_neighbors(double err = 1.0e-8);
 
