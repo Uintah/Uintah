@@ -205,7 +205,7 @@ Piostream* auto_istream(const clString& filename)
     return auto_istream(inp, filename());
 }
 
-Piostream* auto_istream(int fd)
+Piostream* auto_istream(int/* fd*/)
 {
   // Dd:
   printf("Persistent.cc: auto_istream using fd taken out for now.\n");
@@ -214,7 +214,7 @@ Piostream* auto_istream(int fd)
   return NULL;
 }
 
-Piostream* auto_istream(ifstream* inp, const char *name)
+Piostream* auto_istream(ifstream* /*inp*/, const char */*name*/)
 {
   // Dd:
   printf("Persistent.cc: auto_istream(inp,name) using fd taken out for now.\n");

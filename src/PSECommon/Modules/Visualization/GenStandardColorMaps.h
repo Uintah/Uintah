@@ -59,22 +59,10 @@ public:
   // [in] string as an identifier 
   GenStandardColorMaps(const clString& id); 
 
-  ////////// 
-  //  Constructor taking 
-  //  [in] GenStandardColorMaps for copying 
-  //  [in] deep is a copying flag
-  GenStandardColorMaps(const GenStandardColorMaps&, int deep); 
-
   // GROUP: Destructors: 
   ////////// 
   // Destructor
   virtual ~GenStandardColorMaps(); 
-
-
-  // GROUP: cloning and execution 
-  ////////// 
-  // return a copy
-  virtual Module* clone(int deep); 
 
   ////////// 
   // execution scheduled by scheduler   

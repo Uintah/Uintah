@@ -88,9 +88,7 @@ class FieldFilter : public Module {
 
 public:
     FieldFilter(const clString& id);
-    FieldFilter(const FieldFilter&, int deep);
     virtual ~FieldFilter();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -128,24 +126,8 @@ void FieldFilter::widget_moved(int last) {
     }
 }
 
-FieldFilter::FieldFilter(const FieldFilter& copy, int deep)
-: Module(copy, deep), ox("ox", id, this), oy("oy", id, this),
-  oz("oz",id,this), nx("nx", id, this), ny("ny", id, this), nz("nz", id, this),
-  nMaxX("nMaxX", id, this), nMaxY("nMaxY", id, this), nMaxZ("nMaxZ", id, this),
-  sameInput("sameInput", id, this), filterType("filterType", id, this),
-  range_min_x("range_min_x", id, this), range_min_y("range_min_y", id, this),
-  range_min_z("range_min_z", id, this), range_max_x("range_max_x", id, this),
-  range_max_y("range_max_y", id, this), range_max_z("range_max_z", id, this)
-{
-}
-
 FieldFilter::~FieldFilter()
 {
-}
-
-Module* FieldFilter::clone(int deep)
-{
-    return new FieldFilter(*this, deep);
 }
 
 void FieldFilter::filter(ScalarFieldRGBase* in, ScalarFieldRGBase* out,
@@ -681,6 +663,15 @@ void FieldFilter::buildOversampleMitchellTable(Array2<double> *table,
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:39  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:27  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

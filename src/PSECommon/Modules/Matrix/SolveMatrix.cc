@@ -95,9 +95,7 @@ public:
     void parallel_conjugate_gradient(CGData*, int proc);
     void parallel_bi_conjugate_gradient(CGData*, int proc);
     SolveMatrix(const clString& id);
-    SolveMatrix(const SolveMatrix&, int deep);
     virtual ~SolveMatrix();
-    virtual Module* clone(int deep);
     virtual void execute();
 //     virtual void do_execute();
 
@@ -143,29 +141,9 @@ SolveMatrix::SolveMatrix(const clString& id)
     add_oport(solport);
 }
 
-SolveMatrix::SolveMatrix(const SolveMatrix& copy, int deep)
-: Module(copy, deep), target_error("target_error", id, this),
-  flops("flops", id, this), floprate("floprate", id, this),
-  memrefs("memrefs", id, this), memrate("memrate", id, this),
-  orig_error("orig_error", id, this), current_error("current_error", id, this),
-  method("method", id, this),precond("precond",id,this), iteration("iteration", id, this),
-  maxiter("maxiter", id, this),
-  use_previous_soln("use_previous_soln", id, this),
-  emit_partial("emit_partial", id, this),status("status",id,this),
-  tcl_np("np", id, this)
-{
-    NOT_FINISHED("SolveMatrix::SolveMatrix");
-}
-
 SolveMatrix::~SolveMatrix()
 {
 }
-
-Module* SolveMatrix::clone(int deep)
-{
-    return scinew SolveMatrix(*this, deep);
-}
-
 
 void SolveMatrix::execute()
 {
@@ -1518,6 +1496,15 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:45  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:31  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

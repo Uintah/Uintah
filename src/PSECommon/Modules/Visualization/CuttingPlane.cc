@@ -119,19 +119,10 @@ public:
         //
    CuttingPlane(const clString& id);
 
-        ///////////////////////////
-        //
-        // Constructor taking
-        //    [in] CuttingPlane for copying
-        //    [in] deep a copying flag
-        //
-   CuttingPlane(const CuttingPlane&, int deep);
-
         // GROUP:  Destructor:
         ///////////////////////////
         // Destructor
    virtual ~CuttingPlane();
-   virtual Module* clone(int deep);
 
         // GROUP:  Access functions:
         ///////////////////////////
@@ -191,24 +182,8 @@ CuttingPlane::CuttingPlane(const clString& id)
     m=0;
 }
 
-CuttingPlane::CuttingPlane(const CuttingPlane& copy, int deep)
-: Module(copy, deep), cutting_plane_type("cutting_plane_type",id, this),
-  need_find("need_find",id,this),
-  scale("scale", id, this), offset("offset", id, this),
-  num_contours("num_contours", id, this), where("where", id, this),
-  localMinMaxTCL("localMinMaxTCL", id, this),
-  fullRezTCL("fullRezTCL", id, this), exhaustiveTCL("exhaustiveTCL", id, this)
-{
-   NOT_FINISHED("CuttingPlane::CuttingPlane");
-}
-
 CuttingPlane::~CuttingPlane()
 {
-}
-
-Module* CuttingPlane::clone(int deep)
-{
-   return scinew CuttingPlane(*this, deep);
 }
 
 void CuttingPlane::execute()
@@ -681,6 +656,15 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:04  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

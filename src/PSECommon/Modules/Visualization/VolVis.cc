@@ -333,17 +333,9 @@ public:
   
   VolVis(const clString& id);
 
-  // copy constructor
-  
-  VolVis(const VolVis&, int deep);
-
   // destructor
   
   virtual ~VolVis();
-
-  // clones the VolVis module
-  
-  virtual Module* clone(int deep);
 
   // calculate and display the new image
   
@@ -501,40 +493,6 @@ VolVis::VolVis(const clString& id)
 }
 
 
-
-/**************************************************************
- *
- * copy constructor
- *
- **************************************************************/
-
-VolVis::VolVis(const VolVis& copy, int deep)
-: Module(copy, deep),
-  iEView("eview", id, this),
-  maxSV("maxSV", id, this),
-  minSV("minSV", id, this),
-  projection("project", id, this),
-  Petes("pcmap", id, this),
-  iProc("processors", id, this),
-  intervalCount("intervalCount", id, this),
-  Rsv("Rsv", id, this),
-  Gsv("Gsv", id, this),
-  Bsv("Bsv", id, this),
-  Rop("Rop", id, this),
-  Gop("Gop", id, this),
-  Bop("Bop", id, this),
-  uiopen("uiopen", id, this),
-  salmonData("salmon", id, this),
-  stepSize("stepsize", id, this),
-  Xarray("Xarray", id, this),
-  Yarray("Yarray", id, this),
-  msgs(10)
-{
-  NOT_FINISHED("VolVis::VolVis");
-}
-
-
-
 /**************************************************************
  *
  * destructor
@@ -544,22 +502,6 @@ VolVis::VolVis(const VolVis& copy, int deep)
 VolVis::~VolVis()
 {
 }
-
-
-
-/**************************************************************
- *
- * clones this class
- *
- **************************************************************/
-
-Module*
-VolVis::clone(int deep)
-{
-  return scinew VolVis(*this, deep);
-}
-
-
 
 
 /**************************************************************
@@ -1776,6 +1718,15 @@ VolVis::CalculateRayIncrements ()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:13  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -21,6 +21,7 @@
 
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Util/NotFinished.h>
 #include <tcl.h>
 #include <tk.h>
 #include <GL/gl.h>
@@ -241,7 +242,7 @@ PersistentTypeID GeomTexVolRender::type_id("GeomTexVolRender", "GeomObj",
 					   make_GeomTexVolRender);
 					   
 
-GeomTexVolRender::GeomTexVolRender(Point pts[8])
+GeomTexVolRender::GeomTexVolRender(Point /*pts*/[8])
 :nslice(64),s_alpha(0.5),vol3d(0),map1d(0),map2d(0),id(0),
  quantnvol(0),quantclrs(0),rgbavol(0),quantsz(0),qalwaysupdate(1),
  qupdate(1),usemip(1),doOther(0),other(0)
@@ -592,8 +593,9 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 #endif
 }
 
-bool GeomTexVolRender::saveobj(ostream&, const clString& format, GeomSave*)
+bool GeomTexVolRender::saveobj(ostream&, const clString&, GeomSave*)
 {
+    NOT_FINISHED("GeomTexVolRender::savObj");
   return 0;
 }
 
@@ -609,6 +611,15 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.4  1999/08/18 20:19:54  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.3  1999/08/17 23:50:16  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

@@ -126,19 +126,10 @@ public:
         //
    GenColorMap( const clString& id );
 
-        ///////////////////////////
-        //
-        // Constructor taking
-        //    [in] GenColorMap for copying
-        //    [in] deep a copying flag
-        //
-   GenColorMap( const GenColorMap&, int deep );
-
         // GROUP:  Destructor:
         ///////////////////////////
         // Destructor
    virtual ~GenColorMap();
-   virtual Module* clone( int deep );
 
         // GROUP:  Access functions:
         ///////////////////////////
@@ -272,24 +263,8 @@ GenColorMap::GenColorMap( const clString& id )
 
 }
 
-GenColorMap::GenColorMap( const GenColorMap& copy, int deep )
-: Module(copy, deep),
-  nlevels("nlevels", id, this), tclmat("material", id, this),
-  interp_type("interp_type", id, this), cinterp_type("cinterp_type", id, this),
-  min("min", id, this), max("max", id, this), gen_rangemap("gen_rangemap", id, this),
-  keys(copy.keys), spline(copy.spline), making_map(0)
-{
-   NOT_FINISHED("GenColorMap::GenColorMap");
-}
-
 GenColorMap::~GenColorMap()
 {
-}
-
-Module*
-GenColorMap::clone( int deep )
-{
-    return scinew GenColorMap(*this, deep);
 }
 
 void
@@ -694,6 +669,15 @@ GenColorMap::gen_map( const clString& mt )
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:05  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:48  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

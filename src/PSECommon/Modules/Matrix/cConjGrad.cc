@@ -51,9 +51,7 @@ public:
   TCLstring tcl_status;
 
   cConjGrad(const clString& id);
-  cConjGrad(const cConjGrad&, int deep);
   virtual ~cConjGrad();
-  virtual Module* clone(int deep); 
   virtual void execute();
   virtual void tcl_command(TCLArgs& args, void* userdata);
   
@@ -97,31 +95,9 @@ cConjGrad::cConjGrad(const clString& id)
 
 //----------------------------------------------------------
 
-cConjGrad::cConjGrad(const cConjGrad& copy, int deep)
-  : Module(copy, deep),
-    tcl_max_it("tcl_max_it",id,this),
-    tcl_it("tcl_it",id,this),
-    tcl_max_err("tcl_max_err",id,this),
-    tcl_err("tcl_err",id,this),
-    tcl_precond("tcl_precond",id,this),
-    tcl_status("tcl_status",id,this)
-
-
-{}
-
-//------------------------------------------------------------
-
 cConjGrad::~cConjGrad(){}
 
 //-------------------------------------------------------------
-
-Module* cConjGrad::clone(int deep)
-{
-  return new cConjGrad(*this, deep);
-}
-
-
-//--------------------------------------------------------------
 
 void cConjGrad::execute()
 {
@@ -267,6 +243,15 @@ void cConjGrad::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:46  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:32  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

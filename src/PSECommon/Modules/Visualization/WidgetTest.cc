@@ -64,9 +64,7 @@ private:
 
 public:
    WidgetTest(const clString& id);
-   WidgetTest(const WidgetTest&, int deep);
    virtual ~WidgetTest();
-   virtual Module* clone(int deep);
    virtual void execute();
 
    virtual void tcl_command(TCLArgs&, void*);
@@ -104,21 +102,8 @@ WidgetTest::WidgetTest(const clString& id)
    widgets[WT_Path] = scinew PathWidget(this, &widget_lock, INIT);
 }
 
-WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
-: Module(copy, deep),
-  widget_scale("widget_scale", id, this),
-  widget_type("widget_type", id, this)
-{
-   NOT_FINISHED("WidgetTest::WidgetTest");
-}
-
 WidgetTest::~WidgetTest()
 {
-}
-
-Module* WidgetTest::clone(int deep)
-{
-   return scinew WidgetTest(*this, deep);
 }
 
 void WidgetTest::execute()
@@ -198,6 +183,15 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:13  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

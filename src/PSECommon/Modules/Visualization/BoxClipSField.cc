@@ -54,9 +54,7 @@ class BoxClipSField : public Module {
     TCLint axis;
 public:
     BoxClipSField(const clString& id);
-    BoxClipSField(const BoxClipSField&, int deep);
     virtual ~BoxClipSField();
-    virtual Module* clone(int deep);
     virtual void execute();
     ScalarField* UGtoUG(const Point &, const Point &, const Vector &, 
 			const Vector&, const Vector &, ScalarFieldUG *, int);
@@ -95,19 +93,8 @@ BoxClipSField::BoxClipSField(const clString& id)
     axis_allign_flag=1;
 }
 
-BoxClipSField::BoxClipSField(const BoxClipSField& copy, int deep)
-: Module(copy, deep), axis("axis", id, this), interp("interp", id, this)
-{
-    NOT_FINISHED("BoxClipSField::BoxClipSField");
-}
-
 BoxClipSField::~BoxClipSField()
 {
-}
-
-Module* BoxClipSField::clone(int deep)
-{
-    return new BoxClipSField(*this, deep);
 }
 
 void BoxClipSField::execute()
@@ -420,6 +407,15 @@ void BoxClipSField::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:03  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:47  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

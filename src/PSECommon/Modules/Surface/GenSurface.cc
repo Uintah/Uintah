@@ -105,9 +105,7 @@ class GenSurface : public Module {
     int fudge_widget;
 public:
     GenSurface(const clString& id);
-    GenSurface(const GenSurface&, int deep);
     virtual ~GenSurface();
-    virtual Module* clone(int deep);
     virtual void execute();
     virtual void widget_moved(int last);
 };
@@ -149,29 +147,8 @@ GenSurface::GenSurface(const clString& id)
     fudge_widget=0;
 }
 
-GenSurface::GenSurface(const GenSurface& copy, int deep)
-: Module(copy, deep), surfacetype("surfacetype", id, this),
-  cyl_p1("cyl_p1", id, this), cyl_p2("cyl_p2", id, this),
-  cyl_rad("cyl_rad", id, this), cyl_nu("cyl_nu", id, this),
-  cyl_nv("cyl_nv", id, this), cyl_ndiscu("cyl_ndiscu", id, this),
-  sph_cen("sph_cen", id, this), sph_axis("sph_axis", id, this),
-  sph_rad("sph_rad", id, this),
-  sph_nu("sph_nu", id, this), sph_nv("sph_nv", id, this),
-  point_pos("point_pos", id, this), point_rad("point_rad", id, this),
-  cyl_boundary_expr("cyl_boundary_expr", id, this),
-  sph_boundary_expr("sph_boundary_expr", id, this),
-  point_val("point_val", id, this)
-{
-    NOT_FINISHED("GenSurface::GenSurface");
-}
-
 GenSurface::~GenSurface()
 {
-}
-
-Module* GenSurface::clone(int deep)
-{
-    return scinew GenSurface(*this, deep);
 }
 
 void GenSurface::execute()
@@ -358,6 +335,15 @@ void GenSurface::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:56  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:42  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

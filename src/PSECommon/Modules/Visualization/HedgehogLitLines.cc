@@ -83,9 +83,7 @@ class HedgehogLitLines : public Module {
    BBox bbox;
 public:
    HedgehogLitLines(const clString& id);
-   HedgehogLitLines(const HedgehogLitLines&, int deep);
    virtual ~HedgehogLitLines();
-   virtual Module* clone(int deep);
    virtual void execute();
    virtual void tcl_command(TCLArgs&, void*);
 };
@@ -162,25 +160,8 @@ HedgehogLitLines::HedgehogLitLines(const clString& id)
     lines4 = new TexGeomLines;
 }
 
-HedgehogLitLines::HedgehogLitLines(const HedgehogLitLines& copy, int deep)
-: Module(copy, deep), length_scale("length_scale", id, this),
-  width_scale("width_scale", id, this),
-  head_length("head_length", id, this),
-  use_locus("use_locus", id, this),
-  locus_size("locus_size", id, this),
-  type("type", id, this), haveXYZ(0),
-  exhaustive_flag("exhaustive_flag", id, this)
-{
-   NOT_FINISHED("HedgehogLitLines::HedgehogLitLines");
-}
-
 HedgehogLitLines::~HedgehogLitLines()
 {
-}
-
-Module* HedgehogLitLines::clone(int deep)
-{
-   return scinew HedgehogLitLines(*this, deep);
 }
 
 void HedgehogLitLines::execute()
@@ -542,6 +523,15 @@ void HedgehogLitLines::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:07  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:50  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
