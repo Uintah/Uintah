@@ -576,6 +576,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
   task->computes(lb->delP_MassXLabel,      press_matl);
+  task->computes(lb->term2Label,           press_matl);
+  task->computes(lb->term3Label,           press_matl);  
   
   sched->addTask(task, patches, matls);
 }
@@ -1886,6 +1888,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->put(delP_Dilatate, lb->delP_DilatateLabel, 0, patch);
     new_dw->put(delP_MassX,    lb->delP_MassXLabel,    0, patch);
     new_dw->put(press_CC,      lb->press_CCLabel,      0, patch);
+    new_dw->put(term2,         lb->term2Label,         0, patch);
+    new_dw->put(term3,         lb->term3Label,         0, patch); 
 
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
