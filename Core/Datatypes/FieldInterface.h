@@ -156,12 +156,88 @@ SFInterface<Fld>::interpolate(double &result, const Point &p) const
   return interp_(result, p);
 }
 
-template <class Fld>
+
+template <class F>
 bool
-SFInterface<Fld>::compute_min_max(double &minout, double &maxout) const
+SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 {
-  ASSERTFAIL("not implemented");
+  bool result = false;
+  minout = 1.0e6;
+  maxout = -1.0e6;
+  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  switch (fld_->data_at())
+  {
+  case F::NODE:
+    {
+      typename F::mesh_type::Node::iterator bi = mesh->node_begin();
+      typename F::mesh_type::Node::iterator ei = mesh->node_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val < minout) minout = val;
+	  if (val > maxout) maxout = val;
+	  result = true;
+	}
+      }      
+    }
+    break;
+
+  case F::EDGE:
+    {
+      typename F::mesh_type::Edge::iterator bi = mesh->edge_begin();
+      typename F::mesh_type::Edge::iterator ei = mesh->edge_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val < minout) minout = val;
+	  if (val > maxout) maxout = val;
+	  result = true;
+	}
+      }      
+    }
+    break;
+
+  case F::FACE:
+    {
+      typename F::mesh_type::Face::iterator bi = mesh->face_begin();
+      typename F::mesh_type::Face::iterator ei = mesh->face_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val < minout) minout = val;
+	  if (val > maxout) maxout = val;
+	  result = true;
+	}
+      }      
+    }
+    break;
+
+  case F::CELL:
+    {
+      typename F::mesh_type::Cell::iterator bi = mesh->cell_begin();
+      typename F::mesh_type::Cell::iterator ei = mesh->cell_end();
+      while (bi != ei)
+      {
+	typename F::value_type val;
+	if (fld_->value(val, *bi))
+	{
+	  if (val < minout) minout = val;
+	  if (val > maxout) maxout = val;
+	  result = true;
+	}
+      }      
+    }
+    break;
+  }
+  return result;
 }
+
 
 class VectorFieldInterface {
 };
