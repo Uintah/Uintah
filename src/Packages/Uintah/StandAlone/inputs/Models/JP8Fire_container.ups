@@ -565,7 +565,7 @@
                                         1e10]     </heat>
         </exchange_coefficients>
         <do_convective_heat_transfer> true </do_convective_heat_transfer>
-        <convective_fluid>4</convective_fluid>
+        <convective_fluid>3</convective_fluid>
         <convective_solid>0</convective_solid>
       </exchange_properties> 
     </MaterialProperties>
