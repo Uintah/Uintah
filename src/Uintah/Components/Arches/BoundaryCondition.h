@@ -38,7 +38,7 @@ none
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Parallel/ProcessorContext.h>
-
+#include <Uintah/Grid/Array3.h>
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
@@ -51,6 +51,9 @@ class StencilMatrix;
 class BoundaryCondition
 {
 public:
+  // max res for a domain, temp cluge for cell type
+  // change cellTypes later to define on individual patches
+  //  static const IntVector DOMAIN_HIGH = (200, 100, 100);
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   //
@@ -62,7 +65,7 @@ public:
   // POSTCONDITIONS
   //
   // Default constructor.
- 
+   
    BoundaryCondition();
 
    BoundaryCondition(TurbulenceModel* d_turb_model);
@@ -146,6 +149,9 @@ public:
    // used for calculating wall boundary conditions
    TurbulenceModel* d_turbModel;
    // Diff BC types
+   Array3<int>* cellTypes;
+   int numInlets;
+   bool d_
 #if 0
    struct FlowInlet {
      // define enum for cell type
