@@ -43,6 +43,14 @@ PROGRAM := $(SRCDIR)/CVRTItoTriSurfPot
 SRCS := $(SRCDIR)/CVRTItoTriSurfPot.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/JAStoQuadTetVolPot
+SRCS := $(SRCDIR)/JAStoQuadTetVolPot.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/JAStoTetVolPot
+SRCS := $(SRCDIR)/JAStoTetVolPot.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/RawToContourField
 SRCS := $(SRCDIR)/RawToContourField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
