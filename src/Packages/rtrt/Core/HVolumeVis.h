@@ -42,8 +42,21 @@ public:
     // into [0..63].
     int min_index = (int)((min-data_min)/(data_max-data_min)*63);
     int max_index = (int)((max-data_min)/(data_max-data_min)*63);
+#if 1
     for (int i = min_index; i < max_index; i++)
       course_hash |= 1 << i;
+#else
+    // The idea here is to create two bit fields that we can and together.
+    //    min    max
+    // 00011111111111111  This is the first expression computed from min
+    // 11111111111110000  This is the second expression computed from max
+    // 00011111111110000  What we want, which is the and'ed value
+    //
+    // We then or this with what we already have to turn on bits that
+    // haven't already been turned on.  We don't want to turn off bits that
+    // have already been turn on.
+    course_hash |= ((1 << (65-min_index)) - 1) & !((1 << (63-max_index)) - 1);
+#endif
   }
   inline VMCell<DataT>& operator |= (const VMCell<DataT>& v) {
     course_hash |= v.course_hash;
@@ -305,7 +318,7 @@ void HVolumeVis<DataT,MetaCT>::calc_mcell(int depth, int startx, int starty,
 	  mcells(x,y,z)=tmp;
 	  // Now aggregate all the mcells created for this depth by
 	  // doing a bitwise or.
-	  mcell |= tmp;
+  	  mcell |= tmp;
 	}
       }
     }
@@ -430,19 +443,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	    ly2 = lz3 * (1 - y_weight_high) + lz4 * y_weight_high;
 	    
 	    value = ly1 * (1 - x_weight_high) + ly2 * x_weight_high;
-	    if (x_weight_high < 0 || x_weight_high > 1) {
-	      cerr << "x_weight_high = "<<x_weight_high<<", t_offset = "<<t_offset<<", sdiag.x = "<<sdiag.x()<<", ray.direction().x = "<<ray.direction().x()<<", value = "<<value<<endl;
-	      break;
-	    }
-	    if (y_weight_high < 0 || y_weight_high > 1) {
-	      cerr << "y_weight_high = "<<y_weight_high<<", t_offset = "<<t_offset<<", sdiag.y = "<<sdiag.y()<<", ray.direction().y = "<<ray.direction().y()<<", value = "<<value<<endl;
-	      break;
-	    }
-	    if (z_weight_high < 0 || z_weight_high > 1) {
-	      cerr << "z_weight_high = "<<z_weight_high<<", t_offset = "<<t_offset<<", sdiag.z = "<<sdiag.z()<<", ray.direction().z = "<<ray.direction().z()<<", value = "<<value<<endl;
-	      break;
-	    }
-	    
+
 	    float alpha_factor = dpy->lookup_alpha(value) * (1-alpha);
 	    if (alpha_factor > 0.001) {
 	      //      if (true) {
@@ -519,7 +520,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	// Assume that we haven't crossed a cell boundary
 	t_offset += t_inc;
 	bool break_forloop = false;
-	while (t < next_x || t < next_y || t < next_z) {
+	while (t > next_x || t > next_y || t > next_z) {
 	  // If this while loop is entered then t_offset will have to
 	  // update to be the distance from the last cell boundary to
 	  // t.
@@ -553,6 +554,8 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	if (break_forloop)
 	  break;
       }
+      if (alpha >= RAY_TERMINATION_THRESHOLD)
+	break;
     }
   } else {
     BrickArray3<MetaCT>& mcells=macrocells[depth];
@@ -650,7 +653,9 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, MetaCT &transfunct, double t,
 	iz+=diz_dz;
 	if(iz<0 || iz>=cz)
 	  break;
-      }
+      } 
+      if (alpha >= RAY_TERMINATION_THRESHOLD)
+	break;
       if(t >= t_max)
 	break;
     }
