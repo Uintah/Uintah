@@ -491,6 +491,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
                                          DataWarehouse* old_dw, 
                                          DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
 
@@ -499,7 +500,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
 
@@ -614,7 +615,8 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {
-
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks_RF on patch " 
@@ -623,7 +625,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMatls();
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx = patch->dCell();
     double areaX = dx.y() * dx.z();
     double areaY = dx.x() * dx.z();
@@ -865,6 +867,8 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
@@ -876,7 +880,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     // Create arrays for the grid data
     constCCVariable<double>  press_CC;
@@ -1149,6 +1153,8 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
                                           DataWarehouse* old_dw, 
                                           DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1156,7 +1162,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       patch->getID() << "\t\t ICE" << endl;
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    old_dw->get(delT, d_sharedState->get_delt_label(),level);
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
