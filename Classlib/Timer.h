@@ -41,6 +41,7 @@ public:
 class WallClockTimer : public Timer {
     virtual double get_time();
 public:
+    WallClockTimer();
     virtual ~WallClockTimer();
 };
 

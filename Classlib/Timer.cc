@@ -29,6 +29,8 @@ extern "C" long _sysconf(int);
 #define CLOCK_INTERVAL HZ
 #endif
 
+static double ci=0;
+
 Timer::Timer()
 {
     state=Stopped;
@@ -103,6 +105,12 @@ double CPUTimer::get_time()
     return cpu_time;
 }
 
+WallClockTimer::WallClockTimer()
+{
+    if(ci==0)
+	ci=1./double(CLOCK_INTERVAL);
+}
+
 double WallClockTimer::get_time()
 {
 #if 0
@@ -113,7 +121,7 @@ double WallClockTimer::get_time()
     double time=double(tp.tv_sec)+double(tp.tv_usec)/1000000.;
 #endif
     struct tms buffer;
-    double time=double(times(&buffer))/double(CLOCK_INTERVAL);
+    double time=double(times(&buffer))*ci;
     return time;
 }
 
