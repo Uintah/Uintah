@@ -18,8 +18,8 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	set $this-length_scale 0.1
 	global $this-min_crop_length
 	set $this-min_crop_length 0
-	global $this-max_length
-	set $this-max_length 0
+	global $this-max_crop_length
+	set $this-max_crop_length 0
 	global $this-head_length
 	set $this-head_length 0.3
 	global $this-width_scale
