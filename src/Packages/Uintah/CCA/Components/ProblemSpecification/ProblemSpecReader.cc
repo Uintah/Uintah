@@ -32,9 +32,12 @@ ProblemSpecReader::~ProblemSpecReader()
 ProblemSpecP ProblemSpecReader::readInputFile()
 {
   ProblemSpecP prob_spec;
-  
+  static bool initialized = false;
   try {
-    XMLPlatformUtils::Initialize();
+    if (!initialized) {
+      XMLPlatformUtils::Initialize();
+      initialized = true;
+    }
 
     // Instantiate the DOM parser.
     XercesDOMParser* parser = new XercesDOMParser;
