@@ -34,7 +34,7 @@ using namespace Uintah;
 
 static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
 
-#define OPT 0
+#define OPT 1
 
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 	  const Array3<double>& X, CellIterator iter,
@@ -75,7 +75,8 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
           result += AA->s*cx1[x];
         if(y < h1.y())
           result += AA->n*cx2[x];
-	result += AA->t*cx4[x];
+	if(z < h1.z())
+	  result += AA->t*cx4[x];
         cbb[x] = result;
       }
     }
@@ -274,7 +275,8 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
           result += AA->s*cx1[x];
         if(y < h1.y())
           result += AA->n*cx2[x];
-	result += AA->t*cx4[x];
+	if(z < h1.z())
+	  result += AA->t*cx4[x];
         cbb[x] = result;
 	dot += cx0[x]*result;
       }
