@@ -302,8 +302,10 @@ ref::pointer Server_impl::return_ref()
 
 void Server_impl::in_ref(const ref::pointer& a)
 {
+  cerr << "Server_impl::in_ref - 11111\n"; 
   if(a->test() != 11)
     success=false;
+  cerr << "Server_impl::in_ref - 22222\n";
 }
 
 void Server_impl::out_ref(ref::pointer& a)
@@ -519,7 +521,7 @@ int main(int argc, char* argv[])
     usage(argv[0]);
 
   try {
-    PIDL::PIDL::initialize(argc, argv);
+    PIDL::PIDL::initialize(argc,argv);
     sleep( 1 ); // Give threads enough time to come up.
 
     Server::pointer pp;

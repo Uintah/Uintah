@@ -29,7 +29,7 @@ SRCS     += \
 	$(SRCDIR)/moc_Module.cc\
 	$(SRCDIR)/moc_BuilderWindow.cc $(SRCDIR)/moc_NetworkCanvasView.cc
 
-PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL \
+PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL  Core/CCA/Component/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBS)

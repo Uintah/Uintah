@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     using PingPong_ns::PingPong;
 
     try {
-	PIDL::PIDL::initialize(argc, argv);
+	PIDL::PIDL::initialize(argc,argv);
 
 	bool client=false;
 	bool server=false;
@@ -97,8 +97,11 @@ int main(int argc, char* argv[])
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
 	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
+            cerr << "Object_from completed\n";
 	    PingPong::pointer pp=pidl_cast<PingPong::pointer>(obj);
+            cerr << "pidl_case completed\n";
 	    if(pp.isNull()){
+		cerr << "pp_isnull\n";
 		abort();
 	    }
 	    double stime=Time::currentSeconds();

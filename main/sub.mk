@@ -52,7 +52,7 @@ SRCS      := $(SRCDIR)/newmain.cc
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
-  PSELIBS := Core/Exceptions \
+  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
         Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
 	SCIRun Core/CCA/Component/CIA Core/Thread
 endif

@@ -62,13 +62,13 @@ RingMaster_impl::~RingMaster_impl()
 
 int RingMaster_impl::registerClient(const Client::pointer& c)
 {
-    clients.push_back(c);
-    for(vector<Client::pointer>::iterator iter=clients.begin();
+   clients.push_back(c);
+   for(vector<Client::pointer>::iterator iter=clients.begin();
 	iter != clients.end(); iter++){
 	(*iter)->notify(c);
-    }
-    cerr << "Done with notify client\n";
-    return clients.size();
+   }
+   cerr << "Done with notify client\n";
+   return clients.size();
 }
 
 class Client_impl : public objects_test::Client {
@@ -157,10 +157,9 @@ int main(int argc, char* argv[])
 	} else {
 	    PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
 	    RingMaster::pointer rm=pidl_cast<RingMaster::pointer>(obj);
-
 	    Client_impl* me=new Client_impl;
 	    int myid=rm->registerClient(Client::pointer(me));
-	    cerr << "nclients now " << myid << '\n';
+	    cerr << "Test Successful!!\n";
 	}
 	PIDL::PIDL::serveObjects();
     } catch(const Exception& e) {

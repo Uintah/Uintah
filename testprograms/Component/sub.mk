@@ -26,7 +26,9 @@ SUBDIRS := \
 	$(SRCDIR)/mitest	\
 	$(SRCDIR)/objects	\
 	$(SRCDIR)/pingpong	\
-	$(SRCDIR)/spectest      
+	$(SRCDIR)/spectest      \
+#       $(SRCDIR)/pingpong_socket      
+ 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

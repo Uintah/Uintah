@@ -23,7 +23,8 @@ SRCDIR := Core/CCA/Component
 
 SUBDIRS := \
 	$(SRCDIR)/CIA \
-	$(SRCDIR)/PIDL 
+	$(SRCDIR)/PIDL \
+	$(SRCDIR)/Comm
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
