@@ -32,7 +32,7 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
   hist(0), xres(500), yres(500), colors_index(matls), alpha_list(alphas),
   ncolors(ncolors), nalphas(ncolors),
   original_t_inc(0.01), current_t_inc(t_inc), t_inc(t_inc),
-  in_file(in_file)
+  in_file(in_file), data_min(MAXFLOAT), data_max(-MAXFLOAT)
 {
   // need to allocate memory for alpha_transform and color_transform
   Array1<Color*> *c = new Array1<Color*>(ncolors);
@@ -41,6 +41,13 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
   color_transform.set_results_ptr(c);
   alpha_transform.set_results_ptr(new Array1<float>(nalphas));
   alpha_stripes.set_results_ptr(new Array1<float>(nalphas));
+
+  // create the colors for the color transform
+  create_color_transfer();
+  // rescale the alpha values
+  //  current_t_inc = t_inc;
+  // create the alphas for the alpha transform
+  create_alpha_transfer();
 }
   
 VolumeVisDpy::~VolumeVisDpy()
@@ -51,43 +58,18 @@ VolumeVisDpy::~VolumeVisDpy()
 
 void VolumeVisDpy::attach(VolumeVis *volume) {
   volumes.add(volume);
+
+  // this needs to be done here, because we can't guarantee that setup_vars
+  // will get called before VolumeVis starts cranking!
+  data_min = Min(data_min, volume->data_min);
+  data_max = Max(data_max, volume->data_max);
+
+  color_transform.scale(data_min,data_max);
+  alpha_transform.scale(data_min,data_max);
 }
 
 void VolumeVisDpy::setup_vars() {
   //  cerr << "VolumeVisDpy::setup_vars:start\n";
-  if (volumes.size() > 0) {
-    data_min = MAXFLOAT;
-    data_max = -MAXFLOAT;
-
-    // go through all the volumes and compute the min/max of the data values
-    for(unsigned int v = 0; v < volumes.size(); v++) {
-      data_min = Min(data_min, volumes[v]->data_min);
-      data_max = Max(data_max, volumes[v]->data_max);
-    }
-
-    // this takes into account of
-    // min/max equaling each other
-    if (data_min == data_max) {
-      if (data_max > 0) {
-	data_max *= 1.1;
-      } else {
-	if (data_max < 0)
-	  data_max *= 0.9;
-	else
-	  data_max = 1;
-      }
-    }
-    scale = 1.0/(data_max - data_min);
-    color_transform.scale(data_min,data_max);
-    alpha_transform.scale(data_min,data_max);
-  }// end if(volumes.size() > 0)
-
-  // create the colors for the color transform
-  create_color_transfer();
-  // rescale the alpha values
-  //  current_t_inc = t_inc;
-  // create the alphas for the alpha transform
-  create_alpha_transfer();
 }
 
 void VolumeVisDpy::run() {
