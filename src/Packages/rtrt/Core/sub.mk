@@ -121,8 +121,11 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/ColorMap.cc \
 	$(SRCDIR)/SpinningInstance.cc \
 	$(SRCDIR)/plyfile.c \
+	$(SRCDIR)/DynamicInstance.cc 
+
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
+
 
 SUBDIRS := $(SRCDIR)/Shadows \
 #	   $(SRCDIR)/LightField \
