@@ -111,10 +111,10 @@ public:
     CellIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->nx_) {
+      if (i_ >= mesh_->nx_-1) {
 	i_ = 0;
 	j_++;
-	if (j_ >= mesh_->ny_) {
+	if (j_ >= mesh_->ny_-1) {
 	  j_ = 0;
 	  k_++;
 	}
