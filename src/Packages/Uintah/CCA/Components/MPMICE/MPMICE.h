@@ -6,16 +6,15 @@
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
-
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
@@ -223,6 +222,19 @@ public:
                                const MaterialSubset* matls,
                                DataWarehouse*, 
                                DataWarehouse*); 
+                               
+                               
+private:
+  void setBC_rho_micro(const Patch* patch,
+                       MPMMaterial* mpm_matl,
+                       ICEMaterial* ice_matl,
+                       const int indx,
+                       const CCVariable<double>& cv,
+                       const CCVariable<double>& gamma,
+                       const CCVariable<double>& press_new,
+                       const CCVariable<double>& Temp,
+                       const double press_ref,
+                       CCVariable<double>& rho_micro);                             
      
   enum bctype { NONE=0,
                 FIXED,
