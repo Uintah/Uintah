@@ -5,8 +5,6 @@
    <Meta>
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
-    
-    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -81,11 +79,11 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -94,7 +92,7 @@
               <lower>        [0,0,1.1250]    </lower>
               <upper>        [4.5,2.5,1.375]    </upper>
                 <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [2,1,1]    </patches>
+              <patches>      [1,1,1]    </patches>
            </Box>
            <spacing>        [0.125,0.125,0.125]  </spacing>
        </Level>
@@ -105,7 +103,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>2ddiw.uda</filebase>
-      <outputInterval>.005</outputInterval>
+      <outputInterval>.01</outputInterval>
       <save label = "mom_L_ME_CC"/>
       <save label = "vel_CC"/>
       <save label = "press_CC"/>
@@ -117,7 +115,6 @@
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
-      <save label = "StrainEnergy"/>
    </DataArchiver>
 
    <Debug>
@@ -185,7 +182,7 @@
                     </box>
                     <res>               [2,2,2]         </res>
                     <velocity>          [0.0,0.0,0.0]   </velocity>
-                    <temperature>       400             </temperature>
+                    <temperature>       300             </temperature>
                 </geom_object>
          </material>
 
