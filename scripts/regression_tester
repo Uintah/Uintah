@@ -253,11 +253,7 @@ mpm_test () {
 	udadir=$n
 	if test "$n" = "disks2mat4patch"; 
 	    then
-	    udadir=disks2mat4patch1proc
-	fi
-	if test "$n" = "foam_crush1P"; 
-	    then
-	    udadir=foam_crush
+	    udadir=disks2mat4patch4proc
 	fi
 
 	compare_results
