@@ -55,7 +55,9 @@ WARNING
       // Return index associated with this material's
       // velocity field
       int getVFIndex() const;
-      
+
+      void setDWIndex(int);
+      void setVFIndex(int);
    protected:
       
       // Index associated with this material's spot in the DW
@@ -74,6 +76,12 @@ WARNING
 #endif // __MATERIAL_H__
 
 // $Log$
+// Revision 1.6  2000/04/28 08:11:33  sparker
+// ConstitutiveModelFactory should return null on failure
+// MPMMaterial checks for failed constitutive model creation
+// DWindex and VFindex are now initialized
+// Fixed input file to match ConstitutiveModelFactory
+//
 // Revision 1.5  2000/04/26 06:48:49  sparker
 // Streamlined namespaces
 //
