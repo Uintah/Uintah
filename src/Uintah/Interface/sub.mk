@@ -11,7 +11,7 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc \
+	$(SRCDIR)/Scheduler.cc \
 	$(SRCDIR)/MDInterface.cc $(SRCDIR)/Analyze.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions PSECore/XMLUtil \
@@ -22,6 +22,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.14  2000/08/24 21:18:13  dav
+# Removed DWMpiHandler
+#
 # Revision 1.13  2000/07/18 00:01:29  tan
 # Added Analyze interface that will be especially useful for debugging
 # on scitific results.
