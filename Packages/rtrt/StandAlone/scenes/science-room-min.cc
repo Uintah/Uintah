@@ -87,7 +87,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   Camera cam(Eye,Lookat,Up,fov);
 
-  double i2m = 1./36.;             // convert inches to meters
   Point center(-8, 8, 0);
   Vector north(0,1,0);
   Vector east(1,0,0);
@@ -428,15 +427,16 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Object* floor=new Rect(cement_floor, Point(-8, 8, 0),
 			 Vector(4, 0, 0), Vector(0, 4, 0));
   ceiling_floor->add(floor);
+
   ImageMaterial *cement_pedestal = 
     new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-pedestal.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
   table->add(new UVCylinder(cement_pedestal, center,
-			    center+Vector(0,0,36)*i2m, 30*i2m));
+			    center+Vector(0,0,0.5), 1.5));
   Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
-  table->add(new Disc(silver, center+Vector(0,0,36)*i2m,
-		      Vector(0,0,1), 30*i2m));
+  table->add(new Disc(silver, center+Vector(0,0,0.5),
+		      Vector(0,0,1), 1.5));
 
   Group *g = new Group();
 

@@ -658,15 +658,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   make_walls_and_posters(g, center);
 
   Group* table=new Group();
+
   ImageMaterial *cement_pedestal = 
     new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-pedestal.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
   table->add(new UVCylinder(cement_pedestal, center,
-			    center+Vector(0,0,1), 5./6));
+			    center+Vector(0,0,0.5), 1.5));
   Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
-  table->add(new Disc(silver, center+Vector(0,0,1),
-		      Vector(0,0,1), 5./6));
+  table->add(new Disc(silver, center+Vector(0,0,0.5),
+		      Vector(0,0,1), 1.5));
   g->add(table);
 
   add_objects(g, center);
