@@ -19,7 +19,7 @@ namespace SCIRun {
 template<>
 void Pio(Piostream& stream, rtrt::Array1<int>& array)
 {
-  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  stream.begin_class("rtrtArray1", ARRAY1_RTRT_VERSION);
   int size=array.size();
   Pio(stream, size);
   if(stream.reading()){
@@ -40,7 +40,7 @@ void Pio(Piostream& stream, rtrt::Array1<int>& array)
 template<>
 void Pio(Piostream& stream, rtrt::Array1<float>& array)
 {
-  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  stream.begin_class("rtrtArray1", ARRAY1_RTRT_VERSION);
   int size=array.size();
   Pio(stream, size);
   if(stream.reading()){
@@ -61,7 +61,7 @@ void Pio(Piostream& stream, rtrt::Array1<float>& array)
 template<>
 void Pio(Piostream& stream, rtrt::Array1<double>& array)
 {
-  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  stream.begin_class("rtrtArray1", ARRAY1_RTRT_VERSION);
   int size=array.size();
   Pio(stream, size);
   if(stream.reading()){
