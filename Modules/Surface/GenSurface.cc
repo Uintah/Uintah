@@ -13,6 +13,8 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/BasicSurfaces.h>
+#include <Datatypes/Colormap.h>
+#include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/SurfacePort.h>
 #include <Geom/Material.h>
@@ -22,8 +24,7 @@
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
-
-static clString widget_name("GenSurface Widget");
+#include <Widgets/GaugeWidget.h>
 
 class GenSurface : public Module {
     TCLstring surfacetype;
@@ -37,12 +38,25 @@ class GenSurface : public Module {
     TCLdouble point_rad;
     TCLColor widget_color;
 
+    TCLstring boundary_expr;
+
+    ColormapIPort* colormapport;
     SurfaceOPort* outport;
     GeometryOPort* ogeom;
 
     GeomSphere* sphere;
 
     clString oldst;
+    int widget_id;
+    GaugeWidget* cyl_widget;
+    CrowdMonitor widget_lock;
+
+    int surf_id;
+    int last_generation;
+    Point last_cyl_p1;
+    Point last_cyl_p2;
+    double last_cyl_rad;
+    int last_cyl_nu, last_cyl_nv, last_cyl_ndiscu;
 public:
     GenSurface(const clString& id);
     GenSurface(const GenSurface&, int deep);
@@ -51,6 +65,7 @@ public:
     virtual void execute();
     virtual void geom_release(GeomPick*, void*);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
+    virtual void widget_moved(int last);
 };
 
 extern "C" {
@@ -66,13 +81,23 @@ GenSurface::GenSurface(const clString& id)
   cyl_rad("cyl_rad", id, this), cyl_nu("cyl_nu", id, this),
   cyl_nv("cyl_nv", id, this), cyl_ndiscu("cyl_ndiscu", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
-  widget_color("widget_color", id, this)
+  widget_color("widget_color", id, this),
+  boundary_expr("boundary_expr", id, this)
 {
+    // Create the input port
+    colormapport=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    add_iport(colormapport);
+
     // Create the output port
     outport=scinew SurfaceOPort(this, "Geometry", SurfaceIPort::Atomic);
     add_oport(outport);
     ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
+    widget_id=0;
+    surf_id=0;
+
+    cyl_widget=new GaugeWidget(this, &widget_lock, .1);
+    last_generation=0;
 }
 
 GenSurface::GenSurface(const GenSurface& copy, int deep)
@@ -81,7 +106,8 @@ GenSurface::GenSurface(const GenSurface& copy, int deep)
   cyl_rad("cyl_rad", id, this), cyl_nu("cyl_nu", id, this),
   cyl_nv("cyl_nv", id, this), cyl_ndiscu("cyl_ndiscu", id, this),
   point_pos("point_pos", id, this), point_rad("point_rad", id, this),
-  widget_color("widget_color", id, this)
+  widget_color("widget_color", id, this),
+  boundary_expr("boundary_expr", id, this)
 {
     NOT_FINISHED("GenSurface::GenSurface");
 }
@@ -97,12 +123,18 @@ Module* GenSurface::clone(int deep)
 
 void GenSurface::execute()
 {
+    ColormapHandle cmap;
+    if(!colormapport->get(cmap))
+	return;
     Surface* surf=0;
     clString st(surfacetype.get());
     // Handle 3D widget
     if(st != oldst){
-	ogeom->delAll();
+	if(widget_id)
+	    ogeom->delObj(widget_id);
 	if(st=="point"){
+	    
+#if 0
 	    GeomSphere* widget=scinew GeomSphere(point_pos.get(), point_rad.get());
 	    MaterialHandle widget_matl(scinew Material(Color(0,0,0),
 						    widget_color.get(),
@@ -113,37 +145,91 @@ void GenSurface::execute()
 					Vector(0,0,1));
 	    ogeom->addObj(pick, widget_name);
 	    sphere=widget;
+	
+#endif    
 	} else {
-	    NOT_FINISHED("Other surfaces");
+	    widget_id=ogeom->addObj(cyl_widget->GetWidget(), "Cylinder source widget",
+				    &widget_lock);
+	    cyl_widget->Connect(ogeom);
+	    Point p1(cyl_p1.get());
+	    Point p2(cyl_p2.get());
+	    cyl_widget->SetEndpoints(p1, p2);
+	    double dist=(p2-p1).length();
+	    double ratio=cyl_rad.get()/(2*dist);
+	    cyl_widget->SetRatio(ratio);
+	    cyl_widget->SetScale(dist/10);
 	}
 	oldst=st;
+	last_generation=0;
     }
 
     // Spit out the surface
     if(st=="cylinder"){
 	surf=scinew CylinderSurface(cyl_p1.get(), cyl_p2.get(), cyl_rad.get(),
-				 cyl_nu.get(), cyl_nv.get(), cyl_ndiscu.get());
+				    cyl_nu.get(), cyl_nv.get(), cyl_ndiscu.get());
+	cerr << "last_generation=" << last_generation << endl;
+	cerr << "p1=" << cyl_p1.get() << " " << last_cyl_p1 << (cyl_p1.get() == last_cyl_p1) << endl;
+	cerr << "p2=" << cyl_p2.get() << " " << last_cyl_p2 << (cyl_p1.get() == last_cyl_p1) << endl;
+	cerr << "rad=" << cyl_rad.get() <<  " " << last_cyl_rad << (cyl_rad.get() == last_cyl_rad) << " " << cyl_rad.get()-last_cyl_rad << endl;
+	cerr << "nu=" << cyl_nu.get() << " " << last_cyl_nu << (cyl_nu.get() == last_cyl_nu) << endl;
+	cerr << "nv=" << cyl_nv.get() << " " << last_cyl_nv << (cyl_nv.get() == last_cyl_nv) << endl;
+	cerr << "ndiscu=" << cyl_ndiscu.get() << " " << last_cyl_ndiscu << (cyl_ndiscu.get() == last_cyl_ndiscu) << endl;
+	if(last_generation && cyl_p1.get() == last_cyl_p1 
+	   && cyl_p2.get() == last_cyl_p2 && Abs(cyl_rad.get()-last_cyl_rad) < 1.e-8
+	   && cyl_nu.get() == last_cyl_nu && cyl_nv.get() == last_cyl_nv 
+	   && cyl_ndiscu.get() == last_cyl_ndiscu){
+	    surf->generation=last_generation;
+	    cerr << "Setting generation...\n";
+	}
+	last_cyl_p1=cyl_p1.get();
+	last_cyl_p2=cyl_p2.get();
+	last_cyl_rad=cyl_rad.get();
+	last_cyl_nu=cyl_nu.get();
+	last_cyl_nv=cyl_nv.get();
+	last_cyl_ndiscu=cyl_ndiscu.get();
     } else if(st=="point"){
 	surf=scinew PointSurface(point_pos.get());
     } else {
 	error("Unknown surfacetype: "+st);
     }
-    if(surf)
+    if(surf_id)
+	ogeom->delObj(surf_id);
+    if(surf){
+	clString be(boundary_expr.get());
+	if(be != ""){
+	    surf->set_bc(be);
+	}
         outport->send(SurfaceHandle(surf));
+	last_generation=surf->generation;
+    }
+
+    GeomObj* surfobj=surf?surf->get_obj(cmap):0;
+    if(surfobj){
+	MaterialHandle surf_matl(scinew Material(Color(0,0,0),
+						 widget_color.get(),
+						 Color(.6, .6, .6), 10));
+	GeomMaterial* matl=scinew GeomMaterial(surfobj, surf_matl);
+	surf_id=ogeom->addObj(matl, st+" source");
+    }
 }
 
-void GenSurface::geom_moved(GeomPick*, int, double, const Vector& delta, void*)
+void GenSurface::widget_moved(int last)
 {
-    sphere->cen+=delta*6; // SC94 ONLY (*10000)
-    point_pos.set(sphere->cen);
-    sphere->adjust();
-}
-
-void GenSurface::geom_release(GeomPick*, void*)
-{
-    if(!abort_flag){
+    clString st(surfacetype.get());
+    if(st=="point"){
+    } else if(st=="cylinder"){
+	Point p1, p2;
+	cyl_widget->GetEndpoints(p1, p2);
+	cyl_p1.set(p1);
+	cyl_p2.set(p2);
+	double ratio=cyl_widget->GetRatio();
+	double dist=(p2-p1).length();
+	double radius=2*dist*ratio;
+	cyl_rad.set(radius);
+    }
+    if(last && !abort_flag)
+    {
 	abort_flag=1;
 	want_to_execute();
     }
 }
-    

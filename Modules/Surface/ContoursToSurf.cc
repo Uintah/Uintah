@@ -274,7 +274,6 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
     // ...the build_bbox() method does just that.
 
     surf->name=contours[0]->name;
-    surf->bdry_type = (Surface::Boundary_type) contours[0]->bdry_type;
     BBox bb;
     int i;
     for (i=0; i<contours.size(); i++) {

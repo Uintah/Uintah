@@ -7,7 +7,7 @@ SRCS = ContoursToSurf.cc GenSurface.cc SurfToGeom.cc
 LIBNAME = Surface
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lGeometry \
+SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
 	-lTCL -lClasslib -lMultitask -lMalloc -lm
 
 SCIDependTarget($(SRCS))
