@@ -46,7 +46,6 @@ public:
 	TriggerPort,
 	ReSchedule,
 	MultiSend,
-	Demand,
 	GoAway,
 
 	MUIDispatch,
