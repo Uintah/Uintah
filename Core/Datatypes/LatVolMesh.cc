@@ -48,7 +48,7 @@ LatVolMesh::unlocate(Point &result, const Point &p) const
 
 
 inline void
-LatVolMesh::get_point(Point &result, const node_index &index) const
+LatVolMesh::get_point(Point &result, node_index index) const
 {
   get_center(result,index);
 }
