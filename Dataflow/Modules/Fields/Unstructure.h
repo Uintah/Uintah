@@ -89,11 +89,14 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
   typename FSRC::mesh_handle_type mesh = ifield->get_typed_mesh();
 
   typename FDST::mesh_handle_type outmesh = scinew typename FDST::mesh_type();
-  
-  hash_map<typename FSRC::mesh_type::Node::index_type,
+
+  typedef hash_map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,
-    SpecialNodeHash, SpecialNodeEqual> nodemap;
-  //equal_to<typename FSRC::mesh_type::Node::index_type> > nodemap;
+    SpecialNodeHash, SpecialNodeEqual> hash_type;
+  
+  hash_type nodemap;
+
+  vector<typename FDST::mesh_type::Elem::index_type> elemmap;
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
@@ -116,14 +119,44 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
     }
 
     outmesh->add_elem(nnodes);
-
+    elemmap.push_back(*bi);
     ++bi;
   }
 
   outmesh->flush_changes();  // Really should copy normals
 
-  FieldHandle outfield = scinew FDST(outmesh, field_h->data_at());
-  return outfield;
+  FieldHandle ofield = scinew FDST(outmesh, field_h->data_at());
+
+  if (field_h->data_at() == Field::NODE)
+  {
+    hash_type::iterator hitr = nodemap.begin();
+
+    while (hitr != nodemap.end())
+    {
+      typename FSRC::value_type val;
+      ifield->value(val, (typename FSRC::mesh_type::Node::index_type)((*hitr).first));
+      ofield->set_value(val, (typename FDST::mesh_type::Node::index_type)((*hitr).second));
+
+      ++hitr;
+    }
+  }
+  else if (field_h->data_at_type_description()->get_name() ==
+	   get_type_description((typename FSRC::mesh_type::Elem *)0)->get_name())
+  {
+    for (unsigned int i=0; i < elemmap.size(); i++)
+    {
+      typename FSRC::value_type val;
+      ifield->value(val,
+		    (typename FSRC::mesh_type::Elem::index_type)elemmap[i]);
+      ofield->set_value(val, (typename FDST::mesh_type::Elem::index_type)i);
+    }
+  }
+  else
+  {
+    cout << "Unable to copy data at this data locations, use DirectInterp.\n";
+  }
+
+  return ofield;
 }
 
 
