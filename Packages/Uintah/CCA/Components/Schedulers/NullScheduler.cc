@@ -75,7 +75,7 @@ NullScheduler::actuallyCompile()
     cerr << "WARNING: Scheduler executed, but no tasks\n";
   }
   
-  lb->assignResources(*dts_, d_myworld);
+  lb->assignResources(*dts_);
 
   graph.createDetailedDependencies(dts_, lb);
   releasePort("load balancer");

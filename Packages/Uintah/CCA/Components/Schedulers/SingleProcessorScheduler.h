@@ -66,7 +66,7 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
 
-    virtual const MaterialSet* getMaterialSet(){return reloc_.getMaterialSet();}
+    virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
   protected:
     virtual void actuallyCompile();
   private:
