@@ -60,6 +60,9 @@ class Diagram {
 	set ogl $g
 
 	set name $n
+    }
+
+    method init {} {
 
 	#
 	# widgets menu
@@ -85,15 +88,13 @@ class Diagram {
 	$tb add button zoom-in \
 	    -helpstr "Zoom mode" \
 	    -image [image create photo \
-		-file "/home/moulding/mag_glass_3d.ppm"] \
+		-file "../pixmaps/viewmag.ppm"] \
 	    -command "$this set-mode zoom"
 	
 	$tb add button sub \
 	    -helpstr "SubWindow" \
 	    -command {puts "sub window"}
-    }
 
-    method init {} {
 
 	#
 	# option area

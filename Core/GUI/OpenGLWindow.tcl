@@ -50,20 +50,16 @@ class OpenGLWindow {
 
 
     method add-bind { b } {
-	puts "add-bind $b"
 	bindtags $w [concat $b [bindtags $w] ]
-	bind $w <g> {puts "G" }
     }
 
     method rem-bind { b } {
-	puts "rem-bind $b"
-	bindtags $w [ldelete $b [$bindtags $w] ]
-	puts "after... [bindtags $w]"
+	bindtags $w [ldelete $b [bindtags $w] ]
     }
 
     method ldelete { item list } {
 	set i [lsearch -exact $list $item]
-	if { i >= 0 } {
+	if { $i > -1 } {
 	    return [lreplace $list $i $i]
 	} else {
 	    return $list
