@@ -61,10 +61,50 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
 {
    g_velocity_label = new VarLabel("g.velocity",
 				   NCVariable<Vector>::getTypeDescription());
-   p_deformationMeasure_label = new VarLabel("p.deformationMeasure",
-					     ParticleVariable<Matrix3>::getTypeDescription());
-   p_stress_label = new VarLabel("p.stress",
-				 ParticleVariable<Matrix3>::getTypeDescription());
+   p_deformationMeasure_label = 
+               new VarLabel("p.deformationMeasure",
+			    ParticleVariable<Matrix3>::getTypeDescription());
+   p_stress_label = 
+               new VarLabel( "p.stress",
+			     ParticleVariable<Matrix3>::getTypeDescription() );
+
+   pVolumeLabel = 
+               new VarLabel( "p.volume",
+			     ParticleVariable<double>::getTypeDescription());
+   pMassLabel = new VarLabel( "p.mass",
+			      ParticleVariable<double>::getTypeDescription() );
+   pVelocityLabel =
+               new VarLabel( "p.velocity", 
+			     ParticleVariable<Vector>::getTypeDescription() );
+   pExternalForceLabel =
+               new VarLabel( "p.externalforce",
+			     ParticleVariable<Vector>::getTypeDescription() );
+   pXLabel =   new VarLabel( "p.x",
+			     ParticleVariable<Point>::getTypeDescription() );
+
+   gAccelerationLabel =
+                new VarLabel( "g.acceleration",
+			      NCVariable<Vector>::getTypeDescription() );
+   gMassLabel = new VarLabel( "g.mass",
+			      NCVariable<double>::getTypeDescription() );
+   gVelocityLabel = new VarLabel( "g.velocity",
+				  NCVariable<Vector>::getTypeDescription() );
+   gExternalForceLabel =
+                new VarLabel( "g.externalforce",
+			      NCVariable<Vector>::getTypeDescription() );
+   gInternalForceLabel =
+                new VarLabel( "g.internalforce",
+			      NCVariable<Vector>::getTypeDescription() );
+   gVelocityStarLabel =
+                new VarLabel( "g.velocity_star",
+			      NCVariable<Vector>::getTypeDescription() );
+
+
+   // I'm not sure about this one:
+   deltLabel = 
+     new VarLabel( "delt",
+		   ReductionVariable<double>::getTypeDescription() );
+
 }
 
 SerialMPM::~SerialMPM()
@@ -106,13 +146,14 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
 }
 
 void SerialMPM::scheduleTimeAdvance(double t, double dt,
-				    const LevelP& level, SchedulerP& sched,
-				    const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+				    const LevelP&         level,
+				          SchedulerP&     sched,
+				    const DataWarehouseP& old_dw, 
+				          DataWarehouseP& new_dw)
 {
    for(Level::const_regionIterator iter=level->regionsBegin();
        iter != level->regionsEnd(); iter++){
       const Region* region=*iter;
-#ifdef WONT_COMPILE_YET
       {
 	 /*
 	  * interpolateParticlesToGrid
@@ -124,20 +165,15 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::interpolateParticlesToGrid",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::interpolateParticlesToGrid);
-	 t->requires(old_dw, "p.mass", region, 0,
-		     ParticleVariable<double>::getTypeDescription());
-	 t->requires(old_dw, "p.velocity", region, 0,
-		     ParticleVariable<Vector>::getTypeDescription());
-	 t->requires(old_dw, "p.externalforce", region, 0,
-		     ParticleVariable<Vector>::getTypeDescription());
-	 t->requires(old_dw, "p.x", region, 0,
-		     ParticleVariable<Point>::getTypeDescription());
-	 t->computes(new_dw, "g.mass", region, 0,
-		     NCVariable<double>::getTypeDescription());
-	 t->computes(new_dw, "g.velocity", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->computes(new_dw, "g.externalforce", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
+	 t->requires(old_dw, pMassLabel, region, 0 );
+	 t->requires(old_dw, pVelocityLabel, region, 0 );
+	 t->requires(old_dw, pExternalForceLabel, region, 0 );
+	 t->requires(old_dw, pXLabel, region, 0 );
+
+	 t->computes(new_dw, gMassLabel, region );
+	 t->computes(new_dw, gVelocityLabel, region );
+	 t->computes(new_dw, gExternalForceLabel, region );
+		     
 	 sched->addTask(t);
       }
       
@@ -149,20 +185,19 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  *		  the others according to specific rules)
 	  *   out(G.VELOCITY)
 	  */
-#if 0
+
+#if WONT_COMPILE_YET
 	 Task* t = new Task("Contact::exMomInterpolated",
 			    region, old_dw, new_dw,
-			    this, Contact::dav); // Contact::exMomInterpolated);
-	 t->requires(new_dw, "g.mass", region, 0,
-		     NCVariable<double>::getTypeDescription());
-	 t->requires(new_dw, "g.velocity", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->computes(new_dw, "g.velocity", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
+			    this, Contact::exMomInterpolated);
+	 t->requires( new_dw, gMassLabel, region, 0 );
+	 t->requires( new_dw, gVelocityLabel, region, 0 );
+
+	 t->computes( new_dw, gVelocityLabel, region );
+
 	 sched->addTask(t);
 #endif
       }
-#endif
       
       {
 	 /*
@@ -193,7 +228,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 sched->addTask(t);
       }
       
-#ifdef WONT_COMPILE_YET
       {
 	 /*
 	  * computeInternalForce
@@ -206,13 +240,12 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::computeInternalForce",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::computeInternalForce);
-	 t->requires(new_dw, "p.stress", region, 0,
-		     ParticleVariable<Matrix3>::getTypeDescription());
-	 t->requires(old_dw, "p.volume", region, 0,
-		     ParticleVariable<double>::getTypeDescription());
-	 t->computes(new_dw, "g.internalforce", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 sched->addTask(t);
+	 t->requires( new_dw, p_stress_label, region, 0 );
+	 t->requires( old_dw, pVolumeLabel, region, 0 );
+
+	 t->computes( new_dw, gInternalForceLabel, region );
+
+	 sched->addTask( t );
       }
       
       {
@@ -226,12 +259,11 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::solveEquationsMotion",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::solveEquationsMotion);
-	 t->requires(new_dw, "g.mass", region, 0,
-		     NCVariable<double>::getTypeDescription());
-	 t->requires(new_dw, "g.internalforce", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->computes(new_dw, "g.acceleration", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
+	 t->requires( new_dw, gMassLabel, region, 0 );
+	 t->requires( new_dw, gInternalForceLabel, region, 0 );
+
+	 t->computes( new_dw, gAccelerationLabel, region );
+
 	 sched->addTask(t);
       }
       
@@ -246,14 +278,12 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::integrateAcceleration",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::integrateAcceleration);
-	 t->requires(new_dw, "g.acceleration", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->requires(new_dw, "g.velocity", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->requires(old_dw, "delt",
-		     SoleVariable<double>::getTypeDescription());
-	 t->computes(new_dw, "g.velocity_star", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
+	 t->requires(new_dw, gAccelerationLabel, region, 0 );
+	 t->requires(new_dw, gVelocityLabel, region, 0 );
+	 t->requires(old_dw, deltLabel );
+		     
+	 t->computes(new_dw, gVelocityStarLabel, region );
+		     
 	 sched->addTask(t);
       }
       
@@ -296,21 +326,16 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::interpolateToParticlesAndUpdate);
-	 t->requires(new_dw, "g.acceleration", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->requires(new_dw, "g.velocity_star", region, 0,
-		     NCVariable<Vector>::getTypeDescription());
-	 t->requires(old_dw, "p.x", region, 0,
-		     ParticleVariable<Point>::getTypeDescription());
-	 t->requires(old_dw, "delt",
-		     SoleVariable<double>::getTypeDescription());
-	 t->computes(new_dw, "p.velocity", region, 0,
-		     ParticleVariable<Vector>::getTypeDescription());
-	 t->computes(new_dw, "p.x", region, 0,
-		     ParticleVariable<Point>::getTypeDescription());
+	 t->requires(new_dw, gAccelerationLabel, region, 0 );
+	 t->requires(new_dw, gVelocityStarLabel, region, 0 );
+
+	 t->requires(old_dw, pXLabel, region, 0 );
+	 t->requires(old_dw, deltLabel );
+	 t->computes(new_dw, pVelocityLabel, region );
+	 t->computes(new_dw, pXLabel, region );
+
 	 sched->addTask(t);
       }
-#endif
     }
 }
 
@@ -333,11 +358,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
-#if 0  // This needs the datawarehouse to allow indexing by material
-       // for the particle data and velocity field by the grid data
+  // This needs the datawarehouse to allow indexing by material
+  // for the particle data and velocity field by the grid data
+
+  // Dd: making this compile... don't know if this correct...
+  int numMatls = d_sharedState->getNumMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = materials[m];
+    Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
@@ -348,19 +376,20 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<Vector> pexternalforce;
 
-      old_dw->get(px,             "p.x", matlindex, region, 0);
-      old_dw->get(pmass,          "p.mass", matlindex, region, 0);
-      old_dw->get(pvelocity,      "p.velocity", matlindex, region, 0);
-      old_dw->get(pexternalforce, "p.externalforce", matlindex, region, 0);
+      old_dw->get(px,             pXLabel, matlindex, region, 0);
+      old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
+      old_dw->get(pvelocity,      pVelocityLabel, matlindex, region, 0);
+      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region, 0);
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
 
-      new_dw->allocate(gmass, "g.mass", vfindex, region, 0);
-      new_dw->allocate(gvelocity, "g.velocity", vfindex, region, 0);
-      new_dw->allocate(externalforce, "g.externalforce", vfindex, region, 0);
+#if WONT_COMPILE_YET
+      new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
+      new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
+      new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
 
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == pmass.getParticleSubset(matlindex));
@@ -402,12 +431,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	}
       }
 
-      new_dw->put(gmass, "g.mass", vfindex, region, 0);
-      new_dw->put(gvelocity, "g.velocity", vfindex, region, 0);
-      new_dw->put(externalforce, "g.externalforce", vfindex, region, 0);
+      new_dw->put(gmass,         gMassLabel, vfindex, region, 0);
+      new_dw->put(gvelocity,     gVelocityLabel, vfindex, region, 0);
+      new_dw->put(externalforce, gExternalForceLabel, vfindex, region, 0);
+#endif
     }
   }
-#endif
 }
 
 void SerialMPM::computeStressTensor(const ProcessorContext*,
@@ -669,6 +698,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.22  2000/04/20 22:13:36  dav
+// making SerialMPM compile
+//
 // Revision 1.21  2000/04/20 18:56:16  sparker
 // Updates to MPM
 //
