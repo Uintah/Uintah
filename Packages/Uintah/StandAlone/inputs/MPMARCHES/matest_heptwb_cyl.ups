@@ -11,7 +11,7 @@
    </Meta>
 
    <Time>
-	<maxTime>1.0</maxTime>
+	<maxTime>0.5</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>0.01</delt_max>
@@ -389,37 +389,7 @@
 		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
 
-		<probe_data>true</probe_data>
-	        <ProbePoints>
-	           <probe_point>[16,20,20]</probe_point>
-		</ProbePoints>
-	        <ProbePoints>
-	           <probe_point>[16,19,19]</probe_point>
-		</ProbePoints>
-	        <ProbePoints>
-	           <probe_point>[16,17,18]</probe_point>
-		</ProbePoints>
-	        <ProbePoints>
-	           <probe_point>[16,22,19]</probe_point>
-		</ProbePoints>
-	        <ProbePoints>
-	           <probe_point>[24,19,20]</probe_point>
-		</ProbePoints>
-	        <ProbePoints>
-	           <probe_point>[22,20,19]</probe_point>
-		</ProbePoints>
-		<ProbePoints>
-		   <probe_point>[23,17,21]</probe_point>
-		</ProbePoints>
-		<ProbePoints>
-		   <probe_point>[24,22,20]</probe_point>
-		</ProbePoints>
-		<ProbePoints>
-		   <probe_point>[19,19,21]</probe_point>
-		</ProbePoints>
-		<ProbePoints>
-		   <probe_point>[19,22,20]</probe_point>
-		</ProbePoints>
+		<probe_data>false</probe_data>
 
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
