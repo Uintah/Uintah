@@ -44,14 +44,16 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 	set $this-histo 0.5
 
 	global $this-num-entries
-	set $this-num-entries 2
-	#trace variable $this-num-entries w "$this unpickle"
+	set $this-num-entries 0
+	
+	global $this-marker
+	trace variable $this-marker w "$this unpickle"
     }
 
     method unpickle {a b c} {
-	global $this-num-entries
+	global $this-marker
 	$this-c unpickle
-	trace vdelete $this-num-entries w "$this unpickle"
+	trace vdelete $this-marker w "$this unpickle"
     }
 
     method raise_color {col color colMsg} {
