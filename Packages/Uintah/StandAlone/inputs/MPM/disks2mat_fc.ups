@@ -28,7 +28,7 @@
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 
-	<checkpoint cycle = "2" interval = "0.01"/>
+      <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
     <MPM>
@@ -93,6 +93,7 @@
               <type>friction</type>
               <vel_fields>[0,1,0]</vel_fields>
               <mu> .5 </mu>
+              <volume_constraint> .0 </volume_constraint>
 	    </contact>
 	</MPM>
 
