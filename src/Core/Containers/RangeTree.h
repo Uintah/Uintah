@@ -716,7 +716,7 @@ RangeTree(list<TPoint*> points, int dimensions)
   ASSERT(points.size() <= INT_MAX);
   int n = (int)points.size();
   int i, j;
-  list<TPoint*>::iterator iter;
+  typename list<TPoint*>::iterator iter;
 
   largestPossibleL1Distance_ = 0;
   for (i = 0; i < dimensions; i++) {
@@ -768,7 +768,7 @@ queryNearest(const TPoint& p, TPointElem maximumValue)
     TPointElem nearestDistSquared = distSquared;
     // just do a linear search on the results (which hopefully, and in
     // most cases, will be a relatively small subset of points).
-    for (list<TPoint*>::iterator it = candidates.begin();
+    for (typename list<TPoint*>::iterator it = candidates.begin();
 	 it != candidates.end(); it++) {
       distSquared = getDistanceSquared(p, **it, DIMENSIONS_);
       if (distSquared < nearestDistSquared) {
@@ -1192,7 +1192,7 @@ dump()
 /* Actual query implementations below */
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
-RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode*
+typename RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode*
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 findSplit(RangeTreeNode* root, TPointElem low, TPointElem high, int d)
 {
@@ -1214,7 +1214,7 @@ findSplit(RangeTreeNode* root, TPointElem low, TPointElem high, int d)
 }
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
-RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode*
+typename RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::RangeTreeNode*
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 findSplitRadius2(RangeTreeNode* root, TPointElem p, TPointElem radius2, int d)
 {
@@ -1569,7 +1569,7 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   const int FAR_SIDE = (NEAR_SIDE + 1) % 2;
   list<RangeTreeNode*> edgeNodes;
   list<int> subCascadedIndices; // from fractional cascading
-  list<RangeTreeNode*>::iterator iter;
+  typename list<RangeTreeNode*>::iterator iter;
   list<int>::iterator cascadedIndexIter;
   RangeTreeNode* leafNode = 0;
   int splitSubIndex;

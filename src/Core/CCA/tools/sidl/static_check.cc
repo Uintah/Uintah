@@ -371,6 +371,7 @@ void Method::staticCheck(SymbolTable* names)
 	case Method::Abstract:
 	case Method::Static:
 	case Method::Unknown:
+	case Method::NoModifier:
 	  // No problem...
 	  break;
 	case Method::Final:
