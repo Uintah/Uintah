@@ -73,7 +73,7 @@ int DpyBase::open_display(Window parent, bool needevents) {
     criteria = strdup("sb");
     
 #if !defined(__APPLE__)
-  creteria = strcat(creteria, ", max rgba");
+  criteria = strcat(criteria, ", max rgba");
 #endif
 
   if(!visPixelFormat(criteria)){
