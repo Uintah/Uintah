@@ -49,6 +49,8 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/CurveField.h>
 
+#include <Core/Geom/GeomLine.h>
+
 namespace PCS {
 
 using namespace SCIRun;
@@ -56,12 +58,17 @@ using namespace SCIRun;
 class SilhouettesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle& src,
-			      View &view) = 0;
-
+  virtual void execute(FieldHandle& src,
+		       View &view,
+		       bool build_field,
+		       bool build_geom) = 0;
+  
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ttd);
+
+  virtual FieldHandle get_field() = 0;
+  virtual GeomHandle get_geom( double &isoval ) = 0;
 };
 
 
@@ -70,22 +77,45 @@ class SilhouettesAlgoT : public SilhouettesAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle& src,
-			      View &view);
+  virtual void execute(FieldHandle& src,
+		       View &view,
+		       bool build_field,
+		       bool build_geom );
+
+  FieldHandle get_field();
+  GeomHandle get_geom( double &isoval );
+
+private:
+  OMESH     *omesh_;
+
+  // Storage for the field nodes and assocaited values. 
+  vector<typename OFIELD::value_type> values_;
+  vector<typename OFIELD::mesh_type::Node::index_type> nodes_;
+
+  GeomLines *lines_;
 };
 
 // The goal dump all all of the unshared edges into a new field.
 template< class IFIELD, class OFIELD, class OMESH >
-FieldHandle
+void
 SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h,
-						  View &view)
+						  View &view,
+						  bool build_field,
+						  bool build_geom )
 {
   // Get the input field and mesh.
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
   // Create the output mesh.
-  OMESH *omesh = scinew OMESH();
+  if( build_field ) {
+    omesh_ = scinew OMESH();
+    nodes_.clear();
+    values_.clear();
+  }
+
+  if( build_geom )
+    lines_ = scinew GeomLines;
 
   // Iterators and arrays.
   typename IFIELD::mesh_type::Face::iterator in, end;
@@ -99,10 +129,6 @@ SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h,
   // Make sure all of the edges are up todate.
   imesh->synchronize(Mesh::EDGES_E);
   imesh->synchronize(Mesh::EDGE_NEIGHBORS_E);
-
-  // Storage for the field nodes and assocaited values. 
-  vector<typename IFIELD::value_type> values;
-  vector<typename IFIELD::mesh_type::Node::index_type> nodes;
 
   // Loop through all of the faces.
   while (in != end) {
@@ -125,37 +151,56 @@ SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h,
 	imesh->get_point( p0, nodeArray[0] );
 	imesh->get_point( p1, nodeArray[1] );
 
-	// Add the points to the new mesh.
-	typename IFIELD::mesh_type::Node::index_type n0 = omesh->add_node(p0);
-	typename IFIELD::mesh_type::Node::index_type n1 = omesh->add_node(p1);
+	if( build_field ) {
+	  // Add the points to the new mesh.
+	  typename OFIELD::mesh_type::Node::index_type n0 = omesh->add_node(p0);
+	  typename OFIELD::mesh_type::Node::index_type n1 = omesh->add_node(p1);
 
-	// Add the edge to the new mesh.
-	omesh->add_edge( n0, n1 );
+	  // Add the edge to the new mesh.
+	  omesh->add_edge( n0, n1 );
 
-	// Save the values for the field.
-	values.push_back( ifield->value( nodeArray[0] ) );
-	values.push_back( ifield->value( nodeArray[1] ) );
+	  // Save the nodes for each value for the field.
+	  nodes.push_back( n0 );
+	  nodes.push_back( n1 );
 
-	// Save the nodes for each value for the field.
-	nodes.push_back( n0 );
-	nodes.push_back( n1 );
+	  // Save the values for the field.
+	  values.push_back( ifield->value( nodeArray[0] ) );
+	  values.push_back( ifield->value( nodeArray[1] ) );
+	}
+
+	if( build_geom )
+	  lines_->add( p0, p1 );
       }
     }
 
     ++in;
   }
+}
+
+template< class IFIELD, class OFIELD, class OMESH >
+FieldHandle
+SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::get_field() {
 
   // Create the field after the mesh so that the data is allocated properly.
-  OFIELD *ofield = scinew OFIELD(omesh, 1);
+  OFIELD *ofield = scinew OFIELD(omesh_, 1);
 
   // Stuff all of the values into the field.
-  for( unsigned int i; i< values.size(); i++ )
-    ofield->set_value( values[i], nodes[i] );
+  for( unsigned int i; i< values_.size(); i++ )
+    ofield->set_value( values_[i], nodes_[i] );
 
   ofield->freeze();
 
   return FieldHandle( ofield );
 }
+
+template< class IFIELD, class OFIELD, class OMESH >
+GeomHandle
+SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::get_geom( double &isoval ) {
+
+  isoval = values[0];
+  return lines_;
+}
+
 
 } // end namespace PCS
 
