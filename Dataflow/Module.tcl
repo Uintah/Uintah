@@ -154,7 +154,7 @@ proc configureOPorts {modid} {
 	    -x 0 -y 0 -anchor sw
 	bind $w.oport$i <2> "startOPortConnection $modid $i"
 	bind $w.oport$i <B2-Motion> "trackOPortConnection $modid $i %x %y"
-	bind $w.oport$i <ButtonRelease-2> "endPortConnection $portcolor"
+	bind $w.oport$i <ButtonRelease-2> "endPortConnection \"$portcolor\""
 	incr i
     }
     rebuildConnections [netedit getconnected $modid]
