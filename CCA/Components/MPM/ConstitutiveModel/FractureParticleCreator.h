@@ -8,7 +8,7 @@ namespace Uintah {
   class FractureParticleCreator : public ParticleCreator {
   public:
     
-    FractureParticleCreator();
+    FractureParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
     virtual ~FractureParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,

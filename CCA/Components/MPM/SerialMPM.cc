@@ -129,9 +129,21 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
-
+   
    cout << "Number of materials: " << d_sharedState->getNumMatls() << endl;
 
+   lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
+   lb->d_particleState_preReloc.resize(d_sharedState->getNumMPMMatls());    
+   
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+     mpm_matl->getParticleState(lb->d_particleState[m],
+				lb->d_particleState_preReloc[m]);
+     
+   }
+
+   
+#if 0
    // Load up all the VarLabels that will be used in each of the
    // physical models
    lb->d_particleState.resize(d_sharedState->getNumMPMMatls());
@@ -163,6 +175,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
    }
+#endif
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -633,7 +646,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     CCVariable<short int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
-    
+
     for(int m=0;m<matls->size();m++){
       //cerrLock.lock();
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
@@ -650,6 +663,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+
 
 }
 

@@ -15,11 +15,12 @@ namespace Uintah {
   class MPMLabel;
   class MPMMaterial;
   class ParticleSubset;
+  class VarLabel;
 
   class ParticleCreator {
   public:
     
-    ParticleCreator();
+    ParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
     virtual ~ParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,
@@ -29,29 +30,39 @@ namespace Uintah {
 					    MPMLabel* lb,
 					    vector<GeometryObject*>&);
 
+    virtual void registerPermanentParticleState(MPMMaterial* matl,
+						MPMLabel* lb);
+
+    void getPermanentParticleState(vector<const VarLabel* >& pstate,
+				   vector<const VarLabel* >& pstate_preReloc);
+
     particleIndex countParticles(const Patch*,
 				 std::vector<GeometryObject*>&) const;
     particleIndex countParticles(GeometryObject* obj,
 				 const Patch*) const;
 
+    
   protected:
     
     void applyForceBC(particleIndex start, 
 		      ParticleVariable<Vector>& pextforce,
 		      ParticleVariable<double>& pmass, 
 		      ParticleVariable<Point>& position);
+
     
     ParticleSubset* allocateVariables(particleIndex numParticles,
-					      int dwi, MPMLabel* lb, 
-					      const Patch* patch,
-					      DataWarehouse* new_dw);
+				      int dwi, MPMLabel* lb, 
+				      const Patch* patch,
+				      DataWarehouse* new_dw);
 
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
     ParticleVariable<double> pmass, pvolume, ptemperature;
     ParticleVariable<long64> pparticleID;
 
-    
+    int d_8or27;
+
+    vector<const VarLabel* > particle_state, particle_state_preReloc;
   };
 
 

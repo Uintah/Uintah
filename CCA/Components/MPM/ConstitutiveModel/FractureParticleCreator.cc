@@ -3,7 +3,9 @@
 using namespace Uintah;
 using std::vector;
 
-FractureParticleCreator::FractureParticleCreator()
+FractureParticleCreator::FractureParticleCreator(MPMMaterial* matl,
+						 MPMLabel* lb,int n8or27) 
+  :  ParticleCreator(matl,lb,n8or27)
 {
 }
 

@@ -8,7 +8,7 @@ namespace Uintah {
   class ImplicitParticleCreator : public ParticleCreator {
   public:
     
-    ImplicitParticleCreator();
+    ImplicitParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
     virtual ~ImplicitParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 
@@ -23,7 +23,9 @@ namespace Uintah {
 					 std::vector<GeometryObject*>&) const;
     virtual particleIndex countParticles(GeometryObject* obj,
 					 const Patch*) const;
-    
+
+    virtual void registerPermanentParticleState(MPMMaterial* matl,
+						MPMLabel* lb);
     
   };
 

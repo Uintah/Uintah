@@ -66,11 +66,11 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 
    // Check to see which ParticleCreator object we need
    if (integrator == "implicit") 
-     d_particle_creator = scinew ImplicitParticleCreator();
+     d_particle_creator = scinew ImplicitParticleCreator(this,lb,n8or27);
    else if (dynamic_cast<Membrane*>(d_cm) != 0)
-     d_particle_creator = scinew MembraneParticleCreator();
+     d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27);
    else
-     d_particle_creator = scinew DefaultParticleCreator();
+     d_particle_creator = scinew DefaultParticleCreator(this,lb,n8or27);
 	
 //   d_eos = EquationOfStateFactory::create(ps);
 
@@ -155,6 +155,14 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 {
   d_particle_creator->createParticles(this,numParticles,cellNAPID,
 				      patch,new_dw,lb,d_geom_objs);
+}
+
+
+void MPMMaterial::getParticleState(vector<const VarLabel* >& pstate,
+				   vector<const VarLabel* >& pstate_rel)
+{
+  d_particle_creator->ParticleCreator::getPermanentParticleState(pstate,
+								 pstate_rel);
 
 }
 

@@ -8,7 +8,7 @@ namespace Uintah {
   class DefaultParticleCreator : public ParticleCreator {
   public:
     
-    DefaultParticleCreator();
+    DefaultParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
     virtual ~DefaultParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,

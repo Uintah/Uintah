@@ -7,8 +7,10 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <iostream>
 using namespace Uintah;
+using std::cerr;
+using std::endl;
 
 MPMLabel::MPMLabel()
 {
