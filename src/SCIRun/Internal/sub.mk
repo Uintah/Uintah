@@ -36,7 +36,8 @@ SRCS     += $(SRCDIR)/BuilderService.cc \
 	$(SRCDIR)/ComponentRegistry.cc \
 	$(SRCDIR)/InternalComponentDescription.cc \
 	$(SRCDIR)/InternalComponentModel.cc \
-	$(SRCDIR)/InternalComponentInstance.cc
+	$(SRCDIR)/InternalComponentInstance.cc \
+	$(SRCDIR)/FrameworkProperties.cc
 
 $(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ComponentEventService.o: Core/CCA/spec/cca_sidl.h
@@ -44,3 +45,4 @@ $(SRCDIR)/BuilderService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalComponentDescription.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalComponentInstance.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalComponentModel.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/FrameworkProperties.o: Core/CCA/spec/cca_sidl.h
