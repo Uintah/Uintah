@@ -2043,8 +2043,10 @@ class BioTensorApp {
 	global mods
 	
 	# Embed the Viewer
+	set viewer_border 5
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow $win.viewer $viewer_width $viewer_height
+	frame $win.viewer -relief sunken -borderwidth $viewer_border
+	$eviewer setWindow $win.viewer.v [expr $viewer_width - 2*$viewer_border] [expr $viewer_height - 2*$viewer_border]
 	
 	
 	### Processing Part
@@ -2114,6 +2116,7 @@ class BioTensorApp {
 	pack $attachedPFr -side left -anchor n
 
 	pack $win.viewer -side left -anchor n -fill both -expand 1
+	pack $win.viewer.v -side top -anchor n -fill both -expand 1
 
 	pack $attachedVFr -side left -anchor n 
 
@@ -3151,8 +3154,7 @@ class BioTensorApp {
 	    set IsVAttached 0
 	} else {
 	    wm withdraw $detachedVFr
-	    pack $attachedVFr -anchor n -side left -after $win.viewer \
-	       -fill both -expand 1
+	    pack $attachedVFr -anchor n -side left -after $win.viewer 
 	    set new_width [expr $c_width + $vis_width]
             append geom $new_width x $c_height
 	    wm geometry $win $geom
