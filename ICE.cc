@@ -3996,7 +3996,7 @@ void   ICE::backoutGCPressFromVelFC(const Patch* patch,
             THIS ISN'T BIG DEAL BUT SHOULD BE FIXED.    
  ---------------------------------------------------------------------  */
 void ICE::computeTauX_Components( const Patch* patch,
-                          const CCVariable<Vector> vel_CC,
+                          const CCVariable<Vector>& vel_CC,
                           const double viscosity,
                           const Vector dx,
                           SFCXVariable<Vector>& tau_X_FC)
@@ -4073,7 +4073,7 @@ void ICE::computeTauX_Components( const Patch* patch,
             THIS ISN'T BIG DEAL BUT SHOULD BE FIXED. 
  ---------------------------------------------------------------------  */
 void ICE::computeTauY_Components( const Patch* patch,
-                          const CCVariable<Vector> vel_CC,
+                          const CCVariable<Vector>& vel_CC,
                           const double viscosity,
                           const Vector dx,
                           SFCYVariable<Vector>& tau_Y_FC)
@@ -4149,7 +4149,7 @@ void ICE::computeTauY_Components( const Patch* patch,
             THIS ISN'T BIG DEAL BUT SHOULD BE FIXED. 
  ---------------------------------------------------------------------  */
 void ICE::computeTauZ_Components( const Patch* patch,
-                          const CCVariable<Vector> vel_CC,
+                          const CCVariable<Vector>& vel_CC,
                           const double viscosity,
                           const Vector dx,
                           SFCZVariable<Vector>& tau_Z_FC)
