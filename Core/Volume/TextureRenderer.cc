@@ -262,9 +262,14 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 {
 #ifdef HAVE_AVR_SUPPORT
   int nc = brick->nc();
+#ifndef GL_ARB_fragment_program 
+  nc = 1;
+#endif
   int idx[2];
   for(int c=0; c<nc; c++) {
+#ifdef GL_ARB_fragment_program
     glActiveTexture(GL_TEXTURE0+c);
+#endif
     int nb = brick->nb(c);
     int nx = brick->nx();
     int ny = brick->ny();
@@ -383,8 +388,9 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
     }
   }
   brick->set_dirty(false);
+#ifdef GL_ARB_fragment_program 
   glActiveTexture(GL_TEXTURE0);
-
+#endif
   CHECK_OPENGL_ERROR("VolumeRenderer::load_texture end");
 #endif
 }
@@ -401,7 +407,9 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
   }
   if(buffer) {
+#ifdef GL_ARB_fragment_program 
     glActiveTexture(GL_TEXTURE3);
+#endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   }
   for(unsigned int i=0, k=0; i<poly.size(); i++) {
@@ -439,7 +447,9 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     k += poly[i];
   }
   if(buffer) {
+#ifdef GL_ARB_fragment_program 
     glActiveTexture(GL_TEXTURE0);
+#endif
   }
 #endif
 }
@@ -606,7 +616,9 @@ TextureRenderer::build_colormap2()
         glDisable(GL_BLEND);
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#ifdef GL_ARB_fragment_program 
         glActiveTexture(GL_TEXTURE0);
+#endif
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         // rasterize widgets
         vector<CM2WidgetHandle> widgets = cmap2_->widgets();
@@ -641,7 +653,9 @@ TextureRenderer::build_colormap2()
         tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
       shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
                             0.0, 0.0);
+#ifdef GL_ARB_fragment_program 
       glActiveTexture(GL_TEXTURE0);
+#endif
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
       raster_buffer_->bind(GL_FRONT);
       glBegin(GL_QUADS);
@@ -771,6 +785,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                &(cmap1_array_(0, 0)));
 #else
   // bind texture to unit 2
+#ifdef GL_ARB_fragment_program 
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_1D);
@@ -781,6 +796,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
   glEnable(GL_TEXTURE_3D);
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
+#endif
   CHECK_OPENGL_ERROR("");
 #endif
 }
@@ -790,6 +806,7 @@ void
 TextureRenderer::bind_colormap2()
 {
 #ifdef HAVE_AVR_SUPPORT
+#ifdef GL_ARB_fragment_program
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -805,6 +822,7 @@ TextureRenderer::bind_colormap2()
   glEnable(GL_TEXTURE_3D);
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
+#endif
 }
 
 
@@ -815,6 +833,7 @@ TextureRenderer::release_colormap1()
 #if LINUXCOMPAT
   glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
 #else
+#ifdef GL_ARB_fragment_program
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -827,6 +846,7 @@ TextureRenderer::release_colormap1()
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
 #endif
+#endif
 }
 
 
@@ -834,6 +854,7 @@ void
 TextureRenderer::release_colormap2()
 {
 #ifdef HAVE_AVR_SUPPORT
+#ifdef GL_ARB_fragment_program
   glActiveTexture(GL_TEXTURE2_ARB);
   if(!sw_raster_ && use_pbuffer_) {
     cmap2_buffer_->release(GL_FRONT);
@@ -845,6 +866,7 @@ TextureRenderer::release_colormap2()
   glDisable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, 0);
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
 #endif
 }
 

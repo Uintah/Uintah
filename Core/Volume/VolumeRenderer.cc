@@ -296,7 +296,9 @@ VolumeRenderer::draw_volume()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
+#ifdef GL_ARB_fragment_program
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 
@@ -382,7 +384,9 @@ VolumeRenderer::draw_volume()
   } else {
     release_colormap1();
   }
+#ifdef GL_ARB_fragment_program
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
   glDisable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, 0);
 
@@ -411,7 +415,9 @@ VolumeRenderer::draw_volume()
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     
+#ifdef GL_ARB_fragment_program
     glActiveTexture(GL_TEXTURE0);
+#endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     blend_buffer_->bind(GL_FRONT);
 
@@ -592,7 +598,9 @@ VolumeRenderer::multi_level_draw()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
+#ifdef GL_ARB_fragment_program
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 
@@ -760,7 +768,9 @@ VolumeRenderer::multi_level_draw()
   } else {
     release_colormap1();
   }
+#ifdef GL_ARB_fragment_program
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
   glDisable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, 0);
 
@@ -789,7 +799,9 @@ VolumeRenderer::multi_level_draw()
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     
+#ifdef GL_ARB_fragment_program
     glActiveTexture(GL_TEXTURE0);
+#endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     blend_buffer_->bind(GL_FRONT);
 
