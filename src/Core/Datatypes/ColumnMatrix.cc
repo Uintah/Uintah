@@ -72,6 +72,7 @@ ColumnMatrix::ColumnMatrix(int rows) :
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) 
 {
   nrows_ = c.nrows_;
+  ncols_ = c.ncols_;
   if(nrows_){
     data=scinew double[nrows_];
     for(int i=0;i<nrows_;i++)
