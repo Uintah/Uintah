@@ -341,6 +341,9 @@ GridP DataArchive::queryGrid( double time )
 	    if(r.getNodeName().equals("numPatches")){
 	       if(!get(r, numPatches))
 		  throw InternalError("Error parsing numPatches");
+	    } else if(r.getNodeName().equals("numRegions")){
+	       if(!get(r, numPatches))
+		  throw InternalError("Error parsing numRegions");
 	    } else if(r.getNodeName().equals("totalCells")){
 	       if(!get(r, totalCells))
 		  throw InternalError("Error parsing totalCells");
@@ -633,6 +636,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.4  2000/05/31 03:11:12  sparker
+// Made reader backwards compatible with pre-patch uda files
+//
 // Revision 1.3  2000/05/30 20:19:40  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
