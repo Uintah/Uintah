@@ -20,6 +20,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
+       <max_iterations>     100         </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -163,12 +164,26 @@
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
            <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
-	    <Parameters>
-	       <tolerance>1.e-16    </tolerance> 
-	       <norm>     LInfinity  </norm>
-	       <criteria> Absolute   </criteria>
-	    </Parameters>
+           <Parameters variable="implicitPressure">
+	     <!-- Common options -->
+              <tolerance>1.e-8    </tolerance>
+
+	     <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+	     <!-- Hypre options -->
+	     <solver>         hybrid  </solver>
+	     <preconditioner> pfmg    </preconditioner>
+	     <tolerance>      1.e-10  </tolerance>
+	     <maxiterations>  7500    </maxiterations>
+	     <npre>           1       </npre>
+	     <npost>          1       </npost>
+	     <skip>           0       </skip>
+	     <jump>           0       </jump>
+           </Parameters>
         </ImplicitSolver>
+        
 
       </ICE>        
     </CFD>
