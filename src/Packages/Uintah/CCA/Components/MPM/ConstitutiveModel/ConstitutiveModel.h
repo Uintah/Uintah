@@ -87,13 +87,12 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
 /*`==========TESTING==========*/ 
-#if 0
-         double computeRhoMicro(double pressure);
+         double computeRhoMicroCM(double pressure, const MPMMaterial* matl);
 
-         void computePressEOS(double rho_m, double& press_eos,
-                              double& dp_drho, double& ss_new);
-                        
-#endif
+         void computePressEOSCM(double rho_m, double& press_eos,
+                                double& dp_drho, double& ss_new,
+			        const MPMMaterial* matl);
+
 	 double computeRhoMicro(double& press,double& gamma,
 				        double& cv, double& Temp);
 	 

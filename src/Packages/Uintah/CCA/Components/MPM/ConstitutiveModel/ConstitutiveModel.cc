@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
@@ -26,7 +27,6 @@ ConstitutiveModel::~ConstitutiveModel()
 
 //______________________________________________________________________
 //          HARDWIRE FOR AN IDEAL GAS -Todd 
-
 double ConstitutiveModel::computeRhoMicro(double& press, double& gamma,
 				 double& cv, double& Temp)
 {
@@ -43,20 +43,20 @@ void ConstitutiveModel::computePressEOS(double& rhoM, double& gamma,
   dp_drho = (gamma - 1.0)*cv*Temp;
   dp_de   = (gamma - 1.0)*rhoM;
 }
-
 //______________________________________________________________________
 //
-#if 0
-//for coupling to ICE
-double ConstitutiveModel::computeRhoMicro(double pressure)
+// The "CM" versions use the pressure-volume relationship of the CNH model
+double ConstitutiveModel::computeRhoMicroCM(double pressure,
+					  const MPMMaterial* matl)
 {
 
   // This is really only valid now for CompNeoHook(Plas)
-  double rho_orig = 1000.0;
-  double rho_cur;
+  double rho_orig = matl->getInitialDensity();
   double p_ref=101325.0;
-  double p_gauge = pressure - p_ref;
   double bulk = 2000.0;
+
+  double p_gauge = pressure - p_ref;
+  double rho_cur;
 
   rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
 
@@ -65,26 +65,21 @@ double ConstitutiveModel::computeRhoMicro(double pressure)
   return rho_cur;
 }
 
-void ConstitutiveModel::computePressEOS(const double  rho_cur, double& pressure,                                              double& dp_drho, double& ss_new)
+void ConstitutiveModel::computePressEOSCM(const double rho_cur,double& pressure,
+                                                double& dp_drho, double& tmp,
+					        const MPMMaterial* matl)
 {
 
   // This is really only valid now for CompNeoHook(Plas)
-  double rho_orig = 1000.0;
   double p_ref=101325.0;
   double bulk = 2000.0;
+  double rho_orig = matl->getInitialDensity();
 
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
   pressure = p_ref + p_g;
   dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  ss_new   = sqrt(bulk/rho_cur);
+  tmp   = 3600.0/rho_cur;   // speed of sound squared
 
 //  cout << "rho_cur = " << rho_cur << " press = " << pressure << " dp_drho = " << dp_drho << endl;
 
 }
-#endif
-
-
-
-
-
-
