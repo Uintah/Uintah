@@ -140,12 +140,6 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   size = bbox.diagonal();
   center = bbox.center();
 
-  string fldname;
-  if (f->get_property("name",fldname))
-    gui->execute(string("set ")+id+"-fldname "+fldname);
-  else
-    gui->execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
-
   gui->execute(string("set ")+id+"-inputcenterx "+to_string(center.x()));
   gui->execute(string("set ")+id+"-inputcentery "+to_string(center.y()));
   gui->execute(string("set ")+id+"-inputcenterz "+to_string(center.z()));
