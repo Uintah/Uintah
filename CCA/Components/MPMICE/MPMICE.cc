@@ -106,6 +106,11 @@ void MPMICE::scheduleTimeAdvance(double, double,
   const PatchSet* patches = level->eachPatch();
   NOT_FINISHED("probably wrong material set for MPMICE");
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+  const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
   if(d_fracture) {
     d_mpm->scheduleSetPositions(sched, patches, matls);
@@ -122,7 +127,10 @@ void MPMICE::scheduleTimeAdvance(double, double,
   scheduleInterpolateNCToCC_0(sched, patches, matls);
   scheduleComputeEquilibrationPressure(sched, patches, matls);
 
-  d_ice->scheduleComputeFaceCenteredVelocities(sched, patches, matls);
+  d_ice->scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
+                                                               mpm_matls_sub,
+                                                               all_matls);
+                                                               
   d_ice->scheduleAddExchangeContributionToFCVel(sched, patches, matls);
   d_ice->scheduleComputeDelPressAndUpdatePressCC(sched, patches, matls);
 
@@ -136,7 +144,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_ice->scheduleComputePressFC(                  sched, patches, matls);
   d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, matls);
   d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, matls);
-  d_ice->scheduleComputeLagrangianValues(         sched, patches, matls);
+  d_ice->scheduleComputeLagrangianValues(         sched, patches, ice_matls_sub, 
+                                                                  all_matls);
 
   scheduleInterpolatePressCCToPressNC(            sched, patches, matls);
   scheduleInterpolatePAndGradP(                   sched, patches, matls);
