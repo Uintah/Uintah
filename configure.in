@@ -1602,9 +1602,10 @@ case $host in
       sed "s+VERBOSE_CC+${CC}+g;" < ${srcdir}/scripts/cc.in > scripts/cc
       sed "s+VERBOSE_CC+${CXX}+g;" < ${srcdir}/scripts/cc.in > scripts/CC
       chmod 755 scripts/cc scripts/CC
-
-      CC="scripts/cc"
-      CXX="scripts/CC"
+      
+      scripts_path=`cd scripts;pwd`
+      CC="$scripts_path/cc"
+      CXX="$scripts_path/CC"
     else
       AC_MSG_RESULT(no)
     fi
