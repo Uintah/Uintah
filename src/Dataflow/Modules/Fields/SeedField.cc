@@ -193,9 +193,6 @@ SeedField::execute_gui()
   const int rand_seed = random_seed_GUI_.get();
   const int num_dipoles = number_dipoles_GUI_.get();
 
-  //cout << "random_seed_ = " << random_seed_ << " " << rand_seed << endl;
-  //cout << "number_dipoles = " << number_dipoles_ << " " << num_dipoles << endl;
-
   if (vf_generation_ != vfhandle_->generation ||
       random_seed_ != rand_seed ||
       number_dipoles_ != num_dipoles)
@@ -216,7 +213,7 @@ SeedField::execute_gui()
     }
     else
     {
-      cout << "Unsupported input field type, no cells\n";
+      error("Unsupported input field type, no cells\n");
       return;
     }
   }

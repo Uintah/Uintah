@@ -153,7 +153,8 @@ TransformField::execute()
   }
   else
   {
-    cout << "TransformField:: Unsupported mesh type\n";
+    error("Unsupported mesh type.\n");
+    return;
   }
 }
 
