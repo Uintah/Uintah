@@ -15,6 +15,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
+#include <ctime>
 
 namespace Uintah {
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
@@ -190,6 +191,12 @@ void getIteratorBCValueBCKind( const Patch* patch,
      dynamic_cast<const DensityBoundCond *>(new_bcs);   
 
    double K = density_bcs->getConstant();
+
+   // Seed the random number generator with the number of seconds since 
+   // midnight Jan. 1, 1970.
+
+   time_t seconds = time(NULL);
+   srand(seconds);
 
    for (iter = bound.begin(); iter != bound.end(); iter++) {
      var[*iter] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
