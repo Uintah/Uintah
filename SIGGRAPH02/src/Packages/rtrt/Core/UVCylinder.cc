@@ -64,6 +64,17 @@ void UVCylinder::intersect(Ray& ray, HitInfo& hit, DepthStats*,
   // SCIRun::Transform as part of the code merger.
   // Since this is the only place where it is used, I'm going to just
   // transplant the code into here
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }
   Vector v(xform.project(ray.direction()));
   double dist_scale=v.normalize();
   Ray xray(xform.project(ray.origin()), v);
@@ -113,8 +124,21 @@ Vector UVCylinder::normal(const Point& hitpos, const HitInfo&)
 
 void UVCylinder::compute_bounds(BBox& bbox, double offset)
 {
-    bbox.extend(bottom, radius+offset);
-    bbox.extend(top, radius+offset);
+// this code below used to be the solution... 
+//  bbox.extend(bottom, radius+offset);
+//  bbox.extend(top, radius+offset);
+// ...but it was too conservative.  I think this new code works and it
+// definitely has a tighter bound.  But I'm not *positive* it works... -Dave
+  Vector v(top-bottom);
+  v.normalize();
+  v.x(fabs(v.x()));
+  v.y(fabs(v.y()));
+  v.z(fabs(v.z()));
+  Vector ext(1-v.x(), 1-v.y(), 1-v.z());
+  bbox.extend(top+ext*(radius+offset));
+  bbox.extend(top-ext*(radius+offset)); 
+  bbox.extend(bottom+ext*(radius+offset));
+  bbox.extend(bottom-ext*(radius+offset));
 }
 
 void UVCylinder::print(ostream& out)

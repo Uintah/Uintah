@@ -330,7 +330,7 @@ Scene::turnOffAllLights( double left )
     if (left>0.0) {
 
       if( light->isMoodLight() ) {
-	light->updateIntensity( 1.0 - left );
+	light->modifyCurrentIntensity( 1.0 - left );
 	light->turnOn();
       } else {
 	light->modifyCurrentIntensity( left );
@@ -338,6 +338,8 @@ Scene::turnOffAllLights( double left )
     } else {
       if( !light->isMoodLight() ){
 	light->turnOff();
+      } else {
+	light->updateIntensity(1.0);
       }
     }
   }
@@ -360,9 +362,9 @@ Scene::turnOnAllLights()
       light = per_matl_lights[cnt-numLights];
 
     if( light->isMoodLight() ) {
-      lights[cnt]->reset(); 
+      light->reset(); 
     } else {
-      lights[cnt]->reset(); 
+      light->reset(); 
       light->turnOn();
     }
   }
