@@ -23,9 +23,11 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TclObj.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/Color.h>
 #include <Core/2d/OpenGLWindow.h>
+
 
 
 namespace SCIRun {
