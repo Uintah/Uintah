@@ -275,6 +275,7 @@ proc createSubnet { from_subnet { modules "" } } {
 	}
 	
 	foreach xconn $connections {
+	    if { $Subnet([oMod xconn]) == $Subnet([iMod xconn]) } continue
 	    if [string equal [oPort conn] [oPort xconn]] {
 		listFindAndRemove connections $xconn
 		set newconn [lreplace $newconn 2 2 [iMod xconn]]

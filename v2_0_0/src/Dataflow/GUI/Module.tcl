@@ -2059,6 +2059,7 @@ proc portColor { port } {
 	set port "SubnetIcon$Subnet([pMod port]) [pNum port] [invType port]"
     }
     set port [lindex [findPortOrigins $port] 0]
+    if ![string length $port] { return red }
     return [[pMod port]-c [pType port]portcolor [pNum port]]
 }
 
@@ -2070,6 +2071,7 @@ proc portName { port } {
     }
 
     set port [lindex [findPortOrigins $port] 0]
+    if ![string length $port] { return "None None" }
     return [[pMod port]-c [pType port]portname [pNum port]]
 }
 
