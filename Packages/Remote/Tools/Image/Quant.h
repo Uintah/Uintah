@@ -15,6 +15,7 @@ namespace Remote {
 namespace Tools {
 
 typedef unsigned char byte;
+typedef long long INT64;
 
 //////////////////////////////////////////////////////////////////////
 // Color Quantization Class
