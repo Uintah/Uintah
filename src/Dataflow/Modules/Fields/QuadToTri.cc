@@ -107,10 +107,12 @@ QuadToTri::execute()
 	  src_td->get_name());
     return;
   }
-  if (!algo->execute(ifieldhandle, ofieldhandle)) {
+  std::ostream &msg = msgStream();
+  if (!algo->execute(ifieldhandle, ofieldhandle, msg)) {
     error("QuadToTri conversion failed.");
     return;
   } 
+  msgStream_flush();
   ofp->send(ofieldhandle);
 }
 

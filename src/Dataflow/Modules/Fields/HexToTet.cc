@@ -98,13 +98,13 @@ HexToTet::execute()
     return;
   }
   last_generation_ = ifieldhandle->generation;
-  
+  std::ostream &msg = msgStream();
   const TypeDescription *src_td = ifieldhandle->get_type_description();
   CompileInfoHandle hci = HexToTetAlgo::get_compile_info(src_td);
   Handle<HexToTetAlgo> halgo;
   if (module_maybe_dynamic_compile(hci, halgo))
   {
-    if (!halgo->execute(ifieldhandle, ofieldhandle))
+    if (!halgo->execute(ifieldhandle, ofieldhandle, msg))
     {
       warning("HexToTet conversion failed to copy data.");
       return;
@@ -116,7 +116,7 @@ HexToTet::execute()
     Handle<LatToTetAlgo> lalgo;
     if (module_maybe_dynamic_compile(lci, lalgo))
     {
-      if (!lalgo->execute(ifieldhandle, ofieldhandle))
+      if (!lalgo->execute(ifieldhandle, ofieldhandle, msg))
       {
 	warning("LatToTet conversion failed to copy data.");
 	return;
@@ -129,7 +129,7 @@ HexToTet::execute()
       return;
     }
   }
-
+  msgStream_flush();
   ofp->send(ofieldhandle);
 }
 
