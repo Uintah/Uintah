@@ -50,7 +50,8 @@ using Uintah::Grid::Region;
 using Uintah::Grid::NodeIterator;
 using Uintah::Grid::NCVariable;
 
-SerialMPM::SerialMPM()
+SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
+  UintahParallelComponent( MpiRank, MpiProcesses )
 {
 }
 
@@ -698,6 +699,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.20  2000/04/19 22:38:16  dav
+// Make SerialMPM a UintahParallelComponent
+//
 // Revision 1.19  2000/04/19 22:30:00  dav
 // somehow SerialMPM.cc had cvs diff stuff in it.  I have removed it.  I hope I removed the right stuff.
 //

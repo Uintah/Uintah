@@ -1,6 +1,7 @@
 #ifndef UINTAH_HOMEBREW_SERIALMPM_H
 #define UINTAH_HOMEBREW_SERIALMPM_H
 
+#include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/MPMInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
@@ -23,6 +24,7 @@ using Uintah::Interface::MPMInterface;
 using Uintah::Interface::DataWarehouseP;
 using Uintah::Interface::SchedulerP;
 using Uintah::Parallel::ProcessorContext;
+using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Grid::Region;
 using Uintah::Grid::LevelP;
 using Uintah::Interface::ProblemSpecP;
@@ -58,9 +60,9 @@ WARNING
   
 ****************************************/
 
-class SerialMPM : public MPMInterface {
+class SerialMPM : public UintahParallelComponent, public MPMInterface {
 public:
-    SerialMPM();
+    SerialMPM( int MpiRank, int MpiProcesses );
     virtual ~SerialMPM();
 
     //////////
@@ -136,6 +138,9 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/04/19 22:38:16  dav
+// Make SerialMPM a UintahParallelComponent
+//
 // Revision 1.9  2000/04/19 05:26:01  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
