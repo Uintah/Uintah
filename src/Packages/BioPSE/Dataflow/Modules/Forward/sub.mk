@@ -44,7 +44,6 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\
 	    $(SRCDIR)/IntegrateCurrent.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
-	    $(SRCDIR)/SetupBEMatrix2.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
 	    $(SRCDIR)/SphereModel.cc\
 	    $(SRCDIR)/TensorsToIndices.cc\
