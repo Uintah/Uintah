@@ -8,6 +8,7 @@ using namespace std;
 
 void doMatrixSolvingTests(Suite& suite);
 void doEigenTests(Suite& suite);
+void doEigenPlaneTests(Suite& suite);
 
 void addSolveTests(Suite& suite, const string& test_name,
 	       const Matrix3& M, const Vector& rhs, bool exp_return,
@@ -36,10 +37,13 @@ SuiteTree* matrix3TestTree()
   SuiteTreeNode* matrix3Tests = new SuiteTreeNode("Matrix3");
   Suite* solvingTests = new Suite("Solving Ax=b");
   Suite* eigenTests = new Suite("Eigen values/vectors");
+  Suite* eigenPlaneTests = new Suite("Eigen plane values");
   doMatrixSolvingTests(*solvingTests);
   doEigenTests(*eigenTests);
+  doEigenPlaneTests(*eigenPlaneTests);
   matrix3Tests->addSuite(solvingTests);
   matrix3Tests->addSuite(eigenTests);
+  matrix3Tests->addSuite(eigenPlaneTests);
   return matrix3Tests;
 }
 
@@ -157,11 +161,77 @@ void doEigenTests(Suite& suite)
       threeEigenTestC->setResults(testEigenValue(M, e3));
       eigenValueOrderTest->setResults((e1 < e2) && (e2 < e3));
     }
+    else if (num_eigen_values == 2) {
+      // two eigen values are the same
+      // just treat this under the three eigen test case since
+      // this is rare on random data
+      threeEigenTestA->setResults(testEigenValue(M, e1));
+      threeEigenTestB->setResults(testEigenValue(M, e2));
+      eigenValueOrderTest->setResults(e1 < e2);    
+    }
     else {
       suite.addTest("Bad number of eigen values", false);
     }
   }
   
+}
+
+void doEigenPlaneTests(Suite& suite)
+{  
+  Test* eigenValueOrderTest = suite.addTest("e1 < e2");
+  Test* eigenTestA[3];
+  Test* eigenTestB[3];
+
+  eigenTestA[0] = suite.addTest("YZ e1");
+  eigenTestB[0] = suite.addTest("YZ e2");
+  eigenTestA[1] = suite.addTest("XZ e1");
+  eigenTestB[1] = suite.addTest("XZ e2");
+  eigenTestA[2] = suite.addTest("XY e1");
+  eigenTestB[2] = suite.addTest("XY e2");
+  
+  Matrix3 M;
+  Matrix3 planeM; // 3d version of sub-matrix (with zeroes at bottom and right)
+  double e1, e2;
+  double tste1, tste2, tste3;
+  int num_eigen_values;
+  
+  for (int i = 0; i < 5; i++) {
+    // run a bunch of random tests
+    M = randomMatrix();
+    for (int plane = 1; plane <= 3; plane++) {
+      if (plane == 1) {
+	num_eigen_values = M.getYZEigenValues(e1, e2);
+	planeM = Matrix3(M(2, 2), M(2, 3), 0, M(3, 2), M(3, 3), 0, 0, 0, 0);
+      }
+      else if (plane == 2) {
+	num_eigen_values = M.getXZEigenValues(e1, e2);
+	planeM = Matrix3(M(1, 1), M(1, 3), 0, M(3, 1), M(3, 3), 0, 0, 0, 0);
+      }
+      else {
+ 	num_eigen_values = M.getXYEigenValues(e1, e2);
+	planeM = Matrix3(M(1, 1), M(1, 2), 0, M(2, 1), M(2, 2), 0, 0, 0, 0);
+      }
+
+      // Use the 3x3 test with planeM (which is the sub-matrix
+      // with 0's on the bottom and right).  This works because
+      // this every eigenvalue of the 2x2 sub-matrix should be
+      // an eigenvalue of planeM.
+      
+      if (num_eigen_values == 1) {
+	// two eigen values are the same
+	eigenTestA[plane-1]->setResults(testEigenValue(planeM, e1));
+      }
+      else if (num_eigen_values == 2) {
+	eigenTestA[plane-1]->setResults(testEigenValue(planeM, e1));
+	eigenTestB[plane-1]->setResults(testEigenValue(planeM, e2));
+	eigenValueOrderTest->setResults(e1 < e2);    
+      }
+      else if (num_eigen_values != 0) {
+	suite.addTest("Bad number of eigen values", false);
+      }
+    }
+  }
+
 }
 
 bool testEigenValue(const Matrix3& M, double eigen_value)
