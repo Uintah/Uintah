@@ -20,6 +20,7 @@ University of Utah. All Rights Reserved.
 <!--% require("../Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 <!--% doc.insertDocType("article", {"sr"=>"SCIRun"}) %-->
+<!--% colspec = "<colspec colwidth=\"6*\"/> <colspec colwidth=\"1*\" align=\"center\"/> <colspec colwidth=\"1*\" align=\"center\"/> <colspec colwidth=\"1*\" align=\"center\"/> <colspec colwidth=\"1*\" align=\"center\"/>" %-->
 
 <article class="techreport">
   <title>&sr; Documentation Inventory (v. <!--%= doc.edition %-->)</title>
@@ -53,9 +54,9 @@ University of Utah. All Rights Reserved.
 	</listitem>
       </varlistentry>
       <varlistentry>
-	<term>Status</term>
+	<term>%</term>
 	<listitem>
-	  <para>Percent compeleted.  Notes may accompany the percentage figure.</para>
+	  <para>Percent compeleted.</para>
 	</listitem>
       </varlistentry>
       <varlistentry>
@@ -87,40 +88,7 @@ University of Utah. All Rights Reserved.
     <table>
       <title>Developer Guide Tasks</title>
       <tgroup cols="5">
-	<colspec colname="task" colwidth="4*"/>
-	<colspec colname="pri" colwidth="1*"/>
-	<colspec colname="status" colwidth="3*"/>
-	<colspec colname="assigned" colwidth="1*"/>
-	<colspec colname="comp" colwidth="1*"/>
-	<thead>
-	  <row>
-	    <entry colname="task">Task</entry>
-	    <entry colname="pri">Priority</entry>
-	    <entry colname="status">Status</entry>
-	    <entry colname="assigned">Assigned</entry>
-	    <entry colname="comp">Comp Date</entry>
-	  </row>
-	</thead>
-	<tbody>
-	  <row>
-	    <entry colname="task"></entry>
-	    <entry colname="pri"></entry>
-	    <entry colname="status"></entry>
-	    <entry colname="assigned"></entry>
-	    <entry colname="comp"></entry>
-	  </row>
-	</tbody>
-      </tgroup>
-    </table>
-  </section>
-
-  <section>
-    <title>User Guide</title> <para>A user's guide to the purpose and
-    use of the &sr; problem solving environment.  For users who are
-    building and executing &sr; networks</para>
-    <table>
-      <title></title>
-      <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
@@ -144,42 +112,69 @@ University of Utah. All Rights Reserved.
   </section>
 
   <section>
-    <title>Installation Guide</title> 
-    <para>The Installation Guide
-    provides instructions for installing &sr;, its third party library
-    distribution, other third party libraries (e.g. ITK), sample data
-    sets, and documentation.</para>
-     <table>
+    <title>User Guide</title> <para>A user's guide to the purpose and
+    use of the &sr; problem solving environment.  For users who are
+    building and executing &sr; networks</para>
+    <table>
       <title></title>
       <tgroup cols="5">
-	<colspec colname="task" colwidth="4*"/>
-	<colspec colname="pri" colwidth="1*"/>
-	<colspec colname="status" colwidth="3*"/>
-	<colspec colname="assigned" colwidth="1*"/>
-	<colspec colname="comp" colwidth="1*"/>
+	<!--%= colspec %-->
 	<thead>
 	  <row>
-	    <entry colname="task">Task</entry>
-	    <entry colname="pri">Priority</entry>
-	    <entry colname="status">Status</entry>
-	    <entry colname="assigned">Assigned</entry>
-	    <entry colname="comp">Comp Date</entry>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>%</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
 	  </row>
 	</thead>
 	<tbody>
 	  <row>
-	    <entry colname="task">Update system compatibility info. Dav has mostly
-	    gathered this info.  Now needs to be inserted into
-	    Guide. </entry>
-	    <entry colname="pri">Normal</entry>
-	    <entry colname="status">0%</entry>
-	    <entry colname="assigned">Ted</entry>
-	    <entry colname="comp">May 1, 2004</entry>
+	    <entry></entry>
+	    <entry></entry>
+	    <entry></entry>
+	    <entry></entry>
+	    <entry></entry>
 	  </row>
 	</tbody>
       </tgroup>
     </table>
- </section>
+  </section>
+
+  <section>
+    <title>Installation Guide</title>
+
+    <para>The Installation Guide provides instructions for installing
+    &sr;, its third party library distribution, other third party
+    libraries (e.g. ITK), sample data sets, and documentation.</para>
+    
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<!--%= colspec %-->
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>%</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Update system compatibility info. Dav has mostly
+	    gathered this info.  Now needs to be inserted into
+	    Guide. </entry>
+	    <entry>Normal</entry>
+	    <entry>0</entry>
+	    <entry>Ted</entry>
+	    <entry>May 1, 2004</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
 
   <section>
     <title>Module Reference Guide</title>
@@ -187,11 +182,7 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
-	<colspec colwidth="2in"/>
-	<colspec colwidth="0.5in"/>
-	<colspec colwidth="2in"/>
-	<colspec colwidth="1in"/>
-	<colspec colwidth="0.5in"/>
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
@@ -207,7 +198,7 @@ University of Utah. All Rights Reserved.
 	    for each module.  No module is adequately documented and this should
 	    be an ongoing process.</entry>
 	    <entry>Low</entry>
-	    <entry>50%&#x2014;This number reflects past work completed</entry>
+	    <entry>50</entry>
 	    <entry>Module Developers</entry>
 	    <entry>None</entry>
 	  </row>
@@ -222,11 +213,7 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
-	<colspec colwidth="2in"/>
-	<colspec colwidth="0.5in"/>
-	<colspec colwidth="2in"/>
-	<colspec colwidth="1in"/>
-	<colspec colwidth="0.5in"/>
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
@@ -241,7 +228,7 @@ University of Utah. All Rights Reserved.
 	    <entry>Complete the MSG.  Incomplete draft is finished.
 	    See subsequent entries for specific tasks.</entry>
 	    <entry>Low</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>Ted</entry>
 	    <entry>8/1/04</entry>
 	  </row>
@@ -251,7 +238,7 @@ University of Utah. All Rights Reserved.
 	    incomplete.  Remainder of element reference entries need
 	    to be completed.</entry>
 	    <entry>Low</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>Ted</entry>
 	    <entry>8/1/04</entry>
 	  </row>
@@ -259,7 +246,7 @@ University of Utah. All Rights Reserved.
 	    <entry>Expand <citetitle>Content Models</citetitle>
 	    section.  A Terse paragraph exists.</entry>
 	    <entry>Low</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>Ted</entry>
 	    <entry>8/1/04</entry>
 	  </row>
@@ -274,11 +261,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -287,7 +275,7 @@ University of Utah. All Rights Reserved.
 	  <row>
 	    <entry>Review new FAQ entries and commit them to repository.</entry>
 	    <entry>High</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>Ted</entry>
 	    <entry>May 1, 2004</entry>
 	  </row>
@@ -302,11 +290,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -315,7 +304,7 @@ University of Utah. All Rights Reserved.
 	  <row>
 	    <entry>Review new FAQ entries and commit them to repository.</entry>
 	    <entry>High</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>Ted</entry>
 	    <entry>May 1, 2004</entry>
 	  </row>
@@ -330,11 +319,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -343,7 +333,7 @@ University of Utah. All Rights Reserved.
 	  <row>
 	    <entry>Review new FAQ entries and commit them to repository.</entry>
 	    <entry>High</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>Ted</entry>
 	    <entry>May 1, 2004</entry>
 	  </row>
@@ -358,11 +348,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -386,11 +377,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -414,11 +406,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -429,7 +422,7 @@ University of Utah. All Rights Reserved.
 	    to be made more tutorial-like.  Procedures for replicating
 	    tutorial images need to be developed.</entry>
 	    <entry>Low</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry></entry>
 	    <entry></entry>
 	  </row>
@@ -444,11 +437,12 @@ University of Utah. All Rights Reserved.
     <table>
       <title></title>
       <tgroup cols="5">
+	<!--%= colspec %-->
 	<thead>
 	  <row>
 	    <entry>Task</entry>
 	    <entry>Priority</entry>
-	    <entry>Status</entry>
+	    <entry>%</entry>
 	    <entry>Assigned</entry>
 	    <entry>Comp Date</entry>
 	  </row>
@@ -457,7 +451,7 @@ University of Utah. All Rights Reserved.
 	  <row>
 	    <entry>Needs to be brought up to date.</entry>
 	    <entry>Normal</entry>
-	    <entry>0%</entry>
+	    <entry>0</entry>
 	    <entry>None</entry>
 	    <entry>None</entry>
 	  </row>
