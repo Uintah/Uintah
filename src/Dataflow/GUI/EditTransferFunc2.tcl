@@ -323,7 +323,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	bind $w <Shift-Button3-Motion> "$this-c mouse scale move %x %y"
 	bind $w <Shift-ButtonRelease-3> "$this-c mouse scale end %x %y"
 
-	bind $w <Destroy> "$this-c closewindow"		
+	bind $w <Destroy> "$this-c destroygl"		
     }
 	    
     method create_gl {} {
@@ -336,8 +336,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
             frame $w.f.gl -relief groove -borderwidth 2
             pack $w.f.gl -padx 2 -pady 2
             # create an OpenGL widget
-            opengl $w.f.gl.gl -geometry 512x256 -doublebuffer true -direct true \
-                -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
+	    $this-c setgl $w.f.gl.gl
 	    bind_events $w.f.gl.gl
             # place the widget on the screen
             pack $w.f.gl.gl -fill both -expand 1
