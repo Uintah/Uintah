@@ -152,13 +152,10 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
     nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
 
-  vector< string > dataset;
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
-  nHandles[mesh[PHI]]->get_tuple_indecies(dataset);
-
-  dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
-
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
+  nout->nrrd->axis[0].label = strdup("XYZ:Vector");
   nout->nrrd->axis[1].label = strdup("Phi");
   nout->nrrd->axis[2].label = strdup("Theta");
   nout->nrrd->axis[3].label = strdup("Radial");
@@ -227,6 +224,9 @@ execute(vector< NrrdDataHandle >& nHandles,
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
+
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -312,6 +312,9 @@ execute(vector< NrrdDataHandle >& nHandles,
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
+
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
@@ -412,6 +415,9 @@ execute(vector< NrrdDataHandle >& nHandles,
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, sink_size, idim, jdim, kdim);
+
+  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
   vector< string > dataset;
 
