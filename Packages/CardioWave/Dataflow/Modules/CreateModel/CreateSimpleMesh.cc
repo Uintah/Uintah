@@ -13,6 +13,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Containers/Array1.h>
 
 #include <Packages/CardioWave/share/share.h>
 

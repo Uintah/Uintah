@@ -87,11 +87,8 @@ void RemoveInteriorTets::execute(){
   TetVolMesh::Cell::size_type ncells;
   old_mesh->size(ncells);
 
-  Array1<int> cell_valid(ncells);
-  Array1<int> node_valid(nnodes);
-
-  cell_valid.initialize(1);
-  node_valid.initialize(0);
+  vector<bool> cell_valid(ncells, true);
+  vector<bool> node_valid(nnodes, false);
 
   // find the tets with centroid far from their nodes
   TetVolMesh::Cell::iterator cb, ce; old_mesh->begin(cb); old_mesh->end(ce);
@@ -102,7 +99,7 @@ void RemoveInteriorTets::execute(){
     for (i=0; i<4; i++) {
       old_mesh->get_center(p, nodes[i]);
       if ((p-centroid).length() > threshold) {
-	cell_valid[*cb]=0;
+	cell_valid[*cb]=false;
       }
     }
     ++cb;
@@ -114,7 +111,7 @@ void RemoveInteriorTets::execute(){
     if (cell_valid[*cb]) {
       old_mesh->get_nodes(nodes, *cb);
       for (i=0; i<4; i++) {
-	node_valid[nodes[i]]=1;
+	node_valid[nodes[i]]=true;
       }
     }
     ++cb;
@@ -125,8 +122,7 @@ void RemoveInteriorTets::execute(){
   // add the remaining nodes to a new mesh and make a map of old-to-new 
   //   node indices
   int count=0;
-  Array1<int> node_map(nnodes);
-  node_map.initialize(-1);
+  vector<int> node_map(nnodes, -1);
   TetVolMesh::Node::iterator nb, ne; old_mesh->begin(nb); old_mesh->end(ne);
   while(nb!=ne) {
     if (node_valid[*nb]) {
@@ -149,7 +145,7 @@ void RemoveInteriorTets::execute(){
     if (cell_valid[*cb]) {
       old_mesh->get_nodes(nodes, *cb);
       new_mesh->add_tet(node_map[nodes[0]], node_map[nodes[1]],
-		  node_map[nodes[2]], node_map[nodes[3]]);
+			node_map[nodes[2]], node_map[nodes[3]]);
       count++;
     }
     ++cb;

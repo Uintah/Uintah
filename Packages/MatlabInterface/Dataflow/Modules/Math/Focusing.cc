@@ -20,6 +20,8 @@
 
 #include <Packages/MatlabInterface/share/share.h>
 
+#include <stdio.h>
+
 void focusing(double *f,double *d,double *r,double *w,double *m,
               double noise,double mu,double ml,int fcsdg,int Nd,int Nm);
 
