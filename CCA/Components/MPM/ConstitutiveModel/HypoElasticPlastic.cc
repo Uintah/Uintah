@@ -492,7 +492,7 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     pDeformGrad[*n] = o_DeformGrad[*o];
-    pStress[*n] = zero;
+    pStress[*n] = o_Stress[*o];
 
     pLeftStretch[*n] = o_LeftStretch[*o];
     pRotation[*n] = o_Rotation[*o];

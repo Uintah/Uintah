@@ -22,6 +22,7 @@ SRCS     += \
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
 	$(SRCDIR)/ShellMaterial.cc 			\
+	$(SRCDIR)/GUVMaterial.cc 			\
 	$(SRCDIR)/HypoElasticPlastic.cc \
 	$(SRCDIR)/HyperElasticPlastic.cc \
 	$(SRCDIR)/DamageModel.cc \
