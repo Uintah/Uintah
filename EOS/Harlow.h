@@ -41,11 +41,11 @@ WARNING
 	 virtual ~Harlow();
         
 	 // Per cell
-	 virtual double computeRhoMicro(double& press,double& gamma,
-				        double& cv, double& Temp);
+	 virtual double computeRhoMicro(double press,double gamma,
+				        double cv, double Temp);
 	 
-	 virtual void computePressEOS(double& rhoM, double& gamma,
-				      double& cv, double& Temp,
+	 virtual void computePressEOS(double rhoM, double gamma,
+				      double cv, double Temp,
 				      double& press, double& dp_drho,
 				      double& dp_de);
         //per patch                          

@@ -26,8 +26,8 @@ double Harlow::getGasConstant() const
 
 //__________________________________
 //
-double Harlow::computeRhoMicro(double& press, double& gamma,
-				 double& cv, double& Temp)
+double Harlow::computeRhoMicro(double press, double gamma,
+			       double cv, double Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
@@ -51,9 +51,9 @@ void Harlow::computeTempCC(const Patch* patch,
 
 //__________________________________
 //
-void Harlow::computePressEOS(double& rhoM, double& gamma,
-			       double& cv, double& Temp,
-			       double& press, double& dp_drho, double& dp_de)
+void Harlow::computePressEOS(double rhoM, double gamma,
+			     double cv, double Temp,
+			     double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
   press   = (gamma - 1.0)*rhoM*cv*Temp;

@@ -25,8 +25,8 @@ double StiffGas::getGasConstant() const
 
 //__________________________________
 //
-double StiffGas::computeRhoMicro(double& press, double& gamma,
-				 double& cv, double& Temp)
+double StiffGas::computeRhoMicro(double press, double gamma,
+				 double cv, double Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
@@ -50,8 +50,8 @@ void StiffGas::computeTempCC(const Patch* patch,
 
 //__________________________________
 //
-void StiffGas::computePressEOS(double& rhoM, double& gamma,
-			       double& cv, double& Temp,
+void StiffGas::computePressEOS(double rhoM, double gamma,
+			       double cv, double Temp,
 			       double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
