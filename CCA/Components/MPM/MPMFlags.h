@@ -33,6 +33,7 @@ namespace Uintah {
                                          // new particles after failure
     bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_with_color;         // to turn on the color variable
+    bool        d_fracture;         // to turn on fracture
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 
