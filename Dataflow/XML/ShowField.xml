@@ -24,7 +24,7 @@
 <component name="ShowField" category="Visualization">
   <overview>
     <authors>
-      <author>Marty Cole</author>
+      <author>Martin Cole</author>
     </authors>
     <summary>
           ShowField is used to visualize the geometry that makes up a 
@@ -34,60 +34,62 @@
     <description>
       <p>Version Date: March 2001</p><p>Version: 1.0</p>
       <p>
-          If all input ports are connected and have data, then the data in 
-          input two is used as a color index into input three, which together 
-          define how each element in the mesh are drawn.
+         The field in input port 1 holds the mesh and data that are 
+         to be visualized. It only needs to have a mesh, in which case 
+         it will be rendered in the default color, which is editable from
+         the ui. If there is a color map attached to port 2, and there is
+         valid data in field, then the data serves as an index into the
+         color map, and the mesh is rendered with appropriate colors.
       </p>
       <p>
-          If the only connected input with data is the first port, then 
-          all geometry in the Mesh are drawn grey.
+         Nodes can be rendered as spheres, axes, or as points. Edges can be
+         rendered as lines or cylinders. All of which have editable size.
+         Faces can be rendered or not.
       </p>
+      <p>
+         Vector and Tensor vis are forthcoming.
+      </p>
+      <developer>
+	<p>
+           ShowField uses the dynamic loader to compile and load a 
+           RenderField Algorithm templated on field type. RenderField does 
+           all the rendering work, it loads the scene graph to be rendered. 
+        </p>
+      </developer>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <!-- one of (device port file) -->
       <port>
-	<name>Field-Geometry</name>
+	<name>Field</name>
 	<description>
 	  <p>
-             The only required input to function properly. This Field need 
-             only have a Mesh. Its data is never referenced.
+             The only required input to function properly. This field need 
+             only have a valid mesh. Its data is accessed only if the ColorMap 
+             port has valid data.
           </p>
 	</description>
 	<datatype>Field</datatype>
 	<componentname>FieldReader</componentname>
       </port>
       <port>
-	<name>Field-ColorIndex</name>
-	<description>
-	  <p>
-             Optional Input.  If this input exists, the third input port 
-             is required. (See ColorMap port)  This Field must have the 
-             same Mesh type as the Field-Geometry Field. Its data must be 
-             of a scalar type, and is used to fetch MaterialHandles out of 
-             the ColorMap from the third port.
-          </p>
-	</description>
-	<datatype>Field</datatype>
-	<componentname>ManipFields</componentname>
-      </port>
-      <port>
 	<name>ColorMap</name>
 	<description>
 	  <p>
-            Required if second input port has data. This input holds the 
-            color map that is used to color the geometry in the visualization.
+             Optional Input. This is the color indexed by the
+             input field's data, and defines the colors the mesh is 
+             rendered with.
           </p>
 	</description>
 	<datatype>ColorMap</datatype>
-	<componentname>GenStandardColorMaps</componentname>
+	<componentname>GenStandardColorMap</componentname>
       </port>
     </inputs>
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>Geometry</name>
+	<name>Scene Graph</name>
 	<description>
 	  <p>
              A scene graph is sent out through this port expecting to be 
@@ -110,7 +112,7 @@
     <parameter>
       <widget>checkbox</widget>
       <datatype>bool</datatype>
-      <label>Display Nodes</label>
+      <label>Show Nodes</label>
       <description>
 	<p>Toggles display of nodes in the scene.</p>
 	<developer>
@@ -132,7 +134,7 @@
       </description>
     </parameter>
     <parameter>
-      <widget>scale</widget>
+      <widget>expontial scale</widget>
       <datatype>double</datatype>
       <label>NodeScale</label>
       <description>
@@ -154,6 +156,29 @@
       </description>
     </parameter>
     <parameter>
+      <widget>radiobutton</widget>
+      <datatype>string</datatype>
+      <label>Edge Display Type</label>
+      <description>
+	<p>
+           Choices are Cylinders or Lines. These are options for how to 
+           draw the edges. Cylinders draw cylinders to represent edges, while 
+           lines always draw lines.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>expontial scale</widget>
+      <datatype>double</datatype>
+      <label>CylinderScale</label>
+      <description>
+	<p>
+           Effects the thickness of both cylinders and lines rendered for 
+           edges.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
       <widget>checkbox</widget>
       <datatype>bool</datatype>
       <label>Show Faces</label>
@@ -162,6 +187,30 @@
 	<developer>
 	  <p>This toggles the state of a GeomSwitch on the C++ side.</p>
 	</developer>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>slider</widget>
+      <datatype>int</datatype>
+      <label>Cylinder and Sphere Resolution</label>
+      <description>
+	<p>
+           This effects how smooth spheres and cylinders appear when rendered.
+           The greater the number the smoother they appear, but the longer 
+           it takes to draw.
+        </p>
+      </description>
+    </parameter>
+    <parameter>
+      <widget>button</widget>
+      <datatype>Material</datatype>
+      <label>Default Color</label>
+      <description>
+	<p>
+           This button will pop up a color selector when activated. This 
+           allows you to control the default color a mesh will render with.  
+           Default color is ignored if a color map is attached to input port 2.
+        </p>
       </description>
     </parameter>
     <parameter>
@@ -204,7 +253,7 @@
 	<p>turn off/on nodes</p>
       </step>
       <step>
-	<p>turn off bothe edges and faces</p>
+	<p>turn off both edges and faces</p>
       </step>
       <step>
 	<p>change NodeScale</p>
