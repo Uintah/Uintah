@@ -51,7 +51,7 @@ extern void hilbert_i2c( int n, int m, long int r, int a[]);
 
 Worker::Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	       int ncounters, int c0, int c1)
-  : dpy(dpy), scene(scene), num(num), ncounters(ncounters), c0(c0), c1(c1)
+  : dpy(dpy), num(num), scene(scene), ncounters(ncounters), c0(c0), c1(c1)
 {
   if(dpy){
     dpy->register_worker(num, this);
