@@ -199,7 +199,7 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
             ase_matls[token->GetIndex()] = 
 #if 1
               new PhongMaterial(Color(diffuse),1.-token->GetTransparency(),
-                                .3,token->GetShine()*1000);
+                                .3,token->GetShine()*1000,true);
 #else
               new DielectricMaterial(1.,
                                      1.,
@@ -250,7 +250,7 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   cm->members.add(ase_matls[5]);            
   cm->members.add(new InvisibleMaterial);
   cm->members.add(new PhongMaterial(Color(.5,.5,.5),.3,
-                                    .3,400));
+                                    .3,400,true));
   ase_matls[5] = cm;
                   
   Camera cam(Point(1,0,0), Point(0,0,0),
