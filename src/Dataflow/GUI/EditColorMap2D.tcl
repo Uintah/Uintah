@@ -106,6 +106,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     # dont pass default argument to un-highlight all entires
     method highlight_entry { args } {
 	upvar \#0 $this-selected_widget entry
+	if { $highlighted == $entry } return;
 	global Color
 	foreach f $frames {
 	    color_entry $f $highlighted $Color(Basecolor)
@@ -133,6 +134,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	# Create the new variables and entries if needed.
 	upvar $this-num-entries num
 	for {set i 0} {$i < $num} {incr i} {
+
 	    initGlobal $this-name-$i default-$i
 	    initGlobal $this-$i-color-r [expr rand()*0.75+0.25]
 	    initGlobal $this-$i-color-g [expr rand()*0.75+0.25]
