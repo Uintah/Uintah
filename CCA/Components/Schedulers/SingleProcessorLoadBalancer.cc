@@ -42,7 +42,8 @@ SingleProcessorLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
 
 void
 SingleProcessorLoadBalancer::createNeighborhood(const GridP& grid,
-						const ProcessorGroup*)
+						const ProcessorGroup*,
+						const Scheduler* /*sch*/)
 {
   // Nothing to do
 }

@@ -130,12 +130,17 @@ SimpleLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
 
 void
 SimpleLoadBalancer::createNeighborhood(const GridP& grid,
-				       const ProcessorGroup* group)
+				       const ProcessorGroup* group,
+				       const Scheduler* /*sch*/)
 {
   int me = group->myrank();
   // WARNING - this should be determined from the taskgraph? - Steve
   int maxGhost = 2;
-  neighbors.clear();
+  d_neighbors.clear();
+
+  // go through all patches on all levels, and if the patchwise
+  // processor assignment equals the current processor, then store the 
+  // patch's neighbors in the load balancer array
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
     for(Level::const_patchIterator iter = level->patchesBegin();
@@ -149,8 +154,8 @@ SimpleLoadBalancer::createNeighborhood(const GridP& grid,
 				      lowIndex, highIndex);
 	for(int i=0;i<(int)n.size();i++){
 	  const Patch* neighbor = n[i]->getRealPatch();
-	  if(neighbors.find(neighbor) == neighbors.end())
-	    neighbors.insert(neighbor);
+	  if(d_neighbors.find(neighbor) == d_neighbors.end())
+	    d_neighbors.insert(neighbor);
 	}
       }
     }
@@ -163,7 +168,7 @@ SimpleLoadBalancer::inNeighborhood(const PatchSubset* ps,
 {
   for(int i=0;i<ps->size();i++){
     const Patch* patch = ps->get(i);
-    if(neighbors.find(patch) != neighbors.end())
+    if(d_neighbors.find(patch) != d_neighbors.end())
       return true;
   }
   return false;
@@ -172,7 +177,7 @@ SimpleLoadBalancer::inNeighborhood(const PatchSubset* ps,
 bool
 SimpleLoadBalancer::inNeighborhood(const Patch* patch)
 {
-  if(neighbors.find(patch) != neighbors.end())
+  if(d_neighbors.find(patch) != d_neighbors.end())
     return true;
   else
     return false;

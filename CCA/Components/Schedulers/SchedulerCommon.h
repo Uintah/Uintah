@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
@@ -113,6 +114,7 @@ WARNING
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) { d_generation = id; }
+    virtual const MaterialSet* getMaterialSet() {return 0;}
 
   protected:
     void finalizeTimestep();

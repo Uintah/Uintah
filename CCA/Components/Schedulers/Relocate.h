@@ -60,6 +60,7 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
 
+    const MaterialSet* getMaterialSet() { return reloc_matls;}
 
   protected:
     virtual void relocateParticles(const ProcessorGroup*,

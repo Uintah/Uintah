@@ -6,6 +6,8 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
 
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>
@@ -316,14 +318,19 @@ DWDatabase<VarType, DomainType>::DomainRecord::DomainRecord(const DomainType* do
 }
 
 template <class VarType, class DomainType>
-void DWDatabase<VarType, DomainType>::DomainRecord::putVar(int matlIndex, VarType* var,
-					      bool replace)
+void
+DWDatabase<VarType, DomainType>::DomainRecord::putVar( int matlIndex,
+						       VarType* var,
+						       bool replace )
 {
   if(matlIndex+1 >= (int)vars.size()){
     vars.resize(matlIndex+2);
   }
   
   VarType* oldVar = vars[matlIndex+1].var;
+
+  //dataDBtype::iterator iter = find( vars.begin(), vars.end(), matlIndex+1 );
+  //if( iter == vars.end() )
   
   if (oldVar != 0) {
     if (!replace) {
@@ -342,7 +349,8 @@ void DWDatabase<VarType, DomainType>::DomainRecord::putVar(int matlIndex, VarTyp
 }
 
 template <class VarType, class DomainType>
-inline typename DWDatabase<VarType, DomainType>::DataItem*
+inline
+typename DWDatabase<VarType, DomainType>::DataItem*
 DWDatabase<VarType, DomainType>::DomainRecord::getDataItem(int matlIndex)
 {
   if (matlIndex+1 < (int)vars.size())
@@ -352,7 +360,9 @@ DWDatabase<VarType, DomainType>::DomainRecord::getDataItem(int matlIndex)
 }
 
 template <class VarType, class DomainType>
-inline VarType* DWDatabase<VarType, DomainType>::DomainRecord::getVar(int matlIndex) const
+inline
+VarType*
+DWDatabase<VarType, DomainType>::DomainRecord::getVar(int matlIndex) const
 {
   if (matlIndex+1 < (int)vars.size())
     return vars[matlIndex+1].var;
@@ -361,7 +371,9 @@ inline VarType* DWDatabase<VarType, DomainType>::DomainRecord::getVar(int matlIn
 }
 
 template <class VarType, class DomainType>
-inline void DWDatabase<VarType, DomainType>::DomainRecord::removeVar(int matlIndex)
+inline
+void
+DWDatabase<VarType, DomainType>::DomainRecord::removeVar(int matlIndex)
 {
   ASSERT(matlIndex+1 < (int)vars.size());
   ASSERT(vars[matlIndex+1].var != 0);
@@ -421,10 +433,12 @@ bool DWDatabase<VarType, DomainType>::exists(const VarLabel* label, const Domain
 }
 
 template<class VarType, class DomainType>
-void DWDatabase<VarType, DomainType>::put(const VarLabel* label, int matlIndex,
-			      const DomainType* dom,
-			      VarType* var,
-			      bool replace)
+void
+DWDatabase<VarType, DomainType>::put( const VarLabel* label, 
+				      int matlIndex,
+				      const DomainType* dom,
+				      VarType* var,
+				      bool replace )
 {
   ASSERT(matlIndex+1 >= 0);
   
@@ -443,13 +457,15 @@ void DWDatabase<VarType, DomainType>::put(const VarLabel* label, int matlIndex,
   }
   
   DomainRecord* rr = domainiter->second;
+
   rr->putVar(matlIndex, var, replace);
 }
 
 template<class VarType, class DomainType>
 const typename DWDatabase<VarType, DomainType>::DataItem&
-DWDatabase<VarType, DomainType>::getDataItem(const VarLabel* label, int matlIndex,
-				 const DomainType* dom) const
+DWDatabase<VarType, DomainType>::getDataItem( const VarLabel* label,
+					      int matlIndex,
+					      const DomainType* dom ) const
 {
   ASSERT(matlIndex+1 >= 0);
   
@@ -475,8 +491,11 @@ DWDatabase<VarType, DomainType>::getDataItem(const VarLabel* label, int matlInde
 }
 
 template<class VarType, class DomainType>
-inline VarType* DWDatabase<VarType, DomainType>::get(const VarLabel* label, int matlIndex,
-					 const DomainType* dom) const
+inline
+VarType*
+DWDatabase<VarType, DomainType>::get( const VarLabel* label,
+				      int matlIndex,
+				      const DomainType* dom ) const
 {
   const DataItem& dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem.var != 0); // should have thrown an exception before
@@ -484,9 +503,11 @@ inline VarType* DWDatabase<VarType, DomainType>::get(const VarLabel* label, int 
 }
 
 template<class VarType, class DomainType>
-void DWDatabase<VarType, DomainType>::get(const VarLabel* label, int matlIndex,
-					  const DomainType* dom,
-					  VarType& var) const
+void
+DWDatabase<VarType, DomainType>::get( const VarLabel* label,
+				      int matlIndex,
+				      const DomainType* dom,
+				      VarType& var ) const
 {
   VarType* tmp = get(label, matlIndex, dom);
   var.copyPointer(*tmp);
