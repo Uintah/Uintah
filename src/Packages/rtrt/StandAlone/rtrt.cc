@@ -22,7 +22,6 @@
 #include <Packages/rtrt/Core/Trigger.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/rtrt.h>
-#include <Packages/rtrt/Core/Gui.h>
 #include <Packages/rtrt/Core/DpyGui.h>
 
 #include <sys/stat.h>
@@ -687,14 +686,8 @@ main(int argc, char* argv[])
   //////////////////////////////////////////////////////////////////
   // This is the glut glui stuff
 
-  if (show_gui) {
-    GGT* ggt = new GGT();
-
-    ggt->setDpy( dpy );
-    ggt->setDpyGui( dpygui );
-
-    (new Thread(ggt, "Glut Glui Thread"))->detach();
-  }
+  if (show_gui)
+    dpygui->startDefaultGui();
 
   /*  bigler */
   new Thread(dpygui, "DpyGui", rtrt_engine_tg);
