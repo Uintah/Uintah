@@ -108,6 +108,35 @@ public:
     };
 };
 
+class MUI_slider_int : public MUI_widget {
+    ScaleC* scale;
+    int* data;
+    int dispatch_drag;
+    void drag_callback(CallbackData*, void*);
+    void value_callback(CallbackData*, void*);
+public:
+    enum Style {
+	Slider,
+	Dial,
+	ThumbWheel,
+	Guage,
+    };
+    MUI_slider_int(const clString& name, int* data,
+		    DispatchPolicy, int dispatch_drag,
+		    Style=Slider, Orientation=Horizontal,
+		    void* cbdata=0);
+    virtual ~MUI_slider_int();
+    virtual void attach(MUI_window*, EncapsulatorC*);
+
+    void set_minmax(int, int);
+    void set_value(int);
+    void set_orientation(MUI_widget::Orientation);
+    void set_style(Style);
+    enum Event {
+	Drag, Value,
+    };
+};
+
 class MUI_point : public MUI_widget {
     Point* data;
     int dispatch_drag;

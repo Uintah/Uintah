@@ -250,6 +250,78 @@ void MUI_slider_real::value_callback(CallbackData* cbdata, void*)
     dispatch(newdata, data, Value);
 }
 
+MUI_slider_int::MUI_slider_int(const clString& name, int* data,
+			       DispatchPolicy dp, int dispatch_drag,
+			       Style style, Orientation orient,
+			       void* cbdata)
+: MUI_widget(name, cbdata, dp), data(data), dispatch_drag(dispatch_drag)
+{
+    scale=new ScaleC;
+    switch(orient){
+    case Horizontal:
+	scale->SetOrientation(XmHORIZONTAL);
+	break;
+    case Vertical:
+	scale->SetOrientation(XmVERTICAL);
+	break;
+    }
+    scale->SetShowValue(True);
+    XmString nstring=XmStringCreateSimple(name());
+    scale->SetTitleString(nstring);
+    scale->SetHighlightThickness(0);
+    scale->SetDecimalPoints(2);
+    scale->SetValue(*data);
+}
+
+MUI_slider_int::~MUI_slider_int()
+{
+}
+
+void MUI_slider_int::set_minmax(int min, int max)
+{
+    scale->SetMinimum(min);
+    scale->SetMaximum(max);
+    if(window)
+	scale->SetValues();
+}
+
+void MUI_slider_int::set_value(int val)
+{
+    scale->SetValue(val);
+    if(window)
+	scale->SetValues();
+}
+
+void MUI_slider_int::attach(MUI_window* _window, EncapsulatorC* parent)
+{
+    window=_window;
+    NetworkEditor* netedit=window->get_module()->netedit;
+    new MotifCallback<MUI_slider_int>FIXCB(scale, XmNdragCallback,
+					    &netedit->mailbox, this,
+					    &MUI_slider_int::drag_callback,
+					    cbdata,
+					    &CallbackCloners::scale_clone);
+    new MotifCallback<MUI_slider_int>FIXCB(scale, XmNvalueChangedCallback,
+					    &netedit->mailbox, this,
+					    &MUI_slider_int::value_callback,
+					    cbdata,
+					    &CallbackCloners::scale_clone);
+    scale->Create(*parent, "scale");
+}
+
+void MUI_slider_int::drag_callback(CallbackData* cbdata, void*)
+{
+    int newdata=cbdata->get_int();
+    if(dispatch_drag)
+	dispatch(newdata, data, Drag);
+}
+
+void MUI_slider_int::value_callback(CallbackData* cbdata, void*)
+{
+    int newdata=cbdata->get_int();
+    dispatch(newdata, data, Value);
+}
+
 MUI_file_selection::MUI_file_selection(const clString& name,
 				       clString* filename,
 				       DispatchPolicy dp, void* cbdata)
