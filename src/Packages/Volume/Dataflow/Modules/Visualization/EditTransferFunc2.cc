@@ -184,7 +184,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 void
 EditTransferFunc2::push(int x, int y, int button)
 {
-  //cerr << "push: " << x << " " << y << " " << button << endl;
+  //cerr << "push: " << x << " " << y << " " << button << " " << width_ << " " << height_ << endl;
 
   unsigned int i;
 
@@ -199,7 +199,7 @@ EditTransferFunc2::push(int x, int y, int button)
   pick_object_ = 0;
   for (unsigned int i = 0; i < widget_.size(); i++)
   {
-    const int tmp = widget_[i]->pick1(x, 255-y, 512, 256);
+    const int tmp = widget_[i]->pick1(x, height_-1-y, width_, height_);
     if (tmp)
     {
       pick_widget_ = i;
@@ -212,7 +212,7 @@ EditTransferFunc2::push(int x, int y, int button)
   {
     for (unsigned int i = 0; i < widget_.size(); i++)
     {
-      const int tmp = widget_[i]->pick2(x, 255-y, 512, 256);
+      const int tmp = widget_[i]->pick2(x, height_-1-y, width_, height_);
       if (tmp)
       {
 	pick_widget_ = i;
@@ -235,7 +235,7 @@ EditTransferFunc2::motion(int x, int y)
 
   if (pick_widget_ != -1)
   {
-    widget_[pick_widget_]->move(pick_object_, x, 255-y, 512, 256);
+    widget_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
     updating_ = true;
   }
@@ -253,7 +253,7 @@ EditTransferFunc2::release(int x, int y, int button)
   button_ = 0;
   if (pick_widget_ != -1)
   {
-    widget_[pick_widget_]->release(pick_object_, x, 255-y, 512, 256);
+    widget_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
     updating_ = false;
     cmap_dirty_ = true;
   }
@@ -340,6 +340,8 @@ EditTransferFunc2::update()
   }
   glXMakeCurrent(dpy_, win_, ctx_);
 
+  use_pbuffer_ = false;
+  
   if(use_pbuffer_) {
     if(!shader_factory_) {
       shader_factory_ = new CM2ShaderFactory();

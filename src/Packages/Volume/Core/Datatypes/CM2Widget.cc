@@ -34,12 +34,16 @@
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
 #include <Core/Math/MinMax.h>
 
+#include <iostream>
+using namespace std;
+
 using namespace SCIRun;
 
 namespace Volume {
 
-inline double
-CLAMP(double x, double l, double u)
+template <typename T>
+inline T
+CLAMP(T x, T l, T u)
 {
   if (x < l) return l;
   if (x > u) return u;
@@ -197,30 +201,35 @@ TriangleCM2Widget::rasterize(Array3<float>& array)
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
   int size_y = array.dim1();
-  float top_left = top_x_-width_/2;
-  float top_right = top_x_+width_/2;
+  float top_left = top_x_-std::abs(width_)/2;
+  float top_right = top_x_+std::abs(width_)/2;
   int lb = (int)(bottom_*top_y_*size_y);
   int le = (int)(top_y_*size_y);
+  int ilb = CLAMP(lb, 0, size_y-1);
+  int ile = CLAMP(le, 0, size_y-1);
   //cerr << lb << " | " << le << endl;
-  for(int i=lb; i<=le; i++) {
+  for(int i=ilb; i<=ile; i++) {
     float fb = (i/(float)le)*top_left + base_;
     float fe = (i/(float)le)*top_right + base_;
     float fm = (i/(float)le)*top_x_ + base_;
     int rb = (int)(fb*size_x);
     int re = (int)(fe*size_x);
     int rm = (int)(fm*size_x);
-    float a = 0.0;
+    int jrb = CLAMP(rb, 0, size_x-1);
+    int jre = CLAMP(re, 0, size_x-1);
+    int jrm = CLAMP(rm, 0, size_x-1);
     float da = alpha_/(rm-rb);
-    for(int j=rb; j<rm; j++, a+=da) {
+    float a = alpha_-std::abs(rm-jrm+1)*da;
+    for(int j=jrm-1; j>=jrb; j--, a-=da) {
       array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
       array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
       array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
       array(i,j,3) = array(i,j,3)*(1-a) + a;
     }
-    a = alpha_;
     da = alpha_/(re-rm);
+    a = alpha_-std::abs(rm-jrm)*da;
     //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
-    for (int j=rm; j<re; j++, a-=da)
+    for (int j=jrm; j<=jre; j++, a-=da)
     {
       array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
       array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
@@ -436,21 +445,22 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
   float right = left_x_+width_;
   float bottom = left_y_;
   float top = left_y_+height_;
-  left = left < 0.0 ? 0.0 : left;
-  right = right > 1.0 ? 1.0 : right;
-  bottom = bottom < 0.0 ? 0.0 : bottom;
-  top = top > 1.0 ? 1.0 : top;
 
   int lb = int(bottom*size_y);
   int le = int(top*size_y);
+  int ilb = CLAMP(lb, 0, size_y-1);
+  int ile = CLAMP(le, 0, size_y-1);
   //int la = int((mBall.y*mSize.y+bottom)*size.y);
   int rb = int(left*size_x);
   int re = int(right*size_x);
   int ra = int((offset_*width_+left)*size_x);
+  int jrb = CLAMP(rb, 0, size_x-1);
+  int jre = CLAMP(re, 0, size_x-1);
+  int jra = CLAMP(ra, 0, size_x-1);
   switch(type_) {
     case CM2_RECTANGLE_ELLIPSOID: {
-      for(int i=lb; i<=le; i++) {
-        for(int j=rb; j<re; j++) {
+      for(int i=ilb; i<=ile; i++) {
+        for(int j=jrb; j<jre; j++) {
           float x = j/(float)size_x;
           float y = i/(float)size_y;
           x -= (left+right)/2;
@@ -468,20 +478,20 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
     } break;
 
     case CM2_RECTANGLE_1D: {
-      float a = ra <= rb+1 ? alpha_ : 0;
       float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
-      for(int j=rb; j<ra; j++, a+=da) {
-        for(int i=lb; i<le; i++) {
+      float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
+      for(int j=jra-1; j>=jrb; j--, a-=da) {
+        for(int i=ilb; i<=ile; i++) {
           array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
           array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
           array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
           array(i,j,3) = array(i,j,3)*(1-a) + a;
         }
       }
-      a = alpha_;
-      da = ra <= re-1 ? alpha_/(re-ra-1) : 0.0;
-      for(int j=ra; j<re; j++, a-=da) {
-        for(int i=lb; i<le; i++) {
+      da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
+      a = alpha_-std::abs(ra-jra)*da;
+      for(int j=jra; j<=jre; j++, a-=da) {
+        for(int i=ilb; i<=ile; i++) {
           array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
           array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
           array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
