@@ -74,7 +74,7 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
 	pack $w.location $w.function -side top -fill x -expand 1 \
 	    -padx 5 -pady 5
 
-	makeSciButtonPanel $w $w $this -no_execute
+	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
 }
