@@ -6,8 +6,6 @@
 #include <PSECore/Dataflow/SkeletonFiles.h>
 #include <PSECore/Dataflow/GenFiles.h>
 #include <PSECore/Dataflow/FileUtils.h>
-#include <unistd.h>
-#include <sys/wait.h>
 
 #define PERM S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH
 
@@ -115,24 +113,15 @@ void GenCategory(char* catname, char* packname, char* psepath)
   fprintf(file,category_submk_skeleton,packname,catname,packname);
   fclose(file);
 
+  /* edit the modules sub.mk file - add the new category */
+
+  char* modname = new char[strlen(catname)+25];
+  sprintf(modname,"\t%s\\\\\\\n",catname);
+  string = new char[strlen(psepath)+strlen(packname)+25];
+  sprintf(string,"%s/src/%s/Modules/sub.mk",psepath,packname);
+  InsertStringInFile(string,"#\\[INSERT NEW CATEGORY DIR HERE\\]",modname);
   delete[] string;
 
-  /* edit the modules sub.mk file - add the new category */
-  /* fork a process to do the editing.  I'd do it in this process,
-     but for some reason system() calls from this process 
-     (SCIRun main process?) don't work under linux - Chris Moulding */
-
-  if (fork()==0) {
-    /* Only the child process gets in here */
-    char* modname = new char[strlen(catname)+25];
-    sprintf(modname,"\t%s\\\\\\\n",catname);
-    string = new char[strlen(psepath)+strlen(packname)+25];
-    sprintf(string,"%s/src/%s/Modules/sub.mk",psepath,packname);
-    InsertStringInFile(string,"#\\[INSERT NEW CATEGORY DIR HERE\\]",modname);
-    delete[] string;
-    exit(0);
-  } else
-    wait(0); /* the parent process should wait for the child to exit */
 }
 
 void GenComponent(component_node* n, char* packname, char* psepath)
@@ -180,31 +169,21 @@ void GenComponent(component_node* n, char* packname, char* psepath)
   delete[] filename;
 
   /* edit the category sub.mk file - add the new component */
-  if (fork()==0) {
-    /* Only the child process gets in here */
-    char* modname = new char[strlen(n->name)+25];
-    sprintf(modname,"\t$(SRCDIR)/%s.cc\\\\\\\n",n->name);
-    string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
-    sprintf(string,"%s/src/%s/Modules/%s/sub.mk",psepath,packname,n->category);
-    InsertStringInFile(string,"#\\[INSERT NEW CODE FILE HERE\\]",modname);
-    delete[] string;
-    delete[] modname;
-    exit(0);
-  } else
-    wait(0); /* the parent process should wait for the child to exit */ 
+  char* modname = new char[strlen(n->name)+25];
+  sprintf(modname,"\t$(SRCDIR)/%s.cc\\\\\\\n",n->name);
+  string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
+  sprintf(string,"%s/src/%s/Modules/%s/sub.mk",psepath,packname,n->category);
+  InsertStringInFile(string,"#\\[INSERT NEW CODE FILE HERE\\]",modname);
+  delete[] string;
+  delete[] modname;
 
   /* edit the GUI sub.mk file - add the new component */
-  if (fork()==0) {
-    /* Only the child process gets in here */
-    char* modname = new char[strlen(n->name)+25];
-    sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\\\\\n",n->name);
-    string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
-    sprintf(string,"%s/src/%s/GUI/sub.mk",psepath,packname);
-    InsertStringInFile(string,"#\\[INSERT NEW TCL FILE HERE\\]",modname);
-    delete[] string;
-    exit(0);
-  } else
-    wait(0); /* the parent process should wait for the child to exit */ 
+  modname = new char[strlen(n->name)+25];
+  sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\\\\\n",n->name);
+  string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
+  sprintf(string,"%s/src/%s/GUI/sub.mk",psepath,packname);
+  InsertStringInFile(string,"#\\[INSERT NEW TCL FILE HERE\\]",modname);
+  delete[] string;
 }
 
 } // Dataflow
