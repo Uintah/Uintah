@@ -430,7 +430,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           all_matls);           
   }  
                                                             
-  scheduleComputeFaceCenteredVelocities(  sched, patches, ice_matls_sub,
+  scheduleComputeFC_vel_Temp(             sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
                                                           press_matl, 
                                                           all_matls);
@@ -540,9 +540,9 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
 }
 
 /* ---------------------------------------------------------------------
- Function~  ICE::scheduleComputeFaceCenteredVelocities--
+ Function~  ICE::scheduleComputeFC_vel_Temp--
 _____________________________________________________________________*/
-void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
+void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSubset* ice_matls,
                                           const MaterialSubset* mpm_matls,
@@ -556,9 +556,9 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
                        this, &ICE::computeFaceCenteredVelocitiesRF);
   }
   else if (d_EqForm) {       // EQ 
-    cout_doing << "ICE::scheduleComputeFaceCenteredVelocities" << endl;
-    t = scinew Task("ICE::computeFaceCenteredVelocities",
-                       this, &ICE::computeFaceCenteredVelocities);
+    cout_doing << "ICE::scheduleComputeFC_vel_Temp" << endl;
+    t = scinew Task("ICE::computeFC_vel_Temp",
+                       this, &ICE::computeFC_vel_Temp);
   }
                       // EQ  & RATE FORM 
   Ghost::GhostType  gac = Ghost::AroundCells;                      
@@ -568,6 +568,10 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
   t->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls,  gac,1);
+  if (d_EqForm) {
+    t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);  
+    t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);  
+  }
   
   if (d_RateForm) {     //RATE FORM
     t->requires(Task::NewDW,lb->DLabel,                        gac, 1);
@@ -582,6 +586,10 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
   t->computes(lb->uvel_FCLabel);
   t->computes(lb->vvel_FCLabel);
   t->computes(lb->wvel_FCLabel);
+  
+  t->computes(lb->TempX_FCLabel);
+  t->computes(lb->TempY_FCLabel);
+  t->computes(lb->TempZ_FCLabel);
   sched->addTask(t, patches, all_matls);
 }
 /* ---------------------------------------------------------------------
@@ -1478,19 +1486,44 @@ template<class T> void ICE::computeVelFace(int dir, CellIterator it,
   } 
 }
 
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::computeTempFace--
+ Purpose~   compute the face centered Temperatures.  This is used by
+ the HE combustion model
+_____________________________________________________________________*/
+template<class T> void ICE::computeTempFace(CellIterator it,
+                                            IntVector adj_offset,
+                                            constCCVariable<double>& rho_CC,
+                                            constCCVariable<double>& Temp_CC,
+                                            T& Temp_FC)
+{
+  for(;!it.done(); it++){
+    IntVector R = *it;
+    IntVector L = R + adj_offset; 
+
+    double rho_FC = rho_CC[L] + rho_CC[R];
+    ASSERT(rho_FC > 0.0);
+    //__________________________________
+    // interpolation to the face
+    //  based on continuity of heat flux
+    double term1 = (rho_CC[L] * Temp_CC[L] + rho_CC[R] * Temp_CC[R])/(rho_FC);            
+    Temp_FC[R] = term1;
+  } 
+}
                        
 //______________________________________________________________________
 //                       
-void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,  
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* /*matls*/,
-                                        DataWarehouse* old_dw, 
-                                        DataWarehouse* new_dw)
+void ICE::computeFC_vel_Temp(const ProcessorGroup*,  
+                             const PatchSubset* patches,                
+                             const MaterialSubset* /*matls*/,           
+                             DataWarehouse* old_dw,                     
+                             DataWarehouse* new_dw)                     
 {
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing compute_face_centered_velocities on patch " 
+    cout_doing << "Doing compute_FC_vel_Temp on patch " 
               << patch->getID() << "\t ICE" << endl;
     int numMatls = d_sharedState->getNumMatls();
     
@@ -1508,14 +1541,16 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      constCCVariable<double> rho_CC, sp_vol_CC;
+      constCCVariable<double> rho_CC, sp_vol_CC, Temp_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
         new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
         old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
+        old_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1); 
       } else {
         new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
         new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
+        new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
       }              
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
@@ -1523,24 +1558,32 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
   #if 1
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc << "TOP_vel_FC_Mat_" << indx << "_patch_"<< patch->getID(); 
+        desc << "TOP_FC_vel_Temp_Mat_" << indx << "_patch_"<< patch->getID(); 
         printData(indx, patch, 1, desc.str(), "rho_CC",      rho_CC);
         printData(indx, patch, 1, desc.str(), "sp_vol_CC",  sp_vol_CC);
         printVector(indx,patch,1, desc.str(), "vel_CC",  0, vel_CC);
+        printData(indx, patch, 1, desc.str(), "Temp_CC",    Temp_CC);
       }
   #endif
-      SFCXVariable<double> uvel_FC;
-      SFCYVariable<double> vvel_FC;
-      SFCZVariable<double> wvel_FC;
+      SFCXVariable<double> uvel_FC, TempX_FC;
+      SFCYVariable<double> vvel_FC, TempY_FC;
+      SFCZVariable<double> wvel_FC, TempZ_FC;
 
       new_dw->allocateAndPut(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->allocateAndPut(vvel_FC, lb->vvel_FCLabel, indx, patch);
-      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch);
+      new_dw->allocateAndPut(wvel_FC, lb->wvel_FCLabel, indx, patch); 
+      new_dw->allocateAndPut(TempX_FC,lb->TempX_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(TempY_FC,lb->TempY_FCLabel,indx, patch);   
+      new_dw->allocateAndPut(TempZ_FC,lb->TempZ_FCLabel,indx, patch);   
+      
       IntVector lowIndex(patch->getSFCXLowIndex());
       uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
-
+      TempX_FC.initialize(0.0,lowIndex,patch->getSFCXHighIndex()); 
+      TempY_FC.initialize(0.0,lowIndex,patch->getSFCYHighIndex()); 
+      TempZ_FC.initialize(0.0,lowIndex,patch->getSFCZHighIndex());
+      
       vector<IntVector> adj_offset(3);
       adj_offset[0] = IntVector(-1, 0, 0);    // X faces
       adj_offset[1] = IntVector(0, -1, 0);    // Y faces
@@ -1569,13 +1612,35 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
 
+
+      //__________________________________
+      //  Compute the temperature on each face     
+      //  Currently on used by HEChemistry and in  
+      //  the future by heat conduction 
+      if ( d_massExchange == true ) {        
+        computeTempFace<SFCXVariable<double> >(patch->getSFCXIterator(offset),
+                                     adj_offset[0], rho_CC,Temp_CC, TempX_FC);
+
+        computeTempFace<SFCYVariable<double> >(patch->getSFCYIterator(offset),
+                                     adj_offset[1], rho_CC,Temp_CC, TempY_FC);
+
+        computeTempFace<SFCZVariable<double> >(patch->getSFCZIterator(offset),
+                                     adj_offset[2], rho_CC,Temp_CC, TempZ_FC);
+      }
+
       //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
         ostringstream desc;
-        desc <<"BOT_vel_FC_Mat_" << indx << "_patch_"<< patch->getID();
-        printData_FC( indx, patch,1, desc.str(), "uvel_FC", uvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "vvel_FC", vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC", wvel_FC);
+        desc <<"BOT_FC_vel_Temp_Mat_" << indx << "_patch_"<< patch->getID();
+        printData_FC( indx, patch,1, desc.str(), "uvel_FC",  uvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "vvel_FC",  vvel_FC);
+        printData_FC( indx, patch,1, desc.str(), "wvel_FC",  wvel_FC);
+        
+        if ( d_massExchange == true ) { 
+          printData_FC( indx, patch,1, desc.str(), "TempX_FC", TempX_FC);
+          printData_FC( indx, patch,1, desc.str(), "TempY_FC", TempY_FC);
+          printData_FC( indx, patch,1, desc.str(), "TempZ_FC", TempZ_FC);
+        }
       }
     } // matls loop
   }  // patch loop
