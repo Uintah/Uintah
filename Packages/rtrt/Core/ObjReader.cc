@@ -168,7 +168,7 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
 
 void addObjMaterial(Array1<Material*> &matl,
 		    const Color &Kd, const Color &Ks, double opacity,
-		    double Ns, const string &name, Array1<string> &names,
+		    int Ns, const string &name, Array1<string> &names,
 		    const string &tmap_name, const string &bmap_name,
 		    int has_tmap, int has_bmap, 
 		    Array1<int> &matl_has_tmap,
@@ -251,12 +251,12 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
      int matl_complete=0;
      Color Ka, Kd, Ks;
      double opacity;
-     double Ns;
+     int Ns = 60;
      string name;
      string tmap_name;
      string bmap_name;
-     double n_in, n_out, R0, extinction_scale;
-     bool is_glass, is_metal, nothing_inside;
+     double n_in = 1, n_out = 1, R0, extinction_scale = 1;
+     bool is_glass, is_metal, nothing_inside = true;
      Color extinction_in, extinction_out;
      double scale_bump=1;
      is_glass=0;
@@ -321,7 +321,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 
 	 fgets(buf,4096,f);
 	 Get1d(&buf[5], scratch);
-	 Ns=scratch[0];
+	 Ns=(int)(scratch[0]);
 	 matl_complete=1;
        } else if (strncmp(&buf[0], "map_Kd", strlen("map_Kd")) == 0) {
 	 char *b = &(buf[7]);
@@ -366,7 +366,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
      return false;
    }
    
-   Material *curr_matl;
+   Material *curr_matl = 0;
    if (m) { 
      curr_matl=m; 
      matl.resize(0); 
