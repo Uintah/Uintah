@@ -762,6 +762,10 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                 this, &ICE::addExchangeToMomentumAndEnergy);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
+                                // I C E
+  t->requires(Task::OldDW,  lb->temp_CCLabel,  ice_matls, Ghost::None);
+                                // M P M 
+  t->requires(Task::NewDW,  lb->temp_CCLabel,  mpm_matls, Ghost::None);
                                 // A L L  M A T L S
   t->requires(Task::NewDW,  lb->mass_L_CCLabel,    Ghost::None); 
   t->requires(Task::NewDW,  lb->mom_L_CCLabel,     Ghost::None);
@@ -2746,17 +2750,20 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
+      Ghost::GhostType  gn = Ghost::None;
       if(mpm_matl){                 // M P M
+        new_dw->get(old_temp[m],     lb->temp_CCLabel,   indx, patch,gn,0);
         new_dw->allocate(vel_CC[m],  MIlb->vel_CC_scratchLabel, indx, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,indx, patch);
         cv[m] = mpm_matl->getSpecificHeat();
       }
       if(ice_matl){                 // I C E
+        old_dw->get(old_temp[m],    lb->temp_CCLabel,    indx, patch,gn,0);
         new_dw->allocate(vel_CC[m], lb->vel_CCLabel,     indx, patch);
         new_dw->allocate(Temp_CC[m],lb->temp_CCLabel,    indx, patch); 
         cv[m] = ice_matl->getSpecificHeat();
       }                             // A L L  M A T L S
-      Ghost::GhostType  gn = Ghost::None;
+
       new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0); 
       new_dw->get(sp_vol_CC[m],     lb->sp_vol_CCLabel,   indx, patch,gn, 0);
       new_dw->get(mom_L[m],         lb->mom_L_CCLabel,    indx, patch,gn, 0); 
@@ -2853,7 +2860,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       matrixSolver(numALLMatls,a,b,X);
       for(int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = Temp_CC[m][c] + X[m];
-        Tdot[m][c]    = X[m]/delT;
       }
     }  //end CellIterator loop
 
@@ -2872,6 +2878,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       for (int m = 0; m < numALLMatls; m++) {
         int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c];
         mom_L_ME[m][c]     = vel_CC[m][c]          * mass_L[m][c];
+        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
       }
     }
     //---- P R I N T   D A T A ------ 
