@@ -30,7 +30,8 @@ Camera::Camera(const Point& eye, const Point& lookat,
   : eye(eye), lookat(lookat), up(up), fov(fov), eyesep(1)
 
 {
-    setup();
+  verticalFov_ = fov;
+  setup();
 }
 
 Camera::~Camera()
@@ -92,9 +93,9 @@ void Camera::setup()
     u=Cross(v, direction);
     u.normalize();
 
-    double height=2.0*dist*tan(fov*0.5*M_PI/180.);
+    double height=2.0*dist*tan(verticalFov_*0.5*M_PI/180.0);
     u*=height;
-    double width=2.0*dist*tan(fov*0.5*M_PI/180.);
+    double width=2.0*dist*tan(fov*0.5*M_PI/180.0);
     v*=width;
 
 }
@@ -184,7 +185,7 @@ void
 Camera::flatten() // reset pitch to 0 and roll to 0.(note: no roll currently)
 {
   lookat.z( eye.z() );   // Clears Pitch
-  up = Vector( 0, 0, 1 ); // Clears Roll
+  up = Vector( 0, 0, .999 ); // Clears Roll
   setup();
 }
 
