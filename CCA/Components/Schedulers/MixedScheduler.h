@@ -14,9 +14,8 @@
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
-using std::vector;
-
 namespace Uintah {
+using std::vector;
 
   class OnDemandDataWarehouse;
   class Task;

@@ -19,7 +19,7 @@
 #include <string>
 
 namespace Uintah {
-  
+  using namespace std;
   class MaxIteration : public SCIRun::Exception {
   public:
     MaxIteration(SCIRun::IntVector loc,int count, int n_passes, string mes);

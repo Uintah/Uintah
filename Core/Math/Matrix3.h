@@ -21,7 +21,6 @@ namespace SCIRun {
   class Piostream;
 }
 namespace Uintah {
-
 using namespace SCIRun;
 
 class Matrix3 {
@@ -205,8 +204,6 @@ private:
   bool solveParticularReduced(const Vector& rhs, Vector& xp,
 			      int num_zero_rows) const;
 };
-
-using namespace SCIRun;
 
 inline double Matrix3::Trace() const
 {
@@ -567,10 +564,7 @@ std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
 #include <Core/Datatypes/TypeName.h>
 #include <string>
 namespace SCIRun {
-
-using std::string;
-using Uintah::Matrix3;
-
+  using namespace Uintah;
 void swapbytes( Uintah::Matrix3& m);
 template<> const string find_type_name(Matrix3*);
 const TypeDescription* get_type_description(Matrix3*);

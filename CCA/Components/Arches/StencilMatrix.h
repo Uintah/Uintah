@@ -32,9 +32,9 @@ WARNING
 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <iostream>
-using std::vector;
 
 namespace Uintah {
+using std::vector;
 template<class T>
 
 class StencilMatrix {

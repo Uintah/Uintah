@@ -17,9 +17,6 @@
 #include <vector>
 #include <list>
 
-using std::hex;
-using std::dec;
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
 #pragma set woff 1375
@@ -36,9 +33,8 @@ using std::dec;
 #include <unistd.h>
 
 namespace Uintah {
-
-using namespace SCIRun;
-using namespace std;
+  using namespace SCIRun;
+  using namespace std;
 
 class VarLabel;
   class DataWarehouse;

@@ -1,5 +1,6 @@
 #include "Sparse.h"
 #include <iostream>
+using namespace std;
 
 using namespace Uintah;
 using namespace std;

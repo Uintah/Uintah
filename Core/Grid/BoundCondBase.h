@@ -3,9 +3,9 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <string>
-using std::string;
 
 namespace Uintah {
+using std::string;
    
 /**************************************
 

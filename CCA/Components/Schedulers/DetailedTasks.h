@@ -294,8 +294,8 @@ namespace Uintah {
   };
 } // End namespace Uintah
 
-ostream& operator<<(ostream& out, const Uintah::DetailedTask& task);
-ostream& operator<<(ostream& out, const Uintah::DetailedDep& task);
+std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
+std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
 
 #endif
 

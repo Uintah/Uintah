@@ -7,11 +7,10 @@
 #include <map>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 
+namespace Uintah {
 using std::ostream;
 using std::string;
 using std::map;
-
-namespace Uintah {
 
 class TypeDescription;
 class Patch;
@@ -145,6 +144,6 @@ class Patch;
 
 } // End namespace Uintah
 
-ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
+std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
 
 #endif

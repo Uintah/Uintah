@@ -24,12 +24,11 @@
 #include <string>
 #include <map>
 
-using std::vector;
-using std::string;
-using std::map;
-using namespace SCIRun;
-
 namespace Uintah {
+  using std::vector;
+  using std::string;
+  using std::map;
+  using namespace SCIRun;
 
 class SCICORESHARE VariableCache: public Datatype {
 protected:
