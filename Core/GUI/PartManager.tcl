@@ -25,13 +25,25 @@ class PartManager {
     method ui { window } {
 	set w $window
 
-	iwidgets::tabnotebook  $w.tabs -raiseselect true
+	iwidgets::tabnotebook  $w.tabs -raiseselect true -auto true -width 400
 	$w.tabs configure -tabpos "n" 
-	pack $w.tabs -side top -anchor w
+	pack $w.tabs -side top -anchor w -expand true -fill both
     }
 
-    method add-part { name } {
-	puts "PartManager tcl: add-part  $name"
+    method lock {} {
+	set current [$w.tabs view]
+	puts "lock $current"
+	for {set i 0} {$i < $n} {incr i} {
+	    if { $i != $current } {
+		$w.tabs pageconfigure $i -state disable
+	    }
+	}
+    }
+
+    method unlock {} {
+	for {set i 0} {$i < $n} {incr i} {
+	    $w.tabs pageconfigure $i -state normal
+	}
     }
 
     method new-child-window { name } {
