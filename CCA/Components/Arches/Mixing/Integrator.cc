@@ -148,7 +148,7 @@ Integrator::integrate(int* tableKeyIndex)
 	//dqagpe_(fnc, &lowLimit, &upLimit, &npts2, points, &epsabs, &epsrel,
 	//&limit, &result, &abserr, &neval, &ier, alist, blist, rlist,
 	//	elist, pts, level, ndin, iord, &last); 
-	dqagp_(fnc, &lowLimit, &upLimit, &npts2, points, &epsabs, &epsrel, &result,
+	dqagp(fnc, &lowLimit, &upLimit, &npts2, points, &epsabs, &epsrel, &result,
 	       &abserr, &neval, &ier, &leniw, &lenw, &last, iwork, work);
 	if (ier == 0) {
 	  integralSuccess = true;
