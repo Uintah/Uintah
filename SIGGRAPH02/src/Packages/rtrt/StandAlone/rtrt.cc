@@ -55,6 +55,7 @@
 
 /////////////////////////////////////////////////
 // OOGL stuff
+BasicTexture * backgroundTex;
 ShadedPrim   * backgroundTexQuad;
 ShadedPrim   * blendTexQuad;
 BasicTexture * blendTex;
@@ -208,29 +209,6 @@ namespace rtrt {
 
 bool fullscreen = false;
 bool demo = false;
-
-// For glut to call, but since we are always redrawing (currently)
-// glut doesn't need to redraw for use.
-void doNothingCB()
-{
-  cout << "doNothingCB\n";
-  if( fullscreen ) {
-    glutSetWindow( mainWindowId );
-
-    glViewport(0, 0, 1280, 1024);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, 1280, 0, 1024);
-    glDisable( GL_DEPTH_TEST );
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0.375, 0.375, 0.0);
-
-    backgroundTexQuad->draw();
-    glutSwapBuffers();
-    backgroundTexQuad->draw();
-  }
-}
 
 int
 main(int argc, char* argv[])
@@ -681,8 +659,6 @@ main(int argc, char* argv[])
 
   if( fullscreen ) {
     //// BACKGROUND QUAD STUFF
-    PPMImage * ppm = 
-      new PPMImage( "/usr/sci/data/Geometry/interface/background.ppm", true );
 
     float z = 0.0;  
     bool  genTexCoords = true;
@@ -694,9 +670,9 @@ main(int argc, char* argv[])
     backgroundQuad->compile();
 
     Vec2i texDimen(2048,1024);
-    BasicTexture * backgroundTex = 
+    backgroundTex = 
       new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_REPLACE,
-			NULL, GL_FLOAT, &((*ppm)(0,0)) );
+			NULL, GL_FLOAT, NULL );
 
     Shader * backgroundTexShader = new Shader( backgroundTex );
     backgroundTexQuad = new ShadedPrim( backgroundQuad, backgroundTexShader );
@@ -705,12 +681,12 @@ main(int argc, char* argv[])
 
     blend = new Blend( Vec4f(1.0, 1.0, 1.0, 0.5) );
 
-    lowerLeft.set( 255, 0 );    // Going to be 64,64
-    upperRight.set( 512, 256 ); //  and 1088, 320
+    lowerLeft.set( 127, 65 );
+    upperRight.set( 1150, 319 );
     PlanarQuad * blendQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
 
-    texDimen.set(256,256);
+    texDimen.set(1024,256);
     blendTex = 
       new BasicTexture( texDimen, GL_CLAMP, GL_LINEAR, GL_RGB, GL_MODULATE,
 			NULL, GL_FLOAT, NULL );
@@ -816,7 +792,16 @@ main(int argc, char* argv[])
   for( int cnt = 0; cnt < triggers.size(); cnt++ ) {
     Trigger * trigger = triggers[cnt];
     if( !trigger->isSoundTrigger() )
-      trigger->setDrawableInfo( blendTex, blendTexQuad, blend );
+      {
+	trigger->setDrawableInfo( blendTex, blendTexQuad, blend );
+	Trigger * next = trigger->getNext();
+
+	while( next != NULL && next != trigger )
+	  {
+	    next->setDrawableInfo( blendTex, blendTexQuad, blend );
+	    next = next->getNext();
+	  }
+      }
   }
   if( demo ) { // Load the fancy dynamic graphics
     bottomGraphicTrigger = loadBottomGraphic();
@@ -836,7 +821,7 @@ main(int argc, char* argv[])
   glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
 
   glutReshapeFunc( Gui::handleWindowResizeCB );
-  glutDisplayFunc( doNothingCB );
+  glutDisplayFunc( Gui::redrawBackgroundCB );
 
   // Must do this after glut is initialized.
   Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
