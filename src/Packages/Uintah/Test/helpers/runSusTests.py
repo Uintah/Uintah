@@ -202,7 +202,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   if outputpath != startpath:
     system("cp -r %s %s/%s-results" % (resultsdir, startpath, ALGO))
 
-  if solotest != 0 and solotest_found == 0:
+  if solotest != "" and solotest_found == 0:
     print "unknown test: %s" % solotest
     system("rm -rf %s" % (resultsdir))
     exit(1)
