@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/ScalarFieldBinaryOperator.cc \
 	$(SRCDIR)/ScalarFieldAverage.cc \
 	$(SRCDIR)/ScalarMinMax.cc \
+	$(SRCDIR)/Schlieren.cc \
 	$(SRCDIR)/TensorFieldOperator.cc \
 	$(SRCDIR)/TensorParticlesOperator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
