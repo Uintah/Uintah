@@ -62,8 +62,9 @@ CastMLVtoHVAlgoT<FSRC, LSRC, FDST, LDST>::execute(FieldHandle lv_h,
   LatVolMeshHandle lvm = lv->get_typed_mesh();
 
   // Fill in the nodes and connectivities
-  Point min = lvm->get_min();
-  Vector diag = lvm->diagonal();
+  BBox bbox = lvm->get_bounding_box();
+  Point min = bbox.min();
+  Vector diag = bbox.diagonal();
   const int nx = lvm->get_nx();
   const int ny = lvm->get_ny();
   const int nz = lvm->get_nz();
