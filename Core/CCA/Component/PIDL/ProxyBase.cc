@@ -31,16 +31,26 @@
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <iostream>
+#include <Core/CCA/tools/sidl/uuid_wrapper.h>
+
+#if HAVE_MPI || HAVE_MPICH
+#define TRANSFER_UUID 1
+#include <mpi.h>
+#endif
+
 using namespace SCIRun;
 
-ProxyBase::ProxyBase() { }
+ProxyBase::ProxyBase() 
+: proxy_uuid("NONE") { }
 
 ProxyBase::ProxyBase(const Reference& ref)
+: proxy_uuid("NONE")
 { 
   d_ref.insert(d_ref.begin(),ref);
 }
 
 ProxyBase::ProxyBase(const refList& refL)
+: proxy_uuid("NONE")
 { 
   d_ref = refL;
 }
@@ -93,7 +103,17 @@ void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
   }
 }
 
-
-
+::std::string ProxyBase::getProxyUUID()
+{
+  if(proxy_uuid == "NONE") {
+    if(d_ref[0].par_rank == 0) {
+      proxy_uuid = getUUID(); 
+    }
+#ifdef TRANSFER_UUID
+    MPI_Bcast(const_cast<char*>(proxy_uuid.c_str()),64,MPI_CHAR,0,MPI_COMM_WORLD);
+#endif
+  }
+  return proxy_uuid;
+}
 
 

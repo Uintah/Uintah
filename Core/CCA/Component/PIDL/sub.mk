@@ -42,7 +42,7 @@ SRCS     += \
 	$(SRCDIR)/HandlerGateKeeper.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK)
+LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) $(MPI_LIBRARY) $(UUID_LIB)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
