@@ -297,16 +297,14 @@ void computeNu(CCVariable<Vector>& nu,
         // Find an edge iterator that 
         // a) doesn't hit the corner cells and
         // b) extends one cell into the next patch over
-        IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
-                                             - Abs(patch->faceDirection(face0));
-        CellIterator edgeIter= PatchEdgeIterator(patch, face, face0, offset);
-        
-        IntVector lo = edgeIter.begin();
-        IntVector hi = edgeIter.end();
-        
+        CellIterator edgeIter =  
+                patch->getEdgeCellIterator(face, face0, "minusCornerCells");
+
         IntVector patchNeighborLow  = patch->neighborsLow();
         IntVector patchNeighborHigh = patch->neighborsHigh();
         
+        IntVector lo = edgeIter.begin();
+        IntVector hi = edgeIter.end();
         lo[Edir2] -= abs(1 - patchNeighborLow[Edir2]);  // increase footprint
         hi[Edir2] += abs(1 - patchNeighborHigh[Edir2]); // by 1
         CellIterator iterLimits(lo,hi);
@@ -335,13 +333,13 @@ void computeNu(CCVariable<Vector>& nu,
   /*`==========TESTING==========*/
   // Need a clever way to figure out the r and rr indicies
   //  for the two different directions
-      vector<IntVector> crn;
-      computeCornerCellIndices(patch, face, crn);
 
-      vector<IntVector>::iterator itr;
-      for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+      const vector<IntVector> corner = patch->getCornerCells(face);
+      vector<IntVector>::const_iterator itr;
+      for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
         IntVector c = *itr;
         nu[c] = Vector(0,0,0);
+        cout << " I'm working on cell " << c << endl;
       } 
   /*==========TESTING==========`*/
     }  // on the LODI bc face
@@ -508,107 +506,7 @@ void getBoundaryEdges(const Patch* patch,
    face0.push_back(Patch::FaceType(plus[dir2]));
   }
 }
-/*_________________________________________________________________
- Function~ patchEdgeIterator--
- Purpose~ Returns an edge iterator minus the corner cells for 
-          that patch.  For multipatch problems be careful where
-          the two patches join.
-___________________________________________________________________*/  
-CellIterator PatchEdgeIterator(const Patch* patch,
-                               const Patch::FaceType face,
-                               const Patch::FaceType face0,
-                               IntVector offset)
-{
-  // get an iterator for the entire edge include the corner cells
-  CellIterator iterLimits_tmp =  
-                patch->getEdgeCellIterator(face, face0, "plusCornerCells");
 
-  // Find the corner cells for that patch and add/subtract them
-  // from the edge iterator
-  vector<IntVector> crn;
-  computeCornerCellIndices(patch, face, crn);
-  IntVector lo = iterLimits_tmp.begin();
-  IntVector hi = iterLimits_tmp.end();
-
-  vector<IntVector>::iterator itr;  
-  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
-    IntVector corner = *itr;
-    if (corner == lo) {
-      lo += offset;
-    }
-    if (corner == (hi - IntVector(1,1,1)) ) {
-      hi -= offset;
-    }
-  } 
-  return  CellIterator(lo, hi);
-}
-/*_________________________________________________________________
- Function~ computeCornerCellIndices--
- Purpose~ return a list of indicies of the corner cells that are on the
-           boundaries of the domain
-___________________________________________________________________*/  
-void computeCornerCellIndices(const Patch* patch,
-                              const Patch::FaceType face,
-                              vector<IntVector>& crn)
-{     
-  IntVector low,hi;
-  low = patch->getLowIndex();
-  hi  = patch->getHighIndex() - IntVector(1,1,1);  
-  
-  IntVector patchNeighborLow  = patch->neighborsLow();
-  IntVector patchNeighborHigh = patch->neighborsHigh();
- 
-  IntVector axes = patch->faceAxes(face);
-  int P_dir = axes[0];  // principal direction
-  int dir1  = axes[1];  // other vector directions
-  int dir2  = axes[2]; 
-
-  //__________________________________
-  // main index for that face plane
-  int plusMinus = patch->faceDirection(face)[P_dir];
-  int main_index = 0;
-  if( plusMinus == 1 ) { // plus face
-    main_index = hi[P_dir];
-  } else {               // minus faces
-    main_index = low[P_dir];
-  }
-
-  //__________________________________
-  // Looking down on the face examine 
-  // each corner (clockwise) and if there
-  // are no neighboring patches then set the
-  // index
-  // 
-  // Top-right corner
-  IntVector corner(-9,-9,-9);
-  if ( patchNeighborHigh[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
-   corner[P_dir] = main_index;
-   corner[dir1]  = hi[dir1];
-   corner[dir2]  = hi[dir2];
-   crn.push_back(corner);
-  }
-  // bottom-right corner
-  if ( patchNeighborLow[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
-   corner[P_dir] = main_index;
-   corner[dir1]  = low[dir1];
-   corner[dir2]  = hi[dir2];
-   crn.push_back(corner);
-  } 
-  // bottom-left corner
-  if ( patchNeighborLow[dir1] == 1 && patchNeighborLow[dir2] == 1) {
-   corner[P_dir] = main_index;
-   corner[dir1]  = low[dir1];
-   corner[dir2]  = low[dir2];
-   crn.push_back(corner);
-  } 
-  // Top-left corner
-  if ( patchNeighborHigh[dir1] == 1 && patchNeighborLow[dir2] == 1) {
-   corner[P_dir] = main_index;
-   corner[dir1]  = hi[dir1];
-   corner[dir2]  = low[dir2];
-   crn.push_back(corner);
-  } 
-}
 /*_________________________________________________________________
  Function~ otherDirection--
  Purpose~  returns the remaining vector component.
@@ -708,8 +606,9 @@ void FaceDensity_LODI(const Patch* patch,
     int Edir1 = axes[0];
     int Edir2 = otherDirection(P_dir, Edir1);
   
-    CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
-                      
+    CellIterator iterLimits =  
+                patch->getEdgeCellIterator(face, face0, "minusCornerCells");
+                
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;  
       IntVector r = c + offset;  
@@ -726,11 +625,10 @@ void FaceDensity_LODI(const Patch* patch,
 
   //__________________________________
   // C O R N E R S    
-  vector<IntVector> crn;
-  computeCornerCellIndices(patch, face, crn);
- 
-  vector<IntVector>::iterator itr;
-  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+  const vector<IntVector> corner = patch->getCornerCells(face);
+  vector<IntVector>::const_iterator itr;
+  
+  for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     rho_CC[c] = rho_old[c] 
               - delT * (d[1][c][P_dir] + d[1][c][dir1] + d[1][c][dir2]);
@@ -847,7 +745,8 @@ void FaceVel_LODI(const Patch* patch,
     int Edir1 = axes[0];
     int Edir2 = otherDirection(P_dir, Edir1);
      
-    CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
+    CellIterator iterLimits =  
+                patch->getEdgeCellIterator(face, face0, "minusCornerCells");
                       
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;
@@ -894,11 +793,10 @@ void FaceVel_LODI(const Patch* patch,
   //________________________________________________________
   // C O R N E R S    
   double mom_x, mom_y, mom_z; // momentum
-  vector<IntVector> crn;
-  computeCornerCellIndices(patch, face, crn);
- 
-  vector<IntVector>::iterator itr;
-  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+  const vector<IntVector> corner = patch->getCornerCells(face);
+  vector<IntVector>::const_iterator itr;
+  
+  for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     mom_x = rho_old[c] * vel_old[c].x() - delT 
          * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_old[c].x()  
@@ -1019,7 +917,8 @@ void FaceTemp_LODI(const Patch* patch,
     int Edir1 = axes[0];
     int Edir2 = otherDirection(P_dir, Edir1);
      
-    CellIterator iterLimits =  PatchEdgeIterator( patch,face,face0,offset);
+    CellIterator iterLimits =  
+                patch->getEdgeCellIterator(face, face0, "minusCornerCells");
                   
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;  
@@ -1069,11 +968,10 @@ void FaceTemp_LODI(const Patch* patch,
  
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> crn;
-  computeCornerCellIndices(patch, face, crn);
- 
-  vector<IntVector>::iterator itr;
-  for(itr = crn.begin(); itr != crn.end(); ++ itr ) {
+  const vector<IntVector> corner = patch->getCornerCells(face);
+  vector<IntVector>::const_iterator itr;
+  
+  for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
     IntVector c = *itr;
     double vel_old_sqr = vel_old[c].length2();
     double vel_new_sqr = vel_new[c].length2();
