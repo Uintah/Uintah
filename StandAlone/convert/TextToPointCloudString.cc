@@ -44,11 +44,16 @@
 #include <fstream>
 #include <stdlib.h>
 
+namespace SCIRun {
+extern FieldHandle TextPointCloudString_reader(const char *file);
+}
+
 using std::cerr;
 using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+
 
 bool binOutput;
 bool debugOn;
@@ -86,53 +91,33 @@ void printUsageInfo(char *progName) {
 }
 
 int
-main(int argc, char **argv) {
+main(int argc, char **argv)
+{
   if (argc < 3 || argc > 6) {
     printUsageInfo(argv[0]);
     return 0;
   }
+
 #if defined(__APPLE__)  
   macForceLoad(); // Attempting to force load (and thus instantiation of
 	          // static constructors) Core/Datatypes;
 #endif
   setDefaults();
 
-  PointCloudMesh *pcm = new PointCloudMesh();
-  char *ptsName = argv[1];
-  char *fieldName = argv[2];
+  const char *ptsName = argv[1];
+  const char *fieldName = argv[2];
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
     return 0;
   }
 
-  int npts;
-  ifstream ptsstream(ptsName);
-  ptsstream >> npts;
-  cerr << "number of points = "<< npts <<"\n";
-  int i;
-  for (i=0; i<npts; i++) {
-    double x, y, z;
-    ptsstream >> x >> y >> z;
-    pcm->add_point(Point(x,y,z));
-    if (debugOn) 
-      cerr << "Added point #"<<i<<": ("<<x<<", "<<y<<", "<<z<<")\n";
-  }
-  cerr << "done adding points.\n";
-
-  PointCloudField<string> *pc = 
-    scinew PointCloudField<string>(pcm, Field::NODE);
-
-
-  for (i=0; i<npts; i++)
-  {
-    char buffer[1024];
-    if (i == 0) { ptsstream.getline(buffer, 1024); } // Start on fresh line.
-    ptsstream.getline(buffer, 1024);
-    pc->set_value(string(buffer), PointCloudMesh::Node::index_type(i));
-  }
-
-  FieldHandle pcH(pc);
+  FieldHandle pcH(TextPointCloudString_reader(ptsName));
   
+  if (pcH.get_rep() == 0)
+  {
+    return 0;
+  }
+
   if (binOutput) {
     BinaryPiostream out_stream(fieldName, Piostream::Write);
     Pio(out_stream, pcH);

@@ -51,7 +51,7 @@ using namespace std;
 
 
 FieldHandle
-TextPointCloudField_reader(const char *filename)
+TextPointCloudString_reader(const char *filename)
 {
   ifstream ptsstream(filename);
 
@@ -83,7 +83,7 @@ TextPointCloudField_reader(const char *filename)
 
 
 void
-TextPointCloudField_writer(FieldHandle field, const char *filename)
+TextPointCloudString_writer(FieldHandle field, const char *filename)
 {
   ofstream ptsstream(filename);
 
@@ -117,8 +117,8 @@ TextPointCloudField_writer(FieldHandle field, const char *filename)
 static FieldIEPlugin
 TextPointCloudString_plugin("TextPointCloudString",
 			    "pcs.txt", "",
-			    TextPointCloudField_reader,
-			    TextPointCloudField_writer);
+			    TextPointCloudString_reader,
+			    TextPointCloudString_writer);
 
 
 } // namespace SCIRun
