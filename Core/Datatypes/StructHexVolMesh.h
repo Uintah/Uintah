@@ -63,7 +63,7 @@ class SCICORESHARE StructHexVolMesh : public LatVolMesh
 public:
 
   StructHexVolMesh();
-  StructHexVolMesh(unsigned int x, unsigned int y, unsigned int z);
+  StructHexVolMesh(unsigned int i, unsigned int j, unsigned int k);
   StructHexVolMesh(const StructHexVolMesh &copy);
   virtual StructHexVolMesh *clone() { return new StructHexVolMesh(*this); }
   virtual ~StructHexVolMesh() {}
