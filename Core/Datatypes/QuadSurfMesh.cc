@@ -188,7 +188,7 @@ QuadSurfMesh::end(QuadSurfMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E,
 	    "Must call synchronize NODES_E on QuadSurfMesh first");
-  itr = points_.size();
+  itr = (int)points_.size();
 }
 
 void
@@ -204,7 +204,7 @@ QuadSurfMesh::end(QuadSurfMesh::Edge::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
 	    "Must call synchronize EDGES_E on QuadSurfMesh first");
-  itr = static_cast<Edge::iterator>(edges_.size());
+  itr = static_cast<Edge::iterator>((int)edges_.size());
 }
 
 void
@@ -220,7 +220,7 @@ QuadSurfMesh::end(QuadSurfMesh::Face::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & FACES_E,
 	    "Must call synchronize FACES_E on QuadSurfMesh first");
-  itr = static_cast<Face::iterator>(faces_.size() / 4);
+  itr = static_cast<Face::iterator>((int)faces_.size() / 4);
 }
 
 void
@@ -288,7 +288,7 @@ QuadSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   {
     const int a = idx * 4 + i;
     const int b = a - a % 4 + (a+1) % 4;
-    int j = edges_.size()-1;
+    int j = (int)edges_.size()-1;
     for (; j >= 0; j--)
     {
       const int c = edges_[j];
@@ -744,7 +744,7 @@ QuadSurfMesh::add_find_point(const Point &p, double err)
     if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
     point_lock_.unlock();
     normal_lock_.unlock();
-    return static_cast<Node::index_type>(points_.size() - 1);
+    return static_cast<Node::index_type>((int)points_.size() - 1);
   }
 }
 
@@ -761,7 +761,7 @@ QuadSurfMesh::add_quad(Node::index_type a, Node::index_type b,
   face_lock_.unlock();
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
-  return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
+  return static_cast<Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
 
 
@@ -777,7 +777,7 @@ QuadSurfMesh::add_elem(Node::array_type a)
   face_lock_.unlock();
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
-  return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
+  return static_cast<Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
 
 
@@ -789,7 +789,7 @@ struct edgehash
   size_t operator()(const pair<int, int> &a) const
   {
     hash<int> hasher;
-    return hasher(hasher(a.first) + a.second);
+    return hasher((int)hasher(a.first) + a.second);
   }
 #ifdef __ECC
 
@@ -848,8 +848,7 @@ QuadSurfMesh::compute_edges()
 
   EdgeMapType edge_map;
   
-  int i;
-  for (i=faces_.size()-1; i >= 0; i--)
+  for( int i=(int)faces_.size()-1; i >= 0; i--)
   {
     const int a = i;
     const int b = a - a % 4 + (a+1) % 4;
@@ -895,8 +894,7 @@ QuadSurfMesh::compute_edge_neighbors()
     edge_neighbors_[j] = MESH_NO_NEIGHBOR;
   }
 
-  int i;
-  for (i=faces_.size()-1; i >= 0; i--)
+  for(int i = (int)faces_.size()-1; i >= 0; i--)
   {
     const int a = i;
     const int b = a - a % 4 + (a+1) % 4;
@@ -935,7 +933,7 @@ QuadSurfMesh::add_point(const Point &p)
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
   point_lock_.unlock();
   normal_lock_.unlock();
-  return static_cast<Node::index_type>(points_.size() - 1);
+  return static_cast<Node::index_type>((int)points_.size() - 1);
 }
 
 
