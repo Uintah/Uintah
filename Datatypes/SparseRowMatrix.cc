@@ -8,6 +8,7 @@
 #include <Datatypes/ColumnMatrix.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
+#include <stdio.h>
 
 static Persistent* maker()
 {
@@ -49,6 +50,44 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 {
 }
 
+void
+SparseRowMatrix::transpose( SparseRowMatrix &m )
+{
+  int i;
+
+  nnz = m.nnz;
+  nncols = m.nnrows;
+  nnrows = m.nncols;
+
+  a = scinew double[nnz];
+  
+  columns = scinew int[nnz];
+  rows = scinew int[nnrows+1];
+  
+  int *at = scinew int[nnrows+1];
+  for (i=0; i<nnrows+1;i++) 
+    at[i] = 0;
+  for (i=0; i<nnz;i++)
+    at[m.columns[i]+1]++;
+  rows[0] = 0;
+  for (i=1; i<nnrows+1; i++) {
+    at[i] += at[i-1];
+    rows[i] = at[i];
+  }
+
+  int c = 0;
+  for (int r=0; r<m.nnrows; r++) {
+    for (; c<m.rows[r+1]; c++) {
+      int mcol = m.columns[c];
+      columns[at[mcol]] = r;
+      a[at[mcol]] = m.a[c];
+      at[mcol]++;
+    }
+  }
+
+  delete at;
+}
+
 SparseRowMatrix::~SparseRowMatrix()
 {
     if(a)
@@ -59,6 +98,7 @@ SparseRowMatrix::~SparseRowMatrix()
 	delete[] rows;
 }
 
+  
 double& SparseRowMatrix::get(int i, int j)
 {
     int row_idx=rows[i];
@@ -67,13 +107,13 @@ double& SparseRowMatrix::get(int i, int j)
     int h=next_idx-1;
     for(;;){
 	if(h<l){
-#if 0
-	    cerr << "column " << j << " not found in row: ";
+	  //#if 0
+	  cerr << "column " << j << " not found in row "<<i << ": ";
 	    for(int idx=row_idx;idx<next_idx;idx++)
 		cerr << columns[idx] << " ";
 	    cerr << endl;
 	    ASSERT(0);
-#endif
+	    //#endif
 	    static double zero;
 	    zero=0;
 	    return zero;
@@ -92,6 +132,11 @@ double& SparseRowMatrix::get(int i, int j)
 void SparseRowMatrix::put(int i, int j, const double& d)
 {
     get(i,j)=d;
+}
+
+void SparseRowMatrix::add(int i, int j, const double& d)
+{
+    get(i,j)+=d;
 }
 
 int SparseRowMatrix::nrows() const
@@ -193,13 +238,16 @@ void SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
     if(beg==-1)beg=0;
     if(end==-1)end=nnrows;
     double* bp=&b[0];
-    for(int i=beg;i<end;i++){
-	int row_idx=rows[i];
-	int next_idx=rows[i+1];
-	double col_val=x[i];
-	for(int j=row_idx;j<next_idx;j++){
-	    bp[columns[j]]+=a[j]*col_val;
-	}
+    for (int i=beg; i<end; i++)
+      bp[i] = 0;
+    for (int j=0; j<nnrows; j++) {
+      int row_idx = rows[j];
+      int next_idx = rows[j+1];
+      double xj = x[j];
+      int i=row_idx;
+      for (; i<next_idx && columns[i] < beg; i++);
+      for (; i<next_idx && columns[i] < end; i++)
+	bp[columns[i]] += a[i]*xj;
     }
     int nnz=2*(rows[end]-rows[beg]);
     flops+=2*(rows[end]-rows[beg]);

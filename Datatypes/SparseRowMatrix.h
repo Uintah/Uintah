@@ -37,8 +37,11 @@ public:
     virtual ~SparseRowMatrix();
     SparseRowMatrix(const SparseRowMatrix&);
     SparseRowMatrix& operator=(const SparseRowMatrix&);
+
+    void transpose( SparseRowMatrix &);
     virtual double& get(int, int);
     virtual void put(int, int, const double&);
+    virtual void add(int, int, const double&);
     virtual int nrows() const;
     virtual int ncols() const;
     virtual double minValue();
@@ -57,10 +60,27 @@ public:
     virtual double* get_val(){return a;}
     virtual int* get_row(){return rows;}
     virtual int* get_col(){return columns;}
-
+  int get_nnz() { return nnz; }
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
