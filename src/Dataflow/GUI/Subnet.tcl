@@ -999,6 +999,8 @@ proc subDATADIRandDATASET { val } {
 
 
 proc genSubnetScript { subnet { tab "__auto__" }  } {
+    netedit presave
+
     global Subnet Disabled Notes
     set connections ""
     set modVar(Subnet${subnet}) "Subnet"

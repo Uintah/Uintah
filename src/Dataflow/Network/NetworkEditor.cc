@@ -363,6 +363,9 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	result += (*ip).second->datatype + " ";
       }
       args.result(result);
+    } else if (args[1] == "presave") {
+      for(int i=0;i<net->nmodules();i++)
+	net->module(i)->presave();
     } else {
 	args.error("Unknown minor command for netedit");
     }

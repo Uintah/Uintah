@@ -286,6 +286,7 @@ protected:
   void update_msg_state(MsgState);  
   CPUTimer timer;
 public:
+  virtual void presave() {};
   SciTCLstrbuff msgStream_;
 protected:
   void get_position(int& x, int& y);
