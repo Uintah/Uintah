@@ -43,15 +43,16 @@ ifeq ($(HAVE_BABEL),yes)
   SUBDIRS += $(SRCDIR)/HelloWorldBridge
 endif
 
-
 else
 SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
 endif
 
 
 ifeq ($(HAVE_MPI),yes)
-SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello
+SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello  $(SRCDIR)/PLinSolver
 endif
+
+SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/PWorld $(SRCDIR)/PHello $(SRCDIR)/Hello $(SRCDIR)/World
 
 ifeq ($(HAVE_BABEL),yes)
 SUBDIRS+= $(SRCDIR)/BabelTest
