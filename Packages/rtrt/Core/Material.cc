@@ -166,8 +166,8 @@ void Material::phongshade(Color& result,
       Vector refl_dir = reflection( ray.direction(), normal );
       Ray rray(hitpos, refl_dir);
       Color rcolor;
-      cx->worker->traceRay(rcolor, rray, depth+1, ar,
-			   accumcolor+surfcolor*atten, cx);
+      Worker::traceRay(rcolor, rray, depth+1, ar,
+                       accumcolor+surfcolor*atten, cx);
       surfcolor+=rcolor*refl;
       cx->stats->ds[depth].nrefl++;
     }

@@ -649,8 +649,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
     Color bgcolor;
     Point origin(p.x(),p.y(),p.z());
     Ray r(origin,ray.direction());
-    cx->worker->traceRay(bgcolor, r, depth+1, atten,
-			 accumcolor, cx);
+    Worker::traceRay(bgcolor, r, depth+1, atten, accumcolor, cx);
     total += bgcolor * (1-opacity);
   }
   result = total;

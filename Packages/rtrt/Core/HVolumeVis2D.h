@@ -1151,8 +1151,7 @@ void HVolumeVis2D<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   if (opacity < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
     Ray r(ray.origin() + ray.direction() * t_max,ray.direction());
-    ctx->worker->traceRay(bgcolor, r, ray_depth+1, atten,
-			  accumcolor, ctx);
+    Worker::traceRay(bgcolor, r, ray_depth+1, atten, accumcolor, ctx);
     total += bgcolor * (1-opacity);
   }
   result = total;
