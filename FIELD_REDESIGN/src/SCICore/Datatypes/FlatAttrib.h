@@ -94,6 +94,8 @@ public:
 
   virtual string get_info();  
 
+  virtual T* begin() { return (T*)data.begin(); }
+  virtual T* end() { return (T*)data.end(); }
 
   //////////
   // Persistent representation...
