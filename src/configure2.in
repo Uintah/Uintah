@@ -567,7 +567,7 @@ SCI_ARG_WITH(tau,
   [  --with-tau=<tau-makefile>         Specify Tau Makefile],
   [tau="$withval"],
   [tau=""])
-SCI_ARG_WITH(with_globus,
+SCI_ARG_WITH(globus,
   [  --with-globus=DIR                 Use the globus installation in DIR],
   [with_globus="$withval"],
   [with_globus=${with_globus='no'}])
