@@ -149,14 +149,15 @@ GaugeWidget::GaugeWidget( Module* module, CrowdMonitor* lock,
   // Switch3 are the sliders
   if (is_slideable_)
   {
-    SetNumModes(7);
+    SetNumModes(8);
     SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
-    SetMode(Mode1, Switch0|Switch1|Switch2);
-    SetMode(Mode2, Switch0|Switch3);
-    SetMode(Mode3, Switch0);
-    SetMode(Mode4, Switch0|Switch1|Switch3);
-    SetMode(Mode5, Switch0|Switch2|Switch3);
-    SetMode(Mode6, Switch0|Switch2);
+    SetMode(Mode1, Switch0);
+    SetMode(Mode2, Switch0|Switch1);
+    SetMode(Mode3, Switch0|Switch2);
+    SetMode(Mode4, Switch0|Switch1|Switch2);
+    SetMode(Mode5, Switch0|Switch3);
+    SetMode(Mode6, Switch0|Switch1|Switch3);
+    SetMode(Mode7, Switch0|Switch2|Switch3);
   }
   else
   {
