@@ -253,6 +253,11 @@ public:
   bool stereo;
   bool animate;
 
+  // This is for the depth buffer stuff
+  int store_depth;
+  int display_depth;
+  int display_sils;
+
   int     ambient_mode;
   double  ambientScale_;
   double  orig_ambientScale_;
