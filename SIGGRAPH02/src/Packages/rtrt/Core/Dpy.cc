@@ -311,12 +311,15 @@ Dpy::checkGuiFlags()
     lightsShowing_ = false;
   }
 
-  if( turnOffAllLights_ && (lightoff_frame < 0)){
-    lightoff_frame = SCIRun::Time::currentSeconds();
-  }
-
   if( turnOffAllLights_ ){
-    double left = 1.0-(SCIRun::Time::currentSeconds()-lightoff_frame)*0.2;
+    double left;
+    if( lightoff_frame < 0 ) {
+      lightoff_frame = Time::currentSeconds();
+      left = 1.0;
+    } else {
+      left = 1.0 - (Time::currentSeconds()-lightoff_frame)*0.2;
+    }
+
     scene->turnOffAllLights(left);
     if (left <= 0.0) {
       lightoff_frame = -1.0;
@@ -328,11 +331,11 @@ Dpy::checkGuiFlags()
     turnOnAllLights_ = false;
   }
   if( turnOnLight_ ) {
-    scene->turnOnLight( turnOnLight_ );
+    turnOnLight_->turnOn();
     turnOnLight_ = NULL;
   }
   if( turnOffLight_ ) {
-    scene->turnOffLight( turnOffLight_ );
+    turnOffLight_->turnOff();
     turnOffLight_ = NULL;
   }
 
