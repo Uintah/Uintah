@@ -59,7 +59,9 @@ struct DynamicAlgoBase {
   Mutex     lock;
 
   DynamicAlgoBase();
-  virtual ~DynamicAlgoBase() {}
+  virtual ~DynamicAlgoBase();
+
+  static string to_filename(const string s);
 };
 
 typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
