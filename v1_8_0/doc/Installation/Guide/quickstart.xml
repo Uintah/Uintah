@@ -16,37 +16,132 @@
   University of Utah. All Rights Reserved.
 -->
 
-<chapter id="quickstart">
+<chapter id="ch.quick_start">
 <title>Quick Start SCIRun Installation</title>
+
+<para>
+For complete installation instructions see <xref linkend="ch.inst"/>. 
+</para>
+
+<para>
+SCIRun is officially compatible with two platforms, SGI and Linux.
+</para>
+
+<para>&sr; may be <link linkend="sec.rpm_inst_qs">installed from
+RPMs</link> (for Mandrake 9 and Red Hat 8 systems only) or from <link
+linkend="sec.tarball_inst_qs">source code tarballs</link> (for Linux
+and SGI).</para>
+
+<section id="sec.rpm_inst_qs">
+<title>RPM Installation (Linux only)</title>
 
 <section>
 <title>Introduction</title>
 
 <para>
-For complete installation instructions see <xref linkend="inst"/>. 
+You must have root privileges to install &sr;.  Contact your system
+administrator if you don't.
 </para>
 
 <para>
-SCIRun is officially compatible with two platforms: SGI and Linux.
+The following procedure installs &sr; in
+<filename>/usr/local/SCIRun/bin.</filename>
 </para>
+
+<para>
+RPM installation consists of the following steps:
+<orderedlist>
+<listitem>
+<para>Downloading the &sr; rpm distribution.</para>
+</listitem>
+<listitem>
+<para>Installing &sr;</para>
+</listitem>
+<listitem>
+<para>Unpacking &sr;'s sample data sets.</para>
+</listitem>
+</orderedlist>
+</para>
+<para>See <xref endterm="title.starting" linkend="sec.starting"/>
+before starting &sr;</para>
+
+</section>
+
+<section>
+<title>Downloading &sr;'s RPM</title>
+<para>
+Obtain the appropriate &sr; rpm, either
+<filename>SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
+for Mandrake 9 systems or or
+<filename>SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
+for Redhad 8 systems.  Be sure to get
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+too.  These files can be downloaded from SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page.
+</para>
+</section>
+
+<section>
+<title>Installing &sr;</title>
+
+<para>
+Become superuser:
+<literallayout class="monospaced">
+su
+Password:
+</literallayout>
+<command>Cd</command> to the directory where &sr; was downloaded
+and type:
+<literallayout class="monospaced">
+rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
+</literallayout>
+or
+<literallayout class="monospaced">
+rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
+</literallayout>
+Type <command>exit</command> to leave the root account.
+</para>
+
+</section>
+
+<section>
+<title>Unpacking &sr;'s Sample Data Sets</title>
+<para>
+Unpack &sr;'s sample data sets in a location readable by all users:
+<literallayout class="monospaced">
+tar zxf DataSets.<replaceable>x.x.x</replaceable>.tar.gz
+</literallayout>
+This will create <filename>SCIRunData</filename>, a directory
+containing sample data sets.
+</para>
+</section>
+
+</section>
+
+<section id="sec.tarball_inst_qs">
+<title>Tarball Installation (Linux and SGI)</title>
+
+<section>
+<title>Introduction</title>
 
 <para><ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
 later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
-make</ulink> (version 3.79 or later) must be present before building
-SCIRun.</para>
+make</ulink> (version 3.79 or later) must be present before proceeding
+with the tarball installation.</para>
 
 <para>
-The process consists of these steps:
+Installation from tarballs consists of these steps:
 <orderedlist>
 <listitem>
-<para>Downloading and unpacking &sr; sources, its packages,
+<para>Downloading (compressed) tarballs containing &sr; sources, packages,
 third party software, and sample data sets.</para>
 </listitem>
 <listitem>
-<para>Building and installing third party software.</para>
+<para>Unpacking the tarballs.</para>
 </listitem>
 <listitem>
-<para>Configuring &sr;</para>
+<para>Building and installing third party software.</para>
 </listitem>
 <listitem>
 <para>Building &sr;</para>
@@ -54,27 +149,34 @@ third party software, and sample data sets.</para>
 </orderedlist>
 </para> 
 
+<para>See <xref endterm="title.starting"
+linkend="sec.starting"/> before starting &sr;</para>
+
 </section>
 
 <section>
-<title>Downloading and Unpacking Sources</title>
-
-<para>
-
-<orderedlist>
-
-<listitem>
+<title>Downloading</title>
 
 <para>
 Obtain the source code for SCIRun and any desired packages.  Be sure
-to get the <filename>Thirdparty_install.x.x.x.tar.gz</filename> and
-<filename>DataSets.x.x.x.tar.gz</filename> files too.  The compressed
-tarballs for these sources can be downloaded from SCI's <ulink
+to get the
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+and
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+files too.  The compressed tarballs for these sources can be
+downloaded from SCI's <ulink
 url="http://software.sci.utah.edu/archive_entry.html">software
 archive</ulink> page.
 </para>
 
-</listitem>
+</section>
+
+<section>
+<title>Unpacking Tarballs</title>
+
+<para>
+
+<orderedlist>
 
 <listitem>
 <para>
@@ -181,8 +283,8 @@ this value.
 
 <listitem>
 <para>
-Run SCIRun's configure script.  This can be done from the
-<filename>SCIRun/src</filename> directory:
+Run SCIRun's configure script.  This can be done from
+<filename>SCIRun/src</filename>:
 <literallayout class="monospaced">
 cd SCIRun/src
 ./configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
@@ -225,13 +327,68 @@ processors.  This will produce a <command>scirun</command>
 executable. 
 </para>
 </listitem>
-<listitem>
-<para>Test your build by typing <command>./scirun</command>.  You should
-see &sr;'s network editor window and the &sr; shell prompt.</para>
-</listitem>
 
 </orderedlist>
 
+</para>
+
+</section>
+
+</section>
+
+<section id="sec.starting">
+<title id="title.starting">Starting &sr;</title> 
+<para>Before starting &sr; you should
+initialize 2 environment variables:</para>
+<orderedlist>
+<listitem>
+<para>Set <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>.</para>
+<para>Each &sr; user should create an <quote>on the fly</quote>
+directory (see <xref endterm="title.dyncomp" linkend="sec.dyncomp"/> for
+details):
+<literallayout class="monospaced">
+mkdir ~/&sr;_otf
+</literallayout>
+Then, before executing &sr; each user must set the environment variable
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to point to
+<filename>~/&sr;_otf</filename>:
+<literallayout class="monospaced">
+export SCIRUN_ON_THE_FLY_LIBS_DIR=~/&sr;_otf
+</literallayout>
+for <quote>Bourne</quote>-type shells, and
+<literallayout class="monospaced">
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/&sr;_otf
+</literallayout>
+for <quote>C shell</quote>-type shells.  Alternatively, users may create the
+file <filename>~/.scirunrc</filename> with the following content:
+<literallayout>
+SCIRUN_ON_THE_FLY_LIBS_DIR=<replaceable>/path/to/</replaceable>&sr;_otf
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>Set <envar>SCIRUN_DATA</envar>.</para>
+<para>
+It specifies the default data directory of &sr; data sets. Initially
+you will want to set it to point to the sample data sets directory,
+<filename>SCIRunData</filename>:
+<literallayout class="monospaced">
+export SCIRUN_DATA=<replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+or
+<literallayout class="monospaced">
+setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+</para>
+</listitem>
+</orderedlist>
+
+<para>
+If you installed &sr; from it's rpm you can test it's installation by
+typing <command>scirun</command>.  If you installed &sr; from it's
+source code tarballs then you can test it's installation by typing
+(from it's build directory) <command>./scirun</command>.  You should
+see &sr;'s network editor window and the &sr; shell prompt.
 </para>
 
 </section>

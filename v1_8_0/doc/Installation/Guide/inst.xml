@@ -15,56 +15,173 @@
   University of Utah. All Rights Reserved.
 -->
 
-<chapter id="inst">
-<title>&sr; Installation and Build Instructions</title>
+<chapter id="ch.inst">
+<title>&sr; Installation Instructions</title>
 
 
 <section>
 <title>Introduction</title>
-<para>This chapter provides instructions for downloading and building
+<para>This chapter provides instructions for installing
 &sr;.</para>
 
 <para>
-The process consists of these steps:
+&sr; is officially compatible with two platforms: SGI and Linux.
+<xref linkend="tbl.min_sys_rec"/> lists the recommened system requirements.
+</para>
+
+<para>&recommendations;</para>
+
+<para>
+<xref linkend="tbl.req_os_bld_tools"/> describes the minimum software
+requirements for building &sr;.
+</para>
+
+<para>&requirements;</para>
+
+<para>
+On Linux systems (Mandrake 9 and Red Hat 8), &sr; binaries may be
+<link linkend="sec.rpminst">installed via RPM</link> (Red Hat Package
+Manager).  Alternatively, &sr; binaries may be built and <link
+linkend="sec.tarball_inst">installed
+from source code tarballs</link>.
+</para>
+
+<para>
+On SGI systems &sr; binaries must be built and <link
+linkend="sec.tarball_inst">installed from source code tarballs</link>.
+</para>
+
+<para>
+Be sure to read section&nbsp;<citetitle pubwork="section"><xref
+endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
+installing but before starting &sr;.
+</para>
+
+</section>
+
+<section id="sec.rpminst">
+<title>RPM Installation (Linux only)</title>
+
+<section>
+<title>Introduction</title>
+
+<para>
+You must have root privilages to install &sr;.  Contact your system
+administrator if you don't.
+</para>
+
+<para>
+The following procedure installs &sr; in
+<filename>/usr/local/SCIRun/bin.</filename>
+</para>
+
+<para>
+RPM installation consists of the following steps:
 <orderedlist>
 <listitem>
-<para>Downloading and unpacking &sr; sources, its packages,
+<para>Downloading the &sr; rpm distribution.</para>
+</listitem>
+<listitem>
+<para>Installing &sr;</para>
+</listitem>
+</orderedlist>
+</para>
+
+</section>
+
+<section>
+<title>Downloading</title>
+<para>
+Obtain the appropriate &sr; rpm, either
+<filename>SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
+for Mandrake 9 systems or or
+<filename>SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
+for Redhad 8 systems.  Be sure to get
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+too.  These files can be downloaded from SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page.
+</para>
+</section>
+
+<section>
+<title>Installing &sr;</title>
+
+<para>
+Become superuser:
+<literallayout class="monospaced">
+su
+Password:
+</literallayout>
+<command>Cd</command> to the directory where &sr; was downloaded
+and type:
+<literallayout class="monospaced">
+rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
+</literallayout>
+or
+<literallayout class="monospaced">
+rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
+</literallayout>
+<xref linkend="fig.rpm_cmd"/> shows this process (assuming
+<filename>/tmp</filename> is where the rpm was downloaded).  Type
+<command>exit</command> to leave the root account.
+
+</para>
+
+<figure id="fig.rpm_cmd">
+<title>RPM Installation Command</title>
+<mediaobject>
+<imageobject>
+<imagedata fileref="rpm_cmd.gif" format="GIF"/>
+</imageobject>
+</mediaobject>
+</figure>
+</section>
+
+<section>
+<title>Unpacking Sample Data Sets</title>
+<para>
+Unpack &sr;'s sample data sets by typing:
+<literallayout class="monospaced">
+tar zxf DataSets.<replaceable>x.x.x</replaceable>.tar.gz
+</literallayout>
+This will create <filename>SCIRunData</filename>, a directory
+containing sample data sets.
+</para>
+</section>
+
+</section>
+
+<section id="sec.tarball_inst">
+<title>Tarball Installation (Linux and SGI)</title>
+<section>
+<title>Introduction</title>
+
+<para>
+<ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
+later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
+make</ulink> (version 3.79 or later) must be present before proceeding
+with the tarball installation.
+</para>
+
+<para>
+Installation from tarballs consists of these steps:
+<orderedlist>
+<listitem>
+<para>Downloading (compressed) tarballs containing &sr; sources, packages,
 third party software, and sample data sets.</para>
 </listitem>
 <listitem>
-<para>Building and installing third party software.</para>
+<para>Unpacking the tarballs.</para>
 </listitem>
 <listitem>
-<para>Configuring &sr;</para>
+<para>Building and installing third party software.</para>
 </listitem>
 <listitem>
 <para>Building &sr;</para>
 </listitem>
 </orderedlist>
 </para> 
-</section>
-
-<section>
-<title>System Prerequisites</title>
-
-<para>
-&sr; is officially compatible with two platforms: SGI and Linux.
-<xref linkend="minsysrec"/> lists the recommened system requirements.
-</para>
-
-<para>&recommendations;</para>
-
-</section>
-
-<section>
-<title>Software Prerequisites</title>
-
-<para>
-<xref linkend="reqosbldtools"/> describes the minimum software
-requirements for building &sr;.
-</para>
-
-<para>&requirements;</para>
 
 </section>
 
@@ -77,8 +194,8 @@ requirements for building &sr;.
 
 <para>
 Obtain the source code for SCIRun and any desired packages.  Be sure
-to get the <filename>Thirdparty_install.x.x.x.tar.gz</filename> and
-<filename>DataSets.x.x.x.tar.gz</filename> files too.  The compressed
+to get the <filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename> and
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename> files too.  The compressed
 tarballs for these sources can be downloaded from SCI's <ulink
 url="http://software.sci.utah.edu/archive_entry.html">software
 archive</ulink> page.
@@ -90,7 +207,7 @@ archive</ulink> page.
 <para>
 Unpack the &sr; tarball in a directory of your choice:
 <literallayout class="monospaced">
-gunzip -c &sr;.x.x.x.tar.gz | tar xf -
+gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
 This will create a directory called <filename>&sr;</filename>. Below
 we use the term <quote>&sr;</quote> when referring to this
@@ -103,13 +220,13 @@ directory (ignoring its full pathname).
 Unpack the compressed package tarballs into
 <filename>&sr;/src/Packages</filename>, for example:
 <literallayout class="monospaced">
-gunzip -c BioPSE.PKG.x.x.x.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
+gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
 </literallayout>
 to unpack the BioPSE package.
 </para>
 <note>
 <title>Note</title>
-<para><xref linkend="lsrcvs"/> discusses a method for putting the
+<para><xref linkend="ap.lsrcvs"/> discusses a method for putting the
 downloaded &sr; sources under control of the CVS version control
 system.  This is useful if you will be writing modules or other &sr;
 code.  This is <emphasis>not</emphasis> a requirement for installing
@@ -121,7 +238,7 @@ code.  This is <emphasis>not</emphasis> a requirement for installing
 <para>
 Unpack the tarball containing sample datasets:
 <literallayout class="monospaced">
-gunzip -c DataSets.x.x.x.tar.gz | tar xf -
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
 This will create the directory <filename>SCIRunData</filename>.
 </para>
@@ -131,10 +248,10 @@ This will create the directory <filename>SCIRunData</filename>.
 <para>
 Unpack the third party tarball:
 <literallayout class="monospaced">
-gunzip -c Thirdparty_install.x.x.x.tar.gz | tar xf -
+gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
 This will create the directory
-<filename>Thirdparty_install.x.x.x</filename>. 
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>. 
 </para>
 </listitem>
 
@@ -156,7 +273,7 @@ these steps:</para>
 <para>
 <command>cd</command> to the third party software directory:
 <literallayout class="monospaced">
-cd Thirdparty_install.x.x.x
+cd Thirdparty_install.<replaceable>x.x.x</replaceable>
 </literallayout>
 </para>
 </listitem>
@@ -307,9 +424,20 @@ machine will often significantly reduce the time to build &sr;.
 
 </section>
 
-<section id="dyncomp">
+</section>
 
-<title id="dyncomptitle">Dynamic Compilation</title> 
+<section id="sec.prepare">
+<title id="title.prepare">Preparing &sr;</title>
+
+<para>
+Before starting &sr; you should initialize the environment
+variables <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> and
+<envar>SCIRUN_DATA</envar>.
+</para>
+
+<section id="sec.dyncomp">
+<title><envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar></title> 
+<subtitle id="title.dyncomp">Dynamic Compilation</subtitle>
 
 <para>Before executing &sr; you
 should be aware of a feature called <firstterm>Dynamic
@@ -375,6 +503,26 @@ between instances of &sr;.</para>
 </section>
 
 <section>
+<title><envar>SCIRUN_DATA</envar></title>
+
+<para>
+<envar>SCIRUN_DATA</envar> specifies the default data directory
+of &sr; data sets. Initially you will want to set it to point to the
+sample data sets directory, <filename>SCIRunData</filename>:
+<literallayout class="monospaced">
+export SCIRUN_DATA=<replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+or
+<literallayout class="monospaced">
+setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
+</literallayout>
+</para>
+</section>
+
+</section>
+
+
+<section>
 <title>Starting &sr;</title>
 
 <para> After a successful build, <replaceable>build_dir</replaceable>
@@ -383,8 +531,8 @@ type <command>./scirun</command>.  &sr;'s network editor window should
 appear and the &sr; shell should start.</para>
 
 <para>If the window does not appear note any errors displayed in the
-&sr; console and see <xref endterm="helptitle"
-linkend="help"/>.</para>
+&sr; console and see <xref endterm="title.help"
+linkend="sec.help"/>.</para>
 
 <para>See &sr;'s <ulink
 url="../../User/Tutorial/index.html"><citetitle>&sr;
@@ -396,8 +544,8 @@ url="../../User/Guide/usersguide/index.html"><citetitle>&sr; Users
 Guide</citetitle></ulink> for particulars on the use of &sr;.</para>
 </section>
 
-<section id="help">
-<title id="helptitle">Getting Help</title>
+<section id="sec.help">
+<title id="title.help">Getting Help</title>
 
 <para>
 Subscribe to the &sr; users list.  Use it to get answers to your

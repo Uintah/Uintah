@@ -1,4 +1,4 @@
-<appendix id="lsrcvs">
+<appendix id="ap.lsrcvs">
 <title>Local SCIRun Source Code Control using CVS</title>
 
 
@@ -50,8 +50,8 @@ extracting files, and importing files into the CVS repository</para>
 <para>This procedure should be followed once for each release in order
 to import the released source code into the CVS repository. No
 compilation is done, and therefore the result is not a working
-tree. See <xref linkend="create-work-dir" endterm="create-work-dir-tl"/> to create a working
-directory.</para>
+tree. See <xref linkend="sec.create-work-dir"
+endterm="title.create-work-dir"/> to create a working directory.</para>
 
 <orderedlist>
 <listitem>
@@ -176,8 +176,8 @@ cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename
 
 </section>
 
-<section id="create-work-dir">
-<title id="create-work-dir-tl">Creating A Working Scirun Directory Tree</title>
+<section id="sec.create-work-dir">
+<title id="title.create-work-dir">Creating A Working Scirun Directory Tree</title>
 
 <para>This procedure assumes the latest SCIRun/BioPSE tar files have
 already been downloaded and the source code has been imported, and

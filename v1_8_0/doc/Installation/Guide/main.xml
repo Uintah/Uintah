@@ -29,7 +29,7 @@
 <!ENTITY sr  "SCIRun">
 ]>
 
-<book id="main">
+<book id="book.main">
   <title>Installation Guide</title>
   &quickstart;
   &inst;
