@@ -17,7 +17,7 @@ template<class T> struct HMCell;
 namespace SCIRun {
 //template<class A, class B> void Pio(Piostream&, rtrt::Heightfield<A,B>*&);
 class WorkQueue;
-template<class T> Pio(Piostream&, rtrt::HMCell<T>&);
+template<class T> void Pio(Piostream&, rtrt::HMCell<T>&);
 }
 
 namespace rtrt {
