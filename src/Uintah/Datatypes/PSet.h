@@ -1,6 +1,7 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
+
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/Datatype.h>
 #include <Uintah/Grid/ParticleVariable.h>
@@ -20,6 +21,7 @@ using SCICore::Containers::LockingHandle;
 using SCICore::Datatypes::Datatype;
 using SCICore::Geometry::Point;
 using SCICore::PersistentSpace::Piostream;
+using SCICore::PersistentSpace::Pio;
 using SCICore::PersistentSpace::PersistentTypeID;
 /**************************************
 
