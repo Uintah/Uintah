@@ -18,7 +18,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := DaveW/Modules/Path
 
 SRCS     += \
-	$(SRCDIR)/EditPath.cc\
+
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
@@ -30,6 +30,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/07/19 06:30:00  samsonov
+# EditPath is moved to PSECommon
+#
 # Revision 1.4  2000/06/08 22:46:18  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
