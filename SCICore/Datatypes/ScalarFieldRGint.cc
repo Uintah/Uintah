@@ -16,12 +16,12 @@
  *           the generation process.)
  */
 
+#include <string.h>
 #include <SCICore/Datatypes/ScalarFieldRGint.h>
 //#include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <iostream>
-using std::cerr;
 
 namespace SCICore {
 namespace Datatypes {
@@ -52,7 +52,7 @@ void ScalarFieldRGint::resize(int x, int y, int z) {
     grid.newsize(x,y,z);
 }
 
-#define ScalarFieldRGint_VERSION 2
+#define ScalarFieldRGint_VERSION 3
 
 void ScalarFieldRGint::io(Piostream& stream)
 {
@@ -81,9 +81,85 @@ void ScalarFieldRGint::io(Piostream& stream)
 	// Do the base class first...
 	ScalarFieldRGBase::io(stream);
     }
-    Pio(stream, grid);
+
+    if ( stream.reading() ) {
+      std::cerr << "reading...version " << version << std::endl;
+      if  ( version > 2 )
+        Pio(stream, separate_raw);
+      else
+        separate_raw = 0;
+
+      if ( separate_raw == 1) {
+        Pio(stream,raw_filename);
+        Pio(stream, grid, raw_filename);
+	std::cerr << "reading... rawfile=" << raw_filename <<std::endl;
+      }
+      else 
+        Pio(stream,grid);
+    }
+    else { // writing
+      clString filename = raw_filename;
+      int split = separate_raw ;
+      if ( split == 1) {
+	std::cerr << "SF: split \n";
+        if ( filename == "" ) {
+          if ( stream.file_name() ) { 
+            char *tmp=strdup(stream.file_name());
+            char *dot = strrchr( tmp, '.' );
+            if (!dot ) dot = strrchr( tmp, 0);
+            
+            filename = stream.file_name.substr(0,dot-tmp)+clString(".raw");
+            delete tmp;
+          }
+          else 
+            split = 0;
+        }
+      }
+
+      std::cerr << "Filename = " << filename << std::endl;
+      if ( split == 1 ) {
+        Pio(stream, split);
+        Pio(stream, filename);
+        Pio(stream, grid, filename );
+      }
+      else {
+        Pio(stream, split);
+        Pio(stream, grid);
+      }
+    }
     stream.end_class();
 }
+
+// void ScalarFieldRGint::io(Piostream& stream)
+// {
+//     using SCICore::PersistentSpace::Pio;
+//     using SCICore::Containers::Pio;
+//     using SCICore::Geometry::Pio;
+
+//     int version=stream.begin_class("ScalarFieldRGint", ScalarFieldRGint_VERSION);
+//     if(version == 1){
+// 	// From before, when the ScalarFieldRGBase didn't exist...
+// 	ScalarField::io(stream);
+
+// 	// Save these since the ScalarField doesn't
+// 	Pio(stream, bmin);
+// 	Pio(stream, bmax);
+// 	if(stream.reading()){
+// 	    have_bounds=1;
+// 	    diagonal=bmax-bmin;
+// 	}
+
+// 	// Save the rest..
+// 	Pio(stream, nx);
+// 	Pio(stream, ny);
+// 	Pio(stream, nz);
+//     } else {
+// 	// Do the base class first...
+// 	ScalarFieldRGBase::io(stream);
+//     }
+//     Pio(stream, grid);
+//     stream.end_class();
+//}
 
 void ScalarFieldRGint::compute_minmax()
 {
@@ -281,7 +357,7 @@ ScalarFieldRGint::gradient(int x, int y, int z)
 
 void ScalarFieldRGint::fill_gradmags() // these guys ignor the vf
 {
-  cerr << " Filling Gradient Magnitudes...\n";
+  std::cerr << " Filling Gradient Magnitudes...\n";
   
   total_gradmag = 0.0;
   
@@ -328,26 +404,37 @@ void ScalarFieldRGint::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
-// Revision 1.5  1999/10/07 02:07:33  sparker
+// Revision 1.6  2000/02/04 01:25:54  dmw
+// added std:: before cerr and endl
+//
+// Revision 1.5  2000/02/04 00:19:31  yarden
+// enable to store the grid part of a ScalarField in a seperate file.
+// a flag (sererate_raw) signal if this ScalarField was read from a split
+// input file or should be writen as two. raw_filename specify the secondary
+// file name. if no filename is given during writing, the output routines
+// will try to extract the name from the output stream and attach a '.raw'
+// extension to the binary portion.
+//
+// replaced ScalarFieldRGxxx with ScalarFieldRGint. it also replaces
+// the ScalarFieldRG files (i.e. the old RG with no type specification
+// which defaults to 'double'
+//
+// Revision 1.4  1999/10/07 02:07:33  sparker
 // use standard iostreams and complex type
 //
-// Revision 1.4  1999/09/04 06:01:44  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.3  1999/08/25 03:48:39  sparker
+// Revision 1.3  1999/08/25 03:48:37  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
 // Other Misc. directory tree updates
 //
-// Revision 1.2  1999/08/17 06:38:52  sparker
+// Revision 1.2  1999/08/17 06:38:50  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
 //
-// Revision 1.1  1999/07/27 16:56:27  mcq
+// Revision 1.1  1999/07/27 16:56:25  mcq
 // Initial commit
 //
-// Revision 1.3  1999/07/07 21:10:41  dav
+// Revision 1.3  1999/07/07 21:10:39  dav
 // added beginnings of support for g++ compilation
 //
 // Revision 1.2  1999/05/06 19:55:50  dav

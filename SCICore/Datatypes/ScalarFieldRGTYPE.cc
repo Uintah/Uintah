@@ -83,7 +83,7 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
     }
 
     if ( stream.reading() ) {
-      cerr << "reading...version " << version << endl;
+      std::cerr << "reading...version " << version << std::endl;
       if  ( version > 2 )
         Pio(stream, separate_raw);
       else
@@ -92,7 +92,7 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
       if ( separate_raw == 1) {
         Pio(stream,raw_filename);
         Pio(stream, grid, raw_filename);
-	cerr << "reading... rawfile=" << raw_filename <<endl;
+	std::cerr << "reading... rawfile=" << raw_filename <<std::endl;
       }
       else 
         Pio(stream,grid);
@@ -101,7 +101,7 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
       clString filename = raw_filename;
       int split = separate_raw ;
       if ( split == 1) {
-	cerr << "SF: split \n";
+	std::cerr << "SF: split \n";
         if ( filename == "" ) {
           if ( stream.file_name() ) { 
             char *tmp=strdup(stream.file_name());
@@ -116,7 +116,7 @@ void ScalarFieldRGTYPE::io(Piostream& stream)
         }
       }
 
-      cerr << "Filename = " << filename << endl;
+      std::cerr << "Filename = " << filename << std::endl;
       if ( split == 1 ) {
         Pio(stream, split);
         Pio(stream, filename);
@@ -357,7 +357,7 @@ ScalarFieldRGTYPE::gradient(int x, int y, int z)
 
 void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
 {
-  cerr << " Filling Gradient Magnitudes...\n";
+  std::cerr << " Filling Gradient Magnitudes...\n";
   
   total_gradmag = 0.0;
   
@@ -404,6 +404,9 @@ void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
 
 //
 // $Log$
+// Revision 1.6  2000/02/04 01:25:53  dmw
+// added std:: before cerr and endl
+//
 // Revision 1.5  2000/02/04 00:19:31  yarden
 // enable to store the grid part of a ScalarField in a seperate file.
 // a flag (sererate_raw) signal if this ScalarField was read from a split

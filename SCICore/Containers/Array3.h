@@ -341,7 +341,7 @@ template<class T>
 int
 Array3<T>::input( const clString &filename ) 
 {
-  cerr << "Array3: Split input\n";
+  std::cerr << "Array3: Split input\n";
 
   // get raw data
   int file=open( filename(), O_RDONLY, 0666);
@@ -353,7 +353,7 @@ Array3<T>::input( const clString &filename )
   int maxiosz=1024*1024;
   long size = dm1*dm2*dm3*long(sizeof(T));
   int n = int(size / maxiosz);
-  cerr << "grid size = " << size << endl;
+  std::cerr << "grid size = " << size << std::endl;
   char *p = (char *) objs[0][0];
 
   for ( ; n> 0 ; n--, p+= maxiosz) {
@@ -375,7 +375,7 @@ template<class T>
 int
 Array3<T>::output( const clString &filename ) 
 {
-  cerr << "Array3 output to " << filename << endl;
+  std::cerr << "Array3 output to " << filename << std::endl;
   // get raw data
   //  printf("output [%s] [%s]\n", filename(), rawfile() );
   int file=open( filename(), O_WRONLY|O_CREAT|O_TRUNC, 0666);
@@ -415,6 +415,9 @@ Array3<T>::output( const clString &filename )
 
 //
 // $Log$
+// Revision 1.11  2000/02/04 01:25:51  dmw
+// added std:: before cerr and endl
+//
 // Revision 1.10  2000/02/04 00:07:51  yarden
 // provide methods for writing and reading the array in to/from a seperate
 // file in a binary mode.
