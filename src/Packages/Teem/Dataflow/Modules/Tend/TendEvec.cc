@@ -124,7 +124,7 @@ TendEvec::execute()
   
   float thresh = threshold_.get();
   for (int I=0; I<N; I++) {
-    tenEigensolve(eval, evec, tdata);
+    tenEigensolve_f(eval, evec, tdata);
     float scl = tdata[0] >= thresh;
     int seen=0;
     for (int cc=0; cc<3; cc++) {
