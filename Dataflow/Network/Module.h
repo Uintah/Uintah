@@ -19,6 +19,7 @@
 #endif
 
 #include <Dataflow/share/share.h>
+#include <Dataflow/Network/Port.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>
 #include <Core/Util/Timer.h>
@@ -30,31 +31,16 @@
 #include <map>
 
 namespace SCIRun {
-  class Vector;
-  class GeomPick;
-  class GeomObj;
-}
 
-namespace SCIRun {
-  class MessageBase;
-}
-namespace SCIRun {
-  class ViewWindow;
-}
-
-namespace SCIRun {
-  class AI;
-}
-
-namespace SCIRun {
-
+class Vector;
+class GeomPick;
+class GeomObj;
 class Connection;
 class Network;
 class NetworkEditor;
-class OPort;
-class IPort;
+class MessageBase;
 class AI;
-
+class ViewWindow;
 class Module;
 
 typedef IPort* (*iport_maker)(Module*, const clString&);
@@ -226,6 +212,45 @@ public:
 };
 
 typedef Module* (*ModuleMaker)(const clString& id);
+
+
+template<class T>
+int PortManager<T>::size() { 
+  return ports.size(); 
+}
+
+template<class T>
+void PortManager<T>::add(T item) { 
+  namemap.insert(port_pair(item->get_portname(),ports.size())); 
+  ports.add(item);
+}
+
+template<class T>
+void PortManager<T>::remove(int item) {
+  clString name = ports[item]->get_portname();
+  port_iter erase_me;
+
+  dynamic_port_range p = namemap.equal_range(name);
+  for (port_iter i=p.first;i!=p.second;i++)
+    if ((*i).second>item)
+      (*i).second--;
+    else if ((*i).second==item)
+      erase_me = i;
+
+  ports.remove(item);
+  namemap.erase(erase_me);
+}
+
+template<class T>
+const T& PortManager<T>::operator[](int item) {
+  return ports[item];
+}
+
+template<class T>
+dynamic_port_range* PortManager<T>::operator[](clString item) {
+  return new dynamic_port_range(namemap.equal_range(item));
+}
+
 
 } // End namespace SCIRun
 
