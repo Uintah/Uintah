@@ -60,7 +60,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_config.h>
+#include <sci_defs/ieeefp_defs.h>
+#include <sci_defs/hypre_defs.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
