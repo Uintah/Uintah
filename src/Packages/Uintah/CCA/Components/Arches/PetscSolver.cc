@@ -462,7 +462,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     }
     int me = d_myworld->myrank();
     if(me == 0) {
-     cerr << "Time in PETSC pressure matrix solve: " << Time::currentSeconds()-solve_start << " seconds\n";
+     cerr << "Time in PETSC Assemble: " << Time::currentSeconds()-solve_start << " seconds\n";
     }
 #ifdef ARCHES_PETSC_DEBUG
     cerr << " all done\n";
@@ -635,7 +635,7 @@ PetscSolver::pressLinearSolve()
   if(ierr)
     throw PetscError(ierr, "VecNorm");
   if(me == 0) {
-     cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
+     cerr << "SLESSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Time::currentSeconds()-solve_start << " seconds\n";
      cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/init_norm << endl;
      cerr << "Sum of RHS vector: " << sum_b << endl;
   }
