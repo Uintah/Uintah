@@ -7,7 +7,7 @@ SRCS = Tracker.cc TrackerServer.cc
 LIBNAME = Devices
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lComm -lClasslib -lMultitask -lMalloc
+SO_LDFLAGS = -L$(TOP)/lib -lComm -lClasslib -lMultitask -lMalloc -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))

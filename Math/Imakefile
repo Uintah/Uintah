@@ -8,7 +8,7 @@ LIBNAME = Math
 
 SCI_CLIBS = SCI_CCLibs
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lClasslib -lMalloc -lm
+SO_LDFLAGS = -L$(TOP)/lib -lMalloc -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))

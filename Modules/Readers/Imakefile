@@ -20,7 +20,7 @@ LIBNAME = Readers
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
-	-lMultitask -lMalloc
+	-lMultitask -lMalloc -lm -lC -lc
 
 depend:: $(GENSRCS)
 

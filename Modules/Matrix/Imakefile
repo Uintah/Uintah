@@ -25,7 +25,7 @@ LIBNAME = Matrix
 LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
-	-lMultitask $(OPENGLLIBS) -ltk -lMalloc -lm
+	-lMultitask $(OPENGLLIBS) -lscitk -ltk -lMalloc -lm -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

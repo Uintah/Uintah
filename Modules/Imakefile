@@ -1,14 +1,8 @@
 
 #include <config/sci.cf>
 
-SUBDIRS = Contours FEM Fields Matrix Mesh Readers \
+SUBDIRS = Contours FEM Fields Iterators Matrix Mesh Readers \
 	Salmon Sound Surface Visualization Writers
 
 
 SCISubdirs($(SUBDIRS))
-
-OBJS = Contours/libContours.o FEM/libFEM.o Fields/libFields.o \
-	Matrix/libMatrix.o \
-	Mesh/libMesh.o Readers/libReaders.o Salmon/libSalmon.o \
-	Sound/libSound.o Surface/libSurface.o \
-	Visualization/libVisualization.o Writers/libWriters.o

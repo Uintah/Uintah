@@ -18,7 +18,7 @@ LIBNAME = Sound
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
-	-lMalloc SCI_LAUDIO SCI_LM
+	-lMalloc SCI_LAUDIO SCI_LM -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

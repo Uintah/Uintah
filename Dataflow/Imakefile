@@ -17,7 +17,7 @@ LIBNAME = Dataflow
 SCI_CLIBS = SCI_CCLibs
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lComm -lTCL -lClasslib -lMultitask \
-	-lMalloc $(DLLIB)
+	-lMalloc $(DLLIB) -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))

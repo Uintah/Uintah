@@ -193,7 +193,7 @@ void FieldFilter::execute() {
 	GeomObj *w=widget->GetWidget();
 	widget_id = ogeom->addObj(w, module_name, &widget_lock);
 	widget->Connect(ogeom);
-	widget->AxisAligned(1);
+	//widget->AxisAligned(1);
 	widget->SetPosition(Point(.5,.5,.5), Point(1,0,0), Point(0,1,0), 
 			    Point(0,0,1));
 	widget->SetScale(1./20);

@@ -7,8 +7,8 @@ SRCS = LaceContours.cc LaceContoursTemp.cc TransformCS.cc
 LIBNAME = Contours
 
 SO_LIBS = 
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeometry -lClasslib \
-	-lMultitask -lMalloc
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom \
+	-lGeometry -lClasslib -lMultitask -lMalloc -lm -lC -lc
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
