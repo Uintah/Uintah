@@ -13,6 +13,8 @@ using namespace std;
 
 Stream::Stream()
 {
+ d_CO2index = 0;
+ d_H2Oindex = 0;
 }
 
 Stream::Stream(int numSpecies,  int numElements)
@@ -105,7 +107,8 @@ Stream::Stream(const Stream& strm) // copy constructor
   }
   if (strm.d_lsoot)
     d_sootData = strm.d_sootData;
-
+  d_CO2index = strm.d_CO2index;
+  d_H2Oindex = strm.d_H2Oindex;
 }
 
 Stream&
@@ -136,6 +139,8 @@ Stream::operator=(const Stream &rhs)
       }
       if (rhs.d_lsoot)
 	d_sootData = rhs.d_sootData;
+      d_CO2index = rhs.d_CO2index;
+      d_H2Oindex = rhs.d_H2Oindex;
     }
   return *this;
   }
@@ -461,8 +466,8 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
-// Revision 1.22  2003/01/22 00:43:04  spinti
-// Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
+// Revision 1.23  2003/01/24 22:51:21  spinti
+// Removed bugs that caused regression tester failures.
 //
 // Revision 1.21  2002/11/11 18:36:00  rawat
 // Added intrusion boundary conditions. Also, added radaition to work with intrusion and ArchesMPM.
