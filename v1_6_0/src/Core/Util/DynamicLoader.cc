@@ -272,7 +272,7 @@ bool
 DynamicLoader::compile_so(const string& file, ostream &serr)
 {
   string command = "cd " + OTF_OBJ_DIR + "; gmake " + file + "so";
-  command += " > " + file + "log 2>&1";
+  //command += " > " + file + "log 2>&1";
 
   serr << "DynamicLoader - Executing: " << command << endl;
 
