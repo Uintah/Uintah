@@ -89,7 +89,9 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   Vector zero(0.0,0.0,0.0);
   Vector centerOfMassVelocity(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
+  Vector Dvdt;
   double centerOfMassMass;
+  Vector dx = patch->dCell();
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -119,6 +121,8 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 		  Ghost::None, 0);
     }
   }
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
@@ -140,12 +144,14 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       for(int n = 0; n < NVFs; n++){
         Vector deltaVelocity=gvelocity[n][*iter]-centerOfMassVelocity;
         if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
-           && !compare(deltaVelocity.length(),0.0)){
+	   //           && !compare(deltaVelocity.length(),0.0)){
+           && !compare(gmass[n][*iter]-centerOfMassMass,0.0)){
 
           // Apply frictional contact if the surface is in compression
           // or the surface is stress free and surface is approaching.
           // Otherwise apply free surface conditions (do nothing).
           double normalDeltaVelocity=Dot(deltaVelocity,surfnorm[n][*iter]);
+	  Dvdt=zero;
           if((normtraction[n][*iter] < 0.0) ||
              (compare(fabs(normtraction[n][*iter]),0.0) &&
               normalDeltaVelocity>0.0)){
@@ -154,7 +160,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               // is in direction of surface normal.
               if(compare( (deltaVelocity
                         -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
-                gvelocity[n][*iter]-= surfnorm[n][*iter]*normalDeltaVelocity;
+                Dvdt=-surfnorm[n][*iter]*normalDeltaVelocity;
               }
 	      else if(!compare(fabs(normalDeltaVelocity),0.0)){
                 Vector surfaceTangent=
@@ -162,11 +168,21 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                 (deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity).length();
                 double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                 double frictionCoefficient=
-                  Min(d_mu,tangentDeltaVelocity/normalDeltaVelocity);
-                gvelocity[n][*iter]-=
-                  (surfnorm[n][*iter]+surfaceTangent*frictionCoefficient)*
-                                                      normalDeltaVelocity;
-	     }
+                  Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVelocity));
+                Dvdt=
+                  -surfnorm[n][*iter]*normalDeltaVelocity
+		  -surfaceTangent*frictionCoefficient*fabs(normalDeltaVelocity);
+	      }
+	      Vector epsilon=(Dvdt/dx)*delT;
+	      double epsilon_max=
+		Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+	      if(!compare(epsilon_max,0.0)){
+		epsilon_max=epsilon_max*Max(1.0,
+			  gmass[n][*iter]/(centerOfMassMass-gmass[n][*iter]));
+		double ff=Min(epsilon_max,.5)/epsilon_max;
+		Dvdt=Dvdt*ff;
+	      }
+	      gvelocity[n][*iter]+=Dvdt;
 
           }
 	}
@@ -516,22 +532,23 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       for(int n = 0; n < NVFs; n++){
         Vector deltaVelocity=gvelocity_star[n][*iter]-centerOfMassVelocity;
         if(!compare(gmass[n][*iter]/centerOfMassMass,0.0)
-           && !compare(deltaVelocity.length(),0.0)){
+	   //           && !compare(deltaVelocity.length(),0.0)){
+           && !compare(gmass[n][*iter]-centerOfMassMass,0.0)){
 
           // Apply frictional contact if the surface is in compression
           // or the surface is stress free and surface is approaching.
           // Otherwise apply free surface conditions (do nothing).
           double normalDeltaVelocity=Dot(deltaVelocity,gsurfnorm[n][*iter]);
+	  Dvdt=zero;
           if((normtraction[n][*iter] < 0.0) ||
 	     (compare(fabs(normtraction[n][*iter]),0.0) &&
               normalDeltaVelocity>0.0)){
 
 	    // Specialize algorithm in case where approach velocity
 	    // is in direction of surface normal.
-	    Dvdt = -gvelocity_star[n][*iter];
 	    if(compare( (deltaVelocity
 		 -gsurfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
-	      gvelocity_star[n][*iter]-=gsurfnorm[n][*iter]*normalDeltaVelocity;
+	      Dvdt=-gsurfnorm[n][*iter]*normalDeltaVelocity;
 	    }
 	    else if(!compare(fabs(normalDeltaVelocity),0.0)){
 	      Vector surfaceTangent=
@@ -539,12 +556,21 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVelocity).length();
 	      double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
 	      double frictionCoefficient=
-		Min(d_mu,tangentDeltaVelocity/normalDeltaVelocity);
-	      gvelocity_star[n][*iter]-=
-		(gsurfnorm[n][*iter]+surfaceTangent*frictionCoefficient)*
-		normalDeltaVelocity;
+		Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVelocity));
+	      Dvdt=
+		-gsurfnorm[n][*iter]*normalDeltaVelocity
+		-surfaceTangent*frictionCoefficient*fabs(normalDeltaVelocity);
 	    }
-	    Dvdt+=gvelocity_star[n][*iter];
+	    Vector epsilon=(Dvdt/dx)*delT;
+	    double epsilon_max=
+	      Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+	    if(!compare(epsilon_max,0.0)){
+	      epsilon_max=epsilon_max*Max(1.0,
+			  gmass[n][*iter]/(centerOfMassMass-gmass[n][*iter]));
+	      double ff=Min(epsilon_max,.5)/epsilon_max;
+	      Dvdt=Dvdt*ff;
+	    }
+	    gvelocity_star[n][*iter]+=Dvdt;
 	    Dvdt=Dvdt/delT;
 	    gacceleration[n][*iter]+=Dvdt;
           }
@@ -603,6 +629,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.30  2000/08/16 20:35:12  bard
+// Added logic which makes algorithm more robust in a number of situations.
+//
 // Revision 1.29  2000/08/08 01:32:43  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
