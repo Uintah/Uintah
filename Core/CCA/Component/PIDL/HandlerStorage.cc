@@ -46,6 +46,7 @@ HandlerStorage::~HandlerStorage()
 
 void HandlerStorage::clear(int handler_num)
 {
+	std::cout << "START OF CLEAR\n";
   if (handler_num == 0) {
     /*CLEAR ALL*/
     d_data_mutex.lock();
@@ -63,11 +64,15 @@ void HandlerStorage::clear(int handler_num)
   }
   else {
     dataList::iterator diter;
+    std::cout << "1111\n";
 
     d_data_mutex.lock();
+    std::cout << "2222\n";
     diter = d_data.find(handler_num);
+    std::cout << "3333\n";
     if (diter == d_data.end()) {
       d_data_mutex.unlock(); 
+      std::cout << "8888\n";
       return;
     }
     else {
@@ -77,11 +82,14 @@ void HandlerStorage::clear(int handler_num)
 	delete (*viter);
       }
       */
+    std::cout << "5555 \n";
       d_data.erase(diter);
+    std::cout << "6666\n";
+
     }
     d_data_mutex.unlock();    
-
   }
+  std::cout << "END OF CLEAR\n";
 }
 
 void HandlerStorage::add(int handler_num, int queue_num, void* data)

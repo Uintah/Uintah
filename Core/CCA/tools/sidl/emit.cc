@@ -1515,52 +1515,6 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "}\n";
   }
 
-
-
-
-  /***********************************/
-  /*CALLNORET                        */
-  /***********************************/
-  if (isCollective) {
-    e.out << leader2 << "\n";
-    e.out << leader2 << "int rate = _refL[0].par_size;\n";
-    e.out << leader2 << "iter = _refL.begin() + (_refL[0].par_rank + rate);\n";
-
-    e.out << leader2 << "for(unsigned int i=(_refL[0].par_rank + rate); i < _refL.size(); i+=rate, iter+=rate) {\n";
-    e.out << leader2 << "  /*CALLNORET*/\n";
-    string loop_leader1=e.out.push_leader();
-    e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
-    e.out << leader2 << "message->createMessage();\n";
-
-    argNum=0;
-    if (doRedistribution) {
-      e.out << leader2 << "//Marshal flag which informs handler that\n";
-      e.out << leader2 << "// this message is CALLNORET\n";
-      e.out << leader2 << "int _flag = 3;\n";
-      e.out << leader2 << "message->marshalInt(&_flag);\n";
-    }
-    if(list.size() != 0)
-      e.out << leader2 << "// Marshal the arguments\n";
-    argNum=0;
-    for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
-      argNum++;
-      Argument* arg=*iter;
-      if(arg->getMode() != Argument::Out) {
-	std::ostringstream argname;
-	argname << "_arg" << argNum;
-	arg->emit_marshal(e, argname.str(), "1", handlerOff , true, ArgIn, false);
-      }
-    }
-    
-    e.out << leader2 << "// Send the message\n";
-    e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
-    e.out << leader2 << "message->sendMessage(_handler);\n";
-    e.out << leader2 << "message->destroyMessage();\n";
-    
-    e.out.pop_leader(loop_leader1);
-    e.out << leader2 << "}\n";
-  } /*endif isCollective*/
-
   /**********************************************/
   if(reply_required()) {  
 
