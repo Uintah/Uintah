@@ -469,6 +469,11 @@ QuadraticTetVolMesh::get_gradient_basis(Cell::index_type ci, int gaussPt,
   default: 
     cerr << "Error in get_gradQuad: Incorrect index for gaussPt. "
 	 << "index = " << gaussPt << endl;
+    // Is this really an error?  If so, it needs to exit, return, or
+    // set xi,nu,gam to something acceptable.
+    xi = 0;  // <- random numbers for these... please fix
+    nu = 0;
+    gam = 0;
   }
 
   double jac_el = calc_jac_derivs(dxi,dnu,dgam,xi,nu,gam, ci);
@@ -782,6 +787,9 @@ QuadraticTetVolMesh::calc_dphi_dxi(int ptNum, double xi, double nu,
   default: 
     cerr << "Error in calcu_dphi_dxi: Incorrect index for shape function." 
 	 << "index = " << ptNum << endl;
+    // Is this really an error?  If so, it needs to exit, return, or
+    // set value to something acceptable.
+    value = 0; // <- random number put here... please fix
   }
 
   return(value);
@@ -818,6 +826,9 @@ QuadraticTetVolMesh::calc_dphi_dnu(int ptNum, double xi, double nu,
   default: 
     cerr << "Error in calc_dphi_dnu: Incorrect index for shape function. " 
 	 << "index = " << ptNum << endl;
+    // Is this really an error?  If so, it needs to exit, return, or
+    // set value to something acceptable.
+    value = 0; // <- random number put here... please fix
   }
   
   return(value);
@@ -853,6 +864,9 @@ QuadraticTetVolMesh::calc_dphi_dgam(int ptNum, double xi, double nu,
   default: 
     cerr << "Error in calc_dphi_dgam: Incorrect index for shape function. "
 	 << "index = " << ptNum << endl;
+    // Is this really an error?  If so, it needs to exit, return, or
+    // set value to something acceptable.
+    value = 0; // <- random number put here... please fix
   }
 
   return(value);
