@@ -3,6 +3,7 @@
 
 #include <Packages/rtrt/Core/texture.h>
 
+#define numWidgetParams 11
 #define textureWidth 128
 #define textureHeight 128
 
@@ -54,7 +55,7 @@ namespace rtrt
       virtual void paintTransFunc( GLfloat texture_dest[textureWidth][textureWidth][4], float w, float h );
       virtual void adjustOpacity( float dx, float dy );
       virtual bool insideWidget( int x, int y );
-      virtual void returnParams( float *p[10] );
+      virtual void returnParams( float *p[numWidgetParams] );
       virtual void changeColor( float r, float g, float b );
       virtual void invertColor( float color[3] );
 
@@ -84,7 +85,7 @@ namespace rtrt
       virtual void manipulate( float x, float dx, float y, float dy );
       virtual void paintTransFunc( GLfloat texture_dest[textureWidth][textureWidth][4], float w, float h );
       virtual bool insideWidget( int x, int y );
-      virtual void returnParams( float *p[10] );
+      virtual void returnParams( float *p[11] );
       virtual void changeColor( float r, float g, float b );
       virtual void adjustOpacity( float dx, float dy );
       virtual void invertColor( float color[3] );

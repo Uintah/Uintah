@@ -124,7 +124,7 @@ Volvis2DDpy::cycleWidgets( int type )
   //printf( "In cycleWidgets\n" );
   float alpha, left, top, width, height, opac_x, opac_y, opac_off;
   float color[3];
-  float *params[10];
+  float *params[numWidgetParams];
   widgets[widgets.size()-1]->returnParams( params );
   color[0] = *params[4];
   color[1] = *params[5];
