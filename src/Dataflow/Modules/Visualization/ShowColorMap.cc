@@ -135,8 +135,8 @@ ShowColorMap::execute()
   if (numlabels > 1 && numlabels < 50)
   {
     // Fill in the text.
-    const double minval = cmap->min;
-    const double maxval = cmap->max;
+    const double minval = cmap->getMin();
+    const double maxval = cmap->getMax();
 
     Point p0  = ref0 - out * 0.02; 
     char value[80];

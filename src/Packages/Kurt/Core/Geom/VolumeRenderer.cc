@@ -254,46 +254,6 @@ VolumeRenderer::saveobj(std::ostream&, const std::string&, GeomSave*)
    NOT_FINISHED("VolumeRenderer::saveobj");
     return false;
 }
-inline Color FindColor(const Array1<Color>& c,const Array1<float>& s,float t)
-{
-  int j=0;
-
-  if (t<=s[0])
-    return c[0];
-  if (t>= s[s.size()-1])
-    return c[c.size()-1];
-
-  // t is within the interval...
-
-  while((j < c.size()) && (t > s[j])) {
-    j++;
-  }
-
-  double slop = (s[j] - t)/(s[j]-s[j-1]);
-
-  return c[j-1]*slop + c[j]*(1.0-slop);
-  
-}
-
-inline double FindAlpha(const Array1<float>& c,const Array1<float>& s,float t)
-{
-  int j=0;
-
-  if (t<=s[0])
-    return c[0];
-  if (t>= s[s.size()-1])
-    return c[c.size()-1];
-
-  // t is within the interval...
-
-  while((j < c.size()) && (t > s[j])) {
-    j++;
-  }
-
-  float slop = (s[j] - t)/(s[j]-s[j-1]);
-
-  return c[j-1]*slop + c[j]*(1.0-slop);
-}
 
 void
 VolumeRenderer::BuildTransferFunction( )
@@ -309,11 +269,8 @@ VolumeRenderer::BuildTransferFunction( )
   double alpha, alpha1, alpha2;
   for( int j = 0; j < tSize; j++ )
   {
-    Color c = FindColor(cmap->rawRampColor,
-			cmap->rawRampColorT, j*mul);
-    alpha = FindAlpha(cmap->rawRampAlpha,
-		      cmap->rawRampAlphaT, j*mul);
-    
+    Color c = cmap->FindColor(j*mul);
+    alpha = cmap->FindAlpha(j*mul);
     
     alpha1 = pow(alpha, bp);
     alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
