@@ -42,9 +42,6 @@ namespace Uintah {
 				       SchedulerP&, DataWarehouseP&,
 				       DataWarehouseP&);
       
-      void scheduleStep1a(const Patch* patch, SchedulerP&, DataWarehouseP&,
-			  DataWarehouseP&);
-      
       void scheduleComputeEquilibrationPressure(
             const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
       
@@ -87,10 +84,6 @@ namespace Uintah {
       void actuallyComputeStableTimestep(const ProcessorGroup*,
 					 const Patch* patch, DataWarehouseP&,
 					 DataWarehouseP&);
-                  
-      // compute speedSound
-      void actuallyStep1a(const ProcessorGroup*, const Patch* patch,
-			   DataWarehouseP&,  DataWarehouseP&);
       
       // calculateEquilibrationPressure
       void computeEquilibrationPressure(
@@ -329,6 +322,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.54  2001/01/13 01:42:32  harman
+// -eliminated step1a
+// -changed rho_micro_equil_CCLabel -> rho_micro_CCLabel
+//
 // Revision 1.53  2001/01/11 20:17:19  jas
 // Added debug switches to the input file specification.
 // #if 0 the hard wired exchange coefficients.

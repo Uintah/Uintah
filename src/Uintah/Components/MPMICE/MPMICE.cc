@@ -112,7 +112,6 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_mpm->scheduleIntegrateAcceleration(patch,sched,old_dw,new_dw);
     d_mpm->scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
 
-    d_ice->scheduleStep1a(                          patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeEquilibrationPressure(    patch,sched,old_dw,new_dw);
     d_ice->scheduleComputeFaceCenteredVelocities(   patch,sched,old_dw,new_dw);
     d_ice->scheduleAddExchangeContributionToFCVel(  patch,sched,old_dw,new_dw);
@@ -237,10 +236,9 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
     t->requires(new_dw,Ilb->int_eng_L_CCLabel,       iceidx,patch,Ghost::None);
     t->requires(new_dw,Ilb->vol_frac_CCLabel,        iceidx,patch,Ghost::None);
     t->requires(old_dw,Ilb->cv_CCLabel,              iceidx,patch,Ghost::None);
-    t->requires(new_dw,Ilb->rho_micro_equil_CCLabel, iceidx,patch,Ghost::None);
-
-    t->computes(new_dw,Ilb->mom_L_ME_CCLabel,        iceidx,patch);
-    t->computes(new_dw,Ilb->int_eng_L_ME_CCLabel,    iceidx,patch);
+    t->requires(new_dw,Ilb->rho_micro_CCLabel, iceidx,patch,Ghost::None);
+    t->computes(new_dw,Ilb->mom_L_ME_CCLabel,    iceidx, patch);
+    t->computes(new_dw,Ilb->int_eng_L_ME_CCLabel, iceidx, patch);
   }
 
    sched->addTask(t);
@@ -342,7 +340,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                                 dwindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac_CC[m],  Ilb->vol_frac_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
-      new_dw->get(rho_micro_CC[m], Ilb->rho_micro_equil_CCLabel,
+      new_dw->get(rho_micro_CC[m], Ilb->rho_micro_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
       old_dw->get(cv_CC[m],        Ilb->cv_CCLabel,
                                 dwindex, patch, Ghost::None, 0);
@@ -513,6 +511,10 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.13  2001/01/13 01:43:08  harman
+// -eliminated step1a
+// -changed rho_micro_equil_CCLabel -> rho_micro_CCLabel
+//
 // Revision 1.12  2001/01/11 20:11:16  guilkey
 // Working on getting momentum exchange to work.  It doesnt' yet.
 //
