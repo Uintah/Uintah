@@ -44,9 +44,24 @@ itcl_class SCIRun_Render_EditPath {
 	global $this-tcl_step_size
 	global $this-tcl_speed_val
 	global $this-tcl_acc_val
-	global $this-tcl_msg_box
 	global $this-tcl_stop
 	global $this-tcl_widget_show
+
+        set $this-tcl_is_new 1
+	set $this-tcl_rate 1
+	set $this-tcl_curr_view 0
+	set $this-tcl_num_views 0
+	set $this-tcl_intrp_type 2
+	set $this-tcl_acc_mode 1
+	set $this-tcl_is_looped 0
+	set $this-tcl_msg_box 0
+	set $this-tcl_curr_viewwindow 0
+	set $this-tcl_step_size 0.01
+	set $this-tcl_speed_val 0
+	set $this-tcl_acc_val 0
+	set $this-tcl_stop 0
+	set $this-tcl_widget_show 0
+	
     }
     method ui {} {
         set w .ui[modname]
@@ -71,7 +86,6 @@ itcl_class SCIRun_Render_EditPath {
 	frame $ef.sw
 	frame $ef.mkc
 	pack  $ef.btn $ef.fsb $ef.mkc $ef.sw -side top -fill both -pady 3
-	
 	scale $ef.fsb.fr -variable $this-tcl_curr_view -from 0 -to [set $this-tcl_num_views] \
 		-orient horizontal -width 15 -command "$this-c get_to_view" -label "Current View:"
 	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.0001 -to 0.1 \

@@ -1773,9 +1773,11 @@ AC_SUBST(F77_DEPEND_EXT)
 
 # Other programs
 
-AC_PATH_PROG(MAKE,gmake,NOT_FOUND,,)
-if test "$MAKE" = "NOT_FOUND"; then
+AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
+if test "$GMAKE" = "NOT_FOUND"; then
   AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
+else
+  MAKE=$GMAKE
 fi
 if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
@@ -1907,7 +1909,7 @@ fi
 ##  for those of us who are too lazy to type out all the --with paths
 
 if test -z "$thirdparty"; then
-  TP_VERSION=1.7
+  TP_VERSION=1.8
   TP_ARCH=`uname -s`
   TP_COMPILER=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"

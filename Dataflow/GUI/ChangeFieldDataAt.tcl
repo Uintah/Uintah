@@ -45,6 +45,7 @@ itcl_class SCIRun_Fields_ChangeFieldDataAt {
             return
         }
         toplevel $w
+	wm maxsize $w 251 187 
 
 	iwidgets::Labeledframe $w.att -labelpos nw \
 		               -labeltext "Input Field Attributes" 

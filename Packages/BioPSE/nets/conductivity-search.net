@@ -53,8 +53,6 @@ set runDate " Sun  Jun 10 2001"
 global runTime
 set runTime " 20:26:15"
 
-set bbox {12.0 6.0 757 756}
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 320 7]
 set m1 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 12 113]
 set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 287 234]
@@ -62,24 +60,24 @@ set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 484 251]
 set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 466 313]
 set m5 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 343 159]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 320 403]
-set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 492 69]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 630 488]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 504 37]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 657 487]
 set m9 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 48 329]
 set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 30 386]
-set m11 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 34 469]
-set m12 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 34 530]
-set m13 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 630 546]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 30 468]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 30 532]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 657 545]
 set m14 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 117 625]
 set m15 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 30 6]
-set m16 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 343 69]
-set m17 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 452 399]
+set m16 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 688 9]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 452 479]
 set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 281 567]
 set m19 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 452 567]
-set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 263 626]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 463 385]
 set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 434 627]
 set m22 [addModuleAtPosition "SCIRun" "Render" "Viewer" 365 712]
-set m23 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 206 338]
-set m24 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 170 473]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 688 72]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 570 151]
 
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0

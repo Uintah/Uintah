@@ -439,7 +439,6 @@ DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 bool
 DynamicLoader::validate_compile_dir(string &dir)
 {
-  cout << "Testing " << dir << endl;
   struct stat buf;
   if (!stat(dir.c_str(), &buf) && !errno) 
   {    
@@ -472,7 +471,7 @@ DynamicLoader::get_compile_dir()
 {
   if (!otf_dir_found_) 
   {
-    char *ENV_DIR = getenv("SCI_ON_THE_FLY_LIBS_DIR");
+    char *ENV_DIR = getenv("SCIRUN_ON_THE_FLY_LIBS_DIR");
     if (ENV_DIR)
       {
 	string env_dir(ENV_DIR);
@@ -483,7 +482,7 @@ DynamicLoader::get_compile_dir()
 
   if (!otf_dir_found_) 
   {
-    env_iter rc = scirunrc.find("SCI_ON_THE_FLY_LIBS_DIR");
+    env_iter rc = scirunrc.find("SCIRUN_ON_THE_FLY_LIBS_DIR");
     if (rc != scirunrc.end())
     {
       string rc_dir = (*rc).second;
@@ -500,7 +499,7 @@ bool
 DynamicLoader::copy_makefile_to(const string &dir)
 {
   FILE * pipe = 0;
-  string command = ("cp -f --update " + string(SCIRUN_OBJDIR) + 
+  string command = ("cp -f " + string(SCIRUN_OBJDIR) + 
 		    "/on-the-fly-libs/Makefile " + dir);
 
   bool result = true;

@@ -435,6 +435,12 @@ protected:
   NodeNeighborMap	node_neighbors_;
   Mutex			node_neighbor_lock_;
 
+  //! This grid is used as an acceleration structure to expedite calls
+  //!  to locate.  For each cell in the grid, we store a list of which
+  //!  tets overlap that grid cell -- to find the tet which contains a
+  //!  point, we simply find which grid cell contains that point, and
+  //!  then search just those tets that overlap that grid cell.
+  //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
   typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
   grid_handle           grid_;
   Mutex                 grid_lock_; // Bad traffic!

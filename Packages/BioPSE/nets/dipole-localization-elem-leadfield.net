@@ -53,36 +53,34 @@ set runDate "Thu Mar  1 2001"
 global runTime
 set runTime " 21:53:29"
 
-set bbox {84.0 8.0 1020 793}
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 283 8]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 283 68]
-set m2 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 102 599]
+set m2 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 102 601]
 set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 594 749]
-set m4 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 668 83]
+set m4 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 665 83]
 set m5 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 482 231]
-set m6 [addModuleAtPosition "SCIRun" "Math" "MinNormLeastSq" 84 525]
+set m6 [addModuleAtPosition "SCIRun" "Math" "MinNormLeastSq" 84 523]
 set m7 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 84 382]
 set m8 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 265 377]
 set m9 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 448 371]
 set m10 [addModuleAtPosition "BioPSE" "Inverse" "DipoleSearch" 283 144]
-set m11 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 668 22]
+set m11 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 665 22]
 set m12 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 647 292]
 set m13 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 102 291]
 set m14 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 283 292]
 set m15 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 466 293]
-set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 630 222]
-set m17 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 647 354]
-set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 650 144]
-set m19 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 836 358]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 630 382]
+set m17 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 646 444]
+set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 647 144]
+set m19 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 807 355]
 set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 648 671]
-set m21 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 683 495]
+set m21 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 843 433]
 set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 825 494]
-set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 825 574]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 825 577]
 set m24 [addModuleAtPosition "SCIRun" "Fields" "ScaleFieldData" 412 603]
 set m25 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 412 663]
 set m26 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 430 543]
-set m27 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 701 434]
+set m27 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 858 282]
 
 addConnection $m4 1 $m3 0
 addConnection $m5 1 $m3 1

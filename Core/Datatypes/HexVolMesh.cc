@@ -35,7 +35,7 @@
 #include <iostream>
 #include <algorithm>
 #include <sci_hash_map.h>
-
+#include <Core/Exceptions/InternalError.h>
 
 namespace SCIRun {
 
@@ -165,7 +165,10 @@ HexVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
   } else {
     PFace f = (*iter).first;
     if (f.cells_[1] != -1) {
-      cerr << "This Mesh has problems." << endl;
+      cerr << "This Mesh has problems: Cells #" 
+	   << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci 
+	   << " are illegally adjacent." << endl; 
+      SCI_THROW(InternalError("Corrupt HexVolMesh"));      
       return;
     }
     f.cells_[1] = ci; // add this cell
@@ -178,6 +181,7 @@ void
 HexVolMesh::compute_faces()
 {
   face_table_lock_.lock();
+  face_table_.clear();
 
   Cell::iterator ci, cie;
   begin(ci); end(cie);
