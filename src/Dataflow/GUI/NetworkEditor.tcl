@@ -71,6 +71,7 @@ proc makeNetworkEditor {} {
     wm geometry . 800x800+0+0
     wm title . "SCIRun"
 
+    initGuiPreferences
     loadToolTipText
 
     frame .main_menu -relief raised -borderwidth 3
