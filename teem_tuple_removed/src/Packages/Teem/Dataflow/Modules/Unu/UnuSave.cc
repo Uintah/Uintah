@@ -95,7 +95,6 @@ void
   NrrdIoState *nio = nrrdIoStateNew();
 
   string encoding = encoding_.get();
-  cerr << "FIX ME : encoding\n";
   if (encoding == "raw") 
     nio->encoding = nrrdEncodingArray[1];
   else if (encoding == "ascii") 
@@ -107,7 +106,6 @@ void
     nio->encoding = nrrdEncodingArray[1];
   }
 
-  cerr << "FIX ME : format\n";
   string format = format_.get();
   if (format == "nrrd")
     nio->format = nrrdFormatArray[1];
@@ -126,7 +124,6 @@ void
     nio->format = nrrdFormatArray[1];
   }
 
-  cerr << "FIX ME : check endian\n";
   string endian = endian_.get();
   if (endian == "little")
     nio->endian = airEndianLittle;

@@ -13,7 +13,7 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : Unu2op.cc
+//    File   : Unu3op.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -26,61 +26,73 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class Unu2op : public Module {
+class Unu3op : public Module {
 public:
-  Unu2op(SCIRun::GuiContext *ctx);
-  virtual ~Unu2op();
+  Unu3op(SCIRun::GuiContext *ctx);
+  virtual ~Unu3op();
   virtual void execute();
 
 private:
   NrrdIPort*      inrrd1_;
   NrrdIPort*      inrrd2_;
+  NrrdIPort*      inrrd3_;
   NrrdOPort*      onrrd_;
 
   GuiString    operator_;
-  GuiDouble    float_input_;
+  GuiDouble    float1_;
+  GuiDouble    float2_;
+  GuiDouble    float3_;
   bool         first_nrrd_;
   bool         second_nrrd_;
+  bool         third_nrrd_;
 
   unsigned int get_op(const string &op);
   
 };
 
-DECLARE_MAKER(Unu2op)
+DECLARE_MAKER(Unu3op)
 
-Unu2op::Unu2op(SCIRun::GuiContext *ctx) : 
-  Module("Unu2op", ctx, Filter, "Unu", "Teem"), 
+Unu3op::Unu3op(SCIRun::GuiContext *ctx) : 
+  Module("Unu3op", ctx, Filter, "Unu", "Teem"), 
   operator_(ctx->subVar("operator")),
-  float_input_(ctx->subVar("float_input")),
-  first_nrrd_(true), second_nrrd_(true)
+  float1_(ctx->subVar("float1")),
+  float2_(ctx->subVar("float2")),
+  float3_(ctx->subVar("float3")),
+  first_nrrd_(true), second_nrrd_(true), third_nrrd_(true)
 {
 }
 
-Unu2op::~Unu2op() {
+Unu3op::~Unu3op() {
 }
 
 void 
-Unu2op::execute()
+Unu3op::execute()
 {
   first_nrrd_ = true;
   second_nrrd_ = true;
+  third_nrrd_ = true;
 
   NrrdDataHandle nrrd_handle1;
   NrrdDataHandle nrrd_handle2;
+  NrrdDataHandle nrrd_handle3;
 
   update_state(NeedData);
 
   inrrd1_ = (NrrdIPort *)get_iport("InputNrrd1");
   inrrd2_ = (NrrdIPort *)get_iport("InputNrrd2");
+  inrrd3_ = (NrrdIPort *)get_iport("InputNrrd3");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd1_) {
     error("Unable to initialize iport 'InputNrrd1'.");
     return;
   }
-
   if (!inrrd2_) {
     error("Unable to initialize iport 'InputNrrd2'.");
+    return;
+  }
+  if (!inrrd3_) {
+    error("Unable to initialize iport 'InputNrrd3'.");
     return;
   }
   if (!onrrd_) {
@@ -91,6 +103,8 @@ Unu2op::execute()
     first_nrrd_ = false;
   if (!inrrd2_->get(nrrd_handle2)) 
     second_nrrd_ = false;
+  if (!inrrd3_->get(nrrd_handle3)) 
+    third_nrrd_ = false;
   
   if (first_nrrd_ && !nrrd_handle1.get_rep()) {
     error("Empty InputNrrd1.");
@@ -102,42 +116,58 @@ Unu2op::execute()
     return;
   }
 
+  if (third_nrrd_ && !nrrd_handle3.get_rep()) {
+    error("Empty InputNrrd3.");
+    return;
+  }
+
   Nrrd *nin1 = 0;
   Nrrd *nin2 = 0;
+  Nrrd *nin3 = 0;
   Nrrd *nout = nrrdNew();
 
   // can either have two nrrds, first nrrd and float, or second
   // nrrd and float
-  if (!first_nrrd_ && !second_nrrd_) {
+  if (!first_nrrd_ && !second_nrrd_ && !third_nrrd_) {
     error("Must have at least one nrrd connected.");
     return;
   }
+
   if (first_nrrd_)
     nin1 = nrrd_handle1->nrrd;
   if (second_nrrd_)
     nin2 = nrrd_handle2->nrrd;
+  if (third_nrrd_)
+    nin3 = nrrd_handle3->nrrd;
 
   reset_vars();
 
   NrrdIter *in1 = nrrdIterNew();
   NrrdIter *in2 = nrrdIterNew();
+  NrrdIter *in3 = nrrdIterNew();
 
-
-  if (first_nrrd_ && second_nrrd_) {
+  // if a nrrd is connected, it overrides a float
+  if (first_nrrd_) {
     nrrdIterSetOwnNrrd(in1, nin1);
-    nrrdIterSetOwnNrrd(in2, nin2);
-  }
-  else if (first_nrrd_) {
-    nrrdIterSetOwnNrrd(in1, nin1);
-    nrrdIterSetValue(in2, float_input_.get());
   } else {
-    nrrdIterSetValue(in1, float_input_.get());
-    nrrdIterSetOwnNrrd(in2, nin2);
+    nrrdIterSetValue(in1, float1_.get());   
   }
 
-  if (nrrdArithIterBinaryOp(nout, get_op(operator_.get()), in1, in2)) {
+  if (second_nrrd_) {
+    nrrdIterSetOwnNrrd(in2, nin2);
+  } else {
+   nrrdIterSetValue(in2, float2_.get());  
+  }
+
+  if (third_nrrd_) {
+    nrrdIterSetOwnNrrd(in3, nin3);
+  } else {
+    nrrdIterSetValue(in3, float3_.get());  
+  }
+
+  if (nrrdArithIterTernaryOp(nout, get_op(operator_.get()), in1, in2, in3)) {
     char *err = biffGetDone(NRRD);
-    error(string("Error performing 2op to nrrd: ") + err);
+    error(string("Error performing 3op to nrrd: ") + err);
     free(err);
   }
 
@@ -150,44 +180,30 @@ Unu2op::execute()
 }
 
 unsigned int
-Unu2op::get_op(const string &op) {
+Unu3op::get_op(const string &op) {
   if (op == "+") 
-    return nrrdBinaryOpAdd;
-  else if (op == "-")
-    return nrrdBinaryOpSubtract;
+    return nrrdTernaryOpAdd;
   else if (op == "x")
-    return nrrdBinaryOpMultiply;
-  else if (op == "/")
-    return nrrdBinaryOpDivide;
-  else if (op == "^")
-    return nrrdBinaryOpPow;
-  else if (op == "%")
-    return nrrdBinaryOpMod;
-  else if (op == "fmod")
-    return nrrdBinaryOpFmod;
-  else if (op == "atan2")
-    return nrrdBinaryOpAtan2;
+    return nrrdTernaryOpMultiply;
   else if (op == "min")
-    return nrrdBinaryOpMin;
+    return nrrdTernaryOpMin;
   else if (op == "max")
-    return nrrdBinaryOpMax;
-  else if (op == "lt")
-    return nrrdBinaryOpLT;
-  else if (op == "lte")
-    return nrrdBinaryOpLTE;
-  else if (op == "gt")
-    return nrrdBinaryOpGT;
-  else if (op == "gte")
-    return nrrdBinaryOpGTE;
-  else if (op == "eq")
-    return nrrdBinaryOpEqual;
-  else if (op == "neq")
-    return nrrdBinaryOpNotEqual;
-  else if (op == "comp")
-    return nrrdBinaryOpCompare;
+    return nrrdTernaryOpMax;
+  else if (op == "clamp")
+    return nrrdTernaryOpClamp;
+  else if (op == "ifelse")
+    return nrrdTernaryOpIfElse;
+  else if (op == "lerp")
+    return nrrdTernaryOpLerp;
+  else if (op == "exists")
+    return nrrdTernaryOpExists;
+  else if (op == "in_op")
+    return nrrdTernaryOpInOpen;
+  else if (op == "in_cl")
+    return nrrdTernaryOpInClosed;
   else {
-    error("Unknown operation. Using eq");
-    return nrrdBinaryOpEqual;
+    error("Unknown operation. Using +");
+    return nrrdTernaryOpAdd;
   }
 }
 

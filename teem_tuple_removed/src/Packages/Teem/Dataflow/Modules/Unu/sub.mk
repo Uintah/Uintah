@@ -30,6 +30,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Unu
 SRCS     += \
 	$(SRCDIR)/Unu1op.cc\
 	$(SRCDIR)/Unu2op.cc\
+	$(SRCDIR)/Unu3op.cc\
 	$(SRCDIR)/UnuAxdelete.cc\
 	$(SRCDIR)/UnuAxinfo.cc\
 	$(SRCDIR)/UnuAxinsert.cc\
@@ -37,6 +38,7 @@ SRCS     += \
 	$(SRCDIR)/UnuAxsplit.cc\
 	$(SRCDIR)/UnuCCadj.cc\
 	$(SRCDIR)/UnuCCfind.cc\
+	$(SRCDIR)/UnuCCmerge.cc\
 	$(SRCDIR)/UnuCCsettle.cc\
 	$(SRCDIR)/UnuCmedian.cc\
 	$(SRCDIR)/UnuConvert.cc\
@@ -49,6 +51,7 @@ SRCS     += \
 	$(SRCDIR)/UnuHisto.cc\
 	$(SRCDIR)/UnuImap.cc\
 	$(SRCDIR)/UnuInset.cc\
+	$(SRCDIR)/UnuJhisto.cc\
 	$(SRCDIR)/UnuJoin.cc\
 	$(SRCDIR)/UnuLut.cc\
 	$(SRCDIR)/UnuMake.cc\
