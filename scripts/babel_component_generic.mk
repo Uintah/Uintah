@@ -17,11 +17,11 @@ $(COMPONENT)_LANGUAGE := $(BABEL_LANGUAGE)
 ${OUTDIR}/${COMPONENT}.make: ${SRCDIR}/${COMPONENT}.sidl Core/Babel/timestamp
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
 	cp -u $(dir $<)*Impl.* $(dir $@)
-	$(BABEL) --server=$($(basename $(notdir $@))_LANGUAGE) --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --hide-glue --suppress-timestamp --language-subdir $<
+	$(BABEL) --server=$($(basename $(notdir $@))_LANGUAGE) --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
 	mv  $(dir $@)babel.make $@
 
 ${OUTDIR}/${COMPONENT}_stub.make: ${SRCDIR}/${COMPONENT}.sidl Core/Babel/timestamp
-	$(BABEL) --client=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} $< 
+	$(BABEL) --client=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $< 
 	mv  $(dir $@)babel.make $@
 
 #${OUTDIR}/cca.make: ${CCASIDL} 
