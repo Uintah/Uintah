@@ -26,7 +26,7 @@ BCData::setBCValues(int mat_id,BoundCondBase* bc)
   d_data[mat_id][bc->getType()]=bc;
 }
 
-BoundCondBase*
+const BoundCondBase*
 BCData::getBCValues(int mat_id,const string& type) const
 {
   // The default location for BCs defined for all materials is mat_id = 0.

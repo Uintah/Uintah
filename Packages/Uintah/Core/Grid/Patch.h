@@ -283,7 +283,8 @@ WARNING
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
      void setBCValues(FaceType face, BCData& bc);
-     BoundCondBase* getBCValues(int mat_id,string type,FaceType face) const;
+     const BoundCondBase* getBCValues(int mat_id,string type,
+				      FaceType face) const;
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
