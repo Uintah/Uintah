@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="TransformData" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Perform a specified functional transform on all of the
+  data in a field.</summary>
+    <description>
+    	<p>Compute the specified function on each data element in the
+	 input field.</p>
+
+        <p>The data transform is specified in the GUI as the body of a
+	C++ function.  The input values to the function are x, y, z,
+	and v, where x, y, and z are the positions of the data point
+	and v is the value of the input field's data element.  No
+	value is returned, rather set the 'result' variable to the
+	return type.  For example, "result = x + v;" would return a
+	new field containing the x position of each element added with
+	the value that was already there. "result = v.x();" could be
+	used to extract the x component of a vector field into a
+	scalar field.</p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+<nets>
+<net id="TransformData-scalarsphere">
+<title>TransformData-scalarsphere Regression Test</title>
+
+<p>Use the TransformData module to set the values in a LatVolField to be
+the distance function, then use ShowField and transparency in the
+<modref package="SCIRun" name="GenStandardColorMaps"/> module to display a sphere within that lattice.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/TransformData-scalarsphere.net.</p>
+
+</net>
+<net id="TransformData-vectorvortex">
+<title>TransformData-vectorvortex Regression Test</title>
+
+<p>Use the TransformData module to create a cylcone data set by
+resampling a LatVolField onto a PointCloudField, then setting each
+point to be a vector of position crossed with the up vector.  This
+dataset is then viewed using the <modref package="SCIRun" name="ShowField"/> module.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/TransformData-vectorvortex.net.</p>
+
+</net>
+</nets>
+</component>

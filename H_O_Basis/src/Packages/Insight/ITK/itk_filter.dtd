@@ -1,0 +1,78 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<!ELEMENT filter-itk (description, templated, datatypes?, inputs?, outputs?, parameters?, includes)>
+  <!ATTLIST filter-itk name CDATA #REQUIRED>
+
+<!ELEMENT description (#PCDATA)>
+
+<!ELEMENT templated (template*, defaults*)>
+
+<!ELEMENT template (#PCDATA)>
+  <!ATTLIST template type CDATA #IMPLIED>
+
+<!ELEMENT defaults (default*)>
+
+<!ELEMENT default (#PCDATA)>
+
+<!ELEMENT datatypes (array+)>
+
+<!ELEMENT array (elem-type, size-call)>
+  <!ATTLIST array name CDATA #REQUIRED>
+
+<!ELEMENT elem-type (#PCDATA)>
+
+<!ELEMENT size-call (#PCDATA)>
+ 
+<!ELEMENT inputs (input*)>
+
+<!ELEMENT input (type, call)>
+  <!ATTLIST input name CDATA #REQUIRED>
+  <!ATTLIST input optional (yes|no) "no">
+
+<!ELEMENT call (#PCDATA)>
+  <!ATTLIST call const (yes|no) "no">
+  <!ATTLIST call value (on|off) "off">
+
+<!ELEMENT name (#PCDATA)>
+
+<!ELEMENT outputs (output*)>
+
+<!ELEMENT output (type, call)>
+  <!ATTLIST output name CDATA #REQUIRED>
+
+<!ELEMENT parameters (param*)>
+
+<!ELEMENT param (name, type, ((call, call) | call), default?)>
+
+<!ELEMENT type (#PCDATA)>
+
+<!ELEMENT includes (file*)>
+
+<!ELEMENT file (#PCDATA)>
