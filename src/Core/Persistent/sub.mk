@@ -7,7 +7,7 @@ SRCDIR   := Core/Persistent
 SRCS     += $(SRCDIR)/Persistent.cc $(SRCDIR)/Pstreams.cc
 
 PSELIBS := Core/Containers
-LIBS := -lz
+LIBS := $(GZ_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
