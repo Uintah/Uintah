@@ -6,7 +6,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -36,7 +35,7 @@ static DebugStream oldStyleAdvect("oldStyleAdvect",false);
 /*==========TESTING==========`*/
 //______________________________________________________________________              
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
-                               ProblemSpecP& params)
+                     ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
   d_matl_set = 0;
@@ -97,7 +96,7 @@ if (!oldStyleAdvect.active()){
   d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
-
+  
   //__________________________________
   // - create Label names
   // - Let ICE know that this model computes the 
@@ -182,6 +181,25 @@ if (!oldStyleAdvect.active()){
   if(d_scalar->regions.size() == 0) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions");
   }
+
+  //__________________________________
+  //  Read in probe locations for the scalar field
+  ProblemSpecP probe_ps = child->findBlock("probePoints");
+  if (probe_ps) {
+    Vector location = Vector(0,0,0);
+    map<string,string> attr;                    
+    for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
+                      prob_spec = prob_spec->findNextBlock("location")) {
+                      
+      prob_spec->get(location);
+      prob_spec->getAttributes(attr);
+      string name = attr["name"];
+      
+      d_probePts.push_back(location);
+      d_probePtsNames.push_back(name);
+      d_usingProbePts = true;
+    }
+  } 
 }
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
@@ -267,6 +285,23 @@ void SimpleRxn::initialize(const ProcessorGroup*,
                               placeHolder, placeHolder,  f,
                               f, FakeDiffusivity, fakedelT);
     }
+    //__________________________________
+    //  Dump out a header to the probe point files
+    if (d_usingProbePts){
+      FILE *fp;
+      IntVector cell;
+      string udaDir = d_dataArchiver->getOutputLocation();
+      
+        for (unsigned int i =0 ; i < d_probePts.size(); i++) {
+          if(patch->findCell(Point(d_probePts[i]),cell) ) {
+            string filename = udaDir + "/" + d_probePtsNames[i].c_str();
+            fp = fopen(filename.c_str(), "a");
+            fprintf(fp, "#Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
+                    d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].x(),
+                    cell.x(), cell.y(), cell.z() );
+        }
+      }  // loop over probes
+    }  // if using probe points
   }  // patches
 }
 
@@ -414,6 +449,7 @@ void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->modifies(d_scalar->scalar_source_CCLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
+
 //______________________________________________________________________
 void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*, 
                                             const PatchSubset* patches,
@@ -493,7 +529,7 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
            << " cells were touched out of "<< numCells
            << " Total cells ";
       throw InvalidValue(warn.str());
-    }         
+    }     
     //__________________________________
     //  Tack on diffusion
     double diff_coeff_test = d_scalar->diff_coeff;
@@ -506,6 +542,23 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
                               placeHolder, placeHolder,  f_old,
                               f_src, diff_coeff, delT);
     }
+
+    //__________________________________
+    //  dump out the probe points
+    if (d_usingProbePts){
+      FILE *fp;
+      string udaDir = d_dataArchiver->getOutputLocation();
+      double time = d_dataArchiver->getCurrentTime();
+      IntVector cell_indx;
+      
+      for (unsigned int i =0 ; i < d_probePts.size(); i++) {
+         if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
+           string filename = udaDir + "/" + d_probePtsNames[i].c_str();
+           fp = fopen(filename.c_str(), "a");
+           fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+        }
+      }
+    } 
   }
 }
 //__________________________________      
