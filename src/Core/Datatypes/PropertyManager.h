@@ -196,6 +196,8 @@ public:
   template<class T> void set_property(const string &, const T &,
 				      bool is_transient);
   template<class T> bool get_property( const string &, T &);
+  bool is_property( const string & );
+  string get_property_name( unsigned int index );
 
 
   //! -- mutability --
@@ -210,7 +212,7 @@ public:
   bool is_frozen() const { return frozen_; }
 
   void remove_property( const string & );
-  //int size() { return size_; }
+  unsigned int nproperties() { return size_; }
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -220,7 +222,7 @@ private:
 
   typedef map<string, PropertyBase *> map_type;
 
-  int size_;
+  unsigned int size_;
   map_type properties_;
 
 protected:

@@ -170,6 +170,45 @@ PropertyManager::freeze()
   lock.unlock();
 }
 
+bool 
+PropertyManager::is_property(const string &name)
+{
+  lock.lock();
+
+  bool ans;
+  map_type::iterator loc = properties_.find(name);
+  if (loc != properties_.end())
+    ans = true;
+  else
+    ans = false;
+
+  lock.unlock();
+
+  return ans;
+} 
+
+
+string
+PropertyManager::get_property_name(unsigned int index)
+{
+  if (index < size_) {
+
+    lock.lock();
+
+    map_type::const_iterator pi = properties_.begin();
+
+    for( unsigned int i=0; i<index; i++ )
+      ++pi;
+
+    lock.unlock();
+
+    return pi->first;
+  } else {
+    return string("");
+  } 
+  
+}
+
 void
 PropertyManager::remove_property( const string &name )
 {
@@ -223,7 +262,7 @@ PropertyManager::io(Piostream &stream)
   else {
     string name;
     Persistent *p = 0;
-    for (int i=0; i<size_; i++ ) {
+    for (unsigned int i=0; i<size_; i++ ) {
       Pio(stream, name );
       stream.io( p, PropertyBase::type_id );
       properties_[name] = static_cast<PropertyBase *>(p);
