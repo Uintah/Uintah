@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Variables/VarLabelLevelDW.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabelLevelDW.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 

@@ -13,7 +13,7 @@
 #include "RescaleColorMapForParticles.h"
 #include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Variables/ParticleSubset.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 
 namespace Uintah {

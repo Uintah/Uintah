@@ -10,6 +10,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
 	Dataflow/XMLUtil \

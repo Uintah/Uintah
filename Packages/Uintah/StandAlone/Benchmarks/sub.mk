@@ -25,7 +25,6 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Parallel      \

@@ -21,8 +21,6 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/Core/Variables \
-        Packages/Uintah/Core/BoundaryConditions \
         Packages/Uintah/Core/GeometryPiece \
         Packages/Uintah/CCA/Components/Arches/Mixing \
         Packages/Uintah/CCA/Components/Arches/fortran \
@@ -107,8 +105,6 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Variables     \
-        Packages/Uintah/Core/BoundaryConditions \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -144,8 +140,6 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Variables     \
-        Packages/Uintah/Core/BoundaryConditions     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -205,8 +199,6 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Variables     \
-        Packages/Uintah/Core/BoundaryConditions     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
@@ -248,7 +240,6 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/ProblemSpec   \
@@ -289,11 +280,9 @@ else
   PSELIBS := \
         Dataflow/XMLUtil  \
         Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/BoundaryConditions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Variables     \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/ProblemSpec   \
@@ -325,7 +314,6 @@ else
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/Variables \
 	Packages/Uintah/Core/GeometryPiece \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions \
@@ -353,7 +341,6 @@ PSELIBS := \
         Packages/Uintah/Core/Exceptions \
         Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/Variables \
         Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/DataArchive \
@@ -409,7 +396,6 @@ else
   PSELIBS := \
       Packages/Uintah/Core/Grid \
       Packages/Uintah/Core/Util \
-      Packages/Uintah/Core/Variables \
       Packages/Uintah/Core/Parallel \
       Packages/Uintah/Core/Exceptions \
       Packages/Uintah/Core/Math \

@@ -46,8 +46,8 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/NodeIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Variables/CellIterator.h> // Includ after Patch.h
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
 //#include <Packages/Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <vector>

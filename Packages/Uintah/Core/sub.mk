@@ -2,7 +2,6 @@
 
 SRCDIR := Packages/Uintah/Core
 SUBDIRS := \
-	$(SRCDIR)/BoundaryConditions \
 	$(SRCDIR)/DataArchive \
 	$(SRCDIR)/Datatypes   \
 	$(SRCDIR)/Disclosure  \
@@ -14,7 +13,6 @@ SUBDIRS := \
 	$(SRCDIR)/Parallel    \
 	$(SRCDIR)/ProblemSpec \
 	$(SRCDIR)/Util        \
-	$(SRCDIR)/Variables
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

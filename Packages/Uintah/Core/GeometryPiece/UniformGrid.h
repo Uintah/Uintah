@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Variables/Array3.h>
+#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/IntVector.h>

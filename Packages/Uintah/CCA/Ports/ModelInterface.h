@@ -2,7 +2,7 @@
 #define UINTAH_HOMEBREW_ModelInterface_H
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
@@ -11,7 +11,7 @@
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
 /**************************************

@@ -2,11 +2,11 @@
 #define UINTAH_HOMEBREW_DetailedTasks3_H
 
 #include <Packages/Uintah/CCA/Components/Scheduler3/PatchBasedDataWarehouse3P.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-//#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlDW.h>
+//#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlDW.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>

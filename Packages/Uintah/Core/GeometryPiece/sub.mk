@@ -30,5 +30,12 @@ SRCS     += \
 	$(SRCDIR)/CorrugEdgeGeomPiece.cc
 
 PSELIBS := \
+	Core/Exceptions \
+	Core/Geometry \
+	Core/Util \
+	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Exceptions \
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
