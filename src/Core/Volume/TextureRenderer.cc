@@ -430,12 +430,16 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
       }
       for(int j=0; j<poly[i]; j++) {
         float* t = &texcoord[(k+j)*3];
-        glMultiTexCoord3f(GL_TEXTURE0, t[0], t[1], t[2]);
         float* v = &vertex[(k+j)*3];
+#ifdef GL_ARB_fragment_program
+        glMultiTexCoord3f(GL_TEXTURE0, t[0], t[1], t[2]);
         if(fog) {
           float vz = mvmat[2]*v[0] + mvmat[6]*v[1] + mvmat[10]*v[2] + mvmat[14];
           glMultiTexCoord3f(GL_TEXTURE1, -vz, 0.0, 0.0);
         }
+#else
+	glTexCoord3f(t[0], t[1], t[2]);
+#endif
         glVertex3f(v[0], v[1], v[2]);
       }
     }
