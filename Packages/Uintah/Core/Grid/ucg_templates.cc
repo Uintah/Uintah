@@ -23,6 +23,7 @@ template class ParticleVariable<SCIRun::Point>;
 template class ParticleVariable<double>;
 template class ParticleVariable<int>;
 template class ParticleVariable<long int>;
+template class ParticleVariable<long64>;
 
 template class NCVariable<SCIRun::Vector>;
 template class NCVariable<Uintah::Matrix3>;
