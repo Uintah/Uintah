@@ -34,21 +34,21 @@ withThirdParty = ""
 extraOptions = ""
 case Doc::Platform
   when Doc::Linux
-    withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Linux/gcc-3.2-32bit"
+    withThirdParty = "-\-with-thirdparty=/usr/local/SCIRun/Thirdparty/1.8.0/Linux/gcc-3.2-32bit"
   when Doc::Irix
-    withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit"
+    withThirdParty = "-\-with-thirdparty=/usr/local/SCIRun/Thirdparty/1.8.0/Irix/CC-32bit"
   when Doc::OSX
-    withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty_osx"
+    withThirdParty = "-\-with-thirdparty=/usr/local/SCIRun/Thirdparty_osx"
 end
 %-->
 
 <section id="sec.build-sr">
-  <title id="title.build-sr">Building &sr;</title>
+  <title id="title.build-sr">Building SCIRun</title>
 
 <!--
   <note>
     <title>Note for Itanium Architecture</title>
-    <para>When building &sr; for the Itanium architecture, the GNU compiler
+    <para>When building SCIRun for the Itanium architecture, the GNU compiler
     collection (gcc) must be used and the values of the environment
     variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be
     set as follows:</para>
@@ -73,18 +73,18 @@ end
     <listitem>
 
       <para>
-	Run &sr;'s configure script.    Do this from a sub-directory of
-	directory <filename>&sr;</filename> (but <emphasis>not</emphasis>
-	<filename>&sr;/src</filename>) as follows:
+	Run SCIRun's configure script.    Do this from a sub-directory of
+	directory <filename>SCIRun</filename> (but <emphasis>not</emphasis>
+	<filename>SCIRun/src</filename>) as follows:
 	<literallayout class="monospaced">
-mkdir &sr;/<replaceable>build-dir</replaceable>
-cd &sr;/<replaceable>build-dir</replaceable>
+mkdir SCIRun/<replaceable>build-dir</replaceable>
+cd SCIRun/<replaceable>build-dir</replaceable>
 
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
---enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+--enable-package="<replaceable>package-name1 package-name2 &#x2026;</replaceable>"
 	</literallayout>
-	in which case &sr; is built in the directory
-	<filename>&sr;/<replaceable>build-dir</replaceable></filename>.
+	in which case SCIRun is built in the directory
+	<filename>SCIRun/<replaceable>build-dir</replaceable></filename>.
       </para>
       <para>
 	<replaceable>Build-dir</replaceable> is often
@@ -101,7 +101,7 @@ cd &sr;/<replaceable>build-dir</replaceable>
       </para>
       <para>
 	Replace "<replaceable>package-name1 package-name2
-	&hellip;</replaceable>" by a list of package names ,
+	 &#x2026;;</replaceable>" by a list of package names ,
 	e.g. "BioPSE MatlabInterface".  An example configure command
 	is:
 	<literallayout class="monospaced">
@@ -173,7 +173,7 @@ make -j <replaceable>N</replaceable>
 	</literallayout>
 	where <replaceable>N</replaceable> is the number of processors
 	available for use by make.  Using this option on a multiprocessor
-	machine can significantly reduce the time to build &sr;.
+	machine can significantly reduce the time to build SCIRun.
       </para>
     </listitem>
   </orderedlist>
@@ -185,12 +185,12 @@ make -j <replaceable>N</replaceable>
   </para>
 
   <tip>
-    <para>It is possible to build &sr; for multiple machine
+    <para>It is possible to build SCIRun for multiple machine
     architectures within the same source code directory.  See <xref
     linkend="app.multi_builds"/> for details.</para>
   </tip>
 
   <para>Read <xref linkend="sec.prepare"/> before <link
-  linkend="sec.starting">starting</link> &sr;.</para>
+  linkend="sec.starting">starting</link> SCIRun.</para>
 
 </section>
