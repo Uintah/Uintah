@@ -819,6 +819,7 @@ proc biopseFDialog_Config {w type argList} {
             {-defaultextension "" "" ""}
             {-selectedfiletype "" "" ""}
             {-allowMultipleFiles "" "" ""}
+	    {-commandname "" "" ""}
         }
         set data(-initialfile) ""
     } else {
@@ -844,6 +845,7 @@ proc biopseFDialog_Config {w type argList} {
                 {-currentvar "" "" ""}
             {-selectedfiletype "" "" ""}
             {-allowMultipleFiles "" "" ""}
+	    {-commandname "" "" ""}
         }
     }
 
@@ -907,7 +909,7 @@ proc biopseFDialog_Config {w type argList} {
 
 
 proc biopseFDialog_Create {w} {
-
+    
     set dataName [lindex [split $w .] end]
 
     upvar #0 $dataName data
@@ -922,22 +924,23 @@ proc biopseFDialog_Create {w} {
     label $f1.lab -text "Directory:" -under 0
     set data(dirMenuBtn) $f1.menu
     set data(dirMenu) [tk_optionMenu $f1.menu [format .%s(selectPath) $dataName] ""]
-
+    
     set data(upBtn) [button $f1.up]
     if {![info exists biopsePriv(updirImage)]} {
         set biopsePriv(updirImage) [image create bitmap -data {
-#define updir_width 28
-#define updir_height 16
-static char updir_bits[] = {
-   0x00, 0x00, 0x00, 0x00, 0x80, 0x1f, 0x00, 0x00, 0x40, 0x20, 0x00, 0x00,
-   0x20, 0x40, 0x00, 0x00, 0xf0, 0xff, 0xff, 0x01, 0x10, 0x00, 0x00, 0x01,
-   0x10, 0x02, 0x00, 0x01, 0x10, 0x07, 0x00, 0x01, 0x90, 0x0f, 0x00, 0x01,
-   0x10, 0x02, 0x00, 0x01, 0x10, 0x02, 0x00, 0x01, 0x10, 0x02, 0x00, 0x01,
-   0x10, 0xfe, 0x07, 0x01, 0x10, 0x00, 0x00, 0x01, 0x10, 0x00, 0x00, 0x01,
-   0xf0, 0xff, 0xff, 0x01};}]
+	    #define updir_width 28
+	    #define updir_height 16
+	    static char updir_bits[] = {
+     0x00, 0x00, 0x00, 0x00, 0x80, 0x1f, 0x00, 0x00, 0x40, 0x20, 0x00, 0x00,
+     0x20, 0x40, 0x00, 0x00, 0xf0, 0xff, 0xff, 0x01, 0x10, 0x00, 0x00, 0x01,
+     0x10, 0x02, 0x00, 0x01, 0x10, 0x07, 0x00, 0x01, 0x90, 0x0f, 0x00, 0x01,
+     0x10, 0x02, 0x00, 0x01, 0x10, 0x02, 0x00, 0x01, 0x10, 0x02, 0x00, 0x01,
+     0x10, 0xfe, 0x07, 0x01, 0x10, 0x00, 0x00, 0x01, 0x10, 0x00, 0x00, 0x01,
+     0xf0, 0xff, 0xff, 0x01};}]
     }
-    $data(upBtn) config -image $biopsePriv(updirImage)
 
+    $data(upBtn) config -image $biopsePriv(updirImage)
+    
     $f1.menu config -takefocus 1 -highlightthickness 2
  
     pack $data(upBtn) -side right -padx 4 -fill both
@@ -1079,18 +1082,29 @@ static char updir_bits[] = {
         Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
     }
 
-    set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 10\
+    set bName Execute 
+    if { [string length $data(-commandname)] } {
+	set bName $data(-commandname)
+    }
+    set data(executeBtn) [button $f7.execute -text $bName -under 0 -width 10\
                               -default normal -pady 3]
     # For the viewer Save Image window, have it say Save instead of Execute
     if {[string first "ViewWindow" $w] != -1} {
         $data(executeBtn) config -text "Save"
     } 
-    Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+
+    if { $bName == "Save"} {
+	Tooltip $f7.execute "Write the file to disk"
+    } elseif {$bName == "Load"} {
+ 	Tooltip $f7.execute "Load the file from disk"
+    } else {
+ 	Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+    }
 
     set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 10\
-                                 -default normal -pady 3]
+			     -default normal -pady 3]
     Tooltip $f7.cancel "Dismiss the UI without\nsetting the filename"
-
+    
     # only include a find button if this dialog has the form
     # .ui[modname].  otherwise it must be a child of a ui.
     set mod [string range $w 3 end]
@@ -1288,6 +1302,7 @@ static char updir_bits[] = {
     tkFocusGroup_BindIn $w  $data(ent) "biopseFDialog_EntFocusIn $w"
     tkFocusGroup_BindOut $w $data(ent) "biopseFDialog_EntFocusOut $w"
 }
+
 
 # toggle_Current --
 #       Greys out the 'Current index:' label and entry whenever the 'Increment'
