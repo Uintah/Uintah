@@ -397,7 +397,6 @@ main( int argc, char** argv )
 	UintahParallelComponent* comp = 0;
 	if(do_mpm && do_ice){
 	  MPMICE* mpmice = scinew MPMICE(world);
-	  mpmice->attachPort("output", output);
 	  sim = mpmice;
 	  comp = mpmice;
 	} else if(do_mpm && do_arches){
