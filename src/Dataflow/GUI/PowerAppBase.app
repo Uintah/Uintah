@@ -34,9 +34,6 @@ class PowerAppBase {
     # It will initialize variables regarding size, state, the progress indicator, tooltips, etc.
     # The constructor also configures the scheme (color, fonts, etc)
     constructor {} {
-	if [winfo exists .splash] {
-	    hideSplash true
-	}
 
 	configure_scheme 
 
