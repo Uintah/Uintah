@@ -87,7 +87,7 @@ void Patch::findNodesFromCell( const IntVector& cellIndex,
    nodeIndex[7] = IntVector(ix+1, iy+1, iz+1);
 }
 
-bool Patch::findCellAndWeights(const Point& pos,
+void Patch::findCellAndWeights(const Point& pos,
 				IntVector ni[8], double S[8]) const
 {
    Point cellpos = d_level->positionToIndex(pos);
@@ -116,12 +116,10 @@ bool Patch::findCellAndWeights(const Point& pos,
    S[5] = fx * fy1 * fz;
    S[6] = fx * fy * fz1;
    S[7] = fx * fy * fz;
-   return true;
-//   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
 }
 
 
-bool Patch::findCellAndShapeDerivatives(const Point& pos,
+void Patch::findCellAndShapeDerivatives(const Point& pos,
 					 IntVector ni[8],
 					 Vector d_S[8]) const
 {
@@ -151,8 +149,47 @@ bool Patch::findCellAndShapeDerivatives(const Point& pos,
    d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
    d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
    d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
-   return true;
-//   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
+}
+
+void Patch::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+					          IntVector ni[8],
+						  double S[8],
+					          Vector d_S[8]) const
+{
+   Point cellpos = d_level->positionToIndex(pos);
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   ni[0] = IntVector(ix, iy, iz);
+   ni[1] = IntVector(ix, iy, iz+1);
+   ni[2] = IntVector(ix, iy+1, iz);
+   ni[3] = IntVector(ix, iy+1, iz+1);
+   ni[4] = IntVector(ix+1, iy, iz);
+   ni[5] = IntVector(ix+1, iy, iz+1);
+   ni[6] = IntVector(ix+1, iy+1, iz);
+   ni[7] = IntVector(ix+1, iy+1, iz+1);
+   double fx = cellpos.x() - ix;
+   double fy = cellpos.y() - iy;
+   double fz = cellpos.z() - iz;
+   double fx1 = 1-fx;
+   double fy1 = 1-fy;
+   double fz1 = 1-fz;
+   S[0] = fx1 * fy1 * fz1;
+   S[1] = fx1 * fy1 * fz;
+   S[2] = fx1 * fy * fz1;
+   S[3] = fx1 * fy * fz;
+   S[4] = fx * fy1 * fz1;
+   S[5] = fx * fy1 * fz;
+   S[6] = fx * fy * fz1;
+   S[7] = fx * fy * fz;
+   d_S[0] = Vector(- fy1 * fz1, -fx1 * fz1, -fx1 * fy1);
+   d_S[1] = Vector(- fy1 * fz,  -fx1 * fz,   fx1 * fy1);
+   d_S[2] = Vector(- fy  * fz1,  fx1 * fz1, -fx1 * fy);
+   d_S[3] = Vector(- fy  * fz,   fx1 * fz,   fx1 * fy);
+   d_S[4] = Vector(  fy1 * fz1, -fx  * fz1, -fx  * fy1);
+   d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
+   d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
+   d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
 }
 
 ostream& operator<<(ostream& out, const Patch & r)
@@ -751,6 +788,11 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.30  2000/11/30 22:55:34  guilkey
+// Changed the return type of the findCellAnd... functions from bool to void.
+// Also, added a findCellAndWeightsAndShapeDerivatives to be used where both
+// quantities are needed.
+//
 // Revision 1.29  2000/11/30 17:06:16  guilkey
 // Hardwired the findCellAndWeights and findCellAndShapeDerivatives to
 // always return true, as the logic that was previously used is no longer
