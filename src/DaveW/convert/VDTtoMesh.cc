@@ -89,7 +89,13 @@ int main(int argc, char **argv)
     if (surfH.get_rep() && (st=dynamic_cast<SurfTree*>(surfH.get_rep()))) {
 	cerr << "Getting material indices for each component from surftree\n";
 	newConds.resize(st->surfI.size());
-	for (i=0; i<newConds.size(); i++) newConds[i]=st->surfI[i].matl;
+	remap = 1;
+	for (i=0; i<newConds.size(); i++) {
+	    newConds[i]=st->surfI[i].matl;
+	    cerr << "New conds["<<i<<"] = "<<newConds[i]<<"\n";
+	}
+    } else {
+	cerr << "Not getting material indices from surftree!\n";
     }
 
     // ! VDT (C) 1998 Petr Krysl
