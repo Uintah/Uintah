@@ -68,9 +68,11 @@ for test in TESTS:
     else:
       zres = zres*2
 
-  # Run al the tests
-  runSusTests(argv, scale_tests, "scalability", chemfileCallback)
-
+  # Run al the tests.  Exit if it skips them (because of debug mode)
+  retval = runSusTests(argv, scale_tests, "scalability", chemfileCallback)
+  if retval == 3:
+    exit(3)
+    
   # This dir should exist now, and each tests' subdir should be underneath
   chdir("%s/SCALABILITY-results" % getcwd())
   mkdir(test[0])
