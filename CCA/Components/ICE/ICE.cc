@@ -52,8 +52,6 @@ static DebugStream cout_doing("ICE_DOING_COUT", false);
 #define oldStyle_setBC 1
 #define newStyle_setBC 0
 #define setBC_FC 1
-#define setBC_FC_John 
-#undef setBC_FC_John
  /*==========TESTING==========`*/
 //#define ANNULUSICE
 #undef ANNULUSICE
@@ -505,7 +503,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                                       Ghost::None);     
   task->requires(Task::NewDW,lb->burnedMass_CCLabel,  Ghost::None);
   task->computes(lb->press_CCLabel,        press_matl);
-  task->computes(lb->delP_DilatateLabel, press_matl);
+  task->computes(lb->delP_DilatateLabel,   press_matl);
   task->computes(lb->delP_MassXLabel,      press_matl);
   
   sched->addTask(task, patches, matls);
@@ -1520,9 +1518,10 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E  
       //   - backout velocities           
-      a.solve(b);
-      for(int m = 0; m < numMatls; m++)  {
-	vvel_FCME[m][curcell] = vvel_FC[m][curcell] + b[m];
+      vector<double> X(numMatls);
+      matrixSolver(numMatls,a,b,X);
+      for(int m = 0; m < numMatls; m++) {
+	vvel_FCME[m][curcell] = vvel_FC[m][curcell] + X[m];
       }
     }
 
@@ -1565,11 +1564,11 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities
-      a.solve(b);
-
+      vector<double> X(numMatls);
+      matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-	uvel_FCME[m][curcell] = uvel_FC[m][curcell] + b[m];
-      }
+	uvel_FCME[m][curcell] = uvel_FC[m][curcell] + X[m];
+      }   
     }
     //__________________________________
     //  B A C K  F A C E -- B  E  T  A      
@@ -1608,46 +1607,20 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       //__________________________________
       //      S  O  L  V  E
       //   - backout velocities 
-      a.solve(b);
+      vector<double> X(numMatls);
+      matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-	wvel_FCME[m][curcell] = wvel_FC[m][curcell] + b[m];
+	wvel_FCME[m][curcell] = wvel_FC[m][curcell] + X[m];
       }
     }
-
-/*`==========TESTING==========*/ 
-#if setBC_FC
-    #ifdef setBC_FC_John
-    SFCXVariable<Vector> vel_FC;
-    new_dw->allocate(vel_FC,lb->scratch_FCVectorLabel,0,patch);
-    #endif
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      #ifdef setBC_FC_John
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
-	  iter++){  
-	IntVector cell = *iter; 
-	vel_FC[cell] = 
-	  Vector(uvel_FCME[m][cell],vvel_FCME[m][cell],wvel_FCME[m][cell]);
-      }
-      setBC(vel_FC,"Velocity",patch,indx);
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
-	  iter++){  
-	IntVector cell = *iter; 
-	uvel_FCME[m][cell] = vel_FC[cell].x();
-	vvel_FCME[m][cell] = vel_FC[cell].y();
-	wvel_FCME[m][cell] = vel_FC[cell].z();
-      }
-      #endif
-      // Turn off the old way if setBC_FC_John is turned on.
-      #ifndef setBC_FC_John 
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
-      #endif
     }
-#endif
- /*==========TESTING==========`*/
+  
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
       for (int m = 0; m < numMatls; m++)  {
@@ -2560,7 +2533,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
     vector<double> b(numMatls);
     vector<double> cv(numMatls);
+    vector<double> X(numMatls);
     DenseMatrix beta(numMatls,numMatls),acopy(numMatls,numMatls);
+    DenseMatrix a_inverse(numMatls, numMatls);
     DenseMatrix K(numMatls,numMatls),H(numMatls,numMatls),a(numMatls,numMatls);
     beta.zero();
     acopy.zero();
@@ -2619,6 +2594,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 	  a[m][m] +=  beta[m][n];
         }
       }
+      matrixInverse(numMatls, a, a_inverse);
       //---------- X - M O M E N T U M
       // -  F O R M   R H S   (b)
       // -  push a copy of (a) into the solver
@@ -2631,11 +2607,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 	    (vel_CC[n][*iter].x() - vel_CC[m][*iter].x());
         }
       }
-      acopy = a;
-      acopy.solve(b);
-
+  
+      vector<double> X(numMatls);
+      multiplyMatrixAndVector(numMatls,a_inverse,b,X);
       for(int m = 0; m < numMatls; m++) {
-          vel_CC[m][*iter].x( vel_CC[m][*iter].x() + b[m] );
+	  vel_CC[m][*iter].x( vel_CC[m][*iter].x() + X[m] );
       }
 
       //---------- Y - M O M E N T U M
@@ -2649,12 +2625,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 	  b[m] += beta[m][n] *
 	    (vel_CC[n][*iter].y() - vel_CC[m][*iter].y());
         }
-      }
-      acopy    = a;
-      acopy.solve(b);
-
-      for(int m = 0; m < numMatls; m++)   {
-          vel_CC[m][*iter].y( vel_CC[m][*iter].y() + b[m] );
+      }   
+      multiplyMatrixAndVector(numMatls,a_inverse,b,X);
+      for(int m = 0; m < numMatls; m++) {
+	  vel_CC[m][*iter].y( vel_CC[m][*iter].y() + X[m] );
       }
 
       //---------- Z - M O M E N T U M
@@ -2668,13 +2642,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 	  b[m] += beta[m][n] *
 	    (vel_CC[n][*iter].z() - vel_CC[m][*iter].z());
         }
-      }    
-      acopy    = a;
-      acopy.solve(b);
+      } 
+      multiplyMatrixAndVector(numMatls,a_inverse,b,X);
+      for(int m = 0; m < numMatls; m++) {
+	  vel_CC[m][*iter].z( vel_CC[m][*iter].z() + X[m] );
+      }
 
-      for(int m = 0; m < numMatls; m++)  {
-        vel_CC[m][*iter].z( vel_CC[m][*iter].z() + b[m] );
-      }  
       //---------- E N E R G Y   E X C H A N G E
       //   Form BETA matrix (a) off diagonal terms
       for(int m = 0; m < numMatls; m++) {
@@ -2701,10 +2674,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }
       }
       //     S O L V E, Add exchange contribution to orig value
-      a.solve(b);
-
+      matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-        Temp_CC[m][*iter] = Temp_CC[m][*iter] + b[m];
+        Temp_CC[m][*iter] = Temp_CC[m][*iter] + X[m];
       }
     }
     //__________________________________
@@ -2911,9 +2883,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       printVector( patch,1, description, "xmom_L_CC", 0, mom_L_ME);
       printVector( patch,1, description, "ymom_L_CC", 1, mom_L_ME);
       printVector( patch,1, description, "zmom_L_CC", 2, mom_L_ME);
-      printData( patch,1,   description, "int_eng_L_CC",int_eng_L_ME);
-      printData( patch,1,   description, "rho_CC",      rho_CC);
-      printData( patch,1,   description, "Temp_CC",temp);
+      printData(   patch,1, description, "int_eng_L_CC",int_eng_L_ME);
+      printData(   patch,1, description, "rho_CC",      rho_CC);
+      printData(   patch,1, description, "Temp_CC",temp);
       printVector( patch,1, description, "uvel_CC", 0, vel_CC);
       printVector( patch,1, description, "vvel_CC", 1, vel_CC);
       printVector( patch,1, description, "wvel_CC", 2, vel_CC);
@@ -2927,7 +2899,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
   }  // patch loop 
 }
 
-
+#if newStyle_setBC
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care Pressure_CC
@@ -2942,16 +2914,22 @@ void ICE::setBC(CCVariable<double>& press_CC,
                 const Patch* patch, const int mat_id)
 {  
   for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace && patch->getBCType(face)==Patch::None;
-      face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
-    BoundCond<double>* new_bcs;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    BoundCondBase *bcs, *sym_bcs;
+    BoundCond<double> *new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
-    }
-    else
+    } else
       continue;
+ /*`==========TESTING==========*/ 
+    if (sym_bcs != 0) { 
+     cout << "Symetric Boundary Conditions  "<< kind<< " Face "<<face<<endl;
+     ccout << "need to update backoutGCPressFromVelFC "<<endl;
+     exit(1);
+    }
+ /*==========TESTING==========`*/
 
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") 
@@ -2967,10 +2945,9 @@ void ICE::setBC(CCVariable<double>& press_CC,
     }
   }
 }
-/*`==========TESTING==========*/ 
-// KEEP THIS AROUND UNTIL
-// I'M SURE OF THE NEW STYLE OF SETBC
-// FOR PRESSURE -Todd
+#endif
+
+ #if oldStyle_setBC
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care Pressure_CC
@@ -2985,14 +2962,18 @@ void ICE::setBC(CCVariable<double>& press_CC,
   
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
-    BoundCond<double>* new_bcs;
+    BoundCondBase *bcs, *sym_bcs;
+    BoundCond<double> *new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
-    }
-    else
+    } else
       continue;
+ 
+    if (sym_bcs != 0) { 
+      press_CC.fillFaceFlux(face,0.0,dx);
+    }
 
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") 
@@ -3009,7 +2990,8 @@ void ICE::setBC(CCVariable<double>& press_CC,
     }
   }
 }
- /*==========TESTING==========`*/
+#endif
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
  Purpose~   Takes care of Density_CC and Temperature_CC
@@ -3021,14 +3003,21 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
   Vector grav = d_sharedState->getGravity();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
-    BoundCond<double>* new_bcs;
+    BoundCondBase *bcs, *sym_bcs;
+    BoundCond<double> *new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<double> *>(bcs);
     } else
       continue;
  
+    if (sym_bcs != 0) { 
+      if (kind == "Density" || kind == "Temperature" || kind == "set_if_sym_BC") {
+        variable.fillFaceFlux(face,0.0,dx);
+      }
+    }   
+    
     if (new_bcs != 0) {
       //__________________________________
       //  Density_CC
@@ -3047,7 +3036,8 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
 	    variable.fillFace(face,new_bcs->getValue());
            
          // Neumann && gravity                 
-        if (new_bcs->getKind() == "Neumann") {  
+        if (new_bcs->getKind() == "Neumann" ) {  
+
           variable.fillFaceFlux(face,new_bcs->getValue(),dx);
             
           if(fabs(grav.x()) >0.0 ||fabs(grav.y()) >0.0 ||fabs(grav.z()) >0.0) {
@@ -3083,21 +3073,24 @@ void ICE::setBC(CCVariable<Vector>& variable, const string& kind,
     BoundCondBase *bcs,*sym_bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
-
-    if (sym_bcs != 0) {
-      // First set the Neumann conditions for the non-normal faces
+    //__________________________________
+    //  Tangent components Neumann = 0
+    //  Normal components = negInterior
+    //  It's negInterior since it's on the opposite side of the
+    //  plane of symetry
+    if (sym_bcs != 0 && (kind == "Velocity" || kind =="set_if_sym_BC") ) {
+    
       variable.fillFaceFlux(face,Vector(0.,0.,0.),dx);
-      // Then zero out the component that is normal to the face, the
-      // Neumann conditions will be retained.
+
       variable.fillFaceNormal(face);
     }
       
-    if (new_bcs != 0) {
+    if (new_bcs != 0 && kind == "Velocity") {
       if (new_bcs->getKind() == "Dirichlet") 
 	variable.fillFace(face,new_bcs->getValue());
       
@@ -3120,29 +3113,46 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
 {
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase *bcs;
+    BoundCondBase *bcs, *sym_bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
 
     IntVector offset(0,0,0);
+    //__________________________________
+    //  Symmetry boundary conditions
+    //  -set Neumann = 0 on all walls
+    if (sym_bcs != 0) {
+      Vector dx = patch->dCell();
+      //cout<< "Setting uvel_FC symmetry boundary conditons face "<<face<<endl;
+      variable.fillFaceFlux(patch, face, 0.0 ,dx,offset);
+      
+      // Set normal component = 0
+      if( face == Patch::xplus || face == Patch::xminus ) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"FC_vars"); 
+                                                  !iter.done(); iter++) { 
+          //cout<<" now working on uvel_FC "<<*iter<<endl;
+          variable[*iter] = 0.0;  
+        }
+      }
+    }
+    //__________________________________
+    // Neumann or Dirichlet
     if (new_bcs != 0) {
-      if (new_bcs->getKind() == "Dirichlet") {
-	 if (comp == "x")
-	   variable.fillFace(patch, face,new_bcs->getValue().x(),offset);
+      if (new_bcs->getKind() == "Dirichlet" && comp == "x") {
+        variable.fillFace(patch, face,new_bcs->getValue().x(),offset);
       }
 /*`==========TESTING==========*/ 
 #if 1
-// fillFaceFlux is broken and can probably be deleted
+// fillFaceFlux is broken
 // currently vel_FC[gc] = vel_FC[interior] which is WRONG
-      if (new_bcs->getKind() == "Neumann") {
-	 if (comp == "x") {
-          Vector dx = patch->dCell();
-	   variable.fillFaceFlux(patch, face,new_bcs->getValue().x(),dx,offset);
-        }
+      if (new_bcs->getKind() == "Neumann" && comp == "x") {
+        Vector dx = patch->dCell();
+        variable.fillFaceFlux(patch, face,new_bcs->getValue().x(),dx,offset);
       }
 #endif
  /*==========TESTING==========`*/
@@ -3156,32 +3166,48 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
 void ICE::setBC(SFCYVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch, const int mat_id) 
 {
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase *bcs;
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+      face=Patch::nextFace(face)){
+    BoundCondBase *bcs, *sym_bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
- 
+
     IntVector offset(0,0,0);
-    if (new_bcs != 0) {
-      if (new_bcs->getKind() == "Dirichlet") {
-        if (comp == "y")
-	   variable.fillFace(patch, face,new_bcs->getValue().y(),offset);
-      }
- 
-/*`==========TESTING==========*/
-#if 1
-// fillFaceFlux is broken and can probably be deleted
-// currently vel_FC[gc] = vel_FC[interior] which is WRONG
-      if (new_bcs->getKind() == "Neumann") {
-	 if (comp == "y") {
-         Vector dx = patch->dCell();
-	  variable.fillFaceFlux(patch, face,new_bcs->getValue().y(),dx, offset);
+    //__________________________________
+    //  Symmetry boundary conditions
+    //  -set Neumann = 0 on all walls
+    if (sym_bcs != 0) {
+      Vector dx = patch->dCell();
+      //cout<< "Setting vvel_FC symmetry boundary conditons face "<<face<<endl;
+      variable.fillFaceFlux(patch, face, 0.0 ,dx,offset);
+      
+      // set normal compoent = 0
+      if( face == Patch::yminus || face == Patch::yplus ) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"FC_vars");
+                                                    !iter.done(); iter++) { 
+          //cout<<" now working on vvel_FC"<< *iter<<endl;
+          variable[*iter] = 0.0;  
         }
+      }
+    }
+    //__________________________________
+    // Neumann or Dirichlet
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet" && comp == "y") {
+        variable.fillFace(patch, face,new_bcs->getValue().y(),offset);
+      }
+/*`==========TESTING==========*/ 
+#if 1
+// fillFaceFlux is broken
+// currently vel_FC[gc] = vel_FC[interior] which is WRONG
+      if (new_bcs->getKind() == "Neumann" && comp == "y") {
+        Vector dx = patch->dCell();
+        variable.fillFaceFlux(patch, face,new_bcs->getValue().y(),dx,offset);
       }
 #endif
  /*==========TESTING==========`*/
@@ -3195,75 +3221,51 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
 void ICE::setBC(SFCZVariable<double>& variable, const  string& kind, 
 		const string& comp, const Patch* patch, const int mat_id) 
 {
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase *bcs;
-    BoundCond<Vector>* new_bcs;
-    if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
-      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
-    } else
-      continue;
-
-    IntVector offset(0,0,0);
-    if (new_bcs != 0) {
-      if (new_bcs->getKind() == "Dirichlet") {                         
-        if (comp == "z")
-	  variable.fillFace(patch, face,new_bcs->getValue().z(),offset);
-      }
-
-/*`==========TESTING==========*/
-#if 1
-// fillFaceFlux is broken and can probably be deleted
-// currently vel_FC[gc] = vel_FC[interior] which is WRONG     
-      if (new_bcs->getKind() == "Neumann") {
-	 if (comp == "z"){
-          Vector dx = patch->dCell();
-	   variable.fillFaceFlux(patch, face,new_bcs->getValue().z(),dx,offset);
-        }
-      }
-#endif
- /*==========TESTING==========`*/
-    }
-  }
-}
-
-/* --------------------------------------------------------------------- 
- Function~  ICE::setBC--      
- Purpose~   Takes care of vel_FC
- ---------------------------------------------------------------------  */
-void ICE::setBC(SFCXVariable<Vector>& variable, const  string& kind, 
-		const Patch* patch, const int mat_id) 
-{
-  Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
     BoundCondBase *bcs, *sym_bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
-      bcs = patch->getBCValues(mat_id,kind,face);
+      bcs     = patch->getBCValues(mat_id,kind,face);
       sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
       new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
 
-    IntVector offset(0,0,0);  // so you hit the inside walls of the domain
+    IntVector offset(0,0,0);
 
+    //__________________________________
+    //  Symmetry boundary conditions
+    //  -set Neumann = 0 on all walls
     if (sym_bcs != 0) {
-      // First set the Neumann conditions for the non-normal faces
-      variable.fillFaceFlux(patch, face,Vector(0.,0.,0.),dx,offset);
-      // Then zero out the component that is normal to the face, the
-      // Neumann conditions will be retained.
-      variable.fillFaceNormal(face,offset);
-    }
+      Vector dx = patch->dCell();
+      variable.fillFaceFlux(patch, face, 0.0 ,dx,offset);
       
+      // set normal component = 0
+      if( face == Patch::zminus || face == Patch::zplus ) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"FC_vars"); 
+                                                      !iter.done(); iter++) { 
+          variable[*iter] = 0.0;  
+        }
+      }
+    }
+
+    //__________________________________
+    // Neumann or Dirichlet
     if (new_bcs != 0) {
-      if (new_bcs->getKind() == "Dirichlet") 
-	variable.fillFace(patch,face,new_bcs->getValue(),offset);
-            
-      if (new_bcs->getKind() == "Neumann") 
-	variable.fillFaceFlux(patch,face,new_bcs->getValue(),dx,offset);
-	
+      if (new_bcs->getKind() == "Dirichlet" && comp == "z") {
+        variable.fillFace(patch, face,new_bcs->getValue().z(),offset);
+      }
+/*`==========TESTING==========*/ 
+#if 1
+// fillFaceFlux is broken
+// currently vel_FC[gc] = vel_FC[interior] which is WRONG
+      if (new_bcs->getKind() == "Neumann" && comp == "z") {
+        Vector dx = patch->dCell();
+        variable.fillFaceFlux(patch, face,new_bcs->getValue().z(),dx,offset);
+      }
+#endif
+ /*==========TESTING==========`*/
     }
   }
 }
@@ -3362,7 +3364,7 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
     for(int face = TOP; face <= BACK; face++ )  {
       total_fluxout  += OFS[*iter].d_fflux[face];
     }
-    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )  {
+    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
       total_fluxout  += OFE[*iter].d_eflux[edge];
     }
     for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
@@ -3432,7 +3434,7 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
     }
     //__________________________________
     //  OUTFLUX: EDGE_FLUX
-    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )   {
+    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )   {
       sum_q_outflux_EF += q_CC[*iter] * OFE[*iter].d_eflux[edge];
     }
     //__________________________________
@@ -3545,7 +3547,7 @@ void ICE::advectQFirst(const CCVariable<Vector>&   q_CC,const Patch* patch,
     }
     //__________________________________
     //  OUTFLUX: EDGE_FLUX
-    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )   {
+    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )   {
       sum_q_outflux_EF += q_CC[*iter] * OFE[*iter].d_eflux[edge];
     }
     //__________________________________
@@ -3649,7 +3651,7 @@ void  ICE::qOutfluxFirst(const CCVariable<double>&   q_CC,const Patch* patch,
     }
     //__________________________________
     //  EDGE fluxes
-    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )  {
+    for(int edge = TOP_R; edge <= LEFT_FR; edge++ )  {
       q_out_EF[*iter].d_eflux[edge] = q_CC[*iter];
     }
     
