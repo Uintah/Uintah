@@ -33,6 +33,7 @@ public:
 };
 
 class GeomObj {
+protected:
     MaterialProp* matl;
 public:
     GeomObj();

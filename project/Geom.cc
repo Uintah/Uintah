@@ -55,7 +55,7 @@ void ObjGroup::draw()
 {
     if(matl){
 	for (int i=0; i<objs.size(); i++){
-	    matl->set_matl();
+	    matl->set();
 	    objs[i]->draw();
 	}
     } else {
@@ -82,7 +82,7 @@ Triangle::~Triangle()
 }
 
 void Triangle::draw() {
-    if(matl)matl->set_matl();
+    if(matl)matl->set();
     glBegin(GL_TRIANGLES);
     Vector e1(p3-p1);
     Vector e2(p2-p1);
@@ -112,7 +112,7 @@ Tetra::~Tetra()
 }
 
 void Tetra::draw() {
-    if(matl)matl->set_matl();
+    if(matl)matl->set();
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
@@ -141,7 +141,7 @@ GeomSphere::~GeomSphere()
 
 void GeomSphere::draw()
 {
-    if(matl)matl->set_matl();
+    if(matl)matl->set();
     SinCosTable u(nu, 0, 2.*Pi);
     SinCosTable v(nv, -Pi/2., Pi/2., rad);
     for(int i=0;i<nu-1;i++){
@@ -178,7 +178,7 @@ GeomPt::~GeomPt() {
 }
 
 void GeomPt::draw() {
-    if(matl)matl->set_matl();
+    if(matl)matl->set();
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();

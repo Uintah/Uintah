@@ -1,6 +1,6 @@
 
 /*
- *  Color.h: RGB color model
+ *  Color.h: Simple RGB color model
  *
  *  Written by:
  *   Steven G. Parker

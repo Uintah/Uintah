@@ -3,7 +3,7 @@
 
 LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrapper/libMInT
 OBJS = CallbackCloners.o \
-	ColorManager.o  Connection.o  \
+	Color.o ColorManager.o  Connection.o  \
 	Field3D.o  Field3DPort.o  Geom.o  GeometryPort.o  \
 	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
@@ -14,7 +14,7 @@ OBJS = CallbackCloners.o \
 	UserModule.o  XQColor.o \
 	main.o
 SRCS = CallbackCloners.cc \
-	ColorManager.cc Connection.cc \
+	Color.cc ColorManager.cc Connection.cc \
 	Field3D.cc Field3DPort.cc Geom.cc GeometryPort.cc \
 	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \
