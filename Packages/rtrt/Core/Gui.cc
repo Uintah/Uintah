@@ -144,6 +144,9 @@ static Transform prev_trans;
 #define SOUND_VOLUME_SPINNER_ID     192
 #define NUM_THREADS_SPINNER_ID      193
 
+#define START_BENCH_BTN 200
+#define STOP_BENCH_BTN 201
+
 // GLUT MENU ITEM IDS
 
 #define TOGGLE_GUI                 1
@@ -2485,6 +2488,15 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   trans->set_float_limits( MIN_SENSITIVITY, MAX_SENSITIVITY );
   trans->set_speed( 0.01 );
 
+  // Benchmarking
+  GLUI_Panel * bench_panel = 
+    activeGui->mainWindow->add_panel_to_panel( main_panel, "Benchmarking" );
+  activeGui->mainWindow->add_button_to_panel( bench_panel, "Start",
+                                              START_BENCH_BTN, BenchCB );
+  //  activeGui->mainWindow->add_column_to_panel( bench_panel, false );
+  activeGui->mainWindow->add_button_to_panel( bench_panel, "Stop",
+                                              STOP_BENCH_BTN, BenchCB );
+
   /////////////////////////////////////////////////////////
   // Route/Light/Objects/Sounds Window Buttons
   //
@@ -2617,8 +2629,10 @@ Gui::updateRayOffsetCB( int /*id*/ )
 void
 Gui::updateSceneDepthCB( int /*id*/ )
 {
-  if (activeGui->scene()->max_depth < 0)
+  if (activeGui->scene()->max_depth < 0) {
     activeGui->scene()->max_depth = 0;
+    activeGui->sceneDepthSpinner_->set_float_val(0);
+  }
 }
 
 void
@@ -3109,6 +3123,16 @@ Gui::toggleJitterCB( int /*id*/ )
     activeGui->jitterButton_->set_name("Turn Jitter ON");
   else
     activeGui->jitterButton_->set_name("Turn Jitter OFF");
+}
+
+void
+Gui::BenchCB( int id )
+{
+  if (id == START_BENCH_BTN) {
+    activeGui->dpy_->start_bench();
+  } else if (id == STOP_BENCH_BTN) {
+    activeGui->dpy_->stop_bench();
+  }
 }
 
 void
