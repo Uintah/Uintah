@@ -24,8 +24,7 @@ set screenHeight [winfo screenheight .]
 proc moveToCursor { window { leave_up "no" } } {
   global env
 
-  if { [info exists env(SCIRUN_GUI_MoveGuiToMouse)] &&
-       ![boolToInt $env(SCIRUN_GUI_MoveGuiToMouse)] } {
+  if { ![boolToInt SCIRUN_GUI_MoveGuiToMouse] } {
      return
   }
 
