@@ -379,16 +379,19 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
 
-	button $fname.file -text "Export" \
+	button $fname.export -text "Export" \
 	    -command "$this extract export $name $i {$mat_list} $type"
-	pack $fname.file -side right -padx 2 -pady 2
+        Tooltip $fname.export "Save selected data as a gnuplot useable text file" 
+	pack $fname.export -side right -padx 2 -pady 2
 
 	button $fname.table -text "Table" \
 		-command "$this extract table $name $i {$mat_list} $type"
+        Tooltip $fname.table "Show selected data in a table"
 	pack $fname.table -side right -padx 2 -pady 2
 
 	button $fname.graph -text "Graph" \
 		-command "$this extract graph $name $i {$mat_list} $type"
+        Tooltip $fname.graph "Graph selected data"
 	pack $fname.graph -side right -padx 2 -pady 2
 
 	make_mat_menu $fname $mat_list $i $type
@@ -482,7 +485,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 #	pack $w.gtest -side bottom -expand yes -fill x
 
 	makeSciButtonPanel $w $w $this
-	moveToCursor $w
+	moveToCursor $w "leave_up"
     }
     method reset_var_val {} {
 	set var_val_list {}

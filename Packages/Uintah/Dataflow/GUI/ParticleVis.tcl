@@ -220,7 +220,8 @@ itcl_class Uintah_Visualization_ParticleVis {
 
 
         makeSciButtonPanel $w $w $this
-	
+	moveToCursor $w
+
 	$this scalable 0
 
 	iwidgets::messagedialog .md \
