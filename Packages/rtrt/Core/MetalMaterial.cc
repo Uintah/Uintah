@@ -37,6 +37,7 @@ void MetalMaterial::shade(Color& result, const Ray& ray,
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
     double cosine = -Dot(normal, ray.direction());
+    double ray_objnormal_dot(Dot(ray.direction(),normal));
 
     if(cosine<0){
 	cosine=-cosine;
@@ -48,6 +49,7 @@ void MetalMaterial::shade(Color& result, const Ray& ray,
 	Light* light=cx->scene->light(i);
 	Vector light_dir=light->get_pos()-hitpos;
 	light_dir.normalize();
+	if (ray_objnormal_dot*Dot(normal,light_dir)>0) continue;
 	result+=light->get_color() * specular_reflectance *
                    phong_term( ray.direction(), light_dir, normal, phong_exponent);
     }

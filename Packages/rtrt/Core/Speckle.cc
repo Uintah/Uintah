@@ -38,6 +38,7 @@ void Speckle::shade(Color& result, const Ray& ray,
 	cos_prime=-cos_prime;
 	normal=-normal;
     }
+    double ray_objnormal_dot(Dot(ray.direction(),normal));
 
     double pixelsize=0.001;
     Point p(scale*hitpos.x(), scale*hitpos.y(), scale*hitpos.z());
@@ -51,6 +52,10 @@ void Speckle::shade(Color& result, const Ray& ray,
     for(int i=0;i<nlights;i++){
 	Light* light=cx->scene->light(i);
 	Vector light_dir=light->get_pos()-hitpos;
+	if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
+	  cx->stats->ds[depth].inshadow++;
+	  continue;
+	}
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
 	if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){

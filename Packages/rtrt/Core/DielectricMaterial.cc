@@ -77,6 +77,7 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
+    double ray_objnormal_dot(Dot(ray.direction(),normal));
     double cosine = -Dot(normal, ray.direction());
     bool incoming = true;
 
@@ -104,6 +105,7 @@ void DielectricMaterial::shade(Color& result, const Ray& ray,
     for(int i=0;i<nlights;i++){
 	Light* light=cx->scene->light(i);
 	Vector light_dir=light->get_pos()-hitpos;
+	if (ray_objnormal_dot*Dot(normal,light_dir)>0) continue;
 	result+=filter*light->get_color() * phong_term( ray.direction(), light_dir, normal, phong_exponent);
     }
 

@@ -34,6 +34,7 @@ void LambertianMaterial::shade(Color& result, const Ray& ray,
 	incident_angle=-incident_angle;
 	normal=-normal;
     }
+    double ray_objnormal_dot(Dot(ray.direction(),normal));
     
     result = R * ambient_hack(cx->scene, normal);
     int nlights=cx->scene->nlights();
@@ -41,6 +42,10 @@ void LambertianMaterial::shade(Color& result, const Ray& ray,
     for(int i=0;i<nlights;i++){
 	Light* light=cx->scene->light(i);
 	Vector light_dir=light->get_pos()-hitpos;
+	if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
+	  cx->stats->ds[depth].inshadow++;
+	  continue;
+	}
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
 	if(cx->scene->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
