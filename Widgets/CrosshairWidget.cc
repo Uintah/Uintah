@@ -23,35 +23,35 @@ const Index NumMatls = 3;
 const Index NumPcks = 1;
 // const Index NumSchemes = 1;
 
-enum { CrosshairW_GeomCenter, CrosshairW_GeomAxis1, CrosshairW_GeomAxis2, CrosshairW_GeomAxis3 };
-enum { CrosshairW_Pick };
+enum { GeomCenter, GeomAxis1, GeomAxis2, GeomAxis3 };
+enum { Pick };
 
 CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
-   variables[CrosshairW_Center] = new PointVariable("Crosshair", Scheme1, Point(0, 0, 0));
+   variables[CenterVar] = new PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
 
-   materials[CrosshairW_CenterMatl] = PointWidgetMaterial;
-   materials[CrosshairW_AxesMatl] = EdgeWidgetMaterial;
-   materials[CrosshairW_HighMatl] = HighlightWidgetMaterial;
+   materials[CenterMatl] = PointWidgetMaterial;
+   materials[AxesMatl] = EdgeWidgetMaterial;
+   materials[HighMatl] = HighlightWidgetMaterial;
 
    GeomGroup* axes = new GeomGroup;
-   geometries[CrosshairW_GeomCenter] = new GeomSphere;
-   GeomMaterial* centerm = new GeomMaterial(geometries[CrosshairW_GeomCenter], materials[CrosshairW_CenterMatl]);
+   geometries[GeomCenter] = new GeomSphere;
+   GeomMaterial* centerm = new GeomMaterial(geometries[GeomCenter], materials[CenterMatl]);
    axes->add(centerm);
-   geometries[CrosshairW_GeomAxis1] = new GeomCappedCylinder;
-   axes->add(geometries[CrosshairW_GeomAxis1]);
-   geometries[CrosshairW_GeomAxis2] = new GeomCappedCylinder;
-   axes->add(geometries[CrosshairW_GeomAxis2]);
-   geometries[CrosshairW_GeomAxis3] = new GeomCappedCylinder;
-   axes->add(geometries[CrosshairW_GeomAxis3]);
-   GeomMaterial* axesm = new GeomMaterial(axes, materials[CrosshairW_AxesMatl]);
-   picks[CrosshairW_Pick] = new GeomPick(axesm, module);
-   picks[CrosshairW_Pick]->set_highlight(materials[CrosshairW_HighMatl]);
-   picks[CrosshairW_Pick]->set_cbdata((void*)CrosshairW_Pick);
+   geometries[GeomAxis1] = new GeomCappedCylinder;
+   axes->add(geometries[GeomAxis1]);
+   geometries[GeomAxis2] = new GeomCappedCylinder;
+   axes->add(geometries[GeomAxis2]);
+   geometries[GeomAxis3] = new GeomCappedCylinder;
+   axes->add(geometries[GeomAxis3]);
+   GeomMaterial* axesm = new GeomMaterial(axes, materials[AxesMatl]);
+   picks[Pick] = new GeomPick(axesm, module);
+   picks[Pick]->set_highlight(materials[HighMatl]);
+   picks[Pick]->set_cbdata((void*)Pick);
 
-   FinishWidget(picks[CrosshairW_Pick]);
+   FinishWidget(picks[Pick]);
 }
 
 
@@ -63,50 +63,64 @@ CrosshairWidget::~CrosshairWidget()
 void
 CrosshairWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[CrosshairW_GeomCenter])->move(variables[CrosshairW_Center]->GetPoint(),
-							  1*widget_scale);
-   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis1])->move(variables[CrosshairW_Center]->GetPoint()
-								 - (axis1 * 100.0 * widget_scale),
-								 variables[CrosshairW_Center]->GetPoint()
-								 + (axis1 * 100.0 * widget_scale),
-								 0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis2])->move(variables[CrosshairW_Center]->GetPoint()
-								 - (axis2 * 100.0 * widget_scale),
-								 variables[CrosshairW_Center]->GetPoint()
-								 + (axis2 * 100.0 * widget_scale),
-								 0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis3])->move(variables[CrosshairW_Center]->GetPoint()
-								 - (axis3 * 100.0 * widget_scale),
-								 variables[CrosshairW_Center]->GetPoint()
-								 + (axis3 * 100.0 * widget_scale),
-								 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomCenter])->move(variables[CenterVar]->point(),
+					       1*widget_scale);
+   ((GeomCappedCylinder*)geometries[GeomAxis1])->move(variables[CenterVar]->point()
+						      - (axis1 * 100.0 * widget_scale),
+						      variables[CenterVar]->point()
+						      + (axis1 * 100.0 * widget_scale),
+						      0.5*widget_scale);
+   ((GeomCappedCylinder*)geometries[GeomAxis2])->move(variables[CenterVar]->point()
+						      - (axis2 * 100.0 * widget_scale),
+						      variables[CenterVar]->point()
+						      + (axis2 * 100.0 * widget_scale),
+						      0.5*widget_scale);
+   ((GeomCappedCylinder*)geometries[GeomAxis3])->move(variables[CenterVar]->point()
+						      - (axis3 * 100.0 * widget_scale),
+						      variables[CenterVar]->point()
+						      + (axis3 * 100.0 * widget_scale),
+						      0.5*widget_scale);
 }
 
 
 void
 CrosshairWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			     void* cbdata )
 {
    switch((int)cbdata){
-   case CrosshairW_Pick:
-      variables[CrosshairW_Center]->MoveDelta(delta);
+   case Pick:
+      MoveDelta(delta);
       break;
    }
 }
 
 
 void
+CrosshairWidget::MoveDelta( const Vector& delta )
+{
+   variables[CenterVar]->MoveDelta(delta);
+}
+
+
+Point
+CrosshairWidget::ReferencePoint() const
+{
+   return variables[CenterVar]->point();
+}
+
+
+void
 CrosshairWidget::SetPosition( const Point& p )
 {
-    variables[CrosshairW_Center]->Move(p);
-    execute();
+   variables[CenterVar]->Move(p);
+   execute();
 }
 
 
 const Point&
 CrosshairWidget::GetPosition() const
 {
-   return variables[CrosshairW_Center]->GetPoint();
+   return variables[CenterVar]->point();
 }
 
 

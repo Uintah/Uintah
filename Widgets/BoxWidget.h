@@ -18,14 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { BoxW_PointIUL, BoxW_PointIUR, BoxW_PointIDR, BoxW_PointIDL,
-       BoxW_PointOUL, BoxW_PointOUR, BoxW_PointODR, BoxW_PointODL,
-       BoxW_Dist, BoxW_Hypo, BoxW_Diag };
-// Material indexs
-enum { BoxW_PointMatl, BoxW_EdgeMatl, BoxW_HighMatl };
-
-
 class BoxWidget : public BaseWidget {
 public:
    BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -35,10 +27,19 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    inline Vector GetAxis1();
    inline Vector GetAxis2();
    inline Vector GetAxis3();
 
+   // Variable indexs
+   enum { PointIULVar, PointIURVar, PointIDRVar, PointIDLVar,
+	  PointOULVar, PointOURVar, PointODRVar, PointODLVar,
+	  DistVar, HypoVar, DiagVar };
+   // Material indexs
+   enum { PointMatl, EdgeMatl, HighMatl };
 private:
    Vector oldaxis1, oldaxis2, oldaxis3;
 };
@@ -47,7 +48,7 @@ private:
 inline Vector
 BoxWidget::GetAxis1()
 {
-   Vector axis(variables[BoxW_PointIUR]->GetPoint() - variables[BoxW_PointIUL]->GetPoint());
+   Vector axis(variables[PointIURVar]->point() - variables[PointIULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -58,7 +59,7 @@ BoxWidget::GetAxis1()
 inline Vector
 BoxWidget::GetAxis2()
 {
-   Vector axis(variables[BoxW_PointIDL]->GetPoint() - variables[BoxW_PointIUL]->GetPoint());
+   Vector axis(variables[PointIDLVar]->point() - variables[PointIULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else
@@ -69,7 +70,7 @@ BoxWidget::GetAxis2()
 inline Vector
 BoxWidget::GetAxis3()
 {
-   Vector axis(variables[BoxW_PointOUL]->GetPoint() - variables[BoxW_PointIUL]->GetPoint());
+   Vector axis(variables[PointOULVar]->point() - variables[PointIULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis3;
    else

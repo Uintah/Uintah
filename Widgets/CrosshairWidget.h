@@ -18,12 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { CrosshairW_Center };
-// Material indexs
-enum { CrosshairW_CenterMatl, CrosshairW_AxesMatl, CrosshairW_HighMatl };
-
-
 class CrosshairWidget : public BaseWidget {
 public:
    CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -33,6 +27,9 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    void SetPosition( const Point& );
    const Point& GetPosition() const;
 
@@ -40,6 +37,10 @@ public:
    void SetAxes( const Vector& v1, const Vector& v2, const Vector& v3 );
    void GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const;
 
+   // Variable indexs
+   enum { CenterVar };
+   // Material indexs
+   enum { CenterMatl, AxesMatl, HighMatl };
 private:
    Vector axis1, axis2, axis3;
 };

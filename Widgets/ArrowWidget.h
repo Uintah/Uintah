@@ -18,12 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { ArrowW_Point };
-// Material indexs
-enum { ArrowW_PointMatl, ArrowW_EdgeMatl, ArrowW_HighMatl };
-
-
 class ArrowWidget : public BaseWidget {
 public:
    ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -33,12 +27,19 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    void SetPosition( const Point& );
    const Point& GetPosition() const;
    
    void SetDirect( const Vector& v );
    const Vector& GetDirect() const;
 
+   // Variable indexs
+   enum { PointVar };
+   // Material indexs
+   enum { PointMatl, EdgeMatl, HighMatl };
 private:
    Vector direction;
 };

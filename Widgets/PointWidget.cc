@@ -22,24 +22,24 @@ const Index NumMatls = 2;
 const Index NumPcks = 1;
 // const Index NumSchemes = 1;
 
-enum { PointW_GeomPoint };
-enum { PointW_Pick };
+enum { GeomPoint };
+enum { Pick };
 
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   variables[PointW_Point] = new PointVariable("Point", Scheme1, Point(0, 0, 0));
+   variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   materials[PointW_PointMatl] = PointWidgetMaterial;
-   materials[PointW_HighMatl] = HighlightWidgetMaterial;
+   materials[PointMatl] = PointWidgetMaterial;
+   materials[HighMatl] = HighlightWidgetMaterial;
 
-   geometries[PointW_GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[PointW_GeomPoint], materials[PointW_PointMatl]);
-   picks[PointW_Pick] = new GeomPick(sphm, module);
-   picks[PointW_Pick]->set_highlight(materials[PointW_HighMatl]);
-   picks[PointW_Pick]->set_cbdata((void*)PointW_Pick);
+   geometries[GeomPoint] = new GeomSphere;
+   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], materials[PointMatl]);
+   picks[Pick] = new GeomPick(sphm, module);
+   picks[Pick]->set_highlight(materials[HighMatl]);
+   picks[Pick]->set_cbdata((void*)Pick);
 
-   FinishWidget(picks[PointW_Pick]);
+   FinishWidget(picks[Pick]);
 }
 
 
@@ -51,8 +51,8 @@ PointWidget::~PointWidget()
 void
 PointWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[PointW_GeomPoint])->move(variables[PointW_Point]->GetPoint(),
-						     1*widget_scale);
+   ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
+					      1*widget_scale);
 }
 
 
@@ -61,24 +61,38 @@ PointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
    switch((int)cbdata){
-   case PointW_Pick:
-      variables[PointW_Point]->MoveDelta(delta);
+   case Pick:
+      MoveDelta(delta);
       break;
    }
 }
 
 
 void
+PointWidget::MoveDelta( const Vector& delta )
+{
+   variables[PointVar]->MoveDelta(delta);
+}
+
+
+Point
+PointWidget::ReferencePoint() const
+{
+   return variables[PointVar]->point();
+}
+
+
+void
 PointWidget::SetPosition( const Point& p )
 {
-    variables[PointW_Point]->Move(p);
-    execute();
+   variables[PointVar]->Move(p);
+   execute();
 }
 
 
 const Point&
 PointWidget::GetPosition() const
 {
-   return variables[PointW_Point]->GetPoint();
+   return variables[PointVar]->point();
 }
 

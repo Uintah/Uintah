@@ -18,12 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { PointW_Point };
-// Material indexs
-enum { PointW_PointMatl, PointW_HighMatl };
-
-
 class PointWidget : public BaseWidget {
 public:
    PointWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -33,8 +27,16 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    void SetPosition( const Point& );
    const Point& GetPosition() const;
+
+   // Variable indexs
+   enum { PointVar };
+   // Material indexs
+   enum { PointMatl, HighMatl };
 };
 
 

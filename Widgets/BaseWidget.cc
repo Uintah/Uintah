@@ -35,6 +35,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
   picks(NumPicks),
   module(module), widget_scale(widget_scale), lock(lock)
 {
+   solve = new ConstraintSolver();
 }
 
 
@@ -49,6 +50,74 @@ BaseWidget::~BaseWidget()
    for (index = 0; index < NumConstraints; index++) {
       delete constraints[index];
    }
+}
+
+
+void
+BaseWidget::SetScale( const double scale )
+{
+   widget_scale = scale;
+}
+
+
+double
+BaseWidget::GetScale() const
+{
+   return widget_scale;
+}
+
+
+GeomSwitch*
+BaseWidget::GetWidget()
+{
+   return widget;
+}
+
+
+void
+BaseWidget::MoveDelta( const Vector& )
+{
+   Error("BaseWidget: Can't Move!");
+}
+
+
+Point
+BaseWidget::ReferencePoint() const
+{
+   Error("BaseWidget: Can't Determine ReferencePoint!");
+   return Point(0,0,0);
+}
+
+
+void
+BaseWidget::SetMaterial( const Index mindex, const MaterialHandle m )
+{
+   ASSERT(mindex<NumMaterials);
+
+   materials[mindex] = m;
+}
+
+
+MaterialHandle&
+BaseWidget::GetMaterial( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+
+   return materials[mindex];
+}
+
+
+int
+BaseWidget::GetState()
+{
+   return widget->get_state();
+}
+
+
+void
+BaseWidget::SetState( const int state )
+{
+   widget->set_state(state);
 }
 
 
@@ -88,9 +157,6 @@ BaseWidget::FinishWidget(GeomObj* w)
    // Init variables.
    for (Index vindex=0; vindex<NumVariables; vindex++)
       variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
 }
 
 
@@ -109,4 +175,3 @@ BaseWidget::print( ostream& os ) const
    }
    os << endl;
 }
-

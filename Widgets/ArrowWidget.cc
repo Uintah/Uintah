@@ -24,36 +24,34 @@ const Index NumMatls = 3;
 const Index NumPcks = 1;
 // const Index NumSchemes = 1;
 
-enum { ArrowW_GeomPoint, ArrowW_GeomShaft, ArrowW_GeomHead };
-enum { ArrowW_Pick };
+enum { GeomPoint, GeomShaft, GeomHead };
+enum { Pick };
 
-ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
-
-			  double widget_scale )
+ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   direction(0, 0, 1.0)
 {
-   variables[ArrowW_Point] = new PointVariable("Point", Scheme1, Point(0, 0, 0));
+   variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   materials[ArrowW_PointMatl] = PointWidgetMaterial;
-   materials[ArrowW_EdgeMatl] = EdgeWidgetMaterial;
-   materials[ArrowW_HighMatl] = HighlightWidgetMaterial;
+   materials[PointMatl] = PointWidgetMaterial;
+   materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[HighMatl] = HighlightWidgetMaterial;
 
    GeomGroup* arr = new GeomGroup;
-   geometries[ArrowW_GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[ArrowW_GeomPoint], materials[ArrowW_PointMatl]);
+   geometries[GeomPoint] = new GeomSphere;
+   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], materials[PointMatl]);
    arr->add(sphm);
-   geometries[ArrowW_GeomShaft] = new GeomCylinder;
-   GeomMaterial* cylm = new GeomMaterial(geometries[ArrowW_GeomShaft], materials[ArrowW_EdgeMatl]);
+   geometries[GeomShaft] = new GeomCylinder;
+   GeomMaterial* cylm = new GeomMaterial(geometries[GeomShaft], materials[EdgeMatl]);
    arr->add(cylm);
-   geometries[ArrowW_GeomHead] = new GeomCappedCone;
-   GeomMaterial* conem = new GeomMaterial(geometries[ArrowW_GeomHead], materials[ArrowW_EdgeMatl]);
+   geometries[GeomHead] = new GeomCappedCone;
+   GeomMaterial* conem = new GeomMaterial(geometries[GeomHead], materials[EdgeMatl]);
    arr->add(conem);
-   picks[ArrowW_Pick] = new GeomPick(arr, module);
-   picks[ArrowW_Pick]->set_highlight(materials[ArrowW_HighMatl]);
-   picks[ArrowW_Pick]->set_cbdata((void*)ArrowW_Pick);
+   picks[Pick] = new GeomPick(arr, module);
+   picks[Pick]->set_highlight(materials[HighMatl]);
+   picks[Pick]->set_cbdata((void*)Pick);
 
-   FinishWidget(picks[ArrowW_Pick]);
+   FinishWidget(picks[Pick]);
 }
 
 
@@ -65,18 +63,18 @@ ArrowWidget::~ArrowWidget()
 void
 ArrowWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[ArrowW_GeomPoint])->move(variables[ArrowW_Point]->GetPoint(),
-						     1*widget_scale);
-   ((GeomCylinder*)geometries[ArrowW_GeomShaft])->move(variables[ArrowW_Point]->GetPoint(),
-						       variables[ArrowW_Point]->GetPoint()
-						       + direction * widget_scale * 3.0,
-						       0.5*widget_scale);
-   ((GeomCappedCone*)geometries[ArrowW_GeomHead])->move(variables[ArrowW_Point]->GetPoint()
-							+ direction * widget_scale * 3.0,
-							variables[ArrowW_Point]->GetPoint()
-							+ direction * widget_scale * 5.0,
-							widget_scale,
-							0);
+   ((GeomSphere*)geometries[GeomPoint])->move(variables[PointVar]->point(),
+					      1*widget_scale);
+   ((GeomCylinder*)geometries[GeomShaft])->move(variables[PointVar]->point(),
+						variables[PointVar]->point()
+						+ direction * widget_scale * 3.0,
+						0.5*widget_scale);
+   ((GeomCappedCone*)geometries[GeomHead])->move(variables[PointVar]->point()
+						 + direction * widget_scale * 3.0,
+						 variables[PointVar]->point()
+						 + direction * widget_scale * 5.0,
+						 widget_scale,
+						 0);
 
    Vector v1, v2;
    direction.find_orthogonal(v1, v2);
@@ -91,25 +89,39 @@ ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
    switch((int)cbdata){
-   case ArrowW_Pick:
-      variables[ArrowW_Point]->MoveDelta(delta);
+   case Pick:
+      MoveDelta(delta);
       break;
    }
 }
 
 
 void
+ArrowWidget::MoveDelta( const Vector& delta )
+{
+   variables[PointVar]->MoveDelta(delta);
+}
+
+
+Point
+ArrowWidget::ReferencePoint() const
+{
+   return variables[PointVar]->point();
+}
+
+
+void
 ArrowWidget::SetPosition( const Point& p )
 {
-    variables[ArrowW_Point]->Move(p);
-    execute();
+   variables[PointVar]->Move(p);
+   execute();
 }
 
 
 const Point&
 ArrowWidget::GetPosition() const
 {
-   return variables[ArrowW_Point]->GetPoint();
+   return variables[PointVar]->point();
 }
 
 

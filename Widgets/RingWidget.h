@@ -18,14 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { RingW_PointUL, RingW_PointUR, RingW_PointDR, RingW_PointDL,
-       RingW_Dist, RingW_Hypo, RingW_Center,
-       RingW_Slider, RingW_SDist, RingW_Angle, RingW_Const };
-// Material indexs
-enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_SpecialMatl, RingW_HighMatl };
-
-
 class RingWidget : public BaseWidget {
 public:
    RingWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -35,9 +27,12 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    void SetPosition( const Point& center, const Vector& normal, const Real radius );
    void GetPosition( Point& center, Vector& normal, Real& radius ) const;
-      
+   
    void SetRatio( const Real ratio );
    Real GetRatio() const;
 
@@ -47,6 +42,12 @@ public:
    const Vector& GetAxis1();
    const Vector& GetAxis2();
 
+   // Variable indexs
+   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
+	  DistVar, HypoVar, CenterVar,
+	  SliderVar, SDistVar, AngleVar, ConstVar };
+   // Material indexs
+   enum { PointMatl, EdgeMatl, SliderMatl, SpecialMatl, HighMatl };
 private:
    Vector oldaxis1, oldaxis2;
 };

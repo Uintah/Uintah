@@ -28,17 +28,17 @@ const Index NumMatls = 4;
 const Index NumPcks = 11;
 const Index NumSchemes = 6;
 
-enum { SFrameW_ConstULDR, SFrameW_ConstURDL, SFrameW_ConstPyth, SFrameW_ConstPlane,
-       SFrameW_ConstULUR, SFrameW_ConstULDL, SFrameW_ConstDRUR, SFrameW_ConstDRDL,
-       SFrameW_ConstLine1, SFrameW_ConstSDist1, SFrameW_ConstRatio1,
-       SFrameW_ConstLine2, SFrameW_ConstSDist2, SFrameW_ConstRatio2 };
-enum { SFrameW_SphereUL, SFrameW_SphereUR, SFrameW_SphereDR, SFrameW_SphereDL,
-       SFrameW_CylU, SFrameW_CylR, SFrameW_CylD, SFrameW_CylL,
-       SFrameW_GeomResizeU, SFrameW_GeomResizeR, SFrameW_GeomResizeD, SFrameW_GeomResizeL,
-       SFrameW_SliderCyl1, SFrameW_SliderCyl2 };
-enum { SFrameW_PickSphUL, SFrameW_PickSphUR, SFrameW_PickSphDR, SFrameW_PickSphDL, SFrameW_PickCyls,
-       SFrameW_PickResizeU, SFrameW_PickResizeR, SFrameW_PickResizeD, SFrameW_PickResizeL,
-       SFrameW_PickSlider1, SFrameW_PickSlider2 };
+enum { ConstULDR, ConstURDL, ConstPyth, ConstPlane,
+       ConstULUR, ConstULDL, ConstDRUR, ConstDRDL,
+       ConstLine1, ConstSDist1, ConstRatio1,
+       ConstLine2, ConstSDist2, ConstRatio2 };
+enum { SphereUL, SphereUR, SphereDR, SphereDL,
+       CylU, CylR, CylD, CylL,
+       GeomResizeU, GeomResizeR, GeomResizeD, GeomResizeL,
+       SliderCyl1, SliderCyl2 };
+enum { PickSphUL, PickSphUR, PickSphDR, PickSphDL, PickCyls,
+       PickResizeU, PickResizeR, PickResizeD, PickResizeL,
+       PickSlider1, PickSlider2 };
 
 ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
 				      Real widget_scale )
@@ -46,241 +46,241 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
   oldaxis1(1, 0, 0), oldaxis2(0, 1, 0)
 {
    Real INIT = 1.0*widget_scale;
-   variables[SFrameW_PointUL] = new PointVariable("PntUL", Scheme1, Point(0, 0, 0));
-   variables[SFrameW_PointUR] = new PointVariable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[SFrameW_PointDR] = new PointVariable("PntDR", Scheme1, Point(INIT, INIT, 0));
-   variables[SFrameW_PointDL] = new PointVariable("PntDL", Scheme2, Point(0, INIT, 0));
-   variables[SFrameW_Slider1] = new PointVariable("Slider1", Scheme3, Point(INIT/2.0, 0, 0));
-   variables[SFrameW_Slider2] = new PointVariable("Slider2", Scheme4, Point(0, INIT/2.0, 0));
-   variables[SFrameW_Dist1] = new RealVariable("Dist1", Scheme1, INIT);
-   variables[SFrameW_Dist2] = new RealVariable("Dist2", Scheme1, INIT);
-   variables[SFrameW_Hypo] = new RealVariable("Hypo", Scheme1, sqrt(2*INIT*INIT));
-   variables[SFrameW_SDist1] = new RealVariable("SDist1", Scheme3, INIT/2.0);
-   variables[SFrameW_SDist2] = new RealVariable("SDist2", Scheme4, INIT/2.0);
-   variables[SFrameW_Ratio1] = new RealVariable("Ratio1", Scheme1, 0.5);
-   variables[SFrameW_Ratio2] = new RealVariable("Ratio2", Scheme1, 0.5);
+   variables[PointULVar] = new PointVariable("PntUL", solve, Scheme1, Point(0, 0, 0));
+   variables[PointURVar] = new PointVariable("PntUR", solve, Scheme2, Point(INIT, 0, 0));
+   variables[PointDRVar] = new PointVariable("PntDR", solve, Scheme1, Point(INIT, INIT, 0));
+   variables[PointDLVar] = new PointVariable("PntDL", solve, Scheme2, Point(0, INIT, 0));
+   variables[Slider1Var] = new PointVariable("Slider1", solve, Scheme3, Point(INIT/2.0, 0, 0));
+   variables[Slider2Var] = new PointVariable("Slider2", solve, Scheme4, Point(0, INIT/2.0, 0));
+   variables[Dist1Var] = new RealVariable("Dist1", solve, Scheme1, INIT);
+   variables[Dist2Var] = new RealVariable("Dist2", solve, Scheme1, INIT);
+   variables[HypoVar] = new RealVariable("Hypo", solve, Scheme1, sqrt(2*INIT*INIT));
+   variables[SDist1Var] = new RealVariable("SDist1", solve, Scheme3, INIT/2.0);
+   variables[SDist2Var] = new RealVariable("SDist2", solve, Scheme4, INIT/2.0);
+   variables[Ratio1Var] = new RealVariable("Ratio1", solve, Scheme1, 0.5);
+   variables[Ratio2Var] = new RealVariable("Ratio2", solve, Scheme1, 0.5);
 
-   constraints[SFrameW_ConstLine1] = new SegmentConstraint("ConstLine1",
-							   NumSchemes,
-							   variables[SFrameW_PointUL],
-							   variables[SFrameW_PointUR],
-							   variables[SFrameW_Slider1]);
-   constraints[SFrameW_ConstLine1]->VarChoices(Scheme1, 2, 2, 2);
-   constraints[SFrameW_ConstLine1]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[SFrameW_ConstLine1]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[SFrameW_ConstLine1]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[SFrameW_ConstLine1]->VarChoices(Scheme5, 2, 2, 2);
-   constraints[SFrameW_ConstLine1]->VarChoices(Scheme6, 2, 2, 2);
-   constraints[SFrameW_ConstLine1]->Priorities(P_Default, P_Default, P_Highest);
-   constraints[SFrameW_ConstLine2] = new SegmentConstraint("ConstLine2",
-							   NumSchemes,
-							   variables[SFrameW_PointUL],
-							   variables[SFrameW_PointDL],
-							   variables[SFrameW_Slider2]);
-   constraints[SFrameW_ConstLine2]->VarChoices(Scheme1, 2, 2, 2);
-   constraints[SFrameW_ConstLine2]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[SFrameW_ConstLine2]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[SFrameW_ConstLine2]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[SFrameW_ConstLine2]->VarChoices(Scheme5, 2, 2, 2);
-   constraints[SFrameW_ConstLine2]->VarChoices(Scheme6, 2, 2, 2);
-   constraints[SFrameW_ConstLine2]->Priorities(P_Default, P_Default, P_Highest);
-   constraints[SFrameW_ConstSDist1] = new DistanceConstraint("ConstSDist1",
-							     NumSchemes,
-							     variables[SFrameW_PointUL],
-							     variables[SFrameW_Slider1],
-							     variables[SFrameW_SDist1]);
-   constraints[SFrameW_ConstSDist1]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[SFrameW_ConstSDist1]->VarChoices(Scheme2, 1, 1, 1);
-   constraints[SFrameW_ConstSDist1]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[SFrameW_ConstSDist1]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[SFrameW_ConstSDist1]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[SFrameW_ConstSDist1]->VarChoices(Scheme6, 1, 1, 1);
-   constraints[SFrameW_ConstSDist1]->Priorities(P_Lowest, P_Default, P_Default);
-   constraints[SFrameW_ConstRatio1] = new RatioConstraint("ConstRatio1",
-							  NumSchemes,
-							  variables[SFrameW_SDist1],
-							  variables[SFrameW_Dist1],
-							  variables[SFrameW_Ratio1]);
-   constraints[SFrameW_ConstRatio1]->VarChoices(Scheme1, 0, 0, 0);
-   constraints[SFrameW_ConstRatio1]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[SFrameW_ConstRatio1]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[SFrameW_ConstRatio1]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[SFrameW_ConstRatio1]->VarChoices(Scheme5, 0, 0, 0);
-   constraints[SFrameW_ConstRatio1]->VarChoices(Scheme6, 0, 0, 0);
-   constraints[SFrameW_ConstRatio1]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[SFrameW_ConstSDist2] = new DistanceConstraint("ConstSDist2",
-							     NumSchemes,
-							     variables[SFrameW_PointUL],
-							     variables[SFrameW_Slider2],
-							     variables[SFrameW_SDist2]);
-   constraints[SFrameW_ConstSDist2]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[SFrameW_ConstSDist2]->VarChoices(Scheme2, 1, 1, 1);
-   constraints[SFrameW_ConstSDist2]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[SFrameW_ConstSDist2]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[SFrameW_ConstSDist2]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[SFrameW_ConstSDist2]->VarChoices(Scheme6, 1, 1, 1);
-   constraints[SFrameW_ConstSDist2]->Priorities(P_Lowest, P_Default, P_Default);
-   constraints[SFrameW_ConstRatio2] = new RatioConstraint("ConstRatio2",
-							  NumSchemes,
-							  variables[SFrameW_SDist2],
-							  variables[SFrameW_Dist2],
-							  variables[SFrameW_Ratio2]);
-   constraints[SFrameW_ConstRatio2]->VarChoices(Scheme1, 0, 0, 0);
-   constraints[SFrameW_ConstRatio2]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[SFrameW_ConstRatio2]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[SFrameW_ConstRatio2]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[SFrameW_ConstRatio2]->VarChoices(Scheme5, 0, 0, 0);
-   constraints[SFrameW_ConstRatio2]->VarChoices(Scheme6, 0, 0, 0);
-   constraints[SFrameW_ConstRatio2]->Priorities(P_Highest, P_Highest, P_Highest);
-   constraints[SFrameW_ConstPlane] = new PlaneConstraint("ConstPlane",
-							 NumSchemes,
-							 variables[SFrameW_PointUL],
-							 variables[SFrameW_PointUR],
-							 variables[SFrameW_PointDR],
-							 variables[SFrameW_PointDL]);
-   constraints[SFrameW_ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
-   constraints[SFrameW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
-   constraints[SFrameW_ConstPlane]->VarChoices(Scheme3, 2, 3, 0, 1);
-   constraints[SFrameW_ConstPlane]->VarChoices(Scheme4, 2, 3, 0, 1);
-   constraints[SFrameW_ConstPlane]->VarChoices(Scheme5, 2, 3, 0, 1);
-   constraints[SFrameW_ConstPlane]->VarChoices(Scheme6, 2, 3, 0, 1);
-   constraints[SFrameW_ConstPlane]->Priorities(P_Highest, P_Highest,
-					       P_Highest, P_Highest);
-   constraints[SFrameW_ConstULDR] = new DistanceConstraint("Const13",
-							   NumSchemes,
-							   variables[SFrameW_PointUL],
-							   variables[SFrameW_PointDR],
-							   variables[SFrameW_Hypo]);
-   constraints[SFrameW_ConstULDR]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[SFrameW_ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[SFrameW_ConstULDR]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[SFrameW_ConstULDR]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[SFrameW_ConstULDR]->VarChoices(Scheme5, 2, 2, 1);
-   constraints[SFrameW_ConstULDR]->VarChoices(Scheme6, 1, 0, 1);
-   constraints[SFrameW_ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
-   constraints[SFrameW_ConstURDL] = new DistanceConstraint("Const24",
-							   NumSchemes,
-							   variables[SFrameW_PointUR],
-							   variables[SFrameW_PointDL],
-							   variables[SFrameW_Hypo]);
-   constraints[SFrameW_ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[SFrameW_ConstURDL]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[SFrameW_ConstURDL]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[SFrameW_ConstURDL]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[SFrameW_ConstURDL]->VarChoices(Scheme5, 1, 0, 1);
-   constraints[SFrameW_ConstURDL]->VarChoices(Scheme6, 2, 2, 1);
-   constraints[SFrameW_ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
-   constraints[SFrameW_ConstPyth] = new PythagorasConstraint("ConstPyth",
-							     NumSchemes,
-							     variables[SFrameW_Dist1],
-							     variables[SFrameW_Dist2],
-							     variables[SFrameW_Hypo]);
-   constraints[SFrameW_ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[SFrameW_ConstPyth]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[SFrameW_ConstPyth]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[SFrameW_ConstPyth]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[SFrameW_ConstPyth]->VarChoices(Scheme5, 2, 2, 0);
-   constraints[SFrameW_ConstPyth]->VarChoices(Scheme6, 2, 2, 1);
-   constraints[SFrameW_ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
-   constraints[SFrameW_ConstULUR] = new DistanceConstraint("Const12",
-							   NumSchemes,
-							   variables[SFrameW_PointUL],
-							   variables[SFrameW_PointUR],
-							   variables[SFrameW_Dist1]);
-   constraints[SFrameW_ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[SFrameW_ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[SFrameW_ConstULUR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[SFrameW_ConstULUR]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[SFrameW_ConstULUR]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[SFrameW_ConstULUR]->VarChoices(Scheme6, 0, 0, 0);
-   constraints[SFrameW_ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[SFrameW_ConstULDL] = new DistanceConstraint("Const14",
-							   NumSchemes,
-							   variables[SFrameW_PointUL],
-							   variables[SFrameW_PointDL],
-							   variables[SFrameW_Dist2]);
-   constraints[SFrameW_ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[SFrameW_ConstULDL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[SFrameW_ConstULDL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[SFrameW_ConstULDL]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[SFrameW_ConstULDL]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[SFrameW_ConstULDL]->VarChoices(Scheme6, 0, 0, 0);
-   constraints[SFrameW_ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[SFrameW_ConstDRUR] = new DistanceConstraint("Const32",
-							   NumSchemes,
-							   variables[SFrameW_PointDR],
-							   variables[SFrameW_PointUR],
-							   variables[SFrameW_Dist2]);
-   constraints[SFrameW_ConstDRUR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[SFrameW_ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[SFrameW_ConstDRUR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[SFrameW_ConstDRUR]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[SFrameW_ConstDRUR]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[SFrameW_ConstDRUR]->VarChoices(Scheme6, 0, 0, 0);
-   constraints[SFrameW_ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[SFrameW_ConstDRDL] = new DistanceConstraint("Const34",
-							   NumSchemes,
-							   variables[SFrameW_PointDR],
-							   variables[SFrameW_PointDL],
-							   variables[SFrameW_Dist1]);
-   constraints[SFrameW_ConstDRDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[SFrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[SFrameW_ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[SFrameW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[SFrameW_ConstDRDL]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[SFrameW_ConstDRDL]->VarChoices(Scheme6, 0, 0, 0);
-   constraints[SFrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstLine1] = new SegmentConstraint("ConstLine1",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointURVar],
+						   variables[Slider1Var]);
+   constraints[ConstLine1]->VarChoices(Scheme1, 2, 2, 2);
+   constraints[ConstLine1]->VarChoices(Scheme2, 2, 2, 2);
+   constraints[ConstLine1]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstLine1]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstLine1]->VarChoices(Scheme5, 2, 2, 2);
+   constraints[ConstLine1]->VarChoices(Scheme6, 2, 2, 2);
+   constraints[ConstLine1]->Priorities(P_Default, P_Default, P_Highest);
+   constraints[ConstLine2] = new SegmentConstraint("ConstLine2",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointDLVar],
+						   variables[Slider2Var]);
+   constraints[ConstLine2]->VarChoices(Scheme1, 2, 2, 2);
+   constraints[ConstLine2]->VarChoices(Scheme2, 2, 2, 2);
+   constraints[ConstLine2]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstLine2]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstLine2]->VarChoices(Scheme5, 2, 2, 2);
+   constraints[ConstLine2]->VarChoices(Scheme6, 2, 2, 2);
+   constraints[ConstLine2]->Priorities(P_Default, P_Default, P_Highest);
+   constraints[ConstSDist1] = new DistanceConstraint("ConstSDist1",
+						     NumSchemes,
+						     variables[PointULVar],
+						     variables[Slider1Var],
+						     variables[SDist1Var]);
+   constraints[ConstSDist1]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstSDist1]->VarChoices(Scheme2, 1, 1, 1);
+   constraints[ConstSDist1]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstSDist1]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstSDist1]->VarChoices(Scheme5, 1, 1, 1);
+   constraints[ConstSDist1]->VarChoices(Scheme6, 1, 1, 1);
+   constraints[ConstSDist1]->Priorities(P_Lowest, P_Default, P_Default);
+   constraints[ConstRatio1] = new RatioConstraint("ConstRatio1",
+						  NumSchemes,
+						  variables[SDist1Var],
+						  variables[Dist1Var],
+						  variables[Ratio1Var]);
+   constraints[ConstRatio1]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[ConstRatio1]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstRatio1]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstRatio1]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstRatio1]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstRatio1]->VarChoices(Scheme6, 0, 0, 0);
+   constraints[ConstRatio1]->Priorities(P_Highest, P_Highest, P_Highest);
+   constraints[ConstSDist2] = new DistanceConstraint("ConstSDist2",
+						     NumSchemes,
+						     variables[PointULVar],
+						     variables[Slider2Var],
+						     variables[SDist2Var]);
+   constraints[ConstSDist2]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstSDist2]->VarChoices(Scheme2, 1, 1, 1);
+   constraints[ConstSDist2]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstSDist2]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstSDist2]->VarChoices(Scheme5, 1, 1, 1);
+   constraints[ConstSDist2]->VarChoices(Scheme6, 1, 1, 1);
+   constraints[ConstSDist2]->Priorities(P_Lowest, P_Default, P_Default);
+   constraints[ConstRatio2] = new RatioConstraint("ConstRatio2",
+						  NumSchemes,
+						  variables[SDist2Var],
+						  variables[Dist2Var],
+						  variables[Ratio2Var]);
+   constraints[ConstRatio2]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[ConstRatio2]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstRatio2]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstRatio2]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstRatio2]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstRatio2]->VarChoices(Scheme6, 0, 0, 0);
+   constraints[ConstRatio2]->Priorities(P_Highest, P_Highest, P_Highest);
+   constraints[ConstPlane] = new PlaneConstraint("ConstPlane",
+						 NumSchemes,
+						 variables[PointULVar],
+						 variables[PointURVar],
+						 variables[PointDRVar],
+						 variables[PointDLVar]);
+   constraints[ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme3, 2, 3, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme5, 2, 3, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme6, 2, 3, 0, 1);
+   constraints[ConstPlane]->Priorities(P_Highest, P_Highest,
+				       P_Highest, P_Highest);
+   constraints[ConstULDR] = new DistanceConstraint("Const13",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointDRVar],
+						   variables[HypoVar]);
+   constraints[ConstULDR]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[ConstULDR]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstULDR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[ConstULDR]->VarChoices(Scheme5, 2, 2, 1);
+   constraints[ConstULDR]->VarChoices(Scheme6, 1, 0, 1);
+   constraints[ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
+   constraints[ConstURDL] = new DistanceConstraint("Const24",
+						   NumSchemes,
+						   variables[PointURVar],
+						   variables[PointDLVar],
+						   variables[HypoVar]);
+   constraints[ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme5, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme6, 2, 2, 1);
+   constraints[ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
+   constraints[ConstPyth] = new PythagorasConstraint("ConstPyth",
+						     NumSchemes,
+						     variables[Dist1Var],
+						     variables[Dist2Var],
+						     variables[HypoVar]);
+   constraints[ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme5, 2, 2, 0);
+   constraints[ConstPyth]->VarChoices(Scheme6, 2, 2, 1);
+   constraints[ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
+   constraints[ConstULUR] = new DistanceConstraint("Const12",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointURVar],
+						   variables[Dist1Var]);
+   constraints[ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstULUR]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstULUR]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstULUR]->VarChoices(Scheme5, 1, 1, 1);
+   constraints[ConstULUR]->VarChoices(Scheme6, 0, 0, 0);
+   constraints[ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstULDL] = new DistanceConstraint("Const14",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointDLVar],
+						   variables[Dist2Var]);
+   constraints[ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstULDL]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstULDL]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstULDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstULDL]->VarChoices(Scheme5, 1, 1, 1);
+   constraints[ConstULDL]->VarChoices(Scheme6, 0, 0, 0);
+   constraints[ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstDRUR] = new DistanceConstraint("Const32",
+						   NumSchemes,
+						   variables[PointDRVar],
+						   variables[PointURVar],
+						   variables[Dist2Var]);
+   constraints[ConstDRUR]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstDRUR]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstDRUR]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstDRUR]->VarChoices(Scheme5, 1, 1, 1);
+   constraints[ConstDRUR]->VarChoices(Scheme6, 0, 0, 0);
+   constraints[ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstDRDL] = new DistanceConstraint("Const34",
+						   NumSchemes,
+						   variables[PointDRVar],
+						   variables[PointDLVar],
+						   variables[Dist1Var]);
+   constraints[ConstDRDL]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstDRDL]->VarChoices(Scheme5, 1, 1, 1);
+   constraints[ConstDRDL]->VarChoices(Scheme6, 0, 0, 0);
+   constraints[ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SFrameW_PointMatl] = PointWidgetMaterial;
-   materials[SFrameW_EdgeMatl] = EdgeWidgetMaterial;
-   materials[SFrameW_SliderMatl] = SliderWidgetMaterial;
-   materials[SFrameW_HighMatl] = HighlightWidgetMaterial;
+   materials[PointMatl] = PointWidgetMaterial;
+   materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[SliderMatl] = SliderWidgetMaterial;
+   materials[HighMatl] = HighlightWidgetMaterial;
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
-   for (geom = SFrameW_SphereUL, pick = SFrameW_PickSphUL;
-	geom <= SFrameW_SphereDL; geom++, pick++) {
+   for (geom = SphereUL, pick = PickSphUL;
+	geom <= SphereDL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[SFrameW_HighMatl]);
+      picks[pick]->set_highlight(materials[HighMatl]);
       picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, materials[SFrameW_PointMatl]);
+   GeomMaterial* ptsm = new GeomMaterial(pts, materials[PointMatl]);
    
    GeomGroup* resizes = new GeomGroup;
-   for (geom = SFrameW_GeomResizeU, pick = SFrameW_PickResizeU;
-	geom <= SFrameW_GeomResizeL; geom++, pick++) {
+   for (geom = GeomResizeU, pick = PickResizeU;
+	geom <= GeomResizeL; geom++, pick++) {
       geometries[geom] = new GeomCappedCylinder;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[SFrameW_HighMatl]);
+      picks[pick]->set_highlight(materials[HighMatl]);
       picks[pick]->set_cbdata((void*)pick);
       resizes->add(picks[pick]);
    }
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[SFrameW_PointMatl]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
 
    GeomGroup* cyls = new GeomGroup;
-   for (geom = SFrameW_CylU; geom <= SFrameW_CylL; geom++) {
+   for (geom = CylU; geom <= CylL; geom++) {
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[SFrameW_PickCyls] = new GeomPick(cyls, module);
-   picks[SFrameW_PickCyls]->set_highlight(materials[SFrameW_HighMatl]);
-   picks[SFrameW_PickCyls]->set_cbdata((void*)SFrameW_PickCyls);
-   GeomMaterial* cylsm = new GeomMaterial(picks[SFrameW_PickCyls], materials[SFrameW_EdgeMatl]);
+   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls]->set_highlight(materials[HighMatl]);
+   picks[PickCyls]->set_cbdata((void*)PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], materials[EdgeMatl]);
 
    GeomGroup* sliders = new GeomGroup;
-   geometries[SFrameW_SliderCyl1] = new GeomCappedCylinder;
-   picks[SFrameW_PickSlider1] = new GeomPick(geometries[SFrameW_SliderCyl1], module);
-   picks[SFrameW_PickSlider1]->set_highlight(materials[SFrameW_HighMatl]);
-   picks[SFrameW_PickSlider1]->set_cbdata((void*)SFrameW_PickSlider1);
-   sliders->add(picks[SFrameW_PickSlider1]);
-   geometries[SFrameW_SliderCyl2] = new GeomCappedCylinder;
-   picks[SFrameW_PickSlider2] = new GeomPick(geometries[SFrameW_SliderCyl2], module);
-   picks[SFrameW_PickSlider2]->set_highlight(materials[SFrameW_HighMatl]);
-   picks[SFrameW_PickSlider2]->set_cbdata((void*)SFrameW_PickSlider2);
-   sliders->add(picks[SFrameW_PickSlider2]);
-   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SFrameW_SliderMatl]);
+   geometries[SliderCyl1] = new GeomCappedCylinder;
+   picks[PickSlider1] = new GeomPick(geometries[SliderCyl1], module);
+   picks[PickSlider1]->set_highlight(materials[HighMatl]);
+   picks[PickSlider1]->set_cbdata((void*)PickSlider1);
+   sliders->add(picks[PickSlider1]);
+   geometries[SliderCyl2] = new GeomCappedCylinder;
+   picks[PickSlider2] = new GeomPick(geometries[SliderCyl2], module);
+   picks[PickSlider2]->set_highlight(materials[HighMatl]);
+   picks[PickSlider2]->set_cbdata((void*)PickSlider2);
+   sliders->add(picks[PickSlider2]);
+   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SliderMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(ptsm);
@@ -302,69 +302,69 @@ ScaledFrameWidget::~ScaledFrameWidget()
 void
 ScaledFrameWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[SFrameW_SphereUL])->move(variables[SFrameW_PointUL]->GetPoint(),
-						     1*widget_scale);
-   ((GeomSphere*)geometries[SFrameW_SphereUR])->move(variables[SFrameW_PointUR]->GetPoint(),
-						     1*widget_scale);
-   ((GeomSphere*)geometries[SFrameW_SphereDR])->move(variables[SFrameW_PointDR]->GetPoint(),
-						     1*widget_scale);
-   ((GeomSphere*)geometries[SFrameW_SphereDL])->move(variables[SFrameW_PointDL]->GetPoint(),
-						     1*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylU])->move(variables[SFrameW_PointUL]->GetPoint(),
-						   variables[SFrameW_PointUR]->GetPoint(),
-						   0.5*widget_scale);
-   Point p(variables[SFrameW_PointUL]->GetPoint() + (variables[SFrameW_PointUR]->GetPoint()
-						- variables[SFrameW_PointUL]->GetPoint()) / 2.0);
-   ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
-								p + (GetAxis2() * 0.6 * widget_scale),
-								0.75*widget_scale);
-   p = variables[SFrameW_PointUR]->GetPoint() + (variables[SFrameW_PointDR]->GetPoint()
-					    - variables[SFrameW_PointUR]->GetPoint()) / 2.0;
-   ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeR])->move(p - (GetAxis1() * 0.6 * widget_scale),
-								p + (GetAxis1() * 0.6 * widget_scale),
-								0.75*widget_scale);
-   p = variables[SFrameW_PointDR]->GetPoint() + (variables[SFrameW_PointDL]->GetPoint()
-					    - variables[SFrameW_PointDR]->GetPoint()) / 2.0;
-   ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
-								p + (GetAxis2() * 0.6 * widget_scale),
-								0.75*widget_scale);
-   p = variables[SFrameW_PointDL]->GetPoint() + (variables[SFrameW_PointUL]->GetPoint()
-					    - variables[SFrameW_PointDL]->GetPoint()) / 2.0;
-   ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeL])->move(p - (GetAxis1() * 0.6 * widget_scale),
-								p + (GetAxis1() * 0.6 * widget_scale),
-								0.75*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylR])->move(variables[SFrameW_PointUR]->GetPoint(),
-						   variables[SFrameW_PointDR]->GetPoint(),
-						   0.5*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylD])->move(variables[SFrameW_PointDR]->GetPoint(),
-						   variables[SFrameW_PointDL]->GetPoint(),
-						   0.5*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylL])->move(variables[SFrameW_PointDL]->GetPoint(),
-						   variables[SFrameW_PointUL]->GetPoint(),
-						   0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl1])->move(variables[SFrameW_Slider1]->GetPoint()
-							       - (GetAxis1() * 0.3 * widget_scale),
-							       variables[SFrameW_Slider1]->GetPoint()
-							       + (GetAxis1() * 0.3 * widget_scale),
-							       1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl2])->move(variables[SFrameW_Slider2]->GetPoint()
-							       - (GetAxis2() * 0.3 * widget_scale),
-							       variables[SFrameW_Slider2]->GetPoint()
-							       + (GetAxis2() * 0.3 * widget_scale),
-							       1.1*widget_scale);
+   ((GeomSphere*)geometries[SphereUL])->move(variables[PointULVar]->point(),
+					     1*widget_scale);
+   ((GeomSphere*)geometries[SphereUR])->move(variables[PointURVar]->point(),
+					     1*widget_scale);
+   ((GeomSphere*)geometries[SphereDR])->move(variables[PointDRVar]->point(),
+					     1*widget_scale);
+   ((GeomSphere*)geometries[SphereDL])->move(variables[PointDLVar]->point(),
+					     1*widget_scale);
+   ((GeomCylinder*)geometries[CylU])->move(variables[PointULVar]->point(),
+					   variables[PointURVar]->point(),
+					   0.5*widget_scale);
+   Point p(variables[PointULVar]->point() + (variables[PointURVar]->point()
+						- variables[PointULVar]->point()) / 2.0);
+   ((GeomCappedCylinder*)geometries[GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
+							p + (GetAxis2() * 0.6 * widget_scale),
+							0.75*widget_scale);
+   p = variables[PointURVar]->point() + (variables[PointDRVar]->point()
+					    - variables[PointURVar]->point()) / 2.0;
+   ((GeomCappedCylinder*)geometries[GeomResizeR])->move(p - (GetAxis1() * 0.6 * widget_scale),
+							p + (GetAxis1() * 0.6 * widget_scale),
+							0.75*widget_scale);
+   p = variables[PointDRVar]->point() + (variables[PointDLVar]->point()
+					    - variables[PointDRVar]->point()) / 2.0;
+   ((GeomCappedCylinder*)geometries[GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
+							p + (GetAxis2() * 0.6 * widget_scale),
+							0.75*widget_scale);
+   p = variables[PointDLVar]->point() + (variables[PointULVar]->point()
+					    - variables[PointDLVar]->point()) / 2.0;
+   ((GeomCappedCylinder*)geometries[GeomResizeL])->move(p - (GetAxis1() * 0.6 * widget_scale),
+							p + (GetAxis1() * 0.6 * widget_scale),
+							0.75*widget_scale);
+   ((GeomCylinder*)geometries[CylR])->move(variables[PointURVar]->point(),
+					   variables[PointDRVar]->point(),
+					   0.5*widget_scale);
+   ((GeomCylinder*)geometries[CylD])->move(variables[PointDRVar]->point(),
+					   variables[PointDLVar]->point(),
+					   0.5*widget_scale);
+   ((GeomCylinder*)geometries[CylL])->move(variables[PointDLVar]->point(),
+					   variables[PointULVar]->point(),
+					   0.5*widget_scale);
+   ((GeomCappedCylinder*)geometries[SliderCyl1])->move(variables[Slider1Var]->point()
+						       - (GetAxis1() * 0.3 * widget_scale),
+						       variables[Slider1Var]->point()
+						       + (GetAxis1() * 0.3 * widget_scale),
+						       1.1*widget_scale);
+   ((GeomCappedCylinder*)geometries[SliderCyl2])->move(variables[Slider2Var]->point()
+						       - (GetAxis2() * 0.3 * widget_scale),
+						       variables[Slider2Var]->point()
+						       + (GetAxis2() * 0.3 * widget_scale),
+						       1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[SFrameW_PointUR]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
-   Vector spvec2(variables[SFrameW_PointDL]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
+   Vector spvec1(variables[PointURVar]->point() - variables[PointULVar]->point());
+   Vector spvec2(variables[PointDLVar]->point() - variables[PointULVar]->point());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();
       Vector v = Cross(spvec1, spvec2);
       for (Index geom = 0; geom < NumPcks; geom++) {
-	 if ((geom == SFrameW_PickResizeU) || (geom == SFrameW_PickResizeD) || (geom == SFrameW_PickSlider2))
+	 if ((geom == PickResizeU) || (geom == PickResizeD) || (geom == PickSlider2))
 	    picks[geom]->set_principal(spvec2);
-	 else if ((geom == SFrameW_PickResizeL) || (geom == SFrameW_PickResizeR) || (geom == SFrameW_PickSlider1))
+	 else if ((geom == PickResizeL) || (geom == PickResizeR) || (geom == PickSlider1))
 	    picks[geom]->set_principal(spvec1);
 	 else
 	    picks[geom]->set_principal(spvec1, spvec2, v);
@@ -376,52 +376,65 @@ void
 ScaledFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			       void* cbdata )
 {
-   ((DistanceConstraint*)constraints[SFrameW_ConstSDist1])->SetDefault(GetAxis1());
-   ((DistanceConstraint*)constraints[SFrameW_ConstSDist2])->SetDefault(GetAxis2());
+   ((DistanceConstraint*)constraints[ConstSDist1])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[ConstSDist2])->SetDefault(GetAxis2());
 
-   for (Index v=0; v<NumVars; v++)
-      variables[v]->Reset();
-   
    switch((int)cbdata){
-   case SFrameW_PickSphUL:
-      variables[SFrameW_PointUL]->SetDelta(delta);
+   case PickSphUL:
+      variables[PointULVar]->SetDelta(delta);
       break;
-   case SFrameW_PickSphUR:
-      variables[SFrameW_PointUR]->SetDelta(delta);
+   case PickSphUR:
+      variables[PointURVar]->SetDelta(delta);
       break;
-   case SFrameW_PickSphDR:
-      variables[SFrameW_PointDR]->SetDelta(delta);
+   case PickSphDR:
+      variables[PointDRVar]->SetDelta(delta);
       break;
-   case SFrameW_PickSphDL:
-      variables[SFrameW_PointDL]->SetDelta(delta);
+   case PickSphDL:
+      variables[PointDLVar]->SetDelta(delta);
       break;
-   case SFrameW_PickResizeU:
-      variables[SFrameW_PointUR]->SetDelta(delta, Scheme6);
+   case PickResizeU:
+      variables[PointURVar]->SetDelta(delta, Scheme6);
       break;
-   case SFrameW_PickResizeR:
-      variables[SFrameW_PointDR]->SetDelta(delta, Scheme5);
+   case PickResizeR:
+      variables[PointDRVar]->SetDelta(delta, Scheme5);
       break;
-   case SFrameW_PickResizeD:
-      variables[SFrameW_PointDL]->SetDelta(delta, Scheme6);
+   case PickResizeD:
+      variables[PointDLVar]->SetDelta(delta, Scheme6);
       break;
-   case SFrameW_PickResizeL:
-      variables[SFrameW_PointUL]->SetDelta(delta, Scheme5);
+   case PickResizeL:
+      variables[PointULVar]->SetDelta(delta, Scheme5);
       break;
-   case SFrameW_PickSlider1:
-      variables[SFrameW_Slider1]->SetDelta(delta);
+   case PickSlider1:
+      variables[Slider1Var]->SetDelta(delta);
       break;
-   case SFrameW_PickSlider2:
-      variables[SFrameW_Slider2]->SetDelta(delta);
+   case PickSlider2:
+      variables[Slider2Var]->SetDelta(delta);
       break;
-   case SFrameW_PickCyls:
-      variables[SFrameW_PointUL]->MoveDelta(delta);
-      variables[SFrameW_PointUR]->MoveDelta(delta);
-      variables[SFrameW_PointDR]->MoveDelta(delta);
-      variables[SFrameW_PointDL]->MoveDelta(delta);
-      variables[SFrameW_Slider1]->MoveDelta(delta);
-      variables[SFrameW_Slider2]->MoveDelta(delta);
+   case PickCyls:
+      MoveDelta(delta);
       break;
    }
+}
+
+
+void
+ScaledFrameWidget::MoveDelta( const Vector& delta )
+{
+   variables[PointULVar]->MoveDelta(delta);
+   variables[PointURVar]->MoveDelta(delta);
+   variables[PointDRVar]->MoveDelta(delta);
+   variables[PointDLVar]->MoveDelta(delta);
+   variables[Slider1Var]->MoveDelta(delta);
+   variables[Slider2Var]->MoveDelta(delta);
+}
+
+
+Point
+ScaledFrameWidget::ReferencePoint() const
+{
+   return (variables[PointULVar]->point()
+	   + (variables[PointDRVar]->point()
+	      -variables[PointULVar]->point())/2.0);
 }
 
 
@@ -430,14 +443,14 @@ ScaledFrameWidget::SetPosition( const Point& UL, const Point& UR, const Point& D
 {
    Real size1((UR-UL).length()), size2((DL-UL).length());
    
-   variables[SFrameW_PointUL]->Move(UL);
-   variables[SFrameW_PointUR]->Move(UR);
-   variables[SFrameW_PointDL]->Move(DL);
-   variables[SFrameW_Dist1]->Move(size1);
-   variables[SFrameW_Dist2]->Move(size2);
-   variables[SFrameW_PointDR]->Set(UR+(DL-UL), Scheme5); // This should set Hypo...
-   variables[SFrameW_SDist1]->Set(size1*variables[SFrameW_Ratio1]->GetReal(), Scheme1); // Slider1...
-   variables[SFrameW_SDist2]->Set(size2*variables[SFrameW_Ratio2]->GetReal(), Scheme1); // Slider2...
+   variables[PointULVar]->Move(UL);
+   variables[PointURVar]->Move(UR);
+   variables[PointDLVar]->Move(DL);
+   variables[Dist1Var]->Move(size1);
+   variables[Dist2Var]->Move(size2);
+   variables[PointDRVar]->Set(UR+(DL-UL), Scheme5); // This should set Hypo...
+   variables[SDist1Var]->Set(size1*variables[Ratio1Var]->real(), Scheme1); // Slider1...
+   variables[SDist2Var]->Set(size2*variables[Ratio2Var]->real(), Scheme1); // Slider2...
 
    execute();
 }
@@ -446,9 +459,9 @@ ScaledFrameWidget::SetPosition( const Point& UL, const Point& UR, const Point& D
 void
 ScaledFrameWidget::GetPosition( Point& UL, Point& UR, Point& DL )
 {
-   UL = variables[SFrameW_PointUL]->GetPoint();
-   UR = variables[SFrameW_PointUR]->GetPoint();
-   DL = variables[SFrameW_PointDL]->GetPoint();
+   UL = variables[PointULVar]->point();
+   UR = variables[PointURVar]->point();
+   DL = variables[PointDLVar]->point();
 }
 
 
@@ -460,14 +473,14 @@ ScaledFrameWidget::SetPosition( const Point& center, const Vector& normal,
    Vector axis1, axis2;
    normal.find_orthogonal(axis1, axis2);
    
-   variables[SFrameW_PointUL]->Move(center-axis1*s1-axis2*s2);
-   variables[SFrameW_PointDR]->Move(center+axis1*s1+axis2*s2);
-   variables[SFrameW_PointUR]->Move(center+axis1*s1-axis2*s2);
-   variables[SFrameW_PointDL]->Move(center-axis1*s1+axis2*s2);
-   variables[SFrameW_Dist1]->Move(size1);
-   variables[SFrameW_Dist2]->Set(size2); // This should set the Hypo...
-   variables[SFrameW_SDist1]->Set(size1*variables[SFrameW_Ratio1]->GetReal(), Scheme1); // Slider1...
-   variables[SFrameW_SDist2]->Set(size2*variables[SFrameW_Ratio2]->GetReal(), Scheme1); // Slider2...
+   variables[PointULVar]->Move(center-axis1*s1-axis2*s2);
+   variables[PointDRVar]->Move(center+axis1*s1+axis2*s2);
+   variables[PointURVar]->Move(center+axis1*s1-axis2*s2);
+   variables[PointDLVar]->Move(center-axis1*s1+axis2*s2);
+   variables[Dist1Var]->Move(size1);
+   variables[Dist2Var]->Set(size2); // This should set the Hypo...
+   variables[SDist1Var]->Set(size1*variables[Ratio1Var]->real(), Scheme1); // Slider1...
+   variables[SDist2Var]->Set(size2*variables[Ratio2Var]->real(), Scheme1); // Slider2...
 
    execute();
 }
@@ -477,12 +490,12 @@ void
 ScaledFrameWidget::GetPosition( Point& center, Vector& normal,
 				Real& size1, Real& size2 )
 {
-   center = (variables[SFrameW_PointDR]->GetPoint()
-	     + ((variables[SFrameW_PointUL]->GetPoint()-variables[SFrameW_PointDR]->GetPoint())
+   center = (variables[PointDRVar]->point()
+	     + ((variables[PointULVar]->point()-variables[PointDRVar]->point())
 		/ 2.0));
    normal = Cross(GetAxis1(), GetAxis2());
-   size1 = variables[SFrameW_Dist1]->GetReal();
-   size2 = variables[SFrameW_Dist2]->GetReal();
+   size1 = variables[Dist1Var]->real();
+   size2 = variables[Dist2Var]->real();
 }
 
 
@@ -490,7 +503,7 @@ void
 ScaledFrameWidget::SetRatio1( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
-   variables[SFrameW_Ratio1]->Set(ratio);
+   variables[Ratio1Var]->Set(ratio);
    
    execute();
 }
@@ -499,7 +512,7 @@ ScaledFrameWidget::SetRatio1( const Real ratio )
 Real
 ScaledFrameWidget::GetRatio1() const
 {
-   return (variables[SFrameW_Ratio1]->GetReal());
+   return (variables[Ratio1Var]->real());
 }
 
 
@@ -507,7 +520,7 @@ void
 ScaledFrameWidget::SetRatio2( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
-   variables[SFrameW_Ratio2]->Set(ratio);
+   variables[Ratio2Var]->Set(ratio);
    
    execute();
 }
@@ -516,7 +529,7 @@ ScaledFrameWidget::SetRatio2( const Real ratio )
 Real
 ScaledFrameWidget::GetRatio2() const
 {
-   return (variables[SFrameW_Ratio2]->GetReal());
+   return (variables[Ratio2Var]->real());
 }
 
 
@@ -525,23 +538,23 @@ ScaledFrameWidget::SetSize( const Real size1, const Real size2 )
 {
    ASSERT((size1>=0.0)&&(size1>=0.0));
 
-   Point center(variables[SFrameW_PointDR]->GetPoint()
-		+ ((variables[SFrameW_PointUL]->GetPoint()-variables[SFrameW_PointDR]->GetPoint())
+   Point center(variables[PointDRVar]->point()
+		+ ((variables[PointULVar]->point()-variables[PointDRVar]->point())
 		   / 2.0));
-   Vector axis1((variables[SFrameW_PointUR]->GetPoint() - variables[SFrameW_PointUL]->GetPoint())/2.0);
-   Vector axis2((variables[SFrameW_PointDL]->GetPoint() - variables[SFrameW_PointUL]->GetPoint())/2.0);
-   Real ratio1(size1/variables[SFrameW_Dist1]->GetReal());
-   Real ratio2(size2/variables[SFrameW_Dist2]->GetReal());
+   Vector axis1((variables[PointURVar]->point() - variables[PointULVar]->point())/2.0);
+   Vector axis2((variables[PointDLVar]->point() - variables[PointULVar]->point())/2.0);
+   Real ratio1(size1/variables[Dist1Var]->real());
+   Real ratio2(size2/variables[Dist2Var]->real());
 
-   variables[SFrameW_PointUL]->Move(center-axis1*ratio1-axis2*ratio2);
-   variables[SFrameW_PointDR]->Move(center+axis1*ratio1+axis2*ratio2);
-   variables[SFrameW_PointUR]->Move(center+axis1*ratio1-axis2*ratio2);
-   variables[SFrameW_PointDL]->Move(center-axis1*ratio1+axis2*ratio2);
+   variables[PointULVar]->Move(center-axis1*ratio1-axis2*ratio2);
+   variables[PointDRVar]->Move(center+axis1*ratio1+axis2*ratio2);
+   variables[PointURVar]->Move(center+axis1*ratio1-axis2*ratio2);
+   variables[PointDLVar]->Move(center-axis1*ratio1+axis2*ratio2);
 
-   variables[SFrameW_Dist1]->Move(size1);
-   variables[SFrameW_Dist2]->Set(size2); // This should set the Hypo...
-   variables[SFrameW_SDist1]->Set(size1*variables[SFrameW_Ratio1]->GetReal(), Scheme1); // Slider1...
-   variables[SFrameW_SDist2]->Set(size2*variables[SFrameW_Ratio2]->GetReal(), Scheme1); // Slider2...
+   variables[Dist1Var]->Move(size1);
+   variables[Dist2Var]->Set(size2); // This should set the Hypo...
+   variables[SDist1Var]->Set(size1*variables[Ratio1Var]->real(), Scheme1); // Slider1...
+   variables[SDist2Var]->Set(size2*variables[Ratio2Var]->real(), Scheme1); // Slider2...
 
    execute();
 }
@@ -549,15 +562,15 @@ ScaledFrameWidget::SetSize( const Real size1, const Real size2 )
 void
 ScaledFrameWidget::GetSize( Real& size1, Real& size2 ) const
 {
-   size1 = variables[SFrameW_Dist1]->GetReal();
-   size2 = variables[SFrameW_Dist2]->GetReal();
+   size1 = variables[Dist1Var]->real();
+   size2 = variables[Dist2Var]->real();
 }
 
-   
+
 Vector
 ScaledFrameWidget::GetAxis1()
 {
-   Vector axis(variables[SFrameW_PointUR]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
+   Vector axis(variables[PointURVar]->point() - variables[PointULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -568,7 +581,7 @@ ScaledFrameWidget::GetAxis1()
 Vector
 ScaledFrameWidget::GetAxis2()
 {
-   Vector axis(variables[SFrameW_PointDL]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
+   Vector axis(variables[PointDLVar]->point() - variables[PointULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else

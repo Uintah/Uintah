@@ -27,18 +27,18 @@ const Index NumMatls = 4;
 const Index NumPcks = 10;
 const Index NumSchemes = 5;
 
-enum { ViewW_ConstULDR, ViewW_ConstURDL, ViewW_ConstPyth, ViewW_ConstPlane,
-       ViewW_ConstULUR, ViewW_ConstULDL, ViewW_ConstDRUR, ViewW_ConstDRDL,
-       ViewW_ConstRatio };
-enum { ViewW_GeomPointUL, ViewW_GeomPointUR, ViewW_GeomPointDR, ViewW_GeomPointDL,
-       ViewW_GeomCylU, ViewW_GeomCylR, ViewW_GeomCylD, ViewW_GeomCylL,
-       ViewW_GeomResizeU, ViewW_GeomResizeD,
-       ViewW_GeomEye, ViewW_GeomForeEye, ViewW_GeomBackEye, ViewW_GeomShaft,
-       ViewW_GeomCornerUL, ViewW_GeomCornerUR, ViewW_GeomCornerDR, ViewW_GeomCornerDL,
-       ViewW_GeomEdgeU, ViewW_GeomEdgeR, ViewW_GeomEdgeD, ViewW_GeomEdgeL,
-       ViewW_GeomDiagUL, ViewW_GeomDiagUR, ViewW_GeomDiagDR, ViewW_GeomDiagDL };
-enum { ViewW_PickSphUL, ViewW_PickSphUR, ViewW_PickSphDR, ViewW_PickSphDL, ViewW_PickCyls,
-       ViewW_PickResizeU, ViewW_PickResizeD, ViewW_PickEye, ViewW_PickForeEye, ViewW_PickBackEye };
+enum { ConstULDR, ConstURDL, ConstPyth, ConstPlane,
+       ConstULUR, ConstULDL, ConstDRUR, ConstDRDL,
+       ConstRatio };
+enum { GeomPointUL, GeomPointUR, GeomPointDR, GeomPointDL,
+       GeomCylU, GeomCylR, GeomCylD, GeomCylL,
+       GeomResizeU, GeomResizeD,
+       GeomEye, GeomForeEye, GeomBackEye, GeomShaft,
+       GeomCornerUL, GeomCornerUR, GeomCornerDR, GeomCornerDL,
+       GeomEdgeU, GeomEdgeR, GeomEdgeD, GeomEdgeL,
+       GeomDiagUL, GeomDiagUR, GeomDiagDR, GeomDiagDL };
+enum { PickSphUL, PickSphUR, PickSphDR, PickSphDL, PickCyls,
+       PickResizeU, PickResizeD, PickEye, PickForeEye, PickBackEye };
 
 ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
@@ -46,195 +46,195 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 {
    Real INIT = 1.0*widget_scale;
    // Scheme2/3 are used by the picks in GeomMoved!!
-   variables[ViewW_PointUL] = new PointVariable("PntUL", Scheme1, Point(0, 0, 0));
-   variables[ViewW_PointUR] = new PointVariable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[ViewW_PointDR] = new PointVariable("PntDR", Scheme3, Point(INIT, INIT, 0));
-   variables[ViewW_PointDL] = new PointVariable("PntDL", Scheme4, Point(0, INIT, 0));
-   variables[ViewW_Eye] = new PointVariable("Eye", Scheme4, Point(INIT/2, INIT/2, -2*INIT));
-   variables[ViewW_ForeEye] = new PointVariable("ForeEye", Scheme4, Point(INIT/2, INIT/2, 0));
-   variables[ViewW_BackEye] = new PointVariable("BackEye", Scheme4, Point(INIT/2, INIT/2, 3*INIT));
-   variables[ViewW_Dist1] = new RealVariable("DIST1", Scheme1, INIT);
-   variables[ViewW_Dist2] = new RealVariable("DIST2", Scheme1, INIT);
-   variables[ViewW_Ratio] = new RealVariable("Ratio", Scheme1, 1.0);
-   variables[ViewW_Hypo] = new RealVariable("HYPO", Scheme1, sqrt(2*INIT*INIT));
-   variables[ViewW_Fore] = new RealVariable("Fore", Scheme1, 2.0);
-   variables[ViewW_Back] = new RealVariable("Back", Scheme1, 5.0);
+   variables[PointULVar] = new PointVariable("PntUL", solve, Scheme1, Point(0, 0, 0));
+   variables[PointURVar] = new PointVariable("PntUR", solve, Scheme2, Point(INIT, 0, 0));
+   variables[PointDRVar] = new PointVariable("PntDR", solve, Scheme3, Point(INIT, INIT, 0));
+   variables[PointDLVar] = new PointVariable("PntDL", solve, Scheme4, Point(0, INIT, 0));
+   variables[EyeVar] = new PointVariable("Eye", solve, Scheme4, Point(INIT/2, INIT/2, -2*INIT));
+   variables[ForeEyeVar] = new PointVariable("ForeEye", solve, Scheme4, Point(INIT/2, INIT/2, 0));
+   variables[BackEyeVar] = new PointVariable("BackEye", solve, Scheme4, Point(INIT/2, INIT/2, 3*INIT));
+   variables[Dist1Var] = new RealVariable("DIST1", solve, Scheme1, INIT);
+   variables[Dist2Var] = new RealVariable("DIST2", solve, Scheme1, INIT);
+   variables[RatioVar] = new RealVariable("Ratio", solve, Scheme1, 1.0);
+   variables[HypoVar] = new RealVariable("HYPO", solve, Scheme1, sqrt(2*INIT*INIT));
+   variables[ForeVar] = new RealVariable("Fore", solve, Scheme1, 2.0);
+   variables[BackVar] = new RealVariable("Back", solve, Scheme1, 5.0);
 
-   constraints[ViewW_ConstRatio] = new RatioConstraint("ConstRatio",
-						       NumSchemes,
-						       variables[ViewW_Dist1],
-						       variables[ViewW_Dist2],
-						       variables[ViewW_Ratio]);
-   constraints[ViewW_ConstRatio]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[ViewW_ConstRatio]->VarChoices(Scheme2, 1, 0, 0);
-   constraints[ViewW_ConstRatio]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[ViewW_ConstRatio]->VarChoices(Scheme4, 1, 0, 0);
-   constraints[ViewW_ConstRatio]->VarChoices(Scheme5, 1, 0, 0);
-   constraints[ViewW_ConstRatio]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[ViewW_ConstPlane] = new PlaneConstraint("ConstPlane",
-						       NumSchemes,
-						       variables[ViewW_PointUL],
-						       variables[ViewW_PointUR],
-						       variables[ViewW_PointDR],
-						       variables[ViewW_PointDL]);
-   constraints[ViewW_ConstPlane]->VarChoices(Scheme1, 2, 3, 2, 1);
-   constraints[ViewW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 3);
-   constraints[ViewW_ConstPlane]->VarChoices(Scheme3, 0, 3, 0, 1);
-   constraints[ViewW_ConstPlane]->VarChoices(Scheme4, 2, 1, 0, 1);
-   constraints[ViewW_ConstPlane]->VarChoices(Scheme5, 2, 3, 0, 1);
-   constraints[ViewW_ConstPlane]->Priorities(P_Highest, P_Highest,
-					     P_Highest, P_Highest);
-   constraints[ViewW_ConstULDR] = new DistanceConstraint("Const13",
-							 NumSchemes,
-							 variables[ViewW_PointUL],
-							 variables[ViewW_PointDR],
-							 variables[ViewW_Hypo]);
-   constraints[ViewW_ConstULDR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[ViewW_ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[ViewW_ConstULDR]->VarChoices(Scheme3, 0, 0, 0);
-   constraints[ViewW_ConstULDR]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[ViewW_ConstULDR]->VarChoices(Scheme5, 1, 0, 1);
-   constraints[ViewW_ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
-   constraints[ViewW_ConstURDL] = new DistanceConstraint("Const24",
-							 NumSchemes,
-							 variables[ViewW_PointUR],
-							 variables[ViewW_PointDL],
-							 variables[ViewW_Hypo]);
-   constraints[ViewW_ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[ViewW_ConstURDL]->VarChoices(Scheme2, 1, 1, 1);
-   constraints[ViewW_ConstURDL]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[ViewW_ConstURDL]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[ViewW_ConstURDL]->VarChoices(Scheme5, 2, 2, 0);
-   constraints[ViewW_ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
-   constraints[ViewW_ConstPyth] = new PythagorasConstraint("ConstPyth",
-							   NumSchemes,
-							   variables[ViewW_Dist1],
-							   variables[ViewW_Dist2],
-							   variables[ViewW_Hypo]);
-   constraints[ViewW_ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[ViewW_ConstPyth]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[ViewW_ConstPyth]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[ViewW_ConstPyth]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[ViewW_ConstPyth]->VarChoices(Scheme5, 2, 2, 1);
-   constraints[ViewW_ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
-   constraints[ViewW_ConstULUR] = new DistanceConstraint("Const12",
-							 NumSchemes,
-							 variables[ViewW_PointUL],
-							 variables[ViewW_PointUR],
-							 variables[ViewW_Dist1]);
-   constraints[ViewW_ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[ViewW_ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[ViewW_ConstULUR]->VarChoices(Scheme3, 1, 0, 0);
-   constraints[ViewW_ConstULUR]->VarChoices(Scheme4, 1, 0, 1);
-   constraints[ViewW_ConstULUR]->VarChoices(Scheme5, 0, 0, 0);
-   constraints[ViewW_ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[ViewW_ConstULDL] = new DistanceConstraint("Const14",
-							 NumSchemes,
-							 variables[ViewW_PointUL],
-							 variables[ViewW_PointDL],
-							 variables[ViewW_Dist2]);
-   constraints[ViewW_ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[ViewW_ConstULDL]->VarChoices(Scheme2, 1, 0, 0);
-   constraints[ViewW_ConstULDL]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[ViewW_ConstULDL]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[ViewW_ConstULDL]->VarChoices(Scheme5, 0, 0, 0);
-   constraints[ViewW_ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[ViewW_ConstDRUR] = new DistanceConstraint("Const32",
-							 NumSchemes,
-							 variables[ViewW_PointDR],
-							 variables[ViewW_PointUR],
-							 variables[ViewW_Dist2]);
-   constraints[ViewW_ConstDRUR]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[ViewW_ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[ViewW_ConstDRUR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[ViewW_ConstDRUR]->VarChoices(Scheme4, 1, 0, 0);
-   constraints[ViewW_ConstDRUR]->VarChoices(Scheme5, 0, 0, 0);
-   constraints[ViewW_ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[ViewW_ConstDRDL] = new DistanceConstraint("Const34",
-							 NumSchemes,
-							 variables[ViewW_PointDR],
-							 variables[ViewW_PointDL],
-							 variables[ViewW_Dist1]);
-   constraints[ViewW_ConstDRDL]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[ViewW_ConstDRDL]->VarChoices(Scheme2, 1, 0, 0);
-   constraints[ViewW_ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[ViewW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
-   constraints[ViewW_ConstDRDL]->VarChoices(Scheme5, 0, 0, 0);
-   constraints[ViewW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstRatio] = new RatioConstraint("ConstRatio",
+						 NumSchemes,
+						 variables[Dist1Var],
+						 variables[Dist2Var],
+						 variables[RatioVar]);
+   constraints[ConstRatio]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstRatio]->VarChoices(Scheme2, 1, 0, 0);
+   constraints[ConstRatio]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstRatio]->VarChoices(Scheme4, 1, 0, 0);
+   constraints[ConstRatio]->VarChoices(Scheme5, 1, 0, 0);
+   constraints[ConstRatio]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[ConstPlane] = new PlaneConstraint("ConstPlane",
+						 NumSchemes,
+						 variables[PointULVar],
+						 variables[PointURVar],
+						 variables[PointDRVar],
+						 variables[PointDLVar]);
+   constraints[ConstPlane]->VarChoices(Scheme1, 2, 3, 2, 1);
+   constraints[ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 3);
+   constraints[ConstPlane]->VarChoices(Scheme3, 0, 3, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme4, 2, 1, 0, 1);
+   constraints[ConstPlane]->VarChoices(Scheme5, 2, 3, 0, 1);
+   constraints[ConstPlane]->Priorities(P_Highest, P_Highest,
+				       P_Highest, P_Highest);
+   constraints[ConstULDR] = new DistanceConstraint("Const13",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointDRVar],
+						   variables[HypoVar]);
+   constraints[ConstULDR]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[ConstULDR]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[ConstULDR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[ConstULDR]->VarChoices(Scheme5, 1, 0, 1);
+   constraints[ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
+   constraints[ConstURDL] = new DistanceConstraint("Const24",
+						   NumSchemes,
+						   variables[PointURVar],
+						   variables[PointDLVar],
+						   variables[HypoVar]);
+   constraints[ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme2, 1, 1, 1);
+   constraints[ConstURDL]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstURDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstURDL]->VarChoices(Scheme5, 2, 2, 0);
+   constraints[ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
+   constraints[ConstPyth] = new PythagorasConstraint("ConstPyth",
+						     NumSchemes,
+						     variables[Dist1Var],
+						     variables[Dist2Var],
+						     variables[HypoVar]);
+   constraints[ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[ConstPyth]->VarChoices(Scheme5, 2, 2, 1);
+   constraints[ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
+   constraints[ConstULUR] = new DistanceConstraint("Const12",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointURVar],
+						   variables[Dist1Var]);
+   constraints[ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstULUR]->VarChoices(Scheme3, 1, 0, 0);
+   constraints[ConstULUR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[ConstULUR]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstULDL] = new DistanceConstraint("Const14",
+						   NumSchemes,
+						   variables[PointULVar],
+						   variables[PointDLVar],
+						   variables[Dist2Var]);
+   constraints[ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstULDL]->VarChoices(Scheme2, 1, 0, 0);
+   constraints[ConstULDL]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstULDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstULDL]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstDRUR] = new DistanceConstraint("Const32",
+						   NumSchemes,
+						   variables[PointDRVar],
+						   variables[PointURVar],
+						   variables[Dist2Var]);
+   constraints[ConstDRUR]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstDRUR]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstDRUR]->VarChoices(Scheme4, 1, 0, 0);
+   constraints[ConstDRUR]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstDRDL] = new DistanceConstraint("Const34",
+						   NumSchemes,
+						   variables[PointDRVar],
+						   variables[PointDLVar],
+						   variables[Dist1Var]);
+   constraints[ConstDRDL]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstDRDL]->VarChoices(Scheme2, 1, 0, 0);
+   constraints[ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstDRDL]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[ViewW_PointMatl] = PointWidgetMaterial;
-   materials[ViewW_EdgeMatl] = EdgeWidgetMaterial;
-   materials[ViewW_SpecialMatl] = SpecialWidgetMaterial;
-   materials[ViewW_HighMatl] = HighlightWidgetMaterial;
+   materials[PointMatl] = PointWidgetMaterial;
+   materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[SpecialMatl] = SpecialWidgetMaterial;
+   materials[HighMatl] = HighlightWidgetMaterial;
 
    GeomGroup* eyes = new GeomGroup;
-   geometries[ViewW_GeomEye] = new GeomSphere;
-   picks[ViewW_PickEye] = new GeomPick(geometries[ViewW_GeomEye], module);
-   picks[ViewW_PickEye]->set_highlight(materials[ViewW_HighMatl]);
-   picks[ViewW_PickEye]->set_cbdata((void*)ViewW_PickEye);
-   eyes->add(picks[ViewW_PickEye]);
+   geometries[GeomEye] = new GeomSphere;
+   picks[PickEye] = new GeomPick(geometries[GeomEye], module);
+   picks[PickEye]->set_highlight(materials[HighMatl]);
+   picks[PickEye]->set_cbdata((void*)PickEye);
+   eyes->add(picks[PickEye]);
 
-   geometries[ViewW_GeomForeEye] = new GeomSphere;
-   picks[ViewW_PickForeEye] = new GeomPick(geometries[ViewW_GeomForeEye], module);
-   picks[ViewW_PickForeEye]->set_highlight(materials[ViewW_HighMatl]);
-   picks[ViewW_PickForeEye]->set_cbdata((void*)ViewW_PickForeEye);
-   eyes->add(picks[ViewW_PickForeEye]);
+   geometries[GeomForeEye] = new GeomSphere;
+   picks[PickForeEye] = new GeomPick(geometries[GeomForeEye], module);
+   picks[PickForeEye]->set_highlight(materials[HighMatl]);
+   picks[PickForeEye]->set_cbdata((void*)PickForeEye);
+   eyes->add(picks[PickForeEye]);
 
-   geometries[ViewW_GeomBackEye] = new GeomSphere;
-   picks[ViewW_PickBackEye] = new GeomPick(geometries[ViewW_GeomBackEye], module);
-   picks[ViewW_PickBackEye]->set_highlight(materials[ViewW_HighMatl]);
-   picks[ViewW_PickBackEye]->set_cbdata((void*)ViewW_PickBackEye);
-   eyes->add(picks[ViewW_PickBackEye]);
-   GeomMaterial* eyesm = new GeomMaterial(eyes, materials[ViewW_SpecialMatl]);
+   geometries[GeomBackEye] = new GeomSphere;
+   picks[PickBackEye] = new GeomPick(geometries[GeomBackEye], module);
+   picks[PickBackEye]->set_highlight(materials[HighMatl]);
+   picks[PickBackEye]->set_cbdata((void*)PickBackEye);
+   eyes->add(picks[PickBackEye]);
+   GeomMaterial* eyesm = new GeomMaterial(eyes, materials[SpecialMatl]);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
-   for (geom = ViewW_GeomPointUL, pick = ViewW_PickSphUL;
-	geom <= ViewW_GeomPointDL; geom++, pick++) {
+   for (geom = GeomPointUL, pick = PickSphUL;
+	geom <= GeomPointDL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module);
-      picks[pick]->set_highlight(materials[ViewW_HighMatl]);
+      picks[pick]->set_highlight(materials[HighMatl]);
       picks[pick]->set_cbdata((void*)pick);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, materials[ViewW_PointMatl]);
+   GeomMaterial* ptsm = new GeomMaterial(pts, materials[PointMatl]);
    
    GeomGroup* resizes = new GeomGroup;
-   geometries[ViewW_GeomResizeU] = new GeomCappedCylinder;
-   picks[ViewW_PickResizeU] = new GeomPick(geometries[ViewW_GeomResizeU], module);
-   picks[ViewW_PickResizeU]->set_highlight(materials[ViewW_HighMatl]);
-   picks[ViewW_PickResizeU]->set_cbdata((void*)ViewW_PickResizeU);
-   resizes->add(picks[ViewW_PickResizeU]);
-   geometries[ViewW_GeomResizeD] = new GeomCappedCylinder;
-   picks[ViewW_PickResizeD] = new GeomPick(geometries[ViewW_GeomResizeD], module);
-   picks[ViewW_PickResizeD]->set_highlight(materials[ViewW_HighMatl]);
-   picks[ViewW_PickResizeD]->set_cbdata((void*)ViewW_PickResizeD);
-   resizes->add(picks[ViewW_PickResizeD]);
-   GeomMaterial* resizem = new GeomMaterial(resizes, materials[ViewW_PointMatl]);
+   geometries[GeomResizeU] = new GeomCappedCylinder;
+   picks[PickResizeU] = new GeomPick(geometries[GeomResizeU], module);
+   picks[PickResizeU]->set_highlight(materials[HighMatl]);
+   picks[PickResizeU]->set_cbdata((void*)PickResizeU);
+   resizes->add(picks[PickResizeU]);
+   geometries[GeomResizeD] = new GeomCappedCylinder;
+   picks[PickResizeD] = new GeomPick(geometries[GeomResizeD], module);
+   picks[PickResizeD]->set_highlight(materials[HighMatl]);
+   picks[PickResizeD]->set_cbdata((void*)PickResizeD);
+   resizes->add(picks[PickResizeD]);
+   GeomMaterial* resizem = new GeomMaterial(resizes, materials[PointMatl]);
    
    GeomGroup* cyls = new GeomGroup;
-   geometries[ViewW_GeomShaft] = new GeomCylinder;
-   cyls->add(geometries[ViewW_GeomShaft]);
-   for (geom = ViewW_GeomCylU; geom <= ViewW_GeomCylL; geom++) {
+   geometries[GeomShaft] = new GeomCylinder;
+   cyls->add(geometries[GeomShaft]);
+   for (geom = GeomCylU; geom <= GeomCylL; geom++) {
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   for (geom = ViewW_GeomCornerUL; geom <= ViewW_GeomCornerDL; geom++) {
+   for (geom = GeomCornerUL; geom <= GeomCornerDL; geom++) {
       geometries[geom] = new GeomSphere;
       cyls->add(geometries[geom]);
    }
-   for (geom = ViewW_GeomEdgeU; geom <= ViewW_GeomEdgeL; geom++) {
+   for (geom = GeomEdgeU; geom <= GeomEdgeL; geom++) {
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   for (geom = ViewW_GeomDiagUL; geom <= ViewW_GeomDiagDL; geom++) {
+   for (geom = GeomDiagUL; geom <= GeomDiagDL; geom++) {
       geometries[geom] = new GeomCylinder;
       cyls->add(geometries[geom]);
    }
-   picks[ViewW_PickCyls] = new GeomPick(cyls, module);
-   picks[ViewW_PickCyls]->set_highlight(materials[ViewW_HighMatl]);
-   picks[ViewW_PickCyls]->set_cbdata((void*)ViewW_PickCyls);
-   GeomMaterial* cylsm = new GeomMaterial(picks[ViewW_PickCyls], materials[ViewW_EdgeMatl]);
+   picks[PickCyls] = new GeomPick(cyls, module);
+   picks[PickCyls]->set_highlight(materials[HighMatl]);
+   picks[PickCyls]->set_cbdata((void*)PickCyls);
+   GeomMaterial* cylsm = new GeomMaterial(picks[PickCyls], materials[EdgeMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(eyesm);
@@ -256,97 +256,97 @@ ViewWidget::~ViewWidget()
 void
 ViewWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[ViewW_GeomEye])->move(variables[ViewW_Eye]->GetPoint(),
-						  1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomForeEye])->move(variables[ViewW_ForeEye]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomBackEye])->move(variables[ViewW_BackEye]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointUL])->move(variables[ViewW_PointUL]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointUR])->move(variables[ViewW_PointUR]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointDR])->move(variables[ViewW_PointDR]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointDL])->move(variables[ViewW_PointDL]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerUL])->move(variables[ViewW_PointUL]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerUR])->move(variables[ViewW_PointUR]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerDR])->move(variables[ViewW_PointDR]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerDL])->move(variables[ViewW_PointDL]->GetPoint(),
-						       0.5*widget_scale);
-   Point p(variables[ViewW_PointUL]->GetPoint() + (variables[ViewW_PointUR]->GetPoint()
-					      - variables[ViewW_PointUL]->GetPoint()) / 2.0);
-   ((GeomCappedCylinder*)geometries[ViewW_GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							      p + (GetAxis2() * 0.6 * widget_scale),
-							      0.75*widget_scale);
-   p = variables[ViewW_PointDR]->GetPoint() + (variables[ViewW_PointDL]->GetPoint()
-					  - variables[ViewW_PointDR]->GetPoint()) / 2.0;
-   ((GeomCappedCylinder*)geometries[ViewW_GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
-							      p + (GetAxis2() * 0.6 * widget_scale),
-							      0.75*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomShaft])->move(variables[ViewW_Eye]->GetPoint(),
-						     variables[ViewW_BackEye]->GetPoint(),
-						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylU])->move(variables[ViewW_PointUL]->GetPoint(),
-						     variables[ViewW_PointUR]->GetPoint(),
-						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylR])->move(variables[ViewW_PointUR]->GetPoint(),
-						     variables[ViewW_PointDR]->GetPoint(),
-						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylD])->move(variables[ViewW_PointDR]->GetPoint(),
-						     variables[ViewW_PointDL]->GetPoint(),
-						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylL])->move(variables[ViewW_PointDL]->GetPoint(),
-						     variables[ViewW_PointUL]->GetPoint(),
-						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomEdgeU])->move(GetUL(),
-						      GetUR(),
-						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomEdgeR])->move(GetUR(),
-						      GetDR(),
-						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomEdgeD])->move(GetDR(),
-						      GetDL(),
-						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomEdgeL])->move(GetDL(),
-						      GetUL(),
-						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomDiagUL])->move(GetUL(),
-						       variables[ViewW_PointUL]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomDiagUR])->move(GetUR(),
-						       variables[ViewW_PointUR]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomDiagDR])->move(GetDR(),
-						       variables[ViewW_PointDR]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomDiagDL])->move(GetDL(),
-						       variables[ViewW_PointDL]->GetPoint(),
-						       0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomEye])->move(variables[EyeVar]->point(),
+					    1*widget_scale);
+   ((GeomSphere*)geometries[GeomForeEye])->move(variables[ForeEyeVar]->point(),
+						1*widget_scale);
+   ((GeomSphere*)geometries[GeomBackEye])->move(variables[BackEyeVar]->point(),
+						1*widget_scale);
+   ((GeomSphere*)geometries[GeomPointUL])->move(variables[PointULVar]->point(),
+						   1*widget_scale);
+   ((GeomSphere*)geometries[GeomPointUR])->move(variables[PointURVar]->point(),
+						   1*widget_scale);
+   ((GeomSphere*)geometries[GeomPointDR])->move(variables[PointDRVar]->point(),
+						   1*widget_scale);
+   ((GeomSphere*)geometries[GeomPointDL])->move(variables[PointDLVar]->point(),
+						   1*widget_scale);
+   ((GeomSphere*)geometries[GeomCornerUL])->move(variables[PointULVar]->point(),
+						 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomCornerUR])->move(variables[PointURVar]->point(),
+						 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomCornerDR])->move(variables[PointDRVar]->point(),
+						 0.5*widget_scale);
+   ((GeomSphere*)geometries[GeomCornerDL])->move(variables[PointDLVar]->point(),
+						 0.5*widget_scale);
+   Point p(variables[PointULVar]->point() + (variables[PointURVar]->point()
+						- variables[PointULVar]->point()) / 2.0);
+   ((GeomCappedCylinder*)geometries[GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
+							p + (GetAxis2() * 0.6 * widget_scale),
+							0.75*widget_scale);
+   p = variables[PointDRVar]->point() + (variables[PointDLVar]->point()
+					    - variables[PointDRVar]->point()) / 2.0;
+   ((GeomCappedCylinder*)geometries[GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
+							p + (GetAxis2() * 0.6 * widget_scale),
+							0.75*widget_scale);
+   ((GeomCylinder*)geometries[GeomShaft])->move(variables[EyeVar]->point(),
+						variables[BackEyeVar]->point(),
+						0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomCylU])->move(variables[PointULVar]->point(),
+					       variables[PointURVar]->point(),
+					       0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomCylR])->move(variables[PointURVar]->point(),
+					       variables[PointDRVar]->point(),
+					       0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomCylD])->move(variables[PointDRVar]->point(),
+					       variables[PointDLVar]->point(),
+					       0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomCylL])->move(variables[PointDLVar]->point(),
+					       variables[PointULVar]->point(),
+					       0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomEdgeU])->move(GetUL(),
+						GetUR(),
+						0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomEdgeR])->move(GetUR(),
+						GetDR(),
+						0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomEdgeD])->move(GetDR(),
+						GetDL(),
+						0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomEdgeL])->move(GetDL(),
+						GetUL(),
+						0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomDiagUL])->move(GetUL(),
+						 variables[PointULVar]->point(),
+						 0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomDiagUR])->move(GetUR(),
+						 variables[PointURVar]->point(),
+						 0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomDiagDR])->move(GetDR(),
+						 variables[PointDRVar]->point(),
+						 0.5*widget_scale);
+   ((GeomCylinder*)geometries[GeomDiagDL])->move(GetDL(),
+						 variables[PointDLVar]->point(),
+						 0.5*widget_scale);
 
-   ((DistanceConstraint*)constraints[ViewW_ConstULUR])->SetMinimum(3.2*widget_scale);
-   ((DistanceConstraint*)constraints[ViewW_ConstDRDL])->SetMinimum(3.2*widget_scale);
-   ((DistanceConstraint*)constraints[ViewW_ConstULDL])->SetMinimum(3.2*widget_scale);
-   ((DistanceConstraint*)constraints[ViewW_ConstDRUR])->SetMinimum(3.2*widget_scale);
-   ((DistanceConstraint*)constraints[ViewW_ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
-   ((DistanceConstraint*)constraints[ViewW_ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
+   ((DistanceConstraint*)constraints[ConstULUR])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[ConstDRDL])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[ConstULDL])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[ConstDRUR])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
+   ((DistanceConstraint*)constraints[ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[ViewW_PointUR]->GetPoint() - variables[ViewW_PointUL]->GetPoint());
-   Vector spvec2(variables[ViewW_PointDL]->GetPoint() - variables[ViewW_PointUL]->GetPoint());
+   Vector spvec1(variables[PointURVar]->point() - variables[PointULVar]->point());
+   Vector spvec2(variables[PointDLVar]->point() - variables[PointULVar]->point());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();
       Vector v = Cross(spvec1, spvec2);
       for (Index geom = 0; geom < NumPcks; geom++) {
-	 if ((geom == ViewW_PickResizeU) || (geom == ViewW_PickResizeD))
+	 if ((geom == PickResizeU) || (geom == PickResizeD))
 	    picks[geom]->set_principal(spvec2);
-	 else if ((geom == ViewW_PickEye) || (geom == ViewW_PickForeEye) || (geom == ViewW_PickBackEye))
+	 else if ((geom == PickEye) || (geom == PickForeEye) || (geom == PickBackEye))
 	    picks[geom]->set_principal(v);
 	 else
 	    picks[geom]->set_principal(spvec1, spvec2, v);
@@ -361,77 +361,159 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
    Vector delt(delta);
    Real t;
    
-   ((DistanceConstraint*)constraints[ViewW_ConstULUR])->SetDefault(GetAxis1());
-   ((DistanceConstraint*)constraints[ViewW_ConstDRDL])->SetDefault(GetAxis1());
-   ((DistanceConstraint*)constraints[ViewW_ConstULDL])->SetDefault(GetAxis2());
-   ((DistanceConstraint*)constraints[ViewW_ConstDRUR])->SetDefault(GetAxis2());
+   ((DistanceConstraint*)constraints[ConstULUR])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[ConstDRDL])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[ConstULDL])->SetDefault(GetAxis2());
+   ((DistanceConstraint*)constraints[ConstDRUR])->SetDefault(GetAxis2());
 
-   for (Index v=0; v<NumVars; v++)
-      variables[v]->Reset();
-   
    switch((int)cbdata){
-   case ViewW_PickEye:
-      variables[ViewW_Eye]->SetDelta(delta);
+   case PickEye:
+      variables[EyeVar]->SetDelta(delta);
       break;
-   case ViewW_PickForeEye:
-      variables[ViewW_PointUL]->MoveDelta(delta);
-      variables[ViewW_PointUR]->MoveDelta(delta);
-      variables[ViewW_PointDR]->MoveDelta(delta);
-      variables[ViewW_PointDL]->MoveDelta(delta);
-      variables[ViewW_BackEye]->SetDelta(delta);
+   case PickForeEye:
+      variables[PointULVar]->MoveDelta(delta);
+      variables[PointURVar]->MoveDelta(delta);
+      variables[PointDRVar]->MoveDelta(delta);
+      variables[PointDLVar]->MoveDelta(delta);
+      variables[BackEyeVar]->SetDelta(delta);
       break;
-   case ViewW_PickBackEye:
-      variables[ViewW_BackEye]->SetDelta(delta);
+   case PickBackEye:
+      variables[BackEyeVar]->SetDelta(delta);
       break;
-   case ViewW_PickSphUL:
-      variables[ViewW_PointUL]->SetDelta(delta);
+   case PickSphUL:
+      variables[PointULVar]->SetDelta(delta);
       break;
-   case ViewW_PickSphUR:
-      variables[ViewW_PointUR]->SetDelta(delta);
+   case PickSphUR:
+      variables[PointURVar]->SetDelta(delta);
       break;
-   case ViewW_PickSphDR:
-      variables[ViewW_PointDR]->SetDelta(delta);
+   case PickSphDR:
+      variables[PointDRVar]->SetDelta(delta);
       break;
-   case ViewW_PickSphDL:
-      variables[ViewW_PointDL]->SetDelta(delta);
+   case PickSphDL:
+      variables[PointDLVar]->SetDelta(delta);
       break;
-   case ViewW_PickResizeU:
-      if (((variables[ViewW_PointUL]->GetPoint()+delta)-variables[ViewW_PointDL]->GetPoint()).length()
+   case PickResizeU:
+      if (((variables[PointULVar]->point()+delta)-variables[PointDLVar]->point()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[ViewW_PointDL]->GetPoint() + delta.normal()*3.2*widget_scale)
-		 - variables[ViewW_PointUL]->GetPoint());
+	 delt = ((variables[PointDLVar]->point() + delta.normal()*3.2*widget_scale)
+		 - variables[PointULVar]->point());
       }
       t = delt.length();
       if (Dot(delt, GetAxis2()) < 0.0)
 	 t = -t;
-/*      variables[ViewW_PointDL]->MoveDelta(GetAxis1()*t/2.0);
-      variables[ViewW_PointDR]->MoveDelta(-GetAxis1()*t/2.0);
-      variables[ViewW_PointUL]->MoveDelta(delt+GetAxis1()*t/2.0);*/
-      variables[ViewW_PointUR]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
+/*      variables[PointDLVar]->MoveDelta(GetAxis1()*t/2.0);
+	variables[PointDRVar]->MoveDelta(-GetAxis1()*t/2.0);
+	variables[PointULVar]->MoveDelta(delt+GetAxis1()*t/2.0);*/
+      variables[PointURVar]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
-   case ViewW_PickResizeD:
-      if (((variables[ViewW_PointDR]->GetPoint()+delta)-variables[ViewW_PointUR]->GetPoint()).length()
+   case PickResizeD:
+      if (((variables[PointDRVar]->point()+delta)-variables[PointURVar]->point()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[ViewW_PointUR]->GetPoint() + delta.normal()*3.2*widget_scale)
-		 - variables[ViewW_PointDR]->GetPoint());
+	 delt = ((variables[PointURVar]->point() + delta.normal()*3.2*widget_scale)
+		 - variables[PointDRVar]->point());
       }
       t = delt.length();
       if (Dot(delt, GetAxis2()) < 0.0)
 	 t = -t;
-/*      variables[ViewW_PointUL]->MoveDelta(GetAxis1()*t/2.0);
-      variables[ViewW_PointUR]->MoveDelta(-GetAxis1()*t/2.0);
-      variables[ViewW_PointDR]->MoveDelta(delt+GetAxis1()*t/2.0);*/
-      variables[ViewW_PointDL]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
+/*      variables[PointULVar]->MoveDelta(GetAxis1()*t/2.0);
+	variables[PointURVar]->MoveDelta(-GetAxis1()*t/2.0);
+	variables[PointDRVar]->MoveDelta(delt+GetAxis1()*t/2.0);*/
+      variables[PointDLVar]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
-   case ViewW_PickCyls:
-      variables[ViewW_PointUL]->MoveDelta(delta);
-      variables[ViewW_PointUR]->MoveDelta(delta);
-      variables[ViewW_PointDR]->MoveDelta(delta);
-      variables[ViewW_PointDL]->MoveDelta(delta);
-      variables[ViewW_Eye]->MoveDelta(delta);
-      variables[ViewW_ForeEye]->MoveDelta(delta);
-      variables[ViewW_BackEye]->MoveDelta(delta);
+   case PickCyls:
+      MoveDelta(delta);
       break;
    }
 }
+
+
+void
+ViewWidget::MoveDelta( const Vector& delta )
+{
+   variables[PointULVar]->MoveDelta(delta);
+   variables[PointURVar]->MoveDelta(delta);
+   variables[PointDRVar]->MoveDelta(delta);
+   variables[PointDLVar]->MoveDelta(delta);
+   variables[EyeVar]->MoveDelta(delta);
+   variables[ForeEyeVar]->MoveDelta(delta);
+   variables[BackEyeVar]->MoveDelta(delta);
+}
+
+
+Point
+ViewWidget::ReferencePoint() const
+{
+   return variables[EyeVar]->point();
+}
+
+
+Vector
+ViewWidget::GetAxis1()
+{
+   Vector axis(variables[PointURVar]->point() - variables[PointULVar]->point());
+   if (axis.length2() <= 1e-6)
+      return oldaxis1;
+   else
+      return (oldaxis1 = axis.normal());
+}
+
+
+Vector
+ViewWidget::GetAxis2()
+{
+   Vector axis(variables[PointDLVar]->point() - variables[PointULVar]->point());
+   if (axis.length2() <= 1e-6)
+      return oldaxis2;
+   else
+      return (oldaxis2 = axis.normal());
+}
+
+
+Point
+ViewWidget::GetUL()
+{
+   Vector v(variables[PointULVar]->point() - variables[EyeVar]->point());
+   if (v.length2() <= 1e-6)
+      return variables[PointULVar]->point(); // ?!
+   else
+      return (variables[EyeVar]->point()
+	      + v * (variables[BackVar]->real() / variables[ForeVar]->real()));
+}
+
+
+Point
+ViewWidget::GetUR()
+{
+   Vector v(variables[PointURVar]->point() - variables[EyeVar]->point());
+   if (v.length2() <= 1e-6)
+      return variables[PointURVar]->point(); // ?!
+   else
+      return (variables[EyeVar]->point()
+	      + v * (variables[BackVar]->real() / variables[ForeVar]->real()));
+}
+
+
+Point
+ViewWidget::GetDR()
+{
+   Vector v(variables[PointDRVar]->point() - variables[EyeVar]->point());
+   if (v.length2() <= 1e-6)
+      return variables[PointDRVar]->point(); // ?!
+   else
+      return (variables[EyeVar]->point()
+	      + v * (variables[BackVar]->real() / variables[ForeVar]->real()));
+}
+
+
+Point
+ViewWidget::GetDL()
+{
+   Vector v(variables[PointDLVar]->point() - variables[EyeVar]->point());
+   if (v.length2() <= 1e-6)
+      return variables[PointDLVar]->point(); // ?!
+   else
+      return (variables[EyeVar]->point()
+	      + v * (variables[BackVar]->real() / variables[ForeVar]->real()));
+}
+
 

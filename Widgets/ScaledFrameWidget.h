@@ -18,15 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { SFrameW_PointUL, SFrameW_PointUR, SFrameW_PointDR, SFrameW_PointDL,
-       SFrameW_Dist1, SFrameW_Dist2, SFrameW_Hypo,
-       SFrameW_Slider1, SFrameW_SDist1, SFrameW_Ratio1,
-       SFrameW_Slider2, SFrameW_SDist2, SFrameW_Ratio2 };
-// Material indexs
-enum { SFrameW_PointMatl, SFrameW_EdgeMatl, SFrameW_SliderMatl, SFrameW_HighMatl };
-
-
 class ScaledFrameWidget : public BaseWidget {
 public:
    ScaledFrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -35,6 +26,9 @@ public:
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
+
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
 
    void SetPosition( const Point& UL, const Point& UR, const Point& DL );
    void GetPosition( Point& UL, Point& UR, Point& DL );
@@ -55,6 +49,13 @@ public:
    Vector GetAxis1();
    Vector GetAxis2();
 
+   // Variable indexs
+   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
+	  Dist1Var, Dist2Var, HypoVar,
+	  Slider1Var, SDist1Var, Ratio1Var,
+	  Slider2Var, SDist2Var, Ratio2Var };
+   // Material indexs
+   enum { PointMatl, EdgeMatl, SliderMatl, HighMatl };
 private:
    Vector oldaxis1, oldaxis2;
 };

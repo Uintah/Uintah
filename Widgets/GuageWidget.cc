@@ -26,11 +26,11 @@ const Index NumMatls = 4;
 const Index NumSchemes = 3;
 const Index NumPcks = 6;
 
-enum { GuageW_ConstLine, GuageW_ConstDist, GuageW_ConstSDist, GuageW_ConstRatio };
-enum { GuageW_GeomPointL, GuageW_GeomPointR, GuageW_GeomShaft, GuageW_GeomSlider,
-       GuageW_GeomResizeL, GuageW_GeomResizeR };
-enum { GuageW_PickSphL, GuageW_PickSphR, GuageW_PickCyl, GuageW_PickSlider,
-       GuageW_PickResizeL, GuageW_PickResizeR };
+enum { ConstLine, ConstDist, ConstSDist, ConstRatio };
+enum { GeomPointL, GeomPointR, GeomShaft, GeomSlider,
+       GeomResizeL, GeomResizeR };
+enum { PickSphL, PickSphR, PickCyl, PickSlider,
+       PickResizeL, PickResizeR };
 
 GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
@@ -38,87 +38,87 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
 {
    Real INIT = 1.0*widget_scale;
    // Scheme3 is for resizing.
-   variables[GuageW_PointL] = new PointVariable("PntL", Scheme1, Point(0, 0, 0));
-   variables[GuageW_PointR] = new PointVariable("PntR", Scheme1, Point(INIT, 0, 0));
-   variables[GuageW_Slider] = new PointVariable("Slider", Scheme2, Point(INIT/2.0, 0, 0));
-   variables[GuageW_Dist] = new RealVariable("Dist", Scheme1, INIT);
-   variables[GuageW_SDist] = new RealVariable("SDist", Scheme2, INIT/2.0);
-   variables[GuageW_Ratio] = new RealVariable("Ratio", Scheme1, 0.5);
+   variables[PointLVar] = new PointVariable("PntL", solve, Scheme1, Point(0, 0, 0));
+   variables[PointRVar] = new PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+   variables[SliderVar] = new PointVariable("Slider", solve, Scheme2, Point(INIT/2.0, 0, 0));
+   variables[DistVar] = new RealVariable("Dist", solve, Scheme1, INIT);
+   variables[SDistVar] = new RealVariable("SDistVar", solve, Scheme2, INIT/2.0);
+   variables[RatioVar] = new RealVariable("Ratio", solve, Scheme1, 0.5);
    
-   constraints[GuageW_ConstLine] = new SegmentConstraint("ConstLine",
-							 NumSchemes,
-							 variables[GuageW_PointL],
-							 variables[GuageW_PointR],
-							 variables[GuageW_Slider]);
-   constraints[GuageW_ConstLine]->VarChoices(Scheme1, 2, 2, 2);
-   constraints[GuageW_ConstLine]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[GuageW_ConstLine]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[GuageW_ConstLine]->Priorities(P_Default, P_Default, P_Highest);
-   constraints[GuageW_ConstDist] = new DistanceConstraint("ConstDist",
-							  NumSchemes,
-							  variables[GuageW_PointL],
-							  variables[GuageW_PointR],
-							  variables[GuageW_Dist]);
-   constraints[GuageW_ConstDist]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[GuageW_ConstDist]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[GuageW_ConstDist]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[GuageW_ConstDist]->Priorities(P_Highest, P_Highest, P_Default);
-   constraints[GuageW_ConstSDist] = new DistanceConstraint("ConstSDist",
-							   NumSchemes,
-							   variables[GuageW_PointL],
-							   variables[GuageW_Slider],
-							   variables[GuageW_SDist]);
-   constraints[GuageW_ConstSDist]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[GuageW_ConstSDist]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[GuageW_ConstSDist]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[GuageW_ConstSDist]->Priorities(P_Lowest, P_Default, P_Default);
-   constraints[GuageW_ConstRatio] = new RatioConstraint("ConstRatio",
-							NumSchemes,
-							variables[GuageW_SDist],
-							variables[GuageW_Dist],
-							variables[GuageW_Ratio]);
-   constraints[GuageW_ConstRatio]->VarChoices(Scheme1, 0, 0, 0);
-   constraints[GuageW_ConstRatio]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[GuageW_ConstRatio]->VarChoices(Scheme3, 0, 0, 0);
-   constraints[GuageW_ConstRatio]->Priorities(P_Highest, P_Highest, P_Highest);
+   constraints[ConstLine] = new SegmentConstraint("ConstLine",
+						  NumSchemes,
+						  variables[PointLVar],
+						  variables[PointRVar],
+						  variables[SliderVar]);
+   constraints[ConstLine]->VarChoices(Scheme1, 2, 2, 2);
+   constraints[ConstLine]->VarChoices(Scheme2, 2, 2, 2);
+   constraints[ConstLine]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstLine]->Priorities(P_Default, P_Default, P_Highest);
+   constraints[ConstDist] = new DistanceConstraint("ConstDist",
+						   NumSchemes,
+						   variables[PointLVar],
+						   variables[PointRVar],
+						   variables[DistVar]);
+   constraints[ConstDist]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[ConstDist]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[ConstDist]->VarChoices(Scheme3, 2, 2, 2);
+   constraints[ConstDist]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[ConstSDist] = new DistanceConstraint("ConstSDist",
+						       NumSchemes,
+						       variables[PointLVar],
+						       variables[SliderVar],
+						       variables[SDistVar]);
+   constraints[ConstSDist]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstSDist]->VarChoices(Scheme2, 2, 2, 2);
+   constraints[ConstSDist]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[ConstSDist]->Priorities(P_Lowest, P_Default, P_Default);
+   constraints[ConstRatio] = new RatioConstraint("ConstRatio",
+						 NumSchemes,
+						 variables[SDistVar],
+						 variables[DistVar],
+						 variables[RatioVar]);
+   constraints[ConstRatio]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[ConstRatio]->VarChoices(Scheme2, 2, 2, 2);
+   constraints[ConstRatio]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[ConstRatio]->Priorities(P_Highest, P_Highest, P_Highest);
 
-   materials[GuageW_PointMatl] = PointWidgetMaterial;
-   materials[GuageW_EdgeMatl] = EdgeWidgetMaterial;
-   materials[GuageW_SliderMatl] = SliderWidgetMaterial;
-   materials[GuageW_HighMatl] = HighlightWidgetMaterial;
+   materials[PointMatl] = PointWidgetMaterial;
+   materials[EdgeMatl] = EdgeWidgetMaterial;
+   materials[SliderMatl] = SliderWidgetMaterial;
+   materials[HighMatl] = HighlightWidgetMaterial;
 
-   geometries[GuageW_GeomPointL] = new GeomSphere;
-   picks[GuageW_PickSphL] = new GeomPick(geometries[GuageW_GeomPointL], module);
-   picks[GuageW_PickSphL]->set_highlight(materials[GuageW_HighMatl]);
-   picks[GuageW_PickSphL]->set_cbdata((void*)GuageW_PickSphL);
-   GeomMaterial* sphlm = new GeomMaterial(picks[GuageW_PickSphL], materials[GuageW_PointMatl]);
-   geometries[GuageW_GeomPointR] = new GeomSphere;
-   picks[GuageW_PickSphR] = new GeomPick(geometries[GuageW_GeomPointR], module);
-   picks[GuageW_PickSphR]->set_highlight(materials[GuageW_HighMatl]);
-   picks[GuageW_PickSphR]->set_cbdata((void*)GuageW_PickSphR);
-   GeomMaterial* sphrm = new GeomMaterial(picks[GuageW_PickSphR], materials[GuageW_PointMatl]);
+   geometries[GeomPointL] = new GeomSphere;
+   picks[PickSphL] = new GeomPick(geometries[GeomPointL], module);
+   picks[PickSphL]->set_highlight(materials[HighMatl]);
+   picks[PickSphL]->set_cbdata((void*)PickSphL);
+   GeomMaterial* sphlm = new GeomMaterial(picks[PickSphL], materials[PointMatl]);
+   geometries[GeomPointR] = new GeomSphere;
+   picks[PickSphR] = new GeomPick(geometries[GeomPointR], module);
+   picks[PickSphR]->set_highlight(materials[HighMatl]);
+   picks[PickSphR]->set_cbdata((void*)PickSphR);
+   GeomMaterial* sphrm = new GeomMaterial(picks[PickSphR], materials[PointMatl]);
    GeomGroup* resizes = new GeomGroup;
-   geometries[GuageW_GeomResizeL] = new GeomCappedCylinder;
-   picks[GuageW_PickResizeL] = new GeomPick(geometries[GuageW_GeomResizeL], module);
-   picks[GuageW_PickResizeL]->set_highlight(materials[GuageW_HighMatl]);
-   picks[GuageW_PickResizeL]->set_cbdata((void*)GuageW_PickResizeL);
-   resizes->add(picks[GuageW_PickResizeL]);
-   geometries[GuageW_GeomResizeR] = new GeomCappedCylinder;
-   picks[GuageW_PickResizeR] = new GeomPick(geometries[GuageW_GeomResizeR], module);
-   picks[GuageW_PickResizeR]->set_highlight(materials[GuageW_HighMatl]);
-   picks[GuageW_PickResizeR]->set_cbdata((void*)GuageW_PickResizeR);
-   resizes->add(picks[GuageW_PickResizeR]);
+   geometries[GeomResizeL] = new GeomCappedCylinder;
+   picks[PickResizeL] = new GeomPick(geometries[GeomResizeL], module);
+   picks[PickResizeL]->set_highlight(materials[HighMatl]);
+   picks[PickResizeL]->set_cbdata((void*)PickResizeL);
+   resizes->add(picks[PickResizeL]);
+   geometries[GeomResizeR] = new GeomCappedCylinder;
+   picks[PickResizeR] = new GeomPick(geometries[GeomResizeR], module);
+   picks[PickResizeR]->set_highlight(materials[HighMatl]);
+   picks[PickResizeR]->set_cbdata((void*)PickResizeR);
+   resizes->add(picks[PickResizeR]);
    GeomMaterial* resizesm = new GeomMaterial(resizes, SpecialWidgetMaterial);
-   geometries[GuageW_GeomShaft] = new GeomCylinder;
-   picks[GuageW_PickCyl] = new GeomPick(geometries[GuageW_GeomShaft], module);
-   picks[GuageW_PickCyl]->set_highlight(materials[GuageW_HighMatl]);
-   picks[GuageW_PickCyl]->set_cbdata((void*)GuageW_PickCyl);
-   GeomMaterial* cylm = new GeomMaterial(picks[GuageW_PickCyl], materials[GuageW_EdgeMatl]);
-   geometries[GuageW_GeomSlider] = new GeomCappedCylinder;
-   picks[GuageW_PickSlider] = new GeomPick(geometries[GuageW_GeomSlider], module);
-   picks[GuageW_PickSlider]->set_highlight(materials[GuageW_HighMatl]);
-   picks[GuageW_PickSlider]->set_cbdata((void*)GuageW_PickSlider);
-   GeomMaterial* sliderm = new GeomMaterial(picks[GuageW_PickSlider], materials[GuageW_SliderMatl]);
+   geometries[GeomShaft] = new GeomCylinder;
+   picks[PickCyl] = new GeomPick(geometries[GeomShaft], module);
+   picks[PickCyl]->set_highlight(materials[HighMatl]);
+   picks[PickCyl]->set_cbdata((void*)PickCyl);
+   GeomMaterial* cylm = new GeomMaterial(picks[PickCyl], materials[EdgeMatl]);
+   geometries[GeomSlider] = new GeomCappedCylinder;
+   picks[PickSlider] = new GeomPick(geometries[GeomSlider], module);
+   picks[PickSlider]->set_highlight(materials[HighMatl]);
+   picks[PickSlider]->set_cbdata((void*)PickSlider);
+   GeomMaterial* sliderm = new GeomMaterial(picks[PickSlider], materials[SliderMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(sphlm);
@@ -141,33 +141,33 @@ GuageWidget::~GuageWidget()
 void
 GuageWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GuageW_GeomPointL])->move(variables[GuageW_PointL]->GetPoint(),
-						      1*widget_scale);
-   ((GeomSphere*)geometries[GuageW_GeomPointR])->move(variables[GuageW_PointR]->GetPoint(),
-						      1*widget_scale);
-   ((GeomCylinder*)geometries[GuageW_GeomShaft])->move(variables[GuageW_PointL]->GetPoint(),
-						       variables[GuageW_PointR]->GetPoint(),
-						       0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_GeomResizeL])->move(variables[GuageW_PointL]->GetPoint(),
-							       variables[GuageW_PointL]->GetPoint()
-							       - (GetAxis() * 1.5 * widget_scale),
-							       0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_GeomResizeR])->move(variables[GuageW_PointR]->GetPoint(),
-							       variables[GuageW_PointR]->GetPoint()
-							       + (GetAxis() * 1.5 * widget_scale),
-							       0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_GeomSlider])->move(variables[GuageW_Slider]->GetPoint()
-							      - (GetAxis() * 0.3 * widget_scale),
-							      variables[GuageW_Slider]->GetPoint()
-							      + (GetAxis() * 0.3 * widget_scale),
-							      1.1*widget_scale);
+   ((GeomSphere*)geometries[GeomPointL])->move(variables[PointLVar]->point(),
+						  1*widget_scale);
+   ((GeomSphere*)geometries[GeomPointR])->move(variables[PointRVar]->point(),
+						  1*widget_scale);
+   ((GeomCylinder*)geometries[GeomShaft])->move(variables[PointLVar]->point(),
+						variables[PointRVar]->point(),
+						0.5*widget_scale);
+   ((GeomCappedCylinder*)geometries[GeomResizeL])->move(variables[PointLVar]->point(),
+							variables[PointLVar]->point()
+							- (GetAxis() * 1.5 * widget_scale),
+							0.5*widget_scale);
+   ((GeomCappedCylinder*)geometries[GeomResizeR])->move(variables[PointRVar]->point(),
+							variables[PointRVar]->point()
+							+ (GetAxis() * 1.5 * widget_scale),
+							0.5*widget_scale);
+   ((GeomCappedCylinder*)geometries[GeomSlider])->move(variables[SliderVar]->point()
+						       - (GetAxis() * 0.3 * widget_scale),
+						       variables[SliderVar]->point()
+						       + (GetAxis() * 0.3 * widget_scale),
+						       1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-6);
 
    Vector v(GetAxis()), v1, v2;
    v.find_orthogonal(v1,v2);
    for (Index geom = 0; geom < NumPcks; geom++) {
-      if ((geom == GuageW_PickSlider) || (geom == GuageW_PickResizeL) || (geom == GuageW_PickResizeR))
+      if ((geom == PickSlider) || (geom == PickResizeL) || (geom == PickResizeR))
 	 picks[geom]->set_principal(v);
       else
 	 picks[geom]->set_principal(v, v1, v2);
@@ -179,34 +179,47 @@ void
 GuageWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			 void* cbdata )
 {
-   ((DistanceConstraint*)constraints[GuageW_ConstSDist])->SetDefault(GetAxis());
-   ((DistanceConstraint*)constraints[GuageW_ConstDist])->SetDefault(GetAxis());
+   ((DistanceConstraint*)constraints[ConstSDist])->SetDefault(GetAxis());
+   ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetAxis());
 
-   for (Index v=0; v<NumVars; v++)
-      variables[v]->Reset();
-   
    switch((int)cbdata){
-   case GuageW_PickSphL:
-      variables[GuageW_PointL]->SetDelta(delta);
+   case PickSphL:
+      variables[PointLVar]->SetDelta(delta);
       break;
-   case GuageW_PickSphR:
-      variables[GuageW_PointR]->SetDelta(delta);
+   case PickSphR:
+      variables[PointRVar]->SetDelta(delta);
       break;
-   case GuageW_PickResizeL:
-      variables[GuageW_PointL]->SetDelta(delta, Scheme3);
+   case PickResizeL:
+      variables[PointLVar]->SetDelta(delta, Scheme3);
       break;
-   case GuageW_PickResizeR:
-      variables[GuageW_PointR]->SetDelta(delta, Scheme3);
+   case PickResizeR:
+      variables[PointRVar]->SetDelta(delta, Scheme3);
       break;
-   case GuageW_PickSlider:
-      variables[GuageW_Slider]->SetDelta(delta);
+   case PickSlider:
+      variables[SliderVar]->SetDelta(delta);
       break;
-   case GuageW_PickCyl:
-      variables[GuageW_PointL]->MoveDelta(delta);
-      variables[GuageW_PointR]->MoveDelta(delta);
-      variables[GuageW_Slider]->MoveDelta(delta);
+   case PickCyl:
+      MoveDelta(delta);
       break;
    }
+}
+
+
+void
+GuageWidget::MoveDelta( const Vector& delta )
+{
+   variables[PointLVar]->MoveDelta(delta);
+   variables[PointRVar]->MoveDelta(delta);
+   variables[SliderVar]->MoveDelta(delta);
+}
+
+
+Point
+GuageWidget::ReferencePoint() const
+{
+   return (variables[PointLVar]->point()
+	   + (variables[PointRVar]->point()
+	      -variables[PointLVar]->point())/2.0);
 }
 
 
@@ -214,7 +227,7 @@ void
 GuageWidget::SetRatio( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
-   variables[GuageW_Ratio]->Set(ratio);
+   variables[RatioVar]->Set(ratio);
    
    execute();
 }
@@ -223,15 +236,15 @@ GuageWidget::SetRatio( const Real ratio )
 Real
 GuageWidget::GetRatio() const
 {
-   return (variables[GuageW_Ratio]->GetReal());
+   return (variables[RatioVar]->real());
 }
 
 
 void
 GuageWidget::SetEndpoints( const Point& end1, const Point& end2 )
 {
-   variables[GuageW_PointL]->Move(end1);
-   variables[GuageW_PointR]->Set(end2);
+   variables[PointLVar]->Move(end1);
+   variables[PointRVar]->Set(end2);
    
    execute();
 }
@@ -240,15 +253,15 @@ GuageWidget::SetEndpoints( const Point& end1, const Point& end2 )
 void
 GuageWidget::GetEndpoints( Point& end1, Point& end2 ) const
 {
-   end1 = variables[GuageW_PointL]->GetPoint();
-   end2 = variables[GuageW_PointR]->GetPoint();
+   end1 = variables[PointLVar]->point();
+   end2 = variables[PointRVar]->point();
 }
 
 
 const Vector&
 GuageWidget::GetAxis()
 {
-   Vector axis(variables[GuageW_PointR]->GetPoint() - variables[GuageW_PointL]->GetPoint());
+   Vector axis(variables[PointRVar]->point() - variables[PointLVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis;
    else 

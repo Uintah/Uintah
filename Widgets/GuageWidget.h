@@ -18,12 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { GuageW_PointL, GuageW_PointR, GuageW_Dist, GuageW_Slider, GuageW_SDist, GuageW_Ratio};
-// Material indexs
-enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_SliderMatl, GuageW_HighMatl };
-
-
 class GuageWidget : public BaseWidget {
 public:
    GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -33,6 +27,9 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    void SetRatio( const Real ratio );
    Real GetRatio() const;
 
@@ -41,6 +38,10 @@ public:
 
    const Vector& GetAxis();
 
+   // Variable indexs
+   enum { PointLVar, PointRVar, DistVar, SliderVar, SDistVar, RatioVar};
+   // Material indexs
+   enum { PointMatl, EdgeMatl, SliderMatl, HighMatl };
 private:
    Vector oldaxis;
 };

@@ -18,13 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { FrameW_PointUL, FrameW_PointUR, FrameW_PointDR, FrameW_PointDL,
-       FrameW_Dist1, FrameW_Dist2, FrameW_Hypo };
-// Material indexs
-enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
-
-
 class FrameWidget : public BaseWidget {
 public:
    FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -33,6 +26,9 @@ public:
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
+
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
 
    void SetPosition( const Point& UL, const Point& UR, const Point& DL );
    void GetPosition( Point& UL, Point& UR, Point& DL );
@@ -48,6 +44,11 @@ public:
    Vector GetAxis1();
    Vector GetAxis2();
 
+   // Variable indexs
+   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
+	  Dist1Var, Dist2Var, HypoVar };
+   // Material indexs
+   enum { PointMatl, EdgeMatl, HighMatl };
 private:
    Vector oldaxis1, oldaxis2;
 };

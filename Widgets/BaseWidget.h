@@ -17,6 +17,7 @@
 
 #include <Constraints/manifest.h>
 #include <Constraints/BaseConstraint.h>
+#include <Constraints/ConstraintSolver.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
@@ -38,18 +39,21 @@ public:
    BaseWidget( const BaseWidget& );
    ~BaseWidget();
 
-   inline void SetScale( const Real scale );
-   inline double GetScale() const;
+   void SetScale( const Real scale );
+   double GetScale() const;
 
    inline void SetEpsilon( const Real Epsilon );
 
-   inline GeomSwitch* GetWidget();
-   
-   inline void SetMaterial( const Index mindex, const MaterialHandle m );
-   inline MaterialHandle& GetMaterial( const Index mindex ) const;
+   GeomSwitch* GetWidget();
 
-   inline int GetState();
-   inline void SetState( const int state );
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+   
+   void SetMaterial( const Index mindex, const MaterialHandle m );
+   MaterialHandle& GetMaterial( const Index mindex ) const;
+
+   int GetState();
+   void SetState( const int state );
 
    inline const Point& GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
@@ -66,6 +70,8 @@ public:
    void print( ostream& os=cout ) const;
 
 protected:
+   ConstraintSolver* solve;
+   
    virtual void widget_execute()=0;
    Index NumConstraints;
    Index NumVariables;
@@ -106,63 +112,9 @@ inline ostream& operator<<( ostream& os, BaseWidget& w );
 
 
 inline void
-BaseWidget::SetScale( const double scale )
-{
-   widget_scale = scale;
-}
-
-
-inline double
-BaseWidget::GetScale() const
-{
-   return widget_scale;
-}
-
-
-inline void
 BaseWidget::SetEpsilon( const Real Epsilon )
 {
-   for (Index i=0; i<NumVariables; i++)
-      variables[i]->SetEpsilon(Epsilon);
-}
-
-
-inline GeomSwitch*
-BaseWidget::GetWidget()
-{
-   return widget;
-}
-
-
-inline int
-BaseWidget::GetState()
-{
-   return widget->get_state();
-}
-
-
-inline void
-BaseWidget::SetState( const int state )
-{
-   widget->set_state(state);
-}
-
-
-inline void
-BaseWidget::SetMaterial( const Index mindex, const MaterialHandle m )
-{
-   ASSERT(mindex<NumMaterials);
-
-   materials[mindex] = m;
-}
-
-
-inline MaterialHandle&
-BaseWidget::GetMaterial( const Index mindex ) const
-{
-   ASSERT(mindex<NumMaterials);
-
-   return materials[mindex];
+   solve->SetEpsilon(Epsilon);
 }
 
 
@@ -179,7 +131,7 @@ BaseWidget::GetPointVar( const Index vindex ) const
 {
    ASSERT(vindex<NumVariables);
 
-   return variables[vindex]->GetPoint();
+   return variables[vindex]->point();
 }
 
 
@@ -188,7 +140,7 @@ BaseWidget::GetRealVar( const Index vindex ) const
 {
    ASSERT(vindex<NumVariables);
 
-   return variables[vindex]->GetReal();
+   return variables[vindex]->real();
 }
 
 

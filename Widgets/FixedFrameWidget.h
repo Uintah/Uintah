@@ -18,13 +18,6 @@
 #include <Widgets/BaseWidget.h>
 
 
-// Variable indexs
-enum { FFrameW_PointUL, FFrameW_PointUR, FFrameW_PointDR, FFrameW_PointDL,
-       FFrameW_Dist1, FFrameW_Dist2, FFrameW_Hypo, FFrameW_Ratio };
-// Material indexs
-enum { FFrameW_PointMatl, FFrameW_EdgeMatl, FFrameW_HighMatl };
-
-
 class FixedFrameWidget : public BaseWidget {
 public:
    FixedFrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
@@ -34,9 +27,17 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   virtual void MoveDelta( const Vector& delta );
+   virtual Point ReferencePoint() const;
+
    inline Vector GetAxis1();
    inline Vector GetAxis2();
 
+   // Variable indexs
+   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
+	  Dist1Var, Dist2Var, HypoVar, RatioVar };
+   // Material indexs
+   enum { PointMatl, EdgeMatl, HighMatl };
 private:
    Vector oldaxis1;
    Vector oldaxis2;
@@ -46,7 +47,7 @@ private:
 inline Vector
 FixedFrameWidget::GetAxis1()
 {
-   Vector axis(variables[FFrameW_PointUR]->GetPoint() - variables[FFrameW_PointUL]->GetPoint());
+   Vector axis(variables[PointURVar]->point() - variables[PointULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -57,7 +58,7 @@ FixedFrameWidget::GetAxis1()
 inline Vector
 FixedFrameWidget::GetAxis2()
 {
-   Vector axis(variables[FFrameW_PointDL]->GetPoint() - variables[FFrameW_PointUL]->GetPoint());
+   Vector axis(variables[PointDLVar]->point() - variables[PointULVar]->point());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else
