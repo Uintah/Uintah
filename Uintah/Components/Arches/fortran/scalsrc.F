@@ -1,7 +1,7 @@
 c
 c $Id$
 c
-      subroutine scalsrc(domLo, domHi, idxLo, idxHi, 
+      subroutine scalsrc(domLo, domHi, domLong, domHing, idxLo, idxHi, 
      $     sp, su, 
      &     old_den, old_scal, 
      &     sew, sns, stb, 
@@ -13,15 +13,18 @@ c
 *     passed variables
 
       integer domLo(3), domHi(3)
+      integer domLong(3), domHing(3)
       integer idxLo(3), idxHi(3)
-      double precision su(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision sp(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision old_den(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision old_scal(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
+      double precision su(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision sp(domLong(1):domHing(1), domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision old_den(domLong(1):domHing(1), 
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
+      double precision old_scal(domLong(1):domHing(1), 
+     $     domLong(2):domHing(2),
+     $     domLong(3):domHing(3))
       double precision sew(domLo(1):domHi(1))
       double precision sns(domLo(2):domHi(2))
       double precision stb(domLo(3):domHi(3))
@@ -44,8 +47,8 @@ c
       KEND = idxHi(3)
 c-----------------------------------------------------------------------
 
-      CALL ARRASS(SU,ZERO,domLo, domHi, idxLo, idxHi)
-      CALL ARRASS(SP,ZERO,domLo, domHi, idxLo, idxHi)
+      CALL ARRASS(SU,ZERO,domLong, domHing, idxLo, idxHi)
+      CALL ARRASS(SP,ZERO,domLong, domHing, idxLo, idxHi)
 
       do 120 k = KST, KEND
          do 110 j = JST, JEND
@@ -64,6 +67,9 @@ c-----------------------------------------------------------------------
       end
 c
 c $Log$
+c Revision 1.3  2000/10/10 19:31:03  rawat
+c added scalarsolver
+c
 c Revision 1.2  2000/08/19 16:36:40  rawat
 c fixed some bugs in scalarcoef calculations
 c

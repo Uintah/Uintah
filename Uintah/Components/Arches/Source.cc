@@ -487,8 +487,11 @@ Source::calculateScalarSource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector domLo = vars->old_scalar.getFortLowIndex();
-  IntVector domHi = vars->old_scalar.getFortHighIndex();
+  int numGhost = 1;
+  IntVector domLo = patch->getGhostCellLowIndex(numGhost);
+  IntVector domHi = patch->getGhostCellHighIndex(numGhost);
+  IntVector domLong = vars->old_scalar.getFortLowIndex();
+  IntVector domHing = vars->old_scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -497,6 +500,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   FORT_SCALARSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		    domLong.get_pointer(), domHing.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    vars->scalarLinearSrc.getPointer(),
 		    vars->scalarNonlinearSrc.getPointer(),
@@ -769,8 +773,6 @@ Source::addPressureSource(const ProcessorGroup* ,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector domLong = vars->old_density.getFortLowIndex();
   IntVector domHing = vars->old_density.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
 
   int ioff, joff, koff;
   switch(index) {
@@ -865,6 +867,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.46  2000/10/10 19:30:57  rawat
+//added scalarsolver
+//
 //Revision 1.45  2000/10/09 17:06:25  rawat
 //modified momentum solver for multi-patch
 //

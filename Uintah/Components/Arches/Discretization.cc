@@ -983,6 +983,8 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   // Get the domain size and the patch indices
   IntVector domLo = coeff_vars->density.getFortLowIndex();
   IntVector domHi = coeff_vars->density.getFortHighIndex();
+  IntVector domLong = coeff_vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHing = coeff_vars->scalarNonlinearSrc.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLoU = coeff_vars->uVelocity.getFortLowIndex();
@@ -1052,6 +1054,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 #endif
 
   FORT_SCALARCOEFF(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   coeff_vars->density.getPointer(),
 		   coeff_vars->viscosity.getPointer(), 
@@ -1530,6 +1533,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.49  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
 // Revision 1.48  2000/10/08 18:56:35  rawat
 // fixed the solver for multi
 //

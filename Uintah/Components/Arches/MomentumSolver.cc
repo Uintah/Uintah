@@ -14,6 +14,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
@@ -336,6 +337,10 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
   CellInformation* cellinfo = cellInfoP;
+  sum_vartype den_ref_var;
+  old_dw->get(den_ref_var, d_lab->d_refDensity_label);
+  velocityVars.den_Ref = den_ref_var;
+  cerr << "getdensity_ref in momentum" << velocityVars.den_Ref << endl;
   old_dw->get(velocityVars.old_density, d_lab->d_densityCPLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   old_dw->get(velocityVars.cellType, d_lab->d_cellTypeLabel, 
@@ -345,11 +350,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   switch (index) {
   case Arches::XDIR:
     new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     old_dw->get(velocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     cerr << "in moment solve just before allocate" << index << endl;
@@ -371,11 +376,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   case Arches::YDIR:
     // getting new value of u velocity
     new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     old_dw->get(velocityVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     cerr << "in moment solve just before allocate" << index << endl;
@@ -396,11 +401,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   case Arches::ZDIR:
     // getting new value of u velocity
     new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     old_dw->get(velocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     //    new_dw->allocate(velocityVars.variableCalledDW, d_lab->d_DWMBLMLabel,
@@ -471,6 +476,55 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   d_source->addPressureSource(pc, patch, old_dw, new_dw, delta_t, index,
 			      cellinfo, &velocityVars);
+  if (index == 1) {
+    cerr << "After vel voef for u" << endl;
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAE"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AE][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAW"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AW][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAN"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AN][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAS"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AS][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAT"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AT][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAB"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AB][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uAP"<<*iter << ": " << velocityVars.uVelocityCoeff[Arches::AP][*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uSU"<<*iter << ": " << velocityVars.uVelNonlinearSrc[*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "uSP"<<*iter << ": " << velocityVars.uVelLinearSrc[*iter] << "\n" ; 
+    }
+  }
+
   cerr << "in moment solve just before build matrix" << index << endl;
     // put required vars
   switch (index) {
@@ -661,6 +715,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.33  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
 // Revision 1.32  2000/10/09 18:47:17  sparker
 // Fixed variable allocation
 //
