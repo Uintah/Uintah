@@ -208,12 +208,12 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 	    		set initdir $env(PSE_DATA)
 		}
 	
-	
+
 		makeOpenFilebox \
 			-parent $w \
 			-filevar $this-filename-set \
 			-command "wm withdraw $w;  $this OpenNewMatfile" \
-			-commandname "Open" \			
+			-commandname "Open" \
 			-cancel "wm withdraw $w" \
 			-title "SELECT MATLAB FILE" \
 			-filetypes {{ "Matlab files" "*.mat" } { "All files"  "*" } }\
@@ -238,6 +238,7 @@ itcl_class MatlabInterface_DataIO_MatlabNrrdsReader {
 #		pack $childframe.bframe -side top -fill x 
 #		pack $childframe.bframe.cancel -side left -anchor w -padx 5p -pady 5p
 #		pack $childframe.bframe.open -side right -anchor e -padx 5p -pady 5p
+
 		
 		wm deiconify $w	
 	}
