@@ -10,7 +10,6 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/ShellMPM.cc \
 	$(SRCDIR)/MPMLabel.cc \
-	$(SRCDIR)/Solver.cc 	\
 	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/MPMBoundCond.cc

@@ -32,7 +32,6 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Util/DebugStream.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
@@ -145,12 +144,18 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if (!mpm_ps->get("solver",solver))
      solver = "simple";
 
-   d_solver = vector<Solver*>(numMatls);
+#ifdef HAVE_PETSC
+   d_solver = vector<MPMPetscSolver*>(numMatls);
+#else
+   d_solver = vector<SimpleSolver*>(numMatls);
+#endif
+
    for(int m=0;m<numMatls;m++){
-     if (solver == "petsc")
-       d_solver[m] = scinew MPMPetscSolver();
-     else if (solver == "simple")
-       d_solver[m] = scinew SimpleSolver();
+#ifdef HAVE_PETSC
+     d_solver[m] = scinew MPMPetscSolver();
+#else
+     d_solver[m] = scinew SimpleSolver();
+#endif
      d_solver[m]->initialize();
    }
 
@@ -1372,18 +1377,21 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
       parent_old_dw->get(dt,d_sharedState->get_delt_label());
 
+#ifdef HAVE_PETSC
+      PetscScalar v[1];
+#else
+      double v[1];
+#endif
+
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
 	IntVector n = *iter;
-	int dof[3];
+	int dof[1];
 	int l2g_node_num = l2g[n];
-	dof[0] = l2g_node_num;
-	dof[1] = l2g_node_num+1;
-	dof[2] = l2g_node_num+2;
-
-	double v = gmass[*iter]*(4./(dt*dt));
-	d_solver[m]->fillMatrix(dof[0],dof[0],v);
-	d_solver[m]->fillMatrix(dof[1],dof[1],v);
-	d_solver[m]->fillMatrix(dof[2],dof[2],v);
+        v[0] = gmass[*iter]*(4./(dt*dt));
+        for(int ii=0;ii<3;ii++){
+	  dof[0] = l2g_node_num+ii;
+          d_solver[m]->fillMatrix(1,dof,1,dof,v);
+        }
       }
     } 
   }
