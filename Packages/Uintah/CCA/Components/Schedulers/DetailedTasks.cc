@@ -277,7 +277,7 @@ void DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 
 void DetailedTasks::createScrublists(bool init_timestep)
 {
-  const set<const VarLabel*, VarLabel::Compare>& initreqs = taskgraph->getInitialRequires();
+  const set<const VarLabel*, VarLabel::Compare>& initreqs = taskgraph->getInitialRequiredVars();
   ASSERT(localtasks.size() != 0 || tasks.size() == 0);
   // Create scrub lists
   typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare> ScrubMap;
