@@ -70,49 +70,49 @@
 
      <p><b><A name="section-1">ManageFieldData</b><br></A>
 
-     <p>The ManageFieldData module performs two simultaneous operations.  First, the module splits the input field into its mesh part and data values. These data values are then passed through the output matrix port.  Second, the module combines the mesh part with the matrix input, creating a new field output. 
+     <p>The ManageFieldData module performs two simultaneous operations.  First, the module splits the input Field into its mesh part and data values. These data values are then passed through the output matrix port.  Second, the module combines the mesh part with the matrix input, creating a new Field output.</p> 
         
-	There are a few rules for the behavior of the module that
-	increase its versatility and its complexity:
-        <ul>
-        <p><li>If the module has no input matrix then the output field will be
-            the same as the input field.</p>
-        <p><li>If the input field's data are scalar then the output matrix
+<p>There are a few rules for the behavior of the module that
+increase its versatility and its complexity:
+       
+        <p><ul><li>If the module has no input matrix then the output Field will be
+            the same as the input Field.</p>
+        <p><li>If the input Field's data are scalar then the output matrix
             will be a column matrix.</p>
-        <p><li>If the input field's data contains N vectors, then the output
+        <p><li>If the input Field's data contains N vectors, then the output
 	    matrix will be of dimension Nx3.</p>
-        <p><li>If the field contains N tensors the output matrix will be of
+        <p><li>If the Field contains N tensors the output matrix will be of
             dimension Nx9 where the
              tensor is flattened out in left-to-right, top-to-bottom, order.</p>
          <p><li>The number of rows in the input matrix should equal the number
-            of data values in the input field.</p>
-        <p><li> The output field's type is the same as the input field's
-         type.  For instance, if the input field is a vector field, the
-         output field will also be a vector field (and the input matrix
+            of data values in the input Field.</p>
+        <p><li> The output Field's type is the same as the input Field's
+         type.  For instance, if the input Field is a vector Field, the
+         output Field will also be a vector Field (and the input matrix
          must be Nx3 where N is equal to the number of
-         data values in the input field).</p>
+         data values in the input Field).</p>
         </ul>
 
         <p><b><A name="section-2">Combining simulation and
 	visualization</b><br></A> 
 
 	<p>Use the File/Insert option to combine the finite element simulation net from <a
-	href="chapter_5.html#figure-5.2"> Chapter 5, (Figure 5.2),</a>  
+	href="chapter_5.html#figure-5.2"> Chapter 5, Figure 5.2,</a>  
 	with the visualization net from <a
-	href="chapter_4.html#figure-4.1">Chapter 4, (Figure 4.1).</a> 
-	  Add a ManageFieldData module between them, and you
+	href="chapter_4.html#figure-4.1">Chapter 4, Figure 4.1.</a> 
+	   Add a ManageFieldData module between them, and you
 	should have a net that looks like that in <b>Figure 6.1</b>.  Note that all of the modules from the Chapter 4 net that were connected to the left FieldReader module, are now connected to the ManageFieldData module. 
 
       </div>
 	<center>
 	<p><img height="513" width="500" src="images/figures/6_1.gif"><br>
-	<b>Figure 6.1</b></p>
+	<b>Figure 6.1, Chapter 6 network</b></p>
 	</center>
 	<div align="left">
-	<p>
+	</p>
 
 	<p> Executing the network, the image in your
-	ViewWindow should look like <b>Figure 6.2</b>. </p>
+	ViewWindow should look like <b>Figure 6.2</b>.</p>
 
       </div>
 	<center>
@@ -129,7 +129,7 @@
 	<p>In Chapter 7, we will add a feedback module and interactively visualize the results. 
 	<p>	
 	<br>
-	<br><A href="#section-3">Back to Top</A>
+	<br><A href="#section-3">Return to Top</A>
         </div>
 	</td>
 	</tr>

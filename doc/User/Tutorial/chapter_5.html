@@ -133,7 +133,7 @@
 	<p><img height="15" width="14" src="images/A.gif"><img
 	height="16" width="13" src="images/phi.gif"><img height="16"
 	width="20" src="images/equals.gif"><img height="16" width="10"
-	src="images/b.gif">
+	src="images/b.gif">,
         </center>
 
 	<p>to determine the potentials,<img height="16" width="13"
@@ -146,10 +146,8 @@
 
 	<p>To compute the electric and potential fields given a finite
 	element volume conductor mesh and a dipolar current source, we
-	follow these steps:
-	<ol>
-	<p><li value="1.">Load the finite element mesh (tet elements, with a
-	conductivity tensors for each cell).</p>
+	follow these steps:</p>
+	<p><ol><li value="1.">Load the finite element mesh (tet elements, with a conductivity tensors for each cell).</p>
 	<p><li value="2.">Load dipole sources.</p>
 	<p><li>Construct the finite element stiffness matrix based on
 	the conductivity mesh.</p>
@@ -161,9 +159,8 @@
 	src="images/equals.gif"><img height="16" width="10"
 	src="images/b.gif">, to determine the potentials at the nodes.</p>
 	</ol>
-	<p>Each of the above steps corresponds to a SCIRun module.
-	<ul>
-	  <p><li>For steps 1 and 2, we will use 2 SCIRun/DataIO/FieldReader
+	<p>Each of the above steps corresponds to a SCIRun module.</p>
+	  <p><ul><li>For steps 1 and 2, we will use 2 SCIRun/DataIO/FieldReader
 	      modules.</p>  
 	  <p><li>For step 3, we will use a BioPSE/Forward/SetupFEMatrix module.</p>  
 	  <p><li>For step 4, we will use a BioPSE/Forward/ApplyFEMCurrentSource
@@ -207,12 +204,11 @@
 	<b>Figure 5.4 showing ApplyFemCurrentSource module UI</b></p>
 	</center>
 	<div align="left">
-	<p><br>
+	</p>
 
 	<p>The SolveMatrix module solves a linear system using one of
 	several methods as indicated in the UI.</p>   
-	<ol>
-	  <p><li>Beneath the Methods tab, choose Conjugate Gradient & Precond (SCI) method, and set the
+	  <p><ol><li>Beneath the Methods tab, choose Conjugate Gradient & Precond (SCI) method, and set the
 	      Target Error to 0.0001.</p>
 	  <p><li>Set the Maximum Iterations to 200.
 	</ol></p>
@@ -225,13 +221,12 @@
 	<div align="left">
 	<p><br>
 
-	<p>Finally, for this simulation:
-	<ol>
-	  <p><li value="1.">For the FieldReader on the left, load the
+	<p>Finally, for this simulation:</p>
+	  <p><ol><li value="1.">For the FieldReader on the left, load the
 	      mesh Field utahtorso-lowres-mesh.tvt.fld.</p> 
 	  <p><li>For the FieldReader on the right, load the
 	      dipole Field utahtorso-lowres-dipole.pcv.fld.</p>   
-	</oL>
+	</ol>
 	    
 	<p>The mesh field contains the tetrahedral finite element mesh,
 	which forms the geometry of the torso.  The mesh field also contains pointers to the electric conductivity values as assigned to each element.
