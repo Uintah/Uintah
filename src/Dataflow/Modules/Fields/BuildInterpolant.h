@@ -63,7 +63,7 @@ template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 double
 BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p)
 {
-  typename LSRC::iterator itr, eiter;
+  typename LSRC::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
   double mindist = BIA_MAX_DISTANCE;
