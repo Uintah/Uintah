@@ -35,7 +35,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Diagram.tcl \
 	$(SRCDIR)/Hairline.tcl \
 	$(SRCDIR)/OpenGLWindow.tcl\
-	$(SRCDIR)/GuiFilename.tcl\
+//	$(SRCDIR)/GuiFilename.tcl\
+//	$(SRCDIR)/Slider.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Core/GUI
 
