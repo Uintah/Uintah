@@ -60,11 +60,11 @@ namespace Uintah {
      /// Determine the iterator limits.
      void determineIteratorLimits(Patch::FaceType face, const Patch* patch);
 
-     /// Determine the iterator limits.
-     void oldDetermineIteratorLimits(Patch::FaceType face, const Patch* patch);
-
      /// Add boundary condition data
      void addBCData(int mat_id,BCGeomBase* bc);
+
+     /// Combine the duplicate BCGeometryTypes into a single BCGeometryType
+     void combineBCGeometryTypes(int mat_id);
 
      /// Set the cell centered boundary iterators. 
      void setBoundaryIterator(int mat_id,vector<IntVector>& b, int i);

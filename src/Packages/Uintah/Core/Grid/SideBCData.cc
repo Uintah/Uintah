@@ -52,6 +52,7 @@ bool SideBCData::inside(const Point &p) const
 
 void SideBCData::print()
 {
+  cout << "Geometry type = " << typeid(this).name() << endl;
   d_bc.print();
 }
 

@@ -144,6 +144,12 @@ bool BCData::find(const string& bc_type,const string& bc_variable) const
     
 }
 
+void BCData::combine(BCData& from)
+{
+  bcDataType::const_iterator itr;
+  for (itr = from.d_BCData.begin(); itr != from.d_BCData.end(); ++itr) 
+    setBCValues(itr->second);
+}
 
 
 void BCData::print() const

@@ -85,6 +85,7 @@ bool DifferenceBCData::inside(const Point &p) const
 
 void DifferenceBCData::print()
 {
+  cout << "Geometry type = " << typeid(this).name() << endl;
   left->print();
   right->print();
 }
