@@ -19,21 +19,22 @@
 
 #include <Widgets/PointWidget.h>
 #include <Widgets/ArrowWidget.h>
+#include <Widgets/CriticalPointWidget.h>
 #include <Widgets/CrosshairWidget.h>
 #include <Widgets/GuageWidget.h>
 #include <Widgets/RingWidget.h>
-#include <Widgets/FixedFrameWidget.h>
 #include <Widgets/FrameWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
 #include <Widgets/BoxWidget.h>
 #include <Widgets/ScaledBoxWidget.h>
 #include <Widgets/ViewWidget.h>
+#include <Widgets/PathWidget.h>
 
 #include <iostream.h>
 
-const Index NumWidgetTypes = 11;
-enum WidgetTypes { WT_Point, WT_Arrow, WT_Cross, WT_Guage, WT_Ring,
-		   WT_FFrame, WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View };
+enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Guage, WT_Ring,
+		   WT_Frame, WT_SFrame, WT_Box, WT_SBox, WT_View, WT_Path,
+		   NumWidgetTypes };
 
 class WidgetTest : public Module {
    GeometryOPort* ogeom;
@@ -55,6 +56,8 @@ public:
    virtual ~WidgetTest();
    virtual Module* clone(int deep);
    virtual void execute();
+
+   virtual void tcl_command(TCLArgs&, void*);
 };
 
 static Module* make_WidgetTest(const clString& id)
@@ -77,20 +80,19 @@ WidgetTest::WidgetTest(const clString& id)
 
    widgets[WT_Point] = new PointWidget(this, &widget_lock, .1);
    widgets[WT_Arrow] = new ArrowWidget(this, &widget_lock, .1);
+   widgets[WT_Crit] = new CriticalPointWidget(this, &widget_lock, .1);
    widgets[WT_Cross] = new CrosshairWidget(this, &widget_lock, .1);
    widgets[WT_Guage] = new GuageWidget(this, &widget_lock, .1);
    widgets[WT_Ring] = new RingWidget(this, &widget_lock, .1);
-   widgets[WT_FFrame] = new FixedFrameWidget(this, &widget_lock, .1);
    widgets[WT_Frame] = new FrameWidget(this, &widget_lock, .1);
    widgets[WT_SFrame] = new ScaledFrameWidget(this, &widget_lock, .1);
    widgets[WT_Box] = new BoxWidget(this, &widget_lock, .1);
    widgets[WT_SBox] = new ScaledBoxWidget(this, &widget_lock, .1);
    widgets[WT_View] = new ViewWidget(this, &widget_lock, .1);
+   widgets[WT_Path] = new PathWidget(this, &widget_lock, .1);
 
    widget_scale.set(.1);
    init = 1;
-
-   widget_type.set(WT_Frame);
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
@@ -131,16 +133,23 @@ void WidgetTest::execute()
    ogeom->flushViews();
 }
 
+
 void WidgetTest::geom_moved(int axis, double dist, const Vector& delta,
 			    void* cbdata)
 {
-    widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
-    cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
-    cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
-    
-    widgets[widget_type.get()]->execute();
-    ogeom->flushViews();
+   widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
+   cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
+   cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
+   cout << "FOV " << ((ViewWidget*)widgets[WT_View])->GetFOV() << endl;
+   
+   if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
+      ((ArrowWidget*)widgets[WT_Arrow])->SetDirection((Point(0,0,0)-widgets[WT_Arrow]->ReferencePoint()).normal());
+   if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
+      ((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
+   widgets[widget_type.get()]->execute();
+   ogeom->flushViews();
 }
+
 
 void WidgetTest::geom_release(void*)
 {
@@ -148,4 +157,22 @@ void WidgetTest::geom_release(void*)
 	abort_flag=1;
 	want_to_execute();
     }
+}
+
+
+void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
+{
+   if(args.count() < 2){
+      args.error("WidgetTest needs a minor command");
+      return;
+   }
+   if (args[1] == "nextmode") {
+      widgets[widget_type.get()]->NextMode();
+      if(!abort_flag){
+	 abort_flag=1;
+	 want_to_execute();
+      }
+   } else {
+      Module::tcl_command(args, userdata);
+   }
 }

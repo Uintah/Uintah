@@ -9,7 +9,7 @@ itcl_class WidgetTest {
 	global $this-widget_scale
 	set $this-widget_scale 0.01
 	global $this-widget_type
-	set $this-widget_type 5
+	set $this-widget_type 6
     }
     method ui {} {
 	set w .ui$this
@@ -29,11 +29,16 @@ itcl_class WidgetTest {
 	pack $w.f.slide -in $w.f -side top -padx 2 -pady 2 -anchor w
 
 	make_labeled_radio $w.f.wids "Widgets:" $n top $this-widget_type \
-		{ {PointWidget 0} {ArrowWidget 1} \
-		{CrossHairWidget 2} {GuageWidget 3} \
-		{RingWidget 4} {FixedFrameWidget 5} {FrameWidget 6} \
+		{{PointWidget 0} {ArrowWidget 1} \
+		{CriticalPointWidget 2} \
+		{CrossHairWidget 3} {GuageWidget 4} \
+		{RingWidget 5} {FrameWidget 6} \
 		{ScaledFrameWidget 7} {BoxWidget 8} \
-		{ScaledBoxWidget 9} {ViewWidget 10} }
+		{ScaledBoxWidget 9} {ViewWidget 10} \
+		{PathWidget 11}}
 	pack $w.f.wids
+
+	button $w.f.nextmode -text "NextMode" -command "$this-c nextmode"
+	pack $w.f.nextmode -fill x -pady 2
     }
 }
