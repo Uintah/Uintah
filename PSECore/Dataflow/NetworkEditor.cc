@@ -31,6 +31,7 @@
 #include <PSECore/Dataflow/Port.h>
 #include <PSECore/Dataflow/ComponentNode.h>
 #include <PSECore/Dataflow/GenFiles.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/Remote.h>
@@ -70,6 +71,7 @@ namespace Dataflow {
 
 using SCICore::TclInterface::Message;
 using PSECore::Comm::MessageTypes;
+using namespace PSECore::XMLUtil;
 
 // This function was added by Mohamed Dekhil for CSAFE
 void init_notes ()
@@ -682,10 +684,15 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
       }
       component_node* n = CreateComponentNode(1);
       ReadComponentNodeFromFile(n,args[2]());
+      if (n->name==NOT_SET) {
+	args.error(clString("NetworkEditor: XML file did not pass"
+			    " validation: ")+args[2]);
+	return;
+      }
       char string[100]="\0";
       sprintf(string,"%d",(long)n);
-      TCL::execute(clString("GetPathAndPackage ")+string+" "+
-		   n->name+" "+n->category);
+      TCL::execute(clString("GetPathAndPackage {")+string+"} {"+
+		   n->name+"} {"+n->category+"}");
     } else if (args[1] == "create_pac_cat_mod"){
         int check = 1;
         if (args.count()!=7) {
@@ -755,6 +762,9 @@ void postMessage(const clString& errmsg, bool err)
 
 //
 // $Log$
+// Revision 1.20  2000/11/11 04:20:35  moulding
+// try to handle failure of XML validation more gracefully.
+//
 // Revision 1.19  2000/11/02 21:47:20  dmw
 // fixed formatting
 //
