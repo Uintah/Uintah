@@ -84,6 +84,8 @@ set show_plane_z 1
 set show_guidelines 1
 global planes_mapType
 set planes_mapType 0
+global planes_threshold
+set planes_threshold 0
 
 # volume rendering
 global show_vol_ren
@@ -299,6 +301,7 @@ class BioImageApp {
 
 		# rebind 2D windows to call the ViewImage callback and then BioImage's so we
 		# can catch the release
+	        
 		bind  .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
 		bind   .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
 		bind  .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal <ButtonRelease> "$mods(ViewImage)-c release  %W %b %s %X %Y; $this update_ViewImage_button_release %b"
@@ -313,6 +316,10 @@ class BioImageApp {
 		set [set UnuQuantize]-minf $wl
 		set [set UnuJhisto]-maxs "$ww nan"
 		set [set UnuJhisto]-mins "$wl nan"
+
+		global planes_threshold
+		global $mods(ViewImage)-min
+		set planes_threshold [set $mods(ViewImage)-min]
 
                 set 2D_fixed 1
 	    } 
@@ -1246,8 +1253,20 @@ class BioImageApp {
 	    global $m24-operator
 	    set $m24-operator {log}
 
+            global $m26-min $m26-max
+            trace variable $m26-min w "$this update_planes_threshold_slider_min_max"
+            trace variable $m26-max w "$this update_planes_threshold_slider_min_max"
+
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
+	    global $m27-width $m27-height
+	    set $m27-width 441
+	    set $m24-height 40
+	    
+	    # intialize at full alpha
+	    global $m27-nodeList $m27-positionList
+	    set $m27-positionList {{0 0} {441 0}}
+	    set $m27-nodeList {514 1055}
 
 	    global $m30-axis
 	    set $m30-axis 0
@@ -1795,24 +1814,51 @@ class BioImageApp {
 	    set page [$v.tnb add -label "Planes"]
 
 
+            frame $page.planes -relief groove -borderwidth 2
+            pack $page.planes -side top -anchor nw -expand no -fill x
+            
 	    global show_plane_x show_plane_y show_plane_z
-	    checkbutton $page.x -text "Show Sagittal Plane" \
+	    checkbutton $page.planes.x -text "Show Sagittal Plane" \
 		-variable show_plane_x \
 		-command "$this toggle_show_plane_x"
-            Tooltip $page.x "Turn Sagittal plane on/off"
+            Tooltip $page.planes.x "Turn Sagittal plane on/off"
 
-	    checkbutton $page.y -text "Show Coronal Plane" \
+	    checkbutton $page.planes.y -text "Show Coronal Plane" \
 		-variable show_plane_y \
 		-command "$this toggle_show_plane_y"
-            Tooltip $page.y "Turn Coronal plane on/off"
+            Tooltip $page.planes.y "Turn Coronal plane on/off"
 
-	    checkbutton $page.z -text "Show Axial Plane" \
+	    checkbutton $page.planes.z -text "Show Axial Plane" \
 		-variable show_plane_z \
 		-command "$this toggle_show_plane_z"
-            Tooltip $page.z "Turn Axial plane on/off"
+            Tooltip $page.planes.z "Turn Axial plane on/off"
 
-	    pack $page.x $page.y $page.z -side top -anchor nw \
+	    pack $page.planes.x $page.planes.y $page.planes.z -side top -anchor nw \
 		-padx 4 -pady 4
+
+            # Background threshold
+            global planes_threshold
+            frame $page.thresh 
+            pack $page.thresh -side top -anchor nw -expand no -fill x
+
+            label $page.thresh.l -text "Background Threshold:"
+
+            scale $page.thresh.s \
+                -from 0 -to 100 \
+ 	        -orient horizontal -showvalue false \
+ 	        -length 110 \
+	        -variable planes_threshold
+            label $page.thresh.l2 -textvariable planes_threshold
+
+            pack $page.thresh.l $page.thresh.s $page.thresh.l2 -side left -anchor nw \
+                -padx 2 -pady 2
+
+            Tooltip $page.thresh.l "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
+            Tooltip $page.thresh.s "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
+            Tooltip $page.thresh.l2 "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
+
+            bind $page.thresh.s <ButtonRelease> "$this update_planes_threshold"
+
 
 	    checkbutton $page.lines -text "Show Guidelines" \
 		-variable show_guidelines \
@@ -3548,6 +3594,48 @@ class BioImageApp {
 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice2 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
 	} else {
 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	}
+    }
+
+    method update_planes_threshold_slider_min_max {varname varele varop} {
+        global mods
+	global $mods(ViewImage)-min $mods(ViewImage)-max
+	
+	set min [set $mods(ViewImage)-min]
+	set max [set $mods(ViewImage)-max]
+
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
+
+    }
+
+    method update_planes_threshold {} {
+	global mods planes_threshold 
+	global $mods(ViewImage)-min $mods(ViewImage)-max
+
+	set m1 [lindex [lindex $filters(0) $modules] 26]
+        global $m1-nodeList $m1-positionList
+
+        # if threshold is set at borders, only have two control points
+        if {$planes_threshold == [set $mods(ViewImage)-min]} {
+	    set $m1-positionList {{0 0} {441 0}}
+            set $m1-nodeList {514 1055}
+	} elseif {$planes_threshold == [set $mods(ViewImage)-max]} {
+	    set $m1-positionList {{0 40} {441 40}}
+            set $m1-nodeList {514 803}	    
+	} else {	    
+	    # otherwise, use 4 points
+	    set range [expr [set $mods(ViewImage)-max] - [set $mods(ViewImage)-min]]
+            set new_x [expr round ([expr [expr 441.0 / $range] * $planes_threshold])]
+
+            set $m1-positionList {{0 40} {$new_x 40} {$new_x 0} {441 0}}
+            set $m1-positionList [lreplace [set $m1-positionList] 1 1 "[expr $new_x - 5] 40"]
+            set $m1-positionList [lreplace [set $m1-positionList] 2 2 "[expr $new_x + 5] 0"]
+            set $m1-nodeList {514 797 1072 1425}
+       }
+
+        if {$has_executed == 1} {
+	    $m1-c needexecute
 	}
     }
 
