@@ -57,7 +57,8 @@ using namespace SCIRun;
 class ParticleFieldExtractor;
 
 class ParticleFieldExtractor : public Module { 
-
+  class PFEThread;
+  friend class PFEThread;
 public: 
 
   // GROUP: Constructors
