@@ -41,16 +41,18 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/MutexPool.h>
 #include <sstream>
+#include <unistd.h>
 #include <iostream>
 #include <stdlib.h>
 #include <Core/CCA/PIDL/ProxyBase.h>
-
-static bool showRef(){
-  return getenv("SHOWREF")!=NULL;
-}
+#include <Core/CCA/spec/cca_sidl.h>
+#include <mpi.h>
 
 using namespace std;
 using namespace SCIRun;
+
+//#define TRACED_OBJ sci::cca::TypeMap
+//#define TRACED_OBJ_NAME "TypeMap"
 
 int Object::objcnt(0);
 Mutex Object::sm("test mutex");
@@ -58,15 +60,20 @@ Mutex Object::sm("test mutex");
 Object::Object()
     : d_serverContext(0)
 {
+  firstTime=true;
   sm.lock();
   objid=objcnt++;
   ref_cnt=0;
-  if(showRef()){
-    ::std::cout << " ===================================\n";
-    PIDL::getDT()->getAddress().display();
-    ::std::cout << "_addReference (id="<<objid<<"): count is now " << ref_cnt << "\n";
-    //mutex_index=getMutexPool()->nextIndex();
+
+#ifdef TRACED_OBJ
+  if(dynamic_cast<TRACED_OBJ *>(this)){
+    int mpi_size, mpi_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    ::std::cout << "----------------------------------\n";
+    ::std::cout << "Object ("<<TRACED_OBJ_NAME<<" "<<mpi_rank<<") ref_cnt is now " << ref_cnt << "\n";
   }
+#endif
+  //mutex_index=getMutexPool()->nextIndex();
   sm.unlock();
 }
 
@@ -99,12 +106,6 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
 
 Object::~Object()
 {
-  if(showRef()){
-    ::std::cout << " XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
-    PIDL::getDT()->getAddress().display();
-    ::std::cout << "Object destroyed (id="<<objid<<"): count is now " << ref_cnt << "\n";
-  }
-
   if(ref_cnt != 0)
     throw InternalError("Object delete while reference count != 0");
   if(d_serverContext){
@@ -112,6 +113,7 @@ Object::~Object()
     if(d_serverContext->d_endpoint_active){
       if(warehouse->unregisterObject(d_serverContext->d_objid) != this)
 	throw InternalError("Corruption in object warehouse");
+      //EpChannel->closeConnection() does nothing, so far.
       d_serverContext->chan->closeConnection(); 
     }
     delete d_serverContext->chan;
@@ -169,11 +171,15 @@ Object::_addReference()
   //Mutex* m=getMutexPool()->getMutex(mutex_index);
   sm.lock();
   ref_cnt++;
-  if(showRef()){
-    ::std::cout << "+++++++++++++++++++++++++++++++++\n";
-    PIDL::getDT()->getAddress().display();
-    ::std::cout << "_addReference (id="<<objid<<"): count is now " << ref_cnt << "\n";
+#ifdef TRACED_OBJ  
+  if(dynamic_cast<TRACED_OBJ *>(this)){
+    int mpi_size, mpi_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+    ::std::cout << "----------------------------------\n";
+    ::std::cout << "_addReference ("<<TRACED_OBJ_NAME<<" "<<mpi_rank<<") ref_cnt is now " << ref_cnt << "\n";
   }
+  firstTime=false;
+#endif
   sm.unlock();
 }
 
@@ -182,12 +188,17 @@ Object::_deleteReference()
 {
   //Mutex* m=getMutexPool()->getMutex(mutex_index);
   sm.lock();
+
   ref_cnt--;
-  if(showRef()){
+#ifdef TRACED_OBJ
+  firstTime=false;  
+  if(dynamic_cast<sci::cca::ports::UIPort*>(this)){
+    int mpi_size, mpi_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
     ::std::cout << "----------------------------------\n";
-    PIDL::getDT()->getAddress().display();
-    ::std::cout << "_deleteReference (id="<<objid<<") count is now " << ref_cnt << "\n";
+    ::std::cout << "_delReference ("<<TRACED_OBJ_NAME<<" "<<mpi_rank<<") ref_cnt is now " << ref_cnt << "\n";
   }
+#endif  
   bool del;
   if(ref_cnt == 0)
     del=true;
@@ -199,8 +210,20 @@ Object::_deleteReference()
   // conditions with the mutex pool, but we must check the condition
   // inside the lock to prevent race conditions with other threads
   // simultaneously releasing a reference.
-  if(del)
+  //TODO: this is just to verify that reference counting is a problem.
+
+  if(del){
+    //TODO: 
+    //    try to cast the pointer to possible objects such as Typemap, UIPort, goPort etc to find out which one caused the refcnt problem. Review the PHello program and addProvidesPort and related programs first. It may save some time. 
+    int mpi_size, mpi_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+#ifdef TRACED_OBJ
+    if(dynamic_cast<TRACED_OBJ *>(this)){
+      ::std::cout << "############# "<<TRACED_OBJ_NAME<<"("<<mpi_rank<<") deleted \n";
+    }
+#endif
     delete this;
+  }
 }
 
 void

@@ -99,7 +99,8 @@ DESCRIPTION
 
     //////////
     // Create a base Object class from the given Reference
-    static Object::pointer objectFrom(const Reference&);
+    //NOT IMPLEMENTED YET
+    //static Object::pointer objectFrom(const Reference&, int mysize = 1, int myrank = 0);
 
     //////////
     // Create a base Object class from a vector of proxies  

@@ -120,9 +120,9 @@ void MxNArrSynch::setNewArray(void** a_ptr)
   arr_mutex.unlock();
 }
 
-void* MxNArrSynch::waitCompleteArray(MxNArrayRep *myrep)
+void* MxNArrSynch::waitCompleteInArray(MxNArrayRep *myrep)
 {
-  std::cerr<<" Calling MxNArrSynch::waitCompleteArray()" <<std::endl;
+  std::cerr<<" Calling MxNArrSynch::waitCompleteInArray()" <<std::endl;
   descriptorList rl;
 
   //all meta data communications have finished before the constructor can complete
@@ -138,9 +138,29 @@ void* MxNArrSynch::waitCompleteArray(MxNArrayRep *myrep)
 
   //Wait until all of those requests are received
   recv_mutex.lock();
+  ::std::cerr<<"in waitCompleteArray*** recv_count="<<recv_count<<" expected_count="<<expected_count<<" ***\n";
   if(recv_count<expected_count) recvCondition.wait(recv_mutex);
   recv_mutex.unlock();
   return arr_ptr;
+}
+
+
+
+void MxNArrSynch::waitCompleteOutArray(MxNArrayRep *myrep)
+{
+  std::cerr<<" Calling MxNArrSynch::waitCompleteOutArray()" <<std::endl;
+  descriptorList rl;
+
+  //all meta data communications have finished before the constructor can complete
+
+  if(expected_count==0) return;
+
+  //Wait until all of those requests are received
+  send_mutex.lock();
+  ::std::cerr<<"in waitCompleteOutArray*** send_count="<<send_count<<" expected_count="<<expected_count<<" ***\n";
+  if(send_count<expected_count) sendCondition.wait(send_mutex);
+  send_mutex.unlock();
+  return;
 }
 
 void MxNArrSynch::doReceive(int rank)
@@ -151,6 +171,7 @@ void MxNArrSynch::doReceive(int rank)
     //TODO: throw an exception here
     ::std::cout << "Error: received too many distribution when I got rank=" << rank << "\n";
   }
+  ::std::cerr<<"in doReceive*** recv_count="<<recv_count<<" expected_count="<<expected_count<<" ***\n";
   if(recv_count==expected_count) recvCondition.conditionBroadcast();
   recv_mutex.unlock();
 }
@@ -162,8 +183,9 @@ void MxNArrSynch::doReceive(int rank)
   send_count++;
   if(send_count>expected_count){
     //TODO: throw an exception here
-    ::std::cout << "Error: received too many distribution when I got rank=" << rank << "\n";
+    ::std::cout << "Error: received too many distribution when I send rank=" << rank << "\n";
   }
+  ::std::cerr<<"in doSend*** send_count="<<send_count<<" expected_count="<<expected_count<<" ***\n";
   if(send_count==expected_count) sendCondition.conditionBroadcast();
   send_mutex.unlock();
 }

@@ -198,7 +198,7 @@ void MxNScheduler::setArray(std::string distname, ProxyID uuid, int callid, void
   }
 }
 
-void* MxNScheduler::waitCompleteArray(std::string distname, ProxyID uuid, int callid)
+void* MxNScheduler::waitCompleteInArray(std::string distname, ProxyID uuid, int callid)
 {
   //only callee can call this method.
   ASSERT(sch_type==callee); 
@@ -209,10 +209,25 @@ void* MxNScheduler::waitCompleteArray(std::string distname, ProxyID uuid, int ca
 
   //TODO: need remove the array synch entry because it will not be used 
   if(mxnasync!=NULL){
-    return mxnasync->waitCompleteArray(this_iter->second);
+    return mxnasync->waitCompleteInArray(this_iter->second);
   }
   else{ 
     return NULL;
+  }
+}
+
+void MxNScheduler::waitCompleteOutArray(std::string distname, ProxyID uuid, int callid)
+{
+  //only callee can call this method.
+  ASSERT(sch_type==callee); 
+  
+  MxNArrSynch* mxnasync=getArrSynch(distname, uuid, callid);
+  arrRepList::iterator this_iter = myreps.find(distname);
+  if(this_iter==myreps.end()) return;
+  
+  //TODO: need remove the array synch entry because it will not be used 
+  if(mxnasync!=NULL){
+    mxnasync->waitCompleteOutArray(this_iter->second);
   }
 }
 
