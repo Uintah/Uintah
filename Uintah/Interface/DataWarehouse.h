@@ -206,7 +206,7 @@ WARNING
       DataWarehouse(const ProcessorGroup* myworld, int generation, DataWarehouseP& parent_dw);
       // These two things should be removed from here if possible - Steve
       const ProcessorGroup* d_myworld;
-      int d_generation;
+      const int d_generation;
 
       
    private:
@@ -220,6 +220,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.38  2000/08/23 22:51:42  dav
+// Made d_generation a const
+//
 // Revision 1.37  2000/07/28 22:45:17  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in

@@ -9,7 +9,8 @@ using namespace Uintah;
 using std::cerr;
 using SCICore::Geometry::Vector;
 
-DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, int generation, 
+DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, 
+			     int generation, 
 			     DataWarehouseP& parent_dw) :
   d_myworld(myworld),
   d_generation( generation ), d_parent(parent_dw)
@@ -18,6 +19,7 @@ DataWarehouse::DataWarehouse(const ProcessorGroup* myworld, int generation,
 
 DataWarehouse::~DataWarehouse()
 {
+  cerr << "DataWarehouse being deleted\n";
 }
 
 DataWarehouseP
@@ -31,6 +33,9 @@ DataWarehouse::getTop() const{
 
 //
 // $Log$
+// Revision 1.10  2000/08/23 22:51:34  dav
+// Made d_generation a const
+//
 // Revision 1.9  2000/08/16 04:39:09  bbanerje
 // Commented out while loop in DataWarehouse::getTop
 //
