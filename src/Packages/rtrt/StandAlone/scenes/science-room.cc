@@ -40,6 +40,8 @@
 
 #include <Core/Thread/Thread.h>
 #include <Packages/rtrt/Core/SelectableGroup.h>
+#include <Packages/rtrt/Core/BrickArray3.h>
+#include <Packages/rtrt/Core/HVolume.h>
 #include <Packages/rtrt/Core/HVolumeBrick16.h>
 #include <Packages/rtrt/Core/MIPHVB16.h>
 #include <Packages/rtrt/Core/CutVolumeDpy.h>
@@ -797,6 +799,45 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   hcut->name_ = "Cutting Plane";
 #endif
 
+#ifdef ADD_CSAFE_FIRE
+  //ADD THE CSAFE HEPTAINE POOL FIRE DATA SET
+  Material* fmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  fmat->my_lights.add(holo_light0);
+  fmat->my_lights.add(holo_light1);
+  fmat->my_lights.add(holo_light2);
+  fmat->my_lights.add(holo_light3);
+
+  VolumeDpy* firedpy = new VolumeDpy(1000);
+
+  int fstart = 55;
+  int fend = 56;
+  int finc = 8;
+  SelectableGroup *fire_time = new SelectableGroup(1);
+  fire_time->name_ = "CSAFE Fire Time Step Selector";
+  //  TimeObj *fire_time = new TimeObj(5);
+  for(int f = fstart; f < fend; f+= finc) {
+    char buf[1000];
+    sprintf(buf, "/usr/sci/data/CSAFE/heptane300_3D_NRRD/float/h300_%04df.raw",
+	    f);
+    cout << "Reading "<<buf<<endl;
+    Object *fire=new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (fmat, firedpy, buf, 3, nworkers);
+    fire_time->add(fire);
+  }
+  
+  InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_time);
+
+  Transform *fire_trans = new Transform();
+  fire_trans->pre_translate(Vector(8, -8, -2)); 
+  fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
+  fire_trans->pre_translate(Vector(-8, 8, 2));
+
+  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,2), Vector(0,0,1), 0.5);
+  fire_inst->name_ = "Spinning CSAFE Fire";
+
+  CutGroup *fire_cut = new CutGroup(cpdpy);
+  fire_cut->add(fire_inst);
+#endif
+  
 #ifdef ADD_GEO_DATA
   //ADD THE GEOLOGY DATA SET
   ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes/Seismic/geo",256);
@@ -841,6 +882,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 #ifdef ADD_DAVE_HEAD
   sg->add(hcut);
+#endif
+#ifdef ADD_CSAFE_FIRE
+  sg->add(fire_inst);
 #endif
 #ifdef ADD_GEO_DATA
   sg->add(gcut);
@@ -888,6 +932,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   hcvdpy->setName("Brain Volume");
   scene->attach_display(hcvdpy);
   (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
+#endif
+#ifdef ADD_CSAFE_FIRE
+  scene->addObjectOfInterest( fire_inst, true );
+  scene->attach_auxiliary_display(firedpy);
+  firedpy->setName("CSAFE Fire Volume");
+  scene->attach_display(firedpy);
+  (new Thread(firedpy, "CSAFE Fire Volume Dpy"))->detach();
 #endif
 #ifdef ADD_GEO_DATA
   scene->addObjectOfInterest( ginst, false );
