@@ -13,6 +13,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/MIT/Dataflow/Modules/Metropolis
 
 SRCS     += \
+	$(SRCDIR)/PDSimPart.cc\
+	$(SRCDIR)/IUniformPDSimPart.cc\
+	$(SRCDIR)/MultivariateNormalDSimPart.cc\
 	$(SRCDIR)/PriorPart.cc\
 	$(SRCDIR)/LikelihoodPart.cc\
         $(SRCDIR)/SamplerInterface.cc\
@@ -32,7 +35,7 @@ PSELIBS := Packages/MIT/Core/Datatypes \
         Core/Exceptions \
         Core/Geom Core/Geometry Core/Thread Core/GuiInterface
 
-LIBS := -L/usr/local/lib \
+LIBS := -L/usr/local/lib -L$(TCL_LIB_DIR) \
 	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) -lcvode -lunuran $(FLIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

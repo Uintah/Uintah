@@ -13,6 +13,7 @@ extern "C" {
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Parts/Part.h>
+#include <Core/Parts/PartManager.h>
 #include <Core/Parts/GraphPart.h>
 #include <Dataflow/Network/Module.h>
 
@@ -26,6 +27,7 @@ using namespace SCIRun;
 class SamplerInterface;
 class PriorPart;
 class LikelihoodPart;
+class PDSimPart;
 
 class Sampler : public Module, public Part {
 private:
@@ -45,10 +47,13 @@ private:
 
   PriorPart *prior_;
   LikelihoodPart *likelihood_;
+  PartManagerOf<PDSimPart> pdsim_;
+
   GraphPart *graph_;
 
   // control
   bool user_ready;
+  bool has_lkappa_;
 
   int seed;
   double kappa;
@@ -59,8 +64,8 @@ private:
 
   int nparms;
 
-  double *theta;
-  double *star;
+  vector< vector<double> > theta;
+  int old, star;
 
   Array2<double> lkappa;
 
@@ -76,8 +81,8 @@ public:
   void init();
   void reset();
   void metropolis();
-  void pdsim( double [], double [] );
-  double logpost( double [] );
+  Array2<double> &get_lkappa();
+  double logpost( vector<double> & );
   void go();
 
   void tcl_command( TCLArgs &args, void *data);

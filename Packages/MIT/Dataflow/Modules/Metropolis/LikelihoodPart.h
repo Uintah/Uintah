@@ -34,7 +34,7 @@ public:
   virtual ~LikelihoodPart();
 
   void measurements( MeasurementsHandle & );
-  double compute( double [] );
+  double compute( vector<double> & );
 };
   
 

@@ -46,7 +46,7 @@ LikelihoodPart::measurements( MeasurementsHandle &handle)
   neq_ = measurements_->t.size();
 }
 double
-LikelihoodPart::compute( double theta[] )
+LikelihoodPart::compute( vector<double> &theta )
 {
   Array1 <double> ym1(neq_);
   Array1 <double> ym2(neq_);

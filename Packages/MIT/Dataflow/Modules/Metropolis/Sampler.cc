@@ -29,6 +29,9 @@ extern "C" {
 #include <Packages/MIT/Dataflow/Modules/Metropolis/SamplerInterface.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/PriorPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/LikelihoodPart.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/PDSimPart.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/IUniformPDSimPart.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/MultivariateNormalDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/Sampler.h>
 
 #include <Core/Util/Signals.h>
@@ -45,13 +48,15 @@ extern "C" MITSHARE Module* make_Sampler(const string& id) {
 
 Sampler::Sampler(const string& id)
   : Module("Sampler", id, Source, "Metropolis", "MIT"),
-    Part( 0, "Sampler")
+    Part( 0, "Sampler"),
+    pdsim_( 0, "PDSim" )
 {
   seed = 6;
 
   nparms = 0;
-  theta = 0;
-  star = 0;
+  theta.resize(2);
+  old = 0;
+  star = 1;
 
   // init random number generator
   srand48(seed);
@@ -73,6 +78,11 @@ Sampler::Sampler(const string& id)
   // install Likelihood and Prior parts
   prior_ = new PriorPart( interface_, "Prior");
   likelihood_ = new LikelihoodPart( interface_, "Likelihood" );
+
+  pdsim_.set_parent( interface_ );
+  pdsim_.add_part( new MultivariateNormalDSimPart( this, 0, "MVNormal") );
+  pdsim_.add_part( new IUniformPDSimPart( this, 0, "IU" ) );
+
   graph_ = 0;
 }
 
@@ -83,11 +93,9 @@ Sampler::~Sampler()
 void
 Sampler::go()
 {
-  cerr << "Sampler exec\n";
   Module *module = dynamic_cast<Module*>(this);
   if ( ! graph_ ) {
-    cerr << "new graph part with nparms = " << nparms << endl;
-    graph_ = new GraphPart( interface_, "Graph");
+    graph_ = new GraphPart( interface_, "Progress");
     graph_->set_num_lines(nparms);
   }
   module->want_to_execute();
@@ -137,13 +145,11 @@ Sampler::reset()
 {
   int m = distribution_->sigma.dim1();
   if ( m != nparms ) {
-    delete [] theta;
-    delete [] star;
+
+    theta[old].resize(m);
+    theta[star].resize(m);
     
-    theta = scinew double[m];
-    star = scinew double[m];
-    
-    lkappa.newsize( m, m );
+    has_lkappa_ = false;
 
     results = scinew Results;
 
@@ -157,42 +163,55 @@ Sampler::reset()
   likelihood_->measurements( measurements_ );
 }
 
+Array2<double> &
+Sampler::get_lkappa()
+{
+  if ( !has_lkappa_ ) {
+    // init Cholesky of proposal distribution covariance matrix
+  
+    lkappa.newsize( nparms, nparms );
+
+    Array2<double> A(nparms, nparms);
+  
+    for (int i=0; i<nparms; i++) 
+      for (int j=0; j<nparms; j++) 
+	A(i,j) = distribution_->sigma(i,j);
+    
+    int info;
+    
+    char cmd = 'L';  // 'L' if fortran means 'U' in C
+    dpotrf_( cmd, nparms, *(A.get_dataptr()), nparms, info ); 
+    if ( info != 0 ) {
+      cerr << "Cholesky factorization error = " << info << endl;
+      return lkappa; // trow exeption ?
+    }
+    
+    kappa = distribution_->kappa;
+    
+    double k2 = sqrt(kappa);
+    for (int i=0; i<nparms; i++) {
+      lkappa(i,i) = A(i,i)*k2;
+      for (int j=i+1; j<nparms; j++) {
+	lkappa(j,i) = A(i,j)*k2;
+	lkappa(i,j) = 0;
+      }
+    }
+    
+    has_lkappa_ = true;
+  }
+
+  return lkappa;
+}
+
 void Sampler::metropolis()
 {
-  // init Cholesky of proposal distribution covariance matrix
-
-  Array2 <double> A(nparms, nparms);
-
-  for (int i=0; i<nparms; i++) 
-    for (int j=0; j<nparms; j++) 
-      A(i,j) = distribution_->sigma(i,j);
-  
-  int info;
-
-  char cmd = 'L';  // 'L' if fortran means 'U' in C
-  dpotrf_( cmd, nparms, *(A.get_dataptr()), nparms, info ); 
-  if ( info != 0 ) {
-    cerr << "Cholesky factorization error = " << info << endl;
-    return;
-  }
-
-  kappa = distribution_->kappa;
-
-  double k2 = sqrt(kappa);
-  for (int i=0; i<nparms; i++) {
-    lkappa(i,i) = A(i,i)*k2;
-    for (int j=i+1; j<nparms; j++) {
-      lkappa(j,i) = A(i,j)*k2;
-      lkappa(i,j) = 0;
-    }
-  }
-    
   // input probable distribution
   for (int i=0; i<nparms; i++) 
-    theta[i] = distribution_->theta[i]; // we should let the user change it too.
-
+    theta[old][i] = distribution_->theta[i]; // we should let the user change 
+                                             // it too
+  
   int len = (interface_->monitor() - interface_->burning()) 
-    / interface_->thin();
+            / interface_->thin();
 
   results->k_.reserve( len );
   results->data_.resize( nparms );
@@ -202,20 +221,22 @@ void Sampler::metropolis()
     results->data_[i].remove_all();
   }
 
-  double post = logpost( theta );
+  double post = logpost( theta[old] );
+  double lpr = pdsim_->lpr(theta[old]);
+
   for (int k=1; k<interface_->monitor(); k++) {
 
-    pdsim( theta, star);
-
-    double u;
-
-    u = drand48();
-
-    double new_post = logpost( star );
+    pdsim_->compute( theta[old], theta[star]);
+    double new_lpr = pdsim_->lpr( theta[star] );
+    double new_post = logpost( theta[star] );
+    double sum = new_post - post + lpr - new_lpr;
     
-    if ( new_post - post  <= 500 && exp(new_post-post) >= u ) {
-      swap( theta, star );   // yes
+    double u = drand48();
+
+    if ( sum <= 500 && exp(sum) >= u ) {
+      swap( old, star );   // yes
       post = new_post;
+      lpr = new_lpr;
     }
     
     if ( k > interface_->burning()  
@@ -225,14 +246,14 @@ void Sampler::metropolis()
 
       vector<double> v;
       for (int i=0; i<nparms; i++) {
-	results->data_[i].add(theta[i]);
+	results->data_[i].add(theta[old][i]);
 	if ( graph_ )
-	  v.push_back(theta[i] );
+	  v.push_back(theta[old][i] );
       }
       if ( graph_ ) graph_->add_values(v);
     }
   }
-  
+
   if ( !r_port_ ) 
     cerr << " no output port\n";
   else {
@@ -243,23 +264,8 @@ void Sampler::metropolis()
 }
 
 
-void Sampler::pdsim( double theta[], double star[] )
-{
-  Array1 <double> r(nparms);
-
-  for (int i=0; i<nparms; i++)
-    r[i] = unur_sample_cont(gen);
-
-  for (int i=0; i<nparms; i++) {
-    star[i] = theta[i];
-    for (int j=0; j<nparms; j++ )
-      star[i] += lkappa(i,j) * r[j];
-  }
-}
-
-
 double 
-Sampler::logpost( double theta[] )
+Sampler::logpost( vector<double> &theta )
 {
   double prior = prior_->compute( theta );
   double like = likelihood_->compute( theta );
@@ -274,11 +280,14 @@ Sampler::tcl_command( TCLArgs &args, void *data)
   if ( args[1] == "set-window" ) {
     SamplerGui *gui = new SamplerGui( id+"-gui" );
     gui->set_window( args[2] );
+
     connect( gui->burning, interface_, &SamplerInterface::burning );
     connect( gui->monitor, interface_, &SamplerInterface::monitor );
     connect( gui->thin, interface_, &SamplerInterface::thin );
     connect( gui->go, interface_, &SamplerInterface::go);
     connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
+
+    interface_->report_children( (PartGui* )gui, &PartGui::add_child );
   }
   else Module::tcl_command( args, data );
 }
