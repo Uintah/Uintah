@@ -25,19 +25,18 @@
 Packages are collections of modules organized by category. The \SR{} and 
 packages are discussed below. 
 
-\section{The \sr{} Package}
+\section{\sr{}}
 \label{sec:srpackage}
 \index{SCIRun@\sr{}!package}
-
 
 The \sr{} package contains these categories:
 
 \begin{description}
   \descitem{\category{DataIO}} Modules for reading and writing \sr{}
   data types.  Use these to read \sr{} type data into a network and
-  write data to disk from a network.  These modules only know about
-  \sr{} type data.  Non-\sr{} (foreign) data may be converted to \sr{}
-  type data using \sr{}'s converter programs (see \chref{Importing
+  write data to disk from a network.  These modules only understand 
+  \sr{} data types.  Non-\sr{} (foreign) data can be converted to \sr{}
+  type data using \sr{}'s converter programs (see \secref{Importing
     data into \sr{}}{ch:import_export} for more information).
   
   \descitem{\category{Fields}} Modules for creating, manipulating, and
@@ -52,7 +51,7 @@ The \sr{} package contains these categories:
   \chref{Visualization with the \viewer{}}{ch:viewer}.
 \end{description}
 
-\section{The BioPSE Package}
+\section{BioPSE}
 \label{sec:biopsepackage}
 \index{SCIRun@\BIOPSE{}!package}
 
@@ -79,6 +78,40 @@ problems.
   
   \descitem{\category{Visualization}} Modules for visualizing
   bioelectric field data.
+\end{description}
+
+
+\section{Teem}
+\label{sec:teempackage}
+
+\begin{description}
+
+\descitem{\category{DataIO}}
+
+\descitem{\category{Filters}} 
+
+\descitem{\category{NrrdData}} 
+
+\end{description}
+
+\section{Matlabinterface}
+\label{sec:matlabpackage}
+
+\begin{description}
+
+\descitem{\category{DataIO}}
+
+\end{description}
+
+\section{Insight (ITK)}
+\label{sec:insightpackage}
+
+\begin{description}
+  \descitem{\category{Converters}}
+  
+  \descitem{\category{DataIO}}
+  
+  \descitem{\category{Filters}}
 \end{description}
 
 %%% Local Variables: 
