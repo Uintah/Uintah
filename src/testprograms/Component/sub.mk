@@ -32,7 +32,6 @@ SUBDIRS := \
 ifeq ($(HAVE_MPI),yes)
 SUBDIRS += \
 	$(SRCDIR)/pingpongArr   \
-	$(SRCDIR)/mxn  	        \
 	$(SRCDIR)/mxnargtest    \
 	$(SRCDIR)/Jacobi        \
 	$(SRCDIR)/LUFactor      \
