@@ -69,6 +69,15 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 {
 }
 
+SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
+				 int* rows, int* columns,
+				 int nnz)
+: Matrix(Matrix::symmetric, Matrix::sparse), nnrows(nnrows),
+  nncols(nncols), rows(rows), columns(columns), nnz(nnz)
+{
+    a=scinew double[nnz];
+}
+
 void
 SparseRowMatrix::transpose( SparseRowMatrix &m )
 {
@@ -319,6 +328,9 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.7  2000/03/04 00:18:30  dmw
+// added new Mesh BC and fixed sparserowmatrix bug
+//
 // Revision 1.6  1999/12/11 05:47:41  dmw
 // sparserowmatrix -- someone had commented out the code that lets you get() a zero entry... I put it back in.    densematrix -- just cleaned up some comments
 //
