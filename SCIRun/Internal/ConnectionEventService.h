@@ -44,13 +44,16 @@
 #define SCIRun_ConnectionEventService_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
 #include <vector>
 
 namespace SCIRun {
 
-class SCIRunFramework;
+class BuilderService;
+class ConnectionEvent;
+
 /**
  * \class ConnectionEventService
  *
@@ -60,40 +63,43 @@ class SCIRunFramework;
  * ConnectionEventListener interface.
  */
 
-class ConnectionEventService : public sci::cca::ports::ConnectionEventService,
-				public InternalComponentInstance
+class ConnectionEventService
+    : public sci::cca::ports::ConnectionEventService,
+      public InternalComponentInstance
 {
 public:
     virtual ~ConnectionEventService();
 
     /** Factory method for allocating new ConnectionEventService objects.
-	Returns a smart pointer to the newly allocated object registered in
-	the framework \em fwk with the instance name \em name. */
+    Returns a smart pointer to the newly allocated object registered in
+    the framework \em fwk with the instance name \em name. */
     static InternalComponentInstance* create(SCIRunFramework* fwk,
-					    const std::string& name);
+                        const std::string& name);
 
     /** Returns this service. */
     virtual sci::cca::Port::pointer getService(const std::string& name);
 
     /** Sign up to be told about connection activity of a given \em EventType. */
     virtual void addConnectionEventListener(sci::cca::ports::EventType et,
-		const sci::cca::ports::ConnectionEventListener::pointer& cel);
+        const sci::cca::ports::ConnectionEventListener::pointer& cel);
 
     /** Ignore future ConnectionEvents of the given \em EventType. */
     virtual void removeConnectionEventListener(sci::cca::ports::EventType et,
-		const sci::cca::ports::ConnectionEventListener::pointer& cel);
+        const sci::cca::ports::ConnectionEventListener::pointer& cel);
 
 private:
+    friend void BuilderService::emitConnectionEvent(ConnectionEvent* event);
     struct Listener
     {
-	sci::cca::ports::EventType type;
-	sci::cca::ports::ConnectionEventListener::pointer l;
-	Listener(sci::cca::ports::EventType type,
-		    const sci::cca::ports::ConnectionEventListener::pointer& l) :
-		    type(type), l(l) {}
+        sci::cca::ports::EventType type;
+        sci::cca::ports::ConnectionEventListener::pointer l;
+        Listener(sci::cca::ports::EventType type,
+                const sci::cca::ports::ConnectionEventListener::pointer& l) :
+                type(type), l(l) {}
     };
     std::vector<Listener*> listeners;
     ConnectionEventService(SCIRunFramework* framework, const std::string& name);
+    void emitConnectionEvent(const sci::cca::ports::ConnectionEvent::pointer &event);
 };
 
 }
