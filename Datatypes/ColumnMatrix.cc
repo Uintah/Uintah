@@ -24,7 +24,7 @@ ColumnMatrix::ColumnMatrix(int rows)
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
-: rows(c.rows), ref_cnt(0)
+: rows(c.rows)
 {
     data=new double[rows];
     for(int i=0;i<rows;i++)
