@@ -23,6 +23,9 @@ University of Utah. All Rights Reserved.
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 version="1.0">
 
+  <!-- Include customizations of qandaset -->
+  <xsl:include href="srqandaset.xsl"/>
+
   <!-- Generate java script code that locates root of doc tree -->
   <xsl:template name="user.head.content">
     <script type="text/javascript">
