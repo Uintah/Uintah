@@ -415,7 +415,9 @@ public:
 
   //! Subdivision methods
   bool			insert_node(const Point &p);
-  void			insert_node_watson(const Point &p);
+  Node::index_type	insert_node_watson(const Point &p, 
+					   Cell::array_type *new_cells = 0, 
+					   Cell::array_type *mod_cells = 0);
   void			bisect_element(const Cell::index_type c);
 
 
