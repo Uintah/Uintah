@@ -636,6 +636,7 @@ private:
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
 	PressureInlet(int numMix, int cellID);
+	~PressureInlet();
 	void problemSetup(ProblemSpecP& params);
       };
 
@@ -650,6 +651,7 @@ private:
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
 	FlowOutlet(int numMix, int cellID);
+	~FlowOutlet();
 	void problemSetup(ProblemSpecP& params);
       };
 
@@ -661,6 +663,7 @@ private:
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
 	WallBdry(int cellID);
+	~WallBdry();
 	void problemSetup(ProblemSpecP& params);
       };
 
@@ -673,6 +676,7 @@ private:
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
 	IntrusionBdry(int cellID);
+	~IntrusionBdry();
 	void problemSetup(ProblemSpecP& params);
       };
 
