@@ -165,8 +165,6 @@ void EditFusionField::execute(){
   if( fGeneration_ != fHandle->generation ) {
     fGeneration_  = fHandle->generation;
 
-    cout << "EditFusionField - New Field Data." << endl;
-
     updateField = true;
   }
 
@@ -179,8 +177,6 @@ void EditFusionField::execute(){
   if( idim_   != iDim_.get() ||
       jdim_-1 != jDim_.get() ||
       kdim_-1 != kDim_.get() ) {
-
-    cout << "EditFusionField - Updating GUI." << endl;
 
     // Update the dims in the GUI.
     ostringstream str;
@@ -204,8 +200,6 @@ void EditFusionField::execute(){
       iskip_ != iSkip_.get()  ||
       jskip_ != jSkip_.get() ||
       kskip_ != kSkip_.get() ) {
-
-    cout << "EditFusionField - Updating values." << endl;
 
     istart_ = iStart_.get();
     jstart_ = jStart_.get();
@@ -277,6 +271,7 @@ EditFusionFieldAlgo::get_compile_info(const TypeDescription *field_td)
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
+  rval->add_namespace("Fusion");
   field_td->fill_compile_info(rval);
   return rval;
 }

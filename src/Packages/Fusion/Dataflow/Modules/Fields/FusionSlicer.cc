@@ -152,13 +152,13 @@ void FusionSlicer::execute(){
   kdim_ = hvmInput->get_nz();
 
   // Check to see if the dimensions have changed.
-  if( idim_+1 != iDim_.get() ||
-      jdim_ != jDim_.get() ||
-      kdim_ != kDim_.get() )
+  if( idim_   != iDim_.get() ||
+      jdim_-1 != jDim_.get() ||
+      kdim_-1 != kDim_.get() )
   {
     // Update the dims in the GUI.
     ostringstream str;
-    str << id << " set_size " << idim_+1 << " " << jdim_ << " " << kdim_;
+    str << id << " set_size " << idim_ << " " << jdim_-1 << " " << kdim_-1;
 
     gui->execute(str.str().c_str());
 
@@ -174,48 +174,47 @@ void FusionSlicer::execute(){
     iindex_ = iIndex_.get();
     jindex_ = jIndex_.get();
     kindex_ = kIndex_.get();
+
     axis_ = Axis_.get();
+
     updateAll = true;
   }
 
   // If no data or a changed recreate the mesh.
   if( !fHandle_.get_rep() || updateAll || updateField )
   {
+    const TypeDescription *ftd = fHandle->get_type_description(0);
+    const TypeDescription *ttd = fHandle->get_type_description(1);
 
-    const TypeDescription *ftd = fHandle->get_type_description();
-    CompileInfo *ci = FusionSlicerAlgo::get_compile_info(ftd);
+    CompileInfo *ci = FusionSlicerAlgo::get_compile_info(ftd,ttd);
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
-      cout << "Could not compile algorithm." << std::endl;
+      error( "Could not compile algorithm." );
       return;
     }
     FusionSlicerAlgo *algo =
       dynamic_cast<FusionSlicerAlgo *>(algo_handle.get_rep());
     if (algo == 0)
     {
-      cout << "Could not get algorithm." << std::endl;
+      error( "Could not get algorithm." );
       return;
     }
     unsigned int index;
-    if (axis_ == 0)
-    {
+    if (axis_ == 0) {
       index = Max(iindex_, 1);
     }
-    else if (axis_ == 1)
-    {
+    else if (axis_ == 1) {
       index = jindex_;
     }
-    else
-    {
+    else {
       index = kindex_;
     }
     fHandle_ = algo->execute(fHandle, index, axis_);
   }
 
   // Get a handle to the output field port.
-  if( fHandle_.get_rep() )
-  {
+  if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = 
       (FieldOPort *) get_oport("Output Field");
 
@@ -230,25 +229,26 @@ void FusionSlicer::execute(){
 }
 
 CompileInfo *
-FusionSlicerAlgo::get_compile_info(const TypeDescription *fld_td)
+FusionSlicerAlgo::get_compile_info(const TypeDescription *srctd,
+				   const TypeDescription *typetd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("FusionSlicerAlgoT");
   static const string base_class_name("FusionSlicerAlgo");
-  const string::size_type fld_loc = fld_td->get_name().find_first_of('<');
-  const string fdst = "QuadSurfField" + fld_td->get_name().substr(fld_loc);
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       fld_td->get_filename() + ".",
+		       srctd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       fld_td->get_name() + ", " + fdst);
+                       srctd->get_name() + ", " +
+		       typetd->get_name() );
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  fld_td->fill_compile_info(rval);
+  rval->add_namespace("Fusion");
+  srctd->fill_compile_info(rval);
   return rval;
 }
 
