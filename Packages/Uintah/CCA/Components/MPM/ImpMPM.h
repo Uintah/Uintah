@@ -348,6 +348,7 @@ private:
   double           d_initialDt;
   int              d_numIterations;
   bool             d_doGridReset;  // Default is true, standard MPM
+  Vector           d_contact_dirs; // For rigid body contact
   
   const PatchSet* d_perproc_patches;
 
