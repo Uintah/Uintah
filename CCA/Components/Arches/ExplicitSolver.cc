@@ -241,6 +241,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
   //           pressurePS (new_dw)
   // first computes, hatted velocities and then computes the pressure poisson equation
+  d_momSolver->solveVelHatPred(level, sched,
+			       Runge_Kutta_current_step, Runge_Kutta_last_step);
   d_pressSolver->solvePred(level, sched,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
   // Momentum solver
@@ -389,6 +391,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //           pressurePS (new_dw)
     // first computes, hatted velocities and then computes the pressure 
     // poisson equation
+    d_momSolver->solveVelHatCorr(level, sched,
+			   Runge_Kutta_current_step, Runge_Kutta_last_step);
     d_pressSolver->solveCorr(level, sched,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // Momentum solver
