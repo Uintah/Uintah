@@ -20,5 +20,5 @@ tclIndex : Anneal.tcl BldBRDF.tcl BldEEGMesh.tcl BldScene.tcl \
            SiReOutput.tcl SigmaSetReader.tcl SigmaSetWriter.tcl \
            SurfToVectGeom.tcl Taubin.tcl TensorFieldReader.tcl \
            TensorFieldWriter.tcl Thermal.tcl TopoSurfToGeom.tcl XYZtoRGB.tcl
-	$(SRCTOP)/scripts/createTclIndex
+	$(SRCTOP)/scripts/createTclIndex $(SRCDIR)
 
