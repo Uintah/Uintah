@@ -29,12 +29,14 @@
 #include <Core/Util/Assert.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Runnable.h>
 
 #include <string>
 #include <vector>
 using std::string;
 using std::vector;
-
 
 /* //Specialization needed for InterpFunctor<LevelField<Matrix3> > */
 /* #include <Core/Datatypes/FieldAlgo.h> */
@@ -50,6 +52,26 @@ namespace Uintah {
 using SCIRun::GenericField;
 using SCIRun::LockingHandle;
 using SCIRun::Interpolate;
+
+using SCIRun::Thread;
+using SCIRun::Semaphore;
+using SCIRun::Runnable;
+
+template <class Data> class LevelField;
+
+template <class Data>
+class LevelFieldSFI : public ScalarFieldInterface {
+public:
+  LevelFieldSFI(const LevelField<Data>* fld) : fld_(fld) {}
+  virtual bool minmax( pair<double, double>& mm) const;
+  virtual bool interpolate(double &result, const Point &p) const;
+  virtual void interpolate_many(vector<double> &results,
+				vector<bool> &success,
+				const vector<Point> &pts) const;
+private:
+  const LevelField<Data>* fld_;
+};
+
 
 // class Data must inherit from Packages/Uintah/Core/Grid/Array3 or
 // this will not compile
@@ -201,21 +223,6 @@ LevelData<Data>::type_name(int n)
     return find_type_name((Data *)0);
   }
 }
-#define LEVELDATA_VERSION 1
-
-template<class T>
-void Pio(Piostream& stream, LevelData<T>& data)
-{
-#ifdef __GNUG__
-#else
-#endif
-
-  stream.begin_class("Level", LEVELDATA_VERSION);
-  NOT_FINISHED("LevelData::io");
-
-  stream.end_class();
-}
-
 
 template <class Data>
 class LevelField : public GenericField< LevelMesh, LevelData<Data>  > 
@@ -237,14 +244,46 @@ public:
  
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual SFIHandle query_scalar_interface() const;
+  virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
   bool get_gradient(Vector &, const Point &);
-  bool interpolate(Data&, const Point&);
+  bool interpolate(Data&, const Point&) const;
+  bool minmax(pair<double, double>& mm) const ;
 private:
   static Persistent* maker();
+  class make_minmax_thread : public Runnable
+    {
+    public:
+      make_minmax_thread( typename Array3<Data>::iterator it,
+			  typename Array3<Data>::iterator it_end,
+			  double& min, double& max, Semaphore* sema):
+	it_(it), it_end_(it_end), min_(min), max_(max), sema_(sema) {}
+
+      void run()
+	{
+	  min_ = max_ = *it_;
+	  ++it_;
+	  for(; it_ != it_end_; ++it_){
+	    min_ = Min(min_, double(*it_));
+	    max_ = Max(max_, double(*it_));
+	  }
+	  sema_->up();
+	}
+    private:
+      typename Array3<Data>::iterator it_;
+      typename Array3<Data>::iterator it_end_;
+      double &min_, &max_;
+      Semaphore *sema_;
+    };
 };
 
+template<>
+void LevelField<Matrix3>::make_minmax_thread::run();
+template<>
+void LevelField<Vector>::make_minmax_thread::run();
 
 #define LEVELFIELD_VERSION 1
 
@@ -270,6 +309,26 @@ LevelField<Data>::io(Piostream &stream)
   stream.end_class();                                                         
 }
 
+//! Virtual interface.
+template <class Data>
+SFIHandle 
+LevelField<Data>::query_scalar_interface() const
+{
+  return new LevelFieldSFI<Data>( this );
+}
+
+template < class Data>
+VectorFieldInterface* 
+LevelField<Data>::query_vector_interface() const
+{
+  ASSERTFAIL("LevelField::query_vector_interface() not implemented");
+}
+template <class Data>
+TensorFieldInterface* 
+LevelField<Data>::query_tensor_interface() const
+{
+  ASSERTFAIL("LevelField::query_tensor_interface() not implemented");
+}
 
 template <class Data>
 const string
@@ -301,17 +360,6 @@ bool LevelField<Matrix3>::get_gradient(Vector &, const Point &p);
 
 template <> 
 bool LevelField<Vector>::get_gradient(Vector &, const Point &p);
-/* template<> */
-/* bool LevelField<Vector>::get_gradient(Vector&, const Point&)  */
-/* { */
-/*   return false; */
-/* } */
-
-/* template<> */
-/* bool LevelField<Matrix3>::get_gradient(Vector&, const Point&)  */
-/* { */
-/*   return false; */
-/* } */
 
 template <class Data>
 bool LevelField<Data>::get_gradient(Vector &g, const Point &p) {
@@ -379,7 +427,7 @@ bool LevelField<Data>::get_gradient(Vector &g, const Point &p) {
 }
 
 template <class Data>
-bool LevelField<Data>::interpolate(Data &g, const Point &p) {
+bool LevelField<Data>::interpolate(Data &g, const Point &p) const {
   // for now we only know how to do this for fields with scalars at the nodes
   mesh_handle_type mesh = get_typed_mesh();
   int nx, ny, nz;
@@ -444,6 +492,97 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) {
   return true;
 }
 
+template <>
+bool LevelField<Vector>::minmax( pair<double, double> & mm) const;
 
+template <>
+bool LevelField<Matrix3>::minmax( pair<double, double> & mm) const;
+
+template <class Data>
+bool LevelField<Data>::minmax( pair<double, double> & mm) const
+{
+  if(type_name(1) == "double" || type_name(1) == "int" ||
+     type_name(1) == "long"){
+    double mn, mx;
+    fdata_type dt = fdata();
+    vector<Array3<Data> > vdt = fdata();
+    vector<Array3<Data> >::iterator vit = vdt.begin();
+    vector<Array3<Data> >::iterator vit_end = vdt.end();
+    int max_workers = Max(Thread::numProcessors()/3, 4);
+
+    Semaphore* thread_sema = scinew Semaphore( "scalar extractor semaphore",
+					       max_workers); 
+
+    //    typename fdata_type::iterator it = dt.begin();
+    //    typename fdata_type::iterator it_end = dt.end();
+    for(;vit != vit_end; ++vit) {
+      Array3<Data>::iterator it((*vit).begin());
+      Array3<Data>::iterator it_end((*vit).end());
+      
+      thread_sema->down();
+      Thread *thrd = 
+	scinew Thread(scinew LevelField<Data>::make_minmax_thread( it, it_end,
+						       mn, mx, thread_sema),
+		      "minmax worker" );
+      thrd->detach();
+    }
+    thread_sema->down( max_workers );
+    if( thread_sema ) delete thread_sema;
+    mm.first = mn;
+    mm.second = mx;
+    return true;
+  } else { 
+    return false;
+  }
 }
+template <>
+bool LevelFieldSFI<double>::interpolate( double& result, const Point &p) const;
+
+template <>
+bool LevelFieldSFI<float>::interpolate( double& result, const Point &p) const;
+
+template <>
+bool LevelFieldSFI<long>::interpolate( double& result, const Point &p) const;
+  
+template <class Data>
+bool LevelFieldSFI<Data>::minmax( pair<double, double>& mm) const
+{
+  return fld_->minmax( mm );
+}
+
+template <class Data>
+bool LevelFieldSFI<Data>::interpolate( double& result, const Point &p) const
+{
+  return false;
+}
+
+template <class Data>
+void  LevelFieldSFI<Data>::interpolate_many(vector<double> &results,
+					    vector<bool> &success,
+					    const vector<Point> &pts) const
+{
+  ASSERTFAIL("not implemented");
+}
+
+
+} // namespace Uintah
+
+namespace SCIRun {
+#define LEVELDATA_VERSION 1
+
+template<class T>
+void Pio(Piostream& stream, Uintah::LevelData<T>& data)
+{
+#ifdef __GNUG__
+#else
+#endif
+
+  stream.begin_class("Level", LEVELDATA_VERSION);
+  NOT_FINISHED("Uintah::LevelData::io");
+
+  stream.end_class();
+}
+
+} // end namespace SCIRun
+
 #endif // Datatypes_LevelField_h
