@@ -55,6 +55,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 # If run from startTester, tell it to output logs in web dir
 # otherwise, save it in the build
   try:
+
+# if webpage exists, use that, otherwise, use BUILDROOT/mode
     outputpath = "%s-%s" % (environ['HTMLLOG'], mode)
     weboutputpath = "%s-%s" % (environ['WEBLOG'], mode)
     try:
