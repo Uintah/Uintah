@@ -5,6 +5,7 @@
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/NodeIterator.h>
+#include <Uintah/Grid/Task.h>
 
 #include <vector>
 
@@ -86,17 +87,27 @@ void ThermalContact::initializeThermalContact(const Patch* patch,
 {
 }
 
-void ThermalContact::addComputesAndRequires(Task* task,
+void ThermalContact::addComputesAndRequires(Task* t,
                                              const MPMMaterial* matl,
                                              const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
+  int idx = matl->getDWIndex();
+  const MPMLabel* lb = MPMLabel::getLabels();
+  t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires( new_dw, lb->gTemperatureLabel, idx, patch, Ghost::None);
+  t->requires( new_dw, lb->gExternalHeatRateLabel, idx, patch, Ghost::None);
+
+  t->computes( new_dw, lb->gExternalHeatRateLabel, idx, patch );
 }
 
 
 //
 // $Log$
+// Revision 1.3  2000/05/31 22:29:33  tan
+// Finished addComputesAndRequires function.
+//
 // Revision 1.2  2000/05/31 20:51:52  tan
 // Finished the computeHeatExchange() function to computer heat exchange.
 //

@@ -73,12 +73,17 @@ public:
                               const Patch* patch,
                               DataWarehouseP& old_dw,
                               DataWarehouseP& new_dw) const;
+private:
+  SimulationStateP d_sharedState;
 };
       
 } // end namespace MPM
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.2  2000/05/31 22:29:23  tan
+// Finished addComputesAndRequires function.
+//
 // Revision 1.1  2000/05/31 18:16:39  tan
 // Create ThermalContact class to handle heat exchange in
 // contact mechanics.
