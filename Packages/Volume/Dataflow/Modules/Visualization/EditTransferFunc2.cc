@@ -125,9 +125,11 @@ public:
 
   void tcl_command(GuiArgs&, void*);
   
-  void resize_gui();
+  void resize_gui(int n = -1);
   void update_from_gui();
   void update_to_gui(bool init = false);
+  void tcl_unpickle();
+
   void undo();
 
   void redraw();
@@ -213,18 +215,22 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     ctx_ = 0;
   } else if (args[1] == "color_change") {
     update_from_gui();
+  } else if (args[1] == "unpickle") {
+    tcl_unpickle();
   } else if (args[1] == "addtriangle") {
     widgets_.push_back(scinew TriangleCM2Widget());
     undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
     redraw();
     update_to_gui();
+    want_to_execute();
   } else if (args[1] == "addrectangle") {
     widgets_.push_back(scinew RectangleCM2Widget());
     undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
     redraw();
     update_to_gui();
+    want_to_execute();
   } else if (args[1] == "deletewidget") {
     if (pick_widget_ != -1 && pick_widget_ < (int)widgets_.size())
     {
@@ -236,6 +242,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       cmap_dirty_ = true;
       redraw();
       update_to_gui();
+      want_to_execute();
     }
   } else if (args[1] == "undowidget") {
     undo();
@@ -280,6 +287,7 @@ EditTransferFunc2::undo()
     undo_stack_.pop();
     cmap_dirty_ = true;
     redraw();
+    want_to_execute();
     if (gui_update)
     {
       update_to_gui();
@@ -289,9 +297,9 @@ EditTransferFunc2::undo()
 
 
 void
-EditTransferFunc2::resize_gui()
+EditTransferFunc2::resize_gui(int n)
 {
-  gui_num_entries_.set(widgets_.size());
+  gui_num_entries_.set(n==-1?widgets_.size():n);
   unsigned int i;
   // Expand the gui elements.
   for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
@@ -320,6 +328,7 @@ EditTransferFunc2::update_to_gui(bool init)
     gui_color_g_[i]->set(c.g());
     gui_color_b_[i]->set(c.b());
     gui_color_a_[i]->set(widgets_[i]->alpha());
+    //gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
   }
   if (!init) { gui->execute(id + " create_entries"); }
 }
@@ -343,6 +352,44 @@ EditTransferFunc2::update_from_gui()
   }
   cmap_dirty_ = true;
   redraw();
+  want_to_execute();
+}
+
+
+void
+EditTransferFunc2::tcl_unpickle()
+{
+  unsigned int i;
+  for (i=0; i <widgets_.size(); i++)
+  {
+    delete widgets_[i];
+  }
+  widgets_.clear();
+
+  gui_num_entries_.reset();
+  resize_gui(gui_num_entries_.get());
+  for (int i=0; i < gui_num_entries_.get(); i++)
+  {
+    gui_wstate_[i]->reset();
+    if (gui_wstate_[i]->get()[0] == 't')
+    {
+      widgets_.push_back(scinew TriangleCM2Widget());
+      widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
+    }
+    else if (gui_wstate_[i]->get()[0] == 'r')
+    {
+      widgets_.push_back(scinew RectangleCM2Widget());
+      widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
+    }
+    else
+    {
+      cerr << "EditTransferFunc debug: No widget state saved.\n";
+    }
+  }
+
+  // Grab colors
+  resize_gui();
+  update_from_gui();
 }
 
 
@@ -431,6 +478,7 @@ EditTransferFunc2::release(int x, int y, int button)
     widgets_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
     updating_ = false;
     cmap_dirty_ = true;
+
     redraw();
     want_to_execute();
   }
