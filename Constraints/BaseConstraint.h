@@ -71,6 +71,10 @@ protected:
 inline ostream& operator<<( ostream& os, BaseConstraint& v );
 
 
+/***************************************************************************
+ * The BaseConstraint ChooseChange method is used to select which variable
+ *      should be altered to maintain the constraint.
+ */
 inline Index
 BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
 {

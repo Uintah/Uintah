@@ -17,6 +17,13 @@
 #include <Constraints/BaseConstraint.h>
 
 
+/***************************************************************************
+ * The constructor initializes the constraint's variables.
+ * The last line should call the BaseConstraint Register method, which
+ *      registers the constraint with its variables.
+ * The BaseConstraint constructor allocates the constraint's standard
+ *      structures.
+ */
 BaseConstraint::BaseConstraint( const clString& name, const Index nschemes,
 				const Index varCount )
 : name(name), nschemes(nschemes), varCount(varCount),
@@ -26,6 +33,11 @@ BaseConstraint::BaseConstraint( const clString& name, const Index nschemes,
 }
 
 
+/***************************************************************************
+ * The destructor frees the constraint's allocated structures.
+ * The BaseConstraint's destructor frees all the standard structures.
+ * Therefore, most constraints' destructors will not need to do anything.
+ */
 BaseConstraint::~BaseConstraint()
 {
 }
@@ -89,6 +101,15 @@ BaseConstraint::VarChoices( const Scheme scheme,
 }
 
 
+/***************************************************************************
+ * The Satisfy method is where the constraint is maintained.
+ * The BaseConstraint ChooseChange method is used to select which variable
+ *      should be altered to maintain the constraint.
+ * Reference variables are frequently used to speed up accesses of the
+ *      constraint's variables and to make the Satisfy method more legible.
+ * Satisfy should return 1 if it is able to satisfy the constraint, and
+ *      0 otherwise.
+ */
 int
 BaseConstraint::Satisfy( const Index, const Scheme, const Real, BaseVariable*&, VarCore& )
 {

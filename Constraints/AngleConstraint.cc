@@ -19,6 +19,11 @@
 
 static DebugSwitch ac_debug("Constraints", "Angle");
 
+/***************************************************************************
+ * The constructor initializes the constraint's variables.
+ * The last line should call the BaseConstraint Register method, which
+ *      registers the constraint with its variables.
+ */
 AngleConstraint::AngleConstraint( const clString& name,
 				  const Index numSchemes,
 				  PointVariable* center, PointVariable* end1,
@@ -38,11 +43,25 @@ AngleConstraint::AngleConstraint( const clString& name,
    Register();
 };
 
+/***************************************************************************
+ * The destructor frees the constraint's allocated structures.
+ * The BaseConstraint's destructor frees all the standard structures.
+ * Therefore, most constraints' destructors will not need to do anything.
+ */
 AngleConstraint::~AngleConstraint()
 {
 }
 
 
+/***************************************************************************
+ * The Satisfy method is where the constraint is maintained.
+ * The BaseConstraint ChooseChange method is used to select which variable
+ *      should be altered to maintain the constraint.
+ * Reference variables are frequently used to speed up accesses of the
+ *      constraint's variables and to make the Satisfy method more legible.
+ * Satisfy should return 1 if it is able to satisfy the constraint, and
+ *      0 otherwise.
+ */
 int
 AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
 			  BaseVariable*& var, VarCore& c )

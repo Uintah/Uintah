@@ -18,6 +18,11 @@
 
 static DebugSwitch sc_debug("Constraints", "Segment");
 
+/***************************************************************************
+ * The constructor initializes the constraint's variables.
+ * The last line should call the BaseConstraint Register method, which
+ *      registers the constraint with its variables.
+ */
 SegmentConstraint::SegmentConstraint( const clString& name,
 				      const Index numSchemes,
 				      PointVariable* end1, PointVariable* end2,
@@ -33,11 +38,25 @@ SegmentConstraint::SegmentConstraint( const clString& name,
    Register();
 };
 
+/***************************************************************************
+ * The destructor frees the constraint's allocated structures.
+ * The BaseConstraint's destructor frees all the standard structures.
+ * Therefore, most constraints' destructors will not need to do anything.
+ */
 SegmentConstraint::~SegmentConstraint()
 {
 }
 
 
+/***************************************************************************
+ * The Satisfy method is where the constraint is maintained.
+ * The BaseConstraint ChooseChange method is used to select which variable
+ *      should be altered to maintain the constraint.
+ * Reference variables are frequently used to speed up accesses of the
+ *      constraint's variables and to make the Satisfy method more legible.
+ * Satisfy should return 1 if it is able to satisfy the constraint, and
+ *      0 otherwise.
+ */
 int
 SegmentConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
 			    BaseVariable*& var, VarCore& c )
