@@ -75,7 +75,8 @@ protected:
 
   //! This particular implementation uses Runge-Kutta-Fehlberg.
   void FindNodes(vector<Point>&, Point, double, double, int, 
-		 VectorFieldInterfaceHandle, bool remove_colinear_p, int method);
+		 const VectorFieldInterfaceHandle &,
+		 bool remove_colinear_p, int method);
 };
 
 
