@@ -141,9 +141,9 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    return;
 	}
 	if (imod->lastportdynamic && iwhich >= imod->iports.size()) {
-	  std::cerr << "Changing " << iwhich << " to ";
+	  //	  std::cerr << "Changing " << iwhich << " to ";
 	  iwhich = imod->iports.size()-1;
-	  cerr << iwhich << std::endl;
+	  //cerr << iwhich << std::endl;
 	}
 	args.result(net->connect(omod, owhich, imod, iwhich));
     } else if(args[1] == "deleteconnection"){
