@@ -469,50 +469,13 @@ if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   AC_MSG_ERROR(dirname or basename not found.  Configure script won't work!)
 fi
 
-if test "$CC" = ""; then
-  # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
-  # its value first, so...
-  CFLAGS=""
-  AC_PROG_CC()
-  AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\
-	    Using default... $CC)
-fi
-
-if test "$CXX" = ""; then
-  # Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
-  # its value first, so...
-  CXXFLAGS=""
-  AC_PROG_CXX(CC g++ c++)
-  AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
-	    Using default... $CXX)
-fi
-
-
-if test $sci_check_fortran = "yes"; then
-
-  if test "$F77" = ""; then
-    AC_PROG_F77()
-    AC_MSG_WARN(Fortran compiler not specified with 'F77' environment \
-	    variable. Using default... $F77)
-  fi
-  # Most fortran compilers need an "_" for C function names.
-  # Some have strange underscore needs.  This flag is used in the
-  # Packages/Uintah/tools/fspec.pl.in file to generate the correct
-  # cname of the fortran function.
-  FORTRAN_UNDERSCORE=end
-fi
-
-CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
-# Going to look for "as", "ld", etc in this dir:
-COMPILER_DIR=`dirname $CC_REALLY_IS`
-
 ##  --------------------------------------------------------------------
 ##  -----  determine host type, processor count and OS version  --------
 ##  --------------------------------------------------------------------
 
 echo 
 AC_CANONICAL_HOST
-
+HAVE_OSX="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -550,6 +513,51 @@ if test -z "$NUM_CPUS"; then
   NUM_CPUS="1"
 fi
 AC_MSG_RESULT($NUM_CPUS)
+
+
+if test "$CC" = ""; then
+  # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
+  # its value first, so...
+  CFLAGS=""
+  AC_PROG_CC()
+  AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\
+	    Using default... $CC)
+fi
+
+if test "$CXX" = ""; then
+  case "$host" in 
+     *-darwin*)
+	CXX=c++
+	;;
+     *)
+	# Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
+        # its value first, so...
+        CXXFLAGS=""
+        AC_PROG_CXX(CC g++ c++)
+        AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
+	         Using default... $CXX)
+        ;;
+  esac
+fi
+
+
+if test $sci_check_fortran = "yes"; then
+
+  if test "$F77" = ""; then
+    AC_PROG_F77()
+    AC_MSG_WARN(Fortran compiler not specified with 'F77' environment \
+	    variable. Using default... $F77)
+  fi
+  # Most fortran compilers need an "_" for C function names.
+  # Some have strange underscore needs.  This flag is used in the
+  # Packages/Uintah/tools/fspec.pl.in file to generate the correct
+  # cname of the fortran function.
+  FORTRAN_UNDERSCORE=end
+fi
+
+CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
+# Going to look for "as", "ld", etc in this dir:
+COMPILER_DIR=`dirname $CC_REALLY_IS`
 
 ## MAKE_PARALLELISM is used to tell the compiler how many cpus to use
 ## when linking.  1 is usually a good number to use per link,
@@ -832,9 +840,18 @@ case $host in
   *-darwin*)
     ac_objext=o
     LDRUN_PREFIX="-L"
-    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
+    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
-    SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
+    SCI_CHECK_VERSION($CC,--version,3.3,ver33=yes,ver33=no)
+    if test $ver33 == no; then
+	SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
+	NEED_OSX_HACK="yes"
+    else
+	SOFLAGS="-dynamiclib"
+	NEED_OSX_HACK="no"
+
+    fi
+    AC_SUBST(NEED_OSX_HACK)
     ;;
 
   *)
@@ -1427,10 +1444,16 @@ SCI_TRY_LINK(DL,dlopen in libc,[
 
 if test "$HAVE_DL" = "yes"; then
    HAVE_LIB_DL="yes"
-else
+elif test "$HAVE_OSX" = "no"; then
   SCI_TRY_LINK(DL,dlopen in libdl,[
   #include <dlfcn.h>
   ],,dl,,,[
+    dlopen("bogus", 0);
+  ],not-optional)
+else
+  SCI_TRY_LINK(DL,dlopen in libdl,[
+  #include <dlfcn.h>
+  ],$thirdparty/include,dl,$thirdparty/lib,,[
     dlopen("bogus", 0);
   ],not-optional)
 fi
@@ -1915,7 +1938,7 @@ if test $sci_check_fortran = "yes"; then
       ;;
     *-darwin*)
       # OSX Library Check
-      SCI_TRY_LINK(F,required fortran libraries,,,g2c,/sw/lib,,,not-optional)
+      #SCI_TRY_LINK(F,required fortran libraries,,,g2c,/sw/lib,,,not-optional)
       ;;
     *)
       SCI_TRY_LINK(F,required fortran libraries,,,F77,,,,not-optional)
@@ -2291,7 +2314,7 @@ if test "$sci_check_insight" = "yes"; then
    if test -a "$dir/ITKConfig.cmake"; then
 	INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g'`" 
         INSIGHT_LIB_DIR_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS "/;/' | sed 's/")//' | sed 's/;/ -L/g'`"
-	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -litkpng -litkzlib -litkvnl -litksys"
+	INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -litkpng -litkzlib -litkvnl -litkvnl_algo -litknetlib -litksys"
 #	INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
 
       DEF_INSIGHT="#define HAVE_INSIGHT"
