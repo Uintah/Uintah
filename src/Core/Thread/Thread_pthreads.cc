@@ -776,6 +776,7 @@ Mutex::lock()
     oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
 
+#if defined( __APPLE__ ) || defined ( _AIX )
   // Temporary hack:
   // On OSX and AIX, this call may come before the constructor (for
   // static vars) for some reason.  To solve this problem we allocate
@@ -788,6 +789,7 @@ Mutex::lock()
       throw ThreadError(std::string("pthread_mutex_init: ")
 			+strerror(errno));		
   }
+#endif
 
   int status = pthread_mutex_lock(&priv_->mutex);
   if(status != 0){
