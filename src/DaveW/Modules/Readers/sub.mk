@@ -19,6 +19,7 @@ SRCDIR   := DaveW/Modules/Readers
 
 SRCS     += \
 	$(SRCDIR)/ContourSetReader.cc\
+	$(SRCDIR)/GenesisMatrixReader.cc\
 	$(SRCDIR)/SegFldReader.cc\
 	$(SRCDIR)/SigmaSetReader.cc\
 	$(SRCDIR)/TensorFieldReader.cc\
@@ -33,7 +34,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/11/20 21:07:36  mcole
+# add special module for Chris Butsons Genesis data
+#
 # Revision 1.6  2000/10/24 05:57:17  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and
