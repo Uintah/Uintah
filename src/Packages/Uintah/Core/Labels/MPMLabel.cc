@@ -245,6 +245,9 @@ MPMLabel::MPMLabel()
   gVolumeLabel     = VarLabel::create("g.volume",
 			NCVariable<double>::getTypeDescription());
 
+  TotalVolumeDeformedLabel = VarLabel::create( "TotalVolumeDeformed",
+				 sum_vartype::getTypeDescription() );
+  
   gradPAccNCLabel = VarLabel::create("gradPAccNC",
 			NCVariable<Vector>::getTypeDescription());
 
@@ -297,11 +300,16 @@ MPMLabel::MPMLabel()
   TotalMassLabel = VarLabel::create( "TotalMass",
 				 sum_vartype::getTypeDescription() );
 
-  NTractionZMinusLabel = VarLabel::create( "NTractionZMinus",
-			sum_vartype::getTypeDescription() );
-
-  integralAreaLabel = VarLabel::create( "integralArea",
-			sum_vartype::getTypeDescription() );
+  for(int iside=0;iside<6;iside++) {
+      string label_name = Patch::getFaceName( (Patch::FaceType) iside ); // FIXME: assumes face indices
+      
+      BndyContactAreaLabel[iside] =
+        VarLabel::create( std::string("BndyContactArea_"+label_name).c_str(),
+                          sum_vartype::getTypeDescription() );
+      BndyForceLabel[iside] =
+        VarLabel::create( std::string("BndyForce_"+label_name).c_str(),
+                          sumvec_vartype::getTypeDescription() );
+  }
 
   CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
@@ -630,8 +638,11 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(ThermalEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
-  VarLabel::destroy(NTractionZMinusLabel);
-  VarLabel::destroy(integralAreaLabel);
+  VarLabel::destroy(TotalVolumeDeformedLabel);
+  for(int iside=0;iside<6;iside++) {
+      VarLabel::destroy(BndyContactAreaLabel[iside]);
+      VarLabel::destroy(BndyForceLabel[iside]);
+  }
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(CenterOfMassVelocityLabel);
   VarLabel::destroy(pCellNAPIDLabel);

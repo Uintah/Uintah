@@ -641,8 +641,6 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
-  t->computes(lb->NTractionZMinusLabel);
-  t->computes(lb->integralAreaLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -2062,8 +2060,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     // This task is done for visualization only
 
     int numMatls = d_sharedState->getNumMPMMatls();
-    double integralTraction = 0.;
-    double integralArea = 0.;
 
     NCVariable<Matrix3>       GSTRESS;
     new_dw->allocateTemporary(GSTRESS, patch, Ghost::None,0);
@@ -2128,47 +2124,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
      }
     }  // Loop over matls
 
-    bool did_it_already=false;
-    for(int m = 0; m < numMatls; m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-     if(!mpm_matl->getIsRigid() && !did_it_already){
-      did_it_already=true;
-      IntVector low = patch-> getInteriorNodeLowIndex();
-      IntVector hi  = patch-> getInteriorNodeHighIndex();
-      for(Patch::FaceType face = Patch::startFace;
-        face <= Patch::endFace; face=Patch::nextFace(face)){
-
-        // I assume we have the patch variable
-        // Check if the face is on the boundary
-        Patch::BCType bc_type = patch->getBCType(face);
-        if (bc_type == Patch::None) {
-          // We are on the boundary, i.e. not on an interior patch
-          // boundary, so do the traction accumulation . . .
-          if(face==Patch::yminus){
-            int J=low.y();
-            for (int i = low.x(); i<hi.x(); i++) {
-              for (int k = low.z(); k<hi.z(); k++) {
-                integralTraction +=
-                  gintforce[m][IntVector(i,J,k)].y();
-                if(fabs(gstress[m][IntVector(i,J,k)](1,1)) > 1.e-12){
-                  integralArea+=dx.x()*dx.z();
-                }
-              }
-            }
-          }  // if the yminus face
-        } // end of if (bc_type == Patch::None)
-      } // Loop over faces
-     } // If !rigid and !did_it 
-    } // Loop over matls
-//    if(integralArea > 0.){
-//      integralTraction=integralTraction/integralArea;
-//    }
-//    else{
-//      integralTraction=0.;
-//    }
-
-    new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
-    new_dw->put(sum_vartype(integralArea),     lb->integralAreaLabel);
   }
 }
 
