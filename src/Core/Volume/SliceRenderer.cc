@@ -484,7 +484,7 @@ SliceRenderer::multi_level_draw()
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
-	  Point c(control_point_);
+	  //Point c(control_point_);
 	  draw_z = false;
 	  r.planeIntersectParameter(-r.direction(), control_point_, t);
 	  b->compute_polygon(r, t, vertex, texcoord, size);
