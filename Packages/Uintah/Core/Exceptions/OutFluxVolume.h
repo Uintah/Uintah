@@ -22,7 +22,7 @@ namespace Uintah {
   
   class OutFluxVolume : public SCIRun::Exception {
   public:
-    OutFluxVolume(SCIRun::IntVector loc,double outflux, double vol);
+    OutFluxVolume(SCIRun::IntVector loc,double outflux, double vol, int indx);
     OutFluxVolume(const OutFluxVolume&);
     virtual ~OutFluxVolume();
     virtual const char* message() const;
