@@ -1002,7 +1002,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    set ids [$treeview curselection]
 
-	    if { $id != "" } {
+	    if { $ids != "" } {
 		set names [eval $treeview get -full $ids]
 
 		global $this-datasets
