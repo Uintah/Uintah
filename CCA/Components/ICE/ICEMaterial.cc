@@ -48,6 +48,9 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    d_isSurroundingMatl = false;
    ps->get("isSurroundingMatl",d_isSurroundingMatl);
 
+   d_includeFlowWork = true;
+   ps->get("includeFlowWork",d_includeFlowWork);
+
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
