@@ -36,11 +36,21 @@ static char *id="@(#) $Id$";
 #include "GeometrySpecification/Problem.h"
 #include <Uintah/Components/MPM/MPMLabel.h>
 
+
+#include <Uintah/Grid/BoundCond.h>
+#include <Uintah/Grid/KinematicBoundCond.h>
+#include <Uintah/Grid/TempThermalBoundCond.h>
+#include <Uintah/Grid/FluxThermalBoundCond.h>
+
+
+
+
 #include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Uintah/Components/MPM/Fracture/Fracture.h>
 #include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
+
 
 
 using namespace Uintah;
@@ -927,28 +937,53 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 }
       }
 
-#if 0
+#if 1
       // Apply grid boundary conditions to the velocity
       // before storing the data
-      for(int face = 0; face<6; face++){
-	Patch::FaceType f=(Patch::FaceType)face;
+      
+      for(Patch::FaceType face = Patch::startFace;
+	face < Patch::endFace; face=Patch::nextFace(face)){
+	vector<BoundCond* > bcs;
+	bcs = patch->getBCValues(face);
+	//cout << "number of bcs on face " << face << " = " 
+	//    << bcs.size() << endl;
+
+	for (int i = 0; i<(int)bcs.size(); i++ ) {
+	  string bcs_type = bcs[i]->getType();
+	  if (bcs_type == "Kinematic") {
+	    KinematicBoundCond* bc = 
+	      dynamic_cast<KinematicBoundCond*>(bcs[i]);
+	    //  cout << "bc value = " << bc->getVelocity() << endl;
+	  }
+	  if (bcs_type == "Temperature") {
+	    TempThermalBoundCond* bc = 
+	      dynamic_cast<TempThermalBoundCond*>(bcs[i]);
+	    //cout << "bc value = " << bc->getTemp() << endl;
+	  }
+	  if (bcs_type == "Flux") {
+	    FluxThermalBoundCond* bc = 
+	      dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	    //cout << "bc value = " << bc->getFlux() << endl;
+	  }
+	}
+	  
 #if 0
-	switch(patch->getBCType(f)){
+	switch(patch->getBCType(face)){
 	case Patch::None:
 	     // Do nothing
 	     break;
 	case Patch::Fixed:
-	     gvelocity.fillFace(f,Vector(0.0,0.0,0.0));
+	     gvelocity.fillFace(face,Vector(0.0,0.0,0.0));
 	     break; 
 	case Patch::Symmetry:
-	     gvelocity.fillFaceNormal(f);
+	     gvelocity.fillFaceNormal(face);
 	     break; 
 	case Patch::Neighbor:
 	     // Do nothing
 	     break;
 	}
 #endif
-	gvelocity.fillFace(f,Vector(0.0,0.0,0.0));
+	//gvelocity.fillFace(face,Vector(0.0,0.0,0.0));
       }
 #endif
 
@@ -1556,6 +1591,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.96  2000/06/27 23:10:53  jas
+// Added in grid bcs.
+//
 // Revision 1.95  2000/06/27 21:50:57  guilkey
 // Added saving of more "meta data."  Namely, center of mass position and
 // velocity.  These are both actually mass weighted, so should be divided

@@ -38,7 +38,6 @@ void  ParticlesNeighbor::buildExcluding(const particleIndex& pIndex,
   cellsNeighbor.buildIncluding(
     lattice.getPatch()->getLevel()->getCellIndex(lattice.getParticlesPosition()[pIndex]),
     lattice);
-  
   for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
     iter_cell != cellsNeighbor.end();
     ++iter_cell )
@@ -73,6 +72,9 @@ interpolatedouble(const ParticleVariable<double>& pdouble,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.6  2000/06/27 23:11:05  jas
+// Added in grid bcs.
+//
 // Revision 1.5  2000/06/23 21:56:40  tan
 // Use vector instead of list for cells-neighbor and particles-neighbor.
 //
