@@ -28,7 +28,7 @@ void matrixInverse(int numMatls, DenseMatrix& a, DenseMatrix& a_inverse)
     double a10 = a[1][0], a11 = a[1][1], a12 = a[1][2];
     double a20 = a[2][0], a21 = a[2][1], a22 = a[2][2];
     double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 - 
-				a00*a12*a21 - a01*a10*a22 + a00*a11*a22);
+                            a00*a12*a21 - a01*a10*a22 + a00*a11*a22);
     a_inverse[0][0] =  (-(a12*a21) + a11*a22) * one_over_denom;
     a_inverse[0][1] =  (a02*a21 - a01*a22) * one_over_denom;
     a_inverse[0][2] =  (-(a02*a11) + a01*a12) * one_over_denom;
@@ -46,65 +46,65 @@ void matrixInverse(int numMatls, DenseMatrix& a, DenseMatrix& a_inverse)
     double a20 = a[2][0], a21 = a[2][1], a22 = a[2][2], a23 = a[2][3];
     double a30 = a[3][0], a31 = a[3][1], a32 = a[3][2], a33 = a[3][3];
     double one_over_denom = 1./(a03*a12*a21*a30 - a02*a13*a21*a30 - 
-				a03*a11*a22*a30 + a01*a13*a22*a30 + 
-				a02*a11*a23*a30 - a01*a12*a23*a30 - 
-				a03*a12*a20*a31 + a02*a13*a20*a31 + 
-				a03*a10*a22*a31 - a00*a13*a22*a31 - 
-				a02*a10*a23*a31 + a00*a12*a23*a31 + 
-				a03*a11*a20*a32 - a01*a13*a20*a32 - 
-				a03*a10*a21*a32 + a00*a13*a21*a32 + 
-				a01*a10*a23*a32 - a00*a11*a23*a32 - 
-				a02*a11*a20*a33 + a01*a12*a20*a33 + 
-				a02*a10*a21*a33 - a00*a12*a21*a33 - 
-				a01*a10*a22*a33 + a00*a11*a22*a33);
+                            a03*a11*a22*a30 + a01*a13*a22*a30 + 
+                            a02*a11*a23*a30 - a01*a12*a23*a30 - 
+                            a03*a12*a20*a31 + a02*a13*a20*a31 + 
+                            a03*a10*a22*a31 - a00*a13*a22*a31 - 
+                            a02*a10*a23*a31 + a00*a12*a23*a31 + 
+                            a03*a11*a20*a32 - a01*a13*a20*a32 - 
+                            a03*a10*a21*a32 + a00*a13*a21*a32 + 
+                            a01*a10*a23*a32 - a00*a11*a23*a32 - 
+                            a02*a11*a20*a33 + a01*a12*a20*a33 + 
+                            a02*a10*a21*a33 - a00*a12*a21*a33 - 
+                            a01*a10*a22*a33 + a00*a11*a22*a33);
 
     a_inverse[0][0] = (-(a13*a22*a31) + a12*a23*a31 + a13*a21*a32 - 
-		       a11*a23*a32 - a12*a21*a33 + a11*a22*a33)*one_over_denom;
+                     a11*a23*a32 - a12*a21*a33 + a11*a22*a33)*one_over_denom;
 
     a_inverse[0][1] = (a03*a22*a31 - a02*a23*a31 - a03*a21*a32 + a01*a23*a32 + 
-		       a02*a21*a33 - a01*a22*a33) * one_over_denom;
+                     a02*a21*a33 - a01*a22*a33) * one_over_denom;
     
     a_inverse[0][2] = (-(a03*a12*a31) + a02*a13*a31 + a03*a11*a32 - a01*a13*a32
-		       - a02*a11*a33 +  a01*a12*a33) * one_over_denom;
+                     - a02*a11*a33 +  a01*a12*a33) * one_over_denom;
     
     a_inverse[0][3] = (a03*a12*a21 - a02*a13*a21 - a03*a11*a22 + a01*a13*a22 + 
-		       a02*a11*a23 -  a01*a12*a23) * one_over_denom;
+                     a02*a11*a23 -  a01*a12*a23) * one_over_denom;
     
     a_inverse[1][0] = (a13*a22*a30 - a12*a23*a30 - a13*a20*a32 + a10*a23*a32 + 
-		       a12*a20*a33 - a10*a22*a33) * one_over_denom;
+                     a12*a20*a33 - a10*a22*a33) * one_over_denom;
     
     a_inverse[1][1] = (-(a03*a22*a30) + a02*a23*a30 + a03*a20*a32 - 
-		       a00*a23*a32 - a02*a20*a33 + a00*a22*a33)*one_over_denom;
+                     a00*a23*a32 - a02*a20*a33 + a00*a22*a33)*one_over_denom;
 
     a_inverse[1][2] = (a03*a12*a30 - a02*a13*a30 - a03*a10*a32 + a00*a13*a32 +
-		       a02*a10*a33 -  a00*a12*a33) * one_over_denom;
+                     a02*a10*a33 -  a00*a12*a33) * one_over_denom;
      
     a_inverse[1][3] = (-(a03*a12*a20) + a02*a13*a20 + a03*a10*a22 - 
-		       a00*a13*a22 - a02*a10*a23 + a00*a12*a23)*one_over_denom;
+                     a00*a13*a22 - a02*a10*a23 + a00*a12*a23)*one_over_denom;
 
     a_inverse[2][0] = (-(a13*a21*a30) + a11*a23*a30 + a13*a20*a31 - 
-		       a10*a23*a31 - a11*a20*a33 + a10*a21*a33)*one_over_denom;
+                     a10*a23*a31 - a11*a20*a33 + a10*a21*a33)*one_over_denom;
      
     a_inverse[2][1] = (a03*a21*a30 - a01*a23*a30 - a03*a20*a31 + a00*a23*a31 +
-		       a01*a20*a33 - a00*a21*a33) * one_over_denom;
+                     a01*a20*a33 - a00*a21*a33) * one_over_denom;
      
     a_inverse[2][2] = (-(a03*a11*a30) + a01*a13*a30 + a03*a10*a31 - 
-		       a00*a13*a31 - a01*a10*a33 + a00*a11*a33)*one_over_denom;
+                     a00*a13*a31 - a01*a10*a33 + a00*a11*a33)*one_over_denom;
      
     a_inverse[2][3] = (a03*a11*a20 - a01*a13*a20 - a03*a10*a21 + a00*a13*a21 +
-		       a01*a10*a23 - a00*a11*a23) * one_over_denom;
+                     a01*a10*a23 - a00*a11*a23) * one_over_denom;
 
     a_inverse[3][0] = (a12*a21*a30 - a11*a22*a30 - a12*a20*a31 + a10*a22*a31 +
-		       a11*a20*a32 - a10*a21*a32) * one_over_denom;
+                     a11*a20*a32 - a10*a21*a32) * one_over_denom;
      
     a_inverse[3][1] = (-(a02*a21*a30) + a01*a22*a30 + a02*a20*a31 - 
-		       a00*a22*a31 - a01*a20*a32 + a00*a21*a32)*one_over_denom;
+                     a00*a22*a31 - a01*a20*a32 + a00*a21*a32)*one_over_denom;
      
     a_inverse[3][2] = (a02*a11*a30 - a01*a12*a30 - a02*a10*a31 + a00*a12*a31 +
-		       a01*a10*a32 -  a00*a11*a32) * one_over_denom;
+                     a01*a10*a32 -  a00*a11*a32) * one_over_denom;
 
     a_inverse[3][3] = (-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 - 
-		       a00*a12*a21 - a01*a10*a22 + a00*a11*a22)*one_over_denom;
+                     a00*a12*a21 - a01*a10*a22 + a00*a11*a22)*one_over_denom;
     return;
   }
   if (numMatls > 4) {    // numMatls X numMatls; with numMatls > 4
@@ -201,17 +201,17 @@ void matrixSolver(int numMatls, DenseMatrix& a, vector<double>& b, vector<double
     double b0 = 11.0/6.0, b1 = 13.0/12.0, b2 = 47.0/60.0; */
 
     double one_over_denom = 1./(-(a02*a11*a20) + a01*a12*a20 + a02*a10*a21 
-				- a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
+                            - a00*a12*a21 -  a01*a10*a22 + a00*a11*a22);
 
     X[0] = ( (-(a12*a21) + a11*a22)*b0 + (a02*a21 - a01*a22)*b1 +
-	     (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
+            (-(a02*a11) + a01*a12)*b2 )*one_over_denom;
 
 
     X[1] = ( (a12*a20 - a10*a22)*b0 +  (-(a02*a20) + a00*a22)*b1 +
-	     (a02*a10 - a00*a12)*b2 ) * one_over_denom;
+            (a02*a10 - a00*a12)*b2 ) * one_over_denom;
 
     X[2] =  ( (-(a11*a20) + a10*a21)*b0 +  (a01*a20 - a00*a21)*b1 +
-	      (-(a01*a10) + a00*a11)*b2) * one_over_denom;
+             (-(a01*a10) + a00*a11)*b2) * one_over_denom;
     return;
   }      
 
@@ -233,48 +233,48 @@ void matrixSolver(int numMatls, DenseMatrix& a, vector<double>& b, vector<double
     double b0 = 9.5342,  b1 = 6.3941,  b2 = 18.4231,  b3 = 16.9237;*/
 
     double one_over_denom = 1./(a03*a12*a21*a30 - a02*a13*a21*a30 -
-				a03*a11*a22*a30 + a01*a13*a22*a30 + 
-				a02*a11*a23*a30 - a01*a12*a23*a30 - 
-				a03*a12*a20*a31 + a02*a13*a20*a31 + 
-				a03*a10*a22*a31 - a00*a13*a22*a31 - 
-				a02*a10*a23*a31 + a00*a12*a23*a31 + 
-				a03*a11*a20*a32 - a01*a13*a20*a32 - 
-				a03*a10*a21*a32 + a00*a13*a21*a32 + 
-				a01*a10*a23*a32 - a00*a11*a23*a32 -
-				a02*a11*a20*a33 + a01*a12*a20*a33 + 
-				a02*a10*a21*a33 - a00*a12*a21*a33 - 
-				a01*a10*a22*a33 + a00*a11*a22*a33);
+                            a03*a11*a22*a30 + a01*a13*a22*a30 + 
+                            a02*a11*a23*a30 - a01*a12*a23*a30 - 
+                            a03*a12*a20*a31 + a02*a13*a20*a31 + 
+                            a03*a10*a22*a31 - a00*a13*a22*a31 - 
+                            a02*a10*a23*a31 + a00*a12*a23*a31 + 
+                            a03*a11*a20*a32 - a01*a13*a20*a32 - 
+                            a03*a10*a21*a32 + a00*a13*a21*a32 + 
+                            a01*a10*a23*a32 - a00*a11*a23*a32 -
+                            a02*a11*a20*a33 + a01*a12*a20*a33 + 
+                            a02*a10*a21*a33 - a00*a12*a21*a33 - 
+                            a01*a10*a22*a33 + a00*a11*a22*a33);
 
   X[0] = ((-(a13*a22*a31) + a12*a23*a31 + a13*a21*a32 - a11*a23*a32 - 
-	   a12*a21*a33 + a11*a22*a33)*b0 +   (a03*a22*a31 - a02*a23*a31 - 
-	   a03*a21*a32 + a01*a23*a32 + a02*a21*a33 -  a01*a22*a33)*b1 + 
-	  (-(a03*a12*a31) + a02*a13*a31 + a03*a11*a32 - a01*a13*a32 - 
-	   a02*a11*a33 + a01*a12*a33)*b2 +  (a03*a12*a21 - a02*a13*a21 - 
-	  a03*a11*a22 + a01*a13*a22 + a02*a11*a23 -  a01*a12*a23)*b3) * 
+          a12*a21*a33 + a11*a22*a33)*b0 +   (a03*a22*a31 - a02*a23*a31 - 
+          a03*a21*a32 + a01*a23*a32 + a02*a21*a33 -  a01*a22*a33)*b1 + 
+         (-(a03*a12*a31) + a02*a13*a31 + a03*a11*a32 - a01*a13*a32 - 
+          a02*a11*a33 + a01*a12*a33)*b2 +  (a03*a12*a21 - a02*a13*a21 - 
+         a03*a11*a22 + a01*a13*a22 + a02*a11*a23 -  a01*a12*a23)*b3) * 
     one_over_denom;
 
   X[1] = ( (a13*a22*a30 - a12*a23*a30 - a13*a20*a32 + a10*a23*a32 + 
-	    a12*a20*a33 - a10*a22*a33)*b0 + (-(a03*a22*a30) + a02*a23*a30 + 
-	    a03*a20*a32 - a00*a23*a32 - a02*a20*a33 +  a00*a22*a33)*b1 + 
-	   (a03*a12*a30 - a02*a13*a30 - a03*a10*a32 + a00*a13*a32 + 
-	    a02*a10*a33 - a00*a12*a33)*b2 + (-(a03*a12*a20) + a02*a13*a20 + 
-	    a03*a10*a22 - a00*a13*a22 - a02*a10*a23 + a00*a12*a23)*b3 ) * 
+           a12*a20*a33 - a10*a22*a33)*b0 + (-(a03*a22*a30) + a02*a23*a30 + 
+           a03*a20*a32 - a00*a23*a32 - a02*a20*a33 +  a00*a22*a33)*b1 + 
+          (a03*a12*a30 - a02*a13*a30 - a03*a10*a32 + a00*a13*a32 + 
+           a02*a10*a33 - a00*a12*a33)*b2 + (-(a03*a12*a20) + a02*a13*a20 + 
+           a03*a10*a22 - a00*a13*a22 - a02*a10*a23 + a00*a12*a23)*b3 ) * 
     one_over_denom;
 
   X[2] = ((-(a13*a21*a30) + a11*a23*a30 + a13*a20*a31 - a10*a23*a31 - 
-	   a11*a20*a33 +  a10*a21*a33)*b0 +  (a03*a21*a30 - a01*a23*a30 - 
+          a11*a20*a33 +  a10*a21*a33)*b0 +  (a03*a21*a30 - a01*a23*a30 - 
            a03*a20*a31 + a00*a23*a31 + a01*a20*a33 - a00*a21*a33)*b1 + 
-	  (-(a03*a11*a30) + a01*a13*a30 + a03*a10*a31 - a00*a13*a31 - 
-	   a01*a10*a33 + a00*a11*a33)*b2 + (a03*a11*a20 - a01*a13*a20 - 
-	   a03*a10*a21 + a00*a13*a21 + a01*a10*a23 - a00*a11*a23)*b3 ) * 
+         (-(a03*a11*a30) + a01*a13*a30 + a03*a10*a31 - a00*a13*a31 - 
+          a01*a10*a33 + a00*a11*a33)*b2 + (a03*a11*a20 - a01*a13*a20 - 
+          a03*a10*a21 + a00*a13*a21 + a01*a10*a23 - a00*a11*a23)*b3 ) * 
     one_over_denom;
 
   X[3] = ((a12*a21*a30 - a11*a22*a30 - a12*a20*a31 + a10*a22*a31 + 
-	   a11*a20*a32 - a10*a21*a32)*b0 + (-(a02*a21*a30) + a01*a22*a30 + 
+          a11*a20*a32 - a10*a21*a32)*b0 + (-(a02*a21*a30) + a01*a22*a30 + 
            a02*a20*a31 - a00*a22*a31 - a01*a20*a32 + a00*a21*a32)*b1 + 
-	  (a02*a11*a30 - a01*a12*a30 - a02*a10*a31 + a00*a12*a31 + 
-	   a01*a10*a32 - a00*a11*a32)*b2 +  (-(a02*a11*a20) + a01*a12*a20 + 
-	   a02*a10*a21 - a00*a12*a21 - a01*a10*a22 + a00*a11*a22)*b3) * 
+         (a02*a11*a30 - a01*a12*a30 - a02*a10*a31 + a00*a12*a31 + 
+          a01*a10*a32 - a00*a11*a32)*b2 +  (-(a02*a11*a20) + a01*a12*a20 + 
+          a02*a10*a21 - a00*a12*a21 - a01*a10*a22 + a00*a11*a22)*b3) * 
     one_over_denom;
   return;
   }
