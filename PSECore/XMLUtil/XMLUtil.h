@@ -41,6 +41,8 @@ namespace PSECore {
       void appendElement(DOM_Element& root, const DOMString& name,
 			 const SCICore::Geometry::Point& value);
       void appendElement(DOM_Element& root, const DOMString& name,
+			 const SCICore::Geometry::Vector& value);
+      void appendElement(DOM_Element& root, const DOMString& name,
 			 long value);
       void appendElement(DOM_Element& root, const DOMString& name,
 			 double value);
@@ -49,6 +51,9 @@ namespace PSECore {
 
 //
 // $Log$
+// Revision 1.2  2000/06/15 19:51:58  sparker
+// Added appendElement for Vector
+//
 // Revision 1.1  2000/05/20 08:04:28  sparker
 // Added XML helper library
 //
