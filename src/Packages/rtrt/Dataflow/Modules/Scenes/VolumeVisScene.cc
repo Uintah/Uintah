@@ -58,10 +58,10 @@ using namespace std;
 
 class VolumeVisScene : public Module {
 public:
-  VolumeVisScene(const string& id);
+  VolumeVisScene(GuiContext *ctx);
   virtual ~VolumeVisScene();
   virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
+  void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   void create_dirs(Vector* objset);
@@ -96,28 +96,26 @@ private:
 };
 
 static string widget_name("VolumeVisScene Widget");
- 
-extern "C" Module* make_VolumeVisScene(const string& id) {
-  return scinew VolumeVisScene(id);
-}
 
-VolumeVisScene::VolumeVisScene(const string& id)
-  : Module("VolumeVisScene", id, Filter, "Scenes", "rtrt"),
-    scene_type_gui("scene_type_gui", id, this),
-    data_file_gui("data_file_gui", id, this),
-    do_phong_gui("do_phong_gui", id, this),
-    ncolors_gui("ncolors_gui", id, this),
-    t_inc_gui("t_inc_gui", id, this),
-    spec_coeff_gui("spec_coeff_gui", id, this),
-    ambient_gui("ambient_gui", id, this),
-    diffuse_gui("diffuse_gui", id, this),
-    specular_gui("specular_gui", id, this),
-    val_gui("val_gui", id, this),
-    override_data_min_gui("override_data_min_gui", id, this),
-    override_data_max_gui("override_data_max_gui", id, this),
-    data_min_in_gui("data_min_in_gui", id, this),
-    data_max_in_gui("data_max_in_gui", id, this),
-    frame_rate_gui("frame_rate_gui", id, this),
+DECLARE_MAKER(VolumeVisScene)
+
+VolumeVisScene::VolumeVisScene(GuiContext* ctx)
+  : Module("VolumeVisScene", ctx, Filter, "Scenes", "rtrt"),
+    scene_type_gui(ctx->subVar("scene_type_gui")),
+    data_file_gui(ctx->subVar("data_file_gui")),
+    do_phong_gui(ctx->subVar("do_phong_gui")),
+    ncolors_gui(ctx->subVar("ncolors_gui")),
+    t_inc_gui(ctx->subVar("t_inc_gui")),
+    spec_coeff_gui(ctx->subVar("spec_coeff_gui")),
+    ambient_gui(ctx->subVar("ambient_gui")),
+    diffuse_gui(ctx->subVar("diffuse_gui")),
+    specular_gui(ctx->subVar("specular_gui")),
+    val_gui(ctx->subVar("val_gui")),
+    override_data_min_gui(ctx->subVar("override_data_min_gui")),
+    override_data_max_gui(ctx->subVar("override_data_max_gui")),
+    data_min_in_gui(ctx->subVar("data_min_in_gui")),
+    data_max_in_gui(ctx->subVar("data_max_in_gui")),
+    frame_rate_gui(ctx->subVar("frame_rate_gui")),
     timeobj(0)
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
@@ -142,7 +140,7 @@ void VolumeVisScene::execute()
 
 // This is called when the tcl code explicity calls a function besides
 // needexecute.
-void VolumeVisScene::tcl_command(TCLArgs& args, void* userdata)
+void VolumeVisScene::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("VolumeVisScene needs a minor command");
