@@ -401,7 +401,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   int* index_data=0;
   unsigned char* tex_data=0;
   unsigned char* mean_data=0;
-  unsigned char* xform_data=0;
+  unsigned char* coeff_data=0;
   int total_nspheres=0;
   int total_nindices=0;
   int total_ntextures=0;
@@ -409,8 +409,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   int total_nxforms=0;
   float tex_min = 1;
   float tex_max = 0;
-  float xform_min = 1;
-  float xform_max = 0;
+  float coeff_min = 1;
+  float coeff_max = 0;
   
   // Open file for reading
   ifstream infile(fname);
@@ -425,9 +425,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   bool idx_flag=false;
   bool tex_flag=false;
   bool m_flag=false;
-  bool xform_flag=false;
-  bool bases_minmax_flag=false;
-  bool xform_minmax_flag=false;
+  bool coeff_flag=false;
+  bool basis_minmax_flag=false;
+  bool coeff_minmax_flag=false;
   char line[MAX_LINE_LEN];
   infile.getline(line,MAX_LINE_LEN);
   while(!infile.eof()) {
@@ -498,16 +498,16 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 
       total_ntextures+=countData(tex_fname, sizeof(unsigned char), tex_res*tex_res);
       tex_flag=true;
-    } else if (strcmp(token, "bases_file:")==0) {
+    } else if (strcmp(token, "basis_file:")==0) {
       if (!group_flag) {
-	cerr<<"encountered \"bases_file\" without a valid sphere group"<<endl;
+	cerr<<"encountered \"basis_file\" without a valid sphere group"<<endl;
 	return 0;
       }
       
       // Check for a texture data file
       char *tex_fname=strtok(0, " ");
       if (!tex_fname) {
-	cerr<<"bases_file requires a filename"<<endl;
+	cerr<<"basis_file requires a filename"<<endl;
 	return 0;
       }
 
@@ -541,24 +541,24 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 
       total_nmeans+=countData(m_fname, sizeof(unsigned char));      
       m_flag = true;
-    } else if (strcmp(token, "transform_file:")==0) {
+    } else if (strcmp(token, "coeff_file:")==0) {
       if (!group_flag) {
-	cerr<<"encountered \"transform_file\" without a valid sphere group"<<endl;
+	cerr<<"encountered \"coeff_file\" without a valid sphere group"<<endl;
 	return 0;
       }
       
-      // Check for a transform data file
-      char *xform_fname=strtok(0, " ");
-      if (!xform_fname) {
-	cerr<<"transform_file requires a filename"<<endl;
+      // Check for a coefficient data file
+      char *coeff_fname=strtok(0, " ");
+      if (!coeff_fname) {
+	cerr<<"coeff_file requires a filename"<<endl;
 	return 0;
       }
 
-      total_nxforms+=countData(xform_fname, sizeof(unsigned char));
-      xform_flag = true;
-    } else if (strcmp(token, "bases_minmax:")==0) {
-      if (bases_minmax_flag) {
-	cerr << "Can only have one bases_minmax per file.\n";
+      total_nxforms+=countData(coeff_fname, sizeof(unsigned char));
+      coeff_flag = true;
+    } else if (strcmp(token, "basis_minmax:")==0) {
+      if (basis_minmax_flag) {
+	cerr << "Can only have one basis_minmax per file.\n";
 	return 0;
       }
       
@@ -566,7 +566,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       if (min)
 	tex_min = atof(min);
       else {
-	cerr << "Expected a min for bases_minmax, but not found.\n";
+	cerr << "Expected a min for basis_minmax, but not found.\n";
 	return 0;
       }
       
@@ -574,34 +574,34 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       if (max)
 	tex_max = atof(max);
       else {
-	cerr << "Expected a max for bases_minmax, but not found.\n";
+	cerr << "Expected a max for basis_minmax, but not found.\n";
 	return 0;
       }
 
-      bases_minmax_flag = true;
-    } else if (strcmp(token, "transform_minmax:")==0) {
-      if (xform_minmax_flag) {
-	cerr << "Can only have one transform_minmax per file.\n";
+      basis_minmax_flag = true;
+    } else if (strcmp(token, "coeff_minmax:")==0) {
+      if (coeff_minmax_flag) {
+	cerr << "Can only have one coeff_minmax per file.\n";
 	return 0;
       }
       
       char *min=strtok(0, " ");
       if (min)
-	xform_min = atof(min);
+	coeff_min = atof(min);
       else {
-	cerr << "Expected a min for transform_minmax, but not found.\n";
+	cerr << "Expected a min for coeff_minmax, but not found.\n";
 	return 0;
       }
       
       char *max=strtok(0, " ");
       if (max)
-	xform_max = atof(max);
+	coeff_max = atof(max);
       else {
-	cerr << "Expected a max for transform_minmax, but not found.\n";
+	cerr << "Expected a max for coeff_minmax, but not found.\n";
 	return 0;
       }
 
-      xform_minmax_flag = true;
+      coeff_minmax_flag = true;
     } else if (strcmp(token, "}")==0) {
       if (!group_flag) {
 	cerr<<"encountered \"}\" without a valid sphere group"<<endl;
@@ -651,29 +651,32 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     }
   }
 
-  if (m_flag && !xform_flag) {
-    cerr<<"mean_file specified, but no transform_file found"<<endl;
+  if (m_flag && !coeff_flag) {
+    cerr<<"mean_file specified, but no coeff_file found"<<endl;
     return 0;
-  } else if (!m_flag && xform_flag) {
-    cerr<<"transform_file specified, but no mean_file found"<<endl;
+  } else if (!m_flag && coeff_flag) {
+    cerr<<"coeff_file specified, but no mean_file found"<<endl;
     return 0;
-  } else if (m_flag && xform_flag) {
-    if (!bases_minmax_flag) {
-      cerr<<"bases_minmax was not found"<<endl;
+  } else if (m_flag && coeff_flag) {
+    if (!basis_minmax_flag) {
+      cerr<<"basis_minmax was not found"<<endl;
       return 0;
-    } else if (!xform_minmax_flag) {
-      cerr<<"transform_minmax was not found"<<endl;
+    } else if (!coeff_minmax_flag) {
+      cerr<<"coeff_minmax was not found"<<endl;
       return 0;
     }
   }
 
+  // XXX - fix dimensionality checks
+#if 0
   if (total_nxforms != total_nmeans*total_ntextures) {
     cerr<<"number of elements in transform ("<<total_nxforms
-	<<") is not equal to the number of channels times the number of bases ("
+	<<") is not equal to the number of channels times the number of basis ("
 	<<(total_nmeans*total_ntextures)<<")"<<endl;
     return 0;
   }
-  
+#endif
+
   // Allocate memory for the necessary data structures
   cout<<"Allocating space for "<<total_nspheres<<" spheres"<<endl;
   sphere_data=new float[numvars*total_nspheres];
@@ -714,13 +717,12 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
     }
   }
   
-  if (xform_flag) {
-    cout<<"Allocating space for "<<total_nxforms<<" elements of the transformation "
-	<<"matrix"<<endl;
-    xform_data=new unsigned char[total_nxforms];
-    if (!xform_data) {
+  if (coeff_flag) {
+    cout<<"Allocating space for "<<total_nxforms<<" PCA coefficients"<<endl;
+    coeff_data=new unsigned char[total_nxforms];
+    if (!coeff_data) {
       cerr<<"failed to allocate "<<total_nxforms*sizeof(unsigned char)<<" bytes "
-	  <<"for transform data"<<endl;
+	  <<"for coefficient data"<<endl;
       return 0;
     }
   }
@@ -745,7 +747,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   int idx_index = 0;
   int tex_index = 0;
   int m_index = 0;
-  int xform_index = 0;
+  int coeff_index = 0;
   infile2.getline(line,MAX_LINE_LEN);
   while(!infile2.eof()) {
     // Parse the line
@@ -775,7 +777,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       // Slurp the index data
       idx_index+=slurpIntegerData(idx_fname, &(index_data[idx_index]));
     } else if (strcmp(token, "texture_file:")==0 ||
-	       strcmp(token, "bases_file:") == 0) {
+	       strcmp(token, "basis_file:") == 0) {
       // Get the texture data file
       char *tex_fname=strtok(0, " ");
       if (!tex_fname) {
@@ -808,16 +810,16 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 
       // Slurp the mean data
       m_index+=slurpUCharData(m_fname, &(mean_data[m_index]));
-    } else if (strcmp(token, "transform_file:")==0) {
-      // Get the transform data file
-      char *xform_fname=strtok(0, " ");
-      if (!xform_fname) {
-	cerr<<"transform_file requires a filename"<<endl;
+    } else if (strcmp(token, "coeff_file:")==0) {
+      // Get the coefficient data file
+      char *coeff_fname=strtok(0, " ");
+      if (!coeff_fname) {
+	cerr<<"coeff_file requires a filename"<<endl;
 	return 0;
       }
       
-      // Slurp the transform data
-      xform_index+=slurpUCharData(xform_fname, &(xform_data[xform_index]));
+      // Slurp the coefficient data
+      coeff_index+=slurpUCharData(coeff_fname, &(coeff_data[coeff_index]));
     }
     
     // Get the next line
@@ -829,12 +831,13 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 
   // Create the appropriate structure
   TextureGridSpheres* tex_grid;
-  if (m_flag && xform_flag) {
+  if (m_flag && coeff_flag) {
     tex_grid = new PCAGridSpheres(sphere_data, total_nspheres, numvars,
 				  radius, index_data,
 				  tex_data, total_ntextures, tex_res,
-				  xform_data, mean_data, total_nmeans,
-				  tex_min, tex_max, xform_min, xform_max,
+				  coeff_data, mean_data,
+				  total_nxforms/total_ntextures,
+				  tex_min, tex_max, coeff_min, coeff_max,
 				  nsides, gdepth, cmap, color);
   } else {
     tex_grid = new TextureGridSpheres(sphere_data, total_nspheres, numvars,
