@@ -6,8 +6,6 @@
    <Meta>
        <title> Flow through a nozzle </title>
    </Meta>
-
-
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -233,7 +231,7 @@
                  <name>2ndStage</name>
                </tri>         
                <res>                [2,2,1]          </res>
-               <velocity>           [9,0.,0.]      </velocity>
+               <velocity>           [0,0.,0.]        </velocity>
                <temperature>        224.23           </temperature>
              </geom_object>
           </material>
