@@ -455,6 +455,8 @@
 	<heatExchange>true</heatExchange>
 	<turbulentPrandtNo>0.7</turbulentPrandtNo>
 	<fluidHeatCapacity>1007.</fluidHeatCapacity>
+	<IfCutCell>false</IfCutCell>
+	<StationarySolid>false</StationarySolid>
 
     </Multimaterial>
 
