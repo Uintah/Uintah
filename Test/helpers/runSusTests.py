@@ -243,16 +243,22 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
 
     if mode == "dbg":
 	rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
+	short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
+	short_message = short_message_file.readline(500)
         if rc == 0:
-	    print "\tMemory leak tests passed."
+	    print "\tMemory leak tests passed." % (short_message)
+	    if short_message != "":
+		print "\t%s" % (short_message)    
 	elif rc == 5 * 256:
 	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
 	elif rc == 256:
-	    print "\t*** Warning, test %s failed memory leak test" % (testname)
+	    print "\t*** Warning, test %s failed memory leak test." % (testname)
 	    print "\tSee %s/mem_leak_check.log" % (getcwd())
 	    return 1
 	elif rc == 2*256:
-	    print "\t*** Warning, test %s failed memory highwater test" % (testname)
+	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
+	    if short_message != "":
+		print "\t%s" % (short_message)
 	    print "\tSee %s/mem_leak_check.log" % (getcwd())
  	    print "%s" % replace_msg
 	    return 1

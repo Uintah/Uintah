@@ -29,22 +29,24 @@ print "Old total memory highwater " . $compare_highwater . "\n";
 if ($compare_highwater == 0 && $test_highwater > 0) {
     $percent = 99999;
 }
-else if ($test_highwater == 0 && $compare_highwater > 0) {
+elsif ($test_highwater == 0 && $compare_highwater > 0) {
     $percent = -99999;
 }
-if ($test_highwater > 0 && $compare_highwater > 0) {
-    $percent = floor(($test_highwater - $compare_highwater) / 
-		     $compare_highwate * 100 + 0.5);
+elsif ($test_highwater > 0 && $compare_highwater > 0) {
+    $percent = int(($test_highwater - $compare_highwater) / 
+		   $compare_highwater * 100 + 0.5);
+}
+else {
+    $percent = 0; # both are zero
 }
  
 if ($percent > 0) {
-    print "Memory usage increased (worsened) by %" . $percent;
+    print "Memory usage increased (worsened) by %" . $percent . "\n";
 }
-else ($percent < 0) {
-    print "Memory usage decreased (improved) by %" . -$percent;
+elsif ($percent < 0) {
+    print "Memory usage decreased (improved) by %" . -$percent . "\n";
 }
 else {
-    print "Memory usage stayed the same."
+    print "Memory usage stayed the same.\n"
 }
 exit $percent;
-
