@@ -69,7 +69,6 @@ void GeometryOPort::reset()
 	GeomReply reply=tmp.receive();
 	portid=reply.portid;
 	busy_bit=reply.busy_bit;
-//	cerr << "OPort initialized...\n";
 	turn_off();
     }
     dirty=0;
@@ -96,10 +95,8 @@ GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
     GeomID id=serial++;
     GeometryComm* msg=new GeometryComm(portid, id, obj, name, lock);
     if(outbox){
-//	cerr << "addObj sending...\n";
 	outbox->send(msg);
     } else {
-//	cerr << "addObj saving...\n";
 	save_msg(msg);
     }
     dirty=1;
@@ -167,7 +164,6 @@ void GeometryOPort::attach(Connection* c)
     turn_on();
     GeometryComm* p=save_msgs;
     while(p){
-//	cerr << "Sending old message\n";
 	GeometryComm* next=p->next;
 	p->portno=portid;
 	outbox->send(p);

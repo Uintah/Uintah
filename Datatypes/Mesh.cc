@@ -492,11 +492,14 @@ int Mesh::locate(const Point& p, int& ix)
 {
     int i=0;
     while(!elems[i])i++;
+#if 0
     Array1<int> beenhere(elems.size());
     for(int ii=0;ii<beenhere.size();ii++)
 	beenhere[ii]=0;
+#endif
     while(1){
 	Element* elem=elems[i];
+#if 0
 	if(beenhere[i]){
 	    if(beenhere[i]>1){
 		dump_mesh(this);
@@ -512,6 +515,7 @@ int Mesh::locate(const Point& p, int& ix)
 	    cerr << endl;
 	}
 	beenhere[i]++;
+#endif
 	Point p1(nodes[elem->n[0]]->p);
 	Point p2(nodes[elem->n[1]]->p);
 	Point p3(nodes[elem->n[2]]->p);
