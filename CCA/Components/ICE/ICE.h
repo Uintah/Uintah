@@ -508,11 +508,13 @@ namespace Uintah {
                                IntVector& low,                 
                                IntVector& high);               
       
-      void createDirs( const string& desc, string& path);
+      void createDirs( const Patch* patch,
+                        const string& desc, 
+                        string& path);
       
       void find_gnuplot_origin_And_dx(const Patch*,
-                                     const IntVector,
-                                     const IntVector,
+                                     IntVector&,
+                                     IntVector&,
                                      double *,
                                      double *);
                                                            
@@ -645,6 +647,14 @@ namespace Uintah {
                       const string& message1,
                       const string& message2, 
                       const SFCZVariable<double>& q_FC);
+                                
+       template <class T>
+       void printData_driver( int indx,
+                              const  Patch* patch,
+                              int include_GC,
+                              const string& message1,
+                              const string& message2, 
+                              const  T& q_CC);
       
       ICELabel* lb; 
       MPMICELabel* MIlb;
