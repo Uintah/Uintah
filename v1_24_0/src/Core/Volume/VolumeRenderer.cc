@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Volume/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>

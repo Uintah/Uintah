@@ -29,7 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Tue Jul 13 02:27:42 2004
 
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Volume/CM2Shader.h>
 
 #include <iostream>
