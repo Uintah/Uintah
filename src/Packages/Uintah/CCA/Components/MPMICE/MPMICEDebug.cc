@@ -28,7 +28,8 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;        
     IntVector low, high; 
-
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(16);
     fprintf(stderr,"______________________________________________\n");
     fprintf(stderr,"$%s\n",message1);
     fprintf(stderr,"$%s\n",message2);
@@ -57,6 +58,7 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
       fprintf(stderr,"\n");
     }
     fprintf(stderr," ______________________________________________\n");
+    cerr.setf(ios::scientific, ios::floatfield);
   }
 }
 
@@ -78,7 +80,8 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;             
     IntVector low, high; 
-
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(16);
     fprintf(stderr,"______________________________________________\n");
     fprintf(stderr,"$%s\n",message1);
     fprintf(stderr,"$%s\n",message2);
@@ -108,5 +111,6 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
       fprintf(stderr,"\n");
     }
     fprintf(stderr," ______________________________________________\n");
+    cerr.setf(ios::scientific, ios::floatfield);
   }
 }
