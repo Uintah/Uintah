@@ -197,9 +197,15 @@ namespace rtrt {
     Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
 
     // used for acceleration method to improve rendering frame rates
-    unsigned long long UIgrid;
+    unsigned long long UIgrid1;
+    unsigned long long UIgrid2;
+    unsigned long long UIgrid3;
+    unsigned long long UIgrid4;
 #define gridsize 64
-    bool UIgridblock[gridsize];
+    bool UIgridblock1[gridsize];
+    bool UIgridblock2[gridsize];
+    bool UIgridblock3[gridsize];
+    bool UIgridblock4[gridsize];
 
     // collection of volumes being rendered
     vector<VolumeVis2D*> volumes;
