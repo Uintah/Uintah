@@ -37,7 +37,7 @@
                     <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0. </value>
                     </BCType>
-		    <BCType id = "0" label = "Velocity" var = "NegInterior">
+		    <BCType id = "0" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                     </BCType>
 		    <BCType id = "0" label = "Temperature" var = "Neumann">
@@ -51,7 +51,7 @@
                     <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0. </value>
                     </BCType>
-		    <BCType id = "0" label = "Velocity" var = "NegInterior">
+		    <BCType id = "0" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                     </BCType>
 		    <BCType id = "0" label = "Temperature" var = "Neumann">
@@ -65,7 +65,7 @@
                     <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0. </value>
                     </BCType>
-		    <BCType id = "0" label = "Velocity" var = "NegInterior">
+		    <BCType id = "0" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                     </BCType>
 		    <BCType id = "0" label = "Temperature" var = "Neumann">
@@ -79,7 +79,7 @@
                      <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0. </value>
                      </BCType>
-		     <BCType id = "0" label = "Velocity" var = "NegInterior">
+		     <BCType id = "0" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                      </BCType>
 		     <BCType id = "0" label = "Temperature" var = "Neumann">
@@ -93,7 +93,7 @@
                      <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0. </value>
                      </BCType>
-		     <BCType id = "0" label = "Velocity" var = "NegInterior">
+		     <BCType id = "0" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                      </BCType>
 		     <BCType id = "0" label = "Temperature" var = "Neumann">
@@ -107,7 +107,7 @@
                      <BCType id = "0" label = "Pressure" var = "Neumann">
                            <value> 0. </value>
                      </BCType>
-		     <BCType id = "0" label = "Velocity" var = "NegInterior">
+		     <BCType id = "0" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
                      </BCType>
 		     <BCType id = "0" label = "Temperature" var = "Neumann">
@@ -125,7 +125,7 @@
                 <extraCells>[1,1,1]	  </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
-	    <spacing>[0.04,1,1] </spacing>
+	    <spacing>[0.02,1,1] </spacing>
 	</Level>
     </Grid>
    
@@ -136,7 +136,11 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>riemanSm.uda</filebase>
-	<outputInterval>.0</outputInterval>
+	<outputInterval>.000001</outputInterval>
+        <save label="vel_CC"/>
+        <save label="press_CC"/>
+        <save label="rho_CC"/>
+        <save label="rho_micro_CC"/>
    </DataArchiver>
 
    <Debug>
