@@ -538,6 +538,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   
   particle_state.push_back(lb->pParticleIDLabel);
   particle_state_preReloc.push_back(lb->pParticleIDLabel_preReloc);
+  
+  particle_state.push_back(lb->pColorLabel);
+  particle_state_preReloc.push_back(lb->pColorLabel_preReloc);
 
   if (d_8or27 == 27) {
     particle_state.push_back(lb->pSizeLabel);
