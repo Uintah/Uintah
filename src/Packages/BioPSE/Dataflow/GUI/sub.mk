@@ -14,7 +14,6 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 #  University of Utah. All Rights Reserved.
 #
-
 # *** NOTE ***
 # Do not remove or modify the comment line:
 # #[INSERT NEW ?????? HERE]
@@ -27,13 +26,14 @@ SRCDIR := Packages/BioPSE/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/SetupFEMatrix.tcl\
-	$(SRCDIR)/ConductivitySearch.tcl\
+	$(SRCDIR)/SetupFEMatrix.tcl
 	$(SRCDIR)/DipoleSearch.tcl\
-	$(SRCDIR)/ShowDipoles.tcl\
-	$(SRCDIR)/SurfaceToSurface.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
+#	$(SRCDIR)/ShowDipoles.tcl\
+#	$(SRCDIR)/SurfaceToSurface.tcl\
+#	$(SRCDIR)/ConductivitySearch.tcl\
+
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
