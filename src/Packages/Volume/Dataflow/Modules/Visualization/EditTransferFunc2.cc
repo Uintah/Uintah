@@ -163,6 +163,10 @@ protected:
   RectangleType type_;
   float left_x_, left_y_;
   float width_, height_, offset_;
+
+  // Used by picking.
+  float last_x_, last_y_;
+  int pick_ix_, pick_iy_;
   static FragmentProgramARB* shader_;
 };
 
@@ -544,6 +548,7 @@ RectangleWidget::draw()
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
+  selectcolor(1);
 
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(thin_line_width_);
@@ -625,6 +630,18 @@ RectangleWidget::pick (int ix, int iy, int w, int h)
     return 6;
   }
 
+  if (x > Min(left_x_, left_x_ + width_) &&
+      x < Max(left_x_, left_x_ + width_) &&
+      y > Min(left_y_, left_y_ + height_) &&
+      y < Max(left_y_, left_y_ + height_))
+  {
+    last_x_ = left_x_;
+    last_y_ = left_y_;
+    pick_ix_ = ix;
+    pick_iy_ = iy;
+    return 1;
+  }
+
   return 0;
 }
 
@@ -637,6 +654,11 @@ RectangleWidget::move (int obj, int ix, int iy, int w, int h)
   
   switch (selected_)
   {
+  case 1:
+    left_x_ = last_x_ + x - pick_ix_ / (double)w;
+    left_y_ = last_y_ + y - pick_iy_ / (double)h;
+    break;
+      
   case 2:
     width_ = width_ + left_x_ - x;
     left_x_ = x;
