@@ -105,7 +105,6 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
                                                  particleIndex start)
 {
   Box b = patch->getBox();
-  Vector dx = patch->dCell();
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
