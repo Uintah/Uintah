@@ -9,7 +9,8 @@ SRCS     += \
 	$(SRCDIR)/Primes.cc     \
 	$(SRCDIR)/Matrix3.cc    \
 	$(SRCDIR)/CubeRoot.cc	\
-	$(SRCDIR)/Sparse.cc
+	$(SRCDIR)/Sparse.cc	\
+	$(SRCDIR)/Short27.cc
 
 PSELIBS := \
 	Core/Exceptions                 \

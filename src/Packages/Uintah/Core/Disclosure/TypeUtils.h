@@ -12,6 +12,7 @@ namespace Uintah {
 
 class Matrix3;
 class Stencil7;
+class Short27;
 class TypeDescription;
 
 using namespace SCIRun;
@@ -36,8 +37,9 @@ const TypeDescription* fun_getTypeDescription(Matrix3*);
 // true for Matrix3 too.  However, both the fun_getTypeDescription of
 // Matrix3 and Stencil7 are inplemented in their respective .cc files.
 const TypeDescription* fun_getTypeDescription(Stencil7*);
+const TypeDescription* fun_getTypeDescription(Short27*);
 
-} // End namespace Uintah
+} // End namespace UintahStencil7
    
 #include <Core/Datatypes/TypeName.h>
 #include <string>

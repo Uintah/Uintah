@@ -10,6 +10,8 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Grid/NodeIterator.h> 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -22,6 +24,9 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+#define FRACTURE
+#undef FRACTURE
 
 HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
@@ -162,11 +167,20 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
 
     old_dw->get(delT, lb->delTLabel);
+#ifdef FRACTURE
+    // for Fracture -----------------------------------------------------------
+    constParticleVariable<Short27> pgCode;
+    new_dw->get(pgCode, lb->pgCodeLabel, pset);
 
-    new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    constNCVariable<Vector> Gvelocity;
+    new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+    // ------------------------------------------------------------------------
+#endif
+
+    new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                                   lb->pDeformationMeasureLabel_preReloc, pset);
+			   lb->pDeformationMeasureLabel_preReloc, pset);
  
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
@@ -186,8 +200,24 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
        }
 
+      
+      Vector gvel;
       for(int k = 0; k < d_8or27; k++) {
-	  const Vector& gvel = gvelocity[ni[k]];
+#ifdef FRACTURE
+	// for Fracture -----------------------------------------------------
+	if(pgCode[idx][k]==1) 
+	  gvel = gvelocity[ni[k]];
+	else if(pgCode[idx][k]==2)
+	  gvel = Gvelocity[ni[k]];
+	else {
+	  cout << "Unknown velocity field in HypoElastic::computeStressTensor:"
+	       << pgCode[idx][k] << endl;
+	  exit(1);
+	}
+	// -------------------------------------------------------------------
+#else
+	gvel = gvelocity[ni[k]];
+#endif
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i+1,j+1)+=gvel[i] * d_S[k][j] * oodx[j];
@@ -285,7 +315,12 @@ void HypoElastic::addComputesAndRequires(Task* task,
   }
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
 
-
+#ifdef FRACTURE
+  // for Farcture -------------------------------------------------------------
+  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None); 
+  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
+  // --------------------------------------------------------------------------
+#endif
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
