@@ -33,10 +33,6 @@ using std::ostringstream;
 #include <Core/Geom/Material.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/FieldInterface.h>
-//#include <Core/Datatypes/TetVolField.h>
-//#include <Core/Datatypes/MaskedTetVolField.h>
-//#include <Core/Datatypes/LatVolField.h>
-//#include <Core/Datatypes/MaskedLatVolField.h>
 
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
@@ -77,6 +73,8 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_color_r_(ctx->subVar("color-r")),
   gui_color_g_(ctx->subVar("color-g")),
   gui_color_b_(ctx->subVar("color-b")),
+  gui_field_type_(ctx->subVar("field-type", false)),
+  gui_field_gen_(ctx->subVar("field-gen", false)),
   geom_id_(0),
   prev_min_(0),
   prev_max_(0),
@@ -458,9 +456,8 @@ Isosurface::new_field( FieldHandle field )
   // Reset the GUI.
 
   // 1: field info
-  ostringstream info;
-  info << id << " set_info {" << type << "} " << field->generation;
-  gui->execute(info.str().c_str());
+  gui_field_type_.set(type);
+  gui_field_gen_.set(field->generation);
 
   // 2: min/max
   pair<double, double> minmax;
