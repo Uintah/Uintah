@@ -22,6 +22,7 @@ const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 15;
 const Index NumPcks = 1;
+const Index NumMatls = 6;
 const Index NumMdes = 7;
 const Index NumSwtchs = 4;
 // const Index NumSchemes = 1;
@@ -33,23 +34,23 @@ enum { GeomPoint, GeomShaft, GeomHead,
 enum { Pick };
 
 CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   crittype(Regular), direction(0, 0, 1.0)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
    GeomGroup* arr = new GeomGroup;
    geometries[GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], PointMaterial);
-   arr->add(sphm);
+   materials[PointMaterial] = new GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
+   arr->add(materials[PointMaterial]);
    geometries[GeomShaft] = new GeomCylinder;
-   GeomMaterial* cylm = new GeomMaterial(geometries[GeomShaft], EdgeMaterial);
-   arr->add(cylm);
+   materials[ShaftMaterial] = new GeomMaterial(geometries[GeomShaft], DefaultEdgeMaterial);
+   arr->add(materials[ShaftMaterial]);
    geometries[GeomHead] = new GeomCappedCone;
-   GeomMaterial* conem = new GeomMaterial(geometries[GeomHead], EdgeMaterial);
-   arr->add(conem);
+   materials[HeadMaterial] = new GeomMaterial(geometries[GeomHead], DefaultEdgeMaterial);
+   arr->add(materials[HeadMaterial]);
    picks[Pick] = new GeomPick(arr, module, this, Pick);
-   picks[Pick]->set_highlight(HighlightMaterial);
+   picks[Pick]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
    
    GeomGroup* cyls = new GeomGroup;
@@ -61,8 +62,8 @@ CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, do
    cyls->add(geometries[GeomCylinder3]);
    geometries[GeomCylinder4] = new GeomCappedCylinder;
    cyls->add(geometries[GeomCylinder4]);
-   GeomMaterial* cylsm = new GeomMaterial(cyls, SpecialMaterial);
-   CreateModeSwitch(1, cylsm);
+   materials[CylinderMatl] = new GeomMaterial(cyls, DefaultSpecialMaterial);
+   CreateModeSwitch(1, materials[CylinderMatl]);
 
    GeomGroup* torii = new GeomGroup;
    geometries[GeomTorus1] = new GeomTorusArc;
@@ -73,8 +74,8 @@ CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, do
    torii->add(geometries[GeomTorus3]);
    geometries[GeomTorus4] = new GeomTorusArc;
    torii->add(geometries[GeomTorus4]);
-   GeomMaterial* torusm = new GeomMaterial(torii, SpecialMaterial);
-   CreateModeSwitch(2, torusm);
+   materials[TorusMatl] = new GeomMaterial(torii, DefaultSpecialMaterial);
+   CreateModeSwitch(2, materials[TorusMatl]);
 
    GeomGroup* cones = new GeomGroup;
    geometries[GeomCone1] = new GeomCappedCone;
@@ -85,8 +86,8 @@ CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, do
    cones->add(geometries[GeomCone3]);
    geometries[GeomCone4] = new GeomCappedCone;
    cones->add(geometries[GeomCone4]);
-   GeomMaterial* conesm = new GeomMaterial(cones, ResizeMaterial);
-   CreateModeSwitch(3, conesm);
+   materials[ConeMatl] = new GeomMaterial(cones, DefaultResizeMaterial);
+   CreateModeSwitch(3, materials[ConeMatl]);
 
    SetMode(Mode0, Switch0);
    SetMode(Mode1, Switch0|Switch1|Switch3);
@@ -111,7 +112,7 @@ CriticalPointWidget::widget_execute()
    Vector direct(direction);
    Real extent(4.5*widget_scale);
    Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
-   Real twocenoff(extent-cylinderrad), cenoff(twocenoff/2.0), diam(0.6*widget_scale);
+   Real twocenoff(extent-cylinderrad), cenoff(twocenoff/2.0), rad(0.6*widget_scale);
    Real conelen(1.5*widget_scale), conerad(0.8*widget_scale), cyllen(extent-conelen);
    Point center(variables[PointVar]->point());
    Vector v1, v2;
@@ -255,19 +256,19 @@ CriticalPointWidget::widget_execute()
    }
    
    if (mode_switches[1]->get_state()) {
-      ((GeomCappedCylinder*)geometries[GeomCylinder1])->move(cylinder1end1, cylinder1end2, diam);
-      ((GeomCappedCylinder*)geometries[GeomCylinder2])->move(cylinder2end1, cylinder2end2, diam);
-      ((GeomCappedCylinder*)geometries[GeomCylinder3])->move(cylinder3end1, cylinder3end2, diam);
-      ((GeomCappedCylinder*)geometries[GeomCylinder4])->move(cylinder4end1, cylinder4end2, diam);
+      ((GeomCappedCylinder*)geometries[GeomCylinder1])->move(cylinder1end1, cylinder1end2, rad);
+      ((GeomCappedCylinder*)geometries[GeomCylinder2])->move(cylinder2end1, cylinder2end2, rad);
+      ((GeomCappedCylinder*)geometries[GeomCylinder3])->move(cylinder3end1, cylinder3end2, rad);
+      ((GeomCappedCylinder*)geometries[GeomCylinder4])->move(cylinder4end1, cylinder4end2, rad);
    }
    if (mode_switches[2]->get_state()) {
-      ((GeomTorusArc*)geometries[GeomTorus1])->move(torus1center, direct, cenoff, diam, v1,
+      ((GeomTorusArc*)geometries[GeomTorus1])->move(torus1center, direct, cenoff, rad, v1,
 						    torus1start, torusangle);
-      ((GeomTorusArc*)geometries[GeomTorus2])->move(torus2center, direct, cenoff, diam, v1,
+      ((GeomTorusArc*)geometries[GeomTorus2])->move(torus2center, direct, cenoff, rad, v1,
 						    torus2start, torusangle);
-      ((GeomTorusArc*)geometries[GeomTorus3])->move(torus3center, direct, cenoff, diam, v1,
+      ((GeomTorusArc*)geometries[GeomTorus3])->move(torus3center, direct, cenoff, rad, v1,
 						    torus3start, torusangle);
-      ((GeomTorusArc*)geometries[GeomTorus4])->move(torus4center, direct, cenoff, diam, v1,
+      ((GeomTorusArc*)geometries[GeomTorus4])->move(torus4center, direct, cenoff, rad, v1,
 						    torus4start, torusangle);
    }
    if (mode_switches[3]->get_state()) {
@@ -285,9 +286,9 @@ CriticalPointWidget::widget_execute()
 
 void
 CriticalPointWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-				int cbdata )	
+				 int pick )	
 {
-   switch((int)cbdata){
+   switch(pick){
    case Pick:
       MoveDelta(delta);
       break;

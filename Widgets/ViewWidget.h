@@ -39,8 +39,8 @@ public:
    void SetAspectRatio( const Real aspect );
    Real GetAspectRatio() const;
    
-   Vector GetEyeAxis();
-   Vector GetUpAxis();
+   const Vector& GetEyeAxis();
+   const Vector& GetUpAxis();
    Point GetFrontUL();
    Point GetFrontUR();
    Point GetFrontDR();
@@ -52,6 +52,9 @@ public:
 
    // Variable indexs
    enum { EyeVar, ForeVar, LookAtVar, UpVar, UpDistVar, EyeDistVar, FOVVar };
+
+   // Material indexs
+   enum { EyesMatl, ResizeMatl, ShaftMatl, FrustrumMatl };
    
 private:
    Real ratio;

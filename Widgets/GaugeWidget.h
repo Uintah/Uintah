@@ -39,7 +39,10 @@ public:
    const Vector& GetAxis();
 
    // Variable indexs
-   enum { PointLVar, PointRVar, DistVar, SliderVar, SDistVar, RatioVar};
+   enum { PointLVar, PointRVar, DistVar, SDistVar, RatioVar};
+
+   // Material indexs
+   enum { PointMatl, ShaftMatl, ResizeMatl, SliderMatl };
 
 private:
    Vector oldaxis;

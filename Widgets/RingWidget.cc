@@ -15,7 +15,7 @@
 #include <Widgets/RingWidget.h>
 #include <Constraints/AngleConstraint.h>
 #include <Constraints/DistanceConstraint.h>
-#include <Constraints/CenterConstraint.h>
+#include <Constraints/RatioConstraint.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
 #include <Geom/Torus.h>
@@ -23,166 +23,161 @@
 #include <Math/Expon.h>
 #include <Math/Trig.h>
 
-const Index NumCons = 7;
+const Index NumCons = 6;
 const Index NumVars = 8;
-const Index NumGeoms = 8;
-const Index NumPcks = 8;
+const Index NumGeoms = 10;
+const Index NumPcks = 10;
+const Index NumMatls = 5;
 const Index NumMdes = 4;
 const Index NumSwtchs = 3;
 const Index NumSchemes = 5;
 
-enum { ConstAB, ConstBC, ConstCA, ConstCenter,
-       ConstRadius, ConstCDist, ConstAngle };
-enum { GeomPointA, GeomPointB, GeomPointC,
-       GeomSlider, GeomRing, GeomResizeA, GeomResizeB, GeomResizeC };
-enum { PickSphA, PickSphB, PickSphC, PickRing,
-       PickSlider, PickResizeA, PickResizeB, PickResizeC };
+enum { ConstRD, ConstRC, ConstDC, ConstPyth, ConstRadius, ConstAngle };
+enum { GeomPointU, GeomPointR, GeomPointD, GeomPointL,
+       GeomSlider, GeomRing,
+       GeomResizeU, GeomResizeR, GeomResizeD, GeomResizeL };
+enum { PickSphU, PickSphR, PickSphD, PickSphL,
+       PickRing, PickSlider,
+       PickResizeU, PickResizeR, PickResizeD, PickResizeL };
 
 RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale*0.1),
-  oldaxis1(1, 0, 0), oldaxis2(-0.5, -sqrt(0.75), 0), oldaxis3(-0.5, sqrt(0.75), 0)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
-   Real INIT = widget_scale*2.0/3.0;
-   // Scheme5 is used to resize.
-   variables[PointAVar] = new PointVariable("PntA", solve, Scheme1, Point(INIT, 0, 0));
-   variables[PointBVar] = new PointVariable("PntB", solve, Scheme2, Point(-INIT*0.5, -INIT*sqrt(0.75), 0));
-   variables[PointCVar] = new PointVariable("PntC", solve, Scheme3, Point(-INIT*0.5, INIT*sqrt(0.75), 0));
+   Real INIT = 5.0*widget_scale;
+   // Scheme4/5 are used to resize.
+   variables[PointRVar] = new PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
+   variables[PointDVar] = new PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
    variables[CenterVar] = new PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
-   variables[SliderVar] = new PointVariable("Slider", solve, Scheme4, Point(INIT, 0, 0));
-   variables[DistVar] = new RealVariable("Dist", solve, Scheme5, INIT*sqrt(3.0));
-   variables[RadiusVar] = new RealVariable("SDist", solve, Scheme5, INIT);
-   variables[AngleVar] = new RealVariable("Angle", solve, Scheme4, 0);
+   variables[SliderVar] = new PointVariable("Slider", solve, Scheme3, Point(INIT, 0, 0));
+   variables[DistVar] = new RealVariable("Dist", solve, Scheme1, INIT);
+   variables[HypoVar] = new RealVariable("HYPO", solve, Scheme1, sqrt(2*INIT*INIT));
+   variables[Sqrt2Var] = new RealVariable("Sqrt2", solve, Scheme1, sqrt(2));
+   variables[AngleVar] = new RealVariable("Angle", solve, Scheme3, 0);
 
    constraints[ConstAngle] = new AngleConstraint("ConstAngle",
 						 NumSchemes,
 						 variables[CenterVar],
-						 variables[PointAVar],
-						 variables[PointBVar],
+						 variables[PointRVar],
+						 variables[PointDVar],
 						 variables[SliderVar],
 						 variables[AngleVar]);
    constraints[ConstAngle]->VarChoices(Scheme1, 3, 3, 3, 3, 3);
    constraints[ConstAngle]->VarChoices(Scheme2, 3, 3, 3, 3, 3);
-   constraints[ConstAngle]->VarChoices(Scheme3, 3, 3, 3, 3, 3);
-   constraints[ConstAngle]->VarChoices(Scheme4, 4, 4, 4, 4, 4);
+   constraints[ConstAngle]->VarChoices(Scheme3, 4, 4, 4, 4, 4);
+   constraints[ConstAngle]->VarChoices(Scheme4, 3, 3, 3, 3, 3);
    constraints[ConstAngle]->VarChoices(Scheme5, 3, 3, 3, 3, 3);
-   constraints[ConstAngle]->Priorities(P_Default, P_Default, P_Default,
-				       P_Default, P_Highest);
+   constraints[ConstAngle]->Priorities(P_Lowest, P_Lowest, P_Lowest,
+				       P_Highest, P_Highest);
    constraints[ConstRadius] = new DistanceConstraint("ConstRadius",
 						     NumSchemes,
 						     variables[CenterVar],
 						     variables[SliderVar],
-						     variables[RadiusVar]);
+						     variables[DistVar]);
    constraints[ConstRadius]->VarChoices(Scheme1, 1, 1, 1);
    constraints[ConstRadius]->VarChoices(Scheme2, 1, 1, 1);
    constraints[ConstRadius]->VarChoices(Scheme3, 1, 1, 1);
    constraints[ConstRadius]->VarChoices(Scheme4, 1, 1, 1);
    constraints[ConstRadius]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[ConstRadius]->Priorities(P_Lowest, P_HighMedium, P_Default);
-   constraints[ConstCDist] = new DistanceConstraint("ConstCDist",
-						    NumSchemes,
-						    variables[PointAVar],
-						    variables[CenterVar],
-						    variables[RadiusVar]);
-   constraints[ConstCDist]->VarChoices(Scheme1, 2, 2, 2);
-   constraints[ConstCDist]->VarChoices(Scheme2, 2, 2, 2);
-   constraints[ConstCDist]->VarChoices(Scheme3, 2, 2, 2);
-   constraints[ConstCDist]->VarChoices(Scheme4, 2, 2, 2);
-   constraints[ConstCDist]->VarChoices(Scheme5, 2, 2, 2);
-   constraints[ConstCDist]->Priorities(P_Default, P_Default, P_Highest);
-   constraints[ConstCenter] = new CenterConstraint("ConstCenter",
-						   NumSchemes,
-						   variables[CenterVar],
-						   variables[PointAVar],
-						   variables[PointBVar],
-						   variables[PointCVar]);
-   constraints[ConstCenter]->VarChoices(Scheme1, 0, 0, 0, 0);
-   constraints[ConstCenter]->VarChoices(Scheme2, 0, 0, 0, 0);
-   constraints[ConstCenter]->VarChoices(Scheme3, 0, 0, 0, 0);
-   constraints[ConstCenter]->VarChoices(Scheme4, 0, 0, 0, 0);
-   constraints[ConstCenter]->VarChoices(Scheme5, 0, 0, 0, 0);
-   constraints[ConstCenter]->Priorities(P_Highest, P_Default, P_Default, P_Default);
-   constraints[ConstAB] = new DistanceConstraint("ConstAB",
+   constraints[ConstRadius]->Priorities(P_Lowest, P_HighMedium, P_Lowest);
+   constraints[ConstRD] = new DistanceConstraint("ConstRD",
 						 NumSchemes,
-						 variables[PointAVar],
-						 variables[PointBVar],
-						 variables[DistVar]);
-   constraints[ConstAB]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[ConstAB]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[ConstAB]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[ConstAB]->VarChoices(Scheme4, 1, 1, 1);
-   constraints[ConstAB]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[ConstAB]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[ConstBC] = new DistanceConstraint("ConstBC",
+						 variables[PointRVar],
+						 variables[PointDVar],
+						 variables[HypoVar]);
+   constraints[ConstRD]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[ConstRD]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstRD]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[ConstRD]->VarChoices(Scheme4, 1, 1, 1);
+   constraints[ConstRD]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstRD]->Priorities(P_Default, P_Default, P_Default);
+   constraints[ConstPyth] = new RatioConstraint("ConstPyth",
+						NumSchemes,
+						variables[HypoVar],
+						variables[DistVar],
+						variables[Sqrt2Var]);
+   constraints[ConstPyth]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[ConstPyth]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstPyth]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[ConstPyth]->VarChoices(Scheme4, 1, 0, 0);
+   constraints[ConstPyth]->VarChoices(Scheme5, 1, 0, 0);
+   constraints[ConstPyth]->Priorities(P_Highest, P_Highest, P_Highest);
+   constraints[ConstRC] = new DistanceConstraint("ConstRC",
 						 NumSchemes,
-						 variables[PointBVar],
-						 variables[PointCVar],
+						 variables[PointRVar],
+						 variables[CenterVar],
 						 variables[DistVar]);
-   constraints[ConstBC]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[ConstBC]->VarChoices(Scheme2, 1, 1, 1);
-   constraints[ConstBC]->VarChoices(Scheme3, 0, 0, 0);
-   constraints[ConstBC]->VarChoices(Scheme4, 1, 1, 1);
-   constraints[ConstBC]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[ConstBC]->Priorities(P_Default, P_Default, P_LowMedium);
-   constraints[ConstCA] = new DistanceConstraint("ConstCA",
-						 NumSchemes,
-						 variables[PointCVar],
-						 variables[PointAVar],
-						 variables[DistVar]);
-   constraints[ConstCA]->VarChoices(Scheme1, 0, 0, 0);
-   constraints[ConstCA]->VarChoices(Scheme2, 1, 1, 1);
-   constraints[ConstCA]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[ConstCA]->VarChoices(Scheme4, 1, 1, 1);
-   constraints[ConstCA]->VarChoices(Scheme5, 1, 1, 1);
-   constraints[ConstCA]->Priorities(P_Default, P_Default, P_LowMedium);
+   constraints[ConstRC]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[ConstRC]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstRC]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[ConstRC]->VarChoices(Scheme4, 2, 2, 2);
+   constraints[ConstRC]->VarChoices(Scheme5, 0, 0, 0);
+   constraints[ConstRC]->Priorities(P_Highest, P_Highest, P_Default);
+   constraints[ConstDC] = new DistanceConstraint("ConstDC",
+					       NumSchemes,
+					       variables[PointDVar],
+					       variables[CenterVar],
+					       variables[DistVar]);
+   constraints[ConstDC]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[ConstDC]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[ConstDC]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[ConstDC]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[ConstDC]->VarChoices(Scheme5, 2, 2, 2);
+   constraints[ConstDC]->Priorities(P_Highest, P_Highest, P_Default);
 
    Index geom, pick;
    geometries[GeomRing] = new GeomTorus;
    picks[PickRing] = new GeomPick(geometries[GeomRing], module, this, PickRing);
-   picks[PickRing]->set_highlight(HighlightMaterial);
-   GeomMaterial* ringm = new GeomMaterial(picks[PickRing], EdgeMaterial);
-   CreateModeSwitch(0, ringm);
+   picks[PickRing]->set_highlight(DefaultHighlightMaterial);
+   materials[RingMatl] = new GeomMaterial(picks[PickRing], DefaultEdgeMaterial);
+   CreateModeSwitch(0, materials[RingMatl]);
 
    GeomGroup* pts = new GeomGroup;
-   for (geom = GeomPointA, pick = PickSphA;
-	geom <= GeomPointC; geom++, pick++) {
+   for (geom = GeomPointU, pick = PickSphU;
+	geom <= GeomPointL; geom++, pick++) {
       geometries[geom] = new GeomSphere;
       picks[pick] = new GeomPick(geometries[geom], module, this, pick);
-      picks[pick]->set_highlight(HighlightMaterial);
+      picks[pick]->set_highlight(DefaultHighlightMaterial);
       pts->add(picks[pick]);
    }
-   GeomMaterial* ptsm = new GeomMaterial(pts, PointMaterial);
+   materials[PointMatl] = new GeomMaterial(pts, DefaultPointMaterial);
    
-   geometries[GeomResizeA] = new GeomCappedCylinder;
-   picks[PickResizeA] = new GeomPick(geometries[GeomResizeA],
-				     module, this, PickResizeA);
-   picks[PickResizeA]->set_highlight(HighlightMaterial);
-   GeomMaterial* resizeam = new GeomMaterial(picks[PickResizeA], SpecialMaterial);
+   geometries[GeomResizeL] = new GeomCappedCylinder;
+   picks[PickResizeL] = new GeomPick(geometries[GeomResizeL],
+				     module, this, PickResizeL);
+   picks[PickResizeL]->set_highlight(DefaultHighlightMaterial);
+   materials[HalfResizeMatl] = new GeomMaterial(picks[PickResizeL], DefaultSpecialMaterial);
 
-   GeomGroup* resbc = new GeomGroup;
-   geometries[GeomResizeB] = new GeomCappedCylinder;
-   picks[PickResizeB] = new GeomPick(geometries[GeomResizeB],
-				     module, this, PickResizeB);
-   picks[PickResizeB]->set_highlight(HighlightMaterial);
-   resbc->add(picks[PickResizeB]);
-   geometries[GeomResizeC] = new GeomCappedCylinder;
-   picks[PickResizeC] = new GeomPick(geometries[GeomResizeC],
-				     module, this, PickResizeC);
-   picks[PickResizeC]->set_highlight(HighlightMaterial);
-   resbc->add(picks[PickResizeC]);
-   GeomMaterial* resizebcm = new GeomMaterial(resbc, ResizeMaterial);
+   GeomGroup* resulr = new GeomGroup;
+   geometries[GeomResizeU] = new GeomCappedCylinder;
+   picks[PickResizeU] = new GeomPick(geometries[GeomResizeU],
+				     module, this, PickResizeU);
+   picks[PickResizeU]->set_highlight(DefaultHighlightMaterial);
+   resulr->add(picks[PickResizeU]);
+   geometries[GeomResizeD] = new GeomCappedCylinder;
+   picks[PickResizeD] = new GeomPick(geometries[GeomResizeD],
+				     module, this, PickResizeD);
+   picks[PickResizeD]->set_highlight(DefaultHighlightMaterial);
+   resulr->add(picks[PickResizeD]);
+   geometries[GeomResizeR] = new GeomCappedCylinder;
+   picks[PickResizeR] = new GeomPick(geometries[GeomResizeR],
+				     module, this, PickResizeR);
+   picks[PickResizeR]->set_highlight(DefaultHighlightMaterial);
+   resulr->add(picks[PickResizeR]);
+   materials[ResizeMatl] = new GeomMaterial(resulr, DefaultResizeMaterial);
 
    GeomGroup* w = new GeomGroup;
-   w->add(ptsm);
-   w->add(resizeam);
-   w->add(resizebcm);
+   w->add(materials[PointMatl]);
+   w->add(materials[HalfResizeMatl]);
+   w->add(materials[ResizeMatl]);
    CreateModeSwitch(1, w);
 
    geometries[GeomSlider] = new GeomCappedCylinder;
    picks[PickSlider] = new GeomPick(geometries[GeomSlider], module, this,
 				    PickSlider);
-   picks[PickSlider]->set_highlight(HighlightMaterial);
-   GeomMaterial* slidersm = new GeomMaterial(picks[PickSlider], SliderMaterial);
-   CreateModeSwitch(2, slidersm);
+   picks[PickSlider]->set_highlight(DefaultHighlightMaterial);
+   materials[SliderMatl] = new GeomMaterial(picks[PickSlider], DefaultSliderMaterial);
+   CreateModeSwitch(2, materials[SliderMatl]);
 
    SetMode(Mode0, Switch0|Switch1|Switch2);
    SetMode(Mode1, Switch0|Switch1);
@@ -201,25 +196,34 @@ RingWidget::~RingWidget()
 void
 RingWidget::widget_execute()
 {
-   Point A(variables[PointAVar]->point()), B(variables[PointBVar]->point()), C(variables[PointCVar]->point());
+   Vector Right(GetRightAxis()*variables[DistVar]->real());
+   Vector Down(GetDownAxis()*variables[DistVar]->real());
+   Point Center(variables[CenterVar]->point());
+   Point U(Center-Down);
+   Point R(Center+Right);
+   Point D(Center+Down);
+   Point L(Center-Right);
    
-   Vector normal(Cross(GetAxis1(), GetAxis2()));
+   Vector normal(Cross(GetRightAxis(), GetDownAxis()));
    if (normal.length2() < 1e-6) normal = Vector(1.0, 0.0, 0.0);
    
    if (mode_switches[0]->get_state()) {
       ((GeomTorus*)geometries[GeomRing])->move(variables[CenterVar]->point(), normal,
-					       variables[RadiusVar]->real(), 0.5*widget_scale);
+					       variables[DistVar]->real(), 0.5*widget_scale);
    }
 
    if (mode_switches[1]->get_state()) {
-      ((GeomSphere*)geometries[GeomPointA])->move(A, widget_scale);
-      ((GeomSphere*)geometries[GeomPointB])->move(B, widget_scale);
-      ((GeomSphere*)geometries[GeomPointC])->move(C, widget_scale);
-      ((GeomCappedCylinder*)geometries[GeomResizeA])->move(A, A + (GetAxis1() * 1.5 * widget_scale),
+      ((GeomSphere*)geometries[GeomPointU])->move(U, widget_scale);
+      ((GeomSphere*)geometries[GeomPointR])->move(R, widget_scale);
+      ((GeomSphere*)geometries[GeomPointD])->move(D, widget_scale);
+      ((GeomSphere*)geometries[GeomPointL])->move(L, widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeU])->move(U, U - (GetDownAxis() * 1.5 * widget_scale),
 							   0.5*widget_scale);
-      ((GeomCappedCylinder*)geometries[GeomResizeB])->move(B, B + (GetAxis2() * 1.5 * widget_scale),
+      ((GeomCappedCylinder*)geometries[GeomResizeR])->move(R, R + (GetRightAxis() * 1.5 * widget_scale),
 							   0.5*widget_scale);
-      ((GeomCappedCylinder*)geometries[GeomResizeC])->move(C, C + (GetAxis3() * 1.5 * widget_scale),
+      ((GeomCappedCylinder*)geometries[GeomResizeD])->move(D, D + (GetDownAxis() * 1.5 * widget_scale),
+							   0.5*widget_scale);
+      ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - (GetRightAxis() * 1.5 * widget_scale),
 							   0.5*widget_scale);
    }
 
@@ -228,7 +232,7 @@ RingWidget::widget_execute()
       slide = Cross(normal, slide.normal());
       if (slide.length2() < 1e-6) slide = Vector(0.0, 1.0, 0.0);
    } else {
-      slide = GetAxis1();
+      slide = GetRightAxis();
    }
    if (mode_switches[2]->get_state()) {
       ((GeomCappedCylinder*)geometries[GeomSlider])->move(variables[SliderVar]->point()
@@ -238,73 +242,81 @@ RingWidget::widget_execute()
 							  1.1*widget_scale);
    }
    
-   ((DistanceConstraint*)constraints[ConstAB])->SetMinimum(1.0*widget_scale);
-   ((DistanceConstraint*)constraints[ConstBC])->SetMinimum(1.0*widget_scale);
-   ((DistanceConstraint*)constraints[ConstCA])->SetMinimum(1.0*widget_scale);
+   ((DistanceConstraint*)constraints[ConstRC])->SetMinimum(1.6*widget_scale);
+   ((DistanceConstraint*)constraints[ConstDC])->SetMinimum(1.6*widget_scale);
+   ((DistanceConstraint*)constraints[ConstRD])->SetMinimum(sqrt(2*1.6*1.6)*widget_scale);
 
-   Vector spvec1(GetAxis1());
-   Vector spvec2(variables[PointCVar]->point() - variables[PointBVar]->point());
-   if (spvec2.length2() > 0.0) {
-      spvec2.normalize();
-      Vector v = Cross(spvec1, spvec2);
-      for (Index geom = 0; geom < NumPcks; geom++) {
-	 if (geom == PickSlider)
-	    picks[geom]->set_principal(slide);
-	 else if (geom == PickResizeA)
-	    picks[geom]->set_principal(GetAxis1());
-	 else if (geom == PickResizeB)
-	    picks[geom]->set_principal(GetAxis2());
-	 else if (geom == PickResizeC)
-	    picks[geom]->set_principal(GetAxis3());
-	 else
-	    picks[geom]->set_principal(spvec1, spvec2, v);
-      }
+   Right.normalize();
+   Down.normalize();
+   Vector Norm(Cross(Right, Down));
+   for (Index geom = 0; geom < NumPcks; geom++) {
+      if (geom == PickSlider)
+	 picks[geom]->set_principal(slide);
+      else if ((geom == PickResizeU) || (geom == PickResizeD))
+	 picks[geom]->set_principal(Down);
+      else if ((geom == PickResizeL) || (geom == PickResizeR))
+	 picks[geom]->set_principal(Right);
+      else if ((geom == PickSphR) || (geom == PickSphL))
+	 picks[geom]->set_principal(Down, Norm);
+      else if ((geom == PickSphU) || (geom == PickSphD))
+	 picks[geom]->set_principal(Right, Norm);
+      else
+	 picks[geom]->set_principal(Right, Down, Norm);
    }
 }
 
 
 void
-RingWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-		        int cbdata )
+RingWidget::geom_moved( int axis, double dist, const Vector& delta,
+		        int pick )
 {
-   Vector delt(delta);
-   ((DistanceConstraint*)constraints[ConstAB])->SetDefault(GetAxis1());
-   ((DistanceConstraint*)constraints[ConstBC])->SetDefault(GetAxis2());
-   ((DistanceConstraint*)constraints[ConstCA])->SetDefault(GetAxis3());
+   Point p;
+   Real ResizeMin(1.5*widget_scale);
+   if (axis==1) dist = -dist;
 
-   switch(cbdata){
-   case PickSphA:
-      variables[PointAVar]->SetDelta(delta);
+   ((DistanceConstraint*)constraints[ConstRC])->SetDefault(GetRightAxis());
+   ((DistanceConstraint*)constraints[ConstDC])->SetDefault(GetDownAxis());
+
+   switch(pick){
+   case PickSphU:
+      variables[PointDVar]->SetDelta(-delta);
       break;
-   case PickSphB:
-      variables[PointBVar]->SetDelta(delta);
+   case PickSphR:
+      variables[PointRVar]->SetDelta(delta);
       break;
-   case PickSphC:
-      variables[PointCVar]->SetDelta(delta);
+   case PickSphD:
+      variables[PointDVar]->SetDelta(delta);
       break;
-   case PickResizeA:
-      if (((variables[PointAVar]->point()+delta)-variables[CenterVar]->point()).length()
-	  < 1.0*widget_scale) {
-	 delt = ((variables[CenterVar]->point() + delta.normal()*1.0*widget_scale)
-		 - variables[PointAVar]->point());
-      }
-      SetRadius(((variables[PointAVar]->point()+delt)-variables[CenterVar]->point()).length());
+   case PickSphL:
+      variables[PointRVar]->SetDelta(-delta);
       break;
-   case PickResizeB:
-      if (((variables[PointBVar]->point()+delta)-variables[CenterVar]->point()).length()
-	  < 1.0*widget_scale) {
-	 delt = ((variables[CenterVar]->point() + delta.normal()*1.0*widget_scale)
-		 - variables[PointBVar]->point());
-      }
-      SetRadius(((variables[PointBVar]->point()+delt)-variables[CenterVar]->point()).length());
+   case PickResizeU:
+      if ((variables[DistVar]->real() - dist) < ResizeMin)
+	 p = variables[CenterVar]->point() + GetDownAxis()*ResizeMin;
+      else
+	 p = variables[PointDVar]->point() - delta;
+      variables[PointDVar]->Set(p, Scheme5);
       break;
-   case PickResizeC:
-      if (((variables[PointCVar]->point()+delta)-variables[CenterVar]->point()).length()
-	  < 1.0*widget_scale) {
-	 delt = ((variables[CenterVar]->point() + delta.normal()*1.0*widget_scale)
-		 - variables[PointCVar]->point());
-      }
-      SetRadius(((variables[PointCVar]->point()+delt)-variables[CenterVar]->point()).length());
+   case PickResizeR:
+      if ((variables[DistVar]->real() + dist) < ResizeMin)
+	 p = variables[CenterVar]->point() + GetRightAxis()*ResizeMin;
+      else
+	 p = variables[PointRVar]->point() + delta;
+      variables[PointRVar]->Set(p, Scheme4);
+      break;
+   case PickResizeD:
+      if ((variables[DistVar]->real() + dist) < ResizeMin)
+	 p = variables[CenterVar]->point() + GetDownAxis()*ResizeMin;
+      else
+	 p = variables[PointDVar]->point() + delta;
+      variables[PointDVar]->Set(p, Scheme5);
+      break;
+   case PickResizeL:
+      if ((variables[DistVar]->real() - dist) < ResizeMin)
+	 p = variables[CenterVar]->point() + GetRightAxis()*ResizeMin;
+      else
+	 p = variables[PointRVar]->point() - delta;
+      variables[PointRVar]->Set(p, Scheme4);
       break;
    case PickSlider:
       variables[SliderVar]->SetDelta(delta);
@@ -320,9 +332,8 @@ RingWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 void
 RingWidget::MoveDelta( const Vector& delta )
 {
-   variables[PointAVar]->MoveDelta(delta);
-   variables[PointBVar]->MoveDelta(delta);
-   variables[PointCVar]->MoveDelta(delta);
+   variables[PointRVar]->MoveDelta(delta);
+   variables[PointDVar]->MoveDelta(delta);
    variables[CenterVar]->MoveDelta(delta);
    variables[SliderVar]->MoveDelta(delta);
 
@@ -340,13 +351,11 @@ RingWidget::ReferencePoint() const
 void
 RingWidget::SetPosition( const Point& center, const Vector& normal, const Real radius )
 {
-   NOT_FINISHED("SetPosition");
    Vector v1, v2;
    normal.find_orthogonal(v1, v2);
    variables[CenterVar]->Move(center);
-   variables[PointAVar]->Move(center+v1*radius);
-   variables[PointBVar]->Move(center-v1*radius*0.5-v2*radius*sqrt(0.75));
-   variables[PointCVar]->Set(center-v1*radius*0.5+v2*radius*sqrt(0.75));
+   variables[PointRVar]->Move(center+v1*radius);
+   variables[PointDVar]->Set(center+v2*radius);
 
    execute();
 }
@@ -356,10 +365,10 @@ void
 RingWidget::GetPosition( Point& center, Vector& normal, Real& radius ) const
 {
    center = variables[CenterVar]->point();
-   normal = Plane(variables[PointAVar]->point(),
-		  variables[PointBVar]->point(),
-		  variables[PointCVar]->point()).normal();
-   radius = variables[RadiusVar]->real();
+   normal = Plane(variables[PointRVar]->point(),
+		  variables[PointDVar]->point(),
+		  variables[CenterVar]->point()).normal();
+   radius = variables[DistVar]->real();
 }
 
 
@@ -388,18 +397,14 @@ RingWidget::SetRadius( const Real radius )
 {
    ASSERT(radius>=0.0);
    
-   Vector axis1(variables[PointAVar]->point() - variables[CenterVar]->point());
-   Vector axis2(variables[PointBVar]->point() - variables[CenterVar]->point());
-   Vector axis3(variables[PointCVar]->point() - variables[CenterVar]->point());
-   Real ratio(radius/variables[RadiusVar]->real());
+   Vector axis1(variables[PointRVar]->point() - variables[CenterVar]->point());
+   Vector axis2(variables[PointDVar]->point() - variables[CenterVar]->point());
+   Real ratio(radius/variables[DistVar]->real());
 
-   variables[PointAVar]->Move(variables[CenterVar]->point()+axis1*ratio);
-   variables[PointBVar]->Move(variables[CenterVar]->point()+axis2*ratio);
-   variables[PointCVar]->Move(variables[CenterVar]->point()+axis3*ratio);
+   variables[PointRVar]->Move(variables[CenterVar]->point()+axis1*ratio);
+   variables[PointDVar]->Move(variables[CenterVar]->point()+axis2*ratio);
 
-   variables[DistVar]->Move(variables[DistVar]->real()*ratio);
-   
-   variables[RadiusVar]->Set(radius); // This should set the slider...
+   variables[DistVar]->Set(variables[DistVar]->real()*ratio); // This should set the slider...
 
    execute();
 }
@@ -408,46 +413,36 @@ RingWidget::SetRadius( const Real radius )
 Real
 RingWidget::GetRadius() const
 {
-   return variables[RadiusVar]->real();
+   return variables[DistVar]->real();
 }
 
 
 const Vector&
-RingWidget::GetAxis1()
+RingWidget::GetRightAxis()
 {
-   Vector axis(variables[PointAVar]->point() - variables[CenterVar]->point());
+   Vector axis(variables[PointRVar]->point() - variables[CenterVar]->point());
    if (axis.length2() <= 1e-6)
-      return oldaxis1;
+      return oldrightaxis;
    else
-      return (oldaxis1 = axis.normal());
+      return (oldrightaxis = axis.normal());
 }
 
 
 const Vector&
-RingWidget::GetAxis2()
+RingWidget::GetDownAxis()
 {
-   Vector axis(variables[PointBVar]->point() - variables[CenterVar]->point());
+   Vector axis(variables[PointDVar]->point() - variables[CenterVar]->point());
    if (axis.length2() <= 1e-6)
-      return oldaxis2;
+      return olddownaxis;
    else
-      return (oldaxis2 = axis.normal());
+      return (olddownaxis = axis.normal());
 }
 
 
-const Vector&
-RingWidget::GetAxis3()
+void
+RingWidget::GetPlane(Vector& v1, Vector& v2)
 {
-   Vector axis(variables[PointCVar]->point() - variables[CenterVar]->point());
-   if (axis.length2() <= 1e-6)
-      return oldaxis3;
-   else
-      return (oldaxis3 = axis.normal());
-}
-
-
-void RingWidget::GetPlane(Vector& v1, Vector& v2)
-{
-    v1=GetAxis1();
-    v2=(GetAxis2()*2+v1)*Sqrt(1./3.);
+    v1=GetRightAxis();
+    v2=GetDownAxis();
 }
 

@@ -30,26 +30,28 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
-   void SetPosition( const Point& UL, const Point& UR, const Point& DL );
-   void GetPosition( Point& UL, Point& UR, Point& DL );
+   void SetPosition( const Point& center, const Point& R, const Point& D );
+   void GetPosition( Point& center, Point& R, Point& D );
 
    void SetPosition( const Point& center, const Vector& normal,
 		     const Real size1, const Real size2 );
    void GetPosition( Point& center, Vector& normal,
 		     Real& size1, Real& size2 );
 
-   void SetSize( const Real size1, const Real size2 );
-   void GetSize( Real& size1, Real& size2 ) const;
+   void SetSize( const Real sizeR, const Real sizeD );
+   void GetSize( Real& sizeR, Real& sizeD ) const;
    
-   Vector GetAxis1();
-   Vector GetAxis2();
+   const Vector& GetRightAxis();
+   const Vector& GetDownAxis();
 
    // Variable indexs
-   enum { PointULVar, PointURVar, PointDRVar, PointDLVar,
-	  Dist1Var, Dist2Var, HypoVar };
+   enum { CenterVar, PointRVar, PointDVar, DistRVar, DistDVar, HypoVar };
+
+   // Material indexs
+   enum { PointMatl, EdgeMatl, ResizeMatl };
 
 private:
-   Vector oldaxis1, oldaxis2;
+   Vector oldrightaxis, olddownaxis;
 };
 
 

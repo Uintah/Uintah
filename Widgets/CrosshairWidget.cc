@@ -20,6 +20,7 @@ const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 4;
 const Index NumPcks = 2;
+const Index NumMatls = 2;
 const Index NumMdes = 2;
 const Index NumSwtchs = 2;
 // const Index NumSchemes = 1;
@@ -28,15 +29,15 @@ enum { GeomCenter, GeomAxis1, GeomAxis2, GeomAxis3 };
 enum { Pick, PickAxes };
 
 CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
    variables[CenterVar] = new PointVariable("Crosshair", solve, Scheme1, Point(0, 0, 0));
 
    geometries[GeomCenter] = new GeomSphere;
-   GeomMaterial* centerm = new GeomMaterial(geometries[GeomCenter], PointMaterial);
-   picks[PickAxes] = new GeomPick(centerm, module, this, PickAxes);
-   picks[PickAxes]->set_highlight(HighlightMaterial);
+   materials[PointMatl] = new GeomMaterial(geometries[GeomCenter], DefaultPointMaterial);
+   picks[PickAxes] = new GeomPick(materials[PointMatl], module, this, PickAxes);
+   picks[PickAxes]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, picks[PickAxes]);
 
    GeomGroup* axes = new GeomGroup;
@@ -46,9 +47,9 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
    axes->add(geometries[GeomAxis2]);
    geometries[GeomAxis3] = new GeomCappedCylinder;
    axes->add(geometries[GeomAxis3]);
-   GeomMaterial* axesm = new GeomMaterial(axes, EdgeMaterial);
-   picks[Pick] = new GeomPick(axesm, module, this, Pick);
-   picks[Pick]->set_highlight(HighlightMaterial);
+   materials[AxesMatl] = new GeomMaterial(axes, DefaultEdgeMaterial);
+   picks[Pick] = new GeomPick(materials[AxesMatl], module, this, Pick);
+   picks[Pick]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(1, picks[Pick]);
 
    SetMode(Mode0, Switch0|Switch1);
@@ -72,16 +73,16 @@ CrosshairWidget::widget_execute()
       ((GeomSphere*)geometries[GeomCenter])->move(center, widget_scale);
 
    if (mode_switches[1]->get_state()) {
-      Real axislen(100.0*widget_scale), axisdiam(0.5*widget_scale);
+      Real axislen(100.0*widget_scale), axisrad(0.5*widget_scale);
       ((GeomCappedCylinder*)geometries[GeomAxis1])->move(center - (axis1 * axislen),
 							 center + (axis1 * axislen),
-							 axisdiam);
+							 axisrad);
       ((GeomCappedCylinder*)geometries[GeomAxis2])->move(center - (axis2 * axislen),
 							 center + (axis2 * axislen),
-							 axisdiam);
+							 axisrad);
       ((GeomCappedCylinder*)geometries[GeomAxis3])->move(center - (axis3 * axislen),
 							 center + (axis3 * axislen),
-							 axisdiam);
+							 axisrad);
    }
 
    for (Index geom = 0; geom < NumPcks; geom++) {
@@ -92,9 +93,9 @@ CrosshairWidget::widget_execute()
 
 void
 CrosshairWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			     int cbdata )
+			     int pick )
 {
-   switch(cbdata){
+   switch(pick){
    case Pick:
    case PickAxes:
       MoveDelta(delta);

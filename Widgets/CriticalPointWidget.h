@@ -49,6 +49,9 @@ public:
    // Variable indexs
    enum { PointVar };
 
+   // Material indexs
+   enum { PointMaterial, ShaftMaterial, HeadMaterial, CylinderMatl, TorusMatl, ConeMatl };
+
 private:
    CriticalType crittype;
    Vector direction;

@@ -10,6 +10,7 @@ OBJS = BaseWidget.o \
 	CrosshairWidget.o \
 	FrameWidget.o \
 	GaugeWidget.o \
+	LightWidget.o \
 	PathWidget.o \
 	PointWidget.o \
 	RingWidget.o \
@@ -23,6 +24,7 @@ SRCS = BaseWidget.cc \
 	CrosshairWidget.cc \
 	FrameWidget.cc \
 	GaugeWidget.cc \
+	LightWidget.cc \
 	PathWidget.cc \
 	PointWidget.cc \
 	RingWidget.cc \

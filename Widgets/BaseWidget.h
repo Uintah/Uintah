@@ -32,9 +32,13 @@ class Module;
 class BaseWidget {
 public:
    BaseWidget( Module* module, CrowdMonitor* lock,
-	       const Index vars, const Index cons,
-	       const Index geoms, const Index picks,
-	       const Index modes, const Index switches,
+	       const Index NumVariables,
+	       const Index NumConstraints,
+	       const Index NumGeometries,
+	       const Index NumPicks,
+	       const Index NumMaterials,
+	       const Index NumModes,
+	       const Index NumSwitches,
 	       const Real widget_scale );
    BaseWidget( const BaseWidget& );
    virtual ~BaseWidget();
@@ -46,7 +50,8 @@ public:
 
    GeomSwitch* GetWidget();
 
-   virtual void MoveDelta( const Vector& delta )=0;
+   virtual void MoveDelta( const Vector& delta ) = 0;
+   virtual void Move( const Point& p );  // Not pure virtual
    virtual Point ReferencePoint() const = 0;
    
    int GetState();
@@ -56,6 +61,9 @@ public:
    // Doesn't have to be overloaded.
    virtual void NextMode();
    Index GetMode() const;
+
+   void SetMaterial( const Index mindex, const MaterialHandle& matl );
+   const MaterialHandle& GetMaterial( const Index mindex ) const;
 
    inline Point GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
@@ -82,11 +90,13 @@ protected:
    Index NumConstraints;
    Index NumGeometries;
    Index NumPicks;
+   Index NumMaterials;
 
    Array1<BaseConstraint*> constraints;
    Array1<BaseVariable*> variables;
    Array1<GeomObj*> geometries;
    Array1<GeomPick*> picks;
+   Array1<GeomMaterial*> materials;
 
    enum {Mode0,Mode1,Mode2,Mode3,Mode4,Mode5,Mode6,Mode7,Mode8,Mode9};
    Index NumModes;
@@ -105,13 +115,6 @@ protected:
    const long Switch7 = 0x0080;
    const long Switch8 = 0x0100;
 
-   MaterialHandle PointMaterial;
-   MaterialHandle EdgeMaterial;
-   MaterialHandle SliderMaterial;
-   MaterialHandle ResizeMaterial;
-   MaterialHandle SpecialMaterial;
-   MaterialHandle HighlightMaterial;
-
    GeomSwitch* widget;
    Real widget_scale;
    Real epsilon;
@@ -122,12 +125,12 @@ protected:
 
 protected:
    // These affect ALL widgets!!!
-   static MaterialHandle PointWidgetMaterial;
-   static MaterialHandle EdgeWidgetMaterial;
-   static MaterialHandle SliderWidgetMaterial;
-   static MaterialHandle ResizeWidgetMaterial;
-   static MaterialHandle SpecialWidgetMaterial;
-   static MaterialHandle HighlightWidgetMaterial;
+   static MaterialHandle DefaultPointMaterial;
+   static MaterialHandle DefaultEdgeMaterial;
+   static MaterialHandle DefaultSliderMaterial;
+   static MaterialHandle DefaultResizeMaterial;
+   static MaterialHandle DefaultSpecialMaterial;
+   static MaterialHandle DefaultHighlightMaterial;
 };
 
 inline ostream& operator<<( ostream& os, BaseWidget& w );

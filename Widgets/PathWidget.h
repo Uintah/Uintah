@@ -38,7 +38,7 @@ public:
    
 private:
    RealVariable* dist;
-   RealVariable* sqrt2dist;
+   RealVariable* hypo;
    
    GeomGroup* pointgroup;
    GeomGroup* tangentgroup;

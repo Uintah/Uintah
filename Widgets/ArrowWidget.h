@@ -39,6 +39,9 @@ public:
    // Variable indexs
    enum { PointVar };
 
+   // Material indexs
+   enum { PointMatl, ShaftMatl, HeadMatl };
+
 private:
    Vector direction;
 };

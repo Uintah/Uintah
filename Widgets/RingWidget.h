@@ -41,16 +41,18 @@ public:
    void SetRadius( const Real radius );
    Real GetRadius() const;
    
-   const Vector& GetAxis1();
-   const Vector& GetAxis2();
-   const Vector& GetAxis3();
+   const Vector& GetRightAxis();
+   const Vector& GetDownAxis();
 
    // Variable indexs
-   enum { PointAVar, PointBVar, PointCVar, DistVar, CenterVar,
-	  SliderVar, RadiusVar, AngleVar };
+   enum { CenterVar, PointRVar, PointDVar, DistVar, HypoVar, Sqrt2Var,
+	  SliderVar, AngleVar };
+
+   // Materials indexs
+   enum { PointMatl, RingMatl, SliderMatl, ResizeMatl, HalfResizeMatl };
    
 private:
-   Vector oldaxis1, oldaxis2, oldaxis3;
+   Vector oldrightaxis, olddownaxis;
 };
 
 

@@ -14,6 +14,7 @@
 
 #include <Widgets/PathWidget.h>
 #include <Constraints/DistanceConstraint.h>
+#include <Constraints/RatioConstraint.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Sphere.h>
@@ -72,23 +73,25 @@ private:
    GeomPick PickUp;
 };
 
+// Scheme3 is used by Dist.
+
 PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
 : widget(w), index(i),
   PointVar("Point", w->solve, Scheme1, p),
   TangentVar("Tangent", w->solve, Scheme1, p+Vector(w->dist->real(),0,0)),
   OrientVar("Orient", w->solve, Scheme1, p+Vector(0,w->dist->real(),0)),
   UpVar("Up", w->solve, Scheme2, p+Vector(0,0,w->dist->real())),
-  ConstTangent("ConstTangent", 2, &TangentVar, &PointVar, w->dist),
-  ConstRight("ConstRight", 2, &OrientVar, &UpVar, w->sqrt2dist),
-  ConstOrient("ConstOrient", 2, &OrientVar, &PointVar, w->dist),
-  ConstUp("ConstUp", 2, &UpVar, &PointVar, w->dist),
-  PointMatl((GeomObj*)&GeomPoint, w->PointMaterial),
-  TangentShaftMatl((GeomObj*)&GeomTangentShaft, w->EdgeMaterial),
-  TangentHeadMatl((GeomObj*)&GeomTangentHead, w->EdgeMaterial),
-  OrientShaftMatl((GeomObj*)&GeomOrientShaft, w->EdgeMaterial),
-  OrientHeadMatl((GeomObj*)&GeomOrientHead, w->SpecialMaterial),
-  UpShaftMatl((GeomObj*)&GeomUpShaft, w->SpecialMaterial),
-  UpHeadMatl((GeomObj*)&GeomUpHead, w->SpecialMaterial),
+  ConstTangent("ConstTangent", 3, &TangentVar, &PointVar, w->dist),
+  ConstRight("ConstRight", 3, &OrientVar, &UpVar, w->hypo),
+  ConstOrient("ConstOrient", 3, &OrientVar, &PointVar, w->dist),
+  ConstUp("ConstUp", 3, &UpVar, &PointVar, w->dist),
+  PointMatl((GeomObj*)&GeomPoint, w->DefaultPointMaterial),
+  TangentShaftMatl((GeomObj*)&GeomTangentShaft, w->DefaultEdgeMaterial),
+  TangentHeadMatl((GeomObj*)&GeomTangentHead, w->DefaultEdgeMaterial),
+  OrientShaftMatl((GeomObj*)&GeomOrientShaft, w->DefaultEdgeMaterial),
+  OrientHeadMatl((GeomObj*)&GeomOrientHead, w->DefaultSpecialMaterial),
+  UpShaftMatl((GeomObj*)&GeomUpShaft, w->DefaultSpecialMaterial),
+  UpHeadMatl((GeomObj*)&GeomUpHead, w->DefaultSpecialMaterial),
   tangent(new GeomGroup(0)),
   orient(new GeomGroup(0)),
   up(new GeomGroup(0)),
@@ -99,15 +102,19 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
 {
    ConstTangent.VarChoices(Scheme1, 0, 0, 0);
    ConstTangent.VarChoices(Scheme2, 0, 0, 0);
+   ConstTangent.VarChoices(Scheme3, 0, 0, 0);
    ConstTangent.Priorities(P_Default, P_Default, P_Default);
    ConstRight.VarChoices(Scheme1, 1, 1, 1);
    ConstRight.VarChoices(Scheme2, 0, 0, 0);
+   ConstRight.VarChoices(Scheme3, 1, 0, 1);
    ConstRight.Priorities(P_LowMedium, P_LowMedium, P_LowMedium);
    ConstOrient.VarChoices(Scheme1, 0, 0, 0);
    ConstOrient.VarChoices(Scheme2, 0, 0, 0);
+   ConstOrient.VarChoices(Scheme3, 0, 0, 0);
    ConstOrient.Priorities(P_Default, P_Default, P_Default);
    ConstUp.VarChoices(Scheme1, 0, 0, 0);
    ConstUp.VarChoices(Scheme2, 0, 0, 0);
+   ConstUp.VarChoices(Scheme3, 0, 0, 0);
    ConstUp.Priorities(P_Default, P_Default, P_Default);
 
    PointVar.Order();
@@ -122,10 +129,10 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
    up->add(&UpShaftMatl);
    up->add(&UpHeadMatl);
    
-   PickPoint.set_highlight(w->HighlightMaterial);
-   PickTangent.set_highlight(w->HighlightMaterial);
-   PickOrient.set_highlight(w->HighlightMaterial);
-   PickUp.set_highlight(w->HighlightMaterial);
+   PickPoint.set_highlight(w->DefaultHighlightMaterial);
+   PickTangent.set_highlight(w->DefaultHighlightMaterial);
+   PickOrient.set_highlight(w->DefaultHighlightMaterial);
+   PickUp.set_highlight(w->DefaultHighlightMaterial);
    
    w->pointgroup->add(&PickPoint);
    w->tangentgroup->add(&PickTangent);
@@ -162,25 +169,25 @@ PathPoint::execute()
       v2(((Point)OrientVar-PointVar).normal()),
       v3(((Point)UpVar-PointVar).normal());
    Real shaftlen(3.0*widget->widget_scale), arrowlen(5.0*widget->widget_scale);
-   Real spherediam(widget->widget_scale), shaftdiam(0.5*widget->widget_scale);
+   Real sphererad(widget->widget_scale), shaftrad(0.5*widget->widget_scale);
 
    if (widget->mode_switches[1]->get_state()) {
-      GeomPoint.move(PointVar, spherediam);
+      GeomPoint.move(PointVar, sphererad);
    }
    
    if (widget->mode_switches[2]->get_state()) {
-      GeomTangentShaft.move(PointVar, (Point)PointVar + v1 * shaftlen, shaftdiam);
-      GeomTangentHead.move((Point)PointVar + v1 * shaftlen, (Point)PointVar + v1 * arrowlen, spherediam, 0);
+      GeomTangentShaft.move(PointVar, (Point)PointVar + v1 * shaftlen, shaftrad);
+      GeomTangentHead.move((Point)PointVar + v1 * shaftlen, (Point)PointVar + v1 * arrowlen, sphererad, 0);
    }
    
    if (widget->mode_switches[3]->get_state()) {
-      GeomOrientShaft.move(PointVar, (Point)PointVar + v2 * shaftlen, shaftdiam);
-      GeomOrientHead.move((Point)PointVar + v2 * shaftlen, (Point)PointVar + v2 * arrowlen, spherediam, 0);
+      GeomOrientShaft.move(PointVar, (Point)PointVar + v2 * shaftlen, shaftrad);
+      GeomOrientHead.move((Point)PointVar + v2 * shaftlen, (Point)PointVar + v2 * arrowlen, sphererad, 0);
    }
    
    if (widget->mode_switches[4]->get_state()) {
-      GeomUpShaft.move(PointVar, (Point)PointVar + v3 * shaftlen, shaftdiam);
-      GeomUpHead.move((Point)PointVar + v3 * shaftlen, (Point)PointVar + v3 * arrowlen, spherediam, 0);
+      GeomUpShaft.move(PointVar, (Point)PointVar + v3 * shaftlen, shaftrad);
+      GeomUpHead.move((Point)PointVar + v3 * shaftlen, (Point)PointVar + v3 * arrowlen, sphererad, 0);
    }
 
    Vector v(Cross(v2,v3)), v11, v12;
@@ -192,9 +199,9 @@ PathPoint::execute()
 }
 
 void
-PathPoint::geom_moved( const Vector& delta, Index cbdata )
+PathPoint::geom_moved( const Vector& delta, Index pick )
 {
-   switch(cbdata) {
+   switch(pick) {
    case 0:
       MoveDelta(delta);
       break;
@@ -244,20 +251,29 @@ PathPoint::Get( Point& p, Vector& tangent, Vector& orient, Vector& up ) const
 }
 
 
+const Index NumCons = 1;
+const Index NumVars = 3;
 const Index NumMdes = 5;
 const Index NumSwtchs = 5;
 
 PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 			Index num_points )
-: BaseWidget(module, lock, 0, 0, 0, 0, NumMdes, NumSwtchs, widget_scale),
-  npoints(0), points(num_points*2)
+: BaseWidget(module, lock, NumVars, NumCons, 0, 0, 0, NumMdes, NumSwtchs, widget_scale),
+  npoints(0), points(num_points)
 {
-   dist = new RealVariable("Dist", solve, Scheme1, widget_scale*5.0);
-   sqrt2dist = new RealVariable("sqrt2Dist", solve, Scheme1, sqrt(2)*widget_scale*5.0);
+   dist = variables[0] = new RealVariable("Dist", solve, Scheme3, widget_scale*5.0);
+   hypo = variables[1] = new RealVariable("hypo", solve, Scheme3, sqrt(2)*widget_scale*5.0);
+   variables[2] = new RealVariable("sqrt2", solve, Scheme3, sqrt(2));
+
+   constraints[0] = new RatioConstraint("ConstSqrt2", 3, hypo, dist, variables[2]);
+   constraints[0]->VarChoices(Scheme1, 0, 0, 0);
+   constraints[0]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[0]->VarChoices(Scheme3, 0, 0, 0);
+   constraints[0]->Priorities(P_Highest, P_Highest, P_Highest);
 
    splinegroup = new GeomGroup;
    GeomPick* sp = new GeomPick(splinegroup, module, this, -1);
-   sp->set_highlight(HighlightMaterial);
+   sp->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, sp);
    pointgroup = new GeomGroup(0);
    CreateModeSwitch(1, pointgroup);
@@ -296,10 +312,7 @@ PathWidget::~PathWidget()
 void
 PathWidget::widget_execute()
 {
-   cout << "Setting dist" << endl;
    dist->Set(widget_scale*5.0);  // This triggers a LOT of constraints!
-   cout << "Setting sqrt2dist" << endl;
-   sqrt2dist->Set(sqrt(2)*widget_scale*5.0);  // This triggers a LOT of constraints!
 
    if (mode_switches[0]->get_state()) GenerateSpline();
 
@@ -323,18 +336,18 @@ PathWidget::GenerateSpline()
 
 void
 PathWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			int i )
+			int pick )
 {
-   if (i == -1) // Spline pick.
+   if (pick == -1) // Spline pick.
       MoveDelta(delta);
-   else if (i < 10000)
-      points[i]->geom_moved(delta, 0);
-   else if (i < 20000)
-      points[i-10000]->geom_moved(delta, 1);
-   else if (i < 30000)
-      points[i-20000]->geom_moved(delta, 2);
+   else if (pick < 10000)
+      points[pick]->geom_moved(delta, 0);
+   else if (pick < 20000)
+      points[pick-10000]->geom_moved(delta, 1);
+   else if (pick < 30000)
+      points[pick-20000]->geom_moved(delta, 2);
    else
-      points[i-30000]->geom_moved(delta, 3);
+      points[pick-30000]->geom_moved(delta, 3);
    execute();
 }
 

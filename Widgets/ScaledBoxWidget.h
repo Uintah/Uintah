@@ -30,24 +30,24 @@ public:
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
-   Real GetRatio1() const;
-   Real GetRatio2() const;
-   Real GetRatio3() const;
+   Real GetRatioR() const;
+   Real GetRatioD() const;
+   Real GetRatioI() const;
 
-   Vector GetAxis1();
-   Vector GetAxis2();
-   Vector GetAxis3();
+   const Vector& GetRightAxis();
+   const Vector& GetDownAxis();
+   const Vector& GetInAxis();
 
    // Variable indexs
-   enum { PointIULVar, PointIURVar, PointIDRVar, PointIDLVar,
-	  PointOULVar, PointOURVar, PointODRVar, PointODLVar,
-	  Dist1Var, Dist2Var, Dist3Var, HypoVar, DiagVar,
-	  Slider1Var, SDist1Var, Ratio1Var,
-	  Slider2Var, SDist2Var, Ratio2Var,
-	  Slider3Var, SDist3Var, Ratio3Var };
+   enum { CenterVar, PointRVar, PointDVar, PointIVar,
+	  DistRVar, DistDVar, DistIVar, HypoRDVar, HypoDIVar, HypoIRVar,
+	  SDistRVar, RatioRVar, SDistDVar, RatioDVar, SDistIVar, RatioIVar };
+
+   // Material indexs
+   enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl };
 
 private:
-   Vector oldaxis1, oldaxis2, oldaxis3;
+   Vector oldrightaxis, olddownaxis, oldinaxis;
 };
 
 

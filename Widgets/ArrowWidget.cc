@@ -21,6 +21,7 @@ const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 3;
 const Index NumPcks = 1;
+const Index NumMatls = 3;
 const Index NumMdes = 1;
 const Index NumSwtchs = 1;
 // const Index NumSchemes = 1;
@@ -29,23 +30,23 @@ enum { GeomPoint, GeomShaft, GeomHead };
 enum { Pick };
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMdes, NumSwtchs, widget_scale),
-  direction(0, 0, 1.0)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+  direction(0, 0, 1)
 {
    variables[PointVar] = new PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
    GeomGroup* arr = new GeomGroup;
    geometries[GeomPoint] = new GeomSphere;
-   GeomMaterial* sphm = new GeomMaterial(geometries[GeomPoint], PointMaterial);
-   arr->add(sphm);
+   materials[PointMatl] = new GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
+   arr->add(materials[PointMatl]);
    geometries[GeomShaft] = new GeomCylinder;
-   GeomMaterial* cylm = new GeomMaterial(geometries[GeomShaft], EdgeMaterial);
-   arr->add(cylm);
+   materials[ShaftMatl] = new GeomMaterial(geometries[GeomShaft], DefaultEdgeMaterial);
+   arr->add(materials[ShaftMatl]);
    geometries[GeomHead] = new GeomCappedCone;
-   GeomMaterial* conem = new GeomMaterial(geometries[GeomHead], EdgeMaterial);
-   arr->add(conem);
+   materials[HeadMatl] = new GeomMaterial(geometries[GeomHead], DefaultEdgeMaterial);
+   arr->add(materials[HeadMatl]);
    picks[Pick] = new GeomPick(arr, module, this, Pick);
-   picks[Pick]->set_highlight(HighlightMaterial);
+   picks[Pick]->set_highlight(DefaultHighlightMaterial);
    CreateModeSwitch(0, picks[Pick]);
 
    SetMode(Mode0, Switch0);
@@ -85,9 +86,9 @@ ArrowWidget::widget_execute()
 
 void
 ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 int cbdata )
+			 int pick )
 {
-    switch(cbdata){
+    switch(pick){
     case Pick:
 	MoveDelta(delta);
 	break;

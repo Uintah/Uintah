@@ -14,58 +14,63 @@
 
 #include <Widgets/BaseWidget.h>
 
-MaterialHandle BaseWidget::PointWidgetMaterial(new Material(Color(0,0,0),
-							    Color(.54,.60,1),
+MaterialHandle BaseWidget::DefaultPointMaterial(new Material(Color(0,0,0),
+							     Color(.54,.60,1),
+							     Color(.5,.5,.5),
+							     20));
+MaterialHandle BaseWidget::DefaultEdgeMaterial(new Material(Color(0,0,0),
+							    Color(.54,.60,.66),
 							    Color(.5,.5,.5),
 							    20));
-MaterialHandle BaseWidget::EdgeWidgetMaterial(new Material(Color(0,0,0),
-							   Color(.54,.60,.66),
-							   Color(.5,.5,.5),
-							   20));
-MaterialHandle BaseWidget::SliderWidgetMaterial(new Material(Color(0,0,0),
-							     Color(.66,.60,.40),
-							     Color(.5,.5,.5),
-							     20));
-MaterialHandle BaseWidget::ResizeWidgetMaterial(new Material(Color(0,0,0),
-							     Color(.54,1,.60),
-							     Color(.5,.5,.5),
-							     20));
-MaterialHandle BaseWidget::SpecialWidgetMaterial(new Material(Color(0,0,0),
-							      Color(1,.54,.60),
+MaterialHandle BaseWidget::DefaultSliderMaterial(new Material(Color(0,0,0),
+							      Color(.66,.60,.40),
 							      Color(.5,.5,.5),
 							      20));
-MaterialHandle BaseWidget::HighlightWidgetMaterial(new Material(Color(0,0,0),
-								Color(.8,0,0),
-								Color(.5,.5,.5),
-								20));
+MaterialHandle BaseWidget::DefaultResizeMaterial(new Material(Color(0,0,0),
+							      Color(.54,1,.60),
+							      Color(.5,.5,.5),
+							      20));
+MaterialHandle BaseWidget::DefaultSpecialMaterial(new Material(Color(0,0,0),
+							       Color(1,.54,.60),
+							       Color(.5,.5,.5),
+							       20));
+MaterialHandle BaseWidget::DefaultHighlightMaterial(new Material(Color(0,0,0),
+								 Color(.8,0,0),
+								 Color(.5,.5,.5),
+								 20));
 
 BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumVariables,
 			const Index NumConstraints,
 			const Index NumGeometries,
 			const Index NumPicks,
+			const Index NumMaterials,
 			const Index NumModes,
 			const Index NumSwitches,
-			const double widget_scale )
+			const Real widget_scale )
 : module(module), lock(lock),
   solve(new ConstraintSolver), 
   NumVariables(NumVariables), NumConstraints(NumConstraints),
-  NumGeometries(NumGeometries), NumPicks(NumPicks),
+  NumGeometries(NumGeometries), NumPicks(NumPicks), NumMaterials(NumMaterials),
   constraints(NumConstraints), variables(NumVariables),
-  geometries(NumGeometries), picks(NumPicks),
+  geometries(NumGeometries), picks(NumPicks), materials(NumMaterials),
   NumModes(NumModes), NumSwitches(NumSwitches),
   modes(NumModes), mode_switches(NumSwitches), CurrentMode(0),
-  PointMaterial(PointWidgetMaterial),
-  EdgeMaterial(EdgeWidgetMaterial),
-  SliderMaterial(SliderWidgetMaterial),
-  ResizeMaterial(ResizeWidgetMaterial),
-  SpecialMaterial(SpecialWidgetMaterial),
-  HighlightMaterial(HighlightWidgetMaterial),
   widget_scale(widget_scale),
   epsilon(1e-6)
 {
    for (Index i=0; i<NumSwitches; i++)
       mode_switches[i] = NULL;
+   for (i=0; i<NumConstraints; i++)
+      constraints[i] = NULL;
+   for (i=0; i<NumVariables; i++)
+      variables[i] = NULL;
+   for (i=0; i<NumGeometries; i++)
+      geometries[i] = NULL;
+   for (i=0; i<NumPicks; i++)
+      picks[i] = NULL;
+   for (i=0; i<NumMaterials; i++)
+      materials[i] = NULL;
    for (i=0; i<NumModes; i++)
       modes[i] = -1;
 }
@@ -116,6 +121,13 @@ BaseWidget::GetWidget()
 }
 
 
+void
+BaseWidget::Move( const Point& p )
+{
+   MoveDelta(p - ReferencePoint());
+}
+
+
 int
 BaseWidget::GetState()
 {
@@ -150,6 +162,22 @@ Index
 BaseWidget::GetMode() const
 {
    return CurrentMode;
+}
+
+
+void
+BaseWidget::SetMaterial( const Index mindex, const MaterialHandle& matl )
+{
+   ASSERT(mindex<NumMaterials);
+   materials[mindex]->setMaterial(matl);
+}
+
+
+const MaterialHandle&
+BaseWidget::GetMaterial( const Index mindex ) const
+{
+   ASSERT(mindex<NumMaterials);
+   return materials[mindex]->getMaterial();
 }
 
 
@@ -196,6 +224,36 @@ BaseWidget::FinishWidget()
    for (Index i=0; i<NumModes; i++)
       if (modes[i] == -1) {
 	 cerr << "BaseWidget Error:  Mode " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   for (i=0; i<NumSwitches; i++)
+      if (mode_switches[i] == NULL) {
+	 cerr << "BaseWidget Error:  Switch " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   for (i=0; i<NumConstraints; i++)
+      if (constraints[i] == NULL) {
+	 cerr << "BaseWidget Error:  Constraint " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   for (i=0; i<NumVariables; i++)
+      if (variables[i] == NULL) {
+	 cerr << "BaseWidget Error:  Variable " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   for (i=0; i<NumGeometries; i++)
+      if (geometries[i] == NULL) {
+	 cerr << "BaseWidget Error:  Geometry " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   for (i=0; i<NumPicks; i++)
+      if (picks[i] == NULL) {
+	 cerr << "BaseWidget Error:  Pick " << i << " is unitialized!" << endl;
+	 exit(-1);
+      }
+   for (i=0; i<NumMaterials; i++)
+      if (materials[i] == NULL) {
+	 cerr << "BaseWidget Error:  Material " << i << " is unitialized!" << endl;
 	 exit(-1);
       }
    
