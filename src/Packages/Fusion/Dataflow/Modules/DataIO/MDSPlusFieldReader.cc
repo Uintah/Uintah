@@ -829,6 +829,11 @@ void MDSPlusFieldReader::execute(){
 	      
 		  zVal =  vector_data[n][0][1][cc];
 
+		  if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+		    remark( "Replaced a zero length vector" );
+		    xVal = yVal = zVal = 1.0e-12;
+		  }
+
 		  vField[n]->set_value(Vector(xVal, yVal, zVal), node);
 		}
 	      }
