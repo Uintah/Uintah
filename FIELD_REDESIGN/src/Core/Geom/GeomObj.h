@@ -16,6 +16,7 @@
 
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/Handle.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <sci_config.h>
 
@@ -30,6 +31,7 @@ namespace Geometry {
   class BBox;
   class Vector;
   class Point;
+  class IntVector;
 }
 
 namespace GeomSpace {
@@ -46,11 +48,14 @@ using SCICore::Containers::Array1;
 using SCICore::Geometry::BBox;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
+using SCICore::Geometry::IntVector;
 using SCICore::Containers::clString;
 
 class SCICORESHARE GeomObj : public Persistent {
 public:
     GeomObj(int id = 0x1234567);
+    GeomObj(IntVector id);
+    GeomObj(int id_int, IntVector id);
     GeomObj(const GeomObj&);
     virtual ~GeomObj();
     virtual GeomObj* clone() = 0;
@@ -64,15 +69,18 @@ public:
     virtual void draw(DrawInfoOpenGL*, Material*, double time)=0;
     int post_draw(DrawInfoOpenGL*);
 #endif
+    virtual void get_triangles( Array1<float> &v );
     static PersistentTypeID type_id;
 
     virtual void io(Piostream&);    
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*)=0;
   // we want to return false if value is the default value
     virtual bool getId( int& ) { return false; }
+    virtual bool getId( IntVector& ){ return false; }
 protected:
 
   int id;
+  IntVector _id;
 };
 
 void Pio(Piostream&, GeomObj*&);
@@ -82,6 +90,23 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.8.2.1  2000/09/28 03:12:18  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.11  2000/09/11 22:14:46  bigler
+// Added constructors that take an int and IntVector to allow unique
+// identification in 4 dimensions.
+//
+// Revision 1.10  2000/08/09 18:21:14  kuzimmer
+// Added IntVector indexing to GeomObj & GeomSphere
+//
+// Revision 1.9  2000/06/06 16:01:45  dahart
+// - Added get_triangles() to several classes for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.8  2000/01/03 20:12:36  kuzimmer
 //  Forgot to check in these files for picking spheres
 //

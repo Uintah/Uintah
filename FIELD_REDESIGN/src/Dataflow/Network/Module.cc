@@ -25,6 +25,7 @@
 #include <PSECore/Dataflow/NetworkEditor.h>
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Geom/GeomPick.h>
+#include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/Thread/Thread.h>
@@ -54,6 +55,7 @@ Module::Module(const clString& name, const clString& id,
   packageName="error: unset package name";
   categoryName="error: unset category name";
   moduleName="error: unset module name";
+  stacksize=0;
 }
 
 Module::~Module()
@@ -170,8 +172,16 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
 
     // Start up the event loop
     helper=scinew ModuleHelper(this);
-    Thread* t=new Thread(helper, name());
+    Thread* t=new Thread(helper, name(), 0, Thread::NotActivated);
+    if(stacksize)
+       t->setStackSize(stacksize);
+    t->activate(false);
     t->detach();
+}
+
+void Module::setStackSize(unsigned long s)
+{
+   stacksize=s;
 }
 
 OPort* Module::oport(int i)
@@ -207,7 +217,8 @@ Module::geom_pick(GeomPick*, Roe*, int, const BState&)
 }
 
 void
-Module::geom_pick(GeomPick* gp, void* userdata, int)
+//Module::geom_pick(GeomPick* gp, void* userdata, int)
+Module::geom_pick(GeomPick* gp, void* userdata, GeomObj*)
 {
   geom_pick(gp, userdata);
 }
@@ -224,7 +235,8 @@ Module::geom_release(GeomPick*, int, const BState&)
   NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
 }
 
-void Module::geom_release(GeomPick* gp, void* userdata, int)
+//void Module::geom_release(GeomPick* gp, void* userdata, int)
+void Module::geom_release(GeomPick* gp, void* userdata, GeomObj*)
 {
   geom_release(gp, userdata);
 }
@@ -250,7 +262,8 @@ Module::geom_moved(GeomPick*, int, double, const Vector&,
 
 
 void Module::geom_moved(GeomPick* gp, int which, double delta,
-			const Vector& dir, void* cbdata, int)
+			//const Vector& dir, void* cbdata, int)
+			const Vector& dir, void* cbdata, GeomObj*)
 {
   geom_moved(gp, which, delta, dir, cbdata);
 }
@@ -466,6 +479,15 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.10.2.1  2000/09/28 03:14:57  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.12  2000/08/11 15:44:43  bigler
+// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
+//
+// Revision 1.11  2000/07/27 05:22:34  sparker
+// Added a setStackSize method to the module
+//
 // Revision 1.10  1999/12/07 02:53:33  dmw
 // made show_status variable persistent with network maps
 //

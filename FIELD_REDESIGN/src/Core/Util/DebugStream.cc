@@ -16,7 +16,7 @@
 //
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
 //
-// The + or - specifies wheather the named object is on or off.  If a file is 
+// The + or - specifies whether the named object is on or off.  If a file is 
 // specified it is opened in ios::out mode.  If no file is specified,
 // the stream is directed to cerr.  The : and , characters are
 // restricted to deliminators.
@@ -37,6 +37,8 @@
 
 namespace SCICore {
 namespace Util {
+
+static const char *ENV_VAR = "SCI_DEBUG";
 
 
 DebugBuf::DebugBuf()
@@ -83,6 +85,7 @@ DebugStream::~DebugStream()
 void DebugStream::checkenv(string iname)
 {
   char *env = getenv(ENV_VAR);
+
   // if SCI_DEBUG was defined, parse the string and store appropriate
   // values in onstreams and offstreams
   if( env ){
@@ -92,10 +95,10 @@ void DebugStream::checkenv(string iname)
     commapos = colonpos = oldcomma = 0;
     commapos = var.find(',', 0);
     colonpos = var.find(':', 0);
-    if(commapos == string::npos){
+    if(commapos == (int)string::npos){
       commapos = var.size();
     }
-    while(colonpos != string::npos){
+    while(colonpos != (int)string::npos){
       name.assign(var, oldcomma, colonpos-oldcomma);
       if(name == iname){
 	file.assign(var, colonpos+1, commapos-colonpos-1);
@@ -122,7 +125,7 @@ void DebugStream::checkenv(string iname)
       oldcomma = commapos+1;
       commapos = var.find(',', oldcomma+1);
       colonpos = var.find(':', oldcomma+1);
-      if(commapos == string::npos){
+      if(commapos == (int)string::npos){
 	commapos = var.size();
       }
     }

@@ -17,8 +17,6 @@
 
 #ifndef _WIN32
 
-#include <SCICore/TclInterface/Remote.h>
-
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -31,6 +29,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <SCICore/TclInterface/Remote.h>
+
+using namespace std;
 //#define DEBUG 1
 
 // server-side function: returns the listening socket
@@ -175,6 +176,15 @@ int receiveReply (TCLMessage* msg, int skt)
 
 //
 // $Log$
+// Revision 1.4.2.1  2000/09/28 03:11:44  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.6  2000/09/27 22:20:53  yarden
+// move include on Remote.h after the system files includes
+//
+// Revision 1.5  2000/08/02 22:27:07  jas
+// Added using namespace std;
+//
 // Revision 1.4  1999/10/07 02:08:03  sparker
 // use standard iostreams and complex type
 //

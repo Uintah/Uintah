@@ -201,6 +201,9 @@ void SliceMaker::execute()
 
 //
 // $Log$
+// Revision 1.1.2.1  2000/09/28 03:20:14  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
 // Revision 1.1  2000/09/07 20:43:11  zyp
 // This module creates a disc that represents the real and guessed
 // conductivity values for a cylinder.  It is for use in a demo.  It

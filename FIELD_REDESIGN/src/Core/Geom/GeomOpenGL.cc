@@ -47,6 +47,8 @@
 #include <SCICore/Geom/Pt.h>
 #include <SCICore/Geom/RenderMode.h>
 #include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomEllipsoid.h>
+#include <SCICore/Geom/GeomDL.h>
 #if 0
 #include <SCICore/Geom/Squares.h>
 #endif
@@ -168,7 +170,7 @@ static void quad_error(GLenum code)
     cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
 }
 
-#ifdef _USING_GPP
+#ifdef __GNUC__
   typedef void (*gluQuadricCallbackType)(...);
 #else
   typedef void (*gluQuadricCallbackType)();
@@ -181,7 +183,7 @@ DrawInfoOpenGL::DrawInfoOpenGL()
 #ifdef _WIN32
 	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
 #else
-    gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
+	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
 }
 
@@ -658,7 +660,60 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
+  if ( child )
     child->draw(di,m,time);
+}
+
+void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+  if ( !child ) return;
+
+  if(!pre_draw(di, m, 0)) return;
+  
+  if ( !di->dl ) 
+    child->draw(di,m,time);  // do not use display list
+  else  {
+    // do we need a new dl ?
+    if (!have_dl 
+ 	|| type  != di->get_drawtype() 
+ 	|| lighting != di->lighting ) 
+    {
+      type = di->get_drawtype();
+      lighting = di->lighting; 
+      polygons = di->polycount; // remember poly count
+      
+      // do we need to allocate a dl ?
+      if ( !have_dl ) {
+	dl = glGenLists(1);
+	cerr << "dl = " << dl << endl;
+	if ( dl == 0 ) {
+	  cerr << "can not allocate dl\n";
+	   child->draw(di,m,time);  // do not use display list
+	   post_draw(di);
+	   return;
+	}
+	have_dl = true;
+      }
+      
+      // create a new dl 
+
+      // don't use COMPILE_AND_EXECUTE as it seems to cause the dl to be slower
+      glNewList( dl,  GL_COMPILE);
+      child->draw(di,m,time);
+      glEndList();
+      glCallList(dl); 
+
+      // update poly count;
+      polygons = di->polycount - polygons; 
+    } 
+    else {
+      // display the child using the dl
+      glCallList(dl);
+      di->polycount += polygons;
+    }
+  }
+
+  post_draw(di);
 }
 
 void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
@@ -2468,6 +2523,18 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di,matl,1);
+    glPushMatrix();
+    glTranslated(cen.x(), cen.y(), cen.z());
+    glMultMatrixd(m_tensor_matrix);
+    glTranslated(-cen.x(), -cen.y(), -cen.z());
+    GeomSphere::draw(di, matl, 1);
+    glPopMatrix();
+}
+
+
 void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
    if(state)
@@ -3275,55 +3342,54 @@ void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 	case DrawInfoOpenGL::Gouraud:
 	    {	
 	      glBegin(GL_QUADS);
-	      //front
-	      //	glColor4f(0.0,1.0,0.0,0.8);
-	      glVertex3d(min.x(),min.y(),max.z());
-	      glColor4f(0.0,1.0,0.0,0.2);
-	      glVertex3d(min.x(),max.y(),max.z());
-	      glVertex3d(max.x(),max.y(),max.z());
-	      glVertex3d(max.x(),min.y(),max.z());
-	      //back
-	      //	glColor4f(1.0,0.0,0.0,0.8);
-	      glVertex3d(min.x(),max.y(),min.z());
-	      glColor4f(0.0,1.0,0.0,0.2);
-	      glVertex3d(min.x(),min.y(),min.z());
-	      glVertex3d(max.x(),min.y(),min.z());
-	      glVertex3d(max.x(),max.y(),min.z());
-	      
-	      glColor4f(1.0,0.0,0.0,0.2);
-	      
-	      //left
-	      glVertex3d(min.x(),min.y(),min.z());
-	      //	glColor4f(1.0,0.0,0.0,0.8);
-	      glVertex3d(min.x(),max.y(),min.z());
-	      glVertex3d(min.x(),max.y(),max.z());
-	      glVertex3d(min.x(),min.y(),max.z());
-	      glColor4f(1.0,0.0,0.0,0.2);
-	      
-	      //right
-	      //	glColor4f(0.0,1.0,0.0,0.8);
-	      glVertex3d(max.x(),max.y(),max.z());
-	      glColor4f(1.0,0.0,0.0,0.2);
-	      glVertex3d(max.x(),max.y(),min.z());
-	      glVertex3d(max.x(),min.y(),max.z());
-	      glVertex3d(max.x(),min.y(),min.z());
-	      
-	      glColor4f(0.0,0.0,1.0,0.2);
-	      
-	      //top
-	      //	glColor4f(0.0,1.0,0.0,0.8);
-	      glVertex3d(min.x(),max.y(),min.z());
-	      glColor4f(0.0,0.0,1.0,0.2);
-	      glVertex3d(max.x(),max.y(),min.z());
-	      glVertex3d(max.x(),max.y(),max.z());
-	      glVertex3d(min.x(),max.y(),max.z());
-	      //bottom
-	      //	glColor4f(1.0,0.0,0.0,0.8);
+
+	      // top
+	      glNormal3f(0,0,1);
+	      glColor4f(0.0, 0.0, 1.0, 0.0);
 	      glVertex3d(min.x(),min.y(),max.z());
 	      glVertex3d(max.x(),min.y(),max.z());
-	      glVertex3d(max.x(),min.y(),min.z());
-	      glColor4f(0.0,0.0,1.0,0.2);
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+
+	      // bottom
+	      glNormal3f(0,0,-1);
+	      glColor4f(0.0, 0.0, 0.5, 0.0);
 	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      
+	      // left
+	      glNormal3f(-1.0,0,0);
+	      glColor4f(0.5, 0.0, 0.0, 0.0);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(min.x(),min.y(),max.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(min.x(),max.y(),min.z());
+
+	      // right
+	      glNormal3f(1,0,0);
+	      glColor4f(1.0, 0.0, 0.0, 0.0);
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      	      
+	      // top
+	      glNormal3f(0,1.0,0);
+	      glColor4f(0.0, 1.0, 0.0, 0.0);
+	      glVertex3d(min.x(),max.y(),min.z());
+	      glVertex3d(min.x(),max.y(),max.z());
+	      glVertex3d(max.x(),max.y(),max.z());
+	      glVertex3d(max.x(),max.y(),min.z());
+
+	      // back
+	      glNormal3f(0,-1,0);
+	      glColor4f(0.0, 0.5, 0.0, 0.0);
+	      glVertex3d(min.x(),min.y(),min.z());
+	      glVertex3d(max.x(),min.y(),min.z());
+	      glVertex3d(max.x(),min.y(),max.z());
+	      glVertex3d(min.x(),min.y(),max.z());
   
 	      glEnd();
 	    }
@@ -4210,8 +4276,31 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.19.2.2  2000/09/28 03:12:18  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
 // Revision 1.19.2.1  2000/09/22 23:32:42  mcole
 // added support for local line width control
+//
+// Revision 1.24  2000/09/25 17:59:54  sparker
+// Changed ifdef _USING_GPP to __GNUG__
+//
+// Revision 1.23  2000/09/15 20:57:53  kuzimmer
+//  resurrected GeomEllipse from old code
+//
+// Revision 1.22  2000/08/01 01:30:46  yarden
+// replace call to glNewList(dl, GL_COMPILE_AND_EXECUTE)
+// with a call using GL_COMPILE
+// it seems that the first call cause the display list to slower than
+// not using the display list at all !? using compile does improve performance
+// (at least on the linux side)
+//
+// Revision 1.21  2000/07/28 21:13:17  yarden
+// GeomDL: Create and manage a display list for its child.
+// the user can select to ignore it via check buttons in Salmon
+//
+// Revision 1.20  2000/07/06 19:34:07  yarden
+// fix GeomBox drawing.
 //
 // Revision 1.19  2000/05/31 21:54:00  kuzimmer
 // Changes to make the ColorMapKey Module work properly

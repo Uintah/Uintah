@@ -616,7 +616,12 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
 
 //
 // $Log$
+// Revision 1.3.2.1  2000/09/28 03:13:32  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
 // Revision 1.3  2000/08/22 07:18:33  moulding
+//
+//
 // changed   default:   to  default:   to appease the GCC on linux
 //           }                break;
 //                          }

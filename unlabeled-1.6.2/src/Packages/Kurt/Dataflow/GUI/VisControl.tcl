@@ -40,6 +40,7 @@ itcl_class Kurt_Vis_VisControl {
     protected gf ""
     protected pf ""
 
+
     constructor {config} { 
         set name VisControl 
         set_defaults
@@ -57,7 +58,7 @@ itcl_class Kurt_Vis_VisControl {
 	global $this-gvMatNum;
 	global $this-animate
 	global $this-time;
-
+	global $this-timeval 
 	set $this-gsVar ""
 	set $this-gvVar ""
 	set $this-psVar ""
@@ -68,6 +69,7 @@ itcl_class Kurt_Vis_VisControl {
 	set $this-pNMaterials 0
 	set $this-gvMatNum 0
 	set $this-time 0
+	set $this-timeval 0
 	set $this-animate 0
     } 
     
@@ -98,10 +100,25 @@ itcl_class Kurt_Vis_VisControl {
 	frame $w.f -relief flat
  	pack $w.f -side top -expand yes -fill both
 
-	scale $w.time -orient horizontal -from 0 -to 1.0 \
-	    -resolution 0.01 -bd 2 -label "Time" -variable $this-time\
-	    -tickinterval 0.5 
-	pack $w.time -side top -fill x -padx 2 -pady 2
+	frame $w.tframe
+	set f $w.tframe
+	frame $f.tframe
+	frame $f.lframe
+	label $f.lframe.step -text "Time Step"
+	label $f.lframe.val -text "    Time      "
+	scale $f.tframe.time -orient horizontal -from 0 -to 100 \
+	    -resolution 1 -bd 2 -variable $this-time \
+	    -tickinterval 50
+	entry $f.tframe.tval -state disabled \
+	    -width 10 -textvariable $this-timeval
+	pack $f -side top -fill x -padx 2 -pady 2
+	pack $f.lframe -side top -expand yes -fill x
+	pack $f.tframe -side top -expand yes -fill x
+	pack $f.lframe.step -side left -anchor w
+	pack $f.lframe.val -side right -anchor e
+	pack $f.tframe.time -side left -expand yes \
+	    -fill x -padx 2 -pady 2 -anchor w
+	pack $f.tframe.tval -side right  -padx 2 -pady 2 -anchor e
 
 	frame $w.aframe -relief groove -borderwidth 2
 	pack $w.aframe -side top -fill x -padx 2 -pady 2
@@ -114,7 +131,7 @@ itcl_class Kurt_Vis_VisControl {
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
 
-	bind $w.time <ButtonRelease> $n
+	bind $f.tframe.time <ButtonRelease> $n
 	makeFrames $w.f
     }
 
@@ -200,15 +217,12 @@ itcl_class Kurt_Vis_VisControl {
 	set pf ""
     }
 
-    method SetTimeRange { min max timesteps } {
-	set w .ui[modname] 
+    method SetTimeRange { timesteps } {
+	set w .ui[modname].tframe.tframe
 	if { [winfo exists $w.time] } {
-	    set r [expr ($max - $min)/double($timesteps)]
-	    set res "$r"
-	    set interval [expr ($max - $min)/2.0]
-	    $w.time configure -from $min
-	    $w.time configure -to $max
-	    $w.time configure -resolution $res 
+	    set interval [expr ($timesteps)/2.0]
+	    $w.time configure -from 0
+	    $w.time configure -to $timesteps
 	    $w.time configure -tickinterval $interval
 	}
     }

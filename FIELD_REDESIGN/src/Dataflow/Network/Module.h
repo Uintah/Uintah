@@ -33,6 +33,7 @@ namespace SCICore {
   }
   namespace GeomSpace {
     class GeomPick;
+    class GeomObj;
   }
 }
 
@@ -47,6 +48,12 @@ namespace PSECommon {
   }
 }
 
+namespace PSECommon {
+  namespace AInterface {
+    class AI;
+  }
+}
+
 namespace PSECore {
 namespace Dataflow {
 
@@ -55,6 +62,7 @@ using SCICore::TclInterface::TCLArgs;
 using SCICore::TclInterface::TCLint;
 using SCICore::TclInterface::TCLstring;
 using SCICore::GeomSpace::GeomPick;
+using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::BState;
 using SCICore::GeomSpace::Pickable;
 using SCICore::Geometry::Vector;
@@ -63,12 +71,14 @@ using SCICore::Containers::Array1;
 
 using PSECore::Comm::MessageBase;
 using PSECommon::Modules::Roe;
+using PSECommon::AInterface::AI;
 
 class Connection;
 class Network;
 class NetworkEditor;
 class OPort;
 class IPort;
+class AI;
 
 class PSECORESHARE Module : public TCL, public Pickable {
     /*
@@ -80,6 +90,7 @@ class PSECORESHARE Module : public TCL, public Pickable {
     // Added by Mohamed Dekhil for the CSAFE project
     TCLstring notes ;
     TCLint show_status;
+   unsigned long stacksize;
 public:
     enum State {
 	NeedData,
@@ -93,6 +104,7 @@ public:
     friend class ModuleHelper;
     virtual void do_execute();
     virtual void execute()=0;
+   void setStackSize(unsigned long stackSize);
 
     State state;
     Array1<OPort*> oports;
@@ -134,13 +146,16 @@ public:
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);
-    virtual void geom_pick(GeomPick*, void*, int);
+    virtual void geom_pick(GeomPick*, void*, GeomObj*);
+  //virtual void geom_pick(GeomPick*, void*, int);
     virtual void geom_pick(GeomPick*, void*);
     virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs);
     virtual void geom_release(GeomPick*, int, const BState& bs);
-    virtual void geom_release(GeomPick*, void*, int);
+    virtual void geom_release(GeomPick*, void*, GeomObj*);
+  //virtual void geom_release(GeomPick*, void*, int);
     virtual void geom_release(GeomPick*, void*);
-    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, GeomObj*);
+  //virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, 
 			    int, const BState&);
@@ -196,6 +211,7 @@ public:
     bool isSkeleton()	{ return skeleton; }
     void tcl_command(TCLArgs&, void*);
 
+    bool get_abort() { return abort_flag; }
 };
 
 typedef Module* (*ModuleMaker)(const clString& id);
@@ -205,6 +221,22 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.10.2.1  2000/09/28 03:14:57  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.14  2000/08/11 15:44:43  bigler
+// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
+//
+// Revision 1.13  2000/07/27 05:22:34  sparker
+// Added a setStackSize method to the module
+//
+// Revision 1.12  2000/07/23 19:34:22  yarden
+// move abort_flag back to private
+// provided an inline public get_abort()
+//
+// Revision 1.11  2000/07/22 17:51:23  yarden
+// move make abort_flag public
+//
 // Revision 1.10  1999/12/07 02:53:33  dmw
 // made show_status variable persistent with network maps
 //
