@@ -39,7 +39,11 @@
 #include <Core/Datatypes/MRLatVolField.h>
 #include <Core/Volume/TextureBrick.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <limits>
+#include <sgi_stl_warnings_on.h>
+
 using std::cerr;
 using std::endl;
 
