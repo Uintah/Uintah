@@ -193,6 +193,9 @@ void Object::createScheduler()
 void Object::setCalleeDistribution(std::string distname, 
 				   MxNArrayRep* arrrep) 
 {
+  //Clear existing distribution
+  d_serverContext->d_sched->clear(distname, callee);
+  //Reset distribution
   d_serverContext->d_sched->setCalleeRepresentation(distname,arrrep);
 }
 

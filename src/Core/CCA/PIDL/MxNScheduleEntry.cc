@@ -69,6 +69,7 @@ void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
 
 void MxNScheduleEntry::addCalleeRep(MxNArrayRep* arr_rep)
 {
+  //NO rank exists for callees from a caller perspective
   callee_rep.push_back(arr_rep);
 }
 
@@ -129,6 +130,28 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
     meta_sema.up((int) 4*caller_rep.size());
     //::std::cout << "UP Meta semaphore\n";
   }
+}
+
+void MxNScheduleEntry::clear(sched_t sch)
+{
+  descriptorList::iterator iter;
+  if(sch == callee) {
+    iter = callee_rep.begin();
+    for(;iter != callee_rep.end(); iter++) {
+      delete (*iter);
+    }
+  } else {
+    iter = caller_rep.begin();
+    for(;iter != caller_rep.end(); iter++) {
+      delete (*iter);
+    }
+  }
+  //Delete and reset schedule
+  iter = sched.begin();
+  for(;iter != sched.end(); iter++) {
+    delete (*iter);
+  }
+  madeSched = false;	
 }
 
 void MxNScheduleEntry::print(std::ostream& dbg)

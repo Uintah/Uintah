@@ -126,14 +126,6 @@ MxNArrayRep::MxNArrayRep(SSIDL::array2<int>& arr, Reference* remote_ref)
 
 MxNArrayRep::~MxNArrayRep()
 {
-  //mydimarr is a vector now, thus no need to free memory
-  /*
-  //Free the dimension array:
-  for(int i=0; i < mydimno ; i++) {
-    delete mydimarr[i];
-  }
-  delete []mydimarr;
-  */
 }
 
 SSIDL::array2<int> MxNArrayRep::getArray()

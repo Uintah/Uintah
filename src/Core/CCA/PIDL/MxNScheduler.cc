@@ -209,11 +209,11 @@ descriptorList MxNScheduler::getRedistributionReps(std::string distname)
     return rl;
 }
 
-void MxNScheduler::clear(std::string distname)
+void MxNScheduler::clear(std::string distname, sched_t sch)
 {
   schedList::iterator iter = entries.find(distname);
   if (iter != entries.end()) {
-    entries.erase(iter);
+    ((*iter).second)->clear(sch);
   }
 }
 

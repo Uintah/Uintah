@@ -59,7 +59,13 @@
 ****************************************/
 
 namespace SCIRun {
-  
+
+  ////////////
+  // Enumerated type denoting caller and callee. Used to
+  // tag an object as caller or callee in respect
+  // to the distribution.
+  typedef enum { caller, callee } sched_t;
+
   ////////////
   // Solves ax + by = gcd(a,b) for a given a
   // and b integer values. In addition, gcd(a,b) is 
@@ -176,6 +182,7 @@ namespace SCIRun {
     bool received;
 
   private:
+    MxNArrayRep();
 
     ///////////
     // Array of Index representing first, last and stride for each dimension
