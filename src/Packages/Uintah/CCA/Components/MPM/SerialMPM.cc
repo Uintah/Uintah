@@ -325,7 +325,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
-  //  scheduleAddNewParticles(           sched, patches, matls);
+  scheduleAddNewParticles(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -766,6 +766,16 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
   Task* t=scinew Task("MPM::addNewParticles", this, 
 		      &SerialMPM::addNewParticles);
 
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
+								 patches, lb);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
+    cm->addRequiresDamageParameter(t, mpm_matl, patches);
+  }
 
 
   sched->addTask(t, patches, matls);
@@ -1083,6 +1093,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
@@ -2186,62 +2197,115 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw)
 {
-
-  cout << "Adding new particles" << endl;
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
+
+    cout_doing <<"Doing addNewParticles on patch " 
+	       << patch->getID() << "\t MPM"<< endl;
+
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    // Find the mpm material that the void particles are going to change
+    // into.
+    MPMMaterial* null_matl = 0;
+    int null_dwi = -1;
+    for (int void_matl = 0; void_matl < numMPMMatls; void_matl++) {
+      null_dwi = d_sharedState->getMPMMaterial(void_matl)->nullGeomObject();
+      if (null_dwi != -1) {
+	null_matl = d_sharedState->getMPMMaterial(void_matl);
+	null_dwi = void_matl;
+	break;
+      }
+    }
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+      if (dwi == null_dwi)
+	continue;
 
+
+      ParticleVariable<int> damage;
 #if 0
-      Check if material type that we can do erosion on (HypoElasticPlastic){
-        Loop over existing particles for these materials{
-          check criteria for particle deletion/addition (p.damage/p.porosity){
-            if criteria is met, delete original particle, replace with a
-            newly created particle of the target material using the state of
-            the original particle{
-            }
-          }
-        }
-        new_dw->deleteParticles(delset);      
-        
-      }
+      cout << "Current MPM Old_DW Labels in Add New Particles" << endl;
+      vector<const VarLabel*> mpm_label = 
+	mpm_matl->getParticleCreator()->returnParticleState();
+      printParticleLabels(mpm_label,old_dw,dwi,patch);
 #endif
       
-      int numparticles = 1;
-      ParticleCreator* particle_creator = mpm_matl->getParticleCreator();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      new_dw->allocateTemporary(damage,pset);
+      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
+	   iter++) 
+	damage[*iter] = 0;
 
+      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
+						     false,dwi,patch, 0);
+      
+      mpm_matl->getConstitutiveModel()->getDamageParameter(patch,damage,dwi,
+							   old_dw);
+      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
+	   iter++) {
+	if (damage[*iter]) {
+	  cout << "damage[" << *iter << "]=" << damage[*iter] << endl;
+	  delset->addParticle(*iter);
+	}
+      }
+      
+      // Find the mpm material that corresponds to the void particles.
+      // Will probably be the same type as the deleted ones, but have
+      // different parameters.
+      
+      
+      int numparticles = delset->numParticles();
+      if (numparticles != 0) {
+	cout << "Deleted " << numparticles << " particles" << endl;
+	ParticleCreator* particle_creator = null_matl->getParticleCreator();
+	ParticleSet* set_add = scinew ParticleSet(numparticles);
+	ParticleSubset* addset = scinew ParticleSubset(set_add,true,null_dwi,
+						       patch,numparticles);
+	
+	map<const VarLabel*, ParticleVariableBase*>* newState
+	  = new map<const VarLabel*, ParticleVariableBase*>;
 
-      ParticleSet* set_add = scinew ParticleSet(numparticles);
-      ParticleSubset* subset_add = scinew ParticleSubset(set_add,true,dwi,
-							 patch,numparticles);
+#if 0
+	cout << "Null Material" << endl;
+	vector<const VarLabel* > particle_labels = 
+	  particle_creator->returnParticleState();
 
-      map<const VarLabel*, ParticleVariableBase*>* newState
-	= new map<const VarLabel*, ParticleVariableBase*>;
+	printParticleLabels(particle_labels, old_dw, null_dwi,patch);
+#endif
 
-      particle_creator->allocateVariablesAdd(lb,new_dw,subset_add,newState);
+#if 0
+	cout << "MPM Material" << endl;
+	vector<const VarLabel* > mpm_particle_labels = 
+	  mpm_matl->getParticleCreator()->returnParticleState();
+	printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
+#endif
 
-      // Need to do the constitutive models particle variables;
+	particle_creator->allocateVariablesAdd(lb,new_dw,addset,newState,
+					       delset,old_dw);
+	
+	// Need to do the constitutive models particle variables;
+	
+	null_matl->getConstitutiveModel()->allocateCMDataAdd(new_dw,addset,
+							     newState,delset,
+							     old_dw);
 
-      mpm_matl->getConstitutiveModel()->allocateCMData(new_dw,subset_add,
-						       newState);
-
-
-      // Need to carry forward the cellNAPID for each time step;
-      // Move the particle variable declarations in ParticleCreator.h to one
-      // of the functions to save on memory;
-
-      cout << " subset_add num particles = " << subset_add->numParticles()
-	   << endl;
-      new_dw->addParticles(patch,dwi,newState);
-      //      particle_creator->initializeParticlesAdd();
-
-
+	// Need to carry forward the cellNAPID for each time step;
+	// Move the particle variable declarations in ParticleCreator.h to one
+	// of the functions to save on memory;
+	
+	cout << "addset num particles = " << addset->numParticles()
+	     << " for material " << addset->getMatlIndex() << endl;
+	new_dw->addParticles(patch,null_dwi,newState);
+	cout << "Calling deleteParticles for material: " << dwi << endl;
+	new_dw->deleteParticles(delset);
+	
+      } else 
+	delete delset;
+	
     }
   }
-
+  
 }
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -2473,7 +2537,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
        }
       }
-
       new_dw->deleteParticles(delset);      
     }
 
@@ -2570,4 +2633,17 @@ SerialMPM::setParticleDefault(ParticleVariable<Matrix3>& pvar,
 void SerialMPM::setSharedState(SimulationStateP& ssp)
 {
   d_sharedState = ssp;
+}
+
+void SerialMPM::printParticleLabels(vector<const VarLabel*> labels,
+				    DataWarehouse* dw, int dwi, 
+				    const Patch* patch)
+{
+  for (vector<const VarLabel*>::const_iterator it = labels.begin(); 
+       it != labels.end(); it++) {
+    if (dw->exists(*it,dwi,patch))
+      cout << (*it)->getName() << " does exists" << endl;
+    else
+      cout << (*it)->getName() << " does NOT exists" << endl;
+  }
 }
