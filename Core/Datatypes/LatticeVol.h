@@ -96,29 +96,72 @@ FData3d<Data>::type_name(int n)
   }
 }
 
+
 template <class Data>
-class LatticeVol : public GenericField< LatVolMesh, FData3d<Data> > { 
-
+class LatticeVol : public GenericField< LatVolMesh, FData3d<Data> >
+{
 public:
-
-  LatticeVol() :
-    GenericField<LatVolMesh, FData3d<Data> >() {}
-  LatticeVol(Field::data_location data_at) :
-    GenericField<LatVolMesh, FData3d<Data> >(data_at) {}
-  LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at) {}
-  virtual LatticeVol<Data> *clone() { return new LatticeVol(*this); }
-  
-  virtual ~LatticeVol(){}
+  LatticeVol();
+  LatticeVol(Field::data_location data_at);
+  LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at);
+  virtual LatticeVol<Data> *clone() const;
+  virtual ~LatticeVol();
 
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
   bool get_gradient(Vector &, Point &);
+
 private:
   static Persistent* maker();
 };
+
+
+
+template <class Data>
+LatticeVol<Data>::LatticeVol()
+  : GenericField<LatVolMesh, FData3d<Data> >()
+{
+}
+
+
+template <class Data>
+LatticeVol<Data>::LatticeVol(Field::data_location data_at)
+  : GenericField<LatVolMesh, FData3d<Data> >(data_at)
+{
+}
+
+
+template <class Data>
+LatticeVol<Data>::LatticeVol(LatVolMeshHandle mesh,
+			     Field::data_location data_at)
+  : GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at)
+{
+}
+
+
+template <class Data>
+LatticeVol<Data> *
+LatticeVol<Data>::clone() const
+{
+  return new LatticeVol(*this);
+}
+  
+
+template <class Data>
+LatticeVol<Data>::~LatticeVol()
+{
+}
+
+
+template <class Data>
+const string
+LatticeVol<Data>::get_type_name(int n) const
+{
+  return type_name(n);
+}
+
 
 #define LATTICEVOL_VERSION 1
 

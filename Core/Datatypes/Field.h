@@ -41,7 +41,7 @@ public:
 
   Field(data_location at = NONE);
   virtual ~Field();
-  virtual Field *clone() = 0;
+  virtual Field *clone() const = 0;
  
   data_location data_at() const { return data_at_; }
   //! Required virtual functions
