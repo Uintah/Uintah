@@ -199,7 +199,8 @@ Module::Module(const string& name, GuiContext* ctx,
       delete[] datatype;
     }
   } else {
-    cerr << "Cannot find module info for module: " << moduleName << '\n';
+    cerr << "Cannot find module info for module: " 
+	 << packageName << "/" << categoryName << "/" << moduleName << '\n';
   }
 
   // the last port listed in the .xml file may or may not be dynamic.
