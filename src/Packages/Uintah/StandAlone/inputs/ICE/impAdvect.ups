@@ -188,7 +188,8 @@
         
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 	     <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
