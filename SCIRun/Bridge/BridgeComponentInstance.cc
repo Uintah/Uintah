@@ -42,6 +42,7 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/CCA/CCAException.h>
+#include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <iostream>
 #include <Core/Thread/Mutex.h>
 #include <Core/Exceptions/InternalError.h>
@@ -57,6 +58,9 @@ BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
   : ComponentInstance(framework, instanceName, typeName), component(component)
 {
   mutex=new Mutex("getPort mutex");
+  if(!SCIRunComponentModel::gui) {
+    SCIRunComponentModel::initGuiInterface();
+  }
   bmdl = new BridgeModule(component);
 }
 
