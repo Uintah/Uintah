@@ -120,7 +120,7 @@ int SimulationState::getNumVelFields() const {
 SimulationState::~SimulationState()
 {
   VarLabel::destroy(delt_label);
-
+  VarLabel::destroy(refineFlag_label);
   for (int i = 0; i < (int)matls.size(); i++)
     delete matls[i];
 
