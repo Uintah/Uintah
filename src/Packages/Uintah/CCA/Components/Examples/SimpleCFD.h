@@ -229,11 +229,13 @@ WARNING
     Vector random_initial_velocities;
     
     RegionDB regiondb;
-    BoundaryConditions bcs;
     InitialConditions ics;
 
     SimpleCFD(const SimpleCFD&);
     SimpleCFD& operator=(const SimpleCFD&);
+
+  protected:
+    BoundaryConditions bcs;
   };
 }
 

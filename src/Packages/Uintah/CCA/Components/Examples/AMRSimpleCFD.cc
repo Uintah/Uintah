@@ -133,7 +133,7 @@ void refineFaces(const Patch* patch,
 		 DataWarehouse* coarse_new_dw, 
                Patch::VariableBasis basis)
 {
-  cout << "RANDY: AMRSimpleCFD::refineFaces() BGN" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineFaces() BGN" << endl;
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     if(patch->getBCType(face) != Patch::Coarse)
@@ -429,7 +429,7 @@ void refineFaces(const Patch* patch,
       }
     }
   }
-  cout << "RANDY: AMRSimpleCFD::refineFaces() END" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineFaces() END" << endl;
 }
 //______________________________________________________________________
 //
@@ -459,7 +459,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				    int matl,
 				    double subCycleProgress_var)
 {
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(CC) BGN" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(CC) BGN" << endl;
   cout_doing << "Doing refineBoundaries <double>  \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -471,7 +471,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(0,0,0), Patch::invalidFace,
      Patch::invalidFace, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::CellBased);
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(CC) END" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(CC) END" << endl;
 }
 //______________________________________________________________________
 //  SFCXVariable version
@@ -482,7 +482,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				        int matl,
 				        double subCycleProgress_var)
 {
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCX) BGN" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCX) BGN" << endl;
   cout_doing << "Doing refineBoundaries <SFCXVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -494,7 +494,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(1,0,0), Patch::xminus,
      Patch::xplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::XFaceBased);
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCX) END" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCX) END" << endl;
 }
 //______________________________________________________________________
 //  SFCYVariable version
@@ -505,7 +505,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				        int matl,
 				        double subCycleProgress_var)
 {
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCY) BGN" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCY) BGN" << endl;
   cout_doing << "Doing refineBoundaries <SFCYVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -517,7 +517,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(0,1,0), Patch::yminus,
      Patch::yplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::YFaceBased);
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCY) END" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCY) END" << endl;
 }
 //______________________________________________________________________
 //  SFCZVariable version
@@ -528,7 +528,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				        int matl,
 				        double subCycleProgress_var)
 {
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCZ) BGN" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCZ) BGN" << endl;
   cout_doing << "Doing refineBoundaries <SFCZVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -540,7 +540,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(0,0,1), Patch::zminus,
      Patch::zplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::ZFaceBased);
-  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCZ) END" << endl;
+  //  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCZ) END" << endl;
 }
 //______________________________________________________________________
 //
@@ -617,7 +617,6 @@ void AMRSimpleCFD::scheduleRefine(const LevelP& fineLevel,
   task->computes(lb_->yvelocity);
   task->computes(lb_->zvelocity);  
   sched->addTask(task, fineLevel->eachPatch(), sharedState_->allMaterials());
-
   /*
   //__________________________________
   // Re-solve/apply the pressure, using the pressure2 variable
@@ -906,7 +905,7 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
   cout << "RANDY: AMRSimpleCFD::refine() BGN" << endl;
 //    new_dw->transferFrom(old_dw, lb_->bctype, patches, matls);
 
-  cout << "Doing refine \t\t\t AMRSimpleCFD" << '\n';
+  cout_doing << "Doing refine \t\t\t AMRSimpleCFD" << '\n';
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
 
@@ -915,7 +914,8 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {  
     const Patch* finePatch = patches->get(p);
-    cout << "\t\t on patch " << finePatch->getID();
+    cout_doing << "\t\t on patch " << finePatch->getID();
+    cout << "RANDY: Patch = " << finePatch->getID() << endl;
 
     // Find the overlapping regions...
     Level::selectType coarsePatches;
@@ -931,8 +931,8 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
       } else {
 	NCVariable<int> bctype;
 	new_dw->allocateAndPut(bctype, lb_->bctype, matl, finePatch);
+	bcs.set(bctype, finePatch);
       }
-      //      bcs.set(bctype, finePatch);
 
       //__________________________________
       //   P R E S S U R E
@@ -943,6 +943,14 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	  CCVariable<double> pressure;
 	  new_dw->allocateAndPut(pressure, lb_->pressure, matl, finePatch);
 	}
+	/*
+	if (old_dw->exists(lb_->pressure2, m, finePatch)) {
+	  new_dw->transferFrom(old_dw, lb_->pressure2, patches, matls);
+	} else {
+	  CCVariable<double> pressure2;
+	  new_dw->allocateAndPut(pressure2, lb_->pressure2, matl, finePatch);
+	}
+	*/
       }
 
       //__________________________________
