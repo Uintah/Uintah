@@ -107,13 +107,13 @@ bool FieldToImage::run( const FieldHandle &fh)
   if(current_type == LATVOLFIELD) {
     // allocate a new itk image
     typedef LatVolField< data > LatVolFieldType;
-    typedef itk::Image<LatVolFieldType::value_type, 3> ImageType;
+    typedef typename itk::Image<typename LatVolFieldType::value_type, 3> ImageType;
     
     LatVolFieldType* fld = (LatVolFieldType*)infield_handle_.get_rep();
-    ImageType::Pointer img = ImageType::New();
+    typename ImageType::Pointer img = ImageType::New();
     
     // image start index
-    ImageType::IndexType start;
+    typename ImageType::IndexType start;
     start[0] = 0;
     start[1] = 0;
     start[2] = 0;
@@ -123,13 +123,13 @@ bool FieldToImage::run( const FieldHandle &fh)
     unsigned int size_y = fld->fdata().dim2();
     unsigned int size_z = fld->fdata().dim3();
     
-    ImageType::SizeType size;
+    typename ImageType::SizeType size;
     size[0] = size_x;
     size[1] = size_y;
     size[2] = size_z;
     
     // allocate image
-    ImageType::RegionType region;
+    typename ImageType::RegionType region;
     region.SetSize( size );
     region.SetIndex( start );
     
@@ -164,10 +164,10 @@ bool FieldToImage::run( const FieldHandle &fh)
     img->SetSpacing( spacing );
     
     // iterate through the field and copy data
-    ImageType::IndexType pixelIndex;
-    LatVolFieldType::value_type value;
+    typename ImageType::IndexType pixelIndex;
+    typename LatVolFieldType::value_type value;
     
-    FData3d<double>::iterator iter, end;
+    typename FData3d<data>::iterator iter, end;
     iter = fld->fdata().begin();
     end = fld->fdata().end();
     
@@ -195,13 +195,94 @@ bool FieldToImage::run( const FieldHandle &fh)
     
   }
   else if(current_type == ITKLATVOLFIELD) {
-
+    // unwrap it
+    img_->data_ = dynamic_cast<ITKLatVolField< data >*>(fh.get_rep())->get_image();
+    
   }
   else if(current_type == IMAGEFIELD) {
-
+    // allocate a new itk image
+    typedef ImageField< data > ImageFieldType;
+    typedef itk::Image<typename ImageFieldType::value_type, 2> ImageType;
+    
+    ImageFieldType* fld = (ImageFieldType*)infield_handle_.get_rep();
+    typename ImageType::Pointer img = ImageType::New();
+    
+    // image start index
+    typename ImageType::IndexType start;
+    start[0] = 0;
+    start[1] = 0;
+    
+    // image size
+    unsigned int size_x = fld->fdata().dim1();
+    unsigned int size_y = fld->fdata().dim2();
+    
+    typename ImageType::SizeType size;
+    size[0] = size_x;
+    size[1] = size_y;
+    
+    // allocate image
+    typename ImageType::RegionType region;
+    region.SetSize( size );
+    region.SetIndex( start );
+    
+    img->SetRegions( region );
+    img->Allocate();
+    
+    // image origin and spacing
+    const BBox bbox = fld->mesh()->get_bounding_box();
+    Point mesh_center;
+    Vector mesh_size;
+    if(bbox.valid()) {
+      mesh_center = bbox.center();
+      mesh_size = bbox.diagonal();
+    }
+    else {
+      error("No bounding box to get center");
+      return false;
+    }
+    
+    double origin[ ImageType::ImageDimension ];
+    origin[0] = mesh_center.x();
+    origin[1] = mesh_center.y();
+    
+    img->SetOrigin( origin );
+    
+    double spacing[ ImageType::ImageDimension ];
+    spacing[0] = mesh_size.x()/size_x;
+    spacing[1] = mesh_size.y()/size_y;
+    
+    img->SetSpacing( spacing );
+    
+    // iterate through the field and copy data
+    typename ImageType::IndexType pixelIndex;
+    typename ImageFieldType::value_type value;
+    
+    typename FData2d<data>::iterator iter, end;
+    iter = fld->fdata().begin();
+    end = fld->fdata().end();
+    
+      for(int row=0; row < size_y; row++) {
+	for(int col=0; col < size_x; col++) {
+	  if(iter == end) {
+	    error("Reached end before all data was filled");
+	    return false;
+	  }
+	  value = *iter;
+	  
+	  pixelIndex[0] = col;
+	  pixelIndex[1] = row;
+	  
+	  img->SetPixel(pixelIndex, value);
+	  iter++;
+	}
+      }
+    // send itk image downstream
+    img_->data_ = img;
+    outimage_handle_ = img_;
   }
   else if(current_type == ITKIMAGEFIELD) {
-
+    // unwrap it
+    img_->data_ = dynamic_cast<ITKImageField< data >*>(fh.get_rep())->get_image();
   }
   else {
     // should never get here
@@ -330,6 +411,9 @@ void FieldToImage::execute(){
   // LatVolField and ITKLatVolField
   if(0) { }
   else if(run<double>(infield_handle_)) {}
+  else if(run<float>(infield_handle_)) {}
+  else if(run<unsigned char>(infield_handle_)) {}
+  else if(run<unsigned short>(infield_handle_)) {}
   else {
     error("Unknown type");
     return;

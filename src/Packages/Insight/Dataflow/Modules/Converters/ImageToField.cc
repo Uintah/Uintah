@@ -48,6 +48,8 @@ public:
   FieldOPort* ofield_;
   FieldHandle ofield_handle_;
 
+  GuiInt gui_copy_;
+
 public:
   ImageToField(GuiContext*);
 
@@ -75,7 +77,8 @@ private:
 
 DECLARE_MAKER(ImageToField)
 ImageToField::ImageToField(GuiContext* ctx)
-  : Module("ImageToField", ctx, Source, "Converters", "Insight")
+  : Module("ImageToField", ctx, Source, "Converters", "Insight"),
+    gui_copy_(ctx->subVar("copy"))
 {
 }
 
@@ -84,6 +87,14 @@ ImageToField::~ImageToField(){
 
 template<class InputImageType>
 FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
+
+  if(gui_copy_.get() == 0) {
+    std::cout << "\nReference Data...\n";
+  }
+  if(gui_copy_.get() == 1) {
+    std::cout << "\nCopy Data...\n";
+  }
+
 
   typedef ITKImageField<typename InputImageType::PixelType> ITKImageFieldType;
   InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
