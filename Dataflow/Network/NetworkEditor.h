@@ -57,6 +57,7 @@ namespace SCIRun {
     ~NetworkEditor();
   private:
     virtual void tcl_command(GuiArgs&, void*);
+    void init_notes();
   };
 } // End namespace SCIRun
 
