@@ -34,7 +34,8 @@ void Variable::setForeign()
    d_foreign = true;
 }
 
-void Variable::emit(OutputContext& oc, const string& compressionModeHint)
+void Variable::emit(OutputContext& oc, const IntVector& l,
+		    const IntVector& h, const string& compressionModeHint)
 {
   bool use_rle = false;
   bool use_gzip = false;
@@ -67,12 +68,12 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
   ostringstream outstream;
 
   if (use_rle) {
-    if (!emitRLE(outstream, oc.varnode))
+    if (!emitRLE(outstream, l, h, oc.varnode))
       SCI_THROW(InvalidCompressionMode("rle",
 				   virtualGetTypeDescription()->getName()));
   }
   else
-    emitNormal(outstream, oc.varnode);
+    emitNormal(outstream, l, h, oc.varnode);
 
   string preGzip = outstream.str();
   string preGzip2;
@@ -86,7 +87,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
 
     if (try_all) {
       ostringstream outstream2;
-      if (emitRLE(outstream2, oc.varnode)) {
+      if (emitRLE(outstream2, l, h, oc.varnode)) {
 	preGzip2 = outstream2.str();
 	string* writeoutString2 = gzipCompress(&preGzip2, &buffer2);
 	
@@ -241,7 +242,8 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 #endif
 }
 
-bool Variable::emitRLE(ostream& /*out*/, DOMElement* /*varnode*/)
+bool Variable::emitRLE(ostream& /*out*/, const IntVector& l,
+		       const IntVector& h, DOM_Element* /*varnode*/)
 {
   return false; // not supported by default
 }

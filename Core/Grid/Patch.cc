@@ -829,38 +829,62 @@ Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
 
 
 void
-Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
+Patch::getFace(FaceType face, const IntVector& insideOffset,
+	       const IntVector& outsideOffset,
+	       IntVector& l, IntVector& h) const
 {
-   l=getCellLowIndex();
-   h=getCellHighIndex();
-   switch(face){
-   case xminus:
-      l.x(l.x()-offset);
-      h.x(l.x()+2-offset);
-      break;
-   case xplus:
-      l.x(h.x()-1+offset);
-      h.x(h.x()+offset);
-      break;
-   case yminus:
-      l.y(l.y()-offset);
-      h.y(l.y()+2-offset);
-      break;
-   case yplus:
-      l.y(h.y()-1+offset);
-      h.y(h.y()+offset);
-      break;
-   case zminus:
-      l.z(l.z()-offset);
-      h.z(l.z()+2-offset);
-      break;
-   case zplus:
-      l.z(h.z()-1+offset);
-      h.z(h.z()+offset);
-      break;
-   default:
+  IntVector ll=getCellLowIndex();
+  IntVector hh=getCellHighIndex();
+  l=ll;
+  h=hh;
+  switch(face){
+  case xminus:
+    h.x(ll.x()+insideOffset.x());
+    l.x(ll.x()-outsideOffset.x());
+    break;
+  case xplus:
+    l.x(hh.x()-insideOffset.x());
+    h.x(hh.x()+outsideOffset.x());
+    break;
+  case yminus:
+    h.y(ll.y()+insideOffset.y());
+    l.y(ll.y()-outsideOffset.y());
+    break;
+  case yplus:
+    l.y(hh.y()-insideOffset.y());
+    h.y(hh.y()+outsideOffset.y());
+    break;
+  case zminus:
+    h.z(ll.z()+insideOffset.z());
+    l.z(ll.z()-outsideOffset.z());
+    break;
+  case zplus:
+    l.z(hh.z()-insideOffset.z());
+    h.z(hh.z()+outsideOffset.z());
+    break;
+  default:
      SCI_THROW(InternalError("Illegal FaceType in Patch::getFace"));
-   }
+  }
+}
+
+IntVector Patch::faceDirection(FaceType face) const
+{
+  switch(face) {
+  case xminus:
+    return IntVector(-1,0,0);
+  case xplus:
+    return IntVector(1,0,0);
+  case yminus:
+    return IntVector(0,-1,0);
+  case yplus:
+    return IntVector(0,1,0);
+  case zminus:
+    return IntVector(0,0,-1);
+  case zplus:
+    return IntVector(0,0,1);
+  default:
+    SCI_THROW(InternalError("Illegal FaceType in Patch::faceDirection"));
+  }
 }
 
 void
@@ -1276,36 +1300,53 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
 	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0); 
 }
 
-void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
-				   int numGhostCells,
+void Patch::computeVariableExtents(VariableBasis basis,
+				   const IntVector& boundaryLayer,
+				   Ghost::GhostType gtype, int numGhostCells,
 				   IntVector& low, IntVector& high) const
 {
   IntVector lowOffset, highOffset;
   getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
-  computeExtents(basis, lowOffset, highOffset, low, high);
+  computeExtents(basis, boundaryLayer, lowOffset, highOffset, low, high);
 }
 
-void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
-				   int numGhostCells,
+void Patch::computeVariableExtents(VariableBasis basis,
+				   const IntVector& boundaryLayer,
+				   Ghost::GhostType gtype, int numGhostCells,
 				   Level::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
   IntVector lowOffset, highOffset;
   getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
-  computeExtents(basis, lowOffset, highOffset, low, high);
+  computeExtents(basis, boundaryLayer, lowOffset, highOffset, low, high);
   d_level->selectPatches(low, high, neighbors);
-#if 0
-  IntVector low2;
-  IntVector high2;
-  Level::selectType neighbors2;
-  computeVariableExtents2(basis, gtype, numGhostCells, neighbors2, low2, high2);
-  ASSERT(low == low2);
-  ASSERT(high == high2);
-#endif
 }
 
+void Patch::computeVariableExtents(TypeDescription::Type basis,
+				   const IntVector& boundaryLayer,
+				   Ghost::GhostType gtype, int numGhostCells,
+				   IntVector& low, IntVector& high) const
+{
+  bool basisMustExist = (gtype != Ghost::None);
+  computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
+			 boundaryLayer, gtype, numGhostCells, low, high);
+}
 
-void Patch::computeExtents(VariableBasis basis, const IntVector& lowOffset,
+void Patch::computeVariableExtents(TypeDescription::Type basis,
+				   const IntVector& boundaryLayer,
+				   Ghost::GhostType gtype, int numGhostCells,
+				   Level::selectType& neighbors,
+				   IntVector& low, IntVector& high) const
+{
+  bool basisMustExist = (gtype != Ghost::None);
+  computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
+			 boundaryLayer, gtype, numGhostCells, neighbors,
+			 low, high);
+}
+
+void Patch::computeExtents(VariableBasis basis,
+			   const IntVector& boundaryLayer,
+			   const IntVector& lowOffset,
 			   const IntVector& highOffset,
 			   IntVector& low, IntVector& high) const
 
@@ -1313,8 +1354,8 @@ void Patch::computeExtents(VariableBasis basis, const IntVector& lowOffset,
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
 	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
   
-  IntVector origLowIndex = getLowIndex(basis);
-  IntVector origHighIndex = getHighIndex(basis);
+  IntVector origLowIndex = getLowIndex(basis, IntVector(0,0,0));
+  IntVector origHighIndex = getHighIndex(basis, IntVector(0,0,0));
   low = origLowIndex - lowOffset;
   high = origHighIndex + highOffset;
 
@@ -1322,13 +1363,13 @@ void Patch::computeExtents(VariableBasis basis, const IntVector& lowOffset,
     FaceType faceType = (FaceType)(2 * i); // x, y, or z minus
     if (getBCType(faceType) != Neighbor) {
       // no neighbor -- use original low index for that side
-      low[i] = origLowIndex[i];
+      low[i] = origLowIndex[i]-boundaryLayer[i];
     }
     
     faceType = (FaceType)(faceType + 1); // x, y, or z plus
     if (getBCType(faceType) != Neighbor) {
       // no neighbor -- use original high index for that side
-      high[i] = origHighIndex[i];
+      high[i] = origHighIndex[i]+boundaryLayer[i];
     }
   }
 }
@@ -1385,19 +1426,34 @@ Box Patch::getBox() const {
   return d_level->getBox(d_lowIndex, d_highIndex);
 }
 
-IntVector Patch::getLowIndex(VariableBasis basis) const
+IntVector Patch::neighborsLow() const
+{
+  return IntVector(d_bctypes[xminus] == Neighbor? 0:1,
+		   d_bctypes[yminus] == Neighbor? 0:1,
+		   d_bctypes[zminus] == Neighbor? 0:1);
+}
+
+IntVector Patch::neighborsHigh() const
+{
+  return IntVector(d_bctypes[xplus] == Neighbor? 0:1,
+		   d_bctypes[yplus] == Neighbor? 0:1,
+		   d_bctypes[zplus] == Neighbor? 0:1);
+}
+
+IntVector Patch::getLowIndex(VariableBasis basis,
+			     const IntVector& boundaryLayer) const
 {
   switch (basis) {
   case CellBased:
-    return getCellLowIndex();
+    return getCellLowIndex()-neighborsLow()*boundaryLayer;
   case NodeBased:
-    return getNodeLowIndex();
+    return getNodeLowIndex()-neighborsLow()*boundaryLayer;
   case XFaceBased:
-    return getSFCXLowIndex();
+    return getSFCXLowIndex()-neighborsLow()*boundaryLayer;
   case YFaceBased:
-    return getSFCYLowIndex();
+    return getSFCYLowIndex()-neighborsLow()*boundaryLayer;
   case ZFaceBased:
-    return getSFCZLowIndex();
+    return getSFCZLowIndex()-neighborsLow()*boundaryLayer;
   case AllFaceBased:
     SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)"));
   default:
@@ -1405,19 +1461,20 @@ IntVector Patch::getLowIndex(VariableBasis basis) const
   }
 }
 
-IntVector Patch::getHighIndex(VariableBasis basis) const
+IntVector Patch::getHighIndex(VariableBasis basis,
+			      const IntVector& boundaryLayer) const
 {
   switch (basis) {
   case CellBased:
-    return getCellHighIndex();
+    return getCellHighIndex()+neighborsHigh()*boundaryLayer;
   case NodeBased:
-    return getNodeHighIndex();
+    return getNodeHighIndex()+neighborsHigh()*boundaryLayer;
   case XFaceBased:
-    return getSFCXHighIndex();
+    return getSFCXHighIndex()+neighborsHigh()*boundaryLayer;
   case YFaceBased:
-    return getSFCYHighIndex();
+    return getSFCYHighIndex()+neighborsHigh()*boundaryLayer;
   case ZFaceBased:
-    return getSFCZHighIndex();
+    return getSFCZHighIndex()+neighborsHigh()*boundaryLayer;
   case AllFaceBased:
     SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)"));
   default:

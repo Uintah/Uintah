@@ -2,6 +2,8 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Thread/Mutex.h>
+#include <map>
 #include <iostream>
 #include <sstream>
 
@@ -9,20 +11,24 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-map<string, VarLabel*> VarLabel::allLabels;
+static map<string, VarLabel*> allLabels;
 string VarLabel::defaultCompressionMode = "none";
-SCIRun::Mutex VarLabel::d_lock("VarLabel create/destroy lock");
+static Mutex lock("VarLabel create/destroy lock");
 
 VarLabel* VarLabel::create(const string& name,
 			   const TypeDescription* td,
+			   const IntVector& boundaryLayer /*= IntVector(0,0,0) */,
 			   VarType vartype /*= Normal*/)
 {
   VarLabel* label = 0;
- d_lock.lock();
+  lock.lock();
   map<string, VarLabel*>::iterator iter = allLabels.find(name);
   if(iter != allLabels.end()){
     // two labels with the same name -- make sure they are the same type
     VarLabel* dup = iter->second;
+    if(boundaryLayer != dup->d_boundaryLayer)
+      SCI_THROW(InternalError(string("Multiple VarLabels defined with different # of boundary layers")));
+
 #if !defined(_AIX)
     // AIX uses lib.a's, therefore the "same" var labels are different...
     // Need to look into fixing this in a better way...
@@ -33,39 +39,39 @@ VarLabel* VarLabel::create(const string& name,
     label = dup;
   }
   else {
-    label = scinew VarLabel(name, td, vartype);
+    label = scinew VarLabel(name, td, boundaryLayer, vartype);
+    allLabels[name]=label;
   }
   label->addReference();
- d_lock.unlock();  
+  lock.unlock();  
   return label;
 }
 
 bool VarLabel::destroy(const VarLabel* label)
 {
   if (label == 0) return false;
- d_lock.lock();    
   if (label->removeReference()) {
+    lock.lock();    
+    map<string, VarLabel*>::iterator iter = allLabels.find(label->d_name);
+    if(iter != allLabels.end() && iter->second == label)
+      allLabels.erase(iter); 
+    lock.unlock();
     delete label;
- d_lock.unlock();      
     return true;
   }
- d_lock.unlock();    
   return false;
 }
 
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
-		   VarType vartype)
-   : d_name(name), d_td(td), d_vartype(vartype),
-     d_compressionMode("default"), d_allowMultipleComputes(false)
+		   const IntVector& boundaryLayer, VarType vartype)
+  : d_name(name), d_td(td), d_boundaryLayer(boundaryLayer),
+    d_vartype(vartype), d_compressionMode("default"),
+    d_allowMultipleComputes(false)
 {
-  allLabels[name]=this;
 }
 
 VarLabel::~VarLabel()
 {
-  map<string, VarLabel*>::iterator iter = allLabels.find(d_name);
-  if(iter != allLabels.end() && iter->second == this)
-    allLabels.erase(iter);
 }
 
 void VarLabel::printAll()

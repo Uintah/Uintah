@@ -20,6 +20,9 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 // ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
+
+   refineFlag_label = VarLabel::create("refineFlag",
+				       CCVariable<int>::getTypeDescription());
    d_ref_press = 0.0;
 
   // Get the physical constants that are shared between codes.

@@ -60,6 +60,9 @@ class ArchesMaterial;
       const VarLabel* get_delt_label() const {
 	 return delt_label;
       }
+      const VarLabel* get_refineFlag_label() const {
+	return refineFlag_label;
+      }
 
       void registerSimpleMaterial(SimpleMaterial*);
       void registerMPMMaterial(MPMMaterial*);
@@ -126,6 +129,7 @@ class ArchesMaterial;
       SimulationState& operator=(const SimulationState&);
       
       const VarLabel* delt_label;
+      const VarLabel* refineFlag_label;
       std::vector<Material*> matls;
       std::vector<MPMMaterial*> mpm_matls;
       std::vector<ArchesMaterial*> arches_matls;

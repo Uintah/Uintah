@@ -56,8 +56,8 @@ WARNING
 
      enum BCType {
        None,
-       Fixed,
        Symmetry,
+       Coarse,
        Neighbor
      };
      
@@ -166,10 +166,8 @@ WARNING
      
      NodeIterator getNodeIterator(const Box& b) const;
 
-     // If 'basis' is a constant (as in OnDemandDataWarehouse::getGridVar())
-     // then these inlined functions will simplfy to one-liners.
-     IntVector getLowIndex(VariableBasis basis) const;
-     IntVector getHighIndex(VariableBasis basis) const;
+     IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
+     IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
      
      IntVector getLowIndex() const
      { return d_lowIndex; }
@@ -330,48 +328,40 @@ WARNING
      inline const Level* getLevel() const {
        return d_level;
      }
-     void getFace(FaceType face, int offset, IntVector& l, IntVector& h) const;
+     void getFace(FaceType face, const IntVector& insideOffset,
+		  const IntVector& outsideOffset,
+		  IntVector& l, IntVector& h) const;
+     IntVector faceDirection(FaceType face) const;
      void getFaceNodes(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
-     void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
-				 int numGhostCells,
-				 Level::selectType& neighbors,
-				 IntVector& low, IntVector& high) const;
-     /*
-     void computeVariableExtents2(VariableBasis basis, Ghost::GhostType gtype,
-				 int numGhostCells,
-				 Level::selectType& neighbors,
-				 IntVector& low, IntVector& high) const;
-     */
-     void computeVariableExtents(TypeDescription::Type basis,
+     void computeVariableExtents(VariableBasis basis,
+				 const IntVector& boundaryLayer,
 				 Ghost::GhostType gtype, int numGhostCells,
 				 Level::selectType& neighbors,
-				 IntVector& low, IntVector& high) const
-     {
-       bool basisMustExist = (gtype != Ghost::None);
-       computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
-			      gtype, numGhostCells, neighbors, low, high);
+				 IntVector& low, IntVector& high) const;
+     void computeVariableExtents(TypeDescription::Type basis,
+				 const IntVector& boundaryLayer,
+				 Ghost::GhostType gtype, int numGhostCells,
+				 Level::selectType& neighbors,
+				 IntVector& low, IntVector& high) const;
 
-     }
-
-     void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
+     void computeVariableExtents(VariableBasis basis,
+				 const IntVector& boundaryLayer,
+				 Ghost::GhostType gtype,
 				 int numGhostCells,
 				 IntVector& low, IntVector& high) const;
      
      void computeVariableExtents(TypeDescription::Type basis,
+				 const IntVector& boundaryLayer,
 				 Ghost::GhostType gtype, int numGhostCells,
-				 IntVector& low, IntVector& high) const
-     {
-       bool basisMustExist = (gtype != Ghost::None);
-       computeVariableExtents(translateTypeToBasis(basis, basisMustExist),
-			      gtype, numGhostCells, low, high);
-
-     }
+				 IntVector& low, IntVector& high) const;
 
      // helper for computeVariableExtents but also used externally
      // (in GhostOffsetVarMap)
-     void computeExtents(VariableBasis basis, const IntVector& lowOffset,
+     void computeExtents(VariableBasis basis,
+			 const IntVector& boundaryLayer,
+			 const IntVector& lowOffset,
 			 const IntVector& highOffset,
 			 IntVector& low, IntVector& high) const;
 
@@ -381,7 +371,7 @@ WARNING
      { getOtherLevelPatches(1, finePatches); }
      
      void getCoarseLevelPatches(Level::selectType& coarsePatches) const
-     { getOtherLevelPatches(-1, coarsePatches); } // likely only 1
+     { getOtherLevelPatches(-1, coarsePatches); }
 
      void getOtherLevelPatches(int levelOffset, Level::selectType& patches)
        const;
@@ -474,6 +464,9 @@ WARNING
      
      // used only by friend class Level
      inline void setLevelIndex( int idx ){ d_level_index = idx;}
+
+     IntVector neighborsLow() const;
+     IntVector neighborsHigh() const;
      
      //////////
      // Insert Documentation Here:

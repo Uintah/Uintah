@@ -23,6 +23,8 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     max_initial_delt = MAXDOUBLE;
   if(!time_ps->get("initial_delt_range", initial_delt_range))
     initial_delt_range = 0;
+  if(!time_ps->get("max_delt_increase", max_delt_increase))
+    max_delt_increase=1.e99;
 
   num_time_steps = MAXINT;
   time_ps->get( "max_iterations", num_time_steps );

@@ -48,8 +48,9 @@ using namespace std;
 #if SCI_ASSERTION_LEVEL >= 2
     IntVector lowIndex, highIndex;
     pset->getPatch()->
-      computeVariableExtents(Patch::CellBased, pset->getGhostType(),
-			     pset->numGhostCells(), lowIndex, highIndex);
+      computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
+			     pset->getGhostType(), pset->numGhostCells(),
+			     lowIndex, highIndex);
     Box box = pset->getPatch()->getLevel()->getBox(lowIndex, highIndex);
 #endif
     
