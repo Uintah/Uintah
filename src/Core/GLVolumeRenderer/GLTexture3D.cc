@@ -90,7 +90,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   xmax_(0), 
   ymax_(0), 
   zmax_(0),
-  isCC_(false) 
+  isCC_(false)
 {
   if (texfld_->get_type_name(0) != "LatticeVol") {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatticeVol\n";
@@ -124,6 +124,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
     cerr << "GLTexture3D constructor error - unknown LatticeVol type: " << type << endl;
     return;
   }
+  transform_ = mesh->get_transform();
   texfld_=texfld;
   xmax_=ymax_=zmax_=128;
   if( texfld_->data_at() == Field::CELL ){

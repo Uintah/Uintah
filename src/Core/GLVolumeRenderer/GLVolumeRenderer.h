@@ -76,7 +76,6 @@ private:
   GLMIP* _mip;
   GLAttenuate* _atten;
   GLPlanes* _planes;
-
 public:
 
   GLVolumeRenderer(int id);
@@ -145,6 +144,7 @@ public:
 
   void drawWireFrame(){ glColor4f(0.8,0.8,0.8,1.0); _state->drawWireFrame(); }
 
+  GLTexture3DHandle get_tex3d_handle() const { return tex; }
 protected:
   int slices;
   GLTexture3DHandle tex;
