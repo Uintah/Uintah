@@ -768,7 +768,7 @@ void ICE::createDirs( const string& desc, string& path)
 /* 
  ======================================================================
  Function~  find_gnuplot_origin_And_dx:
- Purpose~   which direction and
+ Purpose~   Find principle direction the associated dx and the origin
  _______________________________________________________________________ */
 void ICE::find_gnuplot_origin_And_dx(const Patch* patch, 
                                      const IntVector low, 
@@ -780,15 +780,21 @@ void ICE::find_gnuplot_origin_And_dx(const Patch* patch,
   Vector  dx_org = patch->dCell();
   //__________________________________
   // bullet proofing
-  if (high.x() - low.x() > 1) test +=1;
-  if (high.y() - low.y() > 1) test +=1;
-  if (high.z() - low.z() > 1) test +=1;
+  if (high.x() - low.x() > 1) {test +=1;}
+  if (high.y() - low.y() > 1) {test +=1;}
+  if (high.z() - low.z() > 1) {test +=1;}
+  
   if (test !=1) {
-    Message(1, " \n GNUPLOT: you have more that one principal dir. specified",
-               " or you haven't specified one.",
-               " double check dbg_BeginIndex or dbg_EndIndex");
+    ostringstream desc;
+    desc << "\n GNUPLOT: you have more that one principal dir. specified \n" << 
+         " or you haven't specified one.  Double check dbg_BeginIndex or \n" <<
+         " dbg_EndIndex\n" <<
+         "low "<< low << "high " << high <<endl;
+    Message(1, desc.str(),"","");
   }
-               
+  //__________________________________
+  //  along the principal dir find dx and
+  //  the origin             
   if (high.x() - low.x() > 1) {
     *dx = dx_org.x();
     *origin = *dx * low.x();
