@@ -32,24 +32,19 @@ namespace SCIRun {
 using std::string;
 
 template <class Data>
-class PointCloud: public GenericField< PointCloudMesh, vector<Data> > { 
-
+class PointCloud: public GenericField< PointCloudMesh, vector<Data> >
+{ 
 public:
 
-  PointCloud() :
-    GenericField<PointCloudMesh, vector<Data> >() {}
-  PointCloud(Field::data_location data_at) :
-    GenericField<PointCloudMesh, vector<Data> >(data_at) {}
-  PointCloud(PointCloudMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<PointCloudMesh, vector<Data> >(mesh, data_at) {}
-  
-  virtual ~PointCloud(){}
+  PointCloud();
+  PointCloud(Field::data_location data_at);
+  PointCloud(PointCloudMeshHandle mesh, Field::data_location data_at);  
+  virtual ~PointCloud();
 
-  virtual PointCloud<Data> *clone() const 
-    { return new PointCloud<Data>(*this); }
+  virtual PointCloud<Data> *clone() const; 
  
   static const string type_name(int n = -1);
-  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
 private:
@@ -101,6 +96,51 @@ PointCloud<Data>::type_name(int n)
     return find_type_name((Data *)0);
   }
 } 
+
+
+template <class Data>
+PointCloud<Data>::PointCloud()
+  :  GenericField<PointCloudMesh, vector<Data> >()
+{
+}
+
+
+template <class Data>
+PointCloud<Data>::PointCloud(Field::data_location data_at)
+  : GenericField<PointCloudMesh, vector<Data> >(data_at)
+{
+}
+
+
+template <class Data>
+PointCloud<Data>::PointCloud(PointCloudMeshHandle mesh,
+			     Field::data_location data_at)
+  : GenericField<PointCloudMesh, vector<Data> >(mesh, data_at)
+{
+}
+  
+
+template <class Data>
+PointCloud<Data>::~PointCloud()
+{
+}
+
+
+template <class Data>
+PointCloud<Data> *
+PointCloud<Data>::clone() const 
+{
+  return new PointCloud<Data>(*this);
+}
+ 
+
+template <class Data>
+const string 
+PointCloud<Data>::get_type_name(int n = -1) const
+{
+  return type_name(n);
+}
+
 
 } // end namespace SCIRun
 
