@@ -42,10 +42,10 @@ C***********************************************************************
       double precision YV(JST:JEND)
       double precision ZW(KST:KEND)
  
-      DATA PI/3.141593/, SIG/5.67E-08/
-
       double precision PI,PI1,SIG,SIG4,FLXERR,QRATe,QRATw,QRATn,QRATs
-      double precision QRATt,QRATb,QERR,QACCU,QERR,TOTSRC,VOLV
+      double precision QRATt,QRATb,QERR,QACCU,TOTSRC,VOLV
+
+      DATA PI/3.141593D0/, SIG/5.67D-08/
 
 C     Initialize variables
 
