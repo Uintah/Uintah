@@ -150,8 +150,6 @@ itcl_class Fusion_Fields_FusionSlicer {
 
     method checkScale { iTemp } {
 
-	global $this-idim
-
 	global $this-iindex
 	global $this-jindex
 	global $this-kindex
@@ -208,8 +206,8 @@ itcl_class Fusion_Fields_FusionSlicer {
 
 	# Reset all of the slider values to the index values.
 	set $this-iindex 0
-	set $this-kindex 0
 	set $this-jindex 0
+	set $this-kindex 0
 
 	if [ expr [winfo exists $w] ] {
 
