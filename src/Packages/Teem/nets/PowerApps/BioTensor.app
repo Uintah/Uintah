@@ -3835,9 +3835,13 @@ class BioTensorApp {
 	# configure each vis tab
 	configure_variance_tabs
 	configure_planes_tabs
+	sync_planes_tabs
 	configure_isosurface_tabs
+	sync_isosurface_tabs
 	configure_glyphs_tabs
+	sync_glyphs_tabs
 	configure_fibers_tabs
+	sync_fibers_tabs
 	change_glyph_scale
 	
 	# bring tabs forward
@@ -6043,7 +6047,11 @@ class BioTensorApp {
 	global $mods(ChooseField-ColorPlanes)-port-index
 	set port [set $mods(ChooseField-ColorPlanes)-port-index]
 
-	if {$port == 0} {
+	if {$plane_type == "Constant"} {
+	    #Constant
+	    $planes_tab1.color.childsite.select.color select "Constant"
+	    $planes_tab2.color.childsite.select.color select "Constant"
+	} elseif {$port == 0} {
 	    #FA
 	    $planes_tab1.color.childsite.select.color select "Fractional Anisotropy"
 	    $planes_tab2.color.childsite.select.color select "Fractional Anisotropy"
@@ -6060,7 +6068,7 @@ class BioTensorApp {
 	    #e1
 	    $planes_tab1.color.childsite.select.color select "Principle Eigenvector"
 	    $planes_tab2.color.childsite.select.color select "Principle Eigenvector"
-	}
+	} 
     }
 
     method configure_planes_tabs {} {
