@@ -1792,7 +1792,6 @@ itcl_class ViewWindow {
 	global $this-resx
 	global $this-resy
 	global $this-aspect
-	global env
 
 	set $this-resx [winfo width .ui[modname].wframe.draw]
 	set $this-resy [winfo height .ui[modname].wframe.draw]
@@ -1811,17 +1810,6 @@ itcl_class ViewWindow {
 	toplevel $w -class TkFDialog
 
 	set initdir [pwd]
-
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	
-# 	if {[info exists env(SCIRUN_DATA)]} {
-# 	    set initdir $env(SCIRUN_DATA)
-# 	} elseif {[info exists env(SCI_DATA)]} {
-# 	    set initdir $env(SCI_DATA)
-# 	} elseif {[info exists env(PSE_DATA)]} {
-# 	    set initdir $env(PSE_DATA)
-# 	}
 
 	#######################################################
 	# to be modified for particular reader
@@ -2365,7 +2353,6 @@ itcl_class EmbeddedViewWindow {
 	global $this-resx
 	global $this-resy
 	global $this-aspect
-	global env
 	global emb_win
 
 	set $this-resx [winfo width $emb_win]
@@ -2385,17 +2372,6 @@ itcl_class EmbeddedViewWindow {
 	toplevel $w -class TkFDialog
 
 	set initdir [pwd]
-
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	
-# 	if {[info exists env(SCIRUN_DATA)]} {
-# 	    set initdir $env(SCIRUN_DATA)
-# 	} elseif {[info exists env(SCI_DATA)]} {
-# 	    set initdir $env(SCI_DATA)
-# 	} elseif {[info exists env(PSE_DATA)]} {
-# 	    set initdir $env(PSE_DATA)
-# 	}
 
 	#######################################################
 	# to be modified for particular reader
