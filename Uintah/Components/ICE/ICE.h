@@ -265,7 +265,7 @@ namespace Uintah {
       double d_initialDt;
       double d_CFL;
      
-      Vector d_K_mom, d_K_heat; // exchange coefficients -- off diagonal terms
+      vector<double> d_K_mom, d_K_heat; // exchange coefficients -- off diagonal terms
       
       ICE(const ICE&);
       ICE& operator=(const ICE&);
@@ -308,6 +308,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.42  2000/12/21 21:54:50  jas
+// The exchange coefficients are now vector<double> so that an arbitrary
+// number of materials may be specified.
+//
 // Revision 1.41  2000/12/18 23:25:55  jas
 // 2d ice works for simple advection.
 //
