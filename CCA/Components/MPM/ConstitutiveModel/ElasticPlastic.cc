@@ -881,153 +881,153 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       } else {
 
-	// Get the current porosity 
-	double porosity = pPorosity[idx];
+        // Get the current porosity 
+        double porosity = pPorosity[idx];
 
-	// Evaluate yield condition
-	double traceOfTrialStress = 3.0*pressure + 
-	  tensorD.Trace()*(2.0*mu_cur*delT);
-	double sig = flowStress;
-	double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
-						 traceOfTrialStress, 
-						 porosity, sig);
-	// Compute the deviatoric stress
-	if (Phi <= 0.0) {
+        // Evaluate yield condition
+        double traceOfTrialStress = 3.0*pressure + 
+          tensorD.Trace()*(2.0*mu_cur*delT);
+        double sig = flowStress;
+        double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
+                                                 traceOfTrialStress, 
+                                                 porosity, sig);
+        // Compute the deviatoric stress
+        if (Phi <= 0.0) {
 
-	  elastic = true;
+          elastic = true;
 
-	  // Set the elastic stress to the trial stress
-	  tensorS = trialS;
+          // Set the elastic stress to the trial stress
+          tensorS = trialS;
 
-	  // Update the internal variables
-	  d_plastic->updateElastic(idx);
+          // Update the internal variables
+          d_plastic->updateElastic(idx);
 
-	} else {
+        } else {
 
-	  plastic = true;
+          plastic = true;
 
-	  // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
-	  // European Congress on Computational Methods in Applied Sciences 
-	  // and Engineering,  September 11-14, 2000.
-	  // Basic assumption is that all strain rate is plastic strain rate
-	  Matrix3 Stilde(0.0);
-	  double delGamma = 0.0;
-	  double sqrtSxS = tensorS.Norm(); 
-	  if (sqrtSxS == 0 || tensorS.Determinant() == 0.0) { 
-	    // If the material goes plastic in the first step, 
-	    Stilde = trialS;
-	    delGamma = ((equivStress-flowStress)/(2.0*mu_cur))/
-	      (1.0+bulk/(3.0*mu_cur));
+          // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
+          // European Congress on Computational Methods in Applied Sciences 
+          // and Engineering,  September 11-14, 2000.
+          // Basic assumption is that all strain rate is plastic strain rate
+          Matrix3 Stilde(0.0);
+          double delGamma = 0.0;
+          double sqrtSxS = tensorS.Norm(); 
+          if (sqrtSxS == 0 || tensorS.Determinant() == 0.0) { 
+            // If the material goes plastic in the first step, 
+            Stilde = trialS;
+            delGamma = ((equivStress-flowStress)/(2.0*mu_cur))/
+              (1.0+bulk/(3.0*mu_cur));
 
-	  } else {
+          } else {
 
-	    // Calculate the derivative of the yield function (using the 
-	    // previous time step (n) values)
-	    Matrix3 q(0.0);
-	    d_yield->evalDevDerivOfYieldFunction(tensorSig, flowStress, 
-						 porosity, q);
+            // Calculate the derivative of the yield function (using the 
+            // previous time step (n) values)
+            Matrix3 q(0.0);
+            d_yield->evalDevDerivOfYieldFunction(tensorSig, flowStress, 
+                                                 porosity, q);
 
-	    // Calculate the tensor u (at start of time interval)
-	    double sqrtqs = sqrt(q.Contract(tensorS));
-	    if (sqrtqs == 0) {
-	      cout << getpid() << " EP:sqrtqs = " << sqrtqs << " q = " << q
-		   << " S = " << tensorS << endl;
-	      throw ParameterNotFound("**ERROR**");
-	    }
-	    Matrix3 u = q/sqrtqs;
+            // Calculate the tensor u (at start of time interval)
+            double sqrtqs = sqrt(q.Contract(tensorS));
+            if (sqrtqs == 0) {
+              cout << getpid() << " EP:sqrtqs = " << sqrtqs << " q = " << q
+                   << " S = " << tensorS << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
+            Matrix3 u = q/sqrtqs;
 
-	    // Calculate c and d at the beginning of time step
-	    double cplus = u.NormSquared();
-	    double dplus = u.Contract(tensorEta);
+            // Calculate c and d at the beginning of time step
+            double cplus = u.NormSquared();
+            double dplus = u.Contract(tensorEta);
          
-	    // Calculate gamma_dot at the beginning of the time step
-	    if (cplus == 0) {
-	      cout << getpid() 
+            // Calculate gamma_dot at the beginning of the time step
+            if (cplus == 0) {
+              cout << getpid() 
                    << " EP:cplus = " << cplus << " u = " << u << endl;
-	      throw ParameterNotFound("**ERROR**");
-	    }
-	    double gammadotplus = dplus/cplus;
+              throw ParameterNotFound("**ERROR**");
+            }
+            double gammadotplus = dplus/cplus;
 
-	    // Set initial theta
-	    double theta = 0.0;
+            // Set initial theta
+            double theta = 0.0;
 
-	    // Calculate u_q and u_eta
-	    double etaeta = sqrt(tensorEta.NormSquared());
-	    if (etaeta == 0) {
-	      cout << getpid() 
+            // Calculate u_q and u_eta
+            double etaeta = sqrt(tensorEta.NormSquared());
+            if (etaeta == 0) {
+              cout << getpid() 
                    << " EP:etaeta = " << etaeta << " L = " << tensorL
-		   << " D = " << tensorD  << " Eta = " << tensorEta << endl;
-	      throw ParameterNotFound("**ERROR**");
-	    }
-	    Matrix3 u_eta = tensorEta/etaeta;
-	    double qq = sqrt(q.NormSquared());
-	    if (qq == 0) {
-	      cout << getpid() 
+                   << " D = " << tensorD  << " Eta = " << tensorEta << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
+            Matrix3 u_eta = tensorEta/etaeta;
+            double qq = sqrt(q.NormSquared());
+            if (qq == 0) {
+              cout << getpid() 
                    << " EP:qq = " << qq << " q = " << q << endl;
-	      throw ParameterNotFound("**ERROR**");
-	    }
-	    Matrix3 u_q = q/qq;
+              throw ParameterNotFound("**ERROR**");
+            }
+            Matrix3 u_q = q/qq;
 
-	    // Calculate new dstar
-	    int count = 1;
-	    double dStarOld = 0.0;
-	    double dStar = dplus;
-	    while (count < 10) {
-	      dStarOld = dStar;
+            // Calculate new dstar
+            int count = 1;
+            double dStarOld = 0.0;
+            double dStar = dplus;
+            while (count < 10) {
+              dStarOld = dStar;
 
-	      // Calculate dStar
-	      dStar = ((1.0-0.5*theta)*u_eta.Contract(tensorEta) + 
-		       0.5*theta*u_q.Contract(tensorEta))*sqrt(cplus);
+              // Calculate dStar
+              dStar = ((1.0-0.5*theta)*u_eta.Contract(tensorEta) + 
+                       0.5*theta*u_q.Contract(tensorEta))*sqrt(cplus);
 
-	      // Update theta
-	      if (dStar == 0) {
-		cout << getpid() 
+              // Update theta
+              if (dStar == 0) {
+                cout << getpid() 
                      << " EP:dStar = " << dStar << " theta = " 
-		     << theta << " u_eta = " << u_eta 
-		     << " Eta = " << tensorEta << " u_q = " << u_q
-		     << " cplus = " << cplus << endl;
-		throw ParameterNotFound("**ERROR**");
-	      }
-	      theta = (dStar - cplus*gammadotplus)/dStar;
-	      ++count;
-	      double tol_dStar = dStar*1.0e-6;
-	      if (fabs(dStar-dStarOld) < tol_dStar) break;
-	    } 
+                     << theta << " u_eta = " << u_eta 
+                     << " Eta = " << tensorEta << " u_q = " << u_q
+                     << " cplus = " << cplus << endl;
+                throw ParameterNotFound("**ERROR**");
+              }
+              theta = (dStar - cplus*gammadotplus)/dStar;
+              ++count;
+              double tol_dStar = dStar*1.0e-6;
+              if (fabs(dStar-dStarOld) < tol_dStar) break;
+            } 
 
-	    // Calculate delGammaEr
-	    double delGammaEr =  (sqrtTwo*sig - sqrtqs)/(2.0*mu_cur*cplus);
+            // Calculate delGammaEr
+            double delGammaEr =  (sqrtTwo*sig - sqrtqs)/(2.0*mu_cur*cplus);
 
-	    // Calculate delGamma
-	    delGamma = dStar/cplus*delT - delGammaEr;
+            // Calculate delGamma
+            delGamma = dStar/cplus*delT - delGammaEr;
 
-	    // Calculate Stilde
-	    if (sig == 0) {
-	      cout << getpid() << " EP:sig = " << sig << endl;
-	      throw ParameterNotFound("**ERROR**");
-	    }
-	    double denom = 1.0 + (3.0*sqrtTwo*mu_cur*delGamma)/sig; 
-	    if (denom == 0) {
-	      cout << getpid() << " EP:denom = " << denom 
-		   << " mu_cur = " << mu_cur << " delGamma = " 
-		   << delGamma << " sig = " << sig << endl;
-	      throw ParameterNotFound("**ERROR**");
-	    }
-	    Stilde = trialS/denom;
-	  }
+            // Calculate Stilde
+            if (sig == 0) {
+              cout << getpid() << " EP:sig = " << sig << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
+            double denom = 1.0 + (3.0*sqrtTwo*mu_cur*delGamma)/sig; 
+            if (denom == 0) {
+              cout << getpid() << " EP:denom = " << denom 
+                   << " mu_cur = " << mu_cur << " delGamma = " 
+                   << delGamma << " sig = " << sig << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
+            Stilde = trialS/denom;
+          }
         
-	  // Do radial return adjustment
-	  double stst = sqrt(1.5*Stilde.NormSquared());
-	  if (stst == 0) {
-	    cout << getpid() << " EP:stst = " << stst 
-		 << " Stilde = " << Stilde << endl;
-	    throw ParameterNotFound("**ERROR**");
-	  }
-	  tensorS = Stilde*(sig/stst);
-	  equivStress = sqrt((tensorS.NormSquared())*1.5);
+          // Do radial return adjustment
+          double stst = sqrt(1.5*Stilde.NormSquared());
+          if (stst == 0) {
+            cout << getpid() << " EP:stst = " << stst 
+                 << " Stilde = " << Stilde << endl;
+            throw ParameterNotFound("**ERROR**");
+          }
+          tensorS = Stilde*(sig/stst);
+          equivStress = sqrt((tensorS.NormSquared())*1.5);
 
-	  // Update internal variables
-	  d_plastic->updatePlastic(idx, delGamma);
-	}
+          // Update internal variables
+          d_plastic->updatePlastic(idx, delGamma);
+        }
       }
 
       // Calculate the updated hydrostatic stress
@@ -1111,40 +1111,43 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
           // Check 2: Modified Tepla rule
           if (d_checkTeplaFailureCriterion) {
-            double tepla = pPorosity_new[idx]/d_porosity.fc + 
-              pDamage_new[idx];
+            double tepla = pow(pPorosity_new[idx]/d_porosity.fc,2.0) + 
+              pow(pDamage_new[idx],2.0);
             if (tepla > 1.0) isLocalized = true;
           } 
 
-	  // Check 3: Stability criterion (only if material is plastic)
-	  if (d_stable && !isLocalized) {
+          // Check 3: Stability criterion (only if material is plastic)
+          if (d_stable && !isLocalized) {
 
-	    // Calculate values needed for tangent modulus calculation
-	    state->temperature = temperature;
-	    mu_cur = d_plastic->computeShearModulus(state);
-	    Tm_cur = d_plastic->computeMeltingTemp(state);
-	    double sigY = d_plastic->computeFlowStress(state, delT, d_tol, 
-						       matl, idx);
-	    double dsigYdep = 
-	      d_plastic->evalDerivativeWRTPlasticStrain(state, idx);
-	    double A = voidNucleationFactor(ep);
+            // Calculate values needed for tangent modulus calculation
+            state->temperature = temperature;
+            mu_cur = d_plastic->computeShearModulus(state);
+            Tm_cur = d_plastic->computeMeltingTemp(state);
+            double sigY = d_plastic->computeFlowStress(state, delT, d_tol, 
+                                                       matl, idx);
+            if (!(sigY > 0.0)) isLocalized = true;
+            else {
+              double dsigYdep = 
+                d_plastic->evalDerivativeWRTPlasticStrain(state, idx);
+              double A = voidNucleationFactor(ep);
 
-	    // Calculate the elastic tangent modulus
-	    TangentModulusTensor Ce;
-	    computeElasticTangentModulus(bulk, mu_cur, Ce);
+              // Calculate the elastic tangent modulus
+              TangentModulusTensor Ce;
+              computeElasticTangentModulus(bulk, mu_cur, Ce);
   
-	    // Calculate the elastic-plastic tangent modulus
-	    TangentModulusTensor Cep;
-	    d_yield->computeElasPlasTangentModulus(Ce, tensorSig, sigY, 
-						   dsigYdep, 
-						   pPorosity_new[idx],
-						   A, Cep);
+              // Calculate the elastic-plastic tangent modulus
+              TangentModulusTensor Cep;
+              d_yield->computeElasPlasTangentModulus(Ce, tensorSig, sigY, 
+                                                     dsigYdep, 
+                                                     pPorosity_new[idx],
+                                                     A, Cep);
           
-	    // Initialize localization direction
-	    Vector direction(0.0,0.0,0.0);
-	    isLocalized = d_stable->checkStability(tensorSig, tensorD, Cep, 
-						   direction);
-	  }
+              // Initialize localization direction
+              Vector direction(0.0,0.0,0.0);
+              isLocalized = d_stable->checkStability(tensorSig, tensorD, Cep, 
+                                                     direction);
+            }
+          }
         }
 
         // Use erosion algorithms to treat localized particles
