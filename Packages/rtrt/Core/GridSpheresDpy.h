@@ -42,7 +42,15 @@ class GridSpheresDpy : public Runnable {
   void compute_hist(GLuint fid);
   void draw_hist(GLuint fid, XFontStruct* font_struct, int& redraw_range);
   void move(float* range, int x, int y, int& redraw_range);
+  void move_min_max(float* range, int x, int y, int& redraw_range);
+  void restore_min_max(int y, int &redraw_range);
+  void compute_one_hist(int j);
   void changecolor(int y);
+
+  inline float bound(float val, float min, float max)
+    { return (val>min?(val<max?val:max):min); }
+  inline int bound(int val, int min, int max)
+    { return (val>min?(val<max?val:max):min); }
 
 public:
   GridSpheresDpy(int colordata);

@@ -235,12 +235,14 @@ void GridSpheresDpy::run()
 	shift_pressed = false;
       }
       break;
-    case ButtonPress:
     case ButtonRelease:
+      break;
+    case ButtonPress:
       switch(e.xbutton.button){
       case Button1:
 	if (shift_pressed) {
 	  //cerr << "Left button pressed with shift\n";
+	  move_min_max(min, e.xbutton.x, e.xbutton.y, redraw_range);
 	} else if (control_pressed) {
 	  //cerr << "Left button pressed with control\n";
 	  move(new_color_begin, e.xbutton.x, e.xbutton.y, redraw_range);
@@ -252,8 +254,13 @@ void GridSpheresDpy::run()
       case Button2:
 	if (shift_pressed) {
 	  //cerr << "Middle button pressed with shift\n";
+	  restore_min_max(e.xbutton.y, redraw_range);
+	  redraw=true;
 	} else if (control_pressed) {
 	  //cerr << "Middle button pressed with control\n";
+	  move(new_color_begin, 0, e.xbutton.y, redraw_range);
+	  move(new_color_end, xres, e.xbutton.y, redraw_range);
+	  redraw=true;
 	} else {
 	  changecolor(e.xbutton.y);
 	}
@@ -261,6 +268,7 @@ void GridSpheresDpy::run()
       case Button3:
 	if (shift_pressed) {
 	  //cerr << "Right button pressed with shift\n";
+	  move_min_max(max, e.xbutton.x, e.xbutton.y, redraw_range);
 	} else if (control_pressed) {
 	  //cerr << "Right button pressed with control\n";
 	  move(new_color_end, e.xbutton.x, e.xbutton.y, redraw_range);
@@ -275,13 +283,27 @@ void GridSpheresDpy::run()
       if (shift_pressed || control_pressed) break;
       switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
       case Button1Mask:
-	move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	if (shift_pressed) {
+	  //cerr << "Left button pressed with shift\n";
+	} else if (control_pressed) {
+	  //cerr << "Left button pressed with control\n";
+	  move(new_color_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	} else {
+	  move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	}
 	redraw=true;
 	break;
       case Button2Mask:
 	break;
       case Button3Mask:
-	move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	if (shift_pressed) {
+	  //cerr << "Right button pressed with shift\n";
+	} else if (control_pressed) {
+	  //cerr << "Right button pressed with control\n";
+	  move(new_color_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	} else {
+	  move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	}
 	redraw=true;
 	break;
       }
@@ -347,6 +369,9 @@ void GridSpheresDpy::compute_hist(GLuint fid)
       for(int j=0;j<n;j++){
 	float normalized=(p[j]-min[j])*scales[j];
 	int idx=(int)(normalized*(nhist-1));
+	if (idx >= 0 && idx < nhist)
+	  hist[offset+idx]++;
+#if 0
 	if(idx<0 || idx>=nhist){
 	  cerr << "p[" << j << "]=" << p[j] << ", min[" << j << "]=" << min[j] << ", scales[" << j << "]=" << scales[j] << '\n';
 	  cerr << "idx=" << idx << '\n';
@@ -354,6 +379,7 @@ void GridSpheresDpy::compute_hist(GLuint fid)
 	  Thread::exitAll(-1);
 	}
 	hist[offset+idx]++;
+#endif
 	offset+=nhist;
       }
       p+=n;
@@ -531,15 +557,132 @@ void GridSpheresDpy::move(float* range, int x, int y, int& redraw_range)
       // find the corresponding value at the clicked location
       float val=min[j]+xn*(max[j]-min[j]);
       // bound the value
-      if(val < min[j])
-	val = min[j];
-      if(val > max[j])
-	val = max[j];
-      range[j]=val;
+      range[j]=bound(val,min[j],max[j]);
       redraw_range=j;
       break;
     }
   }
+}
+
+void GridSpheresDpy::move_min_max(float* range, int x, int y,int &redraw_range)
+{
+  // swap y=0 orientation
+  y=yres-y;
+  // loop over each block and see where the event was
+  for(int j = 0; j < ndata; j++){
+    int s=j*yres/ndata +2;
+    int e=(j+1)*yres/ndata-2;
+    if(y>=s && y<e){
+      // found the region the event was
+      float xn=float(x)/xres; // normalize the x location to [0,1]
+      // find the corresponding value at the clicked location
+      float val=min[j]+xn*(max[j]-min[j]);
+      // bound the value
+      range[j]=bound(val,min[j],max[j]);
+      // set redraw_range to -1 so that the histogram lines get redrawn
+      redraw_range=-1;
+
+      // make sure that min and max don't equal each other
+      if (min[j] == max[j])
+	if (min[j] != 0)
+	  if (min[j] > 0)
+	    max[j] = 1.1 * min[j];
+	  else
+	    max[j] = 0.9 * min[j];
+	else
+	  max[j] = 1;
+      // update scales, color_begin/end, range_begin/end, color_scale
+      scales[j] = 1./(max[j]-min[j]);
+      // bound new_color_begin and new_color_end
+      new_color_begin[j] = bound(new_color_begin[j], min[j], max[j]);
+      new_color_end[j] = bound(new_color_end[j], min[j], max[j]);
+      // bound new_range_begin and new_range_end
+      new_range_begin[j] = bound(new_range_begin[j], min[j], max[j]);
+      new_range_end[j] = bound(new_range_end[j], min[j], max[j]);
+      
+      if (new_color_begin[j] != new_color_end[j])
+	color_scales[j] = 1./(new_color_end[j]-new_color_begin[j]);
+
+      // now we need to recompute the histogram for this range
+      compute_one_hist(j);
+      
+      break;
+    }
+  }
+}
+
+void GridSpheresDpy::restore_min_max(int y, int &redraw_range) {
+  // swap y=0 orientation
+  y=yres-y;
+  // loop over each block and see where the event was
+  for(int j = 0; j < ndata; j++){
+    int s=j*yres/ndata +2;
+    int e=(j+1)*yres/ndata-2;
+    if(y>=s && y<e){
+      redraw_range = -1;
+      // found the region the event was
+      // reset the min and max
+      min[j] = original_min[j];
+      max[j] = original_max[j];
+
+      // update scales
+      scales[j] = 1./(max[j]-min[j]);
+
+      // now we need to recompute the histogram for this range
+      compute_one_hist(j);
+      
+      break;
+    }
+  }
+}
+
+void GridSpheresDpy::compute_one_hist(int j) {
+#if 0
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glViewport(0, 0, xres, yres);
+  glClearColor(0, 0, .2, 1);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, 1, 0, 1);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  
+  printString(fid, .1, .5, "Recomputing histogram...\n", Color(1,1,1));
+  glFlush();
+#endif
+  int n=ndata;
+  int nhist=xres;
+  int offset=j*nhist;
+  // initialize the histogram window
+  for(int i = offset; i < (offset + nhist); i++){
+    hist[i]=0;
+      }
+  // loop over all the data and compute histograms
+  for (int g = 0; g < grids.size() ; g++) {
+    GridSpheres* grid = grids[g];
+    float* p=grid->spheres;
+    int nspheres=grid->nspheres;
+    //	p+=j*nspheres;
+    for(int i=0;i<nspheres;i++){
+      float normalized=(p[j]-min[j])*scales[j];
+      int idx=(int)(normalized*(nhist-1));
+      if (idx >= 0 && idx < nhist)
+	hist[offset+idx]++;
+      p+=n;
+    }
+  }
+  //cerr << "GridSpheresDpy:compute_hist:past compute histograms\n";
+  // determine the maximum height for each histogram
+  int* hp=hist;
+  hp+=offset;
+  int max=0;
+  for(int i=0;i<nhist;i++){
+    if(*hp>max)
+      max=*hp;
+    hp++;
+  }
+  histmax[j]=max;
 }
 
 void GridSpheresDpy::animate(bool& changed) {
