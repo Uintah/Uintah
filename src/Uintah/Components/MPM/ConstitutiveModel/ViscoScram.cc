@@ -403,7 +403,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
         // Update Maxwell element Deviatoric Stresses
 
-        statedata[idx].DevStress[imw] =
+        statedata[idx].DevStress[imw] +=
 		 (rk1 + rk4)*onesixth + (rk2 + rk3)*onethird;
       }
 
@@ -606,6 +606,10 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.21  2001/01/18 16:16:52  bard
+// Fixed error (changed = to +=).  There is mounting evidence this
+// constitutive model is working properly.
+//
 // Revision 1.20  2001/01/16 23:56:39  bard
 // Gave statedata variables unique names.
 //
