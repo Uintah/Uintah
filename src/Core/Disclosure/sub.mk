@@ -25,7 +25,7 @@ SRCS +=	$(SRCDIR)/DynamicLoader.cc	    	\
 	$(SRCDIR)/TypeDescription.cc	    	\
 
 
-PSELIBS := 
+PSELIBS := Core/Exceptions Core/Thread Core/Util Core/Persistent
 LIBS := $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

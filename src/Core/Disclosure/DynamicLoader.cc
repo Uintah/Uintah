@@ -85,7 +85,7 @@ DynamicLoader::scirun_loader() {
     scirun_loader_lock_.unlock();
   }
   return *scirun_loader_;
-};
+}
 
 //! DynamicLoader::entry_exists
 //! 
