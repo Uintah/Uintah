@@ -173,6 +173,15 @@ proc biopseIconList_Create {w} {
     set data(curItem)  {}
     set data(noScroll) 1
 
+    # Multiple File Playing Timer Event ID
+    set data(mf_event_id) -1
+    set data(mf_play_mode) "stop"
+    # 1/2 second delay
+    set data(mf_delay) 500
+    set data(mf_file_list) ""
+    # Index of the file (in mf_file_list) to send down
+    set data(mf_file_number) 0
+    puts "set data for mf !"
     # Creates the event bindings.
     bind $data(canvas) <Configure> "biopseIconList_Arrange $w"
 
@@ -250,6 +259,7 @@ proc biopseIconList_DeleteAll {w} {
     set data(numItems) 0
     set data(curItem)  {}
     set data(noScroll) 1
+
     $data(sbar) set 0.0 1.0
     $data(canvas) xview moveto 0
 }
@@ -462,6 +472,7 @@ proc biopseIconList_Select {w rTag {callBrowse 1}} {
         set data(rect) [$data(canvas) create rect 0 0 0 0 \
             -fill #a0a0ff -outline #a0a0ff]
     }
+
     $data(canvas) lower $data(rect)
     set bbox [$data(canvas) bbox $tTag]
     eval $data(canvas) coords $data(rect) $bbox
@@ -791,7 +802,6 @@ proc biopseFDialog {argstring} {
 #       Configures the BIOPSE filedialog according to the argument list
 proc biopseFDialog_Config {w type argList} {
     upvar #0 $w data
-
     set data(type) $type
 
     # 1: the configuration specs
@@ -971,7 +981,13 @@ static char updir_bits[] = {
 
         TooltipMultiWidget "$md_tab.f1.ent $md_tab.f1.lab" "Select first file in series."
         TooltipMultiWidget "$md_tab.f1.delay_ent $md_tab.f1.delay_lab" "Milliseconds between each file being read in."
-
+    
+        set data(mf_event_id) -1
+        set data(mf_play_mode) "stop"
+        set data(mf_delay) 500
+        set data(mf_file_list) ""
+        set data(mf_file_number) 0
+        puts "set data for mf !"
         # load the VCR button bitmaps
         set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
         set rewind   [image create photo -file ${image_dir}/rewind-icon.ppm]
@@ -983,23 +999,23 @@ static char updir_bits[] = {
 
         # Create and pack the VCR buttons frame
         button $md_tab.vcr.rewind -image $rewind \
-            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode rewind;\
-                      $data(-allowMultipleFiles) handleMultipleFiles"
+            -command "setMultipleFilePlayMode $w rewind;\
+                      handleMultipleFiles $w"
         button $md_tab.vcr.stepb -image $stepb \
-            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode stepb;\
-                      $data(-allowMultipleFiles) handleMultipleFiles"
+            -command "setMultipleFilePlayMode $w stepb;\
+                      handleMultipleFiles $w"
         button $md_tab.vcr.pause -image $pause \
-            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode stop;\
-                      $data(-allowMultipleFiles) handleMultipleFiles"
+            -command "setMultipleFilePlayMode $w stop;\
+                      handleMultipleFiles $w"
         button $md_tab.vcr.play  -image $play  \
-            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode play;\
-                      $data(-allowMultipleFiles) handleMultipleFiles"
+            -command "setMultipleFilePlayMode $w play;\
+                      handleMultipleFiles $w"
         button $md_tab.vcr.stepf -image $stepf \
-            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode step;\
-                      $data(-allowMultipleFiles) handleMultipleFiles"
+            -command "setMultipleFilePlayMode $w step;\
+                      handleMultipleFiles $w"
         button $md_tab.vcr.fforward -image $fforward \
-            -command "$data(-allowMultipleFiles) setMultipleFilePlayMode fforward;\
-                      $data(-allowMultipleFiles) handleMultipleFiles"
+            -command "setMultipleFilePlayMode $w fforward;\
+                      handleMultipleFiles $w"
 
         global ToolTipText
         Tooltip $md_tab.vcr.rewind $ToolTipText(VCRrewind)
@@ -1895,7 +1911,7 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
 
     if {![string compare $selectFilePath ""]} {
         set selectFilePath [biopseFDialog_JoinFile $data(selectPath) \
-                $data(selectFile)]
+				$data(selectFile)]
         set biopsePriv(selectFile)     $data(selectFile)
         set biopsePriv(selectPath)     $data(selectPath)
 
@@ -1908,8 +1924,8 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
         if {$confirm && 
             [file exists $selectFilePath] && 
             ![string compare $data(type) save]} {
-                set reply [tk_messageBox -icon warning -type yesno\
-                        -parent $data(-parent) -message "File\
+	    set reply [tk_messageBox -icon warning -type yesno\
+			   -parent $data(-parent) -message "File\
                         \"$selectFilePath\" already exists.\nDo\
                         you want to overwrite it?"]
             if {![string compare $reply "no"]} {
@@ -1920,22 +1936,33 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
     
     # AS: final steps before returning: setting filename variable and executing command
     set $data(-filevar) $selectFilePath
+    set boo [array names data]
+    puts $boo
+
+    puts "$data(md_ent)"
+
     if {$whichBtn == "set"} {
         eval $data(-setcmd)
     } else {
         
         if { $data(-allowMultipleFiles) != "" && [$w.tabs view] == 1 } {
-
+	    
             # If allowing multiple files and in multi file mode...
             puts "multi file handling... skipping given command"
-
-
+	    
+	    
             # WARNING THIS SPLIT IS BROKEN.. doesn't do the correct thing if dir has a number in it!!!!!
-            set parts [split $selectFilePath 0123456789]
-
-
-            puts "parts is $parts"
-            set base [lindex $parts 0]
+	    set words [split $selectFilePath /]
+	    set len [llength $words]
+            set idx [expr $len - 1]
+	    set justname [lindex $words $idx]
+	    puts $justname
+            set parts [split $justname 0123456789]
+	    
+	    set tmp_idx [string first [lindex $parts 0] $selectFilePath]
+	    puts $tmp_idx
+	    set base [string range $selectFilePath 0 [expr $tmp_idx - 1]]
+	    append base [lindex $parts 0]
             set ext [lindex $parts end]
 
             puts "working with $base ... $ext"
@@ -1957,12 +1984,99 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
             puts "delay is $delay"
 
             # Should get delay from this var: $md_tab.delay_ent
-            $data(-allowMultipleFiles) setMultipleFilePlayMode "play"
-            $data(-allowMultipleFiles) handleMultipleFiles "$fileList" $delay
+	    setMultipleFilePlayMode $w "play"
+            handleMultipleFiles $w "$fileList" $delay
 
         } else {
             # In single file mode...
             eval $data(-command)
         }
     }
+}
+
+# Sets the first file in "filesList" to the active file, calls
+# execute, and then delays for "delay".  Repeat until "filesList"
+# is empty.
+proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
+    upvar #0 $w data
+
+    # handleMultipleFiles can be called two ways, from
+    # handleMultipleFiles itself, and from the Reader dialog.  If
+    # we are in the middle of a sequence and handleMultipleFiles
+    # is calling itself, but the user clicks a button, then we
+    # want to cancel the current event.  
+    if { $data(mf_event_id) != -1 } {
+	after cancel $data(mf_event_id)
+	set data(mf_event_id) -1
+    }
+    
+    if { $delay > 0 } {
+	if { $delay < 1 } {
+	    puts "WARNING: casting decimal input from seconds to milliseconds!"
+	    # User probably put in .X seconds... translating
+	    set data(mf_delay) [expr int ($delay * 1000)]
+	} else {
+	    # Delays can only be integers...
+	    set data(mf_delay) [expr int ($delay)]
+	}
+	puts "delaying for $data(mf_delay)"
+    }
+    
+    if { $filesList != "" } {
+	set data(mf_file_list) $filesList
+	set data(mf_file_number) 0
+	puts "setting file list to $data(mf_file_list)"
+    }
+    
+    set num_files [llength $data(mf_file_list)]
+    puts "num files: $num_files"
+    
+    if { $num_files == 0 } {
+	puts "error, no files specified..."
+	return
+    }
+    
+    puts "mode: $data(mf_play_mode)"
+    
+    if { $data(mf_play_mode) == "stop" } {
+	return
+    }
+    
+    if { $data(mf_play_mode) == "fforward" } {
+	set data(mf_file_number) [expr $num_files - 1]
+    } elseif { $data(mf_play_mode) == "rewind" } {
+	set data(mf_file_number) 0
+    } elseif { $data(mf_play_mode) == "stepb" } {
+	if { $data(mf_file_number) == 0 || $data(mf_file_number) == 1 } {
+	    set data(mf_file_number) 0
+	} else {
+	    incr data(mf_file_number) -2
+	}
+    } elseif { $data(mf_play_mode) == "step" } {
+	if { $data(mf_file_number) == $num_files } {
+	    set data(mf_file_number) [expr $num_files - 1]
+	}
+    }
+    
+    # Send the current file through...
+    set currentFile [lindex $data(mf_file_list) $data(mf_file_number)]
+    incr data(mf_file_number)
+    
+    puts "working on ([expr $data(mf_file_number)-1]) '$currentFile'"
+    
+    set mfthis $data(-allowMultipleFiles)
+    set $mfthis-filename $currentFile
+    $mfthis-c needexecute
+    set remainder [lrange $filesList 1 end]
+    
+    if { $data(mf_play_mode) == "play" && $data(mf_file_number) != $num_files } {
+	# If in play mode, then keep the sequence going...
+	set data(mf_event_id) [after $data(mf_delay) "handleMultipleFiles $w"]
+	puts "event_id: $data(mf_event_id)"
+    }
+}
+
+proc setMultipleFilePlayMode { w mode } {
+    upvar #0 $w data
+    set data(mf_play_mode) $mode
 }
