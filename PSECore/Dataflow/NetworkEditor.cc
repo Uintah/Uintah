@@ -29,7 +29,7 @@
 #include <PSECore/Dataflow/Network.h>
 #include <PSECore/Dataflow/PackageDB.h>
 #include <PSECore/Dataflow/Port.h>
-#include <PSECore/Dataflow/CreateModulePackage.h>
+#include <PSECore/Dataflow/CreatePacCatMod.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/Remote.h>
@@ -669,17 +669,42 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	save_network(args[2]);
-    } else if (args[1] == "create_new_package"){
-        
-        if (args.count() < 2) {
-          args.error("create_new_package needs a name");
+    } else if (args[1] == "create_pac_cat_mod"){
+        int check = 1;
+        if (args.count()!=5) {
+          args.error("create_pac_cat_mod needs 3 arguments");
           return;
         }
-        int check = CreateNewPackage(args[2]());
+        check &= CreatePac(args[2]());
+	check &= CreateCat(args[2](),args[3]());
+	check &= CreateMod(args[2](),args[3](),args[4]());
         if (!check) {
-          args.error("CreateNewPackage failed.");
+          args.error("create_pac_cat_mod failed.");
           return;
         }
+    } else if (args[1] == "create_cat_mod"){
+        int check = 1;
+        if (args.count()!=5) {
+          args.error("create_cat_mod needs 3 arguments");
+          return;
+        }
+	check &= CreateCat(args[2](),args[3]());
+	check &= CreateMod(args[2](),args[3](),args[4]());
+	if (!check) {
+	  args.error("create_cat_mod failed.");
+	  return;
+	}
+    } else if (args[1] == "create_mod"){
+        int check = 1;
+        if (args.count()!=5) {
+          args.error("create_mod needs 3 arguments");
+          return;
+        }
+	check &= CreateMod(args[2](),args[3](),args[4]());
+	if (!check) {
+	  args.error("create_mod failed.");
+	  return;
+	}
     } else {
 	args.error("Unknown minor command for netedit");
     }
@@ -690,6 +715,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.13  2000/06/07 00:02:32  moulding
+// removed the package maker, ane added the module maker
+//
 // Revision 1.12  2000/03/20 21:50:13  yarden
 // Linux port: replace the now defunct cuserid with getenv(LOGNAME)
 //
