@@ -39,6 +39,7 @@
 #include <Geom/Sphere.h>
 #include <Geom/Switch.h>
 #include <Geom/Tetra.h>
+#include <Geom/TexSlices.h>
 #include <Geom/Torus.h>
 #include <Geom/Transform.h>
 #include <Geom/Tri.h>
@@ -253,7 +254,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	pre_draw(di, matl, 0);
 	glBegin(GL_LINES);
 	for(int i=0;i<n;i++){
-	    di->set_matl(shaft_matls[i].get_rep());
+	    di->set_matl(shaft_matls[i+1].get_rep());
 	    Point from(positions[i]);
 	    Point to(from+directions[i]*shaft_scale);
 	    glVertex3d(from.x(), from.y(), from.z());
@@ -315,7 +316,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glBegin(GL_QUADS);
 	if(do_normals){
 	    for(int i=0;i<n;i++){
-		di->set_matl(back_matls[i].get_rep());
+		di->set_matl(back_matls[i+1].get_rep());
 		glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
 		Point from(positions[i]+directions[i]*headlength);
 		Point to(from+directions[i]);
@@ -330,7 +331,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	} else {
 	    for(int i=0;i<n;i++){
-		di->set_matl(back_matls[i].get_rep());
+		di->set_matl(back_matls[i+1].get_rep());
 		Point from(positions[i]+directions[i]*headlength);
 		Point to(from+directions[i]);
 		Point p1(from+v1[i]);
@@ -414,7 +415,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 		Vector dn(directions[i]*w2h2);
 		Vector n(dn+v1[i]+v2[i]);
 		glNormal3d(n.x(), n.y(), n.z());
-		di->set_matl(back_matls[i].get_rep());
+		di->set_matl(back_matls[i+1].get_rep());
 
 		Point top(positions[i]+directions[i]);
 		Point from=top-directions[i]*h;
@@ -446,7 +447,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	} else {
 	    for(int i=0;i<n;i++){
 		glBegin(GL_TRIANGLE_FAN);
-		di->set_matl(back_matls[i].get_rep());
+		di->set_matl(back_matls[i+1].get_rep());
 		Point from(positions[i]+directions[i]);
 		glVertex3d(from.x(), from.y(), from.z());
 		from-=directions[i]*(1.0-headlength);
@@ -916,6 +917,8 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     di->polycount+=2*(nu-1)*(nv-1);
+    Vector uu(u/(nu-1));
+    Vector vv(v/(nv-1));
     glPushMatrix();
     glTranslated(-corner.x(), -corner.y(), -corner.z());
     double mat[16];
@@ -1778,6 +1781,163 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     glEnd();
 //    glPopAttrib();
+}
+
+void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
+    pre_draw(di, matl, 0);
+    if (!have_drawn) {
+	have_drawn=1;
+    }
+    double model_mat[16]; // this is the modelview matrix
+  
+    glGetDoublev(GL_MODELVIEW_MATRIX,model_mat);
+    
+    // this is what you rip the view vector from
+    // just use the "Z" axis, normalized
+  
+    Vector view = Vector(model_mat[0*4+2],model_mat[1*4+2],model_mat[2*4+2]);
+    int sort_start=0;
+    int sort_end=0;
+    int sort_dir=1; // positive direction
+    
+    char which;
+    
+    if (fabs(view.x()) > fabs(view.y())) {
+      if (fabs(view.x()) > fabs(view.z())) { // use x dir
+	  which = 0;
+	if (view.x() < 0) {
+	  sort_dir=-1; sort_start=nx-1; sort_end=-1;
+	} else {
+	  sort_start=0; sort_end=nx;
+      }
+      } else { // use z dir
+	  which = 2;
+	if (view.z() < 0) {
+	  sort_dir=-1;sort_start =nz-1; sort_end=-1;
+      } else {
+	  sort_start =0; sort_end=nz;
+      }
+      }
+    } else if (fabs(view.y()) > fabs(view.z())) { // y greates
+	which = 1;
+      if (view.y() < 0) {
+	sort_dir=-1;sort_start =ny-1; sort_end=-1;
+      } else {
+	sort_start =0; sort_end=ny;
+    }
+    } else { // z is the one
+	which = 2;
+      if (view.z() < 0) {
+	sort_dir=-1;sort_start = nz-1; sort_end=-1;
+      } else {
+	sort_start = 0; sort_end = nz;
+    }
+    }
+    
+    Point pts[4];
+    Vector v;
+    switch (which) {
+    case 0:	// x
+	pts[0] = min;
+	pts[1] = Point (min.x(), max.y(), min.z());
+	pts[2] = Point (min.x(), max.y(), max.z());
+	pts[3] = Point (min.x(), min.y(), max.z());
+	v = Vector (max.x()-min.x(),0,0);
+	break;
+    case 1:	// y
+	pts[0] = min;
+	pts[1] = Point (max.x(), min.y(), min.z());
+	pts[2] = Point (max.x(), min.y(), max.z());
+	pts[3] = Point (min.x(), min.y(), max.z());
+	v = Vector (0,max.y()-min.y(),0);
+	break;
+    case 2:
+	pts[0] = min;
+	pts[1] = Point (max.x(), min.y(), min.z());
+	pts[2] = Point (max.x(), max.y(), min.z());
+	pts[3] = Point (min.x(), max.y(), min.z());
+	v = Vector (0,0,max.z()-min.z());
+	break;
+    }
+
+    for (int i=0; i<4; i++) {
+	if (sort_start) {
+	    pts[i] += v;
+	}
+    }
+
+
+    glEnable(GL_TEXTURE_2D);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+	      GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+		    GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+		    GL_LINEAR);
+
+    // make vector be scaled based on slice distance...
+
+    switch (which) {
+    case 0: // x
+	v = v*sort_dir*1.0/nx;
+	break;
+    case 1: // y
+	v = v*sort_dir*1.0/ny;
+	break;
+    case 2: // z
+	v = v*sort_dir*1.0/nz;
+	break;
+    }
+
+    // get GL stuff set up
+
+    glColor4f(1,1,1,0.2);
+
+    glAlphaFunc(GL_GEQUAL,0.0);  // this might be to large...
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glEnable(GL_ALPHA_TEST);    
+
+    for (int outer=sort_start; outer != sort_end; outer += sort_dir) {
+	switch (which) {
+	case 0:	// x
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY8_EXT, ny, nz, 0, 
+			 GL_LUMINANCE, GL_UNSIGNED_BYTE, &(Xmajor(outer,0,0)));
+	    break;
+	case 1: // y
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY8_EXT, nx, nz, 0, 
+			 GL_LUMINANCE, GL_UNSIGNED_BYTE, &(Ymajor(outer,0,0)));
+	    break;
+	case 2: // y
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY8_EXT, nx, ny, 0, 
+			 GL_LUMINANCE, GL_UNSIGNED_BYTE, &(Zmajor(outer,0,0)));
+	    break;
+	}
+	
+	// now draw the quad for this texture...
+
+	for(int j=0;j<4;j++)  // v has been rescaled based on dir
+	    pts[j] += v; 	
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,0);
+	glVertex3f(pts[0].x(),pts[0].y(),pts[0].z());
+
+	glTexCoord2f(0,1);
+	glVertex3f(pts[1].x(),pts[1].y(),pts[1].z());
+
+	glTexCoord2f(1,1);
+	glVertex3f(pts[2].x(),pts[2].y(),pts[2].z());
+
+	glTexCoord2f(1,0);
+	glVertex3f(pts[3].x(),pts[3].y(),pts[3].z());
+	glEnd();
+    }
+
+    glDisable(GL_BLEND);
+    glDisable(GL_ALPHA_TEST);
+    glDisable(GL_TEXTURE_2D);
 }
 
 void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
