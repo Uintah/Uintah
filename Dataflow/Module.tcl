@@ -323,12 +323,10 @@ proc startIPortConnection {imodid iwhich x y} {
     global conn_oports
     set conn_oports [netedit findoports $imodid $iwhich]
     global netedit_canvas
-    puts "making an iport name at $x $y"
     set coords [computeIPortCoords $imodid $iwhich]
     set typename [lindex [lindex [$imodid-c iportinfo] $iwhich] 2]
     eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
 	    -anchor s -text $typename -tags "tempname"
-    $netedit_canvas raise $imodid
     foreach i $conn_oports {
 	set omodid [lindex $i 0]
 	set owhich [lindex $i 1]
@@ -346,12 +344,10 @@ proc startOPortConnection {omodid owhich x y} {
     global conn_iports
     set conn_iports [netedit findiports $omodid $owhich]
     global netedit_canvas
-    puts "making an oport name at $x $y"
     set coords [computeOPortCoords $omodid $owhich]
     set typename [lindex [lindex [$omodid-c oportinfo] $owhich] 2]
     eval $netedit_canvas create text [lindex $coords 0] [lindex $coords 1] \
 	    -anchor n -text $typename -tags "tempname"
-    $netedit_canvas raise $omodid
     foreach i $conn_iports {
 	set imodid [lindex $i 0]
 	set iwhich [lindex $i 1]
@@ -471,7 +467,6 @@ proc trackOPortConnection {omodid which x y} {
 proc endPortConnection {portcolor} {
     global netedit_canvas
     $netedit_canvas delete tempconnections
-    puts "removing names from canvas"
     $netedit_canvas delete tempname
     global potential_connection
     if {$potential_connection != ""} {
