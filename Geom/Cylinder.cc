@@ -73,8 +73,11 @@ void GeomCylinder::adjust()
 	zrotaxis=Cross(axis, z);
 	zrotaxis.normalize();
     }
+    cerr << "axis=" << axis << endl;
+    cerr << "zrotaxis=" << zrotaxis << endl;
     double cangle=Dot(z, axis)/height;
     zrotangle=-Acos(cangle);
+    cerr << "zrotangle=" << zrotangle << endl;
 }
 
 GeomObj* GeomCylinder::clone()

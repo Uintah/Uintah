@@ -49,4 +49,7 @@ void GeomObj::set_matl(const MaterialHandle& _matl)
     matl=_matl;
 }
 
-
+void GeomObj::reset_bbox()
+{
+    // Nothing to do, by default.
+}
