@@ -856,8 +856,17 @@ public:
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
 
+  //! Methods specific to MaskedLatVolMesh
+  void mask_node(Node::index_type);
+  void mask_edge(Edge::index_type);
+  void mask_face(Face::index_type);
   void mask_cell(Cell::index_type);
+  void unmask_node(Node::index_type);
+  void unmask_edge(Edge::index_type);
+  void unmask_face(Face::index_type);
   void unmask_cell(Cell::index_type);
+  //! Special Method to Reset Mesh
+  void unmask_everything();  
   
 
   unsigned num_masked_nodes() const;
@@ -956,11 +965,11 @@ private:
 
   bool		update_count(Cell::index_type, bool masking);
   unsigned	num_missing_faces(Cell::index_type);
-  bool      check_valid(Node::index_type idx) const;
+  bool		check_valid(Node::index_type idx) const;
   bool		check_valid(Edge::index_type idx) const;
   bool		check_valid(Face::index_type idx) const;
   bool		check_valid(Cell::index_type idx) const;
-  bool      check_valid(Node::iterator idx) const;
+  bool		check_valid(Node::iterator idx) const;
   bool		check_valid(Edge::iterator idx) const;
   bool		check_valid(Face::iterator idx) const;    
   bool		check_valid(Cell::iterator idx) const; 
