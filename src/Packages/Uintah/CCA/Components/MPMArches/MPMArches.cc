@@ -57,6 +57,7 @@ MPMArches::MPMArches(const ProcessorGroup* myworld)
   d_mpm      = scinew SerialMPM(myworld);
   d_arches      = scinew Arches(myworld);
   d_SMALL_NUM = 1.e-100;
+  nofTimeSteps = 0;
 }
 
 // ****************************************************************************
@@ -189,6 +190,14 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
+
+  nofTimeSteps++ ;
+  if (nofTimeSteps < 2) {
+    cout << "Performing MPMArches calculations for time step " << nofTimeSteps << endl;
+    d_recompile = true;
+  }
+  else
+    d_recompile = false;
 
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
   d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
@@ -3034,4 +3043,13 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 
     }
   }
+}
+
+// ****************************************************************************
+// Function to return boolean for recompiling taskgraph
+// ****************************************************************************
+bool MPMArches::need_recompile(double time, double dt, 
+			    const GridP& grid) {
+  cerr << "printing recompile" << endl;
+  return d_recompile;
 }
