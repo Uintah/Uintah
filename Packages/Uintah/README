@@ -14,10 +14,11 @@ If you want to keep a "good" sus around to compare against while you
 work on "suspect" code.  
 
 - First build a "good" sus
-- mv sus sus_good
+- mkdir good_sus     ( you need a separate dir for mpi to work>
+- mv sus good_sus/.
 - mkdir SCIRun/src/good_libs
 - cp -r SCIRun/src/lib/ SCIRun/src/good_libs/.
-- In a terminal that will ONLY be used to run sus_good
+- In a terminal that will ONLY be used to run good_sus/sus
     unsetenv LD_LIBRARY64_PATH
     setenv  LD_LIBRARY64_PATH /hd3/harman/SCIRun/src/good_libs:/usr/installed/SCIRun_Thirdparty_64/lib:/usr/lib:/usr/lib64
  
@@ -28,6 +29,15 @@ Essentially LD_LIBRARY64_PATH sets the path where you want the executable to loo
 Don't run any other applications from this terminal since you've wiped out their
  library paths. Compile and run your suspect code in a different terminal.
 
+If you want mpi to work you'll need to add 
+
+if ( $cwd == "<path>/good_sus/" ) then
+ echo "setting LD_LIBRARY_PATH now"
+ setenv  LD_LIBRARY64_PATH /hd3/harman/SCIRun/src/good_libs:/usr/installed/SCIRun_Thirdparty_64/lib:/usr/lib:/usr/lib64
+endif
+
+to your .cshrc file.  MPI wipes out your environmental variables but it sources your
+.cshrc file so you can put a little hack in there.
 
 ______________________________________________________________________
 MOVING SUS TO n02
@@ -48,4 +58,13 @@ scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uin
 scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/puda .
 setenv LD_LIBRARY64_PATH /users/tbh/Csafe/remotely_built/lib:/usr/projects/Uintah/SCIRun_Thirdparty_64/lib:$LD_LIBRARY64_PATH
 
-At this point sus, puda and compare_uda should be working.
+At this point sus, puda and compare_uda should be working for a single processor.
+If you want mpi to work you'll need to add 
+
+if ( $cwd == "/users/tbh/Csafe/remotely_built" ) then
+ echo "setting LD_LIBRARY_PATH now"
+ setenv LD_LIBRARY64_PATH /users/tbh/Csafe/remotely_built/lib:/usr/projects/Uintah/SCIRun_Thirdparty_64/lib:$LD_LIBRARY64_PATH
+endif
+
+to your .cshrc file.  MPI wipes out your environmental variables but it sources your
+.cshrc file so you can put a little hack in there.
