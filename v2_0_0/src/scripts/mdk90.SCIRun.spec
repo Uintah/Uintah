@@ -103,6 +103,8 @@ export PATH=${JAVA_HOME}/bin:${PATH}
 gmake
 
 cd /usr/local/SCIRun/bin
+export SCIRUN_DATASET=sphere
+export SCIRUN_DATA=/usr/sci/data/SCIRunData/1.20.0
 find /usr/local/SCIRun/src -name "*.net" -exec /usr/local/SCIRun/bin/scirun --nosplash -r {} \;
 rm -rf /usr/local/SCIRun/bin/snapshot*
 
