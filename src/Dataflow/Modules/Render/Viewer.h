@@ -44,7 +44,7 @@
 #include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/CrowdMonitor.h>
 
-#include <map.h>
+#include <map>
 
 namespace SCIRun {
 

@@ -40,7 +40,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Geometry/Grid.h>
-#include <map.h>
+#include <map>
 
 namespace FieldConverters {
 

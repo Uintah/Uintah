@@ -40,7 +40,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Mutex.h>
 
-#include <map.h>
+#include <map>
 
 namespace SCIRun {
 
