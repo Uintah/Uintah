@@ -22,7 +22,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/FEM
 
 SRCS     += \
-	$(SRCDIR)/FEM.cc $(SRCDIR)/Matrix.cc
+	$(SRCDIR)/FEM.cc #$(SRCDIR)/Matrix.cc
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
@@ -33,6 +33,6 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 #include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/FEM.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Matrix.o: Core/CCA/spec/cca_sidl.h
+#$(SRCDIR)/Matrix.o: Core/CCA/spec/cca_sidl.h
 
 

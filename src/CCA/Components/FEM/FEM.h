@@ -30,7 +30,7 @@
 #define SCIRun_Framework_FEM_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include "Matrix.h"
+//#include "Matrix.h"
 
 #define myUIPort FEMUIPort
 #define myGoPort FEMGoPort
@@ -58,8 +58,9 @@ public:
 class myPDEMatrixPort: public virtual sci::cca::ports::PDEMatrixPort{
  public:
   virtual ~myPDEMatrixPort(){}
-  virtual sci::cca::Matrix::pointer getMatrix();
+  virtual void getMatrix(SSIDL::array2<double>&);
   virtual SSIDL::array1<double> getVector();
+  int getSize();
   void setParent(FEM *com){this->com=com;}
   FEM *com;  
 };
@@ -83,19 +84,18 @@ class FEM : public sci::cca::Component{
     double boundary(int index);
     bool isConst(int index);
 
-    Matrix::pointer Ag;
+    SSIDL::array2<double> Ag;
+     //Matrix::pointer Ag;
     SSIDL::array1<double> fg;
     SSIDL::array1<int> dirichletNodes;
     SSIDL::array1<double> dirichletValues;
+    myPDEMatrixPort *matrixPort;
+    myGoPort *goPort;
+
   private:
 
     FEM(const FEM&);
     FEM& operator=(const FEM&);
-    myUIPort uiPort;
-    myGoPort goPort;
-    myPDEMatrixPort matrixPort;
-
-
     sci::cca::Services::pointer services;
   };
 //}
