@@ -13,12 +13,16 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 
 #include <Core/Geometry/Vector.h>
+
+#undef RIGID_MPM
+//#define RIGID_MPM
 
 namespace Uintah {
   class Output;
@@ -242,7 +246,11 @@ protected:
   ICELabel* Ilb;
   MPMICELabel* MIlb;
   bool             d_burns;
+#ifdef RIGID_MPM
+  RigidMPM*        d_mpm;
+#else
   SerialMPM*       d_mpm;
+#endif
   ICE*             d_ice;
   int              d_8or27;
   int              NGN;
