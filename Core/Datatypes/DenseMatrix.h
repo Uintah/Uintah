@@ -121,7 +121,10 @@ public:
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
   //! fast accessors
-  inline double*  operator[](int r) const {
+  inline double*  operator[](int r) {
+    return data[r];
+  };
+  inline double const*  operator[](int r) const{
     return data[r];
   };
   
