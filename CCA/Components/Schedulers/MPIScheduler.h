@@ -4,19 +4,33 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Packages/Uintah/Core/Grid/PackBufferInfo.h>
 #include <Packages/Uintah/Core/Grid/TaskProduct.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <vector>
 #include <map>
+
 using std::vector;
 
 namespace Uintah {
-  //struct SendRecord;
-  class SendState;
-  class DetailedTasks;
-  class Task;
-  class OnDemandDataWarehouse;
+
+class Task;
+class SendState;
+
+struct mpi_timing_info_s {
+  double totalreduce;
+  double totalsend;
+  double totalrecv;
+  double totaltask;
+  double totalreducempi;
+  double totalsendmpi;
+  double totalrecvmpi;
+  double totaltestmpi;
+  double totalwaitmpi;
+};
 
 /**************************************
 
@@ -69,19 +83,50 @@ WARNING
 					    const vector<vector<const VarLabel*> >& new_labels,
 					    const MaterialSet* matls);
     
+    static void recvMPIData( const ProcessorGroup  * pg,
+			     DetailedTask          * task, 
+			     mpi_timing_info_s     & mpi_info,
+			     OnDemandDataWarehouse * dws[2] );
+
+    static void sendMPIData( const ProcessorGroup  * pg,
+			     DetailedTask          * task,
+			     mpi_timing_info_s     & mpi_info,
+			     SendRecord            & sends,
+			     SendState             & ss,
+			     OnDemandDataWarehouse * dws[2],
+			     const VarLabel        * reloc_label );
+
+  protected:
+    // Runs the task. (In Mixed, gives the task to a thread.)
+    virtual void initiateTask( const ProcessorGroup  * pg,
+			       DetailedTask          * task,
+			       mpi_timing_info_s     & mpi_info,
+			       SendRecord            & sends,
+			       SendState             & ss,
+			       OnDemandDataWarehouse * dws[2],
+			       const VarLabel        * reloc_label );
+
+    // Waits until all tasks have finished.  In the MPI Scheduler,
+    // this is basically a nop, for the mixed, it talks to the ThreadPool 
+    // and waits until the threadpool in empty (ie: all tasks done.)
+    virtual void wait_till_all_done();
 
   private:
     MPIScheduler(const MPIScheduler&);
     MPIScheduler& operator=(const MPIScheduler&);
     
-    MPIRelocate reloc;
-    const VarLabel* reloc_new_posLabel;
-    double d_lasttime;
-    vector<char*> d_labels;
-    vector<double> d_times;
+    virtual void verifyChecksum();
+
+    MPIRelocate      reloc_;
+    const VarLabel * reloc_new_posLabel_;
+    double           d_lasttime;
+    vector<char*>    d_labels;
+    vector<double>   d_times;
+
     void emitTime(char* label);
     void emitTime(char* label, double time);
   };
+
 } // End namespace Uintah
    
 #endif

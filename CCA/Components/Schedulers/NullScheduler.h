@@ -73,6 +73,8 @@ WARNING
       NullScheduler(const NullScheduler&);
       NullScheduler& operator=(const NullScheduler&);
 
+      virtual void verifyChecksum();
+
       const VarLabel* delt;
       bool firstTime;
    };

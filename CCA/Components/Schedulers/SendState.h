@@ -41,7 +41,7 @@ namespace Uintah {
   public:
     SendState();
     ~SendState();
-    ParticleSubset* find_sendset(const Patch*, int, int);
+    ParticleSubset* find_sendset(const Patch*, int, int) const;
     void add_sendset(const Patch*, int, int, ParticleSubset*);
     
   private:

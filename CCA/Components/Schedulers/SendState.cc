@@ -17,11 +17,10 @@ SendState::~SendState()
 }
 
 ParticleSubset*
-SendState::find_sendset(const Patch* patch, int matlIndex, int dest)
+SendState::find_sendset(const Patch* patch, int matlIndex, int dest) const
 {
-  maptype::iterator iter = sendSubsets.find(make_pair(make_pair(patch,
-								matlIndex),
-						      dest));
+  maptype::const_iterator iter = 
+    sendSubsets.find( make_pair( make_pair(patch, matlIndex), dest ) );
   if(iter == sendSubsets.end())
     return 0;
   return iter->second;

@@ -24,16 +24,18 @@ SRCS += \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := \
-	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
-	Core/Geometry \
-	Core/Thread \
-	Core/Exceptions \
-	Core/Util \
+	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/Exceptions  \
+	Core/Geometry                    \
+	Core/Thread                      \
+	Core/Exceptions                  \
+	Core/Util                        \
 	Dataflow/XMLUtil
+
 LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -2,7 +2,7 @@
 #ifndef UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 #define UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
@@ -49,80 +49,39 @@ WARNING
   
 ****************************************/
 
-   class MixedScheduler : public SchedulerCommon {
-      struct SGArgs {
-	 vector<int> dest;
-	 vector<int> tags;
-      };
-      SGArgs sgargs; // THIS IS UGLY - Steve
-      MessageLog log;
-   public:
-      MixedScheduler(const ProcessorGroup* myworld, Output* oport);
-      virtual ~MixedScheduler();
+class MixedScheduler : public MPIScheduler {
+
+public:
+
+  MixedScheduler(const ProcessorGroup* myworld, Output* oport);
+  virtual ~MixedScheduler();
       
-      virtual void problemSetup(const ProblemSpecP& prob_spec);
+  virtual void problemSetup(const ProblemSpecP& prob_spec);
       
-      //////////
-      // Insert Documentation Here:
-     virtual void compile( const ProcessorGroup * pc, bool init_timestep );
-     virtual void execute( const ProcessorGroup * pc );
-      
-      //////////
-      // Insert Documentation Here:
-      virtual void scheduleParticleRelocation(const LevelP& level,
-					      const VarLabel* old_posLabel,
-					      const vector<vector<const VarLabel*> >& old_labels,
-					      const VarLabel* new_posLabel,
-					      const vector<vector<const VarLabel*> >& new_labels,
-					      const MaterialSet* matls);
+private:
 
+  MessageLog log;
 
-   private:
-      void displayTaskGraph( vector<Task*> & graph );
+  virtual void initiateTask( const ProcessorGroup  * pg,
+			     DetailedTask          * task,
+			     mpi_timing_info_s     & mpi_info,
+			     SendRecord            & sends,
+			     SendState             & ss,
+			     OnDemandDataWarehouse * dws[2],
+			     const VarLabel        * reloc_label );
 
-      void verifyChecksum( vector<Task*> & tasks, int me );
+  // Waits until all tasks have finished. (Ie: talks to the ThreadPool
+  // and waits until the threadpool in empty (ie: all tasks done.))
+  virtual void wait_till_all_done();
 
-      void sendParticleSets( vector<Task*> & tasks, int me );
-      void recvParticleSets( vector<Task*> & tasks, int me );
+  virtual bool useInternalDeps();
 
-      void sendInitialData( vector<Task*> & tasks, int me );
-      // Receive the data into the "old_dw"...
-      void recvInitialData( vector<Task*> & tasks, DataWarehouseP & old_dw,
-			    int me );
+  MixedScheduler(const MixedScheduler&);
+  MixedScheduler& operator=(const MixedScheduler&);
 
-      // Creates the list of dependencies that each tasks needs before
-      // it can be run.  Also creates a map from a dependency to the
-      // task that it satisfies.
-      void createDepencyList( DataWarehouseP & old_dw,
-			      vector<Task*>  & tasks,
-			      int              me );
+  ThreadPool * d_threadPool;
+};
 
-      void makeAllRecvRequests( vector<Task*>       & tasks, 
-				int                   me,
-				DataWarehouseP      & old_dw,
-				DataWarehouseP      & new_dw );
-
-      // Removes the dependencies that are satisfied by "comps" computes
-      // from the taskToDeps list.  Sends data to other processes if
-      // necessary (if sendData is true).  List of sends returned in "send_ids".
-#if 0
-     // sparker
-      void dependenciesSatisfied( const Task::compType & comps,
-				  int                               me,
-				  vector<MPI_Request>             & send_ids,
-				  bool                              sendData = true );
-      void dependencySatisfied( const Task::Dependency * comp,
-				int                      me,
-				vector<MPI_Request>    & send_ids,
-				bool                     sendData = true );
-#endif
-     MPIRelocate reloc;
-
-      MixedScheduler(const MixedScheduler&);
-      MixedScheduler& operator=(const MixedScheduler&);
-
-      ThreadPool * d_threadPool;
-   };
 } // End namespace Uintah
    
 #endif

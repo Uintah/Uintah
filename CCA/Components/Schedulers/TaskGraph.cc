@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
@@ -29,6 +29,11 @@ using namespace SCIRun;
 using std::cerr;
 
 static DebugStream dbg("TaskGraph", false);
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)  From sus.cc:
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 0
 
@@ -262,7 +267,9 @@ TaskGraph::setupTaskConnections()
     d_allcomps.insert(actype::value_type(p, dep));
   }
 #else
-   NOT_FINISHED("new task stuff (addTask - skip)");
+  cerrLock.lock();
+  NOT_FINISHED("new task stuff (addTask - skip)");
+  cerrLock.unlock();
 #endif
 
 #if 0 // moved to addTask
@@ -548,14 +555,15 @@ TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls)
 {
-  DetailedTask* dt = scinew DetailedTask(task, patches, matls);
+  DetailedTask* dt = scinew DetailedTask(task, patches, matls, tasks);
   tasks->add(dt);
 }
 
 DetailedTasks*
-TaskGraph::createDetailedTasks(const ProcessorGroup* pg)
+TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
+			        bool useInternalDeps )
 {
-  DetailedTasks* dt = scinew DetailedTasks(pg, this);
+  DetailedTasks* dt = scinew DetailedTasks( pg, this, useInternalDeps );
   vector<Task*> sorted_tasks;
   topologicalSort(sorted_tasks);
 
@@ -670,7 +678,20 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
 	data.insert(new Data(task, comp, patch, matl));
       }
     }
-  } else {
+  } 
+  else if (matls) {
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
+      data.insert(new Data(task, comp, 0, matl));
+    }
+  }
+  else if (patches) {
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      data.insert(new Data(task, comp, patch, 0));
+    }
+  }
+  else {
     data.insert(new Data(task, comp, 0, 0));
   }
 }
@@ -794,10 +815,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       }
       if(!patches) {
 	// Reduction task
-	if (matls && !matls->empty())
+	if (matls && !matls->empty()) {
 	  ct.remembercomp(task, comp, 0, matls);
-	else 
+	} else { 
 	  ct.remembercomp(task, comp, 0, 0);
+	}
       }
       else if(!patches->empty() && !matls->empty())
 	ct.remembercomp(task, comp, patches, matls);
@@ -809,13 +831,53 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     }
   }
 
+  // Put internal links between the reduction tasks so a mixed thread/mpi
+  // scheduler won't have out of order reduction problems.
+  DetailedTask* lastReductionTask = 0;
+  for(int i=0;i<dt->numTasks();i++){
+    DetailedTask* task = dt->getTask(i);
+    if (task->task->getType() == Task::Reduction) {
+      if (lastReductionTask != 0)
+	task->addInternalDependency(lastReductionTask);
+      lastReductionTask = task;
+    }
+  }
+  
   // Go through the modifies and find and replace the matching comp
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
 
-    // Explicit dependencies are currently not generated for reductions
-    if(task->task->getType() == Task::Reduction)
+    if(task->task->getType() == Task::Reduction) {
+      // only internal dependencies need to be generated for reductions
+      for (Task::Dependency* req = task->task->getRequires();
+	   req != 0; req = req->next) {
+	DetailedTask* creator;
+	Task::Dependency* comp;
+	const PatchSubset* patches = req->patches;
+	const MaterialSubset* matls = req->matls;
+	if(patches && !patches->empty() && matls && !matls->empty()){
+	  for(int i=0;i<patches->size();i++){
+	    for(int m=0;m<matls->size();m++){
+	      const Patch* patch = patches->get(i);
+	      int matl = matls->get(m);
+	      bool didFind = ct.findcomp(req, patch, matl, creator, comp);
+	      if(!didFind) {
+		cerr << "Failure finding " << *req << " for " 
+		     << task->getTask()->getName() << endl; 
+		throw InternalError("Failed to find comp for dep!");
+	      }
+	      if(task->getAssignedResourceIndex() == 
+		 creator->getAssignedResourceIndex()) {
+		task->addInternalDependency(creator);
+	      }
+	    }
+	  }
+	}
+	else
+	  throw InternalError("TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials");
+      }
       continue;
+    }
 
     if(dbg.active() && (task->task->getRequires() != 0))
       dbg << "Looking at requires of detailed task: " << *task << '\n';
@@ -919,19 +981,25 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	      // modified before it gets used.
 	      for (DependencyBatch* batch = creator->getComputes(); batch != 0;
 		   batch = batch->comp_next) {
-		for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
+		for (DetailedDep* dep = batch->head; dep != 0; 
+		     dep = dep->next) {
 		  if (dep->req->var == req->var) {
-		    // dep requires what is to be modified before it is to be
-		    // modified so create a dependency between them so the
-		    // modifying won't conflist with the previous require.
-		    if (dbg.active()) {
-		      dbg << "Requires to modifies dependency from "
-			  << batch->toTask->getTask()->getName()
-			  << " to " << task->getTask()->getName() << endl;
+		    list<DetailedTask*>::iterator toTaskIter;
+		    for (toTaskIter = dep->toTasks.begin(); 
+			 toTaskIter != dep->toTasks.end(); toTaskIter++) {
+		      DetailedTask* toTask = *toTaskIter;
+		      // dep requires what is to be modified before it is to be
+		      // modified so create a dependency between them so the
+		      // modifying won't conflist with the previous require.
+		      if (dbg.active()) {
+			dbg << "Requires to modifies dependency from "
+			    << toTask->getTask()->getName()
+			    << " to " << task->getTask()->getName() << endl;
+		      }
+		      dt->possiblyCreateDependency(toTask, 0, 0, task, req, 0,
+						   matl, l, h);
 		    }
-		    dt->possiblyCreateDependency(batch->toTask, 0, 0,
-						 task, req, 0,
-						 matl, l, h);
+		  }
 		}
 	      }
 	    }
@@ -939,6 +1007,26 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	}
       }
     }
+    else if (!patches && matls && !matls->empty()) {
+      // requiring reduction variables
+      for (int m=0;m<matls->size();m++){
+	int matl = matls->get(m);
+	DetailedTask* creator;
+	Task::Dependency* comp = 0;
+	bool didFind = ct.findcomp(req, 0, matl, creator, comp);
+	if(!didFind) {
+	  cerr << "Failure finding " << *req << " for " 
+	       << task->getTask()->getName() << endl; 
+	  throw InternalError("Failed to find comp for dep!");
+	}
+	if(task->getAssignedResourceIndex() == 
+	   creator->getAssignedResourceIndex()) {
+	  task->addInternalDependency(creator);
+	}
+      }
+    }
+    else
+      throw InternalError("TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials");
     if(patches && patches->removeReference())
       delete patches;
     if(matls && matls->removeReference())
@@ -1000,3 +1088,4 @@ TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
    }
    return result;
 }
+

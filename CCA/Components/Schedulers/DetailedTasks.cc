@@ -6,20 +6,33 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
+#include <Core/Thread/Mutex.h>
+
 using namespace Uintah;
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time) 
+// From: sus.cc
+extern SCIRun::Mutex cerrLock;
+extern DebugStream mixedDebug;
 
 static DebugStream dbg("TaskGraph", false);
 
 DetailedTasks::DetailedTasks(const ProcessorGroup* pg,
-			     const TaskGraph* taskgraph)
-  : taskgraph(taskgraph)
+			     const TaskGraph* taskgraph,
+			     bool mustConsiderInternalDependencies /*= false*/)
+  : taskgraph(taskgraph),
+    mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
+    currentDependencyGeneration_(1),
+    readyQueueMutex_("DetailedTasks Ready Queue"),
+    readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   int nproc = pg->size();
   stasks.resize(nproc);
   tasks.resize(nproc);
   for(int i=0;i<nproc;i++) {
     stasks[i]=scinew Task("send old data", Task::InitialSend);
-    tasks[i]=scinew DetailedTask(stasks[i], 0, 0);
+    tasks[i]=scinew DetailedTask(stasks[i], 0, 0, this);
     tasks[i]->assignResource(i);
   }
 }
@@ -74,7 +87,11 @@ DetailedTasks::getInitialRequires()
       initreqs.push_back(req);
   }
 #else
-  NOT_FINISHED("DetailedTasks::add");
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    NOT_FINISHED("DetailedTasks::add");
+    cerrLock.unlock();
+  }
 #endif
   cerr << initreqs.size() << " initreqs\n";
   return initreqs;
@@ -84,20 +101,36 @@ DetailedTasks::getInitialRequires()
 void
 DetailedTasks::computeLocalTasks(int me)
 {
+  initiallyReadyTasks_.clear();
   if(localtasks.size() != 0)
     return;
   for(int i=0;i<(int)tasks.size();i++){
     DetailedTask* task = tasks[i];
+
     if(task->getAssignedResourceIndex() == me
-       || task->getTask()->getType() == Task::Reduction)
+       || task->getTask()->getType() == Task::Reduction) {
       localtasks.push_back(task);
+
+      if (task->areInternalDependenciesSatisfied()) {
+	initiallyReadyTasks_.push_back(task);
+	if( mixedDebug.active() ) {
+	  cerrLock.lock();
+	  mixedDebug << "Initially Ready Task: " 
+		     << task->getTask()->getName() << endl;
+	  cerrLock.unlock();
+	}
+      }
+    }
   }
 }
 
 DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
-			   const MaterialSubset* matls)
-  : task(task), patches(patches), matls(matls), req_head(0),
-    comp_head(0), scrublist(0), resourceIndex(-1)
+			   const MaterialSubset* matls, DetailedTasks* taskGroup)
+  : task(task), patches(patches), matls(matls), comp_head(0),
+    taskGroup(taskGroup),
+    numPendingInternalDependencies(0),
+    internalDependencyLock("DetailedTask Internal Dependencies"),
+    scrublist(0), resourceIndex(-1)
 {
   if(patches)
     patches->addReference();
@@ -119,28 +152,53 @@ DetailedTask::~DetailedTask()
   }
 }
 
-void DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
-			DataWarehouse* new_dw)
+void
+DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
+		   DataWarehouse* new_dw)
 {
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "DetailedTask " << this << " begin doit()\n";
+    mixedDebug << " task is " << task << "\n";
+    mixedDebug << "   num Pending Deps: " << numPendingInternalDependencies << "\n";
+    mixedDebug << "   Originally needed deps (" << internalDependencies.size()
+	 << "):\n";
+
+    list<InternalDependency>::iterator iter = internalDependencies.begin();
+
+    for( int i = 0; iter != internalDependencies.end(); iter++, i++ )
+      {
+	mixedDebug << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
+      }
+    cerrLock.unlock();
+  }
   task->doit(pg, patches, matls, old_dw, new_dw);
+
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << this << " DetailedTask::done doit() for task " 
+	       << task << "\n";
+    cerrLock.unlock();
+  }
 }
 
-void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
-					     Task::Dependency* comp,
-					     const Patch* fromPatch,
-					     DetailedTask* to,
-					     Task::Dependency* req,
-					     const Patch */*toPatch*/,
-					     int matl,
-					     const IntVector& low,
-					     const IntVector& high)
+void
+DetailedTasks::possiblyCreateDependency(DetailedTask* from,
+					Task::Dependency* comp,
+					const Patch* fromPatch,
+					DetailedTask* to,
+					Task::Dependency* req,
+					const Patch */*toPatch*/,
+					int matl,
+					const IntVector& low,
+					const IntVector& high)
 {
   // TODO - maybe still create internal depencies for threaded scheduler?
   // TODO - perhaps move at least some of this to TaskGraph?
   ASSERT(from->getAssignedResourceIndex() != -1);
   ASSERT(to->getAssignedResourceIndex() != -1);
   if(dbg.active()) {
-    dbg << "Dependency from " << *from << " to " << *to << "\n";
+    dbg << *to << " depends on " << *from << "\n";
     if(comp)
       dbg << "From comp " << *comp;
     else
@@ -148,8 +206,10 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     dbg << " to req " << *req << '\n';
   }
 
-  if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex())
+  if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex()) {
+    to->addInternalDependency(from);
     return;
+  }
   int toresource = to->getAssignedResourceIndex();
   DependencyBatch* batch = from->getComputes();
   for(;batch != 0; batch = batch->comp_next){
@@ -160,9 +220,19 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     batch = scinew DependencyBatch(toresource, from, to);
     batches.push_back(batch);
     from->addComputes(batch);
-    to->addRequires(batch);
+    bool newRequireBatch = to->addRequires(batch);
+    ASSERT(newRequireBatch);
     if(dbg.active())
       dbg << "NEW BATCH!\n";
+  }
+  else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
+    if (to->addRequires(batch)) {
+      // this is a new requires batch for this task, so add
+      // to the batch's toTasks.
+      batch->toTasks.push_back(to);
+    }
+    if(dbg.active())
+      dbg << "USING PREVIOUSLY CREATED BATCH!\n";
   }
   DetailedDep* dep = batch->head;
   for(;dep != 0; dep = dep->next){
@@ -170,10 +240,11 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
        && (req == dep->req
 	   || (req->var->equals(dep->req->var)
 	       && req->dw == dep->req->dw)))
-		 break;
+      break;
   }
   if(!dep){
-    dep = scinew DetailedDep(batch->head, comp, req, fromPatch, matl, low, high);
+    dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, 
+			     low, high);
     batch->head = dep;
     if(dbg.active()) {
       dbg << "ADDED " << low << " " << high << ", fromPatch = ";
@@ -183,6 +254,7 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 	dbg << "NULL\n";	
     }
   } else {
+    dep->toTasks.push_back(to);
     IntVector l = Min(low, dep->low);
     IntVector h = Max(high, dep->high);
     IntVector d1 = h-l;
@@ -201,8 +273,6 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 	warned=true;
       }
     }
-    dep->low=l;
-    dep->high=h;
     if(dbg.active()){
       dbg << "EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
       dbg << *req->var << '\n';
@@ -212,28 +282,112 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       if(dep->comp)
 	dbg << *dep->comp->var << '\n';
     }
+    dep->low=l;
+    dep->high=h;
   }
 }
 
-DetailedTask* DetailedTasks::getOldDWSendTask(int proc)
+DetailedTask*
+DetailedTasks::getOldDWSendTask(int proc)
 {
   // These are the first N tasks
   return tasks[proc];
 }
 
-void DetailedTask::addComputes(DependencyBatch* comp)
+void
+DetailedTask::addComputes(DependencyBatch* comp)
 {
   comp->comp_next=comp_head;
   comp_head=comp;
 }
 
-void DetailedTask::addRequires(DependencyBatch* req)
+bool
+DetailedTask::addRequires(DependencyBatch* req)
 {
-  req->req_next=req_head;
-  req_head=req;
+  // return true if it is adding a new batch
+  return reqs.insert(make_pair(req, req)).second;
 }
 
-ostream& operator<<(ostream& out, const DetailedTask& task)
+void
+DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask)
+{
+  if (taskGroup->mustConsiderInternalDependencies()) {
+    // Avoid unnecessary multiple internal dependency links between tasks.
+    if (prerequisiteTask->internalDependents.find(this) ==
+	prerequisiteTask->internalDependents.end()) {
+      internalDependencies.push_back(InternalDependency(prerequisiteTask, this,
+							0/* not satisfied */));
+      prerequisiteTask->
+	internalDependents[this] = &internalDependencies.back();
+      numPendingInternalDependencies = internalDependencies.size();
+    }
+  }
+}
+
+void
+DetailedTask::done()
+{
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "This: " << this << " is done with task: " << task << "\n";
+    mixedDebug << "Name is: " << task->getName()
+	       << " which has (" << internalDependents.size() 
+	       << ") tasks waiting on it:\n";
+    cerrLock.unlock();
+  }
+
+  int cnt = 1000;
+  map<DetailedTask*, InternalDependency*>::iterator iter;
+  for (iter = internalDependents.begin(); iter != internalDependents.end(); 
+       iter++) {
+    InternalDependency* dep = (*iter).second;
+    if( mixedDebug.active() ) {
+      cerrLock.lock();
+      mixedDebug << cnt << ": " << *(dep->dependentTask->task) << "\n";
+      cerrLock.unlock();
+    }
+    dep->dependentTask->dependencySatisfied(dep);
+    cnt++;
+  }  
+}
+
+void DetailedTask::dependencySatisfied(InternalDependency* dep)
+{
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "Depend satisfied for " << *(dep->dependentTask->getTask()) 
+	       << "\n";
+    cerrLock.unlock();
+  }
+
+ internalDependencyLock.lock();
+  ASSERT(numPendingInternalDependencies > 0);
+  unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
+
+  // if false, then the dependency has already been satisfied
+  ASSERT(dep->satisfiedGeneration < currentGeneration);
+
+  dep->satisfiedGeneration = currentGeneration;
+  numPendingInternalDependencies--;
+
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << *(dep->dependentTask->getTask()) << " has " 
+	       << numPendingInternalDependencies << " left.\n";
+    cerrLock.unlock();
+  }
+
+  if (numPendingInternalDependencies == 0) {
+    taskGroup->internalDependenciesSatisfied(this);
+    // reset for next timestep
+    numPendingInternalDependencies = internalDependencies.size();
+  }
+ internalDependencyLock.unlock();
+}
+
+
+ostream&
+operator<<(ostream& out, const DetailedTask& task)
 {
   out << task.getTask()->getName();
   const PatchSubset* patches = task.getPatches();
@@ -268,7 +422,8 @@ ostream& operator<<(ostream& out, const DetailedTask& task)
   return out;
 }
 
-ostream& operator<<(ostream& out, const DetailedDep& dep)
+ostream&
+operator<<(ostream& out, const DetailedDep& dep)
 {
   out << dep.req->var->getName();
   if (dep.isNonDataDependency())
@@ -279,12 +434,14 @@ ostream& operator<<(ostream& out, const DetailedDep& dep)
   return out;
 }
 
-void DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
+void
+DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 {
   scrublist=scinew ScrubItem(scrublist, var, dw);
 }
 
-void DetailedTasks::createScrublists(bool init_timestep)
+void
+DetailedTasks::createScrublists(bool init_timestep)
 {
   const set<const VarLabel*, VarLabel::Compare>& initreqs = taskgraph->getInitialRequiredVars();
   ASSERT(localtasks.size() != 0 || tasks.size() == 0);
@@ -325,7 +482,15 @@ void DetailedTasks::createScrublists(bool init_timestep)
 	// Only scrub if it is not part of the original requires and
 	// This is not timestep 0
 	newmap[comp->var]=dtask;
-	cerr << "Warning: Variable " << comp->var->getName() << " computed by " << dtask->getTask()->getName() << " and never used\n";
+
+	if( mixedDebug.active() ) {
+	  cerrLock.lock();
+	  mixedDebug << "Warning: Variable " << comp->var->getName() 
+		     << " computed by " << dtask->getTask()->getName() 
+		     << " and never used\n";
+	  cerrLock.unlock();
+	}
+
       }
     }
   }
@@ -336,5 +501,141 @@ void DetailedTasks::createScrublists(bool init_timestep)
   for(ScrubMap::iterator iter = newmap.begin();iter!= newmap.end();iter++){
     DetailedTask* dt = iter->second;
     dt->addScrub(iter->first, Task::NewDW);
+  }
+}
+
+
+void
+DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
+{
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "Begin internalDependenciesSatisfied\n";
+    cerrLock.unlock();
+  }
+ readyQueueMutex_.lock();
+ 
+  internalDependencySatisfiedTasks_.push_back(task);
+
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << *task << " satisfied.  Now " 
+	       << internalDependencySatisfiedTasks_.size() << " ready.\n";
+    cerrLock.unlock();
+  }
+
+  readyQueueSemaphore_.up();
+
+ readyQueueMutex_.unlock();
+}
+
+DetailedTask*
+DetailedTasks::getNextInternalReadyTask()
+{
+  // Block until the list has an item in it.
+  readyQueueSemaphore_.down();
+ readyQueueMutex_.lock();
+  DetailedTask* nextTask = internalDependencySatisfiedTasks_.front();
+  internalDependencySatisfiedTasks_.pop_front();
+ readyQueueMutex_.unlock();
+
+  return nextTask;
+}
+
+void
+DetailedTasks::initTimestep()
+{
+  internalDependencySatisfiedTasks_ = initiallyReadyTasks_;
+  readyQueueSemaphore_.up(internalDependencySatisfiedTasks_.size());
+  incrementDependencyGeneration();
+  initializeBatches();
+}
+
+void DetailedTasks::initializeBatches()
+{
+  for (int i = 0; i < batches.size(); i++) {
+    batches[i]->reset();
+  }
+}
+
+void DependencyBatch::reset()
+{
+  if (toTasks.size() > 1) {
+    if (lock_ == 0)
+      lock_ = scinew Mutex("DependencyBatch receive lock");
+    if (cv_ == 0)
+      cv_ = scinew ConditionVariable("DependencyBatch receive condition variable");
+    received_ = false;
+    madeMPIRequest_ = false; 
+  }
+}
+
+bool DependencyBatch::makeMPIRequest()
+{
+  if (toTasks.size() > 1) {
+    if (!received_) {
+      lock_->lock();
+      if (!received_) {
+	if (!madeMPIRequest_) {
+	  madeMPIRequest_ = true;
+	  lock_->unlock();
+	  return true;
+	}
+	else {
+	  lock_->unlock();
+	  return false;
+	}
+      }
+      lock_->unlock();
+    }
+    return false;
+  }
+  else {
+    return true;
+  }
+}
+
+bool DependencyBatch::waitForMPIRequest()
+{
+  if (toTasks.size() > 1) {
+    if (!received_) {
+      lock_->lock();
+      if (!received_) {
+	if (!madeMPIRequest_) {
+	  madeMPIRequest_ = true;
+	  lock_->unlock();
+	  return true;
+	}
+	else {
+	  cv_->wait(*lock_);
+	  lock_->unlock();
+	  return false;
+	}
+      }
+      lock_->unlock();
+    }
+    return false;
+  }
+  else
+    return true;
+}
+
+void DependencyBatch::received()
+{
+  if (toTasks.size() > 1) {
+    lock_->lock();
+    received_ = true;
+
+    if( mixedDebug.active() ) {
+      cerrLock.lock();
+      mixedDebug << "Received batch message " << messageTag 
+		 << " from task " << *fromTask << endl;
+
+      for (DetailedDep* dep = head; dep != 0; dep = dep->next)
+	mixedDebug << "\tSatisfying " << *dep << endl;
+      cerrLock.unlock();
+    }
+    cv_->conditionBroadcast();
+    lock_->unlock();
   }
 }

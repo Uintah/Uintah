@@ -69,6 +69,9 @@ WARNING
     SimpleScheduler& operator=(const SimpleScheduler&);
 
     vector<Task*> tasks;
+
+    virtual void verifyChecksum();
+
   };
 } // End namespace Uintah
    

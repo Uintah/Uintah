@@ -49,6 +49,8 @@ WARNING
     SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport);
     virtual ~SingleProcessorScheduler();
     
+    virtual void compile(const ProcessorGroup* pg, bool init_timestep);
+
     //////////
     // Insert Documentation Here:
     virtual void execute( const ProcessorGroup * pc );
@@ -65,6 +67,8 @@ WARNING
   private:
     SPRelocate reloc;
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
+
+    virtual void verifyChecksum();
   };
 } // End namespace Uintah
    

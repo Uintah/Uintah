@@ -2,10 +2,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Core/Exceptions/ErrnoException.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
@@ -13,6 +9,12 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Exceptions/ErrnoException.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Util/DebugStream.h>
 
 #include <fstream>
 #include <iostream>
@@ -28,23 +30,28 @@ using namespace SCIRun;
 using std::cerr;
 using std::string;
 
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)  From sus.cc:
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
+
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   : UintahParallelComponent(myworld), m_outPort(oport), m_graphDoc(NULL),
     m_nodes(NULL)
 {
-  dw[0]=dw[1]=0;
-  dt=0;
-  emit_taskgraph=false;
+  dws_[ Task::OldDW ] = dws_[ Task::NewDW ] = 0;
+  dts_ = 0;
+  emit_taskgraph = false;
 }
 
 SchedulerCommon::~SchedulerCommon()
 {
-  if(dw[0])
-    delete dw[0];
-  if(dw[1])
-    delete dw[1];
-  if(dt)
-    delete dt;
+  if( dws_[ Task::OldDW ] )
+    delete dws_[ Task::OldDW ];
+  if( dws_[ Task::NewDW ] )
+    delete dws_[ Task::NewDW ];
+  if( dts_ )
+    delete dts_;
   if(memlogfile)
     delete memlogfile;
 }
@@ -132,16 +139,26 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* dt, bool emit_edges)
 		appendElement(edge, "target", name2.str());
     	    	edges.appendChild(edge);
 #else
+		cerrLock.lock();
 		NOT_FINISHED("New task stuff");
+		cerrLock.unlock();
 #endif
 	    }
 	}
     }
     depfile.close();
 #else
-   NOT_FINISHED("new task stuff");
+    cerrLock.lock();
+    NOT_FINISHED("new task stuff");
+    cerrLock.unlock();
 #endif
 
+}
+
+bool
+SchedulerCommon::useInternalDeps()
+{
+  return false;
 }
 
 void
@@ -206,20 +223,6 @@ SchedulerCommon::getLoadBalancer()
 }
 
 void
-SchedulerCommon::compile(const ProcessorGroup* pg, bool init_timestep)
-{
-  if(dt)
-    delete dt;
-  dt = graph.createDetailedTasks(pg);
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  lb->assignResources(*dt, d_myworld);
-  releasePort("load balancer");
-  dt->computeLocalTasks(pg->myrank());
-  dt->createScrublists(init_timestep);
-}
-
-void
 SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 		      const MaterialSet* matls)
 {
@@ -241,23 +244,23 @@ SchedulerCommon::initialize()
 void 
 SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 {
-  if(dw[0])
-    delete dw[0];
-  dw[0]=dw[1];
+  if( dws_[ Task::OldDW ] )
+    delete dws_[ Task::OldDW ];
+  dws_[ Task::OldDW ] = dws_[ Task::NewDW ];
   int generation = d_generation++;
-  dw[1]=scinew OnDemandDataWarehouse(d_myworld, generation, grid);
+  dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, generation, grid);
 }
 
 DataWarehouse*
 SchedulerCommon::get_old_dw()
 {
-  return dw[0];
+  return dws_[Task::OldDW];
 }
 
 DataWarehouse*
 SchedulerCommon::get_new_dw()
 {
-  return dw[1];
+  return dws_[ Task::NewDW ];
 }
 
 void
@@ -272,10 +275,10 @@ SchedulerCommon::logMemoryUse()
     }
   }
   *memlogfile << '\n';
-  if(dw[0])
-    dw[0]->logMemoryUse(*memlogfile, "OldDW");
-  if(dw[1])
-    dw[1]->logMemoryUse(*memlogfile, "NewDW");
+  if( dws_[ Task::OldDW ] )
+    dws_[ Task::OldDW ]->logMemoryUse(*memlogfile, "OldDW");
+  if( dws_[ Task::NewDW ] )
+    dws_[ Task::NewDW ]->logMemoryUse(*memlogfile, "NewDW");
   memlogfile->flush();
 }
 
@@ -300,7 +303,7 @@ void SchedulerCommon::doEmitTaskGraphDocs()
 void SchedulerCommon::scrub(const DetailedTask* task)
 {
   for(const ScrubItem* s=task->getScrublist();s!=0;s=s->next){
-    if(dw[s->dw])
-      dw[s->dw]->scrub(s->var);
+    if(dws_[s->dw])
+      dws_[s->dw]->scrub(s->var);
   }
 }

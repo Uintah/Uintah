@@ -5,10 +5,18 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)  From sus.cc:
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
 
 SimpleLoadBalancer::SimpleLoadBalancer(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
@@ -32,8 +40,15 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
   // If there is only one processor, we need divBy to be 1.
   divBy = max( divBy, 1 );
 
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "Assigning Tasks to Resources!\n";
+    cerrLock.unlock();
+  }
+
   for(int i=0;i<nTasks;i++){
     DetailedTask* task = graph.getTask(i);
+
     const PatchSubset* patches = task->getPatches();
     if(patches && patches->size() > 0){
       const Patch* patch = patches->get(0);
@@ -49,6 +64,14 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
     } else {
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
 	task->assignResource( Parallel::getRootProcessorGroup()->myrank() );
+
+	if( mixedDebug.active() ) {
+	  cerrLock.lock();
+	  mixedDebug << "  Resource (for no patch task) is : " 
+		     << Parallel::getRootProcessorGroup()->myrank() << "\n";
+	  cerrLock.unlock();
+	}
+
       } else if( task->getTask()->getType() == Task::InitialSend){
 	// Already assigned, do nothing
 	ASSERT(task->getAssignedResourceIndex() != -1);
@@ -59,6 +82,12 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
 	task->assignResource(0);
       }
     }
+    if( mixedDebug.active() ) {
+      cerrLock.lock();
+      mixedDebug << "For Task: " << *task << "\n";
+      cerrLock.unlock();
+    }
+
   }
 }
 

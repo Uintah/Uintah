@@ -1,11 +1,16 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
+
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+
 #include <Core/Containers/Array2.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Util/DebugStream.h>
+
 #include <map>
 #include <set>
 
@@ -13,6 +18,11 @@
 
 using namespace std;
 using namespace Uintah;
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)  From sus.cc:
+extern Mutex cerrLock;
+extern DebugStream mixedDebug;
 
 Relocate::Relocate()
 {
@@ -860,9 +870,21 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     }
   }
 
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "total_reloc: " << total_reloc[0] << ", " << total_reloc[1]
+	       << ", " << total_reloc[2] << "\n";
+    cerrLock.unlock();
+  }
+
+#if 0
+this is bad for the MixedScheduler... I think it is ok to
+just remove it... at least for now... as it is only for info
+and debug purposes...
   // Communicate the number of particles to processor zero, and
   // print them out
   int alltotal[3];
+
   MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
 	     pg->getComm());
   if(pg->myrank() == 0){
@@ -870,6 +892,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     if(alltotal[0] != 0)
       cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
   }
+#endif
 
   // Wait to make sure that all of the sends completed
   int numsends = (int)sendrequests.size();
@@ -882,4 +905,6 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
   for(int i=0;i<(int)recvbuffers.size();i++)
     if(recvbuffers[i])
       delete[] recvbuffers[i];
-}
+
+} // end relocateParticles()
+
