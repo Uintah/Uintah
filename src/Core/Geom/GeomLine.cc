@@ -189,8 +189,8 @@ GeomLines::add(const Point& p1, const Point& p2)
 
 
 void
-GeomLines::add(const Point& p1, MaterialHandle c1,
-	       const Point& p2, MaterialHandle c2)
+GeomLines::add(const Point& p1, const MaterialHandle &c1,
+	       const Point& p2, const MaterialHandle &c2)
 {
   add(p1, p2);
 
@@ -225,6 +225,19 @@ GeomLines::add(const Point& p0, double cindex0,
   indices_.push_back(cindex0);
   indices_.push_back(cindex1);
 }
+
+
+void
+GeomLines::add(const Point& p0, const MaterialHandle &c0, double cindex0,
+	       const Point& p1, const MaterialHandle &c1, double cindex1)
+{
+  add(p0, c0, p1, c1);
+  
+  indices_.push_back(cindex0);
+  indices_.push_back(cindex1);
+}
+
+
 
 
 Persistent* make_GeomTranspLines()
