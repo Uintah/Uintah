@@ -15,3 +15,5 @@ lib
 configVars.mk
 createTclIndex
 packmaker
+disjointPackageMakefile
+stamp-defs
