@@ -116,13 +116,15 @@ WARNING
       low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:1);
+      low-= offset;
       hi  = patch->getCellHighIndex();
       hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+      hi += offset;
       // cout<< "fillFace: SFCZVariable.h"<<endl;
-      // cout<< "low: "<<low<<" Low + offset: "<<low + offset<<endl;
-      // cout<< "hi:  "<<hi <<" hi  - offset: "<<hi -offset<<endl;
+      // cout<< "low: "<<low<<endl;
+      // cout<< "hi:  "<<hi <<endl;
 
       switch (face) {
       case Patch::xplus:
@@ -189,13 +191,15 @@ WARNING
       low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:1);
+      low-= offset;
       hi  = patch->getCellHighIndex();
       hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
 		       patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+      hi += offset;
       // cout<< "fillFaceflux: SFCZVariable.h"<<endl;
-      // cout<< "low: "<<low<<" Low + offset: "<<low + offset<<endl;
-      // cout<< "hi:  "<<hi <<" hi  - offset: "<<hi -offset<<endl;     
+      // cout<< "low: "<<low<<endl;
+      // cout<< "hi:  "<<hi <<endl;     
 
       switch (face) {
       case Patch::xplus:
