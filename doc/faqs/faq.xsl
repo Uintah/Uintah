@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <!--
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -15,7 +17,6 @@
   University of Utah. All Rights Reserved.
 -->
 
-<?xml version="1.0"?>
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:param name="dir"/>
