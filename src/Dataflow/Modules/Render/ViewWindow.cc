@@ -941,23 +941,22 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   case MouseMove:
     {
       double scl;
-      double xmtn=last_x-x;
-      double ymtn=last_y-y;
-      xmtn/=30;
-      ymtn/=30;
+      const double xmtn = (last_x-x) * 6.0 / current_renderer->xres;
+      const double ymtn = (y-last_y) * 6.0 / current_renderer->yres;
       last_x = x;
       last_y = y;
-      if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
-      if (scl<0) scl=1/(1-scl); else scl+=1;
+      const double len = sqrt(xmtn * xmtn + ymtn * ymtn);
+      if (Abs(xmtn)>Abs(ymtn)) scl = xmtn; else scl = ymtn;
+      if (scl<0) scl = 1.0 / (1.0 + len); else scl = len + 1.0;
       total_scale*=scl;
 
       View tmpview(view.get());
-      tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
+      tmpview.eyep(tmpview.lookat() + (tmpview.eyep() - tmpview.lookat())*scl);
 
       view.set(tmpview);
       need_redraw=true;
       ostringstream str;
-      str << "scale: " << total_scale*100 << "%";
+      str << "scale: " << 100.0/total_scale << "%";
       update_mode_string(str.str());
     }
     break;
