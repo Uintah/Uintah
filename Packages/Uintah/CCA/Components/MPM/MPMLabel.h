@@ -57,14 +57,12 @@ using std::vector;
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
-      const VarLabel* pTemperatureRateLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pParticleIDLabel;
       const VarLabel* pIsIgnitedLabel; //for burn models
       const VarLabel* pMassRateLabel; //for burn models
 
       const VarLabel* pDeformationMeasureLabel_preReloc;
-      const VarLabel* pCrackRadiusLabel_preReloc;
       const VarLabel* pStressLabel_preReloc;
       const VarLabel* pVolumeLabel_preReloc;
       const VarLabel* pMassLabel_preReloc;
@@ -79,8 +77,6 @@ using std::vector;
       const VarLabel* pToughnessLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
-      const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
-      const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pIsIgnitedLabel_preReloc; //for burn models

@@ -78,9 +78,6 @@ MPMLabel::MPMLabel()
   pTemperatureGradientLabel = scinew VarLabel( "p.temperatureGradient",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pTemperatureRateLabel  = scinew VarLabel( "p.temperatureRate",
-			ParticleVariable<double>::getTypeDescription() );
-
   pExternalHeatRateLabel = scinew VarLabel( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -121,9 +118,6 @@ MPMLabel::MPMLabel()
   pStressLabel_preReloc = scinew VarLabel( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
   
-  pCrackRadiusLabel_preReloc = scinew VarLabel( "p.CrackRadius+",
-			ParticleVariable<double>::getTypeDescription());
-  
   pVolumeLabel_preReloc = scinew VarLabel( "p.volume+",
 			ParticleVariable<double>::getTypeDescription());
   
@@ -136,18 +130,13 @@ MPMLabel::MPMLabel()
   pExternalForceLabel_preReloc = scinew VarLabel( "p.externalforce+",
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pXLabel_preReloc = scinew VarLabel( "p.x+", ParticleVariable<Point>::getTypeDescription(),
+  pXLabel_preReloc = scinew VarLabel( "p.x+",
+			ParticleVariable<Point>::getTypeDescription(),
 			VarLabel::PositionVariable);
   
   pTemperatureLabel_preReloc = scinew VarLabel( "p.temperature+",
 			ParticleVariable<double>::getTypeDescription() );
   
-  pTemperatureGradientLabel_preReloc = scinew VarLabel( "p.temperatureGradient+",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  pTemperatureRateLabel_preReloc  = scinew VarLabel( "p.temperatureRate+",
-			ParticleVariable<double>::getTypeDescription() );
-
   pExternalHeatRateLabel_preReloc = scinew VarLabel( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -169,7 +158,7 @@ MPMLabel::MPMLabel()
   pToughnessLabel_preReloc = scinew VarLabel( "p.toughness+",
 			ParticleVariable<double>::getTypeDescription() );
 
-  pEnergyReleaseRateLabel_preReloc = scinew VarLabel( "p.energyReleaseRateLabel+",
+  pEnergyReleaseRateLabel_preReloc =scinew VarLabel("p.energyReleaseRateLabel+",
 			ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
@@ -321,7 +310,6 @@ MPMLabel::~MPMLabel()
   delete pXLabel;
   delete pTemperatureLabel;
   delete pTemperatureGradientLabel;
-  delete pTemperatureRateLabel;
   delete pExternalHeatRateLabel;
   delete pSurfLabel;
   delete pIsBrokenLabel;
@@ -334,9 +322,9 @@ MPMLabel::~MPMLabel()
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
   delete pPressureLabel;
+  delete pCrackRadiusLabel;
   
   delete pDeformationMeasureLabel_preReloc;
-  delete pCrackRadiusLabel_preReloc;
   delete pStressLabel_preReloc;
   delete pVolumeLabel_preReloc;
   delete pMassLabel_preReloc;
@@ -344,8 +332,6 @@ MPMLabel::~MPMLabel()
   delete pExternalForceLabel_preReloc;
   delete pXLabel_preReloc;
   delete pTemperatureLabel_preReloc;
-  delete pTemperatureGradientLabel_preReloc;
-  delete pTemperatureRateLabel_preReloc;
   delete pExternalHeatRateLabel_preReloc;
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
