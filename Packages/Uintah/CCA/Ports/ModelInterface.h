@@ -2,10 +2,11 @@
 #define UINTAH_HOMEBREW_ModelInterface_H
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
@@ -38,26 +39,28 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
+  using namespace std;
   class DataWarehouse;
   class Material;
   class ProcessorGroup;
   class VarLabel;
   class ModelSetup {
   public:
+    virtual void registerTransportedVariable(const MaterialSubset* matls,
+					     VarLabel* var) = 0;
   };
   class ModelInfo {
   public:
     ModelInfo(const VarLabel* delt, 
-             const VarLabel* mass_source,
+	      const VarLabel* mass_source,
 	      const VarLabel* momentum_source, 
-             const VarLabel* energy_source,
-             const VarLabel* sp_vol_source,
+	      const VarLabel* energy_source,
+	      const VarLabel* sp_vol_source,
 	      const VarLabel* density, 
-             const VarLabel* velocity,
+	      const VarLabel* velocity,
 	      const VarLabel* temperature, 
-             const VarLabel* pressure,
-             const VarLabel* specificVol)
+	      const VarLabel* pressure,
+	      const VarLabel* specificVol)
       : delT_Label(delt), 
         mass_source_CCLabel(mass_source),
         momentum_source_CCLabel(momentum_source),
@@ -95,12 +98,14 @@ WARNING
      //////////
      // Insert Documentation Here:
      virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			       ModelSetup& setup) = 0;
+			       ModelSetup* setup) = 0;
       
      //////////
      // Insert Documentation Here:
-     virtual void scheduleInitialize(const LevelP& level,
-				     SchedulerP&) = 0;
+     virtual void scheduleInitialize(SchedulerP&,
+				     const LevelP& level,
+				     const ModelInfo*) = 0;
+
      //////////
      // Insert Documentation Here:
      virtual void restartInitialize() {}
