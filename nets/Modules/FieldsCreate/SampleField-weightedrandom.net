@@ -1,4 +1,4 @@
-# SCI Network v1.22
+# SCI Network 1.22.0
 
 #
 # The contents of this file are subject to the University of Utah Public
@@ -15,19 +15,6 @@
 # The Original Source Code was developed by the University of Utah.
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
-
-set results [sourceSettingsFile]
-
-if { $results == "failed" } {
-    ::netedit scheduleok
-    return
-} else {
-    set DATADIR [lindex $results 0]
-    set DATASET [lindex $results 1]
-}
-
-source $DATADIR/$DATASET/$DATASET.settings
-
 global notes
 set notes ""
 
@@ -50,28 +37,28 @@ set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 63 383]
 # Create a SCIRun->FieldsData->DirectInterpolate Module
 set m5 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 64 275]
 
-# Create a SCIRun->FieldsData->TransformScalarData Module
-set m6 [addModuleAtPosition "SCIRun" "FieldsData" "TransformScalarData" 170 91]
-
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 353 287]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 353 287]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 407 166]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 407 166]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 198 95]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m5 0]
-set c2 [addConnection $m1 0 $m6 0]
+set c2 [addConnection $m1 0 $m8 0]
 set c3 [addConnection $m5 0 $m4 0]
-set c4 [addConnection $m6 0 $m2 0]
-set c5 [addConnection $m8 0 $m7 0]
+set c4 [addConnection $m8 0 $m2 0]
+set c5 [addConnection $m7 0 $m6 0]
 set c6 [addConnection $m4 0 $m3 0]
-set c7 [addConnection $m1 0 $m7 1]
+set c7 [addConnection $m1 0 $m6 1]
 set c8 [addConnection $m2 0 $m5 1]
-set c9 [addConnection $m7 0 $m4 1]
+set c9 [addConnection $m6 0 $m4 1]
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
-setGlobal $m1-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
+setGlobal $m1-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
 
 # Setup GUI for the SCIRun->FieldsCreate->SampleField Module
 setGlobal $m2-endpoints {1}
@@ -190,18 +177,16 @@ setGlobal $m4-show_progress {}
 
 # Setup GUI for the SCIRun->FieldsData->DirectInterpolate Module
 
-# Setup GUI for the SCIRun->FieldsData->TransformScalarData Module
-setGlobal $m6-function {x*x}
-setGlobal $m6-imin {-5.2531499999999998}
-setGlobal $m6-imax {4.3192599999999999}
-$m6 initialize_ui
-
 # Setup GUI for the SCIRun->Visualization->RescaleColorMap Module
-setGlobal $m7-min {-5.2531499999999998}
-setGlobal $m7-max {4.3192599999999999}
+setGlobal $m6-min {-5.2531499999999998}
+setGlobal $m6-max {4.3192599999999999}
 
 # Setup GUI for the SCIRun->Visualization->GenStandardColorMaps Module
-setGlobal $m8-resolution {255}
-setGlobal $m8-realres {255}
+setGlobal $m7-resolution {255}
+setGlobal $m7-realres {255}
+
+# Setup GUI for the SCIRun->FieldsData->TransformData Module
+setGlobal $m8-function {result = v * v;
+}
 
 ::netedit scheduleok
