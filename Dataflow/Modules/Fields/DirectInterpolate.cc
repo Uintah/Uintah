@@ -111,10 +111,10 @@ DirectInterpolate::execute()
     const TypeDescription *fsrc = sfieldhandle->get_type_description();
     const TypeDescription *fdst = dfieldhandle->get_type_description();
     const TypeDescription *ldst = dfieldhandle->data_at_type_description();
-    CompileInfo *ci =
+    CompileInfoHandle ci =
       DirectInterpScalarAlgoBase::get_compile_info(fsrc, fdst, ldst);
     Handle<DirectInterpScalarAlgoBase> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
     ofieldhandle = algo->execute(dfieldhandle->mesh(),
 				 dfieldhandle->data_at(),
 				 sfi,
@@ -127,10 +127,10 @@ DirectInterpolate::execute()
     const TypeDescription *fsrc = sfieldhandle->get_type_description();
     const TypeDescription *fdst = dfieldhandle->get_type_description();
     const TypeDescription *ldst = dfieldhandle->data_at_type_description();
-    CompileInfo *ci =
+    CompileInfoHandle ci =
       DirectInterpVectorAlgoBase::get_compile_info(fsrc, fdst, ldst);
     Handle<DirectInterpVectorAlgoBase> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
     ofieldhandle = algo->execute(dfieldhandle->mesh(),
 				 dfieldhandle->data_at(),
 				 vfi,
@@ -143,10 +143,10 @@ DirectInterpolate::execute()
     const TypeDescription *fsrc = sfieldhandle->get_type_description();
     const TypeDescription *fdst = dfieldhandle->get_type_description();
     const TypeDescription *ldst = dfieldhandle->data_at_type_description();
-    CompileInfo *ci =
+    CompileInfoHandle ci =
       DirectInterpTensorAlgoBase::get_compile_info(fsrc, fdst, ldst);
     Handle<DirectInterpTensorAlgoBase> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     ofieldhandle = algo->execute(dfieldhandle->mesh(),
 				 dfieldhandle->data_at(),
@@ -173,7 +173,7 @@ DirectInterpolate::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *fsrc,
 					     const TypeDescription *fdst,
 					     const TypeDescription *loc_td)
@@ -203,7 +203,7 @@ DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *fsrc,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *fsrc,
 					     const TypeDescription *fdst,
 					     const TypeDescription *loc_td)
@@ -233,7 +233,7 @@ DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *fsrc,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 DirectInterpTensorAlgoBase::get_compile_info(const TypeDescription *fsrc,
 					     const TypeDescription *fdst,
 					     const TypeDescription *loc_td)

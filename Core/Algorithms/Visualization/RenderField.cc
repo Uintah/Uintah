@@ -37,7 +37,7 @@ RenderFieldBase::RenderFieldBase() :
 RenderFieldBase::~RenderFieldBase()
 {}
 
-CompileInfo *
+CompileInfoHandle
 RenderFieldBase::get_compile_info(const TypeDescription *ftd,
 				  const TypeDescription *ltd)
 {

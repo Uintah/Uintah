@@ -226,10 +226,10 @@ GenDistanceField::execute()
 	warning("Skeleton models must be scalar fields, skipping.");
 	continue;
       }
-      CompileInfo *ci =	GenDistanceFieldAlgo::
+      CompileInfoHandle ci = GenDistanceFieldAlgo::
 	get_compile_info(skel_handle->get_type_description());
       Handle<GenDistanceFieldAlgo> algo;
-      if (!module_dynamic_compile(*ci, algo)) return;
+      if (!module_dynamic_compile(ci, algo)) return;
 
 #if 0
       if (!did_once_p) { dfieldhandle.detach(); }
@@ -301,7 +301,7 @@ GenDistanceFieldAlgo::distance_to_line2(const Point &p,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 GenDistanceFieldAlgo::get_compile_info(const TypeDescription *fsrc)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__

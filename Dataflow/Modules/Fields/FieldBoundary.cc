@@ -103,9 +103,9 @@ FieldBoundary::execute()
     MeshHandle mesh = input->mesh();
 
     const TypeDescription *mtd = mesh->get_type_description();
-    CompileInfo *ci = FieldBoundaryAlgo::get_compile_info(mtd);
+    CompileInfoHandle ci = FieldBoundaryAlgo::get_compile_info(mtd);
     Handle<FieldBoundaryAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     algo->execute(this, mesh, tri_fh_, interp_fh_);
   }
@@ -133,7 +133,7 @@ FieldBoundaryAlgoAux::determine_tri_order(const Point p[3],
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 FieldBoundaryAlgo::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -155,7 +155,7 @@ FieldBoundaryAlgo::get_compile_info(const TypeDescription *mesh_td)
 }
 
 
-CompileInfo *
+CompileInfoHandle
 FieldBoundaryAlgoAux::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

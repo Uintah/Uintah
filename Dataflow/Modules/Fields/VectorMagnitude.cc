@@ -95,13 +95,13 @@ VectorMagnitude::execute()
 
 #ifdef __sgi
     const TypeDescription *ttd = fieldin->get_type_description(-1);
-    CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd, ttd);
+    CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(ftd, ttd);
 #else
-    CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd);
+    CompileInfoHandle ci = VectorMagnitudeAlgo::get_compile_info(ftd);
 #endif
 
     Handle<VectorMagnitudeAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     fieldout_ = algo->execute(fieldin);
   }
@@ -121,7 +121,7 @@ VectorMagnitude::execute()
 }
 
 
-CompileInfo *
+CompileInfoHandle
 #ifdef __sgi
 VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd,
 				      const TypeDescription *ttd)

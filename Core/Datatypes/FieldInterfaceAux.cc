@@ -36,7 +36,7 @@
 
 namespace SCIRun {
 
-CompileInfo *
+CompileInfoHandle
 ScalarFieldInterfaceMaker::get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd)
 {
@@ -61,7 +61,7 @@ ScalarFieldInterfaceMaker::get_compile_info(const TypeDescription *ftd,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 VectorFieldInterfaceMaker::get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd)
 {
@@ -86,7 +86,7 @@ VectorFieldInterfaceMaker::get_compile_info(const TypeDescription *ftd,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 TensorFieldInterfaceMaker::get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd)
 {

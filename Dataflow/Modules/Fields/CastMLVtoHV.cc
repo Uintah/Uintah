@@ -110,10 +110,10 @@ void CastMLVtoHV::execute()
     break;
   }
 
-  CompileInfo *ci =
+  CompileInfoHandle ci =
     CastMLVtoHVAlgo::get_compile_info(fsrc_td, lsrc_td, ldst_td);
   Handle<CastMLVtoHVAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   ofieldH_ = algo->execute(ifieldH, ifieldH->data_at());
 
@@ -122,7 +122,7 @@ void CastMLVtoHV::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 CastMLVtoHVAlgo::get_compile_info(const TypeDescription *fsrc_td,
 				  const TypeDescription *lsrc_td,
 				  const TypeDescription *ldst_td)

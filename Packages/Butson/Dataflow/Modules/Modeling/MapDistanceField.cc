@@ -103,14 +103,14 @@ MapDistanceField::execute()
     return;
   }
 
-  CompileInfo *ci =
+  CompileInfoHandle ci =
     MapDistanceFieldAlgo::get_compile_info(fsrc_h->get_type_description(),
 					   fsrc_h->data_at_type_description(),
 					   fdst_h->mesh()->get_type_description(),
 					   fdst_h->data_at_type_description(),
 					   fdst_h->get_type_description());
   Handle<MapDistanceFieldAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   pair<FieldHandle, FieldHandle> result;
   result = algo->execute(fsrc_h, fdst_h->mesh(), fdst_h->data_at());
@@ -144,7 +144,7 @@ MapDistanceFieldAlgo::distance_to_line2(const Point &p,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 MapDistanceFieldAlgo::get_compile_info(const TypeDescription *fsrc,
 				       const TypeDescription *lsrc,
 				       const TypeDescription *mdst,

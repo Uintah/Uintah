@@ -371,10 +371,10 @@ ChangeFieldBounds::execute()
 
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
-  CompileInfo *ci = ChangeFieldBoundsAlgoCreate::get_compile_info
+  CompileInfoHandle ci = ChangeFieldBoundsAlgoCreate::get_compile_info
     (fsrc_td, fh->get_type_description()->get_name());
   Handle<ChangeFieldBoundsAlgoCreate> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   gui->execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
@@ -386,10 +386,10 @@ ChangeFieldBounds::execute()
   if (both_scalar_p || same_value_type_p)
   {
     const TypeDescription *fdst_td = ef->get_type_description();
-    CompileInfo *ci =
+    CompileInfoHandle ci =
       ChangeFieldBoundsAlgoCopy::get_compile_info(fsrc_td, fdst_td);
     Handle<ChangeFieldBoundsAlgoCopy> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     gui->execute(id + " set_state Executing 0");
     algo->execute(fh, ef, scale, translate);
@@ -453,7 +453,7 @@ void ChangeFieldBounds::widget_moved(bool last)
 }
 
 
-CompileInfo *
+CompileInfoHandle
 ChangeFieldBoundsAlgoCreate::get_compile_info(const TypeDescription *field_td,
 					      const string &fdstname)
 {
@@ -477,7 +477,7 @@ ChangeFieldBoundsAlgoCreate::get_compile_info(const TypeDescription *field_td,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 ChangeFieldBoundsAlgoCopy::get_compile_info(const TypeDescription *fsrctd,
 					    const TypeDescription *fdsttd)
 {

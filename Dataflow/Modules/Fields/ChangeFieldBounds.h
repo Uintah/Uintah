@@ -40,8 +40,8 @@ public:
 			      bool &same_value_type_p) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const string &fdstname);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const string &fdstname);
 };
 
 
@@ -88,8 +88,8 @@ public:
 		       double scale, double translate) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *fdst);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *fdst);
 };
 
 

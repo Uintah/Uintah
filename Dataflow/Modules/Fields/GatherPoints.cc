@@ -80,9 +80,9 @@ GatherPoints::execute()
     FieldHandle field;
     if (ifield->get(field)) {
       const TypeDescription *meshtd = field->mesh()->get_type_description();
-      CompileInfo *ci = GatherPointsAlgo::get_compile_info(meshtd);
+      CompileInfoHandle ci = GatherPointsAlgo::get_compile_info(meshtd);
       Handle<GatherPointsAlgo> algo;
-      if (!module_dynamic_compile(*ci, algo)) return;
+      if (!module_dynamic_compile(ci, algo)) return;
       algo->execute(field->mesh(), pcmH);
     }
     ++pi;
@@ -91,7 +91,7 @@ GatherPoints::execute()
   ofld->send(FieldHandle(pcH));
 }
 
-CompileInfo *
+CompileInfoHandle
 GatherPointsAlgo::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

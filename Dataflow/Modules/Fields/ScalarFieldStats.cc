@@ -103,16 +103,16 @@ ScalarFieldStats::execute()
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
-  CompileInfo *ci = ScalarFieldStatsAlgo::get_compile_info(ftd, ltd);
+  CompileInfoHandle ci = ScalarFieldStatsAlgo::get_compile_info(ftd, ltd);
   Handle<ScalarFieldStatsAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   algo->execute(ifieldhandle, this);
 }
 
 
 
-CompileInfo *
+CompileInfoHandle
 ScalarFieldStatsAlgo::get_compile_info(const TypeDescription *field_td,
 				     const TypeDescription *loc_td)
 {

@@ -264,9 +264,9 @@ void Plot2DViewer::trueExecute( unsigned int port, unsigned int slice )
     const TypeDescription *ftd = fHandle->get_type_description(0);
     const TypeDescription *ttd = fHandle->get_type_description(1);
 
-    CompileInfo *ci = Plot2DViewerAlgo::get_compile_info(ftd,ttd);
+    CompileInfoHandle ci = Plot2DViewerAlgo::get_compile_info(ftd,ttd);
     Handle<Plot2DViewerAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     algo->execute(fHandle, slice, this);
   }
@@ -367,7 +367,7 @@ void Plot2DViewer::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-CompileInfo *
+CompileInfoHandle
 Plot2DViewerAlgo::get_compile_info(const TypeDescription *ftd,
 				   const TypeDescription *ttd)
 {

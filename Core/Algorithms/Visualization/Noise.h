@@ -50,7 +50,7 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
-  static CompileInfo *get_compile_info(const TypeDescription *td);
+  static CompileInfoHandle get_compile_info(const TypeDescription *td);
 
   FieldHandle trisurf_;
   FieldHandle get_field();

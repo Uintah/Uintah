@@ -153,10 +153,10 @@ AttractNormals::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  CompileInfo *ci =
+  CompileInfoHandle ci =
     AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, scale_p);
   Handle<AttractNormalsAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
 
@@ -203,7 +203,7 @@ LineAttractor::execute(Vector &v, const Point &p)
 
 
 
-CompileInfo *
+CompileInfoHandle
 AttractNormalsAlgo::get_compile_info(const TypeDescription *fsrc_td,
 				     const TypeDescription *floc_td,
 				     const TypeDescription *msrc_td,

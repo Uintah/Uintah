@@ -98,12 +98,12 @@ ApplyInterpolant::execute()
     return;
   }
 
-  CompileInfo *ci =
+  CompileInfoHandle ci =
     ApplyInterpAlgo::get_compile_info(fsrc_h->get_type_description(),
 				      fitp_h->get_type_description(),
 				      fitp_h->data_at_type_description());
   Handle<ApplyInterpAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   ofp = (FieldOPort *)getOPort("Output");
   if (!ofp) {
@@ -121,7 +121,7 @@ ApplyInterpolant::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 ApplyInterpAlgo::get_compile_info(const TypeDescription *fsrc,
 				  const TypeDescription *fitp,
 				  const TypeDescription *litp)

@@ -20,6 +20,7 @@
 #if ! defined(Disclosure_DynamicLoader_h)
 #define Disclosure_DynamicLoader_h
 
+#include <Core/Containers/Handle.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
@@ -51,7 +52,13 @@ public:
   string             base_class_name_;
   string             template_class_name_;
   string             template_arg_;
+
+  int       ref_cnt;
 };
+
+typedef Handle<CompileInfo> CompileInfoHandle;
+
+
 
 //! A type that maker functions can create, and DynamicLoader can store.
 //! All algorithms that support the dynamic loading concept must 

@@ -73,9 +73,9 @@ void TetVol2QuadraticTetVol::execute()
     return;
   }
   const TypeDescription *td = fld_handle->get_type_description();
-  CompileInfo *ci = ConvertTetBase::get_compile_info(td);
+  CompileInfoHandle ci = ConvertTetBase::get_compile_info(td);
   Handle<ConvertTetBase> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;  
+  if (!module_dynamic_compile(ci, algo)) return;  
 
   FieldHandle ofld_handle = algo->convert_quadratic(fld_handle);
 

@@ -32,7 +32,7 @@ public:
   virtual Point execute(MeshHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
 };
 
 
@@ -65,8 +65,8 @@ public:
   virtual void execute(FieldHandle fld, vector<Point> &pts, vector<double> &vals) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fld_td,
-				       const TypeDescription *loc_td);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fld_td,
+					    const TypeDescription *loc_td);
 };
 
 

@@ -111,9 +111,9 @@ Unstructure::execute()
     else
     {
       const TypeDescription *ftd = ifieldhandle->get_type_description();
-      CompileInfo *ci = UnstructureAlgo::get_compile_info(ftd, dstname);
+      CompileInfoHandle ci = UnstructureAlgo::get_compile_info(ftd, dstname);
       Handle<UnstructureAlgo> algo;
-      if (!module_dynamic_compile(*ci, algo)) return;
+      if (!module_dynamic_compile(ci, algo)) return;
 
       ofieldhandle_ = algo->execute(this, ifieldhandle);
 
@@ -136,7 +136,7 @@ Unstructure::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 UnstructureAlgo::get_compile_info(const TypeDescription *fsrc,
 				  const string &partial_fdst)
 {

@@ -142,11 +142,11 @@ ChangeFieldDataType::execute()
 
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
-  CompileInfo *ci =
+  CompileInfoHandle ci =
     ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td,
 						    outputtypename_.get());
   Handle<ChangeFieldDataTypeAlgoCreate> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   gui->execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
@@ -159,10 +159,10 @@ ChangeFieldDataType::execute()
   if (both_scalar_p || same_value_type_p)
   {
     const TypeDescription *fdst_td = ef->get_type_description();
-    CompileInfo *ci =
+    CompileInfoHandle ci =
       ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
     Handle<ChangeFieldDataTypeAlgoCopy> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     gui->execute(id + " set_state Executing 0");
     algo->execute(fh, ef);
@@ -188,7 +188,7 @@ ChangeFieldDataType::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-CompileInfo *
+CompileInfoHandle
 ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *field_td,
 				    const string &fdstname)
 {
@@ -212,7 +212,7 @@ ChangeFieldDataTypeAlgoCreate::get_compile_info(const TypeDescription *field_td,
 }
 
 
-CompileInfo *
+CompileInfoHandle
 ChangeFieldDataTypeAlgoCopy::get_compile_info(const TypeDescription *fsrctd,
 				    const TypeDescription *fdsttd)
 {

@@ -110,9 +110,9 @@ void FusionSlicePlot::execute(){
     const TypeDescription *ftd = fHandle->get_type_description(0);
     const TypeDescription *ttd = fHandle->get_type_description(1);
 
-    CompileInfo *ci = FusionSlicePlotAlgo::get_compile_info(ftd, ttd);
+    CompileInfoHandle ci = FusionSlicePlotAlgo::get_compile_info(ftd, ttd);
     Handle<FusionSlicePlotAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     fHandle_ = algo->execute(fHandle, scale_);
 
@@ -137,7 +137,7 @@ void FusionSlicePlot::execute(){
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 FusionSlicePlotAlgo::get_compile_info(const TypeDescription *ftd,
 				      const TypeDescription *ttd)
 {

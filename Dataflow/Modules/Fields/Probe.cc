@@ -264,9 +264,9 @@ Probe::execute()
   else if (moveto != "")
   {
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-    CompileInfo *ci = ProbeCenterAlgo::get_compile_info(mtd);
+    CompileInfoHandle ci = ProbeCenterAlgo::get_compile_info(mtd);
     Handle<ProbeCenterAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     if (moveto == "node")
     {
@@ -323,9 +323,9 @@ Probe::execute()
   FieldHandle ofield;
 
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  CompileInfo *ci = ProbeLocateAlgo::get_compile_info(mtd);
+  CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(mtd);
   Handle<ProbeLocateAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   string nodestr, edgestr, facestr, cellstr;
   algo->execute(ifieldhandle->mesh(), location,
@@ -430,7 +430,7 @@ Probe::widget_moved(bool last)
 
 
 
-CompileInfo *
+CompileInfoHandle
 ProbeLocateAlgo::get_compile_info(const TypeDescription *msrc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -452,7 +452,7 @@ ProbeLocateAlgo::get_compile_info(const TypeDescription *msrc)
 }
 
 
-CompileInfo *
+CompileInfoHandle
 ProbeCenterAlgo::get_compile_info(const TypeDescription *msrc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

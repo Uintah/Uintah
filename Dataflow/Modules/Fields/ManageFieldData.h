@@ -38,9 +38,9 @@ public:
   virtual MatrixHandle execute(FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *lsrc,
-				       int svt_flag);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *lsrc,
+					    int svt_flag);
 };
 
 
@@ -167,9 +167,9 @@ public:
 			      MeshHandle src, MatrixHandle mat) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc,
-				       const TypeDescription *fsrc,
-				       int svt_flag);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc,
+					    const TypeDescription *fsrc,
+					    int svt_flag);
 };
 
 

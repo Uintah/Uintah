@@ -151,10 +151,10 @@ ChangeFieldDataAt::execute()
 
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
-  CompileInfo *ci = ChangeFieldDataAtAlgoCreate::get_compile_info
+  CompileInfoHandle ci = ChangeFieldDataAtAlgoCreate::get_compile_info
     (fsrc_td, fh->get_type_description()->get_name());
   Handle<ChangeFieldDataAtAlgoCreate> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   gui->execute(id + " set_state Executing 0");
   bool same_value_type_p = false;
@@ -165,7 +165,7 @@ ChangeFieldDataAt::execute()
 
     
 
-CompileInfo *
+CompileInfoHandle
 ChangeFieldDataAtAlgoCreate::get_compile_info(const TypeDescription *field_td,
 					      const string &fdstname)
 {

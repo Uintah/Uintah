@@ -38,8 +38,8 @@ public:
 			      int axis) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *ftd,
-				       const TypeDescription *ttd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    const TypeDescription *ttd);
 };
 
 

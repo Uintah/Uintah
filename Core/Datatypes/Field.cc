@@ -59,11 +59,11 @@ Field::query_scalar_interface(ModuleReporter *m)
 {
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
-  CompileInfo *ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
+  CompileInfoHandle ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<ScalarFieldInterfaceMaker> algo(0);
   if (m)
   {
-    if(!m->module_maybe_dynamic_compile(*ci, algo))
+    if(!m->module_maybe_dynamic_compile(ci, algo))
     {
       return 0;
     }
@@ -71,7 +71,7 @@ Field::query_scalar_interface(ModuleReporter *m)
   else
   {
     DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
+    if (! DynamicLoader::scirun_loader().maybe_get(*(ci.get_rep()), algo_handle))
     {
       return 0;
     }
@@ -90,11 +90,11 @@ Field::query_vector_interface(ModuleReporter *m)
 {
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
-  CompileInfo *ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
+  CompileInfoHandle ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<VectorFieldInterfaceMaker> algo(0);
   if (m)
   {
-    if(!m->module_maybe_dynamic_compile(*ci, algo))
+    if(!m->module_maybe_dynamic_compile(ci, algo))
     {
       return 0;
     }
@@ -102,7 +102,7 @@ Field::query_vector_interface(ModuleReporter *m)
   else
   {
     DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
+    if (! DynamicLoader::scirun_loader().maybe_get(*(ci.get_rep()), algo_handle))
     {
       return 0;
     }
@@ -121,11 +121,11 @@ Field::query_tensor_interface(ModuleReporter *m)
 {
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
-  CompileInfo *ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);
+  CompileInfoHandle ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<TensorFieldInterfaceMaker> algo(0);
   if (m)
   {
-    if(!m->module_maybe_dynamic_compile(*ci, algo))
+    if(!m->module_maybe_dynamic_compile(ci, algo))
     {
       return 0;
     }
@@ -133,7 +133,7 @@ Field::query_tensor_interface(ModuleReporter *m)
   else
   {
     DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().maybe_get(*ci, algo_handle))
+    if (! DynamicLoader::scirun_loader().maybe_get(*(ci.get_rep()), algo_handle))
     {
       return 0;
     }
