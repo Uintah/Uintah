@@ -30,8 +30,8 @@ enum { GuageW_ConstLine, GuageW_ConstDist };
 enum { GuageW_SphereL, GuageW_SphereR, GuageW_Cylinder, GuageW_SliderCyl };
 enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_HighMatl };
 
-GuageWidget::GuageWidget( Module* module )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls)
+GuageWidget::GuageWidget( Module* module, double widget_scale )
+: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale)
 {
    const Real INIT = 100.0;
    variables[GuageW_PointL] = new Variable("PntL", Scheme1, Point(0, 0, 0));
@@ -84,7 +84,7 @@ GuageWidget::GuageWidget( Module* module )
    }
 
    widget = new GeomGroup;
-   for (geom = 0; geom <= NumGeoms; geom++) {
+   for (geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
    widget->set_pick(new GeomPick(module));
@@ -119,7 +119,7 @@ GuageWidget::execute()
 
    Vector v(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
    v.normalize();
-   for (Index geom = 0; geom <= NumGeoms; geom++) {
+   for (Index geom = 0; geom < NumGeoms; geom++) {
       geometries[geom]->get_pick()->set_principal(v);
    }
 }

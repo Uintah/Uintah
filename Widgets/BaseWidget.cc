@@ -16,15 +16,16 @@
 
 
 BaseWidget::BaseWidget( Module* module,
-		       const Index NumVariables,
-		       const Index NumConstraints,
-		       const Index NumGeometries,
-		       const Index NumMaterials )
+			const Index NumVariables,
+			const Index NumConstraints,
+			const Index NumGeometries,
+			const Index NumMaterials,
+			const double widget_scale )
 : NumVariables(NumVariables), NumConstraints(NumConstraints),
   NumGeometries(NumGeometries), NumMaterials(NumMaterials),
   constraints(NumConstraints), variables(NumVariables),
   geometries(NumGeometries), materials(NumMaterials),
-  module(module)
+  module(module), widget_scale(widget_scale)
 {
 }
 

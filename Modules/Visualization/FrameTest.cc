@@ -18,6 +18,7 @@
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
 #include <Widgets/FrameWidget.h>
+#include <TCL/TCLvar.h>
 
 #include <iostream.h>
 
@@ -28,7 +29,7 @@ class FrameTest : public Module {
 private:
     int init;
     int widget_id;
-    double widget_scale;
+    TCLdouble widget_scale;
 
     FrameWidget* widget;
 
@@ -53,13 +54,13 @@ static RegisterModule db2("Visualization", "FrameTest", make_FrameTest);
 static clString widget_name("FrameTest Widget");
 
 FrameTest::FrameTest(const clString& id)
-: Module("FrameTest", id, Source)
+: Module("FrameTest", id, Source), widget_scale("widget_scale", id, this)
 {
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-    widget=new FrameWidget(this);
+    widget=new FrameWidget(this, .1);
     init = 1;
 
 #ifdef OLDUI
@@ -71,7 +72,8 @@ FrameTest::FrameTest(const clString& id)
 }
 
 FrameTest::FrameTest(const FrameTest& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep),
+  widget_scale("widget_scale", id, this)
 {
     NOT_FINISHED("FrameTest::FrameTest");
 }
@@ -92,7 +94,7 @@ void FrameTest::execute()
         widget_id=ogeom->addObj(widget->GetWidget(), widget_name);
     }
     abort_flag=0;
-    widget->SetScale(100.0);
+    widget->SetScale(widget_scale.get());
     widget->execute();
 }
 

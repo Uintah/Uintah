@@ -39,8 +39,8 @@ enum { CubeW_SphereIUL, CubeW_SphereIUR, CubeW_SphereIDR, CubeW_SphereIDL,
        CubeW_CylOU, CubeW_CylOR, CubeW_CylOD, CubeW_CylOL };
 enum { CubeW_PointMatl, CubeW_EdgeMatl, CubeW_HighMatl };
 
-CubeWidget::CubeWidget( Module* module )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls)
+CubeWidget::CubeWidget( Module* module, double widget_scale )
+: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale)
 {
    const Real INIT = 100.0;
    variables[CubeW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
@@ -263,7 +263,7 @@ CubeWidget::CubeWidget( Module* module )
    }
 
    widget=new GeomGroup;
-   for (geom = 0; geom <= NumGeoms; geom++) {
+   for (geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
    widget->set_pick(new GeomPick(module));
@@ -343,7 +343,7 @@ CubeWidget::execute()
    spvec1.normalize();
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom <= NumGeoms; geom++) {
+   for (Index geom = 0; geom < NumGeoms; geom++) {
       geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
    }
 }

@@ -32,10 +32,10 @@ enum { FrameW_SphereUL, FrameW_SphereUR, FrameW_SphereDR, FrameW_SphereDL,
        FrameW_CylU, FrameW_CylR, FrameW_CylD, FrameW_CylL };
 enum { FrameW_PointMatl, FrameW_EdgeMatl, FrameW_HighMatl };
 
-FrameWidget::FrameWidget( Module* module )
-: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls)
+FrameWidget::FrameWidget( Module* module, double widget_scale )
+: BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, widget_scale*0.1)
 {
-   const Real INIT = 100.0;
+   Real INIT = 1.0*widget_scale;
    variables[FrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[FrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
    variables[FrameW_PointDR] = new Variable("PntDR", Scheme1, Point(INIT, INIT, 0));
@@ -117,7 +117,7 @@ FrameWidget::FrameWidget( Module* module )
    }
    for (geom = FrameW_CylU; geom <= FrameW_CylL; geom++) {
       geometries[geom] = new GeomCylinder;
-      GeomPick* p=new GeomPick(module);
+      GeomPick* p = new GeomPick(module);
       p->set_highlight(materials[FrameW_HighMatl]);
       p->set_cbdata((void*)geom);
       geometries[geom]->set_pick(p);
@@ -125,7 +125,7 @@ FrameWidget::FrameWidget( Module* module )
    }
 
    widget = new GeomGroup;
-   for (geom = 0; geom <= NumGeoms; geom++) {
+   for (geom = 0; geom < NumGeoms; geom++) {
       widget->add(geometries[geom]);
    }
    widget->set_pick(new GeomPick(module));
@@ -147,6 +147,8 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::execute()
 {
+   cerr << "widget_scale=" << widget_scale << endl;
+   
    ((GeomSphere*)geometries[FrameW_SphereUL])->move(variables[FrameW_PointUL]->Get(),
 						    1*widget_scale);
    ((GeomSphere*)geometries[FrameW_SphereUR])->move(variables[FrameW_PointUR]->Get(),
@@ -173,7 +175,7 @@ FrameWidget::execute()
    spvec1.normalize();
    spvec2.normalize();
    Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom <= NumGeoms; geom++) {
+   for (Index geom = 0; geom < NumGeoms; geom++) {
       geometries[geom]->get_pick()->set_principal(spvec1, spvec2, v);
    }
 }
