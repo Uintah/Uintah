@@ -17,6 +17,7 @@ OPENGLSRCS =
 OBJS = BitVisualize.o  BoxClipSField.o BoundGrid.o \
 	CuttingPlane.o FastRender.o    \
 	GenAxes.o GenColorMap.o  GenFieldEdges.o GenTransferFunc.o  \
+	GenStandardColorMaps.o \
 	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o IsoSurfaceMRSG.o \
 	OctIsoSurface.o   CuttingPlaneTex.o  \
 	RescaleColorMap.o  Streamline.o  VectorSeg.o  VolVis.o   \
@@ -25,7 +26,9 @@ OBJS = BitVisualize.o  BoxClipSField.o BoundGrid.o \
 SRCS = BB.cc RenderRG.cc  BitVisualize.cc BoxClipSField.cc BoundGrid.cc \
 	CuttingPlane.cc FastRender.c    \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
-	Hedgehog.cc IsoMask.cc  IsoSurface.cc IsoSurfaceSP.cc IsoSurfaceMRSG.cc\
+	GenStandardColorMaps.cc \
+	Hedgehog.cc IsoMask.cc  IsoSurface.cc IsoSurfaceSP.cc \
+	IsoSurfaceMRSG.cc\
 	 OctIsoSurface.cc   CuttingPlaneTex.cc \
 	RescaleColorMap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
 	WidgetTest.cc ImageViewer.cc Ted.cc AddWells.cc FieldCage.cc \
