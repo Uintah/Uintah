@@ -104,6 +104,9 @@ template <> ScalarFieldInterface *
 TetVol<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+TetVol<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 TetVol<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*

@@ -144,6 +144,9 @@ template <> ScalarFieldInterface *
 TriSurf<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+TriSurf<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 TriSurf<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
