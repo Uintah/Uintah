@@ -1,36 +1,32 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE filter SYSTEM "sci_filter.dtd">
 <filter name="DiscreteGaussianImageFilter">
   <include href="ITK/itk_DiscreteGaussianImageFilter.xml"/>
   <include href="Dataflow/Modules/Filters/XML/gui_DiscreteGuassianImageFilter_Yarden.xml"/>
 
-<filter-sci name="DiscreteGaussianImageFilter">
-  <package>Insight</package>
-
-  <category>Filters</category>
-
-  <instantiations>
-    <instance num="1">
-    <type name="InputImageType">
-      <value>itk::Image&lt;float, 2&gt;</value>
-    </type>
-    <type name="OutputImageType">
-      <value>itk::Image&lt;float, 2&gt;</value>
-    </type>
-    </instance>
-    <instance num="2">
-    <type name="InputImageType">
-      <value>itk::Image&lt;float, 3&gt;</value>
-    </type>
-    <type name="OutputImageType">
-      <value>itk::Image&lt;float, 3&gt;</value>
-    </type>
-    </instance>
-  </instantiations>
-
-  <includes>
-    <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
-  </includes>
-
-</filter-sci>
-
+  <filter-sci name="DiscreteGaussianImageFilter">
+    <package>Insight</package>
+    <category>Filters</category>
+    <instantiations>
+      <instance num="1">
+      <type name="InputImageType">
+        <value>itk::Image&lt;float, 2&gt;</value>
+      </type>
+      <type name="OutputImageType">
+        <value>itk::Image&lt;float, 2&gt;</value>
+      </type>
+      </instance>
+      <instance num="2">
+      <type name="InputImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      <type name="OutputImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      </instance>
+    </instantiations>
+    <includes>
+      <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
+    </includes>
+  </filter-sci>
 </filter>

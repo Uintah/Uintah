@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE filter SYSTEM "sci_filter.dtd">
-<filter name="CannySegmentationLevelSetImageFilter">
-  <include href="ITK/itk_CannySegmentationLevelSetImageFilter.xml"/>
-  <include href="Dataflow/Modules/Filters/XML/gui_CannySegmentationLevelSetImageFilter_Darby.xml"/>
+<filter name="ThresholdSegmentationLevelSetImageFilter">
+  <include href="ITK/itk_ThresholdSegmentationLevelSetImageFilter.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_ThresholdSegmentationLevelSetImageFilter_Darby.xml"/>
 
-<filter-sci name="CannySegmentationLevelSetImageFilter">
+<filter-sci name="ThresholdSegmentationLevelSetImageFilter">
   <package>Insight</package>
 
   <category>Filters</category>
 
   <instantiations>
     <instance num="1">
-      <type name="SeedImageType">
+      <type name="ImageType">
         <value>itk::Image&lt;float, 2&gt;</value>
       </type>
       <type name="FeatureImageType">
         <value>itk::Image&lt;float, 2&gt;</value>
-      </type>
-      <type name="OutputPixelType">
-        <value>float</value>
       </type>
      </instance>
   </instantiations>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-gui SYSTEM "gui_filter.dtd">
 <filter-gui name="Darby-CannySegmentationLevelSetImageFilterGui">
   <parameters>
     <param name="iterations">
@@ -31,16 +33,18 @@
       <default>1.0</default>
     </param>
     <param name="curvature_scaling">
-      <gui>text-entry</gui>
-      <default>1.0</default>
-    </param>
-    <param name="isovalue">
       <gui>radiobutton</gui>
       <values>
       <val>0.0</val>
       <val>0.5</val>
       <val>1.0</val>
       </values>
+      <default>1.0</default>
+    </param>
+    <param name="isovalue">
+      <gui>scrollbar</gui>
+      <min>0</min>
+      <max>255</max>
       <default>0.5</default>
     </param>
   </parameters>

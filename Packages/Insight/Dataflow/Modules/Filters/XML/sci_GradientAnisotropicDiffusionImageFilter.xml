@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE filter SYSTEM "sci_filter.dtd">
 <filter name="GradientAnisotropicDiffusionImageFilter">
    <include href="ITK/itk_GradientAnisotropicDiffusionImageFilter.xml"/>
    <include href="Dataflow/Modules/Filters/XML/gui_GradientAnisotropicDiffusionImageFilter_Darby.xml"/>
@@ -7,7 +8,7 @@
       <category>Filters</category>
       <instantiations use-defaults="yes"/>
      <includes>
-        <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
+        <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
      </includes>
   </filter-sci>
 </filter>
