@@ -4,6 +4,11 @@
 #include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 
+#include <Uintah/Components/MPM/Contact/Contact.h>
+#include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
+#include <Uintah/Components/MPM/Fracture/Fracture.h>
+#include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
+
 namespace Uintah {
 
 namespace MPM {
@@ -58,6 +63,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/06/22 22:59:28  tan
+// Moved heat conduction physical parameters (thermalConductivity, specificHeat,
+// and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
+//
 // Revision 1.1  2000/06/22 21:21:52  tan
 // MPMPhysicalModules class is created to handle all the physical modules
 // in MPM, currently those physical submodules include HeatConduction,
