@@ -268,7 +268,7 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
       if (removeOldDir)
 	 restartFromDir.forceRemove();
    }
-   else {
+   else if (d_writeMeta) {
      // just add <restart from = ".." timestep = ".."> tag.
      copySection(restartFromDir, "restarts");
      string iname = d_dir.getName()+"/index.xml";
