@@ -539,24 +539,25 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
                   this, &MPMICE::HEChemistry);
   
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
-  
+  Ghost::GhostType  gac = Ghost::AroundCells;  
+  Ghost::GhostType  gn  = Ghost::None;
+  const MaterialSubset* one_matl = press_matl;
   //__________________________________
   // Products
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,     prod_matls, Ghost::None);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, prod_matls, Ghost::None);
+  t->requires(Task::OldDW,  Ilb->temp_CCLabel,        prod_matls, gn);
+  t->requires(Task::NewDW,  Ilb->vol_frac_CCLabel,    prod_matls, gn);
   if (prod_matls->size() > 0){
-    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, 
-                                                  press_matl, Ghost::None);
+    t->requires(Task::NewDW,Ilb->press_equil_CCLabel, press_matl, gn);
+    t->requires(Task::OldDW,MIlb->NC_CCweightLabel,   one_matl,   gac, 1);                                                
   }
   
   //__________________________________
   // Reactants
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matls, Ghost::None);
-  t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matls, Ghost::None);
-  t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, Ghost::None);
-  t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, Ghost::None);
-  t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls,
-                                                       Ghost::AroundCells,1);
+  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matls, gn);
+  t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matls, gn);
+  t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, gn);
+  t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, gn);
+  t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls, gac,1);
   t->requires(Task::OldDW, Mlb->doMechLabel);
 
   t->computes(MIlb->burnedMassCCLabel);
@@ -1735,6 +1736,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     StaticArray<CCVariable<double> > int_eng_react(numALLMatls); 
     StaticArray<CCVariable<Vector> > mom_comb(numALLMatls);
     
+    constNCVariable<double> NC_CCweight;
     constCCVariable<double> gasPressure;
     constCCVariable<double> gasTemperature;
     constCCVariable<double> gasVolumeFraction;
@@ -1759,8 +1761,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     int prod_indx = -1;
     delt_vartype doMech;
     old_dw->get(doMech, Mlb->doMechLabel);
-    Ghost::GhostType  gn = Ghost::None;    
-   
+    Ghost::GhostType  gn  = Ghost::None;    
+    Ghost::GhostType  gac = Ghost::AroundCells;   
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -1790,10 +1792,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       // 1 product matl
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
         prod_indx = ice_matl->getDWIndex();
-        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,   
-                                                0,      patch,gn,0);
-        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,    
-                                                        prod_indx,patch,gn,0);
+        new_dw->get(gasPressure,    Ilb->press_equil_CCLabel,0,  patch,gn,0);
+        old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel, 0,  patch,gac,1);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx,patch,gn,0);
         new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
                                                         prod_indx,patch,gn,0);
         new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,  
@@ -1813,16 +1814,11 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       // Pull out reactant data
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
         int react_indx = mpm_matl->getDWIndex();  
-        new_dw->get(solidTemperature,    MIlb->temp_CCLabel,  
-                                      react_indx, patch, Ghost::None,0);
-        new_dw->get(solidMass,           MIlb->cMassLabel,    
-                                      react_indx, patch, Ghost::None,0);
-        new_dw->get(sp_vol_CC,            Ilb->sp_vol_CCLabel,
-                                      react_indx, patch, Ghost::None,0);
-        new_dw->get(vel_CC,               MIlb->vel_CCLabel,  
-                                      react_indx, patch, Ghost::None,0); 
-        new_dw->get(NCsolidMass,          Mlb->gMassLabel,    
-                                      react_indx, patch, Ghost::AroundCells, 1);
+        new_dw->get(solidTemperature,MIlb->temp_CCLabel, react_indx,patch,gn,0);
+        new_dw->get(solidMass,       MIlb->cMassLabel,   react_indx,patch,gn,0);
+        new_dw->get(sp_vol_CC,       Ilb->sp_vol_CCLabel,react_indx,patch,gn,0);     
+        new_dw->get(vel_CC,          MIlb->vel_CCLabel,  react_indx,patch,gn,0);      
+        new_dw->get(NCsolidMass,     Mlb->gMassLabel,    react_indx,patch,gac,1);     
       }
     }
     
@@ -1847,14 +1843,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
          
          patch->findNodesFromCell(*iter,nodeIdx);
          
-         double MaxMass = NCsolidMass[nodeIdx[0]];
-         double MinMass = NCsolidMass[nodeIdx[0]];
-         for (int nodeNumber=0; nodeNumber<8; nodeNumber++) {
-           if (NCsolidMass[nodeIdx[nodeNumber]]>MaxMass) {
-             MaxMass = NCsolidMass[nodeIdx[nodeNumber]];
+         double MaxMass = NC_CCweight[nodeIdx[0]]*NCsolidMass[nodeIdx[0]];
+         double MinMass = NC_CCweight[nodeIdx[0]]*NCsolidMass[nodeIdx[0]];
+         for (int nN=0; nN<8; nN++) {
+           if (NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]>MaxMass) {
+             MaxMass = NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]];
            }
-           if (NCsolidMass[nodeIdx[nodeNumber]]<MinMass) {
-             MinMass = NCsolidMass[nodeIdx[nodeNumber]];
+           if (NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]<MinMass) {
+             MinMass = NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]];
            }
          }         
 
