@@ -22,7 +22,7 @@
 
 catch {rename TensorFieldExtractor ""}
 
-itcl_class Packages/Uintah_Visualization_TensorFieldExtractor { 
+itcl_class Uintah_Visualization_TensorFieldExtractor { 
     inherit Module 
 
     protected sVarList ""

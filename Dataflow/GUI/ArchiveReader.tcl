@@ -1,4 +1,4 @@
-itcl_class Packages/Uintah_Readers_ArchiveReader { 
+itcl_class Uintah_Readers_ArchiveReader { 
 
     inherit Module 
     
