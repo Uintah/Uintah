@@ -63,12 +63,12 @@ public:
   bool get_tuple_indecies(vector<string> &elems) const;
   bool get_tuple_index_info(int tmin, int tmax, int &min, int &max) const;
   string concat_tuple_types() const;
+  bool verify_tuple_label(const string &s, vector<string> &elems) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 private:
-  bool verify_tuple_label(const string &s, vector<string> &elems) const;
   bool in_name_set(const string &s) const;
   bool in_type_set(const string &s) const;
 
