@@ -75,33 +75,32 @@ itcl_class Fusion_Fields_NIMRODNrrdConverter {
 	toplevel $w
 
 	frame $w.wrap
-	label $w.wrap.l -text "Wrap"   -width 4 -anchor w -just left
+	label $w.wrap.l -text "Wrap Axis" -width 9 -anchor w -just left
 
 	pack $w.wrap.l -side left
 
 	global $this-ndims
 
 	for {set i 0} {$i < 3} {incr i 1} {
+
 	    if { $i == 0 } {
 		set index i
+		set axis R
 	    } elseif { $i == 1 } {
 		set index j
+		set axis Z
 	    } elseif { $i == 2 } {
 		set index k
+		set axis Phi
 	    }
 
 	    global $this-$index-wrap
 
 	    frame $w.wrap.$index
 
-	    label $w.wrap.$index.l -text " $index :" -width 3 -anchor w -just left
-
-#	    pack $w.$index.l -side left
-
+	    label $w.wrap.$index.l -text "$axis :" -width 4 -anchor w
 
 	    checkbutton $w.wrap.$index.wrap -variable $this-$index-wrap 
-#		    -state $wrap -disabledforeground "" \
-#		    -command "$this wrap $index"
 
 	    pack $w.wrap.$index.l $w.wrap.$index.wrap -side left
 	}
@@ -119,7 +118,7 @@ itcl_class Fusion_Fields_NIMRODNrrdConverter {
 	pack $w.wrap -side top -pady 5
 
 	frame $w.grid
-	label $w.grid.l -text "Grid: (Execute to show list)" -width 30 -just left
+	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
 
 	pack $w.grid.l  -side left
 	pack $w.grid -side top
