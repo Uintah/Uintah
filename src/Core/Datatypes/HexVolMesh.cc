@@ -508,18 +508,19 @@ HexVolMesh::get_center(Point &p, Node::index_type idx) const
   get_point(p, idx);
 }
 
+
 void
-HexVolMesh::get_center(Point &p, Edge::index_type idx) const
+HexVolMesh::get_center(Point &result, Edge::index_type idx) const
 {
-  const double s = 1./2.;
   Node::array_type arr;
   get_nodes(arr, idx);
-  Point p1;
-  get_point(p, arr[0]);
-  get_point(p1, arr[1]);
+  Point p0, p1;
+  get_center(p0, arr[0]);
+  get_center(p1, arr[1]);
 
-  p = ((Vector(p) + Vector(p1)) * s).asPoint();
+  result = (p0.asVector() + p1.asVector() * 0.5).asPoint();
 }
+
 
 void
 HexVolMesh::get_center(Point &p, Face::index_type idx) const
@@ -574,23 +575,17 @@ HexVolMesh::locate(Node::index_type &loc, const Point &p)
   if (locate(ci, p)) { // first try the fast way.
     Node::array_type nodes;
     get_nodes(nodes, ci);
-
-    double d0 = distance2(p, points_[nodes[0]]);
-    double d = d0;
+    
+    double dmin = distance2(p, points_[nodes[0]]);
     loc = nodes[0];
-    double d1 = distance2(p, points_[nodes[1]]);
-    if (d1 < d) {
-      d = d1;
-      loc = nodes[1];
-    }
-    double d2 = distance2(p, points_[nodes[2]]);
-    if (d2 < d) {
-      d = d2;
-      loc = nodes[2];
-    }
-    double d3 = distance2(p, points_[nodes[3]]);
-    if (d3 < d)  {
-       loc = nodes[3];
+    for (unsigned int i = 1; i < nodes.size(); i++)
+    {
+      const double d = distance2(p, points_[nodes[i]]);
+      if (d < dmin)
+      {
+	dmin = d;
+	loc = nodes[i];
+      }
     }
     return true;
   }
