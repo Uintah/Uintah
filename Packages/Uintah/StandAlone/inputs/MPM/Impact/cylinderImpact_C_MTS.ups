@@ -75,13 +75,13 @@
       </material>
       <material>
         <burn type = "null" />
-        <include href="inputs/MPM/MaterialData/MaterialConstAnnCopper.xml"/>
+        <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
         <constitutive_model type="hyperelastic_plastic">
           <tolerance>5.0e-10</tolerance>
-          <include href="inputs/MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
-          <include href="inputs/MPM/MaterialData/MTSPlasticAnnCopper.xml"/>
-          <include href="inputs/MPM/MaterialData/JohnsonCookDamageAnnCopper.xml"/>
-          <include href="inputs/MPM/MaterialData/DefaultHyperEOS.xml"/>
+          <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
+          <include href="../MaterialData/MTSPlasticAnnCopper.xml"/>
+          <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
+          <include href="../MaterialData/DefaultHyperEOS.xml"/>
         </constitutive_model>
         <geom_object>
           <cylinder label = "Cylinder">
