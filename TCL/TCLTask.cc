@@ -24,10 +24,14 @@ extern "C" int tkMain(int argc, char** argv, void (*)(void*), void*);
 extern Tcl_Interp* the_interp;
 typedef void (Tcl_LockProc)();
 extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+typedef int (IsTclThreadProc)();
+extern "C" void Tcl_SetIsTclThread(IsTclThreadProc* proc);
+
 
 static Mutex* tlock=0;
 static Task* owner;
 static int lock_count;
+static Task* tcl_task_id;
 
 static void do_lock()
 {
@@ -57,6 +61,11 @@ static void do_unlock()
     }
 }
 
+static int is_tcl_thread()
+{
+  return Task::self() == tcl_task_id;
+}
+
 static int x_error_handler(Display* dpy, XErrorEvent* error)
 {
     char msg[200];
@@ -80,9 +89,12 @@ TCLTask::TCLTask(int argc, char* argv[])
     // track down errors.  We need core dumps!
     XSetErrorHandler(x_error_handler);
 
+    tcl_task_id=this;
+
     if(!tlock)
 	tlock=scinew Mutex;
     Tcl_SetLock(do_lock, do_unlock);
+    Tcl_SetIsTclThread(is_tcl_thread);
 }
 
 TCLTask::~TCLTask()
