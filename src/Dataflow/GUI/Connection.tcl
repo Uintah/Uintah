@@ -583,14 +583,14 @@ proc insertModuleOnConnectionMenu { conn menu } {
 	    $menu add command -label [lindex $path 0] -state disabled
 	}
 
+	set submenu $menu.menu_[join [lrange $path 0 1] _]
 	if { ![string equal [lindex $path 1] [lindex $last 1]] } {
-	    $menu add cascade -label "  [lindex $path 1]" \
-		-menu $menu.menu_[lindex $path 1]
-	    menu $menu.menu_[lindex $path 1] -tearoff false
+	    menu $submenu -tearoff false
+	    $menu add cascade -label "  [lindex $path 1]" -menu $submenu
 	}
 
 	if { ![string equal [lindex $path 2] [lindex $last 2]] } {
-	    $menu.menu_[lindex $path 1] add command -label [lindex $path 2] \
+	    $submenu add command -label [lindex $path 2] \
 		-command "insertModuleOnConnection \{$conn\} $path"
 	}
     }
