@@ -23,6 +23,7 @@ class LinAlgUnary : public Module {
   GuiString function_;
   void insertion_sort(double *x, int n);
   void subtract_mean(double *x, int n);
+  void normalize(double *x, int n);
 public:
   LinAlgUnary(GuiContext* ctx);
   virtual ~LinAlgUnary();
@@ -60,6 +61,19 @@ void LinAlgUnary::subtract_mean(double *x, int n) {
   }
 }
 
+void LinAlgUnary::normalize(double *x, int n) {
+  double min =  1.0e36;
+  double max = -1.0e36;
+  for (int i=0; i<n; i++) {
+    if( min > x[i] ) min = x[i];
+    else if( max < x[i] ) max = x[i];
+  }
+  double mult = 1.0 / (max-min);
+  for (int i=0; i<n; i++) {
+    x[i] = (x[i]-min) * mult;
+  }
+}
+
 void LinAlgUnary::execute() {
   MatrixIPort* imat_ = (MatrixIPort *)get_iport("Input");
   MatrixOPort* omat_ = (MatrixOPort *)get_oport("Output");
@@ -83,33 +97,40 @@ void LinAlgUnary::execute() {
   }
 
   string op = op_.get();
+
+  MatrixHandle m;
+
   if (op == "Transpose") {
-    Matrix *m = mh->transpose();
-    omat_->send(MatrixHandle(m));
+    Matrix *mat = mh->transpose();
+    m = mat;
   } else if (op == "Sort") {
-    MatrixHandle m = mh->clone();
+    m = mh->clone();
     double *x = &((*(m.get_rep()))[0][0]);
     int n = m->nrows()*m->ncols();
     insertion_sort(x, n);
-    omat_->send(MatrixHandle(m));
   } else if (op == "Subtract_Mean") {
-    MatrixHandle m = mh->clone();
+    m = mh->clone();
     double *x = &((*(m.get_rep()))[0][0]);
     int n = m->nrows()*m->ncols();
     subtract_mean(x, n);
-    omat_->send(MatrixHandle(m));
+  } else if (op == "Normalize") {
+    m = mh->clone();
+    double *x = &((*(m.get_rep()))[0][0]);
+    int n = m->nrows()*m->ncols();
+    normalize(x, n);
   } else if (op == "Function") {
     Function *f = new Function(1);
     fnparsestring(function_.get().c_str(), &f);
-    MatrixHandle m = mh->clone();
+    m = mh->clone();
     double *x = &((*(m.get_rep()))[0][0]);
     int n = m->nrows()*m->ncols();
     for (int i=0; i<n; i++)
       x[i]=f->eval(&(x[i]));
-    omat_->send(MatrixHandle(m));
   } else {
     warning("Don't know operation "+op);
     return;
   }
+
+  omat_->send(MatrixHandle(m));
 }
 } // End namespace SCIRun
