@@ -82,8 +82,8 @@ extern int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
 				  Tcl_Interp *interp, int argc, char **argv));
 extern int BevelCmd _ANSI_ARGS_((ClientData clientData,
 				 Tcl_Interp *interp, int argc, char **argv));
-/* extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData, */
-/* 	Tcl_Interp *interp, int argc, char **argv)); */
+extern int Tk_RangeObjCmd _ANSI_ARGS_((ClientData clientData, 
+				    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])); 
 extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
 				     Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
@@ -309,8 +309,10 @@ Tcl_AppInit(interp)
   printf("bevel widget, ");
   Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
 		    (void (*)(PARAMETERTYPE)) NULL);
-  /*     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp), */
-  /*                       (void (*)(PARAMETERTYPE)) NULL); */
+  fflush(stdout);
+  printf("range widget, ");
+  Tcl_CreateObjCommand(interp, "range", (Tcl_ObjCmdProc *)Tk_RangeObjCmd,
+            (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
   fflush(stdout);
   printf("cursor, ");
   Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
