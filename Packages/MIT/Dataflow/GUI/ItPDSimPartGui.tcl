@@ -22,31 +22,56 @@ class ItPDSimPartGui {
 
     variable w
     variable n
+    variable len
 
     constructor {} {
 	set n 0
+	set len 0
     }
 
     method ui { window } {
+	global $this-df
+	global $this-mean
 
-	puts "ItPDSimPartGui UI"
+	set $this-df 3
+	set $this-mean ""
+
 	set w $window
 
         iwidgets::entryfield $w.df -labeltext "df:" \
+	    -textvariable $this-df  \
+	    -width 4 \
 	    -command "$this-c df \[$w.df get\]" 
 
-#-validate numeric 
+	frame $w.mean
+	label $w.mean.label -text "Mean: "
+	pack $w.mean.label -side left
 
 	frame $w.children
 
-	pack $w.df  -anchor w
+	pack $w.df $w.mean -anchor w
 	pack $w.children
 
     }
 
-    method set-df { df } {
-	if { [$w.df get] != $df } {
-	    $w.df set $df
+    method set-df { v } {
+	global $this-df
+	if { [set $this-df] != $v } {
+	    set $this-df $v
+	}
+    }
+
+    method set-mean { args } {
+	set l [llength $args]
+	if { $l != $len } {
+	    for {set i $len} {$i < $l} {incr i} {
+		entry $w.mean.$i -textvariable $this-mean$i -width 6 
+		bind $w.mean.$i <Return>  "$this-c mean $i \[$w.mean.$i get \]"
+		pack $w.mean.$i -side left
+	    }
+	}
+	for {set i 0} {$i < $l} {incr i} {
+	    set $this-mean$i [lindex $args $i]
 	}
     }
 
