@@ -19,6 +19,7 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/NotFinished.h>
 
 #include <iomanip>
 #include <errno.h>
@@ -136,7 +137,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 	    tmpout << test_string.str();
 	 }
 	 int outlen = (int)(test_string.str().length()+tmpname.length()+2);
-	 char* outbuf = new char[outlen];
+	 char* outbuf = scinew char[outlen];
 	 strcpy(outbuf, test_string.str().c_str());
 	 strcpy(outbuf+test_string.str().length()+1, tmpname.c_str());
 	 MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
@@ -146,13 +147,13 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       } else {
 	 int inlen;
 	 MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
-	 char* inbuf = new char[inlen];
+	 char* inbuf = scinew char[inlen];
 	 MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
 	 char* test_string = inbuf;
 	 char* tmpname = test_string+strlen(test_string)+1;
 	 ifstream tmpin(tmpname);
 	 if(tmpin){
-	    char* in = new char[strlen(test_string)+1];
+	    char* in = scinew char[strlen(test_string)+1];
 	    tmpin.read(in, (int)strlen(test_string));
 	    in[strlen(test_string)]=0;
 	    if(strcmp(test_string, in) != 0){
@@ -383,303 +384,301 @@ void DataArchiver::createIndexXML(Dir& dir)
 }
 
 void DataArchiver::finalizeTimestep(double time, double delt,
-				    const LevelP& level, SchedulerP& sched,
-				    DataWarehouseP& new_dw)
+				    const LevelP& level, SchedulerP& sched)
 {
-   if (!d_wereSavesAndCheckpointsInitialized &&
-       !(delt == 0) /* skip the initialization timestep for this
-		       because it needs all computes to be set
-		       to find the save labels */) {
+  if (!d_wereSavesAndCheckpointsInitialized &&
+      !(delt == 0) /* skip the initialization timestep for this
+		      because it needs all computes to be set
+		      to find the save labels */) {
 
-      // This assumes that the TaskGraph doesn't change after the second
-      // timestep and will need to change if the TaskGraph becomes dynamic. 
-      d_wereSavesAndCheckpointsInitialized = true;
+    // This assumes that the TaskGraph doesn't change after the second
+    // timestep and will need to change if the TaskGraph becomes dynamic. 
+    d_wereSavesAndCheckpointsInitialized = true;
       
-      if (d_outputInterval != 0.0) {
-	 initSaveLabels(sched);
-	 indexAddGlobals(); /* add saved global (reduction)
-			       variables to index.xml */
-      }
+    if (d_outputInterval != 0.0) {
+      initSaveLabels(sched);
+      indexAddGlobals(); /* add saved global (reduction)
+			    variables to index.xml */
+    }
       
-      if (d_checkpointInterval != 0)
-	 initCheckpoints(sched);
-   }
+    if (d_checkpointInterval != 0)
+      initCheckpoints(sched);
+  }
   
-   if (d_outputInterval != 0.0 && delt != 0) {
-      // Schedule task to dump out reduction variables at every timestep
-      Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
-			    this, &DataArchiver::outputReduction, time);
+  if (d_outputInterval != 0.0 && delt != 0) {
+    // Schedule task to dump out reduction variables at every timestep
+    Task* t = scinew Task("DataArchiver::outputReduction",
+			  this, &DataArchiver::outputReduction, time);
 
-      for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
-	 SaveItem& saveItem = d_saveReductionLabels[i];
-	 const VarLabel* var = saveItem.label;
-	 for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	      matIt != saveItem.matls.end(); matIt++) {     
-	    t->requires(new_dw, var, *matIt) ;
-	 }
-      }
+    for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
+      SaveItem& saveItem = d_saveReductionLabels[i];
+      const VarLabel* var = saveItem.label;
+      MaterialSubset* matls = scinew MaterialSubset();
+      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
+	   matIt != saveItem.matls.end(); matIt++)
+	matls->add(*matIt);
+      t->requires(Task::NewDW, var, matls);
+    }
+    
+    sched->addTask(t, 0, 0);
 
-      sched->addTask(t);
+    dbg << "Created reduction variable output task" << endl;
 
-      dbg << "Created reduction variable output task" << endl;
-
-      if(time >= d_nextOutputTime) {
-	 // output timestep
-	 d_wasOutputTimestep = true;
-	 outputTimestep(d_dir, d_saveLabels, time, delt, level, sched,
-			new_dw, &d_lastTimestepLocation);
-	 d_nextOutputTime+=d_outputInterval;
-      }
-      else
-	 d_wasOutputTimestep = false;
-   }
+    if(time >= d_nextOutputTime) {
+      // output timestep
+      d_wasOutputTimestep = true;
+      outputTimestep(d_dir, d_saveLabels, time, delt, level, sched,
+		     &d_lastTimestepLocation);
+      d_nextOutputTime+=d_outputInterval;
+    }
+    else
+      d_wasOutputTimestep = false;
+  }
    
-   if (d_checkpointInterval != 0 && time >= d_nextCheckpointTime) {
-      // output checkpoint timestep
-      string timestepDir;
-      Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
-			    new_dw, new_dw, this,
-			    &DataArchiver::outputCheckpointReduction,
-			    d_currentTimestep);
+  if (d_checkpointInterval != 0 && time >= d_nextCheckpointTime) {
+    // output checkpoint timestep
+    string timestepDir;
+    Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
+			  this, &DataArchiver::outputCheckpointReduction,
+			  d_currentTimestep);
 
-      for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
-	 SaveItem& saveItem = d_checkpointReductionLabels[i];
-	 const VarLabel* var = saveItem.label;
-	 for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	      matIt != saveItem.matls.end(); matIt++) {     
-	    t->requires(new_dw, var, *matIt) ;
-	 }
-      }
-      sched->addTask(t);
-
-      dbg << "Created checkpoint reduction variable output task" << endl;
-     
-      outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
-		     level, sched, new_dw, &timestepDir,
-		     d_checkpointReductionLabels.size() > 0);
+    for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
+      SaveItem& saveItem = d_checkpointReductionLabels[i];
+      const VarLabel* var = saveItem.label;
+      MaterialSubset* matls = scinew MaterialSubset();
+      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
+	   matIt != saveItem.matls.end(); matIt++)
+	matls->add(*matIt);
+      t->requires(Task::NewDW, var, matls) ;
+    }
+    sched->addTask(t, 0, 0);
+    d_wasCheckpointTimestep=true;
+    
+    dbg << "Created checkpoint reduction variable output task" << endl;
+    
+    outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
+		   level, sched, &timestepDir,
+		   d_checkpointReductionLabels.size() > 0);
+    
+    string iname = d_checkpointsDir.getName()+"/index.xml";
+    DOM_Document index;
+    
+    if (d_writeMeta) {
+      index = loadDocument(iname);
       
-      string iname = d_checkpointsDir.getName()+"/index.xml";
-      DOM_Document index;
-
+      // store a back up in case it dies while writing index.xml
+      string ibackup_name = d_checkpointsDir.getName()+"/index_backup.xml";
+      ofstream index_backup(ibackup_name.c_str());
+      index_backup << index << endl;
+    }
+      
+    d_checkpointTimestepDirs.push_back(timestepDir);
+    if ((int)d_checkpointTimestepDirs.size() > d_checkpointCycle) {
       if (d_writeMeta) {
-	 index = loadDocument(iname);
-	 
-	 // store a back up in case it dies while writing index.xml
-	 string ibackup_name = d_checkpointsDir.getName()+"/index_backup.xml";
-	 ofstream index_backup(ibackup_name.c_str());
-	 index_backup << index << endl;
+	// remove reference to outdated checkpoint directory from the
+	// checkpoint index
+	DOM_Node ts = findNode("timesteps", index.getDocumentElement());
+	DOM_Node removed;
+	do {
+	  removed = ts.removeChild(ts.getFirstChild());
+	} while (removed.getNodeType() != DOM_Node::ELEMENT_NODE);
+	ofstream indexout(iname.c_str());
+	indexout << index << endl;
+	
+	// remove out-dated checkpoint directory
+	Dir expiredDir(d_checkpointTimestepDirs.front());
+	expiredDir.forceRemove();
       }
-      
-      d_checkpointTimestepDirs.push_back(timestepDir);
-      if (d_checkpointTimestepDirs.size() > d_checkpointCycle) {
-	 if (d_writeMeta) {
-            // remove reference to outdated checkpoint directory from the
-            // checkpoint index
-	    DOM_Node ts = findNode("timesteps", index.getDocumentElement());
-	    DOM_Node removed;
-	    do {
-	      removed = ts.removeChild(ts.getFirstChild());
-	    } while (removed.getNodeType() != DOM_Node::ELEMENT_NODE);
-	    ofstream indexout(iname.c_str());
-	    indexout << index << endl;
-	   
-            // remove out-dated checkpoint directory
-            Dir expiredDir(d_checkpointTimestepDirs.front());
-            expiredDir.forceRemove();
-	 }
-	d_checkpointTimestepDirs.pop_front();
-      }
-      
-      d_nextCheckpointTime += d_checkpointInterval;
-   }
-
-   d_currentTimestep++;
+      d_checkpointTimestepDirs.pop_front();
+    }
+    
+    d_nextCheckpointTime += d_checkpointInterval;
+  } else {
+    d_wasCheckpointTimestep=false;
+  }
 }
 
 void DataArchiver::outputTimestep(Dir& baseDir,
 				  vector<DataArchiver::SaveItem>& saveLabels,
 				  double time, double delt,
 				  const LevelP& level, SchedulerP& sched,
-				  DataWarehouseP& new_dw,
 				  string* pTimestepDir /* passed back */,
 				  bool hasGlobals /* = false */)
 {
-   int timestep = d_currentTimestep;
+  int timestep = d_currentTimestep;
   
-   ostringstream tname;
-   tname << "t" << setw(4) << setfill('0') << timestep;
-   *pTimestepDir = baseDir.getName() + "/" + tname.str();
+  ostringstream tname;
+  tname << "t" << setw(4) << setfill('0') << timestep;
+  *pTimestepDir = baseDir.getName() + "/" + tname.str();
 
-   // Create the directory for this timestep, if necessary
-   if(d_writeMeta){
-      Dir tdir;
-      try {
-	 tdir = baseDir.createSubdir(tname.str());
-
-	 DOM_DOMImplementation impl;
-    
-	 DOM_Document doc = impl.createDocument(0,"Uintah_timestep",
-						DOM_DocumentType());
-	 DOM_Element rootElem = doc.getDocumentElement();
-
-	 DOM_Element timeElem = doc.createElement("Time");
-	 rootElem.appendChild(timeElem);
-
-	 appendElement(timeElem, "timestepNumber", timestep);
-	 appendElement(timeElem, "currentTime", time);
-	 appendElement(timeElem, "delt", delt);
-
-	 DOM_Element gridElem = doc.createElement("Grid");
-	 rootElem.appendChild(gridElem);
-
-	 GridP grid = level->getGrid();
-	 int numLevels = grid->numLevels();
-	 appendElement(gridElem, "numLevels", numLevels);
-	 for(int l = 0;l<numLevels;l++){
-	    LevelP level = grid->getLevel(l);
-	    DOM_Element levelElem = doc.createElement("Level");
-	    gridElem.appendChild(levelElem);
-
-	    appendElement(levelElem, "numPatches", level->numPatches());
-	    appendElement(levelElem, "totalCells", level->totalCells());
-	    appendElement(levelElem, "cellspacing", level->dCell());
-	    appendElement(levelElem, "anchor", level->getAnchor());
-	    Level::const_patchIterator iter;
-	    for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
-	       const Patch* patch=*iter;
-	       DOM_Element patchElem = doc.createElement("Patch");
-	       levelElem.appendChild(patchElem);
-	       appendElement(patchElem, "id", patch->getID());
-	       appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
-	       appendElement(patchElem, "highIndex", patch->getCellHighIndex());
-	       Box box = patch->getBox();
-	       appendElement(patchElem, "lower", box.lower());
-	       appendElement(patchElem, "upper", box.upper());
-	       appendElement(patchElem, "totalCells", patch->totalCells());
-	    }
-	 }
-	 DOM_Element dataElem = doc.createElement("Data");
-	 rootElem.appendChild(dataElem);
-	 ostringstream lname;
-	 if (saveLabels.size() > 0) {
-	    lname << "l0"; // Hard coded - steve
-	    for(int i=0;i<d_myworld->size();i++){
-	       ostringstream pname;
-	       pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
-	       DOM_Text leader = doc.createTextNode("\n\t");
-	       dataElem.appendChild(leader);
-	       DOM_Element df = doc.createElement("Datafile");
-	       dataElem.appendChild(df);
-	       df.setAttribute("href", pname.str().c_str());
-	       ostringstream procID;
-	       procID << i;
-	       df.setAttribute("proc", procID.str().c_str());
-	       ostringstream labeltext;
-	       labeltext << "Processor " << i << " of " << d_myworld->size();
-	       DOM_Text label = doc.createTextNode(labeltext.str().c_str());
-	       df.appendChild(label);
-	       DOM_Text trailer = doc.createTextNode("\n");
-	       dataElem.appendChild(trailer);
-	    }
-	 }
-	 
-	 if (hasGlobals) {
-	    DOM_Text leader = doc.createTextNode("\n\t");
-	    dataElem.appendChild(leader);
-	    DOM_Element df = doc.createElement("Datafile");
-	    dataElem.appendChild(df);
-	    df.setAttribute("href", "global.xml");
-	    DOM_Text trailer = doc.createTextNode("\n");
-	    dataElem.appendChild(trailer);
-	 }
-	 
-	 string name = tdir.getName()+"/timestep.xml";
-	 ofstream out(name.c_str());
-	 out << doc << endl;
-	 
-      } catch(ErrnoException& e) {
-	 if(e.getErrno() != EEXIST)
-	    throw;
-	 tdir = baseDir.getSubdir(tname.str());
-      }
+  // Create the directory for this timestep, if necessary
+  if(d_writeMeta){
+    Dir tdir;
+    try {
+      tdir = baseDir.createSubdir(tname.str());
       
-      // Create the directory for this level, if necessary
+      DOM_DOMImplementation impl;
+	 
+      DOM_Document doc = impl.createDocument(0,"Uintah_timestep",
+					     DOM_DocumentType());
+      DOM_Element rootElem = doc.getDocumentElement();
+
+      DOM_Element timeElem = doc.createElement("Time");
+      rootElem.appendChild(timeElem);
+      
+      appendElement(timeElem, "timestepNumber", timestep);
+      appendElement(timeElem, "currentTime", time);
+      appendElement(timeElem, "delt", delt);
+      
+      DOM_Element gridElem = doc.createElement("Grid");
+      rootElem.appendChild(gridElem);
+      
+      GridP grid = level->getGrid();
+      int numLevels = grid->numLevels();
+      appendElement(gridElem, "numLevels", numLevels);
+      for(int l = 0;l<numLevels;l++){
+	LevelP level = grid->getLevel(l);
+	DOM_Element levelElem = doc.createElement("Level");
+	gridElem.appendChild(levelElem);
+	
+	appendElement(levelElem, "numPatches", level->numPatches());
+	appendElement(levelElem, "totalCells", level->totalCells());
+	appendElement(levelElem, "cellspacing", level->dCell());
+	appendElement(levelElem, "anchor", level->getAnchor());
+	Level::const_patchIterator iter;
+	for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
+	  const Patch* patch=*iter;
+	  DOM_Element patchElem = doc.createElement("Patch");
+	  levelElem.appendChild(patchElem);
+	  appendElement(patchElem, "id", patch->getID());
+	  appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
+	  appendElement(patchElem, "highIndex", patch->getCellHighIndex());
+	  Box box = patch->getBox();
+	  appendElement(patchElem, "lower", box.lower());
+	  appendElement(patchElem, "upper", box.upper());
+	  appendElement(patchElem, "totalCells", patch->totalCells());
+	}
+      }
+      DOM_Element dataElem = doc.createElement("Data");
+      rootElem.appendChild(dataElem);
       ostringstream lname;
-      lname << "l0"; // Hard coded - steve
-      Dir ldir;
-      try {
-	 ldir = tdir.createSubdir(lname.str());
-      } catch(ErrnoException& e) {
-	 if(e.getErrno() != EEXIST)
-	    throw;
-	 ldir = tdir.getSubdir(lname.str());
+      if (saveLabels.size() > 0) {
+	lname << "l0"; // Hard coded - steve
+	for(int i=0;i<d_myworld->size();i++){
+	  ostringstream pname;
+	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
+	  DOM_Text leader = doc.createTextNode("\n\t");
+	  dataElem.appendChild(leader);
+	  DOM_Element df = doc.createElement("Datafile");
+	  dataElem.appendChild(df);
+	  df.setAttribute("href", pname.str().c_str());
+	  ostringstream procID;
+	  procID << i;
+	  df.setAttribute("proc", procID.str().c_str());
+	  ostringstream labeltext;
+	  labeltext << "Processor " << i << " of " << d_myworld->size();
+	  DOM_Text label = doc.createTextNode(labeltext.str().c_str());
+	  df.appendChild(label);
+	  DOM_Text trailer = doc.createTextNode("\n");
+	  dataElem.appendChild(trailer);
+	}
       }
+	 
+      if (hasGlobals) {
+	DOM_Text leader = doc.createTextNode("\n\t");
+	dataElem.appendChild(leader);
+	DOM_Element df = doc.createElement("Datafile");
+	dataElem.appendChild(df);
+	df.setAttribute("href", "global.xml");
+	DOM_Text trailer = doc.createTextNode("\n");
+	dataElem.appendChild(trailer);
+      }
+	 
+      string name = tdir.getName()+"/timestep.xml";
+      ofstream out(name.c_str());
+      out << doc << endl;
       
-      // Reference this timestep in index.xml
-      string iname = baseDir.getName()+"/index.xml";
-      DOM_Document indexDoc = loadDocument(iname);
-      DOM_Node ts = findNode("timesteps", indexDoc.getDocumentElement());
-      if(ts == 0){
-	 DOM_Text leader = indexDoc.createTextNode("\n");
-	 indexDoc.getDocumentElement().appendChild(leader);
-	 ts = indexDoc.createElement("timesteps");
-	 indexDoc.getDocumentElement().appendChild(ts);
-      }
-      bool found=false;
-      for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
-	 if(n.getNodeName().equals(DOMString("timestep"))){
-	    int readtimestep;
-	    if(!get(n, readtimestep))
-	       throw InternalError("Error parsing timestep number");
-	    if(readtimestep == timestep){
-	       found=true;
-	       break;
-	    }
-	 }
-      }
-      if(!found){
-	 string timestepindex = tname.str()+"/timestep.xml";      
-	 DOM_Text leader = indexDoc.createTextNode("\n\t");
-	 ts.appendChild(leader);
-	 DOM_Element newElem = indexDoc.createElement("timestep");
-	 ts.appendChild(newElem);
-	 ostringstream value;
-	 value << timestep;
-	 DOM_Text newVal = indexDoc.createTextNode(value.str().c_str());
-	 newElem.appendChild(newVal);
-	 newElem.setAttribute("href", timestepindex.c_str());
-	 DOM_Text trailer = indexDoc.createTextNode("\n");
-	 ts.appendChild(trailer);
-      }
-
-      ofstream indexOut(iname.c_str());
-      indexOut << indexDoc << endl;     
-   }
+    } catch(ErrnoException& e) {
+      if(e.getErrno() != EEXIST)
+	throw;
+      tdir = baseDir.getSubdir(tname.str());
+    }
       
-   // Schedule a bunch o tasks - one for each variable, for each patch
-   // This will need to change for parallel code
-   int n=0;
-   Level::const_patchIterator iter;
-   for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
-      const Patch* patch=*iter;
-      vector< SaveItem >::iterator saveIter;
-      for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
-	  saveIter++) {
-	 ConsecutiveRangeSet::iterator matlIter = (*saveIter).matls.begin();
-	 for ( ; matlIter != (*saveIter).matls.end(); matlIter++) {
-	    Task* t = scinew Task("DataArchiver::output", patch, new_dw,
-				  new_dw, this, &DataArchiver::output,
-				  &baseDir, timestep, (*saveIter).label,
-				  *matlIter);
-	    t->requires(new_dw, (*saveIter).label, *matlIter, patch,
-			Ghost::None);
-	    sched->addTask(t);
-	    n++;
-	 }
+    // Create the directory for this level, if necessary
+    ostringstream lname;
+    lname << "l0"; // Hard coded - steve
+    Dir ldir;
+    try {
+      ldir = tdir.createSubdir(lname.str());
+    } catch(ErrnoException& e) {
+      if(e.getErrno() != EEXIST)
+	throw;
+      ldir = tdir.getSubdir(lname.str());
+    }
+      
+    // Reference this timestep in index.xml
+    string iname = baseDir.getName()+"/index.xml";
+    DOM_Document indexDoc = loadDocument(iname);
+    DOM_Node ts = findNode("timesteps", indexDoc.getDocumentElement());
+    if(ts == 0){
+      DOM_Text leader = indexDoc.createTextNode("\n");
+      indexDoc.getDocumentElement().appendChild(leader);
+      ts = indexDoc.createElement("timesteps");
+      indexDoc.getDocumentElement().appendChild(ts);
+    }
+    bool found=false;
+    for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
+      if(n.getNodeName().equals(DOMString("timestep"))){
+	int readtimestep;
+	if(!get(n, readtimestep))
+	  throw InternalError("Error parsing timestep number");
+	if(readtimestep == timestep){
+	  found=true;
+	  break;
+	}
       }
-   }
+    }
+    if(!found){
+      string timestepindex = tname.str()+"/timestep.xml";      
+      DOM_Text leader = indexDoc.createTextNode("\n\t");
+      ts.appendChild(leader);
+      DOM_Element newElem = indexDoc.createElement("timestep");
+      ts.appendChild(newElem);
+      ostringstream value;
+      value << timestep;
+      DOM_Text newVal = indexDoc.createTextNode(value.str().c_str());
+      newElem.appendChild(newVal);
+      newElem.setAttribute("href", timestepindex.c_str());
+      DOM_Text trailer = indexDoc.createTextNode("\n");
+      ts.appendChild(trailer);
+    }
+    
+    ofstream indexOut(iname.c_str());
+    indexOut << indexDoc << endl;     
+  }
+      
+  // Schedule a bunch o tasks - one for each variable, for each patch
+  // This will need to change for parallel code
+  int n=0;
+  vector< SaveItem >::iterator saveIter;
+  const PatchSet* patches = level->eachPatch();
+  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
+      saveIter++) {
+    ConsecutiveRangeSet::iterator matlIter = (*saveIter).matls.begin();
+    MaterialSet* matls = scinew MaterialSet();
+    vector<int> ms;
+    for ( ; matlIter != (*saveIter).matls.end(); matlIter++)
+      ms.push_back(*matlIter);
+    matls->addAll(ms);
+    Task* t = scinew Task("DataArchiver::output", 
+			  this, &DataArchiver::output,
+			  &baseDir, timestep, (*saveIter).label);
+    t->requires(Task::NewDW, (*saveIter).label, Ghost::None);
+    sched->addTask(t, patches, matls);
+    n++;
+  }
    
-   dbg << "Created " << n << " output tasks\n";
+  dbg << "Created " << n << " output tasks\n";
 }
 
 DOM_Document loadDocument(string xmlName)
@@ -747,8 +746,8 @@ void DataArchiver::indexAddGlobals()
 }
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
-				   DataWarehouseP& /*old_dw*/,
-				   DataWarehouseP& new_dw,
+				   DataWarehouse* /*old_dw*/,
+				   DataWarehouse* new_dw,
 				   double time)
 {
    // Dump the stuff in the reduction saveset into files in the uda
@@ -758,7 +757,12 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
       const VarLabel* var = saveItem.label;
       for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
 	   matIt != saveItem.matls.end(); matIt++) {
+#if 0
          int matlIndex = *matIt;
+#else
+	 int matlIndex = -1;
+	 NOT_FINISHED("outputReduction matlIndex");
+#endif
          ostringstream filename;
          filename << d_dir.getName() << "/" << var->getName();
          if (matlIndex < 0)
@@ -779,216 +783,244 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 }
 
 void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw,
+					     DataWarehouse* old_dw,
+					     DataWarehouse* new_dw,
 					     int timestep)
 {
-   // Dump the stuff in the reduction saveset into files in the uda
+  // Dump the stuff in the reduction saveset into files in the uda
 
-   for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
-      SaveItem& saveItem = d_checkpointReductionLabels[i];
-      const VarLabel* var = saveItem.label;
-      for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
-	   matIt != saveItem.matls.end(); matIt++) {
-         int matlIndex = *matIt;
-	 output(world, NULL, old_dw, new_dw, &d_checkpointsDir, timestep,
-		var, matlIndex);
-      }
-   }
+  for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
+    SaveItem& saveItem = d_checkpointReductionLabels[i];
+    const VarLabel* var = saveItem.label;
+    MaterialSubset* matls = scinew MaterialSubset(0);
+    for (ConsecutiveRangeSet::iterator matIt = saveItem.matls.begin();
+	 matIt != saveItem.matls.end(); matIt++)
+      matls->add(*matIt);
+    PatchSubset* patches = scinew PatchSubset(0);
+    patches->add(0);
+    output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, timestep,
+	   var);
+    delete matls;
+    delete patches;
+  }
 }
 
 void DataArchiver::output(const ProcessorGroup*,
-			  const Patch* patch,
-			  DataWarehouseP& /*old_dw*/,
-			  DataWarehouseP& new_dw,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* /*old_dw*/,
+			  DataWarehouse* new_dw,
 			  Dir* p_dir, int timestep,
-			  const VarLabel* var, int matlIndex)
+			  const VarLabel* var)
 {
-   int patchID = (patch ? patch->getID() : -1);
-   bool isReduction = var->typeDescription()->isReductionVariable();
+  bool isReduction = var->typeDescription()->isReductionVariable();
 
-   dbg << "output called on patch: " << patchID << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
-   
-   ostringstream tname;
-   tname << "t" << setw(4) << setfill('0') << timestep;
-
-   Dir tdir = p_dir->getSubdir(tname.str());
-
-   string xmlFilename;
-   string dataFilebase;
-   string dataFilename;
-   if (!isReduction) {
-      ostringstream lname;
-      lname << "l0"; // Hard coded - steve
-      Dir ldir = tdir.getSubdir(lname.str());
-
-      ostringstream pname;
-      pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
-      xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
-      dataFilebase = pname.str() + ".data";
-      dataFilename = ldir.getName() + "/" + dataFilebase;
-   }
-   else {
-      xmlFilename =  tdir.getName() + "/global.xml";
-      dataFilebase = "global.data";
-      dataFilename = tdir.getName() + "/" + dataFilebase;
-   }
-   
-   DOM_Document doc;
-   ifstream test(xmlFilename.c_str());
-   if(test){
-      // Instantiate the DOM parser.
-      DOMParser parser;
-      parser.setDoValidation(false);
-
-      SimpleErrorHandler handler;
-      parser.setErrorHandler(&handler);
-
-      // Parse the input file
-      // No exceptions just yet, need to add
-
-      parser.parse(xmlFilename.c_str());
-
-      if(handler.foundError)
-	 throw InternalError("Error reading file: "+xmlFilename);
-
-      // Add the parser contents to the ProblemSpecP d_doc
-      doc = parser.getDocument();
-   } else {
-      DOM_DOMImplementation impl;
+  dbg << "output called ";
+  if(patches->size() == 1 && !patches->get(1)){
+    dbg << "for reduction";
+  } else {
+    dbg << "on patches: ";
+    for(int p=0;p<patches->size();p++){
+      if(p != 0)
+	dbg << ", ";
+      dbg << patches->get(p)->getID();
+    }
+  }
+  dbg << ", variable: " << var->getName() << ", materials: ";
+  for(int m=0;m<matls->size();m++){
+    if(m != 0)
+      dbg << ", ";
+    dbg << matls->get(m);
+  }
+  dbg << " at time: " << timestep << "\n";
+  
+  ostringstream tname;
+  tname << "t" << setw(4) << setfill('0') << timestep;
+  
+  Dir tdir = p_dir->getSubdir(tname.str());
+  
+  string xmlFilename;
+  string dataFilebase;
+  string dataFilename;
+  if (!isReduction) {
+    ostringstream lname;
+    lname << "l0"; // Hard coded - steve
+    Dir ldir = tdir.getSubdir(lname.str());
     
-      doc = impl.createDocument(0,"Uintah_Output",
-				DOM_DocumentType());
-   }
+    ostringstream pname;
+    pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
+    xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
+    dataFilebase = pname.str() + ".data";
+    dataFilename = ldir.getName() + "/" + dataFilebase;
+  }
+  else {
+    xmlFilename =  tdir.getName() + "/global.xml";
+    dataFilebase = "global.data";
+    dataFilename = tdir.getName() + "/" + dataFilebase;
+  }
+  
+  DOM_Document doc;
+  ifstream test(xmlFilename.c_str());
+  if(test){
+    // Instantiate the DOM parser.
+    DOMParser parser;
+    parser.setDoValidation(false);
+    
+    SimpleErrorHandler handler;
+    parser.setErrorHandler(&handler);
+    
+    // Parse the input file
+    // No exceptions just yet, need to add
+    
+    parser.parse(xmlFilename.c_str());
+    
+    if(handler.foundError)
+      throw InternalError("Error reading file: "+xmlFilename);
+    
+    // Add the parser contents to the ProblemSpecP d_doc
+    doc = parser.getDocument();
+  } else {
+    DOM_DOMImplementation impl;
+    
+    doc = impl.createDocument(0,"Uintah_Output",
+			      DOM_DocumentType());
+  }
 
-   // Find the end of the file
-   DOM_Node n = doc.getDocumentElement();
-   ASSERT(!n.isNull());
-   n = findNode("Variable", n);
+  // Find the end of the file
+  DOM_Node n = doc.getDocumentElement();
+  ASSERT(!n.isNull());
+  n = findNode("Variable", n);
    
-   long cur=0;
-   while(!n.isNull()){
-      DOM_Node endNode = findNode("end", n);
-      ASSERT(!endNode.isNull());
-      DOM_Node tn = findTextNode(endNode);
-      DOMString val = tn.getNodeValue();
-      char* s = val.transcode();
-      long end = atoi(s);
-      delete[] s;
-      
-      if(end > cur)
-	 cur=end;
-      n=findNextNode("Variable", n);
-   }
+  long cur=0;
+  while(!n.isNull()){
+    DOM_Node endNode = findNode("end", n);
+    ASSERT(!endNode.isNull());
+    DOM_Node tn = findTextNode(endNode);
+    DOMString val = tn.getNodeValue();
+    char* s = val.transcode();
+    long end = atoi(s);
+    delete[] s;
+    
+    if(end > cur)
+      cur=end;
+    n=findNextNode("Variable", n);
+  }
 
 
-   DOM_Element rootElem = doc.getDocumentElement();
-   DOM_Element pdElem = doc.createElement("Variable");
-   rootElem.appendChild(pdElem);
-   DOM_Text tailer = doc.createTextNode("\n");
-   rootElem.appendChild(tailer);
+  DOM_Element rootElem = doc.getDocumentElement();
+  // Open the data file
+  int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
+  if(fd == -1)
+    throw ErrnoException("DataArchiver::output (open call)", errno);
 
-   appendElement(pdElem, "variable", var->getName());
-   appendElement(pdElem, "index", matlIndex);
-   appendElement(pdElem, "patch", patchID);
-   pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
+  struct stat st;
+  int s = fstat(fd, &st);
+  if(s == -1)
+    throw ErrnoException("DataArchiver::output (stat call)", errno);
+  ASSERTEQ(cur, st.st_size);
 
-   // Open the data file
-   int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
-   if(fd == -1)
-      throw ErrnoException("DataArchiver::output (open call)", errno);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int patchID = patch?patch->getID():-1;
+    for(int m=0;m<matls->size();m++){
+      int matlIndex = matls->get(m);
+      DOM_Element pdElem = doc.createElement("Variable");
+      rootElem.appendChild(pdElem);
+      DOM_Text tailer = doc.createTextNode("\n");
+      rootElem.appendChild(tailer);
+  
+      appendElement(pdElem, "variable", var->getName());
+      appendElement(pdElem, "index", matlIndex);
+      appendElement(pdElem, "patch", patchID);
+      pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
 
-   struct stat st;
-   int s = fstat(fd, &st);
-   if(s == -1)
-      throw ErrnoException("DataArchiver::output (stat call)", errno);
-   ASSERTEQ(cur, st.st_size);
 #ifdef __sgi
-   off64_t ls = lseek64(fd, cur, SEEK_SET);
+      off64_t ls = lseek64(fd, cur, SEEK_SET);
 #else
-   off_t ls = lseek(fd, cur, SEEK_SET);
+      off_t ls = lseek(fd, cur, SEEK_SET);
 #endif
-   if(ls == -1)
-      throw ErrnoException("DataArchiver::output (lseek64 call)", errno);
+      if(ls == -1)
+	throw ErrnoException("DataArchiver::output (lseek64 call)", errno);
 
-   // Pad appropriately
-   if(cur%PADSIZE != 0){
-      long pad = PADSIZE-cur%PADSIZE;
-      char* zero = scinew char[pad];
-      bzero(zero, pad);
-      write(fd, zero, pad);
-      cur+=pad;
-      delete[] zero;
-   }
-   ASSERTEQ(cur%PADSIZE, 0);
-   appendElement(pdElem, "start", cur);
+      // Pad appropriately
+      if(cur%PADSIZE != 0){
+	long pad = PADSIZE-cur%PADSIZE;
+	char* zero = scinew char[pad];
+	bzero(zero, pad);
+	write(fd, zero, pad);
+	cur+=pad;
+	delete[] zero;
+      }
+      ASSERTEQ(cur%PADSIZE, 0);
+      appendElement(pdElem, "start", cur);
 
-   OutputContext oc(fd, cur, pdElem);
-   new_dw->emit(oc, var, matlIndex, patch);
-   appendElement(pdElem, "end", oc.cur);
-   appendElement(pdElem, "filename", dataFilebase.c_str());
-   s = fstat(fd, &st);
-   if(s == -1)
-      throw ErrnoException("DataArchiver::output (stat call)", errno);
-   ASSERTEQ(oc.cur, st.st_size);
+      OutputContext oc(fd, cur, pdElem);
+      new_dw->emit(oc, var, matlIndex, patch);
+      appendElement(pdElem, "end", oc.cur);
+      appendElement(pdElem, "filename", dataFilebase.c_str());
+      s = fstat(fd, &st);
+      if(s == -1)
+	throw ErrnoException("DataArchiver::output (stat call)", errno);
+      ASSERTEQ(oc.cur, st.st_size);
+      cur=oc.cur;
+    }
+  }
 
-   s = close(fd);
-   if(s == -1)
-      throw ErrnoException("DataArchiver::output (close call)", errno);
+  s = close(fd);
+  if(s == -1)
+    throw ErrnoException("DataArchiver::output (close call)", errno);
 
-   ofstream out(xmlFilename.c_str());
-   out << doc << endl;
+  ofstream out(xmlFilename.c_str());
+  out << doc << endl;
 
-   if(d_writeMeta){
-      // Rewrite the index if necessary...
-      string iname = p_dir->getName()+"/index.xml";
-      DOM_Document indexDoc = loadDocument(iname);
-
-      DOM_Node vs;
-      string variableSection = (isReduction) ? "globals" : "variables";
+  if(d_writeMeta){
+    // Rewrite the index if necessary...
+    string iname = p_dir->getName()+"/index.xml";
+    DOM_Document indexDoc = loadDocument(iname);
+    
+    DOM_Node vs;
+    string variableSection = (isReduction) ? "globals" : "variables";
 	 
-      vs = findNode(variableSection, indexDoc.getDocumentElement());
-      if(vs == 0){
-	 DOM_Text leader = indexDoc.createTextNode("\n");
-	 indexDoc.getDocumentElement().appendChild(leader);
-	 vs = indexDoc.createElement(variableSection.c_str());
-	 indexDoc.getDocumentElement().appendChild(vs);
+    vs = findNode(variableSection, indexDoc.getDocumentElement());
+    if(vs == 0){
+      DOM_Text leader = indexDoc.createTextNode("\n");
+      indexDoc.getDocumentElement().appendChild(leader);
+      vs = indexDoc.createElement(variableSection.c_str());
+      indexDoc.getDocumentElement().appendChild(vs);
+    }
+    bool found=false;
+    for(DOM_Node n = vs.getFirstChild(); n != 0; n=n.getNextSibling()){
+      if(n.getNodeName().equals(DOMString("variable"))){
+	DOM_NamedNodeMap attributes = n.getAttributes();
+	DOM_Node varname = attributes.getNamedItem("name");
+	if(varname == 0)
+	  throw InternalError("varname not found");
+	string vn = toString(varname.getNodeValue());
+	if(vn == var->getName()){
+	  found=true;
+	  break;
+	}
       }
-      bool found=false;
-      for(DOM_Node n = vs.getFirstChild(); n != 0; n=n.getNextSibling()){
-	 if(n.getNodeName().equals(DOMString("variable"))){
-	    DOM_NamedNodeMap attributes = n.getAttributes();
-	    DOM_Node varname = attributes.getNamedItem("name");
-	    if(varname == 0)
-	       throw InternalError("varname not found");
-	    string vn = toString(varname.getNodeValue());
-	    if(vn == var->getName()){
-	       found=true;
-	       break;
-	    }
-	 }
-	 
-      }
-      if(!found){
-	 DOM_Text leader = indexDoc.createTextNode("\n\t");
-	 vs.appendChild(leader);
-	 DOM_Element newElem = indexDoc.createElement("variable");
-	 vs.appendChild(newElem);
-	 newElem.setAttribute("type", var->typeDescription()->getName().c_str());
-	 newElem.setAttribute("name", var->getName().c_str());
-	 DOM_Text trailer = indexDoc.createTextNode("\n");
-	 vs.appendChild(trailer);
-      }
+    }
+    if(!found){
+      DOM_Text leader = indexDoc.createTextNode("\n\t");
+      vs.appendChild(leader);
+      DOM_Element newElem = indexDoc.createElement("variable");
+      vs.appendChild(newElem);
+      newElem.setAttribute("type", var->typeDescription()->getName().c_str());
+      newElem.setAttribute("name", var->getName().c_str());
+      DOM_Text trailer = indexDoc.createTextNode("\n");
+      vs.appendChild(trailer);
+    }
       
-      ofstream indexOut(iname.c_str());
-      indexOut << indexDoc << endl;
-   }
+    ofstream indexOut(iname.c_str());
+    indexOut << indexDoc << endl;
+  }
 }
 
 static Dir makeVersionedDir(const std::string nameBase)
 {
    Dir dir;
-   string dirName;
    unsigned int dirMin = 0;
    unsigned int dirNum = 0;
    unsigned int dirMax = 0;
@@ -997,9 +1029,9 @@ static Dir makeVersionedDir(const std::string nameBase)
    while (!dirCreated) {
       ostringstream name;
       name << nameBase << "." << setw(3) << setfill('0') << dirNum;
-      dirName = name.str();
+      string dirName = name.str();
       
-	   try {
+      try {
          dir = Dir::create(dirName);
             // throws an exception if dir exists
 
@@ -1026,7 +1058,6 @@ static Dir makeVersionedDir(const std::string nameBase)
          }
       }
    }
-
    // Move the symbolic link to point to the new version. We need to be careful
    // not to destroy data, so we only create the link if no file/dir by that
    // name existed or if it's already a link.
@@ -1085,11 +1116,13 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
          d_saveLabels.push_back(saveItem);
    }
    d_saveLabelNames.clear();
+   delete pLabelMatlMap;
 }
 
 
 void  DataArchiver::initCheckpoints(SchedulerP& sched)
 {
+#if 0
    typedef vector<const Task::Dependency*> dep_vector;
    const dep_vector& initreqs = sched->getInitialRequires();
    SaveItem saveItem;
@@ -1123,5 +1156,29 @@ void  DataArchiver::initCheckpoints(SchedulerP& sched)
       else
          d_checkpointLabels.push_back(saveItem);
    }
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 }
 
+bool DataArchiver::need_recompile(double time, double /* dt */,
+				  const LevelP& /* level */)
+{
+  d_currentTimestep++;
+  bool recompile=false;
+  if (d_outputInterval != 0 && time >= d_nextOutputTime){
+    if(!d_wasOutputTimestep)
+      recompile=true;
+  } else {
+    if(d_wasOutputTimestep)
+      recompile=true;
+  }
+  if (d_checkpointInterval != 0 && time >= d_nextCheckpointTime) {
+    if(!d_wasCheckpointTimestep)
+      recompile=true;
+  } else {
+    if(d_wasCheckpointTimestep)
+      recompile=true;
+  }
+  return recompile;
+}
