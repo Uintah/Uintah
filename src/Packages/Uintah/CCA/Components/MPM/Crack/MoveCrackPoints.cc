@@ -68,7 +68,7 @@ void Crack::CrackPointSubset(const ProcessorGroup*,
       } // End of loop over nodes
       MPI_Barrier(mpi_crack_comm);
 
-      // Broadcast cnset of each patch to all ranks
+      // Broadcast cnset to all ranks
       for(int i=0; i<patch_size; i++) {
         int num; // number of crack nodes in patch i
         if(i==pid) num=cnset[m][i].size();
@@ -161,7 +161,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
         int numNodes=cnset[m][i].size();
         if(numNodes>0) {
           Point* cptmp=new Point[numNodes];
-          if(pid==i) { // Proc i update the position of nodes in the patch
+          if(pid==i) { // Processor i updates the position of nodes in patch i
             for(int j=0; j<numNodes; j++) {
               int idx=cnset[m][i][j];
               Point pt=cx[m][idx];
@@ -177,7 +177,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
               // Sum of shape functions from nodes with particle(s) around them
               // This part is necessary for pt located outside the body
               double sumS=0.0;
-              for(int k =0; k < flag->d_8or27; k++) {
+              for(int k =0; k < n8or27; k++) {
                 Point pi=patch->nodePosition(ni[k]);
                 if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&  //ni[k] in real grid
                      (gnum[ni[k]]+Gnum[ni[k]]!=0)) {
@@ -186,7 +186,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
                 }
               }
               if(sumS>1.e-6) {
-                for(int k = 0; k < flag->d_8or27; k++) {
+                for(int k = 0; k < n8or27; k++) {
                   Point pi=patch->nodePosition(ni[k]);
                   if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&
                              (gnum[ni[k]]+Gnum[ni[k]]!=0)) {

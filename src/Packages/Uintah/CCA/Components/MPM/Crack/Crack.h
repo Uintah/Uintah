@@ -41,6 +41,7 @@ class Crack
     Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
                            Output* dataArchiver,
                            MPMLabel* lb,MPMFlags* MFlag);
+
     // Destructor
      ~Crack();
 
@@ -160,15 +161,15 @@ class Crack
 
     SimulationStateP d_sharedState;
     MPMFlags* flag;
+    int n8or27;
     int NGP;
     int NGN;
     
+    enum {NO=0,YES};               // No (NO=0) or Yes (YES=1)
+    enum {R=0, L};                 // Right (R=0) or left (L=1)
+    
     Output* dataArchiver;          // data archiving information
     string udaDir;                 // Base file directory
-    short NO;                      // NO=0 by default 
-    short YES;                     // YES=1 by default
-    int R;                         // Refer to "right", R=0 by default
-    int L;                         // Refer to "left", L=1 by default  
 
     string 
     GridBCType[Patch::numFaces];   // BC types of global grid
@@ -189,9 +190,11 @@ class Crack
     short calFractParameters;      // Flag if calculating fract para at this step
     short doCrackPropagation;      // Flag if doing crack propagation at this step
     double calFractParasInterval;  // Interval of calculating fracture parameters
+                                   // zero by default (every time step) 
     double crackPropInterval;      // Interval of crack propagation
+                                   // zero by default (every time step) 
 
-    // Data members of cracks
+    // Data of crack contact
     vector<string> crackType;      // Crack contact type
     vector<double> cmu;            // Crack surface frcition coefficients
     vector<double> separateVol;    // Critical separate volume

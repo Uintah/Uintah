@@ -1,6 +1,6 @@
 /********************************************************************************
     Crack.cc 
-    PART ONE: CONSTRUCTOR, READ IN AND DISCRETIZE CRACKS 
+    PART ONE: CONSTRUCTOR, DECONSTRUCTOR, READ IN AND DISCRETIZE CRACKS 
 
     Created by Yajun Guo in 2002-2004.
 ********************************************************************************/
@@ -39,28 +39,25 @@ using std::string;
 #define MAX_BASIS 27
 
 Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
-	     Output* d_dataArchiver, MPMLabel* Mlb,MPMFlags* MFlag)
+             Output* d_dataArchiver, MPMLabel* Mlb,MPMFlags* MFlag)
 { 
   MPI_Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
 
   /* Task 1: Initialization of fracture analysis  
   */
   d_sharedState = d_sS;
-  dataArchiver = d_dataArchiver;
-  lb = Mlb;
-  flag = MFlag;
+  dataArchiver  = d_dataArchiver;
+  lb     = Mlb;
+  flag   = MFlag;
+  n8or27 = flag->d_8or27;
 
-  if(flag->d_8or27==8) {NGP=1; NGN=1;}
-  else if(flag->d_8or27==MAX_BASIS) {NGP=2; NGN=2;}
+  if(n8or27==8) {NGP=1; NGN=1;}
+  else if(n8or27==MAX_BASIS) {NGP=2; NGN=2;}
   
   // Default values of parameters for fracture analysis 
-  rdadx=1.;   // Ratio of crack growth to cell-size
-  rJ=-1.;     // Radius of J-path circle
-  NJ=2;       // J contor size
-  R=0;        // right
-  L=1;        // left
-  NO=0;
-  YES=1;
+  rdadx=1.;         // Ratio of crack growth to cell-size
+  rJ=-1.;           // Radius of J-path circle
+  NJ=2;             // J contour size
 
   // Flag if saving crack geometry for visualization
   saveCrackGeometry=true;
@@ -236,9 +233,9 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     m++; // Next material
   }  // End of loop over materials
 
-  #if 1
+#if 1
   OutputInitialCrackPlane(numMPMMatls);
-  #endif
+#endif
 }
 
 void Crack::ReadRectangularCracks(const int& m,const ProblemSpecP& geom_ps)
@@ -550,8 +547,8 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
 
     // Controlling parameters of crack propagation
     if(d_doCrackPropagation!="false") {
-      cout << "\nRatio of crack increment at each time step to the cell size (dadx) = "
-           << rdadx << "." << endl;
+      cout << "  Ratio of crack increment to the cell size (dadx) = "
+           << rdadx << "." << endl << endl;
     }
   }
 }
@@ -693,9 +690,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         } // End of if(..) 
          
         // Output crack mesh information
-        #if 0
+#if 0
         OutputInitialCrackMesh(m);
-        #endif
+#endif
       }
     } // End of loop over matls
   } // End of loop over patches
@@ -1119,7 +1116,7 @@ void Crack::OutputInitialCrackMesh(const int& m)
          << "\n  Number of crack-front elems: "
          << (int)cfSegNodes[m].size()/2 << endl;
 
-    cout << "  Element nodes and normals (" << (int)ce[m].size()
+    cout << "  Crack elements (" << (int)ce[m].size()
          << " elems in total):" << endl;
     for(int i=0; i<(int)ce[m].size(); i++) {
       cout << "     Elem " << i << ": " << ce[m][i] << endl;
@@ -1131,8 +1128,9 @@ void Crack::OutputInitialCrackMesh(const int& m)
       cout << "     Node " << i << ": " << cx[m][i] << endl;
     }
 
-    cout << "  Crack front elems (" << (int)cfSegNodes[m].size()/2
+    cout << "  Crack-front elems and normals (" << (int)cfSegNodes[m].size()/2
          << " elems in total)" << endl;
+    cout << "     V1: bi-normal; V2: outer normal; V3: tangential normal." << endl;
     for(int i=0; i<(int)cfSegNodes[m].size();i++) {
       cout << "     Seg " << i/2 << ": node "
            << cfSegNodes[m][i] << cx[m][cfSegNodes[m][i]]
@@ -1152,3 +1150,6 @@ void Crack::OutputInitialCrackMesh(const int& m)
   }
 }
 
+Crack::~Crack()
+{
+}
