@@ -119,7 +119,7 @@ ApplyInterpMatrix::execute()
     Handle<ManageFieldDataAlgoField> algo_field;
     if (!DynamicCompilation::compile(ci_field, algo_field, true, this))
     {
-      error("Unable to extract data from input field.");
+      error("Dynamic compilation failed: Unable to extract data from input field.");
       return;
     }
     else
