@@ -239,7 +239,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
 		   &indices[0], &send_statii[0]);
       dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
-      if(donecount == send_ids.size() || donecount == MPI_UNDEFINED){
+      if(donecount == (int)send_ids.size() || donecount == MPI_UNDEFINED){
 	 send_ids.clear();
       }
    }
@@ -325,7 +325,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
 	    dw->reduceMPI(dep->d_var, d_myworld);
 	    double reduceend = Time::currentSeconds();
-	    time_t t(NULL);
+	    time_t t(0);
 	    emitNode(tasks[i], t, reduceend - reducestart);
 	 }
 	 break;
@@ -343,7 +343,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       // Receive any of the foreign requires
 	       const vector<Task::Dependency*>& reqs = task->getRequires();
 	       vector<MPI_Request> recv_ids;
-	       for(int r=0;r<reqs.size();r++){
+	       for(int r=0;r<(int)reqs.size();r++){
 		  Task::Dependency* req = reqs[r];
 		  if(!req->d_dw->isFinalized()){
 		     const Task::Dependency* dep = graph.getComputesForRequires(req);
@@ -386,7 +386,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       
 	       sgargs.dest.resize(reqs.size());
 	       sgargs.tags.resize(reqs.size());
-	       for(int r=0;r<reqs.size();r++){
+	       for(int r=0;r<(int)reqs.size();r++){
 		  const Task::Dependency* dep = reqs[r];
 		  sgargs.dest[r] = dep->d_task->getAssignedResourceIndex();
 		  sgargs.tags[r] = dep->d_serialNumber;
@@ -395,7 +395,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       const vector<Task::Dependency*>& reqs = task->getRequires();
 	       sgargs.dest.resize(reqs.size());
 	       sgargs.tags.resize(reqs.size());
-	       for(int r=0;r<reqs.size();r++){
+	       for(int r=0;r<(int)reqs.size();r++){
 		  Task::Dependency* req = reqs[r];
 		  const Task::Dependency* cmp = graph.getComputesForRequires(req);
 		  sgargs.dest[r] = cmp->d_task->getAssignedResourceIndex();
@@ -419,13 +419,13 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       // Send all of the productions
 	       const vector<Task::Dependency*>& comps = task->getComputes();
 	       //cerr << me << " comps.size=" << comps.size() << '\n';
-	       for(int c=0;c<comps.size();c++){
+	       for(int c=0;c<(int)comps.size();c++){
 		  //cerr << me << " c=" << c << '\n';
 		  vector<const Task::Dependency*> reqs;
 		  graph.getRequiresForComputes(comps[c], reqs);
 		  set<VarDestType> varsent;
 		  //cerr << me << " reqs size=" << reqs.size() << '\n';
-		  for(int r=0;r<reqs.size();r++){
+		  for(int r=0;r<(int)reqs.size();r++){
 		     //cerr << me << "r=" << r << '\n';
 		     const Task::Dependency* dep = reqs[r];
 		     //cerr << me << "resource=" << dep->d_task->getAssignedResourceIndex() << '\n';
@@ -463,7 +463,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  MPI_Testsome((int)send_ids.size(), &send_ids[0], &donecount,
 			       &indices[0], &send_statii[0]);
 		  dbg << me << " Done calling send Testsome with " << send_ids.size() << " waiters and got " << donecount << " done\n";
-		  if(donecount == send_ids.size() || donecount == MPI_UNDEFINED){
+		  if(donecount == (int)send_ids.size() || donecount == MPI_UNDEFINED){
 		     send_ids.clear();
 		  }
 	       }
@@ -476,7 +476,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(task->getPatch())
 	       dbg << " on patch " << task->getPatch()->getID();
 	    dbg << " (recv: " << drecv << " seconds, task: " << dtask << " seconds, send: " << dsend << " seconds)\n";
-	    time_t t = time(NULL);
+	    time_t t = time(0);
 	    emitNode(tasks[i], t, dsend+dtask+drecv);
 	 }
 	 break;
@@ -541,7 +541,7 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
 			    this, &MPIScheduler::scatterParticles);
       for(int m=0;m < numMatls;m++){
 	 t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
-	 for(int i=0;i<old_labels[m].size();i++)
+	 for(int i=0;i<(int)old_labels[m].size();i++)
 	    t->requires( new_dw, old_labels[m][i], m, patch, Ghost::None);
       }
       t->computes(new_dw, scatterGatherVariable, 0, patch);
@@ -556,11 +556,11 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
       IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
       std::vector<const Patch*> neighbors;
       level->selectPatches(l, h, neighbors);
-      for(int i=0;i<neighbors.size();i++)
+      for(int i=0;i<(int)neighbors.size();i++)
 	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
       for(int m=0;m < numMatls;m++){
 	 t2->computes( new_dw, new_posLabel, m, patch);
-	 for(int i=0;i<new_labels[m].size();i++)
+	 for(int i=0;i<(int)new_labels[m].size();i++)
 	    t2->computes(new_dw, new_labels[m][i], m, patch);
       }
       t2->setType(Task::Gather);
@@ -594,7 +594,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
    level->selectPatches(l, h, neighbors);
 
    vector<MPIScatterRecord*> sr(neighbors.size());
-   for(int i=0;i<sr.size();i++)
+   for(int i=0;i<(int)sr.size();i++)
       sr[i]=0;
    for(int m = 0; m < reloc_numMatls; m++){
       ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
@@ -618,12 +618,12 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    particleIndex idx = *iter;
 	    // This loop should change - linear searches are not good!
 	    int i;
-	    for(i=0;i<neighbors.size();i++){
+	    for(i=0;i<(int)neighbors.size();i++){
 	       if(neighbors[i]->getBox().contains(px[idx])){
 		  break;
 	       }
 	    }
-	    if(i == neighbors.size()){
+	    if(i == (int)neighbors.size()){
 	       // Make sure that the particle left the world
 	       if(level->containsPoint(px[idx]))
 		  throw InternalError("Particle fell through the cracks!");
@@ -639,7 +639,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  MPIScatterMaterialRecord* smr=scinew MPIScatterMaterialRecord();
 		  sr[i]->matls[m]=smr;
 		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
-		  for(int v=0;v<reloc_old_labels[m].size();v++)
+		  for(int v=0;v<(int)reloc_old_labels[m].size();v++)
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
 		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
@@ -654,21 +654,21 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
    int me = pc->myrank();
    ASSERTEQ(sr.size(), sgargs.dest.size());
    ASSERTEQ(sr.size(), sgargs.tags.size());
-   for(int i=0;i<sr.size();i++){
+   for(int i=0;i<(int)sr.size();i++){
       if(sgargs.dest[i] == me){
 	 new_dw->scatter(sr[i], patch, neighbors[i]);
       } else {
 	 // THIS SHOULD CHANGE INTO A SINGLE SEND, INSTEAD OF ONE PER MATL
 	 if(sr[i]){
 	    int sendsize = 0;
-	    for(int j=0;j<sr[i]->matls.size();j++){
+	    for(int j=0;j<(int)sr[i]->matls.size();j++){
 	      if (sr[i]->matls[j]) {
 		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
 		int size;
 		MPI_Pack_size(1, MPI_INT, pc->getComm(), &size);
 		sendsize+=size;
 		int numP = mr->relocset->numParticles();
-		for(int v=0;v<mr->vars.size();v++){
+		for(int v=0;v<(int)mr->vars.size();v++){
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  var2->packsizeMPI(&sendsize, pc, 0, numP);
@@ -685,12 +685,12 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    log.logSend(0, sizeof(int), "sg_buffersize");
 	    char* buf = scinew char[sendsize];
 	    int position = 0;
-	    for(int j=0;j<sr[i]->matls.size();j++){
+	    for(int j=0;j<(int)sr[i]->matls.size();j++){
 	      if (sr[i]->matls[j]) {
 		MPIScatterMaterialRecord* mr = sr[i]->matls[j];
 		int numP = mr->relocset->numParticles();
 		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
-		for(int v=0;v<mr->vars.size();v++){
+		for(int v=0;v<(int)mr->vars.size();v++){
 		  ParticleVariableBase* var = mr->vars[v];
 		  ParticleVariableBase* var2 = var->cloneSubset(mr->relocset);
 		  int numP = mr->relocset->numParticles();
@@ -739,7 +739,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
    ASSERTEQ(sgargs.tags.size(), neighbors.size());
    vector<char*> recvbuf(neighbors.size());
    vector<int> recvpos(neighbors.size());
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       if(patch != neighbors[i]){
 	 if(sgargs.dest[i] == me){
 	    ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
@@ -791,7 +791,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
       // Get the subsets from the neighbors
       particleIndex recvParticles = 0;
-      for(int i=0;i<sr.size();i++){
+      for(int i=0;i<(int)sr.size();i++){
 	 if(sr[i]->matls[m]){
 	    subsets.push_back(sr[i]->matls[m]->relocset);
 	    posvars.push_back(sr[i]->matls[m]->vars[0]);
@@ -799,7 +799,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 }
       }
       vector<int> counts(neighbors.size());
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 if(sgargs.dest[i] != me){
 	   if(recvsize[i]){
 	       int n=-1234;
@@ -819,7 +819,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
       newpos->gather(newsubset, subsets, posvars, recvParticles);
 
       particleIndex start = totalParticles - recvParticles;
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 if(sgargs.dest[i] != me && counts[i]){
 	    newpos->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
 			      start, counts[i]);
@@ -831,19 +831,19 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
       new_dw->put(*newpos, reloc_new_posLabel);
       delete newpos;
 
-      for(int v=0;v<reloc_old_labels[m].size();v++){
+      for(int v=0;v<(int)reloc_old_labels[m].size();v++){
 	 vector<ParticleVariableBase*> gathervars;
 	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
 
 	 gathervars.push_back(var);
-	 for(int i=0;i<sr.size();i++){
+	 for(int i=0;i<(int)sr.size();i++){
 	    if(sr[i]->matls[m])
 	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
 	 }
 	 ParticleVariableBase* newvar = var->clone();
 	 newvar->gather(newsubset, subsets, gathervars, recvParticles);
 	 particleIndex start = totalParticles - recvParticles;
-	 for(int i=0;i<neighbors.size();i++){
+	 for(int i=0;i<(int)neighbors.size();i++){
 	    if(sgargs.dest[i] != me && counts[i]){
 	       newvar->unpackMPI(recvbuf[i], recvsize[i], &recvpos[i], pc,
 				 start, counts[i]);
@@ -854,16 +854,16 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
 	 delete newvar;
       }
-      for(int i=0;i<subsets.size();i++)
+      for(int i=0;i<(int)subsets.size();i++)
 	 delete subsets[i];
    }
-   for(int i=0;i<sr.size();i++){
+   for(int i=0;i<(int)sr.size();i++){
      for(int m=0;m<reloc_numMatls;m++)
        if(sr[i]->matls[m])
 	 delete sr[i]->matls[m];
      delete sr[i];
    }
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
       if(sgargs.dest[i] != me && recvsize[i] != 0){
 	 delete recvbuf[i];
@@ -888,6 +888,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.22  2000/09/25 20:43:44  sparker
+// Quiet g++ warnings
+//
 // Revision 1.21  2000/09/25 18:10:52  sparker
 // Correctly use MPI_Buffer_attach necessary for bsend
 //

@@ -139,7 +139,7 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
       patchDBtype::const_iterator patchiter = nr->patches.find(patch);
       if(patchiter != nr->patches.end()) {
 	 PatchRecord* rr = patchiter->second;
-	 if(matlIndex >= 0 && matlIndex < rr->vars.size()){
+	 if(matlIndex >= 0 && matlIndex < (int)rr->vars.size()){
 	    if(rr->vars[matlIndex] != 0){
 	       return true;
 	    }
@@ -158,7 +158,7 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) cons
       patchDBtype::const_iterator patchiter = nr->patches.find(patch);
       if(patchiter != nr->patches.end()) {
 	 PatchRecord* rr = patchiter->second;
-	 for(int i=0; i<rr->vars.size(); i++){
+	 for(int i=0; i<(int)rr->vars.size(); i++){
 	    if(rr->vars[i] != 0){
 	       return true;
 	    }
@@ -191,10 +191,10 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    if(matlIndex < 0)
       throw InternalError("matlIndex must be >= 0");
 
-   if(matlIndex >= rr->vars.size()){
+   if(matlIndex >= (int)rr->vars.size()){
       unsigned long oldSize = rr->vars.size();
       rr->vars.resize(matlIndex+1);
-      for(unsigned long i=oldSize;i<matlIndex;i++)
+      for(int i=oldSize;i<matlIndex;i++)
 	 rr->vars[i]=0;
    }
 
@@ -229,7 +229,7 @@ VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
    if(matlIndex < 0)
       throw InternalError("matlIndex must be >= 0");
 
-   if(matlIndex >= rr->vars.size())
+   if(matlIndex >= (int)rr->vars.size())
       throw UnknownVariable(label->getName(), patch->getID(),
 			    patch->toString(), matlIndex,
 			    "no material with this patch and variable name");
@@ -283,7 +283,7 @@ void DWDatabase<VarType>::print(std::ostream& out)
 	  patchiter != nr->patches.end();patchiter++){
 	 PatchRecord* rr = patchiter->second;
 	 out <<  "  " << rr->patch << '\n';
-	 for(int i=0;i<rr->vars.size();i++){
+	 for(int i=0;i<(int)rr->vars.size();i++){
 	    if(rr->vars[i]){
 	       cerr << "    Material " << i << '\n';
 	    }
@@ -296,6 +296,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.14  2000/09/25 20:43:44  sparker
+// Quiet g++ warnings
+//
 // Revision 1.13  2000/07/27 22:39:47  sparker
 // Implemented MPIScheduler
 // Added associated support

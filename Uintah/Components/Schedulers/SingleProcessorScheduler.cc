@@ -128,7 +128,7 @@ SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
 			    this, &SingleProcessorScheduler::scatterParticles);
       for(int m=0;m < numMatls;m++){
 	 t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
-	 for(int i=0;i<old_labels[m].size();i++)
+	 for(int i=0;i<(int)old_labels[m].size();i++)
 	    t->requires( new_dw, old_labels[m][i], m, patch, Ghost::None);
       }
       t->computes(new_dw, scatterGatherVariable, 0, patch);
@@ -142,11 +142,11 @@ SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
       IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
       std::vector<const Patch*> neighbors;
       level->selectPatches(l, h, neighbors);
-      for(int i=0;i<neighbors.size();i++)
+      for(int i=0;i<(int)neighbors.size();i++)
 	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
       for(int m=0;m < numMatls;m++){
 	 t2->computes( new_dw, new_posLabel, m, patch);
-	 for(int i=0;i<new_labels[m].size();i++)
+	 for(int i=0;i<(int)new_labels[m].size();i++)
 	    t2->computes(new_dw, new_labels[m][i], m, patch);
       }
 
@@ -180,7 +180,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
    level->selectPatches(l, h, neighbors);
 
    vector<ScatterRecord*> sr(neighbors.size());
-   for(int i=0;i<sr.size();i++)
+   for(int i=0;i<(int)sr.size();i++)
       sr[i]=0;
    for(int m = 0; m < reloc_numMatls; m++){
       ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
@@ -205,12 +205,12 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
 	    particleIndex idx = *iter;
 	    // This loop should change - linear searches are not good!
 	    int i;
-	    for(i=0;i<neighbors.size();i++){
+	    for(i=0;i<(int)neighbors.size();i++){
 	       if(neighbors[i]->getBox().contains(px[idx])){
 		  break;
 	       }
 	    }
-	    if(i == neighbors.size()){
+	    if(i == (int)neighbors.size()){
 	       // Make sure that the particle left the world
 	       if(level->containsPoint(px[idx]))
 		  throw InternalError("Particle fell through the cracks!");
@@ -226,7 +226,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
 		  ScatterMaterialRecord* smr=scinew ScatterMaterialRecord();
 		  sr[i]->matls[m]=smr;
 		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
-		  for(int v=0;v<reloc_old_labels[m].size();v++)
+		  for(int v=0;v<(int)reloc_old_labels[m].size();v++)
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
 		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
@@ -237,7 +237,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
       }
       delete relocset;
    }
-   for(int i=0;i<sr.size();i++){
+   for(int i=0;i<(int)sr.size();i++){
       new_dw->scatter(sr[i], patch, neighbors[i]);
    }
 
@@ -258,7 +258,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
    level->selectPatches(l, h, neighbors);
 
    vector<ScatterRecord*> sr;
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       if(patch != neighbors[i]){
 	 ScatterGatherBase* sgb = new_dw->gather(neighbors[i], patch);
 	 if(sgb != 0){
@@ -293,7 +293,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
       posvars.push_back(pos);
 
       // Get the subsets from the neighbors
-      for(int i=0;i<sr.size();i++){
+      for(int i=0;i<(int)sr.size();i++){
 	 if(sr[i]->matls[m]){
 	    subsets.push_back(sr[i]->matls[m]->relocset);
 	    posvars.push_back(sr[i]->matls[m]->vars[0]);
@@ -306,12 +306,12 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
       new_dw->put(*newpos, reloc_new_posLabel);
       delete newpos;
 
-      for(int v=0;v<reloc_old_labels[m].size();v++){
+      for(int v=0;v<(int)reloc_old_labels[m].size();v++){
 	 vector<ParticleVariableBase*> gathervars;
 	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
 
 	 gathervars.push_back(var);
-	 for(int i=0;i<sr.size();i++){
+	 for(int i=0;i<(int)sr.size();i++){
 	    if(sr[i]->matls[m])
 	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
 	 }
@@ -320,10 +320,10 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
 	 delete newvar;
       }
-      for(int i=0;i<subsets.size();i++)
+      for(int i=0;i<(int)subsets.size();i++)
 	 delete subsets[i];
    }
-   for(int i=0;i<sr.size();i++){
+   for(int i=0;i<(int)sr.size();i++){
       for(int m=0;m<reloc_numMatls;m++)
 	 if(sr[i]->matls[m])
 	    delete sr[i]->matls[m];
@@ -347,6 +347,9 @@ SingleProcessorScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.18  2000/09/25 20:43:44  sparker
+// Quiet g++ warnings
+//
 // Revision 1.17  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
