@@ -90,6 +90,7 @@ cerr << "After '" << packagePath << "'\n";
 
     void* so=dlopen(soName(),RTLD_NOW);
     if(!so) {
+	cerr << dlerror() << '\n';
       cerr << "ERROR: Can't open package '" << soName << "'\n";
       continue;
     }

@@ -608,7 +608,7 @@ if test "$uintah" = "yes"; then
 fi
 if test "$davew" = "yes"; then
   PACKAGE_DIRS=$PACKAGE_DIRS" DaveW"
-  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/TCL\)"
+  PACKAGE_PATH=$PACKAGE_PATH":\$(OBJTOP_ABS)/DaveW/libDaveW.so\(\$(SRCTOP_ABS)/DaveW/GUIs\)"
   EXENAME="davew"
 fi
 
@@ -2905,6 +2905,24 @@ trap 'rm -fr `echo "Makefile \
                 Uintah/Modules/Makefile \
                   Uintah/Modules/MPMViz/Makefile \
                   Uintah/Modules/Readers/Makefile \
+              DaveW/Makefile \
+                DaveW/Datatypes/Makefile \
+                  DaveW/Datatypes/CS684/Makefile \
+                  DaveW/Datatypes/General/Makefile \
+                  DaveW/Datatypes/SiRe/Makefile \
+                DaveW/Modules/Makefile \
+                  DaveW/Modules/CS684/Makefile \
+                  DaveW/Modules/EEG/Makefile \
+                  DaveW/Modules/EGI/Makefile \
+                  DaveW/Modules/FDM/Makefile \
+                  DaveW/Modules/SiRe/Makefile \
+                DaveW/ThirdParty/Makefile \
+                  DaveW/ThirdParty/NumRec/Makefile \
+                  DaveW/ThirdParty/OldLinAlg/Makefile \
+                  DaveW/ThirdParty/Quaternions/Makefile \
+                  DaveW/ThirdParty/RegTools/Makefile \
+                  DaveW/ThirdParty/SparseLib/Makefile \
+                DaveW/convert/Makefile \
           sci_config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -3071,6 +3089,24 @@ CONFIG_FILES=\${CONFIG_FILES-"Makefile \
                 Uintah/Modules/Makefile \
                   Uintah/Modules/MPMViz/Makefile \
                   Uintah/Modules/Readers/Makefile \
+              DaveW/Makefile \
+                DaveW/Datatypes/Makefile \
+                  DaveW/Datatypes/CS684/Makefile \
+                  DaveW/Datatypes/General/Makefile \
+                  DaveW/Datatypes/SiRe/Makefile \
+                DaveW/Modules/Makefile \
+                  DaveW/Modules/CS684/Makefile \
+                  DaveW/Modules/EEG/Makefile \
+                  DaveW/Modules/EGI/Makefile \
+                  DaveW/Modules/FDM/Makefile \
+                  DaveW/Modules/SiRe/Makefile \
+                DaveW/ThirdParty/Makefile \
+                  DaveW/ThirdParty/NumRec/Makefile \
+                  DaveW/ThirdParty/OldLinAlg/Makefile \
+                  DaveW/ThirdParty/Quaternions/Makefile \
+                  DaveW/ThirdParty/RegTools/Makefile \
+                  DaveW/ThirdParty/SparseLib/Makefile \
+                DaveW/convert/Makefile \
          "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF

@@ -1,5 +1,6 @@
-#include <string.h>
 # include "stdio.h"
+#include <string.h>
+
 # define U(x) ((unsigned char)(x))
 # define NLSTATE yyprevious=YYNEWLINE
 # define BEGIN yybgin = yysvec + 1 +

@@ -26,7 +26,6 @@
 namespace DaveW {
 namespace Datatypes {
 
-using SCICore::PersistentSpace::Pio;
 using SCICore::Math::Min;
 using SCICore::Math::Max;
 
@@ -366,6 +365,9 @@ void ImageRM::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/24 06:22:54  dmw
+// Added in everything for the DaveW branch
+//
 // Revision 1.2  1999/08/23 05:48:00  dmw
 // Put back the NOT_FINISHED messages I accidentally removed.
 //
