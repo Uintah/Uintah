@@ -249,12 +249,14 @@ itcl_class SCIRun_Visualization_ShowField {
 	    make_labeled_radio $node.radio \
 		    "Node Display Type" "$this-c node_display_type" top \
 		    $this-node_display_type \
-		    {{Spheres Spheres} {Axes Axes} {Points Points} {Disks Disks}}
+		{ {Points Points} {Spheres Spheres} \
+		      {Boxes Boxes} {Axes Axes} {Disks Disks}}
 	} else {
 	    make_labeled_radio $node.radio \
 		    "Node Display Type" "$this-c node_display_type" top \
 		    $this-node_display_type \
-		    {{Spheres Spheres} {Axes Axes} {Points Points}}
+		{ {Points Points} {Spheres Spheres}\
+		      {Boxes Boxes} {Axes Axes}}
 	}
 
 	pack $node.show_nodes $node.nodes_transparency $node.udc $node.radio \
@@ -267,7 +269,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	bind $node.slide.scale <ButtonRelease> "$this-c node_scale"
 
 	iwidgets::labeledframe $node.resolution \
-	    -labelpos nw -labeltext "Sphere and Disk Resolution"
+	    -labelpos nw -labeltext "Sphere, Box and Disk Resolution"
 	pack $node.resolution -side top -fill x -expand 1
 
 	set res [$node.resolution childsite]

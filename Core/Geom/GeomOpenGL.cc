@@ -5038,6 +5038,105 @@ GeomCBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
+void
+GeomBoxes::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  const bool ulr = edges_.size() == centers_.size();
+  if (!ulr && global_edge_ < 1.0e-6) { return; }
+
+  if(!pre_draw(di, matl, 1)) return;
+
+  const bool using_texture =
+    di->using_cmtexture_ && indices_.size() == centers_.size();
+  if (using_texture)
+  {
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  
+  const bool using_color = centers_.size() == colors_.size() / 4;
+
+  glMatrixMode(GL_MODELVIEW);
+  for (unsigned int i=0; i < centers_.size(); i++)
+  {
+    if (using_texture) { glTexCoord1f(indices_[i]); }
+    if (using_color) { glColor3ubv(&(colors_[i*4])); }
+
+    glPushMatrix();
+
+    double edge = ulr ? edges_[i] : global_edge_;
+
+    glTranslated(centers_[i].x()-edge/2.0,
+		 centers_[i].y()-edge/2.0,
+		 centers_[i].z()-edge/2.0);
+
+    di->polycount += 6;
+
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+
+    glBegin(GL_QUADS);
+
+    // top
+    glNormal3f(0,0,1);
+    glVertex3d(0,0,edge);
+    glVertex3d(edge,0,edge);
+    glVertex3d(edge,edge,edge);
+    glVertex3d(0,edge,edge);
+
+    // bottom
+    glNormal3f(0,0,-1);
+    glVertex3d(0,0,0);
+    glVertex3d(0,edge,0);
+    glVertex3d(edge,edge,0);
+    glVertex3d(edge,0,0);
+	      
+    // left
+    glNormal3f(-1.0,0,0);
+    glVertex3d(0,0,0);
+    glVertex3d(0,0,edge);
+    glVertex3d(0,edge,edge);
+    glVertex3d(0,edge,0);
+
+    // right
+    glNormal3f(1,0,0);
+    glVertex3d(edge,0,0);
+    glVertex3d(edge,edge,0);
+    glVertex3d(edge,edge,edge);
+    glVertex3d(edge,0,edge);
+	      	      
+    // top
+    glNormal3f(0,1.0,0);
+    glVertex3d(0,edge,0);
+    glVertex3d(0,edge,edge);
+    glVertex3d(edge,edge,edge);
+    glVertex3d(edge,edge,0);
+
+    // back
+    glNormal3f(0,-1,0);
+    glVertex3d(0,0,0);
+    glVertex3d(edge,0,0);
+    glVertex3d(edge,0,edge);
+    glVertex3d(0,0,edge);
+  
+    glEnd();
+
+    glEnable(GL_NORMALIZE);
+
+    glPopMatrix();
+  }
+
+  glDisable(GL_TEXTURE_1D);
+
+  post_draw(di);
+}
+
 
 void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {

@@ -308,6 +308,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   GeomCappedCylinders *discs = 0;
   GeomPoints *points = 0;
   GeomSpheres *spheres = 0;
+  GeomBoxes *boxes = 0;
   GeomLines *lines = 0;
   GeomHandle display_list(0);
 
@@ -317,6 +318,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   else if (node_display_mode == "Spheres") { mode = 1; }
   else if (node_display_mode == "Axes")    { mode = 2; }
   else if (node_display_mode == "Disks")   { mode = 3; }
+  else if (node_display_mode == "Boxes")   { mode = 4; }
 
   if (mode == 0) // Points
   {
@@ -331,7 +333,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
       display_list = scinew GeomDL(points);
     }
   }
-  if (mode == 1) // Spheres
+  else if (mode == 1) // Spheres
   {
     spheres = scinew GeomSpheres(node_scale, node_resolution, node_resolution);
     display_list = scinew GeomDL(spheres);
@@ -359,6 +361,11 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     grp->add(discs);
     grp->add(spheres);
     display_list = scinew GeomDL(grp);
+  }
+  else if (mode == 4) // Boxes
+  {
+    boxes = scinew GeomBoxes(node_scale, node_resolution, node_resolution);
+    display_list = scinew GeomDL(boxes);
   }
 
   // Use a default color?
@@ -485,6 +492,20 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
 	{
 	  discs->add(p-vec, val, p+vec, val);
 	}
+      }
+      break;
+    case 4: // Boxes
+      if (def_color)
+      {
+	boxes->add(p);
+      }
+      else if (vec_color)
+      {
+	boxes->add(p, vcol);
+      }
+      else
+      {
+	boxes->add(p, val);
       }
       break;
     }
