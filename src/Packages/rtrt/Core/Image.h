@@ -44,6 +44,8 @@ public:
     Image(int xres, int yres, bool stereo);
     ~Image();
     void resize_image();
+  void resize_image(const int new_xres, const int new_yres);
+  
     inline int get_xres() const {
 	return xres;
     }

@@ -46,6 +46,12 @@ void Image::resize_image()
     }
 }
 
+void Image::resize_image(const int new_xres, const int new_yres) {
+  xres = new_xres;
+  yres = new_yres;
+  resize_image();
+}
+
 void Image::draw()
 {
     if(stereo){
