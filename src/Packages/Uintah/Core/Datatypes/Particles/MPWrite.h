@@ -115,18 +115,20 @@ class MPWrite {
   // scalarfield to determin if its type and size match that of 
   // the BeginGrid header.  This function a can only be called
   // between BeginGrid and EndGrid.
-  int AddVarToGrid( clString name,
+  int AddSVarToGrid( clString name,
 		    ScalarField* var );
 
-  int AddVarToGrid( clString name, double *sf, int length);
+  int AddSVarToGrid( clString name, double *sf, int length);
   /////////
   // The same as the previous function, but for vector fields.
   // A vector field cannot be added until all scalar fields associated
   // with the scalar variable list have been added.
-  int AddVarToGrid( clString name,
+  int AddVecVarToGrid( clString name,
 		    VectorField* var );
 
-  int AddVarToGrid( clString name, Vector* vf, int length);
+  int AddVecVarToGrid( clString name, Vector* vf, int length);
+
+  int AddVecVarToGrid( clString name, double *vf, int length);
 
   /////////
   // Close the Grid. Set the object state to Open
