@@ -29,18 +29,14 @@
  */
 
 #include <Core/Geom/GuiGeom.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiContext.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>
-#include <iostream>
-using std::ostream;
+using namespace SCIRun;
 
-namespace SCIRun {
-
-GuiColor::GuiColor(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl), r("r", str(), tcl), g("g", str(), tcl),
-  b("b", str(), tcl)
+GuiColor::GuiColor(GuiContext* ctx)
+  : GuiVar(ctx), r(ctx->subVar("r")), g(ctx->subVar("g")),
+    b(ctx->subVar("b"))
 {
 }
 
@@ -48,54 +44,35 @@ GuiColor::~GuiColor()
 {
 }
 
-void GuiColor::reset() {
-  r.reset();
-  g.reset();
-  b.reset();
-}
-
 Color GuiColor::get()
 {
-    return Color(r.get(), g.get(), b.get());
+  ctx->lock();
+  Color c(r.get(), g.get(), b.get());
+  ctx->unlock();
+  return c;
 }
 
 void GuiColor::set(const Color& p)
 {
-    r.set(p.r());
-    g.set(p.g());
-    b.set(p.b());
+  ctx->lock();
+  r.set(p.r());
+  g.set(p.g());
+  b.set(p.b());
+  ctx->unlock();
 }
 
-void GuiColor::emit(ostream& out, string& midx)
-{
-    r.emit(out, midx);
-    g.emit(out, midx);
-    b.emit(out, midx);
-}
-
-GuiMaterial::GuiMaterial(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl), ambient("ambient", str(), tcl),
-  diffuse("diffuse", str(), tcl), specular("specular", str(), tcl),
-  shininess("shininess", str(), tcl), emission("emission", str(), tcl),
-  reflectivity("reflectivity", str(), tcl),
-  transparency("transparency", str(), tcl),
-  refraction_index("refraction_index", str(), tcl)
+GuiMaterial::GuiMaterial(GuiContext* ctx)
+: GuiVar(ctx), ambient(ctx->subVar("ambient")),
+  diffuse(ctx->subVar("diffuse")), specular(ctx->subVar("specular")),
+  shininess(ctx->subVar("shininess")), emission(ctx->subVar("emission")),
+  reflectivity(ctx->subVar("reflectivity")),
+  transparency(ctx->subVar("transparency")),
+  refraction_index(ctx->subVar("refraction_index"))
 {
 }
 
 GuiMaterial::~GuiMaterial()
 {
-}
-
-void GuiMaterial::reset() {
-  ambient.reset();
-  diffuse.reset();
-  specular.reset();
-  shininess.reset();
-  emission.reset();
-  reflectivity.reset();
-  transparency.reset();
-  refraction_index.reset();
 }
 
 Material GuiMaterial::get()
@@ -120,17 +97,4 @@ void GuiMaterial::set(const Material& m)
     refraction_index.set(m.refraction_index);
 }
 
-void GuiMaterial::emit(ostream& out, string& midx)
-{
-    ambient.emit(out, midx);
-    diffuse.emit(out, midx);
-    specular.emit(out, midx);
-    shininess.emit(out, midx);
-    emission.emit(out, midx);
-    reflectivity.emit(out, midx);
-    transparency.emit(out, midx);
-    refraction_index.emit(out, midx);
-}
-
-} // End namespace SCIRun
 

@@ -32,14 +32,14 @@
 #define SCI_Geom_Pick_h 1
 
 #include <Core/Geom/GeomContainer.h>
-#include <Core/Geom/Pickable.h>
+#include <Core/GeomInterface/Pickable.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/Vector.h>
 #include <vector>
 
+namespace SCIRun {
 using std::vector;
 
-namespace SCIRun {
 
 class BaseWidget;
 class MessageBase;
