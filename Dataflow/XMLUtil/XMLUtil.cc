@@ -22,6 +22,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/dom/DOMAttr.hpp>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -528,12 +529,13 @@ char* getSerializedAttributes(DOMNode* d)
   DOMNamedNodeMap *attr = d->getAttributes();
   int length = attr->getLength();
   int index = 0;
-  for(DOMNode *n=attr->item(index);
-      index!=length;n=attr->item(++index)) {
-    const char* nn = to_char_ptr(n->getNodeName());
-    const char* nv = to_char_ptr(n->getNodeValue());
-    str = new char[strlen(nn) + strlen(nv) + 5];
-    sprintf(str, " %s=\"%s\"", nn, nv);
+  // This can only be a DOMAttr*
+  for(DOMAttr *n = (DOMAttr*)attr->item(index); index != length;
+      n = (DOMAttr*)attr->item(++index)) {
+    const string nn(to_char_ptr(n->getName()));
+    const char* nv = to_char_ptr(n->getValue());
+    str = new char[strlen(nn.c_str()) + strlen(nv) + 5];
+    sprintf(str, " %s=\"%s\"", nn.c_str(), nv);
 
     int newlength = strlen(str)+strlen(fullstr);
     newstr = new char[newlength+1];
@@ -559,23 +561,27 @@ char* getSerializedChildren(DOMNode* d)
   char* newstr = 0;
 
   fullstr[0]='\0';
-
   for (DOMNode *n = d->getFirstChild(); n != 0; n = n->getNextSibling()) {
-    const char *nn = to_char_ptr(n->getNodeName());
-    const char *nv = to_char_ptr(n->getNodeValue());
-    if (n->getNodeType() == DOMNode::TEXT_NODE) {
+
+    if (n->getNodeType() == DOMNode::TEXT_NODE) {      
+      DOMText *dt = (DOMText*)n;
+      const char *nv = to_char_ptr(dt->getNodeValue());
       str = new char[strlen(nv) + 1];
       str[0]='\0';
       sprintf(str, "%s", nv);
-    } else {
+    } else if (n->getNodeType() == DOMNode::ELEMENT_NODE){
+      DOMElement *de = (DOMElement*)n;
+      string tname(to_char_ptr(de->getTagName()));
       temp = getSerializedAttributes(n);
       temp2 = getSerializedChildren(n);
-      str = new char[2 * strlen(nn) + strlen(temp) + strlen(temp2) + 6];
+      str = new char[2 * strlen(tname.c_str()) + strlen(temp) + strlen(temp2) + 6];
       str[0]='\0';
-      sprintf(str, "<%s%s>%s</%s>", nn, temp, temp2, nn);
+      sprintf(str, "<%s%s>%s</%s>", tname.c_str(), temp, temp2, tname.c_str());
       delete[] temp;
       delete[] temp2;
-    } 
+    } else {
+      ASSERTFAIL("unexpected node type, in XMLUtil.cc");
+    }
     int newlength = strlen(str) + strlen(fullstr);
     newstr = new char[newlength+1];
     newstr[0]='\0';
@@ -588,7 +594,6 @@ char* getSerializedChildren(DOMNode* d)
     delete[] str;
     str = 0;
   }
-  
   return fullstr;
 }
 
