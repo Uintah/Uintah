@@ -156,7 +156,7 @@
       
       <save label = "g.mass"/>
       <save label = "g.volume"/>
-      <save label = "g.velocity"/>
+      <save label = "g.velocity" material = "0"/>
       <save label = "g.temperature"/> 
       <!-- Need by the regression tester -->
        <checkpoint interval="0.00025" cycle="2"/> 
