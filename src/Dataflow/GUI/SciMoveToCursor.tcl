@@ -23,6 +23,11 @@ set screenHeight [winfo screenheight .]
 
 proc moveToCursor { window { leave_up "no" } } {
 
+  global guiPreferences
+  if { !$guiPreferences("MoveGuiToMouse") } {
+      return
+  }
+
   # If we are currently running a script... ie, we are loading the net
   # from a file, then do not move GUI to the mouse.
   if [string length [info script]] {
