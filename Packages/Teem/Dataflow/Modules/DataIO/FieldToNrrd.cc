@@ -92,13 +92,32 @@ void FieldToNrrd::execute()
   NrrdData *nout=scinew NrrdData;
   Field *field = fieldH.get_rep();
   const string data = field->get_type_name(1);
-  if (field->data_at() != Field::NODE) {
-    cerr << "Error - can only build a nrrd from data at nodes.\n";
-    return;
-  }
+
+
+
+
+
   LatVolMeshHandle lvm;
   nout->nrrd = nrrdNew();
-  if (data == "double") { 
+
+  if ( data == "double" && field->data_at() == Field::CELL) {
+    LatticeVol<double> *f =
+      dynamic_cast<LatticeVol<double>*>(field);
+    lvm = f->get_typed_mesh();
+    nx = lvm->get_nx()-1;
+    ny = lvm->get_ny()-1;
+    nz = lvm->get_nz()-1;
+    double *data=new double[nx*ny*nz];
+    double *p=&(data[0]);
+    for (int k=0; k<nz; k++)
+      for (int j=0; j<ny; j++)
+	for (int i=0; i<nx; i++)
+	  *p++=f->fdata()(k,j,i);
+    nrrdWrap(nout->nrrd, data, nx*ny*nz, nrrdTypeDouble, 3);
+  } else   if (field->data_at() != Field::NODE) {
+    cerr << "Error - can only build a nrrd from data at nodes.\n";
+    return;
+  } else if (data == "double") { 
     LatticeVol<double> *f = 
       dynamic_cast<LatticeVol<double>*>(field);
     lvm = f->get_typed_mesh();
