@@ -60,10 +60,6 @@ set netedit_savefile ""
 global modules
 set modules ""
 
-
-proc resource {} {
-}
-
 proc makeNetworkEditor {} {
 
     wm minsize . 100 100
@@ -115,23 +111,7 @@ proc makeNetworkEditor {} {
     .main_menu.stats.menu add command -label "Threads..." -underline 0 \
 	    -command showThreadStats
 
-#    menubutton .main_menu.help -text "Help" -underline 0 \
-#	-menu .main_menu.help.menu
-#    menu .main_menu.help.menu
-#
-#    .main_menu.help.menu add command -label "Help..." -underline 0 \
-#	    -command { tk_messageBox -message "I'm helpless" }
-
-#    pack .main_menu.file        \
-#         .main_menu.modules     \
-#         .main_menu.appModules     -side left
     pack .main_menu.file -side left
-#    pack .main_menu.help        \
-#         .main_menu.stats          -side right
-#    pack .main_menu.stats          -side right
-
-#    tk_menuBar .main_menu .main_menu.file .main_menu.modules \
-#                          .main_menu.stats .main_menu.help
     tk_menuBar .main_menu .main_menu.file .main_menu.stats .main_menu.help
 
     frame .top -borderwidth 5
@@ -143,7 +123,8 @@ proc makeNetworkEditor {} {
     frame .bot.neteditFrame -relief sunken -borderwidth 3
 
     global mainCanvasHeight mainCanvasWidth
-    canvas .bot.neteditFrame.canvas \
+    global maincanvas minicanvas
+    canvas $maincanvas \
         -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight" \
 	-bg #036
 
@@ -154,27 +135,27 @@ proc makeNetworkEditor {} {
     # itself because mouse events are sent to both the objects on the
     # canvas (such as the lines connection the modules) and the canvas.
 
-    set bgRect [.bot.neteditFrame.canvas create rectangle 0 0 \
+    set bgRect [$maincanvas create rectangle 0 0 \
 	                         $mainCanvasWidth $mainCanvasWidth -fill #036]
 
     
-    menu .bot.neteditFrame.canvas.modulesMenu -tearoff false
+    menu $maincanvas.modulesMenu -tearoff false
 
     scrollbar .bot.neteditFrame.hscroll -relief sunken \
 	    -orient horizontal \
-	    -command ".bot.neteditFrame.canvas xview"
+	    -command "$maincanvas xview"
     scrollbar .bot.neteditFrame.vscroll -relief sunken \
-	-command ".bot.neteditFrame.canvas yview" 
+	-command "$maincanvas yview" 
 
     pack .bot.neteditFrame -expand yes -fill both -padx 4
 
-    grid .bot.neteditFrame.canvas .bot.neteditFrame.vscroll
+    grid $maincanvas .bot.neteditFrame.vscroll
     grid .bot.neteditFrame.hscroll
 
     grid columnconfigure .bot.neteditFrame 0 -weight 1 
     grid rowconfigure    .bot.neteditFrame 0 -weight 1 
 
-    grid config .bot.neteditFrame.canvas -column 0 -row 0 \
+    grid config $maincanvas -column 0 -row 0 \
 	    -columnspan 1 -rowspan 1 -sticky "snew" 
     grid config .bot.neteditFrame.hscroll -column 0 -row 1 \
 	    -columnspan 1 -rowspan 1 -sticky "ew" -pady 2
@@ -191,8 +172,6 @@ proc makeNetworkEditor {} {
     .top.errorFrame.text tag configure warntag -foreground orange
     .top.errorFrame.text tag configure infotag -foreground yellow
 
-# Why on earth was this here?
-#    .top.errorFrame.text configure -state disabled
 
     scrollbar .top.errorFrame.s -relief sunken \
 	    -command ".top.errorFrame.text yview"
@@ -205,40 +184,34 @@ proc makeNetworkEditor {} {
     pack .top.errorFrame -side right -fill both -expand yes
 
     global miniCanvasHeight miniCanvasWidth
-    canvas .top.globalViewFrame.canvas \
+    canvas $minicanvas \
 	-bg #036 -width $miniCanvasWidth -height $miniCanvasHeight
-    pack   .top.globalViewFrame.canvas 
+    pack   $minicanvas 
 
     createCategoryMenu
 
-    global netedit_canvas
-    global netedit_mini_canvas
-    set netedit_canvas .bot.neteditFrame.canvas
-    set netedit_mini_canvas .top.globalViewFrame.canvas
+    set viewAreaBox [ $minicanvas create rectangle 0 0 1 1 -outline black ]
 
-    set viewAreaBox \
-      [ $netedit_mini_canvas create rectangle 0 0 1 1 -outline black ]
-
-    .bot.neteditFrame.canvas configure \
+    $maincanvas configure \
 	-xscrollcommand "updateCanvasX $viewAreaBox" \
         -yscrollcommand "updateCanvasY $viewAreaBox"
 
-    bind $netedit_mini_canvas <B1-Motion> \
-      "updateCanvases $netedit_mini_canvas $netedit_canvas $viewAreaBox %x %y"
-    bind $netedit_mini_canvas <1> \
-      "updateCanvases $netedit_mini_canvas $netedit_canvas $viewAreaBox %x %y"
-    bind $netedit_canvas <Configure> \
-      "handleResize $netedit_mini_canvas $netedit_canvas $viewAreaBox %w %h"
-    $netedit_canvas bind $bgRect <ButtonPress-3> "modulesMenuPressCB %x %y"
+    bind $minicanvas <B1-Motion> \
+      "updateCanvases $minicanvas $maincanvas $viewAreaBox %x %y"
+    bind $minicanvas <1> \
+      "updateCanvases $minicanvas $maincanvas $viewAreaBox %x %y"
+    bind $maincanvas <Configure> \
+      "handleResize $minicanvas $maincanvas $viewAreaBox %w %h"
+    $maincanvas bind $bgRect <ButtonPress-3> "modulesMenuPressCB %x %y"
 
-    bind . <KeyPress-Down>  { $netedit_canvas yview moveto [expr [lindex \
-	    [$netedit_canvas yview] 0] + 0.01 ]}
-    bind . <KeyPress-Up>    { $netedit_canvas yview moveto [expr [lindex \
-	    [$netedit_canvas yview] 0] - 0.01 ] }
-    bind . <KeyPress-Left>  { $netedit_canvas xview moveto [expr [lindex \
-	    [$netedit_canvas xview] 0] - 0.01 ]} 
-    bind . <KeyPress-Right> { $netedit_canvas xview moveto [expr [lindex \
-	    [$netedit_canvas xview] 0] + 0.01 ] }
+    bind . <KeyPress-Down>  { $maincanvas yview moveto [expr [lindex \
+	    [$maincanvas yview] 0] + 0.01 ]}
+    bind . <KeyPress-Up>    { $maincanvas yview moveto [expr [lindex \
+	    [$maincanvas yview] 0] - 0.01 ] }
+    bind . <KeyPress-Left>  { $maincanvas xview moveto [expr [lindex \
+	    [$maincanvas xview] 0] - 0.01 ]} 
+    bind . <KeyPress-Right> { $maincanvas xview moveto [expr [lindex \
+	    [$maincanvas xview] 0] + 0.01 ] }
     bind . <Destroy> {if {"%W"=="."} {exit 1}} 
 }
 
@@ -259,13 +232,12 @@ proc handle_bad_startnet { netfile } {
 }
 
 proc modulesMenuPressCB { x y } {
-    set canvas .bot.neteditFrame.canvas
-
+    global maincanvas minicanvas
     global mouseX mouseY
     set mouseX $x
     set mouseY $y
-    tk_popup $canvas.modulesMenu [expr $x + [winfo rootx $canvas]] \
-	                         [expr $y + [winfo rooty $canvas]]
+    tk_popup $maincanvas.modulesMenu [expr $x + [winfo rootx $maincanvas]] \
+	                         [expr $y + [winfo rooty $maincanvas]]
 
 }
 
@@ -283,56 +255,54 @@ proc handleResize { minicanv maincanv box w h } {
 
 proc updateCanvasX { box beg end } {
     global SCALEX SCALEY
-    global netedit_canvas netedit_mini_canvas
     global miniCanvasWidth miniCanvasHeight
-
+    global maincanvas minicanvas
     # Tell the scroll bar to upate
 
     .bot.neteditFrame.hscroll set $beg $end
 
     # Update the view area box 
 
-    set wid [expr [winfo width $netedit_canvas] / $SCALEX]
+    set wid [expr [winfo width $maincanvas] / $SCALEX]
 
-    set uly [lindex [$netedit_mini_canvas coords $box] 1]
-    set lry [lindex [$netedit_mini_canvas coords $box] 3]
+    set uly [lindex [$minicanvas coords $box] 1]
+    set lry [lindex [$minicanvas coords $box] 3]
     set ulx [ expr $beg * $miniCanvasWidth ]
     set lrx [ expr $ulx + $wid - 1 ]
 
-    $netedit_mini_canvas coords $box $ulx $uly $lrx $lry
+    $minicanvas coords $box $ulx $uly $lrx $lry
 }
 
 proc updateCanvasY { box beg end } {
     global SCALEX SCALEY
-    global netedit_canvas netedit_mini_canvas
     global miniCanvasWidth miniCanvasHeight
-
+    global maincanvas minicanvas
     # Tell the scroll bar to upate
 
     .bot.neteditFrame.vscroll set $beg $end
 
     # Update the view area box 
 
-    set hei [ expr [ winfo height $netedit_canvas ] / $SCALEY ]
+    set hei [ expr [ winfo height $maincanvas ] / $SCALEY ]
 
-    set ulx [lindex [$netedit_mini_canvas coords $box] 0]
+    set ulx [lindex [$minicanvas coords $box] 0]
     set uly [ expr $beg * $miniCanvasHeight ]
-    set lrx [lindex [$netedit_mini_canvas coords $box] 2]
+    set lrx [lindex [$minicanvas coords $box] 2]
     set lry [ expr $uly + $hei - 1 ]
 
-    $netedit_mini_canvas coords $box $ulx $uly $lrx $lry
+    $minicanvas coords $box $ulx $uly $lrx $lry
 }
 
 proc updateCanvases { minicanv maincanv box x y } {
 
     global miniCanvasWidth miniCanvasHeight
-
+    global maincanvas minicanvas
     # Find the width and height of the mini box.
 
-    set wid [expr [lindex [$minicanv coords $box] 2] - \
-	          [lindex [$minicanv coords $box] 0] ]
-    set hei [expr [lindex [$minicanv coords $box] 3] - \
-	          [lindex [$minicanv coords $box] 1] ]
+    set wid [expr [lindex [$minicanvas coords $box] 2] - \
+		  [lindex [$minicanvas coords $box] 0] ]
+    set hei [expr [lindex [$minicanvas coords $box] 3] - \
+	 	  [lindex [$minicanvas coords $box] 1] ]
 
     if [expr $x < ($wid / 2)] { set x [expr $wid / 2] }
     if [expr $x > ($miniCanvasWidth - ($wid / 2))] \
@@ -343,13 +313,13 @@ proc updateCanvases { minicanv maincanv box x y } {
 
     # Move the minibox to the new location
 
-    $minicanv coords $box [expr $x - ($wid/2)] [expr $y - ($hei/2)] \
-	                  [expr $x + ($wid/2)] [expr $y + ($hei/2)]
+    $minicanvas coords $box [expr $x - ($wid/2)] [expr $y - ($hei/2)] \
+			    [expr $x + ($wid/2)] [expr $y + ($hei/2)]
 
     # Update the region displayed in the main canvas.
     # The scroll bars seem to automagically update.
-    $maincanv xview moveto [expr [expr $x - $wid/2] / $miniCanvasWidth ]
-    $maincanv yview moveto [expr [expr $y - $hei/2] / $miniCanvasHeight ]
+    $maincanvas xview moveto [expr [expr $x - $wid/2] / $miniCanvasWidth ]
+    $maincanvas yview moveto [expr [expr $y - $hei/2] / $miniCanvasHeight ]
 }
 
 # All this while loop does is remove spaces from the string.  There's
@@ -369,7 +339,7 @@ proc removeSpaces { str } {
 proc createCategoryMenu {} {
     
 #  puts "Building Module Menus..."
-
+  global maincanvas minicanvas
   foreach package [netedit packageNames] {
     set packageToken [removeSpaces "menu_$package"]
 #    puts "  $package -> $packageToken"
@@ -384,8 +354,8 @@ proc createCategoryMenu {} {
     # Add a separator to the right-button menu for this package if this
     # isn't the first package to go in there
 
-    if { [.bot.neteditFrame.canvas.modulesMenu index end] != "none" } \
-      { .bot.neteditFrame.canvas.modulesMenu add separator }
+    if { [$maincanvas.modulesMenu index end] != "none" } \
+      { $maincanvas.modulesMenu add separator }
 
     foreach category [netedit categoryNames $package] {
       set categoryToken [removeSpaces "menu_${package}_$category"]
@@ -399,9 +369,9 @@ proc createCategoryMenu {} {
 
       # Add the category to the right-button menu
 
-      .bot.neteditFrame.canvas.modulesMenu add cascade -label "$category" \
-        -menu .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken
-      menu .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken -tearoff false
+      $maincanvas.modulesMenu add cascade -label "$category" \
+        -menu $maincanvas.modulesMenu.m_$categoryToken
+      menu $maincanvas.modulesMenu.m_$categoryToken -tearoff false
 
       foreach module [netedit moduleNames $package $category] {
         set moduleToken [removeSpaces $module]
@@ -413,7 +383,7 @@ proc createCategoryMenu {} {
         .main_menu.$packageToken.menu.m_$categoryToken add command \
           -label "$module" \
           -command "addModule \"$package\" \"$category\" \"$module\""
-        .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken add command \
+        $maincanvas.modulesMenu.m_$categoryToken add command \
           -label "$module" \
           -command "addModuleAtMouse \"$package\" \"$category\" \"$module\""
       }
@@ -422,7 +392,7 @@ proc createCategoryMenu {} {
 }
 
 proc createPackageMenu {index} {
-
+    global maincanvas minicanvas
 #  puts "Building Module Menus..."
 
 #  foreach package [netedit packageNames] {
@@ -441,8 +411,8 @@ proc createPackageMenu {index} {
     # Add a separator to the right-button menu for this package if this
     # isn't the first package to go in there
 
-    if { [.bot.neteditFrame.canvas.modulesMenu index end] != "none" } \
-      { .bot.neteditFrame.canvas.modulesMenu add separator }
+    if { [$maincanvas.modulesMenu index end] != "none" } \
+      { $maincanvas.modulesMenu add separator }
 
     foreach category [netedit categoryNames $package] {
       set categoryToken [removeSpaces "menu_${package}_$category"]
@@ -456,9 +426,9 @@ proc createPackageMenu {index} {
 
       # Add the category to the right-button menu
 
-      .bot.neteditFrame.canvas.modulesMenu add cascade -label "$category" \
-        -menu .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken
-      menu .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken -tearoff false
+      $maincanvas.modulesMenu add cascade -label "$category" \
+        -menu $maincanvas.modulesMenu.m_$categoryToken
+      menu $maincanvas.modulesMenu.m_$categoryToken -tearoff false
 
       foreach module [netedit moduleNames $package $category] {
         set moduleToken [removeSpaces $module]
@@ -470,7 +440,7 @@ proc createPackageMenu {index} {
         .main_menu.$packageToken.menu.m_$categoryToken add command \
           -label "$module" \
           -command "addModule \"$package\" \"$category\" \"$module\""
-        .bot.neteditFrame.canvas.modulesMenu.m_$categoryToken add command \
+        $maincanvas.modulesMenu.m_$categoryToken add command \
           -label "$module" \
           -command "addModuleAtMouse \"$package\" \"$category\" \"$module\""
       }
@@ -478,9 +448,6 @@ proc createPackageMenu {index} {
 #  }
 }
 
-proc moveModule {name} {
-    
-}
 ##########################
 proc addModule { package category module } {
     return [addModuleAtPosition "$package" "$category" "$module" 10 10]
@@ -495,6 +462,7 @@ proc addModuleAtMouse { package category module } {
 
 proc addModuleAtPosition {package category module xpos ypos} {
     global mainCanvasWidth mainCanvasHeight
+    global maincanvas minicanvas
     global loading
     global inserting
     
@@ -508,17 +476,17 @@ proc addModuleAtPosition {package category module xpos ypos} {
 	global insertPosition
 	if { $insertPosition == 1 } {
 	    #inserting net at current screen position
-	    set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
-	    set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+	    set xpos [expr $xpos+int([expr (([lindex [$maincanvas xview] 0]*$mainCanvasWidth))])]
+	    set ypos [expr $ypos+int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
 	} else {
 	    #inserting net off to the right
 	    set xpos [expr int([expr $xpos+[lindex $modulesBbox 2]])]
-	     set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+	     set ypos [expr $ypos+int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
 	}
     } else {
 	# place modules as normal
-	set xpos [expr $xpos+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*$mainCanvasWidth))])]
-	set ypos [expr $ypos+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*$mainCanvasHeight))])]
+	set xpos [expr $xpos+int([expr (([lindex [$maincanvas xview] 0]*$mainCanvasWidth))])]
+	set ypos [expr $ypos+int([expr (([lindex [$maincanvas yview] 0]*$mainCanvasHeight))])]
     }
     
     set modid [netedit addmodule "$package" "$category" "$module"]
@@ -531,8 +499,7 @@ proc addModuleAtPosition {package category module xpos ypos} {
 	}
 	Module $modid -name "$module"
     }
-    $modid make_icon .bot.neteditFrame.canvas \
-	    .top.globalViewFrame.canvas $xpos $ypos
+    $modid make_icon $maincanvas $minicanvas $xpos $ypos
     update idletasks
     if { $inserting == 0 } {
 	computeModulesBbox
@@ -564,30 +531,12 @@ proc addConnection {omodid owhich imodid iwhich} {
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
     
     global connection_list
-    set connection_list "$connection_list {$omodid $owhich $imodid $iwhich\
-	    $portcolor}"
+    set connection_list "$connection_list {$omodid $owhich $imodid $iwhich $portcolor}"
     
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
     configureOPorts $omodid
     configureIPorts $imodid
     update idletasks
-}
-
-# Utility procedures to support dragging of items.
-
-proc itemStartDrag {c x y} {
-    global lastX lastY
-    set lastX [$c canvasx $x]
-    set lastY [$c canvasy $y]
-}
-
-proc itemDrag {c x y} {
-    global lastX lastY
-    set x [$c canvasx $x]
-    set y [$c canvasy $y]
-    $c move current [expr $x-$lastX] [expr $y-$lastY]
-    set lastX $x
-    set lastY $y
 }
 
 proc popupSaveMenu {} {
@@ -657,10 +606,11 @@ proc popupInsertMenu {} {
 	#determine if the inserted net should go on the 
 	#current canvas view or to the right of the bbox
 	global mainCanvasWidth mainCanvasHeight
+	global maincanvas minicanvas
 	global insertPosition
-	set x [expr [lindex [.bot.neteditFrame.canvas xview] 0]*\
+	set x [expr [lindex [$maincanvas xview] 0]*\
 		$mainCanvasWidth]
-	set y [expr [lindex [.bot.neteditFrame.canvas yview] 0]*\
+	set y [expr [lindex [$maincanvas yview] 0]*\
 		$mainCanvasHeight] 
 	if { $x > [lindex $modulesBbox 2] || $y > [lindex $modulesBbox 3] } {
 	    # far enough down or to the right to fit on current position
@@ -678,7 +628,6 @@ proc popupInsertMenu {} {
 		# and not be in bbox
 		set insertPosition 1
 	    } else {
-		global maincanvas
 		global modules
 		if { [info exists modules] == 1} {
 		    set fits 1
@@ -715,7 +664,6 @@ proc popupInsertMenu {} {
 }
 
 proc computeModulesBbox {} {
-    global maincanvas
     global modules
     set maxx 0
     set maxy 0
@@ -730,6 +678,7 @@ proc computeModulesBbox {} {
 	set minx 0
 	set miny 0
     } 
+    global maincanvas minicanvas
     foreach m $modules {
 	set curr_coords [$maincanvas coords $m]
 	
@@ -777,13 +726,13 @@ proc ClearCanvas {} {
     set result [tk_messageBox -type okcancel -parent . -message \
 	        "ALL modules and connections will be cleared.\nReally clear?"\
 		-icon warning ]
-    
+    global maincanvas minicanvas
     if {[string compare "ok" $result] == 0} {
 	global modules
 	if { [info exists modules] } {
 	    foreach m $modules {
-		moduleDestroy .bot.neteditFrame.canvas \
-			.top.globalViewFrame.canvas $m
+		moduleDestroy $maincanvas \
+			$minicanvas $m
 	    }
 	}    
 
@@ -800,11 +749,6 @@ proc ClearCanvas {} {
 	
 	set mouseX 0
 	set mouseY 0
-	
-	global maincanvas
-	set maincanvas ".bot.neteditFrame.canvas"
-	global minicanvs
-	set minicanvas ".top.globalViewFrame.canvas"
 	
 	global loading
 	set loading 0
@@ -860,7 +804,7 @@ proc NiceQuit {} {
 	#global modules
 	#if { [info exists modules] } {
 	#    foreach m $modules {
-	#	moduleDestroy .bot.neteditFrame.canvas .top.globalViewFrame.canvas $m
+	#	moduleDestroy $maincanvas $minicanvas $m
 	#    }
 	#}    
 	set modules ""
@@ -984,12 +928,6 @@ proc infoCancel {w} {
     destroy $w
 } 
 
-proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toModule} {
-    set fromClassName [removeSpaces "${fromPackage}_${fromCategory}_${fromModule}"]
-    set toClassName [removeSpaces "${toPackage}_${toCategory}_${toModule}"]
-    itcl_class $toClassName "inherit $fromClassName"
-}
-
 proc loadfile {netedit_loadfile} {
     puts "NOTICE: `loadfile' has been disabled."
     puts "   To use old nets, remove the `loadfile' and `return' lines"
@@ -1033,189 +971,6 @@ proc sourcenet {netedit_loadfile} {
     uplevel #0 {source $file_to_load}
 }
     
-proc sourcefile {netedit_loadfile} {
-    # set loading to 1
-    global loading
-    set loading 1
-
-    # Check to see of the file exists; exit if it doesn't
-    if { ! [file exists $netedit_loadfile] } {
-	puts "$netedit_loadfile: no such file"
-	return
-    }
-    
-    set fchannel [open $netedit_loadfile]
-    
-    set curr_line ""
-
-#    set stage 1
-# DMW: without macromodules, we can just source all of the lines of the file
-#          which is what stage 4 does.
-
-    set stage 4
-
-    global info_list
-    set info_list ""
-
-    # Used in tracking modnames
-    set curr_modname ""
-    set counter -1
-
-    # read in the first line of the file
-    set curr_line [gets $fchannel]
-    
-    set group_info ""
-    
-    while { ! [eof $fchannel] } {
-	# Stage 1: Source basic variables
-
-	if { $stage == 1 } {
-	    if { [string match "set m*" $curr_line] } {
-		# Go on to stage 2, not moving on to the next line of the file
-		set stage 2
-		continue
-	    } elseif { [string match "loadfile *" $curr_line] } {
-		# do nothing
-	    } elseif { [string match "return" $curr_line] } {
-		# do nothing
-	    } elseif { [string match "puts *" $curr_line] } {
-		# do nothing
-	    } else {
-		# Execute the line (comments and/or blank lines are ignored)
-		eval $curr_line
-	    }
-	}
-
-	# Stage 2: Create Modules
-	if { $stage == 2 } {
-	    if { [string match "set m*" $curr_line] } {
-		# build the module
-		eval $curr_line
-	    } elseif { [string match $curr_line "addConnection*"] } {
-		# add connections
-		eval $curr_line
-	    } elseif { [string match $curr_line ""] } {
-		# do nothing
-	    } elseif { [string match "addConnection*" $curr_line] } {
-		eval $curr_line
-	    } else {
-		# Move on to the next stage
-		set stage 3
-		continue
-	    }
-	}
-
-	# Stage 3: do some stuff
-	if { $stage == 3 } {
-	    if { [string match "set ::*" $curr_line] } {
-		set curr_string $curr_line
-		set var [string trimleft $curr_string "set :"]
-
-		set c 0
-		set t 0
-		set pram ""
-		set modname ""
-		while { 1 } {
-		    set char [string index $var $c]
-		    
-		    # Check for -'s; if one is found, begin getting
-		    # the variable name
-		    
-		    if { [string match $char "-"] } {
-			set t 1
-		    }
-		    
-		    # Break if there is a space
-		    
-		    if { [string match $char " "] } {
-			break
-		    }
-
-		    # If the dash has been seen, begin getting the
-		    # variable name...
-
-		    if { $t == 1 } {
-			set pram "$pram$char"
-		    } else {
-			set modname "$modname$char"
-		    }
-		    
-		    # increment the counter...
-		    incr c
-		}
-		
-		set value [list [lindex $var 1]]
-		# Increment the counter each time the modname changes
-		
-		if { ! [string match $modname $curr_modname] } {
-		    incr counter
-		    set curr_modname $modname
-		}
-		
-		if { [string match $value ""] } {
-		    set value "{}"
-		}
-		
-		set mvar "m$counter"
-		set m [expr $$mvar]
-		
-		set command "set ::$m"
-		append command "$pram $value"
-		
-		# Execute the "real" command
-		eval $command
-		
-		if { [string match "*-group*" $command] } {
-		    global $m-group
-		    set grp [lindex [set $m-group] 0]
-		    if { ! [string match $grp ""] } {
-			set group_info "$group_info {$m $grp}"
-		    }
-		}
-
-
-	    } elseif { [string match $curr_line ""] } {
-		# do nothing
-	    } else {
-		set stage 4
-		continue
-	    }
-	}
-	
-	# one last source (this will need to be changed)
-
-
-# DMW: for backwards compatability, we need to ignore the loadfile and return
-#          lines
-
-	if { $stage == 4 } {
-	    if { ![string match "load*" $curr_line] } {
-		if { ![string match "return*" $curr_line] } {
-		    puts $curr_line
-		    eval $curr_line
-		}
-	    }
-	}
-	
-	# Read the next line of the file
-	set curr_line [gets $fchannel]
-	
-	# break out of loop, if at end of file
-	if { [eof $fchannel] } {
-	    break
-	}
-    }
-    
-    # close the file
-    close $fchannel
-
-
-    # set loading back to 0
-    set loading 0
-
-    return $group_info
-}
-
 proc loadMacroModules {group_info} {
     # Generate group lists
     set mmlist ""
