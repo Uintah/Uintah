@@ -1911,6 +1911,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
+#if 0
    int numMatls = d_sharedState->getNumMatls();
 
    vector<const VarLabel* > vars;
@@ -2049,10 +2050,14 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
         } // if mpm_matl
      }  // for matl's
    }
+#endif
 }
 
 
 // $Log$
+// Revision 1.181  2001/01/11 23:43:45  guilkey
+// Commented out a block of unused code
+//
 // Revision 1.180  2001/01/09 22:35:26  jas
 // Moved registerMaterial to private:.  This is called when you either
 // register a MPM or ICE material.  There is no need to call registerMaterial
