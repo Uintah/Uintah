@@ -49,7 +49,6 @@ namespace rtrt {
 // OOGL stuff
 extern BasicTexture * blendTex;
 extern ShadedPrim   * blendTexQuad;
-extern ShadedPrim   * bottomTexQuad;
 extern Blend * blend;
 static double alpha = 0.0;
 static double offset = 0.01;
@@ -315,7 +314,6 @@ Gui::idleFunc()
 	position = (position + 1)%images.size();
 	blendTex->reset( GL_FLOAT, &((*images[position])(0,0)) );
       }
-    bottomTexQuad->draw();
     blendTexQuad->draw();
     ////////////////////////////////////////////
   }
@@ -331,16 +329,16 @@ Gui::idleFunc()
 
     dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
     if( dpy->fullScreenMode_ )
-      activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+      activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
     else
-      activeGui->displayText(fontbase, 10, 15, buf, Color(1,1,1));
+      activeGui->displayText(fontbase, 5, 5, buf, Color(1,1,1));
 
     if( dpy->fullScreenMode_ ) {
       glutSwapBuffers();
       // Need to draw into other buffer so that as we "continuously"
       // flip them, it doesn't look bad.
       dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
-      activeGui->displayText(fontbase, 138, 302, buf, Color(1,1,1));
+      activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
     }
 
     if( activeGui->displayRStats_ )
@@ -800,13 +798,14 @@ Gui::handleWindowResizeCB( int width, int height )
 {
   printf("window resized\n");
 
-glViewport(0, 0, 1280, 1024);
+glViewport(0, 0, activeGui->dpy_->priv->xres, activeGui->dpy_->priv->yres);
 glMatrixMode(GL_PROJECTION);
 glLoadIdentity();
-gluOrtho2D(0, 1280, 0, 1024);
+gluOrtho2D(0, activeGui->dpy_->priv->xres, 0, activeGui->dpy_->priv->yres);
 glDisable( GL_DEPTH_TEST );
 glMatrixMode(GL_MODELVIEW);
 glLoadIdentity();
+glTranslatef(0.375, 0.375, 0.0);
 
   return;
 
