@@ -17,7 +17,6 @@ SRCS     += \
 	$(SRCDIR)/BallAux.cc\
 	$(SRCDIR)/BallMath.cc\
 	$(SRCDIR)/EditPath.cc\
-	$(SRCDIR)/MpegEncoder.cc\
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/Parser.cc\
 	$(SRCDIR)/Renderer.cc\
@@ -42,7 +41,11 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) -lm
+CFLAGS += $(MPEG_DEF_FLAG)
+
+INCLUDES += $(MPEG_INCLUDE)
+
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) $(MPEG_LIBRARY) -lm
 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

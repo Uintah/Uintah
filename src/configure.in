@@ -825,6 +825,8 @@ if test "${nrrd_pkg}" = "yes" ; then
         echo "\n*** Error - could not find ${withval}/include/nrrd.h\n"
         nrrd_pkg="no"
       fi
+    else
+      echo "Remark: ignoring pathless with-nrrd flag"
     fi
   fi
 fi
@@ -832,7 +834,7 @@ fi
 if test "${nrrd_pkg}" = "yes" ; then
   echo -n "checking for nrrd... "
   if test "$NRRD_PREFIX" ; then
-    NRRD_INCLUDE_DIR="${NRRD_PREFIX}/include"
+    NRRD_INCLUDE="-I${NRRD_PREFIX}/include"
     NRRD_LIB_DIR="${NRRD_PREFIX}/lib"
     echo "${NRRD_PREFIX}"
   else
@@ -840,8 +842,43 @@ if test "${nrrd_pkg}" = "yes" ; then
   fi
 fi
 
-AC_SUBST(NRRD_INCLUDE_DIR)
+AC_SUBST(NRRD_INCLUDE)
 AC_SUBST(NRRD_LIB_DIR)
+
+
+##-- Find MPEG ---------------------------------------------------------------
+
+MPEG_DEF_FLAG=""
+MPEG_PREFIX=""
+if test "${with_mpeg+set}" = set; then
+  withval="$with_mpeg"
+  if test "$withval" != "yes" ; then
+    if test -e "${withval}/include/mpege.h"; then
+      MPEG_PREFIX="$withval"
+    else
+      echo "\n*** Error - could not find MPEG in ${withval}/include/mpege.h\n"
+    fi
+  else
+    if test -e "$thirdparty/include/mpege.h" ; then
+      MPEG_PREFIX=$thirdparty
+    else
+      echo "\n*** Error - could not find MPEG in $thirdparty/include/mpege.h\n";
+    fi
+  fi
+fi
+
+if test "$MPEG_PREFIX" != "" ; then
+  echo -n "checking for mpeg... "
+  MPEG_DEF_FLAG="-DMPEG"
+  MPEG_INCLUDE="-I${MPEG_PREFIX}/include"
+  MPEG_LIBRARY="-L${MPEG_PREFIX}/lib/libmpege.a"
+  echo "${MPEG_PREFIX}"
+fi
+
+AC_SUBST(MPEG_INCLUDE)
+AC_SUBST(MPEG_LIBRARY)
+AC_SUBST(MPEG_DEF_FLAG)
+
 
 ##-- Find Nektar--------------------------------------------------------------
 

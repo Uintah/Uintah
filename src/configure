@@ -2534,6 +2534,8 @@ if test "${nrrd_pkg}" = "yes" ; then
         echo "\n*** Error - could not find ${withval}/include/nrrd.h\n"
         nrrd_pkg="no"
       fi
+    else
+      echo "Remark: ignoring pathless with-nrrd flag"
     fi
   fi
 fi
@@ -2541,13 +2543,48 @@ fi
 if test "${nrrd_pkg}" = "yes" ; then
   echo -n "checking for nrrd... "
   if test "$NRRD_PREFIX" ; then
-    NRRD_INCLUDE_DIR="${NRRD_PREFIX}/include"
+    NRRD_INCLUDE="-I${NRRD_PREFIX}/include"
     NRRD_LIB_DIR="${NRRD_PREFIX}/lib"
     echo "${NRRD_PREFIX}"
   else
     echo "no"
   fi
 fi
+
+
+
+
+
+##-- Find MPEG ---------------------------------------------------------------
+
+MPEG_DEF_FLAG=""
+MPEG_PREFIX=""
+if test "${with_mpeg+set}" = set; then
+  withval="$with_mpeg"
+  if test "$withval" != "yes" ; then
+    if test -e "${withval}/include/mpege.h"; then
+      MPEG_PREFIX="$withval"
+    else
+      echo "\n*** Error - could not find MPEG in ${withval}/include/mpege.h\n"
+    fi
+  else
+    if test -e "$thirdparty/include/mpege.h" ; then
+      MPEG_PREFIX=$thirdparty
+    else
+      echo "\n*** Error - could not find MPEG in $thirdparty/include/mpege.h\n";
+    fi
+  fi
+fi
+
+if test "$MPEG_PREFIX" != "" ; then
+  echo -n "checking for mpeg... "
+  MPEG_DEF_FLAG="-DMPEG"
+  MPEG_INCLUDE="-I${MPEG_PREFIX}/include"
+  MPEG_LIBRARY="-L${MPEG_PREFIX}/lib/libmpege.a"
+  echo "${MPEG_PREFIX}"
+fi
+
+
 
 
 
@@ -2582,7 +2619,7 @@ fi
 # Extract the first word of "etags", so it can be a program name with args.
 set dummy etags; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2586: checking for $ac_word" >&5
+echo "configure:2623: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_ETAGS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4160,8 +4197,11 @@ s%@BLT_LIB_FLAG@%$BLT_LIB_FLAG%g
 s%@XML_LIB_DIR@%$XML_LIB_DIR%g
 s%@XML_LIB_FLAG@%$XML_LIB_FLAG%g
 s%@XML_INCLUDE_DIR@%$XML_INCLUDE_DIR%g
-s%@NRRD_INCLUDE_DIR@%$NRRD_INCLUDE_DIR%g
+s%@NRRD_INCLUDE@%$NRRD_INCLUDE%g
 s%@NRRD_LIB_DIR@%$NRRD_LIB_DIR%g
+s%@MPEG_INCLUDE@%$MPEG_INCLUDE%g
+s%@MPEG_LIBRARY@%$MPEG_LIBRARY%g
+s%@MPEG_DEF_FLAG@%$MPEG_DEF_FLAG%g
 s%@NEKTAR_INCLUDE_DIR@%$NEKTAR_INCLUDE_DIR%g
 s%@NEKTAR_LIB_DIR@%$NEKTAR_LIB_DIR%g
 s%@NEKTAR_LIB_FLAG@%$NEKTAR_LIB_FLAG%g

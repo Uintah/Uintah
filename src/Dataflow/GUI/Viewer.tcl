@@ -472,6 +472,7 @@ itcl_class ViewWindow {
 	global "$this-global-movie"
 	global "$this-global-movieName"
 	global "$this-global-movieFrame"
+	global "$this-global-resize"
 	
 	global $this-do_stereo
 	global $this-sbase
@@ -490,6 +491,7 @@ itcl_class ViewWindow {
 	set "$this-global-movie" 0
 	set "$this-global-movieName" "movie"
 	set "$this-global-movieFrame" 0
+	set "$this-global-resize" 0
 	    
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
@@ -540,26 +542,28 @@ itcl_class ViewWindow {
         pack $m.eframe.f -side top -anchor w
         label $m.eframe.f.l -text "Record Movie as:"
         pack $m.eframe.f.l -side top 
+        checkbutton $m.eframe.f.resize -text "Resize 352x240" \
+	    -variable $this-global-resize \
+	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
         radiobutton $m.eframe.f.none -text "Stop Recording" \
             -variable $this-global-movie -value 0 -command "$this-c redraw"
         radiobutton $m.eframe.f.raw -text "Raw Frames" \
             -variable $this-global-movie -value 1 -command "$this-c redraw"
-	set sgi [$this-c sgi_defined]
-	if { $sgi == 1 } {
-        radiobutton $m.eframe.f.mpeg -text "Mpeg" \
-            -variable $this-global-movie -value 2 -command "$this-c redraw"
+	if { [$this-c have_mpeg] } {
+	    radiobutton $m.eframe.f.mpeg -text "Mpeg" -variable \
+		    $this-global-movie -value 2 -command "$this-c redraw"
 	} else {
-        radiobutton $m.eframe.f.mpeg -text "Mpeg" \
-            -variable $this-global-movie -value 2 \
-	    -state disabled -disabledforeground "" \
-	    -command "$this-c redraw"
+	    radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+		    -variable $this-global-movie -value 2 \
+		    -state disabled -disabledforeground "" \
+		    -command "$this-c redraw"
 	}
         entry $m.eframe.f.moviebase -relief sunken -width 12 \
 	    -textvariable "$this-global-movieName" 
         pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
             -side top  -anchor w
         pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
-
+	pack $m.eframe.f.resize -side top  -anchor w
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
@@ -616,6 +620,17 @@ itcl_class ViewWindow {
 #	    puts "Non-existing frame to initialize!"
 #	}
 
+    }
+
+    method resize { } {
+	set w .ui[modname]
+	if { [set $this-global-resize] == 0 } {
+	    pack configure $w.wframe -expand yes -fill both
+	} else {
+	    set size "352x240"
+	    pack configure $w.wframe -expand no -fill none
+	    $w.wframe.draw configure -geometry $size
+	}
     }
 
     method switch_frames {} {

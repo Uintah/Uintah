@@ -1614,18 +1614,12 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     return;
   }
   
-  if (args[1] == "sgi_defined") {
-    clString result("");
-#ifdef __sgi
-#if (_MIPS_SZPTR == 64)
-    result += "2";
+  if (args[1] == "have_mpeg") {
+#ifdef MPEG
+    args.result("1");
 #else
-    result += "1";
-#endif
-#else
-    result += "0";
-#endif
-    args.result( result );
+    args.result("0");
+#endif // MPEG
   } else if (args[1] == "dump_viewwindow") {
     if (args.count() != 4) {
       args.error("ViewWindow::dump_viewwindow needs an output file name and type");
