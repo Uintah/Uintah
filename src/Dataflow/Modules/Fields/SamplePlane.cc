@@ -184,8 +184,6 @@ SamplePlane::execute()
   Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
   minb -= diag;
   maxb += diag;
-  minb.z(-1.0);
-  maxb.z(1.0);
 
   ImageMeshHandle imagemesh = scinew ImageMesh(sizex, sizey, minb, maxb);
 
@@ -212,6 +210,20 @@ SamplePlane::execute()
   {
     ofh = scinew ImageField<double>(imagemesh, basis_order);
   }
+
+#if 0
+  Vector normal(1.0, 1.0, 1.0);
+  const Point origin(0.0, 1.0, 0.0);
+  Vector fakey(Cross(Vector(0.0, 0.0, 1.0), normal));
+  Vector fakex(Cross(normal, fakey));
+  normal.safe_normalize();
+  fakex.safe_normalize();
+  fakey.safe_normalize();
+
+  trans.load_identity();
+  trans.load_basis(Point(0, 0, 0), fakex, fakey, normal);
+  trans.pre_translate(origin.asVector() - fakex * 0.5 - fakey * 0.5);
+#endif
 
   // Transform field.
   ofh->mesh()->transform(trans);
