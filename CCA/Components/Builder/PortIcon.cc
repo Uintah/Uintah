@@ -33,8 +33,11 @@
 
 #include <CCA/Components/Builder/PortIcon.h>
 #include <CCA/Components/Builder/Module.h>
+#include <CCA/Components/Builder/NetworkCanvasView.h>
+#include <CCA/Components/Builder/BuilderWindow.h>
 #include <SCIRun/TypeMap.h>
 
+#include <qmenudata.h>
 #include <qpainter.h>
 #include <qpopupmenu.h>
 #include <iostream>
@@ -48,6 +51,7 @@ PortIcon::PortIcon(Module *module, const std::string& model,
     : mod(module), pModel(model), tName(type), pType(pType), pName(name),
       num(num), pRect(r), services(services)
 {
+//std::cerr << "PortIcon::PortIcon " << name << " model=" << model << std::endl;
     portColorMap();
     if (pType == USES) {
         iColor = Qt::green;
@@ -70,8 +74,21 @@ PortIcon::PortIcon(Module *module, const std::string& model,
         color = colorMap->getString(std::string("default"), "");
     }
     pColor.setNamedColor(color.c_str());
-    //pMenu = new QPopupMenu((QWidget *) module);
-    //pMenu->insertItem("Port menu");
+
+    pMenu = new QPopupMenu((QWidget *) module);
+    std::map<std::string, MenuTree*> *menus =
+        module->parent()->p2BuilderWindow->packageMenus();
+    std::string s;
+    if ("cca" == model || "CCA" == model) {
+        s = "CCA";
+    } else if ("babel" == model) {
+        s = "babel";
+    } else if ("Vtk" == model || "vtk" == model) {
+        s = "Vtk";
+    } else if ("Dataflow" == model || "dataflow" == model) {
+        s = "Dataflow";
+    }
+    (*menus)[s]->populateMenu(pMenu);
 }
 
 PortIcon::~PortIcon()

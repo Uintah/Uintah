@@ -127,10 +127,6 @@ private:
   sci::cca::Services::pointer services;
 };
 
-inline void NetworkCanvasView::contentsContextMenuEvent(QContextMenuEvent*)
-{
-    p2BuilderWindow->componentContextMenu()->exec(QCursor::pos());
-}
 
 inline std::vector<Module*> NetworkCanvasView::getModules()
 {

@@ -82,6 +82,18 @@ NetworkCanvasView::~NetworkCanvasView()
 {
 }
 
+void NetworkCanvasView::contentsContextMenuEvent(QContextMenuEvent *e)
+{
+    QCanvasItemList lst = canvas()->collisions(e->pos());
+    if (lst.size() > 0) {
+        // check for Connection RTTI 
+        removeConnection(lst[0]);
+        e->accept();
+    } else {
+        p2BuilderWindow->componentContextMenu()->exec(QCursor::pos());
+    }
+}
+
 void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 {
     if (moving || connecting) {
@@ -91,13 +103,9 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
     QPoint p = contentsToViewport(e->pos());
     QWidget *who = childAt(p);
     
-    if (e->button() == Qt::RightButton) {
-        QCanvasItemList lst = canvas()->collisions(e->pos());
-        //  std::cerr << "Qt::RightButton (" << e->pos().x() << "," << e->pos().y() << "): lst.size=" << lst.size() << std::endl;
-        if (lst.size() > 0) {
-            removeConnection(lst[0]);
-        }
-    } else if (e->button() == Qt::LeftButton) {
+    // right mouse button events are being handled by context menu events 
+    // middle mouse button is ignored for now
+    if (e->button() == Qt::LeftButton) {
         //std::cerr << "Qt::LeftButton: pos=" << e->pos().x() << " " << e->pos().y() << std::endl;
         for (std::vector<Module*>::iterator it = modules.begin();
                 it != modules.end(); it++) {
@@ -129,7 +137,6 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
                 return;
             }
         }
-    } else { // Middle button
     }
 }
 
@@ -362,6 +369,7 @@ void NetworkCanvasView::removeModule(Module *module)
     }
     catch (const Exception& e) {
         p2BuilderWindow->displayMsg(e.message());
+        p2BuilderWindow->displayMsg("\n");
     }
     services->releasePort("cca.BuilderService");
 

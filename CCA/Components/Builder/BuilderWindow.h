@@ -102,6 +102,9 @@ class BuilderWindow : public QMainWindow,
 {
     Q_OBJECT
 public:
+    typedef std::map<std::string, int> IntMap;
+    typedef std::map<std::string, MenuTree*> MenuMap;
+
     BuilderWindow(const sci::cca::Services::pointer& services,
                   QApplication *app);
     virtual ~BuilderWindow();
@@ -121,14 +124,15 @@ public:
         const std::string &frameworkURL);
     QPopupMenu* componentContextMenu() const { return componentMenu; }
     QApplication* application() const { return app; }
+    MenuMap* packageMenus() { return &menus; }
 
 public slots:
     void updateMiniView();
 
 protected:
     void closeEvent( QCloseEvent* );
-    typedef std::map<std::string, int> IntMap;
     IntMap popupMenuID;
+    MenuMap menus;
 
 private:
     BuilderWindow(const BuilderWindow&);
