@@ -9,7 +9,7 @@
 #include <AllocOS.h>
 #ifdef __sun
 #include <string.h>
-#define bcopy(dest,src,n) memcpy(dest,src,n)
+#define bcopy(src,dest,n) memcpy(dest,src,n)
 #else
 #include <bstring.h>
 #endif
@@ -496,6 +496,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     dd-=sizeof(Sentinel);
     dd-=sizeof(Tag);
     Tag* oldobj=(Tag*)dd;
+    if(trace)
+	fprintf(stderr, "R %08p %d (%s)\n", dobj, newsize, oldobj->tag);
 
     // Make sure that it is still intact...
     if(!lazy)
