@@ -70,7 +70,9 @@ public:
 
   bool isSoundTrigger() { return sound_; }
 
-  void setNext( Trigger * next ) { next_ = next; }
+  void      setNext( Trigger * next ) { next_ = next; }
+  Trigger * getNext() { return next_; }
+
   void setDelay( double delay ) { delay_ = delay; }
 
   void setDrawableInfo( BasicTexture * tex,
