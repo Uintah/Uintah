@@ -51,10 +51,7 @@ public:
   double* a;
 
   //! Constructors
-  // Fuck the SGI compiler for hinting that someone should strip out
-  // all of the variable names from these.  Every time I use this god
-  // forsaken class I have to redecipher this terrible interface.
-  // Here's the document for next time.
+  // Here's what the arguements for the constructor should be:
   //   r   = number of rows
   //   c   = number of columns
   //   rr  = row accumulation buffer containing r+1 entries where
