@@ -1,0 +1,12 @@
+<!-- directory documentation specificatio -->
+
+<!-- ********** Elements ********** -->
+<!ELEMENT p (#PCDATA)>
+
+<!-- Top level -->
+<!ELEMENT dir (fit, use)>
+<!ATTLIST dir name CDATA #REQUIRED>
+<!ELEMENT fit (p+)>
+<!ELEMENT use (when, why)>
+<!ELEMENT when (p+)>
+<!ELEMENT why (p+)>

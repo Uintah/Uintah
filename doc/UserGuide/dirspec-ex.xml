@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "dirspec.dtd">
+
+<dir name="Dataflow/Network">
+  <fit>
+  <!-- describe how this directory fits into SCIRun - why does it 
+       exist, how does SCIRun benefit from it, etc. -->
+    <p>
+      Dataflow/Network provides the basic functionality of the SCIRun
+      dataflow paradigm.  The notions of Modules, Ports, Connections
+      and Networks are defined here.  It also provides the
+      implementation for the NetworkEditor, which is the tool used by
+      a network designer to build Networks.
+    </p>
+  </fit>
+  <use>
+    <why>
+    <!-- Discuss why a developer would need or want to use the
+         functions and/or classes in this directory. -->
+      <p>
+        One of the useful features of SCIRun is that it can easily
+	be extended by developing new modules (algorithms) and new 
+	ports (datatypes) for it.  To do this, a developer would
+	write code that inherits functionality from the classes
+	in this directory.  By inheriting from these classes, a
+	developer can focus on the code needed to quickly implement
+	a new algorithm.
+      </p>
+    </why>
+    <when>
+    <!-- Discuss when or where to use the functions and classes in
+         this directory: From within modules?, when a certain event
+	 occurs? -->
+      <p>
+        Most of the code in this directory is meant to be used
+	internally by the SCIRun PSE only.  There are three instances
+	in which a developer would use code in this directory
+	external to the PSE: When writing modules, When writing ports,
+	and when a developer would like to post a message to the 
+	NetworkEditor's message window.
+      </p>
+    </when>
+  </use
+</dir>
+
+<!-- author comments: suggestions for new/better tags for this xml file
+
+  I think this file should address known bugs, i.e. have a <bugs> tag.
+
+-->
