@@ -32,7 +32,6 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     
     method set_defaults {} { 
 	global $this-gamma
-        global $this-tcl_status 
 	global $this-mapType
 	global $this-resolution
 	global $this-realres
