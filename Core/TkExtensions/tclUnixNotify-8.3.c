@@ -819,13 +819,13 @@ Tcl_WaitForEvent(timePtr)
     memcpy((VOID *) tsdPtr->readyMasks, (VOID *) tsdPtr->checkMasks,
 	    3*MASK_SIZE*sizeof(fd_mask));
 
-    //Db: added unlock  >>> Yarden
+    /*Db: added unlock  >>> Yarden*/
     Unlock();
     numFound = select(tsdPtr->numFdBits,
 	    (SELECT_MASK *) &tsdPtr->readyMasks[0],
 	    (SELECT_MASK *) &tsdPtr->readyMasks[MASK_SIZE],
 	    (SELECT_MASK *) &tsdPtr->readyMasks[2*MASK_SIZE], timeoutPtr);
-    Lock(); // <<< Yarden
+    Lock(); /* <<< Yarden*/
 
     /*
      * Some systems don't clear the masks after an error, so

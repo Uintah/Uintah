@@ -46,6 +46,15 @@
 #endif
    - cm
 */
+
+/* -- Dd for AIX xlC */
+#ifdef _AIX
+#  define	__environ	environ
+#  define       __sigaction     sigaction
+#  define       __sigemptyset   sigemptyset
+#endif
+/* -- end Dd */
+
 #ifdef __digital__
 #define __environ environ
 #endif
