@@ -143,12 +143,16 @@ VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() + ".",
+#ifdef __sgi
+		       ttd->get_filename() + ".",
+#else
+		       ftd->get_filename() + ".",		       
+#endif
                        base_class_name, 
                        template_class_name, 
 #ifdef __sgi
                        ttd->get_name() + "," +
-                       ftd->get_name() + "<double>");
+                       ftd->get_name() + "<double> ");
 #else
                        ftd->get_name());
 #endif  

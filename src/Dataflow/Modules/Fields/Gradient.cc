@@ -139,8 +139,8 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
                        template_class_name, 
 
 #ifdef __sgi
-                       ftd->get_name() + "<" + ttd->get_name()+ ">" + "," +
-                       ftd->get_name() + "<double>");
+                       ftd->get_name() + "<" + ttd->get_name()+ " >" + "," +
+                       ftd->get_name() + "<Vector> ");
 #else
                        ftd->get_name() + ", " +
 		       ttd->get_name());
