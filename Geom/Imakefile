@@ -16,7 +16,7 @@ OPENGLINCS = -I$(TOP)/Mesa/include
 OPENGLLIBS = -L$(TOP)/Mesa/lib $(XLIBDIR) -lMesaGLU -lMesaGL -lX11
 #else
 OPENGLINCS =
-OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lX11
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
 #endif
 
 #else
@@ -35,8 +35,8 @@ OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  \
 	RenderMode.o  Scene.o  Sphere.o Switch.o  \
 	Tetra.o  Torus.o  Transform.o  Tri.o  Triangles.o  TriStrip.o  \
 	Tube.o  TimeGrid.o QMesh.o \
-	VertexPrim.o  View.o  Box.o \
-	TCLGeom.o  TCLView.o  \
+	VertexPrim.o  View.o  Box.o Text.o \
+	TCLGeom.o  TCLView.o  TexSquare.o Billboard.o Sticky.o \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	Disc.cc \
@@ -46,12 +46,12 @@ SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
 	RenderMode.cc Scene.cc Sphere.cc Switch.cc \
 	Tetra.cc Torus.cc Transform.cc Tri.cc Triangles.cc TriStrip.cc \
 	Tube.cc TimeGrid.cc QMesh.cc \
-	VertexPrim.cc View.cc Box.cc \
-	TCLGeom.cc  TCLView.cc \
+	VertexPrim.cc View.cc Box.cc Text.cc \
+	TCLGeom.cc  TCLView.cc TexSquare.cc Billboard.cc Sticky.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)
 SO_LIBS = 
-SO_LDFLAGS = -L$(TOP)/lib -lMath -lTCL -lGeometry -lClasslib \
+SO_LDFLAGS = -L$(TOP)/lib -lMath -lscitk -ltk -lTCL -lGeometry -lClasslib \
 	-lMultitask -lMalloc $(OPENGLLIBS) -lm -lC -lc
 
 LIBNAME = Geom
