@@ -36,14 +36,14 @@ using namespace PSECore::Constraints;
 const Index NumCons = 0;
 const Index NumVars = 1;
 const Index NumGeoms = 3;
-const Index NumPcks = 1;
+const Index NumPcks = 3;
 const Index NumMatls = 3;
-const Index NumMdes = 1;
-const Index NumSwtchs = 1;
+const Index NumMdes = 2;
+const Index NumSwtchs = 3;
 // const Index NumSchemes = 1;
 
 enum { GeomPoint, GeomShaft, GeomHead };
-enum { Pick };
+enum { PointP, ShaftP, HeadP };
 
 /***************************************************************************
  * The constructor initializes the widget's constraints, variables,
@@ -59,25 +59,24 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock, double widget_scal
 {
    variables[PointVar] = scinew PointVariable("Point", solve, Scheme1, Point(0, 0, 0));
 
-   GeomGroup* arr = scinew GeomGroup;
    geometries[GeomPoint] = scinew GeomSphere;
-   materials[PointMatl] = scinew GeomMaterial(geometries[GeomPoint], DefaultPointMaterial);
-   arr->add(materials[PointMatl]);
+   picks[PointP] = scinew GeomPick(geometries[GeomPoint], module, this, PointP);
+   picks[PointP]->set_highlight(DefaultHighlightMaterial);
+   materials[PointMatl] = scinew GeomMaterial(picks[PointP], DefaultPointMaterial);
+   CreateModeSwitch(0, materials[PointMatl]);
    geometries[GeomShaft] = scinew GeomCylinder;
-   materials[ShaftMatl] = scinew GeomMaterial(geometries[GeomShaft], DefaultEdgeMaterial);
-   arr->add(materials[ShaftMatl]);
+   picks[ShaftP] = scinew GeomPick(geometries[GeomShaft], module, this, ShaftP);
+   picks[ShaftP]->set_highlight(DefaultHighlightMaterial);
+   materials[ShaftMatl] = scinew GeomMaterial(picks[ShaftP], DefaultEdgeMaterial);
+   CreateModeSwitch(1, materials[ShaftMatl]);
    geometries[GeomHead] = scinew GeomCappedCone;
-   materials[HeadMatl] = scinew GeomMaterial(geometries[GeomHead], DefaultEdgeMaterial);
-   arr->add(materials[HeadMatl]);
+   picks[HeadP] = scinew GeomPick(geometries[GeomHead], module, this, HeadP);
+   picks[HeadP]->set_highlight(DefaultHighlightMaterial);
+   materials[HeadMatl] = scinew GeomMaterial(picks[HeadP], DefaultEdgeMaterial);
+   CreateModeSwitch(2, materials[HeadMatl]);
 
-   picks[Pick] = scinew GeomPick(arr,
-				 module, this, Pick);
-
-   picks[Pick]->set_highlight(DefaultHighlightMaterial);
-   CreateModeSwitch(0, picks[Pick]);
-
-   SetMode(Mode0, Switch0);
-
+   SetMode(Mode0, Switch0|Switch1|Switch2);
+   SetMode(Mode1, Switch0);
    FinishWidget();
 }
 
@@ -121,6 +120,11 @@ ArrowWidget::redraw()
       }
    }
 
+   if (mode_switches[1]->get_state()) {
+       Point center(variables[PointVar]->point());
+       ((GeomSphere*)geometries[GeomPoint])->move(center, widget_scale);
+   }
+
    Vector v1, v2;
    if(direction.length2() > 1.e-6){
        direction.find_orthogonal(v1, v2);
@@ -149,7 +153,9 @@ ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 			 const Vector& delta, int pick, const BState& )
 {
     switch(pick){
-    case Pick:
+    case PointP: 
+    case ShaftP: 
+    case HeadP:
 	MoveDelta(delta);
 	break;
     }
@@ -276,6 +282,9 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 //
 // $Log$
+// Revision 1.3  1999/09/02 04:44:58  dmw
+// added a mode
+//
 // Revision 1.2  1999/08/17 06:38:27  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
