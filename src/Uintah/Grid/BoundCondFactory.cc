@@ -5,6 +5,7 @@
 #include <Uintah/Grid/KinematicBoundCond.h>
 #include <Uintah/Grid/TempThermalBoundCond.h>
 #include <Uintah/Grid/FluxThermalBoundCond.h>
+#include <Uintah/Grid/PressureBoundCond.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <iostream>
@@ -43,6 +44,9 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
      else if (bc_attr["var"] == "heat_flux")
        objs.push_back(new FluxThermalBoundCond(child));
      
+     else if (bc_attr["var"] == "pressure")
+       objs.push_back(new PressureBoundCond(child));
+     
      else {
        cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
 	    << ")" << endl;
@@ -52,6 +56,9 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
 }
 
 // $Log$
+// Revision 1.2  2000/10/18 03:46:46  jas
+// Added pressure boundary conditions.
+//
 // Revision 1.1  2000/06/27 22:31:50  jas
 // Grid boundary conditions that are stored at the patch level.
 //
