@@ -198,16 +198,18 @@ MatrixSelectVector::execute()
   
   reset_vars();
 
-  if (execmode_.get() != "play" || execmode_.get() != "step") { return; }
   stop_ = false;
 
   const int start = range_min_.get();
   const int end = range_max_.get();
-  int which = start;
   if (changed_p)
   {
     inc_ = (start>end)?-1:1;
   }
+
+  if (execmode_.get() == "update") { return; }
+
+  int which = start;
   if (execmode_.get() == "step")
   {
     int a = start;

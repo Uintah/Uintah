@@ -42,23 +42,23 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	set $this-selectable_units   ""
         set $this-range_min          0
         set $this-range_max          0
-	set $this-playmode           onceforward
+	set $this-playmode           once
 	set $this-current            0
-	set $this-execmode           waiting
+	set $this-execmode           "play"
     }
 
     method run_update {} {
-	set $this-execmode update
+	set $this-execmode "update"
 	$this-c needexecute
     }
 
     method run_step {} {
-	set $this-execmode step
+	set $this-execmode "step"
 	$this-c needexecute
     }
 
     method run_play {} {
-	set $this-execmode play
+	set $this-execmode "play"
 	$this-c needexecute
     }
     
