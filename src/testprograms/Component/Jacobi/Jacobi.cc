@@ -53,8 +53,8 @@
 
 
 /*****************************************************************************/
-#define NYI    100                       /* Number of Y-Intervals            */
-#define NXI    100                       /* Number of X-Intervals            */
+#define NYI    64                       /* Number of Y-Intervals            */
+#define NXI    64                       /* Number of X-Intervals            */
 #define Tinit    0                       /* Starting value                   */
 /*****************************************************************************/
 
