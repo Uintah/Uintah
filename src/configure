@@ -5861,13 +5861,13 @@ echo "configure:5846: checking for itk.h" >&5
 EOF
 
     rm -f conftest.out a.out
-    ac_try="$ac_cpp conftest.$ac_ext -I$ITKLIB/../include -I$INCITCL_H -I$INCTK_H -I$INCTCL_H >/dev/null 2>conftest.out"
+    ac_try="$ac_cpp conftest.$ac_ext -I$LIBITK/../include -I$INCITCL_H -I$INCTK_H -I$INCTCL_H >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
     ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
     if test -z "$ac_err"; then
-      if test "$ITKLIB/../include" != "/usr/include" &&
-         test "$ITKLIB/../include" != "/usr/include/"; then
-        eval $_SCI_VAR_NAME_='$ITKLIB/../include'
+      if test "$LIBITK/../include" != "/usr/include" &&
+         test "$LIBITK/../include" != "/usr/include/"; then
+        eval $_SCI_VAR_NAME_='$LIBITK/../include'
       else
         eval $_SCI_VAR_NAME_='\ '
       fi
