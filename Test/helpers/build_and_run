@@ -31,12 +31,12 @@ if [ "$COMPILE" = "yes" ]; then
   chgrp -R csafe .
   chmod -R g+rwX . 
 
-  chmod -R a+rX "$HTMLLOG"-"$mode"
 
 fi
 
 if [ "$retval" = "0" -a "$NOTESTS" = "0" ]; then
   run $1
+  chmod -R a+rX "$HTMLLOG"-"$mode"
   exit $?
 else
   exit $retval
