@@ -72,7 +72,8 @@ namespace Uintah {
 
    private:
       std::string d_filebase;
-      int d_outputInterval;
+      double d_outputInterval;
+      double d_nextOutputTime;
       int d_currentTimestep;
       Dir d_dir;
 
@@ -84,6 +85,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.6  2000/06/14 21:50:54  guilkey
+// Changed DataArchiver to create uda files based on a per time basis
+// rather than a per number of timesteps basis.
+//
 // Revision 1.5  2000/06/03 05:24:26  sparker
 // Finished/changed reduced variable emits
 // Fixed bug in directory version numbers where the index was getting
