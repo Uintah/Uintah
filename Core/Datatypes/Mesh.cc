@@ -136,14 +136,20 @@ Mesh::Mesh(int nnodes, int nelems)
 }
 
 Mesh::Mesh(const Mesh& copy)
-: nodes(copy.nodes), elems(copy.elems.size()),
-  cond_tensors(copy.cond_tensors), have_all_neighbors(copy.have_all_neighbors),
+: nodes(copy.nodes.size()), elems(copy.elems.size()),
+  cond_tensors(copy.cond_tensors), have_all_neighbors(0),
   current_generation(2), bld_grid(0)
 {
+    // we're gonna copy the nodes, rather than share pointers... otherwise
+    // detach() doesn't really work, since the nodes are still "attached"
+    int i;
+    for (i=0; i<copy.nodes.size(); i++) {
+	nodes[i] = new Node(copy.nodes[i]->p);
+    }
     octree=0;
     grid.nx=grid.ny=grid.nz=0;
     int nelems=elems.size();
-    for(int i=0;i<nelems;i++){
+    for(i=0;i<nelems;i++){
 	Element* e=new Element(*copy.elems[i], this);
 	elems[i]=e;
     }
@@ -217,6 +223,7 @@ void Mesh::io(Piostream& stream)
 	    int idx=0;
 	    locate2(Point(0,0,0), idx, 0);
 	}
+	cerr << "Mesh has "<<nodes.size()<<" nodes and "<<elems.size()<<" elements.\n";
     }
 }
 
@@ -471,6 +478,58 @@ void Mesh::detach_nodes()
     for(int i=0;i<nodes.size();i++)
 	if(nodes[i].get_rep())
 	    nodes[i].detach();
+}
+
+void Mesh::get_elem_nbrhd(int eidx, Array1<int> &nbrs, int dupsOk) {
+    if (!have_all_neighbors) {compute_neighbors(); compute_face_neighbors();}
+    Element *e=elems[eidx];
+    if (dupsOk) {
+	for (int i=0; i<4; i++) {
+	    NodeHandle n=nodes[e->n[i]];
+	    for (int j=0; j<n->elems.size(); j++) {
+		int new_eidx = n->elems[j];
+		if (new_eidx!=eidx) nbrs.add(new_eidx);
+	    }
+	}
+    } else {
+	for (int i=0; i<4; i++) {
+	    NodeHandle n=nodes[e->n[i]];
+	    for (int j=0; j<n->elems.size(); j++) {
+		int new_eidx = n->elems[j];
+		if (new_eidx==eidx) continue;
+		int k;
+		for (k=0; k<nbrs.size(); k++)
+		    if (nbrs[k] == new_eidx) break;
+		if (k==nbrs.size()) nbrs.add(new_eidx);
+	    }
+	}
+    }
+}
+
+void Mesh::get_node_nbrhd(int nidx, Array1<int> &nbrs, int dupsOk) {
+    if (!have_all_neighbors) {compute_neighbors(); compute_face_neighbors();}
+    NodeHandle n=nodes[nidx];
+    if (dupsOk) {
+	for (int i=0; i<n->elems.size(); i++) {
+	    Element *e=elems[n->elems[i]];
+	    for (int j=0; j<4; j++) {
+		int new_nidx = e->n[j];
+		if (new_nidx!=nidx) nbrs.add(new_nidx);
+	    }
+	}
+    } else {
+	for (int i=0; i<n->elems.size(); i++) {
+	    Element *e=elems[n->elems[i]];
+	    for (int j=0; j<4; j++) {
+		int new_nidx = e->n[j];
+		if (new_nidx==nidx) continue;
+		int k;
+		for (k=0; k<nbrs.size(); k++)
+		    if (nbrs[k] == new_nidx) break;
+		if (k==nbrs.size()) nbrs.add(new_nidx);
+	    }
+	}
+    }
 }
 
 void Mesh::compute_neighbors()
@@ -1982,6 +2041,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.16  2000/07/12 15:45:09  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.15  2000/03/20 23:16:45  dav
 // Had to specify the namespace for Pio directly so that it will compile on both SGI and linux
 //
