@@ -3,13 +3,15 @@
 <?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="VectorFieldsToTensorField" category="CreateModel">
+<component name="RakeVectorsToThetaPhi" category="CreateModel">
   <overview>
     <authors>
       <author>Dave Weinstein</author>
     </authors>
     <summary>
-      Read in e1 and e2 fields, create a tensor field (e3=e2).
+      Given a set of vectors that are sampled along a line (e.g. from a rake),
+      compute the theta and phi for each vector, and send them out as
+      ColumnMatrices (e.g. to be plotted in ErrorMetric).
     </summary>
     <description>
       <p>Version Date: May 2002</p>
@@ -21,22 +23,18 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Major Eigenvectors</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
-        <name>Median Eigenvectors</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
-        <name>Mask</name>
+        <name>Vectors</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Tensors</name> 
-	<datatype>SCIRun::Field</datatype>
+        <name>Theta</name> 
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Phi</name> 
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

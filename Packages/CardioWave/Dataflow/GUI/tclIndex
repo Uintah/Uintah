@@ -12,3 +12,4 @@ set auto_index(CardioWave_CreateModel_ReclassifyInteriorTets) [list source [file
 set auto_index(CardioWave_CreateModel_RemoveInteriorTets) [list source [file join $dir RemoveInteriorTets.tcl]]
 set auto_index(CardioWave_CreateModel_SetupFVM2) [list source [file join $dir SetupFVM2.tcl]]
 set auto_index(CardioWave_CreateModel_SetupFVMatrix) [list source [file join $dir SetupFVMatrix.tcl]]
+set auto_index(CardioWave_CreateModel_QuadClipByData) [list source [file join $dir QuadClipByData.tcl]]
