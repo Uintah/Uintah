@@ -32,7 +32,7 @@
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--% doc.insertDocType("book", nil,
-["intro", "getting_started", "tooth_tut", "head_tut",
+["intro", "getting_started", "tooth_tut", "head_tut", "summary",
 "ref_ui", "ref_data", "ref_filters"]) %-->
 
 <book id="main">
@@ -42,6 +42,7 @@
 <!--    &intro; -->
     &getting_started;
     &tooth_tut;
+    &summary;
 <!--     &head_tut; -->
   </part>
 
