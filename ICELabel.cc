@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 
 using namespace Uintah;
@@ -85,7 +86,17 @@ ICELabel::ICELabel()
     VarLabel::create("mom_comb_CC",  CCVariable<Vector>::getTypeDescription());
   created_vol_CCLabel =
     VarLabel::create("created_vol",  CCVariable<double>::getTypeDescription());
+/*`==========TESTING==========*/
+  matrixLabel = 
+    VarLabel::create("matrix",       CCVariable<Stencil7>::getTypeDescription());     
+  rhsLabel = 
+    VarLabel::create("rhs",          CCVariable<double>::getTypeDescription());       
+  initialGuessLabel = 
+    VarLabel::create("initialGuess", CCVariable<double>::getTypeDescription());
+  imp_delPLabel = 
+    VarLabel::create("imp_delP",    CCVariable<double>::getTypeDescription());       
 
+/*==========TESTING==========`*/
   term1Label = 
     VarLabel::create("term1",        CCVariable<double>::getTypeDescription());
   term2Label = 
@@ -206,7 +217,14 @@ ICELabel::~ICELabel()
     VarLabel::destroy(f_theta_CCLabel);
     VarLabel::destroy(Tdot_CCLabel);
     VarLabel::destroy(SumThermExpLabel);
-
+    //
+/*`==========TESTING==========*/
+    VarLabel::destroy(matrixLabel);
+    VarLabel::destroy(rhsLabel); 
+    VarLabel::destroy(initialGuessLabel);
+    VarLabel::destroy(imp_delPLabel);    
+/*==========TESTING==========`*/
+    
     // Face centered variables
     VarLabel::destroy(uvel_FCLabel);
     VarLabel::destroy(vvel_FCLabel);
