@@ -198,7 +198,8 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 
   Point p0, t0;
 
-  unsigned int i,k;
+  unsigned int i;
+  int k;
   volren->di()->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
