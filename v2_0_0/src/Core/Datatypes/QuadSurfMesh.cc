@@ -53,6 +53,11 @@ QuadSurfMesh::QuadSurfMesh()
   : points_(0),
     faces_(0),
     edge_neighbors_(0),
+    point_lock_("QuadSurfMesh point_lock_"),
+    edge_lock_("QuadSurfMesh edge_lock_"),
+    face_lock_("QuadSurfMesh face_lock_"),
+    edge_neighbor_lock_("QuadSurfMesh edge_neighbor_lock_"),
+    normal_lock_("QuadSurfMesh normal_lock_"),
     synchronized_(NODES_E | FACES_E | CELLS_E)
 {
 }
@@ -63,6 +68,11 @@ QuadSurfMesh::QuadSurfMesh(const QuadSurfMesh &copy)
     faces_(copy.faces_),
     edge_neighbors_(copy.edge_neighbors_),
     normals_( copy.normals_ ),
+    point_lock_("QuadSurfMesh point_lock_"),
+    edge_lock_("QuadSurfMesh edge_lock_"),
+    face_lock_("QuadSurfMesh face_lock_"),
+    edge_neighbor_lock_("QuadSurfMesh edge_neighbor_lock_"),
+    normal_lock_("QuadSurfMesh normal_lock_"),
     synchronized_(copy.synchronized_)
 {
 }
@@ -140,6 +150,7 @@ QuadSurfMesh::get_bounding_box() const
 void
 QuadSurfMesh::transform(const Transform &t)
 {
+  point_lock_.lock();
   vector<Point>::iterator itr = points_.begin();
   vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
@@ -147,6 +158,7 @@ QuadSurfMesh::transform(const Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
+  point_lock_.unlock();
 }
 
 
@@ -643,6 +655,11 @@ QuadSurfMesh::synchronize(unsigned int tosync)
 void
 QuadSurfMesh::compute_normals()
 {
+  normal_lock_.lock();
+  if (synchronized_ & NORMALS_E) {
+    normal_lock_.unlock();
+    return;
+  }
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
@@ -693,6 +710,7 @@ QuadSurfMesh::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
+  normal_lock_.unlock();
 }
 
 
@@ -706,8 +724,12 @@ QuadSurfMesh::add_find_point(const Point &p, double err)
   }
   else
   {
+    point_lock_.lock();
+    normal_lock_.lock();
     points_.push_back(p);
     if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
+    point_lock_.unlock();
+    normal_lock_.unlock();
     return static_cast<Node::index_type>(points_.size() - 1);
   }
 }
@@ -717,10 +739,12 @@ QuadSurfMesh::Elem::index_type
 QuadSurfMesh::add_quad(Node::index_type a, Node::index_type b,
 		       Node::index_type c, Node::index_type d)
 {
+  face_lock_.lock();
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
   faces_.push_back(d);
+  face_lock_.unlock();
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
@@ -731,10 +755,12 @@ QuadSurfMesh::add_quad(Node::index_type a, Node::index_type b,
 QuadSurfMesh::Elem::index_type
 QuadSurfMesh::add_elem(Node::array_type a)
 {
+  face_lock_.lock();
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   faces_.push_back(a[3]);
+  face_lock_.unlock();
   synchronized_ &= ~NORMALS_E;
   synchronized_ &= ~EDGE_NEIGHBORS_E;
   return static_cast<Elem::index_type>((faces_.size() - 1) >> 2);
@@ -768,6 +794,11 @@ struct edgehash
 void
 QuadSurfMesh::compute_edges()
 {
+  edge_lock_.lock();
+  if (synchronized_ & EDGES_E) {
+    edge_lock_.unlock();
+    return;
+  }
 #ifdef HAVE_HASH_MAP
 
   hash_map<pair<int, int>, int, edgehash, edgecompare> edge_map;
@@ -809,6 +840,7 @@ QuadSurfMesh::compute_edges()
   }
 
   synchronized_ |= EDGES_E;
+  edge_lock_.unlock();
 }
 
 
@@ -818,6 +850,11 @@ QuadSurfMesh::compute_edge_neighbors()
   // TODO: This is probably broken with the new indexed edges.
   ASSERTMSG(synchronized_ & EDGES_E,
 	    "Must call synchronize EDGES_E on TriSurfMesh first");
+  edge_neighbor_lock_.lock();
+  if (synchronized_ & EDGE_NEIGHBORS_E) {
+    edge_neighbor_lock_.unlock();
+    return;
+  }
 
 #ifdef HAVE_HASH_MAP
 
@@ -868,6 +905,8 @@ QuadSurfMesh::compute_edge_neighbors()
   }
 
   synchronized_ |= EDGE_NEIGHBORS_E;
+  edge_neighbor_lock_.unlock();
+
 }
 
 
@@ -875,8 +914,12 @@ QuadSurfMesh::compute_edge_neighbors()
 QuadSurfMesh::Node::index_type
 QuadSurfMesh::add_point(const Point &p)
 {
+  point_lock_.lock();
+  normal_lock_.lock();
   points_.push_back(p);
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
+  point_lock_.unlock();
+  normal_lock_.unlock();
   return static_cast<Node::index_type>(points_.size() - 1);
 }
 

@@ -183,6 +183,10 @@ void
 HexVolMesh::compute_faces()
 {
   face_table_lock_.lock();
+  if (synchronized_ & FACES_E) {
+    face_table_lock_.unlock();
+    return;
+  }
   face_table_.clear();
 
   Cell::iterator ci, cie;
@@ -234,7 +238,10 @@ void
 HexVolMesh::compute_edges()
 {
   edge_table_lock_.lock();
-
+  if (synchronized_ & EDGES_E) {
+    edge_table_lock_.unlock();
+    return;
+  }
   Cell::iterator ci, cie;
   begin(ci); end(cie);
   Node::array_type arr;
@@ -554,6 +561,10 @@ HexVolMesh::compute_node_neighbors()
 {
   if (!(synchronized_ & EDGES_E)) synchronize(EDGES_E);
   node_nbor_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E) {
+    node_nbor_lock_.unlock();
+    return;
+  }
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   Edge::iterator ei, eie;
@@ -1128,6 +1139,10 @@ void
 HexVolMesh::compute_grid()
 {
   grid_lock_.lock();
+  if (synchronized_ & LOCATE_E) {
+    grid_lock_.unlock();
+    return;
+  }
   if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
 
   BBox bb = get_bounding_box();

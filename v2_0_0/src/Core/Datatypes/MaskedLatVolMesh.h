@@ -961,6 +961,7 @@ public:
 private:
   unsigned int	synchronized_;
   map<Node::index_type, unsigned>	nodes_;
+  Mutex					node_lock_;
   set<unsigned>	masked_cells_;
   unsigned	masked_nodes_count_;
   unsigned	masked_edges_count_;

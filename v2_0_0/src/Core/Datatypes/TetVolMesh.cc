@@ -71,8 +71,8 @@ TetVolMesh::TetVolMesh() :
 #endif
   edge_eq_(cells_),
 #ifdef HAVE_HASH_SET
-  all_edges_(10000,edge_hasher_,edge_eq_),
-  edges_(10000,edge_hasher_,edge_eq_),
+  all_edges_(100,edge_hasher_,edge_eq_),
+  edges_(100,edge_hasher_,edge_eq_),
 #else
   all_edges_(edge_eq_),
   edges_(edge_eq_),
@@ -85,8 +85,8 @@ TetVolMesh::TetVolMesh() :
 #endif
   face_eq_(cells_),
 #ifdef HAVE_HASH_SET
-  all_faces_(10000,face_hasher_,face_eq_),
-  faces_(10000,face_hasher_,face_eq_),
+  all_faces_(100,face_hasher_,face_eq_),
+  faces_(100,face_hasher_,face_eq_),
 #else
   all_faces_(face_eq_),
   faces_(face_eq_),
