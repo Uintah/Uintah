@@ -97,6 +97,9 @@ class Matrix3 {
   //Determinant
   inline double Determinant() const;
 
+  //Determinant
+  inline bool Orthogonal() const;
+
   //Inverse
   Matrix3 Inverse() const;
 
@@ -484,6 +487,20 @@ inline double Matrix3::Determinant() const
   // return result
 
   return temp;
+}
+
+inline bool Matrix3::Orthogonal() const
+{
+  // Identity Matrix
+  Matrix3 I;  I.Identity();
+
+  // Calculate Matrix*(Matrix.Transpose)
+  Matrix3 R(*this);
+  Matrix3 RRT = R*(R.Transpose());
+
+  // Check that RRT = I
+  if (RRT != I) return false;
+  return true;
 }
 
 inline double Matrix3::operator () (int i, int j) const
