@@ -252,8 +252,9 @@ long matlabarray::getnumdims()
 long matlabarray::getnumelements()
 {
     if (m_ == 0) return(0);
-	if ((m_->class_ == mlSTRUCT)||(m_->class_ == mlOBJECT))
-	{ if(m_->fieldnames_.size() == 0) return(0);}
+    if ((m_->class_ == mlSTRUCT)||(m_->class_ == mlOBJECT))
+      { if(m_->fieldnames_.size() == 0) return(0);}
+    
     if (m_->class_ != mlSPARSE)
     {
     	long numel = 1;
@@ -263,6 +264,7 @@ long matlabarray::getnumelements()
     }
     else
     {
+      if (getnnz() == 0) return(1); // Even if it is empty it should be valid
     	return(getnnz());
     }
 }
