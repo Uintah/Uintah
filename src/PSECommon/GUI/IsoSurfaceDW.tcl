@@ -109,11 +109,13 @@ itcl_class PSECommon_Visualization_IsoSurfaceDW {
 	pack $w.f.ex $w.f.f -side top -fill x -expand 1
     }
     method set_minmax {min max} {
-	set w .ui[modname]
 	global $this-min $this-max
 	set $this-min $min
 	set $this-max $max
-	$w.f.isoval configure -from $min -to $max
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    $w.f.isoval configure -from $min -to $max
+	}
     }
     method auto { } {
 	set w .ui[modname]
