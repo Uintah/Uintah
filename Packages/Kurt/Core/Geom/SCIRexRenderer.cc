@@ -267,8 +267,9 @@ SCIRexRenderer::draw()
   glDrawBuffer(GL_BACK);
   glEnable(GL_BLEND);
 //   glBlendEquation(GL_FUNC_ADD_EXT);
+  glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 //  glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-  glBlendFunc( GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+//  glBlendFunc( GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
 
   glDrawPixels(render_data_->viewport_x_,
 	       render_data_->viewport_y_,

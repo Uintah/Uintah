@@ -279,6 +279,7 @@ SCIRexWindow::draw(){
     glXMakeCurrent(dpy, win, cx);
   }
 
+  
   glClear(GL_DEPTH_BUFFER_BIT);
   //  glClearColor(0.2,0.2,0.5,1.0);
   glShadeModel(GL_SMOOTH);
@@ -297,8 +298,8 @@ SCIRexWindow::draw(){
 	       GL_DEPTH_COMPONENT,
 	       GL_UNSIGNED_BYTE, rd->depth_buffer_);
 
-  glClear(GL_COLOR_BUFFER_BIT);
-  glClearColor(0,0,0,0.0);
+   glClearColor(0,0,0,1.0);
+   glClear(GL_COLOR_BUFFER_BIT);
   
   
   vector<GeomObj *>::iterator i;
