@@ -10,8 +10,6 @@ set notes ""
 # global array indexed by module name to keep track of modules
 global mods
 
-global standalone_progress
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 111 44]
 set mods(FieldReader) $m0
 
@@ -99,67 +97,46 @@ class IsoApp {
 	set win .standalone
 
 	set notebook_width 3.5i
-	set notebook_height 2.6i
+	set notebook_height 315
 
 	set iso_alg 1
+
+	set viewer_width 640
+	set viewer_height 512
+    
+	set process_width 200
+	set process_height $viewer_height
+
+	set vis_width 300
+	set vis_height $viewer_height
+
+	set screen_width [winfo screenwidth .]
+	set screen_height [winfo screenheight .]
+
     }
 
     destructor {
 	destroy $this
     }
 
-    method BuildApp {} {
+    method build_app {} {
 	global mods
 
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow .standalone.viewer
+	$eviewer setWindow $win.viewer
 
-	# pack viewer
-	pack $win.viewer -side left -anchor nw 
-
-	### Vis Part
-	#####################
-	### Create a Detached Vis Part
-	toplevel $win.detachedV
-	frame $win.detachedV.f -relief flat
-	pack $win.detachedV.f -side left -anchor nw
-
-	wm title $win.detachedV "Visualization Window"
-
-	wm sizefrom $win.detachedV user
-	wm positionfrom $win.detachedV user
-	
-	wm withdraw $win.detachedV
-
-	### Create Attached Vis Part
-	frame $win.attachedV
-	frame $win.attachedV.f -relief flat
-	pack $win.attachedV.f -side left -anchor nw -fill y
-
-	set IsVAttached 1
 
 	set att_msg "Detach from Viewer"
 	set det_msg " Attach to Viewer "
 
-	# set frame data members
-	set detachedVFr $win.detachedV
-	set attachedVFr $win.attachedV
-	
-	init_Vframe $detachedVFr.f $det_msg 0
-	init_Vframe $attachedVFr.f $att_msg 1
-
-	# show the process frame
-	pack $attachedVFr -side left -anchor nw -after $win.viewer -fill y
-#	append geom [expr [winfo width $win]>[winfo width $win.attachedV] ?[winfo width $win]:[winfo width $win.attachedV]] x [expr [winfo height $win]+[winfo reqheight $win.attachedV]]
-	#wm geometry $win $geom
 
 	### Processing Part
 	#########################
 	### Create Detached Processing Part
 	toplevel $win.detachedP
 	frame $win.detachedP.f -relief flat
-	pack $win.detachedP.f -side left -anchor nw
+	pack $win.detachedP.f -side left -anchor n -fill both -expand 1
 
 	wm title $win.detachedP "Processing Window"
 	
@@ -172,7 +149,7 @@ class IsoApp {
 	### Create Attached Processing Part
 	frame $win.attachedP 
 	frame $win.attachedP.f -relief flat 
-	pack $win.attachedP.f -side left -anchor nw -fill y
+	pack $win.attachedP.f -side top -anchor n -fill both -expand 1
 
 	set IsPAttached 1
 
@@ -183,12 +160,50 @@ class IsoApp {
 	init_Pframe $detachedPFr.f $det_msg
 	init_Pframe $attachedPFr.f $att_msg
 
-	# show the process frame
-	pack $attachedPFr -side left -anchor nw -before $win.viewer -fill y
-#	append geom [expr [winfo width $win]>[winfo width $win.attachedP] ?[winfo width $win]:[winfo width $win.attachedP]] x [expr [winfo height $win]+[winfo reqheight $win.attachedP]]
-	#wm geometry $win $geom
-	update
+	# create detached width and heigh
+	append geomP $process_width x $process_height
+	wm geometry $detachedPFr $geomP
 
+
+	### Vis Part
+	#####################
+	### Create a Detached Vis Part
+	toplevel $win.detachedV
+	frame $win.detachedV.f -relief flat
+	pack $win.detachedV.f -side left -anchor n
+
+	wm title $win.detachedV "Visualization Window"
+
+	wm sizefrom $win.detachedV user
+	wm positionfrom $win.detachedV user
+	
+	wm withdraw $win.detachedV
+
+	### Create Attached Vis Part
+	frame $win.attachedV
+	frame $win.attachedV.f -relief flat
+	pack $win.attachedV.f -side left -anchor n -fill both
+
+	set IsVAttached 1
+
+	# set frame data members
+	set detachedVFr $win.detachedV
+	set attachedVFr $win.attachedV
+	
+	init_Vframe $detachedVFr.f $det_msg 0
+	init_Vframe $attachedVFr.f $att_msg 1
+
+
+	# pack 3 frames
+	pack $attachedPFr $win.viewer $attachedVFr -side left -anchor n -fill both -expand 1
+
+	set total_width [expr [expr $process_width + $viewer_width] + $vis_width]
+
+	set pos_x [expr [expr $screen_width / 2] - [expr $total_width / 2]]
+
+	append geom $total_width x $viewer_height + $pos_x + 0
+	wm geometry .standalone $geom
+	update	
     }
 
 
@@ -197,7 +212,7 @@ class IsoApp {
 	if { [winfo exists $m] } {
 	    ### Menu
 	    frame $m.main_menu -relief raised -borderwidth 3
-	    pack $m.main_menu -fill x
+	    pack $m.main_menu -fill x -anchor nw
 	    
 	    menubutton $m.main_menu.file -text "File" -underline 0 \
 		-menu $m.main_menu.file.menu
@@ -205,13 +220,13 @@ class IsoApp {
 	    menu $m.main_menu.file.menu -tearoff false
 	    
 	    $m.main_menu.file.menu add command -label "Save Ctr+S" \
-		-underline 0 -command "$this SaveSession" -state active
+		-underline 0 -command "$this save_session" -state active
 	    
-	    $m.main_menu.file.menu add command -label "Load  Ctr+L" \
-		-underline 0 -command "$this LoadSession" -state active
+	    $m.main_menu.file.menu add command -label "Load  Ctr+O" \
+		-underline 0 -command "$this load_session" -state active
 	    
 	    $m.main_menu.file.menu add command -label "Quit   Ctr+Q" \
-		-underline 0 -command "$this ExitApp" -state active
+		-underline 0 -command "$this exit_app" -state active
 	    
 	    pack $m.main_menu.file -side left
 	    
@@ -221,7 +236,7 @@ class IsoApp {
 	    menu $m.main_menu.help.menu -tearoff false
 	    
 	    $m.main_menu.help.menu add command -label "View Help" \
-		-underline 0 -command "$this ShowHelp" -state active
+		-underline 0 -command "$this show_help" -state active
 	    
 	    pack $m.main_menu.help -side left
 	    
@@ -230,42 +245,45 @@ class IsoApp {
 	    ### Processing Steps
 	    #####################
 	    iwidgets::labeledframe $m.p \
-		-labelpos n -labeltext "Processing Steps"
-	    pack $m.p -side top -fill y -anchor nw
+		-labelpos n -labeltext "Processing Steps" 
+		# -background "MistyRose"
+	    pack $m.p -side top -fill both -anchor n -expand 1
 	    
 	    set process [$m.p childsite]
 	    
 	    ### Data Section
 	    iwidgets::labeledframe $process.data \
 		-labelpos nw -labeltext "Data" 
-	    pack $process.data -side top -fill y -anchor nw
+	    pack $process.data -side top -fill both -anchor n
 	    
 	    set data_section [$process.data childsite]
 	    
 	    message $data_section.message -width 200 \
 		-text "Please load a dataset to isosurface."
 	    pack $data_section.message -side top  -anchor n
-	    button $data_section.load -text "Load" -command "$this LoadData"  \
+	    button $data_section.load -text "Load" \
+	        -command "$this popup_load_data"  \
 		-width 15 
 	    pack $data_section.load -side top -padx 2 -pady 5  -ipadx 3 -ipady 3 -anchor n
 	    
 	    ### Progress
 	    iwidgets::labeledframe $process.progress \
 		-labelpos nw -labeltext "Progress" 
-	    pack $process.progress -side top -anchor nw -fill x
+	    pack $process.progress -side bottom -anchor s -fill both
 	    
 	    set progress_section [$process.progress childsite]
 	    iwidgets::feedback $progress_section.fb -labeltext "Isosurfacing..." \
-		-steps 20 -barcolor Green \
+		-labelpos nw \
+		-steps 4 -barcolor Green \
 		
-	    pack $progress_section.fb -side top -padx 2 -pady 2 -anchor nw -fill x
+	    pack $progress_section.fb -side top -padx 2 -pady 2 -anchor nw -fill both
 	    
-	    global standalone_progress
-	    set standalone_progress $progress_section.fb
+	    set iso_progress $progress_section.fb
 
 	    ### Attach/Detach button
 	    button $process.cut -text $msg -command "$this switch_P_frames"
-	    pack $process.cut -side top -anchor s -pady 5 -padx 5 
+	    pack $process.cut -side bottom -before $process.progress -anchor s -pady 5 -padx 5 
+
 	}
 	    
     }
@@ -276,88 +294,58 @@ class IsoApp {
 	    ### Visualization Frame
 	    
 	    iwidgets::labeledframe $m.vis \
-		-labelpos n -labeltext "Visualization"
-	    pack $m.vis -side top -anchor nw 
+		-labelpos n -labeltext "Visualization" 
+	        # -background "LightSteelBlue3"
+	    pack $m.vis -side top -anchor n
 	    
 	    set vis [$m.vis childsite]
-	    
-	    iwidgets::scrolledlistbox $vis.data -labeltext "Loaded Data" \
+
+	    ### Tabs
+	    iwidgets::tabnotebook $vis.tnb -width $notebook_width \
+		-height 450 -tabpos n
+	    pack $vis.tnb -padx 0 -pady 0 -anchor n
+
+	    ### Data Vis Tab
+	    set page [$vis.tnb add -label "Data Vis"]
+	    iwidgets::scrolledlistbox $page.data -labeltext "Loaded Data" \
 		-vscrollmode dynamic -hscrollmode dynamic \
 		-selectmode single \
 		-height 0.9i \
 		-width $notebook_width \
-		-labelpos nw -selectioncommand "$this SelectVisData"
+		-labelpos nw -selectioncommand "$this data_selected"
 	    
-	    pack $vis.data -padx 4 -pady 4
+	    pack $page.data -padx 4 -pady 4 -anchor n
 	    
 	    if {$case == 0} {
 		# detached case
-		set data_listbox_Det $vis.data
+		set data_listbox_Det $page.data
 	    } else {
 		# attached case
-		set data_listbox_Att $vis.data
+		set data_listbox_Att $page.data
 	    }
 	    
-	    $vis.data insert 0 {None}
+	    $page.data insert 0 {None}
 	    
 	    
 	    ### Data Info
-	    frame $vis.f -relief groove -borderwidth 2
-	    pack $vis.f -side top -anchor nw -fill x
+	    frame $page.f -relief groove -borderwidth 2
+	    pack $page.f -side top -anchor n -fill x
 	    
-	    iwidgets::notebook $vis.f.nb -width $notebook_width \
+	    iwidgets::notebook $page.f.nb -width $notebook_width \
 		-height $notebook_height 
-	    pack $vis.f.nb -padx 4 -pady 4
+	    pack $page.f.nb -padx 4 -pady 4 -anchor n
 
 	    if {$case == 0} {
 		# detached case
-		set notebook_Det $vis.f.nb
+		set notebook_Det $page.f.nb
 	    } else {
 		# attached case
-		set notebook_Att $vis.f.nb
+		set notebook_Att $page.f.nb
 	    }
 	    
-	    ### Renderer Options
-	    iwidgets::labeledframe $vis.viewer_opts \
-		-labelpos nw -labeltext "Global Render Options"
-	    
-	    pack $vis.viewer_opts -side top -anchor nw -fill x
-	    
-	    set view_opts [$vis.viewer_opts childsite]
+	    ### Renderer Options Tab
+	    create_viewer_tab $vis
 
-	    checkbutton $view_opts.light -text "Lighting" \
-		-variable $mods(Viewer)-ViewWindow_0-global-light \
-		-command "$mods(Viewer)-ViewWindow_0-c redraw"
-
-	    checkbutton $view_opts.fog -text "Fog" \
-		-variable $mods(Viewer)-ViewWindow_0-global-fog \
-		-command "$mods(Viewer)-ViewWindow_0-c redraw"
-
-	    checkbutton $view_opts.bbox -text "BBox" \
-		-variable $mods(Viewer)-ViewWindow_0-global-debug \
-		-command "$mods(Viewer)-ViewWindow_0-c redraw"
-
-	    checkbutton $view_opts.clip -text "Use Clip" \
-		-variable $mods(Viewer)-ViewWindow_0-global-clip \
-		-command "$mods(Viewer)-ViewWindow_0-c redraw"
-
-	    checkbutton $view_opts.cull -text "Back Cull" \
-		-variable $mods(Viewer)-ViewWindow_0-global-cull \
-		-command "$mods(Viewer)-ViewWindow_0-c redraw"
-
-	    checkbutton $view_opts.dl -text "Display List" \
-		-variable $mods(Viewer)-ViewWindow_0-global-dl \
-		-command "$mods(Viewer)-ViewWindow_0-c redraw"
-
-
-	    pack $view_opts.light $view_opts.fog $view_opts.bbox \
-		$view_opts.clip $view_opts.cull $view_opts.dl \
-		-side top -anchor w
-
-	    button $view_opts.autoview -text "Autoview" \
-		-command {$m3-ViewWindow_0-c autoview} \
-		-width 20
-	    pack $view_opts.autoview -side top -padx 3 -pady 3 -anchor n
 
 	    ### Attach/Detach button
 	    button $vis.cut -text $msg -command "$this switch_V_frames"
@@ -366,61 +354,304 @@ class IsoApp {
 	}
     }
 
+    method create_viewer_tab { vis } {
+	global mods
+	set page [$vis.tnb add -label "Global Options"]
+	
+	iwidgets::labeledframe $page.viewer_opts \
+	    -labelpos nw -labeltext "Global Render Options"
+	
+	pack $page.viewer_opts -side top -anchor n -fill both -expand 1
+	
+	set view_opts [$page.viewer_opts childsite]
+	
+	frame $view_opts.eframe -relief flat
+	pack $view_opts.eframe -side top -padx 4 -pady 4
+	
+	frame $view_opts.eframe.a -relief groove -borderwidth 2
+	pack $view_opts.eframe.a -side left 
+	
+	
+	checkbutton $view_opts.eframe.a.light -text "Lighting" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-light \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	
+	checkbutton $view_opts.eframe.a.fog -text "Fog" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-fog \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	
+	checkbutton $view_opts.eframe.a.bbox -text "BBox" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	
+	checkbutton $view_opts.eframe.a.clip -text "Use Clip" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-clip \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	
+	checkbutton $view_opts.eframe.a.cull -text "Back Cull" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-cull \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	
+	checkbutton $view_opts.eframe.a.dl -text "Display List" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-dl \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	
+	
+	pack $view_opts.eframe.a.light $view_opts.eframe.a.fog \
+	    $view_opts.eframe.a.bbox $view_opts.eframe.a.clip \
+	    $view_opts.eframe.a.cull $view_opts.eframe.a.dl \
+	    -side top -anchor w -padx 4 -pady 4
+	
+	frame $view_opts.eframe.b -relief groove -borderwidth 2
+	pack $view_opts.eframe.b -side left -anchor ne -fill both
+	
+	label $view_opts.eframe.b.label -text "Shading:"
+	pack $view_opts.eframe.b.label -side top -anchor nw
+	
+	radiobutton $view_opts.eframe.b.wire -text "Wire" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-type \
+	    -value "Wire" \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
+	    -anchor w
+	
+	radiobutton $view_opts.eframe.b.flat -text "Flat" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-type \
+	    -value "Flat" \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
+	    -anchor w
+	
+	radiobutton $view_opts.eframe.b.gouraud -text "Gouraud" \
+	    -variable $mods(Viewer)-ViewWindow_0-global-type \
+	    -value "Gouraud" \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw" \
+	    -anchor w
+	
+	pack $view_opts.eframe.b.wire $view_opts.eframe.b.flat $view_opts.eframe.b.gouraud -side top -anchor nw -padx 4 -pady 4
+	
+	frame $view_opts.buttons -relief flat
+	pack $view_opts.buttons -side top -anchor n -padx 4 -pady 4
+	
+	frame $view_opts.buttons.v1
+	pack $view_opts.buttons.v1 -side left -anchor nw
+	
+	
+	button $view_opts.buttons.v1.autoview -text "Autoview" \
+	    -command "$mods(Viewer)-ViewWindow_0-c autoview" \
+	    -width 12 -padx 3 -pady 3
+	
+	pack $view_opts.buttons.v1.autoview -side top -padx 3 -pady 3 \
+	    -anchor n -fill x
+	
+	
+	frame $view_opts.buttons.v1.views
+	pack $view_opts.buttons.v1.views -side top -anchor nw -fill x -expand 1
+	
+	menubutton $view_opts.buttons.v1.views.def -text "Views" \
+	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
+	    -padx 3 -pady 3  -width 12
+	
+	menu $view_opts.buttons.v1.views.def.m
+	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +X Axis" \
+	    -menu $view_opts.buttons.v1.views.def.m.posx
+	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +Y Axis" \
+	    -menu $view_opts.buttons.v1.views.def.m.posy
+	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +Z Axis" \
+	    -menu $view_opts.buttons.v1.views.def.m.posz
+	$view_opts.buttons.v1.views.def.m add separator
+	$view_opts.buttons.v1.views.def.m add cascade -label "Look down -X Axis" \
+	    -menu $view_opts.buttons.v1.views.def.m.negx
+	$view_opts.buttons.v1.views.def.m add cascade -label "Look down -Y Axis" \
+	    -menu $view_opts.buttons.v1.views.def.m.negy
+	$view_opts.buttons.v1.views.def.m add cascade -label "Look down -Z Axis" \
+	    -menu $view_opts.buttons.v1.views.def.m.negz
+	
+	pack $view_opts.buttons.v1.views.def -side left -pady 3 -padx 3 -fill x
+	
+	menu $view_opts.buttons.v1.views.def.m.posx
+	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_y1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_y0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_z1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_z0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	
+	menu $view_opts.buttons.v1.views.def.m.posy
+	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_x1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
+	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_x0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_z1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_z0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	
+	menu $view_opts.buttons.v1.views.def.m.posz
+	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_x1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
+	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_x0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_y1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_y0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	
+	menu $view_opts.buttons.v1.views.def.m.negx
+	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_y1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_y0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_z1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_z0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	
+	menu $view_opts.buttons.v1.views.def.m.negy
+	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_x1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
+	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_x0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_z1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_z0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	
+	menu $view_opts.buttons.v1.views.def.m.negz
+	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_x1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
+	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_x0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_y1 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
+	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_y0 \
+	    -command "$mods(Viewer)-ViewWindow_0-c Views"
+	
+	
+	frame $view_opts.buttons.v2 
+	pack $view_opts.buttons.v2 -side left -anchor nw
+	
+	button $view_opts.buttons.v2.sethome -text "Set Home View" -padx 3 -pady 3 \
+	    -command "$mods(Viewer)-ViewWindow_0-c sethome"
+	
+	button $view_opts.buttons.v2.gohome -text "Go Home" \
+	    -command "$mods(Viewer)-ViewWindow_0-c gohome" \
+	    -padx 3 -pady 3
+	
+	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
+	    -side top -padx 2 -pady 2 -anchor ne -fill x
+	
+	$vis.tnb view "Data Vis"
+	
+    }
+
 
     method switch_P_frames {} {
+	set c_width [winfo width $win]
+	set c_height [winfo height $win]
+
 	if { $IsPAttached } {	    
 	    pack forget $attachedPFr
-	    #append geom [winfo width $win] x [expr [winfo height $win]-[winfo reqheight $win.attachedP]]
-	    wm geometry $detachedPFr "198x512+0+0"
+	    set new_width [expr $c_width - $process_width]
+	    append geom1 $new_width x $c_height 
+            wm geometry $win $geom1 
+	    append geom2 $process_width x $c_height 
+	    wm geometry $detachedPFr $geom2
 	    wm deiconify $detachedPFr
 	    set IsPAttached 0
 	} else {
 	    wm withdraw $detachedPFr
-	    pack $attachedPFr -anchor nw -side left -before $win.viewer
-	    #append geom [winfo width $win] x [expr [winfo height $win]+[winfo reqheight $win.attachedP]]
-	    #wm geometry $win $geom
+	    pack $attachedPFr -anchor n -side left -before $win.viewer
+	    set new_width [expr $c_width + $process_width]
+            append geom $new_width x $c_height
+	    wm geometry $win $geom
 	    set IsPAttached 1
 	}
 	update
     }
 
     method switch_V_frames {} {
+	set c_width [winfo width $win]
+	set c_height [winfo height $win]
+
 	if { $IsVAttached } {
 	    # select data in detached data list box
-	    # FIX ME (check if exists before getting index)
-	    $data_listbox_Det selection set [$data_listbox_Att curselection] [$data_listbox_Att curselection]
-
+	    if {[$data_listbox_Att curselection] != ""} {
+		$data_listbox_Det selection set [$data_listbox_Att curselection] [$data_listbox_Att curselection]
+	    }
 	    pack forget $attachedVFr
-	    #append geom [winfo width $win] x [expr [winfo height $win]-[winfo reqheight $win.attachedV]]
-	    wm geometry $detachedVFr "300x512+0+0"
+	    set new_width [expr $c_width - $vis_width]
+	    append geom1 $new_width x $c_height
+            wm geometry $win $geom1
+	    append geom2 $vis_width x $c_height
+	    wm geometry $detachedVFr $geom2
 	    wm deiconify $detachedVFr
 	    set IsVAttached 0
 	} else {
-	    # select data in attached data list box
-	    # FIX ME (check if exists before getting index)
+	    if {[$data_listbox_Det curselection] != ""} {
 	    $data_listbox_Att selection set [$data_listbox_Det curselection] [$data_listbox_Det curselection]
+	    }
 
 	    wm withdraw $detachedVFr
-	    pack $attachedVFr -anchor nw -side left -after $win.viewer
-	    #append geom [winfo width $win] x [expr [winfo height $win]+[winfo reqheight $win.attachedV]]
-	    #wm geometry $win $geom
+	    pack $attachedVFr -anchor n -side left -after $win.viewer
+	    set new_width [expr $c_width + $vis_width]
+            append geom $new_width x $c_height
+	    wm geometry $win $geom
 	    set IsVAttached 1
 	}
 	update
     }
 
-    method LoadData {} {
+    method popup_load_data {} {
 	# Bring up FieldReader UI
 	global mods
 	global $mods(FieldReader)-filename
 	$mods(FieldReader) ui
 	
 	tkwait window .ui$mods(FieldReader)
+
+	update idletasks
+
+	load_data [set $mods(FieldReader)-filename]
+    }
+
+    method load_data { file } {
+	global mods
+	global $mods(FieldReader)-filename
+	# set the FieldReader filename if it hasn't been set
+	if {[set $mods(FieldReader)-filename] == ""} {
+	    set $mods(FieldReader)-filename $file
+	    $mods(FieldReader)-c needexecute
+	}
 	
 	# get the filename and stick into an array formated 
 	# data(file) = full path
-	set name [GetFileName [set $mods(FieldReader)-filename] ]
-	set data($name) [set $mods(FieldReader)-filename]
+	set name [get_file_name $file]
+	set data($name) $file
 	
 	# add the data to the listbox
 	if {[array size data] == 1} then {
@@ -457,20 +688,19 @@ class IsoApp {
 	}
 
 	# build the data info notetab for this
-	BuildDataInfoPage $notebook_Att $name
-	BuildDataInfoPage $notebook_Det $name
+	build_data_info_page $notebook_Att $name
+	build_data_info_page $notebook_Det $name
 
 	# bring new data info page forward
 	$notebook_Att view $name
 	$notebook_Det view $name
 	
 	# reset progress
-	global standalone_progress
-	$standalone_progress reset
+	$iso_progress reset
 
     }
 
-    method SelectVisData {} {
+    method data_selected {} {
 	global mods
 	global $mods(FieldReader)-filename
 	set current ""
@@ -479,7 +709,7 @@ class IsoApp {
 	} else {
 	    set current [$data_listbox_Det getcurselection]
 	}
-	puts "SelectVisData current: $current"
+
 	if {[info exists data($current)] == 1} {
 
             # bring data info page forward
@@ -490,32 +720,116 @@ class IsoApp {
 	    set $mods(FieldReader)-filename $data($current)
 	    $mods(FieldReader)-c needexecute
 	} 
-	#else {
-	#    set result [tk_messageBox -parent . \
-	    \#	    -title {No Data} -type ok \
-	    \#    -icon error \
-	    \#  -message "Please load select a valid data set."]
-    #}
-    
    }
 
-    method SaveSession {} {
-	puts "NEED TO IMPLEMENT SAVE SESSION"
+    method save_session {} {
+	global mods
+
+	set types {
+	    {{App Settings} {.set} }
+	    {{Other} { * } }
+	} 
+	set savefile [ tk_getSaveFile -defaultextension {.set} \
+				   -filetypes $types ]
+	if { $savefile != "" } {
+	    set fileid [open $savefile w]
+
+	    # Save out data information 
+	    global $mods(FieldReader)-filename
+	    puts $fileid "\n\#Current Data Loaded"
+	    puts $fileid "set S_filename [set $mods(FieldReader)-filename]"
+
+	    # Save out Isosurface info
+ 	    global $mods(Isosurface)-isoval
+	    global $mods(Isosurface)-isoval-min
+	    global $mods(Isosurface)-isoval-max
+  	    puts $fileid "\n\#Isosurface Settings"
+  	    puts $fileid "set S_isoval [set $mods(Isosurface)-isoval]"
+	    puts $fileid "set S_isoval_min [set $mods(Isosurface)-isoval-min]"
+	    puts $fileid "set S_isoval_max [set $mods(Isosurface)-isoval-max]"
+	    puts $fileid "set S_isoval_alg $iso_alg"
+
+	    # save_advanced $fileid $mods(Isosurface)
+	    
+	    # Save out global rendering properties
+	    global $mods(Viewer)-ViewWindow_0-global-light
+	    global $mods(Viewer)-ViewWindow_0-global-fog
+	    global $mods(Viewer)-ViewWindow_0-global-debug
+	    global $mods(Viewer)-ViewWindow_0-global-clip
+	    global $mods(Viewer)-ViewWindow_0-global-cull
+	    global $mods(Viewer)-ViewWindow_0-global-dl
+	    global $mods(Viewer)-ViewWindow_0-global-type
+  	    puts $fileid "\n\#Global Rendering Options"
+  	    puts $fileid "set S_global_light [set $mods(Viewer)-ViewWindow_0-global-light]"
+  	    puts $fileid "set S_global_fog [set $mods(Viewer)-ViewWindow_0-global-fog]"
+  	    puts $fileid "set S_global_debug [set $mods(Viewer)-ViewWindow_0-global-debug]"
+  	    puts $fileid "set S_global_clip [set $mods(Viewer)-ViewWindow_0-global-clip]"
+  	    puts $fileid "set S_global_cull [set $mods(Viewer)-ViewWindow_0-global-cull]"
+  	    puts $fileid "set S_global_dl [set $mods(Viewer)-ViewWindow_0-global-dl]"
+	    puts $fileid "set S_global_type [set $mods(Viewer)-ViewWindow_0-global-type]"
+
+	    
+	    close $fileid
+
+	}
+
+    }
+
+    method save_advanced { id vars } {
+	# make globals accessible
+	foreach g [info globals] {
+	   global $g
+	}
+
+	
+	foreach v [info vars $vars*] {
+	  puts $id "set $v \{[set $v]\}"
+	}
     }
     
-    method LoadSession {} {
-	puts "NEED TO IMPLEMENT LOAD SESSION"
+    method load_session {} {
+	global mods
+	set types {
+	    {{App Settings} {.set} }
+	    {{Other} { * }}
+	}
+
+	set file [tk_getOpenFile -filetypes $types]
+	if {$file != ""} {
+		source $file
+
+		# Load data
+		load_data $S_filename
+
+		# Set the isosurface
+		global $mods(Isosurface)-isoval
+		set $mods(Isosurface)-isoval $S_isoval
+		set $mods(Isosurface)-isoval-min $S_isoval_min
+		set $mods(Isosurface)-isoval-max $S_isoval_max
+		#configure $isosurface.isoval -from $S_isoval_min \
+		 	-to $S_isoval_max
+		update
+		set iso_alg $S_isoval_alg
+		$mods(Isosurface) select-alg $iso_alg
+
+		update_isosurface $S_isoval
+
+		# Set the global rendering options
+		global $mods(Viewer)-ViewWindow_0-global-light
+		set $mods(Viewer)-ViewWindow_0-global-light $S_global_light
+	}	
+	
     }
         
-    method ExitApp {} {
+    method exit_app {} {
 	netedit quit
     }
 
-    method ShowHelp {} {
+    method show_help {} {
 	puts "NEED TO IMPLEMENT SHOW HELP"
     }
 
-    method UpdateIsosurfaceScale {} {
+    method update_isosurface_scale {} {
 	# puts "Update Isosurface Scale"
 	global mods
 
@@ -532,7 +846,7 @@ class IsoApp {
 
     }
 
-    method UpdateIsosurface { isoval } {
+    method update_isosurface { isoval } {
 
 	global mods
 
@@ -544,7 +858,7 @@ class IsoApp {
 
     }
     
-    method GetFileName { filename } {
+    method get_file_name { filename } {
 	set end [string length $filename]
 	set start [string last "/" $filename]
 	set start [expr 1 + $start]
@@ -552,23 +866,23 @@ class IsoApp {
 	return [string range $filename $start $end]	
     }
 
-    method BuildDataInfoPage { w which } {
+    method build_data_info_page { w which } {
 	set page [$w add -label $which]
 
 	iwidgets::scrolledframe $page.sf \
 	    -width $notebook_width -height $notebook_height \
 	    -labeltext "Data: $which" \
-	    -vscrollmode none \
-	    -hscrollmode dynamic \
+	    -vscrollmode dynamic \
+	    -hscrollmode none \
 	    -background Grey
 
 	pack $page.sf -anchor n -fill x
 
-	AddIsosurface [$page.sf childsite] $which
+	add_isosurface_section [$page.sf childsite] $which
 
     }
 
-    method AddIsosurface { w which } {
+    method add_isosurface_section { w which } {
 	global mods
 	global $mods(Isosurface)-isoval
 	global $mods(Isosurface)-isoval-min
@@ -577,7 +891,7 @@ class IsoApp {
 	iwidgets::labeledframe $w.isosurface \
 	    -labelpos nw -labeltext "Isosurface"
 
-	pack $w.isosurface -side top -anchor n -fill x -fill y
+	pack $w.isosurface -side top -anchor n -fill both -expand 1
 
 	set isosurface [$w.isosurface childsite]
 
@@ -586,21 +900,21 @@ class IsoApp {
  	    -variable $mods(Isosurface)-isoval \
  	    -from [set $mods(Isosurface)-isoval-min] \
  	    -to [set $mods(Isosurface)-isoval-max] \
- 	    -length 5c \
+ 	    -length 3c \
  	    -showvalue true \
  	    -orient horizontal \
  	    -digits 5 \
  	    -resolution 0.001 \
- 	    -command "$this UpdateIsosurface" \
+ 	    -command "$this update_isosurface" \
 	
- 	pack $isosurface.isoval -side top 
+ 	pack $isosurface.isoval -side top -anchor n 
 
 	# isosurface method
 	label $isosurface.mlabel -text "Method"
 	pack $isosurface.mlabel -side top -anchor nw 
 
 	frame $isosurface.method -relief flat
-	pack $isosurface.method -side top -anchor nw -fill x
+	pack $isosurface.method  -side top -anchor n -fill x
 
 	radiobutton $isosurface.method.noise -text "Noise" \
 	    -variable $iso_alg \
@@ -615,16 +929,26 @@ class IsoApp {
 	    -anchor w
 
 	pack $isosurface.method.noise $isosurface.method.mc -side left \
-	    -anchor nw -fill x
+	    -anchor n -fill x
 
 	# turn on Noise by default
 	$isosurface.method.noise invoke
 
 	
-	button $isosurface.adv -text "Advanced" -width 20 \
-	    -command "$mods(Isosurface) ui"
-	pack $isosurface.adv -side top -padx 4 -pady 4 -anchor n
+	label $isosurface.blank -text "  " -width 31
+	pack $isosurface.blank -side top -anchor n
 	
+    }
+ 
+    method update_progress { which state } {
+	if {$which == "SCIRun_Visualization_Isosurface_0"} {
+     		after 1 "$iso_progress step"
+	}
+        
+    }
+
+    method indicate_error {} {
+
     }
 
     variable eviewer
@@ -638,17 +962,31 @@ class IsoApp {
     variable notebook_width
     variable notebook_height
     variable iso_alg
+    variable iso_progress
     variable IsPAttached
     variable detachedPFr
     variable attachedPFr
     variable IsVAttached
     variable detachedVFr
     variable attachedVFr
+
+    variable process_width
+    variable process_height
+
+    variable viewer_width
+    variable viewer_height
+
+    variable vis_width
+    variable vis_height
+
+    variable screen_width
+    variable screen_height
+
 }
 
 IsoApp app
 
-app BuildApp
+app build_app
 
 
 
@@ -656,17 +994,18 @@ app BuildApp
 
 
 ### Bind shortcuts - Must be after instantiation of IsoApp
-bind .standalone <Control-s> {
-    app SaveSession
+bind all <Control-s> {
+    app save_session
 }
 
-bind .standalone <Control-l> {
-    app LoadSession
+bind all <Control-o> {
+    app load_session
 }
 
-bind .standalone <Control-q> {
-    app ExitApp
+bind all <Control-q> {
+    app exit_app
 }
+
 
 
 
