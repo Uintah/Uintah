@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.8  1996/10/22 00:12:19  dweinste
+ #  still trying to get this to work!!!!
+ #
  #  Revision 1.7  1996/10/21 23:51:54  dweinste
  #  weirdness
  #
@@ -22,8 +25,6 @@
  #  seeing if log info works
  #
  ##
-
-# blah
 
 itcl_class Coregister {
     inherit Module
