@@ -61,7 +61,7 @@ WARNING
       // velocity field
       int getVFIndex() const;
 
-      virtual Burn* getBurnModel() = 0;
+      virtual Burn* getBurnModel();
 
       void setDWIndex(int);
       void setVFIndex(int);
