@@ -57,7 +57,7 @@ DESCRIPTION
   public:
     //////////
     // Initialize PIDL
-    static void initialize(int size=1, int rank=0);
+    static void initialize(int rank=0, int size=1);
 
     //////////
     // Finalize PIDL
