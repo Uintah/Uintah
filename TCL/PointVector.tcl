@@ -4,21 +4,21 @@ proc makePoint {w title name command} {
     label $w.label -text $title
     pack $w.label -side top
     scale $w.x -orient horizontal -variable $name-x \
-	    -from -10 -to 10 -label "X:" \
+	    -from -150 -to 150 -label "X:" \
 	    -showvalue true -tickinterval 5 \
-	    -resolution 0 -digits 3 \
+	    -resolution 0 -digits 5 \
 	    -command $command
     pack $w.x -side top -expand yes -fill x
     scale $w.y -orient horizontal -variable $name-y \
-	    -from -10 -to 10 -label "Y:" \
+	    -from -150 -to 150 -label "Y:" \
 	    -showvalue true -tickinterval 5 \
-	    -resolution 0 -digits 3 \
+	    -resolution 0 -digits 5 \
 	    -command $command
     pack $w.y -side top -expand yes -fill x
     scale $w.z -orient horizontal -variable $name-z \
-	    -from -10 -to 10 -label "Z:" \
+	    -from -150 -to 150 -label "Z:" \
 	    -showvalue true -tickinterval 5 \
-	    -resolution 0 -digits 3 \
+	    -resolution 0 -digits 5 \
 	    -command $command
     pack $w.z -side top -expand yes -fill x
 }
