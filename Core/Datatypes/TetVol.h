@@ -15,7 +15,7 @@ class TetVol: public Field
 public:
   //! Typedefs to support the Field concept.
   typedef Data            value_type;
-  typedef MeshTet                  mesh_type;
+  typedef MeshTet         mesh_type;
   typedef vector<Data>    fdata_type;
 
 
@@ -32,7 +32,10 @@ public:
 
 
   //! Required interface to support Field Concept.
-  value_type operator[] (int);
+  value_type operator[] (MeshTet::node_index);
+  value_type operator[] (MeshTet::edge_index);
+  value_type operator[] (MeshTet::face_index);
+  value_type operator[] (MeshTet::cell_index);
   
   template <class Functor>
   void interpolate(const Point &p, Functor &f);
