@@ -72,6 +72,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmenthalpywallbc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmscalarwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
@@ -1521,13 +1522,18 @@ BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
 {
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  bool fixTemp = true;
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell = IntVector(colX, colY, colZ);	  
 	if (cellType[currCell]==d_mmWallID) {
-	  if (d_energyEx)
-	    temperature[currCell] = solidTemp[currCell];
+	  if (d_energyEx) {
+	    if (!fixTemp) 
+	      temperature[currCell] = solidTemp[currCell];
+	    else
+	      temperature[currCell] = 298.0;
+	  }
 	  else
 	    temperature[currCell] = 298.0;
 	}
@@ -1988,12 +1994,12 @@ BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   //fortran call
-  fort_mmwallbc(idxLo, idxHi,
-		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
-		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
-		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
-		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-		constvars->cellType, d_mmWallID);
+  fort_mmscalarwallbc(idxLo, idxHi,
+		      vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
+		      vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
+		      vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
+		      vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		      constvars->cellType, d_mmWallID);
 }
 
 
