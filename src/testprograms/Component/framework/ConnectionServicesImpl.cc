@@ -30,54 +30,56 @@ ConnectionServicesImpl::init( const Framework &f )
 }
 
 bool
-ConnectionServicesImpl::connect( const ComponentID &provide, 
-				 const string &provide_port, 
-				 const ComponentID &use, 
-				 const string &use_port)
+ConnectionServicesImpl::connect( const ComponentID &uses, 
+				 const string &use_port, 
+				 const ComponentID &provider, 
+				 const string &provide_port)
 {
-  component_iterator from = registry_->components_.find(provide);
-  if ( from == registry_->components_.end() ) {
-    // error: could not find provider
-    return false; 
-  }
+  
 
-  component_iterator to = registry_->components_.find(use);
-  if ( to == registry_->components_.end() ) {
-    // error: could not find user
-    return false; 
-  }
+  // lock registry
+  registry_->connections_.writeLock();
 
-  ProvidePortRecord *ppr = from->second->getProvideRecord(provide_port);
-  if ( !ppr ) {
+  // get provide port record
+  ProvidePortRecord *provide = registry_->getProvideRecord( provider, 
+							    provide_port );
+  if ( !provide ) {
     // error: could not find provider's port
     return false;
   }
 
-  UsePortRecord *upr = from->second->getUseRecord(use_port);
-  if ( !upr ) {
-    // error: could not find use's port
-    return false;
-  }
-
-  if ( ppr->connection_ ) {
+  if ( provide->connection_ ) {
     // error: provide port in use
     return false;
   }
 
-  if ( upr->connection_ ) {
+  // get use port record
+  UsePortRecord *use = registry_->getUseRecord( uses, use_port );
+
+  if ( !use ) {
+    // error: could not find use's port
+    return false;
+  }
+
+  if ( use->connection_ ) {
     // error: uses port in use
     return false;
   }
 
+  // connect
   ConnectionRecord *record = new ConnectionRecord;
-  record->use_ = upr;
-  record->provide_ = ppr;
+  record->use_ = use;
+  record->provide_ = provide;
 
-  ppr->connection_ = record;
-  upr->connection_ = record;
+  provide->connection_ = record;
+  use->connection_ = record;
+
+  // unlock registry
+  registry_->connections_.writeUnlock();
 
   // notify who ever wanted to 
 
+  // done
   return true;
 }
   

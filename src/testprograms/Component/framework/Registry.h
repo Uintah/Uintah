@@ -5,9 +5,12 @@
 #include <string>
 #include <map>
 
+#include <Core/Thread/CrowdMonitor.h>
 #include <testprograms/Component/framework/cca_sidl.h>
 
 namespace sci_cca {
+
+using SCIRun::CrowdMonitor;
 
 class ConnectionRecord;
 
@@ -73,6 +76,15 @@ public:
   map<ComponentID, ComponentRecord *> components_;
 
   typedef map<ComponentID, ComponentRecord *>::iterator component_iterator;
+
+  CrowdMonitor connections_;
+
+public:
+  Registry();
+
+  ProvidePortRecord *getProvideRecord( const ComponentID &, const string &);
+  UsePortRecord *getUseRecord( const ComponentID &, const string &);
+
 };
 
 } // namespace sci_cca

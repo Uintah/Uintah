@@ -1,6 +1,6 @@
 
 #include <Core/Exceptions/InternalError.h> 
-
+#include <Core/Thread/CrowdMonitor.h>
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/Registry.h>
 
@@ -151,6 +151,30 @@ ConnectionRecord::disconnect()
   delete this;
 }
 
+
+Registry::Registry() : connections_("Registry Connection Lock") 
+{
+}
+
+ProvidePortRecord *
+Registry::getProvideRecord( const ComponentID &id, const string &name )
+{
+  component_iterator from = components_.find(id);
+  if ( from == components_.end() ) 
+    return 0; 
+  else
+    return from->second->getProvideRecord(name);
+}
+
+UsePortRecord *
+Registry::getUseRecord( const ComponentID &id, const string &name )
+{
+  component_iterator from = components_.find(id);
+  if ( from == components_.end() ) 
+    return 0; 
+  else
+    return from->second->getUseRecord(name);
+}
 
 } // namespace sci_cca
 
