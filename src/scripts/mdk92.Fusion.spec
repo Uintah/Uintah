@@ -30,7 +30,7 @@
 %define defver	1.22
 %define dotver  0
 %define gccver  3.3.1
-%define plat	mdk9.0
+%define plat	mdk9.2
 %define distro  Mandrake 9.2
 %define debug   opt
 %undefine	__check_files
@@ -101,10 +101,10 @@ tar -xvzf %{SOURCE6}
 
 
 %build
-cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
-./configure --prefix=/usr/local/%{ftgl}
-make
-make install 
+#cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
+#./configure --prefix=/usr/local/%{ftgl}
+#make
+#make install 
 cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
 
 
