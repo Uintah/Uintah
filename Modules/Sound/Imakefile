@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Modules_Sound
-
 #ifdef SCI_MACHINE_SGI
 SOBJS = SoundInput.o  SoundOutput.o  SoundReader.o
 SSRCS = SoundInput.cc SoundOutput.cc SoundReader.cc
@@ -24,11 +22,3 @@ SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Modules_Writers
-
 OBJS = ContourSetWriter.o   MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o   \
 	SurfaceWriter.o   VectorFieldWriter.o \
@@ -66,12 +64,3 @@ VectorFieldWriter.cc: Writer.cc
 
 VectorFieldWriter.tcl: Writer.tcl
 	sed 's/TYPE/VectorField/g' < Writer.tcl > VectorFieldWriter.tcl
-
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

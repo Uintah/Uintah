@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Malloc
-
 LOCALINCLUDES = -I.
 
 #ifdef SCI_MACHINE_SGI
@@ -43,11 +41,3 @@ SCIProgramTarget(test11, test11.o, libMalloc.so, $(LDFLAGS))
 SCIProgramTarget(test12, test12.o, libMalloc.so, $(LDFLAGS))
 SCIProgramTarget(test13, test13.o, libMalloc.so, $(LDFLAGS))
 SCIProgramTarget(test14, test14.o, libMalloc.so, $(LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

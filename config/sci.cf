@@ -88,8 +88,19 @@ depend::							@@\
 NamedTargetSubdirs(name,dirs,"cleaning",NullParameter,clean)
 #endif /* NamedCleanSubdirs */
 
+#ifndef SCINamedSOCleanSubdirs
+#define SCINamedSOCleanSubdirs(name,dirs) \
+NamedTargetSubdirs(name,dirs,"cleaning shared objects",NullParameter,soclean)
+#endif /* NamedCleanSubdirs */
+
 #ifndef SCICleanSubdirs
 #define SCICleanSubdirs(dirs) \
+SCINamedCleanSubdirs(clean,dirs) @@\
+SCINamedSOCleanSubdirs(soclean,dirs)
+#endif
+
+#ifndef SCICleanSubdirs2
+#define SCICleanSubdirs2(dirs) \
 SCINamedCleanSubdirs(clean,dirs)
 #endif
 
@@ -109,7 +120,7 @@ SCICleanSubdirs(subdirs)
 #define SCISubdirs3(subdirs)					@@\
 MakeSubdirs(subdirs)						@@\
 InstallSubdirs(subdirs)						@@\
-SCICleanSubdirs(subdirs)
+SCICleanSubdirs2(subdirs)
 
 #define SCILibraryTarget(objs, lib)				@@\
 AllTarget(lib)							@@\
@@ -152,3 +163,6 @@ Concat(lib,libname.a): objlist						@@\
 clean::
 	$(RM) -r ii_files
 	$(RM) -r ILDUMPS
+
+soclean::
+	$(RM) *.so

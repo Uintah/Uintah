@@ -532,14 +532,15 @@ void MeshView::getElements(const MeshHandle& mesh,
 			   const ColormapHandle& genColors)
 {
     int numTetra = mesh -> elems.size();
-    int numGroups, nL = numLevels.get(), aL = allLevels.get();
+    int nL = numLevels.get();
+    int aL = allLevels.get();
     HashTable<Edge, int> edge_table;
 
     if (tech.get() == 1 || (tech.get() == 2 && lastTech == 1))
     {
 	// If we're looking at quantitative measures, get the apppropriate
 	// elements
-	numGroups = getMeas(mesh, genColors);
+	int numGroups = getMeas(mesh, genColors);
 
 	// Turn the regular group off and the measures on
 	regSwitch -> set_state(0);

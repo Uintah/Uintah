@@ -25,11 +25,20 @@
 #define SCI_DeltaCCompiler cc
 #define SCI_DeltaOptimizeCFlags -O3
 #define SCI_DeltaDebugCFlags -g
+#ifdef SCI_IRIX6
+#define SCI_DeltaOtherCFlags -mips4 -fullwarn
+#else
 #define SCI_DeltaOtherCFlags -mips2 -fullwarn
+#endif
+
 #define SCI_DeltaCppCompiler CC
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
+#ifdef SCI_IRIX6
+#define SCI_DeltaOtherCppFlags -mips4
+#else
 #define SCI_DeltaOtherCppFlags -mips2
+#endif
 #define SCI_DeltaCppIncludeLocation /usr/include/CC
 #define SCI_DeltaLinker time CC
 #define SCI_DeltaLinkerFlags

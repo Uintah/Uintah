@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Multitask
-
 #ifdef SCI_QUARKS
 #define TASK_IMPLEMENTATION_O  Task_Quarks.o
 #define TASK_IMPLEMENTATION_CC Task_Quarks.cc
@@ -13,8 +11,14 @@
 #define TASK_IMPLEMENTATION_CC Task_irix.cc
 LOCKS = lock.o
 
+#ifdef SCI_IRIX6
+ASOPT = -mips4
+#else
+ASOPT = -mips2
+#endif
+
 lock.o: lock_mips.s
-	as -o lock.o lock_mips.s -mips2
+	as -o lock.o lock_mips.s $(ASOPT)
 #endif
 
 #ifdef SCI_MACHINE_SOLARIS
@@ -46,11 +50,3 @@ SO_LDFLAGS = -L$(TOP)/lib -lMalloc SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

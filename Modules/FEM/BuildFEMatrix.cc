@@ -103,7 +103,7 @@ void BuildFEMatrix::execute()
      Array1<int> cols;
      int r=0;
      int i;
-     for(int i=0;i<nnodes;i++){
+     for(i=0;i<nnodes;i++){
 	 rows[r++]=cols.size();
 	 if(mesh->nodes[i]->ndof > 0){
 	     mesh->add_node_neighbors(i, cols);

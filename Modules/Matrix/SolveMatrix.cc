@@ -35,7 +35,10 @@ public:
 class SolveMatrixUpdater : public MatrixUpdater {
 public:
     clString solverid;
-    virtual void update(int, double, double, double);
+    ColumnMatrixOPort* solport;
+    Module* module;
+    virtual void update(int, double, double, double,
+			const ColumnMatrix&);
 };
 
 extern "C" {
@@ -88,16 +91,21 @@ void SolveMatrix::execute()
     }
     SolveMatrixUpdater updater;
     updater.solverid=id;
+    updater.solport=solport;
+    updater.module=this;
     matrix->isolve(*solution.get_rep(), *rhs.get_rep(), .25, //1.e-4,
 		   &updater);
     solport->send(solution);
 }
 
 void SolveMatrixUpdater::update(int iter, double first_error,
-				double current_error, double final_error)
+				double current_error, double final_error,
+				const ColumnMatrix& solution)
 {
     char buf[1000];
     ostrstream str(buf, 1000);
     str << solverid << " update_iter " << iter << " " << first_error << " " << current_error << " " << final_error << '\0';
     TCL::execute(str.str());
+    solport->send(ColumnMatrixHandle(solution.clone()));
+    module->multisend(solport);
 }

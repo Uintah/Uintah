@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Modules_Matrix
-
 OBJS = SolveMatrix.o
 SRCS = SolveMatrix.cc
 
@@ -13,11 +11,3 @@ SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib -lMultitask -l
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

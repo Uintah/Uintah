@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Modules_Readers
-
 OBJS = ContourSetReader.o   GeomReader.o  MeshReader.o   \
 	MultiMeshReader.o   ScalarFieldReader.o   \
 	SurfaceReader.o   VectorFieldReader.o \
@@ -69,11 +67,3 @@ VectorFieldReader.cc: Reader.cc
 
 VectorFieldReader.tcl: Reader.tcl
 	sed 's/TYPE/VectorField/g' < Reader.tcl > VectorFieldReader.tcl
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

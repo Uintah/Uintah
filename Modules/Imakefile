@@ -7,18 +7,8 @@ SUBDIRS = Contours FEM Fields Matrix Mesh Readers \
 
 SCISubdirs($(SUBDIRS))
 
-#if 0
-AllTarget(libModules.o)
-#endif
-
 OBJS = Contours/libContours.o FEM/libFEM.o Fields/libFields.o \
 	Matrix/libMatrix.o \
 	Mesh/libMesh.o Readers/libReaders.o Salmon/libSalmon.o \
 	Sound/libSound.o Surface/libSurface.o \
 	Visualization/libVisualization.o Writers/libWriters.o
-
-#if 0
-libModules.o: $(OBJS)
-	ld -r -o libModules.o $(OBJS)
-
-#endif

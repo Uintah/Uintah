@@ -1,8 +1,6 @@
 
 #include <config/sci.cf>
 
-#ifdef SCI_DIR_Geometry
-
 OBJS = BBox.o  BSphere.o  Grid.o  Plane.o  Point.o  Ray.o  \
 	Transform.o  Vector.o
 SRCS = BBox.cc BSphere.cc Grid.cc Plane.cc Point.cc Ray.cc \
@@ -15,11 +13,3 @@ SO_LDFLAGS = -L$(TOP)/lib -lMath -lClasslib -lMalloc SCI_CCLibs -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
-
-#else
-all:
-depend::
-
-           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
-
-#endif

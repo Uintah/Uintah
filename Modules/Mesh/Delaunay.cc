@@ -17,7 +17,6 @@
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
-#include <Math/MusilRNG.h>
 #include <TCL/TCLvar.h>
 
 class Delaunay : public Module {
@@ -89,63 +88,54 @@ void Delaunay::execute()
     for(int i=0;i<nn;i++)
 	bbox.extend(mesh->nodes[i]->p);
 
-    double epsilon=1.e-4;
+    double epsilon=.1*bbox.longest_edge();
 
     // Extend by max-(eps, eps, eps) and min+(eps, eps, eps) to
     // avoid thin/degenerate bounds
-    bbox.extend(bbox.max()-Vector(epsilon, epsilon, epsilon));
-    bbox.extend(bbox.min()+Vector(epsilon, epsilon, epsilon));
+    Point max(bbox.max()+Vector(epsilon, epsilon, epsilon));
+    Point min(bbox.min()-Vector(epsilon, epsilon, epsilon));
 
-    // Make the bbox square...
-    Point center(bbox.center());
-    double le=1.0001*bbox.longest_edge();
-    Vector diag(le, le, le);
-    Point bmin(center-diag/2.);
+    mesh->nodes.add(new Node(Point(min.x(), min.y(), min.z())));
+    mesh->nodes.add(new Node(Point(max.x(), min.y(), min.z())));
+    mesh->nodes.add(new Node(Point(max.x(), min.y(), max.z())));
+    mesh->nodes.add(new Node(Point(min.x(), min.y(), max.z())));
+    mesh->nodes.add(new Node(Point(min.x(), max.y(), min.z())));
+    mesh->nodes.add(new Node(Point(max.x(), max.y(), min.z())));
+    mesh->nodes.add(new Node(Point(max.x(), max.y(), max.z())));
+    mesh->nodes.add(new Node(Point(min.x(), max.y(), max.z())));
 
-    // Make the initial mesh with a tetra which encloses the bounding
-    // box.  The first point is at the minimum point.  The other 3
-    // have one of the coordinates at bmin+diagonal*3.
-#if 0
-    mesh->nodes.add(new Node(bmin));
-    mesh->nodes.add(new Node(bmin+Vector(le*3, 0, 0)));
-    mesh->nodes.add(new Node(bmin+Vector(0, le*3, 0)));
-    mesh->nodes.add(new Node(bmin+Vector(0, 0, le*3)));
-#endif
-    mesh->nodes.add(new Node(bmin-Vector(le, le, le)));
-    mesh->nodes.add(new Node(bmin+Vector(le*5, 0, 0)));
-    mesh->nodes.add(new Node(bmin+Vector(0, le*5, 0)));
-    mesh->nodes.add(new Node(bmin+Vector(0, 0, le*5)));
+    Element* el1=new Element(mesh, nn+0, nn+1, nn+4, nn+3);
+    Element* el2=new Element(mesh, nn+2, nn+1, nn+3, nn+6);
+    Element* el3=new Element(mesh, nn+7, nn+3, nn+6, nn+4);
+    Element* el4=new Element(mesh, nn+5, nn+6, nn+4, nn+1);
+    Element* el5=new Element(mesh, nn+1, nn+3, nn+4, nn+6);
+    el1->faces[0]=4; el1->faces[1]=-1; el1->faces[2]=-1; el1->faces[3]=-1;
+    el2->faces[0]=4; el2->faces[1]=-1; el2->faces[2]=-1; el2->faces[3]=-1;
+    el3->faces[0]=4; el3->faces[1]=-1; el3->faces[2]=-1; el3->faces[3]=-1;
+    el4->faces[0]=4; el4->faces[1]=-1; el4->faces[2]=-1; el4->faces[3]=-1;
+    el5->faces[0]=2; el5->faces[1]=3; el5->faces[2]=1; el5->faces[3]=0;
+    el1->orient();
+    el2->orient();
+    el3->orient();
+    el4->orient();
+    el5->orient();
+    mesh->elems.add(el1);
+    mesh->elems.add(el2);
+    mesh->elems.add(el3);
+    mesh->elems.add(el4);
+    mesh->elems.add(el5);
 
-    Element* el=new Element(mesh, nn+0, nn+1, nn+2, nn+3);
     int onn=nn;
-    el->orient();
-    el->faces[0]=el->faces[1]=el->faces[2]=el->faces[3]=-1;
-    mesh->elems.add(el);
-
-    nn=nnodes.get();
-    if(nn==0 || nn > onn)nn=onn;
     GeometryOPort* aport=ogeom;
     if(ogeom->nconnections() == 0)
 	aport=0;
-    Array1<int> map(nn);
-    MusilRNG rng;
-    int node;
-    for(node=0;node<nn;node++)
-	map[node]=node;
-#if 0
-    for(node=0;node<nn;node++){
-	int n1=(int)(nn*rng());
-	int n2=(int)(nn*rng());
-	int tmp=map[n1];
-	map[n1]=map[n2];
-	map[n2]=tmp;
-    }
-#endif
-    for(node=0;node<nn;node++){
+    nn=nnodes.get();
+    if(nn==0 || nn > onn)nn=onn;
+    for(int node=0;node<nn;node++){
 	// Add this node...
 	update_progress(node, nn);
 
-	if(!mesh->insert_delaunay(map[node], aport)){
+	if(!mesh->insert_delaunay(node, aport)){
 	    error("Mesher upset - point outside of domain...");
 	    return;
 	}
@@ -161,6 +151,10 @@ cerr << "Adding node " << node << endl;
 	mesh->remove_delaunay(onn+1, 0);
 	mesh->remove_delaunay(onn+2, 0);
 	mesh->remove_delaunay(onn+3, 0);
+	mesh->remove_delaunay(onn+4, 0);
+	mesh->remove_delaunay(onn+5, 0);
+	mesh->remove_delaunay(onn+6, 0);
+	mesh->remove_delaunay(onn+7, 0);
     }
     mesh->pack_all();
     oport->send(mesh);

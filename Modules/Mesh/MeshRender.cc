@@ -115,7 +115,7 @@ void MeshRender::execute()
 	Edge e(eiter.get_key());
 	Point p1(mesh->nodes[e.n[0]]->p);
 	Point p2(mesh->nodes[e.n[1]]->p);
-	GeomCylinder* cyl = new GeomCylinder(p1, p2, radius);
+	GeomCylinder* cyl = new GeomCylinder(p1, p2, radius, 10, 2);
 	group -> add(cyl);
     }
 

@@ -17,6 +17,7 @@ SCIDependTarget(name.cc)
 
 ConvertProgram(ConvMesh)
 ConvertProgram(GenMesh)
+ConvertProgram(GenMesh2)
 ConvertProgram(GenScalp)
 ConvertProgram(JAStoSurf)
 ConvertProgram(JAStoUG)
