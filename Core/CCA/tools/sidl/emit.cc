@@ -40,6 +40,7 @@ extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
 #include <map>
 #include <sstream>
 
+#include <ctype.h>
 #include <stdio.h>
 using namespace std;
 extern bool doing_cia;
@@ -104,6 +105,16 @@ public:\n\
   }\n\
 ";
 #endif
+
+std::string produceLegalVar(std::string illegalVar)
+{
+   std::string legal = "_";
+   for(unsigned int i=0; i<illegalVar.size(); i++) {
+     if(isalnum(illegalVar[i]))
+       legal += illegalVar[i];
+   }
+   return legal;
+}
 
 struct Leader {
 };
@@ -1847,13 +1858,14 @@ void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
       cerr << "emit_unmarshal call for string with qty != 1:" << qty << "\n";
       exit(1);
     }
-    e.out << leader2 << "int " << arg << "_length;\n";
-    e.out << leader2 << "message->unmarshalInt(&" << arg << "_length);\n";
+    string arglen = produceLegalVar(arg) + "_length";
+    e.out << leader2 << "int " << arglen << ";\n";
+    e.out << leader2 << "message->unmarshalInt(&" << arglen << ");\n";
     if(declare)
-      e.out << leader2 << "::std::string " << arg << "(" << arg << "_length, ' ');\n";
+      e.out << leader2 << "::std::string " << arg << "(" << arglen << ", ' ');\n";
     else
-      e.out << leader2 << arg << ".resize(" << arg << "_length);\n";
-    e.out << leader2 << "message->unmarshalChar(const_cast<char*>(" << arg << ".c_str()), " << arg << "_length);\n";
+      e.out << leader2 << arg << ".resize(" << arglen << ");\n";
+    e.out << leader2 << "message->unmarshalChar(const_cast<char*>(" << arg << ".c_str()), " << arglen << ");\n";
   } else if(cname == "::std::complex<float> "){
     if(qty != "1"){
       e.out << leader2 << "float* " << arg << "_in = new float[2*" << qty << "];\n";
@@ -1959,9 +1971,10 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
       cerr << "marshal string called with qty != 1: " << qty << '\n';
       exit(1);
     }
-    e.out << leader2 << "int " << arg << "_len=" << arg << ".length();\n";
-    e.out << leader2 << "message->marshalInt(&" << arg << "_len);\n";
-    e.out << leader2 << "message->marshalChar(const_cast<char*>(" << arg << ".c_str()), " << arg << "_len);\n";
+    std::string arglen = produceLegalVar(arg) + "_len";
+    e.out << leader2 << "int " << arglen << "=" << arg << ".length();\n";
+    e.out << leader2 << "message->marshalInt(&" << arglen << ");\n";
+    e.out << leader2 << "message->marshalChar(const_cast<char*>(" << arg << ".c_str()), " << arglen << ");\n";
   } else if(cname == "::std::complex<float> "){
     if(qty != "1"){
       e.out << leader2 << "float* " << arg << "_out = new float[2*" << qty << "];\n";
@@ -2167,12 +2180,14 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
-	std::ostringstream var2unmarshal2;
+        e.out << "{\n";
+        std::ostringstream var2unmarshal2;
 	var2unmarshal2 << "(*_arr_ptr)";
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  var2unmarshal2 << "[(i" << i << "-adj" << i << ")/str" << i << "]";
 	}   
 	arr_t->subtype->emit_unmarshal(e, var2unmarshal2.str(), "1", handler, ctx, false, false);
+        e.out << "}\n";
 	e.out.pop_leader(templeader); 
 	e.out << leader2 << "  //Mark this representation as recieved\n";
 	e.out << leader2 << "  _sc->d_sched->markReceived(\"" << distarr->getName() << "\",rank);\n";
@@ -2225,6 +2240,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
+        e.out << "{\n";
 	std::ostringstream var2unmarshal2;
 	var2unmarshal2 << "(" << arg;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
@@ -2232,6 +2248,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	}   
 	var2unmarshal2 << ")";
 	arr_t->subtype->emit_unmarshal(e, var2unmarshal2.str(), "1", handler, ctx, false, false);
+        e.out << "}\n";
 	e.out.pop_leader(templeader); 
 	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "}\n";   
@@ -2466,16 +2483,18 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 		<< "), str" << i << "=this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_arr[0][" << i << "]; " << "i" << i << "<=" 
 		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "_meta_arr[2][" 
-		<< i << "])\n"; 
+		<< i << "]) \n"; 
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
+        e.out << "{\n";
 	std::ostringstream var2marshal;
 	var2marshal << arg;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  var2marshal << "[(i" << i << "-adj" << i << ")/str" << i << "]"; 
 	}   
 	arr_t->subtype->emit_marshal(e, var2marshal.str(), "1", handler, top, ctx, false);
+        e.out << "}\n";
 	e.out.pop_leader(templeader);   
 	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "  int _handler=rl[i]->getReference()->getVtableBase()+" << handler << ";\n";
@@ -2516,6 +2535,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
+        e.out << "{\n";
 	std::ostringstream var2marshal;
 	var2marshal << "((*_arr_ptr)";
 	for(int i=arr_t->dim-1; i >= 0; i--) {
@@ -2523,6 +2543,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	}   
 	var2marshal << ")";
 	arr_t->subtype->emit_marshal(e, var2marshal.str(), "1", handler, top, ctx, false);
+        e.out << "}\n";
 	e.out.pop_leader(templeader);   
 	e.out << leader2 << "  //Send Message\n";
 	e.out << leader2 << "  message->sendMessage(0);\n";
