@@ -32,20 +32,22 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <sys/stat.h>
 
 namespace SCITeem {
 
 using namespace SCIRun;
 
 class NrrdReader : public Module {
-    NrrdOPort* outport;
-    GuiString filename;
-    NrrdDataHandle handle;
-    clString old_filename;
+  NrrdOPort* outport_;
+  GuiString filename_;
+  NrrdDataHandle handle_;
+  clString old_filename_;
+  time_t old_filemodification_;
 public:
-    NrrdReader(const clString& id);
-    virtual ~NrrdReader();
-    virtual void execute();
+  NrrdReader(const clString& id);
+  virtual ~NrrdReader();
+  virtual void execute();
 };
 
 extern "C" Module* make_NrrdReader(const clString& id) {
@@ -53,11 +55,13 @@ extern "C" Module* make_NrrdReader(const clString& id) {
 }
 
 NrrdReader::NrrdReader(const clString& id)
-: Module("NrrdReader", id, Source), filename("filename", id, this)
+: Module("NrrdReader", id, Source, "DataIO", "Teem"), 
+  filename_("filename", id, this),
+  old_filemodification_(0)
 {
     // Create the output data handle and port
-    outport=scinew NrrdOPort(this, "Output Data", NrrdIPort::Atomic);
-    add_oport(outport);
+    outport_=scinew NrrdOPort(this, "Output Data", NrrdIPort::Atomic);
+    add_oport(outport_);
 }
 
 NrrdReader::~NrrdReader()
@@ -66,25 +70,50 @@ NrrdReader::~NrrdReader()
 
 void NrrdReader::execute()
 {
+  clString fn(filename_.get());
 
-    clString fn(filename.get());
-    if(!handle.get_rep() || fn != old_filename){
-	old_filename=fn;
-	Piostream* stream=auto_istream(fn);
-	if(!stream){
-	    error(clString("Error reading file: ")+filename.get());
-	    return; // Can't open file...
-	}
-	// Read the file...
-	Pio(*stream, handle);
-	if(!handle.get_rep() || stream->error()){
-	    error("Error reading Nrrd from file");
-	    delete stream;
-	    return;
-	}
-	delete stream;
+  // Read the status of this file so we can compare modification timestamps
+  struct stat buf;
+  if (stat(fn(), &buf)) {
+    error(clString("FieldReader error - file not found ")+fn);
+    return;
+  }
+
+  // If we haven't read yet, or if it's a new filename, 
+  //  or if the datestamp has changed -- then read...
+#ifdef __sgi
+  time_t new_filemodification = buf.st_mtim.tv_sec;
+#else
+  time_t new_filemodification = buf.st_mtime;
+#endif
+  if(!handle_.get_rep() || 
+     fn != old_filename_ || 
+     new_filemodification != old_filemodification_)
+  {
+    old_filemodification_ = new_filemodification;
+    old_filename_=fn;
+
+    FILE *f;
+    if (!(f = fopen(fn(), "rt"))) {
+      cerr << "Error opening file "<<fn<<"\n";
+      return;
     }
-    outport->send(handle);
+
+    NrrdData *n = scinew NrrdData;
+    if (!(n->nrrd=nrrdNewRead(f))) {
+      char *err = biffGet(NRRD);
+      cerr << "Error reading nrrd "<<fn<<": "<<err<<"\n";
+      free(err);
+      biffDone(NRRD);
+      fclose(f);
+      return;
+    }
+    fclose(f);
+    handle_ = n;
+  }
+
+  // Send the data downstream
+  outport_->send(handle_);
 }
 
 } // End namespace SCITeem
