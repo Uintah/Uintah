@@ -85,7 +85,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-color-b 0.9
 
 	trace variable $this-active_tab w "$this switch_to_active_tab"
-	trace variable $this-update_type w "$this set_update_type"
+	trace variable $this-update_type w "$this update_type_callback"
 	trace variable $this-isoval-max w "$this set_minmax_callback"
 
 	# SAGE vars
@@ -163,7 +163,6 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method switch_to_active_tab {name1 name2 op} {
-	#puts stdout "switching"
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set mf [$window.f.meth childsite]
@@ -268,7 +267,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set opt [$w.f.opt childsite]
 	
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
-		-labelpos w -command "$this update-type $opt.update"
+		-labelpos w -command "$this set_update_type $opt.update"
 	$opt.update insert end "on release" Manual Auto
 	$opt.update select [set $this-update_type]
 
@@ -367,7 +366,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
-    method set_update_type { name1 name2 op } {
+    method update_type_callback { name1 name2 op } {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    set opt [$window.f.opt childsite]
@@ -375,7 +374,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
-    method update-type { w } {
+    method set_update_type { w } {
 	global $w
 	global $this-continuous
 	global $this-update_type
@@ -420,31 +419,14 @@ itcl_class SCIRun_Visualization_Isosurface {
 	  bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.r.e \
 		  <Return> "$this manualSliderEntry $min $max $this-isoval $this-isoval2"
 	}
-
-	# have to set this value here -- it needs to be set after
-	#  the first call to set_minmax, otherwise a net that has 
-	#  update_type set to "Auto" will execute immediately... rather
-	#  than waiting for a user-generated execute event
-	# (the configure commands just above are what cause this)
-	global $this-continuous
-	global $this-update_type
-	if { [set $this-update_type] == "Auto" } {
-	    set $this-continuous 1
-	} else {
-	    set $this-continuous 0
-	}
     }
 
     method scaleEntry2 { win start stop length var1 var2 } {
 	frame $win 
-#	pack $win -side top -padx 5
 
 	frame $win.l
 	frame $win.r
 	
-#	puts stderr $stop
-#	puts stderr $start
-
 	set lg [expr floor( log10($stop-$start) ) ]
 	set range [expr pow(10.0, $lg )]
 
@@ -483,6 +465,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	if { [set $this-continuous] == 1.0 } {
 	    eval "$this-c needexecute"
+	} elseif { [set $this-update_type] == "Auto" } {
+	    set $this-continuous 1
 	}
     }
     
