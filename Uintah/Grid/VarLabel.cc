@@ -1,16 +1,42 @@
 
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/Patch.h>
+#include <SCICore/Exceptions/InternalError.h>
 #include <iostream>
 #include <sstream>
 
 using namespace Uintah;
 using namespace std;
+using namespace SCICore::Exceptions;
+
+map<string, VarLabel*> VarLabel::allLabels;
 
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 		   VarType vartype)
    : d_name(name), d_td(td), d_vartype(vartype)
 {
+   map<string, VarLabel*>::value_type mappair(name, this);
+   if (allLabels.insert(mappair).second == false) {
+      // two labels with the same name -- make sure they are the same type
+      VarLabel* dup = allLabels[name];
+      if (d_td != dup->d_td || d_vartype != dup->d_vartype)
+	 throw InternalError(string("VarLabel with same name exists, '")
+			     + name + "', but with different type");
+   }
+}
+
+VarLabel::~VarLabel()
+{
+   allLabels.erase(d_name);
+}
+
+VarLabel* VarLabel::find(string name)
+{
+   map<string, VarLabel*>::iterator found = allLabels.find(name);
+   if (found == allLabels.end())
+      return NULL;
+   else
+      return (*found).second;
 }
 
 
@@ -37,6 +63,11 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.11  2000/12/23 00:35:23  witzel
+// Added a static member variable to VarLabel that maps VarLabel names to
+// the appropriate VarLabel* for all VarLabel's in existent, and added
+// VarLabel::find which uses this map.
+//
 // Revision 1.10  2000/12/19 16:55:39  jas
 // Added implementation of getFullName.
 //

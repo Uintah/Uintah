@@ -4,6 +4,7 @@
 
 #include <string>
 #include <iostream>
+#include <map>
 
 using std::ostream;
 using std::string;
@@ -52,6 +53,8 @@ namespace Uintah {
       VarLabel(const string&, const TypeDescription*,
 	       VarType vartype = Normal);
 
+      ~VarLabel();
+
       // VarLabel(const string&, const TypeDescription*);
       
       inline const string& getName() const {
@@ -65,6 +68,9 @@ namespace Uintah {
       const TypeDescription* typeDescription() const {
 	 return d_td;
       }
+
+      static VarLabel* find(string name);
+     
       class Compare {
       public:
 	 inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
@@ -79,6 +85,7 @@ namespace Uintah {
    private:
       const TypeDescription* d_td;
       VarType                d_vartype;
+      static std::map<std::string, VarLabel*> allLabels;     
       
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
@@ -89,6 +96,11 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.14  2000/12/23 00:35:23  witzel
+// Added a static member variable to VarLabel that maps VarLabel names to
+// the appropriate VarLabel* for all VarLabel's in existent, and added
+// VarLabel::find which uses this map.
+//
 // Revision 1.13  2000/12/10 09:06:18  sparker
 // Merge from csafe_risky1
 //
