@@ -57,7 +57,6 @@ itcl_class SCIRun_FieldsOther_FieldMeasures {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -90,5 +89,8 @@ itcl_class SCIRun_FieldsOther_FieldMeasures {
 	pack $w.general.x $w.general.y $w.general.z $w.general.idx $w.general.nnbrs $w.general.size $w.general.norm -anchor nw
 
 	pack $w.which $w.general -side top -fill x -expand 1
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
