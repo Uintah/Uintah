@@ -440,8 +440,11 @@ void AMRICE::scheduleRefine(const LevelP& fineLevel,
   cout_dbg << "AMRICE::scheduleRefine\t\t\t\tL-" << fineLevel->getIndex() << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
+  MaterialSubset* subset = scinew MaterialSubset;
+  subset->add(0);
+
   task->requires(Task::NewDW, lb->press_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::CoarseLevel, subset, Task::OutOfDomain, gn, 0);
                  
   task->requires(Task::NewDW, lb->rho_CCLabel,
                0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
@@ -822,16 +825,13 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                   this, &AMRICE::errorEstimate, false);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  MaterialSubset* press_matl = scinew MaterialSubset();
-  press_matl->add(0);
-  press_matl->addReference();
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
                   
   t->requires(Task::NewDW, lb->rho_CCLabel,       gac, 1);
   t->requires(Task::NewDW, lb->temp_CCLabel,      gac, 1);
   t->requires(Task::NewDW, lb->vel_CCLabel,       gac, 1);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 1);
-  t->requires(Task::NewDW, lb->press_CCLabel,    press_matl,oims,gac, 1);
+  t->requires(Task::NewDW, lb->press_CCLabel,    d_press_matl,oims,gac, 1);
   
   t->computes(lb->rho_CC_gradLabel);
   t->computes(lb->temp_CC_gradLabel);
