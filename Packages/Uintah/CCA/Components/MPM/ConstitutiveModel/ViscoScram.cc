@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 
