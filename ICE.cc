@@ -1248,14 +1248,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
     double dCFL = d_CFL;
     static double TIME = 0.;
-#ifdef CONVECT
-    if (TIME < .0025){
-      dCFL = d_CFL;
-    }
-    else {
-      dCFL = .3;
-    }
-#endif
 
     for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
       Material* matl = d_sharedState->getMaterial(m);
