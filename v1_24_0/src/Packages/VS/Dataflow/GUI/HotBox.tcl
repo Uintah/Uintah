@@ -566,7 +566,7 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     frame $w.probeUI
     frame $w.probeUI.loc
-    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7"
+    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7" "Myocardial zone 12,80.3,70.3,105.0" "Upper lobe of left lung,87.8,68.3,106.6"
     trace var $this-selnameloc w "$this set_probeSelection"
     label $w.probeUI.loc.locLabel -text "Cursor Location" -just left
     entry $w.probeUI.loc.locx -width 10 -textvariable $this-gui_probeLocx
