@@ -94,7 +94,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   int sink_size = 1;
   int ndims = 3;
 
-  NrrdData *nout = scinew NrrdData(false);
+  NrrdData *nout = scinew NrrdData(true);
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*3];
 
@@ -194,7 +194,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   int sink_size = 1;
   int ndims = 3;
 
-  NrrdData *nout = scinew NrrdData(false);
+  NrrdData *nout = scinew NrrdData(true);
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim];
 
@@ -271,7 +271,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   int sink_size = 1;
   int ndims = 3;
 
-  NrrdData *nout = scinew NrrdData(false);
+  NrrdData *nout = scinew NrrdData(true);
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*3];
 
@@ -360,7 +360,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   unsigned int sink_size = 1;
   unsigned int ndims = 3;
 
-  NrrdData *nout = scinew NrrdData(false);
+  NrrdData *nout = scinew NrrdData(true);
 
   register int i,j,k,m,cc = 0;
 

@@ -175,7 +175,7 @@ VULCANConverter::execute(){
 	  }
 
 	  // Form the new nrrd and store.
-	  NrrdData *nrrd = scinew NrrdData;
+	  NrrdData *nrrd = scinew NrrdData(true);
 	  nrrd->nrrd = nout;
 	  nout->axis[0].label = strdup(dataset[i].c_str());
 
