@@ -30,6 +30,7 @@ public:
 	GeometryDelObj,
 	GeometryDelAll,
 	GeometryFlush,
+	GeometryFlushViews,
 
 	GeometryPick,
 	GeometryRelease,
