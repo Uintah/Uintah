@@ -1,4 +1,4 @@
-#include "CommRecMPI.h"
+#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
