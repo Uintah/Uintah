@@ -223,7 +223,7 @@ FieldMeasures::measure_tetvol()
     mesh->begin(ni); mesh->end(nie);
     int row=0;
     int col=0;
-    TetVolMesh::Cell::array_index nbrs;
+    TetVolMesh::Node::array_type nbrs;
     while (ni != nie) {
       col=0;
       Point p;
