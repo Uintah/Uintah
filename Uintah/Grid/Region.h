@@ -169,6 +169,11 @@ WARNING
 
       string toString() const;
 
+      int getID() const {
+	 return id;
+      }
+      const Region* getNeighbor(const IntVector&) const;
+      void setNeighbor(const IntVector&, const Region*);
    protected:
       friend class Level;
       
@@ -190,7 +195,10 @@ WARNING
       //////////
       // Insert Documentation Here:
       IntVector d_res;
+
+      const Region* neighbors[27];
       
+      int id;
       friend class NodeIterator;
    };
    
@@ -200,6 +208,10 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.17  2000/05/07 06:02:12  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.16  2000/05/05 06:42:45  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

@@ -84,6 +84,12 @@ WARNING
 				       const MPMMaterial* matl,
 				       DataWarehouseP& new_dw);
 	 
+	 virtual void addComputesAndRequires(Task* task,
+					     const MPMMaterial* matl,
+					     const Region* region,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 // class function to read correct number of parameters
 	 // from the input file
 	 static void readParameters(ProblemSpecP ps, double *p_array);
@@ -110,6 +116,10 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.17  2000/05/07 06:02:03  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.16  2000/05/04 16:37:30  guilkey
 // Got the CompNeoHookPlas constitutive model up to speed.  It seems
 // to work but hasn't had a rigorous test yet.

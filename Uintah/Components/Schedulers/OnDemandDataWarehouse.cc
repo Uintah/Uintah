@@ -29,7 +29,7 @@ namespace Uintah {
 OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
   : d_lock("DataWarehouse lock"), DataWarehouse( MpiRank, MpiProcesses )
 {
-  d_allowCreation = true;
+  d_finalized = false;
   d_positionLabel = new VarLabel("__internal datawarehouse position variable",
 				ParticleVariable<Point>::getTypeDescription(),
 				VarLabel::Internal);
@@ -275,6 +275,22 @@ OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
    }
 }
 
+bool
+OnDemandDataWarehouse::exists(const VarLabel* label, const Region* region) const
+{
+   if(!region){
+      reductionDBtype::const_iterator iter = d_reductionDB.find(label);
+      if(iter != d_reductionDB.end())
+	 return true;
+   } else {
+      if(d_ncDB.exists(label, region))
+	 return true;
+      if(d_particleDB.exists(label, region))
+	 return true;
+   }
+   return false;
+}
+
 OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
    : var(var)
 {
@@ -349,6 +365,10 @@ DataWarehouseMpiHandler::run()
 
 //
 // $Log$
+// Revision 1.19  2000/05/07 06:02:07  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.18  2000/05/06 03:54:10  sparker
 // Fixed multi-material carryForward
 //

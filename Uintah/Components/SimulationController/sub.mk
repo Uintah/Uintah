@@ -10,13 +10,17 @@ SRCDIR   := Uintah/Components/SimulationController
 SRCS     += $(SRCDIR)/SimulationController.cc
 
 PSELIBS := Uintah/Parallel Uintah/Exceptions Uintah/Interface \
-	Uintah/Grid SCICore/Geometry SCICore/Thread
+	Uintah/Grid SCICore/Geometry SCICore/Thread SCICore/Exceptions
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/05/07 06:02:10  sparker
+# Added beginnings of multiple patch support and real dependencies
+#  for the scheduler
+#
 # Revision 1.4  2000/04/19 05:26:13  sparker
 # Implemented new problemSetup/initialization phases
 # Simplified DataWarehouse interface (not finished yet)

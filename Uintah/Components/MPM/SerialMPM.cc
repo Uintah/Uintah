@@ -155,6 +155,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 				    const DataWarehouseP& old_dw, 
 				          DataWarehouseP& new_dw)
 {
+   int numMatls = d_sharedState->getNumMatls();
    for(Level::const_regionIterator iter=level->regionsBegin();
        iter != level->regionsEnd(); iter++){
       const Region* region=*iter;
@@ -169,14 +170,22 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::interpolateParticlesToGrid",
 			    region, old_dw, new_dw,
 			    this,&SerialMPM::interpolateParticlesToGrid);
-	 t->requires(old_dw, pMassLabel, region, 0 );
-	 t->requires(old_dw, pVelocityLabel, region, 0 );
-	 t->requires(old_dw, pExternalForceLabel, region, 0 );
-	 t->requires(old_dw, pXLabel, region, 0 );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires(old_dw, pMassLabel, idx, region,
+			Task::AroundNodes, 1 );
+	    t->requires(old_dw, pVelocityLabel, idx, region,
+			Task::AroundNodes, 1 );
+	    t->requires(old_dw, pExternalForceLabel, idx, region,
+			Task::AroundNodes, 1 );
+	    t->requires(old_dw, pXLabel, idx, region,
+			Task::AroundNodes, 1 );
 
-	 t->computes(new_dw, gMassLabel, region );
-	 t->computes(new_dw, gVelocityLabel, region );
-	 t->computes(new_dw, gExternalForceLabel, region );
+	    t->computes(new_dw, gMassLabel, idx, region );
+	    t->computes(new_dw, gVelocityLabel, idx, region );
+	    t->computes(new_dw, gExternalForceLabel, idx, region );
+	 }
 		     
 	 sched->addTask(t);
       }
@@ -194,10 +203,16 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			    region, old_dw, new_dw,
 			    d_contactModel,
 			    &Contact::exMomInterpolated);
-	 t->requires( new_dw, gMassLabel, region, 0 );
-	 t->requires( new_dw, gVelocityLabel, region, 0 );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( new_dw, gMassLabel, idx, region,
+			 Task::None);
+	    t->requires( new_dw, gVelocityLabel, idx, region,
+			 Task::None);
 
-	 t->computes( new_dw, gMomExedVelocityLabel, region );
+	    t->computes( new_dw, gMomExedVelocityLabel, idx, region );
+	 }
 
 	 sched->addTask(t);
       }
@@ -217,22 +232,18 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::computeStressTensor",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::computeStressTensor);
-	 t->requires(new_dw, gMomExedVelocityLabel, region, 0);
-	 /*
-	   #warning
-	   t->requires(old_dw, "p.cmdata", region, 0,
-	   ParticleVariable<Uintah::Components::
-	   ConstitutiveModel::CMData>::getTypeDescription());
-	   */
-	 t->requires(new_dw, pDeformationMeasureLabel, region, 0);
-
-	 t->computes(new_dw, d_sharedState->get_delt_label());
-	 t->computes(new_dw, pStressLabel, region);
-	 t->computes(new_dw, pDeformationMeasureLabel, region);
-
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    if(mpm_matl){
+	       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+	       cm->addComputesAndRequires(t, mpm_matl, region, old_dw, new_dw);
+	    }
+	 }
 	 sched->addTask(t);
       }
 
+#if 0
       {
 	 /*
 	  * updateSurfaceNormalOfBoundaryParticle
@@ -249,6 +260,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 sched->addTask(t);
       }
+#endif
       
       {
 	 /*
@@ -262,10 +274,16 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::computeInternalForce",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::computeInternalForce);
-	 t->requires( new_dw, pStressLabel, region, 0 );
-	 t->requires( old_dw, pVolumeLabel, region, 0 );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( new_dw, pStressLabel, idx, region,
+			 Task::AroundNodes, 1);
+	    t->requires( old_dw, pVolumeLabel, idx, region,
+			 Task::AroundNodes, 1);
 
-	 t->computes( new_dw, gInternalForceLabel, region );
+	    t->computes( new_dw, gInternalForceLabel, idx, region );
+	 }
 
 	 sched->addTask( t );
       }
@@ -281,10 +299,16 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::solveEquationsMotion",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::solveEquationsMotion);
-	 t->requires( new_dw, gMassLabel, region, 0 );
-	 t->requires( new_dw, gInternalForceLabel, region, 0 );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires( new_dw, gMassLabel, idx, region,
+			 Task::None);
+	    t->requires( new_dw, gInternalForceLabel, idx, region,
+			 Task::None);
 
-	 t->computes( new_dw, gAccelerationLabel, region );
+	    t->computes( new_dw, gAccelerationLabel, idx, region);
+	 }
 
 	 sched->addTask(t);
       }
@@ -300,11 +324,17 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::integrateAcceleration",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::integrateAcceleration);
-	 t->requires(new_dw, gAccelerationLabel, region, 0 );
-	 t->requires(new_dw, gMomExedVelocityLabel, region, 0 );
-	 t->requires(old_dw, deltLabel );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires(new_dw, gAccelerationLabel, idx, region,
+			Task::None);
+	    t->requires(new_dw, gMomExedVelocityLabel, idx, region,
+			Task::None);
+	    t->requires(old_dw, deltLabel );
 		     
-	 t->computes(new_dw, gVelocityStarLabel, region );
+	    t->computes(new_dw, gVelocityStarLabel, idx, region );
+	 }
 		     
 	 sched->addTask(t);
       }
@@ -321,12 +351,19 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	Task* t = new Task("Contact::exMomIntegrated",
 			   region, old_dw, new_dw,
 			   d_contactModel, &Contact::exMomIntegrated);
-	t->requires(new_dw, gMassLabel, region, 0);
-	t->requires(new_dw, gVelocityStarLabel, region, 0);
-	t->requires(new_dw, gAccelerationLabel, region, 0);
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires(new_dw, gMassLabel, idx, region,
+			Task::None);
+	    t->requires(new_dw, gVelocityStarLabel, idx, region,
+			Task::None);
+	    t->requires(new_dw, gAccelerationLabel, idx, region,
+			Task::None);
 
-	t->computes(new_dw, gMomExedVelocityStarLabel, region);
-	t->computes(new_dw, gMomExedAccelerationLabel, region);
+	    t->computes(new_dw, gMomExedVelocityStarLabel, idx, region);
+	    t->computes(new_dw, gMomExedAccelerationLabel, idx, region);
+	}
 
 	sched->addTask(t);
       }
@@ -343,17 +380,24 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::interpolateToParticlesAndUpdate);
-	 t->requires(new_dw, gMomExedAccelerationLabel, region, 0 );
-	 t->requires(new_dw, gMomExedVelocityStarLabel, region, 0 );
-
-	 t->requires(old_dw, pXLabel, region, 0 );
-	 t->requires(old_dw, deltLabel );
-	 t->computes(new_dw, pVelocityLabel, region );
-	 t->computes(new_dw, pXLabel, region );
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    t->requires(new_dw, gMomExedAccelerationLabel, idx, region,
+			Task::AroundCells, 1);
+	    t->requires(new_dw, gMomExedVelocityStarLabel, idx, region,
+			Task::AroundCells, 1);
+	    t->requires(old_dw, pXLabel, idx, region,
+			Task::None);
+	    t->requires(old_dw, deltLabel );
+	    t->computes(new_dw, pVelocityLabel, idx, region );
+	    t->computes(new_dw, pXLabel, idx, region );
+	 }
 
 	 sched->addTask(t);
       }
 
+#if 0
       {
 	 /*
 	  * crackGrow
@@ -372,6 +416,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	 sched->addTask(t);
       }
+#endif
 
     }
 }
@@ -526,9 +571,9 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 }
 
 void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorContext*,
-				    const Region* region,
-				    const DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+				    const Region* /*region*/,
+				    const DataWarehouseP& /*old_dw*/,
+				    DataWarehouseP& /*new_dw*/)
 {
   //Tan: not finished yet. 
 }
@@ -785,9 +830,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       static ofstream tmpout("tmp.out");
       static int ts=0;
       tmpout << ts << " " << ke << std::endl;
-    
+#if 0
       static ofstream tmpout2("tmp2.out");
       tmpout2 << ts << " " << px[0] << std::endl;
+#endif
       ts++;
 
       // Store the new result
@@ -807,14 +853,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 void SerialMPM::crackGrow(const ProcessorContext*,
-                          const Region* region,
-                          const DataWarehouseP& old_dw,
-                          DataWarehouseP& new_dw)
+                          const Region* /*region*/,
+                          const DataWarehouseP& /*old_dw*/,
+                          DataWarehouseP& /*new_dw*/)
 {
 }
 
 
 // $Log$
+// Revision 1.43  2000/05/07 06:02:01  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.42  2000/05/04 23:40:00  tan
 // Added fracture interface to general MPM.
 //

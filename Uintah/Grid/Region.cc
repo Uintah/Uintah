@@ -4,22 +4,30 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Region.h>
 #include <SCICore/Math/MiscMath.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
+#include <SCICore/Exceptions/InternalError.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/NodeSubIterator.h>
 #include <Uintah/Grid/SubRegion.h>
 #include <Uintah/Math/Primes.h>
+#include <SCICore/Thread/AtomicCounter.h>
 #include <values.h>
 
 using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
+using SCICore::Exceptions::InternalError;
 using SCICore::Math::Floor;
+static SCICore::Thread::AtomicCounter ids("Region ID counter");
 
 Region::Region(const Point& lower, const Point& upper,
 	       const IntVector& res)
     : d_box(lower, upper), d_res(res)
 {
+   id = ids++;
+   for(int i=0;i<27;i++)
+      neighbors[i]=0;
+   neighbors[1*9+1*3+1]=this;
 }
 
 Region::~Region()
@@ -251,10 +259,43 @@ NodeIterator Region::getNodeIterator() const
    return NodeIterator(0, 0, 0,
 		       d_res.x()+1, d_res.y()+1, d_res.z()+1);
 }
+
+const Region* Region::getNeighbor(const IntVector& n) const
+{
+   if(n.x() == 0 && n.y() == 0 && n.z() == 0)
+      return this;
+   if(n.x() < -1 || n.y() < -1 || n.z() < -1
+      || n.x() > 1 || n.y() > 1 || n.z() > 1)
+      throw InternalError("Region::getNeighbor not implemented for distant neighbors");
+   int ix=n.x()+1;
+   int iy=n.y()+1;
+   int iz=n.z()+1;
+   int idx = ix*9+iy*3+iz;
+   return neighbors[idx];
+}
+      
+void Region::setNeighbor(const IntVector& n, const Region* neighbor)
+{
+   if(n.x() == 0 && n.y() == 0 && n.z() == 0)
+      throw InternalError("Cannot set neighbor 0,0,0");
+   if(n.x() < -1 || n.y() < -1 || n.z() < -1
+      || n.x() > 1 || n.y() > 1 || n.z() > 1)
+      throw InternalError("Region::getNeighbor not implemented for distant neighbors");
+   int ix=n.x()+1;
+   int iy=n.y()+1;
+   int iz=n.z()+1;
+   int idx = ix*9+iy*3+iz;
+   cerr << "Region " << getID() << " neighbor " << n << " is now " << neighbor->getID() << '\n';
+   neighbors[idx]=neighbor;
+}
       
 
 //
 // $Log$
+// Revision 1.15  2000/05/07 06:02:12  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.14  2000/05/05 06:42:45  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

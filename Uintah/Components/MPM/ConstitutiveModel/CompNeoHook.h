@@ -90,6 +90,12 @@ namespace Uintah {
 				       const MPMMaterial* matl,
 				       DataWarehouseP& new_dw);       
 	 
+	 virtual void addComputesAndRequires(Task* task,
+					     const MPMMaterial* matl,
+					     const Region* region,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 // Return the Lame constants
 	 virtual double getMu() const;
 	 virtual double getLambda() const;
@@ -143,6 +149,10 @@ namespace Uintah {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.8  2000/05/07 06:02:03  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.7  2000/04/26 06:48:15  sparker
 // Streamlined namespaces
 //

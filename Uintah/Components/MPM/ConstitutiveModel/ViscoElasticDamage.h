@@ -141,6 +141,12 @@ namespace Uintah {
 				       const MPMMaterial* matl,
 				       DataWarehouseP& new_dw);      
 	 
+	 virtual void addComputesAndRequires(Task* task,
+					     const MPMMaterial* matl,
+					     const Region* region,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 // Return the Lame constants
 	 virtual double getMu() const;
 	 virtual double getLambda() const;

@@ -296,6 +296,15 @@ double CompNeoHookPlas::computeStrainEnergy(const Region* region,
   return 0;
 }
 
+void CompNeoHookPlas::addComputesAndRequires(Task* task,
+					     const MPMMaterial* matl,
+					     const Region* region,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const
+{
+   cerr << "CompNeoHookPlas::addComputesAndRequires needs to be filled in\n";
+}
+
 void CompNeoHookPlas::readParameters(ProblemSpecP ps, double *p_array)
 {
   ps->require("bulk_modulus",p_array[0]);
@@ -355,6 +364,10 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.8  2000/05/07 06:02:03  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.7  2000/05/04 16:37:30  guilkey
 // Got the CompNeoHookPlas constitutive model up to speed.  It seems
 // to work but hasn't had a rigorous test yet.

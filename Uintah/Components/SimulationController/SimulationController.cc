@@ -5,11 +5,13 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MiscMath.h>
+#include <SCICore/Containers/Array3.h>
 #include <SCICore/Thread/Time.h>
 #include <Uintah/Exceptions/ProblemSetupException.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/SimulationTime.h>
+#include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -34,6 +36,7 @@ using SCICore::Geometry::Vector;
 using SCICore::Math::Abs;
 using SCICore::Thread::Time;
 using namespace Uintah;
+using SCICore::Containers::Array3;
 
 SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -210,15 +213,41 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	 if(box_ps->get("patches", patches)){
 	    Vector diag(upper-lower);
 	    Vector scale(1./patches.x(), 1./patches.y(), 1./patches.z());
+	    Array3<Region*> all(patches.x(), patches.y(), patches.z());
 	    for(int i=0;i<patches.x();i++){
 	       for(int j=0;j<patches.y();j++){
 		  for(int k=0;k<patches.z();k++){
 		     IntVector startcell = resolution*IntVector(i,j,k)/patches;
 		     IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
 		     IntVector ncells = endcell-startcell;
-		     level->addRegion(lower+diag*Vector(i,j,k)*scale,
-				      lower+diag*Vector(i+1,j+1,k+1)*scale,
-				      ncells);
+		     const Region* r = level->addRegion(lower+diag*Vector(i,j,k)*scale,
+							lower+diag*Vector(i+1,j+1,k+1)*scale,
+							ncells);
+		     all(i,j,k)=const_cast<Region*>(r);
+		  }
+	       }
+	    }
+	    for(int i=0;i<patches.x();i++){
+	       for(int j=0;j<patches.y();j++){
+		  for(int k=0;k<patches.z();k++){
+		     Region* r = all(i,j,k);
+		     for(int ix=-1;ix<=1;ix++){
+			for(int iy=-1;iy<=1;iy++){
+			   for(int iz=-1;iz<=1;iz++){
+			      int x=i+ix;
+			      int y=j+iy;
+			      int z=k+iz;
+			      if(ix != 0 || iy != 0 || iz != 0){
+				 if(x>=0 && x<patches.x()
+				    && y>=0 && y<patches.y()
+				    && z>=0 && z<patches.z()){
+				    r->setNeighbor(IntVector(ix,iy,iz),
+						   all(x,y,z));
+				 }
+			      }
+			   }
+			}
+		     }
 		  }
 	       }
 	    }
@@ -366,6 +395,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.16  2000/05/07 06:02:10  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.15  2000/05/05 06:42:44  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

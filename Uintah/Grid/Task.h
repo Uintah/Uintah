@@ -160,6 +160,12 @@ WARNING
 	 return d_usesThreads;
       }
       
+      enum GhostType {
+	 None,
+	 AroundNodes,
+	 AroundCells
+      };
+      
       //////////
       // Insert Documentation Here:
       void subregionCapable(bool state=true);
@@ -170,8 +176,9 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void requires(const DataWarehouseP& ds, const VarLabel*,
-		    const Region* region, int numGhostCells);
+      void requires(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
+		    const Region* region, GhostType gtype,
+		    int numGhostCells = 0);
       
       //////////
       // Insert Documentation Here:
@@ -179,14 +186,17 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void computes(const DataWarehouseP& ds, const VarLabel*,
+      void computes(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
 		    const Region* region);
-      
+
       //////////
       // Insert Documentation Here:
       void doit(const ProcessorContext* pc);
       const string& getName() const {
 	 return d_taskName;
+      }
+      const Region* getRegion() const {
+	 return d_region;
       }
       
       //////////
@@ -199,50 +209,24 @@ WARNING
 	 Task*            d_task;
 	 DataWarehouseP   d_dw;
 	 const VarLabel*  d_var;
-	 
-	 const Region*          d_region;
-	 int                    d_numGhostCells;
+	 int		  d_matlIndex;
+	 const Region*    d_region;
 	 
 	 Dependency(      Task*           task,
 			  const DataWarehouseP& dw,
 			  const VarLabel* d_var,
-			  const Region*,
-			  int numGhostcells );
+			  int matlIndex,
+			  const Region*);
 	 
-	 bool operator<(const Dependency& c) const {
-	    if(d_var->getName() < c.d_var->getName()) {
-	       return true;
-	    } else if(d_var->getName() == c.d_var->getName()){
-	       if(d_region < c.d_region){
-		  return true;
-	       } else if(d_region == c.d_region) {
-		  if(d_dw.get_rep() < c.d_dw.get_rep()) {
-		     return true;
-		  } else if(d_dw.get_rep() == c.d_dw.get_rep()){
-		     return false;
-		  } else {
-		     return false;
-		  }
-	       } else {
-		  return false;
-	       }
-	    } else {
-	       return false;
-	    }
-	 }
       }; // end struct Dependency
       
-      //////////
-      // Insert Documentation Here:
-      void addComps(vector<Dependency*>&) const;
-
       //////////
       // Insert Documentation Here:
       const vector<Dependency*>& getComputes() const;
       
       //////////
       // Insert Documentation Here:
-      void addReqs(vector<Dependency*>&) const;
+      const vector<Dependency*>& getRequires() const;
       
    private:
       //////////
@@ -268,6 +252,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/05/07 06:02:13  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.9  2000/05/05 06:42:45  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

@@ -17,7 +17,8 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
-	$(SRCDIR)/Task.cc $(SRCDIR)/VarLabel.cc 
+	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
+	$(SRCDIR)/VarLabel.cc 
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
 	SCICore/Geometry
@@ -27,6 +28,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/05/07 06:02:14  sparker
+# Added beginnings of multiple patch support and real dependencies
+#  for the scheduler
+#
 # Revision 1.10  2000/04/28 03:58:20  sparker
 # Fixed countParticles
 # Implemented createParticles, which doesn't quite work yet because the

@@ -37,11 +37,8 @@
 #include "ConstitutiveModelFactory.h"
 #include "HyperElasticDamage.h"
 #include <fstream>
-using std::ifstream;
-using std::ofstream;
-using std::endl;
-using std::string;
-
+#include <iostream>
+using namespace std;
 using namespace Uintah::MPM;
 
 HyperElasticDamage::HyperElasticDamage(ProblemSpecP& ps)
@@ -285,6 +282,15 @@ void HyperElasticDamage::initializeCMData(const Region* region,
 }
 
 
+void HyperElasticDamage::addComputesAndRequires(Task* task,
+						const MPMMaterial* matl,
+						const Region* region,
+						const DataWarehouseP& old_dw,
+						DataWarehouseP& new_dw) const
+{
+   cerr << "HyperElasticDamage::addComputesAndRequires needs to be filled in\n";
+}
+
 double HyperElasticDamage::getLambda() const
 {
   // Return the Lame constant lambda
@@ -415,6 +421,10 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.7  2000/05/07 06:02:04  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.6  2000/04/26 06:48:17  sparker
 // Streamlined namespaces
 //

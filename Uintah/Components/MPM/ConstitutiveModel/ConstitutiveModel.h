@@ -6,6 +6,7 @@
 #include <Uintah/Interface/ProblemSpec.h>
 
 namespace Uintah {
+   class Task;
    class Region;
    class VarLabel;
    namespace MPM {
@@ -64,7 +65,12 @@ WARNING
 	 virtual void initializeCMData(const Region* region,
 				       const MPMMaterial* matl,
 				       DataWarehouseP& new_dw) = 0;
-	 
+
+	 virtual void addComputesAndRequires(Task* task,
+					     const MPMMaterial* matl,
+					     const Region* region,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const = 0;
 
          const VarLabel* deltLabel;
 
@@ -82,6 +88,10 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.13  2000/05/07 06:02:04  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.12  2000/05/02 18:41:17  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)

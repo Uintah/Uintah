@@ -3,6 +3,7 @@
 
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/NCVariableBase.h>
+#include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Geometry/Vector.h>
 
@@ -76,8 +77,10 @@ WARNING
       const TypeDescription*
       NCVariable<T>::getTypeDescription()
       {
-	 //cerr << "NCVariable::getTypeDescription not done\n";
-	 return 0;
+	 static TypeDescription* td;
+	 if(!td)
+	    td = new TypeDescription(false, TypeDescription::Node);
+	 return td;
       }
    
    template<class T>
@@ -137,6 +140,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/05/07 06:02:12  sparker
+// Added beginnings of multiple patch support and real dependencies
+//  for the scheduler
+//
 // Revision 1.10  2000/05/04 19:06:47  guilkey
 // Added the beginnings of grid boundary conditions.  Functions still
 // need to be filled in.
