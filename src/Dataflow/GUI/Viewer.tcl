@@ -392,7 +392,6 @@ itcl_class ViewWindow {
     }
 
     destructor {
-	puts "here"
 	destroy $renderWindow
 	destroy .ui[modname]
     }
