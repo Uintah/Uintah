@@ -53,21 +53,20 @@
 
         <p><b>Chapter Overview</b><br>
 
-        <p>In Chapters 1 and 2, we constructed SCIRun networks to
-        visualize the geometry and data values in a Field.   In this
-        Chapter, we will explore additional visualization techniques,
-        and examine <i>filter</i> modules that receive a Field as input,
+        <p> Chapters 1 and 2 demonstrate the construction of SCIRun networks to
+        visualize the geometry and data values in a Field. This
+        chapter explores additional visualization techniques,
+        and examines <i>filter</i> modules that receive a Field as input,
         and output a newly derived Field.  
 
-	<p>Rather than building one net to introduce all of these new
-	    modules, we 
-        will construct several nets, each describing a single
-        visualization technique.  We have subdivided this chapter
+	<p>Rather than building one net to introduce these 
+	    modules, several nets will be constructed. Each net will describe a single
+        visualization technique. This chapter is divided
         into three sections, one for each method.  
                 
         <p><b><A name="section-1">3A: FieldBoundary</b><br></A>
 
-	<p>We will first perform a boundary extraction. The FieldBoundary module extracts a boundary surface from a volume. For example, given a TetVolMesh, the module extracts the boundary faces and outputs a TriSurfMesh.
+	<p>First, perform a boundary extraction. The FieldBoundary module extracts a boundary surface from a volume. For example, given a TetVolMesh, the module extracts the boundary faces and outputs a TriSurfMesh.
 
 	<p>Create a net using the FieldBoundary module
 	    (SCIRun/Fields/FieldBoundary):</p>
@@ -82,7 +81,7 @@
 	  <p><li>Connect the output from the ShowField module into a Viewer.</p>
 	    <p><li>Press the Autoview button and rotate the image downward, to look like <b>Figure 3.2</b>.</p></ol>
 
-<p>Your net should look like <b>Figure 3.1</b>, and you should save this net as <i>3A.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-1">Putting the nets together</b></A>.</p><br>
+<p>The net should look like <b>Figure 3.1</b>. Save this net as <i>3A.net</i>, it will be used in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-1">Putting the nets together</b></A>.</p><br>
 
       </div>
 	<center>
@@ -103,19 +102,19 @@
 
         <p><b><A name="section-2">3B:DirectInterpolate</b><br></A>
 
-	<p>Next, we will interpolate data values from one Field to another Field.  In this section, we will load two datasets:</p> 
+	<p>Next, interpolate data values from one Field to another Field.  This section, demonstrates how to load two datasets:</p> 
 	  <p><ul><li>The first contains the utahtorso-lowres-voltage.tvd.fld that we examined in <A href="chapter_1.html#voltage">Chapter 1</a>, which we will refer to as the <i>volume Field</i>.</p>
 	  <p><li>The second contains the electrode positions in utahtorso-lowres-electrodes.pcd.fld, from
 	      <a href="chapter_2.html#electrodes">Chapter 2</a>.</p>
 	</ul>
 	
-	<p>Now that we have loaded the datasets, we will ceate a new Field by interpolating the electrode positions and voltage values.</p>
+	<p>Now that the datasets are loaded, create a new Field by interpolating the electrode positions and voltage values.</p>
 
 	<p>Interpolation is the means by which we calculate the value at a certain point by using the known values at surrounding points. For each electrode, 
 	we must find the corresponding voltage value
 	from the volume Field. 
 		
-	<p>The DirectInterpolate module implements this algorithm (SCIRun/Fields/DirectInterpolate). In order to run the DirectInterpolate net, we will need:</p>
+	<p>The DirectInterpolate module implements this algorithm (SCIRun/Fields/DirectInterpolate). The following modules are needed to run the DirectInterpolate net:</p>
 	<ul>
 	<li>Two FieldReader modules 
 	<li>One DirectInterpolate module 
@@ -124,7 +123,7 @@
 	<li>One RescaleColorMap module 
 	<li>One Viewer module  
 	</ul>
-	<p>These should be hooked together as shown in <b>Figure 3.3</b>.  NOTE: </b>be sure to set the Node Scale in the ShowField UI to be at
+	<p>These modules should be hooked together as shown in <b>Figure 3.3</b>.  NOTE: </b>be sure to set the Node Scale in the ShowField UI to be at
 	least 4-6, and hit the Autoview button in the ViewWindow.</p> 
 
       </div>
@@ -134,7 +133,7 @@
 	</center>
 	<div align="left">
 	</p>
-<p>Also, make sure that you rotate the image in the ViewWindow downward as it appears in <b>Figure 3.4</b>. The FieldReader on the left should read in the
+<p>Also, make sure to rotate the image in the ViewWindow downward as it appears in <b>Figure 3.4</b>. The FieldReader on the left should read in the
 	utahtorso-lowres-voltage.tvd.fld input file, and the
 	FieldReader on the right should read in the
 	utahtorso-lowres-electrodes.pcd.fld input file.</p>
@@ -147,14 +146,14 @@
 	<div align="left">
 	<p><br>
 
-You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
+Save this net as <i>3B.net</i>. It will be used in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
         <p><b><A name="section-3">3C: StreamLines</b><br></A>
 
-        <p>Streamline advection is the last visualization technique we will
-	explore in this 
+        <p>Streamline advection is the last visualization technique 
+	explored in this 
         chapter. The StreamLines module visualizes vector Fields by integrating curves through a gradient vector flow Field.</p>
 
-	<p>We will generate the input vector Field by using the
+	<p>Generate the input vector Field by using the
 	Gradient module (SCIRun/Fields/Gradient) in order to compute the
 	gradient of the utahtorso-lowres-voltage.tvd.fld.</p> 
 
@@ -162,7 +161,7 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	points.  SampleField
 	generates samples from any type of Field input and outputs the
 	samples as a PointCloud Field.    
-	In order to run the StreamLines net, we will need:</p>
+	The following modules are needed to run the StreamLines net:</p>
 	<ul>
 	<li>One FieldReader module 
 	<li>One Gradient module 
@@ -174,7 +173,7 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	<li>One Viewer module
 <li>One StreamLines module</p>  
 	</ul>
-	<p>These should be hooked together as shown in <b>Figure 3.5</b>.</p> 
+	<p>These modules should be hooked together as shown in <b>Figure 3.5</b>.</p> 
 	
       </div>
 	<center>
@@ -184,16 +183,16 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	<div align="left">
 	</p>
 
-<p>The SampleField module can generate the samples randomly or we
-	can select samples using a 3D widget.  For Streamline visualization, we
-	use a 3D <i>rake</i> widget for distributing seed points. You may interactively position the rake of seed points within the volume:</p>
+<p>The SampleField module can generate samples randomly or the user
+	can select samples using a 3D widget.  For Streamline visualization, 
+	use a 3D <i>rake</i> widget for distributing seed points. The user can interactively position the rake of seed points within the volume:</p>
 
 	    <p><ul><li>From the SampleField UI, select the rake option and 
 	      set the number of samples to 30.</p>
 	</ul>
 
-	<p>In order to attach scalar data values to the
-        StreamLine nodes be sure to set the following options:</p>
+	<p>To attach scalar data values to the
+        StreamLine nodes, set the following options:</p>
 	<ul>
 	  <p><li> With the FieldReader, select the input file
 	  utahtorso-lowres-voltage.tvd.fld.</p> 
@@ -206,8 +205,8 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
      
 
 <p>The StreamLines module works by integrating the seed points
-	through the vector Field.  We use a fifth order
-	integration method; the Runge-Kutta-Fehlberg algorithm.  We must set three parameters in order to run this algorithm: Error Tolerance,
+	through the vector Field.  A fifth order
+	integration method is used; the Runge-Kutta-Fehlberg algorithm.  Three parameters must be to run this algorithm: Error Tolerance,
 	Step Size, and a Maximum Number of Steps.  Set these three
 	parameters, respectively, to 0.01, 0.1, and 200.  The other UI options can remain at their default settings.
 
@@ -218,7 +217,7 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	</center>
 	<div align="left">
 	<p><br>
-<p>You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
+<p>Save this net as <i>3C.net</i>. lt will be used in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
 
 	<p><b><A name="section-9">Controlling Widgets</b><br></A> 
 
@@ -230,29 +229,31 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	5.4, Control Widgets</a>. 
 	
 	
-	<p>You can control widgets by:
+	<p>Control widgets by:
 
 	  <p><ul><li>Press and hold the shift key, left-click the mouse on the widget and move
 	      it around the region of view in order to change its location and action.</p>
 	  <p><li>Press and hold the shift key, left-click the mouse on a <b>sphere</b> in the widget and change the
 	      position of that widget.</p>
 	  <p><li>Press and hold the shift key, left-click the mouse on the end <b>knob</b> (green resize cylinders) in the widget and change, for example, the density of streamlines.</p>
-	  <p><li> SCIRun redraws the image in the ViewWindow whenever
-	      you release the mouse button.</p>
+	  <p><li> SCIRun redraws the image in the ViewWindow when
+	      the mouse button is released.</p>
 	</ul>
 	
 	<p><b><A name="section-4">Network execution and data
 	dependence</b></p></A> 
 	
 	<p>There are several ways to execute a SCIRun
-	network that has not yet fired. In the StreamLines network:
+	network that has not fired.</p>
+
+	<p>In the StreamLines network:</p>
 
 	<p><ul><li>On the module itself, right-click the mouse and select the Execute option from the
 	      dropdown menu (<b>Figure 3.7</b>).</p> 
 	<p><li>Or, in several modules, such as ShowField and StreamLines, the UI has its own Execute option.</p>  
 	</ul> 
 
-	<p>These actions will execute the selected module, as well as any modules 
+	<p>These actions will execute the selected module, and any modules 
 	that depend on that module.</p>
 
 	</div>
@@ -263,8 +264,9 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	<div align="left">
 	<p><br>
 
-	<P> After executing the StreamLines network, you should see an image in the ViewWindow as with <b>Figure 3.8</b>.  The rake widget will appear as a gray bar with spheres at the ends.
-	Your image may be somewhat different than the figure, but you should see the rake and colored streamlines.  If the streamlines do not appear, you may need to check the object list and turn on the Edges.
+	<P> After executing the StreamLines network, an image like 
+	<b>Figure 3.8</b> should appear in the ViewWindow.  The rake widget will appear as a gray bar with spheres at the ends.
+	The user's  image may be somewhat different than <b>Figure 3.8</b>, but the user should see the rake and colored streamlines.  If the streamlines do not appear, the user may need to check the object list and turn on the Edges.
 
 	</div>
 	<center>
@@ -276,12 +278,11 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	<br>
 
 	
-	<b><H4>Summary</b></H4>
-	We have just constructed three nets, each describing a single
-	method of  
-	visualizing the utahtorso-lowres-voltage dataset.	
+	<b><H4>Summary</b></H4> Three nets were constructed in this
+	chapter, each describing a single method of visualizing the
+	utahtorso-lowres-voltage dataset.
 
-	<p>In the next chapter, we will merge those nets into a single,
+	<p>In the next chapter, the nets will be merged into a single,
 	larger network  
 	that performs concurrent visualizations.
 

@@ -54,22 +54,21 @@
 	
         <p><b>Chapter Overview</b><br>
 
-        <p>In Chapters 1-4, we worked with dataflow programming, and we 
-	built networks to visualize existing datasets. In this
-        chapter, we will construct a network that <em>computes</em>
+        <p>Chapters 1-4 work with dataflow programming. Networks were built to visualize existing 
+        datasets. This chapter demonstrates the construction of a network that <em>computes</em>
         simulated voltages for a realistic volume conductor problem.
 
-	<p>Thus far, we have used modules from the
-        SCIRun package (packages are logically
-	grouped sets of modules). <b>Figure 5.1</b> shows a SCIRun menu bar from a build that features several additional packages. To learn more about packages, see <a   
+	<p>Thus far, modules from the
+        SCIRun package have been used (packages are logically
+	grouped sets of modules). <b>Figure 5.1</b> shows a SCIRun menu bar from a build that 
+	features several additional packages. To learn more about packages, see <a   
 	HREF="../Guide/usersguide/srug6.html#sec:packages">User's Guide 6.0,
 	Packages.</a></p>
 
 	<p>Modules within the SCIRun package serve as general purpose
-        tools and are not targeted towards any specific application. In this
-	    chapter we will use  
-	modules from the BioPSE package, a set of tools specifically
-	    written for the 
+        tools and are not targeted towards any specific application. This
+        chapter uses 
+        modules from the BioPSE package; a set of tools specifically written for the 
         modeling, simulation, and visualization of bioelectric field
         problems.
 
@@ -86,15 +85,14 @@
         <p><b><A name="section-1">Volume conductor problem</b></A>
 
 	<p>Given a volume conductor model and an equivalent dipole
-	source, we will compute the potentials and electric
+	source, the user will compute the potentials and electric
 	field induced by the source through the domain.</p> 
-<p>Analytic solutions exist for problems of specific geometric models (<i>e.g.</i>, cylinders or spheres). However, for most real-world problems, we can only obtain the
-        solution 
-	through discretization.  For this application, we will
-	discretize our domain into tetrahedral finite elements, where
+<p>Analytic solutions exist for problems of specific geometric models (<i>e.g.</i>, cylinders or spheres). However, for most real-world problems, the solution can only be obtained
+	through discretization.  For this application, the user will
+	discretize the domain into tetrahedral finite elements, where
 	each element contains a conductivity tensor that defines how
 	electricity travels through its region of the domain.  Within
-	each element, we assume a piece-wise linear potential field
+	each element, a piece-wise linear potential field is assumed
 	(piece-wise constant electric field).
 
 	<p>The above problem is governed mathematically by Poisson's
@@ -109,25 +107,25 @@
 	src="images/phi.gif"> is the voltage over the domain, and <img
 	height="19" width="36" src="images/i.gif" align="texttop"> is
 	a source term indicating where there are current sources
-	within our domain. In plain language, this means: the
+	within the domain. In plain language: the
 	divergence (<img height="16" width="25"
 	src="images/del_dot.gif" align="absbottom">) of the electric
 	field (<img height="16" width="15" src="images/del.gif"
 	align="absbottom"><img height="16" width="13"
-	src="images/phi.gif" align="absbottom">) is zero everywhere
+	src="images/phi.gif" align="absbottom">) is zero where
 	there is not a current source. 
 
-	<p>Discretizing this onto our tetrahedral domain, we approximate
+	<p>Discretizing this onto the tetrahedral domain, 
 	the divergence  
 	of the electric field with the stiffness matrix <font
-	size="4"><b>A</b></font>. <img height="16" width="13"
+	size="4"><b>A</b></font> is approximated. <img height="16" width="13"
 	src="images/phi.gif"> is a vector composed of voltages at the
 	nodes. And <font size="4"><b>b</b></font> is a source vector
 	indicating the flux through the nodes -- it is only non-zero
 	for nodes that are corners of elements containing a current
 	source. Given a stiffness matrix, <font
 	size="4"><b>A</b></font>, and a source vector, <font
-	size="4"><b>b</b></font>, we can solve the linear system:<br>
+	size="4"><b>b</b></font>, the linear system can be solved:<br>
 
         <center>
 	<p><img height="15" width="14" src="images/A.gif"><img
@@ -139,19 +137,19 @@
 	<p>to determine the potentials,<img height="16" width="13"
 	src="images/phi.gif">, through the field. Taking the gradient,
 	<img height="16" width="15" src="images/del.gif"><img
-	height="16" width="13" src="images/phi.gif">, we get the
+	height="16" width="13" src="images/phi.gif">, obtains the
 	electric field through the domain.<br>
 
         <p><b><A name="section-2">Finite element simulation network</b><br></A>
 
 	<p>To compute the electric and potential fields given a finite
-	element volume conductor mesh and a dipolar current source, we
+	element volume conductor mesh and a dipolar current source, 
 	follow these steps:</p>
 	<p><ol><li value="1.">Load the finite element mesh (tet elements, with a conductivity tensors for each cell).</p>
 	<p><li value="2.">Load dipole sources.</p>
 	<p><li>Construct the finite element stiffness matrix based on
 	the conductivity mesh.</p>
-	<p><li>Construct the right hand side source vector based on
+	<p><li>Construct the right side source vector based on
 	the location and orientation of any dipole sources.</p>
 	<p><li>Solve the linear system <img height="15" width="14"
 	src="images/A.gif"><img height="16" width="13"
@@ -160,17 +158,17 @@
 	src="images/b.gif">, to determine the potentials at the nodes.</p>
 	</ol>
 	<p>Each of the above steps corresponds to a SCIRun module.</p>
-	  <p><ul><li>For steps 1 and 2, we will use 2 SCIRun/DataIO/FieldReader
+	  <p><ul><li>For steps 1 and 2, use 2 SCIRun/DataIO/FieldReader
 	      modules.</p>  
-	  <p><li>For step 3, we will use a BioPSE/Forward/SetupFEMatrix module.</p>  
-	  <p><li>For step 4, we will use a BioPSE/Forward/ApplyFEMCurrentSource
+	  <p><li>For step 3, use a BioPSE/Forward/SetupFEMatrix module.</p>  
+	  <p><li>For step 4, use a BioPSE/Forward/ApplyFEMCurrentSource
 	      module.</p>   
-	  <p><li>And for step 5, we will use a SCIRun/Math/SolveMatrix module.</p>
+	  <p><li>And for step 5, use a SCIRun/Math/SolveMatrix module.</p>
 	</ul>
 
-	<p>All of these modules should be connected as shown in <b>Figure
+	<p>All modules should be connected as shown in <b>Figure
 	5.2</b>.</p>
-<p><b>NOTE: Do not execute the net until you have specified all of the UI settings for each module as described in the sections below or the solution will not converge.</b></p>
+<p><b>NOTE: Do not execute the net until all UI settings have been specified for each module, as described in the sections below, or the solution will not converge.</b></p>
 
       </div>
 	<center>
@@ -184,7 +182,7 @@
         <p><b><A name="section-3">FEM User Interface settings</b><br></A>
 
 	<p>The SetupFEMatrix module constructs a finite element
-	stiffness matrix from a tetrahedral volume mesh. We can choose whether to incorporate the local conductivity tensors into the stiffness matrix, or whether to use a uniform conductivity as shown in <b>Figure 5.3</b>.  For this application, we will incorporate the local conductivity changes.
+	stiffness matrix from a tetrahedral volume mesh. The user can choose to incorporate the local conductivity tensors into the stiffness matrix, or to use a uniform conductivity as shown in <b>Figure 5.3</b>.  For this application, incorporate the local conductivity changes.
 
 	</div>
 	<center>
@@ -194,7 +192,7 @@
 	<div align="left">
 	<p>The ApplyFEMCurrentSource module modifies the right hand
 	      side vector to account for current sources within the model.
-	  In the module's UI, you can choose whether the
+	  In the module's UI, users can choose whether the
 	      current sources are due to a dipole or a source/sink
 	      electrode pair. For the Source Model option, select the dipole setting.</p>
 
@@ -232,22 +230,22 @@
 	which forms the geometry of the torso.  The mesh field also contains pointers to the electric conductivity values as assigned to each element.
 	In Poisson's equation, these are the values of sigma. The dipole field
 	contains a single dipole vector, positioned 
-        within the torso volume that functions as our bioelectric source.
+        within the torso volume that functions as the bioelectric source.
 
         <p><b><A name="section-4">Running the simulation</b><br></A>
 		
 	
-	<p>Execute the network, and as the simulation progresses, you will see the residual plot in
-	the SolveMatrix UI converge. You have just solved a finite element problem. Again, be sure to save this net as you will use it again in Chapter 6.</p>
+	<p>Execute the network, and as the simulation progresses, the residual plot in
+	the SolveMatrix UI converge. A finite element problem has just been solved. Save this net, it will be used in Chapter 6.</p>
 
 	
 	<p><H4><b>Summary</H4></b>
-	In this chapter, we have used modules from the bioelectric 
-	problem solving environment (BioPSE) package. We have also 
-	constructed a simulation network that computes simulated voltages for a 
+	Chapter five, demonstrated the use of modules from the bioelectric 
+	problem solving environment (BioPSE) package. This chapter also illustrated the
+	construction of a simulation network that computes simulated voltages for a 
 	realistic volume conductor problem. 
 
-	<p>In Chapter 6, we will reuse the finite element simulation
+	<p>Chapter 6 will reuse the finite element simulation
 	network from this chapter,  
 	as well as the visualization network from Chapter 4. 
 	<br>
