@@ -32,7 +32,7 @@ SimpleRxn::~SimpleRxn()
 }
 
 void SimpleRxn::problemSetup(GridP&, SimulationStateP& sharedState,
-			     ModelSetup&)
+			     ModelSetup*)
 {
   matl = sharedState->parseAndLookupMaterial(params, "material");
   params->require("rate", rate);
@@ -55,8 +55,9 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& sharedState,
   }
 }
 
-void SimpleRxn::scheduleInitialize(const LevelP&,
-				   SchedulerP&)
+void SimpleRxn::scheduleInitialize(SchedulerP&,
+				   const LevelP& level,
+				   const ModelInfo*)
 {
   //schedule the init of massFraction...;
   // None necessary...

@@ -46,12 +46,14 @@ WARNING
     //////////
     // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup& setup);
+			      ModelSetup* setup);
       
     //////////
     // Insert Documentation Here:
-    virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP&);
+    virtual void scheduleInitialize(SchedulerP&,
+				    const LevelP& level,
+				    const ModelInfo*);
+
     //////////
     // Insert Documentation Here:
     virtual void restartInitialize() {}
