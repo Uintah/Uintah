@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <iostream.h>
+#include <strings.h>
 
 //#define DEBUG 1
 

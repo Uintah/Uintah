@@ -26,6 +26,8 @@
 #include <tcl/tcl/tcl.h>
 #include <tcl/tk/tk.h>
 
+#include <strings.h>
+
 //#define DEBUG 1
 extern Tcl_Interp* the_interp;
 extern int acceptConnect (int socket);

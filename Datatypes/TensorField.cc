@@ -85,7 +85,11 @@ TensorField<DATA>::~TensorField()
 
 /*returns a totally different, but logically equivalent version of 'this'*/
 template<class DATA>
+#ifdef __GNUG__
 TensorField<DATA>* TensorField<DATA>::clone() const
+#else
+TensorFieldBase* TensorField<DATA>::clone() const
+#endif
 {
     return scinew TensorField<DATA>(*this);
 }

@@ -278,7 +278,7 @@ Allocator* MakeAllocator()
     return a;
 }
 
-void* Allocator::alloc(size_t size, char* tag)
+void* Allocator::alloc(size_t size, const char* tag)
 {
     //fprintf(stderr, "Allocating: %ld bytes (%s)\n", size, tag);
     if(size > MEDIUM_THRESHOLD)
@@ -354,7 +354,7 @@ void* Allocator::alloc(size_t size, char* tag)
     return (void*)d;
 }
 
-void* Allocator::alloc_big(size_t size, char* tag)
+void* Allocator::alloc_big(size_t size, const char* tag)
 {
     lock();
 

@@ -40,6 +40,7 @@
 #endif
 
 #include <fstream.h>
+#include <strings.h>
 
 //#define DEBUG 1
 #include <tcl/tcl/tcl.h>

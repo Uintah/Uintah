@@ -109,7 +109,11 @@ SegFld::~SegFld()
 {
 }
 
+#ifdef __GNUG__
 SegFld* SegFld::clone()
+#else
+ScalarField* SegFld::clone()
+#endif
 {
     return scinew SegFld(*this);
 }

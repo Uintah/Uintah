@@ -2,19 +2,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <Math/hf.h>
-
-#ifdef linux
-#define SQRT sqrt
-#else
-#define SQRT fsqrt
-#endif
+#include <limits.h>
 
 #define CNORM(dx, dy, xx, yy) \
     x=(yy)*(dx); \
     y=(xx)*(dy); \
     z=(xx)*(yy); \
     l=x*x+y*y+z*z; \
-    l=1.0F/SQRT(l); \
+    l=1.0F/sqrtf(l); \
     x*=l; \
     y*=l; \
     z*=l; \

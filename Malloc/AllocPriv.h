@@ -14,7 +14,7 @@ struct Tag {
 //    Allocator* allocator;
 //    size_t size;
     AllocBin* bin;
-    char* tag;
+    const char* tag;
     Tag* next;
     Tag* prev;
     OSHunk* hunk;
@@ -39,9 +39,9 @@ struct Allocator {
     void longlock();
     inline void unlock();
 
-    void* alloc_big(size_t size, char* tag);
+    void* alloc_big(size_t size, const char* tag);
     
-    void* alloc(size_t size, char* tag);
+    void* alloc(size_t size, const char* tag);
     void free(void*);
     void* realloc(void* p, size_t size);
 

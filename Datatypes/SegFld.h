@@ -40,7 +40,11 @@ public:
     SegFld(const SegFld&);
     SegFld(ScalarFieldRGchar*);
     virtual ~SegFld();
+#ifdef __GNUG__
     virtual SegFld* clone();
+#else
+    virtual ScalarField* clone();
+#endif
 
     inline int get_type(int i) {return (i>>28);}
     inline int get_size(int i) {return i%(1<<28);}

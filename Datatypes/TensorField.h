@@ -44,7 +44,11 @@ public:
     TensorField(const TensorField&); /*Deep Copy Constructor*/
 
     virtual ~TensorField(); /*Destructor*/
+#ifdef __GNUG__
     virtual TensorField<DATA>* clone() const; /*makes a real copy of this*/
+#else
+    virtual TensorFieldBase* clone() const; /*makes a real copy of this*/
+#endif
 
     // Persistent representation...
     virtual void io(Piostream&);

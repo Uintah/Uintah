@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <iostream.h>
+#include <strings.h>
 //#define DEBUG 1
 
 extern int requestConnect (int port, char *host);
