@@ -64,7 +64,7 @@ inline double the_time() {
 inline double the_time() {
     struct timeval ts; struct timezone tz;
     gettimeofday(&ts, &tz);
-    return (double)(ts.tv_sec + ts.tv_usec/1e6);
+    return (double)(ts.tv_sec + (double)ts.tv_usec/1e6);
 }
 #endif
 
