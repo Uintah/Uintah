@@ -20,6 +20,7 @@
 #include <SCICore/Geometry/Grid.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 
@@ -51,6 +52,7 @@ ScalarTriSurface::ScalarTriSurface(const TriSurface& ts)
 ScalarTriSurface::ScalarTriSurface(const ScalarTriSurface& copy)
 : TriSurface(copy, ScalarTriSurf), data(copy.data)
 {
+    NOT_FINISHED("ScalarTriSurface::ScalarTriSurface");
 }
 
 ScalarTriSurface::~ScalarTriSurface() {
@@ -75,6 +77,7 @@ Surface* ScalarTriSurface::clone()
 
 GeomObj* ScalarTriSurface::get_obj(const ColorMapHandle&)
 {
+    NOT_FINISHED("ScalarTriSurface::get_obj");
     return 0;
 }
 
@@ -83,6 +86,9 @@ GeomObj* ScalarTriSurface::get_obj(const ColorMapHandle&)
 
 //
 // $Log$
+// Revision 1.2  1999/08/23 05:48:00  dmw
+// Put back the NOT_FINISHED messages I accidentally removed.
+//
 // Revision 1.1  1999/08/23 02:53:00  dmw
 // Dave's Datatypes
 //
