@@ -280,7 +280,7 @@ SimpleSimulationController::run()
    
    bool first=true;
    int  iterations = 0;
-   double prev_delt=0;
+   double delt;
    while( ( t < timeinfo.maxTime ) && 
          ( iterations < timeinfo.num_time_steps ) ) {
       iterations ++;
@@ -291,7 +291,8 @@ SimpleSimulationController::run()
       DataWarehouse* newDW = scheduler->get_dw(1);
       newDW->get(delt_var, sharedState->get_delt_label());
 
-      double delt = delt_var;
+      double prev_delt = delt;
+      delt = delt_var;
       delt *= timeinfo.delt_factor;
       
       // Bind delt to the min and max read from the ups file
@@ -333,7 +334,6 @@ SimpleSimulationController::run()
        newDW->override(delt_vartype(delt), sharedState->get_delt_label(),
                      level);
       }
-     prev_delt=delt;
 
      // get memory stats for output
 #ifndef DISABLE_SCI_MALLOC
@@ -484,7 +484,7 @@ SimpleSimulationController::run()
 	    cerr << "Restarting timestep at " << t << ", changing delt from " 
 		 << delt << " to " << new_delt << '\n';
 	  delt = new_delt;
-	  scheduler->get_dw(0)->override(delt_vartype(delt), 
+	  scheduler->get_dw(0)->override(delt_vartype(new_delt), 
 					 sharedState->get_delt_label());
 	  success = false;
 	  
