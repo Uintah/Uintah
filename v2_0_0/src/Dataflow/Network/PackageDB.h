@@ -99,7 +99,7 @@ namespace SCIRun {
 			     const string &catName,
 			     const string &modName);
       void setSplashPath(string p);
-      void setLoadingApp(bool b, string ses = "");
+      void setLoadingApp(bool b, const string ses = "");
     private:
       LIBRARY_HANDLE findLibInPath(string,string);
       bool findMaker(ModuleInfo* info);
