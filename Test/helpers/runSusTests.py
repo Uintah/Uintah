@@ -249,7 +249,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
       # Run restart test
-      if ALGO != "IMPM" and do_restart == 1:
+      if do_restart == 1:
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "yes", newalgo)
         if rc > 0:
