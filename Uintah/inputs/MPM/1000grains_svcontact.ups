@@ -7286,13 +7286,13 @@
                         <BCType label = "Symmetric" var = "symmetry"> </BCType>
                 </Face>
                 <Face side = "z-">
-                        <BCType label = "Kinematic" var = "velocity">
-                           <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Velocity" var = "Dirichlet">
+                           <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "z+">
-                        <BCType label = "Kinematic" var = "velocity">
-                             <velocity> [0.0,0.0,0.0] </velocity>
+                        <BCType label = "Velocity" var = "Dirichlet">
+                             <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
         </BoundaryConditions>
