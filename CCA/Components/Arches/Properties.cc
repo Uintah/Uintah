@@ -1076,13 +1076,12 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     // modify density for the whole domain by multiplying with
     // void fraction
 
-    bool fixTemp = true;
-
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 
 	  IntVector currCell(colX, colY, colZ);
+	  bool fixTemp = d_bc->getIfFixTemp();
 
 	  double local_den = denMicro[currCell]*voidFraction[currCell];
 
