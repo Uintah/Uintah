@@ -312,8 +312,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    }
    dbg << "Executing " << ntasks << " tasks\n";
 
-   if (me == 0)
-     emitEdges(tasks);
+   makeTaskGraphDoc(tasks, me == 0);
 
    for(int i=0;i<ntasks;i++){
       Task* task = tasks[i];
@@ -682,9 +681,6 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		sendsize+=size;
 	      }
 	    } 
-	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
-		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG, pc->getComm());
-	    log.logSend(0, sizeof(int), "sg_buffersize");
 	    char* buf = scinew char[sendsize];
 	    int position = 0;
 	    for(int j=0;j<(int)sr[i]->matls.size();j++){
@@ -711,10 +707,10 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    delete[] buf;
 	 } else {
 	    int sendsize = 0;
-	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
-		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG,
-		     pc->getComm());
-	    log.logSend(0, sizeof(int), "sg_buffersize(0)");
+	    char dummy;
+	    MPI_Send(&dummy, sendsize, MPI_PACKED, sgargs.dest[i],
+		     sgargs.tags[i], pc->getComm());
+	    log.logSend(0, sizeof(int), "scatter");
 	 }
       }
    }
@@ -752,9 +748,8 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	    }
 	 } else {
 	    MPI_Status stat;
-	    MPI_Recv(&recvsize[i], 1, MPI_INT,
-		     sgargs.dest[i], sgargs.tags[i]|RECV_BUFFER_SIZE_TAG,
-		     pc->getComm(), &stat);
+	    MPI_Probe(sgargs.dest[i], sgargs.tags[i], pc->getComm(), &stat);
+	    MPI_Get_count(&stat, MPI_PACKED, &recvsize[i]);
 	    log.logRecv(0, sizeof(int), "sg_buffersize");
 	    recvpos[i] = 0;
 	    if(recvsize[i]){
@@ -890,6 +885,11 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.24  2000/09/27 00:12:49  witzel
+// emitEdges changed to makeTaskGraphDoc with emit_edges flag argument
+// (so only process 0 emits the edges).  Also, used MPI_Probe in
+// gatherParticles instead of sending and recieving sizes explicitly.
+//
 // Revision 1.23  2000/09/25 23:12:39  witzel
 // Have only process zero emit edges since they all contain the same
 // information.
