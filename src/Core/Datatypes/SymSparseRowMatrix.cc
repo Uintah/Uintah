@@ -296,6 +296,11 @@ void SymSparseRowMatrix::print() const
     cerr << "Sparse RowMatrix: " << endl;
 }
 
+void SymSparseRowMatrix::print(std::ostream &s) const
+{
+    s << "Sparse RowMatrix: " << endl;
+}
+
 #define SYMSPARSEROWMATRIX_VERSION 1
 
 void SymSparseRowMatrix::io(Piostream& stream)
