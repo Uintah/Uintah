@@ -217,9 +217,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 
   rdbg << "HierarchicalRegridder::regrid() END" << endl;
 
-  
   if (*newGrid == *oldGrid) {
     d_newGrid = false;
+    delete newGrid;
     return oldGrid;
   }
   return newGrid;
