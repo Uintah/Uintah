@@ -246,7 +246,7 @@ def runSusTest(test, susdir, inputsdir, compare_root, algo, mode, max_parallelis
 	short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
 	short_message = short_message_file.readline(500)
         if rc == 0:
-	    print "\tMemory leak tests passed." % (short_message)
+	    print "\tMemory leak tests passed."
 	    if short_message != "":
 		print "\t%s" % (short_message)    
 	elif rc == 5 * 256:
