@@ -348,7 +348,9 @@ void
 Thread::disallow_sgi_OpenGL_page0_sillyness()
 {
   if(mprotect(0, getpagesize(), PROT_NONE) == -1){
-    fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
+    if(errno != ENOMEM){
+      fprintf(stderr, "\007\007!!! Strange error protecting page 0 - tell Steve this number: %d\n", errno);
+    }
   }
 }
 
