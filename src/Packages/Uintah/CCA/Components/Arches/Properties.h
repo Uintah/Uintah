@@ -203,6 +203,11 @@ private:
       Properties& operator=(const Properties&);
 
 private:
+
+      // Variable labels used by simulation controller
+      const ArchesLabel* d_lab;
+      const MPMArchesLabel* d_MAlab;
+
       bool d_reactingFlow;
       bool d_enthalpySolve;
       bool d_radiationCalc;
@@ -212,10 +217,6 @@ private:
       IntVector d_denRef;
       MixingModel* d_mixingModel;
       const BoundaryCondition* d_bc;
-
-      // Variable labels used by simulation controller
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
 }; // end class Properties
 } // End namespace Uintah
 

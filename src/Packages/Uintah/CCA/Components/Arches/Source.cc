@@ -28,9 +28,12 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoeffupdate_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+//#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoeffupdate_fort.h>
+#ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
+#else
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#endif
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>

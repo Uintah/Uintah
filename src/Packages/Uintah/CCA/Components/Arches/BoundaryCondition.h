@@ -476,6 +476,14 @@ private:
 
 private:
 
+      // const VarLabel* inputs
+      const ArchesLabel* d_lab;
+      // for multimaterial
+      const MPMArchesLabel* d_MAlab;
+      int d_mmWallID;
+      // cutoff for void fraction rqd to determine multimaterial wall
+      double MM_CUTOFF_VOID_FRAC;
+
       // used for calculating wall boundary conditions
       PhysicalConstants* d_physicalConsts;
       // used to get properties of different streams
@@ -483,10 +491,10 @@ private:
       // mass flow
       double d_uvwout;
       double d_overallMB;
-      // for enthalpy solve 
-      bool d_enthalpySolve;
       // for reacting scalar
       bool d_reactingScalarSolve;
+      // for enthalpy solve 
+      bool d_enthalpySolve;
       // variable labels
       std::vector<int> d_cellTypes;
       WallBdry* d_wallBdry;
@@ -499,14 +507,6 @@ private:
       bool d_outletBoundary;
       FlowOutlet* d_outletBC;
       int d_flowfieldCellTypeVal;
-
-      // const VarLabel* inputs
-      const ArchesLabel* d_lab;
-      // for multimaterial
-      const MPMArchesLabel* d_MAlab;
-      int d_mmWallID;
-      // cutoff for void fraction rqd to determine multimaterial wall
-      double MM_CUTOFF_VOID_FRAC;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah
