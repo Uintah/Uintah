@@ -86,13 +86,11 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
    //ps->require("specific_heat",d_specificHeat);
    ps->get("gamma",d_gamma);
 
-   try{
-     ps->get("room_temp", d_troom);
-     ps->get("melt_temp", d_tmelt);
-   } catch (ParameterNotFound& e) {
-     cerr << "Setting room temperature to 294 K and melt temperature to 295 K\n";
-     d_troom = 294.0; d_tmelt = 295.0;
-   }
+   d_troom = 294.0; d_tmelt = 295.0;
+   ps->get("room_temp", d_troom);
+   ps->get("melt_temp", d_tmelt);
+   //cerr << "Room temp = " << d_troom << "Melt Temp = " << d_tmelt;
+   //cerr << "Setting room temperature to 294 K and melt temperature to 295 K\n";
    
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
