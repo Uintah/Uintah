@@ -36,7 +36,6 @@ enum { FrameW_PickSphUL, FrameW_PickSphUR, FrameW_PickSphDR, FrameW_PickSphDL, F
 FrameWidget::FrameWidget( Module* module, Real widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
-   cerr << "Starting FrameWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[FrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[FrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
@@ -114,12 +113,9 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
    constraints[FrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[FrameW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-					      Color(.5,.5,.5), 20);
-   materials[FrameW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-					     Color(.5,.5,.5), 20);
-   materials[FrameW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-					     Color(0,0,.6), 20);
+   materials[FrameW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[FrameW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[FrameW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -147,17 +143,9 @@ FrameWidget::FrameWidget( Module* module, Real widget_scale )
    w->add(ptsm);
    w->add(cylsm);
 
-   FinishWidget(w);
-   
    SetEpsilon(widget_scale*1e-4);
    
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with FrameWidget CTOR" << endl;
+   FinishWidget(w);
 }
 
 
@@ -194,11 +182,13 @@ FrameWidget::execute()
 
    Vector spvec1(variables[FrameW_PointUR]->Get() - variables[FrameW_PointUL]->Get());
    Vector spvec2(variables[FrameW_PointDL]->Get() - variables[FrameW_PointUL]->Get());
-   spvec1.normalize();
-   spvec2.normalize();
-   Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(spvec1, spvec2, v);
+   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      Vector v = Cross(spvec1, spvec2);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, spvec2, v);
+      }
    }
 }
 

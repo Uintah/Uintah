@@ -77,6 +77,12 @@ protected:
    Module* module;
 
    void FinishWidget(GeomObj* w);
+
+protected:
+   const Material PointWidgetMaterial;
+   const Material EdgeWidgetMaterial;
+   const Material SliderWidgetMaterial;
+   const Material HighlightWidgetMaterial;
 };
 
 inline ostream& operator<<( ostream& os, BaseWidget& w );

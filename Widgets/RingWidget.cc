@@ -24,7 +24,7 @@
 const Index NumCons = 11;
 const Index NumVars = 9;
 const Index NumGeoms = 7;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumPcks = 6;
 const Index NumSchemes = 3;
 
@@ -33,23 +33,22 @@ enum { RingW_ConstULDR, RingW_ConstURDL, RingW_ConstHypo, RingW_ConstPlane,
        RingW_ConstLine, RingW_ConstSDist, RingW_ConstRatio };
 enum { RingW_SphereUL, RingW_SphereUR, RingW_SphereDR, RingW_SphereDL,
        RingW_Cylinder, RingW_SliderCyl, RingW_Ring };
-enum { RingW_PointMatl, RingW_EdgeMatl, RingW_HighMatl };
+enum { RingW_PointMatl, RingW_EdgeMatl, RingW_SliderMatl, RingW_HighMatl };
 enum { RingW_PickSphUL, RingW_PickSphUR, RingW_PickSphDR, RingW_PickSphDL, RingW_PickCyls,
        RingW_PickSlider };
 
 RingWidget::RingWidget( Module* module, Real widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
-   cerr << "Starting RingWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[RingW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[RingW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
    variables[RingW_PointDR] = new Variable("PntDR", Scheme1, Point(INIT, INIT, 0));
    variables[RingW_PointDL] = new Variable("PntDL", Scheme2, Point(0, INIT, 0));
-   variables[RingW_Slider] = new Variable("Slider", Scheme3, Point(sqrt(INIT*INIT/2.0), 0, 0));
+   variables[RingW_Slider] = new Variable("Slider", Scheme3, Point(INIT/2.0, INIT/2.0, 0));
    variables[RingW_Dist] = new Variable("Dist", Scheme1, Point(INIT, 0, 0));
    variables[RingW_Hypo] = new Variable("Hypo", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
-   variables[RingW_SDist] = new Variable("SDist", Scheme3, Point(INIT/2.0, 0, 0));
+   variables[RingW_SDist] = new Variable("SDist", Scheme3, Point(sqrt(INIT*INIT/2.0), 0, 0));
    variables[RingW_Ratio] = new Variable("Ratio", Scheme1, Point(0.5, 0, 0));
 
    constraints[RingW_ConstLine] = new SegmentConstraint("ConstLine",
@@ -154,12 +153,10 @@ RingWidget::RingWidget( Module* module, Real widget_scale )
    constraints[RingW_ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[RingW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[RingW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-					      Color(.5,.5,.5), 20);
-   materials[RingW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-					     Color(.5,.5,.5), 20);
-   materials[RingW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-					     Color(0,0,.6), 20);
+   materials[RingW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[RingW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[RingW_SliderMatl] = new Material(SliderWidgetMaterial);
+   materials[RingW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -187,24 +184,16 @@ RingWidget::RingWidget( Module* module, Real widget_scale )
    picks[RingW_PickSlider] = new GeomPick(geometries[RingW_SliderCyl], module);
    picks[RingW_PickSlider]->set_highlight(materials[RingW_HighMatl]);
    picks[RingW_PickSlider]->set_cbdata((void*)RingW_PickSlider);
-   GeomMaterial* slidersm = new GeomMaterial(picks[RingW_PickSlider], materials[RingW_PointMatl]);
+   GeomMaterial* slidersm = new GeomMaterial(picks[RingW_PickSlider], materials[RingW_SliderMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(ptsm);
    w->add(cylsm);
    w->add(slidersm);
 
-   FinishWidget(w);
-   
    SetEpsilon(widget_scale*1e-4);
    
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with RingWidget CTOR" << endl;
+   FinishWidget(w);
 }
 
 
@@ -234,20 +223,22 @@ RingWidget::execute()
 							- (GetAxis() * 0.3 * widget_scale),
 							variables[RingW_Slider]->Get()
 							+ (GetAxis() * 0.3 * widget_scale),
-							1.0*widget_scale);
+							1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-4);
 
    Vector spvec1(variables[RingW_PointUR]->Get() - variables[RingW_PointUL]->Get());
    Vector spvec2(variables[RingW_PointDL]->Get() - variables[RingW_PointUL]->Get());
-   spvec1.normalize();
-   spvec2.normalize();
-   Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      if (geom == RingW_PickSlider)
-	 picks[geom]->set_principal(GetAxis());
-      else
-	 picks[geom]->set_principal(spvec1, spvec2, v);
+   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      Vector v = Cross(spvec1, spvec2);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 if (geom == RingW_PickSlider)
+	    picks[geom]->set_principal(GetAxis());
+	 else
+	    picks[geom]->set_principal(spvec1, spvec2, v);
+      }
    }
 }
 

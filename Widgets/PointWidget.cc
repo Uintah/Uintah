@@ -29,13 +29,10 @@ enum { PointW_Pick };
 PointWidget::PointWidget( Module* module, double widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   cerr << "Starting PointWidget CTOR" << endl;
    variables[PointW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
 
-   materials[PointW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-						  Color(.5,.5,.5), 20);
-   materials[PointW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-						 Color(0,0,.6), 20);
+   materials[PointW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[PointW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    geometries[PointW_Sphere] = new GeomSphere;
    GeomMaterial* sphm = new GeomMaterial(geometries[PointW_Sphere], materials[PointW_PointMatl]);
@@ -44,14 +41,6 @@ PointWidget::PointWidget( Module* module, double widget_scale )
    picks[PointW_Pick]->set_cbdata((void*)PointW_Pick);
 
    FinishWidget(picks[PointW_Pick]);
-
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with PointWidget CTOR" << endl;
 }
 
 

@@ -56,7 +56,10 @@ inline const Vector&
 ScaledFrameWidget::GetAxis1() const
 {
    Vector axis(variables[SFrameW_PointUR]->Get() - variables[SFrameW_PointUL]->Get());
-   return axis.normal();
+   if (axis.length() == 0.0)
+      return Vector(0,0,0);
+   else
+      return axis.normal();
 }
 
 
@@ -64,7 +67,10 @@ inline const Vector&
 ScaledFrameWidget::GetAxis2() const
 {
    Vector axis(variables[SFrameW_PointDL]->Get() - variables[SFrameW_PointUL]->Get());
-   return axis.normal();
+   if (axis.length() == 0.0)
+      return Vector(0,0,0);
+   else
+      return axis.normal();
 }
 
 

@@ -32,15 +32,11 @@ ArrowWidget::ArrowWidget( Module* module, double widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   direction(0, 0, 1.0)
 {
-   cerr << "Starting ArrowWidget CTOR" << endl;
    variables[ArrowW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
 
-   materials[ArrowW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-						  Color(.5,.5,.5), 20);
-   materials[ArrowW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-						 Color(.5,.5,.5), 20);
-   materials[ArrowW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-						 Color(0,0,.6), 20);
+   materials[ArrowW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[ArrowW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[ArrowW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    GeomGroup* arr = new GeomGroup;
    geometries[ArrowW_Sphere] = new GeomSphere;
@@ -57,14 +53,6 @@ ArrowWidget::ArrowWidget( Module* module, double widget_scale )
    picks[ArrowW_Pick]->set_cbdata((void*)ArrowW_Pick);
 
    FinishWidget(picks[ArrowW_Pick]);
-
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with ArrowWidget CTOR" << endl;
 }
 
 

@@ -24,7 +24,7 @@
 const Index NumCons = 14;
 const Index NumVars = 12;
 const Index NumGeoms = 10;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumPcks = 7;
 const Index NumSchemes = 4;
 
@@ -35,14 +35,13 @@ enum { SSquareW_ConstULDR, SSquareW_ConstURDL, SSquareW_ConstHypo, SSquareW_Cons
 enum { SSquareW_SphereUL, SSquareW_SphereUR, SSquareW_SphereDR, SSquareW_SphereDL,
        SSquareW_CylU, SSquareW_CylR, SSquareW_CylD, SSquareW_CylL,
        SSquareW_SliderCyl1, SSquareW_SliderCyl2 };
-enum { SSquareW_PointMatl, SSquareW_EdgeMatl, SSquareW_HighMatl };
+enum { SSquareW_PointMatl, SSquareW_EdgeMatl, SSquareW_SliderMatl, SSquareW_HighMatl };
 enum { SSquareW_PickSphUL, SSquareW_PickSphUR, SSquareW_PickSphDR, SSquareW_PickSphDL, SSquareW_PickCyls,
        SSquareW_PickSlider1, SSquareW_PickSlider2 };
 
 ScaledSquareWidget::ScaledSquareWidget( Module* module, Real widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
-   cerr << "Starting ScaledSquareWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[SSquareW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[SSquareW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
@@ -200,12 +199,10 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, Real widget_scale )
    constraints[SSquareW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SSquareW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SSquareW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-					      Color(.5,.5,.5), 20);
-   materials[SSquareW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-					     Color(.5,.5,.5), 20);
-   materials[SSquareW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-					     Color(0,0,.6), 20);
+   materials[SSquareW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[SSquareW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[SSquareW_SliderMatl] = new Material(SliderWidgetMaterial);
+   materials[SSquareW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -240,24 +237,16 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, Real widget_scale )
    picks[SSquareW_PickSlider2]->set_highlight(materials[SSquareW_HighMatl]);
    picks[SSquareW_PickSlider2]->set_cbdata((void*)SSquareW_PickSlider2);
    sliders->add(picks[SSquareW_PickSlider2]);
-   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SSquareW_PointMatl]);
+   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SSquareW_SliderMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(ptsm);
    w->add(cylsm);
    w->add(slidersm);
-
-   FinishWidget(w);
    
    SetEpsilon(widget_scale*1e-4);
-   
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with ScaledSquareWidget CTOR" << endl;
+
+   FinishWidget(w);
 }
 
 
@@ -290,30 +279,32 @@ ScaledSquareWidget::execute()
 						  variables[SSquareW_PointUL]->Get(),
 						  0.5*widget_scale);
    ((GeomCylinder*)geometries[SSquareW_SliderCyl1])->move(variables[SSquareW_Slider1]->Get()
-							- (GetAxis1() * 0.2 * widget_scale),
+							- (GetAxis1() * 0.3 * widget_scale),
 							variables[SSquareW_Slider1]->Get()
-							+ (GetAxis1() * 0.2 * widget_scale),
-							1.0*widget_scale);
+							+ (GetAxis1() * 0.3 * widget_scale),
+							1.1*widget_scale);
    ((GeomCylinder*)geometries[SSquareW_SliderCyl2])->move(variables[SSquareW_Slider2]->Get()
-							- (GetAxis2() * 0.2 * widget_scale),
+							- (GetAxis2() * 0.3 * widget_scale),
 							variables[SSquareW_Slider2]->Get()
-							+ (GetAxis2() * 0.2 * widget_scale),
-							1.0*widget_scale);
+							+ (GetAxis2() * 0.3 * widget_scale),
+							1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-4);
 
    Vector spvec1(variables[SSquareW_PointUR]->Get() - variables[SSquareW_PointUL]->Get());
    Vector spvec2(variables[SSquareW_PointDL]->Get() - variables[SSquareW_PointUL]->Get());
-   spvec1.normalize();
-   spvec2.normalize();
-   Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      if (geom == SSquareW_PickSlider1)
-	 picks[geom]->set_principal(spvec1);
-      else if (geom == SSquareW_PickSlider2)
-	 picks[geom]->set_principal(spvec2);
-      else
-	 picks[geom]->set_principal(spvec1, spvec2, v);
+   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      Vector v = Cross(spvec1, spvec2);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 if (geom == SSquareW_PickSlider1)
+	    picks[geom]->set_principal(spvec1);
+	 else if (geom == SSquareW_PickSlider2)
+	    picks[geom]->set_principal(spvec2);
+	 else
+	    picks[geom]->set_principal(spvec1, spvec2, v);
+      }
    }
 }
 

@@ -44,7 +44,6 @@ enum { CubeW_PickSphIUL, CubeW_PickSphIUR, CubeW_PickSphIDR, CubeW_PickSphIDL,
 CubeWidget::CubeWidget( Module* module, double widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   cerr << "Starting CubeWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[CubeW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
    variables[CubeW_PointIUR] = new Variable("PntIUR", Scheme2, Point(INIT, 0, 0));
@@ -240,12 +239,9 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
    constraints[CubeW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[CubeW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[CubeW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-						 Color(.5,.5,.5), 20);
-   materials[CubeW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-						Color(.5,.5,.5), 20);
-   materials[CubeW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-						Color(0,0,.6), 20);
+   materials[CubeW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[CubeW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[CubeW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -273,17 +269,9 @@ CubeWidget::CubeWidget( Module* module, double widget_scale )
    w->add(ptsm);
    w->add(cylsm);
 
-   FinishWidget(w);
-
    SetEpsilon(widget_scale*1e-4);
 
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with CubeWidget CTOR" << endl;
+   FinishWidget(w);
 }
 
 
@@ -350,11 +338,35 @@ CubeWidget::execute()
 
    Vector spvec1(variables[CubeW_PointIUR]->Get() - variables[CubeW_PointIUL]->Get());
    Vector spvec2(variables[CubeW_PointIDL]->Get() - variables[CubeW_PointIUL]->Get());
-   spvec1.normalize();
-   spvec2.normalize();
-   Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(spvec1, spvec2, v);
+   Vector spvec3(variables[CubeW_PointOUL]->Get() - variables[CubeW_PointIUL]->Get());
+   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0) && (spvec3.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      spvec3.normalize();
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, spvec2, spvec3);
+      }
+   } else if ((spvec2.length2() > 0.0) && (spvec3.length2() > 0.0)) {
+      spvec2.normalize();
+      spvec3.normalize();
+      Vector v = Cross(spvec2, spvec3);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(v, spvec2, spvec3);
+      }
+   } else if ((spvec1.length2() > 0.0) && (spvec3.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec3.normalize();
+      Vector v = Cross(spvec1, spvec3);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, v, spvec3);
+      }
+   } else if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      Vector v = Cross(spvec1, spvec2);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, spvec2, v);
+      }
    }
 }
 

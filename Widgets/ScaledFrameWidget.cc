@@ -24,7 +24,7 @@
 const Index NumCons = 14;
 const Index NumVars = 13;
 const Index NumGeoms = 10;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumPcks = 7;
 const Index NumSchemes = 4;
 
@@ -35,14 +35,13 @@ enum { SFrameW_ConstULDR, SFrameW_ConstURDL, SFrameW_ConstPyth, SFrameW_ConstPla
 enum { SFrameW_SphereUL, SFrameW_SphereUR, SFrameW_SphereDR, SFrameW_SphereDL,
        SFrameW_CylU, SFrameW_CylR, SFrameW_CylD, SFrameW_CylL,
        SFrameW_SliderCyl1, SFrameW_SliderCyl2 };
-enum { SFrameW_PointMatl, SFrameW_EdgeMatl, SFrameW_HighMatl };
+enum { SFrameW_PointMatl, SFrameW_EdgeMatl, SFrameW_SliderMatl, SFrameW_HighMatl };
 enum { SFrameW_PickSphUL, SFrameW_PickSphUR, SFrameW_PickSphDR, SFrameW_PickSphDL, SFrameW_PickCyls,
        SFrameW_PickSlider1, SFrameW_PickSlider2 };
 
 ScaledFrameWidget::ScaledFrameWidget( Module* module, Real widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
-   cerr << "Starting ScaledFrameWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[SFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[SFrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
@@ -202,12 +201,10 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, Real widget_scale )
    constraints[SFrameW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SFrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SFrameW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-					      Color(.5,.5,.5), 20);
-   materials[SFrameW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-					     Color(.5,.5,.5), 20);
-   materials[SFrameW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-					     Color(0,0,.6), 20);
+   materials[SFrameW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[SFrameW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[SFrameW_SliderMatl] = new Material(SliderWidgetMaterial);
+   materials[SFrameW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -242,24 +239,16 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, Real widget_scale )
    picks[SFrameW_PickSlider2]->set_highlight(materials[SFrameW_HighMatl]);
    picks[SFrameW_PickSlider2]->set_cbdata((void*)SFrameW_PickSlider2);
    sliders->add(picks[SFrameW_PickSlider2]);
-   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SFrameW_PointMatl]);
+   GeomMaterial* slidersm = new GeomMaterial(sliders, materials[SFrameW_SliderMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(ptsm);
    w->add(cylsm);
    w->add(slidersm);
-
-   FinishWidget(w);
    
    SetEpsilon(widget_scale*1e-4);
-   
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with ScaledFrameWidget CTOR" << endl;
+
+   FinishWidget(w);
 }
 
 
@@ -292,30 +281,32 @@ ScaledFrameWidget::execute()
 						  variables[SFrameW_PointUL]->Get(),
 						  0.5*widget_scale);
    ((GeomCylinder*)geometries[SFrameW_SliderCyl1])->move(variables[SFrameW_Slider1]->Get()
-							- (GetAxis1() * 0.2 * widget_scale),
+							- (GetAxis1() * 0.3 * widget_scale),
 							variables[SFrameW_Slider1]->Get()
-							+ (GetAxis1() * 0.2 * widget_scale),
-							1.0*widget_scale);
+							+ (GetAxis1() * 0.3 * widget_scale),
+							1.1*widget_scale);
    ((GeomCylinder*)geometries[SFrameW_SliderCyl2])->move(variables[SFrameW_Slider2]->Get()
-							- (GetAxis2() * 0.2 * widget_scale),
+							- (GetAxis2() * 0.3 * widget_scale),
 							variables[SFrameW_Slider2]->Get()
-							+ (GetAxis2() * 0.2 * widget_scale),
-							1.0*widget_scale);
+							+ (GetAxis2() * 0.3 * widget_scale),
+							1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-4);
 
    Vector spvec1(variables[SFrameW_PointUR]->Get() - variables[SFrameW_PointUL]->Get());
    Vector spvec2(variables[SFrameW_PointDL]->Get() - variables[SFrameW_PointUL]->Get());
-   spvec1.normalize();
-   spvec2.normalize();
-   Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      if (geom == SFrameW_PickSlider1)
-	 picks[geom]->set_principal(spvec1);
-      else if (geom == SFrameW_PickSlider2)
-	 picks[geom]->set_principal(spvec2);
-      else
-	 picks[geom]->set_principal(spvec1, spvec2, v);
+   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      Vector v = Cross(spvec1, spvec2);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 if (geom == SFrameW_PickSlider1)
+	    picks[geom]->set_principal(spvec1);
+	 else if (geom == SFrameW_PickSlider2)
+	    picks[geom]->set_principal(spvec2);
+	 else
+	    picks[geom]->set_principal(spvec1, spvec2, v);
+      }
    }
 }
 

@@ -56,7 +56,10 @@ inline const Vector&
 ScaledSquareWidget::GetAxis1() const
 {
    Vector axis(variables[SSquareW_PointUR]->Get() - variables[SSquareW_PointUL]->Get());
-   return axis.normal();
+   if (axis.length() == 0.0)
+      return Vector(0,0,0);
+   else
+      return axis.normal();
 }
 
 
@@ -64,7 +67,10 @@ inline const Vector&
 ScaledSquareWidget::GetAxis2() const
 {
    Vector axis(variables[SSquareW_PointDL]->Get() - variables[SSquareW_PointUL]->Get());
-   return axis.normal();
+   if (axis.length() == 0.0)
+      return Vector(0,0,0);
+   else
+      return axis.normal();
 }
 
 

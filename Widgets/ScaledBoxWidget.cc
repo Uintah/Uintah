@@ -22,7 +22,7 @@
 const Index NumCons = 18;
 const Index NumVars = 11;
 const Index NumGeoms = 20;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumSchemes = 4;
 const Index NumPcks = 9;
 
@@ -36,7 +36,7 @@ enum { SBoxW_SphereIUL, SBoxW_SphereIUR, SBoxW_SphereIDR, SBoxW_SphereIDL,
        SBoxW_CylIU, SBoxW_CylIR, SBoxW_CylID, SBoxW_CylIL,
        SBoxW_CylMU, SBoxW_CylMR, SBoxW_CylMD, SBoxW_CylML,
        SBoxW_CylOU, SBoxW_CylOR, SBoxW_CylOD, SBoxW_CylOL };
-enum { SBoxW_PointMatl, SBoxW_EdgeMatl, SBoxW_HighMatl };
+enum { SBoxW_PointMatl, SBoxW_EdgeMatl, SBoxW_SliderMatl, SBoxW_HighMatl };
 enum { SBoxW_PickSphIUL, SBoxW_PickSphIUR, SBoxW_PickSphIDR, SBoxW_PickSphIDL,
        SBoxW_PickSphOUL, SBoxW_PickSphOUR, SBoxW_PickSphODR, SBoxW_PickSphODL,
        SBoxW_PickCyls };
@@ -44,8 +44,7 @@ enum { SBoxW_PickSphIUL, SBoxW_PickSphIUR, SBoxW_PickSphIDR, SBoxW_PickSphIDL,
 ScaledBoxWidget::ScaledBoxWidget( Module* module, double widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   cerr << "Starting ScaledBoxWidget CTOR" << endl;
-   const Real INIT = 100.0;
+   Real INIT = 1.0*widget_scale;
    variables[SBoxW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
    variables[SBoxW_PointIUR] = new Variable("PntIUR", Scheme2, Point(INIT, 0, 0));
    variables[SBoxW_PointIDR] = new Variable("PntIDR", Scheme1, Point(INIT, INIT, 0));
@@ -240,12 +239,10 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, double widget_scale )
    constraints[SBoxW_ConstODRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SBoxW_ConstODRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
-   materials[SBoxW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-						 Color(.5,.5,.5), 20);
-   materials[SBoxW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-						Color(.5,.5,.5), 20);
-   materials[SBoxW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-						Color(0,0,.6), 20);
+   materials[SBoxW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[SBoxW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[SBoxW_SliderMatl] = new Material(SliderWidgetMaterial);
+   materials[SBoxW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    Index geom, pick;
    GeomGroup* pts = new GeomGroup;
@@ -273,17 +270,9 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, double widget_scale )
    w->add(ptsm);
    w->add(cylsm);
 
-   FinishWidget(w);
-
    SetEpsilon(widget_scale*1e-4);
 
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with ScaledBoxWidget CTOR" << endl;
+   FinishWidget(w);
 }
 
 
@@ -350,13 +339,38 @@ ScaledBoxWidget::execute()
 
    Vector spvec1(variables[SBoxW_PointIUR]->Get() - variables[SBoxW_PointIUL]->Get());
    Vector spvec2(variables[SBoxW_PointIDL]->Get() - variables[SBoxW_PointIUL]->Get());
-   spvec1.normalize();
-   spvec2.normalize();
-   Vector v = Cross(spvec1, spvec2);
-   for (Index geom = 0; geom < NumPcks; geom++) {
-      picks[geom]->set_principal(spvec1, spvec2, v);
+   Vector spvec3(variables[SBoxW_PointOUL]->Get() - variables[SBoxW_PointIUL]->Get());
+   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0) && (spvec3.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      spvec3.normalize();
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, spvec2, spvec3);
+      }
+   } else if ((spvec2.length2() > 0.0) && (spvec3.length2() > 0.0)) {
+      spvec2.normalize();
+      spvec3.normalize();
+      Vector v = Cross(spvec2, spvec3);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(v, spvec2, spvec3);
+      }
+   } else if ((spvec1.length2() > 0.0) && (spvec3.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec3.normalize();
+      Vector v = Cross(spvec1, spvec3);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, v, spvec3);
+      }
+   } else if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
+      spvec1.normalize();
+      spvec2.normalize();
+      Vector v = Cross(spvec1, spvec2);
+      for (Index geom = 0; geom < NumPcks; geom++) {
+	 picks[geom]->set_principal(spvec1, spvec2, v);
+      }
    }
 }
+
 
 void
 ScaledBoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,

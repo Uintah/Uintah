@@ -46,7 +46,10 @@ inline const Vector&
 RingWidget::GetAxis() const
 {
    Vector axis(variables[RingW_PointDR]->Get() - variables[RingW_PointUL]->Get());
-   return axis.normal();
+   if (axis.length() == 0.0)
+      return Vector(0,0,0);
+   else
+      return axis.normal();
 }
 
 

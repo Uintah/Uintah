@@ -22,19 +22,18 @@
 const Index NumCons = 4;
 const Index NumVars = 6;
 const Index NumGeoms = 4;
-const Index NumMatls = 3;
+const Index NumMatls = 4;
 const Index NumSchemes = 2;
 const Index NumPcks = 4;
 
 enum { GuageW_ConstLine, GuageW_ConstDist, GuageW_ConstSDist, GuageW_ConstRatio };
 enum { GuageW_SphereL, GuageW_SphereR, GuageW_Cylinder, GuageW_SliderCyl };
-enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_HighMatl };
+enum { GuageW_PointMatl, GuageW_EdgeMatl, GuageW_SliderMatl, GuageW_HighMatl };
 enum { GuageW_PickSphL, GuageW_PickSphR, GuageW_PickCyl, GuageW_PickSlider };
 
 GuageWidget::GuageWidget( Module* module, double widget_scale )
 : BaseWidget(module, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   cerr << "Starting GuageWidget CTOR" << endl;
    Real INIT = 1.0*widget_scale;
    variables[GuageW_PointL] = new Variable("PntL", Scheme1, Point(0, 0, 0));
    variables[GuageW_PointR] = new Variable("PntR", Scheme1, Point(INIT, 0, 0));
@@ -76,12 +75,10 @@ GuageWidget::GuageWidget( Module* module, double widget_scale )
    constraints[GuageW_ConstRatio]->VarChoices(Scheme2, 2, 2, 2);
    constraints[GuageW_ConstRatio]->Priorities(P_Highest, P_Highest, P_Highest);
 
-   materials[GuageW_PointMatl] = new Material(Color(0,0,0), Color(.54, .60, 1),
-						  Color(.5,.5,.5), 20);
-   materials[GuageW_EdgeMatl] = new Material(Color(0,0,0), Color(.54, .60, .66),
-						 Color(.5,.5,.5), 20);
-   materials[GuageW_HighMatl] = new Material(Color(0,0,0), Color(.7,.7,.7),
-						 Color(0,0,.6), 20);
+   materials[GuageW_PointMatl] = new Material(PointWidgetMaterial);
+   materials[GuageW_EdgeMatl] = new Material(EdgeWidgetMaterial);
+   materials[GuageW_SliderMatl] = new Material(SliderWidgetMaterial);
+   materials[GuageW_HighMatl] = new Material(HighlightWidgetMaterial);
 
    geometries[GuageW_SphereL] = new GeomSphere;
    picks[GuageW_PickSphL] = new GeomPick(geometries[GuageW_SphereL], module);
@@ -102,7 +99,7 @@ GuageWidget::GuageWidget( Module* module, double widget_scale )
    picks[GuageW_PickSlider] = new GeomPick(geometries[GuageW_SliderCyl], module);
    picks[GuageW_PickSlider]->set_highlight(materials[GuageW_HighMatl]);
    picks[GuageW_PickSlider]->set_cbdata((void*)GuageW_PickSlider);
-   GeomMaterial* sliderm = new GeomMaterial(picks[GuageW_PickSlider], materials[GuageW_PointMatl]);
+   GeomMaterial* sliderm = new GeomMaterial(picks[GuageW_PickSlider], materials[GuageW_SliderMatl]);
 
    GeomGroup* w = new GeomGroup;
    w->add(sphlm);
@@ -110,17 +107,9 @@ GuageWidget::GuageWidget( Module* module, double widget_scale )
    w->add(cylm);
    w->add(sliderm);
 
-   FinishWidget(w);
-
    SetEpsilon(widget_scale*1e-4);
 
-   // Init variables.
-   for (Index vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Order();
-   
-   for (vindex=0; vindex<NumVariables; vindex++)
-      variables[vindex]->Resolve();
-   cerr << "Done with GuageWidget CTOR" << endl;
+   FinishWidget(w);
 }
 
 
@@ -140,10 +129,10 @@ GuageWidget::execute()
 						      variables[GuageW_PointR]->Get(),
 						      0.5*widget_scale);
    ((GeomCylinder*)geometries[GuageW_SliderCyl])->move(variables[GuageW_Slider]->Get()
-						       - (GetAxis() * 0.2 * widget_scale),
+						       - (GetAxis() * 0.3 * widget_scale),
 						       variables[GuageW_Slider]->Get()
-						       + (GetAxis() * 0.2 * widget_scale),
-						       1.0*widget_scale);
+						       + (GetAxis() * 0.3 * widget_scale),
+						       1.1*widget_scale);
 
    Vector v(GetAxis()), v1, v2;
    v.find_orthogonal(v1,v2);

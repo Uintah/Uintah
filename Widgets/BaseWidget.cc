@@ -28,7 +28,11 @@ BaseWidget::BaseWidget( Module* module,
   constraints(NumConstraints), variables(NumVariables),
   geometries(NumGeometries), materials(NumMaterials),
   picks(NumPicks),
-  module(module), widget_scale(widget_scale)
+  module(module), widget_scale(widget_scale),
+  PointWidgetMaterial(Color(0,0,0), Color(.54,.60,1), Color(.5,.5,.5), 20),
+  EdgeWidgetMaterial(Color(0,0,0), Color(.54,.60,.66), Color(.5,.5,.5), 20),
+  SliderWidgetMaterial(Color(0,0,0), Color(.66,.60,.40), Color(.5,.5,.5), 20),
+  HighlightWidgetMaterial(Color(0,0,0), Color(.7,.7,.7), Color(0,0,.6), 20)  
 {
 }
 
@@ -85,6 +89,13 @@ void
 BaseWidget::FinishWidget(GeomObj* w)
 {
    widget = new GeomSwitch(w);
+
+   // Init variables.
+   for (Index vindex=0; vindex<NumVariables; vindex++)
+      variables[vindex]->Order();
+   
+   for (vindex=0; vindex<NumVariables; vindex++)
+      variables[vindex]->Resolve();
 }
 
 
