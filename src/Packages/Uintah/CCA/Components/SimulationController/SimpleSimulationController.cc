@@ -53,7 +53,6 @@ SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myw
 {
    d_restarting = false;
    d_combinePatches = false;
-   d_timestepClamping = false;
 }
 
 SimpleSimulationController::~SimpleSimulationController()
@@ -335,7 +334,7 @@ SimpleSimulationController::run()
       }
 
       // clamp timestep to output/checkpoint
-      if (d_timestepClamping && output) {
+      if (timeinfo.timestep_clamping && output) {
         double orig_delt = delt;
         double nextOutput = output->getNextOutputTime();
         double nextCheckpoint = output->getNextCheckpointTime();

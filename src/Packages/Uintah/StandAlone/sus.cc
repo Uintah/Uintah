@@ -149,7 +149,6 @@ usage( const std::string & message,
       cerr << "-nthreads <#>        : Only good with MixedScheduler\n";
       cerr << "-scheduler <name>    : Don't specify, use system default!\n";
       cerr << "-loadbalancer <name> : Usually use system default.\n";
-      cerr << "-clamp_timestep      : Shorten timesteps to match output intervals.\n";
       cerr << "          NirvanaLoadBalancer [or NLB for short]\n";
       cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
       cerr << "                           of boxes you are using.\n";
@@ -208,7 +207,6 @@ main( int argc, char** argv )
     bool   do_poisson3=false;
     bool   do_simplecfd=false;
     bool   do_AMR=false;
-    bool   do_clampTimestep = false;
     bool   emit_graphs=false;
     bool   restart=false;
     bool   combine_patches=false;
@@ -315,8 +313,6 @@ main( int argc, char** argv )
 		  s, argv[0]);
 	  }
 	  solver = argv[i];
-	} else if(s == "-clamp_timestep") {
-          do_clampTimestep = true;
 	} else if(s == "-mpi") {
 	  Uintah::Parallel::forceMPI();
 	} else if(s == "-nompi") {
@@ -658,10 +654,6 @@ main( int argc, char** argv )
 			 restartFromScratch, restartRemoveOldDir);
 	}
         
-        if (do_clampTimestep) {
-          ctl->doTimestepClamping();
-        }
-
         ctl->run();
 
 

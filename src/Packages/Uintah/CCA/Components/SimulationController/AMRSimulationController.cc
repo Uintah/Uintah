@@ -51,7 +51,6 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld) 
   SimulationController(myworld)
 {
    d_restarting = false;
-   d_timestepClamping = false;
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -273,7 +272,7 @@ void AMRSimulationController::run()
        delt = timeinfo.delt_max;
      }
      // clamp timestep to output/checkpoint
-     if (d_timestepClamping && output) {
+     if (timeinfo.timestep_clamping && output) {
        double orig_delt = delt;
        double nextOutput = output->getNextOutputTime();
        double nextCheckpoint = output->getNextCheckpointTime();
