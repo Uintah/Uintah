@@ -139,12 +139,12 @@ c*********************************************************************
       iEndGhost = domainHigh(1)
       jEndGhost = domainHigh(2)
       kEndGhost = domainHigh(3)
-      IST = indexLow(1)+1
-      JST = indexLow(2)+1
-      KST = indexLow(3)+1
-      IEND = indexHigh(1)-1
-      JEND = indexHigh(2)-1
-      KEND = indexHigh(3)-1
+      IST = indexLow(1)
+      JST = indexLow(2)
+      KST = indexLow(3)
+      IEND = indexHigh(1)
+      JEND = indexHigh(2)
+      KEND = indexHigh(3)
 
 C-----------------------------------------------------------------------
 c     INIT to ZERO
@@ -500,6 +500,9 @@ C$DIR NO_RECURRENCE
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/10/02 16:40:30  rawat
+c updated cellinformation for multi-patch
+c
 c Revision 1.6  2000/08/04 03:02:02  bbanerje
 c Add some inits.
 c

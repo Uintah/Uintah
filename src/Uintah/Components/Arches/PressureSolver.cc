@@ -485,6 +485,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  outputs: presCoefPBLM
   d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				  cellinfo, d_pressureVars);
+  cerr << "After pressureBC" << "\n";
+  for(CellIterator iter = patch->getCellIterator();
+      !iter.done(); iter++){
+    cerr.width(10);
+    cerr << "AW"<< *iter << ": " << d_pressureVars->pressCoeff[Arches::AW][*iter] << "\n" ; 
+  }
 
   // Calculate Pressure Diagonal
   //  inputs : presCoefPBLM, presLinSrcPBLM
@@ -559,6 +565,13 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	   MPI_Bcast(d_pressureVars->press_ref, 1, MPI_DOUBLE,? , pg, ierr);
 	 }
 #endif
+	 cerr << "After presssoln" << endl;
+	 for(CellIterator iter = patch->getCellIterator();
+	     !iter.done(); iter++){
+	   cerr.width(10);
+	   cerr << "press"<<*iter << ": " << d_pressureVars->pressure[*iter] << "\n" ; 
+	 }
+ 
 	 normPressure(pg, patch, d_pressureVars);
 	 cerr << "Done with normPressure for patch: " << patch->getID() << '\n';
 	 // put back the results
@@ -609,11 +622,17 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   // apply underelaxation to eqn
   d_linearSolver->computePressUnderrelax(pc, patch, old_dw, new_dw,
 					 d_pressureVars);
-    cerr << "After underrelax" << endl;
+    cerr << "After underrelax AP" << endl;
     for(CellIterator iter = patch->getCellIterator();
 	!iter.done(); iter++){
 	  cerr.width(10);
-	  cerr << *iter << ": " << d_pressureVars->pressNonlinearSrc[*iter] << "\n" ; 
+	  cerr << "AP"<< *iter << ": " << d_pressureVars->pressCoeff[Arches::AP][*iter] << "\n" ; 
+    }
+     cerr << "After underrelax" << endl;
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+	  cerr.width(10);
+	  cerr << "SU"<< *iter << ": " << d_pressureVars->pressNonlinearSrc[*iter] << "\n" ; 
     }
   // put back computed matrix coeffs and nonlinear source terms 
   // modified as a result of underrelaxation 
@@ -678,6 +697,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.54  2000/10/02 16:40:25  rawat
+// updated cellinformation for multi-patch
+//
 // Revision 1.53  2000/09/29 20:32:36  rawat
 // added underrelax to pressure solver
 //

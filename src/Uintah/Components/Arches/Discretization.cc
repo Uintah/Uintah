@@ -8,6 +8,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Components/Arches/CellInformation.h>
+#include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/Stencil.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Grid/Level.h>
@@ -1280,6 +1281,12 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		   coeff_vars->uVelocityCoeff[Arches::AB].getPointer(),
 		   coeff_vars->uVelLinearSrc.getPointer());
 
+    cerr << "After UVELCOEF" << endl;
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+	  cerr << *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
+    }
 #ifdef ARCHES_COEF_DEBUG
     cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
@@ -1518,6 +1525,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.46  2000/10/02 16:40:24  rawat
+// updated cellinformation for multi-patch
+//
 // Revision 1.45  2000/09/26 04:35:28  rawat
 // added some more multi-patch support
 //
