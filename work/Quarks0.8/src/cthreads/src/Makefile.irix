@@ -17,14 +17,15 @@ TOP   = ..
 CFLAGS  = -g -I$(TOP)/include 
 
 
-default: $(OBJECT)
+default: libcthreads.a
 
 install: libcthreads.a
 	ar ts libcthreads.a
 	mv libcthreads.a $(QTOPDIR)/lib
 
-libcthreads.a: $(OBJECT)
+libcthreads.a: $(OBJECT) mips/*.o
 	(cd mips; make)
+	rm -f libcthreads.a
 	ar cq libcthreads.a $(OBJECT) mips/*.o
 
 depend: Makefile $(SOURCE)

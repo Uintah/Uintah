@@ -120,6 +120,7 @@ void bind_server(char *hostname)
     sport = (Port *) malloc(sizeof(Port));
     sport->sin.sin_family = AF_INET;
     sport->sin.sin_port   = SERVER_PORTNUM;
+    fprintf(stderr, "server hostname is %s\n", hostname);
 
     if (!(ent = gethostbyname(hostname)))
     {

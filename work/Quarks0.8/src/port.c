@@ -114,6 +114,7 @@ void init_localport(int portnum)
 
     struct hostent *ent;
     char   hostname[256];
+    extern char myhostname[256];
 
     localport = (Port *) malloc(sizeof(Port));
 
@@ -160,8 +161,10 @@ void init_localport(int portnum)
     localport->sin.sin_family = AF_INET;
 
     /* get my host name and obtain my internet address */
-    if (gethostname(hostname, 256) < 0)
-	perror("gethostname");
+/*    if (gethostname(hostname, 256) < 0)
+	perror("gethostname");*/
+    strcpy(hostname, myhostname);
+    fprintf(stderr, "hostname=%s\n", hostname);
 
     if (!(ent = gethostbyname(hostname)))
     {

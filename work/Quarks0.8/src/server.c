@@ -199,6 +199,7 @@ static void give_nodeinfo(Message *msg)
 	{
 	    MSG_INSERT(msg,0);
 	    MSG_INSERT_BLK(msg, contable_port(ct_index), sizeof(Port));
+	    fprintf(stderr, "sin=%x\n", contable_port(ct_index)->sin.sin_addr.s_addr);
 	}
     }
     reply_msg(msg);
@@ -660,9 +661,12 @@ Any dsm_server(Any arg)
     return (Any) 0;
 }
 
+char myhostname[256];
+
 extern void idlethread();
 main()
 {
+    sprintf(myhostname, "taz-fast.cs.utah.edu");
     welcome();
     quarks_basic_init(1);
     quarks_thread_fork(dsm_server, 0);  

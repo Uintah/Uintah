@@ -55,6 +55,9 @@ static char xt_font[8];
 static int use_gdb = 0;
 static int use_xterm = 1;
 static int sflag=0;
+static char path[256];
+char myhostname[256];
+static char progname[256];
 
 static int
 getline(FILE *fp, char *line)
@@ -189,6 +192,12 @@ static void get_qargs(int argc, char *argv[])
     char hname[256];
     static int qk_args_start = 0;
 
+    if (! getwd(path))
+	PANIC("Could not get cwd");
+    if (gethostname(myhostname, 256) < 0)
+	PANIC("Could not find current hostname");
+    strcpy(progname, argv[0]);
+
     for (i=1; i<argc; i++)
     {
 	if (strcmp(argv[i], "--") == 0)
@@ -220,7 +229,30 @@ static void get_qargs(int argc, char *argv[])
 		Qkmaster = 1;
 	    if (strcmp(argv[pos], "-c") == 0)    /* child node */
 		Qkchild = 1;
-	    
+
+	    if (strcmp(argv[pos], "-p") == 0) /* path name */
+	    {
+		pos++;
+		strcpy(path, argv[pos]);
+	    }
+	    if (strcmp(argv[pos], "-me") == 0) /* my host name */
+	    {
+		pos++;
+		if(!Qkchild)
+		    strcpy(myhostname, argv[pos]);
+	    }
+	    if (strcmp(argv[pos], "-you") == 0) /* my host name */
+	    {
+		pos++;
+		if(Qkchild)
+		    strcpy(myhostname, argv[pos]);
+		fprintf(stderr, "myhostname=%s\n", myhostname);
+	    }
+	    if (strcmp(argv[pos], "-progname") == 0) /* My program name */
+	    {
+		pos++;
+		strcpy(progname, argv[pos]);
+	    }
 	    pos++;
 	}
     }
@@ -231,6 +263,7 @@ static void get_qargs(int argc, char *argv[])
 	scanf("%s", hname);
 	Qksrvhname = (char *) malloc(strlen(hname)+1);
 	strcpy(Qksrvhname, hname);
+	fprintf(stderr, "hname=%s\n", hname);
     }
 }
 
@@ -239,7 +272,6 @@ void Qk_init(int argc, char **argv, char *script_file)
 {
     FILE *fd;
     char hostname[32];
-    char myhostname[32];
     int pid;
     char forrsh[1024];
     char geom_string[256];
@@ -250,7 +282,7 @@ void Qk_init(int argc, char **argv, char *script_file)
     char **hptr;
     char *hosts[1024];  
     int childpid;
-    char path[256],exe[100];
+    char exe[100];
     char *display_name;
     char *chptr;
     int clockrate;
@@ -291,8 +323,6 @@ void Qk_init(int argc, char **argv, char *script_file)
 	}
 	
 
-	if (gethostname(myhostname, 32) < 0)
-	    PANIC("Could not find current hostname");
 	NO_PROC = 1;
 	hp = gethostbyname(myhostname);
 	hosts[1] = (char *) malloc((strlen(hp->h_name)+1)*sizeof(char));
@@ -305,6 +335,7 @@ void Qk_init(int argc, char **argv, char *script_file)
 	    if (hostname[0] == '#') continue;
 	    NO_PROC++;
 	    /* check if the host is valid */
+	    fprintf(stderr, "hostname=%s\n", hostname);
 	    if((hp = gethostbyname(hostname)) == NULL)
 		PANIC("ERROR: unknown host");
 	    
@@ -318,9 +349,6 @@ void Qk_init(int argc, char **argv, char *script_file)
 
 	if (Qknumnodes > 0) runi = Qknumnodes-1;
 	else runi = NO_PROC-1;    
-
-	if (! getwd(path))
-	    PANIC("Could not get cwd");
 
 	j=2;
 	ydisp = 0;
@@ -379,7 +407,7 @@ void Qk_init(int argc, char **argv, char *script_file)
 	    else
 	    {
 		index = strlen(forrsh);
-		sprintf(exe,"%s/%s",path,argv[0]); 
+		sprintf(exe,"%s/%s",path, progname);
 		sprintf(&forrsh[index]," %s", exe);
 	    }
 
@@ -400,7 +428,7 @@ void Qk_init(int argc, char **argv, char *script_file)
 		    sprintf(&forrsh[index]," -s %s ", Qksrvhname);
 		}
 		index = strlen(forrsh);
-		sprintf(&forrsh[index]," -c &");
+		sprintf(&forrsh[index]," -c -you %s &", hosts[hindex]);
 	    }
 
 	    /* rsh here */

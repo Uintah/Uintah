@@ -35,7 +35,12 @@ static int numobj;
 static int numcycles;
 
 static int numprocs;
-int    *mat;
+#define BIGSIZE 10000
+typedef struct Big {
+    int data;
+    int x1[BIGSIZE];
+} Big;
+Big    *mat;
 struct global {
     Id ba;
     Id *lk;
@@ -60,15 +65,20 @@ void compute()
 
     for (i=0; i<numcycles; i++)
     {
+	int ii;
 	ind1 = myrandom()%numobj;
 	ind2 = myrandom()%numobj;
-	val  = myrandom()%10;
+	val  = myrandom()%100;
 
 	if (ind2 > ind1) {temp = ind1; ind1 = ind2; ind2 = temp;}
 	Qk_acquire(gl->lk[ind1]);
 	if (ind1 != ind2) Qk_acquire(gl->lk[ind2]);
-	mat[ind1] = mat[ind1] - val;
-	mat[ind2] = mat[ind2] + val;
+	mat[ind1].data = mat[ind1].data - val;
+	mat[ind2].data = mat[ind2].data + val;
+	for(ii=0;ii<BIGSIZE;ii++){
+	    mat[ind1].x1[ii]=val;
+	    mat[ind2].x1[ii]=val;
+	}
 	if (ind1 != ind2) Qk_release(gl->lk[ind2]);
 	Qk_release(gl->lk[ind1]);
 
@@ -81,7 +91,7 @@ void compute()
     sum = 0;
     for (i=0; i<numobj; i++)
     {
-	sum += mat[i];
+	sum += mat[i].data;
     }
 	
     fprintf(stderr, "************* Resulting sum = %d\n", sum);
@@ -93,7 +103,7 @@ static void initialize()
     int  i;
     Id   ba;
 
-    Qk_create_region(1, numobj*sizeof(int),
+    Qk_create_region(1, numobj*sizeof(Big),
 		     (unsigned long *) &mat);
     Qk_create_region(2, sizeof(Id)*(numobj+2),
 		     (unsigned long *) &gl);
@@ -102,7 +112,7 @@ static void initialize()
     for (i=0; i<numobj; i++)
     {
 	gl->lk[i] = Qk_newlock();
-	mat[i] = 0;
+	mat[i].data = 0;
     }
 
     for (i=1; i<numprocs; i++)
