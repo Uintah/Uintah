@@ -401,7 +401,7 @@ proc updateCanvases { x y } {
 }
 
 proc createPackageMenu {index} {
-    global ModuleMenu
+    global ModuleMenu ModuleIPorts ModuleOPorts    
     set package [lindex [netedit packageNames] $index]
     set packageToken [join "menu_${package}" ""]
     set ModuleMenu($packageToken) $package
@@ -414,6 +414,10 @@ proc createPackageMenu {index} {
 	    set moduleToken [join "${categoryToken}_${module}" ""]
 	    set ModuleMenu($moduleToken) $module
 	    lappend ModuleMenu(${packageToken}_${categoryToken}_modules) $moduleToken
+	    set "ModuleIPorts(${package} ${category} ${module})" \
+		[netedit module_iport_datatypes $package $category $module]
+	    set "ModuleOPorts(${package} ${category} ${module})" \
+		[netedit module_oport_datatypes $package $category $module]
 	}
     }
 
