@@ -142,6 +142,18 @@ using std::pair;
       virtual double getCurrentTime()
       { return  d_sharedState->getElapsedTime(); }
 
+      // Get the time the next output will occur
+      virtual double getNextOutputTime() { return d_nextOutputTime; }
+      
+      // Get the timestep the next output will occur
+      virtual int getNextOutputTimestep() { return d_nextOutputTimestep; }
+      
+      // Get the time the next checkpoint will occur
+      virtual double getNextCheckpointTime() { return d_nextCheckpointTime; }
+      
+      // Get the timestep the next checkpoint will occur
+      virtual int getNextCheckpointTimestep(){return d_nextCheckpointTimestep;}
+
       //////////
       // Returns true if the last timestep was one
       // in which data was output.
