@@ -31,7 +31,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/DirectInterpolateAlgo.h>
+#include <Dataflow/Modules/Fields/DirectInterpolate.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -100,37 +100,112 @@ DirectInterpolate::execute()
     return;
   }
 
-  ScalarFieldInterface *sfi;
-  if (!(sfi = sfieldhandle->query_scalar_interface()))
+  ScalarFieldInterface *sfi = sfieldhandle->query_scalar_interface();
+  VectorFieldInterface *vfi = sfieldhandle->query_vector_interface();
+  FieldHandle ofieldhandle;
+  if (sfi)
   {
-    warning("Source not a scalar field.");
-    return;
+    const TypeDescription *td0 = dfieldhandle->get_type_description();
+    const TypeDescription *td1 = dfieldhandle->data_at_type_description();
+    CompileInfo *ci = DirectInterpScalarAlgoBase::get_compile_info(td0, td1);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      error("Could not compile algorithm.");
+      return;
+    }
+
+    DirectInterpScalarAlgoBase *algo = 
+      dynamic_cast<DirectInterpScalarAlgoBase *>(algo_handle.get_rep());
+    if (algo == 0) 
+    {
+      error("Could not get algorithm.");
+      return;
+    }
+    ofieldhandle = algo->execute(dfieldhandle, sfi);
+  }
+  else if (vfi)
+  {
+    const TypeDescription *td0 = dfieldhandle->get_type_description();
+    const TypeDescription *td1 = dfieldhandle->data_at_type_description();
+    CompileInfo *ci = DirectInterpVectorAlgoBase::get_compile_info(td0, td1);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      error("Could not compile algorithm.");
+      return;
+    }
+
+    DirectInterpVectorAlgoBase *algo = 
+      dynamic_cast<DirectInterpVectorAlgoBase *>(algo_handle.get_rep());
+    if (algo == 0) 
+    {
+      error("Could not get algorithm.");
+      return;
+    }
+    ofieldhandle = algo->execute(dfieldhandle, vfi);
+  }
+  else
+  {
+    error("No scalar or vector field interface to sample on.");
   }
 
   ofp_ = (FieldOPort *)get_oport("Interpolant");
   if (!ofp_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+    error("Unable to initialize " + name + "'s output port.");
     return;
   }
-
-  const TypeDescription *td0 = dfieldhandle->get_type_description();
-  const TypeDescription *td1 = dfieldhandle->data_at_type_description();
-  CompileInfo *ci = DirectInterpAlgoBase::get_compile_info(td0, td1);
-  DynamicAlgoHandle algo_handle;
-  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
-  {
-    error("Could not compile algorithm.");
-    return;
-  }
-
-  DirectInterpAlgoBase *algo = 
-    dynamic_cast<DirectInterpAlgoBase *>(algo_handle.get_rep());
-  if (algo == 0) 
-  {
-    error("Could not get algorithm.");
-    return;
-  }
-  ofp_->send(algo->execute(dfieldhandle, sfi));
+  ofp_->send(ofieldhandle);
 }
+
+
+
+CompileInfo *
+DirectInterpScalarAlgoBase::get_compile_info(const TypeDescription *field_td,
+					     const TypeDescription *loc_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("DirectInterpScalarAlgo");
+  static const string base_class_name("DirectInterpScalarAlgoBase");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       field_td->get_filename() + "." +
+		       loc_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       field_td->get_name() + ", " + loc_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfo *
+DirectInterpVectorAlgoBase::get_compile_info(const TypeDescription *field_td,
+					     const TypeDescription *loc_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("DirectInterpVectorAlgo");
+  static const string base_class_name("DirectInterpVectorAlgoBase");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       field_td->get_filename() + "." +
+		       loc_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       field_td->get_name() + ", " + loc_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace SCIRun

@@ -15,12 +15,12 @@
   University of Utah. All Rights Reserved.
 */
 
-//    File   : DirectInterpolateAlgo.h
+//    File   : DirectInterpolate.h
 //    Author : Michael Callahan
 //    Date   : June 2001
 
-#if !defined(DirectInterpolateAlgo_h)
-#define DirectInterpolateAlgo_h
+#if !defined(DirectInterpolate_h)
+#define DirectInterpolate_h
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
@@ -30,11 +30,10 @@ namespace SCIRun {
 //! DirectInterpBaseBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! DirectInterpBaseBase from the DynamicAlgoBase they will have a pointer to.
-class DirectInterpAlgoBase : public DynamicAlgoBase
+class DirectInterpScalarAlgoBase : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi) = 0;
-  virtual ~DirectInterpAlgoBase();
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *field,
@@ -43,7 +42,7 @@ public:
 
 
 template <class Fld, class Loc>
-class DirectInterpAlgo : public DirectInterpAlgoBase
+class DirectInterpScalarAlgo : public DirectInterpScalarAlgoBase
 {
 public:
   //! virtual interface. 
@@ -53,8 +52,8 @@ public:
 
 template <class Fld, class Loc>
 FieldHandle
-DirectInterpAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
-				    ScalarFieldInterface *sfi)
+DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+					  ScalarFieldInterface *sfi)
 {
   Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
   if (!fld2->is_scalar()) { return 0; }
@@ -84,8 +83,59 @@ DirectInterpAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 
 
 
+class DirectInterpVectorAlgoBase : public DynamicAlgoBase
+{
+public:
+  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *sfi) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfo *get_compile_info(const TypeDescription *field,
+				       const TypeDescription *element);
+};
+
+
+template <class Fld, class Loc>
+class DirectInterpVectorAlgo : public DirectInterpVectorAlgoBase
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *sfi);
+};
+
+
+template <class Fld, class Loc>
+FieldHandle
+DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+					  VectorFieldInterface *sfi)
+{
+  Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
+  if (!fld2->is_scalar()) { return 0; }
+  Fld *fld = fld2->clone();
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+
+  typename Loc::iterator itr, itr_end;
+  mesh->begin(itr);
+  mesh->end(itr_end);
+  while (itr != itr_end)
+  {
+    Point p;
+    mesh->get_center(p, *itr);
+
+    Vector val;
+    if (sfi->interpolate(val, p))
+    {
+      fld->set_value(val, *itr);
+    }
+
+    ++itr;
+  }
+
+  FieldHandle ofh(fld);
+  return ofh;
+}
+
 
 
 } // end namespace SCIRun
 
-#endif // DirectInterpolateAlgo_h
+#endif // DirectInterpolate_h
