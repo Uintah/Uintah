@@ -12,83 +12,14 @@
  */
 //milan was here
 
-#include <tcl.h>
-#include <tk.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
-#include <iostream>
-using std::cerr;
-using std::endl;
-#include <sstream>
-using std::ostringstream;
-#include <fstream>
-using std::ofstream;
-#include <string.h>
+#include <PSECommon/Modules/Salmon/OpenGL.h>
 
-#include <map.h>
-
-#include "image.h"
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Geom/Light.h>
-#include <SCICore/Geom/Lighting.h>
-#include <SCICore/Geom/RenderMode.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Datatypes/Image.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECommon/Modules/Salmon/Ball.h>
-#include <PSECommon/Modules/Salmon/MpegEncoder.h>
-#include <PSECommon/Modules/Salmon/Renderer.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <PSECommon/Modules/Salmon/Salmon.h>
-#include <SCICore/Thread/FutureValue.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/Thread.h>
-
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomText.h>
-
-#ifdef __sgi
-#include <X11/extensions/SGIStereo.h>
-#include "imagelib.h"
-#endif
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
 namespace PSECommon {
 namespace Modules {
-
-using PSECore::Datatypes::GeometryData;
-using SCICore::Datatypes::DepthImage;
-
-using SCICore::Datatypes::ColorImage;
-using SCICore::GeomSpace::Light;
-using SCICore::GeomSpace::Lighting;
-using SCICore::GeomSpace::View;
-using SCICore::Containers::to_string;
-using SCICore::TclInterface::TCLTask;
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Thread;
-
-using SCICore::GeomSpace::GeomCone;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomTri;
-using SCICore::GeomSpace::GeomText;
-
-
-class OpenGLHelper;
 
 #define DO_REDRAW 0
 #define DO_PICK 1
@@ -98,98 +29,6 @@ class OpenGLHelper;
 
 static map<clString, ObjTag*>::iterator viter;
 
-struct GetReq {
-    int datamask;
-    FutureValue<GeometryData*>* result;
-    GetReq(int, FutureValue<GeometryData*>* result);
-    GetReq();
-};
-
-class OpenGL : public Renderer {
-    Tk_Window tkwin;
-    Window win;
-    Display* dpy;
-    GLXContext cx;
-    int maxlights;
-    SCICore::GeomSpace::DrawInfoOpenGL* drawinfo;
-    WallClockTimer fpstimer;
-    double current_time;
-
-    int old_stereo;
-    GLuint imglist;
-    void make_image();
-
-    void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
-    void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
-    OpenGLHelper* helper;
-    clString my_openglname;
-    SCICore::Containers::Array1<XVisualInfo*> visuals;
-
-   /* Call this each time an mpeg frame is generated. */
-   void addMpegFrame();
-   MpegEncoder mpEncoder;
-   bool encoding_mpeg;
-
-public:
-    OpenGL();
-    virtual ~OpenGL();
-    virtual clString create_window(Roe* roe,
-				   const clString& name,
-				   const clString& width,
-				   const clString& height);
-    virtual void redraw(Salmon*, Roe*, double tbeg, double tend,
-			int ntimesteps, double frametime);
-    void real_get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&, int&);
-    virtual void get_pick(Salmon*, Roe*, int, int,
-			  GeomObj*&, GeomPick*&, int& );
-    virtual void hide();
-    virtual void dump_image(const clString&);
-    virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
-
-    clString myname;
-    void redraw_loop();
-    SCICore::Thread::Mailbox<int> send_mb;
-    SCICore::Thread::Mailbox<int> recv_mb;
-    SCICore::Thread::Mailbox<GetReq> get_mb;
-
-    Salmon* salmon;
-    Roe* roe;
-    double tbeg;
-    double tend;
-    int nframes;
-    double framerate;
-    void redraw_frame();
-
-    int send_pick_x;
-    int send_pick_y;
-
-    GeomObj* ret_pick_obj;
-    GeomPick* ret_pick_pick;
-    int ret_pick_index;
-
-    virtual void listvisuals(TCLArgs&);
-    virtual void setvisual(const clString&, int i, int width, int height);
-
-    View lastview;
-    double znear, zfar;
-
-    GeomCappedCylinder* stylusCylinder[2];
-    GeomTri* stylusTriangle[4];
-    GeomSphere* pinchSphere;
-    Material* stylusMaterial[16], *pinchMaterial;
-    
-    GeomText* pinchText[2];
-    GeomCappedCylinder* pinchCylinder[4];
-
-    // these functions were added to clean things up a bit...
-
-protected:
-    
-    void initState(void);
-
-    virtual void getData(int datamask, FutureValue<GeometryData*>* result);
-    virtual void real_getData(int datamask, FutureValue<GeometryData*>* result);
-};
 
 static OpenGL* current_drawer=0;
 static const int pick_buffer_size = 512;
@@ -200,11 +39,11 @@ static Renderer* make_OpenGL()
     return scinew OpenGL;
 }
 
-static int query_OpenGL()
+int query_OpenGL()
 {
     TCLTask::lock();
-    int have_opengl=glXQueryExtension(Tk_Display(Tk_MainWindow(the_interp)),
-				      NULL, NULL);
+    int have_opengl=glXQueryExtension
+      (Tk_Display(Tk_MainWindow(the_interp)), NULL, NULL);
     TCLTask::unlock();
     return have_opengl;
 }
@@ -336,11 +175,13 @@ void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
 
 void OpenGL::redraw_loop()
 {
+    int r;
+    
     // Tell the Roe that we are started...
     TimeThrottle throttle;
     throttle.start();
     double newtime=0;
-    for(;;){
+    while(1) {
 	int nreply=0;
 	if(roe->inertia_mode){
 	    double current_time=throttle.time();
@@ -366,14 +207,12 @@ void OpenGL::redraw_loop()
 	    newtime+=frametime;
 	    throttle.wait_for_time(newtime);
 
-	    for(;;){
-		int r;
-		if(!send_mb.tryReceive(r))
-		    break;
-		if(r == DO_PICK){
-		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_index);
+	    while (send_mb.tryReceive(r)) {
+		if (r == DO_PICK) {
+		    real_get_pick(salmon, roe, send_pick_x, send_pick_y,
+			ret_pick_obj, ret_pick_pick, ret_pick_index);
 		    recv_mb.send(PICK_DONE);
-		} else if(r== DO_GETDATA){
+		} else if(r== DO_GETDATA) {
 		    GetReq req(get_mb.receive());
 		    real_getData(req.datamask, req.result);
 		} else {
@@ -409,9 +248,9 @@ void OpenGL::redraw_loop()
 	    
 	    roe->view.set(tmpview);	    
 	} else {
-	    for(;;){
+	    for (;;) {
 		int r=send_mb.receive();
-		if(r == DO_PICK){
+		if (r == DO_PICK) {
 		    real_get_pick(salmon, roe, send_pick_x, send_pick_y, ret_pick_obj, ret_pick_pick, ret_pick_index);
 		    recv_mb.send(PICK_DONE);
 		} else if(r== DO_GETDATA){
@@ -1753,6 +1592,17 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.24  2000/06/06 15:08:15  dahart
+// - Split OpenGL.cc into OpenGL.cc and OpenGL.h to allow class
+// derivations of the OpenGL renderer.
+// - Added a constructor to the Salmon class with a Module name parameter
+// to allow derivations of Salmon with different names.
+// - Added get_triangles() to SalmonGeom for serializing triangles to
+// send them over a network connection.  This is a short term (hack)
+// solution meant for now to allow network transport of the geometry that
+// Yarden's modules produce.  Yarden has promised to work on a more
+// general solution to network serialization of SCIRun geometry objects. ;)
+//
 // Revision 1.23  2000/03/17 18:47:03  dahart
 // Included STL map header files where I forgot them, and removed less<>
 // parameter from map declarations
