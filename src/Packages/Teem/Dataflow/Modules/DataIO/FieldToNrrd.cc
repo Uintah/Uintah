@@ -282,19 +282,19 @@ void FieldToNrrd::execute()
   nout->nrrd->axis[0].spacing=v.x();
   nout->nrrd->axis[1].spacing=v.y();
   nout->nrrd->axis[2].spacing=v.z();
-  nout->nrrd->axis[0].label = "x";
-  nout->nrrd->axis[1].label = "y";
-  nout->nrrd->axis[2].label = "z";
+  nout->nrrd->axis[0].label = strdup("x");
+  nout->nrrd->axis[1].label = strdup("y");
+  nout->nrrd->axis[2].label = strdup("z");
   if (data == "Vector") {
     nout->nrrd->axis[3].size=3;
     nout->nrrd->axis[3].min=0;
     nout->nrrd->axis[3].max=3;
-    nout->nrrd->axis[3].label = "v";
+    nout->nrrd->axis[3].label = strdup("v");
   } else if (data == "Tensor") {
     nout->nrrd->axis[3].size=6;
     nout->nrrd->axis[3].min=0;
     nout->nrrd->axis[3].max=6;
-    nout->nrrd->axis[3].label = "t";
+    nout->nrrd->axis[3].label = strdup("t");
   }
 
   NrrdDataHandle noutH(nout);

@@ -150,7 +150,6 @@ NrrdResample::execute()
   nrrdResampleInfo *info = nrrdResampleInfoNew();
 
   Nrrd *nin = nrrdH->nrrd;
-  Nrrd *nout = nrrdNew();
   cerr << "Resampling with a "<<ftype<<" filter."<<endl;
   nrrdKernel *kern;
   float p[NRRD_KERNEL_PARAMS_MAX];
@@ -179,9 +178,14 @@ NrrdResample::execute()
   last_resampAxis1_ = resampAxis[1];
   last_resampAxis2_ = resampAxis[2];
 
-  nrrdSpatialResample(nout, nin, info);
   NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
+  if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), nin, info)) {
+    char *err = biffGet(NRRD);
+    fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
+    cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    free(err);
+  }
+  nrrdResampleInfoNix(info);  
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }

@@ -62,15 +62,11 @@ void NrrdData::io(Piostream& stream) {
 
   if (stream.reading()) {
     Pio(stream, fname);
-    char name[200];
-    strcpy(name, fname.c_str());
-    nrrd = nrrdNew();
-    if (!(nrrdLoad(nrrd, name))) {
+    if (!(nrrdLoad(nrrd=nrrdNew(), strdup(fname.c_str())))) {
       char *err = biffGet(NRRD);
       cerr << "Error reading nrrd "<<fname<<": "<<err<<"\n";
       free(err);
       biffDone(NRRD);
-      nrrdNuke(nrrd);
       return;
     }
     fname="";
@@ -79,14 +75,11 @@ void NrrdData::io(Piostream& stream) {
       fname = stream.file_name + string(".nrrd");
     }
     Pio(stream, fname);
-    char name[200];
-    strcpy(name, fname.c_str());
-    if (nrrdSave(name, nrrd, nrrdIONew())) {
+    if (nrrdSave(strdup(fname.c_str()), nrrd, 0)) {
       char *err = biffGet(NRRD);      
       cerr << "Error writing nrrd "<<fname<<": "<<err<<"\n";
       free(err);
       biffDone(NRRD);
-      nrrdNuke(nrrd);
       return;
     }
   }
