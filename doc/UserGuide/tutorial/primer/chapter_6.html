@@ -3,7 +3,7 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Putting Simulation and Visualization Together</title>
-<!-- Changed by: Ted Dustman, 22-Feb-2002 -->
+<!-- Changed by: Ted Dustman, 25-Feb-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -46,33 +46,37 @@
 	element mesh.  The module ManageFieldData accomplishes this task,
 	as described below.
 
-        <p><b><A name="section 1">ManageFieldData</b><br></A>
+     <p><b><A name="section 1">ManageFieldData</b><br></A>
 
-        <p>The ManageFieldData module splits and recombines its Field and Matrix inputs to
-	  create new Field and Matrix outputs:
-	<ul>
-	<li>First, the input Field splits
-	into a mesh part and a data part.
-	<li>Next, the mesh and the input Matrix combine to form a new Field.
-	<li>Finally, the data part of the original Field converts to
-	    a Matrix, sending it to the Matrix
-	    output port,sending the new Field to the Field output port.
-	</ul>
-	<p>If there is no input Matrix then the output Field will be
-	the same as the input Field.
-	<ul><li>If the input field's data are scalar then the 
-	output Matrix will be a column matrix.
-	<li>If the input field's data are vectors, then the output will be a Nx3 matrix.
-	<li>If the field contains tensors the output will be a Nx9 matrix, where the
-        tensor is flattened out in left-to-right, top-to-bottom order.
-        <li>The number of rows in the input Matrix should equal the number of data values
-	in the input Field</ul>
-	
-	<p>The output Field's type is the same as the input Field's
-        type.  For instance, if the input field is a vector field, the
-        output Field will also be a vector field (and the input matrix
-        should be Nx3 where N is equal to the number of data values in the
-	input field).
+     <p>The ManageFieldData module splits and recombines its Field and
+Matrix inputs and
+          creates new Field and Matrix outputs:
+        <ul>
+        <li>First it splits its input Field into a mesh part and a data part.
+        <li>Then the mesh and the input Matrix are combined to form a new
+Field.
+        <li>Finally, the data part of the original Field is converted to
+            a Matrix and sent to the Matrix output port and the new Field
+            is sent to the Field output port.
+        </ul>
+        <ul>
+        <li>If there is no input Matrix then the output Field will be
+            the same as the input Field.
+        <li>If the input field's data are scalar then the output Matrix
+            will be a column matrix.
+        <li>If the input field's data are vectors then the output matrix
+            will be of dimension Nx3.
+        <li>If the field contains tensors the output matrix will be of
+            dimension Nx9 where the
+             tensor is flattened out in left-to-right, top-to-bottom order.
+         <li>The number of rows in the input Matrix should equal the number
+            of data values in the input Field.
+        </ul>
+        <p>The output Field's type is the same as the input Field's
+         type.  For instance, if the input field is a vector field, the
+         output Field will also be a vector field (and the input matrix
+         must be Nx3 where N is equal to the number of
+         data values in the input field).
 
         <p><b><A name="section 2">Combining simulation and visualization</b><br></A>
 
