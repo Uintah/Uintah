@@ -234,8 +234,6 @@ void ParticleVis::execute()
     Vector drange = spatial_box.max() - spatial_box.min();
     Vector crange(drange.x()/range.x(), drange.y()/range.y(),
 		  drange.z()/range.z());
-    // use the length of the domain diagonol as the domain size value
-    double domain_size = sqrt(Dot(drange,drange));
     // use the length of a cell diagonol as the cell size value
     cell_size = sqrt(Dot(crange, crange));
     
@@ -292,7 +290,7 @@ void ParticleVis::execute()
       float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
       int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
       int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-      GeomArrows* arrows;
+      GeomArrows* arrows = 0;
       if( drawVectors.get() == 1){
 	arrows = scinew GeomArrows(width_scale.get(),
 				   1.0 - head_length.get(),
@@ -430,7 +428,7 @@ void ParticleVis::execute()
       GeomGroup *obj = scinew GeomGroup;
       GeomPoints *pts= scinew GeomPoints();
       int count = 0;
-      GeomArrows* arrows;
+      GeomArrows* arrows = 0;
       if( drawVectors.get() == 1 && hasVectors){
 	arrows = scinew GeomArrows(width_scale.get(),
 				   1.0 - head_length.get(),
