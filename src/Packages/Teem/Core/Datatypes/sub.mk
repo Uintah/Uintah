@@ -34,7 +34,7 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math Core/Util
 
-LIBS := $(TEEM_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 INCLUDES += -I./Packages $(TEEM_INCLUDE)
 

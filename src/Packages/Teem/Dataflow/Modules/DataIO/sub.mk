@@ -52,7 +52,7 @@ PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions Core/Algorithms/DataIO \
 
-LIBS := $(TEEM_LIBRARY) $(MAGICK_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
