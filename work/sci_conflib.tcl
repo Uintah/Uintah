@@ -330,7 +330,7 @@ itcl_class ConfigDir {
 	    global env
 	    set root $env(SCI_DEVELOP)/work_lib/$vname/work/$dir
 	    puts "root is $root"
-	    if {[catch {set files [glob $root/Imakefile $root/*.h $root/*.tcl $root/lib*.o $root/lib*.a]}]} {
+	    if {[catch {set files [glob $root/Imakefile $root/*.c $root/*.cc $root/*.h $root/*.tcl $root/lib*.o $root/lib*.a]}]} {
 		set files ""
 	    }
 	    foreach t $files {
