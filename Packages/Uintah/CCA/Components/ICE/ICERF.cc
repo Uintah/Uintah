@@ -17,8 +17,8 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-#define ANNULUSICE 
-//#undef ANNULUSICE
+//#define ANNULUSICE 
+#undef ANNULUSICE
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDiv_vol_frac_vel_CC--
@@ -582,6 +582,10 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     double areaY = dx.x() * dx.z();
     double areaZ = dx.x() * dx.y();
     IntVector right, left, top, bottom, front, back;
+    CCVariable<double> term1;
+    CCVariable<double> term2;   
+    CCVariable<double> term3;
+        
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> speedSound;
     constCCVariable<double> press_CC;
@@ -610,6 +614,10 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     new_dw->get(pressY_FC,    lb->pressY_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressZ_FC,    lb->pressZ_FCLabel, 0, patch, gac, 1);
     
+    new_dw->allocateTemporary(term1,  patch);
+    new_dw->allocateTemporary(term2,  patch);
+    new_dw->allocateTemporary(term3,  patch);
+    
      for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx    = matl->getDWIndex();
@@ -621,7 +629,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       if(ice_matl){
         old_dw->get(vel_CC[m],lb->vel_CCLabel,       indx, patch, gn,0);   
       } else {
-        new_dw->get(vel_CC[m],lb->vel_CCLabel,       indx, patch, gn,0);   
+        new_dw->get(vel_CC[m],lb->vel_CCLabel,      indx, patch, gn,0);   
       }
     }
 
@@ -650,7 +658,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
              
         //__________________________________
         //  term1
-        double term1, term1_X, term1_Y, term1_Z;
+        double term1_X, term1_Y, term1_Z;
         double tmp_R = 0.0, tmp_L   = 0.0;
         double tmp_T = 0.0, tmp_BOT = 0.0;
         double tmp_F = 0.0, tmp_BK  = 0.0;
@@ -679,14 +687,11 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
 
         term1_X =(tmp_R * pressX_FC[right] - tmp_L  * pressX_FC[left])  *areaX;   
         term1_Y =(tmp_T * pressY_FC[top]   - tmp_BOT* pressY_FC[bottom])*areaY;     
-        term1_Z =(tmp_F * pressZ_FC[front] - tmp_BK * pressZ_FC[back])  *areaZ;   
-
-        term1 = term1_X + term1_Y + term1_Z;
-
-        term1 *= f_theta[c];
+        term1_Z =(tmp_F * pressZ_FC[front] - tmp_BK * pressZ_FC[back])  *areaZ;
+        term1[c] = f_theta[c] * (term1_X + term1_Y + term1_Z);
         //__________________________________
         // Gradient of press_FC term
-        double term2, term2_X, term2_Y, term2_Z;
+        double term2_X, term2_Y, term2_Z;
         Vector U = Vector(0,0,0);
         for (int dir = 0; dir <3; dir++) {  //loop over all three directons
           for(int mat = 0; mat < numMatls; mat++) {
@@ -703,12 +708,12 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         term2_Z = ( f_theta[c] * U.z() - vol_frac_CC * vel_CC[m][c].z() ) * 
                  (pressZ_FC[front] - pressZ_FC[back])  * areaZ; 
 
-        term2 = term2_X + term2_Y + term2_Z;
+        term2[c] = term2_X + term2_Y + term2_Z;
 
         
         //__________________________________
         //  Divergence of work flux
-        double term3, term3_X, term3_Y, term3_Z;
+        double term3_X, term3_Y, term3_Z;
        
         term3_X = (uvel_FC[m][right]  * pressDiffX_FC[right] - 
                  uvel_FC[m][left]   * pressDiffX_FC[left] )   * areaX;
@@ -719,9 +724,9 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         term3_Z = (wvel_FC[m][front]  * pressDiffZ_FC[front] - 
                  wvel_FC[m][back]   * pressDiffZ_FC[back])    * areaZ; 
                  
-        term3 = term3_X + term3_Y + term3_Z;
+        term3[c] = term3_X + term3_Y + term3_Z;
   
-        int_eng_source[c] = (-term1 + term2 - term3) * delT;
+        int_eng_source[c] = (-term1[c] + term2[c] - term3[c]) * delT;
       }  // iter loop
       
 /*`==========TESTING==========*/
@@ -746,6 +751,10 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         ostringstream desc;
         desc <<  "sources_sinks_Mat_" << indx << "_patch_"<<  patch->getID();
         printData(patch,1,desc.str(),"int_eng_source_RF", int_eng_source);
+        printData(patch,1,desc.str(),"term1", term1);
+        printData(patch,1,desc.str(),"term2", term2);
+        printData(patch,1,desc.str(),"term3", term3);
+#if 0
         if (m == 0 ){
           printData_FC( patch,1, desc.str(), "pressX_FC",     pressX_FC);
           printData_FC( patch,1, desc.str(), "pressY_FC",     pressY_FC);
@@ -757,6 +766,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         printData_FC( patch,1, desc.str(), "uvel_FC",       uvel_FC[m]);
         printData_FC( patch,1, desc.str(), "vvel_FC",       vvel_FC[m]);
         printData_FC( patch,1, desc.str(), "wvel_FC",       wvel_FC[m]);
+#endif 
       }
     }  // matl loop
   }  // patch loop
@@ -913,7 +923,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         ostringstream desc;
         desc<<"TOP_addExchangeToMomentumAndEnergy_RF"<<indx<<"_patch_"
             <<patch->getID();
-        printData(   patch,1, desc.str(),"Temp_CC",    Temp_CC[m]);     
+        printData(   patch,1, desc.str(),"Temp_CC",    old_Temp[m]);     
         printData(   patch,1, desc.str(),"int_eng_L",  int_eng_L[m]);   
         printData(   patch,1, desc.str(),"mass_L",     mass_L[m]);      
         printVector( patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);            
