@@ -21,7 +21,6 @@
 #include <sci_defs.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
-#include <Core/Util/scirun_env.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <string>
