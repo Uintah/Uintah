@@ -199,17 +199,16 @@ void Isosurface::execute()
   }
 
   // Color the surface
-//   have_colorfield=incolorfield->get(colorfield);
+  //   have_colorfield=incolorfield->get(colorfield);
   have_ColorMap=inColorMap->get(cmap);
   
   iso_value = gui_iso_value.get();
   switch ( use_algorithm.get() ) {
   case 0:  // Marching Cubes
-    // for now, use a trivial MC
     if ( !mc_alg ) {
       string type = string("MC::") + field->get_type_name();
       if ( !loader.get( type, mc_alg ) ) {
-	error( "can not work with this field\n");
+	error( "Marching Cubes can not work with this field\n");
 	return;
       }
     }
@@ -234,7 +233,6 @@ void Isosurface::execute()
   case 2:  // View Dependent
     if ( !sage_alg ) {
       string type = string("Sage::") + field->get_type_name();
-      cerr <<"look for alg = " << type << endl;
       if ( !loader.get( type, sage_alg ) ) {
 	error( "SAGE can not work with this field\n");
 	return;
