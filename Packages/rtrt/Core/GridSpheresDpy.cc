@@ -9,7 +9,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 
-#ifdef __GNUG__
+#if defined(__GNUG__) || defined(__ECC)
 #  include <values.h>
 #endif
 
