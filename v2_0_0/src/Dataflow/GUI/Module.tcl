@@ -669,12 +669,13 @@ proc disableModule { module state } {
 }
 
 proc checkForDisabledModules { args } {
-    global Disabled
+    global Disabled Subnet
     set args [lsort -unique $args]
     foreach modid $args {
+	if [isaSubnetEditor $modid] continue;
 	# assume module is disabled
 	set Disabled($modid) 1
-	foreach conn [getModuleConnections $modid] {
+	foreach conn $Subnet(${modid}_connections) {
 	    # if connection is enabled, then enable module
 	    if { !$Disabled([makeConnID $conn]) } {
 		set Disabled($modid) 0
@@ -682,6 +683,7 @@ proc checkForDisabledModules { args } {
 		break;
 	    }
 	}
+	if {![llength $Subnet(${modid}_connections)]} {set Disabled($modid) 0}
 	$modid setColorAndTitle
     }
 }
@@ -717,7 +719,7 @@ proc drawConnections { connlist } {
 	    canvasTooltip $id $HelpText(Connection)
 	} else {
 	    eval $canvas coords $id $path
-	    eval $canvas itemconfigure $flags
+	    eval $canvas itemconfigure $id $flags
 	    eval $minicanvas coords $id [scalePath $path]
 	    eval $minicanvas itemconfigure $miniflags
 	}
@@ -815,13 +817,18 @@ proc canvasExists { canvas arg } {
 proc disableConnection { conn } {
     global Subnet Disabled Color
     set connid [makeConnID $conn]
+    set realConn [findRealConnection $conn]
     if {!$Disabled($connid)} {
 	set Disabled($connid) 1
-	netedit blockconnection $connid
+	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
+	    netedit blockconnection [makeConnID $realConn]
+	}
 	set Color(Notes-$connid) $Color(ConnDisabled)
     } else {
 	set Disabled($connid) 0
-	netedit unblockconnection $connid
+	if { ![isaSubnet [oMod realConn]] && ![isaSubnet [iMod realConn]] } {
+	    netedit unblockconnection [makeConnID $realConn]
+	}
 	set Color(Notes-$connid) $Color($connid)
     }
     $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $connid
@@ -896,6 +903,7 @@ proc createConnection { conn { undo 0 } { tell_SCIRun 1 } } {
     drawConnections [list $conn]
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
+    checkForDisabledModules [oMod conn] [iMod conn]
 
     #if we got here from undo, record this action as undoable
     if { $undo } {
@@ -934,6 +942,7 @@ proc destroyConnection { conn { undo 0 } { tell_SCIRun 1 } } {
 
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
+    checkForDisabledModules [oMod conn] [iMod conn]
 
     #if we got here from undo, record this action as undoable
     if { $undo } {
