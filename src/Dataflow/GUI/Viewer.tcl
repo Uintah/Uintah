@@ -48,7 +48,7 @@ itcl_class SCIRun_Render_Viewer {
 	set make_progress_graph 0
 	set make_time 0
 	set openViewersList ""
-	puts "openViewersList length: [llength $openViewersList]"
+	#puts "openViewersList length: [llength $openViewersList]"
     }
 
     method makeViewWindowID {} {
