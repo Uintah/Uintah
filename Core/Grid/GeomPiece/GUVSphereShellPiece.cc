@@ -30,8 +30,8 @@ GUVSphereShellPiece::GUVSphereShellPiece(ProblemSpecP& ps)
       child->require("zone_center_theta",theta);
       child->require("zone_center_phi",phi);
       child->require("zone_radius",radius);
-      d_theta_zone.push_back(theta);
-      d_phi_zone.push_back(phi);
+      d_theta_zone.push_back(theta*M_PI/180.0);
+      d_phi_zone.push_back(phi*M_PI/180.0);
       d_radius_zone.push_back(radius);
     }
   }
