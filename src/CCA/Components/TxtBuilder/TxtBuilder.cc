@@ -85,6 +85,7 @@ void TxtBuilder::setServices(const sci::cca::Services::pointer& services)
 }
 
 enum TxtCmd{ 
+  USE_CLUSTER,
   LIST_ALL, 
   LIST_COMPONENTS, 
   LIST_PORTS, 
@@ -107,6 +108,7 @@ enum TxtCmd{
 };
 
 char *cmddesc[]={
+  "use cluster <user> <domain>: create slave framework on user@domain",
   "list all:                    list all available components",
   "list components:             list all active components",
   "list ports <comp>:           list ports of component <comp>",
@@ -148,7 +150,8 @@ bool TxtBuilder::exec_command(char cmdline[])
 {
    string args[4];
    int cmd=parse(cmdline,args);
-   if (cmd==LIST_ALL) list_all(args);
+   if (cmd==USE_CLUSTER) use_cluster(args);
+   else if (cmd==LIST_ALL) list_all(args);
    else if(cmd==LIST_COMPONENTS) list_components(args);
    else if(cmd==LIST_PORTS) list_ports(args);
    else if(cmd==LIST_COMPATIBLE) list_compatible(args);
@@ -205,6 +208,18 @@ int TxtBuilder::parse(string cmdline, string args[])
   return BAD_COMMAND;
 }
 
+
+void TxtBuilder::use_cluster(string args[])
+{
+  string user=args[0];
+  string domain=args[1];
+  string cmd="ssh ";
+  cmd+="kzhang@qwerty.sci.utah.edu ~/SCIRun/cca-debug/ploader from.buzz.sci.utah.edu:00:11";
+  //cmd+=user+"@"+domain+" ~/SCIRun/cca-debug/ploader from.buzz.sci.utah.edu:00:11";
+  cout<<"Connecting to "<<user<<"@"<<domain<<"...\n";
+  cout<<cmd<<endl;
+  system(cmd.c_str());
+}
 
 void TxtBuilder::list_all(string args[])
 {
