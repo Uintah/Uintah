@@ -16,13 +16,13 @@
 */
 
 /*
- *  FlatToTriSurf.cc
+ *  CVRTItoTetVolGrad.cc
  *
  *  Written by:
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   February 2001
+ *   May 2001
  *
  *  Copyright (C) 2001 SCI Group
  */

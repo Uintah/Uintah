@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoTetVolPot.cc
+ *  CVRTItoTriSurfPot.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -41,14 +41,14 @@ using namespace SCIRun;
 
 int
 main(int argc, char **argv) {
-  TetVolMesh *tvm = new TetVolMesh();
+  TriSurfMesh *tsm = new TriSurfMesh();
   if (argc != 5 && argc != 6) {
-    cerr << "Usage: "<<argv[0]<<" pts tetras pot [channels] fieldout\n";
+    cerr << "Usage: "<<argv[0]<<" pts fac pot [channels] fieldout\n";
     return 0;
   }
 
   ifstream ptsstream(argv[1]);
-  ifstream tetstream(argv[2]);
+  ifstream facstream(argv[2]);
   ifstream potstream(argv[3]);
 
   int npts=0;
@@ -58,17 +58,17 @@ main(int argc, char **argv) {
     if (!ptsstream) break;
     ptsstream >> y >> z;
     npts++;
-    tvm->add_point(Point(x,y,z));
+    tsm->add_point(Point(x,y,z));
   }
 
-  int ntets=0;
-  while(tetstream) {
-    int i, j, k, l;
-    tetstream >> i;
-    if (!tetstream) break;
-    tetstream >> j >> k >> l;
-    ntets++;
-    tvm->add_tet(i-1, j-1, k-1, l-1);
+  int nfacs=0;
+  while(facstream) {
+    int i, j, k;
+    facstream >> i;
+    if (!facstream) break;
+    facstream >> j >> k;
+    nfacs++;
+    tsm->add_triangle(i-1, j-1, k-1);
   }
   
   Array1<int> channels(npts);
@@ -96,19 +96,19 @@ main(int argc, char **argv) {
     pots[ii]=pot;
   }
 
-  TetVolMeshHandle tvmH(tvm);
-  TetVol<double> *tv = scinew TetVol<double>(tvmH, Field::NODE);
+  TriSurfMeshHandle tsmH(tsm);
+  TriSurf<double> *ts = scinew TriSurf<double>(tsmH, Field::NODE);
 
   for (ii=0; ii<npts; ii++)
-    tv->fdata()[ii]=pots[channels[ii]];
-  FieldHandle tvH(tv);
+    ts->fdata()[ii]=pots[channels[ii]];
+  FieldHandle tsH(ts);
 
   if (argc == 6) {
     TextPiostream out_stream(argv[5], Piostream::Write);
-    Pio(out_stream, tvH);
+    Pio(out_stream, tsH);
   } else {
     TextPiostream out_stream(argv[4], Piostream::Write);
-    Pio(out_stream, tvH);
+    Pio(out_stream, tsH);
   }    
   return 0;  
 }    
