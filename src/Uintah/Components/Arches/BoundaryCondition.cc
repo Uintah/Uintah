@@ -95,8 +95,6 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
   // 2) The labels used/computed by setInletVelocityBC (SIVBC)
   d_densityCPLabel = scinew VarLabel("densityCP", 
 				   CCVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC", 
-				    CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC", 
 				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC", 
@@ -688,7 +686,6 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 		    numGhostCells);
 
       // This task computes new density, uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_densitySIVBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch);
       tsk->computes(new_dw, d_wVelocitySIVBCLabel, matlIndex, patch);
@@ -719,7 +716,7 @@ BoundaryCondition::sched_computePressureBC(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires old density, pressure and velocity
-      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -846,23 +843,23 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   // get cellType and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
   switch(eqnType) {
   case Discretization::PRESSURE:
-    old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
-    old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
-    old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     break;
   case Discretization::MOMENTUM:
-    old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
-    old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
-    old_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     break;
   default:
@@ -903,12 +900,12 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
   }
   // Calculate the velocity wall BC
   // For Discretization::PRESSURE
-  //  inputs : densitySIVBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+  //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
   //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
   //           [u,v,w]VelNonLinSrcPBLM
   // For Discretization::MOMENTUM
-  //  inputs : densitySIVBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
+  //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
   //           [u,v,w]VelNonLinSrcMBLM
@@ -1403,9 +1400,9 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     // Get a copy of the current flowinlet
     FlowInlet fi = d_flowInlets[indx];
 
-#ifdef WONT_COMPILE_YET
     // assign flowType the value that corresponds to flow
-    CellTypeInfo flowType = FLOW;
+    //CellTypeInfo flowType = FLOW;
+
     FORT_INLBCS(domLoU.get_pointer(), domHiU.get_pointer(), 
 		idxLoU.get_pointer(), idxHiU.get_pointer(), 
 		uVelocity.getPointer(),
@@ -1419,14 +1416,13 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 		idxLo.get_pointer(), idxHi.get_pointer(), 
 		density.getPointer(),
 		cellType.getPointer(),
-		&fi.cellTypeID, &fi.flowRate, area, &fi.density, 
-		&fi.inletType,
-		flowType);
-#endif
+		&fi.d_cellTypeID); 
+                //      &fi.flowRate, area, &fi.density, 
+	        //	&fi.inletType,
+	        //	flowType);
 
   }
   // Put the calculated data into the new DW
-  new_dw->put(density, d_densitySIVBCLabel, matlIndex, patch);
   new_dw->put(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch);
@@ -1454,15 +1450,15 @@ BoundaryCondition::calculatePressBC(const ProcessorGroup* ,
   // get cellType, pressure and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(pressure, d_pressurePSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(pressure, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Get the low and high index for the patch and the variables
@@ -1860,6 +1856,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.35  2000/07/03 05:30:13  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.34  2000/07/02 05:47:29  bbanerje
 // Uncommented all PerPatch and CellInformation stuff.
 // Updated array sizes in inlbcs.F

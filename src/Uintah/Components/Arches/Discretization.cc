@@ -41,7 +41,7 @@ Discretization::Discretization()
 				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
 				    SFCZVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+  d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				   CCVariable<double>::getTypeDescription() );
@@ -153,6 +153,10 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
 
   // Get the required data
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
   switch(eqnType) {
   case PRESSURE:
     new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
@@ -161,10 +165,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		numGhostCells);
     new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
     break;
   case MOMENTUM:
     new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
@@ -172,10 +172,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     new_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
-		numGhostCells);
-    old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
   default:
@@ -342,13 +338,13 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   StencilMatrix<SFCXVariable<double> > uVelCoeff;
@@ -472,18 +468,18 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   CCVariable<double> viscosity;
   CCVariable<double> scalar;
 
-  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   // ithe componenet of scalar vector
   old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  new_dw->get(wVelocity, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // Get the PerPatch CellInformation data
@@ -796,6 +792,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.21  2000/07/03 05:30:14  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.20  2000/07/02 05:47:30  bbanerje
 // Uncommented all PerPatch and CellInformation stuff.
 // Updated array sizes in inlbcs.F

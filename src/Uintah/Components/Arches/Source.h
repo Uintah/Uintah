@@ -168,7 +168,7 @@ private:
       const VarLabel* d_uVelocitySIVBCLabel ;
       const VarLabel* d_vVelocitySIVBCLabel ;
       const VarLabel* d_wVelocitySIVBCLabel ;
-      const VarLabel* d_densitySIVBCLabel ;
+      const VarLabel* d_densityCPLabel ;
       const VarLabel* d_viscosityCTSLabel ;
       const VarLabel* d_uVelocityCPBCLabel ;
       const VarLabel* d_vVelocityCPBCLabel ;
@@ -212,6 +212,9 @@ private:
   
 //
 // $Log$
+// Revision 1.16  2000/07/03 05:30:17  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.15  2000/07/02 05:47:31  bbanerje
 // Uncommented all PerPatch and CellInformation stuff.
 // Updated array sizes in inlbcs.F

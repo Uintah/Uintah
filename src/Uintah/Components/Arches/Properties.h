@@ -160,7 +160,6 @@ private:
       // Variable labels used by simulation controller
       const VarLabel* d_densitySPLabel;   // Input density
       const VarLabel* d_densityCPLabel;   // Output density
-      const VarLabel* d_densitySIVBCLabel;   // Input density
       const VarLabel* d_densityRCPLabel;   // Output density
       const VarLabel* d_scalarSPLabel;
 }; // end class Properties
@@ -172,6 +171,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/07/03 05:30:15  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.13  2000/06/30 04:19:17  rawat
 // added turbulence model and compute properties
 //

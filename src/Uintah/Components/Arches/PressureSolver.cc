@@ -54,7 +54,7 @@ PressureSolver::PressureSolver(int nDim,
 				 SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
 				 SFCZVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+  d_densityCPLabel = scinew VarLabel("densityCP",
 			       CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 			       CCVariable<double>::getTypeDescription() );
@@ -149,7 +149,7 @@ void PressureSolver::solve(const LevelP& level,
   //++d_generation;
 
   //computes stencil coefficients and source terms
-  // require : pressureIN, densitySIVBC, viscosityCTS, [u,v,w]VelocitySIVBC
+  // require : pressureIN, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
   // compute : uVelConvCoefPBLM, vVelConvCoefPBLM, wVelConvCoefPBLM
   //           uVelCoefPBLM, vVelCoefPBLM, wVelCoefPBLM, uVelLinSrcPBLM
   //           vVelLinSrcPBLM, wVelLinSrcPBLM, uVelNonLinSrcPBLM 
@@ -203,16 +203,16 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       // Requires
       tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       tsk->requires(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
 
       /// requires convection coeff because of the nodal
       // differencing
@@ -253,25 +253,25 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   for(int index = 1; index <= Arches::NDIM; ++index) {
 
     // Calculate Velocity Coeffs :
-    //  inputs : [u,v,w]VelocitySIVBC, densitySIVBC, viscosityCTS
+    //  inputs : [u,v,w]VelocitySIVBC, densityCP, viscosityCTS
     //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
     d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, index,
 					 Discretization::PRESSURE);
 
     // Calculate Velocity source
-    //  inputs : [u,v,w]VelocitySIVBC, densitySIVBC, viscosityCTS
+    //  inputs : [u,v,w]VelocitySIVBC, densityCP, viscosityCTS
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    d_source->calculateVelocitySource(pc, patch, new_dw, new_dw, 
+    d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				      delta_t, index,
 				      Discretization::PRESSURE);
 
     // Calculate the Velocity BCS
-    //  inputs : densitySIVBC, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
+    //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
     //           [u,v,w]VelNonLinSrcPBLM
-    d_boundaryCondition->velocityBC(pc, patch, new_dw, new_dw, 
+    d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				    index,
 				    Discretization::PRESSURE);
 
@@ -294,7 +294,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, delta_t);
 
   // Calculate Pressure Source
-  //  inputs : pressureIN, [u,v,w]VelocitySIVBC, densitySIVBC,
+  //  inputs : pressureIN, [u,v,w]VelocitySIVBC, densityCP,
   //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
   //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
   d_source->calculatePressureSource(pc, patch, old_dw, new_dw, delta_t);
@@ -335,6 +335,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.27  2000/07/03 05:30:15  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.26  2000/06/29 22:56:43  bbanerje
 // Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
 //

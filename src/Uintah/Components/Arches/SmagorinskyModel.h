@@ -188,7 +188,6 @@ private:
       const VarLabel* d_uVelocityCPBCLabel;
       const VarLabel* d_vVelocityCPBCLabel;
       const VarLabel* d_wVelocityCPBCLabel;
-      const VarLabel* d_densitySIVBCLabel;
       const VarLabel* d_uVelLinSrcPBLMLabel;
       const VarLabel* d_vVelLinSrcPBLMLabel;
       const VarLabel* d_wVelLinSrcPBLMLabel;

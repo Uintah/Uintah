@@ -434,7 +434,6 @@ private:
 
       // Labels for data used/computed by setInletVelocityBC()
       const VarLabel* d_densityCPLabel;
-      const VarLabel* d_densitySIVBCLabel;
       const VarLabel* d_uVelocitySIVBCLabel;
       const VarLabel* d_vVelocitySIVBCLabel;
       const VarLabel* d_wVelocitySIVBCLabel;
@@ -479,6 +478,9 @@ private:
   
 //
 // $Log$
+// Revision 1.32  2000/07/03 05:30:14  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.31  2000/07/02 05:47:30  bbanerje
 // Uncommented all PerPatch and CellInformation stuff.
 // Updated array sizes in inlbcs.F
