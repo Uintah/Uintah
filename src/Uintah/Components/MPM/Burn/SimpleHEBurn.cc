@@ -20,7 +20,6 @@
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
-#include <Uintah/Components/MPM/Burn/Ignition.h>
 
 using namespace Uintah::MPM;
 
@@ -46,14 +45,11 @@ void SimpleHEBurn::initializeBurnModelData(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouseP& new_dw)
 {
-  //   const MPMLabel* lb = MPMLabel::getLabels();
-
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<int> pIsIgnited;
    new_dw->allocate(pIsIgnited, lb->pIsIgnitedLabel, pset);
    CCVariable<double> burnedMass;
-   new_dw->allocate(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(), patch);
-
+   new_dw->allocate(burnedMass,lb->cBurnedMassLabel, matl->getDWIndex(), patch);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
@@ -85,6 +81,9 @@ void SimpleHEBurn::addComputesAndRequires(Task* task,
   task->requires(old_dw, lb->pIsIgnitedLabel, matl->getDWIndex(),
 				patch, Ghost::None);
 
+//  task->requires(old_dw, lb->pSurfLabel, matl->getDWIndex(),
+//				patch, Ghost::None);
+
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
 				patch, Ghost::None);
 
@@ -99,6 +98,7 @@ void SimpleHEBurn::addComputesAndRequires(Task* task,
   task->computes(new_dw, lb->pIsIgnitedLabel_preReloc,matl->getDWIndex(),patch);
   task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
   task->computes(new_dw, lb->cBurnedMassLabel,matl->getDWIndex(),patch);
+//  task->computes(new_dw, lb->pSurfLabel_preReloc,matl->getDWIndex(),patch);
   task->computes(new_dw, lb->pVolumeLabel_preReloc,matl->getDWIndex(),patch);
 }
 
@@ -120,6 +120,8 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   old_dw->get(px, lb->pXLabel, pset);
   ParticleVariable<int> pIsIgnitedOld;
   old_dw->get(pIsIgnitedOld, lb->pIsIgnitedLabel, pset);
+//  ParticleVariable<int> pissurf;
+//  old_dw->get(pissurf, lb->pSurfLabel, pset);
   ParticleVariable<double> pTemperature;
   old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
   CCVariable<double> burnedMass;
@@ -139,7 +141,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
-     if( ig.checkForIgnition(pTemperature[idx], pIsIgnitedOld[idx], b)==1){
+     if(pTemperature[idx] > b || pIsIgnitedOld[idx]==1){
         pIsIgnitedNew[idx]=1;
 	IntVector ci;
 	if(patch->findCell(px[idx],ci)){
@@ -154,6 +156,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 	     pmass[idx]=0.0;
 	     pvolume[idx]=0.0;
 	     remove_subset->addParticle(idx);
+             cout << px[idx] << " " <<  pmass[idx] << endl;
 	     //Find neighboring particle, ignite it
 	     double npd=9999.9;
 	     double cpd;
@@ -168,6 +171,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 			newburn_idx=idx2;
 		  }
 	     }
+             cout << "NewParticle " << px[newburn_idx] << endl;
 	     pIsIgnitedNew[newburn_idx]=1;
 	     pIsIgnitedNew[idx]=2;
 	   }
@@ -181,6 +185,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 
   new_dw->put(pmass,lb->pMassLabel_preReloc);
   new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
+//  new_dw->put(pissurf,lb->pSurfLabel_preReloc);
   new_dw->put(burnedMass,lb->cBurnedMassLabel, matlindex, patch);
   new_dw->put(pIsIgnitedNew,lb->pIsIgnitedLabel_preReloc);
 
@@ -188,12 +193,9 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
-// Revision 1.16  2000/11/07 22:52:21  guilkey
-// Changed the way that materials are looped over.  Instead of each
-// function iterating over all materials, and then figuring out which ones
-// are MPMMaterials on the fly, SimulationState now stores specific information
-// about MPMMaterials, so that for doing MPM, only those materials are returned
-// and then looped over.  This will make coupling with a cfd code easier I hope.
+// Revision 1.17  2000/11/08 19:22:07  guilkey
+// Recommitting old versions of these files which don't have the changes
+// which I previously committed accidentally.
 //
 // Revision 1.15  2000/09/25 20:23:18  sparker
 // Quiet g++ warnings

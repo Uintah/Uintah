@@ -11,7 +11,6 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Components/MPM/Burn/Ignition.h>
 
 
 namespace Uintah {
@@ -54,8 +53,6 @@ WARNING
       // copy constructor
       SimpleHEBurn(const SimpleHEBurn &burn);
       SimpleHEBurn & operator=(const SimpleHEBurn &burn);
-
-      Ignition ig;
       
     public:
       // Constructor
@@ -87,12 +84,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
-// Revision 1.6  2000/11/07 22:52:21  guilkey
-// Changed the way that materials are looped over.  Instead of each
-// function iterating over all materials, and then figuring out which ones
-// are MPMMaterials on the fly, SimulationState now stores specific information
-// about MPMMaterials, so that for doing MPM, only those materials are returned
-// and then looped over.  This will make coupling with a cfd code easier I hope.
+// Revision 1.7  2000/11/08 19:22:07  guilkey
+// Recommitting old versions of these files which don't have the changes
+// which I previously committed accidentally.
 //
 // Revision 1.5  2000/07/25 19:10:25  guilkey
 // Changed code relating to particle combustion as well as the
