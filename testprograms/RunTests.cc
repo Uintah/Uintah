@@ -16,8 +16,11 @@
 #include "TestMatrix3/testmatrix3.h"
 #include "TestConsecutiveRangeSet/TestConsecutiveRangeSet.h"
 #include "TestRangeTree/TestRangeTree.h"
+#include "TestBoxGrouper/TestBoxGrouper.h"
 #include <stdlib.h>
 #include <unistd.h>
+
+using namespace Uintah;
 
 void usage(char* prog_name)
 {
@@ -71,6 +74,7 @@ int main(int argc, char* argv[])
   suites->addSubTree(matrix3TestTree());
   suites->addSubTree(ConsecutiveRangeSetTestTree());
   suites->addSubTree(RangeTreeTestTree(verbose, 20000));
+  suites->addSubTree(BoxGrouperTestTree(verbose));
 
   /* ADD MORE POPULATING METHODS ABOVE FOR OTHER TEST SUITES */
 
