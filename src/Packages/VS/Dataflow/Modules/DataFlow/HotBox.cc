@@ -143,6 +143,7 @@ private:
   void executeProbe();
   void execAdjacency();
   void execInjuryList();
+  void executeOQAFMA();
 
 public:
   HotBox(GuiContext*);
@@ -256,10 +257,10 @@ HotBox::execute()
   }
   labelIndexVal = 0;
 
+  // run the probe's functions
   executeProbe();
 
   const int dataSource(datasource_.get());
-  const int queryType(querytype_.get());
   const string selectionSource(selectionsource_.get());
   const string currentSelection(currentselection_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
@@ -289,7 +290,7 @@ HotBox::execute()
   }
 
   // if the selection source is from the HotBox UI -- ignore the probe
-  char partsName[256], capitalName[256], selectName[256];
+  char selectName[256];
 
   if(selectionSource == "fromHotBoxUI")
   {
@@ -362,142 +363,13 @@ HotBox::execute()
       VH_Anatomy_findBoundingBox( boundBoxList, selectName);
 
   // we now have the anatomy name corresponding to the label value at the voxel
-  char *oqafma_relation[VH_LM_NUM_NAMES];
-  int num_struQLret;
+
   if(dataSource == VS_DATASOURCE_OQAFMA)
   { // get the ontological hierarchy information
     fprintf(stderr, "dataSource = OQAFMA\n");
-    ns1__processStruQLResponse resultStruQL;
-    ServiceInterfaceSoapBinding ws;
-    // build the query to send to OQAFMA
-    std::string p2;
-    switch(queryType)
-    {
-      case VS_QUERYTYPE_ADJACENT_TO:
-      case VS_QUERYTYPE_CONTAINS:
-      {
-        p2 = "WHERE X->\":NAME\"->\"";
-        p2 += capitalize(capitalName, selectName);
-        p2 += "\", X->\"part\"+.\"contains\"->Y, Y->\":NAME\"->Contains CREATE The";
-        p2 += space_to_underbar(partsName, capitalName);
-        p2 += "(Contains)";
-        break;
-      }
-      case VS_QUERYTYPE_PARTS:
-      {
-        p2 = "WHERE X->\":NAME\"->\"";
-        p2 += capitalize(capitalName, selectName);
-        p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
-        p2 += space_to_underbar(partsName, capitalName);
-        p2 += "(Parts)";
-        break;
-      }
-      case VS_QUERYTYPE_PARTCONTAINS:
-      default:
-      {
-      }
-    }
-    cout << "OQAFMA query: " <<  p2  << endl;
-    // launch a query via OQAFMA/Protege C function calls
-    if (ws.ns1__processStruQL(p2, resultStruQL) != SOAP_OK)
-    {
-      soap_print_fault(ws.soap, stderr);
-    }
-    else
-    {
-      // parse XML query results
-      std::string OQAFMA_result = resultStruQL._processStruQLReturn;
-      cout << OQAFMA_result;
 
-      // Instantiate a DOM parser for the OQAFMA query results
-      XercesDOMParser struQLretParser;
-      struQLretParser.setDoValidation(false);
-    
-      // create a Xerces InputSource to hold the query results
-       MemBufInputSource StruQLRetInputSrc (
-            (const XMLByte*)OQAFMA_result.c_str(),
-            strlen(OQAFMA_result.c_str()),
-            "HotBoxStruQL", false);
-      try {
-        struQLretParser.parse(StruQLRetInputSrc);
-      }  catch (const XMLException& toCatch) {
-        std::cerr << "Error during parsing: StruQLReturn\n"
-                  << "Exception message is:  " <<
-          xmlto_string(toCatch.getMessage());
-          return;
-      }
-
-      DOMDocument *struQLretDoc = struQLretParser.getDocument();
-      DOMNodeList *struQLretList;
-      const XMLCh* xs;
-      switch(queryType)
-      {
-        case VS_QUERYTYPE_ADJACENT_TO:
-        case VS_QUERYTYPE_CONTAINS:
-        {
-          xs = to_xml_ch_ptr("Contains");
-          break;
-        }
-        case VS_QUERYTYPE_PARTS:
-        {
-          xs = to_xml_ch_ptr("Parts");
-          break;
-        }
-        case VS_QUERYTYPE_PARTCONTAINS:
-        default:
-        {
-        }
-      } // end switch(queryType)
-      struQLretList = struQLretDoc->getElementsByTagName(xs);
-
-      num_struQLret = struQLretList->getLength();
-      if (num_struQLret == 0) {
-        cout << "HotBox.cc: no entities in StruQL return" << endl;
-      }
-      else
-      {
-        cout << "HotBox.cc: " << num_struQLret
-             << " entities in StruQL return" << endl;
-        if(num_struQLret >= VH_LM_NUM_NAMES)
-           num_struQLret = VH_LM_NUM_NAMES;
-        for (int i = 0;i < num_struQLret; i++)
-        {
-          if (!(struQLretList->item(i)))
-          {
-            cout << "Error: NULL DOM node" << std::endl;
-            continue;
-          }
-          DOMNode &node = *(struQLretList->item(i));
-          cout << "Node[" << i << "] type: " << node.getNodeType();
-          cout << " name: " << to_char_ptr(node.getNodeName());
-          if(node.hasChildNodes())
-          {
-              // cout << " has child nodes " << endl;
-              DOMNode  *elem = node.getFirstChild();
-              if(elem == 0)
-                  cout << " cannot get first child" << endl;
-              else
-              {
-                  // cout << " element: "
-                  //     << to_char_ptr(elem->getNodeValue()) << endl;
-                  oqafma_relation[i] =
-                       strdup(to_char_ptr(elem->getNodeValue()));
-              }
-          }
-          else
-              cout << " has no child nodes" << endl;
-        } // end for (i = 0;i < num_struQLret; i++)
-      } // end else (num_struQLret != 0)
-    } // end else (SOAP_OK)
-    // catch(exception& e)
-    // {
-    //   printf("Unknown exception has occured\n");
-    // }
-    // catch(...)
-    // {
-    //   printf("Unknown exception has occured\n");
-    // }
-
+    // get the ontological hierarchy information for the current selection
+    executeOQAFMA();
   } // end if(dataSource == VS_DATASOURCE_OQAFMA)
   // dataSource == FILES -- adjacency can only be gotten from FILES
   fprintf(stderr, "dataSource = FILES[%d]\n", dataSource);
@@ -604,19 +476,6 @@ HotBox::execute()
   { // clear selection source
     selectionsource_.set("fromProbe");
   }
-  // clean up
-  if(dataSource == VS_DATASOURCE_OQAFMA)
-  {
-     for (int i = 0; i < num_struQLret; i++)
-     {
-       if(oqafma_relation[i] != 0)
-       {
-         free(oqafma_relation[i]);
-         oqafma_relation[i] = 0;
-       }
-     }
-     num_struQLret = 0;
-  } // end if(dataSource == VS_DATASOURCE_OQAFMA)
 
   injured_tissue.clear();
 } // end HotBox::execute()
@@ -804,6 +663,160 @@ HotBox::execAdjacency()
     VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
 } // end HotBox::execAdjacency()
+
+void
+HotBox::executeOQAFMA()
+{ // get the ontological hierarchy information
+  char *oqafma_relation[VH_LM_NUM_NAMES];
+  char partsName[256], capitalName[256], selectName[256];
+  int num_struQLret;
+  fprintf(stderr, "dataSource = OQAFMA\n");
+  ns1__processStruQLResponse resultStruQL;
+  ServiceInterfaceSoapBinding ws;
+  // get the current selection
+  const string currentSelection(currentselection_.get());
+  strcpy(selectName, currentSelection.c_str());
+  // build the query to send to OQAFMA
+  std::string p2;
+  const int queryType(querytype_.get());
+  switch(queryType)
+  {
+    case VS_QUERYTYPE_ADJACENT_TO:
+    case VS_QUERYTYPE_CONTAINS:
+    {
+      p2 = "WHERE X->\":NAME\"->\"";
+      p2 += capitalize(capitalName, selectName);
+      p2 += "\", X->\"part\"+.\"contains\"->Y, Y->\":NAME\"->Contains CREATE The";
+      p2 += space_to_underbar(partsName, capitalName);
+      p2 += "(Contains)";
+      break;
+    }
+    case VS_QUERYTYPE_PARTS:
+    {
+      p2 = "WHERE X->\":NAME\"->\"";
+      p2 += capitalize(capitalName, selectName);
+      p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
+      p2 += space_to_underbar(partsName, capitalName);
+      p2 += "(Parts)";
+      break;
+    }
+    case VS_QUERYTYPE_PARTCONTAINS:
+    default:
+    {
+    }
+  }
+  cout << "OQAFMA query: " <<  p2  << endl;
+  // launch a query via OQAFMA/Protege C function calls
+  if (ws.ns1__processStruQL(p2, resultStruQL) != SOAP_OK)
+  {
+    soap_print_fault(ws.soap, stderr);
+  }
+  else
+  {
+    // parse XML query results
+    std::string OQAFMA_result = resultStruQL._processStruQLReturn;
+    cout << OQAFMA_result;
+
+    // Instantiate a DOM parser for the OQAFMA query results
+    XercesDOMParser struQLretParser;
+    struQLretParser.setDoValidation(false);
+  
+    // create a Xerces InputSource to hold the query results
+     MemBufInputSource StruQLRetInputSrc (
+          (const XMLByte*)OQAFMA_result.c_str(),
+          strlen(OQAFMA_result.c_str()),
+          "HotBoxStruQL", false);
+    try {
+      struQLretParser.parse(StruQLRetInputSrc);
+    }  catch (const XMLException& toCatch) {
+      std::cerr << "Error during parsing: StruQLReturn\n"
+                << "Exception message is:  " <<
+        xmlto_string(toCatch.getMessage());
+        return;
+    }
+
+    DOMDocument *struQLretDoc = struQLretParser.getDocument();
+    DOMNodeList *struQLretList;
+    const XMLCh* xs;
+    switch(queryType)
+    {
+      case VS_QUERYTYPE_ADJACENT_TO:
+      case VS_QUERYTYPE_CONTAINS:
+      {
+        xs = to_xml_ch_ptr("Contains");
+        break;
+      }
+      case VS_QUERYTYPE_PARTS:
+      {
+        xs = to_xml_ch_ptr("Parts");
+        break;
+      }
+      case VS_QUERYTYPE_PARTCONTAINS:
+      default:
+      {
+      }
+    } // end switch(queryType)
+    struQLretList = struQLretDoc->getElementsByTagName(xs);
+
+    num_struQLret = struQLretList->getLength();
+    if (num_struQLret == 0) {
+      cout << "HotBox.cc: no entities in StruQL return" << endl;
+    }
+    else
+    {
+      cout << "HotBox.cc: " << num_struQLret
+           << " entities in StruQL return" << endl;
+      if(num_struQLret >= VH_LM_NUM_NAMES)
+         num_struQLret = VH_LM_NUM_NAMES;
+      for (int i = 0;i < num_struQLret; i++)
+      {
+        if (!(struQLretList->item(i)))
+        {
+          cout << "Error: NULL DOM node" << std::endl;
+          continue;
+        }
+        DOMNode &node = *(struQLretList->item(i));
+        cout << "Node[" << i << "] type: " << node.getNodeType();
+        cout << " name: " << to_char_ptr(node.getNodeName());
+        if(node.hasChildNodes())
+        {
+            // cout << " has child nodes " << endl;
+            DOMNode  *elem = node.getFirstChild();
+            if(elem == 0)
+                cout << " cannot get first child" << endl;
+            else
+            {
+                // cout << " element: "
+                //     << to_char_ptr(elem->getNodeValue()) << endl;
+                oqafma_relation[i] =
+                     strdup(to_char_ptr(elem->getNodeValue()));
+            }
+        }
+        else
+            cout << " has no child nodes" << endl;
+      } // end for (i = 0;i < num_struQLret; i++)
+    } // end else (num_struQLret != 0)
+  } // end else (SOAP_OK)
+  // catch(exception& e)
+  // {
+  //   printf("Unknown exception has occured\n");
+  // }
+  // catch(...)
+  // {
+  //   printf("Unknown exception has occured\n");
+  // }
+
+  // clean up
+  for (int i = 0; i < num_struQLret; i++)
+  {
+    if(oqafma_relation[i] != 0)
+    {
+      free(oqafma_relation[i]);
+      oqafma_relation[i] = 0;
+    }
+  }
+  num_struQLret = 0;
+} // end HotBox::executeOQAFMA()
 
 void
 HotBox::execInjuryList()
