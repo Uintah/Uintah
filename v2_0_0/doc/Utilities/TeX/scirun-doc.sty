@@ -17,205 +17,55 @@
 %
 
 %
-% Recommened markup for latex docs.
+% Latex package to be used by scirun documents.  Markup commands exist
+% in two files.  This one and scirun-doc.tex.  Scirun-doc.tex contains
+% commands that are processed by both latex and by the builtin
+% capabilities of latex2html.  This file contains commands that are
+% completely ignored by latex2html or are processed by functions in
+% the latex2html extension file scirun-doc.perl.
+%
+% Documents should include the
+% following latex commands:
+%
+% \usepackage{scirun-doc}
+% \input{scirun-doc.tex}
 %
 
-% (Mostly) Short cuts  ==============================
-\newcommand{\SCI}{{\em SCI}}
-\newcommand{\sci}{\SCI}
-\newcommand{\scii}{SCI Institute}
-\newcommand{\BIOPSE}{\textbf{BioPSE}}
-\newcommand{\biopse}{\BIOPSE}
-\newcommand{\SR}{\textbf{SCIRun}}
-\newcommand{\sr}{\SR}
-\newcommand{\eg}{{\em e.g.,}}
-\newcommand{\ie}{{\em i.e.,}}
-\newcommand{\etc}{{\em etc.}}
-\newcommand{\etal}{{\em et al.}}
-\newcommand{\degrees}{{$^{\circ}$}}
-\newcommand{\splitline}{\begin{center}\rule{\columnwidth}{.7mm}\end{center}}
-\newcommand{\X}[1]{#1\index{#1}}
-\newcommand{\srig}{\sr{} Installation Guide}
-\newcommand{\srug}{\sr{} User's Guide}
-\newcommand{\srdg}{\sr{} Developer's Guide}
+% Define \newmucmd --- ``new markup command''.  Use \newmucmd to
+% define new markup commands.  \newmucmd takes 2 arguments.  The first
+% is the name of the new markup command and the second is a command to
+% stylize the markup command's content when processed by latex.  The
+% new markup command takes one argument which is the markup command's
+% content.   When processed by latex, content will be stylized
+% according to the second argument given to \newmucmd.  When
+% processed by latex2html, content will be a child of a <span> element
+% and stylized by a css class named after the markup command.
+\def\newmucmd#1#2{%
+  \expandafter\def\csname #1\endcsname##1{%
+    \csname #2\endcsname{##1}} }
 
-% Literal ~ character
-\newcommand{\ltilde}{\textasciitilde}
-
-% Encloses its argument between angle brackets.
-\newcommand{\ab}[1]{\latexhtml{\textless{}#1\textgreater}{<#1>}}
-
-% Inserts a left angle bracket.
-\newcommand{\la}{\latexhtml{\textless}{<}}
-
-% Inserts a right angle bracket.
-\newcommand{\ra}{\latexhtml{\textgreater}{>}}
+% XML start and end tags
+\newcommand{\xmlstarttag}[1]{\texttt{\textless{}#1\textgreater}}
+\newcommand{\xmlendtag}[1]{\texttt{/\textless{}#1\textgreater}}
 
 % Vertical elide.
-\newcommand{\velide}{\latexhtml{\(\vdots\)}{\begin{rawhtml}&#x22EE;\end{rawhtml}}}
-
-% Mark up commands =================================
-
-% Url
-%\newcommand{\url}[1]{#1}
-
-% ip address
-\newcommand{\ipaddr}[1]{#1}
-\newcommand{\localhost}{\ipaddr{127.0.0.1}}
+\newcommand{\velide}{\(\vdots\)}
 
 % Acronym
 \newcommand{\acronym}[1]{{\scshape\lowercase{#1}}}
+ 
+% A Note.  The first optional argument is the note's title.  If
+% missing then ``Note'' is used.  The next argument is the note's
+% text. 
+\newcommand{\note}[2][Note]{%
+  \vspace{1em}%
+  \begin{center}%
+    \parbox{.75\linewidth}{%
+      {\large\bfseries #1}\vspace{0.5em}\hrule\vspace{0.5em}%
+      #2
+      \vspace*{0.5em}\hrule
+    }%
+  \end{center}%
+  \vspace*{0.5em}%
+}%
 
-% Predefined acronyms
-\newcommand{\gui}{\acronym{GUI}}
-\newcommand{\tcl}{\acronym{TCL}}
-\newcommand{\xml}{\acronym{XML}}
-\newcommand{\pse}{\acronym{PSE}}
-
-% Markup the first time use of term that may be unfamiliar to the
-% reader. 
-\newcommand{\dfn}[1]{\emph{#1}}
-
-% In the next command #1 is the term and #2 is the shortcut or acronym that
-% will be used in the rest of the document. 
-\newcommand{\dfna}[2]{\emph{#1} (\acronym{#2})}
-
-% Directory name markup.
-\newcommand{\directory}[1]{\texttt{#1}}
-
-% Markup a file name.
-\newcommand{\filename}[1]{\texttt{#1}}
-
-% Markup text which is the name of a command.
-\newcommand{\command}[1]{\texttt{#1}} 
-
-% Command option.
-\newcommand{\option}[1]{\texttt{#1}}
-
-% Markup text typed at the keyboard.
-\newcommand{\keyboard}[1]{\texttt{#1}} 
-
-% Parameterized text - marks up text that is to be
-% substituted for by the reader.
-\newcommand{\ptext}[1]{\textit{#1}}
-\newcommand{\replaceable}[1]{\textit{#1}}
-
-% Markup text the user might see on his screen.
-\newcommand{\screen}[1]{\texttt{#1}}
-
-% Markup the name of a GUI menu.
-\newcommand{\guimenu}[1]{\textbf{#1}}
-
-% Markup the name of a GUI menu.
-\newcommand{\menu}[1]{\guimenu{#1}}
-
-% Markup a gui menu item name.
-\newcommand{\guimenuitem}[1]{\textbf{#1}}
-
-% Markup a menu item name.
-\newcommand{\menuitem}[1]{\guimenuitem{#1}}
-
-% Markup name of a ui button.
-\newcommand{\guibutton}[1]{\textbf{#1}}
-
-% Markup name of a ui button.
-\newcommand{\button}[1]{\guibutton{#1}}
-
-% Markup name of a gui text item.
-\newcommand{\guitext}[1]{\textit{#1}}
-
-% Markup name of a gui label.
-\newcommand{\guilabel}[1]{\textbf{#1}}
-
-% GUI variable
-\newcommand{\guivar}[1]{\texttt{#1}}
-
-% Scirun port
-\newcommand{\srport}[1]{\texttt{#1}}
-
-% Sockets port
-\newcommand{\port}[1]{\texttt{#1}}
-
-% Socket
-\newcommand{\socket}[2]{\texttt{#1:#2}}
-
-% Variable
-\newcommand{\variable}[1]{\texttt{#1}}
-
-% Data type
-\newcommand{\datatype}[1]{\texttt{#1}}
-
-% Function
-\newcommand{\function}[1]{\texttt{#1}}
-
-% Markup an inline code fragment.
-\newcommand{\icode}[1]{\texttt{#1}}
-
-% Markup a module name.
-\newcommand{\module}[1]{\texttt{#1}}
-
-% Markup a sr package name.
-\newcommand{\package}[1]{\texttt{#1}}
-
-% Markup a sr category name.
-\newcommand{\category}[1]{\texttt{#1}}
-
-% Call attention to some useful bit of information.
-\newcommand{\note}[1]{\emph{Note: #1}} 
-
-% Call attention to a warning.
-\newcommand{\warning}[1]{\emph{Warning: #1}} 
-
-% Call attention to a tip.
-\newcommand{\tip}[1]{\emph{Tip: #1}} 
-
-% Env variable markup.
-\newcommand{\envvar}[1]{\texttt{#1}}
-
-% Markup for the title of a book or article or whatever.
-\newcommand{\etitle}[1]{\texttt{#1}}
-
-% Markup name of a latex section.  First arg is section name.  Second arg
-% is section's label.  When processed with latex, the section
-% name is emphasized.  When processed with latex2html section name is made
-% into a link to section.
-\newcommand{\secname}[2]{\latexhtml{\emph{#1}}{\htmlref{#1}{#2}}}
-
-% Section ref command.  Use of this command
-% in place of \ref to reference sections (subsections etc.) will
-% create a more web friendly version of your document.
-% The command's first argument is the link text (used only on the html
-% page) and the second argument is the section's label
-\newcommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}
-\newcommand{\chref}[2]{\hyperref[ref]{\emph{#1}}{Chapter~}{}{#2}}
-
-% A latex command
-\newcommand{\latexcommand}[1]{\texttt{\textbackslash#1}}
-
-% A latex package
-\newcommand{\latexpackage}[1]{\textit{#1}}
-
-% Use these in place of missing content.
-\newcommand{\missing}[1]{\emph{#1 - Coming Soon.}}
-
-% Use this to make note of incomplete content.
-\newcommand{\incomplete}{\emph{More Comming Soon.}}
-
-% Mark up a mail address
-\newcommand{\mailto}[1]{\texttt{#1}}
-
-% XML start and end tags
-\newcommand{\xmlstarttag}[1]{\ab{\texttt{#1}}}
-\newcommand{\xmlendtag}[1]{\ab{/\texttt{#1}}}
-\newcommand{\xmlattrname}[1]{\texttt{#1}}
-
-% Sci Urls ========================================= 
-
-% www style urls.
-\newcommand{\scisoftware}{http://software.sci.utah.edu}
-\newcommand{\scisoftwareurl}{\scisoftware}
-\newcommand{\sciurl}{http://www.sci.utah.edu}
-\newcommand{\scidocurl}{\scisoftware{}/doc}
-\newcommand{\scidocurlplus}[1]{\scisoftware{}/doc/#1}
-\newcommand{\bugsurl}{\scisoftware{}/bugzilla}
-\newcommand{\scisoftwarearchiveurl}{\scisoftware{}/archive\_entry.html}
