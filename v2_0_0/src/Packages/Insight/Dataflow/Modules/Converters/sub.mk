@@ -31,11 +31,32 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Insight/Dataflow/Modules/Converters
 
 SRCS     += \
-	$(SRCDIR)/Float2DToUChar2D.cc\
-	$(SRCDIR)/UChar2DToFloat2D.cc\
-	$(SRCDIR)/UShort2DToUChar2D.cc\
 	$(SRCDIR)/FieldToImage.cc\
 	$(SRCDIR)/ImageToField.cc\
+	$(SRCDIR)/UCharToDouble.cc\
+	$(SRCDIR)/UCharToFloat.cc\
+	$(SRCDIR)/CharToUChar.cc\
+	$(SRCDIR)/CharToDouble.cc\
+	$(SRCDIR)/CharToFloat.cc\
+	$(SRCDIR)/UShortToUChar.cc\
+	$(SRCDIR)/UShortToDouble.cc\
+	$(SRCDIR)/UShortToFloat.cc\
+	$(SRCDIR)/ShortToUChar.cc\
+	$(SRCDIR)/ShortToDouble.cc\
+	$(SRCDIR)/ShortToFloat.cc\
+	$(SRCDIR)/DoubleToUChar.cc\
+	$(SRCDIR)/DoubleToFloat.cc\
+	$(SRCDIR)/FloatToUChar.cc\
+	$(SRCDIR)/FloatToDouble.cc\
+	$(SRCDIR)/IntToUChar.cc\
+	$(SRCDIR)/IntToDouble.cc\
+	$(SRCDIR)/IntToFloat.cc\
+	$(SRCDIR)/ULongToUChar.cc\
+	$(SRCDIR)/ULongToDouble.cc\
+	$(SRCDIR)/ULongToFloat.cc\
+	$(SRCDIR)/RGBPixelToVector.cc\
+	$(SRCDIR)/Image2DToImage3D.cc\
+	$(SRCDIR)/Image3DToImage2D.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \
