@@ -401,10 +401,10 @@ itcl_class Module {
 	global $this-extra_ports
 	set $this-extra_ports 0
 
-	global font_pixel_width
-	set font_pixel_width [font measure $modname_font\
+	global $this-font_pixel_width
+	set $this-font_pixel_width [font measure $modname_font\
 		    "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz"]
-	set font_pixel_width [expr $font_pixel_width/53.0]
+	set $this-font_pixel_width [expr [set $this-font_pixel_width]/53.0]
     }
     method set_moduleDragged {  ModuleDragged } {
 	set mdragged $ModuleDragged
@@ -432,6 +432,7 @@ itcl_class Module {
     method configureIPorts {canvas} {
 	set modframe $canvas.module[modname]
 	set i 0
+	set temp "a"
 	while {[winfo exists $modframe.iport$i]} {
 	    destroy $modframe.iport$i
 	    destroy $modframe.iportlight$i
@@ -465,6 +466,10 @@ itcl_class Module {
 		    "trackIPortConnection [modname] $i %x %y"
 	    bind $modframe.iport$i <ButtonRelease-2> \
 		    "endPortConnection \"$portcolor\""
+	    bind $modframe.iport$i <ButtonPress-1>\
+		    "IPortTrace [modname] $i $temp"
+	    bind $modframe.iport$i <ButtonRelease-1>\
+		    "IPortReset $temp"
 	    incr i
 	} 
 	rebuildConnections [netedit getconnected [modname]] 0
@@ -472,7 +477,7 @@ itcl_class Module {
 
     method configureOPorts {canvas} {
 	set modframe $canvas.module[modname]
-
+	set temp "a"
 	set i 0
 	while {[winfo exists $modframe.oport$i]} {
 	    destroy $modframe.oport$i
@@ -505,7 +510,11 @@ itcl_class Module {
 	    bind $modframe.oport$i <B2-Motion> \
 		    "trackOPortConnection [modname] $i %x %y"
 	    bind $modframe.oport$i <ButtonRelease-2> \
-		"endPortConnection \"$portcolor\""
+		    "endPortConnection \"$portcolor\""
+	    bind $modframe.oport$i <ButtonPress-1>\
+		    "OPortTrace [modname] $i temp"
+	    bind $modframe.oport$i <ButtonRelease-1>\
+		    "OPortReset temp"
 	    incr i
 	}
 	rebuildConnections [netedit getconnected [modname]] 0
@@ -783,7 +792,6 @@ itcl_class Module {
     
     method module_grow {ports} { 
 	global maincanvas
-	global font_pixel_width
 	global modname_font
 	global port_spacing
 
@@ -799,20 +807,20 @@ itcl_class Module {
 	# module isn't done being created and it
 	# adds on too many extra_ports
 
-	if { [expr $mod_width-[expr $ports*$temp_spacing] ] <= \
-		    $temp_spacing } {
-		incr $this-extra_ports 1
-		set title_width [expr [set $this-original_title_size]+\
-			[expr $temp_spacing*[set $this-extra_ports]]]
-		set title_width [expr int(\
-			[expr ceil([expr $title_width/$font_pixel_width])])]
-		$maincanvas.module[modname].ff.title configure -width $title_width
-	    }
+	if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
+		$temp_spacing } {
+	    incr $this-extra_ports 1
+	    set title_width [expr [set $this-original_title_size]+\
+		    [expr $temp_spacing*[set $this-extra_ports]]]
+	    set title_width [expr int(\
+		    [expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
+	    $maincanvas.module[modname].ff.title configure -width $title_width
 	}
+	
+    }
     
     method module_shrink {} {  
 	global maincanvas
-	global font_pixel_width
 	global port_spacing
 
 	set temp_spacing [expr $port_spacing+1]
@@ -827,7 +835,7 @@ itcl_class Module {
 	if { [expr $title_width-$temp_spacing] > [set $this-original_title_size] } {
 	    set title_width [expr [set $this-original_title_size]+\
 		    [expr [set $this-extra_ports]*$temp_spacing]]
-	    set title_width [expr $title_width/$font_pixel_width]
+	    set title_width [expr $title_width/[set $this-font_pixel_width]]
 	    set title_width [expr int([expr ceil($title_width)])]
 	    $maincanvas.module[modname].ff.title configure -width $title_width
 	}
@@ -987,7 +995,7 @@ proc startIPortConnection {imodid iwhich x y} {
     global netedit_canvas
         
     if { $mm == 1 } {
-	set coords [computeIPortCoords $fake_imodid $fake_iwhich]
+	set coords [computeIPorCoords $fake_imodid $fake_iwhich]
     } else {
 	set coords [computeIPortCoords $imodid $iwhich]
     }
@@ -1166,6 +1174,55 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 
     $netedit_mini_canvas lower $connid
 }
+proc IPortTrace { imodid which temp} {
+    set connInfo [netedit getconnected $imodid] 
+    foreach t $connInfo {
+	set fromName [lindex $t 1]
+	set fromPort [lindex $t 2]
+	set toName [lindex $t 3] 
+	set toPort [lindex $t 4]
+	if { [string match $toName $imodid] && \
+		[string match $which $toPort] } {
+	    # light up the pipe
+	    global netedit_canvas
+	    set path [routeConnection $fromName $fromPort $toName $toPort]
+	    eval $netedit_canvas create bline $path -width 7 \
+		    -borderwidth 2 -fill red -tags $temp
+	}
+    }
+}
+
+proc IPortReset { temp} {
+    global netedit_canvas
+    $netedit_canvas delete $temp
+}
+
+proc OPortTrace { omodid which temp} {
+    set connInfo [netedit getconnected $omodid]
+    set fromName ""
+    set fromPort ""
+    foreach t $connInfo {
+	set fromName [lindex $t 1]
+	set fromPort [lindex $t 2]
+	set toName [lindex $t 3] 
+	set toPort [lindex $t 4]
+	if { [string match $fromName $omodid] && \
+		[string match $which $fromPort] } {
+	    # light up the pipe
+	    global netedit_canvas
+	    set path [routeConnection $fromName $fromPort $toName $toPort]
+	    eval $netedit_canvas create bline $path -width 7 \
+		    -borderwidth 2 -fill red -tags $temp
+	}
+    }
+}
+
+proc OPortReset { temp} {
+    global netedit_canvas
+    $netedit_canvas delete $temp
+}
+    
+
 proc lightPipe {temp omodid owhich imodid iwhich} {
     global netedit_canvas
     set path [routeConnection $omodid $owhich $imodid $iwhich]
