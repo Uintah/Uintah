@@ -32,6 +32,7 @@ public:
     virtual ObjGroup* getGeomFromSurface()=0;
     // Persistent representation...
     virtual void io(Piostream&);
+    static PersistentTypeID typeid;
 };
 
 struct TSElement {
@@ -40,6 +41,8 @@ struct TSElement {
     int i3;
     inline TSElement(int i1, int i2, int i3):i1(i1), i2(i2), i3(i3){}
 };
+
+void Pio(Piostream&, TSElement*&);
 
 class TriSurface : public Surface {
     Array1<Point> points;
@@ -52,5 +55,8 @@ public:
     virtual ObjGroup* getGeomFromSurface();
     void add_point(const Point& p);
     void add_triangle(int i1, int i2, int i3);
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID typeid;
 };
 #endif /* SCI_project_Surface_h */
