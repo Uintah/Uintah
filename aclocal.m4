@@ -485,13 +485,7 @@ case $1 in
   ;;
   SCIRun2)
     sci_check_babel=yes
-    sci_check_fortran=yes
-    sci_check_ssl=yes
-    sci_check_crypto=yes
-    sci_check_globus=yes
-    sci_check_qt=yes
     sci_check_uuid=yes
-    sci_check_mpi=yes
   ;;
   Remote)
     sci_check_jpeg=yes
