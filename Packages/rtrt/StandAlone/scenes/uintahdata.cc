@@ -62,7 +62,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #if 0
     TimeObj* timeobj2=new TimeObj(rate);
 #endif
-    Group* timeblock;
+    Group* timeblock = 0;
 
     // while there is stuff in the file
     while(in){
@@ -89,7 +89,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	    
 	    HVolumeBrick* hvol=new HVolumeBrick(matl0, dpy, file,
 						depth, nworkers);
-	    timeblock->add(hvol);
+	    if (timeblock != 0) {
+	      timeblock->add(hvol);
+	    } else {
+	      cerr << "File found before TIMESTEP tag.  Aborting!\n";
+	      return 0;
+	    }
 #if 0
 	    Object* o2=new Slice<float, BrickArray3<float>, BrickArray3<VMCell<float> > >
 	      (dpy, pdpy, o);
