@@ -16,7 +16,8 @@
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/Mutex.h>
 
-using SCICore::Thread::Guard;
+//using SCICore::Thread::Guard;
+using namespace SCICore::Thread;
 
 Guard::Guard(Mutex* mutex)
     : d_mutex(mutex), d_monitor(0)
@@ -45,6 +46,14 @@ Guard::~Guard()
 
 //
 // $Log$
+// Revision 1.6  1999/10/04 16:44:29  moulding
+// changed
+// using SCICore::Thread::Guard;
+// to
+// using namespace SCICore::Thread;
+//
+// to help the VC compiler.
+//
 // Revision 1.5  1999/09/25 08:29:28  sparker
 // Added MutexPool class - a utility for sharing Mutexes among a large
 //  number of objects
