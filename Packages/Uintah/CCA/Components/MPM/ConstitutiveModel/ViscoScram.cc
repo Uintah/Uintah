@@ -34,11 +34,9 @@ using namespace SCIRun;
 static DebugStream dbg("VS", false);
 static DebugStream dbgSig("VSSig", false);
 
-ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                         MPMFlags* Mflag)
+ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
   ps->require("PR",d_initialData.PR);
   d_initialData.CoefThermExp = 1.0e-5;
   ps->get("CoeffThermalExpansion", d_initialData.CoefThermExp);
@@ -108,12 +106,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
   pStrainRateLabel_preReloc        = VarLabel::create("p.deformRate+",
       ParticleVariable<Matrix3>::getTypeDescription());
 
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
-  }
-
+  
   // The following are precomputed once for use with ICE.
   double G = d_initialData.G[0] + d_initialData.G[1] +
              d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
@@ -123,10 +116,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
 
 ViscoScram::ViscoScram(const ViscoScram* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-
+  
   d_random = cm->d_random;
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_doTimeTemperature = cm->d_doTimeTemperature;
@@ -407,19 +397,24 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>    pRand;
   ParticleVariable<StateData> pStatedata;
 
-  // Define local variables
-  IntVector ni[MAX_BASIS];
-  Vector d_S[MAX_BASIS];
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
 
     // initialize strain energy and wavespeed to zero
     double se = 0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     // Get patch information
-    const Patch* patch = patches->get(p);
+
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
@@ -498,19 +493,18 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         // Then calculate relaxation times and store in an array
         // (Note that shear moduli are already in the array Gi)
         for (int ii = 0; ii < 5; ++ii) {
-          dbg << "Old RTau["<< ii <<"] ="<< RTau[ii] <<" ";
+	  if (dbg.active())
+	    dbg << "Old RTau["<< ii <<"] ="<< RTau[ii] <<" ";
+
           RTau[ii] /= a_T;
-          dbg << "New RTau["<< ii <<"]=" << RTau[ii] << endl;
+	  if (dbg.active())
+	    dbg << "New RTau["<< ii <<"]=" << RTau[ii] << endl;
         }
       }
 
       // Get the node indices that surround the cell
-      if(flag->d_8or27==8){
-        patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
-      }
-      else if(flag->d_8or27==27){
-        patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S,pSize[idx]);
-      }
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S,pSize[idx]);
+      
 
       Matrix3 pVelGrad(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
@@ -550,11 +544,15 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Get effective strain rate and Effective deviatoric strain rate
       pStrainRate_new[idx] = D;
-      dbg.setf(ios::scientific,ios::floatfield);
-      dbg.precision(8);
-      dbg << "Total Strain Rate = [" 
-          << D(0,0) << " " << D(1,1) << " " << D(2,2) << " "
-          << D(1,2) << " " << D(2,0) << " " << D(0,1) << "]" << endl;
+
+      if (dbg.active()) {
+	dbg.setf(ios::scientific,ios::floatfield);
+	dbg.precision(8);
+	dbg << "Total Strain Rate = [" 
+	    << D(0,0) << " " << D(1,1) << " " << D(2,2) << " "
+	    << D(1,2) << " " << D(2,0) << " " << D(0,1) << "]" << endl;
+      }
+
       double EDeff = sqrtopf*DPrime.Norm();
 
       // Sum of old deviatoric stresses
@@ -568,10 +566,12 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       Matrix3 sig_old = pStress[idx];
       double EffStress = sqrtopf*sig_old.Norm();
 
-      dbg << "D.Norm() = " << D.Norm()
-           << " Ddev.Norm() = " << DPrime.Norm()
-           << " Sig.Norm() = " << pStress[idx].Norm()
-           << " SigDev.Norm() = " << DevStress.Norm() << endl;
+      if (dbg.active()) {
+	dbg << "D.Norm() = " << D.Norm()
+	    << " Ddev.Norm() = " << DPrime.Norm()
+	    << " Sig.Norm() = " << pStress[idx].Norm()
+	    << " SigDev.Norm() = " << DevStress.Norm() << endl;
+      }
 
       //old deviatoric stress norm
       double DevStressNormSq = DevStress.NormSquared();
@@ -620,12 +620,13 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       if(vres > d_initialData.CrackMaxGrowthRate){
         vres = d_initialData.CrackMaxGrowthRate;
       }
-
-      dbg  << "vres = " << vres << " sif = " << sif 
-           << " sigmae = " << sigmae << endl;
-      dbg  << "crad = " << crad << " xmup = " << xmup << " a = " << a
-           << " b = " << b << " termm = " << termm << " rko = " << rko
-           << " skp = " << skp << " sk1 = " << sk1 << endl;
+      if (dbg.active()) {
+	dbg  << "vres = " << vres << " sif = " << sif 
+	     << " sigmae = " << sigmae << endl;
+	dbg  << "crad = " << crad << " xmup = " << xmup << " a = " << a
+	     << " b = " << b << " termm = " << termm << " rko = " << rko
+	     << " skp = " << skp << " sk1 = " << sk1 << endl;
+      }
 
       double cdot,cc,rk1c,rk2c,rk3c,rk4c;
 
@@ -649,10 +650,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         rk3c = cc*(1. - fac/(crad+.5*rk2c));
         rk4c = cc*(1. - fac/(crad+rk3c));
       }
-
-      dbg << "c = " << crad << " cdot = " << cdot << " cc = " << cc
-           << " rk1c = " << rk1c << " rk2c = " << rk2c
-           << " rk3c = " << rk3c << " rk3c = " << rk3c << endl;
+      if (dbg.active()) {
+	dbg << "c = " << crad << " cdot = " << cdot << " cc = " << cc
+	    << " rk1c = " << rk1c << " rk2c = " << rk2c
+	    << " rk3c = " << rk3c << " rk3c = " << rk3c << endl;
+      }
 
       // Deviatoric stress integration
       for(int imw=0;imw<5;imw++){
@@ -730,16 +732,17 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                        (DevStressS*con1 +
                         (DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
                        *(Gmw[imw]/G))*delT;
-
-        dbg << "imw = " << imw << endl;
-        dbg << "   rk1 = [" << rk1(0,0) << " " << rk1(1,1) << " " << rk1(2,2)
-             << rk1(1,2) << " " << rk1(2,0) << " " << rk1(0,1) << endl;
-        dbg << "   rk2 = [" << rk2(0,0) << " " << rk2(1,1) << " " << rk2(2,2)
-             << rk2(1,2) << " " << rk2(2,0) << " " << rk2(0,1) << endl;
-        dbg << "   rk3 = [" << rk3(0,0) << " " << rk3(1,1) << " " << rk3(2,2)
-             << rk3(1,2) << " " << rk3(2,0) << " " << rk3(0,1) << endl;
-        dbg << "   rk4 = [" << rk4(0,0) << " " << rk4(1,1) << " " << rk4(2,2)
-             << rk4(1,2) << " " << rk4(2,0) << " " << rk4(0,1) << endl;
+	if (dbg.active()) {
+	  dbg << "imw = " << imw << endl;
+	  dbg << "   rk1 = [" << rk1(0,0) << " " << rk1(1,1) << " " << rk1(2,2)
+	      << rk1(1,2) << " " << rk1(2,0) << " " << rk1(0,1) << endl;
+	  dbg << "   rk2 = [" << rk2(0,0) << " " << rk2(1,1) << " " << rk2(2,2)
+	      << rk2(1,2) << " " << rk2(2,0) << " " << rk2(0,1) << endl;
+	  dbg << "   rk3 = [" << rk3(0,0) << " " << rk3(1,1) << " " << rk3(2,2)
+	      << rk3(1,2) << " " << rk3(2,0) << " " << rk3(0,1) << endl;
+	  dbg << "   rk4 = [" << rk4(0,0) << " " << rk4(1,1) << " " << rk4(2,2)
+	      << rk4(1,2) << " " << rk4(2,0) << " " << rk4(0,1) << endl;
+	}
 
         // Update Maxwell element Deviatoric Stresses
         pStatedata[idx].DevStress[imw] +=
@@ -747,18 +750,22 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       }
 
       // Update the Cauchy stress
-      dbgSig.setf(ios::scientific,ios::floatfield);
-      dbgSig.precision(8);
-      dbgSig << " Particle = " << idx << endl;
-      dbgSig << "  D = [" 
-             << D(0,0) << " " << D(1,1) << " " << D(2,2) << " "
-             << D(1,2) << " " << D(2,0) << " " << D(0,1) << "]" << endl;
+      if (dbgSig.active()) {
+	dbgSig.setf(ios::scientific,ios::floatfield);
+	dbgSig.precision(8);
+	dbgSig << " Particle = " << idx << endl;
+	dbgSig << "  D = [" 
+	       << D(0,0) << " " << D(1,1) << " " << D(2,2) << " "
+	       << D(1,2) << " " << D(2,0) << " " << D(0,1) << "]" << endl;
+      }
 
       double ekkdot = D.Trace();
 
-      dbgSig << "  K = " << bulk << " ekkdot = " << ekkdot 
-             << " delT = " << delT << endl;
-      dbgSig << "  pold = " << sig_m ;
+      if (dbgSig.active()) {
+	dbgSig << "  K = " << bulk << " ekkdot = " << ekkdot 
+	       << " delT = " << delT << endl;
+	dbgSig << "  pold = " << sig_m ;
+      }
 
       sig_m = -sig_m; // revert back to standard form
       sig_m += ekkdot*bulk*delT;
@@ -768,19 +775,24 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       pStress_new[idx] = DevStress + Identity*sig_m;
 
       Matrix3 sig = pStress_new[idx];
-      dbgSig << " pnew = " << sig_m << endl;
-      dbgSig << "  S_dev = [" 
-             << DevStress(0,0) << " " << DevStress(1,1) << " " 
-             << DevStress(2,2) << " " << DevStress(1,2) << " " 
-             << DevStress(2,0) << " " << DevStress(0,1) << "]" << endl;
-      dbgSig << "  sig = [" 
-             << sig(0,0) << " " << sig(1,1) << " " << sig(2,2) << " " 
-             << sig(1,2) << " " << sig(2,0) << " " << sig(0,1) << "]" << endl;
+
+      if (dbgSig.active()) {
+	dbgSig << " pnew = " << sig_m << endl;
+	dbgSig << "  S_dev = [" 
+	       << DevStress(0,0) << " " << DevStress(1,1) << " " 
+	       << DevStress(2,2) << " " << DevStress(1,2) << " " 
+	       << DevStress(2,0) << " " << DevStress(0,1) << "]" << endl;
+	dbgSig << "  sig = [" 
+	       << sig(0,0) << " " << sig(1,1) << " " << sig(2,2) << " " 
+	       << sig(1,2) << " " << sig(2,0) << " " << sig(0,1) << "]" << endl;
+      }
 
       // Update crack radius
       crad += onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
       pCrackRadius_new[idx] = crad;
-      dbgSig << " Crack Radius = " << crad << endl;
+      if (dbgSig.active())
+	dbgSig << " Crack Radius = " << crad << endl;
+
       ASSERT(crad > 0.0);
 
       // Update the internal heating rate 
@@ -808,14 +820,21 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       Matrix3 SRate = (D*(2.0*G) - DevStress*topc - sovertau)*oocoa3;
       double scrdot = (DevStress.NormSquared()*topc + 
                        DevStress.Contract(SRate)*coa3)/(2.0*G);
-      dbg << "SRate = [" 
-          << SRate(0,0) << " " << SRate(1,1) << " " << SRate(2,2) << " "
-          << SRate(1,2) << " " << SRate(2,0) << " " << SRate(0,1) << "]"
-          << endl;
-      dbg << "Wdot_cr = " << scrdot << endl;
-      dbg << "rhoCv = " << rhoCv << endl;
+
+      if (dbg.active()) {
+	dbg << "SRate = [" 
+	    << SRate(0,0) << " " << SRate(1,1) << " " << SRate(2,2) << " "
+	    << SRate(1,2) << " " << SRate(2,0) << " " << SRate(0,1) << "]"
+	    << endl;
+	dbg << "Wdot_cr = " << scrdot << endl;
+	dbg << "rhoCv = " << rhoCv << endl;
+      }
+
       pCrHeatRate_new[idx] = scrdot/rhoCv;
-      dbg << "pCrHeatRate = " << pCrHeatRate_new[idx] << endl;
+
+      if (dbg.active())
+	dbg << "pCrHeatRate = " << pCrHeatRate_new[idx] << endl;
+
 
       // Update the volume change heat rate
       pVolHeatRate_new[idx] = d_initialData.Gamma*pTemperature[idx]*ekkdot;
@@ -844,6 +863,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

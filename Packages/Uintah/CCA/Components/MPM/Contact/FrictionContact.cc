@@ -28,7 +28,6 @@ using std::string;
 
 using namespace std;
 
-#define MAX_BASIS 27
 
 FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
                                  MPMLabel* Mlb,MPMFlags* Mflag)
@@ -47,7 +46,7 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,SimulationStateP& d_sS,
   if(flag->d_8or27){
     NGP=1;
     NGN=1;
-  } else if(flag->d_8or27==MAX_BASIS){
+  } else if(flag->d_8or27==27){
     NGP=2;
     NGN=2;
   }
@@ -92,6 +91,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
+
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
 
     Vector surnor(0.0,0.0,0.0);
 
@@ -327,23 +333,15 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       
       // Next, interpolate the stress to the grid
       constParticleVariable<Vector> psize;
-      if(flag->d_8or27==MAX_BASIS){
-        old_dw->get(psize, lb->pSizeLabel, pset);
-      }
-
-      IntVector ni[MAX_BASIS];
-      double S[MAX_BASIS];
+      old_dw->get(psize, lb->pSizeLabel, pset);
+     
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(flag->d_8or27==8){
-          patch->findCellAndWeights(px[idx], ni, S);
-        }
-        else if(flag->d_8or27==27){
-          patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-        }
+	interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
+        
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
         for(int k = 0; k < flag->d_8or27; k++) {
@@ -497,6 +495,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         }       // if (volume constraint)
       }        // if(!compare(centerOfMassMass,0.0))
     }          // NodeIterator
+
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
   }  // patches
   
 }
@@ -717,9 +719,7 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
   t->requires(Task::OldDW,   lb->delTLabel);
   t->requires(Task::OldDW,   lb->pXLabel,           Ghost::AroundNodes, NGP);
   t->requires(Task::OldDW,   lb->pStressLabel,      Ghost::AroundNodes, NGP);
-  if(flag->d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, NGP);
-  }
+  t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, NGP);
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);

@@ -31,11 +31,12 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
+
 static DebugStream dbg("VS_HS", false);
 
-ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, 
-                                     MPMLabel* Mlb, 
-                                     MPMFlags* Mflag):ViscoScram(ps,Mlb,Mflag)
+ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMLabel* Mlb, 
+                                     MPMFlags* Mflag)
+  :ViscoScram(ps,Mlb,Mflag)
 {
   // Read in the extra material constants
   ps->require("Chi",d_matConst.Chi);
@@ -289,22 +290,26 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   Matrix3 sig_old(0.0);                        // old stress
   Matrix3 sig_new(0.0), sigDev_new(0.0);       // new stress+deviatoric stress
 
-  // Define interpolation variables
-  IntVector ni[MAX_BASIS];
-  Vector d_S[MAX_BASIS];
 
   int dwi = matl->getDWIndex();                // Data warehouse index
   old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
   // Loop through patches
   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
 
     // Initialize patch variables
     double se = 0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     // Get patch size
-    const Patch* patch = patches->get(p);
+
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
@@ -389,10 +394,8 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       //double alphaK = 3.0*K*(alpha*variation);
 
       // Compute the velocity gradient
-      if(flag->d_8or27 == 27)
-        patch->findCellAndShapeDerivatives27(pX[idx], ni, d_S, pSize[idx]);
-      else
-        patch->findCellAndShapeDerivatives(pX[idx], ni, d_S);
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx]);
+      
       pVelGrad.set(0.0);
       Vector vel(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
@@ -412,7 +415,10 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       // and the effective deviatoric strain rate
       pDefRate = (pVelGrad + pVelGrad.Transpose())*.5;
       pStrainRate_new[idx] = pDefRate.Norm();
-      dbg << "Total strain rate = " << pStrainRate_new[idx] << endl;
+
+      if (dbg.active())
+	dbg << "Total strain rate = " << pStrainRate_new[idx] << endl;
+
       pDefRateDev = pDefRate - Id*(onethird*pDefRate.Trace());
       double edotnorm = sqrtopf*pDefRateDev.Norm();
       double vres = 
@@ -428,7 +434,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       FVector Y_old(c_old, pState[idx].DevStress);
 
       //Matrix3 sigDev_old(0.0);
-      //dbg << "Crack Radius (old) = " << c_old << endl;
+      // dbg << "Crack Radius (old) = " << c_old << endl;
       //for (int ii = 0 ; ii < 5; ++ii) {
       //  dbg << " Dev Stress (old) [" << ii << "] = " << endl
       //       << pState[idx].DevStress[ii] << endl;
@@ -459,7 +465,6 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
 
       // Update the Cauchy stress
       pSig_new[idx] = sigDev_new + Id*sig_m_new;
-
       //dbg << "Crack Radius (new) = " << c_new << endl;
       //for (int ii = 0 ; ii < 5; ++ii) {
       //  dbg << " Dev Stress (new) [" << ii << "] = " << endl
@@ -501,8 +506,9 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
                                                pState[idx].DevStress,
                                                pDefRateDev, sigDev_new, 
                                                Gmw, cdot_new);
-      dbg << "rhoCv = " << rhoCv << endl;
-      
+      if (dbg.active())
+	dbg << "rhoCv = " << rhoCv << endl;
+
       // Compute bulk chemical heating rate
       double qdot_ch = computeChemicalHeatRate(rho_cur, T_old);
 
@@ -511,7 +517,10 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       double volHeatRate = d_initialData.Gamma*T_old*ekk;
       double veHeatRate = wdot_ve*fac;
       double crHeatRate = wdot_cr*fac;
-      dbg << "pCrHeatRate = " << crHeatRate << endl;
+
+      if (dbg.active())
+	dbg << "pCrHeatRate = " << crHeatRate << endl;
+
       double chHeatRate = d_matConst.vfHE*qdot_ch;
       pVolHeatRate_new[idx] = volHeatRate;
       pVeHeatRate_new[idx] = veHeatRate;
@@ -555,6 +564,9 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 
@@ -991,12 +1003,17 @@ ViscoSCRAMHotSpot::computeCrackingWorkRate(int numElem, double c_new,
   double psi = 2.0*G/onepca3;
   Matrix3 lambdaTheta =  sovertau*invonepca3;
   Matrix3 sdot = edot*psi - s_new*theta - lambdaTheta;
-  dbg << "SRate = " << endl << sdot << endl;
+
+  if (dbg.active())
+    dbg << "SRate = " << endl << sdot << endl;
 
   // Compute maxwell element stress rate
   double workrate = (threeca3cdotoverc*(s_new.NormSquared()) + 
                      ca3*s_new.Contract(sdot))/(2.0*G);
-  dbg << "Wdot_cr = " << workrate << endl;
+
+  if (dbg.active())
+    dbg << "Wdot_cr = " << workrate << endl;
+
   return workrate;
 }
 
@@ -1215,7 +1232,9 @@ ViscoSCRAMHotSpot::evaluateHotSpotModel(double sig_m, const Matrix3& sig,
 
   // Get the eigenVector in this direction
   Vector edotvec(eigvec(0,0), eigvec(1,0), eigvec(2,0));
-  dbg << " Max dev edot = " << edotmax << " Direction = " << edotvec << endl;
+
+  if (dbg.active())
+    dbg << " Max dev edot = " << edotmax << " Direction = " << edotvec << endl;
 
   // Compute the component of the shear stress in the plane of the "crack"
   // (the component sigCrack(2,3))

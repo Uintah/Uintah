@@ -28,29 +28,17 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                                          MPMFlags* Mflag)
+IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
 
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
-
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
-  }
 
 }
 
 IdealGasMP::IdealGasMP(const IdealGasMP* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-
   d_initialData.gamma = cm->d_initialData.gamma;
   d_initialData.cv = cm->d_initialData.cv;
 }
@@ -169,6 +157,12 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity;
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
     Identity.Identity();
 
     Vector dx = patch->dCell();
@@ -195,9 +189,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
-    if(flag->d_8or27==27){
-      old_dw->get(psize,                     lb->pSizeLabel,              pset);
-    }
+    old_dw->get(psize,                     lb->pSizeLabel,              pset);
+    
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
@@ -229,31 +222,23 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
        // Get the node indices that surround the cell
-       IntVector ni[MAX_BASIS];
-       Vector d_S[MAX_BASIS];
+      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
 
-       if(flag->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        }
-        else if(flag->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-        }
-
-        Vector gvel;
-        velGrad.set(0.0);
-        for(int k = 0; k < flag->d_8or27; k++) {
-          if (flag->d_fracture) {
-            if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-            if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-          } else
-            gvel = gvelocity[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-              velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
-            }
-          }
-        }
-
+      Vector gvel;
+      velGrad.set(0.0);
+      for(int k = 0; k < flag->d_8or27; k++) {
+	if (flag->d_fracture) {
+	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+	} else
+	  gvel = gvelocity[ni[k]];
+	for (int j = 0; j<3; j++){
+	  for (int i = 0; i<3; i++) {
+	    velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
+	  }
+	}
+      }
+      
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
@@ -289,6 +274,10 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

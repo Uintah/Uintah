@@ -27,12 +27,9 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                                      MPMFlags* Mflag)
+Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb,  MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
-
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
@@ -42,18 +39,10 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb,
   defGradInPlaneLabel_preReloc  = VarLabel::create( "p.defgrad_in_plane+",
                         ParticleVariable<Matrix3>::getTypeDescription() );
 
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
-  }
 }
 
 Membrane::Membrane(const Membrane* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
 
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
@@ -210,6 +199,13 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
     Identity.Identity();
 
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
+
     Matrix3 Rotation;
 
     Vector dx = patch->dCell();
@@ -236,9 +232,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    if(flag->d_8or27==27){
-      old_dw->get(psize,                    lb->pSizeLabel,               pset);
-    }
+    old_dw->get(psize,                    lb->pSizeLabel,               pset);
+    
     old_dw->get(px,                         lb->pXLabel,                  pset);
     old_dw->get(pmass,                      lb->pMassLabel,               pset);
     old_dw->get(pstress,                    lb->pStressLabel,             pset);
@@ -285,31 +280,23 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
        // Get the node indices that surround the cell
-       IntVector ni[MAX_BASIS];
-       Vector d_S[MAX_BASIS];
+      interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
 
-       if(flag->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        }
-        else if(flag->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-        }
-
-        Vector gvel;
-        velGrad.set(0.0);
-        for(int k = 0; k < flag->d_8or27; k++) {
-	  if (flag->d_fracture) {
-	    if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-	    if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	  } else 
-	    gvel = gvelocity[ni[k]];
-	  for (int j = 0; j<3; j++){
-	    double d_SXoodx = d_S[k][j] * oodx[j];
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i,j) += gvel[i] * d_SXoodx;
-	    }
+      Vector gvel;
+      velGrad.set(0.0);
+      for(int k = 0; k < flag->d_8or27; k++) {
+	if (flag->d_fracture) {
+	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
+	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+	} else 
+	  gvel = gvelocity[ni[k]];
+	for (int j = 0; j<3; j++){
+	  double d_SXoodx = d_S[k][j] * oodx[j];
+	  for (int i = 0; i<3; i++) {
+	    velGrad(i,j) += gvel[i] * d_SXoodx;
 	  }
 	}
+      }
 
       T1[idx] = ptang1[idx];
       T2[idx] = ptang2[idx];
@@ -527,6 +514,10 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

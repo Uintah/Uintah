@@ -52,8 +52,6 @@ using namespace SCIRun;
 
 using namespace std;
 
-#define MAX_BASIS 27
-
 static DebugStream cout_doing("MPM", false);
 static DebugStream cout_dbg("SerialMPM", false);
 static DebugStream cout_convert("MPMConv", false);
@@ -105,6 +103,7 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   MPMPhysicalBCFactory::clean();
+
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
@@ -132,7 +131,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
     for(std::vector<std::string>::const_iterator ftit(bndy_face_txt_list.begin());
         ftit!=bndy_face_txt_list.end();ftit++) {
         Patch::FaceType face = Patch::invalidFace;
-        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;ft=Patch::nextFace(ft)) {
+        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
+	    ft=Patch::nextFace(ft)) {
           if(Patch::getFaceName(ft)==*ftit) face =  ft;
         }
         if(face!=Patch::invalidFace) {
@@ -153,7 +153,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==MAX_BASIS){
+  } else if(flags->d_8or27==27){
     NGP=2;
     NGN=2;
   }
@@ -254,8 +254,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   // artificial damping coeff initialized to 0.0
-  cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
+  if (cout_dbg.active())
+    cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
              << " 8 or 27 = " << flags->d_8or27 << endl;
+
   if (flags->d_artificialDampCoeff > 0.0) {
     t->computes(lb->pDampingRateLabel); 
     t->computes(lb->pDampingCoeffLabel); 
@@ -286,7 +288,9 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
                                                 SchedulerP& sched)
 {
-  cout_doing << "Doing SerialMPM::scheduleInitializeAddedMaterial " << endl;
+  if (cout_doing.active())
+    cout_doing << "Doing SerialMPM::scheduleInitializeAddedMaterial " << endl;
+
   Task* t = scinew Task("SerialMPM::actuallyInitializeAddedMaterial",
                   this, &SerialMPM::actuallyInitializeAddedMaterial);
                                                                                 
@@ -470,10 +474,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pSp_volLabel,           gan,NGP); 
   t->requires(Task::OldDW, lb->pErosionLabel,          gan, NGP);
-  
-  if(flags->d_8or27==27){
-    t->requires(Task::OldDW,lb->pSizeLabel,             gan,NGP);
-  }
+  t->requires(Task::OldDW,lb->pSizeLabel,             gan,NGP);
+    
   //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
 
   t->computes(lb->gMassLabel);
@@ -508,8 +510,9 @@ void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
    *   the temperature differences)
    *   out(G.EXTERNAL_HEAT_RATE) */
 
-  cout_doing << getpid() << " Doing MPM::ThermalContact::computeHeatExchange "
-             << endl;
+  if (cout_doing.active())
+    cout_doing << getpid() << " Doing MPM::ThermalContact::computeHeatExchange " << endl;
+
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
                         thermalContactModel,
                         &ThermalContact::computeHeatExchange);
@@ -606,11 +609,7 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,    Ghost::None);
-
-  if(flags->d_8or27==27){
-    t->requires(Task::OldDW,lb->pSizeLabel,             Ghost::None);
-  }
-
+  t->requires(Task::OldDW,lb->pSizeLabel,             Ghost::None);
   t->requires(Task::NewDW,lb->gVelocityLabel, gac, NGN);
   t->computes(lb->p_qLabel);
 
@@ -663,9 +662,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pMassLabel,                 gan,NGP);
-  if(flags->d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
-  }
+  t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
+    
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,    gan, NGP);
 
   if(d_with_ice){
@@ -706,9 +704,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::OldDW, lb->pXLabel,                         gan, NGP);
-  if(flags->d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,                    gan, NGP);
-  }
+  t->requires(Task::OldDW, lb->pSizeLabel,                    gan, NGP);
   t->requires(Task::OldDW, lb->pMassLabel,                      gan, NGP);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,            gan, NGP);
   t->requires(Task::NewDW, lb->pInternalHeatRateLabel_preReloc, gan, NGP);
@@ -739,11 +735,11 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   //Uncomment  the next line to use damping
   //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-
+#if 0
   if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
   }
-
+#endif
   t->computes(lb->gAccelerationLabel);
   sched->addTask(t, patches, matls);
 }
@@ -870,8 +866,7 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
                         &SerialMPM::calculateDampingRate);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::AroundCells, NGN);
     t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
-    if(flags->d_8or27==27) 
-      t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
+    t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
 
     t->computes(lb->pDampingRateLabel);
     sched->addTask(t, patches, matls);
@@ -914,21 +909,34 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
 
   int numMatls = d_sharedState->getNumMPMMatls();
 
-  cout_convert << "MPM:scheduleConvertLocalizedParticles : numMatls = " 
-               << numMatls << endl;
+
+  if (cout_convert.active())
+    cout_convert << "MPM:scheduleConvertLocalizedParticles : numMatls = " << numMatls << endl;
+
   for(int m = 0; m < numMatls; m+=2){
 
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    cout_convert << " Material = " << m << " mpm_matl = " << mpm_matl << endl;
+    if (cout_convert.active())
+      cout_convert << " Material = " << m << " mpm_matl = " <<mpm_matl<< endl;
+
     mpm_matl->getParticleCreator()->allocateVariablesAddRequires(t, mpm_matl,
                                                                  patches, lb);
-    cout_convert << "   Done ParticleCreator::allocateVariablesAddRequires\n";
+    if (cout_convert.active())
+      cout_convert << "   Done ParticleCreator::allocateVariablesAddRequires\n";
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cout_convert << "   cm = " << cm << endl;
+    if (cout_convert.active())
+      cout_convert << "   cm = " << cm << endl;
+
     cm->allocateCMDataAddRequires(t,mpm_matl,patches,lb);
-    cout_convert << "   Done cm->allocateCMDataAddRequires = " << endl;
+
+    if (cout_convert.active())
+      cout_convert << "   Done cm->allocateCMDataAddRequires = " << endl;
+
     cm->addRequiresDamageParameter(t, mpm_matl, patches);
-    cout_convert << "   Done cm->addRequiresDamageParameter = " << endl;
+
+    if (cout_convert.active())
+      cout_convert << "   Done cm->addRequiresDamageParameter = " << endl;
+
   }
 
   sched->addTask(t, patches, matls);
@@ -1039,7 +1047,10 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   // the finest level.  Thus to schedule cells for regridding during the 
   // execution, we'll coarsen the flagged cells (see coarsen).
 
-  cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+  if (cout_doing.active())
+    cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+
+
   // Estimate error - this should probably be in it's own schedule,
   // and the simulation controller should not schedule it every time step
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1063,7 +1074,10 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
 void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                              SchedulerP& sched)
 {
-  cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+
+  if (cout_doing.active())
+    cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+
   // Estimate error - this should probably be in it's own schedule,
   // and the simulation controller should not schedule it every time step
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1162,7 +1176,10 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-  cout_dbg << "Current Time (Initialize Pressure BC) = " << time << endl;
+
+  if (cout_dbg.active())
+    cout_dbg << "Current Time (Initialize Pressure BC) = " << time << endl;
+
 
   // Calculate the force vector at each particle
   int nofPressureBCs = 0;
@@ -1179,8 +1196,10 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
       PressureBC* pbc =
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       pbc->numMaterialPoints(numPart);
-      cout_dbg << "    Load Curve = " << nofPressureBCs 
-                 << " Num Particles = " << numPart << endl;
+
+      if (cout_dbg.active())
+      cout_dbg << "    Load Curve = " << nofPressureBCs << " Num Particles = " << numPart << endl;
+
 
       // Calculate the force per particle at t = 0.0
       double forcePerPart = pbc->forcePerParticle(time);
@@ -1225,8 +1244,9 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-               <<"\t\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+
 
     CCVariable<short int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
@@ -1287,8 +1307,9 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing actuallyInitializeAddedMaterial on patch "
-               << patch->getID() <<"\t\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing actuallyInitializeAddedMaterial on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     cout << "num Matls = " << numMPMMatls << endl;
@@ -1323,10 +1344,17 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID()
-               <<"\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID() <<"\t\t MPM"<< endl;
+
 
     int numMatls = d_sharedState->getNumMPMMatls();
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+
 
     NCVariable<double> gmassglobal,gtempglobal;
     NCVariable<Vector> gvelglobal;
@@ -1361,9 +1389,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
-      if(flags->d_8or27==27){
-        old_dw->get(psize,        lb->pSizeLabel,          pset);
-      }
+      old_dw->get(psize,        lb->pSizeLabel,          pset);
       old_dw->get(pErosion,       lb->pErosionLabel,       pset);
 
       // Create arrays for the grid data
@@ -1409,9 +1435,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
-
-      IntVector ni[MAX_BASIS];
-      double S[MAX_BASIS];
       Vector pmom;
       int n8or27=flags->d_8or27;
 
@@ -1421,12 +1444,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(n8or27==8){
-          patch->findCellAndWeights(px[idx], ni, S);
-        }
-        else if(n8or27==27){
-          patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
-        }
+	interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
         total_mom += pvelocity[idx]*pmass[idx];
@@ -1476,6 +1494,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
     }
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
   }  // End loop over patches
 }
 
@@ -1486,17 +1507,32 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
 
-  cout_doing <<"Doing computeStressTensor:MPM: \n" ;
+  if (cout_doing.active())
+    cout_doing <<"Doing computeStressTensor:MPM: \n" ;
+
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-    cout_dbg << " Patch = " << (patches->get(0))->getID();
-    cout_dbg << " Mat = " << m;
+
+    if (cout_dbg.active()) {
+      cout_dbg << " Patch = " << (patches->get(0))->getID();
+      cout_dbg << " Mat = " << m;
+    }
+
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    cout_dbg << " MPM_Mat = " << mpm_matl;
+
+    if (cout_dbg.active())
+      cout_dbg << " MPM_Mat = " << mpm_matl;
+
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cout_dbg << " CM = " << cm;
+
+    if (cout_dbg.active())
+      cout_dbg << " CM = " << cm;
+
     cm->setWorld(d_myworld);
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-    cout_dbg << " Exit\n" ;
+
+    if (cout_dbg.active())
+      cout_dbg << " Exit\n" ;
+
   }
 }
 
@@ -1508,27 +1544,35 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
 {
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    cout_doing << getpid() << "Doing updateErosionParameter on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+
+    if (cout_doing.active())
+      cout_doing << getpid() << "Doing updateErosionParameter on patch "  << patch->getID() << "\t MPM"<< endl;
+
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
 
-      cout_dbg << "updateErosionParameter:: material # = " << m << endl;
+      if (cout_dbg.active())
+	cout_dbg << "updateErosionParameter:: material # = " << m << endl;
+
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      cout_dbg << "updateErosionParameter:: mpm_matl* = " << mpm_matl
-                 << " dwi = " << dwi << " pset* = " << pset << endl;
+      if (cout_dbg.active())
+	cout_dbg << "updateErosionParameter:: mpm_matl* = " << mpm_matl << " dwi = " << dwi << " pset* = " << pset << endl;
+
 
       // Get the erosion data
       constParticleVariable<double> pErosion;
       ParticleVariable<double> pErosion_new;
       old_dw->get(pErosion, lb->pErosionLabel, pset);
       new_dw->allocateAndPut(pErosion_new, lb->pErosionLabel_preReloc, pset);
-      cout_dbg << "updateErosionParameter:: Got Erosion data" << endl;
+
+      if (cout_dbg.active())
+	cout_dbg << "updateErosionParameter:: Got Erosion data" << endl;
+
 
       // Get the localization info
       ParticleVariable<int> isLocalized;
@@ -1537,7 +1581,10 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
       for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
-      cout_dbg << "updateErosionParameter:: Got Damage Parameter" << endl;
+
+      if (cout_dbg.active())
+	cout_dbg << "updateErosionParameter:: Got Damage Parameter" << endl;
+
 
       iter = pset->begin(); 
       for (; iter != pset->end(); iter++) {
@@ -1549,11 +1596,15 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
         } 
       }
 
-      cout_dbg << "updateErosionParameter:: Updated Erosion " << endl;
+      if (cout_dbg.active())
+	cout_dbg << "updateErosionParameter:: Updated Erosion " << endl;
+
 
     }
-    cout_dbg <<"Done updateErosionParamter on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+
+    if (cout_dbg.active())
+      cout_dbg <<"Done updateErosionParamter on patch "  << patch->getID() << "\t MPM"<< endl;
+
   }
 }
 
@@ -1568,8 +1619,9 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID()
-               <<"\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID() <<"\t\t MPM"<< endl;
+
 
     // The following scheme for removing ringing behind a shock comes from:
     // VonNeumann, J.; Richtmyer, R. D. (1950): A method for the numerical
@@ -1578,6 +1630,12 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
     int numMatls = d_sharedState->getNumMPMMatls();
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1594,9 +1652,7 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
       old_dw->get(pmass,     lb->pMassLabel,                   pset);
       new_dw->get(pvol_def,  lb->pVolumeDeformedLabel,         pset);
       new_dw->allocateAndPut(p_q,    lb->p_qLabel,             pset);
-      if(flags->d_8or27==27){
-        old_dw->get(psize,   lb->pSizeLabel,                   pset);
-      }
+      old_dw->get(psize,   lb->pSizeLabel,                   pset);
 
       Matrix3 velGrad;
       Vector dx = patch->dCell();
@@ -1611,15 +1667,8 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        IntVector ni[MAX_BASIS];
-        Vector d_S[MAX_BASIS];
 
-        if(flags->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        }
-        else if(flags->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-        }
+	interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
         velGrad.set(0.0);
         for(int k = 0; k < flags->d_8or27; k++) {
@@ -1645,6 +1694,9 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 
       }
     }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 
 }
@@ -1660,9 +1712,10 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
-    cout_doing <<"Doing computeContactArea on patch " << patch->getID()
-               <<"\t\t\t MPM"<< endl;
+
+    if (cout_doing.active())
+      cout_doing <<"Doing computeContactArea on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+
     
     Vector dx = patch->dCell();
     double cellvol = dx.x()*dx.y()*dx.z();
@@ -1739,8 +1792,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing computeInternalForce on patch " << patch->getID()
-               <<"\t\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing computeInternalForce on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -1750,6 +1804,15 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     double cellvol = dx.x()*dx.y()*dx.z();
     Matrix3 Id;
     Id.Identity();
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
@@ -1784,9 +1847,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pmass,   lb->pMassLabel,                   pset);
       new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
-      if(flags->d_8or27==27){
-        old_dw->get(psize, lb->pSizeLabel,                   pset);
-      }
+      old_dw->get(psize, lb->pSizeLabel,                   pset);
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
@@ -1818,9 +1879,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       }
 
       internalforce.initialize(Vector(0,0,0));
-      IntVector ni[MAX_BASIS];
-      double S[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
+
       Matrix3 stressmass;
       Matrix3 stresspress;
       int n8or27 = flags->d_8or27;
@@ -1831,13 +1890,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        if(n8or27==8){
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
-        }
-        else if(n8or27==27){
-          patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
-                                                         psize[idx]);
-        }
+	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+							    psize[idx]);
 
         stressmass  = pstress[idx]*pmass[idx];
         //stresspress = pstress[idx] + Id*p_pressure[idx];
@@ -1922,6 +1976,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       IntVector c = *iter;
       gstressglobal[c] /= gmassglobal[c];
     }
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
+    delete[] d_S;
   }
   new_dw->put(sum_vartype(partvoldef), lb->TotalVolumeDeformedLabel);
   
@@ -1957,9 +2015,18 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()
-               <<"\t\t MPM"<< endl;
-    cout_heat << " Patch = " << patch->getID() << endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing computeInternalHeatRate on patch " << patch->getID()<<"\t\t MPM"<< endl;
+    if (cout_heat.active())
+      cout_heat << " Patch = " << patch->getID() << endl;
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -1971,7 +2038,10 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      cout_heat << "  Material = " << m << endl;
+
+      if (cout_heat.active())
+	cout_heat << "  Material = " << m << endl;
+
       int dwi = mpm_matl->getDWIndex();
       double kappa = mpm_matl->getThermalConductivity();
       double Cv = mpm_matl->getSpecificHeat();
@@ -1994,13 +2064,9 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       old_dw->get(px,           lb->pXLabel,                         pset);
       new_dw->get(pvol,         lb->pVolumeDeformedLabel,            pset);
       new_dw->get(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, pset);
-
       old_dw->get(pMass,        lb->pMassLabel,                      pset);
-      if(flags->d_8or27==27){
-        old_dw->get(psize,      lb->pSizeLabel,           pset);
-      }
+      old_dw->get(psize,      lb->pSizeLabel,           pset);
       new_dw->get(pErosion,     lb->pErosionLabel_preReloc, pset);
-
       new_dw->get(gTemperature, lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
       new_dw->get(gMass,        lb->gMassLabel,          dwi, patch, gnone, 0);
       new_dw->allocateAndPut(internalHeatRate, lb->gInternalHeatRateLabel,
@@ -2017,9 +2083,6 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       gPIntHeatRate.initialize(0.);
 
       // First compute the temperature gradient at each particle
-      double S[MAX_BASIS];
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
 
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); 
@@ -2027,19 +2090,18 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(flags->d_8or27==8){
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-        }
-        else if(flags->d_8or27==27){
-          patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                         psize[idx]);
-        }
+	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+							    psize[idx]);
 
         // Weight the particle internal heat rate with the mass
         double pIntHeatRate_massWt = pIntHeatRate[idx]*pMass[idx];
-        cout_heat << " Particle = " << idx << endl;
-        //cout_heat << " pIntHeatRate = " << pIntHeatRate[idx]
-        //          << " pMass = " << pMass[idx] << endl;
+
+	if (cout_heat.active()) {
+	  cout_heat << " Particle = " << idx << endl;
+	  cout_heat << " pIntHeatRate = " << pIntHeatRate[idx]
+		    << " pMass = " << pMass[idx] << endl;
+	}
+
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < flags->d_8or27; k++){
@@ -2047,19 +2109,27 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
           for (int j = 0; j<3; j++) {
             pTemperatureGradient[idx][j] += 
               gTemperature[ni[k]] * d_S[k][j] * oodx[j];
-            cout_heat << "   node = " << ni[k]
-                      << " gTemp = " << gTemperature[ni[k]]
-                      << " idx = " << idx
-                      << " pTempGrad = " << pTemperatureGradient[idx][j]
-                      << endl;
+
+	    if (cout_heat.active()) {
+	      cout_heat << "   node = " << ni[k]
+			<< " gTemp = " << gTemperature[ni[k]]
+			<< " idx = " << idx
+			<< " pTempGrad = " << pTemperatureGradient[idx][j]
+			<< endl;
+	    }
+
           }
           // Project the mass weighted particle internal heat rate to
           // the grid
           if(patch->containsNode(ni[k])){
              S[k] *= pErosion[idx];
              gPIntHeatRate[ni[k]] +=  (pIntHeatRate_massWt*S[k]);
-             //cout_heat << "   k = " << k << " node = " << ni[k] 
-             //          << " gPIntHeatRate = " << gPIntHeatRate[ni[k]] << endl;
+
+	if (cout_heat.active()) {
+	  cout_heat << "   k = " << k << " node = " << ni[k] 
+		    << " gPIntHeatRate = " << gPIntHeatRate[ni[k]] << endl;
+	}
+
           }
         }
       }
@@ -2069,8 +2139,12 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       // grid nodes by dividing gPIntHeatRate by the grid mass
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
-        //cout_heat << " c = " << c << " gPIntHeatRate = " << gPIntHeatRate[c]
-        //          << " gMass = " << gMass[c] << endl;
+
+	if (cout_heat.active()) {
+	  cout_heat << " c = " << c << " gPIntHeatRate = " << gPIntHeatRate[c]
+		    << " gMass = " << gMass[c] << endl;
+	}
+
         gPIntHeatRate[c] /= gMass[c];
         internalHeatRate[c] = gPIntHeatRate[c];
       }
@@ -2081,12 +2155,8 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        if(flags->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        }
-        else if(flags->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
-        }
+	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+							    psize[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
@@ -2100,15 +2170,22 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
                        d_S[k].z()*oodx[2]);
             T_ii = Dot(div, T_i)*(alpha/gMass[node])*flags->d_adiabaticHeating;
             internalHeatRate[node] -= T_ii;
-            cout_heat << "   node = " << node << " div = " << div 
-                      << " T_i = " << T_i << " alpha = " << alpha*Cv 
-                      << " T_ii = " << T_ii*Cv*gMass[node]
-                      << " internalHeatRate = " << internalHeatRate[node] 
-                      << endl;
+
+	    if (cout_heat.active()) {
+	      cout_heat << "   node = " << node << " div = " << div 
+			<< " T_i = " << T_i << " alpha = " << alpha*Cv 
+			<< " T_ii = " << T_ii*Cv*gMass[node]
+			<< " internalHeatRate = " << internalHeatRate[node] 
+			<< endl;
+	    }
           }
         }
       }
     }  // End of loop over materials
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
+    delete[] d_S;
   }  // End of loop over patches
 }
 
@@ -2122,8 +2199,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
-               <<"\t\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
 
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
@@ -2135,12 +2212,13 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       // Get required variables for this patch
       constNCVariable<Vector> internalforce;
       constNCVariable<Vector> externalforce;
-      constNCVariable<Vector> gradPAccNC;  // for MPMICE
+      //constNCVariable<Vector> gradPAccNC;  // for MPMICE
       constNCVariable<double> mass;
  
       new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
+#if 0
       if(d_with_ice){
         new_dw->get(gradPAccNC, lb->gradPAccNCLabel,     dwi, patch, gnone, 0);
       }
@@ -2150,7 +2228,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         gradPAccNC_create.initialize(Vector(0.,0.,0.));
         gradPAccNC = gradPAccNC_create; // reference created data
       }
-
+#endif
       //Uncomment to use damping
       //constNCVariable<Vector> velocity;
       //new_dw->get(velocity,  lb->gVelocityLabel,      dwi, patch, gnone, 0);
@@ -2165,10 +2243,12 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
-        //if (mass[c] > 1.0e-199)
-          acc = (internalforce[c] + externalforce[c])/mass[c] ;
-        acceleration[c] = acc +  gravity + gradPAccNC[c];
-
+	//if (mass[c] > 1.0e-199)
+	  acc = (internalforce[c] + externalforce[c])/mass[c] ;
+	  acceleration[c] = acc +  gravity;
+#if 0
++ gradPAccNC[c];
+#endif
 //                 acceleration[c] =
 //                    (internalforce[c] + externalforce[c]
 //                    -5000.*velocity[c]*mass[c])/mass[c]
@@ -2187,8 +2267,9 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing solveHeatEquations on patch " << patch->getID()
-               <<"\t\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing solveHeatEquations on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2240,8 +2321,9 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing integrateAcceleration on patch " << patch->getID()
-               <<"\t\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing integrateAcceleration on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
+
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2277,8 +2359,9 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing integrateTemperatureRate on patch " << patch->getID()
-               << "\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing integrateTemperatureRate on patch " << patch->getID()<< "\t\t MPM"<< endl;
+
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
@@ -2328,8 +2411,9 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->getID()
-               <<"\t\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing setGridBoundaryConditions on patch " << patch->getID()<<"\t\t MPM"<< endl;
+
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
@@ -2365,7 +2449,10 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 {
   // Get the current time
   double time = d_sharedState->getElapsedTime();
-  cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
+
+  if (cout_doing.active())
+    cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
+
 
   // Calculate the force vector at each particle for each pressure bc
   std::vector<double> forcePerPart;
@@ -2399,8 +2486,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing applyExternalLoads on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing applyExternalLoads on patch "  << patch->getID() << "\t MPM"<< endl;
+
 
     // Place for user defined loading scenarios to be defined,
     // otherwise pExternalForce is just carried forward.
@@ -2524,11 +2612,21 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
 
-      cout_doing <<"Doing calculateDampingRate on patch " 
-                 << patch->getID() << "\t MPM"<< endl;
+      if (cout_doing.active())
+	cout_doing <<"Doing calculateDampingRate on patch "   << patch->getID() << "\t MPM"<< endl;
+
 
       double alphaDot = 0.0;
       int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+      ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+      IntVector* ni;
+      ni = new IntVector[interpolator->size()];
+      double* S;
+      S = new double[interpolator->size()];
+      Vector* d_S;
+      d_S = new Vector[interpolator->size()];
+
       for(int m = 0; m < numMPMMatls; m++){
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
         int dwi = mpm_matl->getDWIndex();
@@ -2542,25 +2640,17 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
 
         ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
         old_dw->get(px, lb->pXLabel, pset);
-        if(flags->d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
+	old_dw->get(psize, lb->pSizeLabel, pset);
         Ghost::GhostType  gac = Ghost::AroundCells;
         new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,dwi,patch,gac,NGP);
-
-        IntVector ni[MAX_BASIS];
-        double S[MAX_BASIS];
-        Vector d_S[MAX_BASIS];
-
         // Calculate artificial dampening rate based on the interpolated particle
         // velocities (ref. Ayton et al., 2002, Biophysical Journal, 1026-1038)
         // d(alpha)/dt = 1/Q Sum(vp*^2)
         ParticleSubset::iterator iter = pset->begin();
         for(;iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          if (flags->d_8or27 == 27) 
-            patch->findCellAndWeightsAndShapeDerivatives27(px[idx],ni,S,d_S,
-                                                           psize[idx]);
-          else
-            patch->findCellAndWeightsAndShapeDerivatives(  px[idx],ni,S,d_S);
+	  interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
+							      d_S,psize[idx]);
           Vector vel(0.0,0.0,0.0);
           for (int k = 0; k < flags->d_8or27; k++) 
             vel += gvelocity_star[ni[k]]*S[k];
@@ -2569,6 +2659,10 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
         alphaDot /= flags->d_artificialDampCoeff;
       } 
       new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
+      delete interpolator;
+      delete[] S;
+      delete[] ni;
+      delete[] d_S;
     }
   }
 }
@@ -2582,8 +2676,9 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing addNewParticles on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing addNewParticles on patch "  << patch->getID() << "\t MPM"<< endl;
+
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     // Find the mpm material that the void particles are going to change
@@ -2592,7 +2687,10 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
     int null_dwi = -1;
     for (int void_matl = 0; void_matl < numMPMMatls; void_matl++) {
       null_dwi = d_sharedState->getMPMMaterial(void_matl)->nullGeomObject();
-      cout_dbg << "Null DWI = " << null_dwi << endl;
+
+      if (cout_dbg.active())
+	cout_dbg << "Null DWI = " << null_dwi << endl;
+
       if (null_dwi != -1) {
         null_matl = d_sharedState->getMPMMaterial(void_matl);
         null_dwi = void_matl;
@@ -2629,7 +2727,10 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
            iter++) {
         if (damage[*iter]) {
-          cout_dbg << "damage[" << *iter << "]=" << damage[*iter] << endl;
+
+	  if (cout_dbg.active())
+	    cout_dbg << "damage[" << *iter << "]=" << damage[*iter] << endl;
+
           delset->addParticle(*iter);
         }
       }
@@ -2640,31 +2741,45 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
       
       
       int numparticles = delset->numParticles();
-      cout_dbg << "Num Failed Particles = " << numparticles << endl;
+
+      if (cout_dbg.active())
+	cout_dbg << "Num Failed Particles = " << numparticles << endl;
+
       if (numparticles != 0) {
-        cout_dbg << "Deleted " << numparticles << " particles" << endl;
+
+	if (cout_dbg.active())
+	  cout_dbg << "Deleted " << numparticles << " particles" << endl;
+
         ParticleCreator* particle_creator = null_matl->getParticleCreator();
         ParticleSet* set_add = scinew ParticleSet(numparticles);
         ParticleSubset* addset = scinew ParticleSubset(set_add,true,null_dwi,
                                                        patch,numparticles);
 
-        //cout_dbg << "Address of delset = " << delset << endl;
-        //cout_dbg << "Address of pset = " << pset << endl;
-        //cout_dbg << "Address of set_add = " << set_add << endl;
-        //cout_dbg << "Address of addset = " << addset << endl;
+	if (cout_dbg.active()) {
+	  cout_dbg << "Address of delset = " << delset << endl;
+	  cout_dbg << "Address of pset = " << pset << endl;
+	  cout_dbg << "Address of set_add = " << set_add << endl;
+	  cout_dbg << "Address of addset = " << addset << endl;
+	}
+
         
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
 
-        //cout_dbg << "Address of newState = " << newState << endl;
+	if (cout_dbg.active()) {
+	  cout_dbg << "Address of newState = " << newState << endl;
+	  
+	  cout_dbg << "Null Material" << endl;
+	}
 
-        //cout_dbg << "Null Material" << endl;
         //vector<const VarLabel* > particle_labels = 
         //  particle_creator->returnParticleState();
 
         //printParticleLabels(particle_labels, old_dw, null_dwi,patch);
 
-        //cout_dbg << "MPM Material" << endl;
+	if (cout_dbg.active())
+	  cout_dbg << "MPM Material" << endl;
+
         //vector<const VarLabel* > mpm_particle_labels = 
         //  mpm_matl->getParticleCreator()->returnParticleState();
         //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
@@ -2681,11 +2796,17 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
         // Need to carry forward the cellNAPID for each time step;
         // Move the particle variable declarations in ParticleCreator.h to one
         // of the functions to save on memory;
-        
-        //cout_dbg << "addset num particles = " << addset->numParticles()
-        //     << " for material " << addset->getMatlIndex() << endl;
+
+	if (cout_dbg.active()){
+	  cout_dbg << "addset num particles = " << addset->numParticles()
+		   << " for material " << addset->getMatlIndex() << endl;
+	}
+
         new_dw->addParticles(patch,null_dwi,newState);
-        //cout_dbg << "Calling deleteParticles for material: " << dwi << endl;
+
+	if (cout_dbg.active())
+	  cout_dbg << "Calling deleteParticles for material: " << dwi << endl;
+
         new_dw->deleteParticles(delset);
         
       } else
@@ -2710,23 +2831,33 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing convertLocalizedParticles on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+    if (cout_doing.active())
+      cout_doing <<"Doing convertLocalizedParticles on patch " << patch->getID() << "\t MPM"<< endl;
+
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    cout_convert << "MPM::convertLocalizeParticles:: on patch"
-                 << patch->getID() << " numMPMMaterials = " << numMPMMatls
-                 << endl;
+
+    if (cout_convert.active()) {
+      cout_convert << "MPM::convertLocalizeParticles:: on patch"
+		   << patch->getID() << " numMPMMaterials = " << numMPMMatls
+		   << endl;
+    }
+
     for(int m = 0; m < numMPMMatls; m+=2){
 
-      cout_convert << " material # = " << m << endl;
+      if (cout_convert.active())
+	cout_convert << " material # = " << m << endl;
+
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      cout_convert << " mpm_matl* = " << mpm_matl
-                 << " dwi = " << dwi << " pset* = " << pset << endl;
+      if (cout_convert.active()) {
+	cout_convert << " mpm_matl* = " << mpm_matl
+		     << " dwi = " << dwi << " pset* = " << pset << endl;
+      }
+
 
       ParticleVariable<int> isLocalized;
 
@@ -2742,29 +2873,39 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
 
-      cout_convert << " Got Damage Parameter" << endl;
+      if (cout_convert.active())
+	cout_convert << " Got Damage Parameter" << endl;
+
 
       iter = pset->begin(); 
       for (; iter != pset->end(); iter++) {
         if (isLocalized[*iter]) {
-          cout_convert << "damage[" << *iter << "]=" 
-                       << isLocalized[*iter] << endl;
+
+	  if (cout_convert.active())
+	    cout_convert << "damage[" << *iter << "]=" << isLocalized[*iter] << endl;
           delset->addParticle(*iter);
         }
       }
 
-      cout_convert << " Created Delset ";
+      if (cout_convert.active())
+	cout_convert << " Created Delset ";
+
 
       int numparticles = delset->numParticles();
 
-      cout_convert << " numparticles = " << numparticles << endl;
+      if (cout_convert.active())
+	cout_convert << " numparticles = " << numparticles << endl;
+
 
       if (numparticles != 0) {
 
-        cout_convert << " Converting " 
-                   << numparticles << " particles of material " 
-                   <<  m  << " into particles of material " << (m+1) 
-                   << " in patch " << p << endl;
+	if (cout_convert.active()) {
+	  cout_convert << " Converting " 
+		       << numparticles << " particles of material " 
+		       <<  m  << " into particles of material " << (m+1) 
+		       << " in patch " << p << endl;
+	}
+
 
         MPMMaterial* conv_matl = d_sharedState->getMPMMaterial(m+1);
         int conv_dwi = conv_matl->getDWIndex();
@@ -2778,12 +2919,16 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
 
-        //cout_convert << "New Material" << endl;
+	if (cout_convert.active())
+	  cout_convert << "New Material" << endl;
+
         //vector<const VarLabel* > particle_labels = 
         //  particle_creator->returnParticleState();
         //printParticleLabels(particle_labels, old_dw, conv_dwi,patch);
 
-        //cout_convert << "MPM Material" << endl;
+	if (cout_convert.active())
+	  cout_convert << "MPM Material" << endl;
+
         //vector<const VarLabel* > mpm_particle_labels = 
         //  mpm_matl->getParticleCreator()->returnParticleState();
         //printParticleLabels(mpm_particle_labels, old_dw, dwi,patch);
@@ -2795,8 +2940,11 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
                                                              newState, delset,
                                                              old_dw);
 
-        cout_convert << "addset num particles = " << addset->numParticles()
-                   << " for material " << addset->getMatlIndex() << endl;
+	if (cout_convert.active()) {
+	  cout_convert << "addset num particles = " << addset->numParticles()
+		       << " for material " << addset->getMatlIndex() << endl;
+	}
+
         new_dw->addParticles(patch, conv_dwi, newState);
         new_dw->deleteParticles(delset);
         
@@ -2804,10 +2952,17 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       } 
       else delete delset;
     }
-    cout_convert <<"Done convertLocalizedParticles on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+
+    if (cout_convert.active()) {
+      cout_convert <<"Done convertLocalizedParticles on patch " 
+		   << patch->getID() << "\t MPM"<< endl;
+    }
+
   }
-  cout_convert << "Completed convertLocalizedParticles " << endl;
+
+  if (cout_convert.active())
+    cout_convert << "Completed convertLocalizedParticles " << endl;
+
   
 }
 
@@ -2820,8 +2975,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
-               << patch->getID() << "\t MPM"<< endl;
+    if (cout_doing.active()) {
+      cout_doing <<"Doing interpolateToParticlesAndUpdate on patch " 
+		 << patch->getID() << "\t MPM"<< endl;
+    }
+
+
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -2936,11 +3102,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
-
-      IntVector ni[MAX_BASIS];
-      double S[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
-
       double rho_frac_min = 0.;
       if(m == RMI){
         rho_frac_min = .1;
@@ -2953,13 +3114,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(flags->d_8or27==8){
-          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
-        }
-        else if(flags->d_8or27==27){
-          patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
-                                                         psize[idx]);
-        }
+	interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+							    psize[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);
@@ -2989,11 +3145,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT ;
         pSp_volNew[idx]      = pSp_vol[idx];
 
-        cout_heat << "MPM::Particle = " << idx 
+	if (cout_heat.active()) {
+	  cout_heat << "MPM::Particle = " << idx 
                     << " T_old = " << pTemperature[idx]
                     << " Tdot = " << tempRate
                     << " dT = " << (tempRate*delT)
                     << " T_new = " << pTempNew[idx] << endl;
+	}
+
 
         double rho;
         if(pvolume[idx] > 0.){
@@ -3072,6 +3231,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // cout << "Solid momentum after advection = " << CMV << endl;
 
     // cout << "THERMAL ENERGY " << thermal_energy << endl;
+
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
+    delete[] d_S;
   }
   
 }
@@ -3207,8 +3371,10 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
-    amr_doing << "Doing SerialMPM::initialErrorEstimate on patch "<< patch->getID()<< endl;
+
+    if (amr_doing.active()) 
+      amr_doing << "Doing SerialMPM::initialErrorEstimate on patch "<< patch->getID()<< endl;
+
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
     new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
@@ -3244,7 +3410,10 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
                          DataWarehouse* new_dw)
 {
   // coarsen the errorflag.
-  cout_doing << "Doing Serial::errorEstimate" << '\n';
+
+  if (cout_doing.active())
+    cout_doing << "Doing Serial::errorEstimate" << '\n';
+
   const Level* level = getLevel(patches);
   if (level->getIndex() == level->getGrid()->numLevels()-1) {
     // on finest level, we do the same thing as initialErrorEstimate, so call it
@@ -3255,7 +3424,10 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
   
     for(int p=0;p<patches->size();p++){  
       const Patch* coarsePatch = patches->get(p);
-      amr_doing << "Doing SerialMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
+
+      if (amr_doing.active())
+	amr_doing << "Doing SerialMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
+
       // Find the overlapping regions...
 
       CCVariable<int> refineFlag;
@@ -3317,8 +3489,12 @@ SerialMPM::refine(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      cout_doing <<"Doing refine on patch "
-                 << patch->getID() << " material # = " << dwi << endl;
+
+      if (cout_doing.active()) {
+	cout_doing <<"Doing refine on patch "
+		   << patch->getID() << " material # = " << dwi << endl;
+      }
+
       if (!new_dw->haveParticleSubset(dwi, patch)) {
         ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
 
@@ -3357,7 +3533,10 @@ void SerialMPM::scheduleCheckNeedAddMPMMaterial(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  cout_doing << "SerialMPM::scheduleCheckNeedAddMaterial" << endl;
+
+  if (cout_doing.active())
+    cout_doing << "SerialMPM::scheduleCheckNeedAddMaterial" << endl;
+
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::checkNeedAddMPMMaterial",
                         this, &SerialMPM::checkNeedAddMPMMaterial);
@@ -3376,7 +3555,10 @@ void SerialMPM::checkNeedAddMPMMaterial(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
-  cout_doing <<"Doing checkNeedAddMPMMaterial:MPM: \n" ;
+
+  if (cout_doing.active())
+    cout_doing <<"Doing checkNeedAddMPMMaterial:MPM: \n" ;
+
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
@@ -3388,7 +3570,10 @@ void SerialMPM::scheduleSetNeedAddMaterialFlag(SchedulerP& sched,
                                                const LevelP& level,
                                                const MaterialSet* all_matls)
 {
-  cout_doing << "SerialMPM::scheduleSetNeedAddMaterialFlag" << endl;
+
+  if (cout_doing.active())
+    cout_doing << "SerialMPM::scheduleSetNeedAddMaterialFlag" << endl;
+
   Task* t= scinew Task("SerialMPM::setNeedAddMaterialFlag",
                this, &SerialMPM::setNeedAddMaterialFlag);
   t->requires(Task::NewDW, lb->NeedAddMPMMaterialLabel);

@@ -1,4 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
+#include <Packages/Uintah/CCA/Components/MPM/Node27Interpolator.h>
 #include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -34,11 +36,13 @@ MPMFlags::MPMFlags()
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
   d_canAddMPMMaterial = false;
+  d_interpolator = scinew LinearInterpolator(); 
   d_addFrictionWork = 1.0;  // do frictional heating by default
 }
 
 MPMFlags::~MPMFlags()
 {
+  delete d_interpolator;
 }
 
 void
@@ -80,24 +84,35 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     }
   }
 
-  dbg << "---------------------------------------------------------\n";
-  dbg << "MPM Flags " << endl;
-  dbg << "---------------------------------------------------------\n";
-  dbg << " Time Integration            = " << d_integrator_type << endl;
-  dbg << " Nodes for interpolation     = " << d_8or27 << endl;
-  dbg << " With Color                  = " << d_with_color << endl;
-  dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
-  dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
-  dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
-  dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
-  dbg << " Accumulate Strain Energy    = " << d_accStrainEnergy << endl;
-  dbg << " Adiabatic Heating On        = " << d_adiabaticHeating << endl;
-  dbg << " Create New Particles        = " << d_createNewParticles << endl;
-  dbg << " Add New Material            = " << d_addNewMaterial << endl;
-  dbg << " Do Erosion ?                = " << d_doErosion << endl;
-  dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
-  dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
-  dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
-  dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
-  dbg << "---------------------------------------------------------\n";
+  delete d_interpolator;
+
+  if(d_8or27==8){
+    d_interpolator = scinew LinearInterpolator();
+  } else if(d_8or27==27){
+    d_interpolator = scinew Node27Interpolator();
+  }
+
+  if (dbg.active()) {
+    dbg << "---------------------------------------------------------\n";
+    dbg << "MPM Flags " << endl;
+    dbg << "---------------------------------------------------------\n";
+    dbg << " Time Integration            = " << d_integrator_type << endl;
+    dbg << " Nodes for interpolation     = " << d_8or27 << endl;
+    dbg << " With Color                  = " << d_with_color << endl;
+    dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
+    dbg << " Artificial Viscosity On     = " << d_artificial_viscosity<< endl;
+    dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
+    dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
+    dbg << " Accumulate Strain Energy    = " << d_accStrainEnergy << endl;
+    dbg << " Adiabatic Heating On        = " << d_adiabaticHeating << endl;
+    dbg << " Create New Particles        = " << d_createNewParticles << endl;
+    dbg << " Add New Material            = " << d_addNewMaterial << endl;
+    dbg << " Do Erosion ?                = " << d_doErosion << endl;
+    dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
+    dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
+    dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
+    dbg << " Contact Friction Heating    = " << d_addFrictionWork << endl;
+    dbg << "---------------------------------------------------------\n";
+  }
+
 }

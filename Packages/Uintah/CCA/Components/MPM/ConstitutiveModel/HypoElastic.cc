@@ -29,19 +29,11 @@ using namespace Uintah;
 using namespace SCIRun;
 
 HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
-
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 
-  if(flag->d_8or27==8){
-    NGN=1;
-  } else if(flag->d_8or27==27){
-    NGN=2;
-  }
-  
   if (flag->d_fracture) {
     // Read in fracture criterion and the toughness curve
     ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
@@ -90,10 +82,6 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
 
 HypoElastic::HypoElastic(const HypoElastic* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  NGN = cm->NGN;
-
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
   if (flag->d_fracture)
@@ -263,6 +251,13 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     //  FIX  To do:  Read in table for vres
     //               Obtain and modify particle temperature (deg K)
     //
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
     double c_dil=0.0,Jinc;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -289,9 +284,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    if(flag->d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,               pset);
-    }
+    old_dw->get(psize,             lb->pSizeLabel,               pset);
+    
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
@@ -344,14 +338,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
-      IntVector ni[MAX_BASIS];
-      Vector d_S[MAX_BASIS];
-      if(flag->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-       }
-       else if(flag->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-       }
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
       
        Vector gvel;
@@ -441,6 +428,10 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
+
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
 }
 

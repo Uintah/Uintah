@@ -37,7 +37,6 @@ using namespace std;
 using std::vector;
 using std::string;
 
-#define MAX_BASIS 27
 
 void Crack::addComputesAndRequiresCrackPointSubset(Task* /*t*/,
                                 const PatchSet* /*patches*/,
@@ -96,8 +95,7 @@ void Crack::addComputesAndRequiresMoveCracks(Task* t,
   t->requires(Task::NewDW, lb->GNumPatlsLabel,     gac, NGC);
   t->requires(Task::NewDW, lb->GVelocityStarLabel, gac, NGC);
 
-  if(flag->d_8or27==27)
-   t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
+  t->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
 }
 
 void Crack::MoveCracks(const ProcessorGroup*,
@@ -107,12 +105,20 @@ void Crack::MoveCracks(const ProcessorGroup*,
                       DataWarehouse* new_dw)
 {
   for(int p=0; p<patches->size(); p++){
+    const Patch* patch = patches->get(p);
+
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    double* S;
+    S = new double[interpolator->size()];
+
     int pid,patch_size;
     MPI_Comm_rank(mpi_crack_comm, &pid);
     MPI_Comm_size(mpi_crack_comm, &patch_size);
     MPI_Datatype MPI_POINT=fun_getTypeDescription((Point*)0)->getMPIType();
 
-    const Patch* patch = patches->get(p);
+
     Vector dx = patch->dCell();
     double dx_min=Min(dx.x(),dx.y(),dx.z());
     //double vc=dx.x()*dx.y()*dx.z();
@@ -137,8 +143,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
 
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
       constParticleVariable<Vector> psize;
-      if(flag->d_8or27==27)
-        old_dw->get(psize,lb->pSizeLabel,pset);
+      old_dw->get(psize,lb->pSizeLabel,pset);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       constNCVariable<double> gmass,Gmass;
@@ -166,12 +171,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
               Vector vcm = Vector(0.0,0.0,0.0);
 
               // Get element nodes and shape functions
-              IntVector ni[MAX_BASIS];
-              double S[MAX_BASIS];
-              if(flag->d_8or27==8)
-                patch->findCellAndWeights(pt, ni, S);
-              else if(flag->d_8or27==27)
-                patch->findCellAndWeights27(pt, ni, S, psize[idx]);
+	      interpolator->findCellAndWeights(pt, ni, S, psize[idx]);
 
               // Calculate center-of-velocity (vcm)
               // Sum of shape functions from nodes with particle(s) around them
@@ -245,6 +245,9 @@ void Crack::MoveCracks(const ProcessorGroup*,
       } // End of loop over crack points
 
     } // End of loop over matls
+    delete interpolator;
+    delete[] S;
+    delete[] ni;
   }
 }
 

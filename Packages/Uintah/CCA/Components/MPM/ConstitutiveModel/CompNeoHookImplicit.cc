@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
+#include <Packages/Uintah/CCA/Components/MPM/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -28,30 +29,18 @@ using namespace Uintah;
 using namespace SCIRun;
 
 CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
-                                                            MPMFlags* Mflag)
+					 MPMFlags* Mflag)
+  : ConstitutiveModel(Mlb,Mflag)
 {
-  lb = Mlb;
-  flag = Mflag;
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->get("useModifiedEOS",d_useModifiedEOS); 
 
-  d_8or27 = flag->d_8or27;
-  if(d_8or27==8){
-    NGN=1;
-  } else if(d_8or27==27){
-    NGN=2;
-  }
-
 }
 
 CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
 {
-  lb = cm->lb;
-  flag = cm->flag;
-  d_8or27 = cm->d_8or27;
-  NGN = cm->NGN;
 
   d_useModifiedEOS = cm->d_useModifiedEOS;
   d_initialData.Bulk = cm->d_initialData.Bulk;
@@ -181,6 +170,13 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
 
     Matrix3 Identity;
+
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    IntVector* ni;
+    ni = new IntVector[interpolator->size()];
+    Vector* d_S;
+    d_S = new Vector[interpolator->size()];
+
     
     Identity.Identity();
     
@@ -247,7 +243,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         IntVector ni[8];
         Vector d_S[8];
 
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
         int l2g_node_num;
         for(int k = 0; k < 8; k++) {
@@ -426,6 +422,9 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
       }  // end of loop over particles
     }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
   }
   solver->flushMatrix();
 }
@@ -444,6 +443,12 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
 
      Matrix3 Identity;
+
+     LinearInterpolator* interpolator = new LinearInterpolator(patch);
+     IntVector* ni;
+     ni = new IntVector[interpolator->size()];
+     Vector* d_S;
+     d_S = new Vector[interpolator->size()];
 
      Identity.Identity();
 
@@ -494,21 +499,20 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        dispGrad.set(0.0);
-        // Get the node indices that surround the cell
-        IntVector ni[8];
-        Vector d_S[8];
 
-        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+	dispGrad.set(0.0);
+	// Get the node indices that surround the cell
 
-        for(int k = 0; k < 8; k++) {
-          const Vector& disp = dispNew[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-            }
-          }
-        }
+	interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+
+	for(int k = 0; k < 8; k++) {
+	  const Vector& disp = dispNew[ni[k]];
+	  for (int j = 0; j<3; j++){
+	    for (int i = 0; i<3; i++) {
+	      dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
+	    }
+	  }
+	}
 
         // Find the stressTensor using the displacement gradient
 
@@ -543,6 +547,9 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         pvolume_deformed[idx] = pvolumeold[idx]*J;
       }
      }
+    delete interpolator;
+    delete[] d_S;
+    delete[] ni;
    }
 }
 
