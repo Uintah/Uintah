@@ -56,25 +56,26 @@ proc makeNetworkEditor {} {
 
     tk_menuBar .main_menu .main_menu.file .main_menu.stats .main_menu.help
 
-    frame .all_lists -relief groove -borderwidth 0
-    pack .all_lists -side left -padx 5 -pady 5 -ipadx 2 -ipady 2
-    frame .all_lists.l
-    pack .all_lists.l -side left -padx 2 -pady 2
+    frame .all_lists -relief groove
+    pack .all_lists -side left -padx 5 -pady 5 -ipadx 2 -ipady 2 -fill y
+    frame .all_lists.l -relief groove
+    pack .all_lists.l -side left -padx 2 -pady 2 -fill y
     label .all_lists.l.title -text "Complete List:"
-    frame .all_lists.l.f
-    pack .all_lists.l.title .all_lists.l.f -anchor w
+    frame .all_lists.l.f -relief groove
+    pack .all_lists.l.title -anchor w
+    pack .all_lists.l.f -anchor w -fill y -expand 1
     
     scrollbar .all_lists.l.f.scroll -relief sunken \
 	-command ".all_lists.l.f.list yview"
     listbox .all_lists.l.f.list -yscroll ".all_lists.l.f.scroll set" \
 	-relief sunken -width 20 -height 34 -exportselection false
-    pack .all_lists.l.f.scroll -side right -fill y -padx 2
+    pack .all_lists.l.f.scroll -side right -fill y -padx 2 -expand yes -fill y
     pack .all_lists.l.f.list -side left -expand yes -fill both
     global netedit_completelist
     set netedit_completelist .all_lists.l.f.list
     
     frame .l
-    pack .l -anchor w
+    pack .l -anchor w -fill x
     
     frame .l.lists -relief groove -borderwidth 4
     pack .l.lists -padx 5 -pady 5 -ipadx 2 -ipady 2 -side left -anchor w
@@ -109,11 +110,11 @@ proc makeNetworkEditor {} {
     set netedit_modulelist .l.lists.l2.f.list
     
     frame .t -borderwidth 5
-    pack .t
+    pack .t -fill x
     text .t.text -relief sunken -bd 2 -yscrollcommand ".t.s set" \
 	-height 3 -width 80
     scrollbar .t.s -relief sunken -command ".t.text yview"
-    pack .t.s -side right -expand yes -fill y -padx 4
+    pack .t.s -side right -fill y -padx 4
     pack .t.text -expand yes -fill x
     global netedit_errortext
     set netedit_errortext .t.text
