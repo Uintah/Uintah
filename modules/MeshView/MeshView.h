@@ -35,6 +35,7 @@ class MeshView : public UserModule {
     double clipX, oldClipX, clipY, oldClipY, clipZ, oldClipZ;
     int deep;
     int allLevels;
+    int numShare, oldShare;
 
     int widget_id;
     double *data;

@@ -24,6 +24,7 @@
 #include <iostream.h>
 #include <fstream.h>
 #include <Classlib/Queue.h>
+#include <string.h>
 
 static Module* make_MeshView()
 {
@@ -42,7 +43,7 @@ MeshView::MeshView()
     readDat();
     levels = (int *) malloc (numTetra * sizeof(int));
     oldLev = -1;
-    numLevels=3;
+    numLevels=0;
     levSlide = new MUI_slider_int("Number of Levels",
 				  &numLevels,
 				  MUI_widget::Immediate, 1);
@@ -56,6 +57,13 @@ MeshView::MeshView()
 					MUI_widget::Immediate, 1);
     add_ui(seedSlide);	
     seedSlide -> set_minmax(0, numTetra - 1);
+
+    oldShare = 1;
+    numShare = 3;
+    MUI_slider_int *tmp = new MUI_slider_int("Shared Verts", &numShare,
+					     MUI_widget::Immediate, 1);
+    add_ui(tmp);
+    tmp -> set_minmax(1,3);
 
     oldClipX = Xmax;
     clipX = Xmin;
@@ -113,17 +121,20 @@ void MeshView::execute()
     int i;
   
     ogeom->delAll();
-    if (oldSeed != seedTet)
+    if ((oldSeed != seedTet) || (numShare != oldShare))
     {
 	makeLevels();
 	levSlide -> set_minmax(0, deep);
 	oldSeed = seedTet;
+	oldShare = numShare;
     }
 
     oldLev = numLevels;
     oldClipX = clipX;
     oldClipY = clipY;
     oldClipZ = clipZ;
+    ObjGroup *othGroup = new ObjGroup;
+    ObjGroup *levGroup = new ObjGroup;
     ObjGroup *group = new ObjGroup;
     for (i = 0; i < numTetra; i++)
     {
@@ -143,17 +154,43 @@ void MeshView::execute()
 		     data[tetra[i * 4 + 3] * 3 + 1],
 		     data[tetra[i * 4 + 3] * 3 + 2]);
 
-	    if (((p1.x() > clipX) && (p2.x() > clipX) && (p3.x() > clipX) &&
-		 (p4.x() > clipX)) &&
-		((p1.y() > clipY) && (p2.y() > clipY) && (p3.y() > clipY) &&
-		 (p4.y() > clipY)) &&
-		((p1.z() > clipZ) && (p2.z() > clipZ) && (p3.z() > clipZ) && 
-		(p4.z() > clipZ)))
-		group -> add(new Tetra(p1, p2, p3, p4));	
+	    if (((p1.x() >= clipX) && (p2.x() >= clipX) && (p3.x() >= clipX) &&
+		 (p4.x() >= clipX)) &&
+		((p1.y() >= clipY) && (p2.y() >= clipY) && (p3.y() >= clipY) &&
+		 (p4.y() >= clipY)) &&
+		((p1.z() >= clipZ) && (p2.z() >= clipZ) && (p3.z() >= clipZ) &&
+		 (p4.z() >= clipZ)))
+	    {
+		Vector dummy(0, 0, 0);
+		Tetra *nTet = new Tetra(p1, p2, p3, p4);
+		GeomPick* pick=new GeomPick(this, dummy);
+		nTet -> set_pick(pick);
+		if (levels[i] == numLevels)
+		    levGroup -> add(nTet);
+		else	
+		    othGroup -> add(nTet);
+	    }
 	}
     }
+<<<<<<< MeshView.cc
+
+    MaterialProp *mtl = new  MaterialProp(Color(.5, .5, .5),
+					  Color(.5, .5, .5),
+					  Color(.1, .1, .1),
+					  10);
+    levGroup -> set_matl(mtl);
+
+    othGroup -> set_matl(new MaterialProp(Color(1, 0, 0),
+					  Color(1, 0, 0),
+					  Color(.1, .1, .1),
+					  10));
+    group -> add(othGroup);
+    group -> add(levGroup);
+    ogeom -> addObj(group);
+=======
   
     ogeom -> addObj(group, mesh_name);
+>>>>>>> 1.5
 }	
 
 void MeshView::initList()
@@ -198,7 +235,7 @@ LPTR MeshView::newList()
 
 void MeshView::makeLevels()
 {
-    int i, j, x; 
+    int i, x; 
     Queue<int> q;
     LPTR curr;
     int *work, wCount;
@@ -245,10 +282,10 @@ void MeshView::makeLevels()
 		    work[curr -> tetra]++;
 		}
 	    }
-	    cerr << "Count " << counter << ": " <<  wCount << endl;
+//	    cerr << "Count " << counter << ": " <<  wCount << endl;
 	    for (i = 0; i < numTetra; i++)
 	    {
-		if (work[i] == 3)
+		if (work[i] == numShare)
 		    q.append(i);
 		work[i] = 0;
 	    }
@@ -262,8 +299,15 @@ void MeshView::readDat()
     FILE *dat, *tet;
     double x, y, z;
     int a, b, c, d;
+    char str[80], suff[10], str2[80];
 
-    dat = fopen("/home/grad/cgitlin/classes/cs523/project/cube.pts","r");
+    printf("Enter data file name (no suffix): ");
+    scanf("%s",str);
+
+    strcpy(str2, str);
+    strcpy(suff,".pts");
+    strcat(str2,suff);
+    dat = fopen(str2,"r");
     numVerts = 0;
 
     data = (double *) malloc (3 * 10000 * sizeof(double));
@@ -286,8 +330,11 @@ void MeshView::readDat()
 	if (Zmax < z) Zmax = z;
     }
 
-    
-    tet = fopen("/home/grad/cgitlin/classes/cs523/project/cube.tetra", "r");
+    strcpy(str2, str);
+    strcpy(suff,".tetra");
+    strcat(str2,suff);
+    tet = fopen(str2,"r");
+
     list = (LPTR *) malloc (numVerts * sizeof(LPTR));
 
     initList();
@@ -311,10 +358,10 @@ void MeshView::readDat()
     
 void MeshView::mui_callback(void*, int which)
 {
-    if ((which == 0) && (oldLev != numLevels))
+    if (oldLev != numLevels)
 	want_to_execute();
 
-    else if ((which == 1) && (oldSeed != seedTet))
+    else if (oldSeed != seedTet)
 	want_to_execute();
 
     else if (oldClipX != clipX)
@@ -324,6 +371,9 @@ void MeshView::mui_callback(void*, int which)
 	want_to_execute();
 
     else if (oldClipZ != clipZ)
+	want_to_execute();
+
+    else if (oldShare != numShare)
 	want_to_execute();
 
     else if (which == 3)
