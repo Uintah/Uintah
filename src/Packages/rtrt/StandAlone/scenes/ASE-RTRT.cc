@@ -212,7 +212,7 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
              Vector(0,0,1), 40);
   
   Color groundcolor(.7,.6,.5);
-  double ambient_scale=.9;
+  double ambient_scale=.3;
   
   Color bgcolor(.2,.2,.4);
   
@@ -221,7 +221,8 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
                          bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
                          ambient_scale);
   scene->add_light(new Light(Point(-2250,-11800,15000), Color(.8,.8,.8), 0));
-  scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));
+  if (env_map!="")
+    scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));
   scene->shadow_mode=0;
   scene->set_materials(ase_matls);
   return scene;
