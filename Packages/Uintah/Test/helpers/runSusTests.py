@@ -13,6 +13,8 @@ def extra_sus_flags (test):
     return test[2]
 def num_processes (test):
     return test[3]
+def inputs_root ():
+    return argv[2]
 def date ():
     return asctime(localtime(time()))
 
@@ -29,7 +31,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   ALGO = upper(algo)
   susdir =  path.normpath(path.join(getcwd(), argv[1]))
-  inputsdir = "%s/%s" % (path.normpath(path.join(getcwd(), argv[2])), ALGO)
+  inputsdir = "%s/%s" % (path.normpath(path.join(getcwd(), inputs_root())), \
+                         ALGO)
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   mode = argv[4]
   max_parallelism = float(argv[5])
