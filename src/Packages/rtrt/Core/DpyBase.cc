@@ -31,6 +31,8 @@ DpyBase::DpyBase(const char *name, const int window_mode):
   redraw(true), control_pressed(false), shift_pressed(false)
 {
   window_name = name;
+  cwindow_name = (char*)malloc(256*sizeof(char));
+  sprintf(cwindow_name, "%.255s", window_name.c_str());
 }
 
 DpyBase::~DpyBase() {
@@ -89,9 +91,7 @@ int DpyBase::open_display() {
 		    0, 0, xres, yres, 0, vi->depth,
 		    InputOutput, vi->visual, flags, &atts);
   XTextProperty tp;
-  char name[256];
-  sprintf( name,"%s",window_name.c_str() );
-  XStringListToTextProperty((char**)&name, 1, &tp);
+  XStringListToTextProperty(&cwindow_name, 1, &tp);
   XSizeHints sh;
   sh.flags = USSize;
   XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
@@ -128,16 +128,17 @@ void
 DpyBase::setName( const string & name )
 {
   window_name = name;
-  xlock.lock();  
-  XTextProperty tp;
-  char nameBuf[256];
-  sprintf( nameBuf,"%s",window_name.c_str() );
-  XStringListToTextProperty((char**)&nameBuf, 1, &tp);
-  XSizeHints sh;
-  sh.flags = USSize;
-  XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
+  sprintf( cwindow_name,"%.255s", window_name.c_str() );
+  if (dpy && win) {
+    xlock.lock();  
+    XTextProperty tp;
+    XStringListToTextProperty(&cwindow_name, 1, &tp);
+    XSizeHints sh;
+    sh.flags = USSize;
+    XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
  
-  xlock.unlock();  
+    xlock.unlock();  
+  }
 }
 
 void DpyBase::Hide() {
