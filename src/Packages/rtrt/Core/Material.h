@@ -57,6 +57,11 @@ protected:
   void lambertianshade(Color& result,  const Color& diffuse,
                        const Ray& ray, const HitInfo& hit,
                        int depth, Context* cx);
+  // This one takes an ambient term
+  void lambertianshade(Color& result,  const Color& diffuse,
+                       const Color& amb,
+                       const Ray& ray, const HitInfo& hit,
+                       int depth, Context* cx);
 public:
   Material();
   virtual ~Material();
