@@ -7,8 +7,11 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Malloc/Allocator.h>
+#include <string>
 
 namespace SCIRun {
+
+using std::string;
 
 template <class Data>
 class FData3d : public Array3<Data> {
@@ -36,15 +39,24 @@ public:
   value_type &operator[](typename LatVolMesh::node_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
-  static const string type_name(int);
+  static const string type_name(int a = -1);
+  virtual const string get_type_name(int n = -1) const 
+    { return type_name(n); } 
 };
 
 template <class Data>
 const string
-FData3d<Data>::type_name(int )
+FData3d<Data>::type_name(int a)
 {
-  const static string name =  "FData3d<" + find_type_name((Data *)0) + ">";
-  return name;
+  static const string class_name = "FData3d";
+  static const string template_arg = find_type_name((Data *)0);
+  static const string full_type_name = class_name + "<" + template_arg + ">";
+
+  ASSERT((a <= 1) && a >= -1);
+
+  if (a == -1) return full_type_name;
+  else if (a == 0) return class_name;
+  return template_arg; 
 }
 
 template <class Data>
@@ -61,8 +73,9 @@ public:
   virtual LatticeVol<Data> *clone() const 
     { return new LatticeVol<Data>(*this); }
  
-  static const string type_name(int); 
-  static const string type_name();
+  static const string type_name(int a = 1); 
+  virtual const string get_type_name(int n = -1) const 
+    { return type_name(n); } 
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
 private:
@@ -95,21 +108,18 @@ LatticeVol<Data>::io(Piostream &stream)
 
 template <class Data>
 const string
-LatticeVol<Data>::type_name()
-{
-  static const string name = "LatticeVol<" + find_type_name((Data *)0) + ">";
-  return name;
-} 
-
-template <class Data>
-const string
 LatticeVol<Data>::type_name(int a)
 {
-  ASSERT((a <= 1) && a >= 0);
-  if (a == 0) { return "LatticeVol"; }
-  return find_type_name((Data *)0);
-} 
+  static const string class_name = "LatticeVol";
+  static const string template_arg = find_type_name((Data *)0); 
+  static const string full_type_name = class_name + "<" + template_arg + ">";
 
+  ASSERT((a <= 1) && a >= -1);
+
+  if (a == -1) return full_type_name;
+  else if (a == 0) return class_name;
+  return template_arg; 
+} 
 
 #if 0
 template<class Data> int
