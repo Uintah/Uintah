@@ -100,8 +100,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 // Schedule solve of linearized pressure equation
 // ****************************************************************************
 void PressureSolver::solve(const LevelP& level,
-			   SchedulerP& sched,
-			   double /*time*/, double delta_t)
+			   SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -117,7 +116,7 @@ void PressureSolver::solve(const LevelP& level,
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
   // build the structure and get all the old variables
 
-  sched_buildLinearMatrix(sched, patches, matls, delta_t);
+  sched_buildLinearMatrix(sched, patches, matls);
 
   //residual at the start of linear solve
   // this can be part of linear solver
@@ -153,7 +152,7 @@ void PressureSolver::solve(const LevelP& level,
 // ****************************************************************************
 void 
 PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
-					const MaterialSet* matls,double delta_t)
+					const MaterialSet* matls)
 {
 
   // Build momentum equation coefficients and sources that are needed 
@@ -161,11 +160,13 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeff", 
-			     this, &PressureSolver::buildLinearMatrix,
-			     delta_t);
+			     this, &PressureSolver::buildLinearMatrix);
 
     int numGhostCells = 1;
     int zeroGhostCells = 0;
+
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+    
   // Requires
   // from old_dw for time integration
   // get old_dw from getTop function
@@ -246,11 +247,13 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeffP",
 			     this,
-			     &PressureSolver::buildLinearMatrixPress, delta_t);
+			     &PressureSolver::buildLinearMatrixPress);
     
     int numGhostCells = 1;
     int zeroGhostCells = 0;
 
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+    
     // int matlIndex = 0;
     // Requires
     // from old_dw for time integration
@@ -397,10 +400,13 @@ void
 PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
 				  const MaterialSubset* /*matls*/,
-				  DataWarehouse*,
-				  DataWarehouse* new_dw,
-				  double delta_t)
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -668,9 +674,12 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
 				       const PatchSubset* patches,
 				       const MaterialSubset*/* matls */,
 				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw,
-				       double delta_t)
+				       DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   // Get the pressure, velocity, scalars, density and viscosity from the
   // old datawarehouse
   for (int p = 0; p < patches->size(); p++) {
@@ -1044,8 +1053,7 @@ PressureSolver::normPressure(const ProcessorGroup*,
 // Schedule solve of linearized pressure equation
 // ****************************************************************************
 void PressureSolver::solvePred(const LevelP& level,
-			       SchedulerP& sched,
-			       double /*time*/, double delta_t)
+			       SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -1061,7 +1069,7 @@ void PressureSolver::solvePred(const LevelP& level,
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
   // build the structure and get all the old variables
 
-  sched_buildLinearMatrixPred(sched, patches, matls, delta_t);
+  sched_buildLinearMatrixPred(sched, patches, matls);
 
   // Schedule the pressure solve
   // require : pressureIN, presCoefPBLM, presNonLinSrcPBLM
@@ -1078,8 +1086,7 @@ void PressureSolver::solvePred(const LevelP& level,
 void 
 PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 					    const PatchSet* patches,
-					    const MaterialSet* matls,
-					    double delta_t)
+					    const MaterialSet* matls)
 {
 
   // Build momentum equation coefficients and sources that are needed 
@@ -1087,11 +1094,13 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeffPred", 
-			     this, &PressureSolver::buildLinearMatrixPred,
-			     delta_t);
+			     this, &PressureSolver::buildLinearMatrixPred);
 
     int numGhostCells = 1;
     int zeroGhostCells = 0;
+
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+    
   // Requires
   // from old_dw for time integration
   // get old_dw from getTop function
@@ -1175,10 +1184,12 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeffPPred",
 			     this,
-			     &PressureSolver::buildLinearMatrixPressPred, delta_t);
+			     &PressureSolver::buildLinearMatrixPressPred);
     
     int numGhostCells = 1;
     //int zeroGhostCells = 0;
+
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
     // int matlIndex = 0;
     // Requires
@@ -1275,10 +1286,13 @@ void
 PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
-				      DataWarehouse*,
-				      DataWarehouse* new_dw,
-				      double delta_t)
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -1575,9 +1589,12 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
 					   const PatchSubset* patches,
 					   const MaterialSubset*/* matls */,
 					   DataWarehouse* old_dw,
-					   DataWarehouse* new_dw,
-					   double delta_t)
+					   DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   // Get the pressure, velocity, scalars, density and viscosity from the
   // old datawarehouse
   for (int p = 0; p < patches->size(); p++) {
@@ -1908,8 +1925,7 @@ PressureSolver::pressureLinearSolvePred (const ProcessorGroup* pc,
 // Schedule solve of linearized pressure equation, corrector step
 // ****************************************************************************
 void PressureSolver::solveCorr(const LevelP& level,
-			       SchedulerP& sched,
-			       double /*time*/, double delta_t)
+			       SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -1925,7 +1941,7 @@ void PressureSolver::solveCorr(const LevelP& level,
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
   // build the structure and get all the old variables
 
-  sched_buildLinearMatrixCorr(sched, patches, matls, delta_t);
+  sched_buildLinearMatrixCorr(sched, patches, matls);
 
   // Schedule the pressure solve
   // require : pressureIN, presCoefPBLM, presNonLinSrcPBLM
@@ -1942,8 +1958,7 @@ void PressureSolver::solveCorr(const LevelP& level,
 void 
 PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 					    const PatchSet* patches,
-					    const MaterialSet* matls,
-					    double delta_t)
+					    const MaterialSet* matls)
 {
   // Now build pressure equation coefficients from momentum equation 
   // coefficients
@@ -1951,11 +1966,13 @@ PressureSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   {
     Task* tsk = scinew Task( "Psolve::BuildCoeffPCorr",
 			     this,
-			     &PressureSolver::buildLinearMatrixPressCorr, delta_t);
+			     &PressureSolver::buildLinearMatrixPressCorr);
     
     int numGhostCells = 1;
     //int zeroGhostCells = 0;
 
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+    
     // int matlIndex = 0;
     // Requires
     // from old_dw for time integration
@@ -2008,9 +2025,12 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
 					   const PatchSubset* patches,
 					   const MaterialSubset*/* matls */,
 					   DataWarehouse* old_dw,
-					   DataWarehouse* new_dw,
-					   double delta_t)
+					   DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   // Get the pressure, velocity, scalars, density and viscosity from the
   // old datawarehouse
   for (int p = 0; p < patches->size(); p++) {

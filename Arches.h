@@ -103,8 +103,7 @@ public:
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule time advance
-      virtual void scheduleTimeAdvance(double t, double dt,
-				       const LevelP& level, 
+      virtual void scheduleTimeAdvance(const LevelP& level, 
 				       SchedulerP&);
 
 

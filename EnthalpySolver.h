@@ -84,54 +84,45 @@ public:
       // Schedule Solve of linearized scalar equation
       void solve(SchedulerP& sched,
 		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 double time, double delta_t);
+		 const MaterialSet* matls);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   double delta_t);
+				   const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Enthalpy[index]
       void sched_enthalpyLinearSolve(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   double delta_t);
-
+				     const MaterialSet* matls);
 
       void solvePred(SchedulerP& sched,
 		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 double time, double delta_t);
+		 const MaterialSet* matls);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   double delta_t);
+				       const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Enthalpy[index]
       void sched_enthalpyLinearSolvePred(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   double delta_t);
+					 const MaterialSet* matls);
+  
       void solveCorr(SchedulerP& sched,
 		 const PatchSet* patches,
-		 const MaterialSet* matls,
-		 double time, double delta_t);
+		     const MaterialSet* matls);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   double delta_t);
+				       const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Enthalpy[index]
       void sched_enthalpyLinearSolveCorr(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   double delta_t);
+					 const MaterialSet* matls);
 
 protected:
 
@@ -151,9 +142,8 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     double delta_t);
-
+			     DataWarehouse* new_dw);
+  
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Enthalpy[index]
       //    [in] 
@@ -162,15 +152,13 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     double delta_t);
-
+			       DataWarehouse* new_dw);
+  
       void buildLinearMatrixPred(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     double delta_t);
+				 DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Enthalpy[index]
@@ -180,15 +168,13 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     double delta_t);
-
+				   DataWarehouse* new_dw);
+  
       void buildLinearMatrixCorr(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     double delta_t);
+				 DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Enthalpy[index]
@@ -198,9 +184,8 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     double delta_t);
-
+				   DataWarehouse* new_dw);
+  
 private:
       ArchesVariables* d_enthalpyVars;
       // computes coefficients

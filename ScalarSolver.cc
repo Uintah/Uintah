@@ -24,6 +24,7 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
@@ -92,7 +93,7 @@ void
 ScalarSolver::solve(SchedulerP& sched,
 		    const PatchSet* patches,
 		    const MaterialSet* matls,
-		    double /*time*/, double delta_t, int index)
+		    int index)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
@@ -102,13 +103,13 @@ ScalarSolver::solve(SchedulerP& sched,
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrix(sched, patches, matls, delta_t, index);
+  sched_buildLinearMatrix(sched, patches, matls, index);
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
-  sched_scalarLinearSolve(sched, patches, matls, delta_t, index);
+  sched_scalarLinearSolve(sched, patches, matls, index);
 }
 
 //****************************************************************************
@@ -117,18 +118,20 @@ ScalarSolver::solve(SchedulerP& sched,
 void 
 ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
 				      const MaterialSet* matls,
-				      double delta_t, int index)
+				      int index)
 {
   Task* tsk = scinew Task("ScalarSolver::BuildCoeff",
 			  this,
 			  &ScalarSolver::buildLinearMatrix,
-			  delta_t, index);
+			  index);
 
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   // This task requires scalar and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
@@ -160,16 +163,16 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches
 void
 ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches,
 				      const MaterialSet* matls,
-				      double delta_t,
 				      int index)
 {
   Task* tsk = scinew Task("ScalarSolver::scalarLinearSolve",
 			  this,
-			  &ScalarSolver::scalarLinearSolve, delta_t, index);
+			  &ScalarSolver::scalarLinearSolve, index);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   
-
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // coefficient for the variable for which solve is invoked
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, numGhostCells+1);
@@ -191,10 +194,14 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches
 void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const PatchSubset* patches,
 				     const MaterialSubset*,
-				     DataWarehouse*,
+				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw,
-				     double delta_t, int index)
+				     int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -300,11 +307,14 @@ void
 ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse*,
+				DataWarehouse* old_dw,
 				DataWarehouse* new_dw,
-				double delta_t,
 				int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -370,18 +380,18 @@ void
 ScalarSolver::solvePred(SchedulerP& sched,
 			const PatchSet* patches,
 			const MaterialSet* matls,
-			double /*time*/, double delta_t, int index)
+			int index)
 {
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrixPred(sched, patches, matls, delta_t, index);
+  sched_buildLinearMatrixPred(sched, patches, matls, index);
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
-  sched_scalarLinearSolvePred(sched, patches, matls, delta_t, index);
+  sched_scalarLinearSolvePred(sched, patches, matls, index);
 }
 
 //****************************************************************************
@@ -391,18 +401,21 @@ void
 ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
-					  double delta_t, int index)
+					  int index)
 {
   Task* tsk = scinew Task("ScalarSolver::BuildCoeffPred",
 			  this,
 			  &ScalarSolver::buildLinearMatrixPred,
-			  delta_t, index);
+			  index);
 
   int numGhostCells = 1;
   int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // This task requires scalar and density from old time step for transient
   // calculation
-  //DataWarehouseP old_dw = new_dw->getTop();
+  //DataWarehouseP old_dw = new_dw->getTop();  
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
@@ -435,10 +448,14 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
-					 DataWarehouse*,
+					 DataWarehouse* old_dw,
 					 DataWarehouse* new_dw,
-					 double delta_t, int index)
+					 int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -548,16 +565,16 @@ void
 ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
-					  double delta_t,
 					  int index)
 {
   Task* tsk = scinew Task("ScalarSolver::scalarLinearSolvePred",
 			  this,
-			  &ScalarSolver::scalarLinearSolvePred, delta_t,
+			  &ScalarSolver::scalarLinearSolvePred,
 			  index);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
   // coefficient for the variable for which solve is invoked
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
@@ -583,12 +600,15 @@ void
 ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
                                 const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse*,
+				DataWarehouse* old_dw,
 				DataWarehouse* new_dw,
-				double delta_t,
 				int index)
 {
-for (int p = 0; p < patches->size(); p++) {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
+  for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
@@ -656,18 +676,18 @@ void
 ScalarSolver::solveCorr(SchedulerP& sched,
 			const PatchSet* patches,
 			const MaterialSet* matls,
-			double /*time*/, double delta_t, int index)
+			int index)
 {
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrixCorr(sched, patches, matls, delta_t, index);
+  sched_buildLinearMatrixCorr(sched, patches, matls, index);
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
-  sched_scalarLinearSolveCorr(sched, patches, matls, delta_t, index);
+  sched_scalarLinearSolveCorr(sched, patches, matls, index);
 }
 
 //****************************************************************************
@@ -677,15 +697,18 @@ void
 ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
-					  double delta_t, int index)
+					  int index)
 {
   Task* tsk = scinew Task("ScalarSolver::BuildCoeffCorr",
 			  this,
 			  &ScalarSolver::buildLinearMatrixCorr,
-			  delta_t, index);
+			  index);
 
   int numGhostCells = 1;
   int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // This task requires scalar and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();
@@ -723,10 +746,14 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
-					 DataWarehouse*,
+					 DataWarehouse* old_dw,
 					 DataWarehouse* new_dw,
-					 double delta_t, int index)
+					 int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -836,19 +863,19 @@ void
 ScalarSolver::sched_scalarLinearSolveCorr(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
-					  double delta_t,
 					  int index)
 {
   Task* tsk = scinew Task("ScalarSolver::scalarLinearSolveCorr",
 			  this,
-			  &ScalarSolver::scalarLinearSolveCorr, delta_t,
+			  &ScalarSolver::scalarLinearSolveCorr,
 			  index);
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
   // coefficient for the variable for which solve is invoked
-  //***warning changed in to pred
+  //***warning changed in to pred  
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
@@ -869,11 +896,14 @@ void
 ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse*,
+				DataWarehouse* old_dw,
 				DataWarehouse* new_dw,
-				double delta_t,
 				int index)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material

@@ -89,37 +89,34 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized pressure equation
       void solve(const LevelP& level,
-		 SchedulerP& ,
-		 double time, double delta_t);
+		 SchedulerP&);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls, double delta_t);
+				   const MaterialSet* matls);
  
       void sched_pressureLinearSolve(const LevelP& level,
 				     SchedulerP& sched);
 
       void solvePred(const LevelP& level,
-		 SchedulerP& ,
-		 double time, double delta_t);
+		     SchedulerP&);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls, double delta_t);
+				   const MaterialSet* matls);
  
       void sched_pressureLinearSolvePred(const LevelP& level,
 				     SchedulerP& sched);
 
       void solveCorr(const LevelP& level,
-		 SchedulerP& ,
-		 double time, double delta_t);
+		     SchedulerP&);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls, double delta_t);
+				   const MaterialSet* matls);
  
       void sched_pressureLinearSolveCorr(const LevelP& level,
 				     SchedulerP& sched);
@@ -149,14 +146,12 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls,
 			     DataWarehouse* new_dw,
-			     DataWarehouse* matrix_dw,
-			     double delta_t);
+			     DataWarehouse* matrix_dw);
       void buildLinearMatrixPress(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
 				  DataWarehouse* new_dw,
-				  DataWarehouse* matrix_dw,
-				  double delta_t);
+				  DataWarehouse* matrix_dw);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
 				   const PatchSubset* patches,
@@ -175,14 +170,12 @@ private:
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls,
 			     DataWarehouse* new_dw,
-			     DataWarehouse* matrix_dw,
-			     double delta_t);
+				 DataWarehouse* matrix_dw);
       void buildLinearMatrixPressPred(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
 				  DataWarehouse* new_dw,
-				  DataWarehouse* matrix_dw,
-				  double delta_t);
+				      DataWarehouse* matrix_dw);
 
       void pressureLinearSolvePred_all(const ProcessorGroup* pc,
 				   const PatchSubset* patches,
@@ -201,8 +194,7 @@ private:
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
 				  DataWarehouse* new_dw,
-				  DataWarehouse* matrix_dw,
-				  double delta_t);
+				      DataWarehouse* matrix_dw);
 
       void pressureLinearSolveCorr_all(const ProcessorGroup* pc,
 				   const PatchSubset* patches,
