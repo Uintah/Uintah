@@ -27,67 +27,27 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Modules/DataIO/GenericWriter.h>
 
 namespace SCIRun {
 
-class FieldWriter : public Module {
-  FieldIPort* inport_;
-  GuiString filename_;
-  GuiString filetype_;
+template class GenericWriter<FieldHandle>;
+
+class FieldWriter : public GenericWriter<FieldHandle> {
 public:
   FieldWriter(const string& id);
-  virtual ~FieldWriter();
-  virtual void execute();
 };
+
 
 extern "C" Module* make_FieldWriter(const string& id) {
   return new FieldWriter(id);
 }
 
+
 FieldWriter::FieldWriter(const string& id)
-  : Module("FieldWriter", id, Source, "DataIO", "SCIRun"),
-    filename_("filename", id, this),
-    filetype_("filetype", id, this)
+  : GenericWriter<FieldHandle>("FieldWriter", id, "DataIO", "SCIRun")
 {
-  // Create the output port
-  inport_=scinew FieldIPort(this, "Persistent Data", FieldIPort::Atomic);
-  add_iport(inport_);
-}
-
-FieldWriter::~FieldWriter()
-{
-}
-
-void FieldWriter::execute()
-{
-  // Read data from the input port
-  FieldHandle handle;
-  if(!inport_->get(handle))
-    return;
-
-  // If no name is provided, return
-  const string fn(filename_.get());
-  if(fn == "") {
-    warning("No filename.");
-    return;
-  }
-   
-  // Open up the output stream
-  Piostream* stream;
-  const string ft(filetype_.get());
-  if(ft=="Binary"){
-    stream=scinew BinaryPiostream(fn, Piostream::Write);
-  } else { // "ASCII"
-    stream=scinew TextPiostream(fn, Piostream::Write);
-  }
-
-  // Write the file
-  Pio(*stream, handle);
-  delete stream;
 }
 
 } // End namespace SCIRun
