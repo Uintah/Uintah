@@ -328,7 +328,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 build build_cpu build_vendor build_os host host_cpu host_vendor host_os HAVE_OSX SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG MAGICK_EXTRA_LIB_FLAG MAGICK_EXTRA_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT TAU_MAKEFILE BABEL_BIN HAVE_BABEL SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP MATLAB_ENG ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 build build_cpu build_vendor build_os host host_cpu host_vendor host_os HAVE_OSX SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H DEF_COLLAB_VIS HAVE_COLLAB_VIS PLPLOT_LIB_FLAG PLPLOT_LIB_DIR_FLAG INC_PLPLOT_H DEF_PLPLOT TCLMATRIX_LIB_FLAG TCLMATRIX_LIB_DIR_FLAG INC_TCLMATRIX_H DEF_TCLMATRIX TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG MAGICK_EXTRA_LIB_FLAG MAGICK_EXTRA_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z F_LIB_FLAG BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG MPI_LIB_FLAG MPI_LIB_DIR_FLAG INC_MPI_H DEF_MPI MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG INC_MPIUNI_H DEF_MPIUNI HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG INC_INSIGHT_H DEF_INSIGHT TAU_MAKEFILE BABEL_BIN HAVE_BABEL SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG INC_SIDL_H DEF_BABEL JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG INC_OOGL_H DEF_OOGL OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG INC_TEEM_H DEF_TEEM MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG INC_MDSPLUS_H DEF_MDSPLUS HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG INC_HDF5_H DEF_HDF5 PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_PERFEX SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG INC_GLOBUS_H DEF_GLOBUS QT_MOC_BIN HAVE_QT QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG INC_QT_MT_H DEF_QT DEF_VDT VDT_LIB_FLAG VDT_LIB_DIR_FLAG INC_VDT_H HAVE_HYPRE DEF_HYPRE HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG INC_HYPRE_H UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -931,6 +931,7 @@ Optional Packages:
 --with-jpeg=DIR         Use the jpeg installation in DIR
 --with-tiff=DIR         Use the tiff installation in DIR
 --with-mdsplus=DIR      Use the mdsplus installation in DIR
+--with-hdf5=DIR         Use the hdf5 installation in DIR
 --with-glut=DIR         Use the glut installation in DIR
 --with-glui=DIR         Use the glui installation in DIR
 --with-oogl=DIR         Use the oogl installation in DIR
@@ -1497,6 +1498,7 @@ fi
   sci_check_etags=no
   sci_check_exc=no
   sci_check_fortran=no
+  sci_check_hdf5=no
   sci_check_globus=no
   sci_check_glui=no
   sci_check_glut=no
@@ -1862,6 +1864,7 @@ echo "$as_me: error: The file or directory parameter ($tiff) specified for --wit
 
 
 
+
 # Check whether --with-mdsplus or --without-mdsplus was given.
 if test "${with_mdsplus+set}" = set; then
   withval="$with_mdsplus"
@@ -1875,6 +1878,25 @@ fi;
 echo "$as_me: error: The file or directory parameter ($mdsplus) specified for --with-mdsplus does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
+
+
+
+
+
+# Check whether --with-hdf5 or --without-hdf5 was given.
+if test "${with_hdf5+set}" = set; then
+  withval="$with_hdf5"
+  with_hdf5="$withval"
+else
+  with_hdf5=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-hdf5 --without-hdf5"
+  if test -n "$hdf5" -a ! -e "$hdf5"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($hdf5) specified for --with-hdf5 does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($hdf5) specified for --with-hdf5 does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
 
 
 
@@ -2113,6 +2135,7 @@ case SCIRun2 in
   Fusion)
     sci_check_plplot=yes
     sci_check_mdsplus=yes
+    sci_check_hdf5=yes
   ;;
   SCIRun2)
     sci_check_babel=yes
@@ -2205,6 +2228,7 @@ case $i in
   Fusion)
     sci_check_plplot=yes
     sci_check_mdsplus=yes
+    sci_check_hdf5=yes
   ;;
   SCIRun2)
     sci_check_babel=yes
@@ -3576,7 +3600,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3579:" \
+echo "$as_me:3603:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -17500,8 +17524,8 @@ if test "$sci_check_mdsplus" = "yes"; then
     _sci_lib="$with_mdsplus/lib"
     _sci_inc="$with_mdsplus/include"
   else
-    _sci_lib="/usr/local/mdsplus/lib $sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_lib="/usr/local/mdsplus/lib"
+    _sci_inc="/usr/local/mdsplus/include"
   fi
 
 
@@ -17676,12 +17700,207 @@ _sci_includes=''
 
   if test "$with_mdsplus" && test ! "$DEF_MDSPLUS"; then
     echo
-    { { echo "$as_me:$LINENO: error: One or more of the MDS PLUS components is missing." >&5
-echo "$as_me: error: One or more of the MDS PLUS components is missing." >&2;}
+    { { echo "$as_me:$LINENO: error: One or more of the MDSPLUS components is missing." >&5
+echo "$as_me: error: One or more of the MDSPLUS components is missing." >&2;}
    { (exit 1); exit 1; }; }
     echo
   fi
 fi #end sci_check_mdsplus
+
+
+
+
+
+
+##  --  search for hdf5  -------------------------------------------------
+
+if test "$sci_check_hdf5" = "yes"; then
+  if test "$with_hdf5"; then
+    _sci_lib="$with_hdf5/lib"
+    _sci_inc="$with_hdf5/include"
+  else
+    _sci_lib="/usr/local/hdf5/1.4.5/lib"
+    _sci_inc="/usr/local/hdf5/1.4.5/include"
+  fi
+
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_HDF5        => lib path
+##      HDF5_LIB_DIR_FLAG   => all the -L's
+##      HDF5_LIB_FLAG       => all the -l's
+##      HAVE_HDF5           => yes or no
+##      INC_HDF5_H          => all the -I's
+##      HAVE_HDF5_H         => yes or no
+
+
+
+echo "$as_me:$LINENO: checking for hdf5 library and headers" >&5
+echo $ECHO_N "checking for hdf5 library and headers... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+for i in $_sci_inc; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+
+for i in hdf5; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $_sci_lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+CFLAGS="$CFLAGS $_sci_includes"
+CXXFLAGS="$CXXFLAGS $_sci_includes"
+LDFLAGS="$LDFLAGS $_sci_lib_path"
+LIBS="$LIBS $_sci_libs "
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+   #include <hdf5.h>
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_HDF5='"$_sci_lib"'
+eval HDF5_LIB_DIR_FLAG='"$_sci_lib_path"'
+eval HDF5_LIB_FLAG='"$_sci_libs"'
+eval HAVE_HDF5="yes"
+eval INC_HDF5_H='"$_sci_includes"'
+eval HAVE_HDF5_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_HDF5=''
+eval HDF5_LIB_DIR_FLAG=''
+eval HDF5_LIB_FLAG=''
+eval HAVE_HDF5="no"
+eval INC_HDF5_H=''
+eval HAVE_HDF5_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" =  "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required HDF5 failed.
+    To see the failed compile information, look in config.log,
+    search for HDF5. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required HDF5 failed.
+    To see the failed compile information, look in config.log,
+    search for HDF5. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+
+  if test "$HAVE_HDF5" = "yes"; then
+     DEF_HDF5="#define HAVE_HDF5 1"
+  fi
+
+  if test "$with_hdf5" && test ! "$DEF_HDF5"; then
+    echo
+    { { echo "$as_me:$LINENO: error: One or more of the HDF5 components is missing." >&5
+echo "$as_me: error: One or more of the HDF5 components is missing." >&2;}
+   { (exit 1); exit 1; }; }
+    echo
+  fi
+fi #end sci_check_hdf5
 
 
 
@@ -20509,6 +20728,10 @@ s,@MDSPLUS_LIB_FLAG@,$MDSPLUS_LIB_FLAG,;t t
 s,@MDSPLUS_LIB_DIR_FLAG@,$MDSPLUS_LIB_DIR_FLAG,;t t
 s,@INC_MDSPLUS_H@,$INC_MDSPLUS_H,;t t
 s,@DEF_MDSPLUS@,$DEF_MDSPLUS,;t t
+s,@HDF5_LIB_FLAG@,$HDF5_LIB_FLAG,;t t
+s,@HDF5_LIB_DIR_FLAG@,$HDF5_LIB_DIR_FLAG,;t t
+s,@INC_HDF5_H@,$INC_HDF5_H,;t t
+s,@DEF_HDF5@,$DEF_HDF5,;t t
 s,@PERFEX_LIB_FLAG@,$PERFEX_LIB_FLAG,;t t
 s,@PERFEX_LIB_DIR_FLAG@,$PERFEX_LIB_DIR_FLAG,;t t
 s,@DEF_PERFEX@,$DEF_PERFEX,;t t
@@ -21070,45 +21293,3 @@ else
   { echo "$as_me:$LINENO: WARNING: sci_defs.h has changed." >&5
 echo "$as_me: WARNING: sci_defs.h has changed." >&2;}
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
