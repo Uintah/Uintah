@@ -92,7 +92,8 @@ public:
 			 ParticleSubset*);
    virtual void get(ParticleVariableBase&, const VarLabel*,
 		    ParticleSubset*);
-   virtual void put(const ParticleVariableBase&, const VarLabel*);
+   virtual void put(const ParticleVariableBase&, const VarLabel*,
+		    bool replace = false);
    virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 						     ParticleSubset*);
 
@@ -103,7 +104,7 @@ public:
    virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const NCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
+		    int matlIndex, const Patch*, bool replace = false);
 
    // CCVariables Variables -- fron Tan... need to be fixed...
    virtual void allocate(CCVariableBase&, const VarLabel*,
@@ -112,7 +113,7 @@ public:
    virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const CCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
+		    int matlIndex, const Patch*, bool replace = false);
 
    // SFC[X-Z]Variables Variables
    virtual void allocate(SFCXVariableBase&, const VarLabel*,
@@ -120,25 +121,25 @@ public:
    virtual void get(SFCXVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const SFCXVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
+		    int matlIndex, const Patch*, bool replace = false);
 
    virtual void allocate(SFCYVariableBase&, const VarLabel*,
 			 int matlIndex, const Patch*);
    virtual void get(SFCYVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const SFCYVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
+		    int matlIndex, const Patch*, bool replace = false);
 
    virtual void allocate(SFCZVariableBase&, const VarLabel*,
 			 int matlIndex, const Patch*);
    virtual void get(SFCZVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const SFCZVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*);
+		    int matlIndex, const Patch*, bool replace = false);
    // PerPatch Variables
    virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);
    virtual void put(const PerPatchBase&, const VarLabel*,
-				 int matIndex, const Patch*);
+		    int matIndex, const Patch*, bool replace = false);
 
    // Remove particles that are no longer relevant
    virtual void deleteParticles(ParticleSubset* delset);
