@@ -16,7 +16,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/NonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
