@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dir SYSTEM "../../../../doc/UserGuide/dirspec.dtd">
+
+<dir name="Core/Util">
+  <fit>
+    <p>
+      Core/Util is a miscellaneous collection of code.  The code can be
+      classified into 3 groups: debugging tools, timing routines, and
+      SCIRun internal code.
+    </p>
+    <p>The debugging tools and timing routines are generally useful.  The
+      SCIRun internal code is not.
+    </p>
+    <p>The SCIRun internal code consists of routines for accessing shared
+      libraries and work arounds of bugs on Linux platforms.
+    </p>
+  </fit>
+  <use>
+    <when>
+      <p>Use the the debugging and timing tools when developing any kind of code.</p>
+    </when>
+    <why>
+      <p>
+	Use the debugging tools to specify data invariants, catch
+	programming errors, and log messages during program execution.
+      </p>
+      <p>
+	The timer tools can be used to analyze code bottlenecks and perform
+	other timing tasks.
+      </p>
+    </why>
+  </use>
+</dir>
+
