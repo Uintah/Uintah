@@ -93,7 +93,7 @@ void Poisson2::initialize(const ProcessorGroup*,
       phi.initialize(0);
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
 	IntVector l,h;
-	patch->getFace(Patch::xminus, 0, l, h);
+	patch->getFaceNodes(Patch::xminus, 0, l, h);
 	for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  phi[*iter]=1;
       }
@@ -126,7 +126,6 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
       subsched->get_new_dw()->put(newphi, lb_->phi, matl, patch);
     }
   }
-
   subsched->advanceDataWarehouse(grid);
   // Create the tasks
   Task* task = scinew Task("iterate",
