@@ -174,9 +174,9 @@
 	<ICE>
 	  <material>
             <burn type = "null" />
-	    <ideal_gas>
+	    <EOS type = "ideal_gas">
 		<gas_constant>287 </gas_constant>
-	    </ideal_gas>
+	    </EOS>
 	    <density> 1.1792946927374306000e+00 </density>
 	    <viscosity>      0.0         </viscosity>
 	    <thermal_conductivity>0.0    </thermal_conductivity>
@@ -198,9 +198,9 @@
 	  </material>
 	  <material>
             <burn type = "null" />
-	    <ideal_gas>
+	    <EOS type = "ideal_gas">
 		<gas_constant>287 </gas_constant>
-	    </ideal_gas>
+	    </EOS>
 	    <viscosity>      0.0         </viscosity>
 	    <thermal_conductivity>0.0    </thermal_conductivity>
 	    <specific_heat>  716.0         </specific_heat>
