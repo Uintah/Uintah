@@ -26,20 +26,24 @@ default: all
 include configVars.mk
 
 # Rules for autoconf
-${SRCTOP}/configure: ${SRCTOP}/configure.in ${SRCDIR}/scripts/aclocal.m4
+${SRCTOP}/configure: ${SRCTOP}/configure.in
 	cd ${SRCTOP} && autoconf
 
 sci_config.h: stamp-h
 stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
 		${OBJTOP}/config.status
-	./config.status
+	CONFIGFILE= CONFIG_HEADERS="sci_defs.h sci_config.h " ./config.status
+	echo timestamp > stamp-h
 
-config.status: ${SRCTOP}/configure ${SRCTOP}/configVars.mk.in
+config.status: ${SRCTOP}/configure
 	./config.status --recheck
 	./config.status
 
 Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
 	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
+
+configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/configVars.mk" CONFIG_HEADERS="" ./config.status ) 1>&2
 
 # Actually include the module makefile fragments
 ALLSUBDIRS := . 
