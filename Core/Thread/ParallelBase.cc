@@ -6,7 +6,10 @@
  * by a user program.  See <b>Parallel</b> instead.
  */
 
-ParallelBase::ParallelBase() {}
+ParallelBase::ParallelBase()
+{
+}
 
-ParallelBase::~ParallelBase() {}
-
+ParallelBase::~ParallelBase()
+{
+}
