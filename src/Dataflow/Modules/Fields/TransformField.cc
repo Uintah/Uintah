@@ -35,11 +35,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/PointCloud.h>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
