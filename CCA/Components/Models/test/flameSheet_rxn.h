@@ -75,6 +75,7 @@ WARNING
                     const PatchSubset* patches,
 		      const MaterialSubset* matls, DataWarehouse*, 
 		      DataWarehouse* new_dw);
+                     
     void react(const ProcessorGroup*, 
               const PatchSubset* patches,
 	       const MaterialSubset* matls, DataWarehouse*, 
@@ -129,6 +130,7 @@ template <class T>
     double d_T_oxidizer_inf;
     double d_T_fuel_init;
     double d_diffusivity;
+    int  d_smear_initialDistribution_knob;
     SimulationStateP sharedState;
   };
 }
