@@ -14,7 +14,7 @@ namespace MIT {
 
 using namespace SCIRun;
 
-template class GenericReader<MeasurementsHandle>;
+//template class GenericReader<MeasurementsHandle>;
 
 class MeasurementsReader : public GenericReader<MeasurementsHandle> {
 public:
