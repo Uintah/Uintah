@@ -241,6 +241,12 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void computeContactArea(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+  
   virtual void computeInternalForce(const ProcessorGroup*,
 			    const PatchSubset* patches,
 			    const MaterialSubset* matls,
@@ -379,6 +385,9 @@ protected:
   void scheduleComputeAccStrainEnergy(SchedulerP&, const PatchSet*,
 				      const MaterialSet*);
 
+  virtual void scheduleComputeContactArea(SchedulerP&, const PatchSet*,
+                                          const MaterialSet*);
+  
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
 					    const MaterialSet*);
 

@@ -307,11 +307,17 @@ MPMLabel::MPMLabel()
       BndyContactAreaLabel[iside] =
         VarLabel::create( std::string("BndyContactArea_"+label_name).c_str(),
                           sum_vartype::getTypeDescription() );
+      BndyContactCellAreaLabel[iside] =
+        VarLabel::create( std::string("BndyContactCellArea_"+label_name).c_str(),
+                          sum_vartype::getTypeDescription() );
       BndyForceLabel[iside] =
         VarLabel::create( std::string("BndyForce_"+label_name).c_str(),
                           sumvec_vartype::getTypeDescription() );
+      BndyTractionLabel[iside] =
+        VarLabel::create( std::string("BndyTraction_"+label_name).c_str(),
+                          sumvec_vartype::getTypeDescription() );
   }
-
+  
   CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
 
@@ -643,7 +649,9 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(TotalVolumeDeformedLabel);
   for(int iside=0;iside<6;iside++) {
       VarLabel::destroy(BndyContactAreaLabel[iside]);
+      VarLabel::destroy(BndyContactCellAreaLabel[iside]);
       VarLabel::destroy(BndyForceLabel[iside]);
+      VarLabel::destroy(BndyTractionLabel[iside]);
   }
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(CenterOfMassVelocityLabel);
