@@ -48,10 +48,11 @@ namespace SCIRun {
 template class GenericWriter<FieldHandle>;
 
 class FieldWriter : public GenericWriter<FieldHandle> {
+protected:
+  virtual bool call_exporter(const string &filename);
+
 public:
   FieldWriter(GuiContext* ctx);
-
-  virtual bool call_exporter(const string &filename);
 };
 
 

@@ -34,7 +34,9 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core/ImportExport
 
 SUBDIRS := \
-	$(SRCDIR)/Field
+	$(SRCDIR)/ColorMap \
+	$(SRCDIR)/Field \
+	$(SRCDIR)/Matrix
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -41,12 +41,16 @@
 
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
 namespace SCIRun {
 
 template class GenericWriter<ColorMapHandle>;
 
 class ColorMapWriter : public GenericWriter<ColorMapHandle> {
+protected:
+  virtual bool call_exporter(const string &filename);
+
 public:
   ColorMapWriter(GuiContext* ctx);
 };
@@ -57,6 +61,19 @@ DECLARE_MAKER(ColorMapWriter)
 ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("ColorMapWriter", ctx, "DataIO", "SCIRun")
 {
+}
+
+
+bool
+ColorMapWriter::call_exporter(const string &filename)
+{
+  ColorMapIEPluginManager mgr;
+  ColorMapIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  if (pl)
+  {
+    return pl->filewriter(this, handle_, filename.c_str());
+  }
+  return false;
 }
 
 

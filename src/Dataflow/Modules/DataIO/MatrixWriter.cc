@@ -41,15 +41,20 @@
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 
 namespace SCIRun {
 
 template class GenericWriter<MatrixHandle>;
 
 class MatrixWriter : public GenericWriter<MatrixHandle> {
+protected:
+  virtual bool call_exporter(const string &filename);
+
 public:
   GuiInt split_;
   MatrixWriter(GuiContext* ctx);
+
   virtual void execute();
 };
 
@@ -62,7 +67,22 @@ MatrixWriter::MatrixWriter(GuiContext* ctx)
 {
 }
 
-void MatrixWriter::execute()
+
+bool
+MatrixWriter::call_exporter(const string &filename)
+{
+  MatrixIEPluginManager mgr;
+  MatrixIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  if (pl)
+  {
+    return pl->filewriter(this, handle_, filename.c_str());
+  }
+  return false;
+}
+
+
+void
+MatrixWriter::execute()
 {
   // Read data from the input port
   SimpleIPort<MatrixHandle> *inport = 
@@ -85,28 +105,39 @@ void MatrixWriter::execute()
 
   if (!overwrite()) return;
 
-  // Open up the output stream
-  Piostream* stream;
-  string ft(filetype_.get());
-  if (ft == "Binary")
+  if (exporting_)
   {
-    stream = scinew BinaryPiostream(fn, Piostream::Write);
+    if (!call_exporter(fn))
+    {
+      error("Export failed.");
+      return;
+    }
   }
   else
   {
-    stream = scinew TextPiostream(fn, Piostream::Write);
-  }
+    // Open up the output stream
+    Piostream* stream;
+    string ft(filetype_.get());
+    if (ft == "Binary")
+    {
+      stream = scinew BinaryPiostream(fn, Piostream::Write);
+    }
+    else
+    {
+      stream = scinew TextPiostream(fn, Piostream::Write);
+    }
 
-  // Check whether the file should be split into header and data
-  handle->set_raw(split_.get());
+    // Check whether the file should be split into header and data
+    handle->set_raw(split_.get());
   
-  if (stream->error()) {
-    error("Could not open file for writing" + fn);
-  } else {
-    // Write the file
-    Pio(*stream, handle);
-    delete stream;
-  } 
+    if (stream->error()) {
+      error("Could not open file for writing" + fn);
+    } else {
+      // Write the file
+      Pio(*stream, handle);
+      delete stream;
+    } 
+  }
 }
 
 } // End namespace SCIRun

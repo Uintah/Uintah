@@ -72,10 +72,10 @@ public:
   FieldIEPlugin(const string &name,
 		const string &fileextension,
 		const string &filemagic,
-		FieldHandle (*fieldreader)(ProgressReporter *pr,
-					   const char *filename) = 0,
-		bool (*fieldwriter)(ProgressReporter *pr, FieldHandle f,
-				    const char *filename) = 0);
+		FieldHandle (*freader)(ProgressReporter *pr,
+				       const char *filename) = 0,
+		bool (*fwriter)(ProgressReporter *pr, FieldHandle f,
+				const char *filename) = 0);
 
   ~FieldIEPlugin();
 
