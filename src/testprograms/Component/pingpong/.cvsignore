@@ -2,3 +2,4 @@ pingpong
 PingPong_sidl.h
 PingPong_sidl.cc
 Makefile
+depend.mk
