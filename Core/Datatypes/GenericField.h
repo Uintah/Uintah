@@ -68,6 +68,8 @@ public:
 
   virtual bool is_scalar() const;
 
+  virtual const TypeDescription *data_at_type_description();
+
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::Node::index_type i) const;
   bool value(value_type &val, typename mesh_type::Edge::index_type i) const;
@@ -369,6 +371,28 @@ GenericField<Mesh, FData>::get_type_name(int n) const
   return type_name(n);
 }
 
+template <class Mesh, class FData>
+const TypeDescription *
+GenericField<Mesh, FData>::data_at_type_description()
+{
+  switch(data_at())
+  {
+  case NODE:
+    return SCIRun::get_type_description((typename Mesh::Node *)0);
+
+  case EDGE:
+    return SCIRun::get_type_description((typename Mesh::Edge *)0);
+
+  case FACE:
+    return SCIRun::get_type_description((typename Mesh::Face *)0);
+
+  case CELL:
+    return SCIRun::get_type_description((typename Mesh::Cell *)0);
+
+  default:
+    return 0;
+  }
+}
 
 } // end namespace SCIRun
 

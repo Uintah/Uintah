@@ -192,6 +192,11 @@ template <> PointCloudMesh::Edge::iterator PointCloudMesh::tend(PointCloudMesh::
 template <> PointCloudMesh::Face::iterator PointCloudMesh::tend(PointCloudMesh::Face::iterator *) const;
 template <> PointCloudMesh::Cell::iterator PointCloudMesh::tend(PointCloudMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(PointCloudMesh::Node *);
+const TypeDescription* get_type_description(PointCloudMesh::Edge *);
+const TypeDescription* get_type_description(PointCloudMesh::Face *);
+const TypeDescription* get_type_description(PointCloudMesh::Cell *);
+
 } // namespace SCIRun
 
 #endif // SCI_project_PointCloudMesh_h

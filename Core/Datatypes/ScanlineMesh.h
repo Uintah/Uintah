@@ -214,6 +214,11 @@ template <> ScanlineMesh::Edge::iterator ScanlineMesh::tend(ScanlineMesh::Edge::
 template <> ScanlineMesh::Face::iterator ScanlineMesh::tend(ScanlineMesh::Face::iterator *) const;
 template <> ScanlineMesh::Cell::iterator ScanlineMesh::tend(ScanlineMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(ScanlineMesh::Node *);
+const TypeDescription* get_type_description(ScanlineMesh::Edge *);
+const TypeDescription* get_type_description(ScanlineMesh::Face *);
+const TypeDescription* get_type_description(ScanlineMesh::Cell *);
+
 } // namespace SCIRun
 
 #endif // SCI_project_ScanlineMesh_h

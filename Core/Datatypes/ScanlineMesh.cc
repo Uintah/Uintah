@@ -327,4 +327,56 @@ ScanlineMesh::Face::size_type ScanlineMesh::faces_size() const
 ScanlineMesh::Cell::size_type ScanlineMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
+const TypeDescription*
+get_type_description(ScanlineMesh::Node *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ScanlineMesh::Node",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ScanlineMesh::Edge *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ScanlineMesh::Edge",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ScanlineMesh::Face *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ScanlineMesh::Face",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ScanlineMesh::Cell *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ScanlineMesh::Cell",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
 } // namespace SCIRun

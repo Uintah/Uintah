@@ -217,6 +217,11 @@ template <> TriSurfMesh::Edge::iterator TriSurfMesh::tend(TriSurfMesh::Edge::ite
 template <> TriSurfMesh::Face::iterator TriSurfMesh::tend(TriSurfMesh::Face::iterator *) const;
 template <> TriSurfMesh::Cell::iterator TriSurfMesh::tend(TriSurfMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(TriSurfMesh::Node *);
+const TypeDescription* get_type_description(TriSurfMesh::Edge *);
+const TypeDescription* get_type_description(TriSurfMesh::Face *);
+const TypeDescription* get_type_description(TriSurfMesh::Cell *);
+
 } // namespace SCIRun
 
 

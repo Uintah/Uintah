@@ -231,6 +231,12 @@ template <> ContourMesh::Edge::iterator ContourMesh::tend(ContourMesh::Edge::ite
 template <> ContourMesh::Face::iterator ContourMesh::tend(ContourMesh::Face::iterator *) const;
 template <> ContourMesh::Cell::iterator ContourMesh::tend(ContourMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(ContourMesh::Node *);
+const TypeDescription* get_type_description(ContourMesh::Edge *);
+const TypeDescription* get_type_description(ContourMesh::Face *);
+const TypeDescription* get_type_description(ContourMesh::Cell *);
+
+
 } // namespace SCIRun
 
 #endif // SCI_project_ContourMesh_h

@@ -446,7 +446,10 @@ template <> LatVolMesh::Edge::iterator LatVolMesh::tend(LatVolMesh::Edge::iterat
 template <> LatVolMesh::Face::iterator LatVolMesh::tend(LatVolMesh::Face::iterator *) const;
 template <> LatVolMesh::Cell::iterator LatVolMesh::tend(LatVolMesh::Cell::iterator *) const;
 
-const TypeDescription* get_type_description(LatVolMesh::Node::index_type *);
+const TypeDescription* get_type_description(LatVolMesh::Node *);
+const TypeDescription* get_type_description(LatVolMesh::Edge *);
+const TypeDescription* get_type_description(LatVolMesh::Face *);
+const TypeDescription* get_type_description(LatVolMesh::Cell *);
 
 } // namespace SCIRun
 
