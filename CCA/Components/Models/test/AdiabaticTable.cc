@@ -614,7 +614,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         //__________________________________
         // debugging
         //        cerr << c << ", f=" << f_old[c] << ", flameTemp=" << flameTemp[c] << ", press=" << press[c] << ", newTemp=" << newTemp << ", oldTemp=" << oldTemp[c] << ", dtemp=" << newTemp-oldTemp[c] << '\n';
-        totalEnergy += eloss;
+        totalEnergy += erelease;
         fsum += f_old[c];
         esum += oldTemp[c]*cp*mass;
         cpsum += cp;
