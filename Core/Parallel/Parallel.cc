@@ -94,6 +94,10 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   // Look for SGI MPI
   if(getenv("MPI_ENVIRONMENT")){
     ::usingMPI=true;
+  } else if(getenv("RMS_PROCS")){
+    // Look for CompaqMPI
+    // This isn't conclusive, but we will go with it.
+    ::usingMPI=true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
