@@ -47,44 +47,49 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    pDeformationMeasureLabel = 
                new VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
-   pStressLabel = 
-               new VarLabel( "p.stress",
+   pStressLabel = new VarLabel( "p.stress",
 			     ParticleVariable<Matrix3>::getTypeDescription() );
 
-   pVolumeLabel = 
-               new VarLabel( "p.volume",
+   pVolumeLabel = new VarLabel( "p.volume",
 			     ParticleVariable<double>::getTypeDescription());
-   pMassLabel = new VarLabel( "p.mass",
-			      ParticleVariable<double>::getTypeDescription() );
-   pVelocityLabel =
-               new VarLabel( "p.velocity", 
+
+   pMassLabel = new VarLabel( "p.mass", ParticleVariable<double>::getTypeDescription() );
+
+   pVelocityLabel = new VarLabel( "p.velocity", 
 			     ParticleVariable<Vector>::getTypeDescription() );
-   pExternalForceLabel =
-               new VarLabel( "p.externalforce",
+
+   pExternalForceLabel = new VarLabel( "p.externalforce",
 			     ParticleVariable<Vector>::getTypeDescription() );
-   pXLabel =   new VarLabel( "p.x",
-			     ParticleVariable<Point>::getTypeDescription(),
+
+   pXLabel =   new VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
 
-   gAccelerationLabel =
-                new VarLabel( "g.acceleration",
-			      NCVariable<Vector>::getTypeDescription() );
-   gMassLabel = new VarLabel( "g.mass",
-			      NCVariable<double>::getTypeDescription() );
-   gVelocityLabel = new VarLabel( "g.velocity",
-				  NCVariable<Vector>::getTypeDescription() );
-   gInterpVelocityLabel = new VarLabel( "g.interpvelocity",
-					NCVariable<Vector>::getTypeDescription() );
-   gExternalForceLabel =
-                new VarLabel( "g.externalforce",
-			      NCVariable<Vector>::getTypeDescription() );
-   gInternalForceLabel =
-                new VarLabel( "g.internalforce",
-			      NCVariable<Vector>::getTypeDescription() );
-   gVelocityStarLabel =
-                new VarLabel( "g.velocity_star",
+   gAccelerationLabel = new VarLabel( "g.acceleration",
 			      NCVariable<Vector>::getTypeDescription() );
 
+   gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
+			      NCVariable<Vector>::getTypeDescription() );
+
+   gMassLabel = new VarLabel( "g.mass",
+			      NCVariable<double>::getTypeDescription() );
+
+   gVelocityLabel = new VarLabel( "g.velocity",
+				  NCVariable<Vector>::getTypeDescription() );
+
+   gMomExedVelocityLabel = new VarLabel( "g.momexedvelocity",
+					NCVariable<Vector>::getTypeDescription() );
+
+   gExternalForceLabel = new VarLabel( "g.externalforce",
+			      NCVariable<Vector>::getTypeDescription() );
+
+   gInternalForceLabel = new VarLabel( "g.internalforce",
+			      NCVariable<Vector>::getTypeDescription() );
+
+   gVelocityStarLabel = new VarLabel( "g.velocity_star",
+			      NCVariable<Vector>::getTypeDescription() );
+
+   gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
+			      NCVariable<Vector>::getTypeDescription() );
 
    // I'm not sure about this one:
    deltLabel = 
@@ -184,7 +189,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 t->requires( new_dw, gMassLabel, region, 0 );
 	 t->requires( new_dw, gVelocityLabel, region, 0 );
 
-	 t->computes( new_dw, gInterpVelocityLabel, region );
+	 t->computes( new_dw, gMomExedVelocityLabel, region );
 
 	 sched->addTask(t);
       }
@@ -204,7 +209,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::computeStressTensor",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::computeStressTensor);
-	 t->requires(new_dw, gInterpVelocityLabel, region, 0);
+	 t->requires(new_dw, gMomExedVelocityLabel, region, 0);
 	 /*
 	   #warning
 	   t->requires(old_dw, "p.cmdata", region, 0,
@@ -271,7 +276,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::integrateAcceleration);
 	 t->requires(new_dw, gAccelerationLabel, region, 0 );
-	 t->requires(new_dw, gInterpVelocityLabel, region, 0 );
+	 t->requires(new_dw, gMomExedVelocityLabel, region, 0 );
 	 t->requires(old_dw, deltLabel );
 		     
 	 t->computes(new_dw, gVelocityStarLabel, region );
@@ -295,8 +300,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	t->requires(new_dw, gVelocityStarLabel, region, 0);
 	t->requires(new_dw, gAccelerationLabel, region, 0);
 
-	t->computes(new_dw, gVelocityStarLabel, region);
-	t->computes(new_dw, gAccelerationLabel, region);
+	t->computes(new_dw, gMomExedVelocityStarLabel, region);
+	t->computes(new_dw, gMomExedAccelerationLabel, region);
 
 	sched->addTask(t);
       }
@@ -313,8 +318,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
 			    region, old_dw, new_dw,
 			    this, &SerialMPM::interpolateToParticlesAndUpdate);
-	 t->requires(new_dw, gAccelerationLabel, region, 0 );
-	 t->requires(new_dw, gVelocityStarLabel, region, 0 );
+	 t->requires(new_dw, gMomExedAccelerationLabel, region, 0 );
+	 t->requires(new_dw, gMomExedVelocityStarLabel, region, 0 );
 
 	 t->requires(old_dw, pXLabel, region, 0 );
 	 t->requires(old_dw, deltLabel );
@@ -585,7 +590,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       delt_vartype delt;
 
       new_dw->get(acceleration, gAccelerationLabel, vfindex, region, 0);
-      new_dw->get(velocity, gInterpVelocityLabel, vfindex, region, 0);
+      new_dw->get(velocity, gMomExedVelocityLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
 
@@ -639,7 +644,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       NCVariable<Vector> gacceleration;
       delt_vartype delt;
 
-      new_dw->get(gvelocity_star, gVelocityStarLabel, vfindex, region, 0);
+      new_dw->get(gvelocity_star, gMomExedVelocityStarLabel, vfindex, region, 0);
       new_dw->get(gacceleration,  gAccelerationLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
@@ -705,6 +710,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.38  2000/05/02 18:41:15  guilkey
+// Added VarLabels to the MPM algorithm to comply with the
+// immutable nature of the DataWarehouse. :)
+//
 // Revision 1.37  2000/05/02 17:54:21  sparker
 // Implemented more of SerialMPM
 //

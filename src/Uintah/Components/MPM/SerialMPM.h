@@ -134,9 +134,11 @@ WARNING
 	 
 	 const VarLabel* gMassLabel;
 	 const VarLabel* gAccelerationLabel;
+	 const VarLabel* gMomExedAccelerationLabel;
 	 const VarLabel* gVelocityLabel;
-	 const VarLabel* gInterpVelocityLabel;
+	 const VarLabel* gMomExedVelocityLabel;
 	 const VarLabel* gVelocityStarLabel;
+	 const VarLabel* gMomExedVelocityStarLabel;
 	 const VarLabel* gExternalForceLabel;
 	 const VarLabel* gInternalForceLabel;
 	 
@@ -147,6 +149,10 @@ WARNING
    
 //
 // $Log$
+// Revision 1.18  2000/05/02 18:41:15  guilkey
+// Added VarLabels to the MPM algorithm to comply with the
+// immutable nature of the DataWarehouse. :)
+//
 // Revision 1.17  2000/05/02 17:54:21  sparker
 // Implemented more of SerialMPM
 //

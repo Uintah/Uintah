@@ -74,7 +74,7 @@ WARNING
          const VarLabel* pMassLabel;
          const VarLabel* pXLabel;
 
-         const VarLabel* gInterpVelocityLabel;
+         const VarLabel* gMomExedVelocityLabel;
 	 
       };
       
@@ -82,6 +82,10 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.12  2000/05/02 18:41:17  guilkey
+// Added VarLabels to the MPM algorithm to comply with the
+// immutable nature of the DataWarehouse. :)
+//
 // Revision 1.11  2000/05/02 17:54:25  sparker
 // Implemented more of SerialMPM
 //

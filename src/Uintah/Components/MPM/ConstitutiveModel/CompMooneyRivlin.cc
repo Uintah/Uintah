@@ -145,7 +145,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, gInterpVelocityLabel, matlindex,region, 0);
+  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region, 0);
   delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
@@ -317,6 +317,10 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.18  2000/05/02 18:41:16  guilkey
+// Added VarLabels to the MPM algorithm to comply with the
+// immutable nature of the DataWarehouse. :)
+//
 // Revision 1.17  2000/05/02 17:54:24  sparker
 // Implemented more of SerialMPM
 //
