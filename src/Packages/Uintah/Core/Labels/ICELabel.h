@@ -113,7 +113,13 @@ namespace Uintah {
     const VarLabel*  maxMach_yplusLabel; 
     const VarLabel*  maxMach_zminusLabel;
     const VarLabel*  maxMach_zplusLabel;
-
+    
+    // AMR variables
+    const VarLabel* rho_CC_gradLabel;
+    const VarLabel* temp_CC_gradLabel;
+    const VarLabel* vel_CC_mag_gradLabel;
+    const VarLabel* vol_frac_CC_gradLabel;
+    const VarLabel* press_CC_gradLabel;
       
     };
 } // end namespace Uintah
