@@ -79,6 +79,10 @@ string string_Cify(const string &str);
 // Unsafe cast from string to char *, used to export strings to C functions.
 char * ccast_unsafe(const string &str);
 
+// replaces all occurances of 'substr' in 'str' with 'replacement'
+string replace_substring(string str, string substr, string replacement);
+
+
 } // End namespace SCIRun
 
 #endif
