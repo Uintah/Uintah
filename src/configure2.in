@@ -15,6 +15,7 @@
 ##  University of Utah. All Rights Reserved.
 ##
 
+##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ##
 ##  This configure.in file has some specialized sections for doing certain
 ##  tasks.  If you want to add additional tasks (search for new libraries,
@@ -27,12 +28,14 @@
 ##    initialize
 ##    new macro definitions
 ##    declare arguments  (the --with and --enable stuff)
+##    check for unknown or mis-spelled arguments
 ##    set host specific defaults 
 ##    set host specific compilers 
 ##    search for required libraries and headers
 ##    search for standard/optional libraries and headers
 ##    declare output files
 ##
+##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ##  --------------------------------------------------------------------
 ##  ------------------------  initialize  ------------------------------
@@ -45,11 +48,10 @@ AC_INIT()
 AC_PREREQ(2.0)
 
 ##  --  set the location of config.guess, config.sub, and install.sh
-AC_CONFIG_AUX_DIR(config)
+AC_CONFIG_AUX_DIR(scripts)
 
-##  --  determine the host type (set the 'host' variable)
-echo 
-AC_CANONICAL_HOST
+SCI_ARG_WITH_LIST=""
+SCI_ARG_ENABLE_LIST=""
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  new macro definitions  ------------------------
@@ -254,12 +256,7 @@ AC_DEFUN(SCI_CHECK_VERSION,
     _CUR_1_=""
     _CUR_2_=""
 
-    if test "$1" = "uname"; then
-      _SCI_NAME_=OS
-    else
-      _SCI_NAME_=$1
-    fi
-    AC_MSG_CHECKING(for $_SCI_NAME_ version $3)
+    AC_MSG_CHECKING(for $1 version $3)
 
     if test "$4"; then
       _SCI_CORRECT_='$4'
@@ -287,6 +284,8 @@ AC_DEFUN(SCI_CHECK_VERSION,
       if test $_CUR_2_ -gt $_CUR_1_; then
         _SCI_BIGGER_=no
         break
+      elif test $_CUR_1_ -gt $_CUR_2_; then
+        break
       fi
     done
 
@@ -299,66 +298,193 @@ AC_DEFUN(SCI_CHECK_VERSION,
     fi
   ])
 
+##  --  SCI_CHECK_OS_VERSION(need-version,if-correct,if-not-correct)
+##
+##  check whether the OS's version is >= need-version.
+##  currently only supports version numbers of the form NUM(.NUM)*, no
+##  letters allowed!
+
+AC_DEFUN(SCI_CHECK_OS_VERSION,
+  [
+    ##  -- SCI_CHECK_OS_VERSION
+
+    _SCI_CORRECT_='echo -n ""'
+    _SCI_NOTCORRECT_='echo -n ""'
+    _SCI_VER_1_="0"
+    _SCI_VER_2_="$1"
+    _CUR_1_=""
+    _CUR_2_=""
+
+    AC_MSG_CHECKING(for OS version $1)
+
+    if test "$2"; then
+      _SCI_CORRECT_='$2'
+    fi
+
+    if test "$3"; then
+      _SCI_NOTCORRECT_='$3'
+    fi
+
+    eval "uname -r 2> conftest.out >> conftest.out"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[[^0-9\.]]*%%g'`"
+    _SCI_VER_1_=$_SCI_REPORT_
+
+    _SCI_BIGGER_=yes
+    _SCI_LAST_=""
+    while test "$_SCI_VER_2_"; do
+      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
+        break
+      fi
+      _SCI_LAST_=$_SCI_VER_2_
+      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[[0-9]]*[[a-z]]*%%g'`
+      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
+      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[[0-9]]*[[a-z]]*%%g'`
+      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
+      if test $_CUR_2_ -gt $_CUR_1_; then
+        _SCI_BIGGER_=no
+        break
+      elif test $_CUR_1_ -gt $_CUR_2_; then
+        break
+      fi
+    done
+
+    if test "$_SCI_BIGGER_" = "yes"; then
+      AC_MSG_RESULT(yes ($_SCI_REPORT_))
+      eval $_SCI_CORRECT_
+    else
+      AC_MSG_RESULT(no ($_SCI_REPORT_))
+      eval $_SCI_NOTCORRECT_
+    fi
+  ])
+
+##  --  SCI_ARG_WITH(arg-string, usage-string, if-used, if-not-used)
+##
+##  does the same thing as AC_ARG_WITH (infact, it uses it), but
+##  also appends arg-string to the master list of arg-strings
+
+AC_DEFUN(SCI_ARG_WITH,
+  [
+    ##  -- SCI_ARG_WITH
+
+    AC_ARG_WITH($1, $2, 
+      $3
+      if test -z "$withval"; then 
+        APPENDIX="='$withval'"
+      else 
+        APPENDIX="" 
+      fi 
+      SCI_ARG_WITH_LIST="$SCI_ARG_WITH_LIST --with-$1$APPENDIX", 
+      $4) 
+
+  ])
+
+##  --  SCI_ARG_ENABLE(arg-string, usage-string, if-used, if-not-used)
+##
+##  does the same thing as AC_ARG_ENABLE (infact, it uses it), but
+##  also appends arg-string to the master list of arg-strings
+
+AC_DEFUN(SCI_ARG_ENABLE,
+  [
+    ##  -- SCI_ARG_ENABLE
+    
+    AC_ARG_ENABLE($1, $2,
+      $3
+      if test -z "$enableval"; then
+        APPENDIX="='$enableval'"
+      else 
+        APPENDIX="" 
+      fi
+      SCI_ARG_ENABLE_LIST="$SCI_ARG_ENABLE_LIST --enable-$1$APPENDIX",
+      $4) 
+
+  ])
+
 ##  --------------------------------------------------------------------
 ##  ------------------  declare all arguments here  --------------------
 ##  --------------------------------------------------------------------
 
 ##
-##  Use the AC_ARG_WITH and AC_ARG_ENABLE macros to declare arguments
+##  Use the SCI_ARG_WITH and SCI_ARG_ENABLE macros to declare arguments
 ##
 
-AC_ARG_WITH(thirdparty,
-        [  --with-thirdparty=<path-to-thirdparty>    <path-to-thirdparty>/{itcltk-8.3.2,xerces-1.3.0,...}],
+SCI_ARG_WITH(thirdparty,
+        [  --with-thirdparty=<path-to-thirdparty>    <path-to-thirdparty>/lib/<all-thirdparty-libs}],
         [thirdparty="$withval"],
         [thirdparty=""])
-AC_ARG_WITH(tcl,
+SCI_ARG_WITH(tcl,
         [  --with-tcl=<path-to-tcl>      <path-to-tcl>/lib/libtcl.so],
         [tcl="$withval"],
         [tcl=""])
-AC_ARG_WITH(xercesc,
+SCI_ARG_WITH(xercesc,
         [  --with-xercesc=<path-to-tcl>      <path-to-tcl>/lib/libxerces-c.so],
         [xercesc="$withval"],
         [xercesc=""])
-AC_ARG_WITH(blas,
+SCI_ARG_WITH(blas,
         [  --with-blas=<path-to-tcl>      <path-to-tcl>/lib/libblas.a],
         [blas="$withval"],
         [blas=""])
-AC_ARG_WITH(lapack,
+SCI_ARG_WITH(lapack,
         [  --with-lapack=<path-to-tcl>      <path-to-tcl>/lib/liblapack.a],
         [lapack="$withval"],
         [lapack=""])
-AC_ARG_WITH(unipetsc,
+SCI_ARG_WITH(unipetsc,
         [  --with-unipetsc=<path-to-tcl>      <path-to-tcl>/lib/libpetsc.so],
         [unipetsc="$withval"],
         [unipetsc=""])
 
-AC_ARG_ENABLE(threads,
+SCI_ARG_ENABLE(threads,
         [  --enable-threads             Specify a thread implementation (pthreads, irix)],
         [threads="$enableval"],
         [threads=${threads='unknown'}])
-AC_ARG_ENABLE(debug,
+SCI_ARG_ENABLE(debug,
           [ --enable-debug              Turn on debugging (usually -g flag)],
           [debug="$enableval"],
           [debug="no"])
 
-AC_ARG_ENABLE(optimize,
+SCI_ARG_ENABLE(optimize,
           [  --enable-optimize          Turn on optimize (usually -O2 flag)],
           [optimize="$enableval"],
           [optimize=${optimize='no'}])
 
-AC_ARG_ENABLE(64bit,
+SCI_ARG_ENABLE(64bit,
         [  --enable-64bit               Compile in 64 bit mode],
         [is_64bit="$enableval"],
         [is_64bit=$i{is_64bit='no'}])
 
 ##  --------------------------------------------------------------------
+##  -----------  check for unknown or mis-spelled arguments  -----------
+##  --------------------------------------------------------------------
+
+FOUND_ARG=no
+for i in $*; do
+  for j in $SCI_ARG_WITH_LIST $SCI_ARG_ENABLE_LIST; do
+    if test "$i" = "$j"; then 
+      FOUND_ARG=yes
+      break
+    fi
+  done
+  if test "$FOUND_ARG" = "yes"; then
+    FOUND_ARG=no
+    continue
+  else
+    echo
+    AC_MSG_ERROR(unknown or mis-spelled argument $i.  exiting.)
+    echo
+  fi
+done
+
+##  --------------------------------------------------------------------
 ##  ------------------  set host specific defaults  --------------------
 ##  --------------------------------------------------------------------
+
+##  --  determine the host type (set the 'host' variable)
+echo 
+AC_CANONICAL_HOST
 
 ##  --  set host specific macros
 case $host in
   *-irix*) 
-    SCI_CHECK_VERSION(uname,-r,6.5,,exit)
+    SCI_CHECK_OS_VERSION(6.5,,exit)
     FLIBS=-lftn
     TEMPLATE_TAG=
     TEMPLATE_BOX="<>"
@@ -373,7 +499,7 @@ case $host in
     WOFF="-woff 1047 -Wl,-woff -Wl,84"
     ;; 
   *linux*)
-    SCI_CHECK_VERSION(uname,-r,2.2.17)
+    SCI_CHECK_OS_VERSION(2.2.17,,exit)
     FLIBS=-lg2c
     TEMPLATE_TAG=
     TEMPLATE_BOX="<>"
@@ -429,9 +555,9 @@ case $host in
     SCI_CHECK_VERSION($AS,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
     AC_PATH_PROG(LD,ld,,$MIPSPRO,)
-    CPP="$CC -E"
-    CXXCPP="$CXX -E"
-    CPPFLAGS=" $WOFF"
+    CPP="$CC"
+    CXXCPP="$CXX"
+    CPPFLAGS=" -E $WOFF"
     ;;
   *)
     AC_PROG_CC
@@ -456,7 +582,7 @@ if test "$MAKE" = "NOT_FOUND"; then
   AC_MSG_ERROR(GNU make not found.)
 fi
 SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
-  echo configure: error: wrong gmake version.; exit)
+  echo configure: error: wrong GNU make version.; exit)
 
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
@@ -477,12 +603,11 @@ AC_LANG_CPLUSPLUS
 ##  1. use a for loop to verify "--with" paths:
 ##    
 ##    FOUND_ALL_XXX=no
-##    for i in <PATHS-TO-SEARCH>; do
+##    for i in <ALL-PATHS-TO-SEARCH>; do
 ##      if test ! -d "$i"; then 
 ##        continue
 ##      fi
 ##      ## use SCI_CHECK_LIB and SCI_CHECK_HEADER/SCI_CHECK_HEADERS
-##      ## set LIBXXX and INCXXX variables
 ##      if <FOUND_ALL>; then
 ##        FOUND_ALL_XXX=yes
 ##        break
@@ -512,28 +637,28 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
   fi
   AC_CHECKING(in $i...)
   SCI_CHECK_LIB($i/lib,tcl,main, 
-    if test -f "$i/lib/tclConfig.sh"; then . $i/lib/tclConfig.sh; fi,,)
+    if test -f "$i/lib/tclConfig.sh"; then . $i/lib/tclConfig.sh; fi,continue,)
   SCI_CHECK_HEADERS($TCL_SRC_DIR/generic, tcl.h tclPort.h tclMath.h tclInt.h,,
     break)
 
   SCI_CHECK_LIB($i/lib,tk,main,
-    if test -f "$i/lib/tkConfig.sh"; then . $i/lib/tkConfig.sh; fi,,
+    if test -f "$i/lib/tkConfig.sh"; then . $i/lib/tkConfig.sh; fi,continue,
     $LIBTCL -ltcl)
   SCI_CHECK_HEADERS($TK_SRC_DIR/generic/, tk.h tk3d.h tkPort.h,,
     break,$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itcl,main,
-    if test -f "$i/lib/itclConfig.sh"; then . $i/lib/itclConfig.sh; fi,,
+    if test -f "$i/lib/itclConfig.sh"; then . $i/lib/itclConfig.sh; fi,continue,
     $LIBTCL -ltcl)
   SCI_CHECK_HEADER($ITCL_SRC_DIR/generic,itcl.h,,, $INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itk,main,
-    if test -f "$i/lib/itkConfig.sh"; then . $i/lib/itkConfig.sh; fi,,
+    if test -f "$i/lib/itkConfig.sh"; then . $i/lib/itkConfig.sh; fi,continue,
     $LIBITCL -litcl3.1 $LIBTK -ltk $LIBTCL -ltcl)
   SCI_CHECK_HEADER($ITK_SRC_DIR/generic,itk.h,,, 
     $INCITCL_H $INCTK_H $INCTCL_H)
 
-  SCI_CHECK_LIB($i/lib,BLT,main,,,$LIBTK -ltk $LIBTCL -ltcl)
+  SCI_CHECK_LIB($i/lib,BLT,main,,continue,$LIBTK -ltk $LIBTCL -ltcl)
   SCI_CHECK_HEADER($i/include,blt.h,,, $INCTCL_H $INCTK_H)
 
   if test "$LIBTCL" &&
@@ -683,7 +808,32 @@ AC_SUBST(INCPETSC_H)
 ##  --------------------  declare output files  -------------------------
 ##  ---------------------------------------------------------------------
 
-AC_OUTPUT(Makefile)
+##  list all the output files
+output_files="configVars.mk \
+              Makefile \
+              on-the-fly-libs/Makefile \
+              disjointPackageMakefile \
+              sci_testdefs.h"
+
+#              Dataflow/Modules/Fields/Manip/Makefile \
+#              Dataflow/Modules/Math/Manip/Makefile \
+
+##  Only do the following if configuring with Uintah
+##  Add a list of Uintah specific output files.
+if test "$uintah" = "yes" ; then
+   output_files="$output_files Packages/Uintah/tools/fspec.pl"
+fi 
+
+AC_OUTPUT( [$output_files], echo timestamp > stamp-h )
+
+##  check whether sci_defs.h has changed (due to a re-configure)
+if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
+  AC_MSG_RESULT(sci_defs.h is unchanged)
+  rm -f sci_testdefs.h
+else
+  mv sci_testdefs.h sci_defs.h
+  AC_MSG_WARN(sci_defs.h is changed)
+fi
 
 
 
