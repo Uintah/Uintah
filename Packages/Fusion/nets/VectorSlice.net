@@ -2,6 +2,9 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 184 201]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 16 390]
@@ -37,6 +40,7 @@ set $m2-faces-on {0}
 set $m2-vectors-on {1}
 set $m2-normalize-vectors {0}
 set $m2-has_vec_data {1}
+set $m2-error-cones-on {0}
 set $m2-def-color-r {0.5}
 set $m2-def-color-g {0.5}
 set $m2-def-color-b {0.5}
@@ -52,6 +56,42 @@ set $m2-interactive_mode {Interactive}
 set $m2-resolution {4}
 set $m3-notes {}
 set $m3-show_status {1}
+$m3 ui
+set $m3-ViewWindow_0-pos {}
+set $m3-ViewWindow_0-caxes {1}
+set $m3-ViewWindow_0-iaxes {}
+set $m3-ViewWindow_0-view-eyep-x {              2.1}
+set $m3-ViewWindow_0-view-eyep-y {              1.6}
+set $m3-ViewWindow_0-view-eyep-z {             11.5}
+set $m3-ViewWindow_0-view-lookat-x {                0}
+set $m3-ViewWindow_0-view-lookat-y {                0}
+set $m3-ViewWindow_0-view-lookat-z {                0}
+set $m3-ViewWindow_0-view-up-x {                0}
+set $m3-ViewWindow_0-view-up-y {                1}
+set $m3-ViewWindow_0-view-up-z {                0}
+set $m3-ViewWindow_0-view-fov {               20}
+set $m3-ViewWindow_0-view-eyep_offset-x {}
+set $m3-ViewWindow_0-view-eyep_offset-y {}
+set $m3-ViewWindow_0-view-eyep_offset-z {}
+set $m3-ViewWindow_0-bgcolor-r {                0}
+set $m3-ViewWindow_0-bgcolor-g {                0}
+set $m3-ViewWindow_0-bgcolor-b {                0}
+set $m3-ViewWindow_0-shading {}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ambient-scale {1.0}
+set $m3-ViewWindow_0-diffuse-scale {1.0}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1.0}
+set $m3-ViewWindow_0-shininess-scale {1.0}
+set $m3-ViewWindow_0-sbase {0.40}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_bawgl {0}
+set $m3-ViewWindow_0-drawimg {}
+set $m3-ViewWindow_0-saveprefix {}
+set $m3-ViewWindow_0-resx {}
+set $m3-ViewWindow_0-resy {}
+set $m3-ViewWindow_0-aspect {}
+set $m3-ViewWindow_0-aspect_ratio {}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-tcl_status {Calling GenStandardColorMaps!}
