@@ -45,4 +45,19 @@ Field::io(Piostream& stream){
   stream.end_class();
 }
 
+ScalarFieldInterface* Field::query_scalar_interface() const
+{
+  return 0;
+}
+
+VectorFieldInterface* Field::query_vector_interface() const
+{
+  return 0;
+}
+
+TensorFieldInterface* Field::query_tensor_interface() const
+{
+  return 0;
+}
+
 }

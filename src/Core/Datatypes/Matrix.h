@@ -37,9 +37,9 @@
 #include <Core/Containers/LockingHandle.h>
 #include <iostream>
 
+namespace SCIRun {
 using namespace std;
 
-namespace SCIRun {
 
 class SparseRowMatrix;
 class DenseMatrix;

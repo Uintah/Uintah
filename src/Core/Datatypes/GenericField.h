@@ -37,10 +37,10 @@
 #include <vector>
 #include <iostream>
 
+namespace SCIRun {
 using std::cerr;
 using std::endl;
 
-namespace SCIRun {
 
 template <class Mesh, class FData>
 class GenericField: public Field 
