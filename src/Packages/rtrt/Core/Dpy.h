@@ -55,6 +55,8 @@ class Dpy : public Runnable {
   Light    * turnOffLight_;
   Light    * turnOnLight_;
 
+  bool       turnOnTransmissionMode_;
+
   Camera   * guiCam_;
   Stealth  * objectStealth_;
 
@@ -102,6 +104,8 @@ public:
   virtual ~Dpy();
   virtual void run();
   Barrier* get_barrier();
+
+  const Camera * getGuiCam() { return guiCam_; }
 
   // <<<< bigler >>>>
   int get_num_procs();
