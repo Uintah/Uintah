@@ -123,7 +123,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
 	  }
 	}
 	v.push_back(pair<typename LSRC::index_type, double>
-		    (locs[maxi], weights[maxi]));
+		    (locs[maxi], 1.0));
       }
       else
       {
