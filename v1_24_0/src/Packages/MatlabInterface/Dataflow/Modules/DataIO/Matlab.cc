@@ -1393,11 +1393,32 @@ void Matlab::tcl_command(GuiArgs& args, void* userdata)
     if (args[1] == "keystroke")
     {
         std::string str = args[2];
-        if(!(send_input(str)))
+        if (str.size() == 1)
         {
-            error("Matlab: Could not close matlab engine");
-            return;
-        }    
+            if (str[0] == '\r') str[0] = '\n';
+            if(!(send_input(str)))
+            {
+                error("Matlab: Could not close matlab engine");
+                return;
+            }    
+        }
+        else
+        {
+            std::string key = args[3];
+            if (key == "Enter") str = "\n";
+            else if (key == "BackSpace") str = "\b";
+            else if (key == "Tab") str = "\t";
+            else if (key == "Return") str ="\r";
+            if (str.size() == 1)
+            {
+                if(!(send_input(str)))
+                {
+                    error("Matlab: Could not close matlab engine");
+                    return;
+                }
+            }    
+            
+        }
         return;
     }
     if (args[1] == "disconnect")

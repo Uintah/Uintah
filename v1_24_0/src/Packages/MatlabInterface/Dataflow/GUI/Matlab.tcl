@@ -477,7 +477,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
 			-labeltext "Matlab Output" -height 150 
        
         	set textwidget [$output.f1.display component text]
-	        bind $textwidget <KeyPress> "$this KeyStroke %k"
+	        bind $textwidget <KeyPress> "$this KeyStroke %A %K"
 		$output.f1.display clear	
 		$output.f1.display insert end [set $this-matlab-output]
 		set $this-matlab-var $this-matlab-output
@@ -500,9 +500,9 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		makeSciButtonPanel $w $w $this
     }
 
-    method KeyStroke {key} {
+    method KeyStroke {key specialkey} {
         
-        $this-c "keystroke" $key
+        $this-c "keystroke" $key $specialkey
     }
 
 	method UpdateStatus {text} {
