@@ -18,40 +18,14 @@
 #include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
 
+struct ITree;
+
 class GeomGroup : public GeomObj {
     Array1<GeomObj*> objs;
     BBox bb;
     BSphere bsphere;
     int del_children;
 
-public:
-    struct ITree {
-	double volume;
-	virtual ~ITree();
-	virtual void intersect(const Ray& ray, Material* matl, Hit& hit)=0;
-    };
-    struct ITreeLeaf : public ITree {
-	GeomObj* obj;
-	ITreeLeaf(GeomObj*);
-	virtual ~ITreeLeaf();
-	virtual void intersect(const Ray& ray, Material* matl, Hit& hit);
-    };
-    struct ITreeNode : public ITree {
-	ITree* left;
-	ITree* right;
-	ITreeNode(ITree*, ITree*);
-	virtual ~ITreeNode();
-	virtual void intersect(const Ray& ray, Material* matl, Hit& hit);
-    };
-    struct ITreeNodeBSphere : public ITree {
-	ITree* left;
-	ITree* right;
-	BSphere bsphere;
-	ITreeNodeBSphere(ITree*, ITree*, const BSphere&, const BSphere&);
-	virtual ~ITreeNodeBSphere();
-	virtual void intersect(const Ray& ray, Material* matl, Hit& hit);
-    };
-private:
     ITree* treetop;
 public:
     GeomGroup(int del_children=1);

@@ -32,16 +32,6 @@ GeomGroup::GeomGroup(const GeomGroup& copy)
     }
 }
 
-GeomGroup::~GeomGroup()
-{
-    if(treetop)
-	delete treetop;
-    if(del_children){
-	for(int i=0;i<objs.size();i++)
-	    delete objs[i];
-    }
-}
-
 void GeomGroup::add(GeomObj* obj)
 {
     obj->set_parent(this);
@@ -103,6 +93,43 @@ void GeomGroup::make_prims(Array1<GeomObj*>& free,
     for(int i=0;i<objs.size();i++){
 	MemoryManager::audit(objs[i]);
 	objs[i]->make_prims(free, dontfree);
+    }
+}
+
+struct ITree {
+    double volume;
+    virtual ~ITree();
+    virtual void intersect(const Ray& ray, Material* matl, Hit& hit)=0;
+};
+struct ITreeLeaf : public ITree {
+    GeomObj* obj;
+    ITreeLeaf(GeomObj*);
+    virtual ~ITreeLeaf();
+    virtual void intersect(const Ray& ray, Material* matl, Hit& hit);
+};
+struct ITreeNode : public ITree {
+    ITree* left;
+    ITree* right;
+    ITreeNode(ITree*, ITree*);
+    virtual ~ITreeNode();
+    virtual void intersect(const Ray& ray, Material* matl, Hit& hit);
+};
+struct ITreeNodeBSphere : public ITree {
+    ITree* left;
+    ITree* right;
+    BSphere bsphere;
+    ITreeNodeBSphere(ITree*, ITree*, const BSphere&, const BSphere&);
+    virtual ~ITreeNodeBSphere();
+    virtual void intersect(const Ray& ray, Material* matl, Hit& hit);
+};
+
+GeomGroup::~GeomGroup()
+{
+    if(treetop)
+	delete treetop;
+    if(del_children){
+	for(int i=0;i<objs.size();i++)
+	    delete objs[i];
     }
 }
 
@@ -218,54 +245,51 @@ void GeomGroup::intersect(const Ray& ray, Material* matl,
 #endif
 }
 
-GeomGroup::ITreeLeaf::ITreeLeaf(GeomObj* obj)
+ITreeLeaf::ITreeLeaf(GeomObj* obj)
 : obj(obj)
 {
 }
 
-GeomGroup::ITreeLeaf::~ITreeLeaf()
+ITreeLeaf::~ITreeLeaf()
 {
 }
 
-void GeomGroup::ITreeLeaf::intersect(const Ray& ray, Material* matl, Hit& hit)
+void ITreeLeaf::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     obj->intersect(ray, matl, hit);
 }
 
-GeomGroup::ITreeNode::ITreeNode(GeomGroup::ITree* left,
-				GeomGroup::ITree* right)
+ITreeNode::ITreeNode(ITree* left, ITree* right)
 : left(left), right(right)
 {
 }
 
-GeomGroup::ITreeNode::~ITreeNode()
+ITreeNode::~ITreeNode()
 {
     delete left;
     delete right;
 }
 
-void GeomGroup::ITreeNode::intersect(const Ray& ray, Material* matl, Hit& hit)
+void ITreeNode::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     left->intersect(ray, matl, hit);
     right->intersect(ray, matl, hit);
 }
 
-GeomGroup::ITreeNodeBSphere::ITreeNodeBSphere(GeomGroup::ITree* left,
-					      GeomGroup::ITree* right,
-					      const BSphere& lbound,
-					      const BSphere& rbound)
+ITreeNodeBSphere::ITreeNodeBSphere(ITree* left, ITree* right,
+				   const BSphere& lbound, const BSphere& rbound)
 : left(left), right(right), bsphere(lbound)
 {
     bsphere.extend(rbound);
 }
 
-GeomGroup::ITreeNodeBSphere::~ITreeNodeBSphere()
+ITreeNodeBSphere::~ITreeNodeBSphere()
 {
     delete left;
     delete right;
 }
 
-void GeomGroup::ITreeNodeBSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
+void ITreeNodeBSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     if(!bsphere.intersect(ray))
 	return;
@@ -273,6 +297,6 @@ void GeomGroup::ITreeNodeBSphere::intersect(const Ray& ray, Material* matl, Hit&
     right->intersect(ray, matl, hit);
 }
 
-GeomGroup::ITree::~ITree()
+ITree::~ITree()
 {
 }
