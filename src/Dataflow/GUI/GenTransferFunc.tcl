@@ -76,10 +76,10 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
 	    set n "$this-c needexecute"
 
 	    # HSB/RGB switching
-	    make_labeled_radio $w.f.types "Color Space" $n left \
-		    $this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
+#	    make_labeled_radio $w.f.types "Color Space" $n left \
+#		    $this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
 	    
-	    pack $w.f.types -side top -anchor w
+#	    pack $w.f.types -side top -anchor w
 
             # Resolution
 	    scale $w.f.s2 -from 2 -to 256 -state normal \

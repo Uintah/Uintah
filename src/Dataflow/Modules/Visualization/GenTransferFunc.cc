@@ -78,7 +78,7 @@ private:
   GuiString             rgb_points_pickle_;
   GuiString             hsv_points_pickle_;
   GuiString             alphas_pickle_;
-  GuiInt                gui_resolution_;
+  GuiInt                resolution_;
 
   vector< Color > rgbs_;   // actual line(s)
   vector< float > rgbT_;   // actual line(s)
@@ -101,6 +101,9 @@ private:
 
   ColorMapHandle	cmap;  // created once, first execute...
   int cmap_generation;
+  unsigned int textureid_;
+  double cmap_min_;
+  double cmap_max_;
 
   void loadTs( double Ax, double Ay, double ax, double ay, vector<double>& t);
 
@@ -161,12 +164,15 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
     rgb_points_pickle_(ctx->subVar("rgb_points_pickle")),
     hsv_points_pickle_(ctx->subVar("hsv_points_pickle")),
     alphas_pickle_(ctx->subVar("alphas_pickle")),
-    gui_resolution_(ctx->subVar("resolution")),
+    resolution_(ctx->subVar("resolution")),
     hsv_mode_(0),
     activeLine(-1),
     selNode(-1),
     bdown(-1),
-    cmap_generation(-1)
+    cmap_generation(-1),
+    textureid_(0),
+    cmap_min_(-1.0),
+    cmap_max_(1.0)
 {
   cmap = 0; //scinew ColorMap; // start as nothing.
 
@@ -331,12 +337,6 @@ GenTransferFunc::tcl_unpickle()
 void
 drawBox(float x, float y, float dx, float dy)
 {
-  //glBegin(GL_LINE_LOOP);
-  //  glVertex2f(x-dx,y-dy);
-  //  glVertex2f(x-dx,y+dy);
-  //  glVertex2f(x+dx,y+dy);
-  //  glVertex2f(x+dx,y-dy);
-  //  glEnd();
   glPointSize(5.0);
   glBegin(GL_POINTS);
   glVertex2f(x, y);
@@ -450,21 +450,27 @@ GenTransferFunc::DrawGraphs( int flush)
 
   glXSwapBuffers(dpy[0],win0);
 
+  CHECK_OPENGL_ERROR("");
+
+  // Update the colormap.
+  cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, resolution_.get());
+  cmap->Scale(cmap_min_, cmap_max_);
 
   // Go to the last window.
   glXMakeCurrent(dpy[1],win1,ctxs[1]);
   glDrawBuffer(GL_BACK);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  // First lay down the backgroiund pattern.
+  // First lay down the background pattern.
   glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_TEXTURE_1D);
 
   glShadeModel(GL_FLAT);
   for (j=0;j<32; j++) {
     glBegin(GL_QUAD_STRIP);
     for(i=0;i<5;i++) {
-      int on=0;
-      if ((i&1 && j&1) || (!(i&1) && (!(j&1)))) on=1;
+      const float on = (double)((i&1) == (j&1));
       glColor3f(on, on, on);
       glVertex2f(j/31.0,i/4.0);
       glVertex2f((j+1)/31.0,i/4.0);
@@ -477,36 +483,62 @@ GenTransferFunc::DrawGraphs( int flush)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#if 0
-  glBegin(GL_QUAD_STRIP);
-  if( RGBorHSV_.get() ) {
-    for(j=0;j<hsv_outpts_.size();j++) {
-      double h, s, v;
-      Color rgb;
-      h = hsv_outpts_[j]._rgb[0] * 720;
-      s = hsv_outpts_[j]._rgb[1];
-      v = hsv_outpts_[j]._rgb[2];
-      if (h > 360) h = h-360;
-      rgb = Color( HSVColor( h, s, v ) );
-      glColor3f(rgb.r(), rgb.g(), rgb.b());
-      glVertex2f(hsv_outpts_[j]._t,0);
-      glVertex2f(hsv_outpts_[j]._t,1);
-    }
-  } else {
-    for(j=0;j<rgb_points_.size();j++) {
-      glColor3f(rgb_points_[j]._rgb[0],rgb_points_[j]._rgb[1],
-		rgb_points_[j]._rgb[2]);
-      glVertex2f(rgb_points_[j]._t,0);
-      glVertex2f(rgb_points_[j]._t,1);
-    }
+  glEnable(GL_TEXTURE_1D);
+  glDisable(GL_TEXTURE_2D);
+
+  if (textureid_ == 0)
+  {
+    glGenTextures(1, &textureid_);
   }
-#endif
+
+  // Send Cmap
+  //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glBindTexture(GL_TEXTURE_1D, textureid_);
+  glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
+	       cmap->get_rgba());
+
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  if (cmap->resolution() == 256)
+  {
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  }
+  else
+  {
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  }
+    
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  // Do Cmap transform to min-max
+  glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+  glLoadIdentity();
+
+  const double r = cmap->resolution() / 256.0;
+  glScaled(r / (cmap->getMax() - cmap->getMin()), 1.0, 1.0);
+  glTranslated(-cmap->getMin(), 0.0, 0.0);
+
+
+  glBegin(GL_QUADS);
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  glTexCoord1f(cmap->getMin());
+  glVertex2f(0.0, 0.0);
+  glVertex2f(0.0, 1.0);
+  glTexCoord1f(cmap->getMax());
+  glVertex2f(1.0, 1.0);
+  glVertex2f(1.0, 0.0);
   glEnd();
+
+  glBindTexture(GL_TEXTURE_1D, 0);
+
+  glPopMatrix(); // GL_TEXTURE
+  glMatrixMode(GL_MODELVIEW);
 
   glXSwapBuffers(dpy[1],win1);
 
-  // Update the colormap.
-  cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, gui_resolution_.get());
+  CHECK_OPENGL_ERROR("");
 
   glXMakeCurrent(dpy[0],None,NULL);
   gui->unlock();
@@ -991,7 +1023,6 @@ GenTransferFunc::execute()
   ColorMapIPort *inport = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
   GeometryOPort *ogeomport = (GeometryOPort *)get_oport("Geometry");
-  ColorMapHandle newcmap;
 
   if (!inport) {
     error("Unable to initialize iport 'ColorMap'.");
@@ -1006,25 +1037,19 @@ GenTransferFunc::execute()
     return;
   }
 
-  int c = inport->get(newcmap);
-
-  if ( c && newcmap->generation != cmap_generation )
+  ColorMapHandle newcmap;
+  if (inport->get(newcmap) && newcmap.get_rep() &&
+      newcmap->generation != cmap_generation)
   {
     cmap_generation = newcmap->generation;
     
-    cmap = newcmap;
-
     rgbs_ = newcmap->get_rgbs();
     rgbT_ = newcmap->get_rgbT();
     alphas_ = newcmap->get_alphas();
     alphaT_ = newcmap->get_alphaT();
-
-    gui_resolution_.set(cmap->resolution());
-  }
-  else
-  {
-    cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_,
-			   gui_resolution_.get());
+    resolution_.set(newcmap->resolution());
+    cmap_min_ = newcmap->getMin();
+    cmap_max_ = newcmap->getMax();
   }
   DrawGraphs(0);
 
@@ -1115,6 +1140,7 @@ GenTransferFunc::presave()
 void
 GenTransferFunc::toggle_hsv()
 {
+#if 0
   if (RGBorHSV_.get() != hsv_mode_)
   {
     if (!hsv_mode_)
@@ -1142,6 +1168,7 @@ GenTransferFunc::toggle_hsv()
 
   // Now you just have to redraw this
   DrawGraphs();
+#endif
 }
 
 
