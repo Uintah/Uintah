@@ -86,6 +86,8 @@ Properties::problemSetup(const ProblemSpecP& params)
 //    db->getWithDefault("opl",d_opl,3.0); too sensitive to have default
     db->require("opl",d_opl);
     db->getWithDefault("empirical_soot",d_empirical_soot,true);
+    if (d_empirical_soot)
+      db->getWithDefault("SootFactor",d_sootFactor,0.01);
   }
   // read type of mixing model
   string mixModel;
@@ -673,7 +675,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 		  double factor = 0.01;
 
 		  if (inStream.d_mixVars[0] > 0.1)
-		    sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+		    //		    sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+		    sootFV[currCell] = c3*bc*cmw/rhosoot*d_sootFactor;
 		  else
 		    sootFV[currCell] = 0.0;
 	        }
