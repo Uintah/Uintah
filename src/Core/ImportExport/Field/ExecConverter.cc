@@ -93,8 +93,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
-    cerr << "ExecConverter syscal error " << status << ": "
-	 << "command was '" << command << "'" << endl;
+    cerr << "ExecConverter syscal error, command was: '" << command << "'\n";
     result = 0;
   }
 #else
