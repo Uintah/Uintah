@@ -44,8 +44,8 @@ SR_LIBS = \
 	Multitask/libMultitask.a \
 	Malloc/libMalloc.a \
 	tcl/sci/libscitk.a \
-	tcl/tk3.6/libtk.a \
-	tcl/tcl7.3/libtcl.a \
+	tcl/tk/libtk.a \
+	tcl/tcl/libtcl.a \
 	$(TMPL_LIB)
 
 SR_LDFLAGS = SCI_LAUDIO SCI_LM SCI_LTHREAD SCI_LGL SCI_LX11
