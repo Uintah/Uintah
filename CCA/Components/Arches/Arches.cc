@@ -82,7 +82,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->require("grow_dt", d_deltaT);
   db->require("variable_dt", d_variableTimeStep);
   db->require("reacting_flow", d_reactingFlow);
-  db->require("solve_enthalpy", d_calcEnthalpy);
+  if (d_reactingFlow) {
+    db->require("solve_reactingscalar", d_calcReactingScalar);
+    db->require("solve_enthalpy", d_calcEnthalpy);
+  }
 
   // physical constant
   // physical constants
@@ -113,7 +116,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // read boundary
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_turbModel,
-						 d_props, d_calcEnthalpy);
+						 d_props, d_calcReactingScalar,
+						 d_calcEnthalpy);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
   d_props->setBC(d_boundaryCondition);
@@ -131,6 +135,7 @@ Arches::problemSetup(const ProblemSpecP& params,
         d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
 					   d_boundaryCondition,
 					   d_turbModel, d_physicalConsts,
+					   d_calcReactingScalar,
 					   d_calcEnthalpy,
 					   d_myworld);
   }
@@ -209,6 +214,8 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_scalarVarINLabel); // only work for 1 scalarStat
       tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
     }
+    if (d_calcReactingScalar)
+      tsk->computes(d_lab->d_reactscalarINLabel);
     if (d_calcEnthalpy)
       tsk->computes(d_lab->d_enthalpyINLabel); 
     tsk->computes(d_lab->d_densityINLabel);
@@ -383,6 +390,13 @@ Arches::paramInit(const ProcessorGroup* ,
       new_dw->allocate(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
       new_dw->allocate(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
     }
+    CCVariable<double> reactscalar;
+    if (d_calcReactingScalar) {
+      new_dw->allocate(reactscalar, d_lab->d_reactscalarINLabel,
+		       matlIndex, patch);
+      reactscalar.initialize(0.0);
+    }
+
     if (d_calcEnthalpy) {
       new_dw->allocate(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
       enthalpy.initialize(0.0);
@@ -441,6 +455,8 @@ Arches::paramInit(const ProcessorGroup* ,
       new_dw->put(scalarVar[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
       new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
     }
+    if (d_calcReactingScalar)
+      new_dw->put(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch);
     if (d_calcEnthalpy)
       new_dw->put(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
     new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);

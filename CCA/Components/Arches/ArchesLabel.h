@@ -269,6 +269,48 @@ namespace Uintah {
 
       const VarLabel* d_scalNonLinSrcSBLMLabel;
 
+
+
+      // reactive scalars
+
+
+      const VarLabel* d_reactscalarINLabel;  
+
+      // computed for old_dw in setProfile
+
+      const VarLabel* d_reactscalarSPLabel;
+
+      // computed as a part of pressure boundary calculations
+
+      const VarLabel* d_reactscalarCPBCLabel;
+
+      // Reactscalar variance labels
+      // computed for old_dw in paramInit and for
+      // new_dw in setInitailGuess
+
+      const VarLabel* d_reactscalarVarINLabel;
+
+      // computed for new_dw in Smagorinsky Model
+
+      const VarLabel* d_reactscalarVarSPLabel;
+
+      // Reactscalar Coef
+
+      const VarLabel* d_reactscalCoefSBLMLabel;
+
+      // Reactscalar Conv Coef
+
+      const VarLabel* d_reactscalConvCoefSBLMLabel;
+
+      // Reactscalar Linear Src
+
+      const VarLabel* d_reactscalLinSrcSBLMLabel;
+
+      // Reactscalar NonLinear Src
+
+      const VarLabel* d_reactscalNonLinSrcSBLMLabel;
+
+
       // label for ref_density and pressure
 
       const VarLabel* d_refDensity_label;
@@ -291,6 +333,7 @@ namespace Uintah {
       const VarLabel* d_vVelocityRes;
       const VarLabel* d_wVelocityRes;
       const VarLabel* d_scalarRes;
+      const VarLabel* d_reactscalarRes;
 
       // labels required for explicit solver to store old guess values
 
@@ -370,6 +413,43 @@ namespace Uintah {
       // Scalar NonLinear Src
 
       const VarLabel* d_scalNonLinSrcCorrLabel;
+
+
+
+      // for reactive scalar
+      const VarLabel* d_reactscalarOUTBCLabel;
+      // pred-corr labels
+      const VarLabel* d_reactscalCoefPredLabel;
+
+      // Scalar Conv Coef
+
+      const VarLabel* d_reactscalConvCoefPredLabel;
+
+      // Scalar Linear Src
+
+      const VarLabel* d_reactscalLinSrcPredLabel;
+
+      // Scalar NonLinear Src
+
+      const VarLabel* d_reactscalNonLinSrcPredLabel;
+      // scalar pred
+      const VarLabel* d_reactscalarPredLabel;
+
+      const VarLabel* d_reactscalCoefCorrLabel;
+
+      // Scalar Conv Coef
+
+      const VarLabel* d_reactscalConvCoefCorrLabel;
+
+      // Scalar Linear Src
+
+      const VarLabel* d_reactscalLinSrcCorrLabel;
+
+      // Scalar NonLinear Src
+
+      const VarLabel* d_reactscalNonLinSrcCorrLabel;
+
+
       // for density
       const VarLabel* d_densityPredLabel;
       // labels for pressure solver
@@ -454,6 +534,8 @@ namespace Uintah {
       // for radiation
       const VarLabel* d_absorpINLabel;
       const VarLabel* d_sootFVINLabel;
+      // reactive scalar source term from properties
+      const VarLabel* d_reactscalarSRCINLabel;
     }; // End class ArchesLabel
 } // End namespace Uintah
 

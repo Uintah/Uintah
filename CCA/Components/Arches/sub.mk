@@ -14,7 +14,8 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
 	$(SRCDIR)/Source.cc $(SRCDIR)/CellInformation.cc \
 	$(SRCDIR)/ArchesLabel.cc $(SRCDIR)/ArchesVariables.cc \
-	$(SRCDIR)/ArchesMaterial.cc $(SRCDIR)/EnthalpySolver.cc
+	$(SRCDIR)/ArchesMaterial.cc $(SRCDIR)/EnthalpySolver.cc \
+	$(SRCDIR)/ReactiveScalarSolver.cc
 
 ifneq ($(PETSC_DIR),)
 SRCS +=	$(SRCDIR)/PetscSolver.cc

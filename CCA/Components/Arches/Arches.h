@@ -173,6 +173,7 @@ private:
       int d_nofScalarStats;
       bool d_variableTimeStep;
       bool d_reactingFlow;
+      bool d_calcReactingScalar;
       bool d_calcEnthalpy;
       PhysicalConstants* d_physicalConsts;
       NonlinearSolver* d_nlSolver;
