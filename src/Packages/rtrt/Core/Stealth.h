@@ -78,6 +78,7 @@ public:
   // Slows down in all dimensions (pitch, speed, turn, etc);
   void slowDown();
   void stopAllMovement();
+  void stopPitching();
 
   void slideLeft();
   void slideRight();
@@ -95,8 +96,14 @@ public:
   // Display the Stealth's speeds, etc.
   void print();
 
-  // Returns next location in the path.
-  Point getNextLocation();
+  // Returns next location in the path and the new view vector.
+  void getNextLocation( Point & point, Point & look_at );
+
+  // Clear out path stealth is to follow.
+  void clearPath();
+  void addToPath( const Point & eye, const Point & look_at );
+  void loadPath( const string & filename );
+  void savePath( const string & filename );
 
 private:
 
@@ -126,8 +133,10 @@ private:
 
   // Path information  (rough draft)
 
-  vector<Point> path_;
-  double        segment_percentage_;
+  vector<Point> path_;     // Points along the path for the stealth to move.
+  vector<Point> look_ats_; // Look at locations along path.
+
+  double         segment_percentage_;
 
 };
 
