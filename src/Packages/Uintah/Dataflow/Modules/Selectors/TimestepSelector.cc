@@ -63,14 +63,6 @@ void TimestepSelector::execute()
      return;
    }
 
-   if (archiveH.get_rep()  == 0 ){
-     string visible;
-     gui->eval(id + " isVisible", visible);
-     if( visible == "0" ){
-       gui->execute(id + " buildTopLevel");
-     }
-   }
-
    vector< double > times;
    vector< int > indices;
    try {
@@ -127,7 +119,7 @@ void TimestepSelector::execute()
        cout << "idx = "<<idx<<", tinc_val = "<<tinc_val<<endl;
        // See if incrementing idx will go out of bounds.  If it will
        // don't change it.
-       if (idx + tinc_val < times.size())
+       if (idx + tinc_val < times.size() )
 	 idx+=tinc_val;
        else
 	 break;
