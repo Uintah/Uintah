@@ -176,6 +176,15 @@ void
 TaskGraph::setupTaskConnections()
 {
   vector<Task*>::iterator iter;
+  if (edges.size() > 0) {
+    // Initialize variables on the tasks
+    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+      Task* task = *iter;
+      task->visited=false;
+      task->sorted=false;
+    }    
+    return; // already been done
+  }
 
   // Look for all of the reduction variables - we must treat those
   // special.  Create a fake task that performs the reduction
@@ -874,7 +883,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     if(task->task->getType() == Task::Reduction) {
       // only internal dependencies need to be generated for reductions
-#if 0
       for (Task::Dependency* req = task->task->getRequires();
 	   req != 0; req = req->next) {
 	DetailedTask* creator;
@@ -902,7 +910,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	else
 	  throw InternalError("TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials");
       }
-#endif
       continue;
     }
 
