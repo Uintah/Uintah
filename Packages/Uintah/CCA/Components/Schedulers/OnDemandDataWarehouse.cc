@@ -308,7 +308,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       if(pset->numParticles() > 0){
 	var->getMPIBuffer(buffer, pset);
       }
-      d_particleDB.put(label, matlIndex, patch, var, false);
+      d_particleDB.put(label, matlIndex, patch, var, true);
     }
     break;
   case TypeDescription::NCVariable:
@@ -323,7 +323,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->setForeign();
       
       var->getMPIBuffer(buffer, dep->low, dep->high);
-      d_ncDB.put(label, matlIndex, patch, var, false);
+      d_ncDB.put(label, matlIndex, patch, var, true);
     }
     break;
   case TypeDescription::CCVariable:
@@ -337,7 +337,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->setForeign();
       
       var->getMPIBuffer(buffer, dep->low, dep->high);
-      d_ccDB.put(label, matlIndex, patch, var, false);
+      d_ccDB.put(label, matlIndex, patch, var, true);
     }
     break;
   case TypeDescription::SFCXVariable:
@@ -351,7 +351,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->setForeign();
 
       var->getMPIBuffer(buffer, dep->low, dep->high);
-      d_sfcxDB.put(label, matlIndex, patch, var, false);
+      d_sfcxDB.put(label, matlIndex, patch, var, true);
     }
     break;
   case TypeDescription::SFCYVariable:
@@ -365,7 +365,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->setForeign();
       
       var->getMPIBuffer(buffer, dep->low, dep->high);
-      d_sfcyDB.put(label, matlIndex, patch, var, false);
+      d_sfcyDB.put(label, matlIndex, patch, var, true);
     }
     break;
   case TypeDescription::SFCZVariable:
@@ -379,7 +379,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       var->setForeign();
       
       var->getMPIBuffer(buffer, dep->low, dep->high);
-      d_sfczDB.put(label, matlIndex, patch, var, false);
+      d_sfczDB.put(label, matlIndex, patch, var, true);
     }
     break;
   default:
