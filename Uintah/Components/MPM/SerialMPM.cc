@@ -39,6 +39,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/BoundCond.h>
 #include <Uintah/Grid/KinematicBoundCond.h>
+#include <Uintah/Grid/SymmetryBoundCond.h>
 #include <Uintah/Grid/TempThermalBoundCond.h>
 #include <Uintah/Grid/FluxThermalBoundCond.h>
 
@@ -937,7 +938,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 }
       }
 
-#if 1
       // Apply grid boundary conditions to the velocity
       // before storing the data
       
@@ -954,38 +954,24 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    KinematicBoundCond* bc = 
 	      dynamic_cast<KinematicBoundCond*>(bcs[i]);
 	    //  cout << "bc value = " << bc->getVelocity() << endl;
+	     gvelocity.fillFace(face,bc->getVelocity());
+	  }
+	  if (bcs_type == "Symmetric") {
+	    SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	     gvelocity.fillFaceNormal(face);
 	  }
 	  if (bcs_type == "Temperature") {
-	    TempThermalBoundCond* bc = 
-	      dynamic_cast<TempThermalBoundCond*>(bcs[i]);
+	   // TempThermalBoundCond* bc = 
+	    //  dynamic_cast<TempThermalBoundCond*>(bcs[i]);
 	    //cout << "bc value = " << bc->getTemp() << endl;
 	  }
 	  if (bcs_type == "Flux") {
-	    FluxThermalBoundCond* bc = 
-	      dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	   // FluxThermalBoundCond* bc = 
+	    //  dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
 	    //cout << "bc value = " << bc->getFlux() << endl;
 	  }
 	}
-	  
-#if 0
-	switch(patch->getBCType(face)){
-	case Patch::None:
-	     // Do nothing
-	     break;
-	case Patch::Fixed:
-	     gvelocity.fillFace(face,Vector(0.0,0.0,0.0));
-	     break; 
-	case Patch::Symmetry:
-	     gvelocity.fillFaceNormal(face);
-	     break; 
-	case Patch::Neighbor:
-	     // Do nothing
-	     break;
-	}
-#endif
-	//gvelocity.fillFace(face,Vector(0.0,0.0,0.0));
       }
-#endif
 
       new_dw->put(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
@@ -1463,43 +1449,77 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
-      for(int face = 0; face<6; face++){
-	Patch::FaceType f=(Patch::FaceType)face;
-#if 0
-	// Dummy holder until this is resolved
-	Patch::FaceType f = Patch::xplus;
-	Patch::BCType bctype = patch->getBCType(f);
-	switch(bctype){
-	  case Patch::None:
-	     // Do nothing
-	     break;
-	  case Patch::Fixed:
-	     gvelocity_star.fillFace(f,Vector(0.0,0.0,0.0));
-	     gacceleration.fillFace(f,Vector(0.0,0.0,0.0));
-	     break;
-	  case Patch::Symmetry:
-	     gvelocity_star.fillFaceNormal(f);
-	     gacceleration.fillFaceNormal(f);
-	     break;
-	  case Patch::Neighbor:
-	     // Do nothing
-	     break;
+      for(Patch::FaceType face = Patch::startFace;
+	face < Patch::endFace; face=Patch::nextFace(face)){
+	vector<BoundCond* > bcs;
+	bcs = patch->getBCValues(face);
+	//cout << "number of bcs on face " << face << " = " 
+	//    << bcs.size() << endl;
+
+	for (int i = 0; i<(int)bcs.size(); i++ ) {
+	  string bcs_type = bcs[i]->getType();
+	  if (bcs_type == "Kinematic") {
+	    KinematicBoundCond* bc = 
+	      dynamic_cast<KinematicBoundCond*>(bcs[i]);
+	    //  cout << "bc value = " << bc->getVelocity() << endl;
+	     gvelocity_star.fillFace(face,bc->getVelocity());
+	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0));
+	  }
+	  if (bcs_type == "Symmetric") {
+	    SymmetryBoundCond* bc = dynamic_cast<SymmetryBoundCond*>(bcs[i]);
+	     gvelocity_star.fillFaceNormal(face);
+	     gacceleration.fillFaceNormal(face);
+	  }
+	  if (bcs_type == "Temperature") {
+	    TempThermalBoundCond* bc = 
+	      dynamic_cast<TempThermalBoundCond*>(bcs[i]);
+	    //cout << "bc value = " << bc->getTemp() << endl;
+            IntVector low = gTemperature.getLowIndex();
+            IntVector hi = gTemperature.getHighIndex();
+	    gTemperatureStar.fillFace(face,bc->getTemp());
+	    if(face==Patch::xplus || face==Patch::xminus){
+             int I;
+	     if(face==Patch::xminus){ I=low.x(); }
+	     if(face==Patch::xplus){ I=hi.x()-1; }
+	      for (int j = low.y(); j<hi.y(); j++) { 
+                for (int k = low.z(); k<hi.z(); k++) {
+                   gTemperatureRate[IntVector(I,j,k)] +=
+                    (gTemperatureStar[IntVector(I,j,k)]-
+                     gTemperature[IntVector(I,j,k)])/delT;
+                }
+              }
+	    }
+	    if(face==Patch::yplus || face==Patch::yminus){
+	     int J;
+	     if(face==Patch::yminus){ J=low.y(); }
+	     if(face==Patch::yplus){ J=hi.y()-1; }
+              for (int i = low.x(); i<hi.x(); i++) {
+                for (int k = low.z(); k<hi.z(); k++) {
+                   gTemperatureRate[IntVector(i,J,k)] +=
+                    (gTemperatureStar[IntVector(i,J,k)]-
+                     gTemperature[IntVector(i,J,k)])/delT;
+                }
+              }
+	    }
+	    if(face==Patch::zplus || face==Patch::zminus){
+	     int K;
+	     if(face==Patch::zminus){ K=low.z(); }
+	     if(face==Patch::zplus){ K=hi.z()-1; }
+              for (int i = low.x(); i<hi.x(); i++) {
+                for (int j = low.y(); j<hi.y(); j++) {
+                   gTemperatureRate[IntVector(i,j,K)] +=
+                    (gTemperatureStar[IntVector(i,j,K)]-
+                     gTemperature[IntVector(i,j,K)])/delT;
+                }
+              }
+	    }
+	  }
+	  if (bcs_type == "Flux") {
+	    FluxThermalBoundCond* bc = 
+	      dynamic_cast<FluxThermalBoundCond*>(bcs[i]);
+	    //cout << "bc value = " << bc->getFlux() << endl;
+	  }
 	}
-//	gvelocity_star.fillFace(f,Vector(0.0,0.0,0.0));
-//	gacceleration.fillFace(f,Vector(0.0,0.0,0.0));
-	if(face==0){
-	  gTemperatureStar.fillFace(f,300.0);
-          IntVector low = gTemperature.getLowIndex();
-          IntVector hi = gTemperature.getHighIndex();
-	    for (int j = low.y(); j<hi.y(); j++) {
-             for (int k = low.z(); k<hi.z(); k++) {
-               gTemperatureRate[IntVector(low.x(),j,k)] += 
-		(gTemperatureStar[IntVector(low.x(),j,k)]-
-		gTemperature[IntVector(low.x(),j,k)])/delT;
-             }
-           }
-	}
-#endif
       }
 
       numPTotal += pset->numParticles();
@@ -1642,6 +1662,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.104  2000/07/25 22:52:44  guilkey
+// Completed John's work with the grid boundary conditions.  Now in addition
+// to fishing the boundary information from the problem spec, it actually
+// gets used as well.  Currently, specified velocity, symmetry and specified
+// temperature boundaries are implemented.
+//
 // Revision 1.103  2000/07/25 19:10:23  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.
