@@ -257,46 +257,45 @@ void HypoElastic::addComputesAndRequires(Task* task,
   task->computes(lb->pVolumeDeformedLabel,              matlset);
 }
 
-double HypoElastic::computeRhoMicroCM(double /*pressure*/,
-                                      const MPMMaterial* /*matl*/)
+double HypoElastic::computeRhoMicroCM(double pressure,
+                                      const MPMMaterial* matl)
 {
-#if 0
   double rho_orig = matl->getInitialDensity();
   double p_ref=101325.0;
-  double bulk = d_initialData.Bulk;
-
   double p_gauge = pressure - p_ref;
   double rho_cur;
+  double G = d_initialData.G;
+  double bulk = d_initialData.K;
 
-  rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
-#endif
-
-  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR HypoElastic"
-       << endl;
-
-  double rho_cur=0.;
+  rho_cur = rho_orig/(1-p_gauge/bulk);
 
   return rho_cur;
+
+#if 0
+  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR HypoElastic"
+       << endl;
+#endif
 }
 
-void HypoElastic::computePressEOSCM(const double /*rho_cur*/,double& /*pressure*/,
-                                    double& /*dp_drho*/, double& /*tmp*/,
-                                    const MPMMaterial* /*matl*/)
+void HypoElastic::computePressEOSCM(const double rho_cur, double& pressure,
+                                    double& dp_drho,      double& tmp,
+                                    const MPMMaterial* matl)
 {
-#if 0
+
   double p_ref=101325.0;
-  double bulk = d_initialData.Bulk;
-  double shear = d_initialData.Shear;
+  double G = d_initialData.G;
+  double bulk = d_initialData.K;
   double rho_orig = matl->getInitialDensity();
 
-  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+  double p_g = bulk*(1.0 - rho_orig/rho_cur);
   pressure = p_ref + p_g;
-  dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  tmp = sqrt((bulk + 4.*shear/3.)/rho_cur);  // speed of sound squared
-#endif
+  dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
+  tmp = sqrt((bulk + 4.*G/3.)/rho_cur);  // speed of sound squared
 
+#if 0
   cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR HypoElastic"
        << endl;
+#endif
 }
 
 #ifdef __sgi

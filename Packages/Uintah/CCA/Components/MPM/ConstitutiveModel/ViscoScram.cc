@@ -554,46 +554,45 @@ void ViscoScram::addComputesAndRequires(Task* task,
   task->computes(lb->pVolumeDeformedLabel,                matlset);
 }
 
-double ViscoScram::computeRhoMicroCM(double /* pressure */,
-                                     const MPMMaterial* /* matl */)
+double ViscoScram::computeRhoMicroCM(double pressure,
+                                     const MPMMaterial* matl)
 {
-#if 0
   double rho_orig = matl->getInitialDensity();
   double p_ref=101325.0;
-  double bulk = d_initialData.Bulk;
-
   double p_gauge = pressure - p_ref;
   double rho_cur;
+  double G = d_initialData.G[0] + d_initialData.G[1] +
+ 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
+  double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
-#endif
-
-  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR ViscoScram"
-       << endl;
-
-  double rho_cur=0.;
+  rho_cur = rho_orig/(1-p_gauge/bulk);
 
   return rho_cur;
+
+#if 0
+  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR ViscoScram"
+       << endl;
+#endif
 }
 
-void ViscoScram::computePressEOSCM(const double /*rho_cur*/,double& /*pressure*/,
-                                   double& /*dp_drho*/, double& /*tmp*/,
-                                   const MPMMaterial* /*matl*/)
+void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
+                                   double& dp_drho, double& tmp,
+                                   const MPMMaterial* matl)
 {
-#if 0
   double p_ref=101325.0;
-  double bulk = d_initialData.Bulk;
-  double shear = d_initialData.Shear;
+  double G = d_initialData.G[0] + d_initialData.G[1] +
+ 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
+  double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   double rho_orig = matl->getInitialDensity();
 
-  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+  double p_g = bulk*(1.0 - rho_orig/rho_cur);
   pressure = p_ref + p_g;
-  dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  tmp = sqrt((bulk + 4.*shear/3.)/rho_cur);  // speed of sound squared
-#endif
+  dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
+  tmp = sqrt((bulk + 4.*G/3.)/rho_cur);  // speed of sound squared
 
-  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR ViscoScram"
-       << endl;
+#if 0
+  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR ViscoScram" << endl;
+#endif
 }
 
 #ifdef __sgi
