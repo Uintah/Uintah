@@ -31,6 +31,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/TransformData2.h>
+#include <Dataflow/Modules/Fields/FieldInfo.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
 #include <iostream>
@@ -108,8 +109,38 @@ TransformData2::execute()
 
   if (ifieldhandle0->mesh().get_rep() != ifieldhandle1->mesh().get_rep())
   {
-    error("The Input Fields must share the same mesh.");
-    return;
+    // If not the same mesh make sure they are the same type.
+    if( ifieldhandle0->get_type_description(0)->get_name() !=
+	ifieldhandle1->get_type_description(0)->get_name() ||
+	ifieldhandle0->get_type_description(1)->get_name() !=
+	ifieldhandle1->get_type_description(1)->get_name() ) {
+      error("The input fields must have the same mesh type.");
+      return;
+    } else {
+
+      // Do this last, sometimes takes a while.
+      const TypeDescription *meshtd0 = ifieldhandle0->mesh()->get_type_description();
+
+      CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd0);
+      Handle<FieldInfoAlgoCount> algo;
+      if (!module_dynamic_compile(ci, algo)) return;
+
+      //string num_nodes, num_elems;
+      //int num_nodes, num_elems;
+      const string num_nodes0 = algo->execute_node(ifieldhandle0->mesh());
+      const string num_elems0 = algo->execute_elem(ifieldhandle0->mesh());
+
+      const string num_nodes1 = algo->execute_node(ifieldhandle1->mesh());
+      const string num_elems1 = algo->execute_elem(ifieldhandle1->mesh());
+
+      if( num_nodes0 != num_nodes1 || num_elems0 != num_elems1 ) {
+	error("The input meshes must have the same number of nodes and elements.");
+	return;
+      } else {
+	warning("The input fields do not have the same mesh,");
+	warning("but appear to be the same otherwise.");
+      }
+    }
   }
 
   if (ifieldhandle0->data_at() != ifieldhandle1->data_at())
