@@ -196,16 +196,41 @@ ParticleFieldExtractor::~ParticleFieldExtractor(){}
 
 
 
-void ParticleFieldExtractor::callback( int index)
+void ParticleFieldExtractor::callback( long index)
 {
   cerr<< "ParticleFieldExtractor::callback request data for index "<<
     index << ".\n";
+
+//   if( this->archive.get_rep() == 0 ) return;
+
+//   DataArchive& archive = *((*(this->archive.get_rep()))());
+//   vector< double > times;
+//   vector< int > indices;
+//   archive.queryTimesteps( indices, times );
+//   double time;
+//   GridP grid = archive.queryGrid( time );
+//   LevelP level = grid->getLevel( 0 );
+
+//   int matl = 0;
+//   double starttime = times[0];
+//   double endtime = times[times.size() -1];
+
+//   vector<double> sparts;
   
-  clString idx = to_string(index);
-  TCL::execute( id + " infoFrame " + idx);
-  TCL::execute( id + " infoAdd " + idx + " " + "0" + 
-		" Info for particle " + idx + " in material "
-		+ pName.get() + ".\n");
+//   archive.query(sparts, psVar.get()(), 0, index, starttime, endtime);
+
+//   vector<double>::iterator iter = sparts.begin();
+//   for(; iter < sparts.end(); iter++){
+//     cerr<<sparts[*iter]<<" ";
+//   }
+//   cerr<<endl;
+ 
+  
+//   clString idx = to_string(index);
+//   TCL::execute( id + " infoFrame " + idx);
+//   TCL::execute( id + " infoAdd " + idx + " " + "0" + 
+// 		" Info for particle " + idx + " in material "
+// 		+ pName.get() + ".\n");
   /*
   TCL::execute( id + " infoAdd " + idx + " "
 		+ to_string(tpr->GetNTimesteps())
