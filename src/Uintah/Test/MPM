@@ -5,8 +5,13 @@ from time import asctime,localtime,time
 from types import *
 from sys import argv,exit
 
-TESTS = [   ("disks.ups",   	["dbg", "opt"]),    \
-    	    ("disks2mat.ups",	["dbg", "opt"]),    \
+TESTS = [   ("disks.ups",   	    ["dbg", "opt"]),    \
+    	    ("disks2mat.ups",	    ["dbg", "opt"]),    \
+    	    ("disks_4patch.ups",    ["dbg", "opt"]), 	\
+	    ("disksel.ups",	    ["dbg", "opt"]), 	\
+	    ("disksf.ups",  	    ["dbg", "opt"]),	\
+	    ("disksplas.ups",	    ["dbg", "opt"]), 	\
+	    ("rodsplas.ups",	    [       "opt"]) 	\
     	]
 
 def input (test):
