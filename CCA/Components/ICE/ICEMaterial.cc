@@ -183,10 +183,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    Vector dcorner = dxpp*0.5;
    double totalppc = ppc.x()*ppc.y()*ppc.z();
 
-   //   for(CellIterator iter = patch->getExtraCellIterator(b); !iter.done(); 
-   //    iter++){
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-       iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
  
      Point lower = patch->nodePosition(*iter) + dcorner;
      int count = 0;
@@ -209,7 +206,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
+          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 1;
@@ -220,7 +217,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
+          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 2;
@@ -231,7 +228,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
         vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
         rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-        rho_CC[*iter]    = rho_micro[*iter] * vol_frac_CC[*iter] +SMALL_NUM;
+        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
+                            SMALL_NUM*rho_micro[*iter];
         temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
         speedSound[*iter] = d_speed_of_sound;
         IveBeenHere[*iter]= obj; 
