@@ -491,7 +491,7 @@ main( int argc, char** argv )
 	}
 
 	// Scheduler
-	Scheduler* sch;
+	Scheduler * sch = 0;
 	if(scheduler == "SingleProcessorScheduler"){
 	   SingleProcessorScheduler* sched = 
 	      scinew SingleProcessorScheduler(world, output);
