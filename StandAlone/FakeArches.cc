@@ -15,8 +15,7 @@ public:
 				SimulationStateP&);
 
       virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&,
-				      DataWarehouseP&);
+				      SchedulerP&);
 	 
       virtual void sched_paramInit(const LevelP& level,
 				   SchedulerP&,
@@ -24,8 +23,7 @@ public:
 				   DataWarehouseP& new_dw);
       
       virtual void scheduleComputeStableTimestep(const LevelP& level,
-						 SchedulerP&,
-						 DataWarehouseP&);
+						 SchedulerP&);
 
       virtual void scheduleTimeAdvance(double t, double dt,
 				       const LevelP& level, 
@@ -68,8 +66,7 @@ Arches::sched_paramInit(const LevelP& level,
 // ****************************************************************************
 void 
 Arches::scheduleInitialize(const LevelP& level,
-			   SchedulerP& sched,
-			   DataWarehouseP& dw)
+			   SchedulerP& sched)
 {
 }
 
@@ -78,8 +75,7 @@ Arches::scheduleInitialize(const LevelP& level,
 // ****************************************************************************
 void 
 Arches::scheduleComputeStableTimestep(const LevelP&,
-				      SchedulerP&,
-				      DataWarehouseP& dw)
+				      SchedulerP&)
 {
 }
 
