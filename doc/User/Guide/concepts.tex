@@ -34,7 +34,7 @@
 
 This section describes the general design philosophy and goals of
 integrated problem solving environments \index{problem solving
-  environment} and how \BIOPSE{} embodies some of these ideas.
+  environment} and how \sr{} embodies some of these ideas.
 
 \section{Traditional Problem Solving Methods}
 
@@ -97,13 +97,13 @@ step of the process.
 \label{sec:con-steering} 
 
 The goal of integrated problem solving environments, specifically
-of \SR{} and \BIOPSE{}, is to integrate the steps
+\SR{}, is to integrate the steps
 described in the previous example as components in a single, unified,
-extensible problem solving environment \index{PSE}.  The resulting function
+extensible problem solving environment\index{PSE}.  The resulting function
 includes the ability to manage each step in a
 sequential computing process, and to create batch processes that
 execute repeated simulations. The functionality that sets
-\SR{} and \BIOPSE{} apart from most integrated software environments
+\SR{} apart from most integrated software environments
 is the ability to intervene and control execution anywhere in the
 chain at any time during its execution.  The ability to control a
 computer program during execution is termed \emph{computational
@@ -124,7 +124,7 @@ locations to stay within anatomically reasonable bounds, or refining
 the geometric model resolution in order to balance accuracy and
 execution time.
 
-To achieve integration within the elements of \SR{} and \BIOPSE{},
+To achieve integration within the elements of \SR{},
 data flows directly from one processing step to the next, without
 being diverted to a disk file or leaving the program.  Output from
 each step is available as input to dependent steps.  The underlying
@@ -165,6 +165,13 @@ Progress\cite{MM:Vet95}, \index{Progress} and Magellan\cite{MM:Vet97a}
     \htmladdimg[align=left,alt=""]{../../FAQ/EAB-BioPSE.gif}
   }
 \end{htmlonly}
+
+\sr{} is more properly considered a problem solving environment (PSE)
+framework upon which application specific PSEs are built.  Each
+specific PSE, such as \BIOPSE{}, is a \dfn{package} with \sr{}.  PSEs
+use and build upon data types, algorithms, and modules provided by the
+the \sr{} framework.  PSEs provide application specific data types,
+algorithms, and modules.
 
 It is important to understand the place of the software included in
 this package within the hierarchy of computational problem solving
@@ -212,25 +219,17 @@ has developed various forms of software wrappers or interfaces that
 allow \SR{} to leverage the strengths of these third party tools,
 links referred to as "bridges."
 
-There are instances when a tighter level of integration than a
-bridge between \SR{} and third-party software is necessary.  One example
-is the addition of MPEG support for capturing animations from the \SR{}
-Viewer module, for which the Berkeley and Alex Knowles' MPEG
-encoding tools are used.  Another example is the set of image generation and
-manipulation tools from Peter Haeberli called libimage.  To indicate
-whether or not such tools are available, the configure scripts for \SR{}
-contain optional control flags.
+There are instances when a tighter level of integration than a bridge
+between \SR{} and third-party software is necessary.  One example is
+the addition of MPEG support for capturing animations from the \SR{}
+Viewer module, for which the Berkeley and Alex Knowles' MPEG encoding
+tools are used.  To indicate whether or not such tools are available,
+the configure scripts for \SR{} contain optional control flags.
 
 \sci{} believes the combination of a robust infrastructure and modular
 extensibility through packages and third-party libraries will allow \SR{}
 to grow, and adapt to changing needs and opportunities. 
 
-This manual is consistent with its use of 
-terms \SR{} and \BIOPSE{}.  \sr{} typically refers to some feature that
-is common to the core functionality of the system. This is common to all
-problem solving environment application packages.  \BIOPSE{} 
-refers to specific elements of the bioelectric field problem solving
-environment.
 
 
 \section{\SR{} Modules, Networks, and Sub-Networks}
@@ -301,30 +300,22 @@ One goal of the \BIOPSE{} project is to provide
 support for such external code, including FORTRAN, C, Matlab, and
 IDL\@.
 
-\subsection{Matlab}
+\subsection{Matlab Interface}
 \label{sec:concept-matlab} 
 
-The interface (based on Berkeley sockets) between \SR{} and Matlab provides
-a pathway to send matrix data objects from \SR{} to Matlab, then accepts
-the results of some Matlab computations.  Currently, this arrangement
-requires a Matlab script to perform the desired
-operations.  \SR{} sends the input data to an existing process running
-Matlab, which serves as a compute engine. Matlab then performs the steps
-described in the script, and returns data to \SR{} for further
-processing or display.  The Matlab process can run on a separate
-computer connected via a network, helping to distribute the load and resolving potential licensing conflicts with Matlab.
+The Matlab interface package allows \sr{} to execute Matlab scripts
+and to read and write Matlab matrix data files.
 
-The underlying mechanism for this communication is a socket interface
-consisting of two \SR{} Modules, \module{MatrixSend} and
-\module{MatrixReceive}, and a Matlab ``transport'' routine. The \SR{}
-and the Matlab processes know each other's whereabouts (in the form
-hostname:port) and use a client-to-client communication model.
-Synchronization between processes is manual.  For example, 
-the \SR{} \module{MatrixSend} module sends the matrix to a socket where a 
-Matlab script is listening.  The script receives the matrix, 
-performs the calculations in Matlab, and sends the results to a socket 
-where \module{MatrixReceive} module is listening.  \SR then carries out
-further calculations and displays the results.
+A sockets interface allows \sr{} to exchange a matlab script and matrix
+data with a Matlab process.  Matlab executes the script with input
+data from \sr{} and returns matrix data to \sr{}.  
+
+The Matlab process can run on the same computer as does \sr{} or it
+can run on a separate computer, helping to distribute the load and
+resolving potential licensing conflicts with Matlab.
+
+Via the Matlab package, \sr{} can read Matlab matrix files, converting
+them to a SCIRun matrix type or a NRRD type.
 
 \subsection{Insight Tool Kit}
 
@@ -460,8 +451,8 @@ The following C++/SCI data types can be associated with a \datatype{Field}:
 \item \datatype{double}, \datatype{float}
 \item \datatype{int}, \datatype{short}, \datatype{unsigned}, \datatype{unsigned short}
 \item \datatype{char}, \datatype{unsigned char}
-\item \datatype{Tensor}
-\item \datatype{Vector}
+\item 2nd order \datatype{Tensor}
+\item \datatype{Vector} of doubles
 \end{itemize}
 
 C++ data types are \datatype{double}, \datatype{float},
@@ -471,15 +462,15 @@ C++ data types are \datatype{double}, \datatype{float},
 
 \subsection{Meshes}
 
-\sr{} meshes are classified as \dfn{unstructured}, \dfn{structured}, or
-\dfn{regular}.  In general, a mesh consists of nodes (data value location
-data) and node connectivity data.
+\sr{} meshes are classified as \dfn{unstructured}, \dfn{structured},
+or \dfn{regular}.  A mesh consists of nodes and implicit or explicit
+node connectivity data.
 
 Node locations and connectivities for unstructured meshes are specified
 explicitly.  The unstructured mesh types are:
 \datatype{PointCloudMesh}, \datatype{CurveMesh},
 \datatype{TriSurfMesh}, \datatype{QuadSurfMesh},
-\datatype{TetVolMesh}, \datatype{HexVolMesh}.
+\datatype{TetVolMesh}, and \datatype{HexVolMesh}.
 
 Node locations are specified explicitly, and connectivities are known
 implicitly for structured meshes.  The structured meshes are
@@ -516,8 +507,7 @@ Below are figures of some mesh types:
   segmented curve.}
 
 \meshdoc{100}{ImageField}{Image Mesh}{An Image mesh is a regular 2D
-  grid. Note that an Image mesh is not used for image processing. 
-  \sr{} does not support that function.}
+  grid. Note that an Image mesh is not used for image processing.}
 
 \meshdoc{65}{trisurf}{Tri Surface Mesh}{A Tri Surface mesh is a
   surface made of connected triangles.}
@@ -528,7 +518,12 @@ Below are figures of some mesh types:
 
 \meshdoc{60}{tetvol}{Tet Vol Mesh}{A Tet Volume mesh is a subdivision of space into tetrahedral elements.}
 
-\meshdoc{84}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
+\meshdoc{84}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision
+  of space into hexagonal elements.}
+
+%% \meshdoc{?}{prismvol}{Prism Volume Mesh}{A Prism Volume is a
+%%   subdivision of space into prism elements.  Prism elements have five
+%%   faces, two trangular faces connected by three quadrilateral faces.}
 
 \subsection{Matrices}
 

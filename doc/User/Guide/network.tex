@@ -122,9 +122,49 @@ for all modules and consists of the following elements:
   
   \descitem{UI button} Pressing the \guibutton{UI} button displays the
   module's control dialog. Some modules have no dialog, some have
-  simple dialogs, and some have complex dialogs that allow
-  elaborate control over the module.  Figure~\ref{fig:moddialog} shows
-  the control dialog for \module{Show Field} module.
+  simple dialogs, and some have complex dialogs that allow elaborate
+  control over the module.  Figure~\ref{fig:moddialog} shows the
+  control dialog for \module{Show Field} module.  All module control
+  dialogs (except for read/writer modules) contain the following
+  buttons:
+
+  \begin{description}
+    \descitem{Close}  Closes the control dialog.
+
+    \descitem{Execute} Executes the module.  This may cause other
+    modules in the network to execute or ``fire'' (see
+    \secref{Executing a Network}{sec:executenet}).
+    
+    \descitem{Find} Highlights the module in the NetEdit frame
+    that owns the control dialog being edited.
+
+    \descitem{Help} Displays a module's help information.
+
+  \end{description}
+
+  Reader/writer module control dialogs contain the following button
+  set:
+
+  \begin{description}
+    \descitem{Cancel} Closes the control dialog without setting the
+    module's filename value.
+    
+    \descitem{Execute}  Sets the read/writer module's filename value
+    to the chosen filename, executes the module (reads file contents
+    and sends data downstream), and closes the module's
+    control dialog.
+    
+    \descitem{Find} Highlights the module in the NetEdit frame
+    that owns the control dialog being edited.
+    
+    \descitem{Set} Sets the read/writer module's filename value to the
+    chosen filename then closes the module's control dialog.  In a
+    network with multiple reader/writer modules, \guibutton{Set}
+    (rather than \guibutton{Execute}) should be used to establish each
+    reader/writer module's filename parameter before executing the
+    network.
+    
+  \end{description}
   
   \descitem{Progress bar} Shows the module's progress.  As the module
   works toward completion of its task, the progress bar is filled
@@ -134,7 +174,7 @@ for all modules and consists of the following elements:
   \descitem{Timer} Displays the amount of CPU time the module has
   consumed.  Located to the left of the progress bar.
   
-  \descitem{Message Indicator} Shows the presence of messages in a
+  \descitem{Message Indicator} Indicates the presence of messages in a
   module's log.  Colors represent message types.  Blue represents
   ``remarks'' (informational messages) and yellow represents ``warnings''
   (attention is needed).  Click the indicator to display the

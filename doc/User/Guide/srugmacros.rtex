@@ -63,4 +63,3 @@
 \newcommand{\installguideurl}{\htmlurl{\scisoftware{}/doc/Installation/Guide/index.html}}
 \newcommand{\modulemakerguideurl}{}
 \newcommand{\treetop}{../../..}
-\newcommand{\scidoclink}[2]{\htmladdnormallinkfoot{#1}{\latexhtml{\scisoftware/doc}{\treetop}/#2}}
