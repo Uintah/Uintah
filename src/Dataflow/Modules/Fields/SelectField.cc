@@ -45,7 +45,7 @@ private:
 
   int  last_generation_;
   BBox last_bounds_;
-
+  int  widgetid_;
 public:
   SelectField(GuiContext* ctx);
   virtual ~SelectField();
@@ -59,7 +59,8 @@ SelectField::SelectField(GuiContext* ctx)
     widget_lock_("SelectField widget lock"),
     value_(ctx->subVar("stampvalue")),
     mode_(ctx->subVar("runmode")),
-    last_generation_(0)
+    last_generation_(0),
+    widgetid_(0)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
 }
@@ -68,6 +69,18 @@ SelectField::SelectField(GuiContext* ctx)
 
 SelectField::~SelectField()
 {
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Selection Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 
@@ -137,8 +150,8 @@ SelectField::execute()
 	error("Unable to initialize oport 'Selection Widget'.");
 	return;
       }
-      ogport->addObj(widget_group, "SelectField Selection Widget",
-		     &widget_lock_);
+      widgetid_ = ogport->addObj(widget_group, "SelectField Selection Widget",
+				 &widget_lock_);
       ogport->flushViews();
 
       last_bounds_ = obox;

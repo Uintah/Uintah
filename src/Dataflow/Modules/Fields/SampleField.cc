@@ -99,7 +99,9 @@ DECLARE_MAKER(SampleField)
 
 SampleField::SampleField(GuiContext* ctx)
   : Module("SampleField", ctx, Filter, "Fields", "SCIRun"),
-
+    
+    firsttime_(true),
+    widgetid_(0),
     endpoints_ (ctx->subVar("endpoints")),
     endpoint0x_(ctx->subVar("endpoint0x")),
     endpoint0y_(ctx->subVar("endpoint0y")),
@@ -119,18 +121,27 @@ SampleField::SampleField(GuiContext* ctx)
     randDist_(ctx->subVar("dist")),
     whichTab_(ctx->subVar("whichtab")),
     vf_generation_(0),
-    widget_lock_("StreamLines widget lock")
+    widget_lock_("StreamLines widget lock"),
+    rake_(0)
 {
-  widgetid_=0;;
-  rake_ = 0;
-
-  firsttime_ = true;
   endpoints_.set( 0 );
 }
 
 
 SampleField::~SampleField()
 {
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort *)get_oport("Sampling Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize oport 'Sampling Widget'.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 

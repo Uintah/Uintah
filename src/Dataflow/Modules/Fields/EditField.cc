@@ -127,9 +127,22 @@ EditField::EditField(GuiContext* ctx)
   widgetid_ = 0;
 }
 
-EditField::~EditField(){
-}
 
+EditField::~EditField()
+{
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Transformation Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
+}
 
 
 void EditField::clear_vals() 
