@@ -35,6 +35,12 @@
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/ContourMesh.h>
 #include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/TriSurf.h>
 
 #include <iostream>
 #include <vector>
@@ -83,15 +89,19 @@ private:
   Field                         *sf_;  // seed point field
   ContourField<double>          *cf_;
 
+  ContourMesh                   *cmesh_;
+
   GenericInterpolate<Vector>    *interp_;
 
-  // member functions
+  //! loop through the nodes in the seed field
+  template <class VectorField, class SeedField>
+  void TemplatedExecute(VectorField *, SeedField *);
 
-  // find the nodes that make up a single stream line.
-  // This particular implementation uses Runge-Kutta-Fehlberg
+  //! find the nodes that make up a single stream line.
+  //! This particular implementation uses Runge-Kutta-Fehlberg
   void FindStreamLineNodes(vector<Point>&, Point, float, float, int);
 
-  // compute the inner terms of the RKF formula
+  //! compute the inner terms of the RKF formula
   int ComputeRKFTerms(vector<Vector>&,const Point&, float);
 };
 
@@ -115,6 +125,8 @@ StreamLines::StreamLines(const clString& id)
   vf_ = 0;
   sf_ = 0;
   cf_ = 0;
+
+  cmesh_ = 0;
 }
 
 StreamLines::~StreamLines()
@@ -197,28 +209,81 @@ StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
   }
 }
 
+template <class VectorField, class SeedField>
+void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
+{
+  typedef typename VectorField::mesh_type        vf_mesh_type;
+  typedef typename SeedField::mesh_type          sf_mesh_type;
+  typedef typename vf_mesh_type::node_iterator   vf_node_iterator;
+  typedef typename sf_mesh_type::node_iterator   sf_node_iterator;
+  typedef typename ContourMesh::node_index       node_index;
+
+  Point seed;
+  Vector test;
+  vector<Point> nodes;
+  vector<Point>::iterator node_iter;
+  node_index n1,n2;
+
+  sf_mesh_type *smesh =
+    dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
+
+  // try to find the streamline for each seed point
+  sf_node_iterator seed_iter = smesh->node_begin();
+
+  while (seed_iter!=smesh->node_end()) {
+
+    // Is the seed point inside the field?
+    smesh->get_point(seed,*seed_iter);
+    if (!interp_->interpolate(seed,test))
+      postMessage("StreamLines: WARNING: seed point "
+		  "was not inside the field.");
+
+    cerr << "new streamline." << endl;
+
+    FindStreamLineNodes(nodes,seed,.01,.01,200);
+
+    cerr << "done finding streamline." << endl;
+
+    node_iter = nodes.begin();
+    if (node_iter!=nodes.end())
+      n1 = cmesh_->add_node(*node_iter);
+    while (node_iter!=nodes.end()) {
+      ++node_iter;
+      if (node_iter!=nodes.end()) {
+	n2 = cmesh_->add_node(*node_iter);
+	cmesh_->add_edge(n1,n2);
+	//cerr << "edge = " << n1 << " " << n2 << endl;
+	n1 = n2;
+	//fdata[index] = index++;
+      }
+    }
+
+    cerr << "done adding streamline to contour field." << endl;
+
+    ++seed_iter;
+  }
+}
+
 void StreamLines::execute()
 {
-  ContourMesh *mesh;
-  vector<Point> nodes;
-  ContourMesh::node_index n1,n2; 
-
-  if (!vfport_->get(vfhandle_))
+  // the vector field input is required
+  if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
     return;
 
-  if(!(vf_ = vfhandle_.get_rep()))
+  // the seed field input is required
+  if (!sfport_->get(sfhandle_) || !(sf_ = sfhandle_.get_rep()))
     return;
 
-  // we expect that the field is a vector field
+  // we expect that the flow field input is a vector field
   if (vf_->get_type_name(1) != "Vector") {
     postMessage("StreamLines: ERROR: FlowField is not a Vector field."
 		"  Exiting.");
     return;
   }
 
-  cf_ = scinew ContourField<double>(Field::NODE);
-  mesh = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
-  ContourField<double>::fdata_type &fdata = cf_->fdata();
+  // might have to get Field::NODE
+  cf_ = scinew ContourField<double>(Field::NONE);
+  cmesh_ = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
 
   interp_ = (GenericInterpolate<Vector>*)vf_->query_interpolate();
 
@@ -228,48 +293,35 @@ void StreamLines::execute()
     return;
   }
 
-  // get or generate seed_point(s) here
-  vector<Point> seed_points;
-  seed_points.push_back(Point(0.05,0.05,0.05));
-  //seed_points.push_back(Point(-0.03,-0.03,-0.03));
-  seed_points.push_back(Point(-0.05,-0.03,-0.05));
-
-  // try to find the streamline for each seed point
-  vector<Point>::iterator seed_iter = seed_points.begin();
-  int index = 0;
-  while (seed_iter!=seed_points.end()) {
-
-    // Is the seed point inside the field?
-    Vector test(0);
-    if (!interp_->interpolate(*seed_iter,test))
-      postMessage("StreamLines: WARNING: seed point "
-		  "was not inside the field.");
-
-    cerr << "new streamline." << endl;
-
-    FindStreamLineNodes(nodes,*seed_iter,.001,.001,2000);
-
-    cerr << "done finding streamline." << endl;
-
-    fdata.resize(fdata.size()+nodes.size());
-
-    vector<Point>::iterator node_iter = nodes.begin();
-    if (node_iter!=nodes.end())
-      n1 = mesh->add_node(*node_iter);
-    while (node_iter!=nodes.end()) {
-      ++node_iter;
-      if (node_iter!=nodes.end()) {
-	n2 = mesh->add_node(*node_iter);
-	mesh->add_edge(n1,n2);
-	//cerr << "edge = " << n1 << " " << n2 << endl;
-	n1 = n2;
-	fdata[index] = index++;
+  // this is a pain...
+  if (vf_->get_type_name(0) == "LatticeVol") {
+    if (vf_->get_type_name(1) == "double") {
+      if (sf_->get_type_name(-1) == "ContourField<double>") {
+	TemplatedExecute((LatticeVol<double>*)vf_,(ContourField<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
+	TemplatedExecute((LatticeVol<double>*)vf_,(TriSurf<double>*)sf_);
+      }
+    } else if (vf_->get_type_name(1) == "Vector") {
+      if (sf_->get_type_name(-1) == "ContourField<double>") {
+	TemplatedExecute((LatticeVol<Vector>*)vf_,(ContourField<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
+	TemplatedExecute((LatticeVol<Vector>*)vf_,(TriSurf<double>*)sf_);
       }
     }
-
-    cerr << "done adding streamline to contour field." << endl;
-
-    ++seed_iter;
+  } else if (vf_->get_type_name(0) =="TetVol") {
+    if (vf_->get_type_name(1) == "double") {
+      if (sf_->get_type_name(-1) == "ContourField<double>") {
+	TemplatedExecute((TetVol<double>*)vf_,(ContourField<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
+	TemplatedExecute((TetVol<double>*)vf_,(TriSurf<double>*)sf_);
+      }
+    } else if (vf_->get_type_name(1) == "Vector") {
+      if (sf_->get_type_name(-1) == "ContourField<double>") {
+	TemplatedExecute((TetVol<Vector>*)vf_,(ContourField<double>*)sf_);
+      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
+	TemplatedExecute((TetVol<Vector>*)vf_,(TriSurf<double>*)sf_);
+      }
+    }
   }
 
   oport_->send(cf_);
