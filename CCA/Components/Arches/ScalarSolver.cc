@@ -142,7 +142,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches
   tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::None, Arches::ZEROGHOSTCELLS);		
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
