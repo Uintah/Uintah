@@ -18,7 +18,6 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
-       <max_iterations>     100         </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -115,12 +114,12 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [5,5,5]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
+              <lower>        [0,0,0]          </lower>
+              <upper>        [5,5,5]          </upper>
+              <extraCells>   [1,1,1]          </extraCells>
+              <patches>      [1,1,1]          </patches>
            </Box>
-           <spacing>         [1,1,1]    </spacing>
+           <spacing>         [0.5,0.5,0.5]    </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
@@ -144,10 +143,6 @@
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>      
-      <!-- needed for regression tester dat comparisons -->       
-      <save label="KineticEnergy"/>
-      <save label="TotalIntEng"/>
-      <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
 
   <Debug>
@@ -157,19 +152,11 @@
       
        <dbg_Matls>           [0,1,2]    </dbg_Matls>
 
-       <!-- need this one for regression tester dat comparisons -->       
-       <debug label = "switchTestConservation"/>  
     <!-- 
        <debug label = "switchDebug_updatePressure"/>
        <debug label = "switchDebug_setupMatrix"/>
        <debug label = "switchDebug_setupRHS"/>
      
-       <debug label = "switchDebug_EQ_RF_press"/>
-       <debug label = "switchDebug_explicit_press"/> 
-       <debug label = "switchDebug_advance_advect"/>
-       <debug label = "switchDebug_Exchange_FC"/>
-       <debug label = "switchDebug_EQ_RF_press"/>
-       <debug label = "switchDebug_vel_FC"/>
        <debug label = "switchDebug_explicit_press"/>
        <debug label = "switchDebug_vel_FC"/>
        <debug label = "switchDebug_EQ_RF_press"/>
@@ -187,17 +174,22 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>100</cfl>
+         <cfl>1</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrderCE" />
         <solution technique = "EqForm" />
    
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.5            </knob_for_speedSound>
+        </TimeStepControl>
+        
         <ImplicitSolver>
-           <max_outer_iterations>      5    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <max_outer_iterations>      10    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-12 </outer_iteration_tolerance>
 	    <Parameters>
-	       <tolerance>1.e-8      </tolerance> 
+	       <tolerance>1.e-12    </tolerance> 
 	       <norm>     LInfinity  </norm>
 	       <criteria> Absolute   </criteria>
 	    </Parameters>
