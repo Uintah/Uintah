@@ -82,7 +82,7 @@ private:
 
   bool build_texture(FieldHandle, FieldHandle);
 
-  bool new_vfield(FieldHandle field);
+  bool new_vfield(ScalarFieldInterfaceHandle sfi);
   bool new_gfield(FieldHandle field);
 };
 
@@ -131,12 +131,51 @@ TextureBuilder::execute()
     return;
   }
 
-  if (vfield->generation != vfield_last_generation_)
+  if ((vfield->generation != vfield_last_generation_) ||
+      (gui_vminval_.get() != vminval_) || 
+      (gui_vmaxval_.get() != vmaxval_))
   {
-    // new field
-    if (!new_vfield(vfield)) return;
+    // new field or range change
+    ScalarFieldInterfaceHandle sfi = vfield->query_scalar_interface(this);
+    if (!sfi.get_rep())
+    {
+      error("Input scalar field does not contain scalar data.");
+      return;
+    }
+
+    // Warning::Temporary Hack!
+    // In order to get the colors mapped correctly we need the min and max
+    // values for every level of a Multi-level field.  This
+    // temporary solution needs to be flushed out either in the sfi->minmax
+    // algorithm or someplace else. We don't want to have to handle every
+    // posible scalar type here.
+    if( MRLatVolField<double>* vmrfield =
+        dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
+      double minv = DBL_MAX, maxv = -DBL_MAX;
+      for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
+        const MultiResLevel<double>* lev = vmrfield->level( i );
+        for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+          // Each patch in a level corresponds to a LatVolField.
+          // Grab the field.
+          LatVolField<double>* vmr = lev->patches[j].get_rep(); 
+          // Now, get the min_max for the scalar field.
+          ScalarFieldInterfaceHandle sub_sfi =
+            vmr->query_scalar_interface(this);
+          new_vfield(sub_sfi);
+          minv = Min(vminval_, minv);
+          maxv = Max(vmaxval_, maxv);
+        }
+        // Set the values
+        gui_vminval_.set(minv);  vminval_ = minv;
+        gui_vmaxval_.set(maxv);  vmaxval_ = maxv;
+      }
+    } else {
+      new_vfield( sfi );
+    }
     vfield_last_generation_ = vfield->generation;
+
   }
+
 
   FieldHandle gfield = 0;
   if (igfield)
@@ -172,18 +211,6 @@ TextureBuilder::execute()
       }
     }
   }
-
-  if( MRLatVolField<double>* vmrfield =
-      dynamic_cast< MRLatVolField< double >* > (vfield.get_rep()) ) {
-
-    for(int i = 0 ; i < vmrfield->nlevels(); i++ ){
-      const MultiResLevel<double>* lev = vmrfield->level( i );
-      for(unsigned int j = 0; j < lev->patches.size(); j++ ){
-	LatVolField<double>* vmr = lev->patches[j].get_rep(); 
-	LatVolMeshHandle mesh = vmr->get_typed_mesh();
-      }
-    }
-  }
   
   if (build_texture(vfield, gfield))
   {
@@ -211,15 +238,8 @@ TextureBuilder::build_texture(FieldHandle vfield, FieldHandle gfield)
 
 
 bool
-TextureBuilder::new_vfield(FieldHandle vfield)
+TextureBuilder::new_vfield(ScalarFieldInterfaceHandle sfi)
 {
-  const string type = vfield->get_type_description()->get_name();
-  ScalarFieldInterfaceHandle sfi = vfield->query_scalar_interface(this);
-  if (!sfi.get_rep())
-  {
-    error("Input scalar field does not contain scalar data.");
-    return false;
-  }
   if( gui_fixed_.get() ){
     vminval_ = gui_vminval_.get();
     vmaxval_ = gui_vmaxval_.get();
