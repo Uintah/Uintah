@@ -143,6 +143,7 @@ TendEstim::execute()
   output->copy_sci_data(*dwi_handle.get_rep());
   output->nrrd->axis[0].label = strdup("Unknown:Tensor");
   otens_->send(NrrdDataHandle(output));
+  update_state(Completed);
 }
 
 } // End namespace SCITeem
