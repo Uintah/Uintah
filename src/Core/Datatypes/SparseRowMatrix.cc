@@ -453,15 +453,14 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
     }
   }
 
-  unsigned int i;
   int *vcols = scinew int[cols.size()];
-  for (i = 0; i < cols.size(); i++)
+  for (unsigned int i = 0; i < cols.size(); i++)
   {
     vcols[i] = cols[i];
   }
 
   double *vvals = scinew double[vals.size()];
-  for (i = 0; i < vals.size(); i++)
+  for (unsigned int i = 0; i < vals.size(); i++)
   {
     vvals[i] = vals[i];
   }
