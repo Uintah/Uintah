@@ -946,3 +946,114 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
   s >> offset_;
 }
 
+
+
+
+Persistent* ImageCM2Widget::maker()
+{
+  return scinew ImageCM2Widget;
+}
+
+PersistentTypeID ImageCM2Widget::type_id("ImageCM2Widget", "Datatype", maker);
+
+#define IMAGECM2WIDGET_VERSION 1
+
+void
+ImageCM2Widget::io(Piostream &stream)
+{
+  stream.begin_class("ImageCM2Widget", RECTANGLECM2WIDGET_VERSION);
+
+  // TODO:  Dump out the image in a PIO manner here.
+
+  stream.end_class();
+}
+
+ImageCM2Widget::ImageCM2Widget()
+  : image_(0)
+{
+}
+
+ImageCM2Widget::ImageCM2Widget(NrrdDataHandle image)
+  : image_(image)
+{}
+
+ImageCM2Widget::~ImageCM2Widget()
+{}
+
+ImageCM2Widget::ImageCM2Widget(ImageCM2Widget& copy)
+  : CM2Widget(copy),
+    image_(copy.image_)
+{}
+
+CM2Widget*
+ImageCM2Widget::clone()
+{
+  return new ImageCM2Widget(*this);
+}
+
+void
+ImageCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
+			  Pbuffer* pbuffer)
+{
+  // TODO:  Draw image_ to the pbuffer.
+}
+
+void
+ImageCM2Widget::rasterize(Array3<float>& array, bool faux)
+{
+  // TODO:  Copy image_ to array.  Maybe rescale.
+}
+
+
+void
+ImageCM2Widget::draw()
+{
+  // No widget handles, don't need to do anything here.
+}
+
+
+int
+ImageCM2Widget::pick1 (int ix, int iy, int w, int h)
+{
+  // Not pickable.
+  return 0;
+}
+
+
+int
+ImageCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
+{
+  // Not pickable.
+  return 0;
+}
+
+
+void
+ImageCM2Widget::move (int /*obj*/, int ix, int iy, int w, int h)
+{
+  // Not moveable.
+}
+
+
+void
+ImageCM2Widget::release (int /*obj*/, int /*x*/, int /*y*/,
+                             int /*w*/, int /*h*/)
+{
+  // Don't need to do anything here.
+}
+
+
+string
+ImageCM2Widget::tcl_pickle()
+{
+  // Not pickleable
+  return "";
+}
+
+void
+ImageCM2Widget::tcl_unpickle(const string &p)
+{
+  // Not pickleable
+}
+
+
