@@ -164,7 +164,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>imp_CH4Jet_CoFlow.uda</filebase>
-     <outputInterval>0.001</outputInterval>
+     <outputInterval>0.01</outputInterval>
 <!--      <outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>  
@@ -178,7 +178,7 @@
       <save label = "scalar-f-variance"/>
       <save label = "scalar-f-scaledvariance"/>
       <compression>gzip</compression>
-      <checkpoint cycle = "2" interval = "0.01"/>
+      <checkpoint cycle = "2" interval = "0.05"/>
    </DataArchiver>
 
    <Debug>
