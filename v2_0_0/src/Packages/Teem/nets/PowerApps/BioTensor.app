@@ -4198,7 +4198,7 @@ class BioTensorApp {
 	set data_completed 1
 
 	if {$data_mode == "DWI"} {
-	    if {!$dt_completed && } {
+	    if {!$dt_completed} {
 		disableModule $mods(ChooseNrrd-DT) 1
 	    }
 
