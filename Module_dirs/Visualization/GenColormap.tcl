@@ -10,40 +10,39 @@ proc uiGenColormap {modid} {
     pack $w.f -padx 2 -pady 2
     set n "$modid needexecute "
 
-    global have_seedpoint,$modid
-    set have_seedpoint,$modid 1
-    frame $w.f.seedpoint
-    pack $w.f.seedpoint
-    label $w.f.seedpoint.label -text "Algorithm: "
-    radiobutton $w.f.seedpoint.value -text Value -relief flat \
-	    -variable have_seedpoint,$modid -value 0 \
-	    -command "GenColormap_do_value $modid"
-    radiobutton $w.f.seedpoint.seedpoint -text Seedpoint -relief flat \
-	    -variable have_seedpoint,$modid -value 1 \
-	    -command "GenColormap_do_seed $modid"
+    global nlevels,$modid
+    set nlevels,$modid 50
 
-    global do_3dwidget,$modid
-    set do_3dwidget,$modid 1
-    checkbutton $w.f.seedpoint.w3d -text "3D widget" -relief flat \
-	    -variable do_3dwidget,$modid -command $n
-    pack $w.f.seedpoint.label $w.f.seedpoint.value \
-	    $w.f.seedpoint.seedpoint $w.f.seedpoint.w3d -side left
+    global ambient_intens,$modid
+    set ambient_intens,$modid 0
 
-    global isoval,$modid
-    fscale $w.f.isoval -variable isoval,$modid -digits 4 \
-	    -from 0.0 -to 1.0 -label "IsoValue:" \
-	    -resolution .01 -showvalue true -tickinterval .2 \
-	    -activeforeground SteelBlue2 -orient horizontal \
-	    -command $n -state disabled
-    pack $w.f.isoval -side top -fill x
+    global diffuse_intens,$modid
+    set diffuse_intens,$modid 1
 
-    makePoint $w.f.seed "Seed Point" seed_point,$modid $n
-    pack $w.f.seed -fill x
+    global specular_intens,$modid
+    set specular_intens,$modid 0
 
-    global emit_surface,$modid
-    set emit_surface,$modid 0
-    checkbutton $w.f.emit_surface -text "Emitting Surface" -relief flat \
-	    -variable emit_surface,$modid -command $n
-    pack $w.f.emit_surface
+    global spec_percent,$modid
+    set spec_percent,$modid 1
+
+    global r,spec_color,$modid g,spec_color,$modid b,spec_color,$modid
+    set r,spec_color,$modid .6
+    set g,spec_color,$modid .6
+    set b,spec_color,$modid .6
+
+    global shininess,$modid
+    set shininess,$modid 10
+
+    global map_type,$modid
+    set map_type,$modid rainbow
+
+    global rainbow_hue_min,$modid
+    set rainbow_hue_min,$modid 0
+    global rainbow_hue_max,$modid
+    set rainbow_hue_max,$modid 300
+    global rainbow_sat,$modid
+    set rainbow_sat,$modid 1
+    global rainbow_val,$modid
+    set rainbow_val,$modid 1
 }
 

@@ -99,7 +99,7 @@ void GenColormap::execute()
     int nl=nlevels.get();
     ColormapHandle cmap(new Colormap(nl));
     clString mt(map_type.get());
-    if(mt=="rainbow"){
+    if(mt=="rainbow" || mt==""){
 	// Compute a colormap which varies the hue in HSV color space
 	double hue_min=rainbow_hue_min.get();
 	double hue_max=rainbow_hue_max.get();
@@ -129,6 +129,7 @@ void GenColormap::execute()
     } else {
 	error("Unknown colormap type!");
     }
+    outport->send(cmap);
 }
 
 void GenColormap::compute_colors(const ColormapHandle& cmap, int idx,

@@ -28,12 +28,12 @@ proc uiStreamline {modid} {
     pack $w.f.marker -side top -fill x
     label $w.f.marker.label -text "Marker:"
     pack $w.f.marker.label -padx 2 -side left
-    global marker,$modid
-    set marker,$modid "Line"
+    global markertype,$modid
+    set markertype,$modid "Line"
     radiobutton $w.f.marker.line -text Line -relief flat \
-	-variable marker,$modid -value Line -command $n
+	-variable markertype,$modid -value Line -command $n
     radiobutton $w.f.marker.ribbon -text Ribbon -relief flat \
-	-variable marker,$modid -value Ribbon -command $n
+	-variable markertype,$modid -value Ribbon -command $n
     pack $w.f.marker.line $w.f.marker.ribbon -side left
 
     global radius,$modid

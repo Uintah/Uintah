@@ -17,6 +17,7 @@
 #include <Classlib/Queue.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarField.h>
@@ -43,8 +44,9 @@
 
 class IsoSurface : public Module {
     ScalarFieldIPort* infield;
-//    ColormapPort* incolormap;
     ScalarFieldIPort* incolorfield;
+    ColormapIPort* incolormap;
+
     GeometryOPort* ogeom;
     SurfaceOPort* osurf;
 
@@ -132,10 +134,11 @@ IsoSurface::IsoSurface(const clString& id)
     // Create the input ports
     infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
     add_iport(infield);
-    //incolormap=new ColormapIPort(this, "Colormap");
-    //add_iport(incolormap);
     incolorfield=new ScalarFieldIPort(this, "Color Field", ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
+    incolormap=new ColormapIPort(this, "Color Map", ColormapIPort::Atomic);
+    add_iport(incolormap);
+    
 
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -184,6 +187,10 @@ void IsoSurface::execute()
     ScalarFieldHandle field;
     if(!infield->get(field))
 	return;
+    ScalarFieldHandle colorfield;
+    int have_colorfield=incolorfield->get(colorfield);
+    ColormapHandle cmap;
+    int have_colormap=incolormap->get(cmap);
     double min, max;
     field->get_minmax(min, max);
     if(min != old_min || max != old_max){
@@ -278,14 +285,29 @@ void IsoSurface::execute()
 	widget_disc->adjust();
 	widget->reset_bbox();
     }
-    GeomGroup* group=new GeomGroup;
+    double iv=isoval.get();
+    if(have_seedpoint.get()){
+	Point sp(seed_point.get());
+	if(!field->interpolate(sp, iv)){
+	    iv=min;
+	}
+    }
 
-    group->set_matl(matl);
+    GeomGroup* group=new GeomGroup;
+    if(have_colormap && !have_colorfield){
+	// Paint entire surface based on colormap
+	group->set_matl(cmap->lookup(iv, old_min, old_max));
+    } else if(have_colormap && have_colorfield){
+	// Nothing - done per vertex
+    } else {
+	// Default material
+	group->set_matl(matl);
+    }
     ScalarFieldRG* regular_grid=field->getRG();
     ScalarFieldUG* unstructured_grid=field->getUG();
 
     Point minPt, maxPt;
-    double spacing;
+    double spacing=0;
     Vector diff;
 
     if (emit_surface.get()) {
@@ -309,7 +331,6 @@ void IsoSurface::execute()
 	    Point sp(seed_point.get());
 	    iso_reg_grid(regular_grid, sp, group);
 	} else {
-	    double iv=isoval.get();
 	    iso_reg_grid(regular_grid, iv, group);
 	}
     } else if(unstructured_grid){
@@ -325,7 +346,6 @@ void IsoSurface::execute()
 	    Point sp(seed_point.get());
 	    iso_tetrahedra(unstructured_grid, sp, group);
 	} else {
-	    double iv=isoval.get();
 	    iso_tetrahedra(unstructured_grid, iv, group);
 	}
     } else {

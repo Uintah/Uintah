@@ -124,35 +124,61 @@ public:
 };
 
 // ---------------------------------------------------
-class SRibon                // Stream Ribon class
+class SRibbon                // Stream Ribbon class
 {
     Point p;                // initial point
     Point lp, rp;           // left and right tracer 
     Vector perturb;         // initial perturb vector
     GeomTriStrip* tri;      // triangle trip
-    double width;           // the fixed width of ribons
+    double width;           // the fixed width of Ribbons
     int outside;            
+    int first;
 public:
-    SRibon(GeomGroup*, const Point&, double, const Vector&); 
+    SRibbon(GeomGroup*, const Point&, double, const Vector&); 
     int advance(const VectorFieldHandle&, int rk4, double); 
 }; 
 
-SRibon::SRibon(GeomGroup* group, const Point& p, double w, 
+SRibbon::SRibbon(GeomGroup* group, const Point& p, double w, 
 const Vector& ptb)
-: p(p), perturb(ptb), tri(new GeomTriStrip), width(w)
+: p(p), perturb(ptb), tri(new GeomTriStrip), width(w), first(1)
 {
     group->add(tri);       
     outside=0;    
     lp = p + perturb; 
     rp = p - perturb;    
+ 
 }
-int SRibon::advance(const VectorFieldHandle& field, int rk4,
+
+int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 		   double stepsize)
 {
+    if(first){
+	Vector v1;
+	if(!field->interpolate(lp, v1)){
+	    outside=1;
+	    return 0;
+	}
+
+	Vector v2;
+	if(!field->interpolate(rp, v2)){
+	    outside=1;
+	    return 0;
+	}
+	Vector tmp(lp-rp);
+	Vector diag ( tmp.normal() * width ); // only want fixed sized Ribbon
+	Point p1 = p +  diag;  
+	Point p2 = p -  diag; 
+	Vector n1 ( Cross(v1, diag) ); // the normals here are not percise,
+	Vector n2 ( Cross(v2, diag) ); // need to be improved .....
+
+	tri->add(p1, n1); tri->add(p2, n2); 
+	first=0;
+    }
+
     if(outside)
 	return 0;
     if(rk4){
-	    NOT_FINISHED("SRibon::advance for RK4");
+	    NOT_FINISHED("SRibbon::advance for RK4");
     } else {
         Vector v1, v2; 
         Vector tmp, diag, n1, n2;
@@ -171,7 +197,7 @@ int SRibon::advance(const VectorFieldHandle& field, int rk4,
  
         tmp = lp-rp; 
         p = lp + tmp/2.0;  // define the center point        
-        diag = tmp.normal() * width; // only want fixed sized ribon
+        diag = tmp.normal() * width; // only want fixed sized Ribbon
         Point p1 = p +  diag;  
         Point p2 = p -  diag; 
         n1 = Cross(v1, diag); // the normals here are not percise,
@@ -188,7 +214,7 @@ int SRibon::advance(const VectorFieldHandle& field, int rk4,
 Streamline::Streamline(const clString& id)
 : Module(streamline_name, id, Filter),
   widgettype("source", id, this),
-  markertype("marker", id, this), lineradius("lineradius", id, this),
+  markertype("markertype", id, this), lineradius("lineradius", id, this),
   algorithm("algorithm", id, this), stepsize("stepsize", id, this),
   maxsteps("maxsteps", id, this)
 {
@@ -223,7 +249,7 @@ Streamline::Streamline(const clString& id)
 Streamline::Streamline(const Streamline& copy, int deep)
 : Module(copy, deep),
   widgettype("source", id, this),
-  markertype("marker", id, this), lineradius("lineradius", id, this),
+  markertype("markertype", id, this), lineradius("lineradius", id, this),
   algorithm("algorithm", id, this), stepsize("stepsize", id, this),
   maxsteps("maxsteps", id, this)
 {
@@ -345,50 +371,105 @@ void Streamline::execute()
     group->set_matl(matl);
 
     // Temporary algorithm...
-    Array1<SLine*> slines;
-    if(widgettype.get() == "Point"){
-	slines.add(new SLine(group, p1));
-    } else if(widgettype.get() == "Line"){
-	Vector line(p2-p1);
-	double l=line.length();
-	for(double x=0;x<=l;x+=slider1_dist){
-	    slines.add(new SLine(group, p1+line*(x/l)));
-	}
-    } else if(widgettype.get() == "Square"){
-	Vector line1(p2-p1);
-	Vector line2(p3-p1);
-	double l1=line1.length();
-	double l2=line2.length();
-	for(double x=0;x<=l1;x+=slider1_dist){
-	    Point p(p1+line1*(x/l1));
-	    for(double y=0;y<=l2;y+=slider2_dist){
-		slines.add(new SLine(group, p+line2*(y/l2)));
+    if(markertype.get() == "Line"){
+	Array1<SLine*> slines;
+	if(widgettype.get() == "Point"){
+	    slines.add(new SLine(group, p1));
+	} else if(widgettype.get() == "Line"){
+	    Vector line(p2-p1);
+	    double l=line.length();
+	    for(double x=0;x<=l;x+=slider1_dist){
+		slines.add(new SLine(group, p1+line*(x/l)));
+	    }
+	} else if(widgettype.get() == "Square"){
+	    Vector line1(p2-p1);
+	    Vector line2(p3-p1);
+	    double l1=line1.length();
+	    double l2=line2.length();
+	    for(double x=0;x<=l1;x+=slider1_dist){
+		Point p(p1+line1*(x/l1));
+		for(double y=0;y<=l2;y+=slider2_dist){
+		    slines.add(new SLine(group, p+line2*(y/l2)));
+		}
 	    }
 	}
-    }
 
-    int n=0;
-    int groupid=0;
-    int alg=(algorithm.get()=="RK4");
-    for(int i=0;i<maxsteps.get();i++){
-	int oldn=n;
-	double ss=stepsize.get();
-	for(int i=0;i<slines.size();i++)
-	    n+=slines[i]->advance(field, alg, ss);
-	if(abort_flag || n==oldn)
-	    break;
-	if(n>500){
-	    if(!ogeom->busy()){
-		n=0;
-		if(groupid)
-		    ogeom->delObj(groupid);
-		groupid=ogeom->addObj(group->clone(), streamline_name);
-		ogeom->flushViews();
+	int n=0;
+	int groupid=0;
+	int alg=(algorithm.get()=="RK4");
+	for(int i=0;i<maxsteps.get();i++){
+	    int oldn=n;
+	    double ss=stepsize.get();
+	    for(int i=0;i<slines.size();i++)
+		n+=slines[i]->advance(field, alg, ss);
+	    if(abort_flag || n==oldn)
+		break;
+	    if(n>500){
+		if(!ogeom->busy()){
+		    n=0;
+		    if(groupid)
+			ogeom->delObj(groupid);
+		    groupid=ogeom->addObj(group->clone(), streamline_name);
+		    ogeom->flushViews();
+		}
 	    }
 	}
+	if(groupid)
+	    ogeom->delObj(groupid);
+	cerr << "n=" << n << endl;
+    } else if(markertype.get() == "Ribbon"){
+	Array1<SRibbon*> sribbons;
+	if(widgettype.get() == "Point"){
+	    sribbons.add(new SRibbon(group, p1, widget_scale, Vector(0,widget_scale/20,0)));
+	} else if(widgettype.get() == "Line"){
+	    Vector line(p2-p1);
+	    double l=line.length();
+	    Vector nline(line/50);
+	    for(double x=0;x<=l;x+=slider1_dist){
+		sribbons.add(new SRibbon(group, p1+line*(x/l),
+					 slider1_dist/4., nline));
+	    }
+	} else if(widgettype.get() == "Square"){
+	    NOT_FINISHED("Square with ribbons");
+#if 0
+	    Vector line1(p2-p1);
+	    Vector line2(p3-p1);
+	    double l1=line1.length();
+	    double l2=line2.length();
+	    for(double x=0;x<=l1;x+=slider1_dist){
+		Point p(p1+line1*(x/l1));
+		for(double y=0;y<=l2;y+=slider2_dist){
+		    sribbons.add(new SRibbons(group, p+line2*(y/l2)));
+		}
+	    }
+#endif 
+	}
+
+	int n=0;
+	int groupid=0;
+	int alg=(algorithm.get()=="RK4");
+	for(int i=0;i<maxsteps.get();i++){
+	    int oldn=n;
+	    double ss=stepsize.get();
+	    for(int i=0;i<sribbons.size();i++)
+		n+=sribbons[i]->advance(field, alg, ss);
+	    if(abort_flag || n==oldn)
+		break;
+	    if(n>500){
+		if(!ogeom->busy()){
+		    n=0;
+		    if(groupid)
+			ogeom->delObj(groupid);
+		    groupid=ogeom->addObj(group->clone(), streamline_name);
+		    ogeom->flushViews();
+		}
+	    }
+	}
+	if(groupid)
+	    ogeom->delObj(groupid);
+    } else {
+	error("Unknown markertype: "+markertype.get());
     }
-    if(groupid)
-	ogeom->delObj(groupid);
     if(group->size() == 0){
 	delete group;
 	streamline_id=0;
