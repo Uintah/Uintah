@@ -86,7 +86,7 @@ Sampler::go()
   cerr << "Sampler exec\n";
   Module *module = dynamic_cast<Module*>(this);
   if ( ! graph_ ) {
-    cerr << "new graph part\n";
+    cerr << "new graph part with nparms = " << nparms << endl;
     graph_ = new GraphPart( interface_, "Graph");
     graph_->set_num_lines(nparms);
   }

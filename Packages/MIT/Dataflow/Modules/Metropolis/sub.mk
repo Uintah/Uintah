@@ -28,7 +28,6 @@ PSELIBS := Packages/MIT/Core/Datatypes \
 	Core/Datatypes \
 	Core/Parts \
 	Core/PartsGui \
-	Core/Algorithms/DataIO \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions 
         Core/Geom Core/Datatypes Core/Geometry \

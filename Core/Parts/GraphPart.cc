@@ -29,15 +29,19 @@
  */
 
 #include <iostream>
+#include <typeinfo>
 #include <Core/Parts/GraphPart.h>
 
 namespace SCIRun {
   
-GraphPart::GraphPart( PartInterface *parent, const string &name)
-  : Part( parent, name ), PartInterface( this, parent, "GraphGui" )
+GraphPart::GraphPart( PartInterface *parent, const string &name) : 
+  Part( parent, name, this ), 
+  PartInterface( this, parent, "GraphGui" )
 {
-  interface_ = this;
-  cerr <<"GP = " << this << endl;
+    const type_info &ti = typeid(this); 
+    cerr << "GraphPart: typeid = " << ti.name() << endl;
+
+    parent->add_child(this); // can call add_child here
 }
 
 GraphPart::~GraphPart()
@@ -47,12 +51,19 @@ GraphPart::~GraphPart()
 void 
 GraphPart::set_num_lines( int n )
 {
+  cerr << "resizing lines to " << n << endl;
   data_.resize(n);
 }
   
 void 
 GraphPart::add_values( vector<double> &v)
 {
+  if (v.size() != data_.size()) {
+//    cerr << "add_values size " << v.size() << " != data_ size " 
+//	 << data_.size() << endl;
+    return;
+  }
+
   for (unsigned i=0; i<v.size(); i++)
     data_[i].push_back(v[i]);
   new_values( v );

@@ -32,6 +32,7 @@
 #define SCI_Part_h 
 
 #include <string>
+#include <typeinfo>
 
 namespace SCIRun {
   
@@ -45,8 +46,12 @@ protected:
   string name_;
 
 public:
-  Part( PartInterface *parent=0, const string name="" ) 
-    : parent_interface_(parent), name_(name) {}
+  Part( PartInterface *parent=0, const string name="", PartInterface *i=0 ) 
+    : parent_interface_(parent), interface_(i), name_(name) 
+  { 
+    const type_info &ti = typeid(this); 
+    cerr << "Part: typeid = " << ti.name() << endl;
+  }
   virtual ~Part() {/* if (interface_) delete interface_;*/ }
 
   PartInterface *interface() { return interface_; }

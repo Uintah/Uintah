@@ -21,7 +21,7 @@
  *
  *  Written by:
  *   Yarden Livnat
- *   Deinterfacement of Computer Science
+ *   Department of Computer Science
  *   University of Utah
  *   Sep 2001
  *
