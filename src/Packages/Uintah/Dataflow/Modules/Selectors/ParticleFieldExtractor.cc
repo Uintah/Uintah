@@ -420,7 +420,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     if (names[i] == psVar.get())
       scalar_type = types[i]->getSubType()->getType();
 
-  int max_workers = Max(Thread::numProcessors()/2, 8);
+  int max_workers = Max(Thread::numProcessors()/2, 2);
   Semaphore* sema = scinew Semaphore( "scalar extractor semahpore",
 				      max_workers); 
   Mutex smutex("ScalarParticles Mutex");
@@ -439,8 +439,8 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 			     &smutex, &vmutex, &tmutex, &imutex),
 		  "Particle Field Extractor Thread");
     thrd->detach();
-//     PFEThread *thrd = scinew PFEThread( this, archive, *r,  sp, vp, tp, pset,
-// 			     scalar_type, have_sp, have_vp,
+//     PFEThread *thrd = scinew PFEThread( this, archive, *patch,  sp, vp, tp,
+// 			     pset, scalar_type, have_sp, have_vp,
 // 			     have_tp, have_ids, sema,
 // 			     &smutex, &vmutex, &tmutex, &imutex);
 
