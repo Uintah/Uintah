@@ -45,6 +45,14 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription());  
   releasedHeatCCLabel = VarLabel::create("releasedHeat",
                      CCVariable<double>::getTypeDescription());
+  scratchLabel        = VarLabel::create("scratch",
+                     CCVariable<double>::getTypeDescription());
+  scratch1Label        = VarLabel::create("scratch1",
+                     CCVariable<double>::getTypeDescription());
+  scratch2Label        = VarLabel::create("scratch2",
+                     CCVariable<double>::getTypeDescription());
+  scratch3Label        = VarLabel::create("scratch3",
+                     CCVariable<double>::getTypeDescription()); 
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
 
@@ -66,5 +74,6 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(velInc_NCLabel);
   VarLabel::destroy(burnedMassCCLabel);
   VarLabel::destroy(releasedHeatCCLabel);
+  VarLabel::destroy(scratchLabel);
   VarLabel::destroy(NC_CCweightLabel);
 }
