@@ -103,6 +103,8 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #ifdef THREADED_MPI_AVAILABLE
      if( scheduler == "MixedScheduler" ) {
        required = MPI_THREAD_MULTIPLE;
+     } else {
+       required = MPI_THREAD_SINGLE;
      }
 #endif
 
@@ -145,20 +147,17 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      AllocatorSetDefaultTagMalloc(oldtag);
      rootContext = scinew ProcessorGroup(0, worldComm, true,
 					 worldRank,worldSize);
+
+     if(rootContext->myrank() == 0){
+       cerr << "Parallel: " << rootContext->size() 
+	    << " processors (using MPI)\n";
+#ifdef THREADED_MPI_AVAILABLE
+       cerr << "Parallel: MPI Level Required: " << required << ", provided: " 
+	    << provided << "\n";
+#endif
+     }
    } else {
      rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
-   }
-
-   ProcessorGroup* world = getRootProcessorGroup();
-   if(world->myrank() == 0){
-      cerr << "Parallel: " << world->size() << " processors";
-      if(::usingMPI)
-	 cerr << " (using MPI)";
-      cerr << '\n';
-#ifdef THREADED_MPI_AVAILABLE
-      cerr << "Parallel: MPI Level Required: " << required << ", provided: " 
-	   << provided << "\n";
-#endif
    }
 }
 
