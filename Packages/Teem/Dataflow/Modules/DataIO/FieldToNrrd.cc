@@ -65,11 +65,13 @@ public:
   virtual void execute();
 private:
   FieldIPort  *ifield_;
-  NrrdOPort   *onrrd_;
+  NrrdOPort   *opoints_;
+  NrrdOPort   *oconnect_;
+  NrrdOPort   *odata_;
   
   GuiString    label_;
   int          ifield_generation_;
-  NrrdDataHandle onrrd_handle_;
+  NrrdDataHandle points_handle_, connect_handle_, data_handle_;
 };
 
 } // end namespace SCITeem
@@ -82,7 +84,7 @@ FieldToNrrd::FieldToNrrd(GuiContext *ctx):
   Module("FieldToNrrd", ctx, Filter, "DataIO", "Teem"),
   label_(ctx->subVar("label")),
   ifield_generation_(-1),
-  onrrd_handle_(0)
+  points_handle_(0),  connect_handle_(0),  data_handle_(0)
 {
 }
 
@@ -93,15 +95,25 @@ FieldToNrrd::~FieldToNrrd()
 void FieldToNrrd::execute()
 {
   ifield_ = (FieldIPort *)get_iport("Field");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
+  opoints_ = (NrrdOPort *)get_oport("Points");
+  oconnect_ = (NrrdOPort *)get_oport("Connections");
+  odata_ = (NrrdOPort *)get_oport("Data");
   
   if (!ifield_) {
     error("Unable to initialize iport 'Field'.");
     return;
   }
   
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+  if (!opoints_) {
+    error("Unable to initialize oport 'Points'.");
+    return;
+  }
+  if (!oconnect_) {
+    error("Unable to initialize oport 'Connections'.");
+    return;
+  }
+  if (!odata_) {
+    error("Unable to initialize oport 'Data'.");
     return;
   }
   
@@ -111,6 +123,7 @@ void FieldToNrrd::execute()
   
   if (ifield_generation_ != field_handle->generation) {
     ifield_generation_ = field_handle->generation;
+    points_handle_ = connect_handle_ = data_handle_ = 0;
     
     const TypeDescription *td = field_handle->get_type_description();
     CompileInfoHandle ci = ConvertToNrrdBase::get_compile_info(td);
@@ -119,9 +132,16 @@ void FieldToNrrd::execute()
     
     label_.reset();
     string lab = label_.get();
-    onrrd_handle_ = algo->convert_to_nrrd(field_handle, lab);
+    algo->convert_to_nrrd(field_handle, points_handle_, 
+			  connect_handle_, data_handle_,
+			  lab);
   }
   
-  onrrd_->send(onrrd_handle_);
+  if (points_handle_ != 0)
+    opoints_->send(points_handle_);
+  if (connect_handle_ != 0)
+    oconnect_->send(connect_handle_);
+  if (data_handle_ != 0) 
+    odata_->send(data_handle_);
 }
 

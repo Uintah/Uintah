@@ -62,7 +62,15 @@ many of which are supported in this Teem package. </p>
     </inputs>
     <outputs>
       <port>
-        <name>Nrrd</name>
+        <name>Points</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Connections</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Data</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </outputs>
