@@ -35,7 +35,7 @@ GLAnimatedStreams::GLAnimatedStreams(int id)
   : GeomObj( id ), mutex("GLAnimatedStreams Mutex"),
     vfh_(0), _cmapH(0), _pause(false), _normalsOn(false),
     _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2), _usesWidget(false), widgetLocation(0,0,0)
+    _linewidth(2), flow(0), _usesWidget(false), widgetLocation(0,0,0)
 {
 
   NOT_FINISHED("GLAnimatedStreams::GLAnimatedStreams(int id, const Texture3D* tex, ColorMap* cmap)");
@@ -48,7 +48,7 @@ GLAnimatedStreams::GLAnimatedStreams(int id,
   : GeomObj( id ),  mutex("GLAnimatedStreams Mutex"),
     vfh_(vfh), _cmapH(map), _pause(false), _normalsOn(false),
     _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2), _usesWidget(false), widgetLocation(0,0,0)
+    _linewidth(2), flow(0), _usesWidget(false), widgetLocation(0,0,0)
 {
   init();
 }
@@ -58,8 +58,8 @@ GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
     vfh_(copy.vfh_), _cmapH(copy._cmapH), fx(copy.fx),
     head(copy.head), tail(copy.tail), _numStreams(copy._numStreams),
     _pause(copy._pause), _normalsOn(copy._normalsOn),
-    _linewidth(copy._linewidth), _usesWidget(copy._usesWidget),
-    widgetLocation(copy.widgetLocation)
+    _linewidth(copy._linewidth), flow(copy.flow),
+    _usesWidget(copy._usesWidget), widgetLocation(copy.widgetLocation)
 {
   
 } 
@@ -135,6 +135,20 @@ void GLAnimatedStreams::ResetStreams() {
   mutex.unlock();
 }
 
+void GLAnimatedStreams::IncrementFlow() {
+  //  mutex.lock();
+  flow++;
+  cerr << "increment flow: " << flow << endl;
+  //  mutex.unlock();
+}
+
+void GLAnimatedStreams::DecrementFlow() {
+  //  mutex.lock();
+  flow--;
+  cerr << "decrement flow: " << flow << endl;
+  //  mutex.unlock();
+}
+
 GLAnimatedStreams::~GLAnimatedStreams()
 {
   delete [] fx;
@@ -187,6 +201,22 @@ GLAnimatedStreams::preDraw()
   //glRotatef(xrot, 0, 1, 0);
   //glRotatef(yrot, 1, 0, 0);
 
+  
+#if 0
+  GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+  GLfloat mat_shininess[] = {50.0 };
+  
+  glShadeModel (GL_SMOOTH);
+  glMaterialfv( GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv( GL_FRONT, GL_SHININESS, mat_shininess);
+  
+  GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  
+  glEnable(GL_LIGHT0);
+#endif
+  //  glEnable(GL_LIGHTING);
+  
   
 }
 
@@ -317,24 +347,23 @@ GLAnimatedStreams::draw()
   // meat and potatoes
   Point min, max;
   BBox bounds;
-
+  
   bounds = vfh_->mesh()->get_bounding_box();
   min = bounds.min(); max = bounds.max();
   Vector right;
-
+  
   int i;
   double l, nl;
-
+  
   nl = maxwidth / 50.0;
   
   streamerNode* tempNode;
-
   
-
+  // draw the streams as a linked list starting with tail and going to head
   for (i = 0; i < _numStreams; i++) {
     tempNode = tail[i];      
-				// skip two-- the normals for the
-				// first two iterations are always
+                                // skip two-- the normals for the
+			        // first two iterations are always
 				// funky
     tempNode = tempNode->next;
       if ( !tempNode ) continue;
@@ -366,54 +395,60 @@ GLAnimatedStreams::draw()
       glEnd();
   }
 
-  for (i = 0; i < _numStreams; i++) {
+  // now increment the streams
+  // this should be done only if the animation flag is on or there are values
+  // in the flow variable
+  if ( !_pause || flow) {
+    for (i = 0; i < _numStreams; i++) {
       
 				// flow forward	  
-    RungeKutta(fx[i], _stepsize);
-    if( !bounds.inside(fx[i]) )
-      head[i]->counter = MAX_ITERS;
-    
-    if( head[i]->counter < MAX_ITERS) {
-      head[i]->next = new streamerNode;
-      head[i]->next->counter = head[i]->counter+1;
-      tempNode = head[i];
-      head[i] = head[i]->next;
-
-      head[i]->position = fx[i];
-      head[i]->tangent = head[i]->position - tempNode->position;
-      
-      right = Cross( head[i]->tangent,  tempNode->tangent );
-      if (-1e-6 < right.length() && right.length() < 1e-6 ){
-	right = Cross( head[i]->tangent,  tempNode->normal );
-	head[i]->normal = Cross( right, head[i]->tangent );
-      } else {
-	head[i]->normal = Cross( right, head[i]->tangent );
-      }
-
-      l = 1.0/(head[i]->normal.length());
-      
-      head[i]->normal *= l;
-
-      l = head[i]->tangent.length();
-
-      if(-1e-6 < l && l < 1e-6 ){
+      RungeKutta(fx[i], _stepsize);
+      if( !bounds.inside(fx[i]) )
 	head[i]->counter = MAX_ITERS;
-      }
+      
+      if( head[i]->counter < MAX_ITERS) {
+	head[i]->next = new streamerNode;
+	head[i]->next->counter = head[i]->counter+1;
+	tempNode = head[i];
+	head[i] = head[i]->next;
+	
+	head[i]->position = fx[i];
+	head[i]->tangent = head[i]->position - tempNode->position;
+	
+	right = Cross( head[i]->tangent,  tempNode->tangent );
+	if (-1e-6 < right.length() && right.length() < 1e-6 ){
+	  right = Cross( head[i]->tangent,  tempNode->normal );
+	head[i]->normal = Cross( right, head[i]->tangent );
+	} else {
+	  head[i]->normal = Cross( right, head[i]->tangent );
+	}
 
-      head[i]->color = *(_cmapH->lookup( l ).get_rep());
-      head[i]->next = 0;
-    }
-    
-    if (head[i]->counter-tail[i]->counter > STREAMER_LENGTH ||
-	head[i]->counter >= MAX_ITERS) {
-      tempNode = tail[i];
-      tail[i] = tail[i]->next;
-      delete tempNode;
-      if (tail[i] == NULL) {
-	newStreamer(i);
+	l = 1.0/(head[i]->normal.length());
+	
+	head[i]->normal *= l;
+	
+	l = head[i]->tangent.length();
+	
+	if(-1e-6 < l && l < 1e-6 ){
+	  head[i]->counter = MAX_ITERS;
+	}
+	
+	head[i]->color = *(_cmapH->lookup( l ).get_rep());
+	head[i]->next = 0;
+      }
+      
+      if (head[i]->counter-tail[i]->counter > STREAMER_LENGTH ||
+	  head[i]->counter >= MAX_ITERS) {
+	tempNode = tail[i];
+	tail[i] = tail[i]->next;
+	delete tempNode;
+	if (tail[i] == NULL) {
+	  newStreamer(i);
+	}
       }
     }
-  }
+    if (flow) DecrementFlow();
+  } // end if ( !_pause || flow)
 
                                 // add streams
   _numStreams++;
