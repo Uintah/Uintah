@@ -757,7 +757,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	
 	Nrrd* points = pointsH->nrrd;
 
-	if (pointsH->nrrd->dim == 1) {
+	if (pointsH->nrrd->dim == 2) {
 	  string which = struct_unstruct;
 	  if (which == "PointCloud") {
 	    mHandle = scinew PointCloudMesh();
@@ -793,13 +793,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	      }
 	    }
 	  }
-	} else if (pointsH->nrrd->dim == 2) {
+	} else if (pointsH->nrrd->dim == 3) {
 	  topology_ = STRUCTURED;
  	  geometry_ = IRREGULAR;
 	  mHandle = scinew StructQuadSurfMesh( points->axis[1].size, points->axis[2].size );
 	  idim = points->axis[1].size;
 	  jdim = points->axis[2].size;
-	} else if (pointsH->nrrd->dim == 3) {
+	} else if (pointsH->nrrd->dim == 4) {
 	  topology_ = STRUCTURED;
 	  geometry_ = IRREGULAR;
 	  mHandle = scinew StructHexVolMesh( points->axis[1].size, points->axis[2].size,
@@ -811,6 +811,22 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  error("Points nrrd must have 1, 2, or 3 dimensions.");
 	  return 0;
 	}
+	// create mesh
+	const TypeDescription *mtd = mHandle->get_type_description();
+	
+	remark( "Creating a structured " + mtd->get_name() );
+	
+	CompileInfoHandle ci_mesh =
+	  NrrdToFieldMeshAlgo::get_compile_info( "Structured",
+							mtd,
+							pointsH->nrrd->type,
+							pointsH->nrrd->type);
+	
+	Handle<StructuredNrrdToFieldMeshAlgo> algo_mesh;
+	
+	if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
+
+	algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
       } else {
 	// no data given
 	error("Not enough information given to create a Field.");
