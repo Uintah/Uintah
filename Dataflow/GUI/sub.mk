@@ -76,8 +76,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SamplePlane.tcl \
 	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
-	$(SRCDIR)/ScaledBoxWidget.tcl \
-	$(SRCDIR)/ScaledFrameWidget.tcl \
 	$(SRCDIR)/SampleField.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
