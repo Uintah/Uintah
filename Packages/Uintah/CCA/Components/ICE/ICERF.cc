@@ -103,8 +103,10 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
           IntVector L = R + adj_offset[dir];
 
           double ave_vel= 0.5 * fabs( vel_CC[R].length() + 
-                                      vel_CC[L].length() );           
-
+                                      vel_CC[L].length() ); 
+          if ( speedSound[L] < 1 || speedSound[R] < 1) {
+          cout << R << " speedSound[r] "<< speedSound[R] << " speedSound[L] "<< speedSound[L]<<endl;
+          }
           double kappa_R= sp_vol_CC[R]/( speedSound[R] * speedSound[R] );          
           double kappa_L= sp_vol_CC[L]/( speedSound[L] * speedSound[L] );          
 
@@ -912,6 +914,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       e_prime_v[m] = Joule_coeff * cv[m];
       Tdot[m].initialize(0.0);
       tot_eng_L_ME[m].initialize(0.0);
+      Temp_CC[m].initialize(0.0);
     }
     new_dw->get(press_CC,           lb->press_CCLabel,     0,  patch,gn, 0);       
     
@@ -922,12 +925,11 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       for (int m = 0; m < numALLMatls; m++) {
         KE = 0.5 * mass_L[m][c] * old_vel_CC[m][c].length() * old_vel_CC[m][c].length();
         tot_eng_L_ME[m][c] = int_eng_L[m][c] + KE;
-        vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c]; 
+        vel_CC[m][c]       = mom_L[m][c]/mass_L[m][c]; 
       }
     }
     //---- P R I N T   D A T A ------ 
-    if (switchDebugMomentumExchange_CC ) 
-    {
+    if (switchDebugMomentumExchange_CC ) {
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
