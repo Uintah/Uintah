@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/AMRSimpleCFD.cc \
 	$(SRCDIR)/Interpolator.cc \
 	$(SRCDIR)/ExamplesLabel.cc \
+	$(SRCDIR)/RegridderTest.cc \
 	$(SRCDIR)/BoundaryConditions.cc \
 	$(SRCDIR)/RegionDB.cc
 
