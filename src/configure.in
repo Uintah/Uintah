@@ -871,7 +871,7 @@ if test "$MPEG_PREFIX" != "" ; then
   echo -n "checking for mpeg... "
   MPEG_DEF_FLAG="-DMPEG"
   MPEG_INCLUDE="-I${MPEG_PREFIX}/include"
-  MPEG_LIBRARY="-L${MPEG_PREFIX}/lib/libmpege.a"
+  MPEG_LIBRARY="-L${MPEG_PREFIX}/lib -lmpege"
   echo "${MPEG_PREFIX}"
 fi
 
