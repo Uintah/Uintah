@@ -1,17 +1,17 @@
 itcl_class Insight_Filters_DiscreteGaussianImageFilter {
     inherit Module
     constructor {config} {
-        set name DiscreteGaussianImageFilter
+         set name DiscreteGaussianImageFilter
 
-	global $this-Variance
-	global $this-MaximumError
+         global $this-variance
+         global $this-maximum_error
 
-        set_defaults
+         set_defaults
     }
 
     method set_defaults {} {
-	set $this-Variance 10
-	set $this-MaximumError 0.001
+         set $this-variance 10
+         set $this-maximum_error 0.001    
     }
 
     method ui {} {
@@ -24,24 +24,23 @@ itcl_class Insight_Filters_DiscreteGaussianImageFilter {
 	    return;
         }
         toplevel $w
-                                                   
-	frame $w.Variance
-	label $w.Variance.label -text "Variance" 
-	entry $w.Variance.entry -textvariable $this-Variance
-	pack $w.Variance.label $w.Variance.entry -side left 
-	pack $w.Variance 
 
-	frame $w.MaximumError
-	label $w.MaximumError.label -text "MaximumError" 
-	entry $w.MaximumError.entry -textvariable $this-MaximumError
-	pack $w.MaximumError.label $w.MaximumError.entry -side left
-	pack $w.MaximumError 
+        frame $w.variance
+        label $w.variance.label -text "variance"
+        entry $w.variance.entry -textvariable $this-variance
+        pack $w.variance.label $w.variance entry -side left
+        pack $w.variance
 
-
-	button $w.execute -text "Execute" -command "$this-c needexecute"
-	button $w.close -text "Close" -command "destroy $w"
-	pack $w.execute $w.close 
-
+        frame $w.maximum_error
+        label $w.maximum_error.label -text "maximum_error"
+        entry $w.maximum_error.entry -textvariable $this-maximum_error
+        pack $w.maximum_error.label $w.maximum_error entry -side left
+        pack $w.maximum_error
+        
+        button $w.execute -text "Execute" -command "$this-c needexecute"
+        button $w.close -text "Close" -command "destroy $w"
+        pack $w.execute $w.close 
 
     }
 }
+
