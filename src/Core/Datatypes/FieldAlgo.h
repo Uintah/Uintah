@@ -32,7 +32,7 @@ calc_weights(const Mesh *mesh, Index i, const Point &p,
 
   typename Mesh::node_array::iterator iter = nodes.begin();
   while (iter != nodes.end()) {
-    Mesh::node_index ni = *iter;
+    typename Mesh::node_index ni = *iter;
     ++iter;
     mesh->get_point(np, ni);
     // Calculate the weight, and store it.
@@ -47,7 +47,7 @@ interpolate(const Field &fld, const Point &p, Functor &f) {
   typedef typename Field::mesh_type Mesh;
   
   typename Mesh::cell_index ci;
-  Field::mesh_handle_type mesh = fld.get_typed_mesh();
+  typename Field::mesh_handle_type mesh = fld.get_typed_mesh();
   if (! mesh->locate(ci, p)) return false;
 
   calc_weights(mesh.get_rep(), ci, p, f.weights_);
@@ -77,6 +77,9 @@ interpolate(const Field &fld, const Point &p, Functor &f) {
     {
     }
     break;
+  case Field::NONE:
+    cerr << "Error: Field data at location NONE!!" << endl;
+    return false;
   } 
   return true;
 } 
