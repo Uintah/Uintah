@@ -87,7 +87,7 @@ template<class T> void fillFace(NCVariable<T>& var,const Patch* patch,
     throw InternalError("Illegal FaceType in NCVariable::fillFace");
   }
   
-};
+}
   
   
   // Use to apply symmetry boundary conditions.  On the
