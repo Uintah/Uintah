@@ -1,0 +1,96 @@
+/*
+ *  FieldIterator.h: Some convenient simple iterators for fields.
+ *
+ *  Written by:
+ *   Marty Cole
+ *   Department of Computer Science
+ *   University of Utah
+ *   January 2001
+ *
+ *  Copyright (C) 2001 SCI Group
+ *
+ */
+
+#ifndef Datatypes_FieldIterator_h
+#define Datatypes_FieldIterator_h
+
+#include <Core/Datatypes/FieldIndex.h>
+
+namespace SCIRun {
+
+
+//! Base type for FieldIterator types.
+template <class T>
+struct FieldIteratorBase {
+  FieldIteratorBase(T i) :
+    index_(i) {}
+
+  //! Field Iterators need to be able to increment.
+  inline 
+  T operator ++() { return ++index_; }
+  inline 
+  operator T const &() const { return index_; }
+
+protected:
+  T index_;
+private:
+  //! Hide this in private to prevent it from being called.
+  T operator ++(int) { T tmp = index; index_++; return tmp; }
+};
+
+//! Distinct type for node FieldIterator.
+template <class T>
+struct NodeIterator : public FieldIteratorBase<T> {
+  NodeIterator() :
+    FieldIteratorBase<T>(0) {}
+  NodeIterator(T iter) :
+    FieldIteratorBase<T>(iter) {}
+
+  //! Required interface for an FieldIterator.
+  inline 
+  NodeIndex<T> operator*() { return NodeIndex<T>(index_); }
+};
+
+//! Distinct type for edge Iterator.
+template <class T>
+struct EdgeIterator : public FieldIteratorBase<T> {
+  EdgeIterator() :
+    FieldIteratorBase<T>(0) {}
+  EdgeIterator(T index) :
+    FieldIteratorBase<T>(index) {}
+
+  //! Required interface for an FieldIterator.
+  inline 
+  EdgeIndex<T> operator*() { return EdgeIndex<T>(index_); }
+};
+
+//! Distinct type for face Iterator.
+template <class T>
+struct FaceIterator : public FieldIteratorBase<T> {
+  FaceIterator() :
+    FieldIteratorBase<T>(0) {}
+  FaceIterator(T index) :
+    FieldIteratorBase<T>(index) {}
+
+  //! Required interface for an FieldIterator.
+  inline 
+  FaceIndex<T> operator*() { return FaceIndex<T>(index_); }
+};
+
+//! Distinct type for cell Iterator.
+template <class T>
+struct CellIterator : public FieldIteratorBase<T> {
+  CellIterator() :
+    FieldIteratorBase<T>(0) {}
+  CellIterator(T index) :
+    FieldIteratorBase<T>(index) {}
+
+  //! Required interface for an FieldIterator.
+  inline 
+  CellIndex<T> operator*() { return CellIndex<T>(index_); }
+};
+
+
+}
+
+#endif // Datatypes_FieldIterator_h
