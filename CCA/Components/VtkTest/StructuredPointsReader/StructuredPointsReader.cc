@@ -47,8 +47,7 @@ extern "C" vtk::Component* make_Vtk_StructuredPointsReader()
 
 OPort::OPort(vtkStructuredPointsReader *reader){
   this->reader=reader;
-#  static char * filename="/home/kzhang/vtk/vtkdata/head.60.vtk";
-  static char * filename="/home/kzhang/vtk/vtkdata/matrix.vtk";
+  static char * filename="/home/sci/kzhang/vtk/vtkdata/head.60.vtk";
   reader->SetFileName(filename);
 }
 

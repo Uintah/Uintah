@@ -39,30 +39,6 @@ using namespace SCIRun;
 using namespace vtk;
 
 
-
-#include "vtkActor.h"
-#include "vtkAxes.h"
-#include "vtkCamera.h"
-#include "vtkContourFilter.h"
-#include "vtkDataSet.h"
-#include "vtkFloatArray.h"
-#include "vtkGaussianSplatter.h"
-#include "vtkImageData.h"
-#include "vtkPointData.h"
-#include "vtkPoints.h"
-#include "vtkPolyDataMapper.h"
-#include "vtkProperty.h"
-#include "vtkRenderWindow.h"
-#include "vtkRenderWindowInteractor.h"
-#include "vtkStructuredPointsReader.h"
-#include "vtkStructuredPoints.h"
-#include "vtkContourFilter.h"
-#include "vtkRenderer.h"
-#include "vtkTubeFilter.h"
-#include "vtkUnstructuredGrid.h"
-
-
-
 extern "C" vtk::Component* make_Vtk_ContourFilter()
 {
   return new ContourFilter;
@@ -97,8 +73,7 @@ void
 IPort::connect(Port* port){
   filter->SetInput(dynamic_cast<vtkDataSet*>(port->getObj()));
   //TODO: use GUI
-  filter->SetValue(0,7);
-
+  filter->SetValue(0,70);
 }
 
 //Output Port
@@ -124,61 +99,6 @@ OPort::getName(){
 vtkObject *
 OPort::getObj(){
   return filter->GetOutput();
-}
-
-
-bool
-ContourFilter::haveUI(){
-  return true;
-}
-
-int
-ContourFilter::popupUI(){
-
-  std::cerr<<"Executing popupUI in ContourFilter...\n";
-
-  vtkActor* actor=vtkActor::New();
-
-  vtkPolyDataMapper* mapper =vtkPolyDataMapper::New();
-
-  vtkRenderer *ren1=vtkRenderer::New();
-  
-  vtkRenderWindow *renWin=vtkRenderWindow::New();
-
-  vtkRenderWindowInteractor *iren=vtkRenderWindowInteractor::New();
-
-  mapper->SetInput(filter->GetOutput());
-
-  mapper->ScalarVisibilityOff();
-
-  actor->SetMapper(mapper);
-
-  ren1->AddActor(actor);
-
-  ren1->GetActiveCamera()->Azimuth(20);
-  
-  ren1->GetActiveCamera()->Elevation(30);
-
-  ren1->SetBackground(0.1,0.2,0.4);
-  
-  ren1->GetActiveCamera()->Zoom(1.4);
-
-  ren1->ResetCameraClippingRange();
-
-  renWin->AddRenderer(ren1);
-    
-  iren->SetRenderWindow(renWin);
-
-  renWin->SetSize( 500, 500);
-
-  //Now start working...
-  renWin->Render();
-
-  iren->Initialize();
-
-  iren->Start();
-
-  return 0;
 }
 
 ContourFilter::ContourFilter(){
