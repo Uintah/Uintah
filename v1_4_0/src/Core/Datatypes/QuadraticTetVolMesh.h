@@ -105,6 +105,8 @@ public:
   
   virtual const TypeDescription *get_type_description() const;
 
+  bool test_nodes_range(Cell::index_type ci, int sn, int en);
+
 protected:
   virtual void calc_node_cells_map();
 
