@@ -194,6 +194,8 @@ using std::pair;
       string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
       bool d_wasCheckpointTimestep;
+      bool d_saveParticleVariables;
+      bool d_saveP_x;
 
       double d_currentTime;
 
