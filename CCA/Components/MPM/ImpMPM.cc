@@ -194,7 +194,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 
   scheduleIterate(sched,level,d_perproc_patches,matls);
 
-  scheduleComputeStressTensorOnly(sched,d_perproc_patches,matls,false);
+  scheduleComputeStressTensor(sched,d_perproc_patches,matls);
 
   scheduleComputeInternalForce(sched,d_perproc_patches,matls,false);
 
@@ -301,23 +301,22 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequiresImplicit(t, mpm_matl, patches,recursion);
+    cm->addComputesAndRequires(t, mpm_matl, patches,recursion);
   }
   sched->addTask(t, patches, matls);
 }
 
-void ImpMPM::scheduleComputeStressTensorOnly(SchedulerP& sched,
+void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
 					 const PatchSet* patches,
-					 const MaterialSet* matls,
-					 const bool recursion)
+					 const MaterialSet* matls)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("ImpMPM::computeStressTensorOnly",
-		    this, &ImpMPM::computeStressTensorOnly);
+  Task* t = scinew Task("ImpMPM::computeStressTensor",
+		    this, &ImpMPM::computeStressTensor);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequiresImplicitOnly(t, mpm_matl, patches,recursion);
+    cm->addComputesAndRequires(t, mpm_matl, patches);
   }
   sched->addTask(t, patches, matls);
 }
@@ -1124,27 +1123,27 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,
-				    d_solver, recursion);
+    cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw,
+			    d_solver, recursion);
   }
   
 }
 
-void ImpMPM::computeStressTensorOnly(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* ,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw)
+void ImpMPM::computeStressTensor(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset* ,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw)
 {
   // DONE
 
-  cout_doing <<"Doing computeStressTensorOnly " <<"\t\t\t\t IMPM"<< "\n" 
+  cout_doing <<"Doing computeStressTensor" <<"\t\t\t\t IMPM"<< "\n" 
 	     << "\n";
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->computeStressTensorImplicitOnly(patches, mpm_matl, old_dw, new_dw);
+    cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
   }
   
 }

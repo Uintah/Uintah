@@ -122,145 +122,13 @@ void CompNeoHookImplicit::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-
-void CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
-				      const MPMMaterial* matl,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
-{
-  for(int pp=0;pp<patches->size();pp++){
-    const Patch* patch = patches->get(pp);
-    Matrix3 velGrad,Shear,bElBar_new,deformationGradientInc;
-    double J,p,IEl,U,W,se=0.;
-    double c_dil=0.0;
-    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-    double onethird = (1.0/3.0);
-    Matrix3 Identity;
-
-    Identity.Identity();
-
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-
-    int dwi = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<Matrix3> deformationGradient;
-    ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,pvolume;
-    ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<Vector> pvelocity;
-    constNCVariable<Vector> gvelocity;
-    constParticleVariable<Vector> psize;
-    delt_vartype delT;
-
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,              pset);
-    }
-    new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-		     lb->pDeformationMeasureLabel_preReloc, pset);
-
-    new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
-    old_dw->get(delT, lb->delTLabel);
-      
-    double shear = d_initialData.Shear;
-    double bulk  = d_initialData.Bulk;
-
-    double rho_orig = matl->getInitialDensity();
-
-    for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
-       particleIndex idx = *iter;
-
-       velGrad.set(0.0);
-       // Get the node indices that surround the cell
-       IntVector ni[MAX_BASIS];
-       Vector d_S[MAX_BASIS];
-
-       if(d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        }
-        else if(d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-        }
-
-       for(int k = 0; k < d_8or27; k++) {
-	    const Vector& gvel = gvelocity[ni[k]];
-	    for (int j = 0; j<3; j++){
-	       for (int i = 0; i<3; i++) {
-	          velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-	       }
-	    }
-        }
-
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-				     deformationGradient[idx];
-
-      // get the volumetric part of the deformation
-      J    = deformationGradient_new[idx].Determinant();
-
-      bElBar_new = deformationGradient_new[idx]
-		 * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
-
-      IEl = onethird*bElBar_new.Trace();
-
-      // Shear is equal to the shear modulus times dev(bElBar)
-      Shear = (bElBar_new - Identity*IEl)*shear;
-
-      // get the hydrostatic part of the stress
-      p = 0.5*bulk*(J - 1.0/J);
-
-      // compute the total stress (volumetric + deviatoric)
-      pstress[idx] = Identity*p + Shear/J;
-
-      // Compute the strain energy for all the particles
-      U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
-      W = .5*shear*(bElBar_new.Trace() - 3.0);
-
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
-      
-      double e = (U + W)*pvolume_deformed[idx]/J;
-
-      se += e;
-
-      Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-  		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
-
-    WaveSpeed = dx/WaveSpeed;
-    double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
-
-  }
-}
-
-
 void 
-CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches,
-						 const MPMMaterial* matl,
-						 DataWarehouse* old_dw,
-						 DataWarehouse* new_dw,
-						 Solver* solver,
-						 const bool recursion)
+CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
+					 const MPMMaterial* matl,
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw,
+					 Solver* solver,
+					 const bool recursion)
 
 {
 
@@ -523,10 +391,11 @@ CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 }
 
 
-void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* patches,
-						   const MPMMaterial* matl,
-						   DataWarehouse* old_dw,
-						   DataWarehouse* new_dw)
+void 
+CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
+					 const MPMMaterial* matl,
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw)
 
 
 {
@@ -647,36 +516,9 @@ void CompNeoHookImplicit::addInitialComputesAndRequires(Task*,
 }
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
-					  const MPMMaterial* matl,
-					  const PatchSet*) const
-{
-    const MaterialSubset* matlset = matl->thisMaterial();
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-    task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pMassLabel,   matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pVelocityLabel, matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-						  matlset, Ghost::None);
-    if(d_8or27==27){
-      task->requires(Task::OldDW,lb->pSizeLabel,     matlset, Ghost::None);
-    }
-    task->requires(Task::NewDW,lb->gVelocityLabel,matlset, gac, NGN);
-
-    task->requires(Task::OldDW, lb->delTLabel);
-
-
-    task->computes(lb->pStressLabel_preReloc,             matlset);
-    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-    task->computes(lb->pVolumeDeformedLabel,              matlset);
-
-
-}
-
-
-void CompNeoHookImplicit::addComputesAndRequiresImplicit(Task* task,
-						  const MPMMaterial* matl,
-						  const PatchSet* patches,
-						  const bool recursion)
+						 const MPMMaterial* matl,
+						 const PatchSet* patches,
+						 const bool recursion)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -714,10 +556,9 @@ void CompNeoHookImplicit::addComputesAndRequiresImplicit(Task* task,
   
 }
 
-void CompNeoHookImplicit::addComputesAndRequiresImplicitOnly(Task* task,
-						     const MPMMaterial* matl,
-						     const PatchSet*,
-						     const bool)
+void CompNeoHookImplicit::addComputesAndRequires(Task* task,
+						 const MPMMaterial* matl,
+						 const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);

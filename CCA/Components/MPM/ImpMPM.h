@@ -172,18 +172,20 @@ private:
   //////////
   // Insert Documentation Here:
 
+  // This is for the computation with the 24 x 24 matrix
   void computeStressTensor(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
-			   bool recursion);
+			   const bool recursion);
 
-  void computeStressTensorOnly(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw,
-			       DataWarehouse* new_dw);
+  // No matrix calculations are performed.
+  void computeStressTensor(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
 
   void formStiffnessMatrix(const ProcessorGroup*,
 				const PatchSubset* patches,
@@ -284,12 +286,12 @@ private:
 			     const bool recursion);
 
   void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
-				    const MaterialSet*,
-				    bool recursion = false);
+				   const MaterialSet*,
+				   const bool recursion);
 
-  void scheduleComputeStressTensorOnly(SchedulerP&, const PatchSet*,
-				       const MaterialSet*,
-				       bool recursion = false);
+  void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
+
 
   void scheduleFormStiffnessMatrix(SchedulerP&, const PatchSet*,
 				   const MaterialSet*,const bool recursion);
