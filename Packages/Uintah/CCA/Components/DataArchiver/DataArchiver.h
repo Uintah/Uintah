@@ -8,6 +8,8 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
 
+class DOM_Document;
+
 namespace Uintah {
 
 using std::string;

@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -233,7 +234,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    if (d_writeMeta) {
       string inputname = d_dir.getName()+"/input.xml";
       ofstream out(inputname.c_str());
-      out << params->getNode().getOwnerDocument() << endl;
+      out << params->getNode()->getOwnerDocument() << endl;
       createIndexXML(d_dir);
       
       if (d_checkpointInterval != 0.0) {
