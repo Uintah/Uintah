@@ -150,7 +150,7 @@ set $m3-ViewWindow_0-resx {}
 set $m3-ViewWindow_0-resy {}
 set $m3-ViewWindow_0-aspect {}
 set $m3-ViewWindow_0-aspect_ratio {}
-set $m3-ViewWindow_0-global-light {0}
+set $m3-ViewWindow_0-global-light {1}
 set $m3-ViewWindow_0-global-fog {1}
 set $m3-ViewWindow_0-global-debug {0}
 set $m3-ViewWindow_0-global-clip {0}
