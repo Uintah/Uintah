@@ -53,6 +53,7 @@ class ShowField : public Module
   int                      field_generation_;
   int                      mesh_generation_;
   int                      colormap_generation_;
+  int                      vector_generation_;
 
   //! output port
   GeometryOPort           *ogeom_;  
@@ -156,7 +157,8 @@ public:
   virtual ~ShowField();
   virtual void execute();
   bool check_for_vector_data(FieldHandle fld_handle);
-  bool fetch_typed_algorithm(FieldHandle fld_handle, FieldHandle vfld_handle);
+  bool fetch_typed_algorithm(FieldHandle fld_handle, FieldHandle vfld_handle,
+			     bool recompile_nonvector);
   bool determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle);
   virtual void tcl_command(GuiArgs& args, void* userdata);
 };
@@ -166,6 +168,7 @@ ShowField::ShowField(GuiContext* ctx) :
   field_generation_(-1),
   mesh_generation_(-1),
   colormap_generation_(-1),
+  vector_generation_(-1),
   ogeom_(0),
   node_id_(0),
   edge_id_(0),
@@ -307,20 +310,25 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
 
 bool
 ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
-				 FieldHandle vfld_handle) 
+				 FieldHandle vfld_handle,
+				 bool recompile_nonvector) 
 {
   const TypeDescription *ftd = fld_handle->get_type_description();
   const TypeDescription *ltd = fld_handle->data_at_type_description();
   // description for just the data in the field
   cur_field_data_type_ = fld_handle->get_type_description(1)->get_name();
 
-  // Get the Algorithm.
-  CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
-  if (!module_dynamic_compile(ci, renderer_))
+  if (recompile_nonvector)
   {
-    field_generation_ = -1;
-    mesh_generation_ = -1;
-    return false;
+    // Get the Algorithm.
+    CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
+    if (!module_dynamic_compile(ci, renderer_))
+    {
+      field_generation_ = -1;
+      mesh_generation_ = -1;
+      vector_generation_ = -1;
+      return false;
+    }
   }
 
   if (vfld_handle.get_rep())
@@ -330,6 +338,9 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
       RenderFieldDataBase::get_compile_info(vftd, ftd, ltd);
     if (!module_dynamic_compile(dci, data_renderer_))
     {
+      field_generation_ = -1;
+      mesh_generation_ = -1;
+      vector_generation_ = -1;
       data_renderer_ = 0;
       return false;
     }
@@ -343,6 +354,8 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
 {
   bool mesh_new = fld_handle->mesh()->generation != mesh_generation_;
   bool field_new = fld_handle->generation != field_generation_;
+  bool vector_new = 
+    vfld_handle.get_rep() && vfld_handle->generation != vector_generation_;
 
   if (mesh_new) {
     // completely new, all dirty, or just new geometry, so data_at invalid too.
@@ -350,9 +363,14 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     {
       check_for_vector_data(vfld_handle);
     }
-    if (!fetch_typed_algorithm(fld_handle, vfld_handle)) { return false; }
+    if (!fetch_typed_algorithm(fld_handle, vfld_handle, true))
+    {
+      return false;
+    }
     field_generation_  = fld_handle->generation;  
     mesh_generation_ = fld_handle->mesh()->generation; 
+    vector_generation_ =
+      (vfld_handle.get_rep())?(vfld_handle->mesh()->generation):-1;
     nodes_dirty_ = true; 
     edges_dirty_ = true; 
     faces_dirty_ = true; 
@@ -378,7 +396,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     bounding_vector_ = scinew Vector();
     *bounding_vector_ = fld_handle->mesh()->get_bounding_box().diagonal();
     
-  } else if (!mesh_new && field_new) {
+  } else if (!mesh_new && (field_new || vector_new)) {
     // same geometry, new data.
     if (!check_for_vector_data(fld_handle))
     {
@@ -388,8 +406,8 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     const TypeDescription *data_type_description = 
       fld_handle->get_type_description(1);
     string fdt = data_type_description->get_name();
-    if (cur_field_data_type_ != fdt &&
-	!fetch_typed_algorithm(fld_handle, vfld_handle))
+    if (!fetch_typed_algorithm(fld_handle, vfld_handle,
+			       (cur_field_data_type_ != fdt)))
     { 
       return false;
     }
