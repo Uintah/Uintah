@@ -15,28 +15,78 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <iostream>
+#include <sstream>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+//#include <sys/wait.h>
 
 #include "SocketEpChannel.h"
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
-#include <sstream>
-#include <unistd.h>
+
+
 using namespace std;
 using namespace SCIRun;
-#define PORT 7675
 
-SocketEpChannel::SocketEpChannel() { 
-  char name [255];
-  if (gethostname(name, 255) != 0) {
-    throw CommError("Can't resolve machine hostname. SocketEpChannel::SocketEpChannel()",11);
+
+
+SocketEpChannel::SocketEpChannel(){ 
+  int new_fd;  // listen on sock_fd, new connection on new_fd
+  struct sockaddr_in my_addr;    // my address information
+  
+  if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+    throw CommError("socket", errno);
   }
-  else {    
-    hostname = name;
+  
+  my_addr.sin_family = AF_INET;         // host byte order
+  my_addr.sin_port = 0;                 // automatically select an unused port
+  my_addr.sin_addr.s_addr = htonl(INADDR_ANY); // automatically fill with my IP
+  memset(&(my_addr.sin_zero), '\0', 8); // zero the rest of the struct
+  
+  if (::bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
+    throw CommError("bind", errno);
   }
+
+  //at most 1024 waiting clients
+  if (listen(sockfd, 1024) == -1){ 
+    throw CommError("socket", errno);
+  }
+
+  /*  
+  while(1) {  // main accept() loop
+    sin_size = sizeof(struct sockaddr_in);
+    if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
+			 &sin_size)) == -1) {
+      perror("accept");
+      continue;
+    }
+    printf("server: got connection from %s\n",
+                                               inet_ntoa(their_addr.sin_addr));
+    if (!fork()) { // this is the child process
+      close(sockfd); // child doesn't need the listener
+      if (send(new_fd, "Hello, world!\n", 14, 0) == -1)
+	perror("send");
+      close(new_fd);
+      exit(0);
+    }
+    close(new_fd);  // parent doesn't need this
+        }
+  
+  return 0;
+  */
   msg = NULL;
 }
 
-SocketEpChannel::~SocketEpChannel() { }
+SocketEpChannel::~SocketEpChannel(){ 
+  close(sockfd);
+}
+
 
 void SocketEpChannel::openConnection() {
   //Call listener and pass it the args
@@ -50,16 +100,22 @@ void SocketEpChannel::closeConnection() {
 }
 
 string SocketEpChannel::getUrl() {
-
+  struct sockaddr_in my_addr;
+  socklen_t namelen=sizeof(struct sockaddr);
+  if(getsockname(sockfd, (struct sockaddr*)&my_addr, &namelen )==-1){
+    throw CommError("getsockname", errno);
+  }
+  char hostname[16];
+  strcpy(hostname,inet_ntoa(my_addr.sin_addr));
   std::ostringstream o;
-  o << "socket://" << hostname << ":" << PORT << "/";
+  o << "socket://" << hostname << ":" << my_addr.sin_port << "/";
   return o.str();
 }
 
 void SocketEpChannel::activateConnection(void* /*obj*/) {  }
 
 Message* SocketEpChannel::getMessage() {
-  if (connfd == 0)
+  if (sockfd == 0)
     return NULL;
   if (msg == NULL)
     msg = new SocketMessage();
