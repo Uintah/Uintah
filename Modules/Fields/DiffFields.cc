@@ -80,11 +80,53 @@ void DiffFields::execute()
     if (!sfIHb.get_rep()) return;
     ScalarFieldRG *isfb = sfIHb->getRG();
     if (!isfb) return;
-
-    ScalarFieldRG* osf=new ScalarFieldRG;
     
     // make new field, and compute bbox and contents here!
+    
+    //get bounds for compare...
+    Point min_a, min_b, max_a, max_b;
+    isfa->get_bounds(min_a, max_a);
+    isfb->get_bounds(min_b, max_b);
+    if ((min_a != min_b) && (max_a != max_b))
+      {
+	printf("DiffFields: Boundry not equal.\n  A: %f, %f, %f -> %f, %f, %f B: %f, %f, %f - %f, %f, %f\n",
+	       min_a.x(),min_a.y(),min_a.z(),max_a.x(),max_a.y(),max_a.z(),min_b.x(),min_b.y(),min_b.z(),
+	       max_b.x(),max_b.y(),max_b.z());
+	return;
+      }
 
-    ScalarFieldHandle osfH(osf);
-    ofield->send(osfH);
+    //Compare 3d array sizes...
+    int dim1_a, dim2_a, dim3_a, dim1_b, dim2_b, dim3_b;
+    dim1_a = isfa->grid.dim1();
+    dim2_a = isfa->grid.dim2();
+    dim3_a = isfa->grid.dim3();
+
+    dim1_b = isfb->grid.dim1();
+    dim2_b = isfb->grid.dim2();
+    dim3_b = isfb->grid.dim3();
+
+    if ( (dim1_a != dim1_b) || (dim2_a != dim2_b) || (dim3_a != dim3_b) )
+      {
+	printf("DiffFields: Dimensions of the two fields are not the same.\n A: %d x %d x %d B: %d x %d x %d\n",
+	       dim1_a, dim2_a, dim3_a, dim1_b, dim2_b, dim3_b);
+	return;
+      }
+
+    //Ok make the new field...
+    ScalarFieldRG* diff_field=new ScalarFieldRG;
+    diff_field->resize(dim1_a, dim2_a, dim3_a);
+    diff_field->set_bounds(min_a, max_a);
+    diff_field->grid.initialize(0);
+
+    //And due the difference boy...
+    for (int z = 0; z < dim3_a; z++)
+      for (int y = 0; y < dim2_a; y++)
+	for (int x = 0; x < dim1_a; x++)
+	  {
+	    diff_field->grid(x,y,z) = fabs(isfa->get_value(x,y,z) - isfb->get_value(x,y,z));
+	  }
+    
+    ScalarFieldHandle diff_fieldH(diff_field);
+    ofield->send(diff_fieldH);
 }
+
