@@ -40,6 +40,7 @@
 
 namespace SCIRun {
 
+using namespace std;
 
 class PropertyBase : public Datatype {
 public:
