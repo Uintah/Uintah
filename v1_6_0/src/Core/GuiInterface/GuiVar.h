@@ -76,9 +76,8 @@ public:
 
 typedef GuiSingle<string> GuiString;
 typedef GuiSingle<double> GuiDouble;
-typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
 typedef GuiSingle<int> GuiInt;
-typedef GuiSingle<int> GuiVarint;   // NEED TO GET RID OF
+
 
 template <class T>
 class GuiTriple : public GuiVar
