@@ -421,7 +421,13 @@ void OpenGL::redraw_frame()
   double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
   
   drawinfo->reset();
+
   int do_stereo=viewwindow->do_stereo.get();
+  drawinfo->ambient_scale_=viewwindow->ambient_scale.get();
+  drawinfo->diffuse_scale_=viewwindow->diffuse_scale.get();
+  drawinfo->specular_scale_=viewwindow->specular_scale.get();
+  drawinfo->shininess_scale_=viewwindow->shininess_scale.get();
+  drawinfo->emission_scale_=viewwindow->emission_scale.get();
   
 #ifdef __sgi
   //  --  BAWGL  -- 
@@ -1199,7 +1205,6 @@ void ViewWindow::setState(DrawInfoOpenGL* drawinfo,string tclID)
   string movieName(tclID+"-"+"movieName");
   string movieFrame(tclID+"-"+"movieFrame");
   string use_clip(tclID+"-"+"clip");
-  
   if (!get_gui_stringvar(id,type,val)) {
     cerr << "Error illegal name!\n";
     return;

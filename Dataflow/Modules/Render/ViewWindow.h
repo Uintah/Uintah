@@ -320,6 +320,12 @@ public:
 				// Stereo
   GuiInt do_stereo;
 
+  GuiDouble ambient_scale;      // Scene material scales
+  GuiDouble diffuse_scale;
+  GuiDouble specular_scale;
+  GuiDouble emission_scale;
+  GuiDouble shininess_scale;
+
   GuiDouble sbase;
   GuiInt sr;
 
