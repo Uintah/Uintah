@@ -3,6 +3,7 @@
 #define Packages_Uintah_CCA_Components_Examples_SimpleRxn_h
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
@@ -44,7 +45,7 @@ WARNING
 ****************************************/
 
   class GeometryPiece;
-  class SimpleRxn : public ModelInterface {
+  class SimpleRxn :public ModelInterface {
   public:
     SimpleRxn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~SimpleRxn();
@@ -149,6 +150,10 @@ WARNING
     double d_viscosity_fuel;
     
     SimulationStateP sharedState;
+    Output* dataArchiver;
+    vector<Vector> d_probePts;
+    vector<string> d_probePtsNames;
+    bool d_usingProbePts;
   };
 }
 
