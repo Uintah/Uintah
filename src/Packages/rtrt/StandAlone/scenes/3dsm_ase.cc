@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Background.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
@@ -382,6 +383,7 @@ Scene* make_scene(int argc, char* argv[], int) {
 			 bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
 			 ambient_scale);
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
+  scene->set_background_ptr(new EnvironmentMapBackground("/home/dmw/stadium/SKY.ppm"));
   scene->shadow_mode=1;
   scene->set_materials(ase_matls);
   cerr << "num materials="<<ase_matls.size()<<"\n";
@@ -393,3 +395,6 @@ Scene* make_scene(int argc, char* argv[], int) {
   }
   return scene;
 }
+
+// usage:
+// ./rtrt -np 16 -no_shadows -bv 3 -gridcellsize 80 -scene scenes/3dsm_ase /home/dmw/stadium/Ford\ SGI\ model\ 003.ASE
