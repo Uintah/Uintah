@@ -40,7 +40,7 @@ fi
 testdat=`ls -1 *.dat | head -n 1`
 abs_error_allowable=1e-10
 rel_error_allowable=1e-8
-echo "compare_dat_files $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat"
+echo "compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat"
 compare_dat_files $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat
 retval=$?
 
