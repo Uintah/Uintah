@@ -53,6 +53,58 @@ DpyBase::~DpyBase() {
 static int DPY_NX=0;
 static int DPY_NY=0;
 
+int DpyBase::open_events_display(Window parent) {
+  xlock.lock();
+
+  dpy = XOpenDisplay(NULL);
+  if(!dpy){
+    cerr << "Cannot open display\n";
+    return 1;
+  }
+
+  int screen=DefaultScreen(dpy);
+    
+  XSetWindowAttributes atts;
+  int flags=CWEventMask;
+  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
+  // Set up the parent if we need to.
+  int xlow = DPY_NX;
+  int ylow = DPY_NY;
+  if(!parent){
+    parent = RootWindow(dpy, screen);
+    xlow=ylow=0;
+  } else {
+    DPY_NX+=20;
+    DPY_NY+=yres;
+  }
+  win = XCreateWindow(dpy, parent,
+                      xlow, ylow, xres, yres, 0,
+                      DefaultDepth(dpy, screen), InputOutput,
+                      DefaultVisual(dpy, screen), flags, &atts);
+  
+  XTextProperty tp;
+  XStringListToTextProperty(&cwindow_name, 1, &tp);
+  XSizeHints sh;
+  sh.flags = USPosition|USSize;
+  
+  XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
+  XMapWindow(dpy, win);
+  
+  xlock.unlock();
+  
+  opened = true;
+
+  // Wait for the window to appear before proceeding
+  for(;;){
+    XEvent e;
+    XNextEvent(dpy, &e);
+    if(e.type == MapNotify)
+      break;
+  }
+  
+  return 0;
+}
+
 int DpyBase::open_display(Window parent, bool needevents) {
   xlock.lock();
   // Open an OpenGL window
@@ -153,6 +205,15 @@ int DpyBase::open_display(Window parent, bool needevents) {
   xlock.unlock();
 
   opened = true;
+
+  // Wait for the window to appear before proceeding
+  for(;;){
+    XEvent e;
+    XNextEvent(dpy, &e);
+    if(e.type == MapNotify)
+      break;
+  }
+
   // Assume success at this point
   return 0;
 }
@@ -197,11 +258,13 @@ int DpyBase::close_display(bool remove_from_cleanup_manager) {
   cerr << "Closed dpy:"<<window_name<<"\n";
 
   if (remove_from_cleanup_manager) {
+#if 1
     cerr << "Trying to remove the call back\n";
     // Remove this from the cleanup manager, so we don't close the
     // display twice.
     SCIRun::CleanupManager::remove_callback(this->close_display_aux, this);
     cerr << "Removed the call back\n";
+#endif
   }
   
   xlock.unlock();
@@ -263,8 +326,9 @@ bool DpyBase::should_close() {
 }
 
 void DpyBase::post_redraw() {
-  redraw = true;
-  XSendEvent(dpy, win, false, 0, 0);
+  XEvent event;
+  event.type = Expose;
+  XSendEvent(dpy, win, false, 0, &event);
 }
 
 extern bool pin;
@@ -301,130 +365,137 @@ void DpyBase::run() {
     if (!opened)
       // Most likely going to be stopped soon
       return;
-    
-    XEvent e;
-    // Block on this call until there is an event.  Peek blocks, but
-    // doesn't remove the event from the stack.  This way we can grab
-    // it later in the while loop.
-    XPeekEvent(dpy, &e);
 
-    // By this time, there should be some kind of an event.  We should
-    // try to consume all the queued events before we redraw.  That
-    // way we don't waste time redrawing after each event.
-    while (XEventsQueued(dpy, QueuedAfterReading)) {
-      // Now we need to test to see if we should die
-      if (should_close()) {
-	close_display();
-	return;
-      }
-
-      // Get the next event.  We know there should be one, otherwise
-      // we wouldn't have gotten passed the while conditional.
-      XNextEvent(dpy, &e);	
-      switch(e.type){
-      case Expose:
-	redraw=true;
-	break;
-      case ConfigureNotify:
-	resize(e.xconfigure.width, e.xconfigure.height);
-	break;
-      case KeyPress:
-	{
-	  unsigned long key = XKeycodeToKeysym(dpy, e.xkey.keycode, 0);
-	  switch(key) {
-	  case XK_Control_L:
-	  case XK_Control_R:
-	    //cerr << "Pressed control\n";
-	    control_pressed = true;
-	    break;
-	  case XK_Shift_L:
-	  case XK_Shift_R:
-	    //cerr << "Pressed shift\n";
-	    shift_pressed = true;
-	    break;
-	  default:
-	    key_pressed(key);
-	  }
-	}
-	break;
-      case KeyRelease:
-	{
-	  unsigned long key = XKeycodeToKeysym(dpy, e.xkey.keycode, 0);
-	  switch(key) {
-	  case XK_Control_L:
-	  case XK_Control_R:
-	    control_pressed = false;
-	    //cerr << "Releassed control\n";
-	    break;
-	  case XK_Shift_L:
-	  case XK_Shift_R:
-	    //cerr << "Releassed shift\n";
-	    shift_pressed = false;
-	    break;
-	  default:
-	    key_released(key);
-	  }
-	}
-	break;
-      case ButtonRelease:
-	{
-	  MouseButton button = MouseButton1;
-	  switch(e.xbutton.button){
-	  case Button1:
-	    button = MouseButton1;
-	    break;
-	  case Button2:
-	    button = MouseButton2;
-	    break;
-	  case Button3:
-	    button = MouseButton3;
-	    break;
-	  }
-	  button_released(button, e.xbutton.x, e.xbutton.y);
-	}
-	break;
-      case ButtonPress:
-	{
-	  MouseButton button = MouseButton1;
-	  switch(e.xbutton.button){
-	  case Button1:
-	    button = MouseButton1;
-	    break;
-	  case Button2:
-	    button = MouseButton2;
-	    break;
-	  case Button3:
-	    button = MouseButton3;
-	    break;
-	  }
-	  button_pressed(button, e.xbutton.x, e.xbutton.y);
-	}
-	break;
-      case MotionNotify:
-	{
-	  MouseButton button = MouseButton1;
-	  switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)) {
-	  case Button1Mask:
-	    button = MouseButton1;
-	    break;
-	  case Button2Mask:
-	    button = MouseButton2;
-	    break;
-	  case Button3Mask:
-	    button = MouseButton3;
-	    break;
-	  }
-	  button_motion(button, e.xbutton.x, e.xbutton.y);
-	}
-	break;
-      default:
-	//	cerr << "Unknown event, type=" << e.type << '\n';
-	break;
-      } // end switch (e.type)
-    } // end of while (there is a queued event)
+    wait_and_handle_events();
   } // end of for(;;)
 }
 
+void DpyBase::wait_and_handle_events() {
+  XEvent e;
+  // Block on this call until there is an event.  Peek blocks, but
+  // doesn't remove the event from the stack.  This way we can grab
+  // it later in the while loop.
+  XPeekEvent(dpy, &e);
+
+  // By this time, there should be some kind of an event.  We should
+  // try to consume all the queued events before we redraw.  That
+  // way we don't waste time redrawing after each event.
+  //  while (XEventsQueued(dpy, QueuedAfterReading)) {
+  while (XPending(dpy)) {
+    //    cerr << window_name << ": " << XPending(dpy) << " events left to process\n";
+    // Now we need to test to see if we should die
+    if (should_close()) {
+      close_display();
+      return;
+    }
+
+    // Get the next event.  We know there should be one, otherwise
+    // we wouldn't have gotten passed the while conditional.
+    XNextEvent(dpy, &e);	
+    switch(e.type){
+    case Expose:
+      //      cerr << window_name << ": "<< "Expose event found.  " << XPending(dpy) << " events left to process\n";
+      redraw=true;
+      break;
+    case ConfigureNotify:
+      //      cerr << window_name << ": "<< "ConfigureNotify event found.  " << XPending(dpy) << " events left to process\n";
+      resize(e.xconfigure.width, e.xconfigure.height);
+      break;
+    case KeyPress:
+      {
+        unsigned long key = XKeycodeToKeysym(dpy, e.xkey.keycode, 0);
+        switch(key) {
+        case XK_Control_L:
+        case XK_Control_R:
+          //cerr << "Pressed control\n";
+          control_pressed = true;
+          break;
+        case XK_Shift_L:
+        case XK_Shift_R:
+          //cerr << "Pressed shift\n";
+          shift_pressed = true;
+          break;
+        default:
+          key_pressed(key);
+        }
+      }
+      break;
+    case KeyRelease:
+      {
+        unsigned long key = XKeycodeToKeysym(dpy, e.xkey.keycode, 0);
+        switch(key) {
+        case XK_Control_L:
+        case XK_Control_R:
+          control_pressed = false;
+          //cerr << "Releassed control\n";
+          break;
+        case XK_Shift_L:
+        case XK_Shift_R:
+          //cerr << "Releassed shift\n";
+          shift_pressed = false;
+          break;
+        default:
+          key_released(key);
+        }
+      }
+      break;
+    case ButtonRelease:
+      {
+        MouseButton button = MouseButton1;
+        switch(e.xbutton.button){
+        case Button1:
+          button = MouseButton1;
+          break;
+        case Button2:
+          button = MouseButton2;
+          break;
+        case Button3:
+          button = MouseButton3;
+          break;
+        }
+        button_released(button, e.xbutton.x, e.xbutton.y);
+      }
+      break;
+    case ButtonPress:
+      {
+        MouseButton button = MouseButton1;
+        switch(e.xbutton.button){
+        case Button1:
+          button = MouseButton1;
+          break;
+        case Button2:
+          button = MouseButton2;
+          break;
+        case Button3:
+          button = MouseButton3;
+          break;
+        }
+        button_pressed(button, e.xbutton.x, e.xbutton.y);
+      }
+      break;
+    case MotionNotify:
+      {
+        MouseButton button = MouseButton1;
+        switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)) {
+        case Button1Mask:
+          button = MouseButton1;
+          break;
+        case Button2Mask:
+          button = MouseButton2;
+          break;
+        case Button3Mask:
+          button = MouseButton3;
+          break;
+        }
+        button_motion(button, e.xbutton.x, e.xbutton.y);
+      }
+      break;
+    default:
+      //	cerr << "Unknown event, type=" << e.type << '\n';
+      break;
+    } // end switch (e.type)
+  } // end of while (there is a queued event)
+}
 namespace rtrt {
   
 void printString(GLuint fontbase, double x, double y,
