@@ -474,6 +474,7 @@ SchedulerCommon::scheduleDataCopy(const GridP& grid, SimulationStateP& state)
       
       task->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
       task->computes(var, matls);
+      cout << "  CDTNG: " << var->getName() << " matls " << *matls << endl;
     }
     addTask(task, grid->getLevel(i)->eachPatch(), state->allMaterials());
   }
@@ -501,7 +502,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
     const Level* newLevel = newPatch->getLevel();
     
     // If there is a level that didn't exist, we don't need to copy it
-    if ( newLevel->getIndex() >= newDataWarehouse->getGrid()->numLevels() ) {
+    if ( newLevel->getIndex() >= oldDataWarehouse->getGrid()->numLevels() ) {
       continue;
     }
     
