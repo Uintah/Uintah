@@ -75,6 +75,11 @@ namespace Uintah {
     d_startTime = Time::currentSeconds();
   }
 
+  void SimulationController::setStartSimTime ( double t )
+  {
+    d_startSimTime = t;
+  }
+
   void SimulationController::initSimulationStatsVars ( void )
   {
     // vars used to calculate standard deviation
@@ -213,7 +218,7 @@ namespace Uintah {
 
       if ( d_n > 0 ) {
 	double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
-	double realSecondsAvg = d_wallTime/time;
+	double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
 
 	dbgTime << "1 sim second takes ";
 

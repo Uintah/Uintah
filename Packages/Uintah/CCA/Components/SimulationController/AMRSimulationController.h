@@ -45,6 +45,8 @@ class Regridder;
   WARNING
       
 ****************************************/
+
+   //! Controls the execution of an AMR Simulation
    class AMRSimulationController : public SimulationController {
    public:
       AMRSimulationController(const ProcessorGroup* myworld);
@@ -55,6 +57,8 @@ class Regridder;
       virtual void run();
 
    private:
+      //! Asks a variety of components if one of them needs the taskgraph
+      //! to recompile.
       bool needRecompile(double t, double delt, const GridP& level,
 			 SimulationInterface* cfd, Output* output,
 			 LoadBalancer* lb, Regridder* regridder,
@@ -62,11 +66,14 @@ class Regridder;
       AMRSimulationController(const AMRSimulationController&);
       AMRSimulationController& operator=(const AMRSimulationController&);
 
+      //! recursively schedule refinement, coarsening, and time advances for
+      //! finer levels - compensating for time refinement.
       void subCycle(GridP& grid, SchedulerP& scheduler,
 		    SimulationStateP& sharedState,
 		    int startDW, int dwStride, int numLevel,
 		    SimulationInterface* sim);
 
+      //! initialize the refineFlag variable for this domain (a task callback)
       void initializeErrorEstimate(const ProcessorGroup*,
 				   const PatchSubset* patches,
 				   const MaterialSubset* matls,
