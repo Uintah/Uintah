@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/NotFinished.h>
