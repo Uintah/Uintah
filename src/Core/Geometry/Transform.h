@@ -93,6 +93,7 @@ public:
   void post_translate(const Vector&);
 
   Point unproject(const Point& p);
+  Vector unproject(const Vector& p);
   Point project(const Point& p) const;
   Vector project(const Vector& p) const;
   void get(double*);
