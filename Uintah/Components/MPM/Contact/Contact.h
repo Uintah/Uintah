@@ -10,11 +10,15 @@ namespace Uintah {
   namespace Grid {
     class Region;
   }
+  namespace Parallel {
+    class ProcessorContext;
+  }
 
 namespace Components {
 
 using Uintah::Grid::Region;
 using Uintah::Interface::DataWarehouseP;
+using Uintah::Parallel::ProcessorContext;
 
 /**************************************
 
@@ -48,11 +52,13 @@ WARNING
 class Contact {
 public:
   // Basic contact methods
-  virtual void exMomInterpolated(const Region* region,
+  virtual void exMomInterpolated(const ProcessorContext*,
+				 const Region* region,
                                  const DataWarehouseP& old_dw,
                                  DataWarehouseP& new_dw) = 0;
 
-  virtual void exMomIntegrated(const Region* region,
+  virtual void exMomIntegrated(const ProcessorContext*,
+			       const Region* region,
                                const DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw) = 0;
 
@@ -74,6 +80,9 @@ inline bool compare(double num1, double num2)
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/03/21 01:29:41  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.3  2000/03/20 23:50:44  dav
 // renames SingleVel to SingleVelContact
 //

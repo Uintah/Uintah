@@ -13,7 +13,6 @@ namespace Grid {
 
 class Region;
 class Task;
-class TypeDescription;
 
 /**************************************
 
@@ -72,6 +71,9 @@ private:
 
 //
 // $Log$
+// Revision 1.5  2000/03/21 01:29:42  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.4  2000/03/17 18:45:42  dav
 // fixed a few more namespace problems
 //
