@@ -297,6 +297,46 @@ ViewWindow::get_bounds(BBox& bbox)
   }
 }
 
+
+
+// Get bounds for all the objects, not just the visible ones.  Used
+// for fog computation.
+
+void
+ViewWindow::get_bounds_all(BBox& bbox)
+{
+  bbox.reset();
+  GeomIndexedGroup::IterIntGeomObj iter = viewer_->ports_.getIter();
+  for ( ; iter.first != iter.second; iter.first++) {
+    GeomIndexedGroup::IterIntGeomObj serIter =
+      ((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
+    // items in the scene are all GeomViewerItem's...
+    for ( ; serIter.first != serIter.second; serIter.first++) {
+      GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second.get_rep());
+      if(si->crowd_lock_) si->crowd_lock_->readLock();
+      si->get_bounds(bbox);
+      if(si->crowd_lock_) si->crowd_lock_->readUnlock();
+    }
+  }
+
+  // XXX - START - ASF ADDED FOR UNICAM
+  const unsigned int objs_size = viewwindow_objs_.size();
+  const unsigned int draw_size = viewwindow_objs_draw_.size();
+  for(unsigned int i = 0; i < objs_size; i++) {
+    if (i < draw_size && viewwindow_objs_draw_[i])
+      viewwindow_objs_[i]->get_bounds(bbox);
+  }
+  // XXX - END   - ASF ADDED FOR UNICAM
+
+  // If the bounding box is empty, make it default to sane view.
+  if (!bbox.valid())
+  {
+    bbox.extend(Point(-1.0, -1.0, -1.0));
+    bbox.extend(Point(1.0, 1.0, 1.0));
+  }
+}
+
+
 void
 ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
 {

@@ -116,6 +116,7 @@ public:
   void			mouse_pick(int, int, int, int, int, int);
   void			tcl_command(GuiArgs&, void*);
   void			get_bounds(BBox&);
+  void			get_bounds_all(BBox&);
   void			autoview(const BBox&);
   // sets up the state (OGL) for a tool/viewwindow
   void			setState(DrawInfoOpenGL*, const string&);
