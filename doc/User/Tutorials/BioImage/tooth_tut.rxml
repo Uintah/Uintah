@@ -337,7 +337,7 @@ DEALINGS IN THE SOFTWARE.
 	    </row>
 	    <row>
 	      <entry>Arrow keys</entry>
-	      <entry>?????</entry>
+	      <entry>Move slice left, right, up, down in pane</entry>
 	    </row>
 	    <row>
 	      <entry>Mouse scroll wheel</entry>
@@ -386,7 +386,8 @@ DEALINGS IN THE SOFTWARE.
 	  </mediaobject>
 	</figure>
 	
-	<figure id="fig.rainbow_color_applied"><title>Rainbow colormap</title>
+	<figure id="fig.rainbow_color_applied">
+	  <title>Rainbow colormap</title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Rainbow colormap</phrase>
@@ -404,57 +405,53 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Choose the Rainbow colormap and notice the difference in the
 	resulting images displayed in the viewer windows.
-      </para>
-      <para>
-	Using a rainbow color map makes it easier to identify
+<!--	Using a rainbow color map makes it easy to identify
 	variations in the underlying data, but also makes it more
 	difficult to correlate differences in colors to differences in
-	data (ie is green high density?).
+	data (ie is green high density?).-->
       </para>
-    </section><!-- end:Changing slice colormaps -->
+    </section><!-- end:Coloring slices -->
 
     <section>
       <title>Emphasizing Tooth Features</title>
       <para>
-	The "window width" and "level" controls can be used to
-	emphasise data values in Viewers. The default "level" (or
-	center value) is the center value of the dataset, and the
-	"range" (range of displayed values) is the whole dataset.
-	With the default window and level, all values in the
-	dataset are visible in the viewer. Changing the "window
-	width" and "level" may allow us to view certain features
-	of the dataset, like bone for example.
+	<firstterm>Window width</firstterm> and
+	<firstterm>level</firstterm> 
+	controls are used to emphasize data values displayed in the
+	Visualization pane.  Window width is the number of displayed
+	data values.  Window level is the center value of displayed
+	values.  The default window width is the entire dataset.  The
+	default level is the center value of the entire dataset. With the
+	default window and level, all values in the dataset are
+	visible in the viewer. Certain features of the dataset, bone
+	for example, may be emphasized by changing window width and
+	level values.
       </para>
       <para>
-	The easiest way to change the "window width" and "level"
-	is using the slider shown in label 4 of <xref
-	linkend="fig.planesTab"/> in the Planes tab.  There are
-	two sliders which can be used to set the window width and
-	level. It is also possible to type in a numerical value
-	for the window with and level by clicking on the digit
-	displayed next to the slider and typing in a value.
+	One way to change the window width and level is by using
+	<guilabel>Window/Level</guilabel> slider controls located in
+	the Visualization pane's <guilabel>Planes</guilabel> tab.
+	<xref linkend="fig.planesTab"/> shows these controls.  Two
+	sliders are used to set the window width and level.  It is
+	also possible to type values by clicking on the text entry
+	boxes displayed next to the slider controls.
       </para>
 
       <para>
-	Using the left mouse button inside of the 2D viewer also
-	changes the window and level. Left clicking and dragging
-	the mouse up and down inside of the 2D viewer changes the
-	level.  Left clicking and dragging the mouse side to side
-	inside of the 2D viewer changes the window width.
-	Choosing a small window width would mean that only a small
-	range of values would be visible at any given time in the
-	viewer.
+	The left mouse button inside a slice pane can also be used to
+	change the window and level.  Left click and drag the mouse up
+	and down inside of the 2D viewer to change the level.  Left
+	click and drag the mouse from side to side to change the
+	window width.
       </para>
       <para>
-	The tooth dataset has data values ranging from 0 to 1300,
-	and corresponding default level of 650, and a default
-	window width of 1300. If we set the window width to a very
-	narrow 77, and set the window level to 942, we see that
-	the enamel becomes the only material visible in the viewer
-	window.
+	The tooth dataset's values range from 0 to 1300.
+	It's default level is 650 and default window width is 1300.
+	To view only the enamel, set the window width to 77 and the
+	window level to 942.
       </para>
       <figure id="fig.enamel_window_level_control">
-	<title>Window and Level Sliders</title>
+	<title>Window Width and Level Sliders</title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Window and Level for enamel on tooth dataset.</phrase>
@@ -468,7 +465,7 @@ DEALINGS IN THE SOFTWARE.
 	</mediaobject>
       </figure>
     </section>
-  </section><!-- Slice Planes -->
+  </section><!-- Visualizing Tooth Slices -->
 
   <section>
     <title>Visualizing the Tooth Volume</title>
