@@ -43,7 +43,6 @@
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cout;
-using std::endl;
 using std::ostream;
 
 namespace SCIRun {
@@ -177,20 +176,20 @@ BaseWidget::ui() const
 void
 pmat( const MaterialHandle& mat )
 {
-  cout << "Material{" << endl;
+  cout << "Material{" << "\n";
   cout << "  ambient(" << mat->ambient.r() << "," <<
-    mat->ambient.g() << "," << mat->ambient.b() << ")" << endl;
+    mat->ambient.g() << "," << mat->ambient.b() << ")" << "\n";
   cout << "  diffuse(" << mat->diffuse.r() << "," <<
-    mat->diffuse.g() << "," << mat->diffuse.b() << ")" << endl;
+    mat->diffuse.g() << "," << mat->diffuse.b() << ")" << "\n";
   cout << "  specular(" << mat->specular.r() << "," <<
-    mat->specular.g() << "," << mat->specular.b() << ")" << endl;
-  cout << "  shininess(" << mat->shininess << ")" << endl;
+    mat->specular.g() << "," << mat->specular.b() << ")" << "\n";
+  cout << "  shininess(" << mat->shininess << ")" << "\n";
   cout << "  emission(" << mat->emission.r() << "," <<
-    mat->emission.g() << "," << mat->emission.b() << ")" << endl;
-  cout << "  reflectivity(" << mat->reflectivity << ")" << endl;
-  cout << "  transparency(" << mat->transparency << ")" << endl;
-  cout << "  refraction_index(" << mat->refraction_index << ")" << endl;
-  cout << "}" << endl;
+    mat->emission.g() << "," << mat->emission.b() << ")" << "\n";
+  cout << "  reflectivity(" << mat->reflectivity << ")" << "\n";
+  cout << "  transparency(" << mat->transparency << ")" << "\n";
+  cout << "  refraction_index(" << mat->refraction_index << ")" << "\n";
+  cout << "}" << "\n";
 }
 
 
@@ -727,15 +726,15 @@ BaseWidget::print( ostream& os ) const
    
   for (index=0; index< variables.size(); index++)
   {
-    os << *(variables[index]) << endl;
+    os << *(variables[index]) << "\n";
   }
-  os << endl;
+  os << "\n";
    
   for (index=0; index< constraints.size(); index++)
   {
-    os << *(constraints[index]) << endl;
+    os << *(constraints[index]) << "\n";
   }
-  os << endl;
+  os << "\n";
 }
 
 
