@@ -3120,8 +3120,7 @@ if test "$HAVE_LIB_MPI" &&
   SCI_CHECK_LIB($dirs,petsc,main,,,optional)
 
   SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include /usr/include/petsc, \
-    petsc.h, $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,, \
-    optional)
+    petsc.h, $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,,optional)
 
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscvec,main,$PETSC_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscmat,main,
