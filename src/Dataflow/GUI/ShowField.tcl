@@ -10,8 +10,10 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-show_nodes
 	global $this-show_edges
 	global $this-show_faces
-	global $this-node_disp_type
+	global $this-node_display_type
+	global $this-scale
 	set $this-node_display_type Spheres
+	set $this-scale 0.03
 	$this-c needexecute
     }
 
@@ -106,6 +108,13 @@ itcl_class SCIRun_Visualization_ShowField {
 	    $window.options.disp.radio.1 select
 	}
 
+	scale $window.options.disp.slide -label NodeScale \
+		-from 0.0018 -to 0.05 \
+		-length 5c \
+		-showvalue true \
+		-orient horizontal -resolution 0.001 \
+		-digits 8 -variable $this-scale -command "$this-c scale"
+
 	checkbutton $window.options.disp.show_edges \
 		-text "Show Edges" \
 		-command "$this-c toggle_display_edges"
@@ -118,9 +127,12 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	#pack the node radio button
 	pack $window.options.disp.frame_title $window.options.disp.show_nodes \
-		$window.options.disp.radio $window.options.disp.show_edges \
-		$window.options.disp.show_faces -side top -fill x
+		$window.options.disp.radio $window.options.disp.slide \
+		$window.options.disp.show_edges \
+		$window.options.disp.show_faces \
+		-side top -fill x -padx 2 -pady 2 -anchor w
 
+	bind $window.options.disp.slide <ButtonRelease> "$this-c needexecute"
 	#add bottom frame for execute and dismiss buttons
 	frame $window.control -relief groove -borderwidth 2
 	pack $window.options $window.control -padx 2 -pady 2 -side top
