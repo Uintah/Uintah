@@ -58,9 +58,11 @@ itcl_class VolVis {
 	global $this-rasterX $this-rasterY
 	global $this-bgColor
 	global $this-minSV $this-maxSV
-	global $this-project
+	global $this-project $this-centerit $this-processors
 
 	global $this-intervalCount
+
+	global $this-uiopen
 
 	global Selected
 
@@ -77,6 +79,8 @@ itcl_class VolVis {
 	set $this-minSV what
 
 	set $this-project 1
+        set $this-centerit 1
+        set $this-processors 0
 
 	# set protected variables and globals
 
@@ -108,6 +112,9 @@ itcl_class VolVis {
 	set LineColor(3) blue
 
 	set $this-intervalCount 1
+
+	set $this-uiopen 0
+	puts "UI not open"
     }
     
     #
@@ -163,6 +170,11 @@ itcl_class VolVis {
     method ui {} {
 	
 	set w .ui$this
+
+	global $this-uiopen
+	
+	set $this-uiopen 1
+	puts "UI open is true"
 	
 	if {[winfo exists $w]} {
 	    raise $w		    
@@ -188,6 +200,21 @@ itcl_class VolVis {
 		-value 0
 
 	
+	frame $w.f.allign
+	
+	radiobutton $w.f.allign.left -text Left -variable $this-centerit \
+		-value 0
+	radiobutton $w.f.allign.cent -text Center -variable $this-centerit \
+		-value 1
+
+	frame $w.f.proc
+
+	radiobutton $w.f.proc.single -text Single   -variable $this-processors\
+		-value 0
+	radiobutton $w.f.proc.multi  -text Parallel -variable $this-processors\
+		-value 1
+
+	
 	button $w.f.b -text "Redraw" -command "$this-c redraw_all" -fg blue
 	button $w.f.execbutton -text "Execute" -command "$this-c wanna_exec" \
 		-fg blue
@@ -195,9 +222,14 @@ itcl_class VolVis {
 	# place the buttons in a window
 
 	pack $w.f.proj.per $w.f.proj.ort -side left -fill x
+
+	pack $w.f.allign.left $w.f.allign.cent -side left -fill x
+	
+	pack $w.f.proc.single $w.f.proc.multi -side left -fill x
+	
 	
         pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj \
-		$w.f.graph  $w.f.b  $w.f.execbutton \
+		$w.f.allign $w.f.proc $w.f.graph  $w.f.b  $w.f.execbutton \
 		-expand yes -fill x -pady 2 -padx 2
 	pack $w.f
 

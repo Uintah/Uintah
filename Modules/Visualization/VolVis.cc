@@ -15,6 +15,7 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ColormapPort.h>
+#include <Datatypes/GeometryPort.h>
 
 
 #include <Geom/View.h>
@@ -73,6 +74,8 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 
 class VolVis : public Module {
+  // Geometry Output port - connected to Salmon
+  GeometryOPort* ogeom;
 
   // scalar field input port, provides the 3D image data
   
@@ -130,6 +133,13 @@ class VolVis : public Module {
 
   TCLint projection;
 
+  // allignment
+
+  TCLint iCenter;
+
+  // parallel or single processor
+
+  TCLint iProc;
   
   // raster dimensions
 
@@ -181,8 +191,6 @@ class VolVis : public Module {
 
   TCLint intervalCount;
 
-  
-
   // The following variables will be supplied by Salmon
   // if the Salmon module is connected to this VolVis module.
   
@@ -195,6 +203,10 @@ class VolVis : public Module {
   Array2<double> DepthBuffer;
   Array2<Color>  ColorBuffer;
   
+
+  // the variable that tells me that the ui is open
+  
+  TCLint uiopen;
   
   // initialize an OpenGL window
   
@@ -284,6 +296,8 @@ VolVis::VolVis(const clString& id)
   maxSV("maxSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
+  iCenter("centerit", id, this),
+  iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
   Gsv("Gsv", id, this),
@@ -291,6 +305,7 @@ VolVis::VolVis(const clString& id)
   Rop("Rop", id, this),
   Gop("Gop", id, this),
   Bop("Bop", id, this),
+  uiopen("uiopen", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
 {
@@ -303,6 +318,10 @@ VolVis::VolVis(const clString& id)
   
   iport = scinew ScalarFieldIPort(this, "RGScalarField", ScalarFieldIPort::Atomic);
   add_iport(iport);
+
+  // Create the output port
+  ogeom = scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  add_oport(ogeom);
 
   // initialize the view to home view
 
@@ -333,7 +352,7 @@ VolVis::VolVis(const clString& id)
 
   ibgColor.set(BLACK);
 
-//  intervalCount.set(1);
+  //  intervalCount.set(1);
 }
 
 
@@ -353,6 +372,8 @@ VolVis::VolVis(const VolVis& copy, int deep)
   minSV("minSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
+  iCenter("centerit", id, this),
+  iProc("processors", id, this),
   intervalCount("intervalCount", id, this),
   Rsv("Rsv", id, this),
   Gsv("Gsv", id, this),
@@ -360,6 +381,7 @@ VolVis::VolVis(const VolVis& copy, int deep)
   Rop("Rop", id, this),
   Gop("Gop", id, this),
   Bop("Bop", id, this),
+  uiopen("uiopen", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
 {
@@ -438,23 +460,23 @@ VolVis::parallel( int proc )
 	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
 	    cerr << interval * (proc + 1 + procCount * i ) << endl;
 	    
-	  calc->PerspectiveTrace( interval * ( proc + procCount * i ),
-				 interval * ( proc + 1 + procCount * i ) );
+	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				   interval * ( proc + 1 + procCount * i ) );
 	  }
       else
 	{
 	  for ( i = 0; i < intervalCount.get()-1; i++ )
 	    {
-	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
-	    cerr << interval * (proc + 1 + procCount * i ) << endl;
-	    
-	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
-				   interval * ( proc + 1 + procCount * i ) );
-	  }
+	      cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
+	      cerr << interval * (proc + 1 + procCount * i ) << endl;
+	      
+	      calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				     interval * ( proc + 1 + procCount * i ) );
+	    }
 	  
-	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
-	    cerr << interval * (proc + 1 + procCount * i ) << endl;
-	    
+	  cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
+	  cerr << interval * (proc + 1 + procCount * i ) << endl;
+	  
 	  calc->PerspectiveTrace( interval * ( proc + procCount *
 					      ( intervalCount.get() - 1 ) ),
 				 iRasterX.get() );
@@ -465,16 +487,16 @@ VolVis::parallel( int proc )
       if ( proc != procCount - 1 )
 	for ( i = 0; i < intervalCount.get(); i++ )
 	  calc->ParallelTrace( interval * ( proc + procCount * i ),
-				 interval * ( proc + 1 + procCount * i ) );
+			      interval * ( proc + 1 + procCount * i ) );
       else
 	{
 	  for ( i = 0; i < intervalCount.get()-1; i++ )
 	    calc->ParallelTrace( interval * ( proc + procCount * i ),
-				   interval * ( proc + 1 + procCount * i ) );
+				interval * ( proc + 1 + procCount * i ) );
 	  
 	  calc->ParallelTrace( interval * ( proc + procCount *
-					      ( intervalCount.get() - 1 ) ),
-				 iRasterX.get() );
+					   ( intervalCount.get() - 1 ) ),
+			      iRasterX.get() );
 	}
     }
 }
@@ -495,7 +517,10 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
   
   // get the scalar field handle
   
-  iport->get(homeSFHandle);
+  if ( iport->get(homeSFHandle) )
+    cerr << "iport->get the handle returned true\n";
+  else
+    cerr << "iport->get the handle returned FALSE\n";
 
   // Make sure this is a valid scalar field
 
@@ -509,33 +534,54 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
   // actually, it doesn't have to be (Steve says so)
   
   if ( ( (*homeSFRGrid) = homeSFHandle->getRG()) == 0)
+    {
+      cerr << "it's not an rg grid\n";
     return 0;
+    }
 
-/*  
-  if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getUG()) == 0)
-    if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getRG()) == 0 )
-      {
-	cerr << "bailed on getting the grid\n";
-	return 0;
-      }
-*/
+  /*  
+     if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getUG()) == 0)
+     if ( ( (*homeSFRGrid) = (ScalarField*) homeSFHandle->getRG()) == 0 )
+     {
+     cerr << "bailed on getting the grid\n";
+     return 0;
+     }
+     */
 
-  if ( homeSFgeneration != homeSFHandle->generation )
-  {
-    // remember the generation
+    {
+      // remember the generation
+      
+      homeSFgeneration = homeSFHandle->generation;
+      cerr <<"The SF generation = " << homeSFgeneration << endl;
+
+      // get the min, max values of the new field
+
+      homeSFHandle->get_minmax( min, max );
+
+      // set the tcl/tk min and max scalar values
+
+      minSV.set( int( min ) );
+      maxSV.set( int( max ) );
+    }
   
-    homeSFgeneration = homeSFHandle->generation;
+#if 0
+  if ( homeSFgeneration != homeSFHandle->generation )
+    {
+      // remember the generation
+      
+      homeSFgeneration = homeSFHandle->generation;
 
-    // get the min, max values of the new field
+      // get the min, max values of the new field
 
-    homeSFHandle->get_minmax( min, max );
+      homeSFHandle->get_minmax( min, max );
 
-    // set the tcl/tk min and max scalar values
+      // set the tcl/tk min and max scalar values
 
-    minSV.set( int( min ) );
-    maxSV.set( int( max ) );
-  }
-    
+      minSV.set( int( min ) );
+      maxSV.set( int( max ) );
+    }
+#endif  
+  
   return 1;
 }
 
@@ -595,7 +641,7 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 	  suppl[i] = '\0';
 
       ScalarVal[index].add( 1.0 * position / CANVAS_WIDTH *
-	( maxSV.get() - minSV.get() ) + minSV.get() );
+			   ( maxSV.get() - minSV.get() ) + minSV.get() );
     }
 
   /* read in the y-position */
@@ -623,7 +669,7 @@ VolVis::UpdateTransferFncArray( clString x, clString y, int index )
       // in tcl, the y value increases as one moves down
 
       Opacity[index].add( 1.0 * ( CANVAS_WIDTH - position )
-	/ ( CANVAS_WIDTH ) );
+			 / ( CANVAS_WIDTH ) );
     }
 
 }
@@ -722,7 +768,11 @@ VolVis::makeCurrent()
 void
 VolVis::redraw_all()
 {
-  if ( ! makeCurrent() ) return;
+  if ( ! uiopen.get() ) { cerr << "joy: redraw_all\n"; return;}
+  else { cerr << "PASSED: redraw_all proceeds\n"; }
+  
+  if ( ! makeCurrent() )
+      return;
 
   // clear the GLwindow to background color
 
@@ -752,7 +802,12 @@ VolVis::redraw_all()
   
   glPixelZoom(x_pixel_size, y_pixel_size);
   
-  glRasterPos2i( x_pixel_size, y_pixel_size * (rasterY+1) );
+  if ( iCenter.get() )
+      glRasterPos2i( x_pixel_size + ( 600 - rasterX ) / 2 ,
+		    y_pixel_size * ( ( 600 / 2 + rasterY / 2 + 1 ) ) );
+  else
+    glRasterPos2i( x_pixel_size, y_pixel_size * (rasterY+1) );
+
   
   Color c(1, 0, 1);
 
@@ -760,7 +815,9 @@ VolVis::redraw_all()
 
   // glDrawPixles wants width, then height
   
-  glDrawPixels( rasterX, rasterY, GL_RGB, GL_UNSIGNED_BYTE, pixels );
+//  glDrawPixels( rasterX, rasterY, GL_RGB, GL_UNSIGNED_BYTE, pixels );
+
+  glDrawPixels( Image.dim2(), Image.dim1(), GL_RGB, GL_UNSIGNED_BYTE, pixels );
 
   imagelock.unlock();
 
@@ -786,29 +843,42 @@ VolVis::redraw_all()
 void
 VolVis::execute()
 {
-  ScalarFieldRG *homeSFRGrid;
-
-  ColormapHandle cmap;
-  CharColor temp;
-  Array2<CharColor> * tempImage;
-
-  WallClockTimer watch;
-
-  WallClockTimer justsee;
-
-  justsee.start();
-
-  TCL::execute(id+" get_data");
-  
   // make sure TCL variables are updated
   
-  reset_vars();
+  ScalarFieldRG *homeSFRGrid;
 
   // execute if the input ports are valid and if it is necessary
   // to execute
 
   if ( ! Validate( &homeSFRGrid ) )
+    { cerr << "invalid grid\n";
     return;
+    }
+
+  reset_vars();
+  
+  if ( ! uiopen.get() ) { cerr << "joy: execute\n"; return;}
+  else { cerr << "PASSED: execute proceeds\n"; }
+  
+  ColormapHandle cmap;
+  CharColor temp;
+
+  WallClockTimer watch;
+
+  int ClipFar, ClipNear;
+
+  WallClockTimer justsee;
+
+  justsee.start();
+
+  // get data from transfer map
+
+  TCL::execute(id+" get_data");
+
+  // make sure TCL variables are updated
+  
+  reset_vars();
+  
 
   // retrieve the scalar value-opacity/rgb values, and store them
   // in arrays
@@ -820,52 +890,89 @@ VolVis::execute()
 
   // instantiate the levoy class
 
-  
-  Levoy levoyModule ( homeSFRGrid, colormapport,
-		     ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
+  // if connected to a Salmon module, retrieve Salmon view info
+  // and store it in a LevoyS type structure
+  // otherwise, use the Levoy structure
 
-  /* DAVES
+  // DAVES  
+  //     if ( Salmon::ShareView( SalmonView, DepthBuffer, ColorBuffer, ClipFar,
+  //  ClipNear ) )
+  GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
 
-     call a proc that will supply me with the zbuffer, rgb buffer,
-     and the view
+  if ( data != NULL )
+    {
+      at();
+      calc = new LevoyS( homeSFRGrid, colormapport,
+			ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
 
-     // retrieve the vital information
+      at();
+      calc->SetUp( data );
+      
+//      calc->SetUp( SalmonView, SalmonX, SalmonY,
+//		  &DepthBuffer, &ColorBuffer, ClipFar, ClipNear );
+    }
+  else
+    {
 
-     Salmon::shareview( SalmonView, DepthBuffer, ColorBuffer );
+//      data = new GeometryData( NULL, NULL, iView.get(), iRasterX.get(),
+//			      iRasterY.get(), 0, 0 );
 
-     */
-  
-  levoyModule.SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
+      
+      calc = new Levoy ( homeSFRGrid, colormapport,
+			ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
 
-  // DAVES
-  // levoyModule.SetUp( SalmonView, iRasterX.get(), iRasterY.get(),
-  //                   &DepthBuffer, &ColorBuffer );
+      calc->SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
+    }      
 
   cerr << "the initial part takes: " << justsee.time() << " time units\n";
-
-  calc = &levoyModule;
 
   // calculate the new image
 
   watch.start();
 
-  procCount = Task::nprocessors();
+  at();
+  
+  if ( iProc.get() )
+    {
+      cerr << "Parallel processing data\n";
+      
+      procCount = Task::nprocessors();
 
-  Task::multiprocess(procCount, do_parallel, this);
+      Task::multiprocess(procCount, do_parallel, this);
+    }
+  else
+    calc->TraceRays( projection.get() );
 
   watch.stop();
 
   cerr << "my watch reports: " << watch.time() << "units of time\n";
 
-
-  tempImage = levoyModule.Image;
-  
   // lock it because the Image array will be modified
 
   imagelock.lock();
 
-  Image = *tempImage;
-
+  Image = *(calc->Image);
+  
+  /* THE MOST AWESOME DEBUGGING TECHNIQUE */
+  
+  int loop;
+  for ( loop = 0; loop < iRasterX.get(); loop++ )
+    {
+      Image(0, loop).red = 255;
+      Image(0, loop).green = 0;
+      Image(0, loop).blue = 0;
+    }
+  
+  int pool;
+  for ( pool = 0; pool < iRasterY.get(); pool++ )
+    {
+      Image(pool, 0).red = 0;
+      Image(pool, 0).green = 0;
+      Image(pool, 0).blue = 255;
+    }
+  
+  /* END OF THE MOST AWESOME DEBUGGING TECHNIQUE */
+      
   // also, the bgColor accessed by the redraw_all fnc
   // can now be changed.
 
@@ -878,13 +985,16 @@ VolVis::execute()
   
   imagelock.unlock();
 
-  delete tempImage;
+//  delete tempImage;
 
   // execute a tcl command
   update_progress(0.5);
 
   TCL::execute(id+" redraw_when_idle");
 
+  justsee.stop();
+
+  delete calc;
 }
 
 
@@ -897,20 +1007,20 @@ VolVis::execute()
  **************************************************************/
 
 void
-VolVis::tcl_command(TCLArgs& args, void* userdata) {
-  
+VolVis::tcl_command(TCLArgs& args, void* userdata)
+{
   if ( args[1] == "redraw_all" ){
-    if(strcmp(Task::self()->get_name(), "TCLTask")){
-      TCL::execute("after idle "+args[0]+" "+args[1]);
-      cerr << "Attempted redraw from " << Task::self()->get_name() << ", deferred...\n";
-    } else {
-      redraw_all();
-    }
+    if(strcmp(Task::self()->get_name(), "TCLTask"))
+      {
+	TCL::execute("after idle "+args[0]+" "+args[1]);
+	cerr << "Attempted redraw from " << Task::self()->get_name()
+	  << ", deferred...\n";
+      }
+    else
+	redraw_all();
   }
   else if ( args[1] == "wanna_exec" )
-    want_to_execute();
+      want_to_execute();
   else
-      Module::tcl_command(args, userdata);
+    Module::tcl_command(args, userdata);
 }
-
-
