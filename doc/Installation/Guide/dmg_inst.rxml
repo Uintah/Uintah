@@ -26,16 +26,108 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-
 <section id="sec.dmg_inst">
-  <title id="title.dmg_inst">Installation from a DMG (file image)</title>
+  <title id="title.dmg_inst">Installation from File Images</title>
 
   <section>
     <title>Introduction</title>
-
+    
     <para>
+      Installation from a file image consists of the following steps:
+      <orderedlist>
+	<listitem>
+	  <para>Downloading a file image, documentation, and sample
+	  data sets.</para>
+	</listitem>
+	<listitem>
+	  <para>Installing &sr; from a file image.</para>
+	</listitem>
+	<listitem>
+	  <para>Installing &sr;'s sample data sets.</para>
+	</listitem>
+	<listitem>
+	  <para>Installing &sr;'s documentation.</para>
+	</listitem>
+      </orderedlist>
     </para>
 
+  </section>
+
+  <section>
+    <title>Downloading</title>
+    <para>
+      From <acronym>SCI</acronym>'s <ulink
+      url="http://software.sci.utah.edu/archive_entry.html">software
+      archive</ulink> page download the following files:
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <filename>Blah blah blah</filename>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <filename>SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    (or
+	    <filename>FusionData.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    if also downloading the Fusion specific RPM).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+
+  </section>
+
+  <section>
+    <title>Installing</title>
+    <para>blah blah blah</para>
+  </section>
+
+  <section>
+    <title>&sr;'s Sample Data Sets</title>
+    <para>
+      Install the sample data sets into
+      <filename>/usr/local</filename>.  Administrative privilages are
+      required.
+    </para>
+    <para>
+      Type:
+      <literallayout class="monospaced">
+	sudo gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+      </literallayout>
+     You will be asked for your login password.  The above command
+     creates <filename>/usr/local/&sr;Data</filename>, the sample
+     data sets directory.
+    </para>
+  </section>
+
+  <section>
+    <title>&sr;'s Documentation</title>
+    <para>
+      The following procedure installs the documentation in the
+      directory <filename>/usr/local</filename>.  Administrative
+      privilages are required.
+    </para>
+    <para>
+      Type:
+      <literallayout class="monospaced">
+	sudo gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+      </literallayout>
+      You will be asked for your login password.  The above command
+      will create
+      <filename>/usr/local/&sr;Docs.<replaceable>x.x.x</replaceable></filename>,
+      the &sr; documentation directory.
+    </para>
+    <para>
+      Open <filename>/usr/local/&sr;Docs.<replaceable>x.x.x</replaceable>/doc/index.html</filename>
+      with a web browser to view &sr;'s online documentation.
+    </para>
   </section>
 
 </section>

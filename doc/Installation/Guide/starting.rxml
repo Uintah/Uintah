@@ -42,7 +42,7 @@ changing the working directory (<command>cd</command>ing) to
 <!--}} %-->
 
 <!--%= doc.ifP(Doc::OSX) {%Q{-->
-<para></para>
+<para>Blah, blah, blah</para>
 <!--}} %-->
 
 <para>
@@ -63,7 +63,7 @@ linkend="sec.help"/>.
 
 <para>
 See &sr;'s <ulink 
-url="(%= doc.treeUrl(%Q{doc/User/Tutorial/index.html}) %)" >
+url="(%= doc.treeUrl(%Q{doc/User/Tutorials/SCIRun_Intro/index.html}) %)" >
 tutorial</ulink> for an introduction to the use of &sr;.
 The tutorial uses the previously downloaded sample data sets.
 </para>
@@ -71,4 +71,7 @@ The tutorial uses the previously downloaded sample data sets.
 <para>See the <ulink
 url="(%= doc.treeUrl(%Q{doc/User/Guide/usersguide/index.html}) %)">&sr; Users
 Guide</ulink> for particulars on the use of &sr;.</para>
+
+<para>See tutorials for the <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/BioFEM/BioFEM.html}) %)">BioFEM</ulink>, <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/BioTensor/BioTensor.html}) %)">BioTensor</ulink>, and <ulink url="(%= doc.treeUrl(%Q{doc/User/Tutorials/BioImage/index.html}) %)">BioImage</ulink> PowerApps.</para>
 </section>
+

@@ -27,10 +27,11 @@ DEALINGS IN THE SOFTWARE.
 -->
 
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <!--%
-doc = Doc.create(Doc::DocBook)
 withThirdParty = ""
-extraOpts = ""
+extraOptions = ""
 case Doc::Platform
   when Doc::Linux
     withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Linux/gcc-3.2-32bit"
@@ -38,11 +39,6 @@ case Doc::Platform
     withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit"
   when Doc::OSX
     withThirdParty = "-\-with-thirdparty=/usr/local/&sr;/Thirdparty_osx"
-    extraOptions = %Q{\
--\-enable-32bit \
--\-disable-sci-malloc \
-CC=gcc CXX=g++}
-
 end
 %-->
 
@@ -112,7 +108,7 @@ cd &sr;/<replaceable>build-dir</replaceable>
 	is:
 	<literallayout class="monospaced">
 ../src/configure \
-<!--%= withThirdParty %-->
+<!--%= withThirdParty %--> \
 --enable-package="BioPSE MatlabInterface" <!--%= extraOptions %-->
 	</literallayout>
 	Use option <option>--with-unipetsc</option> to add support for
@@ -127,10 +123,10 @@ cd &sr;/<replaceable>build-dir</replaceable>
 	For example:
 	<literallayout class="monospaced">
 ../src/configure \
-<!--%= withThirdParty %-->
+<!--%= withThirdParty %--> \
 --enable-package="BioPSE MatlabInterface" \
---with-unipetsc=/usr/local/petsc<!--%= doc.ifNotP(Doc::OSX) {%Q{--> \
---with-blas=/usr/local/lib \
+--with-unipetsc=/usr/local/petsc<!--%= doc.ifNotP(Doc::OSX) {%Q{--> \\
+--with-blas=/usr/local/lib \\
 --with-lapack=/usr/local/lib
 <!--}} %-->
 	</literallayout>
@@ -139,21 +135,21 @@ cd &sr;/<replaceable>build-dir</replaceable>
 	<option>--with-insight</option>.  For example:
 	<literallayout class="monospaced">
 ../src/configure \
-<!--%= withThirdParty %-->
+<!--%= withThirdParty %--> \
 --enable-package="BioPSE Teem Insight" \
 --with-insight=/usr/local/lib/InsightToolkit <!--%= extraOptions %-->
 	</literallayout>
-<!--%= doc.ifNotP(Doc::Irix) {%Q{-->
-	Use options <option>--with-hdf5</option> and
-	<option>--with-mdplus</option> to add support for HDF5 and
-	MDSplus.  Also enable packages Teem and DataIO.  For example:
+	Use option <option>--with-hdf5</option> to add HDF5 support.
+	<!--%= doc.ifNotP(Doc::Irix) {%Q{-->Use option
+	<option>--with-mdplus</option> to add MDSplus support<!--}} %-->.
+	Also enable packages Teem and DataIO.  For example:
 	<literallayout class="monospaced">
 ../src/configure \
-<!--$ #{withThirdParty} $-->
+<!--%= withThirdParty %--> \
 --enable-package="BioPSE Teem DataIO" \
---with-hdf5=/usr/local/hdf5 --with-mdsplus=/usr/local/mdsplus <!--$ #{extraOptions} $-->
+--with-hdf5=/usr/local/hdf5<!--%= doc.ifNotP(Doc::Irix) {%Q{-->\\
+--with-mdsplus=/usr/local/mdsplus<!--}} %--><!--%= extraOptions %-->
 	</literallayout>
-<!--}} %-->
       </para>
 
       <para>
@@ -201,8 +197,9 @@ make -j <replaceable>N</replaceable>
 
   <tip>
     <para>
-      It is possible to build &sr; for multiple machine architectures. For instance, 
-      a Linux version and 32 bit and 64 bit Irix versions.  If the
+      It is possible to build &sr; for multiple machine
+      architectures. For instance, a Linux version, 32 bit and 64 bit
+      Irix versions, and a Mac OSX version.  If the
       <filename>&sr;</filename> directory resides on a shared volume,
       do the following:
       <literallayout class="monospaced">
