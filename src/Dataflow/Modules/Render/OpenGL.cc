@@ -1748,166 +1748,85 @@ OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 void
 ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 {
-  string val;
-  string type(tclID+"-"+"type");
-  string lighting(tclID+"-"+"light");
-  string fog(tclID+"-"+"fog");
-  string cull(tclID+"-"+"cull");
-  string dl(tclID+"-"+"dl");
-  string debug(tclID+"-"+"debug");
-  string movie(tclID+"-"+"movie");
-  string movieName(tclID+"-"+"movieName");
-  string movieFrame(tclID+"-"+"movieFrame");
-  string use_clip(tclID+"-"+"clip");
-  if (!ctx->getSub(type,val))
-  {
-    cerr << "Error illegal name!\n";
-    return;
-  }
-  else
-  {
-    if(val == "Wire")
+  GuiString type(ctx->subVar(tclID+"-type",false));
+  if (type.valid()) {
+    if (type.get() == "Default")
     {
-      drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
-      drawinfo->lighting=0;
+      setState(drawinfo,"global");	
+      return; // if they are using the default, con't change
+    } 
+    else if(type.get() == "Wire")
+    {
+    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
+    drawinfo->lighting=0;
     }
-    else if(val == "Flat")
+    else if(type.get() == "Flat")
     {
       drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
       drawinfo->lighting=0;
     }
-    else if(val == "Gouraud")
+    else if(type.get() == "Gouraud")
     {
       drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
       drawinfo->lighting=1;
     }
-    else if (val == "Default")
-    {
-      string globals("global");
-      setState(drawinfo,globals);	
-      return; // if they are using the default, con't change
-    }
     else
     {
-      cerr << "Unknown shading(" << val << "), defaulting to phong" << "\n";
+      cerr << "Unknown shading(" << type.get() << "), defaulting to phong\n";
       drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
       drawinfo->lighting=1;
-    }
-
-    // Now see if they want a bounding box.
-
-    if (ctx->getSub(debug,val))
-    {
-      if (val == "0")
-	drawinfo->debug = 0;
-      else
-	drawinfo->debug = 1;
-    }	
-    else
-    {
-      cerr << "Error, no debug level set!\n";
-      drawinfo->debug = 0;
-    }
-
-    if (ctx->getSub(use_clip,val))
-    {
-      if (val == "0")
-	drawinfo->check_clip = 0;
-      else
-	drawinfo->check_clip = 1;
-    }	
-    else
-    {
-      cerr << "Error, no clipping info\n";
-      drawinfo->check_clip = 0;
-    }
-    // only set with globals.
-    if (ctx->getSub(movie,val))
-    {
-      ctx->getSub(movieName,curName);
-      string curFrameStr;
-      ctx->getSub(movieFrame,curFrameStr);
-      if (val == "0")
-      {
-	doingMovie = 0;
-	makeMPEG = 0;
-      }
-      else
-      {
-	if (!doingMovie)
-	{
-	  doingMovie = 1;
-	  curFrame=0;
-	  if( val == "1" )
-	    makeMPEG = 0;
-	  else
-	    makeMPEG = 1;
-	}
-      }
-    }
-
-    drawinfo->init_clip(); // set clipping
-
-    if (ctx->getSub(cull,val))
-    {
-      if (val == "0")
-	drawinfo->cull = 0;
-      else
-	drawinfo->cull = 1;
-    }	
-    else
-    {
-      cerr << "Error, no culling info\n";
-      drawinfo->cull = 0;
-    }
-    if (ctx->getSub(dl,val))
-    {
-      if (val == "0")
-	drawinfo->dl = 0;
-      else
-	drawinfo->dl = 1;
-    }	
-    else
-    {
-      cerr << "Error, no display list info\n";
-      drawinfo->dl = 0;
-    }
-    if (!ctx->getSub(lighting,val))
-      cerr << "Error, no lighting!\n";
-    else
-    {
-      if (val == "0")
-      {
-	drawinfo->lighting=0;
-      }
-      else if (val == "1")
-      {
-	drawinfo->lighting=1;
-      }
-      else
-      {
-	cerr << "Unknown lighting setting(" << val << "\n";
-      }
-
-      if (ctx->getSub(fog,val))
-      {
-	if (val=="0")
-	{
-	  drawinfo->fog=0;
-	}
-	else
-	{
-	  drawinfo->fog=1;
-	}
-      }
-      else
-      {
-	cerr << "Fog not defined properly!\n";
-	drawinfo->fog=0;
-      }
-
     }
   }
+
+  // Now see if they want a bounding box.
+  GuiInt debug(ctx->subVar(tclID+"-debug",false));
+  if (debug.valid()) 
+    drawinfo->debug = debug.get();
+
+
+  GuiString movieName(ctx->subVar(tclID+"-movieName",false));
+  if (movieName.valid())
+    curName = movieName.get();
+
+  GuiInt movie(ctx->subVar(tclID+"-movie",false));
+  if (movie.valid()) {
+    if (!movie.get())
+    {
+      doingMovie = 0;
+      makeMPEG = 0;
+    }
+    else if (!doingMovie)
+    {
+      doingMovie = 1;
+      curFrame=0;
+      if (movie.get() == 1)
+	makeMPEG = 0;
+      else if (movie.get() == 2)
+	makeMPEG = 1;
+    }
+  }
+
+  GuiInt clip(ctx->subVar(tclID+"-clip",false));
+  if (clip.valid())
+    drawinfo->check_clip = clip.get();
+  drawinfo->init_clip(); // set clipping
+
+  GuiInt cull(ctx->subVar(tclID+"-cull",false));
+  if (cull.valid())
+    drawinfo->cull = cull.get();
+
+  GuiInt dl(ctx->subVar(tclID+"-dl",false));
+  if (dl.valid())
+    drawinfo->dl = dl.get();
+
+  GuiInt fog(ctx->subVar(tclID+"-fog",false));
+  if (fog.valid())
+    drawinfo->fog=fog.get();
+
+  GuiInt lighting(ctx->subVar(tclID+"-light",false));
+  if (lighting.valid())
+      drawinfo->lighting=lighting.get();
+
   drawinfo->currently_lit=drawinfo->lighting;
   drawinfo->init_lighting(drawinfo->lighting);
 }
@@ -1929,66 +1848,64 @@ ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 
 
 // Set the bits for the clipping planes that are on.
-
 void
 ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 {
-  string val;
-  int i;
+  GuiString val(ctx->subVar("clip-visible",false));
+  GuiInt clipnum(ctx->subVar("clip-num",false));
+  int i = clipnum.get();
 
   drawinfo->clip_planes = 0; // set them all of for default
-  if (ctx->getSub("clip-visible", val) &&
-      ctx->getSub("clip-num", i))
+  if (val.valid() && clipnum.valid())
   {
-
     int cur_flag = CLIP_P5;
-    if ( (i>0 && i<7) )
+    if (i > 0 && i < 7)
     {
       while(i--)
       {
 	const string istr = to_string(i+1);
-	
-	string vis("clip-visible-"+ istr);
-	
-	
-	if (ctx->getSub("clip-visible-" + istr, val))
+	GuiInt visible(ctx->subVar("clip-visible-"+ istr,false));
+		
+	if (!visible.valid()) continue;
+
+	if (!visible.get()) {
+	  glDisable((GLenum)(GL_CLIP_PLANE0+i));
+	}
+	else 
 	{
-	  if (val == "1")
+	  double plane[4];
+	  GuiDouble x(ctx->subVar("clip-normal-x-"+ istr,false));
+	  GuiDouble y(ctx->subVar("clip-normal-y-"+ istr,false));
+	  GuiDouble z(ctx->subVar("clip-normal-z-"+ istr,false));
+	  GuiDouble d(ctx->subVar("clip-normal-d-"+ istr,false));
+
+	  if (!x.valid() || !y.valid() || ! z.valid() || !d.valid())
 	  {
-	    double plane[4];
-	    int rval=0;
-	
-	    rval = ctx->getSub("clip-normal-x-" + istr, plane[0]);
-	    rval = ctx->getSub("clip-normal-y-" + istr, plane[1]);
-	    rval = ctx->getSub("clip-normal-z-" + istr, plane[2]);
-	    rval = ctx->getSub("clip-normal-d-" + istr, plane[3]);
-	
-	    double mag = sqrt(plane[0]*plane[0] +
-			      plane[1]*plane[1] +
-			      plane[2]*plane[2]);
-	    plane[0] /= mag;
-	    plane[1] /= mag;
-	    plane[2] /= mag;
-	    plane[3] = -plane[3]; // so moves in planes direction...
-	    glClipPlane((GLenum)(GL_CLIP_PLANE0+i),plane);	
-	
-	    if (drawinfo->check_clip)
-	      glEnable((GLenum)(GL_CLIP_PLANE0+i));
-	    else
-	      glDisable((GLenum)(GL_CLIP_PLANE0+i));
-	
-	    drawinfo->clip_planes |= cur_flag;
-	
-	    if (!rval )
-	    {
-	      cerr << "Error, variable is hosed!\n";
-	    }
+	    cerr << "Error: clipping plane " << i << " has invalid values.\n";
+	    continue;
 	  }
+	  
+	  plane[0] = x.get();
+	  plane[1] = y.get();
+	  plane[2] = z.get();
+	  plane[3] = d.get();
+	  
+	  double mag = sqrt(plane[0]*plane[0] +
+			    plane[1]*plane[1] +
+			    plane[2]*plane[2]);
+	  plane[0] /= mag;
+	  plane[1] /= mag;
+	  plane[2] /= mag;
+	  plane[3] = -plane[3]; // so moves in planes direction...
+
+	  glClipPlane((GLenum)(GL_CLIP_PLANE0+i),plane);	
+	  
+	  if (drawinfo->check_clip)
+	    glEnable((GLenum)(GL_CLIP_PLANE0+i));
 	  else
-	  {
 	    glDisable((GLenum)(GL_CLIP_PLANE0+i));
-	  }
-	
+	  
+	  drawinfo->clip_planes |= cur_flag;
 	}
 	cur_flag >>= 1; // shift the bit we are looking at...
       }
