@@ -34,8 +34,13 @@ itcl_class Fusion_Fields_NIMRODConverter {
     method set_defaults {} {
 
 	global $this-datasets
-
 	set $this-datasets ""
+
+	global $this-nmodes
+	set $this-nmodes 0
+
+	global $this-mode
+	set $this-mode 0
     }
 
     method ui {} {
@@ -60,6 +65,15 @@ itcl_class Fusion_Fields_NIMRODConverter {
 
 	toplevel $w
 
+	frame $w.modes
+
+	label $w.modes.label -text "Mode" -width 6 -anchor w -just left
+	pack $w.modes.label -side left	    
+
+	set_modes [set $this-nmodes]
+
+	pack $w.modes -side top -pady 5
+
 	frame $w.grid
 	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
 
@@ -69,7 +83,7 @@ itcl_class Fusion_Fields_NIMRODConverter {
 	frame $w.datasets
 	
 	global $this-datasets
-	set_names 1 [set $this-datasets]
+	set_names [set $this-datasets]
 
 	pack $w.datasets -side top -pady 10
 
@@ -81,12 +95,55 @@ itcl_class Fusion_Fields_NIMRODConverter {
 	pack $w.misc -side bottom -pady 10
     }
 
-    method set_names {dims datasets} {
+    method set_modes {nnodes} {
 
-	global $this-ndims
+        set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    pack forget $w.modes.label
+
+	    for {set i 0} {$i < 10} {incr i 1} {
+		if [ expr [winfo exists $w.modes.$i] ] {
+		    pack forget $w.modes.$i
+		}
+	    }
+
+	    if { $nnodes > 0 } {
+
+		global $this-nmodes
+		global $this-mode
+		set $this-nmodes $nnodes
+		set $this-mode $nnodes
+
+		pack $w.modes.label -side left
+
+		for {set i 0} {$i <= $nnodes} {incr i 1} {
+		    if [ expr [winfo exists $w.modes.$i] ] {
+			$w.modes.$i.label configure -text "$i" -width 2
+		    } else {
+			frame $w.modes.$i
+			
+			label $w.modes.$i.label -text "$i" \
+			    -width 2 -anchor w -just left
+			radiobutton $w.modes.$i.button \
+			    -variable $this-mode -value $i
+			
+			pack $w.modes.$i.label $w.modes.$i.button -side left
+			pack $w.modes.$i.label -side left
+			
+		    }
+
+		    pack $w.modes.$i -side left
+		}
+		
+		$w.modes.$nnodes.label configure -text "Sum" -width 4
+	    }
+	}
+    }
+
+    method set_names {datasets} {
+
 	global $this-datasets
-
-	set $this-ndims $dims
 	set $this-datasets $datasets
 
         set w .ui[modname]
@@ -98,6 +155,7 @@ itcl_class Fusion_Fields_NIMRODConverter {
 		    pack forget $w.datasets.$i
 		}
 	    }
+
 	    set i 0
 
 	    foreach dataset $datasets {
