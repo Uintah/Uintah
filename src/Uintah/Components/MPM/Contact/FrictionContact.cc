@@ -46,9 +46,9 @@ FrictionContact::~FrictionContact()
 }
 
 void FrictionContact::exMomInterpolated(const ProcessorContext*,
-				    const Region* region,
-				    const DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw)
+					const Region* region,
+					const DataWarehouseP&,
+					DataWarehouseP& new_dw)
 {
   Vector zero(0.0,0.0,0.0);
   Vector centerOfMassVelocity(0.0,0.0,0.0);
@@ -105,7 +105,6 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   Vector centerOfMassMom(0.0,0.0,0.0);
   Vector Dvdt;
   double centerOfMassMass;
-  int n;
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -156,6 +155,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.3  2000/04/28 07:35:29  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.2  2000/04/27 21:28:57  jas
 // Contact is now created using a factory.
 //

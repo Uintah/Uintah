@@ -40,6 +40,7 @@ WARNING
    template<class T> class ParticleData : public RefCounted {
    public:
       ParticleData();
+      ParticleData(particleIndex size);
       ParticleData(const ParticleData<T>&);
       ParticleData<T>& operator=(const ParticleData<T>&);
       virtual ~ParticleData();
@@ -68,6 +69,12 @@ WARNING
       }
    
    template<class T>
+      ParticleData<T>::ParticleData(particleIndex size)
+      : data(size)
+      {
+      }
+   
+   template<class T>
       void ParticleData<T>::add(particleIndex idx, const T& value)
       {
 	 if(idx != data.size())
@@ -84,6 +91,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/04/28 07:35:36  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.5  2000/04/26 06:48:51  sparker
 // Streamlined namespaces
 //

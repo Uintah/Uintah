@@ -63,9 +63,9 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   d_nlSolver->problemSetup(db);
 }
 
-void Arches::problemInit(const LevelP& level,
-			 SchedulerP& sched, DataWarehouseP& dw,
-			 bool restrt )
+void Arches::problemInit(const LevelP&,
+			 SchedulerP&, DataWarehouseP&,
+			 bool)
 {
 #if 0
   // initializes variables
@@ -80,16 +80,16 @@ void Arches::problemInit(const LevelP& level,
 #endif
 }
 
-void Arches::scheduleInitialize(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& dw)
+void Arches::scheduleInitialize(const LevelP&,
+				SchedulerP&,
+				DataWarehouseP&)
 {
    cerr << "SerialMPM::scheduleInitialize not done\n";
 }
 
-void Arches::scheduleComputeStableTimestep(const LevelP& level,
-					   SchedulerP& sched,
-					   DataWarehouseP& dw)
+void Arches::scheduleComputeStableTimestep(const LevelP&,
+					   SchedulerP&,
+					   DataWarehouseP&)
 {
 #ifdef WONT_COMPILE_YET
   dw->put(SoleVariable<double>(d_deltaT), "delt"); 
@@ -97,8 +97,8 @@ void Arches::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void Arches::scheduleTimeAdvance(double time, double dt,
-	      const LevelP& level, SchedulerP& sched,
-	      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+				 const LevelP&, SchedulerP&,
+				 const DataWarehouseP&, DataWarehouseP&)
 {
 #ifdef WONT_COMPILE_YET
   int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
@@ -114,8 +114,8 @@ void Arches::scheduleTimeAdvance(double time, double dt,
 #endif
 }
 
-void Arches::sched_paramInit(const LevelP& level,
-			     SchedulerP& sched, DataWarehouseP& dw)
+void Arches::sched_paramInit(const LevelP&,
+			     SchedulerP&, DataWarehouseP&)
 {
 #ifdef WONT_COMPILE_YET
     for(Level::const_regionIterator iter=level->regionsBegin();
@@ -142,8 +142,8 @@ void Arches::sched_paramInit(const LevelP& level,
 }
 
 void Arches::paramInit(const ProcessorContext*,
-		       const Region* region,
-		       const DataWarehouseP& old_dw)
+		       const Region*,
+		       const DataWarehouseP&)
 {
 #ifdef WONT_COMPILE_YET
   FCVariable<Vector> velocity;
@@ -173,6 +173,10 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.24  2000/04/28 07:35:23  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.23  2000/04/26 06:48:00  sparker
 // Streamlined namespaces
 //

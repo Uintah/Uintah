@@ -52,10 +52,6 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void add(particleIndex idx, const T& value);
-      
-      //////////
-      // Insert Documentation Here:
       ParticleSet* getParticleSet() const {
 	 return d_pset->getParticleSet();
       }
@@ -72,20 +68,12 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void allocate(const Region*);
-      
-      //////////
-      // Insert Documentation Here:
       T& operator[](particleIndex idx) {
 	 //ASSERTRANGE(idx, 0, pdata->data.size());
 	 return d_pdata->data[idx];
       }
       
-      //////////
-      // Insert Documentation Here:
-      void resize(int newSize) {
-	 d_pdata->resize(newSize);
-      }
+      virtual void copyPointer(const ParticleVariableBase&);
    private:
       
       //////////
@@ -125,7 +113,7 @@ WARNING
       : d_pset(pset)
       {
 	 d_pset->addReference();
-	 d_pdata=new ParticleData<T>();
+	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
 	 d_pdata->addReference();
       }
    
@@ -167,22 +155,21 @@ WARNING
    
    template<class T>
       void
-      ParticleVariable<T>::add(particleIndex idx, const T& value)
+      ParticleVariable<T>::copyPointer(const ParticleVariableBase& copy)
       {
-	 d_pdata->add(idx, value);
+	 const ParticleVariable<T>* c = dynamic_cast<const ParticleVariable<T>* >(&copy);
+	 if(!c)
+	    throw TypeMismatchException("Type mismatch in particle variable");
+	 *this = *c;
       }
-   
-   template<class T>
-      void
-      ParticleVariable<T>::allocate(const Region*)
-      {
-	 std::cerr << "ParticleVariable::allocate not done!\n";
-      }
-   
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/04/28 07:35:37  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.6  2000/04/26 06:48:52  sparker
 // Streamlined namespaces
 //

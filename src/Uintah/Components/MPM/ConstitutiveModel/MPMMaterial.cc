@@ -14,6 +14,7 @@
 #include "ConstitutiveModelFactory.h"
 using namespace std;
 using namespace Uintah::MPM;
+using namespace Uintah;
 using namespace SCICore::Geometry;
 
 
@@ -80,9 +81,9 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
   return d_cm;
 }
 
-long MPMMaterial::countParticles(const Region* region) const
+particleIndex MPMMaterial::countParticles(const Region* region) const
 {
-   long sum = 0;
+   particleIndex sum = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       sum+= countParticles(d_geom_objs[i], region);
    return sum;
@@ -91,13 +92,13 @@ long MPMMaterial::countParticles(const Region* region) const
 void MPMMaterial::createParticles(ParticleVariable<Point>& position,
 				  const Region* region)
 {
-   long start = 0;
+   particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position, region);
 }
 
-long MPMMaterial::countParticles(GeometryObject* obj,
-				 const Region* region) const
+particleIndex MPMMaterial::countParticles(GeometryObject* obj,
+					  const Region* region) const
 {
    GeometryPiece* piece = obj->getPiece();
    Box b1 = piece->getBoundingBox();
@@ -110,7 +111,7 @@ long MPMMaterial::countParticles(GeometryObject* obj,
    Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
-   long count = 0;
+   particleIndex count = 0;
    for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
       Point lower = region->nodePosition(*iter) + dcorner;
       for(int ix=0;ix < ppc.x(); ix++){
@@ -129,9 +130,10 @@ long MPMMaterial::countParticles(GeometryObject* obj,
 }
 
 
-long MPMMaterial::createParticles(GeometryObject* obj, long start,
-				  ParticleVariable<Point>& position,
-				  const Region* region)
+particleIndex MPMMaterial::createParticles(GeometryObject* obj,
+					   particleIndex start,
+					   ParticleVariable<Point>& position,
+					   const Region* region)
 {
    GeometryPiece* piece = obj->getPiece();
    Box b1 = piece->getBoundingBox();
@@ -144,7 +146,7 @@ long MPMMaterial::createParticles(GeometryObject* obj, long start,
    Vector dxpp = region->dCell()*obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
-   long count = 0;
+   particleIndex count = 0;
    for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
       Point lower = region->nodePosition(*iter) + dcorner;
       for(int ix=0;ix < ppc.x(); ix++){

@@ -5,19 +5,26 @@ static char *id="@(#) $Id$";
 #include <SCICore/Exceptions/InternalError.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Exceptions/UnknownVariable.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/ParticleVariable.h>
 #include <SCICore/Thread/Guard.h>
+#include <SCICore/Geometry/Point.h>
 #include <iostream>
 
 using namespace Uintah;
 
 using SCICore::Exceptions::InternalError;
 using SCICore::Thread::Guard;
+using SCICore::Geometry::Point;
 using std::cerr;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
   : d_lock("DataWarehouse lock"), DataWarehouse( MpiRank, MpiProcesses )
 {
   d_allowCreation = true;
+  position_label = new VarLabel("__internal datawarehouse position variable",
+				ParticleVariable<Point>::getTypeDescription(),
+				VarLabel::Internal);
 }
 
 void OnDemandDataWarehouse::setGrid(const GridP& grid)
@@ -27,9 +34,6 @@ void OnDemandDataWarehouse::setGrid(const GridP& grid)
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
-    for(dbType::iterator iter = d_data.begin(); iter != d_data.end(); iter++){
-	delete iter->second->di;
-    }
 }
 
 void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
@@ -48,13 +52,8 @@ void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
    cerr << "OnDemandDataWarehouse::get not finished\n";
 }
 
-void OnDemandDataWarehouse::allocate(int numParticles, ParticleVariableBase&,
-				     const VarLabel*, const Region*) const
-{
-   cerr << "OnDemend DataWarehouse::allocate not finished\n";
-}
-
-void OnDemandDataWarehouse::allocate(ReductionVariableBase&, const VarLabel*) const
+void OnDemandDataWarehouse::allocate(ReductionVariableBase&,
+				     const VarLabel*)
 {
    cerr << "OnDemend DataWarehouse::allocate not finished\n";
 }
@@ -65,214 +64,75 @@ void OnDemandDataWarehouse::put(const ReductionVariableBase&, const VarLabel*)
 }
 
 void OnDemandDataWarehouse::get(ParticleVariableBase&, const VarLabel*,
-				int matlIndex, const Region*, int numGhostCells) const
+				int, const Region*, int) const
 {
    cerr << "OnDemend DataWarehouse::get not finished\n";
 }
 
+void OnDemandDataWarehouse::allocate(int numParticles,
+				     ParticleVariableBase& var,
+				     const VarLabel* label,
+				     int matlIndex,
+				     const Region* region)
+{
+   // Error checking
+   if(particledb.exists(label, matlIndex, region))
+      throw InternalError("Particle variable already exists: "+label->getName());
+   if(!label->isPositionVariable())
+      throw InternalError("Particle allocate via numParticles should only be used for position variables");
+   if(particledb.exists(position_label, matlIndex, region))
+      throw InternalError("Particle position already exists in datawarehouse");
+
+   // Create the particle set and variable
+   ParticleSet* pset = new ParticleSet(numParticles);
+   ParticleSubset* psubset = new ParticleSubset(pset);
+   ParticleVariable<Point> positions(psubset);
+
+   // Put it in the database
+   particledb.put(label, matlIndex, region, positions);
+   particledb.put(position_label, matlIndex, region, positions);
+
+   // Copy the pointer for return
+   var.copyPointer(positions);
+}
+
 void OnDemandDataWarehouse::allocate(ParticleVariableBase&, const VarLabel*,
-				     int matlIndex, const Region*) const
+				     int, const Region*)
 {
    cerr << "OnDemend DataWarehouse::allocate not finished\n";
 }
 
 void OnDemandDataWarehouse::put(const ParticleVariableBase&, const VarLabel*,
-				int matlIndex, const Region*)
+				int, const Region*)
 {
    cerr << "OnDemend DataWarehouse::put not finished\n";
 }
 
 void OnDemandDataWarehouse::get(NCVariableBase&, const VarLabel*,
-				int matlIndex, const Region*, int numGhostCells) const
+				int, const Region*, int) const
 {
    cerr << "OnDemend DataWarehouse::get not finished\n";
 }
 
 void OnDemandDataWarehouse::allocate(NCVariableBase&, const VarLabel*,
-				     int matlIndex, const Region*) const
+				     int, const Region*)
 {
    cerr << "OnDemend DataWarehouse::allocate not finished\n";
 }
 
 void OnDemandDataWarehouse::put(const NCVariableBase&, const VarLabel*,
-				int matlIndex, const Region*)
+				int, const Region*)
 {
    cerr << "OnDemend DataWarehouse::put not finished\n";
 }
 
 
-#if 0
-void
-OnDemandDataWarehouse::getBroadcastData(DataItem& result,
-					const std::string& name,
-					const TypeDescription* td) const
-{
-    /* REFERENCED */
-    //    Guard locker(&lock, Guard::Read);
-    dbType::const_iterator iter = d_data.find(name);
-    if(iter == d_data.end())
-	throw UnknownVariable("Variable not found: "+name);
-    DataRecord* dr = iter->second;
-    if(dr->region != 0)
-	throw InternalError("Region not allowed here");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    dr->di->get(result);
-}
-
-void
-OnDemandDataWarehouse::getRegionData(DataItem& result, 
-				     const std::string& name,
-				     const TypeDescription* td,
-				     const Region* region,
-				     int numGhostCells) const
-{
-    if(numGhostCells != 0)
-	throw InternalError("ghostcells not implemented");
-    /* REFERENCED */
-    //    Guard locker(&lock, Guard::Read);
-    dbType::const_iterator iter = d_data.find(name);
-    if(iter == d_data.end())
-	throw UnknownVariable("Variable not found: "+name);
-    DataRecord* dr = iter->second;
-    if(dr->region != region)
-	throw InternalError("Mixed regions not implemented");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    dr->di->get(result);
-}
-
-void
-OnDemandDataWarehouse::getRegionData(DataItem& result, 
-				     const std::string& name,
-				     const TypeDescription* td,
-				     const Region* region) const
-{
-    /* REFERENCED */
-    //    Guard locker(&lock, Guard::Read);
-    dbType::const_iterator iter = d_data.find(name);
-    if(iter == d_data.end())
-	throw UnknownVariable("Variable not found: "+name);
-    DataRecord* dr = iter->second;
-    if(dr->region != region)
-	throw InternalError("Mixed regions not implemented");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    dr->di->get(result);
-}
-
-void
-OnDemandDataWarehouse::putRegionData(const DataItem& result, 
-				     const std::string& name,
-				     const TypeDescription* td,
-				     const Region* region,
-				     int numGhostCells)
-{
-    if(numGhostCells != 0)
-	throw InternalError("ghostcells not implemented");
-    /* REFERENCED */
-    //Guard locker(&lock, Guard::Write);
-    dbType::iterator iter = d_data.find(name);
-    if(iter == d_data.end()){
-	if(d_allowCreation){
-	    //cerr << "Creating variable: " << name << '\n';
-	    d_data[name]=new DataRecord(result.clone(), td, region);
-	}
-	iter = d_data.find(name);
-    }
-    DataRecord* dr = iter->second;
-    if(dr->region != region)
-	throw InternalError("Mixed regions not implemented");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    result.get(*dr->di);
-}
-
-void
-OnDemandDataWarehouse::putRegionData(const DataItem& result, 
-				     const std::string& name,
-				     const TypeDescription* td,
-				     const Region* region)
-{
-    /* REFERENCED */
-    //Guard locker(&lock, Guard::Write);
-    dbType::iterator iter = d_data.find(name);
-    if(iter == d_data.end()){
-	if(d_allowCreation){
-	    //cerr << "Creating variable: " << name << '\n';
-	    d_data[name]=new DataRecord(result.clone(), td, region);
-	}
-	iter = d_data.find(name);
-    }
-    DataRecord* dr = iter->second;
-    if(dr->region != region)
-	throw InternalError("Mixed regions not implemented");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    result.get(*dr->di);
-}
-
-void OnDemandDataWarehouse::allocateRegionData(DataItem& result, 
-					       const std::string& name,
-					       const TypeDescription* td,
-					       const Region* region,
-					       int numGhostCells)
-{
-    if(numGhostCells != 0)
-	throw InternalError("ghostcells not implemented");
-    /* REFERENCED */
-    //    Guard locker(&lock, Guard::Write);
-    //    lock.writeLock();
-    dbType::iterator iter = d_data.find(name);
-    if(iter == d_data.end()){
-	//cerr << "Creating variable: " << name << '\n';
-	DataItem* di = result.clone();
-	d_data[name]=new DataRecord(di, td, region);
-	di->allocate(region);
-	di->get(result);
-    } else {
-	DataRecord* dr = iter->second;
-	if(dr->region != region)
-	    throw InternalError("Multi regions not implemented");
-	if(dr->td != td)
-	    throw TypeMismatchException("Type mismatch");
-	dr->di->get(result);
-    }
-    //    lock.writeUnlock();
-}
-
-void OnDemandDataWarehouse::putBroadcastData(const DataItem& result, 
-					     const std::string& name,
-					     const TypeDescription* td)
-{
-    /* REFERENCED */
-    //Guard locker(&lock, Guard::Write);
-    dbType::iterator iter = d_data.find(name);
-    if(iter == d_data.end()){
-	if(d_allowCreation){
-	    //cerr << "Creating variable: " << name << '\n';
-	    d_data[name]=new DataRecord(result.clone(), td, 0);
-	}
-	iter = d_data.find(name);
-    }
-    DataRecord* dr = iter->second;
-    if(dr->region != 0)
-	throw InternalError("Have a region for broadcast data?");
-    if(dr->td != td)
-	throw TypeMismatchException("Type mismatch");
-    result.get(*dr->di);
-}
-#endif
-
-OnDemandDataWarehouse::DataRecord::DataRecord(DataItem* di,
-					      const TypeDescription* td,
-					      const Region* region)
-    : di(di), td(td), region(region)
-{
-}
-
 //
 // $Log$
+// Revision 1.13  2000/04/28 07:35:34  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.12  2000/04/27 23:18:48  sparker
 // Added problem initialization for MPM
 //

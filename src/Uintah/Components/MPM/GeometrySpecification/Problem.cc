@@ -26,7 +26,7 @@ Problem::~Problem()
 {
 }
 
-void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
+void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP&,
 			   SimulationStateP& sharedState)
 {
   cerr << "In the preprocessor . . ." << endl;
@@ -86,6 +86,10 @@ void Problem::createParticles(const Region* region, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.14  2000/04/28 07:35:31  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.13  2000/04/26 06:48:25  sparker
 // Streamlined namespaces
 //

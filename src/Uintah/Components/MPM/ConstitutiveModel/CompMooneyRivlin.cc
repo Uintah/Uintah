@@ -177,9 +177,9 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 		matlindex, region);
 }
 
-double CompMooneyRivlin::computeStrainEnergy(const Region* region,
-                                             const MPMMaterial* matl,
-                                             const DataWarehouseP& new_dw)
+double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
+                                             const MPMMaterial* /*matl*/,
+                                             const DataWarehouseP& /*new_dw*/)
 {
 #ifdef WONT_COMPILE_YET
   double invar1,invar2,invar3,J,se=0.0;
@@ -268,16 +268,11 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 }
 #endif
 
-ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
-{
-#ifdef WONT_COMPILE_YET
-  return(new CompMooneyRivlin(p_array[0], p_array[1], p_array[2], p_array[3]));
-#else
-  return 0;
-#endif
-}
-
 // $Log$
+// Revision 1.13  2000/04/28 07:35:27  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.12  2000/04/27 23:18:43  sparker
 // Added problem initialization for MPM
 //

@@ -38,14 +38,25 @@ namespace Uintah {
     
    class VarLabel {
    public:
-      VarLabel(const std::string&, const TypeDescription*);
+      enum VarType {
+	 Normal,
+	 Internal,
+	 PositionVariable
+      };
+     
+      VarLabel(const std::string&, const TypeDescription*,
+	       VarType vartype = Normal);
       
       const std::string& getName() const {
 	 return d_name;
       }
+      bool isPositionVariable() const {
+	 return d_vartype == PositionVariable;
+      }
    private:
       std::string d_name;
       const TypeDescription* d_td;
+      VarType d_vartype;
       
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
@@ -56,6 +67,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.4  2000/04/28 07:35:37  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.3  2000/04/26 06:49:01  sparker
 // Streamlined namespaces
 //
