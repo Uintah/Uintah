@@ -467,6 +467,10 @@ ArchesLabel::ArchesLabel()
 
   d_InitNormLabel = VarLabel::create("initNorm",
 				       max_vartype::getTypeDescription() );
+  d_ScalarClippedLabel = VarLabel::create("scalarClipped",
+				       max_vartype::getTypeDescription() );
+  d_ReactScalarClippedLabel = VarLabel::create("reactScalarClipped",
+				       max_vartype::getTypeDescription() );
   d_uVelNormLabel = VarLabel::create("uVelNorm",
 				       sum_vartype::getTypeDescription() );
   d_vVelNormLabel = VarLabel::create("vVelNorm",
@@ -751,6 +755,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_continuityResidualLabel);
 
   VarLabel::destroy(d_InitNormLabel);
+  VarLabel::destroy(d_ScalarClippedLabel);
+  VarLabel::destroy(d_ReactScalarClippedLabel);
   VarLabel::destroy(d_uVelNormLabel);
   VarLabel::destroy(d_vVelNormLabel);
   VarLabel::destroy(d_wVelNormLabel);

@@ -93,6 +93,9 @@ public:
       inline bool checkRadiation() const{
 	return d_radiationCalc;
       }
+      inline void set_iteration_number(int iteration_number) {
+	d_iteration_number = iteration_number;
+      }
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
@@ -180,8 +183,10 @@ private:
       const ProcessorGroup* d_myworld;
       int d_conv_scheme;
       bool d_radRKsteps;
+      bool d_radImpsteps;
       bool d_dynScalarModel;
       double d_turbPrNo;
+      int d_iteration_number;
 
 }; // End class EnthalpySolver
 } // End namespace Uintah
