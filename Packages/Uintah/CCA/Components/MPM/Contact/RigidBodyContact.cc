@@ -69,7 +69,7 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel, dwi, patch);
     }
 
-#if 0
+#if 1
     if(d_sharedState->getElapsedTime() >= d_stop_time){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter; 

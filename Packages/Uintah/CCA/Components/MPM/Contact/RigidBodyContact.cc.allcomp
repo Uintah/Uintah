@@ -51,7 +51,6 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 					 DataWarehouse*,
 					 DataWarehouse* new_dw)
 {
-  //  Vector zero(0.0,0.0,0.0);
   Vector centerOfMassMom(0.0,0.0,0.0);
   double centerOfMassMass;
 
@@ -69,11 +68,11 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel, dwi, patch);
     }
 
-#if 0
+#if 1
     if(d_sharedState->getElapsedTime() >= d_stop_time){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
-	gvelocity[0][c]   = zero;
+	gvelocity[0][c]   = Vector(0.,0.,0.);
       }
     }
 #endif
