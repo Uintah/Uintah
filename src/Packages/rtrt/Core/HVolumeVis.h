@@ -873,14 +873,24 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   dtdz=diz_dz*hierdiag.z()*icz*zinv_dir;
   
   Vector cellsize(cx,cy,cz);
+  // cellcorner and celldir can be used to get the location in terms
+  // of the metacell in index space.
+  //
+  // For example if you wanted to get the location at time t (world
+  // space units) in terms of indexspace you would do the following
+  // computation:
+  //
+  // Vector pos = cellcorner + celldir * t + Vector(startx, starty, startz);
+  //
+  // If you wanted to get how far you are inside a given cell you
+  // could use the following code:
+  //
+  // Vector weights = cellcorner + celldir * t - Vector(ix, iy, iz);
   Vector cellcorner((orig-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
 
   MetaCT transfunct;
   transfunct.course_hash = dpy->course_hash;
-  //  transfunct.turn_on_bits(28,100,0,255);
-  //  transfunct.turn_on_bits(156,228,0,255);
-  //  transfunct.turn_on_bits(0,255,0,255);
   //  transfunct.print();
   
   isect(depth-1, transfunct, t_min, dtdx, dtdy, dtdz, next_x, next_y, next_z,
@@ -891,7 +901,6 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 	ray, hit, ctx);
 
   } else {
-    // This is precomputed stuff for the fast rendering mode
     double x_weight_high, y_weight_high, z_weight_high;
     int x_low, y_low, z_low;
     
