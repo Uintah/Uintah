@@ -444,9 +444,9 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
 					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw,
 					 const VarLabel* old_posLabel,
-					 const vector<const VarLabel*>& old_labels,
+					 const vector<vector<const VarLabel*> >& old_labels,
 					 const VarLabel* new_posLabel,
-					 const vector<const VarLabel*>& new_labels,
+					 const vector<vector<const VarLabel*> >& new_labels,
 					 int numMatls)
 {
    reloc_old_posLabel = old_posLabel;
@@ -454,7 +454,8 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
    reloc_new_posLabel = new_posLabel;
    reloc_new_labels = new_labels;
    reloc_numMatls = numMatls;
-   ASSERTEQ(reloc_new_labels.size(), reloc_old_labels.size());
+   for (int m = 0; m < numMatls; m++ )
+     ASSERTEQ(reloc_new_labels[m].size(), reloc_old_labels[m].size());
    for(Level::const_patchIterator iter=level->patchesBegin();
        iter != level->patchesEnd(); iter++){
 
@@ -465,8 +466,8 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
 			    this, &MPIScheduler::scatterParticles);
       for(int m=0;m < numMatls;m++){
 	 t->requires( new_dw, old_posLabel, m, patch, Ghost::None);
-	 for(int i=0;i<old_labels.size();i++)
-	    t->requires( new_dw, old_labels[i], m, patch, Ghost::None);
+	 for(int i=0;i<old_labels[m].size();i++)
+	    t->requires( new_dw, old_labels[m][i], m, patch, Ghost::None);
       }
       t->computes(new_dw, scatterGatherVariable, 0, patch);
       t->setType(Task::Scatter);
@@ -484,8 +485,8 @@ MPIScheduler::scheduleParticleRelocation(const LevelP& level,
 	 t2->requires(new_dw, scatterGatherVariable, 0, neighbors[i], Ghost::None);
       for(int m=0;m < numMatls;m++){
 	 t2->computes( new_dw, new_posLabel, m, patch);
-	 for(int i=0;i<new_labels.size();i++)
-	    t2->computes(new_dw, new_labels[i], m, patch);
+	 for(int i=0;i<new_labels[m].size();i++)
+	    t2->computes(new_dw, new_labels[m][i], m, patch);
       }
       t2->setType(Task::Gather);
       addTask(t2);
@@ -564,8 +565,8 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  MPIScatterMaterialRecord* smr=new MPIScatterMaterialRecord();
 		  sr[i]->matls[m]=smr;
 		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
-		  for(int v=0;v<reloc_old_labels.size();v++)
-		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[v], pset));
+		  for(int v=0;v<reloc_old_labels[m].size();v++)
+		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
 		  smr->relocset = new ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
 	       }
@@ -742,9 +743,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
       new_dw->put(*newpos, reloc_new_posLabel);
 
-      for(int v=0;v<reloc_old_labels.size();v++){
+      for(int v=0;v<reloc_old_labels[m].size();v++){
 	 vector<ParticleVariableBase*> gathervars;
-	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[v], pset);
+	 ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[m][v], pset);
 
 	 gathervars.push_back(var);
 	 for(int i=0;i<sr.size();i++){
@@ -762,7 +763,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	    }
 	 }
 	 ASSERTEQ(start, totalParticles);
-	 new_dw->put(*newvar, reloc_new_labels[v]);
+	 new_dw->put(*newvar, reloc_new_labels[m][v]);
       }
 
       for(int i=0;i<subsets.size();i++)
@@ -778,6 +779,11 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.9  2000/07/28 22:45:14  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
+//
 // Revision 1.8  2000/07/28 03:08:57  rawat
 // fixed some cvs conflicts
 //

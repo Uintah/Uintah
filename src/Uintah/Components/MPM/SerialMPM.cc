@@ -742,13 +742,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    // we need to possible schedule the various potentially different
    // labels that go with each material.
 
-   //for (int m = 0; m < numMatls; m++) {
    sched->scheduleParticleRelocation(level, old_dw, new_dw,
 				     lb->pXLabel_preReloc, 
-				     lb->d_particleState_preReloc[0],
-				     lb->pXLabel, lb->d_particleState[0],
+				     lb->d_particleState_preReloc,
+				     lb->pXLabel, lb->d_particleState,
 				     numMatls);
-   //}
 
    if(MPMPhysicalModules::fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
@@ -1666,6 +1664,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.108  2000/07/28 22:45:13  jas
+// particle relocation now uses separate var labels for each material.
+// Addd <iostream> for ReductionVariable.  Commented out protected: in
+// Scheduler class that preceeded scheduleParticleRelocation.
+//
 // Revision 1.107  2000/07/27 22:39:43  sparker
 // Implemented MPIScheduler
 // Added associated support
