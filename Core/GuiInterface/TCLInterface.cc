@@ -306,5 +306,6 @@ TCLInterface::complete_command(const string &command)
   Tcl_Parse parse;
   const int ret_val = Tcl_ParseCommand(0, src, len, 1, &parse);
   TCLTask::unlock();
+  delete[] src;
   return (ret_val == TCL_OK);
 }
