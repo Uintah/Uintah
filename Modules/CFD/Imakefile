@@ -1,0 +1,15 @@
+
+#include <config/sci.cf>
+
+OBJS = PartToGeom.o  Readtec.o
+SRCS = PartToGeom.cc Readtec.cc
+
+LIBNAME = CFD
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom \
+	-lGeometry -lMath -lTCL -lClasslib -lMultitask -lMalloc -lm \
+	-lC -lc
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
