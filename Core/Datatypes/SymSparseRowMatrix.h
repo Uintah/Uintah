@@ -83,7 +83,7 @@ public:
 		      int spVec=0) const;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int& flops, int& memrefs, int beg=-1, int end=-1, int spVec=0);
-    virtual void print();
+    virtual void print() const;
     MatrixRow operator[](int r);
     friend SCICORESHARE class AddMatrices;
 

@@ -141,7 +141,7 @@ double& SymSparseRowMatrix::get(int i, int j)
 	    for(int idx=row_idx;idx<next_idx;idx++)
 		cerr << columns[idx] << " ";
 	    cerr << endl;
-	    ASSERT(0);
+	    ASSERTFAIL("Column not found");
 #endif
 	    static double zero;
 	    zero=0;
@@ -292,7 +292,7 @@ void SymSparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
     memrefs+=2*sizeof(int)*nr+nnz*sizeof(int)+2*nnz*sizeof(double)+nr*sizeof(double);
 }
 
-void SymSparseRowMatrix::print()
+void SymSparseRowMatrix::print() const
 {
     cerr << "Sparse RowMatrix: " << endl;
 }
