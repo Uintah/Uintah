@@ -212,7 +212,12 @@ CM2Widget::CM2Widget(CM2Widget& copy)
 
 TriangleCM2Widget::TriangleCM2Widget()
   : base_(0.5), top_x_(0.15), top_y_(0.5), width_(0.25), bottom_(0.5)
-{}
+{
+  color_.r(1.0);
+  color_.g(1.0);
+  color_.b(1.0);
+  alpha_ = 1.0;
+}
 
 TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
                                      float width, float bottom)
@@ -514,7 +519,12 @@ TriangleCM2Widget::release (int obj, int x, int y, int w, int h)
 RectangleCM2Widget::RectangleCM2Widget()
   : type_(CM2_RECTANGLE_1D), left_x_(0.25), left_y_(0.5), width_(0.25), height_(0.25),
     offset_(0.25)
-{}
+{
+  color_.r(1.0);
+  color_.g(1.0);
+  color_.b(0.7);
+  alpha_ = 1.0;
+}
 
 RectangleCM2Widget::RectangleCM2Widget(int type, float left_x, float left_y,
                                        float width, float height, float offset)

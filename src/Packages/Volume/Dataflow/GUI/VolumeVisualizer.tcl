@@ -83,6 +83,9 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 # 		-anchor w -command $n
 	pack $w.f.l $w.f.modeo $w.f.modem -side top -fill x -padx 4 -pady 4
 
+        #-----------------------------------------------------------
+        # Shading
+        #-----------------------------------------------------------
 	frame $w.f4 -relief groove -borderwidth 2
 	pack $w.f4 -padx 2 -pady 2 -fill x
 	checkbutton $w.f4.shading -text "Shading" -relief flat \
@@ -90,6 +93,30 @@ itcl_class Volume_Visualization_VolumeVisualizer {
             -anchor w -command "$s; $n"
         pack $w.f4.shading -side top -fill x -padx 4
 
+        #-----------------------------------------------------------
+        # Light
+        #-----------------------------------------------------------
+ 	frame $w.f5 -relief groove -borderwidth 2
+ 	pack $w.f5 -padx 2 -pady 2 -fill x
+ 	label $w.f5.light -text "Attach Light to"
+ 	radiobutton $w.f5.light0 -text "Light 0" -relief flat \
+            -variable $this-light -value 0 \
+            -anchor w -command $n
+ 	radiobutton $w.f5.light1 -text "Light 1" -relief flat \
+            -variable $this-light -value 1 \
+            -anchor w -command $n
+#  	radiobutton $w.f5.light2 -text "Light 2" -relief flat \
+#             -variable $this-light -value 2 \
+#             -anchor w -command $n
+#  	radiobutton $w.f5.light3 -text "Light 3" -relief flat \
+#             -variable $this-light -value 3 \
+#             -anchor w -command $n
+        pack $w.f5.light $w.f5.light0 $w.f5.light1 \
+            -side left -fill x -padx 4
+
+        #-----------------------------------------------------------
+        # Material
+        #-----------------------------------------------------------
 	frame $w.f6 -relief groove -borderwidth 2
 	pack $w.f6 -padx 2 -pady 2 -fill x
  	label $w.f6.material -text "Material"
@@ -117,34 +144,17 @@ itcl_class Volume_Visualization_VolumeVisualizer {
             $w.f6.specular $w.f6.shine \
             -side top -fill x -padx 4
 
- 	frame $w.f5 -relief groove -borderwidth 2
- 	pack $w.f5 -padx 2 -pady 2 -fill x
- 	label $w.f5.light -text "Attach Light to"
- 	radiobutton $w.f5.light0 -text "Light 0" -relief flat \
-            -variable $this-light -value 0 \
-            -anchor w -command $n
- 	radiobutton $w.f5.light1 -text "Light 1" -relief flat \
-            -variable $this-light -value 1 \
-            -anchor w -command $n
- 	radiobutton $w.f5.light2 -text "Light 2" -relief flat \
-            -variable $this-light -value 2 \
-            -anchor w -command $n
- 	radiobutton $w.f5.light3 -text "Light 3" -relief flat \
-            -variable $this-light -value 3 \
-            -anchor w -command $n
-        pack $w.f5.light $w.f5.light0 $w.f5.light1 $w.f5.light2 $w.f5.light3 \
-            -side top -fill x -padx 4
 
-	frame $w.f3 -relief groove -borderwidth 2
-	pack $w.f3 -padx 2 -pady 2 -fill x
-	label $w.f3.l -text "Interpolation Mode"
-	radiobutton $w.f3.interp -text "Trilinear" -relief flat \
-		-variable $this-interp_mode -value 1 \
-		-anchor w -command $n
-	radiobutton $w.f3.near -text "Nearest" -relief flat \
-		-variable $this-interp_mode -value 0 \
-		-anchor w -command $n
-	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
+# 	frame $w.f3 -relief groove -borderwidth 2
+# 	pack $w.f3 -padx 2 -pady 2 -fill x
+# 	label $w.f3.l -text "Interpolation Mode"
+# 	radiobutton $w.f3.interp -text "Trilinear" -relief flat \
+# 		-variable $this-interp_mode -value 1 \
+# 		-anchor w -command $n
+# 	radiobutton $w.f3.near -text "Nearest" -relief flat \
+# 		-variable $this-interp_mode -value 0 \
+# 		-anchor w -command $n
+# 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
 
         #-----------------------------------------------------------
         # Sampling
@@ -182,16 +192,16 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
 
-	scale $w.tf.cmap_size -variable $this-cmap_size \
-		-from 4 -to 10 -label "Table Size (2^n)" \
-		-showvalue true -resolution 1 \
-		-orient horizontal \
+# 	scale $w.tf.cmap_size -variable $this-cmap_size \
+# 		-from 4 -to 10 -label "Table Size (2^n)" \
+# 		-showvalue true -resolution 1 \
+# 		-orient horizontal \
 
 	checkbutton $w.tf.sw -text "Software Rasterization" -relief flat \
             -variable $this-sw_raster -onvalue 1 -offvalue 0 \
             -anchor w -command "$n"
 
-	pack $w.tf.l $w.tf.stransp $w.tf.cmap_size $w.tf.sw \
+	pack $w.tf.l $w.tf.stransp $w.tf.sw \
             -side top -fill x -padx 4 -pady 2
 
         bind $w.f6.ambient <ButtonRelease> $n
@@ -202,7 +212,7 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 	bind $w.sampling.srate_hi <ButtonRelease> $n
 	bind $w.sampling.srate_lo <ButtonRelease> $n
 
-	bind $w.tf.cmap_size <ButtonRelease> $n
+#	bind $w.tf.cmap_size <ButtonRelease> $n
 	bind $w.tf.stransp <ButtonRelease> $n
 	
 	makeSciButtonPanel $w $w $this
@@ -220,8 +230,8 @@ itcl_class Volume_Visualization_VolumeVisualizer {
             $this activate $w.f5.light
             $this activate $w.f5.light0
             $this activate $w.f5.light1
-            $this activate $w.f5.light2
-            $this activate $w.f5.light3
+#             $this activate $w.f5.light2
+#             $this activate $w.f5.light3
 	} else {
             $this deactivate $w.f6.ambient
             $this deactivate $w.f6.diffuse
@@ -230,8 +240,8 @@ itcl_class Volume_Visualization_VolumeVisualizer {
             $this deactivate $w.f5.light
             $this deactivate $w.f5.light0
             $this deactivate $w.f5.light1
-            $this deactivate $w.f5.light2
-            $this deactivate $w.f5.light3
+#             $this deactivate $w.f5.light2
+#             $this deactivate $w.f5.light3
 	}
 	if {[set $this-adaptive] == 1} {
             $this activate $w.sampling.srate_lo
