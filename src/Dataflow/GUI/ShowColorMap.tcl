@@ -23,6 +23,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	global $this-side         # Which side to put the map on.
 	global $this-numlabels    # How many labels to use on the map.
 	global $this-scale
+	global $this-numsigdigits
 	global $this-units
 	global $this-text_color
 	global $this-text-fontsize
@@ -36,6 +37,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	set $this-side left
 	set $this-numlabels 5
 	set $this-scale 1.0
+	set $this-numsigdigits 2
 	set $this-units ""
 	set $this-text_color 1
 	set $this-text-fontsize 2
@@ -59,6 +61,7 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	frame $w.tc_uns.uns.units -borderwidth 2
 	frame $w.tc_uns.uns.nlabs -borderwidth 2
 	frame $w.tc_uns.uns.scale -borderwidth 2
+	frame $w.tc_uns.uns.ndigits -borderwidth 2
 	
 	label $w.side_length.side.label -text "Display Side"
 	radiobutton $w.side_length.side.left -text "Left" -variable $this-side -value left -command "$this-c needexecute"
@@ -89,6 +92,12 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	entry $w.tc_uns.uns.scale.entry -width 10 -textvariable $this-scale
 	bind $w.tc_uns.uns.scale.entry <KeyPress-Return> "$this-c needexecute"
 
+	label $w.tc_uns.uns.ndigits.label -text "Significant\nDigits"
+	entry $w.tc_uns.uns.ndigits.entry -width 10 \
+	    -textvariable $this-numsigdigits
+	bind $w.tc_uns.uns.ndigits.entry \
+	    <KeyPress-Return> "$this-c needexecute"
+
 	# Pack Display Length Frame
 	pack $w.side_length.length.label $w.side_length.length.full $w.side_length.length.half1 \
 	    $w.side_length.length.half2 -anchor w -padx 4 -pady 2
@@ -104,7 +113,8 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	pack $w.tc_uns.uns.nlabs.label $w.tc_uns.uns.nlabs.entry -side left -anchor e
 	pack $w.tc_uns.uns.units.label $w.tc_uns.uns.units.entry -side left -anchor e
 	pack $w.tc_uns.uns.scale.label $w.tc_uns.uns.scale.entry -side left -anchor e
-	pack $w.tc_uns.uns.nlabs $w.tc_uns.uns.units $w.tc_uns.uns.scale -side top \
+	pack $w.tc_uns.uns.ndigits.label $w.tc_uns.uns.ndigits.entry -side left -anchor e
+	pack $w.tc_uns.uns.nlabs $w.tc_uns.uns.units $w.tc_uns.uns.scale $w.tc_uns.uns.ndigits -side top \
           -padx 5 -pady 2 -anchor e
 
 	# Pack the "Display Length" and "Display Side" Frame
