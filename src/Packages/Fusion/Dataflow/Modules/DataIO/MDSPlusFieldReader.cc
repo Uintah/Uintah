@@ -161,8 +161,7 @@ void MDSPlusFieldReader::execute(){
     std::string axis;
 
     /* Connect to MDSplus */
-    if( MDS_Connect(server.c_str()) )
-    {
+    if( MDS_Connect(server.c_str()) < 0 ) {
       error( "Error connecting to Mds Server " + server );
       return;
     }
@@ -170,8 +169,7 @@ void MDSPlusFieldReader::execute(){
       cout << "MDSPLUSFieldReader - Conecting to MdsPlus Server --> " << server << endl;
 
     // Open tree
-    if( MDS_Open( tree.c_str(), shot) )
-    {
+    if( MDS_Open( tree.c_str(), shot) , 0 ) {
       //	    error( "Error opening " + tree + " tree for shot " + shot );
       return;
     }
