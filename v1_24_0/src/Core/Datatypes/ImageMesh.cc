@@ -362,14 +362,10 @@ ImageMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
   if (ii<0 && ii>(-1.e-10)) ii=0;
   if (jj<0 && jj>(-1.e-10)) jj=0;
 
-  Node::index_type node0, node1, node2, node3;
-  node0.mesh_ = this;
-  node1.mesh_ = this;
-  node2.mesh_ = this;
-  node3.mesh_ = this;
-
+  Node::index_type node0;
   node0.i_ = (unsigned int)floor(ii);
   node0.j_ = (unsigned int)floor(jj);
+  node0.mesh_ = this;
 
   if (node0.i_ < (ni_-1) && node0.i_ >= 0 &&
       node0.j_ < (nj_-1) && node0.j_ >= 0)
@@ -384,12 +380,15 @@ ImageMesh::get_weights(const Point &p, Node::array_type &locs, double *w)
     
     locs[1].i_ = node0.i_ + 1;
     locs[1].j_ = node0.j_ + 0;
-    
+    locs[1].mesh_ = this;
+
     locs[2].i_ = node0.i_ + 1;
     locs[2].j_ = node0.j_ + 1;
+    locs[2].mesh_ = this;
     
     locs[3].i_ = node0.i_ + 0;
     locs[3].j_ = node0.j_ + 1;
+    locs[3].mesh_ = this;
     
     w[0] = dx0 * dy0;
     w[1] = dx1 * dy0;
