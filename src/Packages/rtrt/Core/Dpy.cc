@@ -107,6 +107,8 @@ using namespace SCIRun;
 using std::endl;
 using std::cerr;
 
+extern bool pin;
+
 //Mutex rtrt::cameralock("Frameless Camera Synch lock");
 
 Mutex rtrt::xlock("X windows startup lock");
@@ -241,6 +243,8 @@ int Dpy::get_num_procs() {
 void
 Dpy::run()
 {
+  if(pin)
+    Thread::self()->migrate(0);
   io_lock_.lock();
   cerr << "display is pid " << getpid() << '\n';
   io_lock_.unlock();

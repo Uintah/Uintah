@@ -94,8 +94,12 @@ extern float Galpha;
 
 //double Gjitter_vals[1000],Gjitter_valsb[1000];
 
+extern bool pin;
+
 void Worker::run()
 {
+  if(pin)
+    Thread::self()->migrate((num+2)%Thread::numProcessors());
 #if 0
   io_lock_.lock();
   cerr << "worker pid " << getpid() << '\n';
@@ -108,16 +112,6 @@ void Worker::run()
   else
     counters=0;
   int np = scene->get_rtrt_engine()->np;
-#if 0
-  int np=Thread::numProcessors();
-  int p=(50+num)%np;
-  io_lock_.lock();
-  cerr << "Mustrun: " << p << "(pid=" << getpid() << ")\n";
-  io_lock_.unlock();
-  if(sysmp(MP_MUSTRUN, p) == -1){
-    perror("sysmp - MP_MUSTRUN");
-  }
-#endif
   
 #if 1
   int rendering_scene=0;
