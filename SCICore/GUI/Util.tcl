@@ -106,6 +106,8 @@ itcl_class expscale {
 	    set $variable 1
 	}
 
+	set tmpvar [set $variable]
+
 	set resolution [getResolution ]
 	set built 1
 	scale $w.scale -label $label -orient $orient \
@@ -130,9 +132,7 @@ itcl_class expscale {
 		-insertborderwidth 0
 	pack $w.e.exp
 
-	newvalue [set $variable]
-
-	puts "Here: this is -- $this --"
+	newvalue $tmpvar
     }
 
     destructor {
@@ -201,6 +201,9 @@ itcl_class expscale {
 	incr sign [expr $sign * -2]
 	global $variable
 	updatevalue [expr -1 * [set $variable]]
+	if {[set $variable] == 0} {
+	    updatevalue -0.00000000001
+	}
     }
 
     # don't change the number of decimalplaces or the exponent - just move
