@@ -64,7 +64,7 @@ itcl_class Teem_Unu_UnuMinmax {
 	    # create new ones
 	    for {set i 0} {$i < [set $this-nrrds]} {incr i} {
 		if {![winfo exists $w.f.mmf.a$i]} {
-		    create_min_max_info $w.f.mmf.a$i $i [set $this-mins$i] [set $this-max$i]
+		    create_min_max_info $w.f.mmf.a$i $i [set $this-min$i] [set $this-max$i]
 		}
 	    }
 	}
