@@ -1,0 +1,86 @@
+#!/bin/sh
+
+TEST=$1
+TEST_ROOT=$2
+COMPARE_ROOT=$3
+
+cd $TEST_ROOT/$TEST
+UDADIR=`ls -d *.uda.000`
+
+TEST_UDADIR=$TEST_ROOT/$TEST/$UDADIR
+COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
+TMPDIR=$TEST_ROOT/$TEST
+
+echo "\nTesting $TEST"
+
+if [ -d "$TEST_UDADIR" ]; then
+  if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
+    echo "Creating $COMPARE_ROOT/$TEST directory"
+    cd $COMPARE_ROOT
+    mkdir $TEST
+    cvs add $TEST
+  fi
+  if [ ! -d "$COMPARE_UDADIR" ]; then
+    echo "Storing uda directory's dat files"
+    cp -r $TEST_UDADIR $COMPARE_UDADIR
+    cd $COMPARE_ROOT/$TEST
+    cvs add $UDADIR
+    cd $UDADIR
+    cvs add *.dat
+    cvs commit -m "Automated Tester storing dat files" *.dat
+  else
+    cd $TEST_UDADIR
+    echo "Comparing dat files"
+    compare_dat_files 1e-10 $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat > $TMPDIR/compare_dat_files.msg 2>&1
+    retval=$?
+
+    newcount=`grep -c '\0' $TEST_UDADIR/KineticEnergy.dat`
+    oldcount=`grep -c '\0' $TEST_UDADIR/KineticEnergy.dat`
+    if [ $retval = "0" -a $newcount = $oldcount ]; then
+	echo "Comparison passed"
+    else
+       if [ $retval != "0" ]; then
+         cat $TMPDIR/compare_dat_files.msg > $TMPDIR/error_info.msg
+       else
+         cat >> $TMPDIR/error_info.msg <<EOF
+There is only a discrepancy in the line count of the dat files.
+There are $newcount lines in the new KineticEnergy.dat and
+          $oldcount lines in the old KineticEnergy.dat.
+This could simply be a result of changes timestep size.
+EOF
+       fi
+       cat $TMPDIR/error_info.msg
+
+       if [ "$errormail" = "yes" -a $retval -gt "0" ]; then
+         cat > $TMPDIR/error.msg <<EOF
+Correctness test failed for $TEST.
+
+EOF
+         cat $TMPDIR/error_info.msg >> $TMPDIR/error.msg
+         cat >> $TMPDIR/error.msg <<EOF
+
+The failed uda directory can be found in 
+$TEST_UDADIR at `hostname`.
+The comparing uda directory can be found in
+$COMPARE_UDADIR at `hostname`
+(but should also be in the cvs repository).
+
+If the 'failed' uda directory is actually more
+correct than the 'comparing' uda directory, then
+you should replace it in the cvs repository.
+
+Following is the result of a side by side diff comparison of the dat files.
+
+EOF
+         diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
+         mailx -s "Automated Correctness Regression Alert" "$TEST_ERRORS_TO" < $TMPDIR/error.msg
+         echo "Mail sent\n"
+       fi
+       exit 1
+    fi
+  fi
+else
+  echo "$TEST_UDADIR was not created"
+  exit 1
+fi
+
