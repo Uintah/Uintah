@@ -40,45 +40,37 @@
  *  Copyright (c) 199? SCI Group
  */
 
-#include "ColorMapTex.h"
-#include <Core/Util/NotFinished.h>
+#include <Core/Geom/ColorMapTex.h>
+#include <Core/Geom/GeomColorMap.h>
+#include <Core/Geom/GeomQuads.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/BBox.h>
-using std::ostream;
 
 namespace SCIRun {
 
 Persistent *make_ColorMapTex()
 {
   return scinew ColorMapTex( Point(0,0,0), Point(0,1,0), Point(1,1,0),
-			     Point(1,0,0) );
+			     Point(1,0,0),  0);
 }
 
-PersistentTypeID ColorMapTex::type_id("ColorMapTex", "GeomObj", make_ColorMapTex);
+PersistentTypeID ColorMapTex::type_id("ColorMapTex", "GeomObj",
+				      make_ColorMapTex);
 
 
 ColorMapTex::ColorMapTex(const Point &p1, const Point &p2,
-			 const Point &p3, const Point &p4)
-  : GeomObj(),
-    a_(p1),
-    b_(p2),
-    c_(p3),
-    d_(p4),
-    numcolors_(256)
+			 const Point &p3, const Point &p4,
+			 ColorMapHandle cmap)
+  : GeomContainer(0)
 {
-  memset(texture_, 0, numcolors_ * 4);
+  GeomFastQuads *quad = scinew GeomFastQuads();
+  quad->add (p1, 0.0, p2, 1.0, p3, 1.0, p4, 0.0);
+  child_ = scinew GeomColorMap(quad, cmap);
 }
 
 
 ColorMapTex::ColorMapTex( const ColorMapTex &copy )
-  : GeomObj(copy),
-    a_(copy.a_),
-    b_(copy.b_),
-    c_(copy.c_),
-    d_(copy.d_),
-    numcolors_(copy.numcolors_)
+  : GeomContainer(copy)
 {
-  memcpy(texture_, copy.texture_, numcolors_ * 4);
 }
 
 
@@ -94,31 +86,28 @@ ColorMapTex::clone()
 }
 
 
-void
-ColorMapTex::get_bounds( BBox& bb )
-{
-  bb.extend(a_);
-  bb.extend(b_);
-  bb.extend(c_);
-  bb.extend(d_);
-}
-
-
-#define COLORMAPTEX_VERSION 1
+#define COLORMAPTEX_VERSION 2
 
 void
 ColorMapTex::io(Piostream& stream)
 {
-  const int ver = stream.begin_class("ColorMapTex", COLORMAPTEX_VERSION);
-  GeomObj::io(stream);
-  Pio(stream, a_);
-  Pio(stream, b_);
-  Pio(stream, c_);
-  Pio(stream, d_);
-  if (ver > 1)
+  const int version = stream.begin_class("ColorMapTex", COLORMAPTEX_VERSION);
+  if (version > 1)
   {
-    Pio(stream, numcolors_);
-    //Pio(stream, texture_);
+    GeomContainer::io(stream);
+  }
+  else
+  {
+    // This is broken, but backwards compatable
+    Point p1, p2, p3, p4;
+    Pio(stream, p1);
+    Pio(stream, p2);
+    Pio(stream, p3);
+    Pio(stream, p4);
+
+    GeomFastQuads *quad = scinew GeomFastQuads();
+    quad->add (p1, 0.0, p2, 1.0, p3, 1.0, p4, 0.0);
+    child_ = scinew GeomColorMap(quad, 0);
   }
   stream.end_class();
 }

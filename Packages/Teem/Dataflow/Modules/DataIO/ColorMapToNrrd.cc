@@ -104,7 +104,7 @@ ColorMapToNrrd::execute()
   {
     colormap_generation_ = cmapH->generation;
 
-    const int size = 256;
+    const unsigned int size = cmapH->resolution();
   
     NrrdData *nd = scinew NrrdData();
     nrrdAlloc(nd->nrrd, nrrdTypeFloat, 2, size, 4);
@@ -112,7 +112,7 @@ ColorMapToNrrd::execute()
     nd->nrrd->axis[0].kind = nrrdKind4Color;
 
     float *val = (float *)nd->nrrd->data;
-    float *data = (float *)cmapH->rawRGBA_;
+    const float *data = cmapH->get_rgba();
     memcpy(val, data, sizeof(float) * size * 4);
 
     // Send the data nrrd.

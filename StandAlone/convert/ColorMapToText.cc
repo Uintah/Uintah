@@ -125,7 +125,7 @@ main(int argc, char **argv) {
     return 2;
   }
 
-  int size=handle->size();
+  const unsigned int size = handle->resolution();
   cerr << "Number of colors = "<<size<<"\n";
   FILE *fTxt = fopen(textfileName, "wt");
   if (!fTxt) {
@@ -134,9 +134,10 @@ main(int argc, char **argv) {
   }
   if (header) fprintf(fTxt, "%d\n", size);
   //double alpha;
-  for (int c=0; c<size; c++) {
-    double t=c*1./(size-1.);
-    Color clr = handle->getColor(t);
+  for (unsigned int c=0; c<size; c++)
+  {
+    const double t = c / (size - 1.0);
+    const Color &clr = handle->getColor(t);
     const double alpha = handle->getAlpha(t);
     fprintf(fTxt, "%lf %lf %lf %lf %lf\n", clr.r(), clr.g(), clr.b(), alpha, t);
   }

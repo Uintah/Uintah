@@ -84,7 +84,8 @@ RescaleColorMap::execute()
   if(!imap->get(cmap)) {
     return;
   }
-  cmap = new ColorMap(*cmap.get_rep());
+  //cout << "Detaching cmap\n";
+  //cmap.detach(); // = new ColorMap(*cmap.get_rep());
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
     port_range_type range = get_iports("Field");
@@ -104,7 +105,7 @@ RescaleColorMap::execute()
       if (ifield->get(field) && field.get_rep()) {
 	string units;
 	if (field->get_property("units", units))
-	  cmap->units=units;
+	  cmap->set_units(units);
       }
       ++pi;
     }
@@ -131,7 +132,7 @@ RescaleColorMap::execute()
 	ScalarFieldInterfaceHandle sfi;
 	string units;
 	if (field->get_property("units", units))
-	  cmap->units=units;
+	  cmap->set_units(units);
 	if ((sfi = field->query_scalar_interface(this)).get_rep())
 	{
 	  sfi->compute_min_max(minmax_.first, minmax_.second);

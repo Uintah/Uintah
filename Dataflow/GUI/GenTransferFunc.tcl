@@ -64,98 +64,54 @@ itcl_class SCIRun_Visualization_GenTransferFunc {
     }
 
     method doGL {} {
-        
         set w .ui[modname]
         
         if {[winfo exists $w.f.gl1]} {
             raise $w
         } else {
-
-	set n "$this-c needexecute"
-	make_labeled_radio $w.f.types "Color Space" $n left \
-	    $this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
+	    set n "$this-c needexecute"
+	    make_labeled_radio $w.f.types "Color Space" $n left \
+		$this-rgbhsv { { "RGB" 0 }  { "HSV" 1 } }
 	    
-            # initialize geometry and placement of the widget
-	pack $w.f.types -side top -anchor w
+            # Initialize geometry and placement of the widget.
+	    pack $w.f.types -side top -anchor w
             
 	    frame $w.f.gl1
 	    pack $w.f.gl1 -padx 2 -pady 2
 
-            # create an OpenGL widget
-            
-            opengl $w.f.gl1.gl -geometry 512x256 -doublebuffer true -direct true\
-			      -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
+            # Create an OpenGL widget.
+	    opengl $w.f.gl1.gl -geometry 512x256 -doublebuffer true \
+		-direct true -rgba true \
+		-redsize 1 -greensize 1 -bluesize 1 -depthsize 2
 
-            # every time the OpenGL widget is displayed, redraw it
-            
-            bind $w.f.gl1.gl <Expose> "$this-c expose 0"
-            bind $w.f.gl1.gl <ButtonPress> "$this-c mouse 0 down %x %y %b"
-            bind $w.f.gl1.gl <ButtonRelease> "$this-c mouse 0 release %x %y %b"
-	        bind $w.f.gl1.gl <Motion>        "$this-c mouse 0 motion %x %y"
- 	        bind $w.f.gl1.gl <Destroy> "$this-c closewindow"
+	    # Every time the OpenGL widget is displayed, redraw it.
+	    bind $w.f.gl1.gl <Expose> "$this-c expose 0"
+	    bind $w.f.gl1.gl <ButtonPress> "$this-c mouse down %x %y %b"
+	    bind $w.f.gl1.gl <ButtonRelease> "$this-c mouse release %x %y %b"
+	    bind $w.f.gl1.gl <Motion>        "$this-c mouse motion %x %y"
+	    bind $w.f.gl1.gl <Destroy> "$this-c closewindow"
 
-            # place the widget on the screen
-
-            pack $w.f.gl1.gl -fill both -expand 1
-        }
-#  *************** Temporary comment out of HSV Window **************
-#         if {[winfo exists $w.f.gl2]} {
-#             raise $w
-#         } else {
-
-#             # initialize geometry and placement of the widget
-            
-# 	    frame $w.f.gl2
-# 	    pack $w.f.gl2 -padx 2 -pady 2
-
-#             # create an OpenGL widget
-            
-#             opengl $w.f.gl2.gl -geometry 512x256 -doublebuffer true -direct true\
-# 			 -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
-
-
-#             # every time the OpenGL widget is displayed, redraw it
-            
-#             bind $w.f.gl2.gl <Expose> "$this-c expose 1"
-#             bind $w.f.gl2.gl <ButtonPress> "$this-c mouse 1 down %x %y %b"
-#             bind $w.f.gl2.gl <ButtonRelease> "$this-c mouse 1 release %x %y %b"
-# 	    bind $w.f.gl2.gl <Motion>        "$this-c mouse 1 motion %x %y"
-
-#             # place the widget on the screen
-
-#             pack $w.f.gl2.gl -fill both -expand 1
-#         }
+	    # Place the widget on the screen.
+	    pack $w.f.gl1.gl -fill both -expand 1
+	}
 
         if {[winfo exists $w.f.gl3]} {
             raise $w
         } else {
-
-            # initialize geometry and placement of the widget
-            
+            # Initialize geometry and placement of the widget.
 	    frame $w.f.gl3
 	    pack $w.f.gl3 -padx 2 -pady 2
 
-            # create an OpenGL widget
-
-# Use this one for machines without alpha            
+            # Create an OpenGL widget.
             opengl $w.f.gl3.gl -geometry 512x64 -doublebuffer true \
 		-direct true -rgba true -redsize 1 \
 		-greensize 1 -bluesize 1 -depthsize 2
 
-# Use this one for machines with alpha
-#            opengl $w.f.gl3.gl -geometry 512x64 -doublebuffer true \
-# 	         -direct true -rgba true -redsize 2 -greensize 2 \
-# 		-bluesize 2 -alphasize 2 -depthsize 0
+            # Every time the OpenGL widget is displayed, redraw it.
+            bind $w.f.gl3.gl <Expose> "$this-c expose 1"
 
-            # every time the OpenGL widget is displayed, redraw it
-            
-            bind $w.f.gl3.gl <Expose> "$this-c expose 2"
-
-            # place the widget on the screen
-
+            # Place the widget on the screen.
             pack $w.f.gl3.gl -fill both -expand 1
         }
-        
     }
-
 }

@@ -198,10 +198,13 @@ ShowColorMap::execute()
   ColorMapTex *sq = scinew ColorMapTex(ref0,
 				       ref0 + along,
 				       ref0 + along + out,
-				       ref0 + out);
+				       ref0 + out,
+				       cmap);
+  all->add( sq );
+
   double scale = gui_scale_.get();
   string str = gui_units_.get();
-  if (str == "") str = cmap->units;
+  if (str == "") str = cmap->units();
   // So if the maximum number of digits the number will take up is
   // at most 25 then the length of str better be less than 80-25-1.
   // See size of value and num_sig_digits below.
@@ -210,8 +213,6 @@ ShowColorMap::execute()
     return;
   }
 
-  sq->set_texture( cmap->rawRGBA_ );
-  all->add( sq );
   const int numlabels = gui_numlabels_.get();
   if (numlabels > 1 && numlabels < 50)
   {
