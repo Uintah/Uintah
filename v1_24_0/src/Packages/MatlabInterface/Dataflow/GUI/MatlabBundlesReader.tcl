@@ -40,8 +40,14 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 		global $this-filename
 		global $this-matrixinfotexts
 		global $this-matrixnames
+    global $this-pnrrds
+    global $this-pbundles
+    global $this-pnrrd
+    global $this-pbundle    
 		global $this-matrixname
 		global $this-matriceslistbox		
+    global $this-pnrrdsmenu
+    global $this-pbundlesmenu
 		global $this-filename-set
 		global $this-portsel
 		global $this-numport
@@ -51,10 +57,21 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 		set $this-matrixnames ""
 		set $this-matrixname ""
 		set $this-matriceslistbox ""
+		set $this-pnrrdsmenu ""
+		set $this-pbundlesmenu ""
 		set $this-filename-set ""
 		set $this-portsel 0
 		set $this-numport 6
+    set $this-pnrrd ""
+    set $this-pbundle ""
+    set $this-pnrrds {{prefer matrices} {prefer nrrds}}
+    set $this-pbundles {{prefer sciobjects} {prefer bundles}}
 		
+    for {set x 0} {$x < [set $this-numport]} {incr x} {
+      lappend $this-pnrrd {prefer matrices}
+      lappend $this-pbundle {prefer sciobjects}
+    }
+    
 	}
 
 
@@ -63,10 +80,17 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 		global $this-filename
 		global $this-matrixinfotexts		
 		global $this-matriceslistbox		
+		global $this-pnrrdsmenu		
+		global $this-pbundlesmenu		
 		global $this-filename-entry
 		global $this-port
 		global $this-numport
 		global $this-portsel
+    global $this-pnrrds
+    global $this-pbundles
+    global $this-pnrrd
+    global $this-pbundle    
+
 
 		set w .ui[modname]
 
@@ -115,6 +139,7 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 			button [set $this-port].$x -text [format "Port %d" [expr $x + 1]] -command [format "%s SetPort %d" $this $x]
 			pack [set $this-port].$x  -side left -fill x -padx 2p -anchor w
 		}
+    
 		[set $this-port].[set $this-portsel] configure -fg #FFFFFF
 
 		iwidgets::scrolledlistbox $childframe.listbox -selectmode single -selectioncommand "$this ChooseMatrix" -width 500p -height 300p
@@ -122,6 +147,21 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts
 		pack $childframe.listbox -fill both -expand yes
 
+    frame $childframe.f1
+    
+    iwidgets::optionmenu $childframe.f1.pnrrds -command "$this Setpnrrds"
+    foreach opt {{prefer matrices} {prefer nrrds}} {
+      $childframe.f1.pnrrds insert end $opt
+    }
+
+    iwidgets::optionmenu $childframe.f1.pbundles -command "$this Setpbundles"
+    foreach opt {{prefer sciobjects} {prefer bundles}} {
+      $childframe.f1.pbundles insert end $opt
+    }
+
+    pack $childframe.f1 -fill x
+    pack $childframe.f1.pnrrds $childframe.f1.pbundles -side left -anchor w
+    
 		makeSciButtonPanel $w $w $this
 
 		set matrixname [lindex [set $this-matrixname] [set $this-portsel] ]
@@ -129,11 +169,23 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 		[set $this-matriceslistbox] component listbox selection clear 0 end
 		if [expr $selnum > -1] { [set $this-matriceslistbox] component listbox selection set $selnum }
 
+		set pnrrd [lindex [set $this-pnrrd] [set $this-portsel] ]
+		set selnum [lsearch [set $this-pnrrds] $pnrrd]
+		set $this-pnrrdsmenu $childframe.f1.pnrrds
+		if [expr $selnum > -1] { [set $this-pnrrdsmenu] select $selnum }
+
+		set pbundle [lindex [set $this-pbundle] [set $this-portsel] ]
+		set selnum [lsearch [set $this-pbundles] $pbundle]
+		set $this-pbundlesmenu $childframe.f1.pbundles
+		if [expr $selnum > -1] { [set $this-pbundlesmenu] select $selnum }
+
 
 	}
 
 	method SetPort {num} {
 		global $this-matriceslistbox
+    global $this-pnrrdsmenu
+    global $this-pbundlesmenu
 		global $this-matrixnames
 		global $this-matrixname
 		global $this-port
@@ -147,6 +199,14 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 		set selnum [lsearch [set $this-matrixnames] $matrixname]
 		[set $this-matriceslistbox] component listbox selection clear 0 end
 		if [expr $selnum > -1] { [set $this-matriceslistbox] component listbox selection set $selnum }
+	
+    set pnrrd [lindex [set $this-pnrrd] [set $this-portsel] ]
+		set selnum [lsearch [set $this-pnrrds] $pnrrd]
+		if [expr $selnum > -1] { [set $this-pnrrdsmenu] select $selnum }
+	
+    set pbundle [lindex [set $this-pbundle] [set $this-portsel] ]
+		set selnum [lsearch [set $this-pbundles] $pbundle]
+		if [expr $selnum > -1] { [set $this-pbundlesmenu] select $selnum }
 	
 		for {set x 0} {$x < [set $this-numport]} {incr x} {
 			[set $this-port].$x configure -fg #000000
@@ -167,6 +227,31 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesReader {
 			set $this-matrixname [lreplace [set $this-matrixname] [set $this-portsel] [set $this-portsel] [lindex [set $this-matrixnames] $matrixnum] ]
 		}
 	}
+
+	method Setpnrrds { } {
+		global $this-pnrrdsmenu
+		global $this-pnrrds
+		global $this-pnrrd
+		global $this-portsel
+		
+		set num [[set $this-pnrrdsmenu] get]
+		if [expr [string equal $num ""] == 0] {
+			set $this-pnrrd [lreplace [set $this-pnrrd] [set $this-portsel] [set $this-portsel] $num ]
+		}
+	}
+
+	method Setpbundles { } {
+		global $this-pbundlesmenu
+		global $this-pbundles
+		global $this-pbundle
+		global $this-portsel
+		
+		set num [[set $this-pbundlesmenu] get]
+		if [expr [string equal $num ""] == 0] {
+			set $this-pbundle [lreplace [set $this-pbundle] [set $this-portsel] [set $this-portsel] $num ]
+		}
+	}
+
 
 	method ChooseFile { } {
 
