@@ -78,6 +78,10 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+                                      
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
   private:
     ICELabel* lb;
                                                 
@@ -99,7 +103,14 @@ WARNING
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
                              const ModelInfo* mi);
-
+                             
+    void testConservation(const ProcessorGroup*, 
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const ModelInfo* mi);                          
+    //__________________________________
     SimpleRxn(const SimpleRxn&);
     SimpleRxn& operator=(const SimpleRxn&);
 
@@ -135,6 +146,7 @@ WARNING
     class SimpleRxnLabel {
     public:
       VarLabel* lastProbeDumpTimeLabel;
+      VarLabel* sum_scalar_fLabel;
     };
     
     SimpleRxnLabel* Slb;
@@ -155,6 +167,7 @@ WARNING
     vector<Vector> d_probePts;
     vector<string> d_probePtsNames;
     bool d_usingProbePts;
+    bool d_test_conservation;
     double d_probeFreq;
   };
 }
