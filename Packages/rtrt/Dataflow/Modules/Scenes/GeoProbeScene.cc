@@ -72,6 +72,10 @@ private:
   GuiDouble iso_max_;
   GuiDouble iso_val_;
 
+  // Some state variables
+  GuiInt xa_act_;
+  GuiInt xa_mat_;
+  
   // Colors for the isosurface
   GuiDouble gui_color_r_;
   GuiDouble gui_color_g_;
@@ -89,6 +93,8 @@ private:
   void update_isosurface_material() {}
   void update_isosurface_value();
   void update_cutting_plane(string which, float val);
+  void update_active_cut(string which);
+  void update_usemat_cut(string which);
 };
 
 DECLARE_MAKER(GeoProbeScene)
@@ -109,6 +115,8 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     gui_color_r_(ctx->subVar("color-r")),
     gui_color_g_(ctx->subVar("color-g")),
     gui_color_b_(ctx->subVar("color-b")),
+    xa_act_(ctx->subVar("xa-active")),
+    xa_mat_(ctx->subVar("xa-usemat")),
     //    surfmat(0),
     hvol(0),
     gpfilename_(ctx->subVar("gpfilename")),
@@ -218,9 +226,12 @@ void GeoProbeScene::execute()
       (surfmat, vdpy, 3 /*depth*/, 2 /*np*/, nx, ny, nz, 
        min, max, datamin, datamax, data);
     // Add the cutting planes
-    xacp = new CutPlane(hvol, Vector(1/(max.x()-min.x()),0,0), xa_.get());
+    Object *obj = hvol;
+    obj = xacp = new CutPlane(obj, Vector(1/(max.x()-min.x()),0,0), xa_.get());
     xacp->set_matl(new LambertianMaterial(Color(0.1,0.1,0.9)));
-    g->add(xacp);
+    //    obj = xbcp = new CutPlane(obj, Vector(1/(min.x()-max.x()),0,0), 1-xa_.get());
+    //    xbcp->set_matl(new LambertianMaterial(Color(0.9,0.9,0.1)));
+    g->add(obj);
 #if 0
     BBox temp;
     hvol->compute_bounds(temp, 0);
@@ -280,6 +291,10 @@ void GeoProbeScene::tcl_command(GuiArgs& args, void* userdata)
     update_isosurface_value();
   } else if (args[1] == "update_cut") {
     update_cutting_plane(args[2], atof(args[3].c_str()));
+  } else if (args[1] == "update_active") {
+    update_active_cut(args[2]);
+  } else if (args[1] == "update_usemat") {
+    update_usemat_cut(args[2]);
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -314,6 +329,10 @@ void GeoProbeScene::update_isosurface_value() {
 }
 
 void GeoProbeScene::update_cutting_plane(string which, float val) {
+  if (first_execute_)
+    // haven't initialized anything yet
+    return;
+  
   //  cout << "Updating cutting plane ";
   CutPlane *plane = 0;
   if (which == "xa") {
@@ -322,6 +341,7 @@ void GeoProbeScene::update_cutting_plane(string which, float val) {
   } else if (which == "xb") {
     //    cout << "xb";
     plane = xbcp;
+    val = 1 - val;
   } else if (which == "ya") {
     //    cout << "ya";
     plane = yacp;
@@ -335,9 +355,49 @@ void GeoProbeScene::update_cutting_plane(string which, float val) {
     //    cout << "zb";
     plane = zbcp;
   }
-  cout <<" with value "<<val<<"\n";
-  if (plane)
+  //  cout <<" with value "<<val<<"\n";
+  if (plane) {
+    if (val == 0)
+      val += 1e-3;
+    if (val == 1)
+      val -= 1e-3;
     plane->update_displacement(val);
+  }
+}
+
+void GeoProbeScene::update_active_cut(string which) {
+  if (first_execute_)
+    // haven't initialized anything yet
+    return;
+  
+  reset_vars();
+  if (which == "xa") {
+    //    cout << "xa";
+    xacp->update_active_state(xa_act_.get() == 1);
+  } else if (which == "xb") {
+  } else if (which == "ya") {
+  } else if (which == "yb") {
+  } else if (which == "za") {
+  } else if (which == "zb") {
+  }
+ 
+}
+
+void GeoProbeScene::update_usemat_cut(string which) {
+  if (first_execute_)
+    // haven't initialized anything yet
+    return;
+  
+  reset_vars();
+  if (which == "xa") {
+    xacp->update_usemat_state(xa_mat_.get() == 1);
+  } else if (which == "xb") {
+  } else if (which == "ya") {
+  } else if (which == "yb") {
+  } else if (which == "za") {
+  } else if (which == "zb") {
+  }
+ 
 }
 
 } // End namespace rtrt
