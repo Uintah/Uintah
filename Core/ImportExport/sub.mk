@@ -45,7 +45,7 @@ PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math Core/Util Core/Datatypes
 
-LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
+LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
 	$(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
 	$(Z_LIBRARY) $(M_LIBRARY) 
 
