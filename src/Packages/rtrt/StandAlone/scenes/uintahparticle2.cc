@@ -706,8 +706,8 @@ public:
 	      VariableData vardata;
 	      VariableData vardata2;
 	      // can extract Determinant(), Trace(), Norm()
-	      vardata.name = string(var+" Hydrostatic stress");
-	      vardata2.name = string(var+" Equivalent stress");
+	      vardata.name = string(var+" Trace/3");
+	      vardata2.name = string(var+" Equivalent");
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		  matlIter != matls.end(); matlIter++){
 		int matl = *matlIter;
