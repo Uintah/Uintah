@@ -22,8 +22,10 @@
  *   David Weinstein
  *   University of Utah
  *   May 1999
- *
- *  Copyright (C) 1999 SCI Group
+ *  Modified by:
+ *   Alexei Samsonov
+ *   March 2001
+ *  Copyright (C) 1999, 2001 SCI Group
  */
 
 #include <Dataflow/Network/Module.h>
@@ -42,18 +44,25 @@ using namespace SCIRun;
 
 class ApplyFEMCurrentSource : public Module {
 
+  //! Private data
+
+  //! Input ports
   FieldIPort*   iportField_;
   FieldIPort*   iportSource_;
   MatrixIPort*  iportRhs_;
 
+  //! Output ports
   MatrixOPort*  oportRhs_;
 
-  int gen;
+  int gen_;
   TetVolMesh::cell_index loc;
 
 public:
+  //! Constructor/Destructor
   ApplyFEMCurrentSource(const clString& id);
   virtual ~ApplyFEMCurrentSource();
+  
+  //! Public methods
   virtual void execute();
 };
 
@@ -65,11 +74,11 @@ extern "C" Module* make_ApplyFEMCurrentSource(const clString& id)
 ApplyFEMCurrentSource::ApplyFEMCurrentSource(const clString& id)
   : Module("ApplyFEMCurrentSource", id, Filter) 
 {
-  // Create the input port
+  // Create the input ports
   iportField_ = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
   add_iport(iportField_);
 
-  iportSource_=scinew FieldIPort(this, "Source", MatrixIPort::Atomic);
+  iportSource_=scinew FieldIPort(this, "Dipole Sources", MatrixIPort::Atomic);
   add_iport(iportSource_);
 
   iportRhs_=scinew MatrixIPort(this, "Input RHS", MatrixIPort::Atomic);
@@ -86,6 +95,7 @@ ApplyFEMCurrentSource::~ApplyFEMCurrentSource()
 
 void ApplyFEMCurrentSource::execute()
 {
+  //! Obtaining handles to computation objects
   FieldHandle hField;
   
   if (!iportField_->get(hField) || !hField.get_rep()) {
@@ -138,6 +148,8 @@ void ApplyFEMCurrentSource::execute()
     rhs->zero();
   }
   
+
+  //! Computing contributions of dipoles to RHS
   TetVolMesh::node_iterator ii;
   
   for (ii=hDipField->get_typed_mesh()->node_begin(); ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
@@ -145,12 +157,12 @@ void ApplyFEMCurrentSource::execute()
     Vector dir = hDipField->value(*ii);
     Point p;
     hDipField->get_typed_mesh()->get_point(p, *ii);
-   
+    
     if (hMesh->locate(loc, p)) {
       double s1, s2, s3, s4;
       Vector g1, g2, g3, g4;
       hMesh->get_gradient_basis(loc, g1, g2, g3, g4);
-  
+      
       s1=Dot(g1,dir);
       s2=Dot(g2,dir);
       s3=Dot(g3,dir);
@@ -163,29 +175,20 @@ void ApplyFEMCurrentSource::execute()
       (*rhs)[cell_nodes[1]]+=s2;
       (*rhs)[cell_nodes[2]]+=s3;
       (*rhs)[cell_nodes[3]]+=s4;
-     
-#if 0
-      msgStream_ << "ApplyFEMCurrentSource :: Here's the RHS vector: ";
-      for (int jj=0; jj<hMesh->nodes_size(); jj++) {
-	if ((*rhs)[jj]!=0){
-	  msgStream_ << "i = " << jj << ", val=" << (*rhs)[jj]<< endl;
-	}
-      }
-      msgStream_ << "ApplyFEMCurrentSource :: Here's the dipole: ";
-      msgStream_ << "Pos: " << p << ", Moment=" << dir  << endl;
-#endif
-
-    } else {
+    }
+    else {
       loc=0;
       dir=Vector(0,0,0);
       msgStream_ << "Dipole: "<< p <<" not located within mesh!\n";
     }
     
-    gen=hSource->generation;
+    gen_=hSource->generation;
   }
-
+  
+  //! Sending result
   oportRhs_->send(MatrixHandle(rhs)); 
 }
+
 } // End namespace BioPSE
 
 
