@@ -50,7 +50,7 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
 	Core/GuiInterface Core/Util \
-	Core/Datatypes
+	Core/Datatypes Core/Parts
 
 CFLAGS += $(MPEG_DEF_FLAG) $(LIBIMAGE_DEF_FLAG)
 

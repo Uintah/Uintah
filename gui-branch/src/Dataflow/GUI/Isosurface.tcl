@@ -23,16 +23,22 @@ package require Iwidgets 3.0
 itcl::class SCIRun_Visualization_Isosurface {
     inherit ModuleGui
 
+    # variable to be auto reported
+    public variable algorithm   0
+    public variable extract_from_new_field 0
+    public variable build_trisurf 0
+    public variable np          1
+
     public variable isoval      0
     public variable isoval_min  0
     public variable isoval_max  4095
     public variable continuous  0
-    public variable extract_from_new_field 0
-    public variable algorithm   0
+
+    # info about the current field
     public variable type        ""
     public variable gen         0
-    public variable build_trisurf 0
-    public variable np          1
+    
+    # select an algorithm
     public variable active_tab  "MC"
     public variable update_type Release
     public variable opt
@@ -54,7 +60,11 @@ itcl::class SCIRun_Visualization_Isosurface {
 
 	trace variable [scope active_tab] w "$this switch_to_active_tab"
 	trace variable [scope update_type] w "$this set_update_type"
-	auto-var-set [scope active_tab]
+	auto-var-set [scope np]
+	auto-var-set [scope extract_from_new_field]    
+	auto-var-set [scope build_trisurf]
+	auto-var-set [scope algorithm]
+	auto-var-set [scope np]
     }
 
     method switch_to_active_tab {name1 name2 op}
@@ -79,6 +89,7 @@ body SCIRun_Visualization_Isosurface::switch_to_active_tab {name1 name2 op} {
 }
 
 body SCIRun_Visualization_Isosurface::ui {} {
+    set foo 4
     set w .ui[modname]
     if {[winfo exists $w]} {
 	raise $w
@@ -204,11 +215,6 @@ body SCIRun_Visualization_Isosurface::select-alg { alg } {
 }
 
 body SCIRun_Visualization_Isosurface::set_update_type { name1 name2 op } {
-    puts stdout "set update type"
-    puts stdout $name1
-    puts stdout $name2
-    puts stdout $op
-    puts stdout $update_type
     set window .ui[modname]
     if {[winfo exists $window]} {
 	set opt [$window.f.opt childsite]
@@ -218,7 +224,6 @@ body SCIRun_Visualization_Isosurface::set_update_type { name1 name2 op } {
 
 body SCIRun_Visualization_Isosurface::update-type { w } {
     set update_type [$w get]
-    puts "update to update_type current is $continuous"
     if { $update_type == "Auto" } {
 	set continuous 1
     } else {

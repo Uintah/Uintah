@@ -87,7 +87,8 @@ void add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
 }
 
 ViewWindow::ViewWindow(Viewer* s, const string& id)
-  : manager(s),
+  : Part(s, id, "ViewWindow" ),
+    manager(s),
     pos("pos", id, this),
     caxes("caxes", id, this),iaxes("iaxes", id, this), 
     doingMovie(false),
@@ -109,12 +110,13 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
     drawimg("drawimg", id, this),
     saveprefix("saveprefix", id, this)
 {
+  cerr << "new viewwindow " << id << endl;
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
 
   view.set(homeview);
 
-  tcl_add_command(id+"-c");
+  //tcl_add_command(id+"-c");
   current_renderer=0;
   maxtag=0;
   mouse_obj=0;
@@ -168,13 +170,15 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
     vis->tagid=maxtag++;
     visible[si->name] = vis;
     ostringstream str;
-    str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
-    tcl_execute(str.str().c_str());
+    str << /*id << */ " addObject " << vis->tagid << " \"" << si->name << "\"";
+    command( str.str() );
+    //tcl_execute(str.str().c_str());
   } else {
     vis = (*viter).second;
     ostringstream str;
-    str << id << " addObject2 " << vis->tagid;
-    tcl_execute(str.str().c_str());
+    str << /*id << */ " addObject2 " << vis->tagid;
+    command( str.str() );
+    //tcl_execute(str.str().c_str());
   }
   // invalidate the bounding box
   bb.reset();
@@ -192,8 +196,9 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
   else {
     vis = (*viter).second;
     ostringstream str;
-    str << id << " removeObject " << vis->tagid;
-    tcl_execute(str.str().c_str());
+    str <</* id <<*/ " removeObject " << vis->tagid;
+    command( str.str() );
+    //tcl_execute(str.str().c_str());
   }
 				// invalidate the bounding box
   bb.reset();
@@ -223,7 +228,7 @@ void ViewWindow::spawnChCB(CallbackData*, void*)
 
 ViewWindow::~ViewWindow()
 {
-  tcl_rem_command( id+"-c" );
+  //tcl_rem_command( id+"-c" );
 }
 
 void ViewWindow::get_bounds(BBox& bbox)
@@ -2158,8 +2163,9 @@ void ViewWindow::update_mode_string(GeomObj* pick_obj)
 void ViewWindow::update_mode_string(const string& msg)
 {
   ostringstream str;
-  str << id << " updateMode \"" << msg << "\"";
-  tcl_execute(str.str().c_str());
+  str << /*id << */ " updateMode \"" << msg << "\"";
+  command( str.str() );
+  //tcl_execute(str.str().c_str());
 }
 
 ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, MouseHandler handler,

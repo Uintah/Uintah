@@ -30,6 +30,7 @@
 #ifndef SCI_project_module_ViewWindow_h
 #define SCI_project_module_ViewWindow_h
 
+#include <Core/Parts/Part.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/FutureValue.h>
 #include <Dataflow/Comm/MessageBase.h>

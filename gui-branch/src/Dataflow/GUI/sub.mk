@@ -85,6 +85,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
+	$(SRCDIR)/ViewWindow.tcl \
 	$(SRCDIR)/TclStream.tcl \
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Dataflow/GUI
