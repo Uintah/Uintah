@@ -1,6 +1,10 @@
 #ifndef UINTAH_HOMEBREW_Variable_H
 #define UINTAH_HOMEBREW_Variable_H
 
+#include <Packages/Uintah/CCA/Ports/InputContext.h>
+#include <Packages/Uintah/CCA/Ports/OutputContext.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+
 namespace Uintah {
 
 class TypeDescription;

@@ -6,15 +6,19 @@
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/TypeUtils.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 
 #include <iosfwd>
 #include <iostream>
+#include <errno.h>
+
+namespace Uintah {
 
 using namespace std;
 
-namespace Uintah {
 /**************************************
 
 CLASS
@@ -61,6 +65,8 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&);
       virtual void reduce(const ReductionVariableBase&);
       virtual void emit(ostream&);
+      virtual void emit(OutputContext&);
+      virtual void read(InputContext&);
       virtual void allocate(const Patch*)
       {
 	throw InternalError("Should not call ReductionVariable<T, Op>"

@@ -38,6 +38,8 @@ namespace Uintah {
 using namespace SCIRun;
 using namespace std;
 
+class VarLabel;
+
    struct eqstr { // comparison class used in hash_map to compare keys
      bool operator()(const char* s1, const char* s2) const {
        return strcmp(s1, s2) == 0;

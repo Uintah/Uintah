@@ -1,7 +1,12 @@
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
+#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+
 #include <Dataflow/XMLUtil/SimpleErrorHandler.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/InternalError.h>
@@ -555,7 +560,7 @@ DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode,
       throw InternalError("Cannot find Data in timestep");
    for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
       if(n.getNodeName().equals(DOMString("Datafile"))){
-	 int proc = -1;
+	//	 int proc = -1;
 	 DOM_NamedNodeMap attributes = n.getAttributes();
 	 DOM_Node procNode = attributes.getNamedItem("proc");
 	 if (procNode != NULL) {

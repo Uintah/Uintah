@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <string>
+#include <vector>
 #include <map>
 
 #ifdef __sgi
@@ -30,7 +31,9 @@ namespace Uintah {
 
 class TypeDescription;
 
-using namespace std;
+using std::string;
+using std::vector;
+using std::map;
 using namespace SCIRun;
 
 // This is the "base" problem spec.  There should be ways of breaking
@@ -85,6 +88,7 @@ WARNING
       void require(const std::string& name, IntVector& value);
       void require(const std::string& name, Vector& value);
       void require(const std::string& name, Point& value);
+      void require(const std::string& name, vector<double>& value);
 
    // Get any optional attributes associated with a tag
 

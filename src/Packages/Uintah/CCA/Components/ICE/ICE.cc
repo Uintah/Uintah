@@ -40,6 +40,9 @@ using std::max;
 using namespace SCIRun;
 using namespace Uintah;
 
+static int iterNum = 0;
+static bool computeDt = false;
+
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
 {
@@ -222,6 +225,8 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
     Task* t = scinew Task("ICE::actuallyInitialize", patch, dw, dw,this,
 			  &ICE::actuallyInitialize);
     t->computes( dw, d_sharedState->get_delt_label() );
+
+    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) {
       ICEMaterial*  matl = d_sharedState->getICEMaterial(m);
       int dwindex = matl->getDWIndex();
       

@@ -1,4 +1,4 @@
-#include <Uintah/Components/MPM/PhysicalBC/CrackBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
@@ -9,9 +9,6 @@ using namespace std;
 
 CrackBC::CrackBC(ProblemSpecP& ps)
 {
-  using SCICore::Geometry::Cross;
-  using SCICore::Geometry::Dot;
-  
   Point c1,c2,c3,c4;
   ps->require("corner1",c1);
   ps->require("corner2",c2);

@@ -207,7 +207,7 @@ void NCScalarField<T>::compute_bounds()
  
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    min = nMin( min, (*r)->getBox().lower());
+    min = Min( min, (*r)->getBox().lower());
     max = Max( max, (*r)->getBox().upper());
   }
 
@@ -320,7 +320,6 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double,
 template <class T>
 Vector NCScalarField<T>::gradient(const Point& p)
 {
-  using SCICore::Math::Interpolate;
   Uintah::Box b;
   int i;
   Level::const_patchIterator r;

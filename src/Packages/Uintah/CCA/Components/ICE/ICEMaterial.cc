@@ -14,6 +14,8 @@
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
+#define YOU_CANNOT_DO_THIS 1.0e-100  // d_SMALL_NUM
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -176,7 +178,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
        temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
        cv[*iter]         = d_specificHeat;
        rho_micro[*iter]  = d_density;
-       rho_CC[*iter]     = d_density*vol_frac_CC[*iter] + d_SMALL_NUM;
+       rho_CC[*iter]     = d_density*vol_frac_CC[*iter] + YOU_CANNOT_DO_THIS;
    }
   }
 }
