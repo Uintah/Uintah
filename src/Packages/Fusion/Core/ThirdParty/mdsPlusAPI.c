@@ -295,14 +295,14 @@ double* get_grid( const char *axis, int *dims )
   rank = get_dims( buf, dims );
 
   /* Make sure the rank is correct for the axis specified. */
-  if( ( strcmp( axis, "R"   ) == 0 && rank == 2 ) ||
-      ( strcmp( axis, "PHI" ) == 0 && rank == 1 ) ||
-      ( strcmp( axis, "X"   ) == 0 && rank == 3 ) ||
-      ( strcmp( axis, "Y"   ) == 0 && rank == 3 ) ||
-      ( strcmp( axis, "Z"   ) == 0 && rank == 2 ) ||
-      ( strcmp( axis, "K"   ) == 0 && rank == 1 ) ||
+  if( ( strcmp( axis, "R"        ) == 0 && rank == 2 ) ||
+      ( strcmp( axis, "PHI"      ) == 0 && rank == 1 ) ||
+      ( strcmp( axis, "X"        ) == 0 && rank == 3 ) ||
+      ( strcmp( axis, "Y"        ) == 0 && rank == 3 ) ||
+      ( strcmp( axis, "Z"        ) == 0 && rank == 2 ) ||
+      ( strcmp( axis, "K"        ) == 0 && rank == 1 ) ||
       ( strcmp( axis, "RADIAL"   ) == 0 && rank == 1 ) ||
-      ( strcmp( axis, "POLOIDAL"   ) == 0 && rank == 1 ) )
+      ( strcmp( axis, "POLOIDAL" ) == 0 && rank == 1 ) )
   {
     /* The dimensions for the axis. */
     for( i=0; i<rank; i++ )
