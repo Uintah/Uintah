@@ -12,12 +12,13 @@
 src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
 
 <p class="title">Installation and Build Instructions for the SCIRun PSE</p>
-<p class="subtitle">(Unix version - Updated Novemeber 27, 2000)</p>
+<p class="subtitle">(Unix version - Updated January 11, 2001)</p>
 
 <p class="head">Table of contents</p>
 <ol class="toc">
       <LI><A HREF="#Prerequisites">Prerequisites</A></LI>
       <LI><A HREF="#Requirements">System Software Requirements</A></LI>
+      <LI><A HREF="#Recommend">System Recommendations</A></LI>
       <LI><A HREF="#Installing">Installing SCIRun</A></LI>
       <LI><A HREF="#Building">Building SCIRun</A></LI>
       <LI><A HREF="#RunningSCIRun">Running SCIRun</A></LI>
@@ -198,6 +199,20 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       </TR>
     </TABLE>
 
+<p class="head"><a name="Recommend">System Recommendations</a></p>
+    <p class="firstpara">
+      <b>For SGI machines:</b>
+      R10K 250MHz processor(s),
+      Texture mapping hardware
+    </p>
+
+
+    <p class="firstpara">
+      <b>For Linux machines:</b>
+        PIII 500MHz processor(s),
+	NVidia Geforce accelerated graphics card
+    </p>
+
 <p class="head"><a name="Installing">Installing SCIRun</a></p>
     <p class="firstpara">
       <b>1) Choose a mechanism for obtaining the SCIRun source tree.</b>
@@ -244,13 +259,24 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
     <p class="firstpara">
       The following are example installation transcripts:
     </p>
+
+    <p class="firstpara">
+      <b>For tarball:</b>
+    </p>
+
     <pre class="example">cd /usr/local/contrib
 gunzip SCIRun.tar.gz
 tar xvf SCIRun.tar
     </pre>
+
+    <p class="firstpara">
+      <b>For CVS:</b>
+    </p>
+    
     <pre class="example">cd /usr/local/contrib
 cvs checkout SCIRun
     </pre>
+
     <p class="firstpara"> 
       The root of the resulting SCIRun source tree will be referred to 
       as <i><b><font color=green>SCIRUN_TOP</font></b></i> from now on.
@@ -258,17 +284,15 @@ cvs checkout SCIRun
       examples would be "/usr/local/contrib/SCIRun" .
     </p>
 
+    <p class="firstpara">
+      The rest of the instructions apply to SCIRun trees acquired using
+      both the tarball and CVS mechanisms.
+    </p>
 
 <p class="head"><a name="Building">Building SCIRun</a></p>
   <p class="firstpara">
     <b>1) Make sure that the system setup matches the 
     <A HREF="#Requirements">system requirements</A>.</b>
-  </p>
-
-  <p class="firstpara"
-    Verify that the environment variables (i.e. PATH
-    and LD_LIBRARY_PATH) are set to use the required
-    programs and libraries.
   </p>
 
   <p class="firstpara">
@@ -290,7 +314,7 @@ cvs checkout SCIRun
   <p class="firstpara">
     Where CONFIGURE_OPTIONS are one or more of 
     <a href="makefiles.html#configure">these</a>.<br><br>
-    An example configure command:
+    An example of a typical configure command:
   </p>
 
   <pre class="example">configure --enable-package="Uintah BioPSE" \
@@ -420,7 +444,7 @@ cvs checkout SCIRun
 /usr/local/contrib/scirun_stuff/src/tk8.3.2
 /usr/local/contrib/scirun_stuff/src/itcl3.1.0
 /usr/local/contrib/scirun_stuff/src/blt2.4u
-/usr/local/contrib/scirun_stuff/src/xerces-c1_1
+/usr/local/contrib/scirun_stuff/src/xerces-c1_3
 /usr/local/contrib/scirun_stuff/src/make-3.79.1
 /usr/local/contrib/scirun_stuff/man
 /usr/local/contrib/scirun_stuff/lib
@@ -465,9 +489,7 @@ cvs checkout SCIRun
       For Tk:
     </p>
     <pre class="example">configure --enable-shared \
-	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
-          --with-tcl=<i><b><font 
-	  color=green>INST_DIR</font></b></i>/src/tcl8.3.2/unix
+	  --prefix=<i><b><font color=green>INST_DIR</font></b></i>
     </pre>
 
     <p class="firstpara">
@@ -475,8 +497,6 @@ cvs checkout SCIRun
     </p>
     <pre class="example">configure --enable-shared \
 	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
-          --with-tcl=<i><b><font color=green>INST_DIR</font></b></i>/lib \
-          --with-tk=<i><b><font color=green>INST_DIR</font></b></i>/lib
     </pre>
       
     <p class="firstpara">
@@ -484,8 +504,6 @@ cvs checkout SCIRun
     </p>
     <pre class="example">configure --enable-shared \
 	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
-	  --with-tcl=<i><b><font color=green>INST_DIR</font></b></i>/lib \
-	  --with-tk=<i><b><font color=green>INST_DIR</font></b></i>/lib \
 	  --with-cc=cc
     </pre>
 
@@ -560,7 +578,7 @@ cvs checkout SCIRun
     <p class="firstpara">
       Also, for machines using rld (e.g. SGI machines) the environment 
       variable named above as LD_LIBRARY_PATH may need to changed to
-      LD_LIBRARY32_PATH or LD_LIBRARY64_PATH depending upon machine's
+      LD_LIBRARY32_PATH or LD_LIBRARY64_PATH depending upon the machine's
       default ABI (Application Binary Interface).
     </p>
 
