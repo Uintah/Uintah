@@ -342,7 +342,7 @@ Thread::stop()
 		throw ThreadError(std::string("sem_wait: ")
 				  +strerror(errno));
 	} else {
-	    pthread_kill(priv_->threadid, SIGUSR1);
+	    pthread_kill(priv_->threadid, SIGUSR2);
 	}
     }
     unlock_scheduler();
@@ -385,7 +385,7 @@ Thread::exitAll(int code)
       for(int i=0;i<numActive;i++){
 	Thread_private* t = active[i];
 	if(t->thread != me){
-	  pthread_kill(t->threadid, SIGUSR1);
+	  pthread_kill(t->threadid, SIGUSR2);
 	}
       }
       // Wait for all threads to be in the signal handler
@@ -588,8 +588,8 @@ install_signal_handlers()
 			  +strerror(errno));
 
     action.sa_handler=(SIG_HANDLER_T)handle_siguser1;
-    if(sigaction(SIGUSR1, &action, NULL) == -1)
-	throw ThreadError(std::string("SIGUSR1 failed")
+    if(sigaction(SIGUSR2, &action, NULL) == -1)
+	throw ThreadError(std::string("SIGUSR2 failed")
 			  +strerror(errno));
 }
 
