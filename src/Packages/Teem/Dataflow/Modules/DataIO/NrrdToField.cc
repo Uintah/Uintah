@@ -507,21 +507,24 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	string cell_type = "Auto";
 	if (quad_or_tet == "Auto") {
 	  // determine if tet/quad based on properties
-	  if(pointsH->get_property( "Cell Type", property )) {
+	  if (connectH->get_property( "Cell Type",property )) {
 	    if( property.find( "Tet" ) != string::npos )
 	      cell_type = "Tet";
 	    else if( property.find( "Quad" ) != string::npos )
 	      cell_type = "Quad";
-	  } else if (connectH->get_property( "Cell Type",property )) {
+	  }
+	  else if(pointsH->get_property( "Cell Type", property )) {
 	    if( property.find( "Tet" ) != string::npos )
 	      cell_type = "Tet";
 	    else if( property.find( "Quad" ) != string::npos )
 	      cell_type = "Quad";
+	    warning("Cell Type defined in Points nrrd instead of Connectivity nrrd.");
 	  } else if (has_data_ && dataH->get_property( "Cell Type", property )) {
 	    if( property.find( "Tet" ) != string::npos )
 	      cell_type = "Tet";
 	    else if( property.find( "Quad" ) != string::npos )
 	      cell_type = "Quad";
+	    warning("Cell Type defined in Data nrrd instead of Connectivity nrrd.");
 	  } else {
 	    warning("Auto detection of Cell Type using properties failed.  Using Tet for ambiguious case of 4 points per connection.");
 	    cell_type = "Tet";
@@ -530,7 +533,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	  if (cell_type == "Tet") {
 	    mHandle = scinew TetVolMesh();
 	    connectivity = 4;	    
-	  } else if (cell_type != "Quad") {
+	  } else if (cell_type == "Quad") {
 	    mHandle = scinew QuadSurfMesh();
 	    connectivity = 4;
 	  } else {
