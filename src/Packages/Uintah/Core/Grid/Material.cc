@@ -75,4 +75,7 @@ Material::RX_Prod Material::getRxProduct()
   return d_rx_prod;
 }
 
-
+Burn* Material::getBurnModel()
+{
+  return 0;
+}
