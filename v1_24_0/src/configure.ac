@@ -3505,11 +3505,11 @@ if test "$with_ftgl" = "yes"; then
   _sci_optional=required
 elif test "$with_ftgl"; then
   _sci_lib="$with_ftgl/lib"
-  _sci_inc="$with_ftgl/include/FTGL"
+  _sci_inc="$with_ftgl/include"
   _sci_optional=specific
 fi
 
-SCI_TRY_LINK(FTGL,ftgl library,FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
 
 if test "$HAVE_FTGL" = "yes"; then
   DEF_FTGL="#define HAVE_FTGL 1"
