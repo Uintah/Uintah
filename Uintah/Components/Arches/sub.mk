@@ -11,13 +11,17 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/NonlinearSolver.cc
 #$(SRCDIR)/Discretization.cc $(SRCDIR)/PicardNonlinearSolver.cc \
 #	$(SRCDIR)/PressureSolver.cc
-PSELIBS := Uintah/Parallel Uintah/Interface
-LIBS :=
+PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/04/12 22:58:30  sparker
+# Resolved conflicts
+# Making it compile
+#
 # Revision 1.5  2000/03/22 23:42:52  sparker
 # Do not compile it all quite yet
 #
