@@ -929,23 +929,24 @@ static char updir_bits[] = {
    # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order
     # Ok, Execute, Cancel, Refresh, and Find at bottom
-    global ToolTipText
     set f7 [frame $w.f7]
     set data(okBtn)     [button $f7.ok     -text Set     -under 0 -width 6 \
 	-default active -pady 3]
+    Tooltip $f7.ok "Set the filename and dimiss\nthe UI without executing"
     if { [string length $data(-execute)] } {
        set data(executeBtn) [button $f7.execute -text Execute -under 0 -width 6\
 	  -default normal -pady 3]
-       set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 6\
+       Tooltip $f7.execute "Set the filename, execute\nthe module, and dismiss\nthe UI"
+    } 
+    set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 6\
 				 -default normal -pady 3]
-    } else {
-       set data(cancelBtn) [button $f7.cancel -text Cancel -under 0 -width 6\
-				 -default normal -pady 3]
-    }	
+    Tooltip $f7.cancel "Dismiss the UI without\nsetting the filename"
     set data(refreshBtn) [button $f7.refresh   -text Refresh   -under 0  -width 6 \
 			      -default normal -pady 3]		  
+    Tooltip $f7.refresh "Refresh the visible files\nand directories to reflect\nthe current file system"
     set data(findBtn) [button $f7.find   -text Find   -under 0  -width 6 \
-			      -default normal -pady 3]		  
+			      -default normal -pady 3]	
+    Tooltip $f7.find "Highlights (on the Network Editor) the\nmodule that corresponds to this GUI"	  
 
     # pack the widgets in f7
     pack $data(okBtn) -side left -padx 4 -anchor e -fill x -expand 1
