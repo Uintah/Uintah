@@ -204,7 +204,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 			matlindex, patch,Ghost::None,0);
 
   ParticleSubset* remove_subset =
-		new_dw->createParticleSubset(0, matlindex, patch);
+	new ParticleSubset(pset->getParticleSet(), false, matlindex, patch);
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -237,6 +237,10 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.12  2000/06/23 18:05:59  guilkey
+// Used a different way of creating the delete_subset for the particles
+// to be removed.
+//
 // Revision 1.11  2000/06/21 20:51:40  guilkey
 // Implemented the removal of particles that are completely consumed.
 // The function that does the removal doesn't yet work.
