@@ -52,7 +52,8 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
     LocallyComputedPatchVarMap patchGrouper;
     const PatchSubset* patches = level->allPatches()->getUnion();
     patchGrouper.addComputedPatchSet(0, patches);
-    superPatches = patchGrouper.getSuperPatches(0);
+    patchGrouper.makeGroups();
+    superPatches = patchGrouper.getSuperPatches(0, level.get_rep());
     ASSERT(superPatches != 0);
 
     LevelP newLevel = newGrid->addLevel(level->getAnchor(), level->dCell());
