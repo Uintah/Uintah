@@ -1459,6 +1459,13 @@ else
    pkg_fusion="no"
 fi
 
+u=`echo $package | sed 's/.*Insight.*/Insight/'`
+if test "$u" = "Insight" ; then
+   pkg_insight="yes"
+else
+   pkg_insight="no"
+fi
+
 if test "$enable_sci_malloc" = "yes"; then
   DEF_MALLOC=""
 else
@@ -3081,29 +3088,36 @@ AC_SUBST(DEF_GLOBUS)
 
 ##  --  search for Insight  ----------------------------------------------------
 
-AC_MSG_CHECKING(for Insight.)
+if test "$pkg_insight" = "yes"; then
 
-if test "$with_insight"; then
-  dir="$with_insight"
-else
-  dir="/usr/local"
-fi
+   # Insight is a large distribution. 
+   # we do not want to check all of it. We thus check only if the
+   # include and lib Insight dirs exist.
 
-if test -a "$dir/lib/InsightToolkit/ITKConfig.cmake"; then
-   INSIGHT_LIB_FLAG="-lVXLNumerics -lITKIO -lITKBasicFilters -lITKAlgorithms -lITKMetaIO -litkpng -litkzlib -lITKCommon "
-    INSIGHT_LIB_DIR_FLAG="-L$dir/lib/InsightToolkit"
-    dir=$dir/include/InsightToolkit 
+   AC_MSG_CHECKING(for Insight.)
 
-    INC_INSIGHT_H="-I$dir -I$dir/Common -I$dir/BasicFilters -I$dir/Algorithms -I$dir/IO -I$dir/Numerics -I$dir/Numerics/vxl -I$dir/Numerics/vxl/vnl -I$dir/Numerics/vxl/vcl -I$dir/SpatialObject -I$dir/Utilities"
-    DEF_INSIGHT="#define HAVE_INSIGHT"
-    HAVE_INSIGHT="yes"
+   if test "$with_insight"; then
+      dir="$with_insight"
+   else
+      dir="/usr/local"
+   fi
 
-    AC_MSG_RESULT($dir)
+   if test -a "$dir/lib/InsightToolkit/ITKConfig.cmake"; then
+      INSIGHT_LIB_FLAG="-lVXLNumerics -lITKIO -lITKBasicFilters -lITKAlgorithms -lITKMetaIO -litkpng -litkzlib -lITKCommon "
+      INSIGHT_LIB_DIR_FLAG="-L$dir/lib/InsightToolkit"
 
-else
-  echo
-  AC_MSG_RESULT(not found.)
-  echo
+
+      dir=$dir/include/InsightToolkit 
+
+      INC_INSIGHT_H="-I$dir -I$dir/Common -I$dir/BasicFilters -I$dir/Algorithms -I$dir/IO -I$dir/Numerics -I$dir/Numerics/vxl -I$dir/Numerics/vxl/vnl -I$dir/Numerics/vxl/vcl -I$dir/SpatialObject -I$dir/Utilities"
+      DEF_INSIGHT="#define HAVE_INSIGHT"
+      HAVE_INSIGHT="yes"
+
+      AC_MSG_RESULT($dir)
+
+   else
+      AC_MSG_RESULT(not found.)
+   fi
 fi
 
 AC_SUBST(HAVE_INSIGHT)
