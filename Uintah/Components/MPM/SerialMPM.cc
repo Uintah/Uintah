@@ -969,8 +969,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 		 // Get the node indices that surround the cell
 		 IntVector ni[8];  double S[8];
 	 
-		 if(!patch->findCellAndWeights(px[idx], ni, S))
-		    throw InternalError("Particle not in patch");
+		 patch->findCellAndWeights(px[idx], ni, S);
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
@@ -1003,7 +1002,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 		 // Get the node indices that surround the cell
 		 IntVector ni[8];  double S[8];
 	 
-		 if(!patch->findCellAndWeights(px[idx], ni, S))
+		 patch->findCellAndWeights(px[idx], ni, S);
 		    throw InternalError("Particle not in patch");
 
 		 // Add each particles contribution
@@ -1038,8 +1037,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 		 // Get the node indices that surround the cell
 		 IntVector ni[8];  double S[8];
 	 
-		 if(!patch->findCellAndWeights(px[idx], ni, S))
-		    throw InternalError("Particle not in patch");
+		 patch->findCellAndWeights(px[idx], ni, S);
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
@@ -1208,8 +1206,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 IntVector ni[8];
 	 double S[8];
 
-  	 if(!patch->findCellAndWeights(px[idx], ni, S))
-	      throw InternalError("Particle not in patch");
+  	 patch->findCellAndWeights(px[idx], ni, S);
 
          Visibility vis;
   	 vis = pVisibility[idx];
@@ -1241,8 +1238,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 IntVector ni[8];
 	 double S[8];
 
-  	 if(!patch->findCellAndWeights(px[idx], ni, S))
-	      throw InternalError("Particle not in patch");
+  	 patch->findCellAndWeights(px[idx], ni, S);
 
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
@@ -1460,10 +1456,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Vector d_S[8];
          double S[8];
 
-         if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-  	   continue;
-         if(!patch->findCellAndWeights(px[idx], ni, S))
-           continue;
+         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+         patch->findCellAndWeights(px[idx], ni, S);
 
          Visibility vis;
          vis = pVisibility[idx];
@@ -1490,10 +1484,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          Vector d_S[8];
          double S[8];
 
-         if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-  	   continue;
-         if(!patch->findCellAndWeights(px[idx], ni, S))
-           continue;
+         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+         patch->findCellAndWeights(px[idx], ni, S);
 
          for (int k = 0; k < 8; k++){
 	   if(patch->containsNode(ni[k])){
@@ -1564,8 +1556,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
          // Get the node indices that surround the cell
          IntVector ni[8];
          Vector d_S[8];
-         if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-  	   continue;
+         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
          Visibility vis;
          if(mpm_matl->getFractureModel()) {
@@ -1936,10 +1927,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double S[8];
         Vector d_S[8];
 
-        if(!patch->findCellAndWeights(px[idx], ni, S))
-	    continue;
-        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-            continue;
+        patch->findCellAndWeights(px[idx], ni, S);
+        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
         Visibility vis;
 	int numVisibleNodes = 0;
@@ -2002,10 +1991,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double S[8];
         Vector d_S[8];
 
-        if(!patch->findCellAndWeights(px[idx], ni, S))
-	    continue;
-        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-            continue;
+        patch->findCellAndWeights(px[idx], ni, S);
+        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -2062,6 +2049,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.167  2000/11/30 17:08:32  guilkey
+// Got rid of the if(!) in front of the findCell functions, as this logic
+// is no longer needed.
+//
 // Revision 1.166  2000/11/29 18:50:22  guilkey
 // Fixed the problems that caused the regression test to fail.  Had
 // to add "containsNode" stuff back in.
