@@ -49,6 +49,8 @@ public:
 
   virtual bool compute_min_max(double &minout, double &maxout) const = 0;
   virtual bool interpolate(double &result, const Point &p) const = 0;
+  virtual bool interpolate_many(vector<double> &results,
+				const vector<Point> &points) const = 0;
 };
 
 
@@ -62,8 +64,12 @@ public:
   
   virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
+  virtual bool interpolate_many(vector<double> &results,
+				const vector<Point> &points) const;
 
 private:
+
+  bool finterpolate(double &result, const Point &p) const;
 
   const F        *fld_;
 };
@@ -71,7 +77,7 @@ private:
 
 template <class F>
 bool
-SFInterface<F>::interpolate(double &result, const Point &p) const
+SFInterface<F>::finterpolate(double &result, const Point &p) const
 {
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch(fld_->data_at())
@@ -152,6 +158,29 @@ SFInterface<F>::interpolate(double &result, const Point &p) const
     return false;
   }
   return true;
+}
+
+template <class F>
+bool
+SFInterface<F>::interpolate(double &result, const Point &p) const
+{
+  return finterpolate(result, p);
+}
+
+
+template <class F>
+bool
+SFInterface<F>::interpolate_many(vector<double> &results,
+				 const vector<Point> &points) const
+{
+  bool all_interped_p = true;
+  results.resize(points.size());
+  unsigned int i;
+  for (i=0; i < points.size(); i++)
+  {
+    all_interped_p &=  interpolate(results[i], points[i]);
+  }
+  return all_interped_p;
 }
 
 
@@ -252,6 +281,8 @@ public:
 
   virtual bool compute_min_max(Vector &minout, Vector &maxout) const = 0;
   virtual bool interpolate(Vector &result, const Point &p) const = 0;
+  virtual bool interpolate_many(vector<Vector> &results,
+				const vector<Point> &points) const = 0;
 };
 
 
@@ -264,10 +295,13 @@ public:
     fld_(fld)
   {}
   
-  virtual bool compute_min_max(Vector  &minout, Vector  &maxout) const;
-  virtual bool interpolate(Vector  &result, const Point &p) const;
+  virtual bool compute_min_max(Vector &minout, Vector  &maxout) const;
+  virtual bool interpolate(Vector &result, const Point &p) const;
+  virtual bool interpolate_many(vector<Vector> &results,
+				const vector<Point> &points) const;
 
 private:
+  bool finterpolate(Vector &result, const Point &p) const;
 
   const F        *fld_;
 };
@@ -275,7 +309,7 @@ private:
 
 template <class F>
 bool
-VFInterface<F>::interpolate(Vector  &result, const Point &p) const
+VFInterface<F>::finterpolate(Vector  &result, const Point &p) const
 {
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch(fld_->data_at())
@@ -356,6 +390,30 @@ VFInterface<F>::interpolate(Vector  &result, const Point &p) const
     return false;
   }
   return true;
+}
+
+
+template <class F>
+bool
+VFInterface<F>::interpolate(Vector &result, const Point &p) const
+{
+  return finterpolate(result, p);
+}
+
+
+template <class F>
+bool
+VFInterface<F>::interpolate_many(vector<Vector> &results,
+				 const vector<Point> &points) const
+{
+  bool all_interped_p = true;
+  results.resize(points.size());
+  unsigned int i;
+  for (i=0; i < points.size(); i++)
+  {
+    all_interped_p &=  interpolate(results[i], points[i]);
+  }
+  return all_interped_p;
 }
 
 
