@@ -94,7 +94,7 @@ LocallyComputedPatchVarMap::addComputedPatchSet(const VarLabel* label,
   const Level* level = patches->get(0)->getLevel();
 #if SCI_ASSERTION_LEVEL >= 1
   // Each call to this should contain only one level (one level at a time)
-  for(int i=i;i<patches->size();i++){
+  for(int i=1;i<patches->size();i++){
     const Patch* patch = patches->get(i);
     ASSERT(patch->getLevel() == level);
   }
