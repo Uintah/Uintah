@@ -125,7 +125,7 @@ int
 BaseConstraint::Satisfy( const Index, const Scheme, const Real, BaseVariable*&, VarCore& )
 {
    ASSERTFAIL("BaseConstraint: Can't satisfy!");
-   return 0;
+   //return 0;
 }
 
 
@@ -191,6 +191,9 @@ BaseConstraint::Register()
 
 //
 // $Log$
+// Revision 1.6  2000/06/15 19:50:56  sparker
+// Fixed warnings
+//
 // Revision 1.5  1999/10/07 02:07:15  sparker
 // use standard iostreams and complex type
 //
