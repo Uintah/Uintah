@@ -59,27 +59,45 @@ class CCAComponentModel : public ComponentModel
 public:
   CCAComponentModel(SCIRunFramework* framework);
   virtual ~CCAComponentModel();
-  
+
+  /** ? */
   sci::cca::Services::pointer createServices(const std::string& instanceName,
                                              const std::string& className,
                                              const sci::cca::TypeMap::pointer& properties);
+
+  /** Returns true if component type \em type has been registered with this
+      component model.  In other words, returns true if this ComponentModel
+      knows how to instantiate component \em type. */
   virtual bool haveComponent(const std::string& type);
+
+  /** Allocates an instance of the component of type \em type.  The parameter
+      \em name is assigned as the unique name of the newly created instance.
+      Returns a smart pointer to the newly created instance, or a null pointer
+      on failure. */
   virtual ComponentInstance* createInstance(const std::string& name,
                                             const std::string& type,
                                             const sci::cca::TypeMap::pointer& properties);
   
+  /** Deallocates the component instance \em ci.  Returns \code true on success and
+      \code false on failure. */
   virtual bool destroyInstance(ComponentInstance *ci);
+
+  /** Returns the name (as a string) of this component model. */
   virtual std::string getName() const;
+  
+  /** Creates a list of all the available components (as ComponentDescriptions)
+      registered in this ComponentModel. */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
                                      bool);
+
+  /** ? */
   int addLoader(resourceReference *rr);
+  /** ? */
   int removeLoader(const std::string &loaderName);
   
-  /**
-   * Get/Set the directory path to the XML files describing CCA
+  /** Get/Set the directory path to the XML files describing CCA
    * components. By default, sidlXMLPath is initialized to the
-   * environment variable SIDL_XML_PATH.
-   */
+   * environment variable SIDL_XML_PATH.  */
   std::string getSidlXMLPath() const
   { return sidlXMLPath; }
   void setSidlXMLPath( const std::string& s)
@@ -100,6 +118,7 @@ private:
   
   std::vector<resourceReference* > loaderList;
 };
-}
+
+} // end namespace SCIRun
 
 #endif

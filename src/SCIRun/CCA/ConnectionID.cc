@@ -43,13 +43,13 @@
 #include <Core/CCA/PIDL/URL.h>
 #include <SCIRun/CCA/ConnectionID.h>
 #include <iostream>
-using namespace SCIRun;
-using namespace std;
+
+namespace SCIRun {
 
 ConnectionID::ConnectionID(const sci::cca::ComponentID::pointer& user,
-			   const string& userPortName,
-			   const sci::cca::ComponentID::pointer& provider,
-			   const string& providerPortName)
+                           const std::string& userPortName,
+                           const sci::cca::ComponentID::pointer& provider,
+                           const std::string& providerPortName)
 {
   this->user=user;
   this->userPortName=userPortName;
@@ -81,5 +81,4 @@ std::string ConnectionID::getUserPortName()
   return userPortName;
 }
 
-
-
+} // end namespace SCIRun

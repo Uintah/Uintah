@@ -44,28 +44,46 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
-  class SCIRunFramework;
-  class ComponentID;
-  class ConnectionID : public sci::cca::ConnectionID {
-  public:
-    ConnectionID(const sci::cca::ComponentID::pointer& user,
-		 const std::string& userPortName,
-		 const sci::cca::ComponentID::pointer& provider,
-		 const std::string& providerPortName);
-    virtual ~ConnectionID();
-    sci::cca::ComponentID::pointer getProvider();
-    sci::cca::ComponentID::pointer getUser();
-    std::string getProviderPortName();
-    std::string getUserPortName();
-  private:
-    ConnectionID(const ConnectionID&);
-    ConnectionID& operator=(const ConnectionID&);
-    std::string userPortName;
-    std::string providerPortName;
-    sci::cca::ComponentID::pointer user;
-    sci::cca::ComponentID::pointer provider;
-  };
-}
+
+class SCIRunFramework;
+class ComponentID;
+
+/**
+ * \class ConnectionID
+ *
+ *  This class is an implementation of the cca::ConnectionID interface, which
+ *  describes a connection between CCA components. A connection is made at the
+ *  users direction when one component provides a Port that another component
+ *  advertises for and uses.  The components are referred to by their opaque
+ *  ComponentID references and the Ports are referred to by their string
+ *  instance names.
+ */
+class ConnectionID : public sci::cca::ConnectionID
+{
+public:
+  ConnectionID(const sci::cca::ComponentID::pointer& user,
+               const std::string& userPortName,
+               const sci::cca::ComponentID::pointer& provider,
+               const std::string& providerPortName);
+  virtual ~ConnectionID();
+  /** Returns a smart pointer to the component that is the port provider.*/
+  sci::cca::ComponentID::pointer getProvider();
+  /** Returns a smart pointer to the component that is the port user.    */
+  sci::cca::ComponentID::pointer getUser();
+  /** Returns the provides port name from the providing component.*/
+  std::string getProviderPortName();
+  /** Returns the uses port name from the using component.*/
+  std::string getUserPortName();
+private:
+  ConnectionID(const ConnectionID&);
+  ConnectionID& operator=(const ConnectionID&);
+  std::string userPortName;
+  std::string providerPortName;
+  sci::cca::ComponentID::pointer user;
+  sci::cca::ComponentID::pointer provider;
+};
+
+} // end namespace SCIRun
 
 #endif
 

@@ -44,20 +44,32 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCIRun {
-  class CCAException : public Exception {
-  public:
-    CCAException(const std::string& description);
-    CCAException(const CCAException&);
-    virtual ~CCAException();
+namespace SCIRun
+{
 
-    virtual const char* message() const;
-    virtual const char* type() const;
-  private:
-    std::string description;
+/**
+ * \class CCAException
+ *
+ * An exception object for the CCA Component model.
+ */
+class CCAException : public Exception
+{
+public:
+  CCAException(const std::string& description);
+  CCAException(const CCAException&);
+  virtual ~CCAException();
 
-    CCAException& operator=(const CCAException&);
-  };
-}
+  /** Returns the description associated with this exception. */
+  virtual const char* message() const;
+  
+  /** Returns a string that identifies the unique type of this exception. */
+  virtual const char* type() const;
+private:
+  std::string description;
+  
+  CCAException& operator=(const CCAException&);
+};
+
+} // end namespace SCIRun
 
 #endif

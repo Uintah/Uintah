@@ -39,10 +39,10 @@
  */
 
 #include <SCIRun/CCA/CCAException.h>
-using namespace SCIRun;
-using namespace std;
 
-CCAException::CCAException(const string& description)
+namespace SCIRun {
+
+CCAException::CCAException(const std::string& description)
   : description(description)
 {
 }
@@ -65,3 +65,5 @@ const char* CCAException::type() const
 {
   return "CCAException";
 }
+
+} // end namespace SCIRun

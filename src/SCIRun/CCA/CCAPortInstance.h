@@ -48,45 +48,62 @@
 #include <vector>
 
 namespace SCIRun {
-  class CCAPortInstance : public PortInstance {
-  public:
-    enum PortType {
-      Uses=0, Provides=1
-    };
-    CCAPortInstance(const std::string& portname, const std::string& classname,
-		    const sci::cca::TypeMap::pointer& properties,
-		    PortType porttype);
-    CCAPortInstance(const std::string& portname, const std::string& classname,
-		    const sci::cca::TypeMap::pointer& properties,
-		    const sci::cca::Port::pointer& port,
-		    PortType porttype);
-    ~CCAPortInstance();
-    virtual bool connect(PortInstance*);
-    virtual PortInstance::PortType portType();
-    virtual std::string getType();
-    virtual std::string getModel();
-    virtual std::string getUniqueName();
-    virtual bool disconnect(PortInstance*);
-    virtual bool canConnectTo(PortInstance*);
-    virtual bool available();
-    virtual PortInstance *getPeer();
-    std::string getName();
-    void incrementUseCount();
-    bool decrementUseCount();
-  private:
-    friend class CCAComponentInstance;
-    friend class BridgeComponentInstance;
-    std::string name;
-    std::string type;
-    sci::cca::TypeMap::pointer properties;
-    std::vector<PortInstance*> connections;
-    sci::cca::Port::pointer port;
-    PortType porttype;
-    int useCount;
 
-    CCAPortInstance(const CCAPortInstance&);
-    CCAPortInstance& operator=(const CCAPortInstance&);
-  };
-}
+/**
+ * \class CCAPortInstance
+ *
+ */
+class CCAPortInstance : public PortInstance
+{
+public:
+  enum PortType { Uses=0, Provides=1 };
+  CCAPortInstance(const std::string& portname, const std::string& classname,
+                  const sci::cca::TypeMap::pointer& properties,
+                  PortType porttype);
+  CCAPortInstance(const std::string& portname, const std::string& classname,
+                  const sci::cca::TypeMap::pointer& properties,
+                  const sci::cca::Port::pointer& port,
+                  PortType porttype);
+  ~CCAPortInstance();
+  /** */
+  virtual bool connect(PortInstance*);
+  /** */
+  virtual PortInstance::PortType portType();
+  /** */
+  virtual std::string getType();
+  /** */
+  virtual std::string getModel();
+  /** */
+  virtual std::string getUniqueName();
+  /** */
+  virtual bool disconnect(PortInstance*);
+  /** */
+  virtual bool canConnectTo(PortInstance*);
+  /** */
+  virtual bool available();
+  /** */
+  virtual PortInstance *getPeer();
+  /** */
+  std::string getName();
+  /** */
+  void incrementUseCount();
+  /** */
+  bool decrementUseCount();
+private:
+  friend class CCAComponentInstance;
+  friend class BridgeComponentInstance;
+  std::string name;
+  std::string type;
+  sci::cca::TypeMap::pointer properties;
+  std::vector<PortInstance*> connections;
+  sci::cca::Port::pointer port;
+  PortType porttype;
+  int useCount;
+  
+  CCAPortInstance(const CCAPortInstance&);
+  CCAPortInstance& operator=(const CCAPortInstance&);
+};
+
+} // end namespace SCIRun
 
 #endif
