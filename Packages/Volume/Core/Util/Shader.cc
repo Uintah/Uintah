@@ -38,6 +38,10 @@ using namespace std;
 
 namespace Volume {
 
+Shader::Shader (const std::string& name)
+  : mName(name), mId(0), mDirty(false)
+{}
+
 ShaderProgramARB::ShaderProgramARB (const string& name, const string& program)
   : Shader(name), mProgram(program.length(), 0)
 {
@@ -140,6 +144,7 @@ void
 ShaderProgramARB::bind ()
 {
   glEnable(mType);
+  cerr << (void*)glBindProgramARB << endl;
   glBindProgramARB(mType, mId);
 }
 
@@ -160,6 +165,16 @@ void
 ShaderProgramARB::setLocalParam (int i, float x, float y, float z, float w)
 {
   glProgramLocalParameter4fARB(mType, i, x, y, z, w);
+}
+
+bool
+ShaderProgramARB::valid()
+{
+  cerr << (void*)glIsProgramARB << " " << mId << endl;
+  cerr << "VALID: " << endl;
+  cerr << (int)glIsProgramARB(mId) << endl;
+  return glIsProgramARB(mId);
+  
 }
 
 //-------------------------------------------------------------------------------

@@ -23,6 +23,7 @@ SRCDIR   := Packages/Volume/Dataflow/Ports
 
 SRCS     += \
 	 $(SRCDIR)/TexturePort.cc \
+	 $(SRCDIR)/Colormap2Port.cc \
 #[INSERT NEW CODE FILE HERE]
 
 

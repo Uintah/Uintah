@@ -92,7 +92,7 @@ public:
   // Access one of the 8 vertices [0,7]
   const Point& operator[](int i) const { return corner[i]; }
   //////////
-  BrickData* data(){ return data_; }
+  BrickData* data() { return data_; }
   //////////
   // obtain the bounding box of the Brick
   BBox bbox() const;
@@ -108,8 +108,8 @@ public:
   void ComputePolys(Ray r, double  tmin, double  tmax,
                     double dt, double* ts, vector<Polygon*>& polys) const;
   void ComputePoly(Ray r, double t, Polygon*& p) const;
-  unsigned int texName() const { return name_;}
-  unsigned int* texNameP(){ return &name_; }
+  unsigned int texName(int i) const { return name_[i];}
+  unsigned int* texNameP(int i){ return &name_[i]; }
 
   double ax() const { return ax_;}
   double ay() const { return ay_;}
@@ -138,7 +138,7 @@ protected:
   double ax_, ay_, az_;
   int padx_, pady_, padz_;
 
-  unsigned int name_;
+  unsigned int name_[2];
   
   BrickData *data_;
   

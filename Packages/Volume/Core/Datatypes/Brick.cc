@@ -34,9 +34,11 @@ namespace Volume {
 
 
 Brick::Brick() :
-  padx_(0), pady_(0), padz_(0), name_(0), data_(0),
+  padx_(0), pady_(0), padz_(0), data_(0),
   quantized_(false), storingAlpha_(false)
 {
+  name_[0] = 0;
+  name_[1] = 0;
 }
   
 Brick::~Brick()
@@ -50,10 +52,11 @@ Brick::~Brick()
 Brick::Brick( BrickData *bd,
               int padx, int pady, int padz,
               const BBox*  bbox, const BBox *tbox) :
-  padx_(padx), pady_(pady), padz_(padz), name_(0), data_(bd),
+  padx_(padx), pady_(pady), padz_(padz), data_(bd),
   quantized_(false), storingAlpha_(false)
 {
-  
+  name_[0] = 0;
+  name_[1] = 0;
   /* The cube is numbered in the following way 
      
   2________6        y

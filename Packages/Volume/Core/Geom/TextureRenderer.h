@@ -30,6 +30,7 @@
 
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
+#include <Packages/Volume/Core/Datatypes/Colormap2.h>
 
 namespace Volume {
 
@@ -43,11 +44,12 @@ class TextureRenderer : public GeomObj
 public:
 
   TextureRenderer();
-  TextureRenderer(TextureHandle tex, ColorMapHandle map);
+  TextureRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2);
   TextureRenderer(const TextureRenderer&);
   virtual ~TextureRenderer();
 
   virtual void BuildTransferFunction() = 0;
+  virtual void BuildTransferFunction2() = 0;
 
   void SetTexture( TextureHandle tex ) {
     mutex_.lock(); tex_ = tex; new_texture_ = true; mutex_.unlock();
@@ -57,6 +59,14 @@ public:
     mutex_.lock(); cmap_ = cmap; //BuildTransferFunction(); 
     cmap_has_changed_ = true; mutex_.unlock();
   }
+
+  void SetColormap2(Colormap2Handle cmap2) {
+    mutex_.lock();
+    cmap2_ = cmap2;
+    cmap2_dirty_ = true;
+    mutex_.unlock();
+  }
+  
   void SetInterp( bool i) { interp_ = i;}
 
   void set_bounding_box(BBox &bb) { bounding_box_ = bb; }
@@ -79,6 +89,9 @@ protected:
   void disable_tex_coords();
 
   unsigned int cmap_texture_;
+
+  Array3<unsigned char> cmap2_array_;
+  unsigned int cmap2_texture_;
 #endif
 
 public:
@@ -97,9 +110,11 @@ protected:
   TextureHandle         tex_;
   Mutex                 mutex_;
   ColorMapHandle        cmap_;
+  Colormap2Handle       cmap2_;
 
   bool                  new_texture_;
   bool                  cmap_has_changed_;
+  bool                  cmap2_dirty_;
   DrawInfoOpenGL       *di_;
  
   bool                  interp_;

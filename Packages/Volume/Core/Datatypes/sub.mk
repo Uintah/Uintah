@@ -10,6 +10,7 @@ SRCS     += \
 	 $(SRCDIR)/BrickNode.cc \
 	 $(SRCDIR)/BrickWindow.cc \
 	 $(SRCDIR)/Texture.cc \
+	 $(SRCDIR)/Colormap2.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Exceptions Core/Geometry \

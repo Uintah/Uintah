@@ -22,6 +22,7 @@
 #include <Packages/Volume/Core/Geom/SliceRenderer.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Dataflow/Ports/TexturePort.h>
+#include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 
 #include <iostream>
 #ifdef __sgi
@@ -49,6 +50,7 @@ private:
   TextureHandle tex_;
 
   ColorMapIPort* icmap_;
+  Colormap2IPort* icmap2_;
   TextureIPort* intexture_;
   GeometryOPort* ogeom_;
   ColorMapOPort* ocmap_;
@@ -124,13 +126,14 @@ void
  VolumeSlicer::execute(){
   intexture_ = (TextureIPort *)get_iport("Texture");
   icmap_ = (ColorMapIPort *)get_iport("ColorMap");
+  icmap2_ = (Colormap2IPort *)get_iport("ColorMap2");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
   ocmap_ = (ColorMapOPort *)get_oport("ColorMap");
   if (!intexture_) {
     error("Unable to initialize iport 'GL Texture'.");
     return;
   }
-  if (!icmap_) {
+  if (!icmap_ && !icmap2_) {
     error("Unable to initialize iport 'ColorMap'.");
     return;
   }
@@ -147,7 +150,8 @@ void
   }
   
   ColorMapHandle cmap;
-  if( !icmap_->get(cmap)){
+  Colormap2Handle cmap2;
+  if( !icmap_->get(cmap) && !icmap2_->get(cmap2)){
     return;
   }
 
@@ -179,7 +183,7 @@ void
 
   //AuditAllocator(default_allocator);
   if( !slice_ren_ ){
-    slice_ren_ = new SliceRenderer(tex_, cmap);
+    slice_ren_ = new SliceRenderer(tex_, cmap, cmap2);
     slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     //    ogeom->delAll();
     geom_id_ = ogeom_->addObj( slice_ren_, "Volume Slicer");
