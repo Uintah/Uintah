@@ -652,6 +652,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::None);
             t->requires(new_dw, lb->gTemperatureRateLabel, idx, patch,
 			Ghost::AroundCells, 1);
+	    // Honglai please check this 
+            t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
+			Ghost::AroundCells, 1);
+	    // end of check  -- not sure about the (Ghost::AroundCells,1)
+
             t->requires(new_dw, lb->gTemperatureStarLabel, idx, patch,
 			Ghost::AroundCells, 1);
             t->computes(new_dw, lb->pTemperatureRateLabel_preReloc, idx, patch);
@@ -1725,6 +1730,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.115  2000/08/11 23:16:58  jas
+// Added a missing requires for gTemperatureLabel in the interpolateToParticles
+// AndUpdate method.  MPI now works for the latest SerialMPM.cc.
+//
 // Revision 1.114  2000/08/09 03:17:58  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
