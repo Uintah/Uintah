@@ -125,6 +125,22 @@ SCICORESHARE void Pio(Piostream& stream, list<T>& data)
 }
 
 
+//////////
+// PIO for pait
+#define STLPAIR_VERSION 1
+
+template <class T,class S> 
+SCICORESHARE void Pio(Piostream& stream, pair<T,S>& data)
+{ 
+  
+  stream.begin_class("STLPair", STLPAIR_VERSION);
+  
+  Pio(stream, data.first);
+  Pio(stream, data.second);
+
+  stream.end_class();  
+}
+
 } // End namespace SCIRun
 
 #endif // SCI_project_PersistentSTL_h
