@@ -90,7 +90,7 @@ class Isosurface : public Module {
   GeomObj *surface;
   FieldHandle colorfield;
   ColorMapHandle cmap;
-  TriSurfMeshHandle trisurf_mesh_;
+  FieldHandle trisurf_mesh_;
 
   //! status variables
   int geom_id;

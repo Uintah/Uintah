@@ -205,7 +205,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-update $opt.update
 
 	global $this-build_trisurf
-	checkbutton $opt.buildsurf -text "Build TriSurfField" \
+	checkbutton $opt.buildsurf -text "Build Output Field" \
 		-variable $this-build_trisurf
 
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \

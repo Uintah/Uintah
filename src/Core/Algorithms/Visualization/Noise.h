@@ -52,8 +52,8 @@ public:
   static const string& get_h_file_path();
   static CompileInfo *get_compile_info(const TypeDescription *td);
 
-  TriSurfMeshHandle trisurf_;
-  TriSurfMeshHandle get_trisurf();
+  FieldHandle trisurf_;
+  FieldHandle get_field();
 };
 
 // Noise<T>
@@ -62,7 +62,7 @@ template <class Tesselator>
 class Noise : public NoiseAlg {
   typedef typename Tesselator::field_type       field_type;
   typedef typename field_type::value_type       value_type;
-  typedef typename field_type::mesh_type::Cell::index_type cell_index_type;
+  typedef typename field_type::mesh_type::Elem::index_type cell_index_type;
   typedef SpanPoint<value_type, cell_index_type>      span_point;
 private:
   typename SpanSpace<value_type,cell_index_type>::handle_type space_;
@@ -137,7 +137,7 @@ GeomObj *Noise<Tesselator>::search( double iso, bool buildtrisurf )
   search_min_max( &space_->span[0], space_->span.size() );
 
 
-  trisurf_ = tess_->get_trisurf();
+  trisurf_ = tess_->get_field(iso);
   return tess_->get_geom();
 }
 

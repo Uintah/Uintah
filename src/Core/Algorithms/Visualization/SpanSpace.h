@@ -174,8 +174,8 @@ namespace SCIRun {
       
       typename Field::mesh_handle_type mesh = field->get_typed_mesh();
 
-      typename mesh_type::Cell::iterator cell; mesh->begin(cell);
-      typename mesh_type::Cell::iterator cell_end; mesh->end(cell_end);
+      typename mesh_type::Elem::iterator cell; mesh->begin(cell);
+      typename mesh_type::Elem::iterator cell_end; mesh->end(cell_end);
       typename mesh_type::Node::array_type nodes;
 
       for ( ; cell != cell_end; ++cell) {

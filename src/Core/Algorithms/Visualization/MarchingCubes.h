@@ -28,7 +28,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
 class Field;
@@ -46,7 +46,7 @@ public:
   virtual void set_field( Field * ) = 0;
   virtual void search( double, bool ) = 0;
   virtual GeomObj* get_geom() = 0;
-  virtual TriSurfMeshHandle get_trisurf() = 0;
+  virtual FieldHandle get_field() = 0;
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
@@ -65,7 +65,7 @@ protected:
   vector<Tesselator *> tess_;
   mesh_handle_type mesh_;
   GeomObj *geom_;
-  TriSurfMeshHandle trisurf_;
+  FieldHandle output_field_;
 public:
   MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
   virtual ~MarchingCubes() {}
@@ -75,7 +75,7 @@ public:
   virtual void set_field( Field * );
   virtual void search( double, bool=false );
   virtual GeomObj* get_geom() { return geom_; } 
-  virtual TriSurfMeshHandle get_trisurf() { return trisurf_; }
+  virtual FieldHandle get_field() { return output_field_; }
 
   void parallel_search( int, double, bool );
 };
@@ -124,15 +124,15 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 {
   if ( np_ == 1 ) {
     tess_[0]->reset(0, build_trisurf);
-    typename mesh_type::Cell::iterator cell; mesh_->begin(cell); 
-    typename mesh_type::Cell::iterator cell_end; mesh_->end(cell_end); 
+    typename mesh_type::Elem::iterator cell; mesh_->begin(cell); 
+    typename mesh_type::Elem::iterator cell_end; mesh_->end(cell_end); 
     while ( cell != cell_end)
     {
       tess_[0]->extract( *cell, iso );
       ++cell;
     }
     geom_ = tess_[0]->get_geom();
-    trisurf_ = tess_[0]->get_trisurf();
+    output_field_ = tess_[0]->get_field(iso);
   }
   else {
     Thread::parallel( this,  
@@ -162,11 +162,11 @@ MarchingCubes<Tesselator>::parallel_search( int proc,
 					    double iso, bool build_trisurf)
 {
   tess_[proc]->reset(0, build_trisurf);
-  typename mesh_type::Cell::size_type csize;
+  typename mesh_type::Elem::size_type csize;
   mesh_->size(csize);
   unsigned int n = csize;
   
-  typename mesh_type::Cell::iterator from; mesh_->begin(from);
+  typename mesh_type::Elem::iterator from; mesh_->begin(from);
   unsigned int i;
   for ( i=0; i<(proc*(n/np_)); i++) { ++from; }
   
