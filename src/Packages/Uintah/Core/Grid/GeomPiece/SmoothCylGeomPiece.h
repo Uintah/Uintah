@@ -96,12 +96,12 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     virtual Box getBoundingBox() const;
 
-  protected:
-
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles */
     //////////////////////////////////////////////////////////////////////
     int createPoints();
+
+  private:
 
     //////////////////////////////////////////////////////////////////////
     /*! Creates the particles for the two end caps */
@@ -118,7 +118,6 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     int createHollowCylPoints();
 
-  private:
 	 
     Point  d_top;
     Point  d_bottom;
@@ -127,6 +126,7 @@ namespace Uintah {
     double d_capThick;
     int d_numRadial;
     int d_numAxial;
+    string d_fileName;
 
   };
 } // End namespace Uintah

@@ -44,18 +44,9 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   if (d_capThick < 0.0)
     SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0"));
 
-  string file_name;
-  file_name = "none";
-  ps->get("output_file", file_name);
+  d_fileName = "none";
+  ps->get("output_file", d_fileName);
 
-  // Create the particles and store in the two vectors
-  createPoints();
-
-  // Write the output if requested
-  if (file_name != "none") {
-    writePoints(file_name, "pts");
-    writePoints(file_name, "vol");
-  }
 }
 
 //////////
@@ -139,6 +130,13 @@ SmoothCylGeomPiece::createPoints()
     int count = createSolidCylPoints();
     totCount += count;
   }
+
+  // Write the output if requested
+  if (d_fileName != "none") {
+    writePoints(d_fileName, "pts");
+    writePoints(d_fileName, "vol");
+  }
+
   return totCount;
 }
 

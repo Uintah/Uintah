@@ -22,7 +22,8 @@ SRCS     += \
 	$(SRCDIR)/PlaneShellPiece.cc \
 	$(SRCDIR)/SphereShellPiece.cc \
 	$(SRCDIR)/SmoothGeomPiece.cc \
-	$(SRCDIR)/SmoothCylGeomPiece.cc
+	$(SRCDIR)/SmoothCylGeomPiece.cc \
+	$(SRCDIR)/CorrugEdgeGeomPiece.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Grid        \
