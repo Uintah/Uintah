@@ -263,6 +263,8 @@ case $host in
      LDRUN_PREFIX="-Wl,-rpath "
      TIME_IMPL=Time_unix.cc
      PLATFORM_LDFLAGS="-ldl"
+     echo "checking for sstream"
+     AC_CHECK_HEADER(sstream, echo "yes", cp ${srcdir}/include/sstream sstream)
            ;;
   *)
      echo "WARNING: Untested configuration - you are on your own!"
