@@ -4,9 +4,9 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/ScatterGatherBase.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/ReductionVariable.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -19,10 +19,13 @@ using namespace SCIRun;
 static DebugStream dbg("NullScheduler", false);
 
 NullScheduler::NullScheduler(const ProcessorGroup* myworld,
-    	    	    	    	    	    	   Output* oport)
+			     Output* oport)
    : UintahParallelComponent(myworld), Scheduler(oport)
 {
-  d_generation = 0;
+   d_generation = 0;
+   delt = scinew VarLabel("delT",
+    ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
+   firstTime=true;
 }
 
 NullScheduler::~NullScheduler()
@@ -37,13 +40,18 @@ NullScheduler::initialize()
 
 void
 NullScheduler::execute(const ProcessorGroup *,
-				  DataWarehouseP   & old_dw,
-				  DataWarehouseP   & new_dw )
+		       DataWarehouseP   & old_dw,
+		       DataWarehouseP   & new_dw )
 {
    UintahParallelPort* lbp = getPort("load balancer");
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
    lb->assignResources(graph, d_myworld);
    releasePort("load balancer");
+
+   if(firstTime){
+      firstTime=false;
+      new_dw->put(delt_vartype(1.0), delt);
+   }
 
    new_dw=old_dw;
 }
