@@ -155,7 +155,7 @@ ViscoScramForBinder::allocateCMDataAddRequires(Task* task,
 					       const PatchSet* patch,
 					       MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();  <- Unused
   task->requires(Task::OldDW,pStatedataLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
