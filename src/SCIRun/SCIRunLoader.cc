@@ -50,6 +50,7 @@
 #include <Core/OS/Dir.h>
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Util/Environment.h>
 #include <Core/Util/soloader.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/resourceReference.h>
@@ -77,18 +78,7 @@ namespace SCIRun {
 SCIRunLoader::SCIRunLoader(const std::string &loaderName,
                            const std::string & frameworkURL)
 {
-  /*  Object::pointer obj=PIDL::objectFrom(frameworkURL);
-      if(obj.isNull()){
-      cerr<<"Cannot get framework from url="<<frameworkURL<<std::endl;
-      return;
-      }
-      sci::cca::AbstractFramework::pointer
-      framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-      
-      SSIDL::array1< std::string> URLs;
-      URLs.push_back(this->getURL().getString());
-      framework->registerLoader(loaderName, URLs);
-  */
+  create_sci_environment(0,0);
 }
 
 //<<<<<<< SCIRunLoader.cc
@@ -98,17 +88,15 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
 
   //////////////////////////
   //create a group here
-
+  /*
   SSIDL::array1<int> nodeSet;
   nodeSet=properties->getIntArray("nodes", nodeSet);
-  
   int mpi_size;
   int mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   MPI_Group world_group;
   MPI_Comm_group(MPI_COMM_WORLD, &world_group);
-  
   bool skip=true;
   
   //count how many nodes are involved
@@ -126,7 +114,6 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
       if(k==mpi_rank) skip=false;
     }
   }
-
   ////////////////////////////////////////////////
   // Note that the subgroup has to be created in
   // the world_group, ie, every world_group has
@@ -135,7 +122,6 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
   MPI_Group group;
   MPI_Group_incl(world_group,ns,ranks,&group );
   delete ranks;
-
   MPI_Comm MPI_COMM_COM;
   MPI_Comm_create(MPI_COMM_WORLD, group, &MPI_COMM_COM);
   /////////////////////////////////
@@ -148,24 +134,12 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
     return 0;
   }
 
-
-//=======
-/*
-int SCIRunLoader::createPInstance(const std::string& componentName,
-                                  const std::string& componentType, 
-                                  const sci::cca::TypeMap::pointer& properties,
-                                  SSIDL::array1<std::string> &componentURLs)
-{
-*/
-//>>>>>>> 1.13
+  */
   //TODO: assume type is always good?
-  std::cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<std::endl;
-  
   std::string lastname=componentType.substr(componentType.find('.')+1);  
   std::string so_name("lib/libCCA_Components_");
   so_name=so_name+lastname+".so";
-  std::cerr<<"componentType="<<componentType<<" soname="<<so_name<<std::endl;
-    
+
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
   if(!handle){
     std::cerr << "Cannot load component " << componentType << std::endl;
@@ -176,7 +150,6 @@ int SCIRunLoader::createPInstance(const std::string& componentName,
   for(int i=0;i<(int)makername.size();i++)
     if(makername[i] == '.')
       makername[i]='_';
-  
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
   if(!maker_v){
     std::cerr <<"Cannot load component " << componentType << std::endl;
@@ -185,20 +158,12 @@ int SCIRunLoader::createPInstance(const std::string& componentName,
   }
   sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
   sci::cca::Component::pointer component = (*maker)();
-  //TODO: need keep a reference in the loader's creatation recored.
+  //TODO: need keep a reference in the loader's creatation record.
   component->addReference();
 //  component->setCommunicator((int)(&MPI_COMM_COM) );
 
-
-
-  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-
-  std::cerr << "SCIRunLoader::createInstance..., rank/size="<<mpi_rank<<"/"<<mpi_size<<"\n";
   componentURLs.resize(1);
   componentURLs[0] = component->getURL().getString();
-  //componentURLs.push_back(component->getURL().getString());
-  std::cerr << "Done, rank/size="<<mpi_rank<<"/"<<mpi_size<<" and URL="<<component->getURL().getString()<<"\n";
   return 0;
 }
 
