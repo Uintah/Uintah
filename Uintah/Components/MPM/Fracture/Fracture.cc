@@ -64,11 +64,13 @@ crackGrow(const Patch* patch,
    ParticleVariable<int> pIsBroken;
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<double> pMicrocrackSize;
+   //ParticleVariable<CMData> cmdata;
 
    new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
-   old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);   
+   old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
+   //old_dw->get(cmdata, p_cmdata_label, pset);
    
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++)
@@ -77,16 +79,57 @@ crackGrow(const Patch* patch,
       
       if(!pIsBroken[idx]) {
         //crack initiation
-	/*
-	double sig[3];
-	ASSERT( pStress[idx].getEigenValues(sig[0],sig[1],sig[3]) == 3);
-	Vector dir = std::vector<Vector> pStress[idx].getEigenVectors(
-	   double eigen_value) const
-	*/
 
+	//get the max stress and the direction
+	double sig[3];
+        int eigenValueNum = pStress[idx].getEigenValues(sig[0], sig[1], sig[2]);
+	double maxStress = sig[eigenValueNum-1];
+        vector<Vector> eigenVectors = pStress[idx].getEigenVectors(maxStress);	
+	
+	for(int i=0;i<eigenVectors.size();++i) {
+          eigenVectors[i].normalize();
+	}
+	
+	Vector maxDirection;
+	if(eigenVectors.size() == 1) {
+          maxDirection = eigenVectors[0];
+	}
+
+	if(eigenVectors.size() == 2) {
+	  double theta = drand48() * M_PI * 2;
+	  maxDirection = (eigenVectors[0] * cos(theta) + eigenVectors[1] * sin(theta));
+	}
+	
+	if(eigenVectors.size() == 3) {
+	  double theta = drand48() * M_PI * 2;
+	  double beta = drand48() * M_PI;
+	  double cos_beta = cos(beta);
+	  double sin_beta = sin(beta);
+	  Vector xy = eigenVectors[2] * sin_beta;
+	  maxDirection = xy * cos(theta) +
+	                 xy * sin(theta) +
+			 eigenVectors[2] * cos_beta;
+	}
+
+	//compare with the tensile strength
+	if(maxStress > d_tensileStrength) {
+	  pIsBroken[idx] = 1;
+	  pCrackSurfaceNormal[idx] = maxDirection;
+	  pMicrocrackSize[idx] = 0;
+	}
       }
       else {
         //crack propagation
+	/*
+	double C1 = cmdata[idx].C1;
+	double C2 = cmdata[idx].C2;
+	double PR = cmdata[idx].PR;
+	double mu = 2.*(C1 + C2);
+	double c_dil = sqrt(2.*mu*(1.- PR)*pvolume[idx]/((1.-2.*PR)*pmass[idx]));
+
+	double speed = 
+	*/
+
       }
    }
 
@@ -111,6 +154,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.34  2000/09/07 22:32:02  tan
+// Added code to compute crack initiation in crackGrow function.
+//
 // Revision 1.33  2000/09/07 21:11:10  tan
 // Added particle variable pMicrocrackSize for fracture.
 //
