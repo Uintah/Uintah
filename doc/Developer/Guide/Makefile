@@ -22,6 +22,7 @@ stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 rxmlsrcs := ${wildcard *.rxml} ${wildcard dev/*.rxml} ${wildcard src/*.rxml}
 psfigures := ${patsubst %.gif,%.ps,${wildcard dev/Figures/*.gif}}
 edition := ../../edition.xml
+treetop := ../../..
 
 .PHONY: all html print clean veryclean
 
@@ -38,9 +39,9 @@ srdg.html: ${rxmlsrcs} ${edition}
 	   OUTPUT_MODE=html eruby --delimiters xml $$f > $${f%.rxml}.hxml ; \
 	done
 	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_nochunk} >$@
+          main.hxml ${stylesheet_nochunk}  treetop=${treetop} >$@
 	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_chunk} ${parms_chunk}
+          main.hxml ${stylesheet_chunk} ${parms_chunk}  treetop=${treetop}
 
 # Print version
 print: srdg.pdf
