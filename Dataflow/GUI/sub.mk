@@ -13,6 +13,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
+	$(SRCDIR)/ComboListbox.tcl \
 	$(SRCDIR)/ComponentWizard.tcl \
 	$(SRCDIR)/CriticalPointWidget.tcl \
 	$(SRCDIR)/CrosshairWidget.tcl \
