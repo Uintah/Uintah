@@ -173,7 +173,7 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
-  virtual bool		synchronize(const synchronized_t &which);
+  virtual bool		synchronize(unsigned int);
 
 private:
 
@@ -192,7 +192,7 @@ private:
   vector<Node::index_type>	faces_;
   vector<int>			edge_neighbors_;
   vector<Vector>		normals_; //! normalized per node
-  synchronized_t		synchronized_;
+  unsigned int			synchronized_;
 };
 
 typedef LockingHandle<QuadSurfMesh> QuadSurfMeshHandle;

@@ -83,10 +83,8 @@ HexVolMesh::HexVolMesh() :
   node_nbor_lock_("HexVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("HexVolMesh grid_ fill lock"),
-  synchronized_(0)
+  synchronized_(NODES_E | CELLS_E)
 {
-  synchronized_.set(NODES_E);
-  synchronized_.set(CELLS_E);
 }
 
 HexVolMesh::HexVolMesh(const HexVolMesh &copy):
@@ -209,7 +207,7 @@ HexVolMesh::compute_faces()
     ++f_iter; ++ht_iter; i++;
   }
 
-  synchronized_.set(FACES_E);
+  synchronized_ |= FACES_E;
   face_table_lock_.unlock();
 }
 
@@ -266,7 +264,7 @@ HexVolMesh::compute_edges()
     ++e_iter; ++ht_iter;
   }
   
-  synchronized_.set(EDGES_E);
+  synchronized_ |= EDGES_E;
   edge_table_lock_.unlock();
 }
 
@@ -274,12 +272,13 @@ HexVolMesh::compute_edges()
 
 
 bool
-HexVolMesh::synchronize(const synchronized_t &tosync)
+HexVolMesh::synchronize(unsigned int tosync)
 {
-  if (tosync[EDGES_E] && !synchronized_[EDGES_E]) compute_edges();
-  if (tosync[FACES_E] && !synchronized_[FACES_E]) compute_faces();
-  if (tosync[GRID_E] && !synchronized_[GRID_E]) compute_grid();
-  if (tosync[NODE_NEIGHBORS_E] && !synchronized_[NODE_NEIGHBORS_E]) compute_node_neighbors();
+  if (tosync & EDGES_E && !(synchronized_ & EDGES_E)) compute_edges();
+  if (tosync & FACES_E && !(synchronized_ & FACES_E)) compute_faces();
+  if (tosync & GRID_E && !(synchronized_ & GRID_E)) compute_grid();
+  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E)) 
+    compute_node_neighbors();
   return true;
 }
 
@@ -287,91 +286,104 @@ HexVolMesh::synchronize(const synchronized_t &tosync)
 void
 HexVolMesh::begin(HexVolMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & NODES_E,
+	    "Must call synchronize NODES_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Node::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & NODES_E,
+	    "Must call synchronize NODES_E on HexVolMesh first");
   itr = static_cast<Node::iterator>(points_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Node::size_type &s) const
 {
-  ASSERTMSG(synchronized_[NODES_E], "Must call synchronize NODES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & NODES_E,
+	    "Must call synchronize NODES_E on HexVolMesh first");
   s = static_cast<Node::size_type>(points_.size());
 }
 
 void
 HexVolMesh::begin(HexVolMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Edge::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on HexVolMesh first");
   itr = static_cast<Edge::iterator>(edges_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Edge::size_type &s) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on HexVolMesh first");
   s = static_cast<Edge::size_type>(edges_.size());
 }
 
 void
 HexVolMesh::begin(HexVolMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Face::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   itr = static_cast<Face::iterator>(faces_.size());
 }
 
 void
 HexVolMesh::size(HexVolMesh::Face::size_type &s) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   s = static_cast<Face::size_type>(faces_.size());
 }
 
 void
 HexVolMesh::begin(HexVolMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on HexVolMesh first");
   itr = 0;
 }
 
 void
 HexVolMesh::end(HexVolMesh::Cell::iterator &itr) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on HexVolMesh first");
   itr = static_cast<Cell::iterator>(cells_.size() >> 3);
 }
 
 void
 HexVolMesh::size(HexVolMesh::Cell::size_type &s) const
 {
-  ASSERTMSG(synchronized_[CELLS_E], "Must call synchronize CELLS_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & CELLS_E,
+	    "Must call synchronize CELLS_E on HexVolMesh first");
   s = static_cast<Cell::size_type>(cells_.size() >> 3);
 }
 
 void
 HexVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on HexVolMesh first");
   array.clear();
   PEdge e = edges_[idx];
   array.push_back(e.nodes_[0]);
@@ -382,7 +394,8 @@ HexVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 void
 HexVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   array.push_back(f.nodes_[0]);
@@ -409,7 +422,8 @@ HexVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 void
 HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   array.clear();
   const PFace &f = faces_[idx];
   PEdge e0(f.nodes_[0], f.nodes_[1]);
@@ -417,7 +431,8 @@ HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
   PEdge e2(f.nodes_[2], f.nodes_[3]);
   PEdge e3(f.nodes_[3], f.nodes_[0]);
 
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
   array.push_back((*(edge_table_.find(e2))).second);
@@ -443,7 +458,8 @@ HexVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
   PEdge e10(cells_[off + 2], cells_[off + 6]);
   PEdge e11(cells_[off + 7], cells_[off + 3]);
 
-  ASSERTMSG(synchronized_[EDGES_E], "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & EDGES_E,
+	    "Must call synchronize EDGES_E on HexVolMesh first");
   array.push_back((*(edge_table_.find(e00))).second);
   array.push_back((*(edge_table_.find(e01))).second);
   array.push_back((*(edge_table_.find(e02))).second);
@@ -473,7 +489,8 @@ HexVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
   PFace f5(cells_[off + 1], cells_[off + 5], cells_[off + 6], cells_[off + 2]);
 
   // operator[] not const safe...
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   array.push_back((*(face_table_.find(f0))).second);
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
@@ -486,7 +503,8 @@ bool
 HexVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 			 Face::index_type idx) const
 {
-  ASSERTMSG(synchronized_[FACES_E], "Must call synchronize FACES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & FACES_E,
+	    "Must call synchronize FACES_E on HexVolMesh first");
   const PFace &f = faces_[idx];
 
   if (from == f.cells_[0]) {
@@ -517,7 +535,8 @@ HexVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 void
 HexVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 {
-  ASSERTMSG(synchronized_[NODE_NEIGHBORS_E], "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+	    "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
   array.clear();
   array.insert(array.end(), node_neighbors_[idx].begin(),
 	       node_neighbors_[idx].end());
@@ -532,7 +551,7 @@ HexVolMesh::compute_node_neighbors()
   Edge::iterator ei, eie;
   begin(ei); end(eie);
   for_each(ei, eie, FillNodeNeighbors(node_neighbors_, *this));
-  synchronized_.set(NODE_NEIGHBORS_E);
+  synchronized_ |= NODE_NEIGHBORS_E;
   node_nbor_lock_.unlock();
 }
 
@@ -713,7 +732,8 @@ HexVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  ASSERTMSG(synchronized_[GRID_E], "Must call synchronize GRID_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & GRID_E,
+	    "Must call synchronize GRID_E on HexVolMesh first");
   if (grid_.get_rep() == 0)
   {
     compute_grid();
@@ -914,7 +934,7 @@ HexVolMesh::compute_grid()
     ++ci;
   }
 
-  synchronized_.set(GRID_E);
+  synchronized_ |= GRID_E;
   grid_lock_.unlock();
 }
 
@@ -1053,9 +1073,7 @@ HexVolMesh::io(Piostream &stream)
 
   if (stream.reading())
   {
-    synchronized_.reset();
-    synchronized_.set(NODES_E);
-    synchronized_.set(CELLS_E);
+    synchronized_ = NODES_E | CELLS_E;
   }
 }
 

@@ -205,7 +205,7 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
-  virtual bool		synchronize(const synchronized_t &);
+  virtual bool		synchronize(unsigned int);
 
 private:
 
@@ -402,7 +402,7 @@ private:
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
 
-  synchronized_t		synchronized_;
+  unsigned int			synchronized_;
 };
 
 // Handle type for HexVolMesh mesh.

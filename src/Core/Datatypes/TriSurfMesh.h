@@ -151,7 +151,7 @@ public:
 
   double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
 
-  virtual bool		synchronize(const synchronized_t &which);
+  virtual bool		synchronize(unsigned int);
 
   virtual bool has_normals() const { return true; }
 
@@ -191,7 +191,7 @@ private:
   vector<int>		edge_neighbors_;
   vector<Vector>	normals_;   //! normalized per node normal.
   vector<set<int> >	node_neighbors_;
-  synchronized_t	synchronized_;  
+  unsigned int		synchronized_;
 
 };
 

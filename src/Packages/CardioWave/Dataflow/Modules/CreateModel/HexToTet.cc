@@ -127,9 +127,7 @@ HexToTet::execute()
     ++nbi;
   }
 
-  Mesh::synchronized_t sync;
-  sync.set(Mesh::NODE_NEIGHBORS_E);
-  hvmesh->synchronize(sync);
+  hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
   vector<HexVolMesh::Elem::index_type> elemmap;
 
