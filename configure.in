@@ -429,6 +429,7 @@ if test "$TK_MAJOR_VERSION" = "8" ; then
   TK_LIB_DIR="${TK_PREFIX}/lib"
   # TK_LIB_FLAG set by tclConfig.sh, but needs eval'ing for debug flags
   TK_LIB_FLAG="`eval echo $TK_LIB_FLAG`"
+  TK_LIB_SPEC="`eval echo $TK_LIB_SPEC`"
 
   echo -L$TK_LIB_DIR $TK_LIB_FLAG
 
@@ -456,6 +457,7 @@ AC_SUBST(TK_INCLUDE_DIR)
 AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_LIB_DIR)
 AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_VERSION)
 
 ##-- Find iTcl ---------------------------------------------------------------
@@ -855,6 +857,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.75  2000/11/13 07:44:23  moulding
+# added TK_LIB_SPEC needed indirectly by main/sub.mk and others
+#
 # Revision 1.74  2000/11/12 20:33:57  yarden
 # add support for itcltk-8.3
 #
