@@ -507,9 +507,9 @@ set $m22-j-index {0}
 set $m22-k-index {67}
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m23-isoval {1000}
 set $m23-isoval-min {60.1251335144}
 set $m23-isoval-max {6761.27148438}
+set $m23-isoval {1000}
 set $m23-isoval-quantity 1
 set $m23-isoval-list {1000 4000 7000 12000 13160}
 set $m23-build_geom {0}
@@ -517,9 +517,9 @@ set $m23-active-isoval-selection-tab {2}
 set $m23-active_tab {}
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m24-isoval {1000}
 set $m24-isoval-min {71.6849060059}
 set $m24-isoval-max {6749.19091797}
+set $m24-isoval {1000}
 set $m24-isoval-quantity 1
 set $m24-isoval-list {1000 4000 7000 12000 13160}
 set $m25-build_geom {0}
@@ -527,9 +527,9 @@ set $m24-active-isoval-selection-tab {2}
 set $m24-active_tab {}
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m25-isoval {1000}
 set $m25-isoval-min {61.2371101379}
 set $m25-isoval-max {6728.31152344}
+set $m25-isoval {1000}
 set $m25-isoval-quantity 1
 set $m25-isoval-list {1000 4000 7000 12000 13160}
 set $m25-build_geom {0}
@@ -566,9 +566,9 @@ set $m28-field-name {Isocontours}
 set $m31-function {result = atan2(x,y);}
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m32-isoval {0.0}
 set $m32-isoval-min {-3.1}
 set $m32-isoval-max { 3.1}
+set $m32-isoval {0.0}
 set $m32-isoval-quantity 1
 set $m32-isoval-list {0}
 set $m32-build_geom {0}
@@ -580,9 +580,9 @@ set $m35-clipmode {allnodes}
 set $m35-clipfunction {fabs( atan2(x,y) - v) < 1e-2}
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m36-isoval {64990}
 set $m36-isoval-min {110.923950195}
 set $m36-isoval-max {140186.9375}
+set $m36-isoval {64990}
 set $m36-isoval-quantity 1
 set $m36-isoval-list {1000 4000 7000 12000 13160}
 set $m36-build_geom {0}
@@ -967,8 +967,8 @@ class FusionViewerApp {
 	wm title .standalone "FusionViewer"	 
 	set win .standalone
 	
-	set viewer_width 775
-	set viewer_height 775
+	set viewer_width 800
+	set viewer_height 800
 	
 	set notebook_width 290
 	set notebook_height [expr $viewer_height - 160]
@@ -1209,6 +1209,7 @@ class FusionViewerApp {
 	set show_integration 1
 
 	set initialized 1
+	set ignore_callbacks 0
 
 	global PowerAppSession
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
@@ -1216,7 +1217,7 @@ class FusionViewerApp {
 
 	    load_session_data
 	} else {
-	    set ignore_callbacks 1
+#	    set ignore_callbacks 1
 	    $mods(HDF5-Points) clear
 	    $mods(HDF5-Connections) clear
 	    $mods(HDF5-Scalar) clear
@@ -1225,7 +1226,7 @@ class FusionViewerApp {
 	    $mods(MDSPlus-Connections) deleteEntry 1
 	    $mods(MDSPlus-Scalar) deleteEntry 1
 	    $mods(MDSPlus-Vector) deleteEntry 1
-	    set ignore_callbacks 0
+#	    set ignore_callbacks 0
 	    
 	    update_state
 	}
@@ -3198,12 +3199,13 @@ class FusionViewerApp {
     }
 
     method update_minmax_callback {varname varele varop} {
+
 	if { $ignore_callbacks == 1 } {
 	    return
 	}
 
 	if { $DEBUG == 1 } {
-	    puts stderr "update_minmax_callback"
+	    puts stderr "update_minmax_callback $varname $varele $varop"
 	}
 	global mods
  	global $mods(Isosurface-Surface)-isoval-min
@@ -3671,7 +3673,7 @@ class FusionViewerApp {
 
 	# Because the HDF5/MDSPlus is dynamic the entries must be deleted before reseting.
 	global mods
-	set ignore_callbacks 1
+#	set ignore_callbacks 1
 	$mods(HDF5-Points) clear
 	$mods(HDF5-Connections) clear
 	$mods(HDF5-Scalar) clear
@@ -3680,11 +3682,11 @@ class FusionViewerApp {
 	$mods(MDSPlus-Connections) deleteEntry 1
 	$mods(MDSPlus-Scalar) deleteEntry 1
 	$mods(MDSPlus-Vector) deleteEntry 1
-	set ignore_callbacks 0
+#	set ignore_callbacks 0
 
 	update_state
 
-	set ignore_callbacks 1
+#	set ignore_callbacks 1
 
 	# reset defaults 
 	reset_defaults
@@ -3776,7 +3778,7 @@ class FusionViewerApp {
 
 	change_indicator_labels "Press Execute to Load Data..."
 
-	set ignore_callbacks 0
+#	set ignore_callbacks 0
 
 	update_state
     }	
