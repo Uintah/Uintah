@@ -316,6 +316,7 @@ case $host in
      AC_PROG_CXX
      ;;
 esac
+
 AC_SUBST(F77)
 AC_SUBST(FFLAGS)
 AC_SUBST(PLATFORM_LDFLAGS)
@@ -323,6 +324,7 @@ AC_SUBST(NEED_SONAME)
 AC_SUBST(SSTREAM_COMPAT)
 AC_SUBST(TRACEBACK_LIB)
 AC_SUBST(IMAGE_LIBS)
+
 ##-- Part II thread configuration --------------------------------------------
 
 if test "$threads" = "unknown"; then
