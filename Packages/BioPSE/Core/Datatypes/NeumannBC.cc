@@ -46,9 +46,6 @@
 
 namespace SCIRun {
 
-using std::cout;
-using std::endl;
-
 //////////
 // PIO for NeumannBC objects
 void Pio(Piostream& stream, BioPSE::NeumannBC& nmn){

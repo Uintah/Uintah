@@ -777,7 +777,7 @@ void SurfaceToSurface::solveDense(int nr, int nc, double **A, double *x,
     double cut_off = 0.001;
     tsvd(&AA,&bb,&xx,cut_off);  
     
-    cout<<"TSVD solution"<<endl;
+    //cout<<"TSVD solution"<<endl;
 
 
 //    cout <<xx<<endl;

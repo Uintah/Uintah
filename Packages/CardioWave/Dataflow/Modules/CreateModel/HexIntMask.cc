@@ -145,12 +145,13 @@ HexIntMask::execute()
   vector<int> exclude;
   parse_exclude_list(gui_exclude_.get(), exclude);
 
+#if 0
   for (unsigned int i = 0; i < exclude.size(); i++)
   {
     cout << "\nExcluding " << exclude[i] << "\n";
   }
   cout << "\n";
-
+#endif
 
   HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
   HexVolMeshHandle clipped = scinew HexVolMesh();

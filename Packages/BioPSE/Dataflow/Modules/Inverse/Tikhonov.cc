@@ -431,7 +431,6 @@ namespace BioPSE
 
       } // END  else if (reg_method_.get() == "lcurve")
 
-    cout << "lambda = " << lambda << endl;
     lambda2 = lambda*lambda;
 
     for (int i=0; i<N; i++)

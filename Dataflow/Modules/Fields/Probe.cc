@@ -388,7 +388,6 @@ Probe::execute()
   gui_edge_.set(edgestr);
   gui_face_.set(facestr);
   gui_cell_.set(cellstr);
-  //cout << "PROBE VALUE AT " << location << " IS " << valstr.str() << '\n';
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
   if (!ofp) {

@@ -29,7 +29,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
-using std::cout;
 using std::cerr;
 
 namespace SCITeem {

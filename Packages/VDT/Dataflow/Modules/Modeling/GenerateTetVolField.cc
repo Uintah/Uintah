@@ -69,7 +69,6 @@ GenerateTetVolField::execute()
   // just test that the lib is loaded and we can make a call into it for now.
   //VDT gentv_vdt =
   VDT_new_mesher();
-  cout << "completed" << endl;
 }
 
 
