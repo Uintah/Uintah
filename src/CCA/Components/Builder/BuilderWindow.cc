@@ -222,11 +222,23 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
 	// if fatal error, attempt to exit here?
     } else {
 	displayMsg("Framework URL: ");
-	const char* url = builder->getFrameworkURL().c_str();
-	displayMsg(url);
+	sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+	    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
+
+	if (fwkProperties.isNull()) {
+	    QString msg("url not available");
+	    displayMsg(msg);
+	} else {
+	    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+	    std::string url;
+	    url = tm->getString("url", "");
+	    displayMsg(url);
+
+	    services->releasePort("cca.FrameworkProperties");
+	}
+	services->releasePort("cca.BuilderService");
     }
     displayMsg("\n----------------------\n");
-    services->releasePort("cca.BuilderService");
 
     networkCanvas = new QCanvas(2000, 2000);
     networkCanvas->setAdvancePeriod(30);
