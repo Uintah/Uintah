@@ -187,7 +187,21 @@ Matlab::execute()
 
   int ioflags[10];
   /* PARSE THE STRING FOR i o NAMES */
-  cmdparse(ioflags, command.c_str());
+  const char *cmd = command.c_str();
+  cmdparse(ioflags, cmd);
+  
+
+  // Dont allow assignment to input ports, not valid in dataflow
+  if (strstr(cmd,"i1=") || strstr(cmd,"i1 =") ||
+      strstr(cmd,"i2=") || strstr(cmd,"i2 =") ||
+      strstr(cmd,"i3=") || strstr(cmd,"i3 =") ||
+      strstr(cmd,"i4=") || strstr(cmd,"i4 =") ||
+      strstr(cmd,"i5=") || strstr(cmd,"i5 ="))
+  {
+    error("Cannot assign values to input ports. (ie: i1 = 0;)");
+    return;
+  }
+
 
   // Get the input ports.
   bool different_p = command != last_command_;
