@@ -333,7 +333,7 @@ private:
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PFace &f) const {
       return ((snodes_[0] == f.snodes_[0]) && (snodes_[1] == f.snodes_[1]) &&
-	      (snodes_[1] == f.snodes_[1]) && (snodes_[3] == f.snodes_[3]));
+	      (snodes_[2] == f.snodes_[2]) && (snodes_[3] == f.snodes_[3]));
     }
   };
 
