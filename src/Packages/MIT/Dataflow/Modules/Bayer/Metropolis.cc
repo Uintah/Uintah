@@ -258,7 +258,7 @@ void Metropolis::metropolis()
 {
   // init Cholesky of proposal distribution covariance matrix
 
-  double *A = new double[nparms*nparms];
+  double *A = scinew double[nparms*nparms];
   for (int i=0; i<nparms; i++) 
     for (int j=0; j<nparms; j++) 
       A[i*nparms+j] = pd->sigma(i,j);
