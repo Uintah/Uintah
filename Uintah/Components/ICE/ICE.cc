@@ -1382,14 +1382,17 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
   Vector dx = patch->dCell();
+  Vector gravity = d_sharedState->getGravity();
+  double pressure_source, viscous_source, mass, vol=dx.x()*dx.y()*dx.z();
 
   CCVariable<double> rho_CC;
-  CCVariable<double> uvel_CC;
-  CCVariable<double> vvel_CC;
-  CCVariable<double> wvel_CC;
+  CCVariable<double> uvel_CC, vvel_CC, wvel_CC;
   CCVariable<double> visc_CC;
   CCVariable<double> vol_frac;
   FCVariable<double> press_FC;
+
+  CCVariable<double> xmom_source, ymom_source, zmom_source;
+  FCVariable<double> tau_X_FC, tau_Y_FC, tau_Z_FC;
 
   new_dw->get(press_FC,lb->press_FCLabel, 0, patch,Ghost::None, 0);
 
@@ -1407,12 +1410,6 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
 
       // Create variables for the results
-      CCVariable<double> xmom_source;
-      CCVariable<double> ymom_source;
-      CCVariable<double> zmom_source;
-      FCVariable<double> tau_X_FC;
-      FCVariable<double> tau_Y_FC;
-      FCVariable<double> tau_Z_FC;
       new_dw->allocate(xmom_source, lb->xmom_source_CCLabel, vfindex, patch);
       new_dw->allocate(ymom_source, lb->ymom_source_CCLabel, vfindex, patch);
       new_dw->allocate(zmom_source, lb->zmom_source_CCLabel, vfindex, patch);
@@ -1421,6 +1418,14 @@ void ICE::actuallyStep4a(const ProcessorGroup*,
       new_dw->allocate(tau_Z_FC,    lb->tau_Z_FCLabel,       vfindex, patch);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	 mass = rho_CC[*iter] * vol;
+         // x-momentum
+         //pressure_source = press_FC[*iter][RIGHT] - press_FC[*iter][LEFT];
+         //viscous_source  = tau_X_FC[*iter][RIGHT] - tau_X_FC[*iter][LEFT]
+         //                + tau_X_FC[*iter][TOP]   - tau_X_FC[*iter][BOTTOM]
+         //                + tau_X_FC[*iter][FRONT] - tau_X_FC[*iter][BACK];
+         xmom_source[*iter]  =   (-pressure_source * dx.y() * dx.z() +
+                                   mass * gravity.x()) * delT;
       }
 
       new_dw->put(xmom_source, lb->xmom_source_CCLabel, vfindex, patch);
@@ -2201,6 +2206,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.51  2000/10/26 00:52:54  guilkey
+// Work on step4b
+//
 // Revision 1.50  2000/10/26 00:24:46  guilkey
 // Made all pressures belong to material 0.  Implemented step4b.
 //
