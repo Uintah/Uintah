@@ -52,6 +52,8 @@ template class GenericField<TriSurfMesh, vector<double> >;
 #include <Core/Datatypes/PropertyManager.h>
 template class Property<string>;
 template class Property<pair<double,double> >;
+template class Property<pair<string, Array1<double> > >;
+template class Property<pair<string, Array1<Tensor> > >;
 
 #ifdef __sgi
 #pragma reset woff 1468
