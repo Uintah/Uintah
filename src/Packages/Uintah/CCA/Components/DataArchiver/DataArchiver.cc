@@ -243,23 +243,37 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 }
 
 // to be called after problemSetup gets called
-void DataArchiver::restartSetup(Dir& restartFromDir, int timestep,
-				double time, bool fromScratch,
+void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
+				int timestep, double time, bool fromScratch,
 				bool removeOldDir)
 {
    if (d_writeMeta && !fromScratch) {
       // partial copy of dat files
-      copyDatFiles(restartFromDir, d_dir, timestep, removeOldDir);
+      copyDatFiles(restartFromDir, d_dir, startTimestep,
+		   timestep, removeOldDir);
+
+      copySection(restartFromDir, "restarts");
 
       // partial copy of index.xml and timestep directories and
       // similarly for checkpoints
-      copyTimesteps(restartFromDir, d_dir, timestep, removeOldDir);
+      copyTimesteps(restartFromDir, d_dir, startTimestep, timestep,
+		    removeOldDir);
       Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
       bool areCheckpoints = true;
-      copyTimesteps(checkpointsFromDir, d_checkpointsDir, timestep,
-		    removeOldDir, areCheckpoints);
+      copyTimesteps(checkpointsFromDir, d_checkpointsDir, startTimestep,
+		    timestep, removeOldDir, areCheckpoints);
       if (removeOldDir)
 	 restartFromDir.forceRemove();
+   }
+   else {
+     // just add <restart from = ".." timestep = ".."> tag.
+     copySection(restartFromDir, "restarts");
+     string iname = d_dir.getName()+"/index.xml";
+     DOM_Document indexDoc = loadDocument(iname);
+     if (timestep >= 0)
+       addRestartStamp(indexDoc, restartFromDir, timestep);
+     ofstream copiedIndex(iname.c_str());
+     copiedIndex << indexDoc << endl;
    }
    
    // set time and timestep variables appropriately
@@ -273,13 +287,63 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int timestep,
 	 ceil(time / d_checkpointInterval);
 }
 
-void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int maxTimestep,
-				bool removeOld, bool areCheckpoints /*=false*/)
+void DataArchiver::copySection(Dir& fromDir, string section)
+{
+  string iname = fromDir.getName()+"/index.xml";
+  DOM_Document indexDoc = loadDocument(iname);
+
+  iname = d_dir.getName()+"/index.xml";
+  DOM_Document myIndexDoc = loadDocument(iname);
+  
+  DOM_Node sectionNode = findNode(section, indexDoc.getDocumentElement());
+  if (sectionNode != 0) {
+    DOM_Node newNode = myIndexDoc.importNode(sectionNode, true);
+    
+    // replace whatever was in the section previously
+    DOM_Node mySectionNode = findNode(section, myIndexDoc.getDocumentElement());
+    if (mySectionNode != 0) {
+      myIndexDoc.getDocumentElement().replaceChild(newNode, mySectionNode);
+    }
+    else {
+      myIndexDoc.getDocumentElement().appendChild(myIndexDoc.createTextNode("\n"));
+      myIndexDoc.getDocumentElement().appendChild(newNode);
+    }
+  }
+  
+  ofstream indexOut(iname.c_str());
+  indexOut << myIndexDoc << endl;
+}
+
+void DataArchiver::addRestartStamp(DOM_Document indexDoc, Dir& fromDir,
+				   int timestep)
+{
+   DOM_Text leader = indexDoc.createTextNode("\n");
+   DOM_Text returnTab = indexDoc.createTextNode("\n\t");
+   DOM_Node restarts = findNode("restarts", indexDoc.getDocumentElement());
+   if (restarts == 0) {
+     restarts = indexDoc.createElement("restarts");
+     indexDoc.getDocumentElement().appendChild(leader);
+     indexDoc.getDocumentElement().appendChild(restarts);
+   }
+   DOM_Element restartInfo = indexDoc.createElement("restart");
+   restartInfo.setAttribute("from", fromDir.getName().c_str());
+   ostringstream timestep_str;
+   timestep_str << timestep;
+   restartInfo.setAttribute("timestep", timestep_str.str().c_str());
+   restarts.appendChild(returnTab);
+   restarts.appendChild(restartInfo);
+   restarts.appendChild(leader);
+}
+
+void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
+				 int maxTimestep, bool removeOld,
+				 bool areCheckpoints /*=false*/)
 {
    string old_iname = fromDir.getName()+"/index.xml";
    DOM_Document oldIndexDoc = loadDocument(old_iname);
    string iname = toDir.getName()+"/index.xml";
    DOM_Document indexDoc = loadDocument(iname);
+   DOM_Text leader = indexDoc.createTextNode("\n");
    DOM_Node oldTimesteps = findNode("timesteps",
 				    oldIndexDoc.getDocumentElement());
    DOM_Node ts;
@@ -287,14 +351,8 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int maxTimestep,
       ts = findNode("timestep", oldTimesteps);
 
    // while we're at it, add restart information to index.xml
-   DOM_Text leader = indexDoc.createTextNode("\n");
-   indexDoc.getDocumentElement().appendChild(leader);
-   DOM_Element restartInfo = indexDoc.createElement("restart");
-   restartInfo.setAttribute("from", fromDir.getName().c_str());
-   ostringstream maxtimestep_str;
-   maxtimestep_str << maxTimestep;
-   restartInfo.setAttribute("timestep", maxtimestep_str.str().c_str());
-   indexDoc.getDocumentElement().appendChild(restartInfo);
+   if (maxTimestep >= 0)
+     addRestartStamp(indexDoc, fromDir, maxTimestep);
 
    // create timesteps element if necessary
    DOM_Node timesteps = findNode("timesteps",
@@ -309,7 +367,8 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int maxTimestep,
    int timestep;
    while (ts != 0) {
       get(ts, timestep);
-      if (timestep <= maxTimestep) {
+      if (timestep > startTimestep &&
+	  (timestep <= maxTimestep || maxTimestep < 0)) {
 	 // copy the timestep directory over
 	 DOM_NamedNodeMap attributes = ts.getAttributes();
 	 DOM_Node hrefNode = attributes.getNamedItem("href");
@@ -351,8 +410,8 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int maxTimestep,
    copiedIndex << indexDoc << endl;
 }
 
-void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int maxTimestep,
-				bool removeOld)
+void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
+				int maxTimestep, bool removeOld)
 {
    char buffer[1000];
 
@@ -372,9 +431,10 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int maxTimestep,
 	 
 	 // copy up to maxTimestep lines of the old dat file to the copy
 	 ifstream datFile((fromDir.getName()+"/"+href).c_str());
-	 ofstream copyDatFile((toDir.getName()+"/"+href).c_str());
-	 int timestep = 0;
-	 while (datFile.getline(buffer, 1000) && timestep < maxTimestep) {
+	 ofstream copyDatFile((toDir.getName()+"/"+href).c_str(), ios::app);
+	 int timestep = startTimestep;
+	 while (datFile.getline(buffer, 1000) &&
+		(timestep < maxTimestep || maxTimestep < 0)) {
 	    copyDatFile << buffer << endl;
 	    timestep++;
 	 }
@@ -494,7 +554,8 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       d_wasOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, level,
 		     &d_lastTimestepLocation);
-      d_nextOutputTime+=d_outputInterval;
+      while (d_currentTime >= d_nextOutputTime)
+	d_nextOutputTime+=d_outputInterval;
     }
     else
       d_wasOutputTimestep = false;
@@ -538,8 +599,8 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       }
       d_checkpointTimestepDirs.pop_front();
     }
-    
-    d_nextCheckpointTime += d_checkpointInterval;
+    while (d_currentTime >= d_nextCheckpointTime)
+      d_nextCheckpointTime += d_checkpointInterval;
   } else {
     d_wasCheckpointTimestep=false;
   }
@@ -909,6 +970,7 @@ void DataArchiver::output(const ProcessorGroup*,
     dataFilebase = "global.data";
     dataFilename = tdir.getName() + "/" + dataFilebase;
     pLock = &d_outputReductionLock;
+    cerr << "\nOUTPUT GLOBALS\n\n";
   }
 
  pLock->lock();
