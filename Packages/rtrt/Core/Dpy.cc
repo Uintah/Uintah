@@ -551,9 +551,7 @@ Dpy::checkGuiFlags()
     numThreadsRequested_ = 0;
   }
 
-  if( priv->showing_scene == 0 ) {
-    // Only create new threads if showing_scene is 0.  This will
-    // create them in sync with the Dpy thread.
+  { // Check to see if we are going to change the number of workers
     int nworkers = rtrt_engine->nworkers;
     if( nworkers != numThreadsRequested_ ) {
 
@@ -643,7 +641,7 @@ Dpy::renderFrameless() {
 	Worker * worker = new Worker(this, scene, cnt,
 				     pp_size_, scratchsize_,
 				     ncounters, c0, c1);
-
+        worker->set_rendering_scene(rendering_scene);
         //	cout << "created worker: " << cnt << ", " << worker << "\n";
 	Thread * thread = new Thread( worker, buf);
 	thread->detach();
@@ -964,7 +962,7 @@ Dpy::renderFrame() {
 	Worker * worker = new Worker(this, scene, cnt,
 				     pp_size_, scratchsize_,
 				     ncounters, c0, c1);
-
+        worker->set_rendering_scene(rendering_scene);
         //	cout << "created worker: " << cnt << ", " << worker << "\n";
 	Thread * thread = new Thread( worker, buf);
 	thread->detach();
