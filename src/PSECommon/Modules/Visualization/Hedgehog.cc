@@ -386,10 +386,10 @@ void Hedgehog::execute()
 				    matl = outcolor;
 				}
 
-			    if(vv.length2()*lenscale > 1.e-3)
+			    if(vv.length2()*lenscale > 1.e-5)
 			      arrows->add(p, vv*lenscale, matl, matl, matl);
 			} else {
-			  if(vv.length2()*lenscale > 1.e-3)
+			  if(vv.length2()*lenscale > 1.e-5)
 			    arrows->add(p, vv*lenscale, shaft, back, head);
 			  //else
 			  //    cerr << "vv.length2()="<<vv.length2()<<"\n";
@@ -456,6 +456,9 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.10  2001/02/21 16:45:58  kuzimmer
+// changed draw routine so that the vector will draw if its length is greater than 1e-5,  was 1e-3.
+//
 // Revision 1.9  2001/02/21 16:19:16  kuzimmer
 // Added the ability to set the vector grayscale  when a colormap is not being used.
 //
