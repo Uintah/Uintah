@@ -30,42 +30,68 @@ class Diagram {
     variable menu
     variable tb
     variable ui
+    variable ogl
     variable parent
     variable name
 
     variable initialized
     variable last
     variable w
+    variable mode
+    variable zoom-mode
+
+    variable prevcursor
 
     constructor { args } {
 	set initialized 0
 	set val(0) 1
 	set last 0
+	set mode normal
     }
 
     destructor {
 	delete object  $w.diagram
     }
 
-    method ui { n m t u } {
+    method ui { n m t u g } {
 	set menu $m
 	set tb $t
 	set ui $u
+	set ogl $g
 
 	set name $n
 
-    }
-
-    method init {} {
 	#
 	# widgets menu
 	#
+
 	$menu add menubutton .widgets -text "Widgets"
 
 	$menu add command .widgets.hairline -label Hairline -underline 0 \
 	    -command "$this widget hairline"
 	$menu add command .widgets.zoom -label Zoom -underline 0 \
 	    -command "$this widget zoom"
+
+	#
+	# toolbar
+	#
+
+	$tb add button normal \
+	    -helpstr "Normal mode" \
+	    -command "$this set-mode normal"
+
+	$tb add button zoom-in \
+	    -helpstr "Zoom mode" \
+	    -image [image create photo \
+		-file "../pixmaps/viewmag.ppm"] \
+	    -command "$this set-mode zoom"
+	
+	$tb add button sub \
+	    -helpstr "SubWindow" \
+	    -command {puts "sub window"}
+    }
+
+    method init {} {
 
 	#
 	# option area
@@ -128,7 +154,11 @@ class Diagram {
 	bind DiagramTags <B2-Motion> "$this-c Motion %x %y 2 "
 	bind DiagramTags <B3-Motion> "$this-c Motion %x %y 3 "
 	bind DiagramTags <ButtonRelease> "$this-c ButtonRelease %x %y %b "
-	
+
+	bind DiagramZoom <KeyPress>   "$this zoom-key press %K; break" 
+	bind DiagramZoom <KeyRelease> "$this zoom-key release %K; break"
+	bind DiagramZoom <ButtonPress> "$this zoom-button %x %y %b; break "
+
 	set initialized 1
     }
 	
@@ -178,5 +208,49 @@ class Diagram {
 	set last [expr $last + 1]
 	return $win
     }
-	    
+
+    method set-mode { new-mode } {
+	if { ${new-mode} != $mode } {
+	    if { ${new-mode} == "zoom" } {
+		$this set-zoom on
+	    } else {
+		$this set-zoom off
+	    }
+	    set mode ${new-mode}
+	}
+    }
+
+    method set-zoom { mode } {
+	set icon "../pixmaps/viewmag"
+	if { $mode == "on" } {
+	    set prevcursor \
+		[$ogl set-cursor "@$icon+.xbm $icon+mask.xbm black lightblue"]
+	    $ogl add-bind DiagramZoom
+	    set zoom-mode in
+	} elseif { $mode == "off" } {
+	    $ogl set-cursor $prevcursor
+	    ogl rem-bind DiagramZoom
+	    set zoom-mode out
+	} elseif { $mode == "in" } {
+	    $ogl set-cursor "@$icon+.xbm $icon+mask.xbm black lightblue"
+	    set zoom-mode in
+	} else {
+	    $ogl set-cursor "@$icon-.xbm $icon-mask.xbm black lightyellow"
+	    set zoom-mode out
+	}
+    }
+
+    method zoom-key { type key } {
+	if { $key == "Control_L" | $key == "Control_R" } {
+	    if { $type == "press" } {
+		$this set-zoom out
+	    } else {
+		$this set-zoom in
+	    }
+	}
+    }
+
+    method zoom-button { x y b } {
+	$this-c zoom ${zoom-mode} $x $y $b 
+    }
 }

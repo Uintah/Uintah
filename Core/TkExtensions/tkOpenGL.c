@@ -353,6 +353,7 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
 		argv[0], " option ?arg arg ...?\"", (char *) NULL);
 	return TCL_ERROR;
     }
+
     Tk_Preserve((ClientData) OpenGLPtr);
     c = argv[1][0];
     length = strlen(argv[1]);
@@ -368,22 +369,32 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
 		    TK_CONFIG_ARGV_ONLY);
 	}
     } 
+    else if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)) {
+      if (argc == 3) {
+	result = Tk_ConfigureValue(interp, OpenGLPtr->tkwin, configSpecs,
+				   (char *) OpenGLPtr, argv[2], 0);
+      }
+      else {
+	Tcl_AppendResult(interp, "bad cget command \"", argv[1],
+			 "", 
+			 (char *) NULL);
+	result = TCL_ERROR;
+      }
+    } 
     else if ((c == 's') && (strncmp(argv[1], "setvisual", length) == 0)) 
       {
 	  /* put code for initializing or changing the visual here */
 	printf("setvisual called on an opengl tk widget");
       } 
     else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		   "\":  must be configure, position, or size", (char *) NULL);
-	goto error;
+      Tcl_AppendResult(interp, "bad option \"", argv[1],
+		       "\":  must be configure, cget, position, or size", 
+		       (char *) NULL);
+      result = TCL_ERROR;
     }
+ 
     Tk_Release((ClientData) OpenGLPtr);
     return result;
-
-    error:
-    Tk_Release((ClientData) OpenGLPtr);
-    return TCL_ERROR;
 }
 
 /*
@@ -432,7 +443,6 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
     }
 
     Tk_DefineCursor( OpenGLPtr->tkwin, OpenGLPtr->cursor );
-    //Tk_GetCursor( interp, OpenGLPtr->tkwin, "fleur" );
 
     return TCL_OK;
 }

@@ -14,6 +14,7 @@
 class OpenGLWindow {
 
     variable w
+    variable prev
 
     constructor {} {
     }
@@ -25,6 +26,8 @@ class OpenGLWindow {
 	    -direct true -rgba true 
 	bind $w <Map> "$this-c map $w"
 	bind $w <Expose> "$parent-c redraw $w"
+	bind $w <Enter> { set prev [focus]; focus %W }
+	bind $w <Leave> { focus $prev }
 	pack $w
     }
 
@@ -39,8 +42,32 @@ class OpenGLWindow {
 	$w configure -geometry ${width}x$height
     }
 
-    method set_cursor { c } {
+    method set-cursor { c } {
+	set current [$w cget -cursor]
 	$w configure -cursor $c
+	return $current
+    }
+
+
+    method add-bind { b } {
+	puts "add-bind $b"
+	bindtags $w [concat $b [bindtags $w] ]
+	bind $w <g> {puts "G" }
+    }
+
+    method rem-bind { b } {
+	puts "rem-bind $b"
+	bindtags $w [ldelete $b [$bindtags $w] ]
+	puts "after... [bindtags $w]"
+    }
+
+    method ldelete { item list } {
+	set i [lsearch -exact $list $item]
+	if { i >= 0 } {
+	    return [lreplace $list $i $i]
+	} else {
+	    return $list
+	}
     }
 }
 	
