@@ -98,13 +98,12 @@ UnuQuantize::execute()
 
   if (last_generation_ != nrrdH->generation) {
     // set default values for min,max
-    nrrdMinMaxCleverSet(nrrdH->nrrd);
-    cout << "min and max: " << nrrdH->nrrd->min << " " << nrrdH->nrrd->max 
-	 << endl;
+    NrrdRange *range = nrrdRangeNewSet(nrrdH->nrrd, nrrdBlind8BitRangeState);
+    cout << "min and max: " << range->min << " " << range->max << endl;
     ostringstream str;
-    str << id.c_str() << " update_min_max " << nrrdH->nrrd->min 
-	<< " " << nrrdH->nrrd->max << endl;
-
+    str << id.c_str() << " update_min_max " << range->min
+	<< " " << range->max << endl;
+    delete range;
     gui->execute(str.str());
     minf_.reset();
     maxf_.reset();
@@ -128,13 +127,13 @@ UnuQuantize::execute()
   nrrdH.detach(); 
 
   Nrrd *nin = nrrdH->nrrd;
-  nin->min = minf;
-  nin->max = maxf;
 
   msgStream_ << "Quantizing -- min="<<minf<<
     " max="<<maxf<<" nbits="<<nbits<<endl;
+  NrrdRange *range = nrrdRangeNew(minf, maxf);
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdQuantize(nrrd->nrrd = nrrdNew(), nin, nbits)) {
+  nrrd->nrrd = nrrdNew();
+  if (nrrdQuantize(nrrd->nrrd, nin, range, nbits)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble quantizing: ") + err);
     free(err);
