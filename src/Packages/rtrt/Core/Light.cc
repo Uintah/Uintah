@@ -46,7 +46,7 @@ Light::Light(const Point& pos,
 	     double radius,
 	     double intensity ) :
   radius(radius), intensity_(intensity), pos(pos),
-  currentColor_(color*intensity), origColor_(color)
+  currentColor_(color*intensity), origColor_(color), isOn_( true )
 {
     Vector d(pos-Point(0,0,.5));
     int n=3;
