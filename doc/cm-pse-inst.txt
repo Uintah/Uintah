@@ -1,150 +1,160 @@
-		 Installation and Build Instructions for SCIRun
-			 last modified on May 10, 2000
+		 Installation and Build Instructions for the PSE
+                      (for developers without CVS access)
+			
+                         last modified on June 15, 2000
 				 Chris Moulding
 
 
 Table of Contents
 
-1) System Requirements
-2) Installing SCIRun
-3) Building SCIRun
-4) Running SCIRun
-5) Additional Documentation
-6) Getting Help
-7) Surviving the tcl stuff
+1) Prerequisites
+2) System Requirements
+3) Installing the PSE
+4) Building the PSE
+5) Running the PSE
+6) Additional Documentation
+7) Getting Help
+8) Surviving the tcl stuff
 
 
-1) System Requirements
+1) Prerequisites
 
 
-  For SGI:
-    SGI Irix 6.5 (www.sgi.com/software/software.html#IRIX)
-    SGI MipsPro 7.3.1 compiler (www.sgi.com/developers/devtools/languages/mipspro.html)
-
-  For Linux:
-    Linux 2.2.x 
-    GCC compiler collection (ftp://gcc.gnu.org/pub/gcc/releases/gcc-2.95.2/gcc-2.95.2.tar.gz)
-
-  Tcl/Tk 8.0.4 (ftp://ftp.scriptics.com/pub/tcl/tcl8_0/tcl8.0.4.tar.gz  &
-                ftp://ftp.scriptics.com/pub/tcl/tcl8_0/tk8.0.4.tar.gz)
-
-  Itcl/Itk 3.0.1 (ftp://ftp.tcltk.com/tcltk/pub/itcl/itcl3.0.1.tar.gz)
-
-  BLT 2.4q (ftp://ftp.tcltk.com/aa004735/pub/blt/BLT2.4q.tar.gz)
-
-  GNU make 3.76.1 (ftp://ftp.gnu.org/pub/gnu/make/make-3.76.1.tar.gz)
-
-  Xerces XML parser 1.1.0 (http://xml.apache.org/dist/xerces-c/stable/Xerces-C-src_1_1_0.tar.gz)
-  [^^^^^^ Note: this distribution of xerces won't work.  Use this one:
-    /home/sci/data6/sparker/xerces-c/src/xerces-c-src_1_1_0.tar.gz
-    ^^^^^ This didn't work either.  This one worked:
-          /home/sci/data6/sparker/xerces-c/lib32/libxerces-c1_1.so (tjd)]
+   It is highly recommended that you have a fair amount of knowledge
+   and experience with operating systems, file systems, and
+   programming in general (and for SGI or Linux specifically) to
+   build and install the PSE.  If you find that any of the
+   instructions below are foreign to you, then you may want to have a
+   system administrator help you out.
 
 
+2) System Requirements
 
-2) Installing SCIRun
+
+   NOTE: the versions are appended with one of the following symbols:
+     + = same or newer version
+     # = exact version required
+
+   For SGI:
+     SGI Irix 6.5 +
+     SGI MipsPro compiler 7.3.1 +
+       www.sgi.com/developers/devtools/languages/mipspro.html
+
+   For Linux:
+     Linux 2.2.14 +
+     GCC compiler collection 2.95.2 +
+       ftp://gcc.gnu.org/pub/gcc/releases/gcc-2.95.2/gcc-2.95.2.tar.gz
+
+   Tcl and Tk 8.0.4 #
+     ftp://ftp.scriptics.com/pub/tcl/tcl8_0/tcl8.0.4.tar.gz  
+     ftp://ftp.scriptics.com/pub/tcl/tcl8_0/tk8.0.4.tar.gz
+
+   Itcl/Itk 3.0.1 #
+     ftp://ftp.tcltk.com/tcltk/pub/itcl/itcl3.0.1.tar.gz
+
+   BLT 2.4t +
+     ftp://ftp.tcltk.com/aa004735/pub/blt/BLT2.4t.tar.gz
+     or see www.tcltk/com/blt for latest version
+
+   GNU make 3.76.1 +
+     ftp://ftp.gnu.org/pub/gnu/make/make-3.76.1.tar.gz
+
+   Xerces XML parser 1.1.0 +
+     http://xml.apache.org/dist/xerces-c/stable/Xerces-C-src_1_1_0.tar.gz
 
 
-   unzip and untar the distribution file (SCIRun.tar.gz)
-   into the directory where you would like SCIRun to be
-   installed, e.g. /usr/local/contrib/SCIRun.  There is no
+3) Installing the PSE
+
+
+   unzip and untar the distribution file (PSE.tar.gz)
+   into the directory where you would like the PSE to be
+   installed, e.g. /usr/local/contrib/PSE.  There is no
    "make install" step in the build process, so where ever
    you untar to is where it will be installed.  We'll call
-   this directory SCIRUN_TOP from now on.
+   this directory PSE_TOP from now on.
 
 
-3) Building SCIRun
+4) Building the PSE
 
 
-   These are the steps for building SCIRun:
+   These are the steps for building the PSE:
 
-   *  Make sure that Tcl, Tk, Itcl/Itk, and BLT are
-      built and installed "correctly" on your system.
+   *  Make sure that your system setup matches the
+      system requirements listed in section 1, and
+      that your environment variables (i.e. PATH
+      and LD_LIBRARY_PATH) are set to use those
+      programs and libraries.
 
       This part is the bane of many a users existence,
-      so an in depth section on "surviving the tcl
-      stuff" is listed below in section 7.
+      so we've added section 7 to assist you.
 
-   * Install Xerces if it is not already installed.  
-
-     (!! SGI ONLY !!) SGI users must install a prebuilt version of the xerces
-     library from one of the
-     cs machines.  If your abi is n32 then get
-     /nfs/sci/data6/sparker/xerces-c/lib32/libxerces-c1_1.so.  If your abi is 64 then
-     get /nfs/sci/data6/sparker/xerces-c/lib64/libxerces-c1_1.so.
-
-   *  Edit SCIRUN_TOP/src/configure:
+   *  Edit PSE_TOP/src/configure:
 
       The xerces paths are hardcoded to 
 	  
-	  XML_LIB_DIR="/usr/local/xerces-c/lib"
-	  XML_INCLUDE_DIR="/usr/local/xerces-c/include"
+        XML_LIB_DIR="/usr/local/xerces-c/lib"
+        XML_INCLUDE_DIR="/usr/local/xerces-c/include"
 
-	  find and edit these lines to reflect your system's paths.
+      find and edit these lines to reflect your system's paths.
 
-   *  Modify your PATH variable if tcl/tk 8.0.4 and Itcl/Itk stuff is installed
-      in a non-standard location. 
+   *  Run configure.  From the PSE_TOP/src dir type:
 
-      Csh command:
+        configure --enable-package="PACKAGE"
 
-        setenv PATH tcl-tk-8.0.4-path/bin:$PATH
+      Where PACKAGE is the name (or names) of the packages you want
+      to use.  For example "SCIRun", "Uintah", "BioPSE" or
+      "SCIRun Uintah BioPSE".
 
-      Sh command:
+   *  Finally, run GNU make.  From the PSE_TOP/src dir type:
 
-        export PATH=tcl-tk-8.0.4-path/bin:$PATH
+        make
 
-   *  Run configure.  From the SCIRUN_TOP/src dir type:
+      It takes about 45 minutes to build the PSE (with only
+      the SCIRun package enabled) on a single 250MHz R10K
+      processor.  You can use the -j flag to reduce build
+      time.  For example:
 
-     configure --enable-package="SCIRun"
+        make -j 32
 
-   *  Finally, run GNU make.  From the SCIRUN_TOP/src dir type:
+      will use 32 processors (if available) to build the PSE.  It
+      takes 5 minutes to build on 32 processors.
 
-      make
-
-   It takes about 45 minutes to build SCIRun on a single R10K.
-   You can use the -j flag to reduce build time, e.g.
-
-      make -j 32
-
-   will use 32 processors (if available) to build SCIRun.  It
-   takes 5 minutes to build SCIRun on 32 R10K's.
-
-   If the build failed, see the section below called
-   "Getting help"
+      If the build failed, see the section below called
+      "Getting help"
 
 
-4) Running SCIRun
+5) Running the PSE
 
 
-   After a successful build, there is an executable in
-   the SCIRUN_TOP/src directory named:
+   After a successful build, there will be  an executable in
+   the PSE_TOP/src directory named:
 
-   pse
+     pse
 
-   Running this will open the SCIRun canvas window and start a
-   SCIRun shell (called the SCIRun console) in the shell where
-   pse was started from.
+   Running this will open the PSE network canvas window and start
+   a console (called the PSE console) in the shell where pse was
+   started from.
    
    If the window does not appear, note any errors
-   displayed in the SCIRun console and see the getting
+   displayed in the PSE console and see the getting
    help section below.  Of course, it might just be
    hiding behind other windows on the desktop!
 
 
-5) Additional Documentation
+6) Additional Documentation
 
 
-   Additional Documentation about SCIRun can be obtained on
+   Additional Documentation about the PSE can be obtained on
    the web at:
 
    http://www.cs.utah.edu/sci/scirun/
 
 
-6) Getting Help
+7) Getting Help
 
 
    There is a mailing list available for asking questions about
-   SCIRun or to get help with resolving a problem.  To subscribe to
+   the PSE or to get help with resolving a problem.  To subscribe to
    the mailing list, send email to:
 
    majordomo@cs.utah.edu
@@ -159,174 +169,199 @@ Table of Contents
    scirun-develop@cs.utah.edu
 
    To aid in problem resolution, include a verbatim copy of the error(s) 
-   displayed (if any) in the SCIRun console.  Also include a short
-   description of what you we're doing (running a network, building the
-   tree, etc.) and which version of SCIRun you have (PSE 1.0 beta).
+   displayed (if any).  Also include a short description of what you
+   we're doing (running a network, building the tree, etc.) and which
+   version of the PSE you have (PSE 1.0 beta).
 
 
-7) Surviving the tcl stuff
+8) Surviving the tcl stuff
 
 
-   The most difficult part of getting SCIRun to work has
+   The most difficult part of getting the PSE built has
    historically been the "tcl stuff".  This is due in part
-   because SCIRun depends on exact tcl versions and on a
+   because the PSE depends on exact tcl versions and on a
    "correct" tcl installation, but also because of annoying
    bugs in the tcl distributions.
 
    Because of these problems we've included this section
    to, hopefully painlessly, guide you through the process.
+   
+   Since the BLT package is not required to have an exact
+   version (in fact, the only obtainable version is the
+   latest listed on the blt website - which changes very
+   frequently), we cannot guarentee that the blt distribution
+   will work as described below.  However, we have a lot
+   of experience with these packages and may be able to
+   assist you if anything goes awry.
 
    The configure and installation steps are very important.
    Not configuring and installing as indicated will cause
-   the SCIRun configure to fail.
+   the PSE configure and build to fail.
    
-   Be sure to configure and build each package before
-   configuring and building the next, i.e. tcl, then tk,
-   then itcl/itk and finally blt.
+   Be sure to configure, build and install each package
+   before the next, i.e. first tcl, then tk, then itcl/itk
+   and finally blt.
 
-*  First, Get the tcl distributions (tcl, tk, itcl/itk
-   and blt).  To assist in locating the distributions, 
-   we've included the URL's to them in the System
-   requirements section.
+   *  First, Get the tcl distributions (tcl, tk, itcl/itk
+      and blt).  To assist in locating the distributions, 
+      we've included the URL's to them in the System
+      requirements section.
 
-*  Second, unzip and untar all distributions into a
-   place where you would like to build them.  It doesn't 
-   necessarily have to be the installation location.
-   an example location is /usr/local/contrib/tcl/src:
+   *  Second, unzip and untar all distributions into a
+      place where you would like to build them.  It doesn't 
+      necessarily have to be the installation location.
+      an example location is /usr/local/contrib/tcl/src:
 
-     /usr/local/contrib/tcl/src/tcl8.0.4
-     /usr/local/contrib/tcl/src/tk8.0.4
-     /usr/local/contrib/tcl/src/itcl3.0.1
-     /usr/local/contrib/tcl/src/blt2.4q
+        /usr/local/contrib/tcl/src/tcl8.0.4
+        /usr/local/contrib/tcl/src/tk8.0.4
+        /usr/local/contrib/tcl/src/itcl3.0.1
+        /usr/local/contrib/tcl/src/blt2.4t
 
-     We'll call this location TCL_SRC from now on.
+      We'll call this location TCL_SRC from now on.
 
-*  Third, configure the distribution for a "correct" installation
+   *  Third, configure the distributions for a "correct" installation
 
-   Configure the tcl, tk, itcl/itk, and blt distributions as follows (Note:
-   INST_DIR is the location of the /lib and /bin dirs where
-   you want the final libraries and binaries to be installed, NOT including
-   /lib or /bin.  More details about INST_DIR are below):
+      Configure the tcl, tk, itcl/itk, and blt distributions as follows
+      (Note: INST_DIR is the location of the /lib and /bin dirs where
+      you want the final libraries and binaries to be installed, NOT
+      including /lib or /bin.  More details about INST_DIR are below):
      
-  [ Is the --exec-prefix option necessary in the commands below?  If not
-    specified its value defaults to the value specified in the --prefix option. ]
+        cd TCL_SRC/tcl8.0.4/unix
+        configure --enable-shared --prefix=INST_DIR
 
-       cd TCL_SRC/tcl8.0.4/unix
-       configure --enable-shared --prefix=INST_DIR --exec-prefix=INST_DIR
+        cd TCL_SRC/tk8.0.4/unix
+        configure --enable-shared --prefix=INST_DIR \
+                  --with-tcl=TCL_SRC/tcl8.0.4/unix        
 
-       cd TCL_SRC/tk8.0.4/unix
-       configure --enable-shared --prefix=INST_DIR --exec-prefix=INST_DIR \
-                 --with-tcl=TCL_SRC/tcl8.0.4/unix        
+        cd TCL_SRC/itcl3.0.1
+        configure --enable-shared --prefix=INST_DIR \
+                  --with-tcl=INST_DIR/lib \
+                  --with-tk=INST_DIR/lib
 
-       cd TCL_SRC/itcl3.0.1
-       configure --enable-shared --prefix=INST_DIR --exec-prefix=INST_DIR \
-                 --with-tcl=INST_DIR/lib \
-                 --with-tk=INST_DIR/lib
+        cd TCL_SRC/blt2.4t
+        configure --enable-shared --prefix=INST_DIR \
+                  --with-tcl=INST_DIR/lib \
+                  --with-tk=INST_DIR/lib \
+                  --with-cc=cc
 
-       cd TCL_SRC/blt2.4q
-       configure --enable-shared --prefix=INST_DIR --exec-prefix=INST_DIR \
-                 --with-tcl=INST_DIR/lib \
-                 --with-tk=INST_DIR/lib \
-                 --with-cc=cc
-
-   INST_DIR is the location of the /lib and /bin dirs where
-   you want the final libraries and binaries to be installed, NOT including
-   /lib or /bin.  For example, the following
+      Where INST_DIR is the location of the /lib and /bin dirs where
+      you want the final libraries and binaries to be installed, NOT
+      including /lib or /bin.  For example, the following:
    
-     --prefix=/usr/local/contrib --exec-prefix=/usr/local/contrib
+        --prefix=/usr/local/contrib
 
-   indicates that the /lib and /bin locations for the example tcl install
-   will be
+      indicates that the /lib and /bin locations for the example tcl
+      install will be:
    
-     /usr/local/contrib/lib and
-     /usr/local/contrib/bin
+        /usr/local/contrib/lib and
+        /usr/local/contrib/bin
 
-   INST_DIR must be a full path.  If you build and install the tcl
-   distributions into your home directory, do not use ~ to abbreviate
-   the path.
+      INST_DIR must be a full, absolute path.  If you build and install
+      the tcl distributions into your home directory, do not use ~ to
+      abbreviate the paths.
 
-*  Fourth ( !! SGI ONLY !!) edit Makefiles
+   *  Fourth, edit some files
 
-     The Makefiles listed below must be edited as follows
+      SGI only:
 
-       - Edit the Makefiles to reflect your system's default ABI (either
-         n32 or 64). If you're not sure what your system's default
-         ABI is, then assume "-n32".  Replace each occurance of "-32"
-         with "-n32" or "64".
+	Edit each of the following makefiles:
 
-       - In each Makefile find this line:
+          TCL_SRC/tcl8.0.4/unix/Makefile
+          TCL_SRC/tk8.0.4/unix/Makefile
+          TCL_SRC/itcl3.0.1/itcl/unix/Makefile
+          TCL_SRC/itcl3.0.1/itk/unix/Makefile
+          TCL_SRC/blt2.4t/src/shared/Makefile
 
-           SHLIB_LD =	ld -32 -shared -rdata_shared -rpath /usr/local/lib
+        In each makefile find this line:
 
-         and change it to:
+          SHLIB_LD =	ld -32 -shared -rdata_shared -rpath /usr/local/lib
 
-           SHLIB_LD =	ld -n32 -shared -rdata_shared -rpath ${prefix}/lib
+        and change it to:
 
-         This fixes a problem locating shared libraries when INST_DIR is not
-         /usr/local/lib. 
+          SHLIB_LD =	ld -YOUR_ABI -shared -rdata_shared -rpath INST_DIR
+                               ^                                    ^
+                               |                                    |
+                               *                                    *
 
-     These are the Makefiles to edit:
+        where YOUR_ABI is your system's default ABI (applications binary
+        interface).  It is one of 32, n32 or 64.  Look in the file
+        /etc/compiler.defaults.  In it there will be a line similar to:
 
-        TCL_SRC/tcl8.0.4/unix/Makefile
+          -DEFAULT:abi=n32:isa=mips4:proc=r10k
+ 
+        This example says the default ABI is n32 ("abi=n32").  If you cannot
+        find this line or the file, and you don't know your system's ABI,
+        assume that it's n32.
 
-        TCL_SRC/tk8.0.4/unix/Makefile
+      Linux only:
 
-        TCL_SRC/itcl3.0.1/itcl/unix/Makefile
+        Edit the following source file:
 
-        TCL_SRC/itcl3.0.1/itk/unix/Makefile
+          TCL_SRC/tcl8.0.4/generic/tclPosixStr.c
 
-        TCL_SRC/blt2.4q/src/shared/Makefile
+        Search for the following two lines:
+
+          case ENOTSUP: return "ENOTSUP";
+          case ENOTSUP: return "operation not supported";
+
+        and comment them out:
+
+          /*case ENOTSUP: return "ENOTSUP";*/
+          /*case ENOTSUP: return "operation not supported";*/
      
 
-*  Fifth, build and install the distribution 
+   *  Fifth, build and install the distributions
+ 
+      These commands will build and install tcl, tk, itcl/itk, and blt:
 
-   These commands will build and install tck, tk, itcl, and blt:
+        cd TCL_SRC/tcl8.0.4/unix
+        make   
+        make -k install
 
-     cd TCL_SRC/tcl8.0.4/unix
-     make   
-     make install
+        cd TCL_SRC/tk8.0.4/unix
+        make   
+        make -k install
 
-     cd TCL_SRC/tk8.0.4/unix
-     make   
-     make install
+        cd TCL_SRC/itcl3.0.1
+        make   
+        make -k install
 
-     cd TCL_SRC/itcl3.0.1
-     make   
-     make install
+        cd TCL_SRC/blt2.4t 
+        make
+        make -k install
 
-     cd TCL_SRC/blt2.4q 
-     make
+   *  Finally, set your paths
 
-   (The next 2 commands may not be needed but they do suppress frightening error
-    messages during installation of blt.)
+      csh commands:
 
-     cd TCL_SRC/blt2.4q/src/shared
-     make libBLTlite24.so bltsh24
+        setenv LD_LIBRARY_PATH INST_DIR/lib:$LD_LIBRARY_PATH
+        setenv PATH INST_DIR/bin:$PATH  
 
-     cd TCL_SRC/blt2.4q 
-     make install
+      sh commands:
 
-   The makes should work fine for tcl, tk and itcl/itk, but blt may not work.
-   The blt distribution may incorrectly handle "strdup()".
-   If you get an error related to "strdup()", comment out the
-   strdup() function in bltUtil.c (with #if 0) and continue the build.
+        export LD_LIBRARY_PATH=INST_DIR/lib:$LD_LIBRARY_PATH
+        export PATH=INST_DIR/bin:$PATH
 
-   We have a lot of experience with failed builds for these
-   distributions, so feel free to contact us if you run into problems.
-     
-*  Finally, set your paths
+      ( !! SGI ONLY !!) In the previous commands,
+      LD_LIBRARY_PATH may actually be LD_LIBRARYN32_PATH
+      or LD_LIBRARY64_PATH if your system's default ABI
+      is n32 or 64.
 
-   Csh commands:
+      You can verify that your tcl installation is correct by
+      typing the following:
 
-     setenv LD_LIBRARY_PATH INST_DIR/lib:$LD_LIBRARY_PATH
-     setenv PATH INST_DIR/bin:$PATH  
+        which tclsh8.0
+        which wish8.0
+        which itclsh3.0
+        which itkwish3.0
+        which bltwish24
 
-   Sh commands:
+      if they all report that the executables being used are in
 
-     export LD_LIBRARY_PATH=INST_DIR/lib:$LD_LIBRARY_PATH
-     export PATH=INST_DIR/bin:$PATH
+        INST_DIR/bin
 
-   ( !! SGI ONLY !!) In the previous commands,
-   LD_LIBRARY_PATH may actually be LD_LIBRARYN32_PATH
-   or LD_LIBRARY64_PATH if your system's default ABI
-   (Application Binary Interface) is n32 or 64.
+      Then your environment variables seem to be correct, and the
+      build most likely worked.
+
+
+
