@@ -23,9 +23,13 @@ itcl_class DaveW_FEM_DipoleMatToGeom {
     }
     method set_defaults {} {
 	global $this-widgetSizeTCL
-	global $this-fixedSizeTCL
+	global $this-scaleModeTCL
+	global $this-showLastVecTCL
+	global $this-showLinesTCL
 	set $this-widgetSizeTCL 1
-	set $this-fixedSizeTCL 0
+	set $this-scaleModeTCL normalize
+	set $this-showLastVecTCL 0
+	set $this-showLinesTCL 1
     }
     method make_entry {w text v c} {
         frame $w
@@ -47,11 +51,19 @@ itcl_class DaveW_FEM_DipoleMatToGeom {
         wm minsize $w 150 30
         frame $w.f
 	global $this-widgetSizeTCL
-	make_entry $w.f.s "WidgetSize:" $this-widgetSizeTCL "$this-c needexecute"
-	global $this-fixedSizeTCL
-	checkbutton $w.f.f -text "Fixed Size" -variable $this-fixedSizeTCL
+	make_entry $w.f.s "Widget Size:" $this-widgetSizeTCL "$this-c needexecute"
+	frame $w.f.r -relief sunken -bd 2
+	global $this-scaleModeTCL
+	radiobutton $w.f.r.fixed -text "Fixed Size" -value "fixed" -variable $this-scaleModeTCL
+	radiobutton $w.f.r.normalize -text "Normalize Largest" -value "normalize" -variable $this-scaleModeTCL
+	radiobutton $w.f.r.scale -text "Scale Size" -value "scale" -variable $this-scaleModeTCL
+	pack $w.f.r.fixed $w.f.r.normalize $w.f.r.scale -side top -fill both -expand yes
+	global $this-showLastVecTCL
+	checkbutton $w.f.v -text "Show Last As Vector" -variable $this-showLastVecTCL
+	global $this-showLinesTCL
+	checkbutton $w.f.l -text "Show Lines" -variable $this-showLinesTCL
 
-	pack $w.f.s $w.f.f -side top -fill x -expand yes
+	pack $w.f.s $w.f.r $w.f.v $w.f.l -side top -fill x -expand yes
         pack $w.f -side top -fill x -expand yes
     }
 }
