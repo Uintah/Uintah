@@ -41,12 +41,6 @@
 #ifndef SCI_project_module_SCIBaWGL_h
 #define SCI_project_module_SCIBaWGL_h
 
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
-
 #ifdef __sgi
 #include <ulocks.h>
 #endif

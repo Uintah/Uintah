@@ -28,6 +28,13 @@
 
 #include <sci_defs/ogl_defs.h>
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#include <sci_glu.h>
+#endif
+
 #include <Core/GLVolumeRenderer/FullRes.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Malloc/Allocator.h>
@@ -39,13 +46,6 @@
 #include <iostream>
 
 namespace SCIRun {
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#include <sci_glu.h>
-#endif
 
 //  GLenum errCode;
 //  const GLubyte *errString;

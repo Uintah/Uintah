@@ -46,21 +46,11 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
+
 #define Colormap XColormap
-
 #include <Core/Geom/GeomOpenGL.h>
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#include <GL/glxew.h>
-#else
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
-#endif
-
 #include <tcl.h>
 #include <tk.h>
-
 #undef Colormap
 
 #include <iostream>

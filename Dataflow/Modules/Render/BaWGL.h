@@ -45,12 +45,6 @@
 #ifndef BAWGL_H_
 #define BAWGL_H_
 
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
-
 #include <fstream>
 
 #include <Dataflow/Modules/Render/SharedMemory.h>

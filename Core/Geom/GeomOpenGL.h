@@ -50,6 +50,8 @@
 #define CALLBACK APIENTRY
 #endif
 
+#include <sci_defs/ogl_defs.h>
+
 #if defined( HAVE_GLEW )
 #include <GL/glew.h>
 #include <GL/glxew.h>
