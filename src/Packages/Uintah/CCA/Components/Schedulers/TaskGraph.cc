@@ -782,25 +782,20 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     for(Task::Dependency* comp = task->task->getComputes();
 	comp != 0; comp = comp->next){
-      const PatchSubset* patches =
+      constHandle<PatchSubset> patches =
 	comp->getPatchesUnderDomain(task->patches);
-      const MaterialSubset* matls =
+      constHandle<MaterialSubset> matls =
 	comp->getMaterialsUnderDomain(task->matls);
       if(!patches) {
 	// Reduction task
 	if (matls && !matls->empty()) {
-	  ct.remembercomp(task, comp, 0, matls);
+	  ct.remembercomp(task, comp, 0, matls.get_rep());
 	} else { 
 	  ct.remembercomp(task, comp, 0, 0);
 	}
       }
       else if(!patches->empty() && !matls->empty())
-	ct.remembercomp(task, comp, patches, matls);
-      
-      if(patches && patches->getReferenceCount() == 0)
-	delete patches;
-      if(matls && matls->getReferenceCount() == 0)
-	delete matls;
+	ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep());
     }
   }
 
@@ -886,15 +881,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     if(dbg.active())
       dbg << "req: " << *req << '\n';
     
-    const PatchSubset* patches =
+    constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
-    const MaterialSubset* matls =
+    constHandle<MaterialSubset> matls =
       req->getMaterialsUnderDomain(task->matls);
 
-    if(patches)
-      patches->addReference();
-    if(matls)
-      matls->addReference();
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
 	const Patch* patch = patches->get(i);
@@ -1001,10 +992,6 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
            << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName()<<"\n\n";
       throw InternalError(desc.str()); 
     }
-    if(patches && patches->removeReference())
-      delete patches;
-    if(matls && matls->removeReference())
-      delete matls;
   }
 }
 

@@ -1720,8 +1720,10 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
     
     const VarLabel* label = dep->var;
 
-    Handle<const PatchSubset> patches = dep->getPatchesUnderDomain(domainPatches);
-    Handle<const MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
+    constHandle<PatchSubset> patches =
+      dep->getPatchesUnderDomain(domainPatches);
+    constHandle<MaterialSubset> matls =
+      dep->getMaterialsUnderDomain(domainMatls);
     if (label->typeDescription() &&
 	label->typeDescription()->isReductionVariable()) {
       patches = default_patches.get_rep();
