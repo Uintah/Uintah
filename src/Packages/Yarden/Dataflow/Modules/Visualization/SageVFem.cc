@@ -18,8 +18,7 @@
 #include <Classlib/String.h>
 #include <Classlib/Timer.h>
 #include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldRGdouble.h>
-#include <Datatypes/ScalarFieldRGshort.h>
+#include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>

@@ -38,7 +38,7 @@ class Attrib : public Datatype
 {
 public:
 
-  typedef enum Type { Normal, Temp} ;
+  enum Type { Normal, Temp};
 
   // GROUP:  Constructors/Destructor
   //////////

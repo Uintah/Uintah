@@ -2,29 +2,14 @@
 #define SFRGFILE_H
 
 #include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Containers/Array2.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/Geometry/Point.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 
-
 namespace SCIRun {
-  class ScalarFieldRGdouble;
-  class ScalarFieldRGfloat;
-  class ScalarFieldRGint;
-  class ScalarFieldRGshort;
-  class ScalarFieldRGushort;
-  class ScalarFieldRGchar;
-  class ScalarFieldRGuchar;
-  class ScalarFieldRGBase;
-}
-
-namespace SCIRun {
-
-
-
-
 
 
 typedef int VTYPE;

@@ -13,7 +13,6 @@
 
 
 #include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
-#include <Core/Datatypes/ScalarFieldRGchar.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Malloc/Allocator.h>
 

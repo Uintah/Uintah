@@ -16,7 +16,6 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Dataflow/Ports/VoidStarPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
-#include <Core/Datatypes/ScalarFieldRGuchar.h>
 #include <Core/Datatypes/VoidStar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>

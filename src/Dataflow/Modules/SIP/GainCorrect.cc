@@ -14,8 +14,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
-#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <stdio.h>
 #include <math.h>

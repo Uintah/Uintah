@@ -14,8 +14,6 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/ScalarFieldRGchar.h>
-#include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <GL/gl.h>

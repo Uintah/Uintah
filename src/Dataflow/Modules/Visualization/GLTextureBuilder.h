@@ -17,11 +17,6 @@
 #include <GL/glx.h>
 
 
-
-namespace SCIRun{
-  class ScalarFieldRGuchar;
-}
-
 namespace SCIRun {
   class GLTexture3D;
 }

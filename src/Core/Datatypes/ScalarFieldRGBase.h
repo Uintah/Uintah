@@ -14,8 +14,8 @@
 #ifndef SCI_project_ScalarFieldRGBase_h
 #define SCI_project_ScalarFieldRGBase_h 1
 
-#include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/LockArray3.h>
+#include <Core/Datatypes/ScalarField.h>
 
 namespace SCIRun {
 
@@ -23,13 +23,15 @@ namespace SCIRun {
 typedef LockingHandle< LockArray3<Point> > Array3PointHandle;
 typedef unsigned char uchar;
 
-class ScalarFieldRGdouble;
-class ScalarFieldRGfloat;
-class ScalarFieldRGint;
-class ScalarFieldRGshort;
-class ScalarFieldRGushort;
-class ScalarFieldRGchar;
-class ScalarFieldRGuchar;
+
+template <class T> class ScalarFieldRGT;
+typedef class ScalarFieldRGT<double> ScalarFieldRGdouble;
+typedef class ScalarFieldRGT<float> ScalarFieldRGfloat;
+typedef class ScalarFieldRGT<int> ScalarFieldRGint;
+typedef class ScalarFieldRGT<short> ScalarFieldRGshort;
+typedef class ScalarFieldRGT<unsigned short> ScalarFieldRGushort;
+typedef class ScalarFieldRGT<char> ScalarFieldRGchar;
+typedef class ScalarFieldRGT<unsigned char> ScalarFieldRGuchar;
 
 class SCICORESHARE ScalarFieldRGBase : public ScalarField {
 public:

@@ -39,7 +39,7 @@ LOG
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/VectorFieldRG.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Packages/Uintah/Interface/DataArchive.h>
 #include <Packages/Uintah/Grid/Grid.h>
 #include <Packages/Uintah/Grid/GridP.h>

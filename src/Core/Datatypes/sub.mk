@@ -4,17 +4,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
-GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
-	$(SRCDIR)/ScalarFieldRGuchar.cc $(SRCDIR)/ScalarFieldRGshort.cc \
-	$(SRCDIR)/ScalarFieldRGushort.cc \
-	$(SRCDIR)/ScalarFieldRGint.cc $(SRCDIR)/ScalarFieldRGfloat.cc \
-	$(SRCDIR)/ScalarFieldRGdouble.cc
-
-GENHDRS := $(patsubst %.cc,%.h,$(GENSRCS))
-
-
-SRCS += $(GENSRCS) \
-        $(SRCDIR)/Attrib.cc                 \
+SRCS += $(SRCDIR)/Attrib.cc                 \
         $(SRCDIR)/AttribManager.cc          \
         $(SRCDIR)/BasicSurfaces.cc	    \
 	$(SRCDIR)/Brick.cc		    \
@@ -38,6 +28,7 @@ SRCS += $(GENSRCS) \
         $(SRCDIR)/SField.cc		    \
         $(SRCDIR)/ScalarField.cc	    \
         $(SRCDIR)/ScalarFieldHUG.cc	    \
+        $(SRCDIR)/ScalarFieldRG.cc          \
         $(SRCDIR)/ScalarFieldRGBase.cc      \
         $(SRCDIR)/ScalarFieldRGCC.cc        \
         $(SRCDIR)/ScalarFieldUG.cc	    \
@@ -84,58 +75,6 @@ SRCS += $(GENSRCS) \
 	$(SRCDIR)/Polygon.cc \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
-
-
-$(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/char/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGuchar.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/uchar/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGshort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/short/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGushort.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/ushort/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGint.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/int/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGfloat.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/float/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGdouble.h: $(SRCDIR)/ScalarFieldRGTYPE.h
-	sed 's/TYPE/double/g' < $< > $@
-
-
-# .CC
-
-$(SRCDIR)/ScalarFieldRG.cc: $(SRCDIR)/ScalarFieldRGdouble.cc $(SRCDIR)/ScalarFieldRG.h
-	sed 's/RGdouble/RG/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGchar.h
-	sed 's/TYPE/char/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGuchar.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGuchar.h
-	sed 's/TYPE/uchar/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGshort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGshort.h
-	sed 's/TYPE/short/g' < $< >$@
-
-$(SRCDIR)/ScalarFieldRGushort.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGushort.h
-	sed 's/TYPE/ushort/g' < $< >$@
-
-$(SRCDIR)/ScalarFieldRGint.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGint.h
-	sed 's/TYPE/int/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGfloat.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGfloat.h
-	sed 's/TYPE/float/g' < $< > $@
-
-$(SRCDIR)/ScalarFieldRGdouble.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/ScalarFieldRGdouble.h
-	sed 's/TYPE/double/g' < $< > $@
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/TclInterface \

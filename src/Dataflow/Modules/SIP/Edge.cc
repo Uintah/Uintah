@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id"
 
 /*
  *  Edge.cc:  Edge Detection algorithms module
@@ -13,7 +12,6 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
-#include <Core/Datatypes/ScalarFieldRGchar.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Geom/GeomGrid.h>
 #include <Core/Geom/GeomGroup.h>

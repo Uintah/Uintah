@@ -16,7 +16,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Geometry/Point.h>
 
