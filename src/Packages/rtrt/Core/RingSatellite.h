@@ -16,7 +16,7 @@ void Pio(Piostream&, rtrt::RingSatellite*&);
 
 namespace rtrt {
 
-  class RingSatellite : public Ring, public UVMapping
+class RingSatellite : public Ring
 {
 
  protected:
