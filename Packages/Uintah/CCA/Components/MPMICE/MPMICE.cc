@@ -1169,44 +1169,32 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
          sp_vol_equil[m][*iter] = 1.0/rho_micro[m][*iter];
 
+         tmp = dp_drho[m] + dp_de[m] * 
+                (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
       } 
           
-       if(mpm_matl){                //  M P M
-/*`==========Ideal gas for testing but need a cleaner way ==========*/         
-          //__________________________________
-          //  Hardwire for ideal gas 
-          double gamma   = mpm_matl->getGamma(); 
+      if(mpm_matl){                //  M P M
           rho_micro[m][*iter] =  
-            mpm_matl->getConstitutiveModel()->computeRhoMicro(
-                                            press_new[*iter],gamma,
-					         cv[m][*iter],Temp[m][*iter]); 
-
+           mpm_matl->getConstitutiveModel()->computeRhoMicroCM(press_new[*iter],
+								mpm_matl);
           mpm_matl->getConstitutiveModel()->
-            computePressEOS(rho_micro[m][*iter],gamma,
-                                            cv[m][*iter],Temp[m][*iter],
-                                            press_eos[m],dp_drho[m], dp_de[m]); 
+           computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
+								tmp,mpm_matl);
 
-#if 0         
-    JOHN:  when I tried this it core dumped.
-    //__________________________________
-    //  Hardwire for ideal gas 
-          double gamma   = mpm_matl->getGamma(); 
+          mat_volume[m] = mat_vol[m][*iter];
 
-          rho_micro[m][*iter] =  
-            mpm_matl->getEOSModel()->computeRhoMicro(
-                                            press_new[*iter],gamma,
-					         cv[m][*iter],Temp[m][*iter]); 
-                                                                     
-          mpm_matl->getEOSModel()->
-            computePressEOS(rho_micro[m][*iter],gamma,
-                                            cv[m][*iter],Temp[m][*iter],
-                                            press_eos[m],dp_drho[m], dp_de[m]);
-#endif 
-        mat_volume[m] = mat_vol[m][*iter];
+//    This is the IDEAL GAS stuff
+//          double gamma   = mpm_matl->getGamma(); 
+//          mpm_matl->getConstitutiveModel()->computeRhoMicro(
+//                                            press_new[*iter],gamma,
+//					         cv[m][*iter],Temp[m][*iter]); 
+//          mpm_matl->getConstitutiveModel()->
+//            computePressEOS(rho_micro[m][*iter],gamma,
+//                                            cv[m][*iter],Temp[m][*iter],
+//                                           press_eos[m],dp_drho[m], dp_de[m]);
+//         tmp = dp_drho[m] + dp_de[m] * 
+//                (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
       }              
- /*==========TESTING==========`*/         
-      tmp = dp_drho[m] + dp_de[m] * 
-                (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
       speedSound_new[m][*iter] = sqrt(tmp);
      
       total_mat_vol += mat_volume[m];
@@ -1214,7 +1202,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      }
      for (int m = 0; m < numALLMatls; m++) {
        vol_frac[m][*iter] = mat_volume[m]/(total_mat_vol + d_SMALL_NUM);
-       rho_CC[m][*iter]   = vol_frac[m][*iter] * rho_micro[m][*iter] + d_SMALL_NUM;
+       rho_CC[m][*iter]   = vol_frac[m][*iter]*rho_micro[m][*iter] +d_SMALL_NUM;
      }
   }
  
@@ -1276,17 +1264,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                            cv[m][*iter],Temp[m][*iter],
                                            press_eos[m], dp_drho[m], dp_de[m]);
        }
-/*`==========Need a cleaner way of doing it==========*/ 
        if(mpm_matl){
         //__________________________________
         //  Hardwire for an ideal gas
-          double gamma = mpm_matl->getGamma();
           mpm_matl->getConstitutiveModel()->
-            computePressEOS(rho_micro[m][*iter],gamma,
-                                           cv[m][*iter],Temp[m][*iter],
-                                           press_eos[m], dp_drho[m], dp_de[m]);
+               computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
+								tmp,mpm_matl);
+//    This is the IDEAL GAS stuff
+//          double gamma = mpm_matl->getGamma();
+//          mpm_matl->getConstitutiveModel()->
+//            computePressEOS(rho_micro[m][*iter],gamma,
+//                                          cv[m][*iter],Temp[m][*iter],
+//                                          press_eos[m], dp_drho[m], dp_de[m]);
        }
- /*==========TESTING==========`*/
      }
      //__________________________________
      // - compute delPress
@@ -1319,15 +1309,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                              cv[m][*iter],Temp[m][*iter]);
          sp_vol_equil[m][*iter] = 1.0/rho_micro[m][*iter];
        }
-/*`==========Need a cleaner way  to get an EOS in here==========*/ 
        if(mpm_matl){
-         //__________________________________
-        //  Hardwire ideal gas
-            double gamma = mpm_matl->getGamma();
-           rho_micro[m][*iter] = 
-           mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
-                                             cv[m][*iter],Temp[m][*iter]);
- /*==========TESTING==========`*/
+         rho_micro[m][*iter] =  
+           mpm_matl->getConstitutiveModel()->computeRhoMicroCM(press_new[*iter],
+								mpm_matl);
+//    This is the IDEAL GAS stuff
+//         double gamma = mpm_matl->getGamma();
+//         rho_micro[m][*iter] = 
+//         mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
+//					gamma, cv[m][*iter],Temp[m][*iter]);
        }
      }
      //__________________________________
@@ -1353,22 +1343,21 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
          tmp = dp_drho[m] + dp_de[m] * 
                     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-         speedSound_new[m][*iter] = sqrt(tmp);
        }
-/*`========== Need a cleaner way of doing this ==========*/ 
        if(mpm_matl){
-         //__________________________________
-         //  Hardwire ideal gas
-         double gamma = mpm_matl->getGamma();
-         mpm_matl->getConstitutiveModel()->
-             computePressEOS(rho_micro[m][*iter],gamma,
-                                             cv[m][*iter],Temp[m][*iter],
-                                             press_eos[m],dp_drho[m], dp_de[m]);
-
-         tmp = dp_drho[m] + dp_de[m] * 
-                    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-         speedSound_new[m][*iter] = sqrt(tmp);
+          mpm_matl->getConstitutiveModel()->
+               computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
+								tmp,mpm_matl);
+//    This is the IDEAL GAS stuff
+//         double gamma = mpm_matl->getGamma();
+//         mpm_matl->getConstitutiveModel()->
+//             computePressEOS(rho_micro[m][*iter],gamma,
+//                                          cv[m][*iter],Temp[m][*iter],
+//                                          press_eos[m],dp_drho[m], dp_de[m]);
+//         tmp = dp_drho[m] + dp_de[m] * 
+//                    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
        }
+       speedSound_new[m][*iter] = sqrt(tmp);
  /*==========TESTING==========`*/
      }
      //__________________________________
