@@ -19,7 +19,7 @@
 
    <DataArchiver>
         <filebase>sidecrack.uda</filebase>
-        <outputInterval>.1</outputInterval>
+        <outputInterval>.02</outputInterval>
         <save label="KineticEnergy"/>
         <save label="TotalMass"/>
         <save label="StrainEnergy"/>
