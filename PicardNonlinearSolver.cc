@@ -178,6 +178,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
+  tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
 		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
@@ -199,6 +200,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_MAlab)
     tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
@@ -267,6 +270,13 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_vVelRhoHatLabel);
   tsk->computes(d_lab->d_wVelRhoHatLabel);
   tsk->computes(d_lab->d_filterdrhodtLabel);
+  tsk->computes(d_lab->d_drhodfCPLabel);
+  tsk->computes(d_lab->d_tempINLabel);
+  tsk->computes(d_lab->d_co2INLabel);
+  tsk->computes(d_lab->d_velocityDivergenceLabel);
+  tsk->computes(d_lab->d_velDivResidualLabel);
+  tsk->computes(d_lab->d_continuityResidualLabel);
+  tsk->computes(d_lab->d_divConstraintLabel);
 
   for (int ii = 0; ii < nofScalars; ii++) {
     tsk->computes(d_lab->d_scalarSPLabel);
@@ -285,12 +295,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   }
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
-    tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_cpINLabel);
     if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
     if (d_DORadiationCalc) {
-    tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_h2oINLabel);
     tsk->computes(d_lab->d_sootFVINLabel);
     tsk->computes(d_lab->d_abskgINLabel);
@@ -324,6 +332,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_maxAbsU_label);
   tsk->computes(d_lab->d_maxAbsV_label);
   tsk->computes(d_lab->d_maxAbsW_label);
+  tsk->computes(d_lab->d_maxUxplus_label);
   tsk->computes(d_lab->d_oldDeltaTLabel);
   tsk->computes(d_lab->d_densityOldOldLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -380,9 +389,9 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (!d_turbModel->getFilter()->isInitialized()) 
       d_turbModel->sched_initFilterMatrix(level, subsched, local_patches, local_matls);
     d_props->setFilter(d_turbModel->getFilter());
-#ifdef divergenceconstraint
+//#ifdef divergenceconstraint
     d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
-#endif
+//#endif
   }
 #endif
 
@@ -420,8 +429,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 				  d_timeIntegratorLabels[curr_level], true);
     d_props->sched_computeDenRefArray(subsched, local_patches, local_matls,
 				      d_timeIntegratorLabels[curr_level]);
-    sched_syncRhoF(subsched, local_patches, local_matls,
-		   d_timeIntegratorLabels[curr_level]);
+    //sched_syncRhoF(subsched, local_patches, local_matls,
+//		   d_timeIntegratorLabels[curr_level]);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
@@ -477,12 +486,15 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
+    max_vartype mxUxplus;
     old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
     old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
     old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
+    old_dw->get(mxUxplus, d_lab->d_maxUxplus_label);
     subsched->get_dw(3)->put(mxAbsU, d_lab->d_maxAbsU_label);
     subsched->get_dw(3)->put(mxAbsV, d_lab->d_maxAbsV_label);
     subsched->get_dw(3)->put(mxAbsW, d_lab->d_maxAbsW_label);
+    subsched->get_dw(3)->put(mxUxplus, d_lab->d_maxUxplus_label);
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_stressTensorCompLabel, patches, matls); 
@@ -492,6 +504,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_uVelocitySPBCLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_vVelocitySPBCLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_wVelocitySPBCLabel, patches, matls); 
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_divConstraintLabel, patches, matls); 
     // warning **only works for one scalar
     for (int ii = 0; ii < nofScalars; ii++)
       subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarSPLabel, patches, matls); 
@@ -548,6 +561,13 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_vVelRhoHatLabel, patches, matls); 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_wVelRhoHatLabel, patches, matls); 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_filterdrhodtLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_drhodfCPLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_co2INLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_velocityDivergenceLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_velDivResidualLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_continuityResidualLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_divConstraintLabel, patches, matls); 
     // warning **only works for one scalar
     for (int ii = 0; ii < nofScalars; ii++)
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarSPLabel, patches, matls); 
@@ -560,12 +580,10 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     if (d_enthalpySolve) {
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpySPLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cpINLabel, patches, matls); 
     if (d_radiationCalc) {
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_absorpINLabel, patches, matls); 
     if (d_DORadiationCalc) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_co2INLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_h2oINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_sootFVINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_abskgINLabel, patches, matls); 
@@ -610,9 +628,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->get_dw(3)->get(mxAbsU, d_lab->d_maxAbsU_label);
     subsched->get_dw(3)->get(mxAbsV, d_lab->d_maxAbsV_label);
     subsched->get_dw(3)->get(mxAbsW, d_lab->d_maxAbsW_label);
+    subsched->get_dw(3)->get(mxUxplus, d_lab->d_maxUxplus_label);
     new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
     new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
     new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
+    new_dw->put(mxUxplus, d_lab->d_maxUxplus_label);
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel))  {
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarFluxCompLabel, patches, matls); 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_stressTensorCompLabel, patches, matls); 
@@ -809,15 +829,14 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
 // ****************************************************************************
 void 
 PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched, 
-						   const PatchSet* patches,
-						   const MaterialSet* matls,
-				 const TimeIntegratorLabel* timelabels)
+					    const PatchSet* patches,
+					    const MaterialSet* matls,
+				         const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "PicardNonlinearSolver::interpFCToCC" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this, 
-		  	  &PicardNonlinearSolver::interpolateFromFCToCC,
-			  timelabels);
+			 &PicardNonlinearSolver::interpolateFromFCToCC, timelabels);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
   tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
@@ -848,6 +867,12 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
   tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -856,6 +881,9 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->computes(d_lab->d_newCCVVelocityLabel);
   tsk->computes(d_lab->d_newCCWVelocityLabel);
   tsk->computes(d_lab->d_kineticEnergyLabel);
+  tsk->computes(d_lab->d_velocityDivergenceLabel);
+  tsk->computes(d_lab->d_velDivResidualLabel);
+  tsk->computes(d_lab->d_continuityResidualLabel);
   }
   else {
   tsk->modifies(d_lab->d_newCCVelocityLabel);
@@ -864,6 +892,9 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   tsk->modifies(d_lab->d_newCCVVelocityLabel);
   tsk->modifies(d_lab->d_newCCWVelocityLabel);
   tsk->modifies(d_lab->d_kineticEnergyLabel);
+  tsk->modifies(d_lab->d_velocityDivergenceLabel);
+  tsk->modifies(d_lab->d_velDivResidualLabel);
+  tsk->modifies(d_lab->d_continuityResidualLabel);
   }
   tsk->computes(timelabels->tke_out);
       
@@ -876,11 +907,11 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 // ****************************************************************************
 void 
 PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
-					     const PatchSubset* patches,
-					     const MaterialSubset*,
-					     DataWarehouse* old_dw,
-					     DataWarehouse* new_dw,
-				 const TimeIntegratorLabel* timelabels)
+				      const PatchSubset* patches,
+				      const MaterialSubset*,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw,
+				      const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -897,6 +928,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> uHatVel_CC;
     CCVariable<double> vHatVel_CC;
     CCVariable<double> wHatVel_CC;
+    CCVariable<double> divergence;
+    CCVariable<double> div_residual;
+    CCVariable<double> residual;
+    constCCVariable<double> density;
+    constCCVariable<double> drhodt;
+    constCCVariable<double> div_constraint;
 
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
@@ -907,9 +944,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> newCCVVel;
     CCVariable<double> newCCWVel;
     CCVariable<double> kineticEnergy;
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(oldUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
@@ -932,9 +976,13 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			   matlIndex, patch);
     new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel,
 			   matlIndex, patch);
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+    oldCCVel.initialize(Vector(0.0,0.0,0.0));
+    uHatVel_CC.initialize(0.0);
+    vHatVel_CC.initialize(0.0);
+    wHatVel_CC.initialize(0.0);
+    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 	  
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
@@ -961,6 +1009,181 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	}
       }
     }
+    // boundary conditions not to compute erroneous values in the case of ramping
+    if (xminus) {
+      int ii = idxLo.x()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idxU] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idxU] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (xplus) {
+      int ii =  idxHi.x()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idx]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idx]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (yminus) {
+      int jj = idxLo.y()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idxV] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idxV] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (yplus) {
+      int jj =  idxHi.y()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idx]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idx]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (zminus) {
+      int kk = idxLo.z()-1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idxW] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idxW] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (zplus) {
+      int kk =  idxHi.z()+1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idx]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idx]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
     } 
 
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
@@ -969,6 +1192,23 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(drhodt, d_lab->d_filterdrhodtLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(div_constraint, d_lab->d_divConstraintLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel,
@@ -982,6 +1222,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityLabel,
 			   matlIndex, patch);
     new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(divergence, d_lab->d_velocityDivergenceLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(div_residual, d_lab->d_velDivResidualLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(residual, d_lab->d_continuityResidualLabel,
 			   matlIndex, patch);
     }
     else {
@@ -997,18 +1243,28 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			   matlIndex, patch);
     new_dw->getModifiable(kineticEnergy, d_lab->d_kineticEnergyLabel,
 			   matlIndex, patch);
+    new_dw->getModifiable(divergence, d_lab->d_velocityDivergenceLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(div_residual, d_lab->d_velDivResidualLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(residual, d_lab->d_continuityResidualLabel,
+			   matlIndex, patch);
     }
+    newCCVel.initialize(Vector(0.0,0.0,0.0));
     newCCUVel.initialize(0.0);
     newCCVVel.initialize(0.0);
     newCCWVel.initialize(0.0);
     kineticEnergy.initialize(0.0);
+    divergence.initialize(0.0);
+    div_residual.initialize(0.0);
+    residual.initialize(0.0);
 
 
     double total_kin_energy = 0.0;
 
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 	  
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
@@ -1029,6 +1285,193 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    // boundary conditions not to compute erroneous values in the case of ramping
+    if (xminus) {
+      int ii = idxLo.x()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idxU] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (xplus) {
+      int ii =  idxHi.x()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idx]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (yminus) {
+      int jj = idxLo.y()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idxV] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (yplus) {
+      int jj =  idxHi.y()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idx]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (zminus) {
+      int kk = idxLo.z()-1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idxW] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (zplus) {
+      int kk =  idxHi.z()+1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idx]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+
+    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+	  
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  IntVector idxxminus(ii-1,jj,kk);
+	  IntVector idxyminus(ii,jj-1,kk);
+	  IntVector idxzminus(ii,jj,kk-1);
+	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	  
+	  divergence[idx] = (newUVel[idxU]-newUVel[idx])/cellinfo->sew[ii]+
+		            (newVVel[idxV]-newVVel[idx])/cellinfo->sns[jj]+
+			    (newWVel[idxW]-newWVel[idx])/cellinfo->stb[kk];
+
+	  div_residual[idx] = divergence[idx]-div_constraint[idx]/vol;
+
+	  residual[idx] = (0.5*(density[idxU]+density[idx])*newUVel[idxU]-
+			   0.5*(density[idx]+density[idxxminus])*newUVel[idx])/cellinfo->sew[ii]+
+		          (0.5*(density[idxV]+density[idx])*newVVel[idxV]-
+			   0.5*(density[idx]+density[idxyminus])*newVVel[idx])/cellinfo->sns[jj]+
+			  (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
+			   0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
+			  drhodt[idx]/vol;
 	}
       }
     }
@@ -1870,6 +2313,8 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* p
 
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(parent_old_dw, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1886,11 +2331,13 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* p
     tsk->requires(Task::OldDW, timelabels->maxabsu_in);
     tsk->requires(Task::OldDW, timelabels->maxabsv_in);
     tsk->requires(Task::OldDW, timelabels->maxabsw_in);
+    tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
   }
   else {
     tsk->requires(Task::NewDW, timelabels->maxabsu_in);
     tsk->requires(Task::NewDW, timelabels->maxabsv_in);
     tsk->requires(Task::NewDW, timelabels->maxabsw_in);
+    tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
   }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -1923,22 +2370,27 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
   double maxAbsU;
   double maxAbsV;
   double maxAbsW;
+  double maxUxplus;
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
+  max_vartype mxUxp;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(mxAbsU, timelabels->maxabsu_in);
     old_dw->get(mxAbsV, timelabels->maxabsv_in);
     old_dw->get(mxAbsW, timelabels->maxabsw_in);
+    old_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   else {
     new_dw->get(mxAbsU, timelabels->maxabsu_in);
     new_dw->get(mxAbsV, timelabels->maxabsv_in);
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
+    new_dw->get(mxUxp, timelabels->maxuxplus_in);
   }
   maxAbsU = mxAbsU;
   maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
+  maxUxplus = mxUxp;
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1949,6 +2401,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
+    constCCVariable<double> old_density;
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -1977,6 +2430,8 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 		     matlIndex, patch);
     old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
 		     matlIndex, patch);
+    parent_old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1989,6 +2444,12 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
+    
+//    double factor_old, factor_new, factor_divide;
+//    factor_old = timelabels->factor_old;
+//    factor_new = timelabels->factor_new;
+//    factor_divide = timelabels->factor_divide;
+/*
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -2013,6 +2474,8 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 	  ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
 	   (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
 	  cellinfo->stb[colZ]);
+//	  densityGuess[currCell] = (factor_old*old_density[currCell]+
+//			  factor_new*densityGuess[currCell])/factor_divide;
         }
       }
     } 
@@ -2031,10 +2494,13 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
 
-        if (cellType[xminusCell] == out_celltypeval)
+        if (cellType[xminusCell] == out_celltypeval) {
            densityGuess[xminusCell] = delta_t * maxAbsU *
                (density[currCell] - density[xminusCell]) /
 	       cellinfo->dxep[colX-1];
+//	   densityGuess[xminusCell] = (factor_old*old_density[xminusCell]+
+//			  factor_new*densityGuess[xminusCell])/factor_divide;
+	}
       }
     }
   }
@@ -2045,10 +2511,13 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
 
-        if (cellType[xplusCell] == out_celltypeval)
-           densityGuess[xplusCell] -= delta_t * maxAbsU *
+        if (cellType[xplusCell] == out_celltypeval) {
+           densityGuess[xplusCell] -= delta_t * maxUxplus *
                (density[xplusCell] - density[currCell]) /
 	       cellinfo->dxpw[colX+1];
+//	   densityGuess[xplusCell] = (factor_old*old_density[xplusCell]+
+//			  factor_new*densityGuess[xplusCell])/factor_divide;
+	}
       }
     }
   }
@@ -2059,10 +2528,13 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
 
-        if (cellType[yminusCell] == out_celltypeval)
+        if (cellType[yminusCell] == out_celltypeval) {
            densityGuess[yminusCell] = delta_t * maxAbsV *
                (density[currCell] - density[yminusCell]) /
 	       cellinfo->dynp[colY-1];
+//	   densityGuess[yminusCell] = (factor_old*old_density[yminusCell]+
+//			  factor_new*densityGuess[yminusCell])/factor_divide;
+	}
       }
     }
   }
@@ -2073,10 +2545,13 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
 
-        if (cellType[yplusCell] == out_celltypeval)
+        if (cellType[yplusCell] == out_celltypeval) {
            densityGuess[yplusCell] -= delta_t * maxAbsV *
                (density[yplusCell] - density[currCell]) /
 	       cellinfo->dyps[colY+1];
+//	   densityGuess[yplusCell] = (factor_old*old_density[yplusCell]+
+//			  factor_new*densityGuess[yplusCell])/factor_divide;
+	}
       }
     }
   }
@@ -2087,10 +2562,13 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
 
-        if (cellType[zminusCell] == out_celltypeval)
+        if (cellType[zminusCell] == out_celltypeval) {
            densityGuess[zminusCell] = delta_t * maxAbsW *
                (density[currCell] - density[zminusCell]) /
 	       cellinfo->dztp[colZ-1];
+//	   densityGuess[zminusCell] = (factor_old*old_density[zminusCell]+
+//			  factor_new*densityGuess[zminusCell])/factor_divide;
+	}
       }
     }
   }
@@ -2101,10 +2579,13 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
 
-        if (cellType[zplusCell] == out_celltypeval)
+        if (cellType[zplusCell] == out_celltypeval) {
            densityGuess[zplusCell] -= delta_t * maxAbsW *
                (density[zplusCell] - density[currCell]) /
 	       cellinfo->dzpb[colZ+1];
+//	   densityGuess[zplusCell] = (factor_old*old_density[zplusCell]+
+//			  factor_new*densityGuess[zplusCell])/factor_divide;
+	}
       }
     }
   }
@@ -2182,7 +2663,7 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
       }
     }
   }
-
+*/
   }
 }
 //****************************************************************************
@@ -2304,6 +2785,7 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 
+	  if (density[currCell] > 0.0) {
 	  scalar[currCell] = scalar[currCell] * densityGuess[currCell] /
 		  	     density[currCell];
           if (scalar[currCell] > 1.0)
@@ -2322,6 +2804,7 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
           if (d_enthalpySolve)
 	    enthalpy[currCell] = enthalpy[currCell] * densityGuess[currCell] /
 		  	     density[currCell];
+	  }
         }
       }
     }
