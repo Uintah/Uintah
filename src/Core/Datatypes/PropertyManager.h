@@ -81,7 +81,7 @@ const string Property<T>::type_name(int n)
 
 template <class T>
 PersistentTypeID 
-Property<T>::type_id(Property<T>::type_name(), "PropertyBase", maker);
+Property<T>::type_id(type_name(-1), "PropertyBase", maker);
 
 template <class T>
 Persistent*
@@ -94,7 +94,7 @@ template<class T>
 void
 Property<T>::io( Piostream &stream)
 {
-  stream.begin_class( Property<T>::type_name().c_str(), PROPERTY_VERSION);
+  stream.begin_class( type_name(-1).c_str(), PROPERTY_VERSION);
   if ( stream.reading() ) {
     T *tmp = new T;
     Pio(stream, *tmp );
