@@ -3,25 +3,30 @@
 
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/NCVariableBase.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/constGridVariable.h>
+#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
+
 #include <Core/Exceptions/InternalError.h>
+
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <unistd.h>
 
 namespace Uintah {
 
-  using namespace SCIRun;
-
   class TypeDescription;
+
+  using SCIRun::IntVector;
+  using SCIRun::InternalError;
+  using SCIRun::RunLengthEncoder;
 
   /**************************************
 
@@ -86,8 +91,8 @@ WARNING
 
     // Clones the type with a variable having the given extents
     // but with null data -- good as a place holder.
-    virtual NCVariableBase* makePlaceHolder(IntVector low,
-					    IntVector high) const
+    virtual NCVariableBase* makePlaceHolder(const IntVector & low,
+					    const IntVector & high) const
     {
       Array3Window<T>* window = scinew
       Array3Window<T>(0, IntVector(INT_MAX, INT_MAX, INT_MAX), low, high);

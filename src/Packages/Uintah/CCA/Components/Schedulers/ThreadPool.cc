@@ -308,7 +308,8 @@ Receiver::run()
   TAU_REGISTER_THREAD();
   TAU_PROFILE("Receiver_run()", "void ()", TAU_DEFAULT);
   TAU_PROFILE_TIMER(doittimer, "doit Task", "[Receiver::run()]", TAU_DEFAULT);
-    cerr << "Running thread " << my_thread_ << "\n";
+
+  cerr << "Running thread " << my_thread_ << "\n";
 
   //if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -319,6 +320,10 @@ Receiver::run()
 
   MPI_Request wakeUpRequest;
   MPI_Status status;  
+
+  cout << "Here: pg_ is " << pg_ << "\n";
+  cout << " and size of it is: " << pg_->size() << "\n";
+  cout << " and rank of it is: " << pg_->myrank() << "\n";
 
   // post receive for self-mpi-process wake up signal
   MPI_Irecv(0, 0, MPI_INT, pg_->myrank(), d_id, pg_->getComm(),

@@ -6,8 +6,9 @@
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
-  using namespace std;
-  using namespace SCIRun;
+
+  using SCIRun::IntVector;
+
   class Patch;
   class RefCounted;
 
@@ -48,7 +49,7 @@ WARNING
       virtual void copyPointer(const PerPatchBase&) = 0;
       virtual PerPatchBase* clone() const = 0;
       virtual RefCounted* getRefCounted();
-      virtual void getSizeInfo(string& elems, unsigned long& totsize,
+      virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
 			       void*& ptr) const = 0;
 
       // Only affects grid variables

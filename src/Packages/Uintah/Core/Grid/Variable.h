@@ -13,7 +13,7 @@ namespace SCIRun {
 namespace Uintah {
 
   using namespace std;
-  using namespace SCIRun;
+
   class TypeDescription;
   class InputContext;
   class OutputContext;

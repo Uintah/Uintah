@@ -1,10 +1,10 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 
 #include <iostream>
+
 using namespace std;
-
-
 using namespace Uintah;
+using namespace SCIRun;
 
 void GhostOffsetVarMap::includeOffsets(const VarLabel* var,
 				       const MaterialSubset* matls,

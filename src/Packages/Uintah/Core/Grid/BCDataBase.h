@@ -7,7 +7,9 @@
 #include <vector>
 
 namespace Uintah {
-  using namespace SCIRun;
+
+  using SCIRun::IntVector;
+  using SCIRun::Point;
    
 /**************************************
 

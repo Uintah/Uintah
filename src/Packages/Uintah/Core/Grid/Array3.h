@@ -11,7 +11,8 @@
 
 namespace Uintah {
 
-  using namespace std;
+using std::ostream;
+using std::istream;
 
 /**************************************
 

@@ -24,7 +24,6 @@ using std::vector;
 using std::iostream;
 using std::ostringstream;
 
-using namespace SCIRun;
    /**************************************
      
      CLASS

@@ -17,7 +17,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
   using std::string;
   using std::map;
 

@@ -9,7 +9,7 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
+using SCIRun::IntVector;
 
 /**************************************
 

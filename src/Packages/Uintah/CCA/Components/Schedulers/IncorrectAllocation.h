@@ -21,25 +21,27 @@
 
 namespace Uintah {
 
-   class IncorrectAllocation : public Exception {
-   public:
-     IncorrectAllocation(const VarLabel* expectedLabel,
-			 const VarLabel* actualLabel);
-     IncorrectAllocation(const IncorrectAllocation& copy);
-     virtual ~IncorrectAllocation() {}
+  using SCIRun::Exception;
 
-     static string makeMessage(const VarLabel* expectedLabel,
-			       const VarLabel* actualLabel);
+  class IncorrectAllocation : public Exception {
+  public:
+    IncorrectAllocation(const VarLabel* expectedLabel,
+			const VarLabel* actualLabel);
+    IncorrectAllocation(const IncorrectAllocation& copy);
+    virtual ~IncorrectAllocation() {}
+
+    static string makeMessage(const VarLabel* expectedLabel,
+			      const VarLabel* actualLabel);
      
-     virtual const char* message() const;
-     virtual const char* type() const;
-   protected:
-   private:
-     IncorrectAllocation& operator=(const IncorrectAllocation& copy);
-     const VarLabel* expectedLabel_;
-     const VarLabel* actualLabel_;
-     string d_msg;
-   };
+    virtual const char* message() const;
+    virtual const char* type() const;
+  protected:
+  private:
+    IncorrectAllocation& operator=(const IncorrectAllocation& copy);
+    const VarLabel* expectedLabel_;
+    const VarLabel* actualLabel_;
+    string d_msg;
+  };
 
 } // End namespace Uintah
 

@@ -27,7 +27,10 @@ using std::string;
 using std::vector;
 using std::map;
 using std::ostream;
-using namespace SCIRun;
+
+using SCIRun::IntVector;
+using SCIRun::Vector;
+using SCIRun::Point;
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up
