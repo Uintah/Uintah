@@ -1595,7 +1595,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         old_dw->get(dt, d_sharedState->get_delt_label());
       } 
 
-      int oneifdyn = 0.;
+      double oneifdyn = 0.;
       if(dynamic){
         oneifdyn = 1.;
       }
