@@ -34,6 +34,11 @@ using SCICore::Geometry::Point;
 
 using namespace Uintah;
 
+#define DAV_DEBUG 0
+
+// From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
+extern Semaphore * cerrSem;
+
 OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 					      int generation, 
 					      DataWarehouseP& parent) :
@@ -41,17 +46,22 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
   DataWarehouse( myworld, generation, parent)
 {
   d_finalized = false;
-
+  d_semaphore = scinew Semaphore( "OnDemand DW semaphore", 1 );
 }
 
 void
 OnDemandDataWarehouse::setGrid(const GridP& grid)
 {
+  d_semaphore->down();
   d_grid = grid;
+  d_semaphore->up();
 }
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
+
+  delete d_semaphore;
+
   for (reductionDBtype::const_iterator iter = d_reductionDB.begin(); 
        iter != d_reductionDB.end(); iter++) {
     delete iter->second->var;
@@ -79,42 +89,44 @@ bool OnDemandDataWarehouse::isFinalized() const
 
 void OnDemandDataWarehouse::finalize()
 {
-   d_finalized=true;
+  d_semaphore->down();
+  d_finalized=true;
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::get(ReductionVariableBase& var,
 			   const VarLabel* label)
 {
-   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
+  d_semaphore->down();
+  reductionDBtype::const_iterator iter = d_reductionDB.find(label);
 
    if(iter == d_reductionDB.end())
       throw UnknownVariable(label->getName(), "on reduction");
 
    var.copyPointer(*iter->second->var);
+  d_semaphore->up();
 }
 
 bool
 OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
-			      const Patch* patch)
+			      const Patch* patch) const
 {
+  d_semaphore->down();
 
-   if(d_perpatchDB.exists(label, matlIndex, patch))
-      return true;
-   if(d_ncDB.exists(label, matlIndex, patch))
-      return true;
-   if(d_ccDB.exists(label, matlIndex, patch))
-      return true;
-   if(d_particleDB.exists(label, matlIndex, patch))
-      return true;
-   if(d_sfcxDB.exists(label,matlIndex,patch))
-      return true;
-   if(d_sfcyDB.exists(label,matlIndex,patch))
-      return true;
-   if(d_sfczDB.exists(label,matlIndex,patch))
-      return true;
-   return false;
-
+   if( d_perpatchDB.exists(label, matlIndex, patch) ||
+       d_ncDB.exists(label, matlIndex, patch) ||
+       d_ccDB.exists(label, matlIndex, patch) ||
+       d_particleDB.exists(label, matlIndex, patch) ||
+       d_sfcxDB.exists(label,matlIndex,patch) ||
+       d_sfcyDB.exists(label,matlIndex,patch) ||
+       d_sfczDB.exists(label,matlIndex,patch) ) {
+     d_semaphore->up();
+     return true;
+   } else {
+     d_semaphore->up();
+     return false;
+   }
 }
 
 void
@@ -122,17 +134,25 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 			       const Patch* patch, const ProcessorGroup* world,
 			       int dest, int tag, int* size, MPI_Request* requestid)
 {
+  d_semaphore->down();
+
    if(d_ncDB.exists(label, matlIndex, patch)){
       NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
       void* buf;
       int count;
       MPI_Datatype datatype;
       var->getMPIBuffer(buf, count, datatype);
-      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
+#if 0 //DAV_DEBUG
+      cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
+	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
+	   << ", req=" << requestid << '\n';
+#endif
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+  d_semaphore->up();
+
       return;
    }
    if(d_particleDB.exists(label, matlIndex, patch)){
@@ -150,6 +170,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
       }
+  d_semaphore->up();
       return;
    }
    if(d_ccDB.exists(label, matlIndex, patch)){
@@ -161,8 +182,15 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
       //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
       MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
 
+#if 0 //DAV_DEBUG
+      cerr << "ISend Particle: buf=" << buf << ", count=" << count 
+	   << ", dest=" << dest << ", tag=" << tag << ", comm=" 
+	   << world->getComm() << ", req=" << requestid << '\n';
+#endif
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+  d_semaphore->up();
+
       return;
    }
    if(d_sfcxDB.exists(label, matlIndex, patch)){
@@ -176,6 +204,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+  d_semaphore->up();
       return;
    }
    if(d_sfcyDB.exists(label, matlIndex, patch)){
@@ -189,6 +218,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+  d_semaphore->up();
       return;
    }
    if(d_sfczDB.exists(label, matlIndex, patch)){
@@ -202,6 +232,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+  d_semaphore->up();
       return;
    }
    if(label->typeDescription()->getType() == TypeDescription::ScatterGatherVariable){
@@ -227,11 +258,15 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
    case TypeDescription::ParticleVariable:
       {
 	 if(d_particleDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+	    throw InternalError("Particle Var already exists before MPI recv: "
+				+ label->getFullName(matlIndex, patch));
 	 
 	 // First, get the particle set.  We should already have it
 	 ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
+
+  d_semaphore->down();
 	 Variable* v = label->typeDescription()->createInstance();
+  d_semaphore->up();
 	 ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(pset);
@@ -252,8 +287,11 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
    case TypeDescription::NCVariable:
       {
 	 if(d_ncDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+	    throw InternalError("Variable already exists before MPI recv: " +
+				label->getFullName(matlIndex, patch));
+  d_semaphore->down();
 	 Variable* v = label->typeDescription()->createInstance();
+  d_semaphore->up();
 	 NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
@@ -262,7 +300,7 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 int count;
 	 MPI_Datatype datatype;
 	 var->getMPIBuffer(buf, count, datatype);
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(),requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
 	 d_ncDB.put(label, matlIndex, patch, var, false);
@@ -272,7 +310,9 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
       {
 	 if(d_ccDB.exists(label, matlIndex, patch))
 	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+  d_semaphore->down();
 	 Variable* v = label->typeDescription()->createInstance();
+  d_semaphore->up();
 	 CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
@@ -291,7 +331,9 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
       {
 	 if(d_sfcxDB.exists(label, matlIndex, patch))
 	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+  d_semaphore->down();
 	 Variable* v = label->typeDescription()->createInstance();
+  d_semaphore->up();
 	 SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
@@ -310,7 +352,9 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
       {
 	 if(d_sfcyDB.exists(label, matlIndex, patch))
 	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+  d_semaphore->down();
 	 Variable* v = label->typeDescription()->createInstance();
+  d_semaphore->up();
 	 SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
@@ -329,7 +373,9 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
       {
 	 if(d_sfczDB.exists(label, matlIndex, patch))
 	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+  d_semaphore->down();
 	 Variable* v = label->typeDescription()->createInstance();
+  d_semaphore->up();
 	 SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
@@ -346,18 +392,21 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
    break;
    case TypeDescription::ScatterGatherVariable:
       {
-	 cerr << "recv sgvar notdone\n";
+	 cerr << "RECV SGVAR NOTDONE\n";
+	 throw InternalError( "RECV SGVAR NOTDONE" );
       }
    break;
    default:
       throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
    }
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 				 const ProcessorGroup* world)
 {
+  d_semaphore->down();
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
 
    if(iter == d_reductionDB.end())
@@ -378,10 +427,17 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
    ASSERTEQ(senddatatype, recvdatatype);
    ASSERTEQ(recvop, sendop);
       
-   MPI_Allreduce(sendbuf, recvbuf, recvcount, recvdatatype, recvop,
-		 world->getComm());
+   int error = MPI_Allreduce(sendbuf, recvbuf, recvcount,
+			     recvdatatype, recvop, world->getComm());
+   if( error ){
+     cerr << "reduceMPI: MPI_Allreduce error: " << error << "\n";
+     throw InternalError("reduceMPI: MPI error");     
+   }
+
    iter->second->var->copyPointer(*tmp);
+
    delete tmp;
+  d_semaphore->up();
 }
 
 void
@@ -396,6 +452,7 @@ void
 OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 			   const VarLabel* label)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
@@ -404,24 +461,33 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
    } else {
       iter->second->var->reduce(var);
    }
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::override(const ReductionVariableBase& var,
 				const VarLabel* label)
 {
+
+  d_semaphore->down();
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
    if(iter != d_reductionDB.end()){
       delete iter->second->var;
       delete iter->second;
    }
    d_reductionDB[label]=scinew ReductionRecord(var.clone());
+  d_semaphore->up();
 }
 
 ParticleSubset*
 OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 					    int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
+#if DAV_DEBUG
+  cerr << "createParticleSubset: MI: " << matlIndex << " P: " << *patch<<"\n";
+#endif
+
    ParticleSet* pset = scinew ParticleSet(numParticles);
    ParticleSubset* psubset = 
                        scinew ParticleSubset(pset, true, matlIndex, patch);
@@ -433,26 +499,31 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
    d_psetDB[key]=psubset;
    psubset->addReference();
 
+  d_semaphore->up();
    return psubset;
 }
 
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    psetDBType::key_type key(matlIndex, patch);
    psetDBType::iterator iter = d_psetDB.find(key);
    if(iter == d_psetDB.end()){
       throw UnknownVariable("ParticleSet", patch->getID(), patch->toString(),
 			    matlIndex, "Cannot find particle set on patch");
    }
+  d_semaphore->up();
    return iter->second;
 }
 
 bool
 OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    psetDBType::key_type key(matlIndex, patch);
    psetDBType::iterator iter = d_psetDB.find(key);
+  d_semaphore->up();
    return !(iter == d_psetDB.end());
 }
 
@@ -486,12 +557,13 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
    default:
       throw InternalError("Illegal ghost type");
    }
+
    Box box = patch->getGhostBox(IntVector(l,l,l), IntVector(h,h,h));
    particleIndex totalParticles = 0;
    vector<ParticleVariableBase*> neighborvars;
    vector<ParticleSubset*> subsets;
    const Level* level = patch->getLevel();
-   std::vector<const Patch*> neighbors;
+   vector<const Patch*> neighbors;
    IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
    IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
 
@@ -528,6 +600,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 			   const VarLabel* label,
 			   ParticleSubset* pset)
 {
+  d_semaphore->down();
    int matlIndex = pset->getMatlIndex();
    const Patch* patch = pset->getPatch();
 
@@ -550,6 +623,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       }
       var.gather(pset, neighbor_subsets, neighborvars);
    }
+  d_semaphore->up();
 }
 
 ParticleVariableBase*
@@ -574,6 +648,7 @@ OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 				const VarLabel* label,
 				ParticleSubset* pset)
 {
+  d_semaphore->down();
    int matlIndex = pset->getMatlIndex();
    const Patch* patch = pset->getPatch();
 
@@ -583,6 +658,7 @@ OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 			  label->getName());
 
    var.allocate(pset);
+  d_semaphore->up();
 }
 
 void
@@ -601,8 +677,14 @@ OnDemandDataWarehouse::put(const ParticleVariableBase& var,
    if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Variable already exists: "+label->getName());
 
+#if DAV_DEBUG
+  cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
+       << *patch << " into DW: " << d_generation << "\n";
+#endif
    // Put it in the database
+  d_semaphore->down();
    d_particleDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 void
@@ -611,6 +693,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+  d_semaphore->down();
 #if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -686,6 +769,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       ASSERTEQ(wantnodes, totalNodes);
    }
 #endif
+  d_semaphore->up();
 }
 
 void
@@ -694,12 +778,23 @@ OnDemandDataWarehouse::allocate(NCVariableBase& var,
 				int matlIndex,
 				const Patch* patch)
 {
-   // Error checking
-   if(d_ncDB.exists(label, matlIndex, patch))
-      throw InternalError("NC variable already exists: "+label->getName());
+  d_semaphore->down();
 
-   // Allocate the variable
-   var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+#if DAV_DEBUG
+  cerr << "alloc: NC var: " << *label << *patch 
+       << " MI: " << matlIndex << "\n";
+#endif
+
+  // Error checking
+  if(d_ncDB.exists(label, matlIndex, patch)){
+    cerr << "allocate: NC var already exists!\n";
+    throw InternalError( "allocate: NC variable already exists: " +
+			 label->getName() + patch->toString() );
+  }
+
+  // Allocate the variable
+  var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+  d_semaphore->up();
 }
 
 void
@@ -707,25 +802,33 @@ OnDemandDataWarehouse::put(const NCVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
+#if DAV_DEBUG
+  cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
+       << *patch << " into DW: " << d_generation << "\n";
+#endif
    // Error checking
    if(d_ncDB.exists(label, matlIndex, patch))
-      throw InternalError("NC variable already exists: "+label->getName());
+      throw InternalError("put: NC variable already exists: " +
+			  label->getName());
 
    // Put it in the database
    d_ncDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::get(PerPatchBase& var, const VarLabel* label,
                            int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
   if(!d_perpatchDB.exists(label, matlIndex, patch))
      throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
 			   matlIndex, "perpatch data");
   d_perpatchDB.get(label, matlIndex, patch, var);
-
+  d_semaphore->up();
 }
 
 void
@@ -733,6 +836,7 @@ OnDemandDataWarehouse::put(const PerPatchBase& var,
 			   const VarLabel* label,
 			   int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    // Error checking
@@ -741,6 +845,7 @@ OnDemandDataWarehouse::put(const PerPatchBase& var,
 
    // Put it in the database
    d_perpatchDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 void
@@ -749,12 +854,14 @@ OnDemandDataWarehouse::allocate(CCVariableBase& var,
 				int matlIndex,
 				const Patch* patch)
 {
+  d_semaphore->down();
    // Error checking
    if(d_ccDB.exists(label, matlIndex, patch))
       throw InternalError("CC variable already exists: "+label->getName());
 
    // Allocate the variable
    var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+  d_semaphore->up();
 }
 
 void
@@ -763,6 +870,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 			   const Patch* patch, Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+  d_semaphore->down();
 #if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -828,12 +936,14 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       ASSERTEQ(wantcells, totalCells);
    }
 #endif
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Patch* patch )
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    // Error checking
@@ -842,6 +952,7 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
 
    // Put it in the database
    d_ccDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 void
@@ -850,6 +961,7 @@ OnDemandDataWarehouse::allocate(FCVariableBase& var,
 				int matlIndex,
 				const Patch* patch)
 {
+  d_semaphore->down();
    // Error checking
    if(d_fcDB.exists(label, matlIndex, patch))
       throw InternalError("FC variable already exists: "+label->getName());
@@ -857,6 +969,7 @@ OnDemandDataWarehouse::allocate(FCVariableBase& var,
    // Allocate the variable
    // Probably should be getFaceLowIndex() . . .
    var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+  d_semaphore->up();
 }
 
 void
@@ -865,6 +978,7 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
 			   const Patch* patch, Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+  d_semaphore->down();
 #if 0
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -939,12 +1053,14 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
       ASSERTEQ(wantcells, totalCells);
    }
 #endif
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::put(const FCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Patch* patch )
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    // Error checking
@@ -953,6 +1069,7 @@ OnDemandDataWarehouse::put(const FCVariableBase& var, const VarLabel* label,
 
    // Put it in the database
    d_fcDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 
@@ -962,6 +1079,7 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+  d_semaphore->down();
 #if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -1027,6 +1145,7 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
       ASSERTEQ(wantcells, totalCells);
    }
 #endif
+  d_semaphore->up();
 }
 
 void
@@ -1035,12 +1154,14 @@ OnDemandDataWarehouse::allocate(SFCXVariableBase& var,
 				int matlIndex,
 				const Patch* patch)
 {
+  d_semaphore->down();
    // Error checking
   if(d_sfcxDB.exists(label, matlIndex, patch))
     throw InternalError("SFCX variable already exists: "+label->getName());
 
    // Allocate the variable
-  var.allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+   var.allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+  d_semaphore->up();
 }
 
 void
@@ -1048,6 +1169,7 @@ OnDemandDataWarehouse::put(const SFCXVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    // Error checking
@@ -1056,6 +1178,7 @@ OnDemandDataWarehouse::put(const SFCXVariableBase& var,
 
    // Put it in the database
    d_sfcxDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 void
@@ -1064,6 +1187,7 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+  d_semaphore->down();
 #if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -1128,6 +1252,7 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
       ASSERTEQ(wantcells, totalCells);
    }
 #endif
+  d_semaphore->up();
 }
 
 void
@@ -1136,12 +1261,14 @@ OnDemandDataWarehouse::allocate(SFCYVariableBase& var,
 				int matlIndex,
 				const Patch* patch)
 {
+  d_semaphore->down();
    // Error checking
    if(d_sfcyDB.exists(label, matlIndex, patch))
       throw InternalError("SFCY variable already exists: "+label->getName());
 
    // Allocate the variable
    var.allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+  d_semaphore->up();
 }
 
 void
@@ -1149,6 +1276,7 @@ OnDemandDataWarehouse::put(const SFCYVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    // Error checking
@@ -1157,6 +1285,7 @@ OnDemandDataWarehouse::put(const SFCYVariableBase& var,
 
    // Put it in the database
    d_sfcyDB.put(label, matlIndex, patch, var.clone(), true);
+  d_semaphore->up();
 }
 
 void
@@ -1165,6 +1294,7 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
+  d_semaphore->down();
 #if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
@@ -1229,6 +1359,7 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
       ASSERTEQ(wantcells, totalCells);
    }
 #endif
+  d_semaphore->up();
 }
 
 void
@@ -1237,12 +1368,14 @@ OnDemandDataWarehouse::allocate(SFCZVariableBase& var,
 				int matlIndex,
 				const Patch* patch)
 {
+  d_semaphore->down();
    // Error checking
    if(d_sfczDB.exists(label, matlIndex, patch))
       throw InternalError("SFCZ variable already exists: "+label->getName());
 
    // Allocate the variable
    var.allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+  d_semaphore->up();
 }
 
 void
@@ -1250,6 +1383,7 @@ OnDemandDataWarehouse::put(const SFCZVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex, const Patch* patch)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    // Error checking
@@ -1258,123 +1392,72 @@ OnDemandDataWarehouse::put(const SFCZVariableBase& var,
 
    // Put it in the database
    d_sfczDB.put(label, matlIndex, patch, var.clone(), true);
-}
-
-int
-OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
-				    const Patch   * patch )
-{
-  variableListType * varList = d_dataLocation[ label ];
-
-  char msg[ 1024 ];
-
-  if( varList == 0 ) {
-    sprintf( msg, "findMpiNode: Requested variable: %s for\n"
-	     "patch %s is not in d_dataLocation",
-	     label->getName().c_str(), patch->toString().c_str() );
-    throw InternalError( string( msg ) );
-  }
-  // Run through all the different patches associated with "label" to
-  // find which one contains the "patch" that has been requested.
-
-#if 0
-  variableListType::iterator iter = varList->begin();
-
-  // Commented out because "contains" got axed, and it probably
-  // isn't the right thing to do - Steve
-  while( iter != varList->end() ) {
-    if( (*iter)->patch->contains( *patch ) ) {
-      return (*iter)->mpiNode;
-    }
-    iter++;
-  }
-#endif
-
-  sprintf( msg, "findMpiNode: Requested patch: %s for\n"
-	   "patch %s is not in d_dataLocation",
-	   label->getName().c_str(), patch->toString().c_str() );
-  throw InternalError( string( msg ) );
-}
-
-void
-OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
-					  const Patch   * patch,
-					        int        mpiNode )
-{
-  variableListType * varList = d_dataLocation[ label ];
-
-  if( varList == 0 ) {
-    varList = scinew variableListType();
-    d_dataLocation[ label ] = varList;
-  }
-
-  // Possibly should make sure that varList does not already have
-  // this "label" with this "patch" in it...  for now assuming that 
-  // this doesn't happen...
-
-  dataLocation * location = scinew dataLocation();
-
-  location->patch = patch;
-  location->mpiNode = mpiNode;
-
-  varList->push_back( location );
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::pleaseSave(const VarLabel* var, int number)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    d_saveset.push_back(var);
    d_savenumbers.push_back(number);
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::pleaseSaveIntegrated(const VarLabel* var)
 {
+  d_semaphore->down();
    ASSERT(!d_finalized);
 
    d_saveset_integrated.push_back(var);
+  d_semaphore->up();
 }
 
 void
-OnDemandDataWarehouse::getSaveSet(std::vector<const VarLabel*>& vars,
-				  std::vector<int>& numbers) const
+OnDemandDataWarehouse::getSaveSet( vector<const VarLabel*>& vars,
+				   vector<int>& numbers) const
 {
+  d_semaphore->down();
    vars=d_saveset;
    numbers=d_savenumbers;
+  d_semaphore->up();
 }
 
 void
 OnDemandDataWarehouse::getIntegratedSaveSet
-				(std::vector<const VarLabel*>& vars) const
+				(vector<const VarLabel*>& vars) const
 {
+  d_semaphore->down();
    vars=d_saveset_integrated;
+  d_semaphore->up();
 }
 
 bool
 OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 {
+  d_semaphore->down();
    if(!patch){
       reductionDBtype::const_iterator iter = d_reductionDB.find(label);
-      if(iter != d_reductionDB.end())
-	 return true;
+      if(iter != d_reductionDB.end()){
+	d_semaphore->up();
+	return true;
+      }
    } else {
-      if(d_ncDB.exists(label, patch))
-	 return true;
-      if(d_ccDB.exists(label, patch))
-	 return true;
-      if(d_sfcxDB.exists(label, patch))
-	 return true;
-      if(d_sfcyDB.exists(label, patch))
-	 return true;
-      if(d_sfczDB.exists(label, patch))
-	 return true;
-      if(d_fcDB.exists(label, patch))
-	 return true;
-      if(d_particleDB.exists(label, patch))
-	 return true;
+      if( d_ncDB.exists(label, patch) || 
+	  d_ccDB.exists(label, patch) ||
+	  d_sfcxDB.exists(label, patch) ||
+	  d_sfcyDB.exists(label, patch) ||
+	  d_sfczDB.exists(label, patch) ||
+	  d_fcDB.exists(label, patch) ||
+	  d_particleDB.exists(label, patch) ){
+  d_semaphore->up();
+	return true;
+      }
    }
+  d_semaphore->up();
    return false;
 }
 
@@ -1382,53 +1465,58 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
 				 int matlIndex, const Patch* patch) const
 {
+  d_semaphore->down();
+  bool varFound = false;
    if(d_ncDB.exists(label, matlIndex, patch)) {
       NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
       var->emit(oc);
-      return;
-   }
-   if(d_particleDB.exists(label, matlIndex, patch)) {
+      varFound = true;
+   } else if(d_particleDB.exists(label, matlIndex, patch)) {
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
       var->emit(oc);
-      return;
-   }
-   if(d_ccDB.exists(label, matlIndex, patch)) {
+      varFound = true;
+   } else if(d_ccDB.exists(label, matlIndex, patch)) {
      CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
      var->emit(oc);
-     return;
-   }
-   if(d_sfcxDB.exists(label, matlIndex, patch)) {
+     varFound = true;
+   } else if(d_sfcxDB.exists(label, matlIndex, patch)) {
       SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
       var->emit(oc);
-      return;
-   }
-   if(d_sfcyDB.exists(label, matlIndex, patch)) {
+      varFound = true;
+   } else if(d_sfcyDB.exists(label, matlIndex, patch)) {
       SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
       var->emit(oc);
-      return;
-   }
-   if(d_sfczDB.exists(label, matlIndex, patch)) {
+      varFound = true;
+   } else if(d_sfczDB.exists(label, matlIndex, patch)) {
       SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
       var->emit(oc);
-      return;
-   }
-   if(d_fcDB.exists(label, matlIndex, patch)) {
+      varFound = true;
+   } else if(d_fcDB.exists(label, matlIndex, patch)) {
      FCVariableBase* var = d_fcDB.get(label, matlIndex, patch);
      var->emit(oc);
+     varFound = true;
+   }
+
+   if( varFound ){
+     d_semaphore->up();
      return;
    }
+
    throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
 			 matlIndex, "on emit");
 }
 
 void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label) const
 {
+  d_semaphore->down();
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
+
    if(iter == d_reductionDB.end()){
       throw UnknownVariable(label->getName(), "on emit reduction");
    } else {
       iter->second->var->emit(intout);
    }
+  d_semaphore->up();
 }
 
 OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
@@ -1440,21 +1528,32 @@ void
 OnDemandDataWarehouse::scatter(ScatterGatherBase* var, const Patch* from,
 			       const Patch* to)
 {
+  d_semaphore->down();
+
    pair<const Patch*, const Patch*> idx(from, to);
    if(d_sgDB.find(idx) != d_sgDB.end())
       throw InternalError("scatter variable already exists");
+#if DAV_DEBUG
+   cerr << "putting in (" << from->getID() << ", " << to->getID() << ")\n";
+#endif
    d_sgDB[idx]=var;
+
+  d_semaphore->up();
 }
 
 ScatterGatherBase*
 OnDemandDataWarehouse::gather(const Patch* from, const Patch* to)
 {
+  d_semaphore->down();
    pair<const Patch*, const Patch*> idx(from, to);
    map<pair<const Patch*, const Patch*>, ScatterGatherBase*>::iterator iter
        = d_sgDB.find(idx);
-   if(iter == d_sgDB.end())
+   if(iter == d_sgDB.end()){
+      cerr << "gather: could not find (" << from->getID() << ", " << to->getID() << ")\n";
       throw UnknownVariable("scatter/gather", from->getID(), from->toString(),
 			   -1, " to patch "+to->toString());
+   }
+  d_semaphore->up();
    return iter->second;
 }
 
@@ -1466,6 +1565,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.51  2000/09/27 02:09:48  dav
+// first try at thread safety
+//
 // Revision 1.50  2000/09/25 14:43:11  rawat
 // added cell centered and staggered variables in SendMPI and RecvMPI function calls
 //
