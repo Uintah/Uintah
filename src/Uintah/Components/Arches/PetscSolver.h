@@ -42,7 +42,9 @@ none
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
+extern "C" {
 #include "sles.h"
+}
 #include <SCICore/Containers/Array1.h>
 #include <Uintah/Components/Arches/ArchesVariables.h>
 
@@ -224,6 +226,9 @@ private:
   
 //
 // $Log$
+// Revision 1.2  2000/09/12 15:45:15  sparker
+// Use extern "C" for petsc includes
+//
 // Revision 1.1  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //
