@@ -144,7 +144,9 @@ SRCS := \
 	$(SRCDIR)/TransformData.tcl \
 	$(SRCDIR)/TransformData2.tcl \
 	$(SRCDIR)/TransformData3.tcl \
+	$(SRCDIR)/UIvar.tcl \
 	$(SRCDIR)/Viewer.tcl \
+	$(SRCDIR)/ViewImage.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/VolumeSlicer.tcl \
 	$(SRCDIR)/VolumeVisualizer.tcl \
