@@ -58,6 +58,7 @@ hook up user interface buttons
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Dataflow/Widgets/RingWidget.h>
