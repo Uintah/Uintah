@@ -239,7 +239,7 @@ itcl_class ViewWindow {
 	menu $w.menu.file.menu
 #	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
 #		-command "$this makeSaveObjectsPopup"
-	$w.menu.file.menu add command -label "Save image file..." \
+	$w.menu.file.menu add command -label "Save Image..." \
 	    -underline 0 -command "$this makeSaveImagePopup"
 	$w.menu.file.menu add command -label "Record Movie..." \
 	    -underline 0 -command "$this makeSaveMoviePopup"
