@@ -16,59 +16,59 @@ MPMArchesLabel::MPMArchesLabel()
 {
   // Cell centered variables for solid materials
 
-  cMassLabel             = scinew VarLabel( "c.mass",
+  cMassLabel             = VarLabel::create( "c.mass",
 					    CCVariable<double>::getTypeDescription() );
-  cVolumeLabel           = scinew VarLabel( "c.volume",
+  cVolumeLabel           = VarLabel::create( "c.volume",
 					    CCVariable<double>::getTypeDescription() );
-  solid_fraction_CCLabel = scinew VarLabel( "solid_fraction",
+  solid_fraction_CCLabel = VarLabel::create( "solid_fraction",
 					    CCVariable<double>::getTypeDescription() );
 
   // Cell-centered solid velocity labels
 
-  vel_CCLabel            = scinew VarLabel( "vel_CC",
+  vel_CCLabel            = VarLabel::create( "vel_CC",
 					    CCVariable<Vector>::getTypeDescription() );
-  xvel_CCLabel = scinew VarLabel("xvel_CC", 
+  xvel_CCLabel = VarLabel::create("xvel_CC", 
 				 CCVariable<double>::getTypeDescription() );
-  yvel_CCLabel = scinew VarLabel("yvel_CC", 
+  yvel_CCLabel = VarLabel::create("yvel_CC", 
 				 CCVariable<double>::getTypeDescription() );
-  zvel_CCLabel = scinew VarLabel("zvel_CC", 
+  zvel_CCLabel = VarLabel::create("zvel_CC", 
 				 CCVariable<double>::getTypeDescription() );
 
   // face-centered solid velocity labels
 
-  xvel_FCXLabel = scinew VarLabel("xvel_FCX",
+  xvel_FCXLabel = VarLabel::create("xvel_FCX",
 			     SFCXVariable<double>::getTypeDescription() );
-  xvel_FCYLabel = scinew VarLabel("xvel_FCY",
+  xvel_FCYLabel = VarLabel::create("xvel_FCY",
 			     SFCYVariable<double>::getTypeDescription() );
-  xvel_FCZLabel = scinew VarLabel("xvel_FCZ",
+  xvel_FCZLabel = VarLabel::create("xvel_FCZ",
 			     SFCZVariable<double>::getTypeDescription() );
 
-  yvel_FCXLabel = scinew VarLabel("yvel_FCX",
+  yvel_FCXLabel = VarLabel::create("yvel_FCX",
 			     SFCXVariable<double>::getTypeDescription() );
-  yvel_FCYLabel = scinew VarLabel("yvel_FCY",
+  yvel_FCYLabel = VarLabel::create("yvel_FCY",
 			     SFCYVariable<double>::getTypeDescription() );
-  yvel_FCZLabel = scinew VarLabel("yvel_FCZ",
+  yvel_FCZLabel = VarLabel::create("yvel_FCZ",
 			     SFCZVariable<double>::getTypeDescription() );
 
-  zvel_FCXLabel = scinew VarLabel("zvel_FCX",
+  zvel_FCXLabel = VarLabel::create("zvel_FCX",
 			     SFCXVariable<double>::getTypeDescription() );
-  zvel_FCYLabel = scinew VarLabel("zvel_FCY",
+  zvel_FCYLabel = VarLabel::create("zvel_FCY",
 			     SFCYVariable<double>::getTypeDescription() );
-  zvel_FCZLabel = scinew VarLabel("zvel_FCZ",
+  zvel_FCZLabel = VarLabel::create("zvel_FCZ",
 			     SFCZVariable<double>::getTypeDescription() );
 
   // labels for solid material calculations:
 
-  SumAllForcesCCLabel = scinew VarLabel("SumAllForcesCC",
+  SumAllForcesCCLabel = VarLabel::create("SumAllForcesCC",
 				 CCVariable<Vector>::getTypeDescription() );
 
-  AccArchesCCLabel = scinew VarLabel("AccArchesCC",
+  AccArchesCCLabel = VarLabel::create("AccArchesCC",
 				 CCVariable<Vector>::getTypeDescription() );
 
-  SumAllForcesNCLabel = scinew VarLabel("SumAllForcesNC",
+  SumAllForcesNCLabel = VarLabel::create("SumAllForcesNC",
 				 NCVariable<Vector>::getTypeDescription() );
 
-  AccArchesNCLabel = scinew VarLabel("AccArchesNC",
+  AccArchesNCLabel = VarLabel::create("AccArchesNC",
 				 NCVariable<Vector>::getTypeDescription() );
 
   // used for temporary computation:
@@ -76,13 +76,13 @@ MPMArchesLabel::MPMArchesLabel()
   // CC
 
   // x-drag momentum acting at cell center
-  DragForceX_CCLabel = scinew VarLabel("DragForceX_CC",
+  DragForceX_CCLabel = VarLabel::create("DragForceX_CC",
 				 CCVariable<double>::getTypeDescription() );
   // y-drag momentum acting at cell center
-  DragForceY_CCLabel = scinew VarLabel("DragForceY_CC",
+  DragForceY_CCLabel = VarLabel::create("DragForceY_CC",
 				 CCVariable<double>::getTypeDescription() );
   // z-drag momentum acting at cell center
-  DragForceZ_CCLabel = scinew VarLabel("DragForceZ_CC",
+  DragForceZ_CCLabel = VarLabel::create("DragForceZ_CC",
 				 CCVariable<double>::getTypeDescription() );
 
   // Passed to MPM:
@@ -93,60 +93,60 @@ MPMArchesLabel::MPMArchesLabel()
 
 #if 0
   // x-drag momentum acting on x-face
-  DragForceX_FCXLabel = scinew VarLabel("DragForceX_FCX",
+  DragForceX_FCXLabel = VarLabel::create("DragForceX_FCX",
 				 SFCXVariable<double>::getTypeDescription() );
 #endif
   // y-drag momentum acting on x-face
-  DragForceY_FCXLabel = scinew VarLabel("DragForceY_FCX",
+  DragForceY_FCXLabel = VarLabel::create("DragForceY_FCX",
 				 SFCXVariable<double>::getTypeDescription() );
   // z-drag momentum acting on x-face
-  DragForceZ_FCXLabel = scinew VarLabel("DragForceZ_FCX",
+  DragForceZ_FCXLabel = VarLabel::create("DragForceZ_FCX",
 				 SFCXVariable<double>::getTypeDescription() );
 
   // FCY
 
   // x-drag momentum acting on y-face
-  DragForceX_FCYLabel = scinew VarLabel("DragForceX_FCY",
+  DragForceX_FCYLabel = VarLabel::create("DragForceX_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
 #if 0
   // y-drag momentum acting on y-face
-  DragForceY_FCYLabel = scinew VarLabel("DragForceY_FCY",
+  DragForceY_FCYLabel = VarLabel::create("DragForceY_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
 #endif
   // z-drag momentum acting on y-face
-  DragForceZ_FCYLabel = scinew VarLabel("DragForceZ_FCY",
+  DragForceZ_FCYLabel = VarLabel::create("DragForceZ_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
 
   // FCZ
 
   // x-drag momentum acting on z-face
-  DragForceX_FCZLabel = scinew VarLabel("DragForceX_FCZ",
+  DragForceX_FCZLabel = VarLabel::create("DragForceX_FCZ",
 				 SFCZVariable<double>::getTypeDescription() );
   // y-drag momentum acting on z-face
-  DragForceY_FCZLabel = scinew VarLabel("DragForceY_FCZ",
+  DragForceY_FCZLabel = VarLabel::create("DragForceY_FCZ",
 				 SFCZVariable<double>::getTypeDescription() );
 #if 0
   // z-drag momentum acting on z-face
-  DragForceZ_FCZLabel = scinew VarLabel("DragForceZ_FCZ",
+  DragForceZ_FCZLabel = VarLabel::create("DragForceZ_FCZ",
 				 SFCZVariable<double>::getTypeDescription() );
 #endif
 
   // Pressure Forces:
 
   // pressure force acting on x-face
-  PressureForce_FCXLabel = scinew VarLabel("PressureForce_FCX",
+  PressureForce_FCXLabel = VarLabel::create("PressureForce_FCX",
 				 SFCXVariable<double>::getTypeDescription() );
   // pressure force acting on y-face
-  PressureForce_FCYLabel = scinew VarLabel("PressureForce_FCY",
+  PressureForce_FCYLabel = VarLabel::create("PressureForce_FCY",
 				 SFCYVariable<double>::getTypeDescription() );
   // pressure force acting on z-face
-  PressureForce_FCZLabel = scinew VarLabel("PressureForce_FCZ",
+  PressureForce_FCZLabel = VarLabel::create("PressureForce_FCZ",
 				 SFCZVariable<double>::getTypeDescription() );
 
   // labels for gas calculations
 
   // Gas void fraction
-  void_frac_CCLabel  = scinew VarLabel( "void_frac_CC",
+  void_frac_CCLabel  = VarLabel::create( "void_frac_CC",
 			CCVariable<double>::getTypeDescription() );
 
   // u-velocity source term labels
@@ -154,45 +154,45 @@ MPMArchesLabel::MPMArchesLabel()
 
   // U-Velocity Linear Src Labels from multi-material (CC)
   // used for temporary computation
-  d_uVel_mmLinSrc_CCLabel = scinew VarLabel("uVel_mmLinSrc_CC",
+  d_uVel_mmLinSrc_CCLabel = VarLabel::create("uVel_mmLinSrc_CC",
 				      CCVariable<double>::getTypeDescription() );
   // U-Velocity Linear Src Labels from multi-material (CC) (Collected)
   // used for temporary computation
-  d_uVel_mmLinSrc_CC_CollectLabel = scinew VarLabel("uVel_mmLinSrc_CC_Collect",
+  d_uVel_mmLinSrc_CC_CollectLabel = VarLabel::create("uVel_mmLinSrc_CC_Collect",
 				      CCVariable<double>::getTypeDescription() );
   // U-Velocity Linear Src Labels from multi-material (FCX)
   // used in actual summation of source
-  d_uVel_mmLinSrcLabel = scinew VarLabel("uVel_mmLinSrc",
+  d_uVel_mmLinSrcLabel = VarLabel::create("uVel_mmLinSrc",
 				      SFCXVariable<double>::getTypeDescription() );
   // U-Velocity Linear Src Labels from multi-material (FCY)
   // used for temporary computation
-  d_uVel_mmLinSrc_FCYLabel = scinew VarLabel("uVel_mmLinSrc_FCY",
+  d_uVel_mmLinSrc_FCYLabel = VarLabel::create("uVel_mmLinSrc_FCY",
 				      SFCYVariable<double>::getTypeDescription() );
   // U-Velocity Linear Src Labels from multi-material (FCZ)
   // used for temporary computation
-  d_uVel_mmLinSrc_FCZLabel = scinew VarLabel("uVel_mmLinSrc_FCZ",
+  d_uVel_mmLinSrc_FCZLabel = VarLabel::create("uVel_mmLinSrc_FCZ",
 				      SFCZVariable<double>::getTypeDescription() );
 
 
   // U-Velocity Non Linear Src Labels from multi-material (CC)
   // used for temporary computation
-  d_uVel_mmNonlinSrc_CCLabel = scinew VarLabel("uVel_mmNonlinSrc_CC",
+  d_uVel_mmNonlinSrc_CCLabel = VarLabel::create("uVel_mmNonlinSrc_CC",
 				    CCVariable<double>::getTypeDescription() );
   // U-Velocity Non Linear Src Labels from multi-material (CC) (Collected)
   // used for temporary computation
-  d_uVel_mmNonlinSrc_CC_CollectLabel = scinew VarLabel("uVel_mmNonlinSrc_CC_Collect",
+  d_uVel_mmNonlinSrc_CC_CollectLabel = VarLabel::create("uVel_mmNonlinSrc_CC_Collect",
 				    CCVariable<double>::getTypeDescription() );
   // U-Velocity Non Linear Src Labels from multi-material (FCX)
   // used in actual summation of source
-  d_uVel_mmNonlinSrcLabel = scinew VarLabel("uVel_mmNonlinSrc",
+  d_uVel_mmNonlinSrcLabel = VarLabel::create("uVel_mmNonlinSrc",
 				    SFCXVariable<double>::getTypeDescription() );
   // U-Velocity Non Linear Src Labels from multi-material (FCY)
   // used for temporary computation
-  d_uVel_mmNonlinSrc_FCYLabel = scinew VarLabel("uVel_mmNonlinSrc_FCY",
+  d_uVel_mmNonlinSrc_FCYLabel = VarLabel::create("uVel_mmNonlinSrc_FCY",
 				    SFCYVariable<double>::getTypeDescription() );
   // U-Velocity Non Linear Src Labels from multi-material (FCZ)
   // used for temporary computation
-  d_uVel_mmNonlinSrc_FCZLabel = scinew VarLabel("uVel_mmNonlinSrc_FCZ",
+  d_uVel_mmNonlinSrc_FCZLabel = VarLabel::create("uVel_mmNonlinSrc_FCZ",
 				    SFCZVariable<double>::getTypeDescription() );
 
   // v-velocity source term labels
@@ -200,45 +200,45 @@ MPMArchesLabel::MPMArchesLabel()
 
   // V-Velocity Linear Src Labels from multi-material (CC)
   // used for temporary computation
-  d_vVel_mmLinSrc_CCLabel = scinew VarLabel("vVel_mmLinSrc_CC",
+  d_vVel_mmLinSrc_CCLabel = VarLabel::create("vVel_mmLinSrc_CC",
 				      CCVariable<double>::getTypeDescription() );
   // V-Velocity Linear Src Labels from multi-material (CC) (Collected)
   // used for temporary computation
-  d_vVel_mmLinSrc_CC_CollectLabel = scinew VarLabel("vVel_mmLinSrc_CC_Collect",
+  d_vVel_mmLinSrc_CC_CollectLabel = VarLabel::create("vVel_mmLinSrc_CC_Collect",
 				      CCVariable<double>::getTypeDescription() );
   // V-Velocity Linear Src Labels from multi-material (FCY)
   // used in actual summation of source
-  d_vVel_mmLinSrcLabel = scinew VarLabel("vVel_mmLinSrc",
+  d_vVel_mmLinSrcLabel = VarLabel::create("vVel_mmLinSrc",
 				      SFCYVariable<double>::getTypeDescription() );
   // V-Velocity Linear Src Labels from multi-material (FCZ)
   // used for temporary computation
-  d_vVel_mmLinSrc_FCZLabel = scinew VarLabel("vVel_mmLinSrc_FCZ",
+  d_vVel_mmLinSrc_FCZLabel = VarLabel::create("vVel_mmLinSrc_FCZ",
 				      SFCZVariable<double>::getTypeDescription() );
   // V-Velocity Linear Src Labels from multi-material (FCX)
   // used for temporary computation
-  d_vVel_mmLinSrc_FCXLabel = scinew VarLabel("vVel_mmLinSrc_FCX",
+  d_vVel_mmLinSrc_FCXLabel = VarLabel::create("vVel_mmLinSrc_FCX",
 				      SFCXVariable<double>::getTypeDescription() );
 
 
   // V-Velocity Non Linear Src Labels from multi-material (CC)
   // used for temporary computation
-  d_vVel_mmNonlinSrc_CCLabel = scinew VarLabel("vVel_mmNonlinSrc_CC",
+  d_vVel_mmNonlinSrc_CCLabel = VarLabel::create("vVel_mmNonlinSrc_CC",
 				    CCVariable<double>::getTypeDescription() );
   // V-Velocity Non Linear Src Labels from multi-material (CC) (Collected)
   // used for temporary computation
-  d_vVel_mmNonlinSrc_CC_CollectLabel = scinew VarLabel("vVel_mmNonlinSrc_CC_Collect",
+  d_vVel_mmNonlinSrc_CC_CollectLabel = VarLabel::create("vVel_mmNonlinSrc_CC_Collect",
 				    CCVariable<double>::getTypeDescription() );
   // V-Velocity Non Linear Src Labels from multi-material (FCY)
   // used in actual summation of source
-  d_vVel_mmNonlinSrcLabel = scinew VarLabel("vVel_mmNonlinSrc",
+  d_vVel_mmNonlinSrcLabel = VarLabel::create("vVel_mmNonlinSrc",
 				    SFCYVariable<double>::getTypeDescription() );
   // V-Velocity Non Linear Src Labels from multi-material (FCZ)
   // used for temporary computation
-  d_vVel_mmNonlinSrc_FCZLabel = scinew VarLabel("vVel_mmNonlinSrc_FCZ",
+  d_vVel_mmNonlinSrc_FCZLabel = VarLabel::create("vVel_mmNonlinSrc_FCZ",
 				    SFCZVariable<double>::getTypeDescription() );
   // V-Velocity Non Linear Src Labels from multi-material (FCX)
   // used for temporary computation
-  d_vVel_mmNonlinSrc_FCXLabel = scinew VarLabel("vVel_mmNonlinSrc_FCX",
+  d_vVel_mmNonlinSrc_FCXLabel = VarLabel::create("vVel_mmNonlinSrc_FCX",
 				    SFCXVariable<double>::getTypeDescription() );
 
   // w-velocity source term labels
@@ -246,45 +246,45 @@ MPMArchesLabel::MPMArchesLabel()
 
   // W-Velocity Linear Src Labels from multi-material (CC)
   // used for temporary computation
-  d_wVel_mmLinSrc_CCLabel = scinew VarLabel("wVel_mmLinSrc_CC",
+  d_wVel_mmLinSrc_CCLabel = VarLabel::create("wVel_mmLinSrc_CC",
 				      CCVariable<double>::getTypeDescription() );
   // W-Velocity Linear Src Labels from multi-material (CC) (Collected)
   // used for temporary computation
-  d_wVel_mmLinSrc_CC_CollectLabel = scinew VarLabel("wVel_mmLinSrc_CC_Collect",
+  d_wVel_mmLinSrc_CC_CollectLabel = VarLabel::create("wVel_mmLinSrc_CC_Collect",
 				      CCVariable<double>::getTypeDescription() );
   // W-Velocity Linear Src Labels from multi-material (FCZ)
   // used in actual summation of source
-  d_wVel_mmLinSrcLabel = scinew VarLabel("wVel_mmLinSrc",
+  d_wVel_mmLinSrcLabel = VarLabel::create("wVel_mmLinSrc",
 				      SFCZVariable<double>::getTypeDescription() );
   // W-Velocity Linear Src Labels from multi-material (FCX)
   // used for temporary computation
-  d_wVel_mmLinSrc_FCXLabel = scinew VarLabel("wVel_mmLinSrc_FCX",
+  d_wVel_mmLinSrc_FCXLabel = VarLabel::create("wVel_mmLinSrc_FCX",
 				      SFCXVariable<double>::getTypeDescription() );
   // W-Velocity Linear Src Labels from multi-material (FCY)
   // used for temporary computation
-  d_wVel_mmLinSrc_FCYLabel = scinew VarLabel("wVel_mmLinSrc_FCY",
+  d_wVel_mmLinSrc_FCYLabel = VarLabel::create("wVel_mmLinSrc_FCY",
 				      SFCYVariable<double>::getTypeDescription() );
 
 
   // W-Velocity Non Linear Src Labels from multi-material (CC)
   // used for temporary computation
-  d_wVel_mmNonlinSrc_CCLabel = scinew VarLabel("wVel_mmNonlinSrc_CC",
+  d_wVel_mmNonlinSrc_CCLabel = VarLabel::create("wVel_mmNonlinSrc_CC",
 				    CCVariable<double>::getTypeDescription() );
   // W-Velocity Non Linear Src Labels from multi-material (CC) (Collected)
   // used for temporary computation
-  d_wVel_mmNonlinSrc_CC_CollectLabel = scinew VarLabel("wVel_mmNonlinSrc_CC_Collect",
+  d_wVel_mmNonlinSrc_CC_CollectLabel = VarLabel::create("wVel_mmNonlinSrc_CC_Collect",
 				    CCVariable<double>::getTypeDescription() );
   // W-Velocity Non Linear Src Labels from multi-material (FCZ)
   // used in actual summation of source
-  d_wVel_mmNonlinSrcLabel = scinew VarLabel("wVel_mmNonlinSrc",
+  d_wVel_mmNonlinSrcLabel = VarLabel::create("wVel_mmNonlinSrc",
 				    SFCZVariable<double>::getTypeDescription() );
   // W-Velocity Non Linear Src Labels from multi-material (FCX)
   // used for temporary computation
-  d_wVel_mmNonlinSrc_FCXLabel = scinew VarLabel("wVel_mmNonlinSrc_FCX",
+  d_wVel_mmNonlinSrc_FCXLabel = VarLabel::create("wVel_mmNonlinSrc_FCX",
 				    SFCXVariable<double>::getTypeDescription() );
   // W-Velocity Non Linear Src Labels from multi-material (FCY)
   // used for temporary computation
-  d_wVel_mmNonlinSrc_FCYLabel = scinew VarLabel("wVel_mmNonlinSrc_FCY",
+  d_wVel_mmNonlinSrc_FCYLabel = VarLabel::create("wVel_mmNonlinSrc_FCY",
 				    SFCYVariable<double>::getTypeDescription() );
 
 } 
