@@ -147,6 +147,15 @@ using namespace SCIRun;
                                          DataWarehouse*,
                                          DataWarehouse*);
 
+      template<class T> void computeVelFace(int dir, CellIterator it,
+					    IntVector adj_offset,double dx,
+					    double delT, double gravity,
+					    constCCVariable<double>& rho_CC,
+					    constCCVariable<double>& sp_vol_CC,
+					    constCCVariable<Vector>& vel_CC,
+					    constCCVariable<double>& press_CC,
+					    T& vel_FC);
+
       void addExchangeContributionToFCVel(const ProcessorGroup*, 
                                           const PatchSubset* patch,  
                                           const MaterialSubset* matls,
