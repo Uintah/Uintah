@@ -20,6 +20,8 @@
 #include <Packages/rtrt/Core/BV2.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Dpy.h>
+#include <Packages/rtrt/Core/DpyGui.h>
+#include <Packages/rtrt/Core/Gui.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
@@ -37,14 +39,11 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <GL/glut.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
-
-#include <Packages/rtrt/Core/Gui.h>
 
 namespace rtrt {
 
@@ -78,7 +77,6 @@ private:
   void stop_rtrt();
 
   SceneIPort *in_scene_port;
-  void GlutHelper(int, int, int);
 };
 
 static string widget_name("RTRTViewer Widget");
@@ -246,13 +244,29 @@ void RTRTViewer::start_rtrt() {
 		   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   pp_size, scratchsize, false, do_frameless==true, false);
 
-  Gui * gui = new Gui();
-  Gui::setActiveGui( gui );
-  gui->setDpy( dpy );
+  //////////////////////////////////////////////////////////////////
+  // Setup the DpyGui thread
 
-  /* <<<< bigler >>>> */
-  Thread* t = new Thread(dpy, "Display thread");
-  t->detach();
+  DpyGui* dpygui = new DpyGui();
+  dpygui->setDpy(dpy);
+  dpygui->setRTRTEngine(rtrt_engine);
+  dpygui->set_resolution(xres, yres);
+  (new Thread(dpygui, "DpyGui"))->detach();
+  
+  //////////////////////////////////////////////////////////////////
+  // This is the glut glui stuff
+
+  if (show_gui) {
+    GGT* ggt = new GGT();
+
+    ggt->setDpy( dpy );
+    ggt->setDpyGui( dpygui );
+
+    (new Thread(ggt, "Glut Glui Thread"))->detach();
+  }
+
+  /*  bigler */
+  (new Thread(dpy, "Render Display"))->detach();
   
   // Start up worker threads...
   for(int i=0;i<rtrt_engine->nworkers;i++){
@@ -266,59 +280,7 @@ void RTRTViewer::start_rtrt() {
 			  buf);
     t->detach();
   }
-
-  if (first_time){
-    cout << "about to start GlutHelper()\n";
-//      Thread::parallel(Parallel<RTRTViewer>(this,&RTRTViewer::GlutHelper),
-//  		     1,false);
-    Thread::parallel(this, &RTRTViewer::GlutHelper, 1, false, xres, yres);
-    cout << "thread started\n";
-    first_time = false;
-  }
 } // end start_rtrt()
-
-void RTRTViewer::GlutHelper(int, int xres, int yres) {
-
-  // Initialize GLUT and GLUI stuff.
-  printf("start glut inits\n");
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-  glutInitWindowPosition( 0, 0 );
-  mainWindowId = glutCreateWindow("RTRT");
-  glutReshapeWindow (xres,yres);
-
-  glutKeyboardFunc( Gui::handleKeyPressCB );
-  glutSpecialFunc( Gui::handleSpecialKeyCB );
-  glutMouseFunc( Gui::handleMouseCB );
-  glutMotionFunc( Gui::handleMouseMotionCB );
-  glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
-  glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
-  glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
-
-  glutReshapeFunc( Gui::handleWindowResizeCB );
-  glutDisplayFunc( Gui::redrawBackgroundCB );
-
-  // Must do this after glut is initialized.
-  Gui::createMenus( mainWindowId, startSoundThread, show_gui);
-
-
-  // Let the GUI know about the lights.
-  int cnt;
-  Gui *gui = Gui::getActiveGui();
-  for( cnt = 0; cnt < current_scene->nlights(); cnt++ ) {
-    cout << "Adding light ("<<current_scene->light(cnt)->name_ <<")("<<cnt<<")\n";
-    gui->addLight( current_scene->light( cnt ) );
-  }
-  for(;cnt < current_scene->nlights()+current_scene->nPerMatlLights();cnt++){
-    Light *light = current_scene->per_matl_light(cnt -
-						 current_scene->nlights() );
-    if( light->name_ != "" )
-      light->name_ = light->name_ + " (pm)";
-    gui->addLight( light );
-  }
-    
-  cout << "running glutMainLoop()\n";
-  glutMainLoop();
-}
 
 void RTRTViewer::stop_rtrt() {
   cout << "Stoping the rtrt\n";
