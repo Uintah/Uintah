@@ -96,15 +96,12 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 {
    d_sharedState = sharedState;
    
-/*`==========TESTING==========*/
-cout << " getting DataArchiver " << endl;
    dataArchiver = dynamic_cast<Output*>(getPort("output"));
-cout << " Have dataArchiver " << endl;
    if(dataArchiver == 0){
      cout<<"dataArchiver in FMPM is null now exiting; "<<endl;
      exit(1);
    } 
-/*===========TESTING==========`*/
+
    ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
    if(mpm_soln_ps) {
