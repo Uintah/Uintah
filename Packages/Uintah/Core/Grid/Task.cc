@@ -677,6 +677,12 @@ operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
   case Task::CoarseNewDW:
     out << "CoarseNewDW";
     break;
+  case Task::ParentOldDW:
+    out << "ParentOldDW";
+    break;
+  case Task::ParentNewDW:
+    out << "ParentNewDW";
+    break;
   default:
     out << "Unknown DW!";
     break;
