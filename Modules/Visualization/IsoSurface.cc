@@ -121,6 +121,7 @@ static RegisterModule db2("Visualization", "IsoSurface", make_IsoSurface);
 
 static clString module_name("IsoSurface");
 static clString surface_name("IsoSurface");
+static clString widget_name("IsoSurface widget");
 
 IsoSurface::IsoSurface(const clString& id)
 : Module("IsoSurface", id, Filter), seed_point("seed_point", id, this),
@@ -146,8 +147,8 @@ IsoSurface::IsoSurface(const clString& id)
     isoval.set(1);
     need_seed=1;
 
-    matl=scinew Material(Color(0,0,0), Color(.6,0,0),
-		      Color(.5,0,0), 20);
+    matl=scinew Material(Color(0,0,0), Color(0,.8,0),
+		      Color(.7,.7,.7), 20);
     isosurface_id=0;
 
     old_min=old_max=0;
@@ -192,7 +193,7 @@ void IsoSurface::execute()
 
     if(init == 1){
 	init=0;
-	widget_id = ogeom->addObj(widget->GetWidget(), module_name, &widget_lock);
+	widget_id = ogeom->addObj(widget->GetWidget(), widget_name, &widget_lock);
 	widget->Connect(ogeom);
     }
 	
@@ -235,7 +236,7 @@ void IsoSurface::execute()
 	    need_find=0;
 	}
 	Point sp(widget->GetPosition());
-	Vector grad(field->gradient(sp));
+	Vector grad(-field->gradient(sp));
 	if(grad.length2() > 0)
 	    grad.normalize();
 	widget->SetDirection(grad);
