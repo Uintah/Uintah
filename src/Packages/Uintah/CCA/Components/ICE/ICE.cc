@@ -283,18 +283,20 @@ void ICE::scheduleInitialize(const LevelP& level,
   cout_doing << "Doing ICE::scheduleInitialize " << endl;
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
-  t->computes(d_sharedState->get_delt_label());
-
-  t->computes(lb->temp_CCLabel);
-  t->computes(lb->rho_micro_CCLabel);
-  t->computes(lb->sp_vol_CCLabel);
-  t->computes(lb->mass_CCLabel);
-  t->computes(lb->rho_CC_top_cycleLabel);
-  t->computes(lb->vol_frac_CCLabel);
-  t->computes(lb->vel_CCLabel);
-  t->computes(lb->press_CCLabel);
-  t->computes(lb->speedSound_CCLabel);
+  MaterialSubset* press_matl = scinew MaterialSubset();
+  press_matl->add(0);
+  press_matl->addReference();
   t->computes(lb->doMechLabel);
+  t->computes(lb->vel_CCLabel);
+  t->computes(lb->temp_CCLabel);
+  t->computes(lb->mass_CCLabel);
+  t->computes(lb->sp_vol_CCLabel);
+  t->computes(lb->vol_frac_CCLabel);
+  t->computes(lb->rho_micro_CCLabel);
+  t->computes(lb->speedSound_CCLabel);
+  t->computes(lb->rho_CC_top_cycleLabel);
+  t->computes(lb->press_CCLabel, press_matl);
+  t->computes(d_sharedState->get_delt_label());
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 }
@@ -309,8 +311,8 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 			this, &ICE::actuallyComputeStableTimestep);
 
   task->requires(Task::NewDW, lb->doMechLabel);
-  task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
-  task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
+  task->requires(Task::NewDW, lb->vel_CCLabel,        Ghost::None);
+  task->requires(Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
   task->computes(d_sharedState->get_delt_label());
   sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
 }
@@ -851,11 +853,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                      press_CC,   gamma,   cv[m],
 					  rho_micro[m],    Temp_CC[m]);
       }
-
-  //______________________________________________________
-  // H A R D W I R E   F O R   M P M I C E   P R O B L E M
-  //  Either read in the data or compute it.
-  //  readData( patch, 1,"hardwire_initialize","mass_CC", mass_CC[m]);
 
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         mass_CC[m][*iter] = rho_top_cycle[m][*iter] * cell_vol;
@@ -2154,9 +2151,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_Z_FC.initialize(Vector(0.,0.,0.));
       viscosity = 0.0;
       if(ice_matl){
+        old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::None, 0);
         viscosity = ice_matl->getViscosity();
-        if(viscosity != 0.0){
-          old_dw->get(vel_CC, lb->vel_CCLabel,  indx,patch,Ghost::None, 0);
+        if(viscosity != 0.0){  
           computeTauX_Components( patch, vel_CC, viscosity, dx, tau_X_FC);
           computeTauY_Components( patch, vel_CC, viscosity, dx, tau_Y_FC);
           computeTauZ_Components( patch, vel_CC, viscosity, dx, tau_Z_FC);
