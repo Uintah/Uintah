@@ -20,19 +20,9 @@
 # Default target
 default: all
 
-OTF_OBJTOP_ABS    := $(shell cd ../; pwd)
-
-include $(OTF_OBJTOP_ABS)/configVars.mk
-
-OTF_SRCDIR       := @srcdir@
-OTF_SRCTOP_ABS   := $(shell cd @srcdir@; pwd)
-
-OTF_SRC := $(OTF_SRCTOP_ABS)
-OTF_OBJ := $(OTF_OBJTOP_ABS)
-
-# One level up is the top of the build.
-SCIRUN_SRCTOP       := @srcdir@/..
-SCIRUN_OBJTOP       := ..
+include @abs_conftop_dir@/configVars.mk
+SCIRUN_SRCTOP       := @abs_srcdir@
+SCIRUN_OBJTOP       := @abs_conftop_dir@
 
 INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_SRCTOP)/Packages @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ $(TAU_INCLUDE) $(MPI_INCLUDE)
 
@@ -41,13 +31,11 @@ INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
 endif
 INCLUDES := $(sort $(INCLUDES))
 
-LIBDIR := ../lib/
-
 SOFLAGS         := @SOFLAGS@  $(CFLAGS)
 
 SRCS = $(wildcard *.cc)
-OTF_OBJS := $(patsubst %.cc,%.o, $(SRCS))
 OTF_LIBS := $(patsubst %.cc,%.so, $(SRCS))
+
 
 ifeq ($(NEED_SONAME),yes)
 SONAMEFLAG = -Wl,-soname,$(notdir $@)
