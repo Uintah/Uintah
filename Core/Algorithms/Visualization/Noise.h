@@ -75,7 +75,7 @@ protected:
   
 public:
   Noise() : space_(0), tess_(0) {}
-  virtual ~Noise() {}
+  virtual ~Noise() { release(); }
   
   virtual void release();
   virtual void set_field( Field *);
