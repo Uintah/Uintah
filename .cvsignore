@@ -13,3 +13,5 @@ y.output
 *.sr
 lib
 configVars.mk
+createTclIndex
+packmaker
