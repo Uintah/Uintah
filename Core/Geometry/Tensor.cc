@@ -28,16 +28,25 @@ Tensor::Tensor() : valid_eigens_(0)
 
 Tensor::Tensor(const Tensor& copy)
 {
-  for(int i=0;i<3;i++){
-    for(int j=0;j<3;j++){
+  for(int i=0; i<3; i++)
+    for(int j=0; j<3; j++)
       mat_[i][j]=copy.mat_[i][j];
-    }
-  }
   valid_eigens_=copy.valid_eigens_;
   if (valid_eigens_) {
     e1_=copy.e1_; e2_=copy.e2_; e3_=copy.e3_;
     l1_=copy.l1_; l2_=copy.l2_; l3_=copy.l3_;
   }
+}
+
+Tensor::Tensor(const Array1<double> &t) {
+  mat_[0][0]=t[0];
+  mat_[0][1]=mat_[1][0]=t[1];
+  mat_[0][2]=mat_[2][0]=t[2];
+  mat_[1][1]=t[3];
+  mat_[1][2]=mat_[2][1]=t[4];
+  mat_[2][2]=t[5];
+
+  valid_eigens_=0;
 }
 
 // compute the tensor from 7 diffusion channels

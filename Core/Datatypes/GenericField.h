@@ -36,6 +36,7 @@ public:
   typedef FData                           fdata_type;
   typedef GenericInterpolate<value_type>  interp_type;
 
+  // only Pio should use this constructor
   GenericField() : 
     Field(),
     mesh_(mesh_handle_type(new mesh_type())),
@@ -45,12 +46,6 @@ public:
   GenericField(data_location data_at) : 
     Field(data_at),
     mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type())
-  {};
-
-  GenericField(mesh_handle_type mesh) : 
-    Field(),
-    mesh_(mesh),
     fdata_(fdata_type())
   {};
 

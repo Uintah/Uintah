@@ -17,6 +17,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Util/Assert.h>
 #include <vector>
 
 
@@ -29,15 +30,28 @@ public:
     GenericField<TriSurfMesh, vector<T> >() {};
   TriSurf(Field::data_location data_at) : 
     GenericField<TriSurfMesh, vector<T> >(data_at) {};
-  TriSurf(TriSurfMeshHandle mesh) :
-    GenericField<TriSurfMesh, vector<T> >(mesh) {};
   TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at) : 
-    GenericField<TriSurfMesh, vector<T> >(mesh, data_at) {};
+    GenericField<TriSurfMesh, vector<T> >(mesh, data_at) 
+  {
+    resize_fdata();
+  };
   
   virtual ~TriSurf() {};
   
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
+
+  void resize_fdata() {
+    if (data_at() == NODE)
+      fdata().resize(get_typed_mesh()->nodes_size());
+    else if (data_at() == EDGE)
+      fdata().resize(get_typed_mesh()->edges_size());
+    else if (data_at() == FACE)
+      fdata().resize(get_typed_mesh()->faces_size());
+    else
+      ASSERTFAIL("data at unrecognized location")
+  }
+
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
