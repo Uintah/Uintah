@@ -135,6 +135,17 @@ void FastMatrix::multiply(const vector<double>& b, vector<double>& X) const
   }
 }
 
+void FastMatrix::multiply(const double* b, double* X) const
+{
+  for (int row=0; row<rows; row++) {
+    double sum=0;
+    for (int col=0; col<cols; col++) {
+      sum += mat[row][col]*b[col];
+    }
+    X[row]=sum;
+  }
+}
+
 // this = a*b;
 void FastMatrix::multiply(const FastMatrix& a, const FastMatrix& b)
 {
