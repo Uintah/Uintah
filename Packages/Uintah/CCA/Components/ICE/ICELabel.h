@@ -63,6 +63,9 @@ namespace Uintah {
     const VarLabel* pressX_FCLabel;
     const VarLabel* pressY_FCLabel;
     const VarLabel* pressZ_FCLabel;
+    const VarLabel* TempX_FCLabel;
+    const VarLabel* TempY_FCLabel;
+    const VarLabel* TempZ_FCLabel;
     const VarLabel* press_diffX_FCLabel;
     const VarLabel* press_diffY_FCLabel;
     const VarLabel* press_diffZ_FCLabel;
