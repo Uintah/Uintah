@@ -56,7 +56,8 @@ WARNING
       virtual void copyPointer(NCVariableBase&) = 0;
 
       virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
-      
+      virtual void offsetGrid(IntVector /*offset*/) = 0;
+     
       //////////
       // Insert Documentation Here:
       virtual NCVariableBase* clone() = 0;
@@ -66,6 +67,10 @@ WARNING
       virtual NCVariableBase* cloneType() const = 0;
       virtual constNCVariableBase* cloneConstType() const = 0;
 
+      // Clones the type with a variable having the given extents
+      // but with null data -- good as a place holder.
+      virtual NCVariableBase* makePlaceHolder(IntVector low,
+					      IntVector high) const = 0;     
 
       virtual void allocate(const Patch* patch) = 0;
       virtual void allocate(const IntVector& lowIndex,
