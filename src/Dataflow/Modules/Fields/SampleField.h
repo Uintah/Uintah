@@ -34,7 +34,7 @@ class SampleFieldAlgo : public DynamicAlgoBase
 public:
 
   virtual FieldHandle execute(FieldHandle field, unsigned int num_seeds,
-			      int rng_seed, const string &dist) = 0;
+			      int rng_seed, const string &dist, int clamp) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc);
@@ -82,7 +82,7 @@ private:
 public:
 
   virtual FieldHandle execute(FieldHandle field, unsigned int num_seeds,
-			      int rng_seed, const string &dist);
+			      int rng_seed, const string &dist, int clamp);
 };
 
 
@@ -309,10 +309,13 @@ FieldHandle
 SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
 			      unsigned int num_seeds,
 			      int rng_seed,
-			      const string &dist)
+			      const string &dist,
+                              int clamp)
 {
   DistTable table;
   table.clear();
+
+  typedef typename Mesh::Node::array_type array_type;
 
   ScalarFieldInterface *sfi = field->query_scalar_interface();
   VectorFieldInterface *vfi = field->query_vector_interface();
@@ -335,6 +338,7 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
 
   long double max = table[table.size()-1].first;
   Mesh *mesh = dynamic_cast<Mesh *>(field->mesh().get_rep());
+  array_type ra;
 
   PointCloudMesh *pcmesh = scinew PointCloudMesh;
 
@@ -343,8 +347,14 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
     Point p;
     typename DistTable::table_entry_type e;
     table.search(e,rng() * max);             // find random cell
-    // Find random point in that cell.
-    mesh->get_random_point(p, e.second, rng_seed + loop);
+    if (clamp) {
+      // find a random node in that cell
+      mesh->get_nodes(ra,e.second);
+      mesh->get_center(p,ra[(int)(rng()*ra.size()+0.5)]);
+    } else {
+      // Find random point in that cell.
+      mesh->get_random_point(p, e.second, rng_seed + loop);
+    }
     pcmesh->add_node(p);
   }
 

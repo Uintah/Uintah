@@ -63,6 +63,7 @@ class SampleField : public Module
   GuiInt maxSeeds_;
   GuiInt numSeeds_;
   GuiInt rngSeed_;
+  GuiInt clamp_;
   GuiString widgetType_;
   GuiString randDist_;
   GuiString whichTab_;
@@ -92,6 +93,7 @@ SampleField::SampleField(const string& id)
     maxSeeds_("maxseeds", id, this),
     numSeeds_("numseeds", id, this),
     rngSeed_("rngseed", id, this),
+    clamp_("clamp", id, this),
     widgetType_("type", id, this),
     randDist_("dist", id, this),
     whichTab_("whichtab", id, this),
@@ -242,7 +244,8 @@ SampleField::execute()
       return;
     }
     FieldHandle seedhandle(algo->execute(vfhandle_, numSeeds_.get(),
-					 rngSeed_.get(), randDist_.get()));
+					 rngSeed_.get(), randDist_.get(), 
+                                         clamp_.get()));
     
     ofport_->send(seedhandle);
     if (widgetid_) { ogport_->delObj(widgetid_); }
