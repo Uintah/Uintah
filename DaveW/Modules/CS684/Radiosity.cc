@@ -383,7 +383,9 @@ void Radiosity::radToGeom(RadObj *ro, GeomGroup *gg) {
 		    ro->rad*(CSCALE*.8));
 	}
 	GeomPick *gp=new GeomPick(gt, this);
+#if (_MIPS_SZPTR != 64)
 	hash.insert((int)gp, ro);
+#endif
 //	cerr << "inserting "<<(int) gp<<"...\n";
 	geom_idx.add(ogeom->addObj(gp, rm->obj->name));
     }
@@ -406,6 +408,9 @@ void Radiosity::buildGeom() {
 }
 
 void Radiosity::geom_pick(GeomPick* gp, void*) {
+#if (_MIPS_SZPTR == 64)
+    return;
+#else
     RadObj* rid;
     if (!hash.lookup((int)gp, rid)) {
 	cerr << "Error -- couldn't find that GeomPick "<<(int)gp<<" in hash table!\n";
@@ -415,6 +420,7 @@ void Radiosity::geom_pick(GeomPick* gp, void*) {
     selRadObj = rid;
     msg = clString("polyselect");
     want_to_execute();
+#endif
 }
 
 int Radiosity::bldAncestory(RadObj* descendant, RadObj* ancestor) {

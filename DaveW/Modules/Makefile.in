@@ -2,7 +2,7 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ../..
 
-SUBDIRS = CS684 EEG EGI FDM FEM ISL MEG Path Readers SiRe Tensor Writers
+SUBDIRS = CS684 EEG EGI FDM FEM ISL MEG Path Readers Tensor Writers
 
 include $(OBJTOP)/scripts/recurse.mk
 

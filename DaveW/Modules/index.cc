@@ -19,8 +19,8 @@ MP(XYZtoRGB)
 // EEG
 MP(BldEEGMesh)
 MP(Coregister)
-MP(InvEEGSolve)
 MP(RescaleSegFld)
+MP(SFRGtoSFUG)
 MP(STreeExtractSurf)
 MP(SegFldOps)
 MP(SegFldToSurfTree)
@@ -38,6 +38,8 @@ MP(BuildFDMatrix)
 MP(BuildFDField)
 
 // FEM
+MP(CStoGeom)
+MP(CStoSFRG)
 MP(DipoleMatToGeom)
 MP(DipoleSourceRHS)
 MP(ErrorMetric)
@@ -69,12 +71,6 @@ MP(PathReader)
 MP(SegFldReader)
 MP(SigmaSetReader)
 MP(TensorFieldReader)
-
-// SiRe
-MP(SiReAll)
-MP(SiReCrunch)
-MP(SiReInput)
-MP(SiReOutput)
 
 // Tensor
 MP(Bundles)
@@ -108,8 +104,8 @@ void initPackage(const clString& tcl) {
   // EEG
   RM("EEG",	      "BldEEGMesh",		 make_BldEEGMesh,	    tcl+"/BldEEGMesh.tcl");
   RM("EEG",	      "Coregister",		 make_Coregister,	    tcl+"/Coregister.tcl");
-  RM("EEG",	      "InvEEGSolve",	 	 make_InvEEGSolve,	    tcl+"/InvEEGSolve.tcl");
   RM("EEG",	      "RescaleSegFld",		 make_RescaleSegFld,	    tcl+"/RescaleSegFld.tcl");
+  RM("EEG",	      "SFRGtoSFUG",		 make_SFRGtoSFUG,	    tcl+"/SFRGtoSFUG.tcl");
   RM("EEG",	      "STreeExtractSurf",	 make_STreeExtractSurf,	    tcl+"/STreeExtractSurf.tcl");
   RM("EEG",	      "SegFldOps",		 make_SegFldOps,	    tcl+"/SegFldOps.tcl");
   RM("EEG",	      "SegFldToSurfTree",	 make_SegFldToSurfTree,	    "");
@@ -127,6 +123,8 @@ void initPackage(const clString& tcl) {
   RM("FDM",	      "BuildFDMatrix",		 make_BuildFDMatrix,	    "");
 
   // FEM
+  RM("FEM",	      "CStoGeom",	 	 make_CStoGeom,	    	    tcl+"/CStoGeom.tcl");
+  RM("FEM",	      "CStoSFRG",	 	 make_CStoSFRG,	    	    tcl+"/CStoSFRG.tcl");
   RM("FEM",	      "DipoleMatToGeom",	 make_DipoleMatToGeom,	    tcl+"/DipoleMatToGeom.tcl");
   RM("FEM",	      "DipoleSourceRHS",	 make_DipoleSourceRHS,	    "");
   RM("FEM",	      "ErrorMetric",		 make_ErrorMetric,	    tcl+"/ErrorMetric.tcl");
@@ -158,12 +156,6 @@ void initPackage(const clString& tcl) {
   RM("Readers",	      "SegFldReader",		 make_SegFldReader,	    tcl+"/SegFldReader.tcl");
   RM("Readers",	      "SigmaSetReader",		 make_SigmaSetReader,	    tcl+"/SigmaSetReader.tcl");
   RM("Readers",	      "TensorFieldReader",	 make_TensorFieldReader,    tcl+"/TensorFieldReader.tcl");
-
-  // SiRe
-  RM("SiRe",	      "SiReAll",		 make_SiReAll,	    	    tcl+"/SiReAll.tcl");
-  RM("SiRe",	      "SiReCrunch",		 make_SiReCrunch,	    tcl+"/SiReCrunch.tcl");
-  RM("SiRe",	      "SiReInput",		 make_SiReInput,	    tcl+"/SiReInput.tcl");
-  RM("SiRe",	      "SiReOutput",		 make_SiReOutput,	    tcl+"/SiReOutput.tcl");
 
   // Tensor
   RM("Tensor",	      "Bundles",	 	 make_Bundles,   	    tcl+"/Bundles.tcl");

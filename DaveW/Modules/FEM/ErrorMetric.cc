@@ -34,6 +34,7 @@ class ErrorMetric : public Module {
     ColumnMatrixIPort* ivec2P;
     ColumnMatrixOPort* errorP;
     TCLstring methodTCL;
+    TCLstring pTCL;
 public:
     ErrorMetric(const clString& id);
     virtual ~ErrorMetric();
@@ -46,7 +47,8 @@ Module* make_ErrorMetric(const clString& id)
 }
 
 ErrorMetric::ErrorMetric(const clString& id)
-: Module("ErrorMetric", id, Filter), methodTCL("methodTCL", id, this)
+: Module("ErrorMetric", id, Filter), methodTCL("methodTCL", id, this),
+    pTCL("pTCL", id, this)
 {
     // Create the input port
     ivec1P=scinew ColumnMatrixIPort(this, "Vec1",ColumnMatrixIPort::Atomic);
@@ -93,14 +95,18 @@ void ErrorMetric::execute()
      double CCdenom2=0;
      double RMS=0;
      int i;
+     double pp;
+     pTCL.get().get_double(pp);
      for (i=0; i<ne; i++) {
          CCnum+=(*ivec1)[i]*(*ivec2)[i];
          CCdenom1+=(*ivec1)[i]*(*ivec1)[i];
          CCdenom2+=(*ivec2)[i]*(*ivec2)[i];
-         double tmp=(*ivec1)[i]-(*ivec2)[i];
-         RMS+=tmp*tmp;
+         double tmp=fabs((*ivec1)[i]-(*ivec2)[i]);
+	 if (pp==1) RMS+=tmp; 
+	 else if (pp==2) RMS+=tmp*tmp; 
+	 else RMS+=pow(tmp,pp);
      }
-     RMS = Sqrt(RMS);
+     RMS = pow(RMS,1/pp);
      double CCdenom=Sqrt(CCdenom1*CCdenom2);
      double CC=Min(CCnum/CCdenom, 1000000.);
      double CCinv=Min(1.0/(Abs(CCnum)/CCdenom), 1000000.);
@@ -138,6 +144,15 @@ void ErrorMetric::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/02/02 21:54:00  dmw
+// Makefile, index - added new modules and removed no-longer-used
+// libraries
+// Radiosity - fixed 64-bit include guards
+// EEG/Makefile.in - removed InvEEGSolve from Makefile
+// Taubin - constrained relaxation
+// ErrorMetrix - no idea
+// all others are just new modules
+//
 // Revision 1.5  1999/12/11 05:43:20  dmw
 // need to take sqrt to get RMS error
 //

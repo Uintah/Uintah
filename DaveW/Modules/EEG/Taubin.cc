@@ -19,6 +19,7 @@
 #include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
+#include <SCICore/Math/MusilRNG.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
@@ -42,6 +43,7 @@ class Taubin : public Module {
     TCLdouble constraintTCL;
     TCLint N;
     TCLint constrainedTCL;
+    TCLint jitterTCL;
     SurfaceIPort* isurf;
     SurfaceOPort* osurf;
     int tcl_exec;
@@ -62,6 +64,7 @@ class Taubin : public Module {
     ColumnMatrix origZ;
     SurfaceHandle sh;
     SurfTree *st;
+    MusilRNG mr;
 public:
     Taubin(const clString& id);
     virtual ~Taubin();
@@ -85,7 +88,7 @@ Taubin::Taubin(const clString& id)
 : Module("Taubin", id, Source), gamma("gamma", id, this), pb("pb", id, this),
   N("N", id, this), tcl_exec(0), reset(0), init(0), gen(-1),
   constrainedTCL("constrainedTCL", id, this),
-  constraintTCL("constraintTCL", id, this)
+  constraintTCL("constraintTCL", id, this), jitterTCL("jitterTCL", id, this)
 {
    // Create the input port
    isurf=scinew SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
@@ -221,6 +224,14 @@ void Taubin::smooth(int constrained, double cons) {
     int flops, memrefs;
     // multiplyiteratively
     int iters=N.get();
+
+    if (jitterTCL.get()) {
+	for (int i=0; i<st->nodes.size(); i++) {
+	    oldX[i] += (mr()-.5)*dx/10.;
+	    oldY[i] += (mr()-.5)*dy/10.;
+	    oldZ[i] += (mr()-.5)*dz/10.;
+	}
+    }
     for (int iter=0; iter<iters; iter++) {
 	srm->mult(oldX, tmpX, flops, memrefs);
 	srm->mult(oldY, tmpY, flops, memrefs);
@@ -362,6 +373,15 @@ void Taubin::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.8  2000/02/02 21:53:59  dmw
+// Makefile, index - added new modules and removed no-longer-used
+// libraries
+// Radiosity - fixed 64-bit include guards
+// EEG/Makefile.in - removed InvEEGSolve from Makefile
+// Taubin - constrained relaxation
+// ErrorMetrix - no idea
+// all others are just new modules
+//
 // Revision 1.7  1999/12/09 00:05:24  dmw
 // new modules
 //
