@@ -95,8 +95,10 @@ class DynamicTable {
 
 //
 // $Log$
-// Revision 1.2  2001/09/04 23:44:27  rawat
-// Added ReactingScalar transport equation to run ILDM.
-// Also, merged Jennifer's changes to run ILDM in the mixing directory.
+// Revision 1.3  2001/10/11 18:48:58  divyar
+// Made changes to Mixing
+//
+// Revision 1.1  2001/07/16 21:15:38  rawat
+// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //
 //
