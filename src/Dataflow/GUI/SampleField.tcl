@@ -92,11 +92,13 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5 \
 	    -fill both -expand yes
 
-	frame $wtab.f1 
-	label $wtab.f1.maxseeds_l -text "Number of samples" -width 25 \
-              -anchor w
-	entry $wtab.f1.maxseeds -text $this-maxseeds -width 10
-	pack $wtab.f1.maxseeds_l $wtab.f1.maxseeds -side left
+	iwidgets::spinner $wtab.f1 -labeltext "Number of samples: " \
+	    -width 5 -fixed 5 \
+	    -validate "$this set-maxseeds %P $this-maxseeds]" \
+	    -decrement "$this spin-qunatity -1 $wtab.f1 $this-maxseeds" \
+	    -increment "$this spin-qunatity  1 $wtab.f1 $this-maxseeds" 
+
+	$wtab.f1 insert 1 [set $this-maxseeds]
 
 	checkbutton $wtab.auto -text "Execute automatically" \
 		-variable $this-autoexecute
@@ -104,17 +106,21 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	button $wtab.reset -text "Reset Widget" \
 	    -command "set $this-force-rake-reset 1; $this-c needexecute"
 
-	pack $wtab.type $wtab.f1 $wtab.auto \
-	    -side top -fill x -pady 5 -anchor w
+	pack $wtab.type -side top -fill x -pady 5 -anchor w
+	pack $wtab.f1 $wtab.auto -side top -pady 5
 
 	pack $wtab.reset -side top -pady 5
 
 
-	frame $rtab.f2
-	pack $rtab.f2 -side top -anchor w -padx 8
-	label $rtab.f2.numseeds_l -text "Number of samples" -width 23 -anchor w
-	entry $rtab.f2.numseeds -text $this-numseeds -width 10
-	pack $rtab.f2.numseeds_l $rtab.f2.numseeds -side left -anchor w
+	iwidgets::spinner $rtab.f2 -labeltext "Number of samples: " \
+	    -width 5 -fixed 5 \
+	    -validate "$this set-maxseeds %P $this-numseeds]" \
+	    -decrement "$this spin-qunatity -1 $rtab.f2 $this-numseeds" \
+	    -increment "$this spin-qunatity  1 $rtab.f2 $this-numseeds" 
+
+	$rtab.f2 insert 1 [set $this-numseeds]
+
+	pack $rtab.f2 -side top -pady 5
 
 	iwidgets::Labeledframe $rtab.dist -labelpos nw \
 		               -labeltext "Distribution"
@@ -156,6 +162,27 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
+
+
+    method set-qunatity {new quantity} {
+	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
+	    return 0
+	} elseif {$quantity < 1.0} {
+	    return 0
+	} 
+	set $quantity $new
+	$this-c needexecute
+	return 1
+    }
+
+    method spin-qunatity {step spinner quantity} {
+	set newquantity [expr [set $quantity] + $step]
+
+	if {$newquantity < 1.0} {
+	    set newquantity 0
+	}   
+	set $quantity $newquantity
+	$spinner delete 0 end
+	$spinner insert 0 [set $quantity]
+    }
 }
-
-

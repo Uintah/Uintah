@@ -195,7 +195,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	# Iso Value using slider
 
-	set sel [$isf.tabs add -label "Slider" -command "set $this-active-isoval-selection-tab 0"]
+	set sel [$isf.tabs add -label "Slider" \
+		     -command "set $this-active-isoval-selection-tab 0"]
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
@@ -205,13 +206,17 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	# Iso Value using quantity
 	
-	set sel [$isf.tabs add -label "Quantity" -command "set $this-active-isoval-selection-tab 1"]
+	set sel [$isf.tabs add -label "Quantity" \
+		     -command "set $this-active-isoval-selection-tab 1"]
 	
-	frame $sel.f
-	label $sel.f.l -text "Number of evenly-spaced isovals:"
-	entry $sel.f.e -width 20 -text $this-isoval-quantity
-	bind $sel.f.e <Return> "$this-c needexecute"
-	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
+	iwidgets::spinner $sel.f -labeltext "Number of evenly-spaced isovals: " \
+		-width 5 -fixed 5 \
+		-validate "$this set-iso-qunatity %P $this-isoval-quantity]" \
+		-decrement "$this spin-iso-qunatity -1 $sel.f $this-isoval-quantity" \
+		-increment "$this spin-iso-qunatity  1 $sel.f $this-isoval-quantity" 
+
+	$sel.f insert 1 [set $this-isoval-quantity]
+
 	frame $sel.m
 	radiobutton $sel.m.c -text "ColorMap MinMax" \
 		-variable $this-quantity-range -value "colormap" \
@@ -316,6 +321,28 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+    }
+
+    method set-iso-qunatity {new quantity} {
+	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
+	    return 0
+	} elseif {$quantity < 1.0} {
+	    return 0
+	} 
+	set $quantity $new
+	$this-c needexecute
+	return 1
+    }
+
+    method spin-iso-qunatity {step spinner quantity} {
+	set newquantity [expr [set $quantity] + $step]
+
+	if {$newquantity < 1.0} {
+	    set newquantity 0
+	}   
+	set $quantity $newquantity
+	$spinner delete 0 end
+	$spinner insert 0 [set $quantity]
     }
 
     method set-isoval {} {
