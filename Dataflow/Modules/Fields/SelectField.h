@@ -109,27 +109,26 @@ SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 		     (down-center).length(),
 		     (in-center).length()));
   t.pre_translate(Vector(center.x(), center.y(), center.z()));
+  t.invert();
 
-  int counter = 0;
-  int setcounter = 0;
   while (iter != eiter)
   {
     Point p, ptrans;
     field->get_typed_mesh()->get_center(p, *iter);
 
-    ptrans = t.unproject(p);
-    if (ptrans.x() >= 0.0 && ptrans.x() < 1.0 &&
-	ptrans.y() >= 0.0 && ptrans.y() < 1.0 &&
-	ptrans.z() >= 0.0 && ptrans.z() < 1.0)
+    ptrans = t.project(p);
+    if (ptrans.x() >= -1.0 && ptrans.x() < 1.0 &&
+	ptrans.y() >= -1.0 && ptrans.y() < 1.0 &&
+	ptrans.z() >= -1.0 && ptrans.z() < 1.0)
     {
       field->set_value(value, *iter);
-      setcounter++;
     }
-    counter++;
+    else
+    {
+      field->set_value(0, *iter);
+    }
     ++iter;
   }
-
-  cout << "set " << setcounter << " out of " << counter << "\n";
 }
 
 
