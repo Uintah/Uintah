@@ -65,6 +65,8 @@ typedef LockingHandle<Matrix> MatrixHandle;
 class SCICORESHARE Matrix : public PropertyManager
 {
 public:
+  Matrix() : separate_raw_(false), raw_filename_("") {}
+
   //! make a duplicate, needed to support detach from LockingHandle
   virtual ~Matrix();
   virtual Matrix* clone() = 0;
