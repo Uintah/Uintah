@@ -1344,8 +1344,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   task->requires(Task::NewDW, b, Ghost::None, 0);
   task->hasSubScheduler();
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, 
-								   d_myworld);
+  const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level);
   sched->addTask(task, perproc_patches, matls);
 }
 

@@ -176,7 +176,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     delete d_perproc_patches;
 
   LoadBalancer* lb = sched->getLoadBalancer();
-  d_perproc_patches = lb->createPerProcessorPatchSet(level, d_myworld);
+  d_perproc_patches = lb->createPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
   //  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
