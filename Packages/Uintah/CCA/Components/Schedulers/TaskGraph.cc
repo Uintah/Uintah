@@ -24,8 +24,8 @@
 #include <sstream>
 #include <unistd.h>
 
-#ifdef __digital__
-// DEC doesn't have this...
+#if defined(__digital__) || defined(_AIX)
+// AIX and DEC don't have this...
 namespace Uintah {
   template <class Iter, class Compare>
   bool is_sorted(Iter begin, Iter end, Compare compare)
@@ -608,7 +608,7 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
   return dt;
 }
 
-#if defined(__GNUG__) || defined(__digital__)
+#if defined(__GNUG__) || defined(__digital__) || defined(_AIX)
 namespace std {
   template<class T> class hash {
   public:

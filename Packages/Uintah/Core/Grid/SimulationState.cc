@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
@@ -14,8 +15,9 @@ using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   VarLabel* nonconstDelt = VarLabel::create("delT",
-    ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
+   VarLabel* nonconstDelt = 
+     VarLabel::create("delT", delt_vartype::getTypeDescription() );
+// ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
    d_ref_press = 0.0;
