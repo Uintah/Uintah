@@ -34,13 +34,13 @@
 /* the tiny epsilon vector added to counteract possible
    calculation error */
 
-extern Vector EpsilonVector;
+Vector EpsilonVector( 1.e-6, 1.e-6, 1.e-6 );
 
 /* the most tiny opacity contribution of a point in
    the volume */
 
 double  EpsilonContribution = 0.01;
-extern double  EpsilonAlpha;
+double  EpsilonAlpha = log( 0.01 );
 
 
 
@@ -459,9 +459,16 @@ Levoy::SetUp ( const ExtendedView& myview, int stepsize )
 Color
 Levoy::Eight ( Vector& step, const Point& beg )
 {
-  return BasicVolRender( step, rayStep, beg, SVOpacity, SVmin, SVMultiplier,
-			box, homeSFRGrid->grid.get_dataptr(), backgroundColor,
-			nx, ny, nz, diagx, diagy, diagz );
+  double r, g, b;
+  step = step * rayStep;
+  BasicVolRender( step.x(), step.y(), step.z(), rayStep,
+			beg.x(), beg.y(),
+			beg.z(), SVOpacity, SVmin, SVMultiplier,
+			box.min().x(), box.min().y(), box.min().z(),
+			homeSFRGrid->grid.get_dataptr(), backgroundColor.r(),
+			backgroundColor.g(), backgroundColor.b(),
+			nx, ny, nz, diagx, diagy, diagz, &r,&g,&b );
+  return ( Color ( r,g,b) );
 }
 
 
@@ -482,10 +489,17 @@ Levoy::Eight ( Vector& step, const Point& beg )
 Color
 Levoy::Nine ( Vector& step, const Point& beg )
 {
-  return ColorVolRender( step, rayStep, beg, SVOpacity, SVR, SVG, SVB,
-			SVmin, SVMultiplier,
-			box, homeSFRGrid->grid.get_dataptr(), backgroundColor,
-			nx, ny, nz, diagx, diagy, diagz );
+  double r, g, b;
+  step = step * rayStep;
+  ColorVolRender( step.x(), step.y(), step.z(), rayStep,
+			beg.x(), beg.y(),
+			beg.z(), SVOpacity, SVR, SVG, SVB,
+		        SVmin, SVMultiplier,
+			box.min().x(), box.min().y(), box.min().z(),
+			homeSFRGrid->grid.get_dataptr(), backgroundColor.r(),
+			backgroundColor.g(), backgroundColor.b(),
+			nx, ny, nz, diagx, diagy, diagz, &r,&g,&b );
+  return ( Color ( r,g,b) );
 }
 
 
@@ -508,6 +522,10 @@ Levoy::PerspectiveTrace( int from, int till )
     {
       for ( loop = 0; loop < yres; loop++ )
 	{
+	  if ( loop == 45 && pool == 45 )
+	    {
+	      cerr << ".";
+	    }
 	  // assign ray direction depending on the pixel
 	  rayToTrace = homeRay;
 	  rayToTrace += rayIncrementU * ( pool - xres/2 );

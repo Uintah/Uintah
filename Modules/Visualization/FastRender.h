@@ -1,23 +1,34 @@
 #ifndef _FAST_RENDER_H
 #define _FAST_RENDER_H 1
 
-#include <Geom/Color.h>
-#include <Geometry/Vector.h>
-#include <Geometry/BBox.h>
-#include <Geometry/Point.h>
-
-     
-Color
-BasicVolRender( Vector& step, double rayStep, const Point& beg,
+#ifdef __cplusplus
+extern "C" {
+#endif
+void
+BasicVolRender( double stepx, double stepy, double stepz, double rayStep,
+	        double begx, double begy, double begz,
 		 double *SVOpacity, double SVmin, double SVMultiplier,
-	       const BBox& box, double ***grid, Color& backgroundColor,
-	       int nx, int ny, int nz, int diagx, int diagy, int diagz );
+	       double boxx, double boxy, double boxz,
+	       double ***grid,
+	       double bgr, double bgg, double bgb,
+	       int nx, int ny, int nz,
+	       double diagx, double diagy, double diagz,
+	       double *acr, double *acg, double *acb );
 
-Color
-ColorVolRender( Vector& step, double rayStep, const Point& beg,
+void
+ColorVolRender( double stepx, double stepy, double stepz, double rayStep,
+	        double begx, double begy, double begz,
 	       double *SVOpacity, double *SVR, double *SVG, double *SVB,
 	       double SVmin, double SVMultiplier,
-	       const BBox& box, double ***grid, Color& backgroundColor,
-	       int nx, int ny, int nz, int diagx, int diagy, int diagz );
+	       double boxx, double boxy, double boxz,
+	       double ***grid,
+	       double bgr, double bgg, double bgb,
+	       int nx, int ny, int nz,
+	       double diagx, double diagy, double diagz,
+	       double *acr, double *acg, double *acb );
 
+#ifdef __cplusplus
+}
+#endif
+	       
 #endif

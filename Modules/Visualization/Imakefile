@@ -20,7 +20,7 @@ OBJS = BitVisualize.o  BoxClipSField.o  CuttingPlane.o FastRender.o    \
 	OctIsoSurface.o     \
 	RescaleColormap.o  Streamline.o  VectorSeg.o  VolVis.o   \
 	WidgetTest.o
-SRCS = BitVisualize.cc BoxClipSField.cc CuttingPlane.cc FastRender.cc    \
+SRCS = BitVisualize.cc BoxClipSField.cc CuttingPlane.cc FastRender.c    \
 	GenAxes.cc GenColormap.cc GenFieldEdges.cc \
 	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc LevoyVis.cc \
 	 OctIsoSurface.cc    \
