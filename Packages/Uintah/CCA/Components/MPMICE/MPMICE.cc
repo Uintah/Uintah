@@ -135,6 +135,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                
   d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls);
   d_ice->scheduleComputeDelPressAndUpdatePressCC( sched, patches, press_matl,
+                                                                  ice_matls_sub,
                                                                   all_matls);
 
   // scheduleInterpolateVelIncFCToNC(sched, patches, matls);
@@ -1652,6 +1653,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }  
 
     d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch, 0);
+    //__________________________________
+    //  press_CC boundary conditions are updated in
+    //  ICE::ComputeDelPressAndUpdateCC()
 
     //__________________________________
     //    Put all matls into new dw
