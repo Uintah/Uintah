@@ -345,7 +345,12 @@ void
 TetVolMesh::compute_node_neighbors()
 {
   node_nbor_lock_.lock();
+  node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
+  node_iterator ii;
+  for (ii=node_begin(); ii!=node_end(); ++ii){
+    node_neighbors_[*ii].push_back(*ii);
+  }
   for_each(edge_begin(), edge_end(), FillNodeNeighbors(node_neighbors_, 
 						       *this));
   node_nbor_lock_.unlock();
