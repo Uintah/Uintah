@@ -185,7 +185,6 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << "#include <Core/CCA/Component/PIDL/pidl_cast.h>\n";
   hdr << "#include <Core/CCA/Component/PIDL/MxNArrayRep.h>\n";
   hdr << "#include <Core/CCA/Component/SSIDL/sidl_sidl.h>\n";
-  //hdr << "#include </home/kzhang/SCIRun/src/SCIRun/Babel/SSIDL.hh>\n";
   hdr << "#include <Core/CCA/Component/SSIDL/array.h>\n";
   hdr << "#include <Core/CCA/Component/SSIDL/string.h>\n";
   hdr << "#include <Core/CCA/SmartPointer.h>\n";
@@ -228,6 +227,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/CCA/Component/PIDL/PIDL.h>\n";
   out << "#include <Core/CCA/Component/Comm/Message.h>\n";
   out << "#include <Core/CCA/Component/PIDL/MxNScheduler.h>\n";
+  out << "#include <Core/CCA/Component/PIDL/xcept.h>\n";
   out << "#include <Core/Util/NotFinished.h>\n";
   out << "#include <Core/Thread/Thread.h>\n";
   out << "#include <iostream>\n";
@@ -546,8 +546,6 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  _ret_mdim[0]=_ret.size1();\n";
     e.out << "  _ret_mdim[1]=_ret.size2();\n";
     e.out << "  int _ret_mtotalsize=_ret_mdim[0]*_ret_mdim[1];\n";
-    e.out << "  int _flag=0;\n";
-    e.out << "  message->marshalInt(&_flag);\n";
     e.out << "  ::SSIDL::array2< int>::pointer _ret_mptr=const_cast< ::SSIDL::array2< int>::pointer>(&_ret[0][0]);\n";
     e.out << "  message->marshalInt(&_ret_mdim[0], 2);\n";
     e.out << "  message->marshalInt(_ret_mptr, _ret_mtotalsize);\n";
@@ -832,6 +830,11 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   // Unmarshal the reply  
   e.out << leader2 << "message->unmarshalReply();\n";
 
+  string x_leader;
+  if(throws_clause) {
+    e.out << leader2 << "try {\n";
+    x_leader=e.out.push_leader();
+  }
   e.out << leader2 << "// Call the method\n";
   // Call the method...
   e.out << leader2;
@@ -849,7 +852,20 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << "_arg" << argNum;
   }
   e.out << ");\n";
-
+  if(throws_clause) {
+    e.out.pop_leader(x_leader);
+    int cnt = 1;
+    const std::vector<ScopedName*>& thlist=throws_clause->getList();
+    for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+      ::std::string name = (*iter)->cppfullname();
+      e.out << leader2 << "} catch(" << name << "* _e_ptr) {\n";
+      e.out << leader2 << "  ::std::cerr << \"Throwing " << name << "\\n\";\n";
+      e.out << leader2 << "  _marshal_exception< " << name << ">(message,_e_ptr," << cnt << ");\n";
+      e.out << leader2 << "  return;\n";
+ 
+    }
+    e.out << leader2 << "}\n";
+  }
 
 
   if(reply_required()){
@@ -898,8 +914,16 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       //Do this here because CALLNORET needs data redistribution
       //calls found in emit_marshal (OUT args)
       e.out << leader2 << "if (_flag == ::SCIRun::CALLNORET) {\n";
-      e.out << leader2 << "  message->destroyMessage();\n";
-      e.out << leader2 << "  return;\n";
+      if(throws_clause) {
+	e.out << leader2 << "// Send the reply...\n";
+	int reply_handler_id=0; // Always 0
+	e.out << leader2 << "  message->sendMessage(" << reply_handler_id << ");\n";
+	e.out << leader2 << "  message->destroyMessage();\n";
+	e.out << leader2 << "  return;\n";	
+      } else { 
+	e.out << leader2 << "  message->destroyMessage();\n";
+	e.out << leader2 << "  return;\n";
+      }
       e.out << leader2 << "}\n";
       e.out << leader2 << "else { /*CALLONLY*/ \n";
       a_leader = e.out.push_leader(); 
@@ -911,6 +935,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "message->sendMessage(" << reply_handler_id << ");\n";
   }
   e.out << leader2 << "message->destroyMessage();\n";  
+  e.out << leader2 << "return;\n";
 
   if (isCollective) {
     e.out.pop_leader(a_leader);
@@ -1139,8 +1164,11 @@ void CI::emit_header(EmitState& e)
   // The type signature method...
   e.decl << leader2 << "  virtual const ::SCIRun::TypeInfo* _virtual_getTypeInfo() const;\n";
   e.decl << leader2 << "  static const ::SCIRun::TypeInfo* _static_getTypeInfo();\n";
-  e.decl << leader2 << "protected:\n";
-  e.decl << leader2 << "  " << name << "(bool initServer=true);\n";
+  if(!iam_class()) {
+    //Interface constructor is protected
+    e.decl << leader2 << "protected:\n";
+  }
+  e.decl << leader2 << "  " << name << "(bool initServer = true);\n";
   e.decl << leader2 << "private:\n";
   e.decl << leader2 << "  void registerhandlers(SCIRun::EpChannel* epc);\n";
   e.decl << leader2 << "  " << name << "(const " << name << "&);\n";
@@ -1347,10 +1375,6 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  for(unsigned int i=0; i < _refL->size(); i++, iter++) {\n";
     e.out << "    ::SCIRun::Message* message = msgs[i];\n";
     e.out << "    message->waitReply();\n";
-    e.out << "    int _x_flag;\n";
-    e.out << "    message->unmarshalInt(&_x_flag);\n";
-    e.out << "    if(_x_flag != 0)\n";
-    e.out << "      NOT_FINISHED(\"Exceptions not implemented\");\n";
     e.out << "    //Unmarshal distribution representation array\n";
     e.out << "    int _ret_dim[2];\n";
     e.out << "    message->unmarshalInt(&_ret_dim[0], 2);\n";
@@ -1382,6 +1406,8 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
+    if(throws_clause)
+      e.out << leader2 << "::std::vector <::SCIRun::Message* > save_callnoret_msg;\n";
   }
 
   if(reply_required()){
@@ -1525,7 +1551,13 @@ e.out << leader2 << "//::std::cout << \"CALLNORET sending _sessionID = '\" << _s
     e.out << leader2 << "// Send the message\n";
     e.out << leader2 << "int _handler=(*iter)->getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
-    e.out << leader2 << "message->destroyMessage();\n";
+    if(throws_clause) {
+      e.out << leader2 << "save_callnoret_msg.push_back(message);\n";
+      e.out << leader2 << "//Later check if an exception was thrown\n";
+    }
+    else {
+      e.out << leader2 << "message->destroyMessage();\n";
+    }
 
     e.out.pop_leader(loop_leader1);
     e.out << leader2 << "}\n\n";
@@ -1586,11 +1618,9 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
     e.out << leader2 << "int _handler=_i_ref->getVtableBase()+" << handlerOff << ";\n";
   }
   e.out << leader2 << "message->sendMessage(_handler);\n";
-  if(isCollective)
+  if(isCollective) {
     e.out << leader2 << "save_callonly_msg = message;\n";
-  e.out << leader2 << "// CALLONLY reply to be continued...\n";
-
-  if (isCollective) {
+    e.out << leader2 << "// CALLONLY reply to be continued...\n";
     e.out.pop_leader(call_ldr);
     e.out << leader2 << "}\n";
   }
@@ -1615,16 +1645,34 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
   /********CALLONLY continuation******/
   if(reply_required()){
     if (isCollective) {
-      e.out << leader2 << "if(_flag == ::SCIRun::CALLONLY) {\n";
+      e.out << leader2 << "if(save_callonly_msg) {\n";
       call_ldr=e.out.push_leader();
       e.out << leader2 << "SCIRun::Message* message = save_callonly_msg;\n";
     }
     e.out << leader2 << "message->waitReply();\n";
-    //... emit unmarshal...;
     e.out << leader2 << "int _x_flag;\n";
     e.out << leader2 << "message->unmarshalInt(&_x_flag);\n";
-    e.out << leader2 << "if(_x_flag != 0)\n";
-    e.out << leader2 << "  NOT_FINISHED(\"Exceptions not implemented\");\n";
+    e.out << leader2 << "if(_x_flag != 0) {\n";
+    if(throws_clause) {
+      //Blah
+      e.out << leader2 << "  switch (_x_flag) {\n";
+      int cnt = 1;
+      const std::vector<ScopedName*>& thlist=throws_clause->getList();
+      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+	::std::string name = (*iter)->cppfullname();
+	e.out << leader2 << "  case " << cnt << ":\n";
+	e.out << leader2 << "    _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
+	e.out << leader2 << "    break;\n";
+      }
+      e.out << leader2 << "  }\n";
+      //EofBlah
+    }
+    else {
+      e.out << leader2 << "  throw ::SCIRun::InternalError(\"Unexpected user exception\\n\");\n";
+    }
+    e.out << leader2 << "}\n";
+
+
 
     if(return_type){
       if(!return_type->isvoid()){
@@ -1649,6 +1697,37 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
     if (isCollective) {
       e.out.pop_leader(call_ldr);
       e.out << leader2 << "}\n";
+    }
+
+    //CALLNORET ADDENDUM FOR EXCEPTIONS
+    if((isCollective)&&(throws_clause)) {
+      e.out << leader2 << "\n//CALLNORET ADDENDUM FOR EXCEPTIONS\n";
+      e.out << leader2 << "if(save_callnoret_msg.size() > 0) {\n";      
+      e.out << leader2 << "  ::std::vector< ::SCIRun::Message*>::iterator iter = save_callnoret_msg.begin();\n";
+      e.out << leader2 << "  for(unsigned int i=0; i < save_callnoret_msg.size(); i++, iter++) {\n";
+      e.out << leader2 << "    (*iter)->waitReply();\n";
+      e.out << leader2 << "    int _x_flag;\n";
+      e.out << leader2 << "    (*iter)->unmarshalInt(&_x_flag);\n";
+      e.out << leader2 << "    if(_x_flag != 0) {\n";
+      //Blah
+      e.out << leader2 << "      switch (_x_flag) {\n";
+      int cnt = 1;
+      const std::vector<ScopedName*>& thlist=throws_clause->getList();
+      for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
+	::std::string name = (*iter)->cppfullname();
+	e.out << leader2 << "      case " << cnt << ":\n";
+	e.out << leader2 << "        _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
+	e.out << leader2 << "        break;\n";
+      }
+      e.out << leader2 << "      }\n";
+      //EofBlah
+      e.out << leader2 << "    }\n";
+      e.out << leader2 << "    (*iter)->destroyMessage();\n";
+      e.out << leader2 << "  }\n";
+      e.out << leader2 << "}\n";
+    }
+
+    if (isCollective) {
       e.out << "exitmethod:\n";
     }
 
@@ -2208,7 +2287,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
     e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
     e.out << leader2 << "  " << arg << "=0;\n";
     e.out << leader2 << "} else {\n";
-    //NEW
+
     e.out << leader2 << "  ::SCIRun::ReferenceMgr _refM;\n";
     e.out << leader2 << "  for(int i=0; i<" << arg << "_refno; i++) {\n";
     e.out << leader2 << "    //This may leak SPs\n";
@@ -2521,7 +2600,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _dt=" << arg << "->_virtual_getTypeInfo();\n";
     e.out << leader2 << "  const ::SCIRun::TypeInfo* _bt=" << name->cppfullname(0) << "::_static_getTypeInfo();\n";
     e.out << leader2 << "  int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    //NEW
+
     e.out << leader2 << "  ::SCIRun::ReferenceMgr* " << arg << "_rm;\n";
     e.out << leader2 << "  " << arg << "->_getReferenceCopy(&" << arg << "_rm);\n";
     e.out << leader2 << "  ::SCIRun::refList* _refL = " << arg << "_rm->getAllReferences();\n";

@@ -185,6 +185,10 @@ void Class::staticCheck(SymbolTable* names)
     Definition* d=s->getDefinition();
     Class* c=(Class*)d;
     parentclass=c;
+
+    //if it extends BaseException this class is an exception
+    if((parentclass->name == "BaseException")||(parentclass->iam_exception))
+      iam_exception = true;
   }
   /* Check implements list */
   if(class_implements){
