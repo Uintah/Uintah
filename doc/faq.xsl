@@ -156,7 +156,7 @@
 <!-- *************************************************************** -->
 
 <xsl:variable name="source">
-  <xsl:value-of select="/faqbook/bookinfo/source"/>
+  <xsl:value-of select="/faqbook/bookinfo/title"/>
 </xsl:variable>
 
 <xsl:if test="$cont=0">
