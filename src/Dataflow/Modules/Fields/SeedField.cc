@@ -36,6 +36,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
+#include <Core/Datatypes/ContourField.h>
 #include <math.h>
 
 #include <iostream>
@@ -51,6 +52,8 @@ class SeedField : public Module {
   FieldHandle    vfhandle_;
   Field          *vf_;
 
+  char           firsttime_;
+
   GuiString seedRandTCL_;
   GuiString numDipolesTCL_;
   GuiString dipoleMagnitudeTCL_;
@@ -60,6 +63,7 @@ public:
   SeedField(const clString& id);
   virtual ~SeedField();
   virtual void execute();
+  virtual void tcl_command(TCLArgs&, void*);
 };
 
 extern "C" Module* make_SeedField(const clString& id) {
@@ -86,6 +90,8 @@ SeedField::SeedField(const clString& id)
   add_oport(ogport_);
 
   vf_ = 0;
+
+  firsttime_ = 1;
 }
 
 SeedField::~SeedField()
@@ -95,74 +101,77 @@ SeedField::~SeedField()
 // FIX_ME upgrade to new fields.
 void SeedField::execute()
 {
+  Point min,max;
+  BBox bbox;
+  
+
   // the field input is required
   if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
     return;
 
-  BBox bbox = vf_->mesh()->get_bounding_box();
-  Point min = bbox.min();
-  Point max = bbox.max();
+  bbox = vf_->mesh()->get_bounding_box();
+  min = bbox.min();
+  max = bbox.max();
+  
 
-  Point center(min.x()+(max.x()-min.x())/2.,
-	       min.y()+(max.y()-min.y())/2.,
-	       min.z()+(max.z()-min.z())/2.);
-
-  double x  = max.x()-min.x();
-  double x2 = x*x;
-  double y  = max.y()-min.y();
-  double y2 = y*y;
-  double z  = max.z()-min.z();
-  double z2 = z*z;
-
-  double quarterl2norm = sqrt(x2+y2+z2)/4.;
-
-  rake_.SetEndpoints(Point(center.x()-quarterl2norm,center.y(),center.z()),
-		     Point(center.x()+quarterl2norm,center.y(),center.z()));
-
-  rake_.SetScale(quarterl2norm);
+  if (firsttime_) {
+    firsttime_=0;
+    Point center(min.x()+(max.x()-min.x())/2.,
+		 min.y()+(max.y()-min.y())/2.,
+		 min.z()+(max.z()-min.z())/2.);
+    
+    double x  = max.x()-min.x();
+    double x2 = x*x;
+    double y  = max.y()-min.y();
+    double y2 = y*y;
+    double z  = max.z()-min.z();
+    double z2 = z*z;
+  
+    double quarterl2norm = sqrt(x2+y2+z2)/4.;
+    
+    rake_.SetScale(quarterl2norm*.06); // this size seems empirically good
+    
+    rake_.SetEndpoints(Point(center.x()-quarterl2norm,center.y(),center.z()),
+		       Point(center.x()+quarterl2norm,center.y(),center.z()));
+  }
 
   GeomGroup *widget_group = scinew GeomGroup;
   widget_group->add(rake_.GetWidget());
-
-  rake_.GetEndpoints(min,max);
-
   
+  rake_.GetEndpoints(min,max);
+  
+  Vector dir(max-min);
+  int num_seeds = (int)(rake_.GetRatio()*15);
+  cerr << "num_seeds = " << num_seeds << endl;
+  dir*=1./(num_seeds-1);
+  ContourField<double> *seeds = scinew ContourField<double>(Field::NODE);
+  ContourMesh *mesh = 
+    dynamic_cast<ContourMesh*>(seeds->get_typed_mesh().get_rep());
+  ContourField<double>::fdata_type &fdata = seeds->fdata();
+  fdata.resize(2);
 
+  for (int loop=0;loop<num_seeds;++loop) {
+    mesh->add_node(min+dir*loop);
+    fdata[loop]=1;
+  }
+  
+  ofport_->send(seeds);
   ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+}
+
+void SeedField::tcl_command(TCLArgs& args, void* userdata)
+{
+  if(args.count() < 2){
+    args.error("StreamLines needs a minor command");
+    return;
+  }
+ 
+  if (args[1] == "execute") {
+    want_to_execute();
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 } // End namespace SCIRun
 
-
-
-
-
-
-#if 0
-  FieldHandle mesh;
-  if (!imesh->get(mesh) || !mesh.get_rep()) return;
-  int seedRand, numDipoles;
-  double dipoleMagnitude;
-
-  seedRandTCL.get().get_int(seedRand);
-  numDipolesTCL.get().get_int(numDipoles);
-  dipoleMagnitudeTCL.get().get_double(dipoleMagnitude);
-  seedRandTCL.set(to_string(seedRand+1));
-  cerr << "seedRand="<<seedRand<<"\n";
-  MusilRNG mr(seedRand);
-  mr();
-//  cerr << "rand="<<mr()<<"\n";
-  DenseMatrix *m=scinew DenseMatrix(numDipoles, 6);
-  for (int i=0; i<numDipoles; i++) {
-    int elem = mr() * mesh->elems.size();
-    cerr << "elem["<<i<<"]="<<elem<<"\n";
-    Point p(mesh->elems[elem]->centroid());
-    (*m)[i][0]=p.x();
-    (*m)[i][1]=p.y();
-    (*m)[i][2]=p.z();
-    (*m)[i][3]=2*(mr()-0.5)*dipoleMagnitude;
-    (*m)[i][4]=2*(mr()-0.5)*dipoleMagnitude;
-    (*m)[i][5]=2*(mr()-0.5)*dipoleMagnitude;
-  }
-  omat->send(MatrixHandle(m));
-#endif
