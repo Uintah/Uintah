@@ -58,6 +58,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
 {
   d_wasOutputTimestep = false;
   d_wasCheckpointTimestep = false;
+  d_saveParticleVariables = false;
+  d_saveP_x = false;
   d_currentTime=-1;
   d_currentTimestep=-1;
 }
@@ -105,10 +107,25 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       if (saveItem.matls.size() == 0)
 	// if materials aren't specified, all valid materials will be saved
 	saveItem.matls = ConsecutiveRangeSet::all;
+      
+       //__________________________________
+       //  bullet proofing: must save p.x 
+       //  in addition to other particle variables "p.*"
+       if (saveItem.labelName == "p.x") {
+         d_saveP_x = true;
+       }
+
+       string::size_type pos = saveItem.labelName.find("p.");
+       if ( pos != string::npos &&  saveItem.labelName != "p.x") {
+         d_saveParticleVariables = true;
+       }
 
       d_saveLabelNames.push_back(saveItem);
       save = save->findNextBlock("save");
    }
+   if(d_saveP_x == false && d_saveParticleVariables == true) {
+     throw ProblemSetupException(" You must save p.x when saving other particle variables");
+   }     
    
    d_checkpointInterval = 0.0;
    d_checkpointTimestepInterval = 0;
