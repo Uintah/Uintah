@@ -155,9 +155,9 @@ HexVolMesh::transform(const Transform &t)
 
 
 void
-HexVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
-		      Node::index_type n3, Node::index_type n4,
-		      Cell::index_type ci, face_ht &table) const {
+ HexVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
+		       Node::index_type n3, Node::index_type n4,
+		       Cell::index_type ci, face_ht &table) const {
   PFace f(n1, n2, n3, n4);
 
   face_ht::iterator iter = table.find(f);
@@ -170,12 +170,17 @@ HexVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
       cerr << "This Mesh has problems: Cells #" 
 	   << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci 
 	   << " are illegally adjacent." << endl; 
-      SCI_THROW(InternalError("Corrupt HexVolMesh"));      
-      return;
+      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));      
+    } else if (f.cells_[0] == ci) {
+      cerr << "This Mesh has problems: Cells #" 
+	   << f.cells_[0] << " and #" << ci 
+	   << " are the same." << endl; 
+      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));      
+    } else {
+      f.cells_[1] = ci; // add this cell
+      table.erase(iter);
+      table[f] = 0;
     }
-    f.cells_[1] = ci; // add this cell
-    table.erase(iter);
-    table[f] = 0;
   }
 }
 
