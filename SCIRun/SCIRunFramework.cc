@@ -244,31 +244,36 @@ void SCIRunFramework::registerComponent(ComponentInstance* ci,
 {
   std::string goodname = name;
   int count=0;
-  while(activeInstances.find(goodname) != activeInstances.end()){
-    ostringstream newname;
+  while(activeInstances.find(goodname) != activeInstances.end())
+    {
+    std::ostringstream newname;
     newname << name << "_" << count++;
     goodname=newname.str();
-  }
+    }
   ci->framework=this;
   ci->instanceName = goodname;
   activeInstances[ci->instanceName] = ci;
   // Get the component event service and send a creation event
-  std::cerr << "TODO: register a creation event for component " << name << '\n';
+  std::cerr << "TODO: register a creation event for component " << name << std::endl;
 }
 
 ComponentInstance *
 SCIRunFramework::unregisterComponent(const std::string& instanceName)
 {
-  std::map<std::string, ComponentInstance*>::iterator found=activeInstances.find(instanceName);
-  if(found != activeInstances.end()){
+  std::map<std::string, ComponentInstance*>::iterator found
+    = activeInstances.find(instanceName);
+  if(found != activeInstances.end())
+    {
     ComponentInstance *ci=found->second;
     activeInstances.erase(found);
     return ci;
-  }
-  else{
-    std::cerr<<"Error: component instance "<<instanceName<<" not found!"<<std::endl;;
+    }
+  else
+    {
+    std::cerr<<"Error: component instance "<<instanceName<<" not found!"
+             <<std::endl;;
     return 0;
-  }
+    }
 }
 
 ComponentInstance*
