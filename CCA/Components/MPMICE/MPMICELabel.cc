@@ -35,16 +35,12 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription() );
   press_NCLabel      = VarLabel::create("pressureNC",
                      NCVariable<double>::getTypeDescription());
-
   velInc_CCLabel     = VarLabel::create("velIncCC",
                      CCVariable<Vector>::getTypeDescription());
   velInc_NCLabel     = VarLabel::create("velIncNC",
                      NCVariable<Vector>::getTypeDescription());
-
   burnedMassCCLabel   = VarLabel::create("burnedMass",
                      CCVariable<double>::getTypeDescription());  
-  releasedHeatCCLabel = VarLabel::create("releasedHeat",
-                     CCVariable<double>::getTypeDescription());
   scratchLabel        = VarLabel::create("scratch",
                      CCVariable<double>::getTypeDescription());
   scratch1Label        = VarLabel::create("scratch1",
@@ -73,7 +69,6 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(velInc_CCLabel);
   VarLabel::destroy(velInc_NCLabel);
   VarLabel::destroy(burnedMassCCLabel);
-  VarLabel::destroy(releasedHeatCCLabel);
   VarLabel::destroy(scratchLabel);
   VarLabel::destroy(scratch1Label);
   VarLabel::destroy(scratch2Label);
