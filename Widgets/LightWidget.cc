@@ -150,7 +150,7 @@ LightWidget::~LightWidget()
 
 
 void
-LightWidget::widget_execute()
+LightWidget::redraw()
 {
    Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
    Point center(variables[SourceVar]->point());
@@ -198,8 +198,8 @@ LightWidget::widget_execute()
 }
 
 void
-LightWidget::geom_moved( int axis, double dist, const Vector& delta,
-			 int pick, const BState& state )
+LightWidget::geom_moved( GeomPick* gp, int axis, double dist,
+			 const Vector& delta, int pick, const BState& state )
 {
    switch(ltype) {
    case DirectionalLight:
@@ -226,7 +226,7 @@ LightWidget::geom_moved( int axis, double dist, const Vector& delta,
       }
       break;
    case AreaLight:
-      arealight->geom_moved(axis, dist, delta, pick, state);
+      arealight->geom_moved(gp, axis, dist, delta, pick, state);
       break;
    }
    

@@ -24,14 +24,16 @@ public:
    PointWidget( const PointWidget& );
    virtual ~PointWidget();
 
-   virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int, const BState&);
+   virtual void redraw();
+   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
 
    void SetPosition( const Point& );
    Point GetPosition() const;
+
+   virtual void widget_tcl( TCLArgs& );
 
    // Variable indexs
    enum { PointVar };

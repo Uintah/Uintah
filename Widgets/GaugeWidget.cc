@@ -118,7 +118,7 @@ GaugeWidget::~GaugeWidget()
 
 
 void
-GaugeWidget::widget_execute()
+GaugeWidget::redraw()
 {
    Point L(variables[PointLVar]->point()), R(variables[PointRVar]->point()),
       S(L+GetAxis()*variables[SDistVar]->real());
@@ -151,8 +151,8 @@ GaugeWidget::widget_execute()
 
 
 void
-GaugeWidget::geom_moved( int axis, double dist, const Vector& delta,
-			 int pick, const BState& )
+GaugeWidget::geom_moved( GeomPick*, int axis, double dist,
+			 const Vector& delta, int pick, const BState& )
 {
    ((DistanceConstraint*)constraints[ConstDist])->SetDefault(GetAxis());
 

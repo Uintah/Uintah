@@ -61,7 +61,7 @@ ArrowWidget::~ArrowWidget()
 
 
 void
-ArrowWidget::widget_execute()
+ArrowWidget::redraw()
 {
    if (mode_switches[0]->get_state()) {
       Point center(variables[PointVar]->point());
@@ -85,8 +85,8 @@ ArrowWidget::widget_execute()
 
 
 void
-ArrowWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 int pick, const BState& )
+ArrowWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+			 const Vector& delta, int pick, const BState& )
 {
     switch(pick){
     case Pick:
@@ -162,4 +162,38 @@ ArrowWidget::GetMaterialName( const Index mindex ) const
    }
 }
 
+
+
+
+void
+ArrowWidget::widget_tcl( TCLArgs& args )
+{
+   if (args[1] == "translate"){
+      if (args.count() != 4) {
+	 args.error("arrow widget needs axis translation");
+	 return;
+      }
+      Real trans;
+      if (!args[3].get_double(trans)) {
+	 args.error("arrow widget can't parse translation `"+args[3]+"'");
+	 return;
+      }
+      Point p(GetPosition());
+      switch (args[2](0)) {
+      case 'x':
+	 p.x(trans);
+	 break;
+      case 'y':
+	 p.y(trans);
+	 break;
+      case 'z':
+	 p.z(trans);
+	 break;
+      default:
+	 args.error("arrow widget unknown axis `"+args[2]+"'");
+	 break;
+      }
+      SetPosition(p);
+   }
+}
 

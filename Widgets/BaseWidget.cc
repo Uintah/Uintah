@@ -13,6 +13,12 @@
 
 
 #include <Widgets/BaseWidget.h>
+#include <Constraints/BaseConstraint.h>
+#include <Constraints/ConstraintSolver.h>
+#include <Dataflow/Module.h>
+#include <Modules/Salmon/Roe.h>
+#include <Datatypes/GeometryPort.h>
+
 
 static const Index NumDefaultMaterials = 6;
 
@@ -258,8 +264,9 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 
 
 void
-BaseWidget::widget_tcl(TCLArgs&)
+BaseWidget::widget_tcl( TCLArgs& args )
 {
+   args.error("widget unknown tcl command `"+args[1]+"'");
 }
 
 
@@ -268,6 +275,7 @@ BaseWidget::SetScale( const double scale )
 {
    widget_scale = scale;
    solve->SetEpsilon(epsilon*widget_scale);
+   TCL::execute(id+" scale_changed "+to_string(widget_scale));
    execute();
 }
 
@@ -291,6 +299,13 @@ GeomSwitch*
 BaseWidget::GetWidget()
 {
    return widget;
+}
+
+
+void
+BaseWidget::Connect(GeometryOPort* oport)
+{
+   oports.add(oport);
 }
 
 
@@ -341,6 +356,7 @@ BaseWidget::SetMaterial( const Index mindex, const MaterialHandle& matl )
 {
    ASSERT(mindex<NumMaterials);
    materials[mindex]->setMaterial(matl);
+   flushViews();
 }
 
 
@@ -376,6 +392,7 @@ BaseWidget::SetDefaultMaterial( const Index mindex, const MaterialHandle& matl )
       *DefaultHighlightMaterial.get_rep() = *matl.get_rep();
       break;
    }
+   flushViews();
 }
 
 
@@ -422,31 +439,71 @@ BaseWidget::GetDefaultMaterialName( const Index mindex ) const
 }
 
 
-void
-BaseWidget::execute()
+Point
+BaseWidget::GetPointVar( const Index vindex ) const
 {
-   lock->write_lock();
-   widget_execute();
-   lock->write_unlock();
+   ASSERT(vindex<NumVariables);
+
+   return variables[vindex]->point();
+}
+
+
+Real
+BaseWidget::GetRealVar( const Index vindex ) const
+{
+   ASSERT(vindex<NumVariables);
+
+   return variables[vindex]->real();
 }
 
 
 void
-BaseWidget::geom_pick( int /* cbdata */, const BState& state )
+BaseWidget::flushViews() const
+{
+   for(int i=0;i<oports.size();i++)
+      oports[i]->flushViews();
+}
+
+
+void
+BaseWidget::execute()
+{
+   if (solve->VariablesChanged()) {
+      module->widget_moved();
+      solve->ResetChanged();
+   }
+
+   lock->write_lock();
+   redraw();
+   lock->write_unlock();
+
+   flushViews();
+}
+
+
+void
+BaseWidget::geom_pick( GeomPick* pick, Roe* roe, int /* cbdata */, const BState& state )
 {
    cerr << "btn=" << state.btn << endl;
    cerr << "alt=" << state.alt << endl;
    cerr << "ctl=" << state.control << endl;
    if (state.btn == 3 && !state.alt && !state.control) {
-      TCL::execute(id+" ui");
+      ui();
+      pick->ignore_until_release();
+   } else if (state.btn == 1 && !state.alt && state.control) {
+      BBox bbox;
+      widget->get_bounds(bbox);
+      roe->autoview(bbox);
+      pick->ignore_until_release();
    } else if (state.btn == 2 && !state.alt && !state.control) {
       NextMode();
+      pick->ignore_until_release();
    }
 }
 
 
 void
-BaseWidget::geom_release( int /* cbdata */, const BState& )
+BaseWidget::geom_release( GeomPick*, int /* cbdata */, const BState& )
 {
 }
 
@@ -537,3 +594,13 @@ BaseWidget::print( ostream& os ) const
    }
    os << endl;
 }
+
+
+ostream&
+operator<<( ostream& os, BaseWidget& w )
+{
+   w.print(os);
+   return os;
+}
+
+

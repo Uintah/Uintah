@@ -219,7 +219,7 @@ BoxWidget::~BoxWidget()
 
 
 void
-BoxWidget::widget_execute()
+BoxWidget::redraw()
 {
    Real sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
    Vector Right(GetRightAxis()*variables[DistRVar]->real());
@@ -308,8 +308,8 @@ BoxWidget::widget_execute()
 }
 
 void
-BoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
-		       int pick, const BState& )
+BoxWidget::geom_moved( GeomPick*, int /* axis*/, double /*dist*/,
+		       const Vector& delta, int pick, const BState& )
 {
    switch(pick){
    case PickSphU:

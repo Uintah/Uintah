@@ -139,7 +139,7 @@ FrameWidget::~FrameWidget()
 
 
 void
-FrameWidget::widget_execute()
+FrameWidget::redraw()
 {
    Real sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
    Vector Right(GetRightAxis()*variables[DistRVar]->real());
@@ -204,8 +204,8 @@ FrameWidget::widget_execute()
 }
 
 void
-FrameWidget::geom_moved( int axis, double dist, const Vector& delta,
-			 int pick, const BState& )
+FrameWidget::geom_moved( GeomPick*, int axis, double dist,
+			 const Vector& delta, int pick, const BState& )
 {
    Vector delt(delta);
    Real ResizeMin(1.5*widget_scale);

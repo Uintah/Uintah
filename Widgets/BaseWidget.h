@@ -15,9 +15,7 @@
 #ifndef SCI_project_Base_Widget_h
 #define SCI_project_Base_Widget_h 1
 
-#include <Constraints/manifest.h>
-#include <Constraints/BaseConstraint.h>
-#include <Constraints/ConstraintSolver.h>
+#include <Constraints/BaseVariable.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
@@ -28,8 +26,14 @@
 #include <TCL/TCL.h>
 #include <TCL/TCLvar.h>
 
+
 class CrowdMonitor;
 class Module;
+class GeometryOPort;
+class Roe;
+class ConstraintSolver;
+class BaseVariable;
+class BaseConstraint;
 
 class BaseWidget : public TCL {
 public:
@@ -52,6 +56,7 @@ public:
    void SetEpsilon( const Real Epsilon );
 
    GeomSwitch* GetWidget();
+   void Connect(GeometryOPort*);
 
    virtual void MoveDelta( const Vector& delta ) = 0;
    virtual void Move( const Point& p );  // Not pure virtual
@@ -77,11 +82,9 @@ public:
    inline Point GetPointVar( const Index vindex ) const;
    inline Real GetRealVar( const Index vindex ) const;
    
-   void execute();
-
-   virtual void geom_pick(int, const BState& bs);
-   virtual void geom_release(int, const BState& bs);
-   virtual void geom_moved(int, double, const Vector&, int, const BState& bs)=0;
+   virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs);
+   virtual void geom_release(GeomPick*, int, const BState& bs);
+   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState& bs)=0;
 
    BaseWidget& operator=( const BaseWidget& );
    int operator==( const BaseWidget& );
@@ -102,7 +105,8 @@ protected:
 
    ConstraintSolver* solve;
    
-   virtual void widget_execute()=0;
+   void execute();
+   virtual void redraw()=0;
    Index NumVariables;
    Index NumConstraints;
    Index NumGeometries;
@@ -136,6 +140,9 @@ protected:
    Real widget_scale;
    Real epsilon;
 
+   Array1<GeometryOPort*> oports;
+   void flushViews() const;
+   
    // Individual widgets use this for tcl if necessary.
    // tcl command in args[1], params in args[2], args[3], ...
    virtual void widget_tcl( TCLArgs& );
@@ -144,7 +151,6 @@ protected:
    void SetMode( const Index mode, const long swtchs );
    void FinishWidget();
 
-protected:
    // Used to pass a material to .tcl file.
    TCLMaterial tclmat;
 
@@ -157,33 +163,7 @@ protected:
    static MaterialHandle DefaultHighlightMaterial;
 };
 
-inline ostream& operator<<( ostream& os, BaseWidget& w );
-
-
-inline ostream&
-operator<<( ostream& os, BaseWidget& w )
-{
-   w.print(os);
-   return os;
-}
-
-
-inline Point
-BaseWidget::GetPointVar( const Index vindex ) const
-{
-   ASSERT(vindex<NumVariables);
-
-   return variables[vindex]->point();
-}
-
-
-inline Real
-BaseWidget::GetRealVar( const Index vindex ) const
-{
-   ASSERT(vindex<NumVariables);
-
-   return variables[vindex]->real();
-}
+ostream& operator<<( ostream& os, BaseWidget& w );
 
 
 #endif

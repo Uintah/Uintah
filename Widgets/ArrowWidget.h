@@ -24,8 +24,8 @@ public:
    ArrowWidget( const ArrowWidget& );
    virtual ~ArrowWidget();
 
-   virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int, const BState&);
+   virtual void redraw();
+   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;
@@ -35,6 +35,8 @@ public:
    
    void SetDirection( const Vector& v );
    const Vector& GetDirection() const;
+
+   virtual void widget_tcl( TCLArgs& );
 
    // Variable indexs
    enum { PointVar };

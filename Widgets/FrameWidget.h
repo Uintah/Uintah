@@ -19,13 +19,14 @@
 
 
 class FrameWidget : public BaseWidget {
+   friend class LightWidget;
 public:
    FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale );
    FrameWidget( const FrameWidget& );
    virtual ~FrameWidget();
 
-   virtual void widget_execute();
-   virtual void geom_moved(int, double, const Vector&, int, const BState&);
+   virtual void redraw();
+   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
    virtual void MoveDelta( const Vector& delta );
    virtual Point ReferencePoint() const;

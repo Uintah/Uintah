@@ -194,7 +194,7 @@ RingWidget::~RingWidget()
 
 
 void
-RingWidget::widget_execute()
+RingWidget::redraw()
 {
    Vector Right(GetRightAxis()*variables[DistVar]->real());
    Vector Down(GetDownAxis()*variables[DistVar]->real());
@@ -267,8 +267,8 @@ RingWidget::widget_execute()
 
 
 void
-RingWidget::geom_moved( int axis, double dist, const Vector& delta,
-		        int pick, const BState& )
+RingWidget::geom_moved( GeomPick*, int axis, double dist,
+			const Vector& delta, int pick, const BState& )
 {
    Point p;
    Real ResizeMin(1.5*widget_scale);

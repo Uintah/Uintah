@@ -202,7 +202,7 @@ ViewWidget::~ViewWidget()
 
 
 void
-ViewWidget::widget_execute()
+ViewWidget::redraw()
 {
    Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
 
@@ -268,8 +268,8 @@ ViewWidget::widget_execute()
 }
 
 void
-ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-		        int pick, const BState& )
+ViewWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+			const Vector& delta, int pick, const BState& )
 {
    switch(pick){
    case PickEye:

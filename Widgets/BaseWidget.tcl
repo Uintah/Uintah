@@ -50,7 +50,7 @@ itcl_class BaseWidget {
 	button $opts.close -text "Close" -command "destroy .ui$this"
 	button $opts.nextmode -text "NextMode" -command "$this-c nextmode"
 	button $opts.help -text "Help" -command "$this help"
-	pack $opts.close $opts.nextmode $opts.help -in $opts -side left -padx 2 -pady 2 -anchor e
+	pack $opts.close $opts.nextmode $opts.help -side left -padx 2 -pady 2 -anchor e
 	
 	frame $wid.scale
 	label $wid.scale.l -text "Scale"
@@ -59,7 +59,7 @@ itcl_class BaseWidget {
 	button $wid.scale.decr -text "-" -command "$this-c scale [expr 1.0/1.05]"
 	button $wid.scale.decr2 -text "--" -command "$this-c scale [expr 1.0/1.25]"
 	pack $wid.scale.l $wid.scale.incr $wid.scale.incr2 $wid.scale.decr $wid.scale.decr2 \
-		-in $wid.scale -side left -anchor w
+		-side left -anchor w
 
 	frame $wid.mats -relief ridge -borderwidth 4
 
@@ -70,9 +70,9 @@ itcl_class BaseWidget {
 	global defaultbox
 	set defaultbox $mat1.box
 	scrollbar $mat1.boxs -relief sunken -command "$defaultbox yview"
-	pack $mat1.label -in $mat1 -side top -padx 2 -pady 2 -fill y
-	pack $defaultbox -in $mat1 -side left -padx 2 -pady 2 -fill both -expand yes
-	pack $mat1.boxs -in $mat1 -side right -padx 2 -pady 2 -anchor e -fill y
+	pack $mat1.label -side top -padx 2 -pady 2 -fill y
+	pack $defaultbox -side left -padx 2 -pady 2 -fill both -expand yes
+	pack $mat1.boxs -side right -padx 2 -pady 2 -anchor e -fill y
 
 	frame $wid.mats.mat2 -relief groove -borderwidth 4
 	set mat2 $wid.mats.mat2
@@ -81,9 +81,9 @@ itcl_class BaseWidget {
 	global materialbox
 	set materialbox $mat2.box
 	scrollbar $mat2.boxs -relief sunken -command "$materialbox yview"
-	pack $mat2.label -in $mat2 -side top -padx 2 -pady 2 -fill y
-	pack $materialbox -in $mat2 -side left -padx 2 -pady 2 -fill both -expand yes
-	pack $mat2.boxs -in $mat2 -side right -padx 2 -pady 2 -anchor e -fill y
+	pack $mat2.label -side top -padx 2 -pady 2 -fill y
+	pack $materialbox -side left -padx 2 -pady 2 -fill both -expand yes
+	pack $mat2.boxs -side right -padx 2 -pady 2 -anchor e -fill y
 
 	bind $defaultbox <Button-1> "$this bwdefselect %y $wid $defaultbox $materialbox"
 	bind $materialbox <Button-1> "$this bwselect %y $wid $materialbox $defaultbox"
@@ -122,13 +122,16 @@ itcl_class BaseWidget {
 	global sci_root
 	helpPage $sci_root/Widgets/help/$name.html
     }
+
+    # This is meant to be a virtual link for inherited widget tcls...
+    method scale_changed {newscale} {
+    }
     
     method bwdefselect {y wid box obox} {
 	set ind [$box nearest $y]
 	$box selection set $ind
 	$obox selection clear 0 end
 	set mat [$box get $ind]
-	puts "Edit default material:  $mat"
 
 	global $matwin.mattype
 	set $matwin.mattype setdefmat
@@ -151,7 +154,6 @@ itcl_class BaseWidget {
 	$box selection set $ind
 	$obox selection clear 0 end
 	set mat [$box get $ind]
-	puts "Edit material:  $mat"
 	
 	global $matwin.mattype
 	set $matwin.mattype setmat
@@ -171,7 +173,6 @@ itcl_class BaseWidget {
 
     method bwcommit {box obox} {
 	global $matwin.mattype $matwin.mati
-	puts "this-c [set $matwin.mattype] [set $matwin.mati]"
 	$this-c [set $matwin.mattype] [set $matwin.mati]
 
 	bwcancel $box $obox

@@ -310,7 +310,7 @@ PathWidget::~PathWidget()
 
 
 void
-PathWidget::widget_execute()
+PathWidget::redraw()
 {
    dist->Set(widget_scale*5.0);  // This triggers a LOT of constraints!
 
@@ -335,8 +335,8 @@ PathWidget::GenerateSpline()
 
 
 void
-PathWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			int pick, const BState& state )
+PathWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+			const Vector& delta, int pick, const BState& state )
 {
    if (pick == -1) // Spline pick.
       MoveDelta(delta);
