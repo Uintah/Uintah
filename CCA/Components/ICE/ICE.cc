@@ -2437,11 +2437,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
       //__________________________________
       //  User specified source/sink   
-      static int n_iter;
-      if (patch->getID() == 0 && indx == 0){
-        n_iter ++;
-      }  
-      
+      int n_iter = dataArchiver->getCurrentTimestep();
+
       if(d_add_heat && n_iter <= d_add_heat_iters){
         for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
           if(m == d_add_heat_matls[i] ){
@@ -3603,7 +3600,7 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
             of Bucky's logic
  ---------------------------------------------------------------------  */
 IntVector ICE::upwindCell_X(const IntVector& c, 
-                            const double & var,              
+                            const double& var,              
                             double is_logical_R_face )     
 {
   double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
