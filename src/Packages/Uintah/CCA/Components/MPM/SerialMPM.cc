@@ -2546,8 +2546,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         rho_frac_min = .1;
       }
       const Level* lvl = patch->getLevel();
-      IntVector pbcs = lvl->getPeriodicBoundaries();
-      int pbcsl = pbcs.x() + pbcs.y() + pbcs.z();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
