@@ -33,6 +33,17 @@ public:
     inline bool isbad() {
 	return bad;
     }
+
+    Point pt(int i)
+    {
+        if (i==0)
+            return p1;
+        else if (i==1)
+            return p2;
+        else
+            return p3;
+    }
+ 
     TexturedTri(Material* matl, const Point&, const Point&, const Point&);
     TexturedTri(Material* matl, const Point& p1, const Point& p2, 
 		const Point& p3, const Vector& vn1, const Vector& vn2, 
