@@ -47,6 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/GuiInterface/GuiVar.h>

@@ -39,6 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
