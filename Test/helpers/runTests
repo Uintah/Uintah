@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# should have PATH, OS, PARALLISM, TMPDIR, BUILD_DIR, 
+# BUILDROOT, TEST_DATA, OPT_CONFIGURE, and DBG_CONFIGURE all set
+PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA
+
+echo "" >> "$BUILDROOT"/log
+
+failed=0
+build_and_run "dbg" DBG_CONFIGURE > "$BUILDROOT"/dbg/log
+if [ $? != 0 ]
+  failed=1
+  echo "Some dbg tests failed." >> "$BUILDROOT"/log
+
+
+build_and_run "opt" OPT_CONFIGURE > "$BUILDROOT"/opt/log
+if [ $? != 0 ]
+  failed=1
+  echo "Some opt tests failed." >> "$BUILDROOT"/log
+
+if failed=0:
+  echo "All tests passed!" >> "$BUILDROOT"/log
+echo "" >> "$BUILDROOT"/log
+
+
+cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
+cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
+
+# build_and_run should write summare-log files
+echo "Summary for dbg mode tests:" >> "$BUILDROOT"/log
+cat "$BUILDROOT"/dbg/summary-log >> "$BUILDROOT"/log
+echo "Summary for opt mode tests:" >> "$BUILDROOT"/log
+cat "$BUILDROOT"/opt/summary-log >> "$BUILDROOT"/log
+
+/bin/chgrp -Rh csafe "$BUILDROOT"
+/bin/chmod g+s csafe "$BUILDROOT"
+
+if [ "$SEND_MAIL_TO" != "" ]; then
+    if [ $failed == "0" ]; then
+	subject="Success: `hostname` regression tests"
+    else
+	subject="Failure: `hostname` regression tests"
+    fi
+
+    cat > "$BUILDROOT"/mail.msg <<EOF
+Subject: $subject
+To: $SEND_MAIL_TO
+EOF
+    cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
+
+     /usr/lib/sendmail"$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+    rm -f "$BUILDROOT"/mail.msg
+fi
+
+cat "$BUILDROOT"/log
+
+cleanup
+
+exit $failed
