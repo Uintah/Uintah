@@ -369,11 +369,9 @@ sci_system(const char *line)
     delete buf;
     if (nptl)
     {
-      fprintf(stderr, "SYSTEM\n");
       return system(line);
     }
   }
-  fprintf(stderr, "SCI_SYSTEM\n");
   return sci_system_linuxthreads(line);
 }
 
