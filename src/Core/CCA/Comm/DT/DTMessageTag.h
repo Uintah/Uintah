@@ -86,8 +86,9 @@ namespace SCIRun {
     // and return a copy of itself. This is
     // method is thread-safe.
     DTMessageTag nextTag();
-  private:
     unsigned int hi, lo;
+
+  private:
     static Mutex counter_mutex;
   };
 }//namespace SCIRun

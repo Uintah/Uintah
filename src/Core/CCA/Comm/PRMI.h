@@ -107,6 +107,12 @@ namespace SCIRun {
       bool operator<(const lockid& o)const{
 	return invID<o.invID || (invID==o.invID && seq<o.seq);
       }
+      std::string str(){
+	std::ostringstream s;
+	s<<invID.str()<<seq<<'|';
+	return s.str();
+      }
+
       ProxyID invID;
       int seq;
     };
