@@ -308,18 +308,17 @@ EditField::create_edited_field(field_type_in *f, field_type_out * )
     Point center, right, down, in;
     box_->GetPosition(center,right,down,in);
     // rotate * scale * translate
-    Transform t;
-    t.load_identity();
-    t.pre_translate(Vector(center.x(),center.y(),center.z()));
-    t.pre_scale(Vector((right-center).length()/(old.max().x()-oldc.x()),
-		       (down-center).length()/(old.max().y()-oldc.y()),
-		       (in-center).length()/(old.max().z()-oldc.z())));
-    Transform r;
+    Transform t,r;
     Point unused;
+    t.load_identity();
     r.load_frame(unused,(right-center).normal(),
 		 (down-center).normal(),
 		 (in-center).normal());
     t.pre_trans(r);
+    t.pre_scale(Vector((right-center).length()/(old.max().x()-oldc.x()),
+		       (down-center).length()/(old.max().y()-oldc.y()),
+		       (in-center).length()/(old.max().z()-oldc.z())));
+    t.pre_translate(Vector(center.x(),center.y(),center.z()));
     omesh->transform(t);
   }
 
@@ -452,7 +451,11 @@ void EditField::execute(){
       !ctypename_.get() &&
       !cdataminmax_.get() &&
       !cdataat_.get() &&
-      !cbbox_.get()) return;
+      !cbbox_.get()) {
+    // no changes, just send the original through (it may be nothing!)
+    oport->send(f);    
+    return;
+  }
 
   // verify that the requested edits are possible (type check)
   if (ctypename_.get() && !check_types(f))
@@ -1178,7 +1181,21 @@ void EditField::execute(){
     
 void EditField::tcl_command(TCLArgs& args, void* userdata)
 {
-  Module::tcl_command(args, userdata);
+  if(args.count() < 2){
+    args.error("EditField needs a minor command");
+    return;
+  }
+ 
+  if (args[1] == "execute") {
+    want_to_execute();
+  } else if (args[1] == "update_widget") {
+    Point center, right, down, in;
+    Point min(minx_.get(),miny_.get(),minz_.get());
+    Point max(maxx_.get(),maxy_.get(),maxz_.get());
+    
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 void EditField::widget_moved(int i)
