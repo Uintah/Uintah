@@ -250,6 +250,10 @@ int main(int argc, char** argv)
 	   cerr << "Stack trace: " << e.stackTrace() << '\n';
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
+    } catch (std::exception e){
+       cerr << "Caught std exception: " << e.what() << '\n';
+	Parallel::finalizeManager(Parallel::Abort);
+	abort();       
     } catch(...){
 	cerr << "Caught unknown exception\n";
 	Parallel::finalizeManager(Parallel::Abort);
@@ -266,6 +270,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.20  2000/09/12 15:10:34  sparker
+// Catch stray std exceptions
+//
 // Revision 1.19  2000/08/09 03:17:55  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
