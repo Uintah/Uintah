@@ -65,6 +65,8 @@ int MDSPlusReader::connect( std::string server )
     retVal = -1;
 
   mdsPlusLock_.unlock();
+
+  return retVal;
 #else
   return -1;
 #endif
