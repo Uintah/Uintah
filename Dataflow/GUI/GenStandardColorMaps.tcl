@@ -43,6 +43,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     } 
     
     method set_defaults {} { 
+	global $this-faux
 	global $this-gamma
 	global $this-mapType
 	global $this-resolution
@@ -52,6 +53,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-positionList
 	global $this-width
 	global $this-height
+        set $this-faux 0
 	set $this-gamma 0
 	set $this-mapType 3
 	set $this-resolution 256
@@ -240,6 +242,15 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	    }
 	    
 	pack $w.f2.types -expand yes -fill both
+
+	frame $w.f4 -relief groove -borderwidth 2
+	pack $w.f4 -padx 2 -pady 2 -expand yes -fill x
+
+	checkbutton $w.f4.faux -text "Opacity Modulation (Faux Shading)" -relief flat \
+            -variable $this-faux -onvalue 1 -offvalue 0 \
+            -anchor w -command "$this-c needexecute"
+        pack $w.f4.faux -side top -fill x -padx 4
+	Tooltip $w.f4.faux "Modulates color components based on the given opacity curve."
 
 	bind $w.f.f1.canvas <Expose> "$this canvasExpose"
 	bind $w.f.f1.canvas <Button-1> "$this selectNode %x %y"

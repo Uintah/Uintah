@@ -79,7 +79,7 @@ namespace SCIRun {
 
 // ---------------------------------------------------------------------- // 
 static bool
-genMap(ColorMapHandle &cmap, const string& s, int res)
+genMap(ColorMapHandle &cmap, const string& s, int res, bool faux)
 {
   int r,g,b;
   double a;
@@ -107,6 +107,46 @@ genMap(ColorMapHandle &cmap, const string& s, int res)
     {
       alphaT.push_back(1.0);
     }
+
+    if (faux)
+    {
+      vector<int> local;
+      if (res > 0) {
+        local.push_back(0);
+      }
+      for (int i=1; i<res-1; i++) {
+        if ((alphas[i] < alphas[i-1] && alphas[i] < alphas[i+1])
+            || (alphas[i] > alphas[i-1] && alphas[i] > alphas[i+1])) {
+          local.push_back(i);
+        }
+      }
+      if (res > 0) {
+        local.push_back(res-1);
+      }
+
+      for (int i=0; i<(int)local.size()-1; i++) {
+        if (alphas[local[i]] < alphas[local[i+1]]) {
+          for (int j=local[i]; j<local[i+1]; j++) {
+            float s = alphas[local[i]] +
+              (1 - alphas[local[i]])
+              *(alphas[j]-alphas[local[i]])/(alphas[local[i+1]]-alphas[local[i]]);
+            rgbs[j].r(s*rgbs[j].r());
+            rgbs[j].g(s*rgbs[j].g());
+            rgbs[j].b(s*rgbs[j].b());
+          }
+        } else if (alphas[local[i]] > alphas[local[i+1]]) {
+          for (int j=local[i]; j<=local[i+1]; j++) {
+            float s = alphas[local[i+1]] +
+              (1 - alphas[local[i+1]])
+              *(alphas[j]-alphas[local[i+1]])/(alphas[local[i]]-alphas[local[i+1]]);
+            rgbs[j].r(s*rgbs[j].r());
+            rgbs[j].g(s*rgbs[j].g());
+            rgbs[j].b(s*rgbs[j].b());
+          }
+        }
+      }
+    }
+    
     cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT);
     return true;
   }
@@ -130,7 +170,8 @@ GenStandardColorMaps::GenStandardColorMaps(GuiContext* ctx)
     minRes(ctx->subVar("minRes")),
     resolution(ctx->subVar("resolution")),
     realres(ctx->subVar("realres")),
-    gamma(ctx->subVar("gamma"))
+    gamma(ctx->subVar("gamma")),
+    faux(ctx->subVar("faux"))
 { 
 } 
 
@@ -149,7 +190,7 @@ void GenStandardColorMaps::execute()
    gui->eval(id+" getColorMapString", tclRes);
 
    ColorMapHandle cmap;
-   if ( genMap(cmap, tclRes, resolution.get()) ) 
+   if ( genMap(cmap, tclRes, resolution.get(), faux.get()) ) 
    {
      ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
      if (!outport) {
