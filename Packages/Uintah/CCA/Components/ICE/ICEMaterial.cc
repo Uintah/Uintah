@@ -14,8 +14,8 @@
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
-#define YOU_CANNOT_DO_THIS 1.0e-100  // d_SMALL_NUM
 
+#define d_SMALL_NUM 1.0e-100
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -32,21 +32,17 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
   // 3.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
-
    d_eos = EquationOfStateFactory::create(ps);
    if(!d_eos)
       throw ParameterNotFound("No EOS");
 
    // Step 2 -- get the general material properties
-
-   ps->require("density",d_density);
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
    ps->require("viscosity",d_viscosity);
    ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
-
-   cout << "Density = " << d_density << endl;
+   
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -78,6 +74,9 @@ ICEMaterial::~ICEMaterial()
 
   delete d_eos;
   delete lb;
+  for (int i = 0; i< (int)d_geom_objs.size(); i++) {
+	delete d_geom_objs[i];
+  }
 }
 
 EquationOfState * ICEMaterial::getEOS() const
@@ -117,7 +116,22 @@ double ICEMaterial::getSpeedOfSound() const
 {
   return d_speed_of_sound;
 }
-
+/* --------------------------------------------------------------------- 
+ Function~  ICEMaterial::initializeCells--
+ Purpose~ Initialize material dependent variables 
+ Notes:  This is a tricky little routine.  ICE needs rho_micro, Temp_CC
+ speedSound defined everywhere for all materials even if the mass is 0.0.
+ 
+ We need to accomidate the following scenarios where the number designates
+ a material and * represents a high temperature
+ ____________________           ____________________
+ | 1  | 1  | 1  | 1  |          | 1  | 1  | 1  | 1  |
+ |____|____|____|____|          |____|____|____|____|
+ | 1  | 1  | 1* | 1  |          | 1  | 1  | 2* | 1  |
+ |____|____|____|____|          |____|____|____|____|
+ | 1  | 1  | 1  | 1  |          | 1  | 1  | 1  | 1  |
+ |____|____|____|____|          |____|____|____|____|=
+_____________________________________________________________________*/
 void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 				  CCVariable<double>& rho_CC,
 				  CCVariable<double>& temp,
@@ -126,9 +140,13 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 				  CCVariable<double>& visc_CC,
 				  CCVariable<double>& vol_frac_CC,
 				  CCVariable<Vector>& vel_CC,
-				  const Patch* patch,
-				  DataWarehouseP& new_dw)
+                              CCVariable<double>& press_CC,
+                              int numMatls,
+				  const Patch* patch,DataWarehouseP& new_dw)
 {
+  CCVariable<int> IveBeenHere;
+  new_dw->allocate(IveBeenHere,lb->IveBeenHereLabel, 0,patch);
+  
   // Zero the arrays so they don't get wacky values
   vel_CC.initialize(Vector(0.,0.,0.));
   rho_micro.initialize(0.);
@@ -139,8 +157,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   visc_CC.initialize(0.);
   cv.initialize(0.);
 
-  for(int i=0; i<(int)d_geom_objs.size(); i++){
-   GeometryPiece* piece = d_geom_objs[i]->getPiece();
+  for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
+   GeometryPiece* piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
    Box b2 = patch->getBox();
    Box b = b1.intersect(b2);
@@ -148,13 +166,14 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    if(b.degenerate())
       cerr << "b.degenerate" << endl;
 
-   IntVector ppc = d_geom_objs[i]->getNumParticlesPerCell();
+   IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/ppc;
    Vector dcorner = dxpp*0.5;
    double totalppc = ppc.x()*ppc.y()*ppc.z();
 
    for(CellIterator iter = patch->getExtraCellIterator(b); !iter.done(); 
        iter++){
+ 
      Point lower = patch->nodePosition(*iter) + dcorner;
      int count = 0;
      for(int ix=0;ix < ppc.x(); ix++){
@@ -167,19 +186,52 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 	 }
        }
      }
-     
-    if( count > 0)
-    {
-       vol_frac_CC[*iter]= count/totalppc;
-    }
-       vel_CC[*iter]     = d_geom_objs[i]->getInitialVelocity();
-       speedSound[*iter] = d_speed_of_sound;
-       visc_CC[*iter]    = d_viscosity;
-       temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
-       cv[*iter]         = d_specificHeat;
-       rho_micro[*iter]  = d_density;
-       rho_CC[*iter]     = d_density*vol_frac_CC[*iter] + YOU_CANNOT_DO_THIS;
-   }
-  }
+   IveBeenHere[*iter]=-9; 
+  //__________________________________
+  // For single materials with more than one object 
+      if(numMatls == 1)  {
+        if ( count > 0  && obj == 0) {
+          vol_frac_CC[*iter]= 1.0;
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          rho_CC[*iter]     = rho_micro[*iter] + d_SMALL_NUM;
+          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          speedSound[*iter] = d_speed_of_sound;
+          visc_CC[*iter]    = d_viscosity;
+          cv[*iter]         = d_specificHeat;
+          IveBeenHere[*iter]= 1;
+        }
+
+        if (count > 0 && obj > 0) {
+          vol_frac_CC[*iter]= 1.0;
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          rho_CC[*iter]     = rho_micro[*iter] + d_SMALL_NUM;
+          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          speedSound[*iter] = d_speed_of_sound;
+          visc_CC[*iter]    = d_viscosity;
+          cv[*iter]         = d_specificHeat;
+          IveBeenHere[*iter]= 2;
+        } 
+      }   
+      if (numMatls > 1 ) {
+        if( count > 0)
+        {
+           vol_frac_CC[*iter]= count/totalppc;
+        }
+        press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+        vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+        rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] + d_SMALL_NUM;
+        temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+        speedSound[*iter] = d_speed_of_sound;
+        visc_CC[*iter]    = d_viscosity;
+        cv[*iter]         = d_specificHeat; 
+        IveBeenHere[*iter]= obj;    
+      }    
+    }  // Loop over domain
+  }  // Loop over geom_objects
 }
 
