@@ -33,9 +33,9 @@
     <MPM>
 	<time_integrator>implicit</time_integrator>
         <dynamic>false</dynamic>
-        <solver>simple</solver>
-        <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
-        <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
+        <solver>petsc</solver>
+        <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
+        <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
     </MPM>
 
     <PhysicalConstants>
