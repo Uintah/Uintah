@@ -103,6 +103,7 @@ component_node* CreateComponentNode(int type)
     n->io->outdevices = NULL;
     n->io->inports = new map<int,inport_node*>;
     n->io->outports = new map<int,outport_node*>;
+    n->io->lastportdynamic = 1;
     n->gui = NULL;
     n->testingplans = NULL;
     break;
