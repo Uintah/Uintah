@@ -239,13 +239,10 @@ void ParticleCreator::applyForceBC(const Vector& dxpp,
     if (bcs_type == "Force") {
       ForceBC* bc = dynamic_cast<ForceBC*>
 			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
-#ifdef FRACTURE
-      const Box bcBox(bc->getLowerRange(), bc->getUpperRange());
-#else      
-      const Box bcBox(bc->getLowerRange()-dxpp, bc->getUpperRange()+dxpp);
-#endif
-      //cout << "BC Box = " << bcBox << endl;
+      const Box bcBox(bc->getLowerRange()-dxpp*0.5, 
+                      bc->getUpperRange()+dxpp*0.5);
           
+      //cout << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
         pExtForce = bc->getForceDensity() * pMass;
         //cout << "External Force on Particle = " << pExtForce 
