@@ -120,14 +120,21 @@ University of Utah. All Rights Reserved.
       <literallayout class="monospaced">
 	http://www.lysator.liu.se/~lenst/about_psgml/	  
       </literallayout></para>
+      <para>It is strongly recommended that content is created with
+      one of these editing modes in emacs.  Note also that these modes
+      are excellent for composing any xml (e.g. xhtml, DocBook, etc)
+      content.</para>
+      <para>This author recommends nxml mode because it is simpler to
+      use than psgml mode, performs on-the-fly content validation, and is
+      actively supported.</para>
     </sect1>
 
     <sect1>
       <title>Nxml Prerequisites</title>
       <sect2>
 	<title>Installation</title>
-	<para>Nxml mode should be installed in a sub-directory of
-	emacs'<filename>site-lisp</filename> directory.  Typically
+	<para>Nxml mode is commonly installed in a sub-directory of
+	emacs'<filename>site-lisp</filename> directory, typically
 	<filename>/usr/share/emacs/sitelisp/nxml</filename>.</para>
 	<para>After installing nxml, file
 	<filename>component.rnc</filename> must be copied to
@@ -150,9 +157,7 @@ University of Utah. All Rights Reserved.
 	  (setq auto-mode-alist
 	  (append
 	  '(("\\.xml" . nxml-mode)
-	  ("\\.rxml" . nxml-mode)
-	  ("\\.html" . nxml-mode)
-	  ("\\.rhtml" . nxml-mode))
+	  ("\\.html" . nxml-mode))
 	  auto-mode-alist))
 	  (make-face 'nxml-delimited-data-face)
 	  (make-face 'nxml-name-face)
@@ -224,17 +229,38 @@ University of Utah. All Rights Reserved.
       follow these steps:</para>
       <orderedlist>
 	<listitem>
-	  <para>Huh!?</para>
+	  <para>Create a new file and insert the following:</para>
+	  <literallayout class="monospaced">
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;!DOCTYPE component SYSTEM "<replaceable>path-to</replaceable>/component.dtd"&gt;
+
+&lt;component name="<replaceable>component-name</replaceable>" category="<replaceable>category-name</replaceable>"&gt;
+  
+lt;/component&gt;
+	  </literallayout>
+	</listitem>
+	<listitem>
+	  <para>Save and close the file (this will force nxml/sgml
+	  mode to load the proper schema when the file is
+	  re-opened).</para>
+	</listitem>
+	<listitem>
+	  <para>Re-open the file and insert remaining content using
+	  features of nxml or psgml mode.</para>
 	</listitem>
       </orderedlist>
     </sect1>
 
     <sect1>
       <title>Validating a Module Description</title>
-      <para>Huh!?</para>
+      <para>A validation service for module specification xml files
+      can be found here:</para>
+      <para><ulink
+      url="http://www.cvrti.utah.edu/~dustman/srvalidate.html">http://www.cvrti.utah.edu/~dustman/srvalidate.html</ulink></para>
     </sect1>
 
   </chapter>
+
   <chapter>
     <title>Example</title>
     <para>Huh!</para>
