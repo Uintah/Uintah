@@ -4,7 +4,6 @@
 #include <Uintah/Grid/Box.h>
 #include <iostream>
 
-using namespace Uintah::MPM;
 using namespace Uintah;
 using namespace std;
 
@@ -15,7 +14,6 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 
   ps->require("file",file);
   
- 
 }
 
 TriGeometryPiece::~TriGeometryPiece()
@@ -36,6 +34,9 @@ Box TriGeometryPiece::getBoundingBox() const
 
 //
 // $Log$
+// Revision 1.4  2000/11/21 23:53:34  guilkey
+// Moved Geometry Stuff from MPM namespace to Uintah namespace.
+//
 // Revision 1.3  2000/09/26 00:44:54  witzel
 // needed "#include <iostream>" and "using namespace std;"
 //

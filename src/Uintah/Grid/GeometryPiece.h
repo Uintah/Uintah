@@ -12,7 +12,6 @@ namespace SCICore {
 
 namespace Uintah {
    class Box;
-   namespace MPM {
       using namespace SCICore::Geometry;
 
 /**************************************
@@ -65,13 +64,15 @@ WARNING
 	 virtual bool inside(const Point &p) const = 0;	 
       };
       
-   } // end namespace MPM
 } // end namespace Uintah
    
 #endif // __GEOMETRY_PIECE_H__
 
 
 // $Log$
+// Revision 1.3  2000/11/21 23:53:33  guilkey
+// Moved Geometry Stuff from MPM namespace to Uintah namespace.
+//
 // Revision 1.2  2000/11/06 21:29:04  guilkey
 // Got rid of a bunch of crap.
 //
