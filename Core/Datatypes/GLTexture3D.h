@@ -75,7 +75,7 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  GLTexture3D(FieldHandle texfld);
+  GLTexture3D(FieldHandle texfld, double &min, double &max, int use_minmax);
   //////////
   // Constructor
   GLTexture3D();
@@ -113,6 +113,7 @@ public:
   // Get field size
   FieldHandle get_field(){ return texfld_; }
 
+  LatVolMeshHandle get_mesh() { return mesh_; }
   // GROUP: io
   /////////
   // Persistant representation

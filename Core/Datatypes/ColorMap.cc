@@ -60,10 +60,33 @@ ColorMap::ColorMap(int nlevels, double min, double max, int /*shortrange */)
 }
 
 ColorMap::ColorMap(const ColorMap& copy)
-: min(copy.min), max(copy.max), colors(copy.colors), rawRed(0),
-  rawGreen(0), rawBlue(0),rawAlpha(0),pre_mult_alpha(0),raw1d(0),
-  non_diffuse_constant(0), scaled(false)
+: type(copy.type), min(copy.min), max(copy.max), colors(copy.colors),
+  rcolors(copy.rcolors), alphas(copy.alphas), rawRed(0), rawGreen(0),
+  rawBlue(0), rawAlpha(0), rawRampAlpha(copy.rawRampAlpha), 
+  rawRampAlphaT(copy.rawRampAlphaT), rawRampColor(copy.rawRampColor),
+  rawRampColorT(copy.rawRampColorT), flag(copy.flag),
+  pre_mult_alpha(copy.pre_mult_alpha), raw1d(copy.raw1d),
+  non_diffuse_constant(copy.non_diffuse_constant), scaled(copy.scaled)
 {
+  Build1d();
+}
+
+ColorMap::ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
+	     const Array1<float>& ialpha, const Array1<float>& alphaT,
+		   const int size)
+: type(1),min(-1), max(1), colors(size), rcolors(size), rawRed(0),rawGreen(0),
+  rawBlue(0),rawAlpha(0),pre_mult_alpha(0),raw1d(0),non_diffuse_constant(1),
+  scaled(false)
+{
+  SetRaw(rgb,rgbT,ialpha,alphaT,size);
+  
+  Color ambient(0,0,0),specular(0.7,0.7,0.7);
+  cerr << "Constructor for ColorMap: " << size << endl;
+  for(int i=0;i<size;i++) {
+    colors[i] = scinew Material(ambient,rcolors[i],specular, 10);
+  }
+
+  
 }
 
 inline Color FindColor(const Array1<Color>& c,const Array1<float>& s,float t)
@@ -106,25 +129,6 @@ inline float FindAlpha(const Array1<float>& c,const Array1<float>& s,float t)
 
   return c[j-1]*slop + c[j]*(1.0-slop);
 }
-
-ColorMap::ColorMap(const Array1<Color>& rgb, Array1<float>& rgbT,
-	     const Array1<float>& ialpha, const Array1<float>& alphaT,
-		   const int size)
-: type(1),min(-1), max(1), colors(size), rcolors(size), rawRed(0),rawGreen(0),
-  rawBlue(0),rawAlpha(0),pre_mult_alpha(0),raw1d(0),non_diffuse_constant(1),
-  scaled(false)
-{
-  SetRaw(rgb,rgbT,ialpha,alphaT,size);
-  
-  Color ambient(0,0,0),specular(0.7,0.7,0.7);
-  cerr << "Constructor for ColorMap: " << size << endl;
-  for(int i=0;i<size;i++) {
-    colors[i] = scinew Material(ambient,rcolors[i],specular, 10);
-  }
-
-  
-}
-
 
 void ColorMap::Build1d(const int size)
 {

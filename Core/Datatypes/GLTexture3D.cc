@@ -67,12 +67,13 @@ GLTexture3D::GLTexture3D() :
 {
 }
 
-GLTexture3D::GLTexture3D(FieldHandle texfld) :
-  texfld_(texfld),
-  mesh_(0),
-  X_(0), Y_(0), Z_(0),
-  xmax_(0), ymax_(0), zmax_(0),
-  isCC_(false)
+GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max, 
+			 int use_minmax)
+  :  texfld_(texfld),
+     mesh_(0),
+     X_(0), Y_(0), Z_(0),
+     xmax_(0), ymax_(0), zmax_(0),
+     isCC_(false)
 {
   if (texfld_->get_type_name(0) != "LatticeVol") {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatticeVol\n";
@@ -134,8 +135,17 @@ GLTexture3D::GLTexture3D(FieldHandle texfld) :
   Z_ = mesh_->get_nz();
   minP_ = mesh_->get_min();
   maxP_ = mesh_->get_max();
-  min_ = minmax.first;
-  max_ = minmax.second;
+
+  cerr << "use_minmax = "<<use_minmax<<"  min="<<min<<" max="<<max<<"\n";
+  cerr << "    fieldminmax: min="<<minmax.first<<" max="<<minmax.second<<"\n";
+  if (use_minmax) {
+    min_ = min;
+    max_ = max;
+  } else {
+    min = min_ = minmax.first;
+    max = max_ = minmax.second;
+  }
+  cerr << "    texture: min="<<min<<"  max="<<max<<"\n";
   set_bounds();
   compute_tree_depth(); 
   build_texture();
