@@ -39,6 +39,9 @@
       </port>
     </inputs>
   </io>
+  <gui>
+    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>
