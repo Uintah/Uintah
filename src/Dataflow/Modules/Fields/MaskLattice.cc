@@ -122,8 +122,9 @@ MaskLattice::execute()
       MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunc, hoff);
     if (!DynamicCompilation::compile(ci, algo, false, this))
     {
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       error("Your function would not compile.");
+      gui->eval(id + " compile_error "+ci->filename_);
+      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       return;
     }
     if (algo->identify() == maskfunc)
