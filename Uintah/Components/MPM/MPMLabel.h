@@ -15,8 +15,8 @@ namespace Uintah {
       MPMLabel();
       ~MPMLabel();
 
-      void registerPermanentParticleState(const VarLabel* l);
-      void registerPermanentParticleState_preReloc(const VarLabel* l);
+      void registerPermanentParticleState(int i,const VarLabel* l);
+      void registerPermanentParticleState_preReloc(int i, const VarLabel* l);
 
       //      static const MPMLabel* getLabels();
 
@@ -88,14 +88,19 @@ namespace Uintah {
 
       const VarLabel* ppNAPIDLabel;
 
-      vector<const VarLabel* > d_particleState;
-      vector<const VarLabel* > d_particleState_preReloc;
+      vector<vector<const VarLabel* > > d_particleState;
+      vector<vector<const VarLabel* > > d_particleState_preReloc;
     };
   } // end namepsace MPM
 } // end namespace Uintah
 
 
 // $Log$
+// Revision 1.18  2000/07/27 20:29:50  jas
+// In SerialMPM.cc, problemSetup, there are now labels for each material.
+// So it is now possible for different materials to have different VarLabels
+// depending on the simulation requirements.
+//
 // Revision 1.17  2000/07/17 23:39:35  tan
 // Fixed problems in MPM heat conduction.
 //

@@ -221,17 +221,24 @@ const MPMLabel* MPMLabel::getLabels()
   return instance;
 }
 #endif
-void MPMLabel::registerPermanentParticleState(const VarLabel* label)
+void MPMLabel::registerPermanentParticleState(int i,
+					      const VarLabel* label)
 {
-  d_particleState.push_back(label);
+  d_particleState[i].push_back(label);
 }
 
-void MPMLabel::registerPermanentParticleState_preReloc(const VarLabel* label)
+void MPMLabel::registerPermanentParticleState_preReloc(int i,
+						       const VarLabel* label)
 {
-  d_particleState_preReloc.push_back(label);
+  d_particleState_preReloc[i].push_back(label);
 }
 
 // $Log$
+// Revision 1.20  2000/07/27 20:29:50  jas
+// In SerialMPM.cc, problemSetup, there are now labels for each material.
+// So it is now possible for different materials to have different VarLabels
+// depending on the simulation requirements.
+//
 // Revision 1.19  2000/07/17 23:41:33  tan
 // Fixed problems in MPM heat conduction.
 //
