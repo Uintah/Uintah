@@ -75,7 +75,7 @@ PIDL::rank(0);
 int
 PIDL::size(1);
 
-Object::pointer
+Object::pointer*
 PIDL::optr(NULL);
 
 bool
@@ -122,8 +122,8 @@ PIDL::finalize()
 {
   if(sampleProxy) {
 #ifdef HAVE_MPI
-    if(PIDL::size > 1) { ::std::cerr << "YOYO\n"; optr->getException(); }
-    optr->_deleteReference();
+    if(PIDL::size > 1) { ::std::cerr << "YOYO\n"; (*optr)->getException(); }
+    delete optr;
 #endif
   }
   switch (comm_type) {

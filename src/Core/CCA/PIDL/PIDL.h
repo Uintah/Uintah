@@ -131,8 +131,7 @@ DESCRIPTION
     // Used to save one proxy in order to call get exception
     // upon PIDL::finalize()
     static bool sampleProxy;
-    //static ProxySample<Object::pointer>* ps;
-    static Object::pointer optr;
+    static Object::pointer* optr;
 
   protected:
   private:
