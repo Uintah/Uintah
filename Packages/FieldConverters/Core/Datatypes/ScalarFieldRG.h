@@ -55,6 +55,7 @@ public:
   virtual void fill_gradmags();
 
 private:
+
   static Persistent *maker();
 };
 
@@ -215,7 +216,6 @@ void ScalarFieldRGT<T>::compute_minmax()
 template <class T>
 Vector ScalarFieldRGT<T>::gradient(const Point& p)
 {
-
   Vector pn=p-bmin;
   double diagx=diagonal.x();
   double diagy=diagonal.y();
@@ -235,17 +235,17 @@ Vector ScalarFieldRGT<T>::gradient(const Point& p)
   double fx=x-ix;
   double fy=y-iy;
   double fz=z-iz;
-  double z00=Interpolate(grid(ix, iy, iz), grid(ix, iy, iz1), fz);
-  double z01=Interpolate(grid(ix, iy1, iz), grid(ix, iy1, iz1), fz);
-  double z10=Interpolate(grid(ix1, iy, iz), grid(ix1, iy, iz1), fz);
-  double z11=Interpolate(grid(ix1, iy1, iz), grid(ix1, iy1, iz1), fz);
+  double z00=Interpolate(get_value(ix, iy, iz), get_value(ix, iy, iz1), fz);
+  double z01=Interpolate(get_value(ix, iy1, iz), get_value(ix, iy1, iz1), fz);
+  double z10=Interpolate(get_value(ix1, iy, iz), get_value(ix1, iy, iz1), fz);
+  double z11=Interpolate(get_value(ix1, iy1, iz), get_value(ix1, iy1, iz1), fz);
   double yy0=Interpolate(z00, z01, fy);
   double yy1=Interpolate(z10, z11, fy);
   double dx=(yy1-yy0)*(nx-1)/diagonal.x();
-  double x00=Interpolate(grid(ix, iy, iz), grid(ix1, iy, iz), fx);
-  double x01=Interpolate(grid(ix, iy, iz1), grid(ix1, iy, iz1), fx);
-  double x10=Interpolate(grid(ix, iy1, iz), grid(ix1, iy1, iz), fx);
-  double x11=Interpolate(grid(ix, iy1, iz1), grid(ix1, iy1, iz1), fx);
+  double x00=Interpolate(get_value(ix, iy, iz), get_value(ix1, iy, iz), fx);
+  double x01=Interpolate(get_value(ix, iy, iz1), get_value(ix1, iy, iz1), fx);
+  double x10=Interpolate(get_value(ix, iy1, iz), get_value(ix1, iy1, iz), fx);
+  double x11=Interpolate(get_value(ix, iy1, iz1), get_value(ix1, iy1, iz1), fx);
   double y0=Interpolate(x00, x10, fy);
   double y1=Interpolate(x01, x11, fy);
   double dz=(y1-y0)*(nz-1)/diagonal.z();
@@ -286,10 +286,10 @@ int ScalarFieldRGT<T>::interpolate(const Point& p, double& value, double eps,
   double fx = x-ix;
   double fy = y-iy;
   double fz = z-iz;
-  double x00 = Interpolate(grid(ix, iy, iz), grid(ix1, iy, iz), fx);
-  double x01 = Interpolate(grid(ix, iy, iz1), grid(ix1, iy, iz1), fx);
-  double x10 = Interpolate(grid(ix, iy1, iz), grid(ix1, iy1, iz), fx);
-  double x11 = Interpolate(grid(ix, iy1, iz1), grid(ix1, iy1, iz1), fx);
+  double x00 = Interpolate(get_value(ix, iy, iz), get_value(ix1, iy, iz), fx);
+  double x01 = Interpolate(get_value(ix, iy, iz1), get_value(ix1, iy, iz1), fx);
+  double x10 = Interpolate(get_value(ix, iy1, iz), get_value(ix1, iy1, iz), fx);
+  double x11 = Interpolate(get_value(ix, iy1, iz1), get_value(ix1, iy1, iz1), fx);
   double y0 = Interpolate(x00, x10, fy);
   double y1 = Interpolate(x01, x11, fy);
   value = Interpolate(y0, y1, fz);
@@ -356,32 +356,32 @@ ScalarFieldRGT<T>::gradient(int x, int y, int z)
 
   if (!x || (x == nx-1)) { // boundary...
     if (!x) {
-      rval.x(2*(grid(x+1,y,z)-grid(x,y,z))*h.x()); // end points are rare
+      rval.x(2*(get_value(x+1,y,z)-get_value(x,y,z))*h.x()); // end points are rare
     } else {
-      rval.x(2*(grid(x,y,z)-grid(x-1,y,z))*h.x());
+      rval.x(2*(get_value(x,y,z)-get_value(x-1,y,z))*h.x());
     }
   } else { // just use central diferences...
-    rval.x((grid(x+1,y,z)-grid(x-1,y,z))*h.x());
+    rval.x((get_value(x+1,y,z)-get_value(x-1,y,z))*h.x());
   }
 
   if (!y || (y == ny-1)) { // boundary...
     if (!y) {
-      rval.y(2*(grid(x,y+1,z)-grid(x,y,z))*h.y()); // end points are rare
+      rval.y(2*(get_value(x,y+1,z)-get_value(x,y,z))*h.y()); // end points are rare
     } else {
-      rval.y(2*(grid(x,y,z)-grid(x,y-1,z))*h.y());
+      rval.y(2*(get_value(x,y,z)-get_value(x,y-1,z))*h.y());
     }
   } else { // just use central diferences...
-    rval.y((grid(x,y+1,z)-grid(x,y-1,z))*h.y());
+    rval.y((get_value(x,y+1,z)-get_value(x,y-1,z))*h.y());
   }
 
   if (!z || (z == nz-1)) { // boundary...
     if (!z) {
-      rval.z(2*(grid(x,y,z+1)-grid(x,y,z))*h.z()); // end points are rare
+      rval.z(2*(get_value(x,y,z+1)-get_value(x,y,z))*h.z()); // end points are rare
     } else {
-      rval.z(2*(grid(x,y,z)-grid(x,y,z-1))*h.z());
+      rval.z(2*(get_value(x,y,z)-get_value(x,y,z-1))*h.z());
     }
   } else { // just use central diferences...
-    rval.z((grid(x,y,z+1)-grid(x,y,z-1))*h.z());
+    rval.z((get_value(x,y,z+1)-get_value(x,y,z-1))*h.z());
   }
 
   return rval;

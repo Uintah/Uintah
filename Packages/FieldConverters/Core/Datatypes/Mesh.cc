@@ -92,7 +92,7 @@ PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
 PersistentTypeID Node::type_id("Node", "0", make_Node);
 
 Mesh::Mesh()
-  : have_all_neighbors(0), current_generation(2), bld_grid(0)
+  : bld_grid(0), have_all_neighbors(0), current_generation(2)
 {
   octree=0;
   grid.nx=grid.ny=grid.nz=0;
@@ -107,8 +107,8 @@ Mesh::Mesh()
 }
 
 Mesh::Mesh(int nnodes, int nelems)
-  : nodes(nnodes), elems(nelems), have_all_neighbors(0), current_generation(2),
-    bld_grid(0)
+  : bld_grid(0), nodes(nnodes), elems(nelems),
+    have_all_neighbors(0), current_generation(2)
 {
   octree=0;
   grid.nx=grid.ny=grid.nz=0;
@@ -123,9 +123,9 @@ Mesh::Mesh(int nnodes, int nelems)
 }
 
 Mesh::Mesh(const Mesh& copy)
-  : nodes(copy.nodes.size()), elems(copy.elems.size()),
+  : bld_grid(0), nodes(copy.nodes.size()), elems(copy.elems.size()),
     cond_tensors(copy.cond_tensors), have_all_neighbors(0),
-    current_generation(2), bld_grid(0)
+    current_generation(2)
 {
   // we're gonna copy the nodes, rather than share pointers... otherwise
   // detach() doesn't really work, since the nodes are still "attached"
@@ -349,13 +349,15 @@ Element::Element(const Element& copy, Mesh* mesh)
 }
 
 Node::Node(const Point& p)
-  : p(p), elems(0, 4), bc(0), fluxBC(0), ref_cnt(0), pdBC(0)
+  : p(p), ref_cnt(0), elems(0, 4), bc(0), fluxBC(0), pdBC(0)
 {
 }
 
 Node::Node(const Node& copy)
-  : p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0),
-    fluxBC(0), ref_cnt(0), pdBC(copy.pdBC?new PotentialDifferenceBC(*copy.pdBC):0)
+  : p(copy.p), ref_cnt(0), elems(copy.elems),
+    bc(copy.bc?new DirichletBC(*copy.bc):0),
+    fluxBC(0),
+    pdBC(copy.pdBC?new PotentialDifferenceBC(*copy.pdBC):0)
 {
 }
 
@@ -1092,17 +1094,17 @@ void Mesh::make_grid(int nx, int ny, int nz, const Point &min,
     for (int j=0; j<4; j++) {
       Vector v(nodes[elems[i]->n[j]]->p-min);
       int w;
-      w=Max(0.,(v.x()-eps)/dx);
+      w=(int)Max(0.,(v.x()-eps)/dx);
       if (!j || imin>w) imin=w;
-      w=Max(0.,(v.y()-eps)/dy);
+      w=(int)Max(0.,(v.y()-eps)/dy);
       if (!j || jmin>w) jmin=w;
-      w=Max(0.,(v.z()-eps)/dz);
+      w=(int)Max(0.,(v.z()-eps)/dz);
       if (!j || kmin>w) kmin=w;
-      w=Min((nx-1.),(v.x()+eps)/dx);
+      w=(int)Min((nx-1.),(v.x()+eps)/dx);
       if (!j || imax<w) imax=w;
-      w=Min((ny-1.),(v.y()+eps)/dy);
+      w=(int)Min((ny-1.),(v.y()+eps)/dy);
       if (!j || jmax<w) jmax=w;
-      w=Min((nz-1.),(v.z()+eps)/dz);
+      w=(int)Min((nz-1.),(v.z()+eps)/dz);
       if (!j || kmax<w) kmax=w;
     }
     for (int ii=imin; ii<=imax; ii++) 
@@ -1121,9 +1123,9 @@ int MeshGrid::locate(Mesh* mesh, const Point& p, double)
   double dy=d.y()/ny;
   double dz=d.z()/nz;
   Vector v(p-min);
-  int ii=Min(nx-1., Max(0., v.x()/dx));
-  int jj=Min(ny-1., Max(0., v.y()/dy));
-  int kk=Min(nz-1., Max(0., v.z()/dz));
+  int ii=(int)Min(nx-1., Max(0., v.x()/dx));
+  int jj=(int)Min(ny-1., Max(0., v.y()/dy));
+  int kk=(int)Min(nz-1., Max(0., v.z()/dz));
 
   for(int i=0;i<elems(ii,jj,kk).size();i++){
     Element* elem=mesh->elems[elems(ii,jj,kk)[i]];

@@ -67,12 +67,17 @@ static Persistent* make_TriSurface()
 PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
 
 TriSurface::TriSurface(Representation r)
-  : Surface(r, 0), empty_index(-1), directed(1), haveNodeInfo(0), normType(NrmlsNone), valType(NodeType)
+  : Surface(r, 0),
+    valType(NodeType),
+    normType(NrmlsNone),
+    haveNodeInfo(0),
+    empty_index(-1),
+    directed(1)
 {
 }
 
 TriSurface::TriSurface(const TriSurface& copy, Representation)
-: Surface(copy)
+  : Surface(copy)
 {
     points=copy.points;
     elements=Array1<TSElement*>(copy.elements.size());
