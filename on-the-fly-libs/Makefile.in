@@ -20,7 +20,11 @@
 # Default target
 default: all
 
+OBJTOP      := ..
+OBJTOP_ABS  := $(shell cd $(OBJTOP) ; pwd)
+
 include @abs_conftop_dir@/configVars.mk
+
 SCIRUN_SRCTOP   := @abs_top_srcdir@
 SCIRUN_OBJTOP   := @abs_conftop_dir@
 LIBDIR	        := $(SCIRUN_OBJTOP)/lib/
