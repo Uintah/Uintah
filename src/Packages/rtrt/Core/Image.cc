@@ -137,10 +137,23 @@ void Image::save(char* filename)
 
 void Image::save_ppm(char *filename)
 {
-  ofstream outdata(filename);
+  // We need to find a filename that isn't already taken
+  FILE *input_test;
+  char new_filename[1000];
+  sprintf(new_filename, "%s.ppm", filename);
+  int count = 0;
+  // I'm placing a max on how high count can get to prevent an
+  // infinate loop when the path is just bad and no amount of testing
+  // will create a viable filename.
+  while ((input_test = fopen(new_filename, "r")) != 0 && count < 500) {
+    fclose(input_test);
+    input_test = 0;
+    sprintf(new_filename, "%s%02d.ppm", filename, count++);
+  }
+  ofstream outdata(new_filename);
   if (!outdata.is_open()) {
     cerr << "Image::save_ppm: ERROR: I/O fault: couldn't write image file: "
-	 << filename << "\n";
+	 << new_filename << "\n";
     return;
   }
   outdata << "P6\n# PPM binary image created with rtrt\n";
@@ -158,7 +171,7 @@ void Image::save_ppm(char *filename)
     }
   }
   outdata.close();
-  printf("Finished writing image\n");
+  printf("Finished writing image to %s\n", new_filename);
 }
 
 // this code is added for tiled images...
