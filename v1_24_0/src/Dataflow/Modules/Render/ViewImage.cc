@@ -2594,7 +2594,6 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
       for (unsigned int s = 0; s < window.slices_.size(); ++s)
 	window.slices_[s]->tex_dirty_ = true;
     } else {
-      
       WindowLayouts::iterator liter = layouts_.begin();
       while (liter != layouts_.end()) {
 	for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
@@ -2940,6 +2939,19 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
   } else if(args[1] == "updatecrop") {
     update_crop_bbox_from_gui();
     redraw_all();
+  } else if (args[1] == "setclut") {
+    WindowLayouts::iterator liter = layouts_.begin();
+    while (liter != layouts_.end()) {
+      for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
+	SliceWindow &window = *(*liter).second->windows_[v];
+	window.clut_ww_ = window.clut_ww_();
+	window.clut_wl_ = window.clut_wl_();
+	window.clut_dirty_ = true;
+	for (unsigned int s = 0; s < window.slices_.size(); ++s)
+	  window.slices_[s]->tex_dirty_ = true;
+      }
+      ++liter;
+    }
   } else Module::tcl_command(args, userdata);
 }
 
