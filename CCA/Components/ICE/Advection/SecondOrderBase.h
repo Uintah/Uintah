@@ -88,7 +88,7 @@ SecondOrderBase::gradientLimiter(const CCVariable<T>& q_CC,
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
     
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-    IntVector c = *iter;
+    const IntVector& c = *iter;
 
     T Q_CC = q_CC[c];
     frac = (q_CC_max[c] - Q_CC + SN)/(q_vrtx_max[c] - Q_CC + SN);
