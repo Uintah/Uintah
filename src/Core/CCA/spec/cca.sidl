@@ -1302,17 +1302,16 @@ interface BuilderService  extends gov.cca.Port
 	  </ul>
   */
    void disconnectAll(in gov.cca.ComponentID id1, in gov.cca.ComponentID id2, in float timeout) throws gov.cca.CCAException ; 
-   string getFrameworkURL() throws gov.cca.CCAException;
-   array<gov.cca.Port> 
-   listPorts(in string name ) throws gov.cca.CCAException;
 
- 
+   // BEGIN proposed sparker/kzhang
    /* get available ports in c2 that can be connected to port1 of c1*/ 	
-   array<string> getAvailablePortList(in gov.cca.ComponentID c1, in string port1,
-			        	 in gov.cca.ComponentID c2);   	
+   array<string> getCompatiblePortList(in gov.cca.ComponentID c1,
+				       in string port1,
+				       in gov.cca.ComponentID c2);
+   AbstractFramework getFramework();
+   // END Proposed sparker
 
 
-   gov.cca.Port getUIPort(in string name ) throws gov.cca.CCAException;	
 }  // end interface BuilderService
 
 
