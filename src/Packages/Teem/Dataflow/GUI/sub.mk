@@ -35,6 +35,7 @@ SRCS := \
 	$(SRCDIR)/NrrdSetProperty.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
 	$(SRCDIR)/NrrdSelectTime.tcl\
+	$(SRCDIR)/NrrdToField.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
 	$(SRCDIR)/TendAnvol.tcl\
 	$(SRCDIR)/TendBmat.tcl\
