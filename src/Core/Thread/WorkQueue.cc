@@ -33,8 +33,11 @@
 namespace SCIRun {
 
 WorkQueue::WorkQueue(const char* name)
-  : name_(name), current_assignment_("WorkQueue counter"),
-    total_assignments_(-1), num_threads_(-1), granularity_(-1)
+  : name_(name),
+    num_threads_(-1),
+    total_assignments_(-1),
+    granularity_(-1),
+    current_assignment_("WorkQueue counter")
 {
 }
 

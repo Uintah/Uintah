@@ -271,7 +271,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glDrawBuffer(GL_BACK);
   glClear(GL_COLOR_BUFFER_BIT);
-  int i;
+  unsigned int i;
   for(i=0;i<3;i++) {
 
     float mul=0.5;

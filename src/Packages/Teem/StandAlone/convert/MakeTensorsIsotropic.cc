@@ -74,7 +74,7 @@ main(int argc, char **argv) {
   double evec[9];
   int neg_vals=0;
   int small_vals=0;
-  for (int i=0; i<conds->size(); i++) {
+  for (unsigned int i=0; i<conds->size(); i++) {
     int j, k;
     for (j=0; j<3; j++) for (k=0; k<3; k++) {
       m[j*3+k]=(*conds)[i].second.mat_[j][k];

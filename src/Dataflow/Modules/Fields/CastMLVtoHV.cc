@@ -108,6 +108,10 @@ void CastMLVtoHV::execute()
   case Field::CELL:
     ldst_td = get_type_description((HexVolMesh::Cell *)0);
     break;
+
+  case Field::NONE:
+    error("Unsupported data_at location.");
+    return;
   }
 
   CompileInfoHandle ci =

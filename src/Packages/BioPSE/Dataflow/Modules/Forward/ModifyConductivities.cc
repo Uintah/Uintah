@@ -43,7 +43,7 @@ namespace SCIRun {
 class ModifyConductivities : public Module
 {
 private:
-  unsigned int last_field_generation_;
+  int last_field_generation_;
   vector<pair<string, Tensor> > last_field_tensors_;
   vector<pair<string, Tensor> > last_gui_tensors_;
   bool addnew_;
