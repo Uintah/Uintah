@@ -283,7 +283,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	 box_ps->require("upper", upper);
 
 	 IntVector lowCell = level->getCellIndex(lower);
-	 IntVector highCell = level->getCellIndex(upper);
+	 IntVector highCell = level->getCellIndex(upper+Vector(.001,.001,.001));
 	 Point lower2 = level->getNodePosition(lowCell);
 	 Point upper2 = level->getNodePosition(highCell);
 	 double diff_lower = (lower2-lower).length();
@@ -310,6 +310,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 
 	 IntVector patches;
 	 if(box_ps->get("patches", patches)){
+	    level->setPatchDistributionHint(patches);
 	    for(int i=0;i<patches.x();i++){
 	       for(int j=0;j<patches.y();j++){
 		  for(int k=0;k<patches.z();k++){
@@ -480,6 +481,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.47.4.1  2000/10/07 06:12:14  sparker
+// Try to fix rounding errors for cell upper index
+// set a hint for the level's number of patches in each direction
+//
 // Revision 1.47  2000/09/26 21:26:36  witzel
 // Make only process zero call printStatistics() and write messages in
 // the ProblemSetup.
