@@ -22,15 +22,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Math
 
 FNSRCDIR  := $(SRCTOP)/$(SRCDIR)
-TARGDIR   := $(OBJTOP)/$(SRCDIR)
 
-$(TARGDIR)/fnparser.cc \
-$(TARGDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y;
+# TARGDIR is not really 'srcdir'... however, it is given the 
+# same value... but since it is used based on the top of the compilation
+# tree, it has the "same value".
+TARGDIR := $(SRCDIR)
+
+$(TARGDIR)/fnparser.cc $(TARGDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y
 	$(YACC) -o $(TARGDIR)/y.tab.c -p fn $(FNSRCDIR)/fnparser.y
 	mv -f $(TARGDIR)/y.tab.h $(TARGDIR)/fnparser.h
 	mv -f $(TARGDIR)/y.tab.c $(TARGDIR)/fnparser.cc
 
-$(TARGDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(TARGDIR)/fnparser.cc;
+$(TARGDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(TARGDIR)/fnparser.cc
 	$(LEX) -Pfn -o$(TARGDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
 
 SRCS     += $(SRCDIR)/CubicPWI.cc              \
