@@ -49,15 +49,8 @@ void    ICE::printData( int matl,
     
     IntVector low, high; 
 
-    if (include_EC == 1)  { 
-      low   = patch->getCellLowIndex();
-      high  = patch->getCellHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
-    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high); 
     
     //__________________________________
     // spew to stderr
@@ -144,15 +137,8 @@ void    ICE::printData(int matl,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
     
-    if (include_EC == 1)  { 
-      low   = patch->getCellLowIndex();
-      high  = patch->getCellHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
-    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high);
     
     //__________________________________
     // spew to stderr
@@ -240,15 +226,8 @@ void    ICE::printVector(int matl,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    if (include_EC == 1)  { 
-      low   = patch->getCellLowIndex();
-      high  = patch->getCellHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
-    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high); 
     
     string var_name;
  
@@ -350,15 +329,8 @@ void    ICE::printData_FC(int matl,
     d_dbgOldTime = d_dbgTime;
     IntVector low, high; 
 
-    if (include_EC == 1)  { 
-      low   = patch->getSFCXLowIndex();
-      high  = patch->getSFCXHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
-    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high); 
 
     //__________________________________
     // spew to stderr
@@ -443,16 +415,8 @@ void    ICE::printData_FC(int matl,
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
 
-    if (include_EC == 1)  { 
-      low   = patch->getSFCYLowIndex();
-      high  = patch->getSFCYHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
-    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
-   
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high);
     //__________________________________
     // spew to stderr
     if( !d_dbgGnuPlot) {
@@ -537,17 +501,9 @@ void    ICE::printData_FC(int matl,
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
     IntVector low, high; 
-
-    if (include_EC == 1)  { 
-      low   = patch->getSFCZLowIndex();
-      high  = patch->getSFCZHighIndex();
-    }
-    if (include_EC == 0) {
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
-    }
     
-    adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high);
     //__________________________________
     // spew to stderr
     if( !d_dbgGnuPlot) {
@@ -609,11 +565,29 @@ void    ICE::printData_FC(int matl,
  Purpose:  tweak what the user has specified for d_dbgBegin and end 
  indices for multipatch problems
 _______________________________________________________________________ */
-void  ICE::adjust_dbg_indices( const IntVector d_dbgBeginIndx,
+void  ICE::adjust_dbg_indices(  const int include_EC,
+                                const Patch* patch,
+                                const IntVector d_dbgBeginIndx,
                                 const IntVector d_dbgEndIndx,  
                                 IntVector& low,                 
                                 IntVector& high)                
 {
+  //__________________________________
+  // 
+  if (include_EC == 1)  { 
+    low   = patch->getCellLowIndex();
+    high  = patch->getCellHighIndex();
+  }
+  if (include_EC == 0) {
+    low   = patch->getInteriorCellLowIndex();
+    high  = patch->getInteriorCellHighIndex();
+  }
+ 
+  if (d_dbgGnuPlot){                  // ignore extra cell specification
+    low  = d_dbgBeginIndx;
+    high = d_dbgEndIndx;
+  }
+
   //__________________________________                            
   // for multipatch problems you need                             
   // further restrict the indicies                                
