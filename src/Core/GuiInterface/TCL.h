@@ -99,6 +99,11 @@ public:
 
 };
 
+struct TCLCommandData {
+    TCL* object;
+    void* userdata;
+};
+
 } // End namespace SCIRun
 
 

@@ -50,11 +50,6 @@ extern "C" Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
-struct TCLCommandData {
-    TCL* object;
-    void* userdata;
-};
-
 GuiManager *gm = NULL;
 
 void set_guiManager (GuiManager *mgr)
@@ -136,20 +131,6 @@ void TCL::source_once(const string& filename)
 #endif
 }
 
-static int do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
-{
-    TCLCommandData* td=(TCLCommandData*)cd;
-    TCLArgs args(argc, argv);
-    td->object->tcl_command(args, td->userdata);
-    if(args.have_result_)
-    {
-      Tcl_SetResult(the_interp,
-		    strdup(args.string_.c_str()),
-		    (Tcl_FreeProc*)free);
-    }
-    return args.have_error_?TCL_ERROR:TCL_OK;
-}
-
 void TCL::add_command(const string& command, TCL* callback, void* userdata)
 {
     TCLTask::lock();
@@ -157,7 +138,7 @@ void TCL::add_command(const string& command, TCL* callback, void* userdata)
     command_data->object=callback;
     command_data->userdata=userdata;
     Tcl_CreateCommand(the_interp, ccast_unsafe(command),
-		      do_command, command_data, 0);
+		      GuiManager::do_command, command_data, 0);
     TCLTask::unlock();
 }
 
