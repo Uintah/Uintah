@@ -371,7 +371,7 @@ DEALINGS IN THE SOFTWARE.
 	Visualization Settings pane's <guilabel>Planes</guilabel> tab.
 	Then select a color range by clicking one of the
 	<guilabel>Color Planes By</guilabel> radio buttons&#x2014;see
-	<xref linkend="fig.planesTab"/>, item 9.
+	<xref linkend="fig.planesTab"/>, item 10.
 	
 	<figure id="fig.planesTab">
 	  <title>Options for controlling planes</title>
@@ -526,7 +526,7 @@ DEALINGS IN THE SOFTWARE.
     <para>
       Turn on volume rendering by clicking the Visualization Settings pane's
       <guilabel>Volume Rendering</guilabel> tab and then click the
-      check-box labeled <guilabel>Show Volume Rendering</guilabel>.
+      check-box labeled <guilabel>Show Volume Rendering</guilabel>. <b>NOTE: </b>On machines with graphics cards that do not support shaders, the user must manipulate the Global Opacity to perform volume rendering.
     </para>
 
     <figure id="fig.volrender_tab">
@@ -597,7 +597,7 @@ DEALINGS IN THE SOFTWARE.
 	First click on the Volume Rendering Tab, shown in <xref linkend="fig.volrender_tab"/>
 	and then click the Add Paint Layer button shown in <xref linkend="fig.volrender_tab"/>
 	item 10. Note a new item named "Paint" is added to the list of color layers 
-	in <xref linkend="fig.pb_paint_layer_added"/> item 11. 
+	in <xref linkend="fig.pb_paint_layer_added"/>. 
       </para>
       <figure id="fig.pb_paint_layer_added">
 	<title>Paint Layer</title>
@@ -615,8 +615,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>      
       <para>
         The paint color defaults to a random color so that each new paint layer has a unique
-	color. Click on the "Color" rectangle in <xref linkend="fig.volrender_tab"/> item 11
-	to bring up the color picker.
+	color. Click on the "Color" rectangle in <xref linkend="fig.volrender_tab"/> to bring up the color picker.
       </para>
       <para>
 	Using the color picker, set the color to blue by moving the red and green scrolls to the left, the blue
