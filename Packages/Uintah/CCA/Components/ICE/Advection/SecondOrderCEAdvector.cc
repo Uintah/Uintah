@@ -305,7 +305,7 @@ void SecondOrderCEAdvector::advectMass( const CCVariable<double>& mass,
                                         DataWarehouse* new_dw)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
-  StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
+  SCIRun::StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
   CCVariable<vertex<double> > q_vertex;
   CCVariable<double> mass_grad_x, mass_grad_y, mass_grad_z;
   
@@ -360,7 +360,7 @@ void SecondOrderCEAdvector::advectQ(const bool useCompatibleFluxes,
   CCVariable<facedata<double> > q_OAFS;
   CCVariable<vertex<double> > q_vertex;
   CCVariable<double> q_grad_x, q_grad_y, q_grad_z, q_CC;
-  StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
+  SCIRun::StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
     
   new_dw->allocateTemporary(q_CC,     patch,gac,2);  
   new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
@@ -415,7 +415,7 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
   CCVariable<facedata<double> > q_OAFS;
   CCVariable<vertex<double> > q_vertex;
   CCVariable<double> q_grad_x, q_grad_y, q_grad_z;
-  StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
+  SCIRun::StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
     
   new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
   new_dw->allocateTemporary(q_grad_x, patch,gac,1);
@@ -468,7 +468,7 @@ void SecondOrderCEAdvector::advectQ(const bool useCompatibleFluxes,
   CCVariable<facedata<Vector> > q_OAFS;
   CCVariable<vertex<Vector> > q_vertex;
   CCVariable<Vector> q_grad_x, q_grad_y, q_grad_z, q_CC;
-  StaticArray<CCVariable<Vector> > q_OAFE(12), q_OAFC(8);
+  SCIRun::StaticArray<CCVariable<Vector> > q_OAFE(12), q_OAFC(8);
     
   new_dw->allocateTemporary(q_CC,     patch,gac,2);  
   new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
@@ -513,8 +513,8 @@ void SecondOrderCEAdvector::advectQ(const bool useCompatibleFluxes,
 _____________________________________________________________________*/
 template <class T, typename F> 
   void SecondOrderCEAdvector::advect(  CCVariable<facedata<T> >& q_OAFS,
-                                       StaticArray<CCVariable<T> >& q_OAFE,
-				           StaticArray<CCVariable<T> >& q_OAFC,
+                                       SCIRun::StaticArray<CCVariable<T> >& q_OAFE,
+                                       SCIRun::StaticArray<CCVariable<T> >& q_OAFC,
                                        const Patch* patch,
                                        const CCVariable<T>& q_CC,
                                        CCVariable<T>& q_advected,
@@ -606,9 +606,9 @@ void SecondOrderCEAdvector::qAverageFlux(const bool useCompatibleFluxes,
                                          const CCVariable<T>& q_CC,
                                          const CCVariable<double>& mass_CC,
                                          const Patch* patch,
-					      CCVariable<facedata<T> >& q_OAFS,
-				             StaticArray<CCVariable<T> >& q_OAFE,
-				             StaticArray<CCVariable<T> >& q_OAFC,
+                                         CCVariable<facedata<T> >& q_OAFS,
+                                         SCIRun::StaticArray<CCVariable<T> >& q_OAFE,
+                                         SCIRun::StaticArray<CCVariable<T> >& q_OAFC,
                                          const CCVariable<T>& grad_x,
                                          const CCVariable<T>& grad_y,
                                          const CCVariable<T>& grad_z)
@@ -728,13 +728,13 @@ void SecondOrderCEAdvector::qAverageFlux(const bool useCompatibleFluxes,
 _____________________________________________________________________*/
 template<class T>
 void SecondOrderCEAdvector::compute_q_FC(CellIterator iter, 
-                		             IntVector adj_offset,
-                		             const int face,
+                                         IntVector adj_offset,
+                                         const int face,
                                          const CCVariable<double>& q_CC,
                                          CCVariable<facedata<double> >& q_OAFS,
-                                         StaticArray<CCVariable<double> >& q_OAFE,
-				             StaticArray<CCVariable<double> >& q_OAFC,
-                		             T& q_FC)
+                                         SCIRun::StaticArray<CCVariable<double> >& q_OAFE,
+                                         SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
+                                         T& q_FC)
 {
   double oneThird = 1.0/3.0;
 
@@ -805,9 +805,9 @@ void SecondOrderCEAdvector::compute_q_FC(CellIterator iter,
 _____________________________________________________________________*/
 void SecondOrderCEAdvector::compute_q_FC_PlusFaces(
                                    const CCVariable<double>& q_CC,
-      	      	      	      	       CCVariable<facedata<double> >& q_OAFS,
-                                   StaticArray<CCVariable<double> >& q_OAFE,
-				       StaticArray<CCVariable<double> >& q_OAFC,
+                                   CCVariable<facedata<double> >& q_OAFS,
+                                   SCIRun::StaticArray<CCVariable<double> >& q_OAFE,
+                                   SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
                                    const Patch* patch,
                                    SFCXVariable<double>& q_XFC,
                                    SFCYVariable<double>& q_YFC,

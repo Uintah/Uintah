@@ -10,8 +10,11 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Core/Containers/StaticArray.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <typeinfo>
-using namespace Uintah;
+#include <sgi_stl_warnings_on.h>
+
 namespace Uintah {
 
   //_____________________________________________________________
@@ -34,7 +37,7 @@ namespace Uintah {
     constCCVariable<Vector> vel_CC;
     constCCVariable<double> press_CC;        
     constCCVariable<double> temp_CC;            
-    StaticArray<CCVariable<Vector> > Li;        
+    SCIRun::StaticArray<CCVariable<Vector> > Li;        
   };
   
   void addRequires_Lodi(Task* t, 
@@ -69,7 +72,7 @@ namespace Uintah {
                     SimulationStateP& sharedState);                            
                             
 
-  void computeLi(StaticArray<CCVariable<Vector> >& L,
+  void computeLi(SCIRun::StaticArray<CCVariable<Vector> >& L,
                  const CCVariable<double>& rho,              
                  const CCVariable<double>& press,                   
                  const CCVariable<Vector>& vel,                  
@@ -108,7 +111,7 @@ namespace Uintah {
                
   void FacePress_LODI(const Patch* patch,
                       CCVariable<double>& press_CC,
-                      StaticArray<CCVariable<double> >& rho_micro,
+                      SCIRun::StaticArray<CCVariable<double> >& rho_micro,
                       SimulationStateP& sharedState, 
                       Patch::FaceType face,
                       Lodi_vars* lv);

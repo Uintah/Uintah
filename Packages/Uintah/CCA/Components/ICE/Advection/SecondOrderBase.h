@@ -128,20 +128,20 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
   IntVector f = c + IntVector( 0, 0, 1);    
   IntVector bk= c + IntVector( 0, 0,-1); 
 
-  max_tmp = Max(q_CC[r], q_CC[l]);
-  min_tmp = Min(q_CC[r], q_CC[l]);
+  max_tmp = SCIRun::Max(q_CC[r], q_CC[l]);
+  min_tmp = SCIRun::Min(q_CC[r], q_CC[l]);
 
-  max_tmp = Max(max_tmp, q_CC[t]);
-  min_tmp = Min(min_tmp, q_CC[t]);
+  max_tmp = SCIRun::Max(max_tmp, q_CC[t]);
+  min_tmp = SCIRun::Min(min_tmp, q_CC[t]);
 
-  max_tmp = Max(max_tmp, q_CC[b]);
-  min_tmp = Min(min_tmp, q_CC[b]);
+  max_tmp = SCIRun::Max(max_tmp, q_CC[b]);
+  min_tmp = SCIRun::Min(min_tmp, q_CC[b]);
 
-  max_tmp = Max(max_tmp, q_CC[f]);
-  min_tmp = Min(min_tmp, q_CC[f]);
+  max_tmp = SCIRun::Max(max_tmp, q_CC[f]);
+  min_tmp = SCIRun::Min(min_tmp, q_CC[f]);
 
-  max_tmp = Max(max_tmp, q_CC[bk]);
-  min_tmp = Min(min_tmp, q_CC[bk]);
+  max_tmp = SCIRun::Max(max_tmp, q_CC[bk]);
+  min_tmp = SCIRun::Min(min_tmp, q_CC[bk]);
 
   q_CC_max = max_tmp;
   q_CC_min = min_tmp;
@@ -286,20 +286,20 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
     q_vrtx_min = q_vertex[c].d_vrtx[0];
     
     for (int i=1;i<8;i++){
-      q_vrtx_max = Max(q_vrtx_max,q_vertex[c].d_vrtx[i]);
-      q_vrtx_min = Min(q_vrtx_min,q_vertex[c].d_vrtx[i]);
+      q_vrtx_max = SCIRun::Max(q_vrtx_max,q_vertex[c].d_vrtx[i]);
+      q_vrtx_min = SCIRun::Min(q_vrtx_min,q_vertex[c].d_vrtx[i]);
     }
     
     //__________________________________
     // gradient limiter
     frac = (q_CC_max - Q_CC + SN)/(q_vrtx_max - Q_CC + SN);
-    gradLim_max = Max(zero, frac);
+    gradLim_max = SCIRun::Max(zero, frac);
 
     frac = (q_CC_min - Q_CC + SN)/(q_vrtx_min - Q_CC + SN);
-    gradLim_min = Max(zero, frac);
+    gradLim_min = SCIRun::Max(zero, frac);
 
-    temp = Min(unit, gradLim_max);
-    temp = Min(temp, gradLim_min);
+    temp = SCIRun::Min(unit, gradLim_max);
+    temp = SCIRun::Min(temp, gradLim_min);
     T gradLim = temp;
            
     q_grad_x[c] = q_grad_x[c] * gradLim;

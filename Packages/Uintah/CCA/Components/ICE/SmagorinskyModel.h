@@ -45,7 +45,7 @@ namespace Uintah {
                            const int indx,
                            SimulationStateP&  d_sharedState,
                            DataWarehouse* new_dw,
-                           StaticArray<CCVariable<double> >& SIJ);
+                           SCIRun::StaticArray<CCVariable<double> >& SIJ);
     void computeVariance(const ProcessorGroup*, 
                          const PatchSubset* patch,  
                          const MaterialSubset* matls,
