@@ -27,7 +27,7 @@
 -->
 
 <faq>
-<title>TechnicalFAQ</title>
+<title>Technical FAQ</title>
   <description> <para> This FAQ includes technical questions of interest 
 to users who install, maintain and develop SCIRun</para> </description> <entry> 
 <keywords>SGI, runtime, pthreads and SIGABRT</keywords>. <question> <para> I successfully 
