@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
+
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -8,11 +9,9 @@
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
-#include <Packages/Uintah/Core/Grid/CircleBCData.h>
 
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
@@ -350,10 +349,12 @@ void setBC(CCVariable<double>& press_CC,
 						  mat_id,child);
                                           
         //__________________________________
-        //  hardwiring for NGC nozzle simulation   
-        #define ICEBoundaryCond_1
-        #include "../MPMICE/NGC_nozzle.i"
-        #undef ICEBoundaryCond_1                           
+        //  hardwiring for NGC nozzle simulation
+        if (bc_kind == "Custom") {
+          setNGC_Nozzle_BC<CCVariable<double>,double>
+          (patch, face, press_CC, "Pressure", "CC",
+           bound, bc_kind,mat_id, child, sharedState);
+        }                          
                                             
         //__________________________________________________________
         // Tack on hydrostatic pressure after Dirichlet or Neumann BC
@@ -473,9 +474,12 @@ void setBC(CCVariable<double>& var_CC,
          
         //__________________________________
         //  hardwiring for NGC nozzle simulation   
-        #define ICEBoundaryCond_2
-        #include "../MPMICE/NGC_nozzle.i"
-        #undef ICEBoundaryCond_2 
+        if ( (desc == "Temperature" || desc == "Density") && 
+              bc_kind == "Custom") {
+          setNGC_Nozzle_BC<CCVariable<double>,double>
+                (patch, face, var_CC, desc,"CC", bound, 
+                 bc_kind,mat_id, child, sharedState);
+        }
 
         //__________________________________
         // Temperature and Gravity and ICE Matls
@@ -565,10 +569,10 @@ void setBC(CCVariable<Vector>& var_CC,
 						bc_kind, bc_value, cell_dx,
 						mat_id,child);
         //__________________________________
-        //  hardwiring for NGC nozzle simulation   
-        #define ICEBoundaryCond_3
-        #include "../MPMICE/NGC_nozzle.i"
-        #undef ICEBoundaryCond_3  
+        //  hardwiring for NGC nozzle simulation
+        setNGCVelocity_BC(patch,face,var_CC,desc,
+                          bound, bc_kind,  mat_id, child, sharedState); 
+         
         //__________________________________
         //  Tangent components Neumann = 0
         //  Normal components = -variable[Interior]
@@ -597,7 +601,7 @@ void setBC(CCVariable<Vector>& var_CC,
                <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
 	        << endl;
         }
-      }  // if (bcKind != "notSet"    
+      }  // if (bcKind != "notSet") 
     }  // child loop
   }  // faces loop
 }
