@@ -227,6 +227,7 @@ proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
     drawConnections [list $conn]
     drawPorts [oMod conn] o
     drawPorts [iMod conn] i
+    checkForDisabledModules [oMod conn] [iMod conn]
 
     if $record_undo {
 	set redoList "" ; # new actions invalidate the redo list
@@ -240,10 +241,6 @@ proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } { 
     global Subnet Color Disabled Notes undoList redoList
     set connid [makeConnID $conn]
-    setIfExists disabled Disabled($connid) 0
-    if $disabled {
-	createConnection $conn 0
-    }
 
     networkHasChanged
     deleteTraces
@@ -257,11 +254,13 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
     listFindAndRemove Subnet([oMod conn]_connections) $conn
     listFindAndRemove Subnet([iMod conn]_connections) $conn 
 
+    setIfExists disabled Disabled($connid) 0
+
     array unset Disabled $connid
     array unset Color $connid
     array unset Notes $connid* ;# Delete Notes text, position, & color
 
-    if { $tell_SCIRun } {
+    if { $tell_SCIRun && !$disabled } {
 	foreach realConn [findRealConnections $conn] {
 	    netedit deleteconnection [makeConnID $realConn]
 	}
