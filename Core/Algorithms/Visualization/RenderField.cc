@@ -284,18 +284,60 @@ void
 RenderTensorFieldBase::add_item(GeomHandle glyph,
 				const Point &p, Tensor &t,
 				double scale, int resolution,
-				GeomGroup *g)
+				GeomGroup *g, bool colorize)
 {
-  t.build_mat_from_eigens();
-  Vector v0(t.mat_[0][0] * scale, t.mat_[0][1] * scale, t.mat_[0][2] * scale);
-  Vector v1(t.mat_[1][0] * scale, t.mat_[1][1] * scale, t.mat_[1][2] * scale);
-  Vector v2(t.mat_[2][0] * scale, t.mat_[2][1] * scale, t.mat_[2][2] * scale);
+  Vector ecolor;
+  GeomTransform *gt = 0;
+  if (t.have_eigens())
+  {
+    const Vector &e1 = t.get_eigenvector1();
+    const Vector &e2 = t.get_eigenvector2();
+    const Vector &e3 = t.get_eigenvector3();
 
-  static const Point origin(0.0, 0.0, 0.0);
-  Transform trans(origin, v0, v1, v2);
-  trans.pre_translate(p.asVector());
-  GeomTransform *gt = scinew GeomTransform(glyph, trans);
-  g->add(gt);
+    double v1, v2, v3;
+    t.get_eigenvalues(v1, v2, v3);
+
+    static const Point origin(0.0, 0.0, 0.0);
+    Transform trans(origin, e1, e2, e3);
+    trans.post_scale(Vector(v1, v2, v3) * scale);
+    trans.pre_translate(p.asVector());
+
+    gt = scinew GeomTransform(glyph, trans);
+    ecolor = e1;
+  }
+  else
+  {
+    const Vector v0 = Vector(t.mat_[0][0], t.mat_[0][1], t.mat_[0][2]) * scale;
+    const Vector v1 = Vector(t.mat_[1][0], t.mat_[1][1], t.mat_[1][2]) * scale;
+    const Vector v2 = Vector(t.mat_[2][0], t.mat_[2][1], t.mat_[2][2]) * scale;
+
+    static const Point origin(0.0, 0.0, 0.0);
+    Transform trans(origin, v0, v1, v2);
+    trans.pre_translate(p.asVector());
+
+    gt = scinew GeomTransform(glyph, trans);
+    colorize = false;
+  }
+
+  if (colorize)
+  {
+    ecolor.normalize();
+    double rr = fabs(ecolor.x());
+    double gg = fabs(ecolor.y());
+    double bb = fabs(ecolor.z());
+
+    Color rgb1(rr, gg, bb);
+    HSVColor hsv(rgb1);
+    hsv[1] = 0.7;
+    hsv[2] = 1.0;
+    Color rgb2(hsv);
+    MaterialHandle mh = scinew Material(rgb2);
+    g->add(scinew GeomMaterial(gt, mh));
+  }
+  else
+  {
+    g->add(gt);
+  }
 }
 
 
