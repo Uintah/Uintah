@@ -34,7 +34,7 @@
 %define distro  Red Hat 9.0
 %define debug   opt
 %undefine	__check_files
-%define thirdpartydotver 0
+%define thirdpartydotver 1
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
 %define insightver  2.0.0
 
