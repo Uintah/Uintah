@@ -33,6 +33,12 @@ namespace Uintah {
       const VarLabel* pIsNewlyBrokenLabel;
       const VarLabel* pStressAfterStrainRateLabel;
       const VarLabel* pStressAfterFractureReleaseLabel;
+
+      const VarLabel* pVelocityAfterUpdateLabel;
+      const VarLabel* pVelocityAfterFractureLabel;
+
+      const VarLabel* pStrainEnergyLabel;
+      const VarLabel* pNewlyBrokenSurfaceNormalLabel;
       
       //PermanentParticleState
       const VarLabel* pStressLabel;
@@ -48,6 +54,7 @@ namespace Uintah {
       const VarLabel* pCrackSurfaceContactForceLabel;
       const VarLabel* pTensileStrengthLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
+      const VarLabel* pImageVelocityLabel;
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
@@ -69,6 +76,7 @@ namespace Uintah {
       const VarLabel* pCrackSurfaceContactForceLabel_preReloc;
       const VarLabel* pTensileStrengthLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
+      const VarLabel* pImageVelocityLabel_preReloc;
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
@@ -118,6 +126,12 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.36  2000/11/21 20:51:02  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.35  2000/09/22 07:13:56  tan
 // MPM code works with fracture in three point bending.
 //

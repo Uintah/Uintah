@@ -1,16 +1,30 @@
 #include "FractureFactory.h"
 
-#include "Fracture.h"
+#include "SimpleFracture.h"
+#include "NormalFracture.h"
+#include "ExplosiveFracture.h"
 
 namespace Uintah {
 namespace MPM {
 
 Fracture* FractureFactory::create(const ProblemSpecP& ps)
 {
-   if(ProblemSpecP fractureProb = ps->findBlock("fracture"))
-     return(new Fracture(fractureProb));
-   else 
-     return NULL;
+   if(ProblemSpecP fractureProb = ps->findBlock("fracture")) {
+     std::string fracture_type;
+     fractureProb->require("type",fracture_type);
+     cerr << "fracture_type = " << fracture_type << std::endl;
+ 
+     if (fracture_type == "normal") 
+        return(scinew NormalFracture(fractureProb));
+     else if (fracture_type == "simple") 
+        return(scinew ExplosiveFracture(fractureProb));
+     else if (fracture_type == "explosive") 
+        return(scinew ExplosiveFracture(fractureProb));
+     else {
+	cerr << "Unknown Fracture Type (" << fracture_type << ")" << std::endl;
+     }
+   }
+   return NULL;
 }
 
 } // end namespace MPM
@@ -18,6 +32,12 @@ Fracture* FractureFactory::create(const ProblemSpecP& ps)
 
 
 // $Log$
+// Revision 1.3  2000/11/21 20:48:29  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.2  2000/09/05 05:13:55  tan
 // Moved Fracture Model to MPMMaterial class.
 //

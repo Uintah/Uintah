@@ -6,6 +6,9 @@
 SRCDIR   := Uintah/Components/MPM/Fracture
 
 SRCS     += $(SRCDIR)/Fracture.cc \
+	$(SRCDIR)/SimpleFracture.cc \
+	$(SRCDIR)/NormalFracture.cc \
+	$(SRCDIR)/ExplosiveFracture.cc \
 	$(SRCDIR)/FractureFactory.cc \
 	$(SRCDIR)/Lattice.cc \
 	$(SRCDIR)/Cell.cc \
@@ -21,6 +24,12 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	
 #
 # $Log$
+# Revision 1.15  2000/11/21 20:49:59  tan
+# Implemented different models for fracture simulations.  SimpleFracture model
+# is for the simulation where the resolution focus only on macroscopic major
+# cracks. NormalFracture and ExplosionFracture models are more sophiscated
+# and specific fracture models that are currently underconstruction.
+#
 # Revision 1.14  2000/10/25 22:08:21  jas
 # Remove duplicate LeastSquare entry.
 #
