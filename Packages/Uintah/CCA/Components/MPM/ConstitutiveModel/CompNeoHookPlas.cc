@@ -396,7 +396,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
   task->requires(Task::OldDW, p_statedata_label,           matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  //  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW, bElBarLabel,                 matlset,Ghost::None);
