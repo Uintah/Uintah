@@ -228,7 +228,7 @@ void GridSliceVis::execute(void)
   //AuditAllocator(default_allocator);
   if( !sliceren ){
     svr = scinew GridSliceRen();
-    sliceren = scinew SliceRenderer(0x12345676,svr, tex, cmap,
+    sliceren = scinew SliceRenderer(svr, tex, cmap,
 				   (is_fixed_.get() == 1),
 				   min_.get(), max_.get());
 

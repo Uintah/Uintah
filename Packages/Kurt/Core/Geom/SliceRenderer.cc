@@ -27,19 +27,18 @@ namespace Kurt {
 
 
 
-SliceRenderer::SliceRenderer(int id) 
-  : VolumeRenderer( id )
+SliceRenderer::SliceRenderer() 
 {
   NOT_FINISHED("SliceRenderer::SliceRenderer(int id)");
 }
 
 
-SliceRenderer::SliceRenderer(int id, GridVolRen* gvr,
+SliceRenderer::SliceRenderer( GridVolRen* gvr,
 			       FieldHandle tex,
 			       ColorMapHandle map,
 			       bool fixed,
 			       double min, double max)
-  : VolumeRenderer(id, gvr, tex, map, fixed, min, max)
+  : VolumeRenderer(gvr, tex, map, fixed, min, max)
 { lighting_ = 1;}
 
 SliceRenderer::SliceRenderer(const SliceRenderer& copy)

@@ -54,8 +54,8 @@ using SCIRun::GLVolumeRenderer;
 //using SCIrun::largestPowerOf2;
 
 
-SCIRexRenderer::SCIRexRenderer(int id) 
-  : GeomObj( id ),
+SCIRexRenderer::SCIRexRenderer() 
+  : 
     rs_(SCIRexRenderer::OVEROP),
     tex_(0),
     lighting_(0),
@@ -74,13 +74,12 @@ SCIRexRenderer::SCIRexRenderer(int id)
 }
 
 
-SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
+SCIRexRenderer::SCIRexRenderer(vector<char *>& displays,
 			       int ncompositers, FieldHandle tex,
 			       ColorMapHandle map, bool isfixed,
 			       double min, double max,
 			       GLTexture3DHandle texH)
-  : GeomObj( id ),
-    rs_(SCIRexRenderer::OVEROP),
+  : rs_(SCIRexRenderer::OVEROP),
     tex_(tex),
     lighting_(0),
     slices_(0),
@@ -135,8 +134,7 @@ SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
 }
 
 SCIRexRenderer::SCIRexRenderer(const SCIRexRenderer& copy)
-  : GeomObj( copy.id ),
-    rs_(copy.rs_),
+  : rs_(copy.rs_),
     tex_(copy.tex_),
     lighting_(copy.lighting_),
     slices_(copy.slices_),

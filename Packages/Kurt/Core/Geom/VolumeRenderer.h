@@ -59,9 +59,9 @@ class VolumeRenderer : public GeomObj
 public:
   enum renderStyle { OVEROP, MIP, ATTENUATE };
 
-  VolumeRenderer(int id);
+  VolumeRenderer();
 
-  VolumeRenderer(int id, GridVolRen* gvr, FieldHandle tex,
+  VolumeRenderer(GridVolRen* gvr, FieldHandle tex,
 		 ColorMapHandle map, 
 		 bool fixed, double min, double max);
 

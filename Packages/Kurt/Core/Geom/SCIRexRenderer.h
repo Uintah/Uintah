@@ -74,9 +74,9 @@ class SCIRexRenderer : public GeomObj
 public:
   enum renderStyle { OVEROP, MIP, ATTENUATE };
   
-  SCIRexRenderer(int id);
+  SCIRexRenderer();
   
-  SCIRexRenderer(int id, vector<char*>& displays, int compositers,
+  SCIRexRenderer(vector<char*>& displays, int compositers,
 		 FieldHandle tex, ColorMapHandle map,
 		 bool isfixed, double min, double max,
 		 GLTexture3DHandle texH = 0);

@@ -13,6 +13,7 @@
 #include <strstream>
 #include <fstream>
 using std::ifstream;
+using std::ofstream;
 using std::ostrstream;
 
 using std::cerr;
