@@ -59,14 +59,12 @@ void
 PartGui::add_child( PartInterface *child )
 {
   string type = child->type();
-  cerr <<"create gui: " << type<< endl;
 
   map<string,GuiCreatorBase *>::iterator creator = table.find(type);
 
   PartGui *gui;
   if ( creator == table.end() ) {
     gui = scinew NullGui( name_+"-c"+to_string(n_++) );
-    cerr << "use empty gui\n";
   }
   else 
     gui = creator->second->create( name_+"-c"+to_string(n_++) );
