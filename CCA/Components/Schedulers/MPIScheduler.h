@@ -30,6 +30,8 @@ struct mpi_timing_info_s {
   double totalrecvmpi;
   double totaltestmpi;
   double totalwaitmpi;
+  long long totalcommflops;
+  long long totalexecflops;
 };
 
 /**************************************
@@ -85,31 +87,28 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
     
-    static void recvMPIData( const ProcessorGroup  * pg,
-			     DetailedTask          * task, 
-			     mpi_timing_info_s     & mpi_info,
-			     OnDemandDataWarehouseP dws[2] );
+    void postMPIRecvs( DetailedTask* task, RecvRecord& recvs,
+		       list<DependencyBatch*>& externalRecvs );
+    void processMPIRecvs( DetailedTask* task, RecvRecord& recvs,
+		       list<DependencyBatch*>& externalRecvs );    
 
-    static void sendMPIData( const ProcessorGroup  * pg,
-			     DetailedTask          * task,
-			     mpi_timing_info_s     & mpi_info,
-			     SendRecord            & sends,
-			     SendState             & ss,
-			     OnDemandDataWarehouseP dws[2],
-			     const VarLabel        * reloc_label );
+    void postMPISends( DetailedTask* task );
 
+    void runTask( DetailedTask* task );
+    void runReductionTask( DetailedTask* task );        
+
+    // get the processor group executing with (only valid during execute())
+    const ProcessorGroup* getProcessorGroup()
+    { return pg_; }
   protected:
     virtual void actuallyCompile( const ProcessorGroup * pg,
 				  bool scrubNew );
     
     // Runs the task. (In Mixed, gives the task to a thread.)
-    virtual void initiateTask( const ProcessorGroup  * pg,
-			       DetailedTask          * task,
-			       mpi_timing_info_s     & mpi_info,
-			       SendRecord            & sends,
-			       SendState             & ss,
-			       OnDemandDataWarehouseP dws[2],
-			       const VarLabel        * reloc_label );
+    virtual void initiateTask( DetailedTask          * task );
+
+    // Performs the reduction task. (In Mixed, gives the task to a thread.)    
+    virtual void initiateReduction( DetailedTask          * task );    
 
     // Waits until all tasks have finished.  In the MPI Scheduler,
     // this is basically a nop, for the mixed, it talks to the ThreadPool 
@@ -122,6 +121,11 @@ WARNING
     
     virtual void verifyChecksum();
 
+    const ProcessorGroup* pg_;    
+    mpi_timing_info_s     mpi_info_;
+    SendRecord            sends_;
+    SendState*            ss_;
+    
     MPIRelocate      reloc_;
     const VarLabel * reloc_new_posLabel_;
     double           d_lasttime;

@@ -65,7 +65,7 @@ DependencyBatch::~DependencyBatch()
     dep = tmp;
   }
   delete lock_;
-  delete cv_;
+  //delete cv_;
 }
 
 void
@@ -683,6 +683,7 @@ DetailedTasks::initTimestep()
 
 void DetailedTasks::initializeBatches()
 {
+  cerr << "Initializing Batches\n";
   for (int i = 0; i < (int)batches.size(); i++) {
     batches[i]->reset();
   }
@@ -693,13 +694,12 @@ void DependencyBatch::reset()
   if (toTasks.size() > 1) {
     if (lock_ == 0)
       lock_ = scinew Mutex("DependencyBatch receive lock");
-    if (cv_ == 0)
-      cv_ = scinew ConditionVariable("DependencyBatch receive condition variable");
-    received_ = false;
-    madeMPIRequest_ = false; 
   }
+  received_ = false;
+  madeMPIRequest_ = false; 
 }
 
+/*
 bool DependencyBatch::makeMPIRequest()
 {
   if (toTasks.size() > 1) {
@@ -749,24 +749,71 @@ bool DependencyBatch::waitForMPIRequest()
   else
     return true;
 }
+*/
 
-void DependencyBatch::received()
+bool DependencyBatch::makeMPIRequest()
 {
   if (toTasks.size() > 1) {
-    lock_->lock();
-    received_ = true;
-
-    if( mixedDebug.active() ) {
-      cerrLock.lock();
-      mixedDebug << "Received batch message " << messageTag 
-		 << " from task " << *fromTask << endl;
-
-      for (DetailedDep* dep = head; dep != 0; dep = dep->next)
-	mixedDebug << "\tSatisfying " << *dep << endl;
-      cerrLock.unlock();
+    ASSERT(lock_ != 0);    
+    if (!madeMPIRequest_) {
+      lock_->lock();
+      if (!madeMPIRequest_) {
+	madeMPIRequest_ = true;
+	lock_->unlock();
+	return true; // first to make the request
+      }
+      else {
+	lock_->unlock();
+	return false; // got beat out -- request already made
+      }
     }
-    cv_->conditionBroadcast();
-    lock_->unlock();
+    return false; // request already made
+  }
+  else {
+    // only 1 requiring task -- don't worry about competing with another thread
+    ASSERT(!madeMPIRequest_);
+    madeMPIRequest_ = true;
+    return true;
+  }
+}
+
+void DependencyBatch::addReceiveListener(int mpiSignal)
+{
+  ASSERT(toTasks.size() > 1); // only needed when multiple tasks need a batch
+  ASSERT(lock_ != 0);  
+ lock_->lock();
+  receiveListeners_.insert(mpiSignal);
+ lock_->unlock();
+}
+
+void DependencyBatch::received(const ProcessorGroup * pg)
+{
+  received_ = true;
+  //cv_->conditionBroadcast(); -- replaced with mpi "listeners" below
+  //lock_->unlock();
+  
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << "Received batch message " << messageTag 
+	       << " from task " << *fromTask << endl;
+    
+    for (DetailedDep* dep = head; dep != 0; dep = dep->next)
+      mixedDebug << "\tSatisfying " << *dep << endl;
+    cerrLock.unlock();
+  }
+
+  if (!receiveListeners_.empty()) {
+    // only needed when multiple tasks need a batch
+    ASSERT(toTasks.size() > 1);
+    ASSERT(lock_ != 0);        
+   lock_->lock();
+    for (set<int>::iterator iter = receiveListeners_.begin();
+	 iter != receiveListeners_.end(); ++iter) {
+      // send WakeUp messages to threads on the same processor
+      MPI_Send(0, 0, MPI_INT, pg->myrank(), *iter, pg->getComm());
+    }
+    receiveListeners_.clear();
+   lock_->unlock();
   }
 }
 
