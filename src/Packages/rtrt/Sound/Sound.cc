@@ -92,13 +92,6 @@ Sound::activate()
   int frames = afReadFrames( file,AF_DEFAULT_TRACK, soundBuffer_, 
 			     numFrames_ );
 
-  FILE * fp = fopen( "output", "w" );
-  for(int cnt = 0; cnt < frames; cnt++ )
-    {
-      fprintf(fp, "%f\n", soundBuffer_[cnt] );
-    }
-   fclose( fp );
-
   cout << "read in " << frames << " of a possible " 
        << numFrames_ << " frames\n";
 
