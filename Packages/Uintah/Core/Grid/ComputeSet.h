@@ -24,7 +24,7 @@ namespace Uintah {
     }
 
     int size() const {
-      return items.size();
+      return (int)items.size();
     }
 
     T& operator[](int i) {
@@ -70,7 +70,7 @@ namespace Uintah {
     void add(const T&);
 
     int size() const {
-      return set.size();
+       return (int)set.size();
     }
     ComputeSubset<T>* getSubset(int idx) {
       return set[idx];

@@ -302,7 +302,7 @@ WARNING
       enum TaskType {
 	 Normal,
 	 Reduction,
-	 InitialSend,
+	 InitialSend
       };
 
       Task(const SimpleString&         taskName, TaskType type)
