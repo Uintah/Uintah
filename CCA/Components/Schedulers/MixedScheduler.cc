@@ -72,7 +72,7 @@ MixedScheduler::initiateTask( const ProcessorGroup  * pg,
 			      mpi_timing_info_s     & mpi_info,
 			      SendRecord            & sends,
 			      SendState             & ss,
-			      OnDemandDataWarehouse * dws[2],
+			      OnDemandDataWarehouseP  dws[2],
 			      const VarLabel        * reloc_label )
 {
   d_threadPool->assignThread( pg, task, mpi_info, sends, 

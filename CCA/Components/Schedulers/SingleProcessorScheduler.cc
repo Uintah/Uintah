@@ -79,7 +79,7 @@ SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
 void
 SingleProcessorScheduler::execute(const ProcessorGroup * pg)
 {
-  execute_tasks(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+  execute_tasks(pg, dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
   dws_[ Task::NewDW ]->finalize();
   finalizeNodes();
 }
@@ -87,19 +87,21 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pg)
 void
 SingleProcessorScheduler::executeTimestep(const ProcessorGroup * pg)
 {
-  execute_tasks(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+  execute_tasks(pg, dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
 }
 
 void
 SingleProcessorScheduler::executeRefine(const ProcessorGroup * pg)
 {
-  execute_tasks(pg, m_parent->dws_[Task::OldDW], dws_[Task::NewDW]);
+  execute_tasks(pg, m_parent->dws_[Task::OldDW].get_rep(),
+		dws_[Task::NewDW].get_rep());
 }
 
 void
 SingleProcessorScheduler::executeCoarsen(const ProcessorGroup * pg)
 {
-  execute_tasks(pg, dws_[Task::NewDW], m_parent->dws_[Task::NewDW]);
+  execute_tasks(pg, dws_[Task::NewDW].get_rep(),
+		m_parent->dws_[Task::NewDW].get_rep());
 }
 
 void

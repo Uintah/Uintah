@@ -2,7 +2,7 @@
 #define UINTAH_SCHEDULERS_THREADPOOL_H
 
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 
 #include <Core/Thread/Runnable.h>
@@ -36,7 +36,7 @@ public:
 		   mpi_timing_info_s     & mpi_info,
 		   SendRecord            & sends,
 		   SendState             & ss,
-		   OnDemandDataWarehouse * dws[2],
+		   OnDemandDataWarehouseP  dws[2],
 		   const VarLabel        * reloc_label );
 
   virtual void run();
@@ -56,7 +56,7 @@ private:
   mpi_timing_info_s     * mpi_info_;
   SendRecord            * sends_;
   SendState             * ss_;
-  OnDemandDataWarehouse * dws_[2];
+  OnDemandDataWarehouseP  dws_[2];
   const VarLabel        * reloc_label_;
 
   bool                    quit_;
@@ -84,7 +84,7 @@ public:
 		     mpi_timing_info_s     & mpi_info,
 		     SendRecord            & sends,
 		     SendState             & ss,
-		     OnDemandDataWarehouse * dws[2],
+		     OnDemandDataWarehouseP  dws[2],
 		     const VarLabel        * reloc_label );
 
   // Blocks until thread pool is empty.
