@@ -2,7 +2,7 @@
 #ifndef Math_CatmullRomSpline_h
 #define Math_CatmullRomSpline_h 1
 
-//namespace rtrt {
+namespace rtrt {
 
 template<class T>
 class CatmullRomSpline {
@@ -238,6 +238,6 @@ T CatmullRomSpline<T>::operator()(double x)
 #endif
 }
 
-//} // end namespace rtrt
+} // end namespace rtrt
 
 #endif
