@@ -8,6 +8,8 @@
 
 namespace Uintah {
 using namespace SCIRun;
+
+using std::map;
    
 /**************************************
 
