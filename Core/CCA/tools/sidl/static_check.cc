@@ -190,7 +190,7 @@ void Class::staticCheck(SymbolTable* names)
 
     //if it extends BaseException or an exception this class is an exception
     if((parentclass->name == "BaseException")||(parentclass->exceptionID))
-      exceptionID = exceptionCount++;
+      exceptionID = ++exceptionCount;
   }
   /* Check implements list */
   if(class_implements){

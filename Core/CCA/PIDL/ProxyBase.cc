@@ -124,7 +124,6 @@ void ProxyBase::_proxycreateSubset(int localsize, int remotesize)
 int ProxyBase::_proxygetException(int xid, int lineid)
 {
 
-  ::std::cerr << "_proxygetException called\n";
   int size = rm.getSize();
   int rank = rm.getRank();
   int recv_xid;
@@ -169,13 +168,15 @@ int ProxyBase::_proxygetException(int xid, int lineid)
       recv_xid = *(int *)(recvb);
       recv_lineid = *(int *)(recvb+sizeof(int));
       //Compare exceptions and take preferred one
-      if(recv_lineid > lineid) {
-	lineid = recv_lineid;
-	xid = recv_xid;
-      } else if(recv_lineid == lineid) {
-	if(recv_xid > xid) xid = recv_xid;
+      if(recv_xid > 0) {
+        if(recv_lineid < lineid) {
+	  lineid = recv_lineid;
+	  xid = recv_xid;
+        } else if(recv_lineid == lineid) {
+	  if(recv_xid > xid) xid = recv_xid;
+        }
       }
-      ::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ") WINS\n";
+      ::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ")(lineID=" << lineid << ") WINS\n";
       break;
     } case (loser): {
       char* p_sendb = sendb;
@@ -184,10 +185,10 @@ int ProxyBase::_proxygetException(int xid, int lineid)
       memcpy(p_sendb,&lineid,sizeof(int));
       rwinner = rank - (int)pow(2,round-1);
       (rm.intracomm)->send(rwinner,sendb,20);
-      ::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ") LOSES\n";
+      ::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ")(lineID=" << lineid << ") LOSES\n";
       break;
     } case (bye):
-      ::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ") HAS A BYE\n";
+      //::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ") HAS A BYE\n";
       //do nothing
       break;
     case (none):

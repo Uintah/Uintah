@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
 #include <math.h>
+#include <iostream>
 #include <Core/CCA/SSIDL/array.h>
 #include <Core/CCA/PIDL/Reference.h>
 
