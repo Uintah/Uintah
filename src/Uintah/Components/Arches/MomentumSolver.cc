@@ -42,24 +42,44 @@ MomentumSolver::MomentumSolver(TurbulenceModel* turb_model,
   d_pressureLabel = scinew VarLabel("pressure",
 				    CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velocityLabel = scinew VarLabel("velocity",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity",
+				     CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity",
+				     CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity",
+				     CCVariable<double>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
 				     CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velConvCoefLabel = scinew VarLabel("velocityConvectCoeff",
-				       CCVariable<Vector>::getTypeDescription() );
+  d_uVelConvCoefLabel = scinew VarLabel("uVelocityConvectCoeff",
+					CCVariable<double>::getTypeDescription() );
+  d_vVelConvCoefLabel = scinew VarLabel("vVelocityConvectCoeff",
+					CCVariable<double>::getTypeDescription() );
+  d_wVelConvCoefLabel = scinew VarLabel("wVelocityConvectCoeff",
+					CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velCoefLabel = scinew VarLabel("velocityCoeff",
-				   CCVariable<Vector>::getTypeDescription() );
+  d_uVelCoefLabel = scinew VarLabel("uVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelCoefLabel = scinew VarLabel("vVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelCoefLabel = scinew VarLabel("wVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velLinSrcLabel = scinew VarLabel("velLinearSource",
-				     CCVariable<Vector>::getTypeDescription() );
+  d_uVelLinSrcLabel = scinew VarLabel("uVelLinearSource",
+				      CCVariable<double>::getTypeDescription() );
+  d_vVelLinSrcLabel = scinew VarLabel("vVelLinearSource",
+				      CCVariable<double>::getTypeDescription() );
+  d_wVelLinSrcLabel = scinew VarLabel("wVelLinearSource",
+				      CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velNonLinSrcLabel = scinew VarLabel("velNonlinearSource",
-					CCVariable<Vector>::getTypeDescription() );
+  d_uVelNonLinSrcLabel = scinew VarLabel("uVelNonlinearSource",
+					 CCVariable<double>::getTypeDescription() );
+  d_vVelNonLinSrcLabel = scinew VarLabel("vVelNonlinearSource",
+					 CCVariable<double>::getTypeDescription() );
+  d_wVelNonLinSrcLabel = scinew VarLabel("wVelNonlinearSource",
+					 CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -151,7 +171,11 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       int matlIndex = 0;
       tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_velocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -161,10 +185,18 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       /// requires convection coeff because of the nodal
       // differencing
       // computes index components of velocity
-      tsk->computes(new_dw, d_velConvCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_velCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_velLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_velNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelConvCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelConvCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelConvCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelNonLinSrcLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -201,6 +233,11 @@ void MomentumSolver::buildLinearMatrix(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.5  2000/06/07 06:13:54  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.4  2000/06/04 22:40:13  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

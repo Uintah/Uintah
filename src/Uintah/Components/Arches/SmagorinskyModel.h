@@ -135,7 +135,9 @@ private:
       double d_filterl; // prescribed filter length scale
 
       // const VarLabel* variables
-      const VarLabel* d_velocityLabel;
+      const VarLabel* d_uVelocityLabel;
+      const VarLabel* d_vVelocityLabel;
+      const VarLabel* d_wVelocityLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
 

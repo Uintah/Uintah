@@ -177,15 +177,25 @@ private:
 
       // const VarLabel* (required)
       const VarLabel* d_pressureLabel;
-      const VarLabel* d_velocityLabel;
+      const VarLabel* d_uVelocityLabel;
+      const VarLabel* d_vVelocityLabel;
+      const VarLabel* d_wVelocityLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
 
       // const VarLabel* (computed)
-      const VarLabel* d_velConvCoefLabel;
-      const VarLabel* d_velCoefLabel;
-      const VarLabel* d_velLinSrcLabel;
-      const VarLabel* d_velNonLinSrcLabel;
+      const VarLabel* d_uVelConvCoefLabel;
+      const VarLabel* d_vVelConvCoefLabel;
+      const VarLabel* d_wVelConvCoefLabel;
+      const VarLabel* d_uVelCoefLabel;
+      const VarLabel* d_vVelCoefLabel;
+      const VarLabel* d_wVelCoefLabel;
+      const VarLabel* d_uVelLinSrcLabel;
+      const VarLabel* d_vVelLinSrcLabel;
+      const VarLabel* d_wVelLinSrcLabel;
+      const VarLabel* d_uVelNonLinSrcLabel;
+      const VarLabel* d_vVelNonLinSrcLabel;
+      const VarLabel* d_wVelNonLinSrcLabel;
       const VarLabel* d_presCoefLabel;
       const VarLabel* d_presLinSrcLabel;
       const VarLabel* d_presNonLinSrcLabel;
@@ -202,6 +212,11 @@ private:
 
 //
 // $Log$
+// Revision 1.16  2000/06/07 06:13:55  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.15  2000/06/04 23:57:47  bbanerje
 // Updated Arches to do ScheduleTimeAdvance.
 //

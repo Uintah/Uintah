@@ -48,10 +48,18 @@ PicardNonlinearSolver::PicardNonlinearSolver(Properties* props,
   d_pressureLabel = scinew VarLabel("pressure",
 				   CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velocityLabel = scinew VarLabel("velocity",
-				    CCVariable<Vector>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalar",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_xScalarLabel = scinew VarLabel("xScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_yScalarLabel = scinew VarLabel("yScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_zScalarLabel = scinew VarLabel("zScalar",
+				    CCVariable<double>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
@@ -203,9 +211,17 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
       int matlIndex = 0;
       tsk->requires(old_dw, d_pressureLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_velocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_scalarLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_xScalarLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_yScalarLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_zScalarLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -213,9 +229,13 @@ PicardNonlinearSolver::sched_initialize(const LevelP& level,
 		    numGhostCells);
 
       tsk->computes(new_dw, d_pressureLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_velocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_scalarLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_velocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_xScalarLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_yScalarLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_zScalarLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_densityLabel, matlIndex, patch);
       tsk->computes(new_dw, d_viscosityLabel, matlIndex, patch);
 
       sched->addTask(tsk);
@@ -242,12 +262,24 @@ PicardNonlinearSolver::initialize(const ProcessorContext* ,
 	      nofGhostCells);
 
   // (tmp) velocity should be FCVariable
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  CCVariable<Vector> scalar;
-  old_dw->get(scalar, d_scalarLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> xScalar;
+  old_dw->get(xScalar, d_xScalarLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  CCVariable<double> yScalar;
+  old_dw->get(yScalar, d_yScalarLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  CCVariable<double> zScalar;
+  old_dw->get(zScalar, d_zScalarLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   CCVariable<double> density;
@@ -265,13 +297,25 @@ PicardNonlinearSolver::initialize(const ProcessorContext* ,
   pressure_new = pressure; // copy old into new
 
   // (tmp) velocity should be FCVariable
-  CCVariable<Vector> velocity_new;
-  new_dw->allocate(velocity_new, d_velocityLabel, matlIndex, patch);
-  velocity_new = velocity; // copy old into new
+  CCVariable<double> uVelocity_new;
+  new_dw->allocate(uVelocity_new, d_uVelocityLabel, matlIndex, patch);
+  uVelocity_new = uVelocity; // copy old into new
+  CCVariable<double> vVelocity_new;
+  new_dw->allocate(vVelocity_new, d_vVelocityLabel, matlIndex, patch);
+  vVelocity_new = vVelocity; // copy old into new
+  CCVariable<double> wVelocity_new;
+  new_dw->allocate(wVelocity_new, d_wVelocityLabel, matlIndex, patch);
+  wVelocity_new = wVelocity; // copy old into new
 
-  CCVariable<Vector> scalar_new;
-  new_dw->allocate(scalar_new, d_scalarLabel, matlIndex, patch);
-  scalar_new = scalar; // copy old into new
+  CCVariable<double> xScalar_new;
+  new_dw->allocate(xScalar_new, d_xScalarLabel, matlIndex, patch);
+  xScalar_new = xScalar; // copy old into new
+  CCVariable<double> yScalar_new;
+  new_dw->allocate(yScalar_new, d_yScalarLabel, matlIndex, patch);
+  yScalar_new = yScalar; // copy old into new
+  CCVariable<double> zScalar_new;
+  new_dw->allocate(zScalar_new, d_zScalarLabel, matlIndex, patch);
+  zScalar_new = zScalar; // copy old into new
 
   CCVariable<double> density_new;
   new_dw->allocate(density_new, d_densityLabel, matlIndex, patch);
@@ -283,8 +327,12 @@ PicardNonlinearSolver::initialize(const ProcessorContext* ,
 
   // Copy the variables into the new datawarehouse
   new_dw->put(pressure_new, d_pressureLabel, matlIndex, patch);
-  new_dw->put(velocity_new, d_velocityLabel, matlIndex, patch);
-  new_dw->put(scalar_new, d_scalarLabel, matlIndex, patch);
+  new_dw->put(uVelocity_new, d_uVelocityLabel, matlIndex, patch);
+  new_dw->put(vVelocity_new, d_vVelocityLabel, matlIndex, patch);
+  new_dw->put(wVelocity_new, d_wVelocityLabel, matlIndex, patch);
+  new_dw->put(xScalar_new, d_xScalarLabel, matlIndex, patch);
+  new_dw->put(yScalar_new, d_yScalarLabel, matlIndex, patch);
+  new_dw->put(zScalar_new, d_zScalarLabel, matlIndex, patch);
   new_dw->put(density_new, d_densityLabel, matlIndex, patch);
   new_dw->put(viscosity_new, d_viscosityLabel, matlIndex, patch);
 }
@@ -325,6 +373,11 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.21  2000/06/07 06:13:55  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.20  2000/06/04 23:57:46  bbanerje
 // Updated Arches to do ScheduleTimeAdvance.
 //

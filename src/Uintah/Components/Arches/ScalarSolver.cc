@@ -40,21 +40,41 @@ ScalarSolver::ScalarSolver(TurbulenceModel* turb_model,
 				 d_physicalConsts(physConst),
 				 d_generation(0)
 {
-  d_scalarLabel = scinew VarLabel("scalar",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_xScalarLabel = scinew VarLabel("xScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_yScalarLabel = scinew VarLabel("yScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_zScalarLabel = scinew VarLabel("zScalar",
+				    CCVariable<double>::getTypeDescription() );
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velocityLabel = scinew VarLabel("velocity",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity",
+				    CCVariable<double>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
 				     CCVariable<double>::getTypeDescription() );
-  d_scalarCoefLabel = scinew VarLabel("scalarCoeff",
-				   CCVariable<Vector>::getTypeDescription() );
-  d_scalarLinSrcLabel = scinew VarLabel("scalarLinearSource",
-				     CCVariable<Vector>::getTypeDescription() );
-  d_scalarNonLinSrcLabel = scinew VarLabel("scalarNonlinearSource",
-					CCVariable<Vector>::getTypeDescription() );
+  d_xScalarCoefLabel = scinew VarLabel("xScalarCoeff",
+				   CCVariable<double>::getTypeDescription() );
+  d_yScalarCoefLabel = scinew VarLabel("yScalarCoeff",
+				   CCVariable<double>::getTypeDescription() );
+  d_zScalarCoefLabel = scinew VarLabel("zScalarCoeff",
+				   CCVariable<double>::getTypeDescription() );
+  d_xScalarLinSrcLabel = scinew VarLabel("xScalarLinearSource",
+				     CCVariable<double>::getTypeDescription() );
+  d_yScalarLinSrcLabel = scinew VarLabel("yScalarLinearSource",
+				     CCVariable<double>::getTypeDescription() );
+  d_zScalarLinSrcLabel = scinew VarLabel("zScalarLinearSource",
+				     CCVariable<double>::getTypeDescription() );
+  d_xScalarNonLinSrcLabel = scinew VarLabel("xScalarNonlinearSource",
+					CCVariable<double>::getTypeDescription() );
+  d_yScalarNonLinSrcLabel = scinew VarLabel("yScalarNonlinearSource",
+					CCVariable<double>::getTypeDescription() );
+  d_zScalarNonLinSrcLabel = scinew VarLabel("zScalarNonlinearSource",
+					CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -145,9 +165,17 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_scalarLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_xScalarLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_velocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_yScalarLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_zScalarLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -158,9 +186,15 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
       // differencing
       // computes all the components of velocity
       // added one more argument of index to specify scalar component
-      tsk->computes(new_dw, d_scalarCoefLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_scalarLinSrcLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_scalarNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_xScalarCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_yScalarCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_zScalarCoefLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_xScalarLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_yScalarLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_zScalarLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_xScalarNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_yScalarNonLinSrcLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_zScalarNonLinSrcLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -195,6 +229,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.4  2000/06/07 06:13:56  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.3  2000/06/04 22:40:15  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

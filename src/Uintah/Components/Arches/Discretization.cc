@@ -29,13 +29,21 @@ using SCICore::Geometry::Vector;
 Discretization::Discretization()
 {
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velocityLabel = scinew VarLabel("velocity",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity",
+				    CCVariable<double>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
 				   CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalar",
+  d_xScalarLabel = scinew VarLabel("xScalar",
+				   CCVariable<double>::getTypeDescription() );
+  d_yScalarLabel = scinew VarLabel("yScalar",
+				   CCVariable<double>::getTypeDescription() );
+  d_zScalarLabel = scinew VarLabel("zScalar",
 				   CCVariable<double>::getTypeDescription() );
   d_pressureLabel = scinew VarLabel("pressure",
 				   CCVariable<double>::getTypeDescription() );
@@ -63,8 +71,14 @@ Discretization::calculateVelocityCoeff(const ProcessorContext* pc,
   int numGhostCells = 0;
 
   // (** WARNING **) velocity is a FC variable
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
@@ -140,8 +154,14 @@ Discretization::calculatePressureCoeff(const ProcessorContext*,
 	      numGhostCells);
 
   // (** WARNING **) velocity is a FC variable
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> viscosity;
@@ -202,8 +222,14 @@ Discretization::calculateScalarCoeff(const ProcessorContext* pc,
   int numGhostCells = 0;
 
   // (** WARNING **) velocity is a FC variable
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
@@ -216,8 +242,32 @@ Discretization::calculateScalarCoeff(const ProcessorContext* pc,
 
   // ithe componenet of scalar vector
   CCVariable<double> scalar;
-  old_dw->get(scalar, d_scalarLabel, index, patch, Ghost::None,
-	      numGhostCells);
+  switch(index) {
+  case 1:
+    {
+    old_dw->get(scalar, d_xScalarLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+    }
+  case 2:
+    {
+    old_dw->get(scalar, d_yScalarLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+    }
+  case 3:
+    {
+    old_dw->get(scalar, d_zScalarLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+    }
+  default:
+    {
+    old_dw->get(scalar, d_xScalarLabel, matlIndex, patch, Ghost::None,
+		numGhostCells);
+    break;
+    }
+  }
 
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
@@ -326,6 +376,11 @@ Discretization::calculateScalarDiagonal(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.12  2000/06/07 06:13:54  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.11  2000/06/04 22:40:13  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.
