@@ -77,7 +77,6 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
     db->require("turbulentPrandtlNumber",d_turbPrNo);
   else
     d_turbPrNo = 0.4;
-  db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
 }
 
@@ -169,7 +168,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    double time = d_lab->d_sharedState->getElapsedTime();
+//    double time = d_lab->d_sharedState->getElapsedTime();
     // Variables
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -344,7 +343,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					DataWarehouse* new_dw,
 				        const TimeIntegratorLabel* timelabels)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
+//  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -542,7 +541,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 					DataWarehouse* new_dw,
 			    		const TimeIntegratorLabel* timelabels)
 {
-  double time = d_lab->d_sharedState->getElapsedTime();
+//  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
