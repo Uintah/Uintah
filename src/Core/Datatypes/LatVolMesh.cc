@@ -212,11 +212,13 @@ LatVolMesh::locate(node_index &node, const Point &p) const
 inline bool 
 LatVolMesh::locate(edge_index &, const Point &) const
 {
+  return 0;
 }
 
 inline bool
 LatVolMesh::locate(face_index &, const Point &) const 
 {
+  return 0;
 }
 
 inline bool
@@ -259,6 +261,7 @@ LatVolMesh::locate(cell_index &cell, const Point &p) const
   w[6] = (max.x()-p.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
   w[7] = (p.x()-min.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
 #endif
+  return true;
 }
 
 #define LATVOLMESH_VERSION 1
@@ -266,7 +269,7 @@ LatVolMesh::locate(cell_index &cell, const Point &p) const
 void
 LatVolMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_id.type.c_str(), LATVOLMESH_VERSION);
+  stream.begin_class(type_name().c_str(), LATVOLMESH_VERSION);
 
   // IO data members, in order
   Pio(stream, nx_);
@@ -279,8 +282,9 @@ LatVolMesh::io(Piostream& stream)
 }
 
 const string 
-LatVolMesh::type_name(int)
+LatVolMesh::type_name(int n)
 {
+  ASSERT(n >= -1 && n <= 0);
   static const string name = "LatVolMesh";
   return name;
 }

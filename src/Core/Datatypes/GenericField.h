@@ -162,20 +162,29 @@ GenericField<Mesh, FData>::type_id(type_name(),
 				   "Field",
 				   &make_GenericField<Mesh, FData>);
 
+
 template <class Mesh, class FData>
-const string GenericField<Mesh, FData>::type_name(int a)
+const string GenericField<Mesh, FData>::type_name(int n)
 {
-  
-  ASSERT((a <= 2) && a >= -1);
-  if (a == -1) {
-    return "GenericField<" + find_type_name((Mesh *)0) + ","
-    + find_type_name((FData *)0) + ">";
-  } else if (a == 0) {
+  ASSERT((n >= -1) && n <= 2);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNM
+      + type_name(2) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
     return "GenericField";
-  } else if (a == 1) {
+  }
+  else if (n == 1)
+  {
     return find_type_name((Mesh *)0);
-  }   
-  return find_type_name((FData *)0);
+  }
+  else
+  {
+    return find_type_name((FData *)0);
+  }
 }
 
 

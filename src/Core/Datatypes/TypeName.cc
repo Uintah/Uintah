@@ -30,100 +30,118 @@ class Point;
 // Floating-point types
 template<> const string find_type_name(float*)
 {
-  return "float";
+  static const string name = "float";
+  return name;
 }
 
 template<> const string find_type_name(double*)
 {
-  return "double";
+  static const string name = "double";
+  return name;
 }
 
 template<> const string find_type_name(long double*)
 {
-  return "long double";
+  static const string name = "long double";
+  return name;
 }
 
 //////////
 // Integer types
 template<> const string find_type_name(short*)
 {
-  return "short";
+  static const string name = "short";
+  return name;
 }
 
 template<> const string find_type_name(unsigned short*)
 {
-  return "unsigned short";
+  static const string name = "unsigned short";
+  return name;
 }
 
 template<> const string find_type_name(int*)
 {
-  return "int";
+  static const string name = "int";
+  return name;
 }
 
 template<> const string find_type_name(unsigned int*)
 {
-  return "unsigned int";
+  static const string name = "unsigned int";
+  return name;
 }
 
 template<> const string find_type_name(long*)
 {
-  return "long";
+  static const string name = "long";
+  return name;
 }
 
 template<> const string find_type_name(unsigned long*)
 {
-  return "unsigned long";
+  static const string name = "unsigned long";
+  return name;
 }
 
 template<> const string find_type_name(long long*)
 {
-  return "long long";
+  static const string name = "long long";
+  return name;
 }
 
 template<> const string find_type_name(unsigned long long*)
 {
-  return "unsigned long long";
+  static const string name = "unsigned long long";
+  return name;
 }
 
 //////////
 // Character types
 template<> const string find_type_name(char*)
 {
-  return "char";
+  static const string name = "char";
+  return name;
 }
 
 template<> const string find_type_name(unsigned char*)
 {
-  return "unsigned char";
+  static const string name = "unsigned char";
+  return name;
 }
 
 //////////
 // Boolean type
 template<> const string find_type_name(bool*)
 {
-  return "bool";
+  static const string name = "bool";
+  return name;
 }
 
 //////////
 // Template function specializations for some primitives
 template<> const string find_type_name(Vector*)
 {
-  return "Vector";
+  static const string name = "Vector";
+  return name;
 }
 
 template<> const string find_type_name(Point*)
 {
-  return "Point";
+  static const string name = "Point";
+  return name;
 }
 
 template<> const string find_type_name(Transform*)
 {
-  return "Transform";
+  static const string name = "Transform";
+  return name;
 }
 
 template<> const string find_type_name(string*)
 {
-  return "string";
+  static const string name = "string";
+  return name;
 }
 
 } // namespace SCIRun

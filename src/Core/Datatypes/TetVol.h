@@ -33,7 +33,6 @@ public:
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
-  //static const string type_name(int a);
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
@@ -69,13 +68,23 @@ TetVol<T>::io(Piostream& stream)
 
 template <class T> 
 const string 
-TetVol<T>::type_name(int a)
+TetVol<T>::type_name(int n)
 {
-  ASSERT((a <= 1) && a >= -1);
-  if (a == -1) {
-    return "TetVol<" + find_type_name((T *)0) + ">";
-  } else if (a == 0) { return "TetVol"; }
-  return find_type_name((T *)0);
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+
+  }
+  else if (n == 0)
+  {
+    return "TetVol";
+  }
+  else
+  {
+    return find_type_name((T *)0);
+  }
 }
 
 } // end namespace SCIRun

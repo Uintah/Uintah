@@ -39,24 +39,28 @@ public:
   value_type &operator[](typename LatVolMesh::node_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
-  static const string type_name(int a = -1);
-  virtual const string get_type_name(int n = -1) const 
-    { return type_name(n); } 
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
 };
 
 template <class Data>
 const string
-FData3d<Data>::type_name(int a)
+FData3d<Data>::type_name(int n)
 {
-  static const string class_name = "FData3d";
-  static const string template_arg = find_type_name((Data *)0);
-  static const string full_type_name = class_name + "<" + template_arg + ">";
-
-  ASSERT((a <= 1) && a >= -1);
-
-  if (a == -1) return full_type_name;
-  else if (a == 0) return class_name;
-  return template_arg; 
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    return "FData3d";
+  }
+  else
+  {
+    return find_type_name((Data *)0);
+  }
 }
 
 template <class Data>
@@ -73,9 +77,8 @@ public:
   virtual LatticeVol<Data> *clone() const 
     { return new LatticeVol<Data>(*this); }
  
-  static const string type_name(int a = 1); 
-  virtual const string get_type_name(int n = -1) const 
-    { return type_name(n); } 
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
 private:
@@ -93,8 +96,8 @@ LatticeVol<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-LatticeVol<Data>::type_id(type_name().c_str(),
-		GenericField<LatVolMesh, FData3d<Data> >::type_name().c_str(),
+LatticeVol<Data>::type_id(type_name(),
+		GenericField<LatVolMesh, FData3d<Data> >::type_name(),
                 maker); 
 
 template <class Data>
@@ -108,17 +111,23 @@ LatticeVol<Data>::io(Piostream &stream)
 
 template <class Data>
 const string
-LatticeVol<Data>::type_name(int a)
+LatticeVol<Data>::type_name(int n)
 {
-  static const string class_name = "LatticeVol";
-  static const string template_arg = find_type_name((Data *)0); 
-  static const string full_type_name = class_name + "<" + template_arg + ">";
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
 
-  ASSERT((a <= 1) && a >= -1);
-
-  if (a == -1) return full_type_name;
-  else if (a == 0) return class_name;
-  return template_arg; 
+  }
+  else if (n == 0)
+  {
+    return "LatticeVol";
+  }
+  else
+  {
+    return find_type_name((Data *)0);
+  }
 } 
 
 #if 0

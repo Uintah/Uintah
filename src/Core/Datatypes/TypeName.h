@@ -19,16 +19,22 @@
 #ifndef TYPENAME_H
 #define TYPENAME_H
 
-namespace SCIRun{
+namespace SCIRun {
 
 using std::string;
 using std::vector;
+
+
+static const char FTNS = '<';
+static const char FTNM = ',';
+static const char FTNE = '>';
+
 
 //////////
 // Function to return name of type of its argument
 template <class T> const string find_type_name(T*)
 {
-  return T::type_name(0);
+  return T::type_name();
 }
 
 class Vector;
@@ -61,17 +67,20 @@ template<class T> class Array2;
 
 template <class T> const string find_type_name(Array1<T>*)
 {
-  return "Array1<"+find_type_name((T*)0)+">";
+  static const string name = "Array1" + FTNS + find_type_name((T*)0) + FTNE;
+  return name;
 }
 
 template <class T> const string find_type_name(Array2<T>*)
 {
-  return "Array2<"+find_type_name((T*)0)+">";
+  static const string name = "Array2" + FTNS + find_type_name((T*)0) + FTNE;
+  return name;
 }
 
 template <class T> const string find_type_name(vector<T>*)
 {
-  return "vector<"+find_type_name((T*)0)+">";
+  static const string name = "vector" + FTNS + find_type_name((T*)0) + FTNE;
+  return name;
 }
 
 } // namespace SCIRun
