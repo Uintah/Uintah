@@ -30,10 +30,30 @@ using SCIRun::Mutex;
 using SCIRun::Thread;
 using namespace std;
 
+#if 1
 // I wanted to make this mutex a static member of DpyBase, but I had
 // troubles when calling Thread::exitAll().  Somehow it was getting
 // destroyed before non class members had a chance to use it.
 static Mutex xmutex("X windows lock");
+#else
+class MyMutex {
+public:
+  MyMutex(): mutex_("X Windows lock") {
+    cerr << "MyMutex::MyMutex() called\n";
+  }
+  ~MyMutex() {
+    cerr << "MyMutex::~MyMutex() called\n";
+  }
+
+  void lock() { mutex_.lock(); }
+  void unlock() { mutex_.unlock(); }
+
+  Mutex mutex_;
+};
+
+static MyMutex xmutex;
+
+#endif
 bool rtrt::DpyBase::useXThreads = false;
 
 DpyBase::DpyBase(const char *name, const int window_mode,
