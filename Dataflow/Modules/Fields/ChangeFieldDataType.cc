@@ -145,7 +145,7 @@ ChangeFieldDataType::execute()
     error("Unable to compile creation algorithm.");
     return;
   }
-  gui->execute(id + " set_state Executing 0");
+  update_state(Executing);
   outputfield_ = create_algo->execute(fh);
 
 
@@ -167,7 +167,7 @@ ChangeFieldDataType::execute()
     {
       remark("Copying " + old_data_type + " data into " + new_data_type +
 	     " may result in a loss of precision.");
-      gui->execute(id + " set_state Executing 0");
+      update_state(Executing);
       copy_algo->execute(fh, outputfield_);
     }
   }
