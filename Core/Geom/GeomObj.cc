@@ -29,6 +29,7 @@
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Thread/MutexPool.h>
 
 #include <iostream>
 using std::cerr;
@@ -38,13 +39,12 @@ namespace SCIRun {
 
 PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 
-#define GEOM_LOCK_POOL_SIZE 256
-static Mutex lock_pool_[GEOM_LOCK_POOL_SIZE];
-
+#define GEOM_LOCK_POOL_SIZE 257
+MutexPool lock_pool("GeomObj pool", GEOM_LOCK_POOL_SIZE);
 
 GeomObj::GeomObj(int id) :
   ref_cnt(0),
-  lock(lock_pool_[rand()%GEOM_LOCK_POOL_SIZE]),
+  lock(*(lock_pool.getMutex(lock_pool.nextIndex()))),
   id(id),
   _id(0x1234567,0x1234567,0x1234567)
 {
@@ -52,7 +52,7 @@ GeomObj::GeomObj(int id) :
 
 GeomObj::GeomObj(IntVector i) :
   ref_cnt(0),
-  lock(lock_pool_[rand()%GEOM_LOCK_POOL_SIZE]),
+  lock(*(lock_pool.getMutex(lock_pool.nextIndex()))),
   id( 0x1234567 ),
   _id(i)
 {
@@ -60,7 +60,7 @@ GeomObj::GeomObj(IntVector i) :
 
 GeomObj::GeomObj(int id_int, IntVector i) :
   ref_cnt(0),
-  lock(lock_pool_[rand()%GEOM_LOCK_POOL_SIZE]),
+  lock(*(lock_pool.getMutex(lock_pool.nextIndex()))),
   id( id_int ),
   _id(i)
 {
@@ -68,7 +68,7 @@ GeomObj::GeomObj(int id_int, IntVector i) :
 
 GeomObj::GeomObj(const GeomObj&) :
   ref_cnt(0),
-  lock(lock_pool_[rand()%GEOM_LOCK_POOL_SIZE])
+  lock(*(lock_pool.getMutex(lock_pool.nextIndex())))
   // TODO: id and _id uninitialized.
 {
 }
