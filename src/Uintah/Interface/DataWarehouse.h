@@ -9,9 +9,6 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/NCVariableBase.h>
-#include <Uintah/Grid/XFCVariableBase.h>
-#include <Uintah/Grid/YFCVariableBase.h>
-#include <Uintah/Grid/ZFCVariableBase.h>
 #include <Uintah/Grid/SFCXVariableBase.h>
 #include <Uintah/Grid/SFCYVariableBase.h>
 #include <Uintah/Grid/SFCZVariableBase.h>
@@ -123,31 +120,6 @@ WARNING
       virtual void put(const CCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
 
-      // Face  Centered (XFC) Variables
-      virtual void allocate(XFCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(XFCVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const XFCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
-
-      // Face  Centered (YFC) Variables
-      virtual void allocate(YFCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(YFCVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const YFCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
-
-
-      // Face  Centered (ZFC) Variables
-      virtual void allocate(ZFCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
-      virtual void get(ZFCVariableBase&, const VarLabel*, int matlIndex,
-		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-      virtual void put(const ZFCVariableBase&, const VarLabel*,
-		       int matlIndex, const Patch*) = 0;
-
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
       virtual void allocate(SFCXVariableBase&, const VarLabel*,
 			    int matlIndex, const Patch*) = 0;
@@ -212,6 +184,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.43  2000/12/22 00:11:12  jas
+// Got rid of the X,Y,Z FCVariable stuff.
+//
 // Revision 1.42  2000/12/07 01:35:32  witzel
 // Nixed the pleaseSave stuff (that is now handle in DataArchiver via
 // the problem specification).
