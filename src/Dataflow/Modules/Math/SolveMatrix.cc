@@ -566,10 +566,11 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
     str << id << " append_graph " << niter << " \"";
     int i;
     for(i=last_update;i<errlist.size();i++){
-	if (errlist[i]<1000000) 
-	    str << i << " " << errlist[i] << " ";
-	else 
-	    str << i << " 1000000 ";
+      double err = MakeReal(errlist[i]);
+      if (err < 1000000) 
+	str << i << " " << errlist[i] << " ";
+      else 
+	str << i << " 1000000 ";
     }
     str << "\" \"";
     for(i=last_errupdate;i<targetidx.size();i++){
