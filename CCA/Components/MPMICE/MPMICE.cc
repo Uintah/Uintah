@@ -147,12 +147,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-    if ( ice_matl) {
-     cout << "ice "<<endl;
-    }
-    if(mpm_matl){
-      cout << "mpm"<<endl;
-    }
+
     if( (ice_matl && ice_matl->getRxProduct() == Material::product) ||
         (mpm_matl && mpm_matl->getRxProduct() == Material::product) ){
       prod = true;
@@ -256,11 +251,11 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   for (int m = 0; m < numALLMatls; m++) {
     Material* matl = d_sharedState->getMaterial(m);
     if (matl->getRxProduct() == Material::product) {
-     //cerr << "Product Material: " << m << endl;
+     cout_norm<< "Product Material: " << m << endl;
      prod_sub->add(m);
     }
     if (matl->getRxProduct() == Material::reactant) {
-     //cerr << "reactant Material: " << m << endl;
+     cout_norm << "reactant Material: " << m << endl;
      react_sub->add(m);
     }
   }
@@ -608,14 +603,14 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls, gac,1);
-
+  
   t->computes( Ilb->int_eng_comb_CCLabel); 
   t->computes( Ilb->created_vol_CCLabel);
   t->computes( Ilb->mom_comb_CCLabel);
   t->computes(MIlb->burnedMassCCLabel);
   if(d_ice->d_massExchange) {// only compute diagnostic if there is a reaction
     t->computes(MIlb->onSurfaceLabel,     one_matl);
-    t->computes(MIlb->surfaceTempLabel,   react_matls);
+    t->computes(MIlb->surfaceTempLabel,   one_matl);
   }
 
   sched->addTask(t, patches, all_matls);
@@ -1890,9 +1885,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     
     constCCVariable<double> gasPressure,gasTemperature,gasVolumeFraction;
     constNCVariable<double> NC_CCweight;
-    constSFCXVariable<double> TempX_FC;
-    constSFCYVariable<double> TempY_FC;
-    constSFCZVariable<double> TempZ_FC;
+    constSFCXVariable<double> gasTempX_FC,solidTempX_FC;
+    constSFCYVariable<double> gasTempY_FC,solidTempY_FC;
+    constSFCZVariable<double> gasTempZ_FC,solidTempZ_FC;
     
     CCVariable<double> sumBurnedMass, sumCreatedVol,sumReleasedHeat;
     CCVariable<double> onSurface, surfaceTemp;
@@ -1939,12 +1934,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
         prod_indx = ice_matl->getDWIndex();
         
-        new_dw->get(TempX_FC,         Ilb->TempX_FCLabel,prod_indx,patch,gn,0);
-        new_dw->get(TempY_FC,         Ilb->TempY_FCLabel,prod_indx,patch,gn,0);
-        new_dw->get(TempZ_FC,         Ilb->TempZ_FCLabel,prod_indx,patch,gn,0);
+        new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,prod_indx,patch,gn,0);   
+        new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,prod_indx,patch,gn,0);   
+        new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,prod_indx,patch,gn,0);   
         new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,0,  patch,gn,0);
-        old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,  patch,gac,1);
-        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx,patch,gn,0);
+        old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
+        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,prod_indx, patch,gn,0);
         new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
                                                         prod_indx,patch,gn,0);
 
@@ -1958,13 +1953,16 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                                         prod_indx,patch);
         new_dw->allocateAndPut(onSurface,     MIlb->onSurfaceLabel, 
                                                         0, patch);
-                                                        
+        new_dw->allocateAndPut(surfaceTemp,   MIlb->surfaceTempLabel,
+                                                        0, patch);
         onSurface.initialize(0.0);
+        sumMom_comb.initialize(0.0);
+        surfaceTemp.initialize(0.0);
         sumBurnedMass.initialize(0.0); 
         sumCreatedVol.initialize(0.0);
         sumReleasedHeat.initialize(0.0);
-        sumMom_comb.initialize(0.0);
       }
+
       //__________________________________
       // Reactant data
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
@@ -1972,13 +1970,11 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->get(solidTemperature,MIlb->temp_CCLabel, react_indx,patch,gn,0);
         new_dw->get(solidMass,       MIlb->cMassLabel,   react_indx,patch,gn,0);
         new_dw->get(sp_vol_CC,       Ilb->sp_vol_CCLabel,react_indx,patch,gn,0);
-        new_dw->get(TempX_FC,        Ilb->TempX_FCLabel, react_indx,patch,gn,0);
-        new_dw->get(TempY_FC,        Ilb->TempY_FCLabel, react_indx,patch,gn,0);
-        new_dw->get(TempZ_FC,        Ilb->TempZ_FCLabel, react_indx,patch,gn,0);
+        new_dw->get(solidTempX_FC,   Ilb->TempX_FCLabel, react_indx,patch,gn,0);     
+        new_dw->get(solidTempY_FC,   Ilb->TempY_FCLabel, react_indx,patch,gn,0);     
+        new_dw->get(solidTempZ_FC,   Ilb->TempZ_FCLabel, react_indx,patch,gn,0);     
         new_dw->get(vel_CC,          MIlb->vel_CCLabel,  react_indx,patch,gn,0);
         new_dw->get(NCsolidMass,     Mlb->gMassLabel,    react_indx,patch,gac,1);
-        
-        new_dw->allocateAndPut(surfaceTemp,  MIlb->surfaceTempLabel,react_indx, patch);
       }
     }
     
@@ -1998,48 +1994,50 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
           IntVector c = *iter;
+         
+         //__________________________________
          // Find if the cell contains surface:
-         
-         patch->findNodesFromCell(*iter,nodeIdx);
-         
-         double MaxMass = NC_CCweight[nodeIdx[0]]*NCsolidMass[nodeIdx[0]];
-         double MinMass = NC_CCweight[nodeIdx[0]]*NCsolidMass[nodeIdx[0]];
-         for (int nN=0; nN<8; nN++) {
-           if (NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]>MaxMass) {
-             MaxMass = NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]];
-           }
-           if (NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]<MinMass) {
-             MinMass = NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]];
-           }
-         }         
+          patch->findNodesFromCell(*iter,nodeIdx);
+          double MaxMass = d_SMALL_NUM;
+          double MinMass = 1.0/d_SMALL_NUM;
+          for (int nN=0; nN<8; nN++) {
+            MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
+                                       NCsolidMass[nodeIdx[nN]]);
+            MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
+                                       NCsolidMass[nodeIdx[nN]]); 
+          }               
 
-         /* Here is the new criterion for the surface:
-            if (MnodeMax - MnodeMin) / Mcell > 0.5 - consider it a surface
-         */
 /*`==========TESTING==========*/
          #ifdef FAKE_BURN_MODEL
             MinMass = 0.0;   
          #endif
 /*==========TESTING==========`*/
-         if ((MaxMass-MinMass)/MaxMass > 0.4
+         if ((MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
           && (MaxMass-MinMass)/MaxMass < 1.0
-          &&  MaxMass > 1.e-100){
+          &&  MaxMass > d_SMALL_NUM){
           
-          onSurface[c] = 1.0;
-          
-         double Temperature = 0;
-         if (gasVolumeFraction[c] < 0.2){
-            Temperature = solidTemperature[c];
-         }
-          else {
-          Temperature =std::max(Temperature, TempX_FC[c] );    //L
-          Temperature =std::max(Temperature, TempY_FC[c] );    //Bot
-          Temperature =std::max(Temperature, TempZ_FC[c] );    //BK
-          Temperature =std::max(Temperature, TempX_FC[c + IntVector(1,0,0)] );
-          Temperature =std::max(Temperature, TempY_FC[c + IntVector(0,1,0)] );          
-          Temperature =std::max(Temperature, TempZ_FC[c + IntVector(0,0,1)] );
-         }
-         surfaceTemp[c] = Temperature;
+
+          //__________________________________
+          //  Determine the temperature
+          //  to use in burn model
+          double Temp = 0;
+           if (gasVolumeFraction[c] < 0.2){             //--------------KNOB 2
+            Temp =std::max(Temp, solidTempX_FC[c] );    //L
+            Temp =std::max(Temp, solidTempY_FC[c] );    //Bot
+            Temp =std::max(Temp, solidTempZ_FC[c] );    //BK
+            Temp =std::max(Temp, solidTempX_FC[c + IntVector(1,0,0)] );
+            Temp =std::max(Temp, solidTempY_FC[c + IntVector(0,1,0)] );          
+            Temp =std::max(Temp, solidTempZ_FC[c + IntVector(0,0,1)] );
+           }
+            else {
+            Temp =std::max(Temp, gasTempX_FC[c] );    //L
+            Temp =std::max(Temp, gasTempY_FC[c] );    //Bot
+            Temp =std::max(Temp, gasTempZ_FC[c] );    //BK
+            Temp =std::max(Temp, gasTempX_FC[c + IntVector(1,0,0)] );
+            Temp =std::max(Temp, gasTempY_FC[c + IntVector(0,1,0)] );          
+            Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
+           }
+           surfaceTemp[c] = Temp;
          
             double gradRhoX = 0.25 *
                               ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
@@ -2088,9 +2086,10 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
              double TmpZ = fabs(normalZ*delZ);
 
              double surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
+             onSurface[c] = surfArea; // debugging var
              
-             // compute the enthalpy of reaction and burnedMass         
-             matl->getBurnModel()->computeBurn(Temperature,
+             
+             matl->getBurnModel()->computeBurn(Temp,
                                           gasPressure[c],
                                           solidMass[c],
                                           solidTemperature[c],
