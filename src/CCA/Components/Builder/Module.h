@@ -71,6 +71,7 @@ public:
     QPoint usesPortPoint(int num);
     QPoint providesPortPoint(int num);
     PortIcon* getPort(const std::string &name, PortIcon::PortType type);
+    NetworkCanvasView* parent() const;
 
     std::string moduleName() const;
     std::string displayName() const;
@@ -126,6 +127,11 @@ private:
     bool hasUIPort;
     bool hasComponentIcon;
 };
+
+inline NetworkCanvasView* Module::parent() const
+{
+    return viewWindow;
+}
 
 inline sci::cca::ComponentID::pointer Module::componentID() const
 {

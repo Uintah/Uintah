@@ -498,6 +498,7 @@ void BuilderWindow::buildRemotePackageMenus(
     }
 }
 
+
 /*
  * Populate component menu by obtaining component class descriptions from
  * the CCA component repository.
@@ -508,6 +509,7 @@ void BuilderWindow::buildPackageMenus()
     statusBar()->message("Building component menus...");
     setCursor(Qt::WaitCursor);
     componentMenu->clear();
+    menus.clear();
 
     sci::cca::ports::ComponentRepository::pointer reg =
         pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
@@ -521,7 +523,6 @@ void BuilderWindow::buildPackageMenus()
     }
     std::vector<sci::cca::ComponentClassDescription::pointer> list =
         reg->getAvailableComponentClasses();
-    std::map<std::string, MenuTree*> menus;
 
     for (std::vector<sci::cca::ComponentClassDescription::pointer>::iterator iter =
             list.begin();
@@ -560,7 +561,7 @@ void BuilderWindow::buildPackageMenus()
     } else {
         insert_index = popupMenuID["Loader"];
     }
-    for (std::map<std::string, MenuTree*>::iterator iter = menus.begin();
+    for (MenuMap::iterator iter = menus.begin();
             iter != menus.end(); iter++) {
         QPopupMenu* menu = new QPopupMenu(this);
         menu->setFont(*bFont);

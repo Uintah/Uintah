@@ -79,14 +79,14 @@ private:
     std::string pName;
     // allows modules to keep track of their ports & used to calc. posn.
     int num;
-    sci::cca::TypeMap::pointer colorMap;
-    sci::cca::Services::pointer services;
 
     QPopupMenu *pMenu;
     QColor pColor;
     QColor iColor;
     QRect pRect;
     QRect iRect;
+    sci::cca::TypeMap::pointer colorMap;
+    sci::cca::Services::pointer services;
 };
 
 inline QPopupMenu* PortIcon::menu() const

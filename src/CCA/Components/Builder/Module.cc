@@ -72,6 +72,8 @@ Module::Module(NetworkCanvasView *parent,
     int top = 5;
     int w = 120;
     int h = 60;
+    viewWindow = parent;
+
     std::ostringstream nameWithNodes;
     menu = new QPopupMenu(this);
 
@@ -178,6 +180,7 @@ Module::Module(NetworkCanvasView *parent,
             }
             catch (const Exception& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
+                viewWindow->p2BuilderWindow->displayMsg("\n");
             }
 
             std::string instanceName = cid->getInstanceName();
@@ -202,6 +205,7 @@ Module::Module(NetworkCanvasView *parent,
             }
             catch (const Exception& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
+                viewWindow->p2BuilderWindow->displayMsg("\n");
             }
         }
 
@@ -217,6 +221,7 @@ Module::Module(NetworkCanvasView *parent,
             }
             catch (const Exception& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
+                viewWindow->p2BuilderWindow->displayMsg("\n");
             }
 
             sci::cca::Port::pointer p = services->getPort(iconName);
@@ -250,7 +255,6 @@ Module::Module(NetworkCanvasView *parent,
         menu->insertItem("Destroy", this, SLOT(destroy()) );
         services->releasePort("cca.BuilderService");
     }
-    viewWindow = parent;
     // fill this in
     //QWhatsThis::add(this, "Module\nUses Ports:\nProvides Ports:");
 
@@ -413,7 +417,6 @@ void Module::destroy()
 
 void Module::ui()
 {
-    progress->reset();
     std::string instanceName = cid->getInstanceName();
     std::string uiPortName = instanceName + " uiPort";
 
@@ -424,6 +427,7 @@ void Module::ui()
         viewWindow->p2BuilderWindow->displayMsg("uiPort is not connected, cannot bring up UI!\n");
     } else {
         int status = uiPort->ui();
+	   std::cerr << "UI status=" << status << std::endl;
 //         if (!hasGoPort) {
 //             if (status == 0) {
 //                 progress->setProgress(100);
