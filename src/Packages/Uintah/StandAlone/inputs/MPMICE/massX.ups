@@ -143,10 +143,10 @@
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="temp_CC"/>
-      <save label= "burnedMass"/>
-      <save label= "int_eng_comb"/>
-      <save label= "created_vol"/>
-      <save label="mom_comb_CC"/>
+      <save label="modelMass_src"/>
+      <save label="modelEng_src"/>
+      <save label="modelVol_src"/>
+      <save label="modelMom_src"/>
       <save label = "p.particleID"/>
       <save label = "p.x"/>
       <save label = "p.mass+"/>
