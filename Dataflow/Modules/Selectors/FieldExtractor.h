@@ -40,7 +40,7 @@ LOG
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <Core/Util/Timer.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/IntVector.h>
 #include <string>
@@ -88,7 +88,7 @@ protected:
 		      int mat,
 		      double time,
 		      const Var& v,
-		      LatticeVol<T>*& sfd,
+		      LatVolField<T>*& sfd,
 		      bool swapbytes = false);
   vector< double > times;
   int generation;
@@ -147,7 +147,7 @@ void FieldExtractor::build_field2(DataArchive& archive,
 				  int mat,
 				  double time,
 				  const Var& v,
-				  LatticeVol<T>*& sfd,
+				  LatVolField<T>*& sfd,
 				  bool swapbytes)
 {
   int max_workers = Max(Thread::numProcessors()/2, 4);
@@ -164,12 +164,12 @@ void FieldExtractor::build_field2(DataArchive& archive,
     update_progress(count++/size, my_timer);
     thread_sema->down();
     
-    PatchDataToLatticeVolThread<Var, T>* pdlvt = 
-      scinew PatchDataToLatticeVolThread<Var, T>
+    PatchDataToLatVolFieldThread<Var, T>* pdlvt = 
+      scinew PatchDataToLatVolFieldThread<Var, T>
       (archive, sfd, lo, varname, mat, *r, time, thread_sema, swapbytes);
     pdlvt->run();
 /*      Thread *thrd =  */
-/*        scinew Thread(scinew PatchDataToLatticeVolThread<Var, T> */
+/*        scinew Thread(scinew PatchDataToLatVolFieldThread<Var, T> */
 /*  		    (archive, sfd, lo, varname, mat, *r, time, thread_sema, */
 /*  		     swapbytes), */
 /*  		    "patch_data_to_lattice_vol_worker"); */

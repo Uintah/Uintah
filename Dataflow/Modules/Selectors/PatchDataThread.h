@@ -5,7 +5,7 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Util/Endian.h>
 #include <Packages/Uintah/Core/Grid/Variable.h>
@@ -29,7 +29,7 @@ using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 using SCIRun::Semaphore;
 using SCIRun::Runnable;
-using SCIRun::LatticeVol;
+using SCIRun::LatVolField;
 using SCIRun::LatVolMesh;
 
 
@@ -81,10 +81,10 @@ private:
   
 
 template <class Var, class Data>
-class PatchDataToLatticeVolThread : public Runnable {
+class PatchDataToLatVolFieldThread : public Runnable {
 public:  
-  PatchDataToLatticeVolThread(DataArchive& archive, 
-			      LatticeVol<Data> *fld,
+  PatchDataToLatVolFieldThread(DataArchive& archive, 
+			      LatVolField<Data> *fld,
 			      IntVector& offset,
 			      const string& varname,
 			      int matnum,
@@ -166,9 +166,9 @@ public:
   
 private:
   
-  PatchDataToLatticeVolThread(){}
+  PatchDataToLatVolFieldThread(){}
   DataArchive& archive_;
-  LatticeVol<Data> *fld_;
+  LatVolField<Data> *fld_;
   IntVector offset_;
   const string& name_;
   int mat_;

@@ -38,7 +38,7 @@ itcl_class Uintah_Operators_ScalarOperator {
 
 
 	label $w.calc.l \
-	    -text "Select Operation \n All output fields are LatticeVols"
+	    -text "Select Operation \n All output fields are LatVolFields"
 	radiobutton $w.calc.log -text "Natural Log" \
 		-variable $this-operation -value 0 \
 		-command "$this-c needexecute"

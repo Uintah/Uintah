@@ -6,7 +6,7 @@
 #include <Core/GuiInterface/TCL.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <string>
 #include <iostream>
 using std::string;
@@ -32,7 +32,7 @@ private:
   FieldIPort *in;
   FieldOPort *sfout;
     
-  LatticeVol<double> *aveField;
+  LatVolField<double> *aveField;
   FieldHandle aveFieldH;
   string varname;
   double time;

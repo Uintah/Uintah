@@ -2,7 +2,7 @@
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
@@ -45,14 +45,14 @@ void EigenEvaluator::execute(void) {
     return;
   }
 
-  LatticeVol<double> *eValueField = 0;
-  LatticeVol<Vector> *eVectorField = 0;
+  LatVolField<double> *eValueField = 0;
+  LatVolField<Vector> *eVectorField = 0;
 
-  if( LatticeVol<Matrix3> *tensorField =
-      dynamic_cast<LatticeVol<Matrix3>*>(hTF.get_rep())) {
+  if( LatVolField<Matrix3> *tensorField =
+      dynamic_cast<LatVolField<Matrix3>*>(hTF.get_rep())) {
 
-    eValueField = scinew LatticeVol<double>(hTF->data_at());
-    eVectorField = scinew LatticeVol<Vector>(hTF->data_at());
+    eValueField = scinew LatVolField<double>(hTF->data_at());
+    eVectorField = scinew LatVolField<Vector>(hTF->data_at());
     computeGridEigens(tensorField, eValueField,
 		      eVectorField, guiEigenSelect.get());
   }

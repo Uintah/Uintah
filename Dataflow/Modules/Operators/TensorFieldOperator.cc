@@ -2,7 +2,7 @@
 #include <math.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 
 //#include <SCICore/Math/Mat.h>
@@ -50,11 +50,11 @@ void TensorFieldOperator::execute(void) {
 
 
     
-  LatticeVol<double>  *scalarField = 0;  
-  if( LatticeVol<Matrix3> *tensorField =
-      dynamic_cast<LatticeVol<Matrix3>*>(hTF.get_rep())) {
+  LatVolField<double>  *scalarField = 0;  
+  if( LatVolField<Matrix3> *tensorField =
+      dynamic_cast<LatVolField<Matrix3>*>(hTF.get_rep())) {
 
-    scalarField = scinew LatticeVol<double>(hTF->data_at());
+    scalarField = scinew LatVolField<double>(hTF->data_at());
 
     performOperation( tensorField, scalarField );
     sfout->send(scalarField);

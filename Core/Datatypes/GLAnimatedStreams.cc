@@ -1,6 +1,6 @@
 #include "GLAnimatedStreams.h"
 #include "LevelField.h"
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>
@@ -555,7 +555,7 @@ GLAnimatedStreams::interpolate(FieldHandle texfld_, const Point& p, Vector& val)
       cerr << "Uintah::AnimatedStreams::interpolate:: error - unimplemented Field type: " << type << endl;
       return false;
     }
-  } else if( texfld_->get_type_name(0) == "LatticeVol" ){
+  } else if( texfld_->get_type_name(0) == "LatVolField" ){
     VectorFieldInterface *vfi;
     // use virtual field interpolation
     if( (vfi = texfld_->query_vector_interface()) ){
