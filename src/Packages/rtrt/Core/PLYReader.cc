@@ -70,6 +70,7 @@ PlyProperty tristrip_props[] = { /*list of property information for a vertex*/
 void
 rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
 {
+  cerr << "READ_PLY\n";
   int i,j,k;
   PlyFile *ply;
   int nelems;
@@ -150,6 +151,7 @@ rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
     if (equal_strings ("face", elem_name)) {
       
       /* set up for getting face elements */
+      cerr << "getting face properties\n";
       
       ply_get_property (ply, elem_name, &face_props[0]);
       
@@ -157,6 +159,7 @@ rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
 
       // don't need to save faces for this application,
       // so discard after use.
+      cerr << "got faces, num_elems=" << num_elems << '\n';
       Face face;
       for (j = 0; j < num_elems; j++) {
 	
@@ -270,6 +273,7 @@ rtrt::read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g)
 void
 rtrt::read_ply(char *fname, GridTris* gt)
 {
+  cerr << "READ_PLY2\n";
   if(gt->isCached()){
     cerr << "Skipping read_ply for: " << fname << ", thinking that it is cached\n";
     return;
@@ -345,7 +349,8 @@ rtrt::read_ply(char *fname, GridTris* gt)
     if (equal_strings ("face", elem_name)) {
       
       /* set up for getting face elements */
-      
+
+      cerr << "Getting face properties\n";
       ply_get_property (ply, elem_name, &face_props[0]);
       
       /* grab all the face elements */
@@ -353,15 +358,18 @@ rtrt::read_ply(char *fname, GridTris* gt)
       // don't need to save faces for this application,
       // so discard after use.
       Face face;
+      cerr << "There are " << num_elems << " faces\n";
       for (j = 0; j < num_elems; j++) {
 	
         /* grab an element from the file */
         ply_get_element (ply, (void *) &face);
+        //cerr << "face: verts=" << face.nverts << ", " << face.verts[0] << ", " << face.verts[1] << ", " << face.verts[2] << '\n';
 	
         /* print out face info, for debugging */
         for (k = 0; k < face.nverts-2; k++) 
 	  gt->addTri(face.verts[0], face.verts[k+1], face.verts[k+2]);
       }
+      cerr << "Done reading faces\n";
     }
 
     /* if we're on triangle strip elements, read them in */
