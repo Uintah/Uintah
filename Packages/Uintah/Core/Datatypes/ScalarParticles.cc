@@ -33,7 +33,7 @@ ScalarParticles::ScalarParticles()
 ScalarParticles::ScalarParticles(
 		 const vector <ParticleVariable<double> >& scalars,
 		 PSet* pset) :
-  scalars(scalars),  psetH(pset), have_minmax(false)
+  have_minmax(false), psetH(pset), scalars(scalars)
 {
 }
 
