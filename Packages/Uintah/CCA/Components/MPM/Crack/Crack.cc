@@ -237,7 +237,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
   Point p1,p2,p3,p4,pt,p_1,p_2;
 
   for(int p=0;p<patches->size();p++) {
-    //const Patch* patch = patches->get(p);
+    const Patch* patch = patches->get(p);
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){ 
@@ -392,7 +392,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
        numElems[m]=ce;   // number of crack segments in this material 
 
 #if 0 
-       cout << "*** Crack elements information \n" << "MatID: " << m << endl;
+       cout << "\n*** Crack elements information" << endl;
+       cout << "Patch ID: " << patch->getID() 
+            << ", MatID: " << m << endl;
        for(int mp=0; mp<numElems[m]; mp++) {
          n1=cElemNodes[m][mp].x();
          n2=cElemNodes[m][mp].y();
@@ -434,7 +436,6 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 
     Vector dx = patch->dCell(); 
     for(int m=0; m<numMatls; m++) {
-
       MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -1256,6 +1257,28 @@ void Crack::CrackContactAdjustIntegrated(const ProcessorGroup*,
   }  //End of loop over patches
 }
 
+void Crack::addComputesAndRequiresPrepareMovingCrack(Task* /*t*/,
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
+{
+// currently do nothing 
+}
+
+void Crack::PrepareMovingCrack(const ProcessorGroup*,
+                      const PatchSubset* /*patches*/,
+                      const MaterialSubset* /*matls*/,
+                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* /*new_dw*/)
+{
+  // just set if carck points moved to No
+  int numMPMMatls=d_sharedState->getNumMPMMatls();
+  for(int m=0; m<numMPMMatls; m++) {
+    for(int i=0; i<numPts[m]; i++) {
+      moved[m][i]=0;
+    }
+  }
+}
+
 void Crack::addComputesAndRequiresMoveCrack(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
@@ -1264,8 +1287,10 @@ void Crack::addComputesAndRequiresMoveCrack(Task* t,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, lb->gMassLabel,         gac, 2*NGN);
+  t->requires(Task::NewDW, lb->gNumPatlsLabel,     gac, 2*NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel, gac, 2*NGN);
   t->requires(Task::NewDW, lb->GMassLabel,         gac, 2*NGN);
+  t->requires(Task::NewDW, lb->GNumPatlsLabel,     gac, 2*NGN);
   t->requires(Task::NewDW, lb->GVelocityStarLabel, gac, 2*NGN);
 
   if(d_8or27==27)
@@ -1278,62 +1303,107 @@ void Crack::MoveCrack(const ProcessorGroup*,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
- int numMPMMatls=d_sharedState->getNumMPMMatls();
+  for(int p=0; p<patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label() );
 
- for(int p=0; p<patches->size(); p++){
-   const Patch* patch = patches->get(p);
-   delt_vartype delT;
-   old_dw->get(delT, d_sharedState->get_delt_label() );
+    IntVector l=patch->getCellLowIndex();
+    IntVector h=patch->getCellHighIndex();
+    Point lp=patch->nodePosition(l);
+    Point hp=patch->nodePosition(h);
 
-   IntVector l=patch->getCellLowIndex();
-   IntVector h=patch->getCellHighIndex();
-   Point lp=patch->nodePosition(l);
-   Point hp=patch->nodePosition(h);
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){ // loop over matls    
+      if(numElems[m]==0) continue; // for materials with no cracks
+      MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
+      int dwi=mpm_matl->getDWIndex();
+      ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
+      constParticleVariable<Vector> psize;
+      if(d_8or27==27) 
+        old_dw->get(psize,lb->pSizeLabel,pset);
 
-   for(int m = 0; m < numMPMMatls; m++){ // loop over matls    
-     if(numElems[m]==0) continue; // for materials with no cracks
-     MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
-     int dwi=mpm_matl->getDWIndex();
-     ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
-     constParticleVariable<Vector> psize;
-     if(d_8or27==27) 
-       old_dw->get(psize,lb->pSizeLabel,pset);
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      constNCVariable<double> gmass,Gmass;
+      constNCVariable<int>    gnum,Gnum;
+      constNCVariable<Vector> gvelocity_star, Gvelocity_star;
+      new_dw->get(gmass,         lb->gMassLabel,        dwi,patch,gac,2*NGN);
+      new_dw->get(gnum,          lb->gNumPatlsLabel,    dwi,patch,gac,2*NGN);
+      new_dw->get(gvelocity_star,lb->gVelocityStarLabel,dwi,patch,gac,2*NGN);
+      new_dw->get(Gmass,         lb->GMassLabel,        dwi,patch,gac,2*NGN);
+      new_dw->get(Gnum,          lb->GNumPatlsLabel,    dwi,patch,gac,2*NGN);
+      new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,2*NGN);
 
-     Ghost::GhostType  gac = Ghost::AroundCells;
-     constNCVariable<double> gmass;
-     constNCVariable<double> Gmass;
-     constNCVariable<Vector> gvelocity_star;
-     constNCVariable<Vector> Gvelocity_star;
-     new_dw->get(gmass,         lb->gMassLabel,        dwi,patch,gac,2*NGN);
-     new_dw->get(gvelocity_star,lb->gVelocityStarLabel,dwi,patch,gac,2*NGN);
-     new_dw->get(Gmass,         lb->GMassLabel,        dwi,patch,gac,2*NGN);
-     new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,2*NGN);
+      //move crack points
+      for(int i=0; i<numPts[m]; i++) { 
+        if(!moved[m][i] && 
+           cx[m][i].x()>=lp.x() && cx[m][i].y()>=lp.y() && cx[m][i].z()>=lp.z() &&
+           cx[m][i].x()<hp.x() && cx[m][i].y()<hp.y() && cx[m][i].z()<hp.z() 
+           ) { // not moved AND in this patch
+          
+           // move crack with centerofmass velocity field
+           IntVector ni[MAX_BASIS];
+           double S[MAX_BASIS];
+           if(d_8or27==8) 
+             patch->findCellAndWeights(cx[m][i], ni, S);
+           else if(d_8or27==27) 
+             patch->findCellAndWeights27(cx[m][i], ni, S, psize[i]);
 
-     //move crack points
-     for(int i=0; i<numPts[m]; i++) { 
-        if(cx[m][i].x()>=lp.x() && cx[m][i].x()<hp.x() &&
-           cx[m][i].y()>=lp.y() && cx[m][i].y()<hp.y() &&
-           cx[m][i].z()>=lp.z() && cx[m][i].z()<hp.z() ) { // in the patch
+           double sumS=0.0;
+           for(int k =0; k < d_8or27; k++) {
+             if(gnum[ni[k]]+Gnum[ni[k]]!=0) sumS+=S[k];
+           }
 
-         // move crack with centerofmass velocity field
-         IntVector ni[MAX_BASIS];
-         double S[MAX_BASIS];
-         if(d_8or27==8) 
-           patch->findCellAndWeights(cx[m][i], ni, S);
-         else if(d_8or27==27) 
-           patch->findCellAndWeights27(cx[m][i], ni, S, psize[i]);
+           Vector vcm = Vector(0.0,0.0,0.0);
+           if(sumS>1.e-6) {
+             for(int k = 0; k < d_8or27; k++) {
+               if(gnum[ni[k]]+Gnum[ni[k]]==0) continue;
+               double mg = gmass[ni[k]];
+               double mG = Gmass[ni[k]];
+               Vector vg = gvelocity_star[ni[k]];
+               Vector vG = Gvelocity_star[ni[k]];
+               vcm += (mg*vg+mG*vG)/(mg+mG)*S[k]/sumS;
+             }
+           }
+           cx[m][i] += vcm*delT;
+           moved[m][i]+=1; // initialized to be 0 in PrepareMovingCracks
+        } // End of if not moved and in patch p
+      } // End of loop over numPts[m]
+    } //End of loop over matls
+  } //End of loop over patches
+}
 
-         Vector vcm = Vector(0.0,0.0,0.0);
-         for(int k = 0; k < d_8or27; k++) {
-           double mg = gmass[ni[k]];
-           double mG = Gmass[ni[k]];
-           Vector vg = gvelocity_star[ni[k]];
-           Vector vG = Gvelocity_star[ni[k]];
-           vcm += (mg*vg+mG*vG)/(mg+mG)*S[k];
-         }
-         cx[m][i] += vcm*delT;
-       } // End of if in patch p
-     } // End of loop numPts[m]
+void Crack::addComputesAndRequiresUpdateCrackExtentAndNormals(Task* /*t*/,
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
+{
+// currently do nothing
+}
+
+void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
+                      const PatchSubset* /*patches*/,
+                      const MaterialSubset* /*matls*/,
+                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* /*new_dw*/)
+{
+  // Check if carck points moved and moved only once
+  int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+  for(int m=0; m<numMPMMatls; m++) {
+
+    cmin[m]=Point(9.e16,9.e16,9.e16);
+    cmax[m]=Point(-9.e16,-9.e16,-9.e16);
+    for(int i=0; i<numPts[m]; i++) {
+      // check if the point moved and only moved once
+      if(moved[m][i]!=1) {
+        cout << " Crack point cx[" << m << "]" << "[" << i 
+             << "] moved " << moved[m][i] << " time(s)" << endl;
+        exit(1);
+      }
+      // update crack extent for this material 
+      cmin[m]=Min(cmin[m],cx[m][i]);
+      cmax[m]=Max(cmax[m],cx[m][i]);
+    } // End of loop over crack points 
 
      // update crack element normals
      for(int i=0; i<numElems[m]; i++) {
@@ -1343,10 +1413,9 @@ void Crack::MoveCrack(const ProcessorGroup*,
        int n5=cElemNodes[m][i].z();
        cElemNorm[m][i]=TriangleNormal(cx[m][n3],cx[m][n4],cx[m][n5]);
      } // End of loop crack elements
-   } //End of loop over matls
- } //End of loop over patches
-}
 
+  } // End of loop over matls
+}
 
 // private functions
 
