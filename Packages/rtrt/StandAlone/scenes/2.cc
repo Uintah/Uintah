@@ -101,6 +101,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     scene->addObjectOfInterest( bs4, true );
     scene->addObjectOfInterest( bs5, true );
     scene->addObjectOfInterest( bs6, true );
+    scene->maxdepth=20;
 
     return scene;
 }
