@@ -320,11 +320,12 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 }
 
 double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
+                                      const double /*p_ref*/,
 					   const MPMMaterial* /*matl*/)
 {
 #if 0
   double rho_orig = matl->getInitialDensity();
-  double p_ref=101325.0;
+//  double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
 
   double p_gauge = pressure - p_ref;
@@ -342,11 +343,12 @@ double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
 }
 
 void CompMooneyRivlin::computePressEOSCM(const double /*rho_cur*/,double& /*pressure*/,
+                                         const double /*p_ref*/,
                                          double& /*dp_drho*/, double& /*tmp*/,
                                          const MPMMaterial* /*matl*/)
 {
 #if 0
-  double p_ref=101325.0;
+ // double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
   double shear = d_initialData.Shear;
   double rho_orig = matl->getInitialDensity();
