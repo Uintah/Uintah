@@ -1,0 +1,10 @@
+void mm_computevel(Array3<double> uu,
+	constCCVariable<double> press,
+	constCCVariable<double> den,
+	constCCVariable<double> epsg,
+	OffsetArray1<double> dxpw,
+	double deltat,
+	int ioff, int joff, int koff,
+	constCCVariable<int> pcell,
+	IntVector idxlo_u, IntVector idxhi_u,
+	int mmwallid);

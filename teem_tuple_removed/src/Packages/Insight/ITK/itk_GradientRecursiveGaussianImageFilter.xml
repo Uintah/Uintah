@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::GradientRecursiveGaussianImageFilter">
+  <description>
+Computes the gradient of an image by convolution with the first derivative of a Gaussian. 
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <template>VectorImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;itk::Vector&lt;float&gt;, 2&gt;</default>
+    </defaults>
+    <defaults>
+      <default>itk::Image&lt;float, 3&gt;</default>
+      <default>itk::Image&lt;itk::Vector&lt;float&gt;, 3&gt;</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="InputImage">
+      <type>InputImageType</type>
+      <call>SetInput</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="VectorImage">
+      <type>VectorImageType</type>
+      <call>GetOutput</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>sigma</name>
+      <type>double</type>
+      <call>SetSigma</call>
+      <default>1.0</default>
+    </param>
+    <param>
+      <name>normalize_across_scale</name>
+      <type>bool</type>
+      <call>SetNormalizeAcrossScale</call>
+      <default>0</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkGradientRecursiveGaussianImageFilter.h</file>
+  </includes>
+</filter-itk>
+

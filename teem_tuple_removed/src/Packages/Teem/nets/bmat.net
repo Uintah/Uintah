@@ -1,0 +1,24 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Teem" "Tend" "TendBmat" 10 10]
+set m1 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 196 197]
+
+addConnection $m0 0 $m1 0
+
+set $m0-notes {}
+set $m0-gradient_list {0.56656 0.453453 0.3453453
+0.453453 0.3443 0.8656
+0.22344 0.435346 0.445457
+0.2343 0.242 0.25235
+0.234 0.345 0.456
+0.234 0.3453 0.4547
+0.123 0.234 0.3465
+
+}
+set $m1-notes {}
+$m0 initialize_ui
+$m1 initialize_ui
+
+::netedit scheduleok

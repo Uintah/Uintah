@@ -1,0 +1,79 @@
+# SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 156 6]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 19 99]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 376 100]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 9 285]
+set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 171 366]
+set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 183 100]
+set m6 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 342 367]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 138 195]
+set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdWriter" 473 222]
+set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 342 448]
+
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m2 0
+addConnection $m0 0 $m5 0
+addConnection $m4 0 $m6 0
+addConnection $m5 0 $m6 1
+addConnection $m7 0 $m3 0
+addConnection $m1 0 $m7 0
+addConnection $m0 0 $m7 1
+addConnection $m7 0 $m4 0
+addConnection $m4 0 $m8 0
+addConnection $m6 0 $m9 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/sphere/sphere-voltage.tvd.fld
+set $m1-notes {}
+set $m1-show_status {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-label {gradients}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-label {potentials}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-join-axis {0}
+set $m6-incr-dim {0}
+set $m6-dim {2}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-use_interp {1}
+set $m7-use_closest {1}
+set $m7-closeness_distance {1.0e15}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-filename {/tmp/vector.nrrd}
+set $m8-filetype {}
+set $m9-notes {}
+set $m9-show_status {1}
+$m2 initialize_ui
+$m3 initialize_ui
+$m9 initialize_ui
+
+::netedit scheduleok

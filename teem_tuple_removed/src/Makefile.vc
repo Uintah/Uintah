@@ -1,0 +1,74 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# The top makefile for PSE using Visual C++
+# written by Chris Moulding 11/99
+
+!include "$(TOP)\src\scripts\Makefile.vc.config"
+
+!if ("$(VERSION)"=="Debug")
+APPENDIX = d
+!endif
+
+########################## EDIT HERE #################################
+
+LIBS = Core\Core$(APPENDIX).dll\
+       Dataflow\Dataflow$(APPENDIX).dll
+
+######################################################################
+
+RM = del
+
+all : pse.exe
+
+pse.exe : main\pse.exe
+	copy main\main.exe .\pse.exe
+
+main\pse.exe : $(LIBS)
+	cd main && $(MAKE) -fMakefile.vc
+
+Core\Core$(APPENDIX).dll:
+	cd Core && $(MAKE) -fMakefile.vc
+	
+PSECore\PSECore$(APPENDIX).dll: Core\Core$(APPENDIX).dll
+	cd Dataflow && $(MAKE) -fMakefile.vc
+
+Dataflow\Dataflow$(APPENDIX).dll: SCICore\SCICore$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
+	-cd Dataflow && $(MAKE) -fMakefile.vc
+
+SCIRun\SCIRun$(APPENDIX).dll: Core\Core$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
+	-cd Dataflow && $(MAKE) -fMakefile.vc
+
+Uintah\Uintah$(APPENDIX).dll: Core\Core$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
+	-cd Uintah && $(MAKE) -fMakefile.vc
+	
+clean: 
+	-$(RM) /s *.idb 2> NUL
+	-$(RM) /s *.ilk 2> NUL
+	-$(RM) /s *.pdb 2> NUL 1> NUL
+	-$(RM) /s *.exp 2> NUL 1> NUL
+	-$(RM) /s *.odll 2> NUL 1> NUL
+	-$(RM) /s *.oexe 2> NUL 1> NUL
+
+soclean:
+	-$(RM) /s *.exe 2> NUL 1> NUL
+	-$(RM) /s *.dll 2> NUL 1> NUL
+	-$(RM) /s *.lib 2> NUL 1> NUL
+
+cleanall: clean soclean
+
+	

@@ -1,0 +1,140 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+%
+% Notes:
+%
+% o Rename this file.  It should be named <module-name>.tex.
+%
+% o Complete mandatory sections below.
+%
+% o Use markup commands defined in scirun-doc.sty.
+%   Avoid presentation markup (e.g. \textbf or \emph).
+%
+% o To make your document web-friendly, use commands from html package. See
+%   latex2html manual or the book "The Latex Web Companion."
+%
+% o Don't use latex sectioning commands.  Use the commands
+%   \ModuleRefSubSection{<title>} and \ModuleRefSubSubSection{<title>} to add
+%   sub-sections and sub-sub-sections to the mandatory sections.
+%
+% o Add local commands if desired (via \newcommand).  But first check for
+%   equivalent markup in scirun-doc.sty.
+%
+% o Only use packages distributed with Latex2e.
+%
+% o Cite references with the \cite command. Put citations in
+%   a bib file and send along with this file.
+%
+% o Please include at least one image of your module's GUI. Provide 
+%   either an JPG or GIF version.  Note that an EPS version is needed but
+%   it will be generated automatically from the JPG or GIF figure when it
+%   is needed. 
+%
+% o Including images:  Create a figure command for each figure using the
+%   template below.  Copy the template (make a copy of the template
+%   for each figure) and uncomment only the first '%' in each line.
+%   Then replace angle-bracketed text with appropriate values.  Here is the
+%   template: 
+% 
+%%begin{latexonly}
+%  \newcommand{\<figure command name>}%
+%  {\centerline{\includegraphics[options]{\ModuleRefFigName{<figure-name>.eps}}}}
+%%end{latexonly}
+%\begin{htmlonly}
+%  \newcommand{\<figure command name (same as above)>}{%
+%  \htmladdimg[options]{\ModuleRefFigName{<figure-name.jpg-or-gif>}}}
+%\end{htmlonly}
+%
+%   Where in the ``latexonly'' part, ``options'' is a list of key-value pair
+%   options.  Typically the options specify graphic width, height, and
+%   bounding box.  See ``The Latex Graphics Companion'' for more
+%   information.  Note that we are using ``\includegraphics'' command
+%   from the ``graphicx'' package.
+%
+%   In the ``htmlonly'' part ``options'' is a list options such as ``align'',
+%   ``width'', ``height'', and ``alt''.  See ``The Latex Web Companion'' for
+%   details.
+%
+%   Where <figure-name>.eps and <figure-name.jpg-or-gif> should be
+%   replaced by the names of your figures.
+%   Note that figure names must be enclosed in the
+%   \ModuleRefFigName command.
+%   
+%   Now to actually create figures enclose each figure command as follows:
+%
+%\begin{figure}
+%  \begin{makeimage}
+%  \end{makeimage}
+%  \<figurecommand>
+%  \caption{\label{fig:<figure label>} <Caption text>}
+%\end{figure}
+%
+%   and replace bracketed text appropriately.
+%   
+
+% Uncomment the following block of commands and process with latex to see
+% what your document will look like.  Also uncomment \end{document} command
+% at the end of the file too.  Be sure to recomment these blocks when done!
+
+%% \documentclass{article}
+%% \newcommand{\ModuleRef}[3]{\section{#1} #1 is in Category #2 of Package #3}
+%% \newcommand{\Package}[1]{#1}
+%% \newcommand{\Category}[1]{#1}
+%% \newcommand{\Module}[1]{#1}
+%% \newcommand{\ModuleRefSummary}{\subsection*{Summary}}
+%% \newcommand{\ModuleRefUse}{\subsection*{Use}}
+%% \newcommand{\ModuleRefDetails}{\subsection*{Details}}
+%% \newcommand{\ModuleRefNotes}{\subsection*{Notes}}
+%% \newcommand{\ModuleRefCredits}{\subsection*{Credits}}
+%% \newcommand{\ModuleRefSubSection}[1]{\subsubsection*{#1}}
+%% \newcommand{\ModuleRefSubSubSection}[1]{\paragraph*{#1}}
+%% \begin{document}
+
+% Module information: replace the XXXX's
+\ModuleRef{\Module{XXXX}}{\Category{XXXX}}{\Package{XXXX}}
+
+% Major sections follow.  Note that each of these may be sub-sectioned
+% using the \ModuleRefSubSection and \ModuleRefSubSubSection commands.
+% Don't use latex section commands though!
+
+% Summary of module's purpose. No more than one paragraph.
+\ModuleRefSummary
+Summary here.
+
+% How to use the module.  Describe connections upstream and downstream
+% and how to use the GUI.  If desired, Walk the user through an example.
+% Please include at least one image of your module's GUI in either a JPG or
+% GIF version.
+% See the note above that explains how to include images.
+\ModuleRefUse
+Describe use here.
+
+% Description of module's algorithms, mathematics, etc.
+\ModuleRefDetails
+Details here.
+
+% Special notes.  These may be installation instructions, bugs, limitations,
+% etc.  Omit this section if there are no relevant notes.
+\ModuleRefNotes
+Write notes here.
+
+% Who is responsible? 
+\ModuleRefCredits
+Give yourself credit here.
+
+%%\end{document}

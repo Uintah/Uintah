@@ -1,0 +1,56 @@
+# SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Teem" "DataIO" "NrrdWriter" 9 165]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
+set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 10 88]
+set m3 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 216 5]
+set m4 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 216 83]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 216 164]
+set m6 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 416 86]
+
+addConnection $m1 0 $m2 0
+addConnection $m2 0 $m0 0
+addConnection $m3 0 $m4 0
+addConnection $m4 0 $m5 0
+addConnection $m3 0 $m6 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/tmp/sphere.nd}
+set $m0-filetype {Binary}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $DATADIR/sphere/sphere-voltage.tvd.fld
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-label {sphere}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-label {sphere}
+set $m3-type {Scalar}
+set $m3-axis {axis0}
+set $m3-add {0}
+set $m3-filename {/tmp/sphere.nd}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m6-notes {}
+set $m6-show_status {1}
+
+::netedit scheduleok

@@ -1,0 +1,123 @@
+# SCI Network 1.20
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+set bbox {9 8 383 377}
+set Name {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 9 8]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 9 333]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 188 90]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 188 178]
+set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 188 9]
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 9 90]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 9 256]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m0 0 $m5 0]
+set c1 [addConnection $m5 0 $m6 0]
+set c2 [addConnection $m2 0 $m3 0]
+set c3 [addConnection $m6 0 $m1 0]
+set c4 [addConnection $m4 0 $m5 1]
+set c5 [addConnection $m5 0 $m3 1]
+set c6 [addConnection $m3 0 $m6 1]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+set $m0-notes {}
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+
+set $m1-notes {}
+$m1 ui
+set $m1-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m1-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m1-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m1-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m1-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m1-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m1-ViewWindow_0-view-up-x ${view-up-x}
+set $m1-ViewWindow_0-view-up-y ${view-up-y}
+set $m1-ViewWindow_0-view-up-z ${view-up-z}
+set $m1-ViewWindow_0-view-fov ${view-fov}
+set $m1-ViewWindow_0-specular-scale {0.4}
+
+set $m2-notes {}
+set $m2-tcl_status {Calling GenStandardColorMaps!}
+set $m2-positionList {}
+set $m2-nodeList {}
+set $m2-width {1}
+set $m2-height {1}
+set $m2-mapType {3}
+set $m2-minRes {12}
+set $m2-resolution {128}
+set $m2-realres {128}
+set $m2-gamma {0}
+
+set $m3-notes {}
+set $m3-isFixed {0}
+set $m3-min {-78.301809804673255}
+set $m3-max {61.098199999999999}
+set $m3-makeSymmetric {0}
+
+set $m4-notes {}
+set $m4-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m5-notes {}
+set $m5-interpolation_basis {linear}
+set $m5-map_source_to_single_dest {0}
+set $m5-exhaustive_search {1}
+set $m5-exhaustive_search_max_dist {-1}
+set $m5-np {1}
+
+set $m6-notes {}
+set $m6-nodes-on {1}
+set $m6-edges-on {0}
+set $m6-faces-on {0}
+set $m6-text-on {0}
+set $m6-def-color-r {0.5}
+set $m6-def-color-g {0.5}
+set $m6-def-color-b {0.5}
+set $m6-def-color-a {0.5}
+set $m6-node_display_type {Spheres}
+set $m6-active_tab {Nodes}
+set $m6-node_scale [expr 0.03 * ${global-scale}]
+set $m6-field-name {Electrodes}
+set $m6-node-resolution {6}
+
+::netedit scheduleok

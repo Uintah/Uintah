@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+	<title></title>
+   </Meta>
+
+   <Time>
+	<maxTime>0.2</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.02</delt_min>
+	<delt_max>0.02</delt_max>
+	<timestep_multiplier>1.0</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+      <filebase>vesselslice0.uda</filebase>
+      <outputTimestepInterval> 1 </outputTimestepInterval>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/> 
+      <save label = "p.temperature"/> 
+      <save label = "p.stress"/> 
+      <save label = "g.internalforce"/>
+      <save label = "g.stressFS"/>
+   </DataArchiver>
+
+   <MPM>
+        <time_integrator>implicit</time_integrator>
+        <dynamic>false</dynamic>
+        <solver>petsc</solver>
+        <convergence_criteria_disp>1.e-4</convergence_criteria_disp>
+        <convergence_criteria_energy>4.e-4</convergence_criteria_energy>
+   </MPM>
+
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+                <burn type = "null" />
+                <density>1.0</density>
+                <thermal_conductivity>237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <heat_transfer_coefficient>111</heat_transfer_coefficient>
+		<constitutive_model type="comp_neo_hook"> 
+                    <bulk_modulus>500.</bulk_modulus>
+                    <shear_modulus>10.</shear_modulus>
+	        </constitutive_model>
+		<geom_object>
+		    <file>
+			<name>vesselslice0.pts</name>
+		    </file>
+		    <res>[2,2,1]</res>
+		    <velocity>[0.,0.,0.]</velocity>
+		    <temperature>250.</temperature>
+ 		</geom_object>
+		<geom_object>
+		    <file>
+			<name>collagenslice0.pts</name>
+		    </file>
+		    <res>[2,2,1]</res>
+		    <velocity>[0.,0.,0.]</velocity>
+		    <temperature>350.</temperature>
+ 		</geom_object>
+	    </material>
+	    <material>
+                <burn type = "null" />
+                <density>1.0</density>
+                <thermal_conductivity>237.0</thermal_conductivity>
+                <specific_heat>903</specific_heat>
+                <heat_transfer_coefficient>111</heat_transfer_coefficient>
+		<constitutive_model type="comp_neo_hook"> 
+                    <bulk_modulus>500.</bulk_modulus>
+                    <shear_modulus>10.</shear_modulus>
+	        </constitutive_model>
+                <is_rigid>true</is_rigid>
+		<geom_object>
+                    <box label="gp2">
+                        <min>[ 0.00, -1.322,-1.0]</min>
+                        <max>[132.2,  0.0,   0.0]</max>
+                    </box>
+		    <res>[2,2,1]</res>
+		    <velocity>[0.,-3.305,0.]</velocity>
+		    <temperature>320.</temperature>
+ 		</geom_object>
+		<geom_object>
+                    <box label="gp2">
+                        <min>[  0.0,330.5,  -1.0]</min>
+                        <max>[132.2,331.822, 0.0]</max>
+                    </box>
+		    <res>[2,2,1]</res>
+		    <velocity>[0.,3.305,0.]</velocity>
+		    <temperature>340.</temperature>
+ 		</geom_object>
+	    </material>
+
+            <contact>
+               <type>rigid</type>
+               <direction>[0,1,0]</direction>
+               <stop_time>9999.99</stop_time>
+               <vel_fields>[1,2,3]</vel_fields>
+            </contact>
+
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<Level>
+	    <Box label="1">
+		<lower>[ -2.644, -5.2880,-1.0]</lower>
+		<upper>[134.844, 335.788, 0.0]</upper>
+	        <resolution>[52, 129, 1]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM> </MPM>
+    </PhysicalBC>
+    
+    <InitialConditions>
+	<MPM> </MPM>
+    </InitialConditions>
+
+</Uintah_specification>

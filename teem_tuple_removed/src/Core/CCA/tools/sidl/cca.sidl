@@ -1,0 +1,298 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+// SSIDL interface descriptions of CCA and implementations.
+// The one disturbing property of this is that Babel.Object or equivalent
+// makes an appearance, as you would expect. Not surprisingly,
+// this is in the ConnectionEvent interface.
+// We haven't yet escaped completely from framework dependence
+// if we believe in events.
+// This could be the source for
+// specifying (or at least generating) all the language bindings.
+
+//=============================================================================
+//  The ports/services spec itself
+//=============================================================================
+package CCA {
+
+  /** Framework-specific interfaces 
+      (that may make components unportable across frameworks)
+  */
+  class FrameworkSpecific_Object; // externally defined Object/void *
+  class FrameworkSpecific_Event {}; // externally defined event object class
+
+  class ConnectionEvent extends FrameworkSpecific_Event {
+    void setSource(in FrameworkSpecific_Object source);
+    FrameworkSpecific_Object getSource();
+  };
+
+  interface ConnectionListener{
+     void connectionActivity(in ConnectionEvent evt);
+  };
+
+
+
+  /** Framework-independent CCA interfaces
+   */
+  interface Port {
+     /// just an inheritance stub. Which seems to be in question again.
+  };
+
+
+  interface PortInfo {
+    string getType();
+    string getName();
+    void setType(in string type);
+    void setName(in string name);
+
+    // part of a reference implementation
+    string toString();
+  };
+
+
+  interface Services {
+
+     array<PortInfo,1> getProvidesPorts();
+     array<PortInfo,1> getUsesPorts();
+     Port getPort(in string name); 
+
+     void registerUsesPort(in PortInfo name_and_type);
+     void addProvidesPort(in Port inPort, in PortInfo name);
+     void addConnectionListener(in ConnectionListener l);
+
+     void releasePort(in string name); // different arguments needed?
+  };
+
+
+  interface Core/CCA/Component {
+    void setServices(in Services cc);
+  };
+
+}; // end package CCA
+
+
+
+
+//=============================================================================
+//  the description of a PortInfo implementation and CCAServices
+//=============================================================================
+package Default { // default (reference) of CCA.PortInfo 
+
+  class PortInfo implements CCA.PortInfo {
+    /// Implements in the most generic way the PortInfo interface.
+    string getType();
+    string getName();
+
+    void setType(in string type);
+    void setName(in string name);
+    void copyPortInfo(in PortInfo p);
+
+    // part of a reference implementation
+    string toString();
+  };
+
+
+  class Gizzard implements CCA.Services {
+
+    array<CCA.PortInfo,1> getUsesPorts();
+    array<CCA.PortInfo,1> getProvidesPorts();
+    void registerUsesPort(in CCA.PortInfo name_and_type);
+    void addProvidesPort(in CCA.Port inPort, in CCA.PortInfo name);
+    CCA.Port getPort(in string name);
+    void releasePort(in string name);
+    void addConnectionListener(in CCA.ConnectionListener l);
+  
+  
+    // Below here these methods are unavailable to the components
+    // contained by our framework. 
+
+    void fireConnectionListeners(in CCA.ConnectionEvent evt);
+     /// Fire the listeners with a an event.
+  
+    /** This is how the framework adds a UsesPort.  Note that this is
+        completely inaccessible from the component. */
+    void addUsesPort(in CCA.PortInfo info, in CCA.Port up);
+
+    /** Answer with the UsesPort's that have been registered by the
+        component holding this CCAServices object. */
+    array<string,1> getUsesPortRegister();
+  
+  };
+}; // end package Default (reference implementation description)
+
+
+//=============================================================================
+//  the description of one way to do a direct-connect framework
+//=============================================================================
+package DirectConnect {
+
+  interface DefaultPort extends CCA.Port {
+    void addProvidesPort(in CCA.Port p);
+    void removeProvidesPort(in CCA.Port p);
+  };
+};
+
+package Go {
+  interface Port extends CCA.Port {  
+    void go();
+  };
+};
+
+
+//=============================================================================
+//  a batch of direct-connect interfaces in the funny triangle pattern
+//=============================================================================
+package StringConsumer {
+
+  interface Port extends CCA.Port {
+    void setString(in string s);
+  };
+};
+
+package TimeProducer {
+
+  interface Port extends CCA.Port {
+    string getTime();
+  };
+};
+
+package DoubleArrayProducer {
+  interface Port extends CCA.Port {
+    array<double,1> getArray();
+  };
+};
+
+
+
+
+//=============================================================================
+//  descriptions of several implementations of direct-connects
+//=============================================================================
+package ExampleCore/CCA/Components {
+
+  class StarterCore/CCA/Component implements DirectConnect.DefaultPort, CCA.Core/CCA/Component, Go.Port {
+    void setServices(in CCA.Services cc);
+    CCA.Services getServices();
+    void go();
+  };
+
+  class TimeStamper implements CCA.Core/CCA/Component, StringConsumer.Port {
+    void setCCAServices(in CCA.Services cc);
+    CCA.Services getServices();
+    void setString(in string s);
+  };
+
+  class Timer implements DirectConnect.DefaultPort,
+                         CCA.Core/CCA/Component,
+                         TimeProducer.Port {
+    void setServices(in CCA.Services svc);
+    CCA.Services getServices();
+    string getTime();
+  };
+
+};  // end package ExampleCore/CCA/Components
+
+
+
+
+
+
+//=============================================================================
+//  a slice of the ESI pie, for the sake of argument.
+//=============================================================================
+package ESI {
+
+  interface Map{};
+  interface MapAlgebraic extends Map {};
+
+  interface Vector {
+    int clone(out Vector createdVector);
+    int getMap(out Map map);
+    int put(in double scalar);
+    int scale(in double scalar);
+    int norm1(out double n1);
+    int norm2(out double n2);
+    int norm2squared(out double n2s);
+    int normInfinity(out double ni);
+    int minAbsCoef(out double scalar);
+  };
+
+  //// ... MANY other things in ESI
+  interface VectorSimpleAccess {};
+  interface VectorCommon{};
+  interface VectorPointerAccess{};
+  interface VectorReplaceAccess{};
+  interface VectorOperations{};
+  //........
+};  // end package ESI
+
+
+//=============================================================================
+//  prototype of an ESI component
+//=============================================================================
+
+package ESIReference {
+  class Vector implements ESI.VectorSimpleAccess,
+                          ESI.VectorCommon,
+                          ESI.VectorReplaceAccess,
+                          ESI.VectorPointerAccess,
+                          ESI.VectorOperations,
+                          ESI.Vector,
+                          CCA.Core/CCA/Component,
+                          DoubleArrayProducer.Port {
+
+
+    /** CCA.component functions */
+
+    void setServices(in CCA.Services cc);
+    CCA.Services getServices();
+
+
+    /** DoubleArrayProducer.Port */
+
+    array<double,1> getArray();
+
+
+    /** ESI.Vector functions */
+
+    int clone(out ESI.Vector x) ;
+      /// Clone source vector y to create target vector x.
+
+    int getMap(out ESI.Map map) ;
+      /// Get Map function.
+
+    /** Assignment functions... */
+
+    int put(in double scalar);
+      /// y[i] = scalar for all i
+
+    int scale(in double scalar);
+      /// y <- y*scalar
+
+    /** simple norms on y */
+    int norm1(out double norm) ;
+    int norm2(out double norm) ;
+    int norm2squared(out double norm) ;
+    int normInfinity(out double norm) ;
+
+  /** nonstandard goodies */
+    void setMap(in ESI.MapAlgebraic map);
+      /// Construct a vector with a map.
+
+  }; // end class Vector
+}; // end package ESIReference
+

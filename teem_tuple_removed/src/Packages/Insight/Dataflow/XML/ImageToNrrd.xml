@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ImageToNrrd" category="Converters">
+  <overview>
+    <authors>
+    </authors>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>InputImage</name>
+        <datatype>Insight::ITKDatatype</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>OutputNrrd</name>
+        <datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

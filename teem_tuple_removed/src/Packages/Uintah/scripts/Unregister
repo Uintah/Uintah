@@ -1,0 +1,40 @@
+#!/usr/local/bin/perl
+
+sub usage();
+sub main();
+
+$argu = $ARGV[0];
+
+if( $argu eq "-help" || $#ARGV ne 0 ){
+    usage();
+    exit();
+}
+
+sub main() {
+    $dirName = $ARGV[0];
+    print("Please Input Creator name: ", "\n");;
+    $System = <STDIN>;
+    chop($System);
+    #chop($dirName);
+
+    use LWP::Simple;
+    use URI::URL;
+
+    my $url1 = url('http://panda.cs.utah.edu/blazer/UnRegister');
+    $url1->query_form(SysName=>$dirName, Creator=>$System);
+    $content = get($url1);
+}
+
+sub usage() {
+    print("Name: Blazer Unregister Script:\n");
+    print("User command:\n");
+    print("      Unregister <whole .uda directory name>\n");
+    print("      For example:\n");
+    print("                 Unregister PSE/src/uda/tmp.uda.001\n");
+    print("Description:\n");
+    print("      This script will delete your most recently\n");
+    print("      Registered files.\n");
+}
+
+main();
+

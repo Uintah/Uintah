@@ -1,0 +1,137 @@
+
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+-->
+
+<html>
+  <head>
+    <link href="releasenotes.css" rel="stylesheet" type="text/css" />
+    <title>Version 1.20.2 Release Notes</title>
+  </head>
+
+  <body>
+    <div class="body">
+      <h1 class="doc_title">
+	Release Notes - SCIRun Version 1.20.2 - Feb 5, 2004
+      </h1>
+      <h1>
+	Documentation
+      </h1>
+      <ul>
+	<li>
+	  PowerApp Tutorial: improved images
+	</li>
+	<li>
+	  SCIRun Tutorial: updated
+	</li>
+      </ul>
+      <h1>
+	PowerApps
+      </h1>
+      <ul>
+	<li>
+	  All: added support for specifying a PowerApp session on the
+	  command line
+	</li>
+	<li>
+	  BioTensor: added ability to change widget values before
+	  widget is turned on (e.g. you can now change the isovalue
+	  <em>before</em> turning on the isosurface)
+	</li>
+      </ul>
+      <h1>
+	Packages
+      </h1>
+      <ul>
+	<li>
+	  Insight: more efficient Insight filter generation
+	</li>
+	<li>
+	  Insight: added many Insight filters
+	</li>
+	<li>
+	  BioPSE: add explicit control for whether ModifyConductivities
+	  should load new conductivities or previously-saved UI
+	  conductivities
+	</li>
+      </ul>
+      <h1>
+	Modules
+      </h1>
+      <ul>
+	<li>
+	  Isosurface: fixed memory leak
+	</li>
+	<li>
+	  ShowColorMap: improved layout; multiple colormaps can now be
+	  displayed simultaneously
+	</li>
+	<li>
+	  SynchronizeGeometry: improved robustness
+	</li>
+	<li>
+	  Viewer: use PWD for default location of saved images
+	</li>
+      </ul>
+      <h1>
+	NetworkEditor
+      </h1>
+      <ul>
+	<li>
+	  Reset port color when tracing connection
+	</li>
+	<li>
+	  Remove annotations when module is destroyed
+	</li>
+      </ul>
+      <h1>
+	Infrastructure
+      </h1>
+      <ul>
+	<li>
+	  Added fix for ATI driver bug; uncomment line 118 of
+	  Core/Geom/GeomOpenGL.cc to use (then recompile)
+	</li>
+	<li>
+	  OSX fix to allow SCIRun and converters to be run from
+	  anywhere Fixed EOL problem with dynamically compiled
+	  functions </li>
+      </ul>
+      <h1>
+	Data Sets
+      </h1>
+      <ul>
+	<li>
+	  Updated command line arguments for converter examples in
+	  README file
+	</li>
+      </ul>
+     </div>
+  </body>
+</html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../Utilities/XML/xhtml1-transitional.ced"
+sgml-indent-data: t
+sgml-indent-step: 2
+End:
+-->

@@ -1,0 +1,81 @@
+How to run ckinterp.F
+
+If you are running a simulation with reaction, you will need a chem.bin file in the directory in which you are running. The program ckinterp.F creates the chem.bin file. 
+
+To compile ckinterp.F
+ > f77 ckinterp.F -o ckinterp
+
+To run ckinterp.F,
+ > cp chem.inp.* chem.inp      (* represents the species list - and mechanism if desired -
+                                for the fuel you are using, e.g. methane, heptane, etc.)
+ > cp therm.dat.* therm.dat    (* represents which thermodynamic data set you need,
+                                e.g. methane, heptane, soot1, etc.) 
+ > ckinterp
+
+Output from ckinterp.F
+ 1. A file named chem.out, which includes a listing of the species and the mechanism
+    for which the chem.bin file was created. If there are any errors listed in this
+    file, no chem.bin file is created. 
+ 2. A file named chem.bin, which you need to copy to the directory in which you are 
+    running your simulation.
+
+An example of a chem.inp file with species only (no mechanism) is given below:
+ELEMENTS
+O  H  C  N 
+END
+SPECIES
+CO      CH4     H2      H2O     N2       O2      NO     NH3
+HCN     CH3OH   C(S)    CO2
+END
+
+An example of a chem.inp file with species and a mechanism is given below:
+ELEMENTS
+O  H  C  N  AR
+END
+SPECIES
+H2      H       O       O2      OH      H2O     HO2     H2O2    
+C       CH      CH2     CH2(S)  CH3     CH4     CO      CO2     
+HCO     CH2O    CH2OH   CH3O    CH3OH   C2H     C2H2    C2H3    
+C2H4    C2H5    C2H6    HCCO    CH2CO   HCCOH   N2      AR      
+END
+!THERMO
+! Insert GRI-Mech thermodynamics here or use in default file
+!END
+REACTIONS
+2O+M<=>O2+M                              1.200E+17   -1.000        .00
+H2/ 2.40/ H2O/15.40/ CH4/ 2.00/ CO/ 1.75/ CO2/ 3.60/ C2H6/ 3.00/ AR/  .83/ 
+O+H+M<=>OH+M                             5.000E+17   -1.000        .00
+H2/2.00/ H2O/6.00/ CH4/2.00/ CO/1.50/ CO2/2.00/ C2H6/3.00/ AR/ .70/ 
+O+H2<=>H+OH                              5.000E+04    2.670    6290.00
+O+HO2<=>OH+O2                            2.000E+13     .000        .00
+O+H2O2<=>OH+HO2                          9.630E+06    2.000    4000.00
+O+CH<=>H+CO                              5.700E+13     .000        .00
+O+CH2<=>H+HCO                            8.000E+13     .000        .00
+O+CH2(S)<=>H2+CO                         1.500E+13     .000        .00
+O+CH2(S)<=>H+HCO                         1.500E+13     .000        .00
+O+CH3<=>H+CH2O                           8.430E+13     .000        .00
+O+CH4<=>OH+CH3                           1.020E+09    1.500    8600.00
+O+CO+M<=>CO2+M                           6.020E+14     .000    3000.00
+H2/2.00/ O2/6.00/ H2O/6.00/ CH4/2.00/ CO/1.50/ CO2/3.50/ C2H6/3.00/ AR/ .50/ 
+O+HCO<=>OH+CO                            3.000E+13     .000        .00
+O+HCO<=>H+CO2                            3.000E+13     .000        .00
+O+CH2O<=>OH+HCO                          3.900E+13     .000    3540.00
+O+CH2OH<=>OH+CH2O                        1.000E+13     .000        .00
+O+CH3O<=>OH+CH2O                         1.000E+13     .000        .00
+O+CH3OH<=>OH+CH2OH                       3.880E+05    2.500    3100.00
+O+CH3OH<=>OH+CH3O                        1.300E+05    2.500    5000.00
+O+C2H<=>CH+CO                            5.000E+13     .000        .00
+O+C2H2<=>H+HCCO                          1.020E+07    2.000    1900.00
+O+C2H2<=>OH+C2H                          4.600E+19   -1.410   28950.00
+O+C2H2<=>CO+CH2                          1.020E+07    2.000    1900.00
+O+C2H3<=>H+CH2CO                         3.000E+13     .000        .00
+O+C2H4<=>CH3+HCO                         1.920E+07    1.830     220.00
+O+C2H5<=>CH3+CH2O                        1.320E+14     .000        .00
+O+C2H6<=>OH+C2H5                         8.980E+07    1.920    5690.00
+O+HCCO<=>H+2CO                           1.000E+14     .000        .00
+O+CH2CO<=>OH+HCCO                        1.000E+13     .000    8000.00
+O+CH2CO<=>CH2+CO2                        1.750E+12     .000    1350.00
+O2+CO<=>O+CO2                            2.500E+12     .000   47800.00
+O2+CH2O<=>HO2+HCO                        1.000E+14     .000   40000.00
+H+O2+M<=>HO2+M                           2.800E+18    -.860        .00
+O2/ .00/ H2O/ .00/ CO/ .75/ CO2/1.50/ C2H6/1.50/ N2/ .00/ AR/ .00/ 

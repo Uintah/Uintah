@@ -1,0 +1,95 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter id="dev.customtkwidgets">
+  <title>Custom Tk Widgets for SCIRun</title>
+ 
+  
+    <para>
+      This chapter describes extensions made to Tk by SCIRun to
+      provide for custom widgets.
+    </para>
+  
+
+  <section>
+    <title>Introduction</title>
+    <para>
+      The main purpose of this directory is provide additional GUI
+      component that are needed by SCIRun but are not provided by
+      Tk nor are easily implemented (if at all) in native TclTk. 
+      These extensions include support for an OpenGL window, three 
+      dimension look and feel and moving the cursor to a specified
+      window. These extensions are implemented here in C++ and are
+      added to the Tk built in commands in the initialization stage.
+    </para>
+  </section>
+  
+  <section>
+<title> </title>
+
+
+      <para>
+	There are three components to this interface: Initialization,
+	extensions and a hack of the Tk internals. GUI extensions to Tk
+	should be implemented here and added to the Tk built in commands
+	via the initialization in tkAppInit.c
+      </para>
+
+      <para>
+	A special attention should be given to the tclUnixNotify-*.c 
+	files. These files are a hack of a similar file internal to Tk.
+	Their purpose is to enable Tk to work in a multithreaded 
+	environment even though it was not designed to do so. Since the
+	corresponding file in the Tk distribution changes between different
+	versions of Tk we have included a modified version for the two
+	versions of Tk that are supported by SCIRun, namely 8.0.4 and 8.3 .
+      </para>
+
+      <para>
+        The code in this directory is meant to be used only via the tcl 
+	commands that it provides. Any tcl code can call these commands
+	to create the GUI they provide.
+      </para>
+
+     <section>
+       <title>tk command</title>
+    <para>
+      Tk provides a set of builtin GUI commands. One can augment them
+      by providing additional functions written in C++ (or C). These 
+      additional functions can interface the TCL/TK system via C function
+      calls as describe in the TCL/TK documentation.
+    </para>
+     </section>
+
+     <section>
+       <title>tkOpenGL</title>
+    <para>
+      A Tk window that embodies an OpenGL window.
+    </para>
+     </section>
+  </section>
+</chapter>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

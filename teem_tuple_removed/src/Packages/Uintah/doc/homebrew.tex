@@ -1,0 +1,78 @@
+%% LaTex
+%%
+%%
+%% Title: C-SAFE homebrew documentation
+%%
+%% Authors: Steve Parker, others later
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt]{article}
+%%\documentclass[widereview,draft]{/home/crj/papers/cls/IEEEtran}
+\usepackage{times}              % Postscript fonts.
+\usepackage{epsfig}
+\usepackage{program}
+%\usepackage{latexsym}
+%\usepackage{amsmath}
+\oddsidemargin 0in
+\textwidth 6.5in
+\topmargin -.5in
+\textheight 9in
+
+
+%%\documentstyle[11pt,draft,epsf,amstex]{ieeetran}
+%%\documentstyle[11pt,epsf,draft,titlepage]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Put text into a box centered on the page.
+%%
+%%       \boxtext{...}           
+%%       \boxtextcenter{...}     % center text in box (short message!)
+%%       \boxtexthighlight{...}  % center bold text in box (short message!)%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                %
+\newdimen\boxtextwidth
+\setlength{\boxtextwidth}{\columnwidth}
+\newcommand{\boxtext}[1]{\hfill\rule{0ex}{0.01ex}
+  \centerline{\fbox{\parbox{\boxtextwidth}{#1}}}}
+\newcommand{\boxtextcenter}[1]{\boxtext{\centerline{#1}}}
+\newcommand{\boxtexthighlight}[1]{\boxtextcenter{\textbf{#1}}}
+                                %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+
+\title{Towards Homebrew 1.0}
+
+
+\author{ Steven G. Parker, others in the future
+      }
+
+\maketitle
+
+
+\tableofcontents
+
+\begin{abstract}
+
+
+
+
+\end{abstract}
+
+\newpage
+
+%%
+%% INTRODUCTION
+%%
+
+\include{intro}
+\include{libraries}
+\include{grid}
+\include{parallel}
+\include{components}
+
+
+\end{document}

@@ -1,0 +1,166 @@
+#!/bin/sh
+
+# should have PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE
+# BUILDROOT, TEST_DATA, OPT_CONFIGURE,HTMLLOG,WEBLOG, and DBG_CONFIGURE all set
+PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA
+
+if [ ! -d "$BUILDROOT"/dbg ]; then
+  mkdir "$BUILDROOT"/dbg
+fi
+if [ ! -d "$BUILDROOT"/opt ]; then
+  mkdir "$BUILDROOT"/opt
+fi
+
+failed=0
+dbg_failed=0
+opt_failed=0
+use_html=1
+
+#remove files from previous tests if necessary
+rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$BUILDROOT"/opt/summary_log 
+
+#if VERBOSE is on, then have all output go to stdout instead of log
+
+
+
+# if weekly tests, do not do dbg
+if [ "$WEEKLY" != "1" ]; then
+  WKLY_STRING=" "
+  # make debug header to the webpage referred to by the mail message
+  echo "" >> "$HTMLLOG"
+  echo "/--------------------------\\" >> "$HTMLLOG"
+  echo "|    DEBUG TEST SUMMARY    |" >> "$HTMLLOG"
+  echo "\\--------------------------/" >> "$HTMLLOG"
+
+
+  if [ $VERBOSE = "yes" ]; then
+
+    build_and_run "dbg" "$DBG_CONFIGURE"
+  else
+    build_and_run "dbg" "$DBG_CONFIGURE" > "$BUILDROOT"/dbg/log 2>&1
+  fi
+  if [ $? != 0 ]; then
+    failed=1
+    dbg_failed=1
+    echo "Debug tests failed!" >> "$HTMLLOG"
+  else
+    echo "Debug tests passed!" >> "$HTMLLOG"
+  fi
+else
+  WKLY_STRING=" Weekly"
+fi
+
+#opt webpage header
+echo "" >> "$HTMLLOG"
+echo "/--------------------------\\" >> "$HTMLLOG"
+echo "|  OPTIMIZED TEST SUMMARY   |" >> "$HTMLLOG"
+echo "\\--------------------------/" >> "$HTMLLOG"
+   
+if [ $VERBOSE = "yes" ]; then
+  build_and_run "opt" "$OPT_CONFIGURE"
+else
+  build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
+fi
+
+retval=$?
+if [ $retval != 0 ]; then
+  failed=1
+  opt_failed=1
+  echo "Optimized tests failed!" >> "$HTMLLOG"
+else
+  echo "Optimized tests passed!" >> "$HTMLLOG"
+fi
+
+if [ $failed = "0" ]; then
+  echo "All tests passed!" >> "$BUILDROOT"/log
+  echo "All tests passed!" >> "$HTMLLOG"
+fi
+
+# make outputs to the file which will be sent in the mail
+echo "" >> "$BUILDROOT"/log
+
+if [ "$WEEKLY" != "1" ]; then
+  echo "/--------------------------\\" >> "$BUILDROOT"/log
+  if [ $dbg_failed != "0" ]; then
+    echo "| DEBUG TESTS - failed     |" >> "$BUILDROOT"/log
+  else
+    echo "| DEBUG TESTS - passed     |" >> "$BUILDROOT"/log
+  fi
+  echo "\\--------------------------/" >> "$BUILDROOT"/log
+  echo "" >> "$BUILDROOT"/log
+
+  cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
+
+echo "" >> "$BUILDROOT"/log
+fi
+    echo "/--------------------------\\" >> "$BUILDROOT"/log
+if [ $opt_failed != "0" ]; then
+    echo "| OPTIMIZED TESTS - failed |" >> "$BUILDROOT"/log
+else
+    echo "| OPTIMIZED TESTS - passed |" >> "$BUILDROOT"/log
+fi
+    echo "\\--------------------------/" >> "$BUILDROOT"/log
+echo "" >> "$BUILDROOT"/log
+cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
+
+echo "</pre></body></html>" >> "$HTMLLOG"
+echo "" >> "$BUILDROOT"/log
+
+#chmod -R g+w "$BUILDROOT"
+chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
+
+if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
+    if [ $failed = "0" ]; then
+	subject="SUCCESS:$WKLY_STRING Regression tests on `hostname`"
+    else
+	subject="FAILURE:$WKLY_STRING  Regression tests on `hostname`***"
+    fi
+
+    cat > "$BUILDROOT"/mail.msg <<EOF
+Subject: $subject
+To: $SEND_MAIL_TO
+EOF
+    cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
+
+    if [ $use_html = "1" ]; then
+	echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
+	echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
+    fi
+    sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+#   rm -f "$BUILDROOT"/mail.msg
+fi
+
+remake_file=""
+if [ -f "$BUILDROOT"/dbg/remake_failed_scirun.log ]; then
+    remake_file="$BUILDROOT"/dbg/remake_failed_scirun.log
+elif [ -f  "$BUILDROOT"/opt/remake_failed_scirun.log ]; then
+    remake_file="$BUILDROOT"/opt/remake_failed_scirun.log
+fi
+
+if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
+    subject="Failed to compile scirun with Uintah on `hostname`"
+
+    cat > "$BUILDROOT"/make_mail.msg <<EOF
+Subject: $subject
+To: $MAIL_REMAKE_LOG_TO
+$remake_file:
+
+EOF
+    cat $remake_file >> "$BUILDROOT"/make_mail.msg
+
+    sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/make_mail.msg
+    rm -f "$BUILDROOT"/make_mail.msg
+fi
+
+if [ $failed = "0" ]; then
+    if [ -d "${BUILD_DIR}/last_successful.lock" ]; then
+	rm -r "${BUILD_DIR}/last_successful.lock" 
+    fi
+    ln -s "$BUILDROOT" "${BUILD_DIR}/last_successful.lock"
+fi
+
+cd "$BUILD_DIR"
+cleanup
+
+exit $failed

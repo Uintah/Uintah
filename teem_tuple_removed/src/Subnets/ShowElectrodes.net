@@ -1,0 +1,88 @@
+# SCI Network 1.0
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set bbox {3 26 216 367}
+set Name {ShowElectrides}
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 21 151]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 21 26]
+set m2 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 3 92]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 21 214]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 3 310]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m2 0 $m4 0]
+set c1 [addConnection $m0 0 $m3 0]
+set c2 [addConnection $m4 0 Subnet 0]
+set c3 [addConnection Subnet 0 $m2 0]
+set c4 [addConnection $m1 0 $m2 1]
+set c5 [addConnection $m2 0 $m3 1]
+set c6 [addConnection $m3 0 $m4 1]
+set c7 [addConnection $m3 0 Subnet 1]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+
+set $m0-mapType {3}
+set $m0-minRes {12}
+set $m0-resolution {255}
+set $m0-realres {128}
+
+set $m1-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m2-notes {}
+set $m2-interpolation_basis {linear}
+set $m2-map_source_to_single_dest {0}
+set $m2-exhaustive_search {1}
+set $m2-exhaustive_search_max_dist {-1}
+set $m2-np {1}
+
+set $m4-nodes-on {1}
+set $m4-edges-on {0}
+set $m4-faces-on {0}
+set $m4-node_display_type {Spheres}
+set $m4-node_scale [expr 0.03 * ${global-scale}]
+set $m4-resolution {7}
+set $m4-field-name {Electrodes}
+
+::netedit scheduleok

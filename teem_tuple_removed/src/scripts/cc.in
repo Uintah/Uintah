@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# Wrapper for talkative /opt/MIPSpro/bin/{cc|CC} on SGIs.
+
+pipe IN,OUT;
+
+$pid=fork();
+
+if($pid==0) {
+  $doEcho=1;
+  close(OUT);
+  while(<IN>) {
+    chop;
+    if($_=~/^No such feature/) { $doEcho=0; }
+    if($_=~/^Cannot connect/) { $doEcho=0; }
+    if(length($_) != 0 && $doEcho==1) { printf STDERR "%s\n",$_; }
+    if($_=~/^ Graphics support/) { $doEcho=1; }
+  }
+  exit(42);
+} else {
+  close(IN);
+  open(STDERR,">&OUT");
+  $Prog=$0;
+  $Prog=~s/^.*\///g;
+  $result=system "VERBOSE_CC", @ARGV;
+  close(OUT);
+  close(STDERR);
+  close(STDIN);
+
+  # SGI's Perl exits with arg mod 256???
+  if($result>255) { $result=255; }
+
+  exit($result);
+}

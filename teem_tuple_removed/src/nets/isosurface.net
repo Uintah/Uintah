@@ -1,0 +1,83 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+#######################################################################
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Fri  Mar 23 2001"
+
+global runTime
+set runTime " 17:17:8"
+
+set bbox {12.0 13.0 364 336}
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 30 121]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 12 13]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 190 28]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 12 209]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 30 292]
+
+addConnection $m1 0 $m0 1
+addConnection $m2 0 $m0 0
+addConnection $m1 0 $m3 0
+addConnection $m0 0 $m3 1
+addConnection $m3 1 $m4 0
+
+set $m0-isFixed 0
+set $m0-min 0
+set $m0-max 1
+set $m1-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+set $m2-tcl_status {Calling GenStandardColorMaps!}
+set $m2-positionList {}
+set $m2-nodeList {}
+set $m2-width 1
+set $m2-height 1
+set $m2-mapType 3
+set $m2-minRes 12
+set $m2-resolution 255
+set $m3-isoval 0.747
+set $m3-extract-from-new-field 1
+set $m3-algorithm 0
+set $m3-build_trisurf 0
+$m4 initialize_ui
+set $m4-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m4-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m4-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m4-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m4-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m4-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m4-ViewWindow_0-view-up-x ${view-up-x}
+set $m4-ViewWindow_0-view-up-y ${view-up-y}
+set $m4-ViewWindow_0-view-up-z ${view-up-z}
+set $m4-ViewWindow_0-view-fov ${view-fov}
+$m3 initialize_ui
+
+::netedit scheduleok

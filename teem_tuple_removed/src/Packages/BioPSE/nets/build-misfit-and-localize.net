@@ -1,0 +1,423 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Fri  Feb 23 19101"
+
+global runTime
+set runTime " 16:40:9"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 283 8]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 283 68]
+set m2 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 102 618]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 594 749]
+set m4 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 668 77]
+set m5 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 482 231]
+set m6 [addModuleAtPosition "SCIRun" "Math" "MinNormLeastSq" 84 533]
+set m7 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 84 382]
+set m8 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 265 377]
+set m9 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 448 371]
+set m10 [addModuleAtPosition "BioPSE" "Inverse" "DipoleSearch" 283 144]
+set m11 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 668 10]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 647 292]
+set m13 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 102 291]
+set m14 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 283 292]
+set m15 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 466 293]
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 630 382]
+set m17 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 683 455]
+set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 650 144]
+set m19 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 452 8]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 648 671]
+set m21 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 701 212]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 852 515]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 852 577]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 416 671]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 909 501]
+set m26 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 416 611]
+set m27 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 909 436]
+set m28 [addModuleAtPosition "BioPSE" "LeadField" "BuildMisfitField" 927 373]
+
+addConnection $m4 1 $m3 0
+addConnection $m5 1 $m3 1
+addConnection $m8 0 $m6 1
+addConnection $m7 0 $m6 0
+addConnection $m9 0 $m6 2
+addConnection $m2 0 $m10 2
+addConnection $m6 0 $m10 3
+addConnection $m6 1 $m2 0
+addConnection $m0 0 $m10 1
+addConnection $m1 0 $m10 0
+addConnection $m11 0 $m4 0
+addConnection $m12 0 $m7 0
+addConnection $m12 0 $m8 0
+addConnection $m12 0 $m9 0
+addConnection $m10 0 $m13 0
+addConnection $m10 0 $m15 0
+addConnection $m10 0 $m14 0
+addConnection $m13 0 $m7 1
+addConnection $m14 0 $m8 1
+addConnection $m15 0 $m9 1
+addConnection $m16 0 $m3 2
+addConnection $m10 1 $m5 0
+addConnection $m10 2 $m16 0
+addConnection $m17 0 $m6 3
+addConnection $m17 0 $m2 1
+addConnection $m12 0 $m17 0
+addConnection $m18 1 $m17 1
+addConnection $m4 0 $m18 1
+addConnection $m0 0 $m18 0
+addConnection $m19 0 $m21 0
+addConnection $m20 0 $m3 3
+addConnection $m21 0 $m20 0
+addConnection $m22 0 $m23 0
+addConnection $m21 0 $m23 1
+addConnection $m23 0 $m20 1
+addConnection $m23 0 $m24 1
+addConnection $m24 0 $m3 4
+addConnection $m0 0 $m1 0
+addConnection $m25 1 $m3 5
+addConnection $m17 0 $m21 1
+addConnection $m19 0 $m24 2
+addConnection $m26 0 $m24 0
+addConnection $m19 0 $m26 0
+addConnection $m6 1 $m26 1
+addConnection $m27 0 $m25 0
+addConnection $m28 0 $m27 1
+addConnection $m12 0 $m28 0
+addConnection $m17 0 $m28 1
+addConnection $m0 0 $m27 0
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+set $m1-notes {}
+set $m1-show_status 1
+set $m1-maxseeds 15
+set $m1-numseeds 4
+set $m1-rngseed 3
+set $m1-type {}
+set $m1-dist {uniscat}
+set $m1-whichtab {Random}
+set $m2-notes {}
+set $m2-show_status 1
+set $m2-haveUI 1
+set $m2-methodTCL {CCinv}
+set $m2-pTCL {1}
+set $m3-notes {}
+set $m3-show_status 1
+$m3 initialize_ui
+set $m3-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m3-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m3-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m3-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m3-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m3-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m3-ViewWindow_0-view-up-x ${view-up-x}
+set $m3-ViewWindow_0-view-up-y ${view-up-y}
+set $m3-ViewWindow_0-view-up-z ${view-up-z}
+set $m3-ViewWindow_0-view-fov ${view-fov}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m4-notes {}
+set $m4-show_status 1
+set $m4-widgetSizeGui_ [expr 0.05 * ${global-scale}]
+set $m4-scaleModeGui_ {fixed}
+set $m4-showLastVecGui_ 1
+set $m4-showLinesGui_ -2147483647
+set $m5-notes {}
+set $m5-show_status 1
+set $m5-widgetSizeGui_ [expr 0.035 * ${global-scale}]
+set $m5-scaleModeGui_ {fixed}
+set $m5-showLastVecGui_ -2147483647
+set $m5-showLinesGui_ -2147483647
+set $m6-notes {}
+set $m6-show_status 1
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-row_or_col {col}
+set $m7-selectable_min {0}
+set $m7-selectable_max {18380}
+set $m7-selectable_inc {18381}
+set $m7-selectable_units {Units}
+set $m7-range_min {0}
+set $m7-range_max {0}
+set $m7-playmode {once}
+set $m7-current {0}
+set $m7-execmode {play}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-row_or_col {col}
+set $m8-selectable_min {0}
+set $m8-selectable_max {18380}
+set $m8-selectable_inc {18381}
+set $m8-selectable_units {Units}
+set $m8-range_min {0}
+set $m8-range_max {0}
+set $m8-playmode {once}
+set $m8-current {0}
+set $m8-execmode {play}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-row_or_col {col}
+set $m9-selectable_min {0}
+set $m9-selectable_max {18380}
+set $m9-selectable_inc {18381}
+set $m9-selectable_units {Units}
+set $m9-range_min {0}
+set $m9-range_max {0}
+set $m9-playmode {once}
+set $m9-current {0}
+set $m9-execmode {play}
+set $m10-notes {}
+set $m10-show_status 1
+set $m10-use_cache_gui_ 1
+set $m11-notes {}
+set $m11-show_status 1
+set $m11-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+set $m12-notes {}
+set $m12-show_status 1
+set $m12-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
+set $m13-notes {}
+set $m13-show_status {1}
+set $m13-row_or_col {col}
+set $m13-selectable_min {0}
+set $m13-selectable_max {2}
+set $m13-selectable_inc {3}
+set $m13-selectable_units {Units}
+set $m13-range_min {0}
+set $m13-range_max {0}
+set $m13-playmode {once}
+set $m13-current {0}
+set $m13-execmode {play}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m14-row_or_col {col}
+set $m14-selectable_min {0}
+set $m14-selectable_max {2}
+set $m14-selectable_inc {3}
+set $m14-selectable_units {Units}
+set $m14-range_min {1}
+set $m14-range_max {1}
+set $m14-playmode {once}
+set $m14-current {0}
+set $m14-execmode {play}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-row_or_col {col}
+set $m15-selectable_min {0}
+set $m15-selectable_max {2}
+set $m15-selectable_inc {3}
+set $m15-selectable_units {Units}
+set $m15-range_min {2}
+set $m15-range_max {2}
+set $m15-playmode {once}
+set $m15-current {0}
+set $m15-execmode {play}
+set $m16-notes {}
+set $m16-show_status 1
+set $m16-nodes-on 1
+set $m16-edges-on 0
+set $m16-faces-on 0
+set $m16-def-color-r 0.3
+set $m16-def-color-g 0.7
+set $m16-def-color-b 0.3
+set $m16-node_display_type {Spheres}
+set $m16-edge_display_type {Lines}
+set $m16-node_scale [expr 0.036 * ${global-scale}]
+set $m16-edge_scale [expr 0.03 * ${global-scale}]
+set $m16-show_progress -2147483647
+set $m16-resolution 10
+set $m17-notes {}
+set $m17-show_status 1
+set $m17-row 0
+set $m17-row_max 148
+set $m17-col 0
+set $m17-col_max 18380
+set $m17-row_or_col {col}
+set $m17-animate 0
+set $m18-notes {}
+set $m18-show_status 1
+set $m19-notes {}
+set $m19-show_status 1
+set $m19-filename $DATADIR/$DATASET/$DATASET-electrodes.pcv.fld
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-nodes-on {1}
+set $m20-nodes-as-disks {0}
+set $m20-edges-on {0}
+set $m20-faces-on {0}
+set $m20-use-normals {0}
+set $m20-use-transparency {0}
+set $m20-vectors-on {0}
+set $m20-normalize-vectors {}
+set $m20-has_vector_data {0}
+set $m20-bidirectional {0}
+set $m20-arrow-heads-on {1}
+set $m20-tensors-on {0}
+set $m20-has_tensor_data {0}
+set $m20-text-on {0}
+set $m20-text-use-default-color {1}
+set $m20-text-color-r {1.0}
+set $m20-text-color-g {1.0}
+set $m20-text-color-b {1.0}
+set $m20-text-backface-cull {0}
+set $m20-text-fontsize {1}
+set $m20-text-precision {2}
+set $m20-text-render_locations {0}
+set $m20-text-show-data {1}
+set $m20-text-show-nodes {0}
+set $m20-text-show-edges {0}
+set $m20-text-show-faces {0}
+set $m20-text-show-cells {0}
+set $m20-def-color-r {0.5}
+set $m20-def-color-g {0.5}
+set $m20-def-color-b {0.5}
+set $m20-def-color-a {0.5}
+set $m20-node_display_type {Spheres}
+set $m20-edge_display_type {Lines}
+set $m20-data_display_type {Arrows}
+set $m20-tensor_display_type {Boxes}
+set $m20-active_tab {Nodes}
+set $m20-node_scale {0.036}
+set $m20-edge_scale {0.03}
+set $m20-vectors_scale {0.30}
+set $m20-tensors_scale {0.30}
+set $m20-show_progress {-2147483647}
+set $m20-interactive_mode {Interactive}
+set $m20-node-resolution {15}
+set $m20-edge-resolution {6}
+set $m20-data-resolution {6}
+set $m21-notes {}
+set $m21-show_status 1
+set $m22-notes {}
+set $m22-show_status 1
+set $m22-tcl_status {Calling GenStandardColorMaps!}
+set $m22-positionList {}
+set $m22-nodeList {}
+set $m22-width 1
+set $m22-height 1
+set $m22-mapType 3
+set $m22-minRes 12
+set $m22-resolution 255
+set $m23-notes {}
+set $m23-show_status 1
+set $m23-isFixed 0
+set $m23-min -0.265176
+set $m23-max 1.21133
+set $m24-notes {}
+set $m24-show_status {1}
+set $m24-nodes-on {0}
+set $m24-nodes-as-disks {1}
+set $m24-edges-on {0}
+set $m24-faces-on {0}
+set $m24-use-normals {0}
+set $m24-use-transparency {0}
+set $m24-vectors-on {1}
+set $m24-normalize-vectors {0}
+set $m24-has_vector_data {1}
+set $m24-bidirectional {0}
+set $m24-arrow-heads-on {1}
+set $m24-tensors-on {0}
+set $m24-has_tensor_data {0}
+set $m24-text-on {0}
+set $m24-text-use-default-color {1}
+set $m24-text-color-r {1.0}
+set $m24-text-color-g {1.0}
+set $m24-text-color-b {1.0}
+set $m24-text-backface-cull {0}
+set $m24-text-fontsize {1}
+set $m24-text-precision {2}
+set $m24-text-render_locations {0}
+set $m24-text-show-data {1}
+set $m24-text-show-nodes {0}
+set $m24-text-show-edges {0}
+set $m24-text-show-faces {0}
+set $m24-text-show-cells {0}
+set $m24-def-color-r {0.5}
+set $m24-def-color-g {0.5}
+set $m24-def-color-b {0.5}
+set $m24-def-color-a {0.5}
+set $m24-node_display_type {Points}
+set $m24-edge_display_type {Lines}
+set $m24-data_display_type {Disks}
+set $m24-tensor_display_type {Boxes}
+set $m24-active_tab {Nodes}
+set $m24-node_scale {0.05}
+set $m24-edge_scale {0.03}
+set $m24-vectors_scale {0.045}
+set $m24-tensors_scale {0.30}
+set $m24-show_progress {-2147483647}
+set $m24-interactive_mode {Interactive}
+set $m24-node-resolution {6}
+set $m24-edge-resolution {6}
+set $m24-data-resolution {20}
+set $m25-notes {}
+set $m25-show_status {1}
+set $m25-isoval {0.03797}
+set $m25-isoval-min {3.4244525617954658e-16}
+set $m25-isoval-max {0.99919624266415186}
+set $m25-isoval-typed {0}
+set $m25-isoval-quantity {1}
+set $m25-quantity-range {colormap}
+set $m25-quantity-min {0}
+set $m25-quantity-max {100}
+set $m25-isoval-list {0}
+set $m25-extract-from-new-field {1}
+set $m25-algorithm {0}
+set $m25-build_trisurf {0}
+set $m25-np {1}
+set $m25-active-isoval-selection-tab {0}
+set $m25-active_tab {MC}
+set $m25-update_type {on release}
+set $m25-color-r {0.4}
+set $m25-color-g {0.2}
+set $m25-color-b {0.9}
+set $m26-notes {}
+set $m26-show_status {1}
+set $m27-notes {}
+set $m27-show_status {1}
+set $m28-notes {}
+set $m28-show_status {1}
+set $m28-metric {invCC}
+set $m28-pvalue {1}
+$m1 initialize_ui
+$m2 initialize_ui
+$m10 initialize_ui
+$m25 initialize_ui
+
+::netedit scheduleok

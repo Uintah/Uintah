@@ -1,0 +1,71 @@
+body {background-color:#CCCCCC; text-color:#000000; font-family:"times"; margin-left:1em; margin-right:1em; margin-top:1em}
+
+div.top-banner-margins {margin-left:-1em; margin-right:-1em; margin-top:-1em}
+div.bottom-banner-margins {margin-left:-1em; margin-right:-1em}
+
+a:link {color:#003333}
+a:visited {color:#2f4f4f;}
+
+p {margin-left:90px; margin-right:80px; font-family:"serif";}
+
+br {page-break-after:always}
+
+.toc {list-style-type:"upper-roman"; font-family:"serif"; margin-left:60px; margin-right:60px}
+
+.subtoc {list-style-type:disc; font-family:"serif"}
+
+.title {font-family: "times"; font-weight:bold; font-size:x-large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
+
+.ptitle {font-family: "times"; font-weight:bold; font-size:1.2em; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
+
+.subtitle {font-family:times; text-align:center; font-weight:bold}
+
+.psubtitle {font-family:times; text-align:center; font-weight:bold; font-size:0.80em}
+
+.fineprint {margin:0px; font-family:times; font-size:10.0}
+
+.head {color:#000000; margin:0px; margin-top:25px; border:none; font-size:large; font-family:"arial", "helvetica", "sans-serif"}
+
+.phead {color:#000000; margin:0px; margin-top:25px; border:none;
+font-family:"arial", "helvetica", "sans-serif"; font-size:.90em}
+
+.subhead {margin-left:10px; font-style:italic; font-size:1.15em; font-family:"arial", "helvetica", "sans-serif"}
+
+.psubhead {margin-left:10px; font-style:italic; font-size:0.80em; font-family:"arial", "helvetica", "sans-serif"}
+
+.subsubhead {margin-left:10px; font-weight:bold; font-family:"arial", "helvetica", "sans-serif"}
+
+.firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"}
+
+.pfirstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; font-size:0.70em}
+
+.nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"serif"}
+
+.example {margin-left:50px; white-space:pre; font-family:monospace}
+
+.pexample {margin-left:50px; white-space:pre; font-family:monospace; font-size:0.6em}
+
+blockquote {margin-left:150px; font-family:times}
+
+.list {font-family:"serif"; margin-left:60px}
+
+td {font-family:"arial", "helvetica", "sans-serif"}
+
+.small {font-size:small; font-family:"arial", "helvetica", "sans-serif"}
+
+.dropcap {font-family: "times"; font-size:40px; margin:0; color:#660000}
+
+.pdropcap {font-family: "times"; font-size:1.2em; margin:0; color:#660000}
+
+.question {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; color:#660000}
+
+div {page-break-inside:avoid}
+
+.box  {border-width: thin;
+	border-style: solid;
+	border-color: #000000;
+	background-color: #CCCCCC;
+	margin-left: 50px;
+	margin-right: 50px;
+        page-break-inside:avoid}
+

@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::watershed::SegmentTreeGenerator">
+  <description>
+This filter is a process object class that implements a step in the N-d watershed segmentation algorithm. It produces an ordered list (SegmentTree) of binary merges between segments at increasing saliency levels. This filter is used in conjunction with WatershedSegmenter and WatershedRelabeler to process an initial segmentation into a final relabeled volume. See itk::WatershedImageFilter for an overview of watershed segmentation.
+  </description>
+  <templated>
+    <template>ScalarType</template>
+    <defaults>
+      <default>float</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="Segment_Table">
+      <type>itk::watershed::SegmentTable&lt;ScalarType&gt;</type>
+      <call>SetInputSegmentTable</call>
+    </input>  
+    <input optional="yes" name="Equivalencey_Table">
+      <type>itk::EquivalencyTable</type>
+      <call>SetInputEquivalencyTable</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="Merge_Tree">
+      <type>itk::watershed::SegmentTree&lt;ScalarType&gt;</type>
+      <call>GetOutputSegmentTree</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>flood_level</name>
+      <type>double</type>
+      <call>SetFloodLevel</call>
+      <default>0.1</default>
+    </param>
+   <param>
+      <name>merge</name>
+      <type>bool</type>
+      <call>SetMerge</call>
+      <default>0</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkWatershedSegmentTreeGenerator.h</file>
+  </includes>
+</filter-itk>
+

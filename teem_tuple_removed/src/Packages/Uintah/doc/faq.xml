@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xml-stylesheet href="../../../../doc/faq.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!-- 
+  Entry format:
+             Keywords 
+             Question
+             Answer
+     Questions and answers are delimited with <p> or <pre> tags.
+
+  Example:
+  <entry>
+    <keywords>SGI, endian</keywords>
+    <question>
+      <p>
+        ...
+      </p>
+      ...
+    </question>
+    <answer>
+      <p>
+        ...
+      </p>
+      ...
+    </answer>
+  </entry>
+-->
+
+<faq name="Uintah FAQ">
+  <entry>
+    <keywords>fspec.pl</keywords>
+    <question>
+      <p>
+        Make  complains that fspec.pl is not executable.
+      </p>
+    <answer>
+      <p>
+        Configure is supposed to "chmod +x" this file.  It appears
+	not to the first time.  Manually do the chmod if you run
+	into this problem.  (chmod +x Packages/Uintah/tools/fspec.pl)
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>fspec.pl</keywords>
+    <question>
+      <p>
+        How do I get the simulation to only run a set number of
+	iterations instead of going to a set time?
+      </p>
+    <answer>
+      <p>
+        In the "Time" field of the .ups file, put in a
+        "max_iterations" tag.  Set the value to the number of
+	iterations you want executed.  The simulation will run that
+        many iterations (or till maxTime, which ever comes first.)
+      </p>
+    </answer>
+  </entry>
+
+
+  <entry>
+    <keywords>mpirun, MixedScheduler</keywords>
+    <question>
+      <p>
+        What is an example command line for running the MixedScheduler?
+      </p>
+    <answer>
+      <p>
+        mpirun -prefix "%g: " -np 2 sus -mpm -nthreads 4 \
+	    -loadbalancer SimpleLoadBalancer -scheduler MixedScheduler \
+	    inputs/MPM/bigbar.ups      
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>mpirun, -prefix "%g: "</keywords>
+    <question>
+      <p>
+        What arguments should I use with mpirun?
+      </p>
+    <answer>
+      <p>
+        Use '-prefix "%g: "' to get mpi to automatically print out
+	the processor number in front of any output.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>libblas</keywords>
+    <question>
+      <p>
+        Nirvana is complaining that is can't find libblas for linking sus.
+      </p>
+    <answer>
+      <p>
+        Libblas is a petsc thing.  The -l libs that are used to link sus
+	should not be correct (fixed in configure) and thus this
+	shouldn't be a problem anymore.
+      </p>
+      <p>
+        I believe it was libblas.  Correct me if I am wrong.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>configure</keywords>
+    <question>
+      <p>
+        What are the standard configure command line arguments?
+      </p>
+    <answer>
+      <p>
+      --enable-32bit or --enable-64bit: 
+      Whether to use 32 or 64 bit compilation
+      </p>
+      <p>
+      --enable-package=Uintah:
+      Packages to use.  You get the base PSE Core by default.
+      C-SAFErs will almost always only need Uintah.
+      </p>
+      <p>
+      --enable-debug or --disable-debug:
+      Whether you want the -g debug flag for compilation or not.
+      </p>
+      <p>
+      '--enable-optimize=-Ofast -G 0'
+      Optimization flag.  NOTE: Needs to be in quotes.
+      </p>
+      <p>
+      --enable-parallel:
+      Only used for the prototype CCA stuff.  Uintah does NOT require
+      it and you probably shouldn't use it unless you know what you
+      are doing.
+      </p>
+      <p>
+      --with-globus=/res/sci/data16/ddestger/globus_debug:
+      Location of the globus code.  Used wit the --enable-parallel command.
+      </p>
+      <p>
+      --with-tau=/res/sci/data1/TAU/sgin32/lib/Makefile.tau-sgitimers-sproc:
+      Location of the TAU (performance evaluation toolkit) code.
+      </p>
+      <p>
+      --enable-sci-malloc or --disable-sci-malloc:
+      Usually enable SCI malloc for debug, and disable it for
+      optimized builds.
+      </p>
+      <p>
+      --with-thirdparty=/usr/projects/Uintah/SCIRun_Thirdparty_32:
+      Where the SCIRun support code exists.  The above line is good
+      on Nirvana.  On machines local to the SCI group, this flag
+      need not be specified as configure will find the third party
+      libs automatically for you.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>Thirdparty</keywords>
+    <question>
+      <p>
+        Where do I get the SCIRun Thirdparty software?
+      </p>
+    <answer>
+      <p>
+        This web page has information on how to get and install the
+        SCIRun_Thirdparty software:
+        http://software.sci.utah.edu/software/1_0_1/doc/InstallGuide/ThirdpartyInfo.html        
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>DBL_EPSILON</keywords>
+    <question>
+      <p>
+         What do we know about the DBL_EPSILON being undefined under linux?
+      </p>
+    </question>
+    <answer>
+      <p>
+         Should be in limits.h or float.h.  I once found it here:
+         /usr/lib/gcc-lib/i586-mandrake-linux/2.98.3/include/limits.h
+      </p>
+    </answer>
+  </entry>
+
+</faq>
+
