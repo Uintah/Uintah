@@ -15,40 +15,37 @@
 #  University of Utah. All Rights Reserved.
 #
 
-# All the html files that make up the book.
-BASENAMES   = $(shell ls -1 p?c?.xml | sed 's,.xml,,g') TOC printable
-HTMLNAMES  = $(patsubst %,%.html,$(BASENAMES))
-BOOK = InstallationGuide.xml
-STYLESHEET =../../Utilities/XML/docbook.xsl
+# This Makefile uses the Saxon XSLT processor.  CLASSPATH must point to
+# saxon.jar
 
-#
-# If using saxon 6.3 or higher to process the xml files then
-# the environment variable CLASSPATH must point to saxon.jar.
-#
-define xmltohtml
--java com.icl.saxon.StyleSheet -w2 ${BOOK} ${STYLESHEET} \
-treetop=../../../ cont=${patsubst %.html,%,$@} > $@
-endef
+# STYLESHEET_PATH must point to the location of the srdocbook stylesheets,
+#  e.g. /Applications/docbook-xsl-1.51.1/html/.
 
-# If using xalan-java 2.3.1 or higher to process the xml files then
-# the environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
-#  and xercesImpl.jar.
-#
-# define xmltohtml
-# -java org.apache.xalan.xslt.Process -IN ${BOOK} -XSL ${STYLESHEET} \
-# -OUT $@ -PARAM treetop ../../../ -PARAM cont ${patsubst %.html,%,$@} -HTML
-# endef
+BOOK = main.xml
+PARAMS_COMMON=
+PARMS_CHUNK=${PARAMS_COMMON} chunk.section.depth=0 use.id.as.filename=1
+PARAMS_NOCHUNK=${PARAMS_COMMON} 
+STYLESHEET_CHUNK=${STYLESHEET_PATH}/srdocbook-chunk.xsl
+STYLESHEET_NOCHUNK=${STYLESHEET_PATH}/srdocbook.xsl
 
-default: $(HTMLNAMES)
+.PHONY: default chunk nochunk clean veryclean
 
-%.html: %.xml ${STYLESHEET}
-	${xmltohtml}
+default: chunk nochunk
 
-TOC.html printable.html: ${STYLESHEET} ${BOOK}
-	${xmltohtml}
+chunk: index.html
 
-clean: 
+index.html: *.xml
+	-java com.icl.saxon.StyleSheet -w2 \
+	${BOOK} ${STYLESHEET_CHUNK} ${PARMS_CHUNK}
+
+nochunk: Guide.html
+
+Guide.html: *.xml
+	-java com.icl.saxon.StyleSheet -w2 \
+	${BOOK} ${STYLESHEET_NOCHUNK} ${PARAMS_NOCHUNK} >$@
+
+clean:
 	-rm *~
 
 veryclean: clean
-	-rm -f $(HTMLNAMES)
+	-rm *.html
