@@ -465,7 +465,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,       Ghost::AroundCells,1);   
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,   Ghost::AroundCells,1);   
   t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,    Ghost::AroundCells,1);
-  t->requires(Task::NewDW, Ilb->int_eng_L_ME_CCLabel,Ghost::AroundCells,1);
+  t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,    Ghost::AroundCells,1);
 
   t->computes(Mlb->dTdt_NCLabel);
 
@@ -1184,7 +1184,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
-      new_dw->get(int_eng_L_ME_CC, Ilb->int_eng_L_ME_CCLabel,indx,patch,gac,1);
+      new_dw->get(int_eng_L_ME_CC, Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
       double cv = mpm_matl->getSpecificHeat();     
 
       new_dw->allocateAndPut(dTdt_NC, Mlb->dTdt_NCLabel,        indx, patch);
