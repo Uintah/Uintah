@@ -2948,7 +2948,6 @@ esac
 ## -- grep of the code suggests only those dependent upon CCA need this.
 ##  --  search for uuid functions, either uuid_create or uuid_generate ----
 
-
 if test "$sci_check_uuid" = "yes"; then
   # This is typical on SGI and ??
   AC_MSG_CHECKING(for uuid_create in sys/uuid.h)
@@ -3042,7 +3041,8 @@ AC_SUBST(UUID_LIB_FLAG)
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  if test "$have_uuid" != "yes"; then
+  ## For now, don't check for uuid if on macintosh.
+  if test "$have_uuid" != "yes" && test "$HAVE_OSX" != "yes"; then
     case $host in
       *linux*)
         SCI_MSG_ERROR(uuid_generate function and libuuid not found, must install ext2fs development tools)
