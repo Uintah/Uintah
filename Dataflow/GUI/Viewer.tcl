@@ -158,35 +158,15 @@ itcl_class ViewWindow {
 	$w.menu.file.menu add command -label "Save image file..." \
 	    -underline 0 -command "$this makeSaveImagePopup"
 
-	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
-		-menu $w.menu.renderer.menu
-	menu $w.menu.renderer.menu
-
 
 	# Get the list of supported renderers for the pulldown
-	set r [$viewer-c listrenderers]
 	
-	# OpenGL is the preferred renderer, X11 the next best.
-	# Otherwise just pick the first one for the default
-	global $this-renderer
-	if {[lsearch -exact $r OpenGL] != -1} {
-	    set $this-renderer OpenGL
-	} elseif {[lsearch -exact $r X11] != -1} {
-	    set $this-renderer X11
-	} else {
-	    set $this-renderer [lindex $r 0]
-	}
 	frame $w.wframe -borderwidth 3 -relief sunken
 	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
 
 	set width 640
 	set height 512
-	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
 
-	foreach i $r {
-	    $w.menu.renderer.menu add radio -label $i -variable $this-renderer \
-		    -value $i -command "$this switchRenderer $i"
-	}
 	menubutton $w.menu.edit -text "Edit" -underline 0 \
 		-menu $w.menu.edit.menu
 	menu $w.menu.edit.menu
@@ -385,7 +365,8 @@ itcl_class ViewWindow {
 	pack $w.detached.f -side top -anchor w -fill x
 	
 	wm title $w.detached "VIEWWINDOW settings"
-	update
+	# This update messes up SCIRun2 - is it necessary? Steve
+	#update
 
 	wm sizefrom  $w.detached user
 	wm positionfrom  $w.detached user
@@ -494,7 +475,6 @@ itcl_class ViewWindow {
 
     method init_frame {m msg} {
 	if { [winfo exists $m] } {
-	puts "Initializing frame ... "
 	global "$this-global-light"
 	global "$this-global-fog"
 	global "$this-global-psize"
@@ -757,17 +737,6 @@ itcl_class ViewWindow {
 	    }
 	    update
 	}
-    }
-
-    method switchRenderer {renderer} {
-	set w .ui[modname]
-	set width [winfo width $w.wframe.draw]
-	set height [winfo height $w.wframe.draw]
-	destroy $w.wframe.draw
-	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
-	eval $wcommand
-	bindEvents $w.wframe.draw
-	pack $w.wframe.draw -expand yes -fill both
     }
 
     method updatePerf {p1 p2 p3} {
