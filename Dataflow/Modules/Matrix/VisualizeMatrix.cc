@@ -531,7 +531,7 @@ void VisualizeMatrix::plot_snoop() {
     }
     glFlush();
     glPointSize(1);
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "Snoop got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -652,7 +652,7 @@ void VisualizeMatrix::plot_snoop_rect() {
     lastSnY2=newSnY2;
     glDisable(GL_LOGIC_OP);
     glFlush();
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "Rect got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -782,7 +782,7 @@ void VisualizeMatrix::plot_matrices() {
 	glEnd();
     }
     glFlush();
-    int errcode;
+    GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR){
 	cerr << "Plot got an error from GL: " << (char*)gluErrorString(errcode) << endl;
     }
@@ -840,6 +840,9 @@ void myReshape(int w, int h)
 
 //
 // $Log$
+// Revision 1.8  2000/03/20 21:45:34  yarden
+// Linux port: replace int with GLenum
+//
 // Revision 1.7  2000/03/17 09:27:07  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
