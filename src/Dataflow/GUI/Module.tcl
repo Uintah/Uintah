@@ -131,7 +131,7 @@ itcl_class Module {
 
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
-	global $this-done_bld_icon Disabled Subnet Color
+	global $this-done_bld_icon Disabled Subnet Color ToolTipText
 	set $this-done_bld_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
@@ -156,6 +156,7 @@ itcl_class Module {
 	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
 		-anchor center -command "$this initialize_ui"
 	    pack $p.ui -side left -ipadx 5 -ipady 2
+	    Tooltip $p.ui $ToolTipText(ModuleUI)
 	}
 	# Make the Subnet Button
 	if {$isSubnetModule} {
@@ -701,7 +702,7 @@ proc makeConnID { args } {
 } 
 
 proc drawConnections { connlist } {
-    global Color Disabled HelpText Subnet
+    global Color Disabled ToolTipText Subnet
     foreach conn $connlist {
 	set id [makeConnID $conn]
 	set path [routeConnection $conn]
@@ -720,7 +721,7 @@ proc drawConnections { connlist } {
 	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn}"
 	    $canvas bind $id <3> "connectionMenu %X %Y {$conn}"
 	    $canvas bind $id <ButtonRelease> "+deleteTraces"
-	    canvasTooltip $canvas $id $HelpText(Connection)
+	    canvasTooltip $canvas $id $ToolTipText(Connection)
 	} else {
 	    eval $canvas coords $id $path
 	    eval $canvas itemconfigure $id $flags
@@ -1405,7 +1406,7 @@ proc do_moduleDrag {modid x y} {
 
 
 proc drawNotes { args } {
-    global Subnet Color Notes Font HelpText modname_font
+    global Subnet Color Notes Font ToolTipText modname_font
     set Font(Notes) $modname_font
 
     foreach id $args {
@@ -1435,9 +1436,9 @@ proc drawNotes { args } {
 	    }
 	} else {
 	    if { $isModuleNotes } {
-		Tooltip $canvas.module$id $HelpText(Module)
+		Tooltip $canvas.module$id $ToolTipText(Module)
 	    } else {
-		canvasTooltip $canvas $id $HelpText(Connection)
+		canvasTooltip $canvas $id $ToolTipText(Connection)
 	    }
 	}
 	
@@ -1480,7 +1481,7 @@ proc drawNotes { args } {
 	    $canvas bind $id-notes <ButtonPress-2> \
 		"set Notes($id-Position) none"
 	}
-	canvasTooltip $canvas $id-notes $HelpText(Notes)		
+	canvasTooltip $canvas $id-notes $ToolTipText(Notes)		
 	$canvas raise shadow
 	$canvas raise notes
     }
@@ -1848,7 +1849,7 @@ proc drawPorts { modid { porttypes "i o" } } {
 		    place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
 		}
 	    }
-	    global HelpText
+	    global ToolTipText
 	    set port [list $modid $i $porttype]
 	    foreach p [list $portbevel $portlight] {
 		bind $p <2> "startPortConnection {$port} {$portname}"
@@ -1857,7 +1858,7 @@ proc drawPorts { modid { porttypes "i o" } } {
 		bind $p <ButtonPress-1> "tracePort {$port}"
 		bind $p <Control-Button-1> "tracePort {$port} 1"
 		bind $p <ButtonRelease-1> "deleteTraces"
-		Tooltip $p $HelpText(Connection)
+		Tooltip $p $ToolTipText(Connection)
 	    }
 	    incr i
 	} 
