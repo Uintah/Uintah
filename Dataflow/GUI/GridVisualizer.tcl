@@ -15,6 +15,10 @@ itcl_class Uintah_Visualization_GridVisualizer {
 
     protected var_list ""
     protected mat_list ""
+    protected var_val_list {}
+    protected time_list {}
+    protected num_materials 0
+    protected num_colors 240
 
     constructor {config} {
 	set name GridVisualizer
@@ -60,6 +64,14 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	$this-c needexecute
 	global $this-var_orientation
 	set $this-var_orientation 0
+	global $this-index_l
+	set $this-index_l 0
+	global $this-index_x
+	set $this-index_x 0
+	global $this-index_y
+	set $this-index_y 0
+	global $this-index_z
+	set $this-index_z 0
 
 	#sphere stuff
 	global $this-radius
@@ -109,7 +121,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    set st "$w.l$i"
 	    append st "$text"
 	    puts $st
-	    menubutton $st -text "Level $i $text color" \
+	    menubutton $st -text "Level [expr $i - 1] $text color" \
 		    -menu $st.list -relief groove
 	    pack $st -side top -anchor w -padx 2 -pady 2
 	    
@@ -150,6 +162,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
     }
     method graph {name} {
     }
+    method mat_sel { var num_mat val} {
+	for {set j 0} { $j < $num_mat} {incr j} {
+	    set nvar $var
+	    append nvar $j
+	    set $this-matvar$nvar $val
+	}
+    }
     method make_mat_menu {w mat i} {
 	set fname "$w.mat$mat"
 	menubutton $fname -text "Material" \
@@ -157,17 +176,43 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	pack $fname -side right -padx 2 -pady 2
 	
 	menu $fname.list
-	global $this-vmat$i
-	set $this-vmat$i 0
+	$fname.list add command -label "Sel All" \
+		-command "$this mat_sel $i $mat 1"
+	$fname.list add command -label "Sel None" \
+		-command "$this mat_sel $i $mat 0"
 	for {set j 0} { $j < $mat} {incr j} {
-	    $fname.list add radiobutton \
-		    -variable $this-vmat$i \
-		    -label "Mat $j" \
-		    -value $j
+	    set var $i
+	    append var $j
+	    set $this-matvar$var 0
+	    $fname.list add checkbutton \
+		    -variable $this-matvar$var \
+		    -label "Mat $j"
 	}
     }
-    method graphbutton {name i} {
-	$this-c graph $name [set $this-vmat$i] $i
+    method graphbutton {name var_index num_mat} {
+#	$this-c graph $name [set $this-vmat$i] $i
+	set val_list {}
+	set num_vals 0
+	for {set j 0} { $j < $num_mat} {incr j} {
+	    set nvar $var_index
+	    append nvar $j
+	    if {[set $this-matvar$nvar] != 0} {
+		lappend val_list $j
+		incr num_vals
+	    }
+	}
+	puts "Calling $this-c graph"
+	puts "name      = $name"
+	puts "num_mat   = $num_mat"
+	puts "var_index = $var_index"
+	puts "num_vals  = $num_vals"
+	puts "val_list  = $val_list"
+	set call "$this-c graph $name $var_index $num_vals"
+	for {set i 0} { $i < [llength $val_list] } { incr i } {
+	    set insert [lindex $val_list $i]
+	    append call " $insert"
+	}
+	eval $call
     }
     method addVar {w name mat i} {
 	set fname "$w.var$i"
@@ -177,8 +222,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
 
-	button $fname.button -text "Graph" -command "$this graphbutton $name $i"
+	button $fname.button -text "Graph" -command "$this graphbutton $name $i $mat"
 	pack $fname.button -side right -padx 2 -pady 2
+
+	if {$mat > $num_materials} {
+	    set num_materials $mat
+	    puts "num_materials is now $num_materials"
+	}
 
 	make_mat_menu $fname $mat $i
     }
@@ -224,6 +274,14 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    
 	    setup_color $w.colormenus.nodecolor "node" [set $this-nl] $n
 	}
+    }
+    method make_entry {w text v c} {
+	frame $w
+	label $w.l -text "$text"
+	pack $w.l -side left
+	entry $w.e -textvariable $v -state disabled
+	bind $w.e <Return> $c
+	pack $w.e -side right
     }
     method ui {} {
 	set w .ui[modname]
@@ -272,25 +330,90 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	button $w.o.select.findxz -text "Find XZ" -command "$this-c findxz"
 	pack $w.o.select.findxz -pady 2 -side top -ipadx 3 -anchor w
 
+	# right side
+	frame $w.o.r
+	pack $w.o.r -side right -fill x -padx 2 -pady 2
+
 	# sphere stuff
-	frame $w.o.sphere
-	pack $w.o.sphere -side left -fill x -padx 2 -pady 2
+	frame $w.o.r.sphere
+	pack $w.o.r.sphere -side top -anchor w -fill x -padx 2 -pady 2
 
-	set r [expscale $w.o.sphere.radius -label "Radius:" \
+	set r [expscale $w.o.r.sphere.radius -label "Radius:" \
 		-orient horizontal -variable $this-radius -command $n ]
-	pack $w.o.sphere.radius -side top -fill x
+	pack $w.o.r.sphere.radius -side top -fill x
 
-	scale $w.o.sphere.polygons -label "Polygons:" -orient horizontal \
+	scale $w.o.r.sphere.polygons -label "Polygons:" -orient horizontal \
 	    -variable $this-polygons -command $n \
 	    -from 8 -to 400 -tickinterval 392
-	pack $w.o.sphere.polygons -side top -fill x
+	pack $w.o.r.sphere.polygons -side top -fill x
 
+	# node ID
+	make_entry $w.o.r.nodel "level index:" $this-index_l $n
+	pack $w.o.r.nodel -side top -fill x -padx 2 -pady 2
+	make_entry $w.o.r.nodex "x index:" $this-index_x $n
+	pack $w.o.r.nodex -side top -fill x -padx 2 -pady 2
+	make_entry $w.o.r.nodey "y index:" $this-index_y $n
+	pack $w.o.r.nodey -side top -fill x -padx 2 -pady 2
+	make_entry $w.o.r.nodez "z index:" $this-index_z $n
+	pack $w.o.r.nodez -side top -fill x -padx 2 -pady 2
 
 	makeFrames $w
 
 	# close button
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side bottom -expand yes -fill x
+	button $w.gtest -text "Graph test" -command "$this graph_test"
+	pack $w.gtest -side bottom -expand yes -fill x
+    }
+    method reset_var_val {} {
+	set var_val_list {}
+    }
+    method set_time { args } {
+	set time_list $args
+	puts "time_list =  $time_list"
+    }
+    method set_var_val { args } {
+	set val_list $args
+	lappend var_val_list $val_list
+	puts "Args were $args"
+	puts "New var_val_list: $var_val_list"
+    }
+    method get_color { index } {
+	set color_scheme {
+	    { 255 0 0}  { 255 102 0}
+	    { 255 204 0}  { 255 234 0}
+	    { 204 255 0}  { 102 255 0}
+	    { 0 255 0}    { 0 255 102}
+	    { 0 255 204}  { 0 204 255}
+	    { 0 102 255}  { 0 0 255}}
+	#set color_scheme { {255 0 0} {0 255 0} {0 0 255} }
+	set incr {}
+	set upper_bounds [expr [llength $color_scheme] -1]
+	for {set j 0} { $j < $upper_bounds} {incr j} {
+	    set c1 [lindex $color_scheme $j]
+	    set c2 [lindex $color_scheme [expr $j + 1]]
+	    set incr_a {}
+	    lappend incr_a [expr [lindex $c2 0] - [lindex $c1 0]]
+	    lappend incr_a [expr [lindex $c2 1] - [lindex $c1 1]]
+	    lappend incr_a [expr [lindex $c2 2] - [lindex $c1 2]]
+	    lappend incr $incr_a
+	}
+	lappend incr {0 0 0}
+	puts "incr = $incr"
+	set step [expr $num_colors / [llength $color_scheme]]
+	set ind [expr $index % $num_colors] 
+	set i [expr $ind / $step]
+	set im [expr double($ind % $step)/$step]
+	puts "i = $i  im = $im"
+	set curr_color [lindex $color_scheme $i]
+	set curr_incr [lindex $incr $i]
+	puts "curr_color = $curr_color, curr_incr = $curr_incr"
+	set r [expr [lindex $curr_color 0]+round([lindex $curr_incr 0] * $im)] 
+	set g [expr [lindex $curr_color 1]+round([lindex $curr_incr 1] * $im)] 
+	set b [expr [lindex $curr_color 2]+round([lindex $curr_incr 2] * $im)] 
+	set c [format "#%02x%02x%02x" $r $g $b]
+	puts "r=$r, g=$g, b=$b, c=$c"
+	return $c
     }
     method graph_data { id var args } {
 	set w .graph[modname]$id
@@ -300,35 +423,111 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	toplevel $w
 #	wm minsize $w 300 300
 
+	puts "id = $id"
+	puts "var = $var"
+	puts "args = $args"
+
 	button $w.close -text "Close" -command "destroy $w"
 	pack $w.close -side bottom -anchor s -expand yes -fill x
 	
-	blt::graph $w.graph -title "Variable Value" -height 250 \
-		-plotbackground gray99
+	blt::graph $w.graph -title "Plot of $var with materials $args" \
+		-height 250 -plotbackground gray99
 
 	set max 1e-10
 	set min 1e+10
 
-	for { set i 1 } { $i < [llength $args] } { set i [expr $i + 2]} {
-	    set val [lindex $args $i]
-	    if { $max < $val } { set max $val }
-	    if { $min > $val } { set min $val }
+	puts "length of var_val_list = [llength $var_val_list]"
+	puts "length of args         = $args"
+	for { set i 0 } { $i < [llength $args] } {incr i} {
+	    set mat_vals [lindex $var_val_list [lindex $args $i]]
+	    puts "mat_vals = $mat_vals"
+	    for { set j 0 } { $j < [llength $mat_vals] } {incr j} {
+		set val [lindex $mat_vals $j]
+		if { $max < $val } { set max $val }
+		if { $min > $val } { set min $val }
+	    }
 	}
+	
 	if { ($max - $min) > 1000 || ($max - $min) < 1e-3 } {
 	    $w.graph yaxis configure -logscale true -title $var
 	} else {
 	    $w.graph yaxis configure -title $var
 	}
+	
+	$w.graph xaxis configure -title "Timestep" -loose true
+	
+	puts "length of var_val_list = [llength $var_val_list]"
+	for { set i 0 } { $i < [llength $args] } {incr i} {
+	    puts "adding line"
+	    set mat_index  [lindex $args $i]
+	    set mat_vals [lindex $var_val_list $mat_index]
+	    set color_ind [expr round(double($mat_index) / ($num_materials-1) * ($num_colors - 1))]
+	    $w.graph element create "Material $mat_index" -linewidth 2 \
+		    -pixels 3 -color [$this get_color $color_ind] -xdata $time_list -ydata $mat_vals
+	}
+	
+	pack $w.graph
+    }
+    method graph_test {} {
+	set w .graph[modname]test
+        if {[winfo exists $w]} { 
+            destroy $w 
+	}
+	toplevel $w
+#	wm minsize $w 300 300
 
-	$w.graph xaxis configure -title "Timestep" \
-		-loose true
-	$w.graph element create "Variable Value" -linewidth 2 -color blue \
-	    -pixels 3
+	button $w.close -text "Close" -command "destroy $w"
+	pack $w.close -side bottom -anchor s -expand yes -fill x
+	
+	blt::graph $w.graph -title "Test graph" -height 250 \
+		-plotbackground gray99
+
+	set x1 {0 1 2 3 4 5}
+	set y1 {0 1 2 3 4}
+	set x2 {0 1 2 3 4 5}
+	set y2 {4 3 2 1 0}
+	set x3 {0 1 2 3 4 5}
+	set y3 {1 4 2 0 3}
+
+	$w.graph yaxis configure -title "y-values"
+	$w.graph xaxis configure -title "x-values" -loose true
+
+	$w.graph element create line1 -linewidth 2 -pixels 3 \
+		-color [$this get_color 0]  -xdata $x1 -ydata $y1
+	$w.graph element create line2 -linewidth 2 -pixels 3 \
+		-color [$this get_color 20] -xdata $x2 -ydata $y2
+	$w.graph element create line3 -linewidth 2 -pixels 3 \
+		-color [$this get_color 40] -xdata $x3 -ydata $y3
+
+	$w.graph element create line4 -linewidth 2 -pixels 3 \
+		-color [$this get_color 60]  -xdata $x1 -ydata $y1
+	$w.graph element create line5 -linewidth 2 -pixels 3 \
+		-color [$this get_color 80] -xdata $x2 -ydata $y2
+	$w.graph element create line6 -linewidth 2 -pixels 3 \
+		-color [$this get_color 100] -xdata $x3 -ydata $y3
+
+	$w.graph element create line7 -linewidth 2 -pixels 3 \
+		-color [$this get_color 120]  -xdata $x1 -ydata $y1
+	$w.graph element create line8 -linewidth 2 -pixels 3 \
+		-color [$this get_color 140] -xdata $x2 -ydata $y2
+	$w.graph element create line9 -linewidth 2 -pixels 3 \
+		-color [$this get_color 160] -xdata $x3 -ydata $y3
+
+	$w.graph element create line10 -linewidth 2 -pixels 3 \
+		-color [$this get_color 180]  -xdata $x1 -ydata $y1
+	$w.graph element create line11 -linewidth 2 -pixels 3 \
+		-color [$this get_color 200] -xdata $x2 -ydata $y2
+	$w.graph element create line12 -linewidth 2 -pixels 3 \
+		-color [$this get_color 220] -xdata $x3 -ydata $y3
+
+	$w.graph element create line13 -linewidth 2 -pixels 3 \
+		-color [$this get_color 240]  -xdata $x1 -ydata $y1
+	$w.graph element create line14 -linewidth 2 -pixels 3 \
+		-color [$this get_color 280] -xdata $x2 -ydata $y2
+	$w.graph element create line15 -linewidth 2 -pixels 3 \
+		-color [$this get_color 1100] -xdata $x3 -ydata $y3
 
 	pack $w.graph
-	if { $args != "" } {
-	    $w.graph element configure "Variable Value" -data "$args"
-	}
     }
 }	
 	
