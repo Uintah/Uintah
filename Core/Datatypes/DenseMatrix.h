@@ -61,6 +61,8 @@ class DenseMatrix : public Matrix {
   double** data;
   double*  dataptr_;
 
+  void swap_rows(double *a, double *b);
+
 public:
   //! Constructors
   DenseMatrix();

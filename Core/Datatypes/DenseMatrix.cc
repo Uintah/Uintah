@@ -321,6 +321,19 @@ DenseMatrix::zero()
 }
 
 
+void
+DenseMatrix::swap_rows(double *a, double *b)
+{
+  double tmp;
+  for (int i = 0; i < ncols_; i++)
+  {
+    tmp = a[i];
+    a[i] = b[i];
+    b[i] = tmp;
+  }
+}
+
+
 int
 DenseMatrix::solve(ColumnMatrix& sol, int overwrite)
 {
@@ -366,9 +379,7 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
     if(row != i)
     {
       // Switch rows (actually their pointers)
-      double* tmp=A[i];
-      A[i]=A[row];
-      A[row]=tmp;
+      swap_rows(A[i], A[row]);
       double dtmp=lhs[i];
       lhs[i]=lhs[row];
       lhs[row]=dtmp;
@@ -456,7 +467,6 @@ DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
   int i;
   for (i=0; i<nrows_; i++)
   {
-    //  cout << "Solve: " << i << " of " << nr << endl;
     double max=Abs(A[i][i]);
     int row=i;
     int j;
@@ -478,9 +488,7 @@ DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
     if(row != i)
     {
       // Switch rows (actually their pointers)
-      double* tmp=A[i];
-      A[i]=A[row];
-      A[row]=tmp;
+      swap_rows(A[i], A[row]);
       double dtmp=lhs[i];
       lhs[i]=lhs[row];
       lhs[row]=dtmp;
@@ -812,9 +820,7 @@ DenseMatrix::invert()
     if(row != i)
     {
       // Switch rows (actually their pointers)
-      double* tmp=data[i];
-      data[i]=data[row];
-      data[row]=tmp;
+      swap_rows(data[i], data[row]);
       double* ntmp=newdata[i];
       newdata[i]=newdata[row];
       newdata[row]=ntmp;
