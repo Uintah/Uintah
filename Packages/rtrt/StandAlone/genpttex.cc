@@ -399,11 +399,11 @@ int main(int argc, char** argv)
     geometry = make_geometry();
 
   // Create the background
-  EnvironmentMapBackground *emap=new EnvironmentMapBackground(bg, Vector(0,1,0));
+  EnvironmentMapBackground *emap=new EnvironmentMapBackground(bg, Vector(0,0,-1));
   if (emap->valid() != true) {
     // try a local copy
     delete emap;
-    emap = new EnvironmentMapBackground("./envmap.ppm", Vector(0,1,0));
+    emap = new EnvironmentMapBackground("./envmap.ppm", Vector(0,0,-1));
     if (emap->valid() != true) {
       return 0;
     }
