@@ -23,6 +23,7 @@ class Voxel2D {
 public:
   T _data[2];
 public:
+  Voxel2D() {}
   Voxel2D(const T& _v, const T& _g) {
     _data[0] = _v;
     _data[1] = _g;
@@ -32,8 +33,10 @@ public:
     _data[1] = _val;
   }
   
-  inline T& v() { return _data[0]; }
-  inline T& g() { return _data[1]; }
+  inline T v() const { return _data[0]; }
+  inline T g() const { return _data[1]; }
+  inline T& vref() { return _data[0]; }
+  inline T& gref() { return _data[1]; }
 
   inline Voxel2D<T> operator+(const Voxel2D<T>& vox) {
     return Voxel2D<T>(v() + vox.v(), g() + vox.g());
@@ -44,8 +47,10 @@ public:
   inline Voxel2D<T> operator*(const Voxel2D<T>& vox) {
     return Voxel2D<T>(v() * vox.v(), g() * vox.g());
   }
+  inline Voxel2D<T> operator*(T val) {
+    return Voxel2D<T>(v() * val, g() * val);
+  }
 
-  friend std::ostream& operator<<(std::ostream& out, const Voxel2D<T>& c);
 };
 
 template<class T>
