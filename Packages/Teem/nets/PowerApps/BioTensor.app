@@ -38,11 +38,11 @@ set DATASET brain-dt
 ::netedit dontschedule
 
 set m0 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 14 9]
-set m1 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 603 169]
+set m1 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 603 169]
 set m2 [addModuleAtPosition "Teem" "Tend" "TendEpireg" 14 180]
 set m3 [addModuleAtPosition "Teem" "Tend" "TendEstim" 14 718]
 set m4 [addModuleAtPosition "Teem" "Tend" "TendBmat" 231 181]
-set m5 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 992 516]
+set m5 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 992 516]
 set m6 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 603 583]
 set m7 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 992 649]
 set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 769 812]
@@ -84,7 +84,7 @@ set m40 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 1538]
 set m44 [addModuleAtPosition "SCIRun" "Render" "Viewer" 88 2390]
 set m45 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 88]
 set m46 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 603 645]
-set m47 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 14 455]
+set m47 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 14 455]
 set m48 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 32 316]
 set m49 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 231 558]
 set m50 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 231 103]
@@ -94,10 +94,10 @@ set m50 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 231 103]
 set m54 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1102 1471]
 #set m55 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 463]
 #set m56 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 1269 400]
-set m57 [addModuleAtPosition "Teem" "Unu" "UnuProject" 603 516]
+set m57 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 603 516]
 set m58 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 787 648]
 set m59 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 787 745]
-set m60 [addModuleAtPosition "Teem" "Unu" "UnuProject" 992 580]
+set m60 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 992 580]
 set m61 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1010 748]
 set m62 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 774 169]
 set m63 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 249 495]
@@ -140,10 +140,10 @@ set m99 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 204 313]
 set m100 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 377 313]
 #set m101 [addModuleAtPosition "Teem" "Unu" "UnuResample" 1450 275]
 set m102 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1102 1788]
-set m103 [addModuleAtPosition "Teem" "Unu" "UnuResample" 14 517]
+set m103 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 14 517]
 set m104 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 652]
 set m105 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 248]
-set m106 [addModuleAtPosition "Teem" "Unu" "UnuResample" 14 588]
+set m106 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 14 588]
 #set m107 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 1267 713]
 set m108 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1068 1144]
 set m109 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1068 1206]
@@ -225,7 +225,7 @@ set c44 [addConnection $m30 0 $m133 0]
 set c45 [addConnection $m109 0 $m134 0]
 set c46 [addConnection $m127 0 $m135 0]
 set c47 [addConnection $m8 0 $m44 0]
-set c48 [addConnection $m110 0 $m116 0]
+set c48 [addConnection $m110 2 $m116 0]
 set c49 [addConnection $m0 0 $m45 0]
 set c50 [addConnection $m0 0 $m113 0]
 set c51 [addConnection $m48 0 $m98 0]
@@ -308,7 +308,7 @@ set c127 [addConnection $m9 0 $m44 1]
 set c128 [addConnection $m97 0 $m45 1]
 set c129 [addConnection $m97 0 $m113 1]
 set c130 [addConnection $m99 0 $m98 1]
-set c131 [addConnection $m110 0 $m117 1]
+set c131 [addConnection $m110 2 $m117 1]
 set c132 [addConnection $m50 0 $m2 1]
 set c133 [addConnection $m63 0 $m49 1]
 set c134 [addConnection $m6 0 $m59 1]
@@ -2185,6 +2185,10 @@ class BioTensorApp {
         disableModule $mods(NrrdReader-BMatrix) 1
         disableModule $mods(TendEstim) 1
 	disableModule $mods(ChooseNrrd-DT) 1
+
+	# Disable execute buttons so that only the set button
+	# can be used for NrrdReaders
+	#.ui$mods(NrrdReader1).f7.execute configure -state disabled
     }
 
     
@@ -2450,7 +2454,7 @@ class BioTensorApp {
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
 
 	    button $page.load -text "Dicom Loader" \
-		-command "$mods(DicomToNrrd1) initialize_ui"
+		-command "$this dicom_ui $mods(DicomToNrrd1)"
 	    Tooltip $page.load $tips(DicomFiles)
 
 	    pack $page.load -side top -anchor n \
@@ -2463,7 +2467,7 @@ class BioTensorApp {
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 
 	    button $page.load2 -text "Dicom Loader" \
-		-command "$mods(DicomToNrrd-T2) initialize_ui"
+		-command "$this dicom_ui $mods(DicomToNrrd-T2)"
 	    Tooltip $page.load2 $tips(DicomFiles)
 
 	    pack $page.load2 -side top -anchor n \
@@ -2486,7 +2490,7 @@ class BioTensorApp {
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
 
 	    button $page.load -text "Analyze Loader" \
-		-command "$mods(AnalyzeToNrrd1) initialize_ui"
+		-command "$this analyze_ui $mods(AnalyzeToNrrd1)"
 	    Tooltip $page.load $tips(AnalyzeFiles)
 
 	    pack $page.load -side top -anchor n \
@@ -2499,7 +2503,7 @@ class BioTensorApp {
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 	    
 	    button $page.load2 -text "Analyze Loader" \
-		-command "$mods(AnalyzeToNrrd-T2) initialize_ui"
+		-command "$this analyze_ui $mods(AnalyzeToNrrd-T2)"
 	    Tooltip $page.load2 $tips(AnalyzeFiles)
 
 	    pack $page.load2 -side top -anchor n \
@@ -4342,7 +4346,6 @@ class BioTensorApp {
 	    $reg_tab1.last.ex configure -foreground grey64 -background grey75
 	    $reg_tab2.last.ex configure -foreground grey64 -background grey75
 	    
-	    
 	    foreach w [winfo children $dt_tab1] {
 		disable_widget $w
 	    }
@@ -4476,6 +4479,7 @@ class BioTensorApp {
 	global mods
 	#set theWindow [$mods(NrrdReader1) make_file_open_box]
 	$mods(NrrdReader1) initialize_ui
+	.ui$mods(NrrdReader1).f7.execute configure -state disabled
 
 	# tkwait window $theWindow
 	
@@ -4490,11 +4494,24 @@ class BioTensorApp {
 	global mods
         #set theWindow [$mods(NrrdReader-T2) make_file_open_box]
 	$mods(NrrdReader-T2) initialize_ui
-
+	.ui$mods(NrrdReader-T2).f7.execute configure -state disabled
 	# tkwait window $theWindow
 
 	# update idletasks
     } 
+
+    method dicom_ui { m } {
+	$m initialize_ui
+	# disable execute button 
+	.ui$m.buttonPanel.btnBox.execute configure -state disabled
+    }
+
+    method analyze_ui { m } {
+	$m initialize_ui
+	# disable execute button 
+	.ui$m.buttonPanel.btnBox.execute configure -state disabled
+    }
+
 
 
 ############# REGISTRATION ##############
@@ -4526,6 +4543,14 @@ class BioTensorApp {
 	    set reg_completed 1
 	    set data_completed 1
 
+	    # enable Next button (only if performing global epi registration)
+	    global do_registration
+	    if {$do_registration} {
+		$reg_tab1.last.ne configure -state normal \
+		    -foreground black -background $next_color
+		$reg_tab2.last.ne configure -state normal \
+		    -foreground black -background $next_color
+	    }
 	} else {
 	    set answer [tk_messageBox -message \
 			    "Please load a text file containing the gradients by clicking \"Load Gradients\"" -type ok -icon info -parent .standalone]
@@ -4547,17 +4572,24 @@ class BioTensorApp {
 		activate_widget $w
 	    }
 
-	    $reg_tab1.last.ne configure -state normal \
-		-foreground black -background $next_color
-	    $reg_tab2.last.ne configure -state normal \
-		-foreground black -background $next_color
-	} else {
-	    $reg_tab1.last.ne configure -state disabled \
-		-foreground grey64 -background grey75
-	    $reg_tab2.last.ne configure -state disabled \
-		-foreground grey64 -background grey75
+# 	    $reg_tab1.last.ne configure -state normal \
+# 		-foreground black -background $next_color
+# 	    $reg_tab2.last.ne configure -state normal \
+# 		-foreground black -background $next_color
+	    if {!$reg_completed} {
+		$reg_tab1.last.ne configure -state disabled \
+		    -foreground grey64 -background grey75
+		$reg_tab2.last.ne configure -state disabled \
+		    -foreground grey64 -background grey75
+	    }
+	} 
+#        else {
+# 	    $reg_tab1.last.ne configure -state disabled \
+# 		-foreground grey64 -background grey75
+# 	    $reg_tab2.last.ne configure -state disabled \
+# 		-foreground grey64 -background grey75
 
-	}
+# 	}
 	
 	toggle_reference_image_state
 
@@ -4588,7 +4620,7 @@ class BioTensorApp {
         global mods
         #set theWindow [$mods(NrrdReader-Gradient) make_file_open_box]
 	$mods(NrrdReader-Gradient) initialize_ui
-	
+	.ui$mods(NrrdReader-Gradient).f7.execute configure -state disabled
         #tkwait window $theWindow
 	
         #update idletasks
@@ -4736,6 +4768,7 @@ class BioTensorApp {
 	global mods
         #set theWindow [$mods(NrrdReader-BMatrix) make_file_open_box]
 	$mods(NrrdReader-BMatrix) initialize_ui
+	.ui$mods(NrrdReader-BMatrix).f7.execute configure -state disabled
 	
 	#tkwait window $theWindow
 	
