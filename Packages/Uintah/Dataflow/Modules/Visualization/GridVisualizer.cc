@@ -694,15 +694,15 @@ string GridVisualizer::vector_to_string(vector< Vector > data, string type) {
 
 string GridVisualizer::vector_to_string(vector< Matrix3 > data, string type) {
   ostringstream ostr;
-  if (type == "determinant") {
+  if (type == "Determinant") {
     for(int i = 0; i < data.size(); i++) {
       ostr << data[i].Determinant() << " ";
     }
-  } else if (type == "trace") {
+  } else if (type == "Trace") {
     for(int i = 0; i < data.size(); i++) {
       ostr << data[i].Trace() << " ";
     }
-  } else if (type == "norm") {
+  } else if (type == "Norm") {
     for(int i = 0; i < data.size(); i++) {
       ostr << data[i].Norm() << " ";
     } 
@@ -864,6 +864,9 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.6  2000/10/20 19:38:37  bigler
+// Fixed a bug that was preventing Matrix3 data from being graphed.
+//
 // Revision 1.5  2000/09/22 22:17:41  bigler
 // Added support to graph multiple materials in one graph.
 // Currently only one graph per variable, but that could change.
