@@ -1,119 +1,113 @@
-
 /*
- *  Hedgehog.cc:  Generate Hedgehogs from a field...
+ *  Hedgehog.cc:  
  *
  *  Written by:
- *   Steven G. Parker
+ *   Colette Mullenhoff
  *   Department of Computer Science
  *   University of Utah
- *   March 1994
+ *   May 1995
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1995 SCI Group
  */
 
+#include <Classlib/Array1.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
+#include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/VectorFieldPort.h>
-#include <Geom/Geom.h>
+#include <Geom/Arrows.h>
 #include <Geom/Group.h>
-#include <Geom/Material.h>
 #include <Geom/Line.h>
+#include <Geom/Material.h>
 #include <Geometry/Point.h>
+#include <Math/MinMax.h>
 #include <Malloc/Allocator.h>
+#include <TCL/TCLvar.h>
+
+#include <Widgets/ScaledFrameWidget.h>
 #include <iostream.h>
 
+#define CP_PLANE 0
+#define CP_SURFACE 1
+#define CP_CONTOUR 2
+
 class Hedgehog : public Module {
-    VectorFieldIPort* infield;
-    GeometryOPort* ogeom;
+   VectorFieldIPort *invectorfield;
+   ScalarFieldIPort* inscalarfield;
+   ColormapIPort *incolormap;
+   GeometryOPort* ogeom;
+   CrowdMonitor widget_lock;
+   int init;
+   int widget_id;
+   ScaledFrameWidget *widget;
+   virtual void widget_moved(int last);
+   TCLdouble length_scale;
+   TCLdouble width_scale;
+   MaterialHandle outcolor;
+   int grid_id;
+   int need_find;
 
-    Point min;
-    Point max;
-    double space_x;
-    double space_y;
-    double space_z;
-    double length_scale;
-    double radius;
-
-    int need_minmax;
-
-    int hedgehog_id;
-
-    MaterialHandle front_matl;
-    MaterialHandle back_matl;
-    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
 public:
-    Hedgehog(const clString& id);
-    Hedgehog(const Hedgehog&, int deep);
-    virtual ~Hedgehog();
-    virtual Module* clone(int deep);
-    virtual void execute();
+   Hedgehog(const clString& id);
+   Hedgehog(const Hedgehog&, int deep);
+   virtual ~Hedgehog();
+   virtual Module* clone(int deep);
+   virtual void execute();
+
+   virtual void tcl_command(TCLArgs&, void*);
 };
 
 static Module* make_Hedgehog(const clString& id)
 {
-    return scinew Hedgehog(id);
+   return scinew Hedgehog(id);
 }
 
 static RegisterModule db1("Fields", "Hedgehog", make_Hedgehog);
 static RegisterModule db2("Visualization", "Hedgehog", make_Hedgehog);
 
-static clString hedgehog_name("Hedgehog");
+static clString module_name("Hedgehog");
+static clString widget_name("Hedgehog Widget");
 
 Hedgehog::Hedgehog(const clString& id)
-: Module("Hedgehog", id, Filter)
+: Module("Hedgehog", id, Filter), 
+  length_scale("length_scale", id, this),
+  width_scale("width_scale", id, this)
 {
     // Create the input ports
-    infield=scinew VectorFieldIPort(this, "Vector Field",
-				 VectorFieldIPort::Atomic);
-    add_iport(infield);
-
+    // Need a scalar field and a colormap
+    invectorfield = scinew VectorFieldIPort( this, "Vector Field",
+					     VectorFieldIPort::Atomic);
+    add_iport( invectorfield);
+    inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
+					ScalarFieldIPort::Atomic);
+    add_iport( inscalarfield);
+    incolormap = scinew ColormapIPort( this, "Colormap",
+				     ColormapIPort::Atomic);
+    add_iport( incolormap);
+					
     // Create the output port
-    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    ogeom = scinew GeometryOPort(this, "Geometry", 
+			      GeometryIPort::Atomic);
     add_oport(ogeom);
+    init = 1;
+    float INIT(.1);
 
-    min=Point(0,0,0);
-    max=Point(1,1,1);
-#ifdef OLDUI
-    ui_min=scinew MUI_point("Min: ", &min, MUI_widget::Immediate, 0);
-    add_ui(ui_min);
-    ui_max=scinew MUI_point("Max: ", &max, MUI_widget::Immediate, 0);
-    add_ui(ui_max);
-    space_x=space_y=space_z=1;
-    ui_space_x=scinew MUI_slider_real("X spacing", &space_x,
-				   MUI_widget::Immediate, 0);
-    add_ui(ui_space_x);
-    ui_space_y=scinew MUI_slider_real("Y spacing", &space_y,
-				   MUI_widget::Immediate, 0);
-    add_ui(ui_space_y);
-    ui_space_z=scinew MUI_slider_real("Z spacing", &space_z,
-				   MUI_widget::Immediate, 0);
-    add_ui(ui_space_z);
-    length_scale=1;
-    ui_length_scale=scinew MUI_slider_real("Length Scale", &length_scale,
-					MUI_widget::Immediate, 0);
-    ui_length_scale->set_minmax(0, 10);
-    add_ui(ui_length_scale);
-    radius=0;
-    ui_radius=scinew MUI_slider_real("Radius", &radius,
-				  MUI_widget::Immediate, 0);
-    add_ui(ui_radius);
+    widget = scinew ScaledFrameWidget(this, &widget_lock, INIT);
+    grid_id=0;
 
-    need_minmax=1;
-
-    front_matl=scinew MaterialProp(Color(0,0,0), Color(.6, 0, 0),
-				Color(.5,0,0), 20);
-    back_matl=scinew MaterialProp(Color(0,0,0), Color(0, 0, .6),
-			       Color(0,0,.5), 20);
-    hedgehog_id=0;
-#endif
+    need_find=1;
+    
+    outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
 }
 
 Hedgehog::Hedgehog(const Hedgehog& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), length_scale("length_scale", id, this),
+  width_scale("width_scale", id, this)
 {
-    NOT_FINISHED("Hedgehog::Hedgehog");
+   NOT_FINISHED("Hedgehog::Hedgehog");
 }
 
 Hedgehog::~Hedgehog()
@@ -122,56 +116,161 @@ Hedgehog::~Hedgehog()
 
 Module* Hedgehog::clone(int deep)
 {
-    return scinew Hedgehog(*this, deep);
+   return scinew Hedgehog(*this, deep);
 }
 
 void Hedgehog::execute()
 {
-    if(hedgehog_id)
-	ogeom->delObj(hedgehog_id);
-    VectorFieldHandle field;
-    if(!infield->get(field))
+    int old_grid_id = grid_id;
+
+    // get the scalar field and colormap...if you can
+    VectorFieldHandle vfield;
+    if (!invectorfield->get( vfield ))
 	return;
-    if(need_minmax){
-	field->get_bounds(min, max);
-	Vector diagonal(max-min);
-	space_x=diagonal.x()/10;
-#ifdef OLDUI
-	ui_space_x->set_value(space_x);
-	ui_space_x->set_minmax(0, diagonal.x());
-	space_y=diagonal.y()/10;
-	ui_space_y->set_value(space_y);
-	ui_space_y->set_minmax(0, diagonal.y());
-	space_z=diagonal.z()/10;
-	ui_space_z->set_value(space_z);
-	ui_space_z->set_minmax(0, diagonal.z());
-#endif
-	length_scale=Min(space_x, space_y, space_z)*.75;
-	need_minmax=0;
+    ScalarFieldHandle ssfield;
+    int have_sfield=inscalarfield->get( ssfield );
+    ColormapHandle cmap;
+    int have_cmap=incolormap->get( cmap );
+    if(!have_cmap)
+	have_sfield=0;
+
+    if (init == 1) 
+    {
+	init = 0;
+	GeomObj *w = widget->GetWidget() ;
+	widget_id = ogeom->addObj( w, module_name, &widget_lock );
+	widget->Connect( ogeom );
+	widget->SetRatioR( 0.2 );
+	widget->SetRatioD( 0.2 );
     }
-    GeomGroup* group=scinew GeomGroup;
-    cerr << "length_scale=" << length_scale << endl;
-    for(double x=min.x();x<=max.x();x+=space_x){
-	for(double y=min.y();y<=max.y();y+=space_y){
-	    for(double z=min.z();z<=max.z();z+=space_z){
-		Point p(x,y,z);
-		Vector v;
-		if(field->interpolate(p, v)){
-		    GeomLine* line=new GeomLine(p, p+(v*length_scale));
-		    group->add(line);
+    if (need_find != 0)
+    {
+	Point min, max;
+	vfield->get_bounds( min, max );
+	Point center = min + (max-min)/2.0;
+	double max_scale;
+	if (need_find == 1)
+	{   // Find the field and put in optimal place
+	    // in xy plane with reasonable frame thickness
+	    Point right( max.x(), center.y(), center.z());
+	    Point down( center.x(), min.y(), center.z());
+	    widget->SetPosition( center, right, down);
+	    max_scale = Max( (max.x() - min.x()), (max.y() - min.y()) );
+	}
+	else if (need_find == 2)
+	{   // Find the field and put in optimal place
+	    // in yz plane with reasonable frame thickness
+	    Point right( center.x(), center.y(), max.z());
+	    Point down( center.x(), min.y(), center.z());	    
+	    widget->SetPosition( center, right, down);
+	    max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
+	}
+	else
+	{   // Find the field and put in optimal place
+	    // in xz plane with reasonable frame thickness
+	    Point right( max.x(), center.y(), center.z());
+	    Point down( center.x(), center.y(), min.z());	    
+	    widget->SetPosition( center, right, down);
+	    max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
+	}
+	widget->SetScale( max_scale/20. );
+	need_find = 0;
+    }
+
+    // get the position of the frame widget
+    Point 	corner, center, R, D;
+    widget->GetPosition( center, R, D);
+    Vector v1 = R - center,
+           v2 = D - center;
+         
+    // calculate the corner and the
+    // u and v vectors of the cutting plane
+    corner = (center - v1) - v2;
+    Vector u = v1 * 2.0,
+           v = v2 * 2.0;
+
+    // create the grid for the cutting plane
+    double u_fac = widget->GetRatioR(),
+           v_fac = widget->GetRatioD(),
+           lenscale = length_scale.get(),
+           widscale = width_scale.get();
+
+    int u_num = (int) (u_fac * 100),
+        v_num = (int) (v_fac * 100);
+
+    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
+
+    double ld=vfield->longest_dimension();
+    GeomArrows* arrows = new GeomArrows(widscale*ld);
+    Vector unorm=u.normal();
+    Vector vnorm=v.normal();
+    Vector N(Cross(unorm, vnorm));
+    for (int i = 0; i < u_num; i++)
+	for (int j = 0; j < v_num; j++)
+	{
+	    Point p = corner + u * ((double) i/(u_num-1)) + 
+		v * ((double) j/(v_num-1));
+
+	    // Query the vector field...
+	    Vector v;
+	    if (vfield->interpolate( p, v)){
+		if(have_sfield){
+		    // get the color from cmap for p 	    
+		    MaterialHandle matl;
+		    double sval;
+		    if (ssfield->interpolate( p, sval))
+			matl = cmap->lookup( sval);
+		    else
+		    {
+			matl = outcolor;
+		    }
+		    arrows->add(p, v*lenscale, matl, matl, matl);
+		} else {
+		    arrows->add(p, v*lenscale);
 		}
 	    }
 	}
-    }
+    grid_id = ogeom->addObj(arrows, module_name);
 
-    if(group->size() == 0){
-	delete group;
-	hedgehog_id=0;
-    } else {
-	hedgehog_id=ogeom->addObj(group, hedgehog_name);
+    // delete the old grid/cutting plane
+    if (old_grid_id != 0)
+	ogeom->delObj( old_grid_id );
+}
+
+void Hedgehog::widget_moved(int last)
+{
+    if(last && !abort_flag)
+    {
+	abort_flag=1;
+	want_to_execute();
     }
 }
 
-void Hedgehog::geom_moved(GeomPick*, int, double, const Vector&, void*)
+
+void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 {
+    if(args.count() < 2)
+    {
+	args.error("Streamline needs a minor command");
+	return;
+    }
+    if(args[1] == "findxy")
+    {
+	need_find=1;
+	want_to_execute();
+    }
+    else if(args[1] == "findyz")
+    {
+	need_find=2;
+	want_to_execute();
+    }
+    else if(args[1] == "findxz")
+    {
+	need_find=3;
+	want_to_execute();
+    }
+    else
+    {
+	Module::tcl_command(args, userdata);
+    }
 }
