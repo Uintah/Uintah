@@ -453,7 +453,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 
   // iterator through all patch, initializing on each patch
   // (perhaps not the most efficient, but this is only initialization)
-  for (i = 0; i < (int)grid->numLevels(); i++) {
+  for (i = 0; i < (unsigned int)grid->numLevels(); i++) {
     LevelP level = grid->getLevel(i);
     list<Patch*> patches;
     patches.push_back(NULL); // add NULL patch for dealing with globals
