@@ -27,6 +27,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/BoxWidget.tcl \
 	$(SRCDIR)/BuildTransform.tcl \
 	$(SRCDIR)/CastField.tcl \
+	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
@@ -48,6 +49,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/LightWidget.tcl \
+	$(SRCDIR)/LinAlgBinary.tcl \
+	$(SRCDIR)/LinAlgUnary.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/ManageFieldSet.tcl \
