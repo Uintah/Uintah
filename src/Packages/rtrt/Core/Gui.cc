@@ -1477,27 +1477,22 @@ Gui::attachKeypadCB( int /*id*/ )
       activeGui->CutToggleButton_->set_name( "Toggle Cut" );
       activeGui->attachedCut_ = cut;
     }
-
-
 }
 
 void
 Gui::addLight( Light * light )
 {
-  int numLights = lights_.size();
+  string & name = light->name_;
+  if( name != "" ) {
+    int numLights = lights_.size();
+    char namec[1024];
+    sprintf( namec, "%s", name.c_str() );
 
-  string name = light->name_;
-  if( name == "" ) {
-    name = "Unnamed";
+    lightList->add_item( numLights, namec );
+    lights_.push_back( light );
+
+    updateLightPanelCB( -1 );
   }
-
-  char namec[1024];
-  sprintf( namec, "%s", name.c_str() );
-
-  lightList->add_item( numLights, namec );
-  lights_.push_back( light );
-
-  updateLightPanelCB( -1 );
 }
 
 void
