@@ -1,0 +1,6 @@
+
+package PingPong {
+    class PingPong {
+	int pingpong(out int);
+    };
+};
