@@ -17,8 +17,8 @@
 #include <string>
 #include <vector>
 
-#define SELECT_GRID
-//#define SELECT_RANGETREE
+//#define SELECT_GRID
+#define SELECT_RANGETREE
 
 #ifdef SELECT_RANGETREE
 class PatchRangeTree;
@@ -158,6 +158,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.24  2001/02/13 00:35:44  witzel
+// PatchRangeTree.cc
+//
 // Revision 1.23  2000/12/10 09:06:16  sparker
 // Merge from csafe_risky1
 //

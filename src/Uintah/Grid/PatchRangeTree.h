@@ -63,6 +63,9 @@ private:
 
     PatchPoint(IntVector centerTimes2)
       : d_patch(NULL), d_centerTimes2(centerTimes2) { }
+
+    ~PatchPoint()
+    { }
     
     void setPatch(const Patch* patch)
     {

@@ -2,7 +2,7 @@
 
 PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
   :  d_maxPatchDimensions(0, 0, 0),
-     d_patchPoints(scinew PatchPoint[patches.size()]),
+     d_patchPoints(new PatchPoint[patches.size()]),
      d_numPatches((int)patches.size())
 {
   list<PatchPoint*> pointList;

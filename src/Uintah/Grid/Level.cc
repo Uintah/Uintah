@@ -369,9 +369,11 @@ void Level::finalizeLevel()
       Level::selectType neighbors;
       selectPatches(l, h, neighbors);
       if(neighbors.size() == 0){
+	//cerr << "No neighbor here!\n";
 	patch->setBCType(face, Patch::None);
       }
       else {
+	//cerr << "Neighbor here!\n";
 	patch->setBCType(face, Patch::Neighbor);
       }
     }
@@ -432,6 +434,9 @@ Box Level::getBox(const IntVector& l, const IntVector& h) const
 }
 //
 // $Log$
+// Revision 1.28  2001/02/13 00:35:44  witzel
+// PatchRangeTree.cc
+//
 // Revision 1.27  2001/01/08 19:31:41  kuzimmer
 // Changed getCellIndex to use Floor instead of (int) cast truncation, so that negative indexing works
 //
