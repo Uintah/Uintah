@@ -72,12 +72,14 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
         toplevel $w
 
-	frame $w.l
-	label $w.l.direction -text "Direction"       -width 9 -anchor w -just left
-	label $w.l.index     -text "Slice Node"      -width 11 -anchor w -just left
+	frame $w.main
 
-	pack $w.l.direction -side left
-	pack $w.l.index     -side left -padx 75
+	frame $w.main.l
+	label $w.main.l.direction -text "Direction"       -width 9 -anchor w -just left
+	label $w.main.l.index     -text "Slice Node"      -width 11 -anchor w -just left
+
+	pack $w.main.l.direction -side left
+	pack $w.main.l.index     -side left -padx 75
 
 	for {set i 0} {$i < 3} {incr i 1} {
 	    if { $i == 0 } {
@@ -92,28 +94,31 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    global $this-$index-index
 	    global $this-$index-index2
 
-	    frame $w.$index
+	    frame $w.main.$index
 
-	    radiobutton $w.$index.l -text "$index axis" -width 6 \
+	    radiobutton $w.main.$index.l -text "$index axis" -width 6 \
 		-anchor w -just left -variable $this-axis -value $i
 
-	    pack $w.$index.l -side left
+	    pack $w.main.$index.l -side left
 
-	    scaleEntry2 $w.$index.index \
+	    scaleEntry2 $w.main.$index.index \
 		0 [expr [set $this-$index-dim] - 1] 200 \
 		$this-$index-index $this-$index-index2
 
-	    pack $w.$index.l $w.$index.index -side left
+	    pack $w.main.$index.l $w.main.$index.index -side left
 	}
 
 	if { [set $this-dims] == 3 } {
-	    pack $w.l $w.i $w.j $w.k -side top -padx 10 -pady 5
+	    pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
+
 	} elseif { [set $this-dims] == 2 } {
-	    pack $w.l $w.i $w.j -side top -padx 10 -pady 5	    
+	    pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 1 } {
-	    pack $w.l $w.i -side top -padx 10 -pady 5	    
+	    pack $w.main.l $w.main.i -side top -padx 10 -pady 5
 	}
 
+	pack $w.main -side top
+	
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
@@ -165,17 +170,17 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	}
 
 	if {[winfo exists $w]} {
-	    pack forget $w.i
-	    pack forget $w.k
-	    pack forget $w.j
-	    pack forget $w.misc
+
+	    pack forget $w.main.i
+	    pack forget $w.main.k
+	    pack forget $w.main.j
 
 	    if { [set $this-dims] == 3 } {
-		pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
+		pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 2 } {
-		pack $w.l $w.i $w.j $w.misc -side top -padx 10 -pady 5	    
+		pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5	    
 	    } elseif { [set $this-dims] == 1 } {
-		pack $w.l $w.i $w.misc -side top -padx 10 -pady 5	    
+		pack $w.main.l $w.main.i -side top -padx 10 -pady 5	    
 	    }
 	}
 
@@ -196,9 +201,9 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    if [ expr [winfo exists $w] ] {
 
 		# Update the sliders to the new bounds.
-		$w.$index.index.s configure -from 0 -to $stop_val
+		$w.main.$index.index.s configure -from 0 -to $stop_val
 
-		bind $w.$index.index.e \
+		bind $w.main.$index.index.e \
 		    <Return> "$this manualSliderEntry 0 $stop_val $this-$index-index $this-$index-index2"
 	    }
 

@@ -88,20 +88,22 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 
         toplevel $w
 
-	frame $w.l
-	label $w.l.direction -text "Index"  -width 5 -anchor w -just left
-	label $w.l.start     -text "Start"  -width 5 -anchor w -just left
-	label $w.l.stop      -text "Stop"   -width 5 -anchor w -just left
-	label $w.l.stride    -text "Stride" -width 6 -anchor w -just left
-	label $w.l.wrap      -text "Wrap"   -width 4 -anchor w -just left
+	frame $w.main
 
-	pack $w.l.direction -side left
-	pack $w.l.start     -side left -padx  70
-	pack $w.l.stop      -side left -padx 110
-	pack $w.l.stride    -side left -padx  40
-	pack $w.l.wrap      -side left
+	frame $w.main.l
+	label $w.main.l.direction -text "Index"  -width 5 -anchor w -just left
+	label $w.main.l.start     -text "Start"  -width 5 -anchor w -just left
+	label $w.main.l.stop      -text "Stop"   -width 5 -anchor w -just left
+	label $w.main.l.stride    -text "Stride" -width 6 -anchor w -just left
+	label $w.main.l.wrap      -text "Wrap"   -width 4 -anchor w -just left
 
-#	grid $w.l.direction $w.l.start $w.l.stop $w.l.stride $w.l.wrap
+	pack $w.main.l.direction -side left
+	pack $w.main.l.start     -side left -padx  70
+	pack $w.main.l.stop      -side left -padx 110
+	pack $w.main.l.stride    -side left -padx  40
+	pack $w.main.l.wrap      -side left
+
+#	grid $w.main.l.direction $w.main.l.start $w.main.l.stop $w.main.l.stride $w.main.l.wrap
 
 	for {set i 0} {$i < 3} {incr i 1} {
 	    if { $i == 0 } {
@@ -134,40 +136,42 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		set stop_val [expr [set $this-$index-dim] - 2]
 	    }
 
-	    frame $w.$index
+	    frame $w.main.$index
 
-	    label $w.$index.l -text " $index :" -width 3 -anchor w -just left
+	    label $w.main.$index.l -text " $index :" -width 3 -anchor w -just left
 
-	    pack $w.$index.l -side left
+	    pack $w.main.$index.l -side left
 
-	    scaleEntry4 $w.$index.start \
+	    scaleEntry4 $w.main.$index.start \
 		0 $stop_val 200 \
 		$this-$index-start $this-$index-start2 $index
 
-	    scaleEntry2 $w.$index.stop \
+	    scaleEntry2 $w.main.$index.stop \
 		$start_val [expr [set $this-$index-dim] - 1] 200 \
 		$this-$index-stop $this-$index-stop2
 
-	    scaleEntry2 $w.$index.stride \
+	    scaleEntry2 $w.main.$index.stride \
 		1 [expr [set $this-$index-dim] - 1] 100 $this-$index-stride $this-$index-stride2
 
-	    checkbutton $w.$index.wrap -variable $this-$index-wrap \
+	    checkbutton $w.main.$index.wrap -variable $this-$index-wrap \
 		    -state $wrap -disabledforeground "" \
 		    -command "$this wrap $index"
 
-	    pack $w.$index.l $w.$index.start $w.$index.stop \
-		    $w.$index.stride $w.$index.wrap -side left
-#	    grid $w.$index.l $w.$index.start $w.$index.stop 
-#		    $w.$index.stride $w.$index.wrap
+	    pack $w.main.$index.l $w.main.$index.start $w.main.$index.stop \
+		    $w.main.$index.stride $w.main.$index.wrap -side left
+#	    grid $w.main.$index.l $w.main.$index.start $w.main.$index.stop 
+#		    $w.main.$index.stride $w.main.$index.wrap
 	}
 
 	if { [set $this-dims] == 3 } {
-	    pack $w.l $w.i $w.j $w.k -side top -padx 10 -pady 5
+	    pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 2 } {
-	    pack $w.l $w.i $w.j -side top -padx 10 -pady 5	    
+	    pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	} elseif { [set $this-dims] == 1 } {
-	    pack $w.l $w.i -side top -padx 10 -pady 5	    
+	    pack $w.main.l $w.main.i -side top -padx 10 -pady 5	    
 	}
+
+	pack $w.main -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
@@ -228,12 +232,12 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 		set stop_val  [expr [set $this-$index-dim] - 2]
 	    }
 
-	    $w.$index.start.s configure -from 0 -to $stop_val
-	    $w.$index.stop.s configure -from $start_val -to [expr [set $this-$index-dim] - 1]
+	    $w.main.$index.start.s configure -from 0 -to $stop_val
+	    $w.main.$index.stop.s configure -from $start_val -to [expr [set $this-$index-dim] - 1]
 
-	    bind $w.$index.start.e <Return> \
+	    bind $w.main.$index.start.e <Return> \
 		"$this manualSliderEntry4 0 $stop_val $this-$index-start $this-$index-start2 $index"
-	    bind $w.$index.stop.e  <Return> \
+	    bind $w.main.$index.stop.e  <Return> \
 		"$this manualSliderEntry $start_val  [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
 	}
     }
@@ -291,17 +295,16 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    pack forget $w.i
-	    pack forget $w.k
-	    pack forget $w.j
-	    pack forget $w.misc
+	    pack forget $w.main.i
+	    pack forget $w.main.k
+	    pack forget $w.main.j
 	    
 	    if { [set $this-dims] == 3 } {
-		pack $w.l $w.i $w.j $w.k $w.misc -side top -padx 10 -pady 5
+		pack $w.main.l $w.main.i $w.main.j $w.main.k -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 2 } {
-		pack $w.l $w.i $w.j $w.misc -side top -padx 10 -pady 5	    
+		pack $w.main.l $w.main.i $w.main.j -side top -padx 10 -pady 5
 	    } elseif { [set $this-dims] == 1 } {
-		pack $w.l $w.i $w.misc -side top -padx 10 -pady 5	    
+		pack $w.main.l $w.main.i -side top -padx 10 -pady 5
 	    }
 	}
 
@@ -329,21 +332,21 @@ itcl_class SCIRun_FieldsCreate_FieldSubSample {
 	    if [ expr [winfo exists $w] ] {
 
 		if { [set $this-wrap ] } {
-		    $w.$index.wrap configure -state normal
+		    $w.main.$index.wrap configure -state normal
 		} else {
-		    $w.$index.wrap configure -state disabled 
+		    $w.main.$index.wrap configure -state disabled 
 		}
 
 		# Update the sliders to the new bounds.
-		$w.$index.start.s configure -from 0 -to $stop_val2
-		$w.$index.stop.s  configure -from 0 -to $stop_val1
-		$w.$index.stride.s  configure -from 1 -to $stop_val1
+		$w.main.$index.start.s configure -from 0 -to $stop_val2
+		$w.main.$index.stop.s  configure -from 0 -to $stop_val1
+		$w.main.$index.stride.s  configure -from 1 -to $stop_val1
 
-		bind $w.$index.start.e <Return> \
+		bind $w.main.$index.start.e <Return> \
 		    "$this manualSliderEntry4 0 $stop_val2 $this-$index-start $this-$index-start2 $index"
-		bind $w.$index.stop.e  <Return> \
+		bind $w.main.$index.stop.e  <Return> \
 		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stop $this-$index-stop2"
-		bind $w.$index.stride.e  <Return> \
+		bind $w.main.$index.stride.e  <Return> \
 		    "$this manualSliderEntry  1 $stop_val1 $this-$index-stride $this-$index-stride2"
 	    }
 
