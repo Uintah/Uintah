@@ -129,6 +129,14 @@ PROGRAM := Packages/Uintah/StandAlone/timeextract
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# lineextract
+                                                                                
+SRCS := $(SRCDIR)/lineextract.cc
+PROGRAM := Packages/Uintah/StandAlone/lineextract
+                                                                                
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # uda2nrrd
 
 ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
