@@ -728,7 +728,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 sched->addTask(t);
       }
 
-#if 0
+//#if 0
       if(t + dt >= d_nextOutputTime)
       {
 	 Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
@@ -747,7 +747,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
 	      t->requires(new_dw, lb->pMassLabel_preReloc, idx, patch,
 			Ghost::AroundNodes, 1 );
-	      t->requires(new_dw, lb->pXLabel, idx, patch,
+	      t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 
 	      t->computes(new_dw, lb->gStressForSavingLabel, idx, patch );
@@ -756,7 +756,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
          sched->addTask(t);
 
       }
-#endif
+//#endif
     }
     
     if(t + dt >= d_nextOutputTime)
@@ -792,9 +792,9 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
    // Add pleaseSaves here for each of the grid variables
    // created by interpolateParticlesForSaving
-#if 0
+//#if 0
    new_dw->pleaseSave(lb->gStressForSavingLabel, numMatls);
-#endif
+//#endif
 
    if(d_fracture) {
      new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
@@ -837,7 +837,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
         if(mpm_matl){
           int matlindex = matl->getDWIndex();
           int vfindex = matl->getVFIndex();
-          ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
+          ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
                             Ghost::AroundNodes, 1, lb->pXLabel);
 
           // Allocate storage & retrieve particle weighting and position
@@ -846,8 +846,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
           NCVariable<double> gweight;
           new_dw->allocate(gweight, lb->gWeightLabel, vfindex, patch);
           ParticleVariable<Point> px;
-          new_dw->get(px, lb->pXLabel_preReloc, pset);
-
+          old_dw->get(px, lb->pXLabel, pset);
 
           if (vars[i]->typeDescription()->getSubType()->getType()
 			 == TypeDescription::Vector) {
@@ -1920,6 +1919,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.149  2000/09/15 00:12:40  guilkey
+// Recommitting the (hopefully) fixed interpolateParticlesForSaving
+// code.
+//
 // Revision 1.148  2000/09/12 16:52:04  tan
 // Reorganized crack surface contact force algorithm.
 //
