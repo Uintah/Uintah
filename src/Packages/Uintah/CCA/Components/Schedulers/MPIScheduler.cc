@@ -102,6 +102,11 @@ MPIScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   if( dts_ )
     delete dts_;
 
+  if(graph.getNumTasks() == 0){
+    dts_=0;
+    return;
+  }
+
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   if( useInternalDeps() )
@@ -477,10 +482,12 @@ MPIScheduler::execute(const ProcessorGroup * pg )
    TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", 
 	TAU_USER); 
 
-  dts_->initTimestep();
-
-  ASSERT(dts_ != 0);
+  if(dts_ == 0){
+    cerr << "MPIScheduler skipping execute, no tasks\n";
+    return;
+  }
   dbg << "MPIScheduler executing\n";
+  dts_->initTimestep();
 
   d_labels.clear();
   d_times.clear();
