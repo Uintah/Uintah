@@ -95,17 +95,20 @@ color="maroon">
       since many of our example networks run with a variety of data inputs, <i>e.g.</i>, sphere, brain-EG, and utahtorso-lowres.</p></ol> 
 
 <p>To begin, we will construct a network that loads a geometric mesh from disk and renders it to the screen.  In your Unix shell window:</p>
-<ol>
-  <p><li value="1.">Set your SCIRUN_DATA variable, pointing to the
-  location of SCIRunData.</p>  
-  <p><li value="2.">Set your SCIRUN_DATASET variable to utahtorso-lowres
-  (as shown in <b>Figure 1.1</b>).</p></ol>
+                <ol>
+                  <p>
+                  <li value="1."><p>Set your SCIRUN_DATA variable, pointing to the 
+                    location of SCIRunData (as shown in <b>Figure 1.1</b>). The 
+                    &quot;path_to_data&quot; should represent the directory 
+                    path where you have stored the data on your computer.</p>
+                  <li value="2."><p>Set your SCIRUN_DATASET variable to utahtorso-lowres. 
+                </p></ol>
   
   </div>
   <center>
   <p><img height="200" width="516" src="images/figures/1_2.gif"><br>
-  <b>Figure 1.1: Set environment variables using C-style shell (csh,
-  tcsh).</b></p>
+                  <b>Figure 1.1: Set environment variables using C-style shell 
+                  (csh, tcsh).</b></p>
   </center>
   <div align="left">
   <br> 
@@ -117,10 +120,10 @@ color="maroon">
   </center>
   <div align="left">
   </p>
-  <p>Having set these environment variables, you are now ready to
-  start SCIRun.</p>   
-    <p><ol><li value="1.">Move into your SCIRun/linux/ directory, and
-    enter the command <b>./scirun</b>.  SCIRun cannot run as a background application.  
+  <p>In order to allow multiple users to run the same installation of SCIRun without conflict, each user must specify a directory in which they store dynamically compiled code. To do this, set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to the directory in which you choose to place your dynamically compiled code (to be discussed later in this tutorial), similar to <b>Figure 1.1</b> and <b>Figure 1.2</b>.</p>Having set these environment variables, you are now ready to start SCIRun.</p> 
+  
+    <p><ol><li value="1.">Move into your SCIRun executable directory, and
+    enter the command <b>scirun</b>.  SCIRun cannot run as a background application.  
     <p><li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
     <b>Figure 1.3</b>.</p></ol>
@@ -317,8 +320,7 @@ color="maroon">
     <p><b>Dynamic Compilation</b></p>
 
     <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library, as needed, where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
-
-    <p>In order to allow multiple users to run the same installation of SCIRun without conflict, each user must specify a directory in which they store dynamically compiled code. To do this, set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to the directory in which you choose to place your dynamically compiled code, similar to <b>Figure 1.1</b> and <b>Figure 1.2</b>.</p>
+    
 
 <p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">"Dynamic
