@@ -18,6 +18,7 @@
 #pragma interface
 #endif
 
+struct CrowdMonitor_private;
 struct Mutex_private;
 struct LibMutex_private;
 
@@ -52,7 +53,28 @@ public:
     void down();
 };
 
-class Barrier {
+struct ConditionVariable_private;
+
+class ConditionVariable {
+    ConditionVariable_private* priv;
+public:
+    ConditionVariable();
+    ~ConditionVariable();
+    void wait(Mutex&);
+    void cond_signal();
+    void broadcast();
+};
+
+class CrowdMonitor {
+    CrowdMonitor_private* priv;
+public:
+    CrowdMonitor();
+    ~CrowdMonitor();
+    void read_lock();
+    void read_unlock();
+
+    void write_lock();
+    void write_unlock();
 };
 
 template<class Item> struct Mailbox_private;
@@ -68,19 +90,6 @@ public:
     int nitems() const;
 };
 
-struct ConditionVariable_private;
-
-class ConditionVariable {
-    ConditionVariable_private* priv;
-public:
-    ConditionVariable();
-    ~ConditionVariable();
-    void wait(Mutex&);
-    void cond_signal();
-    void broadcast();
-};
-
-class CrowdMonitor {
-};
+#include <Multitask/Mailbox.cc>
 
 #endif /* SCI_Multitask_ITC_h */

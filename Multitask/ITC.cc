@@ -18,83 +18,71 @@
 #include <Multitask/ITC.h>
 #include <iostream.h>
 
-// Implement the Mailbox with a Mutex and Condition Variables
-template<class Item> struct Mailbox_private {
-    Mutex mutex;
-    Item* ring_buffer;
-    int head;
-    int len;
-    int max;
-    ConditionVariable send_condition;
-    ConditionVariable recv_condition;
-    int send_wait;
-    int recv_wait;
+struct CrowdMonitor_private {
+    ConditionVariable write_waiters;
+    ConditionVariable read_waiters;
+    int nreaders_waiting;
+    int nwriters_waiting;
+    int nreaders;
+    int nwriters;
+    Mutex lock;
 };
 
-template<class Item>
-Mailbox<Item>::Mailbox(int max)
+CrowdMonitor::CrowdMonitor()
 {
-    priv=new Mailbox_private<Item>;
-    priv->ring_buffer=new Item[max];
-    priv->head=0;
-    priv->len=0;
-    priv->send_wait=0;
-    priv->recv_wait=0;
-    priv->max=max;
+    priv=new CrowdMonitor_private;
+    priv->nreaders_waiting=0;
+    priv->nwriters_waiting=0;
+    priv->nreaders=0;
+    priv->nwriters=0;
 }
 
-template<class Item>
-Mailbox<Item>::~Mailbox()
+CrowdMonitor::~CrowdMonitor()
 {
-    delete[] priv->ring_buffer;
     delete priv;
 }
 
-#define NEXT(head, inc, max) ((head+inc)%max)
-
-template<class Item>
-void Mailbox<Item>::send(Item msg)
+void CrowdMonitor::read_lock()
 {
-    priv->mutex.lock();
-    // See if the message buffer is full...
-    while(priv->len == priv->max){
-	priv->send_wait++;
-	priv->send_condition.wait(priv->mutex);
-	priv->send_wait--;
+    priv->lock.lock();
+    while(priv->nwriters_waiting > 0){
+	priv->nreaders_waiting++;
+	priv->read_waiters.wait(priv->lock);
+	priv->nreaders_waiting--;
     }
-    priv->ring_buffer[NEXT(priv->head, priv->len, priv->max)]=msg;
-    priv->len++;
-    if(priv->recv_wait)
-	priv->recv_condition.cond_signal();
-    priv->mutex.unlock();
+    priv->nreaders++;
+    priv->lock.unlock();
 }
 
-template<class Item>
-Item Mailbox<Item>::receive()
+void CrowdMonitor::read_unlock()
 {
-    priv->mutex.lock();
-    while(priv->len == 0){
-	priv->recv_wait++;
-	priv->recv_condition.wait(priv->mutex);
-	priv->recv_wait--;
+    priv->lock.lock();
+    priv->nreaders--;
+    if(priv->nreaders == 0 && priv->nwriters_waiting > 0)
+	priv->write_waiters.cond_signal();
+    priv->lock.unlock();
+}
+
+void CrowdMonitor::write_lock()
+{
+    priv->lock.lock();
+    while(priv->nwriters || priv->nreaders){
+	// Have to wait...
+	priv->nwriters_waiting++;
+	priv->write_waiters.wait(priv->lock);
+	priv->nwriters_waiting--;
     }
-    Item val=priv->ring_buffer[priv->head];
-    priv->head=NEXT(priv->head, 1, priv->max);
-    priv->len--;
-    if(priv->send_wait)
-	priv->send_condition.cond_signal();
-    priv->mutex.unlock();
-    return val;
+    priv->nwriters++;
+    priv->lock.unlock();
 }
 
-template<class Item>
-int Mailbox<Item>::size() const
+void CrowdMonitor::write_unlock()
 {
-    return priv->max;
-}
-
-template<class Item>
-int Mailbox<Item>::nitems() const
-{
-    return priv->len;
+    priv->lock.lock();
+    priv->nwriters--;
+    if(priv->nwriters_waiting)
+	priv->write_waiters.cond_signal(); // Wake one of them up...
+    else if(priv->nreaders_waiting)
+	priv->read_waiters.broadcast(); // Wait all of them up...
+    priv->lock.unlock();
 }
