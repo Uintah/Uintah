@@ -135,13 +135,13 @@ Gui::Gui() :
   routeWindowVisible(false), lightsWindowVisible(false), 
   triggersWindowVisible(false),
   objectsWindowVisible(false), mainWindowVisible(true),
-  lightList(NULL), routeList(NULL), objectList(NULL), soundList_(NULL),
+  lightList(NULL), routeList(NULL), soundList_(NULL),
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
   lightIntensity_(NULL), enableSounds_(false),
   lightBrightness_(1.0),
   mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
-  keypadAttached_(0), rightButtonMenuActive_(true),
+  rightButtonMenuActive_(true),
   displayRStats_(false), displayPStats_(false)
 {
   inputString_[0] = 0;
@@ -1078,11 +1078,6 @@ Gui::updateRouteCB( int /*id*/ )
   goToRouteBeginningCB( -1 );
 }
 
-void
-Gui::updateObjectCB( int /*id*/ )
-{
-  resetObjSelection();
-}
 
 void
 Gui::updateSoundCB( int /*id*/ )
@@ -1222,77 +1217,71 @@ void
 Gui::createObjectWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Objects" );
-
-  objectList = window->add_listbox_to_panel( panel, "Selected Object",
-					    &selectedObjectId_,
-					    OBJECT_LIST_ID, updateObjectCB );
-
+					    
   Array1<Object*> & objects = dpy_->scene->objectsOfInterest_;
   for( int num = 0; num < objects.size(); num++ )
     {
       char name[ 1024 ];
       sprintf( name, "%s", objects[ num ]->name_.c_str() );
-      objectList->add_item( num, name );
+
+      SelectableGroup *sg = dynamic_cast<SelectableGroup*>(objects[num]);
+      if (sg) {
+
+	window->add_separator_to_panel( panel );
+
+	window->add_statictext_to_panel( panel, name );
+	
+	window->add_button_to_panel( panel, "Auto Cycle On/Off",
+				     num,
+				     SGAutoCycleCB );
+	window->add_button_to_panel( panel, "Next Item",
+				     num,
+				     SGNextItemCB );	
+      }
+
+      SpinningInstance *si = dynamic_cast<SpinningInstance*>(objects[num]);
+      if (si) {    
+	window->add_separator_to_panel( panel );
+
+	window->add_statictext_to_panel( panel, name );
+
+	window->add_checkbox_to_panel( panel, "Spin/Freeze", NULL,
+				       num,
+				       SISpinCB );
+	window->add_button_to_panel( panel, "Inc Magnify",
+				     num,
+				     SIIncMagCB );
+	window->add_button_to_panel( panel, "Dec Magnify",
+				     num,
+				     SIDecMagCB );
+	
+	window->add_button_to_panel( panel, "Slide Up",
+				     num,
+				     SISlideUpCB );
+	window->add_button_to_panel( panel, "Slide Down",
+				     num,
+				     SISlideDownCB );		
+      }
+
+      CutGroup * cut = dynamic_cast<CutGroup*>( objects[num] );
+      if (cut) {
+	window->add_separator_to_panel( panel );
+
+	window->add_statictext_to_panel( panel, name );
+
+	window->add_button_to_panel( panel, "On/Off",
+				     num,
+				     CGOnCB );
+	window->add_button_to_panel( panel, "Spin/Freeze",
+				     num,
+				     CGSpinCB );
+
+      }      
+
+      if (num&&(!(num%6))) window->add_column_to_panel( panel, true );
     }
-
-  window->add_statictext_to_panel( panel, "Position:" );
-  window->add_statictext_to_panel( panel, "Type:" );
-  window->add_statictext_to_panel( panel, "Material:" );
-
-  attachKeypadBtn_ = window->add_button_to_panel( panel, "Attach Keypad",
-						  ATTACH_KEYPAD_BTN_ID,
-						  attachKeypadCB );
-
   
-  GLUI_Rollout * moreControls = 
-    window->add_rollout_to_panel( panel, "More Controls", false );  
-
-  window->add_statictext_to_panel( moreControls, "Rotating" );
-
-  /*GLUI_Rotation * objectRotator = */
-    window->add_rotation_to_panel( moreControls, "Rotator", 
-				   (float*)(dpy_->objectRotationMatrix_) );
-
-  window->add_column_to_panel( moreControls, true);
-
-  window->add_statictext_to_panel( moreControls, "Switching" );
-
-  SGAutoButton_ = window->add_checkbox_to_panel( moreControls, "N/A", NULL,
-						 0,
-						 SGChangeCB );
-  SGCycleButton_ = window->add_button_to_panel( moreControls, "N/A",
-						1,
-						SGChangeCB );
-
-  window->add_column_to_panel( moreControls, true);
-
-  window->add_statictext_to_panel( moreControls, "Spinning" );
-  
-  SIAutoButton_ = window->add_checkbox_to_panel( moreControls, "N/A", NULL,
-						 0,
-						 SIChangeCB );
-  SIIncMagButton_ = window->add_button_to_panel( moreControls, "N/A",
-						 1,
-						 SIChangeCB );
-  SIDecMagButton_ = window->add_button_to_panel( moreControls, "N/A",
-						 2,
-						 SIChangeCB );
-
-  SIUpButton_ = window->add_button_to_panel( moreControls, "N/A",
-					     3,
-					     SIChangeCB );
-  SIDownButton_ = window->add_button_to_panel( moreControls, "N/A",
-					       4,
-					       SIChangeCB );
-
-  window->add_column_to_panel( moreControls, true);
-
-  window->add_statictext_to_panel( moreControls, "Cutting" );
-
-  CutToggleButton_ = window->add_button_to_panel( moreControls, "N/A",
-						  0,
-						  CutToggleCB );
-
+  window->add_separator_to_panel( panel );
   window->add_button_to_panel( panel, "Close",
 			       -1, toggleObjectsWindowCB );
 } // end createObjectWindow()
@@ -1403,128 +1392,54 @@ Gui::soundThreadNowActive()
   activeGui->enableSounds_ = true;
 }
 
-void
-Gui::resetObjSelection() {
-  activeGui->stealth_ = activeGui->dpy_->stealth_;
-  activeGui->keypadAttached_ = 0;
-  activeGui->attachKeypadBtn_->set_name( "Attach Keypad" );
-  activeGui->SGAutoButton_->set_name( "N/A" );
-  activeGui->SGCycleButton_->set_name( "N/A" );
-  activeGui->SIAutoButton_->set_name( "N/A" );
-  activeGui->SIIncMagButton_->set_name( "N/A" );
-  activeGui->SIDecMagButton_->set_name( "N/A" );
-  activeGui->SIUpButton_->set_name( "N/A" );
-  activeGui->SIDownButton_->set_name( "N/A" );
-  activeGui->CutToggleButton_->set_name( "N/A" );
-  activeGui->SIAutoButton_->set_int_val(0);
-  activeGui->SGAutoButton_->set_int_val(0);
-  activeGui->stealth_->stopAllMovement();
-  activeGui->dpy_->attachedObject_ = NULL;
-  activeGui->attachedSG_ = NULL;
-  activeGui->attachedSI_ = NULL;
+void Gui::SGAutoCycleCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);
+  obj->toggleAutoswitch();
 }
 
-void Gui::SGChangeCB( int id ) {
-  
-  if ((activeGui->keypadAttached_ == 2) && (activeGui->attachedSG_)) {
-    if (!id) {
-      activeGui->attachedSG_->toggleAutoswitch();
-    } else {
-      activeGui->attachedSG_->nextChild();
-    }
-    activeGui->SGAutoButton_->set_int_val(activeGui->attachedSG_->Autoswitch());
-  }
+void Gui::SGNextItemCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);  
+  obj->nextChild();
 }
 
-void Gui::SIChangeCB( int id ) {
-  
-  if ((activeGui->keypadAttached_ == 3) && (activeGui->attachedSI_)) {
-    switch (id) {
-    case 0:
-      activeGui->attachedSI_->toggleDoSpin();      
-      break;
-    case 1:
-      activeGui->attachedSI_->incMagnification();      
-      break;
-    case 2:
-      activeGui->attachedSI_->decMagnification();      
-      break;
-    case 3:
-      activeGui->attachedSI_->upPole();      
-      break;
-    case 4:
-      activeGui->attachedSI_->downPole();      
-      break;
-    }
-    activeGui->SIAutoButton_->set_int_val(activeGui->attachedSI_->doSpin());
-  }
+void Gui::SISpinCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->toggleDoSpin();      
+}
+void Gui::SIIncMagCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->incMagnification();      
+}
+void Gui::SIDecMagCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->decMagnification();      
+}
+void Gui::SISlideUpCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->upPole();      
+}
+void Gui::SISlideDownCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  SpinningInstance *obj = dynamic_cast<SpinningInstance*>(objects[id]);  
+  obj->downPole();      
 }
 
-void Gui::CutToggleCB( int /*id*/ ) {
-  
-  if ((activeGui->keypadAttached_ == 4) && (activeGui->attachedCut_)) {
-    activeGui->attachedCut_->toggleOn();
-  }
+void Gui::CGOnCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  CutGroup *obj = dynamic_cast<CutGroup*>(objects[id]);  
+  obj->toggleOn();
 }
 
-void
-Gui::attachKeypadCB( int /*id*/ )
-{
-
-  if (activeGui->keypadAttached_) {
-    resetObjSelection();
-    return;
-  }
-  
-  Object * obj = 
-    activeGui->dpy_->scene->objectsOfInterest_[ activeGui->selectedObjectId_ ];
-
-  DynamicInstance * instance = dynamic_cast<DynamicInstance*>( obj );
-  if( instance ) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 1;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->dpy_->attachedObject_ = instance;
-      activeGui->stealth_ = activeGui->dpy_->objectStealth_;
-    }
-
-  SelectableGroup *sg = dynamic_cast<SelectableGroup*>(obj);
-  if (sg) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 2;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->SGAutoButton_->set_name( "Auto Switch" );
-      activeGui->SGCycleButton_->set_name( "Next Object" );
-      activeGui->SGAutoButton_->set_int_val(sg->Autoswitch());
-      activeGui->attachedSG_ = sg;
-    }
-
-  SpinningInstance *si = dynamic_cast<SpinningInstance*>(obj);
-  if (si) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 3;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->SIAutoButton_->set_name( "Auto Spin" );
-      activeGui->SIIncMagButton_->set_name( "Inc Magnify" );
-      activeGui->SIDecMagButton_->set_name( "Dec Magnify" );
-      activeGui->SIUpButton_->set_name( "Slide Up" );
-      activeGui->SIDownButton_->set_name( "Slide Down" );
-      activeGui->SIAutoButton_->set_int_val(si->doSpin()); 
-      activeGui->attachedSI_ = si;
-    }
-
-  CutGroup * cut = dynamic_cast<CutGroup*>( obj );
-  if( cut ) 
-    {
-      resetObjSelection();
-      activeGui->keypadAttached_ = 4;
-      activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
-      activeGui->CutToggleButton_->set_name( "Toggle Cut" );
-      activeGui->attachedCut_ = cut;
-    }
+void Gui::CGSpinCB( int id ) {
+  Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
+  CutGroup *obj = dynamic_cast<CutGroup*>(objects[id]);  
+  obj->toggleAnimate();
 }
 
 void

@@ -20,10 +20,11 @@ CutGroup::CutGroup(const Vector& n, const Point& cen)
     d=Dot(this->n, cen);
     on = true;
     this->set_matl(this);
+    animdpy = false;
 }
 
-CutGroup::CutGroup(CutPlaneDpy* dpy)
-    : Group(), dpy(dpy)
+CutGroup::CutGroup(CutPlaneDpy* dpy, bool animdpy)
+  : Group(), dpy(dpy), animdpy(animdpy)
 {
     n=dpy->n;
     d=dpy->d;
@@ -247,6 +248,8 @@ void CutGroup::animate(double t, bool& changed)
 {
   //receive updates from the PlaneDpy
   if(dpy){
+    if (animdpy) dpy->animate(t);
+
     if(dpy->n != n || dpy->d != d || dpy->on != on){
       changed=true;
       n=dpy->n;

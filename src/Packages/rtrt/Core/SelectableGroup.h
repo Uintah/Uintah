@@ -49,6 +49,12 @@ public:
   inline void Autoswitch(bool b) {autoswitch = b;};
   inline int Autoswitch() {if (autoswitch) return 1; else return 0;};
   inline void toggleAutoswitch() {autoswitch = !autoswitch;};
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize) {
+    Group::preprocess(maxradius, pp_offset, scratchsize);
+    if (objs.size() == 0)
+      child = -1;
+  }
+
 };
 
 } // end namespace rtrt

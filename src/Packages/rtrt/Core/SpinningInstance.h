@@ -1,6 +1,7 @@
 #ifndef SPINNINGINSTANCE_H
 #define SPINNINGINSTANCE_H
 
+#include <Packages/rtrt/Core/CutPlaneDpy.h>
 #include <Packages/rtrt/Core/Instance.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -15,6 +16,7 @@ namespace rtrt {
       BBox bbox_orig;
       bool dorotate;
       double ctime;
+      CutPlaneDpy *cpdpy;
     public:
       Point cen;
       Vector axis;
@@ -26,12 +28,13 @@ namespace rtrt {
       void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		     PerProcessorContext* ppc);
 
-      void toggleDoSpin() { dorotate = !dorotate; };	
+      void toggleDoSpin() { dorotate = !dorotate; if (cpdpy) cpdpy->doanimate=dorotate; };	
       int doSpin() { if (dorotate) return 1; else return 0; };
       void incMagnification();	
       void decMagnification();	
       void upPole();
       void downPole();
+      void addCPDpy(CutPlaneDpy *_cpdpy) { cpdpy = _cpdpy; }
     };
 }
 #endif
