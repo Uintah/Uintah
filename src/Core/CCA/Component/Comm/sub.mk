@@ -59,7 +59,7 @@ endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-ifeq ($(HAVE_MPI),1)
+ifneq ($(HAVE_MPI),)
 SUBDIRS := \
         $(SRCDIR)/Intra 
 
