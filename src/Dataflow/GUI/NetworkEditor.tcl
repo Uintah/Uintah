@@ -1570,6 +1570,11 @@ proc licenseAccept { } {
     }
 }
 
+proc validFile { args } {
+    set name [lindex $args 0]
+    return [expr [file isfile $name] && [file readable $name]]
+}
+
 proc validDir { name } {
     return [expr [file isdirectory $name] && \
 		 [file writable $name] && [file readable $name]]
@@ -1584,9 +1589,11 @@ proc getOnTheFlyLibsDir {} {
     if { $dir != "" } {
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
+	    displayErrorWarningOrInfo "\nCopying the contents of $binOTF\nto $dir..." info
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
+	    displayErrorWarningOrInfo "Done copying on-the-fly-libs.\n" info
 	}
     }
 
@@ -1599,9 +1606,11 @@ proc getOnTheFlyLibsDir {} {
 	set dir [file join $home SCIRun on-the-fly-libs $tcl_platform(os)]
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
+	    displayErrorWarningOrInfo "\nCopying the contents of $binOTF\nto $dir..." info
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
+	    displayErrorWarningOrInfo "Done copying on-the-fly-libs.\n" info
 	}
     }
     if { ![validDir $dir] } {
