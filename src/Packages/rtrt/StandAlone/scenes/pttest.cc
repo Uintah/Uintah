@@ -216,7 +216,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 
   Object *group=0;
   if (infilename) {
-    GridSpheresDpy *dpy = new GridSpheresDpy(0);
+    GridSpheresDpy *dpy = new GridSpheresDpy(1);
     GridSpheres *grid = texGridFromFile(infilename, tex_res, radius, numvars,
 					nsides, gdepth, cmap, color);
     
@@ -275,7 +275,6 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   Light* mainLight = new Light(Point(lx, ly, lz), Color(1,1,1), 0.01);
   mainLight->name_ = "main light";
   scene->add_light( mainLight );
-  scene->turnOffAllLights( 0.0 ); 
 
   scene->select_shadow_mode(No_Shadows);
 
