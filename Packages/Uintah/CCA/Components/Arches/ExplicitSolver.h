@@ -26,9 +26,7 @@ KEYWORDS
 
 
 DESCRIPTION
-   Class ExplicitSolver implements the
-   Fixed Point Picard iteration method is used by
-   ImplicitIntegrator to solve set of nonlinear equations
+   Class ExplicitSolver implements ...
 
 WARNING
    none

@@ -446,7 +446,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
-  if (!(timelabels->integrator_step_name == "FE"))
+  if (timelabels->multiple_steps)
     tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,
 		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
@@ -485,6 +485,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 
   if (d_pressure_correction)
+  if ((timelabels->integrator_step_name == "BEEmulation2")||
+      (timelabels->integrator_step_name == "BEEmulation3")) 
+    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
     tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -620,7 +625,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
-    if (timelabels->number_of_steps > 1)
+    if (timelabels->multiple_steps)
       new_dw->get(constVelocityVars.density, d_lab->d_densityTempLabel, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else
@@ -659,6 +664,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 
     if (d_pressure_correction)
+    if ((timelabels->integrator_step_name == "BEEmulation2")||
+        (timelabels->integrator_step_name == "BEEmulation3")) 
+      new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
       old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 

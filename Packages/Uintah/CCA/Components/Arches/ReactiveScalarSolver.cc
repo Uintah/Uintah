@@ -429,7 +429,7 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (timelabels->number_of_steps > 1)
+  if (timelabels->multiple_steps)
     tsk->requires(Task::NewDW, d_lab->d_reactscalarTempLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   else
@@ -528,7 +528,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    if (timelabels->number_of_steps > 1)
+    if (timelabels->multiple_steps)
       new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarTempLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else

@@ -38,8 +38,8 @@ namespace Uintah {
     public:
     TimeIntegratorStepType();
     ~TimeIntegratorStepType();
-    enum Type {FE, Predictor, Corrector, OldPredictor, OldCorrector,
-	       Intermediate, CorrectorRK3};
+    enum Type {BE, FE, Predictor, Corrector, OldPredictor, OldCorrector,
+	       Intermediate, CorrectorRK3, BEEmulation1, BEEmulation2, BEEmulation3};
     private:
     TimeIntegratorStepType(const TimeIntegratorStepType&);
     TimeIntegratorStepType& operator=(const TimeIntegratorStepType&);
@@ -59,7 +59,7 @@ namespace Uintah {
     public:
     string integrator_step_name;
     int integrator_step_number;
-    int number_of_steps;
+    bool multiple_steps;
     bool integrator_last_step;
     bool use_old_values;
     double time_multiplier;
@@ -88,10 +88,37 @@ namespace Uintah {
       {
 	switch(intgType) {
 
+	  case TimeIntegratorStepType::BE:
+	    integrator_step_name = "BE";
+	    integrator_step_number = TimeIntegratorStepNumber::First;
+            multiple_steps = false;
+	    integrator_last_step = true;
+	    use_old_values = true;
+            time_multiplier = 1.0;
+	    factor_old = 1.0;
+	    factor_new = 1.0;
+	    factor_divide = 1.0;
+	    maxabsu_in = lab->d_maxAbsU_label;
+	    maxabsv_in = lab->d_maxAbsV_label;
+	    maxabsw_in = lab->d_maxAbsW_label;
+	    ref_density = lab->d_refDensity_label;
+	    pressure_out = lab->d_pressurePSLabel;
+	    pressure_guess = lab->d_pressurePSLabel;
+	    maxabsu_out = lab->d_maxAbsU_label;
+	    maxabsv_out = lab->d_maxAbsV_label;
+	    maxabsw_out = lab->d_maxAbsW_label;
+	    tke_out = lab->d_totalKineticEnergyLabel;
+	    flowIN = lab->d_totalflowINLabel;
+	    flowOUT = lab->d_totalflowOUTLabel;
+	    denAccum = lab->d_denAccumLabel;
+	    floutbc = lab->d_netflowOUTBCLabel;
+	    areaOUT = lab->d_totalAreaOUTLabel;
+	  break;
+
 	  case TimeIntegratorStepType::FE:
 	    integrator_step_name = "FE";
 	    integrator_step_number = TimeIntegratorStepNumber::First;
-            number_of_steps = 1;
+            multiple_steps = false;
 	    integrator_last_step = true;
 	    use_old_values = true;
             time_multiplier = 1.0;
@@ -118,7 +145,7 @@ namespace Uintah {
 	  case TimeIntegratorStepType::Predictor:
 	    integrator_step_name = "Predictor";
 	    integrator_step_number = TimeIntegratorStepNumber::First;
-            number_of_steps = 2;
+            multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = true;
             time_multiplier = 1.0;
@@ -145,7 +172,7 @@ namespace Uintah {
 	  case TimeIntegratorStepType::OldPredictor:
 	    integrator_step_name = "OldPredictor";
 	    integrator_step_number = TimeIntegratorStepNumber::First;
-            number_of_steps = 2;
+            multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = true;
             time_multiplier = 0.5;
@@ -172,7 +199,7 @@ namespace Uintah {
 	  case TimeIntegratorStepType::Corrector:
 	    integrator_step_name = "Corrector";
 	    integrator_step_number = TimeIntegratorStepNumber::Second;
-            number_of_steps = 2;
+            multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = false;
             time_multiplier = 1.0;
@@ -199,7 +226,7 @@ namespace Uintah {
 	  case TimeIntegratorStepType::OldCorrector:
 	    integrator_step_name = "OldCorrector";
 	    integrator_step_number = TimeIntegratorStepNumber::Second;
-            number_of_steps = 2;
+            multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = true;
             time_multiplier = 1.0;
@@ -226,7 +253,7 @@ namespace Uintah {
 	  case TimeIntegratorStepType::CorrectorRK3:
 	    integrator_step_name = "CorrectorRK3";
 	    integrator_step_number = TimeIntegratorStepNumber::Third;
-            number_of_steps = 3;
+            multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = false;
             time_multiplier = 1.0;
@@ -253,7 +280,7 @@ namespace Uintah {
 	  case TimeIntegratorStepType::Intermediate:
 	    integrator_step_name = "Intermediate";
 	    integrator_step_number = TimeIntegratorStepNumber::Second;
-            number_of_steps = 3;
+            multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = false;
             time_multiplier = 1.0;
@@ -275,6 +302,87 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumIntermLabel;
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
+	  break;
+
+	  case TimeIntegratorStepType::BEEmulation1:
+	    integrator_step_name = "BEEmulation1";
+	    integrator_step_number = TimeIntegratorStepNumber::First;
+            multiple_steps = true;
+	    integrator_last_step = false;
+	    use_old_values = true;
+            time_multiplier = 1.0;
+	    factor_old = 1.0;
+	    factor_new = 1.0;
+	    factor_divide = 1.0;
+	    maxabsu_in = lab->d_maxAbsU_label;
+	    maxabsv_in = lab->d_maxAbsV_label;
+	    maxabsw_in = lab->d_maxAbsW_label;
+	    ref_density = lab->d_refDensityPred_label;
+	    pressure_out = lab->d_pressurePredLabel;
+	    pressure_guess = lab->d_pressurePSLabel;
+	    maxabsu_out = lab->d_maxAbsUPred_label;
+	    maxabsv_out = lab->d_maxAbsVPred_label;
+	    maxabsw_out = lab->d_maxAbsWPred_label;
+	    tke_out = lab->d_totalKineticEnergyPredLabel;
+	    flowIN = lab->d_totalflowINPredLabel;
+	    flowOUT = lab->d_totalflowOUTPredLabel;
+	    denAccum = lab->d_denAccumPredLabel;
+	    floutbc = lab->d_netflowOUTBCPredLabel;
+	    areaOUT = lab->d_totalAreaOUTPredLabel;
+	  break;
+
+	  case TimeIntegratorStepType::BEEmulation2:
+	    integrator_step_name = "BEEmulation2";
+	    integrator_step_number = TimeIntegratorStepNumber::Second;
+            multiple_steps = true;
+	    integrator_last_step = false;
+	    use_old_values = true;
+            time_multiplier = 1.0;
+	    factor_old = 1.0;
+	    factor_new = 1.0;
+	    factor_divide = 1.0;
+	    maxabsu_in = lab->d_maxAbsUPred_label;
+	    maxabsv_in = lab->d_maxAbsVPred_label;
+	    maxabsw_in = lab->d_maxAbsWPred_label;
+	    ref_density = lab->d_refDensityInterm_label;
+	    pressure_out = lab->d_pressureIntermLabel;
+	    pressure_guess = lab->d_pressurePredLabel;
+	    maxabsu_out = lab->d_maxAbsUInterm_label;
+	    maxabsv_out = lab->d_maxAbsVInterm_label;
+	    maxabsw_out = lab->d_maxAbsWInterm_label;
+	    tke_out = lab->d_totalKineticEnergyIntermLabel;
+	    flowIN = lab->d_totalflowINIntermLabel;
+	    flowOUT = lab->d_totalflowOUTIntermLabel;
+	    denAccum = lab->d_denAccumIntermLabel;
+	    floutbc = lab->d_netflowOUTBCIntermLabel;
+	    areaOUT = lab->d_totalAreaOUTIntermLabel;
+	  break;
+
+	  case TimeIntegratorStepType::BEEmulation3:
+	    integrator_step_name = "BEEmulation3";
+	    integrator_step_number = TimeIntegratorStepNumber::Third;
+            multiple_steps = true;
+	    integrator_last_step = true;
+	    use_old_values = true;
+            time_multiplier = 1.0;
+	    factor_old = 1.0;
+	    factor_new = 1.0;
+	    factor_divide = 1.0;
+	    maxabsu_in = lab->d_maxAbsUInterm_label;
+	    maxabsv_in = lab->d_maxAbsVInterm_label;
+	    maxabsw_in = lab->d_maxAbsWInterm_label;
+	    ref_density = lab->d_refDensity_label;
+	    pressure_out = lab->d_pressurePSLabel;
+	    pressure_guess = lab->d_pressureIntermLabel;
+	    maxabsu_out = lab->d_maxAbsU_label;
+	    maxabsv_out = lab->d_maxAbsV_label;
+	    maxabsw_out = lab->d_maxAbsW_label;
+	    tke_out = lab->d_totalKineticEnergyLabel;
+	    flowIN = lab->d_totalflowINLabel;
+	    flowOUT = lab->d_totalflowOUTLabel;
+	    denAccum = lab->d_denAccumLabel;
+	    floutbc = lab->d_netflowOUTBCLabel;
+	    areaOUT = lab->d_totalAreaOUTLabel;
 	  break;
 
 	  default: 

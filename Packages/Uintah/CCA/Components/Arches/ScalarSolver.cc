@@ -497,7 +497,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   
-  if (timelabels->number_of_steps > 1)
+  if (timelabels->multiple_steps)
     tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   else
@@ -603,7 +603,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    if (timelabels->number_of_steps > 1)
+    if (timelabels->multiple_steps)
       new_dw->get(constScalarVars.old_scalar, d_lab->d_scalarTempLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else
