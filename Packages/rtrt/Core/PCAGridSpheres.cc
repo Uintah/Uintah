@@ -54,8 +54,14 @@ PCAGridSpheres::io(SCIRun::Piostream&)
 void PCAGridSpheres::shade(Color& result, const Ray& ray,
 			      const HitInfo& hit, int /*depth*/,
 			      double /*atten*/, const Color& /*accumcolor*/,
-			      Context* /*cx*/)
+			      Context* cx)
 {
+  if (dpy->shade_method == 0) {
+    // do diffuse shading
+    lambertianshade(result, surface_color(hit), ray, hit, depth, cx);
+    return;
+  }
+
   // cell is the index of the sphere which was intersected.  To get to
   // the actual data you need to simply just add cell to spheres.  To
   // get the number of the sphere which was intersected you need to
