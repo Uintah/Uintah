@@ -27,7 +27,7 @@
 #include <Core/Containers/StaticArray.h>
 #include <sstream>
 #include <float.h>
-#include <fstream.h>
+#include <iostream>
 #include <stdio.h>
 
 using std::vector;
