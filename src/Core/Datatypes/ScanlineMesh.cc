@@ -127,9 +127,9 @@ bool
 ScanlineMesh::locate(Node::index_type &node, const Point &p)
 {
   const Point r = transform_.unproject(p);
-  elem = (unsigned int)(r.x() + 0.5);
+  node = (unsigned int)(r.x() + 0.5);
 
-  if (elem >= length_)
+  if (node >= length_)
   {
     return false;
   }

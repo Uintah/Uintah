@@ -153,11 +153,11 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
   const Point r = transform_.unproject(p);
 
   // Nodes over 2 billion might suffer roundoff error.
-  face.i_ = (unsigned int)(r.x() + 0.5);
-  face.j_ = (unsigned int)(r.y() + 0.5);
+  node.i_ = (unsigned int)(r.x() + 0.5);
+  node.j_ = (unsigned int)(r.y() + 0.5);
 
-  if (face.i_ >= nx_ ||
-      face.j_ >= ny_)
+  if (node.i_ >= nx_ ||
+      node.j_ >= ny_)
   {
     return false;
   }
