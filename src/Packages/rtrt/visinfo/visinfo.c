@@ -542,7 +542,7 @@ GetSymbol(void) {
 	char* varP;
 	char* p;
 	char c;
-	char nextC;
+	char nextC = 0;
 
 	p = CriteriaP;
 	while (isspace(*p))
