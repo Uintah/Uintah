@@ -3,17 +3,22 @@
 #include <Packages/rtrt/Core/ColorMapDpy.h>
 #include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
 #include <stdio.h>
 #include <X11/keysym.h>
-#include <algorithm>
 #if defined(__GNUG__) || defined(__ECC)
 #  include <values.h>
 #endif

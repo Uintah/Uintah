@@ -17,14 +17,16 @@ extern "C" {
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 #include <GL/glx.h>
 #include <GL/glu.h>
 #include <X11/Xlib.h>
 
 #include <stdlib.h>
-#include <fstream>
 
 using namespace rtrt;
 using namespace SCIRun;

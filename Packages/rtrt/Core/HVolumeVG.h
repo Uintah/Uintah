@@ -4,8 +4,10 @@
 
 #include <Packages/rtrt/Core/VolumeVGBase.h>
 #include <Packages/rtrt/Core/HVolume.h> // For VMCell
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Array3.h>
+
+#include <Core/Geometry/Point.h>
+
 #include <stdlib.h>
 
 namespace rtrt {

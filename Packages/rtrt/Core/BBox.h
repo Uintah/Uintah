@@ -3,6 +3,7 @@
 #define BBOX_H 1
 
 #include <Packages/rtrt/Core/Ray.h>
+
 #include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Transform.h>

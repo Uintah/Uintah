@@ -7,8 +7,11 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 using std::string;

@@ -7,8 +7,10 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h> 
 #include <Packages/rtrt/Core/BumpObject.h> 
 
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 class BumpMaterial;

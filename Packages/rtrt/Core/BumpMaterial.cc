@@ -10,6 +10,7 @@
 #include <Packages/rtrt/Core/UV.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/vec.h>
+
 #include <math.h>
 
 using namespace rtrt;

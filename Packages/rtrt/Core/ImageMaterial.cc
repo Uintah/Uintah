@@ -16,9 +16,13 @@
 #ifdef HAVE_PNG
 #  include <Packages/rtrt/Core/PNGImage.h>
 #endif
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <stdio.h>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
 #include <stdlib.h>
 
 using namespace rtrt;
@@ -57,7 +61,7 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 {
 
   filename_ = texfile;  // Save filename, mostly for debugging.
-  int string_length = texfile.length();
+  unsigned long string_length = texfile.length();
 
   string sub_string = texfile.substr(string_length-3, 3);
 
@@ -113,7 +117,7 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
 {
 
   
-  int string_length = texfile.length();
+  unsigned long string_length = texfile.length();
   string sub_string = texfile.substr(string_length-3, 3);
   if(sub_string == "ppm")
     {
@@ -214,7 +218,7 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
     Color  diffuse_temp;
     double u=uv.u()*uscale;
     double v=uv.v()*vscale;
-    Object* obj = cx->scene->get_object();
+    //    Object* obj = cx->scene->get_object();
     
     Ray rray(hitpos, ray.direction());
     HitInfo rhit;

@@ -1,15 +1,21 @@
 #include <Packages/rtrt/Core/HTVolumeBrick.h>
+
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
+
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
-#include <Packages/rtrt/Core/VolumeDpy.h>
-#include <stdio.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-#include <unistd.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <stdio.h>
+#include <unistd.h>
 
 using namespace rtrt;
 using namespace std;

@@ -3,8 +3,11 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <iostream>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 /*
 ColorMaps are used by cutting planes to color the interiors of objects.

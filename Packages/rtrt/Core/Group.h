@@ -4,8 +4,9 @@
 
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Object.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Array1.h>
+
+#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Transform.h>
 
 namespace rtrt {

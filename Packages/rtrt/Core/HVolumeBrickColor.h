@@ -2,9 +2,11 @@
 #ifndef HVOLUMEBRICKCOLOR_H
 #define HVOLUMEBRICKCOLOR_H 1
 
-#include <Core/Thread/WorkQueue.h>
 #include <Packages/rtrt/Core/Material.h>
+
+#include <Core/Thread/WorkQueue.h>
 #include <Core/Geometry/Point.h>
+
 #include <stdlib.h>
 
 namespace rtrt {

@@ -1,5 +1,11 @@
 
 #include <Packages/rtrt/Core/HVolumeBrickColor.h>
+
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+#include <Packages/rtrt/Core/FontString.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
@@ -7,21 +13,23 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/rtrt/Core/Ray.h>
-#include <Packages/rtrt/Core/HitInfo.h>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Packages/rtrt/visinfo/visinfo.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <iostream>
+
 #define XK_LATIN1
 #include <X11/keysymdef.h>
-#include "FontString.h"
 
 using namespace rtrt;
 using namespace std;

@@ -8,8 +8,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/MouseCallBack.h>
