@@ -33,7 +33,8 @@ namespace Uintah {
                                  const SFCZVariable<double>& wvel_CC,
                                  const double& delT, 
                                  const Patch* patch,
-                                 const int& indx);
+                                 const int& indx,
+                                 const bool& bulletProof_test);
 
 
     virtual void advectQ(const CCVariable<double>& q_CC,

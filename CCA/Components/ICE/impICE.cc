@@ -507,7 +507,9 @@ void ICE::setupRHS(const ProcessorGroup*,
          
       //__________________________________
       // Advection preprocessing
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
+      bool bulletProof_test=false;
+      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
+                                    bulletProof_test); 
 
       for(CellIterator iter = iterPlusGhost; !iter.done();iter++){
        IntVector c = *iter;

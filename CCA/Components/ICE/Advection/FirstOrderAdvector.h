@@ -31,7 +31,8 @@ namespace Uintah {
                                  const SFCZVariable<double>& wvel_CC,
                                  const double& delT, 
                                  const Patch* patch,
-                                 const int&  indx);
+                                 const int&  indx,
+                                 const bool& bulletProof_test);
 
 
     virtual void advectQ(const CCVariable<double>& q_CC,
@@ -46,6 +47,7 @@ namespace Uintah {
     
     enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
     struct fflux { double d_fflux[6]; };    // face flux
+    
 
   private:
     CCVariable<fflux> d_OFS;

@@ -2359,7 +2359,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
+      bool bulletProof_test=true;
+      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
+                                    bulletProof_test); 
 
       for(CellIterator iter = iterPlusGhost; !iter.done();iter++){
        IntVector c = *iter;
@@ -3660,7 +3662,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       
       //__________________________________
       //   Advection preprocessing
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
+      bool bulletProof_test=true;
+      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
+                                    bulletProof_test); 
 
       //__________________________________
       // Advect mass and backout rho_CC

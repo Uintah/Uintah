@@ -85,8 +85,8 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
                            const SFCZVariable<double>& wvel_FC,
                            const double& delT, 
                            const Patch* patch,
-			      const int& indx)
-
+			      const int& indx,
+                           const bool& bulletProof_test)
 {
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
@@ -263,7 +263,7 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
   //__________________________________
   // if total_fluxout > vol then 
   // find the cell and throw an exception.  
-  if (fabs(error_test - num_cells) > 1.0e-2) {
+  if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
     for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
       IntVector c = *iter; 
       double total_fluxout = 0.0;
