@@ -67,7 +67,7 @@ public:
         // The end iterator is just a cell iterator
         LatVolMesh::Cell::iterator it_end; it.end(it_end);
 
-        Array3<Data>::iterator vit(&var_, min_);
+        typename Array3<Data>::iterator vit(&var_, min_);
 	
 	IntVector fi(it.i_, it.j_, it.k_);
 	IntVector ai(vit.getIndex());
@@ -92,7 +92,7 @@ public:
                                         hi.x(), hi.y(), hi.z());
         // The end iterator is just a node iterator
         LatVolMesh::Node::iterator it_end; it.end(it_end);
-        Array3<Data>::iterator vit(&var_, min_);
+        typename Array3<Data>::iterator vit(&var_, min_);
 
         if(swapbytes_){
           for(;it != it_end; ++it){

@@ -1401,6 +1401,28 @@ AC_CHECK_HEADERS(algorithm vector map iostream string,,
   echo configure: error: could not find a required STL header. exiting.
   exit)
 
+AC_MSG_CHECKING(for location of hash_map)
+DEF_HASHMAP=None
+AC_TRY_COMPILE([#include <hash_map>
+                std::hash_map<int, int> xx;], ,
+		[DEF_HASHMAP=HAVE_STD_HASHMAP])
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <ext/hash_map>
+                 std::hash_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_EXT_HASHMAP])
+fi
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <ext/hash_map>
+                 __gnu_cxx::hash_map<int, int> xx;], ,
+                 [DEF_HASHMAP=HAVE_GNU_HASHMAP])
+fi
+if test "$DEF_HASHMAP" = "None"; then
+  AC_MSG_ERROR("Cannot find hash_map")
+fi
+DEF_HASHMAP="#define $DEF_HASHMAP"
+AC_SUBST(DEF_HASHMAP)
+AC_MSG_RESULT(found: $DEF_HASHMAP)
+
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 AC_CHECKING(for required Tcl components...)

@@ -23,10 +23,24 @@
 #if !defined SCI_HASH_SET_H
 #define SCI_HASH_SET_H
 
-#if defined __GNUC__ && __GNUC__ >= 3 // newer GCC keeps it in ext
-#  include <ext/hash_set>
-#else // sgi and older gnu have it with the standard STL headers
-#  include <hash_set>
+#ifdef HAVE_STD_HASHMAP
+#include <hash_set>
+using std::hash_set;
+using std::hash_multimap;
+#else
+#ifdef HAVE_EXT_HASHMAP
+#include <ext/hash_set>
+using std::hash_set;
+using std::hash_multimap;
+#else
+#ifdef HAVE_GNU_HASHMAP
+#include <ext/hash_set>
+using __gnu_cxx::hash_set;
+using __gnu_cxx::hash_multimap;
+#else
+#error Do not know location of hash_set
+#endif
+#endif
 #endif
 
-#endif // SCI_Hash_Map_h
+#endif // SCI_Hash_set_h

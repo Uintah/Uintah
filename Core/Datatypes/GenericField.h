@@ -326,46 +326,46 @@ GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::
 }
 
 template <class Mesh, class FData>
-GenericField<Mesh, FData>::value_type
+typename GenericField<Mesh, FData>::value_type
 GenericField<Mesh, FData>::value(typename mesh_type::Node::index_type i) const
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
-GenericField<Mesh, FData>::value_type
+typename GenericField<Mesh, FData>::value_type
 GenericField<Mesh, FData>::value(typename mesh_type::Edge::index_type i) const
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
-GenericField<Mesh, FData>::value_type
+typename GenericField<Mesh, FData>::value_type
 GenericField<Mesh, FData>::value(typename mesh_type::Face::index_type i) const 
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
-GenericField<Mesh, FData>::value_type
+typename GenericField<Mesh, FData>::value_type
 GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const 
 {
   return fdata_[i];
 }
 
 template <class Mesh, class FData>
-GenericField<Mesh, FData>::fdata_type &
+typename GenericField<Mesh, FData>::fdata_type &
 GenericField<Mesh, FData>::fdata()
 {
   return fdata_;
 }
 
 template <class Mesh, class FData>
-const GenericField<Mesh, FData>::fdata_type&
+const typename GenericField<Mesh, FData>::fdata_type&
 GenericField<Mesh, FData>::fdata() const
 {
   return fdata_;
 }
 
 template <class Mesh, class FData>
-GenericField<Mesh, FData>::mesh_handle_type
+typename GenericField<Mesh, FData>::mesh_handle_type
 GenericField<Mesh, FData>::get_typed_mesh() const
 {
   mesh_->flush_changes();  // TODO: Fix synchronization on this

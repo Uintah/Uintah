@@ -48,10 +48,6 @@
 namespace SCIRun {
 
 
-using std::hash_map;
-using std::hash_multimap;
-using std::hash_multiset;
-
 class SCICORESHARE TetVolMesh : public Mesh
 {
 public:

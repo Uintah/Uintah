@@ -30,8 +30,6 @@
 
 namespace SCIRun {
 
-using std::hash_map;
-
 class ClipLatticeAlgo : public DynamicAlgoBase
 {
 public:

@@ -63,7 +63,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
-  map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
+  typename map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
   vector<typename Msh::Node::index_type> reverse_map;
 
   TriSurfMesh::Node::index_type node_idx[3];

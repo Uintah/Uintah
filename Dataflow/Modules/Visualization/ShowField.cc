@@ -54,7 +54,6 @@
 
 
 #include <typeinfo>
-#include <map.h>
 #include <iostream>
 
 namespace SCIRun {

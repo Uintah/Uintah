@@ -36,7 +36,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
-#include <strstream>
+#include <sstream>
 #include <string>
 #include <stdio.h>
 
@@ -65,7 +65,7 @@ ScalarFieldStats::~ScalarFieldStats()
 void
 ScalarFieldStats::fill_histogram( vector<int>& hits)
 {
-  ostrstream ostr;
+  ostringstream ostr;
   int nmin, nmax;
   vector<int>::iterator it = hits.begin();
   nmin = nmax = *it;
@@ -79,11 +79,9 @@ ScalarFieldStats::fill_histogram( vector<int>& hits)
   string smin( to_string(nmin) );
   string smax( to_string(nmax) );
 
-  char *data = ostr.str();
-  gui->execute(id + " graph_data " + smin.c_str() + " "
-	       + smax.c_str() + " " + data );
-  
-  delete data;
+  string data = ostr.str();
+  gui->execute(id + " graph_data " + smin + " "
+	       + smax + " " + data );
 }
 
 void

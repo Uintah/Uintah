@@ -119,6 +119,12 @@ template <class Data>
 class LatVolField : public GenericField< LatVolMesh, FData3d<Data> >
 {
 public:
+  // Avoids a warning with g++ 3.1
+  // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: `typename 
+  // SCIRun::QuadraticTetVolField<T>::mesh_handle_type' is implicitly a typename
+  // ../src/Core/Datatypes/QuadraticTetVolField.h:95: warning: implicit typename is 
+  // deprecated, please see the documentation for details
+  typedef typename GenericField<LatVolMesh, FData3d<Data> >::mesh_handle_type mesh_handle_type;
   LatVolField();
   LatVolField(Field::data_location data_at);
   LatVolField(LatVolMeshHandle mesh, Field::data_location data_at);

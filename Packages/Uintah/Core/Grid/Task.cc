@@ -505,6 +505,9 @@ operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
   case Ghost::AroundFaces:
     out << "Ghost::AroundFaces";
     break;
+  default:
+    out << "Unknown ghost type";
+    break;
   }
   if(dep.gtype != Ghost::None)
     out << ":" << dep.numGhostCells;

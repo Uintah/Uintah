@@ -47,6 +47,7 @@
 @DEF_Z@
 
 @DEF_MDSPLUS@
+@DEF_HASHMAP@
 
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
    it from  being included.  We don't use it anyway. */

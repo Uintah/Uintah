@@ -29,8 +29,8 @@ public:
 {
   typename ScalarField::mesh_type *m =
     sf_->get_typed_mesh().get_rep();
-  Array3<Data>::iterator it(data_.begin());
-  Array3<Data>::iterator it_end(data_.end());
+  typename Array3<Data>::iterator it(data_.begin());
+  typename Array3<Data>::iterator it_end(data_.end());
   IntVector min(data_.getLowIndex() - offset_);
   IntVector size(data_.getHighIndex() - min - offset_);
   if( sf_->data_at() == Field::CELL ) {
@@ -82,8 +82,8 @@ public:
 {
   typename ScalarField::mesh_type *m =
     sf_->get_typed_mesh().get_rep();
-  Array3<Data>::iterator it(data_.begin());
-  Array3<Data>::iterator it_end(data_.end());
+  typename Array3<Data>::iterator it(data_.begin());
+  typename Array3<Data>::iterator it_end(data_.end());
   IntVector min(data_.getLowIndex() - offset_);
   IntVector size(data_.getHighIndex() - min - offset_);
   double ave = 0;
