@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
    
@@ -39,7 +40,7 @@ WARNING
       NoneBoundCond() : BoundCondBase("None") {};
       NoneBoundCond(ProblemSpecP&){};
       virtual ~NoneBoundCond() {};
-      virtual NoneBoundCond* clone() {return new NoneBoundCond(*this);};
+      virtual NoneBoundCond* clone() {return scinew NoneBoundCond(*this);};
       virtual string getKind() const { return "";}
    private:
 #if 0

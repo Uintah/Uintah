@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
    
@@ -39,7 +40,7 @@ WARNING
     NeighBoundCond() : BoundCondBase("Neighbor") {}; 
     NeighBoundCond(ProblemSpecP&) {};
     virtual ~NeighBoundCond() {};
-    virtual NeighBoundCond* clone() {return new NeighBoundCond(*this);};
+    virtual NeighBoundCond* clone() {return scinew NeighBoundCond(*this);};
     virtual string getKind() const { return "";};
       
   private:

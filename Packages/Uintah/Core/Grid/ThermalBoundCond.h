@@ -2,6 +2,7 @@
 #define UINTAH_GRID_ThermalBoundCond_H
 
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
    
@@ -38,7 +39,7 @@ WARNING
       ThermalBoundCond() {};
       virtual ~ThermalBoundCond() {};
       virtual std::string getType() const = 0;
-      virtual ThermalBoundCond* clone() {return new ThermalBoundCond(*this);};
+      virtual ThermalBoundCond* clone() {return scinew ThermalBoundCond(*this);};
          
    private:
 #if 0

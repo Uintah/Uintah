@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
    
@@ -39,7 +40,7 @@ WARNING
     SymmetryBoundCond():BoundCondBase("Symmetry") {};
     SymmetryBoundCond(ProblemSpecP&) {d_type = "Symmetric";};
     virtual ~SymmetryBoundCond() {};
-    virtual SymmetryBoundCond* clone() {return new SymmetryBoundCond(*this);};
+    virtual SymmetryBoundCond* clone() {return scinew SymmetryBoundCond(*this);};
     virtual string getKind() const {return "";};
   private:
 #if 0
