@@ -26,9 +26,8 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Saves persistent set of field objects received from upstream modules</summary>
+    <summary>Saves persistent set of field objects received from upstream modules.</summary>
     <description>
-      <p>Version Date: March 2001</p><p>Version: 1.0</p>
     </description>
   </overview>
   <io>

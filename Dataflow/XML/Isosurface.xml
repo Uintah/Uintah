@@ -26,9 +26,18 @@
     <authors>
       <author>Yarden Livnat</author>
     </authors>
-    <summary>Summary not available yet.</summary>
-    <description>
-      <p>Version Date: Feb 2001</p><p>Version: 1.0</p>
+    <summary>Isosurface allows visualization of an isopotential
+     surface within a model.
+     </summary>
+     <description>
+      <p>Changing the Iso Value allows visualization of any
+      isopotential surface.</p>
+      <p>Method Marching Cubes (MC) looks at the isopotential at the
+      corners of every cell.  You can specify the number of processor
+      (np).</p>
+      <p>Noise method stores the min and max of all cells into a
+      table.
+      </p>
     </description>
   </overview>
   <io>

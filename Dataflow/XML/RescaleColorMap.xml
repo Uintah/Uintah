@@ -26,9 +26,12 @@
     <authors>
       <author>Steven G. Parker</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>RescaleColorMap resets the range of alpha to correspond
+    to your data values.</summary>
     <description>
-      <p>Version Date: November 1994</p><p>Version: 1.0</p>
+      <p>Auto Scale calculates a minimum and maximum for the
+      range of alpha.</p>
+      <p>Fixed Scale allows you to manually select a range.</p>
     </description>
   </overview>
   <io>

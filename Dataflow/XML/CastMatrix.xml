@@ -26,9 +26,13 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Casts a matrix</summary>
     <description>
-      <p>Version Date: June 1999</p><p>Version: 1.0</p>
+      <p>Displays type if the input matrix.
+      </p>
+      <p>Allows you to let the matrix stay the same and just pass
+      through, or cast it to a ColumnMatrix, DenseMatrix or SparseRowMatrix.
+      </p>
     </description>
   </overview>
   <io>

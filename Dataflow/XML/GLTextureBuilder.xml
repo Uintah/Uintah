@@ -26,9 +26,11 @@
     <authors>
       <author>Kurt Zimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Builds an octree based texture with power of 2 size nodes
+    suitable for OpenGL volume rendering.</summary>
     <description>
-      <p>Version Date: unknown</p><p>Version: 1.0</p>
+      <p>You can select auto scale or specify a fixed scale for the
+      transfer function.</p>
     </description>
   </overview>
   <io>

@@ -26,9 +26,8 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Performs the unary matrix operation transpose.</summary>
     <description>
-      <p>Version Date: June 1999</p><p>Version: 1.0</p>
     </description>
   </overview>
   <io>
