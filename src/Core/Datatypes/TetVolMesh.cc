@@ -2261,19 +2261,66 @@ TetVolMesh::refine_elements(const Cell::array_type &cells,
     Node::array_type cnodes;
     get_nodes(cnodes,cell);
 
-    Cell::index_type t1, t2, t3, t4;
+    vector<Cell::index_type> tets(4);
 
     // Modify the first tet to be 1 of 4
-    t1 = mod_tet(cell, center, cnodes[1], cnodes[0], cnodes[2]);
+    tets[0] = mod_tet(cell, center, cnodes[1], cnodes[0], cnodes[2]);
     // Create the last 3 tets
-    t2 = add_tet(center, cnodes[2], cnodes[0], cnodes[3]);
-    t3 = add_tet(center, cnodes[0], cnodes[1], cnodes[3]);
-    t4 = add_tet(center, cnodes[1], cnodes[2], cnodes[3]);
+    tets[1] = add_tet(center, cnodes[2], cnodes[0], cnodes[3]);
+    tets[2] = add_tet(center, cnodes[0], cnodes[1], cnodes[3]);
+    tets[3] = add_tet(center, cnodes[1], cnodes[2], cnodes[3]);
 
-    green_children.insert(make_pair(t1, cell));
-    green_children.insert(make_pair(t2, cell));
-    green_children.insert(make_pair(t3, cell));
-    green_children.insert(make_pair(t4, cell));
+    Node::array_type fnodes;
+    node_pair_t fenodes;
+    vector<edge_centers_t::iterator> edge_center_iters(3);
+    for (unsigned int t = 0; t < 4; ++t) {
+      green_children.insert(make_pair(tets[t], cell));
+      get_nodes(fnodes, Face::index_type(tets[t]*4));
+      fenodes = make_pair(Max(fnodes[0],fnodes[1]),
+			  Min(fnodes[0],fnodes[1]));
+      edge_center_iters[0] = edge_centers.find(fenodes);
+      if (edge_center_iters[0] == edge_centers.end()) continue;
+
+      fenodes = make_pair(Max(fnodes[0],fnodes[2]),
+			  Min(fnodes[0],fnodes[2]));
+      edge_center_iters[1] = edge_centers.find(fenodes);
+      if (edge_center_iters[1] == edge_centers.end()) continue;
+
+      fenodes = make_pair(Max(fnodes[1],fnodes[2]),
+			  Min(fnodes[1],fnodes[2]));
+      edge_center_iters[2] = edge_centers.find(fenodes);
+      if (edge_center_iters[2] == edge_centers.end()) continue;
+
+      Cell::index_type t1, t2, t3, t4;
+      // Perform a 4:1 split on tet 
+      t1 = mod_tet(tets[t], center, 
+		   (*edge_center_iters[0]).second,
+		   (*edge_center_iters[1]).second,
+		   (*edge_center_iters[2]).second);
+      
+      t2 = add_tet(center,fnodes[0],
+		   (*edge_center_iters[0]).second,
+		   (*edge_center_iters[1]).second);
+
+      t3 = add_tet(center,fnodes[1],
+		   (*edge_center_iters[0]).second,
+		   (*edge_center_iters[2]).second);
+
+      t4 = add_tet(center,fnodes[2],
+		   (*edge_center_iters[1]).second,
+		   (*edge_center_iters[2]).second);
+
+      orient(t1);
+      orient(t2);
+      orient(t3);
+      orient(t4);
+
+      green_children.insert(make_pair(t2, cell));
+      green_children.insert(make_pair(t3, cell));
+      green_children.insert(make_pair(t4, cell));
+    }
+
+      
   }
 
   edge_centers_t::iterator enodes_iter = edge_centers.begin();
@@ -2356,7 +2403,7 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
   // Perform a 4:1 split on tet sharing face 0
   if (face_nbrs[0] != MESH_NO_NEIGHBOR)
   {
-    Node::index_type opp = cells_[face_nbrs[0]];
+     Node::index_type opp = cells_[face_nbrs[0]];
     tets.push_back(mod_tet(face_nbrs[0]/4,nodes[7],nodes[8],nodes[9],opp));
     tets.push_back(add_tet(nodes[7],nodes[2],nodes[8],opp));
     tets.push_back(add_tet(nodes[8],nodes[3],nodes[9],opp));
