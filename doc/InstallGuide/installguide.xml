@@ -60,7 +60,7 @@
       The <citetitle>SCIRun Installation Guide</citetitle> contains
       instructions and information for installing and building SCIRun,
       it's packages and the thirdparty libraries that it requires.
-      See the <ulink url="../FAQ/faq.html"><citetitle>Technical FAQ
+      See the <ulink url="../FAQ/faq.xml?cont=1&amp;dir=2"><citetitle>Technical FAQ
       </citetitle></ulink> for information on troubleshooting these
       processes.
     </para>
