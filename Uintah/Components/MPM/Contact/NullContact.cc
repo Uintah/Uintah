@@ -10,13 +10,32 @@ static char *id="@(#) $Id$";
 // sense.
 
 #include "NullContact.h"
+#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
+#include <Uintah/Grid/Array3Index.h>
+#include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/NodeIterator.h>
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/SimulationState.h>
+#include <Uintah/Grid/SimulationStateP.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 using namespace Uintah::MPM;
 
-NullContact::NullContact(ProblemSpecP& /*ps*/,SimulationStateP& /*ss*/)
+NullContact::NullContact(ProblemSpecP& ps, SimulationStateP& d_sS)
 {
   // Constructor
  
+  IntVector v_f;
+  ps->require("vel_fields",v_f);
+  std::cout << "vel_fields = " << v_f << endl;
+
+  d_sharedState = d_sS;
 
 }
 
@@ -34,24 +53,112 @@ void NullContact::initializeContact(const Region* /*region*/,
 }
 
 void NullContact::exMomInterpolated(const ProcessorContext*,
-				    const Region*,
-				    DataWarehouseP& /*old_dw*/,
-				    DataWarehouseP& /*new_dw*/)
+				    const Region* region,
+				    DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
 {
+
+  //  All this does is carry forward the array from gVelocityLabel
+  //  to gMomExedVelocityLabel
+
+  int numMatls = d_sharedState->getNumMatls();
+  int NVFs = d_sharedState->getNumVelFields();
+
+  // Retrieve necessary data from DataWarehouse
+  vector<NCVariable<double> > gmass(NVFs);
+  vector<NCVariable<Vector> > gvelocity(NVFs);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region,
+                  Ghost::None, 0);
+
+      new_dw->put(gvelocity[vfindex], gMomExedVelocityLabel, vfindex, region);
+    }
+  }
+
   
 
 }
 
 void NullContact::exMomIntegrated(const ProcessorContext*,
-				  const Region*,
-                                  DataWarehouseP& /*old_dw*/,
-                                  DataWarehouseP& /*new_dw*/)
+				  const Region* region,
+                                  DataWarehouseP& old_dw,
+                                  DataWarehouseP& new_dw)
 {
+
+  //  All this does is carry forward the array from gVelocityStarLabel
+  //  and gAccelerationLabel to gMomExedVelocityStarLabel and 
+  //  gMomExedAccelerationLabel respectively
+
+  int numMatls = d_sharedState->getNumMatls();
+  int NVFs = d_sharedState->getNumVelFields();
+
+  vector<NCVariable<double> > gmass(NVFs);
+  vector<NCVariable<Vector> > gvelocity_star(NVFs);
+  vector<NCVariable<Vector> > gacceleration(NVFs);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel, vfindex,
+                  region, Ghost::None, 0);
+      new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex,
+                  region, Ghost::None, 0);
+
+    new_dw->put(gvelocity_star[vfindex], gMomExedVelocityStarLabel,
+							 vfindex, region);
+    new_dw->put(gacceleration[vfindex], gMomExedAccelerationLabel,
+							 vfindex, region);
+    }
+  }
 
   
 }
 
+void NullContact::addComputesAndRequiresInterpolated( Task* t,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const
+{
+
+  int idx = matl->getDWIndex();
+  t->requires( new_dw, gVelocityLabel, idx, region, Ghost::None);
+
+  t->computes( new_dw, gMomExedVelocityLabel, idx, region );
+
+
+}
+
+void NullContact::addComputesAndRequiresIntegrated( Task* t,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const
+{
+
+  int idx = matl->getDWIndex();
+  t->requires(new_dw, gVelocityStarLabel, idx, region, Ghost::None);
+  t->requires(new_dw, gAccelerationLabel, idx, region, Ghost::None);
+
+  t->computes( new_dw, gMomExedVelocityStarLabel, idx, region);
+  t->computes( new_dw, gMomExedAccelerationLabel, idx, region);
+
+
+}
+
+
 // $Log$
+// Revision 1.10  2000/05/25 23:05:09  guilkey
+// Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
+// for each of the three derived Contact classes.  Also, got the NullContact
+// class working.  It doesn't do anything besides carry forward the data
+// into the "MomExed" variable labels.
+//
 // Revision 1.9  2000/05/11 20:10:17  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

@@ -18,6 +18,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
 #include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <vector>
 #include <iostream>
@@ -559,7 +560,51 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   }
 }
 
+void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const
+{
+
+  int idx = matl->getDWIndex();
+  t->requires( old_dw, gNormTractionLabel,idx , region, Ghost::None, 0);
+  t->requires( old_dw, gSurfNormLabel,idx , region, Ghost::None, 0);
+  t->requires( new_dw, gMassLabel, idx, region, Ghost::None);
+  t->requires( new_dw, gVelocityLabel, idx, region, Ghost::None);
+
+  t->computes( new_dw, gMomExedVelocityLabel, idx, region );
+
+
+}
+
+void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
+                                             const MPMMaterial* matl,
+                                             const Region* region,
+                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& new_dw) const
+{
+
+  int idx = matl->getDWIndex();
+  t->requires(new_dw, gMassLabel, idx, region, Ghost::None);
+  t->requires(new_dw, gVelocityStarLabel, idx, region, Ghost::None);
+  t->requires(new_dw, gAccelerationLabel, idx, region, Ghost::None);
+
+  t->computes( new_dw, gNormTractionLabel,idx , region);
+  t->computes( new_dw, gSurfNormLabel,idx , region);
+  t->computes( new_dw, gMomExedVelocityStarLabel, idx, region);
+  t->computes( new_dw, gMomExedAccelerationLabel, idx, region);
+
+
+}
+
 // $Log$
+// Revision 1.19  2000/05/25 23:05:07  guilkey
+// Created addComputesAndRequiresInterpolated and addComputesAndRequiresIntegrated
+// for each of the three derived Contact classes.  Also, got the NullContact
+// class working.  It doesn't do anything besides carry forward the data
+// into the "MomExed" variable labels.
+//
 // Revision 1.18  2000/05/18 23:00:27  guilkey
 // Commented out some stupid code that was printing out a big tecplot
 // file for every time step.
