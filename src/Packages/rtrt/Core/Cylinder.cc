@@ -47,7 +47,7 @@ void Cylinder::preprocess(double, int&, int&)
     
 }
 
-void Cylinder::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
+void Cylinder::intersect(Ray& ray, HitInfo& hit, DepthStats*,
 			 PerProcessorContext*)
 {
   // Do a transformation to unit coordinates:

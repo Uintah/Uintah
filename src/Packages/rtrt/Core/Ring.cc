@@ -30,7 +30,7 @@ Ring::~Ring()
 {
 }
 
-void Ring::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
+void Ring::intersect(Ray& ray, HitInfo& hit, DepthStats*,
 		     PerProcessorContext*)
 {
     Vector dir(ray.direction());
@@ -53,7 +53,7 @@ Vector Ring::normal(const Point&, const HitInfo&)
     return n;
 }
 
-void Ring::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void Ring::light_intersect(Ray& ray, HitInfo& hit, Color&,
 			   DepthStats*, PerProcessorContext*)
 {
   Vector dir(ray.direction());

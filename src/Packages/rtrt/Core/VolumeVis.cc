@@ -74,7 +74,7 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 VolumeVis::~VolumeVis() {
 }
 
-void VolumeVis::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
+void VolumeVis::intersect(Ray& ray, HitInfo& hit, DepthStats*,
 			  PerProcessorContext*) {
   // determines the min and max t of the intersections with the boundaries
    double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
@@ -373,7 +373,8 @@ void VolumeVis::shade(Color& result, const Ray& ray,
   if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
     Point origin(p.x(),p.y(),p.z());
-    cx->worker->traceRay(bgcolor, Ray(origin,ray.direction()), depth+1, atten,
+    Ray r(origin,ray.direction());
+    cx->worker->traceRay(bgcolor, r, depth+1, atten,
 			 accumcolor, cx);
     total += bgcolor * (1-alpha);
   }

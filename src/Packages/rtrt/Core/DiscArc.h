@@ -13,9 +13,9 @@ public:
   virtual ~DiscArc();
   DiscArc(Material* matl, const Point& cen, const Vector& n, double radius);
   inline void set_arc(double t0, double t1) { theta0=t0; theta1=t1; }
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
 };
 

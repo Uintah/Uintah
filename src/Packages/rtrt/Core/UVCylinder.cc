@@ -53,7 +53,7 @@ void UVCylinder::preprocess(double, int&, int&)
     
 }
 
-void UVCylinder::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
+void UVCylinder::intersect(Ray& ray, HitInfo& hit, DepthStats*,
 			 PerProcessorContext*)
 {
   // Do a transformation to unit coordinates:

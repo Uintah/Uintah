@@ -63,7 +63,6 @@ public:
 
     bbox = b.transform(currentTransform);
   }
-
   Instance() : Object(0), Material() {} // for Pio.
 
   //! Persistent I/O.
@@ -71,7 +70,7 @@ public:
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, Instance*&);
 
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext* ppc)
   {
     double min_t = hit.min_t;

@@ -57,7 +57,7 @@ class UVSphere : public Object, public UVMapping {
 
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);

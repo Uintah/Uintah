@@ -956,7 +956,7 @@ void Worker::run()
 } // end run()
 
 void
-Worker::traceRay(Color& result, const Ray& ray, int depth,
+Worker::traceRay(Color& result, Ray& ray, int depth,
 		 double atten, const Color& accumcolor,
 		 Context* cx)
 {
@@ -974,7 +974,7 @@ Worker::traceRay(Color& result, const Ray& ray, int depth,
   }
 }
 
-void Worker::traceRay(Color& result, const Ray& ray, int depth,
+void Worker::traceRay(Color& result, Ray& ray, int depth,
 		      double atten, const Color& accumcolor,
 		      Context* cx, double &dist)
 {
@@ -994,7 +994,7 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
   }
 }
 
-void Worker::traceRay(Color& result, const Ray& ray, int depth,
+void Worker::traceRay(Color& result, Ray& ray, int depth,
 		      double atten, const Color& accumcolor,
 		      Context* cx, Object* obj)
 {
@@ -1010,7 +1010,7 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
   }
 }
 
-void Worker::traceRay(Color& result, const Ray& ray, int depth,
+void Worker::traceRay(Color& result, Ray& ray, int depth,
 		      double atten, const Color& accumcolor,
 		      Context* cx, Object* obj, double &dist)
 {
@@ -1028,7 +1028,7 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
   }
 }
 
-void Worker::traceRay(Color& result, const Ray& ray,
+void Worker::traceRay(Color& result, Ray& ray,
 		      Point& hitpos, Object*& hitobj)
 {
   HitInfo hit;

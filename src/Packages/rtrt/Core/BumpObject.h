@@ -14,7 +14,7 @@ protected:
 public:
   BumpObject(Vector &v, UVMapping *uv);
   ~BumpObject(); 
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
     virtual void multi_light_intersect(Light* light, const Point& orig,
 				       const Array1<Vector>& dirs,

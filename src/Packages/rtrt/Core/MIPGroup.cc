@@ -12,7 +12,7 @@ MIPGroup::~MIPGroup()
 {
 }
 
-void MIPGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void MIPGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext* ppc)
 {
     double maxval=0;

@@ -22,7 +22,7 @@ protected:
 public:
     Volume(Material* matl, VolumeDpy* dpy, char* filebase);
     virtual ~Volume();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
     virtual Vector normal(const Point&, const HitInfo& hit);
     virtual void compute_bounds(BBox&, double offset);
@@ -43,7 +43,7 @@ protected:
 public:
     aVolume(Material* matl, VolumeDpy*, char* filebase);
     virtual ~aVolume();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
     virtual Vector normal(const Point&, const HitInfo& hit);
     virtual void compute_bounds(BBox&, double offset);

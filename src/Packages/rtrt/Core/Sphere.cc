@@ -42,7 +42,7 @@ Sphere::~Sphere()
 {
 }
 
-void Sphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void Sphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		       PerProcessorContext*)
 {
     Vector OC=cen-ray.origin();
@@ -79,7 +79,7 @@ void Sphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 }
 
 // Maybe this could be improved - steve
-void Sphere::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void Sphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
 			     DepthStats* st, PerProcessorContext*)
 {
   Vector OC=cen-ray.origin();
@@ -122,7 +122,7 @@ Vector Sphere::normal(const Point& hitpos, const HitInfo&)
     return n;
 }
 
-void Sphere::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+void Sphere::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
 				  double dist, Color& atten, DepthStats* st,
 				  PerProcessorContext*)
 {

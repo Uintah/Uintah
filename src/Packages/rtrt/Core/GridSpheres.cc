@@ -394,7 +394,7 @@ void GridSpheres::calc_mcell(int depth, int startidx, MCell& mcell)
 }
 
 #if 0
-void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
+void GridSpheres::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   const Vector dir(ray.direction());
@@ -602,7 +602,7 @@ void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
 #endif
 
 #if 1
-void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
+void GridSpheres::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   const Vector dir(ray.direction());
@@ -733,7 +733,7 @@ void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
 
 #else
 
-void GridSpheres::intersect_print(const Ray& ray, HitInfo& hit,
+void GridSpheres::intersect_print(Ray& ray, HitInfo& hit,
 				  DepthStats* st, PerProcessorContext* ppc)
 {
   int totalcells=1;
@@ -928,7 +928,7 @@ void GridSpheres::intersect_print(const Ray& ray, HitInfo& hit,
   }
 }
 
-void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
+void GridSpheres::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats* st, PerProcessorContext* ppc)
 {
   int totalcells=1;

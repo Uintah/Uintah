@@ -17,7 +17,7 @@ SelectableGroup::~SelectableGroup()
 }
 
 //override most of Groups methods to only look at the selected child
-void SelectableGroup::light_intersect(const Ray& ray, HitInfo& hit,
+void SelectableGroup::light_intersect(Ray& ray, HitInfo& hit,
 			    Color& atten, DepthStats* st,
 			    PerProcessorContext* ppc)
 {
@@ -27,14 +27,14 @@ void SelectableGroup::light_intersect(const Ray& ray, HitInfo& hit,
   if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
 }
 
-void SelectableGroup::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+void SelectableGroup::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
 				 double dist, Color& atten, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
   if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
 }
 
-void SelectableGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void SelectableGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
   //double min_t = hit.min_t;

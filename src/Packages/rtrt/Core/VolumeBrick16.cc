@@ -171,7 +171,7 @@ extern Vector GradientCell(const Point& pmin, const Point& pmax,
 			   const Point& p, float rho[2][2][2]);
 } // end namespace rtrt
 
-void VolumeBrick16::intersect(const Ray& ray, HitInfo& hit,
+void VolumeBrick16::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats*, PerProcessorContext*)
 {
     float isoval=dpy->isoval;

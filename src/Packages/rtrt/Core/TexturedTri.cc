@@ -264,7 +264,7 @@ TexturedTri::uv(UV& uv, const Point&, const HitInfo& hit)
 
 // I changed the epsilon to 1e-9 to avoid holes in the bunny -- Bill
 
-void TexturedTri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void TexturedTri::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		    PerProcessorContext*)
 {
     st->tri_isect++;
@@ -294,7 +294,7 @@ void TexturedTri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     }
 }
 
-void TexturedTri::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void TexturedTri::light_intersect(Ray& ray, HitInfo& hit, Color&,
 				  DepthStats* st, PerProcessorContext*)
 {
   st->tri_isect++;
@@ -333,7 +333,7 @@ Vector TexturedTri::normal(const Point&, const HitInfo& hitinfo)
 
 // I changed epsilon to 1e-9 to avoid holes in the bunny! -- Bill
 
-void TexturedTri::softshadow_intersect(Light* light, const Ray& ray,
+void TexturedTri::softshadow_intersect(Light* light, Ray& ray,
 				       HitInfo&, double dist, Color& atten,
 				       DepthStats* st, PerProcessorContext*)
 {

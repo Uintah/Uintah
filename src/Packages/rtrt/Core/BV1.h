@@ -33,12 +33,12 @@ public:
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, BV1*&);
 
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
-			 PerProcessorContext*);
-  virtual Vector normal(const Point&, const HitInfo& hit);
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
+			   PerProcessorContext*);
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
-  virtual void softshadow_intersect(Light* light, const Ray& ray,
+  virtual Vector normal(const Point&, const HitInfo& hit);
+  virtual void softshadow_intersect(Light* light, Ray& ray,
 				    HitInfo& hit, double dist, Color& atten,
 				    DepthStats* st, PerProcessorContext* ppc);
   virtual void multi_light_intersect(Light* light, const Point& orig,

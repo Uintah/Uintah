@@ -41,14 +41,14 @@ CutGroup::io(SCIRun::Piostream &str)
   ASSERTFAIL("Pio for CutGroup not implemented");
 }
 
-void CutGroup::softshadow_intersect(Light* light, const Ray& ray, HitInfo& hit,
+void CutGroup::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
 				 double dist, Color& atten, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
   light_intersect(ray, hit, atten, st, ppc);
 }
 
-void CutGroup::light_intersect(const Ray& ray, HitInfo& hit,
+void CutGroup::light_intersect(Ray& ray, HitInfo& hit,
 			    Color& atten, DepthStats* st,
 			    PerProcessorContext* ppc)
 {
@@ -121,7 +121,7 @@ void CutGroup::light_intersect(const Ray& ray, HitInfo& hit,
   }
 }
 
-void CutGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void CutGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		      PerProcessorContext* ppc)
 {
   //basic idea, check if we hit the cuttplane first. If we do check the interiors.
@@ -206,7 +206,7 @@ void CutGroup::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
   }
 }
 
-void CutGroup::sub_intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void CutGroup::sub_intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			     PerProcessorContext* ppc)
 {
   //used by CutMaterial to find insidedness

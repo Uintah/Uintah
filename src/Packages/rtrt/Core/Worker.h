@@ -58,19 +58,19 @@ public:
   // If stop is true, this thread will stop running.
   void syncForNumThreadChange( int oldNumWorkers, bool stop = false );
 
-  void traceRay(Color& result, const Ray& ray, int depth,
+  void traceRay(Color& result, Ray& ray, int depth,
 		double atten, const Color& accum,
 		Context* cx);
-  void traceRay(Color& result, const Ray& ray, int depth,
+  void traceRay(Color& result, Ray& ray, int depth,
 		double atten, const Color& accum,
 		Context* cx, double &dist);
-  void traceRay(Color& result, const Ray& ray, int depth,
+  void traceRay(Color& result, Ray& ray, int depth,
 		double atten, const Color& accum,
 		Context* cx, Object* obj);
-  void traceRay(Color& result, const Ray& ray, int depth,
+  void traceRay(Color& result, Ray& ray, int depth,
 		double atten, const Color& accum,
 		Context* cx, Object* obj, double &dist);
-  void traceRay(Color& result, const Ray& ray,
+  void traceRay(Color& result, Ray& ray,
 		Point& hitpos, Object*& hitobj);
   Stats* get_stats(int i);
   inline Counters* get_counters() {

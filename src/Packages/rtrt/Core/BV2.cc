@@ -32,7 +32,7 @@ namespace rtrt {
     Object* obj;
     BV2Tree(Object* obj, double maxradius);
     BV2Tree(BV2Tree* left, BV2Tree* right);
-    void intersect(const Ray& ray, const Point& orig, const Vector& idir, HitInfo& hit,
+    void intersect(Ray& ray, const Point& orig, const Vector& idir, HitInfo& hit,
 		   DepthStats* st, PerProcessorContext* ppc);
     ~BV2Tree();
   };
@@ -97,7 +97,7 @@ void BV2::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     }
 }
 
-void BV2Tree::intersect(const Ray& ray, const Point& orig, const Vector& idir,
+void BV2Tree::intersect(Ray& ray, const Point& orig, const Vector& idir,
 			HitInfo& hit,
 			DepthStats* st, PerProcessorContext* ppc)
 {
@@ -159,7 +159,7 @@ void BV2Tree::intersect(const Ray& ray, const Point& orig, const Vector& idir,
     }
 }
 
-void BV2::intersect(const Ray& ray, HitInfo& hit,
+void BV2::intersect(Ray& ray, HitInfo& hit,
 		    DepthStats* st, PerProcessorContext* ppc)
 {
     Point orig(ray.origin());    
@@ -168,13 +168,13 @@ void BV2::intersect(const Ray& ray, HitInfo& hit,
     top->intersect(ray, orig, idir, hit, st, ppc);
 }
 
-void BV2::light_intersect(const Ray&, HitInfo&, Color&,
+void BV2::light_intersect(Ray&, HitInfo&, Color&,
 			  DepthStats*, PerProcessorContext*)
 {
     cerr << "BV2::light_intersect not finished\n";
 }
 
-void BV2::softshadow_intersect(Light*, const Ray&,
+void BV2::softshadow_intersect(Light*, Ray&,
 			  HitInfo&, double, Color&,
 			  DepthStats*, PerProcessorContext*)
 {

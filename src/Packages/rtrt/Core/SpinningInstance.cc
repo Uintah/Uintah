@@ -170,7 +170,7 @@ void SpinningInstance::animate(double time, bool& changed) {
   changed = true;  
 }
 
-void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void SpinningInstance::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
 
