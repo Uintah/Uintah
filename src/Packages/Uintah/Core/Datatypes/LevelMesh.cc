@@ -56,7 +56,7 @@ LevelMesh::LevelIndex::LevelIndex(const LevelMesh *m, int i,
   mesh_(m), i_(m->idxLow_.x() + i), j_(m->idxLow_.y() + j),
   k_(m->idxLow_.z() + k)
 {
-  cerr<<"index i_,j_,k_ = ("<<i_<<","<<j_<<","<<k_<<")\n";
+  //  cerr<<"index i_,j_,k_ = ("<<i_<<","<<j_<<","<<k_<<")\n";
 
   patch_ = mesh_->grid_->getLevel( mesh_->level_ )->
     selectPatchForNodeIndex( IntVector(i_,j_,k_));
