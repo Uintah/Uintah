@@ -1758,7 +1758,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_ncDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  NCVariableBase* v = fromDW->d_ncDB.get(var, matl, patch);
 	  d_ncDB.put(var, matl, patch, v->clone(), false);
 	}
@@ -1767,7 +1767,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_ccDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  CCVariableBase* v = fromDW->d_ccDB.get(var, matl, patch);
 	  d_ccDB.put(var, matl, patch, v->clone(), false);
 	}
@@ -1776,7 +1776,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_sfcxDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  SFCXVariableBase* v = fromDW->d_sfcxDB.get(var, matl, patch);
 	  d_sfcxDB.put(var, matl, patch, v->clone(), false);
 	}
@@ -1785,7 +1785,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_sfcyDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  SFCYVariableBase* v = fromDW->d_sfcyDB.get(var, matl, patch);
 	  d_sfcyDB.put(var, matl, patch, v->clone(), false);
 	}
@@ -1794,7 +1794,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_sfczDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  SFCZVariableBase* v = fromDW->d_sfczDB.get(var, matl, patch);
 	  d_sfczDB.put(var, matl, patch, v->clone(), false);
 	}
@@ -1803,7 +1803,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_particleDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  ParticleVariableBase* v = fromDW->d_particleDB.get(var, matl, patch);
 	  d_particleDB.put(var, matl, patch, v->clone(), false);
 	}
@@ -1812,7 +1812,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	{
 	  if(!fromDW->d_perpatchDB.exists(var, matl, patch))
 	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
-				      "in trasferFrom"));
+				      "in transferFrom"));
 	  PerPatchBase* v = fromDW->d_perpatchDB.get(var, matl, patch);
 	  d_perpatchDB.put(var, matl, patch, v->clone(), false);
 	}
