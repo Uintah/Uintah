@@ -67,7 +67,6 @@ class Isosurface : public Module {
   int        last_generation_;
 
   void new_field(FieldHandle field);
-  //void send_results();
 
 public:
   Isosurface(GuiContext* ctx);
