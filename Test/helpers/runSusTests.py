@@ -152,7 +152,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       print "Remove %s/%s before running this test" % (resultsdir, testname)
       exit(1)
 
-    system("echo '%s/replace_gold_standard %s %s %s' > %s/replace_gold_standard" % (helperspath, compare_root, getcwd(), testname, testname))
+    system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
     chdir(testname)
@@ -201,7 +201,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   # if results saved on the web server, copy back to build root
   if outputpath != startpath:
-    system("cp -r %s %s/%s-results" % (resultsdir, startpath, ALGO))
+    system("cp -r %s %s/" % (resultsdir, startpath))
     # remove xml and data files so they don't pile up after they're copied
     system("find %s -name '*.uda*' | xargs rm -rf " % resultsdir)
   if solotest != "" and solotest_found == 0:
