@@ -624,8 +624,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 
 int TaskGraph::findVariableLocation(LoadBalancer* lb,
 				    const ProcessorGroup* pg,
-				    Task::Dependency* req,
-				    const Patch* patch, int matl)
+				    Task::Dependency*/* req*/,
+				    const Patch* patch, int /*matl*/)
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.

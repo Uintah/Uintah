@@ -88,7 +88,7 @@ SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
   reloc_matls = matls;
   reloc_matls->addReference();
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
-  int numMatls = reloc_old_labels.size();
+  int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(matls->size(), 1);
   ASSERTEQ(numMatls, matls->getSubset(0)->size());
   for (int m = 0; m< numMatls; m++)
@@ -136,7 +136,7 @@ namespace Uintah {
 void
 SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
 					   const PatchSubset* patches,
-					   const MaterialSubset* matls,
+					   const MaterialSubset* /*matls*/,
 					   DataWarehouse* old_dw,
 					   DataWarehouse* new_dw)
 {
@@ -153,7 +153,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
     vector<ScatterRecord*> sr(neighbors.size());
     for(int i=0;i<(int)sr.size();i++)
       sr[i]=0;
-    int reloc_numMatls = reloc_new_labels.size();
+    int reloc_numMatls = (int)reloc_new_labels.size();
     for(int m = 0; m < reloc_numMatls; m++){
       ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
       ParticleVariable<Point> px;
@@ -218,7 +218,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
 void
 SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 					  const PatchSubset* patches,
-					  const MaterialSubset* matls,
+					  const MaterialSubset* /*matls*/,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw)
 {
@@ -243,7 +243,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 	}
       }
     }
-    int reloc_numMatls = reloc_new_labels.size();
+    int reloc_numMatls = (int)reloc_new_labels.size();
     for(int m=0;m<reloc_numMatls;m++){
       // Compute the new particle subset
       vector<ParticleSubset*> subsets;
