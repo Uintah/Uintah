@@ -32,6 +32,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <algorithm>
+#include <sci_hash_map.h>
+
 
 namespace SCIRun {
 
@@ -834,6 +836,50 @@ HexVolMesh::add_hex_unconnected(const Point &p0,
 	  add_point(p2), add_point(p3),
 	  add_point(p4), add_point(p5),
 	  add_point(p6), add_point(p7));
+}
+
+
+MeshHandle
+HexVolMesh::clip(Clipper &clipper)
+{
+  HexVolMesh *clipped = scinew HexVolMesh();
+
+  hash_map<under_type, under_type, hash<under_type>,
+    equal_to<under_type> > nodemap;
+
+  Elem::iterator bi, ei;
+  begin(bi); end(ei);
+  while (bi != ei)
+  {
+    Point p;
+    get_center(p, *bi);
+    if (clipper.inside_p(p))
+    {
+      // Add this element to the new mesh.
+      Node::array_type onodes;
+      get_nodes(onodes, *bi);
+      Node::array_type nnodes(onodes.size());
+
+      for (unsigned int i=0; i<onodes.size(); i++)
+      {
+	if (nodemap.find(onodes[i]) == nodemap.end())
+	{
+	  Point np;
+	  get_center(np, onodes[i]);
+	  nodemap[onodes[i]] = clipped->add_point(np);
+	}
+	nnodes[i] = nodemap[onodes[i]];
+      }
+
+      clipped->add_hex(nnodes[0], nnodes[1], nnodes[2], nnodes[3],
+		       nnodes[4], nnodes[5], nnodes[6], nnodes[7]);
+    }
+    
+    ++bi;
+  }
+
+  clipped->flush_changes();  // Really should copy normals
+  return clipped;
 }
 
 
