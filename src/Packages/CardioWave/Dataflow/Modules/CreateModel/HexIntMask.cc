@@ -89,7 +89,7 @@ HexIntMask::parse_exclude_list(const string &guistr, vector<int> &exclude)
   {
     if (skipping_p)
     {
-      if (str[i] >= '0' && str[i] <= '9')
+      if ((str[i] >= '0' && str[i] <= '9') || str[i] == '-')
       {
 	last = i;
 	skipping_p = false;
@@ -97,7 +97,7 @@ HexIntMask::parse_exclude_list(const string &guistr, vector<int> &exclude)
     }
     if (!skipping_p)
     {
-      if (str[i] < '0' || str[i] > '9')
+      if ((str[i] < '0' || str[i] > '9') && str[i] != '-')
       {
 	const string val = str.substr(last, i-last);
 	int v = atoi(val.c_str());

@@ -612,12 +612,15 @@ void compute_matrix(MESH *mesh, const char *fname){
 		Xbox[j] = mesh->vtx[mesh->elements[i].vtx[j]].x;
 		Ybox[j] = mesh->vtx[mesh->elements[i].vtx[j]].y;
 		Zbox[j] = mesh->vtx[mesh->elements[i].vtx[j]].z;
-		D[j][0] = mesh->vtx[mesh->elements[i].vtx[j]].sxx;
-		D[j][1] = mesh->vtx[mesh->elements[i].vtx[j]].sxy;
-		D[j][2] = mesh->vtx[mesh->elements[i].vtx[j]].sxz;			
-		D[j][4] = mesh->vtx[mesh->elements[i].vtx[j]].syy;
-		D[j][5] = mesh->vtx[mesh->elements[i].vtx[j]].syz;
-		D[j][8] = mesh->vtx[mesh->elements[i].vtx[j]].szz;
+                D[j][0] = mesh->vtx[mesh->elements[i].vtx[j]].sxx;
+                D[j][1] = mesh->vtx[mesh->elements[i].vtx[j]].sxy;
+                D[j][2] = mesh->vtx[mesh->elements[i].vtx[j]].sxz;
+                D[j][3] = mesh->vtx[mesh->elements[i].vtx[j]].sxy;
+                D[j][4] = mesh->vtx[mesh->elements[i].vtx[j]].syy;
+                D[j][5] = mesh->vtx[mesh->elements[i].vtx[j]].syz;
+                D[j][6] = mesh->vtx[mesh->elements[i].vtx[j]].sxz;
+                D[j][7] = mesh->vtx[mesh->elements[i].vtx[j]].syz;
+                D[j][8] = mesh->vtx[mesh->elements[i].vtx[j]].szz;
 	}
 
 	fvelement(Xbox,Ybox,Zbox,lmatrix,D);
@@ -839,7 +842,7 @@ void fvelement(float *Xbox,float *Ybox,float *Zbox,float lmatrix[][8],float D[][
 		        Jac[0][1]*(Jac[1][0]*Jac[2][2]-Jac[1][2]*Jac[2][0]) +
 		        Jac[0][2]*(Jac[1][0]*Jac[2][1]-Jac[1][1]*Jac[2][0]);  
 
-		JacInv[0][0] = (Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[1][2])/detJ;
+		JacInv[0][0] = (Jac[1][1]*Jac[2][2]-Jac[1][2]*Jac[2][1])/detJ;
 		JacInv[0][1] = -(Jac[0][1]*Jac[2][2]-Jac[0][2]*Jac[2][1])/detJ;
 		JacInv[0][2] = (Jac[0][1]*Jac[1][2]-Jac[0][2]*Jac[1][1])/detJ;
 		JacInv[1][0] = -(Jac[1][0]*Jac[2][2]-Jac[1][2]*Jac[2][0])/detJ;
