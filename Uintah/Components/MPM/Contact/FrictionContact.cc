@@ -207,25 +207,24 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
   vector<NCVariable<Vector> > gacceleration(NVFs);
   vector<NCVariable<double> > normtraction(NVFs);
-  vector<NCVariable<Vector> > surfnorm(NVFs);
+  vector<NCVariable<Vector> > gsurfnorm(NVFs);
 
   Vector surnor;
 
   // First, calculate the gradient of the mass everywhere
   // normalize it, and stick it in surfNorm
-  NCVariable<Vector> gsurfnorm;
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfi = matl->getVFIndex();
       new_dw->get(gmass[vfi], gMassLabel,vfi , region, 0);
-      new_dw->allocate(gsurfnorm, gSurfNormLabel, vfi, region);
+      new_dw->allocate(gsurfnorm[vfi], gSurfNormLabel, vfi, region);
 
-      gsurfnorm.initialize(Vector(0.0,0.0,0.0));
+      gsurfnorm[vfi].initialize(Vector(0.0,0.0,0.0));
 
-      IntVector lowi(gsurfnorm.getLowIndex());
-      IntVector highi(gsurfnorm.getHighIndex());
+      IntVector lowi(gsurfnorm[vfi].getLowIndex());
+      IntVector highi(gsurfnorm[vfi].getHighIndex());
 
 //      cout << "Low" << lowi << endl;
 //      cout << "High" << highi << endl;
@@ -240,7 +239,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	        -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
 	     double length = surnor.length();
 	     if(length>0.0){
-	    	 gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	    	 gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	     }
           }
         }
@@ -260,16 +259,16 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	   }
-           i=highi.x();
+           i=highi.x()-1;
 	   surnor = Vector(
 	      0.0,
 	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
 	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
@@ -284,16 +283,16 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	   }
-           j=highi.y();
+           j=highi.y()-1;
 	   surnor = Vector(
 	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
 	      0.0,
 	      -(gmass[vfi][IV(i,j,k+1)] - gmass[vfi][IV(i,j,k-1)])/dx.z()); 
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
@@ -308,27 +307,28 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	      0.0);
 	   double length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	   }
-           k=highi.z();
+           k=highi.z()-1;
 	   surnor = Vector(
 	      -(gmass[vfi][IV(i+1,j,k)] - gmass[vfi][IV(i-1,j,k)])/dx.x(),
 	      -(gmass[vfi][IV(i,j+1,k)] - gmass[vfi][IV(i,j-1,k)])/dx.y(), 
 	      0.0);
 	   length = surnor.length();
 	   if(length>0.0){
-	  	gsurfnorm[IntVector(i,j,k)] = surnor/length;;
+	  	gsurfnorm[vfi][IntVector(i,j,k)] = surnor/length;;
 	   }
         }
       }
 
-      new_dw->put(gsurfnorm, gSurfNormLabel, vfi, region);
+      new_dw->put(gsurfnorm[vfi], gSurfNormLabel, vfi, region);
 
     }
   }
 
-  IntVector lowi(gsurfnorm.getLowIndex());
-  IntVector highi(gsurfnorm.getHighIndex());
+  new_dw->get(gsurfnorm[0], gSurfNormLabel, 0, region,0);
+  IntVector lowi(gsurfnorm[0].getLowIndex());
+  IntVector highi(gsurfnorm[0].getHighIndex());
   ofstream tfile("tecplotfile");
   int I=highi.x()-lowi.x(),J=highi.y()-lowi.y(),K=highi.z()-lowi.z();
   static int ts=0;
@@ -336,7 +336,6 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   tfile << "VARIABLES = X,Y,Z,SNX,SNY,SNZ" << endl;
   tfile << "ZONE T=\"GRID\", I=" << I <<", J="<< J <<" K="<< K;
   tfile <<", F=BLOCK" << endl;
-  new_dw->get(gsurfnorm, gSurfNormLabel, 0, region,0);
   int n=0;
   for(int k = lowi.z(); k < highi.z(); k++){
     for(int j = lowi.y(); j < highi.y(); j++){
@@ -375,7 +374,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   for(int k = lowi.z(); k < highi.z(); k++){
     for(int j = lowi.y(); j < highi.y(); j++){
       for(int i = lowi.x(); i < highi.x(); i++){
-        tfile << gsurfnorm[IntVector(i,j,k)].x() << " " ;
+        tfile << gsurfnorm[0][IntVector(i,j,k)].x() << " " ;
         n++;
         if((n % 20) == 0){ tfile << endl; }
       }
@@ -386,7 +385,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   for(int k = lowi.z(); k < highi.z(); k++){
     for(int j = lowi.y(); j < highi.y(); j++){
       for(int i = lowi.x(); i < highi.x(); i++){
-        tfile << gsurfnorm[IntVector(i,j,k)].y() << " " ;
+        tfile << gsurfnorm[0][IntVector(i,j,k)].y() << " " ;
         n++;
         if((n % 20) == 0){ tfile << endl; }
       }
@@ -397,7 +396,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   for(int k = lowi.z(); k < highi.z(); k++){
     for(int j = lowi.y(); j < highi.y(); j++){
       for(int i = lowi.x(); i < highi.x(); i++){
-        tfile << gsurfnorm[IntVector(i,j,k)].z() << " " ;
+        tfile << gsurfnorm[0][IntVector(i,j,k)].z() << " " ;
         n++;
         if((n % 20) == 0){ tfile << endl; }
       }
@@ -452,14 +451,14 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       int vfindex = matl->getVFIndex();
       NCVariable<Matrix3>      gstress;
       NCVariable<double>       gnormtraction;
-      NCVariable<Vector>       gsurfnorm;
+      NCVariable<Vector>       surfnorm;
       new_dw->get(gstress, gStressLabel, vfindex, region,0);
-      new_dw->get(gsurfnorm, gSurfNormLabel, vfindex, region,0);
+      new_dw->get(surfnorm, gSurfNormLabel, vfindex, region,0);
       new_dw->allocate(gnormtraction, gNormTractionLabel, vfindex, region);
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
 	gnormtraction[*iter]=
-			Dot(gsurfnorm[*iter]*gstress[*iter],gsurfnorm[*iter]);
+			Dot(surfnorm[*iter]*gstress[*iter],surfnorm[*iter]);
       }
 
       new_dw->put(gnormtraction, gNormTractionLabel, vfindex, region);
@@ -481,7 +480,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 						 vfindex, region, 0);
       new_dw->get(gacceleration[vfindex],gAccelerationLabel,vfindex,region,0);
       new_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region, 0);
-      new_dw->get(surfnorm[vfindex], gSurfNormLabel,vfindex , region, 0);
+      new_dw->get(gsurfnorm[vfindex], gSurfNormLabel,vfindex , region, 0);
     }
   }
   delt_vartype delt;
@@ -512,7 +511,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
           // Apply frictional contact if the surface is in compression
           // or the surface is stress free and surface is approaching.
           // Otherwise apply free surface conditions (do nothing).
-          double normalDeltaVelocity=Dot(deltaVelocity,surfnorm[n][*iter]);
+          double normalDeltaVelocity=Dot(deltaVelocity,gsurfnorm[n][*iter]);
           if((normtraction[n][*iter] < 0.0) ||
 	     (!compare(fabs(normtraction[n][*iter]),0.0) &&
               normalDeltaVelocity>0.0)){
@@ -521,18 +520,18 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 	    // is in direction of surface normal.
 	    Dvdt = -gvelocity_star[n][*iter];
 	    if(compare( (deltaVelocity
-		 -surfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
-	      gvelocity_star[n][*iter]-= surfnorm[n][*iter]*normalDeltaVelocity;
+		 -gsurfnorm[n][*iter]*normalDeltaVelocity).length(),0.0)){
+	      gvelocity_star[n][*iter]-=gsurfnorm[n][*iter]*normalDeltaVelocity;
 	    }
 	    else{
 	      Vector surfaceTangent=
-		(deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity)/
-                (deltaVelocity-surfnorm[n][*iter]*normalDeltaVelocity).length();
+	       (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVelocity)/
+               (deltaVelocity-gsurfnorm[n][*iter]*normalDeltaVelocity).length();
 	      double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
 	      double frictionCoefficient=
 		Min(d_mu,tangentDeltaVelocity/normalDeltaVelocity);
 	      gvelocity_star[n][*iter]-=
-		(surfnorm[n][*iter]+surfaceTangent*frictionCoefficient)*
+		(gsurfnorm[n][*iter]+surfaceTangent*frictionCoefficient)*
 		normalDeltaVelocity;
 	    }
 	    Dvdt+=gvelocity_star[n][*iter];
@@ -552,6 +551,9 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.15  2000/05/08 22:45:34  guilkey
+// Fixed a few stupid errors in the FrictionContact.
+//
 // Revision 1.14  2000/05/08 21:55:54  guilkey
 // Added calculation of surface normals on the boundary.
 //
