@@ -21,12 +21,11 @@ SRCDIR := testprograms/Component
 
 SUBDIRS := \
 	$(SRCDIR)/argtest	\
-	$(SRCDIR)/spectest	\
-
-
-# $(SRCDIR)/memstress $(SRCDIR)/mitest \
-#	$(SRCDIR)/objects $(SRCDIR)/pingpong 
-#$(SRCDIR)/dav
+	$(SRCDIR)/framework	\
+	$(SRCDIR)/memstress	\
+	$(SRCDIR)/objects	\
+	$(SRCDIR)/pingpong	\
+	$(SRCDIR)/spectest
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
