@@ -45,26 +45,26 @@ public:
   virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
   //! Required interface to support Field Concept.
-  bool value(value_type &val, typename mesh_type::node_index i)
+  bool value(value_type &val, typename mesh_type::node_index i) const
   { val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::edge_index i)
+  bool value(value_type &val, typename mesh_type::edge_index i) const 
   { val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::face_index i)
+  bool value(value_type &val, typename mesh_type::face_index i) const 
   { val = fdata_[i]; return true; }
-  bool value(value_type &val, typename mesh_type::cell_index i)
+  bool value(value_type &val, typename mesh_type::cell_index i) const 
   { val = fdata_[i]; return true; }
 
   //! No safety check for the following calls, be sure you know where data is.
-  value_type value(typename mesh_type::node_index i)
+  value_type value(typename mesh_type::node_index i) const
   { return fdata_[i]; }
-  value_type value(typename mesh_type::edge_index i)
+  value_type value(typename mesh_type::edge_index i) const
   { return fdata_[i]; }
-  value_type value(typename mesh_type::face_index i)
+  value_type value(typename mesh_type::face_index i) const 
   { return fdata_[i]; }
-  value_type value(typename mesh_type::cell_index i)
+  value_type value(typename mesh_type::cell_index i) const 
   { return fdata_[i]; }
 
-  mesh_handle_type get_typed_mesh() { return mesh_; };
+  mesh_handle_type get_typed_mesh() const { return mesh_; };
 
   //! Persistent I/O.
   void    io(Piostream &stream);
@@ -90,8 +90,8 @@ private:
 // internal interp object 
 template <class Mesh, class FData>
 bool 
-GenericField<Mesh, FData>::GInterp::interpolate(const Point& p, 
-						double& value) const
+GenericField<Mesh, FData>::GInterp::interpolate(const Point& /*p*/, 
+						double& /*value*/) const
 {
   cerr << "Error: NO interp defined!" << endl;
   assert(0);
