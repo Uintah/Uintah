@@ -17,6 +17,7 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/EigenEvaluator.cc \
+	$(SRCDIR)/ParticleEigenEvaluator.cc \
 	$(SRCDIR)/InPlaneEigenEvaluator.cc \
 	$(SRCDIR)/TensorElementExtractor.cc
 
@@ -35,6 +36,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7.2.1  2000/10/19 05:18:11  sparker
+# Merge changes from main branch into csafe_risky1
+#
+# Revision 1.8  2000/10/17 22:47:42  witzel
+# Added ParticleEigenEvaluator.
+#
 # Revision 1.7  2000/09/20 23:46:08  witzel
 # Added TensorElementExtractor
 #

@@ -1,4 +1,3 @@
-/* REFERENCED */
 //static char *id="$Id$";
 
 /*
@@ -120,6 +119,7 @@ int main(int argc, char** argv)
 	} else if(s == "-ice"){
 	    do_ice=true;
 	} else if(s == "-nthreads"){
+	  cerr << "reading number of threads\n";
 	    if(++i == argc){
 		usage("You must provide a number of threads for -nthreads",
 		      s, argv[0]);
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 	    cfd = scinew ArchesSpace::Arches(world);
 	}
 	if(do_ice){
-	    cfd = scinew ICESpace::ICE();
+	    cfd = scinew ICESpace::ICE(world);
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -302,6 +302,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.25.2.4  2000/10/19 05:17:25  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.25.2.3  2000/10/17 19:44:05  dav
 // mixed scheduler updates
 //
@@ -310,6 +313,28 @@ int main(int argc, char** argv)
 //
 // Revision 1.25.2.1  2000/10/06 23:59:41  witzel
 // Added VTsetup call for vampir trace initialization.
+//
+// Revision 1.30  2000/10/04 20:21:18  jas
+// Changed ICE() to ICE(world).
+//
+// Revision 1.29  2000/10/02 17:54:45  dav
+// Changed the semantics of numThreads.  By specifying "-nthreads", you
+// are no longer asking for the threaded version of components.  You ARE
+// asking for a threaded scheduler to use threads for separate patches.
+// In the future, we will need, for example, another flag (-mpmthreaded)
+// to specify the explicitly threaded version of mpm.
+//
+// Revision 1.28  2000/09/29 20:41:45  dav
+// Added hack to allow -nthreads to be set
+//
+// Revision 1.27  2000/09/29 19:57:51  dav
+// Changed numThreads from bool to int
+//
+// Revision 1.26  2000/09/29 19:54:22  dav
+// Uncommented the commented out sections that called
+// Parallel::finlaizeManager().  They were commented out because the abort
+// was causing print statements to be lost.  Hopefully with the cerr/cout
+// flush in Parallel.cc and a sleep, this should be fixed...
 //
 // Revision 1.25  2000/09/29 05:32:06  sparker
 // Quiet warning from g++
