@@ -544,6 +544,7 @@ SliceRenderer::draw_slice()
 void
 SliceRenderer::multi_level_draw()
 {
+#ifdef HAVE_AVR_SUPPORT
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
@@ -970,6 +971,7 @@ SliceRenderer::multi_level_draw()
   glBindTexture(GL_TEXTURE_3D, 0);
 
   tex_->unlock_bricks();
+#endif
 }
 
 
