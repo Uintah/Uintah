@@ -130,7 +130,19 @@ void Focusing::execute()
   
   wwww=scinew ColumnMatrix(Nm);
   w=&((*wwww)[0]);
-  for(int i=0;i<Nm;i++) w[i]=1.;
+//  for(int i=0;i<Nm;i++) w[i]=1.;
+
+
+  /* Compute w */
+
+  for(int i1=0;i1<Nm;i1++) 
+  {
+    double t;
+    t=0.;
+    for(int i2=0;i2<Nd;i2++) t+=F[i1+i2*Nm]*F[i1+i2*Nm]; 
+    if(t==0) w[i1]=0.;
+    else     w[i1]=1./sqrt(sqrt(t));
+  }
 
 // ACTUAL OPERATION 
 
