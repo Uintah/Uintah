@@ -1197,7 +1197,8 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 	if { [string equal "SCIRun->Render->Viewer" $modstr] } {
 	    set num 0
 	    foreach w [winfo children .] {
-		if { [string first .ui$module $w] == 0 } {
+		if { [string first .ui$module $w] == 0 && \
+			 [winfo exists $w.bsframe] } {
 		    append script "\n${tab}$modVar($module) addViewer"
 		    # since the viewer always initially comes up without
 		    # the extended controls, save the geometry to only
