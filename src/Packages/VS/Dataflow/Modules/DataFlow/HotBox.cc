@@ -246,7 +246,7 @@ void
   }
 
   // if the selection source is from the HotBox UI -- ignore the probe
-  char selectName[256];
+  char partsName[256], selectName[256];
 
   if(selectionSource == "fromHotBoxUI")
   {
@@ -293,7 +293,7 @@ void
     std::string p2 = "WHERE X->\":NAME\"->\"";
     p2 += selectName;
     p2 += "\", X->\"part\"+->Y, Y->\":NAME\"->Parts CREATE The";
-    p2 += selectName;
+    p2 += space_to_underbar(partsName, selectName);
     p2 += "(Parts)";
     cout << "OQAFMA query: " <<  p2  << endl;
     // launch a query via OQAFMA/Protege C function calls
