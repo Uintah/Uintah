@@ -67,6 +67,8 @@ private:
   GuiDouble position_;
   GuiString data_at_;
   GuiString update_type_;
+  GuiPoint custom_origin_;
+  GuiVector custom_normal_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
 };
@@ -82,7 +84,9 @@ SamplePlane::SamplePlane(GuiContext* ctx) :
   padpercent_(ctx->subVar("padpercent")),
   position_(ctx->subVar("pos")),
   data_at_(ctx->subVar("data-at")),
-  update_type_(ctx->subVar("update_type"))
+  update_type_(ctx->subVar("update_type")),
+  custom_origin_(ctx->subVar("corigin")),
+  custom_normal_(ctx->subVar("cnormal"))
 {
 }
 
@@ -124,6 +128,25 @@ SamplePlane::execute()
   }
   trans.pre_rotate(angle, axis_vector);
 
+  if (axis_.get() == 3)
+  {
+    Vector tmp_normal(custom_normal_.get());
+    Vector fakey(Cross(Vector(0.0, 0.0, 1.0), tmp_normal));
+    if (fakey.length2() < 1.0e-6)
+    {
+      fakey = Cross(Vector(1.0, 0.0, 0.0), tmp_normal);
+    }
+    Vector fakex(Cross(tmp_normal, fakey));
+    tmp_normal.safe_normalize();
+    fakex.safe_normalize();
+    fakey.safe_normalize();
+
+    trans.load_identity();
+    trans.load_basis(Point(0, 0, 0), fakex, fakey, tmp_normal);
+    const Vector &origin(custom_origin_.get().asVector());
+    trans.pre_translate(origin - fakex * 0.5 - fakey * 0.5);
+  }
+
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   if (!ifp) {
@@ -150,30 +173,34 @@ SamplePlane::execute()
     // Compute Transform.
     BBox box = ifieldhandle->mesh()->get_bounding_box();
 
-    Point loc(box.min());
     Vector diag(box.diagonal());
-    position_.reset();
-    double dist = position_.get()/2.0 + 0.5;
-    switch (axis)
-    {
-    case 0:
-      loc.x(loc.x() + diag.x() * dist);
-      break;
-
-    case 1:
-      loc.y(loc.y() + diag.y() * dist);
-      break;
-
-    case 2:
-      loc.z(loc.z() + diag.z() * dist);
-      break;
-      
-    default:
-      break;
-    }
-
     trans.pre_scale(diag);
-    trans.pre_translate(Vector(loc));
+
+    if (axis_.get() != 3)
+    {
+      Point loc(box.min());
+      position_.reset();
+      double dist = position_.get()/2.0 + 0.5;
+      switch (axis)
+      {
+      case 0:
+        loc.x(loc.x() + diag.x() * dist);
+        break;
+
+      case 1:
+        loc.y(loc.y() + diag.y() * dist);
+        break;
+
+      case 2:
+        loc.z(loc.z() + diag.z() * dist);
+        break;
+      
+      default:
+        break;
+      }
+
+      trans.pre_translate(Vector(loc));
+    }
   }
   
   // Create blank mesh.
@@ -210,20 +237,6 @@ SamplePlane::execute()
   {
     ofh = scinew ImageField<double>(imagemesh, basis_order);
   }
-
-#if 0
-  Vector normal(1.0, 1.0, 1.0);
-  const Point origin(0.0, 1.0, 0.0);
-  Vector fakey(Cross(Vector(0.0, 0.0, 1.0), normal));
-  Vector fakex(Cross(normal, fakey));
-  normal.safe_normalize();
-  fakex.safe_normalize();
-  fakey.safe_normalize();
-
-  trans.load_identity();
-  trans.load_basis(Point(0, 0, 0), fakex, fakey, normal);
-  trans.pre_translate(origin.asVector() - fakex * 0.5 - fakey * 0.5);
-#endif
 
   // Transform field.
   ofh->mesh()->transform(trans);
