@@ -55,6 +55,14 @@ Arches::Arches(const ProcessorGroup* myworld) :
 {
   d_lab = scinew ArchesLabel();
   d_MAlab = 0; // will be set by setMPMArchesLabel
+  d_props = 0;
+  d_turbModel = 0;
+  d_boundaryCondition = 0;
+  d_nlSolver = 0;
+  d_physicalConsts = 0;
+#ifdef multimaterialform
+  d_mmInterface = 0;
+#endif
 }
 
 // ****************************************************************************
@@ -62,7 +70,15 @@ Arches::Arches(const ProcessorGroup* myworld) :
 // ****************************************************************************
 Arches::~Arches()
 {
-
+  delete d_lab;
+  delete d_props;
+  delete d_turbModel;
+  delete d_boundaryCondition;
+  delete d_nlSolver;
+  delete d_physicalConsts;
+#ifdef multimaterialform
+  delete d_mmInterface;
+#endif
 }
 
 // ****************************************************************************

@@ -2565,6 +2565,48 @@ BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
 }
 
+BoundaryCondition::FlowInlet::FlowInlet():
+  d_cellTypeID(0), d_area_label(0)
+{
+  turb_lengthScale = 0.0;
+  flowRate = 0.0;
+}
+
+BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
+  d_area_label(copy.d_area_label),
+  d_cellTypeID (copy.d_cellTypeID),
+  flowRate(copy.flowRate),
+  streamMixturefraction(copy.streamMixturefraction),
+  turb_lengthScale(copy.turb_lengthScale),
+  calcStream(copy.calcStream),
+  d_geomPiece(copy.d_geomPiece)
+{
+  d_area_label->addReference();
+}
+
+BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const FlowInlet& copy)
+{
+  // remove reference from the old label
+  VarLabel::destroy(d_area_label);
+  d_area_label = copy.d_area_label;
+  d_area_label->addReference();
+
+  d_cellTypeID = copy.d_cellTypeID;
+  flowRate = copy.flowRate;
+  streamMixturefraction = copy.streamMixturefraction;
+  turb_lengthScale = copy.turb_lengthScale;
+  calcStream = copy.calcStream;
+  d_geomPiece = copy.d_geomPiece;
+
+  return *this;
+}
+
+
+BoundaryCondition::FlowInlet::~FlowInlet()
+{
+  VarLabel::destroy(d_area_label);
+}
+
 //****************************************************************************
 // Problem Setup for BoundaryCondition::FlowInlet
 //****************************************************************************
