@@ -16,7 +16,7 @@
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Visibility.h>
+#include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
 
 using std::cerr;
 using namespace Uintah;
@@ -194,11 +194,13 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  ParticleVariable<int> pVisibility;
+  ParticleVariable<int> pConnectivity;
   ParticleVariable<Vector> pRotationRate;
+  ParticleVariable<double> pStrainEnergy;
   if(matl->getFractureModel()) {
-    new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+    new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
+    new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
   }
 
   double shear = d_initialData.Shear;
@@ -217,37 +219,46 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
-     Visibility vis;
      if(matl->getFractureModel()) {
-  	vis = pVisibility[idx];
-      	vis.modifyShapeDerivatives(d_S);
-     }
+       //ratation rate: (omega1,omega2,omega3)
+       double omega1 = 0;
+       double omega2 = 0;
+       double omega3 = 0;
 
-     //ratation rate: (omega1,omega2,omega3)
-     double omega1 = 0;
-     double omega2 = 0;
-     double omega3 = 0;
-     
-     for(int k = 0; k < 8; k++) {
-       if(vis.visible(k) ) {
-          Vector& gvel = gvelocity[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-                velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
-            }
-          }
+       Connectivity connectivity(pConnectivity[idx]);
+       int conn[8];
+       connectivity.getInfo(conn);
+       connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
+
+       for(int k = 0; k < 8; k++) {
+	 if(conn[k] == Connectivity::connect) {
+	    Vector& gvel = gvelocity[ni[k]];
+	    for (int j = 0; j<3; j++){
+	       for (int i = 0; i<3; i++) {
+	          velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
+	       }
+	    }
 
 	    //rotation rate computation, required for fracture
-          if(matl->getFractureModel()) {
-	    omega1 += gvel(3) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](3) * oodx[3];
-	    omega2 += gvel(1) * d_S[k](3) * oodx[3] - gvel(3) * d_S[k](1) * oodx[1];
-	    omega3 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
-	  }
+            if(matl->getFractureModel()) {
+	      //NOTE!!! gvel(0) = gvel.x() !!!
+	      omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
+	      omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
+	      omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
+	    }
+	 }
        }
+       pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
      }
-
-     if( matl->getFractureModel() ) {
-        pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
+     else {
+       for(int k = 0; k < 8; k++) {
+	  Vector& gvel = gvelocity[ni[k]];
+	  for (int j = 0; j<3; j++){
+	     for (int i = 0; i<3; i++) {
+	        velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
+	     }
+	  }
+        }
      }
 
     // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
@@ -384,27 +395,9 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pVolumeDeformedLabel,   matlindex, patch);
 
    if(matl->getFractureModel()) {
-     task->requires(new_dw, lb->pVisibilityLabel, matlindex,patch, Ghost::None);
+     task->requires(new_dw, lb->pConnectivityLabel, matlindex,patch, Ghost::None);
      task->computes(new_dw, lb->pRotationRateLabel, matlindex, patch);
    }
-}
-
-//for fracture
-void CompNeoHookPlas::computeCrackSurfaceContactForce(const Patch* patch,
-                                           const MPMMaterial* matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw)
-{
-}
-
-//for fracture
-void CompNeoHookPlas::addComputesAndRequiresForCrackSurfaceContact(
-	                                     Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const
-{
 }
 
 #ifdef __sgi

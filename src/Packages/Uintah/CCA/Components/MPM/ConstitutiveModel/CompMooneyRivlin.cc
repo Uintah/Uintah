@@ -18,7 +18,7 @@
 #include <values.h>
 #include <iostream>
 
-#include <Packages/Uintah/CCA/Components/MPM/Fracture/Visibility.h>
+#include <Packages/Uintah/CCA/Components/MPM/Fracture/Connectivity.h>
 
 using std::cerr;
 
@@ -151,11 +151,11 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  ParticleVariable<int> pVisibility;
+  ParticleVariable<int> pConnectivity;
   ParticleVariable<Vector> pRotationRate;
   ParticleVariable<double> pStrainEnergy;
   if(matl->getFractureModel()) {
-    new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+    new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
     new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
   }
@@ -178,19 +178,18 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
      
-     Visibility vis;
      if(matl->getFractureModel()) {
-  	vis = pVisibility[idx];
-      	vis.modifyShapeDerivatives(d_S);
-     }
+       //ratation rate: (omega1,omega2,omega3)
+       double omega1 = 0;
+       double omega2 = 0;
+       double omega3 = 0;
 
-     //ratation rate: (omega1,omega2,omega3)
-     double omega1 = 0;
-     double omega2 = 0;
-     double omega3 = 0;
-     
-     for(int k = 0; k < 8; k++) {
-	 if(vis.visible(k)) {	    
+       Connectivity connectivity(pConnectivity[idx]);
+       int conn[8];
+       connectivity.getInfo(conn);
+       connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
+
+       for(int k = 0; k < 8; k++) {
 	    Vector& gvel = gvelocity[ni[k]];
 	    for (int j = 0; j<3; j++){
 	       for (int i = 0; i<3; i++) {
@@ -199,18 +198,22 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 	    }
 
 	    //rotation rate computation, required for fracture
-            if(matl->getFractureModel()) {
-	      //NOTE!!! gvel(0) = gvel.x() !!!
-	      omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
-	      omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
-	      omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
-	    }
-	    
-	 }
+	    //NOTE!!! gvel(0) = gvel.x() !!!
+	    omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
+	    omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
+	    omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
+       }
+       pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
      }
-
-     if( matl->getFractureModel() ) {
-        pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
+     else {
+       for(int k = 0; k < 8; k++) {
+	  Vector& gvel = gvelocity[ni[k]];
+	  for (int j = 0; j<3; j++){
+	     for (int i = 0; i<3; i++) {
+	        velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
+	     }
+	  }
+        }
      }
 
       // Compute the deformation gradient increment using the time_step
@@ -318,135 +321,10 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pVolumeDeformedLabel,              idx, patch);
    
    if(matl->getFractureModel()) {
-      task->requires(new_dw, lb->pVisibilityLabel,   idx, patch, Ghost::None);
+      task->requires(new_dw, lb->pConnectivityLabel, idx, patch, Ghost::None);
       task->computes(new_dw, lb->pRotationRateLabel, idx, patch);
       task->computes(new_dw, lb->pStrainEnergyLabel, idx, patch);
    }
-}
-
-void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
-                                           const MPMMaterial* mpm_matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw)
-{
-  Matrix3 Identity;
-  Identity.Identity();
-
-  int matlindex = mpm_matl->getDWIndex();
-
-  // Create arrays for the particle data
-  ParticleVariable<Point>  pX_patchAndGhost;
-  ParticleVariable<int>    pIsBroken;
-  ParticleVariable<Vector> pCrackNormal;
-  ParticleVariable<double> pVolume;
-
-  ParticleSubset* pset_patchAndGhost = old_dw->getParticleSubset(
-     matlindex, patch, Ghost::AroundCells, 1, lb->pXLabel);
-
-  old_dw->get(pX_patchAndGhost, lb->pXLabel, pset_patchAndGhost);
-  old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset_patchAndGhost);
-  old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset_patchAndGhost);
-  old_dw->get(pVolume, lb->pVolumeLabel, pset_patchAndGhost);
-
-  Lattice lattice(pX_patchAndGhost);
-  ParticlesNeighbor particles;
-
-  ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(
-     matlindex, patch);
-
-  ParticleVariable<Vector> pCrackSurfaceContactForce;
-  new_dw->allocate(pCrackSurfaceContactForce,
-     lb->pCrackSurfaceContactForceLabel, pset_patchOnly);
-
-  ParticleVariable<Point>  pX_patchOnly;
-  new_dw->get(pX_patchOnly, lb->pXXLabel, pset_patchOnly);
-
-  vector<int> particleIndexExchange( pset_patchOnly->numParticles() );
-  fit(pset_patchOnly,pX_patchOnly,
-      pset_patchAndGhost,pX_patchAndGhost,
-      particleIndexExchange);
-
-  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
-          iter != pset_patchOnly->end(); iter++)
-  {
-    pCrackSurfaceContactForce[*iter] = Vector(0.,0.,0.);
-  }
-
-  IntVector cellIdx;
-  double C1 = d_initialData.C1;
-  double C2 = d_initialData.C2;
-
-  for(ParticleSubset::iterator iter = pset_patchOnly->begin();
-          iter != pset_patchOnly->end(); iter++)
-  {
-    particleIndex pIdx = *iter;
-    particleIndex pIdx1 = particleIndexExchange[pIdx];
-
-    const Point& X1 = pX_patchOnly[pIdx];
-
-    patch->findCell(X1,cellIdx);
-    particles.clear();
-    particles.buildIn(cellIdx,lattice);
-
-    double size1 = pow(pVolume[pIdx1],0.3333);
-
-    //crack surface contact force
-    for(int pNeighbor=0; pNeighbor<(int)particles.size(); ++pNeighbor)
-    {
-      particleIndex pContact = particles[pNeighbor];
-      if(pContact == pIdx1) continue;
-
-      if(!particles.visible( pContact,
-                            pIdx1,
-		            pX_patchAndGhost,
-		            pIsBroken,
-		            pCrackNormal,
-		            pVolume) ) 
-      {
-        const Point& X2 = pX_patchAndGhost[pContact];
-
-        double size2 = pow(pVolume[pContact],0.3333);
-        Vector N = X2-X1;
-        double distance = N.length();
-        double L = (size1+size2) /2 * 0.8;
-        double lambda = distance /L;
-	
-        if( lambda < 1 ) {
-  	  //cout<<"lambda"<<lambda<<endl;
-          N /= distance;
-	  double stress = 2*(C1+C2/lambda)*(lambda-1/lambda/lambda);
-	  double area = M_PI* L * L;
-          Vector F = N * ( stress * area );
-          pCrackSurfaceContactForce[pIdx] += F;
-	}
-      }
-    }
-  }
-
-  new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
-}
-
-void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
-	                                     Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const
-{
-  int idx = matl->getDWIndex();
-
-  task->requires(old_dw, lb->pXLabel, idx,  patch,
-			Ghost::AroundCells, 1 );
-  task->requires(new_dw, lb->pXXLabel, idx,  patch,
-			Ghost::None);
-  task->requires(old_dw, lb->pVolumeLabel, idx, patch,
-			Ghost::AroundCells, 1 );
-  task->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
-			Ghost::AroundCells, 1 );
-  task->requires(old_dw, lb->pCrackNormalLabel, idx, patch,
-			Ghost::AroundCells, 1 );
-		  
-  task->computes(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch );
 }
 
 #ifdef __sgi

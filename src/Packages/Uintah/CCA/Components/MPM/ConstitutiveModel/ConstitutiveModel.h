@@ -74,18 +74,6 @@ WARNING
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;
 
-         //for fracture
-         virtual void computeCrackSurfaceContactForce(const Patch* patch,
-                                           const MPMMaterial* matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw) = 0;
-
-	 virtual void addComputesAndRequiresForCrackSurfaceContact(
-	                                     Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const = 0;
 /*`==========TESTING==========*/ 
          double computeRhoMicroCM(double pressure, const MPMMaterial* matl);
 

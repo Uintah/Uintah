@@ -25,17 +25,26 @@ public:
                 const Point& B,
 		const ParticleVariable<Point>& pX,
 		const ParticleVariable<int>& pIsBroken,
-		const ParticleVariable<Vector>& pCrackSurfaceNormal,
+		const ParticleVariable<Vector>& pCrackSurfaceNormal1,
+		const ParticleVariable<Vector>& pCrackSurfaceNormal2,
+		const ParticleVariable<Vector>& pCrackSurfaceNormal3,
 		const ParticleVariable<double>& pVolume) const;
 
-  bool visible(particleIndex idxA,
-               particleIndex idxB,
-	       const ParticleVariable<Point>& pX,
-	       const ParticleVariable<int>& pIsBroken,
-	       const ParticleVariable<Vector>& pCrackSurfaceNormal,
-	       const ParticleVariable<double>& pVolume) const;
+  bool  visible(particleIndex idxA,
+                particleIndex idxB,
+	        const ParticleVariable<Point>& pX,
+	        const ParticleVariable<int>& pIsBroken,
+	        const ParticleVariable<Vector>& pCrackSurfaceNormal1,
+	        const ParticleVariable<Vector>& pCrackSurfaceNormal2,
+	        const ParticleVariable<Vector>& pCrackSurfaceNormal3,
+	        const ParticleVariable<double>& pVolume) const;
+
+  bool visible(const Point& A,
+               const Point& B,
+	       const Point& O,const Vector& N,double size2) const;
 
 private:
+
 };
 
 } // End namespace Uintah

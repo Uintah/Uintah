@@ -110,7 +110,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
     if(d_fracture) {
       d_mpm->scheduleSetPositions(patch,sched,old_dw,new_dw);
       d_mpm->scheduleComputeBoundaryContact(patch,sched,old_dw,new_dw);
-      d_mpm->scheduleComputeVisibility(patch,sched,old_dw,new_dw);
+      d_mpm->scheduleComputeConnectivity(patch,sched,old_dw,new_dw);
     }
     d_mpm->scheduleInterpolateParticlesToGrid(      patch,sched,old_dw,new_dw);
 
@@ -152,7 +152,6 @@ void MPMICE::scheduleTimeAdvance(double, double,
     d_mpm->scheduleComputeMassRate(                 patch,sched,old_dw,new_dw);
     if(d_fracture) {
       d_mpm->scheduleComputeFracture(patch,sched,old_dw,new_dw);
-      d_mpm->scheduleStressRelease(patch,sched,old_dw,new_dw);
     }
 
     d_mpm->scheduleCarryForwardVariables(           patch,sched,old_dw,new_dw);

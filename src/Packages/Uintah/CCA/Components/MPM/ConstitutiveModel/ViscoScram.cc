@@ -572,23 +572,6 @@ void ViscoScram::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
 }
 
-//for fracture
-void ViscoScram::computeCrackSurfaceContactForce(const Patch* patch,
-                                           const MPMMaterial* matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw)
-{
-}
-
-void ViscoScram::addComputesAndRequiresForCrackSurfaceContact(
-	                                     Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const
-{
-}
-
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
