@@ -26,7 +26,7 @@ SUBDIRS := $(SRCDIR)/Renderer \
 	   $(SRCDIR)/Actor \
 	   $(SRCDIR)/PolyDataMapper \
 	   $(SRCDIR)/ContourFilter \
-	   $(SRCDIR)/StructuredPointsReader	
+	   $(SRCDIR)/StructuredPointsReader
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
