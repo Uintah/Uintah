@@ -63,7 +63,6 @@ itcl_class Teem_DataIO_DicomToNrrd {
 
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
