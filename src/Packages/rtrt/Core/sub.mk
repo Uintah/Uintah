@@ -10,6 +10,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Trigger.cc \
 	$(SRCDIR)/VolumeVis.cc \
 	$(SRCDIR)/VolumeVis2D.cc \
+	$(SRCDIR)/MouseCallBack.cc \
 	$(SRCDIR)/GridTris.cc \
 	$(SRCDIR)/VolumeVisDpy.cc \
 	$(SRCDIR)/Volvis2DDpy.cc \
