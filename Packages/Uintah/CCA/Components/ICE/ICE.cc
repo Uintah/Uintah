@@ -373,8 +373,145 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
                       SimulationStateP&   sharedState)
 {
+  cout << "In ICE::addMaterial" << endl;
+  d_recompile = true;
+  ProblemSpecP mat_ps       =  prob_spec->findBlock("AddMaterialProperties");
+  ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 
+  for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
+    ps = ps->findNextBlock("material") ) {
+    // Extract out the type of EOS and the associated parameters
+    ICEMaterial *mat = scinew ICEMaterial(ps);
+    sharedState->registerICEMaterial(mat);
+  }
+
+  // Pull out the exchange coefficients
+  ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
+  if (!exch_ps)
+    throw ProblemSetupException("Cannot find exchange_properties tag");
+  
+  ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
+  exch_co_ps->require("momentum",d_K_mom);
+  exch_co_ps->require("heat",d_K_heat);
+
+  for (int i = 0; i<(int)d_K_mom.size(); i++) {
+    cout_norm << "K_mom = " << d_K_mom[i] << endl;
+    if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
+      ostringstream warn;
+      warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
+      throw ProblemSetupException(warn.str());
+    }
+  }
+  for (int i = 0; i<(int)d_K_heat.size(); i++) {
+    cout_norm << "K_heat = " << d_K_heat[i] << endl;
+    if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
+      ostringstream warn;
+      warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
+      throw ProblemSetupException(warn.str());
+    }
+  }
+
+  d_convective = false;
+  exch_ps->get("do_convective_heat_transfer", d_convective);
+  if(d_convective){
+    exch_ps->require("convective_fluid",d_conv_fluid_matlindex);
+    exch_ps->require("convective_solid",d_conv_solid_matlindex);
+  }
 }
+
+void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
+{
+                                                                                
+//  cout_doing << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
+  cout << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
+  Task* t = scinew Task("ICE::actuallyInitializeAddedMaterial",
+                  this, &ICE::actuallyInitializeAddedMaterial);
+//  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+
+  int numALLMatls = d_sharedState->getNumMatls();
+  MaterialSubset* add_matl = scinew MaterialSubset();
+  cout << "Added Material = " << numALLMatls-1 << endl;
+  add_matl->add(numALLMatls-1);
+  add_matl->addReference();
+                                                                                
+  t->computes(lb->vel_CCLabel,add_matl);
+  t->computes(lb->rho_CCLabel,add_matl);
+  t->computes(lb->temp_CCLabel,add_matl);
+  t->computes(lb->sp_vol_CCLabel,add_matl);
+  t->computes(lb->vol_frac_CCLabel,add_matl);
+  t->computes(lb->rho_micro_CCLabel,add_matl);
+  t->computes(lb->speedSound_CCLabel,add_matl);
+  t->computes(lb->thermalCondLabel,add_matl);
+  t->computes(lb->viscosityLabel,add_matl);
+  t->computes(lb->gammaLabel,add_matl);
+  t->computes(lb->specific_heatLabel,add_matl);
+
+  sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
+
+  // The task will have a reference to add_matl
+  if (add_matl->removeReference())
+    delete add_matl; // shouln't happen, but...
+}
+
+void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*, 
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* /*matls*/,
+                                          DataWarehouse*, 
+                                          DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing InitializeAddedMaterial on patch " << patch->getID() 
+         << "\t\t\t ICE" << endl;
+    CCVariable<double>  rho_micro, sp_vol_CC, rho_CC, Temp_CC, thermalCond;
+    CCVariable<double>  speedSound,vol_frac_CC, cv, gamma, viscosity,dummy;
+    CCVariable<Vector>  vel_CC;
+    
+    //__________________________________
+    //  Thermo and transport properties
+    int m = d_sharedState->getNumICEMatls() - 1;
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    int indx= ice_matl->getDWIndex();
+    cout << "Added Material Index = " << indx << endl;
+    new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
+    new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
+    new_dw->allocateAndPut(cv,            lb->specific_heatLabel,indx,patch);
+    new_dw->allocateAndPut(gamma,         lb->gammaLabel,        indx,patch);
+    new_dw->allocateAndPut(rho_micro,     lb->rho_micro_CCLabel, indx,patch); 
+    new_dw->allocateAndPut(sp_vol_CC,     lb->sp_vol_CCLabel,    indx,patch); 
+    new_dw->allocateAndPut(rho_CC,        lb->rho_CCLabel,       indx,patch); 
+    new_dw->allocateAndPut(Temp_CC,       lb->temp_CCLabel,      indx,patch); 
+    new_dw->allocateAndPut(speedSound,    lb->speedSound_CCLabel,indx,patch); 
+    new_dw->allocateAndPut(vol_frac_CC,   lb->vol_frac_CCLabel,  indx,patch); 
+    new_dw->allocateAndPut(vel_CC,        lb->vel_CCLabel,       indx,patch);
+    new_dw->allocateTemporary(dummy, patch);
+    cout << "Done allocateAndPut Index = " << indx << endl;
+
+    gamma.initialize(       ice_matl->getGamma());
+    cv.initialize(          ice_matl->getSpecificHeat());    
+    viscosity.initialize  ( ice_matl->getViscosity());
+    thermalCond.initialize( ice_matl->getThermalConductivity());
+
+    int numALLMatls = d_sharedState->getNumMatls();
+    ice_matl->initializeCells(rho_micro,  rho_CC,
+                              Temp_CC,    speedSound, 
+                              vol_frac_CC, vel_CC, 
+                              dummy, numALLMatls, patch, new_dw);
+
+    setBC(rho_CC,     "Density",     patch, d_sharedState, indx, new_dw);
+    setBC(rho_micro,  "Density",     patch, d_sharedState, indx, new_dw);
+    setBC(Temp_CC,    "Temperature", patch, d_sharedState, indx, new_dw);
+    setBC(speedSound, "zeroNeumann", patch, d_sharedState, indx, new_dw); 
+    setBC(vel_CC,     "Velocity",    patch, d_sharedState, indx, new_dw); 
+            
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      sp_vol_CC[c] = 1.0/rho_micro[c];
+      vol_frac_CC[c] = rho_CC[c]*sp_vol_CC[c];  //needed for LODI BCs
+    }
+  }  // patch loop 
+}
+
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
  Notes:     This task actually schedules several tasks.
@@ -647,6 +784,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
     schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
                                                           all_matls); 
   }
+
+  scheduleCheckNeedAddMaterial(           sched, patches, all_matls);
 
   //__________________________________
   //  clean up memory
@@ -1946,6 +2085,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 
     press_new.copyData(press);
+
     //__________________________________
     // Compute rho_micro, volfrac
     for (int m = 0; m < numMatls; m++) {
@@ -2871,7 +3011,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term2[c] -= q_advected[c]; 
 
       }  //iter loop 
-      
+
       //__________________________________
       //   NO Models   MODEL REMOVE
       // term3 is the same now with or without models
@@ -4970,7 +5110,48 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
 }
 
 bool ICE::needRecompile(double time, double dt, const GridP& grid) {
-  return d_recompile;
+  if(d_recompile){
+    d_recompile = false;
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+void ICE::scheduleCheckNeedAddMaterial(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* ice_matls)
+{
+  cout_doing << "ICE::scheduleCheckNeedAddMaterial" << endl;
+  Task* t = scinew Task("ICE::checkNeedAddMaterial",
+                      this,&ICE::checkNeedAddMaterial);
+ 
+  sched->addTask(t, patches, ice_matls);
+}
+
+void ICE::checkNeedAddMaterial(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* /*matls*/,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+                                                                                
+    cout_doing << "Checking some as yet undetermined criteria to see if we need to add a new ICE material " << patch->getID() << "\t ICE" << endl;
+                                                                                
+    double time = d_sharedState->getElapsedTime();
+ 
+    static bool added = false;
+    if(time>.05e100 && !added){
+      d_sharedState->setNeedAddMaterial(true);
+      added = true;
+    }
+    else{
+      d_sharedState->setNeedAddMaterial(false);
+    }
+  }
 }
 
 
