@@ -62,7 +62,6 @@ BPS::BPS(Barrier* barrier, int count, int proc, int np)
 
 void BPS::run()
 {
-    int np=Thread::numProcessors();
     barrier->wait(np);
     double time=Time::currentSeconds();
     for(int i=0;i<count;i++){
