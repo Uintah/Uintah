@@ -115,6 +115,7 @@ using std::vector;
       const VarLabel* StrainEnergyLabel;
       const VarLabel* AccStrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
+      const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
       const VarLabel* NTractionZMinusLabel;
       const VarLabel* integralAreaLabel;
