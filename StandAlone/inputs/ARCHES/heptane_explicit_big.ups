@@ -15,7 +15,7 @@
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.2</timestep_multiplier>
+	<timestep_multiplier>0.5</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -50,9 +50,9 @@
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[30,30,30]</upper>
-	        <resolution>[150,150,150]</resolution>
+	        <resolution>[60,60,60]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[5,10,10]</patches>
+		<patches>[2,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -90,7 +90,7 @@
 		    <enthalpyLoss>0</enthalpyLoss>
 		    <mole>true</mole>
 		    <Species>
-		      <symbol>CH4</symbol>
+		      <symbol>C7H16</symbol>
                       <mfraction>1.0</mfraction>
                     </Species>
 		  </Stream>
@@ -109,6 +109,12 @@
                     </Species>
 		  </Stream>
 		  <MixRxnTableInfo>
+                    <Enthalpy>
+                       <NumDivs>20</NumDivs>
+                       <MaxValue>1.0</MaxValue>
+                       <MinValue>-1.0</MinValue>
+                       <MidValue>0.0</MidValue>
+                    </Enthalpy>
                     <MixtureFraction>
                        <NumDivs>20</NumDivs>
                        <MaxValue>1.0</MaxValue>
