@@ -36,10 +36,10 @@ SRCDIR   := Core/Algorithms/DataIO
 
 ifeq ($(HAVE_INSIGHT),yes)
   SRCS     += \
-          $(SRCDIR)/DicomSeriesReader.cc \
-          $(SRCDIR)/DicomImage.cc        \
-          $(SRCDIR)/AnalyzeReader.cc     \
           $(SRCDIR)/AnalyzeImage.cc      \
+          $(SRCDIR)/AnalyzeReader.cc     \
+          $(SRCDIR)/DicomImage.cc        \
+          $(SRCDIR)/DicomSeriesReader.cc \
 
   LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 endif
