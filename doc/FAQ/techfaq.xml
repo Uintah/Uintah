@@ -28,14 +28,27 @@
 
 <faq>
 <title>Technical FAQ</title>
-  <description> <para> This FAQ includes technical questions of interest 
-to users who install, maintain and develop SCIRun</para> </description> <entry> 
-<keywords>SGI, runtime, pthreads and SIGABRT</keywords>. <question> <para> I successfully 
-installed SCIRun and its required thirdparty software (by hand) onto an SGI target 
-install machine, but when I run SCIRun, it immediately signals an abort (SIGABRT). 
-</para> <para> The output of SCIRun after it signals the abort looks like this: 
-</para> 
-<pre>Thread "main"(pid 251775) caught signal SIGABRT (Abort)
+  <description> 
+    <para> 
+      This FAQ includes technical questions of interest to users who
+      install, maintain and develop SCIRun
+    </para> 
+  </description>
+  <entry>  
+    <keywords>SGI, runtime, pthreads and SIGABRT</keywords> 
+    <question> 
+      <para>
+        I successfully installed SCIRun and its required thirdparty
+	software (by hand) onto an SGI target install machine, but
+	when I run SCIRun, it immediately signals an abort (SIGABRT).  
+      </para>
+      
+      <para> 
+        The output of SCIRun after it signals the abort looks like this: 
+      </para> 
+
+      <pre>
+Thread "main"(pid 251775) caught signal SIGABRT (Abort)
 Backtrace:
 0x5ff69224: SCIRun::Thread::niceAbort(void)
 0x5ff7106c: handle_abort_signals
@@ -84,54 +97,6 @@ Occured for thread:
   </entry>
 
   <entry>
-    <keywords></keywords>
-    <question>
-      <para>
-        When I build on a Redhat or Mandrake linux target install
-        machine, I get random internal compiler errors.  
-      </para>
-    </question>
-    <answer>
-      <para>
-        Some Redhat and Mandrake distributions ship with the 2.96/2.97
-        GCC compilers.  Those compilers apparently have bugs in the
-        dependancy file generation phase.  The errors can be ignored,
-        and a new make command can be issued to simply continue with
-        the build.  Switching to GCC 2.95.3 will eliminate the problem.
-      </para>
-    </answer>
-  </entry>
-
-  <entry>
-    <keywords>Compile, Red Hat, Mandrake, GCC 2.96, GCC 2.97</keywords> 
-    <question>
-      <para>
-        I successfully installed the thirdparty software onto a Redhat or
-        Mandrake linux target install machine, but when I try
-        to build SCIRun it fails while compiling.
-      </para>
-    </question>
-    <answer>
-      <para>
-        Some linux distributions are shipped with a version of the GCC
-        compiler (e.g. 2.96, 2.97) that doesn't work for building SCIRun. 
-        For more information, please visit
-        <a href="http://www.gnu.org/software/gcc/gcc-2.96.html">the GCC site
-        </a> regarding this problem.
-      </para>
-      <para>
-        The solution is to update your compiler to version 2.95.2 or 2.95.3.
-        You can check your existing compilers version by typing:
-      </para>
-      <pre>gcc --version</pre>
-      <para> 
-        or
-      </para>
-      <pre>g++ --version</pre>
-    </answer>
-  </entry>
-
-  <entry>
     <keywords>SGI, LANG:std, MIPSpro</keywords>
     <question>
       <para>
@@ -142,7 +107,8 @@ Occured for thread:
       <para>
         The error message displayed contains the following warning:
       </para>
-      <pre>...
+      <pre>
+...
 Warning: Option 'std' not in group 'LANG' (LANG:std)
 ...
       </pre>
@@ -151,6 +117,30 @@ Warning: Option 'std' not in group 'LANG' (LANG:std)
       <para>
         The MIPSpro compiler on your target install machine is too old.
         SCIRun requires version 7.3.1.1m at a minimum.
+      </para>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>hang, linux, dual processor</keywords>
+    <question>
+      <para>
+        SCIRun sometimes hangs when running the example nets on a dual
+        processor linux machine.
+      </para>
+    </question>
+    <answer>
+      <para>
+        This is a known bug with no known solution.  There is,
+        however, a workaround:
+      </para>
+
+      <para>
+        Re-configure SCIRun adding the --disable-sci-malloc option to
+        the configure command, then rebuild SCIRun.  If SCIRun still 
+        hangs while running example nets, change directories to
+        on-the-fly-libs and issue a make command by hand.  Run the
+        example again once the make of the on-the-fly-libs finishes.
       </para>
     </answer>
   </entry>
@@ -233,7 +223,8 @@ Warning: Option 'std' not in group 'LANG' (LANG:std)
         configure or make [incr Tcl/Tk], type the following commands:  
       </para>
 
-      <pre class="example">cd itcl3.1.0/config
+      <pre class="example">
+cd itcl3.1.0/config
 chmod a+x install-sh mkinstalldirs
       </pre>
 
@@ -252,7 +243,8 @@ chmod a+x install-sh mkinstalldirs
         configuring: 
       </para> 
 
-      <pre class="example">cd blt2.4u
+      <pre class="example">
+cd blt2.4u
 make 
 cd src/shared
 make 
@@ -278,45 +270,68 @@ make -k install
         commands: 
       </para>
 
-      <pre class="example">cd xerces-c-src1_4_0/src
+      <pre class="example">
+cd xerces-c-src1_5_1/src
 chmod a+x configure runConfigure
       </pre>
+   
+      <para>
+        There is no dependency tree for the copy phase of the xerces
+        build, so using a -j flag (number of jobs) as a GNU make
+        argument will cause the build to fail. 
+      </para> 
 
-      
-<para> There is no dependency tree for the copy phase of the xerces build, so 
-using a -j flag (number of jobs) as a GNU make argument will cause the build to 
-fail. </para> <para> There is no dependency tree for the "install" target within 
-the make files, so passing "install" as an argument to the first time "make" is 
-typed will cause the build to fail. Instead type "make" first, then "make install." 
-</para> <para> The make system ignores errors in compilation and forces a link. 
-Verify that the build was actually successful by checking the size of libxerces-c1_4.so. 
-The sizes should be: ~2.1MB for SGI 32 bit, ~2.4MB for SGI 64 bit, and ~1.4MB 
-for linux. </para> </answer> </entry> <entry> <keywords>Tcl, headers, configure</keywords> 
-<question> <para> When I try to configure SCIRun, it says that it cannot find 
-header files for one or more of the Tcl distributions, but my system has the correct 
-versions for all the Tcl distributions. </para> </question> <answer> <para> SCIRun 
-currently requires the full source of Tcl and Tk to be installed. This is required 
-because SCIRun defines a few Tk widgets of its own, and needs some headers from 
-the source that aren't included with typical installations. If your system already 
-has the correct Tcl and Tk versions installed, you will have to re-install in 
-order to have the sources included. </para> </answer> </entry> <entry> <question> 
-<para> I successfully installed SCIRun onto a linux target install machine with 
-XFree86 version 4.1.0 installed, but when I run it, it immediately signals a segmentation 
-violation (SIGSEGV): </para> 
-<pre>
-Initializing the tcl packages: tcl, tk, itcl, itk, blt, Done.
-Adding SCI extensions to tcl: OpenGL widget, bevel widget, cursor, Done.
-User Name: moulding
+      <para>
+        There is no dependency tree for the "install" target within
+        the make files, so passing "install" as an argument to the
+        first time "make" is typed will cause the build to
+        fail. Instead type "make" first, then "make install."  
+      </para>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>Tcl, headers, configure</keywords> 
+    <question>
+      <para>
+        When I try to configure SCIRun, it says that it cannot find
+        header files for one or more of the Tcl distributions, but my
+        system has the correct versions for all the Tcl
+        distributions.
+      </para> 
+    </question>
+    <answer>
+      <para>
+        SCIRun currently requires the full source of Tcl and Tk to be
+        installed. This is required because SCIRun defines a few Tk
+        widgets of its own, and needs some headers from the source
+        that aren't included with typical installations. If your
+        system already has the correct Tcl and Tk versions installed,
+        you will have to re-install in order to have the sources
+        included.
+      </para> 
+    </answer> 
+  </entry> 
+
+  <entry>
+    <question>  
+      <para>
+        I successfully installed SCIRun onto a linux target install
+        machine with XFree86 version 4.1.0 installed, but when I run
+        it, it immediately signals a segmentation violation (SIGSEGV):
+      </para>  
+
+      <pre>
 Thread "main"(pid 2063) caught signal SIGSEGV at address 0xdccc10 (segmentation
 violation)
- 0: main (state=running)
- 1026: TCL main event loop (detached, state=blocking on semaphore, TCLTask startup continue semaphore)
- 2051: Scheduler (daemon, detached, state=blocking, NetworkEditor request FIFO,
+0: main (state=running)
+1026: TCL main event loop (detached, state=blocking on semaphore, TCLTask startup continue semaphore)
+2051: Scheduler (daemon, detached, state=blocking, NetworkEditor request FIFO,
 Mailbox empty condition)
  
 Abort signalled by pid: 2063
 Occured for thread:
- "main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
+"main"resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)?
       </pre>
     </question>
     <answer>
@@ -324,7 +339,8 @@ Occured for thread:
         The XFree86 version 4.1.0 binary distributions for linux ship
         with a version of GLU (libGLU.so.1.3) that somehow conflicts with the 
         xerces library.  The solution is to replace the GLU library with
-        a different version (e.g. libMesaGLU.so).
+        a different version (e.g. libMesaGLU.so, or some other GLU
+	already on the machine).
       </para>
     </answer>
   </entry>
