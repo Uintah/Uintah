@@ -1192,6 +1192,7 @@ void  DataArchiver::initCheckpoints(SchedulerP& sched)
 bool DataArchiver::need_recompile(double time, double dt ,
 				  const LevelP& level )
 {
+  d_currentTime=time+dt;
   dbg << "DataArchiver::need_recompile called\n";
   d_currentTimestep++;
   bool recompile=false;
