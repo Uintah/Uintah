@@ -1615,7 +1615,9 @@ public:
 				 MaterialHandle default_material,
 				 bool force_def_color,
 				 const string &data_display_mode,
-				 double scale, bool normalize,
+				 double scale,
+				 double linewidth,
+				 bool normalize,
 				 bool bidirectional,
 				 int resolution) = 0;
 
@@ -1642,6 +1644,7 @@ public:
 				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
+				 double linewidth,
 				 bool normalize,
 				 bool bidirectional,
 				 int resolution);
@@ -1656,7 +1659,8 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						MaterialHandle default_material,
 						bool force_def_color,
 						const string &display_mode,
-						double scale, 
+						double scale,
+						double linewidth,
 						bool normalize,
 						bool bidirectional,
 						int resolution)
@@ -1712,6 +1716,10 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
     grp->add(disks);
     grp->add(spheres);
     data_switch = scinew GeomDL(grp);
+  }
+  if (lines && linewidth)
+  {
+    lines->setLineWidth(linewidth);
   }
 
   // Use a default color?
