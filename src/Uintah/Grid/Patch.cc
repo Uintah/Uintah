@@ -202,29 +202,36 @@ Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
 {
    l=getCellLowIndex();
    h=getCellHighIndex();
+   //   std::cout << "cell low index = " << l << " hi index = " << h << endl;
    switch(face){
    case xminus:
       l.x(l.x()-offset);
-      h.x(l.x()+1-offset);
+      h.x(l.x()+2-offset);
       break;
    case xplus:
+     //      l.x(h.x()-1+offset);
       l.x(h.x()-1+offset);
+      //      h.x(h.x()+offset);
       h.x(h.x()+offset);
       break;
    case yminus:
       l.y(l.y()-offset);
-      h.y(l.y()+1-offset);
+      h.y(l.y()+2-offset);
       break;
    case yplus:
+     //      l.y(h.y()-1+offset);
       l.y(h.y()-1+offset);
+      //      h.y(h.y()+offset);
       h.y(h.y()+offset);
       break;
    case zminus:
       l.z(l.z()-offset);
-      h.z(l.z()+1-offset);
+      h.z(l.z()+2-offset);
       break;
    case zplus:
+     //      l.z(h.z()-1+offset);
       l.z(h.z()-1+offset);
+      //      h.z(h.z()+offset);
       h.z(h.z()+offset);
       break;
    }
@@ -461,6 +468,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.18  2000/08/02 03:29:33  jas
+// Fixed grid bcs problem.
+//
 // Revision 1.17  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support
