@@ -45,9 +45,9 @@ public:
 			      unsigned int istart,
 			      unsigned int jstart,
 			      unsigned int kstart,
-			      unsigned int iend,
-			      unsigned int jend,
-			      unsigned int kend,
+			      unsigned int istop,
+			      unsigned int jstop,
+			      unsigned int kstop,
 			      unsigned int iskip,
 			      unsigned int jskip,
 			      unsigned int kskip,
@@ -69,9 +69,9 @@ public:
 			      unsigned int istart,
 			      unsigned int jstart,
 			      unsigned int kstart,
-			      unsigned int iend,
-			      unsigned int jend,
-			      unsigned int kend,
+			      unsigned int istop,
+			      unsigned int jstop,
+			      unsigned int kstop,
 			      unsigned int iskip,
 			      unsigned int jskip,
 			      unsigned int kskip,
@@ -87,9 +87,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 				    unsigned int istart,
 				    unsigned int jstart,
 				    unsigned int kstart,
-				    unsigned int iend,
-				    unsigned int jend,
-				    unsigned int kend,
+				    unsigned int istop,
+				    unsigned int jstop,
+				    unsigned int kstop,
 				    unsigned int iskip,
 				    unsigned int jskip,
 				    unsigned int kskip,
@@ -103,6 +103,8 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   unsigned int idim_in, jdim_in, kdim_in;
 
   register unsigned int ic;
+
+  register unsigned int i, j, k, inode, jnode, knode;
 
   Array1<unsigned int> dim = imesh->get_dim();
 
@@ -120,16 +122,19 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     kdim_in = 1;
   }
 
+  // This happens when wrapping.
+  if( istop <= istart ) istop += idim_in;
+  if( jstop <= jstart ) jstop += jdim_in;
+  if( kstop <= kstart ) kstop += kdim_in;
+
   // Add one because we want the last node.
-  unsigned int idim_out = (iend - istart) / iskip + 1;
-  unsigned int jdim_out = (jend - jstart) / jskip + 1;
-  unsigned int kdim_out = (kend - kstart) / kskip + 1;
+  unsigned int idim_out = (istop - istart) / iskip + 1;
+  unsigned int jdim_out = (jstop - jstart) / jskip + 1;
+  unsigned int kdim_out = (kstop - kstart) / kskip + 1;
 
-  unsigned int i, j, k, inode, jnode, knode;
-
-  unsigned int iend_skip;
-  unsigned int jend_skip;
-  unsigned int kend_skip; 
+  unsigned int istop_skip;
+  unsigned int jstop_skip;
+  unsigned int kstop_skip; 
 
   if( field_h->get_type_description(0)->get_name() == "StructHexVolField" ||
       field_h->get_type_description(0)->get_name() == "StructQuadSurfField" ||
@@ -137,17 +142,17 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 
     // Account for the modulo of skipping nodes so that the last node will be
     // included even if it "partial" cell when compared to the others.
-    if( (iend - istart) % iskip ) idim_out += 1;
-    if( (jend - jstart) % jskip ) jdim_out += 1;
-    if( (kend - kstart) % kskip ) kdim_out += 1;
+    if( (istop - istart) % iskip ) idim_out += 1;
+    if( (jstop - jstart) % jskip ) jdim_out += 1;
+    if( (kstop - kstart) % kskip ) kdim_out += 1;
 
-    iend_skip = iend + iskip;
-    jend_skip = jend + jskip;
-    kend_skip = kend + kskip; 
+    istop_skip = istop + iskip;
+    jstop_skip = jstop + jskip;
+    kstop_skip = kstop + kskip; 
   } else {
-    iend_skip = iend + 1;
-    jend_skip = jend + 1;
-    kend_skip = kend + 1; 
+    istop_skip = istop + 1;
+    jstop_skip = jstop + 1;
+    kstop_skip = kstop + 1; 
   }
 
   typename FIELD::mesh_handle_type omesh =
@@ -227,11 +232,11 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 
   // Index based on the old mesh so that we are assured of getting the last
   // node even if it forms a "partial" cell.
-  for( k=kstart; k<kend_skip; k+=kskip ) {
+  for( k=kstart; k<kstop_skip; k+=kskip ) {
 
-    // Check for going past the end.
-    if( k > kend )
-      k = kend;
+    // Check for going past the stop.
+    if( k > kstop )
+      k = kstop;
 
     // Check for overlap.
     if( k-kskip <= kstart+kdim_in && kstart+kdim_in <= k )
@@ -246,11 +251,11 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     for( ic=0; ic<knode*jdim_in*idim_in; ic++ )
       ++knodeItr;
 
-    for( j=jstart; j<jend_skip; j+=jskip ) {
+    for( j=jstart; j<jstop_skip; j+=jskip ) {
 
-      // Check for going past the end.
-      if( j > jend )
-	j = jend;
+      // Check for going past the stop.
+      if( j > jstop )
+	j = jstop;
 
       // Check for overlap.
       if( j-jskip <= jstart+jdim_in && jstart+jdim_in <= j )
@@ -265,11 +270,11 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
       for( ic=0; ic<jnode*idim_in; ic++ )
 	++jnodeItr;
 
-      for( i=istart; i<iend_skip; i+=iskip ) {
+      for( i=istart; i<istop_skip; i+=iskip ) {
 
-	// Check for going past the end.
-	if( i > iend )
-	  i = iend;
+	// Check for going past the stop.
+	if( i > istop )
+	  i = istop;
 
 	// Check for overlap.
 	if( i-iskip <= istart+idim_in && istart+idim_in <= i )
