@@ -196,7 +196,7 @@ void PackageDB::loadPackage(const clString& packPath)
   LIBRARY_HANDLE package_so;
   LIBRARY_HANDLE category_so;
   clString libname;
-  clString bname;
+  clString cat_bname,pak_bname;
   clString pname,cname,mname;
   clString category_error;
   clString package_error;
@@ -213,9 +213,11 @@ void PackageDB::loadPackage(const clString& packPath)
     pname = (*pi).second->name;
 
     if(pname == "SCIRun") {
-      bname = "Dataflow_Modules_";
+      cat_bname = "Dataflow_Modules_";
+      pak_bname = "Dataflow";
     } else {
-      bname = clString("Packages_")+pname+"_Dataflow_Modules_";
+      cat_bname = clString("Packages_")+pname+"_Dataflow_Modules_";
+      pak_bname = clString("Packages_")+pname+"_Dataflow";
     }
 
     postMessage(clString("Loading package '")+pname+"'", false);
@@ -224,7 +226,8 @@ void PackageDB::loadPackage(const clString& packPath)
 		 pname + " }");
     TCL::eval("update idletasks",result);
 
-    libname = clString("lib")+pname+".so";
+    // try the large version of the .so
+    libname = clString("lib")+pak_bname+".so";
     package_so = GetLibraryHandle(libname());
     if (!package_so)
       package_error = SOError();
@@ -235,14 +238,15 @@ void PackageDB::loadPackage(const clString& packPath)
 
       cname = (*ci).second->name;
 
-      libname = clString("lib")+bname+cname+".so";
+      // try the small version of the .so 
+      libname = clString("lib")+cat_bname+cname+".so";
       category_so = GetLibraryHandle(libname());
       if (!category_so)
 	category_error = SOError();
 
       if (!category_so && !package_so) {
 	postMessage(clString("Unable to load all of package '")+pname+
-			     "' (category '"+cname+"') :\n - "+
+			     "' (category '"+cname+"' failed) :\n - "+
 		    package_error+"\n - "+category_error+"\n");
 	TCL::execute("update idletasks");
 	continue;
