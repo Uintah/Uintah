@@ -14,6 +14,20 @@
 default: all
 
 #
+# Blow away a bunch of makes internal rules to improve the performance
+# of make
+#
+.SUFFIXES:
+% :: RCS/%,v
+% :: RCS/%
+% :: %,v
+% :: s.%
+% :: SCCS/s.%
+%.out :: %
+%.c :: %
+%.tex :: %
+
+#
 # Directory variables
 #
 SRCTOP  := @top_srcdir@
@@ -233,16 +247,39 @@ clean::
 distclean:: clean
 	rm -f config.status config.log config.cache
 	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
-	rm -f sci_config.h sci_defs.h stamp-h
+	rm -f sci_config.h sci_defs.h stamp-
 
-ifeq ($(CC_DEPEND_REGEN),-MD)
--include $(patsubst %.o,%.d, $(CLEANOBJS))
+objs: $(CLEANOBJS)
+
+ifeq (,$(findstring objs,$(MAKECMDGOALS)))
+#
+# This includes all of the dependencies.  We prepend the absolute path
+# to the obj dir to prevent make from wasting time searching for them
+# in other directories
+#
+
+  ifeq ($(CC_DEPEND_REGEN),-MD)
+    -include $(patsubst %.o,$(OBJTOP_ABS)/%.d, $(CLEANOBJS))
+  else
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(ALLSUBDIRS))
+  endif
+
 else
--include $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+
+#
+# If we are making the special target "objs", we skip the dependencies.
+# This is a hack for a "quick" compile.
+#
+
 endif
 
 #
 # $Log$
+# Revision 1.17  2000/03/22 09:59:15  sparker
+# Assorted make performance improvements
+# Added a "make objs" target that only builds the .o files and bypasses
+#   all of the depend.mk files - works faster
+#
 # Revision 1.16  2000/03/21 06:13:30  sparker
 # Added pattern rule for .sidl files
 # Compile component testprograms
