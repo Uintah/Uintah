@@ -26,7 +26,8 @@ using std::string;
 
 template<> const string find_type_name(NeumannBC*)
 {
-  return "NeumannBC";
+  static const string name = "NeumannBC";
+  return name;
 }
 
 } // namespace BioPSE

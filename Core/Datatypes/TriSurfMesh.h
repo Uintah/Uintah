@@ -100,8 +100,8 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static  const string type_name(int);
-  virtual const string get_type_name(int n) const { return type_name(n); }
+  static  const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
   // Extra functionality needed by this specific geometry.
   void add_point(const Point &p) { points_.push_back(p); }

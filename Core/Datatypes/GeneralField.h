@@ -97,7 +97,7 @@ class SCICORESHARE GeneralField : public Field
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static const string type_name();
+  static const string type_name(int n = -1);
   static Persistent* maker();
 
 private:
@@ -118,16 +118,34 @@ GeneralField<G,A>::maker() {
 }
 
 template <class G, class A>
-const string GeneralField<G,A>::type_name()
+const string GeneralField<G,A>::type_name(int n)
 {
-  static string type_name = string("GeneralField<") + find_type_name((G*)0) +","+ findTypeName((A*)0) + ">";
-  return type_name;
+  ASSERT((n >= -1) && n <= 2);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNM
+      + type_name(2) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    return "GeneralField";
+  }
+  else if (n == 1)
+  {
+    return find_type_name((G *)0);
+  }
+  else
+  {
+    return find_type_name((A *)0);
+  }
 }
+
 
 template <class G, class A>
 PersistentTypeID GeneralField<G,A>::type_id(GeneralField<G,A>::type_name(), 
-					 "Field", 
-					 GeneralField<G,A>::maker);
+					    "Field", 
+					    GeneralField<G,A>::maker);
 
 template <class G, class A >
 GeneralField<G,A>::GeneralField():

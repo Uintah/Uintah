@@ -33,10 +33,9 @@ public:
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
-  //static const string type_name(int a);
-  static const string type_name();
-  static const string type_name(int);
- 
+  static const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+
 private:
   static Persistent *maker();
 };
@@ -63,32 +62,32 @@ template <class T>
 void 
 TriSurf<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name().c_str(), TET_VOL_VERSION);
+  stream.begin_class(type_name(), TET_VOL_VERSION);
   GenericField<TriSurfMesh, vector<T> >::io(stream);
   stream.end_class();
 }
 
-// FIX_ME support the int arg return vals...
-template <class T> 
-const string 
-TriSurf<T>::type_name()
-{
-  static const string name =  "TriSurf<" + find_type_name((T *)0) + ">";
-  return name;
-}
 
 template <class T> 
 const string 
-TriSurf<T>::type_name(int a)
+TriSurf<T>::type_name(int n)
 {
-  ASSERT((a <= 1) && a >= 0);
-  if (a == 0) { return "TriSurf"; }
-  return find_type_name((T *)0);
+  ASSERT((n >= -1) && n <= 1);
+  if (n == -1)
+  {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if (n == 0)
+  {
+    return "TriSurf";
+  }
+  else
+  {
+    return find_type_name((T *)0);
+  }
 }
 
-#if defined(__sgi)  
-#pragma reset woff 1424
-#endif
 
 } // end namespace SCIRun
 

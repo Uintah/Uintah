@@ -21,9 +21,11 @@ PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "MeshBase", NULL);
 
 
 const string
-TriSurfMesh::type_name(int)
+TriSurfMesh::type_name(int n)
 {
-  return "TriSurfMesh";
+  ASSERT(n >= -1 && n <= 0);
+  static const string name = "TriSurfMesh";
+  return name; 
 }
 
 

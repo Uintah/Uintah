@@ -137,16 +137,11 @@ FieldSet::maker()
 PersistentTypeID FieldSet::type_id("FieldSet", "PropertyManager", maker);
 
 const string
-FieldSet::type_name(int)
+FieldSet::type_name(int n)
 {
-  return "FieldSet";
-}
-
-
-const string
-FieldSet::get_type_name(int n) const
-{
-  return type_name(n);
+  ASSERT(n >= -1 && n <= 0);
+  static const string name = "FieldSet";
+  return name;
 }
 
 

@@ -24,9 +24,11 @@ PersistentTypeID TetVolMesh::type_id("TetVolMesh", "MeshBase",
 				     make_TetVolMesh);
 
 const string
-TetVolMesh::type_name(int)
+TetVolMesh::type_name(int n)
 {
-  return "TetVolMesh";
+  ASSERT(n >= -1 && n <= 0);
+  static const string name = "TetVolMesh";
+  return name;
 }
 
 
