@@ -29,6 +29,7 @@ class MatrixSelectVector : public Module {
   GuiInt    range_min_;
   GuiInt    range_max_;
   GuiString playmode_;
+  GuiString dependence_;
   GuiInt    current_;
   GuiString execmode_;
   GuiInt    delay_;
@@ -62,6 +63,7 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     range_min_(ctx->subVar("range_min")),
     range_max_(ctx->subVar("range_max")),
     playmode_(ctx->subVar("playmode")),
+    dependence_(ctx->subVar("dependence")),
     current_(ctx->subVar("current")),
     execmode_(ctx->subVar("execmode")),
     delay_(ctx->subVar("delay")),
@@ -162,6 +164,8 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
+  bool isDependent = (dependence_.get()=="dependent");
+//  cerr << "isDependent = "<<isDependent<<"\n";
   if (last_p)
   {
     ovec->send(matrix);
@@ -169,8 +173,11 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
   }
   else
   {
-    osel->send(MatrixHandle(selected));
     ovec->send_intermediate(matrix);
+    if (isDependent)
+      osel->send(MatrixHandle(selected));
+    else
+      osel->send_intermediate(MatrixHandle(selected));
   }
 }
 
