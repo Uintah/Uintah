@@ -217,6 +217,65 @@ Module::~Module()
 {
 }
 
+int Module::addOPortByName(std::string name, std::string d_type)
+{
+  OPort* oport;
+  dynamic_port_maker = 0;
+
+  oport_maker maker;
+
+  unsigned long strlength = d_type.length();
+  char* package = new char[strlength+1];
+  char* datatype = new char[strlength+1];
+  sscanf(d_type.c_str(),"%[^:]::%s",package,datatype);
+  if (package[0]=='*')
+    maker = FindOPort(&package[1],datatype);
+  else
+    maker = FindOPort(package,datatype);	
+  if (maker && package[0]!='*') {
+    oport = maker(this,name);
+    if (oport)
+      add_oport(oport);
+    else {
+      cerr << "Cannot create port: " << datatype << '\n';
+      dynamic_port_maker = 0;
+    }
+  }
+  delete[] package;
+  delete[] datatype; 
+
+  return 0;
+}
+
+int Module::addIPortByName(std::string name, std::string d_type)
+{
+  IPort* iport;
+  dynamic_port_maker = 0;
+
+  unsigned long strlength = d_type.length();
+  char* package = new char[strlength+1];
+  char* datatype = new char[strlength+1];
+  sscanf(d_type.c_str(),"%[^:]::%s",package,datatype);
+  if (package[0]=='*')
+    dynamic_port_maker = FindIPort(&package[1],datatype);
+  else
+    dynamic_port_maker = FindIPort(package,datatype);	
+  if (dynamic_port_maker && package[0]!='*') {
+    iport = dynamic_port_maker(this,name);
+    if (iport) {
+      lastportname = name;
+      add_iport(iport);
+    }
+  } else {
+    cerr << "Err: Cannot create port: " << datatype << '\n';
+    dynamic_port_maker = 0;
+  }
+  delete[] package;
+  delete[] datatype;
+  
+  return 0;
+}
+
 void Module::delete_warn() 
 {
   set_show_stats(false);

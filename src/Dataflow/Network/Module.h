@@ -222,6 +222,10 @@ public:
     return DynamicCompilation::compile( ci, result, this );
   }
 
+  //Used by Bridge stuff for SR2
+  int addIPortByName(std::string name, std::string d_type);
+  int addOPortByName(std::string name, std::string d_type);
+ 
 protected:
 
   virtual void tcl_command(GuiArgs&, void*);

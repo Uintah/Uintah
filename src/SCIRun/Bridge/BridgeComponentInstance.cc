@@ -56,10 +56,23 @@ PortInstance*
 BridgeComponentInstance::getPortInstance(const std::string& portname)
 {
   map<string, PortInstance*>::iterator iter = ports.find(portname);
-  if(iter == ports.end())
-    return 0;
-  else
+  if(iter == ports.end()) {
+    //!!!!! Check if it is a dataflow port:
+    // SCIRun ports can potentially have the same name for both, so
+    // SCIRunPortInstance tags them with a prefix of "Input: " or
+    // "Output: ", so we need to check that first.
+    if(portname.substr(0, 7) == "Input: "){
+      map<string, PortInstance*>::iterator iter = ports.find(portname.substr(7));
+      return iter->second;
+    } else if(portname.substr(0,8) == "Output: "){
+      map<string, PortInstance*>::iterator iter = ports.find(portname.substr(8));
+      return iter->second;
+    } else {
+      return 0;
+    }    
+  } else {
     return iter->second;
+  }
 }
 
 sci::cca::Port::pointer BridgeComponentInstance::getCCAPort(const std::string& name)
@@ -148,6 +161,11 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     if(!bpr->decrementUseCount())
       throw InternalError("Port released without correspond get");
     break;
+
+  case Dataflow:
+    
+    ::std::cerr << "Don't know how to release a dataflow port\n";
+    break;
   }
   return;
 }
@@ -159,6 +177,9 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
   map<string, PortInstance*>::iterator iter;
+
+  Port* dflowport;
+  SCIRunPortInstance::PortType portT;
 
   switch (model) {
   case CCA:	
@@ -191,6 +212,23 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
       }     
     }
     ports.insert(make_pair(portName, new BabelPortInstance(portName, portType, 0, BabelPortInstance::Uses)));
+    break;
+
+  case Dataflow:
+    iter = ports.find(portName);
+    if(iter != ports.end()){
+      throw InternalError("port name conflicts with another one");
+    }
+
+    portT = SCIRunPortInstance::Output;
+    bmdl.addOPortByName(portName, portType);
+    dflowport = bmdl.getOPort(portName);
+    
+    if(!dflowport)
+      throw InternalError("Wrong port model for addProvidesPort");
+
+    //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully NULL is okay
+    ports.insert(make_pair(portName, new SCIRunPortInstance(NULL, dflowport, portT)));
     break;
   }
   return;
@@ -238,6 +276,10 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
       throw CCAException("port name not found");
     }
     break;
+
+  case Dataflow:
+    cerr<<"Don't know how to unregisterUsesPort for Dataflow ports\n";
+    break;
   }
   return;
 }
@@ -250,8 +292,11 @@ void BridgeComponentInstance::addProvidesPort(void* port,
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
   map<string, PortInstance*>::iterator iter;
+
   sci::cca::Port::pointer* ccaport;
   gov::cca::Port* babelport;
+  Port* dflowport;
+  SCIRunPortInstance::PortType portT;
 
   switch (model) {
   case CCA:
@@ -288,6 +333,25 @@ void BridgeComponentInstance::addProvidesPort(void* port,
       throw InternalError("Wrong port model for addProvidesPort");
     ports.insert(make_pair(portName, new BabelPortInstance(portName, portType, 0, *babelport, BabelPortInstance::Provides)));
     break;
+
+  case Dataflow:
+    
+    iter = ports.find(portName);
+    if(iter != ports.end()){
+      throw InternalError("port name conflicts with another one");
+    }
+
+    portT = SCIRunPortInstance::Input;
+    bmdl.addIPortByName(portName, portType);
+    dflowport = bmdl.getIPort(portName);
+    
+    if(!dflowport)
+      throw InternalError("Wrong port model for addProvidesPort");
+
+    //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully NULL is okay
+    ports.insert(make_pair(portName, new SCIRunPortInstance(NULL, dflowport, portT)));
+    
+    break;
   }
   return;
 }
@@ -299,6 +363,9 @@ void BridgeComponentInstance::removeProvidesPort(const std::string& name, const 
     cerr << "removeProvidesPort not done, name=" << name << '\n';
     break;
   case Babel:
+    cerr << "removeProvidesPort not done, name=" << name << '\n';
+    break;
+  case Dataflow:
     cerr << "removeProvidesPort not done, name=" << name << '\n';
     break;
   }

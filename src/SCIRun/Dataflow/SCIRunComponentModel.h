@@ -36,6 +36,7 @@ namespace SCIRun {
   class SCIRunComponentDescription;
   class SCIRunFramework;
   class GuiInterface;
+
   class SCIRunComponentModel : public ComponentModel {
   public:
     SCIRunComponentModel(SCIRunFramework* framework);
@@ -48,10 +49,12 @@ namespace SCIRun {
     virtual std::string getName() const;
     virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
 				       bool);
+    static void initGuiInterface();
+    static GuiInterface* gui;
+    static Network* net;
+
   private:
     SCIRunFramework* framework;
-    GuiInterface* gui;
-    Network* net;
 
     SCIRunComponentModel(const SCIRunComponentModel&);
     SCIRunComponentModel& operator=(const SCIRunComponentModel&);

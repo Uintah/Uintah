@@ -42,7 +42,7 @@ SCIRunComponentInstance::SCIRunComponentInstance(SCIRunFramework* framework,
 {
   // See if we have a user-interface...
   if(module->haveUI()){
-    specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.UIPort",
+    specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
 					       sci::cca::TypeMap::pointer(0),
 					       sci::cca::Port::pointer(new SCIRunUIPort(this)),
 					       CCAPortInstance::Provides));
