@@ -64,6 +64,9 @@ public:
     // Change the size of the array.
     void resize(int newsize);
 
+    // Changes size, makes exact if currently smaller...
+    void setsize(int newsize);
+
     // Initialize all elements of the array
     void initialize(const T& val);
 

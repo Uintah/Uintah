@@ -138,6 +138,26 @@ void Array1<T>::resize(int newsize)
 }
 
 template<class T>
+void Array1<T>::setsize(int newsize)
+{ 
+    if(newsize > nalloc) { // have to reallocate...
+      T* newobjs=new T[newsize];     // make it exact!
+      if (objs) {
+	for(int i=0;i<_size;i++){
+	  newobjs[i]=objs[i];
+	}
+	delete[] objs;
+      }		
+      objs = newobjs;
+      nalloc = newsize;
+      
+    }
+    _size=newsize;
+}
+
+
+
+template<class T>
 void Array1<T>::initialize(const T& val) {
     for (int i=0;i<_size;i++)objs[i]=val;
 }
