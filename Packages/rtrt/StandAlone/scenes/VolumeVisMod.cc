@@ -213,6 +213,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     nz = n->axis[2].size;
     cout << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
     cout << "total = " << nz * ny * nz << endl;
+    cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
     data.resize(nx,ny,nz); // resize the bricked data
     // get the physical bounds
     minP = Point(0,0,0);
