@@ -107,8 +107,10 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
   dr[0] = new Index(0, URLs.size(), 1);  //first, last, stride
   MxNArrayRep* arrr = new MxNArrayRep(1,dr);
   cerr<<"ploader->setCallerDistribution...";
-  ploader=resourceReference::getPtrToAll();
-  ploader->setCallerDistribution("dURL",arrr);   //client is caller
+  if(ploader.isNull()){
+    ploader=resourceReference::getPtrToAll();
+    ploader->setCallerDistribution("dURL",arrr);   //client is caller
+  }
   cerr<<"Done\n";
 
 
