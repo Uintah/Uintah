@@ -43,11 +43,11 @@ using namespace std;
 PersistentTypeID ScanlineMesh::type_id("ScanlineMesh", "Mesh", maker);
 
 
-ScanlineMesh::ScanlineMesh(unsigned int length,
+ScanlineMesh::ScanlineMesh(unsigned int nx,
 			   const Point &min, const Point &max)
-  : offset_(0), length_(length)
+  : offset_(0), nx_(nx)
 {
-  transform_.pre_scale(Vector(1.0 / (length_ - 1.0), 1.0, 1.0));
+  transform_.pre_scale(Vector(1.0 / (nx_ - 1.0), 1.0, 1.0));
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
@@ -58,7 +58,7 @@ BBox
 ScanlineMesh::get_bounding_box() const
 {
   Point p0(0.0, 0.0, 0.0);
-  Point p1(length_ - 1, 0.0, 0.0);
+  Point p1(nx_ - 1, 0.0, 0.0);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -112,7 +112,7 @@ ScanlineMesh::locate(Edge::index_type &elem, const Point &p)
   const Point r = transform_.unproject(p);
   elem = (unsigned int)(r.x());
 
-  if (elem >= (length_ - 1))
+  if (elem >= (nx_ - 1))
   {
     return false;
   }
@@ -130,7 +130,7 @@ ScanlineMesh::locate(Node::index_type &node, const Point &p)
   const Point r = transform_.unproject(p);
   node = (unsigned int)(r.x() + 0.5);
 
-  if (node >= length_)
+  if (node >= nx_)
   {
     return false;
   }
@@ -150,7 +150,7 @@ ScanlineMesh::get_weights(const Point &p,
 
   node0 = (unsigned int)r.x();
 
-  if (node0 < (length_ - 1))
+  if (node0 < (nx_ - 1))
   {
     const double dx1 = r.x() - node0;
     const double dx0 = 1.0 - dx1;
@@ -194,7 +194,7 @@ ScanlineMesh::io(Piostream& stream)
   Mesh::io(stream);
 
   // IO data members, in order
-  Pio(stream, length_);
+  Pio(stream, nx_);
   if (version < 2 && stream.reading() ) {
     Pio_old(stream, transform_);
   } else {
@@ -221,13 +221,13 @@ ScanlineMesh::begin(ScanlineMesh::Node::iterator &itr) const
 void
 ScanlineMesh::end(ScanlineMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(offset_ + length_);
+  itr = Node::iterator(offset_ + nx_);
 }
 
 void
 ScanlineMesh::size(ScanlineMesh::Node::size_type &s) const
 {
-  s = Node::size_type(length_);
+  s = Node::size_type(nx_);
 }
 
 void
@@ -239,13 +239,13 @@ ScanlineMesh::begin(ScanlineMesh::Edge::iterator &itr) const
 void
 ScanlineMesh::end(ScanlineMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(offset_+length_-1);
+  itr = Edge::iterator(offset_+nx_-1);
 }
 
 void
 ScanlineMesh::size(ScanlineMesh::Edge::size_type &s) const
 {
-  s = Edge::size_type(length_ - 1);
+  s = Edge::size_type(nx_ - 1);
 }
 
 void
