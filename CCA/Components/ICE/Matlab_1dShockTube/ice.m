@@ -276,7 +276,7 @@ for tstep = 1:maxTimeSteps
     
     % Advance pressure in time
     press_CC(firstCell:lastCell) = press_CC(firstCell:lastCell) ...
-        -delT * (speedSound_CC(firstCell:lastCell).^2 ./ spvol_CC(firstCell:lastCell)) .* q_advected;
+        - (speedSound_CC(firstCell:lastCell).^2 ./ spvol_CC(firstCell:lastCell)) .* q_advected;
 
     % Set boundary conditions on the new pressure
     press_CC =  setBoundaryConditions(press_CC,'press_CC');
@@ -354,7 +354,7 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting momentum\n');
     [q_advected, gradLim, grad_x] = ...
         advectQ(mom_L, rho_CC, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    xvel_CC(firstCell:lastCell)     = (mom_L(firstCell:lastCell) - delT * q_advected) ./ (mass_CC(firstCell:lastCell) + d_SMALL_NUM);  % Updated velocity
+    xvel_CC(firstCell:lastCell)     = (mom_L(firstCell:lastCell) - q_advected) ./ (mass_CC(firstCell:lastCell) + d_SMALL_NUM);  % Updated velocity
 
     %__________________________________
     % E N E R G Y
@@ -362,7 +362,7 @@ for tstep = 1:maxTimeSteps
     fprintf ('Advecting energy\n');
     [q_advected, gradLim, grad_x] = ...
         advectQ(eng_L, rho_CC, rho_slab, rho_vrtx_1, rho_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    temp_CC(firstCell:lastCell)     = (eng_L(firstCell:lastCell) - delT * q_advected)./(cv.*mass_CC(firstCell:lastCell) + d_SMALL_NUM);% Updated temperature
+    temp_CC(firstCell:lastCell)     = (eng_L(firstCell:lastCell) - q_advected)./(cv.*mass_CC(firstCell:lastCell) + d_SMALL_NUM);% Updated temperature
 
     
     %_____________________________________________________
