@@ -38,10 +38,10 @@ class ProbeLocateAlgo : public DynamicAlgoBase
 public:
   virtual void execute(MeshHandle mesh_h,
 		       const Point &p,
-		       string &nodestr,
-		       string &edgestr,
-		       string &facestr,
-		       string &cellstr) = 0;
+		       bool shownode, string &nodestr,
+		       bool showedge, string &edgestr,
+		       bool showface, string &facestr,
+		       bool showcell, string &cellstr) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
@@ -54,10 +54,10 @@ class ProbeLocateAlgoT : public ProbeLocateAlgo
 public:
   virtual void execute(MeshHandle mesh_h,
 		       const Point &p,
-		       string &nodestr,
-		       string &edgestr,
-		       string &facestr,
-		       string &cellstr);
+		       bool shownode, string &nodestr,
+		       bool showedge, string &edgestr,
+		       bool showface, string &facestr,
+		       bool showcell, string &cellstr);
 };
 
 
@@ -65,15 +65,17 @@ template <class MESH>
 void
 ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 				const Point &p,
-				string &nodestr,
-				string &edgestr,
-				string &facestr,
-				string &cellstr)
+				bool shownode, string &nodestr,
+				bool showedge, string &edgestr,
+				bool showface, string &facestr,
+				bool showcell, string &cellstr)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E | Mesh::LOCATE_E);
+  mesh->synchronize(Mesh::LOCATE_E);
 
+  if (shownode)
   {
+    mesh->synchronize(Mesh::NODES_E);
     typename MESH::Node::index_type index;
     bool found_p = true;
     if (!mesh->locate(index, p))
@@ -104,7 +106,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
     }
   }
 
+  if (showedge)
   {
+    mesh->synchronize(Mesh::EDGES_E);
     typename MESH::Edge::index_type index;
     bool found_p = true;
     if (!mesh->locate(index, p))
@@ -135,7 +139,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
     }
   }
 
+  if (showface)
   {
+    mesh->synchronize(Mesh::FACES_E);
     typename MESH::Face::index_type index;
     bool found_p = true;
     if (!mesh->locate(index, p))
@@ -166,7 +172,9 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
     }
   }
 
+  if (showcell)
   {
+    mesh->synchronize(Mesh::CELLS_E);
     typename MESH::Cell::index_type index;
     bool found_p = true;
     if (!mesh->locate(index, p))
@@ -294,6 +302,7 @@ ProbeCenterAlgoT<MESH>::get_node(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
+  mesh->synchronize(Mesh::NODES_E);
 
   typename MESH::Node::index_type index;
   typename MESH::Node::size_type size;
@@ -347,6 +356,7 @@ ProbeCenterAlgoT<MESH>::get_cell(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
+  mesh->synchronize(Mesh::CELLS_E);
 
   typename MESH::Cell::size_type size;
   typename MESH::Cell::index_type index;
