@@ -16,6 +16,9 @@ SRCS     += \
 	$(SRCDIR)/HotBox.cc\
 	$(SRCDIR)/VS_SCI_HotBox.cc\
 	$(SRCDIR)/labelmaps.cc\
+	$(SRCDIR)/soapC.cc\
+	$(SRCDIR)/soapClient.cc\
+	$(SRCDIR)/stdsoap2.cc
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
