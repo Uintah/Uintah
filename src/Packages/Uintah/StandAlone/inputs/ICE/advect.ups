@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+	<title>Advection test</title>
+   </Meta>
+
+   <Time>
+	<maxTime>2.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0</delt_min>
+	<delt_max>1.0</delt_max>
+	<delt_init>1.0e-9</delt_init>
+   </Time>
+
+   <DataArchiver>
+	<filebase>advect.uda</filebase>
+	<outputInterval>1</outputInterval>
+   </DataArchiver>
+
+   <OutputVars>
+  	<t_initial_output>0.0</t_initial_output>
+	<t_final_output>15.0</t_final_output>
+  	<t_delta_output>0</t_delta_output>
+	<filebasename>run1</filebasename>
+	<file_description>run1</file_description>
+   </OutputVars>
+
+   <CFD>
+  	<cfl>0.5</cfl>
+
+	<!-- ICE specification -->
+
+	<ICE>
+	    <time_integrator>explicit</time_integrator>
+	    <max_iteration>100</max_iteration>
+  	    <compute_delta_velocity>convective</compute_delta_velocity>
+	</ICE>
+
+		 
+    </CFD>
+
+   
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<ICE>
+	  <material>
+	    <viscosity>1.0</viscosity>
+	    <thermal_conductivity>1.0</thermal_conductivity>
+	    <specific_heat>1.0</specific_heat>
+	    <speed_of_sound>700</speed_of_sound>
+            <ideal_gas_constant>1.0</ideal_gas_constant>
+	    <gamma>1.4</gamma>	    
+	  </material>
+
+  
+	</ICE>
+
+	
+    </MaterialProperties>
+	
+    <Grid>
+	<Level>
+	    <Box label="1">
+	    	<lower>[1,1,1]</lower>
+	    	<upper>[19,19,1]</upper>
+	        <resolution>[20,20,1]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<ICE>
+	   
+	    <type>inflow</type>
+	    <face>left</face>
+	    <velocity>[1,1,0]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>inflow</type>
+	    <face>right</face>
+	    <velocity>[1,1,0]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>inflow</type>
+	    <face>top</face>
+	    <velocity>[1,1,0]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    <type>inflow</type>
+	    <face>bottom</face>
+	    <velocity>[1,1,0]</velocity>
+	    <temperature>1</temperature>
+	    <density>1</density>
+	    <pressure>1</pressure>
+
+	    
+	</ICE>
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ICE>
+	  <velocity>[1,1,0]</velocity>
+	  <density>1.0</density>
+	  <temperature>300.0</temperature>
+	</ICE>
+
+
+    </InitialConditions>
+
+</Uintah_specification>
