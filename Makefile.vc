@@ -11,14 +11,16 @@ APPENDIX = d
 ########################## EDIT HERE #################################
 
 LIBS = SCICore\SCICore$(APPENDIX).dll\
-       PSECore\PSECore$(APPENDIX).dll\
-	   PSECommon\PSECommon$(APPENDIX).dll\
-	   Uintah\Uintah$(APPENDIX).dll\
-       SCIRun\SCIRun$(APPENDIX).dll
+       PSECore\PSECore$(APPENDIX).dll
 
 ######################################################################
 
-all : main\pse.exe
+RM = del
+
+all : pse.exe
+
+pse.exe : main\pse.exe
+	copy main\main.exe .\pse.exe
 
 main\pse.exe : $(LIBS)
 	cd main && $(MAKE) -fMakefile.vc
