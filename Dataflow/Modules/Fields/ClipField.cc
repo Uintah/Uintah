@@ -96,6 +96,8 @@ ClipField::execute()
 
   ClipperHandle clipper;
 
+  int mode = mode_.get();
+
   // Get input field.
   FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
   if (!cfp) {
@@ -122,45 +124,49 @@ ClipField::execute()
     }
     clipper = algo->execute(cfieldhandle->mesh());
   }
-
-  // Update the widget.
-  BBox obox = ifieldhandle->mesh()->get_bounding_box();
-  if (!(last_bounds_.valid() && obox.valid() &&
-	obox.min() == last_bounds_.min() &&
-	obox.max() == last_bounds_.max()))
+  else
   {
-    const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-    const Point &bmin = bbox.min();
-    const Point &bmax = bbox.max();
+    // Update the widget.
+    BBox obox = ifieldhandle->mesh()->get_bounding_box();
+    if (!(last_bounds_.valid() && obox.valid() &&
+	  obox.min() == last_bounds_.min() &&
+	  obox.max() == last_bounds_.max()))
+    {
+      const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
+      const Point &bmin = bbox.min();
+      const Point &bmax = bbox.max();
 
-    const Point center = bmin + Vector(bmax - bmin) * 0.25;
-    const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
-    const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
-    const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
+      const Point center = bmin + Vector(bmax - bmin) * 0.25;
+      const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
+      const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
+      const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
 
-    const double l2norm = (bmax - bmin).length();
+      const double l2norm = (bmax - bmin).length();
 
-    box_->SetScale(l2norm * 0.015);
-    box_->SetPosition(center, right, down, in);
+      box_->SetScale(l2norm * 0.015);
+      box_->SetPosition(center, right, down, in);
 
-    GeomGroup *widget_group = scinew GeomGroup;
-    widget_group->add(box_->GetWidget());
+      GeomGroup *widget_group = scinew GeomGroup;
+      widget_group->add(box_->GetWidget());
 
-    GeometryOPort *ogport=0;
-    ogport = (GeometryOPort*)get_oport("Selection Widget");
-    if (!ogport) {
-      postMessage("Unable to initialize "+name+"'s oport\n");
-      return;
+      GeometryOPort *ogport=0;
+      ogport = (GeometryOPort*)get_oport("Selection Widget");
+      if (!ogport) {
+	postMessage("Unable to initialize "+name+"'s oport\n");
+	return;
+      }
+      ogport->addObj(widget_group, "ClipField Selection Widget",
+		     &widget_lock_);
+      ogport->flushViews();
+
+      last_bounds_ = obox;
     }
-    ogport->addObj(widget_group, "ClipField Selection Widget",
-		   &widget_lock_);
-    ogport->flushViews();
-
-    last_bounds_ = obox;
   }
   
-  if (mode_.get() == 1 || mode_.get() == 2)
+  if (mode == 1 || ifieldhandle->generation != last_generation_)
   {
+    last_generation_ = ifieldhandle->generation;
+
     if (!clipper.get_rep())
     {
       clipper = box_->get_clipper();
