@@ -661,7 +661,7 @@ StreamReader::read_stream()
     // is found
 
     // Set up the array of header strings to look for
-    int num_headers = 1;
+    const int num_headers = 1;
     string headers[num_headers];
     headers[0] = "solution";
     string header_name = "NONE";
