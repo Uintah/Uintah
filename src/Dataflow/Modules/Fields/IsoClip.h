@@ -253,7 +253,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
-  *(PropertyManager *)clipped = *(PropertyManager *)mesh;
+  clipped->copy_properties(mesh);
 
   node_hash_type nodemap;
   edge_hash_type edgemap;
@@ -559,7 +559,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
-  *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
+  ofield->copy_properties(fieldh.get_rep());
 
   // Add the data values from the old field to the new field.
   typename node_hash_type::iterator nmitr = nodemap.begin();
@@ -773,7 +773,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
-  *(PropertyManager *)clipped = *(PropertyManager *)mesh;
+  clipped->copy_properties(mesh);
 
   node_hash_type nodemap;
   edge_hash_type edgemap;
@@ -926,7 +926,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
-  *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
+  ofield->copy_properties(fieldh.get_rep());
 
   // Add the data values from the old field to the new field.
   typename node_hash_type::iterator nmitr = nodemap.begin();

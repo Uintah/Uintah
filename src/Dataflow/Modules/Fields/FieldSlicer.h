@@ -138,7 +138,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     
     typename ImageField<TYPE>::mesh_type *omesh =
       scinew typename ImageField<TYPE>::mesh_type();
-    *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
+    omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
     omesh->set_min_j( new_min_j );
@@ -147,7 +147,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     ImageField<TYPE> *ofield =
       scinew ImageField<TYPE>(omesh, ifield->data_at());
-    *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+    ofield->copy_properties(ifield);
 
     ofield_h = ofield;
 
@@ -155,11 +155,11 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   } else if( ifield->get_type_description(0)->get_name() == "StructHexVolField" ) {
     typename StructQuadSurfField<TYPE>::mesh_type *omesh =
       scinew typename StructQuadSurfField<TYPE>::mesh_type(new_i,new_j);
-    *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
+    omesh->copy_properties(imesh.get_rep());
 
     StructQuadSurfField<TYPE> *ofield =
       scinew StructQuadSurfField<TYPE>(omesh, ifield->data_at());
-    *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+    ofield->copy_properties(ifield);
 
     ofield_h = ofield;
 
@@ -167,14 +167,14 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   } else if( ifield->get_type_description(0)->get_name() == "ImageField" ) {
     typename ScanlineField<TYPE>::mesh_type *omesh =
       scinew typename ScanlineField<TYPE>::mesh_type();
-    *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
+    omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
     omesh->set_ni( new_i );
 
     ScanlineField<TYPE> *ofield = 
       scinew ScanlineField<TYPE>(omesh, ifield->data_at());
-    *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+    ofield->copy_properties(ifield);
 
     ofield_h = ofield;
 
@@ -182,11 +182,11 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   } else if( ifield->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
     typename StructCurveField<TYPE>::mesh_type *omesh =
       scinew typename StructCurveField<TYPE>::mesh_type(new_i);
-    *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
+    omesh->copy_properties(imesh.get_rep());
 
     StructCurveField<TYPE> *ofield =
       scinew StructCurveField<TYPE>(omesh, ifield->data_at());
-    *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+    ofield->copy_properties(ifield);
 
     ofield_h = ofield;
 
@@ -194,14 +194,14 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   } else if( ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
     typename ScanlineField<TYPE>::mesh_type *omesh =
       scinew typename ScanlineField<TYPE>::mesh_type();
-    *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
+    omesh->copy_properties(imesh.get_rep());
 
     omesh->set_min_i( new_min_i );
     omesh->set_ni( new_i );
 
     ScanlineField<TYPE> *ofield =
       scinew ScanlineField<TYPE>(omesh, ifield->data_at());
-    *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+    ofield->copy_properties(ifield);
 
     ofield_h = ofield;
 
@@ -209,11 +209,11 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
   } else if( ifield->get_type_description(0)->get_name() == "StructCurveField" ) {
     typename PointCloudField<TYPE>::mesh_type *omesh =
       scinew typename PointCloudField<TYPE>::mesh_type();
-    *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
+    omesh->copy_properties(imesh.get_rep());
 
     PointCloudField<TYPE> *ofield =
       scinew PointCloudField<TYPE>(omesh, ifield->data_at());
-    *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+    ofield->copy_properties(ifield);
 
     ofield_h = ofield;
 

@@ -68,7 +68,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
-  *(PropertyManager *)clipped = *(PropertyManager *)mesh;
+  clipped->copy_properties(mesh);
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -123,7 +123,7 @@ ClipFieldAlgoT<FIELD>::execute_cell(ProgressReporter *mod,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
-  *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
+  ofield->copy_properties(fieldh.get_rep());
 
   if (fieldh->data_at() == Field::NODE)
   {
@@ -170,7 +170,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
   typename FIELD::mesh_type *mesh =
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
-  *(PropertyManager *)clipped = *(PropertyManager *)mesh;
+  clipped->copy_properties(mesh);
 
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
@@ -247,7 +247,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ProgressReporter *mod,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
-  *(PropertyManager *)ofield = *(PropertyManager *)(fieldh.get_rep());
+  ofield->copy_properties(fieldh.get_rep());
 
   if (fieldh->data_at() == Field::NODE)
   {

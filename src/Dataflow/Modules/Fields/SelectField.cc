@@ -109,9 +109,8 @@ SelectField::execute()
     output_field_ =
       algo->execute(ifieldhandle->mesh(), ifieldhandle->data_at());
 
-    // copy the properties
-    *((PropertyManager *)(output_field_.get_rep())) =
-          *((PropertyManager *)(ifieldhandle.get_rep()));
+    // Copy the properties.
+    output_field_->copy_properties(ifieldhandle.get_rep());
     
     last_generation_ = ifieldhandle->generation;
 
@@ -120,7 +119,7 @@ SelectField::execute()
 	  obox.min() == last_bounds_.min() &&
 	  obox.max() == last_bounds_.max()))
     {
-      // update the widget
+      // Update the widget.
       const BBox bbox = output_field_->mesh()->get_bounding_box();
       const Point &bmin = bbox.min();
       const Point &bmax = bbox.max();

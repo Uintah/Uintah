@@ -176,8 +176,7 @@ ApplyInterpMatrix::execute()
   }
 
   // Copy the properties.
-  *((PropertyManager *)(result_field.get_rep())) =
-    *((PropertyManager *)(sfieldhandle.get_rep()));
+  result_field->copy_properties(sfieldhandle.get_rep());
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output");
   if (!ofp) {

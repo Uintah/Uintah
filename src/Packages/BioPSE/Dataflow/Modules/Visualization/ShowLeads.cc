@@ -101,17 +101,16 @@ void ShowLeads::execute(){
   }
 
   // set params from properties before drawing leads
-  PropertyManager *pm = mh.get_rep();
   string units;
   double start;
   double end;
-  if (pm && pm->get_property(string("time-units"), units)) {
+  if (mh.get_rep() && mh->get_property(string("time-units"), units)) {
     units_.set(units.c_str());
   }  
-  if (pm && pm->get_property(string("time-start"), start)) {
+  if (mh.get_rep() && mh->get_property(string("time-start"), start)) {
     tmin_.set(start);
   }  
-  if (pm && pm->get_property(string("time-end"), end)) {
+  if (mh.get_rep() && mh->get_property(string("time-end"), end)) {
     tmax_.set(end);
   }  
 

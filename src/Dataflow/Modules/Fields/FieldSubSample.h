@@ -162,7 +162,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
   typename FIELD::mesh_handle_type omesh = scinew typename FIELD::mesh_type();
 
-  *(PropertyManager *) (omesh.get_rep()) = *(PropertyManager *)(imesh.get_rep());
+  omesh->copy_properties(imesh.get_rep());
 
   if( rank == 3 ) {
     dim[0] = idim_out;
@@ -180,7 +180,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   // Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh, ifield->data_at());
 
-  *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
+  ofield->copy_properties(ifield);
 
 #ifdef SET_POINT_DEFINED
   Point pt;

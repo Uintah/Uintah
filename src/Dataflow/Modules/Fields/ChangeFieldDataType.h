@@ -62,7 +62,7 @@ ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h)
   FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fsrc_h->data_at());
 
   // Copy the properties from old field to new field.
-  *((PropertyManager *)fout) = *(PropertyManager *)fsrc;
+  fout->copy_properties(fsrc);
 
   return fout;
 }

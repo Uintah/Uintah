@@ -158,7 +158,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   
   TriSurfField<typename FSRC::value_type> *tvfield = 
     scinew TriSurfField<typename FSRC::value_type>(tsmesh, qsfield->data_at());
-  *(PropertyManager *)tvfield = *(PropertyManager *)qsfield;
+  tvfield->copy_properties(qsfield);
   dstH = tvfield;
 
   typename FSRC::value_type val;
@@ -261,7 +261,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   
   TriSurfField<typename FSRC::value_type> *tfield = 
     scinew TriSurfField<typename FSRC::value_type>(tmesh, ifield->data_at());
-  *(PropertyManager *)tfield = *(PropertyManager *)ifield;
+  tfield->copy_properties(ifield);
   dstH = tfield;
 
   typename FSRC::value_type val;

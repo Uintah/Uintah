@@ -134,8 +134,7 @@ ManageFieldMesh::execute()
     }
 
     // Copy the properties.
-    *((PropertyManager *)(result_field.get_rep())) =
-      *((PropertyManager *)(ifieldhandle.get_rep()));
+    result_field->copy_properties(ifieldhandle.get_rep());
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");

@@ -265,11 +265,10 @@ MatrixSelectVector::execute()
   
   const bool use_row = (row_or_col_.get() == "row");
   bool changed_p = false;
-  PropertyManager *mh_prop = mh.get_rep();
   if (use_row)
   {
     string units;
-    if (!mh_prop->get_property("row_units", units))
+    if (!mh->get_property("row_units", units))
     {
       units = "Units";
     }
@@ -280,7 +279,7 @@ MatrixSelectVector::execute()
     }
 
     double minlabel;
-    if (!mh_prop->get_property("row_min", minlabel))
+    if (!mh->get_property("row_min", minlabel))
     {
       minlabel = 0.0;
     }
@@ -291,7 +290,7 @@ MatrixSelectVector::execute()
     }
 
     double maxlabel;
-    if (!mh_prop->get_property("row_max", maxlabel))
+    if (!mh->get_property("row_max", maxlabel))
     {
       maxlabel = mh->nrows() - 1.0;
     }
@@ -311,7 +310,7 @@ MatrixSelectVector::execute()
   else
   {
     string units;
-    if (!mh_prop->get_property("col_units", units))
+    if (!mh->get_property("col_units", units))
     {
       units = "Units";
     }
@@ -322,7 +321,7 @@ MatrixSelectVector::execute()
     }
 
     double minlabel;
-    if (!mh_prop->get_property("col_min", minlabel))
+    if (!mh->get_property("col_min", minlabel))
     {
       minlabel = 0.0;
     }
@@ -333,7 +332,7 @@ MatrixSelectVector::execute()
     }
 
     double maxlabel;
-    if (!mh_prop->get_property("col_max", maxlabel))
+    if (!mh->get_property("col_max", maxlabel))
     {
       maxlabel = mh->ncols() - 1.0;
     }
