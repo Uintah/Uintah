@@ -61,6 +61,7 @@ using SCICore::Thread::Semaphore;
 using SCICore::Thread::Thread;
 using SCICore::Thread::ThreadError;
 using SCICore::Thread::ThreadGroup;
+bool exiting=false;
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
@@ -330,6 +331,7 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
+    exiting=true;
     ::exit(code);
 }
 
@@ -481,9 +483,24 @@ install_signal_handlers()
 			  +strerror(errno));
 }
 
+static void exit_handler()
+{
+    if(exiting)
+        return;
+    // Wait forever...
+    sem_t wait;
+    if(sem_init(&wait, 0, 0) != 0)
+	throw ThreadError(std::string("sem_init failed")
+			  +strerror(errno));
+    if(sem_wait(&wait) == -1)
+	throw ThreadError(std::string("sem_wait failed")
+			  +strerror(errno));
+}
+
 void
 Thread::initialize()
 {
+  atexit(exit_handler);
     if(pthread_mutex_init(&sched_lock, NULL) != 0)
 	throw ThreadError(std::string("pthread_mutex_init failed")
 			  +strerror(errno));
@@ -764,6 +781,9 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.8  1999/08/29 08:07:39  sparker
+// Fixed bug on linux where main exit before other threads are done.
+//
 // Revision 1.7  1999/08/29 07:50:59  sparker
 // Mods to compile on linux
 //
