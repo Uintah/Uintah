@@ -70,7 +70,6 @@ WARNING
    double getSpeedOfSound() const;
    
    void initializeCells(CCVariable<double>& rhom,
-                     CCVariable<double>&sp_vol,
                      CCVariable<double>& rhC,
                      CCVariable<double>& temp, 
                      CCVariable<double>& ss,
