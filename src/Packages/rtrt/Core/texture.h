@@ -63,8 +63,8 @@ namespace rtrt {
 
     void 
       colormap( int X, int Y ) {
-      float dx = X - stored_x;
-      float dy = Y - stored_y;
+      int dx = X - stored_x;
+      int dy = Y - stored_y;
       const int xmin = 0;
       const int ymin = 30;
       const int xmax = 400;
