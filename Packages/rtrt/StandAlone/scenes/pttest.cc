@@ -20,7 +20,12 @@ using namespace rtrt;
 
 #define NUM_TEXTURES 8
 
-float radius = 1;
+float radius = 1.0;
+
+/*
+  -eye -4.05479 0.0260826 7.411 -lookat 0 0 0 -up 0.125951 0.989877 0.065428 -fov 42.5676
+
+*/
 
 // Returns 1 if there was an error.  This is based on if the texture
 // was found.
@@ -68,6 +73,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       bg = argv[++i];
     else if (strcmp(argv[i],"-tex")==0)
       tex_basename = argv[++i];
+    else if(strcmp(argv[i],"-radius")==0)
+      radius=atof(argv[++i]);
     else
     {
       cerr << "unrecognized option \"" << argv[i] << "\"" << endl;
@@ -90,7 +97,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 
   Camera cam(Point(0,0,10), Point(0,0,0), Vector(0,1,0), 45.0);
 
-  double ambient_scale=1;
+  double ambient_scale=2;
   Color bgcolor(0,0,0);
   Color cdown(1,1,1);
   Color cup(1,1,1);
@@ -110,7 +117,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   }
   scene->set_background_ptr(emap);
     
-  Light* mainLight = new Light(Point(-5,10,7.5), Color(1,1,1), 1.0);
+  Light* mainLight = new Light(Point(-5,10,7.5), Color(1,1,1), 0.01);
   mainLight->name_ = "main light";
   scene->add_light( mainLight );
   scene->turnOffAllLights( 0.0 ); 
