@@ -61,6 +61,8 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = VarLabel::create("viscosityCTS", 
 				      CCVariable<double>::getTypeDescription() );
+  d_viscosityPredLabel = VarLabel::create("viscosityPred", 
+				      CCVariable<double>::getTypeDescription() );
   // Pressure Labels
   d_pressureINLabel = VarLabel::create("pressureIN", 
 				    CCVariable<double>::getTypeDescription() );
@@ -651,6 +653,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_densitySPLabel);
   VarLabel::destroy(d_viscosityINLabel);
   VarLabel::destroy(d_viscosityCTSLabel);
+  VarLabel::destroy(d_viscosityPredLabel);
   VarLabel::destroy(d_pressureINLabel);
   VarLabel::destroy(d_pressureSPBCLabel);
   VarLabel::destroy(d_pressurePSLabel);
@@ -766,6 +769,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalCoefPredLabel);
   VarLabel::destroy(d_scalDiffCoefPredLabel);
   VarLabel::destroy(d_scalDiffCoefCorrLabel);
+  VarLabel::destroy(d_enthDiffCoefPredLabel);
+  VarLabel::destroy(d_enthDiffCoefCorrLabel);
   VarLabel::destroy(d_scalConvCoefPredLabel);
   VarLabel::destroy(d_scalLinSrcPredLabel);
   VarLabel::destroy(d_scalNonLinSrcPredLabel);
