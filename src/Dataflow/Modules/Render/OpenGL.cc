@@ -302,7 +302,11 @@ OpenGL::redraw_loop()
 	newtime=current_time;
       }
       newtime+=frametime;
+      // wait_for_time is unimplemented on anything but SGI.
+      // Thread::yield to at least work around busy-wait deadlock on
+      // linux 2.6.6 kernels.
       throttle.wait_for_time(newtime);
+      Thread::yield();
 
       while (send_mb.tryReceive(r))
       {
@@ -1174,7 +1178,13 @@ OpenGL::redraw_frame()
       //gui->unlock();
       double realtime=t*frametime;
       if(nframes>1)
+      {
+	// wait_for_time is unimplemented on anything but SGI.
+	// Thread::yield to at least work around busy-wait deadlock on
+	// linux 2.6.6 kernels.
 	throttle.wait_for_time(realtime);
+	Thread::yield();
+      }
       //gui->lock();
       gui->execute("update idletasks");
 
