@@ -1,20 +1,27 @@
 
-proc uiTYPEWriter {modid} {
-    set w .ui$modid
-    if {[winfo exists $w]} {
-        raise $w
-        return;
+itcl_class TYPEWriter {
+    inherit Module
+    constructor {config} {
+	set name TYPEWriter
+	set_defaults
     }
-    toplevel $w
-    set filetype,$modid binary
-    radiobutton $w.binary -text "Binary" -relief flat \
-	    -variable filetype,$modid -value "binary"
-    radiobutton $w.ascii -text "ASCII" -relief flat \
-	    -variable filetype,$modid -value "text"
-    $w.binary select
-    pack $w.binary $w.ascii -side left
-    entry $w.f -textvariable filename,$modid -width 40 \
-	    -borderwidth 2 -relief sunken
-    pack $w.f -side bottom
-    bind $w.f <Return> "$modid needexecute "
+    method set_defaults {} {
+	global $this-filetype
+	set $this-filetype Binary
+    }
+    method ui {} {
+	set w .ui$this
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+
+	make_labeled_radio $w "Format:" "" left $this-filetype \
+		{Binary ASCII}
+	entry $w.f -textvariable $this-filename -width 40 \
+		-borderwidth 2 -relief sunken
+	pack $w.f -side bottom
+	bind $w.f <Return> "$this-c needexecute "
+    }
 }

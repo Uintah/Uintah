@@ -1,10 +1,19 @@
 
-proc uiSoundReader {modid} {
-    set w .ui$modid
-    if {[winfo exists $w]} {
-        raise $w
-        return;
+itcl_class SoundReader {
+    inherit Module
+    constructor {config} {
+	set name SoundReader
+	set_defaults
     }
-    toplevel $w
-    makeFilebox $w filename,$modid "$modid needexecute" "destroy $w"
+    method set_defaults {} {
+    }
+    method ui {} {
+	set w .ui$this
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+	makeFilebox $w $this-filename "$this-c needexecute" "destroy $w"
+    }
 }

@@ -14,13 +14,12 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/Colormap.h>
+#include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
-#include <Datatypes/ScalarField.h>
-#include <Datatypes/Colormap.h>
-#include <Datatypes/ColormapPort.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/TriSurface.h>
 #include <Geom/Color.h>

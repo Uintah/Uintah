@@ -56,7 +56,6 @@ void NetworkEditor::main_loop()
     while(!done){
 	MessageBase* msg=mailbox.receive();
 	// Dispatch message....
-	int need_sched=0;
 	switch(msg->type){
 	case MessageTypes::ReSchedule:
 	    do_scheduling();
@@ -166,7 +165,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	    return;
 	}
 	// Add a TCL command for this module...
-	TCL::add_command(mod->id, mod, 0);
+	TCL::add_command(mod->id+"-c", mod, 0);
 	args.result(mod->id);
     } else if(args[1] == "deletemodule"){
 	if(args.count() < 3){

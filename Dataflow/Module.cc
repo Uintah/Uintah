@@ -57,7 +57,7 @@ void Module::update_state(State st)
 	break;
     }
     double time=timer.time();
-    TCL::execute("updateState "+id+" "+s+" "+to_string(time));
+    TCL::execute(id+" set_state "+s+" "+to_string(time));
 }
 
 void Module::update_progress(double p)
@@ -66,7 +66,7 @@ void Module::update_progress(double p)
     int npp=(int)(p*100);
     if(opp != npp){
 	double time=timer.time();
-	TCL::execute("updateProgress "+id+" "+to_string(p)+" "+to_string(time));
+	TCL::execute(id+" set_progress "+to_string(p)+" "+to_string(time));
 	progress=p;
     }
 }
@@ -290,7 +290,7 @@ void Module::reconfigure_iports()
 {
     if(id.len()==0)
 	return;
-    TCL::execute("configureOPorts "+id);
+    TCL::execute("configureIPorts "+id);
 }
 
 void Module::reconfigure_oports()

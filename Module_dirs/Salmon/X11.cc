@@ -259,7 +259,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     }
     timer.stop();
     ostrstream str(strbuf, STRINGSIZE);
-    str << "updatePerf " << roe->id << " \"";
+    str << roe->id << " updatePerf \"";
     str << npolys << " polygons in " << timer.time()
 	<< " seconds\" \"" << npolys/timer.time()
 	<< " polygons/second\"" << '\0';

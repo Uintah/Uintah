@@ -103,7 +103,10 @@ clString OpenGL::create_window(Roe*,
     myname=name;
     width.get_int(xres);
     height.get_int(yres);
-    return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct true -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
+    static int direct=1;
+    int d=direct;
+    direct=0;
+    return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct "+(d?"true":"false")+" -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
 }
 
 void OpenGL::redraw(Salmon* salmon, Roe* roe)
@@ -115,16 +118,27 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Get window information
     if(!tkwin){
-	TCLTask::lock();
-	tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
-	if(!tkwin){
-	    cerr << "Unable to locate window!\n";
-	    TCLTask::unlock();
-	    return;
+	void* spec;
+	if(salmon->lookup_specific("opengl_context", spec)){
+	    cx=(GLXContext)spec;
+	    TCLTask::lock(); // Unlock after MakeCurrent
+	} else {
+	    TCLTask::lock();
+	    tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
+	    if(!tkwin){
+		cerr << "Unable to locate window!\n";
+		TCLTask::unlock();
+		return;
+	    }
+	    dpy=Tk_Display(tkwin);
+	    win=Tk_WindowId(tkwin);
+	    cx=OpenGLGetContext(the_interp, myname());
+	    if(!cx){
+		cerr << "Unable to create OpenGL Context!\n";
+		TCLTask::unlock();
+		return;
+	    }
 	}
-	dpy=Tk_Display(tkwin);
-	win=Tk_WindowId(tkwin);
-	cx=OpenGLGetContext(the_interp, myname());
 	glXMakeCurrent(dpy, win, cx);
 	current_drawer=this;
 	int data[1];
@@ -188,7 +202,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	}
 	for(i=0;i<idx && i<maxlights;i++)
 	    glEnable(GL_LIGHT0+i);
-	for(;i<GL_MAX_LIGHTS;i++)
+	for(;i<maxlights;i++)
 	    glDisable(GL_LIGHT0+i);
 
 	// Set up graphics state
@@ -198,16 +212,16 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
 	clString shading(roe->shading.get());
 //	GeomRenderMode::DrawType dt;
-	if(shading == "wire"){
+	if(shading == "Wire"){
 	    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
 	    drawinfo->lighting=0;
-	} else if(shading == "flat"){
+	} else if(shading == "Flat"){
 	    drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
 	    drawinfo->lighting=0;
-	} else if(shading == "gouraud"){
+	} else if(shading == "Gouraud"){
 	    drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
 	    drawinfo->lighting=1;
-	} else if(shading == "phong"){
+	} else if(shading == "Phong"){
 	    drawinfo->set_drawtype(DrawInfoOpenGL::Phong);
 	    drawinfo->lighting=1;
 	} else {
@@ -223,6 +237,10 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	drawinfo->pickmode=0;
 	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 
+	int errcode;
+	while((errcode=glGetError()) != GL_NO_ERROR){
+	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	}
 	// Draw it all...
 	roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
     }
@@ -231,10 +249,16 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     glXSwapBuffers(dpy, win);
     glXWaitGL();
 
+    // Look for errors
+    int errcode;
+    while((errcode=glGetError()) != GL_NO_ERROR){
+	cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+    }
+
     // Report statistics
     timer.stop();
     ostrstream str(strbuf, STRINGSIZE);
-    str << "updatePerf " << roe->id << " \"";
+    str << roe->id << " updatePerf \"";
     str << drawinfo->polycount << " polygons in " << timer.time()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	<< " polygons/second\"" << '\0';
@@ -306,6 +330,10 @@ void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 
 	glFlush();
 	int hits=glRenderMode(GL_RENDER);
+	int errcode;
+	while((errcode=glGetError()) != GL_NO_ERROR){
+	    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+	}
 	TCLTask::unlock();
 	GLuint min_z;
 	GLuint hit_obj=0;

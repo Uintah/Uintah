@@ -52,6 +52,7 @@ private:
    BaseWidget* widgets[NumWidgetTypes];
 
    virtual void geom_moved(int, double, const Vector&, void*);
+   virtual void geom_release(void*);
 public:
    WidgetTest(const clString& id);
    WidgetTest(const WidgetTest&, int deep);
@@ -140,13 +141,18 @@ void WidgetTest::execute()
 void WidgetTest::geom_moved(int axis, double dist, const Vector& delta,
 			    void* cbdata)
 {
-   widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
-   cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
-   cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
-   
-   if(!abort_flag) {
-      abort_flag = 1;
-      want_to_execute();
-   }
+    widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
+    cout << "Gauge ratio " << ((GuageWidget*)widgets[Guage])->GetRatio() << endl;
+    cout << "Ring angle " << ((RingWidget*)widgets[Ring])->GetRatio() << endl;
+    
+    widgets[widget_type.get()]->execute();
+    ogeom->flushViews();
 }
 
+void WidgetTest::geom_release(void*)
+{
+    if(!abort_flag){
+	abort_flag=1;
+	want_to_execute();
+    }
+}

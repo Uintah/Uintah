@@ -50,7 +50,7 @@ Roe::Roe(Salmon* s, const clString& id)
 {
     bgcolor.set(Color(0,0,0));
     view.set(homeview);
-    TCL::add_command(id, this, 0);
+    TCL::add_command(id+"-c", this, 0);
     current_renderer=0;
     modebuf=new char[MODEBUFSIZE];
     modecommand=new char[MODEBUFSIZE];
@@ -105,12 +105,12 @@ void Roe::itemAdded(SceneItem* si)
 	visible.insert(si->name, vis);
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "addObject " << id << " " << vis->tagid << " \"" << si->name << "\"" << '\0';
+	str << id << " addObject " << vis->tagid << " \"" << si->name << "\"" << '\0';
 	TCL::execute(str.str());
     } else {
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "addObject2 " << id << " " << vis->tagid << '\0';
+	str << id << " addObject2 " << vis->tagid << '\0';
 	TCL::execute(str.str());
     }
     // invalidate the bounding box
@@ -126,7 +126,7 @@ void Roe::itemDeleted(SceneItem *si)
     } else {
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "removeObject " << id << " " << vis->tagid << '\0';
+	str << id << " removeObject " << vis->tagid << '\0';
 	TCL::execute(str.str());
     }
     // invalidate the bounding box
@@ -519,7 +519,10 @@ void Roe::mouse_pick(int action, int x, int y)
 	    Point p1(2*x/double(xres)-1, 2*y/double(yres)-1, depth);
 	    Point p0(2*last_x/double(xres)-1, 2*last_y/double(yres)-1, depth);
 	    double aspect=double(xres)/double(yres);
+	    cerr << "Eye: p1=" << p1 << endl;
 	    p1=tmpview.eyespace_to_objspace(p1, aspect);
+	    cerr << "Object: p1=" << p1 << endl;
+	    cerr << "cen=" << cen << endl;
 	    p0=tmpview.eyespace_to_objspace(p0, aspect);
 	    Vector dir(p1-p0);
 	    double dist=dir.normalize();
@@ -812,7 +815,7 @@ void Roe::redraw()
 void Roe::update_mode_string(const char* msg)
 {
     ostrstream str(modecommand, MODEBUFSIZE);    
-    str << "updateMode " << id << " \"" << msg << "\"" << '\0';
+    str << id << " updateMode \"" << msg << "\"" << '\0';
     TCL::execute(str.str());
 }
 

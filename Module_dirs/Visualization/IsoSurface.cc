@@ -203,7 +203,7 @@ void IsoSurface::execute()
     if(min != old_min || max != old_max){
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "IsoSurface_set_minmax " << id << " " << min << " " << max << '\0';
+	str << id << " set_minmax " << min << " " << max << '\0';
 	TCL::execute(str.str());
 	old_min=min;
 	old_max=max;
@@ -213,7 +213,7 @@ void IsoSurface::execute()
     if(bmin != old_bmin || bmax != old_bmax){
 	char buf[1000];
 	ostrstream str(buf, 1000);
-	str << "IsoSurface_set_bounds " << id << " " << bmin.x() << " " << bmin.y() << " " << bmin.z() << " " << bmax.x() << " " << bmax.y() << " " << bmax.z() << '\0';
+	str << id << " set_bounds " << bmin.x() << " " << bmin.y() << " " << bmin.z() << " " << bmax.x() << " " << bmax.y() << " " << bmax.z() << '\0';
 	TCL::execute(str.str());
 	old_bmin=bmin;
 	old_bmax=bmax;	

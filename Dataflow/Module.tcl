@@ -1,161 +1,294 @@
 
-proc makeModule {modid name canvas modx mody} {
-    set modframe $canvas.module$modid
-    global moduleframe
-    set moduleframe($modid) $modframe
-    frame $modframe -relief raised -borderwidth 3
-    frame $modframe.ff
-    pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
-    set p $modframe.ff
-    global ui_font
-    global sci_root
-    set script_name [glob -nocomplain $sci_root/Modules/*/$name.tcl]
-    if {$script_name != ""} {
-	button $p.ui -text "UI" -borderwidth 2 -font $ui_font -anchor center \
-		-command "source $script_name ; source $sci_root/TCL/Filebox.tcl ; ui$name $modid"
-	pack $p.ui -side left -ipadx 5 -ipady 2
-    }
-    global modname_font
-    global time_font
-    label $p.title -text $name -font $modname_font -anchor w
-    pack $p.title -side top -padx 2 -anchor w
-    label $p.time -text "0.00" -font $time_font
-    pack $p.time -side left -padx 2
-    frame $p.inset -relief sunken -height 4 -borderwidth 2 \
-	-width 50
-    pack $p.inset -side left -expand yes -fill both -padx 2 -pady 2
-    frame $p.inset.graph -relief raised -width 0 -borderwidth 2 \
-	-background red
-    pack $p.inset.graph -fill y -expand yes -anchor nw
-    $canvas create window $modx $mody -window $modframe \
-	    -tags $modid -anchor nw 
-
-    configureIPorts $modid
-    configureOPorts $modid
-
-    set done 0	
-    while { $done == 0 } {
-	set x1 $modx 
-	set y1 $mody
-	set x2 [expr $modx+120]
-	set y2 [expr $mody+50]
-
-	set l [llength [$canvas find overlapping $x1 $y1 $x2 $y2]]
-	if { $l == 0 || $l == 1 } {
-	    set done 1
-	} else {
-	    $canvas move $modid 0 80
-	    incr mody 80
-	    if { $mody > [winfo height $canvas] } {
-		set mody 10
-		incr modx 200
-		$canvas coords $modx $mody
-	    }
-	}
-    }
-
-    bind $canvas <1> "$canvas raise current"
-    bind $p <1> "moduleStartDrag $canvas $modid %X %Y"
-    bind $p <B1-Motion> "moduleDrag $canvas $modid %X %Y"
-    bind $p <ButtonRelease-1> "moduleEndDrag $modframe"
-    bind $p.title <1> "moduleStartDrag $canvas $modid %X %Y"
-    bind $p.title <B1-Motion> "moduleDrag $canvas $modid %X %Y"
-    bind $p.title <ButtonRelease-1> "moduleEndDrag $modframe"
-    bind $p.time <1> "moduleStartDrag $canvas $modid %X %Y"
-    bind $p.time <B1-Motion> "moduleDrag $canvas $modid %X %Y"
-    bind $p.time <ButtonRelease-1> "moduleEndDrag $modframe"
-    bind $p.inset <1> "moduleStartDrag $canvas $modid %X %Y"
-    bind $p.inset <B1-Motion> "moduleDrag $canvas $modid %X %Y"
-    bind $p.inset <ButtonRelease-1> "moduleEndDrag $modframe"
-}
 set port_spacing 18
 set port_width 13
 set port_height 7
 
-proc configureIPorts {modid} {
-    global moduleframe
-    if {![info exists moduleframe($modid)]} {
-	return;
+itcl_class Module {
+    constructor {config} {
     }
-    set w $moduleframe($modid)
-    global port_spacing
-    global port_width
-    global port_height
+    method config {config} {}
+    public name
+    protected canvases
+    protected make_progress_graph 1
+    protected make_time 1
+    protected graph_width 50
+    protected old_width 0
+    public state "NeedData" {$this update_state}
+    public progress 0 {$this update_progress}
+    public time "00.00" {$this update_time}
 
-    set i 0
-    while {[winfo exists $w.iport$i]} {
-	destroy $w.iport$i
-	destroy $w.iportlight$i
-	incr i
+    method set_state {st t} {
+	set state $st
+	set time $t
+	update_state
+	update_time
+	update idletasks
     }
-    set portinfo [$modid iportinfo]
-    set i 0
-    foreach t $portinfo {
-	set portcolor [lindex $t 0]
-	set connected [lindex $t 1]
-	set x [expr $i*$port_spacing+6]
-	if {$connected} {
-	    set e "outtop"
-	} else {
-	    set e "top"
+    method set_progress {p t} {
+	set progress $p
+	set time $t
+	update_progress
+	update_time
+	update idletasks
+    }
+
+    #
+    #  Make the modules icon on a particular canvas
+    #
+    method make_icon {canvas modx mody} {
+	lappend canvases $canvas
+	set modframe $canvas.module$this
+	frame $modframe -relief raised -borderwidth 3
+	frame $modframe.ff
+	pack $modframe.ff -side top -expand yes -fill both -padx 5 -pady 6
+	set p $modframe.ff
+	global ui_font
+	global sci_root
+	if {[$this info method ui] != ""} {
+	    button $p.ui -text "UI" -borderwidth 2 -font $ui_font \
+		    -anchor center -command "$this ui"
+	    pack $p.ui -side left -ipadx 5 -ipady 2
 	}
-	bevel $w.iport$i -width $port_width -height $port_height -borderwidth 3 \
-		-edge $e -background $portcolor \
-		-pto 2 -pwidth 7 -pborder 2
-	place $w.iport$i -bordermode outside -x $x -y 0 -anchor nw
-	frame $w.iportlight$i -width $port_width -height 4 \
-		-relief raised -background black -borderwidth 0
-	place $w.iportlight$i -in $w.iport$i \
-		-x 0 -rely 1.0 -anchor nw
-	bind $w.iport$i <2> "startIPortConnection $modid $i"
-	bind $w.iport$i <B2-Motion> "trackIPortConnection $modid $i %x %y"
-	bind $w.iport$i <ButtonRelease-2> "endPortConnection \"$portcolor\""
-	incr i
-    }
-    rebuildConnections [netedit getconnected $modid]
-}
+	global modname_font
+	global time_font
 
-proc configureOPorts {modid} {
-    global moduleframe
-    if {![info exists moduleframe($modid)]} {
-	return;
-    }
-    set w $moduleframe($modid)
-    global port_width
-    global port_height
-    global port_spacing
+	#
+	# Make the title
+	#
+	label $p.title -text $name -font $modname_font -anchor w
+	pack $p.title -side top -padx 2 -anchor w
 
-    set i 0
-    while {[winfo exists $w.oport$i]} {
-	destroy $w.oport$i
-	destroy $w.oportlight$i
-	incr i
-    }
-    set portinfo [$modid oportinfo]
-    set i 0
-    foreach t $portinfo {
-	set portcolor [lindex $t 0]
-	set connected [lindex $t 1]
-	set x [expr $i*$port_spacing+6]
-	if {$connected} {
-	    set e "outbottom"
-	} else {
-	    set e "bottom"
+	#
+	# Make the time label
+	#
+	if {$make_time} {
+	    label $p.time -text "00.00" -font $time_font
+	    pack $p.time -side left -padx 2
 	}
-	bevel $w.oport$i -width $port_width -height $port_height \
-	    -borderwidth 3 -edge $e -background $portcolor \
-	    -pto 2 -pwidth 7 -pborder 2
-	place $w.oport$i -bordermode ignore -rely 1 -anchor sw -x $x
-	frame $w.oportlight$i -width $port_width -height 4 \
-	    -relief raised -background black -borderwidth 0
-	place $w.oportlight$i -in $w.oport$i \
-	    -x 0 -y 0 -anchor sw
-	bind $w.oport$i <2> "startOPortConnection $modid $i"
-	bind $w.oport$i <B2-Motion> "trackOPortConnection $modid $i %x %y"
-	bind $w.oport$i <ButtonRelease-2> "endPortConnection \"$portcolor\""
-	incr i
+
+	#
+	# Make the progress graph
+	#
+	if {$make_progress_graph} {
+	    frame $p.inset -relief sunken -height 4 -borderwidth 2 \
+		    -width $graph_width
+	    pack $p.inset -side left -fill y -padx 2 -pady 2
+	    frame $p.inset.graph -relief raised -width 0 -borderwidth 2 \
+		    -background red
+	    # Don't pack it in yet - the width is zero... 
+	    #pack $p.inset.graph -fill y -expand yes -anchor nw
+	}
+
+	# Update the progress and time graphs
+	update_progress
+	update_time
+
+	#
+	# Stick it in the canvas
+	#
+	$canvas create window $modx $mody -window $modframe \
+		-tags $this -anchor nw 
+
+	#
+	# Set up input/output ports
+	#
+	$this configureIPorts $canvas
+	$this configureOPorts $canvas
+
+	#
+	# Try to find a position for the icon where it doesn't
+	# overlap other icons
+	#
+	set done 0	
+	while { $done == 0 } {
+	    set x1 $modx 
+	    set y1 $mody
+	    set x2 [expr $modx+120]
+	    set y2 [expr $mody+50]
+	    
+	    set l [llength [$canvas find overlapping $x1 $y1 $x2 $y2]]
+	    if { $l == 0 || $l == 1 } {
+		set done 1
+	    } else {
+		$canvas move $this 0 80
+		incr mody 80
+		if { $mody > [winfo height $canvas] } {
+		    set mody 10
+		    incr modx 200
+		    $canvas coords $modx $mody
+		}
+	    }
+	}
+	
+	bind $canvas <1> "$canvas raise current"
+	bind $p <1> "moduleStartDrag $canvas $this %X %Y"
+	bind $p <B1-Motion> "moduleDrag $canvas $this %X %Y"
+	bind $p <ButtonRelease-1> "moduleEndDrag $modframe"
+	bind $p.title <1> "moduleStartDrag $canvas $this %X %Y"
+	bind $p.title <B1-Motion> "moduleDrag $canvas $this %X %Y"
+	bind $p.title <ButtonRelease-1> "moduleEndDrag $modframe"
+	if {$make_time} {
+	    bind $p.time <1> "moduleStartDrag $canvas $this %X %Y"
+	    bind $p.time <B1-Motion> "moduleDrag $canvas $this %X %Y"
+	    bind $p.time <ButtonRelease-1> "moduleEndDrag $modframe"
+	}
+	if {$make_progress_graph} {
+	    bind $p.inset <1> "moduleStartDrag $canvas $this %X %Y"
+	    bind $p.inset <B1-Motion> "moduleDrag $canvas $this %X %Y"
+	    bind $p.inset <ButtonRelease-1> "moduleEndDrag $modframe"
+	}
     }
-    rebuildConnections [netedit getconnected $modid]
+    method configureAllIPorts {} {
+	foreach t $canvases {
+	    configureIPorts $t
+	}
+    }
+    method configureAllOPorts {} {
+	foreach t $canvases {
+	    configureOPorts $t
+	}
+    }
+    method configureIPorts {canvas} {
+	set modframe $canvas.module$this
+	set i 0
+	while {[winfo exists $modframe.iport$i]} {
+	    destroy $modframe.iport$i
+	    destroy $modframe.iportlight$i
+	    incr i
+	}
+	set portinfo [$this-c iportinfo]
+	set i 0
+	global port_spacing
+	global port_width
+	global port_height
+	foreach t $portinfo {
+	    set portcolor [lindex $t 0]
+	    set connected [lindex $t 1]
+	    set x [expr $i*$port_spacing+6]
+	    if {$connected} {
+		set e "outtop"
+	    } else {
+		set e "top"
+	    }
+	    bevel $modframe.iport$i -width $port_width \
+		    -height $port_height -borderwidth 3 \
+		    -edge $e -background $portcolor \
+		    -pto 2 -pwidth 7 -pborder 2
+	    place $modframe.iport$i -bordermode outside -x $x -y 0 -anchor nw
+	    frame $modframe.iportlight$i -width $port_width -height 4 \
+		    -relief raised -background black -borderwidth 0
+	    place $modframe.iportlight$i -in $modframe.iport$i \
+		    -x 0 -rely 1.0 -anchor nw
+	    bind $modframe.iport$i <2> "startIPortConnection $this $i"
+	    bind $modframe.iport$i <B2-Motion> \
+		    "trackIPortConnection $this $i %x %y"
+	    bind $modframe.iport$i <ButtonRelease-2> \
+		    "endPortConnection \"$portcolor\""
+	    incr i
+	}
+	rebuildConnections [netedit getconnected $this]
+    }
+
+    method configureOPorts {canvas} {
+	set modframe $canvas.module$this
+
+	set i 0
+	while {[winfo exists $modframe.oport$i]} {
+	    destroy $modframe.oport$i
+	    destroy $modframe.oportlight$i
+	    incr i
+	}
+	set portinfo [$this-c oportinfo]
+	set i 0
+	global port_spacing
+	global port_width
+	global port_height
+	foreach t $portinfo {
+	    set portcolor [lindex $t 0]
+	    set connected [lindex $t 1]
+	    set x [expr $i*$port_spacing+6]
+	    if {$connected} {
+		set e "outbottom"
+	    } else {
+		set e "bottom"
+	    }
+	    bevel $modframe.oport$i -width $port_width -height $port_height \
+		    -borderwidth 3 -edge $e -background $portcolor \
+		    -pto 2 -pwidth 7 -pborder 2
+	    place $modframe.oport$i -bordermode ignore -rely 1 -anchor sw -x $x
+	    frame $modframe.oportlight$i -width $port_width -height 4 \
+		    -relief raised -background black -borderwidth 0
+	    place $modframe.oportlight$i -in $modframe.oport$i \
+		    -x 0 -y 0 -anchor sw
+	    bind $modframe.oport$i <2> "startOPortConnection $this $i"
+	    bind $modframe.oport$i <B2-Motion> \
+		    "trackOPortConnection $this $i %x %y"
+	    bind $modframe.oport$i <ButtonRelease-2> \
+		"endPortConnection \"$portcolor\""
+	    incr i
+	}
+	rebuildConnections [netedit getconnected $this]
+    }
+    method update_progress {} {
+	if {!$make_progress_graph} return
+	set width [expr int($progress*($graph_width-4))]
+	if {$width == $old_width} return
+	foreach t $canvases {
+	    set modframe $t.module$this
+	    if {$width == 0} {
+		place forget $modframe.ff.inset.graph
+	    } else {
+		$modframe.ff.inset.graph configure -width $width
+		if {$old_width == 0} {
+		    place $modframe.ff.inset.graph -relheight 1 \
+			    -anchor nw
+		}
+	    }
+	}
+	set old_width $width
+    }
+    method update_time {} {
+	if {!$make_time} return
+	if {$time < 60} {
+	    set secs [expr int($time)]
+	    set frac [expr int(100*($time-$secs))]
+	    set tstr [format "%2d.%02d" $secs $frac]
+	} elseif {$time < 3600} {
+	    set mins [expr int($time/60)]
+	    set secs [expr int($time-$mins*60)]
+	    set tstr [format "%2d:%02d" $mins $secs]
+	} else {
+	    set hrs [expr int($time/3600)]
+	    set mins [expr int($time-$hrs*3600)]
+	    set tstr [format "%d::%02d" $hrs $mins]
+	}
+	foreach t $canvases {
+	    set modframe $t.module$this
+	    $modframe.ff.time configure -text $tstr
+	}
+    }
+    method update_state {} {
+	if {!$make_progress_graph} return
+	if {$state == "Executing"} {
+	    set p 0
+	    set color red
+	} elseif {$state == "Completed"} {
+	    set p 1
+	    set color green
+	} elseif {
+	    set width 0
+	    set p 0
+	}
+	foreach t $canvases {
+	    set modframe $t.module$this
+	    $modframe.ff.inset.graph configure -background $color
+	}
+	#
+	# call update_progress
+	#
+	set progress $p
+	update_progress
+    }
 }
 
 proc startIPortConnection {imodid iwhich} {
@@ -398,34 +531,14 @@ proc moduleEndDrag {mframe} {
     }
 }
 
-proc updateProgress {modid p time} {
-    global moduleframe
-    set w $moduleframe($modid)
-    set width [winfo width $w.ff.inset]
-    $w.ff.inset.graph configure -width [expr $p*($width-4)]
-    updateTime $modid $time
-}
-
-proc updateState {modid state time} {
-    global moduleframe
-    set w $moduleframe($modid)
-    if {$state == "Executing"} {
-	set width 0
-	set color red
-    } elseif {$state == "Completed"} {
-	set width [expr [winfo width $w.ff.inset]-4]
-	set color green
-    } elseif {
-	set width 0
-	set color black
+proc configureIPorts {modid} {
+    if {[info command $modid] != ""} {
+	$modid configureAllIPorts
     }
-    $w.ff.inset.graph configure -width $width -background $color
-    updateTime $modid $time
 }
 
-proc updateTime {modid time} {
-    global moduleframe
-    set w $moduleframe($modid)
-    $w.ff.time configure -text $time
-    update idletasks
+proc configureOPorts {modid} {
+    if {[info command $modid] != ""} {
+	$modid configureAllOPorts
+    }
 }

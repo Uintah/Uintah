@@ -394,3 +394,13 @@ void Salmon::flushPort(int portid)
 	pi->msg_head=pi->msg_tail=0;
     }
 }
+
+int Salmon::lookup_specific(const clString& key, void*& data)
+{
+    return specific.lookup(key, data);
+}
+
+void Salmon::insert_specific(const clString& key, void* data)
+{
+    specific.insert(key, data);
+}

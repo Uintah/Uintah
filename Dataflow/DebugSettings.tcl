@@ -36,8 +36,8 @@ proc showDebugSettings {} {
 	    frame .dsw.canvas.frame.r.$i
 	    for {set j 0} {$j < [llength $items]} {incr j 1} {
 		set item [lindex $items $j]
-		checkbutton .dsw.canvas.frame.r.$i.$j -text $item -variable $module,$item \
-			-relief groove
+		checkbutton .dsw.canvas.frame.r.$i.$j -text $item \
+			-variable $item-$module -relief groove
 		pack .dsw.canvas.frame.r.$i.$j -side left -padx 2 -pady 2 -anchor w
 	    }
 	    pack .dsw.canvas.frame.l.$i -anchor w

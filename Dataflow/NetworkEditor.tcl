@@ -12,6 +12,13 @@ set modname_font "-Adobe-Helvetica-bold-R-Normal-*-120-75-*"
 set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-75-*"
 set time_font "-Adobe-Courier-Medium-R-Normal-*-100-75-*"
 
+proc resource {} {
+    global sci_root
+    foreach t [glob $sci_root/Modules/*/*.tcl] {
+	source $t
+    }
+}
+
 proc makeNetworkEditor {} {
 
     wm minsize . 100 100
@@ -178,22 +185,26 @@ proc moveModule {name} {
 }
 
 proc addModule {name} {
-    set modid [netedit addmodule $name]
-    makeModule $modid $name .cframe.f.canvas 10 10
-    update idletasks
-    return $modid
+    return [addModuleAtPosition $name 10 10]
 }
 
 proc addModuleAtPosition {name xpos ypos} {
     set modid [netedit addmodule $name]
-    makeModule $modid $name .cframe.f.canvas $xpos $ypos
+    # Create the itcl object
+    if {[info command $name] != ""} {
+	$name $modid
+    } else {
+	# Use generic module
+	Module $modid -name $name
+    }
+    $modid make_icon .cframe.f.canvas $xpos $ypos
     update idletasks
     return $modid
 }
 
 proc addConnection {omodid owhich imodid iwhich} {
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
-    set portcolor [lindex [lindex [$omodid oportinfo] $owhich] 0]
+    set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
     buildConnection $connid $portcolor $omodid $owhich $imodid $iwhich
     configureOPorts $omodid
     configureIPorts $imodid
@@ -220,7 +231,10 @@ proc itemDrag {c x y} {
 source $sci_root/TCL/Filebox.tcl
 source $sci_root/TCL/PointVector.tcl
 source $sci_root/TCL/ColorPicker.tcl
+source $sci_root/TCL/Util.tcl
 source $sci_root/Dataflow/MemStats.tcl
 source $sci_root/Dataflow/DebugSettings.tcl
 source $sci_root/Dataflow/ThreadStats.tcl
 source $sci_root/Dataflow/Module.tcl
+
+resource

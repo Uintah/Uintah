@@ -1,99 +1,94 @@
 
-proc uiStreamline {modid} {
-    set w .ui$modid
-    if {[winfo exists $w]} {
-        raise $w
-        return;
+
+itcl_class Streamline {
+    inherit Module
+    constructor {config} {
+	set name Streamline
+	set_defaults
     }
-    toplevel $w
-    wm minsize $w 100 100
-    frame $w.f 
-    pack $w.f -padx 2 -pady 2 -fill x -expand yes
-    set n "$modid needexecute "
+    method set_defaults {} {
+	global $this-source
+	set $this-source "Line"
 
-    frame $w.f.widgets
-    pack $w.f.widgets -side top -fill x
-    label $w.f.widgets.label -text "Source:"
-    pack $w.f.widgets.label -padx 2 -side left
-    global source,$modid
-    set source,$modid "Line"
-    radiobutton $w.f.widgets.point -text Point -relief flat \
-	-variable source,$modid -value Point -command $n
-    radiobutton $w.f.widgets.line -text Line -relief flat \
-	-variable source,$modid -value Line -command $n
-    radiobutton $w.f.widgets.square -text Square -relief flat \
-	-variable source,$modid -value Square -command $n
-    radiobutton $w.f.widgets.ring -text Ring -relief flat \
-	-variable source,$modid -value Ring -command $n
-    pack $w.f.widgets.point $w.f.widgets.line $w.f.widgets.square $w.f.widgets.ring -side left
+	global $this-markertype
+	set $this-markertype "Ribbon"
 
-    frame $w.f.marker
-    pack $w.f.marker -side top -fill x
-    label $w.f.marker.label -text "Marker:"
-    pack $w.f.marker.label -padx 2 -side left
-    global markertype,$modid
-    set markertype,$modid "Ribbon"
-    radiobutton $w.f.marker.line -text Line -relief flat \
-	-variable markertype,$modid -value Line -command $n
-    radiobutton $w.f.marker.ribbon -text Ribbon -relief flat \
-	-variable markertype,$modid -value Ribbon -command $n
-    pack $w.f.marker.line $w.f.marker.ribbon -side left
+	global $this-lineradius
+	set $this-trscale .20
 
-    global lineradius,$modid
-    set lineradius,$modid .25
-    scale $w.f.lineradius -variable lineradius,$modid -digits 3 \
-	-from 0.0 -to 5.0 -label "Line/Ribbon Scale:" \
-	-resolution .01 -showvalue true -tickinterval .2 \
-	-orient horizontal
-    pack $w.f.lineradius -fill x -pady 2
+	global $this-algorithm
+	set $this-algorithm "Euler"
 
-    frame $w.f.alg
-    pack $w.f.alg -side top -fill x
-    label $w.f.alg.label -text "Algorithm:"
-    pack $w.f.alg.label -padx 2 -side left -anchor nw
-    global algorithm,$modid
-    set algorithm,$modid "Euler"
-    radiobutton $w.f.alg.euler -text "Euler" -relief flat \
-	-variable algorithm,$modid -value "Euler" \
-	-command $n
-    radiobutton $w.f.alg.rk4 -text "4th Order Runge Kutta" -relief flat \
-	-variable algorithm,$modid -value "RK4" \
-	-command $n
-    radiobutton $w.f.alg.sf -text "Stream Function" -relief flat \
-	-variable algorithm,$modid -value "Stream Function" \
-	-command $n
-    pack $w.f.alg.euler $w.f.alg.rk4 $w.f.alg.sf -side top -anchor w
+	global $this-stepsizes
+	set $this-stepsizes 0.02
 
-    global stepsize,$modid
+	global $this-maxstepss
+	set $this-maxstepss 50
 
-    set stepsize,$modid 0.02
-    scale $w.f.stepsize -variable stepsize,$modid -digits 3 \
-	-from -2.0 -to 2.0 -label "Step size:" \
-	-resolution .01 -showvalue true -tickinterval 2 \
-	-orient horizontal
-    pack $w.f.stepsize -fill x -pady 2
+	global $this-widget_scale
+	set $this-widget_scale 1
 
-    global maxsteps,$modid
-    set maxsteps,$modid 50
-    scale $w.f.maxsteps -variable maxsteps,$modid \
-	-from 0 -to 1000 -label "Maximum steps:" \
-	-showvalue true -tickinterval 200 \
-	-orient horizontal
-    pack $w.f.maxsteps -fill x -pady 2
+	global $this-need_find
+	set $this-need_find 1
+    }
+    method ui {} {
+	set w .ui$this
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
 
-#    global widget_scale,$modid
-#    set widget_scale,$modid 1
-#    scale $w.f
+	#
+	# Setup toplevel window
+	#
+	toplevel $w
+	wm minsize $w 100 100
+	frame $w.f 
+	pack $w.f -padx 2 -pady 2 -fill x -expand yes
+	set n "$this-c needexecute "
 
+	#
+	# Selector for source type - point, line, square, ring
+	#
+	make_labeled_radio $w.f.widgets "Source:" $n left $this-source \
+		{Point Line Square Ring}
+	pack $w.f.widgets -side top -fill x
+	
+	#
+	# Selector for marker type - line, ribbon, surface
+	#
+	make_labeled_radio $w.f.marker "Marker:" $n left $this-markertype \
+		{Line Tube Ribbon Surface}
+	pack $w.f.marker
 
-    global range_min,$modid
-    scale $w.f.min -variable range_min,$modid -digits 4 \
-	    -from -2.0 -to 2.0 -label "Color min:" \
-	    -resolution .01 -showvalue true \
-	    -orient horizontal
-    scale $w.f.max -variable range_max,$modid -digits 4 \
-	    -from -2.0 -to 2.0 -label "Color max:" \
-	    -resolution .01 -showvalue true \
-	    -orient horizontal
-    pack $w.f.min $w.f.max -side top -fill x
+	#
+	# Line radius and ribbon scale
+	#
+	scale $w.f.trscale -variable $this-trscale -digits 3 \
+		-from 0.0 -to 5.0 -label "Tube/Ribbon Scale:" \
+		-resolution 0 -showvalue true -tickinterval .2 \
+		-orient horizontal
+	pack $w.f.trscale -fill x -pady 2
+
+	#
+	# Selector for algorithm - Euler, RK4, PC, Stream function
+	#
+	make_labeled_radio $w.f.alg "Algorithm:" $n left $this-algorithm \
+		{Euler RK4}
+	pack $w.f.alg -side top -fill x
+
+	#
+	# Parameters
+	scale $w.f.stepsize -variable $this-stepsizes -digits 3 \
+		-from -2.0 -to 2.0 -label "Step size:" \
+		-resolution .01 -showvalue true -tickinterval 2 \
+		-orient horizontal
+	pack $w.f.stepsize -fill x -pady 2
+	
+	scale $w.f.maxsteps -variable $this-maxstepss \
+		-from 0 -to 1000 -label "Maximum steps:" \
+		-showvalue true -tickinterval 200 \
+		-orient horizontal
+	pack $w.f.maxsteps -fill x -pady 2
+    }
 }

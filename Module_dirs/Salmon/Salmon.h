@@ -54,6 +54,7 @@ class Salmon : public Module {
     int max_portno;
     virtual void connection(Module::ConnectionMode, int, int);
 
+    HashTable<clString, void*> specific;
 public:
     MaterialHandle default_matl;
     friend class Roe;
@@ -82,6 +83,9 @@ public:
     Lighting lighting;
 
     int process_event(int block);
+
+    int lookup_specific(const clString& key, void*&);
+    void insert_specific(const clString& key, void* data);
 };
 
 class SalmonMessage : public MessageBase {

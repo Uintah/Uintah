@@ -1,38 +1,41 @@
 
-proc uiWidgetTest {modid} {
-    set w .ui$modid
-    if {[winfo exists $w]} {
-        raise $w
-        return;
+itcl_class WidgetTest {
+    inherit Module
+    constructor {config} {
+	set name WidgetTest
+	set_defaults
     }
-    toplevel $w
-    frame $w.f
-    pack $w.f -padx 2 -pady 2
-    set n "$modid needexecute "
+    method set_defaults {} {
+	global $this-widget_scale
+	set $this-widget_scale 0.01
+	global $this-widget_type
+	set $this-widget_type 5
+    }
+    method ui {} {
+	set w .ui$this
+	if {[winfo exists $w]} {
+	    raise $w
+	    return;
+	}
+	toplevel $w
+	frame $w.f
+	pack $w.f -padx 2 -pady 2
+	set n "$this-c needexecute"
 
-    global widget_scale,$modid
-    set widget_scale,$modid .01
-    scale $w.f.slide -label Scale -from 0.0001 -to 10.0 -length 6c -showvalue true \
-	    -orient horizontal -resolution .001 \
-	    -digits 8 -variable widget_scale,$modid -command $n
-    pack $w.f.slide -in $w.f -side top -padx 2 -pady 2 -anchor w
+	scale $w.f.slide -label Scale -from 0.001 -to 0.05 -length 6c \
+		-showvalue true \
+		-orient horizontal -resolution 0.001 \
+		-digits 8 -variable $this-widget_scale -command $n
+	pack $w.f.slide -in $w.f -side top -padx 2 -pady 2 -anchor w
 
-    frame $w.f.wids
-    radiobutton $w.f.wids.point -text PointWidget -variable widget_type,$modid -value 0 -command $n
-    radiobutton $w.f.wids.arrow -text ArrowWidget -variable widget_type,$modid -value 1 -command $n
-    radiobutton $w.f.wids.cross -text CrosshairWidget -variable widget_type,$modid -value 2 -command $n
-    radiobutton $w.f.wids.guage -text GuageWidget -variable widget_type,$modid -value 3 -command $n
-    radiobutton $w.f.wids.ring -text RingWidget -variable widget_type,$modid -value 4 -command $n
-    radiobutton $w.f.wids.fframe -text FixedFrameWidget -variable widget_type,$modid -value 5 -command $n
-    radiobutton $w.f.wids.frame -text FrameWidget -variable widget_type,$modid -value 6 -command $n
-    radiobutton $w.f.wids.sframe -text ScaledFrameWidget -variable widget_type,$modid -value 7 -command $n
-    radiobutton $w.f.wids.square -text SquareWidget -variable widget_type,$modid -value 8 -command $n
-    radiobutton $w.f.wids.ssquare -text ScaledSquareWidget -variable widget_type,$modid -value 9 -command $n
-    radiobutton $w.f.wids.box -text BoxWidget -variable widget_type,$modid -value 10 -command $n
-    radiobutton $w.f.wids.sbox -text ScaledBoxWidget -variable widget_type,$modid -value 11 -command $n
-    radiobutton $w.f.wids.cube -text CubeWidget -variable widget_type,$modid -value 12 -command $n
-    radiobutton $w.f.wids.scube -text ScaledCubeWidget -variable widget_type,$modid -value 13 -command $n
-
-    pack $w.f.wids.point $w.f.wids.arrow $w.f.wids.cross $w.f.wids.guage $w.f.wids.ring $w.f.wids.fframe $w.f.wids.frame $w.f.wids.sframe $w.f.wids.square $w.f.wids.ssquare $w.f.wids.box $w.f.wids.sbox $w.f.wids.cube $w.f.wids.scube -in $w.f.wids -side top -padx 2 -pady 2 -anchor w
-    pack $w.f.wids -in $w.f
+	make_labeled_radio $w.f.wids "Widgets:" $n top $this-widget_type \
+		{ {PointWidget 0} {ArrowWidget 1} \
+		{CrossHairWidget 2} {GuageWidget 3} \
+		{RingWidget 4} {FixedFrameWidget 5} {FrameWidget 6} \
+		{ScaledFrameWidget 7} {SquareWidget 8} \
+		{ScaledSquareWidget 9} {BoxWidget 10} \
+		{ScaledBoxWidget 11} {CubeWidget 12} \
+		{ScaledCubeWidget 13} }
+	pack $w.f.wids
+    }
 }

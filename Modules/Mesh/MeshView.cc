@@ -126,7 +126,7 @@ void MeshView::execute()
     if ((bmin != oldMin) || (bmax != oldMax))
     {
     	ostrstream str(buf, 1000);
-    	str << "MeshView_set_bounds " << id << " " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z() << endl;
+    	str << id << " set_bounds " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z() << endl;
 
     	TCL::execute(str.str());
 	oldMin = bmin;
@@ -143,7 +143,7 @@ void MeshView::execute()
     {
 	makeLevels(mesh);
 	ostrstream str3(buf, 1000);
-	str3 << "MeshView_set_minmax_nl " << id << " " << 0 << " " << deep << '\0';
+	str3 << id << " set_minmax_nl " << 0 << " " << deep << '\0';
 	TCL::execute(str3.str());
 	oldSeed = seedTet.get();
 
@@ -161,7 +161,7 @@ void MeshView::execute()
     if (oldNumTet != numTetra)
     {
     	ostrstream str2(buf, 1000);
-    	str2 << "MeshView_set_minmax_numTet " << id << " " << 0 << " " << numTetra - 1 << '\0';
+    	str2 << id << " set_minmax_numTet " << 0 << " " << numTetra - 1 << '\0';
     	TCL::execute(str2.str());
 		oldNumTet = numTetra;
     }
