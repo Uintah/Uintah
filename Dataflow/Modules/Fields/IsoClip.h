@@ -108,6 +108,7 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
     if (inside == 0)
     {
+      // Discard outside elements.
     }
     else if (inside == 0xf)
     {
@@ -133,8 +134,8 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     }
     else if (inside == 0x8 || inside == 0x4 || inside == 0x2 || inside == 0x1)
     {
+      // Lop off 3 points and add resulting tet to the new mesh.
       const int *perm = permute_table[inside];
-      // Add this element to the new mesh.
       typename FIELD::mesh_type::Node::array_type nnodes(4);
 
       if (nodemap.find((unsigned int)onodes[perm[0]]) == nodemap.end())
@@ -164,12 +165,13 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     }
     else if (inside == 0x7 || inside == 0xb || inside == 0xd || inside == 0xe)
     {
+      // Lop off 1 point, break up the resulting quads and add the
+      // resulting tets to the mesh.
       const int *perm = permute_table[inside];
-      // Add this element to the new mesh.
-      typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
+      typename FIELD::mesh_type::Node::array_type nnodes(4);
 
       typename FIELD::mesh_type::Node::index_type inodes[9];
-      for (unsigned int i = 1; i<onodes.size(); i++)
+      for (unsigned int i = 1; i < 4; i++)
       {
 	if (nodemap.find((unsigned int)onodes[perm[i]]) == nodemap.end())
 	{
@@ -242,6 +244,82 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       nnodes[0] = inodes[0];
       nnodes[1] = inodes[1];
       nnodes[2] = inodes[2];
+      nnodes[3] = inodes[6];
+      clipped->add_elem(nnodes);
+    }
+    else// if (inside == 0x3 || inside == 0x5 || inside == 0x6 ||
+    	//     inside == 0x9 || inside == 0xa || inside == 0xc)
+    {
+      // Lop off two points, break the resulting quads, then add the
+      // new tets to the mesh.
+      const int *perm = permute_table[inside];
+      typename FIELD::mesh_type::Node::array_type nnodes(4);
+
+      typename FIELD::mesh_type::Node::index_type inodes[8];
+      for (unsigned int i = 2; i < 4; i++)
+      {
+	if (nodemap.find((unsigned int)onodes[perm[i]]) == nodemap.end())
+	{
+	  const typename FIELD::mesh_type::Node::index_type nodeindex =
+	    clipped->add_point(p[perm[i]]);
+	  nodemap[(unsigned int)onodes[perm[i]]] = nodeindex;
+	  inodes[i-2] = nodeindex;
+	}
+	else
+	{
+	  inodes[i-2] = nodemap[(unsigned int)onodes[perm[i]]];
+	}
+      }
+      const double imv0 = isoval - v[perm[0]];
+      const Point l02 = Interpolate(p[perm[0]], p[perm[2]],
+				    imv0 / (v[perm[2]] - v[perm[0]]));
+      const Point l03 = Interpolate(p[perm[0]], p[perm[3]],
+				    imv0 / (v[perm[3]] - v[perm[0]]));
+
+      const double imv1 = isoval - v[perm[1]];
+      const Point l12 = Interpolate(p[perm[1]], p[perm[2]],
+				    imv1 / (v[perm[2]] - v[perm[1]]));
+      const Point l13 = Interpolate(p[perm[1]], p[perm[3]],
+				    imv1 / (v[perm[3]] - v[perm[1]]));
+
+      inodes[2] = clipped->add_point(l02);
+      inodes[3] = clipped->add_point(l03);
+      inodes[4] = clipped->add_point(l12);
+      inodes[5] = clipped->add_point(l13);
+
+      const Point c1 = Interpolate(l02, l03, 0.5);
+      const Point c2 = Interpolate(l12, l13, 0.5);
+
+      inodes[6] = clipped->add_point(c1);
+      inodes[7] = clipped->add_point(c2);
+
+      nnodes[0] = inodes[7];
+      nnodes[1] = inodes[2];
+      nnodes[2] = inodes[0];
+      nnodes[3] = inodes[4];
+      clipped->add_elem(nnodes);
+
+      nnodes[0] = inodes[1];
+      nnodes[1] = inodes[5];
+      nnodes[2] = inodes[3];
+      nnodes[3] = inodes[7];
+      clipped->add_elem(nnodes);
+
+      nnodes[0] = inodes[1];
+      nnodes[1] = inodes[3];
+      nnodes[2] = inodes[6];
+      nnodes[3] = inodes[7];
+      clipped->add_elem(nnodes);
+
+      nnodes[0] = inodes[0];
+      nnodes[1] = inodes[7];
+      nnodes[2] = inodes[6];
+      nnodes[3] = inodes[2];
+      clipped->add_elem(nnodes);
+
+      nnodes[0] = inodes[0];
+      nnodes[1] = inodes[1];
+      nnodes[2] = inodes[7];
       nnodes[3] = inodes[6];
       clipped->add_elem(nnodes);
     }
