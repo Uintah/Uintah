@@ -34,6 +34,14 @@ class PartToGeom : public Module {
     TCLdouble current_time;
     TCLdouble radius;
     TCLint drawspheres;
+    TCLint polygons; // number of polygons used to represent
+                     // a sphere: [minPolys, maxPolys]
+    const int minPolys;    // polys, nu, and nv must correlate
+    const int maxPolys;  // minNu*minNv = minPolys
+    const int minNu;       // maxNu*maxNv = maxPolys
+    const int maxNu;
+    const int minNv;
+    const int maxNv;
     int last_idx;
     int last_generation;
 public:
@@ -53,7 +61,9 @@ Module* make_PartToGeom(const clString& id)
 
 PartToGeom::PartToGeom(const clString& id)
 : Module("PartToGeom", id, Filter), current_time("current_time", id, this),
-  radius("radius", id, this), drawspheres("drawspheres", id, this)
+  radius("radius", id, this), drawspheres("drawspheres", id, this),
+  polygons("polygons", id, this), minPolys(8), maxPolys(400),
+  minNu(4), maxNu(20), minNv(2), maxNv(20)
 {
     // Create the input port
     iPart=scinew ParticleSetIPort(this, "Particles", ParticleSetIPort::Atomic);
@@ -66,11 +76,14 @@ PartToGeom::PartToGeom(const clString& id)
     last_generation=-1;
     drawspheres.set(1);
     radius.set(0.05);
+    polygons.set(100);
 }
 
 PartToGeom::PartToGeom(const PartToGeom&copy, int deep)
 : Module(copy, deep), current_time("current_time", id, this),
-  radius("radius", id, this), drawspheres("drawspheres", id, this)
+  radius("radius", id, this), drawspheres("drawspheres", id, this),
+  polygons("polygons", id, this), minPolys(8), maxPolys(400),
+  minNu(4), maxNu(20), minNv(2), maxNv(20)
 {
     NOT_FINISHED("PartToGeom::PartToGeom");
 }
@@ -152,9 +165,13 @@ void PartToGeom::execute()
     }
     
     if( drawspheres.get() == 1 ) {
+      float t = (polygons.get() - minPolys)/float(maxPolys - minPolys);
+      int nu = int(minNu + t*(maxNu - minNu)); 
+      int nv = int(minNv + t*(maxNv - minNv));
       GeomGroup *obj = scinew GeomGroup;
       for (int i=0; i<pos.size();i++) {
-	GeomSphere *sp = scinew GeomSphere(pos[i].asPoint(),radius.get());
+	GeomSphere *sp = scinew GeomSphere(pos[i].asPoint(),radius.get(),
+					   nu, nv);
 	int index = cmap->rcolors.size() * ( (scalars[i] - min) /
 					     (max - min + 1) ) ;
 	obj->add( scinew GeomMaterial(sp,scinew Material( Color(1,1,1),
