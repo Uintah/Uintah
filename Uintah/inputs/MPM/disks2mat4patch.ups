@@ -84,9 +84,8 @@
 	    </material>
 
 	    <contact>
-	      <type>friction</type>
+	      <type>single_velocity</type>
 	      <vel_fields>[0,1,0]</vel_fields>
-	      <mu> .2 </mu>
 	    </contact>
 	</MPM>
 
