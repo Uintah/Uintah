@@ -675,7 +675,7 @@ itcl_class Roe {
 	set $clip-normal-x [set $clip-normal-x-$cs]
 	set $clip-normal-y [set $clip-normal-y-$cs]
 	set $clip-normal-z [set $clip-normal-z-$cs]
-	set $clip-normal-d [set $clip-normal-d-$cs]
+	.clip[modname].normal.e newvalue [set $clip-normal-d-$cs]
 	set $clip-visible [set $clip-visible-$cs]
     }
 
