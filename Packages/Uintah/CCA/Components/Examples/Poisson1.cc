@@ -95,7 +95,7 @@ void Poisson1::initialize(const ProcessorGroup*,
       phi.initialize(0);
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
 	IntVector l,h;
-	patch->getFace(Patch::xminus, 0, l, h);
+	patch->getFaceNodes(Patch::xminus, 0, l, h);
 	for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  phi[*iter]=1;
       }
