@@ -97,7 +97,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     VolumeDpy* dpy=new VolumeDpy(40);
     Object* obj;
 
-    if(files.size()==0){
+    if(files.size()==1){
 	obj=new HVolume<unsigned char, BrickArray3<unsigned char>, BrickArray3<VMCell<unsigned char> > > (matl0, dpy, files[0], depth, nworkers);
     } else {
 #ifdef GROUP_IN_TIMEOBJ
@@ -109,8 +109,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 	obj=group;
 	for(int i=0;i<files.size();i++){
-	  matl0=new Phong(Color(.6,1,.4),
-			  Color(0,0,0), 100, 0);
 #if 0
 	  if (false) {
 	    matl0=new Phong(Color(1,0.1,0.1),
@@ -146,6 +144,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     if(cut){
 	PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
 	obj=new CutPlane(obj, pd);
+	obj->set_matl(matl0);
 	(new Thread(pd, "Cutting plane display thread"))->detach();
     }
 
@@ -165,7 +164,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			   ambient_scale);
     scene->addObjectOfInterest(obj, true);
     //scene->add_light(new Light(Point(50,-30,30), Color(1.0,0.8,0.2), 0));
-    scene->add_light(new Light(Point(1100,-600,3000), Color(1.0,1.0,1.0), 0));
+    Light *light0 = new Light(Point(1100,-600,3000), Color(1.0,1.0,1.0), 0);
+    light0->name_ = "light 0";
+    scene->add_light(light0);
     scene->set_background_ptr( new LinearBackground(
                                Color(0.2, 0.4, 0.9),
                                Color(0.0,0.0,0.0),
