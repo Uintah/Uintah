@@ -203,6 +203,8 @@ available in the pop-up menu:
   \menuitemdesc{Notes} Displays a connection's note pad.
 \end{description}
 
+
+
 \section{Creating a Module}
 \label{sec:creatingmodules}
 
@@ -233,12 +235,15 @@ placed in the NetEdit frame.
   {../Figures/moddialog.gif}}
 \end{htmlonly}
 
-To change a module's properties, click its \guibutton{UI} button.  This
-displays the module's control dialog.  Use the dialog to change the
-module's properties.  Each \htmladdnormallinkfoot{module's reference
+To change a module's properties, click its \guibutton{UI} button.
+This displays the module's control dialog.  Use the dialog to change
+the module's properties.  Each \htmladdnormallinkfoot{module's
+  reference
   documentation}{\latexhtml{http://software.sci.utah.edu/doc/}{../../../}Developer/Modules/index.html}
-explains the use of its control dialog.  Figure~\ref{fig:moddialog}
-shows the control dialog for the \module{Show Field} module.
+explains the use of its control dialog.  A module's reference
+documentation can be displayed by clicking a module's \guibutton{Help}
+button.  Figure~\ref{fig:moddialog} shows the control dialog for the
+\module{Show Field} module.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -297,6 +302,10 @@ to its new location.
 Multiple modules can be moved at one time.  Select one or more
 modules, then perform Button1-Drag while the pointer is over any one
 of the modules in the selected group.
+
+Two modules may be moved by dragging one of the connections between
+them.  To move two modules perform Button1-Drag when the pointer is
+over a connection between two modules.
 
 \section{Disabling and Enabling Modules}
 \label{sec:disablemod}
@@ -682,17 +691,20 @@ allows the user to write notes on the purpose and use of the network.
 \filename{.net} (in the past they also had .sr and .uin
 extensions).  
 
-To save a network, select \guimenuitem{Save} item from the main window's
+To save a network, select item \guimenuitem{Save} from the main window's
 \menu{File} menu.  A file browser dialog prompts for the
 name and location of the network file.
 
-If  changes are made to an existing network, \guimenuitem{Save} 
-saves changes made to an existing net file.
+If changes are made to an existing network, \guimenuitem{Save} saves
+changes made to an existing net file.
 
-Save an existing network under a new name using the
-\guimenuitem{Save As...} menu item.  A file browser dialog prompts
-for the new name of the network file.  Subsequent uses of
-\guimenuitem{Save} saves changes to the newly created file.
+Save an existing network under a new name using the \guimenuitem{Save
+  As...} menu item.  A file browser dialog prompts for the new name of
+the network file.  Subsequent uses of \guimenuitem{Save} saves changes
+to the newly created file.
+
+The position and size of the Viewer window, if open, will be saved to
+the network file.
 
 Network files are  \dfna{Tool Command Language}{TCL} scripts.
 These files can be edited, however, reasons for doing so are beyond

@@ -108,7 +108,7 @@ of Main Window window.
 \end{figure}
 
 \sr{} may encounter errors during start up.  Errors, warnings, and
-other messages are displayed in \sr{}'s error frame (see
+other messages are displayed in \sr{}'s Message frame (see
 Figure~\ref{fig:srwindow}).  Errors should be
 \htmladdnormallink{reported}{\bugsurl} to the \sr{} development team
 (See \secref{Reporting Bugs}{sec:bugs} for information on reporting
@@ -117,8 +117,8 @@ bugs).
 \section{Anatomy of the Main Window}
 \label{sec:windowanatomy}
 
-The \sr{} main window consists of the Menu Bar, the Global View Frame,
-the Error Frame, and the NetEdit frame (see
+The \sr{} main window consists of the Menu Bar, the Global View frame,
+the Message frame, and the Net Edit frame (see
 Figure~\ref{fig:srwindow}):
 
 \begin{description}
@@ -155,7 +155,8 @@ Figure~\ref{fig:srwindow}):
       the purpose of the network (See \hyperref{this
         section}{Section~}{}{sec:docnetwork}).
     
-      \menuitemdesc{Quit} Quits \sr{}
+      \menuitemdesc{Quit} Quits \sr{}.  Pressing key combination
+      \keyboard{Control + Q} also quits.
     \end{description}
   \end{description}
   
@@ -195,8 +196,8 @@ Figure~\ref{fig:srwindow}):
   Figure~\ref{fig:srwindow}). It is used to navigate complex networks
   \secref{Navigating a Network}{sec:navnetwork} describes the use of the Global View Frame.
   
-  \descitem{Error Frame} Errors during program startup are displayed
-  in the Error Frame.  The Error Frame is located in the upper right
+  \descitem{Message Frame} Messages during program startup are displayed
+  in the Message frame.  The Message frame is located in the upper right
   corner of the main window (see Figure~\ref{fig:srwindow}).  Errors on
   startup may mean \sr{} has been installed incorrectly or has
   been installed from a buggy distribution.  Please report these
@@ -208,6 +209,16 @@ Figure~\ref{fig:srwindow}):
   discusses the use of the NetEdit frame).
 
 \end{description}
+
+The Global View, Message, and Net Edit frames can be resized by moving
+their borders vertically/horizontally.  The horizontal border separating
+the Net Edit frame from the Global View and Message frames can be moved
+up or down.  The vertical border separating the Global View and Error
+frames can be moved left or right.  To resize a frame, position the
+mouse pointer over a border, press (and hold) mouse button 1, and drag
+the mouse.  A frame is removed entirely from view by dragging a border
+to the window's edge.
+
 
 \section{The Terminal Window}
 \label{sec:termwinapp}
@@ -331,6 +342,13 @@ for a csh-style shell
   
   Default value is \directory{\ptext{build\_dir}/lib}.
 
+  \envitem{SCIRUN\_NOSPLASH}  Disables \sr{}'s startup splash screen if defined.
+  
+  \envitem{SCIRUN\_FAST\_QUIT} If defined, disables the confirmation
+  dialog that is normally displayed when exiting \sr.
+  
+  \envitem{SCIRUN\_STRAIGHT\_CONNECTIONS} If defined, connections
+  between modules will be drawn as straight lines.
   
 \end{description}
 
