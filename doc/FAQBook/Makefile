@@ -34,26 +34,21 @@ define xmltohtml
 treetop=${TREETOP} cont=${2} >${1}
 endef
 
-# If using xalan-java 2.3.1 or higher to process the xml files then
-# the environment variable CLASSPATH must point to xalan.jar, xml-api.jar,
-#  and xercesImpl.jar.
-#
-# define xmltohtml
-# -java org.apache.xalan.xslt.Process -IN ${FAQBOOK} -XSL ${STYLESHEET} \
-# -OUT ${1} -PARAM treetop ${TREETOP} -PARAM cont ${2} -HTML
-# endef
-
 default: index.html faq1.html faq2.html faq3.html printable.html
 
+.DELETE_ON_ERROR: index.html
 index.html: ${FAQBOOK} ${FAQS} ${STYLESHEET}
 	${call xmltohtml,index.html,0}
 
+.DELETE_ON_ERROR: faq1.html
 faq1.html: ${INSTFAQ} ${STYLESHEET}
 	${call xmltohtml,faq1.html,1}
 
+.DELETE_ON_ERROR: faq2.html
 faq2.html: ${USERFAQ} ${STYLESHEET}
 	${call xmltohtml,faq2.html,2}
 
+.DELETE_ON_ERROR: faq3.html
 faq3.html: ${DEVFAQ} ${STYLESHEET}
 	${call xmltohtml,faq3.html,3}
 
