@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Components/ICE
 
 SRCS	+= $(SRCDIR)/ICE.cc \
 	$(SRCDIR)/ICELabel.cc \
-	$(SRCDIR)/ICEMaterial.cc 
+	$(SRCDIR)/ICEMaterial.cc $(SRCDIR)/GeometryObject2.cc
 
 SUBDIRS := $(SRCDIR)/EOS 
  
@@ -19,12 +19,23 @@ PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
 	SCICore/Geometry PSECore/XMLUtil Uintah/Math \
 	SCICore/Datatypes
+
 LIBS	:= $(XML_LIBRARY)        
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.19  2000/11/22 01:28:05  guilkey
+# Changed the way initial conditions are set.  GeometryObjects are created
+# to fill the volume of the domain.  Each object has appropriate initial
+# conditions associated with it.  ICEMaterial now has an initializeCells
+# method, which for now just does what was previously done with the
+# initial condition stuct d_ic.  This will be extended to allow regions of
+# the domain to be initialized with different materials.  Sorry for the
+# lame GeometryObject2, this could be changed to ICEGeometryObject or
+# something.
+#
 # Revision 1.18  2000/10/16 17:19:44  guilkey
 # Code for ICE::step1d.  Only code for one of the faces is committed
 # until things become more concrete.
