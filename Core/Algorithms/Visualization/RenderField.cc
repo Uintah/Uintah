@@ -83,6 +83,14 @@ to_double(const Vector &in, double &out)
 }
 
 template <>
+bool
+to_vector(const Vector &in, Vector &out)
+{
+  out = in;
+  return true;
+}
+
+template <>
 bool 
 add_data(const Point &p, const Tensor &d, GeomArrows *arrows, 
 	 GeomSwitch *dat_sw,

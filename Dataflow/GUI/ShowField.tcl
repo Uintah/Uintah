@@ -26,6 +26,7 @@ itcl_class SCIRun_Visualization_ShowField {
 
     method set_defaults {} {
 	global $this-nodes-on
+	global $this-nodes-as-disks
 	global $this-edges-on
 	global $this-faces-on
 	global $this-vectors-on
@@ -49,6 +50,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
 	set $this-nodes-on 1
+	set $this-nodes-as-disks 0
 	set $this-edges-on 1
 	set $this-faces-on 1
 	set $this-vectors-on 0
@@ -58,6 +60,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-active_tab "Nodes"
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
+	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
     }
 
     method raiseColor {col color colMsg} {
@@ -140,10 +143,18 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-nodes-on
 
 	global $this-node_display_type
-	make_labeled_radio $nodes.radio \
-		"Node Display Type" "$this-c node_display_type" top \
-		$this-node_display_type \
-		{{Spheres Spheres} {Axes Axes} {Point Points}}
+	
+	if {[set $this-nodes-as-disks] == 1} {
+	    make_labeled_radio $nodes.radio \
+		    "Node Display Type" "$this-c node_display_type" top \
+		    $this-node_display_type \
+		    {{Spheres Spheres} {Axes Axes} {Point Points} {Disks Disks}}
+	} else {
+	    make_labeled_radio $nodes.radio \
+		    "Node Display Type" "$this-c node_display_type" top \
+		    $this-node_display_type \
+		    {{Spheres Spheres} {Axes Axes} {Point Points}}
+	}
 
 	pack $nodes.show_nodes $nodes.radio -fill y -anchor w
 
@@ -224,6 +235,16 @@ itcl_class SCIRun_Visualization_ShowField {
 		"$this-c needexecute"
     }
 
+    method disk_render_status_changed {name1 name2 op} {
+	#puts stdout "called disk_render_status_changed"
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set dof [$window.options.disp.frame_title childsite]
+	    $dof.tabs delete "Nodes"
+	    add_nodes_tab $dof
+	    $dof.tabs view [set $this-active_tab]
+	}
+    }
 
     method vec_tab_changed {name1 name2 op} {
 	global $this-has_vec_data
@@ -261,7 +282,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 220 -raiseselect true 
+	iwidgets::tabnotebook  $dof.tabs -height 250 -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
 	add_nodes_tab $dof
