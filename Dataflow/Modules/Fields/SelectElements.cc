@@ -197,12 +197,16 @@ void SelectElements::execute()
     ++count;
   }
 
+  Mesh::synchronized_t sync;
+  sync.set(Mesh::NODE_NEIGHBORS_E);
+  mesh->synchronize(sync);
+
+
   TetVolMesh *mesh_no_unattached_nodes = scinew TetVolMesh;
   TetVolMesh::Node::size_type nnodes;
   mesh->size(nnodes);
   Array1<TetVolMesh::Node::index_type> node_map(nnodes);
   node_map.initialize(-1);
-  mesh->flush_changes();
   mesh->begin(niter);
   mesh->end(niter_end);
   TetVolMesh::Node::array_type narr;
