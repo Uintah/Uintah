@@ -29,6 +29,10 @@ PROGRAM := $(SRCDIR)/OldMeshToNewTetVol
 SRCS := $(SRCDIR)/OldMeshToNewTetVol.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/OldMeshToNewFieldSet
+SRCS := $(SRCDIR)/OldMeshToNewFieldSet.cc
+include $(SRCTOP)/scripts/program.mk
+
 PROGRAM := $(SRCDIR)/NewTetVolToOldMesh
 SRCS := $(SRCDIR)/NewTetVolToOldMesh.cc
 include $(SRCTOP)/scripts/program.mk
