@@ -20,6 +20,7 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/CrackFace.cc \
 	$(SRCDIR)/BoundaryBand.cc \
 	$(SRCDIR)/SurfaceCouple.cc \
+	$(SRCDIR)/SurfaceCouples.cc \
 	$(SRCDIR)/IndexExchange.cc
 
 PSELIBS	:= Packages/Uintah/Core/ProblemSpec \

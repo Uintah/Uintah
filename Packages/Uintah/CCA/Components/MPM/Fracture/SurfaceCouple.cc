@@ -32,12 +32,16 @@ bool SurfaceCouple::extensible(
        particleIndex pIdx,
        const ParticleVariable<Point>& pX,
        const ParticleVariable<Vector>& pExtensionDirection,
+       const ParticleVariable<Vector>& pCrackNormal,
        double volume,
        double& distanceToCrack) const
 {
   Point tip = Point( (pX[d_pIdxA].x() + pX[d_pIdxB].x())/2,
                      (pX[d_pIdxA].y() + pX[d_pIdxB].y())/2,
 		     (pX[d_pIdxA].z() + pX[d_pIdxB].z())/2 );
+
+  Vector normal = pCrackNormal[d_pIdxA] + pCrackNormal[d_pIdxB];
+  normal.normalize();
 
   Vector dis = pX[pIdx] - tip;
   if( Dot(dis,pExtensionDirection[d_pIdxA]) < 0 ) return false;
@@ -46,11 +50,21 @@ bool SurfaceCouple::extensible(
   double r = pow(volume,0.333333)/2;
   if(dis.length() > r*3) return false;
   
-  double vDis = fabs( Dot(dis, d_normal) );
+  double vDis = fabs( Dot(dis, normal) );
   if( vDis < distanceToCrack ) {
     distanceToCrack = vDis;
   }
   return true;
+}
+
+particleIndex SurfaceCouple::getIdxA() const
+{
+  return d_pIdxA;
+}
+
+particleIndex SurfaceCouple::getIdxB() const
+{
+  return d_pIdxB;
 }
 
 } // End namespace Uintah
