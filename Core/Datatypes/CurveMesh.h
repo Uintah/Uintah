@@ -153,7 +153,7 @@ public:
     { nodes_[index] = point; }
 
   //! use these to build up a new contour mesh
-  Node::index_type add_node(Point p)
+  Node::index_type add_node(const Point &p)
     { nodes_.push_back(p); return nodes_.size()-1; }
   Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
     { edges_.push_back(index_pair_type(i1,i2)); return static_cast<Edge::index_type>(nodes_.size()-1); }
