@@ -123,10 +123,11 @@ WARNING
       totsize=siz.x()*siz.y()*siz.z()*sizeof(T);
       ptr = (void*)getPointer();
     }
+    virtual IntVector getLow()
+    { return getLowIndex(); }
+    virtual IntVector getHigh()
+    { return getLowIndex(); }
 
-
-    // Replace the values on the indicated face with value
-   
     virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -282,6 +283,13 @@ WARNING
 			     const IntVector& lowIndex,
 			     const IntVector& highIndex)
   {
+    if (getWindow()->getData() == src.getWindow()->getData() &&
+	getWindow()->getOffset() == src.getWindow()->getOffset()) {
+      // No copy needed
+      //cerr << "No copy needed for SFCYVariable!!!\n";
+      return;
+    }
+    
     for(int i=lowIndex.x();i<highIndex.x();i++)
       for(int j=lowIndex.y();j<highIndex.y();j++)
 	for(int k=lowIndex.z();k<highIndex.z();k++)

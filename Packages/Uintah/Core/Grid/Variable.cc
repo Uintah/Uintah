@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
 #include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -17,7 +18,6 @@ using namespace std;
 using namespace Uintah;
 
 Variable::Variable()
-  : allocationLabel_(0)
 {
    d_foreign = false;
 }

@@ -72,12 +72,6 @@ public:
   // Only affects grid variables
   virtual void offsetGrid(IntVector /*offset*/) {}
 
-  void setAllocationLabel(const VarLabel* label)
-  { allocationLabel_ = label; }
-
-  const VarLabel* getAllocationLabel() const
-  { return allocationLabel_; }
-  
   virtual RefCounted* getRefCounted() = 0;
 protected:
   Variable();
@@ -92,7 +86,6 @@ private:
   // other one.
   string* gzipCompress(string* pUncompressed, string* pBuffer);
   bool d_foreign;
-  const VarLabel* allocationLabel_;
 };
 
 } // End namespace Uintah
