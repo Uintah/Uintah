@@ -172,7 +172,10 @@ private:
 		     Semaphore* thread_sema, ThreadGroup* tg);
   
   template <class T>
-  friend class run_make_brick_data : public Runnable {
+#if ! defined(__sgi)
+  friend 
+#endif
+  class run_make_brick_data : public Runnable {
   public:
     run_make_brick_data(GLTexture3D* tex3D,
 		      Semaphore *thread,
@@ -193,7 +196,10 @@ private:
   // friend class template <class T> run_make_brick_data<T>;
 
   //  template <class T>
-  friend class run_make_low_res_brick_data : public Runnable {
+#if ! defined(__sgi)
+  friend 
+#endif
+  class run_make_low_res_brick_data : public Runnable {
   public:
     run_make_low_res_brick_data(GLTexture3D* tex3D,
 				Semaphore *thread,
