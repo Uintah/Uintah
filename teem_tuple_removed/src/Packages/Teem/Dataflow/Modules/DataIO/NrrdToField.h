@@ -186,7 +186,7 @@ execute(MeshHandle& mHandle,
     for( j=0; j<jdim; j++ ) {
       for( k=0; k<kdim; k++ ) {
 	
-	int index = i + idim*(j + jdim*k);
+	int index = (i * jdim + j) * kdim + k;
 	
 	float xVal = 0, yVal = 0, zVal = 0;
 	
@@ -481,6 +481,7 @@ execute(MeshHandle& mHandle,
     for( i=0; i<idim; i++ ) {
       for( j=0; j<jdim; j++ ) {
 	for( k=0; k<kdim; k++ ) {
+
 	  if( permute )
 	    index = (k * jdim + j) * idim + i;
 	  else 
