@@ -360,34 +360,61 @@ void VisControl::execute()
      ParticleVariable< Point  > pp;
      
      int matlIndex=0; // HARDCODED - Steve.  This should be fixed!
-     if(gvVar.get() != "")
+     bool have_gv;
+     if(gvVar.get() != ""){
+	have_gv=true;
 	archive.query(vv, string(gvVar.get()()), matlIndex, *r, times[idx]);
-     if(gsVar.get() != "")
+     } else {
+	have_gv=false;
+     }
+     bool have_gs;
+     if(gsVar.get() != ""){
+	have_gs=true;
 	archive.query(sv, string(gsVar.get()()), matlIndex, *r, times[idx]);
-     if(pvVar.get() != "")
-	archive.query(pv, string(pvVar.get()()), matlIndex, *r, times[idx]);
-     if(psVar.get() != "")
-	archive.query(ps, string(psVar.get()()), matlIndex, *r, times[idx]);
-     if(positionName != "")
-	archive.query(pp, positionName, matlIndex, *r, times[idx]);
-     
-#if 0
+     } else {
+	have_gs=false;
+     }
      // fill up the scalar and vector fields
      for(NodeIterator n = (*r)->getNodeIterator(); !n.done(); n++){
-       sf->grid((*n).x(), (*n).y(), (*n).z() ) = sv[*n];
-       vf->grid((*n).x(), (*n).y(), (*n).z() ) = vv[*n]; 
+	if(have_gs)
+	   sf->grid((*n).x(), (*n).y(), (*n).z() ) = sv[*n];
+	else
+	   sf->grid((*n).x(), (*n).y(), (*n).z()) = 0;
+	if(have_gv)
+	   vf->grid((*n).x(), (*n).y(), (*n).z() ) = vv[*n]; 
+	else
+	   vf->grid((*n).x(), (*n).y(), (*n).z() ) = Vector(0,0,0);
      }
-#endif
-     ParticleSubset* source_subset = ps.getParticleSubset();
-     particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
-     vectors.resync();
-     positions.resync();
-     scalars.resync();
-     for(ParticleSubset::iterator iter = source_subset->begin();
-	 iter != source_subset->end(); iter++, dest++){
-       vectors[dest]=pv[*iter];
-       positions[dest]=pp[*iter];
-       scalars[dest]=ps[*iter];
+
+     int numMatls = archive.queryNumMaterials(positionName, *r, times[idx]);
+     bool have_pv;
+     if(pvVar.get() != ""){
+	have_pv=true;
+     } else {
+	have_pv=false;
+     }
+     for(int matl=0;matl<numMatls;matl++){
+	if(have_pv)
+	   archive.query(pv, string(pvVar.get()()), matl, *r, times[idx]);
+	if(psVar.get() != "")
+	   archive.query(ps, string(psVar.get()()), matl, *r, times[idx]);
+	if(positionName != "")
+	   archive.query(pp, positionName, matl, *r, times[idx]);
+	
+	ParticleSubset* source_subset = ps.getParticleSubset();
+	particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
+	vectors.resync();
+	positions.resync();
+	scalars.resync();
+	for(ParticleSubset::iterator iter = source_subset->begin();
+	    iter != source_subset->end(); iter++, dest++){
+	   if(have_pv)
+	      vectors[dest]=pv[*iter];
+	   else
+	      vectors[dest]=Vector(0,0,0);
+	   positions[dest]=pp[*iter];
+	   scalars[dest]=ps[*iter];
+	}
      }
    }
    VisParticleSet*vps = new VisParticleSet(positions, scalars, vectors, this);
