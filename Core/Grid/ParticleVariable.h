@@ -96,6 +96,9 @@ WARNING
       
       virtual void copyPointer(const ParticleVariableBase&);
       virtual void allocate(ParticleSubset*);
+      virtual void allocate(const Patch*)
+      { throw InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead."); }
+
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs,
@@ -391,7 +394,5 @@ WARNING
 	 }
       }
 } // End namespace Uintah
-
-
 
 #endif

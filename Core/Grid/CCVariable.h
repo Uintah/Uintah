@@ -78,6 +78,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex);
       
+      virtual void allocate(const Patch* patch)
+      { allocate(patch->getCellLowIndex(), patch->getCellHighIndex()); }
+
       //////////
       // Insert Documentation Here:
       void copyPatch(CCVariableBase* src,
@@ -94,10 +97,12 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 
      // Replace the values on the indicated face with value
-      void fillFace(Patch::FaceType face, const T& value)
+      void fillFace(Patch::FaceType face, const T& value, 
+		    IntVector offset = IntVector(0,0,0) )
 	{ 
-	  IntVector low = getLowIndex();
-	  IntVector hi = getHighIndex();
+	  IntVector low,hi;
+	  low = getLowIndex() + offset;
+	  hi = getHighIndex() - offset;
 	  switch (face) {
 	  case Patch::xplus:
 	    for (int j = low.y(); j<hi.y(); j++) {
@@ -143,16 +148,22 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    break;
 	  case Patch::numFaces:
 	    break;
+	 case Patch::invalidFace:
+	    break;
 	  }
 
 	};
      
       // Replace the values on the indicated face with value
       // using a 1st order difference formula for a Neumann BC condition
-      void fillFaceFlux(Patch::FaceType face, const T& value,const Vector& dx)
+
+      void fillFaceFlux(Patch::FaceType face, const T& value,const Vector& dx,
+			IntVector offset = IntVector(0,0,0))
 	{ 
-	  IntVector low = getLowIndex();
-	  IntVector hi = getHighIndex();
+	  IntVector low,hi;
+	  low = getLowIndex() + offset;
+	  hi = getHighIndex() - offset;
+
 	  switch (face) {
 	  case Patch::xplus:
 	    for (int j = low.y(); j<hi.y(); j++) {
@@ -204,6 +215,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    break;
 	  case Patch::numFaces:
 	    break;
+	 case Patch::invalidFace:
+	    break;
 	  }
 
 	};
@@ -212,10 +225,12 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       // Use to apply symmetry boundary conditions.  On the
       // indicated face, replace the component of the vector
       // normal to the face with 0.0
-      void fillFaceNormal(Patch::FaceType face)
+      void fillFaceNormal(Patch::FaceType face,
+			  IntVector offset = IntVector(0,0,0))
 	{
-	  IntVector low = getLowIndex();
-	  IntVector hi = getHighIndex();
+	  IntVector low,hi;
+	  low = getLowIndex() + offset;
+	  hi = getHighIndex() - offset;
 	  switch (face) {
 	  case Patch::xplus:
 	    for (int j = low.y(); j<hi.y(); j++) {
@@ -273,6 +288,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    break;
 	  case Patch::numFaces:
 	    break;
+	 case Patch::invalidFace:
+	    break;
 	  }
 	};
      
@@ -283,9 +300,11 @@ class CCVariable : public Array3<T>, public CCVariableBase {
    private:
    static Variable* maker();
    };
-      template<class T>
-      TypeDescription::Register
-	CCVariable<T>::registerMe(getTypeDescription());
+
+
+  template<class T>
+  TypeDescription::Register
+  CCVariable<T>::registerMe(getTypeDescription());
 
    template<class T>
       const TypeDescription*
@@ -437,7 +456,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 		  ssize_t size = (ssize_t)(sizeof(T)*(h.x()-l.x()));
 		  ssize_t s=::read(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
 		  if(size != s)
-		     throw ErrnoException("CCVariable::emit (write call)", errno);
+		     throw ErrnoException("CCVariable::read (read call)", errno);
 		  oc.cur+=size;
 	       }
 	    }
@@ -466,6 +485,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
 			     (int)(sizeof(T)*siz.y()*siz.x()));
       }
-} // End namespace Uintah
+
+} // end namespace Uintah
+
 
 #endif
+
