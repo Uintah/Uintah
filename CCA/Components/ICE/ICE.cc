@@ -2873,7 +2873,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                     bulletProof_test, new_dw); 
       //__________________________________
       //   advect vol_frac
-      advector->advectQ(vol_frac, patch, q_advected, new_dw);  
+      bool useCompatibleFluxes = false;
+      bool is_Q_massSpecific   = false;
+      CCVariable<double> notUsed;
+      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+                        vol_frac, notUsed, patch, q_advected, new_dw);  
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -4684,7 +4688,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect mass and backout rho_CC
-      advector->advectQ(mass_L,patch,mass_advected, new_dw);
+      advector->advectMass(mass_L, patch,mass_advected, new_dw);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
@@ -4694,7 +4698,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect  momentum and backout vel_CC
-      advector->advectQ(mom_L_ME,patch,qV_advected, new_dw);
+      bool useCompatibleFluxes = false;
+      bool is_Q_massSpecific   = true;
+      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+                        mom_L_ME,mass_L, patch,qV_advected, new_dw);
 
       constCCVariable<double> PH;  // placeHolders
       CCVariable<double> PH2;
@@ -4714,7 +4721,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
-      advector->advectQ(sp_vol_L,patch,q_advected, new_dw); 
+      useCompatibleFluxes = false;
+      is_Q_massSpecific   = true;
+      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+                        sp_vol_L,mass_L, patch,q_advected, new_dw); 
 
       update_q_CC<constCCVariable<double>, double>
                   ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, 
@@ -4736,8 +4746,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
             
-            advector->advectQ(q_L_CC,patch,q_advected, new_dw);
-
+            useCompatibleFluxes = true;
+            is_Q_massSpecific   = true;
+            advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+                              q_L_CC,mass_L, patch,q_advected, new_dw);  
+   
             update_q_CC<constCCVariable<double>, double>
                  ("q_L_CC",q_CC, q_L_CC, q_advected, 
                   mass_L, mass_new, mass_advected, PH, PH2, patch);
@@ -4777,7 +4790,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
-      advector->advectQ(int_eng_L_ME,patch,q_advected, new_dw);
+      useCompatibleFluxes = false;
+      is_Q_massSpecific   = true;
+      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+                        int_eng_L_ME, mass_L, patch,q_advected, new_dw);
       
       update_q_CC<constCCVariable<double>, double>
                   ("energy",temp, int_eng_L_ME, q_advected, 
