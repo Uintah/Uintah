@@ -95,13 +95,14 @@ NrrdReader::get_nrrd_info()
   
   // call the following tcl method
   // add_axis_info {id label center size spacing min max} 
-
   for (int i = 0; i < handle_->nrrd->dim; i++) {
     ostringstream add; 
     add << id.c_str() << " add_axis_info ";
     add << i << " ";
+    if (!handle_->nrrd->axis[i].label) {
+      handle_->nrrd->axis[i].label = strdup("---");
+    }
     add << handle_->nrrd->axis[i].label << " ";
-    
     switch (handle_->nrrd->axis[i].center) {
     case nrrdCenterUnknown :
       add << "Unknown ";
@@ -114,10 +115,14 @@ NrrdReader::get_nrrd_info()
       break;
     }
     add << handle_->nrrd->axis[i].size << " ";
-    add << handle_->nrrd->axis[i].spacing << " ";	
-    add << handle_->nrrd->axis[i].min << " ";
-    add << handle_->nrrd->axis[i].max;  
+    add << handle_->nrrd->axis[i].spacing << " ";
 
+    if (!(AIR_EXISTS(handle_->nrrd->axis[i].min) && 
+	  AIR_EXISTS(handle_->nrrd->axis[i].max)))
+      nrrdAxisMinMaxSet(handle_->nrrd, i);
+    
+    add << handle_->nrrd->axis[i].min << " ";
+    add << handle_->nrrd->axis[i].max << endl;  
     gui->execute(add.str());
   }
 }
@@ -241,7 +246,6 @@ void NrrdReader::execute()
   string ax(axis_.get());
   ax.erase(ax.begin(), ax.begin() + 4); // get rid of the word axis
   int axis = atoi(ax.c_str());
-  cout << "The selected axis index is: " << axis << endl;
 
   if (axis != 0) {
     // purmute so that 0 is the tuple axis
