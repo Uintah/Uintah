@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include <Core/Util/RCParse.h>
 #include <Core/Util/RWS.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Util/scirun_env.h>
 #include <Core/Util/MacroSubstitute.h>
 

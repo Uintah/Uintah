@@ -12,17 +12,23 @@
 #include <sci_hash_map.h>
 
 #if !defined(HAVE_HASH_MAP)
+#include <sgi_stl_warnings_off.h>
 #  include <map>
+#include <sgi_stl_warnings_on.h>
 #endif
 
 #ifdef SUPERBOX_DEBUGGING
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 #endif
 
+#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <vector>
 #include <algorithm>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -37,7 +37,9 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomColormapInterface.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 /* changed to work less stupid with transfer functions
  * Peter-Pike Sloan

@@ -52,21 +52,19 @@
 
 #include <Core/share/share.h>
 
-#include <string>
 #include <stdlib.h> // for getenv()
+#include <sgi_stl_warnings_off.h>
+#include <string>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 
 namespace SCIRun {
 
     using std::streambuf;
     using std::ostream;
-    using std::cerr;
-    using std::endl;
-    using std::ofstream;
     using std::string;
-
 
     
     class DebugStream;

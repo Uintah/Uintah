@@ -16,9 +16,10 @@
 */
 
 #include <Core/Geometry/Polygon.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
-using std::cerr;
 using std::ostream;
 
 namespace SCIRun {

@@ -31,14 +31,16 @@
 #ifndef PropertyManager_h
 #define PropertyManager_h 
 
-#include <map>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <map>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -37,7 +37,9 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Datatypes/Matrix.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

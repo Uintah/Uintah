@@ -30,11 +30,6 @@
 
 
 #include <stdio.h>
-#include <iostream>
-using std::cerr;
-using std::ostream;
-#include <sstream>
-using std::ostringstream;
 
 #include <Core/Datatypes/Color.h>
 #include <Core/Malloc/Allocator.h>
@@ -66,7 +61,6 @@ Hairline::~Hairline()
 void
 Hairline::select( double x, double y, int b )
 {
-  cerr << "Hairline select\n";
   HairObj::select( x, y, b );
 }
   

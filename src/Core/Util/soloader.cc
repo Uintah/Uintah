@@ -18,8 +18,10 @@
 // soloader.cpp written by Chris Moulding 11/98
 
 #include <Core/Util/soloader.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 using namespace std;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)

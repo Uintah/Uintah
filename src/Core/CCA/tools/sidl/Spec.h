@@ -19,10 +19,12 @@
 #ifndef SPEC_H
 #define SPEC_H 1
 
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <set>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 class Symbol;
 class SymbolTable;

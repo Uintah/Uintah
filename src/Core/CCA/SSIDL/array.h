@@ -31,7 +31,9 @@
 #ifndef Component_SIDL_array_h
 #define Component_SIDL_array_h
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SSIDL {
     template<class T> class array1 : public std::vector<T> {

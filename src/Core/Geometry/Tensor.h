@@ -32,8 +32,10 @@
 
 #include <Core/share/share.h>
 #include <Core/Geometry/Vector.h>
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   template<class T> class Array1;

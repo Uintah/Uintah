@@ -36,7 +36,9 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <sci_hash_map.h>
 

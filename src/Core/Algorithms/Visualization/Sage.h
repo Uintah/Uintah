@@ -32,8 +32,10 @@
 #define Sage_h
 
 #include <stdio.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 #include <Core/Thread/Time.h>
 #include <Dataflow/Network/Module.h> 

@@ -39,7 +39,9 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

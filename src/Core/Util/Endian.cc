@@ -2,8 +2,8 @@
 
 namespace SCIRun {
 
-void swapbytes(int8_t& i) { }
-void swapbytes(uint8_t& i) { }
+void swapbytes(int8_t&) { }
+void swapbytes(uint8_t&) { }
 void swapbytes(int16_t& i) { SWAP_2(i); }
 void swapbytes(uint16_t& i) { SWAP_2(i); }
 void swapbytes(int32_t& i) { SWAP_4(i); }

@@ -35,7 +35,9 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Sort.h>
 #include <Core/share/share.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 #define msg(m) std::cout << m << std::endl;
 

@@ -19,19 +19,21 @@
 
 #include <Core/Util/DynamicLoader.h>
 #include <sci_defs.h>
-#include <string>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/scirun_env.h>
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <string>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <sgi_stl_warnings_off.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sstream>
 
 namespace SCIRun {
 

@@ -31,8 +31,10 @@
 #ifndef SCI_PartInterface_h
 #define SCI_PartInterface_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Util/Signals.h>
 #include <Core/Parts/Part.h>
 

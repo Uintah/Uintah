@@ -31,7 +31,9 @@
 #ifndef Component_SIDL_string_h
 #define Component_SIDL_string_h
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SSIDL {
     typedef std::string string;

@@ -31,7 +31,9 @@
 #ifndef SCI_GraphGui_h
 #define SCI_GraphGui_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #include <Core/PartsGui/PartGui.h>
 #include <Core/Util/Signals.h>

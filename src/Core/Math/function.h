@@ -27,9 +27,11 @@
 #ifndef __FUNCTION_H__
 #define __FUNCTION_H__
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <vector>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 using namespace std;

@@ -30,16 +30,13 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <iostream>
-
-using std::cerr;
-using std::endl;
-
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
-using std::ifstream;
-
+#include <iostream>
 #include <sstream>
-using std::istringstream;
+#include <sgi_stl_warnings_on.h>
+
+using namespace std;
 
 namespace SCIRun {
 

@@ -19,7 +19,9 @@
 #ifndef EP_CHANNEL_INTERFACE_H
 #define EP_CHANNEL_INTERFACE_H 
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -4,7 +4,9 @@
 #if defined __cplusplus
 
 #include <math.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 

@@ -36,7 +36,9 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Util/Assert.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 using std::cout;
 using std::endl;
 

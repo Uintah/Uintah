@@ -38,8 +38,10 @@
 #include <Core/Persistent/Persistent.h>
 #include <sci_config.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

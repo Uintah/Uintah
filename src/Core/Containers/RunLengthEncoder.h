@@ -18,11 +18,13 @@
 #ifndef SCI_Containers_RunLengthEncoder_h
 #define SCI_Containers_RunLengthEncoder_h
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
-#include <iostream>
+#include <iosfwd>
 #include <sstream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 #include <unistd.h>
 #include <errno.h>
 

@@ -31,7 +31,9 @@
 #ifndef SCI_PartGui_h
 #define SCI_PartGui_h 
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 #include <Core/GuiInterface/TclObj.h>
 
 namespace SCIRun {

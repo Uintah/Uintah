@@ -29,7 +29,6 @@
 #include <string.h> /* for strlen() */
 #include <math.h>
 #include "texture.h"
-#include <iostream>
 
 Texture *Font = 0;
 double _gl_text_anchor_[3] = {0,0,0};

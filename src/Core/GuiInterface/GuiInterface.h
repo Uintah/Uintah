@@ -31,7 +31,9 @@
 #ifndef SCIRun_Core_GuiInterface_GuiInterface_h
 #define SCIRun_Core_GuiInterface_GuiInterface_h
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   using namespace std;

@@ -35,7 +35,9 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
+#include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 using namespace std;

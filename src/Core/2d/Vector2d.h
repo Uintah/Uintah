@@ -36,8 +36,10 @@
 #include <Core/Util/Assert.h>
 #include <Core/Math/Expon.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 using std::string;

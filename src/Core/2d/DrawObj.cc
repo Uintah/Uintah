@@ -30,10 +30,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/DrawObj.h>
 
-#include <iostream>
-using std::cerr;
-using std::endl;
-
 namespace SCIRun {
 
 PersistentTypeID DrawObj::type_id("DrawObj", "Datatype", 0);

@@ -31,7 +31,9 @@
 #ifndef CCA_PIDL_TypeInfo_h
 #define CCA_PIDL_TypeInfo_h
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 class NexusEpChannel;
 

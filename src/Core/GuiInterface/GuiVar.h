@@ -32,7 +32,9 @@
 #define SCI_project_GuiVar_h 1
 
 #include <Core/share/share.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

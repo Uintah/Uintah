@@ -38,7 +38,9 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/View.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -11,8 +11,10 @@
 #ifndef Graph_h
 #define Graph_h
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 #include <GL/gl.h>
 #include <sci_glu.h>

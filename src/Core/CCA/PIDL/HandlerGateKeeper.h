@@ -36,9 +36,11 @@
 
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <map>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 /**************************************

@@ -33,9 +33,11 @@
 
 #include <Core/CCA/PIDL/ProxyBase.h>
 #include <Core/CCA/PIDL/Object.h>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 /**************************************

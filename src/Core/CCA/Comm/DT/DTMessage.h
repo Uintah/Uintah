@@ -32,8 +32,8 @@
 #define CORE_CCA_COMM_DT_DTMESSAGE_H
 
 #include <Core/CCA/Comm/DT/DTAddress.h>
-#include <iostream>
 #include <string.h>
+
 namespace SCIRun {
 
   class DTPoint;

@@ -32,10 +32,11 @@
 #define CORE_CCA_COMM_DT_DATATRANSMITTER_H
 
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
 #include <deque>
 #include <map>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 #include <Core/CCA/Comm/DT/DTAddress.h>
 
 namespace SCIRun {

@@ -36,8 +36,10 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
+#include <sgi_stl_warnings_on.h>
 
 // This removes compiler warnings about unreachable statements.
 // Only use BREAK after lines that will kill the program.  Otherwise

@@ -29,9 +29,11 @@
  *   
  */
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 #include <Core/Datatypes/FieldIndex.h>
 
 #ifndef TYPENAME_H
