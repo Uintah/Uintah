@@ -106,6 +106,14 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
   return d_cm;
 }
 
+HEBurn * MPMMaterial::getBurnModel()
+{
+  // Return the pointer to the constitutive model associated
+  // with this material
+
+  return d_burn;
+}
+
 particleIndex MPMMaterial::countParticles(const Patch* patch) const
 {
    particleIndex sum = 0;
@@ -141,16 +149,11 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<long> pparticleID;
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
 
-//   PerPatch<long> NAPID(0);
-//   if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
-//      new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
-
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++){
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
 				pissurf,ptemperature,pparticleID,NAPID,patch);
-//      NAPID=NAPID + start;
    }
 
    new_dw->put(position, lb->pXLabel, getDWIndex(), patch);
@@ -161,8 +164,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->put(pissurf, lb->pSurfLabel, getDWIndex(), patch);
    new_dw->put(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
    new_dw->put(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
-
-//   PerPatch<long> newNAPID(NAPID + start);
 
 }
 
@@ -310,6 +311,10 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.30  2000/06/08 16:50:52  guilkey
+// Changed some of the dependencies to account for what goes on in
+// the burn models.
+//
 // Revision 1.29  2000/06/05 19:48:58  guilkey
 // Added Particle IDs.  Also created NAPID (Next Available Particle ID)
 // on a per patch basis so that any newly created particles will know where
