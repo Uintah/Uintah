@@ -17,6 +17,7 @@
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <stdlib.h>
 
@@ -531,6 +532,10 @@ void Pio(Piostream & stream, BBox & box) {
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:52  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:39:26  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

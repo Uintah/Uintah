@@ -17,13 +17,9 @@
 #include <sci_config.h>
 
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
-
-namespace PersistentSpace {
-  class Piostream;
-}
-
 namespace Containers {
 
 using SCICore::PersistentSpace::Piostream;
@@ -56,19 +52,6 @@ public:
 
     friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream, LockingHandle<T>& data);
 };
-
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included LockingHandle.cc
-//
-
-#include <SCICore/Persistent/Persistent.h>
-
-namespace SCICore {
-namespace Containers {
 
 template<class T>
 LockingHandle<T>::LockingHandle()
@@ -195,6 +178,10 @@ void Pio(Piostream& stream, LockingHandle<T>& data)
 
 //
 // $Log$
+// Revision 1.6  1999/09/04 06:01:42  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.5  1999/08/30 20:19:26  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

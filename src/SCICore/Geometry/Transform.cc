@@ -15,6 +15,7 @@
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/Trig.h>
 #include <iostream.h>
 
@@ -561,6 +562,10 @@ Transform& Transform::operator=(const Transform& copy)
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:52  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:39:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

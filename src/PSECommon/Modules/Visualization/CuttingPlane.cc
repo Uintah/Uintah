@@ -26,6 +26,7 @@
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
@@ -655,6 +656,10 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.7  1999/09/04 06:01:40  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.6  1999/08/29 00:46:45  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

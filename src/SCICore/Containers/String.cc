@@ -27,6 +27,7 @@ char *strcpy( char *, const char *);
 #include <stdio.h>
 #include <string.h>
 #include <iomanip.h>
+#include <ctype.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Persistent/Persistent.h>
@@ -38,32 +39,87 @@ char *strcpy( char *, const char *);
 namespace SCICore {
 namespace Containers {
 
-#ifdef BROKEN
-static TrivialAllocator* srep_alloc=0;
-
-inline void* clString::srep::operator new(size_t)
+clString& clString::operator=(const char* s)
 {
-    if(!srep_alloc){
-	srep_alloc=scinew TrivialAllocator(sizeof(clString::srep));
-	lock=scinew Mutex;
+    if(!p || p->n > 1){
+	// Disconnect self
+	if(p)p->n--;
+	p=new srep;
+    } else {
+	// Free old clString
+	if(p->s)delete [] p->s;
     }
-    lock->lock();
-    void* p=srep_alloc->alloc();
-    lock->unlock();
-    return p;
+    int len=strlen(s);
+    p->s=new char[len+1];
+    strcpy(p->s,s);
+    return *this;
 }
 
-inline void clString::srep::operator delete(void* rp, size_t)
+int clString::operator==(const char* s) const
 {
-    lock->lock();
-    srep_alloc->free(rp);
-    lock->unlock();
+    return strcmp((p && p->s)?p->s:"", s) == 0;
 }
-#endif
 
-#define inline
-#include <SCICore/Containers/String.icc>
-#undef inline
+int clString::operator==(const clString& str) const
+{
+    return p==str.p || strcmp((p && p->s)?p->s:"", (str.p && str.p->s)?str.p->s:"") == 0;
+}
+
+int clString::operator!=(const char* s) const
+{
+    return strcmp((p && p->s)?p->s:"", s) != 0;
+}
+
+int clString::operator!=(const clString& str) const
+{
+    return p != str.p && strcmp((p && p->s)?p->s:"", (str.p && str.p->s)?str.p->s:"") != 0;
+}
+
+int clString::operator<(const char* s) const
+{
+    return strcmp((p && p->s)?p->s:"", s) < 0;
+}
+
+int clString::operator<(const clString& str) const
+{
+    return p != str.p && strcmp((p && p->s)?p->s:"", (str.p && str.p->s)?str.p->s:"") < 0;
+}
+
+int clString::operator>(const char* s) const
+{
+    return strcmp((p && p->s)?p->s:"", s) > 0;
+}
+
+int clString::operator>(const clString& str) const
+{
+    return p != str.p && strcmp((p && p->s)?p->s:"", (str.p && str.p->s)?str.p->s:"") > 0;
+}
+
+char clString::operator()(int index) const
+{
+    ASSERT(p != 0 && p->s != 0);
+    ASSERTRANGE(index, 0, (int)strlen(p->s));
+    return p->s[index];
+}
+
+int clString::len() const
+{
+    return p?strlen(p->s):0;
+}
+
+int clString::is_alpha(int i)
+{
+    ASSERT(p != 0 && p->s);
+    ASSERTRANGE(i, 0, (int)strlen(p->s));
+    return isalpha(p->s[i]);
+}
+
+int clString::is_digit(int i)
+{
+    ASSERT(p != 0);
+    ASSERTRANGE(i, 0, (int)strlen(p->s));
+    return isdigit(p->s[i]);
+}
 
 clString::clString(const char* s)
 {
@@ -419,6 +475,10 @@ void clString::test_performance(PerfTest* __pt) {
 
 //
 // $Log$
+// Revision 1.3  1999/09/04 06:01:42  sparker
+// Updates to .h files, to minimize #includes
+// removed .icc files (yeah!)
+//
 // Revision 1.2  1999/08/17 06:38:38  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
