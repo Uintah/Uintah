@@ -48,6 +48,7 @@ SRCS := \
 	$(SRCDIR)/TendEvec.tcl\
 	$(SRCDIR)/TendEvecRGB.tcl\
 	$(SRCDIR)/TendExpand.tcl\
+	$(SRCDIR)/TendFiber.tcl\
 	$(SRCDIR)/TendNorm.tcl\
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
