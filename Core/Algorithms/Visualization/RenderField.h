@@ -722,7 +722,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   const bool with_normals = (use_normals && mesh->has_normals());
 
   GeomSwitch *face_switch;
-  GeomTriangles* faces;
+  GeomFastTriangles* faces;
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
@@ -730,7 +730,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   }
   else
   {
-    faces = scinew GeomTriangles;
+    faces = scinew GeomFastTriangles;
     GeomDL *display_list = scinew GeomDL(faces);
     face_switch = scinew GeomSwitch(display_list);
   }
