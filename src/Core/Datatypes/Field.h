@@ -24,11 +24,14 @@
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
-  class ScalarFieldInterface;
-  class VectorFieldInterface;
-  class TensorFieldInterface;
-class  SCICORESHARE Field: public PropertyManager {
-
+ 
+class ScalarFieldInterface;
+class VectorFieldInterface;
+class TensorFieldInterface;
+class ModuleReporter;
+ 
+class  SCICORESHARE Field: public PropertyManager
+{
 public:
   //! Possible data associations.
   enum data_location{
@@ -55,9 +58,9 @@ public:
   
 
   //! Required interfaces
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
+  virtual ScalarFieldInterface* query_scalar_interface(ModuleReporter *m = 0) const;
+  virtual VectorFieldInterface* query_vector_interface(ModuleReporter *m = 0) const;
+  virtual TensorFieldInterface* query_tensor_interface(ModuleReporter *m = 0) const;
 
   //! Persistent I/O.
   static  PersistentTypeID type_id;
