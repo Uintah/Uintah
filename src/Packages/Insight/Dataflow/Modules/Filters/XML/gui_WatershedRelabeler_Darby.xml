@@ -1,0 +1,9 @@
+<filter-gui name="WatershedRelabelerGui_Darby">
+  <parameters>
+    <param name="flood_level">
+      <gui>text-entry</gui>
+      <default>0.25</default>
+    </param>
+  </parameters>
+
+</filter-gui>

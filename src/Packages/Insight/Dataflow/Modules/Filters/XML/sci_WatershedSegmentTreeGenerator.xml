@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<filter name="watershed::SegmentTreeGenerator">
+  <include href="../../../../ITK/itk_WatershedSegmentTreeGenerator.xml"/>
+  <include href="gui_WatershedSegmentTreeGenerator_Darby.xml"/>
+
+<filter-sci name="WatershedSegmentTreeGenerator">
+  <package>Insight</package>
+
+  <category>Filters</category>
+
+  <instantiations>
+    <instance num="1">
+      <type name="ScalarType">
+        <datatype>ITKDatatype</datatype>
+        <value>float</value>
+      </type>
+      <type name="itk::watershed::SegmentTable&lt;ScalarType&gt;">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::watershed::SegmentTable&lt;ScalarType&gt;</value>
+      </type>
+      <type name="itk::watershed::EquivalencyTable">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::watershed::EquivalencyTable</value>
+      </type>
+      <type name="itk::watershed::SegmentTree&lt;ScalarType&gt;">
+        <datatype>ITKDatatype</datatype>
+        <value>itk::watershed::SegmentTree&lt; ScalarType &gt;</value>
+      </type>
+     </instance>
+  </instantiations>
+
+  <includes>
+    <include>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</include>
+  </includes>
+
+</filter-sci>
+
+</filter>
