@@ -66,9 +66,9 @@ public:
 protected:
 
   GuiInt    nEntries_;
-  GuiString sServerName_;
-  GuiString sTreeName_;
-  GuiString sShotNumber_;
+  GuiString sServer_;
+  GuiString sTree_;
+  GuiString sShot_;
 
   GuiString searchServer_;
   GuiString searchTree_;
@@ -113,9 +113,9 @@ DECLARE_MAKER(MDSPlusDataReader)
 MDSPlusDataReader::MDSPlusDataReader(GuiContext *context)
   : Module("MDSPlusDataReader", context, Source, "DataIO", "Fusion"),
     nEntries_(context->subVar("num-entries")),
-    sServerName_(context->subVar("server")),
-    sTreeName_(context->subVar("tree")),
-    sShotNumber_(context->subVar("shot")),
+    sServer_(context->subVar("server")),
+    sTree_(context->subVar("tree")),
+    sShot_(context->subVar("shot")),
     
     searchServer_(context->subVar("search-server")),
     searchTree_(context->subVar("search-tree")),
@@ -163,9 +163,9 @@ void MDSPlusDataReader::execute(){
 
   // Save off the defaults
   entries_ = nEntries_.get();                  // Number of entries
-  server_ = sServerName_.get();                // MDS+ Default Server
-  tree_ = sTreeName_.get();                    // MDS+ Default Tree 
-  shot_ = atoi( sShotNumber_.get().c_str() );  // MDS+ Default shot
+  server_ = sServer_.get();                // MDS+ Default Server
+  tree_ = sTree_.get();                    // MDS+ Default Tree 
+  shot_ = atoi( sShot_.get().c_str() );  // MDS+ Default shot
 
   int entries = gServer_.size();
 
@@ -238,7 +238,7 @@ void MDSPlusDataReader::execute(){
     }
 
     tmpStr = gTree_[ic]->get();
-    if( tmpStr != servers_[ic] ) {
+    if( tmpStr != trees_[ic] ) {
       trees_[ic] = tmpStr;
       update = true;
     }
@@ -954,7 +954,7 @@ void MDSPlusDataReader::tcl_command(GuiArgs& args, void* userdata)
     for( unsigned int ic=0; ic<signals.size(); ic++ ) {
       // Update the list in the GUI.
       ostringstream str;
-      str << id << " addSignal {" << signals[ic] << "}";
+      str << id << " setEntry {" << signals[ic] << "}";
       
       gui->execute(str.str().c_str());
     }
