@@ -62,17 +62,13 @@ VPATH := $(SRCTOP)
 PACKAGE_DIRS := @PACKAGE_DIRS@
 LOAD_PACKAGE := @LOAD_PACKAGE@
 BUILD_PARALLEL := @BUILD_PARALLEL@
-# Dd: don't need to do it explicitly this way... I think.
-#ifeq ($(BUILD_PARALLEL),yes)
-#COMPONENT_DIRS := Core/CCA/tools/sidl Core/CCA/Component
-#endif
 
 # These cannot be :=
 THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
 TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 
 # Subdirectories
-SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
+SUBDIRS := Core Dataflow StandAlone main \
 	testprograms $(PACKAGE_DIRS)
 
 # Libraries and other flags
