@@ -653,7 +653,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    gac, 1);
   t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub, gac, 2); 
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls_sub, gac, 2);
-  t->requires(Task::NewDW,lb->rho_CCLabel,      Ghost::None);
+  t->requires(Task::NewDW,lb->rho_CCLabel,                     gac, 2);
   t->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
   t->requires(Task::OldDW,lb->doMechLabel);
   if (d_RateForm) {   // RATE FORM
@@ -2212,7 +2212,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       indx = matl->getDWIndex();
 
-      new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
+      new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,gac,2);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
       CCVariable<Vector>   mom_source, press_force;
       new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
