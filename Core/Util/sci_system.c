@@ -17,7 +17,7 @@
    Boston, MA 02111-1307, USA.  */
 
 #ifndef __sgi  /* This file is for linux only. */
-
+#include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -46,6 +46,10 @@
 #endif
    - cm
 */
+/* added by mc trying to fix hang bug on dual cpu machines */
+#define WAITPID_CANNOT_BLOCK_SIGCHLD
+#define NO_WAITPID
+/* - mc */
 
 /* - cm added */
 pid_t __fork(void);
@@ -147,10 +151,11 @@ sci_system(const char *line)
       (void) UNBLOCK;
 
       /* Exec the shell.  */
-      /* - cm modified
+      /* - cm modified 
 	 (void) __execve (SHELL_PATH, (char *const *) new_argv, __environ); */
       (void) execve (SHELL_PATH, (char *const *) new_argv, __environ);
       /* - cm */
+
       _exit (127);
     }
   else if (pid < (pid_t) 0)
@@ -182,10 +187,10 @@ sci_system(const char *line)
       do
 	/* - cm modified
 	   n = __waitpid (pid, &status, 0); */
-	n = waitpid (pid, &status, 0);
+	n = waitpid (pid, &status, 0);      
         /* - cm */
       while (n == -1 && errno == EINTR);
-
+      
       if (n != pid)
 	status = -1;
 #endif
