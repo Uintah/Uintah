@@ -29,11 +29,6 @@ using namespace rtrt;
 using namespace std;
 using namespace SCIRun;
 
-namespace rtrt {
-  extern Mutex xlock;
-} // end namespace rtrt
-
-
 CutPlaneDpy::CutPlaneDpy(const Vector& n, const Point& cen)
   : PlaneDpy(n, cen), cen(cen)
 {

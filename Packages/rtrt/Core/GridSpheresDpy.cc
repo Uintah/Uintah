@@ -30,11 +30,6 @@ using namespace rtrt;
 using SCIRun::Mutex;
 using SCIRun::Thread;
 
-namespace rtrt {
-  extern Mutex xlock;
-} // end namespace rtrt
-
-
 GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
   DpyBase("GridSpheresDpy"),
   hist(0), ndata(-1),

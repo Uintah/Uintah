@@ -21,7 +21,6 @@
 #include <fcntl.h>
 
 namespace rtrt {
-  extern Mutex xlock;
   extern Mutex io_lock_;
 } // end namespace rtrt
 

@@ -30,7 +30,6 @@ using namespace SCIRun;
 
 namespace rtrt {
   extern SCIRun::Mutex io_lock_;
-  extern SCIRun::Mutex xlock;
   
 struct MIPVMCell {
     float max;
