@@ -53,7 +53,10 @@ SRCS := \
 	$(SRCDIR)/ImageToField.tcl \
 	$(SRCDIR)/ColorImageReaderUChar2D.tcl\
 	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
+	$(SRCDIR)/ColorImageReaderUChar3D.tcl\
+	$(SRCDIR)/ColorImageReaderFloat3D.tcl\
 	$(SRCDIR)/ChooseImage.tcl\
+	$(SRCDIR)/ImageInfo.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
