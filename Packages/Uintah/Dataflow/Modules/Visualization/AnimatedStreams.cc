@@ -42,6 +42,7 @@ extern "C" Module* make_AnimatedStreams( const string& id) {
 
 AnimatedStreams::AnimatedStreams(const string& id)
   : Module("AnimatedStreams", id, Filter, "Visualization", "Uintah"),
+    vf(0), anistreams(0), 
     generation(-1), timestep(-1),
     pause("pause",id, this),
     normals("normals", id, this),
@@ -52,7 +53,6 @@ AnimatedStreams::AnimatedStreams(const string& id)
     linewidth("linewidth", id, this),
     control_lock("AnimatedStreams position lock"),
     control_widget(0), control_id(-1),
-    anistreams(0), vf(0),
     mutex("Animated Streams")
 {
 

@@ -108,30 +108,35 @@ protected:
 private:
 
   Mutex mutex;
-  ColorMapHandle _cmapH;
   FieldHandle vfh_;
-
-
-  double slice_alpha;
-
-  bool cmapHasChanged;
-  bool _usesWidget;
-  Point widgetLocation;
+  ColorMapHandle _cmapH;
 
   bool _pause;
   bool _normalsOn;
   bool _lighting;
   bool _use_dt;
   double _stepsize;
+
+  Point* fx;
+
+  streamerNode** tail;		// array of pointers to tail node in
+				// each solution
+  streamerNode** head;		// array of pointers to head node in
+				// each solution
+
+  int _numStreams;
   int _linewidth;
   int flow;
   double _delta_T;
   int _normal_method;
+  bool _usesWidget;
+  Point widgetLocation;
+
+  double slice_alpha;
+
+  bool cmapHasChanged;
+
   
-  streamerNode** head;		// array of pointers to head node in
-				// each solution
-  streamerNode** tail;		// array of pointers to tail node in
-				// each solution
 
   void newStreamer(int whichStreamer);
   void RungeKutta(Point& x, double h);
@@ -142,8 +147,6 @@ private:
   static const double FADE;
   static const int MAXN;
 
-  int _numStreams;
-  Point* fx;
 
   double maxwidth;
   double maxspeed;

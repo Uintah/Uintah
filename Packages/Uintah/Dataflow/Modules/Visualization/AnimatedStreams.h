@@ -41,31 +41,32 @@ public:
 private:
   
   FieldHandle vf;
+  GLAnimatedStreams  *anistreams;
 
   ColorMapIPort* incolormap;
   FieldIPort* infield;
   GeometryOPort* ogeom;
    
   int cmap_id;  // id associated with color map...
+  string varname; // the current variable name
   int generation; // the current generation of Uintah::DataArchive
   int timestep; // the current timestep
-  string varname; // the current variable name
   
   GuiInt pause;
   GuiInt normals;
   GuiInt lighting;
   GuiInt normal_method;
   GuiInt use_deltat;
-  GuiInt linewidth;
   GuiDouble stepsize;
-
-  GLAnimatedStreams  *anistreams;
-
-  Mutex mutex;
+  GuiInt linewidth;
 
   CrowdMonitor control_lock; 
   PointWidget *control_widget;
   GeomID control_id;
+
+
+  Mutex mutex;
+
 
 
 };
