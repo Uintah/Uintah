@@ -9,12 +9,12 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-extern "C" Module* make_ArchiveReader( const clString& id ) { 
+extern "C" Module* make_ArchiveReader( const string& id ) { 
   return scinew ArchiveReader( id );
 }
 
 //--------------------------------------------------------------- 
-ArchiveReader::ArchiveReader(const clString& id) 
+ArchiveReader::ArchiveReader(const string& id) 
   : Module("ArchiveReader", id, Filter),
     filebase("filebase", id, this), 
     tcl_status("tcl_status",id,this) 
@@ -44,14 +44,14 @@ void ArchiveReader::execute()
    if( filebase.get() == "" )
      return;
 
-   if( string(filebase.get()()) != aName ){
+   if(filebase.get() != aName ) {
      try {
-       reader = scinew DataArchive( string(filebase.get()()) );
+       reader = scinew DataArchive(filebase.get());
      } catch ( const InternalError& ex) {
        cerr << "ArchiveReader caught exception: " << ex.message() << endl;
        return;
      }
-     aName = string(filebase.get()());
+     aName = filebase.get();
    }
 
    Archive *archive = scinew Archive( reader );

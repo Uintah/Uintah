@@ -45,7 +45,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  TimestepSelector(const clString& id); 
+  TimestepSelector(const string& id); 
 
   // GROUP: Destructors
   //////////

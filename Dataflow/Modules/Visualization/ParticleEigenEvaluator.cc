@@ -9,11 +9,11 @@ namespace Uintah {
 
 using namespace SCIRun;
 
-extern "C" Module* make_ParticleEigenEvaluator( const clString& id ) { 
+extern "C" Module* make_ParticleEigenEvaluator( const string& id ) { 
   return scinew ParticleEigenEvaluator( id );
 }
 
-ParticleEigenEvaluator::ParticleEigenEvaluator(const clString& id)
+ParticleEigenEvaluator::ParticleEigenEvaluator(const string& id)
   : Module("ParticleEigenEvaluator",id,Source),
     tclEigenSelect("eigenSelect", id, this)
     //    tcl_status("tcl_status", id, this),

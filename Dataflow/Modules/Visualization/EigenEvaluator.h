@@ -13,7 +13,7 @@ using namespace SCIRun;
 
   class EigenEvaluator: public Module {
   public:
-    EigenEvaluator(const clString& id);
+    EigenEvaluator(const string& id);
     virtual ~EigenEvaluator() {}
     
     virtual void execute(void);

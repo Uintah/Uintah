@@ -32,7 +32,6 @@ LOG
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
-#include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
@@ -64,12 +63,12 @@ using namespace SCIRun;
 
   //using DumbScalarField;
 
-extern "C" Module* make_ScalarFieldExtractor( const clString& id ) {
+extern "C" Module* make_ScalarFieldExtractor( const string& id ) {
   return scinew ScalarFieldExtractor( id ); 
 }
 
 //--------------------------------------------------------------- 
-ScalarFieldExtractor::ScalarFieldExtractor(const clString& id) 
+ScalarFieldExtractor::ScalarFieldExtractor(const string& id) 
   : Module("ScalarFieldExtractor", id, Filter),
     tcl_status("tcl_status", id, this), sVar("sVar", id, this),
     sMatNum("sMatNum", id, this), type(0)
@@ -148,9 +147,9 @@ void ScalarFieldExtractor::setVars()
   LevelP level = grid->getLevel( 0 );
   Patch* r = *(level->patchesBegin());
   ConsecutiveRangeSet matls = 
-    archive.queryMaterials(sVar.get()(), r, times[0]);
+    archive.queryMaterials(sVar.get(), r, times[0]);
 
-  clString visible;
+  string visible;
   TCL::eval(id + " isVisible", visible);
   if( visible == "1"){
     TCL::execute(id + " destroyFrames");
@@ -179,7 +178,7 @@ void ScalarFieldExtractor::execute()
   }
    
   if (archiveH.get_rep() == 0 ){
-    clString visible;
+    string visible;
     TCL::eval(id + " isVisible", visible);
     if( visible == "0" ){
       TCL::execute(id + " buildTopLevel");
@@ -207,7 +206,7 @@ void ScalarFieldExtractor::execute()
   GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
   const TypeDescription* subtype = type->getSubType();
-  string var(sVar.get()());
+  string var(sVar.get());
   int mat = sMatNum.get();
   double time = times[idx];
   if(var != ""){

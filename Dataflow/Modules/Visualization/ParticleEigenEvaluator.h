@@ -13,7 +13,7 @@ using namespace SCIRun;
 
   class ParticleEigenEvaluator: public Module {
   public:
-    ParticleEigenEvaluator(const clString& id);
+    ParticleEigenEvaluator(const string& id);
     virtual ~ParticleEigenEvaluator() {}
     
     virtual void execute(void);

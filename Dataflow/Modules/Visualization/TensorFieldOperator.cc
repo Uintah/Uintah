@@ -15,7 +15,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 
-extern "C" Module* make_TensorFieldOperator( const clString& id ) { 
+extern "C" Module* make_TensorFieldOperator( const string& id ) { 
   return scinew TensorFieldOperator( id );
 }
 
@@ -27,7 +27,7 @@ void computeScalars(TensorField* tensorField, ScalarField* scalarField,
 		    TensorOp op /* TensorOp should be a functor for
 				    converting tensors scalars */ );
 
-TensorFieldOperator::TensorFieldOperator(const clString& id)
+TensorFieldOperator::TensorFieldOperator(const string& id)
   : Module("TensorFieldOperator",id,Source),
     tclOperation("operation", id, this),
     tclRow("row", id, this),

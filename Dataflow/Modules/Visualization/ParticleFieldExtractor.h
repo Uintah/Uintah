@@ -54,7 +54,7 @@ public:
 
   // GROUP: Constructors
   //////////
-  ParticleFieldExtractor(const clString& id); 
+  ParticleFieldExtractor(const string& id); 
 
   // GROUP: Destructors
   //////////
@@ -155,7 +155,7 @@ private:
 
   void graph(string varname, vector<string> mat_list,
 	     vector<string> type_list, string particleID);
-  //  void graph(clString, clString);
+  //  void graph(string, string);
 };
 } // End namespace Uintah
 
