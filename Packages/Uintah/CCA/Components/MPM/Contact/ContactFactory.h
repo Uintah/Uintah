@@ -7,6 +7,7 @@
 namespace Uintah {
 
   class Contact;
+  class MPMLabel;
 
   class ContactFactory
   {
@@ -15,7 +16,8 @@ namespace Uintah {
     // this function has a switch for all known mat_types
     // and calls the proper class' readParameters()
     // addMaterial() calls this
-    static Contact* create(const ProblemSpecP& ps,SimulationStateP& ss);
+    static Contact* create(const ProblemSpecP& ps,SimulationStateP& ss,
+								MPMLabel* lb);
   };
 } // End namespace Uintah
   
