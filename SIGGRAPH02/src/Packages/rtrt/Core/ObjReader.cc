@@ -320,7 +320,9 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	   tmap_name=fname;
 	   fclose(f);
 	 } else cerr << "Error - was unable to read texture map!\n";
-       } else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
+       } 
+       /*
+	 else if (strncmp(&buf[0], "map_bump", strlen("map_bump")) == 0) {
 	 char *b = &(buf[9]);
 	 int last = strlen(b) - 1;
 	 while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
@@ -336,7 +338,10 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        } else if (strncmp(&buf[0], "scale_bump", strlen("scale_bump")) == 0) {
 	 Get1d(&buf[11], scratch);
 	 scale_bump=scratch[0];
-       } else {
+       }
+      */ 
+       
+       else {
 	 cerr << "Ignoring matl line: "<<buf<<"\n";
        }
      }
