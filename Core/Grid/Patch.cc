@@ -804,7 +804,7 @@ Patch::setBCValues(Patch::FaceType face, BCData& bc)
 	      getBCType(zplus) == Neighbor?0:1);
 }
 
-BoundCondBase*
+const BoundCondBase*
 Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
 {
   return d_bcs[face].getBCValues(mat_id,type);
