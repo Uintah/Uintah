@@ -643,9 +643,9 @@ main(int argc, char* argv[])
   printf("start glut inits\n");
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
 
-  mainWindowId = glutCreateWindow("RTRT");
-
   glutInitWindowPosition( 0, 0 );
+
+  mainWindowId = glutCreateWindow("RTRT");
 
   if( fullscreen ) {
     //glutFullScreen(); // only if full screen is 1280x1024
