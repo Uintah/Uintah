@@ -743,9 +743,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_0/J;
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
-      // Compute polar decomposition of F (F = RU)
-      polarDecomposition(tensorF_new, tensorR, tensorV);
-      tensorV = tensorF_new*tensorR.Transpose();
+      // Compute polar decomposition of F (F = VR)
+      tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
