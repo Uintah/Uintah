@@ -30,7 +30,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <Core/Util/Endian.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -59,6 +59,7 @@ main(int argc, char **argv) {
     cerr << "Error - thought the second char was supposed to be a 'B' or 'L' -- but saw a '"<<c<<"'\n";
     return 0;
   }
+  bool swap=(c == 'L' && isBigEndian() || c == 'B' && isLittleEndian());
   int dsize, ndata;
   fscanf(fp, "%d:%d", &dsize, &ndata);
   cerr << "entry size = "<<dsize<<"   ndata = "<<ndata<<"\n";
@@ -71,7 +72,7 @@ main(int argc, char **argv) {
   fread(&((*cm)[0]), sizeof(double), ndata, fp);
   fclose(fp);
 
-  if (c == 'L') {
+  if (swap) {
     cerr << "Swapping endianness...\n";
     char *x = (char *)&(*cm)[0];
     char swap;
