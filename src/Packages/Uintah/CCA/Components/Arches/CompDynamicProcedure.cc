@@ -832,6 +832,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     filterRho.copy(density, patch->getCellLowIndex(),
 		      patch->getCellHighIndex());
+#ifdef PetscFilter
     d_filter->applyFilter(pc, patch, density, filterRho);
     if (d_dynScalarModel) {
       if (d_reactingFlow)
@@ -841,6 +842,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       if (d_calcReactingScalar)
         d_filter->applyFilter(pc, patch, rhoRF, filterRhoRF);
     }
+#endif
   }
 }
 //****************************************************************************
