@@ -76,7 +76,7 @@ ClusterDialog::ClusterDialog(QWidget* parent, const char* name, bool modal, WFla
 void ClusterDialog::setWidgets(const char* name, bool modal, WFlags fl)
 {
     if (!name) {
-	setName("Add Loader command");
+        setName("Add Loader command");
     }
 
     setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, sizePolicy().hasHeightForWidth()));
@@ -289,9 +289,9 @@ ClusterDialog::~ClusterDialog()
  */
 void ClusterDialog::languageChange()
 {
-    setCaption(tr("Set cluster information"));
-    QToolTip::add(this, tr("set command to add cluster to framework", "toolTip comment"));
-    QWhatsThis::add(this, tr("dialog to enter command to add cluster to framework", "toolTip comment"));
+    setCaption(tr("Start a parallel component loader"));
+    QToolTip::add(this, tr("set command to add loader to framework", "toolTip comment"));
+    QWhatsThis::add(this, tr("dialog to enter command to add loader to framework", "toolTip comment"));
     textLabelLoader->setText(tr("Loader name"));
     textLabelDomain->setText(tr("Domain name"));
     textLabelLogin->setText(tr("Login"));
