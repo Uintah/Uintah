@@ -80,9 +80,9 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
 
 template <class DC>
 bool
-  DynamicCompilation::compile(CompileInfoHandle cih, DC &result, 
-			      bool ignore, 
-			      ProgressReporter *reporter)
+DynamicCompilation::compile(CompileInfoHandle cih, DC &result, 
+			    bool ignore, 
+			    ProgressReporter *reporter)
 {
   ASSERT(cih.get_rep());
   const CompileInfo &ci = *(cih.get_rep());
