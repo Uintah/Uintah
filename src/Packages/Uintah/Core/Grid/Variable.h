@@ -47,6 +47,8 @@ namespace Uintah {
 class Variable {
 
 public:
+  virtual ~Variable();
+  
   virtual const TypeDescription* virtualGetTypeDescription() const = 0;
   void setForeign();
   bool isForeign() const {
@@ -73,7 +75,6 @@ public:
   virtual RefCounted* getRefCounted() = 0;
 protected:
   Variable();
-  virtual ~Variable();
 
 private:    
   Variable(const Variable&);
