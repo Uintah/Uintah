@@ -345,6 +345,6 @@ MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
 { 
   vel_CC.initialize(Vector(0.,0.,0.));
   rho_micro.initialize(d_density);
-  rho_CC.initialize(d_density+d_TINY_RHO);
+  rho_CC.initialize(d_TINY_RHO);
   temp.initialize(d_troom);
 }
