@@ -21,6 +21,7 @@ typedef LockingHandle<Matrix> _dummy6_;
 typedef LockingHandle<Material> _dummy7_;
 typedef LockingHandle<Colormap> _dummy8_;
 typedef LockingHandle<ColumnMatrix> _dummy9_;
+typedef LockingHandle<Node> _dummy10_;
 
 static void _fn1_(Piostream& p1, MeshHandle& p2)
 {
@@ -55,6 +56,10 @@ static void _fn8_(Piostream& p1, ColormapHandle& p2)
     Pio(p1, p2);
 }
 static void _fn8_(Piostream& p1, ColumnMatrixHandle& p2)
+{
+    Pio(p1, p2);
+}
+static void _fn9_(Piostream& p1, NodeHandle& p2)
 {
     Pio(p1, p2);
 }

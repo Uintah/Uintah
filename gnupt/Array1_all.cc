@@ -101,6 +101,8 @@ typedef Array1<SLSource*> _dummy50_;
 typedef Array1<GeomPick*> _dummy51_;
 typedef Array1<StackItem> _dummy52_;
 typedef Array1<long> _dummy53_;
+typedef Array1<MeshHandle> _dummy54_;
+typedef Array1<NodeVersion1> _dummy55_;
 
 static void _fn1_(Piostream& p1, Array1<TSElement*>& p2)
 {
@@ -111,11 +113,6 @@ static void _fn2_(Piostream& p1, Array1<Vector>& p2)
 {
     Pio(p1, p2);
 }
-static void _fn3_(Piostream& p1, Array1<Node*>& p2)
-{
-    Pio(p1, p2);
-}
-
 static void _fn4_(Piostream& p1, Array1<Element*>& p2)
 {
     Pio(p1, p2);
@@ -127,6 +124,21 @@ static void _fn5_(Piostream& p1, Array1<double>& p2)
 }
 
 static void _fn6_(Piostream& p1, Array1<MaterialHandle>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _fn7_(Piostream& p1, Array1<NodeHandle>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _fn8_(Piostream& p1, Array1<NodeVersion1>& p2)
+{
+    Pio(p1, p2);
+}
+
+static void _fn9_(Piostream& p1, Array1<MeshHandle>& p2)
 {
     Pio(p1, p2);
 }
