@@ -827,9 +827,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       cout << "\nWARNING: Solver had requested a restart\n" <<endl;
       restart = true;
     }
-    if(((max_RHS - smallest_max_RHS_sofar) > 10.0*smallest_max_RHS_sofar) ){
+
+    if(((max_RHS - smallest_max_RHS_sofar) > 100.0*smallest_max_RHS_sofar) ){
       cout << "\nWARNING: outer interation is diverging now "
-           << "restarting the timestep\n"<< endl;
+           << "restarting the timestep"
+           << " Max_RHS " << max_RHS 
+           << "smallest_max_RHS_sofar "<< smallest_max_RHS_sofar<< endl;
       restart = true;
     }
     if(restart){
