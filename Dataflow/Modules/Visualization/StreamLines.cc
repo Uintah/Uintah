@@ -325,6 +325,7 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
     get_gui_doublevar(id,"stepsize",stepsize);
     get_gui_intvar(id,"maxsteps",maxsteps);
 
+    nodes.clear();
     FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vf);
 
     cerr << "done finding streamline." << endl;
@@ -337,7 +338,8 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
       if (node_iter!=nodes.end()) {
 	n2 = cmesh_->add_node(*node_iter);
 	cmesh_->add_edge(n1,n2);
-	//cerr << "edge = " << n1 << " " << n2 << endl;
+	//cerr << "edge = " << n1 << " " << n2 
+	//     << nodes[n1] << " " << nodes[n2] << endl;
 	n1 = n2;
 	//fdata[index] = index++;
       }
