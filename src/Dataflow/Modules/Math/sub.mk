@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/ErrorMetric.cc\
         $(SRCDIR)/ManipMatrix.cc\
         $(SRCDIR)/MatrixSelectVector.cc\
+        $(SRCDIR)/MinNormLeastSq.cc\
 	$(SRCDIR)/SolveMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 

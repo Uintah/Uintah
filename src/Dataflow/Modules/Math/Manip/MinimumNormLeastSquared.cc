@@ -36,6 +36,18 @@ int solve_3x3(double a[3][3] ,double b[3], double x[3]){
     double D1 = det_3x3(b,a[1],a[2]);
     double D2 = det_3x3(a[0],b,a[2]);
     double D3 = det_3x3(a[0],a[1],b);
+    if ( D!=0){ 
+        x[0] = D1/D;
+        x[1] = D2/D; 
+        x[2] = D3/D; 
+    } else {
+        cerr << "ERROR, DET = 0!"<< endl;
+        x[0] = 1;
+        x[1] = 0; 
+        x[2] = 0;
+        return(-1);
+    }
+    return(0);
 }
 
 double error_norm( double* x1, double* x2,int  n){
@@ -45,8 +57,8 @@ double error_norm( double* x1, double* x2,int  n){
     return(sqrt(err));
 }
 
-// This module computes the minimal norm, least squared solution to a linear
-//  system
+// This module computes the minimal norm, least squared solution to a
+//  nx3 linear system.
 // Given four input ColumnMatrices (v0,v1,v2,b),
 //  find the three coefficients (w0,w1,w2) that minimize:
 //  | (w0v0 + w1v1 + w2v2) - b |.
