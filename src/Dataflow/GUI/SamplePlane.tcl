@@ -42,6 +42,12 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	global $this-data-at
 	global $this-update_type
 	global $this-pos
+        global $this-corigin-x
+        global $this-corigin-y
+        global $this-corigin-z
+        global $this-cnormal-x
+        global $this-cnormal-y
+        global $this-cnormal-z
 
 	set $this-sizex 20
 	set $this-sizey 20
@@ -51,6 +57,12 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	set $this-update_type "on release"
 	set $this-pos 0
 
+        set $this-corigin-x 0
+        set $this-corigin-y 0
+        set $this-corigin-z 0
+        set $this-cnormal-x 1.0
+        set $this-cnormal-y 1.0
+        set $this-cnormal-z 1.0
     }
 
     method update-type { w } {
@@ -87,10 +99,13 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	frame $w.row2
 	frame $w.row21
 	frame $w.row3
+	frame $w.row31
+	frame $w.row32
 	frame $w.row4
 	frame $w.which -relief groove -borderwidth 2
 
-	pack $w.row1 $w.row2 $w.row21 $w.row3 $w.row4 $w.which \
+	pack $w.row1 $w.row2 $w.row21 $w.row3 $w.row31 $w.row32 \
+            $w.row4 $w.which \
 	    -side top -e y -f both -padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "Width    "
@@ -108,8 +123,20 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	label $w.row3.label -text "Axis: "
 	radiobutton $w.row3.x -text "X    " -variable $this-axis -value 0
 	radiobutton $w.row3.y -text "Y    " -variable $this-axis -value 1
-	radiobutton $w.row3.z -text "Z" -variable $this-axis -value 2
-	pack $w.row3.label $w.row3.x $w.row3.y $w.row3.z -side left
+	radiobutton $w.row3.z -text "Z    " -variable $this-axis -value 2
+	radiobutton $w.row3.c -text "Custom" -variable $this-axis -value 3
+	pack $w.row3.label $w.row3.x $w.row3.y $w.row3.z $w.row3.c -side left
+
+        label $w.row31.lab -text "Custom Origin:   "
+        entry $w.row31.ex -textvariable $this-corigin-x -width 8
+        entry $w.row31.ey -textvariable $this-corigin-y -width 8
+        entry $w.row31.ez -textvariable $this-corigin-z -width 8
+        pack $w.row31.lab $w.row31.ex $w.row31.ey $w.row31.ez -side left
+        label $w.row32.lab -text "Custom Normal: "
+        entry $w.row32.ex -textvariable $this-cnormal-x -width 8
+        entry $w.row32.ey -textvariable $this-cnormal-y -width 8
+        entry $w.row32.ez -textvariable $this-cnormal-z -width 8
+        pack $w.row32.lab $w.row32.ex $w.row32.ey $w.row32.ez -side left
 
 	label $w.row4.label -text "Position: "
 	scale $w.row4.scale -from -1.0 -to 1.0 -resolution .01 -width 10 -orient horizontal -command "$this set_position" -variable $this-pos
