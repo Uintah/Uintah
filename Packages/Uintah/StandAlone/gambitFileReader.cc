@@ -13,12 +13,10 @@ using namespace std;
 int x, y;
 
 struct node_coord {
-  int node;
   double x,y,z;
 };
 
 struct elem_coord {
-  int index;
   int n1,n2,n3;
 };
 
@@ -85,36 +83,37 @@ int main()
   
   vector<struct node_coord> nodeCoords(numNodes);
   for(int n=0; n<numNodes; n++){
-      nodeCoords[n].node = -999;      // initialize to some obscure value
       nodeCoords[n].x = -999;      // initialize to some obscure value
       nodeCoords[n].y = -999;      // initialize to some obscure value
       nodeCoords[n].z = -999;      // initialize to some obscure value
   }
+  int node_num;
   // reads in node coordinates
   for(int x=0;x<numNodes;x++){
-    instream >> nodeCoords[x].node;  // this is really the node index
+    instream >> node_num;
     instream >> nodeCoords[x].x;
     instream >> nodeCoords[x].y;
     instream >> nodeCoords[x].z;
     
     //__________________________________
     // bulletproofing
-    if (nodeCoords[x].node != x+1) {
+#if 1
+    if (node_num != x+1) {
       cout << " E R R O R : I've misread the Node Coordinates data "
-	   << nodeCoords[x].node << "   "<< nodeCoords[x].x << "  "
+	   << nodeCoords[x].x << "  "
 	   << nodeCoords[x].y << "   "<< nodeCoords[x].z << endl;
       exit(1);
     } 
-    if (!finite(nodeCoords[x].node) || !finite(nodeCoords[x].x) ||
+    if (!finite(nodeCoords[x].x) ||
 	!finite(nodeCoords[x].y) || !finite(nodeCoords[x].z) ) {
       cout << " E R R O R :I've detected a number that isn't finite"<<endl;
-      cout << "Node " << nodeCoords[x].node << " " << nodeCoords[x].x << " " <<
+      cout << " " << nodeCoords[x].x << " " <<
 	nodeCoords[x].y << " " << nodeCoords[x].z << " " <<endl; 
       cout << " Now exiting "<<endl;
       exit(1);        
     } 
   } 
-  
+#endif
   //__________________________________
   //  read in element data
   counter = 0;
@@ -132,7 +131,7 @@ int main()
   vector<elem_coord> nodeIndx(numElements);
   
   for(int y=0;y<numElements;y++){
-    instream >> nodeIndx[y].index;  // this is really element number
+    instream >> node_num;  // this is really element number
     instream >> info;
     instream >> info1;
     instream >> nodeIndx[y].n1;
@@ -146,18 +145,18 @@ int main()
       cout << " Now exiting " << endl;
       exit(1);
     }
-    if (nodeIndx[y].index != y+1) {
+    if (node_num != y+1) {
       cout << " E R R O R : I've misread the element data "
-	   << nodeIndx[y].index << "  "<< info <<"  "<<info1
+	   << info <<"  "<<info1
 	   << "   "<< nodeIndx[y].n1 << "  "<< nodeIndx[y].n2
 	   << "   "<< nodeIndx[y].n3 << endl;
       exit(1);
     }
     
-    if (!finite(nodeIndx[y].index) || !finite(nodeIndx[y].n1) || 
+    if (!finite(nodeIndx[y].n1) || 
 	!finite(nodeIndx[y].n2) || !finite(nodeIndx[y].n3)) {
       cout << "I've detected a number that isn't finite"<<endl;
-      cout << nodeIndx[y].index << " " << nodeIndx[y].n1 << " " <<
+      cout << nodeIndx[y].n1 << " " <<
 	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl; 
       cout << " Now exiting "<<endl;
       exit(1);        
@@ -168,14 +167,15 @@ int main()
   //  spew out what I've found
   cout << "Node Coordinates"<<endl;
   for(int x=0;x<numNodes;x++){
-    pts_stream << nodeCoords[x].node << " " << nodeCoords[x].x << " " 
+    pts_stream << nodeCoords[x].x << " " 
 	       << nodeCoords[x].y << " " << nodeCoords[x].z << endl; 
   }  
   
+  // Input file is 1 based, changing it to zero based.
   cout << "connectivity "<<endl;
   for(int y=0;y<numElements;y++){
-    tri_stream << nodeIndx[y].index << " " << nodeIndx[y].n1 << " "
-	       << nodeIndx[y].n2 << " " << nodeIndx[y].n3 << " " << endl;
+    tri_stream << nodeIndx[y].n1-1 << " "
+	       << nodeIndx[y].n2-1 << " " << nodeIndx[y].n3-1 << " " << endl;
   }  
   
   cout << "I've successfully read in the file  " << endl;
