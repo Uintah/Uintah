@@ -28,6 +28,10 @@ class DielectricMaterial : public Material {
   bool nothing_inside;	/* True if this object is empty - 
 			 * optimize the recursive hits...*/
   double extinction_scale;    // Allow for a scale of t
+
+  Color bg_out;
+  Color bg_in;
+
 public:
   DielectricMaterial(double n_in, double n_out, bool nothing_inside=false);
   DielectricMaterial(double n_in, double n_out, double R0, 
