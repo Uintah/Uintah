@@ -1,6 +1,7 @@
 
 #include <Packages/rtrt/Core/widget.h>
 #include <Packages/rtrt/Core/shape.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -1191,38 +1192,39 @@ EllipWidget::genTransFunc( void )
   }
 }
 
-/***********************************/
-/*      RAINBOW WIDGET CLASS       */
-/***********************************/
+/************************************/
+/*      COLORMAP WIDGET CLASS       */
+/************************************/
 
-RBowWidget::RBowWidget( float x, float y, float w, float h, float c[3] ) :
+ColorMapWidget::ColorMapWidget( float x, float y, float w, float h, 
+				float c[3] ) :
   RectWidget( x, y, w, h, c )
 {
-  type = Rainbow;
+  type = ColorMapType;
   genTransFunc();
 }
 
 
-RBowWidget::RBowWidget( Widget* old_wid ) : RectWidget( old_wid )
+ColorMapWidget::ColorMapWidget( Widget* old_wid ) : RectWidget( old_wid )
 {
-  type = Rainbow;
+  type = ColorMapType;
   genTransFunc();
 }
 
 
-RBowWidget::RBowWidget( float x, float y, float w, float h, float o_x,
-			float foc_x, float foc_y, int cmap_x, int cmap_y,
-			TextureAlign tA ) :
+ColorMapWidget::ColorMapWidget( float x, float y, float w, float h, float o_x,
+				float foc_x, float foc_y, int cmap_x, 
+				int cmap_y, TextureAlign tA ) :
   RectWidget( x, y, w, h, o_x, foc_x, foc_y, cmap_x, cmap_y, tA )
 {
-  type = Rainbow;
+  type = ColorMapType;
   genTransFunc();
 }
 
 
 void
-RBowWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
-			    float master_opacity )
+ColorMapWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
+				float master_opacity )
 {
   float f_textureHeight = (float)textureHeight;
   float f_textureWidth = (float)textureWidth;
@@ -1278,43 +1280,56 @@ RBowWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
   } // for()
 }
 
-
 void
-RBowWidget::genTransFunc( void )
+ColorMapWidget::genTransFunc( void )
 {
-  float red = 1;
-  float green = 0;
-  float blue = 0;
-  float hue_width = textureWidth/6;
-  float color_step = 1/hue_width;
-  for( int i = 0; i < textureHeight; i++ ) {
-    red = 1;
-    green = blue = 0;
-    for( int j = 0; j < textureWidth; j++ ) {
-      if( j < hue_width )
-	green += color_step;
-      else if( j < 2*hue_width )
-	red -= color_step;
-      else if( j < 3*hue_width )
-	blue += color_step;
-      else if( j < 4*hue_width )
-	green -= color_step;
-      else if( j < 5*hue_width )
-	red += color_step;
-      else
-	blue -= color_step;
-      
-      if( red < 0.0f )
-	red = 0.0f;
-      if( green < 0.0f )
-	green = 0.0f;
-      if( blue < 0.0f )
-	blue = 0.0f;
-      
-      transText->textArray[i][j][0] = red;
-      transText->textArray[i][j][1] = green;
-      transText->textArray[i][j][2] = blue;
-      transText->textArray[i][j][3] = 0.50f;
+  if (colors.size() == 0) {
+    float red = 1;
+    float green = 0;
+    float blue = 0;
+    float hue_width = textureWidth/6;
+    float color_step = 1/hue_width;
+    for( int i = 0; i < textureHeight; i++ ) {
+      red = 1;
+      green = blue = 0;
+      for( int j = 0; j < textureWidth; j++ ) {
+	if( j < hue_width )
+	  green += color_step;
+	else if( j < 2*hue_width )
+	  red -= color_step;
+	else if( j < 3*hue_width )
+	  blue += color_step;
+	else if( j < 4*hue_width )
+	  green -= color_step;
+	else if( j < 5*hue_width )
+	  red += color_step;
+	else
+	  blue -= color_step;
+	
+	if( red < 0.0f )
+	  red = 0.0f;
+	if( green < 0.0f )
+	  green = 0.0f;
+	if( blue < 0.0f )
+	  blue = 0.0f;
+	
+	transText->textArray[i][j][0] = red;
+	transText->textArray[i][j][1] = green;
+	transText->textArray[i][j][2] = blue;
+	transText->textArray[i][j][3] = 0.50f;
+      }
     }
-  }			
+  } else {
+    ScalarTransform1D<float, Color> clr(colors);
+    clr.scale(0,1);
+    for (int i = 0; i < textureHeight; i++ ) {
+      for( int j = 0; j < textureWidth; j++ ) {
+	Color c = clr.interpolate((j+0.5)/textureWidth);
+	transText->textArray[i][j][0] = c[0];
+	transText->textArray[i][j][1] = c[1];
+	transText->textArray[i][j][2] = c[2];
+	transText->textArray[i][j][3] = 0.5f;
+      }
+    }      
+  }                     
 }

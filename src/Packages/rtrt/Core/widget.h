@@ -4,6 +4,8 @@
 
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/shape.h>
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/Color.h>
 
 #define menuHeight 80.0f
 #define borderSize 5.0f
@@ -23,8 +25,8 @@ namespace rtrt {
   // particular point on widget (usually where a manipulation point is)
   struct Vertex { float x, y; };
   
-  // what kind of widget (Tent, Ellipse, and Rainbow are rectangular)
-  enum Type { Tri, Tent, Ellipse, Rainbow };
+  // what kind of widget (Tent, Ellipse, and ColorMapType are rectangular)
+  enum Type { Tri, Tent, Ellipse, ColorMapType };
   // whether transfer function is horizontally or vertically aligned
   enum TextureAlign { Horizontal, Vertical };
   // how the widget is being manipulated
@@ -200,13 +202,14 @@ namespace rtrt {
   };
 
 
-  // produces rainbow widget
-  class RBowWidget: public RectWidget {
+  // produces colormap widget
+  class ColorMapWidget: public RectWidget {
   public:
-    RBowWidget( float x, float y, float w, float h, float c[3] );
-    RBowWidget( Widget* old_wid );
-    RBowWidget( float x, float y, float w, float h, float o_x, float foc_x,
-		float foc_y, int cmap_x, int cmap_y, TextureAlign tA );
+    Array1<Color> colors;
+    ColorMapWidget( float x, float y, float w, float h, float c[3] );
+    ColorMapWidget( Widget* old_wid );
+    ColorMapWidget( float x, float y, float w, float h, float o_x, float foc_x,
+		    float foc_y, int cmap_x, int cmap_y, TextureAlign tA );
     virtual void paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 				 float master_opacity );
     virtual void genTransFunc( void );
