@@ -257,7 +257,7 @@ GLVolRenState::loadColorMap(Brick& brick)
     glActiveTexture(GL_TEXTURE0_ARB);
   }
 #elif defined( GL_TEXTURE_COLOR_TABLE_SGI )
-  cerr<<"GL_TEXTURE_COLOR_TABLE_SGI defined\n";
+  //  cerr<<"GL_TEXTURE_COLOR_TABLE_SGI defined\n";
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
