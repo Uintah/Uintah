@@ -197,8 +197,7 @@ FindRKF(vector<Point> &v, // storage for points
   for (int i=0; i<n; i++)
   {
     // Compute the next set of terms.
-    const int tmp = ComputeRKFTerms(terms, x, s, vfi);
-    if (tmp < 5)
+    if (ComputeRKFTerms(terms, x, s, vfi) < 5)
     {
       s /= 1.5;
       continue;
@@ -325,26 +324,24 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
 }
 
 
-void
-StreamLinesCleanupPoints(vector<Point> &v, const vector<Point> &input,
-			 double e2)
+vector<Point>::iterator
+StreamLinesCleanupPoints(vector<Point> &input, double e2)
 {
   unsigned int i, j;
-  v.push_back(input[0]);
   j = 0;
   for (i=1; i < input.size()-1; i++)
   {
-    const Vector v0 = input[i] - v[j];
+    const Vector v0 = input[i] - input[j];
     const Vector v1 = input[i] - input[i+1];
     if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0)
     {
-      v.push_back(input[i]);
       j++;
+      if (i != j) { input[j] = input[i]; }
     }
   }
-  if (input.size() > 1) v.push_back(input[input.size()-1]);
+  if (input.size() > 1) { j++; input[j] = input[input.size()-1]; }
+  return input.begin() + j + 1;
 }
-
 
 
 void
@@ -380,9 +377,7 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 
   if (remove_colinear_p)
   {
-    vector<Point> tmp;
-    StreamLinesCleanupPoints(tmp, v, t2);
-    v = tmp;
+    v.erase(StreamLinesCleanupPoints(v, t2), v.end());
   }
 }
 
