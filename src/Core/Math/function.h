@@ -69,8 +69,10 @@ enum ftype {
   squareroot, logarithm, negation, absolutevalue,
   
 				// binary functions (2 args)
-  sum, difference, product, quotient, power
-  
+  sum, difference, product, quotient, power,
+
+                                // 0 arg functions.
+  randomfunction
 };
 
 //----------------------------------------------------------------------

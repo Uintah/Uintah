@@ -110,6 +110,7 @@ string		{alpha}{alnum}+
 "abs"	{ return(TABS);		}
 "fabs"	{ return(TABS);		}
 "pow"	{ return(TPOW);		}
+"random" { return(TRANDOM);      }
 
 "true"	{ fnlval.value = 1; return(TCONST); }
 "false" { fnlval.value = 0; return(TCONST); }

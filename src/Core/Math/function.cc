@@ -161,6 +161,8 @@ double Function::eval(double* x) const {
   case product:		return (arg1->eval(x) * arg2->eval(x));
   case quotient:	return (arg1->eval(x) / arg2->eval(x));
   case power:		return pow(arg1->eval(x), arg2->eval(x));
+
+  case randomfunction:	return drand48();
     
   default:
     cerr << "Function::eval() error: "
