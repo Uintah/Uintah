@@ -2,6 +2,8 @@
 #define UINTAH_HOMEBREW_SendState_H
 
 #include <map>
+#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Packages/Uintah/Core/Grid/PSPatchMatlGhost.h>
 
 namespace Uintah {
   using namespace std;
@@ -36,16 +38,20 @@ namespace Uintah {
      WARNING
       
      ****************************************/
-    
+
   class SendState {
   public:
     SendState();
     ~SendState();
-    ParticleSubset* find_sendset(const Patch*, int, int) const;
-    void add_sendset(const Patch*, int, int, ParticleSubset*);
-    
+    ParticleSubset* find_sendset(int dest, const Patch*, int matl, 
+                                 Ghost::GhostType gt = Ghost::None,
+                                 int numgc = 0) const;
+    void add_sendset(ParticleSubset* pset, int dest, const Patch*, int matl, 
+                     Ghost::GhostType gt = Ghost::None, int numgc = 0);
+
+    void print();
   private:
-    typedef map<pair<pair<const Patch*, int>, int>, ParticleSubset*> maptype;
+    typedef map<pair<PSPatchMatlGhost, int>, ParticleSubset*> maptype;
     maptype sendSubsets;
     SendState(const SendState&);
     SendState& operator=(const SendState&);
