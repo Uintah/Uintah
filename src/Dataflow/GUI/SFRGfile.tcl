@@ -62,7 +62,7 @@ itcl_class PSECommon_Fields_SFRGfile {
 		-variable $this-haveOutVoxelTCL
         make_labeled_radio $w.v.type "New datatype: " "" left \
 		$this-outVoxelTCL {{double 0} {float 1} {int 2} \
-		{ushort 3} {uchar 4} {char 5}}
+		       { short 3 } {ushort 4} {char 5} {uchar 6}}
 	pack $w.v.b $w.v.type -side top -fill x
 	pack $w.v -side top -fill x -expand 1
 
