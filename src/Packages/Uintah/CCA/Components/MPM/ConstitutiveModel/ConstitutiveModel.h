@@ -196,6 +196,10 @@ WARNING
                                     constNCVariable<Vector>& gVelocity,
                                     constNCVariable<Vector>& GVelocity);
 
+    // Calculate polar decomposition
+    void polarDecomposition(const Matrix3& F, 
+                            Matrix3& R,
+                            Matrix3& U) const;
 
     MPMLabel* lb;
     int d_8or27;

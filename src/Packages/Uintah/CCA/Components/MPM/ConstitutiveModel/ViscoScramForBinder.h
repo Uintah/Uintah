@@ -76,6 +76,14 @@ WARNING
 ****************************************/
   class ViscoScramForBinder : public ConstitutiveModel {
 
+  public:
+
+    static const int StatedataSize() 
+    {
+      //return d_initialData.numMaxwellElements*9+1;
+      return (22*9+1);
+    }
+
   private:
 
     bool d_useModifiedEOS;
@@ -104,8 +112,31 @@ WARNING
     };
 
     struct Statedata {
-      int numElements;
-      vector<Matrix3> sigDev;
+
+      Matrix3 sigDev[22];
+
+      //double numElements;
+      //Matrix3* sigDev;
+
+      //Statedata() 
+      //{
+      //  numElements = 0;
+      //}
+
+      //Statedata(const Statedata& st)
+      //{
+      //  numElements = st.numElements;
+      //  int nn = (int) numElements;
+      //  sigDev = new Matrix3[nn];
+      //  for (int ii = 0; ii < nn; ++ii) {
+      //    sigDev[ii] = st.sigDev[ii];
+      //  }
+      //}
+      
+      //~Statedata()
+      //{
+      //  delete sigDev;
+      //}
     };
 
   private:
@@ -246,6 +277,43 @@ WARNING
                                double   cDot, 
                                Matrix3* k_n);
 
+    // Solve the stress equation using a fourth-order Runge-Kutta scheme
+    void doRungeKuttaForStressAlt(void (ViscoScramForBinder::*fptr)
+				       (int, Matrix3&, double, double, 
+				        Matrix3&, Matrix3&, double,
+				        double, Matrix3&, double, 
+				        Matrix3&), 
+				  Matrix3* y_n,
+				  double h, 
+				  double* rkc, 
+				  double c,
+				  double* G_n, 
+				  double* RTau_n, 
+				  Matrix3& DPrime,
+				  double cDot,
+				  Matrix3* y_rk);
+      void stressEqnWithCrack(int index,
+			      Matrix3& S_n,
+			      double c,
+			      double G,
+			      Matrix3& sumS_nOverTau_n,
+			      Matrix3& S,
+			      double G_n,
+			      double RTau_n,
+			      Matrix3& DPrime,
+			      double cDot,
+			      Matrix3& k_n);
+      void stressEqnWithoutCrack(int index,
+				 Matrix3& S_n,
+				 double ,
+				 double ,
+				 Matrix3& ,
+				 Matrix3& ,
+				 double G_n,
+				 double RTau_n,
+				 Matrix3& DPrime,
+				 double ,
+				 Matrix3& k_n);
   };
 
 } // End namespace Uintah

@@ -4,15 +4,17 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/Grid/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/SphereMembraneGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/SphereMembraneGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/ShellGeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -29,6 +31,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
@@ -82,6 +85,10 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 
    else if (dynamic_cast<Membrane*>(d_cm) != 0)
      d_particle_creator = scinew MembraneParticleCreator(this,lb,n8or27,
+		                                         haveLoadCurve,
+							 doErosion);
+   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0)
+     d_particle_creator = scinew ShellParticleCreator(this,lb,n8or27,
 		                                         haveLoadCurve,
 							 doErosion);
    else
