@@ -242,7 +242,7 @@ Dpy::run()
   priv->draw_rstats=false;
   shadowMode_ = scene->shadow_mode;
   ambientMode_ = scene->ambient_mode;
-
+  cerr << "AMBIENTMODE = "<<ambientMode_<<"\n";
   obj=scene->get_object();
 
   priv->animate=true;
