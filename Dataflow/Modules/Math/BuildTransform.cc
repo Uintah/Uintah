@@ -18,8 +18,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>
-#include <Core/Math/MusilRNG.h>
-#include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
