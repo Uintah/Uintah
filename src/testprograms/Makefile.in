@@ -8,4 +8,4 @@ endif
 
 SUBDIRS = Malloc Thread $(PARALLEL_DIRS)
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
