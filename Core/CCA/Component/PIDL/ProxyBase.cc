@@ -51,7 +51,6 @@ ProxyBase::~ProxyBase()
   for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
     (*iter).chan->closeConnection();
   }
-  delete d_sched;
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const

@@ -1214,6 +1214,9 @@ void CI::emit_proxy(EmitState& e)
 
   e.out << fn << "::~" << cn << "()\n";
   e.out << "{\n";
+  if(doRedistribution) {
+    e.out << "  delete d_sched;\n";
+  }
   e.out << "}\n\n";
   e.out << "void " << fn << "::_getReference(::SCIRun::Reference& ref, bool copy) const\n";
   e.out << "{\n";

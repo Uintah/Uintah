@@ -249,7 +249,7 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
 	intersectionRep->mylast = 0;
 	intersectionRep->mystride = 0;
 
-	intersectionRep->print(std::cerr);
+	//intersectionRep->print(std::cerr);
 	return intersectionRep;
       }
 
@@ -263,8 +263,8 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
 	//No Intersection, leave results as they will signify that also
 	intersectionRep->mylast = min_lst;
       }
-      std::cerr << "INTERSECTION: ";
-      intersectionRep->print(std::cerr);
+      //std::cerr << "INTERSECTION: ";
+      //intersectionRep->print(std::cerr);
     }
   }
   return intersectionRep;
