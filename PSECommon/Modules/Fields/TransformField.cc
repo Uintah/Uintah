@@ -19,6 +19,7 @@
 #include <SCICore/Datatypes/ScalarFieldRGint.h>
 #include <SCICore/Datatypes/ScalarFieldRGshort.h>
 #include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
@@ -57,7 +58,7 @@ class TransformField : public Module {
     int yymap;
     int zzmap;
 
-    int tcl_execute;
+     int tcl_execute;
 public:
     TransformField(const clString& id);
     virtual ~TransformField();
@@ -100,16 +101,18 @@ void TransformField::execute()
     ScalarFieldRGfloat *iff, *off;
     ScalarFieldRGint *ifi, *ofi;
     ScalarFieldRGshort *ifs, *ofs;
-    ScalarFieldRGuchar *ifc, *ofc;
-
+    ScalarFieldRGuchar *ifu, *ofu;
+    ScalarFieldRGchar *ifc, *ofc;
+    
     ScalarFieldRGBase *ofb;
 
     ifd=sfrgb->getRGDouble();
     iff=sfrgb->getRGFloat();
     ifi=sfrgb->getRGInt();
     ifs=sfrgb->getRGShort();
-    ifc=sfrgb->getRGUchar();
-
+    ifu=sfrgb->getRGUchar();
+    ifc=sfrgb->getRGChar();
+    
     ofd=0;
     off=0;
     ofs=0;
@@ -147,8 +150,12 @@ void TransformField::execute()
 		ofs=scinew ScalarFieldRGshort(); 
 		ofs->resize(nx,ny,nz);
 		ofb=ofs;
+	    } else if (ifu) {
+		ofu=scinew ScalarFieldRGuchar(); 
+		ofu->resize(nx,ny,nz);
+		ofb=ofu;
 	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
+		ofc=scinew ScalarFieldRGchar(); 
 		ofc->resize(nx,ny,nz);
 		ofb=ofc;
 	    }
@@ -161,7 +168,9 @@ void TransformField::execute()
 			else if (off) off->grid(i,j,k)=iff->grid(ii,jj,kk);
 			else if (ofi) ofi->grid(i,j,k)=ifi->grid(ii,jj,kk);
 			else if (ofs) ofs->grid(i,j,k)=ifs->grid(ii,jj,kk);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(ii,jj,kk);
+			else if (ofu) ofu->grid(i,j,k)=ifu->grid(ii,jj,kk);
+	                else if (ofc) ofc->grid(i,j,k)=ifc->grid(ii,jj,kk);
+	    
 	} else if (map=="132") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -179,21 +188,26 @@ void TransformField::execute()
 		ofs=scinew ScalarFieldRGshort(); 
 		ofs->resize(nx,nz,ny);
 		ofb=ofs;
-	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nx,nz,ny);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+	    } else if (ifu) {
+		ofu=scinew ScalarFieldRGuchar(); 
+		ofu->resize(nx,nz,ny);
+		ofb=ofu;
+	    } else if (ifc) { 
+                ofc=scinew ScalarFieldRGchar();
+                ofc->resize(nx,nz,ny);         
+                ofb=ofc;                       
+            }
+	    ofb->set_bounds(Point(min.x(), min.z(), min.y()), 
+                            Point(max.x(), max.z(), max.y()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,kk,jj);
-			else if (off) off->grid(i,j,k)=iff->grid(ii,kk,jj);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(ii,kk,jj);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(ii,kk,jj);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(ii,kk,jj);
+			if (ofd) ofd->grid(i,k,j)=ifd->grid(ii,jj,kk);
+                        else if (off) off->grid(i,k,j)=iff->grid(ii,jj,kk);
+                        else if (ofi) ofi->grid(i,k,j)=ifi->grid(ii,jj,kk);
+                        else if (ofs) ofs->grid(i,k,j)=ifs->grid(ii,jj,kk);
+                        else if (ofc) ofc->grid(i,k,j)=ifc->grid(ii,jj,kk);
+                        else if (ofu) ofu->grid(i,j,k)=ifu->grid(ii,jj,kk);
 	} else if (map=="213") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -211,21 +225,26 @@ void TransformField::execute()
 		ofs=scinew ScalarFieldRGshort(); 
 		ofs->resize(ny,nx,nz);
 		ofb=ofs;
+	    } else if (ifu) {
+		ofu=scinew ScalarFieldRGuchar(); 
+		ofu->resize(ny,nx,nz);
+		ofb=ofu;
 	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(ny,nx,nz);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+                ofc=scinew ScalarFieldRGchar(); 
+                ofc->resize(ny,nx,nz);
+                ofb=ofc;
+            }
+            ofb->set_bounds(Point(min.y(), min.x(), min.z()), 
+                            Point(max.y(), max.x(), max.z()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(jj,ii,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(jj,ii,kk);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(jj,ii,kk);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(jj,ii,kk);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(jj,ii,kk);
+                        if (ofd) ofd->grid(i,j,k)=ifd->grid(jj,ii,kk);
+                        else if (off) off->grid(j,i,k)=iff->grid(ii,jj,kk);
+                        else if (ofi) ofi->grid(j,i,k)=ifi->grid(ii,jj,kk);
+                        else if (ofs) ofs->grid(j,i,k)=ifs->grid(ii,jj,kk);
+                        else if (ofc) ofc->grid(j,i,k)=ifc->grid(ii,jj,kk);
+                        else if (ofu) ofu->grid(j,i,k)=ifu->grid(ii,jj,kk);
 	} else if (map=="231") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -243,21 +262,26 @@ void TransformField::execute()
 		ofs=scinew ScalarFieldRGshort(); 
 		ofs->resize(ny,nz,nx);
 		ofb=ofs;
+	    } else if (ifu) {
+		ofu=scinew ScalarFieldRGuchar(); 
+		ofu->resize(ny,nz,nx);
+		ofb=ofu;
 	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(ny,nz,nx);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+                ofc=scinew ScalarFieldRGchar(); 
+                ofc->resize(ny,nz,nx);
+                ofb=ofc;
+            }
+            ofb->set_bounds(Point(min.y(), min.z(), min.x()), 
+                            Point(max.y(), max.z(), max.x()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
 			if (ofd) ofd->grid(i,j,k)=ifd->grid(ii,jj,kk);
-			else if (off) off->grid(i,j,k)=iff->grid(jj,kk,ii);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(jj,kk,ii);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(jj,kk,ii);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(jj,kk,ii);
+			else if (off) off->grid(j,k,i)=iff->grid(jj,kk,ii);
+			else if (ofi) ofi->grid(j,k,i)=ifi->grid(jj,kk,ii);
+			else if (ofs) ofs->grid(j,k,i)=ifs->grid(jj,kk,ii);
+                        else if (ofc) ofc->grid(j,k,i)=ifc->grid(ii,jj,kk);
+			else if (ofu) ofu->grid(j,k,i)=ifu->grid(jj,kk,ii);
 	} else if (map=="312") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -275,21 +299,25 @@ void TransformField::execute()
 		ofs=scinew ScalarFieldRGshort(); 
 		ofs->resize(nz,nx,ny);
 		ofb=ofs;
+	    } else if (ifu) {
+		ofu=scinew ScalarFieldRGuchar(); 
+		ofu->resize(nz,nx,ny);
+		ofb=ofu;
 	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nz,nx,ny);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+                ofc=scinew ScalarFieldRGchar(); 
+                ofc->resize(nz,nx,ny);
+                ofb=ofc;
+            }
+            ofb->set_bounds(Point(min.z(), min.x(), min.y()), 
+                            Point(max.z(), max.x(), max.y()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(kk,ii,jj);
-			else if (off) off->grid(i,j,k)=iff->grid(kk,ii,jj);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(kk,ii,jj);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(kk,ii,jj);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(kk,ii,jj);
+                        if (ofd) ofd->grid(k,i,j)=ifd->grid(ii,jj,kk);
+                        else if (off) off->grid(k,i,j)=iff->grid(ii,jj,kk);
+                        else if (ofi) ofi->grid(k,i,j)=ifi->grid(ii,jj,kk);
+                        else if (ofs) ofs->grid(k,i,j)=ifs->grid(ii,jj,kk);
+                        else if (ofc) ofc->grid(k,i,j)=ifc->grid(ii,jj,kk);
 	} else if (map=="321") {
 	    if (ifd) {
 		ofd=scinew ScalarFieldRGdouble(); 
@@ -307,21 +335,27 @@ void TransformField::execute()
 		ofs=scinew ScalarFieldRGshort(); 
 		ofs->resize(nz,ny,nx);
 		ofb=ofs;
+	    } else if (ifu) {
+		ofu=scinew ScalarFieldRGuchar(); 
+		ofu->resize(nz,ny,nx);
+		ofb=ofu;
 	    } else if (ifc) {
-		ofc=scinew ScalarFieldRGuchar(); 
-		ofc->resize(nz,ny,nx);
-		ofb=ofc;
-	    }
-	    ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-			    Point(max.x(), max.y(), max.z()));
+                ofc=scinew ScalarFieldRGchar(); 
+                ofc->resize(nz,ny,nx);
+                ofb=ofc;
+            }
+            ofb->set_bounds(Point(min.z(), min.y(), min.x()), 
+                            Point(max.z(), max.y(), max.x()));
 	    for (int i=0, ii=basex; i<nx; i++, ii+=incrx)
 		for (int j=0, jj=basey; j<ny; j++, jj+=incry)
 		    for (int k=0, kk=basez; k<nz; k++, kk+=incrz)
-			if (ofd) ofd->grid(i,j,k)=ifd->grid(kk,jj,ii);
-			else if (off) off->grid(i,j,k)=iff->grid(kk,jj,ii);
-			else if (ofi) ofi->grid(i,j,k)=ifi->grid(kk,jj,ii);
-			else if (ofs) ofs->grid(i,j,k)=ifs->grid(kk,jj,ii);
-			else if (ofc) ofc->grid(i,j,k)=ifc->grid(kk,jj,ii);
+                        if (ofd) ofd->grid(k,j,i)=ifd->grid(ii,jj,kk);
+                        else if (off) off->grid(k,j,i)=iff->grid(ii,jj,kk);
+                        else if (ofi) ofi->grid(k,j,i)=ifi->grid(ii,jj,kk);
+                        else if (ofs) ofs->grid(k,j,i)=ifs->grid(ii,jj,kk);
+                        else if (ofc) ofc->grid(k,j,i)=ifc->grid(ii,jj,kk);
+                        else if (ofu) ofu->grid(k,j,i)=ifu->grid(ii,jj,kk);
+	    
 
 //	    outFld->resize(nz,ny,nx);
 //	    outFld->grid(i,j,k)=sfrg->grid(kk,jj,ii);
@@ -442,6 +476,9 @@ void TransformField::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.7  2000/02/08 21:45:28  kuzimmer
+// stuff for transforming and type changes of scalarfieldRGs
+//
 // Revision 1.6  1999/10/07 02:06:49  sparker
 // use standard iostreams and complex type
 //
