@@ -623,6 +623,8 @@ OpenGL::render_and_save_image(int x, int y,
     regressioncounter--;
     if (regressioncounter <= 0)
     {
+      std::cout.flush();
+      std::cerr.flush();
       Thread::exitAll(0);
     }
     else
