@@ -36,7 +36,7 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
 #include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/NCScalarField.h>
 #include <Packages/Uintah/Core/Datatypes/CCScalarField.h>
