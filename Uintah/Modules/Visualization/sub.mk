@@ -7,7 +7,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Modules/Visualization
 
-SRCS     += $(SRCDIR)/GridVisualizer.cc
+SRCS     += $(SRCDIR)/GridVisualizer.cc \
+	$(SRCDIR)/NodeHedgehog.cc
 
 
 
@@ -25,6 +26,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/27 16:58:00  bigler
+# Added NodeHedgehog.cc
+#
 # Revision 1.2  2000/06/21 04:15:46  kuzimmer
 # removed uneccesary dependencies on the Kurt directory
 #
