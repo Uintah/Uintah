@@ -483,7 +483,9 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
     throw ErrnoException("DataArchive::query (lseek64 call)", errno);
   
   InputContext ic(fd, start);
+  double starttime = Time::currentSeconds();
   var.read(ic, end, d_swapBytes, d_nBytes, compressionMode);
+  dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
   ASSERTEQ(end, ic.cur);
   int s = close(fd);
   if(s == -1)
@@ -702,9 +704,11 @@ DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
   ASSERTL3(tsTimes.size() == tsTopNodes.size());
   ASSERTL3(tsUrls.size() == tsTopNodes.size());
 
-  for (int i = 0; i < (int)tsTimes.size(); i++)
+  for (int i = 0; i < (int)tsTimes.size(); i++) {
+    d_patchHashMaps[tsTimes[i]].setTime(tsTimes[i]);
     d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
 				     processor, numProcessors);
+  }
    
   d_lastFoundIt = d_patchHashMaps.end();
 }
@@ -714,6 +718,7 @@ DataArchive::TimeHashMaps::findVariable(const string& name,
 					const Patch* patch, int matl,
 					double time, XMLURL& foundUrl)
 {
+  //  cerr << "TimeHashMaps::findVariable\n";
   PatchHashMaps* timeData = findTimeData(time);
   return (timeData == NULL) ? scinew ProblemSpec(0) :
     timeData->findVariable(name, patch, matl, foundUrl);
@@ -722,6 +727,7 @@ DataArchive::TimeHashMaps::findVariable(const string& name,
 inline DataArchive::MaterialHashMaps*
 DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
 {
+  //  cerr << "TimeHashMaps::findPatchData\n";
   PatchHashMaps* timeData = findTimeData(time);
   return (timeData == NULL) ? NULL : timeData->findPatchData(patch);
 }
@@ -729,14 +735,18 @@ DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
 DataArchive::PatchHashMaps*
 DataArchive::TimeHashMaps::findTimeData(double time)
 {
+  //  cerr << "TimeHashMaps::findTimeData("<<time<<")\n";
   // assuming nearby queries will often be made sequentially,
   // checking the lastFound can reduce overall query times.
   if ((d_lastFoundIt != d_patchHashMaps.end()) &&
-      ((*d_lastFoundIt).first == time))
+      ((*d_lastFoundIt).first == time)) {
+    //    cerr << "d_lastFoundIt.first = "<<(*d_lastFoundIt).first<<"\n";
     return &(*d_lastFoundIt).second;
+  }
   map<double, PatchHashMaps>::iterator foundIt =
     d_patchHashMaps.find(time);
   if (foundIt != d_patchHashMaps.end()) {
+    //    cerr << "foundIt.first = "<<(*foundIt).first<<"\n";
     if (DataArchive::cacheOnlyCurrentTimestep) {
       // Only caching the current timestep.
       // purge the last accessed timestep, since this timestep is differen.t
@@ -760,22 +770,22 @@ void DataArchive::TimeHashMaps::purgeTimeData(double time)
 
 DataArchive::PatchHashMaps::PatchHashMaps()
   : d_matHashMaps(),
-    d_lastFoundIt(d_matHashMaps.end()),
-    d_isParsed(false)
+    d_allParsed(false)
 {
+  // d_lastFoundIt must be initialized in init.  The value here
+  // doesn't persist and causes problems.
 }
 
 DataArchive::PatchHashMaps::~PatchHashMaps() {
-  int size = static_cast<int>(docs.size());
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < docs.size(); i++)
     docs[i]->releaseDocument();
-  }
 }
 
 void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
 				      int processor, int numProcessors)
 {
-  d_isParsed = false;
+  //  cerr << "PatchHashMaps["<<time<<"]::init\n";
+  d_allParsed = false;
   // grab the data xml files from the timestep xml file
   ASSERTL3(tsTopNode != 0);
   ProblemSpecP datanode = tsTopNode->findBlock("Data");
@@ -796,62 +806,102 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
       if(datafile == "")
 	throw InternalError("timestep href not found");
       XMLURL url(tsUrl, datafile.c_str());
-      d_xmlUrls.push_back(url);
+       d_xmlUrls.push_back(url);
     }
     else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "WARNING: Unknown element in Data section: " << n->getNodeName() << '\n';
     }
   }
+  // Initialize whether we have parsed each file
+  d_xmlParsed = vector<bool>(d_xmlUrls.size(), false);
+
+  // d_lastFoundIt must be initialized here instead of the constructor,
+  // because the value doesn't persist from the constructor.
+  d_lastFoundIt = d_matHashMaps.end();
 }
 
 void DataArchive::PatchHashMaps::purgeCache()
 {
+  //  cerr << "PatchHashMaps::purgeCache\n";
   d_matHashMaps.clear();
-  d_isParsed = false;
+  d_lastFoundIt = d_matHashMaps.end();
+  d_allParsed = false;
 
-  for (unsigned int i = 0; i < docs.size(); i++)
+  for (size_t j = 0; j < d_xmlParsed.size(); j++)
+    d_xmlParsed[j] = false;
+  
+  for (size_t i = 0; i < docs.size(); i++)
     docs[i]->releaseDocument();
   docs.clear();
 }
 
-void DataArchive::PatchHashMaps::parse()
+// This is the function that parses the patch.xml file for a single processor.
+void DataArchive::PatchHashMaps::parseProc(int proc)
 {
-  for (list<XMLURL>::iterator urlIt = d_xmlUrls.begin();
-       urlIt != d_xmlUrls.end(); urlIt++) {
-
-    char* urltext = XMLString::transcode(urlIt->getURLText());
-    //cerr << "reading: " << to_char_ptr(urlIt->getURLText()) << '\n';
-
-    ProblemSpecReader psr(urltext);
-    delete [] urltext;
-
-    ProblemSpecP top = psr.readInputFile();
-    docs.push_back(top);
-
-    for(ProblemSpecP r = top->getFirstChild(); r != 0; r=r->getNextSibling()){
-      if(r->getNodeName() == "Variable") {
-	string varname;
-	if(!r->get("variable", varname))
-	  throw InternalError("Cannot get variable name");
-	
-	int patchid;
-	if(!r->get("patch", patchid) && !r->get("region", patchid))
-	  throw InternalError("Cannot get patch id");
-	
-	int index;
-	if(!r->get("index", index))
-	  throw InternalError("Cannot get index");
-	
-	add(varname, patchid, index, r, *urlIt);
-      } else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
-	cerr << "WARNING: Unknown element in Variables section: " << r->getNodeName() << '\n';
-      }
-    }
-
+  //  cerr << "PatchHashMaps::parseProc("<<proc<<")\n";
+  if (proc < 0 || proc >= d_xmlUrls.size()) {
+    cerr << "DataArchive::PatchHashMaps::parseOne:ERROR processor index ("<<proc<<") is out of bounds [0, "<<d_xmlUrls.size()<<"]\n";
+    return;
+  }
+  if (d_xmlParsed[proc]) {
+    // Already parsed
+    //    cerr << "proc "<<proc<<" already parsed\n";
+    return;
   }
   
-  d_isParsed = true;
+  XMLURL urlIt = d_xmlUrls[proc];
+
+  ///////////////////////////////////////////////////////
+  // parse the file
+  char* urltext = XMLString::transcode(urlIt.getURLText());
+  //  cerr << "reading: " << urltext << '\n';
+  
+  ProblemSpecReader psr(urltext);
+  delete [] urltext;
+  
+  ProblemSpecP top = psr.readInputFile();
+  docs.push_back(top);
+  
+  for(ProblemSpecP r = top->getFirstChild(); r != 0; r=r->getNextSibling()){
+    if(r->getNodeName() == "Variable") {
+      string varname;
+      if(!r->get("variable", varname))
+        throw InternalError("Cannot get variable name");
+      
+      int patchid;
+      if(!r->get("patch", patchid) && !r->get("region", patchid))
+        throw InternalError("Cannot get patch id");
+      
+      int index;
+      if(!r->get("index", index))
+        throw InternalError("Cannot get index");
+      
+      add(varname, patchid, index, r, urlIt);
+    } else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
+      cerr << "WARNING: Unknown element in Variables section: " << r->getNodeName() << '\n';
+    }
+  }
+  //////////////////////////////////////////////////////
+  
+  d_xmlParsed[proc] = true;
   d_lastFoundIt = d_matHashMaps.end();
+}
+
+// This is the function that parses all the patch.xml files.
+void DataArchive::PatchHashMaps::parse()
+{
+  for (size_t proc = 0; proc < d_xmlUrls.size(); proc++) {
+
+    parseProc(proc);
+  }
+  
+// This function needs to make sure that d_allParsed is set to true,
+// otherwise the findPatchData function could enter an infinate loop.
+  d_allParsed = true;
+
+  // Might as well make the d_lastFoundIt point to the most likely
+  // candidate for first data access.
+  d_lastFoundIt = d_matHashMaps.begin();
 }
 
 inline ProblemSpecP
@@ -860,6 +910,7 @@ DataArchive::PatchHashMaps::findVariable(const string& name,
 					 int matl,
 					 XMLURL& foundUrl)
 {
+  //  cerr << "PatchHashMaps::findVariable\n";
   MaterialHashMaps* patchData = findPatchData(patch);
   return (patchData == NULL) ? scinew ProblemSpec(0) :
     patchData->findVariable(name, matl, foundUrl);
@@ -868,14 +919,17 @@ DataArchive::PatchHashMaps::findVariable(const string& name,
 DataArchive::MaterialHashMaps*
 DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
 {
-  if (!d_isParsed) parse(); // parse on demand
+  //  cerr << "PatchHashMaps["<<time<<"]::findPatchData\n";
+
+  // Only parse patch.xml files for patches queried
   int patchid = (patch ? patch->getID() : -1);
   
   // assuming nearby queries will often be made sequentially,
   // checking the lastFound can reduce overall query times.
   if ((d_lastFoundIt != d_matHashMaps.end()) &&
-      ((*d_lastFoundIt).first == patchid))
+      ((*d_lastFoundIt).first == patchid)) {
     return &(*d_lastFoundIt).second;
+  }
 
   map<int, MaterialHashMaps>::iterator foundIt =
     d_matHashMaps.find(patchid);
@@ -883,23 +937,58 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
   if (foundIt != d_matHashMaps.end()) {
     d_lastFoundIt = foundIt;
     return &(*foundIt).second;
+  } else {
+    // We didn't find the patch data we were looking for.  If we
+    // parsed all the data then we should do nothing, if we haven't
+    // parsed all the data, then try parsing a single processor and
+    // see if we have it.  If we don't then parse all of the patches
+    // and call this function recursively.
+    if (!d_allParsed) {
+      // Try making a guess as to the processor.  First go is to try
+      // the processor of the same index as the patch.  Many datasets
+      // have only one patch per processor, so this is a reasonable
+      // first attempt.  Future attemps could perhaps be smarter.
+      int proc_guess = patchid;
+      // Only look for it if we actually parse a new file
+      if (!d_xmlParsed[proc_guess]) {
+        //        cerr << "proc_guess =  "<<proc_guess<<"\n";
+        parseProc(proc_guess);
+        // Look for it again
+        foundIt = d_matHashMaps.find(patchid);
+        if (foundIt != d_matHashMaps.end()) {
+          d_lastFoundIt = foundIt;
+          return &(*foundIt).second;
+        }
+      }
+      // Our guess has been wrong, so parse the whole set and try
+      // again.
+      parse();
+      return findPatchData(patch);
+    }
   }
   return NULL;  
 }
 
 ProblemSpecP DataArchive::MaterialHashMaps::findVariable(const string& name,
-						     int matl,
-						     XMLURL& foundUrl)
+                                                         int matl,
+                                                         XMLURL& foundUrl)
 {
+  //  cerr << "MaterialHashMaps::findVariable:start\n";
+  //  cerr << "name = "<<name<<", matl = "<<matl<<"\n";
+
   matl++; // allows for matl=-1 for universal variables
  
   if (matl < (int)d_varHashMaps.size()) {
     VarHashMap& hashMap = d_varHashMaps[matl];
     pair<ProblemSpecP, XMLURL> found;
     if (hashMap.lookup(name, found)) {
+      //      cerr << "Found in hashMap\n";
       foundUrl = found.second;
+      //      cerr << "foundurl = "<<XMLString::transcode(foundUrl.getURLText())<<"\n";
       return found.first;
-    }
+    } else {
+      //      cerr << "Didn't find in hashMap\n";
+    }      
   }
   return NULL;  
 }
