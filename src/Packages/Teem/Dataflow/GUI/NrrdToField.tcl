@@ -31,17 +31,11 @@ itcl_class Teem_DataIO_NrrdToField {
 	global $this-build-eigens
 	global $this-quad-or-tet
 	global $this-struct-unstruct
-	global $this-ni
-	global $this-nj
-	global $this-nk
 
 	set $this-permute 0
 	set $this-build-eigens 0
 	set $this-quad-or-tet "Auto"
 	set $this-struct-unstruct "Auto"
-	set $this-ni 0
-	set $this-nj 0
-	set $this-nk 0
     }
 
     method ui {} {
@@ -65,11 +59,9 @@ itcl_class Teem_DataIO_NrrdToField {
 	pack $w.f.options.eigens -side top -expand yes -fill x
 
 	iwidgets::labeledframe $w.f.options.quadtet \
-	    -labelpos nw -labeltext "Unstructured Cell Type:"
+	    -labelpos nw -labeltext "Unstructured Cell Type when Points per Connection equals 4:"
 	pack $w.f.options.quadtet -side top -expand yes -fill x
 
-	# frame $w.f.options.quadtet -relief groove -borderwidth 2
-	# pack $w.f.options.quadtet -side top -expand yes -fill x
 	set quadtet [$w.f.options.quadtet childsite]
 
 	radiobutton $quadtet.auto -text "Auto" \
@@ -87,47 +79,13 @@ itcl_class Teem_DataIO_NrrdToField {
 	pack $w.f.options.pccurve -side top -expand yes -fill x
 	set pccurve [$w.f.options.pccurve childsite]
 
-	# frame $w.f.options.pccurve -relief groove -borderwidth 2
-	# pack $w.f.options.pccurve -side top -expand yes -fill x
-
 	radiobutton $pccurve.auto -text "Auto" \
 	    -variable $this-struct-unstruct -value "Auto"
 	radiobutton $pccurve.pc -text "Point Cloud" \
 	    -variable $this-struct-unstruct -value "PointCloud"
 	radiobutton $pccurve.curve -text "Struct Curve" \
 	    -variable $this-struct-unstruct -value "StructCurve"
-	radiobutton $pccurve.quad -text "Struct Quad" \
-	    -variable $this-struct-unstruct -value "StructQuad"
-	radiobutton $pccurve.hex -text "Struct Hex" \
-	    -variable $this-struct-unstruct -value "StructHex"
-	pack $pccurve.auto $pccurve.pc $pccurve.curve $pccurve.quad $pccurve.hex -side left -anchor nw -padx 3
-
-	iwidgets::labeledframe $w.f.options.sizes \
-	    -labelpos nw -labeltext "Dimensions for Struct Quad and Struct Hex:"
-	pack $w.f.options.sizes -side top -expand yes -fill x
-	# frame $w.f.options.sizes -relief groove -borderwidth 2
-	# pack $w.f.options.sizes -side top -expand yes -fill x
-
-	set sizes [$w.f.options.sizes childsite]
-	
-	frame $sizes.i
-	pack $sizes.i -side left -expand yes -fill x
-	label $sizes.i.l -text "ni"
-	entry $sizes.i.e -textvar $this-ni
-	pack $sizes.i.l $sizes.i.e -side left -anchor nw -padx 2
-
-	frame $sizes.j
-	pack $sizes.j -side left -expand yes -fill x
-	label $sizes.j.l -text "nj"
-	entry $sizes.j.e -textvar $this-nj
-	pack $sizes.j.l $sizes.j.e -side left -anchor nw -padx 2
-
-	frame $sizes.k
-	pack $sizes.k -side left -expand yes -fill x
-	label $sizes.k.l -text "nk"
-	entry $sizes.k.e -textvar $this-nk
-	pack $sizes.k.l $sizes.k.e -side left -anchor nw -padx 2
-	
+	pack $pccurve.auto $pccurve.pc $pccurve.curve  -side left -anchor nw -padx 3
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
