@@ -511,8 +511,6 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         double newTemp = flameTemp[c] * (press[c] * sp_vol_CC[c])/(press_ref*sp_vol_ref[c]);
         double energyx =( newTemp - oldTemp[c]) * cp * mass;
         energySource[c] += energyx;
-        energySource[c] = 0;
-
         
         //__________________________________
         // debugging
