@@ -26,7 +26,7 @@
 */
 
 
-#ifndef Core_Util_Environemnt_h
+#ifndef Core_Util_Environment_h
 #define Core_Util_Environment_h 1
 
 #include <string>
