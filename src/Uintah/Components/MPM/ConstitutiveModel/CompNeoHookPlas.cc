@@ -152,7 +152,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  new_dw->allocate(pstress, lb->pStressLabel, matlindex, patch);
+  old_dw->get(pstress, lb->pStressLabel, matlindex, patch,Ghost::None, 0);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
@@ -161,6 +161,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   old_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
   old_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
+  ParticleVariable<double> pvolumedef;
+  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, matlindex, patch);
 
   NCVariable<Vector> gvelocity;
 
@@ -275,6 +277,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
     W = .5*shear*(bElBar[idx].Trace() - 3.0);
 
     se += (U + W)*pvolume[idx];
+    pvolumedef[idx]=pvolume[idx];
   }
 
   WaveSpeed = sqrt(Max(c_rot,c_dil));
@@ -292,7 +295,7 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label, matlindex, patch);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolume,lb->pVolumeLabel, matlindex,patch);
+  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel, matlindex,patch);
 
 }
 
@@ -300,6 +303,8 @@ double CompNeoHookPlas::computeStrainEnergy(const Patch* patch,
 					    const MPMMaterial* matl,
 					    DataWarehouseP& new_dw)
 {
+  double se=0;
+#if 0
   double U,W,J,se=0;
   int matlindex = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
@@ -334,7 +339,7 @@ double CompNeoHookPlas::computeStrainEnergy(const Patch* patch,
 
      se += (U + W)*pvolume[idx];
   }
-
+#endif
   return se;
 }
 
@@ -366,7 +371,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
@@ -390,6 +395,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.22  2000/06/08 16:50:52  guilkey
+// Changed some of the dependencies to account for what goes on in
+// the burn models.
+//
 // Revision 1.21  2000/06/01 23:12:06  guilkey
 // Code to store integrated quantities in the DW and save them in
 // an archive of sorts.  Also added the "computes" in the right tasks.

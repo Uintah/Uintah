@@ -134,7 +134,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  new_dw->allocate(pstress, lb->pStressLabel, matlindex, patch);
+  old_dw->get(pstress, lb->pStressLabel, matlindex, patch,Ghost::None, 0);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
@@ -143,6 +143,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   old_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
   ParticleVariable<double> pvolume;
   old_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
+  ParticleVariable<double> pvolumedef;
+  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, matlindex, patch);
 
   NCVariable<Vector> gvelocity;
 
@@ -226,7 +228,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
-
+      pvolumedef[idx]=pvolume[idx];
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
@@ -241,7 +243,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label, matlindex, patch);
     // Volume is currently just carried forward, but will be updated.
-    new_dw->put(pvolume, lb->pVolumeLabel, matlindex, patch);
+    new_dw->put(pvolumedef, lb->pVolumeDeformedLabel, matlindex, patch);
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -269,7 +271,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
@@ -277,6 +279,8 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouseP& new_dw)
 {
+  double se=0.0;
+#if 0
   double invar1,invar2,invar3,J,se=0.0;
   Matrix3 B,BSQ;
 
@@ -318,6 +322,7 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
            C3*(1.0/(invar3*invar3) - 1.0) +
            C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
   }
+#endif
   return se;
 
 }
@@ -342,6 +347,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.39  2000/06/08 16:50:51  guilkey
+// Changed some of the dependencies to account for what goes on in
+// the burn models.
+//
 // Revision 1.38  2000/06/01 23:12:06  guilkey
 // Code to store integrated quantities in the DW and save them in
 // an archive of sorts.  Also added the "computes" in the right tasks.

@@ -64,6 +64,9 @@ WARNING
 	 //////////
 	 // Return correct constitutive model pointer for this material
 	 ConstitutiveModel * getConstitutiveModel();
+
+	 // Return correct burn model pointer for this material
+	 HEBurn * getBurnModel();
 	 
 	 particleIndex countParticles(const Patch*) const;
 	 particleIndex countParticles(GeometryObject* obj,
@@ -124,6 +127,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.23  2000/06/08 16:50:52  guilkey
+// Changed some of the dependencies to account for what goes on in
+// the burn models.
+//
 // Revision 1.22  2000/06/05 19:48:58  guilkey
 // Added Particle IDs.  Also created NAPID (Next Available Particle ID)
 // on a per patch basis so that any newly created particles will know where
