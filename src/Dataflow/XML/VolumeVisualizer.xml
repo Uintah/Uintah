@@ -76,7 +76,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name> Texture</name>
+        <name>Texture</name>
 	<datatype>SCIRun::Texture</datatype>
       </port>
       <port>
