@@ -132,7 +132,7 @@ void initPackage(const clString& tcl) {
   RM("Fields",        "Field Seed",              make_FieldSeed,            tcl+"/FieldSeed.tcl");
   RM("Fields",        "Gradient",                make_Gradient,             "");
   RM("Fields",        "Gradient Magnitude",      make_GradientMagnitude,    "");
-  RM("Fields",        "SFRGfile",                make_SFRGfile,             tcl+"/SFRGfile.tcl");
+  RM("Fields",        "SFRG file",               make_SFRGfile,             tcl+"/SFRGfile.tcl");
   RM("Fields",        "Trace Path",              make_TracePath,            tcl+"/TracePath.tcl");
   RM("Fields",        "Train Seg 2",             make_TrainSeg2,            tcl+"/TrainSeg2.tcl");
   RM("Fields",        "Train Segment",           make_TrainSegment,         tcl+"/TrainSegment.tcl");
