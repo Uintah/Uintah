@@ -1886,7 +1886,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
+      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
 
       for(CellIterator iter = patch->getCellIterator(gc); !iter.done();iter++){
        IntVector c = *iter;
@@ -2978,7 +2978,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       //__________________________________
       //   Advection preprocessing
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch);
+      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
 
       //__________________________________
       // Advect mass and backout rho_CC
@@ -2991,8 +2991,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
-        rho_CC[c]  = (mass_L[c] + q_advected[c]) * invvol;
-        mass_new[c] = rho_CC[c] * vol;
+        mass_new[c]  = (mass_L[c] + q_advected[c]);
+        rho_CC[c]    = mass_new[c] * invvol;
       }   
   
       setBC(rho_CC, "Density", patch, d_sharedState, indx);
