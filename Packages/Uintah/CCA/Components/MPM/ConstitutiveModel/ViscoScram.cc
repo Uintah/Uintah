@@ -593,6 +593,49 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void ViscoScram::carryForward(const PatchSubset* patches,
+                               const MPMMaterial* matl,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int dwi = matl->getDWIndex();
+    ParticleVariable<Matrix3> pdefm_new,pstress_new;
+    constParticleVariable<Matrix3> pdefm,pstress;
+    ParticleVariable<StateData> statedata;
+    ParticleVariable<double> pCrackRadius;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> pvolume_deformed;
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    ParticleVariable<double> pRand;
+    old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
+    old_dw->get(pstress,       lb->pStressLabel,                       pset);
+    old_dw->get(pmass,         lb->pMassLabel,                         pset);
+    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
+                                                                       pset);
+    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+    new_dw->allocateAndPut(statedata,  p_statedata_label_preReloc,     pset);
+    new_dw->allocateAndPut(pCrackRadius, lb->pCrackRadiusLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pRand,         pRandLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    old_dw->copyOut(pRand,                pRandLabel,                     pset);
+    old_dw->copyOut(statedata,            p_statedata_label,              pset);
+    double rho_orig = matl->getInitialDensity();
+
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pdefm_new[idx] = pdefm[idx];
+      pstress_new[idx] = pstress[idx];
+      pCrackRadius[idx] = 0.;
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
+    }
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+  }
+}
+
 void 
 ViscoScram::computeStressTensor(const PatchSubset* ,
 				const MPMMaterial* ,

@@ -543,6 +543,66 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void HypoElasticPlastic::carryForward(const PatchSubset* patches,
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    constParticleVariable<double> pDamage;
+    constParticleVariable<Matrix3> pLeftStretch, pRotation, pDeformGrad;
+    ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new, pDeformGrad_new;
+    ParticleVariable<Matrix3> pStress_new;
+    ParticleVariable<double> pDamage_new;
+    ParticleVariable<Matrix3> pdefm_new,pstress_new;
+    constParticleVariable<Matrix3> pdefm,pstress;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> pvolume_deformed;
+
+    old_dw->get(pDamage, pDamageLabel, pset);
+    old_dw->get(pLeftStretch, pLeftStretchLabel, pset);
+    old_dw->get(pRotation, pRotationLabel, pset);
+    old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pmass,                 lb->pMassLabel,            pset);
+    new_dw->allocateAndPut(pLeftStretch_new, 
+                           pLeftStretchLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pRotation_new,    
+                           pRotationLabel_preReloc,               pset);
+    new_dw->allocateAndPut(pStress_new,      
+                           lb->pStressLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pDeformGrad_new,  
+                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pDamage_new,      
+                           pDamageLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+
+    // Get the plastic strain
+    d_plasticity->getInternalVars(pset, old_dw);
+    d_plasticity->initializeInternalVars(pset, new_dw);
+
+    old_dw->get(pstress,       lb->pStressLabel,                       pset);
+    double rho_orig = matl->getInitialDensity();
+
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pstress_new[idx] = pstress[idx];
+      pDeformGrad_new[idx] = pDeformGrad[idx];
+      pLeftStretch_new[idx] = pLeftStretch[idx];
+      pRotation_new[idx] = pRotation[idx];
+      pDamage_new[idx] = pDamage[idx];
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
+    }
+
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+  }
+}
+
 void 
 HypoElasticPlastic::computeStressTensor(const PatchSubset* ,
 				const MPMMaterial* ,

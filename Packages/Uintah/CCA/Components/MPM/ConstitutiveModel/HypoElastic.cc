@@ -303,6 +303,33 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void HypoElastic::carryForward(const PatchSubset* patches,
+                               const MPMMaterial* matl,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int dwi = matl->getDWIndex();
+    ParticleVariable<Matrix3> pdefm_new,pstress_new;
+    constParticleVariable<Matrix3> pdefm,pstress;
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
+    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
+                                                                       pset);
+    old_dw->get(pstress,       lb->pStressLabel,                       pset);
+    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pdefm_new[idx] = pdefm[idx];
+      pstress_new[idx] = pstress[idx];
+    }
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+  }
+}
+
 void 
 HypoElastic::computeStressTensor(const PatchSubset* ,
 				const MPMMaterial* ,

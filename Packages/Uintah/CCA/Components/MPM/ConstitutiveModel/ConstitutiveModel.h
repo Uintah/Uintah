@@ -60,12 +60,11 @@ WARNING
     ConstitutiveModel();
     virtual ~ConstitutiveModel();
 	 
-    //////////
     // Basic constitutive model calculations
     virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
     virtual void computeStressTensor(const PatchSubset* patches,
 				     const MPMMaterial* matl,
@@ -82,7 +81,7 @@ WARNING
 
     virtual void addInitialComputesAndRequires(Task* task,
 					       const MPMMaterial* matl,
-					       const PatchSet* patches) const = 0;
+					       const PatchSet* patches) const=0;
 
     virtual void addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
@@ -134,6 +133,20 @@ WARNING
 				const MPMMaterial* matl,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
+
+    //////////
+    // Carry forward CM variables for RigidMPM
+    virtual void carryForward(const PatchSubset* patches,
+			      const MPMMaterial* matl,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
+
+    //////////
+    // Carry forward CM variables for RigidMPM with Erosion
+    virtual void carryForwardWithErosion(const PatchSubset* patches,
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
 
 #ifdef FRACTURE
     virtual void ConvertJToK(const PatchSubset* patches,
