@@ -61,6 +61,7 @@ using namespace SCIRun;
       
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, 
                                              const PatchSet*,
+                                             const MaterialSubset*, 
                                              const MaterialSubset*,
 						   const MaterialSet*);
       
@@ -191,6 +192,16 @@ using namespace SCIRun;
       void setBC(CCVariable<double>& press_CC, CCVariable<double>& rho,
                const std::string& type, const Patch* p, const int mat_id);
                
+      void setBC(CCVariable<double>& press_CC, 
+                vector<CCVariable<double> >& rho_micro_CC,
+                vector<CCVariable<double> >& rho_CC,
+                vector<CCVariable<double> >& vol_frac_CC,
+                vector<CCVariable<Vector> >& vel_CC,
+                DataWarehouse* old_dw,
+                const string& kind, 
+                const Patch* patch, 
+                const int mat_id);
+
       void setBC(CCVariable<Vector>& variable,const std::string& type,
 		 const Patch* p, const int mat_id);
                
@@ -237,10 +248,9 @@ using namespace SCIRun;
                           const vector<CCVariable<double> >& vol_frac_CC,
                           const vector<CCVariable<Vector> >& vel_CC);
                              
-/*`==========TESTING==========*/ 
       void getExchangeCoefficients( DenseMatrix& K,
                                     DenseMatrix& H );  
- /*==========TESTING==========`*/    
+                                        
       // Debugging switches
       bool switchDebugInitialize;
       bool switchDebug_equilibration_press;
