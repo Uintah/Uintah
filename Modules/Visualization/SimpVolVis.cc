@@ -71,7 +71,7 @@ extern "C" {
       return scinew SimpVolVis(id);
     }
   
-};
+}
 
 
 static clString module_name("SimpVolVis");
@@ -170,9 +170,6 @@ void SimpVolVis::tcl_command( TCLArgs& args, void* userdata)
 void SimpVolVis::execute(void)
 {
   ScalarFieldHandle sfield;
-  int executemode;
-  const clString base("vol");
-  const clString modes("mode");
 
   if (!inscalarfield->get(sfield)) {
     return;
@@ -230,13 +227,6 @@ void SimpVolVis::execute(void)
     rgchar=r;
   }
 
-  int use_tcl_stuff=1;
-
-  if (!get_tcl_intvar(base,modes,executemode)) {
-      cerr << "Can't find tcl variables in SimpVolVis!\n";
-      use_tcl_stuff=0;
-      executemode=0;
-  }
   if (!init) {
     init=1;
     widget=scinew PointWidget(this, &widget_lock, 0.2);
@@ -263,59 +253,45 @@ void SimpVolVis::execute(void)
     field_id = sfield->generation;
 
     triangles = scinew GeomTrianglesP();
-    
 
-    {
-      Point w(widget->ReferencePoint());
+    Point w1(widget->ReferencePoint());
     
-      Vector vX(dv.x(), 0, 0);
-      Vector vY(0, dv.y(), 0);
-      Vector vZ(0, 0, dv.z());
+    Vector vX(dv.x(), 0, 0);
+    Vector vY(0, dv.y(), 0);
+    Vector vZ(0, 0, dv.z());
     
-      Point cornerX(w.x(), Smin.y(), Smin.z());
-      Point cornerY(Smin.x(), w.y(), Smin.z());
-      Point cornerZ(Smin.x(), Smin.y(), w.z());
-      if (triangles->size()) {
+    Point cornerX(w1.x(), Smin.y(), Smin.z());
+    Point cornerY(Smin.x(), w1.y(), Smin.z());
+    Point cornerZ(Smin.x(), Smin.y(), w1.z());
+    if (triangles->size()) {
 	triangles->reserve_clear(6);
-      }
-      triangles->add(cornerZ,cornerZ+vX,cornerZ+vX+vY);
-      triangles->add(cornerZ,cornerZ+vX+vY,cornerZ+vY);
-    
-      triangles->add(cornerY,cornerY+vX,cornerY+vX+vZ);
-      triangles->add(cornerY,cornerY+vX+vZ,cornerY+vZ);
-    
-      triangles->add(cornerX,cornerX+vZ,cornerX+vZ+vY);
-      triangles->add(cornerX,cornerX+vZ+vY,cornerX+vY);
     }
+    triangles->add(cornerZ,cornerZ+vX,cornerZ+vX+vY);
+    triangles->add(cornerZ,cornerZ+vX+vY,cornerZ+vY);
     
-    //ogeom->addObj(triangles,"Cutting Planes TransParent");
+    triangles->add(cornerY,cornerY+vX,cornerY+vX+vZ);
+    triangles->add(cornerY,cornerY+vX+vZ,cornerY+vZ);
+    
+    triangles->add(cornerX,cornerX+vZ,cornerX+vZ+vY);
+    triangles->add(cornerX,cornerX+vZ+vY,cornerX+vY);
   }
 
-  int nx,ny,nz;
 
-//  if (!get_tcl_intvar(base,clString("nx"),nx) ||
-//      !get_tcl_intvar(base,clString("ny"),ny) ||
-//      !get_tcl_intvar(base,clString("nz"),nz)) {
-//      cerr << "NxNyNz don't exist...\n";
-      use_tcl_stuff=0;
-//    }	
-
-  if (!rvol) {
-    Point pmin,pmax;
+  Point pmin,pmax;
 	
 // DAVE: HACK!
 //    rgchar->get_bounds(pmin,pmax);
  
-    Point tmp1, tmp2;
-    rgchar->get_bounds(tmp1, tmp2);
-    pmin=Point(tmp1.z(), tmp1.y(), tmp1.x());
-    pmax=Point(tmp2.z(), tmp2.y(), tmp2.x());
+  Point tmp1, tmp2;
+  rgchar->get_bounds(tmp1, tmp2);
+  pmin=Point(tmp1.z(), tmp1.y(), tmp1.x());
+  pmax=Point(tmp2.z(), tmp2.y(), tmp2.x());
 
-   rvol = scinew GeomTexVolRender(pmin,pmax);
-    rvol->SetVol((unsigned char*)&rgchar->grid(0,0,0),rgchar->nz,rgchar->ny,rgchar->nx);
+  if (!rvol) {
 
-    if (use_tcl_stuff)
-	rvol->SubVol(nx,ny,nz);
+    rvol = scinew GeomTexVolRender(pmin,pmax);
+    rvol->SetVol((unsigned char*)&rgchar->grid(0,0,0),
+		 rgchar->nz,rgchar->ny,rgchar->nx);
 
     rvol->SetOther(triangles);
     rvol->SetNumSlices(256);
@@ -323,19 +299,15 @@ void SimpVolVis::execute(void)
     ogeom->addObj(rvol,"VolRender");
   } else {
     rvol->map2d = (unsigned char *)1; // force flush...
-    if (executemode == 0) {
-      rvol->SetVol((unsigned char*)&rgchar->grid(0,0,0),
-		   rgchar->nz,rgchar->ny,rgchar->nx);
+    rvol->SetVol((unsigned char*)&rgchar->grid(0,0,0),
+		 rgchar->nz,rgchar->ny,rgchar->nx);
+    rvol->set_bounds(pmin, pmax);
 
 // DAVE: HACK!
 //      sfield->get_bounds(Smin, Smax);
  
-      Point tmp1, tmp2;
-      sfield->get_bounds(tmp1, tmp2);
-      Smin=Point(tmp1.z(), tmp1.y(), tmp1.x());
-      Smax=Point(tmp2.z(), tmp2.y(), tmp2.x());
 
-      Vector dv(Smax-Smin);
+      Vector dv(pmax-pmin);
       ddv.x(dv.x()/(rgchar->nz - 1));
       ddv.y(dv.y()/(rgchar->ny - 1));
       ddv.z(dv.z()/(rgchar->nx - 1));
@@ -346,9 +318,9 @@ void SimpVolVis::execute(void)
       Vector vY(0, dv.y(), 0);
       Vector vZ(0, 0, dv.z());
       
-      Point cornerX(w.x(), Smin.y(), Smin.z());
-      Point cornerY(Smin.x(), w.y(), Smin.z());
-      Point cornerZ(Smin.x(), Smin.y(), w.z());
+      Point cornerX(w.x(), pmin.y(), pmin.z());
+      Point cornerY(pmin.x(), w.y(), pmin.z());
+      Point cornerZ(pmin.x(), pmin.y(), w.z());
       if (triangles->size()) {
 	triangles->reserve_clear(6);
       }
@@ -360,10 +332,6 @@ void SimpVolVis::execute(void)
       
       triangles->add(cornerX,cornerX+vZ,cornerX+vZ+vY);
       triangles->add(cornerX,cornerX+vZ+vY,cornerX+vY);
-    
-    }
-    if (use_tcl_stuff)
-	rvol->SubVol(nx,ny,nz);
   }
 
 
@@ -380,7 +348,7 @@ void SimpVolVis::execute(void)
 
 
 
-void SimpVolVis::widget_moved(int last)
+void SimpVolVis::widget_moved(int)
 {
   if( !mode )
     {
