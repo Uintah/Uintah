@@ -701,15 +701,13 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
               }   
 	    }
 	    ASSERTEQ(position, sendsize);
-	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i], sgargs.tags[i],
-		     pc->getComm());
+	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i],
+		     sgargs.tags[i], pc->getComm());
 	    log.logSend(0, sizeof(int), "scatter");
 	    delete[] buf;
 	 } else {
-	    int sendsize = 0;
-	    char dummy;
-	    MPI_Send(&dummy, sendsize, MPI_PACKED, sgargs.dest[i],
-		     sgargs.tags[i], pc->getComm());
+	    MPI_Send(NULL, 0, MPI_PACKED, sgargs.dest[i],
+	        sgargs.tags[i], pc->getComm());
 	    log.logSend(0, sizeof(int), "scatter");
 	 }
       }
@@ -752,13 +750,11 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	    MPI_Get_count(&stat, MPI_PACKED, &recvsize[i]);
 	    log.logRecv(0, sizeof(int), "sg_buffersize");
 	    recvpos[i] = 0;
-	    if(recvsize[i]){
-	       recvbuf[i] = scinew char[recvsize[i]];
-	       MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
-			sgargs.dest[i], sgargs.tags[i],
-			pc->getComm(), &stat);
-	       log.logRecv(0, recvsize[i], "gather");
-	    }
+	    recvbuf[i] = scinew char[recvsize[i]];
+	    MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
+		     sgargs.dest[i], sgargs.tags[i],
+		     pc->getComm(), &stat);
+	    log.logRecv(0, recvsize[i], "gather");
 	 }
       }
    }
@@ -885,6 +881,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.25  2000/09/27 20:49:55  witzel
+// It needed to receive in gatherParticles even for zero byte data.
+//
 // Revision 1.24  2000/09/27 00:12:49  witzel
 // emitEdges changed to makeTaskGraphDoc with emit_edges flag argument
 // (so only process 0 emits the edges).  Also, used MPI_Probe in
