@@ -39,16 +39,15 @@ using std::string;
 #define MAX_BASIS 27
 
 Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
-                           Output* dataArchiver_tmp,
+                           Output* d_dataArchiver,
                            MPMLabel* Mlb,int n8or27)
 { 
   MPI_Comm_dup( MPI_COMM_WORLD, & mpi_crack_comm );
 
   /* Task 1: Initialization of fracture analysis  
   */
-  d_SMALL_NUM_MPM=1e-200;
   d_sharedState = d_sS;
-  dataArchiver = dataArchiver_tmp;
+  dataArchiver = d_dataArchiver;
   lb = Mlb;
   d_8or27=n8or27;
 
@@ -59,20 +58,20 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   rdadx=1.;   // Ratio of crack growth to cell-size
   rJ=-1.;     // Radius of J-path circle
   NJ=2;       // J contor size
-  mS=0;       // MatErial ID for saving J integral
-  NO=0;
-  YES=1;
   R=0;        // right
   L=1;        // left
+  NO=0;
+  YES=1;
 
+  // Flag if saving crack geometry for visualization
+  saveCrackGeometry=true;
+     
   // Flags for fracture analysis
   d_calFractParameters = "false";
   d_doCrackPropagation = "false";
 
   // Flag if using volume-integral in J-integral computation
   useVolumeIntegral=false; 
-  // Flag for crack geometry visualization
-  doCrackVisualization=false;
   // Flag if smoothing crack-front
   smoothCrackFront=false;
 
@@ -93,7 +92,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Get .uda directory 
   ProblemSpecP uda_ps = ps->findBlock("DataArchiver");
   uda_ps->get("filebase", udaDir);
-  
+  uda_ps->get("save_crack_geometry", saveCrackGeometry);
+      
   /* Task 2: Read in MPM parameters related to fracture analysis
   */
   ProblemSpecP mpm_soln_ps = ps->findBlock("MPM");
@@ -101,10 +101,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
      mpm_soln_ps->get("calculate_fracture_parameters", d_calFractParameters);
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
      mpm_soln_ps->get("use_volume_integral", useVolumeIntegral);
-     mpm_soln_ps->get("do_crack_visualization", doCrackVisualization);
      mpm_soln_ps->get("smooth_crack_front", smoothCrackFront);
      mpm_soln_ps->get("J_radius", rJ);
-     mpm_soln_ps->get("save_J_matID", mS);
      mpm_soln_ps->get("dadx",rdadx);
   }
 
@@ -445,11 +443,11 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         cout << "\nMaterial " << m << ":\n"
              << "  Crack contact type: " << crackType[m] << endl;
         if(crackType[m]=="frictional")
-          cout << "   Frictional coefficient: " << cmu[m] << endl;
+          cout << "    Frictional coefficient: " << cmu[m] << endl;
 
         if(crackType[m]!="null") {
           if(separateVol[m]<0. || contactVol[m]<0.)
-            cout  << "   Check crack contact by displacement criterion." << endl;
+            cout  << "    Check crack contact by displacement criterion." << endl;
           else {
             cout  << "Check crack contact by volume criterion with\n"
                   << "            separate volume = " << separateVol[m]
@@ -493,9 +491,12 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         // Arc cracks
         for(int i=0;i<(int)arcs[m].size();i++) {
           cout << "    Arc " << i << ": meshed by " << arcNCells[m][i]
-               << " cells on the circumference.\n"
-               << "   crack front segment ID: " << arcCrkFrtSegID[m][i]
-               << "\n    start, middle and end points of the arc:"  << endl;
+               << " cells on the circumference." << endl;
+          if(arcCrkFrtSegID[m][i]==9999)
+	    cout << "   crack front: on the arc" << endl;
+          else
+	    cout << "   crack front segment ID: " << arcCrkFrtSegID[m][i] << endl;
+          cout << "\n    start, middle and end points of the arc:"  << endl;
           for(int j=0;j<3;j++)
             cout << "    p" << j+1 << ": " << arcs[m][i][j] << endl;
         }
@@ -503,9 +504,12 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         // Elliptic cracks
         for(int i=0;i<(int)ellipses[m].size();i++) {
           cout << "    Ellipse " << i << ": meshed by " << ellipseNCells[m][i]
-               << " cells on the circumference.\n"
-               << "    crack front segment ID: " << ellipseCrkFrtSegID[m][i]
-               << endl;
+               << " cells on the circumference." << endl;
+	  if(ellipseCrkFrtSegID[m][i]==9999)
+	    cout << "    crack front: on the ellipse circumference" << endl;
+          else	  
+            cout << "    crack front segment ID: " << ellipseCrkFrtSegID[m][i]
+                 << endl;
           cout << "    end point on axis1: " << ellipses[m][i][0] << endl;
           cout << "    end point on axis2: " << ellipses[m][i][1] << endl;
           cout << "    another end point on axis1: " << ellipses[m][i][2]
@@ -516,9 +520,12 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         for(int i=0;i<(int)pellipses[m].size();i++) {
           cout << "    Partial ellipse " << i << " (" << pellipseExtent[m][i]
                << "): meshed by " << pellipseNCells[m][i]
-               << " cells on the circumference.\n"
-               << "    crack front segment ID: " << pellipseCrkFrtSegID[m][i]
-               << endl;
+               << " cells on the circumference." << endl;
+          if(pellipseCrkFrtSegID[m][i]==9999)
+            cout << "    crack front: on the ellipse circomference" << endl;
+          else
+            cout << "    crack front segment ID: " << pellipseCrkFrtSegID[m][i]
+                 << endl;
           cout << "    center: " << pellipses[m][i][0] << endl;
           cout << "    end point on axis1: " << pellipses[m][i][1] << endl;
           cout << "    end point on axis2: " << pellipses[m][i][2] << endl;
@@ -560,7 +567,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
        
     // Allocate memories for crack mesh data
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    cs0.resize(numMPMMatls);
+    css.resize(numMPMMatls);
+    csa.resize(numMPMMatls);
     cx.resize(numMPMMatls);
     ce.resize(numMPMMatls);
     cfSegNodes.resize(numMPMMatls);
@@ -604,18 +612,36 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         }
 
         // Get average length of crack-front segs
-        cs0[m]=0.;
+        css[m]=0.;  
         int ncfSegs=(int)cfSegNodes[m].size()/2;
         for(int i=0; i<ncfSegs; i++) {
           int n1=cfSegNodes[m][2*i];
           int n2=cfSegNodes[m][2*i+1];
-          cs0[m]+=(cx[m][n1]-cx[m][n2]).length();
+          css[m]+=(cx[m][n1]-cx[m][n2]).length();
         }
-        cs0[m]/=ncfSegs;
+        css[m]/=ncfSegs;
 
         if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
           // Get crack-front-node previous index, and sub-crack extent
           FindCrackFrontNodeIndexes(m);
+	   
+	  // Get average angle difference of adjacent crack-front segments
+	  csa[m]=0.;
+	  int count=0; 
+	  for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
+	    int preIdx=cfSegPreIdx[m][i];
+            if(preIdx>0) {
+	      Point p =cx[m][cfSegNodes[m][i]];	    
+	      Point p1=cx[m][cfSegNodes[m][i-2]];
+	      Point p2=cx[m][cfSegNodes[m][i+1]];
+	      Vector v1=TwoPtsDirCos(p1,p);
+	      Vector v2=TwoPtsDirCos(p,p2);
+	      csa[m]+=fabs(acos(Dot(v1,v2)))*180/3.141592654; 
+	      count++;
+	    }	    
+	  }
+	  if(count!=0) csa[m]/=count; 
+	  else         csa[m]=90; 
 
           // Get normals of crack plane at crack-front nodes
           if(smoothCrackFront) {
@@ -1080,8 +1106,11 @@ void Crack::OutputInitialCrackMesh(const int& m)
            << ", V3: " << cfSegV3[m][i] << endl;
     }
 
-    cout << "\n  Average length of crack front segs, cs0[m]="
-         << cs0[m] << endl;
+    cout << "\n  Average length of crack front segs, css[m]="
+         << css[m] << endl;
+    cout << "\n  Average deviation of crack front segs, csa[m]="
+		         << csa[m] << endl;
+	
 
     cout << "\n  Crack extent: " << cmin[m] << "-->"
          <<  cmax[m] << endl << endl;
