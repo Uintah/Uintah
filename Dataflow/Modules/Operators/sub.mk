@@ -5,6 +5,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Dataflow/Modules/Operators
 
 SRCS     += \
+	$(SRCDIR)/ScalarFieldOperator.cc \
+	$(SRCDIR)/ScalarFieldAverage.cc \
 	$(SRCDIR)/TensorFieldOperator.cc \
 	$(SRCDIR)/TensorParticlesOperator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
