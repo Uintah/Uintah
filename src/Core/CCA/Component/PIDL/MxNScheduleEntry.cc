@@ -40,6 +40,11 @@ MxNScheduleEntry::MxNScheduleEntry(std::string n, sched_t st)
     allowArraySet(true), madeSched(false)
 
 {
+#ifdef DEBUG_THE_SEMAS
+  recv_sema_count=0;
+  arr_wait_sema_count=0;
+  meta_sema_count=0;
+#endif
 }
 
 MxNScheduleEntry::~MxNScheduleEntry()
@@ -135,6 +140,9 @@ void* MxNScheduleEntry::getArray()
 
 void* MxNScheduleEntry::getArrayWait()
 {
+#ifdef DEBUG_THE_SEMAS
+  arr_wait_sema_count--;
+#endif
   arr_wait_sema.down();
   allowArraySet = true;
   return arr_ptr;
@@ -152,8 +160,14 @@ void MxNScheduleEntry::setArray(void** a_ptr)
     arr_ptr = (*a_ptr);
     allowArraySet = false;
     //Raise getArrayWait's semaphore 
+#ifdef DEBUG_THE_SEMAS
+    arr_wait_sema_count+= caller_rep.size();
+#endif
     arr_wait_sema.up((int) caller_rep.size());
-    //::std::cout << "setArray -- Raised sema +" << caller_rep.size() << "\n";
+#ifdef DEBUG_THE_SEMAS
+    printSemaCounts();
+    assert(arr_wait_sema_count >= 0);
+#endif
   }
   else { 
     (*a_ptr) = arr_ptr;
@@ -199,6 +213,9 @@ void* MxNScheduleEntry::waitCompleteArray()
     (*temp_ptr) = NULL;
     arr_ptr = (void*) temp_ptr; 
     //Reset variables  
+#ifdef DEBUG_THE_SEMAS
+    arr_wait_sema_count=0;
+#endif
     while (arr_wait_sema.tryDown());
     allowArraySet = true;
     meta_sema.up((int) (2*caller_rep.size()));
@@ -215,6 +232,9 @@ void* MxNScheduleEntry::waitCompleteArray()
     recv_mutex.unlock();
     if (recv_flag == false) {
       //::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
+#ifdef DEBUG_THE_SEMAS
+      recv_sema_count--;
+#endif
       recv_sema.down();
       i=-1; //Next loop iteration will increment it to 0
     }
@@ -232,6 +252,9 @@ void* MxNScheduleEntry::waitCompleteArray()
   }
  
   //Reset variables  
+#ifdef DEBUG_THE_SEMAS
+  arr_wait_sema_count=0;
+#endif
   while (arr_wait_sema.tryDown());
   allowArraySet = true;
   meta_sema.up((int) (2*caller_rep.size()));
@@ -264,16 +287,33 @@ void MxNScheduleEntry::doReceive(int rank)
       //If we have already received this, something is happening
       //out of order, so we yield until things sort out.
       while(caller_rep[i]->received) {
+#ifdef DEBUG_THE_SEMA
+	recv_sema_count++; 
+#endif
 	recv_sema.up();
-	Thread::yield();
+	//Thread::yield();
       }
       recv_mutex.lock();
       caller_rep[i]->received = true;
       recv_mutex.unlock();
+#ifdef DEBUG_THE_SEMA
+      recv_sema_count++;
+#endif
       recv_sema.up();
     }
   }    
 }
+
+#ifdef DEBUG_THE_SEMAS
+void MxNScheduleEntry::printSemaCounts()
+{
+  ::std::cout << "__________________________________________________\n";
+  ::std::cout << "recv_sema_count = " << recv_sema_count << "\n";
+  ::std::cout << "arr_wait_sema_count = " << arr_wait_sema_count << "\n";
+  ::std::cout << "meta_sema_count = " << meta_sema_count << "\n";
+  ::std::cout << "__________________________________________________\n";
+}
+#endif
 
 void MxNScheduleEntry::print(std::ostream& dbg)
 {
