@@ -45,16 +45,11 @@ class LevoyS;
 
 // the type of fnc corresponding to the various cast ray fncs
 
-typedef Color (Levoy::*CRF) ( const Point&, Vector&,
-			     const Point&, const Point& );
+typedef Color (Levoy::*CRF) ( const Point&, Vector&, const Point& );
 
 typedef Color (LevoyS::*CRFS) ( const Point&, Vector&,
 			     const Point&, const Point&, const int&,
 			     const int& );
-
-// the type of fnc corresponding to Perspective/Parallel trace fncs
-
-typedef void (Levoy::*TR) ( int, int );
 
 class Levoy
 {
@@ -158,38 +153,29 @@ public:
   // uses the new transfer map and ray-bbox intersections
 
   Color Eight ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
+	      const Point& beg  );
 
   Color Nine ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
-
-  // uses the Bresenham algorithm and no interpolation
-
-  Color Bresenham2 ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
+	      const Point& beg );
 
   // traces all the rays
   
   Array2<CharColor>* TraceRays ( int projectionType );
 
-  // traces rays repeat number of times, and takes the time it took
-  
-  Array2<CharColor>* BatchTrace ( int projectionType, int repeat );
-  
 
   // Traces rays starting at x=from until x=till
   
   virtual void PerspectiveTrace( int from, int till );
   
+#if 0  
   void ParallelTrace( int from, int till );
-};
 
-/**************************************************************************
- *
- * Associates a value for the particular scalar value
- * given an array of scalar values and corresponding opacity/color values.
- *
- **************************************************************************/
+  // traces rays repeat number of times, and takes the time it took
+  
+  Array2<CharColor>* BatchTrace ( int projectionType, int repeat );
+  
+#endif
+};
 
 inline
 double
@@ -212,6 +198,13 @@ Levoy::AssociateValue ( double scalarValue,
   return opacity;
 
 }
+
+/**************************************************************************
+ *
+ * Associates a value for the particular scalar value
+ * given an array of scalar values and corresponding opacity/color values.
+ *
+ **************************************************************************/
 
 
 class LevoyS : public Levoy

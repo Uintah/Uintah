@@ -37,6 +37,7 @@ Vector EpsilonVector( 1.e-6, 1.e-6, 1.e-6 );
 double EpsilonContribution = 0.01;
 
 
+
 /**************************************************************************
  *
  * Constructor
@@ -53,10 +54,9 @@ Levoy::Levoy ( ScalarFieldRG * grid,
   // set up the bounding box for the image
 
   homeSFRGrid->get_bounds( gmin, gmax );
+  
   box.extend( gmin );
   box.extend( gmax );
-
-  box.SetupSides();
 
   backgroundColor = bg;
 
@@ -229,6 +229,9 @@ Levoy::SetUp ( const ExtendedView& myview )
   // temporary storage for eye position
 
   eye = myview.eyep();
+  
+  // useful for ray-bbox intersection
+  box.PrepareIntersect( eye );
 
   // the original ray from the eye point to the lookat point
 
@@ -248,11 +251,13 @@ Levoy::SetUp ( const ExtendedView& myview )
   // make sure that the raster sizes do not exceed the OpenGL window
   // size
 
+#if 0  
   if ( myview.xres() > VIEW_PORT_SIZE )
     myview.xres( VIEW_PORT_SIZE );
   
   if ( myview.yres() > VIEW_PORT_SIZE )
     myview.yres( VIEW_PORT_SIZE );
+#endif  
 
   // create and initialize the array containing the image
 
@@ -285,11 +290,6 @@ Levoy::SetUp ( const ExtendedView& myview )
   // in order to compare speed
   
   // determine the function to use
-
-  if ( whiteFlag )
-    CastRay = &Levoy::Bresenham2;
-  else // user defined SV-color map
-    CastRay = &Levoy::Nine;
 
   if ( whiteFlag )
     CastRay = &Levoy::Eight;
@@ -326,21 +326,32 @@ Levoy::SetUp ( GeometryData * g )
  **************************************************************************/
 
 Color
-Levoy::Eight ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end )
+Levoy::Eight ( const Point& eye, Vector& step, const Point& beg )
 {
+  // the color for rendering
+
+  Color colr = WHITE;
+
+  // find step vector
+
+  step.normalize();
+
+  step *= rayStep;
+
+  // flag that tells me that the ray is no longer in the bbox space
+  
+  int Flag = 1;
+  
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
   
-  double contribution;
-
-  // the current location in the volume
-
-  Point atPoint;
+  double contribution = 1.0;
 
   // accumulated color as the ray passes through the volume
+  // since no voxels have been crossed, no color has been
+  // accumulated.
   
-  Color accumulatedColor;
+  Color accumulatedColor = BLACK;
 
   // a scalar value corresponds to a particular point
   // in space
@@ -351,52 +362,9 @@ Levoy::Eight ( const Point& eye, Vector& step,
 
   double opacity;
 
-  // step length
-
-  double stepLength;
-
-  // the length of the ray to be cast
-
-  double mylength;
-
-  // the length of ray stepped through so far
-
-  double traversed;
-
-  // contribution of the first voxel's color and opacity
-  
-  contribution = 1.0;
-  
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-
-  accumulatedColor = BLACK;
-
-  // find step vector
-
-  step.normalize();
-
-  step *= rayStep;
-
-  // memorize length
-
-  stepLength = step.length();
-
-  // the color for rendering
-
-  Color colr = WHITE;
-
   // position of the point in space at the beginning of the cast
   
-  atPoint = beg + EpsilonVector - step;
-
-  // the length of the ray to be cast
-
-  mylength = (end - eye).length() - (beg - eye).length();
-
-  // the ray cast begins before entering the volume
-
-  traversed = - stepLength;
+  Point atPoint = beg + EpsilonVector - step;
 
   // begin traversing through the volume at the first point of
   // intersection of the ray with the bbox.  keep going through
@@ -404,11 +372,22 @@ Levoy::Eight ( const Point& eye, Vector& step,
   // is almost none, or until the second intersection point has
   // been reached.
 
-  while ( contribution > EpsilonContribution && traversed <= mylength )
+  atPoint += step;
+  scalarValue = 0;
+  
+  if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+    {
+      opacity = AssociateValue( scalarValue, ScalarVals[0],
+			       AssociatedVals[0], Slopes[0] );
+      
+      accumulatedColor += colr * ( contribution * opacity );
+      contribution = contribution * ( 1.0 - opacity );
+    }
+  
+  while ( contribution > EpsilonContribution && Flag )
     {
       atPoint += step;
       scalarValue = 0;
-      traversed += stepLength;
 
       if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
 	{
@@ -418,8 +397,10 @@ Levoy::Eight ( const Point& eye, Vector& step,
 	  accumulatedColor += colr * ( contribution * opacity );
 	  contribution = contribution * ( 1.0 - opacity );
 	}
+      else
+	Flag = 0;
     }
-
+  
   // background color should contribute to the final color of
   // the pixel.  if contribution is minute, the background
   // is not visible therefore don't add the background color
@@ -447,10 +428,116 @@ Levoy::Eight ( const Point& eye, Vector& step,
 
 
 Color
-Levoy::Nine ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end )
+Levoy::Nine ( const Point& eye, Vector& step, const Point& beg )
 {
+  // the color for rendering
 
+  Color colr = WHITE;
+
+  // find step vector
+
+  step.normalize();
+
+  step *= rayStep;
+
+  // flag that tells me that the ray is no longer in the bbox space
+  
+  int Flag = 1;
+  
+  // as the ray passes through the volume, the voxel's
+  // color contribution decreases
+  
+  double contribution = 1.0;
+
+  // accumulated color as the ray passes through the volume
+  // since no voxels have been crossed, no color has been
+  // accumulated.
+  
+  Color accumulatedColor = BLACK;
+
+  // a scalar value corresponds to a particular point
+  // in space
+  
+  double scalarValue;
+
+  // opacity for a particular position in the volume
+
+  double opacity;
+
+  // position of the point in space at the beginning of the cast
+  
+  Point atPoint = beg + EpsilonVector - step;
+
+  // begin traversing through the volume at the first point of
+  // intersection of the ray with the bbox.  keep going through
+  // the volume until the contribution of the voxel color
+  // is almost none, or until the second intersection point has
+  // been reached.
+
+  atPoint += step;
+  scalarValue = 0;
+  
+  if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+    {
+	  Color tempcolr( AssociateValue( scalarValue,
+					 ScalarVals[1], AssociatedVals[1],
+					 Slopes[1] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[2], AssociatedVals[2],
+					Slopes[2] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[3], AssociatedVals[3],
+					Slopes[3] ) );
+
+	  colr = tempcolr;
+
+      opacity = AssociateValue( scalarValue, ScalarVals[0],
+			       AssociatedVals[0], Slopes[0] );
+      
+      accumulatedColor += colr * ( contribution * opacity );
+      contribution = contribution * ( 1.0 - opacity );
+    }
+  
+  while ( contribution > EpsilonContribution && Flag )
+    {
+      atPoint += step;
+      scalarValue = 0;
+
+      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
+	{
+	  Color tempcolr( AssociateValue( scalarValue,
+					 ScalarVals[1], AssociatedVals[1],
+					 Slopes[1] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[2], AssociatedVals[2],
+					Slopes[2] ),
+			 AssociateValue( scalarValue,
+					ScalarVals[3], AssociatedVals[3],
+					Slopes[3] ) );
+
+	  colr = tempcolr;
+
+	  opacity = AssociateValue( scalarValue, ScalarVals[0],
+				   AssociatedVals[0], Slopes[0] );
+
+	  accumulatedColor += colr * ( contribution * opacity );
+	  contribution = contribution * ( 1.0 - opacity );
+	}
+      else
+	Flag = 0;
+    }
+  
+  // background color should contribute to the final color of
+  // the pixel.  if contribution is minute, the background
+  // is not visible therefore don't add the background color
+  // to the accumulated one.
+  
+  if ( contribution > EpsilonContribution )
+    accumulatedColor = backgroundColor * contribution + accumulatedColor;
+
+  return accumulatedColor;
+
+#if 0  
   // as the ray passes through the volume, the voxel's
   // color contribution decreases
   
@@ -565,6 +652,7 @@ Levoy::Nine ( const Point& eye, Vector& step,
     accumulatedColor = backgroundColor * contribution + accumulatedColor;
 
   return accumulatedColor;
+#endif  
 }
 
 
@@ -585,7 +673,7 @@ Levoy::LightingComponent( const Vector& normal )
 }
 
 
-
+#if 0
 /**************************************************************************
  *
  * calculates the pixel color by casting a ray starting at the first
@@ -826,7 +914,7 @@ Levoy::Bresenham2 ( const Point& eye, Vector& step,
 
   return accumulatedColor;
 }
-
+#endif
 
 
 /**************************************************************************
@@ -841,37 +929,20 @@ Levoy::PerspectiveTrace( int from, int till )
   int loop, pool;
   Vector rayToTrace;
   Color pixelColor;
-  Point beg, end;
+  Point newbeg;
 
   for ( pool = from; pool < till; pool++ )
     {
       for ( loop = 0; loop < y; loop++ )
 	{
-	  // slightly alter the direction of ray
-	  
+	  // assign ray direction depending on the pixel
 	  rayToTrace = homeRay;
 	  rayToTrace += rayIncrementU * ( pool - x/2 );
 	  rayToTrace += rayIncrementV * ( loop - y/2 );
-
-	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
-	    {
-	      // TEMP!!!  perhaps i still want to check what the
-	      // SV is at the point (it must be the corner)
-	      // i will need to REMOVE this later
-
-	      if ( ( eye - beg ).length() > ( eye - end ).length() )
-		{
-		  cerr << "swapping!!!!! ...\n";
-		  cerr << "HELP!!!!\n\n\n\n\n\n\n\n\n\n\n\nHELP!";
-		  ASSERT( ( eye - beg).length() <= ( eye - end ).length() );
-		}
-
-	      if ( beg.InInterval( end, 1.e-5 ) )
-		pixelColor = backgroundColor;
-	      else
-		pixelColor = (this->*CastRay)( eye, rayToTrace,
-					      beg, end );
-	    }
+	  rayToTrace.normalize();
+	  
+	  if ( box.Intersect( eye, rayToTrace, newbeg ) )
+	    pixelColor = (this->*CastRay)( eye, rayToTrace, newbeg );
 	  else
 	    pixelColor = backgroundColor;
 
@@ -889,10 +960,8 @@ Levoy::PerspectiveTrace( int from, int till )
 	    (char)(pixelColor.g()*255);
 	  ((*Image)( loop, pool )).blue =
 	    (char)(pixelColor.b()*255);
-
 	}
     }
-  
 }
 
 
@@ -1323,7 +1392,7 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
 }
 
 
-
+#if 0
 /**************************************************************************
  *
  *
@@ -1359,7 +1428,7 @@ Levoy::ParallelTrace( int from, int till )
 	  startAt += rayIncrementU * ( pool - x/2 );
 	  startAt += rayIncrementV * ( loop - y/2 );
 
-	  if ( box.Intersect( startAt, homeRay, beg, end ) )
+	  if ( box.Intersect2( startAt, homeRay, beg, end ) )
 	    {
 	      // TEMP!!!  perhaps i still want to check what the
 	      // SV is at the point (it must be the corner)
@@ -1391,7 +1460,7 @@ Levoy::ParallelTrace( int from, int till )
 	}
     }
 }
-
+#endif
 
 
 /**************************************************************************
@@ -1418,7 +1487,7 @@ LevoyS::PerspectiveTrace( int from, int till )
 	  rayToTrace += rayIncrementU * ( pool - x/2 );
 	  rayToTrace += rayIncrementV * ( loop - y/2 );
 
-	  if ( box.Intersect( eye, rayToTrace, beg, end ) )
+	  if ( box.Intersect( eye, rayToTrace, beg ) )
 	    {
 	      // TEMP!!!  perhaps i still want to check what the
 	      // SV is at the point (it must be the corner)
@@ -1468,31 +1537,12 @@ Levoy::TraceRays ( int projectionType )
     {
       PerspectiveTrace( 0, x );
     }
+#if 0  
   else
     {
       ParallelTrace( 0, x );
     }
+#endif  
 
-  return Image;
-}
-
-
-
-Array2<CharColor> *
-Levoy::BatchTrace ( int projectionType, int repeat )
-{
-  int loop;
-  WallClockTimer watch;
-
-  watch.start();
-
-  for( loop = 0; loop < repeat; loop++ )
-    TraceRays( projectionType );
-
-  watch.stop();
-
-  cerr << "The watch reports: " << watch.time() << " for " << repeat <<
-    " repetitions\n";
-  
   return Image;
 }

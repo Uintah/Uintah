@@ -500,37 +500,9 @@ VolVis::parallel( int proc )
 	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
 				   interval * ( proc + 1 + procCount * i ) );
 
-#if 0	  
-	  calc->PerspectiveTrace(interval * ( proc + procCount *
-					     ( intervalCount.get() - 1 ) ),
-				 iRasterX.get() );
-#endif	  
 	  calc->PerspectiveTrace(interval * ( proc + procCount *
 					     ( intervalCount.get() - 1 ) ),
 				 myview.xres() );
-	}
-    }
-  else
-    { // for an orthogonal projection do the following:
-      
-      if ( proc != procCount - 1 )
-	for ( i = 0; i < intervalCount.get(); i++ )
-	  calc->ParallelTrace( interval * ( proc + procCount * i ),
-			      interval * ( proc + 1 + procCount * i ) );
-      else
-	{
-	  for ( i = 0; i < intervalCount.get()-1; i++ )
-	    calc->ParallelTrace( interval * ( proc + procCount * i ),
-				interval * ( proc + 1 + procCount * i ) );
-
-#if 0	  
-	  calc->ParallelTrace( interval * ( proc + procCount *
-					   ( intervalCount.get() - 1 ) ),
-			      iRasterX.get() );
-#endif	  
-	  calc->ParallelTrace( interval * ( proc + procCount *
-					   ( intervalCount.get() - 1 ) ),
-			      myview.xres() );
 	}
     }
 }
