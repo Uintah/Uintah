@@ -74,6 +74,8 @@ itcl_class RescaleParticleColorMap {
 	pack  $w.f1.f.l2 -side left -anchor e -expand yes -fill x
 	pack  $w.f1.f.e2 -side left -anchor w -expand yes -fill x
 	
+	bind $w.f1.f.e1 <Return> "$this-c needexecute"
+	bind $w.f1.f.e2 <Return> "$this-c needexecute"
 	set $this-scaleMode "fixed"
 	$this-c needexecute
     }

@@ -129,17 +129,14 @@ void RescaleParticleColorMap::execute()
 	  min -= 1e-6;
 	}
 	cmap.detach();
-	cmap->min=min;
-	cmap->max=max;
+	cmap->Scale( min, max);
 	minVal.set( min );
 	maxVal.set( max );
       }
     } else {
       cmap.detach();
-      cmap->min = minVal.get();
-      cmap->max = maxVal.get();
+      cmap->Scale( minVal.get(), maxVal.get());
     }
-
     omap->send(cmap);
     oPort->send(psh);
     oePort->send(pseh);
