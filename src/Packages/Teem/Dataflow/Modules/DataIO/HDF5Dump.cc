@@ -317,19 +317,21 @@ herr_t HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
   /* Get the rank (number of dims) in the space. */
   int ndims = H5Sget_simple_extent_ndims(file_space_id);
 
-  hsize_t *dims = new hsize_t[ndims];
-
-  /* Get the dims in the space. */
-  int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
-
   if (H5Sis_simple(file_space_id)) {
+
     if (ndims == 0) {
       /* scalar dataspace */
 
       HDF5Dump_tab( iostr );
       *iostr << "DATASPACE  SCALAR " << endl;
     } else {
-	  /* simple dataspace */
+      /* simple dataspace */
+
+      hsize_t *dims = new hsize_t[ndims];
+
+      /* Get the dims in the space. */
+      int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
       HDF5Dump_tab( iostr );
       *iostr << "DATASPACE  SIMPLE { ( " << dims[0];
 
@@ -337,9 +339,9 @@ herr_t HDF5Dump_dataspace(hid_t file_space_id, ostream* iostr) {
 	*iostr << ", " << dims[i];
       
       *iostr << " ) }" << endl;
-    }
 
-    delete dims;
+      delete dims;
+    }
   }
 
   return status;
