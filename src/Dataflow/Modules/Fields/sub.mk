@@ -35,6 +35,8 @@ SRCS     += \
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
+	$(SRCDIR)/ChangeFieldDataType.cc\
+	$(SRCDIR)/ChangeFieldBounds.cc\
 	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/ClipLattice.cc\
 	$(SRCDIR)/ConvertTet.cc\
@@ -42,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
+	$(SRCDIR)/FieldInfo.cc\
 	$(SRCDIR)/FieldMeasures.cc\
 	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
