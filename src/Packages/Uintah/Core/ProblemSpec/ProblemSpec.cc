@@ -858,6 +858,7 @@ ProblemSpecP ProblemSpec::getWithDefault(const std::string& name,
   return ps;
 }
 
+// add newline before, then tabs tabs, and then if trail is true, ending whitespace
 void ProblemSpec::appendElement(const char* name, const std::string& value,
                                 bool trail /*=0*/, int tabs /*=1*/) 
 {
@@ -1249,10 +1250,13 @@ void ProblemSpec::appendText(const char* str) {
 }
 
 // append element with associated string
-// preceded by \n with tabs tabs (default 0), and followed by a newline
-ProblemSpecP ProblemSpec::appendChild(const char *str, int tabs) {
+// preceded by \n (if lead is true) with tabs tabs (default 0), and followed by a newline
+ProblemSpecP ProblemSpec::appendChild(const char *str, 
+                                      bool lead /*=0*/, int tabs /*=0*/) {
   ostringstream ostr;
   ostr.clear();
+  if (lead)
+    ostr << "\n";
   for (int i = 0; i < tabs; i++)
     ostr << "\t";
   appendText(ostr.str().c_str());
