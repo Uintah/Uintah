@@ -50,7 +50,7 @@
 #ifdef __sgi
 #include <abi_mutex.h>
 #else
-#ifndef SCI_NOTHREAD
+#if !defined(SCI_NOTHREAD) && !defined(_WIN32)
 #error "No lock implementation for this architecture"
 #endif
 #endif

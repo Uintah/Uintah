@@ -47,6 +47,7 @@ const int ALIGN=16;
 */
 
 #include <sci_defs/bits_defs.h>
+#include <sci_defs/malloc_defs.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/AllocOS.h>
@@ -54,7 +55,7 @@ const int ALIGN=16;
 // irix64 KCC stuff
 #include <strings.h>
 
-#if defined(__sun)
+#if defined(__sun) || defined(_WIN32)
 #  include <string.h>
 #  define bcopy(src,dest,n) memcpy(dest,src,n)
 #elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__)
@@ -400,7 +401,7 @@ void UnLockAllocator(Allocator *a)
 }
 
 #else
-#ifdef SCI_NOTHREAD
+#if defined(SCI_NOTHREAD) || defined(DISABLE_SCI_MALLOC)
 void Allocator::initlock()
 {
 }
@@ -441,6 +442,7 @@ void AllocError(char* msg)
 
 Allocator* MakeAllocator()
 {
+#ifndef DISABLE_SCI_MALLOC
     // Compute the size of the allocator structures
     size_t size=sizeof(Allocator);
     int nsmall=NSMALL_BINS;
@@ -557,6 +559,9 @@ Allocator* MakeAllocator()
 
     a->dieing = false;
     return a;
+#else
+    return NULL;
+#endif // DISABLE_SCI_MALLOC
 }
 
 void* Allocator::alloc(size_t size, const char* tag)
