@@ -17,17 +17,12 @@
 Generator::Generator()
 {
   xml_file_ = "";
-  cc_xsl_file_ = "";
-  gui_xsl_file_ = "";
-  xml_xsl_file_ = "";
-  cc_out_ = "";
-  gui_out_ = "";
-  xml_out_ = "";
+  xsl_file_ = "";
+  output_file_ = "";
   path_to_insight_package_ = "";
 
   parser_ = new Parser();
   translator_ = new Translator();
-//  translator_ = new Translator(cc_xsl_file_, gui_xsl_file_, xml_xsl_file_);
 }
 
 
@@ -49,67 +44,25 @@ string Generator::get_xml_file( void )
   return xml_file_;
 }
 
-void Generator::set_cc_xsl_file(string f)
+void Generator::set_xsl_file(string f)
 {
-  cc_xsl_file_ = f;
-  this->translator_->set_cc_xsl(cc_xsl_file_);
+  xsl_file_ = f;
+  this->translator_->set_xsl_file(xsl_file_);
 }
 
-string Generator::get_cc_xsl_file( void )
+string Generator::get_xsl_file( void )
 {
-  return cc_xsl_file_;
+  return xsl_file_;
 }
 
-void Generator::set_gui_xsl_file(string f)
+void Generator::set_output_file(string f)
 {
-  gui_xsl_file_ = f;
-  this->translator_->set_gui_xsl(gui_xsl_file_);
+  output_file_ = f;
 }
 
-string Generator::get_gui_xsl_file( void )
+string Generator::get_output_file( void )
 {
-  return gui_xsl_file_;
-}
-
-void Generator::set_xml_xsl_file(string f)
-{
-  xml_xsl_file_ = f;
-  this->translator_->set_xml_xsl(xml_xsl_file_);
-}
-
-string Generator::get_xml_xsl_file( void )
-{
-  return xml_xsl_file_;
-}
-
-void Generator::set_cc_out(string f)
-{
-  cc_out_ = f;
-}
-
-string Generator::get_cc_out( void )
-{
-  return cc_out_;
-}
-
-void Generator::set_gui_out(string f)
-{
-  gui_out_ = f;
-}
-
-string Generator::get_gui_out( void )
-{
-  return gui_out_;
-}
-
-void Generator::set_xml_out(string f)
-{
-  xml_out_ = f;
-}
-
-string Generator::get_xml_out( void )
-{
-  return xml_out_;
+  return output_file_;
 }
 
 void Generator::set_path_to_insight_package(string f)
@@ -123,34 +76,60 @@ string Generator::get_path_to_insight_package( void )
   return path_to_insight_package_;
 }
 
+void Generator::set_category(string f)
+{
+  category_ = f;
+}
+
+string Generator::get_category( void )
+{
+  return category_;
+}
+
+void Generator::set_module(string f)
+{
+  module_ = f;
+}
+
+string Generator::get_module( void )
+{
+  return module_;
+}
+
+
 //////////////////////////////
 // Start generator
 //////////////////////////////
-bool Generator::generate( void )
+bool Generator::generate( FileFormat format )
 {
   if(this->xml_file_ == "") {
     cerr << "XML File not set\n";
     return false;
   }
-  cout << "XML FILE: " << this->get_xml_file() << endl;
-  // parse file for includes and imports
+
+  // parse file for include and import tags
   DOMNode* node = this->parser_->read_input_file(this->get_xml_file());
 
   if(node == 0)
     return false;
-
-  // write out new xml file FIX
-  string temp_file = "/tmp/mp.xml";
+  
+  // Generate temporary file and write it out.
+  // This file combines the sci, itk, and gui xml files
+  // and is written out in the same XML file as the
+  // sci.xml files
+  string temp_file = get_path_to_insight_package();
+  temp_file += "Dataflow/Modules/";
+  temp_file += get_category();
+  temp_file += "/XML/temp.xml";
+  
   std::ofstream out;
   out.open(temp_file.c_str());
   out << "<?xml version=\"1.0\"?>\n";
-
   this->parser_->write_node(out, node);
-
   out.close();
-
-  // use xsl to translate
-  this->translator_->translate(temp_file, this->cc_out_, this->gui_out_, this->xml_out_);
+  
+  // generate the appropriate file
+  this->translator_->translate(temp_file, this->output_file_, format);
 
   return true;
 }
