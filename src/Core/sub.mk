@@ -45,12 +45,15 @@ SUBDIRS := \
 	$(SRCDIR)/Geometry \
 	$(SRCDIR)/GLVolumeRenderer \
 	$(SRCDIR)/GuiInterface \
+	$(SRCDIR)/ICom \
 	$(SRCDIR)/ImportExport \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
 	$(SRCDIR)/Process \
+	$(SRCDIR)/Services \
+	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \

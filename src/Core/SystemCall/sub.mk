@@ -37,13 +37,14 @@ SRCS     += $(SRCDIR)/SystemCallManager.cc \
 			$(SRCDIR)/SystemCallError.cc \
 			$(SRCDIR)/SystemCall.cc \
 			$(SRCDIR)/TempFileManager.cc
-			
+
 PSELIBS := \
 	Core/Thread \
 	Core/Util \
 	Core/Exceptions \
 	Core/Containers \
-	Core/ICom
+	Core/ICom \
+	Core/Math
 
 LIBS := 
 
