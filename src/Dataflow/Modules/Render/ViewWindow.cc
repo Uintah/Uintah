@@ -1393,9 +1393,6 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the  remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-#ifdef __APPLE__
-    if (args.count() > 2) renderer_->apple_wait_a_second_=true;
-#endif
     
     ViewerMessage *tmp = scinew ViewerMessage(id_);
     if (!viewer_->mailbox.sendIfNotSentLast(tmp, check_for_redraw_msg))
