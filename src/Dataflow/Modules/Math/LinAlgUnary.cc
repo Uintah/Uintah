@@ -229,8 +229,7 @@ LinAlgUnaryAlgo::get_compile_info(const string &function,
 
   // Code for the function.
   string class_declaration =
-    string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "class " + template_name + " : public LinAlgUnaryAlgo\n" +
+    string("class " + template_name + " : public LinAlgUnaryAlgo\n") +
     "{\n" +
     "  virtual double user_function(double x)\n" +
     "  {\n" +
@@ -239,10 +238,11 @@ LinAlgUnaryAlgo::get_compile_info(const string &function,
     "\n" +
     "  virtual string identify()\n" +
     "  { return string(\"" + string_Cify(function) + "\"); }\n" +
-    "};\n//";
+    "};\n";
 
   // Add in the include path to compile this obj
-  rval->add_include(include_path + class_declaration);
+  rval->add_include(include_path);
+  rval->add_post_include(class_declaration);
   return rval;
 }
 

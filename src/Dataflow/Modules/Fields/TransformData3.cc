@@ -233,7 +233,7 @@ TransformData3Algo::get_compile_info(const TypeDescription *field0_td,
 
   // Code for the function.
   string class_declaration =
-    string("\"\n\nusing namespace SCIRun;\n\n") + 
+    string("") + 
     "template <class IFIELD0, class IFIELD1, class IFIELD2, class OFIELD, class LOC>\n" +
     "class " + template_name + " : public TransformData3AlgoT<IFIELD0, IFIELD1, IFIELD2, OFIELD, LOC>\n" +
     "{\n" +
@@ -248,10 +248,11 @@ TransformData3Algo::get_compile_info(const TypeDescription *field0_td,
     "\n" +
     "  virtual string identify()\n" +
     "  { return string(\"" + string_Cify(function) + "\"); }\n" +
-    "};\n//";
+    "};\n";
 
   // Add in the include path to compile this obj
-  rval->add_include(include_path + class_declaration);
+  rval->add_include(include_path);
+  rval->add_post_include(class_declaration);
   field0_td->fill_compile_info(rval);
   field1_td->fill_compile_info(rval);
   field2_td->fill_compile_info(rval);

@@ -164,8 +164,7 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
 
   // Code for the function.
   string class_declaration =
-    string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "template <class IFIELD, class OFIELD, class LOC>\n" +
+    string("template <class IFIELD, class OFIELD, class LOC>\n") +
     "class " + template_name + " : public TransformDataAlgoT<IFIELD, OFIELD, LOC>\n" +
     "{\n" +
     "  virtual void function(typename OFIELD::value_type &result,\n" +
@@ -177,10 +176,11 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
     "\n" +
     "  virtual string identify()\n" +
     "  { return string(\"" + string_Cify(function) + "\"); }\n" +
-    "};\n//";
+    "};\n";
 
   // Add in the include path to compile this obj
-  rval->add_include(include_path + class_declaration);
+  rval->add_include(include_path);
+  rval->add_post_include(class_declaration);
   field_td->fill_compile_info(rval);
   return rval;
 }

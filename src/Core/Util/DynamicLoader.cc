@@ -59,6 +59,7 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
   base_class_name_(bcn),
   template_class_name_(tcn),
   template_arg_(tcdec),
+  post_include_extra_(""),
   ref_cnt(0)
 {
 }
@@ -69,6 +70,12 @@ CompileInfo::add_include(const string &inc)
 {
   //std::remove(includes_.begin(), includes_.end(), inc);
   includes_.push_front(inc);
+}
+
+void
+CompileInfo::add_post_include(const string &post)
+{
+  post_include_extra_ = post_include_extra_ + post;
 }
 
 
@@ -411,6 +418,12 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
       fstr << "using namespace " << s << ";" << endl;
     }
     ++nsiter;
+  }
+
+  // Add in any post_include construction, usually specific class instances.
+  if (info.post_include_extra_ != "")
+  {
+    fstr << "\n" << info.post_include_extra_ << "\n";
   }
 
   // Delcare the maker function
