@@ -687,7 +687,8 @@ MPIScheduler::execute()
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts_, me);
 
-  emitTime("taskGraph output");
+  if(d_logTimes)
+    emitTime("taskGraph output");
 
   mpi_info_.totalreduce = 0;
   mpi_info_.totalsend = 0;
