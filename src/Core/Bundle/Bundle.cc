@@ -527,6 +527,8 @@ Bundle::getHandleType(int index)
     
   if ((dynamic_cast<Path *>(handle.get_rep()))) return "path";
 
+  if ((dynamic_cast<Bundle *>(handle.get_rep()))) return "bundle";
+
   return "unknown";
 }
 
