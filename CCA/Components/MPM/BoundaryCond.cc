@@ -188,8 +188,6 @@ template<> void fillFaceNormal(NCVariable<Vector>& var,
   }
 }
 
-}  // using namespace Uintah
-
 template void fillFace<double>(NCVariable<double>& var, const Patch* patch,
 			       Patch::FaceType face, const double& value,
 			       IntVector offset);
@@ -197,3 +195,6 @@ template void fillFace<double>(NCVariable<double>& var, const Patch* patch,
 template void fillFace<Vector>(NCVariable<Vector>& var, const Patch* patch,
 			       Patch::FaceType face, const Vector& value,
 			       IntVector offset);
+
+}  // using namespace Uintah
+
