@@ -25,11 +25,13 @@ SRCS     += \
 	$(SRCDIR)/FieldMedianFilter.cc\
 	$(SRCDIR)/FieldRGAug.cc\
 	$(SRCDIR)/FieldSeed.cc\
+	$(SRCDIR)/GenField.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/GradientMagnitude.cc\
 	$(SRCDIR)/MergeTensor.cc\
 	$(SRCDIR)/OpenGL_Ex.cc\
 	$(SRCDIR)/SFRGfile.cc\
+	$(SRCDIR)/ShowGeometry.cc\
 	$(SRCDIR)/TracePath.cc\
 	$(SRCDIR)/TrainSeg2.cc\
 	$(SRCDIR)/TrainSegment.cc\
@@ -52,6 +54,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.6  2000/10/27 16:29:21  mcole
+# add back removed modules to compile
+#
 # Revision 1.2.2.5  2000/10/26 10:03:31  moulding
 # merge HEAD into FIELD_REDESIGN
 #
