@@ -129,65 +129,6 @@ LeastSquares<Data_Type>::LeastSquares(MatrixDense<Data_Type> &AA,MatrixDense<Dat
 }
     
 
-//-----------------------------------------------------------------------------
-void LeastSquares<double>::solve(){
-  
-  
-    
-//LAPACK staff: 
-    int INFO,LDA,LDB,LWORK,M,N,NRHS,RANK;
-    double RCOND;
-    double *S,*WORK;
-
-
-    M = nrows;
-    N = ncols;    
-    NRHS = nrhs;
-    LDA = M;
-    LDB = Max(M,N);
-    S = new double[Min(M,N)];
-    RCOND =rcond;
-    LWORK = 3*Min(M,N) + Max(2*Min(M,N),Max(Max(M,N),NRHS));
-
-    solver_ = "dgelss";
-    time = clock();
-    dgelss_(&M,&N,&NRHS,A->get_p(),&LDA,B->get_p(),&LDB,S,&RCOND,&RANK,WORK,&LWORK,&INFO);  
-    time = clock() - time;
-    
-    if (INFO == 0)
-      message_ = "Done!";
-    if (INFO < 0)
-      message_ = "Wrong Arguments!";
-    if (INFO > 0)
-      message_ = "SVD failed to converge";
-    
-    info_ = INFO;
-    X = B;   
-    // we are copying pointers here!
-    
-   SV = new ZVector<double> (Min(M,N),S); 
-
-}
-  
-
-//----------------------------------------------------------------------------
-#if 0
-void LeastSquares<Complex>::solve(){
-    
-   
- 
-}
-#endif
-//----------------------------------------------------------------------------
-template <class Data_Type>
-void LeastSquares<Data_Type>:: print(){
- 
-  cout << endl;
-  cout << "Linear System Solution:"<<endl<<endl;
-  cout <<(* X)<<endl;
-  
-}
-
 //----------------------------------------------------------------------------
 template <class Data_Type>
 void LeastSquares<Data_Type>:: info(){
@@ -208,6 +149,12 @@ void LeastSquares<Data_Type>:: info(){
 //----------------------------------------------------------------------------
  
 template <class Data_Type>
+void LeastSquares<Data_Type>:: solve(){
+    cerr << "Error generic LeastSquares<Data_Type>::solve() not implemented.\n";
+}
+
+
+template <class Data_Type>
 void LeastSquares<Data_Type>:: print(){
 
  cout << "SV = "<<endl;
@@ -219,11 +166,4 @@ void LeastSquares<Data_Type>:: print(){
 }
 //----------------------------------------------------------------------------
 
-
-
-
-
-
 #endif
-
-
