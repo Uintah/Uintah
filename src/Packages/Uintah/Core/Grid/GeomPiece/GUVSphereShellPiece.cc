@@ -6,10 +6,10 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <iostream>
 using namespace Uintah;
 using namespace SCIRun;
-
+using std::cout;
 
 GUVSphereShellPiece::GUVSphereShellPiece(ProblemSpecP& ps)
 {
