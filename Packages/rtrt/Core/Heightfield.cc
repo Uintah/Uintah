@@ -261,7 +261,6 @@ Heightfield<A,B>::~Heightfield()
 template<class A, class B>
 void Heightfield<A,B>::preprocess(double, int&, int&)
 {
-    was_processed=true;
 }
 
 template<class A, class B>

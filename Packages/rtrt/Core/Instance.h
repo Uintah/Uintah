@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 namespace rtrt {
 
@@ -15,21 +16,28 @@ class Instance: public Object
 {
 public:
     
-    Object *o;
+    InstanceWrapperObject *o;
     Transform *t;
     BBox bbox;
 
-    Instance(Object* o, Transform* trans) 
+    Instance(InstanceWrapperObject* o, Transform* trans) 
 	: Object(0), o(o), t(trans) 
 	{
 	    if (!t->inv_valid())
 		t->compute_imat();
 
-	    o->compute_bounds(bbox,0);
+	    o->compute_bounds(bbox,1E-5);
+
+	    Point cmin = bbox.min(), cmax=bbox.max();
+
 	    bbox.transform_inplace(t);
+
+	    cmin = bbox.min();
+	    cmax=bbox.max();
+
 	}
 
-    Instance(Object* o, Transform* trans, BBox& b) 
+    Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
 	: Object(0), o(o), t(trans)
 	{
 	    if (!t->inv_valid())
@@ -48,7 +56,7 @@ public:
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext* ppc)
 	{
-	    
+
 	    Ray tray;
 
 	    ray.transform(t,tray);
@@ -94,11 +102,7 @@ public:
 
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	{
-	    if (!was_processed) 
-	    {
-		o->preprocess(maxradius,pp_offset,scratchsize);
-		was_processed = true;
-	    }
+	  o->preprocess(maxradius,pp_offset,scratchsize);
 	}
 };
 }
