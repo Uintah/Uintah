@@ -22,7 +22,6 @@ namespace Uintah {
     const VarLabel* delP_MassXLabel;
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* sp_vol_CCLabel;
-    const VarLabel* sp_vol_equilLabel;
     const VarLabel* mass_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* rho_CC_top_cycleLabel;
@@ -31,7 +30,6 @@ namespace Uintah {
     const VarLabel* speedSound_CCLabel;
     const VarLabel* Kappa_CCLabel;
     const VarLabel* cv_CCLabel;
-    const VarLabel* div_velfc_CCLabel;
     const VarLabel* vol_frac_CCLabel;
     const VarLabel* viscosity_CCLabel;
     const VarLabel* mom_source_CCLabel;
