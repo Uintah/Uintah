@@ -86,8 +86,10 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
       if(!patch->getLayoutHint(l))
 	throw InternalError("NirvanaLoadBalancer requires layout hints");
       int idx = getproc(l, d, layout, patches_per_processor, processors_per_host);
+#if 0
       if(me == 0 && first)
 	cerr << idx << ": " << *patch << '\n';
+#endif
       task->assignResource(idx);
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
@@ -117,10 +119,32 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
 }
 
 int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
-							 const ProcessorGroup*)
+							 const ProcessorGroup* group)
 {
-  if(npatches == 0)
-    throw InternalError("getPatchwiseProcessorAssignent called before assignResources?");
+  if(npatches == 0){
+    npatches = patch->getLevel()->numPatches();
+    numhosts = layout.x()*layout.y()*layout.z();
+    numProcs = group->size();
+    processors_per_host = numProcs/numhosts;
+    if(processors_per_host * numhosts != numProcs)
+      throw InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host");
+    patches_per_processor = npatches/numProcs;
+    if(patches_per_processor * numProcs != npatches) {
+      throw InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor");
+    }
+    IntVector max(-1,-1,-1);
+    const Level* level = patch->getLevel();
+    for(Level::const_patchIterator iter = level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+      IntVector l;
+      if(!(*iter)->getLayoutHint(l))
+	throw InternalError("NirvanaLoadBalancer requires layout hints");
+      max = Max(max, l);
+    }
+    max+=IntVector(1,1,1);
+    d = max/layout;
+  }
+  
   IntVector l;
   if(!patch->getLayoutHint(l))
     throw InternalError("NirvanaLoadBalancer requires layout hints");
