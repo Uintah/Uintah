@@ -31,6 +31,7 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
+#include <string>
 
 namespace SCIRun {
   class BuilderWindow;
@@ -39,7 +40,7 @@ namespace SCIRun {
     virtual ~myBuilderPort(){}
     virtual void setServices(const sci::cca::Services::pointer& svc);
     virtual void buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
-				    const string &frameworkURL);
+				    const std::string &frameworkURL);
   protected:
     sci::cca::Services::pointer services;
     BuilderWindow* builder;
