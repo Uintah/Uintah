@@ -83,8 +83,9 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   try:
     mkdir(resultsdir)
   except Exception:
-    print "Remove %s before running this test" % resultsdir
-    exit(1)
+    if solotest == "":
+      print "Remove %s before running this test" % resultsdir
+      exit(1)
 
   chdir(resultsdir)
 
@@ -108,7 +109,11 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     solotest_found = 1 # if there is a solotest, that is
     testname = nameoftest(test)
 
-    mkdir(testname)
+    try:
+      mkdir(testname)
+    except Exception:
+      print "Remove %s/%s before running this test" % (resultsdir, testname)
+      exit(1)
 
     system("echo '%s/replace_gold_standard %s %s %s' > %s/replace_gold_standard" % (helperspath, compare_root, getcwd(), testname, testname))
     system("chgrp csafe %s/replace_gold_standard" % testname)
