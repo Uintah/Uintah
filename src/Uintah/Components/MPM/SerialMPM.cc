@@ -91,52 +91,44 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    for(int m = 0; m < d_sharedState->getNumMatls(); m++){
      Material* matl = d_sharedState->getMaterial(m);
      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
-     lb->registerPermanentParticleState(m,lb->pVelocityLabel);
-     lb->registerPermanentParticleState(m,lb->pExternalForceLabel);
+     lb->registerPermanentParticleState(m,lb->pVelocityLabel,
+					lb->pVelocityLabel_preReloc);
+     lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
+					lb->pExternalForceLabel_preReloc);
      if(mpm_matl->getBurnModel()->getBurns()){
-       //     lb->registerPermanentParticleState(m,lb->pSurfLabel);
-       lb->registerPermanentParticleState(m,lb->pIsIgnitedLabel);
+       //     lb->registerPermanentParticleState(m,lb->pSurfLabel,
+       //lb->pSurfLabel_preReloc);
+       lb->registerPermanentParticleState(m,lb->pIsIgnitedLabel,
+					  lb->pIsIgnitedLabel_preReloc);
      }
      if(MPMPhysicalModules::fractureModel){
-       lb->registerPermanentParticleState(m,lb->pSurfaceNormalLabel); 
-       lb->registerPermanentParticleState(m,lb->pAverageMicrocrackLength); 
+       lb->registerPermanentParticleState(m,lb->pSurfaceNormalLabel,
+					  lb->pSurfaceNormalLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pAverageMicrocrackLength,
+				  lb->pAverageMicrocrackLength_preReloc); 
      }
      if(MPMPhysicalModules::heatConductionModel){
-       lb->registerPermanentParticleState(m,lb->pTemperatureLabel); 
-       lb->registerPermanentParticleState(m,lb->pTemperatureGradientLabel);
-       //lb->registerPermanentParticleState(m,lb->pExternalHeatRateLabel); 
+       lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
+					  lb->pTemperatureLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pTemperatureGradientLabel,
+				  lb->pTemperatureGradientLabel_preReloc);
+       //lb->registerPermanentParticleState(m,lb->pExternalHeatRateLabel,
+       //lb->pExternalHeatRateLabel_preReloc); 
      }
-     lb->registerPermanentParticleState(m,lb->pParticleIDLabel);
-     lb->registerPermanentParticleState(m,lb->pMassLabel);
-     lb->registerPermanentParticleState(m,lb->pVolumeLabel);
-     lb->registerPermanentParticleState(m,lb->pDeformationMeasureLabel);
-     lb->registerPermanentParticleState(m,lb->pStressLabel);
+     lb->registerPermanentParticleState(m,lb->pParticleIDLabel,
+					lb->pParticleIDLabel_preReloc);
+     lb->registerPermanentParticleState(m,lb->pMassLabel,
+					lb->pMassLabel_preReloc);
+     lb->registerPermanentParticleState(m,lb->pVolumeLabel,
+					lb->pVolumeLabel_preReloc);
+     lb->registerPermanentParticleState(m,lb->pDeformationMeasureLabel,
+					lb->pDeformationMeasureLabel_preReloc);
+     lb->registerPermanentParticleState(m,lb->pStressLabel,
+					lb->pStressLabel_preReloc);
      
-     lb->registerPermanentParticleState_preReloc(m,lb->pVelocityLabel_preReloc);
-     lb->registerPermanentParticleState_preReloc(m,lb->pExternalForceLabel_preReloc);
-     if(mpm_matl->getBurnModel()->getBurns()){
-       //     lb->registerPermanentParticleState_preReloc(m,lb->pSurfLabel_preReloc);
-       lb->registerPermanentParticleState_preReloc(m,lb->pIsIgnitedLabel_preReloc);
-     }
-     if(MPMPhysicalModules::fractureModel){
-       lb->registerPermanentParticleState_preReloc(m,lb->pSurfaceNormalLabel_preReloc); // fracture
-       lb->registerPermanentParticleState_preReloc(m,lb->pAverageMicrocrackLength_preReloc); //frac.
-     }
-     
-     if(MPMPhysicalModules::heatConductionModel){
-       lb->registerPermanentParticleState_preReloc(m,lb->pTemperatureLabel_preReloc); //for heat 
-       lb->registerPermanentParticleState_preReloc(m,lb->pTemperatureGradientLabel_preReloc);
-       //lb->registerPermanentParticleState_preReloc(m,lb->pExternalHeatRateLabel_preReloc); //for heat conduction
-     }
-     
-     lb->registerPermanentParticleState_preReloc(m,lb->pParticleIDLabel_preReloc);
-     lb->registerPermanentParticleState_preReloc(m,lb->pMassLabel_preReloc);
-     lb->registerPermanentParticleState_preReloc(m,lb->pVolumeLabel_preReloc);
-     lb->registerPermanentParticleState_preReloc(m,lb->pDeformationMeasureLabel_preReloc);
-     lb->registerPermanentParticleState_preReloc(m,lb->pStressLabel_preReloc);
      
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
-							lb->d_particleState_preReloc[m]);
+					lb->d_particleState_preReloc[m]);
    }
    cerr << "SerialMPM::problemSetup passed.\n";
 }
@@ -749,13 +741,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    // we need to possible schedule the various potentially different
    // labels that go with each material.
 
-   for (int m = 0; m < numMatls; m++) {
+   //for (int m = 0; m < numMatls; m++) {
    new_dw->scheduleParticleRelocation(level, sched, old_dw,
 				      lb->pXLabel_preReloc, 
-				      lb->d_particleState_preReloc[m],
-				      lb->pXLabel, lb->d_particleState[m],
+				      lb->d_particleState_preReloc[0],
+				      lb->pXLabel, lb->d_particleState[0],
 				      numMatls);
-   }
+   //}
    if(MPMPhysicalModules::fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
@@ -1671,6 +1663,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.106  2000/07/27 22:17:16  jas
+// Consolidated the registerPermanentParticleState to take both the
+// regular labels and the pre_Reloc labels.
+//
 // Revision 1.105  2000/07/27 20:29:50  jas
 // In SerialMPM.cc, problemSetup, there are now labels for each material.
 // So it is now possible for different materials to have different VarLabels

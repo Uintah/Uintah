@@ -15,8 +15,8 @@ namespace Uintah {
       MPMLabel();
       ~MPMLabel();
 
-      void registerPermanentParticleState(int i,const VarLabel* l);
-      void registerPermanentParticleState_preReloc(int i, const VarLabel* l);
+      void registerPermanentParticleState(int i,const VarLabel* l,
+					  const VarLabel* lp);
 
       //      static const MPMLabel* getLabels();
 
@@ -96,6 +96,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.19  2000/07/27 22:17:16  jas
+// Consolidated the registerPermanentParticleState to take both the
+// regular labels and the pre_Reloc labels.
+//
 // Revision 1.18  2000/07/27 20:29:50  jas
 // In SerialMPM.cc, problemSetup, there are now labels for each material.
 // So it is now possible for different materials to have different VarLabels
