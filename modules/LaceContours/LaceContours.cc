@@ -63,7 +63,7 @@ void LaceContours::execute()
     if (!incontour->get(contours))
 	return;
     TriSurface* surf=new TriSurface;
-    surf->name="Scalp";
+    surf->name=contours->name;
     lace_contours(contours, surf);
     osurface->send(surf);
 }
