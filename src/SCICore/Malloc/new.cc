@@ -18,6 +18,8 @@
 
 using namespace SCICore::Malloc;
 
+#if 1
+
 #ifdef __sgi
 
 // This is ugly, but necessary, since --LANG:std remaps the mangling
@@ -105,9 +107,29 @@ void* operator new[](size_t size, Allocator* a, char* tag)
     return a->alloc(size, tag);
 }
 //#endif
+#else
+
+void* operator new(size_t size, Allocator* a, char* tag)
+{
+    return new char[size];
+}
+
+// Dd: Assuming _BOOL should be defined...
+//#ifdef _BOOL
+void* operator new[](size_t size, Allocator* a, char* tag)
+{
+    return new char[size];
+}
+
+#endif
+
 
 //
 // $Log$
+// Revision 1.4  2000/02/24 06:04:55  sparker
+// 0xffff5a5a (NaN) is now the fill pattern
+// Added #if 1 to malloc/new.cc to make it easier to turn them on/off
+//
 // Revision 1.3  1999/08/31 23:26:13  sparker
 // Updates to fix operator new support on SGI with -LANG:std
 //
