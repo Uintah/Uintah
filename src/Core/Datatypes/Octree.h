@@ -1,6 +1,8 @@
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include <Core/Malloc/Allocator.h>
+
 namespace SCIRun {
 
 /**************************************
