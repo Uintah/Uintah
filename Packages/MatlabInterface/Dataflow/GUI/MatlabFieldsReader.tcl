@@ -210,22 +210,37 @@ itcl_class MatlabInterface_DataIO_MatlabFieldsReader {
 	    		set initdir $env(PSE_DATA)
 		}
 	
-		iwidgets::labeledframe	$w.frame -labeltext "SELECT MATLAB FILE" 
-		set childframe [$w.frame childsite]
-		pack $w.frame -fill both -expand yes
 
-		iwidgets::extfileselectionbox $childframe.fsb -mask "*.mat" -directory $initdir
-		frame $childframe.bframe
-		button $childframe.bframe.open -text "Open" -command "wm withdraw $w; $this OpenNewMatfile"
-		button $childframe.bframe.cancel -text "Cancel" -command "wm withdraw $w"
+		makeOpenFilebox \
+			-parent $w \
+			-filevar $this-filename-set \
+			-setcmd "wm withdraw $w;  $this OpenNewMatfile" \
+			-command "wm withdraw $w;  $this OpenNewMatfile" \
+			-cancel "wm withdraw $w" \
+			-title "SELECT MATLAB FILE" \
+			-filetypes {{ "Matlab files" "*.mat" } { "All files"  "*" } }\
+			-initialdir $initdir \
+			-defaultextension "*.mat" \
+			-selectedfiletype 0
+
+# CODE WAITING FOR BETTER DAYS WHEN THIS WIDGET WORKS FINE
+#		iwidgets::labeledframe	$w.frame -labeltext "SELECT MATLAB FILE" 
+#		set childframe [$w.frame childsite]
+#		pack $w.frame -fill both -expand yes
+
+#		iwidgets::extfileselectionbox $childframe.fsb -mask "*.mat" -directory $initdir
+#		frame $childframe.bframe
+#		button $childframe.bframe.open -text "Open" -command "wm withdraw $w; $this OpenNewMatfile"
+#		button $childframe.bframe.cancel -text "Cancel" -command "wm withdraw $w"
 	
-		 $childframe.fsb component selection configure -textvariable $this-filename-set
+#		 $childframe.fsb component selection configure -textvariable $this-filename-set
 			
-		pack $childframe -side top -fill both -expand yes 
-		pack $childframe.fsb -side top -fill both -expand yes
-		pack $childframe.bframe -side top -fill x 
-		pack $childframe.bframe.cancel -side left -anchor w -padx 5p -pady 5p
-		pack $childframe.bframe.open -side right -anchor e -padx 5p -pady 5p
+#		pack $childframe -side top -fill both -expand yes 
+#		pack $childframe.fsb -side top -fill both -expand yes
+#		pack $childframe.bframe -side top -fill x 
+#		pack $childframe.bframe.cancel -side left -anchor w -padx 5p -pady 5p
+#		pack $childframe.bframe.open -side right -anchor e -padx 5p -pady 5p
+
 		
 		wm deiconify $w	
 	}
