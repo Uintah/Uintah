@@ -25,7 +25,6 @@
  *   March 2001   
  *  Copyright (C) 2001 SCI Group
  */
-
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/BuildBEMatrix.h>
 #include <iostream>
 #include <fstream>
@@ -195,7 +194,7 @@ void BuildBEMatrix::parallel(int proc)
     if(!hGhh_.get_rep()){
       makeGhh();
       //! we only need inverted Ghh
-      hGhh_->invert();
+      ASSERT(hGhh_->invert());
     }
     lock_Ghh_.unlock();
   }
@@ -226,7 +225,7 @@ void BuildBEMatrix::parallel(int proc)
 	DenseMatrix tmpBB(hPbb_->nrows(), hPbb_->ncols());
 	Mult(tmpBB, *hZbh_.get_rep(), *hPhb_.get_rep());
 	Add(1, *(hPbb_.get_rep()), -1, tmpBB);
-	hPbb_->invert();
+	ASSERT(hPbb_->invert());
 	lock_Pbb_.unlock();
       }
     

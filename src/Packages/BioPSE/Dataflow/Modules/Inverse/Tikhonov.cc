@@ -509,7 +509,10 @@ void Tikhonov::execute()
   }
   regForMatrix->solve(*mat_AtrY);
   DenseMatrix  *InverseMatrix =scinew DenseMatrix(N, M);
-  regForMatrix->invert();
+  if (regForMatrix->invert()) {
+    error("Matrix not invertible.");
+    return;
+  }
   Mult(*InverseMatrix,*regForMatrix,*(matrixForMatD->transpose()));
 
 
