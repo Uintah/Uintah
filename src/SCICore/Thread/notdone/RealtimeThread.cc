@@ -16,7 +16,8 @@
  * behaves exactly like any other thread.
  */
 
-int RealtimeThread::frameInterval() {
-    return interval;
+int RealtimeThread::frameInterval()
+{
+    return d_interval;
 }
 

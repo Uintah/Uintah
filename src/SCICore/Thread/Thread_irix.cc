@@ -1,7 +1,17 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
 /*
- * Implementation of threads for IRIX, using sproc.
- * Irix will also run the Thread_posix threads implementation.
+ *  Thread_irix.cc: Irix implementation of the Thread library
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
  */
 
 /*
@@ -2276,3 +2286,11 @@ void WorkQueue::refill(int new_ta, int new_nthreads,
     }
 }
 >>>>>>> 1.13
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:38:02  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

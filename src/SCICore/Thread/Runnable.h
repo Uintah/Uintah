@@ -1,6 +1,20 @@
 
-#ifndef SCI_THREAD_RUNNABLE_H
-#define SCI_THREAD_RUNNABLE_H 1
+// $Id$
+
+/*
+ *  Runnable.h: The base class for all threads
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
+#ifndef SCICore_Thread_Runnable_h
+#define SCICore_Thread_Runnable_h
 
 /**************************************
  
@@ -33,31 +47,44 @@ WARNING
    
 ****************************************/
 
-class Thread;
+namespace SCICore {
+    namespace Thread {
+	class Thread;
 
-class Runnable {
-protected:
-    friend class Thread;
-    Thread* d_my_thread;
+	class Runnable {
+	protected:
+	    friend class Thread;
+	    Thread* d_my_thread;
     
-    //////////
-    // Create a new runnable, and initialize it's state.
-    Runnable();
+	    //////////
+	    // Create a new runnable, and initialize it's state.
+	    Runnable();
 
-    //////////
-    // This method will be overridden to implement the maiin body of the
-    // thread.  This method will called when the runnable is attached to
-    // a <b>Thread</b> object, and will be executed in a new context.
-    virtual void run()=0;
+	    //////////
+	    // This method will be overridden to implement the main body
+	    // of the thread.  This method will called when the runnable
+	    // is attached to a <b>Thread</b> object, and will be executed
+	    // in a new context.
+	    virtual void run()=0;
     
-    //////////
-    // The runnable destructor.  See the note above about deleting any
-    // object derived from runnable.
-    virtual ~Runnable();
-};
+	    //////////
+	    // The runnable destructor.  See the note above about deleting any
+	    // object derived from runnable.
+	    virtual ~Runnable();
+	};
+    }
+}
 
 #endif
 
 
 
+
+//
+// $Log$
+// Revision 1.4  1999/08/25 02:37:59  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
 

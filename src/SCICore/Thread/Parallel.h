@@ -1,6 +1,20 @@
 
-#ifndef SCI_THREAD_PARALLEL_H
-#define SCI_THREAD_PARALLEL_H 1
+// $Id$
+
+/*
+ *  Parallel.h: Automatically instantiate several threads
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
+#ifndef SCICore_Thread_Parallel_h
+#define SCICore_Thread_Parallel_h
 
 /**************************************
  
@@ -20,36 +34,40 @@ WARNING
    
 ****************************************/
 
-#include "ParallelBase.h"
+#include <SCICore/Thread/ParallelBase.h>
 
-template<class T>
-class Parallel  : public ParallelBase {
-    T* d_obj;
-    void (T::*d_pmf)(int);
-protected:
-    virtual void run(int proc);
-public:
-    //////////
-    // Create the parallel object similar to the above, but using the
-    // specified member function instead of <i>parallel</i>.  This will
-    // typically be used like:
-    // <pre>Thread::parallel(Parallel&ltMyClass> (this, &ampMyClass::mymemberfn), nthreads)</pre>
-    Parallel(T* obj, void (T::*pmf)(int));
+namespace SCICore {
+    namespace Thread {
+	template<class T>
+	    class Parallel  : public ParallelBase {
+		T* d_obj;
+		void (T::*d_pmf)(int);
+	    protected:
+		virtual void run(int proc);
+	    public:
+		//////////
+		// Create a parallel object, using the specified member
+		// function instead of <i>parallel</i>.  This will
+		// typically be used like:
+		// <pre>Thread::parallel(Parallel&ltMyClass> (this, &ampMyClass::mymemberfn), nthreads)</pre>
+		Parallel(T* obj, void (T::*pmf)(int));
     
-    //////////
-    // Destroy the Parallel object - the threads will remain alive.
-    ~Parallel();
-};
+		//////////
+		// Destroy the Parallel object - the threads will remain alive.
+		~Parallel();
+	    };
+    }
+}
 
 template<class T>
 void
-Parallel<T>::run(int proc)
+SCICore::Thread::Parallel<T>::run(int proc)
 {
     (d_obj->*d_pmf)(proc);
 }
 
 template<class T>
-Parallel<T>::Parallel(T* obj, void (T::*pmf)(int))
+SCICore::Thread::Parallel<T>::Parallel(T* obj, void (T::*pmf)(int))
     : d_obj(obj), d_pmf(pmf)
 {
 }
@@ -60,3 +78,11 @@ Parallel< T>::~Parallel()
 }
 
 #endif
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:37:57  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
+

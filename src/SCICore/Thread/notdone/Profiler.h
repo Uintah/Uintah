@@ -30,25 +30,24 @@ WARNING
    
 ****************************************/
 
-class SCICORESHARE Profiler  : public Runnable {
-    
-    FILE* in;
-    FILE* out;
+class Profiler : public Runnable {    
+    FILE* d_in;
+    FILE* d_out;
     //////////
     // <i>No documentation provided</i>
-    virtual void run() ;
+    virtual void run();
 public:
     //////////
     // <i>No documentation provided</i>
-    Profiler() ;
+    Profiler();
 
     //////////
     // <i>No documentation provided</i>
-    Profiler(FILE* in, FILE* out) ;
+    Profiler(FILE* in, FILE* out);
 
     //////////
     //  <i>No documentation provided</i>
-    ~Profiler() ;
+    ~Profiler();
 };
 
 #endif

@@ -12,15 +12,18 @@
  * processors.
  */
 
-ThreadTopology::ThreadTopology(int) {
+ThreadTopology::ThreadTopology(int)
+{
     fprintf(stderr, "ThreadTopology not finished\n");
 }
 
-ThreadTopology::~ThreadTopology() {
+ThreadTopology::~ThreadTopology()
+{
     fprintf(stderr, "ThreadTopology not finished\n");
 }
 
-void ThreadTopology::connect(int, int, unsigned int) {
+void ThreadTopology::connect(int, int, unsigned int)
+{
     fprintf(stderr, "ThreadTopology not finished\n");
 }
 

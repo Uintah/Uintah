@@ -6,6 +6,7 @@
  * Interface to provide alternate handler for handling thread errors
  */
 
-ThreadError::~ThreadError() {
+ThreadError::~ThreadError()
+{
 }
 

@@ -1,4 +1,19 @@
 
+/* REFERENCED */
+static char *id="$Id$";
+
+/*
+ *  ThreadGroup.h: A set of threads
+ *
+ *  Written by:
+ *   Author: Steve Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: June 1997
+ *
+ *  Copyright (C) 1997 SCI Group
+ */
+
 #include "ThreadGroup.h"
 #include "Thread.h"
 #include <string.h>
@@ -101,3 +116,10 @@ ThreadGroup* ThreadGroup::parentGroup()
     return d_parent;
 }
 
+//
+// $Log$
+// Revision 1.3  1999/08/25 02:38:01  sparker
+// Added namespaces
+// General cleanups to prepare for integration with SCIRun
+//
+//
