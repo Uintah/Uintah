@@ -37,6 +37,9 @@
 #include <Core/CCA/Component/Comm/Intra/IntraComm.h>
 #include <Core/Exceptions/InternalError.h> 
 #include <sci_defs.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sci_defs.h>
 #include <iostream>
 #include <sstream>
 
@@ -67,12 +70,14 @@ void
 PIDL::initialize(int, char*[])
 {
   //Default for communication purposes 
-  //setCommunication(COMM_NEXUS);
+#ifdef HAVE_GLOBUS
+  setCommunication(COMM_NEXUS);
+#else
   setCommunication(COMM_SOCKET);
-
+#endif
   switch (comm_type) {
   case COMM_SOCKET:
-    SocketMessage::setSiteTag();
+    pid=getpid();
     break;
 #ifdef HAVE_GLOBUS
   case COMM_NEXUS:
@@ -209,5 +214,11 @@ PIDL::isNexus(){
   return comm_type==COMM_NEXUS;
 }
 
+int
+PIDL::pid(-1);
 
-
+int
+PIDL::getPID()
+{
+  return pid;
+}
