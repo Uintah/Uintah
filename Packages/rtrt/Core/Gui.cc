@@ -1019,7 +1019,8 @@ Gui::handleWindowResizeCB( int width, int height )
   }
   activeGui->dpy_->priv->xres=width;
   activeGui->dpy_->priv->yres=height;
-
+  activeGui->camera_->setWindowAspectRatio((double)height/width);
+  
 #if 0
   glutSetWindow( activeGui->glutDisplayWindowId );
 
