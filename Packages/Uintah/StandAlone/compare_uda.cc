@@ -363,8 +363,9 @@ void MaterialParticleData::sort()
 
   ParticleSet* set = scinew ParticleSet((particleIndex)subsetIndices.size());
   ParticleSubset* subset = scinew ParticleSubset(set, false, matl_, 0);
-  for (unsigned int i = 0; i < subsetIndices.size(); i++)
+  for (unsigned int i = 0; i < subsetIndices.size(); i++) {
     subset->addParticle(subsetIndices[i]);
+  }
   gather(subset);
 }
 
@@ -441,7 +442,8 @@ template <class T>
 bool MaterialParticleVarData::
 compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
 	ParticleVariable<T>* value2, int matl,
-	double time1, double time2, double abs_tolerance, double rel_tolerance)
+	double time1, double /*time2*/, double abs_tolerance,
+	double rel_tolerance)
 {
   bool passes = true;
   ParticleSubset* pset1 = value1->getParticleSubset();
@@ -453,30 +455,28 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
     cerr << filebase2 << " has " << pset2->numParticles() << " particles.\n";
     abort_uncomparable();
   }
-  
-  ParticleSubset::iterator iter1 = pset1->begin();
-  ParticleSubset::iterator iter2 = pset2->begin();
-  
-  for ( ; iter1 != pset1->end() && iter2 != pset2->end(); iter1++, iter2++) {
-    if (!(::compare((*value1)[*iter1], (*value2)[*iter2], abs_tolerance,
+
+  // Assumes that the particleVariables are in corresponding order --
+  // not necessarily by their particle set order.  This is what the
+  // sort/gather achieves.
+  for (int i = 0; i < pset1->numParticles(); i++) {
+    if (!(::compare((*value1)[i], (*value2)[i], abs_tolerance,
 		    rel_tolerance))) {
       if (name_ != "p.particleID") {
-	ASSERT(getParticleID(*iter1) == data2.getParticleID(*iter2));
+	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
-      cerr << "\nValues differ too much on particle id=" << hex << setfill('0') << setw(16) << getParticleID(*iter1) <<
+      cerr << "\nValues differ too much on particle id=" << hex << setfill('0') << setw(16) << getParticleID(i) <<
 	endl;
-      const Patch* patch1 = getPatch(*iter1);
-      const Patch* patch2 = data2.getPatch(*iter2);
+      const Patch* patch1 = getPatch(i);
+      const Patch* patch2 = data2.getPatch(i);
       displayProblemLocation(name_, matl, patch1, patch2, time1);    
-      cerr << filebase1 << ":\n" << (*value1)[*iter1] << endl;
-      cerr << filebase2 << ":\n" << (*value2)[*iter2] << endl;
+      cerr << filebase1 << ":\n" << (*value1)[i] << endl;
+      cerr << filebase2 << ":\n" << (*value2)[i] << endl;
       tolerance_failure();
       passes = false;
     }
   }
 
-  // this should be true if both sets are the same size
-  ASSERT(iter1 == pset1->end() && iter2 == pset2->end());
   return passes;
 }
 
