@@ -20,11 +20,15 @@ rm -f $m
 set tmpls=`cat tmpl_cclist`
 echo "" > $m
 echo "SRCS = "$tmpls >> $m
-echo "OBJS = "`sed 's/.cc/.o/' < tmpl_cclist` >> $m
+echo "OBJS = x.o "`sed 's/.cc/.o/' < tmpl_cclist` >> $m
 echo "" >> $m
 echo ".SUFFIXES: .cc" >> $m
 echo ".cc.o: " >> $m
 echo '	rm -f $@' >> $m
+echo "" >> $m
+echo "x.cc: " >> $m
+echo '	echo "static int _dummy_;" > x.cc' >> $m
+echo "" >> $m
 echo 'fast_templates.o: $(OBJS)' >> $m
 echo "	rm -f fast_templates.o" >> $m
 #echo "	ar rc fast_templates.a *.o" >> $m
