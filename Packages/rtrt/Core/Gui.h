@@ -72,9 +72,9 @@ private:
 
   // Gui Component Variables
 
-  int selectedLightId;
-  int selectedRouteId;
-  int selectedObjectId;
+  int selectedLightId_;
+  int selectedRouteId_;
+  int selectedObjectId_;
 
   char inputString_[ 1024 ];
 
@@ -169,6 +169,14 @@ private:
   GLUI_Button   * goToRteBegBtn;
 
   ////////////////////////////////////////////////////////////////
+  //
+  // objectWindow GLUI elemets:
+  //
+
+  GLUI_Button * attachKeypadBtn_;
+  bool          keypadAttached_;
+
+  ////////////////////////////////////////////////////////////////
 
   // Returns "N", "NE", "E", etc, depending on facing.
   const std::string getFacingString() const;
@@ -207,9 +215,11 @@ private:
   static void goToPrevMarkerCB( int id );
   static void goToRouteBeginningCB( int id );
 
+  // Object Window Callbacks
   void createObjectWindow( GLUI * window );
   static void toggleObjectsWindowCB( int id );
   static void updateObjectCB( int id );
+  static void attachKeypadCB( int id );
 
   ////////////////////////////////////////////////////////////////
 
