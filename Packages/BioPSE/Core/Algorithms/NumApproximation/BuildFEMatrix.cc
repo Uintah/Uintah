@@ -112,7 +112,7 @@ void BuildFEMatrix::parallel(int proc)
     hMesh_->compute_node_neighbors();
     hMesh_->get_neighbors(neib_nodes, i);
 
-    for (int jj=0; jj<neib_nodes.size(); jj++)
+    for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
       mycols.add(neib_nodes[jj]);
   }
   
@@ -217,14 +217,13 @@ void BuildFEMatrix::parallel(int proc)
   Array1<int> idcNz;
   Array1<double> valNz;
 
-  TetVolMesh::node_iterator niter;
   TetVolMesh::node_array nind;
   vector<double> dbc;
 
   if (proc==0){
-    for(int idx = 0; idx<dirBC_.size(); ++idx){
+    for(unsigned int idx = 0; idx<dirBC_.size(); ++idx){
       int ni = dirBC_[i].first;
-      int val = dirBC_[i].second;
+      double val = dirBC_[i].second;
 
       // -- getting column indices of non-zero elements for the current row
       pA_->getRowNonzeros(ni, idcNz, valNz);
@@ -237,9 +236,9 @@ void BuildFEMatrix::parallel(int proc)
     }
 
     //! zeroing matrix row and column corresponding to the dirichlet nodes
-    for(int idx = 0; idx<dirBC_.size(); ++idx){
+    for(unsigned int idx = 0; idx<dirBC_.size(); ++idx){
       int ni = dirBC_[i].first;
-      int val = dirBC_[i].second;
+      double val = dirBC_[i].second;
 
       pA_->getRowNonzeros(ni, idcNz, valNz);
       for (int i=0; i<idcNz.size(); ++i){
@@ -322,7 +321,7 @@ void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::cell_index c_ind
 }
 
 void BuildFEMatrix::io(Piostream&){
-  
 }
+
 
 } // end namespace BioPSE
