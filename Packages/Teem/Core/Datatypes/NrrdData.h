@@ -54,16 +54,11 @@ public:
   void set_orig_field(FieldHandle fh) { originating_field_ = fh; }
   FieldHandle get_orig_field() { return originating_field_; }
 
-  bool is_sci_nrrd() { return true; } //FIX_ME MC this is not always true...
-  // some methods to create and parse axis labels tuples and otherwise.
-  int get_x_axis()     const { return 1; }
-  int get_y_axis()     const { return 2; }
-  int get_z_axis()     const { return 3; }
-  int get_tuple_axis() const { return 0; }
-
+  //! Is a sci nrrd if we wrap a field up with it, and we have a tuple axis.
+  bool is_sci_nrrd() const;
   
-  
-
+  void copy_sci_data(const NrrdData &);
+ 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 private:

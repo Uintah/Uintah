@@ -136,6 +136,8 @@ NrrdJoin::execute()
   
   Nrrd* arr[nrrds.size()];
   if (do_join) {
+
+    NrrdData *onrrd = new NrrdData(true);
     int i = 0;
     vector<NrrdDataHandle>::iterator iter = nrrds.begin();
     while(iter != nrrds.end()) {
@@ -156,6 +158,9 @@ NrrdJoin::execute()
       } else {
 	arr[i] = cur_nrrd->nrrd;
       }
+      if (i == 0) {
+	onrrd->copy_sci_data(*cur_nrrd);
+      }
       ++i;
     }
     
@@ -175,7 +180,6 @@ NrrdJoin::execute()
       axis = 0;
     }
     
-    NrrdData *onrrd = new NrrdData(true);
     onrrd->nrrd = nrrdNew();
     if (nrrdJoin(onrrd->nrrd, arr, nrrds.size(), axis, incr_dim_.get())) {
       char *err = biffGetDone(NRRD);
