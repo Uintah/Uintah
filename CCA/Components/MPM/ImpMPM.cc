@@ -571,7 +571,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   subsched->get_dw(3)->finalize();
   subsched->advanceDataWarehouse(grid);
   cerr << "dispInc = " << dispInc << " dispIncQ = " << dispIncQ << "\n";
-  while(!dispInc && !dispIncQ) {
+  while(!(dispInc && dispIncQ)) {
     cerr << "Iteration = " << count++ << "\n";
     subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
