@@ -102,8 +102,8 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
       Vector refl_dir = reflection( ray.direction(), normal );
       Ray rray(hitpos, refl_dir);
       Color rcolor;
-      cx->worker->traceRay(rcolor, rray, depth+1,  atten,
-			   accumcolor+surfcolor*atten, cx);
+      Worker::traceRay(rcolor, rray, depth+1,  atten,
+                       accumcolor+surfcolor*atten, cx);
       surfcolor += rcolor * (1.-transp) * Rphong;
       cx->stats->ds[depth].nrefl++;
     }
@@ -113,8 +113,8 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 	atten > 0.02 && transp > 0.02){
             Ray tray(hitpos, ray.direction());
             Color tcolor;
-            cx->worker->traceRay(tcolor, tray, depth+1,  atten,
-                                 accumcolor+difflight+speclight, cx);
+            Worker::traceRay(tcolor, tray, depth+1,  atten,
+                             accumcolor+difflight+speclight, cx);
             surfcolor+= tcolor * transp;
             cx->stats->ds[depth].nrefl++;
     }

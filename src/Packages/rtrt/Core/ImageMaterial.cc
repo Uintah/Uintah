@@ -296,8 +296,8 @@ void ImageMaterial::shade(Color& result, const Ray& ray,
 		    double ratten = atten*(1.0-current_alpha); 
 		    Color rcolor;
 		       
-		    cx->worker->traceRay(rcolor, rray, depth+1, ratten,
-			   accumcolor+diffuse, cx);
+		    Worker::traceRay(rcolor, rray, depth+1, ratten,
+                                     accumcolor+diffuse, cx);
 		    diffuse  +=   rcolor;
 
 		    goto skip2;

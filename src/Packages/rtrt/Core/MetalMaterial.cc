@@ -82,8 +82,8 @@ void MetalMaterial::shade(Color& result, const Ray& ray,
             Color R = specular_reflectance * (1-k) + Color(1,1,1)*k;
             Ray rray(hitpos, refl_dir);
             Color rcolor;
-            cx->worker->traceRay(rcolor, rray, depth+1,  atten*R.luminance(),
-                                 accumcolor, cx);
+            Worker::traceRay(rcolor, rray, depth+1,  atten*R.luminance(),
+                             accumcolor, cx);
             result+= R * rcolor;
             cx->stats->ds[depth].nrefl++;
     }

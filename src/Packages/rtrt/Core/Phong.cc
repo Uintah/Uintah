@@ -101,8 +101,7 @@ void Phong::shade(Color& result, const Ray& ray,
       Vector refl_dir = ray.direction() + normal*(2*incident_angle);
       Ray rray(hitpos, refl_dir);
       Color rcolor;
-      cx->worker->traceRay(rcolor, rray, depth+1, ar,
-			   accumcolor+result*atten, cx);
+      Worker::traceRay(rcolor, rray, depth+1, ar, accumcolor+result*atten, cx);
       result+=rcolor*refl;
       cx->stats->ds[depth].nrefl++;
     }

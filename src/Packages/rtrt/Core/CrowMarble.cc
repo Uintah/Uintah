@@ -116,8 +116,8 @@ void CrowMarble::shade(Color& result, const Ray& ray,
             Vector refl_dir = reflection( ray.direction(), normal );
             Ray rray(hitpos, refl_dir);
             Color rcolor;
-            cx->worker->traceRay(rcolor, rray, depth+1,  atten,
-                                 accumcolor+difflight+speclight, cx);
+            Worker::traceRay(rcolor, rray, depth+1,  atten,
+                             accumcolor+difflight+speclight, cx);
             surfcolor+= rcolor * spec_refl;
             cx->stats->ds[depth].nrefl++;
     }

@@ -604,8 +604,7 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
     } else {
       // Grab the background color
       Ray r(current_p,ray.direction());
-      cx->worker->traceRay(bgcolor, r, depth+1, atten,
-                           accumcolor, cx);
+      Worker::traceRay(bgcolor, r, depth+1, atten, accumcolor, cx);
     }
     total += bgcolor * (1-alpha);
   }

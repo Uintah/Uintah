@@ -501,8 +501,7 @@ void VolumeVisRGBA<DataType>::shade(Color& result, const Ray& ray,
   if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
     Ray r(current_p,ray.direction());
-    cx->worker->traceRay(bgcolor, r, depth+1, atten,
-			 accumcolor, cx);
+    Worker::traceRay(bgcolor, r, depth+1, atten, accumcolor, cx);
     total += bgcolor * (1-alpha);
   }
   result = total;

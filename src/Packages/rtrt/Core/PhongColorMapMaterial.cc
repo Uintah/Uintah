@@ -72,8 +72,7 @@ void PhongColorMapMaterial::shade(Color& result, const Ray& ray,
     // compute the transmitted ray
     Ray tray(ray.eval(hit.min_t+1e-6), ray.direction());
     Color tcolor;
-    cx->worker->traceRay(tcolor, tray, depth+1,  atten,
-			 accumcolor, cx);
+    Worker::traceRay(tcolor, tray, depth+1,  atten, accumcolor, cx);
     surface_color += tcolor * (1-opacity);
     cx->stats->ds[depth].nrefl++;
   }

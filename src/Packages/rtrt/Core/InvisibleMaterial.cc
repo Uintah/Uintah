@@ -38,8 +38,7 @@ void InvisibleMaterial::shade(Color& result, const Ray& ray,
     //Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Ray rray(hitpos, ray.direction());
-    cx->worker->traceRay(result, rray, depth, atten,
-			 accumcolor, cx);
+    Worker::traceRay(result, rray, depth, atten, accumcolor, cx);
 }
 
 const int INVISIBLEMATERIAL_VERSION = 1;
