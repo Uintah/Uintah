@@ -1,9 +1,9 @@
 proc makeFilebox {w var command cancel} {
-    global filter,$w path,$w oldpath,$w var,$w oldsel,$w
+    global filter,$w path,$w oldpath,$w oldsel,$w
+    global $var
 
     set filter,$w "*.*"
 
-    set var,$w ""
     set oldsel,$w ""
 
     set path,$w [exec pwd]
@@ -85,7 +85,7 @@ proc makeFilebox {w var command cancel} {
 
     frame $w.f.sel
     label $w.f.sel.sell -text Selection
-    entry $w.f.sel.sel -relief sunken -width 40 -textvariable var,$w
+    entry $w.f.sel.sel -relief sunken -width 40 -textvariable $var
     bind $w.f.sel.sel <Return> "fbsel $w $dirs $files $var \"$command\""
     pack $w.f.sel.sell -in $w.f.sel -side top -padx 2 -pady 2 -anchor w
     pack $w.f.sel.sel -in $w.f.sel -side bottom -padx 2 -pady 2 \
