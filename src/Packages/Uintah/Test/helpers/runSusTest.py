@@ -47,7 +47,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   rc = system("%s %s > %s 2>&1" % (command, susinput, log))
 
   if datmode == "dbg":
-    environ['MALLOC_STATS'] = ""
+    environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
 
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
