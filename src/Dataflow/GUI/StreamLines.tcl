@@ -23,6 +23,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-stepsize
 	global $this-tolerance
 	global $this-maxsteps
+	global $this-colinear
 
         set_defaults
     }
@@ -31,6 +32,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-tolerance 0.0001
 	set $this-stepsize 0.0001
 	set $this-maxsteps 2000
+	set $this-colinear 0
     }
 
     method ui {} {
@@ -46,9 +48,6 @@ itcl_class SCIRun_Visualization_StreamLines {
 	frame $w.row3
 	frame $w.row4
 
-	pack $w.row1 $w.row2 $w.row3 $w.row4 -side top -e y -f both \
-		-padx 5 -pady 5
-	
 	label $w.row1.tolerance_label -text "Error Tolerance"
 	entry $w.row1.tolerance -textvariable $this-tolerance
 	label $w.row2.stepsize_label -text "Step Size"
@@ -56,13 +55,20 @@ itcl_class SCIRun_Visualization_StreamLines {
 	label $w.row3.maxsteps_label -text "Maximum Steps"
 	entry $w.row3.maxsteps -textvariable $this-maxsteps
 
+	checkbutton $w.colinear -text "Filter Colinear Points" \
+		-variable $this-remove-colinear
+
 	pack $w.row1.tolerance_label $w.row1.tolerance -side left
 	pack $w.row2.stepsize_label $w.row2.stepsize -side left
 	pack $w.row3.maxsteps_label $w.row3.maxsteps -side left
 
-	button $w.row4.execute -text "Execute" -command "$this-c execute"
+	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	
 	pack $w.row4.execute -side top -e n -f both
+
+	pack $w.row1 $w.row2 $w.row3 $w.colinear $w.row4 \
+		-side top -e y -f both \
+		-padx 5 -pady 5
     }
 }
 

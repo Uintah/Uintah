@@ -68,7 +68,9 @@ ManageFieldDataAlgoFieldScalar<Fld, Loc>::execute(FieldHandle ifield_h)
     omatrix->put(index++, (double)val);
     ++iter;
   }
-
+  string units;
+  if (ifield_h->get_property("units", units))
+    omatrix->set_property("units", units, false);
   return MatrixHandle(omatrix);
 }
 
@@ -101,7 +103,9 @@ ManageFieldDataAlgoFieldVector<Fld, Loc>::execute(FieldHandle ifield_h)
     index++;
     ++iter;
   }
-
+  string units;
+  if (ifield_h->get_property("units", units))
+    omatrix->set_property("units", units, false);
   return MatrixHandle(omatrix);
 }
 
@@ -143,7 +147,9 @@ ManageFieldDataAlgoFieldTensor<Fld, Loc>::execute(FieldHandle ifield_h)
     index++;
     ++iter;
   }
-
+  string units;
+  if (ifield_h->get_property("units", units))
+    omatrix->set_property("units", units, false);
   return MatrixHandle(omatrix);
 }
 

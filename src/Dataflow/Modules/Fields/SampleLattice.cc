@@ -99,11 +99,11 @@ SampleLattice::execute()
     datatype = SCALAR;
     if (ifieldhandle->query_vector_interface())
     {
-      datatype = TENSOR;
+      datatype = VECTOR;
     }
     else if (ifieldhandle->query_tensor_interface())
     {
-      datatype = VECTOR;
+      datatype = TENSOR;
     }
     BBox bbox = ifieldhandle->mesh()->get_bounding_box();
     minb = bbox.min();

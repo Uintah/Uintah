@@ -27,11 +27,15 @@ itcl_class SCIRun_Math_Submatrix {
 	global $this-maxrow
 	global $this-mincol
 	global $this-maxcol
+	global $this-nrow
+	global $this-ncol
 
-	set $this-minrow "-1"
-	set $this-maxrow "-1"
-	set $this-mincol "-1"
-	set $this-maxcol "-1"
+	set $this-minrow "--"
+	set $this-maxrow "--"
+	set $this-mincol "--"
+	set $this-maxcol "--"
+	set $this-nrow "??"
+	set $this-ncol "??"
     }
 
     method ui {} {
@@ -42,8 +46,15 @@ itcl_class SCIRun_Math_Submatrix {
         }
         toplevel $w
 
+	frame $w.info
 	frame $w.row
 	frame $w.col
+
+	global $this-nrow $this-ncol
+	label $w.info.label -text "Input Matrix:   nrows ="
+	label $w.info.row -textvariable $this-nrow
+	label $w.info.x -text "  ncols ="
+	label $w.info.col -textvariable $this-ncol
 
 	label $w.row.label -text "Row Range" -width 10 -just left
 	entry $w.row.min -width 10 -textvariable $this-minrow
@@ -58,13 +69,15 @@ itcl_class SCIRun_Math_Submatrix {
 	bind $w.col.min <KeyPress-Return> "$this-c needexecute"
 	bind $w.col.max <KeyPress-Return> "$this-c needexecute"
 
+	pack $w.info.label $w.info.row $w.info.x $w.info.col -side left -anchor n -expand yes -fill x
+
 	pack $w.row.label $w.row.min $w.row.max -side left -anchor n -expand yes -fill x
 
 	pack $w.col.label $w.col.min $w.col.max -side left -anchor n -expand yes -fill x
 	
 	button $w.execute -text "Execute" -command "$this-c needexecute"
 
-	pack $w.row $w.col $w.execute -side top -expand yes -fill x
+	pack $w.info $w.row $w.col $w.execute -side top -expand yes -fill x
     }
 }
 

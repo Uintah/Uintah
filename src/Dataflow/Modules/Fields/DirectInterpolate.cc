@@ -177,6 +177,9 @@ DirectInterpolate::execute()
     error("Unable to initialize " + name + "'s output port.");
     return;
   }
+  string units;
+  if (sfieldhandle->get_property("units", units))
+    ofieldhandle->set_property("units", units, false);
   ofp_->send(ofieldhandle);
 }
 

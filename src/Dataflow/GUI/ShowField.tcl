@@ -37,20 +37,23 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
+	global $this-def-color-a
 	global $this-node_scale
 	global $this-edge_scale
 	global $this-vectors_scale
 	global $this-resolution
 	global $this-active_tab
 	global $this-has_vec_data
+	global $this-interactive_mode
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
-	set $this-edge_scale 0.03
-	set $this-vectors_scale 0.03
+	set $this-edge_scale 0.015
+	set $this-vectors_scale 0.30
 	set $this-def-color-r 0.5
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
+	set $this-def-color-a 0.5
 	set $this-nodes-on 1
 	set $this-nodes-as-disks 0
 	set $this-edges-on 1
@@ -62,6 +65,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
 	set $this-use-transparency 0
+	set $this-interactive_mode "Interactive"
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vec_data w "$this vec_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
@@ -167,7 +171,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-node_scale -command "$this-c node_scale"
 
 	bind $nodes.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+		"$this-c node_scale"
     }
 
     # Edges Tab
@@ -193,7 +197,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-variable $this-edge_scale -command "$this-c edge_scale"
 
 	bind $edge.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+		"$this-c edge_scale"
     }
 
     # Faces Tab
@@ -232,20 +236,15 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_normalize" \
 		-variable $this-normalize-vectors
 
-#	 global $this-vector_display_type
-#	 make_labeled_radio $vector.radio \
-#		 "Vector Display Type" "$this-c vector_display_type" top \
-#		 $this-vector_display_type {{Cylinders Cylinders} {Lines Lines}}
-#
 	pack $vector.show_vectors $vector.normalize_vectors \
 		-side top -fill y -anchor w
 
-	expscale $vector.slide -label CylinderScale \
+	expscale $vector.slide -label "Vector Scale" \
 		-orient horizontal \
 		-variable $this-vectors_scale -command "$this-c data_scale"
 
 	bind $vector.slide.scale <ButtonRelease> \
-		"$this-c needexecute"
+		"$this-c data_scale"
     }
 
     method disk_render_status_changed {name1 name2 op} {
@@ -287,7 +286,6 @@ itcl_class SCIRun_Visualization_ShowField {
 	# node frame holds ui related to vert display (left side)
 	frame $window.options.disp -borderwidth 2
 	pack $window.options.disp -padx 2 -pady 2 -side left -fill y
-
 	set n "$this-c needexecute"	
 
 	# Display Options
@@ -306,6 +304,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
 
 	global $this-active_tab
+	global $this-interactive_mode
 	# view the active tab
 	$dof.tabs view [set $this-active_tab]	
 	$dof.tabs configure -tabpos "n"
@@ -316,13 +315,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	pack $window.options.disp.frame_title -side top -expand yes
 	
 	#add bottom frame for execute and dismiss buttons
-	frame $window.control -relief groove -borderwidth 2
+	frame $window.control -relief groove -borderwidth 2 -width 500
 	frame $window.def_col -borderwidth 2
 
 	addColorSelection $window.def_col $this-def-color \
 		"default_color_change"
 
-
+	button $window.def_col.calcdefs -text "Calculate Defaults" \
+		-command "$this-c calcdefs"
+	pack $window.def_col.calcdefs -padx 20
 	# Cylinder and Sphere Resolution
 	iwidgets::labeledframe $window.resolution \
 		-labelpos nw -labeltext "Cylinder and Sphere Resolution"
@@ -331,15 +332,31 @@ itcl_class SCIRun_Visualization_ShowField {
 	scale $res.scale -orient horizontal -variable $this-resolution \
 		-from 3 -to 20 -showvalue true -resolution 1
 
+	# execute policy
+	make_labeled_radio $window.control.exc_policy \
+		"Execute Policy" "$this-c execute_policy" top \
+		$this-interactive_mode \
+		{{"Interactively update" Interactive} \
+		{"Execute button only" OnExecute}}
+
 	pack $res.scale -side top -fill both -expand 1
 
 	pack $window.options -padx 2 -pady 2 -side top
 	pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
 	pack $window.def_col $window.control -padx 2 -pady 2 -side top
 
-	button $window.control.execute -text Execute -command $n
-	button $window.control.dismiss -text Dismiss -command "destroy $window"
-	pack $window.control.execute $window.control.dismiss -side left 
+	pack $window.control.exc_policy -side top -fill both
+
+
+	frame $window.control.excdis -borderwidth 2
+	button $window.control.excdis.execute -text Execute -command $n
+	button $window.control.excdis.dismiss -text Dismiss \
+		-command "destroy $window"
+
+	pack $window.control.excdis.execute $window.control.excdis.dismiss \
+		-side left -padx 5 -expand 1 -fill x
+	pack $window.control.excdis -padx 2 -pady 2 -side top -fill both
+	pack $window.control -padx 2 -pady 2 -side top -fill both
     }
 }
 

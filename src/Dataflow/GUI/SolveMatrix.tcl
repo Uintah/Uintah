@@ -46,8 +46,8 @@ itcl_class SCIRun_Math_SolveMatrix {
 	set $this-use_previous_soln 1
 	set $this-emit_partial 1
 	set $this-emit_iter 50
-	set $this-petsc_installed 0
 	set $this-np 4
+	set $this-petsc_installed 0
     }
     
     
@@ -148,7 +148,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 		{"KSPLSQR (PETSc)" "KSPLSQR (PETSc)"}
 		{"KSPBICG (PETSc)" "KSPBICG (PETSc)"}
 		{"KSPPREONLY (PETSc)" "KSPPREONLY (PETSc)"}}
-		
+	
 	if { [set $this-petsc_installed] == 0 } {
             for {set i 3} {$i<15} {incr i} {
 	     $meth.f.$i configure -state disabled
@@ -412,6 +412,9 @@ itcl_class SCIRun_Math_SolveMatrix {
 #	puts "finishing graph!"
 	set w .ui[modname]
 #	puts "$w.graph"
+	if {![winfo exists $w]} {
+	    return
+	}
 	$w.graph element configure "Current Error" -color green
     }
 }

@@ -68,7 +68,6 @@ public:
 	ViewWindowRedraw,
 	ViewWindowMouse,
 	ViewWindowDumpImage,
-	ViewWindowDumpHiResImage,
 	ViewWindowDumpObjects,
 
 	AttachDialbox,

@@ -38,6 +38,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ComboListbox.tcl \
 	$(SRCDIR)/ComponentWizard.tcl \
+	$(SRCDIR)/Coregister.tcl \
 	$(SRCDIR)/CriticalPointWidget.tcl \
 	$(SRCDIR)/CrosshairWidget.tcl \
 	$(SRCDIR)/EditField.tcl\
