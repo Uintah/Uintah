@@ -392,6 +392,10 @@ proc createModulesMenu { subnet } {
     global ModuleMenu Subnet
     if ![info exists ModuleMenu] return
     set canvas $Subnet(Subnet${subnet}_canvas)
+    if [winfo exists $canvas.modulesMenu] {	
+	destroy $canvas.modulesMenu
+    }
+	
     if ![winfo exists $canvas.modulesMenu] {	
 	menu $canvas.modulesMenu -tearoff false
 	foreach pack $ModuleMenu(packages) {
