@@ -60,12 +60,14 @@ set origin 0.0,0.66
 set ylabel
 set y2label
 
-plot '.data' using 1:4 t 'Delt' with lines
+plot '.data' using 1:4           t 'Delt' with lines, \
+     '.data' using 1:3 axes x1y2 t 'Physical Time' with lines
 
     #----------third plot-------------
 set size 1.0,0.33       
 set origin 0.0,0.0
 set xlabel "ElapsedTime"
+set ylabel "Memory useage"
 plot '.data' using 1:5 axes x1y2 t 'avg1' with lines, \
      '.data' using 1:6 axes x1y2 t 'avg2' with lines, \
      '.data' using 1:7 axes x1y2 t 'max1' with lines, \
