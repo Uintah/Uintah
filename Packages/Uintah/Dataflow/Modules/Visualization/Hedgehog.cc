@@ -116,6 +116,9 @@ class Hedgehog : public Module {
   int grid_id;
   int need_find2d;
   int need_find3d;
+
+  Point iPoint_;
+  IntVector dim_;
   
 public:
  
@@ -173,7 +176,8 @@ Hedgehog::Hedgehog(GuiContext* ctx)
   shaft(new Material(Color(0,0,0), Color(.6, .6, .6),
 		     Color(.6, .6, .6), 10)),
   head(new Material(Color(0,0,0), Color(1,1,1), Color(.6, .6, .6), 10)),
-  back(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10))
+  back(new Material(Color(0,0,0), Color(.6, .6, .6), Color(.6, .6, .6), 10)),
+  iPoint_(Point(0,0,0)), dim_(IntVector(1,1,1))
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -221,6 +225,13 @@ void Hedgehog::execute()
     cerr<<"Not a LatVolField\n";
   }
 
+  LatVolField<Vector> *fld =
+    dynamic_cast<LatVolField<Vector>*>(vfield.get_rep());
+  // if fld == NULL then the cast didn't work, so bail
+  if (!fld) {
+    cerr << "Cannot cast field into a LatVolField\n";
+    return;
+  }
 
   FieldHandle ssfield;
   int have_sfield=inscalarfield->get( ssfield );
@@ -283,12 +294,31 @@ void Hedgehog::execute()
 
   widget2d->SetState(!do_3d);
   widget3d->SetState(do_3d);
+
+  // if field size or location change we need to update the widgets
+
+  BBox box;  Point min, max;
+  box = vfield->mesh()->get_bounding_box();
+  min = box.min(); max = box.max();
+  int nx, ny, nz;
+  // get the mesh for the geometry
+  LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
+  nx = mesh->get_ni();
+  ny = mesh->get_nj();
+  nz = mesh->get_nk();
+  if( iPoint_ != min ){
+    iPoint_ = min;
+    need_find3d = 1;
+    need_find2d = 1;
+  } else if (   dim_ != IntVector(nx, ny, nz) ){
+    dim_ = IntVector(nx, ny, nz);
+    need_find3d = 1;
+    need_find2d = 1;
+  }
+
+
   if (do_3d){
     if(need_find3d != 0){
-      BBox box;
-      Point min, max;
-      box = vfield->mesh()->get_bounding_box();
-      min = box.min(); max = box.max();
       Point center = min + (max-min)/2.0;
       Point right( max.x(), center.y(), center.z());
       Point down( center.x(), min.y(), center.z());
@@ -301,11 +331,6 @@ void Hedgehog::execute()
     need_find3d = 0;
   } else {
     if (need_find2d != 0){
-      BBox box;
-      Point min, max;
-      box = vfield->mesh()->get_bounding_box();
-      min = box.min(); max = box.max();
-
       Point center = min + (max-min)/2.0;
       double max_scale;
       if (need_find2d == 1) {

@@ -170,7 +170,7 @@ CuttingPlane::CuttingPlane(GuiContext* ctx) :
   fullRezGUI(ctx->subVar("fullRezGUI")),
   exhaustiveGUI(ctx->subVar("exhaustiveGUI")),
   xt(ctx->subVar("xt")), yt(ctx->subVar("yt")), zt(ctx->subVar("zt")),
-  grid_id(0)
+  grid_id(0), iPoint_(Point(0,0,0)), dim_(IntVector(1,1,1))
 {
     float INIT(.1);
 
@@ -247,12 +247,26 @@ void CuttingPlane::execute()
     GeomHandle gt = scinew GeomTransform( w, t);
     widget_id = ogeom->addObj( gt, widget_name, &widget_lock );
   }
+
+  BBox box;
+  Point min, max;
+  box = field->mesh()->get_bounding_box();
+  min = box.min(); max = box.max();
+  int nx, ny, nz;
+  get_dimensions(field, nx,ny,nz);
+  if(field->data_at() == Field::CELL){ nx--; ny--; nz--; }
+
+  if( iPoint_ != min ){
+    iPoint_ = min;
+    find = -1;
+  } else if (   dim_ != IntVector(nx, ny, nz) ){
+    dim_ = IntVector(nx, ny, nz);
+    find = -1;
+  }
+
+
   if (need_find.get() != find)
   {
-    BBox box;
-    Point min, max;
-    box = field->mesh()->get_bounding_box();
-    min = box.min(); max = box.max();
     Point center = min + (max-min)/2.0;
     double max_scale;
     double wh=where.get();
@@ -292,16 +306,9 @@ void CuttingPlane::execute()
   // advance or decrement along x, y, or z
   if (msg != "" &&
       (field->get_type_name(0) == "LatVolField")){
-    int nx, ny, nz;
-    get_dimensions(field, nx,ny,nz);
-    if(field->data_at() == Field::CELL){ nx--; ny--; nz--; }
     Point center, right, down;
     widget->GetPosition(center, right, down);
-    BBox box;
-    Point min, max;
     Vector diag;
-    box = field->mesh()->get_bounding_box();
-    min = box.min(); max = box.max();
     diag=max-min;
     diag.x(diag.x()/(nx-1));
     diag.y(diag.y()/(ny-1));
