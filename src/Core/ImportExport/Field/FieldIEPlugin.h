@@ -66,7 +66,7 @@ public:
   const string filemagic;
 
   FieldHandle (*filereader)(ProgressReporter *pr, const char *filename);
-  void (*filewriter)(ProgressReporter *pr,
+  bool (*filewriter)(ProgressReporter *pr,
 		     FieldHandle f, const char *filename);
 
   FieldIEPlugin(const string &name,
@@ -74,14 +74,21 @@ public:
 		const string &filemagic,
 		FieldHandle (*fieldreader)(ProgressReporter *pr,
 					   const char *filename) = 0,
-		void (*fieldwriter)(ProgressReporter *pr, FieldHandle f,
+		bool (*fieldwriter)(ProgressReporter *pr, FieldHandle f,
 				    const char *filename) = 0);
 
   ~FieldIEPlugin();
 
   bool operator==(const FieldIEPlugin &other) const;
+};
 
-  static map<string, FieldIEPlugin *> *table;
+
+
+class SCICORESHARE FieldIEPluginManager {
+public:
+  void get_importer_list(vector<string> &results);
+  void get_exporter_list(vector<string> &results);
+  FieldIEPlugin *get_plugin(const string &name);
 };
 
 
