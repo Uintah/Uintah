@@ -561,6 +561,55 @@ void    ICE::printData_FC(int matl,
 
 /* 
  ======================================================================*
+ Function:  printStencil--
+_______________________________________________________________________ */
+void    ICE::printStencil( int matl,
+                           const Patch* patch, 
+                           int include_EC,
+                           const string&    message1,        
+                           const string&    message2,       
+                           const CCVariable<Stencil7>& q_CC)
+{
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;      
+
+    IntVector low, high; 
+    adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
+                        low, high); 
+    //__________________________________
+    // spew to stderr
+    cerr << "______________________________________________\n";
+    cerr << "$" << message1 << "\n";
+    cerr << "$" << message2 << "\n";
+
+    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.precision(d_dbgSigFigs);    
+
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+        for(int i = low.x(); i < high.x(); i++) {
+          IntVector idx(i, j, k);  
+          cerr<< idx
+              << " A.b "<< q_CC[idx].b
+              << " A.w "<< q_CC[idx].w
+              << " A.s "<< q_CC[idx].s
+              << " A.p "<< q_CC[idx].p
+              << " A.n "<< q_CC[idx].n
+              << " A.e "<< q_CC[idx].e
+              << " A.t "<< q_CC[idx].t << endl;
+        }
+      }
+    }
+    cerr << "\n";
+    cerr <<" ______________________________________________\n";
+    cerr.setf(ios::scientific ,ios::floatfield);
+  } 
+}
+/* 
+ ======================================================================*
  Function:  adjust_dbg_indices--
  Purpose:  tweak what the user has specified for d_dbgBegin and end 
  indices for multipatch problems
