@@ -17,7 +17,6 @@
 #include <X11/Xlib.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 
-//#include "Thread/Runnable.h"
 #include <Packages/rtrt/Core/GridSpheresDpy.h>
 
 using namespace rtrt;
@@ -523,7 +522,7 @@ void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
 	  }
 	  if(j==n){
 	    Vector OC=Point(p[0], p[1], p[2])-ray.origin();
-	    double tca=OC.dot(ray.direction());
+	    double tca=Dot(OC, ray.direction());
 	    double l2oc=OC.length2();
 	    double rad2=radius*radius;
 	    if(l2oc <= rad2){
@@ -852,7 +851,7 @@ void GridSpheres::intersect_print(const Ray& ray, HitInfo& hit,
       }
       if(j==n){
 	Vector OC=Point(p[0], p[1], p[2])-ray.origin();
-	double tca=OC.dot(ray.direction());
+	double tca=Dot(OC, ray.direction());
 	double l2oc=OC.length2();
 	double rad2=radius*radius;
 	if(l2oc <= rad2){
@@ -1041,7 +1040,7 @@ void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
       }
       if(j==n){
 	Vector OC=Point(p[0], p[1], p[2])-ray.origin();
-	double tca=OC.dot(ray.direction());
+	double tca=Dot(OC, ray.direction());
 	double l2oc=OC.length2();
 	double rad2=radius*radius;
 	if(l2oc <= rad2){
@@ -1102,7 +1101,7 @@ void GridSpheres::intersect(const Ray& ray, HitInfo& hit,
     int min_i=-1234;
     for(int i=0;i<nspheres;i++){
       Vector OC=Point(p[0], p[1], p[2])-ray.origin();
-      double tca=OC.dot(ray.direction());
+      double tca=Dot(OC, ray.direction());
       double l2oc=OC.length2();
       double rad2=radius*radius;
       if(l2oc <= rad2){
@@ -1211,7 +1210,7 @@ void GridSpheres::isect(int depth, double t,
 	if(j==n){
 	  st->sphere_isect++;
 	  Vector OC=Point(p[0], p[1], p[2])-ray.origin();
-	  double tca=OC.dot(ray.direction());
+	  double tca=Dot(OC, ray.direction());
 	  double l2oc=OC.length2();
 	  double rad2=radius*radius;
 	  if(l2oc <= rad2){

@@ -2,8 +2,8 @@
 #ifndef HVOLUMEBRICK16_H
 #define HVOLUMEBRICK16_H 1
 
-#include "VolumeBase.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Core/Geometry/Point.h>
 #include <stdlib.h>
 #include <Core/Thread/WorkQueue.h>
 

@@ -1,9 +1,9 @@
 
-#include "FastTurbulence.h"
-#include "Point.h"
-#include "Vector.h"
-#include "MiscMath.h"
-#include "Assert.h"
+#include <Packages/rtrt/Core/FastTurbulence.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/MiscMath.h>
+#include <Packages/rtrt/Core/Assert.h>
 
 using namespace rtrt;
 

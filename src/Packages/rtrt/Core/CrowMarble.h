@@ -2,14 +2,17 @@
 #ifndef CROWMARBLE_H
 #define CROWMARBLE_H 1
 
-#include "Material.h"
-#include "Color.h"
-#include "Vector.h"
-#include "CatmullRomSpline.h"
-#include "FastTurbulence.h"
+#include <Core/Geometry/Vector.h>
+
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/CatmullRomSpline.h>
+#include <Packages/rtrt/Core/FastTurbulence.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class CrowMarble : public Material {
     double scale;
     Color c1, c2, c3;

@@ -1,9 +1,9 @@
 
-#include "Checker.h"
-#include "Point.h"
-#include "Vector.h"
-#include "Ray.h"
-#include "HitInfo.h"
+#include <Packages/rtrt/Core/Checker.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/HitInfo.h>
 
 using namespace rtrt;
 
@@ -23,8 +23,8 @@ void Checker::shade(Color& result, const Ray& ray,
 		    Context* cx)
 {
     Point p(ray.origin()+ray.direction()*hit.min_t);
-    double uu=u.dot(p);
-    double vv=v.dot(p);
+    double uu=Dot(u, p);
+    double vv=Dot(v, p);
     if(uu<0)
 	uu=-uu+1;
     if(vv<0)

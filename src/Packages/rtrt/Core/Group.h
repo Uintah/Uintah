@@ -2,9 +2,9 @@
 #ifndef GROUP_H
 #define GROUP_H 1
 
-#include "Object.h"
-#include "Point.h"
-#include "Array1.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
 

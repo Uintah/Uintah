@@ -1,11 +1,13 @@
 #ifndef BACKGROUND_H
 #define BACKGROUND_H 1
 
-#include "Color.h"
-#include "Vector.h"
+#include <Packages/rtrt/Core/Color.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class Background {
     Color avg;
 public:

@@ -2,8 +2,8 @@
 #ifndef BOX_H
 #define BOX_H 1
 
-#include "Object.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Core/Geometry/Point.h>
 #include <stdlib.h>
 
 namespace rtrt {

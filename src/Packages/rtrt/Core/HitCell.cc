@@ -1,6 +1,6 @@
-#include    "Point.h"
-#include    "Vector.h"
-#include    "Ray.h"
+#include    <Core/Geometry/Point.h>
+#include    <Core/Geometry/Vector.h>
+#include    <Packages/rtrt/Core/Ray.h>
 #include <iostream>
 
 using namespace rtrt;

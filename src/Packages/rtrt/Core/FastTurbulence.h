@@ -2,11 +2,15 @@
 #ifndef Math_FastTurbulence_h
 #define Math_FastTurbulence_h 1
 
-#include "FastNoise.h"
+#include <Packages/rtrt/Core/FastNoise.h>
+
+namespace SCIRun {
+  class Point;
+}
 
 namespace rtrt {
 
-class Point;
+  using namespace SCIRun;
 
 class FastTurbulence {
 	FastNoise noise;

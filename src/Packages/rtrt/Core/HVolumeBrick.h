@@ -3,8 +3,8 @@
 #define HVOLUMEBRICK_H 1
 
 #include <Core/Thread/WorkQueue.h>
-#include "VolumeBase.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Core/Geometry/Point.h>
 #include <stdlib.h>
 
 namespace rtrt {

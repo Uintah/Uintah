@@ -1,7 +1,8 @@
 
-#include "BBox.h"
+#include <Packages/rtrt/Core/BBox.h>
 
 using namespace rtrt;
+using namespace SCIRun;
 
 BBox::BBox(const BBox& copy)
     : cmin(copy.cmin), cmax(copy.cmax), have_some(copy.have_some)

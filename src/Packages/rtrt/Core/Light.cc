@@ -1,19 +1,20 @@
 
-#include "Light.h"
-#include "MusilRNG.h"
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/MusilRNG.h>
 #include <math.h>
 
 using namespace rtrt;
+using namespace SCIRun;  
 
 void make_ortho(const Vector& v, Vector& v1, Vector& v2) 
 {
-    Vector v0(v.cross(Vector(1,0,0)));
+    Vector v0(Cross(v, Vector(1,0,0)));
     if(v0.length2() == 0){
-        v0=v.cross(v.cross(Vector(0,1,0)));
+        v0=Cross(v, Cross(v, Vector(0,1,0)));
     }
-    v1=v.cross(v0);
+    v1=Cross(v, v0);
     v1.normalize();
-    v2=v.cross(v1);
+    v2=Cross(v, v1);
     v2.normalize();
 }
 

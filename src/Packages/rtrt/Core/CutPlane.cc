@@ -1,12 +1,12 @@
 
-#include "CutPlane.h"
-#include "Ray.h"
-#include "Light.h"
-#include "HitInfo.h"
-#include "BBox.h"
-#include "MiscMath.h"
-#include "Stats.h"
-#include "PlaneDpy.h"
+#include <Packages/rtrt/Core/CutPlane.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/MiscMath.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/PlaneDpy.h>
 #include <iostream>
 
 using namespace rtrt;
@@ -15,7 +15,7 @@ CutPlane::CutPlane(Object* child, const Point& cen, const Vector& n)
     : Object(0), child(child), cen(cen), n(n), dpy(0)
 {
     this->n.normalize();
-    d=this->n.dot(cen);
+    d=Dot(this->n, cen);
 }
 
 CutPlane::CutPlane(Object* child, PlaneDpy* dpy)
@@ -34,12 +34,12 @@ void CutPlane::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 {
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     HitInfo newhit;
-    double plane=n.dot(orig)-d;
+    double plane=Dot(n, orig)-d;
     if(plane > 0){
 	child->intersect(ray, newhit, st, ppc);
 	// On near side of plane...
@@ -72,14 +72,14 @@ void CutPlane::light_intersect(Light* light, const Ray& ray,
 {
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     HitInfo newhit;
     Color newatten(1,1,1);
     Point p(orig+dir*t);
-    double plane=n.dot(orig)-d;
+    double plane=Dot(n, orig)-d;
     if(plane > 0){
 	child->light_intersect(light, ray, newhit, dist, newatten, st, ppc);
 	// On near side of plane...

@@ -1,11 +1,11 @@
 
-#include "Cylinder.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Light.h"
-#include "BBox.h"
-#include "Stats.h"
-#include "TrivialAllocator.h"
+#include <Packages/rtrt/Core/Cylinder.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/TrivialAllocator.h>
 #include <iostream>
 
 using namespace rtrt;
@@ -42,9 +42,17 @@ void Cylinder::preprocess(double, int&, int&)
 void Cylinder::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
 			 PerProcessorContext*)
 {
-    // Do a transformation to unit coordinates:
-    double dist_scale;
-    Ray xray(xform.xray(ray, dist_scale));
+  // Do a transformation to unit coordinates:
+  //  double dist_scale;
+  //  Ray xray(xform.xray(ray, dist_scale));
+
+  // I had to get rid of Transform::xray when I started using
+  // SCIRun::Transform as part of the code merger.
+  // Since this is the only place where it is used, I'm going to just
+  // transplant the code into here
+  Vector v(xform.project(ray.direction()));
+  double dist_scale=v.normalize();
+  Ray xray(xform.project(ray.origin()), v);
     double dx=xray.direction().x();
     double dy=xray.direction().y();
     double a=dx*dx+dy*dy;

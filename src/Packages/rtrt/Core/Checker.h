@@ -2,9 +2,9 @@
 #ifndef CHECKER_H
 #define CHECKER_H 1
 
-#include "Material.h"
-#include "Color.h"
-#include "Vector.h"
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 

@@ -1,13 +1,13 @@
 
-#include "Material.h"
-#include "HitInfo.h"
-#include "Light.h"
-#include "Ray.h"
-#include "Scene.h"
-#include "Stats.h"
-#include "Object.h"
-#include "Worker.h"
-#include "Context.h"
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/Context.h>
 #include <math.h>
 #include <iostream>
 
@@ -60,7 +60,7 @@ Color Material::ambient_hack(Scene* scene, const Point& /*p*/, const Vector& nor
 
 
 Vector Material::reflection(const Vector& v, const Vector n) const {
-     return v - n * (2*v.dot(n));
+     return v - n * (2*Dot(v, n));
 }
 
 
@@ -71,7 +71,7 @@ double Material::phong_term( const Vector& e, const Vector& l, const Vector& n, 
     E.normalize();
     Vector H= L - E;
     H.normalize();
-    double cos_alpha= H.dot( n );
+    double cos_alpha= Dot(H, n );
     if ( cos_alpha > 0 )
         return pow( cos_alpha, ex );
     else
@@ -96,7 +96,7 @@ void Material::phongshade(Color& result,
     Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
     Vector normal(obj->normal(hitpos, hit));
-    double incident_angle=-normal.dot(ray.direction());
+    double incident_angle=-Dot(normal, ray.direction());
     if(incident_angle<0){
 	incident_angle=-incident_angle;
 	normal=-normal;
@@ -112,7 +112,7 @@ void Material::phongshade(Color& result,
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);
 	if(cx->worker->lit(hitpos, light, light_dir, dist, shadowfactor, depth, cx) ){
-	    double cos_theta=light_dir.dot(normal);
+	    double cos_theta=Dot(light_dir, normal);
 	    if(cos_theta < 0){
 		cos_theta=-cos_theta;
 		light_dir=-light_dir;

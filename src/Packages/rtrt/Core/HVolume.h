@@ -2,17 +2,17 @@
 #ifndef HVOLUME_H
 #define HVOLUME_H 1
 
-#include "VolumeBase.h"
-#include "Point.h"
-#include "Array3.cc"
+#include <Packages/rtrt/Core/VolumeBase.h>
+#include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/Array3.cc>
 #include <stdlib.h>
 #include <Core/Thread/WorkQueue.h>
 
-#include "BBox.h"
-#include "HitInfo.h"
-#include "Ray.h"
-#include "Color.h"
-#include "VolumeDpy.h"
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Color.h>
+#include <Packages/rtrt/Core/VolumeDpy.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Parallel.h>

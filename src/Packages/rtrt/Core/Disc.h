@@ -2,8 +2,8 @@
 #ifndef DISC_H
 #define DISC_H 1
 
-#include "Object.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Core/Geometry/Point.h>
 
 namespace rtrt {
 

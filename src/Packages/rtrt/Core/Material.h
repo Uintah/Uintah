@@ -2,17 +2,22 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H 1
 
-#include "Color.h"
+#include <Packages/rtrt/Core/Color.h>
+
+namespace SCIRun {
+  class Point;
+  class Vector;
+}
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 struct Context;
-class Point;
 class HitInfo;
 class Scene;
 class Ray;
 class Stats;
-class Vector;
 class Worker;
 
 class Material {
