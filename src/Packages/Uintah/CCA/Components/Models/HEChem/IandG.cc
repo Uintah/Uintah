@@ -304,3 +304,10 @@ void IandG::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void IandG::scheduleErrorEstimate(const LevelP&,
+                                  SchedulerP&)
+{
+  // Not implemented yet
+}
