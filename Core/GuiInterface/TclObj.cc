@@ -46,7 +46,8 @@ using namespace std;
 namespace SCIRun {
 
 
-TclObj::TclObj( const string &script) : id_(""), window_(""), script_(script)
+TclObj::TclObj( const string &script) 
+  : id_(""), window_(""), script_(script), has_window_(false)
 {
 } 
 
@@ -114,6 +115,7 @@ TclObj::set_window( const string & window, const string& args,  bool exec )
     //cerr << "TclObj::set_window  " << cmd.str() << endl;
     TCL::execute( cmd.str().c_str() );
   }
+  has_window_ = true;
 }
 
 
