@@ -16,7 +16,7 @@
 */
 
 /*
- *  uintah.cc: 
+ *  main.cc: 
  *
  *  Written by:
  *   Steven G. Parker
