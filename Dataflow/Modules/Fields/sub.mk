@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
+	$(SRCDIR)/LatticeToHex.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
