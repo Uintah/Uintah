@@ -8,7 +8,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Grid
 
 SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
-	$(SRCDIR)/CellIterator.cc \
+	$(SRCDIR)/CellIterator.cc $(SRCDIR)/CCVariableBase.cc \
 	$(SRCDIR)/Grid.cc \
 	$(SRCDIR)/Level.cc $(SRCDIR)/Material.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
@@ -28,6 +28,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.13  2000/05/12 18:12:37  sparker
+# Added CCVariableBase.cc to sub.mk
+# Fixed copyPointer and other CCVariable methods - still not implemented
+#
 # Revision 1.12  2000/05/11 20:10:22  dav
 # adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 #
