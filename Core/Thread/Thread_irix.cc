@@ -66,6 +66,7 @@
 #include <sys/syssgi.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <libexc.h>
 extern "C" {
 #include <sys/pmo.h>
 #include <fetchop.h>
@@ -136,8 +137,6 @@ static
 void
 lock_scheduler()
 {
-  if(!Thread::isInitialized())
-    Thread::initialize();
   if(uspsema(schedlock) == -1)
     throw ThreadError(std::string("lock_scheduler failed")
 		      +strerror(errno));
@@ -264,6 +263,29 @@ Thread::initialize()
 {
   if(initialized)
     return;
+  if(getenv("THREAD_SHOWINIT")){
+    char* str = "INIT\n";
+    write(2, str, strlen(str));
+    fprintf(stderr, "Initialize called\n");
+#ifdef __sgi
+    // Use -lexc to print out a stack trace
+    static const int MAXSTACK = 100;
+    static const int MAXNAMELEN = 1000;
+    __uint64_t addrs[MAXSTACK];
+    char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
+    char* names[MAXSTACK];
+    for(int i=0;i<MAXSTACK;i++)
+      names[i]=cnames_str+i*MAXNAMELEN;
+    int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
+    if(nframes == 0){
+      fprintf(stderr, "Backtrace not available!\n");
+    } else {
+      fprintf(stderr, "Backtrace:\n");
+      for(int i=0;i<nframes;i++)
+	fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
+    }
+#endif	// __sgi
+  }
   // disallow_sgi_OpenGL_page0_sillyness();
   usconfig(CONF_ARENATYPE, US_SHAREDONLY);
   usconfig(CONF_INITSIZE, 30*1024*1024);
@@ -767,77 +789,44 @@ Thread::migrate(int proc)
 Mutex::Mutex(const char* name)
   : name_(name)
 {
-#ifdef BROKEN
-  if(!initialized){
-    Thread::initialize();
-  }
-  priv_=(Mutex_private*)usnewlock(arena);
-  if(!priv_)
-    throw ThreadError(std::string("usnewlock failed")
-		      +strerror(errno));
-#else
   if(init_lock((abilock_t*)&priv_) != 0)
     throw ThreadError(std::string("init_lock failed"));
-#endif
 }
 
 Mutex::~Mutex()
 {
-#ifdef BROKEN
-  usfreelock((ulock_t)priv_, arena);
-#else
-#endif
 }
 
 void
 Mutex::lock()
 {
-  Thread* t=Thread::self();
+  // We do NOT want to initialize the whole library, just for Mutex
+  Thread* t=Thread::isInitialized()?Thread::self():0;
   int os;
   Thread_private* p=0;
   if(t){
     p=t->priv_;
     os=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
-#ifdef BROKEN
-  if(ussetlock((ulock_t)priv_) == -1)
-    throw ThreadError(std::string("ussetlock failed")
-		      +strerror(errno));
-#else
   spin_lock((abilock_t*)&priv_);
   if(t)
     Thread::pop_bstack(p, os);
-#endif
 }
 
 bool
 Mutex::tryLock()
 {
-#ifdef BROKEN
-  int st=uscsetlock((ulock_t)priv_, 100);
-  if(st==-1)
-    throw ThreadError(std::string("uscsetlock failed")
-		      +strerror(errno));
-  return st!=0;
-#else
   if(acquire_lock((abilock_t*)&priv_) == 0)
     return true;
   else
     return false;
-#endif
 }
 
 void
 Mutex::unlock()
 {
-#ifdef BROKEN
-  if(usunsetlock((ulock_t)priv_) == -1)
-    throw ThreadError(std::string("usunsetlock failed")
-		      +strerror(errno));
-#else
   if(release_lock((abilock_t*)&priv_) != 0)
     throw ThreadError(std::string("release_lock failed"));
-#endif
 }
 
 /*
@@ -848,6 +837,8 @@ Semaphore::Semaphore(const char* name, int count)
   : name_(name)
 {
   if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "Semaphore: %s\n", name);
     Thread::initialize();
   }
   priv_=(Semaphore_private*)usnewsema(arena, count);
@@ -941,6 +932,8 @@ Barrier::Barrier(const char* name)
   : name_(name)
 {
   if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "Barrier: %s\n", name);
     Thread::initialize();
   }
   priv_=new Barrier_private;
@@ -1012,6 +1005,8 @@ AtomicCounter::AtomicCounter(const char* name)
   : name_(name)
 {
   if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "AtomicCounter: %s\n", name);
     Thread::initialize();
   }
   if(use_fetchop){
@@ -1029,7 +1024,9 @@ AtomicCounter::AtomicCounter(const char* name)
 AtomicCounter::AtomicCounter(const char* name, int value)
   : name_(name)
 {
-  if(!Thread::isInitialized()){
+  if(!Thread::isInitialized()) {
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "AtomicCounter: %s\n", name);
     Thread::initialize();
   }
   if(use_fetchop){
