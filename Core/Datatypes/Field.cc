@@ -1,37 +1,116 @@
-// Field.cc - This is the base class from which all other fields are derived.
+//  Field.cc - This is the base class from which all other fields are derived.
+//
 //  Written by:
-//   Eric Kuehne
+//   Eric Kuehne, Alexei Samsonov
 //   Department of Computer Science
 //   University of Utah
-//   April 2000
+//   April 2000, December 2000
+//
 //  Copyright (C) 2000 SCI Institute
 
 #include  <Core/Datatypes/Field.h>
 
-namespace SCIRun {
-  
+namespace SCIRun{
+
+// GROUP: Persistence support
+//////////
+//
+
 PersistentTypeID Field::type_id("Field", "Datatype", 0);
 
+//////////
+// Persistent IO
+#define FIELD_VERSION 1
+
+void Field::io(Piostream& stream){
+  
+  stream.begin_class("Field", FIELD_VERSION);
+  
+  Pio(stream, d_attribHandles);
+  Pio(stream, d_geomHandle);
+  Pio(stream, d_currAttrib);
+  
+  stream.end_class();
+}
+
+
+//////////
+// Constructors/Destructor
 Field::Field()
-  : status(NEW),
-    data_loc(NODE)
 {
+  string empty("");
+  d_attribHandles[empty]=AttribHandle(NULL);
+  d_currAttrib = "";
 }
 
-Field::~Field()
+Field::Field(const Field&)
 {
+  // TODO: implement this!!!
 }
 
+Field::~Field(){
+}
+
+//////////
+// Member functions implementation
+const AttribHandle Field::getAttrib() const{
+  AttribMap::const_iterator ii=d_attribHandles.find(d_currAttrib);
+  return (*ii).second;
+}
+
+const AttribHandle Field::getAttrib(string aName) const{
+  AttribMap::const_iterator ii=d_attribHandles.find(aName);
+  if (ii!=d_attribHandles.end()){
+    return (*ii).second;
+  }
+  else {
+    return AttribHandle(NULL);
+  }
+}
+
+void Field::setCurrAttrib(string aName){
+  AttribMap::const_iterator ii=d_attribHandles.find(aName);
+  if (ii!=d_attribHandles.end()){
+    d_currAttrib = aName;
+  }
+}
+
+AttribHandle Field::shareAttrib(string aName){
+  AttribMap::const_iterator ii=d_attribHandles.find(aName);
+  if (ii!=d_attribHandles.end()){
+    return (*ii).second;
+  }
+  else {
+    return d_attribHandles[""];
+  }
+}
+
+const GeomHandle Field::getGeom() const{
+  return d_geomHandle;
+}
+
+void Field::addAttribute(const AttribHandle& hAttrib){
+  string aName = hAttrib->getName();
+  AttribMap::const_iterator ii=d_attribHandles.find(aName);
+  if (ii!=d_attribHandles.end()){
+    d_attribHandles[aName]=hAttrib;
+  }
+}
+
+void Field::removeAttribute(string aName){
+  d_attribHandles.erase(aName);
+}
+
+bool  Field::setGeometry(GeomHandle hGeom){
+  d_geomHandle=hGeom;
+  // TODO: checking with consistency with existin attributes???
+  return true;
+}
 
 template <class T> T* Field::query_interface(T *)
 {
   return dynamic_cast<T*>(this);
 }
 
-
-void Field::io(Piostream&){
 }
 
-
-
-} // End namespace SCIRun
