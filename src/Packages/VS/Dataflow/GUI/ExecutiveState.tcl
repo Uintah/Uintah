@@ -45,6 +45,10 @@ itcl_class VS_Render_ExecutiveState {
 	global  $this-edit
 	global  $this-edit-target
 	global  $this-selected_marker
+	global  $this-font_scale
+	global  $this-show_name
+	global  $this-show_vectors
+	global  $this-show_cross
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -57,6 +61,10 @@ itcl_class VS_Render_ExecutiveState {
 	set $this-time_markers_mode  1
 	set $this-plot_count    0
 	set $this-selected_marker -1
+	set $this-font_scale 1.0
+	set $this-show_name 0
+	set $this-show_vectors 0
+	set $this-show_cross 0
     }
 
     method bind_events {w} {
@@ -123,6 +131,10 @@ itcl_class VS_Render_ExecutiveState {
 	$this-c "init"
     }
 
+    method prefs_accept {win} {
+        destroy $win
+        $this-c "init"
+    }
 
     method edit_plot {} {
 	set w .ui[modname]
@@ -153,6 +165,56 @@ itcl_class VS_Render_ExecutiveState {
 	    pack $w.edit.accept.accept -side left -fill x -padx 10
 	    pack $w.edit.accept -side top -fill x -padx 2 -pady 2
 	}
+    }
+
+    method set_prefs {} {
+        set w .ui[modname]
+        if {[winfo exists $w.prefs]} {
+            SciRaise $w.prefs
+            return
+        } else {
+            toplevel $w.prefs
+            wm title $w.prefs "Preferences"
+            wm withdraw $w.prefs
+            wm resizable $w.prefs 0 0
+                                                                                
+            iwidgets::labeledframe $w.prefs.gen -labeltext "General" \
+                -labelpos nw
+            set gen [$w.prefs.gen childsite]
+                                                                                
+            checkbutton $gen.showname -text "Show Name" -padx 6 \
+                -justify left -relief flat -variable $this-show_name \
+                -onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showname -side top -fill x -pady 2
+                                                                                
+            checkbutton $gen.showvec -text "Show 2nd Diff. Vectors" -padx 6 \
+                -justify left -relief flat -variable $this-show_vectors \
+                -onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showvec -side top -fill x -pady 2
+                                                                                
+            checkbutton $gen.showcross -text "Show Crosshairs" -padx 6 \
+                -justify left -relief flat -variable $this-show_cross \
+                -onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showcross -side top -fill x -pady 2
+                                                                                
+            frame $gen.fs -borderwidth 4
+            pack $gen.fs -side top -fill x -pady 2
+            scale $gen.fs.font -variable $this-font_scale \
+                 -from 0.0 -to 3.0 -label "Font Scale:" \
+                 -showvalue true -resolution 0.1 \
+                 -orient horizontal -command "$this-c init"
+            pack $gen.fs.font -fill x
+                                                                                
+            pack $w.prefs.gen -fill x -expand yes -side top
+
+            frame $w.prefs.donef
+            button $w.prefs.donef.done -text "Done" \
+                -command "$this prefs_accept $w.prefs"
+            pack $w.prefs.donef.done -side top -fill x
+            pack $w.prefs.donef -side top -fill x -expand yes -pady 4 -padx 8
+                                                                                
+            centerWindow $w.prefs $w
+        }
     }
     
     method setColor {col color colMsg} {
@@ -315,6 +377,12 @@ itcl_class VS_Render_ExecutiveState {
 
             frame $w.f.menu -relief raised -borderwidth 2
             pack $w.f.menu -fill x -padx 2 -pady 2
+            menubutton $w.f.menu.edit -text "Edit" -underline 0 \
+                -menu $w.f.menu.edit.menu -state normal
+            menu $w.f.menu.edit.menu -tearoff 0
+            $w.f.menu.edit.menu add command -label "Preferences..." \
+                -command "$this set_prefs"
+            pack $w.f.menu.edit -side left
             menubutton $w.f.menu.mkrs -text "Markers" -underline 0 \
 		-menu $w.f.menu.mkrs.menu -state disabled
             menu $w.f.menu.mkrs.menu -tearoff 0
@@ -434,7 +502,7 @@ itcl_class VS_Render_ExecutiveState {
 	    SciRaise $w
 
 	    wm title $w "Executive State"
-	    wm minsize $w 640 128
+	    #wm minsize $w 640 128
 	    wm geometry $w "640x640"
 	}
     }
