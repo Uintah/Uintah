@@ -21,7 +21,7 @@ using namespace Uintah::ArchesSpace;
 Properties::Properties()
 {
   d_densityLabel = scinew VarLabel("density",
-				   CCVariable<Vector>::getTypeDescription() );
+				   CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -135,6 +135,11 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.11  2000/06/07 06:13:55  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.10  2000/05/31 23:44:52  rawat
 // modified arches and properties
 //

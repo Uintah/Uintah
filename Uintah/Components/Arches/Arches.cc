@@ -46,10 +46,18 @@ Arches::Arches( int MpiRank, int MpiProcesses ) :
 				   CCVariable<double>::getTypeDescription() );
   d_pressureLabel = scinew VarLabel("pressure", 
 				    CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalars", 
-				  CCVariable<Vector>::getTypeDescription() );
-  d_velocityLabel = scinew VarLabel("velocity", 
-				    CCVariable<Vector>::getTypeDescription() );
+  d_xScalarLabel = scinew VarLabel("xScalar", 
+				  CCVariable<double>::getTypeDescription() );
+  d_yScalarLabel = scinew VarLabel("yScalar", 
+				  CCVariable<double>::getTypeDescription() );
+  d_zScalarLabel = scinew VarLabel("zScalar", 
+				  CCVariable<double>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity", 
+				    CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity", 
 				     CCVariable<double>::getTypeDescription() );
 }
@@ -153,11 +161,16 @@ Arches::scheduleInitialize(const LevelP& level,
 			   patch, dw, dw, this,
 			   &Arches::paramInit);
       cerr << "New task created successfully\n";
-      tsk->computes(dw, d_velocityLabel, 0, patch);
-      tsk->computes(dw, d_pressureLabel, 0, patch);
-      tsk->computes(dw, d_scalarLabel, 0, patch);
-      tsk->computes(dw, d_densityLabel, 0, patch);
-      tsk->computes(dw, d_viscosityLabel, 0, patch);
+      int matlIndex = 0;
+      tsk->computes(dw, d_uVelocityLabel, matlIndex, patch);
+      tsk->computes(dw, d_vVelocityLabel, matlIndex, patch);
+      tsk->computes(dw, d_wVelocityLabel, matlIndex, patch);
+      tsk->computes(dw, d_pressureLabel, matlIndex, patch);
+      tsk->computes(dw, d_xScalarLabel, matlIndex, patch);
+      tsk->computes(dw, d_yScalarLabel, matlIndex, patch);
+      tsk->computes(dw, d_zScalarLabel, matlIndex, patch);
+      tsk->computes(dw, d_densityLabel, matlIndex, patch);
+      tsk->computes(dw, d_viscosityLabel, matlIndex, patch);
       sched->addTask(tsk);
       cerr << "New task added successfully to scheduler\n";
     }
@@ -190,9 +203,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
   int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
 					      time, dt);
   if (!error_code) {
-#if 0
     old_dw = new_dw;
-#endif
   }
   else {
     cerr << "Nonlinear Solver didn't converge" << endl;
@@ -239,19 +250,28 @@ Arches::paramInit(const ProcessorContext* ,
 
   cerr << "Arches::paramInit\n";
 
-  CCVariable<Vector> velocity;
+  CCVariable<double> uVelocity;
+  CCVariable<double> vVelocity;
+  CCVariable<double> wVelocity;
   CCVariable<double> pressure;
-  CCVariable<Vector> scalar;
+  CCVariable<double> xScalar;
+  CCVariable<double> yScalar;
+  CCVariable<double> zScalar;
   CCVariable<double> density;
   CCVariable<double> viscosity;
 
   cerr << "Actual initialization - before allocation : old_dw = " 
        << old_dw <<"\n";
-  old_dw->allocate(velocity, d_velocityLabel, 0, patch);
-  old_dw->allocate(pressure, d_pressureLabel, 0, patch);
-  old_dw->allocate(scalar, d_scalarLabel, 0, patch);
-  old_dw->allocate(density, d_densityLabel, 0, patch);
-  old_dw->allocate(viscosity, d_viscosityLabel, 0, patch);
+  int matlIndex = 0;
+  old_dw->allocate(uVelocity, d_uVelocityLabel, matlIndex, patch);
+  old_dw->allocate(vVelocity, d_vVelocityLabel, matlIndex, patch);
+  old_dw->allocate(wVelocity, d_wVelocityLabel, matlIndex, patch);
+  old_dw->allocate(pressure, d_pressureLabel, matlIndex, patch);
+  old_dw->allocate(xScalar, d_xScalarLabel, matlIndex, patch);
+  old_dw->allocate(yScalar, d_yScalarLabel, matlIndex, patch);
+  old_dw->allocate(zScalar, d_zScalarLabel, matlIndex, patch);
+  old_dw->allocate(density, d_densityLabel, matlIndex, patch);
+  old_dw->allocate(viscosity, d_viscosityLabel, matlIndex, patch);
   cerr << "Actual initialization - after allocation\n";
 
   IntVector lowIndex = patch->getCellLowIndex();
@@ -263,11 +283,15 @@ Arches::paramInit(const ProcessorContext* ,
 #endif
   cerr << "Actual initialization - before put : old_dw = " 
        << old_dw <<"\n";
-  old_dw->put(velocity, d_velocityLabel, 0, patch);
-  old_dw->put(pressure, d_pressureLabel, 0, patch);
-  old_dw->put(scalar, d_scalarLabel, 0, patch);
-  old_dw->put(density, d_densityLabel, 0, patch);
-  old_dw->put(viscosity, d_viscosityLabel, 0, patch);
+  old_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
+  old_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
+  old_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
+  old_dw->put(pressure, d_pressureLabel, matlIndex, patch);
+  old_dw->put(xScalar, d_xScalarLabel, matlIndex, patch);
+  old_dw->put(yScalar, d_yScalarLabel, matlIndex, patch);
+  old_dw->put(zScalar, d_zScalarLabel, matlIndex, patch);
+  old_dw->put(density, d_densityLabel, matlIndex, patch);
+  old_dw->put(viscosity, d_viscosityLabel, matlIndex, patch);
   cerr << "Actual initialization - after put \n";
 }
   
@@ -295,6 +319,11 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.34  2000/06/07 06:13:53  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.33  2000/06/04 23:57:46  bbanerje
 // Updated Arches to do ScheduleTimeAdvance.
 //

@@ -36,8 +36,12 @@ Source::Source()
   d_presNonlinearSrcLabel = scinew VarLabel("pressureNonlinearSrc",
 				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** velocity is a FCVariable
-  d_velocityLabel = scinew VarLabel("velocity",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity",
+				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** velLinearSrc is a FCVariable
   d_velLinearSrcLabel = scinew VarLabel("velLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
@@ -45,29 +49,53 @@ Source::Source()
   d_velNonlinearSrcLabel = scinew VarLabel("velNonlinearSrc",
 				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** uVelCoeffLabel is a FCVariable
-  d_uVelCoeffLabel = scinew VarLabel("uVelocityCoeff",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_xuVelCoeffLabel = scinew VarLabel("xuVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_yuVelCoeffLabel = scinew VarLabel("yuVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_zuVelCoeffLabel = scinew VarLabel("zuVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** uNonlinearSrc is a FCVariable
   d_uNonlinearSrcLabel = scinew VarLabel("uNonlinearSrc",
 				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** vVelCoeffLabel is a FCVariable
-  d_vVelCoeffLabel = scinew VarLabel("vVelocityCoeff",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_xvVelCoeffLabel = scinew VarLabel("xvVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_yvVelCoeffLabel = scinew VarLabel("yvVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_zvVelCoeffLabel = scinew VarLabel("zvVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** vNonlinearSrc is a FCVariable
   d_vNonlinearSrcLabel = scinew VarLabel("vNonlinearSrc",
 				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** wVelCoeffLabel is a FCVariable
-  d_wVelCoeffLabel = scinew VarLabel("wVelocityCoeff",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_xwVelCoeffLabel = scinew VarLabel("xwVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_ywVelCoeffLabel = scinew VarLabel("ywVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
+  d_zwVelCoeffLabel = scinew VarLabel("zwVelocityCoeff",
+				    CCVariable<double>::getTypeDescription() );
   // ** WARNING ** wNonlinearSrc is a FCVariable
   d_wNonlinearSrcLabel = scinew VarLabel("wNonlinearSrc",
 				    CCVariable<double>::getTypeDescription() );
-  d_scalarLabel = scinew VarLabel("scalar",
-				    CCVariable<Vector>::getTypeDescription() );
-  d_scalarLinearSrcLabel = scinew VarLabel("scalarLinearSrc",
-				    CCVariable<Vector>::getTypeDescription() );
-  d_scalarNonlinearSrcLabel = scinew VarLabel("scalarNonlinearSrc",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_xScalarLabel = scinew VarLabel("xScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_yScalarLabel = scinew VarLabel("yScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_zScalarLabel = scinew VarLabel("zScalar",
+				    CCVariable<double>::getTypeDescription() );
+  d_xScalarLinearSrcLabel = scinew VarLabel("xScalarLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  d_yScalarLinearSrcLabel = scinew VarLabel("yScalarLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  d_zScalarLinearSrcLabel = scinew VarLabel("zScalarLinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  d_xScalarNonlinearSrcLabel = scinew VarLabel("xScalarNonlinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  d_yScalarNonlinearSrcLabel = scinew VarLabel("yScalarNonlinearSrc",
+				    CCVariable<double>::getTypeDescription() );
+  d_zScalarNonlinearSrcLabel = scinew VarLabel("zScalarNonlinearSrc",
+				    CCVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -101,8 +129,14 @@ Source::calculateVelocitySource(const ProcessorContext* pc,
   int matlIndex = 0;
 
   // ** WARNING ** velocity is a FCVariable
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
@@ -192,8 +226,8 @@ Source::calculatePressureSource(const ProcessorContext*,
 	      numGhostCells);
   //old_dw->get(pressure, "pressure", patch, 1);
 
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> velocity;
   //old_dw->get(velocity, "velocity", patch, 1);
@@ -204,8 +238,14 @@ Source::calculatePressureSource(const ProcessorContext*,
   //old_dw->get(density, "density", patch, 1);
 
   int index = 1;
-  CCVariable<Vector> uVelCoeff;
-  new_dw->get(uVelCoeff, d_uVelCoeffLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> xuVelCoeff;
+  new_dw->get(xuVelCoeff, d_xuVelCoeffLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> yuVelCoeff;
+  new_dw->get(yuVelCoeff, d_yuVelCoeffLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> zuVelCoeff;
+  new_dw->get(zuVelCoeff, d_zuVelCoeffLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> uVelCoeff;
   //new_dw->get(uVelCoeff,"uVelocityCoeff",patch, index, 0);
@@ -218,8 +258,14 @@ Source::calculatePressureSource(const ProcessorContext*,
 
   ++index;
 
-  CCVariable<Vector> vVelCoeff;
-  new_dw->get(vVelCoeff, d_vVelCoeffLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> xvVelCoeff;
+  new_dw->get(xvVelCoeff, d_xvVelCoeffLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> yvVelCoeff;
+  new_dw->get(yvVelCoeff, d_yvVelCoeffLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> zvVelCoeff;
+  new_dw->get(zvVelCoeff, d_zvVelCoeffLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> vVelCoeff;
   //new_dw->get(vVelCoeff,"vVelocityCoeff",patch,index,  0);
@@ -232,8 +278,14 @@ Source::calculatePressureSource(const ProcessorContext*,
 
   ++index;
 
-  CCVariable<Vector> wVelCoeff;
-  new_dw->get(wVelCoeff, d_wVelCoeffLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> xwVelCoeff;
+  new_dw->get(xwVelCoeff, d_xwVelCoeffLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> ywVelCoeff;
+  new_dw->get(ywVelCoeff, d_ywVelCoeffLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> zwVelCoeff;
+  new_dw->get(zwVelCoeff, d_zwVelCoeffLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> wVelCoeff;
   //new_dw->get(wVelCoeff,"wVelocityCoeff",patch, index, 0);
@@ -301,14 +353,26 @@ Source::calculateScalarSource(const ProcessorContext*,
   int numGhostCells = 0;
   int matlIndex = 0;
 
-  CCVariable<Vector> velocity;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //FCVariable<Vector> velocity;
   //old_dw->get(velocity, "velocity", patch, 1);
 
-  CCVariable<Vector> scalar;
-  old_dw->get(scalar, d_scalarLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> xScalar;
+  old_dw->get(xScalar, d_xScalarLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> yScalar;
+  old_dw->get(yScalar, d_yScalarLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  CCVariable<double> zScalar;
+  old_dw->get(zScalar, d_zScalarLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   //old_dw->get(scalar, "scalar", patch, 1);
 
@@ -340,13 +404,30 @@ Source::calculateScalarSource(const ProcessorContext*,
 
   //SP term in Arches
   CCVariable<double> scalarLinearSrc;
-  new_dw->allocate(scalarLinearSrc, d_scalarLinearSrcLabel, matlIndex, patch);
+  if (index == 1) 
+    new_dw->allocate(scalarLinearSrc, d_xScalarLinearSrcLabel, matlIndex, patch);
+  else if (index == 2) 
+    new_dw->allocate(scalarLinearSrc, d_yScalarLinearSrcLabel, matlIndex, patch);
+  else if (index == 3) 
+    new_dw->allocate(scalarLinearSrc, d_zScalarLinearSrcLabel, matlIndex, patch);
+  else 
+    new_dw->allocate(scalarLinearSrc, d_xScalarLinearSrcLabel, matlIndex, patch);
   //new_dw->allocate(scalarLinearSrc, "ScalarLinearSrc", patch, index, 0);
 
   // SU in Arches
   CCVariable<double> scalarNonlinearSrc;
-  new_dw->allocate(scalarNonlinearSrc, d_scalarNonlinearSrcLabel, 
-		   matlIndex, patch);
+  if (index == 1) 
+    new_dw->allocate(scalarNonlinearSrc, d_xScalarNonlinearSrcLabel, 
+		     matlIndex, patch);
+  else if (index == 2) 
+    new_dw->allocate(scalarNonlinearSrc, d_yScalarNonlinearSrcLabel, 
+		     matlIndex, patch);
+  else if (index == 3) 
+    new_dw->allocate(scalarNonlinearSrc, d_zScalarNonlinearSrcLabel, 
+		     matlIndex, patch);
+  else 
+    new_dw->allocate(scalarNonlinearSrc, d_xScalarNonlinearSrcLabel, 
+		     matlIndex, patch);
   //new_dw->allocate(scalarNonlinearSrc, "ScalarNonlinearSource", patch, index, 0);
 
 #ifdef WONT_COMPILE_YET
@@ -368,9 +449,23 @@ Source::calculateScalarSource(const ProcessorContext*,
 		    cellinfo->tfac, cellinfo->bfac, volume);
 #endif
 
-  new_dw->put(scalarLinearSrc, d_scalarLinearSrcLabel, matlIndex, patch);
+  if (index == 1) 
+    new_dw->put(scalarLinearSrc, d_xScalarLinearSrcLabel, matlIndex, patch);
+  else if (index == 2) 
+    new_dw->put(scalarLinearSrc, d_yScalarLinearSrcLabel, matlIndex, patch);
+  else if (index == 3) 
+    new_dw->put(scalarLinearSrc, d_zScalarLinearSrcLabel, matlIndex, patch);
+  else 
+    new_dw->put(scalarLinearSrc, d_xScalarLinearSrcLabel, matlIndex, patch);
   //new_dw->put(scalarLinearSrc, "scalarLinearSource", patch, index, 0);
-  new_dw->put(scalarNonlinearSrc, d_scalarNonlinearSrcLabel, matlIndex, patch);
+  if (index == 1) 
+    new_dw->put(scalarNonlinearSrc, d_xScalarNonlinearSrcLabel, matlIndex, patch);
+  else if (index == 2) 
+    new_dw->put(scalarNonlinearSrc, d_yScalarNonlinearSrcLabel, matlIndex, patch);
+  else if (index == 3) 
+    new_dw->put(scalarNonlinearSrc, d_zScalarNonlinearSrcLabel, matlIndex, patch);
+  else 
+    new_dw->put(scalarNonlinearSrc, d_xScalarNonlinearSrcLabel, matlIndex, patch);
   //new_dw->put(scalarNonlinearSrc, "scalarNonlinearSource", patch, index, 0);
 
 }

@@ -221,8 +221,12 @@ private:
 
       // const VarLabel *
       const VarLabel* d_pressureLabel;
-      const VarLabel* d_presCoefLabel;
-      const VarLabel* d_presNonLinSrcLabel;
+      const VarLabel* d_xPresCoefLabel;
+      const VarLabel* d_yPresCoefLabel;
+      const VarLabel* d_zPresCoefLabel;
+      const VarLabel* d_xPresNonLinSrcLabel;
+      const VarLabel* d_yPresNonLinSrcLabel;
+      const VarLabel* d_zPresNonLinSrcLabel;
       const VarLabel* d_presResidualLabel;
 
 }; // End class RBGSSolver.h
@@ -234,6 +238,11 @@ private:
   
 //
 // $Log$
+// Revision 1.7  2000/06/07 06:13:56  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.6  2000/06/04 22:40:15  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

@@ -146,15 +146,25 @@ private:
       PhysicalConstants* d_physicalConsts;
 
       // const VarLabel* (required)
-      const VarLabel* d_scalarLabel;
-      const VarLabel* d_velocityLabel;
+      const VarLabel* d_xScalarLabel;
+      const VarLabel* d_yScalarLabel;
+      const VarLabel* d_zScalarLabel;
+      const VarLabel* d_uVelocityLabel;
+      const VarLabel* d_vVelocityLabel;
+      const VarLabel* d_wVelocityLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
 
       // const VarLabel* (computed)
-      const VarLabel* d_scalarCoefLabel;
-      const VarLabel* d_scalarLinSrcLabel;
-      const VarLabel* d_scalarNonLinSrcLabel;
+      const VarLabel* d_xScalarCoefLabel;
+      const VarLabel* d_yScalarCoefLabel;
+      const VarLabel* d_zScalarCoefLabel;
+      const VarLabel* d_xScalarLinSrcLabel;
+      const VarLabel* d_yScalarLinSrcLabel;
+      const VarLabel* d_zScalarLinSrcLabel;
+      const VarLabel* d_xScalarNonLinSrcLabel;
+      const VarLabel* d_yScalarNonLinSrcLabel;
+      const VarLabel* d_zScalarNonLinSrcLabel;
 
       // DataWarehouse generation
       int d_generation;
@@ -168,6 +178,11 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/06/07 06:13:56  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.5  2000/06/04 22:40:15  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

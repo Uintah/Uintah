@@ -157,8 +157,12 @@ private:
       StencilMatrix* d_scalar_stencil_matrix;
 
       // const VarLabel*
-      const VarLabel* d_velocityLabel;
-      const VarLabel* d_scalarLabel;
+      const VarLabel* d_uVelocityLabel;
+      const VarLabel* d_vVelocityLabel;
+      const VarLabel* d_wVelocityLabel;
+      const VarLabel* d_xScalarLabel;
+      const VarLabel* d_yScalarLabel;
+      const VarLabel* d_zScalarLabel;
       const VarLabel* d_pressureLabel;
       const VarLabel* d_densityLabel;
       const VarLabel* d_viscosityLabel;
@@ -171,6 +175,11 @@ private:
   
 //
 // $Log$
+// Revision 1.13  2000/06/07 06:13:54  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.12  2000/06/04 22:40:13  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.

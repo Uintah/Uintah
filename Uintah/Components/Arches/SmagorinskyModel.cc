@@ -41,8 +41,12 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
                                                  d_physicalConsts(phyConsts)
 {
   // BB : (tmp) velocity is set as CCVariable (should be FCVariable)
-  d_velocityLabel = scinew VarLabel("velocity",
-				    CCVariable<Vector>::getTypeDescription() );
+  d_uVelocityLabel = scinew VarLabel("uVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocityLabel = scinew VarLabel("vVelocity",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocityLabel = scinew VarLabel("wVelocity",
+				    CCVariable<double>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
@@ -87,7 +91,11 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
 
       int numGhostCells = 1;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_velocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       numGhostCells = 0;
       tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
@@ -113,10 +121,16 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 
   // Get the velocity, density and viscosity from the old data warehouse
   // (tmp) velocity should be FCVariable
-  CCVariable<Vector> velocity;
   int matlIndex = 0;
   int nofGhostCells = 1;
-  old_dw->get(velocity, d_velocityLabel, matlIndex, patch, Ghost::None,
+  CCVariable<double> uVelocity;
+  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  CCVariable<double> vVelocity;
+  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  CCVariable<double> wVelocity;
+  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   CCVariable<double> density;
@@ -271,6 +285,11 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.10  2000/06/07 06:13:56  bbanerje
+// Changed CCVariable<Vector> to CCVariable<double> for most cases.
+// Some of these variables may not be 3D Vectors .. they may be Stencils
+// or more than 3D arrays. Need help here.
+//
 // Revision 1.9  2000/06/04 22:40:15  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.
