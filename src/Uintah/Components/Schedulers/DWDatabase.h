@@ -218,12 +218,12 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
       if (patch == NULL) {
          // add to globals
          globalDBtype::const_iterator globaliter = globals.find(label);
-         if (globaliter != globals.end() || replace) {
+         if ((globaliter == globals.end()) || replace) {
 	    globals[label] = var;
 	    return;
 	 }
          else
-	    throw InternalError("Put replacing old variable");
+	    throw InternalError("Put replacing old global variable");
       }
       else
          throw InternalError("matlIndex must be >= 0");
@@ -366,6 +366,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.19  2000/12/07 01:22:59  witzel
+// Fixed some logic in the put method (for global variables).
+//
 // Revision 1.18  2000/12/06 23:48:52  witzel
 // Added "globals" data member for variables used for all materials
 // (specified by matlIndex = -1 and patch = NULL)
