@@ -29,8 +29,8 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
 #define Colormap XColormap
-#include "../../../dmw/itcltk-8.0.4/include/tcl.h"
-#include "../../../dmw/itcltk-8.0.4/include/tk.h"
+#include <tcl.h>
+#include <tk.h>
 #undef Colormap
 
 namespace DaveW {
@@ -216,6 +216,9 @@ void RayTest::execute()
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.5  1999/09/22 19:00:34  dmw
+// using Makefile variable to specify itcl includes
+//
 // Revision 1.4  1999/09/22 18:43:24  dmw
 // added new GUI
 //
