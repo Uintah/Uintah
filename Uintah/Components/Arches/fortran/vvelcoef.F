@@ -13,8 +13,8 @@ c*********************************************************************
      &     domLo, domHi, DEN, VIS, 
      &     DELTAT,
      &     CEE, CWE, CWW, CNNV, CSNV, CSSV,
-     &     CTT, CBT, CBB, SEW, SNSV, STB,
-     &     DXEP, DXPW, DYNPV, DYPSV, DZTP, DZPB, 
+     &     CTT, CBT, CBB, SEW, SNSV, SNS, STB,
+     &     DXEP, DXPW, DYNPV, DYPSV, DYPS, DZTP, DZPB, 
      &     FAC1V, FAC2V, FAC3V, FAC4V, 
      &     JNSDV, JSSDV,
      &     EFAC, WFAC, TFAC, BFAC,
@@ -84,11 +84,13 @@ c*********************************************************************
       double precision CBT(domLo(3):domHi(3))
       double precision CBB(domLo(3):domHi(3))
       double precision SEW(domLo(1):domHi(1))
+      double precision SNS(domLo(2):domHi(2))
       double precision SNSV(domLo(2):domHi(2))
       double precision STB(domLo(3):domHi(3))
       double precision DXEP(domLo(1):domHi(1))
       double precision DXPW(domLo(1):domHi(1))
       double precision DYNPV(domLo(2):domHi(2))
+      double precision DYPS(domLo(2):domHi(2))
       double precision DYPSV(domLo(2):domHi(2))
       double precision DZTP(domLo(3):domHi(3))
       double precision DZPB(domLo(3):domHi(3))
@@ -174,7 +176,8 @@ C-----------------------------------------------------------------------
 c******************
 c ** WARNING ** RAWAT : What does J==2 mean in the patch context ?
 c******************
-               IF (J.EQ.2) GS = DEN(I,J-1,K)*VV(I,J-1,K)
+c done for periodic...comment out for the time being
+c               IF (J.EQ.2) GS = DEN(I,J-1,K)*VV(I,J-1,K)
                GT = 0.5*(DEN(I,J,K+1)+DEN(I,J,K))*WW(I,J,K+1)
                GST = 0.5*(DEN(I,J-1,K+1)+DEN(I,J-1,K))*WW(I,J-1,K+1)
                GB = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))*WW(I,J,K)
@@ -206,13 +209,8 @@ C-----------------------------------------------------------------------
                GUP = EFAC(I)*(0.5*GE+0.5*GSE)+WFAC(I)*(0.5*GW+0.5*GSW)
                CPE = GUP*VOL/DXEP(I)
                CPW = GUP*VOL/DXPW(I)
-c ******
-c ** WARNING ** Rawat, should this be SNS or SNSV ?
-c ******
-c              CPN = GP*VOL/SNS(J)
-c              CPS = GP*VOL/SNS(J-1)
-               CPN = GP*VOL/SNSV(J)
-               CPS = GP*VOL/SNSV(J-1)
+               CPN = GP*VOL/SNS(J)
+               CPS = GP*VOL/SNS(J-1)
                GWP = TFAC(K)*(0.5*GT+0.5*GST)+BFAC(K)*(0.5*GB+0.5*GSB)
 c              CPT = GWP*VOL/(RCVA*DZTP(K))
 c              CPB = GWP*VOL/(RCVA*DZPB(K))
@@ -281,11 +279,7 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-c ******
-c ** WARNING ** Rawat, should this be DYPS or DYPSV ?
-c ******
-c              DV(I,J,K) = VOL/DYPS(J)
-               DV(I,J,K) = VOL/DYPSV(J)
+               DV(I,J,K) = VOL/DYPS(J)
 C----------------------------------------------------------------------
 C      PROVISIONS FOR SIMPLEST
 C----------------------------------------------------------------------
@@ -344,6 +338,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/14 03:45:48  rawat
+c completed velocity bc and fixed some bugs
+c
 c Revision 1.1  2000/07/08 23:08:56  bbanerje
 c Added vvelcoef and wvelcoef ..
 c Rawat check the ** WARNING ** tags in these files for possible problems.

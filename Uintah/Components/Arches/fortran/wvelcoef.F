@@ -13,8 +13,8 @@ c*********************************************************************
      &     domLo, domHi, DEN, VIS, 
      &     DELTAT,
      &     CEE, CWE, CWW, CNN, CSN, CSS, CTTW, CBTW, CBBW, 
-     &     SEW, SNS, STBW,
-     &     DXEP, DXPW, DYNP, DYPS, DZTPW, DZPBW, 
+     &     SEW, SNS, STBW, STB,
+     &     DXEP, DXPW, DYNP, DYPS, DZTPW, DZPBW, DZPB,
      &     FAC1W, FAC2W, FAC3W, FAC4W, 
      &     KTSDW, KBSDW,
      &     EFAC, WFAC, ENFAC, SFAC,
@@ -86,12 +86,14 @@ c*********************************************************************
       double precision SEW(domLo(1):domHi(1))
       double precision SNS(domLo(2):domHi(2))
       double precision STBW(domLo(3):domHi(3))
+      double precision STB(domLo(3):domHi(3))
       double precision DXEP(domLo(1):domHi(1))
       double precision DXPW(domLo(1):domHi(1))
       double precision DYNP(domLo(2):domHi(2))
       double precision DYPS(domLo(2):domHi(2))
       double precision DZTPW(domLo(3):domHi(3))
       double precision DZPBW(domLo(3):domHi(3))
+      double precision DZPB(domLo(3):domHi(3))
       double precision FAC1W(domLo(3):domHi(3))
       double precision FAC2W(domLo(3):domHi(3))
       double precision FAC3W(domLo(3):domHi(3))
@@ -177,7 +179,8 @@ C-----------------------------------------------------------------------
 c ****
 c ** WARNING ** Rawat, what does k == 2 mean in this context ?
 c ****
-               IF (K.EQ.2) GB = DEN(I,J,K-1)*WW(I,J,K-1)
+c used for perodic bc               
+c               IF (K.EQ.2) GB = DEN(I,J,K-1)*WW(I,J,K-1)
                CEO = (0.5*GE+0.5*GEB)*AREAEW
                CWO = (0.5*GW+0.5*GWB)*AREAEW
                CNO = (0.5*GN+0.5*GNB)*AREAN
@@ -210,13 +213,8 @@ C-----------------------------------------------------------------------
                CPS = GVP*VOL/DYPS(J)
 c              CPT = GPB*VOL/(RA(J)*STB(K))
 c              CPB = GPB*VOL/(RA(J)*STB(K-1))
-c *******
-c ** WARNING ** Rawat, should this be STB or STBW ?
-c *******
-c              CPT = GPB*VOL/STB(K)
-c              CPB = GPB*VOL/STB(K-1)
-               CPT = GPB*VOL/STBW(K)
-               CPB = GPB*VOL/STBW(K-1)
+               CPT = GPB*VOL/STB(K)
+               CPB = GPB*VOL/STB(K-1)
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
@@ -284,11 +282,7 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-c *******
-c ** WARNING ** Rawat, should this be DZPB or DZPBW ?
-c *******
-c              DDW(I,J,K) = VOL/(RA(J)*DZPB(K))
-               DDW(I,J,K) = VOL/DZPBW(K)
+               DDW(I,J,K) = VOL/DZPB(K)
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
 C----------------------------------------------------------------------
@@ -347,6 +341,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/07/14 03:45:49  rawat
+c completed velocity bc and fixed some bugs
+c
 c Revision 1.2  2000/07/08 23:42:17  bbanerje
 c Changed AMAX1(A,B) to MAX(A,B)
 c

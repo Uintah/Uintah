@@ -18,7 +18,7 @@ C---------------------------------------------------------------------
 
       implicit none
 
-c #include "param4.h"
+#include "param4.h"
 
 c*********************************************************************
 c     Arguments :
@@ -55,6 +55,8 @@ c*********************************************************************
       double precision Z(domLo(3):domHi(3))
       double precision ZW(domLo(3):domHi(3))
       double precision viscos
+      double precision const
+      
       integer WALL
       integer FFIELD
       integer ierr
@@ -71,12 +73,31 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      ISTU = idxLoU(1)
-      JSTU = idxLoU(2)
-      KSTU = idxLoU(3)
-      IENDU = idxHiU(1)
-      JENDU = idxHiU(2)
-      KENDU = idxHiU(3)
+      ISTU = idxLoU(1)+1
+      JSTU = idxLoU(2)+1
+      KSTU = idxLoU(3)+1
+      IENDU = idxHiU(1)-1
+      JENDU = idxHiU(2)-1
+      KENDU = idxHiU(3)-1
+      
+c------------------------------------------------------------------ 
+c     interior intrusions
+c------------------------------------------------------------------ 
+      const = ONE
+      do 820 k=kstu, kendu
+         do 810 j=jstu, jendu
+            do 800 i=istu, iendu
+
+               if (pcell(i-1,j,k).eq.wall.or.
+     $              pcell(i,j,k).eq.wall)
+     $              call fixval(zero,ae(i,j,k),aw(i,j,k),an(i,j,k),
+     $                          as(i,j,k),at(i,j,k),ab(i,j,k),
+     $              su(i,j,k),sp(i,j,k),const)
+
+ 800        continue
+ 810     continue
+ 820  continue
+
 
 c*********************************************************************
 c     Go thru all the cells
@@ -241,6 +262,9 @@ c                  SU(I+1,J,K+1) = SUL(I+1,J,K+1)
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/14 03:45:48  rawat
+c completed velocity bc and fixed some bugs
+c
 c Revision 1.1  2000/07/12 23:59:23  rawat
 c added wall bc for u-velocity
 c

@@ -13,8 +13,8 @@ c*********************************************************************
      &     domLo, domHi, DEN, VIS, 
      &     DELTAT,
      &     CEEU, CWEU, CWWU, CNN, CSN, CSS,
-     &     CTT, CBT, CBB, SEWU, SNS, STB,
-     &     DXEPU, DXPWU, DYNP, DYPS, DZTP, DZPB, 
+     &     CTT, CBT, CBB, SEWU, SEW, SNS, STB,
+     &     DXEPU, DXPWU, DXPW, DYNP, DYPS, DZTP, DZPB, 
      &     FAC1U, FAC2U, FAC3U, FAC4U, 
      &     IESDU, IWSDU,
      &     ENFAC, SFAC, TFAC, BFAC,
@@ -84,10 +84,12 @@ c*********************************************************************
       double precision CBT(domLo(3):domHi(3))
       double precision CBB(domLo(3):domHi(3))
       double precision SEWU(domLo(1):domHi(1))
+      double precision SEW(domLo(1):domHi(1))
       double precision SNS(domLo(2):domHi(2))
       double precision STB(domLo(3):domHi(3))
       double precision DXEPU(domLo(1):domHi(1))
       double precision DXPWU(domLo(1):domHi(1))
+      double precision DXPW(domLo(1):domHi(1))
       double precision DYNP(domLo(2):domHi(2))
       double precision DYPS(domLo(2):domHi(2))
       double precision DZTP(domLo(3):domHi(3))
@@ -198,8 +200,8 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-               CPE = GP*VOL/SEWU(I)
-               CPW = GP*VOL/SEWU(I-1)
+               CPE = GP*VOL/SEW(I)
+               CPW = GP*VOL/SEW(I-1)
                GVP = ENFAC(J)*(0.5*GN+0.5*GNW)+SFAC(J)*(0.5*GS+0.5*GSW)
                CPN = GVP*VOL/DYNP(J)
                CPS = GVP*VOL/DYPS(J)
@@ -259,7 +261,7 @@ C-----------------------------------------------------------------------
                ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
                ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
                ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
-               DU(I,J,K) = VOL/DXPWU(I)
+               DU(I,J,K) = VOL/DXPW(I)
 c              TSUM = TSUM + TEW+TNS+TTB
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS UPWIND DIFFERENCING SCHEMES
@@ -319,6 +321,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/07/14 03:45:48  rawat
+c completed velocity bc and fixed some bugs
+c
 c Revision 1.3  2000/07/08 23:08:56  bbanerje
 c Added vvelcoef and wvelcoef ..
 c Rawat check the ** WARNING ** tags in these files for possible problems.

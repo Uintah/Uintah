@@ -1014,12 +1014,12 @@ BoundaryCondition::velocityBC(const ProcessorGroup* pc,
 		&molViscosity, cellinfo, eqnType);
     break;
   case 2:
-    vVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
-		&density, &molViscosity, cellinfo, eqnType);
+    vVelocityBC(new_dw, patch, &cellType, &vVelocity,
+		&molViscosity, cellinfo, eqnType);
     break;
   case 3:
-    wVelocityBC(new_dw, patch, &cellType, &uVelocity, &vVelocity, &wVelocity, 
-		&density, &molViscosity, cellinfo, eqnType);
+    wVelocityBC(new_dw, patch, &cellType, &wVelocity, 
+		&molViscosity, cellinfo, eqnType);
     break;
   default:
     cerr << "Invalid Index value" << endl;
@@ -1143,32 +1143,24 @@ void
 BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 			       const Patch* patch,
 			       CCVariable<int>* cellType,
-			       SFCXVariable<double>* uVelocity, 
 			       SFCYVariable<double>* vVelocity, 
-			       SFCZVariable<double>* wVelocity, 
-			       CCVariable<double>* density,
 			       const double* VISCOS,
-			       CellInformation*,
+			       CellInformation* cellinfo,
 			       int eqnType)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  StencilMatrix<SFCYVariable<double> > velocityCoeff;
+  StencilMatrix<SFCYVariable<double> > vvelocityCoeff;
   SFCYVariable<double> linearSrc; // SP term in Arches 
   SFCYVariable<double> nonlinearSrc; // SU term in Arches 
 
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getSFCYFORTLowIndex();
-  IntVector idxHi = patch->getSFCYFORTHighIndex();
-  IntVector domLo = linearSrc.getFortLowIndex();
-  IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
   case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, 
+      new_dw->get(vvelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
     }
     new_dw->get(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
@@ -1178,7 +1170,7 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
     break;
   case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, 
+      new_dw->get(vvelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
     }
     new_dw->get(linearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
@@ -1189,41 +1181,51 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
   default:
     break;
   }
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+  int flow_celltypeval = d_flowfieldCellTypeVal;
+  // Get the low and high index for the patch and the variables
+  IntVector domLoV = linearSrc.getFortLowIndex();
+  IntVector domHiV = linearSrc.getFortHighIndex();
+  IntVector domLo = cellType->getFortLowIndex();
+  IntVector domHi = cellType->getFortHighIndex();
+  // for a single patch should be equal to 1 and nx
+  IntVector idxLoV = cellType->getFortLowIndex();
+  IntVector idxHiV = cellType->getFortHighIndex();
+  // computes momentum source term due to wall
 
-#ifdef WONT_COMPILE_YET
-  int ioff = 1;
-  int joff = 0;
-  int koff = 0;
-  // 3-d array for volume - fortran uses it for temporary storage
-  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+
   // computes remianing diffusion term and also computes source due to gravity
-  FORT_BCVVEL(domLo.get_pointer(), domHi.get_pointer(), 
-	      idxLo.get_pointer(), idxHi.get_pointer(),
-	      velocityCoeff, linearSrc, nonlinearSrc, velocity,  
-	      density, VISCOS, ioff, joff, koff, 
-	      cellType,
-	      cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-	      cellinfo->cnn, cellinfo->csn, cellinfo->css,
-	      cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-	      cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-	      cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-	      cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-	      cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-	      cellinfo->tfac, cellinfo->bfac, volume);
-#endif
+  FORT_BCVVEL(domLoV.get_pointer(), domHiV.get_pointer(), 
+	      idxLoV.get_pointer(), idxHiV.get_pointer(),
+	      vVelocity->getPointer(),   
+	      vvelocityCoeff[Arches::AP].getPointer(), 
+	      vvelocityCoeff[Arches::AE].getPointer(), 
+	      vvelocityCoeff[Arches::AW].getPointer(), 
+	      vvelocityCoeff[Arches::AN].getPointer(), 
+	      vvelocityCoeff[Arches::AS].getPointer(), 
+	      vvelocityCoeff[Arches::AT].getPointer(), 
+	      vvelocityCoeff[Arches::AB].getPointer(), 
+	      nonlinearSrc.getPointer(), linearSrc.getPointer(),
+	      domLo.get_pointer(), domHi.get_pointer(),
+	      cellType->getPointer(),
+	      &wall_celltypeval, &flow_celltypeval, VISCOS, 
+	      cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(), 
+	      cellinfo->stb.get_objs(),
+	      cellinfo->xx.get_objs(), cellinfo->xu.get_objs(), 
+	      cellinfo->zz.get_objs(),
+	      cellinfo->zw.get_objs());
 
   switch(eqnType) {
   case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
+      new_dw->put(vvelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
     break;
   case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
+      new_dw->put(vvelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
@@ -1240,32 +1242,23 @@ void
 BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 			       const Patch* patch,
 			       CCVariable<int>* cellType,
-			       SFCXVariable<double>* uVelocity, 
-			       SFCYVariable<double>* vVelocity, 
 			       SFCZVariable<double>* wVelocity, 
-			       CCVariable<double>* density,
 			       const double* VISCOS,
-			       CellInformation*,
+			       CellInformation* cellinfo,
 			       int eqnType)
 {
   int matlIndex = 0;
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  StencilMatrix<SFCZVariable<double> > velocityCoeff;
+  StencilMatrix<SFCZVariable<double> > wvelocityCoeff;
   SFCZVariable<double> linearSrc; // SP term in Arches 
   SFCZVariable<double> nonlinearSrc; // SU term in Arches 
-
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getSFCZFORTLowIndex();
-  IntVector idxHi = patch->getSFCZFORTHighIndex();
-  IntVector domLo = linearSrc.getFortLowIndex();
-  IntVector domHi = linearSrc.getFortHighIndex();
 
   switch(eqnType) {
   case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, 
+      new_dw->get(wvelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
     }
     new_dw->get(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
@@ -1275,7 +1268,7 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
     break;
   case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, 
+      new_dw->get(wvelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch, 
 		  Ghost::None, numGhostCells);
     }
     new_dw->get(linearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
@@ -1286,41 +1279,48 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
   default:
     break;
   }
-
-#ifdef WONT_COMPILE_YET
-  int ioff = 1;
-  int joff = 0;
-  int koff = 0;
-  // 3-d array for volume - fortran uses it for temporary storage
-  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  // computes remianing diffusion term and also computes source due to gravity
-  FORT_BCWVEL(domLo.get_pointer(), domHi.get_pointer(), 
-	      idxLo.get_pointer(), idxHi.get_pointer(),
-	      velocityCoeff, linearSrc, nonlinearSrc, velocity,  
-	      density, VISCOS, ioff, joff, koff, 
-	      cellType,
-	      cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-	      cellinfo->cnn, cellinfo->csn, cellinfo->css,
-	      cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-	      cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-	      cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-	      cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-	      cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-	      cellinfo->tfac, cellinfo->bfac, volume);
-#endif
+  int wall_celltypeval = d_wallBdry->d_cellTypeID;
+  int flow_celltypeval = d_flowfieldCellTypeVal;
+  // Get the low and high index for the patch and the variables
+  IntVector domLoW = linearSrc.getFortLowIndex();
+  IntVector domHiW = linearSrc.getFortHighIndex();
+  IntVector domLo = cellType->getFortLowIndex();
+  IntVector domHi = cellType->getFortHighIndex();
+  // for a single patch should be equal to 1 and nx
+  IntVector idxLoW = cellType->getFortLowIndex();
+  IntVector idxHiW = cellType->getFortHighIndex();
+  // computes momentum source term due to wall
+  FORT_BCWVEL(domLoW.get_pointer(), domHiW.get_pointer(), 
+	      idxLoW.get_pointer(), idxHiW.get_pointer(),
+	      wVelocity->getPointer(),   
+	      wvelocityCoeff[Arches::AP].getPointer(), 
+	      wvelocityCoeff[Arches::AE].getPointer(), 
+	      wvelocityCoeff[Arches::AW].getPointer(), 
+	      wvelocityCoeff[Arches::AN].getPointer(), 
+	      wvelocityCoeff[Arches::AS].getPointer(), 
+	      wvelocityCoeff[Arches::AT].getPointer(), 
+	      wvelocityCoeff[Arches::AB].getPointer(), 
+	      nonlinearSrc.getPointer(), linearSrc.getPointer(),
+	      domLo.get_pointer(), domHi.get_pointer(),
+	      cellType->getPointer(),
+	      &wall_celltypeval, &flow_celltypeval, VISCOS, 
+	      cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+	      cellinfo->stbw.get_objs(),
+	      cellinfo->xx.get_objs(), cellinfo->xu.get_objs(), 
+	      cellinfo->yy.get_objs(),
+	      cellinfo->yv.get_objs());
 
   switch(eqnType) {
   case Arches::PRESSURE:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
+      new_dw->put(wvelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
     break;
   case Arches::MOMENTUM:
     for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
+      new_dw->put(wvelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
     }
     new_dw->put(linearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
     new_dw->put(nonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
@@ -1958,6 +1958,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.43  2000/07/14 03:45:45  rawat
+// completed velocity bc and fixed some bugs
+//
 // Revision 1.42  2000/07/13 06:32:09  bbanerje
 // Labels are once more consistent for one iteration.
 //
