@@ -224,7 +224,16 @@ using namespace SCIRun;
                         const PatchSubset* patch, 
                         const MaterialSubset* matls,  
                         DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);      
+                        DataWarehouse* new_dw);  
+                         
+      void backoutGCPressFromVelFC(const Patch* patch,
+                                Patch::FaceType face,
+                                DataWarehouse* old_dw,
+                                CCVariable<double>& press_CC, 
+                          const vector<CCVariable<double> >& rho_micro_CC,
+                          const vector<CCVariable<double> >& rho_CC,
+                          const vector<CCVariable<double> >& vol_frac_CC,
+                          const vector<CCVariable<Vector> >& vel_CC);   
       
       // Debugging switches
       bool switchDebugInitialize;
