@@ -266,6 +266,12 @@ SCI_ARG_WITH(png,
   [with_png="$withval"
    sci_required_png=yes],
   [with_png=""])
+SCI_ARG_WITH(camal,
+  AC_HELP_STRING(--with-camal=DIR,
+                 Use the CMLTET installation in DIR),
+  [with_camal="$withval"
+   sci_required_camal=yes],
+  [with_camal=""])
 SCI_ARG_WITH(magick,
   AC_HELP_STRING(--with-magick=DIR,
                  Use the Image Magick installation in DIR),
@@ -2449,6 +2455,45 @@ case $host in
 esac
 
 AC_SUBST(F_LIB_FLAG)
+
+##  --  search for Camal (Sandia meshing library) ------------------------
+
+_sci_optional=optional
+
+if test "$with_camal" = "yes"; then
+  # If --with-camal is specified without a parameter, then it makes it required
+  _sci_optional=required
+else 
+  if test "$with_camal"; then
+    # If --with-camal has a parameter, then use it
+    _sci_lib="$with_camal"
+    _sci_inc="$with_camal/include"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=specific
+  fi 
+fi
+
+if test "$_sci_optional" != "optional" && test "$HAVE_F" != "yes"; then
+   AC_MSG_ERROR(Fortran library not found but is required for CAMAL!)
+fi
+
+SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_FLAG,,$_sci_optional)
+
+if test "$HAVE_CAMAL" = "yes"; then
+  DEF_CAMAL="#define HAVE_CAMAL 1"
+fi
+
+if test "$with_camal" && test ! "$DEF_CAMAL"; then
+  echo
+  AC_MSG_ERROR(One or more of the CAMAL components is missing.)
+  echo
+fi
+
+AC_SUBST(CAMAL_LIB_FLAG)
+AC_SUBST(INC_CAMAL_H)
+AC_SUBST(CAMAL_LIB_DIR_FLAG)
+AC_SUBST(DEF_CAMAL)
+AC_SUBST(HAVE_CAMAL)
 
 ##  --  search for atlas stuff  -------------------------------------------
 
