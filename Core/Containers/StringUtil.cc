@@ -79,9 +79,7 @@ pathname(const string &path)
 char *
 ccast_unsafe(string str)
 {
-  char *result = const_cast<char *>(str.c_str());
-  ASSERT(result);
-  return result;
+  return strdup(str.c_str());
 }
 
 
