@@ -347,9 +347,13 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
     int num_files = files.size();
     string all_files = "";
 
+    // skip first entry because it is always empty
     for( int i = 0; i < num_files; i++ )
     {
-      all_files = string( all_files + " " + files[i] );  
+      // re-ordered so that when selecting an entire series, 
+      // it comes out the same as when using ImageJ
+      //all_files = string( all_files + " " + files[i] );  
+      all_files = string( files[i] + " " + all_files);  
     }
 
     //cerr << "(DicomNrrdReader::tcl_command) all_files = " << all_files << endl;
