@@ -1392,6 +1392,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	// Must use the node indices
 	for(int k = 0; k < 8; k++) {
 	  if(patch->containsNode(ni[k])) {
+	    cout << "Shape = " << S[k] << endl;
 	    gmassglobal[ni[k]]    += pmass[idx]          * S[k];
 	    gmass[ni[k]]          += pmass[idx]          * S[k];
 	    gvolume[ni[k]]        += pvolumeold[idx]        * S[k];
@@ -1611,6 +1612,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 
    VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&petscQ);
    VecDuplicate(petscQ,&petscTemp2);
+   VecDuplicate(petscQ,&diagonal);
 #endif
 
    KK.setSize(globalrows,globalcolumns);
@@ -1639,6 +1641,10 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
   PetscObjectExists((PetscObject)petscTemp2,&exists);
   if (exists == PETSC_TRUE)
     VecDestroy(petscTemp2);
+
+  PetscObjectExists((PetscObject)diagonal,&exists);
+  if (exists == PETSC_TRUE)
+    VecDestroy(diagonal);
 #endif
 
 }
@@ -2527,8 +2533,10 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     // assigned and solved for.  The solutions will be 0.
 
 #ifdef HAVE_PETSC
+#if 0
     Vec diagonal;
     VecCreateMPI(PETSC_COMM_WORLD,num_nodes,PETSC_DETERMINE,&diagonal);
+#endif
     MatGetDiagonal(A,diagonal);
     PetscScalar* diag;
     VecGetArray(diagonal,&diag);
@@ -2554,7 +2562,7 @@ void ImpMPM::removeFixedDOFPetsc(const ProcessorGroup*,
     VecAssemblyBegin(diagonal);
     VecAssemblyEnd(diagonal);
     MatDiagonalSet(A,diagonal,INSERT_VALUES);
-    VecDestroy(diagonal);
+    //VecDestroy(diagonal);
 #endif
     KK.clear();
     KK = KKK;
