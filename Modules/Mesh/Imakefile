@@ -7,14 +7,14 @@ TEMPLATE_SRCS = templates.cc
 #endif
 
 OBJS = BuildMultiMesh.o  BuildOctree.o  \
-	Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  \
+	Delaunay.o  ExtractMesh.o  GenerateMesh.o  \
 	HexMeshToGeom.o \
 	InsertDelaunay.o  MakeScalarField.o  MeshBoundary.o  \
 	MeshToGeom.o  MeshView.o  \
 	OctreeToGeom.o  SelectMesh.o  MeshRender.o \
 	$(TEMPLATE_OBJS)
 SRCS = BuildMultiMesh.cc BuildOctree.cc \
-	Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc \
+	Delaunay.cc ExtractMesh.cc GenerateMesh.cc \
 	HexMeshToGeom.cc \
 	InsertDelaunay.cc MakeScalarField.cc MeshBoundary.cc \
 	MeshToGeom.cc MeshView.cc \
