@@ -410,6 +410,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
+ Notes:     This task actually schedules several tasks.
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 {
@@ -436,10 +437,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
-  // The task will have a reference to press_matl
-  if (press_matl->removeReference())
-    delete press_matl; // shouln't happen, but...
-
+  //__________________________________
+  // Models Initialization
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
        iter != d_models.end(); iter++){
@@ -448,8 +447,34 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
       model->d_dataArchiver = dataArchiver;
     }
   }
-}
+ 
+  //__________________________________
+  // Make adjustments to the hydrostatic prssure
+  // and temperature fields.  You need to do this
+  // after the models have initialized the flowfield
+  Vector grav = d_sharedState->getGravity();
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+  if (grav.length() > 0 ) {
+    cout_doing << "Doing ICE::scheduleHydroStaticAdj " << endl;
+    Task* t2 = scinew Task("ICE::initializeSubTask_hydrostaticAdj",
+                     this, &ICE::initializeSubTask_hydrostaticAdj);
+    Ghost::GhostType  gn  = Ghost::None;
+    t2->requires(Task::NewDW,lb->gammaLabel,         ice_matls_sub, gn);
+    t2->requires(Task::NewDW,lb->specific_heatLabel, ice_matls_sub, gn);
+   
+    t2->modifies(lb->rho_micro_CCLabel);
+    t2->modifies(lb->temp_CCLabel);
+    t2->modifies(lb->press_CCLabel, press_matl); 
 
+    sched->addTask(t2, level->eachPatch(), ice_matls);
+  }
+  
+  // The task will have a reference to press_matl
+  if (press_matl->removeReference())
+    delete press_matl; // shouln't happen, but...
+  }
+//__________________________________
 void ICE::restartInitialize()
 {
   // disregard initial dt when restarting
@@ -1500,37 +1525,21 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 vol_frac_CC[m], vel_CC[m], 
                                 press_CC, numALLMatls, patch, new_dw);
 
-      
-      setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx,
-            "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
       setBC(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
       setBC(vel_CC[m],        "Velocity",     patch, d_sharedState, indx); 
-
+      setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx,
+            "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
+            
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[m][c] = 1.0/rho_micro[m][c];
         vol_frac_CC[m][c] = rho_CC[m][c]*sp_vol_CC[m][c];  //needed for LODI BCs
       }
-      //__________________________________
-      //  Adjust pressure and Temp field if g != 0
-      //  so fields are thermodynamically consistent.
-      if (grav.length() >0.0)  {
-        hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],
-                                      press_CC);
-
-        setBC(press_CC,  rho_micro, placeHolder, d_surroundingMatl_indx,
-              "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
-
-        ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        Patch::FaceType placeHolder;
-        ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
-                                     press_CC,   gamma[m],   cv[m],
-                                     rho_micro[m],    Temp_CC[m], placeHolder);
-      }
+      
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
       ostringstream warn;
@@ -1574,6 +1583,77 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
   }  // patch loop 
 }
+/* ---------------------------------------------------------------------
+ Function~  ICE::initialize_hydrostaticAdj
+ Purpose~   adjust the pressure and temperature fields after both
+            ICE and the models have initialized the fields
+ ---------------------------------------------------------------------  */
+void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* /*ice_matls*/,
+                                          DataWarehouse* /*old_dw*/,
+                                          DataWarehouse* new_dw)
+{ 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing initialize_hydrostaticAdj on patch "<< patch->getID() << "\t ICE" << endl;
+   
+    Ghost::GhostType  gn = Ghost::None;
+    int numMatls = d_sharedState->getNumICEMatls();
+    //__________________________________
+    //  grab rho micro for all matls
+    StaticArray<CCVariable<double>   > rho_micro(numMatls);
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      new_dw->getModifiable(rho_micro[m],lb->rho_micro_CCLabel,  indx, patch);
+    }
+    //_________________________________
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      constCCVariable<double> gamma, cv;
+      CCVariable<double> Temp, press_CC;
+     
+      new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch); 
+      new_dw->getModifiable(Temp,     lb->temp_CCLabel,  indx, patch);
+      new_dw->get(gamma,    lb->gammaLabel,         indx, patch,gn,0);
+      new_dw->get(cv,       lb->specific_heatLabel, indx, patch,gn,0);
+       
+      //__________________________________
+      //  Adjust pressure and Temp field if g != 0
+      //  so fields are thermodynamically consistent.
+      StaticArray<constCCVariable<double> > placeHolder(0);
+      
+      hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],press_CC);
+
+
+    
+    
+      setBC(press_CC,  rho_micro, placeHolder, d_surroundingMatl_indx,
+            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+
+      Patch::FaceType facePlaceHolder;
+      ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
+                                   press_CC, gamma, cv,
+                                   rho_micro[m], Temp, facePlaceHolder);
+      //__________________________________
+      //  Print Data
+      if (switchDebugInitialize){     
+        ostringstream desc, desc1;
+        desc << "hydroStaticAdj_patch_"<< patch->getID();
+        printData(0, patch, 1, "hydroStaticAdj", "press_CC", press_CC);         
+        for (int m = 0; m < numMatls; m++ ) { 
+          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+          int indx = ice_matl->getDWIndex();      
+          desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
+          printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
+          printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp);
+        }   
+      }
+    }
+  }
+} 
 /* ---------------------------------------------------------------------
  Function~  ICE::computeThermoTransportProperties
  Purpose~   
@@ -4070,7 +4150,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       delete lodi_vars;
     }  // ice_matls loop
     delete advector;
-  }  // patch loop 
+  }  // patch loop
 }
 
 /* 
