@@ -36,14 +36,14 @@ void
 DWMpiHandler::registerDW( DataWarehouseP dw )
 {
   if( d_dw.get_rep() != 0 ) {
-    cerr << "DWMpiHandler: Old DW generation was: " << d_dw->d_generation
-	 << "\n";
+//    cerr << "DWMpiHandler: Old DW generation was: " << d_dw->d_generation
+//	 << "\n";
   }
 
   d_dw = dw;
 
-  cerr << "DWMpiHandler: New DW generation is: " << d_dw->d_generation
-       << "\n";
+//  cerr << "DWMpiHandler: New DW generation is: " << d_dw->d_generation
+//       << "\n";
 }
 
 void
@@ -162,6 +162,9 @@ DWMpiHandler::run()
 
 //
 // $Log$
+// Revision 1.3  2000/06/05 19:45:43  guilkey
+// Added some functionality to the DW for PerPatch variables.
+//
 // Revision 1.2  2000/05/30 20:19:39  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
