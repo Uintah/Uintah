@@ -15,6 +15,7 @@ SRCS     += \
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
+	$(SRCDIR)/JohnsonCook.cc 			\
 	$(SRCDIR)/ParticleCreator.cc	\
 	$(SRCDIR)/DefaultParticleCreator.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc	\

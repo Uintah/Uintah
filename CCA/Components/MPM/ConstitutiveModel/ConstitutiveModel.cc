@@ -100,7 +100,7 @@ ConstitutiveModel::polarDecomposition(const Matrix3& defGrad,
   else
     cauchyGreen = defGrad*(defGrad.Transpose());
 
-  // Find the principal invariants of the right Cauchy-Green tensor (b) 
+  // Find the principal invariants of the left or right Cauchy-Green tensor (b) 
   // where b = F*Ftransposeb
   double I1 = cauchyGreen.Trace();
   double I1Square = I1*I1;

@@ -377,7 +377,9 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
       vector<int> dof(0);
       
+#ifdef HAVE_PETSC
       int l2g_node_num;
+#endif
       for(int k = 0; k < 8; k++) {
 	// Need to loop over the neighboring patches l2g to get the right
 	// dof number.
