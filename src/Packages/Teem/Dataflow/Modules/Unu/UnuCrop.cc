@@ -266,8 +266,6 @@ UnuCrop::execute()
     DenseMatrix *indexMat = scinew DenseMatrix( num_axes_.get(), 2 );
     last_matrixH_ = MatrixHandle(indexMat);
 
-    cerr << "Rows " << num_axes_.get() << endl;
-
     for(int i=0; i< num_axes_.get(); i++) {
       min[i] = mins_[i]->get();
       max[i] = maxs_[i]->get();
