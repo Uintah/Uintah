@@ -22,7 +22,7 @@ using namespace Uintah;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
-extern DebugStream mixedDebug;
+DebugStream lbDebug( "LoadBalancer", false );
 
 LoadBalancerCommon::LoadBalancerCommon(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
@@ -37,9 +37,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 {
   int nTasks = graph.numTasks();
 
-  if( mixedDebug.active() ) {
+  if( lbDebug.active() ) {
     cerrLock.lock();
-    mixedDebug << "Assigning Tasks to Resources!\n";
+    lbDebug << "Assigning Tasks to Resources!\n";
     cerrLock.unlock();
   }
 
@@ -59,9 +59,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       else        
         task->assignResource(idx);
 
-      if( mixedDebug.active() ) {
+      if( lbDebug.active() ) {
 	cerrLock.lock();
-	mixedDebug << "1) Task " << *(task->getTask()) << " put on resource "
+	lbDebug << "1) Task " << *(task->getTask()) << " put on resource "
 		   << idx << "\n";
 	cerrLock.unlock();
       }
@@ -86,9 +86,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
 	task->assignResource( d_myworld->myrank() );
 
-	if( mixedDebug.active() ) {
+	if( lbDebug.active() ) {
 	  cerrLock.lock();
-	  mixedDebug << "  Resource (for no patch task) is : " 
+	  lbDebug << "  Resource (for no patch task) is : " 
 		     << d_myworld->myrank() << "\n";
 	  cerrLock.unlock();
 	}
@@ -98,28 +98,27 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 	ASSERT(task->getAssignedResourceIndex() != -1);
       } else {
 #if DAV_DEBUG
-	cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
+	//	cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
 #endif
 	task->assignResource(0);
       }
     }
+    if( lbDebug.active() ) {
+      cerrLock.lock();
+      //      lbDebug << "For Task: " << *task << "\n";
+      cerrLock.unlock();
+    }
   }
 
-  //ParticleLoadBalancer* plb = (ParticleLoadBalancer*) this;
-  //for (int i = 0; i < d_myworld->size(); i++) {
-  //cout << d_myworld->myrank() << " Patch " << i
-  //     << " -> proc " << plb->d_processorAssignment[i] << " old: "
-  //     << plb->d_oldAssignment[i] << endl;
-  //}
 }
 
 void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
 {
   int nTasks = graph.numTasks();
 
-  if( mixedDebug.active() ) {
+  if( lbDebug.active() ) {
     cerrLock.lock();
-    mixedDebug << "Assigning Tasks to Resources!\n";
+    lbDebug << "Assigning Tasks to Resources!\n";
     cerrLock.unlock();
   }
 
@@ -139,9 +138,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
       else        
         task->assignResource(idx);
 
-      if( mixedDebug.active() ) {
+      if( lbDebug.active() ) {
 	cerrLock.lock();
-	mixedDebug << "1) Task " << *(task->getTask()) << " put on resource "
+	lbDebug << "1) Task " << *(task->getTask()) << " put on resource "
 		   << idx << "\n";
 	cerrLock.unlock();
       }
@@ -166,9 +165,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
 	task->assignResource( d_myworld->myrank() );
 
-	if( mixedDebug.active() ) {
+	if( lbDebug.active() ) {
 	  cerrLock.lock();
-	  mixedDebug << "  Resource (for no patch task) is : " 
+	  lbDebug << "  Resource (for no patch task) is : " 
 		     << d_myworld->myrank() << "\n";
 	  cerrLock.unlock();
 	}
@@ -184,13 +183,6 @@ void LoadBalancerCommon::assignResources(DetailedTasks3& graph)
       }
     }
   }
-
-  //ParticleLoadBalancer* plb = (ParticleLoadBalancer*) this;
-  //for (int i = 0; i < d_myworld->size(); i++) {
-  //cout << d_myworld->myrank() << " Patch " << i
-  //     << " -> proc " << plb->d_processorAssignment[i] << " old: "
-  //     << plb->d_oldAssignment[i] << endl;
-  //}
 }
 
 const PatchSet*
