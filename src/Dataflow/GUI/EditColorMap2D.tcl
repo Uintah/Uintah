@@ -96,8 +96,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     method select_widget { entry } {
 	setGlobal $this-selected_widget $entry
 	setGlobal $this-selected_object 1
-	$this-c resend_selection
-	$this-c redraw true
+	$this-c select_widget
     }
 
     method create_entries { } {
@@ -109,7 +108,8 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     # dont pass default argument to un-highlight all entires
     method highlight_entry { args } {
 	upvar \#0 $this-selected_widget entry
-	if { $highlighted == $entry } return;
+	set force [string equal [lindex $args 0] 1]
+	if { !$force && $highlighted == $entry } return;
 	global Color
 	foreach f $frames {
 	    color_entry $f $highlighted $Color(Basecolor)
@@ -136,6 +136,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	bind $parent <ButtonPress> "$this select_widget -1"
 	# Create the new variables and entries if needed.
 	upvar $this-num-entries num
+	set force 0
 	for {set i 0} {$i < $num} {incr i} {
 
 	    initGlobal $this-name-$i default-$i
@@ -146,6 +147,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 
 	    set e $frame.e-$i
 	    if { ![winfo exists $e] } {
+		set force 1
 		frame $e -width 500 -relief sunken -bd 1
 		button $e.x -image $close -anchor nw -relief flat \
 		    -command "$this select_widget $i; $this-c deletewidget"
@@ -177,7 +179,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    destroy $frame.e-$i
 	    incr i
 	}
-	highlight_entry
+	highlight_entry $force
     }
 
     method file_save {} {
