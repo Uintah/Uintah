@@ -222,12 +222,6 @@ private:
 	       DataWarehouse* old_dw, DataWarehouse* new_dw,
 	       LevelP level, Scheduler* sched);
 
-  void moveData(const ProcessorGroup*,
-		 const PatchSubset* patches,
-		 const MaterialSubset* matls,
-		 DataWarehouse* old_dw,
-		 DataWarehouse* new_dw);
-
   void formQ(const ProcessorGroup*, const PatchSubset* patches,
 	     const MaterialSubset* matls, DataWarehouse* old_dw,
 	     DataWarehouse* new_dw,const bool recursion);
@@ -342,9 +336,6 @@ private:
   void scheduleComputeInternalForceR(SchedulerP&, const PatchSet*,
 				    const MaterialSet*,
 				    const bool recursion);
-
-  void scheduleMoveData(SchedulerP&, const LevelP&, const PatchSet*,
-				     const MaterialSet*);
 
   void scheduleIterate(SchedulerP&, const LevelP&,const PatchSet*, 
 		       const MaterialSet*);
