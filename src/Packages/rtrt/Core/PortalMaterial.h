@@ -15,10 +15,11 @@ class PortalMaterial : public Material
  protected:
 
   Transform portal_;
+  bool      valid_;
 
  public:
 
-  PortalMaterial() { portal_.load_identity(); }
+  PortalMaterial() : valid_(false) { portal_.load_identity(); }
   virtual ~PortalMaterial() {}
 
   virtual void shade(Color& result, const Ray& ray,
@@ -26,11 +27,21 @@ class PortalMaterial : public Material
 		     double atten, const Color& accumcolor,
 		     Context* cx)
   {
-    Ray pray(portal_.project(ray.origin()+ray.direction()*hit.min_t),
-             portal_.project(ray.direction()));
-
-    cx->worker->traceRay(result, pray, depth+1,  atten,
-                         accumcolor, cx);
+    UVMapping* map=hit.hit_obj->get_uvmapping();
+    UV uv;
+    Point hitpos(ray.origin()+ray.direction()*hit.min_t);
+    map->uv(uv, hitpos, hit);
+    Color diffuse;
+    double u=uv.u();
+    double v=uv.v();
+    if (valid_ && (u>.02 && u<.98) && (v>.02 && v<.98)) {
+      Ray pray(portal_.project(hitpos), portal_.project(ray.direction()));
+      
+      cx->worker->traceRay(result, pray, depth+1,  atten,
+                           accumcolor, cx);
+    } else {
+      result = Color(.6,0,.6);
+    }
   }
 
   Point project(const Point &p) 
@@ -48,12 +59,14 @@ class PortalMaterial : public Material
   {
     // a is local coordinates, b is opposite end coordinates
     portal_.load_identity();
-    portal_.pre_translate(a-b);
-    portal_.rotate(bu, au);
-    portal_.rotate(bv, av);
+    //portal_.rotate(au,bu);
+    //portal_.rotate(av,bv);
+    portal_.pre_translate(b-a);
     portal_.pre_scale( Vector(au.length()/bu.length(), 
                               av.length()/bv.length(), 
                               1) );
+    valid_ = true;
+    portal_.print();
   }
 };
 
