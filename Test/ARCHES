@@ -24,7 +24,7 @@ def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_par
       cfile = cfile + ".linux.bin"
   else:
       cfile = cfile + ".bin"
-  symlink("%s/%s" % (inputsdir, cfile), "chem.bin")
+  symlink("%s/chem_bins/%s" % (inputsdir, cfile), "chem.bin")
 
 exit(runSusTests(argv, TESTS, "arches", chemfileCallback))
 
