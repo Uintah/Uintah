@@ -87,10 +87,10 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP sched)
 	  if ((*d_patchActive[levelIdx])[IntVector(x,y,z)]) {
 	    IntVector startCell       = IntVector(x,y,z) * d_patchSize[levelIdx];
 	    IntVector endCell         = (IntVector(x,y,z) + IntVector(1,1,1)) * d_patchSize[levelIdx] - IntVector(1,1,1);
-	    //	    if (x == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0);
-	    //	    if (y == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1);
-	    //	    if (z == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2);
-	    endCell = Min (endCell, d_cellNum[levelIdx]);
+	    if (x == d_patchNum[levelIdx](0)-1) endCell(0) = d_cellNum[levelIdx](0);
+	    if (y == d_patchNum[levelIdx](1)-1) endCell(1) = d_cellNum[levelIdx](1);
+	    if (z == d_patchNum[levelIdx](2)-1) endCell(2) = d_cellNum[levelIdx](2);
+	    // endCell = Min (endCell, d_cellNum[levelIdx]);
 	    // ignores extra cells, boundary conditions.
 	    /*Patch* newPatch =*/ newLevel->addPatch(startCell, endCell + IntVector(1,1,1) , startCell, endCell + IntVector(1,1,1));
 	    //newPatch->setLayoutHint(oldPatch->layouthint);
@@ -201,10 +201,10 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
 	  IntVector endCell         = (IntVector(x,y,z) + IntVector(1,1,1)) * d_patchSize[childLevelIdx] - IntVector(1,1,1);
 	  IntVector parentStartCell = startCell / d_cellRefinementRatio[parentLevelIdx];
 	  IntVector parentEndCell   = endCell / d_cellRefinementRatio[parentLevelIdx];
-	  //	  if (x == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0);
-	  //	  if (y == d_patchNum[parentLevelIdx](1)-1) parentEndCell(1) = d_cellNum[parentLevelIdx](1);
-	  //	  if (z == d_patchNum[parentLevelIdx](2)-1) parentEndCell(2) = d_cellNum[parentLevelIdx](2);
-	  parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
+	  if (x == d_patchNum[parentLevelIdx](0)-1) parentEndCell(0) = d_cellNum[parentLevelIdx](0);
+	  if (y == d_patchNum[parentLevelIdx](1)-1) parentEndCell(1) = d_cellNum[parentLevelIdx](1);
+	  if (z == d_patchNum[parentLevelIdx](2)-1) parentEndCell(2) = d_cellNum[parentLevelIdx](2);
+	  // parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
 	  for (int xx = parentStartCell.x(); xx <= parentEndCell.x(); xx++ ) {
 	    for (int yy = parentStartCell.y(); yy <= parentEndCell.y(); yy++ ) {
 	      for (int zz = parentStartCell.z(); zz <= parentEndCell.z(); zz++ ) {
@@ -224,10 +224,10 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
 	  IntVector startCell       = IntVector(x,y,z) * d_patchSize[parentLevelIdx];
 	  IntVector endCell         = (IntVector(x,y,z) + IntVector(1,1,1)) * d_patchSize[parentLevelIdx] - IntVector(1,1,1);
 
-	  //	  if (x == d_patchNum[parentLevelIdx](0)-1) endCell(0) = d_cellNum[parentLevelIdx](0);
-	  //	  if (y == d_patchNum[parentLevelIdx](1)-1) endCell(1) = d_cellNum[parentLevelIdx](1);
-	  //	  if (z == d_patchNum[parentLevelIdx](2)-1) endCell(2) = d_cellNum[parentLevelIdx](2);
-	  endCell                   = Min(endCell, d_cellNum[parentLevelIdx]);
+	  if (x == d_patchNum[parentLevelIdx](0)-1) endCell(0) = d_cellNum[parentLevelIdx](0);
+	  if (y == d_patchNum[parentLevelIdx](1)-1) endCell(1) = d_cellNum[parentLevelIdx](1);
+	  if (z == d_patchNum[parentLevelIdx](2)-1) endCell(2) = d_cellNum[parentLevelIdx](2);
+	  // endCell                   = Min(endCell, d_cellNum[parentLevelIdx]);
 
 	  IntVector latticeIdx      = StartCellToLattice( startCell, parentLevelIdx );
 	  if (flaggedCellsExist(dilatedPatchCells, startCell, endCell)) {
