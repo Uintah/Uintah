@@ -244,21 +244,10 @@ void NexusSpMessage::setSendBuffer(void* buf, int len)
   //  globus_nexus_put_user(_buffer, (globus_byte_t *)buf, len);
 }
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void NexusSpMessage::marshalOpaque(void **buf, int size)  
+{
+}
+void NexusSpMessage::unmarshalOpaque(void **buf, int size)
+{
+}
 
