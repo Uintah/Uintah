@@ -27,6 +27,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/PhongMaterial.cc \
 	$(SRCDIR)/Material.cc \
 	$(SRCDIR)/LambertianMaterial.cc \
+	$(SRCDIR)/LightMaterial.cc \
 	$(SRCDIR)/CoupledMaterial.cc \
 	$(SRCDIR)/DielectricMaterial.cc \
 	$(SRCDIR)/Ball.cc \
