@@ -814,14 +814,14 @@ GenTransferFunc::execute(void)
     points.resize(newcmap->rawRampColor_.size());
     
     for(i=0;i<points.size();i++){
-      points[i]._t = newcmap->rawRampColorT[i];
-      points[i]._rgb = newcmap->rawRampColor[i];
+      points[i]._t = newcmap->rawRampColorT_[i];
+      points[i]._rgb = newcmap->rawRampColor_[i];
     }
 
-    alphas.resize(newcmap->rawRampAlpha.size());
+    alphas.resize(newcmap->rawRampAlpha_.size());
     for(i = 0; i < alphas.size(); i++ ){
-      alphas[i]._t = newcmap->rawRampAlphaT[i];
-      alphas[i]._alpha = newcmap->rawRampAlpha[i];
+      alphas[i]._t = newcmap->rawRampAlphaT_[i];
+      alphas[i]._alpha = newcmap->rawRampAlpha_[i];
     }
 //     alphas = newcmap->rawRampAlpha;
 //     aTimes = newcmap->rawRampAlphaT;
