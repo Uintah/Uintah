@@ -29,4 +29,4 @@ SRCS = Task.cc TASK_IMPLEMENTATION_CC
 LIBNAME = Multitask
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

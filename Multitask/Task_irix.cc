@@ -334,7 +334,12 @@ static void handle_halt_signals(int sig, int code, sigcontext_t* context)
     }
 	
     // Kill all of the threads...
-    char* signam=signal_name(sig, code, (caddr_t)context->sc_badvaddr.lo32);
+#if defined(_LONGLONG)
+    caddr_t addr=(caddr_t)context->sc_badvaddr;
+#else
+    caddr_t addr=(caddr_t)context->sc_badvaddr.lo32;
+#endif
+    char* signam=signal_name(sig, code, addr);
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s.  Going down...\n", tname, getpid(), signam);
     Task::exit_all(-1);
 }
@@ -345,12 +350,17 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	exit(0);
     Task* self=Task::self();
     char* tname=self?self->get_name()():"main";
-    char* signam=signal_name(sig, code, (caddr_t)context->sc_badvaddr.lo32);
+#if defined(_LONGLONG)
+    caddr_t addr=(caddr_t)context->sc_badvaddr;
+#else
+    caddr_t addr=(caddr_t)context->sc_badvaddr.lo32;
+#endif
+    char* signam=signal_name(sig, code, addr);
 
     // See if it is a segv on the stack - if so, grow it...
     if(sig==SIGSEGV && code==EACCES
-       && (caddr_t)context->sc_badvaddr.lo32 >= self->priv->stackbot
-       && (caddr_t)context->sc_badvaddr.lo32 < self->priv->stackbot+self->priv->stacklen){
+       && addr >= self->priv->stackbot
+       && addr < self->priv->stackbot+self->priv->stacklen){
 	self->priv->redlen -= pagesize;
 	if(self->priv->redlen <= 0){
 	    fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) ran off end of stack! \n",
