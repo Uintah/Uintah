@@ -64,6 +64,7 @@ WARNING
    double getGamma() const;
    double getViscosity() const;
    double getSpeedOfSound() const;
+   bool   isSurroundingMatl() const;
    
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
@@ -81,6 +82,7 @@ WARNING
    double d_speed_of_sound;
    double d_viscosity;
    double d_gamma;
+   bool d_isSurroundingMatl; // defines which matl is the background matl.
    
    std::vector<GeometryObject2*> d_geom_objs;
    
