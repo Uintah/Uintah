@@ -553,7 +553,7 @@ TetVolMesh::compute_grid()
   BBox bb = get_bounding_box();
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
-  int s = (int)ceil(pow((double)cells_.size(), one_third));
+  int s = (int)ceil(pow((double)cells_size() , one_third));
   
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatticeVol<vector<cell_index> >(mesh, Field::CELL);

@@ -35,7 +35,7 @@
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/FieldAlgo.h>
-#include <Core/Datatypes/DispatchScalar1.h>
+#include <Core/Datatypes/Dispatch1.h>
 #include <Core/Datatypes/DispatchMesh1.h>
 
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -87,34 +87,38 @@ class ShowField : public Module
   //! top level nodes for switching on and off..
   //! nodes.
   GeomSwitch*              node_switch_;
-  bool                     nodes_on_;
+  GuiInt                  nodes_on_;
   bool                     nodes_dirty_;
   //! edges.
   GeomSwitch*              edge_switch_;
-  bool                     edges_on_;
+  GuiInt                  edges_on_;
   bool                     edges_dirty_;
   //! faces.
   GeomSwitch*              face_switch_;
-  bool                     faces_on_;
+  GuiInt                  faces_on_;
   bool                     faces_dirty_;
 
-  //! default grey material
+  //! default color and material
+  bool                     use_def_color_;
+  GuiDouble                def_color_r_;
+  GuiDouble                def_color_g_;
+  GuiDouble                def_color_b_;
   MaterialHandle           def_mat_handle_;
+
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
   GuiDouble                node_scale_;
   GuiInt                   showProgress_;
 
   //! Private Methods
-
+  template <class T> bool to_double(const T&, double &) const;
   template <class Msh> void finish_mesh(Msh* m);
   template <class Fld> void render_nodes(const Fld *sfld);
   template <class Fld> void render_edges(const Fld *sfld);
   template <class Fld> void render_faces(const Fld *sfld);
   template <class F1>  void render(const F1 *fld);
 
-  inline
-  MaterialHandle choose_mat(bool def, double val);
+  inline  MaterialHandle choose_mat(bool def, double val);
 public:
   ShowField(const clString& id);
   virtual ~ShowField();
@@ -138,7 +142,7 @@ public:
 
 template <class Msh>
 void 
-ShowField::finish_mesh(Msh* m) {}
+ShowField::finish_mesh(Msh*) {}
 
 template <>
 void 
@@ -157,15 +161,19 @@ ShowField::ShowField(const clString& id) :
   edge_id_(0),
   face_id_(0),
   node_switch_(0),
-  nodes_on_(true),
+  nodes_on_("nodes-on", id, this),
   nodes_dirty_(true),
   edge_switch_(0),
-  edges_on_(true),
+  edges_on_("edges-on", id, this),
   edges_dirty_(true),
   face_switch_(0),
-  faces_on_(true),
+  faces_on_("faces-on", id, this),
   faces_dirty_(true),
-  def_mat_handle_(scinew Material(Color(.5, .5, .5))),
+  use_def_color_(true),
+  def_color_r_("def-color-r", id, this),
+  def_color_g_("def-color-g", id, this),
+  def_color_b_("def-color-b", id, this),
+  def_mat_handle_(scinew Material(Color(0.5, 0.5, 0.5))),
   node_display_type_("node_display_type", id, this),
   node_scale_("scale", id, this),
   showProgress_("show_progress", id, this)
@@ -186,13 +194,12 @@ ShowField::~ShowField() {}
 void 
 ShowField::execute()
 {
-
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
   FieldHandle fld_handle;
   fld_->get(fld_handle);
-  if(!fld_handle.get_rep() || !fld_handle->is_scalar()){
-    cerr << "No Data or Not Scalar Data in port 1 field" << endl;
+  if(!fld_handle.get_rep()){
+    cerr << "No Data in port 1 field" << endl;
     return;
   } else if (fld_gen_ != fld_handle->generation) {
     fld_gen_ = fld_handle->generation;  
@@ -216,7 +223,9 @@ ShowField::execute()
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  { return; }
 
-  dispatch_scalar1(fld_handle, render);
+  use_def_color_ = ! fld_handle->is_scalar();
+
+  dispatch1(fld_handle, render);
   if (disp_error) return; // dispatch already printed an error message. 
 
   // cleanup...
@@ -224,22 +233,44 @@ ShowField::execute()
     if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
     nodes_dirty_ = false;
-    if (nodes_on_) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
+    if (nodes_on_.get()) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
   }
   if (edges_dirty_) {
     if (edge_id_) ogeom_->delObj(edge_id_); 
     edge_id_ = 0;
     edges_dirty_ = false;
-    if (edges_on_) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
+    if (edges_on_.get()) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
 
   }
   if (faces_dirty_) {
     if (face_id_) ogeom_->delObj(face_id_); 
     face_id_ = 0;
     faces_dirty_ = false;
-    if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
+    if (faces_on_.get()) face_id_ = ogeom_->addObj(face_switch_, "Faces");
   }  
   ogeom_->flushViews();
+}
+
+template <class T>
+bool
+ShowField::to_double(const T& tmp, double &val) const
+{
+  val = tmp;
+  return true;
+}
+
+template <>
+bool
+ShowField::to_double(const Vector&, double &) const
+{
+  return false;
+}
+
+template <>
+bool
+ShowField::to_double(const Tensor&, double &) const
+{
+  return false;
 }
 
 inline
@@ -266,21 +297,19 @@ ShowField::render_nodes(const Fld *sfld)
     typename Fld::mesh_type::node_iterator niter = mesh->node_begin();  
     while (niter != mesh->node_end()) {
       // Use a default color?
-      bool def_color = (color_handle_.get_rep() == 0);
+      bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
     
       Point p;
       mesh->get_point(p, *niter);
 
       // val is double because the color index field must be scalar.
       double val = 0.L;
-
+ 
       switch (sfld->data_at()) {
       case Field::NODE:
 	{
 	  typename Fld::value_type tmp = 0;
-	  if (sfld->value(tmp, *niter)) { 
-	    val = tmp;
-	  } else {
+	  if (! (sfld->value(tmp, *niter) && (to_double(tmp, val)))) { 
 	    def_color = true; 
 	  }
 	}
@@ -323,7 +352,7 @@ ShowField::render_edges(const Fld *sfld)
     typename Fld::mesh_type::edge_iterator eiter = mesh->edge_begin();  
     while (eiter != mesh->edge_end()) {  
       // Use a default color?
-      bool def_color = (color_handle_.get_rep() == 0);
+      bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
 
       typename Fld::mesh_type::node_array nodes;
       mesh->get_nodes(nodes, *eiter); ++eiter;
@@ -339,11 +368,8 @@ ShowField::render_edges(const Fld *sfld)
 	{
 	  typename Fld::value_type tmp1 = 0;
 	  typename Fld::value_type tmp2 = 0;
-	  if (sfld->value(tmp1, nodes[0]) && sfld->value(tmp2, nodes[1])) { 
-	    val1 = tmp1;
-	    val2 = tmp2;
-	    val1 = (val1 + val2) * .5;
-	  } else {
+	  if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
+		 sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2))) { 
 	    def_color = true; 
 	  }
 	}
@@ -351,9 +377,7 @@ ShowField::render_edges(const Fld *sfld)
       case Field::EDGE:
 	{
 	  typename Fld::value_type tmp = 0;
-	  if (sfld->value(tmp, *eiter)) { 
-	    val1 = tmp;
-	  } else {
+	  if (! (sfld->value(tmp, *eiter) && to_double(tmp, val1))) { 
 	    def_color = true; 
 	  }
 	}
@@ -382,7 +406,7 @@ ShowField::render_faces(const Fld *sfld)
     typename Fld::mesh_type::face_iterator fiter = mesh->face_begin();  
     while (fiter != mesh->face_end()) {  
       // Use a default color?
-      bool def_color = (color_handle_.get_rep() == 0);
+      bool def_color = (use_def_color_ || (color_handle_.get_rep() == 0));
 
       typename Fld::mesh_type::node_array nodes;
       mesh->get_nodes(nodes, *fiter); ++fiter;
@@ -401,12 +425,9 @@ ShowField::render_faces(const Fld *sfld)
 	  typename Fld::value_type tmp1 = 0;
 	  typename Fld::value_type tmp2 = 0;
 	  typename Fld::value_type tmp3 = 0;
-	  if (sfld->value(tmp1, nodes[0]) && sfld->value(tmp2, nodes[1])
-	      && sfld->value(tmp3, nodes[2])) { 
-	    val1 = tmp1;
-	    val2 = tmp2;
-	    val3 = tmp3;
-	  } else {
+	  if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
+		 sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2) &&
+		 sfld->value(tmp3, nodes[2]) && to_double(tmp3, val3))) { 
 	    def_color = true; 
 	  }
 	}
@@ -414,11 +435,8 @@ ShowField::render_faces(const Fld *sfld)
       case Field::FACE: 
 	{
 	  typename Fld::value_type tmp = 0;
-	  if (sfld->value(tmp, *fiter)) { 
-	    val1 = tmp;
-	    val2 = tmp;
-	    val3 = tmp;
-	  } else {
+	  if (! (sfld->value(tmp, *fiter) && to_double(tmp, val1) && 
+		 to_double(tmp, val2) && to_double(tmp, val3))) {
 	    def_color = true; 
 	  }
 	}
@@ -513,15 +531,23 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   if (args[1] == "scale") {
     if (node_display_type_.get() == "Points") { return; }
     nodes_dirty_ = true;
+  } else if (args[1] == "default_color_change") {
+    def_color_r_.reset();
+    def_color_g_.reset();
+    def_color_b_.reset();
+    Material m(Color(def_color_r_.get(), def_color_g_.get(), 
+		     def_color_b_.get()));
+    *def_mat_handle_.get_rep() = m;
+    ogeom_->flushViews();
   } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     want_to_execute();
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
-    nodes_on_ = ! nodes_on_;
-    if (node_switch_) node_switch_->set_state(nodes_on_);
+    nodes_on_.reset();
+    if (node_switch_) node_switch_->set_state(nodes_on_.get());
 
-    if ((nodes_on_) && (node_id_ == 0)) {
+    if ((nodes_on_.get()) && (node_id_ == 0)) {
       nodes_dirty_ = true;
       want_to_execute();
     } else {
@@ -529,10 +555,10 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     }
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
-    edges_on_ = ! edges_on_;
-    if (edge_switch_) edge_switch_->set_state(edges_on_);
+    edges_on_.reset();
+    if (edge_switch_) edge_switch_->set_state(edges_on_.get());
     
-    if ((edges_on_) && (edge_id_ == 0)) {
+    if ((edges_on_.get()) && (edge_id_ == 0)) {
       edges_dirty_ = true;
       want_to_execute();
     } else {
@@ -540,10 +566,10 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     }
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
-    faces_on_ = ! faces_on_;
-    if (face_switch_) face_switch_->set_state(faces_on_);
+    faces_on_.reset();
+    if (face_switch_) face_switch_->set_state(faces_on_.get());
 
-    if ((faces_on_) && (face_id_ == 0)) {
+    if ((faces_on_.get()) && (face_id_ == 0)) {
       faces_dirty_ = true;
       want_to_execute();
     } else {
