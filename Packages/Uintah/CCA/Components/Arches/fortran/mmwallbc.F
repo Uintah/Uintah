@@ -15,6 +15,9 @@ c*********************************************************************
 *                            2) GREAT in the intrusion
 *--------------------------------------------------------------------
 
+#undef wallmodel
+#define wallmodel
+
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
@@ -41,6 +44,7 @@ c intrusion boundary, fix coeffs
      $                        as(i,j,k),at(i,j,k),ab(i,j,k),
      $                        su(i,j,k),sp(i,j,k),const)
                else
+#ifdef wallmodel
                   if (pcell(i-1,j,k).eq.mmwallid)
      $                 aw(i,j,k) = zero
                   if (pcell(i+1,j,k).eq.mmwallid)
@@ -53,6 +57,7 @@ c intrusion boundary, fix coeffs
      $                 ab(i,j,k) = zero
                   if (pcell(i,j,k+1).eq.mmwallid)
      $                 at(i,j,k) = zero
+#endif
                END IF
  300        continue
  400     CONTINUE
