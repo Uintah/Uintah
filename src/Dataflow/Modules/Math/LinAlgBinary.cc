@@ -191,12 +191,12 @@ void LinAlgBinary::execute() {
 
   } else if (op == "SelectColumns") {
     if (!aH.get_rep() || !bH.get_rep()) {
-      cerr << "LinAlgBinary:SelectColumns Error - can't have an empty input matrix for this operation.\n";
+      error("Can't have an empty input matrix for SelectColumns.");
       return;
     }
     ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
     if (!bc) {
-      cerr << "LinAlgBinary:SelectColumns Error - second input must be a ColumnMatrix!\n";
+      error("Second input to SelectColumns must be a ColumnMatrix.");
       return;
     }
     DenseMatrix *cd = scinew DenseMatrix(aH->nrows(), bc->nrows());
@@ -204,7 +204,8 @@ void LinAlgBinary::execute() {
       int idx = (int)(*bc)[i];
       if (idx == -1) continue;
       if (idx > aH->ncols()) {
-	cerr << "LinAlgBinary:SelectColumns Error - tried to select a column ("<<idx<<") that was out of range ("<<aH->ncols()<<")\n";
+	error("Tried to select column (" + to_string(idx) +
+	      ") that was out of range (" + to_string(aH->ncols()) + ").");
 	return;
       }
       for (int j=0; j<aH->nrows(); j++) {
@@ -223,12 +224,12 @@ void LinAlgBinary::execute() {
     return;
   } else if (op == "SelectRows") {
     if (!aH.get_rep() || !bH.get_rep()) {
-      cerr << "LinAlgBinary:SelectRows Error - can't have an empty input matrix for this operation.\n";
+      error("Can't have an empty input matrix for SelectRows.");
       return;
     }
     ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
     if (!bc) {
-      cerr << "LinAlgBinary:SelectRows Error - second input must be a ColumnMatrix!\n";
+      error("Second input must be a ColumnMatrix for SelectRows.";
       return;
     }
     DenseMatrix *cd = scinew DenseMatrix(bc->nrows(), aH->ncols());
@@ -236,7 +237,8 @@ void LinAlgBinary::execute() {
       int idx = (int)(*bc)[i];
       if (idx == -1) continue;
       if (idx > aH->nrows()) {
-	cerr << "LinAlgBinary:SelectRows Error - tried to select a row ("<<idx<<") that was out of range ("<<aH->nrows()<<")\n";
+	error("Tried to select a row (" + to_string(idx) +
+	      ") that was out of range (" + to_string(aH->nrows()) +").");
 	return;
       }
       for (int j=0; j<aH->ncols(); j++) {
@@ -255,7 +257,7 @@ void LinAlgBinary::execute() {
     return;
   } else if (op == "NormalizeAtoB") {
     if (!aH.get_rep() || !bH.get_rep()) {
-      cerr << "LinAlgBinary:NormalizeAtoB Error - can't have an empty input matrix for this operation.\n";
+      error("Can't have an empty input matrix for NormalizeAtoB.");
       return;
     }
     double amin, amax, bmin, bmax;
