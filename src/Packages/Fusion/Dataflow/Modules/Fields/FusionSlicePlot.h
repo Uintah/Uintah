@@ -34,20 +34,14 @@ using namespace SCIRun;
 class FusionSlicePlotAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src,
-			      double scale) = 0;
+  virtual FieldHandle execute(FieldHandle src, double scale) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
-					    const TypeDescription *ttd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
 };
 
 
-#ifdef __sgi
-template< class FIELD, class TYPE >
-#else
-template< template<class> class FIELD, class TYPE >
-#endif
+template< class FIELD >
 class FusionSlicePlotAlgoT : public FusionSlicePlotAlgo
 {
 public:
@@ -56,36 +50,31 @@ public:
 };
 
 
-#ifdef __sgi
-template< class FIELD, class TYPE >
-#else
-template< template<class> class FIELD, class TYPE >
-#endif
+template< class FIELD >
 FieldHandle
-FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
-					   double scale)
+FusionSlicePlotAlgoT<FIELD>::execute(FieldHandle field_h, double scale)
 {
-  FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
+  FIELD *ifield = (FIELD *) field_h.get_rep();
 
   ScalarFieldInterface *sfi = ifield->query_scalar_interface();
 
   if( sfi ) {
 
-    typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
-    typename FIELD<double>::mesh_handle_type omesh = imesh;
-    omesh.detach();
-    
-    FIELD<double> *ofield = scinew FIELD<double>(omesh, ifield->data_at());
+    FIELD *ifield = (FIELD *) field_h.get_rep();
+    FIELD *ofield = ifield->clone();
 
-    typename FIELD<TYPE>::fdata_type::iterator in  = ifield->fdata().begin();
-    typename FIELD<TYPE>::fdata_type::iterator end = ifield->fdata().end();
-    typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
+    ofield->mesh_detach();
 
-    typename FIELD<TYPE>::mesh_type::Node::iterator inodeItr;
+    typename FIELD::mesh_type *omesh = ofield->get_typed_mesh().get_rep();
+
+    typename FIELD::fdata_type::iterator in  = ofield->fdata().begin();
+    typename FIELD::fdata_type::iterator end = ofield->fdata().end();
+
+    typename FIELD::mesh_type::Node::iterator inodeItr;
 
     omesh->begin( inodeItr );
 
-    imesh->synchronize( Mesh::NORMALS_E );
+    omesh->synchronize( Mesh::NORMALS_E );
 
     Point pt;
     Vector vec;
@@ -93,34 +82,27 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     pair<double, double> minmax;
     sfi->compute_min_max(minmax.first, minmax.second);
  
-    scale /= minmax.second;
+    scale /= (minmax.second-minmax.first);
 
     while (in != end) {
 
-      *out = *in;  // Copy the data.
-
       // Get the orginal point on the mesh.
-      imesh->get_point(pt, *inodeItr);
+      omesh->get_point(pt, *inodeItr);
       
       // Get the normal from the orginal surface since it should be planar.
-      imesh->get_normal(vec, *inodeItr);      
+      omesh->get_normal(vec, *inodeItr);      
 
       // Normalize then scale the offset value before adding to the point.
       pt += ( (*in - minmax.first) * scale ) * vec;
 
-      omesh->set_point(*inodeItr, pt);
+      omesh->set_point(pt, *inodeItr);
 
-      ++in; ++out;
+      ++in;
 
       ++inodeItr;
     }
 
     return FieldHandle( ofield );
-  }
-  else {
-    cerr << "FusionSlicePlot - Only availible for Scalar data" << endl;
-
-    return NULL;
   }
 }
 
