@@ -30,6 +30,7 @@ else
 PSELIBS := Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/SimulationController Uintah/Components/ICE \
 	Uintah/Components/Schedulers Uintah/Components/Arches \
+	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions
 LIBS :=
 endif
@@ -38,6 +39,10 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2000/04/11 07:10:29  sparker
+# Completing initialization and problem setup
+# Finishing Exception modifications
+#
 # Revision 1.3  2000/03/23 10:30:10  sparker
 # Now need to link sus with SCICore/Exceptions
 #

@@ -8,7 +8,6 @@
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Exceptions/SchedulerException.h>
 #include <iostream> // TEMPORARY
 #include <string>
 
@@ -147,6 +146,10 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/04/11 07:10:53  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.5  2000/03/22 00:37:17  sparker
 // Added accessor for PerRegion data
 //
