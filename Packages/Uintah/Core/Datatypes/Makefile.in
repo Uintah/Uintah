@@ -4,4 +4,4 @@ OBJTOP  = ../..
 
 SUBDIRS = Particles
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
