@@ -88,11 +88,11 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       }
       new_dw->allocateTemporary(rho_CC_scratch[m], patch);
       new_dw->allocateTemporary(rho_micro[m],      patch);
-      new_dw->allocateAndPut(sp_vol_new[m],Ilb->sp_vol_CCLabel,    indx,patch);  
-      new_dw->allocateAndPut(rho_CC_new[m],Ilb->rho_CCLabel,       indx,patch);  
-      new_dw->allocateAndPut(vol_frac[m],  Ilb->vol_frac_CCLabel,  indx,patch);  
-      new_dw->allocateAndPut(f_theta[m],   Ilb->f_theta_CCLabel,   indx,patch);  
-      new_dw->allocateAndPut(matl_press[m],Ilb->matl_press_CCLabel,indx,patch);  
+      new_dw->allocateAndPut(sp_vol_new[m],Ilb->sp_vol_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(rho_CC_new[m],Ilb->rho_CCLabel,       indx,patch);
+      new_dw->allocateAndPut(vol_frac[m],  Ilb->vol_frac_CCLabel,  indx,patch);
+      new_dw->allocateAndPut(f_theta[m],   Ilb->f_theta_CCLabel,   indx,patch);
+      new_dw->allocateAndPut(matl_press[m],Ilb->matl_press_CCLabel,indx,patch);
       new_dw->allocateAndPut(speedSound_new[m], 
                                            Ilb->speedSound_CCLabel,indx,patch);
       speedSound_new[m].initialize(0.0);
@@ -188,7 +188,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         } 
         if(mpm_matl){                //  M P M
           rho_micro[m][c]  = mass_CC[m][c]/mat_vol[m][c];
-          sp_vol_new[m][c] = 1/rho_micro[m][c];
+          sp_vol_new[m][c] = 1./rho_micro[m][c];
           mat_mass[m]      = mass_CC[m][c];
 
           mpm_matl->getConstitutiveModel()->
