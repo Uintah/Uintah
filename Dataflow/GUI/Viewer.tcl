@@ -149,17 +149,21 @@ itcl_class ViewWindow {
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
+
 	menubutton $w.menu.file -text "File" -underline 0 \
 		-menu $w.menu.file.menu
 	menu $w.menu.file.menu
 #	$w.menu.file.menu add command -label "Save geom file..." -underline 0 \
 #		-command "$this makeSaveObjectsPopup"
+	$w.menu.file.menu add command -label "Save hi-res image file..." \
+	    -underline 0 -command "$this makeSaveHiResImagePopup"
 	$w.menu.file.menu add command -label "Save image file..." \
 	    -underline 0 -command "$this makeSaveImagePopup"
 
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
+
 
 	# Get the list of supported renderers for the pulldown
 	set r [$viewer-c listrenderers]
@@ -1382,8 +1386,64 @@ itcl_class ViewWindow {
 	radiobutton $ex.ppm -variable $this-saveType \
 	    -text "PPM File" -value "ppm" \
 	    -command "$this changeName $w ppm"
+
+	if { [set $this-saveType] == "ppm" } {
+	    $ex.ppm select
+	} else { $ex.raw select }
+
 	pack $ex.raw $ex.ppm -side top -anchor w
-# 	set sgi [$this-c sgi_defined]
+    }
+    
+    method makeSaveHiResImagePopup {} {
+	global $this-saveFile
+	set w .ui[modname]
+	iwidgets::dialog .d -modality application
+	.d delete Apply
+	.d delete Help
+	.d buttonconfigure OK -command {.d deactivate 1}
+	.d buttonconfigure Cancel -command {.d deactivate 0}
+	
+	label [.d childsite].l -text \
+	    "  You are about to make a high resolution image.\n \
+	This will divide your current view into four\n \
+	quadrants.  Each quadrant will expand to  your\n \
+	current screen size and be saved as a ppm file.\n \
+        You can then convert the images and composite\n \
+        them with your favorite image editing software\n \
+	(For example, if your ViewWindow is 640x512 and\n \
+	your image is called 'image', 4 files will\n \
+	be created: 1.image.ppm, 2.image.ppm etc.\n \
+	If the ImageMagick tools are installed you\n \
+	can combine the files with the command:\n \
+	  'montage -borderwidth 0 -tile 2x2\n \
+	  -geometry 640x512 1.image.ppm 2.image.ppm\n \
+	  3.image.ppm 4.image.ppm image.ppm')\n \
+	Please make sure that there are no windows\n \
+	covering the ViewWindow. Would you like to continue?" \
+	    -justify left
+	pack [.d childsite].l -expand yes -fill both
+	if { [.d activate] } {
+	    set defext ".ppm"
+	    set defname "image"
+	    set title "Save quadrants"
+	    set types {
+		{{PPM File} {.ppm} }
+		{{Raw File} {.raw} }
+		{{All Files} {.*} }
+	    }
+	    set $this-saveFile [ tk_getSaveFile \
+				 -parent $w \
+				 -title $title \
+				 -filetypes $types \
+				 -initialfile $defname \
+				 -defaultextension $defext ] 
+	    if { [set $this-saveFile] != "" } {
+		$this doSaveHiResImage
+	    }
+	}
+	destroy .d
+#	pack $ex.ppm -side top -anchor w
+	# 	set sgi [$this-c sgi_defined]
 # 	if { $sgi == 1 || $sgi == 2 } {
 # 	    radiobutton $ex.rgb -variable $this-saveType \
 # 		-text "SGI RGB File" -value "rgb" \
@@ -1400,9 +1460,9 @@ itcl_class ViewWindow {
 # 		-state disabled -disabledforeground ""
 # 	}
 
-	if { [set $this-saveType] == "ppm" } { 
-	    $ex.ppm select 
- 	} 
+#	if { [set $this-saveType] == "ppm" } { 
+#	    $ex.ppm select 
+# 	} 
 # 	elseif { [set $this-saveType] == "rgb" } {
 # 	    $ex.rgb select
 # 	} elseif { [set $this-saveType] == "jpg" } {
@@ -1410,8 +1470,9 @@ itcl_class ViewWindow {
 # 	} else { $ex.raw select }
 # 	pack $ex.rgb $ex.jpg -side top -anchor w
 
-    }
 
+    }
+	
     method changeName { w type} {
 	global $this-saveFile
 	set name [split [set $this-saveFile] .]
@@ -1422,5 +1483,12 @@ itcl_class ViewWindow {
 	global $this-saveFile
 	global $this-saveType
 	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType]
+    }
+    method doSaveHiResImage {} {
+	global $this-saveFile
+	set path [split [set $this-saveFile] / ]
+	set fname  [lindex $path [expr [llength $path] - 1] ]
+	$this-c dump_hires_viewwindow $fname
+	$this-c redraw
     }
 }

@@ -42,7 +42,9 @@ namespace SCIRun {
 #define REDRAW_DONE 4
 #define PICK_DONE 5
 #define DO_IMAGE 6
-#define IMAGE_DONE 7
+#define DO_HIRES_IMAGE 7
+#define IMAGE_DONE 8
+
 
 static map<string, ObjTag*>::iterator viter;
 
@@ -79,9 +81,10 @@ OpenGL::OpenGL()
     get_mb("OpenGL renderer request mailbox", 5),
     img_mb("OpenGL renderer image data mailbox", 5),
     helper_thread(0),
-    dead(0)
+    dead(0),
+    do_hi_res(false),
+    encoding_mpeg(false)
 {
-  encoding_mpeg = false;
   drawinfo=scinew DrawInfoOpenGL;
   fpstimer.start();
   
@@ -208,7 +211,7 @@ void OpenGL::kill_helper()
 void OpenGL::redraw_loop()
 {
   int r;
-  
+  string fname, ftype;
   // Tell the ViewWindow that we are started...
   TimeThrottle throttle;
   throttle.start();
@@ -251,6 +254,9 @@ void OpenGL::redraw_loop()
 	} else if(r== DO_IMAGE) {
 	  ImgReq req(img_mb.receive());
 	  real_saveImage(req.name, req.type);
+	} else if(r== DO_HIRES_IMAGE) {
+	  ImgReq req(img_mb.receive());
+	  do_hi_res = true;
 	} else {
 	  // Gobble them up...
 	  nreply++;
@@ -305,6 +311,11 @@ void OpenGL::redraw_loop()
 	} else if(r== DO_IMAGE) {
 	  ImgReq req(img_mb.receive());
 	  real_saveImage(req.name, req.type);
+	} else if(r== DO_HIRES_IMAGE) {
+	  ImgReq req(img_mb.receive());
+	  do_hi_res = true;
+	  fname = req.name;
+	  ftype = req.type;
 	} else {
 	  nreply++;
 	  break;
@@ -318,6 +329,22 @@ void OpenGL::redraw_loop()
     redraw_frame();
     for(int i=0;i<nreply;i++)
       recv_mb.send(REDRAW_DONE);
+
+    if( do_hi_res) {
+      
+       real_saveImage( string("1.")+fname, "ppm");
+       redraw_frame();
+       sleep(1);
+       real_saveImage(string("2.")+fname, "ppm");
+       redraw_frame();
+       sleep(1);
+       real_saveImage(string("3.")+fname, "ppm");
+       redraw_frame();
+       sleep(1);
+       real_saveImage(string("4.")+fname, "ppm");
+       do_hi_res = false;
+       redraw_frame();
+     }
   }
 }
 
@@ -545,6 +572,10 @@ void OpenGL::redraw_frame()
 	      glMatrixMode(GL_PROJECTION);
 	      glLoadIdentity();
 	      gluPerspective(fovy, aspect, znear, zfar);
+	      deriveFrustum();
+// 	      if( do_hi_res ) {
+// 		cycleFrustum();
+// 	      }
 	      glMatrixMode(GL_MODELVIEW);
 	      glLoadIdentity();
 	      Point eyep(view.eyep());
@@ -564,6 +595,11 @@ void OpenGL::redraw_frame()
 	      gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 			lookat.x(), lookat.y(), lookat.z(),
 			up.x(), up.y(), up.z());
+	      if( do_hi_res ) {
+		glMatrixMode(GL_PROJECTION);
+		cycleFrustum();
+	      }
+
 	    }
 	    
 	    // Set up Lighting
@@ -766,6 +802,36 @@ void OpenGL::redraw_frame()
 	  
 	  // Show the pretty picture
 	  glXSwapBuffers(dpy, win);
+
+//  #ifdef __sgi
+//  	  if(saveprefix != ""){
+//  	    // Save out the image...
+//  	    char filename[200];
+//  	    sprintf(filename, "%s%04d.rgb", saveprefix.c_str(), t);
+//  	    unsigned char* rgbdata=scinew unsigned char[xres*yres*3];
+//  	    glReadPixels(0, 0, xres, yres, GL_RGB, GL_UNSIGNED_BYTE, rgbdata);
+//  	    iflSize dims(xres, yres, 1);
+//  	    iflFileConfig fc(&dims, iflUChar);
+//  	    iflStatus sts;
+//  	    iflFile *file=iflFile::create(filename, NULL, &fc, NULL, &sts);
+//  	    if (sts != iflOKAY) {
+//  	      cerr << "Unable to save image file "<<filename<<"\n";
+//  	      break;
+//  	    }
+//  	    sts = file->setTile(0, 0, 0, xres, yres, 1, rgbdata);
+//  	    if (sts != iflOKAY) {
+//  	      cerr << "Unable to save image tile to "<<filename<<"\n";
+//  	      break;
+//  	    }
+//  	    sts = file->flush();
+//  	    if (sts != iflOKAY) {
+//  	      cerr << "Unable to write tile to "<<filename<<"\n";
+//  	      break;
+//  	    }
+//  	    file->close();
+//  	    delete[] rgbdata;
+//  	  }
+//  #endif // __sgi
 	}
 	throttle.stop();
 	double fps;
@@ -898,8 +964,8 @@ void OpenGL::redraw_frame()
       }
       TCL::execute(str.str().c_str());
       TCLTask::unlock();
-}
-    
+    } 
+
 void OpenGL::hide()
 {
   tkwin=0;
@@ -1619,15 +1685,57 @@ void OpenGL::setvisual(const string& wname, int which, int width, int height)
   myname = wname;
 }
 
+void OpenGL::saveHiResImage(const string& fname,
+			    const string& type) //= "ppm")
+{
+  send_mb.send(DO_HIRES_IMAGE);
+  img_mb.send(ImgReq(fname, type));
+}
+
+void OpenGL::deriveFrustum()
+{
+  double pmat[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  glGetDoublev( GL_PROJECTION_MATRIX, pmat);
+  double G = (pmat[10]-1)/(pmat[10]+1);
+  double n = frustum.n = -(pmat[14]*(G-1))/(2*G);
+  double f = frustum.f = n*G;
+  double l = frustum.l = n*(pmat[8]-1)/pmat[0];
+  double r = frustum.r = n*(pmat[8]+1)/pmat[0];
+  double b = frustum.b = n*(pmat[9]-1)/pmat[5];
+  double t = frustum.t = n*(pmat[9]+1)/pmat[5];
+
+  double clr = l + (r-l)/2.0;
+  double cbt = b + (t-b)/2.0;
+  frustum.tb[0][0]=l; frustum.tb[0][1]=clr; frustum.tb[0][2]=cbt;
+  frustum.tb[0][3]=t; frustum.tb[0][4]=n; frustum.tb[0][5]=f;
+  frustum.tb[1][0]=clr; frustum.tb[1][1]=r; frustum.tb[1][2]=cbt;
+  frustum.tb[1][3]=t; frustum.tb[1][4]=n; frustum.tb[1][5]=f;
+  frustum.tb[2][0]=l; frustum.tb[2][1]=clr; frustum.tb[2][2]=b;
+  frustum.tb[2][3]=cbt; frustum.tb[2][4]=n; frustum.tb[2][5]=f;
+  frustum.tb[3][0]=clr; frustum.tb[3][1]=r; frustum.tb[3][2]=b;
+  frustum.tb[3][3]=cbt; frustum.tb[3][4]=n; frustum.tb[3][5]=f;
+}
+
+void OpenGL::cycleFrustum()
+{
+  // glMatrixMode( GL_PROJECTION );
+  static int cycle = 0;
+  glLoadIdentity();
+  glFrustum( frustum.tb[cycle][0],frustum.tb[cycle][1],frustum.tb[cycle][2],
+	     frustum.tb[cycle][3],frustum.tb[cycle][4],frustum.tb[cycle][5]);
+  ++cycle;
+  if( cycle == 4 ) cycle = 0;
+}
+
 void OpenGL::saveImage(const string& fname,
-		       const string& type) //= "raw")
+		       const string& type) //= "ppm")
 {
   send_mb.send(DO_IMAGE);
   img_mb.send(ImgReq(fname,type));
 }
 
 void OpenGL::real_saveImage(const string& name,
-			    const string& type) //= "raw")
+			    const string& type) //= "ppm")
 {
   GLint vp[4];
   
@@ -1644,7 +1752,8 @@ void OpenGL::real_saveImage(const string& name,
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_FRONT);
   glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
-  
+
+
   if(type == "raw"){
     cerr << "Saving raw file "<<name<<":  size = " << vp[2] << "x" << vp[3] 
 	 << "\n";
@@ -1674,7 +1783,6 @@ void OpenGL::real_saveImage(const string& name,
     ppm <<"P6 "<<width<<" "<<height<<" "<<255<<"\n";
     ppm.write((const char *)pxl, n);
     ppm.close();
-
   }
   else {
     cerr<<"Error unknown image file type\n";

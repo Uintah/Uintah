@@ -210,6 +210,19 @@ int Viewer::process_event(int block)
 	    }
 	}
 	break;
+    case MessageTypes::ViewWindowDumpHiResImage:
+	{
+	    ViewerMessage* rmsg=(ViewerMessage*)msg;
+	    for(int i=0;i<viewwindow.size();i++){
+		ViewWindow* r=viewwindow[i];
+		if(r->id == rmsg->rid){
+                 r->current_renderer->saveHiResImage(rmsg->filename,
+						     rmsg->format);
+		    break;
+		}
+	    }
+	}
+	break;
     case MessageTypes::ViewWindowDumpObjects:
 	{
 	    geomlock.readLock();
