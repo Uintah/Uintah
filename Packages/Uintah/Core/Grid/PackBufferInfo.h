@@ -17,7 +17,7 @@ namespace Uintah {
     PackedBuffer(int bytes)
       : buf((void*)(scinew char[bytes])), bufsize(bytes) {}
     ~PackedBuffer()
-    { delete[] buf; }
+    { delete[] (char*)buf; }
     void* getBuffer() { return buf; }
     int getBufSize() { return bufsize; }
   private:
