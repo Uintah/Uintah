@@ -325,12 +325,12 @@ element, which is used in several contexts, is not described in detail here
 
 <P>
 <DL>
-<DT><STRONG><TT>&lt;component name="component-name" package="package-name"
+<DT><STRONG><TT>&lt;component name="component-name" 
     category="category-name"&gt;</TT></STRONG></DT>
 <DD>Starts the component specification.  All
   other elements are nested within this one.  This element requires the
-  <TT>name</TT>, <TT>package</TT>, and <TT>category</TT> attributes.  These
-  attributes name your component, the package the component belongs to, and
+  <TT>name</TT> and <TT>category</TT> attributes.  These
+  attributes name your component and specify
   the category the component belongs to respectively.
   <DL>
 <DT><STRONG><TT>&lt;overview&gt;</TT></STRONG></DT>
@@ -1271,10 +1271,9 @@ To start a new component specification with [x]emacs do this:
   menu (shift-button1 or shift-button3 for emacs and button3 for xemacs):
   Position the cursor at the end of the file and select the item named
   <B>component</B> from the pop-up menu.  After doing this you will be
-  prompted for the &lt;<TT>component</TT>&gt; element's <TT>name</TT>,
-  <TT>package</TT>, and <TT>category</TT> attributes.
-  attribute.  After typing in each of the attributes [X]Emacs 
-  will then insert a number of other required elements.
+  prompted for the &lt;<TT>component</TT>&gt; element's <TT>name</TT> and
+  <TT>category</TT> attributes.  attribute.  After typing in each of the
+  attributes [X]Emacs will then insert a number of other required elements.
 </LI>
 <LI>Insert content into these elements.  For example, you may insert your
   name between the start and end tags of the &lt;<TT>author</TT>&gt; element.
@@ -1412,11 +1411,11 @@ Mathematics Department, Macquarie University, Sydney.
 The command line arguments were: <BR>
  <STRONG>latex2html</STRONG> <TT>-split 0 -no_navigation component.tex</TT>
 <P>
-The translation was initiated by Ted Dustman on 2000-10-19
+The translation was initiated by Ted Dustman on 2000-11-09
 <BR><HR>
 <ADDRESS>
 Ted Dustman
-2000-10-19
+2000-11-09
 </ADDRESS>
 </BODY>
 </HTML>
