@@ -39,7 +39,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 using namespace std;
-using namespace Uintah::MPM;
+using namespace Uintah;
 using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
@@ -2417,6 +2417,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.71  2000/11/21 23:54:35  guilkey
+// Removed references to MPM namespace which existed only because of
+// the use of GeometryPiece.
+//
 // Revision 1.70  2000/10/14 17:11:05  sparker
 // Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
 // to get rid of memory leak
