@@ -259,10 +259,7 @@ itcl_class Module {
 	set color $Color(Basecolor)
 	if { [$this is_selected] } { set color $Color(Selected) }
 	if { $Disabled([modname])} { set color [blend $color $Color(Disabled)]}
-	if { $compiling_p } {
-	    set color $Color(Compiling)
-	    set args "COMPILING"
-	}
+	if { $compiling_p } { set color $Color(Compiling) }
 	if { ![llength $args] && ![string first SubnetIcon [modname]] } {
 	    set args $Subnet(Subnet$Subnet([modname]_num)_Name)
 	}
