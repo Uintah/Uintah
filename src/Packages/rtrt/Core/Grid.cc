@@ -337,7 +337,7 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
     ray.already_tested[1] = ray.already_tested[0];
     ray.already_tested[0] = this;
   }
-  const Vector dir(ray.direction());
+  const Vector dir(ray.direction()+Vector(1.e-8,1.e-8,1.e-8));
   const Point orig(ray.origin());
   Point min(bbox.min());
   Point max(bbox.max());
@@ -354,13 +354,8 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
     dix_dx=1;
     ddx=1;
   } else {
-    if (dir.x() == 0) {
-      MIN=orig.x();
-      MAX=orig.x();
-    } else {
-      MIN=inv_dir*(max.x()-orig.x());
-      MAX=inv_dir*(min.x()-orig.x());
-    }
+    MIN=inv_dir*(max.x()-orig.x());
+    MAX=inv_dir*(min.x()-orig.x());
     didx_dx=-nynz;
     dix_dx=-1;
     ddx=0;
@@ -376,14 +371,9 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
     diy_dy=1;
     ddy=1;
   } else {
-    if (dir.y() == 0) {
-      y0=orig.y();
-      y1=orig.y();
-    } else {
-      double inv_dir=1./dir.y();
-      y0=inv_dir*(max.y()-orig.y());
-      y1=inv_dir*(min.y()-orig.y());
-    }
+    double inv_dir=1./dir.y();
+    y0=inv_dir*(max.y()-orig.y());
+    y1=inv_dir*(min.y()-orig.y());
     didx_dy=-nz;
     diy_dy=-1;
     ddy=0;
@@ -406,14 +396,9 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
     diz_dz=1;
     ddz=1;
   } else {
-    if (dir.z() == 0) {
-      z0=orig.z();
-      z1=orig.z();
-    } else {
-      double inv_dir=1./dir.z();
-      z0=inv_dir*(max.z()-orig.z());
-      z1=inv_dir*(min.z()-orig.z());
-    }
+    double inv_dir=1./dir.z();
+    z0=inv_dir*(max.z()-orig.z());
+    z1=inv_dir*(min.z()-orig.z());
     didx_dz=-1;
     diz_dz=-1;
     ddz=0;
@@ -518,7 +503,7 @@ void Grid::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
     ray.already_tested[0] = this;
   }
 
-  const Vector dir(ray.direction());
+  const Vector dir(ray.direction()+Vector(1.e-8,1.e-8,1.e-8));
   const Point orig(ray.origin());
   Point min(bbox.min());
   Point max(bbox.max());
@@ -687,7 +672,7 @@ void Grid::softshadow_intersect(Light* light, Ray& ray,
     ray.already_tested[0] = this;
   }
 
-  const Vector dir(ray.direction());
+  const Vector dir(ray.direction()+Vector(1.e-8,1.e-8,1.e-8));
   const Point orig(ray.origin());
   Point min(bbox.min());
   Point max(bbox.max());
