@@ -62,6 +62,7 @@ using namespace SCIRun;
 SocketMessage::SocketMessage(DTMessage *dtmsg)
 {
   this->msg=dtmsg->buf;
+  dtmsg->buf=NULL;
   this->dtmsg=dtmsg;
   msg_size=sizeof(int); //skip handler_id
   spchan=NULL;
