@@ -1035,6 +1035,8 @@ case $1 in
   ;;
   Fusion)
   ;;
+  PCS)
+  ;;
   DataIO)
     sci_required_mdsplus=yes
     sci_required_hdf5=yes
