@@ -14,6 +14,7 @@ log</a>
 <li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/configVars.mk">configuration variables</a>
 <li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/config.log">config.log</a>
 <li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/nightly.txt">build script</a>
+<li> <a href="http://www.sci.utah.edu/~cates/SR2/nightly/doxygen.log">doxygen output</a>
 </ul>
 \endhtmlonly
 */
