@@ -297,9 +297,7 @@ Streamline::Streamline(const clString& id)
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-    need_p1=0;
-    p1=Point(-70,0,30);
-    p2=Point(-90,0,30);
+    need_p1=1;
     slider1_dist=.5;
     widget_point_matl=new Material(Color(0,0,0), Color(.54, .60, 1),
 				   Color(.5,.5,.5), 20);
@@ -379,6 +377,7 @@ void Streamline::execute()
 	field->get_bounds(min, max);
 	Point cen=Interpolate(min, max, 0.5);
 	double s=field->longest_dimension();
+        cerr << "s=" << s << endl;
 	p1=cen-Vector(1,0,0)*(s/5);
 	p2=cen+Vector(1,0,0)*(s/5);
 	p3=cen+Vector(0,1,0)*(s/10);
