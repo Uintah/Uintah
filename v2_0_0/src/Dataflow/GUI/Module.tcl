@@ -1026,7 +1026,8 @@ proc getModuleNotesOptions { module } {
 }
 
 proc startPortConnection { port portname} {
-    global Subnet modname_font new_conn_ports potential_connection
+    global Subnet modname_font new_conn_ports potential_connection drawXtraPort
+    if [info exists drawXtraPort] { unset drawXtraPort}
     set potential_connection ""
     set subnet $Subnet([pMod port])
     set canvas $Subnet(Subnet${subnet}_canvas)
@@ -1056,6 +1057,8 @@ proc startPortConnection { port portname} {
 	if {$addSubnetPort} {
 	    lappend new_conn_ports \
 		[list Subnet$subnet [numPorts $subnet [invType port]]]
+	    set drawXtraPort $port
+	    drawPorts Subnet$subnet [invType port]
 	}
     }
 
@@ -1100,9 +1103,10 @@ proc trackPortConnection { port x y } {
 }
 
 proc endPortConnection { subnet } {
-    global Subnet potential_connection
+    global Subnet potential_connection drawXtraPort
     $Subnet(Subnet${subnet}_canvas) delete temp
-    if { $potential_connection == "" } return
+    if [info exists drawXtraPort] { unset drawXtraPort }
+    if { $potential_connection == "" } { drawPorts Subnet$subnet ; return }
     createConnection $potential_connection 1
 }
 
@@ -1662,13 +1666,13 @@ proc getModuleConnections { module } {
 }
 
 proc getModulePortinfo { modid porttype } {
-    global Subnet
-    if {[string first Subnet $modid] != 0} {
+    global Subnet drawXtraPort
+    if {![isaSubnet $modid]} {
 	set retval [$modid-c ${porttype}portinfo] 
     } else {
 	set retval ""
 	set tocheck ""
-	if { [string first SubnetIcon $modid] == 0} {
+	if { [isaSubnetIcon $modid]} {
 	    set subnet $Subnet(${modid}_num)
 	} else {
 	    set subnet $Subnet($modid)
@@ -1692,6 +1696,13 @@ proc getModulePortinfo { modid porttype } {
 	    set num [lindex [lindex $check 1] 1]
 	    lappend retval [lindex [getModulePortinfo $mod $porttype] $num]
 	    incr i
+	}
+	if [info exists drawXtraPort] {
+	    if [string equal [pType drawXtraPort] $porttype] {
+		lappend retval \
+		    [lindex [getModulePortinfo  [pMod drawXtraPort] \
+				 [pType drawXtraPort]] [pNum drawXtraPort]]
+	    }
 	}
     }
 
