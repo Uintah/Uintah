@@ -180,7 +180,8 @@ Module::Module(const clString& name, const clString& id,
 
   IPort* iport;
   OPort* oport;
-
+  
+  first_dynamic_port = -1;
   lastportdynamic = 0;
   dynamic_port_maker = 0;
 
@@ -235,8 +236,10 @@ Module::Module(const clString& name, const clString& id,
   // the last port listed in the .xml file may or may not be dynamic.
   // if found and lastportdynamic is true, the port is dynamic.
   // otherwise it is not dynamic.
-  if (lastportdynamic && !dynamic_port_maker)
+  if (lastportdynamic && !dynamic_port_maker){
     lastportdynamic = 0;
+  }
+  first_dynamic_port = iports.size()-1;
 }
 
 
@@ -403,7 +406,7 @@ OPort *Module::get_oport(const char *name)
 
 void Module::connection(ConnectionMode mode, int which_port, int is_oport)
 {
-  if(!is_oport && lastportdynamic && dynamic_port_maker) {
+  if(!is_oport && lastportdynamic && dynamic_port_maker && (which_port >= first_dynamic_port)) {
     if(mode == Disconnected) {
       remove_iport(which_port);
     } else {
