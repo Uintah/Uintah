@@ -26,7 +26,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-
 <section id="sec.rpminst">
   <title id="title.rpminst">Installation from RPMs</title>
 
@@ -49,46 +48,50 @@ DEALINGS IN THE SOFTWARE.
 	  installation instructions.</para>
 	</listitem>
 	<listitem>
-	  <para> The &sr;/Insight RPM includes the Insight and Teem
+	  <para>The &sr;/Insight RPM includes the Insight and Teem
 	  packages and Insight libraries.</para>
 	</listitem>
       </itemizedlist>
-      The version of &sr; included in all RPMs has been configured
-      to support BLAS but BLAS libraries must be installed
-      separately.  See <xref linkend="sec.blas_lapack_inst"/> for BLAS
-      installation instructions<footnote><para>BLAS/ATLAS and LAPACK are often
-    pre-installed in Linux distributions.</para></footnote>.
+      The version of &sr; included in all RPMs has been configured to
+      support BLAS but BLAS libraries must be installed separately.
+      See <xref linkend="sec.blas_lapack_inst"/> for BLAS installation
+      instructions (BLAS/ATLAS and LAPACK are often
+      pre-installed in Linux distributions.).
     </para>
 
-    <para>
-      Root privileges are required to install the &sr;
-      <acronym>RPM</acronym>s.  &sr; is installed in
-      <filename>/usr/local/&sr;/bin</filename>.
-    </para>
+    <para>Root privileges are required to install the &sr;
+    <acronym>RPM</acronym>s.  &sr; is installed in
+    <filename>/usr/local/&sr;/bin</filename>.</para>
 
     <para>
-      RPM installation consists of the following steps:
+      Follow these steps to install &sr;:
       <orderedlist>
 	<listitem>
-	  <para>Downloading a &sr; RPM distribution,
-	  documentation, and sample data sets.</para>
+	  <para><link linkend="sec.rpm_download">Download</link> a
+	  &sr; RPM distribution, documentation, and sample data
+	  sets.</para>
 	</listitem>
 	<listitem>
-	  <para>Installing &sr; using the <command>rpm</command>
-	  command.</para>
+	  <para><link linkend="sec.rpm_install">Install</link> &sr;
+	  using the <command>rpm</command> command.</para>
 	</listitem>
 	<listitem>
-	  <para>Installing &sr;'s sample data sets.</para>
+	  <para><link linkend="sec.rpm_data">Install</link> &sr;'s
+	  sample data sets.</para>
 	</listitem>
 	<listitem>
-	  <para>Installing &sr;'s documentation.</para>
+	  <para><link linkend="sec.rpm_docs">Install</link> &sr;'s
+	  documentation.</para>
 	</listitem>
       </orderedlist>
     </para>
 
+    <para>Be sure to read <xref linkend="sec.prepare" /> after
+    installing, but before starting, &sr;.</para>
+
   </section>
 
-  <section>
+  <section id="sec.rpm_download">
     <title>Downloading</title>
     <para>
       From <acronym>SCI</acronym>'s <ulink
@@ -112,7 +115,7 @@ DEALINGS IN THE SOFTWARE.
 	</listitem>
 	<listitem>
 	  <para>
-	    <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+	    <filename>SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	  </para>
 	</listitem>
       </itemizedlist>
@@ -120,7 +123,7 @@ DEALINGS IN THE SOFTWARE.
 
   </section>
 
-  <section>
+  <section id="sec.rpm_install">
     <title>Installing</title>
 
     <para> Start a terminal (e.g. xterm) application.  Become the root
@@ -151,7 +154,7 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
     </para>
   </section>
 
-  <section>
+  <section id="sec.rpm_data">
     <title>&sr;'s Sample Data Sets</title>
     <para>
       Install
@@ -173,7 +176,7 @@ rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-<replaceable>system</replaceable>
     </para>
   </section>
 
-  <section>
+  <section id="sec.rpm_docs">
     <title>&sr;'s Documentation</title>
     <para>
       The following procedure installs the documentation

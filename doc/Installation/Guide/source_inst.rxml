@@ -35,23 +35,26 @@ DEALINGS IN THE SOFTWARE.
     <title>Introduction</title>
 
     <para>
-      Installation <!--%= doc.ifNotP(Doc::Irix) {%Q{-->from source code<!--}} %--> consists of these steps:
+      Follow these steps to install &sr; <!--%= doc.ifNotP(Doc::Irix) {%Q{-->from source code<!--}} %-->:
       <orderedlist>
 	<listitem>
-	  <para>Downloading &sr; sources, packages, third party
-	  software, sample data sets, and documentation.</para>
+	  <para><link linkend="src_download">Download</link> &sr;
+	  sources, packages, third party software, sample data sets,
+	  and documentation.</para>
 	</listitem>
 	<listitem>
-	  <para>Unpacking sources.</para>
+	  <para><link linkend="src_unpack">Unpack</link> sources.</para>
 	</listitem>
 	<listitem>
-	  <para>Building required third party software.</para>
+	  <para><link linkend="sec.third_party_inst">Build</link>
+	  required third party software.</para>
 	</listitem>
 	<listitem>
-	  <para>Building optional third party software.</para>
+	  <para><link linkend="sec.opt_inst">Build</link> optional
+	  third party software.</para>
 	</listitem>
 	<listitem>
-	  <para>Building &sr;</para>
+	  <para><link linkend="sec.build-sr">Build</link> &sr;</para>
 	</listitem>
       </orderedlist>
     </para>

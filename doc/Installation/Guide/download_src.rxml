@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 
   <orderedlist>
 
-    <listitem>
+    <listitem id="src_download">
 
       <para>
 	From <acronym>SCI</acronym>'s <ulink
@@ -112,7 +112,7 @@ DEALINGS IN THE SOFTWARE.
 
     </listitem>
 
-    <listitem>
+    <listitem id="src_unpack">
       <para>
 	Unpack &sr; sources:
 	<literallayout class="monospaced">
