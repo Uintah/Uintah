@@ -69,6 +69,8 @@ using std::pair;
 
       // Copy a section from another uda's index.xml.
       void copySection(Dir& fromDir, Dir& toDir, string section);
+      void copySection(Dir& fromDir, string section)
+      { copySection(fromDir, d_dir, section); }
 
       //////////
       // Insert Documentation Here:
