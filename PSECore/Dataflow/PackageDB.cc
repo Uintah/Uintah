@@ -5,7 +5,6 @@
 #ifdef ASSERT
 #undef ASSERT
 #endif
-#include <SCICore/Containers/AVLTree.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/PackageDB.h>
 #include <PSECore/Dataflow/FileUtils.h>
@@ -38,27 +37,14 @@ using std::vector;
 #endif
 
 typedef std::map<int,char*>::iterator char_iter;
+typedef std::map<int,inport_node*>::iterator inport_iter;
+typedef std::map<int,outport_node*>::iterator outport_iter;
 
 namespace PSECore {
 namespace Dataflow {
 
 using namespace SCICore::Containers;
-using SCICore::Containers::AVLTree;
-using SCICore::Containers::AVLTreeIter;
 using namespace PSECore::XMLUtil;
-
-typedef struct ModuleInfo_tag {
-  ModuleMaker maker;
-  clString uiFile;
-} ModuleInfo;
-
-typedef AVLTree<clString,ModuleInfo*> Category;
-typedef AVLTree<clString,Category*> Package;
-typedef AVLTree<clString,Package*> Packages;
-
-typedef AVLTreeIter<clString,ModuleInfo*> CategoryIter;
-typedef AVLTreeIter<clString,Category*> PackageIter;
-typedef AVLTreeIter<clString,Package*> PackagesIter;
 
 PackageDB packageDB;
 
@@ -138,43 +124,69 @@ void PackageDB::loadPackage(const clString& packPath)
 		      SOError());
       }
       
-      if (makeaddr)
-	registerModule(basename(packageElt()),node->category,
-		       node->name,makeaddr,"not currently used");
+      if (makeaddr) {
+	char* str = 0;
+	IPortInfo* ipinfo;
+	OPortInfo* opinfo;
+	ModuleInfo* info = scinew ModuleInfo;
+	info->packageName = basename(packageElt());
+	info->categoryName = node->category;
+	info->moduleName = node->name;
+	info->maker = (ModuleMaker)makeaddr;
+	info->uiFile = "not currently used";
+	info->iports = scinew std::map<int,IPortInfo*>;
+	info->oports = scinew std::map<int,OPortInfo*>;
+	for (inport_iter i1 = node->io->inports->begin();
+	     i1!=node->io->inports->end();
+	     i1++) {
+	  ipinfo = scinew IPortInfo;
+	  ipinfo->name = clString(((*i1).second)->name);
+	  ipinfo->datatype = clString(((*i1).second)->datatype);
+	  ipinfo->maker = (iport_maker)0;
+	  info->iports->insert(
+	    std::pair<int,IPortInfo*>(info->iports->size(),
+					    ipinfo));
+	}
+	for (outport_iter i2 = node->io->outports->begin();
+	     i2!=node->io->outports->end();
+	     i2++) {
+	  opinfo = scinew OPortInfo;
+	  opinfo->name = clString(((*i2).second)->name);
+	  opinfo->datatype = clString(((*i2).second)->datatype);
+	  opinfo->maker = (oport_maker)0;
+	  info->oports->insert(
+	    std::pair<int,OPortInfo*>(info->oports->size(),
+					    opinfo));
+	}
+	registerModule(info);
+      }
     }
   }
   
   TCL::execute("createCategoryMenu");
 }
   
-void PackageDB::registerModule(const clString& packageName,
-			       const clString& categoryName,
-			       const clString& moduleName,
-			       ModuleMaker moduleMaker,
-			       const clString& tclUIFile) {
+void PackageDB::registerModule(ModuleInfo* info) {
   Packages* db=(Packages*)d_db;
  
   Package* package;
-  if(!db->lookup(packageName,package))
+  if(!db->lookup(info->packageName,package))
     {
-      db->insert(packageName,package=new Package);
-      d_packageList.add( packageName );
+      db->insert(info->packageName,package=new Package);
+      d_packageList.add( info->packageName );
     }
   
   Category* category;
-  if(!package->lookup(categoryName,category))
-    package->insert(categoryName,category=new Category);
+  if(!package->lookup(info->categoryName,category))
+    package->insert(info->categoryName,category=new Category);
   
   ModuleInfo* moduleInfo;
-  if(!category->lookup(moduleName,moduleInfo)) {
+  if(!category->lookup(info->moduleName,moduleInfo)) {
     moduleInfo=new ModuleInfo;
-    category->insert(moduleName,moduleInfo);
+    category->insert(info->moduleName,info);
   } else cerr << "WARNING: Overriding multiply registered module "
-	      << packageName << "." << categoryName << "."
-	      << moduleName << "\n";
-  
-  moduleInfo->maker=moduleMaker;
-  moduleInfo->uiFile=tclUIFile;
+	      << info->packageName << "." << info->categoryName << "."
+	      << info->moduleName << "\n";  
 }
  
 void PackageDB::createAlias(const clString& fromPackageName,
@@ -203,8 +215,7 @@ void PackageDB::createAlias(const clString& fromPackageName,
     postMessage("Warning: creating an alias from a nonexistant module "+fromPackageName+"."+fromCategoryName+"."+fromModuleName+" (ignored)");
     return;
   }
-  registerModule(toPackageName, toCategoryName, toModuleName,
-		 moduleInfo->maker, moduleInfo->uiFile);
+  registerModule(moduleInfo);
 }
  
 Module* PackageDB::instantiateModule(const clString& packageName,
@@ -271,9 +282,9 @@ Module* PackageDB::instantiateModule(const clString& packageName,
 #endif
   
   Module *module = (moduleInfo->maker)(instanceName);
-  module->packageName = packageName;
-  module->moduleName = moduleName;
-  module->categoryName = categoryName;
+  //module->packageName = packageName;
+  //module->moduleName = moduleName;
+  //module->categoryName = categoryName;
   
   return module;
 }
@@ -349,6 +360,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.24  2000/11/21 22:44:30  moulding
+// initial commit of auto-port facility (not yet operational).
+//
 // Revision 1.23  2000/10/24 05:57:41  moulding
 // new module maker Phase 2: new module maker goes online
 //

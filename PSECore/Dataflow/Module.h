@@ -26,6 +26,7 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Mailbox.h>
 #include <SCICore/Geom/Pickable.h>
+#include <map>
 
 namespace SCICore {
   namespace Geometry {
@@ -80,6 +81,11 @@ class OPort;
 class IPort;
 class AI;
 
+class Module;
+
+typedef IPort* (*iport_maker)(Module*, const clString&);
+typedef OPort* (*oport_maker)(Module*, const clString&);
+
 class PSECORESHARE Module : public TCL, public Pickable {
     /*
      * This exists to trip people up that still have clone and
@@ -109,6 +115,8 @@ public:
     State state;
     Array1<OPort*> oports;
     Array1<IPort*> iports;
+    std::map<clString,OPort*> auto_oports;
+    std::map<clString,IPort*> auto_iports;
     ModuleHelper* helper;
     int have_own_dispatch;
 
@@ -128,7 +136,8 @@ public:
 	Iterator,
 	SalmonSpecial
     };
-    Module(const clString& name, const clString& id, SchedClass);
+    Module(const clString& name, const clString& id, SchedClass,
+	   const clString& cat="unknown", const clString& pack="unknown");
     virtual ~Module();
 
     /*
@@ -174,6 +183,8 @@ public:
     void rename_oport(int, const clString&);
     virtual void reconfigure_iports();
     virtual void reconfigure_oports();
+    IPort* get_iport(char*);
+    OPort* get_oport(char*);
 
     // Used by Module subclasses
     void error(const clString&);
@@ -221,6 +232,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.15  2000/11/21 22:44:30  moulding
+// initial commit of auto-port facility (not yet operational).
+//
 // Revision 1.14  2000/08/11 15:44:43  bigler
 // Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
 //
