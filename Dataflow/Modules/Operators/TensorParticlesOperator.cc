@@ -35,7 +35,7 @@ void TensorParticlesOperator::execute(void)
   TensorParticlesHandle hTF;
   
   if(!in->get(hTF)){
-    std::cerr<<"TensorParticlesOperator::execute(void) Didn't get a handle\n";
+    error("TensorParticlesOperator::execute(void) Didn't get a handle.");
     return;
   }
 
