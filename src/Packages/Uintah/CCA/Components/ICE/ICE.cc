@@ -28,8 +28,8 @@
 #include <Core/Util/DebugStream.h>
 
 
-#define JOHN_BCS
-//#undef JOHN_BCS
+//#define JOHN_BCS
+#undef JOHN_BCS
 
 using std::vector;
 using std::max;
