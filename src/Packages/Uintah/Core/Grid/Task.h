@@ -243,6 +243,45 @@ WARNING
       }
     }; // end Action4
     
+    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+    class Action5 : public ActionBase {
+      
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup*,
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse*,
+		     DataWarehouse*,
+		     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+      Arg5 arg5;
+    public: // class Action4
+      Action5( T* ptr,
+	       void (T::*pmf)(const ProcessorGroup*, 
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse*,
+			      DataWarehouse*,
+			      Arg1, Arg2, Arg3, Arg4, Arg5),
+	       Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+	: ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2),
+	  arg3(arg3), arg4(arg4), arg5(arg5) {}
+      virtual ~Action5() {}
+      
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pc,
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse* fromDW,
+			DataWarehouse* toDW) {
+	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+      }
+    }; // end Action5
+    
   public: // class Task
     
     enum WhichDW {
@@ -345,6 +384,23 @@ WARNING
 	 Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
       : d_taskName( taskName ), 
 	d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+    
+    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+    Task(const SimpleString&         taskName,
+	 T*                    ptr,
+	 void (T::*pmf)(const ProcessorGroup*,
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse*,
+			DataWarehouse*,
+			Arg1, Arg2, Arg3, Arg4, Arg5),
+	 Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
+      : d_taskName( taskName ), 
+	d_action( scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5) )
     {
       d_tasktype = Normal;
       initialize();
@@ -495,9 +551,14 @@ WARNING
     }
     
     struct Edge;
+
+    enum DepType {
+      Modifies, Computes, Requires
+    };
     
     struct Dependency {
       Dependency* next;
+      DepType deptype;
       Task* task;
       const VarLabel*  var;
       const PatchSubset* patches;
@@ -516,14 +577,14 @@ WARNING
 	return task->mapDataWarehouse(whichdw);
       }
       
-      Dependency(Task* task, WhichDW dw, const VarLabel* var,
+      Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
 		 const PatchSubset* patches,
 		 const MaterialSubset* matls,
 		 DomainSpec patches_dom = NormalDomain,
 		 DomainSpec matls_dom = NormalDomain,
 		 Ghost::GhostType gtype = Ghost::None,
 		 int numGhostCells = 0);
-      Dependency(Task* task, WhichDW dw, const VarLabel* var,
+      Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
 		 const Level* reductionLevel,
 		 const MaterialSubset* matls,
 		 DomainSpec matls_dom = NormalDomain);
@@ -625,7 +686,10 @@ WARNING
     
     int mapDataWarehouse(WhichDW dw) const;
     DataWarehouse* mapDataWarehouse(WhichDW dw, vector<DataWarehouseP>& dws) const;
-    
+
+    int getSortedOrder() const {
+      return sortedOrder;
+    }
   protected: // class Task
     friend class TaskGraph;
     friend class SchedulerCommon;
@@ -669,6 +733,7 @@ WARNING
 
     static const MaterialSubset* getGlobalMatlSubset();
     static MaterialSubset* globalMatlSubset;
+    int sortedOrder;
 
     int dwmap[TotalDWs];
   };
