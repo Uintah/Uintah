@@ -5,12 +5,14 @@ OBJTOP   = ../..
 TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
 ITCL_INCLUDE_DIR = @ITCL_INCLUDE_DIR@
+BLT_INCLUDE_DIR = @BLT_INCLUDE_DIR@
 
 SRCS     = tk3d2.c tkAppInit.c tkBevel.c tkCanvBLine.c tkCursor.c tkOpenGL.c \
            tkRange.c tkUnixRange.c tclTimer.c tclUnixNotfy.c tk3d.c
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
            -I$(SRCDIR)/internal-includes \
-           -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
+           -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR) \
+	   -I$(BLT_INCLUDE_DIR)
 
 include $(SRCTOP)/scripts/objs.mk
