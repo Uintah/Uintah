@@ -12,6 +12,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <iomanip>
 #include <map>
