@@ -785,7 +785,10 @@ proc biopseFDialog_Config {w type argList} {
 	    {-filevar "" "" ""}
 	    {-cancel "" "" ""}
 	    {-formatvar "" "" ""}
+	    {-formats "" "" ""}
 	    {-splitvar "" "" ""}
+	    {-imgwidth "" "" ""}
+	    {-imgheight "" "" ""}
 	}
     }
 
@@ -946,14 +949,19 @@ static char updir_bits[] = {
 
 	set data(formatMenuBtn) [menubutton $f4.menu -indicatoron 1 -menu $f4.menu.m]
 	set data(formatMenu) [menu $data(formatMenuBtn).m -tearoff 0]
-	$data(formatMenu) add command -label "ASCII" -command "biopseFDialog_SetFormat $w ASCII"
-	$data(formatMenu) add command -label "Binary" -command "biopseFDialog_SetFormat $w Binary"
 
-	if { [string compare [set $data(-formatvar)] Binary]} {
-	    biopseFDialog_SetFormat $w ASCII
-	} else {
-	    biopseFDialog_SetFormat $w Binary
-	}
+        set formats $data(-formats)
+        if {[llength $formats] == 0} {
+	    set formats {ASCII Binary}
+        }
+        foreach f $formats {
+	    $data(formatMenu) add command -label $f \
+                -command "biopseFDialog_SetFormat $w $f"
+
+            if { [string compare [set $data(-formatvar)] $f] == 0} {
+                biopseFDialog_SetFormat $w $f
+            }
+        }
 
 	# setting flag if the file to be split
 	if  { ![string compare [set data(-splitvar)] ""] } {
@@ -961,6 +969,18 @@ static char updir_bits[] = {
 	} else {
 	    set data(is_split) 1
 	}
+
+        if {$data(-imgwidth) != ""} {
+            set f5 [frame $w.f5 -bd 0]
+            label $f5.resxl  -text "Width:"  -width 15 -anchor e
+            entry $f5.resx -width 5 -text $data(-imgwidth)
+        
+            label $f5.resyl  -text "Height:" -width 15 -anchor e
+            entry $f5.resy -width 5 -text $data(-imgheight)
+        
+            pack $f5.resxl $f5.resx $f5.resyl $f5.resy -side left -padx 2
+            pack $f5 -side bottom -fill x -pady 4
+        }
 
 	$data(formatMenuBtn) config -takefocus 1 -highlightthickness 2 \
 	-relief raised -bd 2 -anchor w

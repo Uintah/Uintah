@@ -106,8 +106,8 @@ itcl_class ViewWindow {
 
 	global $this-saveFile
 	global $this-saveType
-	if {![info exists $this-File]} {set $this-saveFile "out.raw"}
-	if {![info exists $this-saveType]} {set $this-saveType "raw"}
+	if {![info exists $this-File]} {set $this-saveFile "MyImage.ppm"}
+	if {![info exists $this-saveType]} {set $this-saveType "ppm"}
 
 	# Animation parameters
 	global $this-current_time
@@ -1700,6 +1700,7 @@ itcl_class ViewWindow {
 	global $this-resx
 	global $this-resy
 	global $this-aspect
+	global env
 
 	set $this-resx [winfo width .ui[modname].wframe.draw]
 	set $this-resy [winfo height .ui[modname].wframe.draw]
@@ -1713,42 +1714,52 @@ itcl_class ViewWindow {
 
 	toplevel $w
 
-        wm title $w "Save ViewWindow Image"
-    
-	makeFilebox $w \
-	    $this-saveFile "$this doSaveImage" "destroy $w"
-	#$w.f.sel.sel configure -textvariable $saveFile
-	set ex $w.f.extra
-	radiobutton $ex.raw -variable $this-saveType \
-	    -text "Raw File" -value "raw" \
-	    -command "$this changeName $w raw"
+	set initdir ""
+
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
 	
-	radiobutton $ex.ppm -variable $this-saveType \
-	    -text "PPM File" -value "ppm" \
-	    -command "$this changeName $w ppm"
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
 
-	radiobutton $ex.byextension -variable $this-saveType \
-	    -text "By Extension" -value "magick" \
-	    -command "$this changeName $w jpeg"
+	#######################################################
+	# to be modified for particular reader
 
-	if { [set $this-saveType] == "ppm" } {
-	    $ex.ppm select
-	} elseif { [set $this-saveType] == "raw" } {
-	    $ex.raw select 
-	} else { $ex.byextension select }
+	# extansion to append if no extension supplied by user
+	set defext ""
+	
+	# name to appear initially
+	set defname "MyImage.ppm"
+	set title "Save ViewWindow Image"
 
-	label $ex.resxl  -text "X:" 
-	entry $ex.resx -width 5 -text $this-resx 
-#	-validate all -validatecommand "$this do_validate_x $ex"
-
-	label $ex.resyl  -text "Y:" 
-	entry $ex.resy -width 5 -text $this-resy 
-#	-validate all	-validatecommand "$this do_validate_y $ex"
-	checkbutton $ex.aspect -text "Preserve Aspect Ratio" \
-		-variable $this-aspect -command "$this do_aspect $ex" 
-	$ex.aspect select
-	pack $ex.raw $ex.ppm $ex.byextension -side top -anchor w
-	pack $ex.resxl $ex.resx $ex.resyl $ex.resy -side left -anchor w
+	# file types to appers in filter box
+	set types {
+	    {{All Files}    {.*}}
+	    {{PPM File}     {.ppm}}
+	    {{Raw File}     {.raw}}
+	}
+	
+	######################################################
+	
+	makeSaveFilebox \
+		-parent $w \
+		-filevar $this-saveFile \
+		-command "$this doSaveImage; destroy $w" \
+		-cancel "destroy $w" \
+		-title $title \
+		-filetypes $types \
+	        -initialfile $defname \
+		-initialdir $initdir \
+		-defaultextension $defext \
+		-formatvar $this-saveType \
+                -formats {ppm raw "by_extension"} \
+	        -imgwidth $this-resx \
+	        -imgheight $this-resy
     }
     
     method changeName { w type} {
