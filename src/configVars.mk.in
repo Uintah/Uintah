@@ -207,7 +207,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
   SUBDIRS := $(SUBDIRS) SCIRun CCA
   HAVE_BABEL := @HAVE_BABEL@
   ifeq ($(HAVE_BABEL),yes)
-    SUBDIRS += Babel
+#    SUBDIRS += Babel
     CCASIDL := Core/Babel/cca.sidl
     BABEL_REPOSITORY:= Core/Babel/repository
     BABEL := @BABEL_BIN@
