@@ -37,20 +37,20 @@
 #include <sgi_stl_warnings_on.h>
 
 #if HAVE_SYS_UUID_H
-extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
-#include <sys/uuid.h>
-}
-#define UUID_CREATE
+   extern "C" { // SGI uuid.h doesn't have this, so we need extern C here
+#  include <sys/uuid.h>
+   }
+#  define UUID_CREATE
 #else
-#if HAVE_UUID_UUID_H
-extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
-#include <uuid/uuid.h>
-}
-#define UUID_GENERATE
-#else
-#define GENERATE_CUSTOM_UUID
-#include <Core/Util/GenerateUUID.h>
-#endif
+#  if HAVE_UUID_UUID_H
+      extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
+#     include <uuid/uuid.h>
+      }
+#     define UUID_GENERATE
+#  else
+#     define GENERATE_CUSTOM_UUID
+#     include <Core/Util/GenerateUUID.h>
+#  endif
 #endif
 
 /*
