@@ -12,7 +12,6 @@ VolumeVisBase::VolumeVisBase(VolumeVisDpy* dpy) :
   Object(this), 
   dpy(dpy)
 {
-  dpy->attach(this);
 }
 
 VolumeVisBase::~VolumeVisBase()
