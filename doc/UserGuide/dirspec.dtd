@@ -22,4 +22,5 @@
 <!ELEMENT definition (term, p+)>
 <!ELEMENT term (#PCDATA)>
 
-<!ELEMENT example (p+)>
+<!ELEMENT code (#PCDATA)>
+<!ELEMENT example (p | code)+>
