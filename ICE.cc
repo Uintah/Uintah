@@ -1568,6 +1568,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
 
     
+    double p_ref = d_sharedState->getRefPress();
+    press_CC.initialize(p_ref);
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
