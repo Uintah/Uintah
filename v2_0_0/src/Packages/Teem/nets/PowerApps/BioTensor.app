@@ -1252,7 +1252,7 @@ set $m92-numseeds {10}
 set $m92-rngseed {1}
 set $m92-rnginc {1}
 set $m92-clamp {0}
-set $m92-autoexecute {0}
+set $m92-autoexecute {1}
 set $m92-type {}
 set $m92-dist {uniuni}
 set $m92-whichtab {Widget}
@@ -1540,7 +1540,7 @@ set $m131-numseeds {10}
 set $m131-rngseed {1}
 set $m131-rnginc {1}
 set $m131-clamp {0}
-set $m131-autoexecute {0}
+set $m131-autoexecute {1}
 set $m131-type {}
 set $m131-dist {uniuni}
 set $m131-whichtab {Widget}
