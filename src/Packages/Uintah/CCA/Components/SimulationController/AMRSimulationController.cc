@@ -32,7 +32,6 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
@@ -429,8 +428,8 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
     d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
     
-    OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(d_scheduler->get_dw(0));
-    OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(d_scheduler->getLastDW());
+    DataWarehouse* oldDataWarehouse = d_scheduler->get_dw(0);
+    DataWarehouse* newDataWarehouse = d_scheduler->getLastDW();
 
     d_scheduler->scheduleDataCopy(currentGrid, d_sharedState);
     for ( int levelIndex = 1; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
@@ -446,18 +445,17 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     //         cerr << getpid() << ": RANDY: Copying level variables" << endl;
     
     for ( unsigned int i = 0; i < levelVariableInfo.size(); i++ ) {
-      VarLabelMatl<Level> currentLevelVar = levelVariableInfo[i];
+      VarLabelMatl<Level> currentReductionVar = levelVariableInfo[i];
       // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
-      const Level* oldLevel = currentLevelVar.domain_;
+      const Level* oldLevel = currentReductionVar.domain_;
       const Level* newLevel = NULL;
       if (oldLevel) {
         newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
       }
       
-      if(!oldDataWarehouse->d_reductionDB.exists(currentLevelVar.label_, currentLevelVar.matlIndex_, currentLevelVar.domain_))
-        SCI_THROW(UnknownVariable(currentLevelVar.label_->getName(), oldDataWarehouse->getID(), currentLevelVar.domain_, currentLevelVar.matlIndex_, "in copyDataTo ReductionVariable"));
-      ReductionVariableBase* v = oldDataWarehouse->d_reductionDB.get(currentLevelVar.label_, currentLevelVar.matlIndex_, currentLevelVar.domain_);
-      newDataWarehouse->d_reductionDB.put(currentLevelVar.label_, currentLevelVar.matlIndex_, newLevel, v->clone(), false);
+      ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
+      oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
+      newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
     }
 
     double time = Time::currentSeconds() - start;
