@@ -142,6 +142,8 @@ HexToTet::execute()
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
   bool flipflop = true;
+  hvmesh->synchronize(Mesh::FACES_E);
+
   while (bi != ei)
   {
     if (!visited[(unsigned int)*bi])
