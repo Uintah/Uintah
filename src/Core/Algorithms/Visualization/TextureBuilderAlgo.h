@@ -122,7 +122,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 	bool same = true;
 	// Same number of levels?
 	if( vmrfield->nlevels() == gmrfield->nlevels() ) {
-	  for(unsigned int i = 0; i < vmrfield->nlevels(); ++i){
+	  for(int i = 0; i < vmrfield->nlevels(); ++i){
 	    const MultiResLevel<value_type>* lev = vmrfield->level( i );
 	    const MultiResLevel<Vector> * glev = gmrfield->level(i);
 	    // Does each level have the same number of patches?
