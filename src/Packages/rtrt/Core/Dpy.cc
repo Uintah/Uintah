@@ -626,8 +626,12 @@ Dpy::renderFrame() {
       rserver->sendImage(displayedImage, nstreams);
     } else {
       // Display textual information on the screen:
-      char buf[100];
-      sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
+      char buf[200];
+      if (priv->FrameRate > 1)
+	sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
+      else
+	sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
+		 1.0f/(priv->FrameRate));
       
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
@@ -636,7 +640,8 @@ Dpy::renderFrame() {
       glLoadIdentity();
       glTranslatef(0.375, 0.375, 0.0);
       displayedImage->draw( renderWindowSize_, fullScreenMode_ );
-      printString(fontbase, 10, 3, buf, Color(1,1,1));
+      if (priv->show_frame_rate)
+	printString(fontbase, 10, 3, buf, Color(1,1,1));
       display();
 #if 0
       if(priv->displayRStats_ )
