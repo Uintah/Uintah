@@ -945,6 +945,9 @@ Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
   mouseDown_ = 0;
 
   switch(button){
+  case GLUT_RIGHT_BUTTON:
+    activeGui->fovSpinner_->set_float_val( activeGui->camera_->get_fov() );
+    break;
   case GLUT_MIDDLE_BUTTON:
     {
 #if 1
@@ -1110,7 +1113,6 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  else if( fov > MAX_FOV )
 	    fov = MAX_FOV;
 	  activeGui->camera_->set_fov( fov );
-	  //	  activeGui->fovSpinner_->set_float_val( fov );
 	}
       activeGui->camera_->setup();
     }
