@@ -247,8 +247,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
         }
 
 	# Before building the tree save the current selections since
-	# they erased when the tree is built.
-
+	# they are erased when the tree is built.
 	set datasets [set $this-datasets]
 
 	toplevel $w
