@@ -12,6 +12,7 @@ namespace Uintah {
   class Patch;
   class ProcessorGroup;
   class DetailedTasks;
+  class Scheduler;
 
 /****************************************
 
@@ -51,7 +52,11 @@ WARNING
 				 const ProcessorGroup* resources) = 0;
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						const ProcessorGroup* resources) = 0;
-    virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*) = 0;
+    virtual int getOldProcessorAssignment(const Patch* patch,
+    			          const ProcessorGroup* resources) 
+      { return getPatchwiseProcessorAssignment(patch, resources); }
+    virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
+				    const Scheduler* sc) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
     virtual bool inNeighborhood(const Patch*) = 0;
 
