@@ -1,16 +1,15 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 namespace Uintah {
-
+  class DataWarehouse;
   void setHydrostaticPressureBC(CCVariable<double>& press,
 				Patch::FaceType face, Vector& gravity,
 				const CCVariable<double>& rho,
