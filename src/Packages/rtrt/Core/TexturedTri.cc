@@ -141,6 +141,7 @@ TexturedTri::~TexturedTri()
 {
 }
 
+
 void
 TexturedTri::set_texcoords(const Point& tx1,
                            const Point& tx2,

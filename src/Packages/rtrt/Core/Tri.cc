@@ -42,7 +42,7 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
       bad = false;
       n *= 1/sqrt(l);
     } else {
-	printf("BAD NORMAL!\n");
+//  	printf("BAD NORMAL!\n");
       bad = true;
       return;
     }
