@@ -26,6 +26,9 @@ typedef struct sigcontext_struct sigcontext_t;
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
+extern "C" {
+#include <sched.h>
+};
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -36,6 +39,10 @@ typedef struct sigcontext_struct sigcontext_t;
 #ifdef __sgi
 #include <sys/sysmp.h>
 #endif
+
+extern "C" {
+ssize_t _read(int fildes, void *buf, size_t nbyte);
+};
 
 #ifdef __linux
 extern "C" {
@@ -76,6 +83,14 @@ struct TaskArgs {
     int arg;
     Task* t;
 };
+
+class MainTask : public Task {
+public:
+    MainTask();
+    virtual ~MainTask();
+    int body(int);
+};
+
 
 #define MAXTASKS 1000
 static int ntasks=0;
@@ -168,6 +183,7 @@ Task* Task::self()
     if(!t){
 	//perror("pthread_getspecific");
 	//exit(1);
+	cerr << "self is 0?\n";
 	return 0;
     }
     return t;
@@ -348,7 +364,8 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\ndump core? ", 7,7,7,tname, getpid(), signam);
     char buf[100];
     buf[0]='n';
-    if(!fgets(buf, 100, stdin)){
+//    if(!fgets(buf, 100, stdin)){
+    if(_read(fileno(stdin), buf, 100) == -1){
 	// Exit without an abort...
 	Task::exit_all(-1);
     }
@@ -396,6 +413,14 @@ void Task::initialize(char* pn)
 	exit(1);
     }
     sched_lock=new Mutex;
+
+    Task* maintask=scinew MainTask;
+    maintask->activated=1;
+    maintask->priv=scinew TaskPrivate;
+    if(pthread_setspecific(selfkey, (void*)maintask) != 0){
+	perror("pthread_setspecific");
+	exit(1);
+    }
 
 #ifdef __sgi
     // Set up the signal stack so that we will be able to 
@@ -480,7 +505,9 @@ void Task::main_exit()
 
 void Task::yield()
 {
-    pthread_yield();
+    if(sched_yield() != 0){
+	perror("sched_yield");
+    }
 }
 
 #if 0
@@ -812,3 +839,50 @@ int Task::start_itimer(const TaskTime& start, const TaskTime& interval,
     exit(1);
     return 0;
 }
+
+struct Barrier_private {
+    Mutex lock;
+    ConditionVariable cond;
+    int count;
+};
+
+Barrier::Barrier()
+{
+    priv=new Barrier_private;
+    priv->count=0;
+}
+
+Barrier::~Barrier()
+{
+}
+
+void Barrier::wait(int n)
+{
+    priv->lock.lock();
+    int orig_count=priv->count++;
+    if(priv->count==n){
+        priv->count=0; // Reset the counter...
+        priv->lock.unlock();
+        priv->cond.broadcast();
+    } else {
+        priv->cond.wait(priv->lock);
+	priv->lock.unlock();
+    }
+}
+
+MainTask::MainTask()
+: Task("main()", 1)
+{
+}
+
+MainTask::~MainTask()
+{
+}
+
+int MainTask::body(int)
+{
+    cerr << "Error - main's body called!\n";
+    exit(-1);
+    return 0;
+}
+

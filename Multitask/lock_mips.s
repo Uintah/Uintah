@@ -14,6 +14,7 @@ again:
 	beqz	$5, again
 	nop
 	j	$31
+	nop
 
 	.livereg	0x2000FF0E,0x00000FFF
 	.end	Task_try_lock
