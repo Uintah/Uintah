@@ -56,3 +56,18 @@ void Material::setVFIndex(int idx)
 {
    d_vfindex = idx;
 }
+
+double Material::getThermalConductivity() const
+{
+  return d_thermalConductivity;
+}
+
+double Material::getSpecificHeat() const
+{
+  return d_specificHeat;
+}
+
+double Material::getHeatTransferCoefficient() const
+{
+  return d_heatTransferCoefficient;
+}

@@ -61,9 +61,6 @@ WARNING
    EquationOfState* getEOS() const;
    
    //for HeatConductionModel
-   double getThermalConductivity() const;
-   double getSpecificHeat() const;
-   double getHeatTransferCoefficient() const;
    double getGamma() const;
    double getViscosity() const;
    double getSpeedOfSound() const;
@@ -81,9 +78,6 @@ WARNING
    
    // Specific constitutive model associated with this material
    EquationOfState *d_eos;
-   double d_thermalConductivity;
-   double d_specificHeat;
-   double d_heatTransferCoefficient;
    double d_speed_of_sound;
    double d_viscosity;
    double d_gamma;

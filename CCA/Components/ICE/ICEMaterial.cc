@@ -90,21 +90,6 @@ EquationOfState * ICEMaterial::getEOS() const
   return d_eos;
 }
 
-double ICEMaterial::getThermalConductivity() const
-{
-  return d_thermalConductivity;
-}
-
-double ICEMaterial::getSpecificHeat() const
-{
-  return d_specificHeat;
-}
-
-double ICEMaterial::getHeatTransferCoefficient() const
-{
-  return d_heatTransferCoefficient;
-}
-
 double ICEMaterial::getGamma() const
 {
   return d_gamma;

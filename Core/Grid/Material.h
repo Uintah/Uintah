@@ -65,6 +65,9 @@ WARNING
        return thismatl;
      }
 
+     double getThermalConductivity() const;
+     double getSpecificHeat() const;
+     double getHeatTransferCoefficient() const;
      bool hasName() const {
        return haveName;
      }
@@ -78,14 +81,17 @@ WARNING
       // Index associated with this material's velocity field
       int d_vfindex;
       MaterialSubset* thismatl;
+      double d_thermalConductivity;
+      double d_specificHeat;
+      double d_heatTransferCoefficient;
 
    private:
 
      bool haveName;
      std::string name;
       
-      Material(const Material &mat);
-      Material& operator=(const Material &mat);
+     Material(const Material &mat);
+     Material& operator=(const Material &mat);
    };
 } // End namespace Uintah
 
