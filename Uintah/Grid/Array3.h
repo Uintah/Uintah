@@ -106,6 +106,22 @@ namespace Uintah {
 
       ///////////////////////////////////////////////////////////////////////
       //
+      // Get low index for fortran calls
+      //
+      inline IntVector getFortLowIndex() {
+	return d_window->getLowIndex();
+      }
+      
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Get high index for fortran calls
+      //
+      inline IntVector getFortHighIndex() {
+	return d_window->getHighIndex()-IntVector(1,1,1);
+      }
+      
+      ///////////////////////////////////////////////////////////////////////
+      //
       // Return pointer to the data 
       // (**WARNING**not complete implementation)
       //
@@ -137,6 +153,9 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.16  2000/06/29 04:19:21  bbanerje
+// Added getForLowIndex() and getFortHighIndex()
+//
 // Revision 1.15  2000/06/15 21:57:15  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
