@@ -54,8 +54,7 @@ WARNING
    public:
       
       virtual ~ParticleVariableBase();
-      virtual void copyPointer(ParticleVariableBase&) = 0;
-      
+
       //////////
       // Insert Documentation Here:
       virtual const ParticleVariableBase* clone() const = 0;
