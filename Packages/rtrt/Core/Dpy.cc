@@ -159,20 +159,21 @@ double _HOLO_STATE_=1;
 Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 	  int nworkers, bool bench, int ncounters, int c0, int c1,
 	  float, float, bool display_frames, 
-	  int pp_size, int scratchsize, bool fullscreen, int frameless )
-  : scene(scene), criteria1(criteria1), criteria2(criteria2),
-    nworkers(nworkers), bench(bench), ncounters(ncounters),
-    c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
-    display_frames(display_frames), stealth_(NULL),
-    showImage_(NULL), doAutoJitter_(false),
-    showLights_( false ), lightsShowing_( false ),
-    turnOffAllLights_( false ), turnOnAllLights_( false ),
-    turnOnLight_( false ), turnOffLight_( false ),
-    attachedObject_(NULL), turnOnTransmissionMode_(false), 
-    numThreadsRequested_(nworkers), changeNumThreads_(false),
-    pp_size_(pp_size), scratchsize_(scratchsize),
-    toggleRenderWindowSize_(fullscreen), renderWindowSize_(1),
-    fullScreenMode_( fullscreen ), holoToggle_(false)
+	  int pp_size, int scratchsize, bool fullscreen, int frameless ) :
+  fullScreenMode_( fullscreen ), 
+  showImage_(NULL), doAutoJitter_( false ),
+  showLights_( false ), lightsShowing_( false ),
+  turnOnAllLights_( false ), turnOffAllLights_( false ),
+  turnOnLight_( false ), turnOffLight_( false ),
+  toggleRenderWindowSize_(fullscreen), renderWindowSize_(1),
+  turnOnTransmissionMode_(false), 
+  numThreadsRequested_(nworkers), changeNumThreads_(false),
+  stealth_(NULL), attachedObject_(NULL), holoToggle_(false),
+  scene(scene), criteria1(criteria1), criteria2(criteria2),
+  nworkers(nworkers), pp_size_(pp_size), scratchsize_(scratchsize),
+  bench(bench), ncounters(ncounters),
+  c0(c0), c1(c1),
+  frameless(frameless),synch_frameless(0), display_frames(display_frames)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -447,6 +448,7 @@ Dpy::checkGuiFlags()
 
 	if( nworkers > numThreadsRequested_ ) {
 
+	  // remove excess threads
 	  int numToRemove = nworkers - numThreadsRequested_;
 
 	  for( int cnt = 1; cnt <= numToRemove; cnt++ )
@@ -455,9 +457,8 @@ Dpy::checkGuiFlags()
 	      workers_.pop_back();
 	      cout << "worker " << nworkers - cnt << " told to stop!\n";
 	      // Tell the worker to stop.
-	      workers_[nworkers-cnt]->syncForNumThreadChange( nworkers, true );
+	      worker->syncForNumThreadChange( nworkers, true );
 	    }
-	  // remove excess threads
 	  cout << "done removing threads\n";
 	}
       }
