@@ -5,6 +5,8 @@
 namespace Uintah {
     namespace Grid {
 	template<class T> class Handle;
+    }
+    namespace Interface {
 	class ProblemSpec;
 	typedef Handle<ProblemSpec> ProblemSpecP;
     }
