@@ -106,12 +106,16 @@ void VectorFieldsToTensorField::execute(){
   pair<string, Tensor> cond;
   cond.first = "-";
   cond.second = t;
-  conds.push_back(cond);
+  conds.push_back(cond);  // bath
+
+  t=Tensor(Vector(1,0,0), Vector(0,1,0), Vector(1,1,1));
+  conds.push_back(cond);  // ventricles
+
   while (v1 != ev1->fdata().end()) {
     if (v1->length() != 0) {
       Vector v3(Cross(*v1, *v2).normal());
       v3 *= v2->length();
-      Tensor t(*v1, *v2, v3);
+      t = Tensor(*v1, *v2, v3);
       cond.second = t;
       *tidx = (int)conds.size();
       conds.push_back(cond);

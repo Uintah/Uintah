@@ -138,6 +138,7 @@ void FloodFillNewValue::execute(){
       mask_vol->set_value(1, *curr_cell);
     else
       mask_vol->set_value(0, *curr_cell);
+    ++curr_cell;
   }
 
   // make our queue
