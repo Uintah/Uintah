@@ -97,7 +97,23 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   ProblemSpecP mpm_soln_ps = ps->findBlock("MPM");
   if(mpm_soln_ps) {
      mpm_soln_ps->get("calculate_fracture_parameters", d_calFractParameters);
+     if(d_calFractParameters!="true" && d_calFractParameters!="false"
+	                 && d_calFractParameters!="every_time_step") {
+        cout << "'calculate_fracture_parameters' can either be "
+	     <<	"'true' or 'false' or 'every_time_step'." 
+	     << " Program terminated." << endl;
+        exit(1);	
+     }
+     
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
+     if(d_doCrackPropagation!="true" && d_doCrackPropagation!="flase"
+                         && d_doCrackPropagation!="every_time_step") {        
+       cout << "'do_crack_propagation' can either be "
+            << "'true' or 'false' or 'every_time_step'." 
+            << " Program terminated." << endl;
+       exit(1);
+     }
+
      mpm_soln_ps->get("use_volume_integral", useVolumeIntegral);
      mpm_soln_ps->get("smooth_crack_front", smoothCrackFront);
      mpm_soln_ps->get("J_radius", rJ);
@@ -219,7 +235,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     m++; // Next material
   }  // End of loop over materials
 
-  #if 0
+  #if 1
   OutputInitialCrackPlane(numMPMMatls);
   #endif
 }
@@ -436,7 +452,7 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
     cout << "\n--Initial crack plane--" << endl;
     for(int m=0; m<numMatls; m++) {
       if(crackType[m]=="NO_CRACK")
-        cout << "--Material " << m << ": no crack exists" << endl;
+        cout << "\nMaterial " << m << ": no crack exists" << endl;
       else {
         cout << "\nMaterial " << m << ":\n"
              << "  Crack contact type: " << crackType[m] << endl;
@@ -530,6 +546,12 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         }
       } // End of if(crackType...)
     } // End of loop over materials
+
+    // Controlling parameters of crack propagation
+    if(d_doCrackPropagation!="false") {
+      cout << "\nRatio of crack increment at each time step to the cell size (dadx) = "
+           << rdadx << "." << endl;
+    }
   }
 }
 
@@ -556,6 +578,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
     // Set radius (rJ) of J-path cirlce or number of cells
     Vector dx = patch->dCell();
     double dx_min=Min(dx.x(),dx.y(),dx.z());
+
     if(rJ<0.) { // No specification in input file
       rJ=NJ*dx_min;
     }  
@@ -570,6 +593,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
     cx.resize(numMPMMatls);
     ce.resize(numMPMMatls);
     cfSegNodes.resize(numMPMMatls);
+    cfSegTime.resize(numMPMMatls);
+    cfSegDis.resize(numMPMMatls);
+    cfSegVel.resize(numMPMMatls);
     cfSegPreIdx.resize(numMPMMatls);
     cfSegMinIdx.resize(numMPMMatls);
     cfSegMaxIdx.resize(numMPMMatls);
@@ -609,17 +635,27 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           cmax[m]=Max(cmax[m],cx[m][i]);
         }
 
-        // Get average length of crack-front segs
-        css[m]=0.;  
-        int ncfSegs=(int)cfSegNodes[m].size()/2;
-        for(int i=0; i<ncfSegs; i++) {
-          int n1=cfSegNodes[m][2*i];
-          int n2=cfSegNodes[m][2*i+1];
-          css[m]+=(cx[m][n1]-cx[m][n2]).length();
-        }
-        css[m]/=ncfSegs;
-
         if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
+	  // Initialize crack-front node velocity 
+	  cfSegVel[m].resize((int)cfSegNodes[m].size());
+	  cfSegTime[m].resize((int)cfSegNodes[m].size());
+	  cfSegDis[m].resize((int)cfSegNodes[m].size());
+	  for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
+	    cfSegVel[m][i]=0.0;
+	    cfSegTime[m][i]=0.0;
+	    cfSegDis[m][i]=0.0;
+	  }
+
+          // Get average length of crack-front segs
+	  css[m]=0.;
+	  int ncfSegs=(int)cfSegNodes[m].size()/2;
+	  for(int i=0; i<ncfSegs; i++) {
+	    int n1=cfSegNodes[m][2*i];
+	    int n2=cfSegNodes[m][2*i+1];
+	    css[m]+=(cx[m][n1]-cx[m][n2]).length();
+	  }
+	  css[m]/=ncfSegs;
+	  
           // Get crack-front-node previous index, and sub-crack extent
           FindCrackFrontNodeIndexes(m);
 	   
