@@ -49,6 +49,7 @@ public:
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif
   void move( Vector& newV) { v = newV; }
+  void setColor( Color& newC) { c = newC; }
 };
 
 } // End namespace SCIRun
