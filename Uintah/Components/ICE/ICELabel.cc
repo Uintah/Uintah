@@ -81,12 +81,16 @@ ICELabel::ICELabel()
      scinew VarLabel("mass_L_CC",CCVariable<double>::getTypeDescription());
     rho_L_CCLabel = 
      scinew VarLabel("rho_L_CC",CCVariable<double>::getTypeDescription());
+    mom_L_ME_CCLabel = 
+     scinew VarLabel("mom_L_ME_CC",CCVariable<Vector>::getTypeDescription());
+#if 0
     xmom_L_ME_CCLabel = 
      scinew VarLabel("xmom_L_ME_CC",CCVariable<double>::getTypeDescription());
     ymom_L_ME_CCLabel = 
      scinew VarLabel("ymom_L_ME_CC",CCVariable<double>::getTypeDescription());
     zmom_L_ME_CCLabel = 
      scinew VarLabel("zmom_L_ME_CC",CCVariable<double>::getTypeDescription());
+#endif
     int_eng_L_ME_CCLabel = 
      scinew VarLabel("intE_L_ME_CC",CCVariable<double>::getTypeDescription());
     q_CCLabel = 
@@ -160,9 +164,12 @@ ICELabel::~ICELabel()
     delete int_eng_L_CCLabel;
     delete mass_L_CCLabel;
     delete rho_L_CCLabel;
+    delete mom_L_ME_CCLabel;
+#if 0
     delete xmom_L_ME_CCLabel;
     delete ymom_L_ME_CCLabel;
     delete zmom_L_ME_CCLabel;
+#endif
     delete int_eng_L_ME_CCLabel;
     delete q_CCLabel;
     delete term1Label;
@@ -183,6 +190,9 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.22  2001/01/08 20:40:51  jas
+// Replace {x,y,z}mom_L_ME with a single CCVariable<Vector> mom_L_ME.
+//
 // Revision 1.21  2001/01/08 18:30:37  jas
 // Replace {x,y,z}mom_L with a single CCVariable<Vector> mom_L.
 //
