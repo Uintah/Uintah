@@ -20,6 +20,18 @@
 #include <Component/PIDL/TypeInfo.h>
 #include <SCICore/Exceptions/InternalError.h>
 
+// To get rid of:
+//cc-1424 CC: REMARK File = ../../../Component/PIDL/pidl_cast.h, Line = 36
+//  The template parameter "T" is not used in declaring the argument types of
+//          function template "pidl_cast".
+//
+//  template<class T>
+//                 ^
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#endif
+
 /**************************************
  
 CLASS
@@ -53,10 +65,17 @@ T pidl_cast(const Component::PIDL::Object& obj)
     }
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif
+
 #endif
 
 //
 // $Log$
+// Revision 1.5  1999/09/28 08:18:43  sparker
+// Added #pragma woff so that CC will not complain
+//
 // Revision 1.4  1999/09/26 06:12:57  sparker
 // Added (distributed) reference counting to PIDL objects.
 // Began campaign against memory leaks.  There seem to be no more
