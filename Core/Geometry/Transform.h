@@ -21,6 +21,7 @@ namespace Geometry {
 
 class Vector;
 class Point;
+class Quaternion;
 
 class SCICORESHARE Transform {
     double mat[4][4];
@@ -39,6 +40,9 @@ class SCICORESHARE Transform {
     void sub_rows(double m[4][4], int row1, int row2, double mul) const;
     void load_identity(double[4][4]);
     void load_zero(double[4][4]);
+
+    friend class Quaternion;
+
 public:
     Transform();
     Transform(const Transform&);
@@ -85,6 +89,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  2000/07/27 05:21:17  samsonov
+// Added friend class Quaternion
+//
 // Revision 1.3  2000/03/13 05:05:12  dmw
 // Added Transform::permute for swapping axes, and fixed compute_imat
 //
