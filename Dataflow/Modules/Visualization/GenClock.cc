@@ -88,8 +88,7 @@ protected:
 
   MaterialHandle material_;
 
-  GeometryOPort *ogeom_port_;
-
+  bool update_;
   bool error_;
 };
 
@@ -114,9 +113,8 @@ GenClock::GenClock(GuiContext *context)
     color_b_(ctx->subVar("color-b")),
     material_(scinew Material(Color(1., 1., 1.))),
 
-    ogeom_port_(0),
-
-    error_(-1)
+    update_(0),
+    error_(0)
 {
 }
 
@@ -126,9 +124,9 @@ GenClock::~GenClock(){
 void GenClock::execute(){
 
   // Get a handle to the output geom port.
-  ogeom_port_ = (GeometryOPort *) get_oport("Clock");
+  GeometryOPort *ogeom_port = (GeometryOPort *) get_oport("Clock");
   
-  if (!ogeom_port_) {
+  if (!ogeom_port) {
     error("Unable to initialize oport 'Clock'.");
     return;
   }
@@ -145,14 +143,11 @@ void GenClock::execute(){
   if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
     current_ = (double) (mHandle->get(0, 0));
   } else {
-    current_ = 0;
     error( "No matrix handle or representation." );
-    //    return;
+    return;
   }
 
-  bool update = false;
-
-  if( update == true ||
+  if( update_ == true ||
 
       error_ == true ||
 
@@ -167,6 +162,7 @@ void GenClock::execute(){
       size_     != dSize_.get() ||
       location_ != sLocation_.get() ) {
 
+    update_ = false;
     error_ = false;
 
     type_     = iType_.get();
@@ -179,20 +175,22 @@ void GenClock::execute(){
     size_     = dSize_.get();
     location_ = sLocation_.get();
 
+    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
+
     dCurrent_.set(current_);
     dCurrent_.reset();
 
-    ogeom_port_->delAll();
+    ogeom_port->delAll();
 
     if( type_ == 0 )           // Analog
-      ogeom_port_->addObj(generateAnalog(), string("Clock"));
+      ogeom_port->addObj(generateAnalog(), string("Clock"));
 
     else if( type_ == 1 )      // Digital
-      ogeom_port_->addObj(generateDigital(), string("Clock"));
+      ogeom_port->addObj(generateDigital(), string("Clock"));
   }
 
   // Send the data downstream
-  ogeom_port_->flushViews();
+  ogeom_port->flushViews();
 }
 
 GeomHandle GenClock::generateAnalog()
@@ -230,8 +228,7 @@ GeomHandle GenClock::generateAnalog()
   cx = radius;
   cy = radius;
 
-  if( showTime_ ) {
-    
+  if( showTime_ ) {    
     int nchars = 0;
 
     GeomHandle time = generateTime( nchars );
@@ -239,9 +236,9 @@ GeomHandle GenClock::generateAnalog()
     double dx = nchars * 14.0 * size_/100.0 * scale;
     double dy = 1.0    * 15.0 * size_/100.0 * scale + 2.0 * border;
 
-    Vector refPt(-dx/2.0, -radius-dy, 0 );
+    Vector refVec(-dx/2.0, -radius-dy, 0 );
     Transform trans;
-    trans.pre_translate( refPt );
+    trans.pre_translate( refVec );
 
     group->add( scinew GeomTransform( time, trans ) );
 
@@ -271,24 +268,21 @@ GeomHandle GenClock::generateAnalog()
     group->add( gmat );
   }
 
-  Vector refPt;
+  Vector refVec;
 
   if( location_ == "Top Left" )
-    refPt = Vector(-31.0/32.0, 31.0/32.0, 0 ) + Vector(  cx, -radius, 0 );
+    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) + Vector(  cx, -radius, 0 );
   else if( location_ == "Top Right" )
-    refPt = Vector( 31.0/32.0, 31.0/32.0, 0 ) + Vector( -cx, -radius, 0 );
+    refVec = Vector( 31.0/32.0, 31.0/32.0, 0 ) + Vector( -cx, -radius, 0 );
   else if( location_ == "Bottom Left" )
-    refPt = Vector(-31.0/32.0,-31.0/32.0, 0 ) + Vector(  cx, cy, 0 ) ;
+    refVec = Vector(-31.0/32.0,-31.0/32.0, 0 ) + Vector(  cx, cy, 0 ) ;
   else if( location_ == "Bottom Right" )
-    refPt = Vector( 31.0/32.0,-31.0/32.0, 0 ) + Vector( -cx, cy, 0 );
+    refVec = Vector( 31.0/32.0,-31.0/32.0, 0 ) + Vector( -cx, cy, 0 );
 
   Transform trans;
-  trans.pre_translate( refPt );
+  trans.pre_translate( refVec );
 
-  GeomSticky *sticky =
-    scinew GeomSticky( scinew GeomTransform( group, trans ) );
-
-  return sticky;
+  return scinew GeomSticky( scinew GeomTransform( group, trans ) );
 }
 
 GeomHandle GenClock::generateDigital()
@@ -325,24 +319,21 @@ GeomHandle GenClock::generateDigital()
     group->add( gmat );
   }
 
-  Vector refPt;
+  Vector refVec;
 
   if( location_ == "Top Left" )
-    refPt = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector( 0, dy, 0 );
+    refVec = Vector(-31.0/32.0, 31.0/32.0, 0 ) - Vector( 0, dy, 0 );
   else if( location_ == "Top Right" )
-    refPt = Vector( 31.0/32.0, 31.0/32.0, 0 ) - Vector( dx, dy, 0 );
+    refVec = Vector( 31.0/32.0, 31.0/32.0, 0 ) - Vector( dx, dy, 0 );
   else if( location_ == "Bottom Left" )
-    refPt = Vector(-31.0/32.0,-31.0/32.0, 0 );
+    refVec = Vector(-31.0/32.0,-31.0/32.0, 0 );
   else if( location_ == "Bottom Right" )
-    refPt = Vector( 31.0/32.0,-31.0/32.0, 0 ) - Vector( dx, 0, 0 );
+    refVec = Vector( 31.0/32.0,-31.0/32.0, 0 ) - Vector( dx, 0, 0 );
 
   Transform trans;
-  trans.pre_translate( refPt );
+  trans.pre_translate( refVec );
 
-  GeomSticky *sticky =
-    scinew GeomSticky( scinew GeomTransform( group, trans ) );
-
-  return sticky;
+  return scinew GeomSticky( scinew GeomTransform( group, trans ) );
 }
 
 GeomHandle GenClock::generateTime( int &nchars )
@@ -362,12 +353,10 @@ GeomHandle GenClock::generateTime( int &nchars )
 
   nchars = strlen( timestr );
 
-  GeomText *text = scinew GeomText( timestr,
-				    Point(0,0,0),
-				    material_->diffuse,
-				    string( fontstr ) );
-
-  return text;
+  return scinew GeomText( timestr,
+			  Point(0,0,0),
+			  material_->diffuse,
+			  string( fontstr ) );
 }
 
 void 
@@ -379,14 +368,8 @@ GenClock::tcl_command(GuiArgs& args, void* userdata) {
   }
 
   if (args[1] == "color_change") {
-    color_r_.reset();
-    color_g_.reset();
-    color_b_.reset();
-
-    material_->diffuse = Color(color_r_.get(), color_g_.get(), color_b_.get());
-
-    if (ogeom_port_)
-      ogeom_port_->flushViews();
+    update_ = true;
+    execute();
   } else {
     Module::tcl_command(args, userdata);
   }
