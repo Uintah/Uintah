@@ -1042,7 +1042,7 @@ EditColorMap::makeCurrent(int win)
 
   if (!ctxs_[win]) {
     string myname; 
-    int height;
+    int height = 0;
     if (win == 0) {
       myname = ".ui" + id + ".f.gl1.gl";
       height = 256;
