@@ -81,10 +81,11 @@ public:
   const vector<float> &get_alphaT() { return rawRampAlphaT_; }
 
   // Functions for handling the color scale of the data.
+  bool                  IsScaled() { return is_scaled_; }
   void			Scale(double newmin, double newmax)
-  { min_ = newmin; max_ = newmax; }
+  { min_ = newmin; max_ = newmax; is_scaled_ = true; }
   void			ResetScale() 
-  { min_ = -1.0; max_ = 1.0; }
+  { min_ = -1.0; max_ = 1.0; is_scaled_ = false; }
   virtual double	getMin() const;
   virtual double	getMax() const;
 
@@ -129,6 +130,7 @@ private:
 
   double			min_;
   double			max_;
+  bool                          is_scaled_;
 
   vector<MaterialHandle>	colors_;
 };

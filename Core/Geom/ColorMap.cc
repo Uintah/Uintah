@@ -71,6 +71,7 @@ ColorMap::ColorMap()
     units_(),
     min_(-1.0),
     max_(1.0),
+    is_scaled_(false),
     colors_()
 {
 }
@@ -85,6 +86,7 @@ ColorMap::ColorMap(const ColorMap& copy)
     rawRGBA_(0),
     min_(copy.min_),
     max_(copy.max_),
+    is_scaled_(copy.is_scaled_),
     colors_()
 {
   Build1d();
@@ -102,8 +104,9 @@ ColorMap::ColorMap(const vector<Color>& rgb,
    rawRampColorT_(rgbT),
    resolution_(res),
    rawRGBA_(0),
-   min_(-1),
-   max_(1),
+   min_(-1.0),
+   max_(1.0),
+   is_scaled_(false),
    colors_()
 {
   Build1d();
