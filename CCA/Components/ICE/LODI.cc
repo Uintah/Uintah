@@ -93,6 +93,8 @@ void lodi_getVars_pressBC( const Patch* patch,
   int numMatls = sharedState->getNumMatls();
   StaticArray<constCCVariable<double> > Temp_CC(numMatls);
   StaticArray<constCCVariable<double> > f_theta_CC(numMatls);
+  StaticArray<constCCVariable<double> > gamma(numMatls);
+  StaticArray<constCCVariable<double> > cv(numMatls);
   Ghost::GhostType  gn = Ghost::None;
   
   for(int m = 0; m < numMatls; m++) {
@@ -102,8 +104,10 @@ void lodi_getVars_pressBC( const Patch* patch,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
     if(ice_matl){                // I C E
-      old_dw->get(Temp_CC[m],     lb->temp_CCLabel,    indx,patch,gn,0);
-      new_dw->get(f_theta_CC[m],  lb->f_theta_CCLabel, indx,patch,gn,0); 
+      old_dw->get(Temp_CC[m],     lb->temp_CCLabel,       indx,patch,gn,0);
+      new_dw->get(f_theta_CC[m],  lb->f_theta_CCLabel,    indx,patch,gn,0);
+      new_dw->get(gamma[m],       lb->gammaLabel,         indx,patch,gn,0);
+      new_dw->get(cv[m],          lb->specific_heatLabel, indx,patch,gn,0);
     }
     if(mpm_matl){                // M P M
       new_dw->get(Temp_CC[m],     lb->temp_CCLabel,    indx,patch,gn,0);
@@ -111,8 +115,9 @@ void lodi_getVars_pressBC( const Patch* patch,
     }
     lodi_vars->f_theta[m] = f_theta_CC[m];
     lodi_vars->Temp_CC[m] = Temp_CC[m];
+    lodi_vars->gamma[m]   = gamma[m];
+    lodi_vars->cv[m]      = cv[m];
   }
-   
 }  
 
 /*__________________________________________________________________
@@ -339,7 +344,7 @@ void computeNu(CCVariable<Vector>& nu,
       for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
         IntVector c = *itr;
         nu[c] = Vector(0,0,0);
-        cout << " I'm working on cell " << c << endl;
+        //cout << " I'm working on cell " << c << endl;
       } 
   /*==========TESTING==========`*/
     }  // on the LODI bc face
@@ -361,15 +366,17 @@ void  lodi_bc_preprocess( const Patch* patch,
   cout_doing << "lodi_bc_preprocess on patch "<<patch->getID()<< endl;
   
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;
   constCCVariable<double> press_old;
   constCCVariable<double> vol_frac_old;
   
-  const double cv = lv->cv;
   CCVariable<double>& E   = lv->E;  // shortcuts to Lodi_vars struct
   CCVariable<Vector>& vel_CC = lv->vel_CC;
   CCVariable<double>& rho_CC = lv->rho_CC;
   CCVariable<double>& press_tmp = lv->press_tmp; 
-  CCVariable<Vector>& nu = lv->nu;  
+  CCVariable<Vector>& nu = lv->nu;
+  constCCVariable<double>& cv         = lv->cv;
+  constCCVariable<double>& gamma      = lv->gamma;
   constCCVariable<double>& rho_old    = lv->rho_old;
   constCCVariable<double>& temp_old   = lv->temp_old;
   constCCVariable<double>& speedSound = lv->speedSound;
@@ -378,6 +385,7 @@ void  lodi_bc_preprocess( const Patch* patch,
   
   //__________________________________
   //   get the data LODI needs from old dw
+  new_dw->get(gamma,        lb->gammaLabel,       indx,patch,gn ,0);
   old_dw->get(temp_old,     lb->temp_CCLabel,     indx,patch,gac,1);
   old_dw->get(rho_old,      lb->rho_CCLabel,      indx,patch,gac,1);
   old_dw->get(vel_old,      lb->vel_CCLabel,      indx,patch,gac,1);
@@ -427,7 +435,7 @@ void  lodi_bc_preprocess( const Patch* patch,
       for(CellIterator iter = iterPlusGhost1; !iter.done(); iter++) {  
         IntVector c = *iter;
         nu[c] = Vector(nanValue,nanValue,nanValue ); 
-        E[c] = rho_old[c] * (cv * temp_old[c]  + 0.5 * vel_old[c].length2() );    
+        E[c] = rho_old[c] * (cv[c] * temp_old[c]  + 0.5 * vel_old[c].length2() );    
       }
       //  plut two layers of ghostcells
       for(CellIterator iter = iterPlusGhost2; !iter.done(); iter++) {  
@@ -834,6 +842,8 @@ void FaceTemp_LODI(const Patch* patch,
   // shortcuts  
   StaticArray<CCVariable<Vector> >& d = lv->di;
   const CCVariable<double>& E         = lv->E;
+  const CCVariable<double>& cv        = lv->cv;
+  const CCVariable<double>& gamma     = lv->gamma;
   const CCVariable<double>& rho_new   = lv->rho_CC;
   const CCVariable<double>& rho_old   = lv->rho_old;
   const CCVariable<double>& press_tmp = lv->press_tmp;
@@ -841,8 +851,6 @@ void FaceTemp_LODI(const Patch* patch,
   const CCVariable<Vector>& vel_new   = lv->vel_CC;
   const CCVariable<Vector>& nu  = lv->nu;
   const double delT  = lv->delT;
-  const double gamma = lv->gamma;
-  const double cv    = lv->cv;
              
   double qConFrt,qConLast, conv_dir1, conv_dir2;
   double term1, term2, term3;
@@ -884,7 +892,7 @@ void FaceTemp_LODI(const Patch* patch,
     double vel_new_sqr = vel_new[c].length2();
     term1 = 0.5 * d[1][c][P_dir] * vel_old_sqr;
     
-    term2 = d[2][c][P_dir]/(gamma - 1.0) 
+    term2 = d[2][c][P_dir]/(gamma[c] - 1.0) 
           + rho_old[c] * ( vel_old[c][P_dir] * d[3][c][P_dir] + 
                            vel_old[c][dir1]  * d[4][c][P_dir] +
                            vel_old[c][dir2]  * d[5][c][P_dir] );
@@ -893,7 +901,7 @@ void FaceTemp_LODI(const Patch* patch,
                                                       
     double E_new = E[c] - delT * (term1 + term2 + term3);               
 
-    temp_CC[c] = E_new/(rho_new[c]*cv) - 0.5 * vel_new_sqr/cv;
+    temp_CC[c] = E_new/(rho_new[c]*cv[c]) - 0.5 * vel_new_sqr/cv[c];
   }
   
   //__________________________________
@@ -936,7 +944,7 @@ void FaceTemp_LODI(const Patch* patch,
 
       term1 = 0.5 * (d[1][c][P_dir] + d[1][c][Edir1]) * vel_old_sqr;
 
-      term2 = (d[2][c][P_dir] + d[2][c][Edir1])/(gamma - 1.0);
+      term2 = (d[2][c][P_dir] + d[2][c][Edir1])/(gamma[c] - 1.0);
       
       if( edge == IntVector(1,1,0) ) { // Left/Right faces top/bottom edges
         term3 =
@@ -962,7 +970,7 @@ void FaceTemp_LODI(const Patch* patch,
       double E_new = E[c] - delT * ( term1 + term2 + term3 + conv);
       double vel_new_sqr = vel_new[c].length2();
 
-      temp_CC[c] = E_new/(rho_new[c] *cv) - 0.5 * vel_new_sqr/cv;
+      temp_CC[c] = E_new/(rho_new[c] *cv[c]) - 0.5 * vel_new_sqr/cv[c];
     }
   }  
  
@@ -977,7 +985,7 @@ void FaceTemp_LODI(const Patch* patch,
     double vel_new_sqr = vel_new[c].length2();
     
     term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_old_sqr;
-    term2 =       (d[2][c].x() + d[2][c].y() + d[2][c].z())/(gamma - 1.0);
+    term2 =       (d[2][c].x() + d[2][c].y() + d[2][c].z())/(gamma[c] - 1.0);
     
     term3 =
         rho_old[c] * vel_old[c].x() * (d[3][c].x() + d[4][c].y() + d[5][c].z())  
@@ -986,7 +994,7 @@ void FaceTemp_LODI(const Patch* patch,
 
     double E_new = E[c] - delT * ( term1 + term2 + term3);
 
-    temp_CC[c] = E_new/(rho_new[c] * cv) - 0.5 * vel_new_sqr/cv;
+    temp_CC[c] = E_new/(rho_new[c] * cv[c]) - 0.5 * vel_new_sqr/cv[c];
   }
 } //end of function FaceTempLODI()  
 
@@ -1010,23 +1018,14 @@ void FacePress_LODI(const Patch* patch,
 
   int numMatls = sharedState->getNumMatls();
   StaticArray<double> press_eos(numMatls);
-  StaticArray<double> cv(numMatls);
-  StaticArray<double> gamma(numMatls);
-
+  StaticArray<constCCVariable<double> >& gamma   = lv->gamma;
+  StaticArray<constCCVariable<double> >& cv      = lv->cv;
   StaticArray<constCCVariable<double> >& Temp_CC = lv->Temp_CC;
   StaticArray<constCCVariable<double> >& f_theta = lv->f_theta;
 
   //__________________________________  
   double press_ref= sharedState->getRefPress();    
-
-  for (int m = 0; m < numMatls; m++) {
-    Material* matl = sharedState->getMaterial( m );
-    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    if(ice_matl){       
-      cv[m]     = ice_matl->getSpecificHeat();
-      gamma[m]  = ice_matl->getGamma();;        
-    }
-  }     
+     
   //__________________________________ 
   for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
     !iter.done();iter++) {
@@ -1040,8 +1039,8 @@ void FacePress_LODI(const Patch* patch,
       double tmp;
 
       if(ice_matl){                // I C E
-        ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                       cv[m],Temp_CC[m][c],
+        ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
+                                       cv[m][c],Temp_CC[m][c],
                                        press_eos[m],tmp,tmp);        
       } 
       if(mpm_matl){                //  M P M

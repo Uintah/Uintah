@@ -61,6 +61,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
                                      + 1.0/(dx.z() * dx.z())  );
                                      
     constCCVariable<double> speedSound, sp_vol_CC, rho_CC, thermalCond;
+    constCCVariable<double> cv, gamma;
     constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;   
@@ -103,7 +104,9 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);     
-      new_dw->get(thermalCond,lb->thermalCondLabel,   indx,patch,gn,  0);      
+      new_dw->get(thermalCond,lb->thermalCondLabel,   indx,patch,gn,  0);
+      new_dw->get(gamma,      lb->gammaLabel,         indx,patch,gn,  0);
+      new_dw->get(cv,         lb->specific_heatLabel, indx,patch,gn,  0);    
       //__________________________________
       //  stability constraint due to courant Condition
       for (int dir = 0; dir <3; dir++) {  //loop over all three directions
@@ -141,12 +144,10 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       if (ice_matl) {
         double thermalCond_test = ice_matl->getThermalConductivity();
         if (thermalCond_test !=0) {
-          double cv    = ice_matl->getSpecificHeat();
-          double gamma = ice_matl->getGamma();
-          double cp = cv * gamma;
-
+        
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
+            double cp = cv[c] * gamma[c];
             double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
             double A =  0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
             delt_cond = std::min(A, delt_cond);
@@ -197,8 +198,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
     StaticArray<double> mat_volume(numMatls);
     StaticArray<double> mat_mass(numMatls);
-    StaticArray<double> cv(numMatls);
-    StaticArray<double> gamma(numMatls);
+    
     StaticArray<double> compressibility(numMatls);
     StaticArray<CCVariable<double> > vol_frac(numMatls);
     StaticArray<CCVariable<double> > rho_micro(numMatls);
@@ -210,6 +210,8 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<double> > Temp(numMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    StaticArray<constCCVariable<double> > cv(numMatls);
+    StaticArray<constCCVariable<double> > gamma(numMatls);
     StaticArray<constCCVariable<double> > placeHolder(0);
 
     constCCVariable<double> press;
@@ -225,9 +227,12 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
-      old_dw->get(Temp[m],      lb->temp_CCLabel,  indx,patch,gn,0);
-      old_dw->get(rho_CC[m],    lb->rho_CCLabel,   indx,patch,gn,0);
-      old_dw->get(sp_vol_CC[m], lb->sp_vol_CCLabel,indx,patch,gn,0);
+      old_dw->get(Temp[m],      lb->temp_CCLabel,      indx,patch,gn,0);
+      old_dw->get(rho_CC[m],    lb->rho_CCLabel,       indx,patch,gn,0);
+      old_dw->get(sp_vol_CC[m], lb->sp_vol_CCLabel,    indx,patch,gn,0);
+      new_dw->get(cv[m],        lb->specific_heatLabel,indx,patch,gn,0);
+      new_dw->get(gamma[m],     lb->gammaLabel,        indx,patch,gn,0);
+      
       new_dw->allocateAndPut(sp_vol_new[m], lb->sp_vol_CCLabel,    indx,patch);  
       new_dw->allocateAndPut(rho_CC_new[m], lb->rho_CCLabel,       indx,patch);  
       new_dw->allocateAndPut(vol_frac[m],   lb->vol_frac_CCLabel,  indx,patch);  
@@ -237,8 +242,6 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
                                                                    indx,patch);
       new_dw->allocateTemporary(rho_micro[m],  patch);
       speedSound_new[m].initialize(0.0);
-      cv[m] = matl->getSpecificHeat();
-      gamma[m] = matl->getGamma();
     }
     
     press_new.initialize(0.0);
@@ -253,8 +256,8 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 
         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-        ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
-                                             cv[m],Temp[m][c],
+        ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
+                                             cv[m][c],Temp[m][c],
                                              matl_press[m][c],dp_drho[m],dp_de[m]);
 
         mat_volume[m] = (rho_CC[m][c] * cell_vol) * sp_vol_CC[m][c];
@@ -888,6 +891,8 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
     StaticArray<CCVariable<double> > tot_eng_L_ME(numALLMatls);
     StaticArray<CCVariable<double> > Tdot(numALLMatls);
+    StaticArray<CCVariable<double> > cv(numALLMatls);
+    
     StaticArray<constCCVariable<double> > mass_L(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
     StaticArray<constCCVariable<double> > old_Temp(numALLMatls);
@@ -898,7 +903,6 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     
     vector<double> b(numALLMatls);
     vector<double> sp_vol(numALLMatls);
-    vector<double> cv(numALLMatls);
     vector<double> X(numALLMatls);
     vector<double> e_prime_v(numALLMatls);
     vector<double> if_mpm_matl_ignore(numALLMatls);
@@ -906,7 +910,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     double tmp, alpha,KE;
 /*`==========TESTING==========*/
 // I've included this term but it's turned off -Todd
-    double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
+//    double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
 /*==========TESTING==========`*/
     FastMatrix beta(numALLMatls, numALLMatls),acopy(numALLMatls, numALLMatls);
     FastMatrix K(numALLMatls, numALLMatls),H(numALLMatls, numALLMatls);
@@ -926,20 +930,26 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
       if_mpm_matl_ignore[m] = 1.0;
+      new_dw->allocateTemporary(cv[m],  patch);
+              
       if(mpm_matl){                 // M P M
         new_dw->get(old_vel_CC[m],   lb->vel_CCLabel,      indx, patch,gn,0); 
         new_dw->get(old_Temp[m],     lb->temp_CCLabel,     indx, patch,gn,0);
         new_dw->allocateTemporary(vel_CC[m],   patch);
         new_dw->allocateTemporary(Temp_CC[m],  patch);
-        cv[m] = mpm_matl->getSpecificHeat();
+        
+        cv[m].initialize(mpm_matl->getSpecificHeat());
         if_mpm_matl_ignore[m] = 0.0;
       }
       if(ice_matl){                 // I C E
-        old_dw->get(old_vel_CC[m],  lb->vel_CCLabel,     indx, patch,gn,0); 
-        old_dw->get(old_Temp[m],    lb->temp_CCLabel,    indx, patch,gn,0);
+        constCCVariable<double> cv_ice;
+        old_dw->get(old_vel_CC[m],lb->vel_CCLabel,       indx, patch,gn,0); 
+        old_dw->get(old_Temp[m],  lb->temp_CCLabel,      indx, patch,gn,0);
+        new_dw->get(cv_ice,       lb->specific_heatLabel,indx, patch,gn,0);
+        
         new_dw->allocateTemporary(vel_CC[m],  patch);
         new_dw->allocateTemporary(Temp_CC[m], patch); 
-        cv[m] = ice_matl->getSpecificHeat();
+        cv[m].copyData(cv_ice);
       }                             // A L L  M A T L S
       new_dw->get(mass_L[m],        lb->mass_L_CCLabel,    indx, patch,gn, 0); 
       new_dw->get(sp_vol_CC[m],     lb->sp_vol_CCLabel,    indx, patch,gn, 0);
@@ -953,12 +963,12 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx, patch);          
       new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx, patch);         
       new_dw->allocateAndPut(tot_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);
-      e_prime_v[m] = Joule_coeff * cv[m];
+//      e_prime_v[m] = Joule_coeff * cv[m];   turned off
       Tdot[m].initialize(0.0);
       tot_eng_L_ME[m].initialize(0.0);
       Temp_CC[m].initialize(0.0);
     }
-    new_dw->get(press_CC,           lb->press_CCLabel,     0,  patch,gn, 0);       
+    new_dw->get(press_CC, lb->press_CCLabel,  0,  patch,gn, 0);       
     
     // Convert momenta to velocities and internal energy to total energy
     // using the old_vel
@@ -1030,16 +1040,16 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       IntVector c = *iter;                                                        
       for (int m = 0; m < numALLMatls; m++) {                                     
         KE = 0.5 * mass_L[m][c] * vel_CC[m][c].length() * vel_CC[m][c].length();         
-        Temp_CC[m][c] = (tot_eng_L_ME[m][c] - KE) /(mass_L[m][c]*cv[m]);          
+        Temp_CC[m][c] = (tot_eng_L_ME[m][c] - KE) /(mass_L[m][c]*cv[m][c]);          
       }                                                                           
   
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
           beta(m,n)  = delT * vol_frac_CC[m][c] * vol_frac_CC[n][c] * H(n,m)/
-                        (rho_CC[m][c] * cell_vol * cv[m]);
+                        (rho_CC[m][c] * cell_vol * cv[m][c]);
           alpha      = if_mpm_matl_ignore[n] * 1.0/Temp_CC[n][c];  
           phi(m,n)   = (f_theta[m][c] * vol_frac_CC[n][c]* alpha)/ 
-                       (rho_CC[m][c]  * cell_vol * cv[m]);         
+                       (rho_CC[m][c]  * cell_vol * cv[m][c]);         
         }
       } 
 
@@ -1100,7 +1110,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
           IntVector c = *iter;
           KE = 0.5 * mass_L[m][c] * old_vel_CC[m][c].length() * old_vel_CC[m][c].length();
-          tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] + KE;
+          tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m][c] * mass_L[m][c] + KE;
         }
       }    
     } else {
@@ -1108,7 +1118,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
           IntVector c = *iter;
           KE = 0.5 * mass_L[m][c] * vel_CC[m][c].length() * vel_CC[m][c].length(); 
-          tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c] + KE;
+          tot_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m][c] * mass_L[m][c] + KE;
         }
       }    
     }

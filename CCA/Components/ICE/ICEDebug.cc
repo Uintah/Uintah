@@ -909,7 +909,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       
     constCCVariable<Vector> vel_CC, mom_L_CC, mom_L_ME_CC;
     constCCVariable<double> rho_CC, int_eng_L_CC, eng_L_ME_CC;
-    constCCVariable<double> Temp_CC;
+    constCCVariable<double> Temp_CC, cv;
    
     Ghost::GhostType  gn  = Ghost::None;
     //__________________________________
@@ -917,10 +917,11 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     for (int m = 0; m < numICEmatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
-      new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch,  Ghost::None, 0);
-      new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch,  Ghost::None, 0);
-      new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch,  Ghost::None, 0);
-      double cv = ice_matl->getSpecificHeat();   
+      new_dw->get(vel_CC, lb->vel_CCLabel,       indx, patch,  Ghost::None, 0);
+      new_dw->get(rho_CC, lb->rho_CCLabel,       indx, patch,  Ghost::None, 0);
+      new_dw->get(Temp_CC,lb->temp_CCLabel,      indx, patch,  Ghost::None, 0);
+      new_dw->get(cv,     lb->specific_heatLabel,indx, patch,  Ghost::None, 0);
+       
       mat_momentum[m] = Vector(0.0, 0.0, 0.0);
       mat_KE[m]       = 0.0;
       mat_int_eng[m]  = 0.0;
@@ -933,7 +934,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
         mat_momentum[m] += vel_CC[c] * mass;
         double vel_sq = vel_CC[c].length() * vel_CC[c].length();
         mat_KE[m]      += 0.5 * mass * vel_sq;
-        mat_int_eng[m] += mass * cv * Temp_CC[c];
+        mat_int_eng[m] += mass * cv[c] * Temp_CC[c];
         mat_mass[m]    += mass;        
       }
     }  // numICEmatls loop
