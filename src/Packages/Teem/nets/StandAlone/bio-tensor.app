@@ -1813,7 +1813,7 @@ class BioTensorApp {
 	set win .standalone
 
 	set viewer_width 435
-	set viewer_height 585
+	set viewer_height 560
 	
 	set notebook_width 280
 	set notebook_height [expr $viewer_height - 50]
@@ -2525,16 +2525,17 @@ class BioTensorApp {
 		-command "$this toggle_registration_threshold"
             pack $thresh.auto -side top -anchor nw -padx 3 -pady 0
             frame $thresh.choose
-            pack $thresh.choose -side top -anchor nw -padx 0 -pady 0
+            pack $thresh.choose -side top -anchor nw -padx 0 -pady 0 -fill x
 	    
             radiobutton $thresh.choose.button -text "Specify Threshold:" \
 		-state disabled \
 		-variable $mods(TendEpireg)-use-default-threshold -value 0 \
 		-command "$this toggle_registration_threshold"
-            entry $thresh.choose.entry -width 10 \
+            entry $thresh.choose.entry -width 12 \
 		-textvariable $mods(TendEpireg)-threshold \
 		-state disabled -foreground grey64
-            pack $thresh.choose.button $thresh.choose.entry -side left -anchor n -padx 2 -pady 1
+            pack $thresh.choose.button  -side left -anchor n -padx 2 -pady 1
+            pack  $thresh.choose.entry -side left -anchor n -padx 2 -pady 1 -fill x
 	    
             checkbutton $seg.cc -variable $mods(TendEpireg)-cc_analysis \
 		-text "Use Connected Components"\
@@ -2542,13 +2543,11 @@ class BioTensorApp {
             pack $seg.cc -side top -anchor nw -padx 6 -pady 0
 	    
             # Fitting
-            label $step_tab.fitl -text "Percent of Slices for Parameter Estimation: " -state disabled
-            pack $step_tab.fitl -side top -anchor nw -padx 8 -pady 0
-	    
             frame $step_tab.fit
             pack $step_tab.fit -side top -anchor n -padx 10 -pady 0
 	    
             global $mods(TendEpireg)-fitting
+            label $step_tab.fit.l -text "Fitting: " -state disabled
             label $step_tab.fit.f -text "70" -state disabled
             label $step_tab.fit.p -text "%" -state disabled
             scale $step_tab.fit.s -label "" \
@@ -2562,7 +2561,7 @@ class BioTensorApp {
 		-orient horizontal \
 		-command "$this configure_fitting_label "
 	    
-            pack $step_tab.fit.f $step_tab.fit.p \
+            pack $step_tab.fit.l $step_tab.fit.f $step_tab.fit.p \
 		$step_tab.fit.s  -side left \
 		-anchor nw -padx 0 -pady 0
             
@@ -2684,7 +2683,7 @@ class BioTensorApp {
 		-command "$this toggle_dt_threshold" 
             pack $thresh.choose.button -side left \
 		-anchor n -padx 2 -pady 3
-            entry $thresh.choose.entry -width 10 \
+            entry $thresh.choose.entry -width 17 \
 		-textvariable $mods(TendEstim)-threshold \
 		-state disabled -foreground grey64
             pack $thresh.choose.entry -side left \
@@ -2721,7 +2720,7 @@ class BioTensorApp {
             pack $bm.load.b -side left -anchor nw \
 		-padx 2 -pady 0
 
-            entry $bm.load.e -width 10 \
+            entry $bm.load.e -width 20 \
 		-textvariable $mods(NrrdReader-BMatrix)-filename \
 		-state disabled -foreground grey64
             pack $bm.load.e -side left -anchor nw \
@@ -4734,6 +4733,8 @@ class BioTensorApp {
 	           -state disabled -foreground grey64 \
 		   -orient horizontal \
 		   -command "$this change_variance_slice" \
+		   -width 15 \
+		   -sliderlength 15 \
 		   -length [expr $notebook_width - 60]
 	       
 	       pack $f.slice -side top -anchor n -padx 3 -pady 3
@@ -4822,7 +4823,7 @@ class BioTensorApp {
 	    scale $f.axis.x.slider -from 0 -to 512 \
 		-variable plane_x \
 		-showvalue false \
-		-length 100  -width 15 \
+		-length 150  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal  
@@ -4840,7 +4841,7 @@ class BioTensorApp {
 	    scale $f.axis.y.slider -from 0 -to 512 \
 		-variable plane_y \
 		-showvalue false \
-		-length 100  -width 15 \
+		-length 150  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal 
@@ -4858,7 +4859,7 @@ class BioTensorApp {
 	    scale $f.axis.z.slider -from 0 -to 512 \
 		-variable plane_z \
 		-showvalue false \
-		-length 100  -width 15 \
+		-length 150  -width 15 \
 		-sliderlength 15 \
 		-state disabled -foreground grey64 \
 		-orient horizontal 
@@ -6793,7 +6794,7 @@ class BioTensorApp {
 	    frame $stop.steps
 	    pack $stop.steps -side top -anchor nw
 	    
-	    checkbutton $stop.steps.check -text "Number of Steps:" \
+	    checkbutton $stop.steps.check -text "Number of Steps: " \
 		-variable $mods(TendFiber)-use-steps \
 		-command "$this toggle_fibers_steps; $mods(TendFiber)-c needexecute" \
 		-state disabled -foreground grey64
@@ -6826,7 +6827,7 @@ class BioTensorApp {
 	    scale $stop.aniso1.val -label "" \
 		-from 0.0 -to 1.0 \
 		-resolution 0.01 \
-		-length 75  -width 15 \
+		-length 70  -width 15 \
 		-sliderlength 15 \
 		-orient horizontal \
 		-showvalue false \
@@ -7555,7 +7556,7 @@ class BioTensorApp {
 	
 	frame $frame.colorFrame
 	frame $frame.colorFrame.col -relief ridge -borderwidth \
-	    4 -height 0.6c -width 0.6c \
+	    4 -height 25 -width 25 \
 	    -background [format #%04x%04x%04x $ir $ig $ib]
 			 
 	set cmmd "$this raiseColor $frame.colorFrame.col $color $mod"
@@ -7565,7 +7566,7 @@ class BioTensorApp {
 	
 	#pack the node color frame
 	pack $frame.colorFrame.set_color \
-	    -side left -ipadx 3 -ipady 3
+	    -side left -ipadx 2 -ipady 2
 	pack $frame.colorFrame.col -side left 
 	pack $frame.colorFrame -side left -padx 1
     }
