@@ -598,6 +598,8 @@ class BioFEMApp {
 	    
 	    ### Renderer Options Tab
 	    create_viewer_tab $vis
+
+            $vis.tnb view "Vis Options"
 	    
 	    
 	    # Execute Button
