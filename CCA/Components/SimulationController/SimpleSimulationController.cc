@@ -395,7 +395,7 @@ SimpleSimulationController::run()
         sim->scheduleTimeAdvance(level, scheduler, 0, 1);
         
         if(output)
-          output->finalizeTimestep(t, delt, grid, scheduler, true);
+          output->finalizeTimestep(t, delt, grid, scheduler, true, sharedState->needAddMaterial());
         
         // Begin next time step...
         sim->scheduleComputeStableTimestep(level, scheduler);
