@@ -28,6 +28,7 @@ ifneq ($(ICE),)
 SRCS += $(SRCDIR)/ICE_schedule.cc       	          	    	 \
     	 $(SRCDIR)/ICE_actual.cc 	     	          	    	 \
     	 $(SRCDIR)/array_conversion.cc   	          	    	 \
+    	 $(SRCDIR)/ICE_wrappers.cc   	          	    	 \
     	 $(ICE_DIR)/input.c					       \
 	 $(ICE_DIR)/Plot_routines/plot_vector.c			\
         $(ICE_DIR)/Plot_routines/plot_control.c			\
@@ -100,6 +101,9 @@ iceclean:
 
 #
 # $Log$
+# Revision 1.11  2000/07/03 16:41:46  harman
+# wrapped all the steps for a single mat.  need to fix step 0 and add multimaterial
+#
 # Revision 1.10  2000/06/28 21:50:07  harman
 # sparker, mcq, harman: - No longer need to make libICE.a in ice_sm for sus
 #                       - Added iceclean to sub.mk
