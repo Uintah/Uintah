@@ -33,7 +33,8 @@ export SCIRUN_SRCDIR=`cd ${SCIRUN_OBJDIR}/../src; pwd`
 export SCIRUN_THIRDPARTY_DIR=`cd ${SCIRUN_OBJDIR}/../Thirdparty; pwd`
 export SCIRUN_ITCL_WIDGETS=${SCIRUN_THIRDPARTY_DIR}/lib/iwidgets/scripts
 export TCL_LIBRARY=${SCIRUN_THIRDPARTY_DIR}/lib/tcl
-export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_OBJDIR}/lib/
+export SCIRUN_INSIGHT_LIB=${SCIRUN_THIRDPARTY_DIR}/lib/InsightToolkit
+export DYLD_LIBRARY_PATH=${SCIRUN_THIRDPARTY_DIR}/lib:${SCIRUN_INSIGHT_LIB}:${SCIRUN_OBJDIR}/lib/
 export DISPLAY=:0.0
 if [ -d /Applications/Utilities/X11.app ]; then
     /usr/bin/open -a /Applications/Utilities/X11.app 
