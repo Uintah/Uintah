@@ -17,7 +17,6 @@
 
 // PackageDB.cc - Interface to module-finding and loading mechanisms
 
-#include <Core/Util/soloader.h>
 #include <Core/Util/scirun_env.h>
 #ifdef ASSERT
 #undef ASSERT
@@ -57,7 +56,7 @@ using std::vector;
 
 namespace SCIRun {
 env_map scirunrc;                        // contents of .scirunrc
-// these are set in main.cc
+// these live here, but are reset in main.cc
 string SCIRUN_SRCTOP("not set");         // = INSTALL_DIR/SCIRun/src
 string SCIRUN_OBJTOP("not set");         // = BUILD_DIR
 string DEFAULT_LOAD_PACKAGE("not set");  // configured packages
@@ -95,6 +94,36 @@ PackageDB::~PackageDB(void)
 
 typedef void (*pkgInitter)(const string& tclPath);
 
+LIBRARY_HANDLE PackageDB::findLibInPath(string lib, string path)
+{
+  LIBRARY_HANDLE handle;
+  string tempPaths = path;
+  string dir;
+
+  // try to find the package library in the specified paths
+  while (tempPaths!="") {
+    const unsigned int firstColon = tempPaths.find(':');
+    if(firstColon < tempPaths.size()) {
+      dir=tempPaths.substr(0,firstColon);
+      tempPaths=tempPaths.substr(firstColon+1,-1);
+    } else {
+      dir=tempPaths;
+      tempPaths="";
+    }
+
+    std::cerr << "looking for " << (dir+"/"+lib).c_str() << std::endl;
+    
+    handle = GetLibraryHandle((dir+"/"+lib).c_str());
+    if (handle)
+      return handle;
+  }
+
+  // if not yet found, try to find it in the LD_LIBRARY_PATH (last resort)
+  handle = GetLibraryHandle(lib.c_str());
+    
+  return handle;
+}
+
 void PackageDB::loadPackage()
 {
   string loadPackage;
@@ -117,17 +146,17 @@ void PackageDB::loadPackage()
   // the format of PACKAGE_PATH is a colon seperated list of paths to the
   // root(s) of package source trees.
   // build the complete package path (var in .scirunrc + default)
-  env_iter i = scirunrc.find(string("PACKAGE_SRC_PATH"));
-  if (i!=scirunrc.end())
-    packagePath = (*i).second + ":" + SCIRUN_SRCTOP +"/Packages";
+  env_iter envi = scirunrc.find(string("PACKAGE_SRC_PATH"));
+  if (envi!=scirunrc.end())
+    packagePath = (*envi).second + ":" + SCIRUN_SRCTOP +"/Packages";
   else
     packagePath = SCIRUN_SRCTOP + "/Packages";
 
   // the format of LOAD_PACKAGE is a comma seperated list of package names.
   // build the complete list of packages to load
-  i = scirunrc.find(string("LOAD_PACKAGE"));
-  if (i!=scirunrc.end())
-    loadPackage = (*i).second;
+  envi = scirunrc.find(string("LOAD_PACKAGE"));
+  if (envi!=scirunrc.end())
+    loadPackage = (*envi).second;
   else
     loadPackage = DEFAULT_LOAD_PACKAGE;
 
@@ -279,6 +308,10 @@ void PackageDB::loadPackage()
 	       " -steps " + to_string(mod_count) + ";"
 	       "pack .loading.fb -padx 5 -fill x; update idletasks");
 
+  string libpath="";
+  envi = scirunrc.find("PACKAGE_LIB_PATH");
+  if (envi!=scirunrc.end())
+    libpath=(*envi).second;
   LIBRARY_HANDLE package_so;
   LIBRARY_HANDLE category_so;
   string libname;
@@ -316,7 +349,8 @@ void PackageDB::loadPackage()
 
     // try the large version of the .so
     libname = "lib" + pak_bname + ".so";
-    package_so = GetLibraryHandle(libname.c_str());
+    package_so = findLibInPath(libname,libpath);
+    //package_so = GetLibraryHandle(libname.c_str());
     if (!package_so)
       package_error = SOError();
 
@@ -328,7 +362,8 @@ void PackageDB::loadPackage()
 
       // try the small version of the .so 
       libname = "lib" + cat_bname + cname + ".so";
-      category_so = GetLibraryHandle(libname.c_str());
+      category_so = findLibInPath(libname,libpath);
+      //category_so = GetLibraryHandle(libname.c_str());
       if (!category_so)
 	category_error = SOError();
 

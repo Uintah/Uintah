@@ -24,6 +24,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/AVLTree.h>
+#include <Core/Util/soloader.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
@@ -66,6 +67,7 @@ namespace SCIRun {
         ~PackageDB(void);
 
         void loadPackage();
+	LIBRARY_HANDLE findLibInPath(string,string);
         void registerModule(ModuleInfo* info);
 	void createAlias(const string& fromPackageName,
 			 const string& fromCategoryName,
