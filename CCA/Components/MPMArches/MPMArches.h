@@ -54,7 +54,7 @@ namespace Uintah {
 using namespace SCIRun;
 
 
- struct cutcell { double d_cutcell[12]; }; //centroids/areafrn./surface normals
+ struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
  
  const TypeDescription* fun_getTypeDescription(cutcell*);
 
@@ -282,10 +282,12 @@ public:
   bool d_recompile;
   double prturb;
   double cpfluid;
+  bool d_useCutCell;
+  bool d_stationarySolid;
 
   enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};
-  enum AREAFRN {AREAE=7, AREAW, AREAN, AREAS, AREAT, AREAB};
+  enum AREAFRN {AREAE=7, AREAW, AREAN, AREAS, AREAT, AREAB, TOTAREA};
 
 };
       

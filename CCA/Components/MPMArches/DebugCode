@@ -306,4 +306,14 @@ void MPMArches::putAllForcesOnCC
 	// allocateAndPut instead:
 	/* new_dw->put(htrate_cc, d_MAlb->heaTranSolid_CCLabel,    matlindex, patch); */;
 
+void MPMArches::initializeKStability(const ProcessorGroup*,
+
+	/* debug stuff
+	   cout << "Patch number  " << p << " has index "<< ccinfo->patchindex << endl;
+	   cout << "for patch  " << p << " ist = " << istart << " jst = " << jstart << " kst = " << kstart << endl;
+	   cout << "for patch  " << p << " iend = " << iend << " jend = " << jend << " kend = " << kend << endl;
+	   cout << "dimLo for patch " << p << " " <<dimLo << endl;
+	   cout << "dimHi for patch " << p << " " <<dimHi << endl;
+	   cout << "It took me " << ii << " tries" << endl;
+	*/
 

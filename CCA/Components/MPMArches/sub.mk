@@ -35,3 +35,4 @@ $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/energy_exchange_term_fort.h
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/interp_centertoface_fort.h
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/momentum_exchange_term_continuous_cc_fort.h
 $(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/pressure_force_fort.h
+$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/read_complex_geometry_fort.h
