@@ -71,6 +71,13 @@ void add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
 
 ViewWindow::ViewWindow(Viewer* s, const clString& id)
   : manager(s),
+    pos("pos", id, this),
+    caxes("caxes", id, this),iaxes("iaxes", id, this), 
+    doingMovie(false),
+    makeMPEG(false),
+    curFrame(0),
+    curName("movie"),
+    dolly_throttle(0),
     id(id),
     view("view", id, this),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
@@ -83,10 +90,7 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
     do_bawgl("do_bawgl", id, this),  
     // --  BAWGL -- 
     drawimg("drawimg", id, this),
-    saveprefix("saveprefix", id, this),
-    curFrame(0),curName("movie"),pos("pos", id, this),
-    caxes("caxes", id, this),iaxes("iaxes", id, this), 
-    doingMovie(false), makeMPEG(false), dolly_throttle(0)
+    saveprefix("saveprefix", id, this)
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -1786,28 +1790,28 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     if( fabs(x) > fabs(y)) {
       if( fabs(x) > fabs(z)) {
 	if(sv.up().x() < 0.0) {
-	  Vector v(-1.0, 0.0, 0.0);
+	  v = Vector(-1.0, 0.0, 0.0);
 	} else {
-	  Vector v(1.0, 0.0, 0.0);
+	  v = Vector(1.0, 0.0, 0.0);
 	}
       } else if( fabs(z) > fabs(y)) {
 	if(sv.up().z() < 0.0) {
-	  Vector v(0.0, 0.0, -1.0);
+	  v = Vector(0.0, 0.0, -1.0);
 	} else {
-	  Vector v(0.0, 0.0, 1.0);
+	  v = Vector(0.0, 0.0, 1.0);
 	}
       }
     } else if( fabs(y) > fabs(z)) {
       if(sv.up().y() < 0.0) {
-	Vector v(0.0, -1.0, 0.0);
+	v = Vector(0.0, -1.0, 0.0);
       } else {
-	Vector v(0.0, 1.0, 0.0);
+	v = Vector(0.0, 1.0, 0.0);
       }
     } else {
       if(sv.up().z() < 0.0) {
-	Vector v(0.0, 0.0, -1.0);
+	v = Vector(0.0, 0.0, -1.0);
       } else {
-	Vector v(0.0, 0.0, 1.0);
+	v = Vector(0.0, 0.0, 1.0);
       }
     }
     Vector lookdir2(sv.eyep() - sv.lookat());

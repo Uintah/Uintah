@@ -97,15 +97,16 @@ GeomObj* GeomTorus::clone()
 }
 
 GeomTorusArc::GeomTorusArc(int nu, int nv)
-: zero(0,1,0), arc_angle(Pi), GeomTorus(nu, nv)
+  : GeomTorus(nu, nv), zero(0,1,0), arc_angle(Pi)
 {
 }
 
 GeomTorusArc::GeomTorusArc(const Point& cen, const Vector& axis,
 			   double rad1, double rad2, const Vector& zero,
-			   double start_angle, double arc_angle, int nu, int nv)
-: zero(zero), start_angle(start_angle), arc_angle(arc_angle),
-  GeomTorus(cen, axis, rad1, rad2, nu, nv)
+			   double start_angle, double arc_angle,
+			   int nu, int nv)
+  : GeomTorus(cen, axis, rad1, rad2, nu, nv),
+    zero(zero), start_angle(start_angle), arc_angle(arc_angle)
 {
 }
 
@@ -126,8 +127,10 @@ void GeomTorusArc::move(const Point& _cen, const Vector& _axis,
 }
 
 GeomTorusArc::GeomTorusArc(const GeomTorusArc& copy)
-: zero(copy.zero), start_angle(copy.start_angle), arc_angle(copy.arc_angle),
-  GeomTorus(copy)
+  : GeomTorus(copy),
+    zero(copy.zero),
+    start_angle(copy.start_angle),
+    arc_angle(copy.arc_angle)
 {
 }
 

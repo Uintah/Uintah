@@ -81,7 +81,7 @@ GuiExtendedView::GuiExtendedView( const clString& name, const clString& id,
 : GuiVar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
   fov("fov", str(), tcl), eyep_offset("eyep_offset", str(), tcl),
-  bg("bg", str(), tcl), xres("xres", str(), tcl), yres("yres", str(), tcl)
+  xres("xres", str(), tcl), yres("yres", str(), tcl), bg("bg", str(), tcl)
 {
 }
 

@@ -36,8 +36,8 @@ namespace SCIRun {
 
 
 Network::Network(int first)
-  : netedit(0), first(first), slave_socket(0), nextHandle(0),
-    the_lock("Network lock")
+  : the_lock("Network lock"),
+    netedit(0), first(first), nextHandle(0), slave_socket(0)
 {
 }
 

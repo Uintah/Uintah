@@ -50,15 +50,23 @@ ostream& operator<<( ostream& os, const StackItem& i ) {
 
 
 ConstraintSolver::ConstraintSolver()
-: Epsilon(1E-6), stack(200), NumVariables(0), variables(0), MaxDepth(25),
-  changed(0)
+  : Epsilon(1E-6),
+    MaxDepth(25),
+    changed(0),
+    stack(200),
+    NumVariables(0),
+    variables(0)
 {
 }
 
 
 ConstraintSolver::ConstraintSolver( const Real epsilon )
-: Epsilon(epsilon), stack(200), NumVariables(0), variables(0), MaxDepth(25),
-  changed(0)
+  : Epsilon(epsilon),
+    MaxDepth(25),
+    changed(0),
+    stack(200),
+    NumVariables(0),
+    variables(0)
 {
 }
 

@@ -71,20 +71,32 @@ static clString module_name("BldTransform");
 static clString widget_name("TransformWidget");
 
 BldTransform::BldTransform(const clString& id)
-: Module("BldTransform", id, Filter),
-  rx("rx", id, this), ry("ry", id, this), rz("rz", id, this), 
-  th("th", id, this),
-  tx("tx", id, this), ty("ty", id, this), tz("tz", id, this),
-  scalex("scalex", id, this), scaley("scaley", id, this), 
-  scalez("scalez", id, this), 
-  scale("scale", id, this), pre("pre", id, this),
-  xmapTCL("xmapTCL", id, this), ymapTCL("ymapTCL", id, this), 
-  zmapTCL("zmapTCL", id, this),
-  whichxform("whichxform", id, this),
-  sha("sha", id, this), shb("shb", id, this), shc("shc", id, this),
-  shd("shd", id, this), widget_lock("BldTransform widget lock"),
-  widgetScale("widgetScale", id, this), ignorechanges(1),
-  init(0), widgetShowResizeHandles("widgetShowResizeHandles", id, this)
+  : Module("BldTransform", id, Filter),
+    rx("rx", id, this),
+    ry("ry", id, this),
+    rz("rz", id, this), 
+    th("th", id, this),
+    tx("tx", id, this),
+    ty("ty", id, this),
+    tz("tz", id, this),
+    scale("scale", id, this),
+    scalex("scalex", id, this),
+    scaley("scaley", id, this), 
+    scalez("scalez", id, this), 
+    sha("sha", id, this),
+    shb("shb", id, this),
+    shc("shc", id, this),
+    shd("shd", id, this),
+    xmapTCL("xmapTCL", id, this),
+    ymapTCL("ymapTCL", id, this), 
+    zmapTCL("zmapTCL", id, this),
+    pre("pre", id, this),
+    whichxform("whichxform", id, this),
+    widgetShowResizeHandles("widgetShowResizeHandles", id, this),
+    widgetScale("widgetScale", id, this),
+    widget_lock("BldTransform widget lock"),
+    ignorechanges(1),
+    init(0)
 {
     // Create the input port
     imatrix=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);

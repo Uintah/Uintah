@@ -37,8 +37,8 @@ static clString make_id(const clString& name)
 }
 
 Histogram::Histogram()
-: id(make_id(widget_name)), numbuckets(200), freqs(1000),
-  minfreq(0), maxfreq(0), minval(0), maxval(0),
+: numbuckets(200), freqs(1000),
+  minfreq(0), maxfreq(0), minval(0), maxval(0), id(make_id(widget_name)),
   l("rangeleft", id, this), r("rangeright", id, this)
 {
    init_tcl();

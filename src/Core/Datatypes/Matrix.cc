@@ -31,7 +31,7 @@ void Matrix::is_symmetric(int symm) {
 }
 
 Matrix::Matrix(Sym sym, Representation rep)
-: sym(sym), rep(rep), extremaCurrent(0), separate_raw(0), raw_filename("")
+  : separate_raw(0), raw_filename(""), sym(sym), extremaCurrent(0), rep(rep)
 {
 }
 

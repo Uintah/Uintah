@@ -460,15 +460,13 @@ bool GeomTrianglesPT1d::saveobj(ostream& out, const clString& format,
 }
 
 GeomTranspTrianglesP::GeomTranspTrianglesP()
-:sorted(0),alpha(0.2),list_pos(0)
+  : alpha(0.2), sorted(0), list_pos(0)
 {
-
 }
 
 GeomTranspTrianglesP::GeomTranspTrianglesP(double aval)
-:sorted(0),alpha(aval),list_pos(0)
+  : alpha(aval), sorted(0), list_pos(0)
 {
-
 }
 
 GeomTranspTrianglesP::~GeomTranspTrianglesP()

@@ -236,9 +236,22 @@ PersistentTypeID GeomTexVolRender::type_id("GeomTexVolRender", "GeomObj",
 					   
 
 GeomTexVolRender::GeomTexVolRender(Point /*pts*/[8])
-:nslice(64),s_alpha(0.5),vol3d(0),map1d(0),map2d(0),id(0),
- quantnvol(0),quantclrs(0),rgbavol(0),quantsz(0),qalwaysupdate(1),
- qupdate(1),usemip(1),doOther(0),other(0)
+  : nslice(64),
+    s_alpha(0.5),
+    vol3d(0),
+    id(0),
+    id2(0),
+    usemip(1),
+    other(0),
+    doOther(0),
+    map1d(0),
+    map2d(0),
+    quantnvol(0),
+    quantclrs(0),
+    quantsz(0),
+    qalwaysupdate(1),
+    qupdate(1),
+    rgbavol(0)
 {
 #if 0
   for(int i=0;i<8;i++)
@@ -249,10 +262,27 @@ GeomTexVolRender::GeomTexVolRender(Point /*pts*/[8])
 }
 
 GeomTexVolRender::GeomTexVolRender(Point& pmin, Point& pmax)
-:nslice(256),s_alpha(1.0),vol3d(0),map1d(0),map2d(0),id(0),
- quantnvol(0),quantclrs(0),rgbavol(0),quantsz(0),qalwaysupdate(1),
- qupdate(1),np(8),ambC(0.2),difC(0.8),specC(0.3),specP(5),id2(0),usemip(1),
- doOther(0),other(0)
+  : nslice(256),
+    s_alpha(1.0),
+    vol3d(0),
+    id(0),
+    id2(0),
+    usemip(1),
+    other(0),
+    doOther(0),
+    map1d(0),
+    map2d(0),
+    quantnvol(0),
+    quantclrs(0),
+    quantsz(0),
+    qalwaysupdate(1),
+    qupdate(1),
+    rgbavol(0),
+    ambC(0.2),
+    difC(0.8),
+    specC(0.3),
+    specP(5),
+    np(8)
 {
   myCube.Init(pmin,pmax);
 

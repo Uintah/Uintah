@@ -93,8 +93,10 @@ extern "C" Module* make_ErrorMetric(const clString& id)
 }
 
 ErrorMetric::ErrorMetric(const clString& id)
-: Module("ErrorMetric", id, Filter), d_methodTCL("methodTCL", id, this),
-    d_pTCL("pTCL", id, this), d_haveUI("haveUI", id, this)
+  : Module("ErrorMetric", id, Filter),
+    d_haveUI("haveUI", id, this),
+    d_methodTCL("methodTCL", id, this),
+    d_pTCL("pTCL", id, this)
 {
     // Create the input port
     d_ivec1P=scinew MatrixIPort(this, "Vec1",MatrixIPort::Atomic);

@@ -1641,8 +1641,8 @@ void SLSquareSource::update_position(const clString& base, const clString& varna
 
 void SLSquareSource::get_n(int& ns, int& nt)
 {
-    ns=fw->GetRatioR()*500;
-    nt=fw->GetRatioD()*500;
+  ns = (int)(fw->GetRatioR() * 500.0);
+  nt = (int)(fw->GetRatioD() * 500.0);
 }
 
 Vector SLSquareSource::ribbon_direction(double, double,

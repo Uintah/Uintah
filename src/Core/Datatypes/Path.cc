@@ -268,7 +268,10 @@ bool Path::build_path(){
   if (!is_built){
 
     if(path_t==KEYFRAMED)
-      return is_built=1;
+    {
+      is_built = 1;
+      return true;
+    }
 
     param.remove_all();
    
@@ -318,7 +321,10 @@ bool Path::build_path(){
     }
     
     if (path_t==CUBIC && param.size()<2)
-      return is_built=0;
+    {
+      is_built = 0;
+      return false;
+    }
     
     if (eyeP->set_data(param, epts) && lookatP->set_data(param, lpts) && upV->set_data(param, vects) 
 	&& fov->set_data(param, fovs) && speed->set_data(param, sps) && resample_path()){

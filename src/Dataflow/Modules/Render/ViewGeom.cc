@@ -34,7 +34,7 @@ PersistentTypeID GeomViewerItem::type_id("GeomViewerItem", "GeomObj",
 					 make_GeomViewerItem);
 
 GeomViewerPort::GeomViewerPort(int no)
-:portno(no),msg_head(0),msg_tail(0)
+  : msg_head(0), msg_tail(0), portno(no)
 {
     // just use default constructor for base class...
 }

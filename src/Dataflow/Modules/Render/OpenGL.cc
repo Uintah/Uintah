@@ -60,8 +60,10 @@ int query_OpenGL()
 RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
-  : tkwin(0), send_mb("OpenGL renderer send mailbox",10),
-    recv_mb("OpenGL renderer receive mailbox", 10), helper(0),
+  : tkwin(0),
+    helper(0),
+    send_mb("OpenGL renderer send mailbox",10),
+    recv_mb("OpenGL renderer receive mailbox", 10),
     get_mb("OpenGL renderer request mailbox", 5),
     img_mb("OpenGL renderer image data mailbox", 5)
 {
@@ -439,13 +441,13 @@ void OpenGL::redraw_frame()
       eyesep=u*eye_sep_dist*zmid;
     }
     
+#ifdef __sgi
     GLfloat realStylusMatrix[16], realPinchMatrix[16];
     int stylusID, pinchID;
     int stylus, pinch;
     GLfloat scale;
     char scalestr[512];
     
-#ifdef __sgi
     //  --  BAWGL  -- 
     if( do_bawgl )
     {

@@ -62,19 +62,19 @@ SliceTable::~SliceTable()
 void SliceTable::getParameters(const Brick& brick, double& tmin,
 			       double& tmax, double& dt) const
 {
-  double min = intersectParam(-view.direction(),
-			       brick[ order[7] ],
-			       view);
-  double max = intersectParam(-view.direction(),
-			       brick[ order[0] ],
-			       view);
+  const double min = intersectParam(-view.direction(),
+				    brick[ order[7] ],
+				    view);
+  const double max = intersectParam(-view.direction(),
+				    brick[ order[0] ],
+				    view);
 
   dt = DT * pow(2.0, treedepth  - brick.level());
 
-  int steps = (max - minT)/dt;
-  tmax = minT + (steps * dt);
-  steps = (min - minT)/dt;
-  tmin = minT + (steps + 1) * dt;
+  const double max_steps = floor((max - minT)/dt);
+  tmax = minT + max_steps * dt;
+  const double min_steps = floor((min - minT)/dt);
+  tmin = minT + (min_steps + 1.0) * dt;
 }
 
 #define SLICETABLE_VERSION 1

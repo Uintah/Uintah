@@ -19,15 +19,30 @@ double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0,
 int GLVolumeRenderer::rCount = 0;
 
 GLVolumeRenderer::GLVolumeRenderer(int id) 
-  : GeomObj( id ), mutex("GLVolumeRenderer Mutex"),
-  tex(0), cmap(0),
-  controlPoint(Point(0,0,0)), slices(0),
-  cmapHasChanged(true),
-  slice_alpha(1.0),
-  drawX(false),drawY(false),drawZ(false),drawView(false),
-  _interp(true), _lighting(0), _tp(0), _roi(0), _fr(0), _los(0),
-  _oo(0), _mip(0), _atten(0), _planes(0),
-  _state(state(_fr, 0)),  _gl_state(state(_oo, 0))
+  : GeomObj( id ),
+    _state(state(_fr, 0)),
+    _roi(0),
+    _fr(0),
+    _los(0),
+    _tp(0),
+    _gl_state(state(_oo, 0)),
+    _oo(0),
+    _mip(0),
+    _atten(0),
+    _planes(0),
+    slices(0),
+    tex(0),
+    mutex("GLVolumeRenderer Mutex"),
+    cmap(0),
+    controlPoint(Point(0,0,0)),
+    slice_alpha(1.0),
+    cmapHasChanged(true),
+    drawX(false),
+    drawY(false),
+    drawZ(false),
+    drawView(false),
+    _interp(true),
+    _lighting(0)
 {
   rCount++;
   NOT_FINISHED("GLVolumeRenderer::GLVolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
@@ -37,31 +52,59 @@ GLVolumeRenderer::GLVolumeRenderer(int id)
 GLVolumeRenderer::GLVolumeRenderer(int id, 
 				   GLTexture3DHandle tex,
 				   ColorMapHandle map)
- : GeomObj( id ),  mutex("GLVolumeRenderer Mutex"),
-  tex(tex), cmap(map),
-  controlPoint(Point(0,0,0)), slices(0),
-  cmapHasChanged(true),
-  slice_alpha(1.0), 
-  drawX(false),drawY(false),drawZ(false),drawView(false),
-  _interp(true),  _lighting(0), _tp(0), _roi(0), _fr(0), _los(0),
-  _oo(0), _mip(0), _atten(0), _planes(0),
-  _state(state(_fr, 0)),  _gl_state(state(_oo, 0))
+  : GeomObj( id ),
+    _state(state(_fr, 0)),
+    _roi(0),
+    _fr(0),
+    _los(0),
+    _tp(0),
+    _gl_state(state(_oo, 0)),
+    _oo(0),
+    _mip(0),
+    _atten(0),
+    _planes(0),
+    slices(0),
+    tex(tex),
+    mutex("GLVolumeRenderer Mutex"),
+    cmap(map),
+    controlPoint(Point(0,0,0)),
+    slice_alpha(1.0),
+    cmapHasChanged(true),
+    drawX(false),
+    drawY(false),
+    drawZ(false),
+    drawView(false),
+    _interp(true),
+    _lighting(0)
 {
   rCount++;
 }
 
 GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
-  : GeomObj( copy.id ), mutex("GLVolumeRenderer Mutex"),
-  tex(copy.tex),  cmap(copy.cmap),
-  controlPoint(copy.controlPoint), slices(copy.slices),
-  cmapHasChanged(copy.cmapHasChanged),
-  slice_alpha(copy.slice_alpha), _state(copy._state),
-  _gl_state(copy._gl_state),
-  drawX(copy.drawX),drawY(copy.drawY),
-    drawZ(copy.drawZ),drawView(copy.drawView),  _lighting(copy._lighting),
-   _interp(copy._interp), _tp(copy._tp), _roi(copy._roi), _fr(copy._fr),
-   _los(copy._los), _oo(copy._oo), _mip(copy._mip), _atten(copy._atten),
-   _planes(copy._planes)
+  : GeomObj( copy.id ),
+    _state(copy._state),
+    _roi(copy._roi),
+    _fr(copy._fr),
+    _los(copy._los),
+    _tp(copy._tp),
+    _gl_state(copy._gl_state),
+    _oo(copy._oo),
+    _mip(copy._mip),
+    _atten(copy._atten),
+    _planes(copy._planes),
+    slices(copy.slices),
+    tex(copy.tex),
+    mutex("GLVolumeRenderer Mutex"),
+    cmap(copy.cmap),
+    controlPoint(copy.controlPoint),
+    slice_alpha(copy.slice_alpha),
+    cmapHasChanged(copy.cmapHasChanged),
+    drawX(copy.drawX),
+    drawY(copy.drawY),
+    drawZ(copy.drawZ),
+    drawView(copy.drawView),
+    _interp(copy._interp),
+    _lighting(copy._lighting)
 {
   rCount++;
 } 
@@ -246,10 +289,10 @@ GLVolumeRenderer::BuildTransferFunctions( )
 
 	  alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
 	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
-	  TransferFunctions[i][4*j + 0] = (c.r()*255);
-	  TransferFunctions[i][4*j + 1] = (c.g()*255);
-	  TransferFunctions[i][4*j + 2] = (c.b()*255);
-	  TransferFunctions[i][4*j + 3] = (alpha2*255);
+	  TransferFunctions[i][4*j + 0] = (unsigned char)(c.r()*255);
+	  TransferFunctions[i][4*j + 1] = (unsigned char)(c.g()*255);
+	  TransferFunctions[i][4*j + 2] = (unsigned char)(c.b()*255);
+	  TransferFunctions[i][4*j + 3] = (unsigned char)(alpha2*255);
 	}
   }
 }

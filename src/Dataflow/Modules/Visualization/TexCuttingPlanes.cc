@@ -41,14 +41,16 @@ extern "C" Module* make_TexCuttingPlanes( const clString& id) {
 
 TexCuttingPlanes::TexCuttingPlanes(const clString& id)
   : Module("TexCuttingPlanes", id, Filter), 
+  tex(0),
+  control_lock("TexCuttingPlanes resolution lock"),
+  control_widget(0),
+  control_id(-1),
   drawX("drawX", id, this),
   drawY("drawY", id, this),
   drawZ("drawZ", id, this),
   drawView("drawView", id, this),
   interp_mode("interp_mode", id, this),
-  control_lock("TexCuttingPlanes resolution lock"),
-  control_widget(0), control_id(-1),
-  volren(0), tex(0)
+  volren(0)
 {
   // Create the input ports
   intexture = scinew GLTexture3DIPort( this, "GL Texture",

@@ -29,7 +29,7 @@ PersistentTypeID GeomBillboard::type_id("GeomBillboard", "GeomObj",
 
 
 GeomBillboard::GeomBillboard(GeomObj* obj, const Point &p)
-: at(p), child(obj)
+: child(obj), at(p)
 {
 
 }

@@ -38,11 +38,11 @@ extern "C" Module* make_GLTextureBuilder( const clString& id) {
 
 GLTextureBuilder::GLTextureBuilder(const clString& id)
   : Module("GLTextureBuilder", id, Filter), 
+    tex(0),
     max_brick_dim("max_brick_dim", id, this),
     min("min", id, this),
     max("max", id, this),
-    isFixed("isFixed", id, this),
-    tex(0) 
+    isFixed("isFixed", id, this)
 {
   // Create the input ports
   infield = scinew FieldIPort( this, " Field",

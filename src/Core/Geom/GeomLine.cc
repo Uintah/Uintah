@@ -173,12 +173,15 @@ Persistent* make_TexGeomLines()
 PersistentTypeID TexGeomLines::type_id("TexGeomLines", "GeomObj", make_TexGeomLines);
 
 TexGeomLines::TexGeomLines()
-    : mutex("TexGeomLines mutex"), tmapid(0),alpha(1.0),tex_per_seg(1) // hedgehog is default...
+  : tmapid(0),
+    tex_per_seg(1),
+    mutex("TexGeomLines mutex"),
+    alpha(1.0)
 {
 }
 
 TexGeomLines::TexGeomLines(const TexGeomLines& copy)
-: mutex("TexGeomLines mutex"), pts(copy.pts)
+  : mutex("TexGeomLines mutex"), pts(copy.pts)
 {
 }
 

@@ -40,8 +40,8 @@ PersistentTypeID TexGeomGrid::type_id("TexGeomGrid", "GeomObj", make_TexGeomGrid
 
 TexGeomGrid::TexGeomGrid(int nu, int nv, const Point& corner,
 			 const Vector& u, const Vector& v, int nchan)
-  : corner(corner), u(u), v(v), 
-  tmap_dlist(-1),dimU(nu),dimV(nv),num_chan(nchan),convolve(0),conv_dim(0),
+  : tmap_dlist(-1), corner(corner), u(u), v(v), 
+  dimU(nu), dimV(nv), num_chan(nchan), convolve(0), conv_dim(0),
   kernal_change(0)
 {
 

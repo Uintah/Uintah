@@ -162,7 +162,6 @@ distance2(const Point &p0, const Point &p1)
 void
 TriSurfMesh::locate(node_iterator &loc, const Point &p)
 {
-#if 0 // compare for iterators (==,!=) isn't compiling under linux
   node_iterator ni = node_begin();
   loc = ni;
   if (ni == node_end())
@@ -183,7 +182,6 @@ TriSurfMesh::locate(node_iterator &loc, const Point &p)
     }
     ++ni;
   }
-#endif
 }
 
 
@@ -289,7 +287,6 @@ TriSurfMesh::inside4_p(int i, const Point &p)
 TriSurfMesh::node_index
 TriSurfMesh::add_find_point(const Point &p, double err)
 {
-#if 0 // compare for iterators (==,!=) isn't compiling under linux
   node_iterator i;
   locate(i, p);
   if (i != node_end() || distance2(points_[*i], p) < err)
@@ -301,7 +298,6 @@ TriSurfMesh::add_find_point(const Point &p, double err)
     points_.add(p);
     return points_.size() - 1;
   }
-#endif
 }
 
 
