@@ -343,7 +343,7 @@ void Level::finalizeLevel()
 {
   each_patch = scinew PatchSet();
   each_patch->addReference();
-
+  
   // The compute set requires an array const Patch*, we must copy d_realPatches
   vector<const Patch*> tmp_patches(d_realPatches.size());
   for(int i=0;i<(int)d_realPatches.size();i++)
@@ -352,10 +352,11 @@ void Level::finalizeLevel()
   all_patches = scinew PatchSet();
   all_patches->addReference();
   all_patches->addAll(tmp_patches);
-
-  setBCTypes();
-
+  
+  all_patches->sortSubsets();
   std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
+  
+  setBCTypes();
 }
 
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
@@ -405,6 +406,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
     }
   }
 
+  all_patches->sortSubsets();
   std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
   std::sort(d_virtualAndRealPatches.begin(), d_virtualAndRealPatches.end(),
 	    Patch::Compare());
