@@ -56,9 +56,8 @@ static const char* FogShaderString1 =
 "TEMP c0, c, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
 "PARAM fogParam = state.fog.params; \n"
-#ifdef __APPLE__
 "ATTRIB fogCoord = fragment.texcoord[1];\n"
-#else
+#if 0
 "ATTRIB fogCoord = fragment.fogcoord; \n"
 #endif
 "ATTRIB tf = fragment.texcoord[0]; \n"
@@ -75,9 +74,8 @@ static const char* FogShaderString4 =
 "TEMP c0, c, fogFactor, finalColor; \n"
 "PARAM fogColor = state.fog.color; \n"
 "PARAM fogParam = state.fog.params; \n"
-#ifdef __APPLE__
 "ATTRIB fogCoord = fragment.texcoord[1];\n"
-#else
+#if 0
 "ATTRIB fogCoord = fragment.fogcoord; \n"
 #endif
 "ATTRIB tf = fragment.texcoord[0]; \n"
@@ -117,9 +115,8 @@ static const char* LitFogVolShaderString =
 "PARAM k = program.local[1]; # {ka, kd, ks, ns} \n"
 "PARAM fc = state.fog.color; \n"
 "PARAM fp = state.fog.params; \n"
-#ifdef __APPLE__
 "ATTRIB f = fragment.texcoord[1];\n"
-#else
+#if 0
 "ATTRIB f = fragment.fogcoord; \n"
 #endif
 "TEMP v, n, c, d, s; \n"
@@ -345,14 +342,12 @@ VolumeRenderer::draw()
     glGetBooleanv(GL_LIGHTING, &lighting);
     int nb = (*bricks.begin())->data()->nb(0);
   
-#ifdef __APPLE__
     if (fog) {
         if (!FogVertexShader->valid()) {
           FogVertexShader->create();
         }
         FogVertexShader->bind();
     }
-#endif
 
     if (shading_ && nb == 4) {
       if(fog) {
@@ -384,10 +379,6 @@ VolumeRenderer::draw()
       if(fog) {
         LitFogVolShader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
         LitFogVolShader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
-// #ifdef __APPLE__
-//         LitFogVolShader->setLocalParam(2, fog_color[0], fog_color[1], fog_color[2], fog_color[3]);
-//         LitFogVolShader->setLocalParam(3, 0.0, fog_start, fog_end, 1.0/(fog_end-fog_start));
-// #endif
       } else {
         LitVolShader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
         LitVolShader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
@@ -464,11 +455,9 @@ VolumeRenderer::draw()
     glGetBooleanv(GL_LIGHTING, &lighting);
     int nb = (*bricks.begin())->data()->nb(0);
 
-#ifdef __APPLE__
     if (fog) {
         FogVertexShader->release();
     }
-#endif
 
     if(shading_ && nb == 4) {
       if(fog) {

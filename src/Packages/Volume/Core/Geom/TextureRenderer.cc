@@ -142,16 +142,6 @@ TextureRenderer::load_texture(Brick& brick)
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 
-  if(interp_){
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //        glCheckForError("glTexParameteri GL_LINEAR");
-  } else {
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //        glCheckForError("glTexParameteri GL_NEAREST");
-  }
-
   if( !brick.texName() || brick.needsReload() ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
@@ -164,6 +154,16 @@ TextureRenderer::load_texture(Brick& brick)
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+    if(interp_){
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      //        glCheckForError("glTexParameteri GL_LINEAR");
+    } else {
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      //        glCheckForError("glTexParameteri GL_NEAREST");
+    }
+
 //     {
 //       int border_color[4] = {0, 0, 0, 0};
 //       glTexParameteriv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, border_color);
@@ -201,6 +201,15 @@ TextureRenderer::load_texture(Brick& brick)
 //      glCheckForError("After glTexImage3D Linux");
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
+    if(interp_){
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      //        glCheckForError("glTexParameteri GL_LINEAR");
+    } else {
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      //        glCheckForError("glTexParameteri GL_NEAREST");
+    }
   }
   //#endif
   int errcode = glGetError();
