@@ -148,7 +148,8 @@ FieldBoundary::execute()
 
   if (!(interp_mh_.get_rep()))
   {
-    warning("Interpolation for these particular field types and/or locations is not supported, use DirectInterpolate.");
+    warning("Interpolation for these particular field types and/or locations is not supported.");
+    warning("Use the DirectInterpolate module if interpolation is required.");
   }
 
   osurf_->send(tri_fh_);
