@@ -38,6 +38,12 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_is_injured(9)
     global $this-gui_parent(0)
     global $this-gui_parent(1)
+    global $this-gui_parent(2)
+    global $this-gui_parent(3)
+    global $this-gui_parent(4)
+    global $this-gui_parent(5)
+    global $this-gui_parent(6)
+    global $this-gui_parent(7)
     global $this-gui_parent_list
     global $this-gui_parlist_name
     global $this-gui_sibling(0)
@@ -54,6 +60,14 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_child(5)
     global $this-gui_child(6)
     global $this-gui_child(7)
+    global $this-gui_child(8)
+    global $this-gui_child(9)
+    global $this-gui_child(10)
+    global $this-gui_child(11)
+    global $this-gui_child(12)
+    global $this-gui_child(13)
+    global $this-gui_child(14)
+    global $this-gui_child(15)
     global $this-gui_child_list
     global $this-gui_childlist_name
     global $this-FME_on
@@ -102,8 +116,20 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_is_injured(9) "0"
     set $this-gui_parent(0) ""
     set $this-gui_parent(1) ""
+    set $this-gui_parent(2) ""
+    set $this-gui_parent(3) ""
+    set $this-gui_parent(4) ""
+    set $this-gui_parent(5) ""
+    set $this-gui_parent(6) ""
+    set $this-gui_parent(7) ""
     set $this-gui_parent_list [list [set $this-gui_parent(0)] \
-                                    [set $this-gui_parent(1)]]
+                                    [set $this-gui_parent(1)] \
+                                    [set $this-gui_parent(2)] \
+                                    [set $this-gui_parent(3)] \
+                                    [set $this-gui_parent(4)] \
+                                    [set $this-gui_parent(5)] \
+                                    [set $this-gui_parent(6)] \
+                                    [set $this-gui_parent(7)]]
     # this holds the name of this instance of the list
     set $this-gui_parlist_name $this-gui_parent_list
     set $this-gui_sibling(0) ""
@@ -124,6 +150,14 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_child(5) ""
     set $this-gui_child(6) ""
     set $this-gui_child(7) ""
+    set $this-gui_child(8) ""
+    set $this-gui_child(9) ""
+    set $this-gui_child(10) ""
+    set $this-gui_child(11) ""
+    set $this-gui_child(12) ""
+    set $this-gui_child(13) ""
+    set $this-gui_child(14) ""
+    set $this-gui_child(15) ""
     set $this-gui_child_list [list [set $this-gui_child(0)] \
                                    [set $this-gui_child(1)] \
                                    [set $this-gui_child(2)] \
@@ -131,7 +165,15 @@ itcl_class VS_DataFlow_HotBox {
                                    [set $this-gui_child(4)] \
                                    [set $this-gui_child(5)] \
                                    [set $this-gui_child(6)] \
-                                   [set $this-gui_child(7)]]
+                                   [set $this-gui_child(7)] \
+                                   [set $this-gui_child(8)] \
+                                   [set $this-gui_child(9)] \
+                                   [set $this-gui_child(10)] \
+                                   [set $this-gui_child(11)] \
+                                   [set $this-gui_child(12)] \
+                                   [set $this-gui_child(13)] \
+                                   [set $this-gui_child(14)] \
+                                   [set $this-gui_child(15)]]
     # this holds the name of this instance of the list
     set $this-gui_childlist_name $this-gui_child_list
     set $this-FME_on "no"
@@ -485,21 +527,23 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
                 -side left -anchor n -expand yes -fill x
-    scale $w.probeUI.slide -orient horizontal -label "Cursor Size" -from 0 -to 40 -showvalue true \
-             -variable $this-gui_probe_scale -resolution 0.25 -tickinterval 25
-    set $w.probeUI.slide $this-gui_probe_scale
-    bind $w.probeUI.slide <ButtonRelease> "$this-c needexecute"
-    bind $w.probeUI.slide <B1-Motion> "$this-c needexecute"
-    pack $w.probeUI.slide $w.probeUI.loc -side bottom -expand yes -fill x
+
+    frame $w.probeUI.slideTime
+    scale $w.probeUI.slideTime.slide -orient horizontal -label "Cursor Size" \
+             -from 0 -to 40 -showvalue true \
+             -variable $this-gui_probe_scale -resolution 0.25 -tickinterval 10
+    set $w.probeUI.slideTime.slide $this-gui_probe_scale
+    bind $w.probeUI.slideTime.slide <ButtonRelease> "$this-c needexecute"
+    bind $w.probeUI.slideTime.slide <B1-Motion> "$this-c needexecute"
 
     ######################################
     # time
     ######################################
-    frame $w.timeUI
-    label $w.timeUI.timeLable -text "Time" -just left
-    entry $w.timeUI.timeVal -width 5 -textvariable $this-currentTime
-    bind $w.timeUI.timeVal <KeyPress-Return> "$this-c needexecute"
-    pack $w.timeUI.timeLable $w.timeUI.timeVal -side left
+    label $w.probeUI.slideTime.timeLabel -text "Time"
+    entry $w.probeUI.slideTime.timeVal -width 5 -textvariable $this-currentTime
+    bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
+    pack $w.probeUI.slideTime.slide $w.probeUI.slideTime.timeLabel $w.probeUI.slideTime.timeVal -side left -expand yes -fill x
+    pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
 
     ######################################
     # FMA Hierarchy UI
@@ -541,7 +585,13 @@ itcl_class VS_DataFlow_HotBox {
     ### C++ HotBox Module takes control asynchronously
     ### and performs the following on selection change
     set $this-gui_parent_list [list [set $this-gui_parent(0)] \
-                                    [set $this-gui_parent(1)]]
+                                    [set $this-gui_parent(1)] \
+                                    [set $this-gui_parent(2)] \
+                                    [set $this-gui_parent(3)] \
+                                    [set $this-gui_parent(4)] \
+                                    [set $this-gui_parent(5)] \
+                                    [set $this-gui_parent(6)] \
+                                    [set $this-gui_parent(7)]]
     set $this-gui_sibling_list [list [set $this-gui_sibling(0)] \
                                      [set $this-gui_sibling(1)] \
                                      [set $this-gui_sibling(2)] \
@@ -553,7 +603,15 @@ itcl_class VS_DataFlow_HotBox {
                                    [set $this-gui_child(4)] \
                                    [set $this-gui_child(5)] \
                                    [set $this-gui_child(6)] \
-                                   [set $this-gui_child(7)]]
+                                   [set $this-gui_child(7)] \
+                                   [set $this-gui_child(8)] \
+                                   [set $this-gui_child(9)] \
+                                   [set $this-gui_child(10)] \
+                                   [set $this-gui_child(11)] \
+                                   [set $this-gui_child(12)] \
+                                   [set $this-gui_child(13)] \
+                                   [set $this-gui_child(14)] \
+                                   [set $this-gui_child(15)]]
     ######################################
     # Query UI
     ######################################
@@ -580,9 +638,9 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.controls2.querytypelabel $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
 
     if { [set $this-Files_on] == "yes" } {
-    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.timeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     } else {
-    pack $w.togFilesUI $w.f $w.probeUI $w.timeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     }
 # pack $w.title -side top
   }
