@@ -1831,6 +1831,8 @@ class BioTensorApp {
 	set c_left_tab "Data Vis"
 	set c_vis_tab "Variance"
 
+	set loading 0
+
         set indicator1 ""
         set indicator2 ""
         set indicatorL1 ""
@@ -2035,7 +2037,7 @@ class BioTensorApp {
 	
 	# Embed the Viewer
 	set eviewer [$mods(Viewer) ui_embedded]
-	$eviewer setWindow $win.viewer
+	$eviewer setWindow $win.viewer $viewer_width $viewer_height
 	
 	
 	### Processing Part
@@ -2138,14 +2140,14 @@ class BioTensorApp {
 	    
 	    menu $m.main_menu.file.menu -tearoff false
 
-	    $m.main_menu.file.menu add command -label "Load session...  Ctr+O" \
+	    $m.main_menu.file.menu add command -label "Load Session...  Ctr+O" \
 		-underline 1 -command "$this load_session" -state active
 	    
-	    $m.main_menu.file.menu add command -label "Save session... Ctr+S" \
+	    $m.main_menu.file.menu add command -label "Save Session... Ctr+S" \
 		-underline 0 -command "$this save_session" -state active
 
-#	    $m.main_menu.file.menu add command -label "Save image..." \
-#		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
+	    $m.main_menu.file.menu add command -label "Save Image..." \
+		-underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
 	    
 	    $m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
 		-underline 0 -command "$this exit_app" -state active
@@ -3164,6 +3166,7 @@ class BioTensorApp {
 
 	    save_module_variables $fileid
 	    save_class_variables $fileid
+
 	    save_global_variables $fileid
 	    save_disabled_modules $fileid
 	    
@@ -3225,7 +3228,7 @@ class BioTensorApp {
 		puts $fileid "set $var \{[set $var]\}"
 	    }
 	}
-
+	puts $fileid "set loading 1"
     }
     
     
@@ -3505,10 +3508,10 @@ class BioTensorApp {
 	    configure_registration_tab
 	    configure_dt_tab
 
-	    set data_completed 0
-	    set reg_completed 0
-	    set dt_completed 0
-	    change_indicator_labels "Data Acquisition..."
+	    #set data_completed 0
+	    #set reg_completed 0
+	    #set dt_completed 0
+	    change_indicator_labels "Executing to Save Point..."
 	}	
     }
 
@@ -3534,8 +3537,6 @@ class BioTensorApp {
     }
     
     method show_help {} {
-	#tk_messageBox -message "Please refer to the online BioTensor Tutorial\nhttp://software.sci.utah.edu/doc/User/BioTensorTutorial" -type ok -icon info -parent .standalone
-
 	global SCIRUN_SRCDIR
 	
 	if {[winfo exists .splash]} {
@@ -3545,7 +3546,7 @@ class BioTensorApp {
 	}
 	
 	# CHANGE FILENAME HERE
-	set filename [file join $SCIRUN_SRCDIR main scisplash.ppm]
+	set filename [file join $SCIRUN_SRCDIR Packages Teem Dataflow GUI splash-tensor.ppm]
 	image create photo ::img::splash -file "$filename"
 	toplevel .splash
 	
@@ -3579,19 +3580,20 @@ class BioTensorApp {
     
     method indicate_dynamic_compile { which mode } {
 	if {$mode == "start"} {
-	    #change_indicate_val 1
-	    #change_indicator_labels "Dynamically Compiling Code..."
+	    change_indicate_val 1
+	    change_indicator_labels "Dynamically Compiling Code..."
         } else {
-# 	    if {$dt_completed} {
-# 		change_indicator_labels "Visualization..."
-# 	    } elseif {$c_data_tab == "Build DTs"} {
-# 		change_indicator_labels "Building Diffusion Tensors..."
-# 	    } elseif {$c_data_tab == "Registration"} {
-# 		change_indicator_labels "Registration..."
-# 	    } else {
-# 		change_indicator_labels "Data Acquisition..."
-# 	    }
-	    # change_indicate_val 0
+	    change_indicate_val 2
+
+	    if {$dt_completed} {
+		change_indicator_labels "Visualization..."
+	    } elseif {$c_procedure_tab == "Build DTs"} {
+		change_indicator_labels "Building Diffusion Tensors..."
+	    } elseif {$c_procedure_tab == "Registration"} {
+		change_indicator_labels "Registration..."
+	    } else {
+		change_indicator_labels "Data Acquisition..."
+	    }
 	}
     }
     
@@ -3609,7 +3611,6 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(ChooseNrrd1) && $state == "Completed"} {
 	    change_indicate_val 2
-	    set data_completed 1	
 	} elseif {$which == $mods(ShowField-Orig) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Orig) && $state == "Completed"} {
@@ -3629,7 +3630,6 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(TendEpireg) && $state == "Completed"} {
 	    change_indicate_val 2
-	    set reg_completed 1
 
 	    # activate next button
 	    $reg_tab1.last.ne configure -state normal \
@@ -3637,9 +3637,7 @@ class BioTensorApp {
 	    $reg_tab2.last.ne configure -state normal \
 		-foreground black -background $next_color
 	    
-#	    if {$reg_completed} {
-		activate_dt
-#	    }
+	    activate_dt
 	} elseif {$which == $mods(ShowField-Reg) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Reg) && $state == "Completed"} {
@@ -3659,11 +3657,7 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(TendEstim) && $state == "Completed"} {
 	    change_indicate_val 2
-	    set dt_completed 1
-
-#	    if {$dt_completed} {
-		activate_vis
-#	    }
+	    activate_vis
 	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
@@ -3877,6 +3871,8 @@ class BioTensorApp {
 	}
 
 	$mods(ChooseNrrd1)-c needexecute
+
+	set data_completed 1
 
 	activate_registration
 
@@ -4164,6 +4160,9 @@ class BioTensorApp {
 	    # execute
 	    $mods(TendEpireg)-c needexecute
 
+	    set reg_completed 1
+	    set data_completed 1
+
 	} else {
 	    set answer [tk_messageBox -message \
 			    "Please load a text file containing the gradients by clicking \"Load Gradients\"" -type ok -icon info -parent .standalone]
@@ -4197,9 +4196,27 @@ class BioTensorApp {
 
 	}
 	
+	toggle_reference_image_state
 
         $ref_image1.s.ref configure -from 1 -to $volumes
         $ref_image2.s.ref configure -from 1 -to $volumes
+
+
+	# select appropriate resampling filter in optionmenu
+        global $mods(TendEpireg)-kernel
+
+        if {[set $mods(TendEpireg)-kernel] ==  "tent"} {
+	    $reg_tab1.rf select "Linear"
+	    $reg_tab2.rf select "Linear"
+	} elseif {[set $mods(TendEpireg)-kernel] ==  "cubicCR"} {
+	    $reg_tab1.rf select "Catmull-Rom"
+	    $reg_tab2.rf select "Catmull-Rom"
+	} elseif {[set $mods(TendEpireg)-kernel] ==  "hann"} {
+	    $reg_tab1.rf select "Windowed Sinc"
+	    $reg_tab2.rf select "Windowed Sinc"
+        } 
+
+	toggle_registration_threshold
 
     }
 
@@ -4297,6 +4314,13 @@ class BioTensorApp {
 	if {$reg_completed} {
 	    activate_dt
 	}
+	
+	toggle_do_smoothing
+
+	toggle_dt_threshold
+
+	toggle_b_matrix
+
     }
 
 
@@ -4325,6 +4349,10 @@ class BioTensorApp {
 	
 	# execute
 	$mods(ChooseNrrd-ToSmooth)-c needexecute
+
+	set dt_completed 1
+	set reg_completed 1
+	set data_completed 1
 		
 	view_Vis
     }
@@ -7234,6 +7262,7 @@ class BioTensorApp {
 
         if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
+            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
         } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
@@ -7944,20 +7973,59 @@ class BioTensorApp {
 		    # only change indicator if progress isn't running
 		    set indicate 2
 		    change_indicator
+
+		    if {$loading} {
+			set loading 0
+			if {$dt_completed} {
+			    change_indicator_labels "Visualization..."
+			} elseif {$reg_completed} {
+			    change_indicator_labels "Building Diffusion Tensors..."
+			} elseif {$data_completed} {
+			    change_indicator_labels "Registration..."
+			} else {
+			    change_indicator_labels "Data Acquisition..."
+			}
+		    }
 		} elseif {$darby < 0} {
 		    # something wasn't caught, reset
 		    set darby 0
 		    set indicate 2
 		    change_indicator
+
+		    if {$loading} {
+			set loading 0
+			if {$dt_completed} {
+			    change_indicator_labels "Visualization..."
+			} elseif {$reg_completed} {
+			    change_indicator_labels "Building Diffusion Tensors..."
+			} elseif {$data_completed} {
+			    change_indicator_labels "Registration..."
+			} else {
+			    change_indicator_labels "Data Acquisition..."
+			}
+		    }
+
 		}
 	    }
 	}
     }
     
     method change_indicator_labels { msg } {
-	if {($msg == "Visualization..." && $data_completed && $reg_completed && $dt_completed) || ($msg != "Visualization...")} {
-	    $indicatorL1 configure -text $msg
-	    $indicatorL2 configure -text $msg
+	if {!$loading} {
+	    if {($msg == "Visualization..." && $data_completed && $reg_completed && $dt_completed) || ($msg != "Visualization...")} {
+		$indicatorL1 configure -text $msg
+		$indicatorL2 configure -text $msg
+	    }
+	} else {
+	    # $msg != "Dynamically Compiling Code..."
+	    if {$msg != "E R R O R !"} {
+		$indicatorL1 configure -text "Executing to Save Point..."
+		$indicatorL2 configure -text "Executing to Save Point..."
+	    } else {
+		$indicatorL1 configure -text $msg
+		$indicatorL2 configure -text $msg
+	    }
+
 	}
     }
     
@@ -8011,6 +8079,8 @@ class BioTensorApp {
     variable IsVAttached
     variable detachedVFr
     variable attachedVFr
+
+    variable loading
 
 
     # Indicator
