@@ -118,6 +118,14 @@ remove_newlines(const string &str)
     {
       result[i] = ' ';
     }
+
+    if (result[i] == '%')
+    {
+      while (result[i] != '\n' && i < result.size()) {
+	result[i] = ' ';
+	i++;
+      }
+    }
   }
   return result;
 }
