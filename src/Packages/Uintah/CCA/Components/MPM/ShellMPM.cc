@@ -122,7 +122,13 @@ ShellMPM::schedInterpolateParticleRotToGrid(SchedulerP& sched,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
-    if (smcm) smcm->addComputesRequiresParticleRotToGrid(t, mpm_matl, patches);
+    if (smcm) {
+      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
+      if (guv)
+        guv->addComputesRequiresParticleRotToGrid(t, mpm_matl, patches);
+      else
+        smcm->addComputesRequiresParticleRotToGrid(t, mpm_matl, patches);
+    }
   }
   sched->addTask(t, patches, matls);
 }
@@ -143,8 +149,13 @@ ShellMPM::interpolateParticleRotToGrid(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     ShellMaterial* smcm = dynamic_cast<ShellMaterial*>(cm);
-    if (smcm) smcm->interpolateParticleRotToGrid(patches, mpm_matl, 
-                                                 old_dw, new_dw);
+    if (smcm) {
+      GUVMaterial* guv = dynamic_cast<GUVMaterial*>(cm);
+      if (guv)
+        guv->interpolateParticleRotToGrid(patches, mpm_matl, old_dw, new_dw);
+      else
+        smcm->interpolateParticleRotToGrid(patches, mpm_matl, old_dw, new_dw);
+    }
   }
 }
 
