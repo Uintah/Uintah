@@ -94,9 +94,9 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 
 	iwidgets::spinner $wtab.f1 -labeltext "Number of samples: " \
 	    -width 5 -fixed 5 \
-	    -validate "$this set-maxseeds %P $this-maxseeds]" \
-	    -decrement "$this spin-qunatity -1 $wtab.f1 $this-maxseeds" \
-	    -increment "$this spin-qunatity  1 $wtab.f1 $this-maxseeds" 
+	    -validate "$this set-quantity %P $this-maxseeds]" \
+	    -decrement "$this spin-quantity -1 $wtab.f1 $this-maxseeds" \
+	    -increment "$this spin-quantity  1 $wtab.f1 $this-maxseeds" 
 
 	$wtab.f1 insert 1 [set $this-maxseeds]
 
@@ -114,9 +114,9 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 
 	iwidgets::spinner $rtab.f2 -labeltext "Number of samples: " \
 	    -width 5 -fixed 5 \
-	    -validate "$this set-maxseeds %P $this-numseeds]" \
-	    -decrement "$this spin-qunatity -1 $rtab.f2 $this-numseeds" \
-	    -increment "$this spin-qunatity  1 $rtab.f2 $this-numseeds" 
+	    -validate "$this set-quantity %P $this-numseeds]" \
+	    -decrement "$this spin-quantity -1 $rtab.f2 $this-numseeds" \
+	    -increment "$this spin-quantity  1 $rtab.f2 $this-numseeds" 
 
 	$rtab.f2 insert 1 [set $this-numseeds]
 
@@ -164,7 +164,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
     }
 
 
-    method set-qunatity {new quantity} {
+    method set-quantity {new quantity} {
 	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
 	    return 0
 	} elseif {$quantity < 1.0} {
@@ -175,7 +175,7 @@ itcl_class SCIRun_FieldsCreate_SampleField {
 	return 1
     }
 
-    method spin-qunatity {step spinner quantity} {
+    method spin-quantity {step spinner quantity} {
 	set newquantity [expr [set $quantity] + $step]
 
 	if {$newquantity < 1.0} {
