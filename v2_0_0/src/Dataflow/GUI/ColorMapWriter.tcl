@@ -29,10 +29,15 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype $this-confirm
+	global $this-filetype $this-confirm env
 	set $this-filetype Binary
-	set $this-confirm 0
-	# set $this-split 0
+	set $this-confirm 1
+	if { [info exists env(SCI_CONFIRM_OVERWRITE)] && 
+	     ([string equal 0 $env(SCI_CONFIRM_OVERWRITE)] ||
+	      [string equal -nocase no $env(SCI_CONFIRM_OVERWRITE)]) } {
+	    set $this-confirm 0
+	}
+	    # set $this-split 0
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
