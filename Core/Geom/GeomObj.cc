@@ -34,6 +34,11 @@ GeomObj::GeomObj(IntVector i)
 {
 }
 
+GeomObj::GeomObj(int id_int, IntVector i)
+  :id( id_int ), _id(i)
+{
+}
+
 GeomObj::GeomObj(const GeomObj&)
 {
 }
@@ -70,6 +75,10 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.8  2000/09/11 22:14:46  bigler
+// Added constructors that take an int and IntVector to allow unique
+// identification in 4 dimensions.
+//
 // Revision 1.7  2000/08/09 18:21:14  kuzimmer
 // Added IntVector indexing to GeomObj & GeomSphere
 //
