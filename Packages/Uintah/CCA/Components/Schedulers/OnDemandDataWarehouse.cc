@@ -565,11 +565,28 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     int matlIndex = matls->get(m);
 
     ReductionVariableBase* var;
-    try {
+    if (d_reductionDB.exists(label, matlIndex, level))
       var = d_reductionDB.get(label, matlIndex, level);
-    } catch (UnknownVariable) {
-      SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
-				"on reduceMPI"));
+    else {
+
+      // create a new var with a harmless value.  This will make 
+      // "inactive" processors work with reduction vars
+      //cout << "NEWRV1\n";
+      var = dynamic_cast<ReductionVariableBase*>(label->typeDescription()->createInstance());
+      //cout << "var=" << var << '\n';
+      //cout << "NEWRV2\n";
+      //cout << "VL = " << label->getName() << endl;
+      var->setBenignValue();
+      //cout << d_myworld->myrank() << " BENIGN VAL ";
+      //var->print(cout);
+
+      // put it in the db so the next get won't fail and so we won't 
+      // have to delete it manually
+      d_reductionDB.put(label, matlIndex, level, var, true);
+      //cout << "NEWRV3\n";
+      //cout << endl;
+      //SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
+      //				"on reduceMPI"));
     }
     int sendcount;
     MPI_Datatype senddatatype;
@@ -597,7 +614,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
       var = d_reductionDB.get(label, matlIndex, level);
     } catch (UnknownVariable) {
       SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
-				"on reduceMPI(pass 2)"));
+                                "on reduceMPI(pass 2)"));
     }
     var->getMPIData(sendbuf, packindex);
   }
