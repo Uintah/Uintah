@@ -314,6 +314,7 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
 
      t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch);
      t->computes(new_dw, Mlb->gMomExedAccelerationLabel, idx, patch);
+     t->computes(new_dw, Mlb->dTdt_NCLabel,              idx, patch);
     }
     t->requires(new_dw,  Ilb->rho_CCLabel,         idx,patch,Ghost::None);
     t->requires(new_dw, MIlb->mom_L_CCLabel,       idx,patch,Ghost::None,0);
@@ -698,12 +699,10 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   vector<NCVariable<Vector> > gvelocity(numALLMatls);
   vector<NCVariable<Vector> > gMEacceleration(numALLMatls);
   vector<NCVariable<Vector> > gMEvelocity(numALLMatls);
-  vector<NCVariable<double> > gmass(numALLMatls);
 
   vector<CCVariable<double> > rho_CC(numALLMatls);
   vector<CCVariable<double> > Temp_CC(numALLMatls);  
   vector<CCVariable<double> > vol_frac_CC(numALLMatls);
-
   vector<CCVariable<double> > rho_micro_CC(numALLMatls);
 
   vector<CCVariable<Vector> > mom_L(numALLMatls);
@@ -714,6 +713,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   vector<CCVariable<Vector> > mom_L_ME(numALLMatls);
   vector<CCVariable<Vector> > vel_CC(numALLMatls);
   vector<CCVariable<Vector> > dvdt_CC(numALLMatls);
+  vector<CCVariable<double> > dTdt_CC(numALLMatls);
+  vector<NCVariable<double> > dTdt_NC(numALLMatls);
   vector<CCVariable<double> > int_eng_L_ME(numALLMatls);
 
   vector<double> b(numALLMatls);
@@ -746,8 +747,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 							Ghost::None, 0);
       new_dw->get(cmass[m],        MIlb->cMassLabel,          dwindex, patch,
 							Ghost::None, 0);
-      new_dw->get(gmass[m]   ,     Mlb->gMassLabel,           dwindex, patch,
-							Ghost::AroundCells, 1);
       new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
       new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
 
@@ -755,6 +754,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 						             dwindex, patch);
       new_dw->allocate(gMEacceleration[m], Mlb->gMomExedAccelerationLabel,
 						             dwindex, patch);
+      new_dw->allocate(dTdt_NC[m], Mlb->dTdt_NCLabel,        dwindex, patch);
       cv[m] = mpm_matl->getSpecificHeat();
     }
     if(ice_matl){
@@ -774,10 +774,12 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,  dwindex, patch,
 							Ghost::None, 0);
     new_dw->allocate(dvdt_CC[m], MIlb->dvdt_CCLabel,      dwindex, patch);
+    new_dw->allocate(dTdt_CC[m], MIlb->dTdt_CCLabel,      dwindex, patch);
     new_dw->allocate(mom_L_ME[m], Ilb->mom_L_ME_CCLabel,  dwindex,patch);
     new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex,patch);
 
     dvdt_CC[m].initialize(zero);
+    dTdt_CC[m].initialize(0.);
   }
 
   double vol = dx.x()*dx.y()*dx.z();
@@ -799,7 +801,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   Vector total_mom(0.,0.,0.);
   for (int m = 0; m < numALLMatls; m++) {
     Vector matl_mom(0.,0.,0.);
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
 	matl_mom += mom_L[m][*iter];
     }
     cout << "Momentum for material " << m << " = " << matl_mom << endl;
@@ -807,8 +809,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   }
   cout << "TOTAL Momentum BEFORE = " << total_mom << endl;
 #endif
-
-
 
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     //   Form BETA matrix (a), off diagonal terms
@@ -878,10 +878,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 	dvdt_CC[m][*iter].z( b[m] );
     }
 
-
-
-
-
     //---------- E N E R G Y   E X C H A N G E
     //         
     for(int m = 0; m < numALLMatls; m++) {
@@ -912,9 +908,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     
     for(int m = 0; m < numALLMatls; m++) {
       Temp_CC[m][*iter] = Temp_CC[m][*iter] + b[m];
+      dTdt_CC[m][*iter] = b[m];
     }
-
-
 
 
   }  //end CellIterator loop
@@ -960,7 +955,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     Vector matl_mom(0.,0.,0.);
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
 	matl_mom += mom_L_ME[m][*iter];
         if(mpm_matl){
 	   dvdt_CC[m][*iter] = vel_CC[m][*iter]-vel_CC_old[m][*iter];
@@ -986,16 +981,15 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
          patch->findCellsFromNode(*iter,cIdx);
 	 gMEvelocity[m][*iter]     = gvelocity[m][*iter];
 	 gMEacceleration[m][*iter] = gacceleration[m][*iter];
+	 dTdt_NC[m][*iter]         = 0.0;
 	 for (int in=0;in<8;in++){
 	   gMEvelocity[m][*iter]     +=  dvdt_CC[m][cIdx[in]]*.125;
 	   gMEacceleration[m][*iter] += (dvdt_CC[m][cIdx[in]]/delT)*.125;
+	   dTdt_NC[m][*iter]         += (dTdt_CC[m][cIdx[in]]/delT)*.125;
          }
-	 total_momwithdvdt += gMEvelocity[m][*iter]*gmass[m][*iter];
        }
      }
   }
-//  cout << "NODE MOMENTUM AFTER CCMOMENTUM EXCHANGE" << endl;
-//  cout << "SOLID Momentum WITHDVDT = " << total_momwithdvdt << endl;
   //__________________________________
   //    Put into new_dw
   for (int m = 0; m < numALLMatls; m++) {
@@ -1012,6 +1006,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 			Mlb->gMomExedVelocityStarLabel,dwindex,patch);
       new_dw->put(gMEacceleration[m],
 			Mlb->gMomExedAccelerationLabel,dwindex,patch);
+      new_dw->put(dTdt_NC[m],
+			Mlb->dTdt_NCLabel,             dwindex,patch);
     }
   }  
 }
