@@ -17,10 +17,15 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/CubicSpline.cc \
 	$(SRCDIR)/QuarticSpline.cc \
 	$(SRCDIR)/ExponentialSpline.cc \
-	$(SRCDIR)/LeastSquare.cc
+	$(SRCDIR)/LeastSquare.cc \
+	$(SRCDIR)/BrokenCellShapeFunction.cc
+	
 	
 #
 # $Log$
+# Revision 1.11  2000/09/06 18:54:06  tan
+# Included BrokenCellShapeFunction.cc into sub.mk
+#
 # Revision 1.10  2000/07/06 05:01:13  tan
 # Added Equation, LeastSquare, CubicSpline, QuarticSpline,ExponentialSpline,
 # and LeastSquare classes.
