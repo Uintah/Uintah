@@ -69,7 +69,7 @@ void GeomDisc::adjust()
     zrotaxis=Cross(normal, z);
     zrotaxis.normalize();
     double cangle=Dot(z, zrotaxis);
-    zrotangle=Acos(cangle);
+    zrotangle=-Acos(cangle);
 }
 
 void GeomDisc::get_bounds(BBox& bb)

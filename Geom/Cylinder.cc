@@ -17,6 +17,7 @@
 #include <Geometry/BBox.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
+#include <Classlib/String.h>
 
 GeomCylinder::GeomCylinder()
 : GeomObj(1)
@@ -68,7 +69,10 @@ void GeomCylinder::adjust()
     zrotaxis=Cross(axis, z);
     zrotaxis.normalize();
     double cangle=Dot(z, zrotaxis);
-    zrotangle=Acos(cangle);
+    zrotangle=-Acos(cangle);
+    cerr << "zrotaxis=" << zrotaxis.string() << endl;
+    cerr << "axis=" << axis.string() << endl;
+    cerr << "zrotangle=" << zrotangle << endl;
 }
 
 GeomObj* GeomCylinder::clone()

@@ -129,8 +129,8 @@ void GeomObj::draw(DrawInfoOpenGL* di)
 void GeomCone::objdraw(DrawInfoOpenGL* di)
 {
     glPushMatrix();
-    glRotated(zrotangle, zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     glTranslated(bottom.x(), bottom.y(), bottom.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=nu*nv;
     gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
     glPopMatrix();
@@ -140,8 +140,8 @@ void GeomCylinder::objdraw(DrawInfoOpenGL* di)
 {
    cerr << "Cylinder: top=" << top << ", bottom=" << bottom << ", radius=" << rad << endl;
     glPushMatrix();
-    glRotated(zrotangle, zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     glTranslated(bottom.x(), bottom.y(), bottom.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=nu*nv;
     gluCylinder(di->qobj, rad, rad, height, nu, nv);
     glPopMatrix();
@@ -151,7 +151,7 @@ void GeomDisc::objdraw(DrawInfoOpenGL* di)
 {
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
-    glRotated(zrotangle, zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=nu*nv;
     gluDisk(di->qobj, 0, rad, nu, nv);
     glPopMatrix();
