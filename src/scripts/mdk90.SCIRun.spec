@@ -16,7 +16,7 @@ Copyright:	University of Utah Limited
 Group:		Applications
 URL:		http://www.sci.utah.edu
 Distribution:	%{distro}
-Icon:		%{name}.xpm
+#Icon:		%{name}.xpm
 Vendor:		Scientific Computing & Imaging Institute at the University of Utah
 Packager:	McKay Davis <rpm@sci.utah.edu>
 
@@ -40,6 +40,9 @@ ExclusiveOS:	linux
 
 source0:	Thirdparty_install.%{version}.tar.gz
 source1:	%{name}.%{version}.tar.gz
+source2:	cmake-1.8.1-x86-linux-files.tar
+source3:	InsightToolkit-1.4.0.tar.gz
+source4:	BioTensor-otf-files.tar.gz
 #source2:	BioPSE.PKG.%{version}.tar.gz
 #source3:	MatlabInterface.PKG.%{version}.tar.gz
 #source4:	Teem.PKG.%{version}.tar.gz
@@ -52,11 +55,24 @@ SCIRun is a Problem Solving Environment (PSE), and a computational steering soft
 
 
 %prep
-rm -rf /usr/local/SCIRun
-  rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{version}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{version}
 tar -xvzf %{SOURCE0}
+
 cd /usr/local
+rm -rf /usr/local/SCIRun
 tar -xvzf %{SOURCE1}
+
+rm -rf $RPM_BUILD_DIR/cmake	
+mkdir -p $RPM_BUILD_DIR/cmake
+cd $RPM_BUILD_DIR/cmake
+tar xvf %{SOURCE2}
+
+rm -rf /usr/local/InsightToolkit*
+cd /usr/local
+tar -xvzf %{SOURCE3}
+	
+cd /usr/local/SCIRun/on-the-fly-libs
+tar -xvzf %{SOURCE4}
 
 #cd /usr/local/%{defname}/src/Packages
 #tar -xvzf %{SOURCE2}
@@ -67,26 +83,38 @@ tar -xvzf %{SOURCE1}
 
 
 %build
-#export TAR=tar
-#export CC=gcc
-#export CXX=g++
+cd /usr/local
+rm -rf /usr/local/InsightToolkit-1.4.0-bin
+mkdir -p /usr/local/InsightToolkit-1.4.0-bin
+cd /usr/local/InsightToolkit-1.4.0-bin
+$RPM_BUILD_DIR/cmake/bin/cmake /usr/local/InsightToolkit-1.4.0 -DBUILD_EXAMPLES:BOOL=OFF -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_TESTING:BOOL=OFF -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE -DITK_USE_SYSTEM_PNG:BOOL=ON
+make
+make install
+
 cd $RPM_BUILD_DIR/Thirdparty_install.%{version}
 python $RPM_BUILD_DIR/Thirdparty_install.%{version}/install /usr/local/SCIRun/Thirdparty 32 1
 
+rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --enable-package="BioPSE MatlabInterface Teem"
+export JAVA_HOME=/usr/java/jdk1.3.1_08
+export PATH=${JAVA_HOME}/bin:${PATH}
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" -with-insight="/usr/local/lib/InsightToolkit"
 gmake
+
+cd /usr/local/SCIRun/bin
+find /usr/local/SCIRun/src -name "*.net" -exec /usr/local/SCIRun/bin/scirun --nosplash -r {} \;
+rm -rf /usr/local/SCIRun/bin/snapshot*
 
 %install
 chown -R root.root /usr/local/SCIRun
 chmod -R a+r /usr/local/SCIRun
-#chmod 777 /usr/local/SCIRun/bin/on-the-fly-libs
 
 %clean
 rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{version}
 
 %files
 /usr/local/SCIRun
+/usr/local/lib/InsightToolkit
 
 %changelog
