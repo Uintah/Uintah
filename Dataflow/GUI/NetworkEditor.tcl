@@ -91,7 +91,7 @@ proc makeNetworkEditor {} {
 	-command "popupInfoMenu"
 
     .main_menu.file.menu add command -label "Quit" -underline 0 \
-	    -command "netedit quit"
+	    -command "NiceQuit"
 
 
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
@@ -819,6 +819,26 @@ proc ClearCanvas {} {
 	
 	global modules
 	set modules ""
+    }   
+}
+
+proc NiceQuit {} {
+
+    set result [tk_messageBox -type okcancel -parent . -message \
+		    "Exiting SCIRun\nDo you wish to proceed?"\
+		    -icon warning ]
+    set result "ok"
+
+    if {[string compare "ok" $result] == 0} {
+	global modules
+	if { [info exists modules] } {
+	    foreach m $modules {
+		moduleDestroy .bot.neteditFrame.canvas \
+			.top.globalViewFrame.canvas $m
+	    }
+	}    
+	set modules ""
+	netedit quit
     }   
 }
 
