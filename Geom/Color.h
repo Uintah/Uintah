@@ -72,4 +72,23 @@ public:
     friend class Color;
 };
 
+/*********************************************************
+  This structure holds a simple RGB color in char format.
+*********************************************************/
+
+class CharColor {
+public:
+  char red;
+  char green;
+  char blue;
+  // char alpha;
+
+  CharColor ();
+  CharColor ( char a, char b, char c );
+  CharColor ( Color& c );
+  
+  CharColor& operator= ( const Color& ) const;
+};
+
+
 #endif

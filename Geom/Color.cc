@@ -169,3 +169,39 @@ HSVColor HSVColor::operator+(const HSVColor& c)
 {
    return HSVColor(_hue+c._hue, _sat+c._sat, _val+c._val);
 }
+
+/***************************************************
+***************************************************/
+
+CharColor::CharColor ()
+{
+  red = green = blue = 0;
+}
+
+CharColor::CharColor ( char a, char b, char c )
+{
+  red = a;
+  green = b;
+  blue = c;
+}
+
+CharColor::CharColor ( Color& c )
+{
+  red   = (char)(c.r()*255);
+  green = (char)(c.g()*255);
+  blue  = (char)(c.b()*255);
+}
+
+
+CharColor&
+CharColor::operator= ( const Color& c ) const
+{
+  CharColor f;
+
+  f.red = (char)(c.r()*255);
+  f.green = (char)(c.g()*255);
+  f.blue = (char)(c.b()*255);
+
+  return f;
+}
+
