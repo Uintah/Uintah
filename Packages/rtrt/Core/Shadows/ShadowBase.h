@@ -54,6 +54,9 @@ public:
 
   static char * shadowTypeNames[];
 
+  static int increment_shadow_type(int shadow_type);
+  static int decrement_shadow_type(int shadow_type);
+
 };
 
 } // end namespace rtrt
