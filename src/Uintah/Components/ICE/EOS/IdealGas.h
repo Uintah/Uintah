@@ -62,22 +62,26 @@ WARNING
 					       DataWarehouseP& old_dw,
 					       DataWarehouseP& new_dw) const;
 
-	 // C&R for compute equilibration pressure
-	 virtual void addComputesAndRequiresCEB(Task* task,
-					       const ICEMaterial* matl,
-					       const Patch* patch,
-					       DataWarehouseP& old_dw,
-					       DataWarehouseP& new_dw) const;
 
          virtual void computeSpeedSound(const Patch* patch,
                                         const ICEMaterial* matl,
                                         DataWarehouseP& old_dw,
                                         DataWarehouseP& new_dw);
+	 // Per patch
+         virtual void computePressEOS(const Patch* patch,
+				      const ICEMaterial* matl,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
 
-         virtual void computeEquilibrationPressure(const Patch* patch,
-                                                   const ICEMaterial* matl,
-                                                   DataWarehouseP& old_dw,
-                                                   DataWarehouseP& new_dw);
+	 virtual void computeRhoMicro(const Patch* patch,
+				      const ICEMaterial* matl,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
+
+	 // Per cell
+	 virtual double computeRhoMicro(double& ,double& );
+	 
+	 virtual double computePressEOS(double&, double&);
 
         protected:
 
@@ -89,6 +93,9 @@ WARNING
 #endif  // __IDEAL_GAS_H__
 
 // $Log$
+// Revision 1.2  2000/10/10 20:35:12  jas
+// Move some stuff around.
+//
 // Revision 1.1  2000/10/06 04:02:16  jas
 // Move into a separate EOS directory.
 //

@@ -71,11 +71,18 @@ public:
 		          DataWarehouseP&,
 		          DataWarehouseP&);
 
-   void actuallyStep1(
+   void actuallyStep1a(
                        const ProcessorGroup*,
 		         const Patch* patch,
 		         DataWarehouseP&,
 		         DataWarehouseP&);
+
+   void actuallyStep1b(
+                       const ProcessorGroup*,
+		         const Patch* patch,
+		         DataWarehouseP&,
+		         DataWarehouseP&);
+
 
    void actuallyStep2(
                         const ProcessorGroup*,
@@ -366,6 +373,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.24  2000/10/10 20:35:07  jas
+// Move some stuff around.
+//
 // Revision 1.23  2000/10/04 23:38:21  jas
 // All of the steps are in place with just dummy functions.  delT is
 // hardwired in for the moment so that we can actually do multiple
