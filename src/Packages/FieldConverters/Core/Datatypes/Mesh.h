@@ -210,69 +210,6 @@ public:
   bool locate(int *strt, const Point &p, double eps1=1.e-6, double eps2=1.e-6);
   bool locate2(int *strt, const Point &p, double epsilon1=1.e-6);
 
-
-#if 0
-  bool mike_locate(int *loc, const Point &p, double eps=1.0e-6)
-  {
-    return locate(p, *loc, eps);
-  }
-
-
-  const static int ELESIZE = 1;
-
-
-  int el[ELESIZE];
-  if (mike_locate(el, some_point))
-  {
-    for (int i=0; i< mike_edgecount(el); i++)
-    {
-      int edge0[ELESIZE], edge1[ELESIZE];
-      mike_edgeindex(edge0, edge1, el, i);
-      printf("edge %n goes from %d to %d\n", i, *edge0, *edge1)
-    }
-  }
-
-  int mike_nodecount(int *loc) { return 4; }
-  void mike_nodeindex(int *ni, int *loc, int n) { *ni = *loc + n; }
-  
-  int mike_edgecount(int *loc) { return 6; }
-  void mike_edgeindex(int *e0, int *e2, int *loc, int n)
-  {
-    switch (n)
-    {
-    case 0:
-      *e0 = *loc+0; *e1 = *loc+1; break;
-    case 1:
-      *e0 = *loc+0; *e1 = *loc+2; break;
-    case 2:
-      *e0 = *loc+0; *e1 = *loc+3; break;
-    case 3:
-      *e0 = *loc+1; *e1 = *loc+2; break;
-    case 4:
-      *e0 = *loc+1; *e1 = *loc+3; break;
-    case 5:
-      *e0 = *loc+2; *e1 = *loc+3; break;
-    }
-  }
-
-  int mike_facecount(int *loc) { return 4; }
-  void mike_faceindex(int *v0, int *v1, int *v2, int *loc, int n)
-  {
-    switch (n)
-    {
-    case 0:
-      *v0 = *loc+0; *v1 = *loc+1; *v2 = *loc+2; break;
-    case 0:
-      *v0 = *loc+0; *v1 = *loc+3; *v2 = *loc+1; break;
-    case 0:
-      *v0 = *loc+0; *v1 = *loc+2; *v2 = *loc+3; break;
-    case 0:
-      *v0 = *loc+1; *v1 = *loc+2; *v2 = *loc+3; break;
-    }
-  }
-#endif
-
-
   void get_interp(Element* elem, const Point& p, double& s1,
 		  double& s2, double& s3, double& s4);
 

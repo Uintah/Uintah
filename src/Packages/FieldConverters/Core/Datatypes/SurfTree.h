@@ -22,7 +22,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 //#include <stdlib.h> // For size_t
-
+using namespace SCIRun;
 namespace FieldConverters {
 
 typedef struct SurfInfo {
@@ -49,7 +49,6 @@ typedef struct EdgeInfo {
   int wireIdx;
   int wireEntry;
   Array1<int> faces;		// which faces is an edge part of
-  friend SCICORESHARE void Pio(Piostream& stream, EdgeInfo& edge);
 } EdgeInfo;
 
 typedef struct NodeInfo {
@@ -57,7 +56,6 @@ typedef struct NodeInfo {
   Array1<int> faces;	// which faces is a node part of
   Array1<int> edges;	// which edges is a node part of
   Array1<int> nbrs;	// which nodes are one neighbors
-  friend SCICORESHARE void Pio(Piostream& stream, NodeInfo& node);
 } NodeInfo;
 
 
