@@ -53,7 +53,7 @@
         as it does the same interpolation without building the
         intermediate interpolant field.  This should be used if the
         source field changes much more often than the destination field.
-      <p> 
+      </p> 
     </description>
   </overview>
   <io>
