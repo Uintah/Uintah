@@ -41,11 +41,12 @@ const DOMNode* findNode(const std::string &name, const DOMNode *node)
   // Convert string name to a DOMText;
   if (node == 0)
     return 0;
-  const XMLCh *search_name = to_xml_ch_ptr(name.c_str());
-  // Do the child nodes now
+  // const XMLCh *search_name = to_xml_ch_ptr(name.c_str());
+  // Do the child nodes now - convert to char*
   const DOMNode *child = node->getFirstChild();
   while (child != 0) {
-    if (XMLString::compareString(search_name, child->getNodeName()) == 0) {
+    char* child_name = XMLString::transcode(child->getNodeName());
+    if (child_name && strcmp(name.c_str(), child_name) == 0) {
       return child;
     }
     child = child->getNextSibling();
@@ -111,8 +112,8 @@ const DOMNode* findTextNode(const DOMNode* node)
 ostream& operator<<(ostream& target, const DOMNode* toWrite)
 {
    // Get the name and value out for convenience
-   const XMLCh *nodeName = toWrite->getNodeName();
-   const XMLCh *nodeValue = toWrite->getNodeValue();
+   const char *nodeName = XMLString::transcode(toWrite->getNodeName());
+   const char *nodeValue = XMLString::transcode(toWrite->getNodeValue());
    
    switch (toWrite->getNodeType()) {
    case DOMNode::TEXT_NODE:
@@ -160,10 +161,10 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
 	 for (int i = 0; i < attrCount; i++) {
 	    DOMNode  *attribute = attributes->item(i);
 	    
-	    target  << ' ' << attribute->getNodeName()
+	    target  << ' ' << XMLString::transcode(attribute->getNodeName())
 		    << " = \"";
 	    //  Note that "<" must be escaped in attribute values.
-	    outputContent(target, attribute->getNodeValue());
+	    outputContent(target, XMLString::transcode(attribute->getNodeValue()));
 	    target << '"';
 	 }
 	 
@@ -222,9 +223,9 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
 //                   Escape the XML special characters (<, &, etc.) unless this
 //                   is suppressed by the command line option.
 // ---------------------------------------------------------------------------
-void outputContent(ostream& target, const XMLCh *to_write)
+void outputContent(ostream& target, const char *chars /**to_write*/)
 {
-  const char* chars = strdup(to_char_ptr(to_write));
+  //const char* chars = strdup(to_char_ptr(to_write));
   for (unsigned int index = 0; index < strlen(chars); index++) {
     switch (chars[index]) {
     case chAmpersand :
