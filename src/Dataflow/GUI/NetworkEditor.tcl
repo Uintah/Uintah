@@ -40,6 +40,7 @@ set smallIcon [image create photo -file "$SCIRUN_SRCDIR/pixmaps/scirun-icon-smal
 set splashImageFile "$SCIRUN_SRCDIR/main/scisplash.ppm"
 set bioTensorSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-tensor.ppm"
 set bioFEMSplashImageFile "$SCIRUN_SRCDIR/Packages/BioPSE/Dataflow/GUI/splash-biofem.ppm"
+set bioImageSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-bioimage.ppm"
 set fusionViewerSplashImageFile "$SCIRUN_SRCDIR/Packages/Fusion/Dataflow/GUI/splash-fusionviewer.ppm"
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
