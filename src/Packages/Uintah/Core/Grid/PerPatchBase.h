@@ -3,9 +3,11 @@
 #define UINTAH_HOMEBREW_PerPatchBase_H
 
 #include <string>
+#include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
   using namespace std;
+  using namespace SCIRun;
   class Patch;
   class RefCounted;
 
@@ -48,6 +50,9 @@ WARNING
       virtual RefCounted* getRefCounted();
       virtual void getSizeInfo(string& elems, unsigned long& totsize,
 			       void*& ptr) const = 0;
+
+      // Only affects grid variables
+     void offsetGrid(IntVector /*offset*/) {}
    protected:
       PerPatchBase(const PerPatchBase&);
       PerPatchBase();
