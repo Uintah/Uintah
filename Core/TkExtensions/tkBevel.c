@@ -41,11 +41,6 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-#ifndef lint
-/* REFERENCED */
-static char rcsid[] = "$Header$ SPRITE (Berkeley)";
-#endif
-
 #include <sci_config.h>
 
 #include "tkPort.h"
