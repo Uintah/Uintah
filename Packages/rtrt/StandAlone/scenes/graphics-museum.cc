@@ -2067,7 +2067,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   ceiling_floor->add(check_floor);
 
-  Material* ped_white = new LambertianMaterial(Color(0.8,0.8,0.8));
   Material* wall_white = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/general/tex-wall.ppm",
 					   ImageMaterial::Tile,
 					   ImageMaterial::Tile, 1,
@@ -2136,9 +2135,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   partitions->add(new Sphere(wall_white, Point(-8,-24,5),0.15));
 
 
-  partitions->add(new Rect(ped_white, Point(-12,-24-.15,2.5),
+  partitions->add(new Rect(wall_white, Point(-12,-24-.15,2.5),
 			   Vector(4, 0, 0), Vector(0,0,2.5)));
-  partitions->add(new Rect(ped_white, Point(-12,-24+.15,2.5),
+  partitions->add(new Rect(wall_white, Point(-12,-24+.15,2.5),
 			   Vector(-4, 0, 0), Vector(0,0,2.5)));
   partitions->add(new UVCylinder(wall_white, Point(-16,-24,0),
 			       Point(-16,-24,5),0.15));
@@ -2147,9 +2146,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   partitions->add(new Sphere(wall_white, Point(-16,-24,5),0.15));
 
 
-  partitions->add(new Rect(ped_white, Point(-16,-16-.15,2.5),
+  partitions->add(new Rect(wall_white, Point(-16,-16-.15,2.5),
 			   Vector(4,0,0), Vector(0,0,2.5)));
-  partitions->add(new Rect(ped_white, Point(-16,-16+.15,2.5),
+  partitions->add(new Rect(wall_white, Point(-16,-16+.15,2.5),
 			   Vector(-4,0,0), Vector(0,0,2.5)));
   partitions->add(new UVCylinder(wall_white, Point(-12,-16,0),
 			       Point(-12,-16,5),0.15));
@@ -2172,7 +2171,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  
+
   build_david_room (g,scene);
   build_history_hall (g,scene);
   build_modern_room (g,scene);
