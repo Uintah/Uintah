@@ -28,6 +28,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Modules/Fields/SelectElements.h>
 #include <math.h>
 
 #include <Core/share/share.h>
@@ -42,6 +43,7 @@ using namespace std;
 class PSECORESHARE SelectElements : public Module {
 public:
   GuiString value_;
+  GuiInt keep_all_nodes_;
   SelectElements(GuiContext* ctx);
   virtual ~SelectElements();
   virtual void execute();
@@ -51,7 +53,8 @@ public:
 
 SelectElements::SelectElements(GuiContext* ctx)
   : Module("SelectElements", ctx, Source, "Fields", "SCIRun"),
-    value_(ctx->subVar("value"))
+    value_(ctx->subVar("value")), 
+    keep_all_nodes_(ctx->subVar("keep-all-nodes"))
 {
 }
 
@@ -61,10 +64,10 @@ SelectElements::~SelectElements(){
 void SelectElements::execute()
 {
   // must find ports and have valid data on inputs
-  FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVol");
+  FieldIPort *ifieldPort = (FieldIPort*)get_iport("Input Field");
 
   if (!ifieldPort) {
-    error("Unable to initialize iport 'TetVol'.");
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
   FieldHandle field;
@@ -74,6 +77,10 @@ void SelectElements::execute()
   if (sfi == 0)
   {
     error("Only works on scalar fields.");
+    return;
+  }
+  if (field->data_at() != Field::CELL) {
+    error("Only works for data_at == Field::CELL");
     return;
   }
   double min, max;
@@ -102,15 +109,9 @@ void SelectElements::execute()
     }
   }
 
-  TetVolField<int> *tvI = dynamic_cast<TetVolField<int> *>(field.get_rep());
-  if (!tvI) {
-    error("Input field wasn't a TetVolField<int>.");
-    return;
-  }
-
-  FieldOPort *ofieldPort = (FieldOPort*)get_oport("TetVol");
+  FieldOPort *ofieldPort = (FieldOPort*)get_oport("Output Field");
   if (!ofieldPort) {
-    error("Unable to initialize oport 'TetVol'.");
+    error("Unable to initialize oport 'Output Field'.");
     return;
   }
 
@@ -126,31 +127,20 @@ void SelectElements::execute()
     return;
   }
 
-  TetVolMeshHandle tvm = tvI->get_typed_mesh();
-  vector<pair<string, Tensor> > conds;
-  tvI->get_property("conductivity_table", conds);
-  vector<int> fdata;
-  TetVolMesh::Cell::size_type ntets;
-  tvm->size(ntets);
-  Array1<int> tet_valid(ntets);
-  tet_valid.initialize(0);
-  TetVolMesh::Cell::iterator citer; tvm->begin(citer);
-  TetVolMesh::Cell::iterator citere; tvm->end(citere);
-  int count=0;
+  const TypeDescription *fsrc_td = field->get_type_description();
+  const TypeDescription *msrc_td = field->mesh()->get_type_description();
+  CompileInfoHandle ci = SelectElementsAlgo::get_compile_info(fsrc_td,msrc_td);
+  Handle<SelectElementsAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) return;
+
+  Array1<int> elem_valid;
   Array1<int> indices;
-  while (citer != citere) {
-    TetVolMesh::Cell::index_type ci = *citer;
-    ++citer;
-    for (ii=0; ii<values.size(); ii++) {
-      if (tvI->fdata()[ci] == values[ii]) {
-	tet_valid[count]=1;
-	fdata.push_back(values[ii]);
-	indices.add(count);
-      }
-    }
-    count++;
-  }
-  msgStream_ << "Found "<<fdata.size()<<" elements (out of "<<count<<") with specified conductivity indices.\n";
+  int count;
+  int keep_all_nodes=keep_all_nodes_.get();
+
+  FieldHandle tvH(algo->execute(field, elem_valid, indices, count, 
+				values, keep_all_nodes));
+  ofieldPort->send(tvH);
 
   ColumnMatrix *cm = scinew ColumnMatrix(indices.size()*3);
   for (ii=0; ii<indices.size(); ii++) {
@@ -164,7 +154,7 @@ void SelectElements::execute()
   int k=0;
   ColumnMatrix *cm2 = scinew ColumnMatrix(count*3);
   for (ii=0; ii<count; ii++) {
-    if (tet_valid[ii]) {
+    if (elem_valid[ii]) {
       (*cm2)[ii*3]=k;
       (*cm2)[ii*3+1]=k+1;
       (*cm2)[ii*3+2]=k+2;
@@ -177,89 +167,28 @@ void SelectElements::execute()
   }
   MatrixHandle cmH2(cm2);
   omat2Port->send(cmH2);
-
-  TetVolMesh *mesh = scinew TetVolMesh;
-
-  TetVolMesh::Node::iterator niter; tvm->begin(niter);
-  TetVolMesh::Node::iterator niter_end; tvm->end(niter_end);
-  while (niter != niter_end) {
-    TetVolMesh::Node::index_type ni = *niter;
-    ++niter;
-    Point p;
-    tvm->get_center(p, ni);
-    mesh->add_point(p);
-  }
-  tvm->begin(citer); tvm->end(citere);
-  count=0;
-  while(citer != citere) {
-    TetVolMesh::Cell::index_type ci = *citer;
-    if (tet_valid[count]) {
-      TetVolMesh::Node::array_type arr(4);
-      tvm->get_nodes(arr, ci);
-      mesh->add_elem(arr);
-    }
-    ++citer; 
-    ++count;
-  }
-
-  mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
-
-
-  TetVolMesh *mesh_no_unattached_nodes = scinew TetVolMesh;
-  TetVolMesh::Node::size_type nnodes;
-  mesh->size(nnodes);
-  Array1<TetVolMesh::Node::index_type> node_map(nnodes);
-  node_map.initialize(-1);
-  mesh->begin(niter);
-  mesh->end(niter_end);
-  TetVolMesh::Node::array_type narr;
-  int total=0;
-  int added=0;
-//  FILE *fout = fopen("/tmp/map-entire-volume-nodes-to-heart-volume-nodes.txt", "wt");
-  while(niter != niter_end) {
-    mesh->get_neighbors(narr, *niter);
-    if (narr.size()) {
-      Point p;
-      mesh->get_center(p, *niter);
-      node_map[total]=added;
-      added++;
-      mesh_no_unattached_nodes->add_point(p);
-//      fprintf(fout, "%d\n", total);
-    }
-    ++niter;
-    total++;
-  }
-//  fclose(fout);
-  mesh->begin(citer);
-  mesh->end(citere);
-  while(citer != citere) {
-    TetVolMesh::Cell::index_type ci = *citer;
-    TetVolMesh::Node::array_type arr(4);
-    mesh->get_nodes(arr, ci);
-    if (arr[0] == -1 ||
-	arr[1] == -1 ||
-	arr[2] == -1 ||
-	arr[3] == -1)
-    {
-      error("Tet contains unmapped node.");
-      return;
-    }
-    arr[0] = node_map[(int)arr[0]];
-    arr[1] = node_map[(int)arr[1]];
-    arr[2] = node_map[(int)arr[2]];
-    arr[3] = node_map[(int)arr[3]];
-    mesh_no_unattached_nodes->add_elem(arr);
-    ++citer;
-  }    
-  
-
-//  TetVolField<int> *tv = scinew TetVolField<int>(mesh_no_unattached_nodes, Field::CELL);
-//  tv->fdata() = fdata;
-//  tv->set_property("conductivity_table", conds, false);
-  TetVolField<double> *tv = scinew TetVolField<double>(mesh_no_unattached_nodes, Field::NODE);
-
-  FieldHandle tvH(tv);
-  
-  ofieldPort->send(tvH);
 }    
+
+CompileInfoHandle
+SelectElementsAlgo::get_compile_info(const TypeDescription *field_td,
+				     const TypeDescription *mesh_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class("SelectElementsAlgoT");
+  static const string base_class_name("SelectElementsAlgo");
+  
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class + "." +
+		       field_td->get_filename() + "." +
+		       mesh_td->get_filename() + ".",
+		       base_class_name, 
+		       template_class,
+                       field_td->get_name() + ", " + mesh_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
+  return rval;
+}
 } // end SCIRun

@@ -33,13 +33,13 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>TetVol</name>
+	<name>Input Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>TetVol</name>
+	<name>Output Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
