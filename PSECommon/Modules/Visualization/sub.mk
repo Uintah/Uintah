@@ -41,6 +41,8 @@ SRCS     += \
 	$(SRCDIR)/IsoSurfaceSP.cc\
 	$(SRCDIR)/IsoSurfaceSAGE.cc\
 	$(SRCDIR)/IsoSurfaceNOISE.cc\
+	$(SRCDIR)/Span.cc\
+	$(SRCDIR)/SearchNOISE.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/SimpVolVis.cc\
 	$(SRCDIR)/Streamline.cc\
@@ -68,6 +70,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/07/26 20:14:46  yarden
+# Isosurface extraction module based on the NOISE
+# algorithm. This module accepts SpanUniverse through
+# a port rather then create one based on the given
+# scalar field.
+#
 # Revision 1.7  2000/07/24 20:56:29  yarden
 # A new module to extract isosurfaces base on Noise algorithm
 # works on UG as well as any RG type
