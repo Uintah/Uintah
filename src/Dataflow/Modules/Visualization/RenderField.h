@@ -32,8 +32,8 @@
 #include <Core/Geom/Pt.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/ColorMap.h>
-#include <Core/Datatypes/TypeDescription.h>
-#include <Core/Datatypes/DynamicLoader.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/DynamicLoader.h>
 
 namespace SCIRun {
 

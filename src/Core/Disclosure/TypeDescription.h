@@ -17,8 +17,8 @@
 //    Author : Martin Cole
 //    Date   : Mon May 14 10:16:28 2001
 
-#if ! defined(Datatypes_TypeDescription_h)
-#define Datatypes_TypeDescription_h
+#if ! defined(Disclosure_TypeDescription_h)
+#define Disclosure_TypeDescription_h
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Tensor.h>
@@ -123,5 +123,5 @@ const TypeDescription* get_type_description (pair<T1,T2> *)
 
 } // End namespace SCIRun
 
-#endif //Datatypes_TypeDescription_h
+#endif //Disclosure_TypeDescription_h
 

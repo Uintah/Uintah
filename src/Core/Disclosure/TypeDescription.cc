@@ -17,8 +17,8 @@
 //    Author : Martin Cole
 //    Date   : Mon May 14 10:20:21 2001
 
-#include <Core/Datatypes/TypeDescription.h>
-#include <Core/Datatypes/DynamicLoader.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>

@@ -16,11 +16,11 @@ SRCS     += \
 	$(SRCDIR)/ExtractSurfNormals.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions
+PSELIBS := Dataflow/Network Dataflow/Ports \
+        Core/Datatypes Core/Disclosure Core/Persistent Core/Containers \
+	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Geometry Core/TkExtensions
+
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

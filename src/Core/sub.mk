@@ -24,6 +24,7 @@ SRCDIR := Core
 SUBDIRS := \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
+	$(SRCDIR)/Disclosure \
 	$(SRCDIR)/Exceptions \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Geom \

@@ -32,11 +32,12 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
-	Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+	Dataflow/Network Dataflow/Ports \
+        Core/Datatypes Core/Disclosure Core/Persistent Core/Containers \
+	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/Math \
         Core/TkExtensions
+
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

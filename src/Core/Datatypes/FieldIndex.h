@@ -33,7 +33,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Datatypes/TypeDescription.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <vector>
 
 namespace SCIRun {
