@@ -256,10 +256,11 @@ SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
 INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
-
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
 ## Sort and remove duplicates from the final list of include paths.
-#    Also, split 'our' thirdparty includes off of the list so that they can be placed at
-#    the beginning of the includes.  This (hopefully on all systems) will mean that our
+#    Also, split 'our' thirdparty includes off of the list so
+#    that they can be placed at the beginning of the includes.
+#    This (hopefully on all systems) will mean that our
 #    include files will be used before any "system" include files.
 TP_INCLUDES := $(shell for i in $(INCLUDES); do echo $$i; done | sort -u | grep Thirdparty)
 OTHER_INCLUDES := $(shell for i in $(INCLUDES); do echo $$i; done | sort -u | grep -v Thirdparty)
