@@ -23,7 +23,8 @@ OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 	   $(patsubst %.s,%.o,$(filter %.s,$(SRCS))) \
 	   $(patsubst %.F,%.o,$(filter %.F,$(SRCS))) \
 	   $(patsubst %.y,%.o,$(filter %.y,$(SRCS)))
-LIBNAME := $(LIBDIR)lib$(subst /,_,$(SRCDIR)).so
+
+LIBNAME := $(LIBDIR)lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 
 # We always link against the internal Dataflow malloc
 ifneq ($(SRCDIR),Core/Malloc)
@@ -54,12 +55,12 @@ $(notdir $(LIBNAME)_LIBS) := $(LIBS)
 # lib/libCore_Thread.so to -lCore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
 ifeq ($(NEED_SONAME),yes)
-SONAMEFLAG = -Wl,-soname,$(notdir $@)
+  SONAMEFLAG = -Wl,-soname,$(notdir $@)
 else
-SONAMEFLAG = 
+  SONAMEFLAG = 
 endif
 
-TMPPSELIBS = $(patsubst %,lib%.so,$(PSELIBS)) 
+TMPPSELIBS = $(patsubst %,lib%.$(SO_OR_A_FILE),$(PSELIBS)) 
 TMPP = $(patsubst libPackages_%,PACKAGE%,$(TMPPSELIBS))
 TMP = $(patsubst lib%,SCIRUN%,$(TMPP))
 TMP_CORE_PSELIBS = $(patsubst SCIRUN%,lib%,$(TMP))
@@ -69,7 +70,10 @@ PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)%,$(PACK_PSELIBS))
 	rm -f $@
-	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
+	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $($(notdir $@)_LIBS)
+
+#$(LIBNAME).pure: $(LIBNAME)
+#	$(purify) $(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@.pure $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($(notdir $@)_LIBS)
 
 #  These will get removed on make clean
 CLEANLIBS := $(CLEANLIBS) $(LIBNAME)
