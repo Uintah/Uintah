@@ -7,7 +7,8 @@ proc makeFilebox {w var command cancel} {
     set $var ""
     set oldsel,$w ""
 
-    set path,$w [exec pwd]
+    global env
+    set path,$w $env(SCI_DATA)
     set oldpath,$w [set path,$w]
 
     frame $w.f
