@@ -34,6 +34,7 @@
 #include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Math/Trig.h>
 
 
@@ -204,17 +205,20 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     ofield_h = ofield;
 
-    // 1D StructCurve to 0D StructCurve
+    // 1D StructCurve to 0D PointCloud
   } else if( ifield->get_type_description(0)->get_name() == "StructCurveField" ) {
-    typename StructCurveField<TYPE>::mesh_type *omesh =
-      scinew typename StructCurveField<TYPE>::mesh_type(new_i);
+    typename PointCloudField<TYPE>::mesh_type *omesh =
+      scinew typename PointCloudField<TYPE>::mesh_type();
     *(PropertyManager *) omesh = *(PropertyManager *)(imesh.get_rep());
 
-    StructCurveField<TYPE> *ofield =
-      scinew StructCurveField<TYPE>(omesh, ifield->data_at());
+    PointCloudField<TYPE> *ofield =
+      scinew PointCloudField<TYPE>(omesh, ifield->data_at());
     *(PropertyManager *) ofield = *(PropertyManager *)(ifield);
 
     ofield_h = ofield;
+
+    omesh->resize_nodes( new_i );
+    ofield->resize_fdata();
   }
 
   return ofield_h;

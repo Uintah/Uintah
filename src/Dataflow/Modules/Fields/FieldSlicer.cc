@@ -311,7 +311,8 @@ FieldSlicerWorkAlgo::get_compile_info(const TypeDescription *iftd,
   // compiler flag so that when needed in FieldSlicer.h it is compiled.
   if( iftd->get_name().find("StructHexVolField"  ) == 0 ||
       iftd->get_name().find("StructQuadSurfField") == 0 ||
-      iftd->get_name().find("StructCurveField"   ) == 0 ) {
+      iftd->get_name().find("StructCurveField"   ) == 0 ||
+      iftd->get_name().find("PointCloudField"    ) == 0 ) {
 
     string header_path(include_path);  // Get the right path 
 
