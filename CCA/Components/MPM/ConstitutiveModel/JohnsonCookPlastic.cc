@@ -76,7 +76,7 @@ void
 JohnsonCookPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
                                                DataWarehouse* new_dw) 
 {
-  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc, pset);
+  new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc,pset);
 }
 
 void

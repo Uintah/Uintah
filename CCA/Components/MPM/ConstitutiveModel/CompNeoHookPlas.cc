@@ -361,7 +361,48 @@ CompNeoHookPlas::computeStressTensor(const PatchSubset* ,
 				const bool )
 {
 }
-	 
+
+void CompNeoHookPlas::carryForward(const PatchSubset* patches,
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int dwi = matl->getDWIndex();
+    ParticleVariable<Matrix3> pdefm_new,pstress_new,bElBar_new;
+    constParticleVariable<Matrix3> pdefm,bElBar;
+    ParticleVariable<StateData> statedata;
+    constParticleVariable<StateData> statedata_old;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> pvolume_deformed;
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
+    old_dw->get(statedata_old,         p_statedata_label,              pset);
+    old_dw->get(bElBar,                bElBarLabel,                    pset);
+    old_dw->get(pmass,                 lb->pMassLabel,                 pset);
+    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
+                                                                       pset);
+    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+    new_dw->allocateAndPut(statedata,  p_statedata_label_preReloc,     pset);
+    new_dw->allocateAndPut(bElBar_new, bElBarLabel_preReloc,           pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    statedata.copyData(statedata_old);
+    double rho_orig = matl->getInitialDensity();
+
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pdefm_new[idx] = pdefm[idx];
+      bElBar_new[idx] = bElBar[idx];
+      pstress_new[idx] = Matrix3(0.0);
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
+    }
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+  }
+}
+ 
 void CompNeoHookPlas::addInitialComputesAndRequires(Task* task,
                                                     const MPMMaterial* matl,
                                                     const PatchSet*) const

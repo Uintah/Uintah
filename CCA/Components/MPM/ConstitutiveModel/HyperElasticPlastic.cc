@@ -474,6 +474,58 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void HyperElasticPlastic::carryForward(const PatchSubset* patches,
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    constParticleVariable<double> pDamage;
+    constParticleVariable<Matrix3> pDeformGrad;
+    ParticleVariable<Matrix3> pDeformGrad_new;
+    ParticleVariable<double> pDamage_new;
+    ParticleVariable<Matrix3> pBbarElastic_new;
+    constParticleVariable<Matrix3> pBbarElastic;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<Matrix3> pdefm_new,pstress_new;
+    constParticleVariable<Matrix3> pdefm,pstress;
+    old_dw->get(pBbarElastic, pBbarElasticLabel, pset);
+    old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pDamage, pDamageLabel, pset);
+    old_dw->get(pmass,                 lb->pMassLabel,                 pset);
+    old_dw->get(pstress,       lb->pStressLabel,                       pset);
+    new_dw->allocateAndPut(pDeformGrad_new,
+                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pDamage_new,
+                           pDamageLabel_preReloc,                 pset);
+    new_dw->allocateAndPut(pBbarElastic_new, pBbarElasticLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+
+    // Get the plastic strain
+    d_plasticity->getInternalVars(pset, old_dw);
+    d_plasticity->initializeInternalVars(pset, new_dw);
+
+    double rho_orig = matl->getInitialDensity();
+    for(ParticleSubset::iterator iter = pset->begin();
+                                 iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pstress_new[idx] = pstress[idx];
+      pDeformGrad_new[idx] = pDeformGrad[idx];
+      pDamage_new[idx] = pDamage[idx];
+      pBbarElastic_new[idx] = pBbarElastic[idx];
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
+    }
+
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+  }
+}
+
 void 
 HyperElasticPlastic::computeStressTensor(const PatchSubset* ,
 				const MPMMaterial* ,
