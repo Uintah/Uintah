@@ -4,16 +4,17 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/JWLC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Murnahan.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Gruneisen.h>
-#if 0
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
-#endif
+#include <Packages/Uintah/CCA/Components/ICE/EOS/Tillotson.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 #include <string>
+#if 0
+#include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
+#endif
 
 using std::cerr;
 using std::ifstream;
@@ -40,6 +41,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       return(scinew Murnahan(child));
     else if (mat_type == "Gruneisen") 
       return(scinew Gruneisen(child));
+    else if (mat_type == "Tillotson") 
+      return(scinew Tillotson(child));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 
