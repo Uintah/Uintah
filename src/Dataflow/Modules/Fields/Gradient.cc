@@ -52,8 +52,8 @@ public:
 
   virtual void execute();
 
-  template <class F> void qwerty_tetvol(F *f);
-  template <class F> void qwerty_latticevol(F *f);
+  template <class F> void dispatch_tetvol(F *f);
+  template <class F> void dispatch_latticevol(F *f);
 };
 
 
@@ -76,7 +76,7 @@ Gradient::~Gradient()
 
 template <class F>
 void
-Gradient::qwerty_tetvol(F *f)
+Gradient::dispatch_tetvol(F *f)
 {
   TetVolMeshHandle tvm = f->get_typed_mesh(); 
   TetVol<Vector> *result = new TetVol<Vector>(tvm, Field::CELL);
@@ -94,7 +94,7 @@ Gradient::qwerty_tetvol(F *f)
 
 template <class F>
 void
-Gradient::qwerty_latticevol(F *f)
+Gradient::dispatch_latticevol(F *f)
 {
   LatVolMeshHandle lvm = f->get_typed_mesh(); 
   LatticeVol<Vector> *result = new LatticeVol<Vector>(lvm, Field::CELL);
@@ -133,19 +133,19 @@ Gradient::execute()
   {
     if (data_name == "double")
     {
-      qwerty_tetvol((TetVol<double> *)field);
+      dispatch_tetvol((TetVol<double> *)field);
     }
     else if (data_name == "int")
     {
-      qwerty_tetvol((TetVol<int> *)field);
+      dispatch_tetvol((TetVol<int> *)field);
     }
     else if (data_name == "short")
     {
-      qwerty_tetvol((TetVol<short> *)field);
+      dispatch_tetvol((TetVol<short> *)field);
     }
     else if (data_name == "char")
     {
-      qwerty_tetvol((TetVol<char> *)field);
+      dispatch_tetvol((TetVol<char> *)field);
     }
     else
     {
@@ -157,19 +157,19 @@ Gradient::execute()
   {
     if (data_name == "double")
     {
-      qwerty_latticevol((LatticeVol<double> *)field);
+      dispatch_latticevol((LatticeVol<double> *)field);
     }
     else if (data_name == "int")
     {
-      qwerty_latticevol((LatticeVol<int> *)field);
+      dispatch_latticevol((LatticeVol<int> *)field);
     }
     else if (data_name == "short")
     {
-      qwerty_latticevol((LatticeVol<short> *)field);
+      dispatch_latticevol((LatticeVol<short> *)field);
     }
     else if (data_name == "char")
     {
-      qwerty_latticevol((LatticeVol<char> *)field);
+      dispatch_latticevol((LatticeVol<char> *)field);
     }
     else
     {
