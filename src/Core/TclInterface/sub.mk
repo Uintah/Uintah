@@ -8,7 +8,8 @@ SRCS     += $(SRCDIR)/DebugSettings.cc $(SRCDIR)/GuiManager.cc \
 	$(SRCDIR)/GuiServer.cc $(SRCDIR)/Histogram.cc \
 	$(SRCDIR)/MemStats.cc $(SRCDIR)/Remote.cc $(SRCDIR)/TCL.cc \
 	$(SRCDIR)/TCLInit.cc $(SRCDIR)/TCLTask.cc $(SRCDIR)/TCLvar.cc \
-	$(SRCDIR)/ThreadStats.cc
+	$(SRCDIR)/ThreadStats.cc \
+	$(SRCDIR)/TCLstrbuff.cc \
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
 	Core/Containers Core/TkExtensions
