@@ -232,7 +232,7 @@ inline AllocBin* Allocator::get_bin(size_t size)
 
 void Allocator::initlock()
 {
-   if(pthread_mutex_init(&the_lock) != 0){
+   if(pthread_mutex_init(&the_lock,0) != 0){
       perror("pthread_mutex_init");
       exit(-1);
    }

@@ -28,6 +28,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <sci_defs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef SCI_PTHREAD
