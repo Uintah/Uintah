@@ -134,7 +134,7 @@ void GridTris::preprocess(double, int&, int&)
     fname << filename << ".gridtri_" << ncells << "_" << depth;
     ifstream in(fname.str().c_str());
     cerr << "Reading gridtris from: " << fname.str() << '\n';
-    double start = Time::currentSeconds();
+    double start = SCIRun::Time::currentSeconds();
     streampos ss = in.tellg();
     int have_fallback;
     in.read((char*)&have_fallback, sizeof(int));
@@ -182,7 +182,7 @@ void GridTris::preprocess(double, int&, int&)
       exit(1);
     }
     streampos se = in.tellg();
-    double dt = Time::currentSeconds()-start;
+    double dt = SCIRun::Time::currentSeconds()-start;
     double rate = double(se-ss)/dt/1024./1024.;
     cerr << "Read file in " << dt << " seconds (" << rate << " MB/sec)\n";
   } else {  // Not cached
@@ -261,7 +261,7 @@ void GridTris::preprocess(double, int&, int&)
     itime=time;
     BrickArray3<int> current(totalcells, totalcells, totalcells);
     current.initialize(0);
-    for(int i=0;i<tris.size();i++){
+    for(unsigned int i=0;i<tris.size();i++){
       double tnow=SCIRun::Time::currentSeconds();
       if(tnow-itime > 5.0){
 	cerr << i << "/" << tris.size() << '\n';
@@ -285,7 +285,7 @@ void GridTris::preprocess(double, int&, int&)
     cerr << "4/6 Filling grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
     time=SCIRun::Time::currentSeconds();
     int* ptr2=current.get_dataptr();
-    for(int i=0;i<datasize;i++){
+    for(unsigned int i=0;i<datasize;i++){
       int diff = ptr[i+1]-ptr[i];
       if(ptr2[i] != diff){
 	cerr << "OOPS!\n";
@@ -346,7 +346,7 @@ void GridTris::preprocess(double, int&, int&)
 	ofstream out(fname.str().c_str());
 	if(out){
 	  cerr << "Writing gridtris to: " << fname.str() << '\n';
-	  double start = Time::currentSeconds();
+	  double start = SCIRun::Time::currentSeconds();
 	  streampos ss = out.tellp();
 	  int have_fallback = fallbackMaterial?1:0;
 	  out.write((char*)&have_fallback, sizeof(int));
@@ -384,7 +384,7 @@ void GridTris::preprocess(double, int&, int&)
 	  streampos se = out.tellp();
 	  cerr << "Closing file\n";
 	  out.close();
-	  double dt = Time::currentSeconds()-start;
+	  double dt = SCIRun::Time::currentSeconds()-start;
 	  double rate = double(se-ss)/dt/1024./1024.;
 	  cerr << "Wrote file in " << dt << " seconds (" << rate << " MB/sec)\n";
 	} else {
@@ -805,7 +805,7 @@ void GridTris::addVertex(float x[3], unsigned char c[3])
 void GridTris::addTri(int i0, int i1, int i2)
 {
   ASSERT(i0 >= 0 && i1 >= 0 && i2 >= 0);
-  ASSERT(i0 < verts.size() && i1 < verts.size() && i2 < verts.size());
+  ASSERT(i0 < (int)verts.size() && i1 < (int)verts.size() && i2 < (int)verts.size());
 
   Vert& v0 = verts[i0];
   Vert& v1 = verts[i1];

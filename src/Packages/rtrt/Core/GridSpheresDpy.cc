@@ -33,10 +33,9 @@ namespace rtrt {
 } // end namespace rtrt
 
 
-GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file)
-    : ndata(-1),hist(0),xres(500),yres(500),
-      colordata(colordata),newcolordata(colordata),
-      in_file(in_file)
+GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
+  hist(0), xres(500), yres(500), ndata(-1),
+  colordata(colordata),newcolordata(colordata), in_file(in_file)
 {
 }
 
