@@ -24,7 +24,7 @@ namespace rtrt {
 VolumeDpy::VolumeDpy(float isoval)
     : isoval(isoval)
 {
-    xres=500;
+    xres=400;
     yres=100;
     hist=0;
 }
