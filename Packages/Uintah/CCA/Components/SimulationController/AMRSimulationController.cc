@@ -301,8 +301,14 @@ void AMRSimulationController::run()
    bool first=true;
    int  iterations = 0;
    double prev_delt = 0;
-   while( ( t < timeinfo.maxTime ) && 
-	  ( iterations < timeinfo.num_time_steps ) ) {
+
+   // if we end the simulation for a timestep, decide whether to march max_iterations
+   // or to end at a certain timestep
+   int max_iterations = timeinfo.max_iterations;
+   if (timeinfo.maxTimestep - sharedState->getCurrentTopLevelTimeStep() < max_iterations)
+     max_iterations = timeinfo.maxTimestep - sharedState->getCurrentTopLevelTimeStep();
+
+   while( t < timeinfo.maxTime && iterations < max_iterations) {
 
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
