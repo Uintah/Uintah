@@ -11,26 +11,6 @@
 
 namespace Uintah {
 
-  template<class T> void fillFace(CCVariable<T>& var,Patch::FaceType face, 
-				  const T& value,
-				  IntVector offset = IntVector(0,0,0));
-  
-  template<class T> void fillFaceFlux(CCVariable<T>& var,Patch::FaceType face, 
-				      const T& value,const Vector& dx,
-				      const double& plus_minus_one=1.0,
-				      IntVector offset = IntVector(0,0,0));
-  
-  template <class T> void fillFaceNormal(CCVariable<T>& var,Patch::FaceType, 
-					 IntVector);
-  
-  template <> void fillFaceNormal(CCVariable<Vector>& var,Patch::FaceType, 
-				  IntVector);
-
-  template <class V, class T> void fillFace(V& var, const Patch* patch, 
-					    Patch::FaceType face,
-					    const T& value, 
-					 IntVector offset = IntVector(0,0,0));
-  
   void setHydrostaticPressureBC(CCVariable<double>& press,
 				Patch::FaceType face, Vector& gravity,
 				const CCVariable<double>& rho,
