@@ -71,6 +71,87 @@ HexToTet::~HexToTet()
 }
 
 
+static void
+visit(HexVolMeshHandle hvmesh,
+      TetVolMeshHandle tvmesh,
+      HexVolMesh::Elem::index_type index,
+      vector<bool> &visited,
+      vector<HexVolMesh::Elem::index_type> &elemmap,
+      bool flipflop)
+{
+  if (visited[(unsigned int)index]) { return; } 
+  visited[(unsigned int)index] = true;
+
+  HexVolMesh::Node::array_type hvnodes;
+  hvmesh->get_nodes(hvnodes, index);
+
+  if (flipflop)
+  {
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[1]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[3]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[4]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[6]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]));
+  }
+  else
+  {
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
+		    (TetVolMesh::Node::index_type)(hvnodes[0]),
+		    (TetVolMesh::Node::index_type)(hvnodes[3]),
+		    (TetVolMesh::Node::index_type)(hvnodes[4]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
+		    (TetVolMesh::Node::index_type)(hvnodes[3]),
+		    (TetVolMesh::Node::index_type)(hvnodes[2]),
+		    (TetVolMesh::Node::index_type)(hvnodes[6]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
+		    (TetVolMesh::Node::index_type)(hvnodes[3]),
+		    (TetVolMesh::Node::index_type)(hvnodes[4]),
+		    (TetVolMesh::Node::index_type)(hvnodes[6]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[1]),
+		    (TetVolMesh::Node::index_type)(hvnodes[5]),
+		    (TetVolMesh::Node::index_type)(hvnodes[4]),
+		    (TetVolMesh::Node::index_type)(hvnodes[6]));
+
+    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[3]),
+		    (TetVolMesh::Node::index_type)(hvnodes[4]),
+		    (TetVolMesh::Node::index_type)(hvnodes[7]),
+		    (TetVolMesh::Node::index_type)(hvnodes[6]));
+  }
+  
+  elemmap.push_back(index);
+
+  HexVolMesh::Cell::array_type neighbors;
+  hvmesh->get_neighbors(neighbors, index);
+
+  for (unsigned int i = 0; i < neighbors.size(); i++)
+  {
+    visit(hvmesh, tvmesh, neighbors[i], visited, elemmap, !flipflop);
+  }
+}
+
+
 void
 HexToTet::execute()
 {
@@ -124,41 +205,15 @@ HexToTet::execute()
   hash_type nodemap;
   vector<HexVolMesh::Elem::index_type> elemmap;
 
+  HexVolMesh::Elem::size_type hesize; hvmesh->size(hesize);
+  vector<bool> visited(hesize, false);
+
   HexVolMesh::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
+
   while (bi != ei)
   {
-    HexVolMesh::Node::array_type hvnodes;
-    hvmesh->get_nodes(hvnodes, *bi);
-
-    
-    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-		    (TetVolMesh::Node::index_type)(hvnodes[1]),
-		    (TetVolMesh::Node::index_type)(hvnodes[2]),
-		    (TetVolMesh::Node::index_type)(hvnodes[5]));
-
-    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-		    (TetVolMesh::Node::index_type)(hvnodes[2]),
-		    (TetVolMesh::Node::index_type)(hvnodes[3]),
-		    (TetVolMesh::Node::index_type)(hvnodes[7]));
-
-    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-		    (TetVolMesh::Node::index_type)(hvnodes[2]),
-		    (TetVolMesh::Node::index_type)(hvnodes[5]),
-		    (TetVolMesh::Node::index_type)(hvnodes[7]));
-
-    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),
-		    (TetVolMesh::Node::index_type)(hvnodes[4]),
-		    (TetVolMesh::Node::index_type)(hvnodes[5]),
-		    (TetVolMesh::Node::index_type)(hvnodes[7]));
-
-    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[2]),
-		    (TetVolMesh::Node::index_type)(hvnodes[5]),
-		    (TetVolMesh::Node::index_type)(hvnodes[6]),
-		    (TetVolMesh::Node::index_type)(hvnodes[7]));
-
-    elemmap.push_back(*bi);
-
+    visit(hvmesh, tvmesh, *bi, visited, elemmap, true);
     ++bi;
   }
   tvmesh->flush_changes();
