@@ -50,6 +50,10 @@ namespace C_Magick {
 }
 #endif
 
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
@@ -699,17 +703,33 @@ OpenGL::redraw_frame()
     gui->unlock();
   }
 
+  // Set up a pbuffer associated with dpy
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
   viewer_->geomlock_.readLock();
 
   gui->lock();
+#if defined(__linux)
+  int screen = Tk_ScreenNumber(tkwin);
+  if( xres != pbuffer.width() || yres != pbuffer.height() ){
+    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
+    pbuffer.destroy();
+    pbuffer.create( dpy, screen, xres, yres, 8, 8 );
+  }
+
+  if(viewwindow->doingMovie && pbuffer.is_valid()){
+    pbuffer.makeCurrent();
+    glDrawBuffer( GL_FRONT );
+
+  } else if( pbuffer.is_current() ) {
+    glXMakeCurrent(dpy, win, cx);
+  }
+#endif
 
   // Clear the screen...
   glViewport(0, 0, xres, yres);
   Color bg(viewwindow->bgcolor.get());
   glClearColor(bg.r(), bg.g(), bg.b(), 1);
-
   string saveprefix(viewwindow->saveprefix.get());
 
   // Setup the view...
@@ -752,7 +772,6 @@ OpenGL::redraw_frame()
     glEnable(GL_NORMALIZE);
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
-
     string globals("global");
     viewwindow->setState(drawinfo,globals);
     drawinfo->pickmode=0;
@@ -760,10 +779,16 @@ OpenGL::redraw_frame()
     GLenum errcode;
     while((errcode=glGetError()) != GL_NO_ERROR)
     {
-      cerr << "We got an error from GL: " << (char*)gluErrorString(errcode)
+      cerr << "We got a GL error after setting up the graphics state: "
+	   << (char*)gluErrorString(errcode)
 	   << "\n";
     }
 
+#if defined(__linux)
+    if( pbuffer.is_current() && !viewwindow->doingMovie ){
+      glXMakeCurrent(dpy, win, cx);
+    }
+#endif
     // Do the redraw loop for each time value
     double dt=(tend-tbeg)/nframes;
     double frametime=framerate==0?0:1./framerate;
@@ -824,12 +849,22 @@ OpenGL::redraw_frame()
 	}
 	else
 	{
-	  glDrawBuffer(GL_BACK);
+#if defined(__linux)
+	  if(!viewwindow->doingMovie){
+	    if( pbuffer.is_current() )
+	      cerr<<"pbuffer is current while not doing Movie\n";
+#endif
+	    glDrawBuffer(GL_BACK);
+#if defined(__linux)
+	  }
+	  else{
+	    glDrawBuffer(GL_FRONT);
+	  }
+#endif	
 	}
-	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, xres, yres);
-	
+
 	double modeltime=t*dt+tbeg;
 	viewwindow->set_current_time(modeltime);
 	
@@ -861,7 +896,9 @@ OpenGL::redraw_frame()
 	{ // render normal
 	  // Setup view.
 	  glMatrixMode(GL_PROJECTION);
+
 	  glLoadIdentity();
+
 	  if (viewwindow->ortho_view())
 	  {
 	    const double len = (view.lookat() - view.eyep()).length();
@@ -874,6 +911,7 @@ OpenGL::redraw_frame()
 	    gluPerspective(fovy, aspect, znear, zfar);
 	  }
 	  glMatrixMode(GL_MODELVIEW);
+
 	  glLoadIdentity();
 	  Point eyep(view.eyep());
 	  Point lookat(view.lookat());
@@ -910,7 +948,7 @@ OpenGL::redraw_frame()
 	  glEnable((GLenum)(GL_LIGHT0+ii));
 	for(;ii<maxlights;ii++)
 	  glDisable((GLenum)(GL_LIGHT0+ii));
-	
+
 	// now set up the fog stuff
 	
 	glFogi(GL_FOG_MODE,GL_LINEAR);
@@ -922,7 +960,7 @@ OpenGL::redraw_frame()
 	bgArray[2]=bg.b();
 	bgArray[3]=1.0;
 	glFogfv(GL_FOG_COLOR, bgArray);
-	
+
 	// now make the ViewWindow setup its clipping planes...
 	viewwindow->setClip(drawinfo);
 	
@@ -930,7 +968,7 @@ OpenGL::redraw_frame()
 	glGetDoublev (GL_MODELVIEW_MATRIX, get_depth_model);
 	glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
 	glGetIntegerv(GL_VIEWPORT, get_depth_view);
-	
+
 	// set up point size, line size, and polygon offset
 	glPointSize(drawinfo->point_size_);
 	glLineWidth(drawinfo->line_width_);
@@ -1115,6 +1153,9 @@ OpenGL::redraw_frame()
       gui->execute("update idletasks");
 
       // Show the pretty picture
+#if defined(__linux)
+      if( !viewwindow->doingMovie )
+#endif
       glXSwapBuffers(dpy, win);
 
       // CollabVis code begin
@@ -1137,7 +1178,7 @@ OpenGL::redraw_frame()
         glReadBuffer(GL_BACK);
 	glReadPixels( 0, 0, _x, _y, GL_RGB, GL_UNSIGNED_BYTE,
 		      (GLubyte *)image);
-	
+
         cerr << "Dimensions: " << _x << " x " << _y << endl;
         // DEBUG CODE
         unsigned char * testImage = (unsigned char *) image;
@@ -1232,6 +1273,9 @@ OpenGL::redraw_frame()
 	glCallList(imglist);
 #endif
     }
+#if defined(__linux)
+      if( !viewwindow->doingMovie )
+#endif
     glXSwapBuffers(dpy, win);
   }
 
@@ -1241,7 +1285,8 @@ OpenGL::redraw_frame()
   GLenum errcode;
   while((errcode=glGetError()) != GL_NO_ERROR)
   {
-    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode)
+    cerr << "We got an error from GL after drawing objects: "
+	 << (char*)gluErrorString(errcode)
 	 << "\n";
   }
 
@@ -1384,6 +1429,7 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     current_drawer=this;
     gui->lock();
     glXMakeCurrent(dpy, win, cx);
+    cerr<<"viewer current\n";
     gui->unlock();
   }
   // Setup the view...
@@ -1557,6 +1603,15 @@ OpenGL::dump_image(const string& name, const string& /* type */)
   glReadBuffer(GL_FRONT);
   glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
   dumpfile.write((const char *)pxl,n);
+#if defined(__linux)
+  if( pbuffer.is_valid() && pbuffer.is_current()){
+    glXMakeCurrent( dpy, win, cx );
+    glDrawBuffer(GL_FRONT);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glDrawPixels(vp[2],vp[3], GL_RGB, GL_UNSIGNED_BYTE,pxl);
+    glDrawBuffer(GL_BACK);
+  }
+#endif
   delete[] pxl;
 }
 
@@ -2367,6 +2422,16 @@ OpenGL::AddMpegFrame()
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_FRONT);
   glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
+
+#if defined(__linux)
+  if( pbuffer.is_valid() && pbuffer.is_current() ){
+    glXMakeCurrent( dpy, win, cx ); 
+    glDrawBuffer(GL_FRONT);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glDrawPixels(width,height, GL_RGB, GL_UNSIGNED_BYTE,ptr);
+    glDrawBuffer(GL_BACK);
+  }
+#endif
 
   int r=3*width;
   static unsigned char* row = 0;

@@ -60,6 +60,11 @@
 #include <Core/Datatypes/Image.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/Ball.h>
+
+#if defined(__linux)
+#include <Dataflow/Modules/Render/PBuffer.h>
+#endif
+ 
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Core/Thread/FutureValue.h>
@@ -194,6 +199,9 @@ private:
   Window win;
   Display* dpy;
   GLXContext cx;
+#if defined(__linux)
+  PBuffer pbuffer;
+#endif
   int maxlights;
   DrawInfoOpenGL* drawinfo;
   WallClockTimer fpstimer;
