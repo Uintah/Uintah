@@ -140,9 +140,8 @@ public:
   }
 
   void get_random_point(Point &p, const elem_index &ei) const {
-#if 0
     static MusilRNG rng(1249);
-    node_array ra;
+    Node::array_type ra;
     get_nodes(ra,ei);
     Point p0,p1,p2;
     get_point(p0,ra[0]);
@@ -157,7 +156,6 @@ public:
       u = 1.-u;
     }
     p = p0+(v0*t)+(v1*u);
-#endif
   }
   
   double get_element_size(Face::index_type &fi) { return get_area(fi); }
