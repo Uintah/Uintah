@@ -8,7 +8,7 @@
 #include <Uintah/Grid/PerPatch.h>
 #include <vector>
 #include <Uintah/Components/ICE/ICELabel.h>
-#include <Uintah/Components/ICE/EquationOfState.h>
+#include <Uintah/Components/ICE/EOS/EquationOfState.h>
 
 namespace SCICore {
    namespace Geometry {
@@ -94,6 +94,9 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.4  2000/10/06 04:05:18  jas
+// Move files into EOS directory.
+//
 // Revision 1.3  2000/10/05 04:26:48  guilkey
 // Added code for part of the EOS evaluation.
 //

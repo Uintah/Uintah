@@ -9,10 +9,11 @@ SRCDIR   := Uintah/Components/ICE
 
 SRCS	+= $(SRCDIR)/ICE.cc \
 	$(SRCDIR)/ICELabel.cc \
-	$(SRCDIR)/ICEMaterial.cc \
-	$(SRCDIR)/EquationOfState.cc \
-	$(SRCDIR)/EquationOfStateFactory.cc \
-	$(SRCDIR)/IdealGas.cc 
+	$(SRCDIR)/ICEMaterial.cc 
+
+SUBDIRS := $(SRCDIR)/EOS 
+ 
+include $(SRCTOP)/scripts/recurse.mk          
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
@@ -23,6 +24,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.17  2000/10/06 04:05:18  jas
+# Move files into EOS directory.
+#
 # Revision 1.16  2000/10/04 23:42:50  jas
 # Add IdealGas.cc
 #
