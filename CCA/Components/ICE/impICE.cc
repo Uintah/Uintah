@@ -70,7 +70,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   t->requires( Task::ParentNewDW, lb->press_equil_CCLabel,one_matl,gn,0);
   t->requires( Task::ParentNewDW, lb->burnedMass_CCLabel,          gn,0);
   t->requires( Task::ParentNewDW, lb->sp_vol_CCLabel,              gn,0);
-  t->requires( Task::ParentNewDW, lb->vol_frac_CCLabel,            gac,1); 
+  t->requires( Task::ParentNewDW, lb->vol_frac_CCLabel,            gac,2); 
   t->requires( Task::NewDW,       lb->uvel_FCMELabel,              gac,2);
   t->requires( Task::NewDW,       lb->vvel_FCMELabel,              gac,2);
   t->requires( Task::NewDW,       lb->wvel_FCMELabel,              gac,2);
@@ -220,7 +220,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   //__________________________________
   // common Variables
   t->requires( Task::OldDW, lb->delTLabel);    
-  t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,1); 
+  t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
   t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl,  gn,0);
   //__________________________________
@@ -476,15 +476,27 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->get(uvel_FC,           lb->uvel_FCMELabel,     indx,patch,gac, 2);
       new_dw->get(vvel_FC,           lb->vvel_FCMELabel,     indx,patch,gac, 2);
       new_dw->get(wvel_FC,           lb->wvel_FCMELabel,     indx,patch,gac, 2);
-      parent_new_dw->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 1);
+      parent_new_dw->get(vol_frac,   lb->vol_frac_CCLabel,   indx,patch,gac, 2);
       parent_new_dw->get(burnedMass, lb->burnedMass_CCLabel, indx,patch,gn,0);
       parent_new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,0);
+
+      //__________________________________
+      // If second order is used 
+      // iterate over two layers of ghostCells
+      cout << "Advecton Type "<< d_advect_type << endl;
+      int ncells = 1;   // default for first order advection
+      if (d_advect_type == "SecondOrder" || 
+          d_advect_type == "SecondOrderCE" ){
+        ncells = 2;
+      }
+      CellIterator iter = patch->getExtraCellIterator();
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter, ncells);
          
       //__________________________________
       // Advection preprocessing
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx); 
 
-      for(CellIterator iter = patch->getCellIterator(gc); !iter.done();iter++){
+      for(CellIterator iter = iterPlusGhost; !iter.done();iter++){
        IntVector c = *iter;
         q_CC[c] = vol_frac[c] * invvol;
       }
