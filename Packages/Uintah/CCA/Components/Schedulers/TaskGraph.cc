@@ -721,6 +721,7 @@ const ComputeSubset<T>* intersection(const ComputeSubset<T>* s1,
     return s1;
 
   ComputeSubset<T>* result = scinew ComputeSubset<T>;
+
   if(s1->size() == 0 || s2->size() == 0)
     return result;
   T el1 = s1->get(0);
@@ -793,23 +794,18 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       }
       if(!patches) {
 	// Reduction task
-	if (matls && !matls->empty()) {
+	if (matls && !matls->empty())
 	  ct.remembercomp(task, comp, 0, matls);
-	}
-	else {
+	else 
 	  ct.remembercomp(task, comp, 0, 0);
-	  if (matls && matls->getReferenceCount() == 0)
-	    delete matls;
-	}
       }
       else if(!patches->empty() && !matls->empty())
 	ct.remembercomp(task, comp, patches, matls);
-      else {
-	if(patches->getReferenceCount() == 0)
-	  delete patches;
-	if(matls->getReferenceCount() == 0)
-	  delete matls;
-      }
+      
+      if(patches && patches->getReferenceCount() == 0)
+	delete patches;
+      if(matls && matls->getReferenceCount() == 0)
+	delete matls;
     }
   }
 
