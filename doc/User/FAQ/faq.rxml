@@ -81,6 +81,56 @@ too.
 <revhistory>
 <revision>
 <revnumber>1.0</revnumber>
+<date>2/20/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+When I remotely display it, SCIRun sometimes hangs and sometimes
+crashes my X server (depending on whether it is running on sgi/linux
+and being displayed on sgi/linux.)  What causes this?
+</para>
+</question>
+
+<answer>
+<para>Apparently there are problems with the 4191 Nvidia drivers that cause
+GL programs to behave badly.  We have had success using the 3123
+drivers (except for 3D texturing).  You can determine what drivers you
+are using (on your linux box) by typing "rpm -qa | grep NVIDIA".
+</para>
+<para>
+Since there doesn't seem to be drivers newer than 4191 on nvidia's
+<ulink
+url="http://www.nvidia.com/view.asp?IO=linux_display_archive">web
+site</ulink> I would suggest going back to the 3123 drivers, which is
+what I currently have on my system.  NVIDIA doesn't have prebuilt
+rpms for RedHat 8.0, but you can easily build from the source rpms:
+<literallayout class="monospaced">
+# Removes the old installation.  You may need to change the actual number
+rpm -e NVIDIA_GLX-1.0-4191 NVIDIA_kernel-1.0-4191
+
+# Build the rpm from the source
+rpmbuild --rebuild NVIDIA_kernel-1.0-3123.src.rpm
+
+# Install the rpm.  Note: the actual path may differ from system to system.
+rpm -ivh /usr/src/redhat/RPMS/i386/NVIDIA_kernel-1.0-3123.i386.rpm
+
+# You don't have build the GLX rpm from source (not kernel dependant),
+# but I did anyway.
+rpmbuild --rebuild NVIDIA_GLX-1.0-3123.src.rpm
+rpm -ivh /usr/src/redhat/RPMS/i386/NVIDIA_GLX-1.0-3123.i386.rpm
+</literallayout>
+</para>
+
+</answer>
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
 <date>1/31/03</date>
 </revision>
 </revhistory>
