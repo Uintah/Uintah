@@ -16,7 +16,6 @@
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/BumpMaterial.h>
-#include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
@@ -164,7 +163,7 @@ void addObjMaterial(Array1<Material*> &matl,
 		    bool is_glass, double n_in, double n_out,
 		    double R0, const Color &extinction_in,
 		    const Color &extinction_out, bool nothing_inside,
-		    double extinction_scale) {
+		    double extinction_scale, double scale_bump) {
   names.add(name);
   Material *m=0;
   if (has_tmap) {
@@ -179,19 +178,23 @@ void addObjMaterial(Array1<Material*> &matl,
   matl_has_tmap.add(has_tmap);
   matl_has_bmap.add(has_bmap);
   if (!m) {
-    if (is_glass)
+    if (is_glass) {
+      cerr << "Creating dielectric!\n";
       m = new DielectricMaterial(n_in, n_out, R0, Ns, extinction_in, 
 				 extinction_out, nothing_inside, 
 				 extinction_scale);
-    else if (Ns == 0)
+    } else if (Ns == 0)
       m = new LambertianMaterial(Kd);
-    else 
-      m = new PhongMaterial(Kd, opacity, R0, Ns, R0==0);
+    else {
+      cerr << "Kd="<<Kd<<" opacity="<<opacity<<" R0="<<R0<<" Ns="<<Ns<<"\n";
+      m = new Phong(Kd, Color(1,1,1), Ns, R0);
+    }
   }
   if (has_bmap) {
     char c[4096];
     sprintf(c, "%s", bmap_name.c_str());
-    matl.add(new BumpMaterial(m, c, 1));
+    cerr << "scale_bump="<<scale_bump<<"\n";
+    matl.add(new BumpMaterial(m, c, 1, scale_bump));
   } else
     matl.add(m);
 }
@@ -223,7 +226,9 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    double n_in, n_out, R0, extinction_scale;
    bool is_glass, nothing_inside;
    Color extinction_in, extinction_out;
-     
+   double scale_bump=1;
+   is_glass=0;
+
    while(fgets(buf,4096,f)) {
      if (strncmp(&(buf[0]), "newmtl", strlen("newmtl")) == 0) {
        if (matl_complete) {
@@ -231,11 +236,13 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 			tmap_name, bmap_name, has_tmap, has_bmap,
 			matl_has_tmap, matl_has_bmap,
 			is_glass, n_in, n_out, R0, extinction_in, 
-			extinction_out, nothing_inside, extinction_scale);
+			extinction_out, nothing_inside, extinction_scale,
+			scale_bump);
 	 is_glass=0;
 	 has_tmap=0;
 	 has_bmap=0;
 	 matl_complete=0;
+	 scale_bump=1;
        }
        name=string(&buf[7]);
        fgets(buf,4096,f);
@@ -251,9 +258,9 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
        Ks=Color(scratch[0], scratch[1], scratch[2]);
        
        fgets(buf,4096,f);
-       if (strncmp(&buf[8], "illum", strlen("illum"))) {
+       if (strncmp(&buf[2], "illum", strlen("illum")) == 0) {
 	 opacity=1;
-       } else if (strncmp(&buf[8], "glass", strlen("glass"))) {
+       } else if (strncmp(&buf[2], "glass", strlen("glass")) == 0) {
 	 Get11d(&buf[8], scratch);
 	 is_glass=1;
 	 n_in = scratch[0];
@@ -263,8 +270,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 extinction_out=Color(scratch[6], scratch[7], scratch[8]);
 	 nothing_inside=scratch[9];
 	 extinction_scale=scratch[10];
-       } else if (strncmp(&buf[8], "opacity", strlen("opacity"))) {
-	 Get1d(&buf[8], scratch);
+       } else if (strncmp(&buf[2], "opacity", strlen("opacity")) == 0) {
+	 Get1d(&buf[10], scratch);
 	 opacity=scratch[0];
 	 if (opacity>1) opacity=1;
        } else opacity=1;
@@ -299,6 +306,9 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 bmap_name=fname;
 	 fclose(f);
        } else cerr << "Error - was unable to read bump map!\n";
+     } else if (strncmp(&buf[0], "scale_bump", strlen("scale_bump")) == 0) {
+       Get1d(&buf[11], scratch);
+       scale_bump=scratch[0];
      } else {
        cerr << "Ignoring matl line: "<<buf<<"\n";
      }
@@ -310,7 +320,8 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 		    tmap_name, bmap_name, has_tmap, has_bmap,
 		    matl_has_tmap, matl_has_bmap,
 		    is_glass, n_in, n_out, R0, extinction_in, 
-		    extinction_out, nothing_inside, extinction_scale);
+		    extinction_out, nothing_inside, extinction_scale,
+		    scale_bump);
    }
 
    fclose(f);
