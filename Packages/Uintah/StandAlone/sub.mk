@@ -26,7 +26,9 @@ AIX_LIBS := \
         Core/TkExtensions \
         Packages/Uintah/CCA/Components/HETransformation \
         Packages/Uintah/CCA/Components/Arches/Mixing \
-        Packages/Uintah/CCA/Components/Arches_fortran
+        Packages/Uintah/CCA/Components/Arches/fortran \
+        Packages/Uintah/CCA/Components/Arches/Radiation \
+        Packages/Uintah/CCA/Components/Arches/Radiation/fortran
 endif
 
 
