@@ -80,13 +80,11 @@ void computeGridEigens(TensorField* tensorField,
   smh->set_nx(tmh->get_nx());
   smh->set_ny(tmh->get_ny());
   smh->set_nz(tmh->get_nz());
-  smh->set_min( box.min() );
-  smh->set_max( box.max() );
+  smh->set_transform(tmh->get_transform());
   vmh->set_nx(tmh->get_nx());
   vmh->set_ny(tmh->get_ny());
   vmh->set_nz(tmh->get_nz());
-  vmh->set_min( box.min() );
-  vmh->set_max( box.max() );
+  smh->set_transform(tmh->get_transform());
   //resize the data storage
   eValueField->resize_fdata();
   eVectorField->resize_fdata();
