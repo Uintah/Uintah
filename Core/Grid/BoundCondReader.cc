@@ -33,7 +33,6 @@ static DebugStream BCR_dbg ("BCR_DBG", false);
 
 BoundCondReader::BoundCondReader() 
 {
-  d_bcs.resize(6);
 }
 
 BoundCondReader::~BoundCondReader()
@@ -170,11 +169,6 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
 		<<  bc->getType() << " bctype = " << typeid(*bc).name() 
 		<<  " "  << bc  << endl;
 
-	// This is for the old boundary conditions.
-	// Can only add in boundary conditions that are using "side"
-	if (typeid(SideBCData) == typeid(*bcGeom)) {
-	  d_bcs[face_side].setBCValues(mat_id,bc);
-	}
 	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
 	delete bc;
       }
@@ -186,10 +180,6 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
 		<< it->second->getType() << " bctype = " 
 		<< typeid(*(it->second)).name() << endl;
       }
-
-      BCR_dbg << endl << "Old BCs just created" << endl;
-      d_bcs[face_side].print();
-
 
       // Search through the newly created boundary conditions and create
       // new BCGeomBase* clones if there are multi materials specified 
@@ -281,20 +271,6 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
     d_BCReaderData[face].print();
   } 
 
-  BCR_dbg << endl << "Old Style BCs . . " << endl;
-  for (vector<BoundCondData>::iterator i = d_bcs.begin();
-       i != d_bcs.end(); ++i) 
-    (*i).print();
-
-
-
-}
-
-
-// For old boundary conditions
-void BoundCondReader::getBC(Patch::FaceType& face, BoundCondData& bc_data)
-{
-  bc_data = d_bcs[face];
 }
 
 const BCDataArray BoundCondReader::getBCDataArray(Patch::FaceType& face) const

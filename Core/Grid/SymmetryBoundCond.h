@@ -41,7 +41,7 @@ WARNING
     SymmetryBoundCond(ProblemSpecP&) {d_type = "Symmetric";};
     virtual ~SymmetryBoundCond() {};
     virtual SymmetryBoundCond* clone() {return scinew SymmetryBoundCond(*this);};
-    virtual string getKind() const {return "";};
+    virtual string getKind() const {return "symmetry";};
   private:
 #if 0
     SymmetryBoundCond(const SymmetryBoundCond&);

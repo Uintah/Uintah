@@ -2,7 +2,6 @@
 #define UINTAH_GRID_BCDataArray_H
 
 #include <Packages/Uintah/Core/Grid/BCData.h>
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/BCGeomBase.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/Vector.h>

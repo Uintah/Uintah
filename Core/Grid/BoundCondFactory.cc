@@ -14,98 +14,10 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <vector>
 #include <stdlib.h>
 
 using namespace std;
 using namespace Uintah;
-
-void BoundCondFactory::create(const ProblemSpecP& ps,BoundCondData& objs)
-
-{
-   for(ProblemSpecP child = ps->findBlock("BCType"); child != 0;
-       child = child->findNextBlock("BCType")){
-     
-     map<string,string> bc_attr;
-     child->getAttributes(bc_attr);
-     int mat_id;
-       
-     bool massFractionBC = false;   // check for massFraction BC
-     string::size_type pos1 = bc_attr["label"].find ("massFraction");
-     string::size_type pos2 = bc_attr["label"].find ("scalar");
-     if ( pos1 != std::string::npos || pos2 != std::string::npos ){
-      massFractionBC = true;
-     }
-     
-     // Check to see if "id" is defined
-     if (bc_attr.find("id") == bc_attr.end()) 
-       SCI_THROW(ProblemSetupException("id is not specified in the BCType tag"));
-     
-     if (bc_attr["id"] != "all")
-       mat_id = atoi(bc_attr["id"].c_str());
-     else
-       mat_id = -1;  // Old setting was 0.
-     
-     if (bc_attr["var"] == "None") {
-       BoundCondBase* bc = scinew NoneBoundCond(child);
-       objs.setBCValues(mat_id,bc);
-     }
-     
-     else if (bc_attr["label"] == "Symmetric") {
-       BoundCondBase* bc = scinew SymmetryBoundCond(child);
-       objs.setBCValues(mat_id,bc);
-     }
-     
-     else if (bc_attr["var"] ==  "Neighbor") {
-       BoundCondBase* bc = scinew NeighBoundCond(child);
-       objs.setBCValues(mat_id,bc);
-     }
-     
-     else if (bc_attr["label"] == "Velocity" && 
-             (bc_attr["var"]   == "Neumann"  ||
-              bc_attr["var"]   == "LODI" ||
-              bc_attr["var"]   == "Dirichlet") ) {
-       BoundCondBase* bc = scinew VelocityBoundCond(child,bc_attr["var"]);
-       objs.setBCValues(mat_id,bc);
-     }
-     
-     else if (bc_attr["label"] == "Temperature" &&
-             (bc_attr["var"]   == "Neumann"  ||
-              bc_attr["var"]   == "LODI" ||
-              bc_attr["var"]   == "Dirichlet") ) {
-       BoundCondBase* bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
-       objs.setBCValues(mat_id,bc);
-     }
-     
-     else if (bc_attr["label"] == "Pressure" &&
-             (bc_attr["var"]   == "Neumann"  ||
-              bc_attr["var"]   == "LODI" ||
-              bc_attr["var"]   == "Dirichlet") ) {
-       BoundCondBase* bc = scinew PressureBoundCond(child,bc_attr["var"]);
-       objs.setBCValues(mat_id,bc);
-     }
-     
-     else if (bc_attr["label"] == "Density" &&
-             (bc_attr["var"]   == "Neumann"  ||
-              bc_attr["var"]   == "LODI" ||
-              bc_attr["var"]   == "Dirichlet") ) {
-       BoundCondBase* bc = scinew DensityBoundCond(child,bc_attr["var"]);
-       objs.setBCValues(mat_id,bc);
-     } 
-     else if (massFractionBC &&
-             (bc_attr["var"]   == "Neumann"  ||
-              bc_attr["var"]   == "Dirichlet") ) {  
-       BoundCondBase* bc = scinew MassFractionBoundCond(child,bc_attr["var"],
-                                   bc_attr["label"]);
-       objs.setBCValues(mat_id,bc);
-     }
-     else {
-       cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
-	    << ")  " << bc_attr["label"]<<endl;
-       exit(1);
-     }
-   }
-}
 
 void BoundCondFactory::create(ProblemSpecP& child,
 			      BoundCondBase* &bc, int& mat_id)

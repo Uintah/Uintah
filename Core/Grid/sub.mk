@@ -36,7 +36,6 @@ SRCS     += \
 	$(SRCDIR)/MassFracBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondReader.cc \
-	$(SRCDIR)/BoundCondData.cc \
 	$(SRCDIR)/BCData.cc \
 	$(SRCDIR)/BCDataArray.cc \
 	$(SRCDIR)/BCGeomBase.cc \

@@ -1061,80 +1061,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
       patch->getLevel()->findNodeIndexRange(low,high);
       high -= IntVector(1,1,1);
 #endif
-#define JOHN
-#ifndef JOHN
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	const BoundCondBase *vel_bcs, *sym_bcs;
-	if (patch->getBCType(face) == Patch::None) {
-	  vel_bcs  = patch->getBCValues(matl,"Velocity",face);
-	  sym_bcs  = patch->getBCValues(matl,"Symmetric",face);
-	} else
-	  continue;
-	
-	if (vel_bcs != 0) {
-	  const VelocityBoundCond* bc =
-	    dynamic_cast<const VelocityBoundCond*>(vel_bcs);
-	  if (bc->getKind() == "Dirichlet") {
-	    fillFace(gvelocity_old,patch, face,bc->getValue(),offset);
-	    fillFace(gacceleration,patch, face,bc->getValue(),offset);
-	    IntVector l,h;
-	    patch->getFaceNodes(face,0,l,h);
-            for(NodeIterator it(l,h); !it.done(); it++) {
-               IntVector n = *it;
-               int dof[3];
-               int l2g_node_num = l2g[n];
-               dof[0] = l2g_node_num;
-               dof[1] = l2g_node_num+1;
-               dof[2] = l2g_node_num+2;
-               d_solver[m]->d_DOF.insert(dof[0]);
-               d_solver[m]->d_DOF.insert(dof[1]);
-               d_solver[m]->d_DOF.insert(dof[2]);
-            }
-	  }
-	  delete vel_bcs;
-	}
 
-	if (sym_bcs != 0) { 
-	  fillFaceNormal(gvelocity_old,patch, face,offset);
-	  fillFaceNormal(gacceleration,patch, face,offset);
-
-	  IntVector l,h;
-	  patch->getFaceNodes(face,0,l,h);
-	  for(NodeIterator it(l,h); !it.done(); it++) {
-	    IntVector n = *it;
-
-            // The DOF is an IntVector which is initially (0,0,0).
-            // Inserting a 1 into any of the components indicates that 
-            // the component should be inserted into the DOF array.
-            IntVector DOF(0,0,0);
-	    
-            if (face == Patch::xminus || face == Patch::xplus){
-              DOF = IntVector(max(DOF.x(),1),max(DOF.y(),0),max(DOF.z(),0));
-            }
-            if (face == Patch::yminus || face == Patch::yplus){
-              DOF = IntVector(max(DOF.x(),0),max(DOF.y(),1),max(DOF.z(),0));
-            }
-            if (face == Patch::zminus || face == Patch::zplus){
-              DOF = IntVector(max(DOF.x(),0),max(DOF.y(),0),max(DOF.z(),1));
-            }
-
-            int dof[3];
-            int l2g_node_num = l2g[n];
-            dof[0] = l2g_node_num;
-            dof[1] = l2g_node_num+1;
-            dof[2] = l2g_node_num+2;
-            if (DOF.x())
-              d_solver[m]->d_DOF.insert(dof[0]);
-            if (DOF.y())
-              d_solver[m]->d_DOF.insert(dof[1]);
-            if (DOF.z())
-              d_solver[m]->d_DOF.insert(dof[2]);
-	  }
-	  delete sym_bcs;
-	}
-      }
-#else
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
 	const BoundCondBase *vel_bcs,*sym_bcs;
@@ -1238,7 +1165,6 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	} else
 	  continue;
       }
-#endif      
     }
   }
 
