@@ -437,9 +437,11 @@
     <xsl:value-of select="./sect1/para" />
   </p>
 
-  <xsl:for-each select="./sect1">
-    <p class="psubhead"><xsl:value-of select="./title"/></p>
-  </xsl:for-each>
+  <ul>
+    <xsl:for-each select="./sect1/title">
+      <li><xsl:value-of select="."/></li>
+    </xsl:for-each>
+  </ul>
 
 </xsl:for-each>
 
