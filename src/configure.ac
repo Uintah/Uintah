@@ -854,7 +854,15 @@ case $host in
 
     CFLAGS="$CFLAGS $extra_cflags"
 
-    FFLAGS="$extra_cflags"
+    case $F77 in
+      *xlf*)
+         FFLAGS="-WF,-D_AIX $extra_cflags $FFLAGS"
+         ;;
+      *)
+         FFLAGS="$extra_cflags $FFLAGS"
+         ;;
+    esac
+
     CXXFLAGS="$CFLAGS"
 
     CPP="$CC -c"
