@@ -15,32 +15,7 @@
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
 
-# COLOR SCHEME
-set basecolor grey
-
-. configure -background $basecolor
-
-option add *Frame*background black
-
-option add *Button*padX 1
-option add *Button*padY 1
-
-option add *background $basecolor
-option add *activeBackground $basecolor
-option add *sliderForeground $basecolor
-option add *troughColor $basecolor
-option add *activeForeground white
-
-option add *Scrollbar*activeBackground $basecolor
-option add *Scrollbar*foreground $basecolor
-option add *Scrollbar*width .35c
-option add *Scale*width .35c
-
-option add *selectBackground "white"
-option add *selector red
-option add *font "-Adobe-Helvetica-bold-R-Normal--*-120-75-*"
-option add *highlightThickness 0
-
+puts "\nLoading BioFEM (this may take a minute)...\n"
 
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
@@ -130,7 +105,11 @@ addConnection $m15 0 $m7 5
 addConnection $m0 0 $m18 0
 addConnection $m20 0 $m6 0
 
-set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+if {[file exists $DATADIR/$DATASET/$DATASET-mesh.tvt.fld]} {
+    set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+} else {
+    set $m0-filename ""
+}
 
 set $m3-target_error {0.000001}
 set $m3-orig_error {1}
@@ -167,7 +146,11 @@ set $m10-extract-from-new-field {1}
 set $m10-update_type {on release}
 set $m10-active_tab {NOISE}
 
-set $m11-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+if {[file exists $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld]} {
+    set $m11-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+} else {
+    set $m11-filename ""
+}
 
 set $m13-nodes-on {1}
 set $m13-edges-on {0}
@@ -203,7 +186,11 @@ set $m19-edges-transparency {1}
 set $m19-edge_display_type {Lines}
 set $m19-edge_scale {1.0}
 
-set $m20-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+if {[file exists $DATADIR/$DATASET/$DATASET-dipole.pcv.fld]} {
+    set $m20-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+} else {
+    set $m20-filename ""
+}
 
 set $m22-nodes-on {0}
 set $m22-edges-on {0}
@@ -240,10 +227,14 @@ set mods(ShowDipole) $m6
 #######################################################
 wm withdraw .
 
+global SCIRUN_SRCDIR
+set auto_index(::PowerAppBase) "source $SCIRUN_SRCDIR/Dataflow/GUI/PowerAppBase.app"
+
 class BioFEMApp {
+    inherit ::PowerAppBase
     
-    method modname {} {
-	return "BioFEMApp"
+    method appname {} {
+	return "BioFEM"
     }
     
     constructor {} {
@@ -251,7 +242,7 @@ class BioFEMApp {
 	wm title .standalone "BioFEM"	 
 	set win .standalone
 	
-	set notebook_width 350
+	set notebook_width 290
 	set notebook_height 600
 	
 	set viewer_width 640
@@ -260,24 +251,12 @@ class BioFEMApp {
 	set vis_width [expr $notebook_width + 40]
 	set vis_height $viewer_height
 
-	set screen_width [winfo screenwidth .]
-	set screen_height [winfo screenheight .]
-
         set initialized 0
 
-        set indicator1 ""
-        set indicator2 ""
-        set indicatorL1 ""
-        set indicatorL2 ""
-        set indicate 0
-        set cycle 0
-	set executing_queue 0
+
         set i_width 300
         set i_height 20
         set stripes 10
-        set i_move [expr [expr $i_width/double($stripes)]/2.0]
-        set i_back [expr $i_move*-3]
-	set indicatorID 0
 
         set vis_frame_tab1 ""
         set vis_frame_tab2 ""
@@ -294,12 +273,6 @@ class BioFEMApp {
         set streamlines_tab1 ""
         set streamlines_tab2 ""
 
-        set proc_color "dark red"
-	set next_color "#cdc858"
-	set execute_color "#5377b5"
-        set feedback_color "dodgerblue4"
-        set error_color "red4"
-
         # colormaps
         set colormap_width 100
         set colormap_height 15
@@ -310,27 +283,11 @@ class BioFEMApp {
 	### Define Tooltips
 	##########################
 	# General
-	set tips(Indicator) "Indicates progress of\napplication. Click when\nred to view errors"
+	global tips
 
 	# Data Acquisition Tab
         set tips(Execute-DataAcquisition) "Select to execute the\nData Acquisition step"
 	set tips(Next-DataAcquisition) "Select to proceed to\nthe Registration step"
-
-	# Registration Tab
-	set tips(Execute-Registration) "Select to execute the\nRegistration step"
-	set tips(Next-Registration) "Select to build\ndiffusion tensors"
-
-	# Build DTs Tab
-	set tips(Execute-DT) "Select to execute building\nof diffusion tensors\nand start visualization"
-	set tips(Next-DT) "Select to view first\nvisualization tab"
-
-	# Attach/Detach Mouseovers
-	set tips(PDetachedMsg) "Click hash marks to\nAttach to Viewer"
-	set tips(PAttachedMsg) "Click hash marks to\nDetach from the Viewer"
-	set tips(VDetachedMsg) "Click hash marks to\nAttach to Viewer"
-	set tips(VAttachedMsg) "Click hash marks to\nDetach from the Viewer"
-
-	# Viewer Options Tab
 
     }
     
@@ -348,46 +305,8 @@ class BioFEMApp {
 	$eviewer setWindow $win.viewer $viewer_width $viewer_height
 	
 	### Menu
-	frame $win.main_menu -relief raised -borderwidth 3
-	pack $win.main_menu -fill x -anchor nw
+	build_menu $win
 
-
-	menubutton $win.main_menu.file -text "File" -underline 0 \
-	    -menu $win.main_menu.file.menu
-	
-	menu $win.main_menu.file.menu -tearoff false
-
-	$win.main_menu.file.menu add command -label "Load       Ctr+O" \
-	    -underline 1 -command "$this load_session" -state active
-	
-	$win.main_menu.file.menu add command -label "Save      Ctr+S" \
-	    -underline 0 -command "$this save_session" -state active
-	
-	$win.main_menu.file.menu add command -label "Quit        Ctr+Q" \
-	    -underline 0 -command "$this exit_app" -state active
-	
-	pack $win.main_menu.file -side left
-
-	
-	global tooltipsOn
-	menubutton $win.main_menu.help -text "Help" -underline 0 \
-	    -menu $win.main_menu.help.menu
-	
-	menu $win.main_menu.help.menu -tearoff false
-
-	$win.main_menu.help.menu add check -label "Show Tooltips" \
-	    -variable tooltipsOn \
-	    -underline 0 -state active
-
-	$win.main_menu.help.menu add command -label "Help Contents" \
-	    -underline 0 -command "$this show_help" -state active
-
-	$win.main_menu.help.menu add command -label "About BioFEM" \
-	    -underline 0 -command "$this show_about" -state active
-	
-	pack $win.main_menu.help -side left
-	
-	tk_menuBar $win.main_menu $win.main_menu.file $win.main_menu.help
 
 	### Vis Part
 	#####################
@@ -432,6 +351,10 @@ class BioFEMApp {
 	append geom $total_width x $total_height + $pos_x + $pos_y
 	wm geometry .standalone $geom
 	update	
+
+
+	$vis_frame_tab1 select "Data Selection"
+	$vis_frame_tab2 select "Data Selection"
 
         set initialized 1
 
@@ -587,7 +510,7 @@ class BioFEMApp {
     
 
     method init_Vframe { m case} {
-	global mods
+	global mods tips
 	if { [winfo exists $m] } {
 	    ### Visualization Frame
 	    
@@ -613,7 +536,6 @@ class BioFEMApp {
 
 	    init_data_selection_frame $data
 	    
-
 
 	    set page [$vis.tnb add -label "Vis Options" -command "$this change_vis_frame 1"]
 
@@ -732,9 +654,9 @@ class BioFEMApp {
                     -command "$this switch_V_frames" 
 	        pack $m.d.cut$i -side top -anchor se -pady 0 -padx 0
 		if {$case == 0} {
-		    Tooltip $m.d.cut$i $tips(VDetachedMsg)
+		    Tooltip $m.d.cut$i $tips(VisAttachHashes)
 		} else {
-		    Tooltip $m.d.cut$i $tips(VAttachedMsg)
+		    Tooltip $m.d.cut$i $tips(VisDetachHashes)
 		}
             }
 
@@ -742,178 +664,6 @@ class BioFEMApp {
 	}
     }
     
-
-    method create_viewer_tab { vis } {
-	global mods
-	set page [$vis.tnb add -label "Viewer Options" -command "$this change_vis_frame 2"]
-	
-	iwidgets::labeledframe $page.viewer_opts \
-	    -labelpos nw -labeltext "Global Render Options"
-	
-	pack $page.viewer_opts -side top -anchor n -fill both -expand 1
-	
-	set view_opts [$page.viewer_opts childsite]
-	
-	frame $view_opts.eframe -relief groove -borderwidth 2
-	pack $view_opts.eframe -side top -anchor n -padx 4 -pady 4
-	
-	checkbutton $view_opts.eframe.light -text "Lighting" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-light \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	
-	checkbutton $view_opts.eframe.fog -text "Fog" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-fog \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	
-	checkbutton $view_opts.eframe.bbox -text "BBox" \
-	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
-	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	
-	pack $view_opts.eframe.light $view_opts.eframe.fog \
-	    $view_opts.eframe.bbox  \
-	    -side left -anchor n -padx 4 -pady 4
-	
-	
-	frame $view_opts.buttons -relief flat
-	pack $view_opts.buttons -side top -anchor n -padx 4 -pady 4
-	
-	frame $view_opts.buttons.v1
-	pack $view_opts.buttons.v1 -side left -anchor nw
-	
-	
-	button $view_opts.buttons.v1.autoview -text "Autoview (Ctrl-v)" \
-	    -command "$mods(Viewer)-ViewWindow_0-c autoview" \
-	    -width 15 -padx 3 -pady 3
-	
-	pack $view_opts.buttons.v1.autoview -side top -padx 3 -pady 3 \
-	    -anchor n -fill x
-	
-	
-	frame $view_opts.buttons.v1.views
-	pack $view_opts.buttons.v1.views -side top -anchor nw -fill x -expand 1
-	
-	menubutton $view_opts.buttons.v1.views.def -text "Views" \
-	    -menu $view_opts.buttons.v1.views.def.m -relief raised \
-	    -padx 3 -pady 3  -width 15
-	
-	menu $view_opts.buttons.v1.views.def.m -tearoff 0
-
-	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +X Axis" \
-	    -menu $view_opts.buttons.v1.views.def.m.posx
-	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +Y Axis" \
-	    -menu $view_opts.buttons.v1.views.def.m.posy
-	$view_opts.buttons.v1.views.def.m add cascade -label "Look down +Z Axis" \
-	    -menu $view_opts.buttons.v1.views.def.m.posz
-	$view_opts.buttons.v1.views.def.m add separator
-	$view_opts.buttons.v1.views.def.m add cascade -label "Look down -X Axis" \
-	    -menu $view_opts.buttons.v1.views.def.m.negx
-	$view_opts.buttons.v1.views.def.m add cascade -label "Look down -Y Axis" \
-	    -menu $view_opts.buttons.v1.views.def.m.negy
-	$view_opts.buttons.v1.views.def.m add cascade -label "Look down -Z Axis" \
-	    -menu $view_opts.buttons.v1.views.def.m.negz
-	
-	pack $view_opts.buttons.v1.views.def -side left -pady 3 -padx 3 -fill x
-	
-	menu $view_opts.buttons.v1.views.def.m.posx -tearoff 0
-	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_y1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_y0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_z1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x1_z0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	
-	menu $view_opts.buttons.v1.views.def.m.posy -tearoff 0
-	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_x1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
-	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_x0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_z1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y1_z0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	
-	menu $view_opts.buttons.v1.views.def.m.posz -tearoff 0
-	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_x1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
-	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_x0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_y1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z1_y0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	
-	menu $view_opts.buttons.v1.views.def.m.negx -tearoff 0
-	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_y1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_y0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_z1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value x0_z0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	
-	menu $view_opts.buttons.v1.views.def.m.negy -tearoff 0
-	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_x1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
-	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_x0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_z1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value y0_z0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	
-	menu $view_opts.buttons.v1.views.def.m.negz -tearoff 0
-	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_x1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views" 
-	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_x0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_y1 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	$view_opts.buttons.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
-	    -variable $mods(Viewer)-ViewWindow_0-pos -value z0_y0 \
-	    -command "$mods(Viewer)-ViewWindow_0-c Views"
-	
-	
-	frame $view_opts.buttons.v2 
-	pack $view_opts.buttons.v2 -side left -anchor nw
-	
-	button $view_opts.buttons.v2.sethome -text "Set Home View" -padx 3 -pady 3 \
-	    -command "$mods(Viewer)-ViewWindow_0-c sethome" -width 15
-	
-	button $view_opts.buttons.v2.gohome -text "Go Home" \
-	    -command "$mods(Viewer)-ViewWindow_0-c gohome" \
-	    -padx 3 -pady 3 -width 15
-	
-	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
-	    -side top -padx 2 -pady 2 -anchor ne -fill x
-	
-	$vis.tnb view "Data Selection"
-    }
 
 
     method switch_V_frames {} {
@@ -967,83 +717,7 @@ class BioFEMApp {
 	}
     }
 
-    method save_module_variables { fileid } {
-	# make globals accessible
-	foreach g [info globals] {
-	    global $g
-	}
-	
-	puts $fileid "# Save out module variables\n"
-	
-	set searchID [array startsearch mods]
-	while {[array anymore mods $searchID]} {
-	    set m [array nextelement mods $searchID]
-	    foreach v [info vars $mods($m)*] {
-		set var [get_module_variable_name $v]
-		if {$var != "msgStream" && ![array exists $v]} {
-		    puts $fileid "set \$mods($m)-$var \{[set $mods($m)-$var]\}"
-		}
-	    }
-	}
-	array donesearch mods $searchID
-    }
-    
-    method get_module_variable_name { var } {
-	# take out the module part of the variable name
-	set end [string length $var]
-	set start [string first "-" $var]
-	set start [expr 1 + $start]
-	
-	return [string range $var $start $end]
-    }
 
-    method save_disabled_modules { fileid } {
-	global mods Disabled
-
-	puts $fileid "\n# Disabled Modules\n"
-	
-	set searchID [array startsearch mods]
-	while {[array anymore mods $searchID]} {
-	    set m [array nextelement mods $searchID]
-	    if {[info exists Disabled($mods($m))] && $Disabled($mods($m))} {
-		puts $fileid "disableModule \$mods($m) 1"
-	    }
-	}
-	array donesearch mods $searchID
-    }
-
-    method save_class_variables { fileid } {
-	puts $fileid "\n# Class Variables\n"
-	
-	foreach v [info variable] {
-	    set var [get_class_variable_name $v]
-	    if {![array exists $var] && $var != "this"} {
-		puts $fileid "set $var \{[set $var]\}"
-	    }
-	}
-    }
-    
-    
-    method save_global_variables { fileid } {
-	puts $fileid "\n# Global Variables\n"
-	
-	#foreach g [info globals] {
-	# puts $fileid "set $g \{[set $g]\}"
-	#}
-	
-	# Save out my globals by hand because otherwise they conflict with
-	# the module variables
-    }
-    
-    
-    method get_class_variable_name { var } {
-	# Remove the :: from the variables
-	set end [string length $var]
-	set start [string last "::" $var]
-	set start [expr 2 + $start]
-	
-	return [string range $var $start $end]
-    }
     
     
     method load_session {} {	
@@ -1079,25 +753,7 @@ class BioFEMApp {
     }
 
 
-    method reset_app {} {
-	global mods
-	# enable all modules
-	set searchID [array startsearch mods]
-	while {[array anymore mods $searchID]} {
-	    set m [array nextelement mods $searchID]
-	    disableModule $mods($m) 0
-	}
-	array donesearch mods $searchID
-	
-	# disable registration and building dt tabs
-	
-	# remove stuff on vis tabs if there???
-    }
     
-    
-    method exit_app {} {
-	NiceQuit
-    }
     
     method show_help {} {
 	tk_messageBox -message "Please refer to the online BioFEM Tutorial\nhttp://software.sci.utah.edu/doc/User/BioFEMTutorial" -type ok -icon info -parent .standalone
@@ -1107,12 +763,7 @@ class BioFEMApp {
 	tk_messageBox -message "BioFEM About Box" -type ok -icon info -parent .standalone
     }
     
-    method display_module_error {} {
-        if {$error_module != ""} {
-	    set result [$error_module displayLog]
-        }
-    }
-    
+
     method indicate_dynamic_compile { which mode } {
 	global mods
 
@@ -1354,7 +1005,7 @@ class BioFEMApp {
 	    frame $maps.rainbow1
 	    pack $maps.rainbow1 -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.rainbow1.b -text "Rainbow1" \
+	    radiobutton $maps.rainbow1.b -text "Inverse Rainbow" \
 		-variable $mods(GenStandardColorMaps)-mapType \
 		-value 3 \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
@@ -1366,13 +1017,13 @@ class BioFEMApp {
 		-height $colormap_height -width $colormap_width
 	    pack $maps.rainbow1.f.canvas -anchor e
 	    
-	    draw_colormap Rainbow1 $maps.rainbow1.f.canvas
+	    draw_colormap "Inverse Rainbow" $maps.rainbow1.f.canvas
 
 	    # Rainbow
 	    frame $maps.rainbow2
 	    pack $maps.rainbow2 -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.rainbow2.b -text "Rainbow2" \
+	    radiobutton $maps.rainbow2.b -text "Rainbow" \
 		-variable $mods(GenStandardColorMaps)-mapType \
 		-value 2 \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
@@ -1384,7 +1035,7 @@ class BioFEMApp {
 		-height $colormap_height -width $colormap_width
 	    pack $maps.rainbow2.f.canvas -anchor e
 	    
-	    draw_colormap Rainbow2 $maps.rainbow2.f.canvas
+	    draw_colormap Rainbow $maps.rainbow2.f.canvas
 	    
 	    # Darkhue
 	    frame $maps.darkhue
@@ -1421,11 +1072,11 @@ class BioFEMApp {
 	    
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
-	    # BP Seismic
+	    # Red-to-Blue
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
+	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps)-mapType \
 		-value 17 \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
@@ -1436,161 +1087,12 @@ class BioFEMApp {
 	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
-	}
-    }
-    
-    
-    method draw_colormap { which canvas } {
-	set color ""
-	if {$which == "Gray"} {
-	    set color { "Gray" { { 0 0 0 } { 255 255 255 } } }
-	} elseif {$which == "Rainbow1"} {
-	    set color { "Rainbow1" {	
-		{ 0 0 255} { 0 102 255}
-		{ 0 204 255} { 0 255 204}
-		{ 0 255 102} { 0 255 0}
-		{ 102 255 0} { 204 255 0}
-		{ 255 234 0} { 255 204 0}
-		{ 255 102 0} { 255 0 0}}}
-	} elseif {$which == "Rainbow2"} {
-	    set color { "Rainbow2" {	
-		{ 255 0 0}  { 255 102 0}
-		{ 255 204 0}  { 255 234 0}
-		{ 204 255 0}  { 102 255 0}
-		{ 0 255 0}    { 0 255 102}
-		{ 0 255 204}  { 0 204 255}
-		{ 0 102 255}  { 0 0 255}}}
-	} elseif {$which == "Blackbody"} {
-	    set color { "Blackbody" {	
-		{0 0 0}   {52 0 0}
-		{102 2 0}   {153 18 0}
-		{200 41 0}   {230 71 0}
-		{255 120 0}   {255 163 20}
-		{255 204 55}   {255 228 80}
-		{255 247 120}   {255 255 180}
-		{255 255 255}}}
-	} elseif {$which == "Darkhue"} {
-	    set color { "Darkhue" {	
-		{ 0  0  0 }  { 0 28 39 }
-		{ 0 30 55 }  { 0 15 74 }
-		{ 1  0 76 }  { 28  0 84 }
-		{ 32  0 85 }  { 57  1 92 }
-		{ 108  0 114 }  { 135  0 105 }
-		{ 158  1 72 }  { 177  1 39 }
-		{ 220  10 10 }  { 229 30  1 }
-		{ 246 72  1 }  { 255 175 36 }
-		{ 255 231 68 }  { 251 255 121 }
-		{ 239 253 174 }}}
-	} elseif {$which == "BP Seismic"} {
-	    set color { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
-	}
-
-        set colorMap [$this set_color_map $color]
-	
-	set width $colormap_width
-        set height $colormap_height
-	
-	set n [llength $colorMap]
-	$canvas delete map
-	set dx [expr $width/double($n)] 
-	set x 0
-	for {set i 0} {$i < $n} {incr i 1} {
-	    set color [lindex $colorMap $i]
-	    set r [lindex $color 0]
-	    set g [lindex $color 1]
-	    set b [lindex $color 2]
-	    set c [format "#%02x%02x%02x" $r $g $b]
-	    set oldx $x
-	    set x [expr ($i+1)*$dx]
-	    $canvas create rectangle \
-		$oldx 0 $x $height -fill $c -outline $c -tags map
+	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas
 	}
     }
     
     
     
-    method set_color_map { map } {
-        set resolution $colormap_res
-	set colorMap {}
-	set currentMap {}
-	set currentMap [$this make_new_map [ lindex $map 1 ]]
-	set n [llength $currentMap]
-	if { $resolution < $n } {
-	    set resolution $n
-	}
-	set m $resolution
-	
-	set frac [expr ($n-1)/double($m-1)]
-	for { set i 0 } { $i < $m  } { incr i} {
-	    if { $i == 0 } {
-		set color [lindex $currentMap 0]
-		lappend color 0.5
-	    } elseif { $i == [expr ($m -1)] } {
-		set color [lindex $currentMap [expr ($n - 1)]]
-		lappend color 0.5
-	    } else {
-		set index [expr int($i * $frac)]
-		set t [expr ($i * $frac)-$index]
-		set c1 [lindex $currentMap $index]
-		set c2 [lindex $currentMap [expr $index + 1]]
-		set color {}
-		for { set j 0} { $j < 3 } { incr j} {
-		    set v1 [lindex $c1 $j]
-		    set v2 [lindex $c2 $j]
-		    lappend color [expr int($v1 + $t*($v2 - $v1))]
-		}
-		lappend color 0.5
-	    }
-	    lappend colorMap $color
-	}	
-        return $colorMap
-    }
-    
-    
-    method make_new_map { currentMap } {
-        set gamma 0
-	set res $colormap_res
-	set newMap {}
-	set m [expr int($res + abs( $gamma )*(255 - $res))]
-	set n [llength $currentMap]
-	if { $m < $n } { set m $n }
-	set frac [expr double($n-1)/double($m - 1)]
-	for { set i 0 } { $i < $m  } { incr i} {
-	    if { $i == 0 } {
-		set color [lindex $currentMap 0]
-	    } elseif { $i == [expr ($m -1)] } {
-		set color [lindex $currentMap [expr ($n - 1)]]
-	    } else {
-		set index_double [$this modify [expr $i * $frac] [expr $n-1]]
-		
-		set index [expr int($index_double)]
-		set t  [expr $index_double - $index]
-		set c1 [lindex $currentMap $index]
-		set c2 [lindex $currentMap [expr $index + 1]]
-		set color {}
-		for { set j 0} { $j < 3 } { incr j} {
-		    set v1 [lindex $c1 $j]
-		    set v2 [lindex $c2 $j]
-		    lappend color [expr int($v1 + $t*($v2 - $v1))]
-		}
-	    }
-	    lappend newMap $color
-	}
-	return $newMap
-    }
-    
-
-    method modify { i range } {
-	set gamma 0
-	
-	set val [expr $i/double($range)]
-	set bp [expr tan( 1.570796327*(0.5 + $gamma*0.49999))]
-	set index [expr pow($val,$bp)]
-	return $index*$range
-    }
-    
-
     method toggle_show_isosurface {} {
        global mods
        global $mods(ShowField-Isosurface)-faces-on
@@ -1620,81 +1122,6 @@ class BioFEMApp {
     }
 
 
-    method activate_vis {} {
-    }
-
-    method activate_widget {w} {
-    	set has_state_option 0
-    	set has_foreground_option 0
-        set has_text_option 0
-    	foreach opt [$w configure ] {
-	    set temp1 [lsearch -exact $opt "state"]
-	    set temp2 [lsearch -exact $opt "foreground"]
-	    set temp3 [lsearch -exact $opt "text"]
-
-	    if {$temp1 > -1} {
-	       set has_state_option 1
-	    }
-            if {$temp2 > -1} {
-               set has_foreground_option 1
-            }
-            if {$temp3 > -1} {
-               set has_text_option 1
-            }
-        }
-
-        if {$has_state_option} {
-	    $w configure -state normal
-        }
-
-        if {$has_foreground_option} {
-            $w configure -foreground black
-        }
-      
-        if {$has_text_option} {
-           # if it is a next button configure the background 
-           set t [$w configure -text]
-           if {[lindex $t 4]== "Next"} {
-             $w configure -background $next_color
-             $w configure -activebackground $next_color
-           } elseif {[lindex $t 4] == "Execute"} {
-             $w configure -background $execute_color
-             $w configure -activebackground $execute_color
-           }
-        }
-
-        foreach widg [winfo children $w] {
-	     activate_widget $widg
-        }
-    }
-
-
-    method disable_widget {w} {
-    	set has_state_option 0
-    	set has_foreground_option 0
-    	foreach opt [$w configure ] {
-	    set temp1 [lsearch -exact $opt "state"]
-	    set temp2 [lsearch -exact $opt "foreground"]
-	    if {$temp1 > -1} {
-	       set has_state_option 1
-	    }
-            if {$temp2 > -1} {
-               set has_foreground_option 1
-            }
-        }
-
-        if {$has_state_option} {
-	    $w configure -state disabled
-        }
-        if {$has_foreground_option} {
-            $w configure -foreground grey64
-        }
-
-
-        foreach widg [winfo children $w] {
-	     disable_widget $widg
-        }
-    }
 
     method change_vis_tab { which } {
 	# change vis tab for attached/detached
@@ -1736,170 +1163,6 @@ class BioFEMApp {
     }
     
 
-    method change_indicator {} {
-       if {[winfo exists $indicator2] == 1} {
-	   
-	   if {$indicatorID != 0} {
-	       after cancel $indicatorID
-	       set indicatorID 0
-	   }
-
-	   if {$indicate == 0} {
-	       # reset and do nothing
-	       $indicator1 raise res all
-	       $indicator2 raise res all
-	       after cancel $indicatorID
-           } elseif {$indicate == 1} {
-	       # indicate something is happening
-	       if {$cycle == 0} { 
-		   $indicator1 raise swirl all
-		   $indicator2 raise swirl all
-		   $indicator1 move swirl $i_back 0
-		   $indicator2 move swirl $i_back 0		  
-		   set cycle 1
-	       } elseif {$cycle == 1} {
-		   $indicator1 move swirl $i_move 0
-		   $indicator2 move swirl $i_move 0
-		   set cycle 2
-	       } elseif {$cycle == 2} {
-		   $indicator1 move swirl $i_move 0
-		   $indicator2 move swirl $i_move 0
-		   set cycle 3
-	       } else {
-		   $indicator1 move swirl $i_move 0
-		   $indicator2 move swirl $i_move 0
-		   set cycle 0
-	       } 
-	       set indicatorID [after 200 "$this change_indicator"]
-           } elseif {$indicate == 2} {
-	       # indicate complete
-	       $indicator1 raise comp1 all
-	       $indicator2 raise comp1 all
-	       
-	       $indicator1 raise comp2 all
-	       $indicator2 raise comp2 all
-           } else {
-	       $indicator1 raise error1 all
-	       $indicator2 raise error1 all
-	       
-	       $indicator1 raise error2 all
-	       $indicator2 raise error2 all
-	       after cancel $indicatorID
-           }
-       }
-    }
-	
-
-    method construct_indicator { canvas } {
-	global tips
-
-       # make image swirl
-       set dx [expr $i_width/double($stripes)]
-       set x 0
-       set longer [expr $stripes+10]
-       for {set i 0} {$i <= $longer} {incr i 1} {
-	  if {[expr $i % 2] != 0} {
-	     set r 83
- 	     set g 119
-             set b 181
-	     set c [format "#%02x%02x%02x" $r $g $b]
-             set oldx $x
-             set x [expr ($i+1)*$dx]
-             set prevx [expr $oldx - $dx]
-             $canvas create polygon \
-  	        $oldx 0 $x 0 $oldx $i_height $prevx $i_height \
-	        -fill $c -outline $c -tags swirl
-          } else {
-	     set r 237
-   	     set g 240
-             set b 242
-	     set c [format "#%02x%02x%02x" $r $g $b]
-             set oldx $x
-             set x [expr ($i+1)*$dx]
-             set prevx [expr $oldx - $dx]
-             $canvas create polygon \
-	        $oldx 0 $x 0 $oldx $i_height $prevx $i_height \
-	        -fill $c -outline $c -tags swirl
-          }
-       }
-
-       set i_font "-Adobe-Helvetica-Bold-R-Normal-*-14-120-75-*"
-
-       # make completed
-       set s [expr $i_width/2]
-       set dx [expr $i_width/double($s)]
-       set x 0
-       for {set i 0} {$i <= $s} {incr i 1} {
-	  if {[expr $i % 2] != 0} {
-	     set r 0
- 	     set g 139
-             set b 69
-	     set c [format "#%02x%02x%02x" $r $g $b]
-             set oldx $x
-             set x [expr ($i+1)*$dx]
-             $canvas create rectangle \
-  	        $oldx 0 $x $i_height \
-	        -fill $c -outline $c -tags comp1
-          } else {
-	     set r 49
-   	     set g 160
-             set b 101
-	     set c [format "#%02x%02x%02x" $r $g $b]
-             set oldx $x
-             set x [expr ($i+1)*$dx]
-             $canvas create rectangle \
-	        $oldx 0 $x $i_height  \
-	        -fill $c -outline $c -tags comp1
-          }
-       }
-
-       $canvas create text [expr $i_width/2] [expr $i_height/2] -text "C O M P L E T E" \
-   	  -font $i_font -fill "black" -tags comp2
-
-       # make error
-       set s [expr $i_width/2]
-       set dx [expr $i_width/double($s)]
-       set x 0
-       for {set i 0} {$i <= $s} {incr i 1} {
-	  if {[expr $i % 2] == 0} {
-	     set r 191
-	     set g 59
-	     set b 59
-	     set c [format "#%02x%02x%02x" $r $g $b]
-             set oldx $x
-             set x [expr ($i+1)*$dx]
-             $canvas create rectangle \
-  	        $oldx 0 $x $i_height \
-	        -fill $c -outline $c -tags error1
-          } else {
-	     set r 206
-	     set g 78
-	     set b 78
-	     set c [format "#%02x%02x%02x" $r $g $b]
-             set oldx $x
-             set x [expr ($i+1)*$dx]
-             $canvas create rectangle \
-	        $oldx 0 $x $i_height  \
-	        -fill $c -outline $c -tags error1
-          }
-       }
-
-
-       $canvas create text [expr $i_width/2] [expr $i_height/2] -text "E R R O R" \
-   	  -font $i_font -fill "black" -tags error2
-
-       # make reset
-       set r 237
-       set g 240
-       set b 242
-       set c [format "#%02x%02x%02x" $r $g $b]
-       $canvas create rectangle \
-	   0 0 $i_width $i_height -fill $c -outline $c -tags res
-       
-       bind $canvas <ButtonPress> {app display_module_error}
-
-   }
-    
     
     method change_indicate_val { v } {
 	# only change an error state if it has been cleared (error_module empty)
@@ -1917,19 +1180,19 @@ class BioFEMApp {
 		change_indicator
 	    } elseif {$v == 1} {
 		# Start
-		set executing_queue [expr $executing_queue + 1]
+		set executing_modules [expr $executing_modules + 1]
 		set indicate 1
 		change_indicator
 	    } elseif {$v == 2} {
 		# Complete
-		set executing_queue [expr $executing_queue - 1]
-		if {$executing_queue == 0} {
+		set executing_modules [expr $executing_modules - 1]
+		if {$executing_modules == 0} {
 		    # only change indicator if progress isn't running
 		    set indicate 2
 		    change_indicator
-		} elseif {$executing_queue < 0} {
+		} elseif {$executing_modules < 0} {
 		    # something wasn't caught, reset
-		    set executing_queue 0
+		    set executing_modules 0
 		    set indicate 2
 		    change_indicator
 		}
@@ -1944,41 +1207,7 @@ class BioFEMApp {
     }
     
     
-    # Tooltips array
-    variable tips
 
-    # Embedded Viewer
-    variable eviewer
-
-    # Standalone
-    variable win
-
-    # Flag to indicate whether entire gui has been built
-    variable initialized
-
-    # State
-    variable IsVAttached
-    variable detachedVFr
-    variable attachedVFr
-
-
-    # Indicator
-    variable indicatorID
-    variable indicator1
-    variable indicator2
-    variable indicatorL1
-    variable indicatorL2
-    variable indicate
-    variable cycle
-    variable executing_queue
-    variable i_width
-    variable i_height
-    variable stripes
-    variable i_move
-    variable i_back
-    variable error_module
-
-    
     # Visualiztion frame tabnotebook
     variable vis_frame_tab1
     variable vis_frame_tab2
@@ -1998,27 +1227,6 @@ class BioFEMApp {
     variable notebook_width
     variable notebook_height
 
-    variable viewer_width
-    variable viewer_height
-
-    variable vis_width
-    variable vis_height
-
-    variable screen_width
-    variable screen_height
-
-
-    # Colors
-    variable proc_color
-    variable next_color
-    variable execute_color
-    variable feedback_color
-    variable error_color
-
-    # colormaps
-    variable colormap_width
-    variable colormap_height
-    variable colormap_res
 
 }
 
