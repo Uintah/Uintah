@@ -116,6 +116,11 @@ void SimulationState::finalizeMaterials()
   // a material that represents all materials 
   // (i.e. summed over all materials -- the whole enchilada)
   allInOneMatl->add((int)matls.size());
+
+  //refine matl subset, only done on matl 0 (matl independent)
+  refine_flag_matls = scinew MaterialSubset();
+  refine_flag_matls->addReference();
+  refine_flag_matls->add(0);
 }
 
 int SimulationState::getNumVelFields() const {
@@ -146,6 +151,9 @@ SimulationState::~SimulationState()
   if(all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
 
+  if(refine_flag_matls && refine_flag_matls->removeReference())
+    delete refine_flag_matls;
+
   if (allInOneMatl && allInOneMatl->removeReference()) {
     delete allInOneMatl;
   }
@@ -173,6 +181,12 @@ const MaterialSet* SimulationState::allMaterials() const
 {
   ASSERT(all_matls != 0);
   return all_matls;
+}
+
+const MaterialSubset* SimulationState::refineFlagMaterials() const
+{
+  ASSERT(refine_flag_matls != 0);
+  return refine_flag_matls;
 }
 
 Material* SimulationState::getMaterialByName(const std::string& name) const
