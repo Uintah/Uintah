@@ -20,12 +20,15 @@ class LeastSquare;
 class ParticlesNeighbor : public std::vector<particleIndex> {
 public:
 
+        ParticlesNeighbor();
         ParticlesNeighbor(const ParticleVariable<Point>& pX,
 	                  const ParticleVariable<int>& pIsBroken,
 			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
 			  const ParticleVariable<double>& pMicrocrackSize,
 			  const ParticleVariable<double>& pMicrocrackPosition);
 
+  const ParticleVariable<int>& getpIsBroken() const;
+  
   void  buildIn(const IntVector& cellIndex,const Lattice& lattice);
   
   bool  visible(const Point& A,const Point& B) const;
@@ -48,11 +51,11 @@ public:
                           Vector& pInternalForce) const;
 
 private:
-  const ParticleVariable<Point>&  d_pX;
-  const ParticleVariable<int>&    d_pIsBroken;
-  const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
-  const ParticleVariable<double>& d_pMicrocrackSize;
-  const ParticleVariable<double>& d_pMicrocrackPosition;
+  const ParticleVariable<Point>*  d_pX;
+  const ParticleVariable<int>*    d_pIsBroken;
+  const ParticleVariable<Vector>* d_pCrackSurfaceNormal;
+  const ParticleVariable<double>* d_pMicrocrackSize;
+  const ParticleVariable<double>* d_pMicrocrackPosition;
 };
 
 } //namespace MPM
@@ -61,6 +64,9 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.9  2000/09/12 16:52:11  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.8  2000/09/11 00:15:00  tan
 // Added calculations on random distributed microcracks in broken particles.
 //

@@ -147,6 +147,20 @@ namespace Uintah {
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
+         //for fracture
+         virtual void computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw);
+
+         //for fracture
+         virtual void addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
 

@@ -1,7 +1,12 @@
 #include "Visibility.h"
 
+#include <SCICore/Exceptions/InternalError.h>
+#include <iostream>
+
 namespace Uintah {
 namespace MPM {
+
+using SCICore::Exceptions::InternalError;
 
 Visibility::
 Visibility()
@@ -52,6 +57,13 @@ modifyWeights(double S[8]) const
     ++num;
     N[i] = 0;
   }
+  
+/*
+  if(num == 0) {
+    std::cout<<d_flag<<std::endl;
+    throw InternalError("Isolated particle");
+  }
+*/
 
   for(int i=0;i<8;++i) {
     if(visible(i)) N[i] += S[i];
@@ -79,6 +91,13 @@ modifyShapeDerivatives(Vector d_S[8]) const
     d_N[i] = Vector(0.,0.,0.);
   }
 
+/*
+  if(num == 0) {
+    std::cout<<d_flag<<std::endl;
+    throw InternalError("Isolated particle");
+  }
+*/
+
   for(int i=0;i<8;++i) {
     if(visible(i)) d_N[i] += d_S[i];
     else {
@@ -95,6 +114,9 @@ modifyShapeDerivatives(Vector d_S[8]) const
 }} //namespace
 
 // $Log$
+// Revision 1.2  2000/09/12 16:52:12  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.1  2000/09/09 18:12:26  tan
 // Added Visibility class to handle the relationship between a particle
 // and the related nodes.

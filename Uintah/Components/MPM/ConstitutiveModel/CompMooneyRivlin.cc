@@ -361,6 +361,148 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    }
 }
 
+void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* mpm_matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw)
+{
+  Matrix3 Identity;
+  Identity.Identity();
+
+  int matlindex = mpm_matl->getDWIndex();
+  int vfindex = mpm_matl->getVFIndex();
+
+  // Create arrays for the particle data
+  ParticleVariable<Point>  pX;
+  ParticleVariable<int>    pIsBroken;
+  ParticleVariable<double> pVolume;
+  ParticleVariable<CMData> cmdata;
+
+  ParticleSubset* outsidePset = old_dw->getParticleSubset(matlindex, patch,
+	Ghost::AroundNodes, 1, lb->pXLabel);
+
+  old_dw->get(pX, lb->pXLabel, outsidePset);
+  old_dw->get(pIsBroken, lb->pIsBrokenLabel, outsidePset);
+  old_dw->get(pVolume, lb->pVolumeLabel, outsidePset);
+  old_dw->get(cmdata, p_cmdata_label, outsidePset);
+
+  ParticleSubset* insidePset = old_dw->getParticleSubset(matlindex, patch);
+  ParticleVariable<Vector> pCrackSurfaceContactForce;
+  new_dw->allocate(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel,
+     insidePset);
+
+  Lattice lattice(pX);
+  ParticlesNeighbor particles;
+
+  for(ParticleSubset::iterator iter = insidePset->begin();
+          iter != insidePset->end(); iter++)
+  {
+    pCrackSurfaceContactForce[*iter] = Vector(0.,0.,0.);
+  }
+  
+  IntVector cellIdx;
+  for(ParticleSubset::iterator iter = insidePset->begin();
+          iter != insidePset->end(); iter++)
+  {
+    particleIndex pIdx = *iter;
+    patch->findCell(pX[pIdx],cellIdx);
+    particles.clear();
+    particles.buildIn(cellIdx,lattice);
+
+    const Point& X1 = pX[pIdx];
+    double size1 = pow(pVolume[pIdx],0.3333);
+
+    //crack surface contact force
+    for(int pNeighbor=0; pNeighbor<particles.size();++pNeighbor)
+    {
+      particleIndex pContact = particles[pNeighbor];
+
+      if( particles[pNeighbor] <= pIdx ) continue;
+      if( !pIsBroken[pContact] && 
+          !pIsBroken[pIdx] ) continue;
+      const Point& X2 = pX[pContact];
+      if(!particles.visible(X1,X2))
+      {
+        double size2 = pow(pVolume[pContact],0.3333);
+        Vector N = X2-X1;
+        double distance = N.length();
+        double l = (size1+size2) /2;
+        double lambda = distance /l;
+	
+        if( lambda < 0.9 ) {
+          N /= distance;
+          Matrix3 deformationGradient;
+	  
+          for(int i=1;i<=3;++i)
+	  for(int j=1;j<=3;++j)
+	  deformationGradient(i,j) = N(i) * N(j) * lambda;
+
+          // Compute the left Cauchy-Green deformation tensor
+          Matrix3 B = deformationGradient * deformationGradient.Transpose();
+
+          // Compute the invariants
+          double invar1 = B.Trace();
+          double invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
+          double J = deformationGradient.Determinant();
+          double invar3 = J*J;
+
+          double C1 = ( cmdata[pIdx].C1 + cmdata[pContact].C1 )/2;
+          double C2 = ( cmdata[pIdx].C2 + cmdata[pContact].C2 )/2;
+          double C3 = .5*C1 + C2;
+          double PR = ( cmdata[pIdx].PR + cmdata[pContact].PR )/2;
+          double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
+
+          double w1 = C1;
+          double w2 = C2;
+          double w3 = -2.0*C3/(invar3*invar3*invar3) + 2.0*C4*(invar3 -1.0);
+
+          double w1pi1w2 = w1 + invar1*w2;
+          double i3w3 = invar3*w3;
+
+          Matrix3 stress = (B*w1pi1w2 - (B*B)*w2 + Identity*i3w3)*2.0/J;
+	  double area = l*l;
+          Vector F = stress * N * area;
+          pCrackSurfaceContactForce[pIdx] += F;
+	  
+          bool pContactInside = false;
+	  for(ParticleSubset::iterator i = insidePset->begin();
+              i != insidePset->end(); i++)
+	  {
+	    if(*i == pContact) {
+	      pContactInside = true;
+	      break;
+	    }
+	  }
+	  
+          if(pContactInside) pCrackSurfaceContactForce[pContact] -= F;
+	}
+      }
+    }
+  }
+  new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
+}
+
+void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const
+{
+  int idx = matl->getDWIndex();
+  
+  task->requires(old_dw, lb->pXLabel, idx,  patch,
+			Ghost::AroundNodes, 1 );
+  task->requires(old_dw, lb->pVolumeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+  task->requires(old_dw, p_cmdata_label, idx,  patch,
+			Ghost::AroundNodes, 1 );
+  task->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+		  
+  task->computes(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch );
+}
+
 double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouseP& new_dw)
@@ -397,6 +539,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.64  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.63  2000/09/11 20:23:25  tan
 // Fixed a mistake in crack surface contact force algorithm.
 //

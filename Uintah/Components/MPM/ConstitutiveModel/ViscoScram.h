@@ -95,6 +95,19 @@ namespace Uintah {
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
 
+         //for fracture
+         virtual void computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw);
+
+         virtual void ViscoScram::addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
          // class function to read correct number of parameters
          // from the input file
          static void readParameters(ProblemSpecP ps, double *p_array);
@@ -129,6 +142,9 @@ namespace Uintah {
 #endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.4  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.3  2000/08/22 23:14:40  guilkey
 // More work on ViscoScram done.
 //

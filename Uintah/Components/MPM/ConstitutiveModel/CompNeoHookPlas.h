@@ -93,6 +93,20 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
+         //for fracture
+         virtual void computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw);
+
+         //for fracture
+         virtual void addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
  	 const VarLabel* p_cmdata_label;
@@ -107,6 +121,9 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.17  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.16  2000/07/27 22:39:44  sparker
 // Implemented MPIScheduler
 // Added associated support

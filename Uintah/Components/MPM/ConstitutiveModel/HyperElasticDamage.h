@@ -134,6 +134,21 @@ namespace Uintah {
 					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
+
+         //for fracture
+         virtual void computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw);
+
+         //for fracture
+         virtual void addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
 
@@ -189,6 +204,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.12  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.11  2000/06/15 21:57:06  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

@@ -271,6 +271,24 @@ void HyperElasticDamage::computeStressTensor(const Patch* patch,
 #endif
 }
 
+//for fracture
+void HyperElasticDamage::computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw)
+{
+}
+
+//for fracture
+void HyperElasticDamage::addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const
+{
+}
+
 double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
 					       const MPMMaterial* matl,
 					       DataWarehouseP& new_dw)
@@ -429,6 +447,9 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.13  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.12  2000/06/16 05:03:05  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now

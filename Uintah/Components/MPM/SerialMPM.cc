@@ -196,16 +196,16 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
     
       {
 	 /*
-	  * computerNodesVisibilityAndCrackSurfaceContactForce
+	  * computerNodesVisibility
 	  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
 	  *   operation(computer the visibility information of particles to the
 	  *             related nodes)
 	  * out(P.VISIBILITY)
 	  */
 	 Task* t = scinew Task(
-	    "SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce",
+	    "SerialMPM::computerNodesVisibility",
 	    patch, old_dw, new_dw,
-	    this,&SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce);
+	    this,&SerialMPM::computerNodesVisibility);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
@@ -221,21 +221,35 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::AroundNodes, 1 );
    	       t->requires(old_dw, lb->pMicrocrackPositionLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-			
-   	       t->requires(old_dw, lb->pVelocityLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pVolumeLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	       t->requires(old_dw, lb->pMassLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	       t->requires(old_dw, d_sharedState->get_delt_label() );
+	       t->computes(new_dw, lb->pVisibilityLabel, idx, patch );
    	    }
-
-	    t->computes(new_dw, lb->pVisibilityLabel, idx, patch );
-	    t->computes(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch );
 	 }
 	 sched->addTask(t);
       }
+      
+      {
+	 /*
+	  * computeCrackSurfaceContactForce
+	  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
+	  *   operation(computer the surface contact force)
+	  * out(P.SURFACECONTACTFORCE)
+	  */
+	 Task* t = scinew Task(
+	    "SerialMPM::computeCrackSurfaceContactForce",
+	    patch, old_dw, new_dw,
+	    this,&SerialMPM::computeCrackSurfaceContactForce);
+	 for(int m = 0; m < numMatls; m++){
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+	    if(mpm_matl->getFractureModel()) {
+  	       mpm_matl->getConstitutiveModel()->
+	         addComputesAndRequiresForCrackSurfaceContact(t,mpm_matl,
+		    patch,old_dw,new_dw);
+   	    }
+	 }
+	 sched->addTask(t);
+      }      
       
       {
 	 /*
@@ -601,6 +615,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
 	    if(mpm_matl->getFractureModel()) {
 	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+			Ghost::None);
+	       t->requires(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch,
 			Ghost::None);
    	    }
 						
@@ -993,7 +1009,7 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 {
 }
 
-void SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce(
+void SerialMPM::computerNodesVisibility(
                    const ProcessorGroup*,
 		   const Patch* patch,
 		   DataWarehouseP& old_dw,
@@ -1007,7 +1023,28 @@ void SerialMPM::computerNodesVisibilityAndCrackSurfaceContactForce(
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl) {
       if(mpm_matl->getFractureModel()) {
-        mpm_matl->getFractureModel()->computerNodesVisibilityAndCrackSurfaceContactForce(
+        mpm_matl->getFractureModel()->computerNodesVisibility(
+	  patch, mpm_matl, old_dw, new_dw);
+      }
+    }
+  }
+}
+
+void SerialMPM::computeCrackSurfaceContactForce(
+                   const ProcessorGroup*,
+		   const Patch* patch,
+		   DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMatls();
+
+  for(int m = 0; m < numMatls; m++)
+  {
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl) {
+      if(mpm_matl->getFractureModel()) {
+        mpm_matl->getConstitutiveModel()->computeCrackSurfaceContactForce(
 	  patch, mpm_matl, old_dw, new_dw);
       }
     }
@@ -1630,8 +1667,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
 
       ParticleVariable<int> pVisibility;
+      ParticleVariable<Vector> pCrackSurfaceContactForce;
       if(mpm_matl->getFractureModel()) {
         new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+	new_dw->get(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel, pset);
       }
 
       // Get the arrays of grid data on which the new particle values depend
@@ -1751,6 +1790,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             continue;
 
         Visibility vis;
+	int numVisibleNodes = 0;
         if(mpm_matl->getFractureModel()) {
   	   vis = pVisibility[idx];
 	   vis.modifyWeights(S);
@@ -1766,6 +1806,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
  	   if(vis.visible(k) ) {
+  	      ++numVisibleNodes;
 	      vel += gvelocity_star[ni[k]]  * S[k];
    	      acc += gacceleration[ni[k]]   * S[k];
 	   
@@ -1778,12 +1819,21 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 
         // Update the particle's position and velocity
-        px[idx]        += vel * delT;
-        pvelocity[idx] += acc * delT;
-        pTemperatureRate[idx] = tempRate;
-        pTemperature[idx] += tempRate * delT;
+	if(numVisibleNodes != 0) {
+          px[idx]        += vel * delT;
+          pvelocity[idx] += acc * delT;
+          pTemperatureRate[idx] = tempRate;
+          pTemperature[idx] += tempRate * delT;
 //          thermal_energy += pTemperature[idx] * Cp;
-        
+        }
+	else {        
+   	  //for isolated particles in fracture
+          px[idx]        += pvelocity[idx] * delT;
+          pvelocity[idx] += (pexternalForce[idx] + pCrackSurfaceContactForce[idx])
+	     /pmass[idx] * delT;
+        }
+	
+	
         ke += .5*pmass[idx]*pvelocity[idx].length2();
 	CMX = CMX + (px[idx]*pmass[idx]).asVector();
 	CMV += pvelocity[idx]*pmass[idx];
@@ -1870,6 +1920,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.148  2000/09/12 16:52:04  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.147  2000/09/11 20:23:19  tan
 // Fixed a mistake in crack surface contact force algorithm.
 //

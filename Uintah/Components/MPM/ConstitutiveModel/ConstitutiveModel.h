@@ -7,6 +7,9 @@
 #include <vector>
 #include <Uintah/Components/MPM/MPMLabel.h>
 
+#include <Uintah/Components/MPM/Fracture/Lattice.h>
+#include <Uintah/Components/MPM/Fracture/ParticlesNeighbor.h>
+
 namespace Uintah {
    class Task;
    class Patch;
@@ -76,6 +79,20 @@ WARNING
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;
+
+         //for fracture
+         virtual void computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw) = 0;
+
+	 virtual void addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const = 0;
+
         protected:
 
 	 MPMLabel* lb;
@@ -85,6 +102,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.22  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.21  2000/08/22 00:11:21  guilkey
 // Tidied up these files.
 //

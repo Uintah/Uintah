@@ -369,6 +369,24 @@ void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
    cerr << "ElasticConsitutive::addComputesAndRequires needs to be filled in\n";
 }
 
+//for fracture
+void ElasticConstitutiveModel::computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw)
+{
+}
+
+//for fracture
+void ElasticConstitutiveModel::addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const
+{
+}
+
 void ElasticConstitutiveModel::readParameters(ProblemSpecP ps, double *p_array)
 {
 
@@ -520,6 +538,9 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.21  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.20  2000/08/08 01:32:42  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

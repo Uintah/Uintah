@@ -90,6 +90,19 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
+         //for fracture
+         virtual void computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* mpm_matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw);
+
+	 virtual void addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const;
+
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
 	 const VarLabel* p_cmdata_label;
@@ -103,6 +116,9 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.26  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.25  2000/07/05 23:43:33  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
