@@ -298,48 +298,48 @@ ImageMesh::get_center(Point &result, const Face::index_type &idx) const
   result = transform_.project(p);
 }
 
+
 bool
 ImageMesh::locate(Face::index_type &face, const Point &p)
 {
   const Point r = transform_.unproject(p);
 
-  // Rounds down, so catches intervals.  Might lose numerical precision on
-  // upper edge (ie nodes on upper edges are not in any cell).
-  // Nodes over 2 billion might suffer roundoff error.
-  face.i_ = (unsigned int)floor(r.x());
-  face.j_ = (unsigned int)floor(r.y());
-  face.mesh_ = this;
+  const double rx = floor(r.x());
+  const double ry = floor(r.y());
 
-  if (face.i_ >= (ni_-1) ||
-      face.j_ >= (nj_-1))
+  // Clip before int conversion to avoid overflow errors.
+  if (rx < 0.0 || ry < 0.0 || rx >= (ni_-1) || ry >= (nj_-1))
   {
     return false;
   }
-  else
-  {
-    return true;
-  }
+
+  face.i_ = (unsigned int)rx;
+  face.j_ = (unsigned int)ry;
+  face.mesh_ = this;
+
+  return true;
 }
+
 
 bool
 ImageMesh::locate(Node::index_type &node, const Point &p)
 {
   const Point r = transform_.unproject(p);
 
-  // Nodes over 2 billion might suffer roundoff error.
-  node.i_ = (unsigned int)floor(r.x() + 0.5);
-  node.j_ = (unsigned int)floor(r.y() + 0.5);
-  node.mesh_ = this;
+  const double rx = floor(r.x() + 0.5);
+  const double ry = floor(r.y() + 0.5);
 
-  if (node.i_ >= ni_ ||
-      node.j_ >= nj_)
+  // Clip before int conversion to avoid overflow errors.
+  if (rx < 0.0 || ry < 0.0 || rx >= ni_ || ry >= nj_)
   {
     return false;
   }
-  else
-  {
-    return true;
-  }
+
+  node.i_ = (unsigned int)rx;
+  node.j_ = (unsigned int)ry;
+  node.mesh_ = this;
+
+  return true;
 }
 
 
