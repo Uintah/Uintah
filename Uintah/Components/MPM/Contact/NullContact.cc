@@ -26,9 +26,9 @@ NullContact::~NullContact()
 
 }
 
-void NullContact::initializeContact(const Region* region,
-                                    int vfindex,
-                                    DataWarehouseP& new_dw)
+void NullContact::initializeContact(const Region* /*region*/,
+                                    int /*vfindex*/,
+                                    DataWarehouseP& /*new_dw*/)
 {
 
 }
@@ -52,6 +52,14 @@ void NullContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.8  2000/05/10 20:02:48  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.7  2000/05/08 18:42:46  guilkey
 // Added an initializeContact function to all contact classes.  This is
 // a null function for all but the FrictionContact.

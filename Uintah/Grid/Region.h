@@ -89,15 +89,15 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      bool findCellAndWeights(const SCICore::Geometry::Point& /*pos*/,
-			      IntVector /*ni*/[8], double /*S*/[8]) const;
+      bool findCellAndWeights(const SCICore::Geometry::Point& pos,
+			      IntVector ni[8], double S[8]) const;
 
       //////////
       // Insert Documentation Here:
       bool findCellAndShapeDerivatives
-			(const SCICore::Geometry::Point&/* pos*/,
-		         IntVector /*ni*/[8],
-			 SCICore::Geometry::Vector /*S*/[8]) const;
+			(const SCICore::Geometry::Point& pos,
+		         IntVector ni[8],
+			 SCICore::Geometry::Vector S[8]) const;
 
       //////////
       // Insert Documentation Here:
@@ -116,8 +116,16 @@ WARNING
       // Insert Documentation Here:
       SubRegion subregion(int i, int n) const;
       
-      IntVector getLowIndex() const;
-      IntVector getHighIndex() const;
+      IntVector getNodeLowIndex() const {
+	 return d_lowIndex;
+      }
+      IntVector getNodeHighIndex() const;
+      IntVector getCellLowIndex() const {
+	 return d_lowIndex;
+      }
+      IntVector getCellHighIndex() const {
+	 return d_highIndex;
+      }
       
       inline Box getBox() const {
 	 return d_box;
@@ -138,10 +146,11 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      inline bool contains(const IntVector& idx) const {
-	 return idx.x() >= 0 && idx.y() >= 0 && idx.z() >= 0 &&
-	   idx.x() <= d_res.x() && idx.y() <= d_res.y() && 
-	   idx.z() <= d_res.z();
+      inline bool containsNode(const IntVector& idx) const {
+	 IntVector l(getNodeLowIndex());
+	 IntVector h(getNodeHighIndex());
+	 return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.x()
+	    && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
       }
 
       //////////
@@ -185,6 +194,11 @@ WARNING
 	 return d_box.lower() + dCell()*idx;
       }
 
+      Box getGhostBox(int l, int h) const {
+	 return Box(nodePosition(getCellLowIndex()+IntVector(l,l,l)),
+		    nodePosition(getCellHighIndex()+IntVector(h,h,h)));
+      }
+				 
       string toString() const;
 
       int getID() const {
@@ -199,7 +213,8 @@ WARNING
       // Insert Documentation Here:
       Region(const SCICore::Geometry::Point& min,
 	     const SCICore::Geometry::Point& max,
-	     const SCICore::Geometry::IntVector& res);
+	     const SCICore::Geometry::IntVector& d_lowIndex,
+	     const SCICore::Geometry::IntVector& d_highIndex);
       ~Region();
 
    private:
@@ -212,6 +227,8 @@ WARNING
       
       //////////
       // Insert Documentation Here:
+      IntVector d_lowIndex;
+      IntVector d_highIndex;
       IntVector d_res;
 
       const Region* neighbors[27];
@@ -226,6 +243,14 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.19  2000/05/10 20:03:02  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.18  2000/05/09 03:24:40  jas
 // Added some enums for grid boundary conditions.
 //

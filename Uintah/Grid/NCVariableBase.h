@@ -2,10 +2,16 @@
 #ifndef UINTAH_HOMEBREW_NCVariableBase_H
 #define UINTAH_HOMEBREW_NCVariableBase_H
 
+namespace SCICore {
+   namespace Geometry {
+      class IntVector;
+   }
+}
 
 namespace Uintah {
 
    class Region;
+   using SCICore::Geometry::IntVector;
 
 /**************************************
 
@@ -47,7 +53,11 @@ WARNING
       // Insert Documentation Here:
       virtual NCVariableBase* clone() const = 0;
 
-      virtual void allocate(const Region*) = 0;
+      virtual void allocate(const IntVector& lowIndex,
+			    const IntVector& highIndex) = 0;
+      virtual void copyRegion(NCVariableBase* src,
+			      const IntVector& lowIndex,
+			      const IntVector& highIndex) = 0;
    protected:
       NCVariableBase(const NCVariableBase&);
       NCVariableBase();
@@ -60,6 +70,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/10 20:03:00  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.3  2000/05/02 06:07:22  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

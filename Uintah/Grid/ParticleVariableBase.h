@@ -2,6 +2,7 @@
 #ifndef UINTAH_HOMEBREW_ParticleVariableBase_H
 #define UINTAH_HOMEBREW_ParticleVariableBase_H
 
+#include <vector>
 
 namespace Uintah {
    class ParticleSubset;
@@ -47,6 +48,9 @@ WARNING
       virtual ParticleVariableBase* clone() const = 0;
 
       virtual void allocate(ParticleSubset*) = 0;
+      virtual void gather(ParticleSubset* dest,
+			  std::vector<ParticleSubset*> subsets,
+			  std::vector<ParticleVariableBase*> srcs) = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
       ParticleVariableBase();
@@ -59,6 +63,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/05/10 20:03:02  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.4  2000/05/01 16:18:18  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data

@@ -1,4 +1,9 @@
 
+Array bounds for windows
+Regions - common origin,etc.
+Make ghost cells work for get
+Compute gets/puts with task data
+
 Nix DataItem?
 Particle IDs
 Region -> Patch/Box

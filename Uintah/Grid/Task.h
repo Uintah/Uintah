@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_Task_H
 
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <string>
@@ -160,12 +161,6 @@ WARNING
 	 return d_usesThreads;
       }
       
-      enum GhostType {
-	 None,
-	 AroundNodes,
-	 AroundCells
-      };
-      
       //////////
       // Insert Documentation Here:
       void subregionCapable(bool state=true);
@@ -177,7 +172,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       void requires(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
-		    const Region* region, GhostType gtype,
+		    const Region* region, Ghost::GhostType gtype,
 		    int numGhostCells = 0);
       
       //////////
@@ -252,6 +247,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/05/10 20:03:03  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.10  2000/05/07 06:02:13  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

@@ -42,9 +42,9 @@ Level::regionIterator Level::regionsEnd()
 }
 
 Region* Level::addRegion(const Point& lower, const Point& upper,
-			 const IntVector& res)
+			 const IntVector& lowIndex, const IntVector& highIndex)
 {
-    Region* r = new Region(lower, upper, res);
+    Region* r = new Region(lower, upper, lowIndex, highIndex);
     d_regions.push_back(r);
     return r;
 }
@@ -87,6 +87,14 @@ long Level::totalCells() const
 
 //
 // $Log$
+// Revision 1.6  2000/05/10 20:02:59  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.5  2000/04/26 06:48:49  sparker
 // Streamlined namespaces
 //

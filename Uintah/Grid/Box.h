@@ -46,6 +46,11 @@ namespace Uintah {
       Box(const Point& lower, const Point& upper);
 
       bool overlaps(const Box&, double epsilon=1.e-6) const;
+      bool contains(const Point& p) const {
+	 return p.x() >= d_lower.x() && p.y() >= d_lower.y()
+	    && p.z() >= d_lower.z() && p.x() < d_upper.x()
+	    && p.y() < d_upper.y() && p.z() < d_upper.z();
+      }
 
       inline Point lower() const {
 	 return d_lower;
@@ -72,6 +77,14 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
 //
 // $Log$
+// Revision 1.5  2000/05/10 20:02:59  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.4  2000/04/27 23:18:49  sparker
 // Added problem initialization for MPM
 //

@@ -90,13 +90,15 @@ public:
    virtual void allocate(ParticleVariableBase&, const VarLabel*,
 			 int matlIndex, const Region*);
    virtual void get(ParticleVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*, int numGhostCells) const;
+		    int matlIndex, const Region*,
+		    Ghost::GhostType, int numGhostCells = 0) const;
    virtual void put(const ParticleVariableBase&, const VarLabel*,
 		    int matlIndex, const Region*);
    virtual void allocate(NCVariableBase&, const VarLabel*,
 			 int matlIndex, const Region*);
    virtual void get(NCVariableBase&, const VarLabel*,
-		    int matlIndex, const Region*, int numGhostCells) const;
+		    int matlIndex, const Region*,
+		    Ghost::GhostType, int numGhostCells = 0) const;
    virtual void put(const NCVariableBase&, const VarLabel*,
 		    int matlIndex, const Region*);
 
@@ -165,6 +167,14 @@ private:
 
 //
 // $Log$
+// Revision 1.17  2000/05/10 20:02:53  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.16  2000/05/07 06:02:08  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

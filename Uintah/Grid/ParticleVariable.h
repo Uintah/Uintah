@@ -1,6 +1,7 @@
 #ifndef UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 #define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
+#include <SCICore/Util/FancyAssert.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/ParticleData.h>
@@ -71,12 +72,15 @@ WARNING
       //////////
       // Insert Documentation Here:
       T& operator[](particleIndex idx) {
-	 //ASSERTRANGE(idx, 0, pdata->data.size());
+	 ASSERTRANGE(idx, 0, d_pdata->data.size());
 	 return d_pdata->data[idx];
       }
       
       virtual void copyPointer(const ParticleVariableBase&);
       virtual void allocate(ParticleSubset*);
+      virtual void gather(ParticleSubset* dest,
+			  std::vector<ParticleSubset*> subsets,
+			  std::vector<ParticleVariableBase*> srcs);
    private:
       
       //////////
@@ -181,10 +185,49 @@ WARNING
 	    throw TypeMismatchException("Type mismatch in particle variable");
 	 *this = *c;
       }
+
+   template<class T>
+      void
+      ParticleVariable<T>::gather(ParticleSubset* pset,
+				  std::vector<ParticleSubset*> subsets,
+				  std::vector<ParticleVariableBase*> srcs)
+      {
+	 if(d_pdata && d_pdata->removeReference())
+	    delete d_pdata;
+	 if(d_pset && d_pset->removeReference())
+	    delete d_pset;
+	 d_pset = pset;
+	 pset->addReference();
+	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
+	 d_pdata->addReference();
+	 ASSERTEQ(subsets.size(), srcs.size());
+	 ParticleSubset::iterator dstiter = pset->begin();
+	 for(int i=0;i<subsets.size();i++){
+	    ParticleVariable<T>* srcptr = dynamic_cast<ParticleVariable<T>*>(srcs[i]);
+	    if(!srcptr)
+	       throw TypeMismatchException("Type mismatch in ParticleVariable::gather");
+	    ParticleVariable<T>& src = *srcptr;
+	    ParticleSubset* subset = subsets[i];
+	    for(ParticleSubset::iterator srciter = subset->begin();
+		srciter != subset->end(); srciter++){
+	       (*this)[*dstiter] = src[*srciter];
+	       dstiter++;
+	    }
+	 }
+	 ASSERT(dstiter == pset->end());
+      }
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.11  2000/05/10 20:03:01  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.10  2000/05/07 06:02:12  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

@@ -21,9 +21,10 @@ using SCICore::Math::Floor;
 static SCICore::Thread::AtomicCounter ids("Region ID counter");
 
 Region::Region(const Point& lower, const Point& upper,
-	       const IntVector& res)
-    : d_box(lower, upper), d_res(res)
+	       const IntVector& lowIndex, const IntVector& highIndex)
+    : d_box(lower, upper), d_lowIndex(lowIndex), d_highIndex(highIndex)
 {
+   d_res = highIndex - lowIndex;
    id = ids++;
    for(int i=0;i<27;i++)
       neighbors[i]=0;
@@ -52,14 +53,14 @@ bool Region::findCellAndWeights(const Point& pos,
    int ix = Floor(cellpos.x());
    int iy = Floor(cellpos.y());
    int iz = Floor(cellpos.z());
-   ni[0] = IntVector(ix, iy, iz);
-   ni[1] = IntVector(ix, iy, iz+1);
-   ni[2] = IntVector(ix, iy+1, iz);
-   ni[3] = IntVector(ix, iy+1, iz+1);
-   ni[4] = IntVector(ix+1, iy, iz);
-   ni[5] = IntVector(ix+1, iy, iz+1);
-   ni[6] = IntVector(ix+1, iy+1, iz);
-   ni[7] = IntVector(ix+1, iy+1, iz+1);
+   ni[0] = IntVector(ix, iy, iz)+d_lowIndex;
+   ni[1] = IntVector(ix, iy, iz+1)+d_lowIndex;
+   ni[2] = IntVector(ix, iy+1, iz)+d_lowIndex;
+   ni[3] = IntVector(ix, iy+1, iz+1)+d_lowIndex;
+   ni[4] = IntVector(ix+1, iy, iz)+d_lowIndex;
+   ni[5] = IntVector(ix+1, iy, iz+1)+d_lowIndex;
+   ni[6] = IntVector(ix+1, iy+1, iz)+d_lowIndex;
+   ni[7] = IntVector(ix+1, iy+1, iz+1)+d_lowIndex;
    double fx = cellpos.x() - ix;
    double fy = cellpos.y() - iy;
    double fz = cellpos.z() - iz;
@@ -86,14 +87,14 @@ bool Region::findCellAndShapeDerivatives(const Point& pos,
     int ix = Floor(cellpos.x());
     int iy = Floor(cellpos.y());
     int iz = Floor(cellpos.z());
-    ni[0] = IntVector(ix, iy, iz);
-    ni[1] = IntVector(ix, iy, iz+1);
-    ni[2] = IntVector(ix, iy+1, iz);
-    ni[3] = IntVector(ix, iy+1, iz+1);
-    ni[4] = IntVector(ix+1, iy, iz);
-    ni[5] = IntVector(ix+1, iy, iz+1);
-    ni[6] = IntVector(ix+1, iy+1, iz);
-    ni[7] = IntVector(ix+1, iy+1, iz+1);
+    ni[0] = IntVector(ix, iy, iz)+d_lowIndex;
+    ni[1] = IntVector(ix, iy, iz+1)+d_lowIndex;
+    ni[2] = IntVector(ix, iy+1, iz)+d_lowIndex;
+    ni[3] = IntVector(ix, iy+1, iz+1)+d_lowIndex;
+    ni[4] = IntVector(ix+1, iy, iz)+d_lowIndex;
+    ni[5] = IntVector(ix+1, iy, iz+1)+d_lowIndex;
+    ni[6] = IntVector(ix+1, iy+1, iz)+d_lowIndex;
+    ni[7] = IntVector(ix+1, iy+1, iz+1)+d_lowIndex;
     double fx = cellpos.x() - ix;
     double fy = cellpos.y() - iy;
     double fz = cellpos.z() - iz;
@@ -257,8 +258,7 @@ Region::getCellIterator(const Box& b) const
       
 NodeIterator Region::getNodeIterator() const
 {
-   return NodeIterator(0, 0, 0,
-		       d_res.x()+1, d_res.y()+1, d_res.z()+1);
+   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
 }
 
 const Region* Region::getNeighbor(const IntVector& n) const
@@ -274,7 +274,16 @@ const Region* Region::getNeighbor(const IntVector& n) const
    int idx = ix*9+iy*3+iz;
    return neighbors[idx];
 }
-      
+
+IntVector Region::getNodeHighIndex() const
+{
+   IntVector h(d_highIndex+
+	       IntVector(getNeighbor(IntVector(1,0,0))?0:1,
+			 getNeighbor(IntVector(0,1,0))?0:1,
+			 getNeighbor(IntVector(0,0,1))?0:1));
+   return h;
+}
+
 void Region::setNeighbor(const IntVector& n, const Region* neighbor)
 {
    if(n.x() == 0 && n.y() == 0 && n.z() == 0)
@@ -293,6 +302,14 @@ void Region::setNeighbor(const IntVector& n, const Region* neighbor)
 
 //
 // $Log$
+// Revision 1.17  2000/05/10 20:03:02  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.16  2000/05/09 03:24:39  jas
 // Added some enums for grid boundary conditions.
 //

@@ -11,6 +11,7 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/BoundCond.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
+	$(SRCDIR)/Fracture \
 	$(SRCDIR)/GeometrySpecification $(SRCDIR)/Util
 
 include $(SRCTOP)/scripts/recurse.mk
@@ -24,6 +25,14 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/05/10 20:02:42  sparker
+# Added support for ghost cells on node variables and particle variables
+#  (work for 1 patch but not debugged for multiple)
+# Do not schedule fracture tasks if fracture not enabled
+# Added fracture directory to MPM sub.mk
+# Be more uniform about using IntVector
+# Made regions have a single uniform index space - still needs work
+#
 # Revision 1.5  2000/04/26 06:48:12  sparker
 # Streamlined namespaces
 #

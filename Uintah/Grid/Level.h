@@ -59,7 +59,8 @@ WARNING
       
       Region* addRegion(const SCICore::Geometry::Point& lower,
 			const SCICore::Geometry::Point& upper,
-			const SCICore::Geometry::IntVector& res);
+			const SCICore::Geometry::IntVector& lowIndex,
+			const SCICore::Geometry::IntVector& highIndex);
       
       int numRegions() const;
       long totalCells() const;
@@ -76,6 +77,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/05/10 20:02:59  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.8  2000/04/26 06:48:49  sparker
 // Streamlined namespaces
 //

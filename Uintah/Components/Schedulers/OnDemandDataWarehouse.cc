@@ -23,8 +23,10 @@ using SCICore::Thread::Guard;
 using SCICore::Geometry::Point;
 using std::cerr;
 using std::string;
-
-namespace Uintah {
+using std::vector;
+using SCICore::Geometry::Min;
+using SCICore::Geometry::Max;
+using namespace Uintah;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, int MpiProcesses )
   : d_lock("DataWarehouse lock"), DataWarehouse( MpiRank, MpiProcesses )
@@ -93,13 +95,73 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex,
 			   const Region* region,
+			   Ghost::GhostType gtype,
 			   int numGhostCells) const
 {
-   if(numGhostCells != 0)
-      throw InternalError("Ghost cells don't work, go away");
    if(!d_particleDB.exists(label, matlIndex, region))
       throw UnknownVariable(label->getName());
-   d_particleDB.get(label, matlIndex, region, var);
+   if(gtype == Ghost::None){
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+      d_particleDB.get(label, matlIndex, region, var);
+   } else {
+      int l,h;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundNodes");
+	 // Lower neighbors
+	 l=-1;
+	 h=0;
+	 break;
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      Box box = region->getGhostBox(l, h);
+      particleIndex totalParticles = 0;
+      vector<ParticleVariableBase*> neighborvars;
+      vector<ParticleSubset*> subsets;
+      for(int ix=l;ix<=h;ix++){
+	 for(int iy=l;iy<=h;iy++){
+	    for(int iz=l;iz<=h;iz++){
+	       const Region* neighbor = region->getNeighbor(IntVector(ix,iy,iz));
+	       if(neighbor){
+		  if(!d_particleDB.exists(d_positionLabel, matlIndex, neighbor))
+		     throw InternalError("Position variable does not exist: "+ 
+			  d_positionLabel->getName());
+		  if(!d_particleDB.exists(label, matlIndex, neighbor))
+		     throw InternalError("Position variable does not exist: "+ 
+			  d_positionLabel->getName());
+
+		  ParticleVariable<Point> pos;
+		  d_particleDB.get(d_positionLabel, matlIndex, neighbor, pos);
+		  ParticleSubset* pset = pos.getParticleSubset();
+		  ParticleSubset* subset = new ParticleSubset(pset->getParticleSet(), false);
+		  for(ParticleSubset::iterator iter = pset->begin();
+		      iter != pset->end(); iter++){
+		     particleIndex idx = *iter;
+		     if(box.contains(pos[idx])){
+			subset->addParticle(idx);
+		     }
+		  }
+		  totalParticles+=subset->numParticles();
+		  neighborvars.push_back(d_particleDB.get(label, matlIndex, neighbor));
+		  subsets.push_back(subset);
+	       }
+	    }
+	 }
+      }
+      ParticleSet* newset = new ParticleSet(totalParticles);
+      ParticleSubset* newsubset = new ParticleSubset(newset, true);
+      var.gather(newsubset, subsets, neighborvars);
+   }
 }
 
 void
@@ -120,7 +182,7 @@ OnDemandDataWarehouse::allocate(int numParticles,
 
    // Create the particle set and variable
    ParticleSet* pset = new ParticleSet(numParticles);
-   ParticleSubset* psubset = new ParticleSubset(pset);
+   ParticleSubset* psubset = new ParticleSubset(pset, true);
    var.allocate(psubset);
 
    // Put it in the database
@@ -164,13 +226,69 @@ OnDemandDataWarehouse::put(const ParticleVariableBase& var,
 void
 OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Region* region,
+			   Ghost::GhostType gtype,
 			   int numGhostCells) const
 {
-   if(numGhostCells != 0)
-      throw InternalError("Ghost cells don't work, go away");
-   if(!d_ncDB.exists(label, matlIndex, region))
-      throw UnknownVariable(label->getName());
-   d_ncDB.get(label, matlIndex, region, var);
+   if(gtype == Ghost::None) {
+      if(numGhostCells != 0)
+	 throw InternalError("Ghost cells specified with task type none!\n");
+      if(!d_ncDB.exists(label, matlIndex, region))
+	 throw UnknownVariable(label->getName());
+      d_ncDB.get(label, matlIndex, region, var);
+   } else {
+      int l,h;
+      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+      IntVector lowIndex;
+      IntVector highIndex;
+      switch(gtype){
+      case Ghost::AroundNodes:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundNodes");
+	 // All 27 neighbors
+	 l=-1;
+	 h=1;
+	 lowIndex = region->getNodeLowIndex()-gc;
+	 highIndex = region->getNodeHighIndex()+gc;
+	 cerr << "Nodes around nodes is probably not functional!\n";
+	 break;
+      case Ghost::AroundCells:
+	 if(numGhostCells == 0)
+	    throw InternalError("No ghost cells specified with Task::AroundCells");
+	 // Uppwer neighbors
+	 l=0;
+	 h=1;
+	 lowIndex = region->getCellLowIndex();
+         highIndex = region->getCellHighIndex()+gc;
+	 break;
+      default:
+	 throw InternalError("Illegal ghost type");
+      }
+      var.allocate(lowIndex, highIndex);
+      long totalNodes=0;
+      for(int ix=l;ix<=h;ix++){
+	 for(int iy=l;iy<=h;iy++){
+	    for(int iz=l;iz<=h;iz++){
+	       const Region* neighbor = region->getNeighbor(IntVector(ix,iy,iz));
+	       if(neighbor){
+		  if(!d_ncDB.exists(label, matlIndex, neighbor))
+		     throw InternalError("Position variable does not exist: "+ 
+					 label->getName());
+		  NCVariableBase* srcvar = d_ncDB.get(label, matlIndex, neighbor);
+		  IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
+		  IntVector high = Min(highIndex, neighbor->getNodeHighIndex());
+		  if(high.x() < low.x() || high.y() < low.y() || high.z() < low.z())
+		     throw InternalError("Region doesn't overlap?");
+		  var.copyRegion(srcvar, low, high);
+		  IntVector dnodes = high-low;
+		  totalNodes+=dnodes.x()*dnodes.y()*dnodes.z();
+	       }
+	    }
+	 }
+      }
+      IntVector dn = highIndex-lowIndex;
+      long wantnodes = dn.x()*dn.y()*dn.z();
+      ASSERTEQ(wantnodes, totalNodes);
+   }
 }
 
 void
@@ -184,7 +302,7 @@ OnDemandDataWarehouse::allocate(NCVariableBase& var,
       throw InternalError("NC variable already exists: "+label->getName());
 
    // Allocate the variable
-   var.allocate(region);
+   var.allocate(region->getNodeLowIndex(), region->getNodeHighIndex());
 }
 
 void
@@ -360,11 +478,16 @@ DataWarehouseMpiHandler::run()
   } // end while
 }
 
-
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.20  2000/05/10 20:02:53  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.19  2000/05/07 06:02:07  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

@@ -6,6 +6,7 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/DataItem.h>
+#include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/NCVariableBase.h>
@@ -72,14 +73,16 @@ WARNING
       virtual void allocate(ParticleVariableBase&, const VarLabel*,	int matlIndex,
 			    const Region*) = 0;
       virtual void get(ParticleVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*, int numGhostCells) const = 0;
+		       int matlIndex, const Region*,
+		       Ghost::GhostType, int numGhostCells = 0) const = 0;
       virtual void put(const ParticleVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
       virtual void allocate(NCVariableBase&, const VarLabel*,
 			    int matlIndex, const Region*) = 0;
       virtual void get(NCVariableBase&, const VarLabel*,
-		       int matlIndex, const Region*, int numGhostCells) const = 0;
+		       int matlIndex, const Region*,
+		       Ghost::GhostType, int numGhostCells = 0) const = 0;
       virtual void put(const NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
@@ -117,6 +120,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.19  2000/05/10 20:03:05  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.18  2000/05/05 06:42:46  dav
 // Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
 //

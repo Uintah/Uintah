@@ -45,10 +45,10 @@ WARNING
       inline NodeIterator operator++(int) {
 	 NodeIterator old(*this);
 	 
-	 if(++d_iz >= d_ez){
-	    d_iz = d_sz;
-	    if(++d_iy >= d_ey){
-	       d_iy = d_sy;
+	 if(++d_iz >= d_e.z()){
+	    d_iz = d_s.z();
+	    if(++d_iy >= d_e.y()){
+	       d_iy = d_s.y();
 	       ++d_ix;
 	    }
 	 }
@@ -58,7 +58,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       inline bool done() const {
-	 return d_ix >= d_ex || d_iy >= d_ey || d_iz >= d_ez;
+	 return d_ix >= d_e.x() || d_iy >= d_e.y() || d_iz >= d_e.z();
       }
 
       IntVector operator*() {
@@ -67,43 +67,48 @@ WARNING
       IntVector index() const {
 	 return IntVector(d_ix, d_iy, d_iz);
       }
-      inline NodeIterator(int ix, int iy, int iz, int ex, int ey, int ez)
-	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz), d_ex(ex), d_ey(ey), d_ez(ez) {
+      inline NodeIterator(const IntVector& s, const IntVector& e)
+	 : d_s(s), d_e(e) {
+	    d_ix = s.x();
+	    d_iy = s.y();
+	    d_iz = s.z();
       }
       inline IntVector current() const {
 	 return IntVector(d_ix, d_iy, d_iz);
       }
       inline IntVector begin() const {
-	 return IntVector(d_sx, d_sy, d_sz);
+	 return d_s;
       }
       inline IntVector end() const {
-	 return IntVector(d_ex, d_ey, d_ez);
+	 return d_e;
       }
       inline NodeIterator(const NodeIterator& copy)
 	 : d_ix(copy.d_ix), d_iy(copy.d_iy), d_iz(copy.d_iz),
-	   d_sx(copy.d_sx), d_sy(copy.d_sx), d_sz(copy.d_sz),
-	   d_ex(copy.d_ex), d_ey(copy.d_ey), d_ez(copy.d_ez) {
+	   d_s(copy.d_s), d_e(copy.d_e) {
       }
 
    private:
       NodeIterator();
       NodeIterator& operator=(const NodeIterator& copy);
-      inline NodeIterator(const Region* region, int ix, int iy, int iz)
-	 : d_sx(ix), d_sy(iy), d_sz(iz), d_ix(ix), d_iy(iy), d_iz(iz),
-	   d_ex(region->getNNodes().x()), d_ey(region->getNNodes().y()), d_ez(region->getNNodes().z()) {
-      }
       
       //////////
       // Insert Documentation Here:
-      int     d_ix, d_iy, d_iz;
-      int     d_sx, d_sy, d_sz;
-      int     d_ex, d_ey, d_ez;
+      IntVector d_s,d_e;
+      int d_ix, d_iy, d_iz;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/05/10 20:03:00  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.8  2000/05/02 06:07:22  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
