@@ -45,7 +45,6 @@
 
 	<save label="tempIN"/>
         <save label="co2IN"/>
-        <save label="enthalpyRXN"/>
 
 	<save label="htfluxConvX"/>
 	<save label="htfluxRadX"/>
