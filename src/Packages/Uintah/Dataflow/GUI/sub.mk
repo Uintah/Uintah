@@ -19,7 +19,8 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/ParticleFieldExtractor.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
-	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl
+	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl \
+	$(SRCDIR)/InPlaneEigenEvaluator.tcl \
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 
@@ -27,6 +28,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.8  2000/08/25 17:29:47  witzel
+# Added InPlaneEigenEvaluator.tcl
+#
 # Revision 1.7  2000/08/22 22:24:53  witzel
 # Added EigenEvaluator.tcl
 #
