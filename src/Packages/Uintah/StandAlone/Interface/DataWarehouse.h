@@ -19,13 +19,47 @@ namespace SCICore {
 }
 
 namespace Uintah {
+
+namespace Grid {
+  class Region;
+  class TypeDescription;
+}
+
 namespace Interface {
 
 using Uintah::Grid::RefCounted;
 using Uintah::Grid::DataItem;
+using Uintah::Grid::Region;
+using Uintah::Grid::TypeDescription;
 
-class Region;
-class TypeDescription;
+/**************************************
+
+CLASS
+   DataWarehouse
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   DataWarehouse.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   DataWarehouse
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class DataWarehouse : public RefCounted {
 public:
@@ -89,6 +123,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 18:45:43  dav
+// fixed a few more namespace problems
+//
 // Revision 1.3  2000/03/16 22:08:22  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
