@@ -65,7 +65,7 @@ Under `pwd` on `hostname`:
 EOF
     find trash -user $username -prune >> trash/userRemoval
     
-    #/usr/lib/sendmail $sendto < trash/userRemoval
+    /usr/lib/sendmail $sendto < trash/userRemoval
     rm trash/userRemoval
 done
 
