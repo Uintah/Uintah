@@ -1657,6 +1657,15 @@ AC_SUBST(HAVE_COLLAB_VIS)
 
 
 if test "$sci_check_plplot" = "yes"; then
+  if test "$with_plplot"; then
+    _sci_lib="$with_plplot/lib"
+    _sci_inc="$with_plplot/include"
+  else
+    _sci_lib="/usr/local/plplot/lib $sci_thirdparty_libs"
+    _sci_inc="/usr/local/plplot/include $sci_thirdparty_includes"
+  fi
+
+
 #  SCI_TRY_LINK(PLPLOTTCLTK,optional optimized plplottcltk library and headers,[
 #
 #  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
@@ -1671,7 +1680,6 @@ if test "$sci_check_plplot" = "yes"; then
   SCI_TRY_LINK(PLPLOT,optional optimized plplot library and headers,[
   #include <plplot/plplot.h> 
   ],$_sci_inc,plplot, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
-
 
   if test "$HAVE_PLPLOT" = "no"; then
     SCI_TRY_LINK(PLPLOT,optional debug plplot library and headers,[
@@ -2628,9 +2636,16 @@ if test "$sci_check_mdsplus" = "yes"; then
     _sci_inc="/usr/local/mdsplus/include"
   fi
 
+# mdsplus is a C lib so it has to be checked as a C file not CC..
+  cxx="$CXX"
+  CXX="$CC"
+
+  ext="$ac_ext"
+  ac_ext="c"
+
   SCI_TRY_LINK(MDSPLUS,mdslib library and headers,[
    #include <mdslib.h>
-   ],$_sci_inc,MdsLib_client,$_sci_lib,,,optional)
+   ],$_sci_inc,MdsLib_client,$_sci_lib,,,not-optional)
 
   if test "$HAVE_MDSPLUS" = "yes"; then
      DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
@@ -2641,6 +2656,10 @@ if test "$sci_check_mdsplus" = "yes"; then
     AC_MSG_ERROR(One or more of the MDSPLUS components is missing.)
     echo
   fi
+
+# Restore the previous settings.
+  CXX="$cxx"
+  ac_ext="$ext"
 fi #end sci_check_mdsplus
 
 AC_SUBST(MDSPLUS_LIB_FLAG)
