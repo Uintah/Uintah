@@ -635,6 +635,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
 
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->NTractionZMinusLabel);
+  t->computes(lb->integralAreaLabel);
   sched->addTask(t, patches, matls);
 }
 
@@ -724,11 +725,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
   subsched->get_dw(3)->finalize();
   subsched->advanceDataWarehouse(grid);
 
-//  while(!(dispInc && dispIncQ) && !haveanan) {
   while(!(dispInc && dispIncQ)) {
     if(d_myworld->myrank() == 0){
-     cerr << "Beginning Iteration = " << count++ << "\n";
+     cerr << "Beginning Iteration = " << count << "\n";
     }
+    count++;
     subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
     subsched->execute(d_myworld);  // THIS ACTUALLY GETS THE WORK DONE
@@ -760,6 +761,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       new_dw->restartTimestep();
       return;
     }
+
     subsched->advanceDataWarehouse(grid);
   }
   d_numIterations = count;
@@ -2036,13 +2038,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
         } // end of if (bc_type == Patch::None)
       } // Loop over faces
     }  // Loop over matls
-    if(integralArea > 0.){
-      integralTraction=integralTraction/integralArea;
-    }
-    else{
-      integralTraction=0.;
-    }
     new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
+    new_dw->put(sum_vartype(integralArea),     lb->integralAreaLabel);
   }
 }
 
