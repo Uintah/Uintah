@@ -10,7 +10,9 @@ using std::find;
 using Uintah::Parallel::UintahParallelComponent;
 using Uintah::Parallel::UintahParallelPort;
 
-UintahParallelComponent::UintahParallelComponent()
+UintahParallelComponent::UintahParallelComponent( int MpiRank, 
+						  int MpiProcesses ) :
+  d_MpiRank( MpiRank ), d_MpiProcesses( MpiProcesses )
 {
 }
 
@@ -52,6 +54,9 @@ void UintahParallelComponent::releasePort(const std::string&)
 
 //
 // $Log$
+// Revision 1.5  2000/04/19 21:20:05  dav
+// more MPI stuff
+//
 // Revision 1.4  2000/04/12 23:01:03  sparker
 // Make getPort work
 //
