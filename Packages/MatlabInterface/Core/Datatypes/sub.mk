@@ -51,7 +51,7 @@ PSELIBS := Core/Datatypes Core/Containers \
 	 Core/Persistent Core/Geometry \
 	 Core/Util  
 
-LIBS := $(Z_LIBRARY)
+LIBS := $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
