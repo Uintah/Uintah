@@ -1647,7 +1647,6 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
   GeomLines *lines = 0;
   GeomCones *cones = 0;
-  GeomArrows *arrows = 0;
   GeomCappedCylinders *disks = 0;
   GeomSpheres *spheres = 0;
   const bool lines_p = (display_mode == "Lines");
@@ -1677,8 +1676,14 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   }
   else if (arrows_p)
   {
-    arrows = scinew GeomArrows(0.15, 0.6);
-    data_switch = scinew GeomDL(arrows);
+    lines = scinew GeomLines();
+    cones = scinew GeomCones(resolution, scale * 0.15);
+    spheres = scinew GeomSpheres(scale * 0.15, resolution, resolution);
+    GeomGroup *grp = scinew GeomGroup();
+    grp->add(lines);
+    grp->add(cones);
+    grp->add(spheres);
+    data_switch = scinew GeomDL(grp);
   }
   else if (disks_p)
   {
@@ -1828,10 +1833,11 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    }
 	    else
 	    {
-	      cones->add_radius(p, p+tmp, tmp.length()/6.0);
+	      const double len = tmp.length() / 6.0;
+	      cones->add_radius(p, p+tmp, len);
 	      if (bidirectional)
 	      {
-		cones->add_radius(p, p-tmp, tmp.length()/6.0);
+		cones->add_radius(p, p-tmp, len);
 	      }
 	    }
 	  }
@@ -1852,10 +1858,11 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    }
 	    else
 	    {
-	      cones->add_radius(p, p+tmp, vcol, tmp.length()/6.0);
+	      const double len = tmp.length() / 6.0;
+	      cones->add_radius(p, p+tmp, vcol, len);
 	      if (bidirectional)
 	      {
-		cones->add_radius(p, p-tmp, vcol, tmp.length()/6.0);
+		cones->add_radius(p, p-tmp, vcol, len);
 	      }
 	    }
 	  }
@@ -1875,10 +1882,11 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    }
 	    else
 	    {
-	      cones->add_radius(p, p+tmp, ctmpd, tmp.length()/6.0);
+	      const double len = tmp.length() / 6.0;
+	      cones->add_radius(p, p+tmp, ctmpd, len);
 	      if (bidirectional)
 	      {
-		cones->add_radius(p, p-tmp, ctmpd, tmp.length()/6.0);
+		cones->add_radius(p, p-tmp, ctmpd, len);
 	      }
 	    }
 	  }
@@ -1910,13 +1918,155 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       }
       else if (arrows_p)
       {
-	typename CFld::value_type ctmp;
-	cfld->value(ctmp, *iter);
-	double ctmpd;
-	to_double(ctmp, ctmpd);
-	add_data(p, tmp, arrows,
-		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
-		 display_mode, scale, normalize, bidirectional);
+	if (tmp.length2() > 1.0e-10)
+	{
+	  if (normalize) { tmp.safe_normalize(); }
+	  tmp *= scale;
+	  const Vector ltmp = tmp * 0.6;
+
+	  if (def_color)
+	  {
+	    if (normalize)
+	    {
+	      cones->add(p+ltmp, p+tmp);
+	      if (bidirectional)
+	      {
+		cones->add(p-ltmp, p-tmp);
+	      }
+	    }
+	    else
+	    {
+	      const double len = tmp.length() * 0.15;
+	      cones->add_radius(p+ltmp, p+tmp, len);
+	      if (bidirectional)
+	      {
+		cones->add_radius(p-ltmp, p-tmp, len);
+	      }
+	    }
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    if (normalize)
+	    {
+	      cones->add(p+ltmp, p+tmp, vcol);
+	      if (bidirectional)
+	      {
+		cones->add(p-ltmp, p-tmp, vcol);
+	      }
+	    }
+	    else
+	    {
+	      const double len = tmp.length() * 0.15;
+	      cones->add_radius(p+ltmp, p+tmp, vcol, len);
+	      if (bidirectional)
+	      {
+		cones->add_radius(p-ltmp, p-tmp, vcol, len);
+	      }
+	    }
+	  }
+	  else
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    if (normalize)
+	    {
+	      cones->add(p+ltmp, p+tmp, ctmpd);
+	      if (bidirectional)
+	      {
+		cones->add(p-ltmp, p-tmp, ctmpd);
+	      }
+	    }
+	    else
+	    {
+	      const double len = tmp.length() * 0.15;
+	      cones->add_radius(p+ltmp, p+tmp, ctmpd, len);
+	      if (bidirectional)
+	      {
+		cones->add_radius(p-ltmp, p-tmp, ctmpd, len);
+	      }
+	    }
+	  }
+
+	  if (bidirectional)
+	  {
+	    if (def_color)
+	    {
+	      lines->add(p - ltmp, p + ltmp);
+	    }
+	    else if (vec_color)
+	    {
+	      typename CFld::value_type ctmp;
+	      cfld->value(ctmp, *iter);
+	      Vector vtmp;
+	      to_vector(ctmp, vtmp);
+	      vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	      lines->add(p - ltmp, vcol, p + ltmp, vcol);
+	    }
+	    else
+	    {
+	      typename CFld::value_type ctmp;
+	      cfld->value(ctmp, *iter);
+	      double ctmpd;
+	      to_double(ctmp, ctmpd);
+	      lines->add(p - ltmp, ctmpd, p + ltmp, ctmpd);
+	    }
+	  }
+	  else
+	  {
+	    if (def_color)
+	    {
+	      lines->add(p, p + ltmp);
+	    }
+	    else if (vec_color)
+	    {
+	      typename CFld::value_type ctmp;
+	      cfld->value(ctmp, *iter);
+	      Vector vtmp;
+	      to_vector(ctmp, vtmp);
+	      vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	      lines->add(p, vcol, p + ltmp, vcol);
+	    }
+	    else
+	    {
+	      typename CFld::value_type ctmp;
+	      cfld->value(ctmp, *iter);
+	      double ctmpd;
+	      to_double(ctmp, ctmpd);
+	      lines->add(p, ctmpd, p + ltmp, ctmpd);
+	    }
+	  }
+	}
+	else if (normalize)
+	{
+	  if (def_color)
+	  {
+	    spheres->add(p);
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    spheres->add(p, vcol);
+	  }
+	  else
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    spheres->add(p, ctmpd);
+	  }
+	}
       }
       else if (lines_p)
       {
