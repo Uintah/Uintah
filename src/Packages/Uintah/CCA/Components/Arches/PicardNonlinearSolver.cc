@@ -65,6 +65,7 @@ PicardNonlinearSolver(const ArchesLabel* label,
 		      d_enthalpySolve(calc_enthalpy),
 		      d_physicalConsts(physConst)
 {
+  d_perproc_patches = 0;
   d_pressSolver = 0;
   d_momSolver = 0;
   d_scalarSolver = 0;
@@ -87,6 +88,8 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
     delete nosolve_timelabels;
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches;
 }
 
 // ****************************************************************************
@@ -152,15 +155,23 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     d_radiationCalc = d_enthalpySolver->checkRadiation();
     d_DORadiationCalc = d_enthalpySolver->checkDORadiation();
   }
-    db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"BE");
+  db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"BE");
     
-    if (d_timeIntegratorType == "BE") {
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::BE));
-    }
-    else {
-      throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
-    }
+  if (d_timeIntegratorType == "BE") {
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+				     TimeIntegratorStepType::BE));
+    numTimeIntegratorLevels = 1;
+  }
+  else {
+    throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
+  }
+
+#ifdef PetscFilter
+    d_props->setFilter(d_turbModel->getFilter());
+//#ifdef divergenceconstraint
+    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
+//#endif
+#endif
 }
 
 // ****************************************************************************
@@ -169,6 +180,13 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  SchedulerP& sched)
 {
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches;
+
+  LoadBalancer* lb = sched->getLoadBalancer();
+  d_perproc_patches = lb->createPerProcessorPatchSet(level, d_myworld);
+  d_perproc_patches->addReference();
+
   Task* tsk = scinew Task("PicardNonlinearSolver::recursiveSolver",
 			   this, &PicardNonlinearSolver::recursiveSolver,
 			   level, sched.get_rep());
@@ -342,9 +360,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 		  d_lab->d_stressTensorMatl, Task::OutOfDomain);
   }
 
-  LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, d_myworld);
-  sched->addTask(tsk, perproc_patches, d_lab->d_sharedState->allArchesMaterials());
+  sched->addTask(tsk, d_perproc_patches, d_lab->d_sharedState->allArchesMaterials());
 
 
   return(0);
@@ -388,10 +404,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     // if the matrix is not initialized
     if (!d_turbModel->getFilter()->isInitialized()) 
       d_turbModel->sched_initFilterMatrix(level, subsched, local_patches, local_matls);
-    d_props->setFilter(d_turbModel->getFilter());
-//#ifdef divergenceconstraint
-    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
-//#endif
   }
 #endif
 
