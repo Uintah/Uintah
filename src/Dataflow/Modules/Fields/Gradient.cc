@@ -48,7 +48,7 @@ private:
   GuiInt  interpolate_;
 
 public:
-  Gradient(const string& id);
+  Gradient(GuiContext* ctx);
   virtual ~Gradient();
 
   virtual void execute();
@@ -59,14 +59,11 @@ public:
 };
 
 
-extern "C" Module* make_Gradient(const string& id) {
-  return new Gradient(id);
-}
+DECLARE_MAKER(Gradient)
 
-
-Gradient::Gradient(const string& id)
-  : Module("Gradient", id, Filter, "Fields", "SCIRun"),
-    interpolate_("interpolate", id, this)
+Gradient::Gradient(GuiContext* ctx)
+  : Module("Gradient", ctx, Filter, "Fields", "SCIRun"),
+    interpolate_(ctx->subVar("interpolate"))
 {
 }
 

@@ -36,17 +36,14 @@ template class GenericWriter<PathHandle>;
 
 class PathWriter : public GenericWriter<PathHandle> {
 public:
-  PathWriter(const string& id);
+  PathWriter(GuiContext* ctx);
 };
 
 
-extern "C" Module* make_PathWriter(const string& id) {
-  return new PathWriter(id);
-}
+DECLARE_MAKER(PathWriter)
 
-
-PathWriter::PathWriter(const string& id)
-  : GenericWriter<PathHandle>("PathWriter", id, "DataIO", "SCIRun")
+PathWriter::PathWriter(GuiContext* ctx)
+  : GenericWriter<PathHandle>("PathWriter", ctx, "DataIO", "SCIRun")
 {
 }
 

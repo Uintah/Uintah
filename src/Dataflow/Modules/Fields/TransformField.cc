@@ -46,7 +46,7 @@ namespace SCIRun {
 class TransformField : public Module
 {
 public:
-  TransformField(const string& id);
+  TransformField(GuiContext* ctx);
   virtual ~TransformField();
 
   virtual void execute();
@@ -59,13 +59,10 @@ protected:
 };
 
 
-extern "C" Module* make_TransformField(const string& id) {
-  return new TransformField(id);
-}
+DECLARE_MAKER(TransformField)
 
-
-TransformField::TransformField(const string& id)
-  : Module("TransformField", id, Source, "Fields", "SCIRun"),
+TransformField::TransformField(GuiContext* ctx)
+  : Module("TransformField", ctx, Source, "Fields", "SCIRun"),
     ifield_generation_(0),
     imatrix_generation_(0)
 {

@@ -32,18 +32,16 @@ private:
   GuiInt ny_;
   GuiInt nz_;
 public:
-  CastTVtoMLV(const string& id);
+  CastTVtoMLV(GuiContext* ctx);
   virtual ~CastTVtoMLV();
   virtual void execute();
 };
 
-extern "C" PSECORESHARE Module* make_CastTVtoMLV(const string& id) {
-  return scinew CastTVtoMLV(id);
-}
+  DECLARE_MAKER(CastTVtoMLV);
 
-CastTVtoMLV::CastTVtoMLV(const string& id)
-  : Module("CastTVtoMLV", id, Source, "Fields", "SCIRun"),
-    nx_("nx", id, this), ny_("ny", id, this), nz_("nz", id, this)
+CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
+  : Module("CastTVtoMLV", ctx, Source, "Fields", "SCIRun"),
+    nx_(ctx->subVar("nx")), ny_(ctx->subVar("ny")), nz_(ctx->subVar("nz"))
 {
 }
 

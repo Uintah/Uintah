@@ -37,12 +37,12 @@ class GeomObj;
 class TexCuttingPlanes : public Module {
 
 public:
-  TexCuttingPlanes( const string& id);
+  TexCuttingPlanes( GuiContext* ctx);
 
   virtual ~TexCuttingPlanes();
   virtual void widget_moved(int last);    
   virtual void execute();
-  void tcl_command( TCLArgs&, void* );
+  void tcl_command( GuiArgs&, void* );
 
 private:
   GLTexture3DHandle       tex_;

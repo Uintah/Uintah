@@ -29,10 +29,9 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 
@@ -43,19 +42,16 @@ namespace SCIRun {
 static string widget_name("GLTextureBuilderLocatorWidget");
 static string res_name("Resolution Widget");
 
-extern "C" Module* make_GLTextureBuilder( const string& id) {
-  return scinew GLTextureBuilder(id);
-}
+DECLARE_MAKER(GLTextureBuilder)
 
-
-GLTextureBuilder::GLTextureBuilder(const string& id) : 
-  Module("GLTextureBuilder", id, Filter, "Visualization", "SCIRun"), 
+GLTextureBuilder::GLTextureBuilder(GuiContext* ctx) : 
+  Module("GLTextureBuilder", ctx, Filter, "Visualization", "SCIRun"), 
   tex_(0),
-  is_fixed_("is_fixed", id, this),
-  max_brick_dim_("max_brick_dim", id, this),
-  sel_brick_dim_("sel_brick_dim", id, this),
-  min_("min", id, this),
-  max_("max", id, this),
+  is_fixed_(ctx->subVar("is_fixed")),
+  max_brick_dim_(ctx->subVar("max_brick_dim")),
+  sel_brick_dim_(ctx->subVar("sel_brick_dim")),
+  min_(ctx->subVar("min")),
+  max_(ctx->subVar("max")),
   old_brick_size_(0), 
   old_min_(-1), 
   old_max_(-1)
@@ -122,7 +118,7 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       min_.set(minV);
       max_.set(maxV);
     }
-    TCL::execute(id + " SetDims " + to_string( tex_->get_brick_size()));
+    gui->execute(id + " SetDims " + to_string( tex_->get_brick_size()));
     if (sel_brick_dim_.get()) tex_->set_brick_size(sel_brick_dim_.get());
     old_brick_size_ = tex_->get_brick_size();
   }

@@ -10,6 +10,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
@@ -36,21 +37,19 @@ private:
   FieldOPort     *outport_;
 
 public:
-  TetVolFieldCellToNode(const string& id);
+  TetVolFieldCellToNode(GuiContext* ctx);
 
   virtual ~TetVolFieldCellToNode();
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
 };
 
-extern "C" PSECORESHARE Module* make_TetVolFieldCellToNode(const string& id) {
-  return scinew TetVolFieldCellToNode(id);
-}
+  DECLARE_MAKER(TetVolFieldCellToNode);
 
-TetVolFieldCellToNode::TetVolFieldCellToNode(const string& id)
-  : Module("TetVolFieldCellToNode", id, Source, "Fields", "SCIRun")
+TetVolFieldCellToNode::TetVolFieldCellToNode(GuiContext* ctx)
+  : Module("TetVolFieldCellToNode", ctx, Source, "Fields", "SCIRun")
 {
 }
 
@@ -111,7 +110,7 @@ void TetVolFieldCellToNode::execute()
   mag_sums.resize(nodes_size,0);
   ref_counts.resize(nodes_size,0);
 
-  TCL::execute(id + " set_state Executing 0");
+  gui->execute(id + " set_state Executing 0");
 
   TetVolMesh::Cell::iterator ci, cie;
   TetVolMesh::Node::array_type::iterator ni;
@@ -135,7 +134,7 @@ void TetVolFieldCellToNode::execute()
 
     }
 
-    TCL::execute(id + " set_progress " + to_string(count/cells_size) + " 0");
+    gui->execute(id + " set_progress " + to_string(count/cells_size) + " 0");
   }
 
   TetVolField<Vector> *newfield = scinew TetVolField<Vector>(mesh,Field::NODE);
@@ -152,7 +151,7 @@ void TetVolFieldCellToNode::execute()
   outport_->send(newfield);
 }
 
-void TetVolFieldCellToNode::tcl_command(TCLArgs& args, void* userdata)
+void TetVolFieldCellToNode::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

@@ -36,15 +36,12 @@ template class GenericReader<PathHandle>;
 
 class PathReader : public GenericReader<PathHandle> {
 public:
-  PathReader(const string& id);
+  PathReader(GuiContext* ctx);
 };
 
-extern "C" Module* make_PathReader(const string& id) {
-  return new PathReader(id);
-}
-
-PathReader::PathReader(const string& id)
-  : GenericReader<PathHandle>("PathReader", id, "DataIO", "SCIRun")
+DECLARE_MAKER(PathReader)
+PathReader::PathReader(GuiContext* ctx)
+  : GenericReader<PathHandle>("PathReader", ctx, "DataIO", "SCIRun")
 {
 }
 

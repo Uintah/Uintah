@@ -50,28 +50,24 @@ namespace SCIRun {
 
 
 
-extern "C" Module* make_CastField(const string& id)
-{
-    return new CastField(id);
-}
-
+DECLARE_MAKER(CastField)
 static string module_name("CastField");
-CastField::CastField(const string& id)
-  : Module("CastField", id, Filter, "Fields", "SCIRun"),
-    haveMinMaxTCL("haveMinMaxTCL", id, this),
-    haveOutVoxelTCL("haveOutVoxelTCL", id, this), 
-    haveBBoxTCL("haveBBoxTCL", id, this),
-    outVoxelTCL("outVoxelTCL", id, this),
-    NminTCL("NminTCL", id, this),
-    NmaxTCL("NmaxTCL", id, this),
-    CminTCL("CminTCL", id, this),
-    CmaxTCL("CmaxTCL", id, this),
-    minOutTCLX("minOutTCLX", id, this),
-    minOutTCLY("minOutTCLY", id, this),
-    minOutTCLZ("minOutTCLZ", id, this),
-    maxOutTCLX("maxOutTCLX", id, this),
-    maxOutTCLY("maxOutTCLY", id, this), 
-    maxOutTCLZ("maxOutTCLZ", id, this)
+CastField::CastField(GuiContext* ctx)
+  : Module("CastField", ctx, Filter, "Fields", "SCIRun"),
+    haveMinMaxTCL(ctx->subVar(ctx->subVar("haveMinMaxTCL")),
+    haveOutVoxelTCL(ctx->subVar("haveOutVoxelTCL")), 
+    haveBBoxTCL(ctx->subVar("haveBBoxTCL")),
+    outVoxelTCL(ctx->subVar("outVoxelTCL")),
+    NminTCL(ctx->subVar("NminTCL")),
+    NmaxTCL(ctx->subVar("NmaxTCL")),
+    CminTCL(ctx->subVar("CminTCL")),
+    CmaxTCL(ctx->subVar("CmaxTCL")),
+    minOutTCLX(ctx->subVar("minOutTCLX")),
+    minOutTCLY(ctx->subVar("minOutTCLY")),
+    minOutTCLZ(ctx->subVar("minOutTCLZ")),
+    maxOutTCLX(ctx->subVar("maxOutTCLX")),
+    maxOutTCLY(ctx->subVar("maxOutTCLY")), 
+    maxOutTCLZ(ctx->subVar("maxOutTCLZ"))
 {
     iField=new FieldIPort(this, "Geometry", FieldIPort::Atomic);
     add_iport(iField);

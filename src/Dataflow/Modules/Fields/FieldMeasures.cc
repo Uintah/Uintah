@@ -60,7 +60,7 @@ private:
   void measure_trisurf();
   void measure_latvol();
 public:
-  FieldMeasures(const string& id);
+  FieldMeasures(GuiContext* ctx);
   virtual ~FieldMeasures();
 
   virtual void execute();
@@ -68,19 +68,16 @@ public:
 };
 
 
-extern "C" Module* make_FieldMeasures(const string& id) {
-  return new FieldMeasures(id);
-}
+DECLARE_MAKER(FieldMeasures)
 
-
-FieldMeasures::FieldMeasures(const string& id)
-  : Module("FieldMeasures", id, Filter, "Fields", "SCIRun"),
-    nodeBased_("nodeBased", id, this),
-    xFlag_("xFlag", id, this), yFlag_("yFlag", id, this),
-    zFlag_("zFlag", id, this), sizeFlag_("sizeFlag", id, this),
-    valenceFlag_("valenceFlag", id, this), 
-    aspectRatioFlag_("aspectRatioFlag", id, this),
-    elemSizeFlag_("elemSizeFlag", id, this)
+FieldMeasures::FieldMeasures(GuiContext* ctx)
+  : Module("FieldMeasures", ctx, Filter, "Fields", "SCIRun"),
+    nodeBased_(ctx->subVar("nodeBased")),
+    xFlag_(ctx->subVar("xFlag")), yFlag_(ctx->subVar("yFlag")),
+    zFlag_(ctx->subVar("zFlag")), sizeFlag_(ctx->subVar("sizeFlag")),
+    valenceFlag_(ctx->subVar("valenceFlag")), 
+    aspectRatioFlag_(ctx->subVar("aspectRatioFlag")),
+    elemSizeFlag_(ctx->subVar("elemSizeFlag"))
 {
 }
 

@@ -54,7 +54,7 @@ class BuildInterpolant : public Module
   GuiDouble  closeness_distance_;
 
 public:
-  BuildInterpolant(const string& id);
+  BuildInterpolant(GuiContext* ctx);
   virtual ~BuildInterpolant();
   virtual void execute();
 
@@ -62,16 +62,12 @@ public:
   //void find_closest(Mesh *mesh, typename Index::index_type &idx, Point &p);
 };
 
-extern "C" Module* make_BuildInterpolant(const string& id)
-{
-  return new BuildInterpolant(id);
-}
-
-BuildInterpolant::BuildInterpolant(const string& id) : 
-  Module("BuildInterpolant", id, Filter, "Fields", "SCIRun"),
-  use_interp_("use_interp", id, this),
-  use_closest_("use_closest", id, this),
-  closeness_distance_("closeness_distance", id, this)
+DECLARE_MAKER(BuildInterpolant)
+BuildInterpolant::BuildInterpolant(GuiContext* ctx) : 
+  Module("BuildInterpolant", ctx, Filter, "Fields", "SCIRun"),
+  use_interp_(ctx->subVar("use_interp")),
+  use_closest_(ctx->subVar("use_closest")),
+  closeness_distance_(ctx->subVar("closeness_distance"))
 {
 }
 

@@ -23,19 +23,15 @@ class LinAlgUnary : public Module {
   GuiString function_;
   void insertion_sort(double *x, int n);
 public:
-  LinAlgUnary(const string& id);
+  LinAlgUnary(GuiContext* ctx);
   virtual ~LinAlgUnary();
   virtual void execute();
 };
 
-extern "C" Module* make_LinAlgUnary(const string& id)
-{
-    return new LinAlgUnary(id);
-}
-
-LinAlgUnary::LinAlgUnary(const string& id)
-: Module("LinAlgUnary", id, Filter,"Math", "SCIRun"),
-  op_("op", id, this), function_("function", id, this)
+DECLARE_MAKER(LinAlgUnary)
+LinAlgUnary::LinAlgUnary(GuiContext* ctx)
+: Module("LinAlgUnary", ctx, Filter,"Math", "SCIRun"),
+  op_(ctx->subVar("op")), function_(ctx->subVar("function"))
 {
 }
 

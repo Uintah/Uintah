@@ -38,6 +38,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -169,7 +170,7 @@ class SolveMatrix : public Module {
 public:
   void parallel_conjugate_gradient(int proc);
   void parallel_bi_conjugate_gradient(int proc);
-  SolveMatrix(const string& id);
+  SolveMatrix(GuiContext* ctx);
   virtual ~SolveMatrix();
   virtual void execute();
   
@@ -195,30 +196,27 @@ public:
   CGData data;
 };
 
-extern "C" Module* make_SolveMatrix(const string& id) {
-  return new SolveMatrix(id);
-}
-
+DECLARE_MAKER(SolveMatrix)
  
-SolveMatrix::SolveMatrix(const string& id)
-  : Module("SolveMatrix", id, Filter, "Math", "SCIRun"),
-    target_error("target_error", id, this),
-    flops("flops", id, this),
-    floprate("floprate", id, this),
-    memrefs("memrefs", id, this),
-    memrate("memrate", id, this),
-    orig_error("orig_error", id, this),
-    current_error("current_error", id, this),
-    method("method", id, this),
-    precond("precond",id,this),
-    iteration("iteration", id, this),
-    maxiter("maxiter", id, this),
-    use_previous_soln("use_previous_soln", id, this),
-    emit_partial("emit_partial", id, this),
-    emit_iter("emit_iter", id, this),
-    petsc_installed("petsc_installed", id, this),
-    status("status",id,this),
-    tcl_np("np", id, this)
+SolveMatrix::SolveMatrix(GuiContext* ctx)
+  : Module("SolveMatrix", ctx, Filter, "Math", "SCIRun"),
+    target_error(ctx->subVar("target_error")),
+    flops(ctx->subVar("flops")),
+    floprate(ctx->subVar("floprate")),
+    memrefs(ctx->subVar("memrefs")),
+    memrate(ctx->subVar("memrate")),
+    orig_error(ctx->subVar("orig_error")),
+    current_error(ctx->subVar("current_error")),
+    method(ctx->subVar("method")),
+    precond(ctx->subVar("precond")),
+    iteration(ctx->subVar("iteration")),
+    maxiter(ctx->subVar("maxiter")),
+    use_previous_soln(ctx->subVar("use_previous_soln")),
+    emit_partial(ctx->subVar("emit_partial")),
+    emit_iter(ctx->subVar("emit_iter")),
+    petsc_installed(ctx->subVar("petsc_installed")),
+    status(ctx->subVar("status")),
+    tcl_np(ctx->subVar("np"))
 {
 #ifdef UNI_PETSCe
   petsc_installed.set(1);
@@ -462,7 +460,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
   PETSc_max_err = target_error.get();
 
   //Setup callback to chart graph
-  TCL::execute(id+" reset_graph");
+  gui->execute(id+" reset_graph");
   PETSc_errlist.remove_all();
   PETSc_last_update=1;
   PETSc_targetidx.remove_all();
@@ -495,7 +493,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
   }
   else
   {
-    TCL::execute(id+" finish_graph");
+    gui->execute(id+" finish_graph");
     append_values(its, PETSc_errlist, PETSc_last_update, 
 		  PETSc_targetidx, PETSc_targetlist, 
 		  PETSc_last_errupdate);
@@ -517,7 +515,7 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
 
   PetscLock.unlock();
 
-  TCL::execute("update idletasks");
+  gui->execute("update idletasks");
 }
 #endif
 
@@ -541,7 +539,7 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
 	str << targetidx[i] << " " << targetlist[i] << " ";
     }
     str << "\" ; update idletasks";
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
     last_update=errlist.size();
     last_errupdate=targetidx.size();
 }
@@ -603,7 +601,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     grefs+=memref/1000000000;
     memref=memref%1000000000;
     
-    TCL::execute(id+" reset_graph");
+    gui->execute(id+" reset_graph");
     Array1<double> errlist;
     errlist.add(err);
     int last_update=0;
@@ -621,12 +619,12 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     while(niter < toomany){
 	niter++;
 
-	double new_error;
-	if(get_gui_doublevar(id, "target_error", new_error)
-	   && new_error != max_error){
-	    targetidx.add(niter);
-	    targetlist.add(max_error);
-	    max_error=new_error;
+	target_error.reset();
+	double new_error = target_error.get();
+	if(new_error != max_error){
+	  targetidx.add(niter);
+	  targetlist.add(max_error);
+	  max_error=new_error;
 	}
 	targetidx.add(niter);
 	targetlist.add(max_error);
@@ -680,7 +678,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     memrefs.set(grefs*1.e9+memref);
     memrate.set((grefs*1.e3+memref*1.e-6)/time);
 
-    TCL::execute(id+" finish_graph");
+    gui->execute(id+" finish_graph");
     append_values(niter, errlist, last_update, targetidx, targetlist, last_errupdate);
 }
 
@@ -808,7 +806,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrefs.set(stats->grefs*1.e9+stats->memref);
     memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
-    TCL::execute(id+" reset_graph");
+    gui->execute(id+" reset_graph");
     errlist.add(data.err);
     targetidx.add(0);
     targetlist.add(data.max_error);
@@ -828,9 +826,9 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     ColumnMatrix& P=*data.P;
     if(processor==0){
 //       data.niter++;
-      double new_error;
-     if(get_gui_doublevar(id, "target_error", new_error)
-	 && new_error != data.max_error){
+      target_error.reset();
+      double new_error = target_error.get();
+      if(new_error != data.max_error){
 	targetidx.add(data.niter+1);
 	targetlist.add(data.max_error);
 	data.max_error=new_error;
@@ -929,7 +927,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrefs.set(14*stats->grefs*1.e9+stats->memref);
     memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
-    TCL::execute(id+" finish_graph");
+    gui->execute(id+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
 		  last_errupdate);
     
@@ -1071,7 +1069,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     memrefs.set(stats->grefs*1.e9+stats->memref);
     memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
-    TCL::execute(id+" reset_graph");
+    gui->execute(id+" reset_graph");
     errlist.add(data.err);
     targetidx.add(0);
     targetlist.add(data.max_error);
@@ -1093,9 +1091,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     ColumnMatrix& P1=*data.P1;
     
     if(processor==0){
-      double new_error;
-      if(get_gui_doublevar(id, "target_error", new_error)
-	 && new_error != data.max_error){
+      target_error.reset();
+      double new_error = target_error.get();
+      if(new_error != data.max_error){
 	targetidx.add(data.niter+1);
 	targetlist.add(data.max_error);
 	data.max_error=new_error;
@@ -1222,7 +1220,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
     remark("Done in " + to_string(time) + " seconds.");
     
-    TCL::execute(id+" finish_graph");
+    gui->execute(id+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
 		  last_errupdate);
     

@@ -137,17 +137,17 @@ class ShowField : public Module
   void maybe_execute(toggle_type_e dis_type);
   Vector                  *bounding_vector_;
 public:
-  ShowField(const string& id);
+  ShowField(GuiContext* ctx);
   virtual ~ShowField();
   virtual void execute();
   void check_for_vector_data(FieldHandle fld_handle);
   bool fetch_typed_algorithm(FieldHandle fld_handle);
   bool determine_dirty(FieldHandle fld_handle);
-  virtual void tcl_command(TCLArgs& args, void* userdata);
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 };
 
-ShowField::ShowField(const string& id) : 
-  Module("ShowField", id, Filter, "Visualization", "SCIRun"), 
+ShowField::ShowField(GuiContext* ctx) : 
+  Module("ShowField", ctx, Filter, "Visualization", "SCIRun"), 
   fld_(0),
   color_(0),
   color_handle_(0),
@@ -159,34 +159,34 @@ ShowField::ShowField(const string& id) :
   edge_id_(0),
   face_id_(0),
   data_id_(0),
-  nodes_on_("nodes-on", id, this),
-  nodes_as_disks_("nodes-as-disks", id, this),
+  nodes_on_(ctx->subVar("nodes-on")),
+  nodes_as_disks_(ctx->subVar("nodes-as-disks")),
   nodes_dirty_(true),
-  edges_on_("edges-on", id, this),
+  edges_on_(ctx->subVar("edges-on")),
   edges_dirty_(true),
-  use_normals_("use-normals", id, this),
-  use_transparency_("use-transparency", id, this),
-  faces_on_("faces-on", id, this),
+  use_normals_(ctx->subVar("use-normals")),
+  use_transparency_(ctx->subVar("use-transparency")),
+  faces_on_(ctx->subVar("faces-on")),
   faces_dirty_(true),
-  vectors_on_("vectors-on", id, this),
-  normalize_vectors_("normalize-vectors", id, this),
-  has_vec_data_("has_vec_data", id, this),
+  vectors_on_(ctx->subVar("vectors-on")),
+  normalize_vectors_(ctx->subVar("normalize-vectors")),
+  has_vec_data_(ctx->subVar("has_vec_data")),
   data_dirty_(true),
-  def_color_r_("def-color-r", id, this),
-  def_color_g_("def-color-g", id, this),
-  def_color_b_("def-color-b", id, this),
-  def_color_a_("def-color-a", id, this),
+  def_color_r_(ctx->subVar("def-color-r")),
+  def_color_g_(ctx->subVar("def-color-g")),
+  def_color_b_(ctx->subVar("def-color-b")),
+  def_color_a_(ctx->subVar("def-color-a")),
   def_mat_handle_(scinew Material(Color(0.5, 0.5, 0.5))),
   data_at_dirty_(true),
-  node_display_type_("node_display_type", id, this),
-  edge_display_type_("edge_display_type", id, this),
-  active_tab_("active_tab", id, this),
-  node_scale_("node_scale", id, this),
-  edge_scale_("edge_scale", id, this),
-  vectors_scale_("vectors_scale", id, this),
-  showProgress_("show_progress", id, this),
-  interactive_mode_("interactive_mode", id, this),
-  resolution_("resolution", id, this),
+  node_display_type_(ctx->subVar("node_display_type")),
+  edge_display_type_(ctx->subVar("edge_display_type")),
+  active_tab_(ctx->subVar("active_tab")),
+  node_scale_(ctx->subVar("node_scale")),
+  edge_scale_(ctx->subVar("edge_scale")),
+  vectors_scale_(ctx->subVar("vectors_scale")),
+  showProgress_(ctx->subVar("show_progress")),
+  interactive_mode_(ctx->subVar("interactive_mode")),
+  resolution_(ctx->subVar("resolution")),
   res_(0),
   renderer_(0),
   render_state_(5),
@@ -468,7 +468,7 @@ ShowField::maybe_execute(toggle_type_e dis_type)
 }
 
 void 
-ShowField::tcl_command(TCLArgs& args, void* userdata) {
+ShowField::tcl_command(GuiArgs& args, void* userdata) {
   if(args.count() < 2){
     args.error("ShowField needs a minor command");
     return;
@@ -594,10 +594,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   }
 }
 
-extern "C" Module* make_ShowField(const string& id) {
-  return new ShowField(id);
-}
-
+DECLARE_MAKER(ShowField)
 } // End namespace SCIRun
 
 

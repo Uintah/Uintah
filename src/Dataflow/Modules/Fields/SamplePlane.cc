@@ -40,7 +40,7 @@ namespace SCIRun {
 class SamplePlane : public Module
 {
 public:
-  SamplePlane(const string& id);
+  SamplePlane(GuiContext* ctx);
   virtual ~SamplePlane();
 
   virtual void execute();
@@ -55,16 +55,13 @@ private:
 };
 
 
-extern "C" Module* make_SamplePlane(const string& id) {
-  return new SamplePlane(id);
-}
+DECLARE_MAKER(SamplePlane)
 
-
-SamplePlane::SamplePlane(const string& id)
-  : Module("SamplePlane", id, Filter, "Fields", "SCIRun"),
-    size_x_("sizex", id, this),
-    size_y_("sizey", id, this),
-    axis_("axis", id, this)
+SamplePlane::SamplePlane(GuiContext* ctx)
+  : Module("SamplePlane", ctx, Filter, "Fields", "SCIRun"),
+    size_x_(ctx->subVar("sizex")),
+    size_y_(ctx->subVar("sizey")),
+    axis_(ctx->subVar("axis"))
 {
 }
 

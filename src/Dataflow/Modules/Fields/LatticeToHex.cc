@@ -29,17 +29,15 @@ private:
   int            last_gen_;
   FieldHandle    ofieldH_;
 public:
-  LatticeToHex(const string& id);
+  LatticeToHex(GuiContext* ctx);
   virtual ~LatticeToHex();
   virtual void execute();
 };
 
-extern "C" PSECORESHARE Module* make_LatticeToHex(const string& id) {
-  return scinew LatticeToHex(id);
-}
+  DECLARE_MAKER(LatticeToHex(GuiContext* ctx));
 
-LatticeToHex::LatticeToHex(const string& id)
-  : Module("LatticeToHex", id, Source, "Fields", "SCIRun"), last_gen_(-1)
+LatticeToHex::LatticeToHex(GuiContext* ctx)
+  : Module("LatticeToHex", ctx, Source, "Fields", "SCIRun"), last_gen_(-1)
 {
 }
 

@@ -42,20 +42,17 @@ private:
   FieldOPort *ofp;
 
 public:
-  VectorMagnitude(const string& id);
+  VectorMagnitude(GuiContext* ctx);
   virtual ~VectorMagnitude();
 
   virtual void execute();
 };
 
 
-extern "C" Module* make_VectorMagnitude(const string& id) {
-  return new VectorMagnitude(id);
-}
+DECLARE_MAKER(VectorMagnitude)
 
-
-VectorMagnitude::VectorMagnitude(const string& id)
-  : Module("VectorMagnitude", id, Filter, "Fields", "SCIRun")
+VectorMagnitude::VectorMagnitude(GuiContext* ctx)
+  : Module("VectorMagnitude", ctx, Filter, "Fields", "SCIRun")
 {
 }
 

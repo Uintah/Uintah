@@ -29,13 +29,13 @@ namespace SCIRun {
 
 class TetVol2QuadraticTetVol : public Module {
 public:
-  TetVol2QuadraticTetVol(const string& id);
+  TetVol2QuadraticTetVol(GuiContext* ctx);
 
   virtual ~TetVol2QuadraticTetVol();
 
   virtual void execute();
 
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   void debug_tets(TetVolMeshHandle in, 
 		  QuadraticTetVolMeshHandle out);
 private:
@@ -43,12 +43,9 @@ private:
   FieldOPort*              ofld_;
 };
 
-extern "C" Module* make_TetVol2QuadraticTetVol(const string& id) {
-  return scinew TetVol2QuadraticTetVol(id);
-}
-
-TetVol2QuadraticTetVol::TetVol2QuadraticTetVol(const string& id)
-  : Module("TetVol2QuadraticTetVol", id, Source, "Fields", "SCIRun")
+DECLARE_MAKER(TetVol2QuadraticTetVol)
+TetVol2QuadraticTetVol::TetVol2QuadraticTetVol(GuiContext* ctx)
+  : Module("TetVol2QuadraticTetVol", ctx, Source, "Fields", "SCIRun")
 {
 }
 
@@ -147,7 +144,7 @@ TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in,
 
 }
 
-void TetVol2QuadraticTetVol::tcl_command(TCLArgs& args, void* userdata)
+void TetVol2QuadraticTetVol::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

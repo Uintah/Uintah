@@ -38,32 +38,28 @@ class MatrixSelectVector : public Module {
   int increment(int which, int lower, int upper);
 
 public:
-  MatrixSelectVector(const string& id);
+  MatrixSelectVector(GuiContext* ctx);
   virtual ~MatrixSelectVector();
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
-extern "C" Module* make_MatrixSelectVector(const string& id)
-{
-  return new MatrixSelectVector(id);
-}
+DECLARE_MAKER(MatrixSelectVector)
 
-
-MatrixSelectVector::MatrixSelectVector(const string& id)
-  : Module("MatrixSelectVector", id, Filter,"Math", "SCIRun"),
-    row_or_col_("row_or_col", id, this),
-    selectable_min_("selectable_min", id, this),
-    selectable_max_("selectable_max", id, this),
-    selectable_inc_("selectable_inc", id, this),
-    selectable_units_("selectable_units", id, this),
-    range_min_("range_min", id, this),
-    range_max_("range_max", id, this),
-    playmode_("playmode", id, this),
-    current_("current", id, this),
-    execmode_("execmode", id, this),
-    delay_("delay", id, this),
+MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
+  : Module("MatrixSelectVector", ctx, Filter,"Math", "SCIRun"),
+    row_or_col_(ctx->subVar("row_or_col")),
+    selectable_min_(ctx->subVar("selectable_min")),
+    selectable_max_(ctx->subVar("selectable_max")),
+    selectable_inc_(ctx->subVar("selectable_inc")),
+    selectable_units_(ctx->subVar("selectable_units")),
+    range_min_(ctx->subVar("range_min")),
+    range_max_(ctx->subVar("range_max")),
+    playmode_(ctx->subVar("playmode")),
+    current_(ctx->subVar("current")),
+    execmode_(ctx->subVar("execmode")),
+    delay_(ctx->subVar("delay")),
     inc_(1),
     stop_(false)
 {
@@ -311,7 +307,7 @@ MatrixSelectVector::execute()
   {
     std::ostringstream str;
     str << id << " update";
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
   }
   
   reset_vars();
@@ -453,7 +449,7 @@ MatrixSelectVector::execute()
 
 
 void
-MatrixSelectVector::tcl_command(TCLArgs& args, void* userdata)
+MatrixSelectVector::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
     args.error("MatrixSelectVector needs a minor command");

@@ -58,32 +58,29 @@ private:
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
-  ClipLattice(const string& id);
+  ClipLattice(GuiContext* ctx);
   virtual ~ClipLattice();
 
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   virtual void widget_moved(int);
 };
 
 
-extern "C" Module* make_ClipLattice(const string& id) {
-  return new ClipLattice(id);
-}
+DECLARE_MAKER(ClipLattice)
 
-
-ClipLattice::ClipLattice(const string& id)
-  : Module("ClipLattice", id, Source, "Fields", "SCIRun"),
+ClipLattice::ClipLattice(GuiContext* ctx)
+  : Module("ClipLattice", ctx, Source, "Fields", "SCIRun"),
     widget_lock_("ClipLattice widget lock"),
     gui_exec_p_(true),
     last_input_generation_(0),
-    use_text_bbox_("use-text-bbox", id, this),
-    text_min_x_("text-min-x", id, this),
-    text_min_y_("text-min-y", id, this),
-    text_min_z_("text-min-z", id, this),
-    text_max_x_("text-max-x", id, this),
-    text_max_y_("text-max-y", id, this),
-    text_max_z_("text-max-z", id, this),
+    use_text_bbox_(ctx->subVar("use-text-bbox")),
+    text_min_x_(ctx->subVar("text-min-x")),
+    text_min_y_(ctx->subVar("text-min-y")),
+    text_min_z_(ctx->subVar("text-min-z")),
+    text_max_x_(ctx->subVar("text-max-x")),
+    text_max_y_(ctx->subVar("text-max-y")),
+    text_max_z_(ctx->subVar("text-max-z")),
     init(0)
 {
   widget_ = scinew BoxWidget(this, &widget_lock_, 1.0, true, false);
@@ -294,7 +291,7 @@ ClipLattice::widget_moved(int i)
 }
 
 void
-ClipLattice::tcl_command(TCLArgs& args, void* userdata) {
+ClipLattice::tcl_command(GuiArgs& args, void* userdata) {
   if (args.count() < 2) {
     args.error("ClipLattice needs a minor command");
     return;

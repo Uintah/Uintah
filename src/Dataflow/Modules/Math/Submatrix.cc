@@ -30,6 +30,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
 
@@ -46,27 +47,23 @@ private:
   GuiInt ncol_;
 
 public:
-  Submatrix(const string& id);
+  Submatrix(GuiContext* ctx);
   virtual ~Submatrix();
 
   virtual void execute();
 };
 
 
-extern "C" Module* make_Submatrix(const string& id)
-{
-    return new Submatrix(id);
-}
+DECLARE_MAKER(Submatrix)
 
-
-Submatrix::Submatrix(const string& id)
-  : Module("Submatrix", id, Filter,"Math", "SCIRun"),
-    mincol_("mincol", id, this),
-    maxcol_("maxcol", id, this),
-    minrow_("minrow", id, this),
-    maxrow_("maxrow", id, this),
-    nrow_("nrow", id, this),
-    ncol_("ncol", id, this)
+Submatrix::Submatrix(GuiContext* ctx)
+  : Module("Submatrix", ctx, Filter,"Math", "SCIRun"),
+    mincol_(ctx->subVar("mincol")),
+    maxcol_(ctx->subVar("maxcol")),
+    minrow_(ctx->subVar("minrow")),
+    maxrow_(ctx->subVar("maxrow")),
+    nrow_(ctx->subVar("nrow")),
+    ncol_(ctx->subVar("ncol"))
 {
 }
 

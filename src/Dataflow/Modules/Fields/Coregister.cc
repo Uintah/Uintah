@@ -53,24 +53,22 @@ private:
   int abort_;
   MusilRNG *mr_;
 public:
-  Coregister(const string& id);
+  Coregister(GuiContext* ctx);
   virtual ~Coregister();
   virtual void execute();
-  void tcl_command( TCLArgs&, void * );
+  void tcl_command( GuiArgs&, void * );
 };
 
 
-extern "C" Module* make_Coregister(const string& id) {
-  return new Coregister(id);
-}
+DECLARE_MAKER(Coregister)
 
-
-Coregister::Coregister(const string& id)
-  : Module("Coregister", id, Filter, "Fields", "SCIRun"),
-    allowScale_("allowScale", id, this), allowRotate_("allowRotate", id, this),
-    allowTranslate_("allowTranslate", id, this), seed_("seed", id, this),
-    iters_("iters", id, this), misfitTol_("misfitTol", id, this),
-    method_("method", id, this)
+Coregister::Coregister(GuiContext* ctx)
+  : Module("Coregister", ctx, Filter, "Fields", "SCIRun"),
+    allowScale_(ctx->subVar("allowScale")),
+    allowRotate_(ctx->subVar("allowRotate")),
+    allowTranslate_(ctx->subVar("allowTranslate")), seed_(ctx->subVar("seed")),
+    iters_(ctx->subVar("iters")), misfitTol_(ctx->subVar("misfitTol")),
+    method_(ctx->subVar("method"))
 {
 }
 
@@ -194,7 +192,7 @@ Coregister::execute()
 }
 //! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
-void Coregister::tcl_command(TCLArgs& args, void* userdata) {
+void Coregister::tcl_command(GuiArgs& args, void* userdata) {
   if (args[1] == "stop") {
     abort_=1;
   } else {

@@ -22,20 +22,16 @@ class SetProperty : public Module {
   GuiString val_;
   GuiInt mesh_prop_; // is this property for the mesh or the Field?
 public:
-  SetProperty(const string& id);
+  SetProperty(GuiContext* ctx);
   virtual ~SetProperty();
   virtual void execute();
 };
 
-extern "C" Module* make_SetProperty(const string& id)
-{
-    return new SetProperty(id);
-}
-
-SetProperty::SetProperty(const string& id)
-: Module("SetProperty", id, Filter,"Fields", "SCIRun"),
-  prop_("prop", id, this), val_("val", id, this),
-  mesh_prop_("meshprop", id, this)
+DECLARE_MAKER(SetProperty)
+SetProperty::SetProperty(GuiContext* ctx)
+: Module("SetProperty", ctx, Filter,"Fields", "SCIRun"),
+  prop_(ctx->subVar("prop")), val_(ctx->subVar("val")),
+  mesh_prop_(ctx->subVar("meshprop"))
 {
 }
 

@@ -104,23 +104,20 @@ GenStandardColorMaps::genMap(const string& s)
 // ---------------------------------------------------------------------- // 
   
 
-extern "C" Module* make_GenStandardColorMaps(const string& id) { 
-  return new GenStandardColorMaps(id); 
-}
-
+DECLARE_MAKER(GenStandardColorMaps)
 //--------------------------------------------------------------- 
-GenStandardColorMaps::GenStandardColorMaps(const string& id) 
-  : Module("GenStandardColorMaps", id, Filter, "Visualization", "SCIRun"),
-    tcl_status("tcl_status",id,this),
-    positionList("positionList", id, this),
-    nodeList("nodeList", id, this),
-    width("width", id, this),
-    height("height", id, this),
-    mapType("mapType", id, this),
-    minRes("minRes", id, this),
-    resolution("resolution", id, this),
-    realres("realres", id, this),
-    gamma("gamma", id, this)
+GenStandardColorMaps::GenStandardColorMaps(GuiContext* ctx) 
+  : Module("GenStandardColorMaps", ctx, Filter, "Visualization", "SCIRun"),
+    tcl_status(ctx->subVar("tcl_status")),
+    positionList(ctx->subVar("positionList")),
+    nodeList(ctx->subVar("nodeList")),
+    width(ctx->subVar("width")),
+    height(ctx->subVar("height")),
+    mapType(ctx->subVar("mapType")),
+    minRes(ctx->subVar("minRes")),
+    resolution(ctx->subVar("resolution")),
+    realres(ctx->subVar("realres")),
+    gamma(ctx->subVar("gamma"))
 { 
 } 
 
@@ -144,7 +141,7 @@ void GenStandardColorMaps::execute()
    }
    
    string tclRes;
-   TCL::eval(id+" getColorMapString", tclRes);
+   gui->eval(id+" getColorMapString", tclRes);
    if ( genMap(tclRes) ) 
      outport->send(cmap);
 } 

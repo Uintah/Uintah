@@ -31,8 +31,7 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLTask.h>
-
+#include <Core/Containers/StringUtil.h>
 #include <Core/Geom/Color.h>
 #include <Core/Math/MinMax.h>
 #define Colormap XColormap
@@ -101,7 +100,7 @@ class GenTransferFunc : public Module {
   int cmap_generation;
 
 public:
-  GenTransferFunc( const string& id);
+  GenTransferFunc( GuiContext* ctx);
 
   void DrawGraphs(int flush=1); // this function just blasts away...
 
@@ -131,7 +130,7 @@ public:
 
   virtual ~GenTransferFunc();
   virtual void execute();
-  void tcl_command( TCLArgs&, void* );
+  void tcl_command( GuiArgs&, void* );
 
   int makeCurrent(void);
 
@@ -139,13 +138,10 @@ public:
 
 };
 
-extern "C" Module* make_GenTransferFunc( const string& id) {
-  return scinew GenTransferFunc(id);
-}
-
-GenTransferFunc::GenTransferFunc( const string& id)
-  : Module("GenTransferFunc",id,Source, "Visualization", "SCIRun"),
-    RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
+DECLARE_MAKER(GenTransferFunc)
+GenTransferFunc::GenTransferFunc( GuiContext* ctx)
+  : Module("GenTransferFunc",ctx,Source, "Visualization", "SCIRun"),
+    RGBorHSV(ctx->subVar("rgbhsv")),lineVSspline(ctx->subVar("linespline")),
     activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
     cmap_generation(-1)
 {
@@ -258,7 +254,7 @@ void GenTransferFunc::Resize(int win)
   glViewport(0,0,winX[win],winY[win]);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  TCLTask::unlock();
+  gui->unlock();
 
 }
 
@@ -397,7 +393,7 @@ void GenTransferFunc::DrawGraphs( int flush)
 
     glXMakeCurrent(dpy[0],None,NULL);
 
-    TCLTask::unlock();
+    gui->unlock();
     if ( flush )
       ogeom->flushViews();
 
@@ -407,13 +403,13 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glXMakeCurrent(dpy[0],None,NULL);
 
-  TCLTask::unlock();
+  gui->unlock();
 
 }
 
 // this is how the gui talks with this thing
 
-void GenTransferFunc::tcl_command( TCLArgs& args, void* userdata)
+void GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
     args.error("No command for GenTransferFunc");
@@ -806,7 +802,7 @@ int GenTransferFunc::makeCurrent(void)
   Tk_Window tkwin;
 
   // lock a mutex
-  TCLTask::lock();
+  gui->lock();
 
   if (!ctxs[0]) {
     const string myname(".ui" + id + ".f.gl1.gl");
@@ -817,7 +813,7 @@ int GenTransferFunc::makeCurrent(void)
       error("Unable to locate window!");
 
       // unlock mutex
-      TCLTask::unlock();
+      gui->unlock();
       return 0;
     }
     winX[0] = Tk_Width(tkwin);
@@ -832,7 +828,7 @@ int GenTransferFunc::makeCurrent(void)
     if(!ctxs[0])
       {
 	error("Unable to create OpenGL Context!");
-	TCLTask::unlock();
+	gui->unlock();
 	return 0;
       }
   }	
@@ -846,7 +842,7 @@ int GenTransferFunc::makeCurrent(void)
       error("Unable to locate window!");
 
       // unlock mutex
-      TCLTask::unlock();
+      gui->unlock();
       return 0;
     }
     
@@ -862,7 +858,7 @@ int GenTransferFunc::makeCurrent(void)
     if(!ctxs[1])
       {
 	error("Unable to create OpenGL Context!");
-	TCLTask::unlock();
+	gui->unlock();
 	return 0;
       }
   }	
@@ -876,7 +872,7 @@ int GenTransferFunc::makeCurrent(void)
       error("Unable to locate window!");
 
       // unlock mutex
-      TCLTask::unlock();
+      gui->unlock();
       return 0;
     }
     winX[2] = Tk_Width(tkwin);
@@ -891,7 +887,7 @@ int GenTransferFunc::makeCurrent(void)
     if(!ctxs[2])
       {
 	error("Unable to create OpenGL Context!");
-	TCLTask::unlock();
+	gui->unlock();
 	return 0;
       }
   }	

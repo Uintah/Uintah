@@ -36,15 +36,12 @@ template class GenericReader<MatrixHandle>;
 
 class MatrixReader : public GenericReader<MatrixHandle> {
 public:
-  MatrixReader(const string& id);
+  MatrixReader(GuiContext* ctx);
 };
 
-extern "C" Module* make_MatrixReader(const string& id) {
-  return new MatrixReader(id);
-}
-
-MatrixReader::MatrixReader(const string& id)
-  : GenericReader<MatrixHandle>("MatrixReader", id, "DataIO", "SCIRun")
+DECLARE_MAKER(MatrixReader)
+MatrixReader::MatrixReader(GuiContext* ctx)
+  : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "SCIRun")
 {
 }
 

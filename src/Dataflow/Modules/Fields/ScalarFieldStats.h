@@ -30,16 +30,15 @@
 #include <algorithm>
 #include <vector>
 
+namespace SCIRun {
 using std::sort;
 using std::vector;
-
-namespace SCIRun {
 
 class ScalarFieldStats : public Module
 {
   friend class ScalarFieldStatsAlgo;
 public:
-  ScalarFieldStats(const string& id);
+  ScalarFieldStats(GuiContext* ctx);
   virtual ~ScalarFieldStats();
   virtual void execute();
   

@@ -92,7 +92,6 @@ class Isosurface : public Module {
   TriSurfMeshHandle trisurf_mesh_;
 
   //! status variables
-  int init;
   int geom_id;
   double prev_min, prev_max;
   int last_generation;
@@ -106,7 +105,7 @@ class Isosurface : public Module {
   DynamicAlgoHandle            sage_alg_;
 
 public:
-  Isosurface(const string& id);
+  Isosurface(GuiContext* ctx);
   virtual ~Isosurface();
   virtual void execute();
 

@@ -43,7 +43,7 @@ namespace SCIRun {
 class Unstructure : public Module
 {
 public:
-  Unstructure(const string& id);
+  Unstructure(GuiContext* ctx);
   virtual ~Unstructure();
   virtual void execute();
 
@@ -53,13 +53,9 @@ private:
 };
 
 
-extern "C" Module* make_Unstructure(const string& id)
-{
-  return new Unstructure(id);
-}
-
-Unstructure::Unstructure(const string& id)
-  : Module("Unstructure", id, Filter, "Fields", "SCIRun"),
+DECLARE_MAKER(Unstructure)
+Unstructure::Unstructure(GuiContext* ctx)
+  : Module("Unstructure", ctx, Filter, "Fields", "SCIRun"),
     last_generation_(0),
     ofieldhandle_(0)
 {

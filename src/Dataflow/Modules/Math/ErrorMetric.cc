@@ -68,6 +68,7 @@ POSSIBLE REVISIONS:
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
 using std::ostringstream;
@@ -81,7 +82,7 @@ public:
   ////////////////////////////////////////////////////////////
   // Constructor taking
   //  [in] string
-  ErrorMetric(const string& id);
+  ErrorMetric(GuiContext* ctx);
 
   // GROUP: Destructors:
   ///////////////////////////////////////////////////////////
@@ -103,16 +104,12 @@ private:
 }; 
 
 
-extern "C" Module* make_ErrorMetric(const string& id)
-{
-    return scinew ErrorMetric(id);
-}
-
-ErrorMetric::ErrorMetric(const string& id)
-  : Module("ErrorMetric", id, Filter, "Math", "SCIRun"),
-    haveUI_("haveUI", id, this),
-    methodTCL_("methodTCL", id, this),
-    pTCL_("pTCL", id, this)
+DECLARE_MAKER(ErrorMetric)
+ErrorMetric::ErrorMetric(GuiContext* ctx)
+  : Module("ErrorMetric", ctx, Filter, "Math", "SCIRun"),
+    haveUI_(ctx->subVar("haveUI")),
+    methodTCL_(ctx->subVar("methodTCL")),
+    pTCL_(ctx->subVar("pTCL"))
 {
 }
 
@@ -205,7 +202,7 @@ void ErrorMetric::execute()
 	 for (iterate=0; iterate<ne; iterate++)
 	     str << iterate << " " << (*ivec2)[iterate] << " ";
 	 str << "\" ; update idletasks";
-	 TCL::execute(str.str().c_str());
+	 gui->execute(str.str().c_str());
      }
 
      const string meth=methodTCL_.get();

@@ -27,19 +27,15 @@ class BuildNoise : public Module {
   MusilRNG musil;
   GuiDouble snr_;
 public:
-  BuildNoise(const string& id);
+  BuildNoise(GuiContext* ctx);
   virtual ~BuildNoise();
   virtual void execute();
 };
 
-extern "C" Module* make_BuildNoise(const string& id)
-{
-    return new BuildNoise(id);
-}
-
-BuildNoise::BuildNoise(const string& id)
-: Module("BuildNoise", id, Filter,"Math", "SCIRun"),
-  snr_("snr", id, this)
+DECLARE_MAKER(BuildNoise)
+BuildNoise::BuildNoise(GuiContext* ctx)
+: Module("BuildNoise", ctx, Filter,"Math", "SCIRun"),
+  snr_(ctx->subVar("snr"))
 {
 }
 

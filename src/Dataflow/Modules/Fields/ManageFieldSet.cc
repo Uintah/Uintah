@@ -57,7 +57,7 @@ class ManageFieldSet : public Module
   FHMap  fidmap_;
 
 public:
-  ManageFieldSet(const string& id);
+  ManageFieldSet(GuiContext* ctx);
   virtual ~ManageFieldSet();
   virtual void execute();
 
@@ -68,20 +68,14 @@ public:
 
   const string get_name(PropertyManager *pm);
   const string data_at_to_string(Field::data_location loc);
-
-  virtual void connection(Module::ConnectionMode mode, int a, int b);
 };
 
 
-extern "C" Module* make_ManageFieldSet(const string& id)
-{
-  return new ManageFieldSet(id);
-}
+DECLARE_MAKER(ManageFieldSet)
 
-
-ManageFieldSet::ManageFieldSet(const string& id)
-  : Module("ManageFieldSet", id, Filter, "Fields", "SCIRun"),
-    state_gui_("state", id, this)
+ManageFieldSet::ManageFieldSet(GuiContext* ctx)
+  : Module("ManageFieldSet", ctx, Filter, "Fields", "SCIRun"),
+    state_gui_(ctx->subVar("state"))
 {
 }
 
@@ -96,7 +90,7 @@ ManageFieldSet::add_fieldset(string path, FieldSetHandle fs)
 {
   const string name = get_name(fs.get_rep());
   string newpath;
-  TCL::eval(id + " add_sitem " + path + " " + name, newpath);
+  gui->eval(id + " add_sitem " + path + " " + name, newpath);
   const string sindex = newpath;
   fsidmap_[sindex] = fs;
 
@@ -126,7 +120,7 @@ ManageFieldSet::add_field(string path, FieldHandle f)
     " }";
 
   string index;
-  TCL::eval(id + " add_fitem " + path + " " +  name + " " + data, index);
+  gui->eval(id + " add_fitem " + path + " " +  name + " " + data, index);
 
   const string sindex = index;
   fidmap_[sindex] = f;
@@ -137,8 +131,8 @@ void
 ManageFieldSet::update_hiertable()
 {
   string result;
-  TCL::eval(id + " ui", result);
-  TCL::eval(id + " clear_all", result);
+  gui->eval(id + " ui", result);
+  gui->eval(id + " clear_all", result);
 
   fsidmap_.clear();
   fidmap_.clear();
@@ -236,15 +230,6 @@ split(list<string> &result, const string vals)
   } while (index0 < vals.size());
 }
 
-
-void
-ManageFieldSet::connection(Module::ConnectionMode mode, int a, int b)
-{
-  Module::connection(mode, a, b);
-  //update_hiertable();
-}
-
-
 void
 ManageFieldSet::execute()
 {
@@ -261,7 +246,7 @@ ManageFieldSet::execute()
     FieldSet *ofs = NULL;
 
     string result;
-    TCL::eval(".ui" + id + ".sel.h curselection", result);
+    gui->eval(".ui" + id + ".sel.h curselection", result);
 
     list<string> selected;
     split(selected, result);

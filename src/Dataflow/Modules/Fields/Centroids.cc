@@ -26,17 +26,15 @@ using namespace std;
 
 class PSECORESHARE Centroids : public Module {
 public:
-  Centroids(const string& id);
+  Centroids(GuiContext* ctx);
   virtual ~Centroids();
   virtual void execute();
 };
 
-extern "C" PSECORESHARE Module* make_Centroids(const string& id) {
-  return scinew Centroids(id);
-}
+  DECLARE_MAKER(Centroids);
 
-Centroids::Centroids(const string& id)
-  : Module("Centroids", id, Source, "Fields", "SCIRun")
+Centroids::Centroids(GuiContext* ctx)
+  : Module("Centroids", ctx, Source, "Fields", "SCIRun")
 {
 }
 

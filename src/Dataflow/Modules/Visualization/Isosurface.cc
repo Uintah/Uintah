@@ -48,26 +48,23 @@ using std::ostringstream;
 
 namespace SCIRun {
 
-extern "C" Module* make_Isosurface(const string& id) {
-  return new Isosurface(id);
-}
-
+DECLARE_MAKER(Isosurface)
 //static string module_name("Isosurface");
 static string surface_name("Isosurface");
 static string widget_name("Isosurface");
 
-Isosurface::Isosurface(const string& id) : 
-  Module("Isosurface", id, Filter, "Visualization", "SCIRun"), 
-  gui_iso_value("isoval", id, this),
-  extract_from_new_field("extract-from-new-field", id, this ),
-  use_algorithm("algorithm", id, this),
-  build_trisurf_("build_trisurf", id, this),
-  np_("np", id, this),
-  active_tab_("active_tab", id, this),
-  update_type_("update_type", id, this),
-  color_r_("color-r", id, this),
-  color_g_("color-g", id, this),
-  color_b_("color-b", id, this)
+Isosurface::Isosurface(GuiContext* ctx) : 
+  Module("Isosurface", ctx, Filter, "Visualization", "SCIRun"), 
+  gui_iso_value(ctx->subVar("isoval")),
+  extract_from_new_field(ctx->subVar("extract-from-new-field")),
+  use_algorithm(ctx->subVar("algorithm")),
+  build_trisurf_(ctx->subVar("build_trisurf")),
+  np_(ctx->subVar("np")),
+  active_tab_(ctx->subVar("active_tab")),
+  update_type_(ctx->subVar("update_type")),
+  color_r_(ctx->subVar("color-r")),
+  color_g_(ctx->subVar("color-g")),
+  color_b_(ctx->subVar("color-b"))
 {
   geom_id=0;
   
@@ -76,7 +73,6 @@ Isosurface::Isosurface(const string& id) :
   mc_alg_ = 0;
   noise_alg_ = 0;
   sage_alg_ = 0;
-  init = true;
 }
 
 Isosurface::~Isosurface()
@@ -116,11 +112,6 @@ void Isosurface::execute()
 
   update_state(JustStarted);
 
-  if( init ) {
-    initialize();
-    init = false;
-  }
-  
   if ( field->generation != last_generation ) {
     // new field
     new_field( field );
@@ -264,13 +255,13 @@ Isosurface::new_field( FieldHandle &field )
   // 1: field info
   ostringstream info;
   info << id << " set_info {" << type << "} " << field->generation;
-  TCL::execute(info.str().c_str());
+  gui->execute(info.str().c_str());
 
   // 2: min/max
   if(minmax.first != prev_min || minmax.second != prev_max){
     ostringstream str;
     str << id << " set_minmax " << minmax.first << " " << minmax.second;
-    TCL::execute(str.str().c_str());
+    gui->execute(str.str().c_str());
     prev_min = minmax.first;
     prev_max = minmax.second;
   }

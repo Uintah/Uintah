@@ -60,12 +60,12 @@ typedef void (*MatrixManipFunction)(vector<MatrixHandle>& in, vector<MatrixHandl
 class PSECORESHARE ManipMatrix : public Module 
 {
 public:
-  ManipMatrix(const string& id);
+  ManipMatrix(GuiContext* ctx);
   virtual ~ManipMatrix();
 
   // Compile and load .so for the selected manipulation
   virtual void execute();
-  virtual void tcl_command(TCLArgs& args, void* userdata);
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 
 private:
   typedef vector<string>          StringVector;
@@ -112,9 +112,9 @@ ManipMatrix::manips_map_t ManipMatrix::manips_;
 
 
 
-ManipMatrix::ManipMatrix( const string& id ) 
-  : Module("ManipMatrix", id, Source, "Math", "SCIRun" )
-  , name_("manipulationName", id, this)
+ManipMatrix::ManipMatrix( GuiContext* ctx ) 
+  : Module("ManipMatrix", ctx, Source, "Math", "SCIRun" )
+  , name_(ctx->subVar("manipulationName"))
   , curFun_(0)
 {
 }
@@ -183,7 +183,7 @@ ManipMatrix::execute()
 // ManipMatrix::tcl_command
 // 
 void 
-ManipMatrix::tcl_command(TCLArgs& args, void* userdata)
+ManipMatrix::tcl_command(GuiArgs& args, void* userdata)
 {
   name_.reset();
   cout << "TCLCOMMAND: curname: " << name_.get() << endl;
@@ -622,7 +622,7 @@ ManipMatrix::load_ui()
     names += manipName + " ";
   }
 
-  TCL::execute(( id + " set_names " + "{" + names + "}" ).c_str());
+  gui->execute(( id + " set_names " + "{" + names + "}" ).c_str());
 }
 
 
@@ -654,9 +654,9 @@ ManipMatrix::set_cur_manip( const string& name )
   const string libpath = vector_to_string( manipData.libpath_ );
   const string inc     = vector_to_string( manipData.inc_     );
 
-  TCL::execute((id + " set_cur_libs "    + "{" + libs    + "}").c_str());
-  TCL::execute((id + " set_cur_libpath " + "{" + libpath + "}").c_str());
-  TCL::execute((id + " set_cur_inc "     + "{" + inc     + "}").c_str());
+  gui->execute((id + " set_cur_libs "    + "{" + libs    + "}").c_str());
+  gui->execute((id + " set_cur_libpath " + "{" + libpath + "}").c_str());
+  gui->execute((id + " set_cur_inc "     + "{" + inc     + "}").c_str());
 }
 
 
@@ -681,10 +681,7 @@ ManipMatrix::getManips()
 
 
 
-extern "C" PSECORESHARE Module* make_ManipMatrix(const string& id) 
-{
-  return new ManipMatrix(id());
-}
+DEFINE_MAKER(ManipMatrix);
 
 } // End namespace SCIRun
 

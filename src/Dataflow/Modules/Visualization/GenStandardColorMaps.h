@@ -77,7 +77,7 @@ public:
   ////////// 
   // Contructor taking 
   // [in] string as an identifier
-  GenStandardColorMaps(const string& id); 
+  GenStandardColorMaps(GuiContext* ctx); 
 
   // GROUP: Destructors: 
   ////////// 
