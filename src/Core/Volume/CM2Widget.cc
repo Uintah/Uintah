@@ -145,8 +145,12 @@ TriangleCM2Widget::io(Piostream &stream)
   stream.end_class();
 }
 
-TriangleCM2Widget::TriangleCM2Widget()
-  : base_(0.5), top_x_(0.15), top_y_(0.5), width_(0.25), bottom_(0.5)
+TriangleCM2Widget::TriangleCM2Widget() : 
+  base_(0.5), 
+  top_x_(0.15), 
+  top_y_(0.5), 
+  width_(0.25), 
+  bottom_(0.5)
 {
   color_.r(1.0);
   color_.g(1.0);
@@ -155,25 +159,29 @@ TriangleCM2Widget::TriangleCM2Widget()
 }
 
 TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
-                                     float width, float bottom)
-  : base_(base), top_x_(top_x), top_y_(top_y), width_(width), bottom_(bottom)
+                                     float width, float bottom) : 
+  base_(base), 
+  top_x_(top_x), 
+  top_y_(top_y), 
+  width_(width), 
+  bottom_(bottom)
 {}
 
 TriangleCM2Widget::~TriangleCM2Widget()
 {}
 
-TriangleCM2Widget::TriangleCM2Widget(TriangleCM2Widget& copy)
-  : CM2Widget(copy),
-    base_(copy.base_),
-    top_x_(copy.top_x_),
-    top_y_(copy.top_y_),
-    width_(copy.width_),
-    bottom_(copy.bottom_),
-    last_x_(copy.last_x_),
-    last_y_(copy.last_y_),
-    last_width_(copy.last_width_),
-    pick_ix_(copy.pick_ix_),
-    pick_iy_(copy.pick_iy_)
+TriangleCM2Widget::TriangleCM2Widget(TriangleCM2Widget& copy) : 
+  CM2Widget(copy),
+  base_(copy.base_),
+  top_x_(copy.top_x_),
+  top_y_(copy.top_y_),
+  width_(copy.width_),
+  bottom_(copy.bottom_),
+  last_x_(copy.last_x_),
+  last_y_(copy.last_y_),
+  last_width_(copy.last_width_),
+  pick_ix_(copy.pick_ix_),
+  pick_iy_(copy.pick_iy_)
 {}
 
 CM2Widget*
@@ -183,7 +191,8 @@ TriangleCM2Widget::clone()
 }
 
 void
-TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer)
+TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
+			     Pbuffer* pbuffer)
 {
   if(!onState_) return;
 
@@ -195,7 +204,8 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuf
       blend = CM2_BLEND_FRAGMENT_ATI;
   }
 
-  FragmentProgramARB* shader = factory.shader(CM2_SHADER_TRIANGLE, shadeType_, faux, blend);
+  FragmentProgramARB* shader = factory.shader(CM2_SHADER_TRIANGLE, shadeType_, 
+					      faux, blend);
 
   if(shader) {
     if(!shader->valid()) {
@@ -211,7 +221,8 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuf
     glGetIntegerv(GL_VIEWPORT, vp);
     shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
     if(pbuffer)
-      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 0.0, 0.0);
+      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
+			    0.0, 0.0);
     
     glBegin(GL_TRIANGLES);
     {
@@ -313,18 +324,24 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       float da = alpha_/(rm-rb);
       float a = alpha_ - abs(rm-jrm+1)*da;
       for(int j=jrm-1; j>=jrb; j--, a-=da) {
-        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
+			     0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
+			     0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
+			     0.0f, 1.0f);
         array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
       a = alpha_ - abs(rm-jrm)*da;
       for (int j=jrm; j<=jre; j++, a-=da)
       {
-        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 
+			     0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 
+			     0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 
+			     0.0f, 1.0f);
         array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
     }
@@ -573,10 +590,13 @@ RectangleCM2Widget::io(Piostream &stream)
   stream.end_class();
 }
 
-RectangleCM2Widget::RectangleCM2Widget()
-  : type_(CM2_RECTANGLE_1D), left_x_(0.25), left_y_(0.5),
-    width_(0.25), height_(0.25),
-    offset_(0.25)
+RectangleCM2Widget::RectangleCM2Widget() : 
+  type_(CM2_RECTANGLE_1D), 
+  left_x_(0.25), 
+  left_y_(0.5),
+  width_(0.25), 
+  height_(0.25),
+  offset_(0.25)
 {
   color_.r(1.0);
   color_.g(1.0);
@@ -584,27 +604,32 @@ RectangleCM2Widget::RectangleCM2Widget()
   alpha_ = 1.0;
 }
 
-RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x, float left_y,
-                                       float width, float height, float offset)
-  : type_(type), left_x_(left_x), left_y_(left_y), width_(width), height_(height),
-    offset_(offset)
+RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x, 
+				       float left_y, float width, float height,
+				       float offset) : 
+  type_(type), 
+  left_x_(left_x), 
+  left_y_(left_y), 
+  width_(width), 
+  height_(height),
+  offset_(offset)
 {}
 
 RectangleCM2Widget::~RectangleCM2Widget()
 {}
 
-RectangleCM2Widget::RectangleCM2Widget(RectangleCM2Widget& copy)
-  : CM2Widget(copy),
-    type_(copy.type_),
-    left_x_(copy.left_x_),
-    left_y_(copy.left_y_),
-    width_(copy.width_),
-    height_(copy.height_),
-    offset_(copy.offset_),
-    last_x_(copy.last_x_),
-    last_y_(copy.last_y_),
-    pick_ix_(copy.pick_ix_),
-    pick_iy_(copy.pick_iy_)
+RectangleCM2Widget::RectangleCM2Widget(RectangleCM2Widget& copy) : 
+  CM2Widget(copy),
+  type_(copy.type_),
+  left_x_(copy.left_x_),
+  left_y_(copy.left_y_),
+  width_(copy.width_),
+  height_(copy.height_),
+  offset_(copy.offset_),
+  last_x_(copy.last_x_),
+  last_y_(copy.last_y_),
+  pick_ix_(copy.pick_ix_),
+  pick_iy_(copy.pick_iy_)
 {}
 
 CM2Widget*
@@ -614,7 +639,8 @@ RectangleCM2Widget::clone()
 }
 
 void
-RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer)
+RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, 
+			      Pbuffer* pbuffer)
 {
   if(!onState_) return;
 
@@ -648,7 +674,8 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbu
     glGetIntegerv(GL_VIEWPORT, vp);
     shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
     if(pbuffer)
-      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 0.0, 0.0);
+      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
+			    0.0, 0.0);
   
 
     glBegin(GL_QUADS);
