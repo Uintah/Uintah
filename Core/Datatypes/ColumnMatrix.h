@@ -109,7 +109,8 @@ public:
   friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
   friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
   
-  void print(std::ostream&);
+  virtual void print() const;
+  virtual void print(std::ostream&) const;
   void resize(int);
   
   // Persistent representation...

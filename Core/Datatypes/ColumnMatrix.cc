@@ -139,9 +139,14 @@ double ColumnMatrix::vector_norm(int& flops, int& memrefs, int beg, int end)
     return linalg_norm2((end-beg), data+beg);
 }
 
-void ColumnMatrix::print(std::ostream& str)
+void ColumnMatrix::print() const
 {
-    str << "Column Matrix: " << rows << endl;
+    std::cout << "Column Matrix: " << rows << endl;
+    print(std::cout);
+}
+
+void ColumnMatrix::print(std::ostream& str) const
+{
     for(int i=0;i<rows;i++){
 	str << data[i] << endl;
     }
