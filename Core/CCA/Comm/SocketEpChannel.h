@@ -68,6 +68,9 @@ namespace SCIRun {
     void registerHandler(int num, void* handle);
     void bind(SpChannel* spchan);
     int getTableSize();
+
+    const static int ADD_REFERENCE=-101;
+    const static int DEL_REFERENCE=-102;
   private:
     DTPoint *ep;
 

@@ -92,11 +92,13 @@ void SocketSpChannel::openConnection(const URL& url) {
 
   ep=(DTPoint*)(atol(  url.getSpec().c_str() ) );
 
+  //TODO: what if the url is not associated with a exsiting server?
+
   //addReference upon openning connection
   Message *message=getMessage();
   message->createMessage();
-  message->sendMessage(-101); //addReference;
-  //message->destroyMessage();
+  message->sendMessage(SocketEpChannel::ADD_REFERENCE);
+  message->destroyMessage();
 }
 
 SpChannel* SocketSpChannel::SPFactory(bool deep) {
@@ -105,11 +107,11 @@ SpChannel* SocketSpChannel::SPFactory(bool deep) {
 }
 
 void SocketSpChannel::closeConnection() {
-  //addReference upon openning connection
+  //delete reference upon closing connection
   Message *message=getMessage();
   message->createMessage();
-  message->sendMessage(-102); //deleteReference;  
-  //message->destroyMessage();
+  message->sendMessage(SocketEpChannel::DEL_REFERENCE); 
+  message->destroyMessage();
 }
 
 //new message is created and user should call destroyMessage to delete it.

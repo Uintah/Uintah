@@ -78,21 +78,17 @@ static void service(DTMessage *dtmsg){
   SocketEpChannel *chan = dynamic_cast<SocketEpChannel*>(sc->chan);
   if (chan) {
     int id=*((int *)dtmsg->buf);
-    if(id<=-100){
-      switch(id){
-      case -101:
-	sc->d_objptr->addReference();
-	break;
-      case -102:
-	sc->d_objptr->deleteReference();
-	break;
-      }
+    if(id==SocketEpChannel::ADD_REFERENCE){
+      sc->d_objptr->addReference();
+      delete dtmsg;
+    }
+    else if(id==SocketEpChannel::DEL_REFERENCE){
+      sc->d_objptr->deleteReference();
       delete dtmsg;
     }
     else{
       if (id >= chan->getTableSize())
 	throw CommError("Handler function does not exist",1101);
-      
       SocketMessage* msg=new SocketMessage(dtmsg);
       Thread *t = new Thread(new SocketThread(chan, msg, id), "HANDLER_THREAD");
       t->detach(); 
@@ -114,11 +110,11 @@ SocketEpChannel::~SocketEpChannel(){
 
 
 void SocketEpChannel::openConnection() {
-  //...do nothing
+  //do nothing
 }
 
 void SocketEpChannel::closeConnection() {
-  // ...
+  //do nothing
 }
 
 string SocketEpChannel::getUrl() {
@@ -132,8 +128,7 @@ void SocketEpChannel::activateConnection(void* obj){
 }
 
 Message* SocketEpChannel::getMessage() {
-  //this should never be called!
-  throw CommError("SocketEpChannel::getMessage", -1);
+  throw CommError("SocketEpChannel::getMessage should never be called", -1);
 }
 
 void SocketEpChannel::allocateHandlerTable(int size){
