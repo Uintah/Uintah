@@ -16426,8 +16426,8 @@ if test "$HAVE_LAPACK" != "yes"; then
 
 
 
-echo "$as_me:$LINENO: checking for complib.sgimath library (optional)" >&5
-echo $ECHO_N "checking for complib.sgimath library (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for complib.sgimath_mp library (optional)" >&5
+echo $ECHO_N "checking for complib.sgimath_mp library (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -16436,7 +16436,7 @@ _sci_savecxxflags=$CXXFLAGS
 _sci_includes=
 
 
-for i in complib.sgimath; do
+for i in complib.sgimath_mp; do
   if test -z "$_sci_libs"; then
     _sci_libs=-l$i
   else
