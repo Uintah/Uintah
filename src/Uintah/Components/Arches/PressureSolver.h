@@ -41,7 +41,7 @@ WARNING
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
-#include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Components/Arches/ArchesLabel.h>
 namespace Uintah {
 class ProcessorGroup;
@@ -112,14 +112,6 @@ public:
 				     SchedulerP& sched, 
 				     DataWarehouseP& new_dw,
 				     DataWarehouseP& matrix_dw);
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Schedule the creation of the .. more documentation here
-      //
-      void sched_normPressure(const LevelP& level,
-			      SchedulerP& sched,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw);  
 
 protected:
 
@@ -156,10 +148,9 @@ private:
       //    [in] 
       //        add documentation here
       //
-      void normPressure(const Patch* patch,
-			SchedulerP& sched,
-			const DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw);
+      void normPressure(const ProcessorGroup* pc,
+			const Patch* patch,
+			ArchesVariables* vars);
 
   
 
@@ -185,7 +176,7 @@ private:
       // underrealaxation parameter, read from an input database
       double d_underrelax;
       //reference points for the solvers
-      Vector d_pressRef;
+      IntVector d_pressRef;
 
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
@@ -199,6 +190,9 @@ private:
 
 //
 // $Log$
+// Revision 1.27  2000/08/11 21:26:36  rawat
+// added linear solver for pressure eqn
+//
 // Revision 1.26  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

@@ -23,7 +23,8 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/bcscalar.F \
 	$(SRCDIR)/scalsrc.F \
 	$(SRCDIR)/rescal.F \
-	$(SRCDIR)/arrl1.F
+	$(SRCDIR)/arrl1.F $(SRCDIR)/underelax.F $(SRCDIR)/linegs.F \
+	$(SRCDIR)/normpress.F
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
@@ -59,6 +60,9 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.32  2000/08/11 21:26:41  rawat
+# added linear solver for pressure eqn
+#
 # Revision 1.31  2000/08/01 23:28:46  skumar
 # Added residual calculation procedure and modified templates in linear
 # solver.  Added template for order-of-magnitude term calculation.

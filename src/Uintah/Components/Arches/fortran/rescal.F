@@ -7,7 +7,7 @@ c*********************************************************************
       SUBROUTINE rescal(domLo, domHi, idxLo, idxHi,
      &     PHI,RES,
      &     AE,AW,AN,AS,AT,AB,AP,SU,
-     &     RESPHI)
+     &     RESPHI, TRUNCPHI)
 C-----------------------------------------------------------------------
 C     WRITTEN BY: SESHADRI KUMAR, OCTOBER 14, 1996
 C     Modified, December 11, 1996, to isolate TRNC calculation from
@@ -36,6 +36,7 @@ C		Ending indices for calculation (i/p)
 C	PHI	Variable for which equation is being solved
 C	RES	Array containing the residual of the PHI-equation (o/p)
 C	RESPHI	L1 norm of the residual of the PHI-equation (o/p)
+c       TRUNCPHI L1 norm of order of magnitude terms in the PHI-equation
 C	SU	Source term for the PHI-momentum equation,
 C		excluding the pressure gradient (i/p)
 C-----------------------------------------------------------------------
@@ -71,17 +72,19 @@ c*********************************************************************
       double precision SU(domLo(1):domHi(1), 
      &     domLo(2):domHi(2), domLo(3):domHi(3))
       double precision RESPHI
+      double precision TRUNCPHI
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      double precision RESAVE
+      double precision RESAVE, TRUNC
 
       integer i,j,k
 
 C-----------------------------------------------------------------------
 C     EXECUTABLE STATEMENTS
 C-----------------------------------------------------------------------
+      truncphi = 0.0
 
       do 300 k = idxLo(3), idxHi(3)
          do 200 j = idxLo(2), idxHi(2)
@@ -97,8 +100,11 @@ c-----calculate residual------------------------------------------------
      &              as(i,j,k)*phi(i,j-1,k)+
      &              at(i,j,k)*phi(i,j,k+1)+
      &              ab(i,j,k)*phi(i,j,k-1))
-
                res(i,j,k) = su(i,j,k) - res(i,j,k)
+               trunc = amax1(abs(ap(i,j,k)*phi(i,j,k)),
+     $                           abs(su(i,j,k)))
+               truncphi = truncphi + trunc
+               
 
  100        continue
  200     continue
@@ -114,6 +120,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/11 21:26:41  rawat
+c added linear solver for pressure eqn
+c
 c Revision 1.2  2000/08/01 23:28:46  skumar
 c Added residual calculation procedure and modified templates in linear
 c solver.  Added template for order-of-magnitude term calculation.
