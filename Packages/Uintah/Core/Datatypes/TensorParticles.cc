@@ -1,6 +1,10 @@
 #include "TensorParticles.h"
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Grid.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -30,10 +34,12 @@ TensorParticles::TensorParticles()
 {
 }
 
-TensorParticles::TensorParticles(const ParticleVariable<Point>& positions,
-				 const ParticleVariable<Matrix3>& tensors,
-				 void* callbackClass) :
-  positions(positions), tensors(tensors), cbClass(callbackClass)
+TensorParticles::TensorParticles(
+			   const vector <ParticleVariable<Point> >& positions,
+			   const vector <ParticleVariable<Matrix3> >& tensors,
+			   void* callbackClass) :
+  positions(positions), tensors(tensors), cbClass(callbackClass),
+  have_bounds(false), have_minmax(false)
 {
 }
 
@@ -42,6 +48,14 @@ TensorParticles::~TensorParticles()
 {
 }
 
+void 
+TensorParticles:: AddVar( const ParticleVariable<Point> locs,
+			  const ParticleVariable<Matrix3> tens,
+			  const Patch*)
+{
+  positions.push_back( locs );
+  tensors.push_back( tens );
+}
 
 void TensorParticles::compute_bounds()
 {
@@ -50,13 +64,15 @@ void TensorParticles::compute_bounds()
 
   Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
 
-  ParticleSubset *ps = positions.getParticleSubset();
-  for(ParticleSubset::iterator iter = ps->begin();
-      iter != ps->end(); iter++){
-    max = SCICore::Geometry::Max(positions[ *iter ], max);
-    min = SCICore::Geometry::Min(positions[ *iter ], min);
+  vector<ParticleVariable<Point> >::iterator it;
+  for( it = positions.begin(); it != positions.end(); it++){
+    ParticleSubset *ps = (*it).getParticleSubset();
+    for(ParticleSubset::iterator iter = ps->begin();
+	iter != ps->end(); iter++){
+      max = SCICore::Geometry::Max((*it)[ *iter ], max);
+      min = SCICore::Geometry::Min((*it)[ *iter ], min);
+    }
   }
-
   if (min == max) {
     min = Point(0,0,0);
     max = Point(1,1,1);
@@ -81,13 +97,16 @@ void TensorParticles::compute_minmax()
     return;
 
   double min = 1e30, max = -1e30;
-  ParticleSubset *ps = positions.getParticleSubset();
-  for(ParticleSubset::iterator iter = ps->begin();
-      iter != ps->end(); iter++){
-    max = ( tensors[ *iter ].Norm() > max ) ?
-      tensors[ *iter ].Norm() : max;
-    min = ( tensors[ *iter ].Norm() < min ) ?
-      tensors[ *iter ].Norm() : min;
+  vector<ParticleVariable<Matrix3> >::iterator it;
+  for( it = tensors.begin(); it != tensors.end(); it++){
+    ParticleSubset *ps = (*it).getParticleSubset();
+    for(ParticleSubset::iterator iter = ps->begin();
+	iter != ps->end(); iter++){
+      max = ( (*it)[ *iter ].Norm() > max ) ?
+	(*it)[ *iter ].Norm() : max;
+      min = ( (*it)[ *iter ].Norm() < min ) ?
+	(*it)[ *iter ].Norm() : min;
+    }
   }
   if (min == max) {
     min -= 0.001;
