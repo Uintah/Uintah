@@ -6,7 +6,7 @@ TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
 TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
 ITCL_INCLUDE_DIR = @ITCL_INCLUDE_DIR@
 
-SRCS     = EditMatrix.cc ExtractSubmatrix.cc SolveMatrix.cc \
+SRCS     = BldTransform.cc EditMatrix.cc ExtractSubmatrix.cc SolveMatrix.cc \
            VisualizeMatrix.cc cConjGrad.cc cPhase.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \

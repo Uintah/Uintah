@@ -32,6 +32,7 @@ MP(TransformField)
 MP(MeshIterator)
 
 // Matrix
+MP(BldTransform)
 MP(EditMatrix)
 MP(SolveMatrix)
 MP(VisualizeMatrix)
@@ -133,6 +134,7 @@ void initPackage(const clString& tcl) {
   RM("Iterators",     "Mesh Iterator",           make_TransformField,       "");
 
   // Matrix
+  RM("Matrix",        "BldTransform",            make_BldTransform,         tcl+"/BldTransform.tcl");
   RM("Matrix",        "Edit Matrix",             make_EditMatrix,           tcl+"/EditMatrix.tcl");
   RM("Matrix",        "Solve Matrix",            make_SolveMatrix,          "");
   RM("Matrix",        "Visualize Matrix",        make_VisualizeMatrix,      "");
