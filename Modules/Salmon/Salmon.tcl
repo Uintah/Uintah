@@ -387,7 +387,7 @@ itcl_class Roe {
 	set "$this-$objid-debug" 0
 	set "$this-$objid-clip" 1
 
-	set menuvar  $m.objlist.canvas.frame.menu2$objid
+	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
 
 	$menup entryconfigure 0 -command "[$menup entrycget 0 -command] ; $this-c redraw"
@@ -395,14 +395,14 @@ itcl_class Roe {
 	$menup entryconfigure 2 -command "[$menup entrycget 2 -command] ; $this-c redraw"
 	$menup entryconfigure 3 -command "[$menup entrycget 3 -command] ; $this-c redraw"
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
-	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
     method addObject2 {objid} {
 	set w .ui$this
 	set m $w.mframe.f
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
-	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
     method removeObject {objid} {

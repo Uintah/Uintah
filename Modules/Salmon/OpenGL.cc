@@ -238,19 +238,28 @@ void OpenGL::redraw_loop()
 	    if(framerate==0)
 		framerate=30;
 	    double frametime=1./framerate;
-	    cerr << "delta=" << current_time-newtime << endl;
-	    if(current_time-newtime > .85*frametime){
+	    double delta=current_time-newtime;
+	    cerr << "delta=" << delta << endl;
+	    if(delta > 1.5*frametime){
+		cerr << "REALLY backing off..." << endl;
+		framerate=1./delta;
+		frametime=delta;
+		newtime=current_time;
+		cerr << "now=" << framerate << endl;
+	    } if(delta > .85*frametime){
 		cerr << "Backing off framerate.." << endl;
 		framerate*=.9;
 		cerr << "now=" << framerate << endl;
 		frametime=1./framerate;
-	    } else if(current_time-newtime < .5*frametime){
+		newtime=current_time;
+	    } else if(delta < .5*frametime){
 		cerr << "Advancing off framrate..." << endl;
 		framerate*=1.1;
 		if(framerate>30)
 		    framerate=30;
 		cerr << "now=" << framerate << endl;
 		frametime=1./framerate;
+		newtime=current_time;
 	    }
 	    newtime+=frametime;
 	    throttle.wait_for_time(newtime);
