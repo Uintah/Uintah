@@ -63,8 +63,8 @@ public:
   // GROUP:  Constructors/Destructor
   //////////
   //
-  Attrib(){};
-  virtual ~Attrib() { };
+  Attrib();
+  virtual ~Attrib();
   
   // GROUP: Class interface functions
   //////////
@@ -81,7 +81,15 @@ public:
   //////////
   // Get information about the attribute
   virtual string getInfo() = 0;
-
+  
+  //////////
+  // Returns type name:
+  // 0 - the class name
+  // n!=0 - name of the n-th parameter (for templatazed types)
+  virtual string getTypeName(int n) = 0;
+ 
+  //////////
+  // Attribute naming
   void setName(string name){
     d_name=name;
   };
@@ -93,9 +101,11 @@ public:
   // GROUP: Support of persistent representation
   //////////
   // Persistent IO
+
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-  
+  static  PersistentTypeID type_id;
+  static  string typeName(int);
+
   // GROUP: Public Data
   //////////
   // 
@@ -107,7 +117,6 @@ public:
   string      d_date;
   string      d_orgName;
   
- 
 protected:
   string      d_name;
 };
