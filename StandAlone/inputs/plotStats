@@ -56,6 +56,7 @@ echo "" > gp
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 
 echo "Generating the postscript file plotStats.ps"
+/bin/rm gp
 cat > gp << fin
 set terminal x11 1
 set terminal postscript color solid "Times-Roman" 9
