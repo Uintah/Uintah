@@ -27,7 +27,7 @@
  */
 
 #include <CCA/Components/Tri/Tri.h>
-#include <iostream.h>
+#include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
 
 #include <qapplication.h>

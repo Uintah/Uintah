@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <iostream.h>
+#include <iostream>
 
 class vector2d  {
 public:
@@ -47,12 +47,12 @@ inline bool operator!=(const vector2d &t1, const vector2d &t2) {
    return ((t1.x!=t2.x)||(t1.y!=t2.y));
 }
 
-inline istream &operator>>(istream &is, vector2d &t) {
+inline std::istream &operator>>(std::istream &is, vector2d &t) {
    is >> t.x >> t.y;
    return is;
 }
 
-inline ostream &operator<<(ostream &os, const vector2d &t) {
+inline std::ostream &operator<<(std::ostream &os, const vector2d &t) {
    os << t.x << " " << t.y;
    return os;
 }

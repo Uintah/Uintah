@@ -40,8 +40,8 @@
 #include <qscrollview.h>
 #include <math.h>
 #include <stdlib.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "vector2d.h"
 
 class Colormap:public QFrame

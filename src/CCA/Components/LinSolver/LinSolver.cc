@@ -30,8 +30,8 @@
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <qmessagebox.h>
 #include "Matrix.h"
 
