@@ -17,6 +17,7 @@
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Classlib/Args.h>
+#include <Malloc/New.h>
 #include <fcntl.h>
 #include <iostream.h>
 #include <setjmp.h>
