@@ -99,6 +99,7 @@ struct Allocator {
     int lazy;
     FILE* trace_out;
     FILE* stats_out;
+    char* statsfile;
     OSHunk* hunks;
 
     AllocBin* small_bins;
