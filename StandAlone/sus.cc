@@ -421,7 +421,6 @@ main( int argc, char** argv )
 
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 	SimulationController* ctl;
-        Regridder* regridder = NULL;
         if(do_AMR) {
 	   ctl = scinew AMRSimulationController(world);
 
@@ -595,7 +594,6 @@ main( int argc, char** argv )
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
-  lb = bal;
 
 	// Output
         DataArchiver* dataarchiver = scinew DataArchiver(world);

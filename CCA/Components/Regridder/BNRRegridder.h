@@ -37,11 +37,11 @@ WARNING
   //! Takes care of AMR Regridding, using the Berger-Rigoutsos algorithm
   class BNRRegridder : public RegridderCommon {
   public:
-    BNRRegridder(ProcessorGroup* pg);
+    BNRRegridder(const ProcessorGroup* pg);
     virtual ~BNRRegridder();
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched) = 0;
+    virtual Grid* regrid(Grid* oldGrid, SchedulerP sched);
   };
 
 } // End namespace Uintah

@@ -139,7 +139,7 @@ void AMRSimulationController::run()
 
    // set up regridder with initial infor about grid
    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-   regridder->problemSetup(ups, sharedState, grid);
+   regridder->problemSetup(ups, grid, sharedState);
 
    if(d_myworld->myrank() == 0){
      cout << "Compiling initialization taskgraph...\n";

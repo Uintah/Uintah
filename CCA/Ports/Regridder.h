@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
@@ -44,7 +45,8 @@ WARNING
     virtual ~Regridder();
 
     //! Initialize with regridding parameters from ups file
-    virtual void problemSetup(const ProblemSpecP& params, const GridP&) = 0;
+    virtual void problemSetup(const ProblemSpecP& params, const GridP&,
+			      const SimulationStateP& state) = 0;
 
     //! Asks if we need to recompile the task graph.
     virtual bool needRecompile(double time, double delt,
