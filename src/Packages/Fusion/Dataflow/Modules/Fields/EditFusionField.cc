@@ -397,7 +397,7 @@ void EditFusionField::execute(){
       hvm->set_property( "J Dim", jend, false );
       hvm->set_property( "K Dim", kend, false );
 
-      cout << "Reducing " << iend << " " << jend << " " << kend << endl;
+      cout << "EditFusionField - Reducing " << iend << " " << jend << " " << kend << endl;
     }
     else
     {
@@ -493,7 +493,7 @@ void EditFusionField::execute(){
       int nRows = npts;
       int nCols = matInput->ncols();
 
-      cout << "Reducing " << nRows << "  " << nCols << endl;
+      cout << "EditFusionField - Reducing " << nRows << "  " << nCols << endl;
 
       DenseMatrix *matrix = scinew DenseMatrix(nRows,nCols);
 
