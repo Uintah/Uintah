@@ -16,6 +16,7 @@ SCIDependTarget(name.cc)
 
 
 ConvertProgram(ConvMesh)
+ConvertProgram(GEtoSF)
 ConvertProgram(GenMesh)
 ConvertProgram(GenMesh2)
 ConvertProgram(GenScalp)
