@@ -50,7 +50,7 @@ TCLstrbuff::TCLstrbuff(GuiContext* ctx)
   ctx->dontSave();
   ctx->lock();
   
-  buff_ = Tcl_Alloc(bSize_=256);
+  buff_ = Tcl_Alloc(bSize_=4096);
   *buff_='\0';
 
   string varname = ctx->getfullname();
