@@ -45,8 +45,12 @@ public:
 
     Array2<T>& operator=(const Array2&);
     
+    //////////
+    //Class Destructor
     ~Array2();
-   
+
+    //////////
+    //Used for accessing elements in the Array
     inline T& operator()(int d1, int d2) const
 	{
 	    ASSERTL3(d1>=0 && d1<dm1);

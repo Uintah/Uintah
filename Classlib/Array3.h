@@ -53,6 +53,10 @@ public:
 
     inline T*** get_dataptr() {return objs;}
 
+    //////////
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __test);
+    
     friend void Pio(Piostream&, Array3<T>&);
     friend void Pio(Piostream&, Array3<T>*&);
 
@@ -60,3 +64,6 @@ public:
 
 
 #endif
+
+
+

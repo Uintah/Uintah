@@ -17,6 +17,7 @@
 
 #include <Classlib/Assert.h>
 
+
 #ifdef __GNUG__
 #pragma interface
 #endif
@@ -85,6 +86,12 @@ public:
 
     // Persistent io
     friend void Pio(Piostream&, HashTable<Key, Data>&);
+    
+    //////////
+    //Rigorous Tests
+    static void test_rigorous(RigorousTest* __test);
+
+
 };
 
 // Use this class for walking through a hashtable
@@ -110,6 +117,9 @@ public:
 
     // Get the data from the current item
     Data& get_data();
+
+  
+
 };
 
 // An element in the HashTable
@@ -128,3 +138,10 @@ template<class Key, class Data> class HashKey {
 };
 
 #endif
+
+
+
+
+
+
+

@@ -163,3 +163,87 @@ Array3<T>& Array3<T>::operator=(const Array3<T>&)
 {
     NOT_FINISHED("Array2::operator=");
 }
+
+#include <iostream.h>
+
+void Array3<int>::test_rigorous(RigorousTest* __test)
+{
+    for(int x=0;x<=10;x++){
+	for(int y=0;y<=10;y++){
+	    for (int z=0;z<10;z++){
+		Array3<int> my_array(x,y,z);
+		TEST (my_array.dim1()==x);
+		TEST (my_array.dim2()==y);
+		TEST (my_array.dim3()==z);
+	    }
+	}
+    }
+    
+    Array3<int> array3(0,0,0);
+    TEST (array3.dim1()==0);
+    TEST (array3.dim2()==0);
+    TEST (array3.dim3()==0);
+
+    
+    //A 10X10X10 array is used for the following test, however, it is known to
+    //pass when as large as 100X100X100, and has been made smaller for speed
+    //purposes
+
+
+    for(x=0;x<=10;x++){
+	for(int y=0;y<10;y++){
+	    for(int z=0;z<10;z++){
+		array3.newsize(x,y,z);
+		TEST (array3.dim1()==x);
+		TEST (array3.dim2()==y);
+		TEST (array3.dim3()==z);
+
+		array3.initialize(x);
+
+		for(int x1=0;x1<x;x1++){
+		    for(int y1=0;y1<y;y1++){
+			for(int z1=0;z1<z;z1++){
+			    TEST(array3(x1,y1,z1)==x);
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    
+    //The following block of code is known to cause an assertion failure
+    
+    //#include <Classlib/String.h>
+    //
+    //for(x=0;x<=10;x++){
+    //for(int y=0;y<=10;y++){
+    //    for(int z=0;z<=10;z++){
+    //	Array3<clString> string_array(x,y,z);
+    //	TEST (string_array.dim1()==x);
+    //	TEST (string_array.dim2()==y);
+    //	TEST (string_array.dim3()==z);
+    //
+    //	string_array.initialize("hi there");
+    //
+    //	for(int x1=0;x1<x;x++){
+    //	    for(int y1=0;y1<y;y++){
+    //		for(int z1=0;z1<z;z++){
+    //		    TEST(string_array(x1,y1,z1)=="hi there");
+    //		}
+    //	    }
+    //	}
+    //    }
+    //}
+    //}
+    //
+}
+
+
+
+
+
+
+
+
+

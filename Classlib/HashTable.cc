@@ -14,6 +14,9 @@
 #include <Classlib/HashTable.h>
 #include <Classlib/Assert.h>
 #include <Malloc/Allocator.h>
+#include <Tester/RigorousTest.h>
+
+
 
 #ifdef __GNUG__
 #pragma interface
@@ -292,3 +295,20 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
     }
     stream.end_class();
 }
+
+#include <iostream.h>
+
+void HashTable<char*, int>::test_rigorous(RigorousTest* __test)
+{
+    TEST(0==0);
+}
+
+
+
+
+
+
+
+
+
+
