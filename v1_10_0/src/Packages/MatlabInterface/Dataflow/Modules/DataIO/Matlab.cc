@@ -225,7 +225,7 @@ Matlab::execute()
      
       strcpy(cl,"echo 'path('\\''"); 
       strcat(cl,SCIRUN_OBJDIR);
-      strcat(cl,"/../src/Packages/MatlabInterface/matlab/engine");
+      strcat(cl,"/matlab/engine");
       strcat(cl,"'\\'',path); mlabengine(");
       sprintf(cl,"%s%i",cl,wordy-2);
       strcat(cl,",'\\''"); 
