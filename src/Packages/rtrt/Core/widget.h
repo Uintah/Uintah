@@ -1,7 +1,7 @@
-#include <Packages/rtrt/Core/texture.h>
-
 #ifndef __WIDGET_H__
 #define __WIDGET_H__
+
+#include <Packages/rtrt/Core/texture.h>
 
 #define textureWidth 128
 #define textureHeight 128
