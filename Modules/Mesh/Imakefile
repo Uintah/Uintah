@@ -3,11 +3,13 @@
 
 OBJS = BuildMultiMesh.o  BuildOctree.o  \
 	Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  \
+	HexMeshToGeom.o \
 	InsertDelaunay.o  MakeScalarField.o  \
 	MeshToGeom.o  MeshView.o  \
 	OctreeToGeom.o  SelectMesh.o  MeshRender.o
 SRCS = BuildMultiMesh.cc BuildOctree.cc \
 	Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc \
+	HexMeshToGeom.cc \
 	InsertDelaunay.cc MakeScalarField.cc \
 	MeshToGeom.cc MeshView.cc \
 	OctreeToGeom.cc SelectMesh.cc MeshRender.cc
