@@ -7,8 +7,8 @@
 # a script that loads the command.
 
 set auto_index(CardioWave_CreateModel_CreateSimpleMesh) [list source [file join $dir CreateSimpleMesh.tcl]]
-set auto_index(CardioWave_CreateModel_RemoveInteriorTets) [list source [file join $dir RemoveInteriorTets.tcl]]
-set auto_index(CardioWave_CreateModel_SetupFVMatrix) [list source [file join $dir SetupFVMatrix.tcl]]
-set auto_index(CardioWave_CreateModel_ReclassifyInteriorTets) [list source [file join $dir ReclassifyInteriorTets.tcl]]
 set auto_index(CardioWave_CreateModel_HexIntMask) [list source [file join $dir HexIntMask.tcl]]
+set auto_index(CardioWave_CreateModel_ReclassifyInteriorTets) [list source [file join $dir ReclassifyInteriorTets.tcl]]
+set auto_index(CardioWave_CreateModel_RemoveInteriorTets) [list source [file join $dir RemoveInteriorTets.tcl]]
 set auto_index(CardioWave_CreateModel_SetupFVM2) [list source [file join $dir SetupFVM2.tcl]]
+set auto_index(CardioWave_CreateModel_SetupFVMatrix) [list source [file join $dir SetupFVMatrix.tcl]]

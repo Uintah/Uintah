@@ -24,11 +24,13 @@ itcl_class CardioWave_CreateModel_HexIntMask {
         set name HexIntMask
 
 	global $this-exclude
+	global $this-delete-nodes
         set_defaults
     }
 
     method set_defaults {} {
 	set $this-exclude ""
+	set $this-delete-nodes 0
     }
 
     method ui {} {
@@ -46,7 +48,8 @@ itcl_class CardioWave_CreateModel_HexIntMask {
 	pack $w.chelper.label $w.chelper.entry -side left -anchor n
 
 	pack $w.chelper -side top -anchor w -padx 10
-	
+	checkbutton $w.delete -text "Delete Unattached Nodes" -variable $this-delete-nodes
+	pack $w.delete -side top
     }
 }
 

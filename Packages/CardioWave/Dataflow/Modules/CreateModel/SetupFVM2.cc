@@ -31,6 +31,7 @@ class CardioWaveSHARE SetupFVM2 : public Module {
   GuiString	sprfile_;
   GuiString	volumefile_;
   GuiString	visfile_;
+  GuiString	idfile_;
   
 public:
   SetupFVM2(GuiContext *context);
@@ -49,7 +50,8 @@ SetupFVM2::SetupFVM2(GuiContext *context)
     fibersig2_(context->subVar("fibersig2")),
     sprfile_(context->subVar("sprfile")),
     volumefile_(context->subVar("volumefile")),
-    visfile_(context->subVar("visfile"))
+    visfile_(context->subVar("visfile")),
+    idfile_(context->subVar("idfile"))
 {
 }
 
@@ -63,6 +65,7 @@ void SetupFVM2::execute(){
   string sprfile = sprfile_.get();
   string volumefile = volumefile_.get();
   string visfile = visfile_.get();
+  string idfile = idfile_.get();
   
   // must find ports and have valid data on inputs
   FieldIPort *ifld = (FieldIPort*)get_iport("HexVolTensor");
@@ -110,7 +113,9 @@ void SetupFVM2::execute(){
   HexVolMesh::Node::iterator nb, ne; m->begin(nb); m->end(ne);
   int cnt=0;
   Point p;
-
+  FILE *IDFILE = fopen(idfile.c_str(), "w");
+  fprintf(IDFILE, "%d\n", nnodes);
+  
   while(nb != ne) {
     int tidx;
     fld->value(tidx, *nb);
@@ -120,6 +125,7 @@ void SetupFVM2::execute(){
     mesh->vtx[cnt].z = p.z();
 
     if (tidx == 0 || tidx == 1) {
+      fprintf(IDFILE, "0\n");
       mesh->vtx[cnt].sxx = bathsig;
       mesh->vtx[cnt].sxy = 0;
       mesh->vtx[cnt].sxz = 0;
@@ -128,6 +134,7 @@ void SetupFVM2::execute(){
       mesh->vtx[cnt].szz = bathsig;
       mesh->vtx[cnt].volume=0;
     } else { // assuming type = 1
+      fprintf(IDFILE, "1\n");
       Tensor t = tens[tidx].second;
       Vector f1, f2, f3;
       t.get_eigenvectors(f1, f2, f3);
@@ -154,7 +161,8 @@ void SetupFVM2::execute(){
     cnt++;
     ++nb;
   }
-  
+  fclose(IDFILE);
+
   HexVolMesh::Cell::iterator cb, ce; m->begin(cb); m->end(ce);
   HexVolMesh::Node::array_type nodes;
   cnt=0;
