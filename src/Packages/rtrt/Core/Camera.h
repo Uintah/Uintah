@@ -4,6 +4,7 @@
 #define CAMERA_H 1
 
 #include <Core/Persistent/Persistent.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -120,6 +121,20 @@ public:
   void changePitch( double amount );
   void changeFacing( double amount );
 
+  // These are other UI interface functions
+  enum TransformCenter {
+    LookAt,
+    Eye,
+    Origin
+  };
+  void transform(SCIRun::Transform t, TransformCenter);
+#if 0
+  void scaleFOV(double);
+  void translate(Vector);
+  void dolly(double);
+  void autoview(double fov);
+#endif
+  
   // Some math to combine and blend cameras.  You should call setup
   // once you get the final camera, as u,v, and direction are not
   // propagated.
