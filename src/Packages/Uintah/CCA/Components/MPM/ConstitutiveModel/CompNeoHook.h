@@ -89,8 +89,8 @@ namespace Uintah {
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
-         const VarLabel* bElBarLabel;
-         const VarLabel* bElBarLabel_preReloc;
+	//const VarLabel* bElBarLabel;
+	//const VarLabel* bElBarLabel_preReloc;
 
       };
 } // End namespace Uintah
