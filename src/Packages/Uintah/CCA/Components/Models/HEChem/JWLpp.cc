@@ -53,6 +53,7 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
   d_sharedState = sharedState;
   bool defaultActive=true;
   params->getWithDefault("Active", d_active, defaultActive);
+  params->require("ThresholdPressure",   d_threshold_pressure);
   if(d_active){
     matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
     matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
@@ -60,7 +61,6 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
     params->require("b",    d_b);
     params->require("E0",   d_E0);
     params->require("rho0", d_rho0);
-    params->require("ThresholdPressure",   d_threshold_pressure);
 
     //__________________________________
     //  define the materialSet
@@ -87,7 +87,7 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
 
 void JWLpp::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
-  cout << "I'm in problem setup" << endl;
+  cout << "I'm in activateModel" << endl;
   d_active=true;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
@@ -95,8 +95,7 @@ void JWLpp::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
   params->require("b",    d_b);
   params->require("E0",   d_E0);
   params->require("rho0", d_rho0);
-  params->require("ThresholdPressure",   d_threshold_pressure);
-                                                                                
+
   //__________________________________
   //  define the materialSet
   vector<int> m_tmp(2);
@@ -182,6 +181,67 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
   }
 }
 
+void JWLpp::scheduleCheckNeedAddMaterial(SchedulerP& sched,
+                                         const LevelP& level,
+                                         const ModelInfo* mi)
+{
+    Task* t = scinew Task("JWLpp::checkNeedAddMaterial", this, 
+                          &JWLpp::checkNeedAddMaterial, mi);
+    cout_doing << "JWLpp::scheduleCheckNeedAddMaterial "<<  endl;  
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    MaterialSet* one_matl     = scinew MaterialSet();
+    one_matl->add(0);
+    one_matl->addReference();
+
+    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl->getUnion(),gn);
+
+    sched->addTask(t, level->eachPatch(), one_matl);
+
+    if (one_matl->removeReference())
+      delete one_matl;
+}
+
+void JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                const ModelInfo* mi)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);  
+    
+    cout_doing << "Doing checkNeedAddMaterial on patch "<< patch->getID()
+               <<"\t\t\t\t  JWLpp" << endl;
+
+    Ghost::GhostType  gn  = Ghost::None;
+
+    constCCVariable<double> press_CC;
+    new_dw->get(press_CC,   Ilb->press_equil_CCLabel,0,  patch,gn, 0);
+
+    if(!d_active){
+      bool add = false;
+      for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        if (press_CC[c] > .9*d_threshold_pressure){
+          add = true;
+        }
+      }
+
+      if(add){
+        d_sharedState->setNeedAddMaterial(true);
+      }
+      else{
+        d_sharedState->setNeedAddMaterial(false);
+      }
+    }  //only add a new material once
+    else{
+      d_sharedState->setNeedAddMaterial(false);
+    }
+  }
+}
 //______________________________________________________________________
 //
 void JWLpp::computeModelSources(const ProcessorGroup*, 
