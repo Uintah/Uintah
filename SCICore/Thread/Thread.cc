@@ -275,7 +275,15 @@ Thread::niceAbort()
     	    return;
 	} else if (strcasecmp(smode, "dbx") == 0) {
     	    char command[500];
-    	    sprintf(command, "winterm -c dbx -p %d &", getpid());
+	    if(getenv("SCI_DBXCOMMAND")){
+	       sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
+	    } else {
+#ifdef __sgi
+	       sprintf(command, "winterm -c dbx -p %d &", getpid());
+#else
+	       sprintf(command, "xterm -e dbx -p %d &", getpid());
+#endif
+	    }
 	    system(command);
 	    smode = "ask";
 	} else if (strcasecmp(smode, "cvd") == 0) {
@@ -359,6 +367,11 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.21  2000/09/25 18:04:05  sparker
+// Added partial support for debuggin under linux
+// Added environment variable SCI_DBXCOMMAND
+// Misc. reformatting
+//
 // Revision 1.20  2000/06/13 23:58:57  jehall
 // - Modified niceAbort() to allow default action via environment variable
 //
