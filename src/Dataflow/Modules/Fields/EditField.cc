@@ -40,6 +40,8 @@ public:
   GuiInt cnumelems_;
   GuiInt cdataat_;
   GuiInt cdataminmax_;
+  GuiInt cbboxmin_;
+  GuiInt cbboxmax_;
 
   EditField(const string& id);
 
@@ -78,7 +80,9 @@ EditField::EditField(const string& id)
     ctypename_("ctypename", id, this),
     cnumelems_("cnumelems", id, this),
     cdataat_("cdataat", id, this),
-    cdataminmax_("cdataminmax", id, this)
+    cdataminmax_("cdataminmax", id, this),
+    cbboxmin_("cbboxmin", id, this),
+    cbboxmax_("cbboxmax", id, this)
 {
 }
 
@@ -208,22 +212,7 @@ void EditField::execute(){
   update_input_attributes(f);
   TCL::execute(id+" update_multifields");
 
-  GuiString fldname("fldname2", id, this);
-  GuiString type_name("typename2", id, this);
-  GuiString datamin("datamin2", id, this);
-  GuiString datamax("datamax2", id, this);
-  GuiString numelems("numelems2", id, this);
-  GuiString dataat("dataat2", id, this);
-  GuiDouble minx("minx2",id,this),miny("miny2",id,this),minz("minz2",id,this);
-  GuiDouble maxx("maxx2",id,this),maxy("maxy2",id,this),maxz("maxz2",id,this);
-
-  GuiInt cfldname("cfldname", id, this);
-  GuiInt ctypename("ctypename", id, this);
-  GuiInt cnumelems("cnumelems", id, this);
-  GuiInt cdataat("cdataat", id, this);
-  GuiInt cdataminmax("cdataminmax", id, this);
-
-  std::cerr << "fldname : " << fldname.get() << " " << cfldname.get() 
+  std::cerr << "fldname : " << fldname_.get() << " " << cfldname_.get() 
 	    << std::endl; 
 }
     
