@@ -595,6 +595,16 @@ void Semaphore::down()
     }
 }
 
+int Semaphore::try_down()
+{
+    int stry=uscpsema(priv->semaphore);
+    if(stry == -1){
+	perror("upsema");
+	Task::exit_all(-1);
+    }
+    return stry;
+}
+
 void Semaphore::up()
 {
     if(usvsema(priv->semaphore) == -1){

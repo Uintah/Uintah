@@ -52,6 +52,7 @@ public:
     ~Semaphore();
     void up();
     void down();
+    int try_down();
 };
 
 struct ConditionVariable_private;
