@@ -14,7 +14,7 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
-#include <Geom/Geom.h>
+#include <Geom/Scene.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
@@ -83,6 +83,7 @@ void GeomReader::execute()
 {
     clString fn(filename.get());
     if(fn != old_filename){
+	outport->delAll();
 	old_filename=fn;
 	Piostream* stream=auto_istream(fn);
 	if(!stream){
@@ -90,14 +91,14 @@ void GeomReader::execute()
 	    return; // Can't open file...
 	}
 	// Read the file...
-	GeomObj* obj;
-	Pio(*stream, obj);
-	if(!obj || stream->error()){
+	GeomScene scene;
+	Pio(*stream, scene);
+	if(!scene.top || stream->error()){
 	    error("Error reading Geom from file");
 	    delete stream;
 	    return;
 	}
 	delete stream;
-	outport->addObj(obj, old_filename);
+	outport->addObj(scene.top, old_filename);
     }
 }
