@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
@@ -15,6 +16,9 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
+
+#include <xercesc/util/XMLString.hpp>
+#include <xercesc/util/XMLURL.hpp>
 
 #include <iostream> // debug only
 
@@ -522,6 +526,60 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double delt,
   //cout << d_myworld->myrank() << " PLB recompile: " << d_state << endl;
   return d_state != idle; // to recompile when need to load balance or post lb
 } 
+
+void
+ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
+{
+  // here we need to grab the uda data to reassign patch data to the 
+  // processor that will get the data
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+    d_processorAssignment[i]= -1;
+
+  ASSERT(pspec != 0);
+  ProblemSpecP datanode = pspec->findBlock("Data");
+  if(datanode == 0)
+    throw InternalError("Cannot find Data in timestep");
+  for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
+      n=n->getNextSibling()){
+    if(n->getNodeName() == "Datafile") {
+      map<string,string> attributes;
+      n->getAttributes(attributes);
+      string proc = attributes["proc"];
+      if (proc != "") {
+        int procnum = atoi(proc.c_str());
+        string datafile = attributes["href"];
+        if(datafile == "")
+          throw InternalError("timestep href not found");
+        
+        XMLURL dataurl(tsurl, datafile.c_str());
+        char* urltext = XMLString::transcode(dataurl.getURLText());
+
+        // open the datafiles
+        ProblemSpecReader psr(urltext);
+        delete [] urltext;
+
+        ProblemSpecP dataDoc = psr.readInputFile();
+        if (!dataDoc)
+          throw InternalError("Cannot open data file");
+        for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
+          if(r->getNodeName() == "Variable") {
+            int patchid;
+            if(!r->get("patch", patchid) && !r->get("region", patchid))
+              throw InternalError("Cannot get patch id");
+            if (d_processorAssignment[patchid] == -1) {
+              // assign the patch to the processor
+              d_processorAssignment[patchid] = procnum % d_myworld->size();
+            }
+          }
+        }            
+        
+      }
+    }
+  }
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+    ASSERT(d_processorAssignment[i] != -1);
+}
+
 void 
 ParticleLoadBalancer::setDynamicAlgorithm(std::string algo, double interval,
                                           int timestepInterval, float factor)

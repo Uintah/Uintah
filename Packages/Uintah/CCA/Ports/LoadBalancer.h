@@ -10,6 +10,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
+#include <xercesc/util/XMLURL.hpp>
+
 namespace Uintah {
 
   class Patch;
@@ -65,7 +67,7 @@ WARNING
 
     virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level) = 0;
     virtual void dynamicReallocation(const GridP&, const SchedulerP&) {}
-
+    virtual void restartInitialize(ProblemSpecP&, XMLURL tsurl) {}
   private:
     LoadBalancer(const LoadBalancer&);
     LoadBalancer& operator=(const LoadBalancer&);
