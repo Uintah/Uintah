@@ -123,9 +123,6 @@ Component  specification dtd.
 <!-- Name of gui item (tcl/tk) widget (e.g. slider, text entry, checkbox)-->
 <!ELEMENT widget (#PCDATA)>
 
-<!-- Type of data stored (e.g. int, bool, string, double) -->
-<!ELEMENT datatype (#PCDATA)>
-
 <!-- Gui item label -->
 <!ELEMENT label (#PCDATA)>
 
