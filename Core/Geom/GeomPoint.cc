@@ -99,7 +99,7 @@ COLOR_FTOB(double v)
 
 
 void
-GeomPoints::add(const Point &p, MaterialHandle m)
+GeomPoints::add(const Point &p, const MaterialHandle &m)
 {
   add(p);
   
