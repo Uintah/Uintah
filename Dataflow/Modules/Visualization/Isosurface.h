@@ -78,6 +78,7 @@ class Isosurface : public Module {
   GuiInt    extract_from_new_field;
   GuiInt    use_algorithm;
   GuiInt    build_trisurf_;
+  GuiInt    np_;          
 
   //! 
   double iso_value;

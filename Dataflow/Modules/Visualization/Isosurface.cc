@@ -74,7 +74,8 @@ Isosurface::Isosurface(const clString& id)
     gui_iso_value("isoval", id, this),
     extract_from_new_field("extract-from-new-field", id, this ),
     use_algorithm("algorithm", id, this),
-    build_trisurf_("build_trisurf", id, this)
+    build_trisurf_("build_trisurf", id, this),
+    np_("np", id, this)  
 {
     // Create the input ports
   infield=scinew FieldIPort(this, "Field", FieldIPort::Atomic);
@@ -152,6 +153,9 @@ void Isosurface::execute()
       }
     }
     // mc_alg should be set now
+    mc_alg->set_np( np_.get() ); 
+    if ( np_.get() > 1 )
+      build_trisurf = false;
     mc_alg->set_field( field.get_rep() );
     mc_alg->search( iso_value, build_trisurf);
     surface = mc_alg->get_geom();
