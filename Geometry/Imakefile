@@ -1,10 +1,17 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = BBox.o  BSphere.o  Grid.o  Plane.o  Point.o  Ray.o  \
-	Transform.o  Vector.o 
+	Transform.o  Vector.o \
+	$(TEMPLATE_OBJS)
 SRCS = BBox.cc BSphere.cc Grid.cc Plane.cc Point.cc Ray.cc \
-	Transform.cc Vector.cc
+	Transform.cc Vector.cc \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = Geometry
 

@@ -15,10 +15,6 @@
 #include <Classlib/Assert.h>
 #include <Malloc/Allocator.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 // Create a FastHashTable
 template<class Key>
 FastHashTable<Key>::FastHashTable()

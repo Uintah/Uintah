@@ -166,25 +166,3 @@ VectorField* VectorFieldRG::clone()
     return scinew VectorFieldRG(*this);
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array3.cc>
-
-template class Array3<Vector>;
-template void Pio(Piostream&, Array3<Vector>&);
-
-#endif
-
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array3.cc>
-
-static void _dummy_(Piostream& p1, Array3<Vector>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

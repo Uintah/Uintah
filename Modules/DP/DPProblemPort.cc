@@ -16,13 +16,3 @@
 clString SimpleIPort<DPProblemHandle>::port_type("DPProblem");
 clString SimpleIPort<DPProblemHandle>::port_color("red");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<DPProblemHandle>;
-template class SimpleOPort<DPProblemHandle>;
-template class SimplePortComm<DPProblemHandle>;
-template class Mailbox<SimplePortComm<DPProblemHandle>*>;
-
-#endif

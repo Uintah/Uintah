@@ -1,6 +1,11 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = VarCore.o \
 	ConstraintSolver.o \
 	BaseVariable.o \
@@ -13,7 +18,8 @@ OBJS = VarCore.o \
 	ProjectConstraint.o \
 	PythagorasConstraint.o \
 	RatioConstraint.o \
-	SegmentConstraint.o
+	SegmentConstraint.o \
+	$(TEMPLATE_OBJS)
 SRCS = VarCore.cc \
 	ConstraintSolver.cc \
 	BaseVariable.cc \
@@ -26,7 +32,8 @@ SRCS = VarCore.cc \
 	ProjectConstraint.cc \
 	PythagorasConstraint.cc \
 	RatioConstraint.cc \
-	SegmentConstraint.cc
+	SegmentConstraint.cc \
+	$(TEMPLATE_SRCS)
 
 
 LIBNAME = Constraints

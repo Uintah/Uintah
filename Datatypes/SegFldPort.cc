@@ -15,15 +15,3 @@
 
 clString SimpleIPort<SegFldHandle>::port_type("SegFld");
 clString SimpleIPort<SegFldHandle>::port_color("Green");
-
-
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<SegFldHandle>;
-template class SimpleOPort<SegFldHandle>;
-template class SimplePortComm<SegFldHandle>;
-template class Mailbox<SimplePortComm<SegFldHandle>*>;
-
-#endif

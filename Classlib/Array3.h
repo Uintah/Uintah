@@ -17,10 +17,6 @@
 #include <Classlib/Assert.h>
 #include <Tester/RigorousTest.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 class Piostream;
 class RigorousTest;
 

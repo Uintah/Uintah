@@ -15,10 +15,6 @@
 #ifndef SCI_Classlib_Ring_h
 #define SCI_Classlib_Ring_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/Array1.h>
 
 template<class T> class Ring {

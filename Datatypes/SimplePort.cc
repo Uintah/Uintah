@@ -33,10 +33,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 //#define DEBUG 1
 
 extern char** global_argv;

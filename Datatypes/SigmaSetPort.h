@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/SigmaSet.h>
 
-typedef Mailbox<SimplePortComm<SigmaSetHandle>*> _cfront_bug_SigmaSet_;
 typedef SimpleIPort<SigmaSetHandle> SigmaSetIPort;
 typedef SimpleOPort<SigmaSetHandle> SigmaSetOPort;
 

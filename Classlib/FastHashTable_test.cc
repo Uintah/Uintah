@@ -296,3 +296,15 @@ void FastHashTable<int>::test_rigorous(RigorousTest* __test){
 
     TEST(table.size()==count);
 }
+
+#ifdef __GNUG__
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Classlib/FastHashTable.cc>
+template class FastHashTable<TestFastHashTable>;
+template class FastHashTableIter<TestFastHashTable>;
+template class FastHashTable<intFastHashTable>;
+template class FastHashTableIter<intFastHashTable>;
+#endif

@@ -182,15 +182,3 @@ BaseConstraint::Register()
       var_indexs[index] = vars[index]->Register(this, index);
 }
 
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<BaseVariable*>;
-template class Array1<Index>;
-
-#include <Classlib/Array2.cc>
-template class Array2<Index>;
-
-#endif

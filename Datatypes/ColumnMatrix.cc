@@ -297,10 +297,3 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 	result.data[i]=a.data[i]*s;
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-
-template class LockingHandle<ColumnMatrix>;
-
-#endif

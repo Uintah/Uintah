@@ -35,6 +35,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef linux
+#include <string.h>
+#endif
 
 #include <fstream.h>
 
@@ -639,9 +642,3 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
     }
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-template class Queue<Module*>;
-
-#endif

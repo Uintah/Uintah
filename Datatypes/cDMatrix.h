@@ -19,6 +19,7 @@ public:
   cDMatrix(const cDMatrix &B); //copy constructor;
   cDMatrix &operator=(const cDMatrix &B); //assigment operator  
   ~cDMatrix(); //Destructor;
+  virtual cMatrix* clone();
   
   int size() {return Size;};
   Complex &operator()(int i, int j);

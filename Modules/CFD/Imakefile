@@ -1,19 +1,25 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = Readtec.o  PartToGeom.o  cfdGridLines.o  GatherTimeSteps.o \
-	TecplotFileSelector.o ParticleGridVisControl.o
+	TecplotFileSelector.o ParticleGridVisControl.o \
+	$(TEMPLATE_OBJS)
 
 SRCS = Readtec.cc PartToGeom.cc cfdGridLines.cc GatherTimeSteps.cc \
-	TecplotFileSelector.cc ParticleGridVisControl.cc
-
+	TecplotFileSelector.cc ParticleGridVisControl.cc \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = CFD
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom \
 	-lGeometry -lComm -lMath -lTCL -lClasslib -lMultitask -lMalloc -lm \
-	-lC -lc
+	SCI_CCLibs
 
 depend:: $(GENH) $(GENSRCS)
 

@@ -18,7 +18,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/HexMesh.h>
 
-typedef Mailbox<SimplePortComm<HexMeshHandle>*> _cfront_bug_HexMesh_;
 typedef SimpleIPort<HexMeshHandle> HexMeshIPort;
 typedef SimpleOPort<HexMeshHandle> HexMeshOPort;
 

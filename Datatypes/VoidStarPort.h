@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/VoidStar.h>
 
-typedef Mailbox<SimplePortComm<VoidStarHandle>*> _cfront_bug_VoidStar_;
 typedef SimpleIPort<VoidStarHandle> VoidStarIPort;
 typedef SimpleOPort<VoidStarHandle> VoidStarOPort;
 

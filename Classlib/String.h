@@ -21,12 +21,6 @@ class Piostream;
 class RigorousTest;
 class PerfTest;
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
-
-
 /**************************************
 
 CLASS
@@ -145,10 +139,6 @@ public:
     clString operator+(const clString&) const;
 
     
-    //////////
-    //<i>No documentation provided</i>
-    clString& operator+=(const char*);
-
     //////////
     //<i>No documentation provided</i>
     clString& operator+=(const clString&);

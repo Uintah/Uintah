@@ -149,30 +149,3 @@ bool GeomTransform::saveobj(ostream&, const clString&,
     }
 #endif
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-
-template class LockingHandle<Transform>;
-
-#include <Classlib/Array1.cc>
-template class Array1<TransformHandle>;
-
-template void Pio(Piostream&, Array1<TransformHandle>&);
-template void Pio(Piostream&, TransformHandle&);
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/LockingHandle.cc>
-
-static void _dummy_(Piostream& p1, TransformHandle& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

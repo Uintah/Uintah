@@ -11,15 +11,8 @@
  */
 
 #include <Datatypes/LockArray3.h>
-#include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 #include <Classlib/NotFinished.h>
-
-#include <Geometry/Point.h>
-
-#ifdef __GNUG__
-#pragma interface
-#endif
 
 template<class T>
 LockArray3<T>::LockArray3()
@@ -41,6 +34,12 @@ void LockArray3<T>::allocate()
 	    pp+=dm3;
 	}
     }
+}
+
+template<class T>
+LockArray3<T>* LockArray3<T>::clone() const
+{
+    return new LockArray3<T>(*this);
 }
 
 template<class T>
@@ -167,6 +166,3 @@ void LockArray3<T>::io(Piostream&)
 {
   cerr << "Error - not implemented!\n";
 }
-
-
-PersistentTypeID LockArray3<Point>::type_id("LockArray3", "Datatype", 0);

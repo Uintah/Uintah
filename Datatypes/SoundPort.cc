@@ -239,11 +239,3 @@ void SoundOPort::resend(Connection*)
     cerr << "SoundOPort can't resend and shouldn't be asked to!\n";
 }
 
-#ifdef __GNUG__
-
-#include <Multitask/Mailbox.cc>
-
-template class Mailbox<SoundComm*>;
-
-#endif
-

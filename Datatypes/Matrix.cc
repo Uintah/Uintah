@@ -96,10 +96,3 @@ void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
     mat.mult(v, result, flops, memrefs);
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-
-template class LockingHandle<Matrix>;
-
-#endif

@@ -793,7 +793,7 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
     return sign*theDist;
 }
 
-void orderNormal(int i[], const Vector& v) {
+static void orderNormal(int i[], const Vector& v) {
     if (fabs(v.x())>fabs(v.y())) {
         if (fabs(v.y())>fabs(v.z())) {  // x y z
             i[0]=0; i[1]=1; i[2]=2;
@@ -1085,34 +1085,3 @@ void TriSurface::distribute_samples()
   }
 
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<TSElement*>;
-template void Pio(Piostream&, Array1<TSElement*>&);
-template class Array1<TSEdge*>;
-template void Pio(Piostream&, Array1<TSEdge*>&);
-
-#include <Classlib/HashTable.cc>
-template class HashTable<int, int>;
-template class HashKey<int, int>;
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-
-static void _dummy_(Piostream& p1, Array1<TSElement*>& p2)
-{
-    Pio(p1, p2);
-}
-static void _dummy_(Piostream& p1, Array1<TSEdge*>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

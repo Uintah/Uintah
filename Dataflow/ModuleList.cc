@@ -152,20 +152,3 @@ void ModuleList::parse_db()
     }
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/AVLTree.cc>
-template class TreeLink<clString, makeModule>;
-template class AVLTree<clString, makeModule>;
-template class AVLTreeIter<clString, makeModule>;
-template class TreeLink<clString, ModuleCategory*>;
-template class AVLTree<clString, ModuleCategory*>;
-template class AVLTreeIter<clString, ModuleCategory*>;
-
-#include <Classlib/HashTable.cc>
-template class HashTable<clString, clString>;
-template class HashKey<clString, clString>;
-template class HashTable<clString, void*>;
-template class HashKey<clString, void*>;
-
-#endif

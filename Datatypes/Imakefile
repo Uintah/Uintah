@@ -1,6 +1,11 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	ColumnMatrix.o  ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
@@ -31,7 +36,8 @@ OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
 	TecplotReader.o MEFluid.o ParticleSetExtension.o \
 	ParticleSetExtensionPort.o \
 	cfdlibParticleSet.o \
-        TensorField.o TensorFieldBase.o TensorFieldPort.o
+        TensorField.o TensorFieldBase.o TensorFieldPort.o \
+	$(TEMPLATE_OBJS)
 
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
@@ -69,7 +75,8 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ParticleSetExtensionPort.cc \
 	VoidStar.cc VoidStarPort.cc \
 	cfdlibParticleSet.cc \
-        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc
+        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc \
+	$(TEMPLATE_SRCS)
 
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
 	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h \
@@ -79,7 +86,7 @@ LIBNAME = Datatypes
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
-	-lTCL -lClasslib -lMultitask -lTester -lMalloc -lC -lc -lm
+	-lTCL -lClasslib -lMultitask -lTester -lMalloc SCI_CCLibs -lm
 
 depend:: $(GENH) $(GENSRCS)
 

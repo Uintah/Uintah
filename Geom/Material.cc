@@ -203,29 +203,3 @@ bool GeomMaterial::saveobj(ostream& out, const clString& format,
     }
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-
-template class LockingHandle<Material>;
-
-#include <Classlib/Array1.cc>
-template class Array1<MaterialHandle>;
-
-template void Pio(Piostream&, Array1<MaterialHandle>&);
-template void Pio(Piostream&, MaterialHandle&);
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/LockingHandle.cc>
-
-static void _dummy_(Piostream& p1, MaterialHandle& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

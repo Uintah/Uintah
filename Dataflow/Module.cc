@@ -403,15 +403,3 @@ void Module::multisend(OPort* p1, OPort* p2)
     netedit->mailbox.send(new Module_Scheduler_Message(p1, p2));
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/Array1.cc>
-template class Array1<clString>;
-template class Array1<OPort*>;
-template class Array1<IPort*>;
-
-#include <Multitask/Mailbox.cc>
-template class Mailbox<MessageBase*>;
-
-#endif
-

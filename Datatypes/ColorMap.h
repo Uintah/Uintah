@@ -17,6 +17,7 @@
 #include <Datatypes/Datatype.h>
 #include <Classlib/Array1.h>
 #include <Classlib/LockingHandle.h>
+#include <Geom/GeomColormapInterface.h>
 #include <Geom/Material.h>
 #include <Geom/Color.h>
 
@@ -27,7 +28,7 @@ typedef LockingHandle<ColorMap> ColorMapHandle;
  * Peter-Pike Sloan
  */
 
-class ColorMap : public Datatype {
+class ColorMap : public Datatype, public GeomColormapInterface {
 public:
     int type; // 0 is stupid, 1 is not stupid
     double min;
@@ -87,6 +88,8 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 
+    virtual double getMin();
+    virtual double getMax();
 private:
   bool scaled;
    

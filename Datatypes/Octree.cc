@@ -1044,8 +1044,3 @@ void Pio(Piostream& stream, Octree*& o)
     stream.end_cheap_delim();
 }
 
-#ifdef __GNUG__
-#include <Classlib/LockingHandle.cc>
-template class LockingHandle<OctreeTop>;
-
-#endif

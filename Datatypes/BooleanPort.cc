@@ -16,13 +16,3 @@
 clString SimpleIPort<sciBooleanHandle>::port_type("Boolean");
 clString SimpleIPort<sciBooleanHandle>::port_color("blue4");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<sciBooleanHandle>;
-template class SimpleOPort<sciBooleanHandle>;
-template class SimplePortComm<sciBooleanHandle>;
-template class Mailbox<SimplePortComm<sciBooleanHandle>*>;
-
-#endif

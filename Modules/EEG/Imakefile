@@ -6,6 +6,10 @@ XLIBDIR = -L/usr/openwin/lib
 XINCLUDE = -I/usr/openwin/include
 #endif
 
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
 #ifdef SCI_MESA
 OPENGLINCS = $(XINCLUDE) -I$(TOP)/Mesa/include 
 OPENGLLIBS = $(XLIBDIR) -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
@@ -45,8 +49,8 @@ LEONID_TOP = ./TEMPLATES
 LEONID_INCLUDES = -I$(LEONID_TOP)/INCLUDE
 LEONID_LDFLAGS = -L$(LEONID_TOP)/LIB -lclapack -lcblas -lftn
 
-LOCALCFLAGS = -DCOMPLEX=complex
-LOCALCCFLAGS = -DCOMPLEX=complex
+LOCALCFLAGS = -DCOMPLEX=complex\<double\>
+LOCALCCFLAGS = -DCOMPLEX=complex\<double\>
 
 LOCALINCLUDES = $(OPENGLINCS) $(IML_INCLUDES) $(LEONID_INCLUDES)
 SO_LIBS = 

@@ -70,8 +70,10 @@ class Colorub { // unsigned byte color
   unsigned char data[3]; // data...
 public:
   Colorub() {};
-  Colorub(Color& c) { data[0] = c.r()*255; data[1] = c.g()*255;
-		      data[2] = c.b()*255; }; // converts them...
+  Colorub(Color& c) { data[0] = (unsigned char)(c.r()*255);
+                      data[1] = (unsigned char)(c.g()*255);
+		      data[2] = (unsigned char)(c.b()*255);
+  }; // converts them...
 
   unsigned char* ptr() { return &data[0]; }; // grab pointer
 

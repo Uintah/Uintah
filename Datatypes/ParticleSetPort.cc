@@ -16,13 +16,3 @@
 clString SimpleIPort<ParticleSetHandle>::port_type("ParticleSet");
 clString SimpleIPort<ParticleSetHandle>::port_color("purple4");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<ParticleSetHandle>;
-template class SimpleOPort<ParticleSetHandle>;
-template class SimplePortComm<ParticleSetHandle>;
-template class Mailbox<SimplePortComm<ParticleSetHandle>*>;
-
-#endif

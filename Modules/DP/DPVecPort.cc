@@ -16,13 +16,3 @@
 clString SimpleIPort<DPVecHandle>::port_type("DPVec");
 clString SimpleIPort<DPVecHandle>::port_color("green");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<DPVecHandle>;
-template class SimpleOPort<DPVecHandle>;
-template class SimplePortComm<DPVecHandle>;
-template class Mailbox<SimplePortComm<DPVecHandle>*>;
-
-#endif

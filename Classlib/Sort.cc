@@ -542,3 +542,13 @@ void main(int argc, char* argv)
 }
 
 #endif
+
+#ifdef __GNUG__
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Classlib/Array1.cc>
+template class Array1<QSortHelperF>;
+template class Array1<QSortHelperI>;
+#endif

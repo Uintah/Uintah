@@ -297,7 +297,7 @@ void SurfTree::compute_bboxes() {
 	    surfI[nodeI[i].surfs[j]].bbox.extend(nodes[i]);
 }
 
-void orderNormal(int i[], const Vector& v) {
+static void orderNormal(int i[], const Vector& v) {
     if (fabs(v.x())>fabs(v.y())) {
         if (fabs(v.y())>fabs(v.z())) {  // x y z
             i[0]=0; i[1]=1; i[2]=2;
@@ -549,29 +549,3 @@ GeomObj* SurfTree::get_obj(const ColorMapHandle&)
     NOT_FINISHED("SurfTree::get_obj");
     return 0;
 }
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-static void _dummy_(Piostream& p1, Array1<SurfInfo*>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _dummy_(Piostream& p1, Array1<FaceInfo>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _dummy_(Piostream& p1, Array1<EdgeInfo>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _dummy_(Piostream& p1, Array1<NodeInfo>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif

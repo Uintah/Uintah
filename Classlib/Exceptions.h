@@ -18,10 +18,6 @@
 #define EXCEPTION(exc) \
 	Exception(exc, __FILE__, __LINE__)
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 class AllExceptions {
 public:
     virtual ~AllExceptions();

@@ -339,8 +339,3 @@ void Pio(Piostream& stream, SurfOctree*& o)
     stream.end_cheap_delim();
 }
 
-#ifdef __GNUG__
-#include <Classlib/LockingHandle.cc>
-template class LockingHandle<SurfOctreeTop>;
-
-#endif

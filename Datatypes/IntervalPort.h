@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Interval.h>
 
-typedef Mailbox<SimplePortComm<IntervalHandle>*> _cfront_bug_Interval_;
 typedef SimpleIPort<IntervalHandle> IntervalIPort;
 typedef SimpleOPort<IntervalHandle> IntervalOPort;
 

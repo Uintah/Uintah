@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ColorMap.h>
 
-typedef Mailbox<SimplePortComm<ColorMapHandle>*> _cfront_bug_ColorMap_;
 typedef SimpleIPort<ColorMapHandle> ColorMapIPort;
 typedef SimpleOPort<ColorMapHandle> ColorMapOPort;
 

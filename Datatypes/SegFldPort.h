@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/SegFld.h>
 
-typedef Mailbox<SimplePortComm<SegFldHandle>*> _cfront_bug_SegFld_;
 typedef SimpleIPort<SegFldHandle> SegFldIPort;
 typedef SimpleOPort<SegFldHandle> SegFldOPort;
 

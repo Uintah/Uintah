@@ -37,6 +37,8 @@ public:
 
   virtual ~TensorFieldBase();
 
+  virtual TensorFieldBase* clone() const=0;
+
   /* Type handling */
   void set_type(int in_type);
   int get_type(void);
@@ -47,10 +49,3 @@ public:
 };
 
 #endif
-
-
-
-
-
-
-

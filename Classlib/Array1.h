@@ -19,10 +19,6 @@
 class Piostream;
 class RigorousTest;
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class T>
 
 /**************************************

@@ -164,12 +164,3 @@ HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
     return &objs;
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/HashTable.cc>
-template class HashTable<int, GeomObj*>;
-template class HashTableIter<int, GeomObj*>;
-template class HashKey<int, GeomObj*>;
-template void Pio(Piostream&, HashTable<int, GeomObj*>&);
-
-#endif

@@ -11,10 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/Array1.h>
 #include <Classlib/Persistent.h>
 #include <Malloc/Allocator.h>

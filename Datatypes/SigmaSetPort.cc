@@ -16,13 +16,3 @@
 clString SimpleIPort<SigmaSetHandle>::port_type("SigmaSet");
 clString SimpleIPort<SigmaSetHandle>::port_color("chocolate4");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<SigmaSetHandle>;
-template class SimpleOPort<SigmaSetHandle>;
-template class SimplePortComm<SigmaSetHandle>;
-template class Mailbox<SimplePortComm<SigmaSetHandle>*>;
-
-#endif

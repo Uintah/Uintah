@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/MultiMesh.h>
 
-typedef Mailbox<SimplePortComm<MultiMeshHandle>*> _cfront_bug_MultiMesh_;
 typedef SimpleIPort<MultiMeshHandle> MultiMeshIPort;
 typedef SimpleOPort<MultiMeshHandle> MultiMeshOPort;
 

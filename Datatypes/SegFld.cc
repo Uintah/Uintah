@@ -109,7 +109,7 @@ SegFld::~SegFld()
 {
 }
 
-ScalarField* SegFld::clone()
+SegFld* SegFld::clone()
 {
     return scinew SegFld(*this);
 }
@@ -402,26 +402,4 @@ void Pio(Piostream& stream, tripleInt& t) {
 	Pio(stream, i);
     }
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<tripleInt>;
-template void Pio(Piostream&, Array1<tripleInt>&);
-
-#endif
-
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-
-static void _dummy_(Piostream& p1, Array1<tripleInt>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
 

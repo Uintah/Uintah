@@ -11,11 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/LockingHandle.h>
+#include <Classlib/Persistent.h>
 #include <iostream.h>
 
 template<class T>
@@ -128,7 +125,8 @@ template<class T>
 void Pio(Piostream& stream, LockingHandle<T>& data)
 {
     stream.begin_cheap_delim();
-    Persistent* trep=data.rep;
+    Persistent* trep;
+    trep=data.rep;
     stream.io(trep, T::type_id);
     if(stream.reading()){
 	data.rep=(T*)trep;

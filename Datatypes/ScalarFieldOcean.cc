@@ -141,24 +141,3 @@ ScalarField* ScalarFieldOcean::clone()
     return scinew ScalarFieldOcean(*this);
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array3.cc>
-template class Array3<float>;
-template void Pio(Piostream&, Array3<float>&);
-
-#endif
-
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array3.cc>
-
-static void _dummy_(Piostream& p1, Array3<float>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

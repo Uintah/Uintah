@@ -17,10 +17,6 @@
 
 #include <Tester/RigorousTest.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class T>
 Array2<T>::Array2()
 {

@@ -2,10 +2,6 @@
 #ifndef Geometry_Vector_h
 #define Geometry_Vector_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/Assert.h>
 
 class Point;

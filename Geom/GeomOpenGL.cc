@@ -11,7 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Datatypes/ColorMap.h>
 #include <Geom/GeomOpenGL.h>
 #include <Classlib/NotFinished.h>
 #include <Geom/Arrows.h>
@@ -22,6 +21,7 @@
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
+#include <Geom/GeomColormapInterface.h>
 #include <Geom/Grid.h>
 #include <Geom/QMesh.h>
 #include <Geom/tGrid.h>
@@ -88,6 +88,7 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
 	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
 	    gluQuadricNormals(di->qobj, GLU_SMOOTH);
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
@@ -104,6 +105,7 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	    break;
 	case DrawInfoOpenGL::Flat:
 	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
 	}
@@ -152,6 +154,7 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	break;
     case DrawInfoOpenGL::Gouraud:
+    case DrawInfoOpenGL::Phong:
 	gluQuadricDrawStyle(qobj, GLU_FILL);
 	glShadeModel(GL_SMOOTH);
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
@@ -172,6 +175,7 @@ void DrawInfoOpenGL::init_lighting(int use_light)
 	    gluQuadricNormals(qobj, GLU_FLAT);
 	    break;
 	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
 	    gluQuadricNormals(qobj, GLU_SMOOTH);
 	    break;
 	}
@@ -846,10 +850,12 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 			  GL_NEAREST);
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+#ifndef linux
 	  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,
 				   GL_INTENSITY_EXT,
 				   conv_dim,conv_dim,
 				   GL_FLOAT,GL_RED,conv_data);
+#endif
 	  
 	  glTexImage2D(GL_TEXTURE_2D,0,GL_INTENSITY_EXT,
 		       tmap_size,tmap_size,
@@ -1074,7 +1080,7 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
       double bval = dt;
 
 //      int mapsz = map->rcolors.size();
-      double cdenom = 1.0/(map->max-map->min); // index
+      double cdenom = 1.0/(map->getMax()-map->getMin()); // index
       
       //double min = 1000000;
       //double max = -100000;
@@ -1087,7 +1093,7 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 	  for(int i=0;i<dimU;i++) {
 	    float nval = startM[sindex + i];
 
-	    double rmapval = (nval-map->min)*cdenom;
+	    double rmapval = (nval-map->getMin())*cdenom;
 	    MaterialHandle hand = map->lookup2(rmapval);
 
 	    bmap[bindex + i*3 + 0] = hand->diffuse.r();
@@ -1105,7 +1111,7 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 	      bval*(endM[sindex+i]-startM[sindex + i]);
 	    // now look this up in the color map...
 	    
-	    double rmapval = (nval-map->min)*cdenom;
+	    double rmapval = (nval-map->getMin())*cdenom;
 	    MaterialHandle hand = map->lookup2(rmapval);
 
 	    bmap[bindex + i*3 + 0] = hand->diffuse.r();
@@ -4056,6 +4062,3 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }  
-
-
-

@@ -359,19 +359,3 @@ int Network::delete_module(const clString& id)
     return 1;
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/Array1.cc>
-template class Array1<Connection*>;
-template class Array1<Module*>;
-
-#include <Classlib/HashTable.cc>
-template class HashTable<clString, Module*>;
-template class HashTable<int, Module*>;
-template class HashTable<clString, Connection*>;
-template class HashKey<clString, Module*>;
-template class HashKey<int, Module*>;
-template class HashKey<clString, Connection*>;
-template int Hash(const clString& k, int hash_size);
-
-#endif

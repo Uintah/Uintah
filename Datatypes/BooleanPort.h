@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Boolean.h>
 
-typedef Mailbox<SimplePortComm<sciBooleanHandle>*> _cfront_bug_sciBoolean_;
 typedef SimpleIPort<sciBooleanHandle> sciBooleanIPort;
 typedef SimpleOPort<sciBooleanHandle> sciBooleanOPort;
 

@@ -13,10 +13,6 @@
 
 #include <Classlib/Handle.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class T>
 Handle<T>::Handle()
 : rep(0)

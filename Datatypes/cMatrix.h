@@ -19,6 +19,7 @@ public:
 
  virtual void mult(cVector& V,cVector& tmp)=0;
  virtual Complex& get(int row, int col)=0;
+    virtual cMatrix* clone()=0;
 
 // Persistent representation...
     virtual void io(Piostream&);

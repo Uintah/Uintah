@@ -1,4 +1,5 @@
 #include <Datatypes/cDMatrix.h>
+#include <Classlib/NotFinished.h>
 
 //-----------------------------------------------------------------
 cDMatrix::cDMatrix(int N){
@@ -25,6 +26,12 @@ cDMatrix::~cDMatrix(){
  delete[] a[0];
 
  delete [] a;
+}
+
+cMatrix* cDMatrix::clone()
+{
+    NOT_FINISHED("cDMatrix::clone()");
+    return 0;
 }
 
 //----------------------------------------------------------------

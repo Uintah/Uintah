@@ -14,10 +14,6 @@
 #include <Classlib/FLPQueue.h>
 #include <Malloc/Allocator.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class T> FLPQueue<T>::FLPQueue(int size)
 : head(0), tail(0), _length(0), _size(size)
 {

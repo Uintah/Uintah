@@ -319,9 +319,3 @@ GeometryData::Print()
   cerr << endl;
 }
 
-#ifdef __GNUG__
-
-#include <Multitask/Mailbox.cc>
-template class Mailbox<GeomReply>;
-
-#endif

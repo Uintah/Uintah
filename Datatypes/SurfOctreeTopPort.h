@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/SurfOctree.h>
 
-typedef Mailbox<SimplePortComm<SurfOctreeTopHandle>*> _cfront_bug_SurfOctreeTop_;
 typedef SimpleIPort<SurfOctreeTopHandle> SurfOctreeTopIPort;
 typedef SimpleOPort<SurfOctreeTopHandle> SurfOctreeTopOPort;
 

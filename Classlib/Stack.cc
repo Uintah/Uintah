@@ -14,10 +14,6 @@
 #include <Classlib/Stack.h>
 #include <Classlib/Assert.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class T>
 Stack<T>::Stack(int initial_alloc, int growsize)
 : stack(0, initial_alloc), sp(0), growsize(growsize)

@@ -17,10 +17,6 @@
 
 #include <Classlib/Assert.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class Key> class FastHashTableIter;
 class RigorousTest;
 

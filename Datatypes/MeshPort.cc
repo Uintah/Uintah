@@ -18,13 +18,3 @@ using sci::MeshHandle;
 clString SimpleIPort<MeshHandle>::port_type("Mesh");
 clString SimpleIPort<MeshHandle>::port_color("orange red");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<MeshHandle>;
-template class SimpleOPort<MeshHandle>;
-template class SimplePortComm<MeshHandle>;
-template class Mailbox<SimplePortComm<MeshHandle>*>;
-
-#endif

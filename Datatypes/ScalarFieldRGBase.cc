@@ -355,3 +355,4 @@ void ScalarFieldRGBase::distribute_samples()
 }
 
 
+PersistentTypeID LockArray3<Point>::type_id("LockArray3", "Datatype", 0);

@@ -28,7 +28,6 @@ LOG
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ParticleGridReader.h>
 
-typedef Mailbox<SimplePortComm<ParticleGridReader>*> _cfront_bug_ParticleGridReader_;
 typedef SimpleIPort<ParticleGridReaderHandle> ParticleGridReaderIPort;
 typedef SimpleOPort<ParticleGridReaderHandle> ParticleGridReaderOPort;
 

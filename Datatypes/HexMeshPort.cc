@@ -17,13 +17,3 @@
 clString SimpleIPort<HexMeshHandle>::port_type("HexMesh");
 clString SimpleIPort<HexMeshHandle>::port_color("yellow green");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<HexMeshHandle>;
-template class SimpleOPort<HexMeshHandle>;
-template class SimplePortComm<HexMeshHandle>;
-template class Mailbox<SimplePortComm<HexMeshHandle>*>;
-
-#endif

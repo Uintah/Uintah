@@ -250,13 +250,3 @@ ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Schem
       stack.remove_all();
 }
 
-
-#ifdef __GNUG__
-
-#include <Classlib/Stack.cc>
-template class Stack<StackItem>;
-
-#include <Classlib/Array1.cc>
-template class Array1<StackItem>;
-
-#endif

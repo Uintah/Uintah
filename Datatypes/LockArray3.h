@@ -16,12 +16,6 @@
 
 #include <Classlib/Assert.h>
 #include <Datatypes/Datatype.h>
-
-
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 class Piostream;
 
 template<class T>
@@ -37,6 +31,9 @@ public:
     LockArray3(int, int, int);
     LockArray3<T>& operator=(const LockArray3&);
     virtual ~LockArray3();
+
+    LockArray3<T>* clone() const;
+
     inline T& operator()(int d1, int d2, int d3) const
 	{
 	    ASSERTL3(d1>=0 && d1<dm1);

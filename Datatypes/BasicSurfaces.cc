@@ -685,10 +685,3 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 	} else val[i]=0;
     }
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<Point>;
-
-#endif

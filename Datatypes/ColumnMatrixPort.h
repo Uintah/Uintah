@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ColumnMatrix.h>
 
-typedef Mailbox<SimplePortComm<ColumnMatrixHandle>*> _cfront_bug_ColumnMatrix_;
 typedef SimpleIPort<ColumnMatrixHandle> ColumnMatrixIPort;
 typedef SimpleOPort<ColumnMatrixHandle> ColumnMatrixOPort;
 

@@ -21,9 +21,7 @@ X::~X()
 }
 
 void* operator new(size_t, Allocator*, const char*);
-#ifdef _BOOL
 void* operator new[](size_t, Allocator*, const char*);
-#endif
 
 main()
 {

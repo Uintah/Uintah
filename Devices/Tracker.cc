@@ -65,13 +65,3 @@ TrackerMessage::~TrackerMessage()
 {
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/Array1.cc>
-
-template class Array1<Tracker*>;
-
-#include <Multitask/Mailbox.cc>
-template class Mailbox<MessageBase*>;
-
-#endif

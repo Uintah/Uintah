@@ -126,6 +126,11 @@ inline Vector& Vector::operator*=(const double d)
     return *this;
 }
 
+inline Vector Vector::operator/(const Vector& v) const
+{
+    return Vector(_x/v._x, _y/v._y, _z/v._z);
+}
+
 inline void Vector::x(double d)
 {
 #if SCI_ASSERTION_LEVEL >= 4

@@ -160,39 +160,3 @@ bool TexGeomGrid::saveobj(ostream&, const clString&, GeomSave*)
   return 0;
 }
 
-#ifdef __GNUG__
-#include <Classlib/Array2.cc>
-
-template class Array2<double>;
-template class Array2<MaterialHandle>;
-template class Array2<Vector>;
-
-template void Pio(Piostream&, Array2<double>&);
-template void Pio(Piostream&, Array2<MaterialHandle>&);
-template void Pio(Piostream&, Array2<Vector>&);
-
-#endif
-
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array2.cc>
-
-static void _dummy_(Piostream& p1, Array2<MaterialHandle>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _dummy_(Piostream& p1, Array2<Vector>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _dummy_(Piostream& p1, Array2<double>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/VectorField.h>
 
-typedef Mailbox<SimplePortComm<VectorFieldHandle>*> _cfront_bug_VectorField_;
 typedef SimpleIPort<VectorFieldHandle> VectorFieldIPort;
 typedef SimpleOPort<VectorFieldHandle> VectorFieldOPort;
 

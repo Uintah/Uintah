@@ -36,9 +36,3 @@ void Pio(Piostream& stream, Lighting& l)
     stream.end_class();
 }
 
-#ifdef __GNUG__
-#include <Classlib/Array1.cc>
-template class Array1<Light*>;
-template void Pio(Piostream&, Array1<Light*>&);
-
-#endif

@@ -16,12 +16,6 @@
 #include <Malloc/Allocator.h>
 #include <Tester/RigorousTest.h>
 
-
-
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 // Create a hashtable
 template<class Key, class Data>
 HashTable<Key, Data>::HashTable()
@@ -271,7 +265,7 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 	    t.table[i]=0;
 	}
 	Pio(stream, count);
-	HashKey<Key, Data>* p;
+	HashKey<Key, Data>* p=0;
 	for(int ii=0;ii<count;ii++){
 	    if(stream.reading()){
 		HashKey<Key, Data>* tmp=scinew HashKey<Key, Data>;

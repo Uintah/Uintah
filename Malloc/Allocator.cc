@@ -11,7 +11,11 @@
 #include <string.h>
 #define bcopy(src,dest,n) memcpy(dest,src,n)
 #else
+#ifdef linux
+#include <string.h>
+#else
 #include <bstring.h>
+#endif
 #endif
 #include <stdio.h>
 #include <config.h>

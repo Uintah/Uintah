@@ -3,12 +3,18 @@
 #include <math.h>
 #include <Math/hf.h>
 
+#ifdef linux
+#define SQRT sqrt
+#else
+#define SQRT fsqrt
+#endif
+
 #define CNORM(dx, dy, xx, yy) \
     x=(yy)*(dx); \
     y=(xx)*(dy); \
     z=(xx)*(yy); \
     l=x*x+y*y+z*z; \
-    l=1.0F/fsqrt(l); \
+    l=1.0F/SQRT(l); \
     x*=l; \
     y*=l; \
     z*=l; \
@@ -101,8 +107,8 @@ void hf_minmax_float_s6(float* data, int xres, int yres,
 {
     int x,y;
     float* p=data;
-    float min=MAXFLOAT;
-    float max=-MAXFLOAT;
+    float min=FLT_MAX;
+    float max=-FLT_MAX;
     for(y=0;y<yres;y++){
 	for(x=0;x<xres;x++){
 	    float f=p[5];

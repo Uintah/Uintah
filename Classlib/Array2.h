@@ -17,10 +17,6 @@
 #include <Classlib/Assert.h>
 class RigorousTest;
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 class Piostream;
 /**************************************
 
@@ -105,8 +101,6 @@ public:
     friend void Pio(Piostream&, Array2<T>&);
     friend void Pio(Piostream&, Array2<T>*&);
     
-
-
 };
 
 

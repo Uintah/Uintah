@@ -84,8 +84,6 @@
 #include "banmul.h"
 #include "banmprv.h"
 
-#define _NON_TEMPLATE_COMPLEX
-
 #include "comprow_double.h"        //compressed row matrix storage
 #include "iotext_double.h"        //matrix, vector input- output
 

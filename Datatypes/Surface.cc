@@ -111,9 +111,3 @@ void Surface::set_bc(const clString& bc_expr)
     boundary_type=DirichletExpression;
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-template class LockingHandle<Surface>;
-
-#endif

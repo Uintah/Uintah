@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Octree.h>
 
-typedef Mailbox<SimplePortComm<OctreeTopHandle>*> _cfront_bug_Octree_;
 typedef SimpleIPort<OctreeTopHandle> OctreeIPort;
 typedef SimpleOPort<OctreeTopHandle> OctreeOPort;
 

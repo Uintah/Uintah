@@ -20,7 +20,7 @@
 #include <Geometry/Vector.h>
 #include <Classlib/Array2.h>
 
-class ColorMap;
+class GeomColormapInterface;
 
 class TimeGrid : public GeomObj {
     Array1<float *> tmap;
@@ -46,7 +46,7 @@ public:
 
     // methor for textur mapping...
 
-    ColorMap* map; // color map to be used...
+    GeomColormapInterface* map; // color map to be used...
 
     void set_active(int, double);
 

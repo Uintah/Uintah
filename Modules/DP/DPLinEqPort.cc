@@ -16,13 +16,3 @@
 clString SimpleIPort<DPLinEqHandle>::port_type("DPLinEq");
 clString SimpleIPort<DPLinEqHandle>::port_color("purple");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<DPLinEqHandle>;
-template class SimpleOPort<DPLinEqHandle>;
-template class SimplePortComm<DPLinEqHandle>;
-template class Mailbox<SimplePortComm<DPLinEqHandle>*>;
-
-#endif

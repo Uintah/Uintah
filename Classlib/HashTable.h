@@ -17,11 +17,6 @@
 
 #include <Classlib/Assert.h>
 class RigorousTest;
-
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 class Piostream;
 
 template<class Key, class Data> class HashKey;
@@ -42,6 +37,11 @@ inline int Hash(const int& k, int hash_size)
 }
 
 inline int Hash(const unsigned long& k, int hash_size)
+{
+    return (int)(k^(3*hash_size+1))%hash_size;
+}   
+
+inline int Hash(const unsigned long long& k, int hash_size)
 {
     return (int)(k^(3*hash_size+1))%hash_size;
 }   

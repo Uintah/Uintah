@@ -13,10 +13,6 @@
 
 #include <Classlib/Ring.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class T> Ring<T>::Ring(int s)
 : _head(0), _tail(0), _size(s)
 {

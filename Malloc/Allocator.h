@@ -35,15 +35,9 @@ void GetBinStats(Allocator*, int binno, size_t& minsize, size_t& maxsize,
 void AuditAllocator(Allocator*);
 void DumpAllocator(Allocator*);
 
-void* operator new(size_t, Allocator*, char*);
-#ifdef _BOOL
-void* operator new[](size_t, Allocator*, char*);
-#endif
+void* operator new(size_t, Allocator*, const char*);
+void* operator new[](size_t, Allocator*, const char*);
 
-#ifdef __GNUG__
-#define scinew new
-#else
 #define scinew new(default_allocator, __FILE__)
-#endif
 
 #endif

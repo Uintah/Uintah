@@ -346,14 +346,3 @@ int Grid::element_triangle_intersect(int i, int j, int k, const Point &p1,
     return (next->size());
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<int>;
-template class Array1<Point>;
-
-#include <Classlib/Array3.cc>
-template class Array3<Array1<int>*>;
-
-#endif
-

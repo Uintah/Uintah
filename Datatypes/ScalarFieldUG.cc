@@ -351,24 +351,3 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
   cerr << vol_total << " Volume " << grad_total << " Gradient\n";
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<double>;
-template void Pio(Piostream&, Array1<double>&);
-
-#endif
-
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-
-static void _dummy_(Piostream& p1, Array1<double>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

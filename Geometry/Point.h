@@ -2,10 +2,6 @@
 #ifndef Geometry_Point_h
 #define Geometry_Point_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/Assert.h>
 #include <Tester/RigorousTest.h>
 

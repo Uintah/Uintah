@@ -54,6 +54,11 @@ MultiMesh* MultiMesh::clone()
     return scinew MultiMesh(*this);
 }
 
+void MultiMesh::add_mesh(const sci::MeshHandle &m, int i)
+{
+    meshes[i]=m->clone();
+}
+
 #define MultiMesh_VERSION 1
 
 void MultiMesh::io(Piostream& stream)
@@ -62,27 +67,4 @@ void MultiMesh::io(Piostream& stream)
     Pio(stream, meshes);
     stream.end_class();
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-template class LockingHandle<MultiMesh>;
-
-#include <Classlib/Array1.cc>
-template class Array1<MeshHandle>;
-template void Pio(Piostream&, Array1<MeshHandle>&);
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-
-static void _dummy_(Piostream& p1, Array1<MeshHandle>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
 

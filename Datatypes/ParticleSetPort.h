@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ParticleSet.h>
 
-typedef Mailbox<SimplePortComm<ParticleSetHandle>*> _cfront_bug_ParticleSet_;
 typedef SimpleIPort<ParticleSetHandle> ParticleSetIPort;
 typedef SimpleOPort<ParticleSetHandle> ParticleSetOPort;
 

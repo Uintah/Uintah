@@ -16,13 +16,3 @@
 clString SimpleIPort<MultiMeshHandle>::port_type("MultiMesh");
 clString SimpleIPort<MultiMeshHandle>::port_color("red");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<MultiMeshHandle>;
-template class SimpleOPort<MultiMeshHandle>;
-template class SimplePortComm<MultiMeshHandle>;
-template class Mailbox<SimplePortComm<MultiMeshHandle>*>;
-
-#endif

@@ -15,10 +15,6 @@
 #include <Classlib/Assert.h>
 #include <Malloc/Allocator.h>
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class Key, class Data>
 TreeLink<Key, Data>::TreeLink(const Key& key, const Data& data)
 : key(key), data(data), left(0), right(0), parent(0), 

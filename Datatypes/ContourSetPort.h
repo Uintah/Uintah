@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ContourSet.h>
 
-typedef Mailbox<SimplePortComm<ContourSetHandle>*> _cfront_bug_ContourSet_;
 typedef SimpleIPort<ContourSetHandle> ContourSetIPort;
 typedef SimpleOPort<ContourSetHandle> ContourSetOPort;
 

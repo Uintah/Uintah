@@ -15,10 +15,6 @@
 #ifndef SCI_Classlib_FLPQueue_h
 #define SCI_Classlib_FLPQueue_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/Persistent.h>
 
 class Piostream;
@@ -31,7 +27,7 @@ template<class T> class FLPQueueNode {
   FLPQueueNode* next;
   FLPQueueNode* prev;
   inline FLPQueueNode(const T& item, FLPQueueNode* next, FLPQueueNode* prev, double w) : item(item), next(next), prev(prev), w(w){}
-  inline FLPQueueNode(const T& item, double w): items(item), next(0), prev(0), w(w){}
+  inline FLPQueueNode(const T& item, double w): item(item), next(0), prev(0), w(w){}
   friend class FLPQueue<T>;
   friend void Pio(Piostream&, FLPQueueNode<T>&);
   friend void Pio(Piostream&, FLPQueue<T>&);

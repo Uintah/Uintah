@@ -17,13 +17,3 @@
 clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
 clString SimpleIPort<TensorFieldHandle>::port_color("green3");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<TensorFieldHandle>;
-template class SimpleOPort<TensorFieldHandle>;
-template class SimplePortComm<TensorFieldHandle>;
-template class Mailbox<SimplePortComm<TensorFieldHandle>*>;
-
-#endif

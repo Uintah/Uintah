@@ -16,7 +16,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/cVector.h>
 
-typedef Mailbox<SimplePortComm<cVectorHandle>*> _cfront_bug_cVector_;
 typedef SimpleIPort<cVectorHandle> cVectorIPort;
 typedef SimpleOPort<cVectorHandle> cVectorOPort;
 

@@ -171,27 +171,3 @@ bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
     return true;
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<ITree*>;
-template class Array1<BSphere>;
-template class Array1<GeomObj*>;
-
-template void Pio(Piostream&, Array1<GeomObj*>&);
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-
-static void _dummy_(Piostream& p1, Array1<GeomObj*>& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ScaledBoxWidgetData.h>
 
-typedef Mailbox<SimplePortComm<ScaledBoxWidgetDataHandle>*> _cfront_bug_ScaledBoxWidgetData_;
 typedef SimpleIPort<ScaledBoxWidgetDataHandle> ScaledBoxWidgetDataIPort;
 typedef SimpleOPort<ScaledBoxWidgetDataHandle> ScaledBoxWidgetDataOPort;
 

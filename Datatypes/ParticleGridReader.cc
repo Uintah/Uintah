@@ -1,6 +1,7 @@
 
 #include <Datatypes/ParticleGridReader.h>
 #include <Classlib/String.h>
+#include <Classlib/NotFinished.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
 
@@ -25,3 +26,9 @@ void ParticleGridReader::io(Piostream& stream)
   stream.begin_class("ParticleGridReader", PARTICLEGRIDREADER_VERSION);
     stream.end_class();
 }
+
+void ParticleGridReader::SetFile(const clString& file )
+{
+    NOT_FINISHED("ParticlGridReader::SetFile");
+}
+

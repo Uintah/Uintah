@@ -618,3 +618,12 @@ void Readtec::geom_pick(GeomPick* pick, void* userdata, int index)
   cerr << "sphere index = "<<index<<endl<<endl;
   // Now modify so that points and spheres store index.
 }
+
+#ifdef __GNUG__
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Classlib/Array1.cc>
+template class Array1<Zone>;
+#endif

@@ -16,13 +16,3 @@
 clString SimpleIPort<ImageHandle>::port_type("Image");
 clString SimpleIPort<ImageHandle>::port_color("misty rose");
 
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<ImageHandle>;
-template class SimpleOPort<ImageHandle>;
-template class SimplePortComm<ImageHandle>;
-template class Mailbox<SimplePortComm<ImageHandle>*>;
-
-#endif

@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Image.h>
 
-typedef Mailbox<SimplePortComm<ImageHandle>*> _cfront_bug_Image_;
 typedef SimpleIPort<ImageHandle> ImageIPort;
 typedef SimpleOPort<ImageHandle> ImageOPort;
 

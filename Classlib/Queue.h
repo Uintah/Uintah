@@ -15,10 +15,6 @@
 #ifndef SCI_Classlib_Queue_h
 #define SCI_Classlib_Queue_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Classlib/Assert.h>
 
 template<class T> class Queue;
@@ -79,7 +75,7 @@ public:
 
     //////////
     //Returns 1 if the Queue is empty, 0 if there is still data in the Queue
-    int is_empty();
+    bool is_empty();
 
     //////////
     //Returns the legnth of the Queue
@@ -92,10 +88,3 @@ public:
 };
 
 #endif
-
-
-
-
-
-
-

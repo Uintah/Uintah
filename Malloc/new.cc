@@ -16,7 +16,7 @@ void operator delete(void* ptr)
     default_allocator->free(ptr);
 }
 
-void* operator new(size_t size, Allocator* a, char* tag)
+void* operator new(size_t size, Allocator* a, const char* tag)
 {
     if(!a){
 	if(!default_allocator)
@@ -26,8 +26,7 @@ void* operator new(size_t size, Allocator* a, char* tag)
     return a->alloc(size, tag);
 }
 
-#ifdef _BOOL
-void* operator new[](size_t size, Allocator* a, char* tag)
+void* operator new[](size_t size, Allocator* a, const char* tag)
 {
     if(!a){
 	if(!default_allocator)
@@ -36,6 +35,4 @@ void* operator new[](size_t size, Allocator* a, char* tag)
     }
     return a->alloc(size, tag);
 }
-
-#endif
 

@@ -5,7 +5,11 @@
 #include <string.h>
 #define bzero(p,sz)  memset(p,0, sz);
 #else
+#ifdef linux
+#include <string.h>
+#else
 #include <bstring.h>
+#endif
 #endif
 
 extern "C" {

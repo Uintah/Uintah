@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Matrix.h>
 
-typedef Mailbox<SimplePortComm<MatrixHandle>*> _cfront_bug_Matrix_;
 typedef SimpleIPort<MatrixHandle> MatrixIPort;
 typedef SimpleOPort<MatrixHandle> MatrixOPort;
 

@@ -86,14 +86,3 @@ ostream& operator<<(ostream& str, DebugSwitch& db)
     return str;
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/Array1.cc>
-template class Array1<DebugSwitch*>;
-
-#include <Classlib/AVLTree.cc>
-template class AVLTree<clString, DebugVars*>;
-template class AVLTreeIter<clString, DebugVars*>;
-template class TreeLink<clString, DebugVars*>;
-
-#endif

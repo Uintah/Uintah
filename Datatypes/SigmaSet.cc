@@ -56,35 +56,3 @@ void SigmaSet::io(Piostream& stream)
     stream.end_class();
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<clString>;
-template void Pio(Piostream&, Array1<clString>&);
-
-#include <Classlib/Array2.cc>
-template class Array2<double>;
-template void Pio(Piostream&, Array2<double>&);
-
-#include <Classlib/LockingHandle.cc>
-template class LockingHandle<SigmaSet>;
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
-
-static void _dummy_(Piostream& p1, Array1<clString>& p2)
-{
-    Pio(p1, p2);
-}
-
-static void _dummy_(Piostream& p1, Array2<double> & p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

@@ -23,7 +23,7 @@ XLIBS =
 
 SO_LIBS =
 SO_LDFLAGS = -Wl,-woff,15 -L$(TOP)/lib $(DPLIBS) -lDatatypes -lDataflow -lGeom -lGeometry \
-	-lTCL -lClasslib -lMultitask -lMalloc $(XLIBS) -lm -lC -lc
+	-lTCL -lClasslib -lMultitask -lMalloc $(XLIBS) -lm SCI_CCLibs
 
 LOCALINCLUDES = $(DPINCS)
 

@@ -15,15 +15,3 @@
 
 clString SimpleIPort<SurfaceHandle>::port_type("Surface");
 clString SimpleIPort<SurfaceHandle>::port_color("SteelBlue4");
-
-
-#ifdef __GNUG__
-
-#include <Datatypes/SimplePort.cc>
-#include <Multitask/Mailbox.cc>
-template class SimpleIPort<SurfaceHandle>;
-template class SimpleOPort<SurfaceHandle>;
-template class SimplePortComm<SurfaceHandle>;
-template class Mailbox<SimplePortComm<SurfaceHandle>*>;
-
-#endif

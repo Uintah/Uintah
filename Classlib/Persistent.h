@@ -18,11 +18,7 @@
 
 class clString;
 class Persistent;
-#ifdef __GNUG__
-#include <Classlib/HashTable.h>
-#else
 template<class Key, class Data> class HashTable;
-#endif
 
 struct PersistentTypeID {
     char* type;

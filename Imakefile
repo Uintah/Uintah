@@ -8,10 +8,6 @@ all::
 #endif
 #endif
 
-#ifdef SCI_MACHINE_Linux
-OTHER_SOS = -lDatatypes -lMath -lMesaGL -lMesaGLU
-#endif
-
 SUBDIRS = Malloc Tester tcl \
 	Multitask Classlib TCL Math Comm Geometry \
 	Devices Constraints Geom Dataflow Datatypes Widgets \
@@ -34,17 +30,17 @@ SRCS = $(SR_SRCS)
 SCIDependTarget($(SRCS))
 
 World:
-        make Makefile
-        make Makefiles
-        make depend
-        make
+	make Makefile
+	make Makefiles
+	make depend
+	make
 
 update:
-        cvs update -d
-        make World
+	cvs update -d
+	make World
 
 clean::
-        rm -rf templates
+	rm -rf templates
 
 installtcl:
-        @(cd tcl && make installtcl)
+	@(cd tcl && make installtcl)

@@ -28,7 +28,6 @@ LOG
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/ParticleSetExtension.h>
 
-typedef Mailbox<SimplePortComm<ParticleSetExtension>*> _cfront_bug_ParticleSetExtension_;
 typedef SimpleIPort<ParticleSetExtensionHandle> ParticleSetExtensionIPort;
 typedef SimpleOPort<ParticleSetExtensionHandle> ParticleSetExtensionOPort;
 

@@ -17,7 +17,6 @@
 #include <Datatypes/SimplePort.h>
 #include <Datatypes/Surface.h>
 
-typedef Mailbox<SimplePortComm<SurfaceHandle>*> _cfront_bug_Surface_;
 typedef SimpleIPort<SurfaceHandle> SurfaceIPort;
 typedef SimpleOPort<SurfaceHandle> SurfaceOPort;
 

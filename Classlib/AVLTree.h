@@ -15,10 +15,6 @@
 #ifndef SCI_Classlib_AVLTree_h
 #define SCI_Classlib_AVLTree_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class Key, class Data> class AVLTree;
 template<class Key, class Data> class AVLTreeIter;
 

@@ -11,6 +11,7 @@
  */
 
 #include <Datatypes/TensorField.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
@@ -73,6 +74,7 @@ template<class DATA>
 TensorField<DATA>::TensorField(const TensorField<DATA>& t)
 {
   /*NOTE - IMPEMENT ME!*/
+    NOT_FINISHED("TensorField copy ctor\n");
 }
 
 /*Destructor*/
@@ -120,14 +122,3 @@ void TensorField<DATA>::io(Piostream& stream)
       Pio(stream, m_tensor_field[slice]);
     stream.end_class();
 }
-
-
-/*Activate the random GNUG only LockingHandle stuff - for some reason*/
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc
-template<class DATA>
-template class LockingHandle<TensorField<DATA > >;
-
-#endif
-

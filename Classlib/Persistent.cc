@@ -31,7 +31,14 @@ PersistentTypeID::PersistentTypeID(char* type, char* parent,
     clString typestring(type);
     PersistentTypeID* dummy;
     if(table->lookup(typestring, dummy)){
-	cerr << "WARNING: duplicate type in Persistent Object Type Database" << endl;
+	if(dummy->maker == maker && clString(dummy->parent) == clString(parent)){
+	    //cerr << "WARNING: duplicate type in Persistent Object Type Database: " << typestring << endl;
+	} else {
+	    cerr << "WARNING: duplicate type in Persistent Object Type Database: " << typestring << endl;
+	    //cerr << "Makers: " << (void*)dummy->maker << ", " << (void*)maker << "\n";
+	    //cerr << "Parents: " << dummy->parent << ", " << parent << "\n";
+	    //exit(1);
+	}
     }
     dummy=this;
     table->insert(typestring, dummy);
@@ -245,15 +252,3 @@ Piostream* auto_istream(ifstream* inp, char *name)
     }
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/HashTable.cc>
-template class HashTable<clString, PersistentTypeID*>;
-template class HashKey<clString, PersistentTypeID*>;
-template class HashTable<int, Persistent*>;
-template class HashKey<int, Persistent*>;
-template class HashTable<Persistent*, int>;
-template class HashKey<Persistent*, int>;
-template int Hash(const clString& k, int hash_size);
-
-#endif
