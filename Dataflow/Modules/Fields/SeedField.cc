@@ -45,12 +45,17 @@
 #include <set>
 
 #include <iostream>
+#include <limits.h>
 
 using std::set;
 using std::vector;
 using std::pair;
 
 namespace SCIRun {
+
+//! magnitudes
+double fdata_mag(double v) { return v; }
+double fdata_mag(Vector v) { return v.length(); }  
 
 template <class Field>
 class DistTable
@@ -124,9 +129,9 @@ class SeedField : public Module
   template <class Field> 
   bool build_weight_table(Field *, DistTable<Field> &);
   template <class Field>
-  PointCloud<double>* generate_widget_seeds(Field *);
+  void generate_widget_seeds(Field *);
   template <class Field>
-  PointCloud<double>* generate_random_seeds(Field *);
+  void generate_random_seeds(Field *);
 
   template <class M> 
   void dispatch(M *mesh);
@@ -209,21 +214,27 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
     return false;
 
   // the tables are to be filled with strictly increasing values.
+  // degenerate elements will not be included in the table.
+  // mag(data) <=0 means ignore the element (don't include in the table).
+  // bin[n] = b[n-1]+newval;bin[0]=newval
 
   if (dist=="importance") { // size of element * data at element
-    table.push_back(mesh->get_element_size(*ei)*fdata[*ei],*ei);
+    table.push_back(mesh->get_element_size(*ei)*fdata_mag(fdata[*ei]),*ei);
     ++ei;
     while (ei != mesh->elem_end()) {
-      table.push_back(mesh->get_element_size(*ei)*fdata[*ei]+
-		      table[table.size()-1].first,*ei);
+      if ( mesh->get_element_size(*ei)*fdata_mag(fdata[*ei])>0) {
+	table.push_back(mesh->get_element_size(*ei)*fdata_mag(fdata[*ei])+
+			table[table.size()-1].first,*ei);
+      }
       ++ei;
     }
   } else if (dist=="uniform") { // size of element only
     table.push_back(mesh->get_element_size(*ei),*ei);
     ++ei;
     while (ei != mesh->elem_end()) {
-      table.push_back(mesh->get_element_size(*ei)+
-		      table[table.size()-1].first,*ei);
+      if (mesh->get_element_size(*ei)>0)
+	table.push_back(mesh->get_element_size(*ei)+
+			table[table.size()-1].first,*ei);
       ++ei;
     }
   } else if (dist=="scattered") { // element index; not uniform!
@@ -239,32 +250,40 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
 }
 
 template <class Field>
-PointCloud<double>*
+void
 SeedField::generate_widget_seeds(Field *field)
 {
 }
 
 template <class Field>
-PointCloud<double>*
+void
 SeedField::generate_random_seeds(Field *field)
 {
   typedef typename Field::mesh_type              mesh_type;
+  typedef typename Field::fdata_type             fdata_type;
   typedef typename DistTable<Field>::table_entry table_entry;
+
+  //std::cerr << "trying to build weight table" << std::endl;
 
   DistTable<Field> table;
 
-  if (!build_weight_table(field,table)) // unknown dist type
-    return 0;
+  //std::cerr << "table created" << std::endl;
 
-  MusilRNG rng(rngSeed_.get());
+  if (!build_weight_table(field,table)) // unknown dist type
+    return;
+
+  //std::cerr << "generating random seeds" << std::endl;
+
+  static MusilRNG rng(rngSeed_.get());
 
   double max = table[table.size()-1].first;
   mesh_type *mesh = field->get_typed_mesh().get_rep();
   PointCloudMesh *pcmesh = scinew PointCloudMesh;
-  PointCloud<double> *pc = scinew PointCloud<double>(pcmesh,Field::NODE);
 
   unsigned int ns = numSeeds_.get();
-  for (unsigned int loop=0;loop<ns;loop++) {
+  unsigned int loop;
+  
+  for (loop=0;loop<ns;loop++) {
     Point p;
     table_entry e;
     table.search(e,rng()*max);           // find random cell
@@ -272,7 +291,14 @@ SeedField::generate_random_seeds(Field *field)
     pcmesh->add_node(p);
   }
 
-  return pc;
+  PointCloud<double> *seeds = scinew PointCloud<double>(pcmesh,Field::NODE);
+  PointCloud<double>::fdata_type &fdata = seeds->fdata();
+  for (loop=0;loop<ns;++loop)
+  {
+    fdata[loop]=1;
+  }
+
+  ofport_->send(seeds);
 }
 
 #if 0
@@ -349,30 +375,44 @@ SeedField::execute()
     return;
   }
 
-  PointCloud<double> *seeds;
-
   string tab = whichTab_.get();
 
-  if (tab=="random") {
+  //std::cerr << "executing SeedField" << std::endl;
+
+  if (tab=="Random") {
     if (vf_->get_type_name(-1)=="LatticeVol<double>") {
-      seeds = generate_random_seeds((LatticeVol<double>*)vf_);
+      generate_random_seeds((LatticeVol<double>*)vf_);
     } else if (vf_->get_type_name(-1)=="TetVol<double>") {
-      seeds = generate_random_seeds((TetVol<double>*)vf_);
+      generate_random_seeds((TetVol<double>*)vf_);
     } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
-      seeds = generate_random_seeds((TriSurf<double>*)vf_);
+      generate_random_seeds((TriSurf<double>*)vf_);
     } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
-      //pc = generate_random_seeds((LatticeVol<Vector>*)vf_);
+      generate_random_seeds((LatticeVol<Vector>*)vf_);
     } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
-      //pc = generate_random_seeds((TetVol<Vector>*)vf_);
+      generate_random_seeds((TetVol<Vector>*)vf_);
     } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
-      //pc = generate_random_seeds((TriSurf<Vector>*)vf_);
+      generate_random_seeds((TriSurf<Vector>*)vf_);
     } else {
       // can't do this kind of field
       return;
     }
-    ofport_->send(seeds);
-  } else if (tab=="widget") {
-    //pc = generate_widget_seeds(vf_);
+  } else if (tab=="Widget") {
+    if (vf_->get_type_name(-1)=="LatticeVol<double>") {
+      generate_widget_seeds((LatticeVol<double>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TetVol<double>") {
+      generate_widget_seeds((TetVol<double>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TriSurf<double>") {
+      generate_widget_seeds((TriSurf<double>*)vf_);
+    } else if (vf_->get_type_name(-1)=="LatticeVol<Vector>") {
+      generate_widget_seeds((LatticeVol<Vector>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TetVol<Vector>") {
+      generate_widget_seeds((TetVol<Vector>*)vf_);
+    } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
+      generate_widget_seeds((TriSurf<Vector>*)vf_);
+    } else {
+      // can't do this kind of field
+      return;
+    }
   }
 }
 
