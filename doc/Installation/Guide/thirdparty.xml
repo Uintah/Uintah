@@ -135,8 +135,17 @@ for SCIRun.
 </para>
 
 <para>
-The install script requires Python version 1.5.2 or greater
+The install script requires Python version 1.5.2 or greater.
 </para>
+
+<para>
+You may reinstall part or all of the required thirdparty software by 
+repeating the above command.  This time since the target directory exists, 
+you will be asked to replace all or part of the installation. Just answer 
+y or n to the script until you have selected the exact reinstallation 
+you wish.
+</para> 
+
 </listitem>
 </orderedlist>
 </section>
@@ -179,22 +188,18 @@ directories where older versions are already installed.
 
 <para>
 An example of a centralized and out-of-the-way location would be:
-/usr/local/SCIRun_Thirdparty_32 such that after installation
+/usr/local/SCIRun_Thirdparty such that after installation
 the contents of that directory would look like this (assuming that
 the tarballs were unzipped and untarred in the /src directory inside
-/usr/local/SCIRun_Thirdparty_32):
+/usr/local/SCIRun_Thirdparty):
 </para>
 
 <literallayout>
-/usr/local/SCIRun_Thirdparty_32/bin
-/usr/local/SCIRun_Thirdparty_32/include
-/usr/local/SCIRun_Thirdparty_32/lib
-/usr/local/SCIRun_Thirdparty_32/man 
-/usr/local/SCIRun_Thirdparty_32/src/blt2.4u
-/usr/local/SCIRun_Thirdparty_32/src/itcl3.1.0
-/usr/local/SCIRun_Thirdparty_32/src/tcl8.3.2
-/usr/local/SCIRun_Thirdparty_32/src/tk8.3.2
-/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_5_1
+/usr/local/SCIRun_Thirdparty/bin
+/usr/local/SCIRun_Thirdparty/include
+/usr/local/SCIRun_Thirdparty/lib
+/usr/local/SCIRun_Thirdparty/man 
+/usr/local/SCIRun_Thirdparty/src
 </literallayout>
 </section>
 
@@ -207,7 +212,7 @@ the tarballs were unzipped and untarred in the /src directory inside
 represents
 the chosen installation directory for the indicated software
 distribution.  <replaceable>INST_DIR</replaceable>
-would be "/usr/local/SCIRun_Thirdparty_32" for the example given
+would be "/usr/local/SCIRun_Thirdparty" for the example given
 above.  Note that the <replaceable>INST_DIR</replaceable>
 does not have to be the same for each distribution, but can be if it
 is desired as is demonstrated in the example.
@@ -291,9 +296,7 @@ CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
 
 <para>
 Where <replaceable>XERCES_C_ROOT</replaceable> is the root of the unzipped
-and untarred xerces 1.5.1 distribution.  For the example
-given above, <replaceable>XERCES_C_ROOT</replaceable> would be
-"/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_5_1". 
+and untarred xerces distribution.
 </para>
 </section>
 </section>
