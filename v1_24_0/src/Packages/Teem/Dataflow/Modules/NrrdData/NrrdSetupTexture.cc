@@ -113,17 +113,18 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
   //const unsigned int nk = nin->axis[0].size;
   const unsigned int nji = nj * ni;
   const double dmaxplus = 255.0 / (dmax - dmin);
-  for (k = 0; k < nk; k++)
-  {
-    for (j = 0; j < nj; j++)
-    {
-      for (i = 0; i < ni; i++)
-      {
-        const unsigned int idx = k * nji + j * ni + i;
-        const double val = (double)nindata[idx];
 
-        if (justvalues)
+  if (justvalues)
+  {
+    for (k = 0; k < nk; k++)
+    {
+      for (j = 0; j < nj; j++)
+      {
+        for (i = 0; i < ni; i++)
         {
+          const unsigned int idx = k * nji + j * ni + i;
+          const double val = (double)nindata[idx];
+
           if (valuesonly)
           {
             nvoutdata[idx] = VtoUC(val, dmin, dmaxplus);
@@ -133,24 +134,35 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
             nvoutdata[idx * 4 + 3] = VtoUC(val, dmin, dmaxplus);
           }
         }
-        else
+      }
+    }
+  }
+  else
+  {
+    for (k = 0; k < nk; k++)
+    {
+      double zscale = 0.5;
+      int k0 = k-1;
+      int k1 = k+1;
+      if (k == 0)   { k0 = k; zscale = 1.0; }
+      if (k1 == nk) { k1 = k; zscale = 1.0; }
+      for (j = 0; j < nj; j++)
+      {
+        double yscale = 0.5;
+        int j0 = j-1;
+        int j1 = j+1;
+        if (j == 0)   { j0 = j; yscale = 1.0; }
+        if (j1 == nj) { j1 = j; yscale = 1.0; }
+        for (i = 0; i < ni; i++)
         {
           double xscale = 0.5;
-          double yscale = 0.5;
-          double zscale = 0.5;
           int i0 = i-1;
           int i1 = i+1;
-          int j0 = j-1;
-          int j1 = j+1;
-          int k0 = k-1;
-          int k1 = k+1;
           if (i == 0)   { i0 = i; xscale = 1.0; }
           if (i1 == ni) { i1 = i; xscale = 1.0; }
-          if (j == 0)   { j0 = j; yscale = 1.0; }
-          if (j1 == nj) { j1 = j; yscale = 1.0; }
-          if (k == 0)   { k0 = k; zscale = 1.0; }
-          if (k1 == nk) { k1 = k; zscale = 1.0; }
 
+          const unsigned int idx = k * nji + j * ni + i;
+          const double val = (double)nindata[idx];
           const double x0 = nindata[k * nji + j * ni + i0];
           const double x1 = nindata[k * nji + j * ni + i1];
           const double y0 = nindata[k * nji + j0 * ni + i];
