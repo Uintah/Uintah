@@ -139,7 +139,6 @@ public:
 			MaterialHandle m0);
   inline void add_edge(const Point &p1, const Point &p2, double scale, 
 		       GeomGroup *g, MaterialHandle mh_avg,
-		       MaterialHandle mh_p0, MaterialHandle mh_p1, 
 		       bool cyl = true);
   inline void add_face(const Point &p1, const Point &p2, const Point &p3, 
 		       MaterialHandle m0, MaterialHandle m1, MaterialHandle m2,
@@ -413,9 +412,7 @@ ShowField::render_edges(const Fld *sfld)
       bool cyl = false;
       if (edge_display_type_.get() == "Cylinders") { cyl = true; }
       add_edge(p1, p2, edge_scale_.get(), edges, 
-	       choose_mat(def_color, val_avg), 
-	       choose_mat(def_color, val1), 
-	       choose_mat(def_color, val2), cyl);
+	       choose_mat(def_color, val_avg), cyl);
     }
   }
 }
@@ -506,16 +503,11 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 void 
 ShowField::add_edge(const Point &p0, const Point &p1,  
 		    double scale, GeomGroup *g, MaterialHandle mh_avg,
-		    MaterialHandle mh_p0, MaterialHandle mh_p1,
 		    bool cyl) 
 {
   if (cyl) {
     GeomCylinder *c = new GeomCylinder(p0, p1, scale, 2*res_);
-    GeomSphere *s1 = new GeomSphere(p0, scale, res_, res_);
-    GeomSphere *s2 = new GeomSphere(p1, scale, res_, res_);
     g->add(scinew GeomMaterial(c, mh_avg));
-    g->add(scinew GeomMaterial(s1, mh_p0));
-    g->add(scinew GeomMaterial(s2, mh_p1));
   } else {
     GeomLine *l = new GeomLine(p0, p1);
     l->setLineWidth(scale);
