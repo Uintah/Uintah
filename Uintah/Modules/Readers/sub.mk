@@ -11,7 +11,7 @@ SRCS     += \
 	$(SRCDIR)/ArchiveReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Uintah/Datatypes Uintah/Interface PSECore/Datatypes \
+PSELIBS := Uintah/Datatypes Uintah/Interface Uintah/Grid PSECore/Datatypes \
 	PSECore/Dataflow SCICore/Containers SCICore/Persistent \
 	SCICore/Exceptions SCICore/TclInterface SCICore/Thread \
 	SCICore/Datatypes SCICore/Geom
@@ -21,6 +21,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2001/01/09 21:44:31  kuzimmer
+# fixed an unresolved error
+#
 # Revision 1.5  2000/12/07 18:44:32  kuzimmer
 # removing more legacy code
 #
