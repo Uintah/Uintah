@@ -178,12 +178,25 @@ void Pio(Piostream& stream, Element*& data)
     stream.end_cheap_delim();
 }
 
-#define NODE_VERSION 2
+#define NODE_VERSION 3
 
 void Node::io(Piostream& stream)
 {
-    /* int version= */ stream.begin_class("Node", NODE_VERSION);
+    int version=stream.begin_class("Node", NODE_VERSION);
     Pio(stream, p);
+    if(version >= 3){
+      int flag;
+      if(!stream.reading()){
+	flag=bc?1:0;
+      }
+      Pio(stream, flag);
+      if(stream.reading() && flag)
+	bc=new DirichletBC(0,0);
+      if(flag){
+	Pio(stream, bc->fromsurf);
+	Pio(stream, bc->value);
+      }
+    }
     stream.end_class();
 }
 
@@ -199,14 +212,17 @@ Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
     n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
     faces[0]=faces[1]=faces[2]=faces[3]=-2;
 
+#ifdef STORE_ELEMENT_BASIS
     if(mesh)
 	compute_basis();
     else
 	vol=-9999;
+#endif
 }
 
 void Element::compute_basis()
 {
+#ifdef STORE_ELEMENT_BASIS
     Point p1(mesh->nodes[n[0]]->p);
     Point p2(mesh->nodes[n[1]]->p);
     Point p3(mesh->nodes[n[2]]->p);
@@ -251,15 +267,17 @@ void Element::compute_basis()
     a[3]=a4*iV6;
 
     vol=(1./iV6)/6.0;
+#endif
 }
 
 Element::Element(const Element& copy, Mesh* mesh)
-: generation(0), cond(copy.cond), mesh(mesh), vol(copy.vol)
+: generation(0), cond(copy.cond), mesh(mesh)
 {
     faces[0]=copy.faces[0];
     faces[1]=copy.faces[1];
     faces[2]=copy.faces[2];
     faces[3]=copy.faces[3];
+#ifdef STORE_ELEMENT_BASIS
     n[0]=copy.n[0];
     n[1]=copy.n[1];
     n[2]=copy.n[2];
@@ -272,6 +290,8 @@ Element::Element(const Element& copy, Mesh* mesh)
     a[1]=copy.a[1];
     a[2]=copy.a[2];
     a[3]=copy.a[3];
+    vol=copy.vol;
+#endif
 }
 
 Node::Node(const Point& p)
@@ -428,7 +448,7 @@ void Mesh::compute_neighbors()
 int Mesh::inside(const Point& p, Element* elem)
 {
     cerr << "inside called...\n";
-#if 0
+#ifndef STORE_ELEMENT_BASIS
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
     Point p3(nodes[elem->n[2]]->p);
@@ -478,7 +498,7 @@ int Mesh::inside(const Point& p, Element* elem)
     double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
     if(s4<-1.e-6)
 	return 0;
-#endif
+#else
     double s0=elem->a[0]+Dot(elem->g[0], p);
     if(s0<-1.e-6)
 	return 0;
@@ -491,6 +511,7 @@ int Mesh::inside(const Point& p, Element* elem)
     double s3=elem->a[3]+Dot(elem->g[3], p);
     if(s0<-1.e-6)
 	return 0;
+#endif
 
     return 1;
 }
@@ -498,7 +519,7 @@ int Mesh::inside(const Point& p, Element* elem)
 void Mesh::get_interp(Element* elem, const Point& p,
 		      double& s0, double& s1, double& s2, double& s3)
 {
-#if 0
+#ifndef STORE_ELEMENT_BASIS
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
     Point p3(nodes[elem->n[2]]->p);
@@ -548,7 +569,7 @@ void Mesh::get_interp(Element* elem, const Point& p,
 double Mesh::get_grad(Element* elem, const Point&,
 		      Vector& g0, Vector& g1, Vector& g2, Vector& g3)
 {
-#if 0
+#ifndef STORE_ELEMENT_BASIS
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
     Point p3(nodes[elem->n[2]]->p);
@@ -591,7 +612,6 @@ double Mesh::get_grad(Element* elem, const Point&,
     double vol=(1./iV6)/6.0;
     return(vol);
 #else
-    elem->compute_basis();
     g0=elem->g[0];
     g1=elem->g[1];
     g2=elem->g[2];
@@ -649,7 +669,7 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
     int nelems=elems.size();
     while(count++<nelems){
 	Element* elem=elems[i];
-#if 0
+#ifndef STORE_ELEMENT_BASIS
 	Point p1(nodes[elem->n[0]]->p);
 	Point p2(nodes[elem->n[1]]->p);
 	Point p3(nodes[elem->n[2]]->p);
@@ -1017,7 +1037,6 @@ int Mesh::insert_delaunay(int node, GeometryOPort*)
     }
     for(i=0;i<to_remove.size();i++){
 	int tr=to_remove[i];
-	cerr << "Removing: " << tr << endl;
 	delete elems[tr];
 	elems[tr]=0;
     }

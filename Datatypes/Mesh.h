@@ -28,6 +28,8 @@ typedef LockingHandle<Node> NodeHandle;
 
 #include <stdlib.h> // For size_t
 
+#define STORE_ELEMENT_BASIS
+
 class GeomGroup;
 class Mesh;
 class RPoint;
@@ -40,9 +42,11 @@ struct Element {
     int cond; // index to the conductivities array for the cond
               // tensor of this element
 
+#ifdef STORE_ELEMENT_BASIS
     Vector g[4];
     double a[4];
     double vol;
+#endif
 
     void compute_basis();
 

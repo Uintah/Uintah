@@ -22,6 +22,7 @@
 class VectorFieldRG;
 class VectorFieldUG;
 class VectorField;
+class VectorFieldOcean;
 typedef LockingHandle<VectorField> VectorFieldHandle;
 
 class VectorField : public Datatype {
@@ -36,6 +37,7 @@ protected:
     enum Representation {
 	RegularGrid,
 	UnstructuredGrid,
+	OceanFile,
     };
     VectorField(Representation);
 private:
@@ -46,6 +48,7 @@ public:
 
     VectorFieldRG* getRG();
     VectorFieldUG* getUG();
+    VectorFieldOcean* getOcean();
     void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual int interpolate(const Point&, Vector&)=0;

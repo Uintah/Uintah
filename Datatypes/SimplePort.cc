@@ -58,12 +58,14 @@ void SimpleIPort<T>::reset()
 template<class T>
 void SimpleIPort<T>::finish()
 {
+#if 0
     if(!recvd && nconnections() > 0){
 	turn_on(Finishing);
 	SimplePortComm<T>* msg=mailbox.receive();
 	delete msg;
 	turn_off();
     }
+#endif
 }
 
 template<class T>
@@ -80,8 +82,15 @@ void SimpleOPort<T>::finish()
 	// Tell them that we didn't send anything...
 	turn_on(Finishing);
 	for(int i=0;i<nconnections();i++){
-	    SimplePortComm<T>* msg=scinew SimplePortComm<T>();
-	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+#if 0
+	    if(connections[i]->demand){
+#endif
+	        SimplePortComm<T>* msg=scinew SimplePortComm<T>();
+		((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+#if 0
+		connections[i]->demand--;
+	    }
+#endif
 	}
 	turn_off();
     }
@@ -93,15 +102,27 @@ void SimpleOPort<T>::send(const T& data)
     handle=data;
     if(nconnections() == 0)
 	return;
+#if 0
     if(sent_something){
 	// Tell the scheduler that we are going to do this...
 	cerr << "The data got sent twice - ignoring second one...\n";
 	return;
     }
+#endif
     turn_on();
     for(int i=0;i<nconnections();i++){
-	SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
-	((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+#if 0
+        if(connections[i]->demand){
+#endif
+	    SimplePortComm<T>* msg=scinew SimplePortComm<T>(data);
+	    ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
+#if 0
+	    connections[i]->demand--;
+	} else {
+	    // Advise the module of the change...
+	  //connections[i]->iport->get_module()->mailbox.send(msg);
+	}
+#endif
     }
     sent_something=1;
     turn_off();
@@ -128,7 +149,71 @@ int SimpleIPort<T>::get(T& data)
     if(nconnections()==0)
 	return 0;
     turn_on();
+#if 0
+    // Send the demand token...
+    Connection* conn=connections[0];
+    conn->oport->get_module()->mailbox.send(new Demand_Message(conn));
+#endif
+
+    // Wait for the data...
     SimplePortComm<T>* comm=mailbox.receive();
+    recvd=1;
+    if(comm->have_data){
+       data=comm->data;
+       delete comm;
+       turn_off();
+       return 1;
+   } else {
+       delete comm;
+       turn_off();
+       return 0;
+   }
+}
+
+template<class T>
+int SimpleIPort<T>::special_get(T& data)
+{
+    if(nconnections()==0)
+	return 0;
+    turn_on();
+#if 0
+    // Send the demand token...
+    Connection* conn=connections[0];
+    conn->oport->get_module()->mailbox.send(new Demand_Message(conn));
+#endif
+
+    // Wait for the data...
+    SimplePortComm<T>* comm;
+    while(!mailbox.try_receive(comm)){
+      MessageBase* msg;
+      if(module->mailbox.try_receive(msg)){
+	switch(msg->type){
+	case MessageTypes::ExecuteModule:
+	  cerr << "Dropping execute...\n";
+	  break;
+	case MessageTypes::TriggerPort:
+	  cerr << "Dropping trigger...\n";
+	  break;
+	case MessageTypes::Demand:
+	  {
+	    Demand_Message* dmsg=(Demand_Message*)msg;
+	    if(dmsg->conn->oport->have_data()){
+	      dmsg->conn->oport->resend(dmsg->conn);
+	    } else {
+	      cerr << "Dropping demand...\n";
+	    }
+	  }
+	  break;
+	default:
+	  cerr << "Illegal Message type: " << msg->type << endl;
+	  break;
+	}
+	delete msg;
+      } else {
+	sginap(1);
+      }
+    }
+	
     recvd=1;
     if(comm->have_data){
        data=comm->data;

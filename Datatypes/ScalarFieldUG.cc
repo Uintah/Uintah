@@ -18,19 +18,28 @@
 
 static Persistent* maker()
 {
-    return scinew ScalarFieldUG;
+    return scinew ScalarFieldUG(ScalarFieldUG::NodalValues);
 }
 
 PersistentTypeID ScalarFieldUG::type_id("ScalarFieldUG", "ScalarField", maker);
 
-ScalarFieldUG::ScalarFieldUG()
-: ScalarField(UnstructuredGrid)
+ScalarFieldUG::ScalarFieldUG(Type typ)
+: ScalarField(UnstructuredGrid), typ(typ)
 {
 }
 
-ScalarFieldUG::ScalarFieldUG(const MeshHandle& mesh)
-: ScalarField(UnstructuredGrid), mesh(mesh), data(mesh->nodes.size())
+ScalarFieldUG::ScalarFieldUG(const MeshHandle& mesh, Type typ)
+  : ScalarField(UnstructuredGrid), mesh(mesh),
+    data(mesh->nodes.size()), typ(typ)
 {
+  switch(typ){
+  case NodalValues:
+    ASSERTEQ(mesh->nodes.size(), data.size());
+    break;
+  case ElementValues:
+    ASSERTEQ(mesh->elems.size(), data.size());
+    break;
+  }
 }
 
 ScalarFieldUG::~ScalarFieldUG()
@@ -51,13 +60,20 @@ void ScalarFieldUG::compute_bounds()
     have_bounds=1;
 }
 
-#define SCALARFIELDUG_VERSION 1
+#define SCALARFIELDUG_VERSION 2
 
 void ScalarFieldUG::io(Piostream& stream)
 {
-    /*int version=*/stream.begin_class("ScalarFieldUG", SCALARFIELDUG_VERSION);
+    int version=stream.begin_class("ScalarFieldUG", SCALARFIELDUG_VERSION);
     // Do the base class....
     ScalarField::io(stream);
+
+    if(version < 2){
+        typ=NodalValues;
+    } else {
+        int* typp=(int*)&typ;
+	stream.io(*typp);
+    }
 
     Pio(stream, mesh);
     Pio(stream, data);
@@ -83,10 +99,14 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, double epsilon1, d
     int ix=0;
     if(!mesh->locate(p, ix, epsilon1, epsilon2))
 	return 0;
-    double s1,s2,s3,s4;
-    Element* e=mesh->elems[ix];
-    mesh->get_interp(e, p, s1, s2, s3, s4);
-    value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    if(typ == NodalValues){
+      double s1,s2,s3,s4;
+      Element* e=mesh->elems[ix];
+      mesh->get_interp(e, p, s1, s2, s3, s4);
+      value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    } else {
+	value=data[ix];
+    }
     return 1;
 }
 
@@ -94,10 +114,14 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double ep
 {
     if(!mesh->locate(p, ix, epsilon1, epsilon2))
 	return 0;
-    double s1,s2,s3,s4;
-    Element* e=mesh->elems[ix];
-    mesh->get_interp(e, p, s1, s2, s3, s4);
-    value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    if(typ == NodalValues){
+        double s1,s2,s3,s4;
+	Element* e=mesh->elems[ix];
+	mesh->get_interp(e, p, s1, s2, s3, s4);
+	value=data[e->n[0]]*s1+data[e->n[1]]*s2+data[e->n[2]]*s3+data[e->n[3]]*s4;
+    } else {
+	value=data[ix];
+    }   
     return 1;
 }
 

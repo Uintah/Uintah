@@ -41,6 +41,14 @@ VectorFieldUG* VectorField::getUG()
 	return 0;
 }
 
+VectorFieldOcean* VectorField::getOcean()
+{
+    if(rep==OceanFile)
+	return (VectorFieldOcean*)this;
+    else
+	return 0;
+}
+
 double VectorField::longest_dimension()
 {
     if(!have_bounds){

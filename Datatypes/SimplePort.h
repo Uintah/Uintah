@@ -52,6 +52,7 @@ public:
     virtual void finish();
 
     int get(T&);
+    int special_get(T&);
 };
 
 template<class T>

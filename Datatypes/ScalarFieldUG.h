@@ -23,8 +23,14 @@ public:
     MeshHandle mesh;
     Array1<double> data;
 
-    ScalarFieldUG();
-    ScalarFieldUG(const MeshHandle&);
+    enum Type {
+	NodalValues,
+	ElementValues,
+    };
+    Type typ;
+
+    ScalarFieldUG(Type typ);
+    ScalarFieldUG(const MeshHandle&, Type typ);
     virtual ~ScalarFieldUG();
     virtual ScalarField* clone();
 
