@@ -10,8 +10,8 @@ SRCS	+= \
 	$(SRCDIR)/ICELabel.cc    \
 	$(SRCDIR)/ICEMaterial.cc \
 	$(SRCDIR)/BoundaryCond.cc \
-	$(SRCDIR)/GeometryObject2.cc
-
+	$(SRCDIR)/GeometryObject2.cc \
+       $(SRCDIR)/impICE.cc
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
