@@ -147,10 +147,8 @@ HexVolMesh::transform(Transform &t)
     *itr = t.project(*itr);
     ++itr;
   }
-  
-  // Recompute grid.
-  grid_.detach();
-  compute_grid();
+  synchronized_ &= ~GRID_E;
+  grid_ = 0;
 }
 
 
@@ -276,7 +274,10 @@ HexVolMesh::synchronize(unsigned int tosync)
 {
   if (tosync & EDGES_E && !(synchronized_ & EDGES_E)) compute_edges();
   if (tosync & FACES_E && !(synchronized_ & FACES_E)) compute_faces();
-  if (tosync & GRID_E && !(synchronized_ & GRID_E)) compute_grid();
+  if (tosync & GRID_E && !(synchronized_ & GRID_E)) {
+    compute_grid();
+    if (!(synchronized_ & FACES_E)) compute_faces();
+  }
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E)) 
     compute_node_neighbors();
   return true;
@@ -545,6 +546,7 @@ HexVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 void
 HexVolMesh::compute_node_neighbors()
 {
+  if (!(synchronized_ & EDGES_E)) synchronize(EDGES_E);
   node_nbor_lock_.lock();
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());

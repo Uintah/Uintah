@@ -307,11 +307,26 @@ Probe::execute()
   PointCloudMesh *mesh = scinew PointCloudMesh();
   PointCloudMesh::Node::index_type pcindex = mesh->add_point(location);
   FieldHandle ofield;
+
+  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+  CompileInfo *ci = ProbeLocateAlgo::get_compile_info(mtd);
+  Handle<ProbeLocateAlgo> algo;
+  if (!module_dynamic_compile(*ci, algo)) return;
+
+  string nodestr, edgestr, facestr, cellstr;
+  algo->execute(ifieldhandle->mesh(), location,
+		nodestr, edgestr, facestr, cellstr);
+
+  gui_node_.set(nodestr);
+  gui_edge_.set(edgestr);
+  gui_face_.set(facestr);
+  gui_cell_.set(cellstr);
+
   std::ostringstream valstr;
-  ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
-  VectorFieldInterface *vfi = ifieldhandle->query_vector_interface();
-  TensorFieldInterface *tfi = ifieldhandle->query_tensor_interface();
-  if (sfi)
+  ScalarFieldInterface *sfi = 0;
+  VectorFieldInterface *vfi = 0;
+  TensorFieldInterface *tfi = 0;
+  if ((sfi = ifieldhandle->query_scalar_interface()))
   {
     double result;
     if (!sfi->interpolate(result, location))
@@ -324,7 +339,7 @@ Probe::execute()
     field->set_value(result, pcindex);
     ofield = field;
   }
-  else if (vfi)
+  else if ((vfi = ifieldhandle->query_vector_interface()))
   {
     Vector result;
     if (!vfi->interpolate(result, location))
@@ -337,7 +352,7 @@ Probe::execute()
     field->set_value(result, pcindex);
     ofield = field;
   }
-  else if (tfi)
+  else if ((tfi = ifieldhandle->query_tensor_interface()))
   {
     Tensor result;
     if (!tfi->interpolate(result, location))
@@ -354,20 +369,6 @@ Probe::execute()
   gui_locy_.set(location.y());
   gui_locz_.set(location.z());
   gui_value_.set(valstr.str());
-
-  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  CompileInfo *ci = ProbeLocateAlgo::get_compile_info(mtd);
-  Handle<ProbeLocateAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
-
-  string nodestr, edgestr, facestr, cellstr;
-  algo->execute(ifieldhandle->mesh(), location,
-		nodestr, edgestr, facestr, cellstr);
-
-  gui_node_.set(nodestr);
-  gui_edge_.set(edgestr);
-  gui_face_.set(facestr);
-  gui_cell_.set(cellstr);
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
   if (!ofp) {
