@@ -68,6 +68,7 @@ public:
   //  GridSpheresDpy(GridSpheres* grid);
   virtual ~GridSpheresDpy();
   void attach(GridSpheres* g);
+  void set_var_names(std::string* in_var_names) { var_names = in_var_names; }
   virtual void run();
   void setup_vars();
   void animate(bool& changed);
