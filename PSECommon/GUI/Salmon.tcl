@@ -307,7 +307,7 @@ itcl_class Roe {
         radiobutton $m.eframe.f.mpeg -text "Mpeg" \
             -variable $this-global-movie -value 2 \
 	    -state disabled -disabledforeground "" \
-	    --command "$this-c redraw"
+	    -command "$this-c redraw"
 	}
         entry $m.eframe.f.moviebase -relief sunken -width 12 \
 	    -textvariable "$this-global-movieName" 
