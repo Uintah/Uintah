@@ -10,26 +10,14 @@ PSELIBS := SCICore
 else
 PSELIBS := PSECore/Datatypes DaveW/ThirdParty/NumRec SCICore/Datatypes SCICore/Containers SCICore/Persistent SCICore/Exceptions SCICore/Thread SCICore/Geometry
 endif
-LIBS := -lDaveW_ThirdParty_Nrrd -lm
-
-PROGRAM := $(SRCDIR)/BldBalloons
-SRCS := $(SRCDIR)/BldBalloons.cc
-include $(SRCTOP)/scripts/program.mk
+LIBS := -lm
 
 PROGRAM := $(SRCDIR)/BldDisks
 SRCS := $(SRCDIR)/BldDisks.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/BldSphereMesh
-SRCS := $(SRCDIR)/BldSphereMesh.cc
-include $(SRCTOP)/scripts/program.mk
-
-#PROGRAM := $(SRCDIR)/BldTensor
-#SRCS := $(SRCDIR)/BldTensor.cc
-#include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/CVRTItoMesh
-SRCS := $(SRCDIR)/CVRTItoMesh.cc
+PROGRAM := $(SRCDIR)/MakeRadialCylinder
+SRCS := $(SRCDIR)/MakeRadialCylinder.cc
 include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/DuckReader
@@ -40,20 +28,20 @@ PROGRAM := $(SRCDIR)/DuckWriter
 SRCS := $(SRCDIR)/DuckWriter.cc
 include $(SRCTOP)/scripts/program.mk
 
+#PROGRAM := $(SRCDIR)/BldTensor
+#SRCS := $(SRCDIR)/BldTensor.cc
+#include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/CVRTItoMesh
+SRCS := $(SRCDIR)/CVRTItoMesh.cc
+include $(SRCTOP)/scripts/program.mk
+
 PROGRAM := $(SRCDIR)/GenPlate
 SRCS := $(SRCDIR)/GenPlate.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/GEtoSF
-SRCS := $(SRCDIR)/GEtoSF.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/GenSegFld
 SRCS := $(SRCDIR)/GenSegFld.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/GPtoTS
-SRCS := $(SRCDIR)/GPtoTS.cc
 include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/JAStoMesh
@@ -64,40 +52,20 @@ PROGRAM := $(SRCDIR)/JAStoSurf
 SRCS := $(SRCDIR)/JAStoSurf.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/MakeRadialCylinder
-SRCS := $(SRCDIR)/MakeRadialCylinder.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/MatrixToFlatMat
-SRCS := $(SRCDIR)/MatrixToFlatMat.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/MatrixToMat
 SRCS := $(SRCDIR)/MatrixToMat.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/MatrixTranspose
-SRCS := $(SRCDIR)/MatrixTranspose.cc
 include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/MeshCheck
 SRCS := $(SRCDIR)/MeshCheck.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/MergeSurfs
-SRCS := $(SRCDIR)/MergeSurfs.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/MeshFix
 SRCS := $(SRCDIR)/MeshFix.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/MeshInfo
-SRCS := $(SRCDIR)/MeshInfo.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/MeshRemoveAir
-SRCS := $(SRCDIR)/MeshRemoveAir.cc
+PROGRAM := $(SRCDIR)/MeshToJAS
+SRCS := $(SRCDIR)/MeshToJAS.cc
 include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/MeshToSFUG
@@ -116,17 +84,13 @@ include $(SRCTOP)/scripts/program.mk
 #SRCS := $(SRCDIR)/ModelTestFull.cc
 #include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/PadField
-SRCS := $(SRCDIR)/PadField.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/ResampleField
 SRCS := $(SRCDIR)/ResampleField.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/SFRGfile
-SRCS := $(SRCDIR)/SFRGfile.cc
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM := $(SRCDIR)/SFRGfile
+#SRCS := $(SRCDIR)/SFRGfile.cc
+#include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/SFUGtoSFUG
 SRCS := $(SRCDIR)/SFUGtoSFUG.cc
@@ -134,14 +98,6 @@ include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/STreeToTris
 SRCS := $(SRCDIR)/STreeToTris.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/SurfAddNormals
-SRCS := $(SRCDIR)/SurfAddNormals.cc
-include $(SRCTOP)/scripts/program.mk
-
-PROGRAM := $(SRCDIR)/SplitJAStoSurf
-SRCS := $(SRCDIR)/SplitJAStoSurf.cc
 include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/SurfToJAS
@@ -156,22 +112,18 @@ PROGRAM := $(SRCDIR)/VDTtoMesh
 SRCS := $(SRCDIR)/VDTtoMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/VecDiff
-SRCS := $(SRCDIR)/VecDiff.cc
-include $(SRCTOP)/scripts/program.mk
-
 PROGRAM := $(SRCDIR)/WatsonToMesh
 SRCS := $(SRCDIR)/WatsonToMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/simulate
-SRCS := $(SRCDIR)/simulate.cc
+PROGRAM := $(SRCDIR)/GEtoSF
+SRCS := $(SRCDIR)/GEtoSF.cc
 include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
-# Revision 1.6  2000/10/30 04:37:44  dmw
-# removing a file I accidentally re-committed to the tree
+# Revision 1.7  2000/10/30 04:39:54  dmw
+# reverting to previous version
 #
 # Revision 1.5  2000/10/27 20:32:00  zyp
 # Fixed the sub.mk file.  Accidently included one of my test programs in
