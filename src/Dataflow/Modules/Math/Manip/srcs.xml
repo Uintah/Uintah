@@ -2,9 +2,7 @@
 <!DOCTYPE srcs SYSTEM "srcs.dtd">
 
 <srcs>
-  </src>
-  <src name="matrixMan">
-    <description>(null string)</description>
-    <lib name="Core_Thread"/>
+  <src name="fred">
+    <description></description>
   </src>
 </srcs>

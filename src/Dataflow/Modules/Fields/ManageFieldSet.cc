@@ -284,7 +284,7 @@ ManageFieldSet::execute()
     if (ofs != NULL)
     {
       cout << "Dumping out a field set\n";
-      ofs->store("name", "glomfield");
+      ofs->store("name", string("glomfield"));
       FieldSetHandle ofsh(ofs);
       FieldSetOPort *ofsp = (FieldSetOPort *)get_oport("Output FieldSet");
       ofsp->send(ofsh);

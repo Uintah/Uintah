@@ -2,6 +2,9 @@
 <!DOCTYPE srcs SYSTEM "srcs.dtd">
 
 <srcs>
+  <src name="bob">
+    <description></description>
+  </src>
   <src name="first">
     <description>(null string)</description>
   </src>
@@ -9,6 +12,6 @@
     <description>Nifty new test for dynamic compilation and loading</description>
   </src>
   <src name="second">
-    <description></description>
+    <description>(null string)</description>
   </src>
 </srcs>

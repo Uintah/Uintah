@@ -18,7 +18,7 @@ int
 main(int argc, char **argv)
 {  
   TetVol<double> *field = new TetVol<double>;
-  field->store("date", "today");
+  field->store("date", string("today"));
   delete(field);
   return 0;  
 }    

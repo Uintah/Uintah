@@ -138,4 +138,4 @@ void TetMC<Field>::extract( cell_index cell, double v )
      
 } // End namespace SCIRun
 
-#endif TetMC_h
+#endif // TetMC_h
