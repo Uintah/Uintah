@@ -679,16 +679,6 @@ void ViscoScram::carryForward(const PatchSubset* patches,
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
-
-void 
-ViscoScram::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
 	 
 void ViscoScram::addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,

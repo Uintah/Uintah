@@ -15,8 +15,6 @@ namespace Uintah {
   {
   public:
     // this function has a switch for all known mat_types
-    // and calls the proper class' readParameters()
-    // addMaterial() calls this
     static DamageModel* create(ProblemSpecP& ps);
   };
 } // End namespace Uintah

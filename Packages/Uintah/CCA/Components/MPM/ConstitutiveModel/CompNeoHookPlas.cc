@@ -387,16 +387,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void 
-CompNeoHookPlas::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
-
 void CompNeoHookPlas::carryForward(const PatchSubset* patches,
                                    const MPMMaterial* matl,
                                    DataWarehouse* old_dw,

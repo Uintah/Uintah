@@ -368,15 +368,6 @@ void CompMooneyRivlin::carryForward(const PatchSubset* patches,
   }
 }
 
-void 
-CompMooneyRivlin::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
 	 
 void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 					std::vector<const VarLabel*>& to)

@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereMembraneGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/ShellGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/NullGeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -235,6 +236,17 @@ double MPMMaterial::getRoomTemperature() const
 double MPMMaterial::getMeltTemperature() const
 {
   return d_tmelt;
+}
+
+int MPMMaterial::nullGeomObject() const
+{
+  for (int obj = 0; obj <(int)d_geom_objs.size(); obj++) {
+    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
+    NullGeometryPiece* null_piece = dynamic_cast<NullGeometryPiece*>(piece);
+    if (null_piece) 
+      return obj;
+  }
+  return -1;
 }
 
 bool MPMMaterial::getIsRigid() const
