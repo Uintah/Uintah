@@ -145,6 +145,17 @@ const TypeDescription* get_type_description(double*)
   return td;
 }
 
+const TypeDescription* get_type_description(float*)
+{
+  static TypeDescription* td = 0;
+  static string nm("float");
+  static string path("builtin");
+  if(!td){
+    td = scinew TypeDescription(nm, path);
+  }
+  return td;
+}
+
 const TypeDescription* get_type_description(short*)
 {
   static TypeDescription* td = 0;
@@ -176,11 +187,15 @@ const TypeDescription* get_type_description(unsigned char*)
     td = scinew TypeDescription(nm, path);
   }
   return td;
-  return 0;
 }
 const TypeDescription* get_type_description(Vector*)
 {
-  return 0;
+  static TypeDescription* td = 0;
+  static string nm("Vector");
+  if(!td){
+    td = scinew TypeDescription(nm, Vector::get_h_file_path());
+  }
+  return td;
 }
 const TypeDescription* get_type_description(Tensor*)
 {
@@ -194,11 +209,12 @@ const TypeDescription* get_type_description(Transform*)
 {
   return 0;
 }
+
 const TypeDescription* get_type_description(string*)
 {
   static TypeDescription* td = 0;
   static string nm("string");
-  static string path("std");
+  static string path("std::string");
   if(!td){
     td = scinew TypeDescription(nm, path);
   }
