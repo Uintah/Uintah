@@ -46,7 +46,7 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
-const size_t work_load_max = 1000;
+size_t work_load_max = 1000;
 int tex_size = 16;
 double radius = 0;
 double radius_factor = 1.0;
@@ -368,8 +368,9 @@ int main(int argc, char** argv)
     }
     else if(strcmp(argv[i],"-num_samples")==0) {
       num_samples=atoi(argv[++i]);
-    }
-    else if(strcmp(argv[i],"-depth")==0) {
+    } else if (strcmp(argv[i],"-nsdivs")==0) {
+      num_sample_divs = atoi(argv[++i]);
+    } else if(strcmp(argv[i],"-depth")==0) {
       depth=atoi(argv[++i]);
     }
     else if(strcmp(argv[i],"-tex_size")==0 || strcmp(argv[i],"-tex_res")==0) {
@@ -408,8 +409,10 @@ int main(int argc, char** argv)
       threshold = atof(argv[++i]);
     } else if (strcmp(argv[i],"-lum")==0) {
       luminance = atof(argv[++i]);
-    } else if (strcmp(argv[i],"-nsdivs")==0) {
-      num_sample_divs = atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-workload")==0) {
+      work_load_max = atoi(argv[++i]);
+    } else if (strcmp(argv[i],"-start")==0) {
+      next_sphere = (size_t)atoi(argv[++i]);
     } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
@@ -423,7 +426,7 @@ int main(int argc, char** argv)
       cerr<<"  -tex_res <int>              texture resolution (16)\n";
       cerr<<"  -radius <float>             sphere radius (0.0)\n";
       cerr<<"  -i <filename>               input filename (null)\n";
-      cerr<<"  -numvars <int>                number of variables in file (3)"<<endl;
+      cerr<<"  -numvars <int>              number of variables in file (3)"<<endl;
       cerr<<"  -timevary <filename>        input filename timelist  (null)\n";
       cerr<<"  -bg <filename>              background image name (envmap.ppm)\n";
       cerr<<"  -o <filename>               basename of texture files (null)\n";
@@ -435,6 +438,8 @@ int main(int argc, char** argv)
       cerr<<"  -wa                         use weighted averaging during dilation (false)\n";
       cerr<<"  -t <float>                  threshold for contribution determination (0.3)\n";
       cerr<<"  -lum <float>                luminance value (1.0)"<<endl;
+      cerr<<"  -workload <int>             size of the maximum work load (1000)"<<endl;
+      cerr<<"  -start <int>                start at given sphere (0)"<<endl;
       exit(1);
     }
   }
