@@ -26,7 +26,7 @@ void MPMPetscSolver::initialize()
 #ifdef LOG
   int argc = 5;
 #else
-  int argc = 4;
+  int argc = 2;
 #endif
   char** argv;
   argv = new char*[argc];
@@ -34,9 +34,9 @@ void MPMPetscSolver::initialize()
   //argv[1] = "-on_error_attach_debugger";
   //argv[1] = "-start_in_debugger";
   argv[1] = "-no_signal_handler";
+#ifdef LOG
   argv[2] = "-log_exclude_actions";
   argv[3] = "-log_exclude_objects";
-#ifdef LOG
   argv[4] = "-log_info";
 #endif
 
@@ -141,40 +141,54 @@ void MPMPetscSolver::solve()
   VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
 #endif
   SLESSolve(sles,d_B,d_x,&its);
+#ifdef LOG
   SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
+#endif
 #endif
 }
 
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
-				  const vector<int>& dof_diag, 
-				  const vector<int>& dof_off)
+				  const map<int,int>& dof_diag)
 {
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
   int numlcolumns = numlrows;
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes;
-  
-  int *diag,*off;
-  diag = new int[(int)dof_diag.size()];
-  off = new int[(int)dof_off.size()];
+#if 0  
+  cerr << "me = " << me << endl;
+  cerr << "numlrows = " << numlrows << endl;
+  cerr << "numlcolumns = " << numlcolumns << endl;
+  cerr << "globalrows = " << globalrows << endl;
+  cerr << "globalcolumns = " << globalcolumns << endl;
+#endif
+  int *diag;
+  diag = new int[numlrows];
+  for (int i = 0; i < numlrows; i++) 
+    diag[i] = 1;
 
-  for (int i = 0; i < (int)dof_diag.size(); i++) diag[i] = dof_diag[i];
+  map<int,int>::const_iterator itr;
+  for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
+    //    cerr << "diag_before[" << itr->first << "]=" << itr->second << endl;
+    diag[itr->first] = itr->second;
+  }
 
-  for (int i = 0; i < (int)dof_off.size(); i++) off[i] = dof_off[i];
-  
+#if 0
+  for (int i = 0; i < numlrows; i++) 
+    cerr << "diag[" << i << "] = " << diag[i] << endl;
+#endif
 
 #ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
   if (exists == PETSC_FALSE) {
-#if 1
+#if 0
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
 		    PETSC_NULL, &d_A);
 #endif
-#if 0
+#if 1
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, diag, 
 		    PETSC_DEFAULT,PETSC_NULL, &d_A);
@@ -191,10 +205,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
 #endif
 
-
-
   delete[] diag;
-  delete[] off;
 }
 
 
