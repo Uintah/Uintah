@@ -138,7 +138,7 @@ EndOfString
       etable[0] = entries[0, numRowsArray[0]]
       etable[1] = entries[numRowsArray[0], numRowsArray[1]]
       etable[2] = entries[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
-      index.print("<table align='center'>\n")
+      index.print("<table align='center' cellspacing='0' border='1' cellpadding='2'>\n")
       # Generate page title and subtitle
 index.print("<th colspan=\"#{numCols}\"><span class=\"title\">#{packageName} Module Descriptions</span><br/><span class=\"subtitle\">(for SCIRun version #{version})</span></th>\n")
       numRows.times do |i|
