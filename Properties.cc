@@ -354,8 +354,10 @@ Properties::computeProps(const ProcessorGroup*,
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
+#ifdef jen_fix
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
+#endif
 	  }
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
@@ -366,8 +368,6 @@ Properties::computeProps(const ProcessorGroup*,
 	    //	    density[currCell] = d_denUnderrelax*local_den +
 	    //  (1.0-d_denUnderrelax)*density[currCell];
 	    density[currCell] = local_den;
-	  else
-	    density[currCell] = density_old[currCell];
 	}
       }
     }
@@ -569,8 +569,10 @@ Properties::reComputeProps(const ProcessorGroup*,
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
 	    enthalpy[currCell] = outStream.getEnthalpy();
+#ifdef jen_fix
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
+#endif
 	  }
 	  if (d_radiationCalc) {
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
@@ -578,9 +580,11 @@ Properties::reComputeProps(const ProcessorGroup*,
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    // optical path length
 	    double opl = 3.0;
+#ifdef jen_fix
 	    if (d_mixingModel->getNumRxnVars()) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
+#endif
 	      if (temperature[currCell] > 1000) {
 		double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
 		double c3 = 0.1;
@@ -595,10 +599,10 @@ Properties::reComputeProps(const ProcessorGroup*,
 	      }
 	      else 
 		sootFV[currCell] = 0.0;
-	    }
+	      //}
 	    absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
 				   sootFV[currCell]*temperature[currCell]*opl));
-	  }
+	    }
 	  if (d_MAlab) {
 	    denMicro[IntVector(colX, colY, colZ)] = local_den;
 	    if (voidFraction[currCell] > 0.01)

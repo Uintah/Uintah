@@ -2,10 +2,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinPrototypes.h>
-//Are these necessary???
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 #include <string>
 #include <math.h>
@@ -25,80 +21,97 @@ StanjanEquilibriumReactionModel::~StanjanEquilibriumReactionModel()
 }
 
 void
-StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& /* params*/, 
-					      MixingModel* /*mixModel*/)
+StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& /* params*/)
 {
-  d_depStateSpaceVars = NUM_DEP_VARS + d_reactionData->getNumSpecies();
-  d_lsoot = false;
-  //cout << "Stanjan::lsoot = " << d_lsoot << endl;
+  d_normalizeEnthalpy = false;
 }
 
 Stream
+StanjanEquilibriumReactionModel::computeEnthalpy(Stream& unreactedMixture, 
+						 const vector<double>& mixRxnVar)
+  {
+    //This routine is needed to linearize the enthalpy. Both the adiabatic 
+    //and sensible enthalpy are required to linearize the absolute enthalpy 
+    //passed to the mixing model from the cfd. The sensible enthalpy is chosen 
+    //as an arbitrary enthalpy whereas the adiabatic enthalpy is chosen for
+    //the standardized constant enthalpy.
+    int nofspecies = d_reactionData->getNumSpecies();
+    Stream enthalpy(nofspecies);
+    // Initialized in problemSetup to false
+    d_normalizeEnthalpy = true;
+    bool adiabatic = false;
+    enthalpy = computeRxnStateSpace(unreactedMixture, mixRxnVar, adiabatic);
+    d_normalizeEnthalpy = false;
+    return enthalpy;
+  }    
+
+Stream
 StanjanEquilibriumReactionModel::computeRxnStateSpace(Stream& unreactedMixture,
-						      vector<double>& mixRxnVar,
+						      const vector<double>& mixRxnVar,
 						      bool adiabatic)
 {
-  Stream equilStateSpace = unreactedMixture;
-  double adiabaticEnthalpy = unreactedMixture.d_enthalpy;
-  double initTemp = unreactedMixture.d_temperature;
-  double initPress = unreactedMixture.d_pressure;
-  // Compute equilibrium for adiabatic system; if equilibrium calculation fails,
-  // unreacted values are returned; the 0 in the computeEquilibrium call
-  // indicates the adiabatic problem will be solved
-  vector<double> initMassFract;
-  if (unreactedMixture.d_mole) 
-    initMassFract = d_reactionData->convertMolestoMass(
+    double adiabaticEnthalpy = unreactedMixture.d_enthalpy;
+    double initTemp = unreactedMixture.d_temperature;
+    double initPress = unreactedMixture.d_pressure;
+    int nofspecies = d_reactionData->getNumSpecies();
+    // Compute equilibrium for adiabatic system; if equilibrium calculation fails,
+    // unreacted values are returned; the 0 in the computeEquilibrium call
+    // indicates the adiabatic problem will be solved
+    //int heatLoss = 0;
+    Stream equilStateSpace(nofspecies);
+    vector<double> initMassFract;
+    if (unreactedMixture.d_mole) 
+      initMassFract = d_reactionData->convertMolestoMass(
 				      unreactedMixture.d_speciesConcn);
-  else
-    initMassFract = unreactedMixture.d_speciesConcn;
-  //cout<<"Stanjan::computeEquilibrium"<<endl;
-  //cout<<"initTemp = "<<initTemp<<endl;
-  //for (int jj=0; jj<11; jj++)
-  //  cout<<initMassFract[jj]<<endl;   
-  computeEquilibrium(initTemp, initPress, initMassFract, equilStateSpace);
-  equilStateSpace.d_lsoot = d_lsoot;  // No soot in this model
-  //cout << "Stanjan::computerxn soot = " << d_lsoot << endl;
-  double sensibleEnthalpy = 0;
-  equilStateSpace.d_sensibleEnthalpy = sensibleEnthalpy;
-  // Compute equilibrium for nonadiabatic system
-  if (!(adiabatic)) {       
-    //Calculate the sensible enthalpy based on a reference temperature, TREF   
-    double trefEnthalpy =  d_reactionData->getMixEnthalpy(TREF, initMassFract);
-    //cout<<"Stanjan::trefH = "<<trefEnthalpy<<endl;
-    //cout<<"Stanjan::adH = "<<adiabaticEnthalpy<<endl;
-    double sensibleEnthalpy =  adiabaticEnthalpy - trefEnthalpy;
-    //cout<<"Stanjan::sensH = "<<sensibleEnthalpy<<endl;
-    double absoluteEnthalpy;
-    // First variable in mixRxnVar is normalized enthalpy; use it to compute
-    // absolute enthalpy
-    absoluteEnthalpy = adiabaticEnthalpy + mixRxnVar[0]*sensibleEnthalpy;
-    // Find temperature associated with absoluteEnthalpy
-    double heatLossTemp = computeTemperature(absoluteEnthalpy, initMassFract, 
-					     initTemp);
-    computeEquilibrium(heatLossTemp, initPress, initMassFract, equilStateSpace);
-    //DEBUGGING COUT (enthalpies should be equal)
-    //	cout<<"Absolute enthalpy = "<<absoluteEnthalpy<<endl
-    //	    <<"Equilibrium enthalpy = "<<equilStateSpace.d_adiabaticEnthalpy
-    //          <<endl;
-      
-    // Calculate radiation gas absorption coefficient and black body
-    // emissivity for given mixture
-    //computeRadiationProperties();
+    else
+      initMassFract = unreactedMixture.d_speciesConcn;
+
+    //computeEquilibrium(initTemp, initPress, heatLoss, adiabaticEnthalpy, 
+    //		       initMassFract, equilStateSpace);
+    computeEquilibrium(initTemp, initPress, initMassFract, equilStateSpace);
+    double sensibleEnthalpy = 0;
     equilStateSpace.d_sensibleEnthalpy = sensibleEnthalpy;
-  } // if !(adiabatic)
-   
-  //Assign radiation coefficients ???
-  //for (i = 0; i < nofSpecies; i++){    
-  //  equilStateSpace[count++] = abkg[i];
-  //  equilStateSpace[count++] = emb[i];
-  //}
-  return equilStateSpace;
+    // Compute equilibrium for nonadiabatic system
+    if (!(adiabatic)) {       
+      //Calculate the sensible enthalpy based on a reference temperature, TREF   
+      double trefEnthalpy =  d_reactionData->getMixEnthalpy(TREF, initMassFract);\
+      double sensibleEnthalpy =  adiabaticEnthalpy - trefEnthalpy;
+      // This section can be skipped if computeRxnStateSpace was only called to
+      // get enthalpies for normalization
+      if (!d_normalizeEnthalpy) {
+	double absoluteEnthalpy;
+	// First variable in mixRxnVar is normalized enthalpy; use it to compute
+	// absolute enthalpy
+	absoluteEnthalpy = adiabaticEnthalpy + mixRxnVar[0]*sensibleEnthalpy;
+	// Find temperature associated with absoluteEnthalpy
+	double heatLossTemp = computeTemperature(absoluteEnthalpy, initMassFract, 
+						 initTemp);
+	//heatLoss = 1;
+	computeEquilibrium(heatLossTemp, initPress, initMassFract, equilStateSpace);
+	//DEBUGGING COUT (enthalpies should be equal)
+	//	cout<<"Absolute enthalpy = "<<absoluteEnthalpy<<endl
+	//	    <<"Equilibrium enthalpy = "<<equilStateSpace.d_adiabaticEnthalpy
+	//          <<endl;
+	
+	// Calculate radiation gas absorption coefficient and black body
+	// emissivity for given mixture
+	//computeRadiationProperties();
+      }
+      equilStateSpace.d_sensibleEnthalpy = sensibleEnthalpy;
+    }
+    
+    //Assign radiation coefficients ???
+    //for (i = 0; i < nofSpecies; i++){    
+    //  equilStateSpace[count++] = abkg[i];
+    //  equilStateSpace[count++] = emb[i];
+    //}
+    return equilStateSpace;
 }
 
 void
 StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp, 
 					    double initPress,
-					    const vector<double> initMassFract,
+					    const vector<double>& initMassFract,
 					    Stream& equilSoln) 
 {
   // Set parameters for equilibrium calculation
@@ -136,40 +149,50 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
   int lout = d_reactionData->getOutFile();
   // Convert vector of species mass fractions to array of mole fractions
   vector<double> Xequil = d_reactionData->convertMasstoMoles(initMassFract);
+  double *Yarray = new double[nofSpecies];
+  double *Xarray = new double[nofSpecies];
+  // convert vector to array
+  for (int ii = 0; ii < nofSpecies; ii++) {
+    Xarray[ii] = Xequil[ii];
+    Yarray[ii] = initMassFract[ii];
+  }
+
   // Compute equilibrium using Stanjan
   equil(&lout, &lprnt, &lsave, &leqst, &lcntue, d_reactionData->d_ickwrk,
 	d_reactionData->d_rckwrk, &lenieq, ieqwrk, &lenreq, reqwrk, 
 	&nofElements, &nofSpecies, d_reactionData->d_elementNames[0], 
-	d_reactionData->d_speciesNames[0], &nop, &kmon, &Xequil[0], &initTemp, 
+	d_reactionData->d_speciesNames[0], &nop, &kmon, Xarray, &initTemp, 
 	&test, &patm, &pest, &ncon, kcon, xcon, &ierr); 
+	//	&heatLoss, &enthalpy, &ierr);
 
   if (ierr == 0) {
     // If no error detected in equilibrium solution, call eqsol, which
     // returns equilibrium solution in cgs units
     double *xeq = new double[nofSpecies]; // Equilibrium mole fractions
-    vector<double> yeq(nofSpecies); // Equilibrium mass fractions
+    double *yeq = new double[nofSpecies]; // Equilibrium mass fractions
     double equilVol; // Mixture specific volume; not returned
     double sout; // Mixture entropy; not returned
     double cout_s, cdet_out; // Not returned
-    eqsol(&nofSpecies, reqwrk, xeq, &yeq[0], &equilSoln.d_temperature, 
+    eqsol(&nofSpecies, reqwrk, xeq, yeq, &equilSoln.d_temperature, 
 	  &equilSoln.d_pressure, &equilSoln.d_enthalpy, &equilVol, 
 	  &sout, &equilSoln.d_moleWeight, &cout_s, &cdet_out);
     // Convert output to SI units (d_temperature and d_moleWeight do not 
     // require any units conversion)
     //cout<<"equil temp = "<<equilSoln.d_temperature<<endl;
-    //?? put zeros in vector if mass fractions 
-    // within ATOL of zero??
-    equilSoln.d_speciesConcn = yeq;
     equilSoln.d_pressure *= 1.01325e+05; // atm -> Pa
     equilSoln.d_enthalpy *= 1.e-4; // Units of J/kg
     equilSoln.d_density = 1./equilVol*1.e+3; // Units of kg/m^3
     equilSoln.d_cp = d_reactionData->getMixSpecificHeat(equilSoln.d_temperature, 
-							equilSoln.d_speciesConcn); 
-                                                        // Units of J/(kg-K)
+							yeq); // Units of J/(kg-K)
+    // Assign yeq array to output vector; ?? put zeros in vector if mass fractions 
+    // within ATOL of zero??
     // store mass fraction
     equilSoln.d_mole = false;
-   
-    delete[] xeq;        
+    for (int i = 0; i < nofSpecies; i++)
+      equilSoln.d_speciesConcn[i] = yeq[i]; 
+    
+    delete[] xeq;
+    delete[] yeq;        
   }
   else {
     equilSoln.d_pressure = initPress;
@@ -177,14 +200,14 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
     equilSoln.d_mole = false;
     equilSoln.d_speciesConcn = initMassFract;
     equilSoln.d_density = d_reactionData->getMassDensity(initPress, initTemp,
-							 initMassFract);
+							 Yarray);
     equilSoln.d_enthalpy = d_reactionData->getMixEnthalpy(initTemp, 
 							  initMassFract);
-    equilSoln.d_moleWeight = d_reactionData->getMixMoleWeight(initMassFract);
-    equilSoln.d_cp = d_reactionData->getMixSpecificHeat(initTemp, initMassFract);
+    equilSoln.d_moleWeight = d_reactionData->getMixMoleWeight(Yarray);
+    equilSoln.d_cp = d_reactionData->getMixSpecificHeat(initTemp, Yarray);
     cerr << "equilibrium failed for: " << endl;
     for (int ii = 0; ii < initMassFract.size(); ii++) {
-      cerr << "  " << initMassFract[ii];
+      cerr << "  " << Xarray[ii];
       if (!(ii % 10))
 	cerr << endl;
     }
@@ -200,6 +223,8 @@ StanjanEquilibriumReactionModel::computeEquilibrium(double initTemp,
 
   delete[] ieqwrk;
   delete[] reqwrk;
+  delete[] Xarray;
+  delete[] Yarray;
 }
 
 double 
@@ -207,55 +232,52 @@ StanjanEquilibriumReactionModel::computeTemperature(const double absEnthalpy,
 						    const vector<double>& massFract, 
 						    double initTemp)
 {
-  double lowerTemp, upperTemp, lowerEnthalpy, upperEnthalpy, nonadTemp, del;
-  lowerTemp = TLOW;
-  upperTemp = THIGH;
-  //cout<<"TLOW="<<TLOW<<" THIGH="<<THIGH<<" TREF="<<TREF<<endl;
-  lowerEnthalpy = d_reactionData->getMixEnthalpy(lowerTemp,massFract);
-  upperEnthalpy = d_reactionData->getMixEnthalpy(upperTemp,massFract);
-  //cout<<"lowerEnthalpy= "<<lowerEnthalpy<<" upperEnthalpy="<<upperEnthalpy<<endl;
-  int iter = 0;
-  do {
-    iter += 1;
-    if (fabs(upperEnthalpy-lowerEnthalpy) < 0.0001) {
-      nonadTemp = upperTemp;
-    }
-    else {
-      nonadTemp = upperTemp-(upperEnthalpy-absEnthalpy)*
-	(upperTemp-lowerTemp)/(upperEnthalpy-lowerEnthalpy);
-    }
-    del = nonadTemp - upperTemp;
-    lowerTemp = upperTemp;
-    lowerEnthalpy = upperEnthalpy;
-    upperTemp = nonadTemp;
-    //cout<<"lowerTemp="<<lowerTemp<<" upperTemp= "<<upperTemp<<endl;
-    upperEnthalpy = d_reactionData->getMixEnthalpy(upperTemp, massFract);
-  } while((fabs(del) > 0.0001) && (iter < MAXITER));
-  // If secant method fails to find a solution, set nonadTemp to initTemp
-  if (iter == MAXITER) {
-    nonadTemp = initTemp;
-    //cout<<"At f = "<<d_mixVar[0]<<" and h = "<<d_normH<<" the max number of"
-    //  <<" iterations was exceeded when computing the initial temperature"<<endl
-    //  <<"Using temperature for adiabatic system."<<endl; 
-  }
-  else if (nonadTemp < TLOW) {
-    nonadTemp = initTemp;
-    //cout<<"At f = "<<d_mixVar[0]<<" and h = "<<d_normH<<" the computed"
-    //  <<" initial temperature is less than "<<TLOW<<endl
-    //  <<"Using temperature for adiabatic system."<<endl;
-  }
-  else if (nonadTemp > THIGH) {
-    nonadTemp = initTemp;
-    //cout<<"At f = "<<d_mixVar[0]<<" and h = "<<d_normH<<" the computed"
-    //  <<" initial temperature exceeds "<<THIGH<<endl
-    //  <<"Using temperature for adiabatic system."<<endl;
-  }	  
-  //DEBUGGING COUT
-  //cout<<"Initial temp = "<<nonadTemp<<endl;
-  
-  return nonadTemp;
-}
+	double lowerTemp, upperTemp, lowerEnthalpy, upperEnthalpy, nonadTemp, del;
+	lowerTemp = TLOW;
+	upperTemp = THIGH;
+	//cout<<"TLOW="<<TLOW<<" THIGH="<<THIGH<<" TREF="<<TREF<<endl;
+	lowerEnthalpy = d_reactionData->getMixEnthalpy(lowerTemp,massFract);
+	upperEnthalpy = d_reactionData->getMixEnthalpy(upperTemp,massFract);
+        //cout<<"lowerEnthalpy= "<<lowerEnthalpy<<" upperEnthalpy="<<upperEnthalpy<<endl;
+	int iter = 0;
+	do {
+	  iter += 1;
+	  if (fabs(upperEnthalpy-lowerEnthalpy) < 0.0001) {
+	    nonadTemp = upperTemp;
+	  }
+	  else {
+	    nonadTemp = upperTemp-(upperEnthalpy-absEnthalpy)*
+	      (upperTemp-lowerTemp)/(upperEnthalpy-lowerEnthalpy);
+	  }
+	  del = nonadTemp - upperTemp;
+	  lowerTemp = upperTemp;
+	  lowerEnthalpy = upperEnthalpy;
+	  upperTemp = nonadTemp;
+	  upperEnthalpy = d_reactionData->getMixEnthalpy(upperTemp, massFract);
+	} while((fabs(del) > 0.0001) && (iter < MAXITER));
+	// If secant method fails to find a solution, set nonadTemp to initTemp
+	if (iter == MAXITER) {
+	  nonadTemp = initTemp;
+	  //cout<<"At f = "<<d_mixVar[0]<<" and h = "<<d_normH<<" the max number of"
+	  //  <<" iterations was exceeded when computing the initial temperature"<<endl
+	  //  <<"Using temperature for adiabatic system."<<endl; 
+	}
+	else if (nonadTemp < TLOW) {
+	  nonadTemp = initTemp;
+	  //cout<<"At f = "<<d_mixVar[0]<<" and h = "<<d_normH<<" the computed"
+	  //  <<" initial temperature is less than "<<TLOW<<endl
+	  //  <<"Using temperature for adiabatic system."<<endl;
+	}
+	else if (nonadTemp > THIGH) {
+	  nonadTemp = initTemp;
+	  //cout<<"At f = "<<d_mixVar[0]<<" and h = "<<d_normH<<" the computed"
+	  //  <<" initial temperature exceeds "<<THIGH<<endl
+	  //  <<"Using temperature for adiabatic system."<<endl;
+	}	  
+	//DEBUGGING COUT
 
+	return nonadTemp;
+}
 
 void
 StanjanEquilibriumReactionModel::computeRadiationProperties() {}
