@@ -693,8 +693,6 @@ QuadSurfMesh::compute_normals()
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
-
-  cerr << normals_.size() << endl;
 }
 
 
