@@ -15,7 +15,6 @@ SRCS       += \
        $(SRCDIR)/Turbulence.cc \
  	$(SRCDIR)/SmagorinskyModel.cc \
 	$(SRCDIR)/DynamicModel.cc \
-	$(SRCDIR)/NearWallTreatment.cc \
 	$(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
