@@ -10,7 +10,6 @@
 #include <Packages/rtrt/Core/MiscMath.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Color.h>
-#include <Packages/rtrt/Core/BrickArray3.cc>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
