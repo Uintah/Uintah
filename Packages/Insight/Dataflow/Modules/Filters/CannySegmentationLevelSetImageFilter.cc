@@ -132,7 +132,7 @@ bool CannySegmentationLevelSetImageFilter::run( itk::Object *obj1, itk::Object *
   if(!outhandle2_.get_rep())
   {
     ITKDatatype* im = scinew ITKDatatype;
-    im->data_ = filter->GetSpeedImage();
+    im->data_ = const_cast<itk::Image<float, 2>* >(filter->GetSpeedImage());
     outhandle2_ = im; 
   }
   
