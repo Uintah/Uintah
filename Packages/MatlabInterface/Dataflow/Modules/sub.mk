@@ -29,6 +29,7 @@ SRCDIR := Packages/MatlabInterface/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
+	$(SRCDIR)/Math\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
