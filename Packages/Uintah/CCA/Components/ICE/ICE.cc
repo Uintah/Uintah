@@ -112,7 +112,8 @@ ICE::~ICE()
 
 bool ICE::restartableTimesteps()
 {
-  return true;
+  // Only implicit ICE will restart timesteps
+  return d_impICE;
 }
 
 double ICE::recomputeTimestep(double current_dt)
@@ -1192,9 +1193,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
-      task->requires(Task::OldDW, tvar->var, gac, 2);
+      task->requires(Task::OldDW, tvar->var, tvar->matls, gac, 2);
       if(tvar->src)
-	task->requires(Task::NewDW, tvar->src, gac, 2);
+	task->requires(Task::NewDW, tvar->src, tvar->matls, gac, 2);
       task->computes(tvar->var,   tvar->matls);
     }
   } 
@@ -1778,8 +1779,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      if(test_max_iter == d_max_iter_equilibration) 
-       throw MaxIteration(c,count,n_passes,"MaxIterations reached");
+      if(test_max_iter == d_max_iter_equilibration) {
+	throw MaxIteration(c,count,n_passes,"MaxIterations reached");
+      }
 
        for (int m = 0; m < numMatls; m++) {
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
@@ -4112,9 +4114,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
           if(tvar->matls->contains(indx)){
             constCCVariable<double> q_L_CC,q_src;
             CCVariable<double> q_new, q_CC;
-	     old_dw->get(q_L_CC, tvar->var, indx, patch, gac, 2);         
-	     new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);         
-	     new_dw->allocateTemporary(q_new, patch, gac, 2);
+	    old_dw->get(q_L_CC, tvar->var, indx, patch, gac, 2);         
+	    if(tvar->src) 
+	      new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);         
+	    new_dw->allocateTemporary(q_new, patch, gac, 2);
             new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
             
 	     if(tvar->src){  // if transported variable has a source
@@ -4125,7 +4128,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 	       }
 	       advector->advectQ(q_new,patch,q_advected, new_dw);
 	     } else {
-	       advector->advectQ(q_L_CC,patch,q_advected, new_dw);
+	       for(CellIterator iter(q_L_CC.getLowIndex(), q_L_CC.getHighIndex());
+		    !iter.done(); iter++){
+		  IntVector c = *iter;                            
+		  q_new[c]  = q_L_CC[c]*mass_L[c];
+	       }
+	       advector->advectQ(q_new,patch,q_advected, new_dw);
 	     }
 
 	     for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
