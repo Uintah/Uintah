@@ -36,7 +36,7 @@ GeomBBoxCache::GeomBBoxCache(GeomObj* obj)
 
 }
 
-GeomBBoxCache::GeomBBoxCache(GeomObj* obj, BBox &box)
+GeomBBoxCache::GeomBBoxCache(GeomObj* obj, const BBox &box)
 :child(obj),bbox_cached(1)
 {
   bbox.extend( box );
@@ -67,13 +67,13 @@ void GeomBBoxCache::reset_bbox()
 
 void GeomBBoxCache::get_bounds(BBox& box)
 {
-    if (!bbox_cached) {
-	bbox.reset();
-	child->get_bounds(bbox);
-	bbox_cached = 1;
-    }
-
-    box.extend( bbox );
+  if (!bbox_cached || !bbox.valid()) {
+    bbox.reset();
+    child->get_bounds(bbox);
+    bbox_cached = 1;
+  }
+  
+  box.extend( bbox );
 }
 
 #define GEOMBBOXCACHE_VERSION 2
@@ -115,6 +115,9 @@ bool GeomBBoxCache::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.9  2000/07/06 23:18:55  yarden
+// fix a bug if the bbox is not valid
+//
 // Revision 1.8  2000/06/06 16:01:42  dahart
 // - Added get_triangles() to several classes for serializing triangles to
 // send them over a network connection.  This is a short term (hack)
