@@ -125,6 +125,7 @@ WARNING
     class PassiveScalarLabel {
     public:
       VarLabel* lastProbeDumpTimeLabel;
+      VarLabel* sum_scalar_fLabel;
     };
     
     PassiveScalarLabel* Slb;
@@ -135,6 +136,7 @@ WARNING
     vector<Vector> d_probePts;
     vector<string> d_probePtsNames;
     bool d_usingProbePts;
+    bool d_test_conservation;
     double d_probeFreq;
   };
 }
