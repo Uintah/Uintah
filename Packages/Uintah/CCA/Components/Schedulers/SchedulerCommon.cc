@@ -200,8 +200,16 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
     delete dws_[ Task::OldDW ];
   dws_[ Task::OldDW ] = dws_[ Task::NewDW ];
   int generation = d_generation++;
-  dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, this, generation,
-						 grid);
+  if (dws_[Task::OldDW] == 0) {
+    // first datawarehouse -- indicate that it is the "initialization"= dw.
+    dws_[Task::NewDW] = scinew
+      OnDemandDataWarehouse(d_myworld, this, generation, grid,
+			    true /* initialization dw */);
+  }
+  else {
+    dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, this, generation,
+						   grid);
+  }
 }
 
 DataWarehouse*
