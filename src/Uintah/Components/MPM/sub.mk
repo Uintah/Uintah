@@ -8,7 +8,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
-	$(SRCDIR)/BoundCond.cc $(SRCDIR)/MPMLabel.cc
+	$(SRCDIR)/BoundCond.cc $(SRCDIR)/MPMLabel.cc \
+	$(SRCDIR)/DavMPM.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \
@@ -25,6 +26,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/05/30 17:07:56  dav
+# I think I added the xerces flag
+#
 # Revision 1.8  2000/05/26 21:37:30  jas
 # Labels are now created and accessed using Singleton class MPMLabel.
 #
