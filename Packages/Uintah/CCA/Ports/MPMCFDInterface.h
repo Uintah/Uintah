@@ -10,8 +10,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
-#include <Packages/Uintah/CCA/Ports/PatchDataAnalyze.h>
-
 namespace Uintah {
 /**************************************
 
@@ -68,13 +66,9 @@ WARNING
 
 				       const LevelP& level, SchedulerP&) = 0;
 
-      void setAnalyze(PatchDataAnalyze* analyze);
-
    private:
       MPMCFDInterface(const MPMCFDInterface&);
       MPMCFDInterface& operator=(const MPMCFDInterface&);
-  protected:
-      PatchDataAnalyze*  d_analyze;
    };
 } // End namespace Uintah
    

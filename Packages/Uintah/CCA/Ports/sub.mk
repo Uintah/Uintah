@@ -8,8 +8,7 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc $(SRCDIR)/MPMCFDInterface.cc \
-	$(SRCDIR)/MDInterface.cc $(SRCDIR)/Analyze.cc
+	$(SRCDIR)/Scheduler.cc $(SRCDIR)/MPMCFDInterface.cc 
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
