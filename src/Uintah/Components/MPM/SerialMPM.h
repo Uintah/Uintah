@@ -13,10 +13,9 @@
 using SCICore::Geometry::Vector;
 
 namespace Uintah {
-   class VarLabel;
-   namespace MPM {
+namespace MPM {
    
-     class Fracture;
+class Fracture;
 
 /**************************************
 
@@ -47,137 +46,140 @@ WARNING
   
 ****************************************/
 
-      class SerialMPM : public UintahParallelComponent, public MPMInterface {
-      public:
-	 SerialMPM( int MpiRank, int MpiProcesses);
-	 virtual ~SerialMPM();
+class SerialMPM : public UintahParallelComponent, public MPMInterface {
+public:
+  SerialMPM( int MpiRank, int MpiProcesses);
+  virtual ~SerialMPM();
 	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-				   SimulationStateP&);
+  //////////
+  // Insert Documentation Here:
+  virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+			    SimulationStateP&);
 	 
-	 virtual void scheduleInitialize(const LevelP& level,
-					 SchedulerP&,
-					 DataWarehouseP&);
+  virtual void scheduleInitialize(const LevelP& level,
+				  SchedulerP&,
+				  DataWarehouseP&);
 	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void scheduleComputeStableTimestep(const LevelP& level,
-						    SchedulerP&,
-						    DataWarehouseP&);
+  //////////
+  // Insert Documentation Here:
+  virtual void scheduleComputeStableTimestep(const LevelP& level,
+					     SchedulerP&,
+					     DataWarehouseP&);
 	 
-	 //////////
-	 // Insert Documentation Here:
-	 virtual void scheduleTimeAdvance(double t, double dt,
-				  const LevelP& level, SchedulerP&,
-				  DataWarehouseP&, DataWarehouseP&);
+  //////////
+  // Insert Documentation Here:
+  virtual void scheduleTimeAdvance(double t, double dt,
+				   const LevelP& level, SchedulerP&,
+				   DataWarehouseP&, DataWarehouseP&);
 
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-      private:
-	 //////////
-	 // Insert Documentation Here:
-	 void actuallyInitialize(const ProcessorContext*,
-				 const Region* region,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
-	 //////////
-	 // Insert Documentation Here:
-	 void actuallyComputeStableTimestep(const ProcessorContext*,
-					    const Region* region,
-					    DataWarehouseP& old_dw,
-					    DataWarehouseP& new_dw);
-	 //////////
-	 // Insert Documentation Here:
-	 void interpolateParticlesToGrid(const ProcessorContext*,
-					 const Region* region,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw);
-	 //////////
-	 // Insert Documentation Here:
-	 void computeStressTensor(const ProcessorContext*,
-				  const Region* region,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw);
-
-	 //////////
-	 // update the Surface Normal Of Boundary Particles according to their
-	 // velocity gradient during the deformation
-	 //
-	 void updateSurfaceNormalOfBoundaryParticle(
-	                            const ProcessorContext*,
-				    const Region* region,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
-
-	 //////////
-	 // Insert Documentation Here:
-	 void computeInternalForce(const ProcessorContext*,
-				   const Region* region,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw);
-
-	 //////////
-	 // Insert Documentation Here:
-         void computeInternalHeatRate(
-                                     const ProcessorContext*,
+private:
+  //////////
+  // Insert Documentation Here:
+  void actuallyInitialize(const ProcessorContext*,
+			  const Region* region,
+			  DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void actuallyComputeStableTimestep(const ProcessorContext*,
 				     const Region* region,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void interpolateParticlesToGrid(const ProcessorContext*,
+				  const Region* region,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void computeStressTensor(const ProcessorContext*,
+			   const Region* region,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
 
-	 //////////
-	 // Insert Documentation Here:
-	 void solveEquationsMotion(const ProcessorContext*,
-				   const Region* region,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw);
+  //////////
+  // update the Surface Normal Of Boundary Particles according to their
+  // velocity gradient during the deformation
+  //
+  void updateSurfaceNormalOfBoundaryParticle(
+					     const ProcessorContext*,
+					     const Region* region,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw);
 
-	 //////////
-	 // Insert Documentation Here:
-         void solveHeatEquations(const ProcessorContext*,
-				     const Region* region,
-				     DataWarehouseP& /*old_dw*/,
-				     DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void computeInternalForce(const ProcessorContext*,
+			    const Region* region,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
 
-	 //////////
-	 // Insert Documentation Here:
-	 void integrateAcceleration(const ProcessorContext*,
-				    const Region* region,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
-	 //////////
-	 // Insert Documentation Here:
-	 void interpolateToParticlesAndUpdate(const ProcessorContext*,
-					      const Region* region,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void computeInternalHeatRate(
+			       const ProcessorContext*,
+			       const Region* region,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw);
 
-	 //////////
-	 // check the stress on each boundary particle to see
-	 // if the microcrack will grow.  If fracture occur,
-	 // more interior particles become boundary particles
-         void crackGrow(const ProcessorContext*,
-                        const Region* region,
-                        DataWarehouseP& old_dw,
-                        DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void solveEquationsMotion(const ProcessorContext*,
+			    const Region* region,
+			    DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
 
-	 SerialMPM(const SerialMPM&);
-	 SerialMPM& operator=(const SerialMPM&);
+  //////////
+  // Insert Documentation Here:
+  void solveHeatEquations(const ProcessorContext*,
+			  const Region* region,
+			  DataWarehouseP& /*old_dw*/,
+			  DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void integrateAcceleration(const ProcessorContext*,
+			     const Region* region,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
+  //////////
+  // Insert Documentation Here:
+  void interpolateToParticlesAndUpdate(const ProcessorContext*,
+				       const Region* region,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw);
+
+  //////////
+  // check the stress on each boundary particle to see
+  // if the microcrack will grow.  If fracture occur,
+  // more interior particles become boundary particles
+  void crackGrow(const ProcessorContext*,
+		 const Region* region,
+		 DataWarehouseP& old_dw,
+		 DataWarehouseP& new_dw);
+
+  SerialMPM(const SerialMPM&);
+  SerialMPM& operator=(const SerialMPM&);
 	 
-	 SimulationStateP d_sharedState;
-	 Contact*         d_contactModel;
-	 Fracture*        d_fractureModel;
-	 bool             d_heatConductionInvolved;
-      };
+  SimulationStateP d_sharedState;
+  Contact*         d_contactModel;
+  Fracture*        d_fractureModel;
+  bool             d_heatConductionInvolved;
+};
       
-   } // end namespace MPM
+} // end namespace MPM
 } // end namespace Uintah
    
 //
 // $Log$
+// Revision 1.35  2000/05/30 18:17:05  dav
+// few more fixes
+//
 // Revision 1.34  2000/05/30 17:07:34  dav
 // Removed commented out labels.  Other MPI fixes.  Changed delt to delT so I would stop thinking of it as just delta.
 //
