@@ -64,12 +64,12 @@ set runTime " 16:35:33"
 
 set bbox {13.0 17.0 398 318}
 
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 13 93]
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 13 93]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 13 17]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 13 274]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 13 181]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 13 181]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 203 78]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 185 192]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "VolumeSlicer" 185 192]
 
 addConnection $m0 0 $m3 0
 addConnection $m3 0 $m2 0

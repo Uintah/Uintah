@@ -12,7 +12,7 @@ set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 450 200]
 set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 468 22]
 set m5 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 150 311]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "Probe" 209 102]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "GatherPoints" 150 244]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "GatherFields" 150 244]
 set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 110 420]
 set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 388 403]
 
