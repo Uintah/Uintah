@@ -26,16 +26,16 @@
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>Non-interactive geometric transform of a field.</summary>
+    <summary>Make a new field with data at elements instead of nodes.</summary>
     <description>
 
-      <p>This module is used to non-interactively transform the
-      geometry of a field.  The transform is passed in to the
-      "Transform Matrix" port as a 4x4 matrix.  There is no GUI for
-      this module.  The transform is
-      generally computed by a different module, such as
-      BuildTransform.  For interactive geometry transforms use the
-      ChangeFieldBounds module.</p>
+      <p>MoveNodeToElem creates a new field with the data at the
+      mesh elements rather than at the nodes.   This currently only
+      works on LatVolField and ImageField field types.  The data must
+      be at the nodes.  A new field is created such that the data
+      remains at the same positions in space but occupy the
+      cell/face centers of the new mesh rather than being located at
+      the node locations.  This is the opposite of MoveElemToNode.</p>
 
     </description>
   </overview>
