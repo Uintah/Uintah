@@ -253,7 +253,7 @@ ShowField::add_face(const Point &p0, const Point &p1, const Point &p2,
 void 
 ShowField::add_edge(const Point &p0, const Point &p1,  
 		    double scale, GeomGroup *g, MaterialHandle mh) {
-  GeomLine *l = scinew GeomLine(p0, p1);
+  GeomLine *l = new GeomLine(p0, p1);
   l->setLineWidth(scale);
   g->add(scinew GeomMaterial(l, mh));
 }
