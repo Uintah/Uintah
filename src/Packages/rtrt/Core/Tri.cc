@@ -280,8 +280,8 @@ void Tri::light_intersect(const Ray& ray, HitInfo& hit, Color&,
 Vector Tri::normal(const Point&, const HitInfo& hitinfo)
 {
   double *uv = (double *)hitinfo.scratchpad;
-  double beta = uv[0];
-  double gamma = uv[1];
+  double beta = uv[1];
+  double gamma = uv[0];
 
 //    printf("beta: %lf gamma: %lf\n",beta,gamma);
 
