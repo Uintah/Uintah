@@ -114,14 +114,15 @@ DynamicLoader::~DynamicLoader()
 //! 
 //! How to get at the global loader for scirun.
 DynamicLoader& 
-DynamicLoader::scirun_loader() {
-  if (scirun_loader_ == 0) {
-    scirun_loader_lock_.lock();
-    if (scirun_loader_ == 0) {
-      scirun_loader_ = new DynamicLoader;
-    }
-    scirun_loader_lock_.unlock();
+DynamicLoader::scirun_loader()
+{
+  scirun_loader_lock_.lock();
+  if (scirun_loader_ == 0)
+  {
+    scirun_loader_ = new DynamicLoader;
   }
+  scirun_loader_lock_.unlock();
+
   return *scirun_loader_;
 }
 
