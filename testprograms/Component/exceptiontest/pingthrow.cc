@@ -133,15 +133,18 @@ int main(int argc, char* argv[])
 	    abort();
 	  }
 	  double stime=Time::currentSeconds();
-	  int j=pp->pingthrow(13);
-	  double dt=Time::currentSeconds()-stime;
-	  cerr << "in " << dt << " seconds\n";
+	  for(int z=0; z<10; z++) { 
+            ::std::cout << "Calling from node " << myrank << " for the " << z+1 << " time\n";
+       	    int j=pp->pingthrow(13);
+          }
+          double dt=Time::currentSeconds()-stime;
+	  cerr << "3 reps in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;
 	  cerr << us << " us/rep\n";
  	}
     } catch(PingThrow_ns::PPException* p) {
         cerr << "pingthrow.cc: Coaught ppexception\n";
-        exit(0);
+        //exit(0);
     } catch(const MalformedURL& e) {
 	cerr << "pingthrow.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';
