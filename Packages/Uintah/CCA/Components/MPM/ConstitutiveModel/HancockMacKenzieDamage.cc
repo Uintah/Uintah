@@ -49,7 +49,9 @@ HancockMacKenzieDamage::computeScalarDamage(const double& plasticStrainRate,
 
   // Compute hydrostatic stress and equivalent stress
   double sig_h = stress.Trace()/3.0;
-  double sig_eq = sqrt((stress.NormSquared())*1.5);
+  Matrix3 I; I.Identity();
+  Matrix3 sig_dev = stress - I*sig_h;
+  double sig_eq = sqrt((sig_dev.NormSquared())*1.5);
 
   // Calculate the updated scalar damage parameter
   double D = D_old + (1.0/1.65)*epsInc*exp(1.5*sig_h/sig_eq);
