@@ -133,6 +133,10 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	TCLTask::unlock();
     }
 
+    // Get the window size
+    xres=Tk_Width(tkwin);
+    yres=Tk_Height(tkwin);
+
     // Make ourselves current
     if(current_drawer != this){
 	current_drawer=this;
@@ -144,6 +148,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     TCLTask::lock();
 
     // Clear the screen...
+    glViewport(0, 0, xres, yres);
     Color bg(roe->bgcolor.get());
     glClearColor(bg.r(), bg.g(), bg.b(), 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

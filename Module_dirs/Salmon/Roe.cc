@@ -729,7 +729,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// Animate lookat point to center of BBox...
 	BBox bbox;
 	get_bounds(bbox);
-	if(bb.valid()){
+	if(bbox.valid()){
 	    cv.lookat=bbox.center();
 	    animate_to_view(cv, 2.0);
 
