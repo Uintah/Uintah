@@ -8,7 +8,7 @@
  *   July 1994
  *
  *  Modified
- *   Packages/Kurt Zimmerman
+ *   Kurt Zimmerman
  *   Department of Computer Science
  *   University of Utah
  *   Dec 1998
@@ -42,7 +42,7 @@
 #include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <stdio.h>
 #include <iostream>
 using std::cerr;
@@ -308,7 +308,7 @@ void ParticleVis::execute()
       if( drawVectors.get() == 1 && hasVectors){
 	obj->add( arrows );
       }
-      // Let's set it up so that we can pick the particle set -- Packages/Kurt Z. 12/18/98
+      // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
       GeomPick *pick = scinew GeomPick( obj, this);
       ogeom->delAll();
       ogeom->addObj(pick, "Particles");      
@@ -382,7 +382,3 @@ extern "C" Module* make_ParticleVis( const clString& id ) {
   return scinew ParticleVis( id );
 }
 } // End namespace Uintah
-
-
-
-

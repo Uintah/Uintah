@@ -36,7 +36,7 @@ LOG
 
 
 namespace Uintah {
-using namespace Uintah::Datatypes;
+
 using namespace SCIRun;
 
 class TimestepSelector : public Module { 
@@ -78,7 +78,5 @@ private:
 
 }; //class 
 } // End namespace Uintah
-
-
 
 #endif

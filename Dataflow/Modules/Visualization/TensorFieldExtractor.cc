@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Packages/Kurt Zimmerman
+    Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -30,34 +30,33 @@ LOG
 #include "TensorFieldExtractor.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Core/Containers/String.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
 #include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
-#include <Packages/Uintah/Interface/DataArchive.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Ports/DataArchive.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
  
 
 #include <iostream> 
 #include <sstream>
 #include <string>
 
+namespace Uintah {
+
 using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
 
-namespace Uintah {
 using namespace SCIRun;
-using namespace Uintah;
-using namespace Uintah::Datatypes;
 
 extern "C" Module* make_TensorFieldExtractor( const clString& id ) {
   return scinew TensorFieldExtractor( id ); 
@@ -267,5 +266,5 @@ void TensorFieldExtractor::execute()
   return;
 }
 } // End namespace Uintah
-//--------------------------------------------------------------- 
+
   

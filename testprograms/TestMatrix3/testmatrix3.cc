@@ -1,11 +1,12 @@
 #include "testmatrix3.h"
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
 #include <iostream>
 
 using namespace std;
+using namespace Uintah;
 
 void doMatrixSolvingTests(Suite& suite);
 void doEigenTests(Suite& suite);

@@ -27,6 +27,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Widgets/FrameWidget.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomSphere.h>
@@ -36,26 +37,25 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/Patch.h>
-#include <Packages/Uintah/Grid/NodeIterator.h> // Must be included after Patch.h
-#include <Packages/Uintah/Grid/CellIterator.h> // Must be included after Patch.h
-//#include <Packages/Uintah/Grid/FaceIterator.h> // Must be included after Patch.h
-#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h> // Includ after Patch.h
+#include <Packages/Uintah/Core/Grid/CellIterator.h> // Includ after Patch.h
+//#include <Packages/Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
+#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>
 //#include <string>
 
 namespace Uintah {
+
 using namespace SCIRun;
-using namespace Uintah;
-using namespace Uintah::Datatypes;
 using namespace std;
 
 #define GRID_COLOR 1
@@ -916,6 +916,7 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   IntVector id;
   int level;
   if ( picked->getId( id ) && picked->getId(level)) {
+
     cerr<<"Id = "<< id << " Level = " << level << endl;
     currentNode.id = id;
     index_l.set(level);
@@ -959,7 +960,4 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
     cerr<<"Not getting the correct data\n";
 }
 } // End namespace Uintah
-
-
-
 

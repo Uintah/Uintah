@@ -2,7 +2,7 @@
  *  RescaleColorMapForParticles.cc.cc:  Generate Color maps
  *
  *  Written by:
- *   Packages/Kurt Zimmerman
+ *   Kurt Zimmerman
  *   Department of Computer Science
  *   University of Utah
  *   December 1999
@@ -13,16 +13,12 @@
 #include "RescaleColorMapForParticles.h"
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Grid/ParticleSubset.h>
+#include <Packages/Uintah/Core/Grid/ParticleSubset.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 
 namespace Uintah {
-using Uintah::ParticleSubset;
 
 using namespace SCIRun;
-using Uintah::Datatypes::ScalarParticles;
-using Uintah::Datatypes::ScalarParticlesHandle;
-
 
 RescaleColorMapForParticles::RescaleColorMapForParticles(const clString& id)
 : Module("RescaleColorMapForParticles", id, Filter),
@@ -91,5 +87,3 @@ extern "C" Module* make_RescaleColorMapForParticles( const clString& id ) {
   return scinew RescaleColorMapForParticles( id );
 }
 } // End namespace Uintah
-
-

@@ -19,12 +19,19 @@ SRCS     += \
 	$(SRCDIR)/TensorFieldOperator.cc \
 	$(SRCDIR)/TensorParticlesOperator.cc
 
-PSELIBS :=  Dataflow/Network Core/Datatypes \
+PSELIBS := \
+	Dataflow/Network Dataflow/Ports Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/TclInterface Core/Containers Core/Datatypes \
-        Core/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
-	Core/Geometry Dataflow/Widgets PSECore/XMLUtil \
-	Core/Util  Uintah/Components/MPM Uintah/Datatypes
+        Core/Geom \
+	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
+	Core/Util \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/CCA/Ports       \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/Datatypes   \
+	Packages/Uintah/CCA/Components/MPM
 
 LIBS := $(XML_LIBRARY) -lm
 

@@ -6,8 +6,8 @@
 #include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
 
 namespace Uintah {
-using namespace SCIRun;
 
+using namespace SCIRun;
 
 extern "C" Module* make_ParticleEigenEvaluator( const clString& id ) { 
   return scinew ParticleEigenEvaluator( id );
