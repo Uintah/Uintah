@@ -97,14 +97,14 @@ namespace Uintah {
 	 d_window=scinew Array3Window<T>(new Array3Data<T>(size), lowIndex, lowIndex, highIndex);
 	 d_window->addReference();
       }
-      T& operator[](const IntVector& idx) const {
+      inline T& operator[](const IntVector& idx) const {
 	 return d_window->get(idx);
       }
       
       inline Array3Window<T>* getWindow() const {
 	 return d_window;
       }
-      T& operator[](const IntVector& idx) {
+      inline T& operator[](const IntVector& idx) {
 	 return d_window->get(idx);
       }
       
@@ -182,6 +182,10 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.20  2000/12/07 23:47:55  guilkey
+// Inlined [] operator in Array3.  Fixed (I think) SymmetryBoundCond so
+// it actually does something now.
+//
 // Revision 1.19  2000/10/11 17:39:38  sparker
 // Added copy with range
 // Fixed bug in Array3Data::copy
