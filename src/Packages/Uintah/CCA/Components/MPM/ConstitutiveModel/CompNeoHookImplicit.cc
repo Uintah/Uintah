@@ -139,7 +139,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
-    Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
+    Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
     FastMatrix kmat(24,24);
     FastMatrix kgeo(24,24);
     
@@ -203,7 +203,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        velGrad.set(0.0);
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         IntVector ni[8];
@@ -393,7 +392,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 {
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
-     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
+     Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
 
      Matrix3 Identity;
 
@@ -446,7 +445,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                   iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 
-	velGrad.set(0.0);
 	dispGrad.set(0.0);
 	// Get the node indices that surround the cell
 	IntVector ni[8];
@@ -527,10 +525,9 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   // new version uses ParentOldDW
 
   task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
-                                                           matlset,Ghost::None);
+                                                         matlset,Ghost::None);
   task->requires(Task::ParentOldDW,lb->bElBarLabel,      matlset,Ghost::None);
   task->requires(Task::ParentOldDW,lb->pTemperatureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
@@ -544,24 +541,18 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 						 const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel, matlset, Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
-
-  task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
-  
+  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeOldLabel,         matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->bElBarLabel,             matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   task->requires(Task::OldDW, lb->delTLabel);
-  
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-		 matlset,Ghost::None);
-  task->requires(Task::OldDW,lb->bElBarLabel,matlset,
-		 Ghost::None);
 
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->bElBarLabel_preReloc,matlset);
+  task->computes(lb->bElBarLabel_preReloc,              matlset);
+  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->delTLabel);
-  task->computes(lb->pVolumeDeformedLabel, matlset);
-  task->computes(lb->pStressLabel_preReloc,matlset);  
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
