@@ -101,6 +101,8 @@ public:
   
   //! (re)create the edge and faces data based on cells.
   void finish();
+  void compute_edges();
+  void compute_faces();
  
   //! Persistent IO
   virtual void io(Piostream&);
@@ -121,6 +123,58 @@ private:
   //! face neighbors index to tet opposite the corresponding node in cells_
   vector<index_type>   neighbors_;
 
+  //! Face information.
+  struct Face {
+    node_index         nodes_[3];   //! 3 nodes makes a face.
+    vector<cell_index> cells_;      //! list of all the cells this face is in.
+    
+    Face() : cells_(6) {
+      nodes_[0] = -1;
+      nodes_[1] = -1;
+    }
+    // nodes_ must be sorted. See Hash Function below.
+    Face(node_index n1, node_index n2, node_index n3) : cells_(6) {
+      if ((n1 < n2) && (n1 < n3)) {
+	nodes_[0] = n1;
+	if (n2 < n3) {
+	  nodes_[1] = n2; 
+	  nodes_[2] = n3;
+	} else {
+	  nodes_[1] = n3;
+	  nodes_[2] = n2;
+	} 
+      } else if ((n2 < n1) && (n2 < n3)) {
+	nodes_[0] = n2;
+	if (n1 < n3) {
+	  nodes_[1] = n1; 
+	  nodes_[2] = n3;
+	} else {
+	  nodes_[1] = n3;
+	  nodes_[2] = n1;
+	} 
+      } else {
+	nodes_[0] = n3;
+	if (n1 < n2) {
+	  nodes_[1] = n1; 
+	  nodes_[2] = n2;
+	} else {
+	  nodes_[1] = n2;
+	  nodes_[2] = n1;
+	} 
+      }
+    }
+
+    bool shared() const { return cells_.size() > 1; }
+    
+    //! true if both have the same nodes (order does not matter)
+    bool operator==(const Face &f) const {
+      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) && 
+	      (nodes_[2] == f.nodes_[2]));
+    }
+  };
+  /*! container for face storage. Must be computed each time 
+    nodes or cells change. */
+  vector<Face>         faces_;
 
   //! Edge information.
   struct Edge {
@@ -156,6 +210,22 @@ private:
 
   /*! hash the egde's node_indecies such that edges with the same nodes 
    *  hash to the same value. nodes are sorted on edge construction. */
+  static const int sz_int = sizeof(int) * 8; // in bits
+  struct FaceHash {
+    static const int sz_third_int = (int)(sz_int * .333333); // in bits
+    static const int up3_mask = ((~((int)0)) << sz_third_int << sz_third_int);
+    static const int mid3_mask =  up3_mask ^ (~((int)0) << sz_third_int);
+    static const int low3_mask = ~(up3_mask | mid3_mask);
+
+    size_t operator()(const Face &f) const {
+      return ((f.nodes_[0] << sz_third_int << sz_third_int) | 
+	      (mid3_mask & (f.nodes_[1] << sz_third_int)) | 
+	      (low3_mask & f.nodes_[2]));
+    }
+  };
+
+  /*! hash the egde's node_indecies such that edges with the same nodes 
+   *  hash to the same value. nodes are sorted on edge construction. */
   struct EdgeHash {
     static const int sz_int = sizeof(int) * 8; // in bits
     static const int sz_half_int = sizeof(int) << 2; // in bits
@@ -163,13 +233,17 @@ private:
     static const int low_mask = (~((int)0) ^ up_mask);
 
     size_t operator()(const Edge &e) const {
-      return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[0]);
+      return (e.nodes_[0] << sz_half_int) | (low_mask & e.nodes_[1]);
     }
   };
 
   inline
   void hash_edge(node_index n1, node_index n2, 
 		 cell_index ci, hash_set<Edge, EdgeHash> &table) const;
+
+  inline
+  void hash_face(node_index n1, node_index n2, node_index n2,
+		 cell_index ci, hash_set<Face, FaceHash> &table) const;
 };
 
 // Handle type for TetVolMesh mesh.

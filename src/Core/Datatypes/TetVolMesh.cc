@@ -65,6 +65,49 @@ TetVolMesh::get_bounding_box() const
 }
 
 void 
+TetVolMesh::hash_face(node_index n1, node_index n2, node_index n3,
+		      cell_index ci, hash_set<Face, FaceHash> &table) const {
+  Face f;
+  f.nodes_[0] = n1;
+  f.nodes_[1] = n2;
+  f.nodes_[2] = n3;
+  hash_set<Face, FaceHash>::iterator iter = table.find(f);
+  if (iter == table.end()) {
+    table.insert(f); // insert for the first time
+  } else {
+    Face f = *iter;
+    f.cells_.push_back(ci); // add this cell
+    table.erase(iter);
+    table.insert(f);
+  }
+}
+
+void 
+TetVolMesh::compute_faces()
+{
+  hash_set<Face, FaceHash> table;
+
+  cell_iterator ci = cell_begin();
+  while (ci != cell_end()) {
+    node_array arr;
+    get_nodes(arr, *ci); ++ci;
+    // 4 faces
+    hash_face(arr[0], arr[1], arr[2], *ci, table);
+    hash_face(arr[0], arr[1], arr[3], *ci, table);
+    hash_face(arr[0], arr[2], arr[3], *ci, table);
+    hash_face(arr[1], arr[2], arr[3], *ci, table);
+  }
+  // dump edges into the edges_ container.
+  faces_.resize(table.size());
+  vector<Face>::iterator              f_iter = faces_.begin();
+  hash_set<Face, FaceHash>::iterator ht_iter = table.begin();
+  while (ht_iter != table.end()) {
+    *f_iter = *ht_iter;
+    ++f_iter; ++ht_iter;
+  }
+}
+
+void 
 TetVolMesh::hash_edge(node_index n1, node_index n2, 
 		      cell_index ci, hash_set<Edge, EdgeHash> &table) const {
   Edge e;
@@ -82,7 +125,7 @@ TetVolMesh::hash_edge(node_index n1, node_index n2,
 }
 
 void 
-TetVolMesh::finish()
+TetVolMesh::compute_edges()
 {
   hash_set<Edge, EdgeHash> table;
 
@@ -90,6 +133,7 @@ TetVolMesh::finish()
   while (ci != cell_end()) {
     node_array arr;
     get_nodes(arr, *ci); ++ci;
+    // 6 edges
     hash_edge(arr[0], arr[1], *ci, table);
     hash_edge(arr[0], arr[2], *ci, table);
     hash_edge(arr[0], arr[3], *ci, table);
@@ -107,6 +151,13 @@ TetVolMesh::finish()
   }
   
 }
+
+void 
+TetVolMesh::finish() {
+  compute_edges();
+  compute_faces();
+}
+
 
 TetVolMesh::node_iterator
 TetVolMesh::node_begin() const
@@ -141,7 +192,7 @@ TetVolMesh::face_begin() const
 TetVolMesh::face_iterator
 TetVolMesh::face_end() const
 {
-  return 0; //FIX_ME
+  return faces_.size();
 }
 
 TetVolMesh::cell_iterator
@@ -169,7 +220,10 @@ TetVolMesh::get_nodes(node_array &array, edge_index idx) const
 void
 TetVolMesh::get_nodes(node_array &array, face_index idx) const
 {
-  ASSERT(0);
+  Face f = faces_[idx];
+  array.push_back(f.nodes_[0]); 
+  array.push_back(f.nodes_[1]);
+  array.push_back(f.nodes_[2]);
 }
 
 
