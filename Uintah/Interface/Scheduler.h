@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_SCHEDULER_H
 
 #include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/Output.h>
@@ -16,7 +17,6 @@ class DOM_Element;
 
 namespace Uintah {
 
-class Task;
 class VarLabel;
 class ProcessorGroup;
 
@@ -26,7 +26,6 @@ using std::list;
 using std::map;
 
 class LoadBalancer;
-class Task;
 class TaskGraph;
 class VarLabel;
 class ProcessorGroup;
@@ -82,6 +81,8 @@ WARNING
        // Insert Documentation Here:
        virtual void addTask(Task* t) = 0;
 
+       virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
+
        virtual LoadBalancer* getLoadBalancer() = 0;
        virtual void releaseLoadBalancer() = 0;
        
@@ -126,6 +127,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.25  2001/01/09 00:56:10  witzel
+// Added getInitialRequires() virtual method.
+//
 // Revision 1.24  2001/01/02 23:47:56  witzel
 // Changed VarLabelMaterialMap to be a map from a VarLabel string name to
 // the materials rather than from a VarLabel* because VarLabel*'s may
