@@ -275,10 +275,12 @@ void setBC(CCVariable<double>& press_CC,
 }
 /* --------------------------------------------------------------------- 
  Function~  setBC--
- Purpose~   Takes care any CC variable
+ Purpose~   Takes care any CC variable, except Pressure
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<double>& var_CC,
-           const string& desc, 
+           const string& desc,
+           const CCVariable<double>& gamma,
+           const CCVariable<double>& cv,
            const Patch* patch,
            SimulationStateP& sharedState, 
            const int mat_id,
@@ -344,24 +346,18 @@ void setBC(CCVariable<double>& var_CC,
 
         //__________________________________
         // Temperature and Gravity and ICE Matls
-        // --change gravity sign according to the face direction
-        int p_dir = patch->faceAxes(face)[0];     // principal  face direction
+        // -Ignore this during intialization phase,
+        //  since we backout the temperature field
         Vector gravity = sharedState->getGravity();                             
         Material *matl = sharedState->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-
-        if (gravity[p_dir] != 0 && desc == "Temperature" && ice_matl) {  
-
-          Vector faceDir = patch->faceDirection(face).asVector();
-          double grav  = gravity[p_dir] * (double)faceDir[p_dir]; 
-          double cv    = ice_matl->getSpecificHeat();
-          double gamma = ice_matl->getGamma();
-          double dx    = cell_dx[p_dir];
-
-          vector<IntVector>::const_iterator iter;  
-          for (iter=bound.begin(); iter != bound.end(); iter++) { 
-            var_CC[*iter] += grav * dx/((gamma - 1.)*cv);
-          }
+        int P_dir =  patch->faceAxes(face)[0];  // principal direction
+        
+        if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
+             && topLevelTimestep >0) {
+          ice_matl->getEOS()->
+              hydrostaticTempAdjustment(face, patch, bound, gravity,
+                                        gamma, cv, cell_dx, var_CC);
         }
         //__________________________________
         //  debugging
@@ -465,7 +461,7 @@ void setBC(CCVariable<Vector>& var_CC,
 
 //______________________________________________________________________
 //______________________________________________________________________
-//      S T U B   F U N C T I O N S  so gcc can link 
+//      S T U B   F U N C T I O N S
 
 void setBC(CCVariable<double>& var,     
           const std::string& type,     // so gcc compiles
@@ -475,8 +471,9 @@ void setBC(CCVariable<double>& var,
 {
   Lodi_vars* lv = new Lodi_vars();
   lv->setLodiBcs = false;
+  constCCVariable<double> placeHolder;
   
-  setBC(var, type, patch, sharedState, mat_id, lv);
+  setBC(var, type, placeHolder, placeHolder, patch, sharedState, mat_id, lv);
   
   delete lv;
 } 
