@@ -716,7 +716,7 @@ proc drawConnections { connlist } {
 	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn}"
 	    $canvas bind $id <3> "connectionMenu %X %Y {$conn}"
 	    $canvas bind $id <ButtonRelease> "+deleteTraces"
-	    canvasTooltip $id $HelpText(Connection)
+	    canvasTooltip $canvas $id $HelpText(Connection)
 	} else {
 	    eval $canvas coords $id $path
 	    eval $canvas itemconfigure $id $flags
@@ -1416,13 +1416,13 @@ proc drawNotes { subnet args } {
 	    if { $isModuleNotes } {
 		Tooltip $canvas.module$id $Notes($id) 
 	    } else {
-		canvasTooltip $id $Notes($id)
+		canvasTooltip $canvas $id $Notes($id)
 	    }
 	} else {
 	    if { $isModuleNotes } {
 		Tooltip $canvas.module$id $HelpText(Module)
 	    } else {
-		canvasTooltip $id $HelpText(Connection)
+		canvasTooltip $canvas $id $HelpText(Connection)
 	    }
 	}
 	
@@ -1476,7 +1476,7 @@ proc drawNotes { subnet args } {
 	    $canvas bind $id-notes <ButtonPress-2> \
 		"global NotesPos;set NotesPos($id) none; drawNotes $subnet $id"
 	}
-	canvasTooltip $id-notes $HelpText(Notes)		
+	canvasTooltip $canvas $id-notes $HelpText(Notes)		
     }
     $canvas raise shadow
     $canvas raise notes
@@ -1835,7 +1835,7 @@ proc drawPorts { modid { porttypes "i o" } } {
 		    place $portlight -in $portbevel -x 0 -rely 1.0 -anchor nw
 		}
 	    }
-
+	    global HelpText
 	    set port [list $modid $i $porttype]
 	    foreach p [list $portbevel $portlight] {
 		bind $p <2> "startPortConnection {$port} {$portname}"
@@ -1844,11 +1844,8 @@ proc drawPorts { modid { porttypes "i o" } } {
 		bind $p <ButtonPress-1> "tracePort {$port}"
 		bind $p <Control-Button-1> "tracePort {$port} 1"
 		bind $p <ButtonRelease-1> "deleteTraces"
+		Tooltip $p $HelpText(Connection)
 	    }
-	    
-	    global HelpText
-	    Tooltip $port $HelpText(Connection)
-	    Tooltip $portlight $HelpText(Connection)
 	    incr i
 	} 
     }
