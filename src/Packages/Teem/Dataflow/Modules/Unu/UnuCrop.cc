@@ -45,6 +45,9 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
 
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+
 #include <sstream>
 #include <iostream>
 using std::endl;
@@ -69,6 +72,7 @@ private:
   vector<int>     lastmax_;
   int             last_generation_;
   NrrdDataHandle  last_nrrdH_;
+  MatrixHandle    last_matrixH_;
 };
 
 } // End namespace SCITeem
@@ -94,8 +98,7 @@ void
 UnuCrop::load_gui() {
   num_axes_.reset();
   if (num_axes_.get() == 0) { return; }
-  
- 
+   
   lastmin_.resize(num_axes_.get(), -1);
   lastmax_.resize(num_axes_.get(), -1);  
 
@@ -117,31 +120,35 @@ UnuCrop::load_gui() {
 void 
 UnuCrop::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
+
+  NrrdDataHandle nrrdH;
   NrrdIPort* inrrd = (NrrdIPort *)get_iport("Nrrd");
-  NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
 
   if (!inrrd) {
     error("Unable to initialize iport 'Nrrd'.");
     return;
   }
-  if (!onrrd) {
-    error("Unable to initialize oport 'Nrrd'.");
+
+  if (!inrrd->get(nrrdH) || !nrrdH.get_rep()) {
+    error( "No handle or representation" );
     return;
   }
-  if (!inrrd->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
+
+  MatrixHandle matrixH;
+  MatrixIPort* imatrix = (MatrixIPort *)get_iport("Current Index");
+
+  if (!imatrix) {
+    error("Unable to initialize iport 'Current Index'.");
     return;
   }
-  
+
   num_axes_.reset();
   
+  // If not the same nrrd check the dims.
   if (last_generation_ != nrrdH->generation) {
-    ostringstream str;
-
+    last_generation_ = nrrdH->generation;
+    
     load_gui();
 
     bool do_clear = false;
@@ -157,6 +164,7 @@ UnuCrop::execute()
       do_clear = true;
     }
 
+    // Different dims and sizes so clear.
     if (do_clear) {
 
       lastmin_.clear();
@@ -179,6 +187,7 @@ UnuCrop::execute()
 	++iter;
       }
       absmaxs_.clear();
+
       gui->execute(id.c_str() + string(" clear_axes"));
       
     
@@ -187,92 +196,138 @@ UnuCrop::execute()
       load_gui();
       gui->execute(id.c_str() + string(" init_axes"));
 
-      for (int a = 0; a < num_axes_.get(); a++) {
+      for (int a=0; a<num_axes_.get(); a++) {
 	mins_[a]->set(0);
 	absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
 	maxs_[a]->reset();
 	absmaxs_[a]->reset();
       }
     
+      ostringstream str;
       str << id.c_str() << " set_max_vals" << endl; 
-      gui->execute(str.str());
-    
+      gui->execute(str.str());    
     }
   }
 
-  if (num_axes_.get() == 0) { return; }
-  
-  for (int a = 0; a < num_axes_.get(); a++) {
+  if (num_axes_.get() == 0) {
+    warning("Trying to crop a nrrd with no axes" );
+    return;
+  }
+
+  for (int a=0; a<num_axes_.get(); a++) {
     mins_[a]->reset();
     maxs_[a]->reset();
     absmaxs_[a]->reset();
   }
 
-  if (last_generation_ == nrrdH->generation && last_nrrdH_.get_rep()) {
+  // If a matrix present use those values.
+  if (imatrix->get(matrixH) && matrixH.get_rep()) {
 
-    last_generation_ = nrrdH->generation;
-    
-    bool same = true;
-
-    for (int i = 0; i < num_axes_.get(); i++) {
-      if (lastmin_[i] != mins_[i]->get()) {
-	same = false;
-	lastmin_[i] = mins_[i]->get();
-      }
-      if (lastmax_[i] != maxs_[i]->get()) {
-	same = false;
-	lastmax_[i] = maxs_[i]->get();
-      }
-    }
-    if (same) {
-      onrrd->send(last_nrrdH_);
+    if( num_axes_.get() != matrixH.get_rep()->nrows() ||
+	matrixH.get_rep()->ncols() != 2 ) {
+      error("Input matrix size does not match nrrd dimensions." );
       return;
     }
-  }
 
-  Nrrd *nin = nrrdH->nrrd;
-  Nrrd *nout = nrrdNew();
+    for (int a=0; a<num_axes_.get(); a++) {
+      int min, max;
 
-  int *min = scinew int[num_axes_.get()];
-  int *max = scinew int[num_axes_.get()];
+      min = (int) matrixH.get_rep()->get(a, 0);
+      max = (int) matrixH.get_rep()->get(a, 1);
 
-  for(int i = 0; i <  num_axes_.get(); i++) {
-    min[i] = mins_[i]->get();
-    max[i] = maxs_[i]->get();
-
-    if (nrrdKindSize(nin->axis[i].kind) > 1 &&
-	(min[i] != 0 || max[i] != absmaxs_[i]->get())) {
-      warning("Trying to crop axis " + to_string(i) +
-	      " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+      mins_[a]->set(min);
+      mins_[a]->reset();
+      maxs_[a]->set(max);
+      mins_[a]->reset();
     }
   }
 
-  if (nrrdCrop(nout, nin, min, max)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Trouble resampling: ") + err);
-    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
-    free(err);
+  // See if any of the sizes have changed.
+  bool update = false;
+
+  for (int i=0; i<num_axes_.get(); i++) {
+    if (lastmin_[i] != mins_[i]->get()) {
+      update = true;
+      lastmin_[i] = mins_[i]->get();
+    }
+    if (lastmax_[i] != maxs_[i]->get()) {
+      update = true;
+	lastmax_[i] = maxs_[i]->get();
+    }
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
+  if( update ) {
+    Nrrd *nin = nrrdH->nrrd;
+    Nrrd *nout = nrrdNew();
 
-  // Copy the properies, kinds, and labels.
-  *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+    int *min = scinew int[num_axes_.get()];
+    int *max = scinew int[num_axes_.get()];
 
-  for( int i=0; i<nin->dim; i++ ) {
-    nout->axis[i].kind  = nin->axis[i].kind;
-    nout->axis[i].label = nin->axis[i].label;
-   }
+    DenseMatrix *indexMat = scinew DenseMatrix( num_axes_.get(), 2 );
+    last_matrixH_ = MatrixHandle(indexMat);
 
-  if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
-      (nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
-    nout->axis[0].kind = nrrdKindDomain;
+    cerr << "Rows " << num_axes_.get() << endl;
 
-  //nrrd->copy_sci_data(*nrrdH.get_rep());
-  last_nrrdH_ = nrrd;
-  onrrd->send(last_nrrdH_);
+    for(int i=0; i< num_axes_.get(); i++) {
+      min[i] = mins_[i]->get();
+      max[i] = maxs_[i]->get();
 
-  delete min;
-  delete max;
+      indexMat->put(i, 0, (double) min[i]);
+      indexMat->put(i, 1, (double) max[i]);
+
+      if (nrrdKindSize(nin->axis[i].kind) > 1 &&
+	  (min[i] != 0 || max[i] != absmaxs_[i]->get())) {
+	warning("Trying to crop axis " + to_string(i) +
+		" which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+      }
+    }
+
+    if (nrrdCrop(nout, nin, min, max)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Trouble resampling: ") + err);
+      msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+      free(err);
+    }
+
+    delete min;
+    delete max;
+
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;
+    last_nrrdH_ = NrrdDataHandle(nrrd);
+
+    // Copy the properies, kinds, and labels.
+    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+
+    for( int i=0; i<nin->dim; i++ ) {
+      nout->axis[i].kind  = nin->axis[i].kind;
+      nout->axis[i].label = nin->axis[i].label;
+    }
+
+    if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
+	(nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
+      nout->axis[0].kind = nrrdKindDomain;
+  }
+
+  if (last_nrrdH_.get_rep()) {
+
+    NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
+    if (!onrrd) {
+      error("Unable to initialize oport 'Nrrd'.");
+      return;
+    }
+
+    onrrd->send(last_nrrdH_);
+  }
+
+  if (last_matrixH_.get_rep()) {
+    MatrixOPort* omatrix = (MatrixOPort *)get_oport("Selected Index");
+    
+    if (!omatrix) {
+      error("Unable to initialize oport 'Selected Index'.");
+      return;
+    }
+    
+    omatrix->send( last_matrixH_ );
+  }
 }
