@@ -52,12 +52,13 @@
   \directory{src/Packages/\ab{package}/Dataflow/Tex} where \ab{package} is
   the name of the appropriate package.  This directory should be named
   after the module it describes.
-\item Copy the template file, \htmladdnormallink{module-desc-template.tex}
-  {file://module-desc-template.tex}, to the directory you just created.
-  Name this file after its parent directory and with an extension of
-  \filename{.tex}. 
-  This file is now your module description document.
-\item Put your document's figures in the directory created above.
+\item Copy the template file,
+  \filename{doc/Documentum/module-desc-template.tex}, to the directory you
+  just created.  Name this file after its parent directory and with an
+  extension of \filename{.tex}.  This file is now your module description
+  document.
+\item Put your document's figures in the directory created above.  Provide
+  figures in 2 formats: JPG or GIF and EPS.
 \item Look at the file \htmladdnormallink{\filename{scirun-doc.sty}}
   {file://../Utilities/scirun-doc.sty} and observe the markup
   commands recommended for use in your module description file.
@@ -68,7 +69,27 @@
 \item Refer to following sections for additional information.
 \end{enumerate}
 
-\section{Introduction}
+
+\section{Document Name and Location}
+
+Your document will live in the \directory{src} side of the CVS tree.  If it
+describes a module in the \sr{} package then it will live in a
+sub-directory of the directory \directory{src/Dataflow/TeX}.  If it
+describes a module in another package then it will live in a sub-directory
+of the directory \directory{src/Packages/\ab{package}/Dataflow/Tex} where
+\ab{package} is the name of the appropriate package.
+
+Your document's file should be named after the name of the module it
+describes and with an extension of \filename{.tex}.  Your document's
+directory \emph{must} have the same name as the document itself sans the
+\filename{.tex} extension. 
+
+Your document must consist of 1 file only. 
+
+Place figures in your document's directory or a sub-directory of your
+document's directory.
+
+\section{Organization}
 
 The \LaTeX{} version of a module description document consists 6 parts: The
 \latexcommand{ModuleRef} command, and the summary, use, details, notes, and
@@ -76,6 +97,7 @@ credits sections.  Below we describe the purpose of each part.
 
 \begin{description}
 \item[The \latexcommand{ModuleRef} Command]\mbox{}
+
   The \latexcommand{ModuleRef} command is the first command in the
   module description file.  Its purpose is to specify the module's
   name, and the category and package to which the module belongs.  It
@@ -91,20 +113,22 @@ credits sections.  Below we describe the purpose of each part.
 
 \item[Summary]
   \label{sec:summary} \mbox{}
+
   The Summary section is a brief summary of the module's purpose.  It
   should be no more than one paragraph.
 
+  The \latexcommand{ModuleRefSummary} command starts the Summary section.
+
 \item[Use] \label{sec:use} \mbox{}
   
+  The \latexcommand{ModuleRefUse} command starts the Use section.
   
-  Describe your module's use.  
-  
-  Describe your module's upstream and downstream connections.
-  
-  Describe the use of the module's \gui{}.  Include at least 1 image
-  (in 2 formats, \acronym{EPS}, and \acronym{JPEG} or \acronym{GIF})
-  of your module's graphical user interface.  See \secref{Including
-    Images}{sec:inclimg} for details on including images.
+  The Use section describe's your module's use.  It should describe your
+  module's upstream and downstream connections and the use of your module's
+  \gui{}.  Include at least 1 image (in 2 formats, \acronym{EPS}, and
+  \acronym{JPEG} or \acronym{GIF}) of your module's graphical user
+  interface.  See \secref{Including Images}{sec:inclimg} for details on
+  including images.
   
   Relate control of your module via its \gui{} to its theoretical
   under-pinnings (and perhaps other details) described in your
@@ -116,6 +140,8 @@ credits sections.  Below we describe the purpose of each part.
 \item[Details] \mbox{}
   \label{sec:details}
   
+  The \latexcommand{ModuleRefDetails} command starts the Details section.
+
   Details not directly associated with the module's use belong in
   the Details section.
   
@@ -128,19 +154,33 @@ credits sections.  Below we describe the purpose of each part.
 \item[Notes]\mbox{}
   \label{sec:notes}
   
+  The \latexcommand{ModuleRefNotes} command starts the Notes section.
+
   Special installation instructions (special configure options
   perhaps), bugs, limitations, and possible future work should be
   described in the Notes section.
 
-\item[Credits]
+\item[Credits]\mbox{}
   \label{sec:credits}
   
+  The \latexcommand{ModuleRefCredits} command starts the Credits section.
+
   Give yourself credit!
 \end{description}
 
-To write this document, see the Quick Start instructions above.
+See the Quick Start instructions above and the notes in
+\filename{doc/Documentum/module-desc-template.tex}.
 
 \section{Using Markup}
+
+Don't use \LaTeX{} sectioning commands!  You are restricted to the
+following sectioning commands: \latexcommand{ModuleRef},
+\latexcommand{ModuleRefSummary}, \latexcommand{ModuleRefUse},
+\latexcommand{ModuleRefDetails}, \latexcommand{ModuleRefNotes},
+\latexcommand{ModuleRefCredits}, \latexcommand{ModuleRefSubSection},
+\latexcommand{ModuleRefSubSubSection}.  The latter two commands may be used
+to add sub-sections and sub-sub-sections to the top-level sections of the
+module description document.
 
 Markup your document using \LaTeX{} commands and commands in the file
 \htmladdnormallink{\filename{scirun-doc.sty}}{../scirun-doc.sty}. 
@@ -295,25 +335,6 @@ Cite references to other publications with the \latexcommand{cite} command.
 You should provide a ``bib'' file containing bibliographic entries
 referenced in your document.
 
-
-%\section{Example}
-
-\section{Location of Document}
-
-Your document will live in the \directory{src} side of the CVS tree.  If it
-describes a module in the \sr{} package then it will live in a
-sub-directory of the directory \directory{src/Dataflow/TeX}.  If it
-describes a module in another package then it will live in a sub-directory
-of the directory \directory{src/Packages/\ab{package}/Dataflow/Tex} where
-\ab{package} is the name of the appropriate package.
-
-Your document's file should be named after the name of the module it
-describes and with an extension of \filename{.tex}.  Your document's
-directory \emph{must} have the same name as the document itself sans the
-\filename{.tex} extension.
-
-Place figures in your document's directory.  Or you may create sub-directories
-for holding figures or other document sources.
 
 \begin{htmlonly}
 \include{../Utilities/TeX/banner_bottom.tex}
