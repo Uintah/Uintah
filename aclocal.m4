@@ -777,6 +777,15 @@ case $1 in
     sci_required_insight=yes
     sci_required_xalan=yes
   ;;
+  Volume)
+    case "$host" in 
+     *-darwin*)
+	sci_required_glew=yes
+	;;
+     *)
+        ;;
+    esac
+  ;;
   *)
     AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)
   ;;
