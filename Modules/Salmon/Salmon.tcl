@@ -225,43 +225,44 @@ itcl_class Roe {
 	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
 		-command "$this-c redraw"
 
-
-# Dave's addition for dumping frames
 	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
 		-command "$this-c redraw"
-	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
-	frame $m.eframe.mf
-	label $m.eframe.mf.lf -text "  Frame: "
-	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
-	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
+
+
+# Dave's addition for dumping frames
+# 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
+# 	frame $m.eframe.mf
+# 	label $m.eframe.mf.lf -text "  Frame: "
+# 	entry $m.eframe.mf.vf -relief sunken -width 4 -textvariable $this-global-movieFrame
+# 	pack $m.eframe.mf.lf $m.eframe.mf.vf -side left
 	
-	frame $m.eframe.mn
-	label $m.eframe.mn.ln -text "  Name: "
-	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
-	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
+# 	frame $m.eframe.mn
+# 	label $m.eframe.mn.ln -text "  Name: "
+# 	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
+# 	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
 	
-	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
-		-in $m.eframe -side top -anchor w
+# 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
+# 		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
+# 		-in $m.eframe -side top -anchor w
 # end Dave's addition for dumping frames
+
+
+#  PPSloan's addition for dumping raw frames 
+	checkbutton  $m.eframe.domovie -text Movie -variable \
+	    $this-global-movie -onvalue 1 -offvalue 0 -command "$this-c redraw"
+
+	entry $m.eframe.moviebase -textvariable "$this-global-movieName" 
+
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
+		-side top -anchor w
+
+	pack $m.eframe.domovie $m.eframe.moviebase -in $m.eframe \
+		-side top -anchor w
+#  End PPSloan's addition
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
 	pack $m.shade -in $m.eframe -side top -anchor w
-
-#  PPSloan's addition for dumping raw frames 
-#	checkbutton  $m.eframe.domovie -text Movie -variable \
-#	    $this-global-movie -onvalue 1 -offvalue 0 -command "$this-c redraw"
-
-#	entry $m.eframe.moviebase -textvariable "$this-global-movieName" 
-
-#	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
-		-side top -anchor w
-
-#	pack $m.eframe.domovie $m.eframe.moviebase -in $m.eframe \
-#		-side top -anchor w
-#  End PPSloan's addition
-
 
 	global "$this-global-light"
 	global "$this-global-fog"
@@ -269,6 +270,7 @@ itcl_class Roe {
 	global "$this-global-type"
 	global "$this-global-debug"
 	global "$this-global-clip"
+	global "$this-global-cull"
 
 #PPSloan
 #	global "$this-global-movie"
@@ -276,7 +278,6 @@ itcl_class Roe {
 
 
 #Dave
-	global "$this-global-cull"
 	global "$this-global-movie"
 	global "$this-global-movieName"
 	global "$this-global-movieFrame"
@@ -287,6 +288,7 @@ itcl_class Roe {
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
+	set "$this-global-cull" 0
 
 
 #PPSloan
@@ -294,7 +296,6 @@ itcl_class Roe {
 #	set "$this-global-movieName" "/tmp/movie"
 	
 #Dave
-	set "$this-global-cull" 0
 	set "$this-global-movie" 0
 	set "$this-global-movieName" "/tmp/movie"
 	set "$this-global-movieFrame" 0

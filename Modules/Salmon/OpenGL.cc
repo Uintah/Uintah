@@ -840,7 +840,6 @@ void OpenGL::dump_image(const clString& name) {
     glGetIntegerv(GL_VIEWPORT,vp);
     int n=3*vp[2]*vp[3];
     cerr << "Dumping: " << vp[2] << "x" << vp[3] << endl;
-    cerr << " viewport = "<< vp[0]<< ", "<< vp[1]<<endl;
     unsigned char* pxl=scinew unsigned char[n];
 
     //    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
@@ -985,9 +984,8 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	if (get_tcl_stringvar(id,movie,val)) {
 	    get_tcl_stringvar(id,movieName,curName);
 	    clString curFrameStr;
-	    get_tcl_stringvar(id,movieFrame,curFrameStr);
-	    curFrameStr.get_int(curFrame);
-	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
+	    //	    get_tcl_stringvar(id,movieFrame,curFrameStr);
+	    //	    curFrameStr.get_int(curFrame);
 	    if (val == "0") {
 		doingMovie = 0;
 	    } else {
