@@ -4454,10 +4454,10 @@ class BioTensorApp {
     method configure_data_tab {} {
 	global data_mode
 	foreach w [winfo children $data_tab1] {
-	    activate_widget $w
+	    enable_widget $w
 	}
 	foreach w [winfo children $data_tab2] {
-	    activate_widget $w
+	    enable_widget $w
 	}
 
 	# configure t2 reference image stuff if loading tensors directly
@@ -5138,11 +5138,11 @@ class BioTensorApp {
 	# configure Registrations next button
 	if {$data_completed} {
 	    foreach w [winfo children $reg_tab1] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	    
 	    foreach w [winfo children $reg_tab2] {
-		activate_widget $w
+		enable_widget $w
 	    }
 
 # 	    $reg_tab1.last.ne configure -state normal \
@@ -5324,11 +5324,11 @@ class BioTensorApp {
 
     method activate_dt { } {
 	foreach w [winfo children $dt_tab1] {
-	    activate_widget $w
+	    enable_widget $w
         }
 
 	foreach w [winfo children $dt_tab2] {
-	    activate_widget $w
+	    enable_widget $w
         }
 
         toggle_do_smoothing
@@ -6116,10 +6116,10 @@ class BioTensorApp {
 	set color_port [set $mods(ChooseColorMap-Planes)-port-index]
 
 	foreach w [winfo children $planes_tab1] {
-	    activate_widget $w
+	    enable_widget $w
 	}
 	foreach w [winfo children $planes_tab2] {
-	    activate_widget $w
+	    enable_widget $w
 	}
 
 	if { $color_port == 1 && $port != 3} {
@@ -6236,11 +6236,11 @@ class BioTensorApp {
 	
 	if {$vis_activated && $show_planes} {
 	    foreach w [winfo children $planes_tab1.color.childsite.maps] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	    
 	    foreach w [winfo children $planes_tab2.color.childsite.maps] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	}
     }
@@ -7139,10 +7139,10 @@ class BioTensorApp {
 	if {$initialized != 0} {
 	    if {$vis_activated} {
 		foreach w [winfo children $isosurface_tab1] {
-		    activate_widget $w
+		    enable_widget $w
 		}
 		foreach w [winfo children $isosurface_tab2] {
-		    activate_widget $w
+		    enable_widget $w
 		}
 	    }
 	    
@@ -7351,11 +7351,11 @@ class BioTensorApp {
 	global $mods(ShowField-Isosurface)-faces-on
 	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {	
 	    foreach w [winfo children $isosurface_tab1.isocolor.childsite.maps] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	    
 	    foreach w [winfo children $isosurface_tab2.isocolor.childsite.maps] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	}
     }
@@ -7858,10 +7858,10 @@ class BioTensorApp {
 	
 	if {$vis_activated} {
 	    foreach w [winfo children $glyphs_tab1] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	    foreach w [winfo children $glyphs_tab2] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	}
 
@@ -8132,11 +8132,11 @@ class BioTensorApp {
 
     method enable_glyphs_colormaps {} {
 	foreach w [winfo children $glyphs_tab1.rep.childsite.maps] {
-	    activate_widget $w
+	    enable_widget $w
 	}
 
 	foreach w [winfo children $glyphs_tab2.rep.childsite.maps] {
-	    activate_widget $w
+	    enable_widget $w
 	}
     }
 
@@ -8812,10 +8812,10 @@ class BioTensorApp {
 	
         if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on] == 1} {
 	    foreach w [winfo children $fibers_tab1] {
-		activate_widget $w
+		enable_widget $w
 	    }
 	    foreach w [winfo children $fibers_tab2] {
-		activate_widget $w
+		enable_widget $w
 	    }
 
 	    # configure checkbutton/radiobutton widgets
@@ -9089,11 +9089,11 @@ class BioTensorApp {
 
     method enable_fibers_colormaps {} {
 	foreach w [winfo children $fibers_tab1.rep.childsite.maps] {
-	    activate_widget $w
+	    enable_widget $w
 	}
 
 	foreach w [winfo children $fibers_tab2.rep.childsite.maps] {
-	    activate_widget $w
+	    enable_widget $w
 	}
     }
 
