@@ -32,6 +32,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
 #include <Packages/Uintah/CCA/Components/Examples/Burger.h>
 #include <Packages/Uintah/CCA/Components/Examples/Wave.h>
+#include <Packages/Uintah/CCA/Components/Examples/AMRWave.h>
 #include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
@@ -449,16 +450,13 @@ main( int argc, char** argv )
 	}
 
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
-	SimulationController* ctl;
+	SimulationController* ctl = 
+          scinew AMRSimulationController(world, do_AMR);
         if(do_AMR) {
-	   ctl = scinew AMRSimulationController(world);
-
            // if we ever decide to allow multiple algorithms, switch on them here
            HierarchicalRegridder* regridder = scinew HierarchicalRegridder(world);
            ctl->attachPort("regridder", regridder);
         }
-        else
-	   ctl = scinew SimpleSimulationController(world);
 
 	// Reader
 	ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
@@ -545,7 +543,11 @@ main( int argc, char** argv )
 	  sim = burger;
 	  comp = burger;
 	} else if(do_wave){
-	  Wave* wave = scinew Wave(world);
+          Wave* wave;
+	  if(do_AMR)
+	    wave = scinew AMRWave(world);
+	  else
+            wave = scinew Wave(world);
 	  sim = wave;
 	  comp = wave;
 	} else if(do_poisson1){
@@ -708,6 +710,7 @@ main( int argc, char** argv )
 	}
         
         ctl->run();
+	delete ctl;
 
 
 	sch->removeReference();
@@ -717,7 +720,6 @@ main( int argc, char** argv )
 	delete solve;
 	delete output;
 	delete reader;
-	delete ctl;
 	delete modelmaker;
     } catch (Exception& e) {
 
