@@ -2339,11 +2339,11 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
         pack $page.shading -side top -fill x -padx 4
 
         #----------------------------------------------------------
-        # Disable Lightint
+        # Disable Lighting
         #----------------------------------------------------------
         set ChooseNrrdLighting [lindex [lindex $filters(0) $modules] 36]
         global [set ChooseNrrdLighting]-port-index
-	checkbutton $page.lighting -text "Disable Lighting" -relief flat \
+	checkbutton $page.lighting -text "Use Lighting" -relief flat \
             -variable [set ChooseNrrdLighting]-port-index -onvalue 1 -offvalue 0 \
             -anchor w -command "[set ChooseNrrdLighting]-c needexecute"
         pack $page.lighting -side top -fill x -padx 4
