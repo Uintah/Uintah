@@ -90,8 +90,7 @@ trace variable env r neteditGetenv
 # Warns user if not a valid boolean string.
 proc boolToInt { val } {
     if [string equal $val ""] {
-	puts "TCL boolToInt: Boolean value is empty!"
-	return 1; # follows the C convention of any non-zero value equals true
+	return 0; # blank value is taken to mean false
     }
     if ![string is boolean $val] {
 	puts "TCL boolToInt: Cannot determine boolean value: $val."
