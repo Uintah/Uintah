@@ -250,6 +250,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
 
       int dest = batch->toTasks.front()->getAssignedResourceIndex();
+      ASSERTRANGE(dest, 0, d_myworld->size());
 
       ssLock.lock();  // Dd: ??
       ParticleSubset* sendset = ss.find_sendset(patch, matlIndex, dest);
@@ -390,6 +391,7 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
         int from=batch->fromTask->getAssignedResourceIndex();
+	ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Recv(&numParticles, 1, MPI_INT, from,
                  PARTICLESET_TAG|batch->messageTag, world->getComm(),
                  &status);

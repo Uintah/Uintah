@@ -320,6 +320,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 #endif
     // Create the MPI type
     int to = batch->toTasks.front()->getAssignedResourceIndex();
+    ASSERTRANGE(to, 0, d_myworld->size());
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
       if( mixedDebug.active() ) {
@@ -491,6 +492,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
       mpibuff.get_type(buf, count, datatype);
 #endif
       int from = batch->fromTask->getAssignedResourceIndex();
+      ASSERTRANGE(from, 0, d_myworld->size());
       MPI_Request requestid;
       dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,

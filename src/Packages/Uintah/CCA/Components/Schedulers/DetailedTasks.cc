@@ -83,9 +83,9 @@ DetailedTasks::assignMessageTags(int me)
   for(int i=0;i<(int)batches.size();i++){
     DependencyBatch* batch = batches[i];
     int from = batch->fromTask->getAssignedResourceIndex();
-    ASSERT(from != -1);
+    ASSERTRANGE(from, 0, d_myworld->size());
     int to = batch->to;
-    ASSERT(to != -1);
+    ASSERTRANGE(to, 0, d_myworld->size());
 
     if (from == me || to == me) {
       // Easier to go in reverse order now, instead of reinitializing
@@ -146,6 +146,7 @@ DetailedTasks::computeLocalTasks(int me)
   for(int i=0;i<(int)tasks.size();i++){
     DetailedTask* task = tasks[i];
 
+    ASSERTRANGE(task->getAssignedResourceIndex(), 0, d_myworld->size());
     if(task->getAssignedResourceIndex() == me
        || task->getTask()->getType() == Task::Reduction) {
       localtasks.push_back(task);
@@ -478,8 +479,8 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 {
   // TODO - maybe still create internal depencies for threaded scheduler?
   // TODO - perhaps move at least some of this to TaskGraph?
-  ASSERT(from->getAssignedResourceIndex() != -1);
-  ASSERT(to->getAssignedResourceIndex() != -1);
+  ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
+  ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
   if(dbg.active()) {
     dbg << d_myworld->myrank() << "        " << *to << " depends on " << *from << "\n";
     if(comp)
@@ -894,6 +895,7 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
 void DetailedTasks::emitEdges(DOMElement* edgesElement, int rank)
 {
   for (int i = 0; i < (int)tasks.size(); i++) {
+    ASSERTRANGE(tasks[i]->getAssignedResourceIndex(), 0, d_myworld->size());
     if (tasks[i]->getAssignedResourceIndex() == rank) {
       tasks[i]->emitEdges(edgesElement);
     }

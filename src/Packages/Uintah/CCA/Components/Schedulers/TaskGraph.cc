@@ -792,6 +792,8 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 	// create internal dependencies to reduction tasks from any task
 	// computing the reduction
 	DetailedTask* reductionTask = d_reductionTasks[comp->var];
+	ASSERTRANGE(reductionTask->getAssignedResourceIndex(), 0, pg->size());
+	ASSERTRANGE(task->getAssignedResourceIndex(), 0, pg->size());
 	if (reductionTask->getAssignedResourceIndex() == 
 	    task->getAssignedResourceIndex() &&
 	    task->getAssignedResourceIndex() == me) {
@@ -934,6 +936,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	       << task->getTask()->getName() << "\n"; 
 	  SCI_THROW(InternalError("Failed to find comp for dep!"));
 	}
+	ASSERTRANGE(task->getAssignedResourceIndex(), 0, pg->size());
 	if(task->getAssignedResourceIndex() ==
 	   creator->getAssignedResourceIndex() &&
 	   task->getAssignedResourceIndex() == me) {

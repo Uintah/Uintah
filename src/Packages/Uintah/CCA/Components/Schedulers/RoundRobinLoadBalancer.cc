@@ -67,7 +67,9 @@ int
 RoundRobinLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 							const ProcessorGroup* group)
 {
-   return patch->getID()%group->size();
+  int proc = patch->getID()%group->size();
+  ASSERTRANGE(proc, 0, group->size());
+  return proc;
 }
 
 const PatchSet*

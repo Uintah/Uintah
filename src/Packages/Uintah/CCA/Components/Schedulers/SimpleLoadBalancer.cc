@@ -47,6 +47,7 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
       const Patch* patch = patches->get(0);
 
       int idx = getPatchwiseProcessorAssignment(patch, group);
+      ASSERTRANGE(idx, 0, group->size());
 
       task->assignResource(idx);
 
@@ -60,6 +61,7 @@ void SimpleLoadBalancer::assignResources(DetailedTasks& graph,
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
 	int pidx = getPatchwiseProcessorAssignment(p, group);
+	ASSERTRANGE(pidx, 0, group->size());
 	if(pidx != idx){
 	  cerrLock.lock();
 	  cerr << "WARNING: inconsistent task (" << task->getTask()->getName() 
@@ -103,8 +105,8 @@ SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 						    const ProcessorGroup* group)
 {
   int numProcs = group->size();
-
   int proc = (patch->getLevelIndex()*numProcs)/patch->getLevel()->numPatches();
+  ASSERTRANGE(proc, 0, group->size());
   return proc;
 }
 
