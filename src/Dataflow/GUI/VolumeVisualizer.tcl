@@ -230,8 +230,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 # 		-showvalue true -resolution 1 \
 # 		-orient horizontal \
 
-	checkbutton $tab.tf.sw -text "Software Rasterization" -relief flat \
-            -variable $this-sw_raster -onvalue 1 -offvalue 0 \
+	checkbutton $tab.tf.sw -text "Software ColorMap2 Rasterization" \
+            -relief flat -variable $this-sw_raster -onvalue 1 -offvalue 0 \
             -anchor w -command "$n"
 
 	pack $tab.tf.l $tab.tf.stransp $tab.tf.sw \
