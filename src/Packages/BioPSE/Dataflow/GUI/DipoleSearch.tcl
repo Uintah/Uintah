@@ -15,10 +15,9 @@
 #  University of Utah. All Rights Reserved.
 #
 
+catch {rename BioPSE_Inverse_DipoleSearch ""}
 
-catch {rename BioPSE_Forward_DipoleSearch ""}
-
-itcl_class BioPSE_Forward_DipoleSearch {
+itcl_class BioPSE_Inverse_DipoleSearch {
     inherit Module
 
     constructor {config} {
@@ -69,7 +68,6 @@ itcl_class BioPSE_Forward_DipoleSearch {
         make_labeled_radio $w.m "Method:" "" \
                 left $this-methodTCL \
                 {{"Downhill Simplex" "downhill"} \
-                {"Protozoa" "protozoa"} \
                 {"Simulated Annealing" "anneal"}}
 	global $this-useCacheTCL
 	checkbutton $w.b -text "UseCache" -variable $this-useCacheTCL
