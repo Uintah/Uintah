@@ -53,6 +53,42 @@ itcl_class SubnetModule {
 	}
     }
 
+    method update_msg_state {} { 
+	global Subnet 
+	set state 0
+	set msg_open ""
+	foreach modid $Subnet(Subnet${subnetNumber}_Modules) {
+	    switch [$modid get_msg_state] {
+		Error   { lappend msg_open $modid; set state 3 }
+		Warning { lappend msg_open $modid; if {$state<2} {set state 2}}
+		Remark  { if {$state < 1} {set state 1}}
+		Reset   { }
+		default { }
+	    }
+	}
+
+	switch $state {
+	    3 { set color red }
+	    2 { set color yellow }
+	    1 { set color blue }
+	    0 { set color grey75 }
+	}
+
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set indicator $canvas.module[modname].ff.msg.indicator
+	place forget $indicator
+	$indicator configure -width $indicator_width -background $color
+	place $indicator -relheight 1 -anchor nw 
+	bind $indicator <Button> "foreach modid {$msg_open} {\$modid displayLog}"
+	
+	
+	if {[winfo exists .standalone]} {
+	    app indicate_error [modname] $msg_state
+	}
+	
+    }
+
+
 	
 }
        
