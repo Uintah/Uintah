@@ -6086,11 +6086,13 @@ class BioTensorApp {
 	    }
 
 	    global show_planes
-	    if {$vis_activated && $show_planes} {
+	    if {$vis_activated} {
 		$mods(GatherPoints)-c needexecute
 		
-		$mods(ShowField-X)-c toggle_display_faces  
-		$mods(Viewer)-ViewWindow_0-c redraw
+		if {$show_planes} {
+		    $mods(ShowField-X)-c toggle_display_faces  
+		    $mods(Viewer)-ViewWindow_0-c redraw
+		}
 	    } else {
 		global exec_planes
 		set exec_planes(GatherPoints) 1
@@ -6116,11 +6118,13 @@ class BioTensorApp {
 	    }
 
 	    global show_planes
-	    if {$vis_activated && $show_planes} {
+	    if {$vis_activated} {
 		$mods(GatherPoints)-c needexecute
 		
-		$mods(ShowField-Y)-c toggle_display_faces
-		$mods(Viewer)-ViewWindow_0-c redraw
+		if {$show_planes} {
+		    $mods(ShowField-Y)-c toggle_display_faces
+		    $mods(Viewer)-ViewWindow_0-c redraw
+		}
 	    } else {
 		global exec_planes
 		set exec_planes(GatherPoints) 1
@@ -6147,11 +6151,13 @@ class BioTensorApp {
 	    }
 	    
 	    global show_planes
-	    if {$vis_activated && $show_planes} {
+	    if {$vis_activated} {
 		$mods(GatherPoints)-c needexecute
 		
-		$mods(ShowField-Z)-c toggle_display_faces
-		$mods(Viewer)-ViewWindow_0-c redraw
+		if {$show_planes} {
+		    $mods(ShowField-Z)-c toggle_display_faces
+		    $mods(Viewer)-ViewWindow_0-c redraw
+		}
 	    } else {
 		global exec_planes
 		set exec_planes(GatherPoints) 1
