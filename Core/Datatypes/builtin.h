@@ -51,4 +51,4 @@ typedef ScalarType<double> Double;
 
 } // end namespace SCIRun
 
-#endif buildin_h
+#endif // builtin_h
