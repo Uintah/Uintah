@@ -13,7 +13,6 @@
 
 #include <SCICore/Geom/GeomTransform.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geom/GeomSave.h>
@@ -86,27 +85,6 @@ void GeomTransform::get_bounds(BBox& bb)
     bb.extend(trans.project(b.max()));
 }
 
-void GeomTransform::get_bounds(BSphere& bs)
-{
-    BBox b;
-    child->get_bounds(b);
-    BBox b2;
-    b2.extend(trans.project(b.min()));
-    b2.extend(trans.project(b.max()));
-    bs.extend(b2.center(), b2.longest_edge()/1.9999999);
-}
-
-void GeomTransform::make_prims(Array1<GeomObj*>& free,
-			      Array1<GeomObj*>& dontfree)
-{
-    child->make_prims(free, dontfree);
-}
-
-void GeomTransform::intersect(const Ray& ray, Material* matl, Hit& hit)
-{
-    child->intersect(ray, matl, hit);
-}
-
 #define GEOMTransform_VERSION 1
 
 void GeomTransform::io(Piostream& stream)
@@ -158,6 +136,10 @@ bool GeomTransform::saveobj(ostream&, const clString&,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:27  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:15  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

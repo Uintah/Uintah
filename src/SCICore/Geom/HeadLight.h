@@ -18,7 +18,6 @@
 
 #include <SCICore/Geom/Light.h>
 #include <SCICore/Geom/Color.h>
-#include <SCICore/Geometry/Point.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -30,11 +29,7 @@ class SCICORESHARE HeadLight : public Light {
 public:
     HeadLight(const clString& name, const Color&);
     virtual ~HeadLight();
-    virtual void compute_lighting(const View& view, const Point& at,
-				  Color&, Vector&);
-    virtual GeomObj* geom();
-    virtual void lintens(const OcclusionData& od, const Point& hit_position,
-			 Color& light, Vector& light_dir);
+
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 #ifdef SCI_OPENGL
@@ -47,6 +42,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:31  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:18  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

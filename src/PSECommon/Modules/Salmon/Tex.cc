@@ -20,7 +20,6 @@
 #include <strings.h>
 
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <tcl.h>
 #include <tk.h>
@@ -312,34 +311,10 @@ void GeomTexVolRender::get_bounds(BBox& bound)
     bound.extend(myCube.pts[i]);
 }
 
-void GeomTexVolRender::get_bounds(BSphere& bound)
-{	
-  for(int i=0;i<8;i++)
-    bound.extend(myCube.pts[i]);
-}
-
-void GeomTexVolRender::make_prims(Array1<GeomObj*>&,
-				  Array1<GeomObj*>&)
-{
-  // do nothing now...
-}
-
-void GeomTexVolRender::preprocess()
-{
-  // do nothing...
-}
-
-void GeomTexVolRender::intersect(const Ray&, Material*,
-				 Hit&)
-{
-
-}
-
 void GeomTexVolRender::io(Piostream&)
 {
   // do nothing
 }
-
 
 void GeomTexVolRender::CreateTexMatrix3D(void) {
   //  glMatrixMode(GL_TEXTURE);
@@ -458,7 +433,7 @@ void oCube::EmitStuff(double dist)
 
 #define DO_SMART_SLICE 1
 
-const double LIGHTCOMP=0.99939083; // 2 degrees...
+//const double LIGHTCOMP=0.99939083; // 2 degrees...
 
 void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
@@ -634,6 +609,10 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:16  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:37:40  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

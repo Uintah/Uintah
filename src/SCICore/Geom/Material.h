@@ -76,14 +76,6 @@ public:
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
 
-    // For all Painter's algorithm based renderers
-    virtual void make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree);
-
-    // For Raytracing
-    virtual void intersect(const Ray& ray, Material* matl,
-			   Hit& hit);
-
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
     virtual bool saveobj(ostream&, const clString& format, GeomSave*);

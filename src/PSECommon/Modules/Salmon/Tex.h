@@ -13,24 +13,12 @@
 #include <SCICore/Containers/Handle.h>
 #include <SCICore/Persistent/Persistent.h>
 
-namespace SCICore {
-  namespace Geometry {
-    class Ray;
-  }
-  namespace GeomSpace {
-    class Hit;
-  }
-}
-
 namespace PSECommon {
 namespace Modules {
 
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::BBox;
-using SCICore::Geometry::BSphere;
-using SCICore::Geometry::Ray;
-using SCICore::GeomSpace::Hit;
 using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::GeomSave;
 using SCICore::GeomSpace::DrawInfoOpenGL;
@@ -205,16 +193,10 @@ public:
   
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
-  virtual void get_bounds(BSphere&);
   
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-  virtual void make_prims(Array1<GeomObj*>& free,
-			  Array1<GeomObj*>& dontfree);
-  virtual void preprocess();
-  virtual void intersect(const Ray& ray, Material*,
-			 Hit& hit);
   virtual void io(Piostream&);
   static PersistentTypeID type_id;  
   virtual bool saveobj(ostream&, const clString& format, GeomSave*);
@@ -225,6 +207,10 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:16  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:37:40  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

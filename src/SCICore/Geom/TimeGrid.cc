@@ -16,7 +16,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
@@ -121,30 +120,9 @@ TimeGrid::~TimeGrid()
       delete tmap[i];
 }
 
-void TimeGrid::get_bounds(BSphere&)
-{
-
-}
-
-void TimeGrid::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("TimeGrid::make_prims");
-}
-
 GeomObj* TimeGrid::clone()
 {
     return scinew TimeGrid(*this);
-}
-
-void TimeGrid::preprocess()
-{
-    NOT_FINISHED("TimeGrid::preprocess");
-}
-
-void TimeGrid::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("TimeGrid::intersect");
 }
 
 #define TimeGrid_VERSION 1
@@ -168,6 +146,10 @@ bool TimeGrid::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:34  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:24  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
