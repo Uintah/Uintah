@@ -28,6 +28,11 @@
  *  Copyright (C) 2001 SCI Group
  */
 
+#include <Core/GuiInterface/TclObj.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/TCL.h>
+
+#include <Core/Malloc/Allocator.h>
 
 #include <stdio.h>
 #include <iostream>
@@ -36,16 +41,7 @@
 #include <tcl.h>
 #include <tk.h>
 
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
-#include <Core/GuiInterface/TclObj.h>
-
-#include <Core/Malloc/Allocator.h>
-
-using std::cerr;
-using std::endl;
-using std::ostream;
-using std::ostringstream;
+using namespace std;
 
 namespace SCIRun {
 
