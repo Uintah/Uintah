@@ -132,6 +132,12 @@ static Transform prev_trans;
 // Used for loading in routes.  (Is monotonicly increasing)
 static int routeNumber = 0;
 
+// If someone accidentally types in a huge number to the number of
+// threads spinner, the machine goes into a fit.  If possible, this
+// number should be set dynamically based on the number of processors
+// on the machine that rtrt is running on.
+#define MAX_NUM_THREADS 32
+
 Gui::Gui() :
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
   selectedSoundId_(0), soundsWindowVisible(false),
@@ -851,6 +857,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	}
       if( activeGui->shiftDown_ )
 	{
+	  // Move towares/away from the lookat point.
 	  double scl;
 	  double xmtn=-(last_x-mouse_x);
 	  double ymtn=-(last_y-mouse_y);
@@ -862,6 +869,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  Vector dir = activeGui->camera_->lookat - activeGui->camera_->eye;
 	  activeGui->camera_->eye += dir*scl;
 	} else {
+	  // Zoom in/out.
 	  double scl;
 	  double xmtn= last_x - mouse_x;
 	  double ymtn= last_y - mouse_y;
@@ -877,7 +885,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	    fov = MIN_FOV;
 	  else if( fov > MAX_FOV )
 	    fov = MAX_FOV;
-	  activeGui->camera_->fov = fov;
+	  activeGui->camera_->set_fov( fov );
 	  activeGui->fovSpinner_->set_float_val( fov );
 	}
       activeGui->camera_->setup();
@@ -1752,7 +1760,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 			  &(activeGui->dpy_->numThreadsRequested_),
 			  NUM_THREADS_SPINNER_ID );
   activeGui->numThreadsSpinner_->set_speed( 0.0001 );
-  activeGui->numThreadsSpinner_->set_int_limits( 1, 128 );
+  activeGui->numThreadsSpinner_->set_int_limits( 1, MAX_NUM_THREADS );
 
   // ...This probably goes to the objects window...
   GLUI_Button * toggleMaterials = activeGui->mainWindow->
