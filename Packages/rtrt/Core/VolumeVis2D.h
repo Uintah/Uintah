@@ -154,24 +154,23 @@ public:
     MouseCallBack::assignCB_MU( VolumeVis2D::mouseUp_Wrap, this );
     MouseCallBack::assignCB_MM( VolumeVis2D::mouseMotion_Wrap, this );
   }
-  static void mouseDown_Wrap( int x, int y, Object *obj,
-			      const Ray& ray, const HitInfo& hit ) {
+  static void mouseDown_Wrap( Object *obj, const Ray& ray,
+			      const HitInfo& hit ) {
     VolumeVis2D *vobj = (VolumeVis2D*)obj;
-    vobj->mouseDown( x, y, ray, hit );
+    vobj->mouseDown( ray, hit );
   }
-  void mouseDown( int x, int y, const Ray& ray, const HitInfo& hit );
-  static void mouseUp_Wrap( int x, int y, Object *obj,
-			    const Ray& ray, const HitInfo& hit) {
+  void mouseDown( const Ray& ray, const HitInfo& hit );
+  static void mouseUp_Wrap( Object *obj, const Ray& ray, const HitInfo& hit) {
     VolumeVis2D *vobj = (VolumeVis2D*) obj;
-    vobj->mouseUp( x, y, ray, hit );
+    vobj->mouseUp();
   }
-  void mouseUp( int x, int y, const Ray& ray, const HitInfo& hit );
-  static void mouseMotion_Wrap( int x, int y, Object *obj,
-				const Ray& ray, const HitInfo& hit ) {
+  void mouseUp( void );
+  static void mouseMotion_Wrap( Object *obj, const Ray& ray,
+				const HitInfo& hit ) {
     VolumeVis2D *vobj = (VolumeVis2D*) obj;
-    vobj->mouseMotion( x, y, ray, hit );
+    vobj->mouseMotion( ray, hit );
   }
-  void mouseMotion( int x, int y, const Ray& ray, const HitInfo& hit );
+  void mouseMotion( const Ray& ray, const HitInfo& hit );
 };
 
 } // end namespace rtrt
