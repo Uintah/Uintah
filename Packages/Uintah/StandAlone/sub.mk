@@ -12,6 +12,7 @@ ifeq ($(CC),newmpxlc)
   AIX_LIBRARY := \
         Core/Datatypes    \
         Dataflow/Comm     \
+        Dataflow/XMLUtil  \
         Dataflow/Network  \
         Dataflow/Ports    \
         Core/GuiInterface \
@@ -41,6 +42,7 @@ else
         Core/Thread       \
         Core/Geometry     \
         Core/Util         \
+        Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/Core/Grid \
         Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Math \
