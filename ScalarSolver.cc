@@ -674,6 +674,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				    cellinfo);
 
 // Outlet bc is done here not to change old scalar
+    int out_celltypeval = d_boundaryCondition->outletCellType();
+    if (!(out_celltypeval==-10))
     d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
 				        &scalarVars, &constScalarVars, delta_t,
 					maxAbsU, maxAbsV, maxAbsW);

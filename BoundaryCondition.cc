@@ -567,6 +567,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 
 	fort_areain(domLo, domHi, idxLo, idxHi, cellInfo->sew, cellInfo->sns,
 		    cellInfo->stb, inlet_area, cellType, cellid,
+		    d_flowfieldCellTypeVal,
 		    xminus, xplus, yminus, yplus, zminus, zplus);
 	
 	// Write the inlet area to the old_dw
@@ -779,6 +780,9 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
 
   tsk->computes(d_lab->d_maxAbsU_label);
   tsk->computes(d_lab->d_maxAbsV_label);
@@ -1010,9 +1014,12 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int flow_celltypeval = d_flowfieldCellTypeVal;
+  int outlet_celltypeval = -10;
+  if (d_outletBoundary)
+    outlet_celltypeval = d_outletBC->d_cellTypeID;
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
   // ** WARNING ** Symmetry is hardcoded to -3
-  int symmetry_celltypeval = -3;
+  // int symmetry_celltypeval = -3;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -1021,6 +1028,8 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
+  int neumann_bc = -1;
+  int dirichlet_bc = 1;
   //fortran call
   fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
 	       vars->pressCoeff[Arches::AP],
@@ -1028,9 +1037,42 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
 	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
 	       vars->pressNonlinearSrc, vars->pressLinearSrc,
-	       constvars->cellType, wall_celltypeval, symmetry_celltypeval,
-	       flow_celltypeval, xminus, xplus, yminus, yplus, zminus, zplus);
+	       constvars->cellType, wall_celltypeval, wall_celltypeval,
+	       neumann_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
 
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, outlet_celltypeval,
+	       dirichlet_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, press_celltypeval,
+	       dirichlet_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+  
+  for (int ii = 0; ii < d_numInlets; ii++) {
+  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
+	       vars->pressCoeff[Arches::AP],
+	       vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+	       vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+	       vars->pressNonlinearSrc, vars->pressLinearSrc,
+	       constvars->cellType, wall_celltypeval, 
+	       d_flowInlets[ii].d_cellTypeID,
+	       neumann_bc,
+	       xminus, xplus, yminus, yplus, zminus, zplus);
+  }
 }
 
 //****************************************************************************
@@ -1197,6 +1239,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
+    SFCXVariable<double> uVelRhoHat;
+    SFCYVariable<double> vVelRhoHat;
+    SFCZVariable<double> wVelRhoHat;
     StaticArray<CCVariable<double> > scalar(d_nofScalars);
     CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
@@ -1204,6 +1249,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
     if (d_reactingScalarSolve)
       new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
     for (int ii =0; ii < d_nofScalars; ii++) {
@@ -1242,6 +1290,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
     // loop thru the flow inlets to set all the components of velocity and density
+    double time = d_lab->d_sharedState->getElapsedTime();
     for (int indx = 0; indx < d_numInlets; indx++) {
       sum_vartype area_var;
       new_dw->get(area_var, d_flowInlets[indx].d_area_label);
@@ -1250,12 +1299,12 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       // Get a copy of the current flowinlet
       // check if given patch intersects with the inlet boundary of type index
       FlowInlet fi = d_flowInlets[indx];
-      //std::cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
-      //cerr << "density=" << fi.density << '\n';
+      //cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
+      //cerr << "density=" << fi.calcStream.d_density << endl;
       fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-		 cellType, area, fi.d_cellTypeID, fi.flowRate,
+		 cellType, area, fi.d_cellTypeID, fi.flowRate, fi.inletVel,
 		 fi.calcStream.d_density,
-		 xminus, xplus, yminus, yplus, zminus, zplus);
+		 xminus, xplus, yminus, yplus, zminus, zplus, time);
 
       fort_profscalar(idxLo, idxHi, density, cellType,
 		      fi.calcStream.d_density, fi.d_cellTypeID,
@@ -1295,6 +1344,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     }
     
     density_oldold.copyData(density); // copy old into new
+    uVelRhoHat.copyData(uVelocity); 
+    vVelRhoHat.copyData(vVelocity); 
+    wVelRhoHat.copyData(wVelocity); 
 
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
@@ -2010,6 +2062,7 @@ BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
 {
   turb_lengthScale = 0.0;
   flowRate = 0.0;
+  inletVel = 0.0;
   // add cellId to distinguish different inlets
   d_area_label = VarLabel::create("flowarea"+cellID,
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
@@ -2020,11 +2073,13 @@ BoundaryCondition::FlowInlet::FlowInlet():
 {
   turb_lengthScale = 0.0;
   flowRate = 0.0;
+  inletVel = 0.0;
 }
 
 BoundaryCondition::FlowInlet::FlowInlet(const FlowInlet& copy) :
   d_cellTypeID (copy.d_cellTypeID),
   flowRate(copy.flowRate),
+  inletVel(copy.inletVel),
   streamMixturefraction(copy.streamMixturefraction),
   turb_lengthScale(copy.turb_lengthScale),
   calcStream(copy.calcStream),
@@ -2043,6 +2098,7 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
 
   d_cellTypeID = copy.d_cellTypeID;
   flowRate = copy.flowRate;
+  inletVel = copy.inletVel;
   streamMixturefraction = copy.streamMixturefraction;
   turb_lengthScale = copy.turb_lengthScale;
   calcStream = copy.calcStream;
@@ -2063,7 +2119,8 @@ BoundaryCondition::FlowInlet::~FlowInlet()
 void 
 BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 {
-  params->require("Flow_rate", flowRate);
+  params->getWithDefault("Flow_rate", flowRate,0.0);
+  params->getWithDefault("InletVelocity", inletVel,0.0);
   params->require("TurblengthScale", turb_lengthScale);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
@@ -2944,7 +3001,9 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = d_outletBC->d_cellTypeID;
+  int out_celltypeval = -10;
+  if (d_outletBoundary)
+     out_celltypeval = d_outletBC->d_cellTypeID;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3140,7 +3199,9 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = d_outletBC->d_cellTypeID;
+  int out_celltypeval = -10;
+  if (d_outletBoundary)
+    out_celltypeval = d_outletBC->d_cellTypeID;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3433,7 +3494,9 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = d_outletBC->d_cellTypeID;
+  int out_celltypeval = -10;
+  if (d_outletBoundary)
+    out_celltypeval = d_outletBC->d_cellTypeID;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -4066,7 +4129,9 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  int out_celltypeval = d_outletBC->d_cellTypeID;
+  int out_celltypeval = -10;
+  if (d_outletBoundary)
+    out_celltypeval = d_outletBC->d_cellTypeID;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -4471,6 +4536,8 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 			  &BoundaryCondition::correctVelocityOutletBC,
 			  timelabels);
   
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, timelabels->flowIN);
   tsk->requires(Task::NewDW, timelabels->flowOUT);
   tsk->requires(Task::NewDW, timelabels->denAccum);
@@ -4554,9 +4621,12 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       const Patch* patch = patches->get(p);
       int archIndex = 0; // only one arches material
       int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+      constCCVariable<int> cellType;
       SFCXVariable<double> uVelocity;
       SFCYVariable<double> vVelocity;
       SFCZVariable<double> wVelocity;
+      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex,
+		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
 		  	    patch);
       new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
@@ -4564,6 +4634,9 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
 		  	    patch);
 
+      int outlet_celltypeval = -10;
+      if (d_outletBoundary)
+        outlet_celltypeval = d_outletBC->d_cellTypeID;
 // Assuming outlet is xplus
       IntVector indexLow = patch->getCellFORTLowIndex();
       IntVector indexHigh = patch->getCellFORTHighIndex();
@@ -4574,11 +4647,13 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
 	  for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	    IntVector currCell(colX, colY, colZ);
 	    IntVector xplusCell(colX+1, colY, colZ);
+	    if (cellType[currCell]==outlet_celltypeval) {
 	    
 	    uVelocity[currCell] += uvwcorr;
 // Negative velocity limiter, as requested by Rajesh
 	    if (uVelocity[currCell] < 0.0) uVelocity[currCell] = 0.0;
 	    uVelocity[xplusCell] = uVelocity[currCell];
+	    }
 	  }
 	}
       }

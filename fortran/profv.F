@@ -12,7 +12,7 @@ c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
       double precision FLOW, RHO, AVGVELP, AVGVELS
-      double precision YR, ZR, YVR, ZWR
+      double precision YR, ZR, YVR, ZWR, factor
 
 c*********************************************************************
 c     Start :
@@ -29,12 +29,33 @@ C     CALCULATION OF U IN PRIMARY STREAMS
 C---------------------------------------------------------------------
       FLOW = FLOWPR
       RHO = DENPR
+      if (flow.eq.0.0D0) then
+      AVGVELP = inletvel
+      else
       IF (AREAPR.le.TINY) THEN
         AVGVELP = ZERO
         FLOWPR = ZERO
       ELSE
         AVGVELP = FLOW/(RHO*AREAPR)
       ENDIF
+      endif
+      factor = 1.0d0
+      if (time .lt. 2.0d0) then
+         factor = (time+0.01d0)*0.5d0
+         if (time.lt.0.02d0) then
+            factor = 0.000001d0*factor
+         elseif (time.lt.0.1d0) then
+            factor = 0.001d0*factor
+         elseif (time.lt.0.2d0) then
+            factor = 0.01d0*factor
+         elseif (time.lt.0.3d0) then
+            factor = 0.1d0*factor
+         elseif (time.lt.0.4d0) then
+            factor = 0.5d0*factor
+         elseif (time.lt.1.0d0) then
+            factor = 0.8d0*factor
+         endif
+      endif
 c
 c     debug to try pure diffusion case: if we don't do this, then
 c     since den = 0.0, avgvelp = nan.
@@ -50,7 +71,7 @@ C--------------------------------------------------------------------
                if (xminus) then
                   IF (PCELL(ist-1,J,K).EQ.PFIELD) THEN
                      UU(ist-1,J,K) = AVGVELP
-                     UU(IST,J,K) = AVGVELP
+                     UU(IST,J,K) = factor*AVGVELP
                      VV(ist-1,J,K) = ZERO
                      WW(ist-1,J,K) = ZERO
                   END IF
@@ -58,7 +79,7 @@ C--------------------------------------------------------------------
                if (xplus) then
                   IF (PCELL(iend+1,J,K).EQ.PFIELD) THEN
                      UU(iend+2,J,K) = -AVGVELP
-                     UU(iend+1,J,K) = -AVGVELP
+                     UU(iend+1,J,K) = -factor*AVGVELP
 c            UINLT(J,K) = -AVGVELP
 c            UU(NI+1,J,K) = -AVGVELP
                      VV(iend+1,J,K) = ZERO
@@ -77,7 +98,7 @@ C--------------------------------------------------------------------
                if (yminus) then
                   IF (PCELL(I,jst-1,K).EQ.PFIELD) THEN
                      VV(I,jst-1,K) = AVGVELP
-                     VV(I,JST,K) = AVGVELP
+                     VV(I,JST,K) = factor*AVGVELP
                      WW(I,jst-1,K) = ZERO
                      UU(I,jst-1,K) = ZERO
                   END IF
@@ -85,7 +106,7 @@ C--------------------------------------------------------------------
                if (yplus) then
                   IF (PCELL(I,jend+1,K).EQ.PFIELD) THEN
                      VV(I,jend+2,K) = -AVGVELP
-                     VV(I,jend+1,K) = -AVGVELP
+                     VV(I,jend+1,K) = -factor*AVGVELP
 c            VINLT(I,K) = -AVGVELP
 c            VV(I,NJ+1,K) = -AVGVELP
                      WW(I,jend+1,K) = ZERO
@@ -104,7 +125,7 @@ C--------------------------------------------------------------------
                if (zminus) then
                   IF (PCELL(I,J,kst-1).EQ.PFIELD) THEN
                      WW(I,J,kst-1) = AVGVELP
-                     WW(I,J,kst) = AVGVELP
+                     WW(I,J,kst) = factor*AVGVELP
                      VV(I,J,kst-1) = ZERO
                      UU(I,J,kst-1) = ZERO
                   END IF
@@ -112,7 +133,7 @@ C--------------------------------------------------------------------
                if (zplus) then
                   IF (PCELL(I,J,kend+1).EQ.PFIELD) THEN
                      WW(I,J,kend+2) = -AVGVELP
-                     WW(I,J,kend+1) = -AVGVELP
+                     WW(I,J,kend+1) = -factor*AVGVELP
 c            WINLT(I,J) = -AVGVELP
 c            WW(I,J,NK+1) = -AVGVELP
                      VV(I,J,kend+1) = ZERO

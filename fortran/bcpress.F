@@ -41,6 +41,7 @@ c*********************************************************************
 *     intrusion boundary conditions
 *----------------------------------------------------------------------
 
+      if (curr_bc_type.eq.wall) then
       do 520 k = idxLo(3), idxHi(3)
          do 510 j = idxLo(2), idxHi(2)
             do 500 i = idxLo(1), idxHi(1)
@@ -55,20 +56,17 @@ c*********************************************************************
  500        continue
  510     continue
  520  continue
+      end if
 *----------------------------------------------------------------------
 *     INLET/OUTLET BOUNDARY CONDITIONS 
 *       EAST AND/OR WEST WALLS
 *----------------------------------------------------------------------
       if (xminus.or.xplus) then
-C$DIR SCALAR
          DO 610 K = KST,KEND
-C$DIR SCALAR
             DO 600 J = JST,JEND
-               IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
-     &              PCELL(IEND,J,K).NE.WALL).AND.xplus) then
-                  AP(IEND,J,K) = AP(IEND,J,K)+AE(IEND,J,K)
-c                  AP(IEND,J,K) = AP(IEND,J,K)-AE(IEND,J,K)
-                  AE(IEND,J,K) = ZERO
+              IF ((PCELL(IEND+1,J,K).eq.curr_bc_type).AND.xplus) THEN
+                 AP(IEND,J,K) = AP(IEND,J,K)+curr_bc_factor*AE(IEND,J,K)
+                 AE(IEND,J,K) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   i = iend
                   call fixval(
@@ -78,16 +76,16 @@ c                  AP(IEND,J,K) = AP(IEND,J,K)-AE(IEND,J,K)
 #endif
 
                END IF
-               IF ((PCELL(IST-1,J,K).NE.WALL .AND.
-     &              PCELL(IST,J,K).NE.WALL).AND.
-     $              xminus) THEN
-                  AP(IST,J,K) = AP(IST,J,K)-AW(IST,J,K)
+               IF ((PCELL(IST-1,J,K).eq.curr_bc_type).AND.xminus) THEN
+                  AP(IST,J,K) = AP(IST,J,K)+curr_bc_factor*AW(IST,J,K)
                   AW(IST,J,K) = ZERO
-               END IF
-               IF ((PCELL(IST-1,J,K).EQ.WALL .AND.
-     &              PCELL(IST,J,K).NE.WALL).AND.
-     $              xminus) THEN
-                  AP(IST,J,K) = AP(IST,J,K)-AW(IST,J,K)
+#ifdef ARCHES_BC_DEBUG
+                  i = ist
+                  call fixval(
+     $                 zero, ae(i,j,k), aw(i,j,k), an(i,j,k), as(i,j,k),
+     $                 at(i,j,k), ab(i,j,k),
+     $                 su(i,j,k), sp(i,j,k), one)
+#endif
                END IF
  600        CONTINUE
  610     CONTINUE
@@ -96,16 +94,11 @@ c                  AP(IEND,J,K) = AP(IEND,J,K)-AE(IEND,J,K)
 *     NORTH AND/OR SOUTH WALLS
 *--------------------------------------------------------------------
       if (yminus.or.yplus) then
-C$DIR SCALAR
          DO 710 K = KST,KEND
-C$DIR SCALAR
             DO 700 I = IST,IEND
-               IF ((PCELL(I,JEND+1,K).NE.WALL.AND.
-     &              PCELL(I,JEND,K).NE.WALL).AND.
-     $              yplus) THEN
-                  AP(I,JEND,K) = AP(I,JEND,K)+AN(I,JEND,K)
-c                  AP(I,JEND,K) = AP(I,JEND,K)-AN(I,JEND,K)
-                  AN(I,JEND,K) = ZERO
+              IF ((PCELL(I,JEND+1,K).eq.curr_bc_type).AND.yplus) THEN
+                 AP(I,JEND,K) = AP(I,JEND,K)+curr_bc_factor*AN(I,JEND,K)
+                 AN(I,JEND,K) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   j = jend
                   call fixval(
@@ -114,11 +107,8 @@ c                  AP(I,JEND,K) = AP(I,JEND,K)-AN(I,JEND,K)
      $                 su(i,j,k), sp(i,j,k), one)
 #endif                  
                END IF
-               IF ((PCELL(I,JST-1,K).NE.WALL.AND.
-     &              PCELL(I,JST,K).NE.WALL).AND.
-     $              yminus) THEN
-                  AP(I,JST,K) = AP(I,JST,K)+AS(I,JST,K)
-c                  AP(I,JST,K) = AP(I,JST,K)-AS(I,JST,K)
+               IF ((PCELL(I,JST-1,K).eq.curr_bc_type).AND.yminus) THEN
+                  AP(I,JST,K) = AP(I,JST,K)+curr_bc_factor*AS(I,JST,K)
                   AS(I,JST,K) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   j = jst
@@ -135,16 +125,11 @@ c                  AP(I,JST,K) = AP(I,JST,K)-AS(I,JST,K)
 *     TOP AND/OR BOTTOM WALLS
 *--------------------------------------------------------------------
       if (zminus.or.zplus) then
-C$DIR SCALAR
          DO 810 J = JST,JEND
-C$DIR SCALAR
             DO 800 I = IST,IEND
-               IF ((PCELL(I,J,KEND+1).NE.WALL .AND. 
-     &              PCELL(I,J,KEND).NE.WALL).AND.
-     $              zplus)THEN
-                  AP(I,J,KEND) = AP(I,J,KEND)+AT(I,J,KEND)
-c                  AP(I,J,KEND) = AP(I,J,KEND)-AT(I,J,KEND)
-                  AT(I,J,KEND) = ZERO
+              IF ((PCELL(I,J,KEND+1).eq.curr_bc_type).AND.zplus)THEN
+                 AP(I,J,KEND) = AP(I,J,KEND)+curr_bc_factor*AT(I,J,KEND)
+                 AT(I,J,KEND) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   k = kend
                   call fixval(
@@ -153,11 +138,8 @@ c                  AP(I,J,KEND) = AP(I,J,KEND)-AT(I,J,KEND)
      $                 su(i,j,k), sp(i,j,k), one)
 #endif
                END IF
-               IF ((PCELL(I,J,KST-1).NE.WALL .AND. 
-     &              PCELL(I,J,KST).NE.WALL).AND.
-     $              zminus) THEN
-                  AP(I,J,KST) = AP(I,J,KST)+AB(I,J,KST)
-c                  AP(I,J,KST) = AP(I,J,KST)-AB(I,J,KST)
+               IF ((PCELL(I,J,KST-1).eq.curr_bc_type).AND.zminus) THEN
+                  AP(I,J,KST) = AP(I,J,KST)+curr_bc_factor*AB(I,J,KST)
                   AB(I,J,KST) = ZERO
 #ifdef ARCHES_BC_DEBUG
                   k = kst
@@ -173,43 +155,45 @@ c                  AP(I,J,KST) = AP(I,J,KST)-AB(I,J,KST)
 *--------------------------------------------------------------------
 *     SYMMETRY AND INTRUSION BOUNDARY CONDITIONS
 *--------------------------------------------------------------------
-      IF (LSYMB) THEN
-         CALL SYMBCS(domLo, domHi, idxLo, idxHi,
-     & PASS3A(PP)
-     & PASS3B(PP),
-     & PASS3A(AE)
-     & PASS3B(AE),
-     & PASS3A(AW)
-     & PASS3B(AW),
-     & PASS3A(AN)
-     & PASS3B(AN),
-     & PASS3A(AS)
-     & PASS3B(AS),
-     & PASS3A(AT)
-     & PASS3B(AT),
-     & PASS3A(AB)
-     & PASS3B(AB),
-     & PASS3A(PCELL)
-     & PASS3B(PCELL),
-     & PCELL, SYMTRY,LPRDJK, LPRDKK)
-      ENDIF
+c commented symmtry out for the time being
+c      IF (LSYMB) THEN
+c         CALL SYMBCS(domLo, domHi, idxLo, idxHi,
+c     & PASS3A(PP)
+c     & PASS3B(PP),
+c     & PASS3A(AE)
+c     & PASS3B(AE),
+c     & PASS3A(AW)
+c     & PASS3B(AW),
+c     & PASS3A(AN)
+c     & PASS3B(AN),
+c     & PASS3A(AS)
+c     & PASS3B(AS),
+c     & PASS3A(AT)
+c     & PASS3B(AT),
+c     & PASS3A(AB)
+c     & PASS3B(AB),
+c     & PASS3A(PCELL)
+c     & PASS3B(PCELL),
+c     & PCELL, SYMTRY,LPRDJK, LPRDKK)
+c      ENDIF
 
-      CALL WALLBC(idxLo, idxHi,
-     & PASS3A(AE)
-     & PASS3B(AE),
-     & PASS3A(AW)
-     & PASS3B(AW),
-     & PASS3A(AN)
-     & PASS3B(AN),
-     & PASS3A(AS)
-     & PASS3B(AS),
-     & PASS3A(AT)
-     & PASS3B(AT),
-     & PASS3A(AB)
-     & PASS3B(AB),
-     & PASS3A(PCELL)
-     & PASS3B(PCELL),
-     & WALL, xminus, xplus, yminus, yplus, zminus, zplus)
+c added what wallbc does to the loop explicitly above
+c      CALL WALLBC(idxLo, idxHi,
+c     & PASS3A(AE)
+c     & PASS3B(AE),
+c     & PASS3A(AW)
+c     & PASS3B(AW),
+c     & PASS3A(AN)
+c     & PASS3B(AN),
+c     & PASS3A(AS)
+c     & PASS3B(AS),
+c     & PASS3A(AT)
+c     & PASS3B(AT),
+c     & PASS3A(AB)
+c     & PASS3B(AB),
+c     & PASS3A(PCELL)
+c     & PASS3B(PCELL),
+c     & WALL, xminus, xplus, yminus, yplus, zminus, zplus)
       RETURN
       END 
 

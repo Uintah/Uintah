@@ -926,6 +926,8 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
 
 // Outlet bc is done here not to change old enthalpy
+    int out_celltypeval = d_boundaryCondition->outletCellType();
+    if (!(out_celltypeval==-10))
     d_boundaryCondition->enthalpyOutletBC(pc, patch,  cellinfo, 
 					  &enthalpyVars, &constEnthalpyVars,
 					  delta_t, maxAbsU, maxAbsV, maxAbsW);
