@@ -5,9 +5,11 @@
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <set>
 #include <vector>
+#include <map>
 
 using std::set;
 using std::vector;
+using std::map;
 
 namespace Uintah {
 
@@ -29,8 +31,7 @@ namespace Uintah {
     virtual void solve() = 0;
 
     virtual void createMatrix(const ProcessorGroup* pg, 
-			      const vector<int>& diag,
-			      const vector<int>& off ) = 0;
+			      const map<int,int>& diag) = 0;
 
     virtual void destroyMatrix(bool recursion) = 0;
     
