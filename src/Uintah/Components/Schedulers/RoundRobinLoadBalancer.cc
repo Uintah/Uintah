@@ -4,9 +4,16 @@
 #include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Uintah/Components/Schedulers/TaskGraph.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
+#include <Uintah/Parallel/Parallel.h>
 #include <Uintah/Grid/Patch.h>
 
+#include <iostream> // debug only
+
 using namespace Uintah;
+
+using std::cerr;
+
+#define DAV_DEBUG 0
 
 RoundRobinLoadBalancer::RoundRobinLoadBalancer(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
@@ -20,14 +27,24 @@ RoundRobinLoadBalancer::~RoundRobinLoadBalancer()
 void RoundRobinLoadBalancer::assignResources(TaskGraph& graph,
 					     const ProcessorGroup* group)
 {
-   int ntasks = graph.getNumTasks();
-   int nump = group->size();
-   for(int i=0;i<ntasks;i++){
+   int maxThreads = Parallel::getMaxThreads();
+   int nTasks = graph.getNumTasks();
+   int numProcs = group->size();
+
+   for(int i=0;i<nTasks;i++){
       Task* task = graph.getTask(i);
       if(task->getPatch()){
-	 task->assignResource(task->getPatch()->getID()%nump);
+	 task->assignResource(task->getPatch()->getID() / maxThreads
+			                                      % numProcs);
       } else {
-	 task->assignResource(0);
+	if( Parallel::usingMPI() && task->isReductionTask() ){
+	  task->assignResource( Parallel::getRootProcessorGroup()->myrank() );
+	} else {
+#if DAV_DEBUG
+	  cerr << "Task " << *task << " IS ASSIGNED TO PG 0!\n";
+#endif
+	  task->assignResource(0);
+	}
       }
    }
 }
@@ -40,6 +57,9 @@ int RoundRobinLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 
 //
 // $Log$
+// Revision 1.4  2000/09/27 02:12:57  dav
+// Mixed Model Changes.
+//
 // Revision 1.3  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
