@@ -26,7 +26,7 @@ namespace Uintah {
     (\f$ p \f$) and temperature (\f$ T \f$), but independent of 
     plastic strain rate (\f$ \epsilon_p \f$), and is given by
     \f[
-       \mu = \mu_0\left[1 + A\frac{p}{\eta^{1/3}} + B(T - 300)\right]
+       \mu = \mu_0\left[1 + A\frac{p}{\eta^{1/3}} - B(T - 300)\right]
     \f]
     where,\n
     \f$ \mu_0 \f$ is the shear modulus at the reference state
@@ -34,7 +34,7 @@ namespace Uintah {
     \f$ \eta = \rho/\rho_0\f$ is the compression, and \n
     \f[ 
        A = \frac{1}{\mu_0} \frac{d\mu}{dp} ~~;~~
-       B = -\frac{1}{\mu_0} \frac{d\mu}{dT}
+       B = \frac{1}{\mu_0} \frac{d\mu}{dT}
     \f]
 
     The flow stress (\f$ \sigma \f$) is given by
@@ -225,7 +225,7 @@ namespace Uintah {
       The derivative is given by
       \f[
          \frac{\partial \sigma}{\partial T} = 
-         B\sigma_0\left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^n
+         -B\sigma_0\left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^n
       \f]
 
       \return Derivative \f$ d\sigma_Y / dT \f$.
