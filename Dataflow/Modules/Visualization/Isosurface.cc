@@ -238,6 +238,11 @@ Isosurface::execute()
 	error("Can't use quantity tab if Min == Max");
 	return;
       }
+
+      // if the min - max range is 2 - 4, and the user requests 3 isovals,
+      // the code below generates 2.333, 3.0, and 3.666 -- which is nice
+      // since it produces evenly spaced slices in torroidal data.
+
       double di=(qmax - qmin)/(double)num;
       for (int i=0; i<num; i++) 
 	isovals.push_back(qmin + ((double)i+0.5)*di);
