@@ -252,22 +252,7 @@ SingleProcessorScheduler::scatterParticles(const ProcessorGroup*,
       new_dw->scatter(sr[i], patch, neighbors[i]);
    }
 
-   for (int i = 0; i<sr.size(); i++) {
-     if (sr[i] != 0) {
-       for (int j = 0; j<sr[i]->matls.size(); j++ ) {
-	 if (sr[i]->matls[j] != 0) {
-	   delete sr[i]->matls[j]->relocset;
-	   for (int k = 0; k<sr[i]->matls[j]->vars.size(); k++) {
-	     delete sr[i]->matls[j]->vars[k];
-	   }
-	 }
-	 delete sr[i]->matls[j];
-       }
-     }
-     delete sr[i];
-   }
 }
-
 
 void
 SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
@@ -348,25 +333,14 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
    }
-
-   for (int i = 0; i<sr.size(); i++) {
-     if (sr[i] != 0) {
-       for (int j = 0; j<sr[i]->matls.size(); j++ ) {
-	 if (sr[i]->matls[j] != 0) {
-	   delete sr[i]->matls[j]->relocset;
-	   for (int k = 0; k<sr[i]->matls[j]->vars.size(); k++) {
-	     delete sr[i]->matls[j]->vars[k];
-	   }
-	 }
-	 delete sr[i]->matls[j];
-       }
-     }
-     delete sr[i];
-   }
 }
 
 //
 // $Log$
+// Revision 1.12  2000/08/18 23:26:14  guilkey
+// Removed a bunch of deletes in the SingleProcessorScheduler that were
+// recently added and were killing the MPM code after ~90 timesteps.
+//
 // Revision 1.11  2000/08/08 01:32:45  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
