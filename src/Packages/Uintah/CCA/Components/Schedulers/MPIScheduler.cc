@@ -17,6 +17,9 @@
 #include <iomanip>
 #include <map>
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
+#ifdef USE_PERFEX_COUNTERS
+#include "counters.h"
+#endif
 
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
@@ -155,7 +158,14 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
 			    OnDemandDataWarehouse * dws[2],
 			    const VarLabel        * reloc_label )
 {
+  long long communication_flops = 0;
+  long long execution_flops = 0, dummy;
+#ifdef USE_PERFEX_COUNTERS
+  start_counters(0, 19);
+#endif
+  
   double recvstart = Time::currentSeconds();
+  
   recvMPIData( pg, task, mpi_info, dws );
 
 #ifdef USE_TAU_PROFILING
@@ -173,9 +183,20 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
   TAU_PROFILE_START(doittimer);
   TAU_MAPPING_PROFILE_START(doitprofiler,0);
 
+  
   double taskstart = Time::currentSeconds();
-  task->doit(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
 
+  
+#ifdef USE_PERFEX_COUNTERS
+  read_counters(0, &dummy, 19, &communication_flops);
+  start_counters(0, 19);
+#endif  
+  task->doit(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+#ifdef USE_PERFEX_COUNTERS
+  read_counters(0, &dummy, 19, &execution_flops);
+  start_counters(0, 19);
+#endif
+  
   TAU_MAPPING_PROFILE_STOP(0);
   TAU_PROFILE_STOP(doittimer);
 
@@ -199,10 +220,17 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
   double dtask = sendstart-taskstart;
   double drecv = taskstart-recvstart;
 
+#ifdef USE_PERFEX_COUNTERS
+  long long end_communication_flops;
+  read_counters(0, &dummy, 19, &end_communication_flops);
+  communication_flops += end_communication_flops;
+#endif
+  
   dbg << pg->myrank() << " Completed task: ";
   printTask(dbg, task); dbg << '\n';
 
-  emitNode(task, Time::currentSeconds(), dsend+dtask+drecv);
+  emitNode(task, Time::currentSeconds(), dsend+dtask+drecv, dtask, execution_flops,
+	   communication_flops);
 
   mpi_info.totalsend += dsend;
   mpi_info.totaltask += dtask;
@@ -568,6 +596,9 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	  cerrLock.unlock();
 	}
 
+#ifdef USE_PERFEX_COUNTERS
+	start_counters(0, 19);
+#endif
 	double reducestart = Time::currentSeconds();
 	const Task::Dependency* comp = task->getTask()->getComputes();
 	ASSERT(!comp->next);
@@ -575,7 +606,12 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	dw->reduceMPI(comp->var, comp->matls /*task->getMaterials() */,
 		      d_myworld);
 	double reduceend = Time::currentSeconds();
-	emitNode(task, reducestart, reduceend - reducestart);
+	long long flop_count=0;
+#ifdef USE_PERFEX_COUNTERS
+	long long dummy;
+	read_counters(0, &dummy, 19, &flop_count);
+#endif
+	emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
 	mpi_info.totalreduce += reduceend-reducestart;
 	mpi_info.totalreducempi += reduceend-reducestart;
       }

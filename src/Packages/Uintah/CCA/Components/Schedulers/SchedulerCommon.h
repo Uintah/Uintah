@@ -87,7 +87,10 @@ WARNING
   protected:
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);
-    void emitNode(const DetailedTask* dt, double start, double duration);
+    void emitNode(const DetailedTask* dt, double start, double duration,
+		  double execution_duration, 
+		  long long execution_flops,
+		  long long communication_flops = 0);
     void finalizeNodes(int process=0);
     void scrub(const DetailedTask* dt);
     
