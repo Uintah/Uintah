@@ -88,6 +88,13 @@ usage( const std::string & message,
        const std::string& badarg,
        const std::string& progname)
 {
+  int argc = 0;
+  char **argv;
+  argv = 0;
+
+  /* Initialize MPI so that "usage" is only printed by proc 0. */
+  Uintah::Parallel::initializeManager( argc, argv, "" );
+
   if( !Uintah::Parallel::usingMPI() || 
       ( Uintah::Parallel::usingMPI() &&
 	Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
@@ -153,15 +160,6 @@ main(int argc, char** argv)
     string scheduler;
     string loadbalancer;
     IntVector layout(1,1,1);
-
-    /*
-     * Initialize MPI
-     */
-    Uintah::Parallel::initializeManager( argc, argv, scheduler );
-    #ifdef USE_VAMPIR
-    VTsetup();
-    #endif
-
 
     /*
      * Parse arguments
@@ -245,6 +243,14 @@ main(int argc, char** argv)
     }
 
     /*
+     * Initialize MPI
+     */
+    Uintah::Parallel::initializeManager( argc, argv, scheduler );
+    #ifdef USE_VAMPIR
+    VTsetup();
+    #endif
+
+    /*
      * Check for valid argument combinations
      */
     if(do_ice && do_arches){
@@ -273,6 +279,8 @@ main(int argc, char** argv)
 
     bool thrownException = false;
     
+    cerr << "Main mpi process: pid: " << getpid() << "\n";
+
     /*
      * Create the components
      */
@@ -456,11 +464,26 @@ main(int argc, char** argv)
     /*
      * Finalize MPI
      */
-    Uintah::Parallel::finalizeManager(thrownException?Uintah::Parallel::Abort:Uintah::Parallel::NormalShutdown);
+    Uintah::Parallel::finalizeManager(thrownException?
+				      Uintah::Parallel::Abort:
+				      Uintah::Parallel::NormalShutdown);
 
     if (thrownException) {
+      if( !Uintah::Parallel::usingMPI() || 
+	  ( Uintah::Parallel::usingMPI() &&
+	    Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
+	{
+	  cout << "An exception was thrown... Goodbye.\n";
+	}
       Thread::exitAll(1);
     }
+
+    if( !Uintah::Parallel::usingMPI() || 
+	( Uintah::Parallel::usingMPI() &&
+	  Uintah::Parallel::getRootProcessorGroup()->myrank() == 0 ) )
+      {
+	cout << "Sus: going down successfully\n";
+      }
 
     //Thread::exitAll(0);
 }
