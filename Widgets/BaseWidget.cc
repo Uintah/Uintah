@@ -44,10 +44,6 @@ BaseWidget::~BaseWidget()
    for (index = 0; index < NumGeometries; index++) {
       delete geometries[index];
    }
-
-   for (index = 0; index < NumMaterials; index++) {
-      delete materials[index];
-   }
 }
 
 

@@ -18,8 +18,11 @@
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
+#include <Datatypes/TriSurface.h>
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
+#include <Geom/Tri.h>
 #include <iostream.h>
 #include <fstream.h>
 
@@ -64,11 +67,21 @@ void SurfToGeom::execute()
     SurfaceHandle surf;
     if (!isurface->get(surf))
 	return;
-    ObjGroup *group=surf->getGeomFromSurface();
+
+    GeomGroup* group = new GeomGroup;
+    TriSurface* ts=surf->getTriSurface();
+    if(ts){
+	for (int i=0; i<ts->elements.size(); i++) {
+	    group->add(new GeomTri(ts->points[ts->elements[i]->i1], 
+				   ts->points[ts->elements[i]->i2],
+				   ts->points[ts->elements[i]->i3]));
+	}
+    } else {
+	error("Unknown representation for Surface in SurfToGeom");
+    }
     if (surf->name == "sagital.scalp") {
-	MaterialProp *matl=new MaterialProp(Color(0,0,0), Color(0,.6,0), 
-					   Color(.5,.5,.5), 20);
-	group->set_matl(matl);
+	group->set_matl(new Material(Color(0,0,0), Color(0,.6,0), 
+				     Color(.5,.5,.5), 20));
     }
     ogeom->delAll();
     ogeom->addObj(group, surf->name);

@@ -16,7 +16,13 @@
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldUG.h>
+#include <Geom/Cylinder.h>
+#include <Geom/Disc.h>
 #include <Geom/Geom.h>
+#include <Geom/Group.h>
+#include <Geom/Pick.h>
+#include <Geom/Polyline.h>
+#include <Geom/Sphere.h>
 #include <Geometry/Point.h>
 #include <iostream.h>
 #include <fstream.h>
@@ -34,10 +40,10 @@ static clString streamline_name("Streamline");
 
 class SLine {
     Point p;
-    GeomPolyLine* line;
+    GeomPolyline* line;
     int outside;
 public:
-    SLine(ObjGroup*, const Point&);
+    SLine(GeomGroup*, const Point&);
     int advance(const VectorFieldHandle&, int rk4, double);
 };
 
@@ -62,14 +68,16 @@ Streamline::Streamline(const clString& id)
 
     need_p1=1;
 
-    widget_point_matl=new MaterialProp(Color(0,0,0), Color(.54, .60, 1),
-				       Color(.5,.5,.5), 20);
-    widget_edge_matl=new MaterialProp(Color(0,0,0), Color(.54, .60, .66),
-				      Color(.5,.5,.5), 20);
-    widget_slider_matl=new MaterialProp(Color(0,0,0), Color(.83, .60, .66),
-					Color(.5,.5,.5), 20);
-    widget_highlight_matl=new MaterialProp(Color(0,0,0), Color(.7,.7,.7),
-					   Color(0,0,.6), 20);
+    widget_point_matl=new Material(Color(0,0,0), Color(.54, .60, 1),
+				   Color(.5,.5,.5), 20);
+    widget_edge_matl=new Material(Color(0,0,0), Color(.54, .60, .66),
+				  Color(.5,.5,.5), 20);
+    widget_slider_matl=new Material(Color(0,0,0), Color(.83, .60, .66),
+				    Color(.5,.5,.5), 20);
+    widget_highlight_matl=new Material(Color(0,0,0), Color(.7,.7,.7),
+				       Color(0,0,.6), 20);
+    matl=new Material(Color(0,0,0), Color(0,0,.6),
+			  Color(0,0,0.5), 20);
     widget_id=0;
     streamline_id=0;
 }
@@ -122,7 +130,7 @@ void Streamline::execute()
 	cerr << "Rebuilding widget" << endl;
 	if(widget_id)
 	    ogeom->delObj(widget_id);
-	widget=new ObjGroup;
+	widget=new GeomGroup;
 	if(widgettype.get() == "Point"){
 	    widget_p1=new GeomSphere(p1, 1*widget_scale);
 	    widget_p1->set_matl(widget_point_matl);
@@ -130,40 +138,44 @@ void Streamline::execute()
 					Vector(0,1,0),
 					Vector(0,0,1));
 	    pick->set_highlight(widget_highlight_matl);
-	    widget->pick=pick;
+	    widget->set_pick(pick);
 	    widget->add(widget_p1);
 	} else if(widgettype.get() == "Line"){
 	    widget_p1=new GeomSphere;
-	    widget_p1->pick=new GeomPick(this);
-	    widget_p1->pick->set_highlight(widget_highlight_matl);
-	    widget_p1->pick->set_cbdata((void*)1);
+	    GeomPick* p=new GeomPick(this);
+	    p->set_highlight(widget_highlight_matl);
+	    p->set_cbdata((void*)1);
+	    widget_p1->set_pick(p);
 	    widget_p1->set_matl(widget_point_matl);
 	    widget_p2=new GeomSphere;
-	    widget_p2->pick=new GeomPick(this);
-	    widget_p2->pick->set_highlight(widget_highlight_matl);
-	    widget_p2->pick->set_cbdata((void*)2);
+	    p=new GeomPick(this);
+	    p->set_highlight(widget_highlight_matl);
+	    p->set_cbdata((void*)2);
+	    widget_p2->set_pick(p);
 	    widget_p2->set_matl(widget_point_matl);
 	    widget_edge1=new GeomCylinder;
-	    widget_edge1->pick=new GeomPick(this);
-	    widget_edge1->pick->set_highlight(widget_highlight_matl);
-	    widget_edge1->pick->set_cbdata((void*)3);
+	    p=new GeomPick(this);
+	    p->set_highlight(widget_highlight_matl);
+	    p->set_cbdata((void*)3);
+	    widget_edge1->set_pick(p);
 	    widget_edge1->set_matl(widget_edge_matl);
-	    widget_slider1=new ObjGroup;
+	    widget_slider1=new GeomGroup;
 	    widget_slider1body=new GeomCylinder;
 	    widget_slider1cap1=new GeomDisc;
 	    widget_slider1cap2=new GeomDisc;
 	    widget_slider1->add(widget_slider1body);
 	    widget_slider1->add(widget_slider1cap1);
 	    widget_slider1->add(widget_slider1cap2);
-	    widget_slider1->pick=new GeomPick(this);
-	    widget_slider1->pick->set_highlight(widget_highlight_matl);
-	    widget_slider1->pick->set_cbdata((void*)4);
+	    p=new GeomPick(this);
+	    p->set_highlight(widget_highlight_matl);
+	    p->set_cbdata((void*)4);
+	    widget_slider1->set_pick(p);
 	    widget_slider1->set_matl(widget_slider_matl);
 	    widget->add(widget_p1);
 	    widget->add(widget_p2);
 	    widget->add(widget_edge1);
 	    widget->add(widget_slider1);
-	    widget->pick=new GeomPick(this);
+	    widget->set_pick(new GeomPick(this));
 	} else if(widgettype.get() == "Square"){
 	    NOT_FINISHED("Square widget");
 	} else {
@@ -188,16 +200,15 @@ void Streamline::execute()
 	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
 	Vector v1,v2;
 	spvec.find_orthogonal(v1, v2);
-	widget_p1->pick->set_principal(spvec, v1, v2);
-	widget_p2->pick->set_principal(spvec, v1, v2);
-	widget_edge1->pick->set_principal(spvec, v1, v2);
-	widget_slider1->pick->set_principal(spvec);
+	widget_p1->get_pick()->set_principal(spvec, v1, v2);
+	widget_p2->get_pick()->set_principal(spvec, v1, v2);
+	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
+	widget_slider1->get_pick()->set_principal(spvec);
     } else if(widgettype.get() == "Square"){
 	NOT_FINISHED("Square widget");
     }
-    ObjGroup* group=new ObjGroup;
-    group->set_matl(new MaterialProp(Color(0,0,0), Color(0,0,.6),
-				     Color(0,0,0.5), 20));
+    GeomGroup* group=new GeomGroup;
+    group->set_matl(matl);
 
     // Temporary algorithm...
     Array1<SLine*> slines;
@@ -296,8 +307,8 @@ void Streamline::geom_moved(int axis, double dist, const Vector& delta,
     }
 }
 
-SLine::SLine(ObjGroup* group, const Point& p)
-: p(p), line(new GeomPolyLine)
+SLine::SLine(GeomGroup* group, const Point& p)
+: p(p), line(new GeomPolyline)
 {
     group->add(line);
     outside=0;

@@ -16,12 +16,11 @@
 
 #include <Dataflow/Module.h>
 #include <Classlib/Array1.h>
-#include <Datatypes/ContourSet.h>
-#include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
 #include <Datatypes/ContourSetPort.h>
 
 class Grid;
+class TriSurface;
 
 class ContoursToSurf : public Module {
     Array1<ContourSetIPort*> incontours;
