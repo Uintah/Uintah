@@ -128,6 +128,7 @@ proc makeNetworkEditor {} {
     set bgRect [.bot.neteditFrame.canvas create rectangle 0 0 \
 	                         $mainCanvasWidth $mainCanvasWidth -fill #036]
 
+    
     menu .bot.neteditFrame.canvas.modulesMenu -tearoff false
 
     scrollbar .bot.neteditFrame.hscroll -relief sunken \
@@ -198,19 +199,20 @@ proc makeNetworkEditor {} {
     bind $netedit_canvas <Configure> \
       "handleResize $netedit_mini_canvas $netedit_canvas $viewAreaBox %w %h"
     $netedit_canvas bind $bgRect <ButtonPress-3> "modulesMenuPressCB %x %y"
+
     bind . <KeyPress-Down>  { $netedit_canvas yview moveto [expr [lindex \
-	    [$netedit_canvas yview] 0] + 0.01 ] }
+	    [$netedit_canvas yview] 0] + 0.01 ]}
     bind . <KeyPress-Up>    { $netedit_canvas yview moveto [expr [lindex \
 	    [$netedit_canvas yview] 0] - 0.01 ] }
     bind . <KeyPress-Left>  { $netedit_canvas xview moveto [expr [lindex \
-	    [$netedit_canvas xview] 0] - 0.01 ] }
+	    [$netedit_canvas xview] 0] - 0.01 ]} 
     bind . <KeyPress-Right> { $netedit_canvas xview moveto [expr [lindex \
 	    [$netedit_canvas xview] 0] + 0.01 ] }
     bind . <Destroy> {if {"%W"=="."} {exit 1}} 
 }
 
-proc modulesMenuPressCB { x y } {
 
+proc modulesMenuPressCB { x y } {
     set canvas .bot.neteditFrame.canvas
 
     global mouseX mouseY
@@ -474,6 +476,7 @@ proc addModuleAtPosition {package category module xpos ypos} {
 }
 
 proc addConnection {omodid owhich imodid iwhich} {
+
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
     set portcolor [lindex [lindex [$omodid-c oportinfo] $owhich] 0]
     
