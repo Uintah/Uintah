@@ -240,15 +240,29 @@ void Discretization::calculatePressureCoeff(const ProcessorContext*,
   FCVariable<Vector> wVelCoeff;
   new_dw->get(wVelCoeff,"wVelocityCoeff",region, 0);
 
-  // Create vars for new_dw
+  // using chain of responsibility pattern for getting cell information
+  DataWarehouseP top_dw = new_dw->getTop();
+  PerRegion<CellInformation*> cellinfop;
+  if(top_dw->exists("cellinfo", region)){
+    top_dw->get(cellinfop, "cellinfo", region);
+  } else {
+    cellinfop.setData(new CellInformation(region));
+    top_dw->put(cellinfop, "cellinfo", region);
+  } 
+  CellInformation* cellinfo = cellinfop;
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+
+ // Create vars for new_dw
   CCVariable<Vector> pressCoeff; //7 point stencil
   new_dw->allocate(pressCoeff,"pressureCoeff",region, 0);
-  // get high and low from region
-  //
-  FORT_PRESSCOEF(lowIndex, highIndex,geom.sew, geom.sns, geom.stb,
-		 geom.dxep,geom.dxpw, geom.dynp, geom.dyps, geom.dztp,
-		 geom.dzpb, pressure, velocity, density, uVelCoeff,
-		 vVelCoeff, wVelCoeff, pressCoeff);
+
+  FORT_PRESSSOURCE(pressCoeff, pressure, velocity, density
+		   uVelocityCoeff, vVelocityCoeff, wVelocityCoeff,
+		   lowIndex, highIndex,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
+		   cellinfo->dxep, cellinfo->dxpw, cellinfo->dynp,
+		   cellinfo->dyps, cellinfo->dztp, cellinfo->dzpb);
   new_dw->put(pressCoeff, "pressureCoeff", region, 0);
 }
   

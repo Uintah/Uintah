@@ -47,7 +47,7 @@ using namespace Uintah::Grid;
 using namespace Uintah::Components;
 using namespace Uintah::Interface;
 #endif
-
+class TurbulenceModel;
 class Discretization;
 class Source;
 class BoundaryCondition;
@@ -70,6 +70,7 @@ class PressureSolver
   //
   // Default constructor.
    PressureSolver();
+   PressureSolver(TurbulenceModel* turb_model);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -131,10 +132,13 @@ class PressureSolver
    Source* d_source;
 
    // computes boundary conditions
-   BoundaryCondition* d_bndryCond;
+   BoundaryCondition* d_boundaryCondition;
 
    // linear solver
    LinearSolver* d_linearSolver;
+
+   // turbulence model
+   TurbulenceModel* d_turbModel;
 
 // GROUP: Data members.
 

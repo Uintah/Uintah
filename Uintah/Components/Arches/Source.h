@@ -30,7 +30,21 @@ none
 ****************************************/
 #ifndef included_Source
 #define included_Source
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Interface/SchedulerP.h>
+#include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Parallel/ProcessorContext.h>
 
+#include <SCICore/Containers/Array1.h>
+
+namespace Uintah {
+namespace Components {
+class TurbulenceModel;
+ using namespace Uintah::Grid;
+ using namespace Uintah::Interface;
+ using namespace SCICore::Containers;
+ using namespace Uintah::Parallel;
 
 class Source : 
 {
@@ -49,7 +63,7 @@ public:
  
    Source();
 
-
+   Source(TurbulenceModel* turb_model);
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
   // Destructor
@@ -84,7 +98,11 @@ public:
 			      SchedulerP& sched,
 			      const DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw);
+   TurbulenceModel* d_turbModel;
 
 };
+
+}
+}
 #endif  
   

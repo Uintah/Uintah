@@ -1,5 +1,8 @@
 #include <Uintah/Components/Arches/PressureSolver.h>
 #include <Uintah/Components/Arches/Discretization.h>
+#include <Uintah/Components/Arches/Source.h>
+#include <Uintah/Components/Arches/BoundaryCondition.h>
+#include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/ProblemSpec.h>
@@ -10,6 +13,11 @@ using Uintah::Components::PressureSolver;
 using namespace std;
 
 PressureSolver::PressureSolver()
+{
+}
+
+PressureSolver::PressureSolver(TurbulenceModel* turb_model)
+: d_turbModel(turb_model)
 {
 }
 
@@ -31,6 +39,9 @@ void PressureSolver::problemSetup(const ProblemSpecP& params)
   else 
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff, db);
+  // make source and boundary_condition objects
+  d_source = Source(d_turbModel);
+  d_boundaryCondition = BoundaryCondition(d_turbModel);
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "GaussSiedel")
