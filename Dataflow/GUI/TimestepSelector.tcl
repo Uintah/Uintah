@@ -68,7 +68,6 @@ itcl_class Uintah_Selectors_TimestepSelector {
 
     method buildTopLevel {} {
         set w .ui[modname]
-	puts "$w: buildTopLevel"
 
         toplevel $w 
 	
@@ -123,8 +122,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $w.l $w.s -side top -fill x
 
 	frame $w.cs -relief groove -borderwidth 2
-	addColorSelection $w.cs  $this-def-color \
-		"default_color_change"
+	addColorSelection $w.cs
 	frame $w.cs.fs -relief flat
 	pack $w.cs.fs -side top -fill x -expand yes
 	
@@ -164,51 +162,47 @@ itcl_class Uintah_Selectors_TimestepSelector {
     method isOn { bval } {
 	return  [set $this-$bval]
     }
-    method raiseColor {col color colMsg} {
-	 global $color
+    method raiseColor {} {
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
 	     raise $window.color
-	     return;
+	     return
 	 } else {
-	     toplevel $window.color
-	     makeColorPicker $window.color $color \
-		     "$this setColor $col $color $colMsg" \
+	     makeColorPicker $window.color $this-def-color \
+		     "$this setColor" \
 		     "destroy $window.color"
 	 }
     }
-    method setColor {col color colMsg} {
-	 global $color
-	 global $color-r
-	 global $color-g
-	 global $color-b
-	 set ir [expr int([set $color-r] * 65535)]
-	 set ig [expr int([set $color-g] * 65535)]
-	 set ib [expr int([set $color-b] * 65535)]
+    method setColor {} {
+	global $this-def-color-r
+	global $this-def-color-g
+	global $this-def-color-b
+	set ir [expr int([set $this-def-color-r] * 65535)]
+	set ig [expr int([set $this-def-color-g] * 65535)]
+	set ib [expr int([set $this-def-color-b] * 65535)]
 
-	 set window .ui[modname]
-	 $col config -background [format #%04x%04x%04x $ir $ig $ib]
-	 $this-c $colMsg
+	set w .ui[modname]
+	$w.cs.colorFrame.col config -background [format #%04x%04x%04x $ir $ig $ib]
+        $this-c needexecute
     }
-    method addColorSelection {frame color colMsg} {
+    method addColorSelection {frame} {
 	#add node color picking 
-	global $color
-	global $color-r
-	global $color-g
-	global $color-b
-	set ir [expr int([set $color-r] * 65535)]
-	set ig [expr int([set $color-g] * 65535)]
-	set ib [expr int([set $color-b] * 65535)]
+	global $this-def-color-r
+	global $this-def-color-g
+	global $this-def-color-b
+	set ir [expr int([set $this-def-color-r] * 65535)]
+	set ig [expr int([set $this-def-color-g] * 65535)]
+	set ib [expr int([set $this-def-color-b] * 65535)]
 	
 	frame $frame.colorFrame
 	frame $frame.colorFrame.col -relief ridge -borderwidth \
 	    4 -height 0.8c -width 1.0c \
 	    -background [format #%04x%04x%04x $ir $ig $ib]
-	set cmmd "$this raiseColor $frame.colorFrame.col $color $colMsg"
+	set cmmd "$this raiseColor"
         button $frame.colorFrame.set_color \
-            -text "Display Color in Viewer" -command $cmmd
+            -text "Text Color (In Viewer)" -command $cmmd
         #pack the node color frame
-	pack $frame.colorFrame.set_color $frame.colorFrame.col -side left
+	pack $frame.colorFrame.set_color $frame.colorFrame.col -side left -padx 5 -pady 3
 	pack $frame.colorFrame -side left
     }
 	    	    
