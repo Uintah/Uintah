@@ -148,7 +148,7 @@
       <save label= "int_eng_comb"/>
       <save label= "created_vol"/>
       <save label="mom_comb_CC"/>
-
+      <save label = "p.particleID"/>
       <save label = "p.x"/>
       <save label = "p.mass+"/>
       <save label = "p.volume+"/>
@@ -160,7 +160,7 @@
       <save label = "g.velocity"/>
       <save label = "g.temperature"/> 
       <!-- Need by the regression tester -->
-       <checkpoint interval="0.0025" cycle="2"/> 
+       <checkpoint interval="0.00025" cycle="2"/> 
    </DataArchiver>
 
    <Debug>
