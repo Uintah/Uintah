@@ -272,6 +272,7 @@ GeomFastTriangles::GeomFastTriangles(const GeomFastTriangles& copy)
   : points_(copy.points_),
     colors_(copy.colors_),
     normals_(copy.normals_),
+    face_normals_(copy.face_normals_),
     material_(0)
 {
 }
@@ -343,6 +344,19 @@ GeomFastTriangles::add(const Point &p0, const Vector &n0,
 		       const Point &p2, const Vector &n2,
 		       const MaterialHandle &m2)
 {
+  Vector n(Cross(p1-p0, p2-p0));
+#ifndef SCI_NORM_OGL
+  if(n.length2() > 0)
+  {
+    n.normalize();
+  }
+  else
+  {
+    cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
+    return;
+  }
+#endif
+
   points_.push_back(p0.x());
   points_.push_back(p0.y());
   points_.push_back(p0.z());
@@ -372,6 +386,18 @@ GeomFastTriangles::add(const Point &p0, const Vector &n0,
   colors_.push_back(COLOR_FTOB(m2->diffuse.b()));
   colors_.push_back(COLOR_FTOB(m2->transparency * m2->transparency *
 			       m2->transparency * m2->transparency));
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
+
+  face_normals_.push_back(n.x());
+  face_normals_.push_back(n.y());
+  face_normals_.push_back(n.z());
 
   normals_.push_back(n0.x());
   normals_.push_back(n0.y());
