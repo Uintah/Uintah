@@ -597,9 +597,8 @@ srcdir="${oldSrcDir}"
 if test "${enable_64bit+set}" = set; then
   enableval="$enable_64bit"
   lac_cv_64bit="$enableval"
-	lac_cv_64bit=${lac_cv_enterleave='no'}
+	lac_cv_64bit=${lac_cv_64bit='no'}
 fi
-
 
 
 case $host in
@@ -646,6 +645,7 @@ case $host in
            echo "#define SCI_NORM_OGL" >> config.h
 	   if test "$lac_cv_64bit" = "yes" ; then
              echo "#define SCI_IRIX_BIN_n64_mips4" >> config.h
+	     echo "#define SCI_64BIT" >> config.h
 	   else
              echo "#define SCI_IRIX_BIN_n32_mips4" >> config.h
 	   fi	

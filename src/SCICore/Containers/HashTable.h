@@ -481,11 +481,68 @@ HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
 }
 
 
+#define HASHTABLE_VERSION 1
+
+// Persistent IO for hash tables
+template <class Key, class Data>
+void Pio(Piostream& stream, HashTable<Key, Data>& t)
+{
+    using SCICore::PersistentSpace::Pio;
+    using SCICore::GeomSpace::Pio;
+    using SCICore::Containers::Pio;
+    using SCICore::CoreDatatypes::Pio;
+    stream.begin_class("HashTable", HASHTABLE_VERSION);
+    Pio(stream, t.nelems);
+    Pio(stream, t.hash_size);
+    if(stream.reading())
+	t.table=new HashKey<Key,Data>*[t.hash_size];
+    for(int i=0;i<t.hash_size;i++){
+	stream.begin_cheap_delim();
+	int count;
+	if(stream.writing()){
+	    count=0;
+	    for(HashKey<Key, Data>* p=t.table[i];p!=0;p=p->next)
+		count++;
+	} else {
+	    t.table[i]=0;
+	}
+	Pio(stream, count);
+	HashKey<Key, Data>* p=0;
+	for(int ii=0;ii<count;ii++){
+	    if(stream.reading()){
+		HashKey<Key, Data>* tmp=scinew HashKey<Key, Data>;
+		tmp->next=0;
+		if(ii==0)
+		    t.table[i]=tmp;
+		else
+		    p->next=tmp;
+		p=tmp;
+	    } else {
+		if(ii==0){
+		    p=t.table[i];
+		}
+		else
+		    p=p->next;
+	    }
+	    Pio(stream, p->key);
+	    Pio(stream, p->data);
+	}
+	stream.end_cheap_delim();
+    }
+    stream.end_class();
+}
+
 } // End namespace Containers
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 18:56:16  sparker
+// Use 64 bit mmap
+// Incorporated missing Hashtable Pio function
+// Fix bug in MAKE_PARALLELISM handling
+// Got rid of lib32 in main/Makefile.in (for 64 bit)
+//
 // Revision 1.2  1999/08/17 06:38:36  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
