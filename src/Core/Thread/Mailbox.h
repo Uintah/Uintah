@@ -15,6 +15,14 @@
 #ifndef SCICore_Thread_Mailbox_h
 #define SCICore_Thread_Mailbox_h
 
+#include <SCICore/Thread/ConditionVariable.h>
+#include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Thread.h>
+#include <vector>
+
+namespace SCICore {
+    namespace Thread {
 /**************************************
  
 CLASS
@@ -28,21 +36,8 @@ DESCRIPTION
    concurrent senders and receivers.  Multiple threads send <b>Item</b>s
    to the mailbox, and multiple thread may receive <b>Item</b>s from the
    mailbox.  Items are typically pointers to a message structure.
-PATTERNS
 
-
-WARNING
-   
 ****************************************/
-
-#include <SCICore/Thread/ConditionVariable.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
-#include <vector>
-
-namespace SCICore {
-    namespace Thread {
 	template<class Item> class Mailbox {
 	public:
 	    //////////
@@ -259,6 +254,9 @@ SCICore::Thread::Mailbox<Item>::numItems() const
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:42  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/29 00:47:00  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

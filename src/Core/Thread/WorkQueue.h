@@ -15,6 +15,13 @@
 #ifndef SCICore_Thread_WorkQueue_h
 #define SCICore_Thread_WorkQueue_h
 
+#include <SCICore/Thread/AtomicCounter.h>
+#include <vector>
+
+namespace SCICore {
+    namespace Thread {
+	struct WorkQueue_private;
+	
 /**************************************
  
 CLASS
@@ -29,20 +36,7 @@ DESCRIPTION
    Initially, assignments are relatively large, and will get smaller
    towards the end in an effort to equalize the total effort.
    
-PATTERNS
-
-
-WARNING
-   
 ****************************************/
-
-#include <SCICore/Thread/AtomicCounter.h>
-#include <vector>
-
-namespace SCICore {
-    namespace Thread {
-	struct WorkQueue_private;
-	
 	class WorkQueue {
 	public:
 	    //////////
@@ -99,6 +93,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:45  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:53  sparker
 // Final updates before integration with PSE
 //

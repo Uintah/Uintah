@@ -15,6 +15,10 @@
 #ifndef SCICore_Thread_Parallel_h
 #define SCICore_Thread_Parallel_h
 
+#include <SCICore/Thread/ParallelBase.h>
+
+namespace SCICore {
+    namespace Thread {
 /**************************************
  
 CLASS
@@ -26,24 +30,15 @@ KEYWORDS
 DESCRIPTION
    Helper class to make instantiating threads to perform a parallel
    task easier.
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-#include <SCICore/Thread/ParallelBase.h>
-
-namespace SCICore {
-    namespace Thread {
 	template<class T> class Parallel  : public ParallelBase {
 	public:
 	    //////////
 	    // Create a parallel object, using the specified member
 	    // function instead of <i>parallel</i>.  This will
 	    // typically be used like:
-	    // <pre>Thread::parallel(Parallel&ltMyClass> (this, &ampMyClass::mymemberfn), nthreads)</pre>
+	    // <b><pre>Thread::parallel(Parallel&lt;MyClass&gt;(this, &amp;MyClass::mymemberfn), nthreads);</pre></b>
 	    Parallel(T* obj, void (T::*pmf)(int));
 	    
 	    //////////
@@ -82,6 +77,9 @@ SCICore::Thread::Parallel<T>::~Parallel()
 #endif
 //
 // $Log$
+// Revision 1.6  1999/09/02 16:52:43  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.5  1999/08/28 03:46:48  sparker
 // Final updates before integration with PSE
 //

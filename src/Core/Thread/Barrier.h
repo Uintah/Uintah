@@ -15,6 +15,10 @@
 #ifndef SCICore_Thread_Barrier_h
 #define SCICore_Thread_Barrier_h
 
+namespace SCICore {
+    namespace Thread {
+	class ThreadGroup;
+	class Barrier_private;
 /**************************************
  
 CLASS
@@ -27,8 +31,6 @@ DESCRIPTION
    Barrier synchronization primitive.  Provides a single wait
    method to allow a set of threads to block at the barrier until all
    threads arrive.
-PATTERNS
-
 
 WARNING
    When the ThreadGroup semantics are used, other threads outside of the
@@ -37,11 +39,6 @@ WARNING
    ThreadGroup while the Barrier is being accessed.
    
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class ThreadGroup;
-	class Barrier_private;
 
 	class Barrier {
 	public:
@@ -78,6 +75,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.8  1999/09/02 16:52:41  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.7  1999/08/29 00:47:00  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
