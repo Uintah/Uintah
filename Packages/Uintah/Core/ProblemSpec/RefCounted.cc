@@ -5,6 +5,7 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -18,6 +19,8 @@ static AtomicCounter* nextIndex;
 static AtomicCounter* freeIndex;
 #include <iostream>
 using namespace std;
+
+namespace Uintah {
 
 RefCounted::RefCounted()
     : d_refCount(0)
@@ -36,7 +39,17 @@ RefCounted::RefCounted()
   d_lockIndex = ((*nextIndex)++)%NLOCKS;
   ASSERT(d_lockIndex >= 0);
 }
+  /*
+RefCounted::RefCounted(const RefCounted&)
+{
+  throw InternalError( "RefCounted::RefCounted(const RefCounted&) not implemented!" );
+}
 
+RefCounted& RefCounted::operator=(const RefCounted&)
+{
+  throw InternalError( "RefCounted& RefCounted::operator=(const RefCounted&) not implemented!" );
+}
+*/
 RefCounted::~RefCounted()
 {
   ASSERTEQ(d_refCount, 0);
@@ -73,3 +86,5 @@ bool RefCounted::removeReference() const
     locks[d_lockIndex]->unlock();
     return status;
 }
+
+} // namespace Uintah
