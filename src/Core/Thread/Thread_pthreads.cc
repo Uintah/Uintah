@@ -172,13 +172,11 @@ Thread_shutdown(Thread* thread)
       if(sem_wait(&priv->delete_ready) == -1)
 	 throw ThreadError(std::string("sem_wait failed")
 			   +strerror(errno));
-   delete thread;
 
    // Allow this thread to run anywhere...
    if(thread->cpu_ != -1)
       thread->migrate(-1);
 
-   priv->thread=0;
    lock_scheduler();
    /* Remove it from the active queue */
    int i;
@@ -191,7 +189,11 @@ Thread_shutdown(Thread* thread)
    }
    numActive--;
    unlock_scheduler();
+   if(pthread_setspecific(thread_key, 0) != 0)
+     fprintf(stderr, "Warning: pthread_setspecific failed");
    bool wait_main = (priv->threadid == 0);
+   delete thread;
+   priv->thread=0;
    delete priv;
    Thread::checkExit();
    if(wait_main){
@@ -360,25 +362,31 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
-    exiting=true;
-
-    // Uninitialize...
-    if(sem_destroy(&main_sema) != 0)
-	throw ThreadError(std::string("sem_init failed")
+  exiting=true;
+  if(initialized){
+    
+    lock_scheduler();
+    if(initialized){
+      // Uninitialize...
+      if(sem_post(&main_sema) != 0)
+	throw ThreadError(std::string("sem_post failed")
 			  +strerror(errno));
-    if(sem_destroy(&control_c_sema) != 0)
-	throw ThreadError(std::string("sem_init failed")
+      if(sem_destroy(&main_sema) != 0)
+	throw ThreadError(std::string("sem_destroy failed")
 			  +strerror(errno));
-    delete ThreadGroup::s_default_group;
-    if(pthread_mutex_destroy(&sched_lock) != 0)
-      throw ThreadError(std::string("pthread_mutex_destroy failed")
-			+strerror(errno));
-
-    if(pthread_key_delete(thread_key) != 0)
-      throw ThreadError(std::string("pthread_key_delete failed")
-			+strerror(errno));
-    initialized=false;
+      if(sem_destroy(&control_c_sema) != 0)
+	throw ThreadError(std::string("sem_destroy failed")
+			  +strerror(errno));
+      if(ThreadGroup::s_default_group)
+	delete ThreadGroup::s_default_group;
+      initialized=false;
+      unlock_scheduler();
+      if(pthread_key_delete(thread_key) != 0)
+	throw ThreadError(std::string("pthread_key_delete failed")
+			  +strerror(errno));
+    }
     ::exit(code);
+  }
 }
 
 /*
