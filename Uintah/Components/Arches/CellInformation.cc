@@ -3,42 +3,54 @@
 //
 #include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Components/Arches/ArchesFort.h>
+#include <Uintah/Grid/Level.h>
+#include <SCICore/Geometry/Point.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <iostream>
 using namespace std;
 using namespace Uintah::ArchesSpace;
-
+using SCICore::Geometry::Point;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-  IntVector idxLo = patch->getCellLowIndex();
-  IntVector idxHi = patch->getCellHighIndex();
-  IntVector domLo = idxLo;
-  IntVector domHi = idxHi;
-  IntVector Size = idxHi - idxLo;
+  int numGhostCells = 1;
+  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
+  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells);
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex()+IntVector(1,1,1);
+  IntVector Size = domHi - domLo;
 
   // cell information
   xx.resize(Size.x()); yy.resize(Size.y()); zz.resize(Size.z());
 
   // cell grid information, for nonuniform grid it will be more
   // complicated
-  xx[0] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
+  const Level* level = patch->getLevel();
+  Point lowerPos = level->getCellPosition(domLo);
+  Point upperPos = level->getCellPosition(domHi-IntVector(1,1,1));
+  xx[0] = lowerPos.x();
+  //  xx[0] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
   for (int ii = 1; ii < Size.x()-1; ii++) {
     xx[ii] = xx[ii-1]+patch->dCell().x();
   }
-  xx[Size.x()-1] = (patch->getBox().upper()).x()-0.5*(patch->dCell()).x();
-  yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
-  for (int ii = 1; ii < Size.y()-1; ii++) {
+  xx[Size.x()-1] = upperPos.x();
+  //  xx[Size.x()-1] = (patch->getBox().upper()).x()-0.5*(patch->dCell()).x();
+  //  yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
+  yy[0] = lowerPos.y();
+   for (int ii = 1; ii < Size.y()-1; ii++) {
     yy[ii] = yy[ii-1]+patch->dCell().y();
   }
-  yy[Size.y()-1] = (patch->getBox().upper()).y()-0.5*(patch->dCell()).y();
-  zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
+   yy[Size.y()-1] = upperPos.y();
+   // yy[Size.y()-1] = (patch->getBox().upper()).y()-0.5*(patch->dCell()).y();
+   //  zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
+   zz[0] = lowerPos.z();
   for (int ii = 1; ii < Size.z()-1; ii++) {
     zz[ii] = zz[ii-1]+patch->dCell().z();
   }
-  zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
-
+  zz[Size.z()-1] = upperPos.z();
+  //  zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
+#define ARCHES_GEOM_DEBUG 1
 #ifdef ARCHES_GEOM_DEBUG
   cerr << "Lower x = " << patch->getBox().lower().x() << endl;
   cerr << "xx = [" ;
@@ -159,8 +171,6 @@ CellInformation::CellInformation(const Patch* patch)
 	     ktsdw.get_objs(), kbsdw.get_objs());
 
 #ifdef ARCHES_GEOM_DEBUG
-  idxHi = idxHi + IntVector(1,1,1);
-  idxLo = idxLo + IntVector(1,1,1);
   cerr << " After CELLG : " << endl;
   cerr << " dxep = " ;
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
@@ -283,7 +293,7 @@ CellInformation::CellInformation(const Patch* patch)
   }
   cerr << endl;
   cerr << " iwsdu = " ;
-  for (int ii = idxLo.y(); ii <= idxHi.y(); ii++) {
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     cerr.width(10);
     cerr << iwsdu[ii] << " " ; 
   }
