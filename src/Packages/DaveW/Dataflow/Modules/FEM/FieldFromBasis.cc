@@ -31,9 +31,11 @@ using namespace SCICore::Containers;
 class FieldFromBasis : public Module {    
     MeshIPort* mesh_iport;
     MatrixIPort* basis_iport;
+    int matrixGen;
     ColumnMatrixIPort* rms_iport;
     MatrixOPort* elem_oport;
     ScalarFieldOPort* field_oport;
+    ScalarFieldHandle sfh;
 public:
     FieldFromBasis(const clString& id);
     virtual ~FieldFromBasis();
@@ -64,6 +66,7 @@ FieldFromBasis::FieldFromBasis(const clString& id)
     field_oport = new ScalarFieldOPort(this, "Error Field",
 				       ScalarFieldIPort::Atomic);
     add_oport(field_oport);
+    matrixGen=-1;
 }
 
 FieldFromBasis::~FieldFromBasis(){}
@@ -87,16 +90,25 @@ void FieldFromBasis::execute() {
 	return;
     }
 
+    if (matrixGen == basisH->generation && sfh.get_rep()) {
+	field_oport->send(sfh);
+	return;
+    }
+    matrixGen=basisH->generation;
+
     int counter=0;
     Array1<double> errors(nelems);
     while (counter<nelems) {
+
+	if (counter && counter%100 == 0)
+	    cerr << "FieldFromBasis: "<<counter<<"/"<<nelems<<"\n";
 	// send element's basis matrix
 	DenseMatrix* bas=new DenseMatrix(nelecs,3);
 	int i;
 	for (i=0; i<nelecs; i++) 
 	    for (int j=0; j<3; j++)
 		(*bas)[i][j]=(*basis)[counter][i*3+j];
-	if (counter<(nelecs-1)) elem_oport->send_intermediate(bas);
+	if (counter<(nelems-1)) elem_oport->send_intermediate(bas);
 	else elem_oport->send(bas);
 
 	// read error
@@ -113,7 +125,8 @@ void FieldFromBasis::execute() {
     ScalarFieldUG *sfug=new ScalarFieldUG(mesh_in, 
 					  ScalarFieldUG::ElementValues);
     sfug->data=errors;
-    field_oport->send(sfug);
+    sfh=sfug;
+    field_oport->send(sfh);
     cerr << "Done with the Module!"<<endl;
 }
 } // End namespace Modules
@@ -121,6 +134,9 @@ void FieldFromBasis::execute() {
 
 //
 // $Log$
+// Revision 1.2  1999/09/22 18:43:25  dmw
+// added new GUI
+//
 // Revision 1.1  1999/09/05 23:16:19  dmw
 // build scalar field of error values from Basis Matrix
 //
