@@ -214,7 +214,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  double Cp0 = matl->getSpecificHeat();
+  //  FIX  Need thermal properties
+  //  double Cp0 = matl->getSpecificHeat();
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -450,10 +451,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       // FIX  Need to access particle temperature, thermal constants.
 
-//      double cpnew = Cp0 + d_intialData.DCp_DTemperature*ptemperature[idx];
-      double cpnew = Cp0;
-//      double Cv = cpnew/(1+Beta*ptemperature[idx]);
-      double Cv = cpnew;
+      //      double cpnew = Cp0 + d_intialData.DCp_DTemperature*ptemperature[idx];
+      //      double Cv = cpnew/(1+Beta*ptemperature[idx]);
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -471,19 +470,19 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       pvolume[idx]=Jinc*pvolume[idx];
 
-      double rhocv = (pvolume[idx]/pmass[idx])*Cv;
+      // FIX when have the particle temperatures, thermal properties
 
-      // FIX when have the particle temperatures
+      //      double rhocv = (pvolume[idx]/pmass[idx])*Cv;
 
-//      statedata[idx].VolumeChangeHeating -=
-//		 d_intitalData.Gamma*ptemperature[idx]*ekkdot*delT;
-      statedata[idx].VolumeChangeHeating = 0.;
+      //      statedata[idx].VolumeChangeHeating -=
+      //		 d_intitalData.Gamma*ptemperature[idx]*ekkdot*delT;
 
+      // FIX Need access to thermal constants
       // Increments to the particle temperature
-      statedata[idx].ViscousHeating += svedot/rhocv*delT;
-      statedata[idx].CrackHeating   += scrdot/rhocv*delT;
+      //      statedata[idx].ViscousHeating += svedot/rhocv*delT;
+      //      statedata[idx].CrackHeating   += scrdot/rhocv*delT;
 
-//      ptemperature[idx] += (svedot + scrdot)/rhocv*delT;
+      //      ptemperature[idx] += (svedot + scrdot)/rhocv*delT;
 
       // Compute the strain energy for all the particles
       se += (D(1,1)*pstress[idx](1,1) +
@@ -605,6 +604,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.13  2000/10/19 22:48:14  bard
+// Fixed an initialization error.  Runs longer, but not working yet.
+//
 // Revision 1.12  2000/10/17 18:03:56  guilkey
 // Swapped delTLabel with delTAfterConstitutiveModel in two places.
 //
