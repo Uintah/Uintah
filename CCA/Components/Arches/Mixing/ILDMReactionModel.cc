@@ -88,12 +88,12 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 
   // This next section assumes there is only ONE reaction variable
   // !!!This section is specfically coded to read Diem's ILDM file format!!!
-  cout<<"Code is currently hard-wired to read in data for ONE rxn variable"
-      <<endl;
+  //cout<<"Code is currently hard-wired to read in data for ONE rxn variable"
+  //    <<endl;
   cout<<"MAKE SURE there are "<<d_rxnTableInfo->getNumDivsBelow(count-1)+
     d_rxnTableInfo->getNumDivsAbove(count-1)+1<<" entries for the reaction parameter"
       << endl;
-  cout<< "Otherwise, YOUR RESULTS WILL BE SCREWED UP" <<endl;
+  //cout<< "Otherwise, YOUR RESULTS WILL BE SCREWED UP" <<endl;
  
   //Data files being read in are set up as follows. The word ENTRY appear at the
   //start of each new data set , i.e. each (h,f) pair. The first line after ENTRY

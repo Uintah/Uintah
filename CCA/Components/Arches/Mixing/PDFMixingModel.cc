@@ -42,8 +42,8 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("PDFMixingModel");
   db->require("adiabatic",d_adiabatic);
-  if (!d_adiabatic)
-    cout<<"PDF::problem is nonadiabatic"<<endl;
+  //if (!d_adiabatic)
+  //cout<<"PDF::problem is nonadiabatic"<<endl;
   db->require("mixstatvars",d_numMixStatVars);
   db->require("rxnvars",d_numRxnVars);
   // read and initialize reaction model with chemkin interface
@@ -56,7 +56,6 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     d_rxnModel = new ILDMReactionModel(d_adiabatic);
   else
     throw InvalidValue("Reaction Model not supported" + rxnModel);
-  cout<<"adiabatic = "<<d_adiabatic<<endl; 
   //d_rxnModel->problemSetup(db);//Move this to the end of problemSetup
   // number of species
   ChemkinInterface* chemInterf = d_rxnModel->getChemkinInterface();
@@ -105,10 +104,9 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
   }
   // num_mix_scalars = num_streams -1
   d_numMixingVars = nofstrm - 1;
-  cout << "PDFMixingModel::numMixVars = " << d_numMixingVars << endl;
-  cout << "PDFMixingModel::numMixStatVars = " << d_numMixStatVars << endl;
-  cout <<"PDF::numRxnVars = "<<d_numRxnVars<<endl;
-  cout <<"PDF::adiabatic = "<<d_adiabatic<<endl;
+  //cout << "PDFMixingModel::numMixVars = " << d_numMixingVars << endl;
+  //cout << "PDFMixingModel::numMixStatVars = " << d_numMixStatVars << endl;
+  //cout <<"PDF::numRxnVars = "<<d_numRxnVars<<endl;
   d_tableDimension = d_numMixingVars + d_numMixStatVars + d_numRxnVars + !(d_adiabatic);
   d_tableInfo = new MixRxnTableInfo(d_tableDimension);
   bool mixTableFlag = true; //This is a mixing table, not a rxn table
@@ -118,7 +116,7 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
   d_rxnModel->problemSetup(db, this); 
   //d_depStateSpaceVars = d_streams[0].getDepStateSpaceVars();
   d_depStateSpaceVars = d_rxnModel->getTotalDepVars();
-  cout<<"PDF::tabledim = "<<d_tableDimension<<" "<<d_depStateSpaceVars<<endl;
+  //cout<<"PDF::tabledim = "<<d_tableDimension<<" "<<d_depStateSpaceVars<<endl;
   d_mixTable = new KD_Tree(d_tableDimension, d_depStateSpaceVars);
   // tableSetup is a function in DynamicTable; it allocates memory for table
   tableSetup(d_tableDimension, d_tableInfo);
