@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 
 #include <vector>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 using std::vector;

@@ -11,6 +11,7 @@
 #include <map>
 #include <iosfwd>
 #include <vector>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 namespace Uintah {
