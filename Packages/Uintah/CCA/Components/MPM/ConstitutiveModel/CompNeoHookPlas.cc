@@ -13,7 +13,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Util/NotFinished.h>
 

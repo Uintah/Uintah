@@ -6,9 +6,11 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 using std::cerr;
 using std::ifstream;
 using std::ofstream;
@@ -33,5 +35,5 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
    else 
       throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")");
 
-   return 0;
+   //return 0;
 }

@@ -1,7 +1,9 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MTSPlastic.h>
 #include <math.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -230,7 +232,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
 
   // Calculate f_q (h = 1, therefore f_q.h = f_q)
   double epdot = sqrt(Ddev.NormSquared()/1.5);
-  double f_q = epdot;
+  double f_q = T;
 
   // Form the elastic-plastic tangent modulus
   Matrix3 Cr, rC;

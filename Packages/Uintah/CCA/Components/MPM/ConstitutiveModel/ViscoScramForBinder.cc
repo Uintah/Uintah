@@ -20,8 +20,10 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Math/MinMax.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using std::string;

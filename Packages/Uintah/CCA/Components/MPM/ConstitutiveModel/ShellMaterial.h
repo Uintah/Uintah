@@ -11,39 +11,23 @@
 
 namespace Uintah {
 
-/**************************************
+////////////////////////////////////////////////////////////////////////////
+/*! 
+   \class ShellMaterial
+   \brief Material model for shells (stresses normal to the shell are zero).
+   \warn  Only isotropic hypoelastic shells implemented.
+   \author Biswajit Banerjee \n
+   C-SAFE and Department of Mechanical Engineering \n
+   University of Utah \n
+   Copyright (C) 2003 University of Utah \n
+*/
+////////////////////////////////////////////////////////////////////////////
 
-CLASS
-   ShellMaterial
-   
-   ShellMaterial Model
-
-GENERAL INFORMATION
-
-   ShellMaterial.h
-
-   Biswajit Banerjee
-   Department of Mechanical Engineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2003 University of Utah
-
-KEYWORDS
-   ShellMaterial formulation
-
-DESCRIPTION
-   
-WARNING
-
-   Only Isotropic ShellMaterials
-  
-****************************************/
   class ShellMaterial : public ConstitutiveModel {
 
   public:
-    // Create datatype for storing model parameters
+
+    /*! Datatype for storing model parameters */
     struct CMData {
       double Bulk;
       double Shear;
@@ -106,7 +90,8 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Add computes and requires for interpolation of particle rotation to grid
+    /*! Add computes and requires for interpolation of particle rotation to 
+        grid */
     //
     void addComputesRequiresParticleRotToGrid(Task* task,
 					      const MPMMaterial* matl,
@@ -114,7 +99,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Actually interpolate normal rotation from particles to the grid
+    /*! Actually interpolate normal rotation from particles to the grid */
     //
     void interpolateParticleRotToGrid(const PatchSubset* patches,
 				      const MPMMaterial* matl,
@@ -133,7 +118,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Add computes and requires computation of rotational internal moment
+    /*! Add computes and requires computation of rotational internal moment */
     //
     void addComputesRequiresRotInternalMoment(Task* task,
 					      const MPMMaterial* matl,
@@ -141,7 +126,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Actually compute rotational Internal moment
+    /*! Actually compute rotational Internal moment */
     //
     void computeRotInternalMoment(const PatchSubset* patches,
 				  const MPMMaterial* matl,
@@ -150,7 +135,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Add computes and requires computation of rotational acceleration
+    /*! Add computes and requires computation of rotational acceleration */
     //
     void addComputesRequiresRotAcceleration(Task* task,
 					    const MPMMaterial* matl,
@@ -158,7 +143,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Actually compute rotational acceleration
+    /*! Actually compute rotational acceleration */
     //
     void computeRotAcceleration(const PatchSubset* patches,
 				const MPMMaterial* matl,
@@ -167,7 +152,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Add computes and requires update of rotation rate
+    /*! Add computes and requires update of rotation rate */
     //
     void addComputesRequiresRotRateUpdate(Task* task,
 					  const MPMMaterial* matl,
@@ -175,7 +160,7 @@ WARNING
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // Actually update rotation rate
+    /*! Actually update rotation rate */
     //
     void particleNormalRotRateUpdate(const PatchSubset* patches,
 				     const MPMMaterial* matl,
@@ -210,6 +195,22 @@ WARNING
     // class function to create a new object from parameters
     static ConstitutiveModel* create(double *p_array);
 
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches,
+					const bool recursion) const
+    {
+    }
+
+    virtual void computeStressTensor(const PatchSubset* patches,
+				     const MPMMaterial* matl,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
+				     Solver* solver,
+				     const bool recursion)
+    {
+    }
+	 
   protected:
 
     // Calculate the incremental rotation matrix for a shell particle

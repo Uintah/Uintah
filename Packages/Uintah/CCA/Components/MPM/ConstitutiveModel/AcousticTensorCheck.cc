@@ -30,7 +30,7 @@ normalCompare(const Vector& normal1, const Vector& normal2, double tol)
   Vector sum = normal1 + normal2;
   return ( diff[0]*diff[0] + diff[1]*diff[1] + diff[2]*diff[2] < tol ||
            sum[0]*sum[0] + sum[1]*sum[1] + sum[2]*sum[2] < tol);
-};
+}
 
 /*! As above, 10e-10 seems to be a good tolerance for this comparison */
 bool normalCompare(const Vector& normal1, const Vector& normal2);
@@ -38,7 +38,7 @@ bool
 normalCompare(const Vector& normal1, const Vector& normal2)
 {
   return normalCompare(normal1, normal2, 10e-10);
-};
+}
 
 /*! Read in the sweep increment, number of theta checks, and number of phi
  *   checks from inputs file problem specification 

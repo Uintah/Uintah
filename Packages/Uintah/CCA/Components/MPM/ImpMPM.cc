@@ -35,9 +35,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
+#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

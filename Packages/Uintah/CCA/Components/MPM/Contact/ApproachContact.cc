@@ -16,9 +16,11 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Util/NotFinished.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 
 using namespace Uintah;

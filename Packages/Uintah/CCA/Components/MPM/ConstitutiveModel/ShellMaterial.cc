@@ -19,8 +19,10 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using namespace Uintah;
@@ -284,7 +286,7 @@ ShellMaterial::computeStableTimestep(const Patch* patch,
 void 
 ShellMaterial::addComputesRequiresParticleRotToGrid(Task* task,
 						    const MPMMaterial* matl,
-						    const PatchSet* patches)
+						    const PatchSet* )
 {
   Ghost::GhostType  gan = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -715,7 +717,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 void 
 ShellMaterial::addComputesRequiresRotInternalMoment(Task* task,
 						    const MPMMaterial* matl,
-						    const PatchSet* patches)
+						    const PatchSet* )
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -798,7 +800,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
 void 
 ShellMaterial::addComputesRequiresRotAcceleration(Task* task,
 					          const MPMMaterial* matl,
-					          const PatchSet* patches) 
+					          const PatchSet* ) 
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   //  Ghost::GhostType  gnone = Ghost::None;
@@ -887,7 +889,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
 void 
 ShellMaterial::addComputesRequiresRotRateUpdate(Task* task,
 						const MPMMaterial* matl,
-						const PatchSet* patches) 
+						const PatchSet* ) 
 {
   Ghost::GhostType gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();

@@ -19,10 +19,12 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Util/NotFinished.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;
