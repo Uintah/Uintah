@@ -486,12 +486,22 @@ NIMRODConverter::execute(){
   bool updateMode = false;
 
   if( nmodes_ > 0 ) {
+    bool haveMode = false;
+
     for( int ic=0; ic<=nmodes_; ic++ ) {
       gModes_[ic]->reset();
       if( modes_[ic] != gModes_[ic]->get() ) {
 	modes_[ic] = gModes_[ic]->get();
 	updateMode = true;
       }
+
+      if( !haveMode ) haveMode = (modes_[ic] ? true : false );
+    }
+
+    if( !haveMode ) {
+      warning( "Select the mode for the calculation" );
+      error_ = true; // Not really an error but it so it will execute.
+      return;
     }
   }
 
