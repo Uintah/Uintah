@@ -254,9 +254,9 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
   fem_mat_ = build_composite_matrix(which_conductivity);
   
   // send out data
-  mesh_oport_->send(mesh_out_, true);
-  cond_vector_oport_->send(cond_vector_, true);
-  fem_mat_oport_->send(fem_mat_, true);
+  mesh_oport_->send_intermediate(mesh_out_);
+  cond_vector_oport_->send_intermediate(cond_vector_);
+  fem_mat_oport_->send_intermediate(fem_mat_);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix

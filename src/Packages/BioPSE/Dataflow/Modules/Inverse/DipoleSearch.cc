@@ -201,11 +201,11 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   
   // send out data
   leadfield_selectH_ = leadfield_select_out;
-  leadfield_select_oport_->send(leadfield_selectH_, true);
+  leadfield_select_oport_->send_intermediate(leadfield_selectH_);
   simplexH_ = pcv;
-  simplex_oport_->send(simplexH_, true);
+  simplex_oport_->send_intermediate(simplexH_);
   dipoleH_ = pcd;
-  dipole_oport_->send(dipoleH_, true);
+  dipole_oport_->send_intermediate(dipoleH_);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
