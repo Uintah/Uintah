@@ -1726,7 +1726,6 @@ else
   ],
   $_sci_inc, GL, $_sci_lib,,
   [
-    glBindProgramARB(0,0);
     glActiveTexture(0);
   ],optional)
 

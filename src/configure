@@ -11131,7 +11131,6 @@ int
 main ()
 {
 
-    glBindProgramARB(0,0);
     glActiveTexture(0);
 
   ;
