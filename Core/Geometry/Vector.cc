@@ -32,18 +32,18 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Containers/String.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
+#include <stdio.h>
+
 using std::istream;
 using std::ostream;
-#include <stdio.h>
 
 namespace SCIRun {
 
-clString
-Vector::string() const
+string
+Vector::get_string() const
 {
 #if 0
     return clString("[")
@@ -53,7 +53,7 @@ Vector::string() const
 #endif
     char buf[100];
     sprintf(buf, "[%g, %g, %g]", _x, _y, _z);
-    return clString(buf);
+    return buf;
 }
 
 void
@@ -79,7 +79,7 @@ Vector::normal() const
 
 ostream& operator<<( ostream& os, const Vector& v )
 {
-   os << v.string();
+   os << v.get_string();
    return os;
 }
 
