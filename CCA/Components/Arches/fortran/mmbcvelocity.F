@@ -8,8 +8,8 @@ c*********************************************************************
 
 #undef normalbc
 #undef tangentialbc
-c#define normalbc
-c#define tangentialbc
+#define normalbc
+#define tangentialbc
 
 c     The "usual" normal and tangential bcs involve severing
 c     connections to the cell under consideration.
