@@ -323,7 +323,7 @@ void MDSPlusDataReader::execute(){
 
 	if (vec.size() > 1) {
 	  
-	  NrrdData* onrrd = new NrrdData(true);
+	  NrrdData* onrrd = scinew NrrdData(true);
 	  string new_label("");
 	  string axis_label("");
 
@@ -529,7 +529,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     remark( str.str() );
   }
 
-  if( !mds.valid( signal ) ) {
+  if( 0 && !mds.valid( signal ) ) {
     ostringstream str;
     str << "Invalid signal " << signal;
     error( str.str() );
@@ -612,7 +612,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     // Stuff the data into the NRRD.
     string tuple_type_str(":Scalar");
     int sink_size = 1;
-    NrrdData *nout = scinew NrrdData(false);
+    NrrdData *nout = scinew NrrdData(true);
 
     switch(ndims) {
     case 1:
