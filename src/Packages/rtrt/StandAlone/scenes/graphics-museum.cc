@@ -1679,9 +1679,6 @@ void build_history_hall (Group* main_group, Group* no_shadow_group,
 /* **************** david room **************** */
 
 void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *light2) {
-  //  Material* david_white = new LambertianMaterial(Color(.8,.75,.7)); 
-  //  Material* david_white = new Phong(Color(.8,.75,.7),
-  //				    Color(.2,.2,.2),40); 
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* light_marble1 
     = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
@@ -1755,8 +1752,11 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 
   printf ("\n\n*********************************\n\n");
 
-  Color bone(0.9608, 0.8706, 0.7020);
-  Material* david_white=new Phong(bone*.6, bone*.6, 100, 0);
+  //  Color bone(0.9608, 0.8706, 0.7020);
+  //  Material* david_white=new Phong(bone*.6, bone*.6, 100, 0);
+  //  Material* david_white = new LambertianMaterial(Color(.8,.75,.7)); 
+  Material* david_white = new Phong(Color(.8,.75,.7),
+  				    Color(.2,.2,.2),40); 
 
 #if INSERTHUGEMODELS
   GridTris* davidg = new GridTris(david_white, cells, depth,
@@ -3312,6 +3312,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   floor_mat->my_lights.add(HistoryL2);
   floor_mat->my_lights.add(DavL1);
   floor_mat->my_lights.add(DavL2);
+#else 
+  floor_mat->my_lights.add(HistoryL0);
+  floor_mat->my_lights.add(HistoryL1);
+  floor_mat->my_lights.add(HistoryL2);
+  floor_mat->my_lights.add(DavL1);
+  floor_mat->my_lights.add(DavL2);
+  floor_mat->my_lights.add(ModL1);
 #endif
 
   all_wall_white->my_lights.add (HistoryL0);
