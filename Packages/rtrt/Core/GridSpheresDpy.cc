@@ -282,6 +282,51 @@ void GridSpheresDpy::run()
       case XK_S:
         // The modulous is the number of shade methods
         new_shade_method = (new_shade_method+1)%5;
+        cerr<<"Shade method:  ";
+        switch (new_shade_method) {
+        case 0:
+          cerr<<"Color mapping with lambertian shading"<<endl;
+          break;
+        case 1:
+          cerr<<"Constant color with lambertian shading"<<endl;
+          break;
+        case 2:
+          cerr<<"Color mapping with textured luminance"<<endl;
+          break;
+        case 3:
+          cerr<<"Constant color with textured luminance"<<endl;
+          break;
+        case 4:
+          cerr<<"Color mapping with textured luminance as ambient term"<<endl;
+          break;
+        case 5:
+          cerr<<"Constant color with textured luminance as ambient term"<<endl;
+          break;
+        }
+        break;
+      case XK_0:
+        new_shade_method=0;
+        cerr<<"Shade method:  Color mapping with lambertian shading"<<endl;
+        break;
+      case XK_1:
+        new_shade_method=1;
+        cerr<<"Shade method:  Constant color with lambertian shading"<<endl;
+        break;
+      case XK_2:
+        new_shade_method=2;
+        cerr<<"Shade method:  Color mapping with textured luminance"<<endl;
+        break;
+      case XK_3:
+        new_shade_method=3;
+        cerr<<"Shade method:  Constant color with textured luminance"<<endl;
+        break;
+      case XK_4:
+        new_shade_method=4;
+        cerr<<"Shade method:  Color mapping with textured luminance as ambient term"<<endl;
+        break;
+      case XK_5:
+        new_shade_method=5;
+        cerr<<"Shade method:  Constant color with textured luminance as ambient term"<<endl;
         break;
       }
       break;
