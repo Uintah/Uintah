@@ -34,16 +34,18 @@ using namespace std;
 #define ROOMFLOOR              .55
 #define ROOMHEIGHT             ((30*ROOMSCALE)+ROOMFLOOR)
 #define ROOMRADIUS             (50*ROOMSCALE)
-#define ROOMOFFSET             4
-#define PORTALOFFSET           .001
-#define ROOMCENTER             (ROOMRADIUS+ROOMOFFSET),(ROOMRADIUS+ROOMOFFSET)
-#define WALLTHICKNESS          .1
+#define ROOMOFFSETX            4
+#define ROOMOFFSETY            4
+#define PORTALOFFSET           .002
+#define ROOMCENTER             (ROOMRADIUS+ROOMOFFSETX),\
+                               (ROOMRADIUS+ROOMOFFSETY)
+#define WALLTHICKNESS          .001
 #define SYSTEM_SIZE_SCALE      (1.438848E-5*ROOMSCALE) /*1.438848E-6*/
 #define SYSTEM_DISTANCE_SCALE  (6.76E-9*ROOMSCALE) /*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
 #define SYSTEM_TIME_SCALE2     .01
 #define FLIP_IMAGES            true
-#define ANIMATE                TRUE
+#define ANIMATE                true
 #if 0
 #define IMAGEDIR      "/home/moulding/images/"
 #else
@@ -208,72 +210,124 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
 #if RENDERWALLS
   Parallelogram *floor = new Parallelogram(holo0, 
-                                           Point(ROOMOFFSET,
-                                                 ROOMOFFSET,
+                                           Point(ROOMOFFSETX,
+                                                 ROOMOFFSETY,
                                                  ROOMFLOOR),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,ROOMRADIUS*2,0));
 
   Parallelogram *ceiling = new Parallelogram(holo0, 
-                                             Point(ROOMOFFSET,
-                                                   ROOMOFFSET,
+                                             Point(ROOMOFFSETX,
+                                                   ROOMOFFSETY,
                                                    ROOMHEIGHT),
                                              Vector(ROOMRADIUS*2,0,0),
                                              Vector(0,ROOMRADIUS*2,0));
 
+  // south
   Parallelogram *wall0 = new Parallelogram(holo1, 
-                                           Point(ROOMOFFSET,ROOMOFFSET,
+                                           Point(ROOMOFFSETX,ROOMOFFSETY,
                                                  ROOMFLOOR),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,0,ROOMHEIGHT));
+  // north
   Parallelogram *wall1 = new Parallelogram(holo1, \
-                                           Point(ROOMRADIUS*2+ROOMOFFSET,
-                                                 ROOMRADIUS*2+ROOMOFFSET,
+                                           Point(ROOMRADIUS*2+ROOMOFFSETX,
+                                                 ROOMRADIUS*2+ROOMOFFSETY,
                                                  ROOMFLOOR),
                                            Vector(-ROOMRADIUS*2,0,0),
                                            Vector(0,0,ROOMHEIGHT));
+  // east
   Parallelogram *wall2 = new Parallelogram(holo1, 
-                                           Point(ROOMRADIUS*2+ROOMOFFSET,
-                                                 ROOMOFFSET,ROOMFLOOR),
+                                           Point(ROOMRADIUS*2+ROOMOFFSETX,
+                                                 ROOMOFFSETY,ROOMFLOOR),
                                            Vector(0,ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
+  // west
   Parallelogram *wall3 = new Parallelogram(holo1, 
-                                           Point(ROOMOFFSET,
-                                                 ROOMRADIUS*2+ROOMOFFSET,
+                                           Point(ROOMOFFSETX,
+                                                 ROOMRADIUS*2+ROOMOFFSETY,
                                                  ROOMFLOOR),
                                            Vector(0,-ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
 
+  // south
+  Parallelogram *outwall0 = new Parallelogram(white, 
+                                              Point(ROOMOFFSETX-
+                                                    WALLTHICKNESS,
+                                                    ROOMOFFSETY-
+                                                    WALLTHICKNESS,
+                                                    ROOMFLOOR),
+                                              Vector((ROOMRADIUS*2)+
+                                                     (WALLTHICKNESS*2),0,0),
+                                              Vector(0,0,ROOMHEIGHT+
+                                                     (WALLTHICKNESS*2)));
+  // north
+  Parallelogram *outwall1 = new Parallelogram(white,
+                                              Point(ROOMRADIUS*2+ROOMOFFSETX+
+                                                    WALLTHICKNESS,
+                                                    ROOMRADIUS*2+ROOMOFFSETY+
+                                                    WALLTHICKNESS,
+                                                    ROOMFLOOR),
+                                              Vector(-ROOMRADIUS*2-
+                                                     WALLTHICKNESS*2,0,0),
+                                              Vector(0,0,ROOMHEIGHT+
+                                                     WALLTHICKNESS*2));
+  // east
+  Parallelogram *outwall2 = new Parallelogram(white, 
+                                              Point(ROOMRADIUS*2+ROOMOFFSETX+
+                                                    WALLTHICKNESS,
+                                                    ROOMOFFSETY-WALLTHICKNESS,
+                                                    ROOMFLOOR),
+                                              Vector(0,ROOMRADIUS*2+
+                                                     WALLTHICKNESS*2,0),
+                                              Vector(0,0,ROOMHEIGHT+
+                                                     WALLTHICKNESS*2));
+  // west
+  Parallelogram *outwall3 = new Parallelogram(white, 
+                                              Point(ROOMOFFSETX-
+                                                    WALLTHICKNESS,
+                                                    ROOMRADIUS*2+ROOMOFFSETY+
+                                                    WALLTHICKNESS,
+                                                    ROOMFLOOR),
+                                              Vector(0,-ROOMRADIUS*2-
+                                                     (WALLTHICKNESS*2),0),
+                                              Vector(0,0,ROOMHEIGHT+
+                                                     (WALLTHICKNESS*2)));
+  
   galaxy_room->add( floor );
   galaxy_room->add( ceiling );
   galaxy_room->add( wall0 );
   galaxy_room->add( wall1 );
   galaxy_room->add( wall2 );
   galaxy_room->add( wall3 );
+  galaxy_room->add( outwall0 );
+  galaxy_room->add( outwall1 );
+  galaxy_room->add( outwall2 );
+  galaxy_room->add( outwall3 );
 
   // doors
   
   PortalParallelogram *door0a = 
-    new PortalParallelogram(Point(ROOMOFFSET+DOOROFFSET,
-                                  ROOMOFFSET-PORTALOFFSET,ROOMFLOOR),
+    new PortalParallelogram(Point(ROOMOFFSETX+DOOROFFSET,
+                                  ROOMOFFSETY-PORTALOFFSET,ROOMFLOOR),
                             Vector(DOORWIDTH,0,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door0b = 
-    new PortalParallelogram(Point(ROOMOFFSET+DOOROFFSET,
-                                  ROOMOFFSET+PORTALOFFSET,ROOMFLOOR),
+    new PortalParallelogram(Point(ROOMOFFSETX+DOOROFFSET,
+                                  ROOMOFFSETY+PORTALOFFSET,ROOMFLOOR),
                             Vector(DOORWIDTH,0,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door1a = 
-    new PortalParallelogram(Point(ROOMOFFSET-PORTALOFFSET,
-                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,ROOMFLOOR),
+    new PortalParallelogram(Point(ROOMOFFSETX-PORTALOFFSET,
+                                  ROOMOFFSETY+DOOROFFSET+DOORWIDTH,ROOMFLOOR),
                             Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door1b = 
-    new PortalParallelogram(Point(ROOMOFFSET+PORTALOFFSET,
-                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,ROOMFLOOR),
+    new PortalParallelogram(Point(ROOMOFFSETX+PORTALOFFSET,
+                                  ROOMOFFSETY+DOOROFFSET+DOORWIDTH,ROOMFLOOR),
                             Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
