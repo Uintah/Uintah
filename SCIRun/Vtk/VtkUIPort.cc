@@ -74,9 +74,13 @@ VtkUIPort::~VtkUIPort()
 int 
 VtkUIPort::ui()
 {
-  Thread* t = new Thread(new VtkUIThread(ci), "Vtk UI Thread", 0);
-  t->detach();
-  //TODO: need return correct value: 0 success, -1 fatal error, 
+  if(ci->getComponent()->isThreadedUI()){
+    Thread* t = new Thread(new VtkUIThread(ci), "Vtk UI Thread", 0);
+    t->detach();
+  }else{
+    return ci->getComponent()->popupUI();
+  }
+  //return 0 success, -1 fatal error, 
   //other values for other errors.
   return 0;
 }

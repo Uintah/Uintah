@@ -28,6 +28,8 @@
 
 #include <SCIRun/Vtk/VtkPortInstance.h>
 #include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/InPort.h>
+#include <SCIRun/Vtk/OutPort.h>
 #include <iostream>
 using namespace SCIRun;
 using namespace vtk;
@@ -42,6 +44,11 @@ VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci,
 
 VtkPortInstance::~VtkPortInstance()
 {
+}
+
+std::string
+VtkPortInstance::getModel(){
+  return "vtk";
 }
 
 string VtkPortInstance::getUniqueName()
@@ -70,9 +77,9 @@ bool VtkPortInstance::connect(PortInstance* to)
   
   //  Network* net = port->get_module()->getNetwork();
   if(porttype == Output){
-    peer->port->connect(port);
+    ((InPort*)peer->port)->connect((OutPort*)port);
   } else {
-    port->connect(port);
+    ((InPort*)port)->connect((OutPort*)port);
   }
   return true;
 }
@@ -85,28 +92,23 @@ bool VtkPortInstance::disconnect(PortInstance*)
 
 bool VtkPortInstance::canConnectTo(PortInstance *to)
 {
-  // TODO: use Port's interface to decide if can be connected. 
-  //VtkPortInstance* p2 = dynamic_cast<VtkPortInstance*>(to);
-  cerr<<"#1"<<endl;
+  //skip connections between different component models
+  //particuarlly connections between UI ports (CCA) and Vtk ports. 
+  if(getModel()!=to->getModel()) return false;
   if(porttype == Input){
-    cerr<<"#2"<<endl;
     if(((VtkPortInstance*)to)->porttype ==Input) return false;
     // Input port does not allow multiple connections.
-    cerr<<"#3"<<endl;
+    InPort* inport = (InPort*)port;
+    OutPort* outport =(OutPort*)(((VtkPortInstance*)to)->port);
     if(nConnections>1) return false; 
-    cerr<<"#4"<<endl;
-    if(port->accept(((VtkPortInstance*)to)->port)) return true;
-    cerr<<"#5"<<endl;
+    if(inport->accept(outport)) return true;
   }else{
-    cerr<<"#6"<<endl;
     if(((VtkPortInstance*)to)->porttype ==Output) return false;
-    cerr<<"#7"<<endl;
     // Input port does not allow multiple connections.
+    OutPort* outport = (OutPort*)port;
+    InPort* inport =(InPort*)(((VtkPortInstance*)to)->port);
     if(((VtkPortInstance*)to)->nConnections>1) return false; 
-    cerr<<"#8"<<endl;
-    if(((VtkPortInstance*)to)->port->accept(port)) return true;
-    cerr<<"#9"<<endl;
+    if(inport->accept(outport)) return true;
   }
-  cerr<<"#10"<<endl;
   return false;
 }

@@ -16,7 +16,7 @@
 */
 
 /*
- *  Port.h: 
+ *  OutPort.cc: 
  *
  *  Written by:
  *   Keming Zhang
@@ -25,37 +25,29 @@
  *   January 2004
  *
  */
+#include <SCIRun/Vtk/OutPort.h>
 
-#ifndef SCIRun_Vtk_Port_h
-#define SCIRun_Vtk_Port_h
-#include <string>
 class vtkObject;
 
-namespace SCIRun {
-  namespace vtk {
-    class Component;
-    class Port{
-    public:
-      //constructor
-      Port();
+using namespace SCIRun;
+using namespace vtk;
 
-      //destructor
-      ~Port();
-
-      //set the name for the port
-      void setName(const std::string &name);
-
-      //get the name of the port
-      std::string getName();
-
-      //check if this port is an input port
-      bool isInput();
-
-    protected:
-      std::string name;
-      bool is_input;
-    };
-  }
+OutPort::OutPort(){
+  vtkobj=NULL;
+  is_input=false;
 }
 
-#endif
+void 
+OutPort::setOutput(vtkObject* vtkobj){
+  this->vtkobj=vtkobj;
+}
+
+vtkObject*
+OutPort::getOutput(){
+  return vtkobj;
+}
+
+
+OutPort::~OutPort(){
+}
+

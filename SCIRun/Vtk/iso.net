@@ -1,0 +1,21 @@
+5
+4
+Vtk.Actor
+426
+267
+Vtk.ContourFilter
+162
+77
+Vtk.PolyDataMapper
+333
+76
+Vtk.Renderer
+622
+77
+Vtk.StructuredPointsReader
+107
+253
+4 StructuredPointsReader::output 1 ContourFilter::input
+2 PolyDataMapper::output 0 Actor::input
+0 Actor::output 3 Renderer::input
+1 ContourFilter::output 2 PolyDataMapper::input

@@ -23,10 +23,13 @@ SRCS     += $(SRCDIR)/VtkComponentModel.cc \
 	$(SRCDIR)/VtkComponentDescription.cc \
 	$(SRCDIR)/VtkComponentInstance.cc \
 	$(SRCDIR)/VtkPortInstance.cc \
-	$(SRCDIR)/VtkUIPort.cc
+	$(SRCDIR)/VtkUIPort.cc \
+	$(SRCDIR)/Port.cc \
+	$(SRCDIR)/InPort.cc \
+	$(SRCDIR)/OutPort.cc \
+	$(SRCDIR)/Component.cc 
 
 
 
 $(SRCDIR)/VtkComponentInstance.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/VtkComponentModel.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/VtkScheduler.o: Core/CCA/spec/cca_sidl.h
