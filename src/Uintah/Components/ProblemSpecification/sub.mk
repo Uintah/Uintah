@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Components/ProblemSpecification
 
 SRCS	+= $(SRCDIR)/ProblemSpecReader.cc
 
-PSELIBS := Uintah/Interface
+PSELIBS := Uintah/Interface Uintah/Exceptions
 LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
@@ -28,6 +28,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.7  2000/04/12 22:59:42  sparker
+# Added crude error handling capabilities to reader
+#
 # Revision 1.6  2000/04/06 18:10:31  jas
 # Added Uintah/Grid to the PSELIB for test2 to compile.
 #

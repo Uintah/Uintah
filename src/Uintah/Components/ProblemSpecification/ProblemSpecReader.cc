@@ -1,15 +1,113 @@
 
 #include "ProblemSpecReader.h"
+#include <Uintah/Exceptions/ProblemSetupException.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <sax/SAXException.hpp>
+#include <sax/SAXParseException.hpp>
+#include <sax/ErrorHandler.hpp>
 #include <iostream>
+#include <stdio.h>
 using namespace std;
 
+using Uintah::Exceptions::ProblemSetupException;
 using Uintah::Interface::ProblemSpec;
 
 void outputContent(ostream& target, const DOMString &s);
 ostream& operator<<(ostream& target, const DOMString& toWrite);
 ostream& operator<<(ostream& target, DOM_Node& toWrite);
 static bool     doEscapes       = true;
+
+static string to_string(int i)
+{
+    char buf[20];
+    sprintf(buf, "%d", i);
+    return string(buf);
+}
+
+static string xmlto_string(const DOMString& str)
+{
+    char* s = str.transcode();
+    string ret = string(s);
+    delete[] s;
+    return ret;
+}
+
+static string xmlto_string(const XMLCh* const str)
+{
+    char* s = XMLString::transcode(str);
+    string ret = string(s);
+    delete[] s;
+    return ret;
+}
+
+class MyErrorHandler : public ErrorHandler {
+public:
+    bool foundError;
+
+    MyErrorHandler();
+    ~MyErrorHandler();
+
+    void warning(const SAXParseException& e);
+    void error(const SAXParseException& e);
+    void fatalError(const SAXParseException& e);
+    void resetErrors();
+
+private :
+    MyErrorHandler(const MyErrorHandler&);
+    void operator=(const MyErrorHandler&);
+};
+
+MyErrorHandler::MyErrorHandler()
+{
+    foundError=false;
+}
+
+MyErrorHandler::~MyErrorHandler()
+{
+}
+
+static void postMessage(const string& errmsg, bool err=true)
+{
+    cerr << errmsg << '\n';
+}
+
+void MyErrorHandler::error(const SAXParseException& e)
+{
+    foundError=true;
+    postMessage(string("Error at (file ")+xmlto_string(e.getSystemId())
+		+", line "+to_string((int)e.getLineNumber())
+		+", char "+to_string((int)e.getColumnNumber())
+		+"): "+xmlto_string(e.getMessage()));
+}
+
+void MyErrorHandler::fatalError(const SAXParseException& e)
+{
+    foundError=true;
+    postMessage(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
+		+", line "+to_string((int)e.getLineNumber())
+		+", char "+to_string((int)e.getColumnNumber())
+		+"): "+xmlto_string(e.getMessage()));
+}
+
+void MyErrorHandler::warning(const SAXParseException& e)
+{
+    postMessage(string("Warning at (file ")+xmlto_string(e.getSystemId())
+		+", line "+to_string((int)e.getLineNumber())
+		+", char "+to_string((int)e.getColumnNumber())
+		+"): "+xmlto_string(e.getMessage()));
+}
+
+void MyErrorHandler::resetErrors()
+{
+}
+
+static string toString(const DOMString& s)
+{
+    char *p = s.transcode();
+    string r (p);
+    delete [] p;
+    return r;
+}
 
 ProblemSpecReader::ProblemSpecReader(const std::string& filename)
     : filename(filename)
@@ -28,35 +126,40 @@ ProblemSpecP ProblemSpecReader::readInputFile()
     XMLPlatformUtils::Initialize();
   }
   catch(const XMLException& toCatch) {
-    cerr << "Error during Xerces-c Initialization.\n"
-	 << "  Exception message:"
-	 << DOMString(toCatch.getMessage()) << endl;
-    //return ;
-    exit(1);
+      throw ProblemSetupException("XML Exception: "+toString(toCatch.getMessage()));
   }
   
 
-  // Instantiate the DOM parser.
-  DOMParser parser;
-  parser.setDoValidation(false);
+  ProblemSpecP prob_spec;
+  try {
+      // Instantiate the DOM parser.
+      DOMParser parser;
+      parser.setDoValidation(false);
 
-  // Parse the input file
-  // No exceptions just yet, need to add
+      MyErrorHandler handler;
+      parser.setErrorHandler(&handler);
 
-  cout << "Parsing " << filename << endl;
-  parser.parse(filename.c_str());
-  cout << "Works after parsing . . ." << endl;
+      // Parse the input file
+      // No exceptions just yet, need to add
 
+      cout << "Parsing " << filename << endl;
+      parser.parse(filename.c_str());
 
-  // Add the parser contents to the ProblemSpecP d_doc
+      if(handler.foundError)
+	  throw ProblemSetupException("Error reading file: "+filename);
 
-  DOM_Document doc = parser.getDocument();
+      // Add the parser contents to the ProblemSpecP d_doc
 
-  ProblemSpecP prob_spec = new ProblemSpec;
-  DOM_Node null_node;
+      DOM_Document doc = parser.getDocument();
+
+      prob_spec = new ProblemSpec;
+      DOM_Node null_node;
  
-  prob_spec->setDoc(doc);
-  prob_spec->setNode(null_node);
+      prob_spec->setDoc(doc);
+      prob_spec->setNode(null_node);
+  } catch(const XMLException& ex) {
+      throw ProblemSetupException("XML Exception: "+toString(ex.getMessage()));
+  }
 
   return prob_spec;
 }
