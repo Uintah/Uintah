@@ -54,7 +54,7 @@ public:
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const = 0;
 
-  virtual void find_closest(double &result, const Point &p) const = 0;
+  virtual double find_closest(double &result, const Point &p) const = 0;
 };
 
 
@@ -70,7 +70,7 @@ public:
   virtual bool interpolate(double &result, const Point &p) const;
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const;
-  virtual void find_closest(double &result, const Point &p) const;
+  virtual double find_closest(double &result, const Point &p) const;
 private:
 
   bool finterpolate(double &result, const Point &p) const;
@@ -291,10 +291,10 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 
 
 template <class F>
-void
+double
 SFInterface<F>::find_closest(double &minout, const Point &p) const
 {
-  double mindist = 1.0e6;
+  double mindist = 1.0e15;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch (fld_->data_at())
   {
@@ -393,6 +393,8 @@ SFInterface<F>::find_closest(double &minout, const Point &p) const
   case F::NONE:
     break;
   }
+
+  return mindist;
 }
 
 
@@ -406,7 +408,7 @@ public:
   virtual bool interpolate(Vector &result, const Point &p) const = 0;
   virtual bool interpolate_many(vector<Vector> &results,
 				const vector<Point> &points) const = 0;
-  virtual void find_closest(Vector &result, const Point &p) const = 0;
+  virtual double find_closest(Vector &result, const Point &p) const = 0;
 };
 
 
@@ -423,7 +425,7 @@ public:
   virtual bool interpolate(Vector &result, const Point &p) const;
   virtual bool interpolate_many(vector<Vector> &results,
 				const vector<Point> &points) const;
-  virtual void find_closest(Vector &result, const Point &p) const;
+  virtual double find_closest(Vector &result, const Point &p) const;
 
 private:
   bool finterpolate(Vector &result, const Point &p) const;
@@ -667,10 +669,10 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 
 
 template <class F>
-void
+double
 VFInterface<F>::find_closest(Vector &minout, const Point &p) const
 {
-  double mindist = 1.0e6;
+  double mindist = 1.0e15;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch (fld_->data_at())
   {
@@ -761,6 +763,8 @@ VFInterface<F>::find_closest(Vector &minout, const Point &p) const
   case F::NONE:
     break;
   }
+
+  return mindist;
 }
 
 
@@ -775,7 +779,7 @@ public:
   virtual bool interpolate(Tensor &result, const Point &p) const = 0;
   virtual bool interpolate_many(vector<Tensor> &results,
 				const vector<Point> &points) const = 0;
-  virtual void find_closest(Tensor &result, const Point &p) const = 0;
+  virtual double find_closest(Tensor &result, const Point &p) const = 0;
 };
 
 
@@ -790,7 +794,7 @@ public:
   virtual bool interpolate(Tensor &result, const Point &p) const;
   virtual bool interpolate_many(vector<Tensor> &results,
 				const vector<Point> &points) const;
-  virtual void find_closest(Tensor &result, const Point &p) const;
+  virtual double find_closest(Tensor &result, const Point &p) const;
   
 private:
   bool finterpolate(Tensor &result, const Point &p) const;
@@ -923,10 +927,10 @@ TFInterface<F>::interpolate_many(vector<Tensor> &results,
 
 
 template <class F>
-void
+double
 TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
 {
-  double mindist = 1.0e6;
+  double mindist = 1.0e15;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch (fld_->data_at())
   {
@@ -1017,6 +1021,8 @@ TFInterface<F>::find_closest(Tensor &minout, const Point &p) const
   case F::NONE:
     break;
   }
+
+  return mindist;
 }
 
 
