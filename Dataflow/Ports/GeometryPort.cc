@@ -497,7 +497,7 @@ GeometryOPort::have_data()
 void
 GeometryOPort::resend(Connection*)
 {
-  cerr << "GeometryOPort can't resend and shouldn't need to!\n";
+  //  cerr << "GeometryOPort can't resend and shouldn't need to!\n";
 }
 
 int
