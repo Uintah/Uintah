@@ -7,14 +7,9 @@
 
    <Meta>
        <title>symetry test</title>
-   </Meta>
-    
+   </Meta>    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
-    <!--   maxTime          = ending time for simulation                    -->
-    <!--   initTime         = ????????                                      -->
-    <!--   delt_init        = initial value for delta time                  -->
-    <!--   timestep_mulipler= ???????????                                   -->
     <!--____________________________________________________________________-->
    <Time>
        <maxTime>            0.01        </maxTime>
@@ -115,10 +110,7 @@
       </Face>
     </BoundaryConditions>
     <!--____________________________________________________________________-->
-    <!--     P A T C H   D I M E N S I O N S                                -->
-    <!--   lower/upper      = lower and upper physical limits               -->
-    <!--   extraCells       = number of extra cells in x,y,z                -->
-    <!--   spacing          = resolution                                    -->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
        <Level>
            <Box label="1">
@@ -129,13 +121,9 @@
            </Box>
            <spacing>[0.5,0.5,0.5] </spacing>
        </Level>
-    </Grid>
-   
+    </Grid>    
     <!--____________________________________________________________________-->
-    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
-    <!--   filebase         = output file basenme                           -->
-    <!--   outputInterval   = Time between filedumps                        -->
-    <!--   save label       = any variable you want to visualize            -->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>symetry3D.uda</filebase>
@@ -161,19 +149,14 @@
     -->         
    </Debug>
     <!--____________________________________________________________________-->
-    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->>
-    <!--    cfl             = Standard CFL number                           -->
-    <!--    time_integrator = [explicit or implicit]                        -->
-    <!--    delt_based_on   = [??????]                                      -->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
          <cfl>0.5</cfl>
        <ICE>
-           <time_integrator>explicit    </time_integrator>
-           <max_iteration>  100         </max_iteration>
-             <delt_based_on>  convective  </delt_based_on>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
+        <solution technique = "EqForm" />
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
@@ -184,11 +167,6 @@
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
-    <!--    density [kg/m^3]             specific_heat [J/kg-K]             -->
-    <!--    ideal gas constant [J/kgK]                                      -->
-    <!--    geom_object                                                     -->
-    <!--        res     = number of particles per cell in each dir          -->
-    <!--        min/max = Physical dimensions of overlay                    -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>

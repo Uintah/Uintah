@@ -7,14 +7,9 @@
 
    <Meta>
        <title>Advection test</title>
-   </Meta>
-
+   </Meta>    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
-    <!--   maxTime          = ending time for simulation                    -->
-    <!--   delt_max         = maximum allowable delta time                  -->
-    <!--   delt_init        = initial value for delta time                  -->
-    <!--   timestep_mulipler= ???????????                                   -->
     <!--____________________________________________________________________-->
    <Time>
        <maxTime>            0.001      </maxTime>
@@ -123,12 +118,9 @@
            </Box>
            <spacing>[0.02,1,1] </spacing>
        </Level>
-    </Grid>
-   
+    </Grid>    
     <!--____________________________________________________________________-->
-    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
-    <!--   filebase         = output file basenme                           -->
-    <!--   outputInterval   = Time between filedumps                        -->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>riemanSm.uda</filebase>
