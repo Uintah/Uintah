@@ -8,7 +8,7 @@
 #include "Crack.h"
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
+#include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
