@@ -27,7 +27,7 @@ namespace Uintah {
   // This struct contains the additional variables required to 
   // apply the Lodi pressure bcs.
   struct Lodi_vars_pressBC{
-    Lodi_vars_pressBC(int numMatls):Li(6){};
+    Lodi_vars_pressBC(int /*numMatls*/):Li(6){};
     CCVariable<double> speedSound;
     CCVariable<double> rho_CC;
     constCCVariable<Vector> vel_CC;
