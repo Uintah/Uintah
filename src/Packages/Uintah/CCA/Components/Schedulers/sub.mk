@@ -26,6 +26,7 @@ SRCS += \
 	$(SRCDIR)/GhostOffsetVarMap.cc \
 	$(SRCDIR)/DeniedAccess.cc \
 	$(SRCDIR)/IncorrectAllocation.cc \
+	$(SRCDIR)/Util.cc \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := \
