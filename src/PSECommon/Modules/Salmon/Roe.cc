@@ -75,6 +75,8 @@ Roe::Roe(Salmon* s, const clString& id)
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
+  saveFile("saveFile", id, this),
+  saveType("saveType", id, this),
   id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
   {
     inertia_mode=0;
@@ -752,9 +754,17 @@ void Roe::tcl_command(TCLArgs& args, void*)
     return;
   }
   
-  if (args[1] == "dump_roe") {
-    if (args.count() != 3) {
-      args.error("Roe::dump_roe needs an output file name!");
+  if (args[1] == "sgi_defined") {
+    clString result("");
+#ifdef __sgi
+    result += "1";
+#else
+    result += "0";
+#endif
+    args.result( result );
+  } else if (args[1] == "dump_roe") {
+    if (args.count() != 4) {
+      args.error("Roe::dump_roe needs an output file name and type");
       return;
     }
 				// We need to dispatch this one to the
@@ -763,10 +773,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
 				// roe gets killed by the time the
 				// redraw message gets dispatched.
     manager->mailbox.send(scinew
-      SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
-  }
-  else if (args[1] == "startup") {
-    
+	     SalmonMessage(MessageTypes::RoeDumpImage, id, args[2], args[3]));
+  }else if (args[1] == "startup") {
 				// Fill in the visibility database...
     GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
     
@@ -1235,6 +1243,9 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.15  2000/06/07 20:59:26  kuzimmer
+// Modifications to make the image save menu item work on SGIs
+//
 // Revision 1.14  2000/03/17 09:27:17  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
