@@ -584,6 +584,10 @@ SCI_ARG_WITH(globus,
   [  --with-globus=DIR                 Use the globus installation in DIR],
   [with_globus="$withval"],
   [with_globus=${with_globus='no'}])
+SCI_ARG_WITH(qt,
+  [  --with-qt=DIR                     Use the Qt installation in DIR],
+  [with_qt="$withval"],
+  [with_qt=${with_qt='no'}])
 
 
 SCI_ARG_ENABLE(threads,
@@ -1226,6 +1230,13 @@ case $host in
       else
         AC_MSG_ERROR(unable to find required thread library: -lfetchop. exiting.)
       fi
+    elif test "$threads" = "unknown" ||
+       test "$threads" = "pthreads"; then
+      threads=pthreads
+      SCI_CHECK_LIB($thirdparty/lib,pthread,main,THREAD_DEFINE=yes; THREAD_LIBS=-lpthread,,)
+      if test -z "$THREAD_LIBS"; then
+        AC_MSG_ERROR(unable to find required thread library: -lpthread. exiting.)
+      fi 
     else
       AC_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
@@ -1783,6 +1794,7 @@ FOUND_ALL_QT=no
 QT_INCLUDE=""
 QT_LIB=""
 QT_MOC_BIN=""
+echo with_qt $with_qt
 for i in $with_qt $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
     continue
