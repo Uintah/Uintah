@@ -93,25 +93,37 @@ void    MPMICE::printNCVector(const Patch* patch, int include_EC,
     }
     
     d_ice->adjust_dbg_indices( d_ice->d_dbgBeginIndx, d_ice->d_dbgEndIndx, 
-                               low, high);
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n"; 
+                               low, high); 
     
+    string var_name;
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);
-        
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " 
-              << q_NC[idx](component) << "  ";  
-         /*  cerr << "\n"; */
+    cerr.precision(d_dbgSigFigs); 
+    
+    for (int dir = 0; dir < 3 ; dir ++ ) { 
+      if (dir == 0 ) {
+        var_name="X_" + message2;
+      }
+      if (dir == 1 ) {
+        var_name="Y_" + message2;
+      }
+      if (dir == 2 ) {
+        var_name="Z_" + message2;
+      }
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << var_name << "\n"; 
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " 
+                << q_NC[idx](component) << "  ";  
+           /*  cerr << "\n"; */
+          }
+          cerr << "\n";
         }
         cerr << "\n";
       }
-      cerr << "\n";
     }
     cerr <<" ______________________________________________\n";
     cerr.setf(ios::scientific, ios::floatfield);
