@@ -13,7 +13,7 @@ using namespace Uintah;
 
 SimulationState::SimulationState(ProblemSpecP &ps)
 {
-   VarLabel* nonconstDelt = scinew VarLabel("delT",
+   VarLabel* nonconstDelt = VarLabel::create("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
    nonconstDelt->allowMultipleComputes();
    delt_label = nonconstDelt;
