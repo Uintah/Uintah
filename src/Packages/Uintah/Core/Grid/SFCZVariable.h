@@ -53,14 +53,13 @@ WARNING
   public:
      
     SFCZVariable();
-    SFCZVariable(const SFCZVariable<T>&);
     virtual ~SFCZVariable();
      
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
      
-    virtual void copyPointer(const SFCZVariableBase&);
+    virtual void copyPointer(SFCZVariableBase&);
 
     virtual void rewindow(const IntVector& low, const IntVector& high)
     { Array3<T>::rewindow(low, high); }
@@ -373,6 +372,7 @@ WARNING
       return getWindow();
     }
   private:
+    SFCZVariable(const SFCZVariable<T>&);    
     SFCZVariable<T>& operator=(const SFCZVariable<T>&);
 
     static Variable* maker();
@@ -415,7 +415,7 @@ WARNING
    
   template<class T>
   void
-  SFCZVariable<T>::copyPointer(const SFCZVariableBase& copy)
+  SFCZVariable<T>::copyPointer(SFCZVariableBase& copy)
   {
     const SFCZVariable<T>* c = dynamic_cast<const SFCZVariable<T>* >(&copy);
     if(!c)
@@ -425,12 +425,6 @@ WARNING
 
   template<class T>
   SFCZVariable<T>::SFCZVariable()
-  {
-  }
-   
-  template<class T>
-  SFCZVariable<T>::SFCZVariable(const SFCZVariable<T>& copy)
-    : Array3<T>(copy)
   {
   }
    

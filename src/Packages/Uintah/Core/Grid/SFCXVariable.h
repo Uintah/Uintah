@@ -53,14 +53,13 @@ WARNING
   public:
      
     SFCXVariable();
-    SFCXVariable(const SFCXVariable<T>&);
     virtual ~SFCXVariable();
      
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
 
-    virtual void copyPointer(const SFCXVariableBase&);
+    virtual void copyPointer(SFCXVariableBase&);
 
     virtual void rewindow(const IntVector& low, const IntVector& high)
     { Array3<T>::rewindow(low, high); }
@@ -370,6 +369,7 @@ WARNING
     }
   private:
     SFCXVariable<T>& operator=(const SFCXVariable<T>&);
+    SFCXVariable(const SFCXVariable<T>&);
     
     static Variable* maker();
   };
@@ -411,7 +411,7 @@ WARNING
 
   template<class T>
   void
-  SFCXVariable<T>::copyPointer(const SFCXVariableBase& copy)
+  SFCXVariable<T>::copyPointer(SFCXVariableBase& copy)
   {
     const SFCXVariable<T>* c = dynamic_cast<const SFCXVariable<T>* >(&copy);
     if(!c)
@@ -421,12 +421,6 @@ WARNING
 
   template<class T>
   SFCXVariable<T>::SFCXVariable()
-  {
-  }
-   
-  template<class T>
-  SFCXVariable<T>::SFCXVariable(const SFCXVariable<T>& copy)
-    : Array3<T>(copy)
   {
   }
    

@@ -53,14 +53,13 @@ WARNING
   public:
      
     SFCYVariable();
-    SFCYVariable(const SFCYVariable<T>&);
     virtual ~SFCYVariable();
      
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
      
-    virtual void copyPointer(const SFCYVariableBase&);
+    virtual void copyPointer(SFCYVariableBase&);
 
     virtual void rewindow(const IntVector& low, const IntVector& high)
     { Array3<T>::rewindow(low, high); }
@@ -371,6 +370,7 @@ WARNING
       return getWindow();
     }
   private:
+    SFCYVariable(const SFCYVariable<T>&);
     SFCYVariable<T>& operator=(const SFCYVariable<T>&);
 
     static Variable* maker();
@@ -413,7 +413,7 @@ WARNING
    
   template<class T>
   void
-  SFCYVariable<T>::copyPointer(const SFCYVariableBase& copy)
+  SFCYVariable<T>::copyPointer(SFCYVariableBase& copy)
   {
     const SFCYVariable<T>* c = dynamic_cast<const SFCYVariable<T>* >(&copy);
     if(!c)
@@ -423,12 +423,6 @@ WARNING
 
   template<class T>
   SFCYVariable<T>::SFCYVariable()
-  {
-  }
-   
-  template<class T>
-  SFCYVariable<T>::SFCYVariable(const SFCYVariable<T>& copy)
-    : Array3<T>(copy)
   {
   }
    
