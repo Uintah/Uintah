@@ -79,6 +79,7 @@ Part::~Part()
 void
 Part::add_child( Part *child )
 {
+  cerr << "Part add child " << child->name() << endl;
   children_.push_back(child);
 }
 
@@ -152,7 +153,6 @@ Part::var_set( GuiVar *var )
 void 
 Part::command( const string &cmd )
 {
-  cerr << "Part send command: " << cmd << endl;
   port_->command_signal( cmd );
 }
 
@@ -175,6 +175,12 @@ Part::find_var( const string &name )
 // 
 // PartPort
 //
+
+const string &
+PartPort::name()
+{
+  return part_->name();
+} 
 
 const string &
 PartPort::type()

@@ -61,6 +61,7 @@ public:
   virtual ~PartPort() {}
 
   const string &type();
+  const string &name();
 
   // value set by the a GUI 
   template<class T> void set_var( const string& name, const T &v ) 
