@@ -6,10 +6,6 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR := Uintah/Datatypes
 
-SUBDIRS := $(SRCDIR)/Particles
-
-include $(SRCTOP)/scripts/recurse.mk
-
 SRCS     += $(SRCDIR)/Archive.cc  $(SRCDIR)/ArchivePort.cc \
 	$(SRCDIR)/NCVectorField.cc $(SRCDIR)/CCVectorField.cc \
 	$(SRCDIR)/NCTensorField.cc $(SRCDIR)/CCTensorField.cc \
@@ -39,6 +35,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/12/07 18:53:06  kuzimmer
+# The code in the Particles directory is no longer needed.  Complete removal.  This directory can be removed when the PSE layout is changed.
+#
 # Revision 1.7  2000/12/06 21:55:49  kuzimmer
 # Moved all of the function definitions for the templated classes NCScalarField and CCScalarField into their respective header files to eliminate problems when other libraries use these classes.
 #
