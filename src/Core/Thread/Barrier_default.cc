@@ -16,18 +16,19 @@
 #include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
-	struct Barrier_private {
-	    Mutex mutex;
-	    ConditionVariable cond0;
-	    ConditionVariable cond1;
-	    int cc;
-	    int nwait;
-	    Barrier_private();
-	    ~Barrier_private();
-	};
-    }
+struct Barrier_private {
+  Mutex mutex;
+  ConditionVariable cond0;
+  ConditionVariable cond1;
+  int cc;
+  int nwait;
+  Barrier_private();
+  ~Barrier_private();
+};
 }
 
+using SCIRun::Barrier_private;
+using SCIRun::Barrier;
 
 Barrier_private::Barrier_private()
     : mutex("Barrier lock"),
@@ -65,7 +66,7 @@ Barrier::wait(int n)
 	cond.conditionBroadcast();
     } else {
 	cond.wait(d_priv->mutex);
-} // End namespace SCIRun
+    }
     d_priv->mutex.unlock();
     Thread::couldBlockDone(oldstate);
-
+}
