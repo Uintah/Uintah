@@ -136,7 +136,7 @@ NrrdReader::read_nrrd()
   string fn(filename_.get());
 
   if (stat(fn.c_str(), &buf)) {
-    error(string("FieldReader error - file not found ")+fn);
+    error(string("FieldReader error - file not found: '")+fn+"'");
     return;
   }
 
