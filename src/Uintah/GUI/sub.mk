@@ -17,6 +17,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl\
+	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/EigenEvaluator.tcl\
 	$(SRCDIR)/ParticleEigenEvaluator.tcl\
 	$(SRCDIR)/TensorOperator.tcl\
@@ -30,6 +31,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.18  2001/02/02 19:53:01  bigler
+# Added PatchVisualizer.tcl
+#
 # Revision 1.17  2000/12/07 17:52:05  kuzimmer
 # removing more stuff related to legacy modules
 #
