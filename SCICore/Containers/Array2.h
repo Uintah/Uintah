@@ -17,6 +17,10 @@
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Persistent/Persistent.h>
 
+#ifdef _WIN32
+#pragma warning(disable:4786)
+#endif
+
 namespace DaveW {
   namespace Datatypes {
     void Pio();  // This is a dummy declaration to get things to compile.
@@ -268,6 +272,9 @@ void Pio(Piostream& stream, Containers::Array2<T>*& data) {
 
 //
 // $Log$
+// Revision 1.8  2000/02/22 20:41:03  moulding
+// added a pragma to prevent a vc++ warning
+//
 // Revision 1.7  1999/09/08 02:26:45  sparker
 // Various #include cleanups
 //
