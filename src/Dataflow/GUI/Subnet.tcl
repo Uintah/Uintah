@@ -605,11 +605,9 @@ proc writeSubnet { filename subnet } {
     puts $out "${tab}global Subnet"
     puts $out "${tab}set Subnet(Subnet\$Subnet(Loading)_Name) \{$Subnet(Subnet${subnet}_Name)\}"
     puts $out "${tab}set bbox \{[subnet_bbox $subnet]\}"
-    close $out
 
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	set out [open $filename {WRONLY APPEND}]
 	set modVar($module) "\$m$i"
 	if { [isaSubnetIcon $module] } {
 	    puts $out "\n${tab}\# Instiantiate a SCIRun Sub-Network"
@@ -629,40 +627,22 @@ proc writeSubnet { filename subnet } {
 	eval lappend connections $Subnet(${module}_connections)
 	# Write user notes 
 	if [info exists Notes($module-Position)] {
-	    puts $out "${tab}set Notes($modVar($module)-Position) \{$Notes($module-Position)\}"
+	    puts $out "${tab}set Notes(\$m$i-Position) \{$Notes($module-Position)\}"
 	}
 	if [info exists Notes($module-Color)] {
-	    puts $out "${tab}set Notes($modVar($module)-Color) \{$Notes($module-Color)\}"
+	    puts $out "${tab}set Notes(\$m$i--Color) \{$Notes($module-Color)\}"
 	}
-	# Must close the file before C-side can append to it 
-	close $out
-	# C-side knows which GUI vars to write out
-	if { ![isaSubnetIcon $module] } { 
-	    $module-c emit_vars $filename "\$m$i" "${tab}"
-	}
-
-	# Write file to open GUI on load if it was open on save
-	if [windowIsMapped .ui$module] {
-	    set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
-	    puts $out "${tab}\$m$i initialize_ui"
-	    close $out
-	}	
 	incr i
-    }   
+    }
+
     # Uniquely sort connections list by output port # to handle dynamic ports
     set connections [lsort -integer -index 3 [lsort -unique $connections]]
 
-    set out [open $filename {WRONLY APPEND}] ;# Re-Open file for appending
     if [llength $connections] {
 	puts $out "\n${tab}\# Create the Connections between Modules"
     }
     set i 0
     foreach conn $connections {
-	if {![info exists modVar([oMod conn])] || 
-	    ![info exists modVar([iMod conn])]} {
-	    puts "Error finding modules for Connection: \{$conn\}"
-	    continue
-	}
 	puts -nonewline $out "${tab}set c$i \[addConnection "
 	puts $out "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
 	set id [makeConnID $conn]
@@ -679,11 +659,35 @@ proc writeSubnet { filename subnet } {
 	    puts $out "${tab}set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
 	}
 	incr i
-    }	
-    if $subnet {
-	puts $out "\}\n"
     }
     close $out
+
+    set i 0
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
+	set modulePath [list [netedit packageName $module] \
+			    [netedit categoryName $module] \
+			    [netedit moduleName $module]]
+	puts $out "\n${tab}\# Set GUI Values for the [join $modulePath ->] Module"
+
+	# Write file to open GUI on load if it was open on save
+	if [windowIsMapped .ui$module] {
+	    puts $out "${tab}\$m$i initialize_ui"
+	}	
+	close $out
+
+	# C-side knows which GUI vars to write out
+	if { ![isaSubnetIcon $module] } { 
+	    $module-c emit_vars $filename "\$m$i" "${tab}"
+	}
+	incr i
+    }   
+
+    if $subnet {
+	set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
+	puts $out "\}\n"
+	close $out
+    }
 }		          
 
 
