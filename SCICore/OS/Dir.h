@@ -44,6 +44,18 @@ namespace SCICore {
       static Dir create(const std::string& name);
       
       void remove();
+      void forceRemove(); // removes even if the directory has contents
+
+      void remove(const std::string& filename); // remove a file
+
+      // copy this directory to under the destination directory
+      void copy(Dir& destDir);
+      void move(Dir& destDir);
+
+      // copy a file in this directory to the destination directory
+      void copy(const std::string& filename, Dir& destDir);
+      void move(const std::string& filename, Dir& destDir);
+
       Dir createSubdir(const std::string& name);
       Dir getSubdir(const std::string& name);
 
@@ -59,6 +71,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.4  2001/01/08 17:19:31  witzel
+// Added copy, move, forceRemove, and remove(file) methods.
+//
 // Revision 1.3  2000/09/25 18:02:33  sparker
 // include errno.h instead of explicitly defining extern int errno
 //
