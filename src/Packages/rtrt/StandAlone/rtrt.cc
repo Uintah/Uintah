@@ -555,6 +555,12 @@ main(int argc, char* argv[])
     rtrt_engine->Gjitter_valsb[ii] *= 0.25;
   }
   
+  if( fullscreen ) {
+    double fov = scene->get_camera(0)->get_fov();
+    scene->get_camera(0)->setVerticalFov( 0.5625 * fov );
+    scene->get_camera(1)->setVerticalFov( 0.5625 * fov );
+  }
+
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
@@ -705,7 +711,7 @@ main(int argc, char* argv[])
     //// RTRT QUAD STUFF -- NEED 2 QUADS (512 Tall + 64 Tall)
 
     lowerLeft.set(   126, 296 );
-    upperRight.set( 1152, 830 ); // SHOULD BE: 808, but to fit 600 pixel
+    upperRight.set( 1149, 830 ); // SHOULD BE: 808, but to fit 600 pixel
                                  // high frame, going to strech it a little
                                  // Once frame is right, go back.
     PlanarQuad * rtrtBotQuad=
@@ -719,8 +725,8 @@ main(int argc, char* argv[])
     Shader * rtrtBotTexShader = new Shader( rtrtBotTex );
     rtrtBotTexQuad = new ShadedPrim( rtrtBotQuad, rtrtBotTexShader );
 
-    lowerLeft.set( 125, 830 ); //SHOULD BE 808.  See not above about stretching
-    upperRight.set( 1152, 899 ); // 872
+    lowerLeft.set( 126, 830 ); //SHOULD BE 808.  See not above about stretching
+    upperRight.set( 1149, 899 ); // 872
 
     PlanarQuad * rtrtTopQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
@@ -735,7 +741,7 @@ main(int argc, char* argv[])
 
     // MEDIUM RESOLUTION RTRT RENDER WINDOW
     lowerLeft.set( 126, 296 );  // see note above about proper dimensions
-    upperRight.set( 1152, 830 );
+    upperRight.set( 1150, 830 );
 
     PlanarQuad * rtrtMidBotQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
@@ -749,7 +755,7 @@ main(int argc, char* argv[])
     rtrtMidBotTexQuad = new ShadedPrim( rtrtMidBotQuad, rtrtMidBotTexShader );
 
     lowerLeft.set( 126, 830 );
-    upperRight.set( 1152, 899 );
+    upperRight.set( 1150, 899 );
 
     PlanarQuad * rtrtMidTopQuad=
       new PlanarQuad( lowerLeft, upperRight, z, genTexCoords );
