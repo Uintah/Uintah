@@ -32,12 +32,16 @@ public:
 
   // get values
   float df() { return df_; }
+  const vector<double> &mean() { return mean_; }
 
   // set values
   void df( float v ) { df_ = v; df_changed(df_); }
+  void means( const vector<double> &);
+  void mean( int, double );
 
   // Signals
   Signal1<float> df_changed;
+  Signal1< const vector<double> &> mean_changed;
 };
   
 

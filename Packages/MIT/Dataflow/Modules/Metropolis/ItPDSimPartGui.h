@@ -41,7 +41,11 @@ using namespace SCIRun;
 class ItPDSimPartGui : public PartGui {
 public:
   Signal1<float> df;
+  Signal1<const vector<double> &> means;
+  Signal2<int,double> mean;
+
   void set_df( float );
+  void set_mean( const vector<double> & );
 
 public:
   ItPDSimPartGui( const string &name, const string &script ="ItPDSimPartGui"); 
