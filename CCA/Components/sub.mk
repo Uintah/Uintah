@@ -11,7 +11,8 @@ SUBDIRS := \
 	$(SRCDIR)/MPMICE \
 	$(SRCDIR)/MPMArches \
 	$(SRCDIR)/Arches \
-	$(SRCDIR)/ProblemSpecification
+	$(SRCDIR)/ProblemSpecification \
+	$(SRCDIR)/HETransformation
 
 include $(SRCTOP)/scripts/recurse.mk
 
