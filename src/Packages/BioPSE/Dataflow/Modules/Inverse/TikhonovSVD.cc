@@ -510,11 +510,31 @@ namespace BioPSE
 	}
 	
 	M=matrixU->nrows();
-	if(Method == SVD_method)
-		N=matrixV->nrows();
-	else
-		N=matrixX->nrows();
 
+	if(Method == SVD_method)
+	{
+		N=matrixV->nrows();
+		if(matrixS->nrows() != N || matrixU->ncols() != N || matrixMeasDatD->nrows() != M )
+		{
+			error("Input matrix dimensions incorrect.");
+			return;
+		}
+	}
+	else
+	{
+		N=matrixX->nrows();
+		int P=matrixV->nrows();
+		if(M<N)
+		{
+			error("The forward matrix should be overdetermined.");
+			return;
+		}
+		if(matrixX->ncols()!=N || matrixS->nrows()!= P || matrixU->ncols() !=N || P>N || matrixMeasDatD->nrows()!=M)
+		{
+			error("Input matrix dimensions incorrect.");
+			return;
+		}
+	}
 	ColumnMatrix *Uy=scinew ColumnMatrix(matrixU->ncols());
     	DenseMatrix  *InverseMat = scinew DenseMatrix(N, M);
     	ColumnMatrix *solution = scinew ColumnMatrix(N);
