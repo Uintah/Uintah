@@ -874,7 +874,7 @@ void ImpMPM::scheduleFormQR(SchedulerP& sched,const PatchSet* patches,
 {
 #ifdef HAVE_PETSC
   Task* t = scinew Task("ImpMPM::formQR", this, 
-			&ImpMPM::formQ,recursion);
+			&ImpMPM::formQPetsc,recursion);
 #else
   Task* t = scinew Task("ImpMPM::formQR", this, 
 			&ImpMPM::formQ,recursion);
@@ -1614,9 +1614,10 @@ void ImpMPM::formStiffnessMatrixPetsc(const ProcessorGroup*,
 	KK[dof[1]][dof[1]] = KK[dof[1]][dof[1]] + gmass[*iter]*(4./(dt*dt));
 	KK[dof[2]][dof[2]] = KK[dof[2]][dof[2]] + gmass[*iter]*(4./(dt*dt));
 #ifdef HAVE_PETSC
-	PetscScalar v[3];
-	v[0]=v[1]=v[2]= gmass[*iter]*(4./(dt*dt));
-	MatSetValues(A,3,dof,3,dof,v,ADD_VALUES);
+	PetscScalar v = gmass[*iter]*(4./(dt*dt));
+	MatSetValues(A,1,&dof[0],1,&dof[0],&v,ADD_VALUES);
+	MatSetValues(A,1,&dof[1],1,&dof[1],&v,ADD_VALUES);
+	MatSetValues(A,1,&dof[2],1,&dof[2],&v,ADD_VALUES);
 #endif
 
       }
@@ -2417,6 +2418,13 @@ void ImpMPM::solveForDuCGPetsc(const ProcessorGroup*,
     VecCreateSeq(PETSC_COMM_WORLD,num_nodes,&d_x);
     SLESSolve(sles,petscQ,d_x,&its);
     SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
+    PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
+    PetscScalar* xPetsc;
+    VecGetArray(d_x,&xPetsc);
+    for (int i = 0; i < num_nodes; i++) {
+      PetscPrintf(PETSC_COMM_WORLD,"d_x[%d] = %g\n",i,xPetsc[i]);
+    }
+    VecRestoreArray(d_x,&xPetsc);
 
 #endif
 
