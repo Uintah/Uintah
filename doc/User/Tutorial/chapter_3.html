@@ -208,8 +208,7 @@
 	through the vector Field.  We use a fifth order
 	integration method; the Runge-Kutta-Fehlberg algorithm.  We must set three parameters in order to run this algorithm: Error Tolerance,
 	Step Size, and a Maximum Number of Steps.  Set these three
-	parameters, respectively, to 0.01, 0.1, and 200, respectively,
-	.
+	parameters, respectively, to 0.01, 0.1, and 200.  The other UI options can remain at their default settings.
 
 	</div>
 	<center>
@@ -219,29 +218,24 @@
 	<div align="left">
 	<p><br>
 
-	<p><b><A name="section-9">Controlling Widgets</b><br></A>
+	<p><b><A name="section-9">Controlling Widgets</b><br></A> 
 
-	While the network executes--it will take some time--we
-	can explain more about widgets and executing a network.
-	
-	<p>The rake is one of a family of widgets--graphical elements
-	in the Viewer that allow the user 
-	to control interactively some features of the display.  The SCIRun
-	widgets have a similar look and feel, but manipulate different
-	aspects of the display,as detailed in the <a
+	<p>The rake is one of many widgets used in the SCIRun.  Widgets are graphical elements in the Viewer that allow the user 
+	to interactively control features of the display.  The SCIRun
+	widgets have similar visual characteristics, but manipulate different
+	aspects of the display, as detailed in the <a
 	 HREF="../Guide/usersguide/srug5.html#sec:view-widgets">User's Guide
 	5.4, Control Widgets</a>. 
 	
 	
 	<p>You can control widgets by:
 	<ul>
-	  <li> Shift-left-click and drag any neutral spot on the widget to move
-	      it around the region of view and thus change where it acts.
-	  <LI> Shift-left-click on a <b>sphere</b> in the widget and change the
-	      position of just that widget.
-	  <LI> Shift-left-click on a <b>cylinder</b> in the widget and change,
-	      for example, the density of streamlines the widget emits.
-	  <LI> SCIRun will redraw the image in the Viewer window whenever
+	  <li>Press and hold the shift key, left-click the mouse on the widget and move
+	      it around the region of view in order to change its location and action.
+	  <LI>Press and hold the shift key, left-click the mouse on a <b>sphere</b> in the widget and change the
+	      position of that widget.
+	  <LI>Press and hold the shift key, left-click the mouse on the end <b>knob</b> (green resize cylinders)in the widget and change, for example, the density of stream lines.
+	  <LI> SCIRun redraws the image in the ViewWindow whenever
 	      you release the mouse button.
 	</ul>
 	
@@ -249,16 +243,14 @@
 	dependence</b><br></A> 
 	
 	<p>There are several ways to execute a SCIRun
-	network that has not yet "fired." 
+	network that has not yet "fired." In the StreamLines network:
 	<ul>
-	  <li>Click the right mouse button on the name of one of
-	      the module icons and select the "Execute" option from the
-	      dropdown menu that appears (<b>Figure 3.7</b>).   
-	  <li>Press any of the "Execute" buttons that appear in many of the
-	      module User Interfaces.
+	  <li>On the module itself, right-click the mouse and select the "Execute" option from the
+	      dropdown menu (<b>Figure 3.7</b>). 
+	<li>Or, in several modules, such as ShowField and StreamLines, the UI has its own "Execute" option.  
 	</ul> 
 
-	These actions will execute the selected module as well as any modules 
+	<p>These actions will execute the selected module, as well as any modules 
 	that depend on that module.
 
 	</div>
@@ -269,13 +261,8 @@
 	<div align="left">
 	<p><br>
 
-	<p>Now, back to the action!
-
-	<P> After executing the network, you should see an image like
-	<b>Figure 3.8</b> in the Viewer window.  The rake widget appears
-	as a gray stick in this scene.  You may not get quite the same
-	image as in the figure, but you should see the rake and colored
-	streamlines coming from it.
+	<P> After executing the StreamLines network, you should see an image in the ViewWindow as with <b>Figure 3.8</b>.  The rake widget will appear as a gray bar with spheres at the ends.
+	Your image may be somewhat different than the figure, but you should see the rake and colored streamlines.
 
 	</div>
 	<center>
