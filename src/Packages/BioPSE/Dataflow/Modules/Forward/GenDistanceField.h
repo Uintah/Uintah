@@ -105,12 +105,12 @@ GenDistanceFieldAlgoT<FDST, LDST, FSRC>::execute_node(FieldHandle fdsthandle,
       typename FSRC::value_type val;
       fsrc->value(val, *citr);
       val = val * val;
-      if (val < 1.0e-3) { val = 1.0e-3; }
+      if (val < 1.0e-6) { val = 1.0e-6; }
 
       Point cloc;
       msrc->get_center(cloc, *citr);
 
-      dist = min((location - cloc).length2() * val, dist);
+      dist = min((location - cloc).length2() / val, dist);
       ++citr;
     }
 
@@ -163,7 +163,7 @@ GenDistanceFieldAlgoT<FDST, LDST, FSRC>::execute_edge(FieldHandle fdsthandle,
       typename FSRC::value_type val;
       fsrc->value(val, *citr);
       val = val * val;
-      if (val < 1.0e-3) { val = 1.0e-3; }
+      if (val < 1.0e-6) { val = 1.0e-6; }
 
       typename FSRC::mesh_type::Node::array_type array;
 
@@ -174,7 +174,7 @@ GenDistanceFieldAlgoT<FDST, LDST, FSRC>::execute_edge(FieldHandle fdsthandle,
       msrc->get_center(cloc1, array[0]);
       msrc->get_center(cloc2, array[1]);
 
-      dist = min(distance_to_line2(location, cloc1, cloc2) * val, dist);
+      dist = min(distance_to_line2(location, cloc1, cloc2) / val, dist);
       ++citr;
     }
 

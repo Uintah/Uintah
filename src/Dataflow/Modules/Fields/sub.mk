@@ -32,7 +32,6 @@ SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/AttractNormals.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
-	$(SRCDIR)/BuildMapping.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/Centroids.cc\
@@ -43,7 +42,6 @@ SRCS     += \
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/GatherPoints.cc\
-	$(SRCDIR)/GenDistanceField.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\

@@ -16,7 +16,7 @@
 */
 
 /*
- *  BuildMapping.cc:  Build an interpolant field -- a field that says
+ *  MapDistanceField.cc:  Build an interpolant field -- a field that says
  *         how to project the data from one field onto the data of a second
  *         field.
  *
@@ -34,7 +34,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Dataflow/Modules/Fields/BuildMapping.h>
+#include <Packages/BioPSE/Dataflow/Modules/Forward/MapDistanceField.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -44,7 +44,7 @@ using std::vector;
 using std::pair;
 
 
-class BuildMapping : public Module
+class MapDistanceField : public Module
 {
   FieldIPort *src_port;
   FieldIPort *dst_port;
@@ -52,33 +52,33 @@ class BuildMapping : public Module
   GuiString   interp_op_gui_;
 
 public:
-  BuildMapping(const string& id);
-  virtual ~BuildMapping();
+  MapDistanceField(const string& id);
+  virtual ~MapDistanceField();
   virtual void execute();
 
   //template <class Mesh, class Index>
   //void find_closest(Mesh *mesh, typename Index::index_type &idx, Point &p);
 };
 
-extern "C" Module* make_BuildMapping(const string& id)
+extern "C" Module* make_MapDistanceField(const string& id)
 {
-  return new BuildMapping(id);
+  return new MapDistanceField(id);
 }
 
-BuildMapping::BuildMapping(const string& id) : 
-  Module("BuildMapping", id, Filter, "Fields", "SCIRun"),
+MapDistanceField::MapDistanceField(const string& id) : 
+  Module("MapDistanceField", id, Filter, "Forward", "BioPSE"),
   interp_op_gui_("interp_op_gui", id, this)
 {
 }
 
-BuildMapping::~BuildMapping()
+MapDistanceField::~MapDistanceField()
 {
 }
 
 
 
 void
-BuildMapping::execute()
+MapDistanceField::execute()
 {
   dst_port = (FieldIPort *)get_iport("Surface");
   FieldHandle fdst_h;
@@ -104,19 +104,19 @@ BuildMapping::execute()
   }
 
   CompileInfo *ci =
-    BuildMappingAlgo::get_compile_info(fsrc_h->get_type_description(),
-				       fsrc_h->data_at_type_description(),
-				       fdst_h->mesh()->get_type_description(),
-				       fdst_h->data_at_type_description(),
-				       fdst_h->get_type_description());
+    MapDistanceFieldAlgo::get_compile_info(fsrc_h->get_type_description(),
+					   fsrc_h->data_at_type_description(),
+					   fdst_h->mesh()->get_type_description(),
+					   fdst_h->data_at_type_description(),
+					   fdst_h->get_type_description());
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
     error("Could not compile algorithm.");
     return;
   }
-  BuildMappingAlgo *algo =
-    dynamic_cast<BuildMappingAlgo *>(algo_handle.get_rep());
+  MapDistanceFieldAlgo *algo =
+    dynamic_cast<MapDistanceFieldAlgo *>(algo_handle.get_rep());
   if (algo == 0)
   {
     error("Could not get algorithm.");
@@ -143,8 +143,8 @@ BuildMapping::execute()
 
 
 double
-BuildMappingAlgo::distance_to_line2(const Point &p,
-				    const Point &a, const Point &b) const
+MapDistanceFieldAlgo::distance_to_line2(const Point &p,
+					const Point &a, const Point &b) const
 {
   Vector m = b - a;
   Vector n = p - a;
@@ -156,16 +156,16 @@ BuildMappingAlgo::distance_to_line2(const Point &p,
 
 
 CompileInfo *
-BuildMappingAlgo::get_compile_info(const TypeDescription *fsrc,
-				   const TypeDescription *lsrc,
-				   const TypeDescription *mdst,
-				   const TypeDescription *ldst,
-				   const TypeDescription *fdst)
+MapDistanceFieldAlgo::get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *lsrc,
+				       const TypeDescription *mdst,
+				       const TypeDescription *ldst,
+				       const TypeDescription *fdst)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("BuildMappingAlgoT");
-  static const string base_class_name("BuildMappingAlgo");
+  static const string template_class_name("MapDistanceFieldAlgoT");
+  static const string base_class_name("MapDistanceFieldAlgo");
 
   const string::size_type loc1 = fsrc->get_name().find_first_of('<');
   const string foutsrc = fsrc->get_name().substr(0, loc1) +

@@ -39,3 +39,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/ElectrodeToContour
 SRCS := $(SRCDIR)/ElectrodeToContour.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TextToContour
+SRCS := $(SRCDIR)/TextToContour.cc
+include $(SCIRUN_SCRIPTS)/program.mk
