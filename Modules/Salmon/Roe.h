@@ -42,6 +42,11 @@ class BallData;
 struct GeometryData;
 template<class T> class AsyncReply;
 
+class TexStruct1D;
+class TexStruct2D;
+class TexStruct3D;
+class SegBin;       // bins for sorted line segments...
+
 
 struct ObjTag {
     TCLvarint* visible;
@@ -110,6 +115,17 @@ protected:
     void redraw();
     void redraw(double tbeg, double tend, int nframes, double framerate);
 
+    Array1< TexStruct1D* >   tmap_1d;
+    Array1< unsigned int >   tmap_tex_objs_1d;
+
+    Array1< TexStruct2D* >   tmap_2d;
+    Array1< unsigned int >   tmap_tex_objs_2d;
+
+    Array1< TexStruct3D* >   tmap_3d;
+    Array1< unsigned int >   tmap_tex_objs_3d;  // no more than 1!!!
+
+    SegBin*                  line_segs;   // for lit streamlines/hedgehogs/etc
+
     int last_time;
 public:
     int inertia_mode;
@@ -122,6 +138,13 @@ public:
     double total_scale;
     int prev_time[3]; // history for quaternions and time
     HVect prev_quat[3];
+
+    void LoadTexture1D(TexStruct1D*);
+    void LoadTexture2D(TexStruct2D*);
+    void LoadTexture3D(TexStruct3D*);
+    void LoadColorTable(TexStruct1D*);
+
+    int tex_disp_list;
 
 
     Renderer* current_renderer;

@@ -1011,36 +1011,55 @@ void Roe::force_redraw()
 
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 {
-    // Do internal objects first...
-    for(int i=0;i<roe_objs.size();i++){
-	(r->*pmf)(manager, this, roe_objs[i]);
-    }
+  // Do internal objects first...
+  for(int i=0;i<roe_objs.size();i++){
+    (r->*pmf)(manager, this, roe_objs[i]);
+  }
 
-//    HashTableIter<int, PortInfo*> iter(&manager->portHash);
-    HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
-    for (iter.first(); iter.ok(); ++iter) {
-//	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-//	HashTableIter<int, SceneItem*> serIter(serHash);
-	HashTableIter<int,GeomObj*> serIter = 
-	    ((GeomSalmonPort*)iter.get_data())->getIter();
-	
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
-	    // Look up the name to see if it should be drawn...
-	    ObjTag* vis;
-	    if(visible.lookup(si->name, vis)){
-		if(vis->visible->get()){
-		    if(si->lock)
-			si->lock->read_lock ();
-		    (r->*pmf)(manager, this, si);
-		    if(si->lock)
-			si->lock->read_unlock();
-		}
-	    } else {
-		cerr << "Warning: object " << si->name << " not in visibility database...\n";
-	    }
+  Array1<GeomSalmonItem*> transp_objs; // transparent objects - drawn last
+
+  HashTableIter<int,GeomObj*> iter = manager->ports.getIter();
+  for (iter.first(); iter.ok(); ++iter) {
+    HashTableIter<int,GeomObj*> serIter = 
+      ((GeomSalmonPort*)iter.get_data())->getIter();
+    
+    for (serIter.first(); serIter.ok(); ++serIter) {
+      GeomSalmonItem *si=(GeomSalmonItem*)serIter.get_data();
+      // Look up the name to see if it should be drawn...
+      ObjTag* vis;
+      if(visible.lookup(si->name, vis)){
+	if(vis->visible->get()){
+	  if (strstr("TransParent",si->name())) { // delay drawing
+	    transp_objs.add(si);
+	  } else {
+	    
+	    if(si->lock)
+	      si->lock->read_lock ();
+	    (r->*pmf)(manager, this, si);
+	    if(si->lock)
+	      si->lock->read_unlock();
+	  }
 	}
+      } else {
+	cerr << "Warning: object " << si->name << " not in visibility database...\n";
+      }
     }
+  }
+
+  // now run through the transparent objects...
+
+  for(i=0;i<transp_objs.size();i++) {
+    GeomSalmonItem *si = transp_objs[i];    
+
+    if(si->lock)
+      si->lock->read_lock ();
+    (r->*pmf)(manager, this, si);
+    if(si->lock)
+      si->lock->read_unlock();
+  }
+
+  // now you are done...
+
 }
 
 void Roe::set_current_time(double time)

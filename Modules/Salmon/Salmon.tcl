@@ -635,17 +635,18 @@ itcl_class Roe {
 		-showvalue true -tickinterval 10
 	pack $w.tframes -side top -fill x
 	scale $w.tbeg -orient horizontal -variable $this-tbeg \
-		-from 0 -to 10 -label "Begin time:" \
-		-resolution 0.01 -digits 4 \
+		-from 0 -to 1 -label "Begin time:" \
+		-resolution 0.001 -digits 4 \
 		-showvalue true -tickinterval 2
 	scale $w.tend -orient horizontal -variable $this-tend \
-		-from 0 -to 10 -label "End time:" \
-		-resolution 0.01 -digits 4 \
+		-from 0 -to 1 -label "End time:" \
+		-resolution 0.001 -digits 4 \
 		-showvalue true -tickinterval 2
 	scale $w.ct -orient horizontal -variable $this-current_time \
-		-from 0 -to 10 -label "Current time:" \
-		-resolution 0.01 -digits 4 \
-		-showvalue true -tickinterval 2
+		-from 0 -to 1 -label "Current time:" \
+		-resolution 0.001 -digits 4 \
+		-showvalue true -tickinterval 2 \
+		-command "$this-c redraw"
 	pack $w.tbeg $w.tend $w.ct -side top -fill x
 	entry $w.savefile -textvariable $this-saveprefix
 	pack $w.savefile -side top -fill x
