@@ -1278,38 +1278,6 @@ proc displayErrorWarningOrInfo { msg status } {
 }
 
 
-#centers window w1 over window w2
-proc centerWindow { w1 { w2 "" } } {
-    update
-#    wm overrideredirect $w1 1
-    wm geometry $w1 ""
-    update idletasks
-    if { [winfo exists $w2] } {
-	set w [winfo width $w2]
-	set h [winfo height $w2]
-	set x [winfo x $w2]
-	set y [winfo y $w2]
-    } else {
-	set w 0
-	set h 0
-	set x 0
-	set y 0
-    }
-
-    if {$w < 2} { set w [winfo screenwidth .] }
-    if {$h < 2} { set h [winfo screenheight .] }    
-
-    set x [expr $x+($w - [winfo width $w1])/2]
-    set y [expr $y+($h - [winfo height $w1])/2]
-    wm geometry $w1 +${x}+${y}
-    if { [winfo ismapped $w1] } {
-	raise $w1
-    } else {
-	wm deiconify $w1
-    }
-    grab $w1
-}
-
 proc hideProgress { args } {
     if { ![winfo exists .splash] } return
     update idletasks
@@ -1624,23 +1592,39 @@ proc licenseAccept { } {
 
 
 proc promptUserToCopySCIRunrc {} {
+
     global dontAskAgain copyResult
     set w .copyRCprompt
+
     toplevel $w
     wm withdraw $w
+
     set copyResult 0
     set dontAskAgain 0
-    set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
+
+    set version [netedit getenv SCIRUN_RCFILE_VERSION]
+    if { $version == "" } {
+        set version "bak"
+    }
+
     wm title $w "Copy v$version .scirunrc file?"
-    label $w.message -text "A newer version of your ~/.scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n\n" -justify left
+    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?" -justify left
     frame $w.but
     button $w.but.ok -text Copy -command "set copyResult 1"
     button $w.but.no -text "Don't Copy" -command "set copyResult 0"
-    checkbutton $w.dontAskAgain -text "Dont Ask Me This Question Again" -variable dontAskAgain -offvalue 0 -onvalue 1
+    checkbutton $w.dontAskAgain -text "Don't ask me this question again." -variable dontAskAgain -offvalue 0 -onvalue 1
 #    pack $w.but.dontAskAgain -side topy -pady 5
+
     pack $w.but.ok $w.but.no -side left -padx 5 -ipadx 5
-    pack $w.message $w.dontAskAgain $w.but -side top
-    centerWindow $w
+
+    pack $w.message $w.dontAskAgain $w.but -pady 5 -padx 5
+
+    # Override the destroy window decoration and make it not do anything
+    wm protocol $w WM_DELETE_WINDOW "SciRaise $w"
+
+    moveToCursor $w
+    SciRaise $w
+
     vwait copyResult
     if { $dontAskAgain && !$copyResult } {
 	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
