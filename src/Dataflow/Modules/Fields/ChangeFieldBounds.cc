@@ -127,7 +127,13 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   Point center;
   Vector size;
   
-  const BBox bbox = f->mesh()->get_bounding_box();
+  BBox bbox = f->mesh()->get_bounding_box();
+
+  if (!bbox.valid()) {
+    warning("Input field is empty -- using unit cube.");
+    bbox.extend(Point(0,0,0));
+    bbox.extend(Point(1,1,1));
+  }
   size = bbox.diagonal();
   center = bbox.center();
 
@@ -161,8 +167,12 @@ ChangeFieldBounds::build_widget(FieldHandle f)
   Point center;
   Vector size;
   BBox bbox = f->mesh()->get_bounding_box();
+  if (!bbox.valid()) {
+    warning("Input field is empty -- using unit cube.");
+    bbox.extend(Point(0,0,0));
+    bbox.extend(Point(1,1,1));
+  }
   box_initial_bounds_ = bbox;
-
 
   // build a widget identical to the BBox
   size = Vector(bbox.max()-bbox.min());
@@ -256,6 +266,11 @@ ChangeFieldBounds::execute()
     update_input_attributes(fh);
     build_widget(fh);
     BBox bbox = fh->mesh()->get_bounding_box();
+    if (!bbox.valid()) {
+      warning("Input field is empty -- using unit cube.");
+      bbox.extend(Point(0,0,0));
+      bbox.extend(Point(1,1,1));
+    }
     Vector size(bbox.max()-bbox.min());
      if (fabs(size.x())<1.e-4) {
       size.x(2.e-4); 
