@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ 
+<port name="ColorMap">
+   <datatype>ColorMap</datatype>
+   <color>BlueViolet</color>
+</port>
