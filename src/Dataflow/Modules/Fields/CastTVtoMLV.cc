@@ -70,7 +70,9 @@ void CastTVtoMLV::execute()
     return;
   
   // we expect that the input field is a TetVolField<Vector>
-  if ( ifieldH.get_rep()->get_type_name() == "TetVolField<Vector>" ) {
+  if ( ifieldH.get_rep()->get_type_description()->get_name() ==
+       "TetVolField<Vector>" )
+  {
     postMessage("CastTVtoMLV: ERROR: input volume is not a TetVolField<Vector>.  Exiting.");
     return;
   }                     

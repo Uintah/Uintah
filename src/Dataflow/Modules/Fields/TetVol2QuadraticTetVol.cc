@@ -59,11 +59,15 @@ void TetVol2QuadraticTetVol::execute()
   
   ifld_->get(fld_handle);
 
-  if(!fld_handle.get_rep()){
+  if(!fld_handle.get_rep())
+  {
     warning("No Data in port 1 field.");
     return;
-  } else if (fld_handle->get_type_name(0) != "TetVolField") {
-    error("input must be a TetVol type, not a "+fld_handle->get_type_name(0));
+  }
+  else if (fld_handle->mesh()->get_type_description()->get_name() !=
+	   get_type_description((TetVolMesh *)0)->get_name())
+  {
+    error("Input must be a TetVol type.");
     return;
   }
   const TypeDescription *td = fld_handle->get_type_description();
