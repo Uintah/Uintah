@@ -74,12 +74,12 @@
             <set_initial_condition>true</set_initial_condition>
             <init_cond_input_file>iso_ini_32.dat</init_cond_input_file>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>smagorinsky</turbulence_model>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
             <reacting_flow>true</reacting_flow>
             <solve_enthalpy>false</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
-		<cf>0.0</cf>
+		<cf>0.17</cf>
 		<fac_mesh>1.0</fac_mesh>
 		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>
@@ -175,7 +175,7 @@
 	    <PhysicalConstants>
 		<gravity>[0,0,0]</gravity>
 		<pressure>0.0</pressure>
-		<viscosity>0.00000</viscosity>
+		<viscosity>0.000020</viscosity>
 		<schmidtNo>0.7</schmidtNo>
 	    </PhysicalConstants>
 
@@ -205,6 +205,7 @@
 		<cal_momentum>true</cal_momentum>
 		<MomentumSolver>
 		    <central>true</central>
+	            <filter_divergence_constraint>false</filter_divergence_constraint>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
