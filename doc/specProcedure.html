@@ -1,0 +1,86 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
+   <meta name="Author" content="Martin Cole">
+   <title>Specification Procedure</title>
+</head>
+<body>
+
+<center>
+<h2>
+Specification procedure</h2></center>
+
+<p><br>Our goal is to have complete specifications for each module we release.
+To achieve this goal you will need to create and completely populate a
+spec.xml file that lives next to the .cc file associated with a module.
+<br>&nbsp;
+<dt>
+<b>spec.xml</b></dt>
+
+<dd>
+Combined with the documentation extracted via Cocoon, spec.xml defines
+a complete specification for a module. It contains information the compile
+needs, as well as various levels of documentation targeted at different
+user levels. spec.xml Documentation will be extracted from spec.xml, it
+is intended to be maintained just as the C++ code is.</dd>
+
+<h3>
+User levels</h3>
+
+<dt>
+<b>user</b></dt>
+
+<dd>
+User who works with a predefined network map of modules. This level is
+not relevant for module level specifications. They will have a unique user
+guide for relevant to the network they use.</dd>
+
+<dt>
+<b>builder</b></dt>
+
+<dd>
+User will do the above as well as building and editing their own maps,
+but will write no code.</dd>
+
+<dt>
+<b>developer</b></dt>
+
+<dd>
+User will write modules they needs as well as all of the above.</dd>
+
+<center>
+<h3>
+Steps:</h3></center>
+
+<ol>
+<li>
+Start with .cc file.&nbsp; Make sure it conforms to the <a href="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">coding
+standard</a>.</li>
+
+<li>
+Update/enhance <a href="http://www.csafe.utah.edu/development_environment/cocoon/index.html">cocoon
+style comments</a>.</li>
+
+<li>
+Take a screen shot of the gui (if it has one) and convert to gif format.
+This should be placed in ./doc relative to the .cc file for the module.&nbsp;
+Name it <i>module_name</i>Gui.gif. use xv for generating grabbing the image,
+it will grab the whole dialog, and just the dialog.&nbsp; If you need more
+than one window in the grab, and you are on an SGI use snapshot, then xv
+to convert to gif format.</li>
+
+<li>
+Write spec.xml.&nbsp; It should live in the same dir as the .cc file. See
+the <a href="anotSpec.html">annotated spec.xml </a>to understand what each
+tag is for.</li>
+
+<li>
+The current plan is to gmake docs: generate Specification in the various
+formats (xml, html, latex) This is not currently implemented, so <b><u><font color="#993300">do
+not do this step</font></u></b>.</li>
+</ol>
+
+</body>
+</html>
