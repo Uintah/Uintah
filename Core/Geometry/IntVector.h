@@ -34,10 +34,14 @@
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
+
+#include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
+
+class Piostream;
 
 class IntVector {
 public:
@@ -176,6 +180,12 @@ public:
   friend inline Vector operator*(const Vector&, const IntVector&);
   friend inline Vector operator*(const IntVector&, const Vector&);
   friend inline IntVector Abs(const IntVector& v);
+
+   //! support dynamic compilation
+  static const string& get_h_file_path();
+
+ friend SCICORESHARE void Pio( Piostream&, IntVector& );
+
 private:
   int value_[3];
 };
@@ -203,9 +213,12 @@ inline IntVector Abs(const IntVector& v)
     return IntVector(x,y,z);
 }
 
+
+SCICORESHARE std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+
 } // End namespace SCIRun
 
-std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+
 
 
 #endif

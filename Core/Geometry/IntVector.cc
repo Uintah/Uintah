@@ -17,15 +17,46 @@
 
 
 #include <Core/Geometry/IntVector.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Util/TypeDescription.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 using std::ostream;
 
-using namespace SCIRun;
+namespace SCIRun{
+
+void
+Pio(Piostream& stream, IntVector& p)
+{
+  stream.begin_cheap_delim();
+  Pio(stream, p.value_[0]);
+  Pio(stream, p.value_[1]);
+  Pio(stream, p.value_[2]);
+  stream.end_cheap_delim();
+}
+
+
+
+const string& 
+IntVector::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
+
+const TypeDescription* get_type_description(IntVector*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("IntVector", IntVector::get_h_file_path(), "SCIRun");
+  }
+  return td;
+}
 
 ostream& operator<<(ostream& out, const IntVector& v)
 {
   out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
   return out;
 }
+
+} //end namespace SCIRun
