@@ -501,7 +501,7 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
   if (write_data) {
     writeData(data, total_spheres, numvars, timestep);
   }
-  return new GridSpheres(data, mins, maxs, total_spheres, numvars-3, gridcellsize, griddepth, radius, matls.size(), &matls[0], data_group[0].var_names);  
+  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, matls.size(), &matls[0], data_group[0].var_names);  
 }
 
 #ifdef USE_UINTAHPARTICLE_THREADS
