@@ -48,6 +48,7 @@ class VolumeVisDpy : public DpyBase {
   int ncolors;
   int nalphas;
   bool new_fast_render_mode;
+  unsigned long long new_course_hash;
 
   ScalarTransform1D<float,Color*> color_transform;
   ScalarTransform1D<float,float> alpha_transform;
@@ -74,6 +75,7 @@ public:
   void rescale_alphas(float new_t_inc);
   void create_alpha_transfer();
   void create_color_transfer();
+  void create_alpha_hash();
   inline float lookup_alpha(float val) {
     return alpha_transform.lookup(val);
   }
@@ -83,6 +85,7 @@ public:
 
   float t_inc;
   bool fast_render_mode;
+  unsigned long long course_hash;
 };
 
 } // end namespace rtrt

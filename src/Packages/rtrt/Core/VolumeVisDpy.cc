@@ -56,6 +56,7 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
   //  current_t_inc = t_inc;
   // create the alphas for the alpha transform
   create_alpha_transfer();
+  create_alpha_hash();
 }
   
 VolumeVisDpy::~VolumeVisDpy()
@@ -229,6 +230,7 @@ void VolumeVisDpy::run() {
 	case Button1:
 	  {
 	    create_alpha_transfer();
+	    create_alpha_hash();
 	    selected_point = -1;
 	    redraw = true;
 	  }
@@ -542,6 +544,30 @@ void VolumeVisDpy::create_alpha_transfer() {
   }
 }
 
+void VolumeVisDpy::create_alpha_hash() {
+  // loop over the alpha values and fill in the bits
+  new_course_hash = 0;
+  int nindex = 63; // 64 - 1
+
+  for (int a_index = 0; a_index < (alpha_list.size()-1); a_index++) {
+    // This code looks for segments where either the start or the end
+    // is non zeoro.  When this happens indices are produces which
+    // round down on the start and round up on the end.  This can
+    // cause some overlap at adjacent non zero segments, but this is
+    // OK as we are only turning bits on.
+    float val = alpha_list[a_index].val;
+    float next_val = alpha_list[a_index+1].val;
+    if (val != 0 || next_val != 0) {
+      int start, end;
+      start = (int)(alpha_list[a_index].x * nindex);
+      end = (int)ceilf(alpha_list[a_index+1].x * nindex);
+      for (int i = start; i <= end; i++)
+	// Turn on the bits.
+	new_course_hash |= 1ULL << i;
+    }
+  }
+}
+
 // finds the closest point to x,y in the alpha_list and returns the index
 int VolumeVisDpy::select_point(int xpos, int ypos) {
   // need to figure out the normalized points
@@ -594,9 +620,11 @@ void VolumeVisDpy::create_color_transfer() {
 
 void VolumeVisDpy::animate(bool& changed) {
   if (current_t_inc != t_inc ||
-      new_fast_render_mode != fast_render_mode) {
+      new_fast_render_mode != fast_render_mode ||
+      new_course_hash != course_hash) {
     changed = true;
     t_inc = current_t_inc;
+    course_hash = new_course_hash;
     cout << "t_inc now equals "<< t_inc<<endl;
     fast_render_mode = new_fast_render_mode;
     cout << "fast_render_mode is now ";
@@ -604,6 +632,7 @@ void VolumeVisDpy::animate(bool& changed) {
       cout << "true.\n";
     else
       cout << "false.\n";
+    cout << "course_hash is now "<<course_hash<<endl;
   }
 }
 
