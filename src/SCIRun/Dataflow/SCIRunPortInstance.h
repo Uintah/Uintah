@@ -53,6 +53,8 @@ namespace SCIRun {
     virtual bool canConnectTo(PortInstance *);
 
   private:
+    friend class BridgeComponentInstance;
+    
     SCIRunPortInstance(const SCIRunPortInstance&);
     SCIRunPortInstance& operator=(const SCIRunPortInstance&);
 
