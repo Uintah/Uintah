@@ -30,9 +30,9 @@ SUBDIRS := \
 	$(SRCDIR)/pingpongArr   \
 	$(SRCDIR)/mxn  	        \
 	$(SRCDIR)/mxnargtest    \
-	$(SRCDIR)/OESort        \
 	$(SRCDIR)/Jacobi        \
 	$(SRCDIR)/LUFactor
+#	$(SRCDIR)/OESort 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
