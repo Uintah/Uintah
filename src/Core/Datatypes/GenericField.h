@@ -427,9 +427,11 @@ GenericField<Mesh, FData>::data_at_type_description() const
   case CELL:
     return SCIRun::get_type_description((typename Mesh::Cell *)0);
 
-  default:
-    return 0;
+  case NONE:
+    // Default to least common denominator.
+    return SCIRun::get_type_description((typename Mesh::Node *)0);
   }
+  return 0;
 }
 
 } // end namespace SCIRun
