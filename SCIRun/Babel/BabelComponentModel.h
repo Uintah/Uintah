@@ -50,7 +50,8 @@ namespace SCIRun {
 					       const gov::cca::TypeMap& properties);
     virtual bool haveComponent(const std::string& type);
     virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type);
+					      const std::string& type,
+					      const sci::cca::Loader::pointer &loader);
 
     virtual std::string createComponent(const std::string& name,
 					 const std::string& type);
