@@ -13,16 +13,17 @@
 
 namespace Uintah {
 namespace Components {
-  using Uintah::Interface::CFDInterface;
-  using Uintah::Parallel::UintahParallelComponent;
-  using Uintah::Interface::ProblemSpecP;
-  using Uintah::Grid::GridP;
-  using Uintah::Grid::LevelP;
-  using Uintah::Grid::Region;
-  using Uintah::Grid::VarLabel;
-  using Uintah::Interface::DataWarehouseP;
-  using Uintah::Interface::SchedulerP;
-  using Uintah::Parallel::ProcessorContext;
+
+using Uintah::Interface::CFDInterface;
+using Uintah::Parallel::UintahParallelComponent;
+using Uintah::Interface::ProblemSpecP;
+using Uintah::Grid::GridP;
+using Uintah::Grid::LevelP;
+using Uintah::Grid::Region;
+using Uintah::Grid::VarLabel;
+using Uintah::Interface::DataWarehouseP;
+using Uintah::Interface::SchedulerP;
+using Uintah::Parallel::ProcessorContext;
 
 class PhysicalConstants;
 class NonlinearSolver;
@@ -34,7 +35,7 @@ class Arches : public UintahParallelComponent, public CFDInterface {
 public:
     static const int NDIM = 3;
 
-    Arches();
+    Arches( int MpiRank, int MpiProcesses );
     virtual ~Arches();
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid);
@@ -42,9 +43,9 @@ public:
     virtual void problemInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw,
 			     bool restrt);
-   virtual void scheduleInitialize(const LevelP& level,
-				   SchedulerP&,
-				   DataWarehouseP&);
+    virtual void scheduleInitialize(const LevelP& level,
+				    SchedulerP&,
+				    DataWarehouseP&);
 	 
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&,
@@ -79,6 +80,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/04/19 20:59:11  dav
+// adding MPI support
+//
 // Revision 1.13  2000/04/19 05:25:56  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)
