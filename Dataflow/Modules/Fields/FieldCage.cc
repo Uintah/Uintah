@@ -64,11 +64,12 @@ private:
   Point			  *bounding_min_;
 };
 
+
 DECLARE_MAKER(FieldCage)
 FieldCage::FieldCage(GuiContext* ctx) : 
   Module("FieldCage", ctx, Filter, "Fields", "SCIRun"), 
-  ogeom_(0),
   infield_(0),
+  ogeom_(0),
   sizex_(ctx->subVar("sizex")),
   sizey_(ctx->subVar("sizey")),
   sizez_(ctx->subVar("sizez")),
@@ -127,7 +128,7 @@ FieldCage::execute()
     *bounding_min_ = fld_handle->mesh()->get_bounding_box().min();
   }
   
-  GeomCLines* lines = scinew GeomCLines;
+  GeomLines* lines = scinew GeomLines;
   lines->setLineWidth(1.0);
   GeomSwitch *cage_switch = scinew GeomSwitch(scinew GeomDL(lines));
     

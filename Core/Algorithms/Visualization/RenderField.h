@@ -111,7 +111,7 @@ protected:
 		  MaterialHandle m0);
   void add_disk(const Point &p, const Vector& v, double scale, 
 		int resolution, GeomGroup *g, MaterialHandle m0);
-  void add_axis(const Point &p, double scale, GeomCLines *lines, 
+  void add_axis(const Point &p, double scale, GeomLines *lines, 
 		MaterialHandle m0);
 
   inline  MaterialHandle choose_mat(bool def, int idx) {  
@@ -498,7 +498,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     scinew GeomDL(scinew GeomMaterial(nodes, def_mat_handle_));
   GeomSwitch *node_switch = scinew GeomSwitch(display_list);
   GeomPoints *points = 0;
-  GeomCLines *lines = 0;
+  GeomLines *lines = 0;
 
   // 0 Points 1 Spheres 2 Axes 3 Disks
   int mode = 0;
@@ -525,7 +525,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     }
     else
     {
-      lines = scinew GeomCLines();
+      lines = scinew GeomLines();
     }
     lines->setLineWidth(3);
   }
@@ -642,7 +642,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 
   const bool cyl = edge_display_mode == "Cylinders";
 
-  GeomCLines* lines = NULL;
+  GeomLines* lines = NULL;
   GeomColoredCylinders* cylinders = NULL;
   GeomSwitch *edge_switch;
   if (cyl)
@@ -661,7 +661,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
     }
     else
     {
-      lines = scinew GeomCLines;
+      lines = scinew GeomLines;
     }
     lines->setLineWidth(edge_scale);
     GeomDL *display_list =
@@ -1372,7 +1372,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 
   GeomGroup *disks;
   GeomArrows *vec_node;
-  GeomCLines *lines;
+  GeomLines *lines;
   const bool lines_p = (display_mode == "Lines");
   const bool needles_p = (display_mode == "Needles");
   const bool cones_p = (display_mode == "Cones");
@@ -1395,7 +1395,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   {
     if (lines_p)
     {
-      lines = scinew GeomCLines();
+      lines = scinew GeomLines();
     }
     else
     {

@@ -110,7 +110,7 @@ RenderFieldBase::add_disk(const Point &p, const Vector &vin,
 
 void 
 RenderFieldBase::add_axis(const Point &p0, double scale, 
-			  GeomCLines *lines, MaterialHandle mh) 
+			  GeomLines *lines, MaterialHandle mh) 
 {
   static const Vector x(1., 0., 0.);
   static const Vector y(0., 1., 0.);
