@@ -2,6 +2,10 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_ExamplesLabel_h
 #define Packages_Uintah_CCA_Components_Examples_ExamplesLabel_h
 
+#include <vector>
+using std::vector;
+
+
 namespace Uintah {
   class VarLabel;
   class ExamplesLabel {
@@ -50,6 +54,16 @@ namespace Uintah {
     // For Burger
     const VarLabel* u;
 
+    // For ParticleTest1
+    const VarLabel* pXLabel;
+    const VarLabel* pXLabel_preReloc;
+    const VarLabel* pMassLabel;
+    const VarLabel* pMassLabel_preReloc;
+    const VarLabel* pParticleIDLabel;
+    const VarLabel* pParticleIDLabel_preReloc;
+
+    vector<vector<const VarLabel*> > d_particleState;
+    vector<vector<const VarLabel*> > d_particleState_preReloc;
     ExamplesLabel();
     ~ExamplesLabel();
   };
