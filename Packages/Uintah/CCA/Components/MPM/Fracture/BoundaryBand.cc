@@ -23,11 +23,14 @@ BoundaryBand::BoundaryBand()
 void BoundaryBand::setup(particleIndex pIdx,
 	             const ParticleVariable<Vector>& pCrackNormal,
 		     const ParticleVariable<int>& pIsBroken,
+                     const ParticleVariable<double>& pVolume,
 		     const Lattice& lattice,
 		     double range)
 {
   d_pCrackNormal = &pCrackNormal;
   d_pX = &lattice.getpX();
+  d_pVolume = &pVolume;
+  d_pIsBroken = &pIsBroken;
 
   IntVector cellIdx;
   lattice.getPatch()->findCell( (*d_pX)[pIdx],cellIdx);
@@ -40,20 +43,27 @@ void BoundaryBand::setup(particleIndex pIdx,
     int pidx = particles[i];
     if(pidx == pIdx) continue;
     if( !pIsBroken[pidx] ) continue;
-    if( ( (*d_pX)[pIdx]-(*d_pX)[pidx]).length() < range ) {
+    Vector dis = (*d_pX)[pidx]-(*d_pX)[pIdx];
+    if( Dot( pCrackNormal[pidx], dis ) < 0 ) continue;
+    if( dis.length() < range ) {
       d_pIndexs.push_back(pidx);
     }
   }
+  
+  d_idx = pIdx;
 }
 
 void BoundaryBand::setup(const Point& p,
 	             const ParticleVariable<Vector>& pCrackNormal,
 		     const ParticleVariable<int>& pIsBroken,
+                     const ParticleVariable<double>& pVolume,
 		     const Lattice& lattice,
 		     double range)
 {
   d_pCrackNormal = &pCrackNormal;
   d_pX = &lattice.getpX();
+  d_pVolume = &pVolume;
+  d_pIsBroken = &pIsBroken;
 
   IntVector cellIdx;
   lattice.getPatch()->findCell(p,cellIdx);
@@ -65,10 +75,31 @@ void BoundaryBand::setup(const Point& p,
   for(int i=0; i<particlesNumber; i++) {
     int pidx = particles[i];
     if( !pIsBroken[pidx] ) continue;
-    if( (p-(*d_pX)[pidx]).length() < range ) {
+    Vector dis = (*d_pX)[pidx]-p;
+    if( Dot( pCrackNormal[pidx], dis ) < 0 ) continue;
+    if( dis.length() < range ) {
       d_pIndexs.push_back(pidx);
     }
   }
+
+  d_idx = -1;
+}
+
+int BoundaryBand::inside(particleIndex pIdx) const
+{
+  if( pIdx == d_idx && (*d_pIsBroken)[pIdx] ) return 1;
+  
+  const Point& p = (*d_pX)[pIdx];
+  
+  int particlesNumber = d_pIndexs.size();
+  for(int i=0; i<particlesNumber; i++) {
+    int pidx = d_pIndexs[i];
+    
+    Point pCrack = (*d_pX)[pidx];
+    if( Dot( (*d_pCrackNormal)[pidx], 
+              p - pCrack ) < 0) return 1;
+  }
+  return 0;
 }
 
 int BoundaryBand::inside(const Point& p) const
@@ -76,8 +107,9 @@ int BoundaryBand::inside(const Point& p) const
   int particlesNumber = d_pIndexs.size();
   for(int i=0; i<particlesNumber; i++) {
     int pidx = d_pIndexs[i];
+    Point pCrack = (*d_pX)[pidx];
     if( Dot( (*d_pCrackNormal)[pidx], 
-              p - (*d_pX)[pidx] ) < 0) return 1;
+              p - pCrack ) < 0) return 1;
   }
   return 0;
 }
