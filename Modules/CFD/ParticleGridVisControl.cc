@@ -345,7 +345,8 @@ void ParticleGridVisControl::graph(clString idx, clString var)
     ostrstream ostr;
     ostr << id << " graph " << idx+var << " ";
     int j = 0;
-    for( i = pgrh->GetStartTime(); i <= pgrh->GetEndTime(); i++ )
+    for( i = pgrh->GetStartTime(); i <= pgrh->GetEndTime();
+	 i += pgrh->GetIncrement())
       {
 	ostr << i << " " << values[j++] << " ";
       }

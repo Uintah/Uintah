@@ -95,7 +95,7 @@ void TecplotFileSelector::execute()
    tcl_status.set("Calling TecplotFileSelector!"); 
    static executed = 0;
    // might have multiple filenames later for animations
-   if( executed > 1 ){
+   if( !executed  ){
      clString command( id + " activate");
      TCL::execute(command);
    }
