@@ -49,6 +49,8 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps,
   ps->require("shear_modulus",d_initialData.Shear);
 
   ps->get("useModifiedEOS",d_useModifiedEOS);
+  d_removeParticles = true;
+  ps->get("remove_particles",d_removeParticles);
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
   d_initialMaterialTemperature = 294.0;
@@ -624,7 +626,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // If the particle has localized, do nothing
-      if (pLocalized[idx]) {
+      if (d_removeParticles && pLocalized[idx]) {
         pDeformGrad_new[idx] = pDeformGrad[idx];;
         pStress_new[idx] = pStress[idx];
         pVolume_deformed[idx] = pVolume[idx];
@@ -743,7 +745,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->meltingTemp = Tm_cur ;
 
       // Check if the particle has localized
-      if (temperature > Tm_cur) {
+      if (d_removeParticles && temperature > Tm_cur) {
         pDeformGrad_new[idx] = pDeformGrad[idx];;
         pStress_new[idx] = pStress[idx];
         pVolume_deformed[idx] = pVolume[idx];
@@ -973,7 +975,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 	  isLocalized = d_stable->checkStability(tensorSig, tensorD, Cep, 
                                                  direction);
 	}
-	if (isLocalized) {
+	if (d_removeParticles && isLocalized) {
 	  cerr << " Particle " << idx << " is localized " << endl;
 
 	  // set the particle localization flag to true and set the 
