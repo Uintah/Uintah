@@ -440,6 +440,34 @@ Source::calculateScalarSource(const ProcessorGroup*,
 // Scalar source calculation
 //****************************************************************************
 void 
+Source::addReactiveScalarSource(const ProcessorGroup*,
+				const Patch* patch,
+				double delta_t,
+				int, 
+				CellInformation* cellinfo,
+				ArchesVariables* vars) 
+{
+
+  // Get the patch and variable indices
+  IntVector indexLow = patch->getCellFORTLowIndex();
+  IntVector indexHigh = patch->getCellFORTHighIndex();
+  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	IntVector currCell(colX, colY, colZ);
+	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	vars->scalarNonlinearSrc[currCell] += vol*vars->reactscalarSRC[currCell];
+      }
+    }
+  }
+}
+
+
+
+//****************************************************************************
+// Scalar source calculation
+//****************************************************************************
+void 
 Source::calculateEnthalpySource(const ProcessorGroup*,
 			      const Patch* patch,
 			      double delta_t,

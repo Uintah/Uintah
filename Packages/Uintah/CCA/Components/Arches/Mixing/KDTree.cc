@@ -94,6 +94,7 @@ KD_Tree::TreeInsert(KD_Node*& x, int key[], vector<double> phi,
     for(i=0; i<d_dim && key[i]==x->keys[i]; i++);
     if(i== d_dim) {
       cout << "the node already exist" << endl;
+      cout << key[0] << " " << key[1] << " " << key[2] << endl;
       x->Phi = phi;
     }
     else if (key[lev] > x->keys[lev]){
@@ -178,6 +179,10 @@ KD_Tree::DestroyTree(KD_Node *x){
 
 //
 // $Log$
+// Revision 1.4  2001/09/04 23:44:27  rawat
+// Added ReactingScalar transport equation to run ILDM.
+// Also, merged Jennifer's changes to run ILDM in the mixing directory.
+//
 // Revision 1.3  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
 //

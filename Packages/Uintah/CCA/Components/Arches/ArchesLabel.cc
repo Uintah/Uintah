@@ -210,6 +210,40 @@ ArchesLabel::ArchesLabel()
   // Scalar Non Linear Src
   d_scalNonLinSrcSBLMLabel = scinew VarLabel("scalNonLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
+
+  // reactive scalar
+
+  d_reactscalarINLabel = scinew VarLabel("reactscalarIN",
+				    CCVariable<double>::getTypeDescription() );
+  d_reactscalarSPLabel = scinew VarLabel("reactscalarSP",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarOUTBCLabel = scinew VarLabel("reactscalarOUTBC",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarCPBCLabel = scinew VarLabel("reactscalarCPBC",
+				      CCVariable<double>::getTypeDescription() );
+
+  // reactscalar variance
+  d_reactscalarVarINLabel = scinew VarLabel("reactscalarVarIN", 
+				       CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarVarSPLabel = scinew VarLabel("reactscalarVarSP", 
+				       CCVariable<double>::getTypeDescription() );
+  // Reactscalar Coef
+  d_reactscalCoefSBLMLabel = scinew VarLabel("reactscalCoefSBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Conv Coef
+  d_reactscalConvCoefSBLMLabel = scinew VarLabel("reactscalConvCoefSBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Linear Src
+  d_reactscalLinSrcSBLMLabel = scinew VarLabel("reactscalLinSrcSBLM",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Non Linear Src
+  d_reactscalNonLinSrcSBLMLabel = scinew VarLabel("reactscalNonLinSrcSBLM",
+				   CCVariable<double>::getTypeDescription() );
+
+
   // labels for nonlinear residuals
   d_presResidPSLabel = scinew VarLabel("presResidPSLabel",
 				        ReductionVariable<double,
@@ -244,6 +278,10 @@ ArchesLabel::ArchesLabel()
 				   SFCZVariable<double>::getTypeDescription() );
   d_scalarRes = scinew VarLabel("scalarRes",
 				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarRes = scinew VarLabel("reactscalarRes",
+				   CCVariable<double>::getTypeDescription() );
+
   d_enthalpyRes = scinew VarLabel("enthalpyRes",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -374,6 +412,36 @@ ArchesLabel::ArchesLabel()
   d_scalarPredLabel = scinew VarLabel("scalarPred",
 				   CCVariable<double>::getTypeDescription() );
 
+
+  // predictor-corrector labels
+  // Reactscalar Coef
+  d_reactscalCoefPredLabel = scinew VarLabel("reactscalCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Conv Coef
+  d_reactscalConvCoefPredLabel = scinew VarLabel("reactscalConvCoefPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Linear Src
+  d_reactscalLinSrcPredLabel = scinew VarLabel("reactscalLinSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Non Linear Src
+  d_reactscalNonLinSrcPredLabel = scinew VarLabel("reactscalNonLinSrcPred",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalCoefCorrLabel = scinew VarLabel("reactscalCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Conv Coef
+  d_reactscalConvCoefCorrLabel = scinew VarLabel("reactscalConvCoefCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Linear Src
+  d_reactscalLinSrcCorrLabel = scinew VarLabel("reactscalLinSrcCorr",
+				   CCVariable<double>::getTypeDescription() );
+  // Reactscalar Non Linear Src
+  d_reactscalNonLinSrcCorrLabel = scinew VarLabel("reactscalNonLinSrcCorr",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarPredLabel = scinew VarLabel("reactscalarPred",
+				   CCVariable<double>::getTypeDescription() );
+
   d_densityPredLabel = scinew VarLabel("densityPred",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -465,6 +533,9 @@ ArchesLabel::ArchesLabel()
   d_absorpINLabel = scinew VarLabel("absorpIN",
 				    CCVariable<double>::getTypeDescription() );
   d_sootFVINLabel = scinew VarLabel("sootFVIN",
+				    CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarSRCINLabel = scinew VarLabel("reactscalarSRCIN",
 				    CCVariable<double>::getTypeDescription() );
 
 

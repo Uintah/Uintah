@@ -42,11 +42,11 @@ BetaPDFShape::computePDFFunction(double* meanMixVar,
 {
   d_validGammaValue = true;
   //cout<<"Beta::meanMixVar ="<<meanMixVar[0]<<" "<<statVar<<endl;
+  // ***Jennifer's note- This kluge will only work for integration over
+  // ONE variable***
+  //What if mixVar=0 or 1??; right now, if var too high, it is reduced
+  // If var too low, mean values will be returned 
   if ((meanMixVar[0]<0.001)||(meanMixVar[0]>0.999)) {
-     d_validGammaValue = false;
-     return;
-  }
-  if (statVar <= 1e-04) {
      d_validGammaValue = false;
      return;
   }
@@ -54,13 +54,6 @@ BetaPDFShape::computePDFFunction(double* meanMixVar,
   d_gammafnValue = computeBetaPDFShape(meanMixVar, statVar);
   //  cout<<"Beta::PDFFunction statVar = "<<statVar<<endl;
   //  cout << "LN(gammafnValue) = " << d_gammafnValue << endl; 
-  //if (d_gammafnValue < SMALL)  //Old check before Wing put in
-  // robust gammafn
-  //  d_validGammaValue = false;
-  // ***Jennifer's note- This kluge will only work for integration over
-  // ONE variable***
-  //What if mixVar=0 or 1??; right now, if var too high, it is reduced
-  // If var too low, mean values will be returned (see next line)
   return;
 }
 
@@ -89,25 +82,26 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   double lastMixVars = 1.0 - sumMixVars; // 1.0 - fi's
   sumSqrMixVars += lastMixVars*lastMixVars; //SUM(sqr(fi's))
   //cout<<"statVar = "<<statVar<<endl;
-  if (statVar < SMALL) 
+  if (statVar < SMALL_VARIANCE) 
     factor = 0.0;
-  else
-      // (1-S)/Q - 1
-    factor = (1.0 - sumSqrMixVars)/statVar - 1.0;
+  else 
+    factor = (1.0 - sumSqrMixVars)/statVar - 1.0;  // (1-S)/Q - 1
   double sumCoefs = 0.0;
   double multGamma = 0.0;
   vector<double> gammafn(d_dimPDF+1);
   for (int i = 0; i < d_dimPDF; i++) {
     d_coef[i] = meanMixVar[i]*factor; // ai = fi*(1-S)/Q - 1
     //cout << meanMixVar[i] << " Beta(" << i << ") = " << d_coef[i] << endl;
-
     if (d_coef[i] <= 0.0)
-      //upper limit, if Q is greater than (1-S), ai becomes negative.  So we reset the new Q = 0.9*fi*(1-fi)/2
+      //Upper limit, if Q is greater than (1-S), ai becomes negative.  
+      //So we reset the new Q = 0.9*fi*(1-fi)/2
       {
 	//	cout << "meanmixvar " << meanMixVar[i] << endl;
 	new_d_statVar = 0.9*meanMixVar[i]*(1-meanMixVar[i])/2.0;
-	//cout << "newstatvar = " << new_d_statVar << endl;
-	new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
+	if (new_d_statVar < SMALL_VARIANCE)
+	  new_factor = 0.0;
+	else
+	  new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
 	d_coef[i] = meanMixVar[i]*new_factor;
 	//cout << "beta is negative, new beta is calculated" << endl;
       }
@@ -120,8 +114,11 @@ BetaPDFShape::computeBetaPDFShape(double* meanMixVar,
   if (d_coef[d_dimPDF] <= 0.0)
     {
       new_d_statVar = 0.9*lastMixVars*(1-lastMixVars)/2.0;
+      if (new_d_statVar < SMALL_VARIANCE)
+         new_factor = 0.0;
+      else
+	 new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
       //cout << "lastMixVar = "<<lastMixVars<<" mean[d_dimPDF] = "<<meanMixVar[d_dimPDF]<<endl;
-      new_factor = (1.0 - sumSqrMixVars)/new_d_statVar - 1.0;
       d_coef[d_dimPDF] = lastMixVars*new_factor;
       //cout << "Beta is negative, new beta is calculated" << endl;
     }    
@@ -162,6 +159,10 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.6  2001/09/04 23:44:26  rawat
+// Added ReactingScalar transport equation to run ILDM.
+// Also, merged Jennifer's changes to run ILDM in the mixing directory.
+//
 // Revision 1.5  2001/08/26 06:31:48  spinti
 // 1. Changed Petsc's convergence criterion to not depend on absolute norm
 // 2. Removed zeroing of pressref in PressureSolver

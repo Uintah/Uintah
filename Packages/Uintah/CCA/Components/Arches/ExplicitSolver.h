@@ -43,6 +43,7 @@ namespace Uintah {
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
+class ReactiveScalarSolver; 
 class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
@@ -61,6 +62,7 @@ public:
 		     BoundaryCondition* bc,
 		     TurbulenceModel* turbModel, 
 		     PhysicalConstants* physConst,
+		     const bool calcReactscalar,
 		     const bool calcEnthalpy,
 		     const ProcessorGroup* myworld);
 
@@ -157,6 +159,7 @@ private:
       // for probing data for debuging or plotting
       bool d_probe_data;
       bool d_enthalpySolve;
+      bool d_reactingScalarSolve;
       vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
@@ -166,6 +169,8 @@ private:
       MomentumSolver* d_momSolver;
       // Scalar solver
       ScalarSolver* d_scalarSolver;
+      // reacting scalar solver
+      ReactiveScalarSolver* d_reactingScalarSolver;
       // enthalpy solver
       EnthalpySolver* d_enthalpySolver;
       // physcial constatns

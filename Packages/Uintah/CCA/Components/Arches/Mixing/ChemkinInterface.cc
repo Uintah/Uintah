@@ -19,12 +19,6 @@ ChemkinInterface::ChemkinInterface() {
   d_numSpecies=1;
   d_nfit=1;  
 
-
-#if 0
-  // Read in chem.inp and therm.dat and create binary output file
-  // will generate chem.bin before the start of the calculation
-  ckinterp();
-#endif
   strcpy (cklinkfile, "chem.bin");
 
   // Initialize Chemkin by reading binary file into appropriate work
@@ -126,10 +120,10 @@ ChemkinInterface::getSpeciesIndex(char *name)
 }
 
 double
-ChemkinInterface::getMixMoleWeight(double *Y)
+ChemkinInterface::getMixMoleWeight(vector<double> Yvec)
 {
   double mixMoleWeight;
-  ckmmwy(Y, d_ickwrk, d_rckwrk, &mixMoleWeight);
+  ckmmwy(&Yvec[0], d_ickwrk, d_rckwrk, &mixMoleWeight);
   // Check to see if next line causes compile time error. This will
   // answer question about const
   // d_ickwrk[1] = 1;
@@ -137,70 +131,58 @@ ChemkinInterface::getMixMoleWeight(double *Y)
 }
 
 double
-ChemkinInterface::getMixEnthalpy(double temp, const vector<double>& Yvec)
+ChemkinInterface::getMixEnthalpy(double temp, vector<double> Yvec)
 {
-  double* Y = new double[d_numSpecies];
-  assert(d_numSpecies == Yvec.size());
-  for (int i = 0; i < Yvec.size(); i++)
-    Y[i] = Yvec[i];
   double mixEnthalpy; // Units of J/kg
-  ckhbms(&temp, Y, d_ickwrk, d_rckwrk, &mixEnthalpy);
+  ckhbms(&temp, &Yvec[0], d_ickwrk, d_rckwrk, &mixEnthalpy);
   mixEnthalpy *= 1.e-4; // Convert to SI (erg/gm) -> (J/kg)
-  delete [] Y;
   return mixEnthalpy;
 }
+
 double
-ChemkinInterface::getMixSpecificHeat(double temp, double *Y)
+ChemkinInterface::getMixSpecificHeat(double temp, vector<double> Yvec)
 {
   double mixSpecificHeat; // Units of J/kg*K
-  ckcpbs(&temp, Y, d_ickwrk, d_rckwrk, &mixSpecificHeat);
+  ckcpbs(&temp, &Yvec[0], d_ickwrk, d_rckwrk, &mixSpecificHeat);
   mixSpecificHeat = mixSpecificHeat / 1e+7 * 1000; //Convert from
   // erg/(gm K) to J/(kg K)
   return mixSpecificHeat;
 }
 
 double 
-ChemkinInterface::getMassDensity(double press, double temp, double *Y)
+ChemkinInterface::getMassDensity(double press, double temp, 
+				 vector<double> Yvec)
 {
   double massDensity; // Units of kg/m^3
   double cgsPressure = press*10; // Convert from Pa to dyne/cm^2
-  ckrhoy(&cgsPressure, &temp, Y, d_ickwrk, d_rckwrk, &massDensity);
+  ckrhoy(&cgsPressure, &temp, &Yvec[0], d_ickwrk, d_rckwrk, &massDensity);
   massDensity *= 1000; // Convert to SI
   return massDensity;
 }
 
 vector<double>
-ChemkinInterface::convertMolestoMass(const vector<double> &Xvec)
+ChemkinInterface::convertMolestoMass(vector<double> Xvec)
 {
-  double* X = new double[d_numSpecies];
-  for (int i = 0; i < Xvec.size(); i++)
-      X[i] = Xvec[i];
   double* yArray = new double[d_numSpecies];
-  ckxty(X, d_ickwrk, d_rckwrk, yArray);
+  ckxty(&Xvec[0], d_ickwrk, d_rckwrk, yArray);
   // Cast array as vector for return
   vector<double> Y(d_numSpecies);
   for (int i = 0; i < d_numSpecies; i++)
     Y[i] = yArray[i];
   delete [] yArray;
-  delete [] X;
   return Y;
 }
 
 vector<double>
-ChemkinInterface::convertMasstoMoles(const vector<double>& Yvec)
+ChemkinInterface::convertMasstoMoles(vector<double> Yvec)
 {
-  double* Y = new double[d_numSpecies];
-  assert(d_numSpecies == Yvec.size());
-  for (int i = 0; i < Yvec.size(); i++)
-    Y[i] = Yvec[i];
   double* xArray = new double[d_numSpecies];
-  ckytx(Y, d_ickwrk, d_rckwrk, xArray);
+  ckytx(&Yvec[0], d_ickwrk, d_rckwrk, xArray);
   // Cast array as vector for return
   vector<double> X(d_numSpecies);
   for (int i = 0; i < d_numSpecies; i++)
     X[i] = xArray[i];
   delete [] xArray;
-  delete [] Y;
   return X;
 }
 
@@ -213,10 +195,11 @@ ChemkinInterface::getSpeciesEnthalpy(double temp, double *speciesEnthalpy)
 }
 
 void
-ChemkinInterface::getMolarRates(double press, double temp, double *Y, double *wdot)
+ChemkinInterface::getMolarRates(double press, double temp, 
+				vector<double> Yvec, double *wdot)
 {
   double cgsPressure = press*10; // Convert from Pa to dyne/cm^2
-  ckwyp(&cgsPressure, &temp, Y, d_ickwrk, d_rckwrk, wdot);
+  ckwyp(&cgsPressure, &temp, &Yvec[0], d_ickwrk, d_rckwrk, wdot);
   for (int i=0; i < d_numSpecies; i++)
     wdot[i] *= 1e+03; //Convert from moles/(cm^3*s) to kmoles/(m^3*s)
 }

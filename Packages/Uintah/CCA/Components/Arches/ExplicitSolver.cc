@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/ReactiveScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -41,11 +42,13 @@ ExplicitSolver(const ArchesLabel* label,
 	       BoundaryCondition* bc,
 	       TurbulenceModel* turbModel,
 	       PhysicalConstants* physConst,
+	       bool calc_reactingScalar,
 	       bool calc_enthalpy,
 	       const ProcessorGroup* myworld): 
                NonlinearSolver(myworld),
 	       d_lab(label), d_MAlab(MAlb), d_props(props), 
 	       d_boundaryCondition(bc), d_turbModel(turbModel),
+	       d_reactingScalarSolve(calc_reactingScalar),
 	       d_enthalpySolve(calc_enthalpy),
 	       d_physicalConsts(physConst)
 {
@@ -99,6 +102,12 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
     d_scalarSolver->problemSetup(db);
+  }
+  if (d_reactingScalarSolve) {
+    d_reactingScalarSolver = scinew ReactiveScalarSolver(d_lab, d_MAlab,
+					     d_turbModel, d_boundaryCondition,
+					     d_physicalConsts);
+    d_reactingScalarSolver->problemSetup(db);
   }
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
@@ -158,6 +167,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // in this case we're only solving for one scalar...but
     // the same subroutine can be used to solve multiple scalars
     d_scalarSolver->solvePred(sched, patches, matls, index);
+  }
+  if (d_reactingScalarSolver) {
+    int index = 0;
+    // in this case we're only solving for one scalar...but
+    // the same subroutine can be used to solve multiple scalars
+    d_reactingScalarSolver->solvePred(sched, patches, matls, index);
   }
 
   if (nofScalarVars > 0) {
@@ -304,6 +319,10 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 		    Ghost::None, numGhostCells);
     }
   }
+  if (d_reactingScalarSolve) {
+    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
+		  Ghost::None, numGhostCells);
+  }
 
   if (d_enthalpySolve)
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
@@ -327,7 +346,8 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
       tsk->computes(d_lab->d_scalarVarINLabel);
     }
   }
-
+  if (d_reactingScalarSolver)
+    tsk->computes(d_lab->d_reactscalarINLabel);
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpyINLabel);
   tsk->computes(d_lab->d_densityINLabel);
@@ -532,6 +552,17 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       }
     }
 
+    CCVariable<double> reactscalar;
+    CCVariable<double> new_reactscalar;
+    if (d_reactingScalarSolve) {
+      old_dw->get(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, 
+		  Ghost::None, nofGhostCells);
+      new_dw->allocate(new_reactscalar, d_lab->d_reactscalarINLabel, matlIndex,
+		       patch);
+      new_reactscalar.copyPatch(reactscalar);
+    }
+
+
     CCVariable<double> new_enthalpy;
     if (d_enthalpySolve) {
       new_dw->allocate(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
@@ -561,7 +592,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 	new_dw->put(scalarVar_new[ii], d_lab->d_scalarVarINLabel, matlIndex, patch);
       }
     }
-
+    if (d_reactingScalarSolve)
+      new_dw->put(new_reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch);
     if (d_enthalpySolve)
       new_dw->put(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
     new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
