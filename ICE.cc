@@ -3667,13 +3667,13 @@ void ICE::computeTauY( const Patch* patch,
     //__________________________________
     //  tau_YX
     grad_1 = (vel_CC[cell].x() - vel_CC[bottom].x())/delY;
-    grad_2 = (vvel_EC_right    - vvel_EC_left)    /delX;
+    grad_2 = (vvel_EC_right    - vvel_EC_left)      /delX;
     tau_Y_FC[cell].x(vol_frac_FC * viscosity * (grad_1 + grad_2) ); 
 
 
     //__________________________________
     //  tau_YZ
-    grad_1 = (vvel_EC_front    - vvel_EC_back)    /delZ;
+    grad_1 = (vvel_EC_front    - vvel_EC_back)      /delZ;
     grad_2 = (vel_CC[cell].z() - vel_CC[bottom].z())/delY;
     tau_Y_FC[cell].z(vol_frac_FC * viscosity * (grad_1 + grad_2)); 
     
@@ -3787,7 +3787,7 @@ void ICE::computeTauZ( const Patch* patch,
     //__________________________________
     //  tau_ZY
     grad_1 = (vel_CC[cell].y() - vel_CC[back].y()) /delZ;
-    grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delX;
+    grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delY;
     tau_Z_FC[cell].y( vol_frac_FC * viscosity * (grad_1 + grad_2) ); 
 
     //__________________________________
