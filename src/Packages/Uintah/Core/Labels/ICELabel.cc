@@ -14,6 +14,8 @@ ICELabel::ICELabel()
   delTLabel = 0; // Placed in later, in problemSetup
   doMechLabel
     = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
+  NeedAddIceMaterialLabel
+    = VarLabel::create("NeedAddIceMaterial", sum_vartype::getTypeDescription());
 
   //__________________________________
   // Cell Centered variables
@@ -313,6 +315,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(maxMach_zplusLabel);
 
     VarLabel::destroy(doMechLabel);
+    VarLabel::destroy(NeedAddIceMaterialLabel);
 
     // Model variables
     VarLabel::destroy(modelMass_srcLabel);

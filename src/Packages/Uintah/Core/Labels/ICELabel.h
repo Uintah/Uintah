@@ -13,6 +13,7 @@ namespace Uintah {
 
     const VarLabel* delTLabel;
     const VarLabel* doMechLabel;
+    const VarLabel* NeedAddIceMaterialLabel;
 
     // Cell centered variables
     const VarLabel* press_CCLabel;
