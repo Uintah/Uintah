@@ -381,18 +381,24 @@ Dpy::checkGuiFlags()
   else            { scene->rtrt_engine->do_jitter = false;  }
 
   if(animate && scene->animate) {
+    // Do all the regular animated objects.
     Array1<Object*> & objects = scene->animateObjects_;
-    BBox bbox1,bbox2;
     for( int num = 0; num < objects.size(); num++ ) {
-      bbox1.reset();
-      bbox2.reset();
-      objects[num]->compute_bounds(bbox1,1E-5);
       objects[num]->animate(SCIRun::Time::currentSeconds(), changed);
-      Grid2 *anim_grid = objects[num]->get_anim_grid();
+    }
+    // Do the special objects that require bounding box mojo.
+    Array1<Object*> & dobjects = scene->dynamicBBoxObjects_;
+    BBox bbox1,bbox2;
+    for( int num = 0; num < dobjects.size(); num++ ) {
+      bbox1.reset();
+      dobjects[num]->compute_bounds(bbox1,1E-5);
+      dobjects[num]->animate(SCIRun::Time::currentSeconds(), changed);
+      Grid2 *anim_grid = dobjects[num]->get_anim_grid();
       if (anim_grid) {
-        objects[num]->compute_bounds(bbox2, 1E-5);
-        anim_grid->remove(objects[num],bbox1);
-        anim_grid->insert(objects[num],bbox2);
+        bbox2.reset();
+        dobjects[num]->compute_bounds(bbox2, 1E-5);
+        anim_grid->remove(dobjects[num],bbox1);
+        anim_grid->insert(dobjects[num],bbox2);
       }
     }
   }

@@ -263,9 +263,11 @@ public:
   // via this call.  If the "name_" of the object is "", then the
   // Gui will not display the object.  Also, animate will (now) only 
   // be called on objects that have been added through this function
-  // with the "animate" flag set to true.
-  void addObjectOfInterest( Object * obj, bool animate = false );
-  void addObjectOfInterest( const string& name, Object * obj, bool animate = false );
+  // with the "animate" flag set to true.  If you have an object that needs
+  // to change its bounding box on the fly, then you need to set the
+  // remakebbox flag to true.
+  void addObjectOfInterest( Object * obj, bool animate = false, bool remakebbox = false );
+  void addObjectOfInterest( const string& name, Object * obj, bool animate = false, bool remakebbox = false );
 
   void attach_display(DpyBase *dpy);
   void attach_auxiliary_display(DpyBase *dpy);
@@ -324,6 +326,9 @@ private:
 
   // Objects that will have their animate() function called:
   Array1<Object*> animateObjects_;
+
+  // Objects that, when they have their animate() function called, must recompute bbox
+  Array1<Object*> dynamicBBoxObjects_;
   
   Camera* camera0;
   Camera* camera1;
