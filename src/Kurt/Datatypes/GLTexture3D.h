@@ -342,7 +342,7 @@ GLTexture3D::buildBonTree(Point min, Point max,
     }
 
     clString  group_name( "thread group ");
-    group_name = group_name + to_string( level )();
+    group_name = group_name + to_string( level+1 )();
     ThreadGroup *group = scinew ThreadGroup( group_name() );
     
     brick = scinew Brick(min, max, padx, pady, padz, level, brickData);
@@ -367,7 +367,7 @@ GLTexture3D::buildBonTree(Point min, Point max,
       tmp = tmp*2 -1;
     }   
  
-    level++;
+
 
     int X2, Y2, Z2;
     X2 = largestPowerOf2( xsize -1);
@@ -375,13 +375,14 @@ GLTexture3D::buildBonTree(Point min, Point max,
     Z2 = largestPowerOf2( zsize -1);
 
 
+      
     Vector diag = max - min;
     Point mid;
     if( Z2 == Y2 && Y2 == X2 ){mid = min + Vector(dx* (sx-1), dy* (sy-1),
 						  dz* (sz-1));
       for(int i = 0; i < 8; i++){
 	BuildChild(i, min, mid, max, xoff, yoff, zoff,
-		    xsize, ysize, zsize, sx, sy, sz,level,tex, node, 
+		    xsize, ysize, zsize, sx, sy, sz,level+1,tex, node, 
 			  thread_sema, group);
       }
     } else if( Z2 > Y2 && Z2 > X2 ) {
@@ -390,82 +391,82 @@ GLTexture3D::buildBonTree(Point min, Point max,
 			 dz*(sz-1));
       
       BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, ysize, sz, level, tex, node, 
+		 xsize, ysize, zsize, xsize, ysize, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(1, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, ysize, sz, level, tex, node, 
+		 xsize, ysize, zsize, xsize, ysize, sz, level+1, tex, node, 
 			  thread_sema, group);
     } else  if( Y2 > Z2 && Y2 > X2 ) {
       mid = min + Vector(diag.x(),
 			 dy*(sy - 1),
 			 diag.z());
       BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, zsize, level, tex, node, 
+		 xsize, ysize, zsize, xsize, sy, zsize, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(2, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, zsize, level, tex, node, 
+		 xsize, ysize, zsize, xsize, sy, zsize, level+1, tex, node, 
 			  thread_sema, group);
     } else  if( X2 > Z2 && X2 > Y2 ) {
       mid = min + Vector(dx*(sx-1),
 			 diag.y(),
 			 diag.z());
       BuildChild(0, min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, zsize, level, tex, node, 
+		 xsize, ysize, zsize, sx, ysize, zsize, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, zsize, level, tex, node, 
+		 xsize, ysize, zsize, sx, ysize, zsize, level+1, tex, node, 
 			  thread_sema, group);
     } else if( Z2 == Y2 ){
       mid = min + Vector(diag.x(),
 			 dy * (sy - 1),
 			 dz* (sz - 1));
       BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
+		 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(1,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
+		 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(2,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
+		 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(3,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, xsize, sy, sz, level, tex, node, 
+		 xsize, ysize, zsize, xsize, sy, sz, level+1, tex, node, 
 			  thread_sema, group);
     } else if( X2 == Y2 ){
       mid = min + Vector(dx*(sx - 1), dy*(sy-1),
 			 diag.z());
       BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
+		 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(2,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
+		 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
+		 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(6,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, sy, zsize, level, tex, node, 
+		 xsize, ysize, zsize, sx, sy, zsize, level+1, tex, node, 
 			  thread_sema, group);
     } else if( Z2 == X2 ){
       mid = min + Vector(dx*(sx-1),
 			 diag.y(),
 			 dz*(sz-1));
       BuildChild(0,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
+		 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(1,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
+		 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(4,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
+		 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
 			  thread_sema, group);
       BuildChild(5,min, mid, max, xoff, yoff, zoff,
-		 xsize, ysize, zsize, sx, ysize, sz, level, tex, node, 
+		 xsize, ysize, zsize, sx, ysize, sz, level+1, tex, node, 
 			  thread_sema, group);
     }
 
     group->join();
-    delete group;
+    //group->stop();
       
     thread_sema->down();
     Thread *t = new Thread(new GLTexture3D::run_makeLowResBrickData(this, 
@@ -477,7 +478,10 @@ GLTexture3D::buildBonTree(Point min, Point max,
 					   level, node, brickData),
 			   "makeLowResBrickData worker", tg);
 
-
+    if(group->numActive(false) != 0){
+      cerr<<"Active Threads in thread group\n";
+    }
+    delete group;
   }
   return node;
 }

@@ -110,6 +110,10 @@ void GLTexture3D::BuildTexture()
   Semaphore* thread_sema = new Semaphore( "worker count semhpore",
 					  max_workers);  
 
+  clString  group_name( "thread group ");
+  group_name = group_name + "0";
+  tg = scinew ThreadGroup( group_name() );
+
 //   cerr<<"Max_worker threads = "<<max_workers<<endl;
   if( _tex->getRGDouble() ){
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0,
@@ -171,6 +175,9 @@ void GLTexture3D::BuildTexture()
   } else {
     cerr<<"Error: cast didn't work!\n";
   }
+  
+  tg->join();
+  delete tg;
   thread_sema->down(max_workers);
   ASSERT(bontree != 0x0);
 }
@@ -326,7 +333,7 @@ GLTexture3D::run_makeLowResBrickData::run()
   int ii,jj,kk;
   double dx, dy, dz;
 
-  if( level == 1 ){
+  if( level == 0 ){
      thread_sema->up();
      return;
   } else {
@@ -370,8 +377,8 @@ GLTexture3D::run_makeLowResBrickData::run()
 	}
       }
     }
+    thread_sema->up();
   }    
-  thread_sema->up();
 }
 
 
