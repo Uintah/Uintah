@@ -240,18 +240,20 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
 						      gov::cca::TypeMap::pointer(0),
 						      component);
-  component->setServices(gov::cca::Services::pointer(ci));
   ci->addReference(); //what is this for?
+  component->setServices(gov::cca::Services::pointer(ci));
   return ci;
 }
 
 bool CCAComponentModel::destroyInstance(ComponentInstance *ci)
 {
-
-  //make sure why ci->addReference() is called in createInstace();
-  cerr<<"TODO: CCAComponentModel::destroyInstance() is not done"<<endl;
-  //delete ci;  //how?  
-  return false;
+  CCAComponentInstance* cca_ci = dynamic_cast<CCAComponentInstance*>(ci);
+  if(!cca_ci){
+	cerr<<"error: in destroyInstance() cca_ci is 0"<<endl;  	
+    return false;
+  }
+  cca_ci->deleteReference();
+  return true;	
 }
 
 string CCAComponentModel::getName() const
