@@ -230,8 +230,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set current_cursor [$w cget -cursor]
 
 	# read an HDF5 file
-	iwidgets::labeledframe $w.f -labeltext "HDF5 File Browser"
-	set f [$w.f childsite]
+	iwidgets::labeledframe $w.browser -labeltext "HDF5 File Browser"
+	set f [$w.browser childsite]
 	
 	iwidgets::entryfield $f.fname -labeltext "File:" \
 	    -textvariable $this-filename
@@ -240,8 +240,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -command "$this make_file_open_box"
 
 	pack $f.fname $f.sel -side top -fill x -expand yes
-	pack $w.f -fill x -expand yes -side top
 
+  	pack $w.browser -side top -pady 10 -fill x -expand yes
 
 
 	option add *TreeView.font { Courier 12 }
@@ -265,7 +265,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 			  -selectcommand [list $this SelectNotify] \
 			  -tree $tree]
 
-  	pack $treeframe.tree -fill x -expand yes
+  	pack $treeframe.tree -side top -pady 10 -fill x -expand yes
 
 	$treeview column configure treeView -text Node
 	$treeview column insert end "Node-Type" "Data-Type" "Value"
@@ -314,9 +314,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $search.options.path $search.options.node -padx 5 -side left
 	pack $search.options -side right
 
-	pack $search.name -side left -fill x -expand yes
-	pack $w.search -fill x -expand yes -side top
+	pack $search.name -side left -fill x -expand yes -pady 10
+	pack $w.search -fill x -expand yes -side top -pady 10
 
+
+#       Selected Data
 	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
 	set sd [$w.sd childsite]
 
@@ -397,7 +399,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $dm.merge $dm.svt $dm.animate -side left
 
 
-	pack $w.dm -fill x -expand yes -side top
+	pack $w.dm -fill x -expand yes -side top -pady 10
 
 
 	iwidgets::labeledframe $w.sample -labeltext "Data Sampling"

@@ -100,55 +100,57 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set current_cursor [$w cget -cursor]
 
 
-	iwidgets::labeledframe $w.treeview -labeltext "MDS Tree Traverser"
+	iwidgets::labeledframe $w.loader -labeltext "MDS Tree Loader"
 
-	set treeframe [$w.treeview childsite]
+	set loadframe [$w.loader childsite]
 
-	frame $treeframe.info
+	frame $loadframe.box
 
-	frame $treeframe.info.box
+	frame $loadframe.box.title
+	label $loadframe.box.title.server -text "Server" -width 16 -relief groove
+	label $loadframe.box.title.tree   -text "Tree"   -width 12 -relief groove
+	label $loadframe.box.title.shot   -text "Shot"   -width  8 -relief groove
+	label $loadframe.box.title.signal -text "Signal" -width 48 -relief groove
 
-	frame $treeframe.info.box.title
-	label $treeframe.info.box.title.server -text "Server" -width 16 -relief groove
-	label $treeframe.info.box.title.tree   -text "Tree"   -width 12 -relief groove
-	label $treeframe.info.box.title.shot   -text "Shot"   -width  8 -relief groove
-	label $treeframe.info.box.title.signal -text "Signal" -width 48 -relief groove
-
-	pack $treeframe.info.box.title.server $treeframe.info.box.title.tree \
-	    $treeframe.info.box.title.shot $treeframe.info.box.title.signal \
+	pack $loadframe.box.title.server $loadframe.box.title.tree \
+	    $loadframe.box.title.shot $loadframe.box.title.signal \
 	    -side left
 
-	pack $treeframe.info.box.title
+	pack $loadframe.box.title
 
-	frame $treeframe.info.box.entry
-	entry $treeframe.info.box.entry.server -textvariable $this-load-server \
+
+	frame $loadframe.box.entry
+	entry $loadframe.box.entry.server -textvariable $this-load-server \
 	    -width 16
-	entry $treeframe.info.box.entry.tree   -textvariable $this-load-tree   \
+	entry $loadframe.box.entry.tree   -textvariable $this-load-tree   \
 	    -width 12
-	entry $treeframe.info.box.entry.shot   -textvariable $this-load-shot   \
+	entry $loadframe.box.entry.shot   -textvariable $this-load-shot   \
 	    -width  8
-	entry $treeframe.info.box.entry.signal -textvariable $this-load-signal \
+	entry $loadframe.box.entry.signal -textvariable $this-load-signal \
 	    -width 48
 
-	pack $treeframe.info.box.entry.server $treeframe.info.box.entry.tree \
-	    $treeframe.info.box.entry.shot $treeframe.info.box.entry.signal \
+	pack $loadframe.box.entry.server $loadframe.box.entry.tree \
+	    $loadframe.box.entry.shot $loadframe.box.entry.signal \
 	    -side left 
 
-	pack $treeframe.info.box.title $treeframe.info.box.entry -side top \
+	pack $loadframe.box.title $loadframe.box.entry -side top \
 	     -fill both
 
 
-	button $treeframe.info.load -text "  Load  " \
+	button $loadframe.load -text "  Load  " \
 	    -command "$this AddRootSignals"
 
-	pack $treeframe.info.box  -padx 15 -side left
-	pack $treeframe.info.load -padx 20 -side left
+	pack $loadframe.box  -padx 15 -side left
+	pack $loadframe.load -padx 20 -side left
 
 
-	pack $treeframe.info -side top -fill both -expand yes
+  	pack $w.loader -side top -pady 10 -fill x -expand yes
 
 
 
+	iwidgets::labeledframe $w.treeview -labeltext "MDS Treeview"
+
+	set treeframe [$w.treeview childsite]
 
 	option add *TreeView.font { Courier 12 }
 #	option add *TreeView.Button.background grey95
@@ -165,7 +167,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 			  -width 600 -height 225 \
 			  -selectcommand [list $this SelectNotify] \
 			  -tree $tree]
-
+	
 	#-selectmode multiple \
 
   	pack $treeframe.tree -side top -pady 10 -fill x -expand yes
@@ -193,41 +195,6 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    $treeview column configure $column \
 		-command [list $this SortColumn $column]
 	}
-
-
-	frame $w.title
-	label $w.title.check  -text ""       -width  3 -relief groove
-	label $w.title.server -text "Server" -width 16 -relief groove
-	label $w.title.tree   -text "Tree"   -width 12 -relief groove
-	label $w.title.shot   -text "Shot"   -width  8 -relief groove
-	label $w.title.signal -text "Signal" -width 48 -relief groove
-	label $w.title.status -text "Status" -width  8 -relief groove
-	label $w.title.port   -text "Port"   -width  4 -relief groove
-	label $w.title.empty  -text ""        -width 3 -relief groove
-
-	pack $w.title.check \
-	    $w.title.server $w.title.tree $w.title.shot $w.title.signal \
-	    $w.title.status $w.title.port $w.title.empty \
-	    -side left 
-
-	pack $w.title -fill x
-
-	iwidgets::scrolledframe $w.entries -hscrollmode none
-	pack $w.entries -side top -fill both -expand yes
-
-	create_entries
-
-
-	frame $w.controls
-	button $w.controls.add -text "Add Entry" \
-	    -command "$this addEntry"
-	button $w.controls.delete -text "Delete Entry" \
-	    -command "$this deleteEntry"
-	pack $w.controls.add $w.controls.delete \
-	    -side left -fill x -expand y
-
-	pack $w.controls -side top -fill both -expand yes -pady 10
-
 
 
 	iwidgets::labeledframe $w.search -labeltext "Search Selection"
@@ -301,10 +268,50 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	pack $search.options.search -side left
 	pack $search.box $search.options -side left
 
+	pack $w.search -side top -fill both -expand yes -pady 10
 
-	pack $w.search -side top -fill both -expand yes
+
+#       Selected Data
+	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
+
+	set sd [$w.sd childsite]
+
+	frame $sd.title
+	label $sd.title.check  -text ""       -width  3 -relief groove
+	label $sd.title.server -text "Server" -width 16 -relief groove
+	label $sd.title.tree   -text "Tree"   -width 12 -relief groove
+	label $sd.title.shot   -text "Shot"   -width  8 -relief groove
+	label $sd.title.signal -text "Signal" -width 48 -relief groove
+	label $sd.title.status -text "Status" -width  8 -relief groove
+	label $sd.title.port   -text "Port"   -width  4 -relief groove
+	label $sd.title.empty  -text ""        -width 3 -relief groove
+
+	pack $sd.title.check \
+	    $sd.title.server $sd.title.tree $sd.title.shot $sd.title.signal \
+	    $sd.title.status $sd.title.port $sd.title.empty \
+	    -side left 
+
+	pack $sd.title -fill x
+
+	iwidgets::scrolledframe $sd.entries -hscrollmode none
+	pack $sd.entries -side top -fill both -expand yes
+
+	create_entries
 
 
+	frame $sd.controls
+	button $sd.controls.add -text "Add Entry" \
+	    -command "$this addEntry"
+	button $sd.controls.delete -text "Delete Entry" \
+	    -command "$this deleteEntry"
+	pack $sd.controls.add $sd.controls.delete \
+	    -side left -fill x -expand y
+
+	pack $sd.controls -side top -fill both -expand yes
+
+	pack $w.sd -side top -fill both -expand yes -pady 10
+
+#       Data Management
 	iwidgets::labeledframe $w.dm -labeltext "Data Management"
 	set dm [$w.dm childsite]
 
@@ -358,7 +365,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 
-	    set entries [$w.entries childsite]
+	    set sd [$w.sd childsite]
+	    set entries [$sd.entries childsite]
 
 	    # Create the new variables and entries if needed.
 	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
@@ -463,7 +471,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 
-	    set entries [$w.entries childsite]
+	    set sd [$w.sd childsite]
+	    set entries [$sd.entries childsite]
 
 	    global $this-num-entries
 
