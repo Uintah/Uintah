@@ -2689,6 +2689,8 @@ if test "$sci_required_insight" = "yes"; then
     if ! test "$HAVE_PNG" = "yes"; then
       echo "note: using libitkpng"
       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
+    else
+      INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG"
     fi
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
