@@ -303,6 +303,9 @@ public:
 				// Stereo
   GuiInt do_stereo;
 
+  GuiDouble sbase;
+  GuiInt sr;
+
   // --  BAWGL -- 
   GuiInt do_bawgl;
   // --  BAWGL -- 
