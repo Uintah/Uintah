@@ -26,6 +26,7 @@ rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$B
 
 # if weekly tests, do not do dbg
 if [ "$WEEKLY" != "1" ]; then
+  WKLY_STRING=" "
   # make debug header to the webpage referred to by the mail message
   echo "" >> "$HTMLLOG"
   echo "/--------------------------\\" >> "$HTMLLOG"
@@ -46,7 +47,8 @@ if [ "$WEEKLY" != "1" ]; then
   else
     echo "Debug tests passed!" >> "$HTMLLOG"
   fi
-fi
+else
+  WKLY_STRING=" Weekly"
 
 
 #opt webpage header
@@ -110,9 +112,9 @@ chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
     if [ $failed = "0" ]; then
-	subject="SUCCESS: Regression tests on `hostname`"
+	subject="SUCCESS:$WKLY_STRING Regression tests on `hostname`"
     else
-	subject="FAILURE: Regression tests on `hostname`***"
+	subject="FAILURE:$WKLY_STRING  Regression tests on `hostname`***"
     fi
 
     cat > "$BUILDROOT"/mail.msg <<EOF
