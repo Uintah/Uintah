@@ -141,6 +141,12 @@ public:
 
 };
 
+
+Point operator*(Transform &t, const Point &d);
+Vector operator*(Transform &t, const Vector &d);
+
+
+
 const TypeDescription* get_type_description(Transform*);
 
 } // End namespace SCIRun
