@@ -75,7 +75,8 @@ public:
   SpanSpace() {}
   ~SpanSpace() {}
 
-  template<class Field> void init( Field *);
+  template<class Field> void init_node( Field *);
+  template<class Field> void init_cell( Field *);
   void swap( span_point_type &, span_point_type &);
   void select_min( span_point_type p[], int n );
   void select_max( span_point_type p[], int n );
@@ -169,7 +170,7 @@ void SpanSpace<T,Index>::select_max( span_point_type p[], int n )
   
 template<class T, class Index>
 template <class Field> 
-void SpanSpace<T,Index>::init(Field *field)
+void SpanSpace<T,Index>::init_node(Field *field)
 {
   typedef typename Field::mesh_type  mesh_type;
       
@@ -198,8 +199,49 @@ void SpanSpace<T,Index>::init(Field *field)
   // init kd-tree
   select_min( &span[0], span.size() );    
 }
-  
-  
+
+
+template<class T, class Index>
+template <class Field> 
+void SpanSpace<T,Index>::init_cell(Field *field)
+{
+  field->mesh()->synchronize(Mesh::FACES_E);
+  field->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
+
+  typedef typename Field::mesh_type  mesh_type;
+      
+  typename Field::mesh_handle_type mesh = field->get_typed_mesh();
+
+  typename mesh_type::Cell::iterator elem; mesh->begin(elem);
+  typename mesh_type::Cell::iterator elem_end; mesh->end(elem_end);
+  typename mesh_type::Cell::index_type nbr;
+  typename mesh_type::Face::array_type faces;
+
+  for ( ; elem != elem_end; ++elem) {
+    mesh->get_faces(faces, *elem);
+
+    // compute  min max of elem
+    T min, max = field->value(*elem);
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+      T v;
+      if (mesh->get_neighbor(nbr, *elem, faces[i]) &&
+	  field->value(v, nbr))
+      {
+	if ( v < min ) min = v;
+	else if ( v > max ) max = v;
+      }
+    }
+	
+    if ( min < max ) // ignore elems with min == max
+      span.push_back( SpanPoint<T,Index>(min, max, *elem));
+  }
+      
+  // init kd-tree
+  select_min( &span[0], span.size() );    
+}
+
+
 template <class T,class Index> 
 const string find_type_name(Handle<SpanSpace<T,Index> > *)
 {

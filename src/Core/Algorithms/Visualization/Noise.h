@@ -109,9 +109,18 @@ void Noise<Tesselator>::set_field( Field *f )
     if ( tess_ ) delete tess_;
     tess_ = new Tesselator( field );
     if ( !field->get_property( "spanspace", space_ ) ) {
-      space_ = scinew SpanSpace<value_type, cell_index_type>;
-      space_->init( field );
-      field->set_property( "spanspace", space_, true );
+      if (f->data_at() == Field::CELL)
+      {
+	space_ = scinew SpanSpace<value_type, cell_index_type>;
+	space_->init_cell( field );
+	field->set_property( "spanspace", space_, true );
+      }
+      else
+      {
+	space_ = scinew SpanSpace<value_type, cell_index_type>;
+	space_->init_node( field );
+	field->set_property( "spanspace", space_, true );
+      }
     }
   }
 }
