@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<filter-itk name="itk::VectorConfidenceConnectedImageFilter">
+  <description>
+This filter extracts a connected set of pixels whose pixel intensities are consistent with the pixel statistics of a seed point. The mean and variance across a neighborhood (8-connected, 26-connected, etc.) are calculated for a seed point. Then pixels connected to this seed point whose values are within the confidence interval for the seed point are grouped. The width of the confidence interval is controlled by the "Multiplier" variable (the confidence interval is the mean plus or minus the "Multiplier" times the standard deviation). If the intensity variations across a segment were gaussian, a "Multiplier" setting of 2.5 would define a confidence interval wide enough to capture 99% of samples in the segment.
+
+After this initial segmentation is calculated, the mean and variance are re-calculated. All the pixels in the previous segmentation are used to calculate the mean the standard deviation (as opposed to using the pixels in the neighborhood of the seed point). The segmentation is then recalculted using these refined estimates for the mean and variance of the pixel values. This process is repeated for the specified number of iterations. Setting the "NumberOfIterations" to zero stops the algorithm after the initial segmentation from the seed point.
+
+NOTE: the lower and upper threshold are restricted to lie within the valid numeric limits of the input data pixel type. Also, the limits may be adjusted to contain the seed point's intensity. 
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;itk::RGBPixel&lt;unsigned char&gt;, 2&gt;</default>
+      <default>itk::Image&lt;unsigned char, 2&gt;</default>
+    </defaults>
+    <defaults>
+      <default>itk::Image&lt;itk::RGBPixel&lt;unsigned char&gt;, 3&gt;</default>
+      <default>itk::Image&lt;unsigned char, 3&gt;</default>
+    </defaults>
+  </templated>
+
+  <datatypes>
+    <array name="FilterType::IndexType">
+      <elem-type>int</elem-type>
+      <size-call>GetIndexDimension</size-call>
+    </array>
+  </datatypes>
+
+  <inputs>
+    <input name="InputImage">
+      <type>InputImageType</type>
+      <call>SetInput</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="OutputImge">
+      <type>OutputImageType</type>
+      <call>GetOutput</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>number_of_iterations</name>
+      <type>int</type>
+      <call>SetNumberOfIterations</call>
+      <default>1</default>
+    </param>
+    <param>
+      <name>multiplier</name>
+      <type>float</type>
+      <call>SetMultiplier</call>
+      <default>2.5</default>
+    </param>
+    <param>
+      <name>seed_point</name>
+      <type>FilterType::IndexType</type>
+      <call>SetSeed</call>
+      <default>0</default>
+    </param>
+    <param>
+      <name>replace_value</name>
+      <type>double</type>
+      <call>SetReplaceValue</call>
+      <default>255.0</default>
+    </param>
+    <param>
+      <name>initial_radius</name>
+      <type>int</type>
+      <call>SetInitialNeighborhoodRadius</call>
+      <default>1</default>
+    </param>
+  </parameters>
+
+
+  <includes>
+    <file>itkVectorConfidenceConnectedImageFilter.h</file>
+  </includes>
+</filter-itk>

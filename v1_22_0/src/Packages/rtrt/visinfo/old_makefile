@@ -1,0 +1,17 @@
+CC=/usr/bin/cc
+CFLAGS=-fullwarn -O -64 -mips4 -fullwarn
+
+all: findvis
+
+findvis: findvis.o visinfo.o Makefile
+	$(CC) $(CFLAGS) -o findvis findvis.o visinfo.o -lGL -lX11
+
+findvis.o: findvis.c visinfo.h Makefile
+
+visinfo.o: visinfo.c visinfo.h Makefile
+
+clean:
+	rm -f findvis.o visinfo.o
+
+clobber: clean
+	rm -f findvis

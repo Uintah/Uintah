@@ -1,0 +1,7 @@
+void init(IntVector idxLoU, IntVector idxHiU, SFCXVariable<double> uu,
+     double uval, IntVector idxLoV, IntVector idxHiV,
+     SFCYVariable<double> vv, double vval, IntVector idxLoW,
+     IntVector idxHiW, SFCZVariable<double> ww, double wval,
+     IntVector idxLo, IntVector idxHi, CCVariable<double> pp,
+     double pval, CCVariable<double> den, double denval,
+     CCVariable<double> vis, double visval);

@@ -1,0 +1,45 @@
+			NEWTONIAN PARTICLE SYSTEM
+
+A particle simulation involves three main parts: particle themselves, emitters that emit thses particles and the entities that apply forces to particles.
+
+Particles have mass, position, velocity and are subjected to forces. There can be additional attributes attached to each particle (age, life span, color, etc.)
+
+Emitters are objects that emit particles from a particular position in some direction. Emitters can be arbitrarily shaped (ie. a point emitter) and emit particles at some rate.
+
+All particles are subjects to forces. Forces are grouped in three basic categories:
+- unary forces such as gravity and drag that act independently on each particle
+- n-ary forcs such as springs that apply forces to a fixed set of particles
+- forces of spatial interaction such as attraction and repulsion. They may act on any or all pairs of particles depending on their position.
+
+The basic algorithm for any particle system is the following:
+
+Loop over time (at given time step dTime):
+
+	1. Emit all particles at given time step
+	2. For each particle
+		- set force acting on a particle to 0
+		- compute all forces acting on a particle
+		- compute velocity and acceleration
+		- update position and velocity 
+	3. Update state
+	4. Update time
+
+
+
+The main program would therefore look like:
+
+	Create some emitters
+	Create forces
+	Create a particle system
+	Add forces and emitters to the particle system
+	Loop over time
+		particleSystem->Update()
+
+
+
+TODO: 
+
+	Collision detection
+	Taking into accoun the age of particles (ie they die when they
+        are old and are removed from the system)
+

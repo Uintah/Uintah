@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<filter-itk name="itk::watershed::Segmenter">
+  <description>
+This filter implements the first step in the N-d watershed segmentation algorithm. It produces a segmented, labeled image from a scalar-valued image input. This filter is used in conjunction with WatershedSegmentTreeGenerator and WatershedRelabeler to produce a final segmented image volume. See itk::WatershedImageFilter for an overview of the entire algorithm and notes on the terminology used in describing it.
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="Scalar_Image">
+      <type>InputImageType</type>
+      <call>SetInputImage</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="Labeled_Image">
+      <type>LabeledImageType</type>
+      <call>GetOutputImage</call>
+    </output>
+    <output name="Segment_Table">
+      <type>SegmentTableType</type>
+      <call>GetSegmentTable</call>
+    </output>
+    <output name="Boundary">
+      <type>BoundaryType</type>
+      <call>GetBoundary</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>threshold</name>
+      <type>double</type>
+      <call>SetThreshold</call>
+      <default>0.01</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkWatershedSegmenter.h</file>
+  </includes>
+</filter-itk>
+

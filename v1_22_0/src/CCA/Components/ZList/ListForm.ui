@@ -1,0 +1,229 @@
+<!DOCTYPE UI><UI version="3.0" stdsetdef="1">
+<class>ListForm</class>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>ListForm</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>310</width>
+            <height>480</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>List Test</string>
+    </property>
+    <hbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <property name="margin">
+            <number>11</number>
+        </property>
+        <property name="spacing">
+            <number>6</number>
+        </property>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>Layout8</cstring>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>Layout2</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <property name="margin">
+                            <number>0</number>
+                        </property>
+                        <property name="spacing">
+                            <number>6</number>
+                        </property>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>numLineEdit</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QPushButton">
+                            <property name="name">
+                                <cstring>insertPushButton</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
+                            </property>
+                            <property name="text">
+                                <string>Insert</string>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>Layout7</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <property name="margin">
+                            <number>0</number>
+                        </property>
+                        <property name="spacing">
+                            <number>6</number>
+                        </property>
+                        <widget class="QListBox">
+                            <item>
+                                <property name="text">
+                                    <string>1.0</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>2.0</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>3.0</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>4.0</string>
+                                </property>
+                            </item>
+                            <property name="name">
+                                <cstring>numListBox</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>Layout6</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <property name="margin">
+                                    <number>0</number>
+                                </property>
+                                <property name="spacing">
+                                    <number>6</number>
+                                </property>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>deletePushButton</cstring>
+                                    </property>
+                                    <property name="enabled">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="text">
+                                        <string>Delete</string>
+                                    </property>
+                                </widget>
+                                <spacer>
+                                    <property name="name" stdset="0">
+                                        <cstring>Spacer2</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>20</width>
+                                            <height>20</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>refreshPushButton</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Refresh</string>
+                                    </property>
+                                </widget>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>closePushButton</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Close</string>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                    </hbox>
+                </widget>
+            </vbox>
+        </widget>
+    </hbox>
+</widget>
+<connections>
+    <connection>
+        <sender>insertPushButton</sender>
+        <signal>clicked()</signal>
+        <receiver>ListForm</receiver>
+        <slot>insert()</slot>
+    </connection>
+    <connection>
+        <sender>refreshPushButton</sender>
+        <signal>clicked()</signal>
+        <receiver>ListForm</receiver>
+        <slot>refresh()</slot>
+    </connection>
+    <connection>
+        <sender>numLineEdit</sender>
+        <signal>textChanged(const QString&amp;)</signal>
+        <receiver>ListForm</receiver>
+        <slot>enableInsert(const QString&amp;)</slot>
+    </connection>
+    <connection>
+        <sender>closePushButton</sender>
+        <signal>clicked()</signal>
+        <receiver>ListForm</receiver>
+        <slot>close()</slot>
+    </connection>
+    <connection>
+        <sender>numListBox</sender>
+        <signal>highlighted(int)</signal>
+        <receiver>ListForm</receiver>
+        <slot>enableDelete(int)</slot>
+    </connection>
+    <connection>
+        <sender>deletePushButton</sender>
+        <signal>clicked()</signal>
+        <receiver>ListForm</receiver>
+        <slot>del()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">ListForm.ui.h</include>
+</includes>
+<slots>
+    <slot>enableDelete( int i )</slot>
+    <slot>enableInsert( const QString &amp; s )</slot>
+    <slot>insert()</slot>
+    <slot>refresh()</slot>
+    <slot>del()</slot>
+</slots>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

@@ -1,0 +1,40 @@
+# Makefile for exceptions
+
+include ../make.include
+
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := @ROOT_DIR@
+
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+VPATH := $(SRCDIR)
+
+INCLUDES += -I$(SRCTOP) $(XML_INCLUDE)
+
+INCLUDES := $(sort $(INCLUDES))
+#SOFLAGS := $(SOFLAGS) -rpath ${LIBDIR}
+
+OBJS = Exception.o
+
+SOLIB = ../lib/libExceptions.so
+
+LIBS = @TRACEBACK_LIB@
+
+
+all:	$(SOLIB)
+
+$(SOLIB):	$(OBJS)
+	$(CXX) $(SOFLAGS)	$(OBJS) -o $(SOLIB) $(LIBS)
+
+clean:
+	/bin/rm -f $(SOLIB) $(OBJS)
+
+# -include $(OBJS:.o=.d)

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="ApplyFEMVoltageSource" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>The module changes/creates the right-hand side (RHS) and 
+    forward matrices for voltgage (Dirichlet) boundary conditions.</summary>
+    <description>
+      <p>Version Date: March 2001</p><p>Version: 1.0</p>
+      <p>The module has the following behaviour:</p>
+      <orderedlist>
+	<listitem>
+	  <p>The ApplyFEMVoltageSource module creates and fills a new ColumnMatrix, 
+	  according to mesh and dipole parameters in situations where it does not 
+	  locate a ColumnMatrix on its input that contains an RHS to modify, 
+	  or when the module finds a ColumnMatrix of a different size than 
+	  the number of nodes in the mesh.</p>
+	</listitem>
+	<listitem>
+	  <p>We assume the mesh to be a TetVolField(int) type, containing 
+	  indices to the conductivity tensor lookup table. The documentation 
+	  for the <modref package="BioPSE" name="SetupFEMatrix"/> module provides further information about this mesh.
+
+</p>
+	</listitem>
+      </orderedlist>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Mesh</name>
+	<description>
+	  <p>FEM conductivity mesh</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Stiffness Matrix</name>
+	<description>
+	  <p>FEM Stiffness Matrix</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>RHS</name>
+	<description>
+	  <p>FEM Right Hand Side (b) Vector</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </inputs>
+
+    <outputs>
+      <port>
+	<name>Forward Matrix</name>
+	<description>
+	  <p>FEM Forward (A) Matrix</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+      <port>
+	<name>RHS</name>
+	<description>
+	  <p>FEM Right Hand Side (b) Vector</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
+    </outputs>
+  </io>
+  
+  <testing>
+  </testing>
+</component>

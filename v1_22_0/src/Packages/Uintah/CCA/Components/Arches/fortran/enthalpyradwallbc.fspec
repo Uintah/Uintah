@@ -1,0 +1,7 @@
+void enthalpyradwallbc(IntVector idxLo, IntVector idxHi,
+	CCVariable<double> qfluxe, CCVariable<double> qfluxw,
+	CCVariable<double> qfluxn, CCVariable<double> qfluxs,
+	CCVariable<double> qfluxt, CCVariable<double> qfluxb,
+	CCVariable<double> tg, CCVariable<int> pcell,
+	int wallid, bool xminus, bool xplus, bool yminus,
+	bool yplus, bool zminus, bool zplus);

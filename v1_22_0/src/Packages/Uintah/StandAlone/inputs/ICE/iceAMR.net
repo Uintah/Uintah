@@ -1,0 +1,284 @@
+# SCI Network 1.22.0
+
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+#
+# The Original Source Code is SCIRun, released March 12, 2001.
+#
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
+global notes
+set notes ""
+
+global Subnet
+set Subnet(Subnet$Subnet(Loading)_Name) {Main}
+set bbox {0 7 990 592}
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 1 7]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 223 86]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m3 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 4 208]
+
+# Create a Uintah->Visualization->GridVisualizer Module
+set m4 [addModuleAtPosition "Uintah" "Visualization" "GridVisualizer" 825 218]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m5 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 0 87]
+
+# Create a SCIRun->Render->Viewer Module
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 2 548]
+
+# Create a Uintah->Selectors->VectorFieldExtractor Module
+set m7 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 440 219]
+
+# Create a Uintah->Visualization->NodeHedgehog Module
+set m8 [addModuleAtPosition "Uintah" "Visualization" "NodeHedgehog" 440 326]
+
+# Create a SCIRun->Visualization->GLTextureBuilder Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 4 332]
+
+# Create a SCIRun->Visualization->TexCuttingPlanes Module
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 5 432]
+
+# Create a Uintah->Selectors->VectorFieldExtractor Module
+set m11 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 632 216]
+
+# Create a Uintah->Visualization->NodeHedgehog Module
+set m12 [addModuleAtPosition "Uintah" "Visualization" "NodeHedgehog" 632 330]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m13 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 257 214]
+
+# Create a SCIRun->Visualization->TexCuttingPlanes Module
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 260 435]
+
+# Create a SCIRun->Visualization->GLTextureBuilder Module
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 257 332]
+
+# Create the Connections between Modules
+set c1 [addConnection $m9 0 $m10 0]
+set c2 [addConnection $m15 0 $m14 0]
+set c3 [addConnection $m1 0 $m5 0]
+set c4 [addConnection $m3 0 $m9 0]
+set c5 [addConnection $m13 0 $m15 0]
+set c6 [addConnection $m5 0 $m3 0]
+set c7 [addConnection $m5 0 $m13 0]
+set c8 [addConnection $m5 0 $m7 0]
+set c9 [addConnection $m5 0 $m11 0]
+set c10 [addConnection $m5 0 $m4 0]
+set c11 [addConnection $m7 0 $m8 0]
+set c12 [addConnection $m11 0 $m12 0]
+set c13 [addConnection $m8 0 $m6 0]
+set c14 [addConnection $m2 0 $m10 1]
+set c15 [addConnection $m2 0 $m14 1]
+set c16 [addConnection $m4 0 $m6 1]
+set c17 [addConnection $m2 0 $m8 2]
+set c18 [addConnection $m10 0 $m6 2]
+set c19 [addConnection $m12 0 $m6 3]
+set c20 [addConnection $m14 0 $m6 4]
+
+# Setup GUI for the Uintah->DataIO->ArchiveReader Module
+setGlobal $m1-tcl_status {Executing}
+
+# Setup GUI for the SCIRun->Visualization->GenStandardColorMaps Module
+setGlobal $m2-resolution {255}
+setGlobal $m2-realres {255}
+
+# Setup GUI for the Uintah->Selectors->ScalarFieldExtractor Module
+setGlobal $m3-tcl_status {Calling ScalarFieldExtractor!}
+setGlobal $m3-sVar {scalar-f}
+
+# Setup GUI for the Uintah->Visualization->GridVisualizer Module
+setGlobal $m4-var_orientation {1}
+setGlobal $m4-nl {2}
+setGlobal $m4-index_x {8}
+setGlobal $m4-index_y {5}
+setGlobal $m4-index_z {5}
+setGlobal $m4-index_l {1}
+setGlobal $m4-curr_var {}
+setGlobal $m4-level1_grid_color {blue}
+setGlobal $m4-plane_on {1}
+setGlobal $m4-node_select_on {1}
+setGlobal $m4-radius {0.0803}
+
+# Setup GUI for the Uintah->Selectors->TimestepSelector Module
+setGlobal $m5-tcl_status {Calling TimestepSelector!}
+setGlobal $m5-time {21}
+setGlobal $m5-max_time {253}
+setGlobal $m5-timeval {0.030387678236630664}
+setGlobal $m5-def-color-a {}
+
+# Setup GUI for the SCIRun->Render->Viewer Module
+$m6 ui
+setGlobal $m6-ViewWindow_0-pos {z1_y1}
+setGlobal $m6-ViewWindow_0-caxes {0}
+setGlobal $m6-ViewWindow_0-raxes {0}
+setGlobal $m6-ViewWindow_0-iaxes {}
+setGlobal $m6-ViewWindow_0-have_collab_vis {0}
+setGlobal $m6-ViewWindow_0-view-eyep-x {2.815775375878613}
+setGlobal $m6-ViewWindow_0-view-eyep-y {3.5355018086664978}
+setGlobal $m6-ViewWindow_0-view-eyep-z {28.53485499712183}
+setGlobal $m6-ViewWindow_0-view-lookat-x {2.5314051131640318}
+setGlobal $m6-ViewWindow_0-view-lookat-y {2.3248717229205385}
+setGlobal $m6-ViewWindow_0-view-lookat-z {2.5}
+setGlobal $m6-ViewWindow_0-view-up-x {-0.014910555081991116}
+setGlobal $m6-ViewWindow_0-view-up-y {0.99881710360908849}
+setGlobal $m6-ViewWindow_0-view-up-z {-0.04628249004859545}
+setGlobal $m6-ViewWindow_0-view-fov {20}
+setGlobal $m6-ViewWindow_0-view-eyep_offset-x {}
+setGlobal $m6-ViewWindow_0-view-eyep_offset-y {}
+setGlobal $m6-ViewWindow_0-view-eyep_offset-z {}
+setGlobal $m6-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+setGlobal $m6-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+setGlobal $m6-ViewWindow_0-bgcolor-r {0}
+setGlobal $m6-ViewWindow_0-bgcolor-g {0}
+setGlobal $m6-ViewWindow_0-bgcolor-b {0}
+setGlobal $m6-ViewWindow_0-shading {}
+setGlobal $m6-ViewWindow_0-do_stereo {0}
+setGlobal $m6-ViewWindow_0-ambient-scale {1.0}
+setGlobal $m6-ViewWindow_0-diffuse-scale {1.0}
+setGlobal $m6-ViewWindow_0-specular-scale {0.4}
+setGlobal $m6-ViewWindow_0-emission-scale {1.0}
+setGlobal $m6-ViewWindow_0-shininess-scale {1.0}
+setGlobal $m6-ViewWindow_0-polygon-offset-factor {1.0}
+setGlobal $m6-ViewWindow_0-polygon-offset-units {0.0}
+setGlobal $m6-ViewWindow_0-point-size {1.0}
+setGlobal $m6-ViewWindow_0-line-width {1.0}
+setGlobal $m6-ViewWindow_0-sbase {0.40}
+setGlobal $m6-ViewWindow_0-sr {1}
+setGlobal $m6-ViewWindow_0-do_bawgl {0}
+setGlobal $m6-ViewWindow_0-drawimg {}
+setGlobal $m6-ViewWindow_0-saveprefix {}
+setGlobal $m6-ViewWindow_0-resx {640}
+setGlobal $m6-ViewWindow_0-resy {512}
+setGlobal $m6-ViewWindow_0-aspect {}
+setGlobal $m6-ViewWindow_0-aspect_ratio {}
+setGlobal $m6-ViewWindow_0-global-light {1}
+setGlobal $m6-ViewWindow_0-global-fog {0}
+setGlobal $m6-ViewWindow_0-global-debug {0}
+setGlobal $m6-ViewWindow_0-global-clip {0}
+setGlobal $m6-ViewWindow_0-global-cull {0}
+setGlobal $m6-ViewWindow_0-global-dl {0}
+setGlobal $m6-ViewWindow_0-global-type {Gouraud}
+setGlobal $m6-ViewWindow_0-ortho-view {0}
+setGlobal $m6-ViewWindow_0-clip-num {}
+setGlobal $m6-ViewWindow_0-clip-visible {}
+setGlobal $m6-ViewWindow_0-clip-selected {}
+setGlobal $m6-ViewWindow_0-clip-visible-1 {}
+setGlobal $m6-ViewWindow_0-clip-normal-x-1 {}
+setGlobal $m6-ViewWindow_0-clip-normal-y-1 {}
+setGlobal $m6-ViewWindow_0-clip-normal-z-1 {}
+setGlobal $m6-ViewWindow_0-clip-normal-d-1 {}
+setGlobal $m6-ViewWindow_0-clip-visible-2 {}
+setGlobal $m6-ViewWindow_0-clip-normal-x-2 {}
+setGlobal $m6-ViewWindow_0-clip-normal-y-2 {}
+setGlobal $m6-ViewWindow_0-clip-normal-z-2 {}
+setGlobal $m6-ViewWindow_0-clip-normal-d-2 {}
+setGlobal $m6-ViewWindow_0-clip-visible-3 {}
+setGlobal $m6-ViewWindow_0-clip-normal-x-3 {}
+setGlobal $m6-ViewWindow_0-clip-normal-y-3 {}
+setGlobal $m6-ViewWindow_0-clip-normal-z-3 {}
+setGlobal $m6-ViewWindow_0-clip-normal-d-3 {}
+setGlobal $m6-ViewWindow_0-clip-visible-4 {}
+setGlobal $m6-ViewWindow_0-clip-normal-x-4 {}
+setGlobal $m6-ViewWindow_0-clip-normal-y-4 {}
+setGlobal $m6-ViewWindow_0-clip-normal-z-4 {}
+setGlobal $m6-ViewWindow_0-clip-normal-d-4 {}
+setGlobal $m6-ViewWindow_0-clip-visible-5 {}
+setGlobal $m6-ViewWindow_0-clip-normal-x-5 {}
+setGlobal $m6-ViewWindow_0-clip-normal-y-5 {}
+setGlobal $m6-ViewWindow_0-clip-normal-z-5 {}
+setGlobal $m6-ViewWindow_0-clip-normal-d-5 {}
+setGlobal $m6-ViewWindow_0-clip-visible-6 {}
+setGlobal $m6-ViewWindow_0-clip-normal-x-6 {}
+setGlobal $m6-ViewWindow_0-clip-normal-y-6 {}
+setGlobal $m6-ViewWindow_0-clip-normal-z-6 {}
+setGlobal $m6-ViewWindow_0-clip-normal-d-6 {}
+
+# Setup GUI for the Uintah->Selectors->VectorFieldExtractor Module
+setGlobal $m7-level {1}
+setGlobal $m7-tcl_status {Calling VectorFieldExtractor!}
+setGlobal $m7-sVar {vel_CC}
+
+# Setup GUI for the Uintah->Visualization->NodeHedgehog Module
+setGlobal $m8-length_scale {0.0490}
+setGlobal $m8-min_crop_length {0.000000e+00}
+setGlobal $m8-max_crop_length {0.000000e+00}
+setGlobal $m8-width_scale {0.100}
+setGlobal $m8-head_length {0.300}
+setGlobal $m8-drawcylinders {0}
+setGlobal $m8-norm_head {0}
+setGlobal $m8-shaft_rad {0.000}
+setGlobal $m8-max_vector_x {10.000000033721513}
+setGlobal $m8-max_vector_y {8.9668083583433435e-09}
+setGlobal $m8-max_vector_z {-7.987326314253942e-09}
+setGlobal $m8-max_vector_length {10.000000033721513}
+
+# Setup GUI for the SCIRun->Visualization->GLTextureBuilder Module
+setGlobal $m9-is_fixed {1}
+setGlobal $m9-max_brick_dim {128}
+setGlobal $m9-sel_brick_dim {128}
+
+# Setup GUI for the SCIRun->Visualization->TexCuttingPlanes Module
+setGlobal $m10-control_pos_saved {1}
+setGlobal $m10-control_x {3.0182859636296562}
+setGlobal $m10-control_y {2.7478427640388707}
+setGlobal $m10-control_z {0.027895908127359981}
+setGlobal $m10-drawZ {1}
+setGlobal $m10-interp_mode {0}
+setGlobal $m10-cyl_active {0}
+
+# Setup GUI for the Uintah->Selectors->VectorFieldExtractor Module
+setGlobal $m11-tcl_status {Calling VectorFieldExtractor!}
+setGlobal $m11-sVar {vel_CC}
+
+# Setup GUI for the Uintah->Visualization->NodeHedgehog Module
+setGlobal $m12-length_scale {0.0460}
+setGlobal $m12-min_crop_length {0.000000e+00}
+setGlobal $m12-max_crop_length {0.000000e+00}
+setGlobal $m12-width_scale {0.100}
+setGlobal $m12-head_length {0.300}
+setGlobal $m12-drawcylinders {0}
+setGlobal $m12-norm_head {0}
+setGlobal $m12-shaft_rad {0.000}
+setGlobal $m12-max_vector_x {10.000000000075017}
+setGlobal $m12-max_vector_y {3.1539813467530961e-13}
+setGlobal $m12-max_vector_z {7.336433056434326e-11}
+setGlobal $m12-max_vector_length {10.000000000075017}
+
+# Setup GUI for the Uintah->Selectors->ScalarFieldExtractor Module
+setGlobal $m13-level {1}
+setGlobal $m13-tcl_status {Calling ScalarFieldExtractor!}
+setGlobal $m13-sVar {scalar-f}
+
+# Setup GUI for the SCIRun->Visualization->TexCuttingPlanes Module
+setGlobal $m14-control_pos_saved {1}
+setGlobal $m14-control_x {2.5606445930828272}
+setGlobal $m14-control_y {2.4580268606729971}
+setGlobal $m14-control_z {3.0959684257259692}
+setGlobal $m14-drawZ {1}
+setGlobal $m14-interp_mode {0}
+setGlobal $m14-cyl_active {0}
+
+# Setup GUI for the SCIRun->Visualization->GLTextureBuilder Module
+setGlobal $m15-is_fixed {1}
+setGlobal $m15-max_brick_dim {128}
+setGlobal $m15-sel_brick_dim {128}
+
+::netedit scheduleok

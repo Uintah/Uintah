@@ -1,0 +1,117 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 77 40]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 308 346]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 252 41]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 187 123]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 308 275]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 326 206]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 326 123]
+
+addConnection $m3 0 $m4 0
+addConnection $m6 0 $m5 0
+addConnection $m5 0 $m4 1
+addConnection $m3 0 $m5 1
+addConnection $m4 0 $m1 0
+addConnection $m0 0 $m3 0
+addConnection $m2 0 $m3 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/usr/sci/data/Medical/mouse/activation/sr/128/mouse-heart-128-clipped-flooded.hvt.fld}
+set $m1-notes {}
+set $m1-show_status {1}
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes {0}
+set $m1-ViewWindow_0-iaxes {-2147483647}
+set $m1-ViewWindow_0-view-eyep-x {        -0.357702}
+set $m1-ViewWindow_0-view-eyep-y {         -1.66513}
+set $m1-ViewWindow_0-view-eyep-z {         -1.31176}
+set $m1-ViewWindow_0-view-lookat-x {         0.450217}
+set $m1-ViewWindow_0-view-lookat-y {         0.455119}
+set $m1-ViewWindow_0-view-lookat-z {         0.338211}
+set $m1-ViewWindow_0-view-up-x {      -0.00994789}
+set $m1-ViewWindow_0-view-up-y {         0.616474}
+set $m1-ViewWindow_0-view-up-z {        -0.787312}
+set $m1-ViewWindow_0-view-fov {          16.5492}
+set $m1-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m1-ViewWindow_0-bgcolor-r {0}
+set $m1-ViewWindow_0-bgcolor-g {0}
+set $m1-ViewWindow_0-bgcolor-b {0}
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo {0}
+set $m1-ViewWindow_0-ambient-scale {1.0}
+set $m1-ViewWindow_0-diffuse-scale {1.0}
+set $m1-ViewWindow_0-specular-scale {0.4}
+set $m1-ViewWindow_0-emission-scale {1.0}
+set $m1-ViewWindow_0-shininess-scale {1.0}
+set $m1-ViewWindow_0-sbase {1.00}
+set $m1-ViewWindow_0-sr {1}
+set $m1-ViewWindow_0-do_bawgl {0}
+set $m1-ViewWindow_0-drawimg {-2147483647}
+set $m1-ViewWindow_0-saveprefix {}
+set $m1-ViewWindow_0-resx {}
+set $m1-ViewWindow_0-resy {}
+set $m1-ViewWindow_0-aspect {}
+set $m1-ViewWindow_0-aspect_ratio {}
+set $m1-ViewWindow_0-unused {1}
+set $m1-ViewWindow_0-unused {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-filename {/usr/sci/data/Medical/mouse/activation/sr/128/mouse-heart-128-act.mat}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-nodes-on {1}
+set $m4-nodes-as-disks {0}
+set $m4-edges-on {0}
+set $m4-use-normals {0}
+set $m4-use-transparency {0}
+set $m4-faces-on {0}
+set $m4-vectors-on {0}
+set $m4-normalize-vectors {-2147483647}
+set $m4-has_vec_data {0}
+set $m4-bidirectional {0}
+set $m4-arrow-heads-on {1}
+set $m4-def-color-r {0.5}
+set $m4-def-color-g {0.5}
+set $m4-def-color-b {0.5}
+set $m4-def-color-a {0.5}
+set $m4-node_display_type {Points}
+set $m4-edge_display_type {Lines}
+set $m4-active_tab {Nodes}
+set $m4-node_scale {0.012}
+set $m4-edge_scale {0.005}
+set $m4-vectors_scale {0.005}
+set $m4-show_progress {-2147483647}
+set $m4-interactive_mode {Interactive}
+set $m4-resolution {6}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-isFixed {1}
+set $m5-min {                0}
+set $m5-max {10}
+set $m5-makeSymmetric {0}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-tcl_status {Calling GenStandardColorMaps!}
+set $m6-positionList {}
+set $m6-nodeList {}
+set $m6-width {398}
+set $m6-height {40}
+set $m6-mapType {2}
+set $m6-minRes {12}
+set $m6-resolution {255}
+set $m6-realres {255}
+set $m6-gamma {0}
+$m4 initialize_ui
+$m5 initialize_ui
+$m6 initialize_ui
+
+::netedit scheduleok

@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>SimpleCFD test</title>
+   </Meta>
+
+   <Time>
+	<maxTime>10.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>.05</delt_max>
+	<timestep_multiplier>1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>cfd.uda</filebase>
+	<outputInterval>.1</outputInterval>
+	<save label = "density"/>
+	<save label = "xvelocity"/>
+	<save label = "yvelocity"/>
+	<save label = "zvelocity"/>
+	<!--	<checkpoint cycle = "2" interval = "1"/> -->
+   </DataArchiver>
+
+    <SimpleCFD>
+        <delt_multiplier>1</delt_multiplier>
+	<diffusion>.01</diffusion>
+	<viscosity>.01</viscosity>
+	<dissipation>1</dissipation>
+	<correction_pin>[0.5,0.5,0.5]</correction_pin>
+	<diffusion_tolerance>1.e-6</diffusion_tolerance>
+	<viscosity_tolerance>1.e-6</viscosity_tolerance>
+	<correction_tolerance>1.e-9</correction_tolerance>
+	<advection_tolerance>1.e-4</advection_tolerance>
+        <Regions>
+		<box name="left">
+		      <min>[0,0,0]</min>
+		      <max>[0.5,1,1]</max>
+		</box>
+		<box name="right">
+		      <min>[0.5,0,0]</min>
+		      <max>[1,1,1]</max>
+		</box>
+        </Regions>
+	<InitialConditions>
+		<Condition var="density">
+		    <value>0</value>
+		</Condition>
+		<Condition var="xvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="yvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="zvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="xvelocity">
+		    <region name="left"/>
+		    <value>1</value>
+		</Condition>
+		<Condition var="xvelocity">
+		    <region name="right"/>
+		    <value>-1</value>
+		</Condition>
+	</InitialConditions>
+	<BoundaryConditions>	
+	</BoundaryConditions>
+    </SimpleCFD>
+
+    <Grid>
+	<Level>
+	    <Box label = "1">
+		<lower>[0,0,0]</lower>
+		<upper>[1.0,1.0,1.0]</upper>
+	        <resolution>[7,7,1]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+</Uintah_specification>

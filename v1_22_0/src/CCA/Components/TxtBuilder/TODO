@@ -1,0 +1,37 @@
+
+
+Command line should do at least the following,
+$list all: 		list all components
+$list components: 	list all active components
+$list ports <comp>:	list ports of component <comp>
+$list compatible <comp>:	list compatible ports for component <comp>
+$list connections <comp>:list connections of component <comp>
+
+$create <comp>:		create component <comp>		
+$connect <user> <uport> <pvdr> <pport>:
+			connect uport (of component <user> 
+			and pport (of component <pvdr>)
+$go <comp>:		start component <comp>		
+$disconnect <conn_id>:	disconnect connection <conn_id>
+$destroy <comp>:	destroy component <comp>		
+$execute <file>:	execute batch <file>				
+
+load <network>:		load <network>
+save as <network>:	save network as <network>
+save: 			save network
+insert <network>:	insert <network>  
+clear:			clear network
+
+$quit:			quit this builder
+$help:			provide help information			
+
+
+
+
+
+
+
+
+
+
+

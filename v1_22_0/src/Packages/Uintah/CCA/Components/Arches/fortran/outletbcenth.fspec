@@ -1,0 +1,6 @@
+void outletbcenth(CCVariable<double> h, constCCVariable<double> old_h,
+     constCCVariable<double> den,
+     IntVector idxLo, IntVector idxHi, constCCVariable<int> pcell,
+     int pfield, double uvwout, bool xminus, bool xplus, bool yminus,
+     bool yplus, bool zminus, bool zplus, double delta_t,
+     OffsetArray1<double> dxpw);

@@ -1,0 +1,113 @@
+/** \mainpage Semotus Visum Documentation
+ *
+ * \section intro Introduction
+ *
+ * The Semotus Visum client is the C++ version of a Java remote
+ * visualization client. The client is divided into a number of modules.
+ *
+ * \section modules Modules
+ *
+ * \subsection Compression Compression
+ *
+ * The compression module is straightforward. Subclasses of class
+ * Compressor must provide compress() and decompress() methods, as well
+ * as info on whether or not they are lossy or do RGB conversion (like
+ * JPG). LZO uses the miniLZO library, and works fine.
+ *
+ * \subsection Exceptions  Exceptions
+ *
+ * Exceptions are not utilized in the main code base. They were utilized
+ * in the Java version to great benefit. This is an area that could be
+ * explored on a client-wide scale. The exception classes are pulled
+ * straight from SCIRun.
+ *
+ * \subsection Logging     Logging
+ *
+ * Logging is a fairly stable module. It uses a mutex to protect the
+ * logfile from multiple threads writing simultaneously. There is only a
+ * single debugging level, which leads to scrimping on debug info or
+ * massive log files. Perhaps extra levels of debugging could be useful.
+ *
+ *
+ * \subsection Malloc      Malloc
+ *
+ * The malloc/new library is pulled directly from SCIRun. The entire
+ * application code base uses this library.
+ *
+ * \subsection Message     Messages
+ *
+ * Messages are used to transmit info between client and
+ * server. Currently, they are serialized to/extracted from XML. There is
+ * a MakeMessage() function that takes in raw XML and returns the
+ * appropriate message...based on the first tag.
+ *
+ * \subsection Network     Networking
+ *
+ * The network package is heavily layered. These layers fall out thus:
+ * 
+ * 		    <center>Application
+ * <hr "width=25%"><br> 
+ * NetInterface - provides routines to connect to server and multicast,
+ * 	       as well as read/write to server and multicast. <br> 
+ * <hr><br>
+ * NetConnection - Provides abstracted nonblocking, safe network
+ * 	        I/O. Does this via threads and blocking
+ * 		connections. Gives read() and write() calls.<br> 
+ * <hr><br>
+ * PTPConnection, MulticastConnection - Provide safe, blocking I/O. Give
+ * 				     read() and write() function
+ * 				     calls.<br> 
+ * <hr><br>
+ * AppleSeeds library - Handles low-level socket issues.<br> 
+ * <hr><br>
+ * </center>
+ *
+ * Multicast is relatively untested - more work in testing and
+ * performance enhancements are probably needed. NetConnections should
+ * allow the user to specify whether reads and writes are blocking or run
+ * in their own thread (as they do now). 
+ * 
+ * When data is received from the network, it is parsed into a Message,
+ * and sent to the dispatcher (NetDispatchManager). This class sends the
+ * message (via callbacks or mailboxes - though no modules currently use
+ * the mailbox interface) to all modules that have registered for
+ * it. This scheme works quite well; however, we may wish to internally
+ * thread the NetDispatchManager to allow non-blocking callbacks. This
+ * could possibly improve performance on both streaming renderers (image
+ * rendering), as well as one-time renderers (geometry rendering).
+ * 
+ *
+ * \subsection Rendering   Rendering 
+ *
+ *
+ *
+ * \subsection Thread      Threading and Synchronization
+ *
+ * Threads work fine. The current thread library is pulled directly from
+ * SCIRun, and uses either pthreads or IRIX threads, whichever is
+ * appropriate.
+ *
+ * \subsection UI          User Interface
+ *
+ *
+ *
+ * \subsection Util        Utility classes
+ *
+ *
+ *
+ * \subsection XML         XML utilities
+ *
+ *
+ *
+ *  
+ */
+
+/**
+ * The Semotus Visum namespace is used by all user-written code.
+ */
+namespace SemotusVisum {}
+
+/**
+ * The SCIRun namespace is used by most of the borrowed SCIRun code.
+ */
+namespace SCIRun {}

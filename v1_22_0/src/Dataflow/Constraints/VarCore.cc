@@ -1,0 +1,108 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+
+/*
+ *  VarCore.h
+ *
+ *  Written by:
+ *   James Purciful
+ *   Department of Computer Science
+ *   University of Utah
+ *   Feb. 1995
+ *
+ *  Copyright (C) 1995 SCI Group
+ */
+
+#include <Dataflow/Constraints/VarCore.h>
+#include <iostream>
+using std::ostream;
+#include <stdio.h>
+
+namespace SCIRun {
+
+int
+VarCore::operator==( const VarCore& c ) const
+{
+   if (vartype == c.vartype) {
+      if ((vartype == PointVar) && (pointvalue == c.pointvalue)) return 1;
+      else if (realvalue == c.realvalue) return 1;
+   }
+   return 0;
+}
+
+
+int
+VarCore::operator==( const Point& p ) const
+{
+   if ((vartype == PointVar) && (pointvalue == p))
+      return 1;
+   else
+      return 0;
+}
+
+
+int
+VarCore::operator==( const double r ) const
+{
+   if ((vartype == RealVar) && (realvalue == r))
+      return 1;
+   else
+      return 0;
+}
+
+
+VarCore&
+VarCore::operator+=( const Vector& v )
+{
+   ASSERT(vartype == PointVar);
+   pointvalue += v;
+   return *this;
+}
+
+
+VarCore&
+VarCore::operator+=( const double r )
+{
+   ASSERT(vartype == RealVar);
+   realvalue += r;
+   return *this;
+}
+
+
+ostream& operator<<( ostream& os, VarCore& c ) {
+   if (c.vartype==VarCore::PointVar) os << c.pointvalue;
+   else os << c.realvalue;
+   return os;
+}
+
+} // End namespace SCIRun
+
+
+
