@@ -3,7 +3,7 @@
 #ifndef __SINGLE_VEL_H__
 #define __SINGLE_VEL_H__
 
-#include "Contact.h"
+#include <Uintah/Components/MPM/Contact/Contact.h>
 
 namespace Uintah {
 namespace Components {
@@ -53,11 +53,13 @@ class SingleVelContact : public Contact {
    virtual ~SingleVelContact();
 
    // Basic contact methods
-   virtual void exMomInterpolated(const Region* region,
+   virtual void exMomInterpolated(const ProcessorContext*,
+				  const Region* region,
                                   const DataWarehouseP& old_dw,
                                   DataWarehouseP& new_dw);
 
-   virtual void exMomIntegrated(const Region* region,
+   virtual void exMomIntegrated(const ProcessorContext*,
+				const Region* region,
                                 const DataWarehouseP& old_dw,
                                 DataWarehouseP& new_dw);
 
@@ -69,6 +71,9 @@ class SingleVelContact : public Contact {
 #endif /* __SINGLE_VEL_H__ */
 
 // $Log$
+// Revision 1.2  2000/04/20 23:21:02  dav
+// updated to match Contact.h
+//
 // Revision 1.1  2000/03/20 23:50:44  dav
 // renames SingleVel to SingleVelContact
 //

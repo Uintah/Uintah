@@ -32,7 +32,8 @@ SingleVelContact::~SingleVelContact()
 }
 
 void
-SingleVelContact::exMomInterpolated(const Region* region,
+SingleVelContact::exMomInterpolated(const ProcessorContext*,
+				    const Region* region,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
@@ -77,7 +78,8 @@ SingleVelContact::exMomInterpolated(const Region* region,
 }
 
 void
-SingleVelContact::exMomIntegrated(const Region* region,
+SingleVelContact::exMomIntegrated(const ProcessorContext*,
+				  const Region* region,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
 {
@@ -134,6 +136,9 @@ SingleVelContact::exMomIntegrated(const Region* region,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.3  2000/04/20 23:21:02  dav
+// updated to match Contact.h
+//
 // Revision 1.2  2000/03/21 01:29:41  dav
 // working to make MPM stuff compile successfully
 //
