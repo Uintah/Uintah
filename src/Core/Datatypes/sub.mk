@@ -50,6 +50,8 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/MatrixOperations.cc	    	\
 	$(SRCDIR)/Mesh.cc		    	\
 	$(SRCDIR)/NrrdData.cc		    	\
+	$(SRCDIR)/NrrdString.cc		    	\
+	$(SRCDIR)/NrrdScalar.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/PrismVolMesh.cc	    	\
