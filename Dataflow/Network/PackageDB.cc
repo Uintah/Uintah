@@ -25,7 +25,7 @@
 #include <Dataflow/Network/FileUtils.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/PackageDBHandler.h>
-#include <Dataflow/Network/StrX.h>
+#include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <stdio.h>

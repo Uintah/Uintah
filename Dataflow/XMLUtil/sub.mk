@@ -21,7 +21,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/XMLUtil
 
-SRCS     += $(SRCDIR)/SimpleErrorHandler.cc $(SRCDIR)/XMLUtil.cc
+SRCS     += $(SRCDIR)/SimpleErrorHandler.cc $(SRCDIR)/XMLUtil.cc \
+	$(SRCDIR)/StrX.cc
 
 PSELIBS := Core/Containers
 LIBS := $(XML_LIBRARY) $(GZ_LIBRARY)
