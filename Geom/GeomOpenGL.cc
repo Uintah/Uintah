@@ -20,6 +20,7 @@
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
 #include <Geom/Grid.h>
+#include <Geom/tGrid.h>
 #include <Geom/Group.h>
 #include <Geom/HeadLight.h>
 #include <Geom/IndexedGroup.h>
@@ -557,6 +558,85 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->polycount+=2*(nu-1)*(nv-1);
     gluDisk(di->qobj, 0, rad, nu, nv);
     glPopMatrix();
+}
+
+// this is for alexandras volume render thing
+// this should be changed to use texture objects
+
+// deletes texture map - only works on single Roe!
+
+TexGeomGrid::~TexGeomGrid()
+{
+    if (tmapdata) {
+	if (tmap_dlist != -1)
+	    glDeleteLists(tmap_dlist,1);
+	delete tmapdata;
+	tmapdata = 0;
+    }
+}
+
+void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  pre_draw(di, matl, 0);
+  int nu=dimU;
+  int nv=dimV;
+  di->polycount+=2; 
+  Vector uu(u/(nu-1));
+  Vector vv(v/(nv-1));
+
+  cerr << "Trying to do texture draw...\n";
+  
+  switch(di->get_drawtype()){
+  case DrawInfoOpenGL::WireFrame:
+    break;
+  case DrawInfoOpenGL::Flat:
+  case DrawInfoOpenGL::Gouraud:
+  case DrawInfoOpenGL::Phong:
+    {
+      if (tmap_dlist == -1) {
+	tmap_dlist = glGenLists(1);
+	glNewList(tmap_dlist,GL_COMPILE_AND_EXECUTE);
+	glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
+		  GL_MODULATE);
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
+			GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
+			GL_LINEAR);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	
+	glTexImage2D(GL_TEXTURE_2D,0,3,tmap_size,tmap_size,
+		     0,GL_RGB,GL_UNSIGNED_BYTE,tmapdata);
+	glEndList();
+	// cerr << "Generated List " << tmap_dlist << endl;
+      }
+      else {
+	glCallList(tmap_dlist);
+      }
+      glColor4f(1.0,1.0,1.0,1.0);
+      glEnable(GL_TEXTURE_2D);
+      
+      glBegin(GL_QUADS);
+      glTexCoord2f(0.0,0.0);
+      glVertex3d(corner.x(),corner.y(),corner.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
+      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
+      
+      glTexCoord2f(dimU/(1.0*tmap_size),
+		   dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x()+u.x(),
+		 corner.y()+v.y()+u.y(),
+		 corner.z()+v.z()+u.z());
+      
+      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
+      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
+      
+      glEnd();
+      
+      glDisable(GL_TEXTURE_2D);
+      break;
+    }
+  }
 }
 
 // WARNING doesn't respond to lighting correctly yet!
