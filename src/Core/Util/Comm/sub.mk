@@ -21,10 +21,5 @@ INCLUDES += $(SCISOCK_INCLUDE)
 PSELIBS :=
 LIBS := $(SCISOCK_LIBRARY)
  
-
-echo "includes: $(SCISOCK_INCLUDE)"
-echo "includes: $(SCISOCK_LIBRARY)"
-
-
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
