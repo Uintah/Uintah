@@ -24,7 +24,6 @@
 \usepackage{makeidx}
 \usepackage[]{../../Utilities/TeX/scirun-doc}
 \usepackage[]{srmrgmacros}
-\makeindex
 
 \begin{document}
 
@@ -35,8 +34,11 @@
 \newpage
 
 % Now the main sections of the manual
-\input{modules}
-
-\printindex
+\input{SCIRun_modules.tex}
+\input{BioPSE_modules.tex}
+\input{Teem_modules.tex}
+\input{Insight_modules.tex}
+\input{MatlabInterface_modules.tex}
+\input{Fusion_modules.tex}
 
 \end{document}
