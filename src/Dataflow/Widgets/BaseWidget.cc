@@ -320,7 +320,7 @@ BaseWidget::SetScale( const double scale )
 {
    widget_scale = scale;
    solve->SetEpsilon(epsilon*widget_scale);
-   TCL::execute(id+" scale_changed "+to_string(widget_scale));
+   // TCL::execute(id+" scale_changed "+to_string(widget_scale));
    execute(0);
 }
 
@@ -727,6 +727,11 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.9  1999/11/12 01:38:32  ikits
+// Added ANL AVTC site visit modifications to make the demos work.
+// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
+// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
+//
 // Revision 1.8  1999/10/07 02:07:24  sparker
 // use standard iostreams and complex type
 //

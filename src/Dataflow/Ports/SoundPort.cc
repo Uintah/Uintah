@@ -112,7 +112,7 @@ int SoundIPort::is_stereo()
 void SoundIPort::do_read(int fin)
 {
     if(fin)
-	if (module->show_status) turn_on(Finishing);
+      if (module->show_status) turn_on(Finishing);
     else
 	if (module->show_status) turn_on();
     SoundComm* comm;
@@ -249,6 +249,11 @@ void SoundOPort::resend(Connection*)
 
 //
 // $Log$
+// Revision 1.9  1999/11/12 01:38:31  ikits
+// Added ANL AVTC site visit modifications to make the demos work.
+// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
+// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
+//
 // Revision 1.8  1999/11/12 00:57:33  dmw
 // had to include Module.h
 //
