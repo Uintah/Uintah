@@ -23,7 +23,7 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription() );
   vel_CCLabel   = VarLabel::create( "vel_CC",
                      CCVariable<Vector>::getTypeDescription() );
-  velstar_CCLabel  = VarLabel::create( "velstar_CC",
+  vel_CC_scratchLabel  = VarLabel::create( "vel_CC_scratch",
                      CCVariable<Vector>::getTypeDescription() );
   dvdt_CCLabel     = VarLabel::create( "dvdt_CC",
                      CCVariable<Vector>::getTypeDescription() );
@@ -60,7 +60,7 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(cMassLabel);
   VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(vel_CCLabel);
-  VarLabel::destroy(velstar_CCLabel);
+  VarLabel::destroy(vel_CC_scratchLabel);
   VarLabel::destroy(dvdt_CCLabel);
   VarLabel::destroy(dTdt_CCLabel);
   VarLabel::destroy(temp_CCLabel);

@@ -17,7 +17,7 @@ namespace Uintah {
       const VarLabel* cMassLabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* vel_CCLabel;
-      const VarLabel* velstar_CCLabel;
+      const VarLabel* vel_CC_scratchLabel;
       const VarLabel* dvdt_CCLabel;
       const VarLabel* dTdt_CCLabel;
       const VarLabel* temp_CCLabel;
