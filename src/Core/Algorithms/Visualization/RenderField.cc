@@ -17,7 +17,7 @@
 //    Author : Martin Cole
 //    Date   : Tue May 22 10:57:12 2001
 
-#include <Dataflow/Modules/Visualization/RenderField.h>
+#include <Core/Algorithms/Visualization/RenderField.h>
 
 namespace SCIRun {
 

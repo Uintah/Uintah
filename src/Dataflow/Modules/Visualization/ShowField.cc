@@ -47,12 +47,13 @@
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/Pt.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Algorithms/Visualization/RenderField.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Visualization/RenderField.h>
+
 
 #include <typeinfo>
 #include <map.h>
@@ -195,7 +196,7 @@ ShowField::execute()
   
   color_->get(color_handle_);
   if(!color_handle_.get_rep()){
-    warning("No ColorMap in port 3 ColorMap.");
+    warning("No ColorMap in port 2 ColorMap.");
     if (colm_gen_ != -1) {
       nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
     }

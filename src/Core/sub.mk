@@ -22,6 +22,7 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
+	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Disclosure \
@@ -39,7 +40,7 @@ SUBDIRS := \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
-#	$(SRCDIR)/Algorithms \
+
 
 ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := \

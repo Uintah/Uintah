@@ -34,7 +34,6 @@ SRCS     += \
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
-        $(SRCDIR)/RenderField.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/StreamLines.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
@@ -48,7 +47,7 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Dataflow/Modules/Render Core/Datatypes Core/Containers \
 	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
 	Core/Persistent Core/Disclosure Core/Geometry Core/Util \
-	Core/TkExtensions
+	Core/TkExtensions Core/Algorithms/Visualization
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
