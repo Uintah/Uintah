@@ -412,6 +412,21 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 		       brick->tex_type(), brick->tex_data(c));
 	}
       }
+#else
+      {
+	if (reuse)
+	{
+	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
+			  GL_LUMINANCE,
+			  brick->tex_type(), brick->tex_data(c));
+	}
+	else
+	{
+	  glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE,
+		       nx, ny, nz, 0, GL_LUMINANCE,
+		       brick->tex_type(), brick->tex_data(c));
+	}
+      }
 #endif
     }
   }
@@ -837,6 +852,10 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 		 GL_FLOAT,
 		 &(cmap1_array_(0, 0)));
   }
+#else
+  {
+    std::cerr << "No volume colormaps available." << std::endl;
+  }
 #endif
   CHECK_OPENGL_ERROR("");
 }
@@ -891,6 +910,10 @@ TextureRenderer::release_colormap1()
 #ifdef GL_EXT_shared_texture_palette
   {
     glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
+  }
+#else
+  {
+    // Already warned in bind.  Do nothing.
   }
 #endif
   CHECK_OPENGL_ERROR("");
