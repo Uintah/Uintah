@@ -328,10 +328,12 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
-double CompNeoHook::computeRhoMicroCM(double pressure, const MPMMaterial* matl)
+double CompNeoHook::computeRhoMicroCM(double pressure, 
+                                      const double p_ref,
+                                      const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
-  double p_ref=101325.0;
+ // double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
 
   double p_gauge = pressure - p_ref;
@@ -342,10 +344,12 @@ double CompNeoHook::computeRhoMicroCM(double pressure, const MPMMaterial* matl)
   return rho_cur;
 }
 
-void CompNeoHook::computePressEOSCM(const double rho_cur,double& pressure,                                                double& dp_drho, double& tmp,
+void CompNeoHook::computePressEOSCM(const double rho_cur,double& pressure, 
+                                               const double p_ref,
+                                               double& dp_drho, double& tmp,
                                                 const MPMMaterial* matl)
 {
-  double p_ref=101325.0;
+  //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
   double shear = d_initialData.Shear;
   double rho_orig = matl->getInitialDensity();
