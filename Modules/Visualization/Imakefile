@@ -1,10 +1,10 @@
 
 #include <config/sci.cf>
 
-OBJS = FrameTest.o  GenColormap.o  Hedgehog.o  \
-	IsoSurface.o  Streamline.o  Streamsurf.o
-SRCS = FrameTest.cc GenColormap.cc Hedgehog.cc \
-	IsoSurface.cc Streamline.cc Streamsurf.cc
+OBJS = Dipole.o  FrameTest.o  GenColormap.o  Hedgehog.o  \
+	IsoSurface.o  Meter.o  Streamline.o  Streamsurf.o
+SRCS = Dipole.cc FrameTest.cc GenColormap.cc Hedgehog.cc \
+	IsoSurface.cc Meter.cc Streamline.cc Streamsurf.cc
 
 LIBNAME = Visualization
 
