@@ -982,6 +982,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_gzopen=no
   sci_required_hypre=no
   sci_required_insight=no
+  sci_required_java=no
   sci_required_jpeg=no
   sci_required_lapack=no
   sci_required_mdsplus=no
@@ -990,6 +991,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_oogl=no
   sci_required_perl=no
   sci_required_petsc=no
+  sci_required_ptolemyII=no
   sci_required_qt=no
   sci_required_ruby=no
   sci_required_ssl=no
@@ -1072,6 +1074,10 @@ case $1 in
      *)
         ;;
     esac
+  ;;
+  Ptolemy)
+    sci_required_ptolemyII=yes
+    sci_required_java=yes
   ;;
   *)
     AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)
