@@ -79,6 +79,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
 //    db->getWithDefault("opl",d_opl,3.0); too sensitive to have default
     db->require("opl",d_opl);
+    db->getWithDefault("empirical_soot",d_empirical_soot,true);
   }
   // read type of mixing model
   string mixModel;
@@ -1197,21 +1198,24 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    if (d_mixingModel->getNumRxnVars()) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
-	      if (temperature[currCell] > 1000) {
-		double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
-		double c3 = 0.1;
-		double rhosoot = 1950.0;
-		double cmw = 12.0;
-		double factor = 0.01;
+	      if (d_empirical_soot) {
+	        if (temperature[currCell] > 1000) {
+		  double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+		  double c3 = 0.1;
+		  double rhosoot = 1950.0;
+		  double cmw = 12.0;
+		  double factor = 0.01;
 
-		if (inStream.d_mixVars[0] > 0.1)
-		  sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
-		else
+		  if (inStream.d_mixVars[0] > 0.1)
+		    sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+		  else
+		    sootFV[currCell] = 0.0;
+	        }
+	        else 
 		  sootFV[currCell] = 0.0;
 	      }
-	      else 
-		sootFV[currCell] = 0.0;
-	    }
+	      else sootFV[currCell] = 0.0;
+	    }  
 	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
 				   sootFV[currCell]*temperature[currCell]*d_opl));
 	  }
