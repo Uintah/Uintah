@@ -55,8 +55,10 @@ namespace Uintah {
     }
 
     void destructiveInvert(FastMatrix& inverse);
-    void destructiveSolve(const vector<double>& b, vector<double>& X);
-    void destructiveSolve(double* X1, double* X2);
+    // Warning - this do not do any pivoting...
+    void destructiveSolve(double* b);
+    void destructiveSolve(double* b1, double* b2);
+    void destructiveSolve(double* b1, double* b2, double* b3);
 
     void transpose(const FastMatrix& transpose);
     void multiply(const vector<double>& b, vector<double>& X) const;
@@ -68,17 +70,18 @@ namespace Uintah {
     void copy(const FastMatrix& copy);
     void print(std::ostream& out);
 
+    enum {
+      MaxSize = 16
+    };
   private:
-    static const int smallSize;
-    static const int smallRows;
-    double smallMat[16];    // Make sure this equals smallSize
-    double* smallMatPtr[4]; // Make sure this equals smallRows
-    double** mat;
+      
+    double mat[MaxSize][MaxSize];
     int rows, cols;
 
     void big_destructiveInvert(FastMatrix& inverse);
-    void big_destructiveSolve(const vector<double>& b, vector<double>& X);
-    void big_destructiveSolve(double* X1, double* X2);
+    void big_destructiveSolve(double* b);
+    void big_destructiveSolve(double* b1, double* b2);
+    void big_destructiveSolve(double* b1, double* b2, double* b3);
 
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);
