@@ -70,6 +70,8 @@ void CastMatrix::execute() {
     return;
   }
 
+  oldtype_.set(imH->type_name());
+
   string newtype = newtype_.get();
   MatrixHandle omH;
 
@@ -79,6 +81,8 @@ void CastMatrix::execute() {
     omH = imH->sparse();
   } else if (newtype == "ColumnMatrix") {
     omH = imH->column();
+  } else if (newtype == "Same") {
+    omH = imH;
   } else {
     error("CastMatrix: unknown cast type "+newtype);
     return;
