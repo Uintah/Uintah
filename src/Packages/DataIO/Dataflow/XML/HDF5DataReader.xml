@@ -56,7 +56,7 @@ keys or by using left mouse clicks on the to open the folders. Only
 HDF5 groups, attributes, and dataset nodes are displayed in the
 treeview. For attribute and dataset nodes their node type, data type,
 and value are displayed in the Type and Value columns,
-respectufully. In the case of the attrbiutes the data values are
+respectufully. In the case of the attributes the data values are
 displayed. For datasets the data type and the value of the dimensions
 of the dataset are displayed. 
 </p>
@@ -66,7 +66,7 @@ dataset has been selected it with be highlighted in white and listed
 in the Selected Data listbox. The dataset can be deselected using a
 left mouse click as well. Multiple datasets may be selected using
 the ctrl and shift left mouse clicks. If a group is selected all
-chilren will be selected. Attrbiutes can not be selected and are only
+chilren will be selected. Attributes can not be selected and are only
 provided as suplementary information. 
 </p>
 <p>
@@ -111,8 +111,8 @@ of the data using the sliders.
 Once the data has been read it can be merged into one output NRRD if
 it has the same dimensionality and data type. When the data is merged
 a new "Time" axis will be constructed. The time axis represents the
-number datasets merged together. Combining datasets is necessasry when
-using the NrrdSelectTime to animating data.  If the data is not merged
+number datasets merged together. Combining datasets is necessary when
+using the NrrdSelectTime to animate data.  If the data is not merged
 dataset will be outputed individually. The maximum outputs is six. 
 </p>
 <p>
@@ -120,7 +120,7 @@ The "Assume Vector-Tensor data" will convert datasets that have the
 last dimension of either 3 or 6 into SCIRun "Vectors" or "Tensors".
 This is needed for animating mutliple datasets when using the
 NrrdSelectTime. If it is not selected data will be assumed to be
-"Scalar" 
+"Scalar". 
       </p>
     </description>
   </overview>
