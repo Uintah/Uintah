@@ -75,12 +75,6 @@ public:
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////
       //
-      // Initialization: qw - heat flux, I - Intensity
-      //
-      virtual void radiationInitialize() = 0;
-
-      /////////////////////////////////////////////////////////////////////////
-      //
       virtual void computeRadiationProps(const ProcessorGroup*,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
@@ -88,13 +82,6 @@ public:
 					ArchesConstVariables* constvars) = 0;
 
 
-      /////////////////////////////////////////////////////////////////////////
-      //
-      //virtual void computeHeatFluxDiv(const ProcessorGroup*,
-      //					 const Patch* patch,
-      //					 CellInformation* cellinfo,
-      //					ArchesVariables* vars)  = 0;
-      //
       /////////////////////////////////////////////////////////////////////////
       //
       virtual void boundarycondition(const ProcessorGroup*,

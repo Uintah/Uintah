@@ -14,19 +14,32 @@
       IST=idxlo(1)
       JST=idxlo(2)
       KST=idxlo(3)
+
       if (xminus.or.xplus) then
          DO 30 K=KST,KEND
             DO 20 J=JST,JEND
                if (xminus) then
                   i = ist -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
+
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobtwo)then
+                     tg(i,j,k) = 0.0
+                     end if
                      ABSKG(I,J,K) = 1.0D0
+
                   END IF
                endif
                if (xplus) then
                   i = iend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
+
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobtwo)then
+                     tg(i,j,k) = 0.0
+                     end if
                      ABSKG(I,J,K) = 1.0D0
+
                   END IF
                endif
  20         CONTINUE
@@ -38,13 +51,25 @@
                if (yminus) then
                   j = jst -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
+
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobtwo)then
+                     tg(i,j,k) = 0.0
+                     end if
                      ABSKG(I,J,K) = 1.0D0
+
                   END IF
                endif
                if (yplus) then
                   j = jend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
+
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobtwo)then
+                     tg(i,j,k) = 0.0
+                     end if
                      ABSKG(I,J,K) = 1.0D0
+
                   END IF
                endif
  40         CONTINUE
@@ -56,13 +81,25 @@
                if (zminus) then
                   k = kst -1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
+
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobtwo)then
+                     tg(i,j,k) = 0.0
+                     end if
                      ABSKG(I,J,K) = 1.0D0
+
                   END IF
                endif
                if (zplus) then
                   k = kend + 1
                   IF (PCELL(I,J,K).NE.FFIELD) THEN
+
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0
+                     if (lprobtwo)then
+                     tg(i,j,k) = 0.0
+                     end if
                      ABSKG(I,J,K) = 1.0D0
+
                   END IF
                endif
  60         CONTINUE
@@ -70,3 +107,11 @@
       endif
       RETURN
       end
+
+
+
+
+
+
+
+

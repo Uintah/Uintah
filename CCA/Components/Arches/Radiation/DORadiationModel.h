@@ -68,27 +68,19 @@ public:
     
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////
-      //
-      // Initialization: qw(f) - heat flux on faces, MAXITR - Max.# of Radn.  
-      // iterations, QACCU - accuracy desired
-
-      virtual void radiationInitialize();
-
-      /////////////////////////////////////////////////////////////////////////
-      //
+      /*
+      virtual void computeRadiationProps(const ProcessorGroup* pc,
+      				 const Patch* patch,
+      				 CellInformation* cellinfo,
+      				 ArchesVariables* vars);
+      */
       virtual void computeRadiationProps(const ProcessorGroup* pc,
 					 const Patch* patch,
 					 CellInformation* cellinfo,
 					 ArchesVariables* vars,
 					 ArchesConstVariables* constvars);
-
+      //
       /////////////////////////////////////////////////////////////////////////
-      //      
-      //      virtual void computeHeatFluxDiv(const ProcessorGroup* pc,
-      //                                      const Patch* patch,
-      //				      CellInformation* cellinfo, 
-      //				      ArchesVariables* vars);
-      ////////////////////////////////////////////////////////////////////////
       
       virtual void boundarycondition(const ProcessorGroup* pc,
                                       const Patch* patch,
@@ -118,6 +110,8 @@ private:
       int MAXITR;
       double QACCU, d_opl, af, qerr, totsrc;
       int iflag, iriter;
+      int lambda;
+      double wavemin, wavemax, dom, omega;
       int ffield;
       int wall;
       int symtry;
@@ -125,6 +119,10 @@ private:
       int sfield;
       int pbcfld;
       int outletfield;
+      bool lprobone, lprobtwo, lprobthree, lradcal;
+
+      OffsetArray1<double> fraction;
+
       OffsetArray1<double> ord;
       OffsetArray1<double> oxi;
       OffsetArray1<double> omu;
@@ -132,7 +130,17 @@ private:
       OffsetArray1<double> wt;
       OffsetArray1<double> arean;
       OffsetArray1<double> areatb;
+
+      OffsetArray1<double> srcbm;
+      OffsetArray1<double> srcpone;
+      OffsetArray1<double> qfluxbbm;
       const ProcessorGroup* d_myworld;
+
+      double rgamma[7][4];
+      double sd15[80][6];
+      double sd[376][6];
+      double sd7[16][3];
+      double sd3[32][3];
 
 }; // end class RadiationModel
 
