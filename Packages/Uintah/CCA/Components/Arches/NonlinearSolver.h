@@ -58,6 +58,8 @@ public:
       // Interface for Set up of the problem specification database
       virtual void problemSetup(const ProblemSpecP& db) = 0;
 
+      virtual void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
+					       const MaterialSet* matls) = 0;
       // GROUP: Schedule Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Solve the nonlinear system, return some error code.
