@@ -54,7 +54,7 @@ using namespace std;
 #include <sys/stat.h>
 static string SCIRUN_SRCTOP = SRCTOP;   // = INSTALL_DIR/SCIRun/src
 static string SCIRUN_OBJTOP = OBJTOP;   // = BUILD_DIR
-static string DEFAULT_LOAD_PACKAGE = DEF_LOAD_PACK;  // configured packages
+static string DEFAULT_LOAD_PACKAGE = LOAD_PACKAGE;  // configured packages
 
 namespace SCIRun {
   PackageDB* packageDB = 0;
