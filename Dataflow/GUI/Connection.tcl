@@ -29,7 +29,6 @@
 
 
 
-# args == { connid omodid owhich imodid iwhich }
 proc connectionMenu {x y conn cx cy} {
     global Subnet mouseX mouseY
     set mouseX $cx
