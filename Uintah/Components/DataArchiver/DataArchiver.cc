@@ -85,6 +85,23 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 				    DataWarehouseP& new_dw)
 {
    int timestep = d_currentTimestep;
+
+   // Schedule task to dump out integrated data at every timestep
+   vector<const VarLabel*> ivars;
+   new_dw->getIntegratedSaveSet(ivars);
+
+
+   Task* t = scinew Task("DataArchiver::outputReduction", new_dw, new_dw,
+		  this, &DataArchiver::outputReduction);
+
+    for(int i=0;i<ivars.size();i++){
+      t->requires(new_dw, ivars[i]) ;
+    }
+
+   sched->addTask(t);
+
+   cerr << "Created reduction variable output task" << endl;
+
    if((d_currentTimestep++ % d_outputInterval) != 0)
       return;
 
@@ -217,6 +234,22 @@ static bool get(const DOM_Node& node, int &value)
       }
    }
    return false;
+}
+
+void DataArchiver::outputReduction(const ProcessorContext*,
+//			  const Patch* patch,
+			  DataWarehouseP& /*old_dw*/,
+			  DataWarehouseP& new_dw)
+{
+   // Dump the stuff in the reduction saveset into an
+   // ofstream
+
+   vector<const VarLabel*> ivars;
+   new_dw->getIntegratedSaveSet(ivars);
+
+   static ofstream intout("intquan.dat");
+   new_dw->emit(intout, ivars);
+
 }
 
 void DataArchiver::output(const ProcessorContext*,
@@ -483,6 +516,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.5  2000/06/01 23:09:38  guilkey
+// Added beginnings of code to store integrated quantities.
+//
 // Revision 1.4  2000/05/31 15:21:50  jehall
 // - Added output dir versioning
 //
