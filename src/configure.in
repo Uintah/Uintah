@@ -1,4 +1,4 @@
-## $Id$
+c## $Id$
 ## XXX: Should probably set AC_PREFIX_DEFAULT to something good some day.
 ## TODO:
 ##  - Automatically detect TEMPLATE_BOX and TEMPLATE_TAG variables
@@ -26,11 +26,9 @@ if test "$package" = ""; then
 fi
 
 PACKAGE_DIRS=$package
-PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon/components.xml"
-#PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon"
+PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon"
 for i in $package; do
-  PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i/components.xml"
-# PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i"
+ PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i"
 done
 
 ##-- check for user supplied tcl paths --------------------------------------
@@ -828,6 +826,12 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.71  2000/10/24 05:57:05  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.70  2000/10/21 19:17:42  moulding
 # added some comment lines that will be un-commented when the new module maker
 # comes on line.

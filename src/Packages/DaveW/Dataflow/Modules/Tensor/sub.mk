@@ -22,7 +22,7 @@ SRCS     += \
 	$(SRCDIR)/Flood.cc\
 	$(SRCDIR)/TensorAccessFields.cc\
 	$(SRCDIR)/TensorAnisotropy.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
 	PSECore/Widgets SCICore/Persistent SCICore/Geometry \
@@ -35,6 +35,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/10/24 05:57:18  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.4  2000/06/08 22:46:20  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.

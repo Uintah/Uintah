@@ -7,11 +7,14 @@ include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 
 SRCDIR   := Remote/Modules/remoteSalmon
 
-SRCS     += $(SRCDIR)/remoteSalmon.cc \
+SRCS     += \
+	$(SRCDIR)/remoteSalmon.cc \
 	$(SRCDIR)/HeightSimp.cc \
 	$(SRCDIR)/RenderModel.cc \
-	$(SRCDIR)/SimpMesh.cc $(SRCDIR)/OpenGLServer.cc \
-	$(SRCDIR)/socketServer.cc
+	$(SRCDIR)/SimpMesh.cc\
+	$(SRCDIR)/OpenGLServer.cc \
+	$(SRCDIR)/socketServer.cc\
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 	SCICore/Persistent SCICore/Exceptions SCICore/Geometry \
@@ -26,6 +29,12 @@ include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/10/24 05:57:48  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.3  2000/07/11 20:23:20  yarden
 # replace $(OBJDIR) with $(SRCDIR)
 #

@@ -7,7 +7,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Modules/Visualization
 
-SRCS     += $(SRCDIR)/GridVisualizer.cc \
+SRCS     += \
+	$(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/NodeHedgehog.cc \
 	$(SRCDIR)/TimestepSelector.cc \
 	$(SRCDIR)/ScalarFieldExtractor.cc \
@@ -21,8 +22,8 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/InPlaneEigenEvaluator.cc \
 	$(SRCDIR)/ParticleInPlaneEigenEvaluator.cc \
 	$(SRCDIR)/TensorElementExtractor.cc \
-	$(SRCDIR)/ParticleTensorElementExtractor.cc
-
+	$(SRCDIR)/ParticleTensorElementExtractor.cc\
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
@@ -38,6 +39,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/10/24 05:57:58  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.10  2000/10/18 20:19:32  witzel
 # Added ParticleInPlaneEigenEvaluator
 #

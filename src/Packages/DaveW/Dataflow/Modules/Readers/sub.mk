@@ -22,7 +22,7 @@ SRCS     += \
 	$(SRCDIR)/SegFldReader.cc\
 	$(SRCDIR)/SigmaSetReader.cc\
 	$(SRCDIR)/TensorFieldReader.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Exceptions SCICore/Thread SCICore/Containers \
@@ -33,6 +33,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/24 05:57:17  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.5  2000/07/19 06:25:13  samsonov
 # PathReader moved in PSECommon
 #
