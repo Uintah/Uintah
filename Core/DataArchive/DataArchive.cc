@@ -283,8 +283,7 @@ DataArchive::queryGrid( double time )
 	  long totalCells;
 	  if(!r->get("totalCells", totalCells))
 	    throw InternalError("Error parsing patch total cells");
-	  Patch* patch = level->addPatch(lowIndex, highIndex,lowIndex,
-				     highIndex,id);
+	  USE_IF_ASSERTS_ON(Patch* patch = level->addPatch(lowIndex, highIndex,lowIndex, highIndex,id);)
 	  ASSERTEQ(patch->totalCells(), totalCells);
 	} else if(r->getNodeName() == "anchor"
 		  || r->getNodeName() == "cellspacing"
