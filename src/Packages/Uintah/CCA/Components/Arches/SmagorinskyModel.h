@@ -128,26 +128,29 @@ private:
       //    [in] 
       //        documentation here
       void computeTurbSubmodel(const ProcessorGroup*,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually reCalculate the Turbulence sub model
       //    [in] 
       //        documentation here
       void reComputeTurbSubmodel(const ProcessorGroup*,
-				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
       ///////////////////////////////////////////////////////////////////////
       // Actually Calculate the subgrid scale variance
       //    [in] 
       //        documentation here
       void computeScalarVariance(const ProcessorGroup*,
-				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
 
 
 private:

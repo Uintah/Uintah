@@ -45,11 +45,8 @@ Source::~Source()
 void 
 Source::calculateVelocitySource(const ProcessorGroup* ,
 				const Patch* patch,
-				DataWarehouseP& ,
-				DataWarehouseP& new_dw,
 				double delta_t,
 				int index,
-				int eqnType,
 				CellInformation* cellinfo,
 				ArchesVariables* vars)
 {
@@ -361,8 +358,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 void 
 Source::calculatePressureSource(const ProcessorGroup*,
 				const Patch* patch,
-				DataWarehouseP& ,
-				DataWarehouseP& ,
 				double delta_t,
 				CellInformation* cellinfo,
 				ArchesVariables* vars)
@@ -467,8 +462,6 @@ Source::calculatePressureSource(const ProcessorGroup*,
 void 
 Source::calculateScalarSource(const ProcessorGroup*,
 			      const Patch* patch,
-			      DataWarehouseP& ,
-			      DataWarehouseP& ,
 			      double delta_t,
 			      int index, 
 			      CellInformation* cellinfo,
@@ -532,11 +525,9 @@ Source::calculateScalarSource(const ProcessorGroup*,
 void 
 Source::modifyVelMassSource(const ProcessorGroup* ,
 			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw,
 			    double delta_t, 
 			    int index,
-			    int eqnType, ArchesVariables* vars)
+			    ArchesVariables* vars)
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
@@ -712,8 +703,6 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 void 
 Source::modifyScalarMassSource(const ProcessorGroup* ,
 			       const Patch* patch,
-			       DataWarehouseP& ,
-			       DataWarehouseP& ,
 			       double delta_t, 
 			       int index, ArchesVariables* vars)
 {
@@ -748,8 +737,6 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
 void 
 Source::addPressureSource(const ProcessorGroup* ,
 			  const Patch* patch ,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
 			  double delta_t,
 			  int index,
 			  CellInformation* cellinfo,			  

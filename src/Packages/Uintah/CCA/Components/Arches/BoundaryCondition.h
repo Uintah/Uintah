@@ -152,33 +152,32 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize multimaterial wall cell types
-      void sched_mmWallCellTypeInit(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls);
+      void sched_mmWallCellTypeInit( SchedulerP&, const PatchSet* patches,
+				     const MaterialSet* matls);
 
       // GROUP:  Actual Computations :
       ////////////////////////////////////////////////////////////////////////
       // Initialize celltyping
       // Details here
       void cellTypeInit(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,  
-			DataWarehouseP&);
+			 const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse* old_dw,
+			DataWarehouse* new_dw);
       ////////////////////////////////////////////////////////////////////////
       // computing inlet areas
       // Details here
       void computeInletFlowArea(const ProcessorGroup*,
-			const Patch* patch,
-			DataWarehouseP& old_dw,  
-			DataWarehouseP&);
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually compute velocity BC terms
       void velocityBC(const ProcessorGroup* pc,
 		      const Patch* patch,
-		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw,
 		      const int index,
-		      int eqnType,
 		      CellInformation* cellinfo,
 		      ArchesVariables* vars);
 
@@ -186,8 +185,8 @@ public:
       // Actually compute pressure BC terms
       void pressureBC(const ProcessorGroup*,
 		      const Patch* patch,
-		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw,
+		      DataWarehouse* old_dw,
+		      DataWarehouse* new_dw,
 		      CellInformation* cellinfo,
 		      ArchesVariables* vars);
 
@@ -195,8 +194,6 @@ public:
       // Actually compute scalar BC terms
       void scalarBC(const ProcessorGroup* pc,
 		    const Patch* patch,
-		    DataWarehouseP& old_dw,
-		    DataWarehouseP& new_dw,
 		    const int index,
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars);
@@ -205,9 +202,10 @@ public:
       // Initialize multi-material wall celltyping
       // Details here
       void mmWallCellTypeInit(const ProcessorGroup*,
-			      const Patch* patch,
-			      DataWarehouseP& old_dw,  
-			      DataWarehouseP& new_dw);
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
 
 
       // compute multimaterial wall bc
@@ -231,8 +229,7 @@ private:
       // GROUP:  Actual Computations (Private)  :
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
-      void uVelocityBC(DataWarehouseP& new_dw,
-		       const Patch* patch,
+      void uVelocityBC(const Patch* patch,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars);
@@ -240,16 +237,14 @@ private:
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute v velocity BC terms
-      void vVelocityBC(DataWarehouseP& new_dw,
-		       const Patch* patch,
+      void vVelocityBC(const Patch* patch,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
 		       ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute w velocity BC terms
-      void wVelocityBC(DataWarehouseP& new_dw,
-		       const Patch* patch,
+      void wVelocityBC(const Patch* patch,
 		       const double* VISCOS,
 		       CellInformation* cellinfo,
 		        ArchesVariables* vars);
@@ -257,30 +252,34 @@ private:
       ////////////////////////////////////////////////////////////////////////
       // Actually set inlet velocity bcs
       void setInletVelocityBC(const ProcessorGroup* pc,
-			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw);
+			       const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually calculate pressure bcs
       void calcPressureBC(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
+			   const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually calculate pressure bcs
       void recomputePressureBC(const ProcessorGroup* pc,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
 
       ////////////////////////////////////////////////////////////////////////
       // Actually set the velocity, density and props flat profile
       void setFlatProfile(const ProcessorGroup* pc,
-			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
 
 private:
 

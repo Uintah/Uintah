@@ -13,7 +13,8 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/PressureSolver.cc $(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
 	$(SRCDIR)/Source.cc $(SRCDIR)/CellInformation.cc \
-	$(SRCDIR)/ArchesLabel.cc $(SRCDIR)/ArchesVariables.cc
+	$(SRCDIR)/ArchesLabel.cc $(SRCDIR)/ArchesVariables.cc \
+	$(SRCDIR)/ArchesMaterial.cc
 
 ifneq ($(PETSC_DIR),)
 SRCS +=	$(SRCDIR)/PetscSolver.cc

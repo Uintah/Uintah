@@ -300,9 +300,7 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 void 
 PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
-				   DataWarehouseP&,
-				   DataWarehouseP&, 
-				   ArchesVariables* vars)
+				    ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
@@ -366,8 +364,6 @@ PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 void 
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    const Patch* patch,
-			    DataWarehouseP&,
-			    DataWarehouseP&,
 			    ArchesVariables* vars,
 			    const ArchesLabel* lab)
 {
@@ -1121,9 +1117,7 @@ PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 void 
 PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				 const Patch* patch,
-				 DataWarehouseP& ,
-				 DataWarehouseP& , 
-				 int index, ArchesVariables* vars)
+				  int index, ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
   IntVector domLo;
@@ -1301,13 +1295,11 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::velocityLisolve(const ProcessorGroup* pc,
-			    const Patch* patch,
-			    DataWarehouseP& old_dw ,
-			    DataWarehouseP& new_dw, 
-			    int index, double delta_t,
-			    ArchesVariables* vars,
-			    CellInformation* cellinfo,
-			    const ArchesLabel* lab)
+			     const Patch* patch,
+			     int index, double delta_t,
+			     ArchesVariables* vars,
+			     CellInformation* cellinfo,
+			     const ArchesLabel* lab)
 {
   // Get the patch bounds and the variable bounds
 #if 0
@@ -1643,8 +1635,6 @@ PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 void 
 PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
-				    DataWarehouseP& ,
-				    DataWarehouseP& , 
 				    int index,
 				    ArchesVariables* vars)
 {
@@ -1672,8 +1662,6 @@ PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 void 
 PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw, 
 			  int index, double delta_t,
 			  ArchesVariables* vars,
 			  CellInformation* cellinfo,

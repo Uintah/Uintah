@@ -76,8 +76,6 @@ public:
       // scalars
       void calculatePressureSource(const ProcessorGroup* pc,
 				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw,
 				   double delta_t,
 				   CellInformation* cellinfo,
 				   ArchesVariables* vars); 
@@ -87,11 +85,8 @@ public:
       // scalars
       void calculateVelocitySource(const ProcessorGroup* pc,
 				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw,
 				   double delta_t, 
 				   int index,
-				   int eqnType, 
 				   CellInformation* cellinfo,
 				   ArchesVariables* vars);
 
@@ -100,8 +95,6 @@ public:
       // scalars
       void calculateScalarSource(const ProcessorGroup* pc,
 				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw,
 				 double delta_t, 
 				 int index,
 				 CellInformation* cellinfo,
@@ -112,19 +105,15 @@ public:
       // scalars
       void modifyVelMassSource(const ProcessorGroup* pc,
 			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw,
 			       double delta_t, 
 			       int index,
-			       int eqnType, ArchesVariables* vars);
+			       ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       void modifyScalarMassSource(const ProcessorGroup* pc,
 				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw,
 				  double delta_t, 
 				  int index, ArchesVariables* vars);
 
@@ -133,8 +122,6 @@ public:
       // scalars
       void addPressureSource(const ProcessorGroup* pc,
 			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw,
 			     double delta_t,
 			     int index,
 			     CellInformation* cellinfo,

@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/Grid/Stencil.h>
 #include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -18,6 +19,7 @@
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <iostream>
@@ -76,6 +78,33 @@ void
 SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* patches,
 					    const MaterialSet* matls)
 {
+  Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodel",
+			  this,
+			  &SmagorinskyModel::computeTurbSubmodel);
+
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  
+  // Requires
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, Ghost::None,
+		zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, 
+		Ghost::AroundCells,
+		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel,
+		Ghost::AroundCells,
+		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel,
+		Ghost::AroundCells,
+		numGhostCells);
+
+      // Computes
+  tsk->computes(d_lab->d_viscosityCTSLabel);
+
+  sched->addTask(tsk, patches, matls);
+
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -111,8 +140,6 @@ SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* p
       sched->addTask(tsk);
     }
   }
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
@@ -120,9 +147,40 @@ SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* p
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, const PatchSet* patches,
+SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
+					      const PatchSet* patches,
 					      const MaterialSet* matls)
 {
+  Task* tsk = scinew Task("SmagorinskyModel::ReTurbSubmodel",
+			  this,
+			  &SmagorinskyModel::reComputeTurbSubmodel);
+
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  // Requires
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
+		Ghost::None,
+		zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::AroundCells,
+		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
+		Ghost::AroundCells,
+		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
+		Ghost::AroundCells,
+		numGhostCells);
+  // for multimaterial
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, zeroGhostCells);
+
+      // Computes
+  tsk->computes(d_lab->d_viscosityCTSLabel);
+
+  sched->addTask(tsk, patches, matls);
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -162,8 +220,6 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, const PatchSet*
       sched->addTask(tsk);
     }
   }
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
@@ -172,122 +228,128 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, const PatchSet*
 //****************************************************************************
 void 
 SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw)
+				      const PatchSubset* patches,
+				      const MaterialSubset* matls,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw)
 {
-  // Variables
-  SFCXVariable<double> uVelocity;
-  SFCYVariable<double> vVelocity;
-  SFCZVariable<double> wVelocity;
-  CCVariable<double> density;
-  CCVariable<double> viscosity;
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    CCVariable<double> density;
+    CCVariable<double> viscosity;
 
-  // Get the velocity, density and viscosity from the old data warehouse
-  int matlIndex = 0;
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
-  old_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  old_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  old_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-	      zeroGhostCells);
-  old_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
-	      zeroGhostCells);
+    // Get the velocity, density and viscosity from the old data warehouse
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, 
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, 
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
+		zeroGhostCells);
+    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
+		zeroGhostCells);
 
-  PerPatch<CellInformationP> cellinfop;
-  //if (old_dw->exists(d_cellInfoLabel, patch)) {
-  if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) {
-  old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
-  } else {
-    cellinfop.setData(scinew CellInformation(patch));
-    old_dw->put(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
-  }
-  //  old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
-  //} else {
-  //  cellinfop.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
-  //}
-  CellInformation* cellinfo = cellinfop.get().get_rep();
-
-  //  DataWarehouseP top_dw = new_dw->getTop();
-  // Get the patch details
-  IntVector domLoVelx = uVelocity.getFortLowIndex();
-  IntVector domHiVelx = uVelocity.getFortHighIndex();
-  IntVector domLoVely = vVelocity.getFortLowIndex();
-  IntVector domHiVely = vVelocity.getFortHighIndex();
-  IntVector domLoVelz = wVelocity.getFortLowIndex();
-  IntVector domHiVelz = wVelocity.getFortHighIndex();
-  
-  IntVector domLoDen = density.getFortLowIndex();
-  IntVector domHiDen = density.getFortHighIndex();
-
-  IntVector domLoVis = viscosity.getFortLowIndex();
-  IntVector domHiVis = viscosity.getFortHighIndex();
-  IntVector lowIndex = patch->getCellFORTLowIndex();
-  IntVector highIndex = patch->getCellFORTHighIndex();
-  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
-  // compatible with fortran index
-  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
-                                              IntVector(1,1,1);
+    PerPatch<CellInformationP> cellinfop;
+    //if (old_dw->exists(d_cellInfoLabel, patch)) {
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) {
+      new_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
+    } else {
+      cellinfop.setData(scinew CellInformation(patch));
+      new_dw->put(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    //  old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //} else {
+    //  cellinfop.setData(scinew CellInformation(patch));
+    //  old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
+    //}
+    CellInformation* cellinfo = cellinfop.get().get_rep();
+    
+    //  DataWarehouseP top_dw = new_dw->getTop();
+    // Get the patch details
+    IntVector domLoVelx = uVelocity.getFortLowIndex();
+    IntVector domHiVelx = uVelocity.getFortHighIndex();
+    IntVector domLoVely = vVelocity.getFortLowIndex();
+    IntVector domHiVely = vVelocity.getFortHighIndex();
+    IntVector domLoVelz = wVelocity.getFortLowIndex();
+    IntVector domHiVelz = wVelocity.getFortHighIndex();
+    
+    IntVector domLoDen = density.getFortLowIndex();
+    IntVector domHiDen = density.getFortHighIndex();
+    
+    IntVector domLoVis = viscosity.getFortLowIndex();
+    IntVector domHiVis = viscosity.getFortHighIndex();
+    IntVector lowIndex = patch->getCellFORTLowIndex();
+    IntVector highIndex = patch->getCellFORTHighIndex();
+    IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
+    // compatible with fortran index
+    IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
+                                                      IntVector(1,1,1);
 
     // get physical constants
-  double mol_viscos; // molecular viscosity
-  mol_viscos = d_physicalConsts->getMolecularViscosity();
-  FORT_SMAGMODEL(domLoVelx.get_pointer(), domHiVelx.get_pointer(), 
-		 uVelocity.getPointer(),
-		 domLoVely.get_pointer(), domHiVely.get_pointer(), 
-		 vVelocity.getPointer(),
-		 domLoVelz.get_pointer(), domHiVelz.get_pointer(), 
-		 wVelocity.getPointer(),
-		 domLoDen.get_pointer(), domHiDen.get_pointer(), 
-		 density.getPointer(),
-		 domLoVis.get_pointer(), domHiVis.get_pointer(), 
-		 lowIndex.get_pointer(), highIndex.get_pointer(), 
-		 viscosity.getPointer(),
- 		 domLo.get_pointer(), domHi.get_pointer(),
-		 cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
-		 cellinfo->stb.get_objs(), &mol_viscos,
-		 &d_CF, &d_factorMesh, &d_filterl);
+    double mol_viscos; // molecular viscosity
+    mol_viscos = d_physicalConsts->getMolecularViscosity();
+    FORT_SMAGMODEL(domLoVelx.get_pointer(), domHiVelx.get_pointer(), 
+		   uVelocity.getPointer(),
+		   domLoVely.get_pointer(), domHiVely.get_pointer(), 
+		   vVelocity.getPointer(),
+		   domLoVelz.get_pointer(), domHiVelz.get_pointer(), 
+		   wVelocity.getPointer(),
+		   domLoDen.get_pointer(), domHiDen.get_pointer(), 
+		   density.getPointer(),
+		   domLoVis.get_pointer(), domHiVis.get_pointer(), 
+		   lowIndex.get_pointer(), highIndex.get_pointer(), 
+		   viscosity.getPointer(),
+		   domLo.get_pointer(), domHi.get_pointer(),
+		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		   cellinfo->stb.get_objs(), &mol_viscos,
+		   &d_CF, &d_factorMesh, &d_filterl);
 
 #ifdef multimaterialform
-  if (d_mmInterface) {
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
-    MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
-    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	  // Store current cell
-	  IntVector currCell(colX, colY, colZ);
-	  viscosity[currCell] *=  mmVars->voidFraction[currCell];
+    if (d_mmInterface) {
+      IntVector indexLow = patch->getCellLowIndex();
+      IntVector indexHigh = patch->getCellHighIndex();
+      MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
+      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	    // Store current cell
+	    IntVector currCell(colX, colY, colZ);
+	    viscosity[currCell] *=  mmVars->voidFraction[currCell];
+	  }
 	}
       }
     }
 #endif
 
 #ifdef ARCHES_DEBUG
-  // Testing if correct values have been put
-  cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-  for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) {
-    cerr << "Viscosity for ii = " << ii << endl;
-    for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) {
-      for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) {
-	cerr.width(10);
-	cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
+      // Testing if correct values have been put
+      cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
+      for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) {
+	cerr << "Viscosity for ii = " << ii << endl;
+	for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) {
+	  for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) {
+	    cerr.width(10);
+	    cerr << viscosity[IntVector(ii,jj,kk)] << " " ; 
+	  }
+	  cerr << endl;
+	}
       }
-      cerr << endl;
-    }
-  }
 #endif
 
-  // Create the new viscosity variable to write the result to 
-  // and allocate space in the new data warehouse for this variable
-  // Put the calculated viscosityvalue into the new data warehouse
-  new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+      // Create the new viscosity variable to write the result to 
+      // and allocate space in the new data warehouse for this variable
+      // Put the calculated viscosityvalue into the new data warehouse
+      new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+  }
 }
 
 //****************************************************************************
@@ -295,129 +357,153 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
 //****************************************************************************
 void 
 SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw)
 {
-  // Variables
-  SFCXVariable<double> uVelocity;
-  SFCYVariable<double> vVelocity;
-  SFCZVariable<double> wVelocity;
-  CCVariable<double> density;
-  CCVariable<double> viscosity;
-  CCVariable<double> voidFraction;
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    CCVariable<double> density;
+    CCVariable<double> viscosity;
+    CCVariable<double> voidFraction;
+    // Get the velocity, density and viscosity from the old data warehouse
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
+		zeroGhostCells);
+    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
+		zeroGhostCells);
+    if (d_MAlab)
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    //  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    //else {
+    //  cellInfoP.setData(scinew CellInformation(patch));
+    //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    //}
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+    // get physical constants
+    double mol_viscos; // molecular viscosity
+    mol_viscos = d_physicalConsts->getMolecularViscosity();
+    
+    // Get the patch and variable details
+    IntVector domLoU = uVelocity.getFortLowIndex();
+    IntVector domHiU = uVelocity.getFortHighIndex();
+    IntVector idxLoU = patch->getSFCXFORTLowIndex();
+    IntVector idxHiU = patch->getSFCXFORTHighIndex();
+    IntVector domLoV = vVelocity.getFortLowIndex();
+    IntVector domHiV = vVelocity.getFortHighIndex();
+    IntVector idxLoV = patch->getSFCYFORTLowIndex();
+    IntVector idxHiV = patch->getSFCYFORTHighIndex();
+    IntVector domLoW = wVelocity.getFortLowIndex();
+    IntVector domHiW = wVelocity.getFortHighIndex();
+    IntVector idxLoW = patch->getSFCZFORTLowIndex();
+    IntVector idxHiW = patch->getSFCZFORTHighIndex();
+    IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
+    // compatible with fortran index
+    IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
+                                                      IntVector(1,1,1);
+    IntVector domLoDen = density.getFortLowIndex();
+    IntVector domHiDen = density.getFortHighIndex();
+    IntVector domLoVis = viscosity.getFortLowIndex();
+    IntVector domHiVis = viscosity.getFortHighIndex();
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    
+    FORT_SMAGMODEL(domLoU.get_pointer(), domHiU.get_pointer(), 
+		   uVelocity.getPointer(),
+		   domLoV.get_pointer(), domHiV.get_pointer(), 
+		   vVelocity.getPointer(),
+		   domLoW.get_pointer(), domHiW.get_pointer(), 
+		   wVelocity.getPointer(),
+		   domLoDen.get_pointer(), domHiDen.get_pointer(), 
+		   density.getPointer(),
+		   domLoVis.get_pointer(), domHiVis.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(), 
+		   viscosity.getPointer(),
+		   domLo.get_pointer(), domHi.get_pointer(),
+		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		   cellinfo->stb.get_objs(), &mol_viscos,
+		   &d_CF, &d_factorMesh, &d_filterl);
 
-  // Get the velocity, density and viscosity from the old data warehouse
-  int matlIndex = 0;
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
-  new_dw->get(uVelocity,d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  new_dw->get(vVelocity,d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-	      zeroGhostCells);
-  new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
-	      zeroGhostCells);
-  if (d_MAlab)
-    new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		Ghost::None, zeroGhostCells);
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformationP> cellInfoP;
-  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  else {
-    cellInfoP.setData(scinew CellInformation(patch));
-    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  }
-  //  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
-  CellInformation* cellinfo = cellInfoP.get().get_rep();
-  
-  // get physical constants
-  double mol_viscos; // molecular viscosity
-  mol_viscos = d_physicalConsts->getMolecularViscosity();
 
-  // Get the patch and variable details
-  IntVector domLoU = uVelocity.getFortLowIndex();
-  IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector domLoV = vVelocity.getFortLowIndex();
-  IntVector domHiV = vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector domLoW = wVelocity.getFortLowIndex();
-  IntVector domHiW = wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
-  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
-  // compatible with fortran index
-  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
-                                              IntVector(1,1,1);
-  IntVector domLoDen = density.getFortLowIndex();
-  IntVector domHiDen = density.getFortHighIndex();
-  IntVector domLoVis = viscosity.getFortLowIndex();
-  IntVector domHiVis = viscosity.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  FORT_SMAGMODEL(domLoU.get_pointer(), domHiU.get_pointer(), 
-		 uVelocity.getPointer(),
-		 domLoV.get_pointer(), domHiV.get_pointer(), 
-		 vVelocity.getPointer(),
-		 domLoW.get_pointer(), domHiW.get_pointer(), 
-		 wVelocity.getPointer(),
-		 domLoDen.get_pointer(), domHiDen.get_pointer(), 
-		 density.getPointer(),
-		 domLoVis.get_pointer(), domHiVis.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(), 
-		 viscosity.getPointer(),
- 		 domLo.get_pointer(), domHi.get_pointer(),
- 		 cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
-		 cellinfo->stb.get_objs(), &mol_viscos,
-		 &d_CF, &d_factorMesh, &d_filterl);
-
-
-  if (d_MAlab) {
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
-    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	  // Store current cell
-	  IntVector currCell(colX, colY, colZ);
-	  viscosity[currCell] *=  voidFraction[currCell];
+    if (d_MAlab) {
+      IntVector indexLow = patch->getCellLowIndex();
+      IntVector indexHigh = patch->getCellHighIndex();
+      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	    // Store current cell
+	    IntVector currCell(colX, colY, colZ);
+	    viscosity[currCell] *=  voidFraction[currCell];
+	  }
 	}
       }
     }
-  }
 
 #ifdef ARCHES_PRES_DEBUG
-  // Testing if correct values have been put
-  cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
-  viscosity.print(cerr);
+    // Testing if correct values have been put
+    cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
+    viscosity.print(cerr);
 #endif
-
-  // Put the calculated viscosityvalue into the new data warehouse
-  new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    
+    // Put the calculated viscosityvalue into the new data warehouse
+    new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+  }
 }
 
 //****************************************************************************
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
 void 
-SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, const PatchSet* patches,
+SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, 
+					      const PatchSet* patches,
 					      const MaterialSet* matls)
 {
+  Task* tsk = scinew Task("SmagorinskyModel::computeScalarVar",
+			  this,
+			  &SmagorinskyModel::computeScalarVariance);
+
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  
+  // Requires, only the scalar corresponding to matlindex = 0 is
+  //           required. For multiple scalars this will be put in a loop
+  
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel, 
+		Ghost::None, zeroGhostCells);
+
+  // Computes
+  tsk->computes(d_lab->d_scalarVarSPLabel);
+
+  sched->addTask(tsk, patches, matls);
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -445,68 +531,70 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, const PatchSet*
       sched->addTask(tsk);
     }
   }
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
 
 void 
 SmagorinskyModel::computeScalarVariance(const ProcessorGroup* pc,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw)
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw)
 {
-  // Variables
-  CCVariable<double> scalar;
-  CCVariable<double> scalarVar;
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    CCVariable<double> scalar;
+    CCVariable<double> scalarVar;
+    // Get the velocity, density and viscosity from the old data warehouse
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
+		numGhostCells);
+    new_dw->get(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
+		Ghost::None, zeroGhostCells);
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    //else {
+    //  cellInfoP.setData(scinew CellInformation(patch));
+    //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    //}
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+    IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
+    // compatible with fortran index
+    IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
+                                                      IntVector(1,1,1);
+    IntVector domLoScalar = scalar.getFortLowIndex();
+    IntVector domHiScalar = scalar.getFortHighIndex();
+    IntVector domLoScalarVar = scalarVar.getFortLowIndex();
+    IntVector domHiScalarVar = scalarVar.getFortHighIndex();
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    
+    FORT_SCALARVARMODEL(domLoScalar.get_pointer(), domHiScalar.get_pointer(), 
+			scalar.getPointer(),
+			domLoScalarVar.get_pointer(), domHiScalarVar.get_pointer(),
+			idxLo.get_pointer(), idxHi.get_pointer(), 
+			scalarVar.getPointer(),
+			domLo.get_pointer(), domHi.get_pointer(),
+			cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
+			cellinfo->dzpb.get_objs(), 
+			cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+			cellinfo->stb.get_objs(),
+			&d_CFVar, &d_factorMesh, &d_filterl);
+    
 
-  // Get the velocity, density and viscosity from the old data warehouse
-  int matlIndex = 0;
-  int numGhostCells = 1;
-  int zeroGhostCells = 0;
-  new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
-	      numGhostCells);
-  new_dw->get(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
-	      Ghost::None, zeroGhostCells);
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformationP> cellInfoP;
-  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
-  CellInformation* cellinfo = cellInfoP.get().get_rep();
-  
-  IntVector domLo = patch->getGhostCellLowIndex(numGhostCells);
-  // compatible with fortran index
-  IntVector domHi = patch->getGhostCellHighIndex(numGhostCells) - 
-                                              IntVector(1,1,1);
-  IntVector domLoScalar = scalar.getFortLowIndex();
-  IntVector domHiScalar = scalar.getFortHighIndex();
-  IntVector domLoScalarVar = scalarVar.getFortLowIndex();
-  IntVector domHiScalarVar = scalarVar.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  FORT_SCALARVARMODEL(domLoScalar.get_pointer(), domHiScalar.get_pointer(), 
-		      scalar.getPointer(),
-		      domLoScalarVar.get_pointer(), domHiScalarVar.get_pointer(),
-		      idxLo.get_pointer(), idxHi.get_pointer(), 
-		      scalarVar.getPointer(),
-		      domLo.get_pointer(), domHi.get_pointer(),
-		      cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
-		      cellinfo->dzpb.get_objs(), 
-		      cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
-		      cellinfo->stb.get_objs(),
-		      &d_CFVar, &d_factorMesh, &d_filterl);
-
-
-  // Put the calculated viscosityvalue into the new data warehouse
-  new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    // Put the calculated viscosityvalue into the new data warehouse
+    new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+  }
 }
 
 //****************************************************************************

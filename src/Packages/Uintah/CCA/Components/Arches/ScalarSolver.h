@@ -81,10 +81,9 @@ public:
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized scalar equation
-      void solve(const LevelP& level,
-		 SchedulerP& sched,
-		 DataWarehouseP& old_dw,
-		 DataWarehouseP& new_dw,
+      void solve(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
 		 double time, double delta_t, int index);
    
       ///////////////////////////////////////////////////////////////////////
@@ -113,9 +112,10 @@ private:
       //    [in] 
       //        add documentation here
       void buildLinearMatrix(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
 			     double delta_t, const int index);
 
       ///////////////////////////////////////////////////////////////////////
@@ -123,9 +123,11 @@ private:
       //    [in] 
       //        add documentation here
       void scalarLinearSolve(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     DataWarehouseP& new_dw,
-			     DataWarehouseP& matrix_dw, double delta_t,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t,
 			     int index);
 
 private:
