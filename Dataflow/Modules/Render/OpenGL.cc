@@ -116,6 +116,7 @@ OpenGL::OpenGL(GuiInterface* gui) :
 {
   drawinfo=scinew DrawInfoOpenGL;
   fpstimer.start();
+  num_frames = 1;
 
   /* Grey */
   stylusMaterial[0] = scinew Material(Color(0,0,0), Color(.3,.3,.3), Color(.5,.5,.5), 20);
@@ -1295,28 +1296,36 @@ OpenGL::redraw_frame()
   // Report statistics
   timer.stop();
   fpstimer.stop();
-  double fps;
-  if (fpstimer.time()>0)
-    fps=nframes/fpstimer.time();
-  else
-    fps=100;
-  fps+=0.05;			// Round to nearest tenth
-  int fps_whole=(int)fps;
-  int fps_tenths=(int)((fps-fps_whole)*10);
-  fpstimer.clear();
-  fpstimer.start();		// Start it running for next time
   ostringstream str;
-  double pps;
-  if (timer.time()>0)
-    pps=drawinfo->polycount/timer.time();
-  else
-    pps=drawinfo->polycount;
-  str << viewwindow->id << " updatePerf \"";
-  str << drawinfo->polycount << " polygons in " << timer.time()
-      << " seconds\" \"" << pps
-      << " polygons/second\"" << " \"" << fps_whole << "."
-      << fps_tenths << " frames/sec\"" << '\0';
-  //    cerr <<"updatePerf: <" << str.str() << ">\n";	
+  if (fpstimer.time()>.33) {
+    double fps;
+    fps=nframes*num_frames/fpstimer.time();
+    //    cerr << "fps = " << fps <<",\tnum_frames = "<<num_frames<<",\tfpstimer.time = "<<fpstimer.time()<<",\tnframes = "<<nframes<<"\n";
+    cerr.flush();
+    num_frames = 1;
+    fps+=0.05;			// Round to nearest tenth
+    int fps_whole=(int)fps;
+    int fps_tenths=(int)((fps-fps_whole)*10);
+    fpstimer.clear();
+    fpstimer.start();		// Start it running for next time
+    double pps;
+    if (timer.time()>0)
+      pps=drawinfo->polycount/timer.time();
+    else
+      pps=drawinfo->polycount;
+    str << viewwindow->id << " updatePerf \"";
+    str << drawinfo->polycount << " polygons in " << timer.time()
+	<< " seconds\" \"" << pps
+	<< " polygons/second\"" << " \"" << fps_whole << "."
+	<< fps_tenths << " frames/sec\"" << '\0';
+  //    cerr <<"updatePerf: <" << str.str() << ">\n";
+
+  } else if (fpstimer.time() > 0) {
+    num_frames++;
+    fpstimer.start();
+  } else {
+    fpstimer.start();
+  }    
   /***********************************/
   /* movie makin' movie-movie makin' */
   /***********************************/
