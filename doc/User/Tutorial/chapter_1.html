@@ -317,6 +317,19 @@ color="maroon">
     </center>
     <div align="left">
 
+    <p><b>Dynamic Compilation</b></p>
+
+    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library, as needed, where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
+
+    <p>In order to allow multiple users to run the same installation of SCIRun without conflict, each user must specify a directory in which they store dynamically compiled code. To do this, set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to the directory in which you choose to place your dynamically compiled code, similar to <b>Figure 1.2.1 </b> and <b>Figure 1.2.2</b>.</p>
+
+<p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
+    href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
+    Compilation</a>.</p>
+
+
+<p>In addition, the module will turn a color while it compiles and all output will go to the module's log as a remark.</p>
+
 
     <p><b>Setting the ShowField User Interface</b></p>
 
@@ -352,13 +365,6 @@ color="maroon">
 	  spheres. The module will Interactively Update, by default, to execute after every change.  Or, you may select the Execute Button Only box to contain all changes until you press the Execute button. Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
     Executing a Network</a>, for more details.</p> 
-    <p>ShowField works with any of the SCIRun Field data types. These data types must be first compiled into a shared library, as needed, where they are saved for future use.  This process is called &quot;Dynamic Compilation.&quot;</p>
-<p>As a result, Dynamic Compilation causes a delay when the module executes for the first time. For more detail about this process, refer to the PDF document <a
-    href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
-    Compilation</a>.
-
-
-<p>In addition, the module will turn a color while it compiles and all output will go to the module's log as a remark.</p>
 
 
     <p><b><A name="section-5">Viewer module</b><br></A>
