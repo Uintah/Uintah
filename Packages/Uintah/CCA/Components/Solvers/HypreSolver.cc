@@ -142,11 +142,7 @@ public:
       HYPRE_StructMatrix HA;
       HYPRE_StructMatrixCreate(pg->getComm(), grid, stencil, &HA);
       HYPRE_StructMatrixSetSymmetric(HA, 0);
-      int ghost[] = {0,0,0,0,0,0};
-      if(params->getSolveOnExtraCells()){
-	for(int i=0;i<6;i++)
-	  ghost[i]=1;
-      }
+      int ghost[] = {1,1,1,1,1,1};
       HYPRE_StructMatrixSetNumGhost(HA, ghost);
       HYPRE_StructMatrixInitialize(HA);
 
