@@ -890,7 +890,9 @@ XQColor_named_colors.insert("SGISlateBlue", RGBColor(0.443137,0.443137,0.776471)
 XQColor_named_colors.insert("sgi beet", RGBColor(0.556863,0.219608,0.556863));
 XQColor_named_colors.insert("SGIBeet", RGBColor(0.556863,0.219608,0.556863));
 XQColor_named_colors.insert("sgi teal", RGBColor(0.219608,0.556863,0.556863));
+#endif
 XQColor_named_colors.insert("SGITeal", RGBColor(0.219608,0.556863,0.556863));
+#if 0
 XQColor_named_colors.insert("sgi light", RGBColor(0.666667,0.666667,0.666667));
 XQColor_named_colors.insert("SGILightGray", RGBColor(0.666667,0.666667,0.666667));
 XQColor_named_colors.insert("sgi light", RGBColor(0.666667,0.666667,0.666667));
