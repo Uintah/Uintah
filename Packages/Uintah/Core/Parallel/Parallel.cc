@@ -5,8 +5,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
 
-#include <stdio.h>
-
+#include <sstream>
 #include <iostream>
 
 using namespace Uintah;
@@ -17,6 +16,7 @@ using SCIRun::AllocatorSetDefaultTagMalloc;
 using std::cerr;
 using std::cout;
 using std::string;
+using std::ostringstream;
 
 #define THREADED_MPI_AVAILABLE
 
@@ -32,10 +32,10 @@ void
 MpiError(char* what, int errorcode)
 {
    // Simple error handling for now...
-   char string[1000];
+   char string_name[1000];
    int resultlen=1000;
-   MPI_Error_string(errorcode, string, &resultlen);
-   cerr << "MPI Error in " << what << ": " << string << '\n';
+   MPI_Error_string(errorcode, string_name, &resultlen);
+   cerr << "MPI Error in " << what << ": " << string_name << '\n';
    exit(1);
 }
 
@@ -130,11 +130,10 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 
 #ifdef THREADED_MPI_AVAILABLE
      if( provided < required ){
-       char msg[ 128 ];
-       sprintf( msg, "Provided MPI parallel support of %d is "
-		"not enough for the required level of %d", provided, 
-		required );
-       throw InternalError( string( msg ) );
+       ostringstream msg;
+       msg << "Provided MPI parallel support of " << provided 
+	   << " is not enough for the required level of " << required;
+       throw InternalError( msg.str() );
      }
 #endif
 
