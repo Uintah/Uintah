@@ -22,7 +22,7 @@ SRCS     += $(SRCDIR)/AddWells.cc $(SRCDIR)/AddWells2.cc \
 	$(SRCDIR)/VolRendTexSlices.cc $(SRCDIR)/VolVis.cc \
 	$(SRCDIR)/WidgetTest.cc $(SRCDIR)/FastRender.c \
 	$(SRCDIR)/HedgehogLitLines.cc $(SRCDIR)/Span.cc \
-	$(SRCDIR)/Noise.cc $(SRCDIR)/NoiseMCube.cc
+	$(SRCDIR)/Noise.cc $(SRCDIR)/NoiseMCube.cc \
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Containers SCICore/Exceptions SCICore/Thread \
@@ -35,6 +35,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.1  2000/09/11 16:18:20  kuehne
+# updates to field redesign
+#
 # Revision 1.3  2000/03/20 21:49:04  yarden
 # Linux port: link against PSECommon/Modules/Salmon too.
 #
