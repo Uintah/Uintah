@@ -222,8 +222,9 @@ GenField::execute()
 
   //if (mgeomtype != 1) { return; }
 
-  Lattice3Geom *geom = new Lattice3Geom();
-  geom->resize(x, y, z);
+  Lattice3Geom *geom = new Lattice3Geom(x, y, z,
+					Point(0.0, 0.0, 0.0, 0.0),
+					Point(1.0, 1.0, 1.0, 1.0));
 
 #if 1
   dbg << "attribtype: " << mattribtype << endl; 
