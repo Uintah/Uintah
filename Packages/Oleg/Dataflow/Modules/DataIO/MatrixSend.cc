@@ -7,7 +7,6 @@
  *
  */
 
-#include <stdio.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -16,6 +15,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 
 #include <Packages/Oleg/share/share.h>
+#include <stdio.h>
 
 namespace Oleg 
 {
@@ -161,12 +161,12 @@ void MatrixSend::tcl_command(TCLArgs& args, void* userdata)
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+//#include <strings.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-#ifdef SGI64
+#ifdef __sgi
 #define socklen_t int
 #endif 
 
