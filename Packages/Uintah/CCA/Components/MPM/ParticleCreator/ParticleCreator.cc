@@ -130,7 +130,8 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 		pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		pvelocity[start+count]=(*obj)->getInitialVelocity();
 		ptemperature[start+count]=(*obj)->getInitialTemperature();
-		
+	       psp_vol[start+count]=1.0/matl->getInitialDensity(); 
+
 		// Calculate particle mass
 		double partMass = matl->getInitialDensity()*pvolume[start+count];
 		pmass[start+count] = partMass;
@@ -196,14 +197,15 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
 							patch);
-  new_dw->allocateAndPut(position, lb->pXLabel, subset);
-  new_dw->allocateAndPut(pvelocity, lb->pVelocityLabel, subset); 
+  new_dw->allocateAndPut(position,       lb->pXLabel, subset);
+  new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel, subset); 
   new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, subset);
-  new_dw->allocateAndPut(pmass, lb->pMassLabel, subset);
-  new_dw->allocateAndPut(pvolume, lb->pVolumeLabel, subset);
-  new_dw->allocateAndPut(ptemperature, lb->pTemperatureLabel, subset);
-  new_dw->allocateAndPut(pparticleID, lb->pParticleIDLabel, subset);
-  new_dw->allocateAndPut(psize, lb->pSizeLabel, subset);
+  new_dw->allocateAndPut(pmass,          lb->pMassLabel, subset);
+  new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel, subset);
+  new_dw->allocateAndPut(ptemperature,   lb->pTemperatureLabel, subset);
+  new_dw->allocateAndPut(psp_vol,        lb->pSp_volLabel, subset); 
+  new_dw->allocateAndPut(pparticleID,    lb->pParticleIDLabel, subset);
+  new_dw->allocateAndPut(psize,          lb->pSizeLabel, subset);
 
   return subset;
 
@@ -292,6 +294,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state.push_back(lb->pTemperatureLabel);
   particle_state_preReloc.push_back(lb->pTemperatureLabel_preReloc);
 
+  particle_state.push_back(lb->pSp_volLabel);
+  particle_state_preReloc.push_back(lb->pSp_volLabel_preReloc); 
+  
   particle_state.push_back(lb->pParticleIDLabel);
   particle_state_preReloc.push_back(lb->pParticleIDLabel_preReloc);
 
