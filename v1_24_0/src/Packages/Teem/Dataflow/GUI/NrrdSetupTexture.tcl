@@ -52,6 +52,7 @@ itcl_class Teem_NrrdData_NrrdSetupTexture {
 	global $this-useinputmax
 	global $this-realmin
 	global $this-realmax
+        global $this-valuesonly
 
         set $this-minf 0
         set $this-maxf 255
@@ -59,6 +60,7 @@ itcl_class Teem_NrrdData_NrrdSetupTexture {
 	set $this-useinputmax 1
 	set $this-realmin "unknown"
 	set $this-realmax "unknown"
+        set $this-valuesonly false
     }
 
     method ui {} {
@@ -118,6 +120,10 @@ itcl_class Teem_NrrdData_NrrdSetupTexture {
 	    -text "Use highest value of input nrrd as max" \
 	    -variable $this-useinputmax
         pack $w.f.max.useinputmax -side top -expand yes -fill x
+
+        checkbutton $w.vonly -text "Don't output normals" \
+            -variable $this-valuesonly
+        pack $w.vonly
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

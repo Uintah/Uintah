@@ -26,9 +26,9 @@
 # 
 
 set name {Main}
-set bbox {7 8 540 683}
-set creationDate {Mon Feb 07 2005}
-set creationTime {18:14:58}
+set bbox {11 8 540 683}
+set creationDate {Tue Feb 08 2005}
+set creationTime {12:20:48}
 set runDate {}
 set runTime {}
 set notes {}
@@ -51,29 +51,25 @@ set m5 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 375 481]
 # Create a Teem->Converters->FieldToNrrd Module
 set m6 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 11 169]
 
-# Create a Teem->UnuNtoZ->UnuQuantize Module
-set m7 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 7 286]
-
 # Create a SCIRun->Visualization->NrrdTextureBuilder Module
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 159 481]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 159 481]
 
 # Create a Teem->UnuNtoZ->UnuQuantize Module
-set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 298 403]
+set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 298 403]
 
 # Create a Teem->NrrdData->NrrdSetupTexture Module
-set m10 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 190 280]
+set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 190 280]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m3 0]
 set c2 [addConnection $m3 0 $m6 0]
-set c3 [addConnection $m8 0 $m4 0]
+set c3 [addConnection $m7 0 $m4 0]
 set c4 [addConnection $m4 0 $m2 0]
-set c5 [addConnection $m6 2 $m10 0]
-set c6 [addConnection $m6 2 $m7 0]
-set c7 [addConnection $m10 1 $m9 0]
-set c8 [addConnection $m7 0 $m8 0]
-set c9 [addConnection $m9 0 $m8 1]
-set c10 [addConnection $m5 0 $m4 2]
+set c5 [addConnection $m6 2 $m9 0]
+set c6 [addConnection $m9 0 $m7 0]
+set c7 [addConnection $m9 1 $m8 0]
+set c8 [addConnection $m8 0 $m7 1]
+set c9 [addConnection $m5 0 $m4 2]
 
 # Set GUI variables for the SCIRun->FieldsCreate->SampleLattice Module
 set $m1-sizex {64}
@@ -81,7 +77,7 @@ set $m1-sizey {64}
 set $m1-sizez {64}
 
 $m2 addViewer
-set $m2-ViewWindow_0-geometry 654x642+198+84
+set $m2-ViewWindow_0-geometry 654x641+198+84
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m2-ViewWindow_0-view-eyep-x {6.60573556843}
@@ -209,22 +205,18 @@ set $m5-marker {end}
 # Open the SCIRun->Visualization->EditColorMap2D UI
 $m5 initialize_ui
 
-# Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
-set $m7-realmin {0.0274928699614}
-set $m7-realmax {1.73205080757}
-set $m7-nbits {8}
-
 # Set GUI variables for the SCIRun->Visualization->NrrdTextureBuilder Module
-set $m8-card_mem {256}
+set $m7-card_mem {256}
 
 # Set GUI variables for the Teem->UnuNtoZ->UnuQuantize Module
-set $m9-realmin {0.686140656471}
-set $m9-realmax {0.999999403954}
-set $m9-nbits {8}
+set $m8-realmin {0.686140656471}
+set $m8-realmax {0.999999403954}
+set $m8-nbits {8}
 
 # Set GUI variables for the Teem->NrrdData->NrrdSetupTexture Module
-set $m10-realmin {0.0274928699614}
-set $m10-realmax {1.73205080757}
+set $m9-realmin {0.0274928699614}
+set $m9-realmax {1.73205080757}
+set $m9-valuesonly {1}
 
 
 ::netedit scheduleok
