@@ -179,9 +179,9 @@ void PathTraceWorker::run() {
 		  ptc->color *
 		  //		  reflected_surface_dot *
 		  light->color *
-		  light_norm_dot_sr *
-		  light->area *
-		  (normal_dot_sr/(distance*distance*M_PI));
+		  (light_norm_dot_sr *
+		   light->area *
+		   (normal_dot_sr/(distance*distance*M_PI)));
 	    }
 			      
 	    if (depth==ptc->max_depth)
@@ -230,6 +230,8 @@ void PathTraceWorker::run() {
 		// sphere happens to be coincident with a neighboring
 		// sphere and you somehow do some crazy math.  We
 		// don't like negative dot products, so we kill it.
+
+		sphere->inside(u,v) += 1;
 		break;
 	      }
 	    }
@@ -307,6 +309,29 @@ void PathTraceWorker::run() {
     fprintf(out, "encoding: raw\n");
     fprintf(out, "\n");
     
+    sprintf(buf, "%s-i%05lu.nrrd", basename, offset);
+    FILE *out2 = fopen(buf, "wb");
+    if (!out2) {
+      cerr << "Cannot open "<<buf<<" for writing\n";
+      return;
+    }
+
+    cout << "Writing combined texture to "<<buf<<"\n";
+
+    fprintf(out2, "NRRD0001\n");
+    fprintf(out2, "type: float\n");
+    fprintf(out2, "dimension: 3\n");
+    fprintf(out2, "sizes: %d %d %d\n", width, height, local_spheres->objs.size());
+    fprintf(out2, "spacings: 1 1 NaN\n");
+#ifdef __sgi
+    fprintf(out2, "endian: big\n");
+#else
+    fprintf(out2, "endian: little\n");
+#endif
+    fprintf(out2, "labels: \"x\" \"y\" \"sphere\"\n");
+    fprintf(out2, "encoding: raw\n");
+    fprintf(out2, "\n");
+
     for(int sindex = 0; sindex < local_spheres->objs.size(); sindex++) {
       TextureSphere *sphere  =
 	dynamic_cast<TextureSphere*>(local_spheres->objs[sindex]);
@@ -316,11 +341,13 @@ void PathTraceWorker::run() {
 	continue;
       }
       
-      sphere->writeData(out);
+      sphere->writeData(out, out2);
   
     }
 
     fclose(out);
+    fclose(out2);
+
   } else {
     // This really shouldn't happen now
     cerr << "Textures do not all have the same size.  You will now get individual textures.\n";
@@ -340,9 +367,10 @@ void PathTraceWorker::run() {
 }
 
 TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
-  Sphere(0, cen, radius), texture(tex_res, tex_res)
+  Sphere(0, cen, radius), texture(tex_res, tex_res), inside(tex_res, tex_res)
 {
   texture.initialize(Color(0,0,0));
+  inside.initialize(0);
 }
 
 void TextureSphere::writeTexture(char* basename, size_t index)
@@ -372,12 +400,12 @@ void TextureSphere::writeTexture(char* basename, size_t index)
   fprintf(out, "encoding: raw\n");
   fprintf(out, "\n");
 
-  writeData(out);
+  writeData(out, 0);
   
   fclose(out);
 }
 
-void TextureSphere::writeData(FILE *outfile) {
+void TextureSphere::writeData(FILE *outfile, FILE *outfile2) {
   // Iterate over each texel
   int width = texture.dim1();
   int height = texture.dim2();
@@ -392,6 +420,16 @@ void TextureSphere::writeData(FILE *outfile) {
 	return;
       }
     }
+  if (outfile2) {
+    for(int v = 0; v < height; v++)
+      for(int u = 0; u < width; u++) {
+	float data = inside(u,v);
+	if (fwrite(&data, sizeof(float), 1, outfile2) != 1) {
+	  cerr << "Trouble writing texel for sphere at ["<<u<<", "<<v<<"]\n";
+	  return;
+	}
+      }
+  }
 }
 
 PathTraceLight::PathTraceLight(const Point &cen, double radius,
