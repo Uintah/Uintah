@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/UV.h>
+#include <Packages/rtrt/Core/RegularColorMap.h>
 
 #include <Core/Thread/Time.h>
 
@@ -30,9 +31,10 @@ TextureGridSpheres::TextureGridSpheres(float* spheres, size_t nspheres, int ndat
 				       unsigned char* tex_data, size_t ntextures,
 				       int tex_res,
 				       int nsides, int depth,
+                                       RegularColorMap* cmap,
 				       const Color& color)
   : GridSpheres(spheres, 0, 0, nspheres, ndata, nsides,  depth,
-		radius, 0, 0),
+		radius, cmap),
     tex_indices(tex_indices), tex_data(tex_data), ntextures(ntextures),
     tex_res(tex_res), color(color)
 {
@@ -100,9 +102,15 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
   // Get the pointer into the texture
   unsigned char *texture = tex_data + (tex_index * tex_res * tex_res);
 
-  Color surface_color = interp_color(texture, u, v);
+  float luminance = interp_luminance(texture, u, v);
+  Color surface;
+  if (cmap) {
+    surface = surface_color(hit);
+  } else {
+    surface = color;
+  }
 
-  result = surface_color;
+  result = surface * luminance;
 }
 
 void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos, const Point& cen)
@@ -119,8 +127,8 @@ void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos, const Point& cen)
   uv.set( uu,vv);
 }
 
-Color TextureGridSpheres::interp_color(unsigned char *image,
-				       double u, double v)
+float TextureGridSpheres::interp_luminance(unsigned char *image,
+                                           double u, double v)
 {
 #if 0
   u *= tex_res;
@@ -135,7 +143,7 @@ Color TextureGridSpheres::interp_color(unsigned char *image,
 
   float lum=*(image + (iv * tex_res + iu));
 
-  return lum*color*one_over_255;
+  return lum*one_over_255;
 #else
   u *= tex_res;
   int iu = (int)u;
@@ -165,6 +173,6 @@ Color TextureGridSpheres::interp_color(unsigned char *image,
     lum10*(1-u_weight_high)*   v_weight_high +
     lum11*   u_weight_high *   v_weight_high;
 
-  return lum*color*one_over_255;
+  return lum*one_over_255;
 #endif
 }

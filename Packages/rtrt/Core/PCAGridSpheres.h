@@ -22,7 +22,7 @@ class PCAGridSpheres : public TextureGridSpheres {
   // size_t ntextures; // not used directly
 
   float getPixel(int x, int y, int channel_index);
-  Color interp_color(double u, double v, int index);
+  float interp_luminance(double u, double v, int index);
 public:
   PCAGridSpheres(float* spheres, size_t nspheres, int ndata,
 		 float radius,
@@ -30,7 +30,7 @@ public:
 		 unsigned char* tex_data, int nbases, int tex_res,
 		 float *xform, float *mean, int nchannels,
 		 float tex_min, float tex_max,
-		 int nsides, int depth,
+		 int nsides, int depth, RegularColorMap* cmap = 0,
 		 const Color& color = Color(1.0, 1.0, 1.0));
 
   virtual ~PCAGridSpheres();
