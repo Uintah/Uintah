@@ -20,6 +20,13 @@
 
 #include <sci_defs.h>
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
+
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
 #include <Packages/Kurt/Core/Geom/GridVolRen.h>
 #include <Core/Thread/Mutex.h>
@@ -34,12 +41,6 @@
 #include <Core/Geom/Material.h>
 #include <Core/Persistent/Persistent.h>
 
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
 
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <ostream>
