@@ -202,13 +202,13 @@ get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &data, int)  {
     for (int j = 0; j < ny; j++) {
       for (int i = 0; i < nx; i++) {
 	Tensor &t = data(k,j,i);
-	p[0] = t.mat_[0][0];
-	p[1] = t.mat_[0][1];
-	p[2] = t.mat_[0][2];
-	p[3] = t.mat_[1][1];
-	p[4] = t.mat_[1][2];
-	p[5] = t.mat_[2][2];
-	p[6] = 1.0;
+	p[0] = 1.0;
+	p[1] = t.mat_[0][0];
+	p[2] = t.mat_[0][1];
+	p[3] = t.mat_[0][2];
+	p[4] = t.mat_[1][1];
+	p[5] = t.mat_[1][2];
+	p[6] = t.mat_[2][2];
 	p += 7;
       }
     }
