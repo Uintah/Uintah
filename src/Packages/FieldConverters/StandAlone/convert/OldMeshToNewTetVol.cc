@@ -25,6 +25,17 @@ using std::endl;
 
 using namespace SCIRun;
 using namespace FieldConverters;
+
+
+// Functor to extract a Point from a NodeHandle.
+struct NodePointFtor{
+  Point operator()(NodeHandle nh) {
+    static int i = 0;
+    cout << "NodePointFtor: " << i++ << endl;
+    return nh->p;
+  }
+};
+
 int
 main(int argc, char **argv) {
   
@@ -50,8 +61,8 @@ main(int argc, char **argv) {
     exit(0);
   }
   
-  Mesh *base = dynamic_cast<Mesh*>(handle.get_rep());
-  if (!base) {
+  Mesh *mesh = dynamic_cast<Mesh*>(handle.get_rep());
+  if (!mesh) {
     cerr << "Error: input Field wasn't a Mesh."
 	 << ".  Exiting..." << endl;
     exit(0);
@@ -63,15 +74,13 @@ main(int argc, char **argv) {
 
   TetVolMeshHandle tvm = field->get_typed_mesh();
 
-  // Assume that the old Mesh and the new arrange nodes the same way.
-  for (int i = 0; i < handle->nodes.size(); i++) {
-    cout << "node " << i << ": " << handle->nodes[i]->p << endl;
-  }
-  
-  // TO_DO:
-  // make a new Field, set it to fH, and give it a mesh and data like base's
+  NodeHandle &s = mesh->nodes[0];
+  NodeHandle *begin = &s;
+  NodeHandle *end = begin + mesh->nodes.size();
+  tvm->fill_points(begin, end, NodePointFtor());
 
-  BinaryPiostream outstream(argv[2], Piostream::Write);
+  // FIX_ME fill the cells and neihbor info up.
+  TextPiostream outstream(argv[2], Piostream::Write);
   Pio(outstream, fH);
 
   return 0;  
