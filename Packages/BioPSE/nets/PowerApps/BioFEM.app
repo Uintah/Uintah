@@ -378,7 +378,7 @@ class BioFEMApp {
 	global PowerAppSession
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
-	    wm title .standalone "BioTensor - [getFileName $saveFile]"
+	    wm title .standalone "BioFEM - [getFileName $saveFile]"
 	    $this load_session
 	} 
 
