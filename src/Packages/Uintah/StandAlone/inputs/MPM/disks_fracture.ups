@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>0.2</maxTime>
+	<maxTime>0.05</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>0.001</delt_max>
@@ -36,8 +36,8 @@
 		<fracture type = "normal">
 		  <constraint> 3 </constraint>
 		</fracture>
-		<pressure_rate> 3. </pressure_rate>
-		<explosive_pressure> 30 </explosive_pressure>
+		<pressure_rate> 0.1 </pressure_rate>
+		<explosive_pressure> 0.1 </explosive_pressure>
 		<initial_pressure> 0. </initial_pressure>
 		<density>1000.0</density>
 		<constitutive_model type="comp_mooney_rivlin"> 
@@ -51,38 +51,57 @@
 
 		<geom_object>
 		    <cylinder label="gp1">
-			<bottom>[.34,.34,.05]</bottom>
-			<top>[.34,.34,.1]</top>
+			<bottom>[.34, .34, 0]</bottom>
+			<top>[.34, .34, .05]</top>
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
 		    <velocity>[2,2,0]</velocity>
 		    <temperature>12</temperature>
-                    <toughness_min> 20 </toughness_min>
-		    <toughness_max> 20 </toughness_max>
+                    <toughness_min> 10. </toughness_min>
+		    <toughness_max> 10. </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
 
+	    <material>
+		<burn type = "null" />
+		<fracture type = "normal">
+		  <constraint> 3 </constraint>
+		</fracture>
+		<pressure_rate> 0.1 </pressure_rate>
+		<explosive_pressure> 0.1 </explosive_pressure>
+		<initial_pressure> 0. </initial_pressure>
+		<density>1000.0</density>
+		<constitutive_model type="comp_mooney_rivlin"> 
+		   <he_constant_1>2500000.0</he_constant_1>
+		   <he_constant_2>500000.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
 		<geom_object>
 		    <cylinder label="gp2">
-			<bottom>[.66,.66,.05]</bottom>
-			<top>[.66,.66,.1]</top>
+			<bottom>[.66, .66, 0]</bottom>
+			<top>[.66, .66, .05]</top>
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
 		    <velocity>[-2,-2,0]</velocity>
 		    <temperature>12</temperature>
-                    <toughness_min> 20 </toughness_min>
-		    <toughness_max> 20 </toughness_max>
+                    <toughness_min> 10. </toughness_min>
+		    <toughness_max> 10. </toughness_max>
 		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
-		<velocity_field>0</velocity_field>
+		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>
-	      <type>null</type>
-	      <vel_fields>[0,0,0]</vel_fields>
+	      <type>single_velocity</type>
+	      <vel_fields>[0,1,0]</vel_fields>
 	    </contact>
 	</MPM>
 
@@ -92,9 +111,9 @@
 	<Level>
 	    <Box label="1">
 		<lower>[0.,0.,0]</lower>
-		<upper>[1.0,1.0,.15]</upper>
-	        <resolution>[20,20,3]</resolution>
-		<patches>[2,2,1]</patches>
+		<upper>[1.0,1.0,.05]</upper>
+	        <resolution>[20,20,1]</resolution>
+		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -108,10 +127,10 @@
 			<corner4>[0.65, 0.66,  0. ]</corner4>
 		</crack>
 		<crack>
-			<corner1>[0.74, 0.72,  0. ]</corner1>
-			<corner2>[0.74, 0.72,  1. ]</corner2>
-			<corner3>[0.80, 0.79,  1. ]</corner3>
-			<corner4>[0.80, 0.79,  0. ]</corner4>
+			<corner1>[0.54, 0.72,  0. ]</corner1>
+			<corner2>[0.54, 0.72,  1. ]</corner2>
+			<corner3>[0.60, 0.79,  1. ]</corner3>
+			<corner4>[0.60, 0.79,  0. ]</corner4>
 		</crack>
 		<crack>
 			<corner1>[0.63, 0.52,  0. ]</corner1>
