@@ -49,7 +49,7 @@ itcl_class PSECommon_Visualization_GenTransferFunc {
             # create an OpenGL widget
             
             opengl $w.f.gl1.gl -geometry 512x256 -doublebuffer true -direct true\
-			      -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2 -visual 2
+			      -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
 
             # every time the OpenGL widget is displayed, redraw it
             
@@ -76,7 +76,7 @@ itcl_class PSECommon_Visualization_GenTransferFunc {
             # create an OpenGL widget
             
             opengl $w.f.gl2.gl -geometry 512x256 -doublebuffer true -direct true\
-			 -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2 -visual 2
+			 -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
 
 
             # every time the OpenGL widget is displayed, redraw it
@@ -104,7 +104,7 @@ itcl_class PSECommon_Visualization_GenTransferFunc {
 
 # Use this one for machines without alpha            
             opengl $w.f.gl3.gl -geometry 512x64 -doublebuffer true -direct true\
-			 -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2 -visual 2
+			 -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
 
 # Use this one for machines with alpha
 #            opengl $w.f.gl3.gl -geometry 512x64 -doublebuffer true -direct true\
