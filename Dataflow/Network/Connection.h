@@ -39,24 +39,27 @@ namespace SCIRun {
   class Module;
   class OPort;
 
-  class PSECORESHARE Connection {
-  public:
-    Connection(Module*, int, Module*, int);
-    ~Connection();
-    OPort* oport;
-    IPort* iport;
-    int local;
-    std::string id;
-    bool blocked_;
-    
-    bool is_blocked() const { return blocked_; }
-    void block()      { blocked_ = true; }
-    void unblock()    { blocked_ = false; }
-    void makeID();
-    void wait_ready();
+class PSECORESHARE Connection {
+public:
+  Connection(Module* omod, int oportno, Module* imod, int imodno,
+	     const std::string &id);
+  ~Connection();
 
-    void connect();
-  };
+  OPort* const oport;
+  IPort* const iport;
+  std::string id;
+
+private:
+  bool blocked_;
+
+public:    
+  bool is_blocked() const { return blocked_; }
+  void block()      { blocked_ = true; }
+  void unblock()    { blocked_ = false; }
+
+  void makeID();
+};
+
 } // End namespace SCIRun
 
 

@@ -49,14 +49,12 @@ using std::endl;
 
 using namespace SCIRun;
 
-Connection::Connection(Module* m1, int p1, Module* m2, int p2) :
-  blocked_(false)
-{
-  oport=m1->getOPort(p1);
-  iport=m2->getIPort(p2);
-}
-
-void Connection::connect()
+Connection::Connection(Module* m1, int p1, Module* m2, int p2,
+		       const string &id)
+  : oport(m1->getOPort(p1)),
+    iport(m2->getIPort(p2)),
+    id(id),
+    blocked_(false)
 {
   iport->attach(this);
   oport->attach(this);
