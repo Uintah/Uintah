@@ -89,6 +89,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     if (d_empirical_soot)
       db->getWithDefault("SootFactor",d_sootFactor,0.01);
   }
+  
   // read type of mixing model
   string mixModel;
   db->require("mixing_model",mixModel);
@@ -125,6 +126,12 @@ Properties::problemSetup(const ProblemSpecP& params)
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = d_mixingModel->getNumMixVars();
   d_numMixStatVars = d_mixingModel->getNumMixStatVars();
+
+  d_co_output = d_mixingModel->getCOOutput();
+  d_sulfur_chem = d_mixingModel->getSulfurChem();
+
+  cout << "d_co_output "<< d_co_output << endl;
+
   if (d_flamelet) {
     d_reactingFlow = false;
     d_radiationCalc = false;
@@ -229,7 +236,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 		  Arches::ZEROGHOSTCELLS);
   }
 
-
   tsk->modifies(d_lab->d_densityCPLabel);
 
 // assuming ref_density is not changed by RK averaging
@@ -263,6 +269,15 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_qrgINLabel);
       tsk->computes(d_lab->d_qrsINLabel);
     }
+
+    if (d_co_output) 
+      tsk->computes(d_lab->d_coINLabel);
+    if (d_sulfur_chem) {
+      tsk->computes(d_lab->d_h2sINLabel);
+      tsk->computes(d_lab->d_so2INLabel);
+      tsk->computes(d_lab->d_so3INLabel);
+    }
+
     if (d_radiationCalc) {
       tsk->computes(d_lab->d_absorpINLabel);
       tsk->computes(d_lab->d_sootFVINLabel);
@@ -295,6 +310,15 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_qrgINLabel);
       tsk->modifies(d_lab->d_qrsINLabel);
     }
+
+    if (d_co_output) 
+      tsk->modifies(d_lab->d_coINLabel);
+    if (d_sulfur_chem) {
+      tsk->modifies(d_lab->d_h2sINLabel);
+      tsk->modifies(d_lab->d_so2INLabel);
+      tsk->modifies(d_lab->d_so3INLabel);
+    }
+
     if (d_radiationCalc) {
       tsk->modifies(d_lab->d_absorpINLabel);
       tsk->modifies(d_lab->d_sootFVINLabel);
@@ -368,6 +392,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> denMicro;
     constCCVariable<double> solidTemp;
     CCVariable<double> enthalpy;
+
+    CCVariable<double> co;
+    CCVariable<double> h2s;
+    CCVariable<double> so2;
+    CCVariable<double> so3;
 
     CCVariable<double> thermalnoxSRC;
     constCCVariable<double> thermalnox;
@@ -457,6 +486,18 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->allocateAndPut(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
       }
 
+      if (d_co_output)
+	new_dw->allocateAndPut(co, d_lab->d_coINLabel,
+			       matlIndex, patch);
+      if (d_sulfur_chem) {
+	new_dw->allocateAndPut(h2s, d_lab->d_h2sINLabel,
+			       matlIndex, patch);
+	new_dw->allocateAndPut(so2, d_lab->d_so2INLabel,
+			       matlIndex, patch);
+	new_dw->allocateAndPut(so3, d_lab->d_so3INLabel,
+			       matlIndex, patch);
+      }
+
       if (d_radiationCalc) {
         new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
 			       matlIndex, patch);
@@ -499,11 +540,24 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(qrs, d_lab->d_qrsINLabel, matlIndex, patch);
       }
 
+      if (d_co_output)
+	new_dw->getModifiable(co, d_lab->d_coINLabel,
+			      matlIndex, patch);
+      if (d_sulfur_chem) {
+	new_dw->getModifiable(h2s, d_lab->d_h2sINLabel,
+			      matlIndex, patch);
+	new_dw->getModifiable(so2, d_lab->d_so2INLabel,
+			      matlIndex, patch);
+	new_dw->getModifiable(so3, d_lab->d_so3INLabel,
+			      matlIndex, patch);
+      }
+
       if (d_radiationCalc) {
         new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
 			       matlIndex, patch);
         new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
+
     }
 
     drhodf.initialize(0.0);
@@ -532,6 +586,15 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       qrg.initialize(0.0);
       qrs.initialize(0.0);
     }
+
+    if (d_co_output)
+      co.initialize(0.0);
+    if (d_sulfur_chem) {
+      h2s.initialize(0.0);
+      so2.initialize(0.0);
+      so3.initialize(0.0);
+    }
+
     if (d_radiationCalc) {
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
@@ -627,6 +690,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
   TAU_PROFILE_STOP(mixing);
 
 	  double local_den = outStream.getDensity();
+	  //	  cout << "density = " << local_den << endl;
 	  drhodf[currCell] = outStream.getdrhodf();
 
 	  if (d_flamelet) {
@@ -640,6 +704,15 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    tnine[currCell] = outStream.gettnine();
 	    qrg[currCell] = outStream.getqrg();
 	    qrs[currCell] = outStream.getqrs();
+	  }
+
+	  if (d_co_output) {
+	    co[currCell] = outStream.getCO();
+	  }
+	  if (d_sulfur_chem) {
+	    h2s[currCell] = outStream.getH2S();
+	    so2[currCell] = outStream.getSO2();
+	    so3[currCell] = outStream.getSO3();
 	  }
 
 	  if (d_enthalpySolve && (initialize || local_enthalpy_init))
@@ -849,6 +922,26 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->computes(d_lab->d_abskgINLabel);
     }
   }
+
+  if (d_co_output) {
+    tsk->requires(Task::OldDW, d_lab->d_coINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->computes(d_lab->d_coINLabel);
+  }
+
+  if (d_sulfur_chem) {
+    tsk->requires(Task::OldDW, d_lab->d_h2sINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_so2INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_so3INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    tsk->computes(d_lab->d_h2sINLabel);
+    tsk->computes(d_lab->d_so2INLabel);
+    tsk->computes(d_lab->d_so3INLabel);
+  }
+
   tsk->computes(d_lab->d_oldDeltaTLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -906,6 +999,17 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> tempIN;
     constCCVariable<double> cpIN;
     constCCVariable<double> co2IN;
+
+    constCCVariable<double> coIN;
+    constCCVariable<double> h2sIN;
+    constCCVariable<double> so2IN;
+    constCCVariable<double> so3IN;
+
+    CCVariable<double> coIN_new;
+    CCVariable<double> h2sIN_new;
+    CCVariable<double> so2IN_new;
+    CCVariable<double> so3IN_new;
+
     /*
     constCCVariable<double> enthalpyRXN; 
     */
@@ -1068,6 +1172,34 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 			     d_lab->d_abskgINLabel, matlIndex, patch);
       abskg_new.copyData(abskg);
       }
+    }
+
+    if (d_co_output) {
+      old_dw->get(coIN, d_lab->d_coINLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(coIN_new, d_lab->d_coINLabel,
+			     matlIndex, patch);
+      coIN_new.copyData(coIN);
+    }
+    
+    if (d_sulfur_chem) {
+      old_dw->get(h2sIN, d_lab->d_h2sINLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(h2sIN_new, d_lab->d_h2sINLabel,
+			     matlIndex, patch);
+      h2sIN_new.copyData(h2sIN);      
+
+      old_dw->get(so2IN, d_lab->d_so2INLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(so2IN_new, d_lab->d_so2INLabel,
+			     matlIndex, patch);
+      so2IN_new.copyData(so2IN);
+
+      old_dw->get(so3IN, d_lab->d_so3INLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(so3IN_new, d_lab->d_so3INLabel,
+			     matlIndex, patch);
+      so3IN_new.copyData(so3IN);
     }
 
     // no need for if (d_MAlab),  since this routine is only 

@@ -110,6 +110,14 @@ public:
       inline int getNumMixStatVars() const{
 	return d_numMixStatVars;
       }
+
+      inline bool getCOOutput() const{
+	return 0;
+      }
+      inline bool getSulfurChem() const{
+	return 0;
+      }
+
       inline int getNumRxnVars() const{
 	return d_numRxnVars;
       }
