@@ -233,6 +233,7 @@ void Discretization::calculatePressureCoeff(const ProcessorContext*,
   old_dw->get(velocity, "velocity", region, 1);
   CCVariable<double> density;
   old_dw->get(density, "density", region, 1);
+  // need to be consistent, use Stencil
   FCVariable<Vector> uVelCoeff;
   new_dw->get(uVelCoeff,"uVelocityCoeff",region, 0);
   FCVariable<Vector> vVelCoeff;

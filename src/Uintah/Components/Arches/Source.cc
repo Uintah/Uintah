@@ -114,7 +114,8 @@ void Source::calculateVelocitySource(const ProcessorContext* pc,
     int koff = 0;
     // 3-d array for volume - fortran uses it for temporary storage
     Array3<double> volume(region->getLowIndex(), region->getHighIndex());
-    // computes remianing diffusion term and also computes source due to gravity
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
     FORT_VELSOURCE(uLinearSrc, uNonlinearSrc, velocity, viscosity, 
 		   density, gravity.x(), 
 		   ioff, joff, koff, lowIndex, highIndex,
