@@ -39,10 +39,10 @@ public:
     int nv;
 
     void adjust();
-    void move(const Point&, const Point&, double, double, int nu=20, int nv=4);
+    void move(const Point&, const Point&, double, double, int nu=20, int nv=1);
 
-    GeomCone(int nu=20, int nv=10);
-    GeomCone(const Point&, const Point&, double, double, int nu=20, int nv=4);
+    GeomCone(int nu=20, int nv=1);
+    GeomCone(const Point&, const Point&, double, double, int nu=20, int nv=1);
     GeomCone(const GeomCone&);
     virtual ~GeomCone();
 
@@ -61,9 +61,9 @@ class SCICORESHARE GeomCappedCone : public GeomCone {
     int nvdisc1;
     int nvdisc2;
 public:
-    GeomCappedCone(int nu=20, int nv=10, int nvdisc1=4, int nvdisc2=4);
+    GeomCappedCone(int nu=20, int nv=1, int nvdisc1=1, int nvdisc2=1);
     GeomCappedCone(const Point&, const Point&, double, double, 
-		   int nu=20, int nv=4, int nvdisc1=4, int nvdisc2=4);
+		   int nu=20, int nv=1, int nvdisc1=1, int nvdisc2=1);
     GeomCappedCone(const GeomCappedCone&);
     virtual ~GeomCappedCone();
 
@@ -81,6 +81,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/11/19 06:43:25  dmw
+// fewer triangles in default size for cones and cylinders
+//
 // Revision 1.4  1999/10/07 02:07:41  sparker
 // use standard iostreams and complex type
 //
