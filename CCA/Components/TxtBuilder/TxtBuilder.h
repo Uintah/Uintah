@@ -35,29 +35,29 @@ using namespace std;
 namespace SCIRun {
   //class BuilderWindow;
   /*
-  class myBuilderPort : public virtual gov::cca::ports::BuilderPort {
+  class myBuilderPort : public virtual sci::cca::ports::BuilderPort {
   public:
     virtual ~myBuilderPort(){}
-    virtual void setServices(const gov::cca::Services::pointer& svc);
-    virtual void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual void buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
 				    const string &frameworkURL);
   protected:
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
     //BuilderWindow* builder;
   };
   */
-  class TxtBuilder : public gov::cca::Component, public Runnable{
+  class TxtBuilder : public sci::cca::Component, public Runnable{
   public:
     TxtBuilder();
     ~TxtBuilder();
-    void setServices(const gov::cca::Services::pointer& svc);
+    void setServices(const sci::cca::Services::pointer& svc);
   private:
     TxtBuilder(const TxtBuilder&);
     TxtBuilder& operator=(const TxtBuilder&);
     //myBuilderPort builderPort;
-    gov::cca::Services::pointer svc;
-    gov::cca::ports::BuilderService::pointer bs;
-    gov::cca::ports::ComponentRepository::pointer cr;
+    sci::cca::Services::pointer svc;
+    sci::cca::ports::BuilderService::pointer bs;
+    sci::cca::ports::ComponentRepository::pointer cr;
     void run();
     bool exec_command(char cmdline[]);
     int parse(string cmdline, string args[]);
