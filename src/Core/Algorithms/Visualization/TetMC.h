@@ -93,12 +93,15 @@ TetMC<Field>::find_or_add_edgepoint(int n0, int n1, Point p) {
   map<long int, TriSurfMesh::node_index>::iterator node_iter;
   TriSurfMesh::node_index node_idx;
   long int key = (n0 < n1) ? n0*nnodes_+n1 : n1*nnodes_+n0;
+  cerr << "mapping key: "<<key<<"\n";
   node_iter = vertex_map_.find(key);
   if (node_iter == vertex_map_.end()) { // first time to see this node
     node_idx = trisurf_->add_point(p);
+    cerr << "  didn't find it - adding it as node index: "<<node_idx<<"\n";
     vertex_map_[key] = node_idx;
   } else {
-    node_idx = (*node_iter).first;
+    node_idx = (*node_iter).second;
+    cerr << "  found it at node index: "<<node_idx<<"\n";
   }
   return node_idx;
 }
@@ -157,9 +160,9 @@ void TetMC<Field>::extract( cell_index cell, double v )
 
       if (build_trisurf_) {
 	TriSurfMesh::node_index i1, i2, i3;
-	i1 = find_or_add_edgepoint(o, i, p1);
-	i2 = find_or_add_edgepoint(o, j, p2);
-	i3 = find_or_add_edgepoint(o, k, p3);
+	i1 = find_or_add_edgepoint(node[o], node[i], p1);
+	i2 = find_or_add_edgepoint(node[o], node[j], p2);
+	i3 = find_or_add_edgepoint(node[o], node[k], p3);
 	trisurf_->add_triangle(i1, i2, i3);
       }
     }
@@ -184,10 +187,10 @@ void TetMC<Field>::extract( cell_index cell, double v )
 
       if (build_trisurf_) {
 	TriSurfMesh::node_index i1, i2, i3, i4;
-	i1 = find_or_add_edgepoint(o, i, p1);
-	i2 = find_or_add_edgepoint(o, j, p2);
-	i3 = find_or_add_edgepoint(k, j, p3);
-	i4 = find_or_add_edgepoint(k, i, p4);
+	i1 = find_or_add_edgepoint(node[o], node[i], p1);
+	i2 = find_or_add_edgepoint(node[o], node[j], p2);
+	i3 = find_or_add_edgepoint(node[k], node[j], p3);
+	i4 = find_or_add_edgepoint(node[k], node[i], p4);
 	trisurf_->add_triangle(i1, i2, i3);
 	trisurf_->add_triangle(i1, i3, i4);
       }
