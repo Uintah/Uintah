@@ -83,8 +83,8 @@ extern "C" int __ateachexit(void(*)());
 
 namespace SCIRun {
 
+static Thread *mainthread=0;
 static void install_signal_handlers();
-
 
 /*
  * Intialize threads for irix
@@ -92,7 +92,11 @@ static void install_signal_handlers();
 void
 Thread::initialize()
 {
-  printf("I called Thread::initialize\n");
+  if (initialized)
+    return;
+  initialized = true;
+  ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
+  mainthread=new Thread(ThreadGroup::s_default_group, "main");
   install_signal_handlers();
 }
 
@@ -111,21 +115,18 @@ Thread::disallow_sgi_OpenGL_page0_sillyness()
 void
 Thread::exit()
 {
-  printf("I called Thread::exit\n");
   ::exit(0);
 }
 
 void
 Thread::checkExit()
 {
-  printf("I called Thread::checkExit\n");
   ::exit(0);
 }
 
 void
 Thread::exitAll(int code)
 {
-  printf("I called Thread::exitAll\n");
 
   ::exit(code);
 }
@@ -136,40 +137,34 @@ Thread::exitAll(int code)
 void
 Thread::os_start(bool stopped)
 {
-  printf("I called Thread::os_start\n");
 
 }
 
 void
 Thread::stop()
 {
-  printf("I called Thread::stop\n");
 }
 
 void
 Thread::resume()
 {
-  printf("I called Thread::resume\n");
 }
 
 void
 Thread::detach()
 {
-  printf("I called Thread::resume\n");
 
 }
 
 void
 Thread::join()
 {
-  printf("I called Thread::join\n");
 
 }
 
 void
 ThreadGroup::gangSchedule()
 {
-  printf("I called Thread::gangSchedule\n");
 }
 
 /*
@@ -179,14 +174,12 @@ int
 Thread::push_bstack(Thread_private* p, Thread::ThreadState state,
 		    const char* name)
 {
-  printf("I called Thread::push_bstack\n");
   return 0;
 }
 
 void
 Thread::pop_bstack(Thread_private* p, int oldstate)
 {
-  printf("I called Thread::pop_bstack\n");
 }
 
 /*
@@ -195,7 +188,6 @@ Thread::pop_bstack(Thread_private* p, int oldstate)
 void
 Thread::print_threads()
 {
-  printf("I called Thread::print_threads\n");
 
 }
 
@@ -320,7 +312,7 @@ install_signal_handlers()
 Thread*
 Thread::self()
 {
-  return NULL;
+  return mainthread;
 }
 
 
