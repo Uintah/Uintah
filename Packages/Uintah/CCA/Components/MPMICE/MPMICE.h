@@ -68,14 +68,6 @@ public:
 				  SchedulerP&,
 				  DataWarehouseP&);
 
-  virtual void scheduleFixVolFrac(const Patch* patch,
-                                  SchedulerP&,
-                                  DataWarehouseP&,
-                                  DataWarehouseP&);
-	 
-  void actuallyFixVolFrac(const ProcessorGroup*, const Patch* patch,
-                          DataWarehouseP&  old_dw, DataWarehouseP& new_dw);
-
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -87,6 +79,14 @@ public:
   virtual void scheduleTimeAdvance(double t, double dt,
 				   const LevelP& level, SchedulerP&,
 				   DataWarehouseP&, DataWarehouseP&);
+
+  void scheduleFinishMPMICEproblemSetup(const ProblemSpecP& params, 
+                            GridP& grid,
+				SimulationStateP&);  
+                            
+  void scheduleFinishMPMICEinitialize(const LevelP& level, 
+                          SchedulerP& sched,
+			     DataWarehouseP& dw);
 
   void scheduleInterpolateNCToCC_0(const Patch* patch,
                                    SchedulerP&,
@@ -113,8 +113,18 @@ public:
 					      DataWarehouseP&,
 					      DataWarehouseP&);
 
-  //////////
-  // Insert Documentation Here:
+//______________________________________________________________________
+//       A C T U A L   S T E P S : 
+                          
+  void finishMPMICEproblemSetup(const ProblemSpecP& params, 
+                            GridP& grid,
+				SimulationStateP&);   
+                            
+  void finishMPMICEinitialize(const ProcessorGroup*, 
+                          const Patch* patch,
+			     DataWarehouseP& old_dw, 
+                          DataWarehouseP& new_dw);  
+                                                    
   void interpolateNCToCC_0(const ProcessorGroup*,
                            const Patch* patch,
                            DataWarehouseP& old_dw,
@@ -159,6 +169,7 @@ protected:
   double           d_outputInterval;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
+  vector<double>   d_K_mom, d_K_heat;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
