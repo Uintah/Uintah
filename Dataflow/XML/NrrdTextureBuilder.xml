@@ -60,7 +60,7 @@
     <outputs>
       <port>
 	<name>Texture</name>
-	<datatype>Volume::Texture</datatype>
+	<datatype>SCIRun::Texture</datatype>
       </port>
     </outputs>
   </io>

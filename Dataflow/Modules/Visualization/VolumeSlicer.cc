@@ -110,7 +110,7 @@ static string control_name("Control Widget");
 			 
 DECLARE_MAKER(VolumeSlicer)
 VolumeSlicer::VolumeSlicer(GuiContext* ctx)
-  : Module("VolumeSlicer", ctx, Source, "Visualization", "Volume"),
+  : Module("VolumeSlicer", ctx, Source, "Visualization", "SCIRun"),
     tex_(0),
     cmap1_prevgen_(0),
     cmap2_prevgen_(0),

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -44,7 +46,7 @@
     <inputs lastportdynamic="no">
       <port>
 	<name>Input Colormap</name>
-	<datatype>Volume::Colormap2</datatype>
+	<datatype>SCIRun::Colormap2</datatype>
       </port>
       <port>
 	<name>Histogram</name>
@@ -54,7 +56,7 @@
     <outputs>
       <port>
         <name>Output Colormap</name>
-        <datatype>Volume::Colormap2</datatype>
+        <datatype>SCIRun::Colormap2</datatype>
       </port>
     </outputs>
   </io>
