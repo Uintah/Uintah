@@ -19,10 +19,10 @@ parms_chunk=chunk.section.depth=2 use.id.as.filename=1
 stylesheet_chunk=${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
-rxmlsrcs := ${wildcard *.rxml SCIRun/*.rxml BioPSE/*.rxml Teem/*.rxml}
+rxmlsrcs := ${wildcard *.rxml */*.rxml}
 psfigures := \
-  ${patsubst %.gif,%.ps,${wildcard SCIRun/*.gif BioPSE/*.gif Teem/*.gif}} \
-  ${patsubst %.jpg,%.ps,${wildcard SCIRun/*.jpg BioPSE/*.jpg Teem/*.jpg}}
+  ${patsubst %.gif,%.ps,${wildcard */*.gif}} \
+  ${patsubst %.jpg,%.ps,${wildcard */*.jpg}}
 
 edition := ../../edition.xml
 
