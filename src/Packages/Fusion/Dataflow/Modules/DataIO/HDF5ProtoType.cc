@@ -642,77 +642,7 @@ void HDF5ProtoType::tcl_command(GuiArgs& args, void* userdata)
     error( "No HDF5 availible." );
 
 #endif
-
-#ifdef COMMENT_OUT_CODE
-      herr_t status;
-
-      /* Open the file using default properties. */
-      hid_t file_id = H5Fopen(new_filename.c_str(),
-			      H5F_ACC_RDONLY, H5P_DEFAULT);
-
-
-      /* Open the top level group in the file. */
-      hid_t g_id = H5Gopen(file_id, "//");
-
-      /* Open the number of data nodes in the file. */
-      hid_t a_id = H5Aopen_name(g_id, "nnode_data");
-
-      status = H5Aread( a_id, H5T_NATIVE_INT, &ndatasets );
-
-      /* Terminate access to the attribute. */ 
-      status = H5Aclose(a_id);
-      /* Terminate access to the group. */ 
-      status = H5Gclose(g_id);
-
-
-
-      /* Open the grid group in the file. */
-      g_id = H5Gopen(file_id, "coordinates");
-
-      /* Open the coordinate dataset in the file. */
-      hid_t ds_id = H5Dopen(g_id, "values"  );
-
-      /* Open the coordinate space in the file. */
-      hid_t file_space_id = H5Dget_space( ds_id );
-    
-      /* Get the rank (number of dims) in the space. */
-      ndims = H5Sget_simple_extent_ndims(file_space_id);
-
-      hsize_t *dims = new hsize_t[ndims];
-
-      /* Get the dims in the space. */
-      int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
-
-      /* Terminate access to the data space. */ 
-      status = H5Sclose(file_space_id);
-      /* Terminate access to the dataset. */
-      status = H5Dclose(ds_id);
-      /* Terminate access to the group. */ 
-      status = H5Gclose(g_id);
-      /* Terminate access to the group. */ 
-      status = H5Fclose(file_id);
-
-      idim_ = dims[0];
-      jdim_ = dims[1];
-      kdim_ = dims[2];
-      ndims--;
-      delete dims;
-
-      // Check to see if the dimensions have changed.
-      if( ndims != nDims_.get() ||
-	  idim_ != iDim_.get()  ||
-	  jdim_ != jDim_.get()  ||
-	  kdim_ != kDim_.get() ) {
-    
-	// Update the dims in the GUI.
-	ostringstream str;
-	str << id << " set_size " << ndatasets << " ";
-	str << ndims << " " << idim_ << " " << jdim_ << " " << kdim_;
-    
-	gui->execute(str.str().c_str());
-      }
     }
-#endif
   } else {
     Module::tcl_command(args, userdata);
   }

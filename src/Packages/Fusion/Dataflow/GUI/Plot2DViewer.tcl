@@ -2,6 +2,7 @@ package require Iwidgets 3.0
 
 itcl_class Fusion_Render_Plot2DViewer {
     inherit Module
+
     constructor {config} {
         set name Plot2DViewer
         set_defaults

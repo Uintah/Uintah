@@ -110,6 +110,63 @@ set $m2-edge-resolution {6}
 set $m2-data-resolution {6}
 set $m3-notes {}
 set $m3-show_status {1}
+$m3 ui
+set $m3-ViewWindow_0-pos {}
+set $m3-ViewWindow_0-caxes {0}
+set $m3-ViewWindow_0-raxes {1}
+set $m3-ViewWindow_0-iaxes {}
+set $m3-ViewWindow_0-have_collab_vis {0}
+set $m3-ViewWindow_0-view-eyep-x {         -11.4434}
+set $m3-ViewWindow_0-view-eyep-y {         -8.25125}
+set $m3-ViewWindow_0-view-eyep-z {          13.7492}
+set $m3-ViewWindow_0-view-lookat-x {       0.00690844}
+set $m3-ViewWindow_0-view-lookat-y {        0.0126503}
+set $m3-ViewWindow_0-view-lookat-z {        0.0084144}
+set $m3-ViewWindow_0-view-up-x {          0.22205}
+set $m3-ViewWindow_0-view-up-y {         0.742717}
+set $m3-ViewWindow_0-view-up-z {         0.631716}
+set $m3-ViewWindow_0-view-fov {               20}
+set $m3-ViewWindow_0-view-eyep_offset-x {}
+set $m3-ViewWindow_0-view-eyep_offset-y {}
+set $m3-ViewWindow_0-view-eyep_offset-z {}
+set $m3-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m3-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m3-ViewWindow_0-bgcolor-r {                0}
+set $m3-ViewWindow_0-bgcolor-g {                0}
+set $m3-ViewWindow_0-bgcolor-b {                0}
+set $m3-ViewWindow_0-shading {}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ambient-scale {1.0}
+set $m3-ViewWindow_0-diffuse-scale {1.0}
+set $m3-ViewWindow_0-specular-scale {0.4}
+set $m3-ViewWindow_0-emission-scale {1.0}
+set $m3-ViewWindow_0-shininess-scale {1.0}
+set $m3-ViewWindow_0-polygon-offset-factor {1.0}
+set $m3-ViewWindow_0-polygon-offset-units {0.0}
+set $m3-ViewWindow_0-point-size {1.0}
+set $m3-ViewWindow_0-line-width {1.0}
+set $m3-ViewWindow_0-sbase {0.40}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_bawgl {0}
+set $m3-ViewWindow_0-drawimg {}
+set $m3-ViewWindow_0-saveprefix {}
+set $m3-ViewWindow_0-resx {}
+set $m3-ViewWindow_0-resy {}
+set $m3-ViewWindow_0-aspect {}
+set $m3-ViewWindow_0-aspect_ratio {}
+set $m3-ViewWindow_0-global-light {1}
+set $m3-ViewWindow_0-global-fog {0}
+set $m3-ViewWindow_0-global-debug {0}
+set $m3-ViewWindow_0-global-clip {0}
+set $m3-ViewWindow_0-global-cull {0}
+set $m3-ViewWindow_0-global-dl {0}
+set $m3-ViewWindow_0-global-type {Gouraud}
+set $m3-ViewWindow_0-ortho-view {0}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {0}
+set $m3-ViewWindow_0-unused {1}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-isoval {139879.046}
@@ -156,8 +213,8 @@ set $m6-k-start {0}
 set $m6-i-stop {384}
 set $m6-j-stop {0}
 set $m6-k-stop {0}
-set $m6-i-stride {1}
-set $m6-j-stride {1}
+set $m6-i-stride {10}
+set $m6-j-stride {5}
 set $m6-k-stride {1}
 set $m6-i-wrap {0}
 set $m6-j-wrap {1}
@@ -188,8 +245,8 @@ set $m9-k-start {0}
 set $m9-i-stop {384}
 set $m9-j-stop {0}
 set $m9-k-stop {0}
-set $m9-i-stride {1}
-set $m9-j-stride {1}
+set $m9-i-stride {10}
+set $m9-j-stride {5}
 set $m9-k-stride {1}
 set $m9-i-wrap {0}
 set $m9-j-wrap {1}
@@ -283,7 +340,7 @@ set $m11-tensor_display_type {Boxes}
 set $m11-active_tab {Vectors}
 set $m11-node_scale {0.0300}
 set $m11-edge_scale {0.0150}
-set $m11-vectors_scale {2.0}
+set $m11-vectors_scale {2.00}
 set $m11-tensors_scale {0.30}
 set $m11-show_progress {1819043193}
 set $m11-interactive_mode {Interactive}
@@ -340,7 +397,7 @@ set $m12-edge-resolution {6}
 set $m12-data-resolution {6}
 set $m13-notes {}
 set $m13-show_status {1}
-set $m13-isoval {397781.037}
+set $m13-isoval {351883.225}
 set $m13-isoval-min {1.04083e-17}
 set $m13-isoval-max {476463}
 set $m13-isoval-typed {0}
@@ -411,6 +468,6 @@ set $m15-notes {}
 set $m15-show_status {1}
 set $m16-notes {}
 set $m16-show_status {1}
-set $m16-outputdatatype {double}
+set $m16-outputdatatype {Vector}
 
 ::netedit scheduleok
