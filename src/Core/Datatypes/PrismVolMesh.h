@@ -824,7 +824,7 @@ PrismVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     ++piter; ++iter;
   }
   points_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true; // FIXME
 }
 
 template <class Iter, class Functor>
@@ -844,7 +844,7 @@ PrismVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++iter;
   }
   cells_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true; // FIXME
 }
 
 
