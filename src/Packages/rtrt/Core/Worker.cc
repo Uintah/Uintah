@@ -11,6 +11,9 @@
 #include <Core/Thread/Mutex.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/CycleMaterial.h>
+#include <Packages/rtrt/Core/InvisibleMaterial.h>
+#include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BBox.h>
@@ -982,6 +985,37 @@ bool Worker::lit(const Point& hitpos, Light* light,
 			 &cx->stats->ds[depth], ppc);
   } else if(scene->shadow_mode==2){
     obj->intersect(lightray, hit, &cx->stats->ds[depth], 0);
+  } else if(scene->shadow_mode==3){
+    int done=0;
+    Point start_origin(lightray.origin());
+    double t=0;
+    while (!done) {
+      obj->intersect(lightray, hit, &cx->stats->ds[depth], 0);
+      if (hit.was_hit && hit.min_t < dist) {
+	Material *m = hit.hit_obj->get_matl();
+	int see_through = 0;
+	if (dynamic_cast<PhongMaterial*>(m) && 
+	    dynamic_cast<PhongMaterial*>(m)->get_opacity() < .5) 
+	  see_through=1;
+	else if (dynamic_cast<InvisibleMaterial*>(m)) see_through=1;
+	else if (dynamic_cast<CycleMaterial*>(m) &&
+		 dynamic_cast<InvisibleMaterial*>(dynamic_cast<CycleMaterial*>(m)->curr())) see_through=1;
+	else if (dynamic_cast<CycleMaterial*>(m) &&
+		 dynamic_cast<PhongMaterial*>(dynamic_cast<CycleMaterial*>(m)->curr()) &&
+		 (dynamic_cast<PhongMaterial*>(dynamic_cast<CycleMaterial*>(m)->curr()))->get_opacity() < 0.5)
+		 see_through=1;
+	if (see_through) {
+	  lightray.set_origin(lightray.origin() + hit.min_t * lightray.direction());
+	  t += hit.min_t;
+	  hit.was_hit = false;
+	} else
+	  done=1;
+      } else done=1;
+    }
+    if (hit.was_hit) {
+      hit.min_t = t;
+    }
+    lightray.set_origin(start_origin);
   } else {
     Array1<Vector>& beamdirs=light->get_beamdirs();
     int n=beamdirs.size();
