@@ -175,7 +175,7 @@ ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox)
 
 
 void
-ImageMesh::get_center(Point &result, Node::index_type idx) const
+ImageMesh::get_center(Point &result, const Node::index_type &idx) const
 {
   Point p(idx.i_, idx.j_, 0.0);
   result = transform_.project(p);
@@ -196,7 +196,7 @@ ImageMesh::get_center(Point &result, Edge::index_type idx) const
 
 
 void
-ImageMesh::get_center(Point &result, Face::index_type idx) const
+ImageMesh::get_center(Point &result, const Face::index_type &idx) const
 {
   Point p(idx.i_ + 0.5, idx.j_ + 0.5, 0.0);
   result = transform_.project(p);
@@ -212,6 +212,7 @@ ImageMesh::locate(Face::index_type &face, const Point &p)
   // Nodes over 2 billion might suffer roundoff error.
   face.i_ = (unsigned int)floor(r.x());
   face.j_ = (unsigned int)floor(r.y());
+  face.mesh_ = this;
 
   if (face.i_ >= (ni_-1) ||
       face.j_ >= (nj_-1))
@@ -232,6 +233,7 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
   // Nodes over 2 billion might suffer roundoff error.
   node.i_ = (unsigned int)floor(r.x() + 0.5);
   node.j_ = (unsigned int)floor(r.y() + 0.5);
+  node.mesh_ = this;
 
   if (node.i_ >= ni_ ||
       node.j_ >= nj_)

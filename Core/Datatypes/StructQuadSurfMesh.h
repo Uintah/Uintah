@@ -86,10 +86,10 @@ public:
   }
 
   //! get the center point (in object space) of an element
-  void get_center(Point &, const Node::index_type) const;
-  void get_center(Point &, const Edge::index_type) const;
-  void get_center(Point &, const Face::index_type) const;
-  void get_center(Point &, const Cell::index_type) const {}
+  void get_center(Point &, const Node::index_type &) const;
+  void get_center(Point &, Edge::index_type) const;
+  void get_center(Point &, const Face::index_type &) const;
+  void get_center(Point &, Cell::index_type) const {}
 
   bool locate(Node::index_type &, const Point &) const;
   bool locate(Edge::index_type &, const Point &) const;
