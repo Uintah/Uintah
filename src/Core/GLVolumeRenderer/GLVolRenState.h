@@ -90,7 +90,7 @@ public:
   // draw Wireframe
   virtual void drawWireFrame() = 0;
   
-  void Reload(){reload = (unsigned char *)1;}
+  void Reload(){reload_ = true;}
   void NewBricks(){ newbricks_ = true; }
   void NewColorMap(){ newcmap_ = true; }
 
@@ -112,7 +112,7 @@ protected:
 
   GLuint* texName;
   vector<GLuint> textureNames;
-  unsigned char* reload;
+  bool reload_;
   bool newbricks_;
   bool newcmap_;
 

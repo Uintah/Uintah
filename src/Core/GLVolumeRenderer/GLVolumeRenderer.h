@@ -70,6 +70,7 @@ public:
   void SetColorMap( ColorMapHandle cmap){
     mutex_.lock(); cmap_ = cmap; BuildTransferFunctions();
     state_->NewColorMap();
+    state_->Reload();
     cmap_has_changed_ = true; mutex_.unlock(); }
   void SetControlPoint( const Point& point){ control_point_ = point; }
 
