@@ -22,7 +22,6 @@ set screenWidth [winfo screenwidth .]
 set screenHeight [winfo screenheight .]
 
 proc moveToCursor { window { leave_up "no" } } {
-  global env
 
   if { ![boolToInt SCIRUN_GUI_MoveGuiToMouse] } {
      return
