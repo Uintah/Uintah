@@ -38,16 +38,18 @@ actions performed by the user:
 
 \descitem{Press} ``Press'' means press and hold a key or mouse button.
 
-\descitem{Click} ``Click'' means press and release a key or mouse button.
+\descitem{Click} ``Click'' means press and release a mouse button.
 
-\descitem{Button\repaceable{N}-Drag} Press and hold Button\repaceable{N},
+\descitem{Type} ``Type''  means press and release a key.
+
+\descitem{Button\replaceable{N}-Drag} Press Button\replaceable{N},
 then drag the mouse.
 
-\descitem{C-Button\repaceable{N}} Press and hold the
-\keyboard{Control} key, then press or click Button\repaceable{N}
+\descitem{C-Button\replaceable{N}} Press the \keyboard{Control} key,
+then press or click Button\replaceable{N}
 
 \descitem{C-\replaceable{key}} Press and hold the control key, then
-press key \replaceable{key}
+type key \replaceable{key}
 \end{description}
 
 
@@ -130,7 +132,7 @@ for all modules and consists of the following elements:
   (attention is needed).  Click the indicator to display the
   module's log.
   
-  \descitem{Pop-up Menu} Pressing Button3 while the mouse pointer is
+  \descitem{Pop-up Menu} Pressing \keyboard{Button3} while the mouse pointer is
   over a module activates a module's pop-up menu.  The content
   of the pop-up menu changes depending on the state of the NetEdit
   window. The following items are available in the pop-up menu:
@@ -164,12 +166,12 @@ for all modules and consists of the following elements:
     their execution (see \secref{Viewing a Module's Log}{sec:viewmodslog}).
     
     \menuitemdesc{Make Sub-Network} Creates a sub-network from
-    selected modules.  See \secref{Creating a Sub-Network}{sec:subnet}.
+    selected modules.  See \secref{Creating a Sub-Network}{sec:crsubnet}.
     
     \menuitemdesc{Expand Sub-Network} Reverses the action of menu item
     \menuitem{Make Sub-Network}.  This menu item is available only in
     a sub-network's pop-up menu.  See \secref{Expanding a
-      Sub-Network}{sec:subnet}.
+      Sub-Network}{sec:expsubnet}.
     
     \menuitemdesc{Disable} Disables a module.  See
     \secref{Disabling/Enabling Modules}{sec:disablemod}.
@@ -397,7 +399,7 @@ options: \guibutton{Default}, \guibutton{Tooltip}, \guibutton{Top},
 \guibutton{Left}, \guibutton{Right}, or \guibutton{Bottom}.  Choose a
 display mode by clicking \keyboard{Button1} on the appropriate button.
 
-Choose \guibutton{tooltips} to display notes as tooltips.  Notes are
+Choose \guibutton{Tooltip} to display notes as tooltips.  Notes are
 displayed only when the mouse pointer hovers over a module.
 
 Choose one of \guibutton{Default}, \guibutton{Top}, \guibutton{Left},
@@ -427,9 +429,9 @@ pop-up menu.
 \label{sec:connectmods}
 
 To connect the output (input) port of one module to the input (output)
-port of another module, use \keyboard(Button2). Clicking \keyboard(Button3) on a connection
-gives access to a pop-up menu. Use the pop-up menu to disable, delete,
-or annotate a connection.
+port of another module, use \keyboard(Button2). Clicking
+\keyboard(Button3) on a connection gives access to a pop-up menu. Use
+the pop-up menu to disable, delete, or annotate a connection.
 
 To make a connection, position the mouse pointer over a module's input
 (output) port.  Then perform \keyboard{Button2-Drag} and drag the
@@ -447,7 +449,7 @@ corresponding to the connection's data type.
 Users can connect a module's output port to the input ports of one or more
 modules by repeating the procedure just described.
 
-\section{Editing/Displaying Connection Notes}
+\section{Editing and Displaying Connection Notes}
 \label{sec:displaynotes}
 
 Connection notes allow the user to document the purpose of
@@ -464,7 +466,7 @@ options: \guibutton{Default}, \guibutton{Tooltip}, \guibutton{Top},
 \guibutton{Left}, \guibutton{Right}, or \guibutton{Bottom}.  Choose a
 display mode by clicking \keyboard{Button1} on the appropriate button.
 
-Choose \guibutton{tooltips} to display notes as tooltips.  Notes are
+Choose \guibutton{tooltips} to display notes as tooltips---notes are
 displayed only when the mouse pointer hovers over a connection.
 
 Choose one of \guibutton{Default}, \guibutton{Top}, \guibutton{Left},
@@ -498,7 +500,7 @@ To disable a connection, click \keyboard(Button3) on the connection to
 bring up the connection menu and select \menuitem{Disable}. The
 connection appears grey.
 
-Disabling a connection blocks data from flowing through, as if it were
+Disabling a connection prevents data from flowing through, as if it were
 not connected.
 
 \section{Undoing/Redoing a Connection}
