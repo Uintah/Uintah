@@ -135,7 +135,7 @@ void ReferenceMgr::createSubset(int localsize, int remotesize)
 
   /*REMOTESIZE*/
   if(remotesize > 0) { 
-    if(remotesize < d_ref.size()) s_refSize=remotesize;
+    if(remotesize < (int)d_ref.size()) s_refSize=remotesize;
   }
   else { 
     /*reset subsetting*/

@@ -127,6 +127,10 @@ public:
   // (no implementation for server)
   void createSubset(int, int);
 
+  ////////
+  // Dummy method (needed by PIDL/proxy_sample
+  virtual void getException();
+
   //DEBUG:: remove
   int getRefCount();
 protected:
