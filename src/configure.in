@@ -406,6 +406,7 @@ if test "$ITCL_VERSION" = "3.0" ; then
   ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
   ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
   ITCL_LIB_FLAG="-litk3.0 -litcl3.0"
+  ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
 
   echo -L$ITCL_PREFIX $ITCL_LIB_FLAG
 else
@@ -415,6 +416,7 @@ else
 fi
 
 AC_SUBST(ITCL_INCLUDE_DIR)
+AC_SUBST(ITCL_WIDGETS)
 AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 
