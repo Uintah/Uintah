@@ -185,3 +185,9 @@ void Sphere::print(ostream& out)
     out << "Sphere: cen=" << cen << ", radius=" << radius << '\n';
 }
 
+void
+Sphere::updatePosition( const Point & pos )
+{
+  cen = pos;
+}
+
