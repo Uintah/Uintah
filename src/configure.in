@@ -367,6 +367,13 @@ else
 fi
 
 if test "$uintah" = "yes" ; then
+
+  # Create the Packages/Uintah/tools dir for later use.
+  if ! test -d "Packages/Uintah/tools"; then
+	echo "Creating Packages/Uintah/tools directory"; 	
+	mkdir -p "Packages/Uintah/tools"
+  fi
+
   if test "no$mpi_lib" = "no" ; then
     AC_MSG_ERROR("MPI Required for Uintah")
   fi
@@ -1344,17 +1351,40 @@ AC_CHECK_FILE(on-the-fly-libs,
 abs_conftop_dir=`pwd`;
 AC_SUBST(abs_conftop_dir)
 
-##-- Generate Output Files ---------------------------------------------------
-AC_OUTPUT(	configVars.mk \
+output_files="configVars.mk \
 		Makefile \
 		on-the-fly-libs/Makefile\
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
-		sci_testdefs.h \
-		Packages/Uintah/tools/fspec.pl \
-		, echo timestamp > stamp-h; \
-	        chmod 755 Packages/Uintah/tools/fspec.pl )
+		sci_testdefs.h"
+
+# Only do the following if configuring with Uintah
+# - Add a list of Uintah specific output files. 
+if test "$uintah" = "yes" ; then
+   output_files="$output_files \
+		Packages/Uintah/tools/fspec.pl"
+fi
+
+##-- Generate Output Files ---------------------------------------------------
+AC_OUTPUT( $output_files )
+
+## I tried adding these after a "," to the AC_OUTPUT list...
+#  Then I tried using AC_OUTPUT_COMMANDS to do them.
+#  For whatever reason, when added to AC_OUTPUT, it just
+#  create files ",", "echo", "755" etc.
+#  When used in AC_OUTPUT_COMMANDS, the echo used the entire
+#  line as an argument to echo, instead of running all the
+#  commands.  If someone knows what is going on, please
+#  feel free to fix this back.  Dd.
+
+echo timestamp > stamp-h
+
+# Only do the following if configuring with Uintah
+# - Uintah specific shell commands.
+if test "$uintah" = "yes" ; then
+   chmod 755 Packages/Uintah/tools/fspec.pl
+fi
 
 if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
   echo "sci_defs.h is unchanged"
