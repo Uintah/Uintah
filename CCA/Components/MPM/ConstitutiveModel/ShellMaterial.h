@@ -65,6 +65,8 @@ namespace Uintah {
     //ShellMaterial(const ShellMaterial &cm);
     ShellMaterial& operator=(const ShellMaterial &cm);
 
+    bool d_includeFlowWork;
+
   public:
     // constructors
     ShellMaterial(ProblemSpecP& ps,  MPMLabel* lb, MPMFlags* flag);
