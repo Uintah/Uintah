@@ -50,6 +50,34 @@ void get_material(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
   alphas.add(AlphaPos(1,        0));  // pos 192
 }
 
+void get_material2(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
+
+  float div = 1.0/255;
+  matls.add(Color(255, 255, 255) * div);
+  matls.add(Color(255, 255, 180) * div);
+  matls.add(Color(255, 247, 120) * div);   
+  matls.add(Color(255, 228, 80) * div);
+  matls.add(Color(255, 204, 55) * div);   
+  matls.add(Color(255, 163, 20) * div);
+  matls.add(Color(255, 120, 0) * div);   
+  matls.add(Color(230, 71, 0) * div);
+  matls.add(Color(200, 41, 0) * div);   
+  matls.add(Color(153, 18, 0) * div);
+  matls.add(Color(102, 2, 0) * div);   
+  matls.add(Color(52, 0, 0) * div);
+  matls.add(Color(0, 0, 0) * div);
+
+
+  alphas.add(AlphaPos(0       , 0));  // pos 0
+  alphas.add(AlphaPos(28.0/255, 0));  // pos 28
+  alphas.add(AlphaPos(64.0/255, 0.1));// pos 64
+  alphas.add(AlphaPos(100.0/255,0));  // pos 100
+  alphas.add(AlphaPos(156.0/255,0));  // pos 156
+  alphas.add(AlphaPos(192.0/255,1));  // pos 192
+  alphas.add(AlphaPos(228.0/255,0));  // pos 192 
+  alphas.add(AlphaPos(1,        0));  // pos 192
+}
+
 VolumeVis *create_volume_from_nrrd(char *filename,
 				   bool override_data_min, double data_min_in,
 				   bool override_data_max, double data_max_in,
@@ -250,6 +278,9 @@ VolumeVis *create_volume_default(int scene_type, double val,
 		       specular, dpy);
 }
 
+#define RAINBOW_COLOR_MAP 0
+#define INVERSE_BLACK_BODY_COLOR_MAP 1
+
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
@@ -272,6 +303,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   float data_min_in = -1;
   float data_max_in = -1;
   float frame_rate = 3;
+  int color_map_type = RAINBOW_COLOR_MAP;
+  Color bgcolor(1.,1.,1.);
   
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-dim")==0){
@@ -341,6 +374,22 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     } else if(strcmp(argv[i], "-rate")==0){
       i++;
       frame_rate = atof(argv[i]);
+    } else if(strcmp(argv[i], "-colormap")==0){
+      i++;
+      if (strcmp(argv[i], "rainbow")==0){
+	color_map_type = RAINBOW_COLOR_MAP;
+      } else if (strcmp(argv[i], "inversebb")==0){
+	color_map_type = RAINBOW_COLOR_MAP;
+      } else {
+	cerr << "Unknown color map type.  Using rainbow.\n";
+	color_map_type = RAINBOW_COLOR_MAP;
+      }
+    } else if(strcmp(argv[i], "-bgcolor")==0){
+      float r,g,b;
+      r = atof(argv[++i]);
+      g = atof(argv[++i]);
+      b = atof(argv[++i]);
+      bgcolor = Color(r,g,b);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -362,6 +411,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -diffuse [float] - the diffuse factor\n";
       cerr << " -specular [float] - the specular factor\n";
       cerr << " -rate [float] - frame rate of the time steps\n";
+      cerr << " -colormap [string] - \"rainbow\" or \"inverse\"\n";
+      cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
       return 0;
     }
   }
@@ -379,11 +430,18 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   //  double bgscale=0.5;
   //  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
-  Color bgcolor(0.,0.,0.);
   
   Array1<Color> matls;
   Array1<AlphaPos> alphas;
-  get_material(matls,alphas);
+  switch (color_map_type) {
+  case INVERSE_BLACK_BODY_COLOR_MAP:
+    get_material2(matls,alphas);
+    break;
+  case RAINBOW_COLOR_MAP:
+  default:
+    get_material(matls,alphas);
+    break;
+  }
   VolumeVisDpy *dpy = new VolumeVisDpy(matls, alphas, ncolors, t_inc);
 
   // Generate the data
