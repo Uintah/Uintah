@@ -51,6 +51,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
 
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
 
 using namespace Uintah;
 using namespace Uintah::MPM;
@@ -200,7 +201,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 {
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->computes(new_dw, lb->pExternalForceLabel, idx, patch );
+
+	    t->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
+	    t->requires(old_dw, lb->pVolumeLabel, idx, patch, Ghost::None);
+	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch, Ghost::None);
+	    t->computes(new_dw, lb->pExternalForceLabel_preReloc, idx, patch );
+
+            sched->addTask(t);
 	 }
       }
 
@@ -252,9 +259,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pVelocityLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+	    t->requires(new_dw, lb->pExternalForceLabel_preReloc, idx, patch,
 			Ghost::AroundNodes, 1 );
 
             t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
@@ -633,12 +640,10 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::None);
 			
 	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
-	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch, Ghost::None);
 	    t->requires(old_dw, d_sharedState->get_delt_label() );
 	    t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch );
 	    t->computes(new_dw, lb->pXLabel_preReloc, idx, patch );
 	    //	    t->computes(new_dw, lb->pMassLabel_preReloc, idx, patch);
-	    t->computes(new_dw, lb->pExternalForceLabel_preReloc, idx, patch);
 
 	    t->requires(old_dw, lb->pParticleIDLabel, idx, patch, Ghost::None);
 	    t->computes(new_dw, lb->pParticleIDLabel_preReloc, idx, patch);
@@ -863,6 +868,60 @@ void SerialMPM::applyPhysicalBCToParticles(const ProcessorGroup*,
 					   DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
+  int numMatls = d_sharedState->getNumMatls();
+  for(int m = 0; m < numMatls; m++)
+  {
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl)
+    {
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+
+      ParticleVariable<Point> pX;
+      ParticleVariable<double> pVolume;
+
+      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+
+      old_dw->get(pX, lb->pXLabel, pset);
+      old_dw->get(pVolume, lb->pVolumeLabel, pset);
+
+      ParticleVariable<Vector> pExternalforce;
+      new_dw->allocate(pExternalforce, lb->pExternalForceLabel, pset);
+
+      for (int i = 0; i<d_physicalBCs.size(); i++ )
+      {
+        string bcs_type = d_physicalBCs[i]->getType();
+        
+        if (bcs_type == "Force")
+        {
+          ForceBC* bc = dynamic_cast<ForceBC*>(d_physicalBCs[i]);
+
+          const Point& lower( bc->getLowerRange() );
+          const Point& upper( bc->getUpperRange() );
+          
+          for( ParticleSubset::iterator iter = pset->begin();
+               iter != pset->end(); iter++)
+          {
+            particleIndex idx = *iter;
+
+            if( lower.x() <= pX[idx].x() && pX[idx].x() <= upper.x() &&
+                lower.y() <= pX[idx].y() && pX[idx].y() <= upper.y() &&
+                lower.z() <= pX[idx].z() && pX[idx].z() <= upper.z() )
+            {
+              pExternalforce[idx] = bc->getForceDensity() * pVolume[idx];
+              cout << pExternalforce[idx] << endl;
+            }
+            else {
+              pExternalforce[idx] = Vector(0.0,0.0,0.0);
+            }
+          }
+        }
+      }
+
+      new_dw->put(pExternalforce, lb->pExternalForceLabel_preReloc);
+    }
+  }
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
@@ -895,7 +954,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(px,             lb->pXLabel, pset);
       old_dw->get(pmass,          lb->pMassLabel, pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel, pset);
-      old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
+      new_dw->get(pexternalforce, lb->pExternalForceLabel_preReloc, pset);
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -1592,11 +1651,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(px,        lb->pXLabel_preReloc);
       new_dw->put(pvelocity, lb->pVelocityLabel_preReloc);
 
-      ParticleVariable<Vector> pexternalforce;
-
-      old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
-      new_dw->put(pexternalforce, lb->pExternalForceLabel_preReloc);
-
       ParticleVariable<long> pids;
       old_dw->get(pids, lb->pParticleIDLabel, pset);
       new_dw->put(pids, lb->pParticleIDLabel_preReloc);
@@ -1671,6 +1725,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.113  2000/08/07 20:22:32  tan
+// Applied force boundary conditions on particles during each simulation step.
+//
 // Revision 1.112  2000/08/07 17:09:51  tan
 // Added applyPhysicalBCToParticles to handle particle boundary conditions
 // in each step.

@@ -16,22 +16,25 @@ const Vector& ForceBC::getForceDensity() const
   return d_forceDensity;
 }
 
-const Vector& ForceBC::getLowerRange() const
+const Point& ForceBC::getLowerRange() const
 {
   return d_lowerRange;
 }
 
-const Vector& ForceBC::getUpperRange() const
+const Point& ForceBC::getUpperRange() const
 {
   return d_upperRange;
 }
 
 std::string ForceBC::getType() const
 {
-  return "force";
+  return "Force";
 }
 
 // $Log$
+// Revision 1.2  2000/08/07 20:23:30  tan
+// Applied force boundary conditions on particles during each simulation step.
+//
 // Revision 1.1  2000/08/07 00:42:51  tan
 // Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
 // in MPM.  Currently implemented force boundary conditions.
