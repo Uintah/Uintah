@@ -30,7 +30,7 @@ using namespace std;
 
 const char* FIELD_MANIP_COMPILATION_PATH = FM_COMP_PATH;
 
-typedef FieldHandle& (*FieldManipFunction)(vector<FieldHandle> &);
+typedef void (*FieldManipFunction)(vector<FieldHandle>& in, vector<FieldHandle>& out);
 
 
 
@@ -69,7 +69,7 @@ private:
   int  ReadNodeFromFile( const string& filename );
   void getManips       ();
   void load_ui         ();
-  void set_cur_manip   ( const string& name);
+  void set_cur_manip   ( const string& name );
   static bool create_dummy_cc ( const string& filename );
   bool write_sub_mk    () const;
   bool save_xml        () const;
@@ -78,11 +78,6 @@ private:
   bool               compileFile      ( const string& filename );
   FieldManipFunction getFunctionFromDL( const string& filename);
 
-  // ---- Member Data ----
-  FieldIPort*                infield_;
-  FieldHandle                sfield_;
-  FieldOPort*                ofield_;
-  
   GuiString                  name_;
   string                     id_;
   FieldManipFunction         curFun_;
@@ -97,18 +92,17 @@ ManipFields::manips_map_t ManipFields::manips_;
 
 ManipFields::ManipFields( const string& id ) 
   : Module("ManipFields", id.c_str(), Source)
-  , sfield_(0)
   , name_("manipulationName", id.c_str(), this)
   , id_(id)
   , curFun_(0)
 {
-  // Create the input ports
-  infield_ = scinew FieldIPort( this, "Input Field", FieldIPort::Atomic );
-  add_iport( infield_ );
+  // Create the input port
+  FieldIPort* infield = scinew FieldIPort( this, "Input Field", FieldIPort::Atomic );
+  add_iport( infield );
     
   // Create the output port
-  ofield_ = scinew FieldOPort( this, "Output Field", FieldIPort::Atomic );
-  add_oport( ofield_ );
+  FieldOPort* ofield = scinew FieldOPort( this, "Output Field", FieldIPort::Atomic );
+  add_oport( ofield );
 }
 
 
@@ -127,12 +121,7 @@ ManipFields::execute()
 {
   // Load all of the available Manipulations from the xml file.
 
-  static bool firstTime( true );
-  if( firstTime ) 
-  {
-    firstTime = false;
-    getManips();
-  }
+  getManips();
   
   cerr << "try to load Manip " << endl;
 
@@ -142,13 +131,34 @@ ManipFields::execute()
   }
   else
   {
-    // Package up the input Fields.
-    infield_->get( sfield_ );
     vector<FieldHandle> allIn;
-    allIn.push_back(sfield_);
+    vector<FieldHandle> allOut; 
+    FieldHandle         sfield;
 
-    FieldHandle fh = (*curFun_)(allIn);
-    ofield_->send(fh);
+    //collect input fields
+    FieldIPort* ifield;
+    for( int i = 0; i < niports(); ++i )
+    {
+      ifield = dynamic_cast<FieldIPort*>( get_iport(i) );
+      ifield->get( sfield );
+      allIn.push_back( sfield );
+    }
+
+    curFun_( allIn, allOut );
+    
+    //send out output fields
+    FieldOPort* ofield;
+    int portCount(0);
+    for( vector<FieldHandle>::const_iterator i = allOut.begin()
+         ; i != allOut.end()
+         , portCount < noports()    //TODO: ask Chris Moulding what to do here
+         ; ++i
+         , ++portCount
+       )
+    {
+      ofield = dynamic_cast<FieldOPort*>( get_oport(portCount) ); //can cast because it was newed as FieldOPort
+      ofield->send( *i );
+    }
   } 
   cerr << "done Manip execute" << endl;
 }
@@ -318,8 +328,6 @@ ManipFields::getFunctionFromDL(const string& f)
 {
   FieldManipFunction ret = 0;
 
-  cout << "Compiling: " << f << endl;
-
   if( compileFile(f) ) 
   {
     // Load the dl.
@@ -359,6 +367,7 @@ ManipFields::compileFile(const string& file)
   string command = string("cd ") + FIELD_MANIP_COMPILATION_PATH 
           + "; gmake " + file + ".so";
 
+  cout << "Executing: " << command << endl;
   bool compiledSuccessfully =  sci_system(command.c_str()) == 0; 
   if( !compiledSuccessfully )
   {
@@ -577,6 +586,7 @@ ManipFields::write_sub_mk() const
     {
       f << "\t\t" << m->first << ".cc \\\n";
     }
+    f << "\n"; 
   }
   return ret;
 }
@@ -645,18 +655,25 @@ ManipFields::set_cur_manip( const string& name )
 void
 ManipFields::getManips()
 {
-  string xmlFile = 
-    string( FIELD_MANIP_COMPILATION_PATH ) + "/srcs.xml";
-  // Read xml file to find out all of our available Manipulations
-  int check = ReadNodeFromFile(xmlFile);
-  if (check != 1) {
-    cerr << "ManipFields: XML file did not pass validation" << endl;
+  //reads all available manipulations from an xml file
+  static bool beenHere( false ); 
+  if( !beenHere ) 
+  {
+    beenHere = true;
+    string xmlFile
+        = string( FIELD_MANIP_COMPILATION_PATH ) + "/srcs.xml";
+    int check = ReadNodeFromFile(xmlFile);
+    if( check != 1 ) 
+    {
+      cerr << "ManipFields: XML file did not pass validation" << endl;
+    }
   }
 }
 
 
 
-extern "C" PSECORESHARE Module* make_ManipFields(const clString& id) {
+extern "C" PSECORESHARE Module* make_ManipFields(const clString& id) 
+{
   return new ManipFields(id());
 }
 
