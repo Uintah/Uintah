@@ -606,8 +606,8 @@ itcl_class Fusion_Render_Plot2DViewer {
 
     method manualSliderEntry { start stop var1 var2 } {
 
-	if { [set $var2] < 0 } {
-	    set $var2 0
+	if { [set $var2] < $start } {
+	    set $var2 $start
 	}
 	
 	if { [set $var2] > $stop } {
@@ -898,8 +898,8 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 			if { [set $this-color-$plt-$dat] == 0 } {
 
-			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]
-			    
+			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]	
+
 			    if { 1.0 < $col } { set col 1.0 }
 			    if { $col < 0.0 } { set col 0.0 }
 			    
@@ -1056,8 +1056,8 @@ itcl_class Fusion_Render_Plot2DViewer {
 
 			if { [set $this-color-$plt-$dat] == 0 } {
 
-			    set col [expr ([v $i 0]-[set $this-zmin])*$cOffset]
-			    
+			    set col [expr ([z $i 0]-[set $this-zmin])*$cOffset]
+
 			    if { 1.0 < $col } { set col 1.0 }
 			    if { $col < 0.0 } { set col 0.0 }
 			    
