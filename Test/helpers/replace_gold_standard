@@ -13,8 +13,8 @@ echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$
 read yesno
 
 if [ $yesno == "y" -o $yesno == "yes" ]; then
-  echo "rm -rf $gold_standard_dir/$testname/*.uda*"
-  rm -r $gold_standard_dir/$testname/*.uda*
+  echo "rm -rf $gold_standard_dir/$testname/*.uda"
+  rm -r $gold_standard_dir/$testname/*.uda
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
