@@ -29,7 +29,12 @@ LOG
 #include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Datatypes/VectorField.h>
 
-#include <fstream.h> // Cannot be <fstream> due to seekg and tellg
+#include <fstream> // Cannot be <fstream> due to seekg and tellg
+#include <iostream>
+
+using std::ifstream;
+using std::cout;
+using std::cerr;
 
 namespace Uintah {
 namespace Datatypes {  
