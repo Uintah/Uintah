@@ -6,7 +6,7 @@
 ** a constructor, and a destroy() slot in place of a destructor.
 *****************************************************************************/
 
-#include <iostream.h>
+#include <iostream>
 #include "ZList.h"
 
 void ListForm::enableDelete(int i)
@@ -29,7 +29,7 @@ void ListForm::insert()
 {
     QString s=numLineEdit->text();
     int index=numListBox->currentItem();
-    cerr<<"index="<<index<<"s="<<s<<endl;	
+    std::cerr<<"index="<<index<<"s="<<s<<std::endl;	
     numListBox->insertItem(s, index);
     numLineEdit->clear();
 }
@@ -43,7 +43,7 @@ void ListForm::refresh()
         v.push_back(numListBox->text(i).toDouble());
    }
    com->datalist=v;
-   cerr<<"datalist is refreshed with size="<<size<<endl;
+   std::cerr<<"datalist is refreshed with size="<<size<<std::endl;
 }
 
 void ListForm::del()
