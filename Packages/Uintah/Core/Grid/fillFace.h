@@ -289,7 +289,7 @@ using namespace Uintah;
     case Patch::xplus:
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  cout << "Using iterator = " << IntVector(hi.x()-1,j,k) << endl;
+	  // cout << "Using iterator = " << IntVector(hi.x()-1,j,k) << endl;
 	  var[IntVector(hi.x()-1,j,k)] = value;
 	}
       }
@@ -297,7 +297,7 @@ using namespace Uintah;
     case Patch::xminus:
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  cout << "Using iterator = " << IntVector(low.x(),j,k) << endl;
+	  // cout << "Using iterator = " << IntVector(low.x(),j,k) << endl;
 	  var[IntVector(low.x(),j,k)] = value;
 	}
       }
@@ -305,7 +305,7 @@ using namespace Uintah;
     case Patch::yplus:
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  cout << "Using iterator = " << IntVector(i,hi.y()-1,k) << endl;
+	  // cout << "Using iterator = " << IntVector(i,hi.y()-1,k) << endl;
 	  var[IntVector(i,hi.y()-1,k)] = value;
 	}
       }
@@ -313,7 +313,7 @@ using namespace Uintah;
     case Patch::yminus:
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  cout << "Using iterator = " << IntVector(i,low.y(),k) << endl;
+	  // cout << "Using iterator = " << IntVector(i,low.y(),k) << endl;
 	  var[IntVector(i,low.y(),k)] = value;
 	}
       }
@@ -321,7 +321,7 @@ using namespace Uintah;
     case Patch::zplus:
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int j = low.y(); j<hi.y(); j++) {
-	  cout << "Using iterator = " << IntVector(i,j,hi.z()-1) << endl;
+	  // cout << "Using iterator = " << IntVector(i,j,hi.z()-1) << endl;
 	  var[IntVector(i,j,hi.z()-1)] = value;
 	}
       }
@@ -329,7 +329,7 @@ using namespace Uintah;
     case Patch::zminus:
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int j = low.y(); j<hi.y(); j++) {
-	  cout << "Using iterator = " << IntVector(i,j,low.z()) << endl;
+	  // cout << "Using iterator = " << IntVector(i,j,low.z()) << endl;
 	  var[IntVector(i,j,low.z())] = value;
 	}
       }
