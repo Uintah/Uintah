@@ -144,6 +144,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 		pexternalforce[start+count] = pExtForce;
 		
 		// Determine if particle is on the surface
+		// int surf = checkForSurface(piece,p,dxpp);
 		short int& myCellNAPID = cellNAPID[cell_idx];
 		pparticleID[start+count] = cellID | (long64)myCellNAPID;
 		psize[start+count] = size;
@@ -312,4 +313,43 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   matl->getConstitutiveModel()->addParticleState(particle_state,
 						 particle_state_preReloc);
 
+}
+
+int ParticleCreator::checkForSurface(const GeometryPiece* piece, const Point p,
+		                     const Vector dxpp)
+{
+
+//  Check the candidate points which surround the point just passed
+//   in.  If any of those points are not also inside the object
+//  the current point is on the surface
+
+    int ss = 0;
+
+      // Check to the left (-x)
+        if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
+          ss++;
+      // Check to the right (+x)
+        if(!piece->inside(p+Vector(dxpp.x(),0.,0.)))
+          ss++;
+      // Check behind (-y)
+        if(!piece->inside(p-Vector(0.,dxpp.y(),0.)))
+          ss++;
+      // Check in front (+y)
+        if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
+           ss++;
+      #if 0
+      // Check below (-z)
+        if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
+           ss++;
+      // Check above (+z)
+        if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
+           ss++;
+      #endif
+
+    if(ss>0){
+      return 1;
+    }
+    else {
+      return 0;
+    }
 }
