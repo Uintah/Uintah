@@ -33,6 +33,7 @@ void ICE::scheduleComputeFCPressDiffRF(SchedulerP& sched,
   t->requires(Task::OldDW,lb->delTLabel);
   t->requires(Task::NewDW,lb->rho_CCLabel,            Ghost::AroundCells,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,         Ghost::AroundCells,1);  
+  t->requires(Task::NewDW,lb->speedSound_CCLabel,     Ghost::AroundCells,1); 
   t->requires(Task::NewDW,lb->matl_press_CCLabel,     Ghost::AroundCells,1);
   t->requires(Task::NewDW,lb->vel_CCLabel,mpm_matls,  Ghost::AroundCells,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,ice_matls,  Ghost::AroundCells,1);
@@ -44,7 +45,6 @@ void ICE::scheduleComputeFCPressDiffRF(SchedulerP& sched,
   t->computes(lb->press_diffZ_FCLabel);
 
   sched->addTask(t, patches, matls);
-  
 }
 
 /* --------------------------------------------------------------------- 
@@ -127,16 +127,18 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
                                              cv[m],Temp[m][c],
                                              matl_press[m][c],dp_drho[m],dp_de[m]);
 
-        compressibility[m]=
-                      ice_matl->getEOS()->getCompressibility(matl_press[m][c]);
-
         mat_volume[m] = (rho_CC[m][c] * cell_vol) * sp_vol_CC[m][c];
 
         tmp = dp_drho[m] + dp_de[m] * 
            (matl_press[m][c] * (sp_vol_CC[m][c] * sp_vol_CC[m][c]));            
 
         total_mat_vol += mat_volume[m];
-        speedSound_new[m][c] = sqrt(tmp);
+/*`==========TESTING==========*/
+        speedSound_new[m][c] = sqrt(tmp)/gamma[m];  // Isothermal speed of sound
+        speedSound_new[m][c] = sqrt(tmp);           // Isentropic speed of sound
+        compressibility[m] = sp_vol_CC[m][c]/ 
+                            (speedSound_new[m][c] * speedSound_new[m][c]); 
+/*==========TESTING==========`*/
        } 
       //__________________________________
       // Compute 1/f_theta
@@ -203,7 +205,9 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
 /* --------------------------------------------------------------------- 
  Function~  ICE::computeFCPressDiffRF-- 
  Reference: A Multifield Model and Method for Fluid Structure
-            Interaction Dynamics
+            Interaction Dynamics.  
+ Note:      This only computes the isotropic part of the stress difference term
+             Eq 4.13b
 _____________________________________________________________________*/
 void ICE::computeFCPressDiffRF(const ProcessorGroup*,
                                 const PatchSubset* patches,
@@ -226,6 +230,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     StaticArray<CCVariable<double>      > scratch(3); 
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    StaticArray<constCCVariable<double> > speedSound(numMatls);
     StaticArray<constCCVariable<double> > matl_press(numMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
     StaticArray<SFCXVariable<double>    > press_diffX_FC(numMatls);
@@ -243,6 +248,8 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
                                                           Ghost::AroundCells,1);
       new_dw->get(sp_vol_CC[m],    lb->sp_vol_CCLabel,    indx,patch,
                                                           Ghost::AroundCells,1);
+      new_dw->get(speedSound[m],   lb->speedSound_CCLabel,indx,patch,
+                                                          Ghost::AroundCells,1); 
       new_dw->get(matl_press[m],   lb->matl_press_CCLabel,indx,patch,
                                                           Ghost::AroundCells,1);
       if(ice_matl){
@@ -285,34 +292,35 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     }
     //______________________________________________________________________
     for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      double Kcur, Kadj;
-      if(mpm_matl){
-        Kcur = mpm_matl->getConstitutiveModel()->getCompressibility();
-        Kadj = mpm_matl->getConstitutiveModel()->getCompressibility();
-      }
       //__________________________________
       //  For each face compute the press_Diff
       for (int dir= 0; dir < 3; dir++) {
         for(CellIterator iter=patch->getSFCIterator(dir);!iter.done(); iter++){
           IntVector cur = *iter;
           IntVector adj = cur + adj_offset[dir]; 
+
+//__________________________________
+//WARNING: We're currently using the 
+// isentropic compressibility instead of 
+// its cousin the isothermal compressiblity.  
+          double inv_kappa_cur = ( speedSound[m][cur] * speedSound[m][cur] )/
+                                 ( sp_vol_CC[m][cur]);
+          double inv_kappa_adj = ( speedSound[m][adj] * speedSound[m][adj] )/
+                                 ( sp_vol_CC[m][adj]);
+
           double rho_brack = (rho_CC[m][cur]*rho_CC[m][adj])/
-                             (rho_CC[m][cur]+rho_CC[m][adj]);
-          if(ice_matl){
-            Kcur = ice_matl->getEOS()->getCompressibility(press_CC[cur]);
-            Kadj = ice_matl->getEOS()->getCompressibility(press_CC[adj]);
-          }
-          double deltaP = 2.*delT*(vel_CC[m][adj](dir) - vel_CC[m][cur](dir))/
-                          ((Kcur + Kadj)*dx(dir));
-                          
-          scratch[dir][cur] = rho_brack*
-               ((matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
-                (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj] +
-                (sp_vol_CC[m][cur] + sp_vol_CC[m][adj]) * deltaP);
+                             (rho_CC[m][cur]+rho_CC[m][adj]);           
+          
+          double term1 = 
+                (matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
+                (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj];
+                
+          double term2 = -2.0 * delT *
+                         ((sp_vol_CC[m][cur] + sp_vol_CC[m][adj])/
+                         (inv_kappa_cur + inv_kappa_adj) ) *
+                         ((vel_CC[m][adj](dir) - vel_CC[m][cur](dir))/dx(dir));
+ 
+          scratch[dir][cur] = rho_brack * (term1 + term2);
         }
       } 
       //__________________________________
@@ -552,7 +560,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     double vol = dx.x()*dx.y()*dx.z();    
 
     constCCVariable<double> rho_CC, rho_micro, Tdot, sp_vol_CC;
-    constCCVariable<double> delP_Dilatate, press_CC;
+    constCCVariable<double> delP_Dilatate, press_CC, speedSound;
     constCCVariable<double> f_theta,vol_frac, Temp_CC;
     CCVariable<double> sum_therm_exp;
 
@@ -594,18 +602,20 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
      spec_vol_L.initialize(0.);
      spec_vol_source.initialize(0.);
      if(ice_matl){
-       new_dw->get(rho_CC,   lb->rho_CCLabel,      indx,patch,Ghost::None, 0);
-       new_dw->get(sp_vol_CC,lb->sp_vol_CCLabel,   indx,patch,Ghost::None, 0);
-       new_dw->get(vol_frac, lb->vol_frac_CCLabel, indx,patch,Ghost::None, 0);
-       new_dw->get(Tdot,     lb->Tdot_CCLabel,     indx,patch,Ghost::None, 0);
-       new_dw->get(f_theta,  lb->f_theta_CCLabel,  indx,patch,Ghost::None, 0);
+       new_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch,Ghost::None, 0);
+       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
+       new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,Ghost::None, 0); 
+       new_dw->get(vol_frac,  lb->vol_frac_CCLabel,  indx,patch,Ghost::None, 0);
+       new_dw->get(Tdot,      lb->Tdot_CCLabel,      indx,patch,Ghost::None, 0);
+       new_dw->get(f_theta,   lb->f_theta_CCLabel,   indx,patch,Ghost::None, 0);
 
        for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         // Note that at this point, spec_vol_L is actually just a
         // volume of material, this is consistent with 4.8c
-        double K = ice_matl->getEOS()->getCompressibility(press_CC[c]);
-        double term1 = -vol * vol_frac[c] * K * delP_Dilatate[c];
+        double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]); 
+        
+        double term1 = -vol * vol_frac[c] * kappa * delP_Dilatate[c];
 #if 0
         alpha = 1.0/Temp_CC[c];  // this assumes an ideal gas
         double term2 = delT * vol * (vol_frac[c]*alpha*Tdot[c] -
