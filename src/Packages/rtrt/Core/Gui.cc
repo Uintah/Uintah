@@ -397,40 +397,32 @@ Gui::handleTriggers()
 } // end handleTriggers()
 
 void
-Gui::drawBackground()
-{
-  glutSetWindow( glutDisplayWindowId );
-
-  glViewport(0, 0, 1280, 1024);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0, 1280, 0, 1024);
-  glDisable( GL_DEPTH_TEST );
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(0.375, 0.375, 0.0);
-
-  backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
-  backgroundTexQuad->draw();
-}
-
-void
 Gui::redrawBackgroundCB()
 {
   if( activeGui->dpy_->fullScreenMode_ ) {
     if( !activeGui->backgroundImage_ ) return;
-    // update loop will check for a new background, see it is different,
-    // and update correctly.
-    activeGui->backgroundImage_ = NULL;
+    glutSetWindow( activeGui->glutDisplayWindowId );
+
+    glViewport(0, 0, 1280, 1024);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, 1280, 0, 1024);
+    glDisable( GL_DEPTH_TEST );
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.375, 0.375, 0.0);
+
+    backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
+    backgroundTexQuad->draw();
+    glutSwapBuffers();
+    backgroundTexQuad->draw();
   }
 }
 
 
-bool
+void
 Gui::setBackgroundImage( int room )
 {
-  PPMImage * current = backgroundImage_;
-
   switch( room ) {
   case 0:
     backgroundImage_ = scienceRoomImage;
@@ -442,14 +434,12 @@ Gui::setBackgroundImage( int room )
     backgroundImage_ = galaxyRoomImage;
     break;
   case 3:
-    backgroundImage_ = museumRoomImage;
-    break;
-  default:
     backgroundImage_ = underwaterRoomImage;
     break;
+  default:
+    backgroundImage_ = museumRoomImage;
+    break;
   }
-
-  return (current != backgroundImage_);
 }
 
 void
@@ -483,10 +473,6 @@ Gui::idleFunc()
     char buf[100];
     sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
 
-    bool redrawBG = activeGui->checkBackgroundWindow();
-
-    if( redrawBG ) activeGui->drawBackground();
-
     dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
     if( dpy->fullScreenMode_ )
       activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
@@ -497,7 +483,6 @@ Gui::idleFunc()
       glutSwapBuffers();
       // Need to draw into other buffer so that as we "continuously"
       // flip them, it doesn't look bad.
-      if( redrawBG ) activeGui->drawBackground();
       dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
       activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
     }
@@ -2145,56 +2130,6 @@ Gui::update()
   updateSoundPanel();
 
 } // end update()
-
-
-bool
-Gui::checkBackgroundWindow()
-{
-  // See if we have moved nearer to another room... return true if so.
-
-  static int count = 10;
-
-  if( count == 10 )
-    {
-      count = 0;
-      static vector<Point> positions;
-      if( positions.size() == 0 )
-	{
-	  positions.push_back( Point(  -8, 10, 2) ); //  science
-	  positions.push_back( Point(  10, -6, 2) ); //  living
-	  positions.push_back( Point(   8, 10, 2) ); //  galaxy
-	  positions.push_back( Point( -10, -6, 2) ); //  museum
-
-	  positions.push_back( Point(  0,  -6, 2) ); //  southTube
-	  positions.push_back( Point(  0,  10, 2) ); //  northTube
-	  positions.push_back( Point( -10,  2, 2) ); //  westTube
-	  positions.push_back( Point(  10,  2, 2) ); //  eastTube
-	}
-
-      double minDist = 99999;
-      int    index   = -1;
-
-      const Point & eye = camera_->get_eye();
-
-      for( int cnt = 0; cnt < 8; cnt++ )
-	{
-	  double dist = (positions[cnt] - eye).length2();
-	  if( dist < minDist )
-	    {
-	      minDist = dist;
-	      index = cnt;
-	    }
-	}
-      cout << "closest to " << index << "\n";
-      if( index != -1 )
-	return setBackgroundImage( index );
-    }
-  else
-    {
-      count++;
-    }
-  return false;
-}
 
 void
 Gui::updateSoundPanel()
