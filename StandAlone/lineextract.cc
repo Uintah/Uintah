@@ -132,7 +132,7 @@ void printData(DataArchive* archive, string& variable_name,
   
   for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
   
-    out << "outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
+    cerr << "%outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
     
     // for each type available, we need to query the values for the time range, 
     // variable name, and material
@@ -145,7 +145,8 @@ void printData(DataArchive* archive, string& variable_name,
         cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
         exit(1);
       }
-      out << *ci << ": " << values[0] << endl;
+      IntVector c = *ci;
+      out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
     }
     out << endl;
   }
