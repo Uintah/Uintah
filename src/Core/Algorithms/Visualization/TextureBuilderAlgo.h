@@ -546,7 +546,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
-              tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
+              tex1[idx] = (unsigned char)(((gn-gmin)/(gmax-gmin))*255);
               ++iter;
             }
             if(nx != brick->mx()) {
@@ -596,7 +596,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
-              tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
+              tex1[idx] = (unsigned char)(((gn-gmin)/(gmax-gmin))*255);
               ++iter;
             }
             if(nx != brick->mx()) {
