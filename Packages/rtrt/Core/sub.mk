@@ -180,6 +180,11 @@ SRCS += $(SRCDIR)/Worker.cc \
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 
+#ifneq ($(HAVE_PNG),)
+ifeq ($(findstring png, $(PNG_LIBRARY)),png)
+  SRCS += $(SRCDIR)/PNGImage.cc
+endif
+
 SUBDIRS := $(SRCDIR)/Shadows \
 #	   $(SRCDIR)/LightField \
 
@@ -188,6 +193,6 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Persistent Core/Geometry Packages/rtrt/visinfo 
 
-LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) 
+LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
