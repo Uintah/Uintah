@@ -33,6 +33,10 @@ PROGRAM := $(SRCDIR)/CardioWaveToDenseMat
 SRCS := $(SRCDIR)/CardioWaveToDenseMat.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/CardioWaveToVectorField
+SRCS := $(SRCDIR)/CardioWaveToVectorField.cc
+include $(SRCTOP)/scripts/program.mk
+
 PROGRAM := $(SRCDIR)/ColumnMatToCardioWave
 SRCS := $(SRCDIR)/ColumnMatToCardioWave.cc
 include $(SRCTOP)/scripts/program.mk
