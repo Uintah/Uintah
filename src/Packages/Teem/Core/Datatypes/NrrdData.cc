@@ -59,6 +59,19 @@ NrrdData::~NrrdData() {
   }
 }
 
+// This needs to parse axis 0 and see if the label is tuple as well...
+bool
+NrrdData::is_sci_nrrd() const 
+{
+  return (originating_field_.get_rep() != 0);
+}
+
+void 
+NrrdData::copy_sci_data(const NrrdData &cp)
+{
+  originating_field_ = cp.originating_field_;
+}
+
 #define NRRDDATA_VERSION 1
 
 //////////

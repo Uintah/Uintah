@@ -301,6 +301,7 @@ void NrrdToField::execute()
   if (ninH->is_sci_nrrd()) {
     // the NrrdData has a stored MeshHandle which from the originating field.
     FieldHandle fh = ninH->get_orig_field();
+    cout << "nrrd has field handle? " << fh.get_rep() << endl;
     const TypeDescription *td = fh->get_type_description();
     // manipilate the type to match the nrrd.
     const TypeDescription *sub = get_new_td(n->type);
