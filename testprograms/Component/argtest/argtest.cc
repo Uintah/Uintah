@@ -45,6 +45,9 @@ using namespace std;
 
 using argtest::ref;
 using argtest::Server;
+using argtest::TestEnum;
+using argtest::Foo;
+using argtest::Bar;
 
 using CIA::array1;
 using std::istringstream;
@@ -167,6 +170,11 @@ public:
   virtual void out_int(int& a);
   virtual void inout_int(int& a);
 
+  virtual TestEnum return_enum();
+  virtual void in_enum(TestEnum a);
+  virtual void out_enum(TestEnum& a);
+  virtual void inout_enum(TestEnum& a);
+
   virtual string return_string();
   virtual void in_string(const string& a);
   virtual void out_string(string& a);
@@ -238,6 +246,29 @@ void Server_impl::inout_int(int& a)
   if(a != 8)
     success=false;
   a=9;
+}
+
+TestEnum Server_impl::return_enum()
+{
+  return Foo;
+}
+
+void Server_impl::in_enum(TestEnum a)
+{
+  if(a != Foo)
+    success=false;
+}
+
+void Server_impl::out_enum(TestEnum& a)
+{
+  a=Bar;
+}
+
+void Server_impl::inout_enum(TestEnum& a)
+{
+  if(a != Foo)
+    success=false;
+  a=Bar;
 }
 
 
@@ -493,20 +524,14 @@ int main(int argc, char* argv[])
 
     Server pp;
     if(server) {
-      cerr << "Creating argtest object\n";
       pp=new Server_impl;
       cerr << "Waiting for argtest connections...\n";
       cerr << pp->getURL().getString() << '\n';
     } else {
-      cerr << "aaaaaaaaa\n";
       double stime=Time::currentSeconds();
-      cerr << "main thread = " << Thread::self() << endl;
       PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
-      cerr << "in the middle\n";
       Server rm=pidl_cast<Server>(obj);
-      cerr << "AAAAAAAAA\n";
       for(int i=0;i<reps;i++){
-	cerr << "bbbbbbbbb\n";
 	if(rm->return_int() != 5)
 	  fail("return_int");
 	rm->in_int(6);
@@ -520,6 +545,20 @@ int main(int argc, char* argv[])
 	  fail("inout_int");
 	if(!rm->getSuccess())
 	  fail("int failure on remote side");
+	  
+	if(rm->return_enum() != Foo)
+	  fail("return_enum");
+	rm->in_enum(Foo);
+	TestEnum test_enum;
+	rm->out_enum(test_enum);
+	if(test_enum != Bar)
+	  fail("out_enum");
+	test_enum=Foo;
+	rm->inout_enum(test_enum);
+	if(test_enum != Bar)
+	  fail("inout_enum");
+	if(!rm->getSuccess())
+	  fail("enum failure on remote side");
 	  
 	if(rm->return_string() != "return string")
 	  fail("return_string");
@@ -629,18 +668,16 @@ int main(int argc, char* argv[])
       double us=dt/reps*1000*1000;
       cerr << "argtest: " << us << " us/rep\n";
     }
+    PIDL::PIDL::serveObjects();
     cerr << "Argtest successful\n";
   } catch(const Exception& e) {
     cerr << "argtest caught exception:\n";
     cerr << e.message() << '\n';
-    cerr << "main caught thread = " << Thread::self() << endl;
     //Thread::exitAll(1);
   } catch(...) {
     cerr << "Caught unexpected exception!\n";
     //Thread::exitAll(1);
   }
-  PIDL::PIDL::serveObjects();
-  cerr << "done\n";
   return 0;
 }
 
