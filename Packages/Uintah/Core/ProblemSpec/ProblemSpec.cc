@@ -220,9 +220,13 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
 	 child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
-	//DOMString val = child->getNodeValue();
-	const char *s = to_char_ptr(child->getNodeValue());
-	value = std::string(s);
+        //DOMString val = child->getNodeValue();
+	 const char *s = to_char_ptr(child->getNodeValue());
+        //__________________________________
+        // This little bit of magic removes all spaces
+	 std::string tmp(s);
+	 istringstream value_tmp(tmp);
+        value_tmp >> value; 
       }
     }
   }
