@@ -32,6 +32,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
+#include <sstream>
 #include <iostream>
 using std::endl;
 #include <stdio.h>
@@ -95,6 +96,22 @@ NrrdQuantize::execute()
     return;
   }
 
+  if (last_generation_ != nrrdH->generation) {
+    // set default values for min,max
+    nrrdMinMaxCleverSet(nrrdH->nrrd);
+    cout << "min and max: " << nrrdH->nrrd->min << " " << nrrdH->nrrd->max 
+	 << endl;
+    ostringstream str;
+    str << id.c_str() << " update_min_max " << nrrdH->nrrd->min 
+	<< " " << nrrdH->nrrd->max << endl;
+
+    gui->execute(str.str());
+    minf_.reset();
+    maxf_.reset();
+  }
+
+
+
   double minf=minf_.get();
   double maxf=maxf_.get();
   int nbits=nbits_.get();
@@ -106,6 +123,9 @@ NrrdQuantize::execute()
     onrrd_->send(last_nrrdH_);
     return;
   }
+  // must detach because we are about to modify the input nrrd.
+  last_generation_ = nrrdH->generation;
+  nrrdH.detach(); 
 
   Nrrd *nin = nrrdH->nrrd;
   nin->min = minf;
@@ -120,8 +140,9 @@ NrrdQuantize::execute()
     free(err);
     return;
   }
+  // propogate sci added data
+  nrrd->copy_sci_data(*nrrdH.get_rep());
 
-  last_generation_ = nrrdH->generation;
   last_minf_ = minf;
   last_maxf_ = maxf;
   last_nbits_ = nbits;

@@ -41,6 +41,16 @@ itcl_class Teem_Filters_NrrdQuantize {
         set $this-maxf 255
 	set $this-nbits 32
     }
+
+    method update_min_max {min max} {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    puts $min
+	    puts $max
+	    $w.f.min newvalue $min
+	    $w.f.max newvalue $max
+	}
+    }
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
