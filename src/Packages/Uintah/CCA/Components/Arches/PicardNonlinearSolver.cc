@@ -110,9 +110,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
-
+#if 0
   if (d_MAlab)
     d_boundaryCondition->sched_mmWallCellTypeInit(sched, patches, matls);
+#endif
   //initializes and allocates vars for new_dw
   // set initial guess
   // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
@@ -577,7 +578,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     int nofScalars = d_props->getNumMixVars();
     vector<CCVariable<double> > scalar(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
-      old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, 
+      old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
     }
 
@@ -643,7 +644,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->put(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->put(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
     for (int ii = 0; ii < nofScalars; ii++) {
-      new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
+      new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch);
     }
     new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
