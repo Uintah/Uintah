@@ -796,16 +796,20 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
+#if 0
       cerr << "Before BC application" << endl;
       char description[50];
       sprintf(description, "Initialization_Mat_%d ",m);
       printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
+#endif
 
       setBC(rho_top_cycle[m], "Density",      patch, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
+#if 0
       cerr << "After BC application" << endl;
       printData(   patch, 1, description, "rho_CC",      rho_top_cycle[m]);
+#endif
 
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
@@ -3024,7 +3028,9 @@ void ICE::setBC(CCVariable<double>& press_CC, CCVariable<double>& rho_micro,
 void ICE::setBC(CCVariable<double>& variable, const string& kind, 
 		const Patch* patch, const int mat_id)
 {
+#if 0
   cerr << "Setting BC " << kind << " for material " << mat_id << endl;
+#endif
   Vector dx = patch->dCell();
   
   for(Patch::FaceType face = Patch::startFace;
