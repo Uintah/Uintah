@@ -32,6 +32,7 @@
 #include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 using std::cerr;
@@ -77,7 +78,7 @@ static int lock_count;
 
 static void do_lock()
 {
-  ASSERT(Thread::self() != 0);
+    ASSERT(Thread::self() != 0);
     if(owner == Thread::self()){
       lock_count++;
 //      cerr << "Recursively locked, count=" << lock_count << endl;
