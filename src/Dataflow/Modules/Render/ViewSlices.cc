@@ -201,8 +201,6 @@ class ViewSlices : public Module
     UIdouble		y_;
 
     bool		redraw_;
-    UIint		clut_ww_;
-    UIint		clut_wl_;
       
     UIint		auto_levels_;
     UIint		mode_;
@@ -265,8 +263,10 @@ class ViewSlices : public Module
   NrrdSlice *		mip_slices_[3];
 
   SliceWindow *		window_level_;
-  int			window_level_ww_;
-  int			window_level_wl_;
+  UIdouble		clut_ww_;
+  UIdouble		clut_wl_;
+  double		original_ww_;
+  double		original_wl_;
 
   int			pick_;
   int			pick_x_;
@@ -438,7 +438,6 @@ class ViewSlices : public Module
   int			render_window(SliceWindow &);
   int			swap_window(SliceWindow &);
   int			set_probe(SliceWindow &);
-  int			reset_clut(SliceWindow &);
   int			set_paint_dirty(SliceWindow &);
   int			autoview(SliceWindow &);
 
@@ -636,8 +635,6 @@ ViewSlices::SliceWindow::SliceWindow(GuiContext *ctx) :
   x_(ctx->subVar("posx"),0.0),
   y_(ctx->subVar("posy"),0.0),
   redraw_(true),
-  clut_ww_(ctx->subVar("clut_ww")),
-  clut_wl_(ctx->subVar("clut_wl")),
   auto_levels_(ctx->subVar("auto_levels"),0),
   mode_(ctx->subVar("mode"),0),
   crosshairs_(ctx->subVar("crosshairs"),0),
@@ -694,8 +691,8 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   panning_(0),
   cursor_(0.0, 0.0, 0.0),
   window_level_(0),
-  window_level_ww_(1),
-  window_level_wl_(0),
+  clut_ww_(ctx->subVar("clut_ww"), 1.0),
+  clut_wl_(ctx->subVar("clut_wl"), 0.0),
   pick_(0),
   pick_x_(0),
   pick_y_(0),
@@ -1998,8 +1995,8 @@ ViewSlices::draw_slice(NrrdSlice &slice)
 
 
   if (slice.tex_dirty_) {
-    int min = window.clut_wl_ - window.clut_ww_/2;
-    int max = window.clut_wl_ + window.clut_ww_/2;
+    double min = clut_wl_ - clut_ww_/2.0;
+    double max = clut_wl_ + clut_ww_/2.0;
     apply_colormap(slice, double(min), double(max), temp_tex_data_);
   }
   
@@ -2262,9 +2259,9 @@ ViewSlices::send_mip_textures(SliceWindow &window)
     value++;
     slice.do_lock();
 
-    int min = window.clut_wl_ - window.clut_ww_/2;
-    int max = window.clut_wl_ + window.clut_ww_/2;
-    apply_colormap(slice, double(min), double(max), temp_tex_data_);
+    double min = clut_wl_ - clut_ww_/2.0;
+    double max = clut_wl_ + clut_ww_/2.0;
+    apply_colormap(slice, min, max, temp_tex_data_);
 
     window.viewport_->make_current();
     bind_slice(slice, temp_tex_data_);
@@ -2576,15 +2573,6 @@ ViewSlices::rebind_slice(NrrdSlice &slice) {
   return 1;
 }
 
-int
-ViewSlices::reset_clut(SliceWindow &window) {
-  window.clut_ww_(); // resets gui context
-  window.clut_wl_(); // resets gui context
-  window.redraw_ = true;
-  for_each(window, &ViewSlices::rebind_slice);
-  return 1;
-}
-
   
 void
 ViewSlices::handle_gui_motion(GuiArgs &args) {
@@ -2645,16 +2633,14 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
       
       for_each(&ViewSlices::set_probe);
     } else if (window_level_) {
-      WindowLayouts::iterator liter = layouts_.begin();
-      while (liter != layouts_.end()) {
-	for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
-	  SliceWindow &window = *(*liter).second->windows_[v];
-	  window.clut_ww_ = Max(1,window_level_ww_ + (X - pick_x_)*2);
-	  window.clut_wl_ = window_level_wl_ + (pick_y_ - Y)*2;
-	  for_each(window, &ViewSlices::rebind_slice);
-	}
-	++liter;
-      }
+      //      WindowLayouts::iterator liter = layouts_.begin();
+      const double diagonal = 
+	sqrt(double(layout.opengl_->width()*layout.opengl_->width()) +
+	     double(layout.opengl_->height()*layout.opengl_->height()));
+      const double scale = (max_ - min_)/(2*diagonal);
+      clut_ww_ = Max(0.0,original_ww_ + (X - pick_x_)*scale);
+      clut_wl_ = Clamp(original_wl_ + (pick_y_ - Y)*scale, min_, max_);
+      for_each(&ViewSlices::rebind_slice);
       for (int axis = 0; axis < 3; ++axis)
 	if (mip_slices_[axis])
 	  rebind_slice(*mip_slices_[axis]);
@@ -2807,8 +2793,8 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
       pick_ = mouse_in_pick_boxes(window, crop_pick_boxes_);
       if (!pick_) {
 	window_level_ = layout.windows_[w];
-	window_level_ww_ = window.clut_ww_();
-	window_level_wl_ = window.clut_wl_();
+	original_ww_ = clut_ww_();
+	original_wl_ = clut_wl_();
       }
       break;
     case 2:
@@ -2992,11 +2978,15 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     update_crop_bbox_from_gui();
     redraw_all();
   } else if (args[1] == "setclut") {
-    for_each(&ViewSlices::reset_clut);
+    clut_ww_(); // resets gui context
+    clut_wl_(); // resets gui context
+    for_each(&ViewSlices::rebind_slice);
+    for_each(&ViewSlices::redraw_window);
     for (int n = 0; n < 3; ++n)
       if (mip_slices_[n])
-	mip_slices_[n]->tex_dirty_ = true;
-  } else Module::tcl_command(args, userdata);
+	rebind_slice(*mip_slices_[n]);
+  } else 
+    Module::tcl_command(args, userdata);
 }
 
 
@@ -3078,9 +3068,8 @@ ViewSlices::apply_colormap2_to_slice(Array3<float> &cm2, NrrdSlice &slice)
   const unsigned int z = slice.slice_num_;
   const Nrrd* value_nrrd = volumes_[0]->nrrd_->nrrd;
   const Nrrd* grad_nrrd = gradient_->nrrd;
-  const double min = (double(slice.window_->clut_wl_) - 
-		      int(slice.window_->clut_ww_)/2);
-  const double scale = 255.999 / double(slice.window_->clut_ww_);
+  const double min = clut_wl_ - clut_ww_/2.0;
+  const double scale = 255.999 / clut_ww_;
   float *paintdata =  (float *)slice.nrrd_->nrrd->data;  
   const int grad_thresh = Round(gradient_threshold_()*255.0);
   int grad, cval, pos;
@@ -3190,8 +3179,8 @@ ViewSlices::do_paint(SliceWindow &window) {
     int(get_value(gradient_->nrrd, xyz[0], xyz[1], xyz[2]));
   if (gradient < Round(gradient_threshold_*255.0)) return;
 
-  const double offset = double(window.clut_wl_) - int(window.clut_ww_)/2;
-  const double scale = 1.0 / double(window.clut_ww_);
+  const double offset = clut_wl_ - clut_ww_/2.0;
+  const double scale = 1.0 / clut_ww_;
   const double value = 
     scale*(get_value(volumes_[0]->nrrd_->nrrd,xyz[0],xyz[1],xyz[2])-offset);
   paint_widget_->add_coordinate(make_pair(value, gradient/255.0));
@@ -3211,25 +3200,13 @@ ViewSlices::extract_current_paint(SliceWindow &window)
 
 void
 ViewSlices::update_background_threshold() {
-  WindowLayouts::iterator layouts_iter = layouts_.begin();
-  if (layouts_iter == layouts_.end()) return;
-  WindowLayout *layout = layouts_iter->second;
-  if (!layout) return;
-  SliceWindows::iterator windows_iter = layout->windows_.begin();
-  if (windows_iter == layout->windows_.end()) return;
-  SliceWindow *window = *windows_iter;
-  if (!window) return;
-  const double wl = window->clut_wl_();
-  const double ww = window->clut_ww_();
-  const double min = wl - ww/2;
-  //  const double max = wl + ww/2;
-  double alpha = (background_threshold_() - min) / ww;
+  const double min = clut_wl_ - clut_ww_/2.0;
+  double alpha = (background_threshold_() - min) / clut_ww_;
   TexSquareMap::iterator iter = tobjs_.begin();
   while (iter != tobjs_.end()) {
     iter->second->set_alpha_cutoff(alpha);
     iter++;
-  }
-  
+  }  
   if (geom_oport_) geom_oport_->flushViews();
 }
 
