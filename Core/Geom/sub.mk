@@ -83,6 +83,8 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Light.cc		    		\
 	$(SRCDIR)/Lighting.cc		    		\
 	$(SRCDIR)/Material.cc		    		\
+	$(SRCDIR)/OpenGLContext.cc	    		\
+	$(SRCDIR)/OpenGLViewport.cc	    		\
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/SpotLight.cc		    		\
@@ -94,9 +96,9 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \
-	Core/GuiInterface Core/Util
+	Core/GuiInterface Core/Util Core/TkExtensions
 
-LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY)
 
 INCLUDES += $(FTGL_INCLUDE)
 
