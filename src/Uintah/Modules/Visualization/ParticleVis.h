@@ -24,6 +24,9 @@ class ParticleVis : public Module {
     TensorParticlesIPort* tpin;
     ColorMapIPort *cin;
     GeometryOPort* ogeom;
+    TCLdouble min_;
+    TCLdouble max_;
+    TCLint isFixed;
     TCLdouble current_time;
     TCLdouble radius;
     TCLint drawcylinders;

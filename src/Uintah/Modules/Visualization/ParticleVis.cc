@@ -71,6 +71,8 @@ ParticleVis::ParticleVis(const clString& id)
     shaft_rad("shaft_rad", id,this), drawcylinders("drawcylinders", id, this),
     polygons("polygons", id, this),
     show_nth("show_nth", id, this),
+    isFixed("isFixed", id, this),
+    min_("min_", id, this),  max_("max_", id, this),
     MIN_POLYS(8), MAX_POLYS(400),
     MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
@@ -245,7 +247,12 @@ void ParticleVis::execute()
 	  
 	  if( hasScale ) {
 	    double smin = 0, smax = 0;
-	    scaleSet->get_minmax(smin,smax);
+	    if( isFixed.get() ){
+	      smin = min_.get(); smax = max_.get();
+	    } else {
+	      scaleSet->get_minmax(smin,smax);
+	      min_.set(smin); max_.set(smax);
+	    }
  	    double scalefactor = 0;
 	    if (smax-smin > 1e-10)
  	      scalefactor = ((*scale_it)[*iter] - smin)/(smax - smin);
