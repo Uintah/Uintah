@@ -87,8 +87,7 @@ public:
       //    [out] 
       //        documentation here
       virtual int nonlinearSolve(const LevelP& level,
-				 SchedulerP& sched,
-				 double time, double deltat);
+				 SchedulerP& sched);
 
   
       ///////////////////////////////////////////////////////////////////////

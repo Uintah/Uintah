@@ -116,8 +116,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
 int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
-					  SchedulerP& sched,
-					  double time, double delta_t)
+					  SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -148,7 +147,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     // require : densityIN, [u,v,w]VelocityIN (new_dw)
     // compute : [u,v,w]VelocitySIVBC
 
-    d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls, time);
+    d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls);
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)
@@ -165,15 +164,15 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
     // compute total flowin, flow out and overall mass balance
-    d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls, delta_t);
+    d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls);
     d_boundaryCondition->sched_computeOMB(sched, patches, matls);
-    d_boundaryCondition->sched_transOutletBC(sched, patches, matls, delta_t);
+    d_boundaryCondition->sched_transOutletBC(sched, patches, matls);
 
     // calculate density reference array for buoyant plume calculation
 
     d_props->sched_computeDenRefArray(sched, patches, matls);
 
-    d_pressSolver->solve(level, sched, time, delta_t);
+    d_pressSolver->solve(level, sched);
 
 
     // Momentum solver
@@ -188,7 +187,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     for (int index = 1; index <= Arches::NDIM; ++index) {
 
-      d_momSolver->solve(sched, patches, matls, time, delta_t, index);
+      d_momSolver->solve(sched, patches, matls, index);
 
     }
 
@@ -203,12 +202,12 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
 
-      d_scalarSolver->solve(sched, patches, matls, time, delta_t, index);
+      d_scalarSolver->solve(sched, patches, matls, index);
 
     }
 
     if (d_enthalpySolve)
-      d_enthalpySolver->solve(sched, patches, matls, time, delta_t);
+      d_enthalpySolver->solve(sched, patches, matls);
 
     // update properties
     // require : densityIN
@@ -656,6 +655,7 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 	 iter != d_probePoints.end(); iter++) {
 
       if (patch->containsCell(*iter)) {
+	cerr.precision(10);
 	cerr << "for Intvector: " << *iter << endl;
 	cerr << "Density: " << density[*iter] << endl;
 	//	cerr << "Viscosity: " << viscosity[*iter] << endl;
