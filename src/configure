@@ -926,6 +926,7 @@ Optional Packages:
 --with-netsolve=DIR     Use the netsolve installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
 --with-png=DIR          Use the png installation in DIR
+--with-magick=DIR       Use the Image Magick installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
 --with-tau=<tau-makefile>
                           Specify a Tau Makefile
@@ -1762,6 +1763,24 @@ fi;
   if test -n "$png" -a ! -e "$png"; then
     { { echo "$as_me:$LINENO: error: The file or directory parameter ($png) specified for --with-png does not exist!  Please verify that the path and file are correct." >&5
 echo "$as_me: error: The file or directory parameter ($png) specified for --with-png does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-magick or --without-magick was given.
+if test "${with_magick+set}" = set; then
+  withval="$with_magick"
+  with_magick="$withval"
+   sci_required_magick=yes
+else
+  with_magick=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-magick --without-magick"
+  if test -n "$magick" -a ! -e "$magick"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($magick) specified for --with-magick does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($magick) specified for --with-magick does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -4193,7 +4212,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4196:" \
+echo "$as_me:4215:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7355,7 +7374,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.20
+  sci_tp_version=1.22
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -14635,334 +14654,150 @@ fi
 
 ##  --  search for ImageMagick --------------------------------------
 
+# Default values:
 _sci_optional=optional
-if test "$with_imagemagick"; then
-  _sci_inc="$with_imagemagick/include"
-  _sci_lib="$with_imagemagick/lib"
-  _sci_optional=specific
+_sci_lib="$sci_thirdparty_dir"
+_sci_inc="$sci_thirdparty_includes"
+
+if test "$with_magick" = "yes"; then
+  # If --with-magick is specified without a parameter, then it makes it required
+  _sci_optional=required
 else
-  _sci_inc="$sci_thirdparty_includes"
-  _sci_lib="$sci_thirdparty_libs"
+  if test "$with_magick"; then
+    # If --with-magick has a parameter, then use it
+    _sci_lib="$with_magick/$BASE_LIB_DIR"
+    _sci_inc="$with_magick/include"
+    _sci_optional=specific
+  fi
 fi
 
-# capture in the libs to link
+echo "$as_me:$LINENO: checking for $_sci_optional ImageMagick" >&5
+echo $ECHO_N "checking for $_sci_optional ImageMagick... $ECHO_C" >&6
+
 if test -e $_sci_lib/../bin/Magick-config; then
-    echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
+   echo "$as_me:$LINENO: result: Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&5
 echo "${ECHO_T}Using $_sci_lib/../bin/Magick-config to set ImageMagick variables." >&6
-    MAGICK_LIB_DIR_FLAG=""
-    MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-    INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
-    HAVE_MAGICK=yes
+
+   MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
+   MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
+
+   MAGICK_LIB_DIR_FLAG=
+
+    ##  SCI_REMOVE_MINUS_L
+
+   dirs="$MAG_DIRS"
+   libs="$MAG_LIBS"
+
+echo "dirs: $dirs"
+echo "libs: $libs"
+
+   if test -z "$dirs" || test -z "$libs"; then
+       { { echo "$as_me:$LINENO: error: The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+   else
+
+     sci_temp_lib=
+
+     # list of libraries that have been found
+     found_libs=
+
+     for libflag in $libs; do
+echo "found_libs: $found_libs"
+
+       # Cut of the '-l'
+       the_lib=lib`echo $libflag | sed 's/-l//'`
+
+echo "looking for the_lib: $the_lib"
+
+       checked_dirs=
+       for dirflag in $dirs; do
+
+         # Cut of the '-L' from each library directory.
+         the_dir=`echo $dirflag | sed 's/-L//'`
+echo "  in: $the_dir"
+
+         # Disregard generic libraries:
+         if test "$the_dir" = "/usr/lib"; then
+echo continue
+           continue
+         fi
+
+echo "already checked these dirs: $checked_dirs"
+echo "running this comand: echo $checked_dirs | grep $the_dir"
+         already_checked=`echo $checked_dirs | grep "$the_dir "`
+echo "already_checked = $already_checked"
+         if test -n "$already_checked"; then
+           { echo "$as_me:$LINENO: WARNING: $the_dir listed more than once as a -L flag.  Skipping." >&5
+echo "$as_me: WARNING: $the_dir listed more than once as a -L flag.  Skipping." >&2;}
+           continue
+         else
+           checked_dirs="$checked_dirs$the_dir "
+         fi
+
+         sci_found=
+         # Check to see if the .so exists in the given directory
+         if test -e $the_dir/$the_lib.so; then
+           sci_temp_lib="$sci_temp_lib $the_dir/$the_lib.so"
+           sci_found=$the_lib
+         else
+           # If no .so, then look for a '.dylib' file.
+           if test -e $the_dir/$the_lib.dylib; then
+              sci_temp_lib="$sci_temp_lib $the_dir/$the_lib.dylib"
+              sci_found=$the_lib
+           else
+             # If no .so, then look for a '.a' file.
+             if test -e $the_dir/$the_lib.a; then
+                sci_temp_lib="$sci_temp_lib $the_dir/$the_lib.a"
+                sci_found=$the_lib
+             fi
+           fi
+         fi
+
+echo "sci_found: $sci_found"
+echo "found_libs: $found_libs"
+         if test -n "$sci_found"; then
+           already_found=`echo $found_libs | grep "$sci_found "`
+         fi
+echo "already_found: $already_found"
+
+         if test -n "$already_found"; then
+           { { echo "$as_me:$LINENO: error: $libflag found in more than one location -- $the_dir and $already_found!" >&5
+echo "$as_me: error: $libflag found in more than one location -- $the_dir and $already_found!" >&2;}
+   { (exit 1); exit 1; }; }
+         else
+           if test -n "$sci_found"; then
+             found_libs="$found_libs$the_dir/$sci_found "
+           fi
+         fi
+       done
+     done
+     MAGICK_LIB_FLAG=$sci_temp_lib
+  fi
+
+
+   INC_MAGICK_H=`$_sci_lib/../bin/Magick-config --cppflags`
+   HAVE_MAGICK=yes
+   DEF_MAGICK="#define HAVE_MAGICK 1"
 else
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : 'optional' or 'required' or 'specific' required argument
-##             If specific, then SCI_TRY_LINK will take only one lib
-##             path and one include path and will verify that the
-##             libs/includes are in that path.
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_MAGICK        => lib path
-##      MAGICK_LIB_DIR_FLAG   => all the -L's
-##      MAGICK_LIB_FLAG       => all the -l's
-##      HAVE_MAGICK           => yes or no
-##      INC_MAGICK_H          => all the -I's
-##      HAVE_MAGICK_H         => yes or no
-
-if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for ImageMagick library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for ImageMagick library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
+   echo "$as_me:$LINENO: result: no." >&5
+echo "${ECHO_T}no." >&6
+   if test "$_sci_optional" != "optional"; then
+     echo
+     { echo "$as_me:$LINENO: WARNING: Cannot find a Magick-config file to get ImageMagick variables." >&5
+echo "$as_me: WARNING: Cannot find a Magick-config file to get ImageMagick variables." >&2;}
+     { echo "$as_me:$LINENO: WARNING: This file usually resides in Magicklib_dir/../bin/Magick-config." >&5
+echo "$as_me: WARNING: This file usually resides in Magicklib_dir/../bin/Magick-config." >&2;}
+     { echo "$as_me:$LINENO: WARNING: Please install ImageMagick and then reconfigure." >&5
+echo "$as_me: WARNING: Please install ImageMagick and then reconfigure." >&2;}
+   fi
 fi
 
-
-
-echo "$as_me:$LINENO: checking for ImageMagick library and headers ($_sci_optional)" >&5
-echo $ECHO_N "checking for ImageMagick library and headers ($_sci_optional)... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for ImageMagick library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
-
-for i in $_sci_inc; do
-  if test "$i" = "/usr/include"; then
-     echo ""
-     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for ImageMagick library and headers include files." >&5
-echo "$as_me: error: Please do not specify /usr/include as the location for ImageMagick library and headers include files." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-if test "$_sci_optional" = "specific"; then
-  # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
-  __sci_pass=false
-  __sci_first_time=true
-
-  # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib; do
-    if test "$value" = "/usr/lib"; then
-       echo ""
-       { { echo "$as_me:$LINENO: error: Please do not specify /usr/lib as the location for libs Magick." >&5
-echo "$as_me: error: Please do not specify /usr/lib as the location for libs Magick." >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-    if test "$value" = ""; then
-      continue
-    fi
-    if test $__sci_first_time = "true"; then
-      __sci_first_time=false
-      __sci_pass=true
-    else
-      __sci_pass=false
-    fi
-  done
-  if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for ImageMagick library and headers only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for ImageMagick library and headers only one library path may be specified (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-  # and only one include path:
-  ### Determine if there is only one item in $_sci_inc
-  __sci_pass=false
-  __sci_first_time=true
-  for value in ""$_sci_inc; do
-    if test "$value" = ""; then
-      continue
-    fi
-    if test $__sci_first_time = "true"; then
-      __sci_first_time=false
-      __sci_pass=true
-    else
-      __sci_pass=false
-    fi
-  done
-  if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for ImageMagick library and headers only one include path may be specified (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for ImageMagick library and headers only one include path may be specified (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-fi
-
-
-for i in Magick; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_sci_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $IM_LDFLAGS $IM_LIBS $LIBS"
-
-# Build up a list of the #include <file> lines for use in compilation:
-__sci_pound_includes=
-for i in ""magick/magick.h; do
-    # Have to have the "" for the SGI sh.
-    if test "$i" = ""; then
-      continue
-    fi
-    __sci_pound_includes="$__sci_pound_includes
-#include <$i>"
-done
-
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$__sci_pound_includes
-int
-main ()
-{
-
-    WriteImage
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_MAGICK='"$_sci_lib"'
-
-if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval MAGICK_LIB_DIR_FLAG=''
-else
-  eval MAGICK_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
-
-eval MAGICK_LIB_FLAG='"$_sci_libs"'
-eval HAVE_MAGICK="yes"
-
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_MAGICK_H=''
-else
-  eval INC_MAGICK_H='"$_sci_includes"'
-fi
-
-eval HAVE_MAGICK_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_MAGICK=''
-eval MAGICK_LIB_DIR_FLAG=''
-eval MAGICK_LIB_FLAG=''
-eval HAVE_MAGICK="no"
-eval INC_MAGICK_H=''
-eval HAVE_MAGICK_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "$_sci_optional" != "optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required MAGICK failed.
-    To see the failed compile information, look in config.log,
-    search for MAGICK. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required MAGICK failed.
-    To see the failed compile information, look in config.log,
-    search for MAGICK. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-
-if test "$_sci_optional" = "specific"; then
-#echo specific
-  # Make sure the exact includes were found
-  for i in ""magick/magick.h; do
-#echo looking for $_sci_inc/$i
-    if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specificly requested ImageMagick library and headers include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specificly requested ImageMagick library and headers include file '$_sci_inc/$i' was not found" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-  done
-  # Make sure the exact libraries were found
-  for i in ""Magick; do
-#echo looking for $_sci_lib/$i
-    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested ImageMagick library and headers library file '$_sci_lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested ImageMagick library and headers library file '$_sci_lib/$i' was not found" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-  done
-fi
-
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-fi
-
-if test "$HAVE_MAGICK" = "yes"; then
-    DEF_MAGICK="#define HAVE_MAGICK 1"
-fi
-
-if test "$with_imagemagick" && test ! "$DEF_MAGICK"; then
+if test "$with_magick" && test ! "$DEF_MAGICK"; then
   echo
   { { echo "$as_me:$LINENO: error: One or more of the ImageMagick components is missing." >&5
 echo "$as_me: error: One or more of the ImageMagick components is missing." >&2;}
    { (exit 1); exit 1; }; }
-  echo
 fi
 
 
