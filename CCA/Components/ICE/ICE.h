@@ -225,6 +225,13 @@ using namespace SCIRun;
 			const CCVariable<cflux>& OFC,
 			CCVariable<double>& q_advected);
       
+      void advectQFirst(const CCVariable<Vector>& q_CC,
+			const Patch* patch,
+			const CCVariable<fflux>& OFS,
+			const CCVariable<eflux>& OFE,
+			const CCVariable<cflux>& OFC,
+			CCVariable<Vector>& q_advected);
+
       void qOutfluxFirst(const CCVariable<double>& q_CC,const Patch* patch,
 			 CCVariable<fflux>& q_out,
 			 CCVariable<eflux>& q_out_EF,
