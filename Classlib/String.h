@@ -204,6 +204,10 @@ public:
     //////////
     // Remove directory name
     friend clString basename(const clString&);
+    //////////
+    // Return directory name
+    friend clString pathname(const clString&);
+  
 
     static void test_rigorous(RigorousTest* __test);
     static void test_performance(PerfTest* __pt);

@@ -18,6 +18,7 @@
 #include <Classlib/TrivialAllocator.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
+#include <iomanip.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -116,16 +117,32 @@ ostream& operator<<(ostream& s, const clString& str)
 
 istream& operator>>(istream& s, clString& str)
 {
-    char* buf=scinew char[1000];
-    s.get(buf,1000,'\n');
+  const int bufsize = 1024;
+  char* buf = scinew char[bufsize];
+  s >> setw( bufsize ) >> buf;
+  str = buf;
+  while (s.gcount() == bufsize - 1) { // string is longer than 1024
+    s >> setw( bufsize) >> buf;
+    str +=  buf;
+  }
+  delete [] buf;
+  return s;
+}
+      
+    
+/* -----------------  Old version ----------------------
+istream& operator>>(istream& s, clString& str)
+{
+    char* buf=scinew char[1024];
+    s.get(buf,1024,'\n');
 #ifdef broken
     char c;
     if(cin.get(c) && c!='\n'){
-	// Longer than 1000...
+	// Longer than 1024...
 	int grow=1;
-	int size=1000;
+	int size=1024;
 	while(grow){
-	    int newsize=size << 1; /* Double size... */
+	    int newsize=size << 1; // Double size... 
 	    char* p=scinew char[newsize];
 	    strncpy(p, buf, size);
 	    s.get(buf+size,size,'\n');
@@ -144,6 +161,9 @@ istream& operator>>(istream& s, clString& str)
     delete[] buf;
     return s;
 }
+------------------------------------------------------ */
+
+
 
 int clString::index(const char match) const
 {
@@ -198,6 +218,25 @@ clString basename(const clString& str)
 	pp++;
     }
     return clString(last_slash+1);
+}
+
+clString pathname(const clString &str)
+{
+  ASSERT(str.p && str.p->s);
+  char* pp=str.p->s;
+  char* p = pp;
+  char* last_slash = pp;
+  clString result;
+  while(*pp) {
+   if(*pp=='/')last_slash=pp;
+	pp++;
+    }
+  
+  while( p != last_slash ) {
+    result += *p;
+    p++;
+  }
+  return result;
 }
 
 clString& clString::operator+=(char c)
