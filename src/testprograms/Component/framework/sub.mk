@@ -19,16 +19,17 @@ PROGRAM := $(SRCDIR)/main
 SRCS    := $(SRCDIR)/cca_sidl.cc \
 	$(SRCDIR)/main.cc \
 	$(SRCDIR)/cca.cc \
-	$(SRCDIR)/BuilderImpl.cc \
-	$(SRCDIR)/ConnectionServicesImpl.cc \
-	$(SRCDIR)/ComponentImpl.cc \
+	$(SRCDIR)/Registry.cc \
 	$(SRCDIR)/ComponentIdImpl.cc \
-	$(SRCDIR)/FrameworkImpl.cc \
+	$(SRCDIR)/ComponentImpl.cc \
 	$(SRCDIR)/PortInfoImpl.cc \
-	$(SRCDIR)/SciServicesImpl.cc \
 	$(SRCDIR)/PortImpl.cc \
+	$(SRCDIR)/FrameworkImpl.cc \
+	$(SRCDIR)/SciServicesImpl.cc \
+	$(SRCDIR)/ConnectionServicesImpl.cc \
 	$(SRCDIR)/LocalFramework.cc \
-#	$(SRCDIR)/BuilderImpl.cc \
+	$(SRCDIR)/BuilderImpl.cc \
+
 GENHDRS := $(SRCDIR)/cca_sidl.h
 
 include $(SRCTOP)/scripts/program.mk
