@@ -74,7 +74,7 @@
             <solve_enthalpy>true</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
-		<cf>0.001</cf>
+		<cf>0.01</cf>
 		<fac_mesh>1.0</fac_mesh>
 		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>
@@ -86,11 +86,10 @@
 	        <radiation>true</radiation>
 	        <mixing_model>pdfMixingModel</mixing_model>
 	        <PDFMixingModel>
-		  <TableType>dynamic</TableType>
-                  <TableStorage>KDTree</TableStorage>
                   <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
+	          <TableStorage>KDTree</TableStorage>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
 		  <Stream>
 		    <pressure>1.01325e+05</pressure>
@@ -239,10 +238,16 @@
 		<res_tol>2.0</res_tol>
 		<probe_data>true</probe_data>
 	        <ProbePoints>
-	           <probe_point>[5,5,5]</probe_point>
+	           <probe_point>[1,3,3]</probe_point>
 		</ProbePoints>
                 <ProbePoints>
-	           <probe_point>[7,5,5]</probe_point>
+	           <probe_point>[1,3,6]</probe_point>
+		</ProbePoints>
+	        <ProbePoints>
+	           <probe_point>[1,6,3]</probe_point>
+		</ProbePoints>
+                <ProbePoints>
+	           <probe_point>[1,6,6]</probe_point>
 		</ProbePoints>
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
