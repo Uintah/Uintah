@@ -45,32 +45,25 @@ public:
     //Return the center point of the BBox
     Point center() const;
     //////////
-    //Return the largest edge
+    //Return the length of the largest edge
     double longest_edge();
     //////////
     //Move the BBox in space
     void translate(const Vector &v);
     //////////
-    //Change the dimensions of the box by a scale
+    //Change the dimensions of the box by a scale, and translate the box
     void scale(double s, const Vector &o);
     //////////
-    //Return the minimum component of the BBox
+    //Return the minimum of the BBox
     Point min() const;
     //////////
-    //Returns the maximum component component of the BBox
+    //Returns the maximum of the BBox
     Point max() const;
     //////////
     //Returns the diagonal vector of the BBox
-    Vector diagonal() const;
+    Vector diagonal() const;  
     //////////
-
-  //Return the greater of two integers
-    inline friend int maxint(int a, int b){
-      if(a>b)
-        return a;
-      return b;
-    }
-  
+    //Is a point within the bounds of a BBox?
     inline int inside(const Point &p) const {return (have_some && p.x()>=cmin.x() && p.y()>=cmin.y() && p.z()>=cmin.z() && p.x()<=cmax.x() && p.y()<=cmax.y() && p.z()<=cmax.z());}
 
     //Rigorous Tests
