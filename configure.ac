@@ -50,7 +50,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.9],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.10],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.53
 AC_PREREQ(2.53)
@@ -74,6 +74,11 @@ AC_COPYRIGHT(
 ##
 )
 
+## Clean up files that could be left around if configure was 
+## interrupted (by control-c, ^c) because I do not know how to add
+## cleanup to the builtin AC function that uses the 'trap' command.
+rm -rf ii_files sedscript
+
 AC_CONFIG_SRCDIR(configVars.mk.in)
 
 ##  set the location of config.guess, config.sub, and install.sh
@@ -82,16 +87,17 @@ AC_CONFIG_AUX_DIR(scripts)
 ##  set the output header to "sci_config.h"
 AC_CONFIG_HEADER(sci_config.h)
 
-path_to_src=`echo $0 | sed 's/configure//'`
+## Cut off the /configure from the configure command (eg: ../src/configure)
+path_to_src=`echo $0 | sed 's/\/configure//'`
 
-echo $path_to_src
-if test "$path_to_src" = "./" -o "$path_to_src" = ""; then
+## If user tried to configure in current directory, this will block it.
+if test "$path_to_src" = "configure" -o "$path_to_src" = "."; then
    AC_MSG_WARN(DO NOT CONFIGURE IN THE SRC DIRECTORY:)
    AC_MSG_WARN(___ Try creating a dir such as: ../archBITSdebug)
    AC_MSG_WARN(___ eg: ../sgi32opt or ../linux32debug)
    AC_MSG_WARN(___ cd to that dir and then type: ../src/configure)
    rm -f config.log config.cache confdefs.h conftest.out
-   AC_MSG_ERROR(You have been warned!)
+   AC_MSG_ERROR(Tried to configure in src directory.)
 fi
 
 # make sure these variables are considered precious.
@@ -2984,3 +2990,9 @@ else
   mv sci_testdefs.h sci_defs.h
   AC_MSG_WARN(sci_defs.h has changed.)
 fi
+
+#### Clean up: ####
+## Possible temporary template directories
+rm -rf ii_files
+## sedscript
+rm -f sedscript
