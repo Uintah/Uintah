@@ -43,6 +43,7 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
 	Packages/Uintah/Core/Datatypes     \
+	Packages/Uintah/Core/DataArchive     \
 	Packages/Uintah/Dataflow/Modules/Selectors
 
 LIBS := $(M_LIBRARY)
