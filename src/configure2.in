@@ -697,8 +697,7 @@ AC_MSG_RESULT($NUM_CPUS)
 ## MAKE_PARALLELISM is used to tell the compiler how many cpus to use
 ## when linking.  1 is usually a good number to use per link,
 ## espcially for smaller number of cpu machines.  I think 4 is
-## sufficient for even nirvana.  (BTW, if there is an "elseif"
-## construct in shell programming, could someone let me know... Dd.)
+## sufficient for even nirvana.
 if test "NUM_CPUS -le 2" ; then
   MAKE_PARALLELISM=1
 else
