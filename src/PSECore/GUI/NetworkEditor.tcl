@@ -427,8 +427,11 @@ proc addModuleAtPosition {package category module xpos ypos} {
     set modid [netedit addmodule "$package" "$category" "$module"]
     # Create the itcl object
     set className [removeSpaces "${package}_${category}_${module}"]
-    if {[catch "$className $modid"]} {
+    if {[catch "$className $modid" exception]} {
 	# Use generic module
+	if {$exception != "invalid command name \"$className\""} {
+	    bgerror "Error instantiating iTcl class for module:\n$exception";
+	}
 	Module $modid -name "$module"
     }
     $modid make_icon .bot.neteditFrame.canvas \

@@ -59,7 +59,6 @@ Renderer* Renderer::create(const clString& type)
 {
     RegisterRenderer* rr;
     if(known_renderers->lookup(type, rr)){
-	cerr << "Calling maker\n";
 	make_Renderer maker=rr->maker;
 	return (*maker)();
     } else {
@@ -164,6 +163,12 @@ void Renderer::getData(int, AsyncReply<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.3  1999/08/23 20:11:49  sparker
+// GenAxes had no UI
+// Removed extraneous print statements
+// Miscellaneous compilation issues
+// Fixed an authorship error
+//
 // Revision 1.2  1999/08/17 06:37:38  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

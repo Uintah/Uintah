@@ -174,7 +174,7 @@ void initPackage(const clString& tcl) {
   RM("Visualization", "Cutting Plane",           make_CuttingPlane,         tcl+"/CuttingPlane.tcl");
   RM("Visualization", "Cutting Plane Tex",       make_CuttingPlaneTex,      tcl+"/CuttingPlaneTex.tcl");
   RM("Visualization", "FieldCage",               make_FieldCage,            tcl+"/FieldCage.tcl");
-  RM("Visualization", "Gen Axes",                make_GenAxes,              "");
+  RM("Visualization", "Gen Axes",                make_GenAxes,              tcl+"/GenAxes.tcl");
   RM("Visualization", "Gen Color Map",           make_GenColorMap,          tcl+"/GenColorMap.tcl");
   RM("Visualization", "Gen Transfer Func",       make_GenTransferFunc,      tcl+"/GenTransferFunc.tcl");
   RM("Visualization", "Gen Field Edges",         make_GenFieldEdges,        "");
@@ -200,7 +200,7 @@ void initPackage(const clString& tcl) {
   RM("Writers",       "Geometry Writer",         make_GeometryWriter,       tcl+"/GeometryWriter.tcl");
   RM("Writers",       "Matrix Writer",           make_MatrixWriter,         tcl+"/MatrixWriter.tcl");
   RM("Writers",       "Mesh Writer",             make_MeshWriter,           tcl+"/MeshWriter.tcl");
-  RM("Writers",       "Scalr Field Writer",      make_ScalarFieldWriter,    tcl+"/ScalarFieldWriter.tcl");
+  RM("Writers",       "Scalar Field Writer",     make_ScalarFieldWriter,    tcl+"/ScalarFieldWriter.tcl");
   RM("Writers",       "Surface Writer",          make_SurfaceWriter,        tcl+"/SurfaceWriter.tcl");
   RM("Writers",       "Tetra Writer",            make_TetraWriter,          tcl+"/TetraWriter.tcl");
   RM("Writers",       "Vector Field Writer",     make_VectorFieldWriter,    tcl+"/VectorFieldWriter.tcl");
