@@ -55,10 +55,10 @@ private:
 
 public:
   SlotBase( int priority=0) : priority_(priority) {}
-  virtual ~SlotBase() {}
+  virtual ~SlotBase();
 
   int priority() {return priority_;}
-  virtual void send() {}
+  virtual void send();
 };
 
 
@@ -69,6 +69,7 @@ class SignalBase {
   
  protected: //you can not allocated a SignalBase
   SignalBase() : lock_("signal lock") {} 
+  virtual ~SignalBase();
   
  public:
   void add( SlotBase *s )
@@ -120,8 +121,9 @@ private:
   void (*fun)();
 public:
   StaticSlot( void (*fun)(), int priority=0 ) : SlotBase(priority), fun(fun) {}
+  virtual ~StaticSlot();
   
-  virtual void send() { (*fun)(); }
+  virtual void send();
   bool operator==(const StaticSlot &s) { return fun == s.fun;}
 };
 
@@ -138,6 +140,8 @@ private:
 public:
   Slot( Caller *caller, void (Caller::*pmf)(), int priority=0 ) 
     : SlotBase(priority), caller_(caller), pmf_(pmf) {}
+  ~Slot();
+
   virtual void send() { (caller_->*pmf_)(); }
   bool operator==(const Slot &s) 
     { 
@@ -152,6 +156,9 @@ public:
 
 class Signal : public SignalBase {
 public:
+
+  ~Signal();
+
   void operator()() 
     { lock_.lock();
     for (unsigned i=0; i<slot_.size(); i++) slot_[i]->send();

@@ -254,7 +254,7 @@ StructQuadSurfMesh::locate(Node::index_type &node, const Point &p) const
 bool
 StructQuadSurfMesh::locate(Edge::index_type &node, const Point &) const
 {
-  ASSERT("Locate Edge not implemented in StructQuadSurfMesh");
+  ASSERTFAIL("Locate Edge not implemented in StructQuadSurfMesh");
   return false;
 }
 
@@ -262,7 +262,7 @@ StructQuadSurfMesh::locate(Edge::index_type &node, const Point &) const
 bool
 StructQuadSurfMesh::locate(Face::index_type &loc, const Point &) const
 {
-  ASSERT("Locate Face not implemented in StructQuadSurfMesh");
+  ASSERTFAIL("Locate Face not implemented in StructQuadSurfMesh");
   return false;
 }
 
@@ -270,7 +270,7 @@ StructQuadSurfMesh::locate(Face::index_type &loc, const Point &) const
 bool
 StructQuadSurfMesh::locate(Cell::index_type &loc, const Point &) const
 {
-  ASSERT("Locate Cell not implemented in StructQuadSurfMesh");
+  ASSERTFAIL("Locate Cell not implemented in StructQuadSurfMesh");
   return false;
 }
 
@@ -278,7 +278,7 @@ void
 StructQuadSurfMesh::get_weights(const Point &p,
 				Node::array_type &locs, vector<double> &weights)
 {
-  ASSERT("get_weights for nodes not implemented in StructQuadSurfMesh");
+  ASSERTFAIL("get_weights for nodes not implemented in StructQuadSurfMesh");
 }
 
 void

@@ -518,7 +518,7 @@ ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 			     const string& rid, int lightNo, 
 			     bool on, const Vector& dir)
-  : MessageBase(type), rid(rid), lightNo(lightNo), on(on), lightDir(dir)
+  : MessageBase(type), rid(rid), lightDir(dir), lightNo(lightNo), on(on)
 {}
 
 

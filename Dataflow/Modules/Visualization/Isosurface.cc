@@ -260,13 +260,11 @@ Isosurface::execute()
   else if (gui_active_isoval_selection_tab_.get() == "2")
   { // list
     string vlist = gui_iso_value_list_.get();
-    char **v;
     char *value_str = new char[500];
-    v = &value_str;
-    strcpy(value_str, vlist.c_str());
+    strncpy(value_str, vlist.c_str(), 500);
     char *val;
     while ((val = strtok(value_str, " "))) {
-      value_str = 0;
+      //value_str = 0;
       isovals.push_back(atof(val));
     }
 //    cerr << "Number of isovalues="<<isovals.size()<<"\n";

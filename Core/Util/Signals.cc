@@ -2,6 +2,40 @@
 
 namespace SCIRun {
 
+
+SlotBase::~SlotBase()
+{
+}
+
+
+void
+SlotBase::send()
+{
+}
+
+
+SignalBase::~SignalBase()
+{
+}
+
+
+StaticSlot::~StaticSlot()
+{
+}
+
+
+void
+StaticSlot::send()
+{
+  (*fun)();
+}
+
+
+Signal::~Signal()
+{
+}
+
+
 void connect( Signal &s, void (*fun)(), int priority=0 )
 {
   s.add ( new StaticSlot( fun, priority ) );
