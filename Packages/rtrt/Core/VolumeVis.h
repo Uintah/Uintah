@@ -147,8 +147,8 @@ VolumeVis<DataType>::VolumeVis(BrickArray3<DataType>& _data,
 }
 
 template<class DataType>
-void VolumeVis<DataType>::intersect(Ray& ray, HitInfo& hit, DepthStats*,
-				    PerProcessorContext*) {
+void VolumeVis<DataType>::intersect(Ray& ray, HitInfo& hit, DepthStats* ds,
+				    PerProcessorContext* ppc) {
   // determines the min and max t of the intersections with the boundaries
   double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
   
@@ -193,16 +193,50 @@ void VolumeVis<DataType>::intersect(Ray& ray, HitInfo& hit, DepthStats*,
   if (ty2 < t2) t2 = ty2;
   if (tz2 < t2) t2 = tz2;
 
-  // t1 is t_min and t2 is t_max
-  if (t2 > t1) {
-    if (t1 > FLT_EPSILON) {
-      if (hit.hit(this, t1)) {
-	float* tmax=(float*)hit.scratchpad;
-	*tmax = t2;
+  HitInfo hitchild;
+
+  // This is for recursive calls when the background ray is sent by
+  // the shade function.  This won't work for children that are
+  // groups.
+  if (child && !(hit.was_hit && hit.hit_obj != child))
+    child->intersect(ray, hitchild, ds, ppc);
+  
+  if (hitchild.was_hit == false) {
+    // t1 is t_min and t2 is t_max
+    if (t2 > t1) {
+      if (t1 > FLT_EPSILON) {
+        if (hit.hit(this, t1)) {
+          float* tmax=(float*)hit.scratchpad;
+          tmax[30] = t2;
+          tmax[31] = t2;
+        }
+      }
+      //else if (t2 > FLT_EPSILON)
+      //hit.hit(this, t2);
+    }
+  } else {
+    // The box wasn't hit, so let's see if the child does
+    if (hit.hit(hitchild.hit_obj, hitchild.min_t))
+      // If the child was hit, copy the HitInfo over, since there may
+      // be scratch data that's needed.
+      hit = hitchild;
+
+    // The child was hit, let's see who was closer
+    if (t2 > t1) {
+      if (t1 > FLT_EPSILON) {
+        // The box was hit, figure out who was first
+        if (t1 < hitchild.min_t) {
+          if (hit.hit(this, t1)) {
+            float* tmax=(float*)hit.scratchpad;
+            tmax[30] = t2;
+            tmax[31] = hitchild.min_t;
+          }
+          // We know that the child can't be hit if the box didn't
+          // register a hit.
+          return;
+        }
       }
     }
-    //else if (t2 > FLT_EPSILON)
-    //hit.hit(this, t2);
   }
    
 }
@@ -312,7 +346,9 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
 				Context* cx) {
   float t_min = hit.min_t;
   float* t_maxp = (float*)hit.scratchpad;
-  float t_max = *t_maxp;
+  float t_max = t_maxp[30];
+  float child_hit = t_maxp[31];
+  if (t_max < t_maxp[1]) t_max = child_hit;
 
   // alpha is the accumulating opacities
   // alphas are in levels of opacity: 1 - completly opaque
@@ -557,10 +593,21 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
     }
   }
   if (alpha < RAY_TERMINATION_THRESHOLD) {
+    // Check to see if there is a child
     Color bgcolor;
-    Ray r(current_p,ray.direction());
-    cx->worker->traceRay(bgcolor, r, depth+1, atten,
-			 accumcolor, cx);
+    if (child) {
+      HitInfo hit_child;
+      hit_child.was_hit = true;
+      hit_child.hit_obj = child;
+      hit_child.min_t = child_hit;
+        child->get_matl()->shade(bgcolor, ray, hit_child, depth+1,
+                                 atten, accumcolor, cx);
+    } else {
+      // Grab the background color
+      Ray r(current_p,ray.direction());
+      cx->worker->traceRay(bgcolor, r, depth+1, atten,
+                           accumcolor, cx);
+    }
     total += bgcolor * (1-alpha);
   }
   result = total;
