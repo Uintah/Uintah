@@ -102,7 +102,7 @@ void SurfTree::printNbrInfo() {
 // map will be the mapping from a tree idx to a tri index --
 // imap will be a mapping from a tri index to a tree index.
 int SurfTree::extractTriSurface(TriSurface* ts, Array1<int>& map, 
-				Array1<int>& imap, int comp) {
+				Array1<int>& imap, int comp, int remapPoints) {
     map.resize(0);
     imap.resize(0);
     if (comp>surfI.size()) {
@@ -126,7 +126,7 @@ int SurfTree::extractTriSurface(TriSurface* ts, Array1<int>& map,
 
     int currIdx=0;
     for (i=0; i<map.size(); i++) {
-	if (map[i] != -1) {
+	if (map[i] != -1 || !remapPoints) {
 	    imap.add(i);
 	    map[i]=currIdx;
 	    ts->points.add(nodes[i]);
@@ -587,6 +587,9 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.9  1999/11/17 00:35:07  dmw
+// added support for not renumbering the nodes when extracting a trisurface from a surftree
+//
 // Revision 1.8  1999/11/02 06:06:13  moulding
 // added a #ifdef for win32 to quiet the C++ compiler.  This change
 // relates to bug # 61 in csafe's bugzilla.
