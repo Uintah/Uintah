@@ -241,8 +241,12 @@ VolumeVisualizer::execute()
     volren_->set_texture(tex);
     if(c1 && cmap1_dirty)
       volren_->set_colormap1(cmap1);
+    else if (!c1)
+      volren_->set_colormap1(0);
     if(c2 && cmap2_dirty)
       volren_->set_colormap2(cmap2);
+    else if (!c2)
+      volren_->set_colormap2(0);
     int ni = tex->nx();
     int nj = tex->ny();
     int nk = tex->nz();
@@ -256,9 +260,7 @@ VolumeVisualizer::execute()
     }
   }
  
-  //AuditAllocator(default_allocator);
   volren_->set_interp(bool(gui_interp_mode_.get()));
-  //AuditAllocator(default_allocator);
 
   switch(gui_render_style_.get()) {
   case 0:
@@ -281,7 +283,6 @@ VolumeVisualizer::execute()
     gui_num_slices_.set(-1);
   }
   
-  //AuditAllocator(default_allocator);
   volren_->set_sampling_rate(gui_sampling_rate_hi_.get());
   volren_->set_interactive_rate(gui_sampling_rate_lo_.get());
   volren_->set_adaptive(gui_adaptive_.get());
@@ -323,9 +324,7 @@ VolumeVisualizer::execute()
                         gui_specular_.get(), gui_shine_.get());
   volren_->set_light(gui_light_.get());
   
-  //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
-  //AuditAllocator(default_allocator);
 
   if (!ocmap) {
     error("Unable to initialize oport 'Color Map'.");
