@@ -215,15 +215,15 @@ void TensorFieldExtractor::execute()
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Matrix3> *vfd =
 	  scinew LevelField<Matrix3>( mesh, Field::NODE );
-	vector<Array3<Matrix3> >& data = vfd->fdata();
+	vector<ShareAssignArray3<Matrix3> >& data = vfd->fdata();
 	data.resize(level->numPatches());
-	vector<Array3<Matrix3> >::iterator it = data.begin();
+	vector<ShareAssignArray3<Matrix3> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
 	    thread_sema->down();
 	    Thread *thrd =
 	      scinew Thread(new PatchDataThread<NCVariable<Matrix3>,
-			    vector<Array3<Matrix3> >::iterator>
+			    vector<ShareAssignArray3<Matrix3> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
 	    thrd->detach();
@@ -246,15 +246,15 @@ void TensorFieldExtractor::execute()
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Matrix3> *vfd =
 	  scinew LevelField<Matrix3>( mesh, Field::CELL );
-	vector<Array3<Matrix3> >& data = vfd->fdata();
+	vector<ShareAssignArray3<Matrix3> >& data = vfd->fdata();
 	data.resize(level->numPatches());
-	vector<Array3<Matrix3> >::iterator it = data.begin();
+	vector<ShareAssignArray3<Matrix3> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
 	    r != level->patchesEnd(); r++, ++it ){
 	    thread_sema->down();
 	    Thread *thrd =
 	      scinew Thread(new PatchDataThread<CCVariable<Matrix3>,
-			    vector<Array3<Matrix3> >::iterator>
+			    vector<ShareAssignArray3<Matrix3> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
 	    thrd->detach();

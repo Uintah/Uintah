@@ -129,9 +129,9 @@ void VectorFieldOperator::computeScalars(VectorField* vectorField,
     int max_workers = Max(Thread::numProcessors()/3, 4);
     Semaphore* thread_sema = scinew Semaphore( "tensor operator semaphore",
 					       max_workers); 
-    vector<Array3<Vector> > tdata = vectorField->fdata();
-    vector<Array3<Vector> >::iterator vit = tdata.begin();
-    vector<Array3<Vector> >::iterator vit_end = tdata.end();
+    vector<ShareAssignArray3<Vector> > tdata = vectorField->fdata();
+    vector<ShareAssignArray3<Vector> >::iterator vit = tdata.begin();
+    vector<ShareAssignArray3<Vector> >::iterator vit_end = tdata.end();
     thread_sema->down();
     IntVector offset( (*vit).getLowIndex() );
     for(;vit != vit_end; ++vit) {

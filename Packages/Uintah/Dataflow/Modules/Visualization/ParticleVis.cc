@@ -43,6 +43,7 @@
 #include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <stdio.h>
 #include <iostream>
 using std::cerr;
@@ -180,16 +181,16 @@ void ParticleVis::execute()
   // so just grab one
   PSet *pset = part->getParticleSet();
   cbClass = pset->getCallBackClass();
-  vector<ParticleVariable<Point> >& points = pset->getPositions();
-  vector<ParticleVariable<long> >& ids = pset->getIDs();
-  vector<ParticleVariable<long> >::iterator id_it = ids.begin();
-  vector<ParticleVariable<double> >& values = part->get();
-  vector<ParticleVariable<Point> >::iterator p_it = points.begin();
-  vector<ParticleVariable<Point> >::iterator p_it_end = points.end();
-  vector<ParticleVariable<double> >::iterator s_it = values.begin();
-  vector<ParticleVariable<double> >::iterator scale_it;
-  vector<ParticleVariable<Vector> >::iterator v_it;
-  vector<ParticleVariable<Matrix3> >::iterator t_it;
+  vector<ShareAssignParticleVariable<Point> >& points = pset->getPositions();
+  vector<ShareAssignParticleVariable<long> >& ids = pset->getIDs();
+  vector<ShareAssignParticleVariable<long> >::iterator id_it = ids.begin();
+  vector<ShareAssignParticleVariable<double> >& values = part->get();
+  vector<ShareAssignParticleVariable<Point> >::iterator p_it = points.begin();
+  vector<ShareAssignParticleVariable<Point> >::iterator p_it_end = points.end();
+  vector<ShareAssignParticleVariable<double> >::iterator s_it = values.begin();
+  vector<ShareAssignParticleVariable<double> >::iterator scale_it;
+  vector<ShareAssignParticleVariable<Vector> >::iterator v_it;
+  vector<ShareAssignParticleVariable<Matrix3> >::iterator t_it;
 
   if( hasScale ) scale_it = scaleSet->get().begin();
   if( hasVectors ) v_it = vect->get().begin();

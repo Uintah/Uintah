@@ -4,6 +4,7 @@
 #include <Uintah/Core/Datatypes/TensorParticles.h>
 #include <Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Uintah/Core/Datatypes/VectorParticles.h>
+#include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
 
 namespace Uintah {
 
@@ -52,8 +53,8 @@ void ParticleEigenEvaluator::execute(void) {
   double e[3];
   std::vector<Vector> eigenVectors;
 
-  vector< ParticleVariable<Matrix3> >& tensors = pTP->get();
-  vector< ParticleVariable<Matrix3> >::const_iterator iter;
+  vector< ShareAssignParticleVariable<Matrix3> >& tensors = pTP->get();
+  vector< ShareAssignParticleVariable<Matrix3> >::const_iterator iter;
   for (iter = tensors.begin(); iter != tensors.end(); iter++) {
     ParticleSubset* subset = (*iter).getParticleSubset();
     selectedEValues.copyPointer(ParticleVariable<double>(subset));
