@@ -74,12 +74,14 @@ WARNING
 	 void readPoints(const string& file);
 	 void readTri(const string& file);
 	 void makePlanes();
+	 void makeTriBoxes();
 	 bool insideTriangle(const Point& p, int i) const;
 	 
 	 Box d_box;
 	 vector<Point> d_points;
 	 vector<IntVector> d_tri;
 	 vector<Plane> d_planes;
+	 vector<Box> d_boxes;
 	 
       };
 } // End namespace Uintah
