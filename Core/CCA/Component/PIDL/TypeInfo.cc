@@ -68,10 +68,10 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   ProxyBase* p=dynamic_cast<ProxyBase*>(obj);
   if(!p)
     return 0;
-
+  
   ReferenceMgr* _rm;
   _rm = p->_proxyGetReferenceMgr(); 
-  Message* message = _rm->getIndependentReference()->chan->getMessage();
+  Message* message = _rm->d_ref[0].chan->getMessage();
 
   // Get a startpoint ready for the reply
   message->createMessage();
@@ -106,12 +106,32 @@ Object* TypeInfo::pidl_cast(Object* obj) const
     // isa failed
     return 0;
   } else {
-    // isa succeeded, return the correct proxy
-    ReferenceMgr new_rm;
-    new_rm = (*_rm);
-    for(unsigned int i=0; i < new_rm.d_ref.size(); i++)
-      new_rm.d_ref[i].d_vtable_base=vtbase;
-    return (*d_priv->create_proxy)(new_rm);
+    // isa succeeded 
+    // addReference to the other processes in case it is a parallel component
+    for(unsigned int i=1; i < _rm->d_ref.size(); i++) {
+      /*CALLNORET*/
+      message = _rm->d_ref[i].chan->getMessage();
+      message->createMessage();
+      //Marshal flag which informs handler that
+      // this message is CALLNORET
+      ::SCIRun::callType _flag = ::SCIRun::CALLNORET;
+      message->marshalInt(&(int)_flag);
+      //Marshal the sessionID and number of actual calls from this proxy
+      ::std::string _sessionID = p->getProxyUUID();
+      message->marshalChar(const_cast<char*>(_sessionID.c_str()), 64);
+      //CALLNORET always sends (1 call + redis) number of calls per callee proc.
+      int _numCalls = 1;
+      message->marshalInt(&_numCalls);
+      // Send the message
+      int _handler= _rm->d_ref[i].getVtableBase()+0;
+      message->sendMessage(_handler);
+      message->destroyMessage();
+    }
+
+    // return the correct proxy
+    for(unsigned int i=0; i < _rm->d_ref.size(); i++)
+      _rm->d_ref[i].d_vtable_base=vtbase;
+    return (*d_priv->create_proxy)(*_rm);
   }
 }
 

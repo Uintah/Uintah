@@ -33,6 +33,7 @@
 #include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/CCA/Component/Comm/NexusSpChannel.h>
 #include <Core/CCA/Component/Comm/NexusEpChannel.h>
+#include <Core/CCA/Component/Comm/CommNexus.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/Exceptions/InternalError.h> 
@@ -52,11 +53,24 @@ PIDL::initialize(int, char*[])
 {
   //Default for communication purposes 
   setCommunication(COMM_NEXUS);
+  CommNexus::initialize();
 
   if(!warehouse){
     warehouse=new Warehouse;
   }
 
+}
+
+void
+PIDL::finalize()
+{
+  switch (comm_type) {
+  case COMM_SOCKET:
+    break;
+  case COMM_NEXUS:
+    CommNexus::finalize();
+    break;
+  }
 }
 
 SpChannel*  
