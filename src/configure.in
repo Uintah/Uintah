@@ -446,11 +446,11 @@ fi
 # if still not found try some standard locations
 if test -z "$TCL_MAJOR_VERSION" ; then
   unset cfsh
-  cfsh="/usr/lib/tclConfig.sh"
+  cfsh="/usr/local/lib/tclConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
   else
-    cfsh="/usr/local/lib/tclConfig.sh"
+    cfsh="/usr/lib/tclConfig.sh"
     if test -f $cfsh ; then
       . $cfsh
     fi
@@ -535,11 +535,11 @@ fi
 # if still not found try some standard locations
 if test -z "$TK_MAJOR_VERSION" ; then
   unset cfsh
-  cfsh="/usr/lib/tkConfig.sh"
+  cfsh="/usr/local/lib/tkConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
   else
-    cfsh="/usr/local/lib/tkConfig.sh"
+    cfsh="/usr/lib/tkConfig.sh"
     if test -f $cfsh ; then
       . $cfsh
     fi
@@ -660,22 +660,22 @@ fi
 # if still not found try some standard locations
 if test -z "$ITCL_MAJOR_VERSION" ; then
   unset cfsh
-  cfsh="/usr/lib/itclConfig.sh"
+  cfsh="/usr/local/lib/itclConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
     ITCL_PREFIX="/usr"
   else
-    cfsh="/usr/local/lib/itclConfig.sh"
+    cfsh="/usr/lib/itclConfig.sh"
     if test -f $cfsh ; then
       . $cfsh
       ITCL_PREFIX="/usr/local"
     fi
   fi
-  cfsh="/usr/lib/itkConfig.sh"
+  cfsh="/usr/local/lib/itkConfig.sh"
   if test -f $cfsh ; then
     . $cfsh
   else
-    cfsh="/usr/local/lib/itkConfig.sh"
+    cfsh="/usr/lib/itkConfig.sh"
     if test -f $cfsh ; then
       . $cfsh
     fi
@@ -735,24 +735,24 @@ AC_SUBST(ITK_LIB_SPEC)
 echo -n "checking for BLT 2.4x... "
 
 if test "$blt" &&
-   test -e $blt/lib/libBLT24.so; then
+   test -n "`ls -1r $blt/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
   BLT_PREFIX=$blt
 elif test "$tcl" &&
-     test -e $tcl/lib/libBLT24.so; then
+     test -n "`ls -1r $tcl/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
   BLT_PREFIX=$tcl
 fi
 
 if test -z "$BLT_PREFIX" ; then
   if test "$is_64bit" = "yes" && 
-     test -e $thirdparty/itcltk-8.3.2-64/lib/libBLT24.so; then
+     test -n "`ls -1r $thirdparty/itcltk-8.3.2-64/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
     BLT_PREFIX="$thirdparty/itcltk-8.3.2-64"
   elif test "$is_64bit" != "yes" &&
-       test -e $thirdparty/itcltk-8.3.2/lib/libBLT24.so; then
+       test -n "`ls -1r $thirdparty/itcltk-8.3.2/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
     BLT_PREFIX="$thirdparty/itcltk-8.3.2"  
-  elif test -e /usr/lib/libBLT24.so; then
-    BLT_PREFIX=/usr
-  elif test -e /usr/local/lib/libBLT24.so; then
+  elif test -n "`ls -1r /usr/local/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
     BLT_PREFIX=/usr/local
+  elif test -n "`ls -1r /usr/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+    BLT_PREFIX=/usr
   fi
 fi
 
@@ -781,9 +781,6 @@ AC_SUBST(BLT_LIB_FLAG)
 
 echo -n "checking for Xerces-C 1.X... "
 
-# this stuff breaks if there is more than one version of xerces-c in
-# the same directory.
-
 if test "$xerces"; then
   case $host in
   *-irix*)
@@ -802,36 +799,36 @@ if test -z "$XML_LIB_DIR"; then
   case $host in
   *-irix*)
     if test "$is_64bit" = "yes"; then
-      if test -e $thirdparty/xerces-1.3.0/lib64/libxerces-c1_?.so; then
+      if test -n "`ls -1r $thirdparty/xerces-1.3.0/lib64/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
         XML_LIB_DIR="$thirdparty/xerces-1.3.0/lib64"
-      elif test -e /usr/lib64/libxerces-c1_?.so; then
-	XML_LIB_DIR="/usr/lib64"
-      elif test -e /usr/local/lib64/libxerces-c1_?.so; then
+      elif test -n "`ls -1r /usr/local/lib64/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
 	XML_LIB_DIR="/usr/local/lib64"
-      elif test -e /usr/lib/libxerces-c1_?.so; then
-	XML_LIB_DIR="/usr/lib"
-      elif test -e /usr/local/lib/libxerces-c1_?.so; then
+      elif test -n "`ls -1r /usr/lib64/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+	XML_LIB_DIR="/usr/lib64"
+      elif test -n "`ls -1r /usr/local/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
 	XML_LIB_DIR="/usr/local/lib"
+      elif test -n "`ls -1r /usr/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+	XML_LIB_DIR="/usr/lib"
       fi
     else
-      if test -e $thirdparty/xerces-1.3.0/lib32/libxerces-c1_?.so; then
+      if test -n "`ls -1r $thirdparty/xerces-1.3.0/lib32/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
         XML_LIB_DIR="$thirdparty/xerces-1.3.0/lib32"
-      elif test -e /usr/lib32/libxerces-c1_?.so; then
-	XML_LIB_DIR="/usr/lib32"
-      elif test -e /usr/local/lib32/libxerces-c1_?.so; then
+      elif test -n "`ls -1r /usr/local/lib32/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
 	XML_LIB_DIR="/usr/local/lib32"
-      elif test -e /usr/lib/libxerces-c1_?.so; then
-	XML_LIB_DIR="/usr/lib"
-      elif test -e /usr/local/lib/libxerces-c1_?.so; then
+      elif test -n "`ls -1r /usr/lib32/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+	XML_LIB_DIR="/usr/lib32"
+      elif test -n "`ls -1r /usr/local/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
 	XML_LIB_DIR="/usr/local/lib"
+      elif test -n "`ls -1r /usr/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+	XML_LIB_DIR="/usr/lib"
       fi
     fi
     ;;
   *)
-    if test -e /usr/lib/libxerces-c1_?.so; then
-      XML_LIB_DIR="/usr/lib"
-    elif test -e /usr/local/lib/libxerces-c1_?.so; then
+    if test -n "`ls -1r /usr/local/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
       XML_LIB_DIR="/usr/local/lib"
+    elif test -n "`ls -1r /usr/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+      XML_LIB_DIR="/usr/lib"
     fi
     ;;
   esac
