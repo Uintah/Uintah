@@ -11,4 +11,4 @@ SRCS = Connection.cc DebugSettings.cc HelpUI.cc MemStats.cc Module.cc \
 LIBNAME = Dataflow
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))
