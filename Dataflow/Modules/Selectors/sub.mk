@@ -31,6 +31,7 @@ PSELIBS := \
 	Core/Thread       \
 	Core/Datatypes    \
 	Core/Geom         \
+	Core/Util         \
 	Core/Geometry
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
 
