@@ -52,6 +52,7 @@ public:
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
 
   //! Persistent IO
   void    io(Piostream &stream);
@@ -127,6 +128,17 @@ TetVol<Vector>::query_vector_interface() const;
 template <class T>
 VectorFieldInterface*
 TetVol<T>::query_vector_interface() const
+{
+  return 0;
+}
+
+template <>
+TensorFieldInterface*
+TetVol<Tensor>::query_tensor_interface() const;
+
+template <class T>
+TensorFieldInterface*
+TetVol<T>::query_tensor_interface() const
 {
   return 0;
 }

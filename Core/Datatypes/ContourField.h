@@ -45,6 +45,7 @@ public:
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
@@ -162,6 +163,17 @@ ContourField<Vector>::query_vector_interface() const;
 template <class T>
 VectorFieldInterface*
 ContourField<T>::query_vector_interface() const
+{
+  return 0;
+}
+
+template <>
+TensorFieldInterface*
+ContourField<Tensor>::query_tensor_interface() const;
+
+template <class T>
+TensorFieldInterface*
+ContourField<T>::query_tensor_interface() const
 {
   return 0;
 }
