@@ -160,35 +160,6 @@ public:
 
       ////////////////////////////////////////////////////////////////////////
       //
-      // Schedule Computation of Velocity boundary conditions terms. 
-      //
-      void sched_velocityBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw,
-			    int index);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Schedule Computation of Pressure boundary conditions terms. 
-      //
-      void sched_pressureBC(const LevelP& level,
-			    SchedulerP& sched,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
-      // Schedule Computation of Scalar boundary conditions terms. 
-      //
-      void sched_scalarBC(const LevelP& level,
-			  SchedulerP& sched,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw,
-			  int index);
-
-      ////////////////////////////////////////////////////////////////////////
-      //
       // Schedule Setting inlet velocity bc's
       // we need to do it because of staggered grid
       // 
@@ -445,6 +416,10 @@ private:
   
 //
 // $Log$
+// Revision 1.41  2000/07/30 22:21:21  bbanerje
+// Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
+// in C++ side.
+//
 // Revision 1.40  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients

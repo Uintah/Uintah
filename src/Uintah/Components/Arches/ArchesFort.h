@@ -64,6 +64,7 @@ WARNING
 #define FORT_ADDPRESSGRAD addpressgrad_
 #define FORT_SCALARCOEFF scalcoef_
 #define FORT_SCALARSOURCE ssource_
+#define FORT_SCALARBC bcscalar_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
 #define FORT_RBGLISOLV lisolv_
@@ -641,7 +642,7 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     //
-    // Calculate the pressure source terms
+    // Calculate the pressure BC
     //
     void
     FORT_PRESSBC(const int* domLo, const int* domHi,
@@ -713,12 +714,45 @@ extern "C"
 		     const double* tfac, const double* bfac,
 		     const double* dxpw, const double* dyps, const double* dzpb);
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the scalar BC
+    //
+    void
+    FORT_SCALARBC(const int* domLo, const int* domHi,
+		  const int* idxLo, const int* idxHi,
+		  double* scalar,
+		  double* scalarCoeffAE,
+		  double* scalarCoeffAW,
+		  double* scalarCoeffAN,
+		  double* scalarCoeffAS,
+		  double* scalarCoeffAT,
+		  double* scalarCoeffAB,
+		  double* scalarNonlinearSrc,
+		  double* scalarLinearSrc,
+		  double* density,
+		  double* fmixin,
+		  const int* domLoU, const int* domHiU,
+		  double* uVelocity,
+		  const int* domLoV, const int* domHiV,
+		  double* vVelocity,
+		  const int* domLoW, const int* domHiW,
+		  double* wVelocity,
+		  const double* sew, const double* sns, const double* stb,
+		  int* cellType,
+		  int* wall_celltypeval, int* symmetry_celltypeval,
+		  int* flow_celltypeval, const int* ffield, const int* sfield,
+		  const int* outletfield);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.25  2000/07/30 22:21:21  bbanerje
+// Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
+// in C++ side.
+//
 // Revision 1.24  2000/07/28 02:30:59  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients
