@@ -1555,7 +1555,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          if(ice_matl){
            rho_micro[m][c] = 
              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                                  cv[m][c],Temp[m][c]);
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
          }
          if(mpm_matl){
            rho_micro[m][c] =  
@@ -1715,7 +1715,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             IntVector c = *iter;
             rho_micro[m][c] = 
               ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                                 cv[m][c],Temp[m][c]);
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
           }
         }
         if(mpm_matl){
@@ -1830,7 +1830,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
      if(ice_matl){        // ICE
        rho_micro[m][c] =
          ice_matl->getEOS()->computeRhoMicro(Pm,gamma[m][c],
-                                           cv[m][c],Temp[m][c]);
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
      }
      if(mpm_matl){        // MPM
        rho_micro[m][c] =
@@ -1888,9 +1888,9 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
      
      if(ice_matl){        //  ICE
        rhoMicroR = ice_matl->getEOS()->
-                      computeRhoMicro(Pright,gamma[m][c],cv[m][c],Temp[m][c]);
+        computeRhoMicro(Pright,gamma[m][c],cv[m][c],Temp[m][c],rho_micro[m][c]);
        rhoMicroL = ice_matl->getEOS()->
-                      computeRhoMicro(Pleft, gamma[m][c],cv[m][c],Temp[m][c]);
+        computeRhoMicro(Pleft, gamma[m][c],cv[m][c],Temp[m][c],rho_micro[m][c]);
      }
      if(mpm_matl){        //  MPM
        rhoMicroR =
