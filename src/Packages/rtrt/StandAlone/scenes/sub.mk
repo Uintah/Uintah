@@ -109,6 +109,9 @@ $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
 	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY) -m
 
+$(SRCDIR)/science-room.mo: $(SRCDIR)/science-room.o
+	$(CXX) -o $@ -L$(TEEM_LIB_DIR) $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye -lell -lnrrd -lhest -lbiff -lair -lm $(GLUI_LIBRARY) $(GLUT_LIBRARY) -m
+
 $(SRCDIR)/uintahparticle2.mo: $(SRCDIR)/uintahparticle2.o
 	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) $(RTRT_ULIBS) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 

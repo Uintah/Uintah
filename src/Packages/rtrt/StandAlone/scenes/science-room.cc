@@ -58,13 +58,258 @@ using namespace rtrt;
 using namespace std;
 using SCIRun::Thread;
 
-#define ADD_BRICKBRACK 1
+#define ADD_BRICKBRACK
+//#define ADD_VIS_FEM
+//#define ADD_HEAD
+//#define ADD_CSAFE_FIRE
+#define ADD_GEO_DATA
+//#define ADD_SHEEP
+//#define ADD_DTIGLYPH
 
-#define ADD_VIS_FEM 1
-#define ADD_HEAD 1
-#define ADD_CSAFE_FIRE 1
-#define ADD_GEO_DATA 1
-#define ADD_SHEEP 1
+#ifdef ADD_DTIGLYPH
+
+#include <Packages/rtrt/Core/Glyph.h>
+#include <nrrd.h>
+#include <hest.h>
+#include <air.h>
+#include <biff.h>
+#include <ten.h>
+
+int
+dtiParseNrrd(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
+  char me[] = "dtiParseNrrd", *nerr;
+  Nrrd **nrrdP;
+  airArray *mop;
+  
+  if (!(ptr && str)) {
+    sprintf(err, "%s: got NULL pointer", me);
+    return 1;
+  }
+  nrrdP = (Nrrd **)ptr;
+  mop = airMopInit();
+  *nrrdP = nrrdNew();
+  airMopAdd(mop, *nrrdP, (airMopper)nrrdNuke, airMopOnError);
+  if (nrrdLoad(*nrrdP, str)) {
+    airMopAdd(mop, nerr = biffGetDone(NRRD), airFree, airMopOnError);
+    if (strlen(nerr) > AIR_STRLEN_HUGE - 1)
+      nerr[AIR_STRLEN_HUGE - 1] = '\0';
+    strcpy(err, nerr);
+    airMopError(mop);
+    return 1;
+  }
+  if (!tenValidTensor(*nrrdP, nrrdTypeFloat, AIR_TRUE)) {
+    sprintf(err, "%s: \"%s\" isn't a valid tensor volume", me, str);
+    biffAdd(TEN, err);
+    airMopAdd(mop, nerr = biffGetDone(TEN), airFree, airMopOnError);
+    if (strlen(nerr) > AIR_STRLEN_HUGE - 1)
+      nerr[AIR_STRLEN_HUGE - 1] = '\0';
+    strcpy(err, nerr);
+    airMopError(mop);
+    return 1;
+  }
+  airMopOkay(mop);
+  return 0;
+}
+
+hestCB dtiNrrdHestCB = {
+  sizeof(Nrrd *),
+  "nrrd",
+  dtiParseNrrd,
+  (airMopper)nrrdNuke
+};
+
+int
+dtiParseAniso(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
+  char me[]="dtiParseAniso";
+  int *anisoP;
+    
+  anisoP = (int*)ptr;
+  *anisoP = airEnumVal(tenAniso, str);
+  if (tenAnisoUnknown == *anisoP) {
+    sprintf(err, "%s: \"%s\" not a recognized anisotropy type", me, str);
+    return 1;
+  }
+  return 0;
+}
+
+hestCB dtiAnisoHestCB = {
+  sizeof(int),
+  "aniso",
+  dtiParseAniso,
+  NULL
+};
+
+char *dtiINFO = ("Generates an rtrt scene to do glyph-based "
+		 "visualization of a diffusiont-tensor field");
+
+void
+dtiRgbGen(Color &rgb, float evec[3], float an) {
+  float r, g, b;
+
+  r = AIR_ABS(evec[0]);
+  g = AIR_ABS(evec[1]);
+  b = AIR_ABS(evec[2]);
+  rgb = Color(AIR_AFFINE(0.0, an, 1.0, 0.5, r),
+	      AIR_AFFINE(0.0, an, 1.0, 0.5, g),
+	      AIR_AFFINE(0.0, an, 1.0, 0.5, b));
+}
+
+namespace rtrt {
+  extern float glyph_threshold;
+}
+
+void make_brain_glyphs(Group *g, int argc, char *argv[]) {
+  airArray *mop;
+  hestOpt *opt = NULL;
+  int anisoType;
+  char *me, *err;
+  float glyphScale, anisoThresh;
+  Nrrd *nin;
+  int gridcellsize;
+  int num_levels;
+
+  hestOptAdd(&opt, NULL, "input", airTypeOther, 1, 1, &nin, NULL,
+	     "input tensor volume, in nrrd format, with 7 floats per voxel.",
+	     NULL, NULL, &dtiNrrdHestCB);
+  hestOptAdd(&opt, NULL, "aniso", airTypeEnum, 1, 1, &anisoType, NULL,
+	     "scalar anisotropy type for thresholding and color "
+	     "saturation modulation. "
+	     "Currently supported:\n "
+	     "\b\bo \"cl\": Westin's linear\n "
+	     "\b\bo \"cp\": Westin's planar\n "
+	     "\b\bo \"ca\": Westin's linear + planar\n "
+	     "\b\bo \"cs\": Westin's spherical (1-ca)\n "
+	     "\b\bo \"ct\": GK's anisotropy type (cp/ca)\n "
+	     "\b\bo \"ra\": Basser+Pierpaoli relative anisotropy\n "
+	     "\b\bo \"fa\": Basser+Pierpaoli fractional anisotropy/sqrt(2)\n "
+	     "\b\bo \"vf\": volume fraction = 1-(Bass,Pier volume ratio)",
+	     NULL, tenAniso);
+  hestOptAdd(&opt, NULL, "scale", airTypeFloat, 1, 1, &glyphScale, NULL,
+	     "over-all glyph scaling");
+  hestOptAdd(&opt, NULL, "thresh", airTypeFloat, 1, 1, &anisoThresh, NULL,
+	     "anisotropy threshold for testing");
+  hestOptAdd(&opt, "gridcellsize", "gridcellsize", airTypeInt, 1, 1,
+	     &gridcellsize, "3",
+	     "size of the grid cells to put around the GlyphGroup");
+  hestOptAdd(&opt, "nl", "num_levels", airTypeInt, 1, 1, &num_levels, "10",
+	     "number of grid levels to use for optimizations");
+  
+  mop = airMopInit();
+  airMopAdd(mop, opt, (airMopper)hestOptFree, airMopAlways);
+  me = argv[0];
+  if (argc < 5) {
+    hestInfo(stderr, me, dtiINFO, NULL);
+    hestUsage(stderr, opt, me, NULL);
+    hestGlossary(stderr, opt, NULL);
+    airMopError(mop);
+    exit(-1);
+  }
+  fprintf(stderr, "%s: reading input ... ", me); fflush(stderr);
+  if (hestParse(opt, argc-1, argv+1, &err, NULL)) {
+    fprintf(stderr, "%s: %s\n", me, err); free(err);
+    hestUsage(stderr, opt, me, NULL);
+    hestGlossary(stderr, opt, NULL);
+    airMopError(mop);
+    exit(-1);
+  }
+  printf("hooray!\n\n");
+  fprintf(stderr, "done\n");
+  airMopAdd(mop, opt, (airMopper)hestParseFree, airMopAlways);
+
+  fprintf(stderr, "%s: glyphScale = %g\n", me, glyphScale);
+  fprintf(stderr, "%s: anisoType = %d\n", me, anisoType);
+  fprintf(stderr, "%s: anisoThresh = %g\n", me, anisoThresh);
+  fprintf(stderr, "%s: got dti volume dimensions %d x %d x %d\n", me,
+	  nin->axis[1].size, nin->axis[2].size, nin->axis[3].size);
+  fprintf(stderr, "%s: dti volume spacings %g x %g x %g\n", me,
+	  nin->axis[1].spacing, nin->axis[2].spacing, nin->axis[3].spacing);
+
+  glyph_threshold = anisoThresh;
+  //////////////////////////////////////////////////////
+  // add geometry to this :)
+
+  int sx, sy, sz,        // sizes along x,y,z axes
+    xi, yi, zi,          // indices into x,y,z axes
+    numGlyphs;
+  float zs, ys, xs,      // spacings along x,y,z axes
+    as;                  // average spacing
+  sx = nin->axis[1].size;
+  sy = nin->axis[2].size;
+  sz = nin->axis[3].size;
+  xs = nin->axis[1].spacing;
+  ys = nin->axis[2].spacing;
+  zs = nin->axis[3].spacing;
+  as = (xs + ys + zs)/3.0;
+  fprintf(stderr, "%s: average spacing = %g\n", me, as);
+  float tmp,             // don't ask
+    *tdata,              // all tensor data; 7 floats per tensor
+    x, y, z,             // world-ish position (scaled by spacings)
+    eval[3], evec[9],    // eigen{values,vectors} of tensor
+    c[TEN_ANISO_MAX+1];  // all possible anisotropies
+  tdata = (float*)nin->data;
+  numGlyphs = 0;
+  Array1<Glyph*> glyphs;
+  for (zi = 0; zi < sz; zi++) {
+    z = zs * zi;
+    for (yi = 0; yi < sy; yi++) {
+      y = ys * yi;
+      for (xi = 0; xi < sx; xi++, tdata+=7) {
+	x = xs * xi;
+
+	// we always ignore data points with low confidence
+	if (!( tdata[0] > 0.75 ))
+	  continue;
+
+	// do eigensystem solve
+	tenEigensolve(eval, evec, tdata);
+	tenAnisoCalc(c, eval);
+	//	if (!( c[anisoType] > anisoThresh))
+	//	  continue;
+	
+	// so there will be a glyph generated for this sample
+	numGlyphs++;
+	Color rgb;
+	dtiRgbGen(rgb, evec, c[anisoType]);
+	Phong *matl = new Phong(rgb, Color(1,1,1), 100);
+	// These are cool transparent/reflective glyphs
+	//PhongMaterial *matl = new PhongMaterial(rgb, 0.3, 0.4, 100, true);
+	// all glyphs start at the origin
+
+	Sphere *obj = new Sphere(matl, Point(0,0,0), glyphScale);
+
+
+	double tmat[9], A[16], B[16], C[16];
+	// C = composition of tensor matrix and translation
+	TEN_LIST2MAT(tmat, tdata);
+	ELL_43M_INSET(A, tmat);
+	ELL_4M_SET_SCALE(B, as, as, as);
+	// C = composition of uniform scaling and tensor matrix
+	ELL_4M_MUL(C, B, A);
+	ELL_4M_SET_TRANSLATE(A,
+			     x - xs*(sx-1)/2,
+			     y - ys*(sy-1)/2,
+			     z);
+	// B = composition of translation and C
+	ELL_4M_MUL(B, A, C);
+	ELL_4M_TRANSPOSE_IP(B, tmp);
+	//	printf("glyph at (%d,%d,%d) -> (%g,%g,%g) with transform:\n",
+	//	       xi, yi, zi, x, y, z);
+	//	ell4mPrint_d(stdout, C);
+	Transform *tr = new Transform();
+	tr->set(B);
+
+	tr->post_scale(Vector(.01,.01,.01));
+	tr->post_translate(Vector(-8, 8, 0.55));
+	glyphs.add(new Glyph(new Instance(new InstanceWrapperObject(obj),tr),
+		 c[anisoType]));
+      }
+    }
+  }
+  printf("%s: created %d glyphs!\n", me, numGlyphs);
+  g->add(new GlyphGroup(glyphs, gridcellsize, num_levels));
+  printf("%s: created GlyphGroup\n", me);
+}
+#endif
 
 void make_walls_and_posters(Group *g, const Point &center) {
   Vector north(0,1,0);
@@ -278,17 +523,17 @@ void make_walls_and_posters(Group *g, const Point &center) {
   TexturedTri *tri;
 
   p1=Point(south_ceiling_west_corner);
-  p1t=Point(0,0,0);
+  p1t=Point(1,1,0);
   p2=Point(south_floor_west_corner);
-  p2t=Point(0,1,0);
+  p2t=Point(1,0,0);
   p3=Point(south_floor_west_corner+door_inset_distance*east);
-  p3t=Point(door_inset_distance/north_south_wall_length,1,0);
+  p3t=Point(1-door_inset_distance/north_south_wall_length,0,0);
   p4=Point(p3+door_width*east);
-  p4t=Point((door_inset_distance+door_width)/north_south_wall_length,1,0);
+  p4t=Point(1-(door_inset_distance+door_width)/north_south_wall_length,0,0);
   p5=Point(south_floor_east_corner);
-  p5t=Point(1,1,0);
+  p5t=Point(0,0,0);
   p6=Point(south_ceiling_east_corner);
-  p6t=Point(1,0,0);
+  p6t=Point(0,1,0);
   p7=Point(p3+door_height*up);
   p7t=Point(p3t.x(),door_height/wall_height,0);
   p8=Point(p4+door_height*up);
@@ -349,17 +594,17 @@ void make_walls_and_posters(Group *g, const Point &center) {
   south_wall->add(tri);
 
   p1=Point(north_ceiling_east_corner);
-  p1t=Point(0,0,0);
+  p1t=Point(0,1,0);
   p2=Point(north_floor_east_corner);
-  p2t=Point(0,1,0);
+  p2t=Point(0,0,0);
   p3=Point(north_floor_east_corner-door_inset_distance*north);
-  p3t=Point(door_inset_distance/east_west_wall_length,1,0);
+  p3t=Point(door_inset_distance/east_west_wall_length,0,0);
   p4=Point(p3-door_width*north);
-  p4t=Point((door_inset_distance+door_width)/east_west_wall_length,1,0);
+  p4t=Point((door_inset_distance+door_width)/east_west_wall_length,0,0);
   p5=Point(south_floor_east_corner);
-  p5t=Point(1,1,0);
+  p5t=Point(1,0,0);
   p6=Point(south_ceiling_east_corner);
-  p6t=Point(1,0,0);
+  p6t=Point(1,1,0);
   p7=Point(p3+door_height*up);
   p7t=Point(p3t.x(),door_height/wall_height,0);
   p8=Point(p4+door_height*up);
@@ -532,8 +777,13 @@ SpinningInstance *make_dna(Group *g) {
   Group *g1 = new Group;
   for (int i=0; i<14; i++) {
     Phong *l, *r;
-    if (drand48() < 0.5) { l=red; r=green; }
-    else { l=yellow; r=blue; }
+//    if (drand48() < 0.5) { l=red; r=green; }
+//    else { l=yellow; r=blue; }
+    double rand=drand48();
+    if (rand < 0.25) { l=red; r=green; }
+    else if (rand < 0.5) { l=green; r=red; }
+    else if (rand < 0.75) { l=yellow; r=blue; }
+    else { l=blue; r=yellow; }
     Vector v(left*(rad*cos(th0+dth*i))+in*(rad*sin(th0+dth*i)));
     Point ls(center_base+up*(dh*i)+v);
     Point rs(center_base+up*(dh*i)-v);
@@ -632,17 +882,17 @@ void add_objects(Group *g, const Point &center) {
 extern "C"
 Scene* make_scene(int argc, char* argv[], int nworkers)
 {
-  for(int i=1;i<argc;i++) {
-    cerr << "Unknown option: " << argv[i] << '\n';
-    cerr << "Valid options for scene: " << argv[0] << '\n';
-    return 0;
-  }
+//  for(int i=1;i<argc;i++) {
+//    cerr << "Unknown option: " << argv[i] << '\n';
+//    cerr << "Valid options for scene: " << argv[0] << '\n';
+//    return 0;
+//  }
 
 // Start inside:
-  Point Eye(-11, 8, 1.6);
-  Point Lookat(-8, 8, 2.0);
-  Vector Up(0,0,1);
-  double fov=60;
+//  Point Eye(-11, 8, 1.6);
+//  Point Lookat(-8, 8, 2.0);
+//  Vector Up(0,0,1);
+//  double fov=60;
 
 // Start outside:
   //  Point Eye(-10.9055, -0.629515, 1.56536);
@@ -656,10 +906,20 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 //  Vector Up(0, 0, 1);
 //  double fov=35;
 
+// Just vis
+  Point Eye(-11.85, 8.05916, 1.30671);
+  Point Lookat(-8.83055, 8.24346, 1.21209);
+  Vector Up(0,0,1);
+  double fov=45;
   Camera cam(Eye,Lookat,Up,fov);
 
   Point center(-8, 8, 0);
   Group *g=new Group;
+
+#ifdef ADD_DTIGLYPH
+  make_brain_glyphs(g, argc, argv);
+#endif
+
 #ifdef ADD_BRICKBRACK
   make_walls_and_posters(g, center);
 #endif
@@ -671,7 +931,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 		      Color(0,0,0), 0);
   table->add(new UVCylinder(cement_pedestal, center,
 			    center+Vector(0,0,0.5), 1.5));
-  Material *silver = new MetalMaterial(Color(0.7,0.73,0.8), 12);
+  Material *silver = new MetalMaterial(Color(0.5,0.5,0.5), 12);
   table->add(new Disc(silver, center+Vector(0,0,0.5),
 		      Vector(0,0,1), 1.5));
   g->add(table);
@@ -685,9 +945,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 
   //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
-  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.5,0.4,0.55), 0);
-  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2), Color(0.4,0.5,0.55), 0);
-  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2), Color(0.4,0.4,0.65), 0);
+  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.5,0.3,0.3),0,1,true);
+  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2),Color(0.3,0.5,0.3),0,1,true);
+  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2),Color(0.3,0.3,0.5),0,1,true);
   holo_light1->name_ = "hololight1";
   holo_light2->name_ = "hololight2";
   holo_light3->name_ = "hololight3";
@@ -870,9 +1130,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Transform *gtrans = new Transform();
   gtrans->rotate(Vector(1,0,0), Vector(0,0,-1));
-  gtrans->pre_scale(Vector(1.245,1.245,1.245)); //fit between z=0.51 and 3
-  gtrans->pre_translate(Vector(-8, 8, 1.75));
-  gtrans->pre_translate(Vector(0,0,0.005)); //place 1 cm above table
+//  gtrans->pre_scale(Vector(1.245,1.245,1.245)); //fit between z=0.51 and 3
+  gtrans->pre_scale(Vector(3.735,3.735,0.6225)); //fit between z=0.51 and 1.75
+  gtrans->pre_translate(Vector(-8, 8, 1.25));
+//  gtrans->pre_translate(Vector(-8, 8, 1.75));
+  gtrans->pre_translate(Vector(0,0,0.1)); //place 4 cm above table
 
   SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
   ginst->name_ = "Spinning Geology";
@@ -1010,9 +1272,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(cpdpy);
   (new Thread(cpdpy, "CutPlane Dpy"))->detach();
 
-  scene->add_per_matl_mood_light(holo_light1);
-  scene->add_per_matl_mood_light(holo_light2);
-  scene->add_per_matl_mood_light(holo_light3);
+  scene->add_per_matl_light(holo_light1);
+  scene->add_per_matl_light(holo_light2);
+  scene->add_per_matl_light(holo_light3);
 
   return scene;
 }
