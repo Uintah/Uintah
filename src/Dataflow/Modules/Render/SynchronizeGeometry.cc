@@ -44,7 +44,7 @@ private:
   void flush_all_msgs();
   void append_msg(GeometryComm* gmsg);
   void flush_port(int portno);
-  bool init_ports(int nports = 0);
+  bool init_ports(int nports);
 };
 
 
@@ -98,7 +98,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
   const bool enforce = gui_enforce_.get();
   GeometryComm* gmsg = (GeometryComm*)msg;
 
-  switch(msg->type)
+  switch (msg->type)
   {
   case MessageTypes::GoAway:
     return 86;
@@ -115,45 +115,39 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
   case MessageTypes::GeometryDelObj:
   case MessageTypes::GeometryDelAll:
   case MessageTypes::GeometryAddObj:
-    if (init_ports())
+    if (enforce)
     {
-      if (enforce)
-      {
-	append_msg(gmsg);
-      }
-      else
-      {
-	gmsg->portno = portno_map_[gmsg->portno];
-	flush_all_msgs();
-	if (!(ogeom_->direct_forward(gmsg)))
-	{
-	  delete gmsg;
-	}
-      }
-      msg = 0;
+      append_msg(gmsg);
     }
+    else
+    {
+      gmsg->portno = portno_map_[gmsg->portno];
+      flush_all_msgs();
+      if (!(ogeom_->direct_forward(gmsg)))
+      {
+	delete gmsg;
+      }
+    }
+    msg = 0;
     break;
 
   case MessageTypes::GeometryFlush:
   case MessageTypes::GeometryFlushViews:
-    if (init_ports())
+    if (enforce)
     {
-      if (enforce)
-      {
-	append_msg(gmsg);
-	forward_saved_msg();
-      }
-      else
-      {
-	gmsg->portno = portno_map_[gmsg->portno];
-	flush_all_msgs();
-	if (!(ogeom_->direct_forward(gmsg)))
-	{
-	  delete gmsg;
-	}
-      }
-      msg = 0;
+      append_msg(gmsg);
+      forward_saved_msg();
     }
+    else
+    {
+      gmsg->portno = portno_map_[gmsg->portno];
+      flush_all_msgs();
+      if (!(ogeom_->direct_forward(gmsg)))
+      {
+	delete gmsg;
+      }
+    }
+    msg = 0;
     break;
 
   default:
@@ -167,6 +161,7 @@ SynchronizeGeometry::enforce_barrier(MessageBase* msg)
 
   return 0;
 }
+
 
 
 bool
@@ -200,6 +195,7 @@ SynchronizeGeometry::init_ports(int nports)
 }
 
 
+
 void
 SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 {
@@ -218,6 +214,7 @@ SynchronizeGeometry::append_msg(GeometryComm* gmsg)
 
   gmsg->portno = portno_map_[portno];
 }
+
 
 
 void
@@ -259,6 +256,7 @@ SynchronizeGeometry::forward_saved_msg()
     }
   }
 }
+
 
 
 void
