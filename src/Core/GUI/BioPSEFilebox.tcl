@@ -1950,8 +1950,6 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
             # If allowing multiple files and in multi file mode...
             puts "multi file handling... skipping given command"
 	    
-	    
-            # WARNING THIS SPLIT IS BROKEN.. doesn't do the correct thing if dir has a number in it!!!!!
 	    set words [split $selectFilePath /]
 	    set len [llength $words]
             set idx [expr $len - 1]
