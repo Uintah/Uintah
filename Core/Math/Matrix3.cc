@@ -394,6 +394,78 @@ std::vector<Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
   return basis_vectors;
 }
 
+// Polar decomposition of a non-singular square matrix
+// If rightFlag == true return right stretch and rotation
+// else return left stretch and rotation
+void Matrix3::polarDecomposition(Matrix3& stretch,
+                                 Matrix3& rotation,
+                                 double tolerance,
+                                 bool rightFlag) const
+{
+  double det = this->Determinant();
+  if ( det == 0.0 ) {
+    cout << "Singular matrix in polar decomposition..." << endl;
+    exit(1);
+  }
+
+  // Calculate the right (C) Cauchy-Green tensor 
+  // where C = Ftranspose*F 
+  Matrix3 C = (this->Transpose())*(*this);
+
+  // Find the principal invariants of the left or right Cauchy-Green tensor (b) 
+  // where b = F*Ftransposeb
+  double I1 = C.Trace();
+  double I1Square = I1*I1;
+  Matrix3 CSquare = C*C;
+  double I2 = 0.5*(I1Square - CSquare.Trace());
+  double I3 = C.Determinant();
+
+  // Find the principal stretches lambdaA, lambdaB, lambdaC
+  // or lambda(ii), ii = 1..3
+  double lambda[4]; lambda[0] = 0.0;
+  double oneThird = 1.0/3.0;
+  double oneThirdI1 = oneThird*I1;
+  double bb = I2 - oneThird*I1Square;
+  double cc = -(2.0/27.0)*I1Square*I1 + oneThirdI1*I2 - I3;
+  if (fabs(bb) > tolerance) {
+    double mm = 2.0*sqrt(-oneThird*bb);
+    double nn = 3.0*cc/(mm*bb);
+    if (fabs(nn) > 1.0) nn /= fabs(nn);
+    double tt = oneThird*atan(sqrt(1-(nn*nn))/nn);
+    for (int ii = 1; ii < 4; ++ii) 
+      lambda[ii] = sqrt(mm*cos(tt+2.0*(double)(ii-1)*oneThird*M_PI) + oneThirdI1); 
+  } else {
+    for (int ii = 1; ii < 4; ++ii) 
+      lambda[ii] = sqrt(-pow(cc, oneThird) + oneThirdI1); 
+  }
+
+  // Find the stretch tensor 
+  Matrix3 one;
+  one.Identity();
+  double lambda2p3 = lambda[2] + lambda[3];
+  double lambda2m3 = lambda[2]*lambda[3];
+  double i1 = lambda[1] + lambda2p3;
+  double i2 = lambda[1]*lambda2p3 + lambda2m3;
+  double i3 = lambda[1]*lambda2m3;
+  double DD = i1*i2 - i3;
+  if (fabs(DD) > 0.0 && fabs(i3) > 0.0) {
+    stretch = (CSquare*(-1) + C*(i1*i1-i2) + one*(i1*i3))*(1.0/DD);
+    Matrix3 stretchInv = (C - (stretch*i1 - one*i2))*(1.0/i3);
+
+    // Calculate the rotation tensor
+    rotation = (*this)*stretchInv;
+    if (!rightFlag) stretch = (rotation*stretch)*(rotation.Transpose());
+    for (int ii = 1; ii < 4; ++ii) {
+      for (int jj = 1; jj < 4; ++jj) {
+	if (fabs(stretch(ii,jj)) < tolerance) stretch(ii,jj) = 0.0;
+	if (fabs(rotation(ii,jj)) < tolerance) rotation(ii,jj) = 0.0;
+      }
+    }
+  }
+}
+
+
+
 int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
 {
   // eigen values will be roots of the following cubic polynomial
