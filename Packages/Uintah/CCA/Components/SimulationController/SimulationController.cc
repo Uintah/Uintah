@@ -495,8 +495,9 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 		  inStartCell+=IntVector(0, 0, extraCells.z());
 		if(k==patches.z()-1)
 		  inEndCell-=IntVector(0, 0, extraCells.z());
-		level->addPatch(startcell, endcell,
-				inStartCell, inEndCell);
+		Patch* p = level->addPatch(startcell, endcell,
+					   inStartCell, inEndCell);
+		p->setLayoutHint(IntVector(i,j,k));
 	      }
 	    }
 	  }
