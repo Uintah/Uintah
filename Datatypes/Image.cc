@@ -3,6 +3,8 @@
 #include <Classlib/Persistent.h>
 #include <Classlib/String.h>
 
+PersistentTypeID Image::type_id("Image", "Datatype", 0);
+
 ColorImage::ColorImage(int xres, int yres)
 : imagedata(yres, xres)
 {
