@@ -108,6 +108,7 @@ public:
   inline Vector operator-(const Vector&) const;
   inline Vector& operator-=(const Vector&);
   inline double normalize();
+  inline double safe_normalize();
   Vector normal() const;
   friend SCICORESHARE inline Vector Cross(const Vector&, const Vector&);
   friend SCICORESHARE inline Vector Abs(const Vector&);
@@ -395,6 +396,21 @@ double Vector::normalize()
     _y/=l;
     _z/=l;
     return l;
+}
+
+inline
+double Vector::safe_normalize()
+{
+    double l2=_x*_x+_y*_y+_z*_z;
+    if (l2 > 0.0)
+    {
+      double l=Sqrt(l2);
+      _x/=l;
+      _y/=l;
+      _z/=l;
+      return l;
+    }
+    return 0.0;
 }
 
 inline Point Vector::asPoint() const {
