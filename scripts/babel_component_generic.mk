@@ -58,8 +58,8 @@ SKELSRCS :=
 #include ${OUTDIR}/${COMPONENT}_stub.make
 #SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
 
-PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL \
-	Core/CCA/Component/Comm Core/CCA/spec Core/Thread \
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL \
+	Core/CCA/Comm Core/CCA/spec Core/Thread \
 	Core/Containers Core/Exceptions
 
 LIBS := $(SIDL_LIBRARY)
