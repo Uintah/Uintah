@@ -65,7 +65,8 @@ itcl_class BioPSE_Forward_ComputeCurrent {
 	frame $w.f.c
 	label $w.f.c.l -text "Computed current: "
 	label $w.f.c.c -textvariable $this-current
-	pack $w.f.c.l $w.f.c.c -side left -fill x -expand yes
+	label $w.f.c.a -text "amps"
+	pack $w.f.c.l $w.f.c.c $w.f.c.a -side left -fill x -expand yes
 	pack $w.f.c -side top -fill x -expand yes
         pack $w.f -side top -fill x -expand yes
     }
