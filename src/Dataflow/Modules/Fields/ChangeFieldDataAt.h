@@ -42,12 +42,11 @@ public:
 			      MatrixHandle &interp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const string &fdstname);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
 };
 
 
-template <class FSRC, class FOUT>
+template <class FSRC>
 class ChangeFieldDataAtAlgoCreateT : public ChangeFieldDataAtAlgoCreate
 {
 public:
@@ -59,17 +58,17 @@ public:
 };
 
 
-template <class FSRC, class FOUT>
+template <class FSRC>
 FieldHandle
-ChangeFieldDataAtAlgoCreateT<FSRC, FOUT>::execute(ProgressReporter *mod,
-						  FieldHandle fsrc_h,
-						  Field::data_location at,
-						  MatrixHandle &interp)
+ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
+					    FieldHandle fsrc_h,
+					    Field::data_location at,
+					    MatrixHandle &interp)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
 
   // Create the field with the new mesh and data location.
-  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), at);
+  FSRC *fout = scinew FSRC(fsrc->get_typed_mesh(), at);
   fout->resize_fdata();
 
   fout->copy_properties(fsrc);
