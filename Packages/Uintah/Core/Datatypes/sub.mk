@@ -6,27 +6,15 @@ SRCDIR := Packages/Uintah/Core/Datatypes
 
 SRCS     += \
 	$(SRCDIR)/Archive.cc \
-	$(SRCDIR)/ArchivePort.cc \
 	$(SRCDIR)/ScalarParticles.cc \
-	$(SRCDIR)/ScalarParticlesPort.cc \
 	$(SRCDIR)/VectorParticles.cc \
-	$(SRCDIR)/VectorParticlesPort.cc \
 	$(SRCDIR)/TensorParticles.cc \
-	$(SRCDIR)/TensorParticlesPort.cc \
 	$(SRCDIR)/PSet.cc \
 	$(SRCDIR)/LevelField.cc \
 	$(SRCDIR)/LevelMesh.cc \
 	$(SRCDIR)/GLTexture3D.cc \
 	$(SRCDIR)/GLAnimatedStreams.cc \
 	$(SRCDIR)/cd_templates.cc \
-
-#	$(SRCDIR)/NCTensorField.cc \
-#	$(SRCDIR)/CCTensorField.cc \
-#	$(SRCDIR)/TensorField.cc \
-#	$(SRCDIR)/TensorFieldPort.cc \
-
-#	$(SRCDIR)/CCVectorField.cc \
-#	$(SRCDIR)/NCVectorField.cc \
 
 PSELIBS := \
 	Dataflow/Network \
