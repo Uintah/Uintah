@@ -44,10 +44,8 @@ using Containers::clString;
 
 class  Surface;
 struct Node;
-class ScalarTriSurface;
 class TriSurface;
 class PointsSurface;
-class TopoSurfTree;
 class SurfTree;
 
 typedef LockingHandle<Surface> SurfaceHandle;
@@ -58,9 +56,8 @@ protected:
     enum Representation {
 	TriSurf,
 	PointsSurf,
-	ScalarTriSurf,
+	Unused,
 	STree,
-	TSTree,
 	RepOther
     };
     Surface(Representation, int closed);
@@ -95,9 +92,7 @@ public:
     virtual void construct_grid()=0;
     virtual void destroy_grid();
     virtual void destroy_hash();
-    TopoSurfTree* getTopoSurfTree();
     SurfTree* getSurfTree();
-    ScalarTriSurface* getScalarTriSurface();
     TriSurface* getTriSurface();
     PointsSurface* getPointsSurface();
     virtual void get_surfnodes(Array1<NodeHandle>&)=0;
@@ -114,6 +109,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/09/05 05:32:28  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.4  1999/08/28 17:54:36  sparker
 // Integrated new Thread library
 //

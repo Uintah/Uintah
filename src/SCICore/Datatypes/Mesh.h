@@ -135,10 +135,21 @@ struct Edge{
     int operator==(const Edge&) const;
 };
 
+struct Octree{
+  Point mid;
+  Array1<int> elems;
+  Octree* child[8];
+  Octree();
+  ~Octree();
+
+  int locate(Mesh* mesh, const Point& p, double epsilon);
+};
+
 class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
 
 class SCICORESHARE Mesh : public Datatype {
+    Octree* octree;
 public:
     Array1<int> ids;
     Array1<NodeHandle> nodes;
@@ -178,10 +189,21 @@ public:
     void add_node_neighbors(int node, Array1<int>& idx, int apBC=1);
     void new_element(Element* ne, HashTable<Face, int> *new_faces);
     void remove_all_elements();
+    void get_boundary_nodes(Array1<int> &pts);
+
     void get_boundary_lines(Array1<Point>& lines);
 
     void draw_element(int, GeomGroup*);
     void draw_element(Element* e, GeomGroup*);
+
+    bool vertex_in_tetra(const Point& v, const Point& p0, const Point& p1,
+			 const Point& p2, const Point& p3);
+    bool tetra_edge_in_box(const Point& min, const Point& max,
+			   const Point& orig, const Vector& dir);
+    bool overlaps(Element* e, const Point& min, const Point& max);
+
+    void make_octree(int level, Octree*& octree, const Point& min,
+		     const Point& max, const Array1<int>& elems);
 
     // Persistent representation...
     virtual void io(Piostream&);
@@ -211,6 +233,9 @@ void Pio(Piostream& stream, ElementVersion1& node);
 
 //
 // $Log$
+// Revision 1.4  1999/09/05 05:32:27  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.3  1999/08/25 03:48:35  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
