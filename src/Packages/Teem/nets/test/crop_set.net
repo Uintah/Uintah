@@ -21,10 +21,10 @@ set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 376 100]
 set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 9 285]
 set m4 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 171 366]
 set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 183 100]
-set m6 [addModuleAtPosition "Teem" "Filters" "NrrdJoin" 342 367]
+set m6 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 342 367]
 set m7 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 138 195]
 set m8 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 359 470]
-set m9 [addModuleAtPosition "Teem" "Filters" "NrrdCrop" 119 471]
+set m9 [addModuleAtPosition "Teem" "Unu" "UnuCrop" 119 471]
 set m10 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 119 546]
 
 addConnection $m0 0 $m1 0

@@ -17,9 +17,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Tensor_TendPoint ""}
+catch {rename Teem_Tend_TendPoint ""}
 
-itcl_class Teem_Tensor_TendPoint {
+itcl_class Teem_Tend_TendPoint {
     inherit Module
     constructor {config} {
         set name TendPoint

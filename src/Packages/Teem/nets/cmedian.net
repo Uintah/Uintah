@@ -2,7 +2,7 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "Teem" "Filters" "NrrdCmedian" 363 347]
+set m0 [addModuleAtPosition "Teem" "Unu" "UnuCmedian" 363 347]
 set m1 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 363 283]
 set m2 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 363 411]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 32 4]

@@ -21,7 +21,7 @@ set notes ""
 set m0 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 190 169]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
 set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 10 90]
-set m3 [addModuleAtPosition "Teem" "Filters" "NrrdResample" 10 169]
+set m3 [addModuleAtPosition "Teem" "Unu" "UnuResample" 10 169]
 set m4 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 10 235]
 
 addConnection $m1 0 $m2 0

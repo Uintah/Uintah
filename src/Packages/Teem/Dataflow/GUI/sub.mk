@@ -28,24 +28,9 @@ SRCS := \
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
 	$(SRCDIR)/HDF5DataReader.tcl\
-	$(SRCDIR)/NrrdAxmerge.tcl\
-	$(SRCDIR)/NrrdAxsplit.tcl\
-	$(SRCDIR)/NrrdCmedian.tcl\
-	$(SRCDIR)/NrrdConvert.tcl\
-	$(SRCDIR)/NrrdCrop.tcl\
-	$(SRCDIR)/NrrdDhisto.tcl\
-	$(SRCDIR)/NrrdFlip.tcl\
-	$(SRCDIR)/NrrdHisto.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
-	$(SRCDIR)/NrrdJoin.tcl\
-	$(SRCDIR)/NrrdPad.tcl\
-	$(SRCDIR)/NrrdPermute.tcl\
-	$(SRCDIR)/NrrdProject.tcl\
-	$(SRCDIR)/NrrdQuantize.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
-	$(SRCDIR)/NrrdResample.tcl\
 	$(SRCDIR)/NrrdSelectTime.tcl\
-	$(SRCDIR)/NrrdSlice.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
 	$(SRCDIR)/TendAnvol.tcl\
 	$(SRCDIR)/TendBmat.tcl\
@@ -58,6 +43,21 @@ SRCS := \
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/TendShrink.tcl\
+	$(SRCDIR)/UnuAxmerge.tcl\
+	$(SRCDIR)/UnuAxsplit.tcl\
+	$(SRCDIR)/UnuCmedian.tcl\
+	$(SRCDIR)/UnuConvert.tcl\
+	$(SRCDIR)/UnuCrop.tcl\
+	$(SRCDIR)/UnuDhisto.tcl\
+	$(SRCDIR)/UnuFlip.tcl\
+	$(SRCDIR)/UnuHisto.tcl\
+	$(SRCDIR)/UnuJoin.tcl\
+	$(SRCDIR)/UnuPad.tcl\
+	$(SRCDIR)/UnuPermute.tcl\
+	$(SRCDIR)/UnuProject.tcl\
+	$(SRCDIR)/UnuQuantize.tcl\
+	$(SRCDIR)/UnuResample.tcl\
+	$(SRCDIR)/UnuSlice.tcl\
 
 #[INSERT NEW TCL FILE HERE]
 

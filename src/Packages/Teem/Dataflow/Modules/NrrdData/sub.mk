@@ -29,6 +29,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/NrrdData
 
 SRCS     += \
 	$(SRCDIR)/NrrdInfo.cc\
+	$(SRCDIR)/NrrdSelectTime.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \

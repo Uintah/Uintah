@@ -17,9 +17,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Tensor_TendAnvol ""}
+catch {rename Teem_Tend_TendAnvol ""}
 
-itcl_class Teem_Tensor_TendAnvol {
+itcl_class Teem_Tend_TendAnvol {
     inherit Module
     constructor {config} {
         set name TendAnvol

@@ -26,9 +26,9 @@ SRCDIR := Packages/Teem/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Filters\
+	$(SRCDIR)/Unu\
 	$(SRCDIR)/NrrdData\
-	$(SRCDIR)/Tensor\
+	$(SRCDIR)/Tend\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -18,7 +18,7 @@ puts "*** Using SCIRUN_DATA $DATADIR"
 global notes
 set notes ""
 
-set m0 [addModuleAtPosition "Teem" "Filters" "NrrdConvert" 65 158]
+set m0 [addModuleAtPosition "Teem" "Unu" "UnuConvert" 65 158]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 9]
 set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 84]
 set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 288 89]
