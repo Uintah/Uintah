@@ -23,16 +23,12 @@ namespace Uintah {
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* sp_vol_CCLabel;
     const VarLabel* DLabel;
-    const VarLabel* mass_CCLabel;
     const VarLabel* sum_rho_CCLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* speedSound_CCLabel;
-    const VarLabel* Kappa_CCLabel;
-    const VarLabel* cv_CCLabel;
     const VarLabel* vol_frac_CCLabel;
-    const VarLabel* viscosity_CCLabel;
     const VarLabel* press_force_CCLabel;
     const VarLabel* mom_source_CCLabel;
     const VarLabel* int_eng_source_CCLabel;
@@ -43,20 +39,14 @@ namespace Uintah {
     const VarLabel* mass_L_CCLabel;
     const VarLabel* mom_L_ME_CCLabel;
     const VarLabel* eng_L_ME_CCLabel;
-    const VarLabel* q_CCLabel;
-    const VarLabel* q_advectedLabel;
-    const VarLabel* qV_CCLabel;
-    const VarLabel* qV_advectedLabel;
     const VarLabel* burnedMass_CCLabel;
     const VarLabel* int_eng_comb_CCLabel;
     const VarLabel* created_vol_CCLabel;
     const VarLabel* mom_comb_CCLabel;
-    const VarLabel* term1Label;
     const VarLabel* term2Label;
     const VarLabel* term3Label;
     const VarLabel* f_theta_CCLabel;
     const VarLabel* Tdot_CCLabel;
-    const VarLabel* SumThermExpLabel;
 /*`==========TESTING==========*/
     const VarLabel* matrixLabel;
     const VarLabel* rhsLabel;
@@ -73,9 +63,6 @@ namespace Uintah {
     const VarLabel* pressX_FCLabel;
     const VarLabel* pressY_FCLabel;
     const VarLabel* pressZ_FCLabel;
-    const VarLabel* tau_X_FCLabel;
-    const VarLabel* tau_Y_FCLabel;
-    const VarLabel* tau_Z_FCLabel;
     const VarLabel* press_diffX_FCLabel;
     const VarLabel* press_diffY_FCLabel;
     const VarLabel* press_diffZ_FCLabel;
