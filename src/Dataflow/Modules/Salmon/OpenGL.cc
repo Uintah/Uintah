@@ -13,8 +13,10 @@
 //milan was here
 
 #include <PSECommon/Modules/Salmon/OpenGL.h>
-#include <ifl/iflFile.h>
 
+#ifdef __sgi
+#include <ifl/iflFile.h>
+#endif
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
@@ -788,21 +790,12 @@ void OpenGL::redraw_frame()
 	<< " polygons/second\"" << " \"" << fps_whole << "."
 	<< fps_tenths << " frames/sec\"" << '\0';
     //    cerr <<"updatePerf: <" << str.str() << ">\n";	
+    /***********************************/
+    /* movie makin' movie-movie makin' */
+    /***********************************/
     if (roe->doingMovie) {
-      //      cerr << "Saving a movie!\n";
-      unsigned char movie[10];
-      int startDiv = 100;
-      int idx=0;
-      int fi = roe->curFrame;
-      while (startDiv >= 1) {
-	movie[idx] = '0' + fi/startDiv;
-	fi = fi - (startDiv)*(fi/startDiv);
-	startDiv /= 10;
-	idx++;
-      }
-      movie[idx] = 0;
-      clString segname(roe->curName);
 
+      clString segname(roe->curName);
       int lasthash=-1;
       for (int ii=0; ii<segname.len(); ii++) {
 	  if (segname()[ii] == '/') lasthash=ii;
@@ -811,14 +804,48 @@ void OpenGL::redraw_frame()
       if (lasthash == -1) pathname = "./";
       else pathname = segname.substr(0, lasthash+1);
       clString fname = segname.substr(lasthash+1, -1);
-      fname = fname + ".raw";
-      clString framenum((char *)movie);
-      framenum = framenum + ".";
-      clString fullpath(pathname + framenum + fname);
-      cerr << "Dumping "<<fullpath<<"....  ";
-      dump_image(fullpath);
-      cerr << " done!\n";
-      roe->curFrame++;
+
+      //      cerr << "Saving a movie!\n";
+      if( roe->makeMPEG ){
+	if(!encoding_mpeg){
+	  encoding_mpeg = true;
+	  fname = fname + ".mpg";
+	  StartMpeg( fname );
+	}
+	AddMpegFrame();
+      } else { // dump each frame
+        /* if mpeg has just been turned off, close the file. */
+	if(encoding_mpeg){
+	  encoding_mpeg = false;
+	  EndMpeg();
+	}
+	  
+	unsigned char movie[10];
+	int startDiv = 100;
+	int idx=0;
+	int fi = roe->curFrame;
+	while (startDiv >= 1) {
+	  movie[idx] = '0' + fi/startDiv;
+	  fi = fi - (startDiv)*(fi/startDiv);
+	  startDiv /= 10;
+	  idx++;
+	}
+	movie[idx] = 0;
+	fname = fname + ".raw";
+	clString framenum((char *)movie);
+	framenum = framenum + ".";
+	clString fullpath(pathname + framenum + fname);
+	cerr << "Dumping "<<fullpath<<"....  ";
+	dump_image(fullpath);
+	cerr << " done!\n";
+	roe->curFrame++;
+      }
+    }
+    else {
+      if(encoding_mpeg) {// make sure we finish up mpeg that was in progress
+	encoding_mpeg = false;
+	EndMpeg();
+      }
     }
     TCL::execute(str.str().c_str());
     TCLTask::unlock();
@@ -1150,7 +1177,6 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    cerr << "Error, no clipping info\n";
 	    drawinfo->check_clip = 0;
 	}
-
 	// only set with globals...
 	if (get_tcl_stringvar(id,movie,val)) {
 	    get_tcl_stringvar(id,movieName,curName);
@@ -1160,11 +1186,15 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 //	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
 	    if (val == "0") {
 		doingMovie = 0;
+		makeMPEG = 0;
 	    } else {
-
 		if (!doingMovie) {
 		    doingMovie = 1;
 		    curFrame=0;
+		    if( val == "1" )
+		      makeMPEG = 0;
+		    else
+		      makeMPEG = 1;
 		}
 	    }
 	}
@@ -1554,7 +1584,9 @@ void OpenGL::real_saveImage(const clString& name,
     ofstream dumpfile(name());
     dumpfile.write((const char *)pxl,n);
     dumpfile.close();
-  } else if(type == "rgb" || type == "ppm" || type == "jpg" ){
+  }
+#ifdef __sgi
+  else if(type == "rgb" || type == "ppm" || type == "jpg" ){
     cerr << "Saving file "<< name <<endl;
     iflSize dims(vp[2], vp[3], 3);
     iflFileConfig fc(&dims, iflUChar);
@@ -1562,11 +1594,9 @@ void OpenGL::real_saveImage(const clString& name,
     iflFile* file = iflFile::create(name(), NULL, &fc, NULL, &sts);
     sts = file->setTile(0, 0, 0, vp[2], vp[3], 1, pxl);
     file->close();
-//   } else if( type == "jpg" ){
-//     cerr<<"JPEG save Not implemented\n";
-//   } else if( type == "ppm" ){
-//     cerr<<"PPM save not implemented\n";
-  } else {
+  } 
+#endif
+  else {
     cerr<<"Error unknown image file type\n";
   }
   delete[] pxl;
@@ -1637,6 +1667,99 @@ void OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     result->send(res);
 }
 
+void OpenGL::StartMpeg(const clString& fname)
+{
+#ifdef __sgi  
+#if (_MIPS_SZPTR == 64)
+  cerr<<"Mpeg Recording not supported in 64 bit mode\n";
+#else    
+  cerr<<"Starting Mpeg\n";
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT,vp);
+  int n=3*vp[2]*vp[3];
+  float cropwidth = (vp[3] - (vp[2] * 240.0/352.0))/2.0;
+  float *frameRate = new float(23.976);
+  os.open( fname(), ios::out);
+  clOpenCompressor(CL_MPEG1_VIDEO_SOFTWARE, &compressorHdl);
+  clSetParam(compressorHdl, CL_IMAGE_WIDTH, vp[2]);
+  clSetParam(compressorHdl, CL_IMAGE_HEIGHT, vp[3]);
+  clSetParam(compressorHdl, CL_IMAGE_CROP_TOP, int(cropwidth));
+  clSetParam(compressorHdl, CL_IMAGE_CROP_BOTTOM, int(cropwidth));
+  clSetParam(compressorHdl, CL_INTERNAL_FORMAT, CL_FORMAT_YCbCr422DC);
+  clSetParam(compressorHdl, CL_FRAME_RATE, CL_TypeIsInt(*frameRate));
+  clSetParam(compressorHdl, CL_FORMAT, CL_FORMAT_BGR);
+  compressedBufferSize = clGetParam(compressorHdl,
+					CL_COMPRESSED_BUFFER_SIZE);
+  compressedBufferHdl = clCreateBuf(compressorHdl, CL_BUF_COMPRESSED,
+				  compressedBufferSize, 1, NULL);
+#endif
+#else
+  cerr<<"Mpeg Recording supported only on SGI platform\n";
+#endif
+}
+
+void OpenGL::AddMpegFrame()
+{
+#ifdef __sgi  
+#if (_MIPS_SZPTR == 64)
+  cerr<<"Mpeg Recording not supported in 64 bit mode\n";  
+#else
+  cerr<<"Adding Mpeg Frame\n";
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT,vp);
+  int n=3*vp[2]*vp[3];
+  unsigned char* pxl=scinew unsigned char[n];
+  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  glReadBuffer(GL_FRONT);
+  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+  int wrap, size;
+  void *buf;
+  clCompress(compressorHdl, 1, pxl,
+	     &compressedBufferSize,
+ 	     NULL);
+  while ((size=clQueryValid(compressedBufferHdl, 0, &buf, &wrap)) > 0) {
+    os.write((const char *)buf, size);
+    clUpdateTail(compressedBufferHdl, size);
+  }
+#endif
+#else
+  cerr<<"Mpeg Recording supported only on SGI platform\n";
+#endif
+}
+
+void OpenGL::EndMpeg()
+{
+#ifdef __sgi 
+#if (_MIPS_SZPTR == 64)
+  cerr<<"Mpeg Recording not supported in 64 bit mode\n";  
+#else
+  cerr<<"Ending Mpeg\n";
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT,vp);
+  int n=3*vp[2]*vp[3];
+  unsigned char* pxl=scinew unsigned char[n];
+  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  glReadBuffer(GL_FRONT);
+  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+  int wrap, size;
+  void *buf;
+  clCompress(compressorHdl, 1, pxl,
+	     &compressedBufferSize,
+ 	     NULL);
+  clSetParam(compressorHdl, CL_MPEG1_END_OF_STREAM, 1);
+  while ((size=clQueryValid(compressedBufferHdl, 0, &buf, &wrap)) > 0) {
+    os.write((const char*)buf, size);
+    clUpdateTail(compressedBufferHdl, size);
+  }
+  clDestroyBuf( compressedBufferHdl );
+  clCloseCompressor(compressorHdl);
+  os.close();
+#endif
+#else
+  cerr<<"Mpeg Recording supported only on SGI platform\n";
+#endif
+}
+
 GetReq::GetReq()
 {
 }
@@ -1659,6 +1782,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.26  2000/06/09 17:50:18  kuzimmer
+// Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
+//
 // Revision 1.25  2000/06/07 20:59:25  kuzimmer
 // Modifications to make the image save menu item work on SGIs
 //
