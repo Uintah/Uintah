@@ -1252,9 +1252,10 @@ proc getOnTheFlyLibsDir {} {
 	}
     }
     set makefile [file join $SCIRUN_OBJDIR on-the-fly-libs Makefile]
+
     if { ![validDir $dir] || [catch "file copy -force $makefile $dir"] } {
 	tk_messageBox -type ok -parent . -icon error -message \
-	    "SCIRun cannot find a directory to store dynamically compiled code.  Please quit and set the environment variable SCIRUN_ON_THE_FLY_LIBS to a writable directory.  If you continue, networks may not execute correctly."
+	    "SCIRun cannot find a directory to store dynamically compiled code.  Please quit and set the environment variable SCIRUN_ON_THE_FLY_LIBS_DIR to a writable directory.  If you continue, networks may not execute correctly."
 	return $binOTF
     }
     return $dir
