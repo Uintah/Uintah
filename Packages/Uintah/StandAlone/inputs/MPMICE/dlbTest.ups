@@ -147,6 +147,7 @@
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
+      <save label = "p.particleID"/>
       <checkpoint cycle = "2" timestepInterval = "50"/>
    </DataArchiver>
 
