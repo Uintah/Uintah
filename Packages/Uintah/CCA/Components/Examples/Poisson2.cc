@@ -29,7 +29,7 @@ Poisson2::~Poisson2()
   delete lb_;
 }
 
-void Poisson2::problemSetup(const ProblemSpecP& params, GridP& grid,
+void Poisson2::problemSetup(const ProblemSpecP& params, GridP&,
 			 SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
@@ -71,10 +71,10 @@ void Poisson2::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 
-void Poisson2::computeStableTimestep(const ProcessorGroup* pg,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw, DataWarehouse* new_dw)
+void Poisson2::computeStableTimestep(const ProcessorGroup*,
+				  const PatchSubset*,
+				  const MaterialSubset*,
+				  DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
 }
@@ -82,7 +82,7 @@ void Poisson2::computeStableTimestep(const ProcessorGroup* pg,
 void Poisson2::initialize(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw)
+		       DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -118,9 +118,11 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      NCVariable<double> phi;
+      constNCVariable<double> phi;
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::None, 0);
-      subsched->get_new_dw()->put(phi, lb_->phi, matl, patch);
+      NCVariable<double> newphi;
+      newphi.copyData(phi);
+      subsched->get_new_dw()->put(newphi, lb_->phi, matl, patch);
     }
   }
 
@@ -154,10 +156,12 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      NCVariable<double> phi;
+      constNCVariable<double> phi;
       // DW has been advanced, so it is old now
       subsched->get_old_dw()->get(phi, lb_->phi, matl, patch, Ghost::None, 0);
-      new_dw->put(phi, lb_->phi, matl, patch);
+      NCVariable<double> newphi;
+      newphi.copyData(phi);
+      new_dw->put(newphi, lb_->phi, matl, patch);
     }
   }
   cerr << "Poisson2 time advance done!\n";
@@ -174,7 +178,7 @@ void Poisson2::iterate(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-      NCVariable<double> phi;
+      constNCVariable<double> phi;
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
       new_dw->allocate(newphi, lb_->phi, matl, patch);
