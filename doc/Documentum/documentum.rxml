@@ -274,7 +274,7 @@ Install the required tools.  See
 </para>
 </listitem>
 <listitem>
-<para>Prepare a <firstterm>catalog</firstterm> file.</para>
+<para>Prepare <firstterm>catalog</firstterm> files.</para>
 </listitem>
 <listitem>
 <para>Setup environment variables.</para>
@@ -287,8 +287,62 @@ linkend="sec.using-publish-rb">Publish.rb</link>
 </para>
 
 <section id="sec.catalog">
-<title>Catalog File</title>
-<para></para>
+<title id="sec.catalog.title">Catalog Files</title> 
+
+<para>
+This section assumes that OpenJade and the ISO character entity sets
+have been installed.  See <link endterm="sec.tools.title"
+linkend="sec.tools"/> for information on these tools.
+</para>
+
+<para>
+Two catalog files must be prepared.  The first maps ISO entity set
+<firstterm>public identifiers</firstterm> (abstract names) to
+corresponding <firstterm>system identifiers</firstterm> (file names).
+The second catalog lists system identifiers of other catalog files
+including the ISO entity set catalog.
+</para>
+
+<para>The ISO entity set catalog is named
+<filename>isoent.cat</filename> and has the following content:
+<literallayout class="monospaced">
+  PUBLIC "ISO 8879:1986//ENTITIES Diacritical Marks//EN" "ISOdia"
+  PUBLIC "ISO 8879:1986//ENTITIES Numeric and Special Graphic//EN" "ISOnum"
+  PUBLIC "ISO 8879:1986//ENTITIES Publishing//EN" "ISOpub"
+  PUBLIC "ISO 8879:1986//ENTITIES General Technical//EN" "ISOtech"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Latin 1//EN" "ISOlat1"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Latin 2//EN" "ISOlat2"
+  PUBLIC "ISO 8879:1986//ENTITIES Greek Letters//EN" "ISOgrk1"
+  PUBLIC "ISO 8879:1986//ENTITIES Monotoniko Greek//EN" "ISOgrk2"
+  PUBLIC "ISO 8879:1986//ENTITIES Greek Symbols//EN" "ISOgrk3" PUBLIC "ISO 8879:1986//ENTITIES Alternative Greek Symbols//EN" "ISOgrk4"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Arrow Relations//EN" "ISOamsa"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Binary Operators//EN" "ISOamsb"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Delimiters//EN" "ISOamsc"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Negated Relations//EN" "ISOamsn"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Ordinary//EN" "ISOamso"
+  PUBLIC "ISO 8879:1986//ENTITIES Added Math Symbols: Relations//EN" "ISOamsr"
+  PUBLIC "ISO 8879:1986//ENTITIES Box and Line Drawing//EN" "ISObox"
+  PUBLIC "ISO 8879:1986//ENTITIES Russian Cyrillic//EN" "ISOcyr1"
+  PUBLIC "ISO 8879:1986//ENTITIES Non-Russian Cyrillic//EN" "ISOcyr2"
+</literallayout>
+The catalog entries above assume <filename>isoent.cat</filename> is in
+the directory containting the ISO entity sets.  If this is not true
+then the system identifiers above (e.g. <quote>ISOdia</quote>) must be
+changed (e.g. <quote>/path/to/ISOdia</quote>) appropriately.
+</para>
+
+<para>
+The second catalog lists system identifiers of other catalog files
+including the ISO entity set catalog. This catalog file may be located
+anywhere.  It has the following content:
+<literallayout class="monospaced">
+  CATALOG /path/to/openjade/dsssl/catalog
+  CATALOG /path/to/isoent.cat
+</literallayout>
+where <quote>/path/to/</quote> is replaced by a real path.  The first
+entry in this catalog references a file named <quote>catalog</quote>
+within the OpenJade distribution.
+</para>
 </section>
 
 <section id="sec.bld-vars">
@@ -338,9 +392,12 @@ if you want Doxygen to build the C++ based documentation.
 </itemizedlist>
 For instance (assuming a Bourne type shell):
 <programlisting>
-export CLASSPATH=/usr/local/lib/Saxon/saxon.jar
-export STYLESHEET_PATH=/usr/local/xsl/docbook/html/
-export WITH_CV=true
+  export CLASSPATH=/usr/local/lib/Saxon/saxon.jar
+  export STYLESHEET_XSL_HTML=/usr/local/xsl/docbook/html/
+  export STYLESHEET_DSSSL_PRINT=/usr/share/sgml/dsssl/docbook-dsssl-nwalsh/print
+  export XML_DCL=/usr/share/sgml/dsssl/docbook-dsssl-nwalsh/dtds/decls/xml.dcl
+  export CATALOG=~/Documents/sgml/catalog
+  export WITH_CV=true
 </programlisting>
 
 </para>
@@ -385,7 +442,7 @@ no products) from a directory (and its sub-directories) type:
 </section>
 
 <section id="sec.using-publish-rb">
-<title>Using Publish.rb</title>
+<title>Publish.rb</title>
 <para> </para>
 </section>
 
@@ -1679,7 +1736,10 @@ output.</para>
 <varlistentry>
 <term><ulink url="http://www.oasis-open.org/cover/ISOEnts.zip">ISO character entity sets</ulink></term>
 <listitem>
-<para>Needed Character entities sets.</para>
+<para>Needed Character entities sets.</para> <para>A catalog file must
+be prepared which references these entity sets.  See <citetitle><link
+endterm="sec.catalog.title" linkend="sec.catalog"/></citetitle> for
+instructions.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
