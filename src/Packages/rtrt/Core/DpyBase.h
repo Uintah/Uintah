@@ -2,32 +2,35 @@
 #ifndef __DPYBASE__H__
 #define __DPYBASE__H__
 
+#include <Core/Thread/Runnable.h>
+
+#include <string>
+
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <Core/Thread/Runnable.h>
 
 namespace rtrt {
 
 using SCIRun::Runnable;
+using std::string;
 
-
-  class Scene;
-  class Color;
+class Scene;
+class Color;
   
-  enum MouseButton {
-    MouseButton1,
-    MouseButton2,
-    MouseButton3
-  };
+enum MouseButton {
+  MouseButton1,
+  MouseButton2,
+  MouseButton3
+};
 
-  enum {
-    SingleBuffered = 0x00000000,
-    DoubleBuffered = 0x00000001
-  };
+enum {
+  SingleBuffered = 0x00000000,
+  DoubleBuffered = 0x00000001
+};
 
-  enum {
-    BufferModeMask = 0x00000001
-  };
+enum {
+  BufferModeMask = 0x00000001
+};
 
 class DpyBase : public Runnable {
 protected:
@@ -80,7 +83,7 @@ protected:
   bool shift_pressed;
 
 
-  char *window_name;
+  string window_name;
   int window_mode;
   Display *dpy;
   Window win;
@@ -95,6 +98,8 @@ public:
 
   void Hide();
   void Show();
+
+  void setName( const string & name );
 
   // Sets the resolution of the window.  Currently this only has an effect
   // before you create the window.
