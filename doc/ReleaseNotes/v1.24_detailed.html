@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
     <script type="text/javascript">doc.preContent();</script>
 
     <h1 class="page-title">
-      Release Notes - SCIRun Version 1.24 - December 30, 2004
+      Release Notes - SCIRun Version 1.24 - February 03, 2004
     </h1>
 
     <a id="begin-toc">Content:H1,H2</a>
@@ -69,8 +69,7 @@ DEALINGS IN THE SOFTWARE.
       <li>EditColorMap (Visualization) replaces GenTransferFunc and
           provides many more features.</li>
       <li>CangeFieldBasis (Fields) module replaces ChangeFieldDataAt</li>
-      <li></li>
-      <li></li>
+      <li>ViewSlices (Render) module for viewing 2D slices of 3D Nrrds.</li>
     </ul>
 
     <h2> Teem Modules (Category in parentheses) </h2>
@@ -96,6 +95,7 @@ DEALINGS IN THE SOFTWARE.
             <li>Use bounding sphere for fog near/far calculations, rotationally invariant</li>
             <li>Add fog brightness controls</li>
             <li>Add fog option for computing using all objects or just visible ones</li>
+	    <li>Major code re-write for clarity and removal of dead code.</li>
         </ul>
 	</li>
       <li>Isosurface (Visualization) modules now automatically updates
@@ -116,8 +116,7 @@ DEALINGS IN THE SOFTWARE.
       <li>ScalarFieldStats (Fields) - Fixed numbering of Xa axis of histogram.</li>
       <li>SampleField (Fields) - Now saves ring widget positions correctly.</li>
       <li>GatherFields (Fields) - Now issues warning instead of error if input is empty.</li>
-      <li></li>
-      <li></li>
+      <li>ClipByFunc (Fields), MaskLattice (Fields), TransformData (Fields), TransformData2 (Fields), TransformData3 (Fields), LinAlgUnary (Math), LinearAlgebra (Math), LinAlgBinary (Fields) - Highlights compilation error lines when user inputs invalid code.</li>
     </ul>
 
     <h2>BioPSE Modules</h2>
@@ -162,7 +161,6 @@ DEALINGS IN THE SOFTWARE.
       directly and will only write out a .nd file if specifed or if
       there are NrrdData properties.</li>
       <li>UnuResample (Unu) - Fixed to pass correct parameters to teem call.</li>
-      <li></li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
@@ -172,9 +170,6 @@ DEALINGS IN THE SOFTWARE.
       <li>Handle buildling with ITK 1.4, 1.6, 1.9, and 1.10 (Note,
       1.10 will be released soon.  We have preemptively fixed GCC 3.4
       compile problems).</li>
-      <li></li>
-      <li></li>
-      <li></li>
     </ul>
 
     <h1> Deprecated Modules </h1>
@@ -184,9 +179,6 @@ DEALINGS IN THE SOFTWARE.
       <li>GatherPoints (Fields) - replaced by GatherPoints.</li>
       <li>GenTransferFunc (Visualization) replaced by EditColorMap.</li>
       <li>ChangeFieldDataAt (Fields) moduled renamed to CangeFieldBasis</li>
-      <li></li>
-      <li></li>
-      <li></li>
     </ul>
 
     <h2>Fusion Modules (Category in parentheses)</h2>
@@ -259,27 +251,47 @@ DEALINGS IN THE SOFTWARE.
       <li>Optimized most of the Mesh::Node::array_type types by using StackVectors.</li>
       <li>Use new SearchGrid for faster field locates with less memory usage.</li>
       <li>Added new range widget.</li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
-      <li></li>
+      <li>Viewer OpenGL context switching on OSX now works.</li>
+      <li>User input dynamic C++ code now shows error lines in dialog.</li>
+      <li>Loading .net file with disabled connections bug fixed.</li>
+      <li>Loading .net file with saved view bug fixed.</li>
+      <li>Loading .net file with Viewer geometry turned off bug fixed.</li>
+      <li>Major internal code cleanup of Viewer module and related code.</li>
+      <li>Removed dead BaWGL code from Viewer.</li>
+      <li>Ability to reference TCL arrays and lists from GuiVars with [], and () operators.</li>
+      <li>Core/GuiInterface/UIvar class allows for GUI variables with +,-,*,/,==,!=, etc operators.</li>
+      <li>FreeType lib included for TrueType font support in ViewSlices (Render) module.</li>
+      <li>Module icons now re-size correctly when they have more than 9 ports.</li>
+      <li>Move SCIRUN_VERSION to src/main/sci_version.h creates a single place for SCIRun version.</li>
+      <li>All OpenGL contexts are now created as shared contexts. Allows for displaying textures across multiple Viewer windows.</li>
+      <li>Distribution of pre-compiled OSX builds for easy installation</li>
+      <li>Display stack trace when exception encountered.</li>
+      <li>Bug #2277: When saving, backup existing .net file to #filename</li>
+      <li>Bug #2306: Delete GuiContext when GuiVar destroyed fixes memory leak</li>
+      <li>Fix OpenGL context creation crash caused by upgrade to OSX 10.3.6.</li>
+      <li>Disable connections to/from subnets to avoid bug.</li>
+      <li>Bug #2364: Don't allow special TCL characters \{, \}, and \" in Subnet Names</li>
+      <li>Bug #2372: Fixes writing of On-Disk subnets when network is saved</li>
+      <li>Bug #2421 fix.&nbsp; Correct placement of duplicated module when canvas view is not upper-left corner of network.</li>
+      <li>Bug #2428 fix.&nbsp; Fixes duplicated modules shrinking to UI button size</li>
+      <li>Add versioning of .scirunrc file.&nbsp; If ~/.scirunrc file is out of date, ask user to update it.</li>
+      <li>Upgrade RPMS to use Insight Toolkit v1.8.1 (was v1.6.1)</li>
+      <li>Red-Green style subdivision added to Core/Datatypes/TetVolMesh.h</li>
     </ul>
 
     <h1>Environment Variables</h1>
     <ul>
-      <li></li>
+      <li>SCIRUN_DATAFILE added.  Allows user to specify different datafiles that reside in the same SCIRUN_DATASET directory.</li>
+      <li>SCIRUN_THRIDPARTY_DIR added.  Allows user to manually set location of thirdparty directory after compilation.  Used for re-locatable build.</li>
+      <li>SCIRUN_FONT_PATH added.&nbsp; Allows user to specify location of TrueType fonts.</li>
+      <li>SCIRUN_RCFILE_VERSION added.&nbsp; Allows SCIRun to determine if .scirunrc needs updating.</li>      
     </ul>
 
     <h1>GUI Enhancements</h1>
     <ul>
       <li>Cleaned up 'Record Movie' dialog window.  Added tool tips to widgets.</li>
+      <li>Right-Clicking on module port opens menu of only Modules that can connect to that port.&nbsp; Selecting a module from the list creates the module and connection to port.</li>
+      <li>'Destroy Selected' on a module removed.&nbsp; Functionality moved to 'Destroy' command.</li>
     </ul>
 
     <h1>Documentation</h1>
