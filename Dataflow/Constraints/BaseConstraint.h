@@ -34,11 +34,12 @@
 
 #include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseVariable.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <string>
+#include <vector>
 
 using std::string;
+using std::vector;
 
 
 namespace SCIRun {
@@ -82,8 +83,8 @@ protected:
    Index nschemes;
    
    Index varCount;
-   Array1<BaseVariable*> vars;
-   Array1<Index> var_indexs; // The var's index for this constraint.
+   vector<BaseVariable*> vars;
+   vector<Index> var_indexs; // The var's index for this constraint.
    Array2<Index> var_choices;
    Index whichMethod, callingMethod;
 

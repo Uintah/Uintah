@@ -35,10 +35,11 @@
 #include <Dataflow/share/share.h>
 
 #include <Dataflow/Constraints/VarCore.h>
-#include <Core/Containers/Array1.h>
 #include <string>
+#include <vector>
 
 using std::string;
+using std::vector;
 
 
 namespace SCIRun {
@@ -102,10 +103,10 @@ private:
    int levellevel, level;
 
    Index numconstraints;
-   Array1<BaseConstraint*> constraints;
-   Array1<Index> constraint_indexs;
-   Array1<VPriority> constraint_priorities;
-   Array1<Index> constraint_order;
+   vector<BaseConstraint*> constraints;
+   vector<Index>           constraint_indexs;
+   vector<VPriority>       constraint_priorities;
+   vector<Index>           constraint_order;
    
    Scheme scheme;
 
