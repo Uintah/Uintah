@@ -87,14 +87,13 @@ public:
     }
     
   private:
-#if 0
-    NodeIter operator++(unsigned)
+
+    NodeIter operator++(int)
     {
       NodeIter result(*this);
       operator++();
       return result;
     }
-#endif
   };
   
   
@@ -118,14 +117,13 @@ public:
     }
     
   private:
-#if 0
-    CellIter operator++(unsigned)
+
+    CellIter operator++(int)
     {
       CellIter result(*this);
       operator++();
       return result;
     }
-#endif
   };
   
   typedef LatIndex index_type;
