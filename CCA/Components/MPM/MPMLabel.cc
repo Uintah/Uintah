@@ -330,8 +330,8 @@ MPMLabel::MPMLabel()
   bElBarLabel_preReloc = VarLabel::create("bElBar+",
 			 ParticleVariable<Matrix3>::getTypeDescription());
 
-  // for Farcture ----------------------------
-  pDispLabel = VarLabel::create("p.dispalcement",
+  // for Fracture ----------------------------
+  pDispLabel = VarLabel::create("p.displacement",
 	          ParticleVariable<Vector>::getTypeDescription());
   pDispLabel_preReloc = VarLabel::create( "p.displacement+",
                   ParticleVariable<Vector>::getTypeDescription());
