@@ -13,6 +13,7 @@ SRCDIR := Packages/Insight/Dataflow/Modules
 SUBDIRS := \
 	$(SRCDIR)/Filters\
 	$(SRCDIR)/DataIO\
+	$(SRCDIR)/Converters\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
