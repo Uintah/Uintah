@@ -12,6 +12,7 @@
  */
 
 #include <Network.h>
+#include <Connection.h>
 #include <Module.h>
 #include <ModuleList.h>
 #include <NotFinished.h>
@@ -29,10 +30,16 @@ Network::Network(int first)
 	    exit(-1);
 	}
     }
-    modules.add((*ModuleList::lookup("WidgetReal"))());
-    modules.add((*ModuleList::lookup("WidgetReal"))());
-    modules[0]->activate(0);
-    modules[1]->activate(0);
+    modules.add((*ModuleList::lookup("SoundInput"))());
+    modules[0]->activate();
+    modules.add((*ModuleList::lookup("SoundFilter"))());
+    modules[1]->activate();
+    modules[1]->ypos=110;
+    modules.add((*ModuleList::lookup("SoundOutput"))());
+    modules[2]->activate();
+    modules[2]->ypos=210;
+    connect(modules[0], 0, modules[1], 0);
+    connect(modules[1], 0, modules[2], 0);
 }
 
 Network::~Network()
@@ -76,3 +83,21 @@ Module* Network::module(int i)
     return modules[i];
 }
 
+int Network::nconnections()
+{
+    return connections.size();
+}
+
+Connection* Network::connection(int i)
+{
+    return connections[i];
+}
+
+void Network::connect(Module* m1, int p1, Module* m2, int p2)
+{
+    Connection* conn=new Connection(m1->oport(p1), m2->iport(p2));
+    connections.add(conn);
+    // Notify the modules of the connection...
+    m1->mailbox.send(new ModuleMsg(Module::Connected, 1, p1, m2, p2, conn));
+    m2->mailbox.send(new ModuleMsg(Module::Connected, 0, p2, m1, p1, conn));
+}

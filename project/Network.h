@@ -17,12 +17,14 @@
 #include <Multitask/ITC.h>
 #include <Classlib/Array1.h>
 class clString;
+class Connection;
 class Module;
 
 class Network {
     Mutex the_lock;
     int read_file(const clString&);
     Array1<Module*> modules;
+    Array1<Connection*> connections;
 public:
     Network(int first);
     ~Network();
@@ -34,6 +36,10 @@ public:
 
     int nmodules();
     Module* module(int);
+
+    int nconnections();
+    Connection* connection(int);
+    void connect(Module*, int, Module*, int);
 };
 
 #endif

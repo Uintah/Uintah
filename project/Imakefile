@@ -2,11 +2,19 @@
 #include <config/sci.cf>
 
 LOCALINCLUDES = -I. -I../modules
-OBJS = Module.o  Modules.o  ModuleList.o  \
-	Network.o  NetworkEditor.o  Scheduler.o  \
+OBJS = Connection.o  Data.o  Datatype.o  Datatypes.o  \
+	Module.o  Modules.o  ModuleList.o  \
+	MUI.o  \
+	Network.o  NetworkEditor.o  Port.o  Scheduler.o  \
+	SoundData.o \
+	UserModule.o  \
 	main.o
-SRCS = Module.cc Modules.cc ModuleList.cc \
-	Network.cc NetworkEditor.cc Scheduler.cc \
+SRCS = Connection.cc Data.cc Datatype.cc Datatypes.cc \
+	Module.cc Modules.cc ModuleList.cc \
+	MUI.cc \
+	Network.cc NetworkEditor.cc Port.cc Scheduler.cc \
+	SoundData.cc \
+	UserModule.cc \
 	main.cc
 TARGET = project
 

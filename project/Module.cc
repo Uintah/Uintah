@@ -13,20 +13,19 @@
 
 #include <Module.h>
 #include <NotFinished.h>
-#define DEFAULT_MODULE_PRIORITY 90
 
 Module::Module(const clString& name)
-: Task(name, 1, DEFAULT_MODULE_PRIORITY), name(name),
-  xpos(10), ypos(10),
-  interface_initialized(0), state(NeedData)
+: name(name), xpos(10), ypos(10),
+  interface_initialized(0), state(NeedData),
+  mailbox(10)
 {
 }
 
 Module::Module(const Module& copy, int deep)
-: Task(name, 1, DEFAULT_MODULE_PRIORITY),
-  name(copy.name), xpos(copy.xpos+10), ypos(copy.ypos+10),
+: name(copy.name), xpos(copy.xpos+10), ypos(copy.ypos+10),
   interface_initialized(0),
-  state(NeedData)
+  state(NeedData),
+  mailbox(10)
 {
 }
 
@@ -86,4 +85,35 @@ double Module::get_progress()
 Module::State Module::get_state()
 {
     return state;
+}
+
+int Module::niports()
+{
+    return iports.size();
+}
+
+IPort* Module::iport(int i)
+{
+    return iports[i];
+}
+
+int Module::noports()
+{
+    return oports.size();
+}
+
+OPort* Module::oport(int i)
+{
+    return oports[i];
+}
+
+void Module::activate()
+{
+}
+
+ModuleMsg::ModuleMsg(Module::ConnectionMode mode, int output, int port,
+		     Module* tomod, int toport, Connection* connection)
+: type(Connect), mode(mode), output(output), port(port),
+  tomod(tomod), toport(toport), connection(connection)
+{
 }

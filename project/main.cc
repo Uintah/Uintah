@@ -13,6 +13,7 @@
 
 #include <Classlib/ArgProcessor.h>
 #include <Multitask/Task.h>
+#include <Datatype.h>
 #include <ModuleList.h>
 #include <Network.h>
 #include <NetworkEditor.h>
@@ -26,11 +27,14 @@ int main(int argc, char** argv)
     // the rest is handled "automagically".
     ArgProcessor::process_args(argc, argv);
 
-    // Initialize the multithreader
-    TaskManager::initialize();
+    // Build the list of datatypes...
+    Datatype::initialize_list();
 
     // Build the list of known modules...
     ModuleList::initialize_list();
+
+    // Initialize the multithreader
+    TaskManager::initialize();
 
     // Create initial network
     // We build the Network with a 1, indicating that this is the

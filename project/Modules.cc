@@ -13,9 +13,17 @@
 
 #include <ModuleList.h>
 #include <Classlib/String.h>
-Module* make_WidgetReal();
 
 void ModuleList::initialize_list()
 {
+    Module* make_WidgetReal();
     ModuleList::insert("WidgetReal", make_WidgetReal);
+    Module* make_SoundFilter();
+    ModuleList::insert("SoundFilter", make_SoundFilter);
+    Module* make_SoundInput();
+    ModuleList::insert("SoundInput", make_SoundInput);
+    Module* make_SoundMixer();
+    ModuleList::insert("SoundMixer", make_SoundMixer);
+    Module* make_SoundOutput();
+    ModuleList::insert("SoundOutput", make_SoundOutput);
 }

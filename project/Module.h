@@ -14,14 +14,17 @@
 #ifndef SCI_project_Module_h
 #define SCI_project_Module_h 1
 
+#include <Classlib/Array1.h>
 #include <Classlib/String.h>
 #include <Classlib/Timer.h>
-#include <Multitask/Task.h>
+#include <Multitask/ITC.h>
+class Connection;
 class ModuleWidgetCallbackData;
 class IPort;
 class OPort;
+struct ModuleMsg;
 
-class Module : public Task {
+class Module {
 public:
     enum State {
 	NeedData,
@@ -30,12 +33,19 @@ public:
     };
 private:
     clString name;
-    int need_update;
-    State state;
-    double progress;
     virtual int body(int);
     WallClockTimer timer;
+protected:
+    int need_update;
+    double progress;
+    State state;
+    Array1<OPort*> oports;
+    Array1<IPort*> iports;
 public:
+    enum ConnectionMode {
+	Connected,
+	Disconnected,
+    };
     Module(const clString& name);
     virtual ~Module();
     Module(const Module&, int deep);
@@ -59,6 +69,7 @@ public:
     int ytime;
     void* drawing_a;
     ModuleWidgetCallbackData* wcbdata;
+    Mailbox<ModuleMsg*> mailbox;
 
     // Used by Scheduler
 
@@ -73,7 +84,24 @@ public:
     void update_progress(int, int);
 
     // Implemented by Module subclasses
+    virtual void activate();
     virtual void execute()=0;
+};
+
+struct ModuleMsg {
+    enum MType {
+	Connect,
+    };
+    ModuleMsg(Module::ConnectionMode, int output, int port,
+	      Module* tomod, int toport, Connection* conn);
+
+    MType type;
+    Module::ConnectionMode mode;
+    int output;
+    int port;
+    Module* tomod;
+    int toport;
+    Connection* connection;
 };
 
 #endif /* SCI_project_Module_h */

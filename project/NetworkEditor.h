@@ -17,6 +17,8 @@
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Xm/Xm.h> // For Widget and XtPointer
+class Connection;
+class Datatype;
 class Module;
 class Network;
 class Scheduler;
@@ -33,8 +35,11 @@ class NetworkEditor : public Task {
     void redraw(XtPointer);
     friend void do_redraw(Widget w, XtPointer ud, XtPointer xcbdata);
     friend void do_mod_redraw(Widget w, XtPointer ud, XtPointer);
-    void module_move(Module*, XButtonEvent*, String);
+    friend void do_con_redraw(Widget w, XtPointer ud, XtPointer);
     friend void do_module_move(Widget w, XButtonEvent*, String*, int*);
+    void module_move(Module*, XButtonEvent*, String);
+    friend void do_connection_move(Widget w, XButtonEvent*, String*, int*);
+    void connection_move(Module*, XButtonEvent*, String);
     void timer();
     friend void do_timer(XtPointer, XtIntervalId*);
     
@@ -47,6 +52,12 @@ class NetworkEditor : public Task {
     void update_display();
     void update_module(Module*, int);
     void initialize(Module*);
+    void draw_connection(Connection*, int);
+    void initialize(Connection*);
+    void initialize(Datatype*);
+    void get_iport_coords(Module*, int which, int& x, int& y);
+    void get_oport_coords(Module*, int which, int& x, int& y);
+    void calc_portwindow_size(Connection*, int, int&, int&, int&, int&);
 public:
     NetworkEditor(Network*);
     ~NetworkEditor();

@@ -12,16 +12,23 @@
  */
 
 #include <NetworkEditor.h>
+
+#include <Connection.h>
+#include <Datatype.h>
 #include <Module.h>
 #include <Network.h>
 #include <NotFinished.h>
+#include <Port.h>
+
 #include <Classlib/ArgProcessor.h>
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
+
 #include <Xm/Xm.h>
 #include <Xm/DrawingA.h>
 #include <Xm/MainW.h>
 #include <Xm/ScrollBar.h>
+
 #include <iostream.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,8 +51,13 @@
 #define MOD_GRAPH_TEXT_SPACE 3
 #define MOD_GRAPH_BUTT_SPACE 3
 #define MOD_SIDE_BORDER 5
+#define MOD_PORTPAD_WIDTH 13
+#define MOD_PORTPAD_SPACE 3
+#define PIPE_WIDTH 3
+#define PIPE_SHADOW_WIDTH 2
 #define CANVAS_SIZE 2000
 #define STAY_FROM_EDGE 2
+#define MIN_WIRE_EXTEND 8
 // #define MOD_NAME_FONT "-*-lucida-medium-r-*-*-17-*-*-*-*-*-*-*"
 #define MOD_NAME_FONT "-*-lucida-bold-r-*-*-14-*-*-*-*-*-*-*"
 #define MOD_TIME_FONT "-*-lucida-medium-r-*-*-11-*-*-*-*-*-*-*"
@@ -87,6 +99,10 @@ static String network_translations =
 	"<Btn1Down>:   network_scroll(down) ManagerGadgetArm()\n"
 	"<Btn1Up>:     network_scroll(up) ManagerGadgetActivate()\n"
 	"<Btn1Motion>: network_scroll(motion) ManagerGadgetButtonMotion()";
+static String connection_translations =
+	"<Btn1Down>:   connection_move(down) ManagerGadgetArm()\n"
+	"<Btn1Up>:     connection_move(up) ManagerGadgetActivate()\n"
+	"<Btn1Motion>: connection_move(motion) ManagerGadgetButtonMotion()";
 
 #define MOVE_NONE 0
 #define MOVE_WIDGET 1
@@ -100,6 +116,13 @@ class ModuleWidgetCallbackData {
 public:
     NetworkEditor* ne;
     Module* mod;
+};
+
+class ConnectionWidgetCallbackData {
+public:
+    NetworkEditor* ne;
+    Connection* conn;
+    int which_seg;
 };
 
 // Callbacks for motif...
@@ -121,6 +144,12 @@ void do_mod_redraw(Widget, XtPointer ud, XtPointer)
     cb->ne->draw_module(cb->mod);
 }
 
+void do_con_redraw(Widget, XtPointer ud, XtPointer)
+{
+    ConnectionWidgetCallbackData* cb=(ConnectionWidgetCallbackData*)ud;
+    cb->ne->draw_connection(cb->conn, cb->which_seg);
+}
+
 void do_module_move(Widget w, XButtonEvent* event, String* args, int* num_args)
 {
     if(*num_args != 1)
@@ -130,6 +159,17 @@ void do_module_move(Widget w, XButtonEvent* event, String* args, int* num_args)
     XtVaGetValues(w, XmNuserData, &ud, NULL);
     ModuleWidgetCallbackData* cb=(ModuleWidgetCallbackData*)ud;
     cb->ne->module_move(cb->mod, event, args[0]);
+}
+
+void do_connection_move(Widget w, XButtonEvent* event, String* args, int* num_args)
+{
+    if(*num_args != 1)
+	XtError("Wrong number of args!");
+
+    XtPointer ud;
+    XtVaGetValues(w, XmNuserData, &ud, NULL);
+    ModuleWidgetCallbackData* cb=(ModuleWidgetCallbackData*)ud;
+    cb->ne->connection_move(cb->mod, event, args[0]);
 }
 
 void do_network_scroll(Widget, XButtonEvent* event, String* args,
@@ -313,12 +353,14 @@ void NetworkEditor::build_ui()
 					NULL);
     XtAddCallback(drawing_a, XmNexposeCallback, do_redraw, (XtPointer)this);
 
-    XtActionsRec actions[2];
+    XtActionsRec actions[3];
     actions[0].string="module_move";
     actions[0].proc=(XtActionProc)do_module_move;
     actions[1].string="network_scroll";
     actions[1].proc=(XtActionProc)do_network_scroll;
-    XtAppAddActions(app, &actions[0], 2);
+    actions[2].string="connection_move";
+    actions[2].proc=(XtActionProc)do_connection_move;
+    XtAppAddActions(app, &actions[0], 3);
 
     XtVaGetValues(main_w, XmNbackground, &bg_color, NULL);
     XmGetColors(XtScreen(drawing_a), DefaultColormapOfScreen(XtScreen(drawing_a)),
@@ -326,13 +368,18 @@ void NetworkEditor::build_ui()
 
     XtRealizeWidget(toplevel);
 
-    // Initialize modules...
+    // Initialize connections and modules...
     // We do some writing to the network, but it is all
     // either our own private data, or the update flags, where
     // locking is not necessary
     net->read_lock();
+    int nconnections=net->nconnections();
+    for(int i=0;i<nconnections;i++){
+	Connection* conn=net->connection(i);
+	initialize(conn);
+    }
     int nmodules=net->nmodules();
-    for(int i=0;i<nmodules;i++){
+    for(i=0;i<nmodules;i++){
 	Module* mod=net->module(i);
 	initialize(mod);
     }
@@ -352,10 +399,57 @@ void NetworkEditor::redraw(XtPointer cbdata)
     redrawn_once=1;
 
     XmDrawingAreaCallbackStruct* cbs=(XmDrawingAreaCallbackStruct*)cbdata;
-
-    // Redraw wires...
-    NOT_FINISHED("NetworkEditor::Redraw");
 }
+
+void NetworkEditor::initialize(Datatype* dt)
+{
+    XColor col, unused;
+    if(!XAllocNamedColor(XtDisplay(toplevel),
+			 DefaultColormapOfScreen(XtScreen(toplevel)),
+			 dt->color_name(), &col, &unused)){
+	cerr << "Warning: Can't allocate color" << endl;
+	col.pixel=BlackPixelOfScreen(XtScreen(toplevel));
+    }
+    dt->color=col.pixel;
+    XmGetColors(XtScreen(toplevel), DefaultColormapOfScreen(XtScreen(toplevel)),
+		dt->color, NULL, &dt->top_shadow, &dt->bottom_shadow, NULL);
+    dt->interface_initialized=1;
+}
+
+void NetworkEditor::initialize(Connection* conn)
+{
+    Datatype* dt=conn->oport->datatype;
+    if(!dt->interface_initialized)
+	initialize(dt);
+
+    for(int i=0;i<5;i++){
+	ConnectionWidgetCallbackData* cbdata=new ConnectionWidgetCallbackData;
+	int x, y, w, h;
+	calc_portwindow_size(conn, i, x, y, w, h);
+	Widget da=XtVaCreateManagedWidget("drawing_a",
+					  xmDrawingAreaWidgetClass, drawing_a,
+					  XmNunitType, XmPIXELS,
+					  XmNx, x,
+					  XmNy, y,
+					  XmNwidth, w,
+					  XmNheight, h,
+					  XmNresizePolicy, XmNONE,
+					  XmNmarginHeight, 0,
+					  XmNmarginWidth, 0,
+					  XmNshadowThickness, 0,
+					  XmNbackground, dt->color,
+					  XmNtranslations,
+					    XtParseTranslationTable(connection_translations),
+					  XmNuserData, cbdata,
+					  NULL);
+	conn->drawing_a[i]=(void*)da;
+	cbdata->conn=conn;
+	cbdata->ne=this;
+	cbdata->which_seg=i;
+	XtAddCallback(da, XmNexposeCallback, do_con_redraw, (XtPointer)cbdata);
+    }
+}
+    
 
 void NetworkEditor::initialize(Module* mod)
 {
@@ -452,13 +546,80 @@ void NetworkEditor::draw_module(Module* mod)
     Drawable win=XtWindow(da);
 
     // Draw base
-    XClearWindow(dpy, win);
+    //XClearWindow(dpy, win);
     XSetForeground(dpy, gc, top_shadow);
     draw_shadow(dpy, win, gc, 0, 0, mod->width-1, mod->height-1,
 		MOD_EDGE_WIDTH, top_shadow, bottom_shadow);
 
-    // Draw Ports
-    NOT_FINISHED("Draw Ports and buttons");
+    // Draw Input ports
+    int port_spacing=MOD_PORTPAD_WIDTH+MOD_PORTPAD_SPACE;
+    int niports=mod->niports();
+    for(int p=0;p<niports;p++){
+	IPort* iport=mod->iport(p);
+	Datatype* dt=iport->datatype;
+	if(!dt->interface_initialized)
+	    initialize(dt);
+	XSetForeground(dpy, gc, dt->top_shadow);
+	int left=p*port_spacing+MOD_EDGE_WIDTH+MOD_SIDE_BORDER;
+	int right=left+MOD_PORTPAD_WIDTH-1;
+	for(int i=0;i<MOD_EDGE_WIDTH;i++){
+	    XDrawLine(dpy, win, gc, left, i, right, i);
+	}
+	XSetForeground(dpy, gc, dt->color);
+	int t=MOD_EDGE_WIDTH;
+	for(i=0;i<MOD_PORT_SIZE;i++){
+	    XDrawLine(dpy, win, gc, left, i+t, right, i+t);
+	}
+	if(iport->nconnections() > 0){
+	    // Draw tab...
+	    int p2=(MOD_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
+	    int l=left+p2+PIPE_SHADOW_WIDTH;
+	    XSetForeground(dpy, gc, dt->color);
+	    for(int i=0;i<PIPE_WIDTH;i++){
+		XDrawLine(dpy, win, gc, l+i, 0, l+i, MOD_EDGE_WIDTH-1);
+	    }
+	    XSetForeground(dpy, gc, dt->bottom_shadow);
+	    l+=PIPE_WIDTH;
+	    for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+		XDrawLine(dpy, win, gc, l+i, 0, l+i, MOD_EDGE_WIDTH-i-1);
+	    }
+	}
+    }
+
+    // Draw Output ports
+    int noports=mod->noports();
+    for(p=0;p<noports;p++){
+	OPort* oport=mod->oport(p);
+	Datatype* dt=oport->datatype;
+	if(!dt->interface_initialized)
+	    initialize(dt);
+	int h=mod->height;
+	int left=p*port_spacing+MOD_EDGE_WIDTH+MOD_SIDE_BORDER;
+	int right=left+MOD_PORTPAD_WIDTH-1;
+	XSetForeground(dpy, gc, dt->bottom_shadow);
+	for(int i=0;i<MOD_EDGE_WIDTH;i++){
+	    XDrawLine(dpy, win, gc, left, h-i-1, right, h-i-1);
+	}
+	XSetForeground(dpy, gc, dt->color);
+	int t=MOD_EDGE_WIDTH+1;
+	for(i=0;i<MOD_PORT_SIZE;i++){
+	    XDrawLine(dpy, win, gc, left, h-i-t, right, h-i-t);
+	}
+	if(oport->nconnections() > 0){
+	    // Draw tab...
+	    int p2=(MOD_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
+	    int l=left+p2;
+	    XSetForeground(dpy, gc, dt->top_shadow);
+	    for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+		XDrawLine(dpy, win, gc, l+i, h-i-1, l+i, h-1);
+	    }
+	    l+=PIPE_SHADOW_WIDTH;
+	    XSetForeground(dpy, gc, dt->color);
+	    for(int i=0;i<PIPE_WIDTH;i++){
+		XDrawLine(dpy, win, gc, l+i, h-MOD_EDGE_WIDTH-1, l+i, h-1);
+	    }
+	}
+    }
 
     // Draw buttons
     int ybtop=MOD_EDGE_WIDTH+MOD_PORT_SIZE+MOD_PORT_SPACE;
@@ -638,6 +799,38 @@ void NetworkEditor::module_move(Module* mod, XButtonEvent* event, String arg)
 		}
 		drag_sx=event->x_root;
 		drag_sy=event->y_root;
+
+		// Update connections...
+		for(int p=0;p<mod->niports();p++){
+		    Port* ip=mod->iport(p);
+		    for(int c=0;c<ip->nconnections();c++){
+			Connection* conn=ip->connection(c);
+			for(int i=0;i<5;i++){
+			    int x,y,w,h;
+			    calc_portwindow_size(conn, i, x, y, w, h);
+			    Widget da=(Widget)conn->drawing_a[i];
+			    XtVaSetValues(da, XmNx, x, XmNy, y,
+					  XmNwidth, w, XmNheight, h, NULL);
+			    XClearWindow(XtDisplay(da), XtWindow(da));
+			    draw_connection(conn, i);
+			}
+		    }
+		}
+		for(p=0;p<mod->noports();p++){
+		    Port* op=mod->oport(p);
+		    for(int c=0;c<op->nconnections();c++){
+			Connection* conn=op->connection(c);
+			for(int i=0;i<5;i++){
+			    int x,y,w,h;
+			    calc_portwindow_size(conn, i, x, y, w, h);
+			    Widget da=(Widget)conn->drawing_a[i];
+			    XtVaSetValues(da, XmNx, x, XmNy, y,
+					  XmNwidth, w, XmNheight, h, NULL);
+			    XClearWindow(XtDisplay(da), XtWindow(da));
+			    draw_connection(conn, i);
+			}
+		    }
+		}
 	    }
 	    break;
 	}
@@ -645,6 +838,14 @@ void NetworkEditor::module_move(Module* mod, XButtonEvent* event, String arg)
 	    dragmode=MOVE_NONE;
     } else {
 	dragmode=MOVE_NONE;
+    }
+}
+
+void NetworkEditor::connection_move(Module* mod, XButtonEvent* event, String arg)
+{
+    if(strcmp(arg, "down") == 0){
+    } else if(strcmp(arg, "up") == 0
+	      || strcmp(arg, "motion") == 0){
     }
 }
 
@@ -669,4 +870,241 @@ void NetworkEditor::draw_shadow(Display* dpy, Window win, GC gc,
 	XDrawLine(dpy, win, gc, xmax-i, ymin+i+1, xmax-i, ymax);
 	XDrawLine(dpy, win, gc, xmin+i+1, ymax-i, xmax, ymax-i);
     }
+}
+
+void NetworkEditor::get_iport_coords(Module* mod, int which, int& x, int& y)
+{
+    int port_spacing=MOD_PORTPAD_WIDTH+MOD_PORTPAD_SPACE;
+    int p2=(MOD_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
+    x=mod->xpos+which*port_spacing+MOD_EDGE_WIDTH+MOD_SIDE_BORDER+p2;
+    y=mod->ypos;
+}
+
+void NetworkEditor::get_oport_coords(Module* mod, int which, int& x, int& y)
+{
+    get_iport_coords(mod, which, x, y);
+    y+=mod->height;
+}
+
+void NetworkEditor::draw_connection(Connection* conn, int which_seg)
+{
+    Dimension w, h;
+    Widget wg=(Widget)conn->drawing_a[which_seg];
+    Display* dpy=XtDisplay(wg);
+    Drawable win=XtWindow(wg);
+    XtVaGetValues(wg, XmNwidth, &w, XmNheight, &h, NULL);
+    Datatype* dt=conn->oport->datatype;
+    if(!dt->interface_initialized)
+	initialize(dt);
+    Pixel bottom_shadow=dt->bottom_shadow;
+    Pixel top_shadow=dt->top_shadow;
+    if(which_seg==0 || which_seg==2 || which_seg==4){
+	// Vertical segment...
+	XSetForeground(dpy, gc, top_shadow);
+	for(int i=0;i<PIPE_SHADOW_WIDTH;i++){
+	    XDrawLine(dpy, win, gc, i, 0, i, h);
+	}
+	XSetForeground(dpy, gc, bottom_shadow);
+	for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+	    XDrawLine(dpy, win, gc, w-i-1, 0, w-i-1, h);
+	}
+    } else {
+	IPort* iport=conn->iport;
+	OPort* oport=conn->oport;
+	Module* imod=iport->module;
+	Module* omod=oport->module;
+	int iwhich=iport->which_port;
+	int owhich=oport->which_port;
+	int ix, iy;
+	get_iport_coords(imod, iwhich, ix, iy);
+	int ox, oy;
+	get_oport_coords(omod, owhich, ox, oy);
+	int cx=(ix+ox)/2;
+	int cy=(iy+oy)/2;
+	int width=PIPE_WIDTH+2*PIPE_SHADOW_WIDTH;
+	int ly=oy+MIN_WIRE_EXTEND;
+	int uy=iy-MIN_WIRE_EXTEND;
+	if(ly > uy){
+	    if(which_seg == 1){
+		XSetForeground(dpy, gc, top_shadow);
+		for(int i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, h-i-1, i, w-h+i, i);
+		    XDrawLine(dpy, win, gc, w-h+i, 0, w-h+1, i);
+		    XDrawLine(dpy, win, gc, i, 0, i, h-i-1);
+		}
+		XSetForeground(dpy, gc, bottom_shadow);
+		for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, i+1, h-i-1, w-i-1, h-i-1);
+		    XDrawLine(dpy, win, gc, w-i-1, 0, w-i-1, h-i-1);
+		    XDrawLine(dpy, win, gc, h-i-1, 0, h-i-1, i);
+		}
+	    } else {
+		// seg 3
+		XSetForeground(dpy, gc, top_shadow);
+		for(int i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, i+1, i, w-i-1, i);
+		    XDrawLine(dpy, win, gc, i, i, i, h-1);
+		    XDrawLine(dpy, win, gc, w-h+i, h-i, w-h+i, h-1);
+		}
+		XSetForeground(dpy, gc, bottom_shadow);
+		for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, w-i-1, i+1, w-i-1, h-1);
+		    XDrawLine(dpy, win, gc, h-i-1, h-i-1, h-i-1, h-1);
+		    XDrawLine(dpy, win, gc, h-i-1, h-i-1, w-h+i, h-i-1);
+		}
+	    }
+	} else {
+	    // Just one seg (1)
+	    if(ix > ox){
+		XSetForeground(dpy, gc, top_shadow);
+		for(int i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, i, 0, i, h-i-1);
+		    XDrawLine(dpy, win, gc, w-h+i, h-i-1, w-h+i, h-1);
+		    XDrawLine(dpy, win, gc, h-i-1, i, w-i-1, i);
+		}
+		XSetForeground(dpy, gc, bottom_shadow);
+		for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, i+1, h-i-1, w-h+i, h-i-1);
+		    XDrawLine(dpy, win, gc, w-i-1, i+1, w-i-1, h-1);
+		    XDrawLine(dpy, win, gc, h-i-1, 0, h-i-1, i);
+		}
+	    } else {
+		XSetForeground(dpy, gc, top_shadow);
+		for(int i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, i, i, i, h-1);
+		    XDrawLine(dpy, win, gc, i, i, w-h+i, i);
+		    XDrawLine(dpy, win, gc, w-h+i, 0, w-h+i, i);
+		}
+		XSetForeground(dpy, gc, bottom_shadow);
+		for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+		    XDrawLine(dpy, win, gc, h-i-1, h-i-1, h-i-1, h-1);
+		    XDrawLine(dpy, win, gc, h-i-1, h-i-1, w-i, h-i-1);
+		    XDrawLine(dpy, win, gc, w-i-1, 0, w-i-1, h-i);
+		}
+	    }
+	}
+    }
+}
+
+void NetworkEditor::calc_portwindow_size(Connection* conn, int which,
+					 int& x, int& y, int& w, int& h)
+{
+    IPort* iport=conn->iport;
+    OPort* oport=conn->oport;
+    Module* imod=iport->module;
+    Module* omod=oport->module;
+    int iwhich=iport->which_port;
+    int owhich=oport->which_port;
+    int ix, iy;
+    get_iport_coords(imod, iwhich, ix, iy);
+    int ox, oy;
+    get_oport_coords(omod, owhich, ox, oy);
+    int cx=(ix+ox)/2;
+    int cy=(iy+oy)/2;
+    int width=PIPE_WIDTH+2*PIPE_SHADOW_WIDTH;
+    int ly=oy+MIN_WIRE_EXTEND;
+    int uy=iy-MIN_WIRE_EXTEND;
+    if(ox < ix){
+	if(cx >= imod->xpos-MOD_PORT_SPACE){
+	    cx=imod->xpos-MOD_PORT_SPACE;
+	}
+	if(cx <= omod->xpos+omod->width+MOD_PORT_SPACE){
+	    cx=omod->xpos+omod->width+MOD_PORT_SPACE;
+	}
+    } else {
+	if(cx >= omod->xpos-MOD_PORT_SPACE){
+	    cx=omod->xpos-MOD_PORT_SPACE;
+	}
+	if(cx <= imod->xpos+imod->width+MOD_PORT_SPACE){
+	    cx=imod->xpos+imod->width+MOD_PORT_SPACE;
+	}
+    }
+    int x1, x2;
+    int y1, y2;
+    if(ly > uy){
+	switch(which){
+	case 0:
+	    // Vertical segment from output port...
+	    x1=ox;
+	    y1=ly;
+	    x2=ox+width;
+	    y2=oy;
+	    break;
+	case 1:
+	    // Horizontal segment to center...
+	    x1=ox;
+	    y1=ly;
+	    x2=cx+width;
+	    y2=ly+width;
+	    if(x1 > x2-width){
+		x1+=width;
+		x2-=width;
+	    }
+	    break;
+	case 2:
+	    // Vertical segment...
+	    x1=cx;
+	    y1=ly;
+	    x2=cx+width;
+	    y2=uy;
+	    break;
+	case 3:
+	    // Horizontal segment...
+	    x1=cx;
+	    y1=uy-width;
+	    x2=ix+width;
+	    y2=uy;
+	    if(x1 > x2-width){
+		x1+=width;
+		x2-=width;
+	    }
+	    break;
+	case 4:
+	    // Vertical segment to input port...
+	    x1=ix;
+	    y1=iy;
+	    x2=ix+width;
+	    y2=uy;
+	    break;
+	}
+    } else {
+	switch(which){
+	case 0:
+	    // Vertical segment from output port...
+	    x1=ox;
+	    y1=oy;
+	    x2=ox+width;
+	    y2=cy;
+	    break;
+	case 1:
+	    // Horizontal segment...
+	    x1=ox;
+	    y1=cy;
+	    x2=ix+width;
+	    y2=cy+width;
+	    if(x1 > x2-width){
+		x1+=width;
+		x2-=width;
+	    }
+	    break;
+	case 2:
+	case 3:
+	    // Empty...
+	    x1=x2=y1=y2=0;
+	    break;
+	case 4:
+	    // Vertical segment from input port...
+	    x1=ix;
+	    y1=iy;
+	    x2=ix+width;
+	    y2=cy+width;
+	    break;
+	}
+    }
+    x=Min(x1, x2);
+    y=Min(y1, y2);
+    w=Abs(x2-x1);
+    h=Abs(y2-y1);
+    if(w==0)w=1;
+    if(h==0)h=1;
 }
