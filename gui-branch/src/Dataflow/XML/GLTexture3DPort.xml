@@ -2,5 +2,5 @@
  
 <port name="GLTexture3D">
    <datatype>GLTexture3D</datatype>
-   <color>BlueViolet</color>
+   <color>Gray40</color>
 </port>
