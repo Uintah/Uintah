@@ -18,7 +18,7 @@ PSELIBS := \
 	Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/GuiInterface Core/Containers Core/Datatypes \
-        Core/Geom Core/GeomInterface \
+        Core/Geom Core/GeomInterface Core/TkExtensions \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
 	Core/TkExtensions \
