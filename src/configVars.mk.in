@@ -133,7 +133,7 @@ endif
 MPI_LIBRARY := @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
 # When using the HAVE_MPI variable, check only for whether it is blank (""), or
 # not blank.  Its "value" is not useful.
-HAVE_MPI := "@DEF_MPI@"
+HAVE_MPI := @HAVE_MPI@
 
 MDSPLUS_LIBRARY := @MDSPLUS_LIB_DIR_FLAG@ @MDSPLUS_LIB_FLAG@
 DEF_MDSPLUS  := @DEF_MDSPLUS@
@@ -225,6 +225,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
 
   GLOBUS_LIBRARY := @GLOBUS_LIB_DIR_FLAG@ @GLOBUS_LIB_FLAG@ 
   GLOBUS_INCLUDE := @INC_GLOBUS_H@
+  HAVE_GLOBUS := @HAVE_GLOBUS@
 
   HAVE_QT := @HAVE_QT@
   QT_LIBRARY := @QT_MT_LIB_DIR_FLAG@ @QT_MT_LIB_FLAG@
