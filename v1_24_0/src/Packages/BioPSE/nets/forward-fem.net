@@ -147,6 +147,8 @@ set $m11-update_type {on release}
 
 set $m12-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 
+set $m13-exhaustive_search {1}
+
 set $m14-nodes-on {1}
 set $m14-edges-on {0}
 set $m14-faces-on {0}
@@ -171,6 +173,8 @@ set $m17-stepsize [expr 0.004 * ${global-scale}]
 set $m17-tolerance [expr 0.004 * ${global-scale}]
 set $m17-maxsteps {250}
 set $m17-method {5}
+
+set $m18-exhaustive_search {0}
 
 set $m20-def-color-r {0.3}
 set $m20-def-color-g {0.3}
