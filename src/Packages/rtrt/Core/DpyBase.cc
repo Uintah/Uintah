@@ -39,11 +39,10 @@ DpyBase::DpyBase(const char *name, const int window_mode):
 DpyBase::~DpyBase() {
 }
 
-static int DPY_INITX=1300;
 static int DPY_NX=0;
 static int DPY_NY=0;
 
-int DpyBase::open_display() {
+int DpyBase::open_display(Window parent, bool needevents) {
   xlock.lock();
   // Open an OpenGL window
   dpy = XOpenDisplay(NULL);
@@ -91,13 +90,24 @@ int DpyBase::open_display() {
   atts.border_pixmap = None;
   atts.border_pixel = 0;
   atts.colormap=cmap;
-  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
+  if(needevents)
+    atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
+  else
+    atts.event_mask=StructureNotifyMask;
   //DDM Added for SIGGRAPH demo to make it pop up on 2nd display
-  win=XCreateWindow(dpy, RootWindow(dpy, screen),
-		    DPY_INITX+DPY_NX, DPY_NY, xres, yres, 0, vi->depth,
+  int xlow = DPY_NX;
+  int ylow = DPY_NY;
+  if(!parent){
+    parent = RootWindow(dpy, screen);
+    xlow=ylow=0;
+  } else {
+    DPY_NX+=20;
+    DPY_NY+=yres;
+  }
+  win=XCreateWindow(dpy, parent,
+		    xlow, ylow, xres, yres, 0, vi->depth,
 		    InputOutput, vi->visual, flags, &atts);
-  DPY_NX+=20;
-  DPY_NY+=yres;
+  cerr << "CreateWindow, parent=" << parent << ", xlow=" << xlow << ", ylow=" << ylow << ", xres=" << xres << ", yres=" << yres << '\n';
   XTextProperty tp;
   XStringListToTextProperty(&cwindow_name, 1, &tp);
   XSizeHints sh;
@@ -180,8 +190,10 @@ void DpyBase::init() {
 
 void DpyBase::display() {
   glFinish();
-  if (window_mode & BufferModeMask == DoubleBuffered)
+  if (window_mode & BufferModeMask == DoubleBuffered){
+    cerr << "swap!\n";
     glXSwapBuffers(dpy, win);
+  }
   XFlush(dpy);
 }
 

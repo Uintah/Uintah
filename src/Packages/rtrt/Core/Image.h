@@ -84,6 +84,10 @@ struct Pixel {
   {
   }
 
+  unsigned char& operator[](int idx) {
+    return (&r)[idx];
+  }
+
   inline void set(const Color& color) {
     float rr=color.r;
     rr=rr<0.f?0.f:rr>1.f?1.f:rr;

@@ -1,6 +1,5 @@
 
 #include <sci_defs.h> // For HAVE_OOGL
-
 #include <Packages/rtrt/Core/Gui.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/DpyPrivate.h>
@@ -36,7 +35,17 @@
 #include <Core/Geometry/Transform.h>
 
 #include <GL/glut.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1430
+#pragma set woff 3201
+#pragma set woff 1375
+#endif
 #include <glui.h>
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1430
+#pragma reset woff 3201
+#pragma reset woff 1375
+#endif
 
 #include <unistd.h>  // for sleep
 #include <strings.h> // for bzero
@@ -50,8 +59,8 @@ namespace rtrt {
 }
   
 //oogl
-extern ShadedPrim   * backgroundTexQuad; // from rtrt.cc
-extern BasicTexture * backgroundTex;     // from rtrt.cc
+ShadedPrim   * backgroundTexQuad; // from rtrt.cc
+BasicTexture * backgroundTex;     // from rtrt.cc
 
 ////////////////////////////////////////////
 
@@ -166,6 +175,7 @@ Gui::Gui() :
   soundList_(NULL)
 {
   inputString_[0] = 0;
+
 }
 
 Gui::~Gui()
@@ -468,6 +478,7 @@ Gui::setBackgroundImage( int room )
   return (current != backgroundImage_);
 }
 
+#if 0
 void
 Gui::idleFunc()
 {
@@ -552,6 +563,7 @@ Gui::idleFunc()
       glutSwapBuffers(); 
   }
 }
+#endif
 
 void
 Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
@@ -758,6 +770,14 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
   case 'j': // toggle on/off continuous jittered sampling...
     toggleJitterCB( -1 );
+    break;
+
+  case 'e':
+    activeGui->dpy_->nstreams++;
+    break;
+  case 'E':
+    if(activeGui->dpy_->nstreams > 1)
+      activeGui->dpy_->nstreams--;
     break;
 
   case 'r':
@@ -974,7 +994,7 @@ Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
 	priv->ball->qNorm = priv->ball->qNow.Conj();
 	//double mag = ball->qNow.VecMag();
 		    
-      } 
+      }
       priv->ball->EndDrag();
     }
     break;
@@ -985,7 +1005,19 @@ void
 Gui::handleWindowResizeCB( int width, int height )
 {
   printf("window resized\n");
+  // This is an ugly, cheaty way of getting the window id out of glut...
+  static bool first=true;
+  if(first){
+    extern Window** __glutWindowList;
+    Window win = __glutWindowList[activeGui->glutDisplayWindowId-1][1];
+    cerr << "winid=" << (void*)win << '\n';
+    activeGui->dpy_->release(win);
+    first=false;
+  }
+  activeGui->dpy_->priv->xres=width;
+  activeGui->dpy_->priv->yres=height;
 
+#if 0
   glutSetWindow( activeGui->glutDisplayWindowId );
 
   glViewport(0, 0, activeGui->dpy_->priv->xres, activeGui->dpy_->priv->yres);
@@ -996,9 +1028,11 @@ Gui::handleWindowResizeCB( int width, int height )
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glTranslatef(0.375, 0.375, 0.0);
+#endif
 
   return;
 
+#if 0
   DpyPrivate * priv = activeGui->priv;
 
   // Resize the image...
@@ -1014,6 +1048,7 @@ Gui::handleWindowResizeCB( int width, int height )
   glTranslatef(0.375, 0.375, 0.0);
 
   printf("done window resized\n");
+#endif
 }
 
 void

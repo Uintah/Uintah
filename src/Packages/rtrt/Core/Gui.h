@@ -83,8 +83,6 @@ public:
   static void createMenus( int winId, bool soundOn = false,
 			   bool showGui = true );
 
-  static void idleFunc();
-
   ///////////////////////////////////////////////////////////////////
   // 
   // Functions that allow the sound thread to interact with the gui.

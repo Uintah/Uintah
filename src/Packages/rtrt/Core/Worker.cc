@@ -94,7 +94,7 @@ extern float Galpha;
 
 //double Gjitter_vals[1000],Gjitter_valsb[1000];
 
-extern bool pin;
+bool pin = false;
 
 void Worker::run()
 {
