@@ -16,7 +16,7 @@
 */
 
 /*
- *  SocketThread.cc: Threads used by Socket communication channels
+ *   DTThread.cc: Threads used by the DataTransmitter
  *
  *  Written by:
  *   Keming Zhang
@@ -28,29 +28,28 @@
  */
 
 
-#include <iostream>
-#include <Core/Thread/Thread.h>
-#include <Core/CCA/Component/Comm/SocketEpChannel.h>
-#include <Core/CCA/Component/Comm/SocketThread.h>
-#include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/PIDL/ServerContext.h>
+#include <Core/CCA/Component/Comm/DT/DTThread.h>
+#include <Core/CCA/Component/Comm/DT/DataTransmitter.h>
 
 using namespace SCIRun;
-using namespace std;
-
   
-SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id){
-  this->ep=ep;
-  this->msg=msg;
+DTThread::DTThread(DataTransmitter *dt, int id){
+  this->dt=dt;
   this->id=id;
 }
 
 void 
-SocketThread::run()
+DTThread::run()
 {
-  if(id==-1) ep->runService();
-  else{
-    //cerr<<"calling handler #"<<id<<"\n";
-    ep->handler_table[id](msg);
+  switch(id){
+  case 0:
+    dt->runListeningThread();
+    break;
+  case 1:
+    dt->runSendingThread();
+    break;
+  case 2:
+    dt->runRecvingThread();
+    break;
   }
 }

@@ -54,14 +54,14 @@ endif
 ifeq ($(HAVE_GLOBUS),yes)
 PSELIBS := Core/Exceptions Core/Util Core/Thread Core/globus_threads
 else
-PSELIBS := Core/Exceptions Core/Util Core/Thread
+PSELIBS := Core/Exceptions Core/Util Core/Thread Core/CCA/Component/Comm/DT
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(HAVE_MPI),yes)
 SUBDIRS := \
-        $(SRCDIR)/Intra 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+        $(SRCDIR)/Intra   
 endif
-
+SUBDIRS+=$(SRCDIR)/DT
+include $(SCIRUN_SCRIPTS)/recurse.mk
