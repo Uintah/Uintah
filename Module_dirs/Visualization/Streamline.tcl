@@ -37,10 +37,10 @@ proc uiStreamline {modid} {
     pack $w.f.marker.line $w.f.marker.ribbon -side left
 
     global radius,$modid
-    set radius,$modid 0
+    set radius,$modid .25
     fscale $w.f.lineradius -variable radius,$modid -digits 3 \
-	-from 0.0 -to .10 -label "Line Radius Scale:" \
-	-resolution .01 -showvalue true -tickinterval .02 \
+	-from 0.0 -to 1.0 -label "Line/Ribbon Scale:" \
+	-resolution .01 -showvalue true -tickinterval .2 \
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.lineradius -fill x -pady 2
 
@@ -64,8 +64,8 @@ proc uiStreamline {modid} {
     global stepsize,$modid
     set stepsize,$modid 0.1
     fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
-	-from 0.0 -to 1.0 -label "Step size:" \
-	-resolution .01 -showvalue true -tickinterval .2 \
+	-from 0.0 -to 10.0 -label "Step size:" \
+	-resolution .01 -showvalue true -tickinterval 2 \
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.stepsize -fill x -pady 2
 
@@ -76,4 +76,8 @@ proc uiStreamline {modid} {
 	-showvalue true -tickinterval 200 \
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.maxsteps -fill x -pady 2
+
+#    global widget_scale,$modid
+#    set widget_scale,$modid 1
+#    fscale $w.f
 }
