@@ -208,7 +208,6 @@ Scene* make_scene(int argc, char* argv[])
   //Color cup(0.8, 0.8, 0.4);
   //double ambient_scale=.5;
   //Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
-  //scene->ambient_hack = true;
   
   //scene->shadow_mode = 1;
   //scene->maxdepth = 8;

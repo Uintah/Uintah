@@ -31,13 +31,14 @@ Scene::Scene(Object* obj, const Camera& cam, Image* image0, Image* image1,
 	     const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
-	     const Plane& groundplane,
-	     double ambientscale)
-    : obj(obj), mainGroup_(obj),
-      camera0(camera0), image0(image0), image1(image1),
-      groundplane(groundplane),
-      cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
-      work("frame tiles")
+	     const Plane& groundplane, 
+	     double ambientscale,
+	     AmbientType ambient_mode)
+  : obj(obj), mainGroup_(obj), 
+    camera0(camera0), image0(image0), image1(image1),
+    groundplane(groundplane), ambient_mode(ambient_mode),
+    cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
+    work("frame tiles")
 {
   mainGroupWithLights_ = new Group;
   mainGroupWithLights_->add( obj );
@@ -57,7 +58,6 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   maxdepth=2;
   xtilesize=32;
   ytilesize=2;
-  ambient_hack=true;
   shadowobj=0;
   background = new ConstantBackground( bgcolor );
   animate=true;
@@ -65,6 +65,7 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   frameno=0;
   frametime_fp=0;
   lasttime=0;
+  ambient_environment_map=0;
 
   add_shadowmode(ShadowBase::shadowTypeNames[0],new NoShadows());
   add_shadowmode(ShadowBase::shadowTypeNames[1],new SingleSampleSoftShadows());
@@ -92,12 +93,13 @@ Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
 	     const Plane& groundplane,
-	     double ambientscale)
-    : obj(obj), mainGroup_(obj), 
-      camera0(camera0), image0(0), image1(0),
-      groundplane(groundplane),
-      cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
-      work("frame tiles")
+	     double ambientscale,
+	     AmbientType ambient_mode)
+  : obj(obj), mainGroup_(obj),
+    camera0(camera0), image0(0), image1(0),
+    groundplane(groundplane), ambient_mode(ambient_mode),
+    cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
+    work("frame tiles")
 {
   mainGroupWithLights_ = new Group;
   mainGroupWithLights_->add( obj );

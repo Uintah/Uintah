@@ -31,15 +31,18 @@ class Group;
 struct DepthStats;
 struct PerProcessorContext;
 
+enum AmbientType { Global_Ambient = 0, Constant_Ambient, Arc_Ambient, 
+		   Sphere_Ambient };
+
 class Scene {
   
 public:
   Scene(Object*, const Camera&, Image*, Image*, const Color& bgcolor,
 	const Color& cdown, const Color& cup, const Plane& groundplane,
-	double ambientscale);
+	double ambientscale, AmbientType ambient_mode=Constant_Ambient);
   Scene(Object*, const Camera&, const Color& bgcolor,
 	const Color& cdown, const Color& cup, const Plane& groundplane,
-	double ambientscale);
+	double ambientscale, AmbientType ambient_mode=Constant_Ambient);
   ~Scene();
   
   inline Image* get_image(int which) const {
@@ -99,6 +102,16 @@ public:
     background = ptr;
   }
   
+  inline void set_ambient_environment_map ( EnvironmentMapBackground *ptr ) {
+    ambient_environment_map = ptr;
+  }
+
+  inline void get_ambient_environment_map_color (const Vector& v,
+						  Color &c) {
+    if (ambient_environment_map) 
+      ambient_environment_map->color_in_direction(v, c);
+  }
+
   inline void set_bgcolor(const Color& c) {
     background = new ConstantBackground(c);
   }
@@ -186,11 +199,11 @@ public:
   int xtilesize;
   int ytilesize;
   bool no_aa;
-  bool ambient_hack;
   Object* shadowobj;
   bool stereo;
   bool animate;
   
+  int ambient_mode;
   int frameno;
   FILE* frametime_fp;
   double lasttime;
@@ -227,6 +240,7 @@ private:
   Image* image0;
   Image* image1;
   Background* background;
+  Background* ambient_environment_map;
 
   Color origCup_;      // initialized cup value
   Color origCDown_;    // initialized cdown value
@@ -236,6 +250,7 @@ private:
   Plane groundplane;   // the groundplane for ambient hack
                        // distance guage is based on normal length
   int shadow_mode;
+
   int lightbits;
 
   // Lights that are on.

@@ -53,9 +53,8 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 1, 0) );
   Scene* scene=new Scene(all, cam, bgcolor, 
 			 Color(1,0,0), Color(0,0,01),
-			 groundplane, ambient_scale);
+			 groundplane, ambient_scale, Arc_Ambient);
 
-  scene->ambient_hack = true;
   scene->add_light(new Light(Point(-6250,-11800,15000), Color(1,1,1), 1));
   if (env_map!="")
     scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));

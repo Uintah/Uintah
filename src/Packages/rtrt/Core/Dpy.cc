@@ -27,7 +27,7 @@
 // f      decrease framerate
 // F      increase framerate (was 'g' key.)
 // g      toggle gravity on/off
-// h      toggle ambient_hack
+// h      cycle ambient_mode
 // j      toggle on/off jitter sampling
 // J      toggle on/off AUTO jitter (jitters if not moving)
 // m      scale eyesep to 1.1
@@ -36,7 +36,7 @@
 // p      toggle pstats
 // q      quit
 // r      toggle rstats
-// s      toggle through shadow modes
+// s      cycle through shadow modes
 // t      toggle hotspots
 // v      recenter view so that whole scene is displayed
 // w      (W)rite picture of screen in images/image.raw 
@@ -241,6 +241,7 @@ Dpy::run()
   priv->draw_pstats=false;
   priv->draw_rstats=false;
   shadowMode_ = scene->shadow_mode;
+  ambientMode_ = scene->ambient_mode;
 
   obj=scene->get_object();
 
@@ -317,6 +318,10 @@ Dpy::renderFrame() {
     obj->animate(SCIRun::Time::currentSeconds(), changed);
   if(scene->shadow_mode != shadowMode_){
     scene->shadow_mode = shadowMode_;
+    changed=true;
+  }
+  if(scene->ambient_mode != ambientMode_){
+    scene->ambient_mode = ambientMode_;
     changed=true;
   }
   if(scene->maxdepth != maxdepth){

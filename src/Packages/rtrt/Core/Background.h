@@ -67,47 +67,41 @@ public:
     }
 };
 
-  class EnvironmentMapBackground : public Background 
+class EnvironmentMapBackground : public Background {
+public:
+  EnvironmentMapBackground( char* filename, const Vector& up = Vector( 0.0, 0.0, 1.0 ) );
+
+  virtual ~EnvironmentMapBackground( void );
+
+  virtual void color_in_direction(const Vector& v, Color& c) const ;
+
+protected:
+  void read_image( char* filename );
+
+  inline Vector ChangeFromBasis( const Vector& a ) const 
   {
-    
-  public:
+    return( a.x()*_u + a.y()*_v + a.z()*_up );
+  }
+  
+  inline Vector ChangeToBasis( const Vector& a ) const 
+  {
+    return Vector( Dot( a, _u), Dot( a, _v ), Dot( a, _up ) );
+  }
+      
+  virtual void updateAmbient( double scale ) {
+    ambientScale_ = scale;
+  }
 
-    EnvironmentMapBackground( char* filename, const Vector& up = Vector( 0.0, 0.0, 1.0 ) );
-      
-      virtual ~EnvironmentMapBackground( void );
-      
-      virtual void color_in_direction(const Vector& v, Color& c) const ;
-      
-  protected:
-
-      double ambientScale_;
-      
-      void read_image( char* filename );
-      inline Vector ChangeFromBasis( const Vector& a ) const 
-      {
-	  return( a.x()*_u + a.y()*_v + a.z()*_up );
-      }
-
-      inline Vector ChangeToBasis( const Vector& a ) const 
-      {
-	  return Vector( Dot( a, _u), Dot( a, _v ), Dot( a, _up ) );
-      }
-      
-      virtual void updateAmbient( double scale ) {
-	ambientScale_ = scale;
-      }
-      texture* _text;
-      int _width, _height;
-      Array2<Color> _image;
-      double _aspectRatio;
-      Vector _up;
-      Vector _u;
-      Vector _v;
-
+  double ambientScale_;
+  texture* _text;
+  int _width, _height;
+  Array2<Color> _image;
+  double _aspectRatio;
+  Vector _up;
+  Vector _u;
+  Vector _v;
 };
-
 
 } // end namespace rtrt
 
 #endif
-

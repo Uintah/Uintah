@@ -70,6 +70,6 @@ void Speckle::shade(Color& result, const Ray& ray,
 	}
     }
     
-    result = Rd * (difflight + ambient_hack(cx->scene, normal));
+    result = Rd * (difflight + ambient(cx->scene, normal));
 
 }

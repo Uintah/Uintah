@@ -125,6 +125,7 @@ private:
   float           translateSensitivity_;
 
   GLUI_Listbox  * shadowModeLB_;
+  GLUI_Listbox  * ambientModeLB_;
   GLUI_Button   * jitterButton_;
 
   GLUI_EditText * framesPerSecondTxt;
@@ -237,7 +238,8 @@ private:
   // Helper Functions:
 
   void toggleGui();
-  void updateShadowMode();
+  void cycleShadowMode();
+  void cycleAmbientMode();
   void quit();
 
   ////////////////////////////////////////////////////////////////

@@ -74,7 +74,7 @@ void CoupledMaterial::shade(Color& result, const Ray& ray,
 	}
     }
     
-    Color surfcolor=Rd * (difflight + ambient_hack(cx->scene, normal)*(1-k1))
+    Color surfcolor=Rd * (difflight + ambient(cx->scene, normal)*(1-k1))
 	+speclight;
 
     double spec_refl = (R0 + (1-R0)*k1);

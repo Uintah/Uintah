@@ -41,31 +41,42 @@ public:
     Material();
     virtual ~Material();
     Array1<Light *> my_lights;
+    AmbientType local_ambient_mode;
 
     //ambient color (irradiance/pi) at position with surface normal
-  inline Color ambient_hack(Scene* scene, const Vector& normal) const {
+    inline Color ambient(Scene* scene, const Vector& normal) const {
+      int a_mode = (scene->ambient_mode==Global_Ambient)?scene->ambient_mode:local_ambient_mode;
 
-    if( !scene->ambient_hack ) {
-      return scene->getAmbientColor();
-    }
+      // in this next line, a_mode should never be Global_Ambient
+      // .. but just in case someone sets someone sets it wrong
+      // we'll just return the constant ambient color
+      if (a_mode == Constant_Ambient || a_mode == Global_Ambient)
+	return scene->getAmbientColor();
 
-    float cosine = scene->get_groundplane().cos_angle( normal );
+      if (a_mode == Arc_Ambient) {
+	float cosine = scene->get_groundplane().cos_angle( normal );
 #ifdef __sgi
-    float sine = fsqrt ( 1.F - cosine*cosine );
+	float sine = fsqrt ( 1.F - cosine*cosine );
 #else
-    float sine = sqrt(1.-cosine*cosine);
+	float sine = sqrt(1.-cosine*cosine);
 #endif
-    //double w = (cosine > 0)? sine/2 : (1 -  sine/2);
-    float w0, w1;
-    if(cosine > 0){
-      w0= sine/2.F;
-      w1= (1.F -  sine/2.F);
-    } else {
-      w1= sine/2.F;
-      w0= (1.F -  sine/2.F);
+	//double w = (cosine > 0)? sine/2 : (1 -  sine/2);
+	float w0, w1;
+	if(cosine > 0){
+	  w0= sine/2.F;
+	  w1= (1.F -  sine/2.F);
+	} else {
+	  w1= sine/2.F;
+	  w0= (1.F -  sine/2.F);
+	}
+	return scene->get_cup()*w1 + scene->get_cdown()*w0;
+      } 
+
+      // must be Sphere_Ambient
+      Color c;
+      scene->get_ambient_environment_map_color(normal, c);
+      return c;
     }
-    return scene->get_cup()*w1 + scene->get_cdown()*w0;
-  } 
 
     // reflection of v with respect to n
     Vector reflection(const Vector& v, const Vector n) const;

@@ -61,7 +61,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   rtrt::Plane groundplane ( Point(0, 0, -0.5), Vector(0, 0, 1) );
   Scene* scene=new Scene(group, cam,
 			 bgcolor, cdown, cup, groundplane,
-			 ambient_scale);
+			 ambient_scale, Arc_Ambient);
   Light * mainLight = new Light(Point(20,20,50), Color(1,1,1), 0.8, 1.0 );
   mainLight->name_ = "main light";
 
@@ -71,8 +71,6 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   scene->add_light( mainLight );
   scene->add_light( botLight );
   
-  scene->ambient_hack = true;
-
   scene->set_background_ptr( new LinearBackground( Color(0.0, 0.0, 0.0),
 						   Color(1.0,0.0,1.0),
 						   Vector(0,0,1)) );

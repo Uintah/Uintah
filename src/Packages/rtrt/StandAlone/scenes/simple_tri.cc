@@ -78,7 +78,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			   bgcolor, cdown, cup, groundplane,
 			   ambient_scale);
     scene->add_light(new Light(Point(1,0,3), Color(.5,.5,.5), light_radius));
-//      scene->ambient_hack = true;
 
     scene->set_background_ptr( new LinearBackground(
                                Color(0.2, 0.4, 0.9),

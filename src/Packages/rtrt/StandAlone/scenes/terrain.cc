@@ -505,10 +505,9 @@ Scene* make_scene(int argc, char* argv[])
     Scene* scene=new Scene(grp, cam,
 			   bgcolor, cdown, cup,
 			   groundplane, 
-			   ambient_scale);
+			   ambient_scale, Arc_Ambient);
     scene->add_light(new Light(Point(-10000,-10000,10000), Color(.7,.7,.7), 0));
     scene->select_shadow_mode( No_Shadows );
-    scene->ambient_hack=true;
     scene->maxdepth=0;
     scene->set_background_ptr( new LinearBackground(
 	Color(135/255., 206/255., 235/255.)*.8,

@@ -280,7 +280,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Vector(1, 0, 0)) );
 
     scene->select_shadow_mode( No_Shadows );
-    scene->ambient_hack=false;
     scene->attach_display(dpy);
     return scene;
 }
