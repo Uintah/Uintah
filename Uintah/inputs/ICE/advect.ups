@@ -57,7 +57,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>advect.uda</filebase>
-	<outputInterval>.1</outputInterval>
+	<outputInterval>.0001</outputInterval>
    </DataArchiver>
 
    <OutputVars>
@@ -96,12 +96,15 @@
     <MaterialProperties>
 	<ICE>
 	  <material>
+	    <ideal_gas> </ideal_gas>
+	    <density> 1. </density>
 	    <viscosity>      1.0         </viscosity>
 	    <thermal_conductivity>1.0    </thermal_conductivity>
 	    <specific_heat>  1.0         </specific_heat>
 	    <speed_of_sound> 700         </speed_of_sound>
            <ideal_gas_constant>1.0     </ideal_gas_constant>
 	    <gamma>          1.4         </gamma>	    
+	    <velocity_field>0</velocity_field>
 	  </material>
 	</ICE>	
     </MaterialProperties>
