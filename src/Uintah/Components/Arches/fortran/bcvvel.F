@@ -170,7 +170,8 @@ C--------------------------------------------------------------------
 C             SOUTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
                   IF (PCELL(I+1,J,K).NE.WALL.AND.
-     &                 PCELL(I+1,J-1,K).NE.WALL) THEN
+     &                 PCELL(I+1,J-1,K).NE.WALL.AND.
+     $                 .NOT.(yminus.and.j.eq.jst))THEN
                      XP = X(I+1) - XU(I+1)
                      TMULT = VISCOS/XP
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNSV(J)*STB(K)
@@ -188,6 +189,21 @@ C--------------------------------------------------------------------
                            SP(I+1,J+1,K) = SP(I+1,J+1,K)-TMULT*
      $                          SNSV(J+1)*STB(K)
                            AW(I+1,J+1,K) = 0.0
+                        END IF
+                     END IF
+                  endif
+C--------------------------------------------------------------------
+C             SOUTHEAST FACE OF INTRUSION/WALL, only if next to south patch
+C--------------------------------------------------------------------
+                  IF ((J.EQ.JST+1).AND.(.NOT.yminus)) THEN
+                     IF (PCELL(I,J-1,K).NE.WALL) THEN
+                        IF (PCELL(I+1,J-1,K).NE.WALL.AND.
+     &                       PCELL(I+1,J,K).NE.WALL) THEN
+                           XP = X(I+1)-XU(I+1)
+                           TMULT = VISCOS/XP
+                           SP(I+1,J-1,K) = SP(I+1,J-1,K)-TMULT*
+     $                          SNSV(J-1)*STB(K)
+                           AW(I+1,J-1,K) = 0.0
                         END IF
                      END IF
                   endif
@@ -254,6 +270,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.9  2000/10/09 17:06:30  rawat
+c modified momentum solver for multi-patch
+c
 c Revision 1.8  2000/10/08 18:56:41  rawat
 c fixed the solver for multi
 c

@@ -39,7 +39,6 @@ MomentumSolver(const ArchesLabel* label, TurbulenceModel* turb_model,
                                    d_boundaryCondition(bndry_cond),
 				   d_physicalConsts(physConst)
 {
-  d_velocityVars = scinew ArchesVariables();
 }
 
 //****************************************************************************
@@ -83,21 +82,21 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 void 
 MomentumSolver::solve(const LevelP& level,
 		      SchedulerP& sched,
-		      DataWarehouseP& /*old_dw*/,
+		      DataWarehouseP& old_dw,
 		      DataWarehouseP& new_dw,
 		      double /*time*/, double delta_t, int index)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // velocity solve.
-  DataWarehouseP matrix_dw = sched->createDataWarehouse(new_dw);
+  //  DataWarehouseP matrix_dw = sched->createDataWarehouse(new_dw);
 
   //computes stencil coefficients and source terms
   // require : pressureCPBC, [u,v,w]VelocityCPBC, densityIN, viscosityIN (new_dw)
   //           [u,v,w]SPBC, densityCP (old_dw)
   // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
+  sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t, index);
     
   // Schedules linear velocity solve
   // require : [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM,
@@ -106,7 +105,7 @@ MomentumSolver::solve(const LevelP& level,
   //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
   //           [u,v,w]VelocityMS
   //  d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
-  sched_velocityLinearSolve(level, sched, new_dw, matrix_dw, delta_t, index);
+  sched_velocityLinearSolve(level, sched, old_dw, new_dw, delta_t, index);
     
 }
 
@@ -116,8 +115,8 @@ MomentumSolver::solve(const LevelP& level,
 void 
 MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 					SchedulerP& sched,
+					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw,
-					DataWarehouseP& matrix_dw,
 					double delta_t, int index)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
@@ -130,57 +129,61 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 	// 		      Discretization::buildLinearMatrix,
 	// 		      delta_t, index);
       Task* tsk = scinew Task("MomentumSolver::BuildCoeff",
-			      patch, new_dw, matrix_dw, this,
+			      patch, old_dw, new_dw, this,
 			      &MomentumSolver::buildLinearMatrix,
 			      delta_t, index);
 
-      int numGhostCells = 0;
+      int numGhostCells = 1;
+      int zeroGhostCells = 0;
       int matlIndex = 0;
       int nofStencils = 7;
       // get old_dw from sched
       // from old_dw for time integration
-      DataWarehouseP old_dw = new_dw->getTop();
+      //      DataWarehouseP old_dw = new_dw->getTop();
       tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
+      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+
       // from new_dw
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       switch (index) {
       case Arches::XDIR:
 	tsk->requires(new_dw, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_vVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	break;
       case Arches::YDIR:
 	// use new uvelocity for v coef calculation
-	tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+	tsk->requires(new_dw, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, 
+		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_vVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	break;
       case Arches::ZDIR:
 	// use new uvelocity for v coef calculation
-	tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
-	tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+	tsk->requires(new_dw, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, 
+		      Ghost::AroundCells, numGhostCells);
+	tsk->requires(new_dw, d_lab->d_vVelocityCPBCLabel, matlIndex, patch, 
+		      Ghost::AroundCells, numGhostCells);
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	break;
       default:
 	throw InvalidValue("Invalid index in MomentumSolver");
@@ -193,32 +196,29 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       switch (index) {
       case Arches::XDIR:
 	for (int ii = 0; ii < nofStencils; ii++) {
-	  tsk->computes(matrix_dw, d_lab->d_uVelConvCoefMBLMLabel, ii, patch);
-	  tsk->computes(matrix_dw, d_lab->d_uVelCoefMBLMLabel, ii, patch);
+	  tsk->computes(new_dw, d_lab->d_uVelCoefMBLMLabel, ii, patch);
 	}
-	tsk->computes(matrix_dw, d_lab->d_uVelLinSrcMBLMLabel, 
+	tsk->computes(new_dw, d_lab->d_uVelLinSrcMBLMLabel, 
 		      matlIndex, patch);
-	tsk->computes(matrix_dw, d_lab->d_uVelNonLinSrcMBLMLabel, 
+	tsk->computes(new_dw, d_lab->d_uVelNonLinSrcMBLMLabel, 
 		      matlIndex, patch);
 	break;
       case Arches::YDIR:
 	for (int ii = 0; ii < nofStencils; ii++) {
-	  tsk->computes(matrix_dw, d_lab->d_vVelConvCoefMBLMLabel, ii, patch);
-	  tsk->computes(matrix_dw, d_lab->d_vVelCoefMBLMLabel, ii, patch);
+	  tsk->computes(new_dw, d_lab->d_vVelCoefMBLMLabel, ii, patch);
 	}
-	tsk->computes(matrix_dw, d_lab->d_vVelLinSrcMBLMLabel, 
+	tsk->computes(new_dw, d_lab->d_vVelLinSrcMBLMLabel, 
 		      matlIndex, patch);
-	tsk->computes(matrix_dw, d_lab->d_vVelNonLinSrcMBLMLabel, 
+	tsk->computes(new_dw, d_lab->d_vVelNonLinSrcMBLMLabel, 
 		      matlIndex, patch);
 	break;
       case Arches::ZDIR:
 	for (int ii = 0; ii < nofStencils; ii++) {
-	  tsk->computes(matrix_dw, d_lab->d_wVelConvCoefMBLMLabel, ii, patch);
-	  tsk->computes(matrix_dw, d_lab->d_wVelCoefMBLMLabel, ii, patch);
+	  tsk->computes(new_dw, d_lab->d_wVelCoefMBLMLabel, ii, patch);
 	}
-	tsk->computes(matrix_dw, d_lab->d_wVelLinSrcMBLMLabel, 
+	tsk->computes(new_dw, d_lab->d_wVelLinSrcMBLMLabel, 
 		      matlIndex, patch);
-	tsk->computes(matrix_dw, d_lab->d_wVelNonLinSrcMBLMLabel, 
+	tsk->computes(new_dw, d_lab->d_wVelNonLinSrcMBLMLabel, 
 		      matlIndex, patch);
 	break;
       default:
@@ -233,8 +233,8 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 void
 MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
 					  SchedulerP& sched,
+					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw,
-					  DataWarehouseP& matrix_dw,
 					  double delta_t, int index)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
@@ -242,54 +242,55 @@ MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
     const Patch* patch=*iter;
     {
       Task* tsk = scinew Task("MomentumSolver::VelLinearSolve",
-			   patch, new_dw, matrix_dw, this,
+			   patch, old_dw, new_dw, this,
 			   &MomentumSolver::velocityLinearSolve, delta_t, index);
 
-      int numGhostCells = 0;
+      int numGhostCells = 1;
+      int zeroGhostCells = 0;
       int matlIndex = 0;
       int nofStencils = 7;
-      DataWarehouseP old_dw = new_dw->getTop();
+      //      DataWarehouseP old_dw = new_dw->getTop();
       tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, zeroGhostCells);
       switch(index) {
       case Arches::XDIR:
+	tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		      Ghost::None, zeroGhostCells);
 	// coefficient for the variable for which solve is invoked
 	tsk->requires(new_dw, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  tsk->requires(matrix_dw, d_lab->d_uVelCoefMBLMLabel, ii, patch, 
-			Ghost::None, numGhostCells);
-	tsk->requires(matrix_dw, d_lab->d_uVelNonLinSrcMBLMLabel, 
-		      matlIndex, patch, Ghost::None, numGhostCells);
+	  tsk->requires(new_dw, d_lab->d_uVelCoefMBLMLabel, ii, patch, 
+			Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_lab->d_uVelNonLinSrcMBLMLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
 	tsk->computes(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
 	
 	break;
       case Arches::YDIR:
+	tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		      Ghost::None, zeroGhostCells);
 	// coefficient for the variable for which solve is invoked
 	tsk->requires(new_dw, d_lab->d_vVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  tsk->requires(matrix_dw, d_lab->d_vVelCoefMBLMLabel, ii, patch, 
-			Ghost::None, numGhostCells);
-	tsk->requires(matrix_dw, d_lab->d_vVelNonLinSrcMBLMLabel, 
-		      matlIndex, patch, Ghost::None, numGhostCells);
+	  tsk->requires(new_dw, d_lab->d_vVelCoefMBLMLabel, ii, patch, 
+			Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_lab->d_vVelNonLinSrcMBLMLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
 	tsk->computes(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
 	break;
       case Arches::ZDIR:
+	tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		      Ghost::None, zeroGhostCells);
 	// coefficient for the variable for which solve is invoked
 	tsk->requires(new_dw, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, 
-		      Ghost::None, numGhostCells);
+		      Ghost::AroundCells, numGhostCells);
 	for (int ii = 0; ii < nofStencils; ii++) 
-	  tsk->requires(matrix_dw, d_lab->d_wVelCoefMBLMLabel, ii, patch, 
-			Ghost::None, numGhostCells);
-	tsk->requires(matrix_dw, d_lab->d_wVelNonLinSrcMBLMLabel, 
-		      matlIndex, patch, Ghost::None, numGhostCells);
+	  tsk->requires(new_dw, d_lab->d_wVelCoefMBLMLabel, ii, patch, 
+			Ghost::None, zeroGhostCells);
+	tsk->requires(new_dw, d_lab->d_wVelNonLinSrcMBLMLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
 	tsk->computes(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
 	break;
       default:
@@ -306,22 +307,23 @@ MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
 void 
 MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  const Patch* patch,
+				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw,
-				  DataWarehouseP& matrix_dw,
 				  double delta_t, int index)
 {
+  ArchesVariables velocityVars;
   int matlIndex = 0;
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   int nofStencils = 7;
-  DataWarehouseP old_dw = new_dw->getTop();
+  //  DataWarehouseP old_dw = new_dw->getTop();
     // Get the required data
-  new_dw->get(d_velocityVars->pressure, d_lab->d_pressureSPBCLabel, 
+  new_dw->get(velocityVars.pressure, d_lab->d_pressureSPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_velocityVars->density, d_lab->d_densityINLabel, 
+  new_dw->get(velocityVars.density, d_lab->d_densityINLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+  new_dw->get(velocityVars.viscosity, d_lab->d_viscosityINLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_velocityVars->viscosity, d_lab->d_viscosityINLabel, 
-	      matlIndex, patch, Ghost::None, zeroGhostCells);
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
   // get old_dw from getTop function
@@ -334,84 +336,84 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
   CellInformation* cellinfo = cellInfoP;
-  old_dw->get(d_velocityVars->old_density, d_lab->d_densityCPLabel, 
+  old_dw->get(velocityVars.old_density, d_lab->d_densityCPLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
-  old_dw->get(d_velocityVars->cellType, d_lab->d_cellTypeLabel, 
+  old_dw->get(velocityVars.cellType, d_lab->d_cellTypeLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   // for explicit coeffs will be computed using the old u, v, and w
   // change it for implicit solve
   switch (index) {
   case Arches::XDIR:
-    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    old_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
+    new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    old_dw->get(velocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     cerr << "in moment solve just before allocate" << index << endl;
-    //    new_dw->allocate(d_velocityVars->variableCalledDU, d_lab->d_DUMBLMLabel,
+    //    new_dw->allocate(velocityVars.variableCalledDU, d_lab->d_DUMBLMLabel,
     //			matlIndex, patch);
 
     for (int ii = 0; ii < nofStencils; ii++) {
-      matrix_dw->allocate(d_velocityVars->uVelocityCoeff[ii], 
+      new_dw->allocate(velocityVars.uVelocityCoeff[ii], 
 			  d_lab->d_uVelCoefMBLMLabel, ii, patch);
-      matrix_dw->allocate(d_velocityVars->uVelocityConvectCoeff[ii], 
+      new_dw->allocate(velocityVars.uVelocityConvectCoeff[ii], 
 			  d_lab->d_uVelConvCoefMBLMLabel, ii, patch);
     }
-    matrix_dw->allocate(d_velocityVars->uVelLinearSrc, 
+    new_dw->allocate(velocityVars.uVelLinearSrc, 
 			d_lab->d_uVelLinSrcMBLMLabel, matlIndex, patch);
-    matrix_dw->allocate(d_velocityVars->uVelNonlinearSrc, 
+    new_dw->allocate(velocityVars.uVelNonlinearSrc, 
 			d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
     cerr << "in moment solve just after allocate" << index << endl;
     break;
   case Arches::YDIR:
     // getting new value of u velocity
-    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    old_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
+    new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    old_dw->get(velocityVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     cerr << "in moment solve just before allocate" << index << endl;
-    //    new_dw->allocate(d_velocityVars->variableCalledDV, d_lab->d_DVMBLMLabel,
+    //    new_dw->allocate(velocityVars.variableCalledDV, d_lab->d_DVMBLMLabel,
     //			matlIndex, patch);
     for (int ii = 0; ii < nofStencils; ii++) {
-      matrix_dw->allocate(d_velocityVars->vVelocityCoeff[ii], 
+      new_dw->allocate(velocityVars.vVelocityCoeff[ii], 
 			  d_lab->d_vVelCoefMBLMLabel, ii, patch);
-      matrix_dw->allocate(d_velocityVars->vVelocityConvectCoeff[ii], 
+      new_dw->allocate(velocityVars.vVelocityConvectCoeff[ii], 
 			  d_lab->d_vVelConvCoefMBLMLabel, ii, patch);
     }
-    matrix_dw->allocate(d_velocityVars->vVelLinearSrc, 
+    new_dw->allocate(velocityVars.vVelLinearSrc, 
 			d_lab->d_vVelLinSrcMBLMLabel, matlIndex, patch);
-    matrix_dw->allocate(d_velocityVars->vVelNonlinearSrc, 
+    new_dw->allocate(velocityVars.vVelNonlinearSrc, 
 			d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
 
     break;
   case Arches::ZDIR:
     // getting new value of u velocity
-    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    old_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
+    new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+    old_dw->get(velocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-    //    new_dw->allocate(d_velocityVars->variableCalledDW, d_lab->d_DWMBLMLabel,
+    //    new_dw->allocate(velocityVars.variableCalledDW, d_lab->d_DWMBLMLabel,
     //			matlIndex, patch);
     for (int ii = 0; ii < nofStencils; ii++) {
-      matrix_dw->allocate(d_velocityVars->wVelocityCoeff[ii], 
+      new_dw->allocate(velocityVars.wVelocityCoeff[ii], 
 			  d_lab->d_wVelCoefMBLMLabel, ii, patch);
-      matrix_dw->allocate(d_velocityVars->wVelocityConvectCoeff[ii], 
+      new_dw->allocate(velocityVars.wVelocityConvectCoeff[ii], 
 			  d_lab->d_wVelConvCoefMBLMLabel, ii, patch);
     }
-    matrix_dw->allocate(d_velocityVars->wVelLinearSrc, 
+    new_dw->allocate(velocityVars.wVelLinearSrc, 
 			d_lab->d_wVelLinSrcMBLMLabel, matlIndex, patch);
-    matrix_dw->allocate(d_velocityVars->wVelNonlinearSrc, 
+    new_dw->allocate(velocityVars.wVelNonlinearSrc, 
 			d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
 
     break;
@@ -421,45 +423,45 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // compute ith componenet of velocity stencil coefficients
   // inputs : [u,v,w]VelocityCPBC, densityIN, viscosityIN
   // outputs: [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM
-  d_discretize->calculateVelocityCoeff(pc, patch, new_dw, matrix_dw, 
+  d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 				       delta_t, index,
 				       Arches::MOMENTUM,
-				       cellinfo, d_velocityVars);
+				       cellinfo, &velocityVars);
 
   // Calculate velocity source
   // inputs : [u,v,w]VelocityCPBC, densityIN, viscosityIN ( new_dw), 
   //          [u,v,w]VelocitySPBC, densityCP( old_dw), 
   // outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  d_source->calculateVelocitySource(pc, patch, new_dw, matrix_dw, 
+  d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				    delta_t, index,
 				    Arches::MOMENTUM,
-				    cellinfo, d_velocityVars);
+				    cellinfo, &velocityVars);
 
   // Velocity Boundary conditions
   //  inputs : densityIN, [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
   //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
   //           [u,v,w]VelNonLinSrcPBLM
-  d_boundaryCondition->velocityBC(pc, patch, new_dw, matrix_dw, 
+  d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				  index,
 				  Arches::MOMENTUM,
-				  cellinfo, d_velocityVars);
+				  cellinfo, &velocityVars);
 
   // Modify Velocity Mass Source
   //  inputs : [u,v,w]VelocityCPBC, [u,v,w]VelCoefPBLM, 
   //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
   //           [u,v,w]VelNonLinSrcPBLM
   //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  d_source->modifyVelMassSource(pc, patch, new_dw,
-				matrix_dw, delta_t, index,
-				Arches::MOMENTUM, d_velocityVars);
+  d_source->modifyVelMassSource(pc, patch, old_dw,
+				new_dw, delta_t, index,
+				Arches::MOMENTUM, &velocityVars);
 
   // Calculate Velocity Diagonal
   //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
   //  outputs: [u,v,w]VelCoefPBLM
-  d_discretize->calculateVelDiagonal(pc, patch, new_dw, matrix_dw, 
+  d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
 				     index,
-				     Arches::MOMENTUM, d_velocityVars);
+				     Arches::MOMENTUM, &velocityVars);
 
   // Add the pressure source terms
   // inputs :[u,v,w]VelNonlinSrcMBLM, [u,v,w]VelCoefMBLM, pressureCPBC, 
@@ -467,41 +469,35 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // [u,v,w]VelocityCPBC
   // outputs:[u,v,w]VelNonlinSrcMBLM
 
-  d_source->addPressureSource(pc, patch, new_dw, matrix_dw, delta_t, index,
-			      cellinfo, d_velocityVars);
+  d_source->addPressureSource(pc, patch, old_dw, new_dw, delta_t, index,
+			      cellinfo, &velocityVars);
   cerr << "in moment solve just before build matrix" << index << endl;
     // put required vars
-  // **warning** not sure if we need to put velocity coeffs too
   switch (index) {
   case Arches::XDIR:
     for (int ii = 0; ii < nofStencils; ii++) {
-      matrix_dw->put(d_velocityVars->uVelocityCoeff[ii], 
+      new_dw->put(velocityVars.uVelocityCoeff[ii], 
 		     d_lab->d_uVelCoefMBLMLabel, ii, patch);
-      matrix_dw->put(d_velocityVars->uVelocityConvectCoeff[ii], 
-		     d_lab->d_uVelConvCoefMBLMLabel, ii, patch);
+
     }
-    matrix_dw->put(d_velocityVars->uVelNonlinearSrc, 
+    new_dw->put(velocityVars.uVelNonlinearSrc, 
 		   d_lab->d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
   break;
   case Arches::YDIR:
     for (int ii = 0; ii < nofStencils; ii++) {
-      matrix_dw->put(d_velocityVars->vVelocityCoeff[ii], 
+      new_dw->put(velocityVars.vVelocityCoeff[ii], 
 		     d_lab->d_vVelCoefMBLMLabel, ii, patch);
-      matrix_dw->put(d_velocityVars->vVelocityConvectCoeff[ii], 
-		     d_lab->d_vVelConvCoefMBLMLabel, ii, patch);
     }
-    matrix_dw->put(d_velocityVars->vVelNonlinearSrc, 
+    new_dw->put(velocityVars.vVelNonlinearSrc, 
 		   d_lab->d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
   break;
   
   case Arches::ZDIR:
     for (int ii = 0; ii < nofStencils; ii++) {
-      matrix_dw->put(d_velocityVars->wVelocityCoeff[ii], 
+      new_dw->put(velocityVars.wVelocityCoeff[ii], 
 		     d_lab->d_wVelCoefMBLMLabel, ii, patch);
-      matrix_dw->put(d_velocityVars->wVelocityConvectCoeff[ii], 
-		     d_lab->d_wVelConvCoefMBLMLabel, ii, patch);
     }
-    matrix_dw->put(d_velocityVars->wVelNonlinearSrc, 
+    new_dw->put(velocityVars.wVelNonlinearSrc, 
 		   d_lab->d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
   break;
   default:
@@ -512,15 +508,16 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 void 
 MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 				    const Patch* patch,
+				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw,
-				    DataWarehouseP& matrix_dw,
 				    double delta_t, int index)
 {
+  ArchesVariables velocityVars;
   int matlIndex = 0;
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   int nofStencils = 7;
-  DataWarehouseP old_dw = new_dw->getTop();
+  //  DataWarehouseP old_dw = new_dw->getTop();
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
   // get old_dw from getTop function
@@ -533,49 +530,49 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
   CellInformation* cellinfo = cellInfoP;
-  old_dw->get(d_velocityVars->old_density, d_lab->d_densityCPLabel, 
+  old_dw->get(velocityVars.old_density, d_lab->d_densityCPLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   switch (index) {
   case Arches::XDIR:
-    new_dw->get(d_velocityVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
+    new_dw->get(velocityVars.uVelocity, d_lab->d_uVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     for (int ii = 0; ii < nofStencils; ii++)
-      matrix_dw->get(d_velocityVars->uVelocityCoeff[ii], 
+      new_dw->get(velocityVars.uVelocityCoeff[ii], 
 		     d_lab->d_uVelCoefMBLMLabel, 
 		     ii, patch, Ghost::None, zeroGhostCells);
-    matrix_dw->get(d_velocityVars->uVelNonlinearSrc, 
+    new_dw->get(velocityVars.uVelNonlinearSrc, 
 		   d_lab->d_uVelNonLinSrcMBLMLabel,
 		   matlIndex, patch, Ghost::None, zeroGhostCells);
-    matrix_dw->allocate(d_velocityVars->residualUVelocity, d_lab->d_uVelocityRes,
+    new_dw->allocate(velocityVars.residualUVelocity, d_lab->d_uVelocityRes,
 			  matlIndex, patch);
 
     break;
   case Arches::YDIR:
-    new_dw->get(d_velocityVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
+    new_dw->get(velocityVars.vVelocity, d_lab->d_vVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     // initial guess for explicit calculations
     for (int ii = 0; ii < nofStencils; ii++)
-      matrix_dw->get(d_velocityVars->vVelocityCoeff[ii], 
+      new_dw->get(velocityVars.vVelocityCoeff[ii], 
 		     d_lab->d_vVelCoefMBLMLabel, 
 		     ii, patch, Ghost::None, zeroGhostCells);
-    matrix_dw->get(d_velocityVars->vVelNonlinearSrc, 
+    new_dw->get(velocityVars.vVelNonlinearSrc, 
 		   d_lab->d_vVelNonLinSrcMBLMLabel,
 		   matlIndex, patch, Ghost::None, zeroGhostCells);
-    matrix_dw->allocate(d_velocityVars->residualVVelocity, d_lab->d_vVelocityRes,
+    new_dw->allocate(velocityVars.residualVVelocity, d_lab->d_vVelocityRes,
 			  matlIndex, patch);
     break; 
   case Arches::ZDIR:
-    new_dw->get(d_velocityVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
+    new_dw->get(velocityVars.wVelocity, d_lab->d_wVelocityCPBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
     for (int ii = 0; ii < nofStencils; ii++)
-      matrix_dw->get(d_velocityVars->wVelocityCoeff[ii], 
+      new_dw->get(velocityVars.wVelocityCoeff[ii], 
 		     d_lab->d_wVelCoefMBLMLabel, 
 		     ii, patch, Ghost::None, zeroGhostCells);
-    matrix_dw->get(d_velocityVars->wVelNonlinearSrc, 
+    new_dw->get(velocityVars.wVelNonlinearSrc, 
 		   d_lab->d_wVelNonLinSrcMBLMLabel,
 		   matlIndex, patch, Ghost::None, zeroGhostCells);
-    matrix_dw->allocate(d_velocityVars->residualWVelocity, d_lab->d_wVelocityRes,
+    new_dw->allocate(velocityVars.residualWVelocity, d_lab->d_wVelocityRes,
 			  matlIndex, patch);
     break;  
   default:
@@ -583,65 +580,67 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   }
   
   // compute eqn residual
-  d_linearSolver->computeVelResidual(pc, patch, new_dw, matrix_dw, index, 
-				     d_velocityVars);
+#if 0
+  d_linearSolver->computeVelResidual(pc, patch, new_dw, new_dw, index, 
+				     &velocityVars);
   // put the summed residuals into new_dw
   switch (index) {
   case Arches::XDIR:
-    new_dw->put(sum_vartype(d_velocityVars->residUVel), d_lab->d_uVelResidPSLabel);
-    new_dw->put(sum_vartype(d_velocityVars->truncUVel), d_lab->d_uVelTruncPSLabel);
+    new_dw->put(sum_vartype(velocityVars.residUVel), d_lab->d_uVelResidPSLabel);
+    new_dw->put(sum_vartype(velocityVars.truncUVel), d_lab->d_uVelTruncPSLabel);
     break;
   case Arches::YDIR:
-    new_dw->put(sum_vartype(d_velocityVars->residVVel), d_lab->d_vVelResidPSLabel);
-    new_dw->put(sum_vartype(d_velocityVars->truncVVel), d_lab->d_vVelTruncPSLabel);
+    new_dw->put(sum_vartype(velocityVars.residVVel), d_lab->d_vVelResidPSLabel);
+    new_dw->put(sum_vartype(velocityVars.truncVVel), d_lab->d_vVelTruncPSLabel);
     break;
   case Arches::ZDIR:
-    new_dw->put(sum_vartype(d_velocityVars->residWVel), d_lab->d_wVelResidPSLabel);
-    new_dw->put(sum_vartype(d_velocityVars->truncWVel), d_lab->d_wVelTruncPSLabel);
+    new_dw->put(sum_vartype(velocityVars.residWVel), d_lab->d_wVelResidPSLabel);
+    new_dw->put(sum_vartype(velocityVars.truncWVel), d_lab->d_wVelTruncPSLabel);
     break;
   default:
     throw InvalidValue("Invalid index in MomentumSolver");  
   }
+#endif
 
   // apply underelax to eqn
-  d_linearSolver->computeVelUnderrelax(pc, patch, new_dw, matrix_dw, index, 
-				     d_velocityVars);
+  d_linearSolver->computeVelUnderrelax(pc, patch, old_dw, new_dw, index, 
+				     &velocityVars);
   // initial guess for explicit calculation
 #if 0
-  new_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocityCPBCLabel, 
+  new_dw->get(velocityVars.old_uVelocity, d_lab->d_uVelocityCPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocityCPBCLabel, 
+  new_dw->get(velocityVars.old_vVelocity, d_lab->d_vVelocityCPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocityCPBCLabel, 
+  new_dw->get(velocityVars.old_wVelocity, d_lab->d_wVelocityCPBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
 #endif
 
-  new_dw->allocate(d_velocityVars->old_uVelocity, d_lab->d_old_uVelocityGuess,
+  new_dw->allocate(velocityVars.old_uVelocity, d_lab->d_old_uVelocityGuess,
 			  matlIndex, patch);
-  new_dw->allocate(d_velocityVars->old_vVelocity, d_lab->d_old_vVelocityGuess,
+  new_dw->allocate(velocityVars.old_vVelocity, d_lab->d_old_vVelocityGuess,
 			  matlIndex, patch);
-  new_dw->allocate(d_velocityVars->old_wVelocity, d_lab->d_old_wVelocityGuess,
+  new_dw->allocate(velocityVars.old_wVelocity, d_lab->d_old_wVelocityGuess,
 			  matlIndex, patch);
 
-  d_velocityVars->old_uVelocity.copy(d_velocityVars->uVelocity);
-  d_velocityVars->old_vVelocity.copy(d_velocityVars->vVelocity);
-  d_velocityVars->old_wVelocity.copy(d_velocityVars->wVelocity);
+  velocityVars.old_uVelocity.copy(velocityVars.uVelocity);
+  velocityVars.old_vVelocity.copy(velocityVars.vVelocity);
+  velocityVars.old_wVelocity.copy(velocityVars.wVelocity);
 
   // make it a separate task later
-  d_linearSolver->velocityLisolve(pc, patch, new_dw, matrix_dw, index, delta_t, 
-				  d_velocityVars, cellinfo, d_lab);
+  d_linearSolver->velocityLisolve(pc, patch, old_dw, new_dw, index, delta_t, 
+				  &velocityVars, cellinfo, d_lab);
   // put back the results
   switch (index) {
   case Arches::XDIR:
-    new_dw->put(d_velocityVars->uVelocity, d_lab->d_uVelocitySPBCLabel, 
+    new_dw->put(velocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 				     matlIndex, patch);
     break;
   case Arches::YDIR:
-    new_dw->put(d_velocityVars->vVelocity, d_lab->d_vVelocitySPBCLabel,
+    new_dw->put(velocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel,
 				      matlIndex, patch);
     break;
   case Arches::ZDIR:
-    new_dw->put(d_velocityVars->wVelocity, d_lab->d_wVelocitySPBCLabel, 
+    new_dw->put(velocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 				     matlIndex, patch);
     break;
   default:
@@ -654,6 +653,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.31  2000/10/09 17:06:24  rawat
+// modified momentum solver for multi-patch
+//
 // Revision 1.30  2000/09/20 18:05:33  sparker
 // Adding support for Petsc and per-processor tasks
 //

@@ -4,10 +4,12 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE explicit(domLoU, domHiU, idxLo, idxHi,
+      SUBROUTINE explicit(domLoU, domHiU,domLoUng, domHiUng,
+     $     idxLo, idxHi,
      &     PHI, old_PHI, 
      &     AE,AW,AN,AS,AT,AB,AP,SU,
-     $     domLo, domHi, old_den, sew, sns, stb, dtime)
+     $     domLo, domHi,domLowg, domHiwg, old_den, sew, 
+     $     sns, stb, dtime)
 c     &     lswpwe, lswpsn, lswpbt)
 C-----------------------------------------------------------------------
 *
@@ -45,35 +47,39 @@ c     Arguments :
 c*********************************************************************
       integer domLoU(3)
       integer domHiU(3)
+      integer domLoUng(3)
+      integer domHiUng(3)
       integer idxLo(3)
       integer idxHi(3)
       integer domLo(3)
       integer domHi(3)
+      integer domLowg(3)
+      integer domHiwg(3)
       double precision PHI(domLoU(1):domHiU(1), 
      &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
       double precision old_PHI(domLoU(1):domHiU(1), 
      &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AP(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AE(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AW(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AN(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AS(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AT(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AB(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision SU(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
+      double precision AP(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision AE(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision AW(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision AN(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision AS(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision AT(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision AB(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
+      double precision SU(domLoUng(1):domHiUng(1), 
+     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
       double precision old_Den(domLo(1):domHi(1), 
      &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision sew(domLo(1):domHi(1))
-      double precision sns(domLo(2):domHi(2))
-      double precision stb(domLo(3):domHi(3))
+      double precision sew(domLowg(1):domHiwg(1))
+      double precision sns(domLowg(2):domHiwg(2))
+      double precision stb(domLowg(3):domHiwg(3))
       double precision dtime
 
 c*********************************************************************
@@ -106,6 +112,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/10/09 17:06:30  rawat
+c modified momentum solver for multi-patch
+c
 c Revision 1.1  2000/08/15 00:23:38  rawat
 c added explicit solve for momentum and scalar eqns
 c

@@ -773,10 +773,12 @@ extern "C"
     //
     void
     FORT_ADDPRESSGRAD(const int* domLoU, const int* domHiU,
+		      const int* domLoUng, const int* domHiUng,
 		      const int* idxLo, const int* idxHiU,
 		      const double* uVelocity,
 		      double* nlsource, double* velcoeff_AP,
 		      const int* domLo, const int* domHi,
+		      const int* domLong, const int* domHing,
 		      const double* pressure,
 		      const double* old_density,
 		      const double* delta_t, const int* ioff, const int* joff,
@@ -931,6 +933,7 @@ extern "C"
   // explicit solver
   void 
   FORT_EXPLICIT(const int* domLo, const int* domHi,
+		const int* domLong, const int* domHing,
 		const int* idxLo, const int* idxHi,
 		double* variable, double* old_variable,
 		double* coeffEast,
@@ -942,6 +945,7 @@ extern "C"
 		double* coeffDiagonal,
 		double* nonlinearSrc,
 		const int* domLoDen, const int* domHiDen,
+		const int* domLoDenwg, const int* domHiDenwg,
 		double* old_density,
 		double* sew, double* sns, double* stb,
 		double* delta_t);
@@ -952,6 +956,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.42  2000/10/09 17:06:24  rawat
+// modified momentum solver for multi-patch
+//
 // Revision 1.41  2000/10/08 18:56:35  rawat
 // fixed the solver for multi
 //
