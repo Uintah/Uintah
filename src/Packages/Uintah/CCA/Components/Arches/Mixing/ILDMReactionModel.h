@@ -66,7 +66,6 @@ namespace Uintah {
  
   // Reference temperature defined to be the lower limit of integration in the
   // determination of the system sensible enthalpy
-
   //const double TREF = 298.0; //defined in StanjanEquilibriumReactionModel
 
   class ILDMReactionModel: public ReactionModel, public DynamicTable {
@@ -141,6 +140,9 @@ namespace Uintah {
     // This could be implemented either as a k-d or a binary tree data structure.
     KD_Tree* d_rxnTable;
 
+    // includes all the vars except vectors...
+    // increase the value if want to increase number of variables
+    static const int NUM_DEP_VARS = 7;
 
   }; // End Class ILDMReactionModel
 
