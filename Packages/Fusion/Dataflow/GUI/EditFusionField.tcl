@@ -327,7 +327,7 @@ itcl_class Fusion_Fields_EditFusionField {
 
 	if { [set $this-iskip2] > 50 } { set $this-iskip2 50 }
 	if { [set $this-jskip2] > 50 } { set $this-jskip2 50 }
-	if { [set $this-kskip2] >  5 } { set $this-kskip2  5 }
+	if { [set $this-kskip2] > 10 } { set $this-kskip2 10 }
 	
 
 	set $this-istart [set $this-istart2]
@@ -394,7 +394,7 @@ itcl_class Fusion_Fields_EditFusionField {
 # Update the delta values to be at the initials values.
 	set $this-idelta $idim
 	set $this-jdelta $jdim
-	set $this-kdelta [expr $kdim / 2]
+	set $this-kdelta $kdim
 
 # Update the text values.
 	set $this-istart2 [set $this-istart]
