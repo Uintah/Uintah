@@ -40,6 +40,8 @@ Infrastructure
             Core/Geom/GeomOpenGL.cc to use (then recompile)
          OSX fix to allow SCIRun and converters to be run from anywhere
          Fixed EOL problem with dynamically compiled functions
+	 Added -bind_at_load link-line option for OSX to address
+            hang-at-startup bug introduced in 10.3.2
 
 Data Sets
 ---------
