@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
@@ -576,6 +575,9 @@ void SerialMPM::scheduleSolveEquationsMotion(const Patch* patch,
     t->requires( new_dw, lb->gMassLabel,          idx, patch, Ghost::None);
     t->requires( new_dw, lb->gInternalForceLabel, idx, patch, Ghost::None);
     t->requires( new_dw, lb->gExternalForceLabel, idx, patch, Ghost::None);
+    if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
+        t->requires( new_dw, lb->gradPressNCLabel,idx, patch, Ghost::None);
+    }
 
     t->computes( new_dw, lb->gAccelerationLabel,  idx, patch);
   }
@@ -1065,6 +1067,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
       
    double totalmass = 0;
+   Vector total_mom(0.0,0.0,0.0);
 
    if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
 
@@ -1117,6 +1120,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
   	 patch->findCellAndWeights(px[idx], ni, S);
 
+
+         total_mom += pvelocity[idx]*pmass[idx];
+
+
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
@@ -1133,6 +1140,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 }
       }
     }
+
+    cout << "Particle momentum before intToGrid = " << total_mom << endl;
 
       for(NodeIterator iter = patch->getNodeIterator();
 				!iter.done(); iter++) {
@@ -1489,11 +1498,13 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 
 void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 				     const Patch* patch,
-				     DataWarehouseP& /*old_dw*/,
+				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
   Vector zero(0.,0.,0.);
   Vector gravity = d_sharedState->getGravity();
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label() );
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1502,12 +1513,22 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       NCVariable<double> mass;
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
+      NCVariable<Vector> gradPressNC;  // for MPMICE
 
       new_dw->get(mass,  lb->gMassLabel, matlindex, patch, Ghost::None, 0);
       new_dw->get(internalforce, lb->gInternalForceLabel, matlindex, patch,
-		  Ghost::None, 0);
+							   Ghost::None, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, matlindex, patch,
-		  Ghost::None, 0);
+							   Ghost::None, 0);
+
+      if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
+         new_dw->get(gradPressNC,lb->gradPressNCLabel,    matlindex, patch,
+							   Ghost::None, 0);
+      }
+      else{
+	 new_dw->allocate(gradPressNC,lb->gradPressNCLabel, matlindex, patch);
+	 gradPressNC.initialize(zero);
+      }
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
@@ -1517,8 +1538,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
 	  acceleration[*iter] =
-		(internalforce[*iter] + externalforce[*iter])/ mass[*iter]
-		 + gravity;
+		(internalforce[*iter] + externalforce[*iter] +
+				gradPressNC[*iter]/delT)/ mass[*iter] + gravity;
 	}
 	else{
 	  acceleration[*iter] = zero;
@@ -1735,6 +1756,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
   double ke=0;
+  Vector total_mom(0.0,0.0,0.0);
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1828,7 +1850,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	    TemperatureBoundCond* bc = 
 	      dynamic_cast<TemperatureBoundCond*>(bcs[i]);
 	    if (bc->getKind() == "Dirichlet") {
-	      cout << "Temperature bc value = " << bc->getValue() << endl;
+	      //cout << "Temperature bc value = " << bc->getValue() << endl;
 	      IntVector low = gTemperature.getLowIndex() + offset;
 	      IntVector hi = gTemperature.getHighIndex() - offset;
 	      gTemperatureStar.fillFace(face,bc->getValue(),offset);
@@ -1972,6 +1994,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	CMV += pvelocitynew[idx]*pmass[idx];
+        total_mom += pvelocitynew[idx]*pmass[idx];
       }
     }
 
@@ -1996,6 +2019,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
   new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
   new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+
+  cout << "Solid momentum after advection = " << total_mom << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
 }
