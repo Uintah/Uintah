@@ -411,10 +411,7 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
                     this, &MPMICE::interpolatePressCCToPressNC);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-/*`==========TESTING==========*/
-   t->requires(Task::NewDW,Ilb->press_CCLabel,       press_matl, gac, 1);
-// t->requires(Task::NewDW,Ilb->press_equil_CCLabel, press_matl, gac, 1);
-/*`==========TESTING==========*/
+  t->requires(Task::NewDW,Ilb->press_CCLabel, press_matl, gac, 1);
   t->computes(MIlb->press_NCLabel, press_matl);
   
   sched->addTask(t, patches, matls);
@@ -775,10 +772,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
     NCVariable<double> pressNC;
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-/*`==========TESTING==========*/
-    new_dw->get(pressCC, Ilb->press_CCLabel,       0, patch, gac, 1);
-//  new_dw->get(pressCC, Ilb->press_equil_CCLabel, 0, patch, gac, 1);
-/*`==========TESTING==========*/
+    new_dw->get(pressCC, Ilb->press_CCLabel, 0, patch, gac, 1);
     new_dw->allocateAndPut(pressNC, MIlb->press_NCLabel, 0, patch);
     pressNC.initialize(0.0);
     
@@ -1072,19 +1066,15 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
 
       //---- P R I N T   D A T A ------ 
       if(d_ice->switchDebugLagrangianValues) {
-         ostringstream desc;
-         desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
-              <<  indx<<patch->getID();
-         d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
-         printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
-/*`==========TESTING==========*/
-         d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
-#if 0
-         printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
-         printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
-                                                                gvelocity); 
-#endif
-/*==========TESTING==========`*/
+        ostringstream desc;
+        desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
+             <<  indx<<patch->getID();
+        d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
+        printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
+        d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
+        //printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
+        //printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
+        //                                                       gvelocity);
       }
 
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
@@ -1442,16 +1432,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         if(ice_matl){                // I C E
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } 
-
         if(mpm_matl){                //  M P M
-/*`==========TESTING==========*/
-// This might be wrong.  Try 1/sp_vol -- Todd 11/22/199?
-           rho_micro[m][c] =  
-            mpm_matl->getConstitutiveModel()->
+          rho_micro[m][c] =  mpm_matl->getConstitutiveModel()->
             computeRhoMicroCM(press_new[c],press_ref, mpm_matl); 
-            
-//            rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-/*==========TESTING==========`*/
         }
         mat_volume[m] = (rho_CC_old[m][c]*cell_vol)/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
@@ -1462,25 +1445,25 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         rho_CC_new[m][c] = vol_frac[m][c]*rho_micro[m][c];
       }
     }  // cell iterator
-  //---- P R I N T   D A T A ------
+    //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  {
-        ostringstream desc1;
-        desc1<< "TOP_equilibration_patch_"<< patch->getID();
-        d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_top", press); 
+      ostringstream desc1;
+      desc1<< "TOP_equilibration_patch_"<< patch->getID();
+      d_ice->printData( 0, patch, 1, desc1.str(), "Press_CC_top", press); 
 
-        for (int m = 0; m < numALLMatls; m++)  {
-          Material* matl = d_sharedState->getMaterial( m );
-          int indx = matl->getDWIndex();
-          ostringstream desc;
-          desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
-          d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
-          d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
-          d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
-          d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
-        }
+      for (int m = 0; m < numALLMatls; m++)  {
+        Material* matl = d_sharedState->getMaterial( m );
+        int indx = matl->getDWIndex();
+        ostringstream desc;
+        desc<<"TOP_equilibration_Mat_"<< indx<<"_patch_"<<patch->getID();
+        d_ice->printData( indx,patch,1,desc.str(),"rho_CC_new",rho_CC_new[m]);
+        d_ice->printData( indx,patch,1,desc.str(),"rho_micro", rho_micro[m]);
+        d_ice->printData( indx,patch,1,desc.str(),"Temp_CC",   Temp[m]);     
+        d_ice->printData( indx,patch,1,desc.str(),"vol_frac_CC",vol_frac[m]);
       }
-  //______________________________________________________________________
-  // Done with preliminary calcs, now loop over every cell
+    }
+    //______________________________________________________________________
+    // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
 #ifdef OREN_PRESS_EQ
     int num_bad_cells = 0;
