@@ -48,6 +48,7 @@ private:
 };
 
 
+
 DECLARE_MAKER(SynchronizeGeometry)
 SynchronizeGeometry::SynchronizeGeometry(GuiContext* ctx)
   : Module("SynchronizeGeometry", ctx, Filter, "Render", "SCIRun"),
@@ -58,15 +59,18 @@ SynchronizeGeometry::SynchronizeGeometry(GuiContext* ctx)
 }
 
 
+
 SynchronizeGeometry::~SynchronizeGeometry()
 {
 }
+
 
 
 void
 SynchronizeGeometry::execute()
 {
 }
+
 
 
 void
@@ -90,6 +94,7 @@ SynchronizeGeometry::do_execute()
     }
   }
 }
+
 
 
 int
@@ -222,6 +227,9 @@ SynchronizeGeometry::forward_saved_msg()
 {
   int i, num_flush;
 
+  cout << "SynchronizeGeometry::forward_saved_msg called, checking " <<
+    max_portno_ << " ports.\n";
+
   num_flush = 0;
   for (i = 0; i < max_portno_; i++)
   {
@@ -232,6 +240,7 @@ SynchronizeGeometry::forward_saved_msg()
 	  tmp_gmsg->type == MessageTypes::GeometryFlushViews)
       {
 	num_flush++;
+	cout << "  port " << i << " is ready.\n";
 	break;
       }
       tmp_gmsg = tmp_gmsg->next;
@@ -240,6 +249,7 @@ SynchronizeGeometry::forward_saved_msg()
 
   if (num_flush == numIPorts() - 1)
   {
+    cout << " All were ready, flushing.\n";
     for (i = 0; i < max_portno_; i++)
     {
       flush_port(i);
