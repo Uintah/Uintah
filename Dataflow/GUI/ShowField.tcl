@@ -83,7 +83,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-cells
 	global $this-field-name
 	global $this-field-name-update
-	global $this-tensors-empahsis
+	global $this-tensors-emphasis
 	set $this-node_display_type Points
 	set $this-edge_display_type Lines
 	set $this-data_display_type Arrows
@@ -142,7 +142,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-show-cells 0
 	set $this-field-name ""
 	set $this-field-name-update 1
-	set $this-tensors-empahsis 0.825
+	set $this-tensors-emphasis 0.825
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vector_data w "$this vector_tab_changed"
 	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
