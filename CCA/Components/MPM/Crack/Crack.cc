@@ -52,13 +52,6 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   for( ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
                    mat_ps=mat_ps->findNextBlock("material") ) {
 
-    // variables for this material
-    vector<vector<Point> > rectangles;
-    vector<vector<Point> > triangles;
-    vector<int> n12;
-    vector<int> n23;
-    vector<int> ncell;
-
     ProblemSpecP crk_ps=mat_ps->findBlock("crack");
  
     if(crk_ps==0) crackType[m]="NO_CRACK";
@@ -98,70 +91,125 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
           quad_ps!=0; quad_ps=quad_ps->findNextBlock("quadrilateral")) {
           int n;
           Point p;   
-          vector<Point> thisRect;
+          vector<Point> thisRectPts;
+          vector<short> thisRectCrackSidesAtFront;
 
           // four vertices of the quadrilateral
           quad_ps->require("pt1",p);
-          thisRect.push_back(p);
+          thisRectPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]); 
           quad_ps->require("pt2",p);
-          thisRect.push_back(p);
+          thisRectPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]);
           quad_ps->require("pt3",p);
-          thisRect.push_back(p);
+          thisRectPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]);
           quad_ps->require("pt4",p);
-          thisRect.push_back(p);
+          thisRectPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]);
-          rectangles.push_back(thisRect);
-          thisRect.clear();
+          rectangles[m].push_back(thisRectPts);
+          thisRectPts.clear();
           
           // mesh resolution  
           quad_ps->require("n12",n); 
-          n12.push_back(n);
+          rectN12[m].push_back(n);
           quad_ps->require("n23",n);
-          n23.push_back(n);
+          rectN23[m].push_back(n);
+
+          // crack front
+          short Side;
+          string cfsides;
+          quad_ps->get("crackfrontsides",cfsides);
+          if(cfsides.length()==4) {
+            for(string::const_iterator iter=cfsides.begin();
+                                     iter!=cfsides.end(); iter++) {
+              if( *iter=='Y' || *iter=='y')
+                Side=1;
+              else if(*iter=='N' || *iter=='n')
+                Side=0;
+              else { 
+                cout << " Wrong specification for crack front sides." << endl;
+                exit(1);
+              }
+              thisRectCrackSidesAtFront.push_back(Side);
+            }
+          }
+          else if(cfsides.length()==0) {
+            thisRectCrackSidesAtFront.push_back(0);
+            thisRectCrackSidesAtFront.push_back(0);
+            thisRectCrackSidesAtFront.push_back(0);
+            thisRectCrackSidesAtFront.push_back(0);
+          } 
+          else { 
+            cout << " The length of string cracksegmentsides for "
+                 << "quadrilaterals should be 4." << endl;
+            exit(1);
+          }
+          rectCrackSidesAtFront[m].push_back(thisRectCrackSidesAtFront);
+          thisRectCrackSidesAtFront.clear();
        }
-       allRects[m]=rectangles;
-       allN12[m]=n12;
-       allN23[m]=n23;
-       rectangles.clear();
-       n12.clear();
-       n23.clear();
  
        // read in triangles         
        for(ProblemSpecP tri_ps=geom_ps->findBlock("triangle");
              tri_ps!=0; tri_ps=tri_ps->findNextBlock("triangle")) {
           int n;
           Point p;
-          vector<Point> thisTri;
+          vector<Point> thisTriPts;
+          vector<short> thisTriCrackSidesAtFront;
 
           // three vertices of the triangle
           tri_ps->require("pt1",p);
-          thisTri.push_back(p);
+          thisTriPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]);
           tri_ps->require("pt2",p);
-          thisTri.push_back(p);
+          thisTriPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]);
           tri_ps->require("pt3",p);
-          thisTri.push_back(p);
+          thisTriPts.push_back(p);
           cmin[m]=Min(p,cmin[m]);
           cmax[m]=Max(p,cmax[m]);
-          triangles.push_back(thisTri);
-          thisTri.clear();
+          triangles[m].push_back(thisTriPts);
+          thisTriPts.clear();
           tri_ps->require("ncell",n);
-          ncell.push_back(n);
+          triNCells[m].push_back(n);
+
+          // crack front
+          short Side;
+          string cfsides;
+          tri_ps->get("crackfrontsides",cfsides);
+          if(cfsides.length()==3) {
+            for(string::const_iterator iter=cfsides.begin();
+                                     iter!=cfsides.end(); iter++) {
+              if( *iter=='Y' || *iter=='y')
+                Side=1;
+              else if(*iter=='N' || *iter=='n')
+                Side=0;
+              else {
+                cout << " The length of string crackfrontsides for"
+                     << " triangles should be 3." << endl;
+                exit(1);
+              }
+              thisTriCrackSidesAtFront.push_back(Side);
+            }
+          }
+          else if(cfsides.length()==0) {
+            thisTriCrackSidesAtFront.push_back(0);
+            thisTriCrackSidesAtFront.push_back(0);
+            thisTriCrackSidesAtFront.push_back(0);
+          }
+          else {
+            cout << " Wrong specification for crack front sides." << endl;
+            exit(1);
+          }
+          triCrackSidesAtFront[m].push_back(thisTriCrackSidesAtFront);
+          thisTriCrackSidesAtFront.clear();
        }
-       allTris[m]=triangles;
-       allNCell[m]=ncell;
-       ncell.clear();
-       triangles.clear();
     } // End of if crk_ps != 0
 
     m++; // next material
@@ -191,17 +239,33 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
                 << "\n            contact volume = " << contactVol[m] << endl;
       
         cout <<"\nCrack geometry:" << endl;
-        for(int i=0;i<(int)allRects[m].size();i++) {
-           cout << "Rectangle " << i << ": meshed by [" << allN12[m][i] 
-                << ", " << allN23[m][i] << "]" << endl;
+        for(int i=0;i<rectangles[m].size();i++) {
+           cout << "Rectangle " << i+1 << ": meshed by [" << rectN12[m][i] 
+                << ", " << rectN23[m][i] << ", " << rectN12[m][i]
+                << ", " << rectN23[m][i] << "]" << endl;
            for(int j=0;j<4;j++) 
-              cout << "pt " << j << ": " << allRects[m][i][j] << endl;
+              cout << "pt " << j+1 << ": " << rectangles[m][i][j] << endl;
+           for(int j=0;j<4;j++) {
+              if(rectCrackSidesAtFront[m][i][j]) {
+                 int j2=(j+2<5 ? j+2 : 1);
+                 cout << "side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+                 << ") is at crack front." << endl;
+              }
+           }
         } 
-        for(int i=0;i<(int)allTris[m].size();i++) {
-           cout << "Triangle " << i << ": meshed by " 
-                << allNCell[m][i] << " cells on each side" << endl;
+        for(int i=0;i<triangles[m].size();i++) {
+           cout << "Triangle " << i+1 << ": meshed by [" << triNCells[m][i]
+                << ", " << triNCells[m][i] 
+                << ", " << triNCells[m][i] << "]" << endl;
            for(int j=0;j<3;j++) 
-              cout << "pt " << j << ": " << allTris[m][i][j] << endl;
+              cout << "pt " << j+1 << ": " << triangles[m][i][j] << endl;
+           for(int j=0;j<3;j++) {
+              if(triCrackSidesAtFront[m][i][j]) {
+                 int j2=(j+2<4 ? j+2 : 1);
+                 cout << "side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+                 << ") is at crack front." << endl;
+              }
+           }
         }
         cout << "Crack extent: " << cmin[m] << "..." 
              <<  cmax[m] << endl << endl;
@@ -224,38 +288,33 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
                                 DataWarehouse* /*old_dw*/,
                                 DataWarehouse* /*new_dw*/)
 {
-  int cn,ce;
+  double w;
   int k,i,j,ni,nj,n1,n2,n3;
   int nstart0,nstart1,nstart2,nstart3;
-  double w;
   Point p1,p2,p3,p4,pt,p_1,p_2;
+  Point pt1,pt2,pt3,pt4;
 
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     for(int m = 0; m < numMPMMatls; m++){ 
+       cnumElems[m] = 0;   // total number of elements for this material
+       cnumNodes[m] = 0;   // total number of nodes for this materials
 
-       if(crackType[m]=="NO_CRACK") { // no crack for this material
-          numElems[m] = 0;
-          numPts[m]   = 0;
-          continue;
-       }
-
-       cn = 0;  // current node
-       ce = 0;  // current element
+       if(crackType[m]=="NO_CRACK") continue;
 
        //Discretize quadrilaterals
        nstart0=0;  // starting node number for each level (in j direction)
-       for(k=0; k<(int)allRects[m].size(); k++) {  // loop over quadrilaterals
+       for(k=0; k<rectangles[m].size(); k++) {  // loop over quadrilaterals
          // resolutions for the quadrilateral 
-         ni=allN12[m][k];       
-         nj=allN23[m][k]; 
+         ni=rectN12[m][k];       
+         nj=rectN23[m][k]; 
          // four vertices for the quadrilateral 
-         p1=allRects[m][k][0];   
-         p2=allRects[m][k][1];
-         p3=allRects[m][k][2];
-         p4=allRects[m][k][3];
+         p1=rectangles[m][k][0];   
+         p2=rectangles[m][k][1];
+         p3=rectangles[m][k][2];
+         p4=rectangles[m][k][3];
 
          // create temporary arraies
          Point* side2=new Point[2*nj+1];
@@ -273,7 +332,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
               p_1=side4[2*j];
               p_2=side2[2*j];
               pt=p_1+(p_2-p_1)*w;
-              cx[m][cn++]=pt;
+              cx[m].push_back(pt);          
+              cnumNodes[m]++;
            }
            if(j!=nj) {
               for(i=0; i<ni; i++) {
@@ -281,7 +341,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
                  p_1=side4[2*j+1];
                  p_2=side2[2*j+1];
                  pt=p_1+(p_2-p_1)*w;
-                 cx[m][cn++]=pt;
+                 cx[m].push_back(pt);
+                 cnumNodes[m]++;
               }
            }  // End of if j!=nj
          } // End of loop over j
@@ -297,26 +358,30 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
               n1=nstart2+i; 
               n2=nstart1+i; 
               n3=nstart1+(i+1);
-              cElemNodes[m][ce]=IntVector(n1,n2,n3);
-              cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+              cElemNodes[m].push_back(IntVector(n1,n2,n3));
+              cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+              cnumElems[m]++;   
               // for the 2nd element
               n1=nstart2+i;
               n2=nstart3+i;
               n3=nstart1+i;
-              cElemNodes[m][ce]=IntVector(n1,n2,n3);
-              cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+              cElemNodes[m].push_back(IntVector(n1,n2,n3));
+              cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+              cnumElems[m]++;   
               // for the 3rd element
               n1=nstart2+i;
               n2=nstart1+(i+1);
               n3=nstart3+(i+1);
-              cElemNodes[m][ce]=IntVector(n1,n2,n3);
-              cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+              cElemNodes[m].push_back(IntVector(n1,n2,n3));
+              cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+              cnumElems[m]++;   
               // for the 4th element 
               n1=nstart2+i;
               n2=nstart3+(i+1);
               n3=nstart3+i;
-              cElemNodes[m][ce]=IntVector(n1,n2,n3);
-              cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+              cElemNodes[m].push_back(IntVector(n1,n2,n3));
+              cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+              cnumElems[m]++;   
            }  // end of loop over i
          }  // end of loop over j
          nstart0+=((2*ni+1)*nj+ni+1);  
@@ -325,36 +390,37 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
        } // End of loop over quadrilaterals 
 
        // discretize triangluar segments 
-       for(k=0; k<(int)allTris[m].size(); k++) {  // loop over all triangles
+       for(k=0; k<triangles[m].size(); k++) {  // loop over all triangles
          // three vertices of the triangle
-         p1=allTris[m][k][0];
-         p2=allTris[m][k][1];
-         p3=allTris[m][k][2];
+         p1=triangles[m][k][0];
+         p2=triangles[m][k][1];
+         p3=triangles[m][k][2];
 
          // create temprary arraies
-         Point* side12=new Point[allNCell[m][k]+1];
-         Point* side13=new Point[allNCell[m][k]+1];
+         Point* side12=new Point[triNCells[m][k]+1];
+         Point* side13=new Point[triNCells[m][k]+1];
 
          // generate node coordinates
-         for(j=0; j<=allNCell[m][k]; j++) {
-           w=(float)j/(float)allNCell[m][k];
+         for(j=0; j<=triNCells[m][k]; j++) {
+           w=(float)j/(float)triNCells[m][k];
            side12[j]=p1+(p2-p1)*w;
            side13[j]=p1+(p3-p1)*w;
          }
         
-         for(j=0; j<=allNCell[m][k]; j++) {
+         for(j=0; j<=triNCells[m][k]; j++) {
            for(i=0; i<=j; i++) {
              p_1=side12[j];
              p_2=side13[j];
              if(j==0) w=0.0;
              else w=(float)i/(float)j;
              pt=p_1+(p_2-p_1)*w;
-             cx[m][cn++]=pt;
+             cx[m].push_back(pt);
+             cnumNodes[m]++;
            } // End of loop over i
          } // End of loop over j
  
          // generate elements and their normals
-         for(j=0; j<allNCell[m][k]; j++) {
+         for(j=0; j<triNCells[m][k]; j++) {
            nstart1=nstart0+j*(j+1)/2;
            nstart2=nstart0+(j+1)*(j+2)/2;
            for(i=0; i<j; i++) {
@@ -362,43 +428,124 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
              n1=nstart1+i;
              n2=nstart2+i;
              n3=nstart2+(i+1);
-             cElemNodes[m][ce]=IntVector(n1,n2,n3);
-             cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+             cElemNodes[m].push_back(IntVector(n1,n2,n3));
+             cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+             cnumElems[m]++;   
              //right element
              n1=nstart1+i;
              n2=nstart2+(i+1);
              n3=nstart1+(i+1);
-             cElemNodes[m][ce]=IntVector(n1,n2,n3);
-             cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+             cElemNodes[m].push_back(IntVector(n1,n2,n3));
+             cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+             cnumElems[m]++;   
            } // End of loop over i
            n1=nstart0+(j+1)*(j+2)/2-1;
            n2=nstart0+(j+2)*(j+3)/2-2;
            n3=nstart0+(j+2)*(j+3)/2-1;
-           cElemNodes[m][ce]=IntVector(n1,n2,n3);
-           cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
+           cElemNodes[m].push_back(IntVector(n1,n2,n3));
+           cElemNorm[m].push_back(TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]));
+           cnumElems[m]++;   
          } // End of loop over j
          //add number of nodes in this trianglular segment
-         nstart0+=(allNCell[m][k]+1)*(allNCell[m][k]+2)/2;
+         nstart0+=(triNCells[m][k]+1)*(triNCells[m][k]+2)/2;
          delete [] side12;
          delete [] side13;
        } // End of loop over triangles
 
-       numPts[m]=cn;     // number of crack points in this materials
-       numElems[m]=ce;   // number of crack segments in this material 
+       // get line-segments at crack front
+       // check qradrilaterals
+       for(k=0; k<rectangles[m].size(); k++) {  // loop over quadrilaterals
+         for(j=0; j<4; j++) {  // loop over four sides of the quadrilateral
+           if(rectCrackSidesAtFront[m][k][j]==0) continue;
+           int j1= (j!=3 ? j+1 : 0);
+           pt1=rectangles[m][k][j];
+           pt2=rectangles[m][k][j1];
+           for(i=0;i<cnumElems[m];i++) { //loop over elems
+             int istar;
+             //for sides 3&4, check elems reversely
+             if(j==0 || j==1) istar=i;
+             else istar=cnumElems[m]-(i+1);
+             for(int side=0; side<3; side++) { // three sides
+               if(side==0) {
+                 pt3=cx[m][cElemNodes[m][istar].x()];
+                 pt4=cx[m][cElemNodes[m][istar].y()];
+               }
+               else if(side==1) {
+                 pt3=cx[m][cElemNodes[m][istar].y()];
+                 pt4=cx[m][cElemNodes[m][istar].z()];
+               }
+               else {
+                 pt3=cx[m][cElemNodes[m][istar].z()];
+                 pt4=cx[m][cElemNodes[m][istar].x()];
+               }
+               if(TwoLinesDuplicate(pt1,pt2,pt3,pt4)) {
+                 cFrontSegPoints[m].push_back(pt3);
+                 cFrontSegPoints[m].push_back(pt4);
+               }
+             } // End of loop over sides
+           } // End of loop over i 
+         } // End of loop over j
+       } // End of loop over k
+       // check triangles
+       for(k=0; k<triangles[m].size(); k++) {  // loop over triangles
+         for(j=0; j<3; j++) {  // loop over three sides of the triangle
+           if(triCrackSidesAtFront[m][k][j]==0) continue;
+           int j1= (j!=2 ? j+1 : 0);
+           pt1=triangles[m][k][j];
+           pt2=triangles[m][k][j1];
+           for(i=0;i<cnumElems[m];i++) { //loop over elems
+             int istar; 
+             if(j==0 || j==1) istar=i;
+             else istar=cnumElems[m]-(i+1);
+             for(int side=0; side<3; side++) { // three sides
+               if(side==0) {
+                 pt3=cx[m][cElemNodes[m][istar].x()];
+                 pt4=cx[m][cElemNodes[m][istar].y()];
+               }
+               else if(side==1) {
+                 pt3=cx[m][cElemNodes[m][istar].y()];
+                 pt4=cx[m][cElemNodes[m][istar].z()];
+               }
+               else {
+                 pt3=cx[m][cElemNodes[m][istar].z()];
+                 pt4=cx[m][cElemNodes[m][istar].x()];
+               }
+               if(TwoLinesDuplicate(pt1,pt2,pt3,pt4)) {
+                 cFrontSegPoints[m].push_back(pt3);
+                 cFrontSegPoints[m].push_back(pt4);
+               }
+             } // End of loop over sides
+           } // End of loop over i
+         } // End of loop over j
+       } // End of loop over k
 
-#if 0 
-       cout << "\n*** Crack elements information" << endl;
-       cout << "Patch ID: " << patch->getID() 
+#if 0
+       cout << "\n*** Crack mesh information" << endl;
+       cout << "Patch ID: " << patch->getID()
             << ", MatID: " << m << endl;
-       for(int mp=0; mp<numElems[m]; mp++) {
+       cout << "  Element nodes and normals (" << cnumElems[m]
+            << " elements intotal):" << endl; 
+       for(int mp=0; mp<cnumElems[m]; mp++) {
          n1=cElemNodes[m][mp].x();
          n2=cElemNodes[m][mp].y();
          n3=cElemNodes[m][mp].z();
-         cout << "   Elem " << mp 
-              << ": " << n1 << cx[m][n1] << ", " << n2 << cx[m][n2]
-              << ", " << n3 << cx[m][n3] << endl;
+         cout << "     Elem " << mp
+              << ": [" << n1 << ", " << n2 << ", " << n3
+              << "], norm " << cElemNorm[m][mp] << endl;
        }
-#endif 
+       cout << "  Crack nodes coordinates (" << cnumNodes[m]
+            << " nodes in total):" << endl; 
+       for(int mp=0; mp<cnumNodes[m]; mp++) {
+         cout << "     Node " << mp << ": " << cx[m][mp] << endl;
+       }
+       cout << "  Crack front line-segments (" << cFrontSegPoints[m].size()/2
+            << " segments in total):" << endl;
+       for(int mp=0; mp<cFrontSegPoints[m].size()/2;mp++) {
+         cout << "     Seg " << mp << ": "
+              << cFrontSegPoints[m][mp*2] << "..." << cFrontSegPoints[m][2*mp+1]
+              << endl;
+       }
+#endif
 
      } // End of loop over matls
    } // End of loop over patches
@@ -455,7 +602,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 
       IntVector ni[MAX_BASIS];
 
-      if(numElems[m]==0) {            // for materials with no carck
+      if(cnumElems[m]==0) {            // for materials with no carck
         // set pgCode[idx][k]=1
         for(ParticleSubset::iterator iter=pset->begin();
                                      iter!=pset->end();iter++) {
@@ -535,7 +682,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               // get node position even if ni[k] beyond this patch
               Point gx=patch->nodePosition(ni[k]);
 
-              for(int i=0; i<numElems[m]; i++) {  //loop over crack elements
+              for(int i=0; i<cnumElems[m]; i++) {  //loop over crack elements
                 //three vertices of each element
                 Point n3,n4,n5;                  
                 n3=cx[m][cElemNodes[m][i].x()];
@@ -619,7 +766,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               else { 
                 short  cross=SAMESIDE; 
                 Vector norm=Vector(0.,0.,0.);
-                for(int i=0; i<numElems[m]; i++) {  //loop over crack elements
+                for(int i=0; i<cnumElems[m]; i++) {  //loop over crack elements
                   //three vertices of each element
                   Point n3,n4,n5;                
                   n3=cx[m][cElemNodes[m][i].x()];
@@ -1291,11 +1438,12 @@ void Crack::InitializeMovingCracks(const ProcessorGroup*,
                       DataWarehouse* /*old_dw*/,
                       DataWarehouse* /*new_dw*/)
 {
-  // just set if crack points moved to No
+ // just set if crack points moved to No
   int numMPMMatls=d_sharedState->getNumMPMMatls();
   for(int m=0; m<numMPMMatls; m++) {
-    for(int i=0; i<numPts[m]; i++) {
-      moved[m][i]=0;
+    moved[m].clear();
+    for(int i=0; i<cnumNodes[m]; i++) {
+      moved[m].push_back(0);
     }
   }
 }
@@ -1336,7 +1484,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){ // loop over matls    
-      if(numElems[m]==0) continue; // for materials with no cracks
+      if(cnumElems[m]==0) continue; // for materials with no cracks
       MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
       int dwi=mpm_matl->getDWIndex();
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
@@ -1356,7 +1504,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
       new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,2*NGN);
 
       //move crack points
-      for(int i=0; i<numPts[m]; i++) { 
+      for(int i=0; i<cnumNodes[m]; i++) { 
         if(!moved[m][i] && 
            cx[m][i].x()>=lp.x() && cx[m][i].y()>=lp.y() && cx[m][i].z()>=lp.z() &&
            cx[m][i].x()<hp.x() && cx[m][i].y()<hp.y() && cx[m][i].z()<hp.z() 
@@ -1392,7 +1540,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
            cx[m][i] += vcm*delT;
            moved[m][i]+=1; 
         } // End of if not moved and in patch p
-      } // End of loop over numPts[m]
+      } // End of loop over cnumNodes[m]
     } //End of loop over matls
   } //End of loop over patches
 }
@@ -1416,7 +1564,7 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
 
     cmin[m]=Point(9.e16,9.e16,9.e16);
     cmax[m]=Point(-9.e16,-9.e16,-9.e16);
-    for(int i=0; i<numPts[m]; i++) {
+    for(int i=0; i<cnumNodes[m]; i++) {
       // check if the point moved and only moved once
       if(moved[m][i]!=1) {
         cout << " Crack point cx[" << m << "]" << "[" << i 
@@ -1429,7 +1577,7 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
     } // End of loop over crack points 
 
     // update crack element normals
-    for(int i=0; i<numElems[m]; i++) {
+    for(int i=0; i<cnumElems[m]; i++) {
       // n3, n4, n5 three nodes of the element
       int n3=cElemNodes[m][i].x();
       int n4=cElemNodes[m][i].y();
@@ -1549,3 +1697,27 @@ IntVector Crack::CellOffset(const Point& p1, const Point& p2, Vector dx)
 
   return IntVector(nx,ny,nz);
 }
+
+// detect if line p3-p4 included in line p1-p2
+short Crack::TwoLinesDuplicate(const Point& p1,const Point& p2,
+                                 const Point& p3,const Point& p4)
+{
+   double l12,l31,l32,l41,l42;
+   double x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4;
+   x1=p1.x(); y1=p1.y(); z1=p1.z();
+   x2=p2.x(); y2=p2.y(); z2=p2.z();
+   x3=p3.x(); y3=p3.y(); z3=p3.z();
+   x4=p4.x(); y4=p4.y(); z4=p4.z();
+
+   l12=sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1)+(z2-z1)*(z2-z1));
+   l31=sqrt((x3-x1)*(x3-x1)+(y3-y1)*(y3-y1)+(z3-z1)*(z3-z1));
+   l32=sqrt((x3-x2)*(x3-x2)+(y3-y2)*(y3-y2)+(z3-z2)*(z3-z2));
+   l41=sqrt((x4-x1)*(x4-x1)+(y4-y1)*(y4-y1)+(z4-z1)*(z4-z1));
+   l42=sqrt((x4-x2)*(x4-x2)+(y4-y2)*(y4-y2)+(z4-z2)*(z4-z2));
+
+   if(fabs(l31+l32-l12)/l12<1.e-3 && fabs(l41+l42-l12)/l12<1.e-3)
+     return 1;
+   else
+     return 0;
+}
+
