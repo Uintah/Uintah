@@ -39,7 +39,7 @@
 #endif
 
 #include <GL/gl.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 namespace SCIRun {
 
 class SCICORESHARE GeomText : public GeomObj {

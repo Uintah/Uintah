@@ -28,7 +28,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Persistent/Persistent.h>
 

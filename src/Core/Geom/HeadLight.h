@@ -34,7 +34,7 @@
 #include <Core/share/share.h>
 
 #include <Core/Geom/Light.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 namespace SCIRun {
 

@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomDL.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Containers/StringUtil.h>

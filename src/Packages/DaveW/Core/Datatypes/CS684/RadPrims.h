@@ -6,7 +6,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/TriSurfFieldace.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>

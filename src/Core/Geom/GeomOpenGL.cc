@@ -84,7 +84,7 @@
 #include <Core/Geom/GeomTriStrip.h>
 #include <Core/Geom/View.h>
 #include <Core/Geom/GeomSticky.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>

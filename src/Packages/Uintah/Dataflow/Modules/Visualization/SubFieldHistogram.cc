@@ -26,7 +26,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -39,8 +39,8 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomSticky.h>
-#include <Core/Datatypes/ColorMap.h>
-#include <Core/Geom/Color.h>
+#include <Core/Geom/ColorMap.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/HistogramTex.h>
 #include <Core/Datatypes/LatVolField.h>

@@ -30,7 +30,7 @@
 
 #include <Core/Geom/GuiGeom.h>
 #include <Core/GuiInterface/GuiContext.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 using namespace SCIRun;
 

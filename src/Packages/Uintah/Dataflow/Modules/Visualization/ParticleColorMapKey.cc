@@ -1,5 +1,5 @@
 #include <Packages/Uintah/Dataflow/Modules/Visualization/ParticleColorMapKey.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/ColorMapTex.h>

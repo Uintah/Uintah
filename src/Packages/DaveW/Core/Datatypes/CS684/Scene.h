@@ -4,7 +4,7 @@
 #include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
 #include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

@@ -28,7 +28,7 @@
 #include <Core/Thread/Mutex.h>
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Thread.h>
 #include <GL/gl.h>

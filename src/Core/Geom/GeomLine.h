@@ -33,7 +33,7 @@
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Thread/Mutex.h>
 

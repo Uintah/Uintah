@@ -19,7 +19,7 @@ extern "C" {
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 #include <Packages/MIT/Core/Datatypes/MetropolisData.h>
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>

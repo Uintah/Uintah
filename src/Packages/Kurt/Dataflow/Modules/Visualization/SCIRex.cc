@@ -25,7 +25,7 @@
 #include <Packages/Kurt/Dataflow/Modules/Visualization/SCIRex.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>

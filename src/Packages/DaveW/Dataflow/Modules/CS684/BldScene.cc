@@ -25,7 +25,7 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/VoidStar.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>

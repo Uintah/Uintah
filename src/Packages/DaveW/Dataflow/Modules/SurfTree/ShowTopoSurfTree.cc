@@ -13,7 +13,7 @@
 #include <Packages/DaveW/Core/Datatypes/General/TopoSurfTree.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomSphere.h>

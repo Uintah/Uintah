@@ -23,7 +23,7 @@
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 #include <GL/gl.h>
 #include <GL/glu.h>

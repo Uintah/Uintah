@@ -16,7 +16,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Datatypes/TriSurfFieldace.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geom/BBoxCache.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomTriangles.h>

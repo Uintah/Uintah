@@ -33,7 +33,7 @@
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomContainer.h>
 
 namespace SCIRun {

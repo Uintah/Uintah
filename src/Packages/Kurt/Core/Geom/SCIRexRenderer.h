@@ -24,7 +24,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>

@@ -20,14 +20,14 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ColorMapPort.h>
+#include <Geom/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/SurfacePort.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <Geom/Color.h>
+#include <Datatypes/Color.h>
 #include <Geom/GeomOpenGL.h>
 
 #include <Multitask/ITC.h>

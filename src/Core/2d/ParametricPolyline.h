@@ -31,7 +31,7 @@
 #ifndef SCI_ParametricPolyline_h
 #define SCI_ParametricPolyline_h 
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/2d/DrawObj.h>
 
 #include <map>

@@ -35,7 +35,7 @@
 
 #include <Core/Persistent/Persistent.h>
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/View.h>
 
 #include <iosfwd>

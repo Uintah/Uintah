@@ -25,7 +25,7 @@
 #include <tk.h>
 #undef Colormap
 #include <Dataflow/Network/Module.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/GuiInterface/TCLTask.h>

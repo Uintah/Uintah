@@ -31,7 +31,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #ifdef __sgi
 #include <Core/Containers/Array1.h>
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

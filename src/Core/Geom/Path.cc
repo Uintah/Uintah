@@ -36,7 +36,7 @@ POSSIBLE REVISIONS
     Adding additional interpolation modes (subject to experiment)
 ----------------------------------------------------------------------*/
 
-#include <Core/Datatypes/Path.h>
+#include <Core/Geom/Path.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

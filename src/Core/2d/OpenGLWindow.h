@@ -23,7 +23,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 
 
 namespace SCIRun {

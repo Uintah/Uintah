@@ -32,7 +32,7 @@
 
 #include <FieldConverters/share/share.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array1.h>

@@ -36,7 +36,7 @@ using std::ostream;
 #include <sstream>
 using std::ostringstream;
 
-#include <Core/Geom/Color.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Hairline.h>
 #include <Core/2d/Diagram.h>
