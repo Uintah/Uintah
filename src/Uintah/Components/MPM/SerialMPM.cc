@@ -3,9 +3,9 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
+#include <Uintah/Components/MPM/Contact/SingleVelContact.h>
 
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
@@ -59,12 +59,10 @@ using Uintah::Grid::VarLabel;
 SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
-   g_velocity_label = new VarLabel("g.velocity",
-				   NCVariable<Vector>::getTypeDescription());
-   p_deformationMeasure_label = 
+   pDeformationMeasureLabel = 
                new VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
-   p_stress_label = 
+   pStressLabel = 
                new VarLabel( "p.stress",
 			     ParticleVariable<Matrix3>::getTypeDescription() );
 
@@ -131,8 +129,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
       {
 	 Task* t = new Task("SerialMPM::initialize", region, dw, dw,
 			    this, SerialMPM::actuallyInitialize);
-	 sched->addTask(t);
 	 t->computes(dw, d_sharedState->get_delt_label());
+	 sched->addTask(t);
       }
    }
 }
@@ -186,17 +184,15 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  *   out(G.VELOCITY)
 	  */
 
-#if WONT_COMPILE_YET
 	 Task* t = new Task("Contact::exMomInterpolated",
 			    region, old_dw, new_dw,
-			    this, Contact::exMomInterpolated);
+			    d_contactModel, Contact::exMomInterpolated);
 	 t->requires( new_dw, gMassLabel, region, 0 );
 	 t->requires( new_dw, gVelocityLabel, region, 0 );
 
 	 t->computes( new_dw, gVelocityLabel, region );
 
 	 sched->addTask(t);
-#endif
       }
       
       {
@@ -214,17 +210,19 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::computeStressTensor",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::computeStressTensor);
-	 t->requires(new_dw, g_velocity_label, region, 0);
+	 t->requires(new_dw, gVelocityLabel, region, 0);
 	 /*
 	   #warning
 	   t->requires(old_dw, "p.cmdata", region, 0,
 	   ParticleVariable<Uintah::Components::
 	   ConstitutiveModel::CMData>::getTypeDescription());
 	   */
-	 t->requires(new_dw, p_deformationMeasure_label, region, 0);
+	 t->requires(new_dw, pDeformationMeasureLabel, region, 0);
+
 	 t->computes(new_dw, d_sharedState->get_delt_label());
-	 t->computes(new_dw, p_stress_label, region);
-	 t->computes(new_dw, p_deformationMeasure_label, region);
+	 t->computes(new_dw, pStressLabel, region);
+	 t->computes(new_dw, pDeformationMeasureLabel, region);
+
 	 sched->addTask(t);
       }
       
@@ -240,7 +238,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 Task* t = new Task("SerialMPM::computeInternalForce",
 			    region, old_dw, new_dw,
 			    this, SerialMPM::computeInternalForce);
-	 t->requires( new_dw, p_stress_label, region, 0 );
+	 t->requires( new_dw, pStressLabel, region, 0 );
 	 t->requires( old_dw, pVolumeLabel, region, 0 );
 
 	 t->computes( new_dw, gInternalForceLabel, region );
@@ -344,6 +342,8 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw)
 {
+
+  d_contactModel = new SingleVelContact();
 }
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
@@ -386,11 +386,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
 
-#if WONT_COMPILE_YET
       new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
 
+#if WONT_COMPILE_YET
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == pmass.getParticleSubset(matlindex));
       ASSERT(pset == pvelocity.getParticleSubset(matlindex));
@@ -462,33 +462,37 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 				     DataWarehouseP& new_dw)
 {
 
-    Vector dx = region->dCell();
-    double oodx[3];
-    oodx[0] = 1.0/dx.x();
-    oodx[1] = 1.0/dx.y();
-    oodx[2] = 1.0/dx.z();
+  Vector dx = region->dCell();
+  double oodx[3];
+  oodx[0] = 1.0/dx.x();
+  oodx[1] = 1.0/dx.y();
+  oodx[2] = 1.0/dx.z();
 
-#if 0  // This needs the datawarehouse to allow indexing by material
-       // for the particle data and velocity field for the grid data.
+  // This needs the datawarehouse to allow indexing by material
+  // for the particle data and velocity field for the grid data.
+
+  int numMatls = d_sharedState->getNumMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = materials[m];
+    Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
-      ParticleVariable<Vector> px;
-      old_dw->get(px, "p.x", matlindex, region, 0);
-      ParticleVariable<double> pvol;
-      old_dw->get(pvol, "p.volume", matlindex, region, 0);
+      ParticleVariable<Vector>  px;
+      ParticleVariable<double>  pvol;
       ParticleVariable<Matrix3> pstress;
-      old_dw->get(pstress, "p.stress", matlindex, region, 0);
+      NCVariable<Vector>        internalforce;
 
-      NCVariable<Vector> internalforce;
-      new_dw->allocate(internalforce, "g.internalforce", vfindex, region, 0);
+      old_dw->get(px,      pXLabel, matlindex, region, 0);
+      old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
+      old_dw->get(pstress, pStressLabel, matlindex, region, 0);
+
+      new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region, 0);
   
+#if WONT_COMPILE_YET
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == px.getParticleSubset(matlindex));
       ASSERT(pset == pvol.getParticleSubset(matlindex));
@@ -511,11 +515,10 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
   	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
          }
       }
-
-      new_dw->put(internalforce, "g.internalforce", vfindex, region, 0);
+      new_dw->put(internalforce, gInternalForceLabel, vfindex, region, 0);
+#endif
     }
   }
-#endif
 }
 
 void SerialMPM::solveEquationsMotion(const ProcessorContext*,
@@ -523,29 +526,33 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     const DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw)
 {
-    Vector zero(0.,0.,0.);
+  Vector zero(0.,0.,0.);
 
-#if 0  // This needs the datawarehouse to allow indexing by velocity
-       // field for the grid data
+  // This needs the datawarehouse to allow indexing by velocity
+  // field for the grid data
+
+  int numMatls = d_sharedState->getNumMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = materials[m];
+    Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       // Get required variables for this region
       NCVariable<double> mass;
-      new_dw->get(mass, "g.mass", vfindex, region, 0);
       NCVariable<Vector> internalforce;
-      new_dw->get(internalforce, "g.internalforce", vfindex, region, 0);
       NCVariable<Vector> externalforce;
-      new_dw->get(externalforce, "g.externalforce", vfindex, region, 0);
+
+      new_dw->get(mass,          gMassLabel, vfindex, region, 0);
+      new_dw->get(internalforce, gInternalForceLabel, vfindex, region, 0);
+      new_dw->get(externalforce, gExternalForceLabel, vfindex, region, 0);
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
-      new_dw->allocate(acceleration, "g.acceleration", vfindex, region, 0);
+      new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region, 0);
 
       // Do the computation of a = F/m for nodes where m!=0.0
+#if WONT_COMPILE_YET
       for(NodeIterator  iter  = region->begin();
 			iter != region->end(); iter++){
 	if(mass[*iter]>0.0){
@@ -556,13 +563,12 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 	  acceleration[*iter] = zero;
 	}
       }
-
+#endif
       // Put the result in the datawarehouse
-      new_dw->put(acceleration, "g.acceleration", vfindex, region, 0);
+      new_dw->put(acceleration, gAccelerationLabel, vfindex, region );
 
     }
   }
-#endif
 }
 
 void SerialMPM::integrateAcceleration(const ProcessorContext*,
@@ -570,36 +576,42 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
 				      const DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw)
 {
-#if 0  // This needs the datawarehouse to allow indexing by material
+  // This needs the datawarehouse to allow indexing by material
+
+  int numMatls = d_sharedState->getNumMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = materials[m];
+    Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       // Get required variables for this region
-      NCVariable<Vector> acceleration;
-      new_dw->get(acceleration, "g.acceleration", vfindex, region, 0);
-      NCVariable<Vector> velocity;
-      new_dw->get(velocity, "g.velocity", vfindex, region, 0);
-      SoleVariable<double> delt;
-      old_dw->get(delt, "delt");
+      NCVariable<Vector>        acceleration;
+      NCVariable<Vector>        velocity;
+      ReductionVariable<double> delt;
+
+      new_dw->get(acceleration, gAccelerationLabel, vfindex, region, 0);
+      new_dw->get(velocity, gVelocityLabel, vfindex, region, 0);
+
+      old_dw->get(delt, deltLabel);
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
-      new_dw->allocate(velocity_star, "g.velocity_star", vfindex, region, 0);
+      new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region, 0);
 
       // Do the computation
 
+#if WONT_COMPILE_YET
       for(NodeIterator  iter  = region->begin();
-			iter != region->end(); iter++)
+			iter != region->end(); iter++) {
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
+      }
+#endif
 
       // Put the result in the datawarehouse
-      new_dw->put(velocity_star, "g.velocity_star", vfindex, region, 0);
+      new_dw->put( velocity_star, gVelocityStarLabel, vfindex, region );
     }
   }
-#endif
 }
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
@@ -613,28 +625,34 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
 
-#if 0  // This needs the datawarehouse to allow indexing by material
+  // This needs the datawarehouse to allow indexing by material
+
+  int numMatls = d_sharedState->getNumMatls();
 
   for(int m = 0; m < numMatls; m++){
-    Material* matl = materials[m];
+    Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
       // Get the arrays of particle values to be changed
       ParticleVariable<Vector> px;
-      old_dw->get(px, "p.x", matlindex, region, 0);
       ParticleVariable<Vector> pvelocity;
-      old_dw->get(pvelocity, "p.velocity", matlindex, region, 0);
+
+      old_dw->get(px,        pXLabel, matlindex, region, 0);
+      old_dw->get(pvelocity, pVelocityLabel, matlindex, region, 0);
 
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
-      new_dw->get(gvelocity_star, "g.velocity_star", vfindex, region, 0);
       NCVariable<Vector> gacceleration;
-      new_dw->get(gacceleration, "g.acceleration", vfindex, region, 0);
-      SoleVariable<double> delt;
-      old_dw->get(delt, "delt");
+      ReductionVariable<double> delt;
 
+      new_dw->get(gvelocity_star, gVelocityStarLabel, vfindex, region, 0);
+      new_dw->get(gacceleration,  gAccelerationLabel, vfindex, region, 0);
+
+      old_dw->get(delt, deltLabel);
+
+#if WONT_COMPILE_YET
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == pvelocity.getParticleSubset(matlindex));
 
@@ -668,6 +686,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
        // is in the correct cells list
 
       }
+
       static ofstream tmpout("tmp.out");
       static int ts=0;
       tmpout << ts << " " << ke << std::endl;
@@ -676,28 +695,32 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       tmpout2 << ts << " " << px[5] << std::endl;
       ts++;
 
+#endif
       // Store the new result
-      new_dw->put(px, "p.x", matlindex, region, 0);
-      new_dw->put(pvelocity, "p.velocity", matlindex, region, 0);
+      new_dw->put(px,        pXLabel, matlindex, region);
+      new_dw->put(pvelocity, pVelocityLabel, matlindex, region);
 
       ParticleVariable<double> pmass;
-      old_dw->get(pmass, "p.mass", matlindex, region, 0);
-      new_dw->put(pmass, "p.mass", matlindex, region, 0);
       ParticleVariable<double> pvolume;
-      old_dw->get(pvolume, "p.volume", matlindex, region, 0);
-      new_dw->put(pvolume, "p.volume", matlindex, region, 0);
       ParticleVariable<Vector> pexternalforce;
-      old_dw->get(pexternalforce, "p.externalforce", matlindex, region, 0);
-      new_dw->put(pexternalforce, "p.externalforce", matlindex, region, 0);
+
+      old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
+      new_dw->put(pmass,          pMassLabel, matlindex, region);
+      old_dw->get(pvolume,        pVolumeLabel, matlindex, region, 0);
+      new_dw->put(pvolume,        pVolumeLabel, matlindex, region);
+      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region, 0);
+      new_dw->put(pexternalforce, pExternalForceLabel, matlindex, region);
     }
   }
-#endif
 }
 
 } // end namespace Components
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.23  2000/04/20 23:20:26  dav
+// updates
+//
 // Revision 1.22  2000/04/20 22:13:36  dav
 // making SerialMPM compile
 //
