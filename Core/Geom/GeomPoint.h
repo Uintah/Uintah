@@ -42,9 +42,20 @@ namespace SCIRun {
 
 
 class SCICORESHARE GeomPoints : public GeomObj {
-public:
+protected:
   vector<float> points_;
   vector<unsigned char> colors_;
+
+  bool pickable;  // hack so we don't draw non-pickable pts during a pick
+
+public:
+
+  GeomPoints();
+  GeomPoints(const GeomPoints&);
+  virtual ~GeomPoints();
+  virtual GeomObj* clone();
+
+  virtual void get_bounds(BBox&);
 
   inline void add(const Point& p) {
     points_.push_back(p.x());
@@ -54,14 +65,29 @@ public:
 
   void add(const Point& p, MaterialHandle c);
 
-  bool pickable;  // hack so we don't draw non-pickable pts during a pick
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
 
-  GeomPoints();
-  GeomPoints(const GeomPoints&);
-  virtual ~GeomPoints();
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
+class SCICORESHARE GeomTranspPoints : public GeomPoints {
+protected:
+  vector<unsigned int> xindices_;
+  vector<unsigned int> yindices_;
+  vector<unsigned int> zindices_;
+
+  void sort();
+
+public:
+  GeomTranspPoints();
+  GeomTranspPoints(const GeomTranspPoints&);
+  virtual ~GeomTranspPoints();
   virtual GeomObj* clone();
-
-  virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
