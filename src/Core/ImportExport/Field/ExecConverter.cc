@@ -129,7 +129,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
 
 
 static FieldHandle
-Exec_reader(const char *cfilename, const string &precommand)
+Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
   Exec_setup_command(cfilename, precommand, command, tmpfilename);
@@ -161,7 +161,8 @@ Exec_reader(const char *cfilename, const string &precommand)
 
 
 static void
-Exec_writer(FieldHandle field, const char *cfilename, const string &precommand)
+Exec_writer(ProgressReporter *pr,
+	    FieldHandle field, const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
   Exec_setup_command(cfilename, precommand, command, tmpfilename);
@@ -188,21 +189,22 @@ Exec_writer(FieldHandle field, const char *cfilename, const string &precommand)
 // CurveField
 
 static FieldHandle
-TextCurveField_reader(const char *filename)
+TextCurveField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToCurveFieldToText %e.pts %e.edges %t";
-    return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextCurveField_writer(FieldHandle field, const char *filename)
+TextCurveField_writer(ProgressReporter *pr,
+		      FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "CurveFieldToText %t %e.pts %e.edges";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -215,21 +217,22 @@ TextCurveField_plugin("TextCurveField",
 // HexVolField
 
 static FieldHandle
-TextHexVolField_reader(const char *filename)
+TextHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToHexVolField %e.pts %e.hexes %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextHexVolField_writer(FieldHandle field, const char *filename)
+TextHexVolField_writer(ProgressReporter *pr,
+		       FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "HexVolFieldToText %t %e.pts %e.hexes";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -242,21 +245,22 @@ TextHexVolField_plugin("TextHexVolField",
 // QuadSurfField
 
 static FieldHandle
-TextQuadSurfField_reader(const char *filename)
+TextQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToQuadSurfField %e.pts %e.quads %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextQuadSurfField_writer(FieldHandle field, const char *filename)
+TextQuadSurfField_writer(ProgressReporter *pr,
+			 FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "QuadSurfFieldToText %t %e.pts %e.quads";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -269,21 +273,22 @@ TextQuadSurfField_plugin("TextQuadSurfField",
 // TetVolField
 
 static FieldHandle
-TextTetVolField_reader(const char *filename)
+TextTetVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToTetVolField %e.pts %e.tets %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextTetVolField_writer(FieldHandle field, const char *filename)
+TextTetVolField_writer(ProgressReporter *pr,
+		       FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TetVolFieldToText %t %e.pts %e.tets";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -296,21 +301,22 @@ TextTetVolField_plugin("TextTetVolField",
 // TriSurfField
 
 static FieldHandle
-TextTriSurfField_reader(const char *filename)
+TextTriSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToTriSurfField %e.pts %e.tets %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextTriSurfField_writer(FieldHandle field, const char *filename)
+TextTriSurfField_writer(ProgressReporter *pr,
+			FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TriSurfFieldToText %t %e.pts %e.tets";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -324,21 +330,22 @@ TextTriSurfField_plugin("TextTriSurfField",
 
 
 static FieldHandle
-TextPointCloudField_reader(const char *filename)
+TextPointCloudField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToPointCloudField %f %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextPointCloudField_writer(FieldHandle field, const char *filename)
+TextPointCloudField_writer(ProgressReporter *pr,
+			   FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "PointCloudFieldToText %t %f";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -350,21 +357,22 @@ TextPointCloudField_plugin("TextHexVolField",
 
 
 static FieldHandle
-TextStructCurveField_reader(const char *filename)
+TextStructCurveField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToStructCurveField %f %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextStructCurveField_writer(FieldHandle field, const char *filename)
+TextStructCurveField_writer(ProgressReporter *pr,
+			    FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "StructCurveFieldToText %t %f";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -376,21 +384,22 @@ TextStructCurveField_plugin("TextHexVolField",
 
 
 static FieldHandle
-TextStructHexVolField_reader(const char *filename)
+TextStructHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToStructHexVolField %f %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextStructHexVolField_writer(FieldHandle field, const char *filename)
+TextStructHexVolField_writer(ProgressReporter *pr,
+			     FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "StructHexVolFieldToText %t %f";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -401,21 +410,22 @@ TextStructHexVolField_plugin("TextHexVolField",
 
 
 static FieldHandle
-TextStructQuadSurfField_reader(const char *filename)
+TextStructQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TextToStructQuadSurfField %f %t";
-  return Exec_reader(filename, command);
+  return Exec_reader(pr, filename, command);
 }
 
 static void
-TextStructQuadSurfField_writer(FieldHandle field, const char *filename)
+TextStructQuadSurfField_writer(ProgressReporter *pr,
+			       FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "StructQuadSurfFieldToText %t %f";
-  Exec_writer(field, filename, command);
+  Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin

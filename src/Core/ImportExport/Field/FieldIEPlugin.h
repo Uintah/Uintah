@@ -44,6 +44,7 @@ namespace SCIRun {
 using std::string;
 using std::map;
 
+
 //----------------------------------------------------------------------
 class SCICORESHARE FieldIEPlugin {
 public:
@@ -52,14 +53,16 @@ public:
   const string fileextension;
   const string filemagic;
 
-  FieldHandle (*filereader)(const char *filename);
-  void (*filewriter)(FieldHandle f, const char *filename);
+  FieldHandle (*filereader)(ProgressReporter *pr, const char *filename);
+  void (*filewriter)(ProgressReporter *pr,
+		     FieldHandle f, const char *filename);
 
   FieldIEPlugin(const string &name,
 		const string &fileextension,
 		const string &filemagic,
-		FieldHandle (*fieldreader)(const char *filename) = 0,
-		void (*fieldwriter)(FieldHandle f,
+		FieldHandle (*fieldreader)(ProgressReporter *pr,
+					   const char *filename) = 0,
+		void (*fieldwriter)(ProgressReporter *pr, FieldHandle f,
 				    const char *filename) = 0);
 
   ~FieldIEPlugin();

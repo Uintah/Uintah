@@ -51,7 +51,7 @@ using namespace std;
 
 
 FieldHandle
-TextPointCloudString_reader(const char *filename)
+TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
 {
   ifstream ptsstream(filename);
 
@@ -110,7 +110,8 @@ TextPointCloudString_reader(const char *filename)
 
 
 void
-TextPointCloudString_writer(FieldHandle field, const char *filename)
+TextPointCloudString_writer(ProgressReporter *pr,
+			    FieldHandle field, const char *filename)
 {
   ofstream ptsstream(filename);
 
