@@ -318,7 +318,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
 			 Ghost::AroundNodes, 1);
-	    t->requires( new_dw, lb->pVolumeDeformedLabel_preReloc, idx, patch,
+	    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
 			 Ghost::AroundNodes, 1);
 
 	    t->computes( new_dw, lb->gInternalForceLabel, idx, patch );
@@ -347,7 +347,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-	    t->requires(new_dw, lb->pVolumeDeformedLabel_preReloc, idx, patch,
+	    t->requires(new_dw, lb->pVolumeDeformedLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
 	    t->requires( new_dw, lb->pTemperatureGradientLabel_preReloc, idx, patch,
 			 Ghost::AroundNodes, 1);
@@ -670,7 +670,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    vector<const VarLabel*> plabels;
    plabels.push_back(lb->pVelocityLabel);
    plabels.push_back(lb->pExternalForceLabel);
-   //plabels.push_back(lb->pSurfLabel);
+//   plabels.push_back(lb->pSurfLabel);
    if(d_fractureModel){
       plabels.push_back(lb->pSurfaceNormalLabel); //for fracture
       plabels.push_back(lb->pAverageMicrocrackLength); //for fracture
@@ -685,8 +685,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    plabels.push_back(lb->pVolumeLabel);
    plabels.push_back(lb->pDeformationMeasureLabel);
    plabels.push_back(lb->pStressLabel);
-   //plabels.push_back(lb->pIsIgnitedLabel); //for burn models
-   //plabels.push_back(lb->pMassRateLabel); //for burn models
+//   plabels.push_back(lb->pIsIgnitedLabel); //for burn models
 
    // This array should contain a list of all of the particle state
    // that will be used in the next time step
@@ -694,7 +693,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    vector<const VarLabel*> plabels_preReloc;
    plabels_preReloc.push_back(lb->pVelocityLabel_preReloc);
    plabels_preReloc.push_back(lb->pExternalForceLabel_preReloc);
-   //plabels_preReloc.push_back(lb->pSurfLabel_preReloc);
+//   plabels_preReloc.push_back(lb->pSurfLabel_preReloc);
    if(d_fractureModel){
       plabels_preReloc.push_back(lb->pSurfaceNormalLabel_preReloc); //for fracture
       plabels_preReloc.push_back(lb->pAverageMicrocrackLength_preReloc); //for fracture
@@ -709,14 +708,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    plabels_preReloc.push_back(lb->pVolumeLabel_preReloc);
    plabels_preReloc.push_back(lb->pDeformationMeasureLabel_preReloc);
    plabels_preReloc.push_back(lb->pStressLabel_preReloc);
+//   plabels_preReloc.push_back(lb->pIsIgnitedLabel_preReloc); //for burn models
 
    // This sucks, fix it - Steve
    Material* matl = d_sharedState->getMaterial( 0 );
    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
    mpm_matl->getConstitutiveModel()->addParticleState(plabels, plabels_preReloc);
 
-   //plabels_preReloc.push_back(lb->pIsIgnitedLabel_preReloc); //for burn models
-   //plabels_preReloc.push_back(lb->pMassRateLabel_preReloc); //for burn models
 
    new_dw->scheduleParticleRelocation(level, sched, old_dw,
 				      lb->pXLabel_preReloc, plabels_preReloc,
@@ -724,19 +722,32 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    if(d_fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
+
+   new_dw->pleaseSave(lb->pXLabel, numMatls);
+   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
+   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
+   new_dw->pleaseSave(lb->pMassLabel, numMatls);
+   new_dw->pleaseSave(lb->pStressLabel, numMatls);
+
    new_dw->pleaseSave(lb->gAccelerationLabel, numMatls);
    new_dw->pleaseSave(lb->gInternalForceLabel, numMatls);
    new_dw->pleaseSave(lb->gMassLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
 
-   new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
-   new_dw->pleaseSave(lb->pMassLabel, numMatls);
-   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
-   new_dw->pleaseSave(lb->pXLabel, numMatls);
+//   new_dw->pleaseSave(lb->cBurnedMassLabel, numMatls);
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->TotalMassLabel);
+
+//   pleaseSaveParticlesToGrid(lb->pVelocityLabel,lb->pMassLabel,numMatls,new_dw);
+}
+
+void SerialMPM::pleaseSaveParticlesToGrid(const VarLabel* var,
+				 const VarLabel* varweight, int number,
+				 DataWarehouseP& new_dw)
+{
+   new_dw->pleaseSave(var, number);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
@@ -761,8 +772,6 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 
        NAPID=NAPID + numParticles;
 
-       cout << "NAPID " << NAPID << endl;
-
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
        mpm_matl->getBurnModel()->initializeBurnModelData(patch,
@@ -776,7 +785,6 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        }
     }
   }
-  cout << "NAPID " << NAPID << endl;
   new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
 }
 
@@ -881,7 +889,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       }
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	 if(gmass[*iter] != 0.0){
+//	 if(gmass[*iter] != 0.0){
+	 if(gmass[*iter] >= 1.e-10){
 	    gvelocity[*iter] *= 1./gmass[*iter];
 	    if (d_heatConductionInvolved) {
     	      gTemperature[*iter] /= gmass[*iter];
@@ -889,9 +898,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	 }
       }
 
+#if 0
       // Apply grid boundary conditions to the velocity
       // before storing the data
-#if 0
       for(int face = 0; face<6; face++){
 	Patch::FaceType f=(Patch::FaceType)face;
 #if 0
@@ -1022,7 +1031,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 						       Ghost::AroundNodes, 1,
 						       lb->pXLabel);
       old_dw->get(px,      lb->pXLabel, pset);
-      new_dw->get(pvol,    lb->pVolumeDeformedLabel_preReloc, pset);
+      new_dw->get(pvol,    lb->pVolumeDeformedLabel, pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
 
       new_dw->allocate(internalforce, lb->gInternalForceLabel, vfindex, patch);
@@ -1167,11 +1176,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Put the result in the datawarehouse
       new_dw->put(acceleration, lb->gAccelerationLabel, vfindex, patch);
-
     }
   }
 }
-
 
 void SerialMPM::solveHeatEquations(const ProcessorContext*,
 				     const Patch* patch,
@@ -1339,9 +1346,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 		 				 Ghost::AroundCells, 1);
       }
 
+#if 0
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
-#if 0
       for(int face = 0; face<6; face++){
 	Patch::FaceType f=(Patch::FaceType)face;
 #if 0
@@ -1511,6 +1518,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.85  2000/06/16 23:23:35  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.84  2000/06/15 21:57:00  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

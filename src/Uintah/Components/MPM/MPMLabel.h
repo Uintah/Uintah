@@ -37,7 +37,6 @@ namespace Uintah {
       const VarLabel* pDeformationMeasureLabel_preReloc;
       const VarLabel* pStressLabel_preReloc;
       const VarLabel* pVolumeLabel_preReloc;
-      const VarLabel* pVolumeDeformedLabel_preReloc;
       const VarLabel* pMassLabel_preReloc;
       const VarLabel* pVelocityLabel_preReloc;
       const VarLabel* pExternalForceLabel_preReloc;
@@ -83,6 +82,10 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.11  2000/06/16 23:23:35  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.10  2000/06/15 21:57:00  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

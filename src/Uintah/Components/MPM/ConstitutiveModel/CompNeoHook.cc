@@ -267,7 +267,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label_preReloc);
   // Volume is currently being carried forward, will be updated
-  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel_preReloc);
+  new_dw->put(pvolumedef,lb->pVolumeDeformedLabel);
 }
 
 double CompNeoHook::computeStrainEnergy(const Patch* patch,
@@ -343,7 +343,7 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, bElBarLabel_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel_preReloc, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
@@ -367,6 +367,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.23  2000/06/16 23:23:39  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.22  2000/06/16 05:03:04  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now

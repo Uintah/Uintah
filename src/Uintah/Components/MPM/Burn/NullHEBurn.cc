@@ -65,7 +65,7 @@ void NullHEBurn::addMassRateComputesAndRequires(Task* task,
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
                                 patch, Ghost::None);
   
-  task->requires(new_dw, lb->pVolumeDeformedLabel_preReloc, matl->getDWIndex(),
+  task->requires(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(),
                                 patch, Ghost::None);
   
   task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
@@ -95,7 +95,7 @@ void NullHEBurn::computeMassRate(const Patch* patch,
   ParticleVariable<double> pmass;
   old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeDeformedLabel_preReloc, pset);
+  new_dw->get(pvolume, lb->pVolumeDeformedLabel, pset);
 
   new_dw->put(pmass,lb->pMassLabel_preReloc);
   new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
@@ -103,6 +103,10 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 }
 
 // $Log$
+// Revision 1.6  2000/06/16 23:23:38  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.5  2000/06/15 21:57:02  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

@@ -84,6 +84,11 @@ private:
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
+
+  void pleaseSaveParticlesToGrid(const VarLabel* var,
+                                 const VarLabel* varweight, int number,
+				 DataWarehouseP& new_dw);
+
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorContext*,
@@ -202,6 +207,10 @@ private:
    
 //
 // $Log$
+// Revision 1.40  2000/06/16 23:23:36  guilkey
+// Got rid of pVolumeDeformedLabel_preReloc to fix some confusion
+// the scheduler was having.
+//
 // Revision 1.39  2000/06/15 21:57:01  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
