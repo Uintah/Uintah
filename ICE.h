@@ -16,6 +16,10 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
+#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+
+#define ADVECT_TEST
+//#undef ADVECT_TEST
 
 namespace Uintah {
 
@@ -25,10 +29,6 @@ using namespace SCIRun;
     public:
       ICE(const ProcessorGroup* myworld);
       virtual ~ICE();
-      
-      struct fflux { double d_fflux[6]; };          //face flux
-      struct eflux { double d_eflux[12]; };         //edge flux
-      struct cflux { double d_cflux[8]; };          //corner flux
       
       virtual void problemSetup(const ProblemSpecP& params, 
                                 GridP& grid,
@@ -276,28 +276,8 @@ using namespace SCIRun;
       int d_max_iter_equilibration;
      
     private:
-      friend const TypeDescription* fun_getTypeDescription(fflux*);
-      friend const TypeDescription* fun_getTypeDescription(eflux*);
-      friend const TypeDescription* fun_getTypeDescription(cflux*);
-      
       friend class MPMICE;
       
-      void influxOutfluxVolume(const SFCXVariable<double>& uvel_CC,
-			       const SFCYVariable<double>& vvel_CC,
-			       const SFCZVariable<double>& wvel_CC,
-			       const double& delT, const Patch* patch,
-			       CCVariable<fflux>& OFS, 
-			       CCVariable<eflux>& OFE,
-			       CCVariable<cflux>& OFC);
-      
-      template<class T> void advectQFirst(const CCVariable<T>& q_CC,
-			const Patch* patch,
-			const CCVariable<fflux>& OFS,
-			const CCVariable<eflux>& OFE,
-			const CCVariable<cflux>& OFC,
-			CCVariable<T>& q_advected);
-
-
       void computeTauX_Components( const Patch* patch,
                           const CCVariable<Vector>& vel_CC,
                           const double viscosity,
@@ -340,66 +320,27 @@ using namespace SCIRun;
       double d_dbgNextDumpTime;
       double d_dbgOldTime;
 
+      Advector* d_advector;
       
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat;
 
       ICE(const ICE&);
       ICE& operator=(const ICE&);
-      
-      const VarLabel* IFS_CCLabel;
-      const VarLabel* OFS_CCLabel;
-      const VarLabel* IFE_CCLabel;
-      const VarLabel* OFE_CCLabel;
-      const VarLabel* IFC_CCLabel;
-      const VarLabel* OFC_CCLabel;
-      const VarLabel* q_outLabel;
-      const VarLabel* q_out_EFLabel;
-      const VarLabel* q_out_CFLabel;
-      const VarLabel* q_inLabel;
-      const VarLabel* q_in_EFLabel;
-      const VarLabel* q_in_CFLabel;
+
       
     };
 
- /*______________________________________________________________________
- *      Needed by Advection Routines
- *______________________________________________________________________*/   
-#define TOP        0          /* index used to designate the top cell face    */
-#define BOTTOM     1          /* index used to designate the bottom cell face */
-#define RIGHT      2          /* index used to designate the right cell face  */
-#define LEFT       3          /* index used to designate the left cell face   */
-#define FRONT      4          /* index used to designate the front cell face  */
-#define BACK       5          /* index used to designate the back cell face   */
-#define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */  
-            //__________________________________
-            //   E D G E   F L U X E S
-#define TOP_R               0               /* edge on top right of cell    */
-#define TOP_FR              1               /* edge on top front of cell    */
-#define TOP_L               2               /* edge on top left of cell     */
-#define TOP_BK              3               /* edge on top back of cell     */
-
-#define BOT_R               4               /* edge on bottom right of cell */
-#define BOT_FR              5               /* edge on bottom front of cell */
-#define BOT_L               6               /* edge on bottom left of cell  */
-#define BOT_BK              7               /* edge on bottom back of cell  */
-
-#define RIGHT_BK            8               /* edge along right back of cell*/
-#define RIGHT_FR            9               /* edge along right front of cell  */
-#define LEFT_BK             10              /* edge alone left back of cell  */
-#define LEFT_FR             11              /* edge along left front of cell*/
-     
-            //__________________________________
-            //   C O R N E R   F L U X E S
-#define TOP_R_BK            0               /* top, RIGHT, back corner      */
-#define TOP_R_FR            1               /* top, RIGHT, front corner     */
-#define TOP_L_BK            2               /* top, LEFT, back corner       */
-#define TOP_L_FR            3               /* top, LEFT, front corner      */
-#define BOT_R_BK            4               /* bottom, RIGHT, back corner   */
-#define BOT_R_FR            5               /* bottom, RIGHT, front corner  */
-#define BOT_L_BK            6               /* bottom, LEFT, back corner    */
-#define BOT_L_FR            7               /* bottom, LEFT, front corner   */
+#define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */
+ 
 
 } // End namespace Uintah
 
 #endif
+
+
+
+
+
+
+
