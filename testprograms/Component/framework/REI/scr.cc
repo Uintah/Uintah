@@ -2,6 +2,8 @@
 #include <testprograms/Component/framework/REI/scr.h>
 
 using namespace sci_cca;
+#include <iostream>
+using namespace std;
 
 void
 scr::setServices( const Services & srv )
