@@ -23,6 +23,7 @@ SUBDIRS := \
 	$(SRCDIR)/argtest	\
 	$(SRCDIR)/framework	\
 	$(SRCDIR)/memstress	\
+	$(SRCDIR)/mitest	\
 	$(SRCDIR)/objects	\
 	$(SRCDIR)/pingpong	\
 	$(SRCDIR)/spectest
