@@ -27,7 +27,7 @@ itcl_class Teem_Tend_TendEvecRGB {
     }
     method set_defaults {} {
         global $this-evec
-        set $this-evec "major"
+        set $this-evec 2
 
         global $this-aniso_metric
         set $this-aniso_metric  "tenAniso_FA"
@@ -60,9 +60,9 @@ itcl_class Teem_Tend_TendEvecRGB {
 	frame $w.f.options.f1 -borderwidth 2 -relief groove
 	make_labeled_radio $w.f.options.f1.evec \
 	    "Eigenvector to use" "" top $this-evec \
-	    {{"Major" "major"}
-		{"Medium" "medium"}
-		{"Minor" "minor"}}
+	    {{"Major" 2}
+		{"Medium" 1}
+		{"Minor" 0}}
 	pack $w.f.options.f1.evec -side top -expand yes -fill x
 	pack $w.f.options.f1 -side top -expand yes -fill x
 
