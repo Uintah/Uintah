@@ -7,7 +7,6 @@ SRCDIR   := Dataflow/Ports
 SRCS     += $(SRCDIR)/ColorMapPort.cc             \
             $(SRCDIR)/ColumnMatrixPort.cc         \
             $(SRCDIR)/FieldPort.cc                \
-            $(SRCDIR)/FieldWrapperPort.cc         \
             $(SRCDIR)/GeomPort.cc                 \
             $(SRCDIR)/GeometryPort.cc             \
 	    $(SRCDIR)/GLTexture3DPort.cc          \

@@ -15,7 +15,6 @@ SRCS     += \
 	$(SRCDIR)/AddAttribute.cc\
 	$(SRCDIR)/CastField.cc\
 	$(SRCDIR)/ChangeCellType.cc\
-        $(SRCDIR)/GenField.cc\
 	$(SRCDIR)/GenScalarField.cc\
 	$(SRCDIR)/GenVectorField.cc\
 	$(SRCDIR)/LocateNbrhd.cc\

@@ -194,7 +194,7 @@ public:
     }
 
     BBox bbox;
-    d_sfield->getGeom()->getBoundingBox(bbox);
+    d_sfield->get_geom()->getBoundingBox(bbox);
 
     d_dbg << bbox.min().x() << " " << bbox.min().y() << " " 
 	  << bbox.min().z() << " " << bbox.max().x() << " " << bbox.max().y() 
@@ -204,7 +204,7 @@ public:
     d_conSwitch = scinew GeomSwitch(bb);
 
     GeomGroup *verts = scinew GeomGroup;
-    GeomHandle geom = d_sfield->getGeom();
+    GeomHandle geom = d_sfield->get_geom();
 
     d_dbg << geom->getInfo();
 

@@ -18,14 +18,14 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/DiscreteAttrib.h>
+#include <Core/Datatypes/FData.h>
 #include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
     
 
 
-template <class G, class A=DiscreteAttrib<double> >
+template <class G, class A>
   class SCICORESHARE GeneralField : public Field
 {
   public:
@@ -48,16 +48,16 @@ template <class G, class A=DiscreteAttrib<double> >
   virtual bool set_geom_name(string iname);
   
   //////////
-  // If attrib is set, set its name
-  virtual bool set_attrib_name(string iname);
+  // If fdata is set, set its name
+  virtual bool set_fdata_name(string iname);
 
   //////////
   // Return geometry
-  virtual const GeomHandle getGeom() const;
+  virtual const GeomHandle get_geom() const;
 
   //////////
-  // Return the attribute
-  virtual const AttribHandle getAttrib() const;
+  // Return the field data
+  virtual const FDataHandle get_fdata() const;
 
   //////////
   // Return the upper and lower bounds
@@ -72,10 +72,12 @@ template <class G, class A=DiscreteAttrib<double> >
   //virtual bool set_bbox(const BBox&);
   //virtual bool set_bbox(const Point&, const Point&);
 
+#if 0
   //////////
   // return the min and max values
   virtual bool get_minmax(typename A::value_type &min,
 			  typename A::value_type &max);
+#endif
 
 
   //////////
@@ -101,9 +103,9 @@ template <class G, class A=DiscreteAttrib<double> >
 private:
 
   /////////
-  // The geometry and attribute associated with this field
-  LockingHandle<G> geom;
-  LockingHandle<A> attrib;
+  // The geometry and field data associated with this field
+  LockingHandle<G> geom_;
+  LockingHandle<A> fdata_;
     
 };
 
@@ -138,8 +140,8 @@ GeneralField<G,A>::~GeneralField()
 }
 
 template <class G, class A >
-GeneralField<G,A>::GeneralField(G* igeom, A* iattrib):
-  Field(), geom(igeom), attrib(iattrib)
+GeneralField<G,A>::GeneralField(G* igeom, A* ifdata):
+  Field(), geom(igeom), fdata(ifdata)
 {
 }
 
@@ -153,12 +155,12 @@ template <class G, class A >
 const typename A::value_type &
 GeneralField<G,A>::grid(int x, int y, int z) const
 {
-  A* typedattrib = attrib.get_rep();
-  if (typedattrib) {
-    return typedattrib->get3(x, y, z);
+  A* typedfdata = fdata.get_rep();
+  if (typedfdata) {
+    return typedfdata->get3(x, y, z);
   }
   else {
-    throw "NO_ATTRIB_EXCEPTION";
+    throw "NO_FDATA_EXCEPTION";
   }
 }
 
@@ -166,14 +168,14 @@ template <class G, class A >
 typename A::value_type &
 GeneralField<G,A>::operator[](int a)
 {
-  A* typedattrib = attrib.get_rep();
-  if (typedattrib)
+  A* typedfdata = fdata.get_rep();
+  if (typedfdata)
     {
-      return typedattrib->get1(a);
+      return typedfdata->get1(a);
     }
   else
     {
-    throw "NO_ATTRIB_EXCEPTION";
+    throw "NO_FDATA_EXCEPTION";
     }
 }
 
@@ -189,25 +191,25 @@ bool GeneralField<G,A>::set_geom_name(string iname)
 }
 
 template <class G, class A >
-bool GeneralField<G,A>::set_attrib_name(string iname){
- if (attrib.get_rep())
+bool GeneralField<G,A>::set_fdata_name(string iname){
+ if (fdata.get_rep())
    {
-     attrib->setName(iname);
+     fdata->setName(iname);
      return true;
    }
   return false;
 }
 
 template <class G, class A >
-const GeomHandle GeneralField<G,A>::getGeom() const
+const GeomHandle GeneralField<G,A>::get_geom() const
 {
   return GeomHandle((Geom*)geom.get_rep());
 }
 
 template <class G, class A >
-const AttribHandle GeneralField<G,A>::getAttrib() const
+const FDataHandle GeneralField<G,A>::get_fdata() const
 {
-  return AttribHandle((Attrib*)attrib.get_rep());
+  return FDataHandle((FData*)fdata.get_rep());
 }
 
 template <class G, class A >
@@ -230,7 +232,8 @@ bool GeneralField<G,A>::get_bbox(BBox& bbox)
     }
 }
 
-template <class T> struct MinMaxFunctor : public AttribFunctor<T>
+#if 0
+template <class T> struct MinMaxFunctor : public FdataFunctor<T>
 {
 public:
   virtual void operator () (T &val)
@@ -249,31 +252,32 @@ template <class G, class A >
 bool GeneralField<G,A>::get_minmax(typename A::value_type &imin,
 				   typename A::value_type &imax)
 {
-  A* tattrib = attrib.get_rep();
-  if (!tattrib) { return false; }
+  A* tfdata = fdata.get_rep();
+  if (!tfdata) { return false; }
 
   MinMaxFunctor <typename A::value_type> f;
-  switch (tattrib->dimension())
+  switch (tfdata->dimension())
     {
     case 3:
-      f.min = f.max = tattrib->get3(0, 0, 0);
+      f.min = f.max = tfdata->get3(0, 0, 0);
       break;
     case 2:
-      f.min = f.max = tattrib->get2(0, 0);
+      f.min = f.max = tfdata->get2(0, 0);
       break;
     case 1:
-      f.min = f.max = tattrib->get1(0);
+      f.min = f.max = tfdata->get1(0);
       break;
     default:
       return false;
     }
 
-  tattrib->iterate(f);
+  tfdata->iterate(f);
   
   imin = f.min;
   imax = f.max;
   return true;
 }
+#endif
 
 
 template <class G, class A >
@@ -300,7 +304,7 @@ bool GeneralField<G,A>::interpolate(const Point& p,
 				    typename A::value_type &outval,
 				    double)
 {
-  geom->interp(attrib.get_rep(), p, outval);
+  geom->interp(fdata.get_rep(), p, outval);
   return true;
 }
 
@@ -317,8 +321,8 @@ void GeneralField<G,A>::io(Piostream& stream){
 
   stream.begin_class(typeName().c_str(), GeneralField_VERSION);
   //  Field::io(stream);
-  Pio(stream, geom);
-  Pio(stream, attrib);
+  Pio(stream, geom_);
+  Pio(stream, fdata_);
   stream.end_class();
 }
 

@@ -4,9 +4,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
-SRCS += $(SRCDIR)/Attrib.cc                 \
-        $(SRCDIR)/AttribManager.cc          \
-        $(SRCDIR)/BasicSurfaces.cc	    \
+SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
 	$(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/ColorMap.cc		    \
         $(SRCDIR)/ColumnMatrix.cc	    \
@@ -14,7 +12,6 @@ SRCS += $(SRCDIR)/Attrib.cc                 \
         $(SRCDIR)/Datatype.cc		    \
         $(SRCDIR)/DenseMatrix.cc	    \
         $(SRCDIR)/Field.cc		    \
-        $(SRCDIR)/FieldWrapper.cc	    \
         $(SRCDIR)/GenFunction.cc	    \
         $(SRCDIR)/Geom.cc		    \
         $(SRCDIR)/HexMesh.cc		    \

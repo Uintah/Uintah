@@ -13,12 +13,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/GeneralField.h>
-#include <Core/Datatypes/FlatAttrib.h>
 #include <Core/Datatypes/LatticeGeom.h>
-#include <Core/Datatypes/AccelAttrib.h>
-#include <Core/Datatypes/BrickAttrib.h>
-#include <Core/Datatypes/IndexAttrib.h>
-#include <Core/Datatypes/AnalytAttrib.h>
 #include <Core/Datatypes/ScalarField.h>
 
 using namespace SCIRun;
@@ -40,20 +35,12 @@ template class LockingHandle<Mesh>;
 #include <Core/Datatypes/Surface.h>
 template class LockingHandle<Surface>;
 
-template class DiscreteAttrib<double>;
-template class FlatAttrib<double>;
-template class AccelAttrib<double>;
-template class BrickAttrib<double>;
+//template class GeneralField<LatticeGeom>;
+//template class GeneralField<LatticeGeom, FlatAttrib<double> >;
+//template class GeneralField<LatticeGeom, AccelAttrib<double> >;
 
-template class AccelAttrib<unsigned char>;
-template class IndexAttrib<double, unsigned char, AccelAttrib<unsigned char> >;
-
-template class GeneralField<LatticeGeom>;
-template class GeneralField<LatticeGeom, FlatAttrib<double> >;
-template class GeneralField<LatticeGeom, AccelAttrib<double> >;
-
-template class AttribFunctor<double>;
-template class AnalytAttrib<double>;
+//template class AttribFunctor<double>;
+//template class AnalytAttrib<double>;
 
 //template class MinMaxFunctor<double>;
 

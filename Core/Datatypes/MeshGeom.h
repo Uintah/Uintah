@@ -18,15 +18,15 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
-//#include <sstream>
+
 #include <list>
 #include <vector>
 #include <string>
-//#include <set>
 
 
 namespace SCIRun {
 
+using std::list;
 using std::vector;
 using std::string;
 
