@@ -659,15 +659,17 @@ using namespace SCIRun;
       ModelInfo* d_modelInfo;
       struct TransportedVariable {
 	const MaterialSubset* matls;
-	VarLabel* var;
-	VarLabel* Lvar;
+	const VarLabel* var;
+	const VarLabel* src;
+	const VarLabel* Lvar;
       };
       class ICEModelSetup : public ModelSetup {
       public:
 	ICEModelSetup();
 	virtual ~ICEModelSetup();
 	virtual void registerTransportedVariable(const MaterialSubset* matls,
-						 VarLabel* var);
+						 const VarLabel* var,
+						 const VarLabel* src);
 	std::vector<TransportedVariable*> tvars;
       };
       ICEModelSetup* d_modelSetup;

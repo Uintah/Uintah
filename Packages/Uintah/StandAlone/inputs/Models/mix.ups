@@ -21,7 +21,7 @@
 	<max_delt_increase>  0.5        </max_delt_increase>	
 	<max_initial_delt>   1.e-4      </max_initial_delt>
        <timestep_multiplier>0.8        </timestep_multiplier>
-       <max_iterations>     500         </max_iterations>
+       <max_iterations>      2         </max_iterations>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -121,7 +121,7 @@
               <extraCells>   [1,1,1]      </extraCells>
               <patches>      [1,1,1]      </patches>
            </Box>
-           <spacing>         [1,1,0.5]           </spacing>
+           <spacing>         [0.5,0.5,0.5]           </spacing>
        </Level>
     </Grid>
    
@@ -150,10 +150,8 @@
       <save label= "modelMass_src"/>
       <save label= "modelMom_src"/>
       <save label= "modelEng_src"/>
-      <save label= "massFraction-CH4"/>
-      <save label= "massFraction-O2"/>
-      <save label= "massFraction-N2"/>
-      <save label= "massFraction-H2O"/>
+      <save label= "massFraction-Q"/>
+      <save label= "massFraction-Q2"/>
       <!-- Need by the regression tester -->
    </DataArchiver>
 
@@ -212,33 +210,21 @@
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
-           <thermal_conductivity>       .70             </thermal_conductivity>
-           <specific_heat>              1293.908298567086          </specific_heat>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
            <speed_of_sound>             376             </speed_of_sound>
-           <gamma>                      1.240786866259094             </gamma>
+           <gamma>                      1.4             </gamma>
            <geom_object>
                 <box label="world">
                     <min>       [ 0.0, 0.0, 0.0 ]       </min>
                     <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
                <res>                [2,2,2]             </res>
-               <velocity>           [.0,.0,.0]       </velocity>
-               <temperature>        900.0               </temperature>
-               <density>            .36135767         </density>
+               <velocity>           [1.0,1.0,1.0]       </velocity>
+               <temperature>        300.0               </temperature>
+               <density>    1.1792946927374306000e+00        </density>
                <pressure>           101325.0            </pressure>
            </geom_object>
-           <geom_object>
-                <box label="world">
-                    <min>       [ 2.0, 2.0, 0.0 ]       </min>
-                    <max>       [ 3.0, 3.0, 0.5 ]       </max>
-                </box>
-               <res>                [2,2,2]             </res>
-               <velocity>           [.0,.0,.0]       </velocity>
-               <temperature>        3000.0               </temperature>
-               <density>            .21681486 </density>
-               <pressure>           101235.0            </pressure>
-           </geom_object>
-<!--               <density>     0.2501710015579138        </density> -->
          </material>
       </ICE>       
       
@@ -252,38 +238,41 @@
     </MaterialProperties>
     <Models>
 
-      <Model type="Mixing2">
+      <Model type="Mixing">
         <material>source</material>
-	<file>gri30.xml</file>
-	<id>gri30</id>
-	<stream name="O2">
+	<stream name="Q">
            <geom_object>
                 <box label="world">
                     <min>       [ -1.0, -1.0, -1.0 ]       </min>
                     <max>       [ 7.0, 7.0, 7.0 ]       </max>
                 </box>
-		<massFraction>0.2</massFraction>
+		<massFraction>0.5</massFraction>
            </geom_object>
+	   <properties>
+	      <molecularweight>0.002</molecularweight>
+	      <cp>1000</cp>
+	   </properties>
 	</stream>
-	<stream name="CH4">
+	<stream name="Q2">
            <geom_object>
                 <box label="world">
                     <min>       [ -1.0, -1.0, -1.0 ]       </min>
                     <max>       [ 7.0, 7.0, 7.0 ]       </max>
                 </box>
-		<massFraction>0.1</massFraction>
+		<massFraction>0.5</massFraction>
            </geom_object>
-	</stream>
-	<stream name="N2">
-           <geom_object>
-                <box label="world">
-                    <min>       [ -1.0, -1.0, -1.0 ]       </min>
-                    <max>       [ 7.0, 7.0, 7.0 ]       </max>
-                </box>
-		<massFraction>0.7</massFraction>
-           </geom_object>
+	   <properties>
+	      <molecularweight>0.004</molecularweight>
+	      <cp>1000</cp>
+	   </properties>
 	</stream>
 
+	<reaction>
+	  <from>Q</from>
+	  <to>Q2</to>
+	  <energyRelease>10000</energyRelease>
+	  <rate>1.e-4</rate>
+	</reaction>
       </Model>
 
     </Models>

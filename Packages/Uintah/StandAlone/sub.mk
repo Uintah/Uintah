@@ -78,6 +78,7 @@ ifeq ($(CC),newmpxlc)
         -lld $(M_LIBRARY)
 else
   LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 endif
 

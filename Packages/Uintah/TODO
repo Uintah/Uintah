@@ -1,6 +1,13 @@
+models:
+ - add sources in ice
+ - sort out material sets
+ - read models
+ - create simple model
+ - make labels
+
 restart
-track down using std somewhere
-AMR gets for coarse regions - move into DW...
+DONE track down using std somewhere
+DONE AMR gets for coarse regions - move into DW...
 reallocation...
 2 proc/27 patch problems
 ice1: failed to scrub vel_CC
@@ -12,7 +19,6 @@ saves for multi-level reductions
 Combine grid reading between SimulationController and AMRSimulationController
 Poisson2 broken...
 
-Delt on multiple levels???
 Nix d_computes in task
 Fix getOtherLevelPatches to not use Point to move between levels...
 What is d_requires and d_requiresOldDW in Task???
