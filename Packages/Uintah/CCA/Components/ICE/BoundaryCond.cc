@@ -2003,7 +2003,7 @@ void  setBCPress_LODI(CCVariable<double>& press_CC,
     }
 
     if ( new_bcs != 0 && new_bcs->getKind() == "LODI"){
-      fillFacePress_LODI(press_CC, rho_micro, Temp_CC, f_theta, numALLMatls,
+      fillFacePress_LODI(patch, press_CC, rho_micro, Temp_CC, f_theta, numALLMatls,
                          sharedState, face);
     }
   } 
