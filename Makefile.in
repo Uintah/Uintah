@@ -65,6 +65,8 @@ MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 CREATETCLINDEX := $(OBJTOP)/createTclIndex
+TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
+TCL_VERSION    := @TCL_VERSION@
 
 # etags generation
 TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
@@ -84,8 +86,7 @@ $(MAKEFILEDIRS):
 
 $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	@echo creating createTclIndex
-	-@sed -e 's,ITCLSH,$(ITCLSH),g' \
-              -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
+	-@sed -e 's,TCLSH,$(TCLSH),g' \
 	      -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
               $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)
