@@ -181,8 +181,7 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
   }
   if(matls) {
     // patches and matls must be sorted
-    ASSERT(is_sorted(patches->getVector().begin(), patches->getVector().end(),
-		     Patch::Compare()));    
+    ASSERT(is_sorted(matls->getVector().begin(), matls->getVector().end()));    
     matls->addReference();
   }
 }
@@ -490,7 +489,8 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     dbg << " to req " << *req << '\n';
   }
 
-  if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex()) {
+  if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex() || 
+     req->var->typeDescription()->isReductionVariable()) {
     to->addInternalDependency(from, req->var);
     return;
   }
