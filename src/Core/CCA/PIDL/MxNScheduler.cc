@@ -45,6 +45,7 @@
 #include <Core/CCA/PIDL/MxNMetaSynch.h>
 #include <iostream>
 #include <sstream>
+#include <assert.h>
 using namespace SCIRun;   
 
 MxNScheduler::MxNScheduler(sched_t sch)
