@@ -378,7 +378,7 @@ TriSurfMesh::compute_normals()
     Vector v1 = p3 - p2;
     Vector n = Cross(v0, v1);
     face_normals[*iter] = n;
-    cerr << "normal mag: " << n.length() << endl;
+//    cerr << "normal mag: " << n.length() << endl;
     ++iter;
   }  
 
