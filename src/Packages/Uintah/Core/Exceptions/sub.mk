@@ -12,13 +12,19 @@ SRCS     += $(SRCDIR)/InvalidGrid.cc $(SRCDIR)/InvalidValue.cc \
 	$(SRCDIR)/ProblemSetupException.cc \
 	$(SRCDIR)/TypeMismatchException.cc $(SRCDIR)/UnknownVariable.cc
 
-PSELIBS := SCICore/Exceptions
+PSELIBS := SCICore/Exceptions Uintah/Grid
 LIBS :=
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/12/06 23:44:19  witzel
+# Added Uintah/Grid to PSELIBS.  This causes a "circular dependency"
+# warning while compiling, but it gives many more warnings without it
+# because UnknownVariable uses Patch objects explicitly for simplicity
+# elsewhere (OnDemandWarehouse and DWDatabase).
+#
 # Revision 1.5  2000/04/12 22:57:47  sparker
 # Added new exception classes
 #
