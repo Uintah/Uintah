@@ -63,27 +63,6 @@ struct NodeIndex : public FieldIndexBase<T> {
     FieldIndexBase<T>(0) {}
   NodeIndex(T index) :
     FieldIndexBase<T>(index) {}
-
-  static
-  const string type_name(int n = -1)
-  {
-    ASSERT((n >= -1) && n <= 1);
-    if (n == -1)
-    {
-      static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-      return name;
-      
-    }
-    else if (n == 0)
-    {
-      return "NodeIndex";
-    }
-    else
-    {
-      return find_type_name((T *)0);
-    }
-  }
-  
 };
 
 //! Distinct type for edge index.
