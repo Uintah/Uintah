@@ -227,6 +227,8 @@ void FirstOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
 {
   advectCE<double>(q_CC,patch,q_advected,  
                    q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
+  
+  compute_q_FC_PlusFaces( q_CC, patch, q_XFC, q_YFC, q_ZFC);
 }
 //__________________________________
 //     V E C T O R
@@ -334,3 +336,115 @@ template <class T, typename F>
     save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);
   }
 }
+
+/*_____________________________________________________________________
+ Function~ compute_q_FC
+ This takes care of the q_FC values  on the x+, y+, z+ patch faces
+_____________________________________________________________________*/
+template<class T>
+void FirstOrderCEAdvector::compute_q_FC(CellIterator iter, 
+                		      IntVector adj_offset,
+                		      const int face,
+                		      const CCVariable<double>& q_CC,
+                		      T& q_FC)
+{
+  double oneThird = 1.0/3.0;
+
+  for(;!iter.done(); iter++){
+    IntVector R = *iter;      
+    IntVector L = R + adj_offset; 
+    //__________________________________
+    //   S L A B S
+    // face:           LEFT,   BOTTOM,   BACK  
+    // IF_slab[face]:  RIGHT,  TOP,      FRONT
+    double outfluxVol = d_OFS[R].d_fflux[face];
+    double influxVol  = d_OFS[L].d_fflux[IF_slab[face]];
+
+    double q_slab_flux = q_CC[L] * influxVol - q_CC[R] * outfluxVol;             
+    double slab_vol    =  outfluxVol +  influxVol;                 
+
+    //__________________________________
+    //   E D G E S  
+    double q_edge_flux = 0.0;
+    double edge_vol = 0.0;
+
+    for(int e = 0; e < 4; e++ ) {
+      int OF = OF_edge[face][e];        // cleans up the equations
+      int IF = IF_edge[face][e];
+
+      IntVector L = R + E_ac[face][e]; // adjcent cell
+      outfluxVol = 0.5 * d_OFE[R].d_eflux[OF];
+      influxVol  = 0.5 * d_OFE[L].d_eflux[IF];
+
+      q_edge_flux += -q_CC[R] * outfluxVol
+                  +  q_CC[L]  * influxVol;
+      edge_vol    += outfluxVol + influxVol;
+    }                
+
+    //__________________________________
+    //   C O R N E R S
+    double q_corner_flux = 0.0;
+    double corner_vol = 0.0;
+
+    for(int crner = 0; crner < 4; crner++ ) {
+      int OF = OF_corner[face][crner];      // cleans up the equations
+      int IF = IF_corner[face][crner];
+
+      IntVector L = R + C_ac[face][crner]; // adjacent cell
+      outfluxVol = oneThird * d_OFC[R].d_cflux[OF];
+      influxVol  = oneThird * d_OFC[L].d_cflux[IF];
+
+      q_corner_flux += -q_CC[R] * outfluxVol 
+                    +  q_CC[L]  * influxVol; 
+      corner_vol    += outfluxVol + influxVol;
+    }  //  corner loop
+
+    double q_faceFlux = q_slab_flux + q_edge_flux + q_corner_flux;
+    double faceVol    = slab_vol + edge_vol + corner_vol;
+    
+    double tmp_FC     = fabs(q_faceFlux)/(faceVol + 1.0e-100);
+
+    // if q_FC = 0.0 then set it equal to q_CC[c]
+    q_FC[R] = equalZero(q_faceFlux, q_CC[R], tmp_FC);
+
+  }
+}
+
+/*_____________________________________________________________________
+ Function~  compute_q_FC_PlusFaces
+ Compute q_FC values on the faces between the extra cells
+ and the interior domain only on the x+, y+, z+ patch faces 
+_____________________________________________________________________*/
+void FirstOrderCEAdvector::compute_q_FC_PlusFaces(
+      	      	      	      	       const CCVariable<double>& q_CC,
+                                   const Patch* patch,
+                                   SFCXVariable<double>& q_XFC,
+                                   SFCYVariable<double>& q_YFC,
+                                   SFCZVariable<double>& q_ZFC)
+{                                                  
+  vector<IntVector> adj_offset(3);
+  adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+  adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+  adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+
+  CellIterator Xiter=patch->getFaceCellIterator(Patch::xplus,"minusEdgeCells");
+  CellIterator Yiter=patch->getFaceCellIterator(Patch::yplus,"minusEdgeCells");
+  CellIterator Ziter=patch->getFaceCellIterator(Patch::zplus,"minusEdgeCells");
+  
+  IntVector patchOnBoundary = patch->neighborsHigh();
+  // only work on patches that are at the edge of the computational domain
+  
+  if (patchOnBoundary.x() == 1 ){
+    compute_q_FC<SFCXVariable<double> >(Xiter, adj_offset[0], LEFT,  
+                                        q_CC,q_XFC);
+  } 
+  if (patchOnBoundary.y() == 1 ){
+    compute_q_FC<SFCYVariable<double> >(Yiter, adj_offset[1], BOTTOM,
+                                        q_CC,q_YFC); 
+  }
+  if (patchOnBoundary.z() == 1 ){  
+    compute_q_FC<SFCZVariable<double> >(Ziter, adj_offset[2], BACK,  
+                                        q_CC,q_ZFC);  
+  }
+}
+
