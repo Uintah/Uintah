@@ -16,7 +16,7 @@ addConnection $m2 0 $m3 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/usr/sci/data/SCIRunData/1.10.0/brain-eg/brain-eg-condparams.mat}
+set $m0-filename {/usr/sci/data/SCIRunData/1.20.0/brain-eg/brain-eg-condparams.mat}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-tcl_status {Calling GenStandardColorMaps!}
