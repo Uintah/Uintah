@@ -100,13 +100,31 @@ void ProblemSpecReader::resolveIncludes(ProblemSpecP params)
 	// open the file, read it, and replace the index node
 	ProblemSpecReader *psr = new ProblemSpecReader(href);
 	ProblemSpecP include = psr->readInputFile();
-	
+
+	// nodes to be substituted must be enclosed in a 
+        // "Uintah_Include" node
+
+	if (include->getNodeName() == "Uintah_Include") {
+	  ProblemSpecP incChild = include->getFirstChild();
+	  while (incChild != 0) {
+	    //make include be created from same document that created params
+	    ProblemSpecP newnode = child->importNode(incChild, true);
+	    resolveIncludes(newnode);
+	    params->getNode()->insertBefore(newnode->getNode(), child->getNode());
+	    incChild = incChild->getNextSibling();
+	  }
+	  params->removeChild(child);
+	}
+	else {
+	  throw ProblemSetupException("No href attributes in include tag");
+}
+
 	//make include be created from same document that created params
-	ProblemSpecP newnode = child->importNode(include, true);
-	resolveIncludes(newnode);
-	params->replaceChild(newnode, child);
-	child = child->getNextSibling();
-	continue;
+	//	ProblemSpecP newnode = child->importNode(include, true);
+	//	resolveIncludes(newnode);
+	//	params->replaceChild(newnode, child);
+		child = child->getNextSibling();
+		continue;
       }
       // recurse on child's children
       resolveIncludes(child);
