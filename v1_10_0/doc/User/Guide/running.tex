@@ -184,31 +184,25 @@ optional.
     Compilation}{sec:dyncomp} for details on the meaning and use of
   this variable.
 
-\envitem{SCIRUN\_DATA}
+\item[\envvar{SCIRUN\_DATA} \& \envvar{SCIRUN\_DATASET}]\mbox{}
 
-  The environment variable \envvar{SCIRUN\_DATA} specifies the
-  default directory of \sr{} data files.  \sr{} will first look
-  in this directory to find data and network files.  This affects
-  the behavior of file browsing dialogs---they will prompt for
-  a file within the \envvar{SCIRUN\_DATA} directory (of course
-  you may have the dialog look elsewhere).  This can be very
-  handy when using shared datasets, like the ones shipped with
-  \sr{}.  Many of the demonstration nets distributed with the
-  software also assume that \envvar{SCIRUN\_DATA} points to the
-  location of these datasets.
+  These two variables specify the complete path to a \sr{} \dfn{data
+  set}.  A data set is a collection of \sr{} type data like fields,
+  matricies, \etc{} that are stored in a directory and are used in
+  \sr{} networks.
 
-\envitem{SCIRUN\_DATASET}
+  \envvar{SCIRUN\_DATA} specifies a directory which contains a
+  collection of data set directories.  \envvar{SCIRUN\_DATA} is used in
+  conjunction with \envvar{SCIRUN\_DATASET} to specify the full path of
+  a data set.  \envvar{SCIRUN\_DATASET} specifies a specific data set
+  directory. 
 
-  This variable refines the search for data files within the
-  directory pointed at by \envvar{SCIRUN\_DATA}.  By setting
-  these two variables, one can easily select different data sets
-  for the same network.  See the network files distributed with
-  \sr{} (\eg{} \filename{forward-fem.net}) as
-  examples of how to use these variables.  Some of the
-  demonstration nets require setting \envvar{SCIRUN\_DATASET}.  Read
-  the documentation on each net before using it.
+  When working with the sample \sr{} data sets, for example,
+  \envvar{SCIRUN\_DATA} would be set to
+  \filename{/usr/local/SCIRunData} (assuming this is where \sr{}'s
+  sample data were installed).  \envvar{SCIRUN\_DATASET} could then be
+  set to \filename{utahtorso} to specify the Utah Torso data set.
   
-
 \envitem{DISPLAY}
   
   If \sr{} is executed remotely then the value of the
