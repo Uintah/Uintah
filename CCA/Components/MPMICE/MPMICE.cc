@@ -232,10 +232,9 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls);
-  if (d_ice->d_RateForm) {
-    d_ice->scheduleComputeFCPressDiffRF(          sched, patches, ice_matls_sub,
+  if (d_ice->d_RateForm) {                                                                 
+    d_ice->schedulecomputeDivThetaVel_CC(         sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
-                                                                  press_matl,
                                                                   all_matls);
   }
   d_ice->scheduleComputeFaceCenteredVelocities(   sched, patches, ice_matls_sub,
@@ -265,7 +264,10 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   d_ice->scheduleAccumulateMomentumSourceSinks(   sched, patches, press_matl,
                                                                   ice_matls_sub,
                                                                   all_matls);
-  d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, press_matl,
+                                                                  
+  d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+                                                                  press_matl,
                                                                   all_matls);
 
   scheduleInterpolatePressCCToPressNC(            sched, patches, press_matl,
