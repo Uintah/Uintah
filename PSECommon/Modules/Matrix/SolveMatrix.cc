@@ -114,7 +114,7 @@ public:
     TCLint iteration;
     TCLint maxiter;
     TCLint use_previous_soln;
-    TCLvarint emit_partial;
+    TCLint emit_partial;
     int ep;
     TCLstring status;
     TCLint tcl_np;
@@ -855,10 +855,8 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
-#if 0
-	    if(emit_partial.get() && niter%50 == 0)
+	    if(ep && niter%50 == 0)
 		solport->send_intermediate(rhs.clone());
-#endif
 	}
     }
     iteration.set(niter);
@@ -1099,7 +1097,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
     bkden=bknum;
     double my_akden=Dot(Z, P, stats->flop, stats->memref, beg, end);
-    cerr << "p="<<processor<<" my_akden="<<my_akden<<"\n";
+//    cerr << "p="<<processor<<" my_akden="<<my_akden<<"\n";
 
     double akden=data->reducer.sum(processor, data->np, my_akden);
     
@@ -1487,6 +1485,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.11  1999/09/22 04:06:15  dmw
+// removed debug info
+//
 // Revision 1.10  1999/09/21 23:20:10  dmw
 // fixed it so it works for RHS==0
 //
