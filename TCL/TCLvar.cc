@@ -58,14 +58,11 @@ double TCLdouble::get()
     if(is_reset){
 	TCLTask::lock();
 	char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
-	cerr << "getting " << varname << endl;
 	if(l){
 	    Tcl_GetDouble(the_interp, l, &value);
 	    is_reset=0;
 	}
 	TCLTask::unlock();
-    } else {
-	cerr << "skipped getting " << varname << endl;
     }
     return value;
 }

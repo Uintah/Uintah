@@ -14,6 +14,7 @@
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Dataflow/Module.h>
+#include <Multitask/Task.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
@@ -39,7 +40,7 @@ static clString prefix()
 	    pf=clString(p);
 	} else {
 	    cerr << "Error: SCI_WORK variable not set!\n";
-	    exit(0);
+	    TaskManager::exit_all(-1);
 	}
     }
     return pf;
