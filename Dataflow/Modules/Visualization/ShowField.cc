@@ -76,6 +76,10 @@ class ShowField : public Module
   GeomSwitch*              face_switch_;
   bool                     faces_on_;
   bool                     faces_dirty_;
+
+  //! default grey material
+  Material                 def_mat_;
+  MaterialHandle           def_mat_handle_;
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
   GuiDouble                node_scale_;
@@ -85,6 +89,8 @@ class ShowField : public Module
   template <class Field>
   bool render(Field *f, Field *f1, ColorMapHandle cm);
 
+  inline
+  MaterialHandle choose_mat(bool def, ColorMapHandle cm, double val);
 public:
   ShowField(const clString& id);
   virtual ~ShowField();
@@ -128,6 +134,8 @@ ShowField::ShowField(const clString& id) :
   face_switch_(0),
   faces_on_(true),
   faces_dirty_(true),
+  def_mat_(Color(.5, .5, .5)),
+  def_mat_handle_(&def_mat_),
   node_display_type_("node_display_type", id, this),
   node_scale_("scale", id, this),
   showProgress_("show_progress", id, this)
@@ -252,10 +260,9 @@ ShowField::execute()
 }
 
 inline
-MaterialHandle choose_mat(bool def, ColorMapHandle cm, double val) {
-  static Material m(Color(.5, .5, .5));
-  static MaterialHandle mh(&m);
-  if (def) return mh;
+MaterialHandle 
+ShowField::choose_mat(bool def, ColorMapHandle cm, double val) {
+  if (def) return def_mat_handle_;
   return cm->lookup(val);
 }
 
