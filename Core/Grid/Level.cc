@@ -24,6 +24,7 @@
 #include <math.h>
 
 #define SELECT_RANGETREE
+//#define BRYAN_SELECT_CACHE
 
 #ifdef SELECT_RANGETREE
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
@@ -77,6 +78,17 @@ Level::~Level()
     delete each_patch;
   if(all_patches && all_patches->removeReference())
     delete all_patches;
+
+#ifdef BRYAN_SELECT_CACHE
+  int patches_stored = 0;
+  int queries_stored = 0;
+  for (selectCache::iterator iter = d_selectCache.begin(); iter != d_selectCache.end(); iter++) {
+    queries_stored++;
+    patches_stored += iter->second.size();
+  }
+  cout << "  Bryan's select cache stored " << queries_stored << " queries and " << patches_stored << " patches\n";
+#endif
+
 }
 
 void Level::setPatchDistributionHint(const IntVector& hint)
@@ -264,6 +276,19 @@ Point Level::positionToIndex(const Point& p) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
 			  selectType& neighbors) const
 {
+#ifdef BRYAN_SELECT_CACHE
+  // look it up in the cache first
+  selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
+  if (iter != d_selectCache.end()) {
+    const vector<const Patch*>& cache = iter->second;
+    for (unsigned i = 0; i < cache.size(); i++) {
+      neighbors.push_back(cache[i]);
+    }
+    return;
+  }
+#endif
+
+  int orig_size = neighbors.size();
 #if defined( SELECT_LINEAR )
    // This sucks - it should be made faster.  -Steve
    for(const_patchIterator iter=d_virtualAndRealPatches.begin();
@@ -307,6 +332,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    }
    neighbors.resize(i);
 #elif defined( SELECT_RANGETREE )
+   //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
    d_rangeTree->query(low, high, neighbors);
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 #else
@@ -329,6 +355,16 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
    for(int i=0;i<(int)neighbors.size();i++)
       ASSERT(neighbors[i] == tneighbors[i]);
+#endif
+
+#ifdef BRYAN_SELECT_CACHE
+   // put it in the cache - start at orig_size in case there was something in
+   // neighbors before this query
+   vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
+   cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+   for (int i = orig_size; i < neighbors.size(); i++) {
+     cache.push_back(neighbors[i]);
+   }
 #endif
 }
 
