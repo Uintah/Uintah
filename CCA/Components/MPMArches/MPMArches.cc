@@ -177,7 +177,8 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
                                     Mlb->pXLabel_preReloc,
                                     Mlb->d_particleState_preReloc,
                                     Mlb->pXLabel, Mlb->d_particleState,
-                                    mpm_matls);
+				    Mlb->pParticleIDLabel,
+				    mpm_matls);
 
 
 }
@@ -600,8 +601,8 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       // Create arrays for the grid data
-      NCVariable<double > gmass, gvolume;
-      NCVariable<Vector > gvelocity;
+      constNCVariable<double > gmass, gvolume;
+      constNCVariable<Vector > gvelocity;
       CCVariable<double > cmass, cvolume;
       CCVariable<Vector > vel_CC;
       
@@ -662,8 +663,8 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       
-      CCVariable<double > cmass;
-      CCVariable<Vector > vel_CC;
+      constCCVariable<double > cmass;
+      constCCVariable<Vector > vel_CC;
       
       CCVariable<double> xvel_CC;
       CCVariable<double> yvel_CC;
@@ -826,7 +827,7 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     int archIndex = 0;
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<CCVariable<double> > mat_vol(numMPMMatls);
+    StaticArray<constCCVariable<double> > mat_vol(numMPMMatls);
     StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
     
     int zeroGhostCells = 0;
@@ -902,23 +903,23 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
   // MPM stuff
 
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
 
-    StaticArray<CCVariable<double> > xvelCC_solid(numMPMMatls);
-    StaticArray<CCVariable<double> > yvelCC_solid(numMPMMatls);
-    StaticArray<CCVariable<double> > zvelCC_solid(numMPMMatls);
+    StaticArray<constCCVariable<double> > xvelCC_solid(numMPMMatls);
+    StaticArray<constCCVariable<double> > yvelCC_solid(numMPMMatls);
+    StaticArray<constCCVariable<double> > zvelCC_solid(numMPMMatls);
     
-    StaticArray<SFCXVariable<double> > xvelFCX_solid(numMPMMatls);
-    StaticArray<SFCXVariable<double> > yvelFCX_solid(numMPMMatls);
-    StaticArray<SFCXVariable<double> > zvelFCX_solid(numMPMMatls);
+    StaticArray<constSFCXVariable<double> > xvelFCX_solid(numMPMMatls);
+    StaticArray<constSFCXVariable<double> > yvelFCX_solid(numMPMMatls);
+    StaticArray<constSFCXVariable<double> > zvelFCX_solid(numMPMMatls);
     
-    StaticArray<SFCYVariable<double> > xvelFCY_solid(numMPMMatls);
-    StaticArray<SFCYVariable<double> > yvelFCY_solid(numMPMMatls);
-    StaticArray<SFCYVariable<double> > zvelFCY_solid(numMPMMatls);
+    StaticArray<constSFCYVariable<double> > xvelFCY_solid(numMPMMatls);
+    StaticArray<constSFCYVariable<double> > yvelFCY_solid(numMPMMatls);
+    StaticArray<constSFCYVariable<double> > zvelFCY_solid(numMPMMatls);
     
-    StaticArray<SFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
-    StaticArray<SFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
-    StaticArray<SFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
+    StaticArray<constSFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
+    StaticArray<constSFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
+    StaticArray<constSFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
     
     StaticArray<CCVariable<double> >   dragForceX_cc(numMPMMatls);
     StaticArray<CCVariable<double> >   dragForceY_cc(numMPMMatls);
@@ -939,14 +940,14 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     
     // Arches stuff
     
-    CCVariable<int> cellType;
-    CCVariable<double> pressure;
+    constCCVariable<int> cellType;
+    constCCVariable<double> pressure;
     
-    CCVariable<double> xvelCC_gas;
-    CCVariable<double> yvelCC_gas;
-    CCVariable<double> zvelCC_gas;
+    constCCVariable<double> xvelCC_gas;
+    constCCVariable<double> yvelCC_gas;
+    constCCVariable<double> zvelCC_gas;
     
-    CCVariable<double> gas_fraction_cc;
+    constCCVariable<double> gas_fraction_cc;
     
     // multimaterial contribution to SP and SU terms in Arches momentum eqns
     // currently at cc and fcs.  Later we will interpolate to where
@@ -1562,72 +1563,88 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     CCVariable<double> su_dragx_cc;
-    SFCYVariable<double> su_dragx_fcy;
-    SFCZVariable<double> su_dragx_fcz;
+    constSFCYVariable<double> su_dragx_fcy;
+    constSFCZVariable<double> su_dragx_fcz;
     
     CCVariable<double> sp_dragx_cc;
-    SFCYVariable<double> sp_dragx_fcy;
-    SFCZVariable<double> sp_dragx_fcz;
+    constSFCYVariable<double> sp_dragx_fcy;
+    constSFCZVariable<double> sp_dragx_fcz;
     
     CCVariable<double> su_dragy_cc;
-    SFCZVariable<double> su_dragy_fcz;
-    SFCXVariable<double> su_dragy_fcx;
+    constSFCZVariable<double> su_dragy_fcz;
+    constSFCXVariable<double> su_dragy_fcx;
     
     CCVariable<double> sp_dragy_cc;
-    SFCZVariable<double> sp_dragy_fcz;
-    SFCXVariable<double> sp_dragy_fcx;
+    constSFCZVariable<double> sp_dragy_fcz;
+    constSFCXVariable<double> sp_dragy_fcx;
     
     CCVariable<double> su_dragz_cc;
-    SFCXVariable<double> su_dragz_fcx;
-    SFCYVariable<double> su_dragz_fcy;
+    constSFCXVariable<double> su_dragz_fcx;
+    constSFCYVariable<double> su_dragz_fcy;
     
     CCVariable<double> sp_dragz_cc;
-    SFCXVariable<double> sp_dragz_fcx;
-    SFCYVariable<double> sp_dragz_fcy;
+    constSFCXVariable<double> sp_dragz_fcx;
+    constSFCYVariable<double> sp_dragz_fcy;
 
     int numGhostCells = 1;
 
-    new_dw->get(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CCLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->allocate(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
+		     matlIndex, patch);
+    new_dw->allocate(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel,
+		     matlIndex, patch);
+    
+    new_dw->allocate(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
+		     matlIndex, patch);
+    new_dw->allocate(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel,
+		     matlIndex, patch);
+    
+    new_dw->allocate(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
+		     matlIndex, patch);
+    new_dw->allocate(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel,
+		     matlIndex, patch);
+    
+    
+    new_dw->copyOut(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(su_dragx_fcy, d_MAlb->d_uVel_mmNonlinSrc_FCYLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(su_dragx_fcz, d_MAlb->d_uVel_mmNonlinSrc_FCZLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
-    new_dw->get(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CCLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(sp_dragx_fcy, d_MAlb->d_uVel_mmLinSrc_FCYLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(sp_dragx_fcz, d_MAlb->d_uVel_mmLinSrc_FCZLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
-    new_dw->get(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CCLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(su_dragy_fcz, d_MAlb->d_vVel_mmNonlinSrc_FCZLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(su_dragy_fcx, d_MAlb->d_vVel_mmNonlinSrc_FCXLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
-    new_dw->get(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CCLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(sp_dragy_fcz, d_MAlb->d_vVel_mmLinSrc_FCZLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(sp_dragy_fcx, d_MAlb->d_vVel_mmLinSrc_FCXLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
-    new_dw->get(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CCLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->copyOut(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(su_dragz_fcx, d_MAlb->d_wVel_mmNonlinSrc_FCXLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(su_dragz_fcy, d_MAlb->d_wVel_mmNonlinSrc_FCYLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-
-    new_dw->get(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CCLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    
+    new_dw->copyOut(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CCLabel,
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(sp_dragz_fcx, d_MAlb->d_wVel_mmLinSrc_FCXLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->get(sp_dragz_fcy, d_MAlb->d_wVel_mmLinSrc_FCYLabel,
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		    matlIndex, patch, Ghost::AroundCells, numGhostCells);
     
     IntVector valid_lo;
     IntVector valid_hi;
@@ -1810,12 +1827,12 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> su_dragx_cc;
-    CCVariable<double> sp_dragx_cc;
-    CCVariable<double> su_dragy_cc;
-    CCVariable<double> sp_dragy_cc;
-    CCVariable<double> su_dragz_cc;
-    CCVariable<double> sp_dragz_cc;
+    constCCVariable<double> su_dragx_cc;
+    constCCVariable<double> sp_dragx_cc;
+    constCCVariable<double> su_dragy_cc;
+    constCCVariable<double> sp_dragy_cc;
+    constCCVariable<double> su_dragz_cc;
+    constCCVariable<double> sp_dragz_cc;
     
     SFCXVariable<double> su_dragx_fcx;
     SFCXVariable<double> sp_dragx_fcx;
@@ -2146,10 +2163,10 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
       CCVariable<Vector> totalforce;
       CCVariable<Vector> acc_arches;
-      CCVariable<double> DFX_CC, DFY_CC, DFZ_CC, cmass;
-      SFCXVariable<double> PRX_FC;
-      SFCYVariable<double> PRY_FC;
-      SFCZVariable<double> PRZ_FC;
+      constCCVariable<double> DFX_CC, DFY_CC, DFZ_CC, cmass;
+      constSFCXVariable<double> PRX_FC;
+      constSFCYVariable<double> PRY_FC;
+      constSFCZVariable<double> PRZ_FC;
 
       new_dw->allocate(totalforce, d_MAlb->SumAllForcesCCLabel,matlindex,patch);
       new_dw->allocate(acc_arches, d_MAlb->AccArchesCCLabel,   matlindex,patch);
@@ -2212,7 +2229,7 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
-      CCVariable<Vector> acc_archesCC;
+      constCCVariable<Vector> acc_archesCC;
       NCVariable<Vector> acc_archesNC;
       new_dw->get(acc_archesCC, d_MAlb->AccArchesCCLabel,   matlindex,patch,
 						Ghost::AroundCells, 1);

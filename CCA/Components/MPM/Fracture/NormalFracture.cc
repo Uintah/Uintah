@@ -52,12 +52,12 @@ void NormalFracture::computeBoundaryContact(
       patch, Ghost::AroundCells, 1, lb->pXLabel);
 
     //patchAndGhost data
-    ParticleVariable<Point>  pX_pg;
-    ParticleVariable<double> pVolume_pg;
-    ParticleVariable<int>    pIsBroken_pg;
-    ParticleVariable<Vector> pCrackNormal_pg;
-    ParticleVariable<Vector> pVelocity_pg;
-    ParticleVariable<double> pMass_pg;
+    constParticleVariable<Point>  pX_pg;
+    constParticleVariable<double> pVolume_pg;
+    constParticleVariable<int>    pIsBroken_pg;
+    constParticleVariable<Vector> pCrackNormal_pg;
+    constParticleVariable<Vector> pVelocity_pg;
+    constParticleVariable<double> pMass_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
@@ -69,7 +69,7 @@ void NormalFracture::computeBoundaryContact(
     //patchOnly data
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
 
-    ParticleVariable<Point>  pX_p;
+    constParticleVariable<Point>  pX_p;
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
 
     //particle index exchange from patch to patch+ghost
@@ -181,10 +181,10 @@ void NormalFracture::computeConnectivity(
     ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
       patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-    ParticleVariable<Point>  pX_pg;
-    ParticleVariable<double> pVolume_pg;
-    ParticleVariable<Vector> pCrackNormal_pg;
-    ParticleVariable<int>    pCrackEffective_pg;
+    constParticleVariable<Point>  pX_pg;
+    constParticleVariable<double> pVolume_pg;
+    constParticleVariable<Vector> pCrackNormal_pg;
+    constParticleVariable<int>    pCrackEffective_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
@@ -198,7 +198,7 @@ void NormalFracture::computeConnectivity(
       <<pset_p->numParticles()<<endl;
       */
 
-    ParticleVariable<Point>  pX_p;
+    constParticleVariable<Point>  pX_p;
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
 
     IndexExchange indexExchange(pset_p,pX_p,pset_pg,pX_pg);
@@ -276,17 +276,17 @@ void NormalFracture::computeFracture(
     ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
        patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-    ParticleVariable<Point>   pX_pg;
-    ParticleVariable<double>  pVolume_pg;
-    ParticleVariable<Vector>  pTipNormal_pg;
-    ParticleVariable<Vector>  pExtensionDirection_pg;
-    ParticleVariable<Matrix3> pStress_pg;
-    ParticleVariable<double>  pToughness_pg;
-    ParticleVariable<double>  pStrainEnergy_pg;
-    ParticleVariable<double>  pMass_pg;
-    ParticleVariable<int>     pIsBroken_pg;
-    ParticleVariable<Vector>  pCrackNormal_pg;
-    ParticleVariable<Vector>  pDisplacement_pg;
+    constParticleVariable<Point>   pX_pg;
+    constParticleVariable<double>  pVolume_pg;
+    constParticleVariable<Vector>  pTipNormal_pg;
+    constParticleVariable<Vector>  pExtensionDirection_pg;
+    constParticleVariable<Matrix3> pStress_pg;
+    constParticleVariable<double>  pToughness_pg;
+    constParticleVariable<double>  pStrainEnergy_pg;
+    constParticleVariable<double>  pMass_pg;
+    constParticleVariable<int>     pIsBroken_pg;
+    constParticleVariable<Vector>  pCrackNormal_pg;
+    constParticleVariable<Vector>  pDisplacement_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     old_dw->get(pVolume_pg, lb->pVolumeLabel, pset_pg);
@@ -303,10 +303,10 @@ void NormalFracture::computeFracture(
     //patchOnly data
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
   
-    ParticleVariable<Point>   pX_p;
-    ParticleVariable<Vector>  pRotationRate_p;
-    ParticleVariable<double>  pCrackSurfacePressure_p;
-    ParticleVariable<Vector>  pVelocity_p;
+    constParticleVariable<Point>   pX_p;
+    constParticleVariable<Vector>  pRotationRate_p;
+    constParticleVariable<double>  pCrackSurfacePressure_p;
+    constParticleVariable<Vector>  pVelocity_p;
 
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
     new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
@@ -516,11 +516,11 @@ void NormalFracture::computeCrackExtension(
     ParticleSubset* pset_pg = old_dw->getParticleSubset(matlindex, 
       patch, Ghost::AroundCells, 1, lb->pXLabel);
 
-    ParticleVariable<Point>  pX_pg;
-    ParticleVariable<int>    pIsBroken_pg;
-    ParticleVariable<Vector> pCrackNormal_pg;
-    ParticleVariable<Vector> pExtensionDirection_pg;
-    ParticleVariable<double> pVolume_pg;
+    constParticleVariable<Point>  pX_pg;
+    constParticleVariable<int>    pIsBroken_pg;
+    constParticleVariable<Vector> pCrackNormal_pg;
+    constParticleVariable<Vector> pExtensionDirection_pg;
+    constParticleVariable<double> pVolume_pg;
 
     old_dw->get(pX_pg, lb->pXLabel, pset_pg);
     new_dw->get(pIsBroken_pg, lb->pIsBrokenLabel_preReloc, pset_pg);
@@ -531,9 +531,9 @@ void NormalFracture::computeCrackExtension(
     //patchAndGhost data (_p)
     ParticleSubset* pset_p = old_dw->getParticleSubset(matlindex, patch);
   
-    ParticleVariable<Point>   pX_p;
-    ParticleVariable<Vector>  pTipNormal_p;
-    ParticleVariable<Vector>  pRotationRate_p;
+    constParticleVariable<Point>   pX_p;
+    constParticleVariable<Vector>  pTipNormal_p;
+    constParticleVariable<Vector>  pRotationRate_p;
 
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
     old_dw->get(pTipNormal_p, lb->pTipNormalLabel, pset_p);

@@ -70,12 +70,12 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     Vector centerOfMassVelocity(0.0,0.0,0.0);
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity(numMatls);
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->get(gmass[m],    lb->gMassLabel,    dwindex, patch,Ghost::None,0);
-      new_dw->get(gvelocity[m],lb->gVelocityLabel,dwindex, patch,Ghost::None,0);
+      new_dw->get(gmass[m], lb->gMassLabel,    dwindex, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwindex, patch);
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -94,10 +94,12 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     // Store new velocities in DataWarehouse
+    /* Not necessary when using getModifiable    
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->modify(gvelocity[m], lb->gVelocityLabel, dwindex, patch);
     }
+    */
   }
 }
 
@@ -119,7 +121,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     double centerOfMassMass;
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
     StaticArray<NCVariable<double> > frictionalWork(numMatls);
@@ -127,10 +129,10 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->get(gmass[m],lb->gMassLabel, dwindex, patch, Ghost::None, 0);
-      new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
-		  patch, Ghost::None, 0);
-      new_dw->get(gacceleration[m], lb->gAccelerationLabel, dwindex,
-		  patch, Ghost::None, 0);
+      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
+		  patch);
+      new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwindex,
+		  patch);
       new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel,
                                                             dwindex, patch);
       frictionalWork[m].initialize(0.);
@@ -157,11 +159,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
       }
     }
 
-    // Store new velocities and accelerations in DataWarehouse
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->modify(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,patch);
-      new_dw->modify(gacceleration[m],  lb->gAccelerationLabel, dwindex,patch);
       new_dw->put(frictionalWork[m],    lb->frictionalWorkLabel,dwindex,patch);
     }
   }
@@ -182,6 +181,7 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 					     const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel, mss);
