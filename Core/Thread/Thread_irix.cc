@@ -1163,6 +1163,11 @@ struct ConditionVariable_private {
 ConditionVariable::ConditionVariable(const char* name)
   : name_(name)
 {
+  if(!Thread::isInitialized()){
+    if(getenv("THREAD_SHOWINIT"))
+      fprintf(stderr, "ConditionVariable: %s\n", name);
+    Thread::initialize();
+  }
   priv_=new ConditionVariable_private();
   priv_->num_waiters=0;
   priv_->pollsema=false;
