@@ -46,14 +46,7 @@ void VectorFieldUG::compute_bounds()
 {
     if(have_bounds || mesh->nodes.size() == 0)
 	return;
-    Point min(mesh->nodes[0]->p);
-    Point max(mesh->nodes[0]->p);
-    for(int i=1;i<mesh->nodes.size();i++){
-	min=Min(min, mesh->nodes[i]->p);
-	max=Max(max, mesh->nodes[i]->p);
-    }
-    bmin=min;
-    bmax=max;
+    mesh->get_bounds(bmin, bmax);
     have_bounds=1;
 }
 

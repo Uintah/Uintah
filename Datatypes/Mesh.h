@@ -34,6 +34,9 @@ struct Element {
     void* operator new(size_t);
     void operator delete(void*, size_t);
     int face(int);
+
+    double volume();
+    int orient();
 };
 
 void Pio(Piostream&, Element*&);
@@ -68,6 +71,7 @@ public:
 		    double& s2, double& s3, double& s4);
     void get_grad(Element* elem, const Point& p, Vector& g1,
 		  Vector& g2, Vector& g3, Vector& g4);
+    void get_bounds(Point& min, Point& max);
 
     // Persistent representation...
     virtual void io(Piostream&);
