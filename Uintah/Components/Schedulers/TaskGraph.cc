@@ -371,6 +371,31 @@ Task* TaskGraph::getTask(int idx)
    return d_tasks[idx];
 }
 
+TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
+{
+   VarLabelMaterialMap* result = scinew VarLabelMaterialMap;
+  
+   map<TaskProduct, Task::Dependency*>::iterator it;
+
+   // assume all patches will compute the same labels on the same
+   // materials
+   for (it = d_allcomps.begin(); it != d_allcomps.end(); it++) {
+      const VarLabel* label = (*it).first.getLabel();
+      pair< const VarLabel*, list<int> >& labelMatls
+         = (*result)[label->getName()];
+      labelMatls.first = label;
+
+      // note that d_allcomps is sorted by materials first, so
+      // duplicates in materials will be in order
+      int material = (*it).second->d_matlIndex;
+      if (labelMatls.second.size() == 0 ||
+	  labelMatls.second.back() != material)
+         labelMatls.second.push_back(material);
+   }
+  
+   return result;
+}
+
 bool
 DependData::operator==( const DependData & d1 ) const {
   if( ( d1.dep->d_matlIndex      == dep->d_matlIndex ) &&
@@ -413,6 +438,9 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.10  2000/12/06 23:54:26  witzel
+// Added makeVarLabelMaterialMap method
+//
 // Revision 1.9  2000/09/27 02:15:29  dav
 // Mixed model updates
 //

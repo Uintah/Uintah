@@ -5,12 +5,14 @@
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/Patch.h>
 #include <vector>
+#include <list>
 #include <map>
 
 namespace Uintah {
 
 using std::map;
 using std::vector;
+using std::list;
 
 struct TaskData {
 
@@ -135,6 +137,12 @@ WARNING
 	 return d_tasks;
       }
 
+      // Makes and returns a map that maps strings to VarLabels of
+      // that name and a list of material indices for which that
+      // variable is valid (at least according to d_allcomps).
+      typedef map< string, pair< const VarLabel*, list<int> > >
+              VarLabelMaterialMap;
+      VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
       TaskGraph(const TaskGraph&);
       TaskGraph& operator=(const TaskGraph&);
@@ -155,6 +163,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/12/06 23:54:26  witzel
+// Added makeVarLabelMaterialMap method
+//
 // Revision 1.5  2000/09/27 02:14:12  dav
 // Added support for mixed model
 //
