@@ -129,10 +129,10 @@ set $m4-ViewWindow_0-global-type {Gouraud}
 set $m4-ViewWindow_0-ortho-view {0}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m5-filename "$DATADIR/volume/tooth-nv-uc.nrrd"
+set $m5-filename "$DATADIR/volume/$DATASET-nv-uc.nrrd"
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m6-filename "$DATADIR/volume/tooth-gm-uc.nrrd"
+set $m6-filename "$DATADIR/volume/$DATASET-gm-uc.nrrd"
 
 
 ::netedit scheduleok
