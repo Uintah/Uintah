@@ -13,6 +13,9 @@ using namespace std;
 Persistent* cbackground_maker() {
   return new ConstantBackground();
 }
+Persistent* abackground_maker() {
+  return new AmbientBackground();
+}
 Persistent* lbackground_maker() {
   return new LinearBackground();
 }
@@ -25,17 +28,15 @@ PersistentTypeID Background::type_id("Background", "Persistent", 0);
 PersistentTypeID ConstantBackground::type_id("ConstantBackground", 
 					     "Background", 
 					     cbackground_maker);
+PersistentTypeID AmbientBackground::type_id("AmbientBackground", 
+					     "Background", 
+					     cbackground_maker);
 PersistentTypeID LinearBackground::type_id("LinearBackground", 
 					   "Background", 
 					   lbackground_maker);
 PersistentTypeID EnvironmentMapBackground::type_id("EnvironmentMapBackground", 
 						   "Background", 
 						   embackground_maker);
-
-Background::Background(const Color& avg)
-  : avg(avg), origAvg_( avg )
-{
-}
 
 Background::~Background() {}
 
@@ -44,11 +45,24 @@ Background::~Background() {}
 //     ConstantBackground members
 
 ConstantBackground::ConstantBackground(const Color& C) : 
-  Background(C), C(C), origC_(C) {}
+  C(C) {}
 
 ConstantBackground::~ConstantBackground() {}
 
-void ConstantBackground::color_in_direction( const Vector&, Color& result) const
+void ConstantBackground::color_in_direction(const Vector&, Color& result) const
+{
+  result=C;
+}
+
+// *****************************************************************
+//     AmbientBackground members
+
+AmbientBackground::AmbientBackground(const Color& C) : 
+  C(C), origC_(C) {}
+
+AmbientBackground::~AmbientBackground() {}
+
+void AmbientBackground::color_in_direction(const Vector&, Color& result) const
 {
   result=C;
 }
@@ -62,8 +76,7 @@ LinearBackground::~LinearBackground() {}
 LinearBackground::LinearBackground( const Color& C1, 
 				    const Color& C2,
 				    const Vector& direction_to_C1) :
-  Background(C1), C1(C1), C2(C2), origC1_(C1), origC2_(C2),
-  direction_to_C1(direction_to_C1)
+  C1(C1), C2(C2), direction_to_C1(direction_to_C1)
 {
 }
 
@@ -98,7 +111,6 @@ inline Vector PerpendicularVector( const Vector& v )
 
 EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
 						    const Vector& up ) :
-    Background( Color( 0, 0, 0 ) ),
     _width( 0 ),
     _height( 0 ),
     _up( up ),
@@ -181,19 +193,28 @@ void
 Background::io(SCIRun::Piostream &str)
 {
   str.begin_class("Background", BACKGROUND_VERSION);
-  SCIRun::Pio(str, avg);
-  SCIRun::Pio(str, origAvg_);
   str.end_class();
 }
+
 void 
 ConstantBackground::io(SCIRun::Piostream &str)
 {
   str.begin_class("ConstantBackground", CBACKGROUND_VERSION);
   Background::io(str);
   SCIRun::Pio(str, C);
+  str.end_class();
+}
+
+void 
+AmbientBackground::io(SCIRun::Piostream &str)
+{
+  str.begin_class("AmbientBackground", CBACKGROUND_VERSION);
+  Background::io(str);
+  SCIRun::Pio(str, C);
   SCIRun::Pio(str, origC_);
   str.end_class();
 }
+
 void 
 LinearBackground::io(SCIRun::Piostream &str)
 {
@@ -201,11 +222,10 @@ LinearBackground::io(SCIRun::Piostream &str)
   Background::io(str);
   SCIRun::Pio(str, C1);
   SCIRun::Pio(str, C2);
-  SCIRun::Pio(str, origC1_);
-  SCIRun::Pio(str, origC2_);
   SCIRun::Pio(str, direction_to_C1);
   str.end_class();
 }
+
 void 
 EnvironmentMapBackground::io(SCIRun::Piostream &str)
 {
@@ -231,6 +251,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::Background*& obj)
     //ASSERT(obj != 0)
   }
 }
+
 void Pio(SCIRun::Piostream& stream, rtrt::ConstantBackground*& obj)
 {
   SCIRun::Persistent* pobj=obj;
@@ -240,6 +261,17 @@ void Pio(SCIRun::Piostream& stream, rtrt::ConstantBackground*& obj)
     //ASSERT(obj != 0)
   }
 }
+
+void Pio(SCIRun::Piostream& stream, rtrt::AmbientBackground*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::AmbientBackground::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::AmbientBackground*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+
 void Pio(SCIRun::Piostream& stream, rtrt::LinearBackground*& obj)
 {
   SCIRun::Persistent* pobj=obj;
@@ -249,6 +281,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::LinearBackground*& obj)
     //ASSERT(obj != 0)
   }
 }
+
 void Pio(SCIRun::Piostream& stream, rtrt::EnvironmentMapBackground*& obj)
 {
   SCIRun::Persistent* pobj=obj;
@@ -258,4 +291,5 @@ void Pio(SCIRun::Piostream& stream, rtrt::EnvironmentMapBackground*& obj)
     //ASSERT(obj != 0)
   }
 }
+
 } // end namespace SCIRun
