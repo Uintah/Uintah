@@ -19,6 +19,15 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
+extern "C" {
+PSECORESHARE IPort* make_ColorMapIPort(Module* module, const clString& name) {
+  return new SimpleIPort<ColorMapHandle>(module,name);
+}
+PSECORESHARE OPort* make_ColorMapOPort(Module* module, const clString& name) {
+  return new SimpleOPort<ColorMapHandle>(module,name);
+}
+}
+
 template<> clString ColorMapIPort::port_type("ColorMap");
 template<> clString ColorMapIPort::port_color("blueviolet");
 
@@ -27,6 +36,10 @@ template<> clString ColorMapIPort::port_color("blueviolet");
 
 //
 // $Log$
+// Revision 1.5  2000/11/22 17:14:41  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the auto-port facility).
+//
 // Revision 1.4  1999/08/30 20:19:22  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

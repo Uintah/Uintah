@@ -12,10 +12,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <PSECore/share/share.h>
+
 #include <PSECore/Datatypes/MatrixPort.h>
 
 namespace PSECore {
 namespace Datatypes {
+
+extern "C" {
+PSECORESHARE IPort* make_MatrixIPort(Module* module, const clString& name) {
+  return new SimpleIPort<MatrixHandle>(module,name);
+}
+PSECORESHARE OPort* make_MatrixOPort(Module* module, const clString& name) {
+  return new SimpleOPort<MatrixHandle>(module,name);
+}
+}
 
 using namespace SCICore::Datatypes;
 
@@ -27,6 +38,10 @@ template<> clString SimpleIPort<MatrixHandle>::port_color("dodger blue");
 
 //
 // $Log$
+// Revision 1.5  2000/11/22 17:14:41  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the auto-port facility).
+//
 // Revision 1.4  1999/08/30 20:19:23  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations
