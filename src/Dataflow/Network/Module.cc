@@ -237,24 +237,25 @@ void Module::kill_helper()
 
 void Module::report_progress( ProgressState state )
 {
-  static bool reset_color = false;
+  //static bool reset_color = false;
   switch ( state ) {
   case ProgressReporter::Starting:
-    light_module0();
-    reset_color = false;
+    //light_module0();
+    //reset_color = false;
     break;
   case ProgressReporter::Compiling:
+    light_module0();
     light_module();
     remark("Dynamically compiling some code.");
     break;
   case ProgressReporter::CompilationDone:
     msgStream_flush();
     reset_module_color();
-    reset_color = true;
+    //reset_color = true;
     remark("Dynamic compilation completed.");
     break;
   case ProgressReporter::Done:
-    if ( reset_color ) reset_module_color();
+    //if ( reset_color ) reset_module_color();
     break;
   }
 }
