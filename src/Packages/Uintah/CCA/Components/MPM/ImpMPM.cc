@@ -2111,6 +2111,23 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
         IntVector c = *iter;
         GSTRESS[c] += (gstress[m][c]);
       }
+    }  // Loop over matls
+
+    for(int m = 0; m < numMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid()){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        gstress[m][c] = GSTRESS[c]/(gmass[m][c]+1.e-200);
+      }
+     }
+    }  // Loop over matls
+
+    bool did_it_already=false;
+    for(int m = 0; m < numMatls; m++){
+     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+     if(!mpm_matl->getIsRigid() && !did_it_already){
+      did_it_already=true;
       IntVector low = patch-> getInteriorNodeLowIndex();
       IntVector hi  = patch-> getInteriorNodeHighIndex();
       for(Patch::FaceType face = Patch::startFace;
@@ -2127,8 +2144,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
             for (int i = low.x(); i<hi.x(); i++) {
               for (int k = low.z(); k<hi.z(); k++) {
                 integralTraction +=
-                  gstress[m][IntVector(i,J,k)](2,2)*dx.x()*dx.z();
-                if(fabs(gstress[m][IntVector(i,J,k)](2,2)) > 1.e-12){
+                  gstress[m][IntVector(i,J,k)](1,1)*dx.x()*dx.z();
+                if(fabs(gstress[m][IntVector(i,J,k)](1,1)) > 1.e-12){
                   integralArea+=dx.x()*dx.z();
                 }
               }
@@ -2136,19 +2153,17 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
           }  // if the yminus face
         } // end of if (bc_type == Patch::None)
       } // Loop over faces
-    }  // Loop over matls
+     } // If !rigid and !did_it 
+    } // Loop over matls
+    if(integralArea > 0.){
+      integralTraction=integralTraction/integralArea;
+    }
+    else{
+      integralTraction=0.;
+    }
+
     new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
     new_dw->put(sum_vartype(integralArea),     lb->integralAreaLabel);
-
-    for(int m = 0; m < numMatls; m++){
-     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-     if(!mpm_matl->getIsRigid()){
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        gstress[m][c] = GSTRESS[c]/(gmass[m][c]+1.e-200);
-      }
-     }
-    }  // Loop over matls
   }
 }
 
