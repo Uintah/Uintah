@@ -111,6 +111,24 @@ ManageFieldMeshAlgoInsertT<FIELD>::execute(ProgressReporter *mod,
   copy->mesh_detach();
   typename FIELD::mesh_handle_type mesh = copy->get_typed_mesh();
 
+  if (matrix->ncols() < 3)
+  {
+    mod->error("Matrix must contain at least 3 columns for position data.");
+    return 0;
+  }
+  if (matrix->ncols() > 3)
+  {
+    mod->remark("Matrix contains unused columns, only first three are used.");
+  }
+
+  typename FIELD::mesh_type::Node::size_type nsize;
+  mesh->size(nsize);
+  if (((int)nsize) != matrix->nrows())
+  {
+    mod->error("Matrix rows do not fit in this mesh.  May need transpose.");
+    return 0;
+  }
+
   unsigned int index = 0;
   typename FIELD::mesh_type::Node::iterator itr, eitr;
   mesh->begin(itr);
