@@ -30,7 +30,6 @@ LOG
 #include "ParticleFieldExtractor.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Core/Util/Endian.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -560,81 +559,35 @@ void PFEThread::run(){
     ids.resync();
     scalars.resync();
     tensors.resync();
-    bool need_byte_swap = ( endianness() != archive.queryEndianness() );
 
     for(ParticleSubset::iterator iter = source_subset->begin();
 	iter != source_subset->end(); iter++, dest++){
-      if( need_byte_swap){
-	if(have_vp){
-	  Vector val(pvv[*iter]); 
-	  swapbytes( val );
-	  vectors[dest]= val;
-	} else
-	  vectors[dest]=Vector(0,0,0);
-	if(have_sp)
-	  switch (scalar_type) {
-	  case TypeDescription::double_type:
-	    {
-	      double val = pvs[*iter];  
-	      swapbytes( val );
-	      scalars[dest]=val;
-	    }
-	    break;
-	  case TypeDescription::int_type:
-	    {
-	      int val = pvs[*iter];
-	      swapbytes( val );
-	      scalars[dest]=val;
-	    }
-	    break;
-	  }
-	else
-	  scalars[dest]=0;
-	if(have_tp){
-	  Matrix3 val(pvt[*iter]);
-	  swapbytes( val );
-	  tensors[dest]=val;
+      if(have_vp)
+	vectors[dest]=pvv[*iter];
+      else
+	vectors[dest]=Vector(0,0,0);
+      if(have_sp)
+	switch (scalar_type) {
+	case TypeDescription::double_type:
+	  scalars[dest]=pvs[*iter];
+	  break;
+	case TypeDescription::int_type:
+	  scalars[dest]=pvint[*iter];
+	  break;
 	}
-	else
-	  tensors[dest]=Matrix3(0.0);
-	if(have_ids){
-	  long64 val = pvi[*iter];
-	  swapbytes( val );
-	  ids[dest] = val;
-	} else
-	  ids[dest] = -1;
-	
-	Point val = pvp[*iter];
-	swapbytes( val );
-	positions[dest]=val;
-      } else {
-	if(have_vp)
-	  vectors[dest]=pvv[*iter];
-	else
-	  vectors[dest]=Vector(0,0,0);
-	if(have_sp)
-	  switch (scalar_type) {
-	  case TypeDescription::double_type:
-	    scalars[dest]=pvs[*iter];
-	    break;
-	  case TypeDescription::int_type:
-	    scalars[dest]=pvint[*iter];
-	    break;
-	  }
-	else
-	  scalars[dest]=0;
-	if(have_tp){
-	  tensors[dest]=pvt[*iter];
-	}
-	else
-	  tensors[dest]=Matrix3(0.0);
-	if(have_ids)
-	  ids[dest] = pvi[*iter];
-	else
-	  ids[dest] = -1;
-	
-	positions[dest]=pvp[*iter];
+      else
+	scalars[dest]=0;
+      if(have_tp){
+	tensors[dest]=pvt[*iter];
       }
+      else
+	tensors[dest]=Matrix3(0.0);
+      if(have_ids)
+	ids[dest] = pvi[*iter];
+      else
+	ids[dest] = -1;
+      
+      positions[dest]=pvp[*iter];
     }
   }
   imutex->lock();

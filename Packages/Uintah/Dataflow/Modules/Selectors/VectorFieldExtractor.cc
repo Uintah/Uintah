@@ -133,8 +133,6 @@ void VectorFieldExtractor::execute()
   
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
-  string endianness( archive.queryEndianness() );
-  bool need_byte_swap( endianness != SCIRun::endianness() );
 
   // get time, set timestep, set generation, update grid and update gui
   double time = update(); // yeah it does all that
@@ -176,8 +174,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			vfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
 	  // send the field out to the port
 	  vfout->send(vfd);
 	  return;
@@ -198,8 +195,7 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			vfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
 	  // send the field out to the port
 	  vfout->send(vfd);
 	  return;
