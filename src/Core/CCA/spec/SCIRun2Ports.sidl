@@ -1,12 +1,12 @@
 //abstract interface 
-interface UIPort extends gov.cca.Port
+interface UIPort extends sci.cca.Port
 {
 	//return 0 for success, -1 for fatal error, other values for others errors
 	int ui();
 }
 
 //abstract interface 
-interface BuilderPort extends gov.cca.Port
+interface BuilderPort extends sci.cca.Port
 {
 	/** The builder port is designed for the Builder only
 	 *  There is only one port for convenience.
@@ -14,13 +14,13 @@ interface BuilderPort extends gov.cca.Port
 	 *  the BuilderService and the BuilderService will tranverse
 	 *  each Builder
 	 */
-	void buildRemotePackageMenus(in gov.cca.ports.ComponentRepository reg, in string frameworkURL); 	
+	void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL); 	
 
 }
 
 
 //abstract interface
-interface ZListPort extends gov.cca.Port
+interface ZListPort extends sci.cca.Port
 {
 	array<double> getList();
 }
@@ -29,14 +29,14 @@ interface ZListPort extends gov.cca.Port
 
 
 //abstract interface 
-interface Field2DPort extends gov.cca.Port
+interface Field2DPort extends sci.cca.Port
 {
 	//provides a interface to 
 	array<double> getField();
 }
 
 //abstract interface 
-interface PDEDescriptionPort extends gov.cca.Port
+interface PDEDescriptionPort extends sci.cca.Port
 {
 	//provides a interface to 
 	array<double> getNodes();
@@ -46,7 +46,7 @@ interface PDEDescriptionPort extends gov.cca.Port
 }
 
 //abstract interface 
-interface MeshPort extends gov.cca.Port
+interface MeshPort extends sci.cca.Port
 {
 	//provides a interface to 
 	array<int> getTriangles();
@@ -55,7 +55,7 @@ interface MeshPort extends gov.cca.Port
 
 
 //abstract interface 
-interface PDEMatrixPort extends gov.cca.Port
+interface PDEMatrixPort extends sci.cca.Port
 {
 	//provides a interface to 
 	Matrix getMatrix();
