@@ -15,9 +15,13 @@
 #include <Packages/Uintah/Core/Math/Primes.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
+
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <sgi_stl_warnings_on.h>
 
 // TODO:
 //  DONE Parse geometry from UPS file and fill in weights array properly
@@ -64,7 +68,7 @@ void bisect(const string& div, int num, int factor, Uintah::Primes::FactorType f
 
 
   } else {
-    int number = factors[factor];
+    int number = static_cast<int>(factors[factor]);  // quiet the sgi compiler
 
     int l = low[index];
     int h = high[index];
@@ -276,12 +280,12 @@ main(int argc, char *argv[])
       
       // remove the 'Box' entry from the ups
       ProblemSpecP g = ups->findBlock("Grid");
-      ProblemSpecP l = g->findBlock("Level");
-      ProblemSpecP box = l->findBlock("Box");
+      ProblemSpecP lev = g->findBlock("Level");
+      ProblemSpecP box = lev->findBlock("Box");
       
-      l->removeChild(box);
+      lev->removeChild(box);
       
-      bisect(div, 0, factor, factors, low, high, weights, level, l); 
+      bisect(div, 0, factor, factors, low, high, weights, level, lev); 
     }
     
     ofstream out(outfile.c_str());
