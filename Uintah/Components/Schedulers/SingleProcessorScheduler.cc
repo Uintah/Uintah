@@ -318,9 +318,11 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
    }
 }
 
->>>>>>> 1.7
 //
 // $Log$
+// Revision 1.9  2000/07/28 03:08:57  rawat
+// fixed some cvs conflicts
+//
 // Revision 1.8  2000/07/28 03:01:54  rawat
 // modified createDatawarehouse and added getTop()
 //

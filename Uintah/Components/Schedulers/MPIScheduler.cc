@@ -25,8 +25,6 @@ static SCICore::Util::DebugStream dbg("MPIScheduler", false);
 #define PARTICLESET_TAG		0x1000000
 #define RECV_BUFFER_SIZE_TAG	0x2000000
 
-MPIScheduler::MPIScheduler(const ProcessorGroup* myworld)
-   : UintahParallelComponent(myworld), d_generation(0)
 struct DestType {
    // A unique destination for sending particle sets
    const Patch* patch;
@@ -82,8 +80,8 @@ static const TypeDescription* specialType;
 
 MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
    : UintahParallelComponent(myworld), Scheduler(oport)
->>>>>>> 1.6
 {
+  d_generation = 0;
    myrank = myworld->myrank(); // For debug only...
   if(!specialType)
      specialType = new TypeDescription(TypeDescription::ScatterGatherVariable,
@@ -780,6 +778,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.8  2000/07/28 03:08:57  rawat
+// fixed some cvs conflicts
+//
 // Revision 1.7  2000/07/28 03:01:54  rawat
 // modified createDatawarehouse and added getTop()
 //
