@@ -57,6 +57,9 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   db->require("max_iter", d_maxSweeps);
   db->require("res_tol", d_residual);
   db->require("underrelax", d_underrelax);
+  db->require("pctype", d_pcType);
+  if (d_pcType == "asm")
+    db->require("overlap",d_overlap);
   int argc = 2;
   char** argv;
   argv = new char*[2];
@@ -507,7 +510,16 @@ PetscSolver::pressLinearSolve()
   ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRQ(ierr);
   ierr = SLESGetKSP(sles,&ksp);CHKERRQ(ierr);
   ierr = SLESGetPC(sles, &peqnpc); CHKERRQ(ierr);
-  ierr = PCSetType(peqnpc, PCJACOBI); CHKERRQ(ierr);
+  if (d_pcType == "jacobi") {
+    ierr = PCSetType(peqnpc, PCJACOBI); CHKERRQ(ierr);
+  }
+  else if (d_pcType == "asm") {
+    ierr = PCSetType(peqnpc, PCASM); CHKERRQ(ierr);
+    ierr = PCASMSetOverlap(peqnpc, d_overlap); CHKERRQ(ierr);
+  }
+  else {
+    ierr = PCSetType(peqnpc, PCBJACOBI); CHKERRQ(ierr);
+  }
   ierr = KSPSetTolerances(ksp, 1.e-7, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   CHKERRQ(ierr);
 
