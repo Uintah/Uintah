@@ -150,6 +150,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    break;
 	  case Patch::numFaces:
 	    break;
+	 case Patch::invalidFace:
+	    break;
 	  }
 
 	};
@@ -214,6 +216,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    }
 	    break;
 	  case Patch::numFaces:
+	    break;
+	 case Patch::invalidFace:
 	    break;
 	  }
 
@@ -285,6 +289,8 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    }
 	    break;
 	  case Patch::numFaces:
+	    break;
+	 case Patch::invalidFace:
 	    break;
 	  }
 	};
@@ -484,6 +490,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.32  2001/01/08 22:12:11  jas
+// Added switch for invalidFace for fillFlux, and friends.
+// Added check for types in lookupType().
+//
 // Revision 1.31  2000/12/23 00:32:47  witzel
 // Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
 // pure virtual methods to class Variable and did any needed implementations

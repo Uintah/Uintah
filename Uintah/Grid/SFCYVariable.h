@@ -142,6 +142,8 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	   break;
 	 case Patch::numFaces:
 	    break;
+	 case Patch::invalidFace:
+	    break;
 	 }
 
        };
@@ -203,6 +205,8 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	    }
 	    break;
 	  case Patch::numFaces:
+	    break;
+	 case Patch::invalidFace:
 	    break;
 	  }
 
@@ -273,6 +277,8 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 	     }
 	   }
 	   break;
+	 case Patch::invalidFace:
+	    break;
          }
       };
      
@@ -469,6 +475,10 @@ class SFCYVariable : public Array3<T>, public SFCYVariableBase {
 
 //
 // $Log$
+// Revision 1.14  2001/01/08 22:12:12  jas
+// Added switch for invalidFace for fillFlux, and friends.
+// Added check for types in lookupType().
+//
 // Revision 1.13  2000/12/23 00:32:47  witzel
 // Added emit(OutputContext), read(InputContext), and allocate(Patch*) as
 // pure virtual methods to class Variable and did any needed implementations
