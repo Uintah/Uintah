@@ -59,7 +59,7 @@ namespace Uintah {
 
 using namespace SCIRun;
 class NodeHedgehogWorker;
-#define USE_HOG_THREADS
+  //#define USE_HOG_THREADS
   
 /**************************************
 CLASS
@@ -127,10 +127,10 @@ class NodeHedgehog : public Module {
   // GROUP: Private Function:
   //////////////////////
   // add_arrow -
-  void add_arrow(Vector vv, FieldHandle ssfield,
-		 int have_sfield, ColorMapHandle cmap,
-		 double lenscale, double minlen, double maxlen,
-		 GeomArrows* arrows, Point p);
+//    void add_arrow(Vector vv, FieldHandle ssfield,
+//  		 int have_sfield, ColorMapHandle cmap,
+//  		 double lenscale, double minlen, double maxlen,
+//  		 GeomArrows* arrows, Point p);
 
   GuiDouble length_scale;
   GuiDouble min_crop_length;
@@ -157,7 +157,9 @@ class NodeHedgehog : public Module {
 
   Mutex add_arrows;
 
+#ifdef USE_HOG_THREADS
   friend class NodeHedgehogWorker;
+#endif
 public:
  
   // GROUP:  Constructors:
@@ -185,13 +187,15 @@ public:
   virtual void tcl_command(TCLArgs&, void*);
 
   // used to get the values.
-  bool interpolate(FieldHandle f, const Point& p, Vector& val);
-  bool interpolate(FieldHandle f, const Point& p, double& val);
+  //  bool interpolate(FieldHandle f, const Point& p, Vector& val);
+  //  bool interpolate(FieldHandle f, const Point& p, double& val);
 };
+
+#ifdef USE_HOG_THREADS
   
 class NodeHedgehogWorker: public Runnable {
 public:
-  NodeHedgehogWorker(Patch *patch, LevelField<Vector> *field,
+  NodeHedgehogWorker(Patch *patch, LatVolField<Vector> *field,
 		     FieldHandle ssfield,
 		     bool have_sfield, ColorMapHandle cmap, bool have_cmap,
 		     Box boundaryRegion,
@@ -249,7 +253,7 @@ public:
 private:
   // passed in
   Patch *patch;
-  LevelField<Vector> *field;
+  LatVolField<Vector> *field;
   FieldHandle ssfield;
   bool have_sfield;
   ColorMapHandle cmap;
@@ -307,6 +311,7 @@ private:
   } // end add_arrow
   
 };
+#endif // USE_HOG_THREADS
   
 static string module_name("NodeHedgehog");
 static string widget_name("NodeHedgehog Widget");
@@ -373,6 +378,7 @@ NodeHedgehog::~NodeHedgehog()
 {
 }
 
+#if 0
 void
 NodeHedgehog::add_arrow(Vector vv, FieldHandle ssfield,
 			int have_sfield, ColorMapHandle cmap,
@@ -412,10 +418,12 @@ NodeHedgehog::add_arrow(Vector vv, FieldHandle ssfield,
     }
   }
 }
+#endif
 
 void NodeHedgehog::execute()
 {
   int old_grid_id = grid_id;
+  cout << "NodeHedgehog::execute:start\n";
 
     // Create the input port
   ingrid = (ArchiveIPort *) get_iport("Data Archive");
@@ -435,15 +443,16 @@ void NodeHedgehog::execute()
     return;
   }
   
-  if(vfield->get_type_name(0) != "LevelField") {
-    cerr<<"Not a LevelField\n";
+  if(vfield->get_type_name(0) != "LatVolField") {
+    cerr<<"Not a LatVolField\n";
     return;
   }
 
-  LevelField<Vector> *fld =dynamic_cast<LevelField<Vector>*>(vfield.get_rep());
+  LatVolField<Vector> *fld =
+    dynamic_cast<LatVolField<Vector>*>(vfield.get_rep());
   // if fld == NULL then the cast didn't work, so bail
   if (!fld) {
-    cerr << "Cannot cast field into a LevelField\n";
+    cerr << "Cannot cast field into a LatVolField\n";
     return;
   }
   
@@ -454,17 +463,21 @@ void NodeHedgehog::execute()
   // Get the scalar field and ColorMap...if you can
   FieldHandle ssfield;
   int have_sfield=inscalarfield->get( ssfield );
+  ScalarFieldInterface *sf_interface;
   if( have_sfield ){
     if( !ssfield->is_scalar() ){
       cerr<<"Second field is not a scalar field.  No Colormapping.\n";
       have_sfield = 0;
+    } else {
+      sf_interface = ssfield->query_scalar_interface();
+      if (sf_interface == 0)
+	have_sfield = 0;
     }
   }
   ColorMapHandle cmap;
   int have_cmap=inColorMap->get( cmap );
-  if(!have_cmap)
-    have_sfield=0;
   
+  cout << "NodeHedgehog::execute:initializing phase\n";
   if (init == 1) {
     init = 0;
     GeomObj *w2d = widget2d->GetWidget() ;
@@ -550,11 +563,11 @@ void NodeHedgehog::execute()
   // because skip is used for the interator increment
   // it must be 1 or more otherwise you enter an
   // infinite loop (and that really sucks for performance)
-#ifndef USE_HOG_THREADS
   int skip = skip_node.get();
   if (skip < 1)
     skip = 1;
-#endif
+
+  cout << "NodeHedgehog::execute:calculating frame widget boundaries\n";
   // get the position of the frame widget and determine
   // the boundaries
   Point center, R, D, I;
@@ -578,20 +591,95 @@ void NodeHedgehog::execute()
   lower = Min(temp1,lower);
   Box boundaryRegion(lower,upper);
   
+  cout << "NodeHedgehog::execute:add arrows\n";
   // create the group for the arrows to be added to
 #ifdef USE_HOG_THREADS
   GeomGroup *arrows = scinew GeomGroup;
 #else
   GeomArrows* arrows = scinew GeomArrows(width_scale.get(), 1.0-head_length.get(), drawcylinders.get(), shaft_rad.get(), norm_head.get() );
 #endif
-  // loop over all the nodes in the graph taking the position
-  // of the node and determining the vector value.
-  int numLevels = grid->numLevels();
 
   // reset max_length and max_vector
   max_length = 0;
   max_vector = Vector(0,0,0);
   
+#if 1
+  // We need a few pieces of information.
+  // 1. All the Node/Cell locations (we'll call that v_origin)
+  // 2. The value of the vector field at v_origin ( vf_value )
+  // 3. The color to use for the arrow ( arrow_color ).  This is:
+  //    A. If there is a color map
+  //       1. If there is a scalar field
+  //          a. Get the value of the scalar field at v_origin ( sf_value )
+  //          b. The color by indexing into color map by sf_value
+  //       2. If there is no scalar field, the value of cman.lookup(0)
+  //    B. Without a color map, use a default color ( green ).
+
+  // get the mesh for the geometry
+  LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
+  // Access length_scale once, because accessing a tcl variable can be
+  // expensive if inside of a loop.
+  double arrow_length_scale = length_scale.get();
+#ifdef USE_HOG_THREADS
+  // break up the volume into smaller pieces and then loop over each piece
+#else
+  // Make a switch based on the data location
+  if( fld->data_at() == Field::CELL) {
+    // Now we need to loop over the data and extract the vector information
+    LatVolMesh::CellIter iter; mesh->begin(iter);
+    LatVolMesh::CellIter end;  mesh->end(end);
+    for(; iter != end; ++iter) {
+      cout << "*";
+      Point v_origin;
+      mesh->get_center(v_origin, *iter);
+      Vector vf_value = fld->value(*iter);
+      MaterialHandle arrow_color;
+      if (have_cmap) {
+	if (have_sfield) {
+	  // query the scalar field
+	  double sf_value;
+	  sf_interface->find_closest(sf_value, v_origin);
+	  arrow_color = cmap->lookup( sf_value );
+	} else {
+	  // grab a value from the color map
+	  arrow_color = cmap->lookup( 0 );
+	}
+	arrows->add(v_origin, vf_value * arrow_length_scale,
+		    arrow_color, arrow_color, arrow_color);
+      } else {
+	arrows->add(v_origin, vf_value * arrow_length_scale);
+      }
+    }
+  } else if( fld->data_at() == Field::NODE) {
+    // Now we need to loop over the data and extract the vector information
+    LatVolMesh::NodeIter iter; mesh->begin(iter);
+    LatVolMesh::NodeIter end;  mesh->end(end);
+    for(; iter != end; ++iter) {
+      cout << "+";
+      Point v_origin;
+      mesh->get_center(v_origin, *iter);
+      Vector vf_value = fld->value(*iter);
+      cout << "v_origin = "<<v_origin<<", vf_value = "<<vf_value<<endl;
+      MaterialHandle arrow_color;
+      if (have_cmap) {
+	if (have_sfield) {
+	  // query the scalar field
+	  double sf_value;
+	  sf_interface->find_closest(sf_value, v_origin);
+	  arrow_color = cmap->lookup( sf_value );
+	} else {
+	  // grab a value from the color map
+	  arrow_color = cmap->lookup( 0 );
+	}
+	arrows->add(v_origin, vf_value * arrow_length_scale,
+		    arrow_color, arrow_color, arrow_color);
+      } else {
+	arrows->add(v_origin, vf_value * arrow_length_scale);
+      }
+    }
+  }
+#endif // ifdef USE_HOG_THREADS
+#else
   //-----------------------------------------
   // for each level in the grid
   for(int l = 0;l<numLevels;l++){
@@ -656,7 +744,9 @@ void NodeHedgehog::execute()
     if( thread_sema ) delete thread_sema;
 #endif
   } // end for each level
-
+#endif // end switch between current and old code
+  cout << "\nNodeHedgehog::execute:finished adding arrows\n";
+  
   // delete the old grid/cutting plane
   if (old_grid_id != 0)
     ogeom->delObj( old_grid_id );
@@ -668,6 +758,7 @@ void NodeHedgehog::execute()
   max_vector_x.set(max_vector.x());
   max_vector_y.set(max_vector.y());
   max_vector_z.set(max_vector.z());
+  cout << "NodeHedgehog::execute:end\n";
 }
 
 void NodeHedgehog::widget_moved(int last)
@@ -711,15 +802,16 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
   }
 }
 
+#if 0
 bool  
 NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
 {
   const string field_type = vfld->get_type_name(0);
   const string type = vfld->get_type_name(1);
-  if( field_type == "LevelField"){
+  if( field_type == "LatVolField"){
     if (type == "Vector") {
-      if( LevelField<Vector> *fld =
-	dynamic_cast<LevelField<Vector>*>(vfld.get_rep())){
+      if( LatVolField<Vector> *fld =
+	dynamic_cast<LatVolField<Vector>*>(vfld.get_rep())){
 	return fld->interpolate(val ,p);
       } else {
 	return false;
@@ -747,10 +839,10 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
 {
   //  const string field_type = sfld->get_type_name(0);
   const string type = sfld->get_type_name(1);
-  if( sfld->get_type_name(0) == "LevelField" ){
+  if( sfld->get_type_name(0) == "LatVolField" ){
     if (type == "double") {
-      if(LevelField<double> *fld =
-	dynamic_cast<LevelField<double>*>(sfld.get_rep())){;
+      if(LatVolField<double> *fld =
+	dynamic_cast<LatVolField<double>*>(sfld.get_rep())){;
 	return fld->interpolate(val ,p);
       } else {
 	return false;
@@ -758,16 +850,16 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
     } else if (type == "float") {
       float result;
       bool success;
-      LevelField<float> *fld =
-	dynamic_cast<LevelField<float>*>(sfld.get_rep());
+      LatVolField<float> *fld =
+	dynamic_cast<LatVolField<float>*>(sfld.get_rep());
       success = fld->interpolate(result ,p);   
       val = (double)result;
       return success;
     } else if (type == "long") {
       long result;
       bool success;
-      LevelField<long> *fld =
-	dynamic_cast<LevelField<long>*>(sfld.get_rep());
+      LatVolField<long> *fld =
+	dynamic_cast<LatVolField<long>*>(sfld.get_rep());
       success =  fld->interpolate(result,p);
       val = (double)result;
       return success;
@@ -786,6 +878,7 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
     return false;
   }
 }
+#endif
 
 } // End namespace Uintah
 
