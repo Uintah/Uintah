@@ -26,12 +26,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Packages/Uintah/Grid/GridP.h>
-#include <Packages/Uintah/Grid/Grid.h>
-#include <Packages/Uintah/Grid/Level.h>
-#include <Packages/Uintah/Grid/Patch.h>
-#include <Packages/Uintah/Grid/NodeIterator.h>
-#include <Packages/Uintah/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 
@@ -48,8 +48,8 @@ using std::vector;
 #define CP_CONTOUR 2
 
 namespace Uintah {
+
 using namespace SCIRun;
-using namespace Uintah::Datatypes;
 
 /**************************************
 CLASS

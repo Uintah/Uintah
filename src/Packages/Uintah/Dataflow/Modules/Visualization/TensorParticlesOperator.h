@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
 
 namespace Uintah {
+
 using namespace SCIRun;
 
   class TensorParticlesOperator: public Module {
@@ -36,7 +37,9 @@ using namespace SCIRun;
     TensorParticlesIPort *in;
 
     ScalarParticlesOPort *spout;
-} // End namespace Uintah
   };
+
+} // End namespace Uintah
+
 #endif // __VISUALIZATION_TENSORPARTICLESOPERATOR_H__
 

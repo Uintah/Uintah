@@ -2,12 +2,13 @@
 #include "Parallel.h"
 #include "SimulationController.h"
 #include <Core/Exceptions/Exception.h>
-using namespace SCIRun;
+#include <Core/Malloc/Allocator.h>
 #include <ieeefp.h>
 #include <iostream>
-using std::cerr;
 #include <mpi.h>
-#include <Core/Malloc/Allocator.h>
+
+using namespace SCIRun;
+using std::cerr;
 
 int main(int argc, char** argv)
 {

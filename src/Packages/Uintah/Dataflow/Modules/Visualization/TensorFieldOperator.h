@@ -9,6 +9,7 @@
 #include <Dataflow/Ports/VectorFieldPort.h>
 
 namespace Uintah {
+
 using namespace SCIRun;
 
   class TensorFieldOperator: public Module {
@@ -41,7 +42,9 @@ using namespace SCIRun;
 
     ScalarFieldOPort *sfout;
     //VectorFieldOPort *vfout;
-} // End namespace Uintah
   };
+
+} // End namespace Uintah
+
 #endif // __VISUALIZATION_TENSORFIELDOPERATOR_H__
 
