@@ -140,7 +140,9 @@ void ParticleVis::execute()
 
 
   // default colormap--nobody has scaled it.
+#if 0
   if( !cmap->IsScaled()) {
+#endif
     for(ParticleSubset::iterator iter = ps->begin();
 	iter != ps->end(); iter++){max = ( part->getScalars()[ *iter ] > max ) ?
 	      part->getScalars()[ *iter ] : max;
@@ -152,8 +154,10 @@ void ParticleVis::execute()
       max += 0.001;
     }
     cmap->Scale(min,max);
-  }   
-  cerr << "min=" << min << ", max=" << max << '\n';
+    cerr << "min=" << min << ", max=" << max << '\n';
+#if 0
+  }  
+#endif 
 
   //--------------------------------------
   cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
@@ -268,6 +272,11 @@ extern "C" Module* make_ParticleVis( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.3  2000/05/21 08:18:06  sparker
+// Always compute min/max for particles
+// Fill in grid data
+// Be careful if a variable doesn't exist
+//
 // Revision 1.2  2000/05/20 08:03:56  sparker
 // Got vis tools to work
 //
