@@ -34,6 +34,10 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+namespace SCIRun {
+  class Vector;
+}
+
 namespace Uintah {
   using namespace std;
   class FastMatrix {
@@ -58,7 +62,7 @@ namespace Uintah {
     // Warning - this do not do any pivoting...
     void destructiveSolve(double* b);
     void destructiveSolve(double* b1, double* b2);
-    void destructiveSolve(double* b1, double* b2, double* b3);
+    void destructiveSolve(SCIRun::Vector* b);
 
     void transpose(const FastMatrix& transpose);
     void multiply(const vector<double>& b, vector<double>& X) const;
@@ -81,7 +85,7 @@ namespace Uintah {
     void big_destructiveInvert(FastMatrix& inverse);
     void big_destructiveSolve(double* b);
     void big_destructiveSolve(double* b1, double* b2);
-    void big_destructiveSolve(double* b1, double* b2, double* b3);
+    void big_destructiveSolve(SCIRun::Vector* b);
 
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);
