@@ -43,11 +43,13 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	global $this-def-color-g
 	global $this-def-color-b
 	global $this-font_size
+	global $this-tinc
 	set $this-time 0
 	set $this-max_time 100
 	set $this-timeval 0
 	set $this-animate 0
 	set $this-anisleep 0
+	set $this-tinc 1
 	set $this-def-color-r 1.0
 	set $this-def-color-g 1.0
 	set $this-def-color-b 1.0
@@ -57,14 +59,11 @@ itcl_class Uintah_Selectors_TimestepSelector {
     method ui {} { 
         set w .ui[modname] 
 
-        if {[winfo exists $w]} { 
-	    wm deiconify $w
-            raise $w 
-        } else { 
-	    $this buildTopLevel
-	    wm deiconify $w
-            raise $w 
+        if {[winfo exists $w]} {
+	    return
 	}
+	$this buildTopLevel
+	moveToCursor $w
     }
 
     method buildTopLevel {} {
@@ -113,6 +112,14 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	    -textvariable $this-tcl_status 
 	pack $w.aframe.abutton -side left
 	pack $w.aframe.status -side right  -padx 2 -pady 2
+
+	frame $w.tincf 
+	pack $w.tincf -side top -fill x -padx 2 -pady 2
+	label $w.tincf.l -text "Time step increment"
+	pack $w.tincf.l -side left
+	entry $w.tincf.e -textvariable $this-tinc
+	pack $w.tincf.e -side right
+
 	label $w.l -text "Animation Sleep (seconds)" 
 	scale $w.s  -variable $this-anisleep  \
 	    -orient horizontal -from 0 -to 600 -resolution 1
@@ -140,9 +147,8 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $bf.fs $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 -side left
 	pack $w.cs -side top -anchor w -fill x
 
-	button $w.b -text "Close" -command "wm withdraw $w"
-	pack $w.b -side top -fill x -padx 2 -pady 2
-
+	makeSciButtonPanel $w $w $this
+ 
 	bind $f.tframe.time <ButtonRelease> $n
     }
 
