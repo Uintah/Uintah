@@ -41,3 +41,7 @@ LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+UINTAH_SCIRUN := $(UINTAH_SCIRUN) $(LIBNAME)
+endif
+
