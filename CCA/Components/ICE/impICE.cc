@@ -20,9 +20,6 @@ static DebugStream cout_norm("ICE_NORMAL_COUT", false);
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 
-
-
-
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleImplicitPressureSolve--
 _____________________________________________________________________*/
@@ -66,6 +63,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   cout_doing << "ICE::scheduleSetupRHS" << endl;
   t = scinew Task("setupRHS", this, &ICE::setupRHS);
   t->requires( Task::OldDW, lb->delTLabel);
+  t->requires( Task::OldDW, lb->imp_delPLabel,    one_matl,gn,0);
   t->requires( Task::NewDW, lb->betaLabel,        one_matl,gn,0);
   t->requires( Task::NewDW, lb->burnedMass_CCLabel,        gn,0);
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,            gn,0);
@@ -96,6 +94,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,                    gn);
   t->requires(Task::NewDW, lb->rho_CCLabel,                       gn);
   t->requires(Task::NewDW, lb->betaLabel,           one_matl,     gn);
+  t->requires(Task::NewDW, lb->term2Label,          one_matl,     gn);
       
   t->computes(lb->delP_DilatateLabel, press_matl);
   t->computes(lb->delP_MassXLabel,    press_matl);  
@@ -126,7 +125,6 @@ void ICE::setupMatrix(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
     Vector dx     = patch->dCell();
-    double vol = dx.x() * dx.y() * dx.z();
     CCVariable<Stencil7> A; 
     CCVariable<double> beta;
    
@@ -143,9 +141,9 @@ void ICE::setupMatrix(const ProcessorGroup*,
     for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
       A[c].p = 1.0;
-      A[c].n = 1.0;   A[c].s = 1.0;
-      A[c].e = 1.0;   A[c].w = 1.0;  // extra cell = 1.0
-      A[c].t = 1.0;   A[c].b = 1.0;
+      A[c].n = 0.0;   A[c].s = 0.0;
+      A[c].e = 0.0;   A[c].w = 0.0;  // extra cell = 1.0
+      A[c].t = 0.0;   A[c].b = 0.0;
     } 
     for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
@@ -223,7 +221,6 @@ void ICE::setupMatrix(const ProcessorGroup*,
         
         upwnd   = upwindCell_Z(c, wvel_FC[back],   0.0);
         A[c].b += vol_frac[upwnd] * sp_vol_brack_BK;
-        
       }
       //__________________________________
       // sum beta = sum ( vol_frac * sp_vol/speedSound^2)
@@ -238,44 +235,29 @@ void ICE::setupMatrix(const ProcessorGroup*,
     //__________________________________
     //  Multiple stencil by delT^2 * area/dx
     double delT_2 = delT * delT;
-    double areaX_inv_dx = dx.y() * dx.z()/dx.x();
-    double areaY_inv_dy = dx.x() * dx.z()/dx.y();
-    double areaZ_inv_dz = dx.x() * dx.y()/dx.z();
+    double tmp_e_w = delT_2/( dx.x() * dx.x() );
+    double tmp_n_s = delT_2/( dx.y() * dx.y() );
+    double tmp_t_b = delT_2/( dx.z() * dx.z() );
         
     for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
-      A[c].e *= delT_2 * areaX_inv_dx;
-      A[c].w *= delT_2 * areaX_inv_dx;
+      A[c].e *= -tmp_e_w;
+      A[c].w *= -tmp_e_w;
       
-      A[c].n *= delT_2 * areaY_inv_dy;
-      A[c].s *= delT_2 * areaY_inv_dy;
+      A[c].n *= -tmp_n_s;
+      A[c].s *= -tmp_n_s;
 
-      A[c].t *= delT_2 * areaZ_inv_dz;
-      A[c].b *= delT_2 * areaZ_inv_dz;
+      A[c].t *= -tmp_t_b;
+      A[c].b *= -tmp_t_b;
       
-      A[c].p = beta[c] * vol + 
+      A[c].p = beta[c] -
                 (A[c].n + A[c].s + A[c].e + A[c].w + A[c].t + A[c].b);
     }    
-/*`==========TESTING==========*/
-#if 1
-    //__________________________________
-    // DUMMY matrix
-    for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-      IntVector c = *iter;
-      A[c].p = 1.0;
-      A[c].n = 1.0;
-      A[c].s = 1.0;
-      A[c].e = 1.0;
-      A[c].w = 1.0;
-      A[c].t = 1.0;
-      A[c].b = 1.0;
-    }
-#endif 
-/*===========TESTING==========`*/ 
+
     //---- P R I N T   D A T A ------   
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
-      desc << "BOT_setupMatrix_" << patch->getID();
+      desc << "BOT_setupMatrix_patch_" << patch->getID();
       printStencil( 0, patch, 0, desc.str(), "A", A);
     }         
   }
@@ -307,11 +289,13 @@ void ICE::setupRHS(const ProcessorGroup*,
     CCVariable<double> rhs, initialGuess;
     CCVariable<double> sumAdvection, massExchTerm;
     constCCVariable<double> beta, press_CC, oldPressure;
+    constCCVariable<double> old_imp_delP;
     
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;   
-    
+
+    old_dw->get(old_imp_delP,           lb->imp_delPLabel,      0,patch,gn,0);    
     new_dw->get(beta,                   lb->betaLabel,          0,patch,gn,0);   
     new_dw->get(press_CC,               lb->press_equil_CCLabel,0,patch,gn,0);     
     new_dw->allocateAndPut(rhs,         lb->rhsLabel,           0,patch);    
@@ -321,8 +305,9 @@ void ICE::setupRHS(const ProcessorGroup*,
     new_dw->allocateTemporary(sumAdvection,     patch);
     new_dw->allocateTemporary(q_CC,             patch,  gac,1);    
  
+    initialGuess.copyData(old_imp_delP);
     rhs.initialize(0.0);
-    initialGuess.initialize(0.0);
+//    initialGuess.initialize(0.0);
     sumAdvection.initialize(0.0);
     massExchTerm.initialize(0.0);
   
@@ -358,8 +343,7 @@ void ICE::setupRHS(const ProcessorGroup*,
         IntVector c = *iter;
         sumAdvection[c] += q_advected[c];
         
-        massExchTerm[c] += burnedMass[c] * (sp_vol_CC[c]/vol);
-        
+        massExchTerm[c] += burnedMass[c] * (sp_vol_CC[c] * invvol);
       } 
     }  //matl loop
     delete advector;  
@@ -369,21 +353,20 @@ void ICE::setupRHS(const ProcessorGroup*,
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
 /*`==========TESTING==========*/
-//      double term1 = beta[c] * vol*(press_CC[c] - oldPressure[c]);
+//      double term1 = beta[c] *  (press_CC[c] - oldPressure[c]);
       double term1 = 0.0;
 /*===========TESTING==========`*/ 
 
       double term2 = delT * massExchTerm[c];
-      rhs[c] = -term1 + term2 -sumAdvection[c];
+      rhs[c] = -term1 + term2 + sumAdvection[c];
 /*`==========TESTING==========*/
-      initialGuess[c] = 5; 
-      rhs[c] = 1; 
+//      initialGuess[c] = 0.0001;  
 /*===========TESTING==========`*/
     }
     //---- P R I N T   D A T A ------  
     if (switchDebug_setupRHS) {
       ostringstream desc;
-      desc << "BOT_setupRHS_" << patch->getID();
+      desc << "BOT_setupRHS_patch_" << patch->getID();
       printData( 0, patch, 0,desc.str(), "rhs",              rhs);
       printData( 0, patch, 0,desc.str(), "sumAdvection",     sumAdvection);
       printData( 0, patch, 0,desc.str(), "MassExchangeTerm", massExchTerm);
@@ -433,13 +416,6 @@ void ICE::updatePressure(const ProcessorGroup*,
     press_CC.initialize(0.);
     delP_Dilatate.initialize(0.0);
     delP_MassX.initialize(0.0); 
-    
-    //---- P R I N T   D A T A ------  
-    if (switchDebug_updatePressure) {
-      ostringstream desc;
-      desc << "TOP_updatePressure_" << patch->getID();
-      printData( 0, patch, 0,desc.str(), "imp_delP",     imp_delP);
-    }
          
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -469,5 +445,15 @@ void ICE::updatePressure(const ProcessorGroup*,
     }    
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
+    
+    //---- P R I N T   D A T A ------  
+    if (switchDebug_updatePressure) {
+      ostringstream desc;
+      desc << "BOT_updatePressure_patch_" << patch->getID();
+      printData( 0, patch, 1,desc.str(), "imp_delP",      imp_delP); 
+      printData( 0, patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
+      printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);
+      printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);    
+    }  
   }
 }
