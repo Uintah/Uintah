@@ -59,6 +59,10 @@ void ScalarFieldOperator::performOperation(Field* field,
     computeScalars(field, scalarField,
 		   ExponentialOp());
     break;
+  case 20:
+    computeScalars(field, scalarField,
+		   NoOp());
+    break;
   default:
     std::cerr << "ScalarFieldOperator::performOperation: "
 	      << "Unexpected Operation Type #: " << guiOperation.get() << "\n";
