@@ -29,6 +29,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
+	$(SRCDIR)/ModifyConductivities.tcl\
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\
 
