@@ -471,6 +471,9 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPressNCLabel,  Ghost::None);
   }
+  if(d_with_arches){
+    t->requires(Task::NewDW, lb->AccArchesNCLabel,  Ghost::None);
+  }
 
   t->computes(lb->gAccelerationLabel);
   sched->addTask(t, patches, matls);
@@ -1408,6 +1411,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
       NCVariable<Vector> gradPressNC;  // for MPMICE
+      NCVariable<Vector> AccArchesNC;  // for MPMArches
 
       new_dw->get(internalforce, lb->gInternalForceLabel, matlindex, patch,
 							   Ghost::None, 0);
@@ -1428,6 +1432,14 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 	 new_dw->allocate(gradPressNC,lb->gradPressNCLabel, matlindex, patch);
 	 gradPressNC.initialize(zero);
       }
+      if(d_with_arches){
+         new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    matlindex, patch,
+							   Ghost::None, 0);
+      }
+      else{
+	 new_dw->allocate(AccArchesNC,lb->AccArchesNCLabel, matlindex, patch);
+	 AccArchesNC.initialize(zero);
+      }
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
@@ -1441,9 +1453,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         if(mass[*iter]>1e-10){
           acceleration[*iter] =
                 (internalforce[*iter] + externalforce[*iter] +
-                        gradPressNC[*iter]/delT)/ mass[*iter] + gravity;
-//          cout<<"internalforce="<<internalforce[*iter]
-//	      <<" externalforce="<<externalforce[*iter]<<endl;
+                        gradPressNC[*iter]/delT)/ mass[*iter] + gravity +
+			AccArchesNC[*iter];
 	}
         else{
           acceleration[*iter] = Vector(0.,0.,0.);

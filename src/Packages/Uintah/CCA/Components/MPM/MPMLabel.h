@@ -117,6 +117,8 @@ using std::vector;
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
 
+      const VarLabel* AccArchesNCLabel;
+
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* TotalMassLabel;
