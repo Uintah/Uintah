@@ -17,6 +17,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
+#include <Packages/rtrt/Core/SketchMaterial.h>
 #include <Packages/rtrt/Core/FontString.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
 #include <Packages/rtrt/Core/Stats.h>
@@ -129,9 +130,10 @@ static Transform prev_trans;
 
 #define OBJECT_LIST_ID           140
 #define OBJECTS_BUTTON_ID        141
-#define SOUNDS_BUTTON_ID         142
-#define ATTACH_KEYPAD_BTN_ID     143
-#define SICYCLE_BTN_ID           144
+#define MATERIALS_BUTTON_ID      142
+#define SOUNDS_BUTTON_ID         143
+#define ATTACH_KEYPAD_BTN_ID     144
+#define SICYCLE_BTN_ID           145
 
 #define SOUND_LIST_ID            150
 
@@ -194,7 +196,7 @@ Gui::Gui() :
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
   selectedSoundId_(0), selectedTriggerId_(-1),
   routeWindowVisible(false), lightsWindowVisible(false), 
-  objectsWindowVisible(false),
+  objectsWindowVisible(false), materialsWindowVisible(false),
   soundsWindowVisible(false), triggersWindowVisible(false),
   mainWindowVisible(true),
   enableSounds_(false),
@@ -1464,6 +1466,16 @@ Gui::toggleObjectsWindowCB( int /*id*/ )
 }
 
 void
+Gui::toggleMaterialsWindowCB( int /*id*/ )
+{
+  if( activeGui->materialsWindowVisible )
+    activeGui->materialsWindow->hide();
+  else
+    activeGui->materialsWindow->show();
+  activeGui->materialsWindowVisible = !activeGui->materialsWindowVisible;
+}
+
+void
 Gui::toggleTriggersWindowCB( int /*id*/ )
 {
   if( activeGui->triggersWindowVisible )
@@ -1784,6 +1796,36 @@ Gui::createObjectWindow( GLUI * window )
   window->add_button_to_panel( panel, "Close",
 			       -1, toggleObjectsWindowCB );
 } // end createObjectWindow()
+
+void
+Gui::createMaterialsWindow( GLUI * window )
+{
+  GLUI_Panel * panel = window->add_panel( "Materials" );
+					    
+  Array1<Material*> & materials = dpy_->scene->guiMaterials_;
+  for( int num = 0; num < materials.size(); num++ ) {
+    char name[ 1024 ];
+    sprintf( name, "%s", Names::getName(materials[num]).c_str() );
+    
+    SketchMaterialBase *sm = dynamic_cast<SketchMaterialBase*>(materials[num]);
+    if (sm) {
+      
+      window->add_separator_to_panel( panel );
+      
+      window->add_statictext_to_panel( panel, name );
+      
+      GLUI_Spinner *sm_sil_thickness =
+	window->add_spinner_to_panel( panel, "Sihouette Thickness",
+				      GLUI_SPINNER_FLOAT,
+				      &(sm->gui_sil_thickness));
+      sm_sil_thickness->set_float_limits(0, 10);
+      sm_sil_thickness->set_speed(0.1);
+    }
+  }
+  window->add_separator_to_panel( panel );
+  window->add_button_to_panel( panel, "Close",
+			       -1, toggleMaterialsWindowCB );
+} // end createMaterialsWindow()
 
 void
 Gui::createSoundsWindow( GLUI * window )
@@ -2139,8 +2181,9 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->routeWindow     = GLUI_Master.create_glui( "Route",   0,900,400 );
   activeGui->lightsWindow    = GLUI_Master.create_glui( "Lights",  0,900,500 );
   activeGui->objectsWindow   = GLUI_Master.create_glui( "Objects", 0,900,600 );
-  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",  0,900,700 );
-  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,900,800 );
+  activeGui->materialsWindow = GLUI_Master.create_glui("Materials",0,900,700 );
+  activeGui->soundsWindow    = GLUI_Master.create_glui( "Sounds",  0,900,800 );
+  activeGui->triggersWindow_ = GLUI_Master.create_glui( "Triggers",0,900,900 );
 
   activeGui->getStringWindow = 
                     GLUI_Master.create_glui( "Input Request", 0, 900, 600 );
@@ -2153,6 +2196,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->routeWindow->hide();
   activeGui->lightsWindow->hide();
   activeGui->objectsWindow->hide();
+  activeGui->materialsWindow->hide();
   activeGui->soundsWindow->hide();
   activeGui->triggersWindow_->hide();
 
@@ -2161,6 +2205,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->createRouteWindow( activeGui->routeWindow );
   activeGui->createLightWindow( activeGui->lightsWindow );
   activeGui->createObjectWindow( activeGui->objectsWindow );
+  activeGui->createMaterialsWindow( activeGui->materialsWindow );
   activeGui->createTriggersWindow( activeGui->triggersWindow_ );
   activeGui->createGetStringWindow( activeGui->getStringWindow );
 
@@ -2383,25 +2428,23 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Routes",
 			 ROUTE_BUTTON_ID, toggleRoutesWindowCB );
-  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Lights",
 			 LIGHTS_BUTTON_ID, toggleLightsWindowCB );
-  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Objects",
 			 OBJECTS_BUTTON_ID, toggleObjectsWindowCB );
-  //  activeGui->mainWindow->add_column_to_panel( button_panel );
 
+  activeGui->mainWindow->
+    add_button_to_panel( button_panel, "Materials",
+			 MATERIALS_BUTTON_ID, toggleMaterialsWindowCB );
+  
   activeGui->openSoundPanelBtn_ = activeGui->mainWindow->
     add_button_to_panel( button_panel, "Sounds",
-			 OBJECTS_BUTTON_ID, toggleSoundWindowCB );
+			 SOUNDS_BUTTON_ID, toggleSoundWindowCB );
   activeGui->openSoundPanelBtn_->disable();
-  //  activeGui->mainWindow->add_column_to_panel( button_panel );
-
-  //  activeGui->mainWindow->add_separator_to_panel( button_panel);
   
   activeGui->mainWindow->
     add_button_to_panel( button_panel, "Triggers",
