@@ -90,9 +90,10 @@ public:
   // Persistent representation.
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
 
   virtual string getInfo();
+  virtual string getTypeName(int);
 
 protected:
 

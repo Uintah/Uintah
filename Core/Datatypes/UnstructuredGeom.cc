@@ -10,9 +10,22 @@
 
 namespace SCIRun {
 
-string UnstructuredGeom::typeName(){
+string UnstructuredGeom::typeName(int){
   static string typeName = "UnstructuredGeom";
   return typeName;
+}
+
+PersistentTypeID UnstructuredGeom::type_id(UnstructuredGeom::typeName(0), 
+					   Geom::typeName(0), 
+					   0);
+
+void UnstructuredGeom::io(Piostream& stream){
+  Geom::io(stream);
+}
+
+
+string UnstructuredGeom::getTypeName(int n){
+  return typeName(n);
 }
 
 NodeSimp::NodeSimp(){

@@ -10,10 +10,35 @@
 
 namespace SCIRun {
 
-PersistentTypeID MeshGeom::type_id("MeshGeom", "Datatype", 0);
+//////////
+// PIO support
+static Persistent* maker(){
+  return new MeshGeom();
+}
+
+string MeshGeom::typeName(int){
+  static string className = "MeshGeom";
+  return className;
+}
+
+PersistentTypeID MeshGeom::type_id(MeshGeom::typeName(0), 
+				   SurfaceGeom::typeName(0), 
+				   maker);
+
+#define MESHGEOM_VERSION 1
+void
+MeshGeom::io(Piostream& stream)
+{
+  stream.begin_class(typeName(0).c_str(), MESHGEOM_VERSION);
+  SurfaceGeom::io(stream);
+  Pio(stream, d_cell);
+  stream.end_class();
+}
 
 DebugStream MeshGeom::dbg("MeshGeom", true);
 
+//////////
+// Constructors/Destructor
 MeshGeom::MeshGeom()
 {
 }
@@ -26,10 +51,9 @@ MeshGeom::getInfo()
   return retval.str();
 }
 
-void
-MeshGeom::io(Piostream&)
-{
+string
+MeshGeom::getTypeName(int n){
+  return typeName(n);
 }
-
 
 } // End namespace SCIRun

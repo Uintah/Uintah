@@ -28,7 +28,7 @@ using std::map;
 //////////
 // Function to return name of type of its argument
 template <class T> string findTypeName(T*){
-  return T::typeName();
+  return T::typeName(0);
 }
 
 class Vector;

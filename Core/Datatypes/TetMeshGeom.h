@@ -33,8 +33,12 @@ class TetMeshGeom:public MeshGeom
 {
 public:
 
+  TetMeshGeom();
   TetMeshGeom(const vector<NodeSimp>&, const vector<TetSimp>&);
   ~TetMeshGeom();
+
+  virtual string get_info();
+  virtual string getTypeName(int=0);
 
   //////////
   // Interpolate
@@ -43,24 +47,25 @@ public:
 		    double eps=1.0e-6);
 
   void set_tets(const vector<TetSimp>&);
-
- ///////////
+  
+  ///////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
- 
-  vector<TetSimp> tets;
+  static string typeName(int);
 
+  vector<TetSimp> d_tets;
+  
 protected:
   bool has_neighbors;
-
+  
 private:
   static DebugStream dbg;
 };
 
 template <class A>
 int TetMeshGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double& outval,
-				    double eps){
+			       double eps){
 }
 
 } // End namespace SCIRun

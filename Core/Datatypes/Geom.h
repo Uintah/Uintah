@@ -45,7 +45,7 @@ class SCICORESHARE Geom : public Datatype {
 public:
 
   Geom();
-  virtual ~Geom() {};
+  virtual ~Geom();
 
   //////////
   // return the bounding box, if it is not allready computed 
@@ -61,7 +61,13 @@ public:
   
   //////////
   // Return a string describing this geometry.
-  virtual string getInfo() = 0;
+  virtual string getInfo() = 0;  
+
+  //////////
+  // Returns type name:
+  // 0 - the class name
+  // n!=0 - name of the n-th parameter (for templatazed types)
+  virtual string getTypeName(int n) = 0;
 
   inline void setName(string iname) { d_name = iname; };
   inline string getName() { return d_name; };
@@ -78,7 +84,8 @@ public:
   // Persistent IO
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  
+  static string typeName(int);
+
   // ...
 protected:
 

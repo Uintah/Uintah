@@ -42,6 +42,7 @@ public:
   ~ContourGeom();
 
   virtual string getInfo();
+  virtual string getTypeName(int=0);
   
   //////////
   // Interpolate
@@ -57,7 +58,8 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
+
 protected:
 
   vector<EdgeSimp> d_edge;

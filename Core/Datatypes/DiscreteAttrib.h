@@ -96,12 +96,13 @@ public:
   void copyValidBits(const unsigned int*, int);
   
   virtual string getInfo();
-
+  virtual string getTypeName(int=0);
+  
   //////////
   // Persistent representation...
   virtual void io(Piostream &);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
   static Persistent* maker();
 
   virtual int iterate(AttribFunctor<T> &func);
@@ -158,9 +159,17 @@ DebugStream DiscreteAttrib<T>::dbg("DiscreteAttrib", true);
  
 
 template <class T>
-string DiscreteAttrib<T>::typeName(){
-  static string typeName = string("DiscreteAttrib<") + findTypeName((T*)0)+">";
-  return typeName;
+string DiscreteAttrib<T>::typeName(int n=0){
+  ASSERTRANGE(n, 0, 2);
+  static string t1name    = findTypeName((T*)0);
+  static string className = string("DiscreteAttrib<") + t1name +">";
+  
+  switch (n){
+  case 1:
+    return t1name;
+  default:
+    return className;
+  }
 }
 
 template <class T> Persistent*
@@ -182,8 +191,8 @@ const unsigned int DiscreteAttrib<T>::maxUI = 0xFFFF;
 
 
 template <class T> 
-PersistentTypeID DiscreteAttrib<T>::type_id(DiscreteAttrib<T>::typeName(), 
-					    "Attrib", 
+PersistentTypeID DiscreteAttrib<T>::type_id(DiscreteAttrib<T>::typeName(0), 
+					    Attrib::typeName(0), 
 					    DiscreteAttrib<T>::maker);
 
 #define DISCRETEATTRIB_VERSION 1
@@ -191,7 +200,7 @@ PersistentTypeID DiscreteAttrib<T>::type_id(DiscreteAttrib<T>::typeName(),
 template <class T> void
 DiscreteAttrib<T>::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), DISCRETEATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), DISCRETEATTRIB_VERSION);
   
   // -- base class PIO
   Attrib::io(stream);
@@ -673,6 +682,11 @@ template <class T> void
 DiscreteAttrib<T>::copyValidBits(const unsigned int* pValidBits, int nalloc){
   resizeValidBits(nalloc);
   memcpy(d_pValidBits, pValidBits, nalloc*sizeof(unsigned int));
+}
+
+template <class T> string
+DiscreteAttrib<T>::getTypeName(int n){
+  return typeName(n);
 }
   
 } // End namespace SCIRun

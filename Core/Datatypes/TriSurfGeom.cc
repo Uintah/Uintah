@@ -11,15 +11,16 @@
 namespace SCIRun {
 
 
-string TriSurfGeom::typeName(){
+string TriSurfGeom::typeName(int){
   static string typeName = "TriSurfGeom";
   return typeName;
 }
 
-PersistentTypeID TriSurfGeom::type_id("TriSurfGeom", "Datatype", 0);
+PersistentTypeID TriSurfGeom::type_id(typeName(0), 
+				      "Datatype", 
+				      0);
 
-
- void
+void
 TriSurfGeom::pushPoint(double a, double b, double c)
 {
   Point p(a, b, c);
@@ -72,7 +73,10 @@ TriSurfGeom::getInfo()
   return retval.str();
 }
 
-
+string
+TriSurfGeom::getTypeName(int n){
+  return typeName(n);
+} 
 // TODO: make faster, not O(n^2).  Use better equality test for points.
  void
 TriSurfGeom::remove_duplicates(vector<Point> old_points,

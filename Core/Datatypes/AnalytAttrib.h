@@ -83,9 +83,10 @@ namespace SCIRun {
     const StrV& get_fstr() const;
     
     //////////
-    // Base class override
+    // Base class overrides
     string getInfo();
-
+    virtual string getTypeName(int);
+    
     //////////
     // Initializes pevalf pointer to whether precompiled
     // function or to Function::eval(double*) member
@@ -104,7 +105,7 @@ namespace SCIRun {
     // No function object is carried around while serializing
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
-    static string typeName();
+    static string typeName(int);
     static Persistent* maker();
 
   private:
@@ -119,9 +120,17 @@ namespace SCIRun {
 //////////
 // PIO support
 template <class T>
-string AnalytAttrib<T>::typeName(){
-  static string typeName = string("AnalytAttrib<") + findTypeName((T*)0)+">";
-  return typeName;
+string AnalytAttrib<T>::typeName(int n){
+  ASSERTRANGE(n, 0, 2);
+  static string t1name    = findTypeName((T*)0);
+  static string className = string("AnalytAttrib<") + t1name +">";
+  
+  switch (n){
+  case 1:
+    return t1name;
+  default:
+    return className;
+  }
 }
 
 template <class T>
@@ -130,8 +139,8 @@ Persistent* AnalytAttrib<T>::maker(){
 }
 
 template <class T> 
-PersistentTypeID AnalytAttrib<T>::type_id(AnalytAttrib<T>::typeName(), 
-					  "Attrib",
+PersistentTypeID AnalytAttrib<T>::type_id(AnalytAttrib<T>::typeName(0), 
+					  Attrib::typeName(0),
 					  maker);
 
 #define ANALYTATTRIB_VERSION 1
@@ -139,7 +148,7 @@ PersistentTypeID AnalytAttrib<T>::type_id(AnalytAttrib<T>::typeName(),
 template <class T> void
 AnalytAttrib<T>::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), ANALYTATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), ANALYTATTRIB_VERSION);
   
   // -- base class PIO
   Attrib::io(stream);
@@ -280,6 +289,10 @@ AnalytAttrib<T>::io(Piostream& stream)
       "Defined in Domain R" << 3 <<'\n' <<
       "Output dimensions = " << func->get_num_comp() <<'\n'; 
     return ostr.str();  
+  }
+
+  template <class T> string AnalytAttrib<T>::getTypeName(int n){
+    return typeName(n);
   }
 
   template <class T> const StrV& AnalytAttrib<T>::get_fstr() const{

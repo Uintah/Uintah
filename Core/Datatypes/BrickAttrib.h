@@ -81,13 +81,13 @@ public:
   int size() const;
 
   virtual string getInfo();  
-  
+  virtual string getTypeName(int=0);
 
   //////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
   static Persistent* maker();
 
 protected:
@@ -121,21 +121,29 @@ Persistent* BrickAttrib<T>::maker(){
 }
 
 template <class T>
-string BrickAttrib<T>::typeName(){
-  static string typeName = string("BrickAttrib<") + findTypeName((T*)0)+">";
-  return typeName;
+string BrickAttrib<T>::typeName(int n){
+  ASSERTRANGE(n, 0, 2);
+  static string t1name    = findTypeName((T*)0);
+  static string className = string("BrickAttrib<") + t1name +">";
+  
+  switch (n){
+  case 1:
+    return t1name;
+  default:
+    return className;
+  }
 }
 
 template <class T> 
-PersistentTypeID BrickAttrib<T>::type_id(BrickAttrib<T>::typeName(), 
-					 FlatAttrib<T>::typeName(), 
+PersistentTypeID BrickAttrib<T>::type_id(BrickAttrib<T>::typeName(0), 
+					 FlatAttrib<T>::typeName(0), 
 					 BrickAttrib<T>::maker);
 
 
 #define BRICKATTRIB_VERSION 1
 template <class T> 
 void BrickAttrib<T>::io(Piostream& stream){
-  stream.begin_class(typeName().c_str(), BRICKATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), BRICKATTRIB_VERSION);
   
   // -- base class PIO
   FlatAttrib<T>::io(stream);
@@ -543,11 +551,13 @@ BrickAttrib<T>::getInfo()
   return retval.str();
 }
 
+template <class T> string
+BrickAttrib<T>::getTypeName(int n){
+  return typeName(n);
+}
+
 } // End namespace SCIRun
 
 
 
 #endif  // SCI_project_BrickAttrib_h
-
-
-

@@ -12,22 +12,26 @@
 
 namespace SCIRun {
 
-string LatticeGeom::typeName(){
-  static string typeName = "LatticeGeom";
-  return typeName;
+//////////
+// PIO support
+string LatticeGeom::typeName(int){
+  static string className = "LatticeGeom";
+  return className;
 }
 
 static Persistent* maker(){
   return new LatticeGeom();
 }
 
-PersistentTypeID LatticeGeom::type_id(LatticeGeom::typeName(), "Geom", maker);
+PersistentTypeID LatticeGeom::type_id(LatticeGeom::typeName(0), 
+				      Geom::typeName(0), 
+				      maker);
 
 #define LATTICEGEOM_VERSION 1
 void
 LatticeGeom::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), LATTICEGEOM_VERSION);
+  stream.begin_class(typeName(0).c_str(), LATTICEGEOM_VERSION);
   Pio(stream, d_dim);
   Pio(stream, d_nx);
   Pio(stream, d_ny);
@@ -121,6 +125,10 @@ LatticeGeom::getInfo()
   return retval.str();
 }
 
+string
+LatticeGeom::getTypeName(int n){
+  return typeName(n);
+}
 
 bool
 LatticeGeom::computeBoundingBox()

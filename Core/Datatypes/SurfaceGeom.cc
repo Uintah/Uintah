@@ -10,9 +10,32 @@
 
 namespace SCIRun {
 
-PersistentTypeID SurfaceGeom::type_id("SurfaceGeom", "Datatype", 0);
+//////////
+// PIO support
+static Persistent* maker(){
+  return new SurfaceGeom();
+}
+
+string  SurfaceGeom::typeName(int){
+  static string className = "SurfaceGeom";
+  return className;
+}
+
+PersistentTypeID SurfaceGeom::type_id(SurfaceGeom::typeName(0), 
+				      ContourGeom::typeName(0), 
+				      maker);
+#define SURFACEGEOM_VERSION 1
+void
+SurfaceGeom::io(Piostream& stream)
+{
+  stream.begin_class(typeName(0).c_str(), SURFACEGEOM_VERSION);
+  ContourGeom::io(stream);
+  Pio(stream, d_face);
+  stream.end_class();
+}
 
 DebugStream SurfaceGeom::dbg("SurfaceGeom", true);
+
 
 SurfaceGeom::SurfaceGeom()
 {
@@ -27,9 +50,9 @@ SurfaceGeom::getInfo()
   return retval.str();
 }
 
-void
-SurfaceGeom::io(Piostream&)
-{
+string
+SurfaceGeom::getTypeName(int n){
+  return typeName(n);
 }
 
 

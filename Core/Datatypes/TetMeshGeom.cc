@@ -10,27 +10,53 @@
 
 namespace SCIRun {
 
-PersistentTypeID TetMeshGeom::type_id("TetMeshGeom", "Datatype", 0);
+//////////
+// PIO support
+static Persistent* maker(){
+  return new TetMeshGeom();
+}
+
+string TetMeshGeom::typeName(int){
+  static string className = "TetMeshGeom";
+  return className;
+}
+
+PersistentTypeID TetMeshGeom::type_id(TetMeshGeom::typeName(0), 
+				      MeshGeom::typeName(0), 
+				      maker);
 
 DebugStream TetMeshGeom::dbg("TetMeshGeom", true);
+
+#define TETMESHGEOM_VERSION 1
+void TetMeshGeom::io(Piostream& stream){
+  stream.begin_class(typeName(0).c_str(), TETMESHGEOM_VERSION);
+  MeshGeom::io(stream);
+  Pio(stream, d_tets);
+  stream.end_class();
+}
+
+//////////
+// Constructors/Destructor
+TetMeshGeom::TetMeshGeom(){
+}
 
 TetMeshGeom::TetMeshGeom(const vector<NodeSimp>& inodes, const vector<TetSimp>& itets):
   has_neighbors(0)
 {
   d_node = inodes;
-  tets = itets;
+  d_tets = itets;
 }
 
 TetMeshGeom::~TetMeshGeom(){
 }
 
 void TetMeshGeom::set_tets(const vector<TetSimp>& itets){
-  tets.clear();
-  tets = itets;
+  d_tets.clear();
+  d_tets = itets;
 }
 
-
-void TetMeshGeom::io(Piostream&){
+string TetMeshGeom::getTypeName(int n){
+  return typeName(n);
 }
 
 

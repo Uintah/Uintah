@@ -7,13 +7,38 @@
 //  Copyright (C) 2000 SCI Institute
 
 #include <Core/Datatypes/PointCloudGeom.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
-PersistentTypeID PointCloudGeom::type_id("PointCloudGeom", "Datatype", 0);
+//////////
+// PIO support
+static Persistent* maker(){
+  return new PointCloudGeom();
+}
+
+string PointCloudGeom::typeName(int){
+  static string className = "PointCloudGeom";
+  return className;
+}
+
+PersistentTypeID PointCloudGeom::type_id(PointCloudGeom::typeName(0), 
+					 UnstructuredGeom::typeName(0), 
+					 maker);
+
+#define POINTCLOUDGEOM_VERSION 1
+void
+PointCloudGeom::io(Piostream& stream)
+{
+  stream.begin_class(typeName(0).c_str(),  POINTCLOUDGEOM_VERSION);
+  Pio(stream, d_node);
+  stream.end_class();
+}
 
 DebugStream PointCloudGeom::dbg("PointCloudGeom", true);
 
+//////////
+// Constructors/Destructor
 PointCloudGeom::PointCloudGeom()
 {
 }
@@ -35,6 +60,11 @@ PointCloudGeom::getInfo()
   ostringstream retval;
   retval << "name = " << d_name << endl;
   return retval.str();
+}
+
+string
+PointCloudGeom::getTypeName(int n){
+  return typeName(n);
 }
 
 bool
@@ -70,11 +100,5 @@ PointCloudGeom::setNodes(const vector<NodeSimp>& inodes)
   d_node.clear();
   d_node = inodes;
 }
-
-void
-PointCloudGeom::io(Piostream&)
-{
-}
-
 
 } // End namespace SCIRun
