@@ -7,6 +7,7 @@ SRCS     += $(SRCDIR)/Advector.cc \
  	$(SRCDIR)/FirstOrderCEAdvector.cc \
 	$(SRCDIR)/SecondOrderAdvector.cc \
  	$(SRCDIR)/SecondOrderCEAdvector.cc \
+ 	$(SRCDIR)/SecondOrderBase.cc \
 	$(SRCDIR)/AdvectionFactory.cc
 
 PSELIBS := \
