@@ -101,6 +101,14 @@ void computeStagnationProperties(double &stag_press,
                                const int indx,
                                const string& where,
                                NG_BC_vars* ng);
+ 
+ void  BC_values_using_IsentropicRelations(const double stag_press,
+                                          const double stag_rho,
+                                          const double stag_temp,
+                                          double &static_press,
+                                          double &static_temp,
+                                          double &static_rho,
+                                          double &static_vel);
                                
     bool using_NG_hack(const ProblemSpecP& prob_spec);
                                                                 
@@ -147,7 +155,7 @@ void setNGC_Nozzle_BC(const Patch* patch,
      
     //__________________________________
     // which cell is the probe cell
-    int probeCell;
+    int probeCell = 0;
     if(var_loc == "CC"){   // ghostCell center location
       probeCell = (int)ceil(dx_mg.x()/dx_sg);
     }
@@ -175,16 +183,10 @@ void setNGC_Nozzle_BC(const Patch* patch,
       double p1   = ng->press_CC[adj];
       double rho1 = ng->rho_CC[adj];
       double u1   = ng->vel_CC[adj].x();
-       ng->c = c;     // cell index
- 
- #if 0
-      p1   = p4/10;
-      rho1 = rho4/10;
-      u1   = 0.0;
- #endif          
-     
+      ng->c = c;     // cell index    
       
       double p, Temp, rho, vel;   // probed cell variables
+//      BC_values_using_IsentropicRelations(p4, rho4, T4, p,Temp, rho, vel);
 
       solveRiemannProblemInterface( t_final,Length,ncells,
                               u4, p4, rho4,                                   
@@ -192,7 +194,7 @@ void setNGC_Nozzle_BC(const Patch* patch,
                               diaphragm_location,
                               probeCell, ng,
                               p, Temp, rho, vel);
-                              
+                          
       if(var_desc == "Pressure"){
         q_CC[c] = V(p);
       }
@@ -206,8 +208,8 @@ void setNGC_Nozzle_BC(const Patch* patch,
         q_CC[c] = V(vel);
       }
       
-      cout << c << " adj " << adj << var_desc << " " << q_CC[c] 
-             << "\t\t  p1 " << p1 << "\t rho1 " << rho1 << "\t u1 " << u1 <<endl;
+ //     cout << c << " adj " << adj << var_desc << " " << q_CC[c] 
+ //            << "\t\t  p1 " << p1 << "\t rho1 " << rho1 << "\t u1 " << u1 <<endl;
     }
   }
 }
