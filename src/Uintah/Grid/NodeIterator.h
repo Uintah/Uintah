@@ -2,8 +2,8 @@
 #ifndef UINTAH_HOMEBREW_NodeIterator_H
 #define UINTAH_HOMEBREW_NodeIterator_H
 
-#include "Array3Index.h"
-#include "Region.h"
+#include <Uintah/Grid/Array3Index.h>
+#include <Uintah/Grid/Region.h>
 
 namespace Uintah {
 namespace Grid {
@@ -93,6 +93,9 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/03/21 01:29:42  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.2  2000/03/16 22:07:59  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

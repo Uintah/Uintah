@@ -12,25 +12,31 @@ static char *id="@(#) $Id$";
 
 #include "SingleVelContact.h"
 
+#include <SCICore/Geometry/Vector.h>
+
 namespace Uintah {
 namespace Components {
 
-SingleVel::SingleVel()
+using SCICore::Geometry::Vector;
+
+SingleVelContact::SingleVelContact()
 {
   // Constructor
 
 }
 
-SingleVel::~SingleVel()
+SingleVelContact::~SingleVelContact()
 {
   // Destructor
 
 }
 
-void SingleVel::exMomInterpolated(const Region* region,
-                                  const DataWarehouseP& old_dw,
-                                  DataWarehouseP& new_dw)
+void
+SingleVelContact::exMomInterpolated(const Region* region,
+				    const DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
 {
+#if 0
   Vector zero(0.0,0.0,0.0);
   Vector CenterOfMassVelocity(0.0,0.0,0.0);
   Vector CenterOfMassMom(0.0,0.0,0.0);
@@ -67,13 +73,15 @@ void SingleVel::exMomInterpolated(const Region* region,
   for( int n=firstMPMVelField; n<=numMPMVelFields; n++){
     new_dw->put(gvelocity[n], "g.velocity", n, region, 0);
   }
-
+#endif
 }
 
-void SingleVel::exMomIntegrated(const Region* region,
-                                const DataWarehouseP& old_dw,
-                                DataWarehouseP& new_dw)
+void
+SingleVelContact::exMomIntegrated(const Region* region,
+				  const DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw)
 {
+#if 0
   Vector zero(0.0,0.0,0.0);
   Vector CenterOfMassVelocity(0.0,0.0,0.0);
   Vector CenterOfMassMom(0.0,0.0,0.0);
@@ -119,13 +127,16 @@ void SingleVel::exMomIntegrated(const Region* region,
     new_dw->put(gvelocity_star[n], "g.velocity_star", n, region, 0);
     new_dw->put(acceleration[n], "g.acceleration", n, region, 0);
   }
-
+#endif
 }
 
 } // end namespace Components
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.2  2000/03/21 01:29:41  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.1  2000/03/20 23:50:44  dav
 // renames SingleVel to SingleVelContact
 //

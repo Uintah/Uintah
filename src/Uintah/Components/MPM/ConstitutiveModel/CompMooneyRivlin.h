@@ -1,12 +1,10 @@
-//  CompMooneyRivlin.h 
-
 #ifndef __COMPMOONRIV_CONSTITUTIVE_MODEL_H__
 #define __COMPMOONRIV_CONSTITUTIVE_MODEL_H__
 
 
 #include "ConstitutiveModel.h"	
 #include <math.h>
-#include "../Util/Matrix3.h"
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 
 #include <Uintah/Interface/DataWarehouseP.h>
 
@@ -14,6 +12,35 @@ namespace Uintah {
 namespace Components {
 
     using Uintah::Interface::DataWarehouseP;
+
+/**************************************
+
+CLASS
+   CompMooneyRivlin
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   CompMooneyRivlin.h
+
+   Author?
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Comp_Mooney_Rivlin
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class CompMooneyRivlin : public ConstitutiveModel {
  private:
@@ -65,6 +92,9 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.6  2000/03/21 01:29:40  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.5  2000/03/20 17:17:07  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

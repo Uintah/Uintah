@@ -55,11 +55,11 @@ public:
 	//ASSERTRANGE(j, 0, size2);
 	//ASSERTRANGE(k, 0, size3);
 #if 0
-	int idx = i*size3*size2+j*size3+k;
-	ASSERTRANGE(idx, 0, totalsize);
-	return data[idx];
+	int idx = i*d_size3*d_size2+j*d_size3+k;
+	ASSERTRANGE(idx, 0, d_totalsize);
+	return d_data[idx];
 #else
-	return data3[i][j][k];
+	return d_data3[i][j][k];
 #endif
     }
 private:
@@ -130,6 +130,9 @@ Array3Data<T>::~Array3Data()
 
 //
 // $Log$
+// Revision 1.3  2000/03/21 01:29:42  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.2  2000/03/16 22:07:58  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

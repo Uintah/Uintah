@@ -1,24 +1,25 @@
 #ifndef UINTAH_HOMEBREW_Region_H
 #define UINTAH_HOMEBREW_Region_H
 
+#include "Array3Index.h"
+
+#include <Uintah/Grid/SubRegion.h>
+#include <Uintah/Grid/ParticleSet.h>
+
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
-#include "Array3Index.h"
-#include "ParticleSet.h"
+
 
 #include <iostream> // TEMPORARY
 
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 
-class Array3Index;
-
 namespace Uintah {
 namespace Grid {
 
 class NodeIterator;
 class NodeSubIterator;
-class SubRegion;
 
 /**************************************
 
@@ -159,6 +160,9 @@ inline NodeIterator Region::end() const
 
 //
 // $Log$
+// Revision 1.3  2000/03/21 01:29:42  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.2  2000/03/16 22:08:01  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

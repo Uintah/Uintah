@@ -1,25 +1,29 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
+#include <Uintah/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h> // TEMPORARY
+#include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/SerialMPM.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 
 #include <Uintah/Grid/Array3Index.h>
-#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ProblemSpec.h>
 #include <Uintah/Grid/Region.h>
-#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Grid/NodeIterator.h> // Must be included after Region.h
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h> // TEMPORARY
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Interface/Scheduler.h>
+
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Math/MinMax.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -43,9 +47,9 @@ using Uintah::Grid::ParticleVariable;
 using Uintah::Grid::Task;
 using Uintah::Grid::SoleVariable;
 using Uintah::Grid::ProblemSpec;
+using Uintah::Grid::Region;
+using Uintah::Grid::NodeIterator;
 using Uintah::Grid::NCVariable;
-
-#ifdef WONT_COMPILE_YET
 
 SerialMPM::SerialMPM()
 {
@@ -159,9 +163,10 @@ void SerialMPM::timeStep(double t, double dt,
 	    *		  the others according to specific rules)
 	    *   out(G.VELOCITY)
 	    */
+#if 0
 	    Task* t = new Task("Contact::exMomInterpolated",
-				region, old_dw, new_dw,
-				this, Contact::exMomInterpolated);
+			       region, old_dw, new_dw,
+			       this, Contact::dav); // Contact::exMomInterpolated);
 	    t->requires(new_dw, "g.mass", region, 0,
 			NCVariable<double>::getTypeDescription());
 	    t->requires(new_dw, "g.velocity", region, 0,
@@ -169,6 +174,7 @@ void SerialMPM::timeStep(double t, double dt,
 	    t->computes(new_dw, "g.velocity", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    sched->addTask(t);
+#endif
 	}
 
 	{
@@ -189,7 +195,8 @@ void SerialMPM::timeStep(double t, double dt,
 	    t->requires(new_dw, "g.velocity", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    t->requires(old_dw, "p.cmdata", region, 0,
-			ParticleVariable<CMData>::getTypeDescription());
+			ParticleVariable<Uintah::Components::
+                            CompMooneyRivlin::CMData>::getTypeDescription());
 	    t->requires(new_dw, "p.deformationMeasure", region, 0,
 			ParticleVariable<Matrix3>::getTypeDescription());
 	    t->requires(old_dw, "delt",
@@ -324,13 +331,16 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
 					      const DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
+    using SCICore::Math::Min;
+
     SoleVariable<double> MaxWaveSpeed;
     new_dw->get(MaxWaveSpeed, "MaxWaveSpeed");
 
     Vector dCell = region->dCell();
     double width = Min(dCell.x(), dCell.y(), dCell.z());
     double delt = 0.5*width/MaxWaveSpeed;
-    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
+#warning this needs to be fixed:
+//    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
@@ -371,7 +381,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
     externalforce.initialize(Vector(0,0,0));
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
-	ParticleSet::index idx = *iter;
+	Uintah::Grid::particleIndex idx = *iter;
 
 	// Get the node indices that surround the cell
 	Array3Index ni[8];
@@ -407,7 +417,10 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-    for(int m = 0; m < numMatls; i++){
+#warning this needs to be fixed:
+#if 0
+
+    for(int m = 0; m < numMatls; m++){
         Material* matl = materials[m];
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         if(mpm_matl){
@@ -415,6 +428,7 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
             cm->computeStressTensor(region, mpm_matl, old_dw, new_dw);
 	}
     }
+#endif
 }
 
 void SerialMPM::computeInternalForce(const ProcessorContext*,
@@ -450,7 +464,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
     for(ParticleSubset::iterator iter = pset->begin();
        iter != pset->end(); iter++){
-       ParticleSet::index idx = *iter;
+       Uintah::Grid::particleIndex idx = *iter;
 
        // Get the node indices that surround the cell
        Array3Index ni[8];
@@ -562,7 +576,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     double ke=0;
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
-      ParticleSet::index idx = *iter;
+      Uintah::Grid::particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
       Array3Index ni[8];
@@ -613,12 +627,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     new_dw->put(pexternalforce, "p.externalforce", region, 0);
 }
 
-#endif
-
 } // end namespace Components
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/03/21 01:29:39  dav
+// working to make MPM stuff compile successfully
+//
 // Revision 1.8  2000/03/20 17:17:05  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //
