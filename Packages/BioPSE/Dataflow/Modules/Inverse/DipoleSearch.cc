@@ -35,7 +35,6 @@
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TetVol.h>
-#include <Core/Math/MusilRNG.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <iostream>
@@ -44,57 +43,55 @@ using std::endl;
 #include <stdio.h>
 #include <math.h>
 
-#define NDIM 3
-#define NSEEDS (NDIM+1)
-#define NDIPOLES (NDIM+2)
-#define CONVERGANCE 0.001
-#define MAXEVALS 100
 
 namespace BioPSE {
 using namespace SCIRun;
 
 class DipoleSearch : public Module {    
-  FieldIPort     *seeds_iport;
-  FieldIPort     *mesh_iport;
-  MatrixIPort    *misfit_iport;
-  MatrixIPort    *dir_iport;
+  FieldIPort     *seeds_iport_;
+  FieldIPort     *mesh_iport_;
+  MatrixIPort    *misfit_iport_;
+  MatrixIPort    *dir_iport_;
 
-  MatrixOPort    *x_oport;
-  MatrixOPort    *y_oport;
-  MatrixOPort    *z_oport;
-  FieldOPort     *simplex_oport;
-  FieldOPort     *dipole_oport;
+  MatrixOPort    *x_oport_;
+  MatrixOPort    *y_oport_;
+  MatrixOPort    *z_oport_;
+  FieldOPort     *simplex_oport_;
+  FieldOPort     *dipole_oport_;
 
-  FieldHandle seedsH;
-  FieldHandle meshH;
-  TetVolMeshHandle vol_mesh;
-  FieldHandle simplexH;
+  FieldHandle seedsH_;
+  FieldHandle meshH_;
+  TetVolMeshHandle vol_mesh_;
+  FieldHandle simplexH_;
 
-  int seed_counter;
-  clString state;
-  Array1<double> errors;
-  Array2<double> dipoles;
-  Array1<int> cell_visited;
-  Array1<double> cell_err;
-  Array1<Vector> cell_dir;  
-  int use_cache;
-  int in_bounds;
-  int stop_search;
-  int send_intermediate;  // was the last send we did a send_intermediate
-  Mutex mylock;
+  int seed_counter_;
+  clString state_;
+  Array1<double> misfit_;
+  Array2<double> dipoles_;
+  Array1<int> cell_visited_;
+  Array1<double> cell_err_;
+  Array1<Vector> cell_dir_;  
+  int use_cache_;
+  int stop_search_;
+  int last_intermediate_;
+  Mutex mylock_;
 
-  // private methods
+  static int NDIM_;
+  static int NSEEDS_;
+  static int NDIPOLES_;
+  static int MAX_EVALS_;
+  static double CONVERGENCE_;
+  static double OUT_OF_BOUNDS_MISFIT_;
+
   void initialize_search();
-  void send_and_get_data(int which_dipole, Point p, TetVolMesh::cell_index ci,
-			 Vector &dir);
+  void send_and_get_data(int which_dipole, TetVolMesh::cell_index ci);
   int pre_search();
-  void eval_test_dipole(Vector &dir);
+  Vector eval_test_dipole();
   double simplex_step(Array1<double>& sum, double factor, int worst);
   void simplex_search();
   void read_field_ports(int &valid_data, int &new_data);
 public:
-  GuiString tcl_status;
-  GuiInt useCacheTCL;
+  GuiInt use_cache_gui_;
   DipoleSearch(const clString& id);
   virtual ~DipoleSearch();
   virtual void execute();
@@ -105,104 +102,113 @@ extern "C" Module* make_DipoleSearch(const clString& id) {
   return new DipoleSearch(id);
 }
 
+int DipoleSearch::NDIM_ = 3;
+int DipoleSearch::NSEEDS_ = 4;
+int DipoleSearch::NDIPOLES_ = 5;
+int DipoleSearch::MAX_EVALS_ = 100;
+double DipoleSearch::CONVERGENCE_ = 0.001;
+double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
+
 DipoleSearch::DipoleSearch(const clString& id)
-  : Module("DipoleSearch", id, Filter), tcl_status("tcl_status",id,this),
-    mylock("pause lock for DipoleSearch"), useCacheTCL("useCacheTCL",id,this)
+  : Module("DipoleSearch", id, Filter), 
+  mylock_("pause lock for DipoleSearch"), 
+  use_cache_gui_("use_cache_gui_",id,this)
 {
   // point cloud of vectors -- the seed positions/orientations for our search
-  seeds_iport = new FieldIPort(this, "DipoleSeeds",
+  seeds_iport_ = new FieldIPort(this, "DipoleSeeds",
 				      FieldIPort::Atomic);
-  add_iport(seeds_iport);
+  add_iport(seeds_iport_);
   
   // domain of search -- used for constraining and for caching misfits
-  mesh_iport = new FieldIPort(this,"TetMesh",
+  mesh_iport_ = new FieldIPort(this,"TetMesh",
 			      FieldIPort::Atomic);
-  add_iport(mesh_iport);
+  add_iport(mesh_iport_);
 
   // the computed misfit for the latest test dipole
-  misfit_iport = new MatrixIPort(this, "TestMisfit",
+  misfit_iport_ = new MatrixIPort(this, "TestMisfit",
 				 MatrixIPort::Atomic);
-  add_iport(misfit_iport);
+  add_iport(misfit_iport_);
   
   // optimal orientation for the test dipole
-  dir_iport = new MatrixIPort(this,"TestDirection",
+  dir_iport_ = new MatrixIPort(this,"TestDirection",
 			      MatrixIPort::Atomic);
-  add_iport(dir_iport);
+  add_iport(dir_iport_);
   
   // column matrix of the position and x-orientation of the test dipole
-  x_oport = new MatrixOPort(this, "TestDipoleX",
+  x_oport_ = new MatrixOPort(this, "TestDipoleX",
 				MatrixIPort::Atomic);
-  add_oport(x_oport);
+  add_oport(x_oport_);
   
   // column matrix of the position and y-orientation of the test dipole
-  y_oport = new MatrixOPort(this, "TestDipoleY",
+  y_oport_ = new MatrixOPort(this, "TestDipoleY",
 				MatrixIPort::Atomic);
-  add_oport(y_oport);
+  add_oport(y_oport_);
   
   // column matrix of the position and z-orientation of the test dipole
-  z_oport = new MatrixOPort(this, "TestDipoleZ",
+  z_oport_ = new MatrixOPort(this, "TestDipoleZ",
 				MatrixIPort::Atomic);
-  add_oport(z_oport);
+  add_oport(z_oport_);
   
   // point cloud of vectors -- the latest simplex (for vis)
-  simplex_oport = new FieldOPort(this, "DipoleSimplex",
+  simplex_oport_ = new FieldOPort(this, "DipoleSimplex",
 				FieldIPort::Atomic);
-  add_oport(simplex_oport);
+  add_oport(simplex_oport_);
 
   // point cloud of one vector, just the test dipole (for vis)
-  dipole_oport = new FieldOPort(this, "TestDipole",
+  dipole_oport_ = new FieldOPort(this, "TestDipole",
 				FieldIPort::Atomic);
-  add_oport(dipole_oport);
+  add_oport(dipole_oport_);
 
-  mylock.unlock();
-  state = "SEEDING";
-  stop_search = 0;
-  seed_counter = 0;
+  mylock_.unlock();
+  state_ = "SEEDING";
+  stop_search_ = 0;
+  seed_counter_ = 0;
 }
 
 DipoleSearch::~DipoleSearch(){}
 
-//! Initialization reads and validates the volume and seed meshes;
-//!   sets up our dipole search matrix; builds the map we'll use
-//!   to keep track of which seed dipole is where in the search
-//!   matrix; and resizes and initializes our caching vectors
+
+//! Initialization sets up our dipole search matrix, and misfit vector, and 
+//!   resizes and initializes our caching vectors
 
 void DipoleSearch::initialize_search() {
-  // cast the mesh based calss up to a tetvolmesh
+  // cast the mesh based class up to a tetvolmesh
   TetVolMesh *seeds_mesh =
-    (TetVolMesh*)dynamic_cast<TetVolMesh*>(seedsH->mesh().get_rep());
+    (TetVolMesh*)dynamic_cast<TetVolMesh*>(seedsH_->mesh().get_rep());
 
   // iterate through the nodes and copy the positions into our 
   //  simplex search matrix (`dipoles')
   TetVolMesh::node_iterator ni = seeds_mesh->node_begin();
-  errors.resize(NDIM);
-  dipoles.newsize(NDIPOLES, NDIM+3);
+  misfit_.resize(NDIPOLES_);
+  dipoles_.newsize(NDIPOLES_, NDIM_+3);
   for (int nc=0; ni != seeds_mesh->node_end(); ++ni, nc++) {
     Point p;
     seeds_mesh->get_center(p, *ni);
-    dipoles(nc,0)=p.x(); dipoles(nc,1)=p.y(); dipoles(nc,2)=p.z();
-    dipoles(nc,3)=0; dipoles(nc,4)=0; dipoles(nc,5)=1;
+    dipoles_(nc,0)=p.x(); dipoles_(nc,1)=p.y(); dipoles_(nc,2)=p.z();
+    dipoles_(nc,3)=0; dipoles_(nc,4)=0; dipoles_(nc,5)=1;
   }
   // this last dipole entry contains our test dipole
   int j;
-  for (j=0; j<NDIM+3; j++) 
-    dipoles(NSEEDS,j)=0;
+  for (j=0; j<NDIM_+3; j++) 
+    dipoles_(NSEEDS_,j)=0;
 
-  cell_visited.resize(vol_mesh->cells_size());
-  cell_err.resize(vol_mesh->cells_size());
-  cell_dir.resize(vol_mesh->cells_size());
-  cell_visited.initialize(0);
-  use_cache=useCacheTCL.get();
+  cell_visited_.resize(vol_mesh_->cells_size());
+  cell_err_.resize(vol_mesh_->cells_size());
+  cell_dir_.resize(vol_mesh_->cells_size());
+  cell_visited_.initialize(0);
+  use_cache_=use_cache_gui_.get();
 }
 
-void DipoleSearch::send_and_get_data(int which_dipole, Point p, 
-				     TetVolMesh::cell_index ci,
-				     Vector &dir) {
-  if (!mylock.tryLock()) {
-    mylock.lock();
-    mylock.unlock();
+
+//! Find the misfit and optimal orientation for a single dipole
+
+void DipoleSearch::send_and_get_data(int which_dipole, 
+				     TetVolMesh::cell_index ci) {
+  if (!mylock_.tryLock()) {
+    mylock_.lock();
+    mylock_.unlock();
   } else {
-    mylock.unlock();
+    mylock_.unlock();
   }
 
   ColumnMatrix *x_out = scinew ColumnMatrix(7);
@@ -210,49 +216,49 @@ void DipoleSearch::send_and_get_data(int which_dipole, Point p,
   ColumnMatrix *z_out = scinew ColumnMatrix(7);
   int j;
   for (j=0; j<3; j++)
-    (*x_out)[j] = (*y_out)[j] = (*z_out)[j] = dipoles(seed_counter,j);
+    (*x_out)[j] = (*y_out)[j] = (*z_out)[j] = dipoles_(which_dipole,j);
   for (j=3; j<6; j++)
     (*x_out)[j] = (*y_out)[j] = (*z_out)[j] = 0;
   (*x_out)[3] = (*y_out)[4] = (*z_out)[5] = 1;
   (*x_out)[6] = (*y_out)[6] = (*z_out)[6] = (double)ci;
   
   TetVolMeshHandle tvm = scinew TetVolMesh;
-  for (j=0; j<NSEEDS; j++)
-    tvm->add_point(Point(dipoles(j,0), dipoles(j,1), dipoles(j,2)));
+  for (j=0; j<NSEEDS_; j++)
+    tvm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
   TetVol<Vector> *tvv = scinew TetVol<Vector>(tvm, Field::NODE);
-  for (j=0; j<NSEEDS; j++)
-    tvv->fdata()[j] = Vector(dipoles(j,3), dipoles(j,4), dipoles(j,5));
+  for (j=0; j<NSEEDS_; j++)
+    tvv->fdata()[j] = Vector(dipoles_(j,3), dipoles_(j,4), dipoles_(j,5));
 
   tvm = scinew TetVolMesh;
-  tvm->add_point(p);
+  tvm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
+		       dipoles_(which_dipole, 2)));
   TetVol<double> *tvd = scinew TetVol<double>(tvm, Field::NODE);
   
   // send out data
-  x_oport->send_intermediate(x_out);
-  y_oport->send_intermediate(y_out);
-  z_oport->send_intermediate(z_out);
-  simplexH = tvv;
-  simplex_oport->send_intermediate(simplexH);
-  dipole_oport->send_intermediate(tvd);
-  send_intermediate=1;
+  x_oport_->send_intermediate(x_out);
+  y_oport_->send_intermediate(y_out);
+  z_oport_->send_intermediate(z_out);
+  simplexH_ = tvv;
+  simplex_oport_->send_intermediate(simplexH_);
+  dipole_oport_->send_intermediate(tvd);
+  last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
   Matrix* m;
-  if (!misfit_iport->get(mH) || !(m = mH.get_rep())) {
-    error("DipoleSearch::preSearch failed to read back error");
+  if (!misfit_iport_->get(mH) || !(m = mH.get_rep())) {
+    error("DipoleSearch::failed to read back error");
     return;
   }
-  cell_err[ci]=errors[which_dipole]=(*m)[0][0];
-  if (!dir_iport->get(mH) || !mH.get_rep() || mH->ncols()<3) {
-    error("DipoleSearch::preSearch failed to read back orientation");
+  cell_err_[ci]=misfit_[which_dipole]=(*m)[0][0];
+  if (!dir_iport_->get(mH) || !mH.get_rep() || mH->ncols()<3) {
+    error("DipoleSearch::failed to read back orientation");
     return;
   }
-  dir=cell_dir[ci]=Vector((*m)[0][0], (*m)[0][1], (*m)[0][2]);
+  cell_dir_[ci]=Vector((*m)[0][0], (*m)[0][1], (*m)[0][2]);
   for (j=0; j<3; j++)
-    dipoles(which_dipole,j+3)=(*m)[0][j];
+    dipoles_(which_dipole,j+3)=(*m)[0][j];
 }  
-
 
 
 //! pre_search gets called once for each seed dipole.  It sends out
@@ -262,85 +268,95 @@ void DipoleSearch::send_and_get_data(int which_dipole, Point p,
 //!   back a misfit or optimal orientation after a send 
 
 int DipoleSearch::pre_search() {
-  if (seed_counter == 0) {
+  if (seed_counter_ == 0) {
     initialize_search();
   }
 
-  // send out a seed dipole and get back the error and the optimal orientation
+  // send out a seed dipole and get back the misfit and the optimal orientation
   TetVolMesh::cell_index ci;
-  Point p(dipoles(seed_counter,0), dipoles(seed_counter,1), 
-	  dipoles(seed_counter,2));
-  if (!vol_mesh->locate(ci, p)) {
-    cerr << "Error: seedpoint " <<seed_counter<<" is outside of mesh!" << endl;
+  if (!vol_mesh_->locate(ci, Point(dipoles_(seed_counter_,0), 
+				   dipoles_(seed_counter_,1), 
+				   dipoles_(seed_counter_,2)))) {
+    cerr << "Error: seedpoint " <<seed_counter_<<" is outside of mesh!" << endl;
     return 0;
   }
-  if (cell_visited[ci]) {
+  if (cell_visited_[ci]) {
     cerr << "Warning: redundant seedpoints.\n";
+    misfit_[seed_counter_]=cell_err_[ci];
   } else {
-    cell_visited[ci]=1;
-    Vector dir;
-    send_and_get_data(seed_counter, p, ci, dir);
+    cell_visited_[ci]=1;
+    send_and_get_data(seed_counter_, ci);
   }
-  seed_counter++;
+  seed_counter_++;
 
   // done seeding, prepare for search phase
-  if (seed_counter > NSEEDS) {
-    seed_counter = 0;
-    state = "START_SEARCHING";
+  if (seed_counter_ > NSEEDS_) {
+    seed_counter_ = 0;
+    state_ = "START_SEARCHING";
   }
   return 1;
 }
 
-// evaluate the test dipole, cache the misfit and optimal orientation
-void DipoleSearch::eval_test_dipole(Vector &dir) {
+
+//! Evaluate a test dipole.  Return the optimal orientation.
+
+Vector DipoleSearch::eval_test_dipole() {
   TetVolMesh::cell_index ci;
-  Point p(dipoles(NSEEDS,0), dipoles(NSEEDS,1), dipoles(NSEEDS,2));
-  if (vol_mesh->locate(ci, p)) {
-    if (!cell_visited[ci]) {
-      cell_visited[ci]=1;
-      send_and_get_data(NSEEDS, p, ci, dir);
+  if (vol_mesh_->locate(ci, Point(dipoles_(NSEEDS_,0), 
+				  dipoles_(NSEEDS_,1), 
+				  dipoles_(NSEEDS_,2)))) {
+    if (!cell_visited_[ci]) {
+      cell_visited_[ci]=1;
+      send_and_get_data(NSEEDS_, ci);
     } else {
-      dir=cell_dir[ci];
-      errors[NSEEDS]=cell_err[ci];
+      misfit_[NSEEDS_]=cell_err_[ci];
     }
+    return (cell_dir_[ci]);
+  } else {
+    misfit_[NSEEDS_]=OUT_OF_BOUNDS_MISFIT_;
+    return (Vector(0,0,1));
   }
 }
+
+
+//! Take a single simplex step.  Evaluate a new position -- if it's
+//! better then an existing vertex, swap them.
 
 double DipoleSearch::simplex_step(Array1<double>& sum, double factor,
 				  int worst) {
-  double factor1 = (1 - factor)/NDIM;
+  double factor1 = (1 - factor)/NDIM_;
   double factor2 = factor1-factor;
   int i;
-  for (i=0; i<NDIM; i++) 
-    dipoles(NSEEDS,i) = sum[i]*factor1 - dipoles(worst,i)*factor2;
+  for (i=0; i<NDIM_; i++) 
+    dipoles_(NSEEDS_,i) = sum[i]*factor1 - dipoles_(worst,i)*factor2;
 
   // evaluate the new guess
-  Vector dir(0,0,1);
-  eval_test_dipole(dir);
+  eval_test_dipole();
 
   // if this is better, swap it with the worst one
-  if (errors[NSEEDS] < errors[worst]) {
-    errors[worst] = errors[NSEEDS];
-    for (i=0; i<NDIM; i++) {
-      sum[i] = sum[i] + dipoles(NSEEDS,i)-dipoles(worst,i);
-      dipoles(worst,i) = dipoles(NSEEDS,i);
+  if (misfit_[NSEEDS_] < misfit_[worst]) {
+    misfit_[worst] = misfit_[NSEEDS_];
+    for (i=0; i<NDIM_; i++) {
+      sum[i] = sum[i] + dipoles_(NSEEDS_,i)-dipoles_(worst,i);
+      dipoles_(worst,i) = dipoles_(NSEEDS_,i);
     }
-    for (i=NDIM; i<NDIM+3; i++)
-      dipoles(worst,i) = dipoles(NSEEDS,i);  // copy orientation data
+    for (i=NDIM_; i<NDIM_+3; i++)
+      dipoles_(worst,i) = dipoles_(NSEEDS_,i);  // copy orientation data
   }
 
-  return errors[NSEEDS];
+  return misfit_[NSEEDS_];
 }
 
 
-//! the simplex has been constructed -- now let's find a minimum
+//! The simplex has been constructed -- now let's search for a minimal misfit
+
 void DipoleSearch::simplex_search() {
-  Array1<double> sum(NDIM);  // sum of the entries in the search matrix rows
+  Array1<double> sum(NDIM_);  // sum of the entries in the search matrix rows
   sum.initialize(0);
   int i, j;
-  for (i=0; i<NSEEDS; i++) 
-    for (j=0; j<NDIM; j++)
-      sum[i]+=dipoles(i,j); 
+  for (i=0; i<NSEEDS_; i++) 
+    for (j=0; j<NDIM_; j++)
+      sum[j]+=dipoles_(i,j); 
 
   double relative_tolerance;
   int num_evals = 0;
@@ -348,7 +364,7 @@ void DipoleSearch::simplex_search() {
   while(1) {
     int best, worst, next_worst;
     best = 0;
-    if (errors[0] > errors[1]) {
+    if (misfit_[0] > misfit_[1]) {
       worst = 0;
       next_worst = 1;
     } else {
@@ -356,68 +372,72 @@ void DipoleSearch::simplex_search() {
       next_worst = 0;
     }
     int i;
-    for (i=0; i<NSEEDS; i++) {
-      if (errors[i] <= errors[best]) best=i;
-      if (errors[i] > errors[worst]) {
+    for (i=0; i<NSEEDS_; i++) {
+      if (misfit_[i] <= misfit_[best]) best=i;
+      if (misfit_[i] > misfit_[worst]) {
 	next_worst = worst;
 	worst = i;
       } else 
-	if (errors[i] > errors[next_worst] && (i != worst)) 
+	if (misfit_[i] > misfit_[next_worst] && (i != worst)) 
 	  next_worst=i;
-      relative_tolerance = 2*(errors[worst]-errors[best])/
-	(errors[worst]+errors[best]);
+      relative_tolerance = 2*(misfit_[worst]-misfit_[best])/
+	(misfit_[worst]+misfit_[best]);
     }
 
-    if ((relative_tolerance < CONVERGANCE) || 
-	(num_evals > MAXEVALS) || (stop_search)) 
+    if ((relative_tolerance < CONVERGENCE_) || 
+	(num_evals > MAX_EVALS_) || (stop_search_)) 
       break;
 
-    double step_error = simplex_step(sum, -1, worst);
+    double step_misfit = simplex_step(sum, -1, worst);
     num_evals++;
-    if (step_error <= errors[best]) {
-      step_error = simplex_step(sum, 2, worst);
+    if (step_misfit <= misfit_[best]) {
+      step_misfit = simplex_step(sum, 2, worst);
       num_evals++;
-    } else if (step_error >= errors[worst]) {
-      double old_error = errors[worst];
-      step_error = simplex_step(sum, 0.5, worst);
+    } else if (step_misfit >= misfit_[worst]) {
+      double old_misfit = misfit_[worst];
+      step_misfit = simplex_step(sum, 0.5, worst);
       num_evals++;
-      if (step_error >= old_error) {
-	for (i=0; i<NSEEDS; i++) {
+      if (step_misfit >= old_misfit) {
+	for (i=0; i<NSEEDS_; i++) {
 	  if (i != best) {
 	    int j;
-	    for (j=0; j<NDIM; j++)
-	      dipoles(i,j) = dipoles(NSEEDS,j) = 
-		0.5 * (dipoles(i,j) + dipoles(best,j));
-	    Vector dir(0,0,1);
-	    eval_test_dipole(dir);
-	    errors[i] = errors[NDIM];
+	    for (j=0; j<NDIM_; j++)
+	      dipoles_(i,j) = dipoles_(NSEEDS_,j) = 
+		0.5 * (dipoles_(i,j) + dipoles_(best,j));
+	    Vector dir = eval_test_dipole();
+	    misfit_[i] = misfit_[NSEEDS_];
+	    dipoles_(i,3) = dir.x(); 
+	    dipoles_(i,4) = dir.y(); 
+	    dipoles_(i,5) = dir.z(); 
 	    num_evals++;
-	    dipoles(i,3) = dir.x(); 
-	    dipoles(i,4) = dir.y(); 
-	    dipoles(i,5) = dir.z(); 
 	  }
 	}
       }
       sum.initialize(0);
-      for (i=0; i<NSEEDS; i++) {
-	for (j=0; j<NDIM; j++)
-	  sum[i]+=dipoles(i,j); 
+      for (i=0; i<NSEEDS_; i++) {
+	for (j=0; j<NDIM_; j++)
+	  sum[j]+=dipoles_(i,j); 
       }
     }
   }
 }
 
+
+//! Read the input fields.  Check whether the inputs are valid,
+//! and whether they've changed since last time.
+
 void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   FieldHandle mesh;
   valid_data=1;
   new_data=0;
-  if (mesh_iport->get(mesh) && mesh.get_rep() &&
-      (meshH->get_type_name(0) == "TetVol")) {
-    if (!meshH.get_rep() || (meshH->generation != mesh->generation)) {
+  if (mesh_iport_->get(mesh) && mesh.get_rep() &&
+      (mesh->get_type_name(0) == "TetVol")) {
+    if (!meshH_.get_rep() || (meshH_->generation != mesh->generation)) {
       new_data=1;
-      meshH=mesh;
+      meshH_=mesh;
       // cast the mesh base class up to a tetvolmesh
-      vol_mesh=(TetVolMesh*)dynamic_cast<TetVolMesh*>(meshH->mesh().get_rep());
+      vol_mesh_=
+	(TetVolMesh*)dynamic_cast<TetVolMesh*>(mesh->mesh().get_rep());
     } else {
       cerr << "DipoleSearch -- same VolumeMesh as before."<<endl;
     }
@@ -428,13 +448,13 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   
   FieldHandle seeds;    
   TetVol<double> *d;
-  if (seeds_iport->get(seeds) && seeds.get_rep() &&
-      (seedsH->get_type_name(0) == "TetVol") &&
-      (d=dynamic_cast<TetVol<double> *>(seedsH.get_rep())) &&
-      (d->get_typed_mesh()->nodes_size() == NSEEDS)) {
-    if (!seedsH.get_rep() || (seedsH->generation != seeds->generation)) {
+  if (seeds_iport_->get(seeds) && seeds.get_rep() &&
+      (seedsH_->get_type_name(0) == "TetVol") &&
+      (d=dynamic_cast<TetVol<double> *>(seedsH_.get_rep())) &&
+      (d->get_typed_mesh()->nodes_size() == NSEEDS_)) {
+    if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation)) {
       new_data = 1;
-      seedsH=seeds;
+      seedsH_=seeds;
     } else {
       cerr << "DipoleSearch -- same SeedsMesh as before."<<endl;
     }
@@ -444,66 +464,74 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   }
 }
 
+
+//! If we have an old solution and the inputs haven't changed, send that
+//! one.  Otherwise, if the input is valid, run a simplex search to find
+//! a dipole with minimal misfit.
+
 void DipoleSearch::execute() {
   int valid_data, new_data;
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {
-    if (simplexH.get_rep()) { // if we have valid old data
+    if (simplexH_.get_rep()) { // if we have valid old data
       // send old data and clear ports
-      simplex_oport->send(simplexH);
+      simplex_oport_->send(simplexH_);
       MatrixHandle dummy_mat;
-      misfit_iport->get(dummy_mat);
-      dir_iport->get(dummy_mat);
+      misfit_iport_->get(dummy_mat);
+      dir_iport_->get(dummy_mat);
       return;
     } else {
       return;
     }
   }
 
-  send_intermediate=0;
+  last_intermediate_=0;
 
   // we have new, valid data -- run the simplex search
   while (1) {
-    if (state == "SEEDING") {
+    if (state_ == "SEEDING") {
       if (!pre_search()) break;
-    } else if (state == "START_SEARCH") {
+    } else if (state_ == "START_SEARCH") {
       simplex_search();
-      state = "DONE";
+      state_ = "DONE";
     }
-    if (stop_search || state == "DONE") break;
+    if (stop_search_ || state_ == "DONE") break;
   }
-  if (send_intermediate) { // last sends were send_intermediates
+  if (last_intermediate_) { // last sends were send_intermediates
     // gotta do final sends and clear the ports
     MatrixHandle dummy_mat;
-    x_oport->send(dummy_mat);
-    y_oport->send(dummy_mat);
-    z_oport->send(dummy_mat);
-    simplex_oport->send(simplexH);
+    x_oport_->send(dummy_mat);
+    y_oport_->send(dummy_mat);
+    z_oport_->send(dummy_mat);
+    simplex_oport_->send(simplexH_);
     FieldHandle dummy_fld;
-    dipole_oport->send(dummy_fld);
-    misfit_iport->get(dummy_mat);
-    dir_iport->get(dummy_mat);
+    dipole_oport_->send(dummy_fld);
+    misfit_iport_->get(dummy_mat);
+    dir_iport_->get(dummy_mat);
   }
-  state = "SEEDING";
-  stop_search=0;
-  seed_counter=0;
+  state_ = "SEEDING";
+  stop_search_=0;
+  seed_counter_=0;
 }
+
+
+//! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
 void DipoleSearch::tcl_command(TCLArgs& args, void* userdata) {
     if (args[1] == "pause") {
-        if (mylock.tryLock())
+        if (mylock_.tryLock())
 	  cerr << "DipoleSearch pausing..."<<endl;
         else 
 	  cerr << "DipoleSearch: can't lock -- already locked"<<endl;
     } else if (args[1] == "unpause") {
-        if (mylock.tryLock())
+        if (mylock_.tryLock())
 	  cerr << "DipoleSearch: can't unlock -- already unlocked"<<endl;
         else
 	  cerr << "DipoleSearch: unpausing"<<endl;
-        mylock.unlock();
+        mylock_.unlock();
     } else if (args[1] == "stop") {
-        stop_search=1;
+        stop_search_=1;
     } else {
         Module::tcl_command(args, userdata);
     }

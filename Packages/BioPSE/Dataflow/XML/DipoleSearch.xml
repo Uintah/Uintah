@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
-<component name="DipoleSearch" category="Forward">
+<component name="DipoleSearch" category="Inverse">
   <overview>
     <authors>
-      <author>Leonid Zhukov</author>
+      <author>David Weinstein</author>
     </authors>
     <summary>Summary not available yet.</summary>
     <description>
