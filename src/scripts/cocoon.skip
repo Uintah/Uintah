@@ -13,6 +13,7 @@ DaveW/ThirdParty/SparseLib/mv/include
 PSECommon/ThirdParty/mpeg
 PSECommon/share
 PSECore/share
+PSECommon/Algorithms/Visualization
 SCICore/TkExtensions/internal-includes
 SCICore/Winfix/include/GL
 SCICore/globus_threads
