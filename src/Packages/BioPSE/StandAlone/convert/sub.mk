@@ -36,9 +36,17 @@ SRCDIR := Packages/BioPSE/StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Util
+PSELIBS := \
+	Core/Datatypes  \
+	Core/Containers \
+	Core/Persistent \
+	Core/Exceptions \
+	Core/Thread     \
+	Core/Geometry   \
+	Core/Math       \
+	Core/Util
 endif
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(LAPACK_LIBRARY) $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/ContinuityToTetVolDouble
 SRCS := $(SRCDIR)/ContinuityToTetVolDouble.cc
