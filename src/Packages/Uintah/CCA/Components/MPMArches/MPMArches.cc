@@ -1,6 +1,7 @@
 // MPMArches.cc
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
@@ -21,9 +22,10 @@ using namespace std;
 MPMArches::MPMArches(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  d_Mlb  = scinew MPMLabel();
+  Mlb  = scinew MPMLabel();
   d_MAlb = scinew MPMArchesLabel();
   d_mpm      = scinew SerialMPM(myworld);
+  d_fracture = false;
   d_arches      = scinew Arches(myworld);
   d_SMALL_NUM = 1.e-100;
 }
@@ -42,7 +44,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_sharedState = sharedState;
 
    // add for MPMArches, if any parameters are reqd
-   d_mpm->setMPMLabel(d_Mlb);
+   d_mpm->setMPMLabel(Mlb);
    d_mpm->problemSetup(prob_spec, grid, d_sharedState);
    // set multimaterial label in Arches to access interface variables
    d_arches->setMPMArchesLabel(d_MAlb);
@@ -83,19 +85,71 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
 				 DataWarehouseP& old_dw, 
 				 DataWarehouseP& new_dw)
 {
+  // Rajesh/Kumar  Because interpolation from particles to nodes
+  // is the fist thing done in our algorithm, it is, unfortunately,
+  // going to be necessary to put that step of the algorithm in
+  // prior to the NCToCC stuff, and so of course the remaining
+  // MPM steps will follow.  Without doing a heap of other work,
+  // I don't see any way around this, and the only real cost is
+  // to ugly this up a bit.
+
+  for(Level::const_patchIterator iter=level->patchesBegin();
+			       iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+
+    if(d_fracture) {
+      d_mpm->scheduleSetPositions(patch,sched,old_dw,new_dw);
+      d_mpm->scheduleComputeBoundaryContact(patch,sched,old_dw,new_dw);
+      d_mpm->scheduleComputeConnectivity(patch,sched,old_dw,new_dw);
+    }
+    d_mpm->scheduleInterpolateParticlesToGrid(patch,sched,old_dw,new_dw);
+    if (MPMPhysicalModules::thermalContactModel) {
+       d_mpm->scheduleComputeHeatExchange(patch,sched,old_dw,new_dw);
+    }
+  }
+
   // interpolate mpm properties from node center to cell center/ face center
   // these computed variables are used by void fraction and mom exchange
   scheduleInterpolateNCToCC(level, sched, old_dw, new_dw);
+  // Velocity and temperature are needed at the faces, right?
+  scheduleInterpolateCCToFC(level, sched, old_dw, new_dw);
+
   // for explicit calculation, exchange will be at the beginning
   scheduleComputeVoidFrac(level, sched, old_dw, new_dw);
+
   // for heat transfer HeatExchangeCoeffs will be called
   scheduleMomExchange(level, sched, old_dw, new_dw);
-  // Jim, can we do this?
-  d_mpm->scheduleTimeAdvance(time, delt, level, sched, old_dw, new_dw);  
+
   d_arches->scheduleTimeAdvance(time, delt, level, sched, old_dw, new_dw);
+
+  for(Level::const_patchIterator iter=level->patchesBegin();
+			       iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+
+    d_mpm->scheduleExMomInterpolated(               patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeStressTensor(             patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeInternalForce(            patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeInternalHeatRate(         patch,sched,old_dw,new_dw);
+    d_mpm->scheduleSolveEquationsMotion(            patch,sched,old_dw,new_dw);
+    d_mpm->scheduleSolveHeatEquations(              patch,sched,old_dw,new_dw);
+    d_mpm->scheduleIntegrateAcceleration(           patch,sched,old_dw,new_dw);
+    d_mpm->scheduleIntegrateTemperatureRate(        patch,sched,old_dw,new_dw);
+    d_mpm->scheduleExMomIntegrated(                 patch,sched,old_dw,new_dw);
+    d_mpm->scheduleInterpolateToParticlesAndUpdate( patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeMassRate(                 patch,sched,old_dw,new_dw);
+    if(d_fracture) {
+      d_mpm->scheduleComputeFracture(               patch,sched,old_dw,new_dw);
+    }
+    d_mpm->scheduleCarryForwardVariables(           patch,sched,old_dw,new_dw);
+  }
+
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
+  sched->scheduleParticleRelocation(level, old_dw, new_dw,
+                                    Mlb->pXLabel_preReloc,
+                                    Mlb->d_particleState_preReloc,
+                                    Mlb->pXLabel, Mlb->d_particleState,
+                                    numMPMMatls);
 }
-
-
 //
 //
 void MPMArches::scheduleInterpolateNCToCC(const LevelP& level,
@@ -115,16 +169,14 @@ void MPMArches::scheduleInterpolateNCToCC(const LevelP& level,
 		        this, &MPMArches::interpolateNCToCC);
    int numMPMMatls = d_sharedState->getNumMPMMatls();
    int numGhostCells = 1;
-   int matlIndex = 0;
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
      int idx = mpm_matl->getDWIndex();
-     // shouldn't we use old_dw here
-     t->requires(new_dw, d_Mlb->gMassLabel,         idx, patch,
+     t->requires(new_dw, Mlb->gMassLabel,         idx, patch,
 		Ghost::AroundCells, numGhostCells);
-     t->requires(new_dw, d_Mlb->gVolumeLabel,       idx, patch,
+     t->requires(new_dw, Mlb->gVolumeLabel,       idx, patch,
 		Ghost::AroundCells, numGhostCells);
-     t->requires(new_dw, d_Mlb->gVelocityLabel,     idx, patch,
+     t->requires(new_dw, Mlb->gVelocityLabel,     idx, patch,
 		Ghost::AroundCells, numGhostCells);
 
      t->computes(new_dw, d_MAlb->cMassLabel,         idx, patch);
@@ -138,9 +190,13 @@ void MPMArches::scheduleInterpolateNCToCC(const LevelP& level,
 }
 
 
+void MPMArches::scheduleInterpolateCCToFC(const LevelP& level,
+                                       SchedulerP& sched,
+                                       DataWarehouseP& old_dw,
+                                       DataWarehouseP& new_dw)
+{
 
-//
-//
+}
 
 void MPMArches::scheduleComputeVoidFrac(const LevelP& level,
 				       SchedulerP& sched,
@@ -193,7 +249,7 @@ void MPMArches::scheduleMomExchange(const LevelP& level,
       // I think we need mpm particle velocities here...anything else? 
       // get as ncvars and interpolate on faces
       // Jim...I need your help in this one. rajesh->requires(jim's help):-)
-      t->requires(new_dw, d_Mlb->gVelocityLabel, idx, patch,
+      t->requires(new_dw, Mlb->gVelocityLabel, idx, patch,
 		  Ghost::None, numGhostCells);
       t->requires(new_dw, d_MAlb->vel_CCLabel,        idx, patch,
 		 Ghost::None, numGhostCells);
@@ -267,16 +323,16 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
      cvolume.initialize(0.);
      vel_CC.initialize(zero); 
 
-     new_dw->get(gmass,     d_Mlb->gMassLabel,           matlindex, patch, 
+     new_dw->get(gmass,     Mlb->gMassLabel,           matlindex, patch, 
                         		 Ghost::AroundCells, numGhostCells);
-     new_dw->get(gvolume,   d_Mlb->gVolumeLabel,         matlindex, patch,
+     new_dw->get(gvolume,   Mlb->gVolumeLabel,         matlindex, patch,
 					 Ghost::AroundCells, numGhostCells);
-     new_dw->get(gvelocity, d_Mlb->gVelocityLabel,       matlindex, patch,
+     new_dw->get(gvelocity, Mlb->gVelocityLabel,       matlindex, patch,
 					 Ghost::AroundCells, numGhostCells);
 
      IntVector nodeIdx[8];
 
-     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+     for (CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
        patch->findNodesFromCell(*iter,nodeIdx);
        for (int in=0;in<8;in++){
 	 cmass[*iter]    += .125*gmass[nodeIdx[in]];
@@ -290,6 +346,14 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
      new_dw->put(cvolume,   d_MAlb->cVolumeLabel,       matlindex, patch);
      new_dw->put(vel_CC,    d_MAlb->vel_CCLabel,        matlindex, patch);
   }
+}
+
+void MPMArches::interpolateCCToFC(const ProcessorGroup*,
+			       const Patch* patch,
+			       DataWarehouseP& old_dw,
+			       DataWarehouseP& new_dw)
+{
+
 }
 //
 //
@@ -364,9 +428,9 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     for (int m = 0; m < numMPMMatls; m++) {
       Material* matl = d_sharedState->getMPMMaterial( m );
       int idx = matl->getDWIndex();
-      new_dw->get(gvelocity[m], d_Mlb->gVelocityLabel, idx, patch,
+      new_dw->get(gvelocity[m], Mlb->gVelocityLabel, idx, patch,
 		  Ghost::None, numGhostCells);
-      new_dw->get(cc_pvelocity[m], d_Mlb->gVelocityLabel, idx, patch,
+      new_dw->get(cc_pvelocity[m], Mlb->gVelocityLabel, idx, patch,
 		  Ghost::None, numGhostCells);
       new_dw->allocate(dragForceX[m], d_MAlb->momExDragForceFCXLabel, idx, patch);
       new_dw->allocate(pressForceX[m],d_MAlb->momExPressureForceFCXLabel,idx, patch);
