@@ -387,7 +387,7 @@ void compute_volumes(MESH *mesh, const char *fname){
 	
 
         TempVol=(double*)malloc(sizeof(double)*(mesh->numvtx));
-	xi[0]=-a;xi[1]=a;xi[2]=a;xi[3]=-1;
+	xi[0]=-a;xi[1]=a;xi[2]=a;xi[3]=-a;
 	xi[4]=-a;xi[5]=a;xi[6]=a;xi[7]=-a;
 	eta[0]=-a;eta[1]=-a;eta[2]=a;eta[3]=a;
 	eta[4]=-a;eta[5]=-a;eta[6]=a;eta[7]=a;
