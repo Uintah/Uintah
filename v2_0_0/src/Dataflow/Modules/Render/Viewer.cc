@@ -65,7 +65,8 @@ Viewer::Viewer(GuiContext* ctx)
     newViewWindowMailbox( "NewViewWindowMailbox", 10 ),
 #endif
     // CollabVis code end
-    max_portno_(0)
+    max_portno_(0),
+    stop_rendering_(false)
 {
 
   map<LightID, int> li;
@@ -113,7 +114,7 @@ Viewer::do_execute()
 {
   for(;;)
   {
-    if(mailbox.numItems() == 0)
+    if(!stop_rendering_ && mailbox.numItems() == 0)
     {
       // See if anything needs to be redrawn...
       int did_some=1;
@@ -122,10 +123,12 @@ Viewer::do_execute()
 	did_some=0;
 	for(unsigned int i=0;i<view_window_.size();i++)
 	{
-	  if (view_window_[i]->need_redraw)
-	  {
-	    did_some++;
-	    view_window_[i]->redraw_if_needed();
+	  if (view_window_[i]) {
+	    if (view_window_[i]->need_redraw)
+	    {
+	      did_some++;
+	      view_window_[i]->redraw_if_needed();
+	    }
 	  }
 	}
       }
@@ -138,6 +141,7 @@ Viewer::do_execute()
 	if (r && r->current_renderer)
 	{
 	  r->current_renderer->kill_helper();
+	  r->manager = 0;
       	}
       }
       return;
@@ -155,6 +159,10 @@ Viewer::process_event()
   {
   case MessageTypes::GoAway:
     return 86;
+
+  case MessageTypes::GoAwayWarn:
+    stop_rendering_ = true;
+    break;
 
   case MessageTypes::ExecuteModule:
     // We ignore these messages...

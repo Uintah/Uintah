@@ -165,7 +165,7 @@ public:
   }
   bool haveUI();
   void popupUI();
-
+  void delete_warn();
   bool showStats() { return true; }
 
   // ProgressReporter function

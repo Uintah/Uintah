@@ -236,25 +236,55 @@ Module* Network::get_module_by_id(const string& id)
     }
 }
 
-int Network::delete_module(const string& id)
+namespace SCIRun {
+class DeleteModuleThread : public Runnable 
 {
-    Module* mod = get_module_by_id(id);
-    if (!mod)
-	return 0;
-    
+public:
+
+  DeleteModuleThread(Network* n, const string& i) :
+    net_(n),
+    id_(i),
+    status_(1)
+  {}
+
+  void run() {
+    Module* mod = net_->get_module_by_id(id_);
+    if (!mod) {
+      status_ = 0;
+      return;
+    }
     // traverse array of ptrs to Modules in Network to find this module
     unsigned int i;
-    for (i = 0; i < modules.size(); i++)
-        if (modules[i] == mod)
-	    break;
-    if (i == modules.size())
-	return 0;
+    for (i = 0; i < net_->modules.size(); i++)
+      if (net_->modules[i] == mod)
+	break;
+    if (i == net_->modules.size()) {
+      status_ = 0;
+      return;
+    }
 
     // remove array element corresponding to module, remove from hash table
-    modules.erase(modules.begin() + i);
+    net_->modules.erase(net_->modules.begin() + i);
     mod->kill_helper();
     delete mod;
-    return 1;
+  }
+  
+  int status() { return status_; }
+private:
+  Network          *net_;
+  const string     &id_;
+  int               status_;
+};
+}
+
+int Network::delete_module(const string& id)
+{
+  DeleteModuleThread * dm = scinew DeleteModuleThread((Network*)this, id);
+  string tname("Delete module: " + id);
+  Thread *mod_deleter = scinew Thread(dm, tname.c_str());
+  int rval = dm->status();
+  mod_deleter->join();
+  return rval;
 }
 
 void Network::schedule()
