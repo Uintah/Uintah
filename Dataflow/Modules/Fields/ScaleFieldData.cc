@@ -75,6 +75,7 @@ ScaleFieldData::execute()
   }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
+    error("Input field is empty.");
     return;
   }
 
