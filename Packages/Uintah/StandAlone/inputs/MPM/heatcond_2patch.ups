@@ -71,7 +71,6 @@
                <vel_fields>[1,2,3]</vel_fields>
             </contact>
 
-            <heat_conduction></heat_conduction>
 
 	</MPM>
 
