@@ -101,7 +101,34 @@ public:
     int d_range;
     int d_offset;
   };
+
   
+  // represents range: [low, low+extent]
+  struct Range
+  {
+    Range(int low, int high);
+    Range(const Range& r2)
+      : d_low(r2.d_low), d_extent(r2.d_extent) { }
+
+    Range& operator=(const Range& r2)
+    { d_low = r2.d_low; d_extent = r2.d_extent; return *this; }
+
+    bool operator==(const Range& r2) const
+    { return d_low == r2.d_low && d_extent == r2.d_extent; }
+
+    bool operator!=(const Range& r2) const
+    { return d_low != r2.d_low || d_extent != r2.d_extent; }
+    
+    bool operator<(const Range& r2) const
+    { return d_low < r2.d_low; }
+
+    inline void display(std::ostream& out) const;
+	
+    int high() const { return (int)(d_low + d_extent); }
+    int d_low;
+    unsigned long d_extent;
+  };
+
 public:
   ConsecutiveRangeSet(std::list<int>& set);
 
@@ -157,32 +184,6 @@ private:
   ConsecutiveRangeSet(InputIterator begin, InputIterator end)
     : d_rangeSet(begin, end) { setSize(); }
   void setSize();
-
-  // represents range: [low, low+extent]
-  struct Range
-  {
-    Range(int low, int high);
-    Range(const Range& r2)
-      : d_low(r2.d_low), d_extent(r2.d_extent) { }
-
-    Range& operator=(const Range& r2)
-    { d_low = r2.d_low; d_extent = r2.d_extent; return *this; }
-
-    bool operator==(const Range& r2) const
-    { return d_low == r2.d_low && d_extent == r2.d_extent; }
-
-    bool operator!=(const Range& r2) const
-    { return d_low != r2.d_low || d_extent != r2.d_extent; }
-    
-    bool operator<(const Range& r2) const
-    { return d_low < r2.d_low; }
-
-    inline void display(std::ostream& out) const;
-	
-    int high() const { return (int)(d_low + d_extent); }
-    int d_low;
-    unsigned long d_extent;
-  };
   
   std::vector<Range> d_rangeSet;
   unsigned long d_size; // sum of range (extent+1)'s
