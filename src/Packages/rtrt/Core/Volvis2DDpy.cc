@@ -277,7 +277,6 @@ Volvis2DDpy::drawBackground( void ) {
 // template<class T>
 void
 Volvis2DDpy::addWidget( int x, int y ) {
-  float color[3] = {0.0,0.6,0.85};
   float halfWidth = 30.0f*pixel_width;
   // create new widget if placement keeps entire widget inside window
   if( (float)x/pixel_width-halfWidth >= UIwind->border &&
@@ -285,8 +284,7 @@ Volvis2DDpy::addWidget( int x, int y ) {
     widgets.push_back( new TriWidget( (float)x/pixel_width, 2*halfWidth,
 				      UIwind->height - UIwind->border -
 				      UIwind->menu_height -
-				      (float)y/pixel_height,
-				      color, 1.0f ) );
+				      (float)y/pixel_height ) );
 
     // color any previously focused widget to show that it is now not in focus
     if( widgets.size() > 1 )
@@ -302,50 +300,29 @@ Volvis2DDpy::addWidget( int x, int y ) {
 //   -> rect("rainbow") -> tri...
 // template<class T>
 void
-Volvis2DDpy::cycleWidgets( int type ) {
-  // values to copy as widget is removed and replaced by next type
-  int switchFlag;
-  float opacity, left, top, width, height, opac_x, opac_y;
-  float color[3];
-  float *params[numWidgetParams];
-
-  // store away widget values
-  widgets[pickedIndex]->returnParams( params );
-  left = *params[0];
-  top = *params[1];
-  width = *params[2];
-  height = *params[3];
-  color[0] = *params[4];
-  color[1] = *params[5];
-  color[2] = *params[6];
-  opacity = *params[7];
-  opac_x = *params[8];
-  opac_y = *params[9];
-  switchFlag = widgets[pickedIndex]->switchFlag;
-  Texture<GLfloat> *temp = widgets[pickedIndex]->transText;
+Volvis2DDpy::cycleWidgets(void) {
+  Widget* old_wid = widgets.back();
+  Widget* new_wid = 0;
 
   // remove widget
   widgets.pop_back();
+
   // and replace with appropriate type
-  switch( (++type)%4 ) {
-  case 0:   // tri
-    widgets.push_back(new TriWidget(left+width/2,width,
-				    top-UIwind->menu_height-UIwind->border,
-				    top-height,color,
-				    opacity,opac_x,opac_y,temp,switchFlag));
+  switch( old_wid->type ) {
+  case Tri:
+    new_wid = new TentWidget( old_wid );
     break;
-  case 1:   // elliptical
-    widgets.push_back(new RectWidget(left,top,width,top-height,color,opacity, 
-				     1,opac_x,opac_y,temp,switchFlag));
+  case Tent:
+    new_wid = new EllipWidget( old_wid );
     break;
-  case 2:   // one-dimensional
-    widgets.push_back(new RectWidget(left,top,width,height,color,opacity, 
-				     2,opac_x,opac_y,temp,switchFlag));
+  case Ellipse:
+    new_wid = new RBowWidget( old_wid );
     break;
-  case 3:   // rainbow
-    widgets.push_back(new RectWidget(left,top,width,height,color,opacity,
-				     3,opac_x,opac_y,temp,switchFlag));
-  } // switch()
+  case Rainbow:
+    new_wid = new TriWidget( old_wid );
+  } // switch(type)
+
+  widgets.push_back( new_wid );
   transFunc_changed  = true;
   redraw = true;
 } // cycleWidgets()
@@ -768,7 +745,7 @@ Volvis2DDpy::key_pressed(unsigned long key) {
   case XK_s:
   case XK_S:
     if( pickedIndex >= 0 )
-      widgets[pickedIndex]->reflectTrans();
+      widgets[pickedIndex]->changeTextureAlignment();
     transFunc_changed = true;
     redraw = true;
     break;
@@ -888,17 +865,15 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
   // if user selected the cutplane probe widget, add it to the widget vector
   float hist_x = x/pixel_width;
   float hist_y = (height-y)/pixel_height;
+  float color[3] = {1.0, 1.0, 0.0};
+  float cpx = cp_probe->getCenterX();
+  float cpy = cp_probe->getCenterY();
+  float cpwidth = cp_probe->width;
+  float cpheight = cp_probe->height;
   if( display_probe &&
-      hist_x >= cp_probe->topLeftVertex[0] - 5 &&
-      hist_x <= cp_probe->lowRightVertex[0] + 5 &&
-      hist_y >= cp_probe->lowRightVertex[1] - 5 &&
-      hist_y <= cp_probe->topLeftVertex[1] + 5 ) {
-    float color[3] = {1.0, 1.0, 0.0};
-    float x = (cp_probe->topLeftVertex[0]+cp_probe->lowRightVertex[0])*0.5f;
-    float y = (cp_probe->topLeftVertex[1]+cp_probe->lowRightVertex[1])*0.5f;
-    float width = cp_probe->lowRightVertex[0]-cp_probe->topLeftVertex[0];
-    float height = cp_probe->topLeftVertex[1]-cp_probe->lowRightVertex[1];
-    widgets.push_back( new RectWidget( x, y, width, height, color, 1 ) );
+      hist_x >= cpx - 0.5*cpwidth - 5 && hist_x <= cpx + 0.5*cpwidth + 5 &&
+      hist_y >= cpy - cpheight*0.5 - 5 && hist_y <= cpy + cpheight*0.5 + 5 ) {
+    widgets.push_back( new EllipWidget( cpx, cpy, cpwidth, cpheight, color ) );
     widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
     if(widgets.size() > 1)
       widgets[widgets.size()-2]->changeColor( 0.85, 0.6, 0.6 );
@@ -928,7 +903,7 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
       if( pickedIndex > 0 )
 	widgets[pickedIndex-1]->changeColor( 0.85, 0.6, 0.6 );
       // set drawFlag for manipulate() to adjust texture color
-      widgets[pickedIndex]->drawFlag = 6;
+      widgets[pickedIndex]->drawFlag = Cmap;
       widgets[pickedIndex]->transText->store_position( x, y );
       redraw = true;
     } // else if
@@ -944,7 +919,7 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
     // if any part of a widget was selected (frame or texture)
     if( pickedIndex >= 0 || insideAnyWidget( x, y ) ) {
       prioritizeWidgets();
-      cycleWidgets( widgets[pickedIndex]->type );
+      cycleWidgets();
       widgets[pickedIndex]->changeColor( 0.0, 0.6, 0.85 );
       if( pickedIndex > 0 )
 	widgets[pickedIndex-1]->changeColor( 0.85, 0.6, 0.6 );
@@ -1019,7 +994,7 @@ Volvis2DDpy::button_released(MouseButton /*button*/, const int x, const int y){
 
   // release selected widget's drawing properties
   if( pickedIndex >= 0 )
-    widgets[pickedIndex]->drawFlag = 0;
+    widgets[pickedIndex]->drawFlag = Null;
 
   m_opacity_adjusting = false;
   cp_opacity_adjusting = false;
@@ -1063,7 +1038,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 
   if( button == MouseButton1 ) {
     // if the user has selected a widget by its frame
-    if( pickedIndex >= 0 && widgets[pickedIndex]->drawFlag != 6 ) {
+    if( pickedIndex >= 0 && widgets[pickedIndex]->drawFlag != Cmap ) {
       widgets[pickedIndex]->manipulate( x/pixel_width, 330.0-y/pixel_height );
 				       
       if( !widgetsMaintained ) {
@@ -1123,13 +1098,13 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     // if the user has selected a widget by its texture
     else if( pickedIndex >= 0 ) {
       // no reason to adjust a rainbow widget's texture color
-      if( widgets[pickedIndex]->type == 3 )
+      if( widgets[pickedIndex]->type == Rainbow )
 	return;
       // adjust widget texture's color
       widgets[pickedIndex]->transText->colormap( x, y );
-      if( widgets[pickedIndex]->type != 0 )
+      if( widgets[pickedIndex]->type != Tri )
 	// invert the widget frame's color to make it visible with texture
-	widgets[pickedIndex]->invertColor();
+	widgets[pickedIndex]->invertFocus();
 
       transFunc_changed = true;
       redraw = true;
@@ -1496,72 +1471,62 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
 
   for( int i = 0; i < widgets.size(); i++ ) {
     // if widget is a TriWidget...
-    if( widgets[i]->type == 0 ) {
+    if( widgets[i]->type == Tri ) {
       outfile << "TriWidget";
-      outfile << "\nLowerVertex: "
-	      << widgets[i]->lowVertex[0] << ' '
-	      << widgets[i]->lowVertex[1];
+      outfile << "\nBase: "
+	      << (widgets[i]->getBase())->x;
+      outfile << "\nWidth: "
+	      << widgets[i]->width;
       outfile << "\nLeftLowerbound: "
-	      << widgets[i]->midLeftVertex[0] << ' '
-	      << widgets[i]->midLeftVertex[1];
-      outfile << "\nRightLowerbound: "
-	      << widgets[i]->midRightVertex[0] << ' '
-	      << widgets[i]->midRightVertex[1];
+	      << (widgets[i]->getTextLBound())->x << ' '
+	      << (widgets[i]->getTextLBound())->y;
       outfile << "\nLeftUpperbound: "
-	      << widgets[i]->topLeftVertex[0] << ' '
-	      << widgets[i]->topLeftVertex[1];
-      outfile << "\nRightUpperbound: "
-	      << widgets[i]->topRightVertex[0] << ' '
-	      << widgets[i]->topRightVertex[1];
-      outfile << "\nWidgetFrameColor: "
-	      << widgets[i]->color[0] << ' '
-	      << widgets[i]->color[1] << ' '
-	      << widgets[i]->color[2] << ' '
-	      << widgets[i]->opacity;
+	      << (widgets[i]->getTextUBound())->x << ' '
+	      << (widgets[i]->getTextUBound())->y;
       outfile << "\nWidgetOpacityStarPosition: "
-	      << widgets[i]->opac_x << ' '
-	      << widgets[i]->opac_y;
-      outfile << "\nWidgetTextureColor: "
-	      << widgets[i]->transText->current_color[0] << ' '
-	      << widgets[i]->transText->current_color[1] << ' '
-	      << widgets[i]->transText->current_color[2];
+	      << widgets[i]->opac_x;
       outfile << "\nWidgetTextureColormapOffset: "
-	      << widgets[i]->transText->colormap_x_offset << ' '
-	      << widgets[i]->transText->colormap_y_offset;
+	      << widgets[i]->transText->cmap_x << ' '
+	      << widgets[i]->transText->cmap_y;
       outfile << "\nWidgetTextureAlignment: "
-	      << widgets[i]->switchFlag;
+	      << (int)(widgets[i]->textureAlign);
       outfile << "\n//TriWidget\n\n";
     } // if()
     // if widget is a RectWidget...
     else {
-      outfile << "RectWidget";
-      outfile << "\nType: " << widgets[i]->type;
+      if( widgets[i]->type == Tent )
+	outfile << "TentWidget";
+      else if( widgets[i]->type == Ellipse )
+	outfile << "EllipseWidget";
+      else if( widgets[i]->type == Rainbow )
+	outfile << "RainbowWidget";
+      else
+	outfile << "Unknown Widget";
+
       outfile << "\nUpperLeftCorner: "
-	      << widgets[i]->topLeftVertex[0] << ' '
-	      << widgets[i]->topLeftVertex[1];
-      outfile << "\nWidth: " << widgets[i]->width;	  
+	      << (widgets[i]->getBase())->x << ' '
+	      << (widgets[i]->getBase())->y;
+      outfile << "\nWidth: " << widgets[i]->width;
       outfile << "\nHeight: " << widgets[i]->height;
-      outfile << "\nWidgetFrameColor: "
-	      << widgets[i]->color[0] << ' '	  
-	      << widgets[i]->color[1] << ' '	  
-	      << widgets[i]->color[2] << ' '
-	      << widgets[i]->opacity;
       outfile << "\nFocusStarLocation: "
-	      << widgets[i]->focus_x << ' '
-	      << widgets[i]->focus_y;
+	      << (widgets[i]->getFocus())->x << ' '
+	      << (widgets[i]->getFocus())->y;
       outfile << "\nOpacityStarLocation: "
-	      << widgets[i]->opac_x << ' '
-	      << widgets[i]->opac_y;
-      outfile << "\nWidgetTextureColor: "
-	      << widgets[i]->transText->current_color[0] << ' '
-	      << widgets[i]->transText->current_color[1] << ' '
-	      << widgets[i]->transText->current_color[2];
+	      << widgets[i]->opac_x;
       outfile << "\nWidgetColormapOffset: "
-	      << widgets[i]->transText->colormap_x_offset << ' '
-	      << widgets[i]->transText->colormap_y_offset;
+	      << widgets[i]->transText->cmap_x << ' '
+	      << widgets[i]->transText->cmap_y;
       outfile << "\nWidgetTextureAlignment: "
-	      << widgets[i]->switchFlag;
-      outfile << "\n//RectWidget\n\n";
+	      << (int)(widgets[i]->textureAlign);
+
+      if( widgets[i]->type == Tent )
+	outfile << "\n//TentWidget\n\n";
+      else if( widgets[i]->type == Ellipse )
+	outfile << "\n//EllipseWidget\n\n";
+      else if( widgets[i]->type == Rainbow )
+	outfile << "\n//RainbowWidget\n\n";
+      else
+	outfile << "\n//Unknown Widget\n\n";
     } // else()
   } // for()
   outfile.close();
@@ -1650,126 +1615,110 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
   }
   while( !infile.eof() ) {
     infile >> token;
-    while( token != "TriWidget" && token != "RectWidget" && !infile.eof() )
+    while( token != "TriWidget" && token != "TentWidget" &&
+	   token != "EllipseWidget" && token != "RainbowWidget" &&
+	   !infile.eof() )
       infile >> token;
     // if widget is a TriWidget...
     if( token == "TriWidget" ) {
-      float lV0 = 0.0f;       float lV1 = 0.0f;      float mLV0 = 0.0f;
-      float mLV1 = 0.0f;      float mRV0 = 0.0f;     float mRV1 = 0.0f;
-      float uLV0 = 0.0f;      float uLV1 = 0.0f;     float uRV0 = 0.0f;
-      float uRV1 = 0.0f;      float red = 0.0f;      float green = 0.0f;
-      float blue = 0.0f;      float opacity = 0.0f;  float opac_x = 0.0f;
-      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
-      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
-      int switchFlag = 0;
+      float base_x = 0.0f;      float width = 0.0f;
+      float lbound_x = 0.0f;    float lbound_y = 0.0f;
+      float ubound_x = 0.0f;    float ubound_y = 0.0f;
+      int cmap_x = 0;           int cmap_y = 0;
+      float ostar_x = 0.0f;     int textAlign = 0;
       while( token != "//TriWidget" ) {
 	infile >> token;
-	if( token == "LowerVertex:" ) {
-	  infile >> lV0 >> lV1;
+	if( token == "Base:" ) {
+	  infile >> base_x;
 	  infile >> token;
-	} // if()
-	if( token == "LeftLowerbound:" ) {
-	  infile >> mLV0 >> mLV1;
-	  infile >> token;
-	} // if()
-	if( token == "RightLowerbound:" ) {
-	  infile >> mRV0 >> mRV1;
-	  infile >> token;
-	} // if()
-	if( token == "LeftUpperbound:" ) {
-	  infile >> uLV0 >> uLV1;
-	  infile >> token;
-	} // if()
-	if( token == "RightUpperbound:" ) {
-	  infile >> uRV0 >> uRV1;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetFrameColor:" ) {
-	  infile >> red >> green >> blue >> opacity;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetOpacityStarPosition:" ) {
-	  infile >> opac_x >> opac_y;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureColor:" ) {
-	  infile >> text_red >> text_green >> text_blue;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureColormapOffset:" ) {
-	  infile >> text_x_off >> text_y_off;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureAlignment:" ) {
-	  infile >> switchFlag;
-	  infile >> token;
-	} // if()
-      } // while()
-      widgets.push_back( new TriWidget( lV0, mLV0, mLV1, mRV0, mRV1, uLV0,
-					uLV1, uRV0, uRV1, red, green, blue,
-					opacity, opac_x, opac_y, text_red,
-					text_green, text_blue, text_x_off, 
-					text_y_off, switchFlag ) );
-    } // if()
-    // if widget is a RectWidget...
-    else if( token == "RectWidget" ) {
-      int type = -1;          float left = 0.0f;     float top = 0.0f;
-      float width = 0.0f;     float height = 0.0f;   float red = 0.0f;
-      float green = 0.0f;     float blue = 0.0f;     float opacity = 0.0f;
-      float focus_x = 0.0f;   float focus_y = 0.0f;  float opac_x = 0.0f;
-      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
-      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
-      int switchFlag = 0;
-      while( token != "//RectWidget" ) {
-	infile >> token;
-	if( token == "Type:" ) {
-	  infile >> type;
-	  infile >> token;
-	} // if()
-	if( token == "UpperLeftCorner:" ) {
-	  infile >> left >> top;
-	  infile >> token;
-	} // if()
+	}
 	if( token == "Width:" ) {
 	  infile >> width;
 	  infile >> token;
-	} // if()
+	}
+	if( token == "LeftLowerbound:" ) {
+	  infile >> lbound_x >> lbound_y;
+	  infile >> token;
+	}
+	if( token == "LeftUpperbound:" ) {
+	  infile >> ubound_x >> ubound_y;
+	  infile >> token;
+	}
+	if( token == "WidgetOpacityStarPosition:" ) {
+	  infile >> ostar_x;
+	  infile >> token;
+	}
+	if( token == "WidgetTextureColormapOffset:" ) {
+	  infile >> cmap_x >> cmap_y;
+	  infile >> token;
+	}
+	if( token == "WidgetTextureAlignment:" ) {
+	  infile >> textAlign;
+	  infile >> token;
+	}
+      } // while token is not '//TriWidget'
+      
+      widgets.push_back( new TriWidget( base_x, width, lbound_x, lbound_y,
+					ubound_x, ubound_y, cmap_x, cmap_y,
+					ostar_x, (TextureAlign)textAlign ) );
+    } // if a TriWidget
+    
+    // ...otherwise, if widget is a RectWidget...
+    else if( token == "TentWidget" || token == "EllipseWidget" ||
+	     token == "RainbowWidget" ) {
+      float left = 0.0f;      float top = 0.0f;
+      float width = 0.0f;     float height = 0.0f;
+      float focus_x = 0.0f;   float focus_y = 0.0f;
+      int cmap_x = 0;         int cmap_y = 0;
+      float opac_x = 0.0f;    int textAlign = 0;
+      while( token != "//TentWidget" && token != "//EllipseWidget" &&
+	     token != "//RainbowWidget" ) {
+	infile >> token;
+	if( token == "UpperLeftCorner:" ) {
+	  infile >> left >> top;
+	  infile >> token;
+	}
+	if( token == "Width:" ) {
+	  infile >> width;
+	  infile >> token;
+	}
 	if( token == "Height:" ) {
 	  infile >> height;
 	  infile >> token;
-	} // if()
-	if( token == "WidgetFrameColor:" ) {
-	  infile >> red >> green >> blue >> opacity;
-	  infile >> token;
-	} // if()
+	}
 	if( token == "FocusStarLocation:" ) {
 	  infile >> focus_x >> focus_y;
 	  infile >> token;
-	} // if()
+	}
 	if( token == "OpacityStarLocation:" ) {
-	  infile >> opac_x >> opac_y;
+	  infile >> opac_x;
 	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureColor:" ) {
-	  infile >> text_red >> text_green >> text_blue;
-	  infile >> token;
-	} // if()
+	}
 	if( token == "WidgetColormapOffset:" ) {
-	  infile >> text_x_off >> text_y_off;
+	  infile >> cmap_x >> cmap_y;
 	  infile >> token;
-	} // if()
+	}
 	if( token == "WidgetTextureAlignment:" ) {
-	  infile >> switchFlag;
+	  infile >> textAlign;
 	  infile >> token;
-	} // if()
-      } // else while()
-      widgets.push_back( new RectWidget( type, left, top, width, height, red,
-					 green, blue, opacity, focus_x,
-					 focus_y, opac_x, opac_y, text_red,
-					 text_green, text_blue, text_x_off,
-					 text_y_off, switchFlag ) );
-    } // else if()
-  } // while()
+	}
+      } // while not the end of the widget loading
+      
+      if( token == "//TentWidget" )
+	widgets.push_back( new TentWidget( left, top, width, height, opac_x,
+					   focus_x, focus_y, cmap_x, cmap_y,
+					   (TextureAlign)textAlign ) );
+      else if( token == "//EllipseWidget" )
+	widgets.push_back( new EllipWidget( left, top, width, height, opac_x,
+					    focus_x, focus_y, cmap_x, cmap_y,
+					    (TextureAlign)textAlign ) );
+      else if( token == "//RainbowWidget" )
+	widgets.push_back( new RBowWidget( left, top, width, height, opac_x,
+					   focus_x, focus_y, cmap_x, cmap_y,
+					   (TextureAlign)textAlign ) );
+    } // if a rectangular widget
+  } // while not at the end of the file
+  colorWidgetFrames();
   printf( "Loaded state %d successfully.\n", stateNum );
   lastLoadState = file;
   infile.close();
@@ -1780,13 +1729,23 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 
 
 void
+Volvis2DDpy::colorWidgetFrames( void )
+{
+  for( int i = 0; i < widgets.size()-1; i++ )
+    widgets[i]->changeColor( 0.85, 0.6, 0.6 );
+  widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
+}
+
+
+
+void
 Volvis2DDpy::loadWidgets( char* file )
 {
   ifstream infile( file );
   if( !infile.good() ) {
     perror( "Could not open file!" );
     return;
-  } // if()
+  }
 
   string token;
   infile >> token;
@@ -1794,6 +1753,12 @@ Volvis2DDpy::loadWidgets( char* file )
     float vmn, vmx;
     float gmn, gmx;
     infile >> vmn >> vmx >> gmn >> gmx;
+//      if( vmn < vmin || vmx > vmax || gmn < gmin || gmx > gmax ) {
+//        printf( "Load file's histogram bounds outside current histogram limits");
+//        printf( "\nAborting file load!\n" );
+//        return;
+//      }
+    createBGText( vmn, vmx, gmn, gmx );
     current_vmin = selected_vmin = vmn;
     current_vmax = selected_vmax = vmx;
     current_gmin = selected_gmin = gmn;
@@ -1803,126 +1768,111 @@ Volvis2DDpy::loadWidgets( char* file )
   }
   while( !infile.eof() ) {
     infile >> token;
-    while( token != "TriWidget" && token != "RectWidget" && !infile.eof() )
+    while( token != "TriWidget" && token != "TentWidget" &&
+	   token != "EllipseWidget" && token != "RainbowWidget" &&
+	   !infile.eof() )
       infile >> token;
     // if widget is a TriWidget...
     if( token == "TriWidget" ) {
-      float lV0 = 0.0f;       float lV1 = 0.0f;      float mLV0 = 0.0f;
-      float mLV1 = 0.0f;      float mRV0 = 0.0f;     float mRV1 = 0.0f;
-      float uLV0 = 0.0f;      float uLV1 = 0.0f;     float uRV0 = 0.0f;
-      float uRV1 = 0.0f;      float red = 0.0f;      float green = 0.0f;
-      float blue = 0.0f;      float opacity = 0.0f;  float opac_x = 0.0f;
-      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
-      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
-      int switchFlag = 0;
+      float base_x = 0.0f;      float width = 0.0f;
+      float lbound_x = 0.0f;    float lbound_y = 0.0f;
+      float ubound_x = 0.0f;    float ubound_y = 0.0f;
+      int cmap_x = 0;           int cmap_y = 0;
+      float ostar_x = 0.0f;     int textAlign = 0;
       while( token != "//TriWidget" ) {
 	infile >> token;
-	if( token == "LowerVertex:" ) {
-	  infile >> lV0 >> lV1;
+	if( token == "Base:" ) {
+	  infile >> base_x;
 	  infile >> token;
-	} // if()
-	if( token == "LeftLowerbound:" ) {
-	  infile >> mLV0 >> mLV1;
-	  infile >> token;
-	} // if()
-	if( token == "RightLowerbound:" ) {
-	  infile >> mRV0 >> mRV1;
-	  infile >> token;
-	} // if()
-	if( token == "LeftUpperbound:" ) {
-	  infile >> uLV0 >> uLV1;
-	  infile >> token;
-	} // if()
-	if( token == "RightUpperbound:" ) {
-	  infile >> uRV0 >> uRV1;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetFrameColor:" ) {
-	  infile >> red >> green >> blue >> opacity;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetOpacityStarPosition:" ) {
-	  infile >> opac_x >> opac_y;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureColor:" ) {
-	  infile >> text_red >> text_green >> text_blue;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureColormapOffset:" ) {
-	  infile >> text_x_off >> text_y_off;
-	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureAlignment:" ) {
-	  infile >> switchFlag;
-	  infile >> token;
-	} // if()
-      } // while()
-      widgets.push_back( new TriWidget( lV0, mLV0, mLV1, mRV0, mRV1, uLV0,
-					uLV1, uRV0, uRV1, red, green, blue,
-					opacity, opac_x, opac_y, text_red,
-					text_green, text_blue, text_x_off, 
-					text_y_off, switchFlag ) );
-    } // if()
-    // if widget is a RectWidget...
-    else if( token == "RectWidget" ) {
-      int type = -1;          float left = 0.0f;     float top = 0.0f;
-      float width = 0.0f;     float height = 0.0f;   float red = 0.0f;
-      float green = 0.0f;     float blue = 0.0f;     float opacity = 0.0f;
-      float focus_x = 0.0f;   float focus_y = 0.0f;  float opac_x = 0.0f;
-      float opac_y = 0.0f;    float text_red = 0.0f; float text_green = 0.0f;
-      float text_blue = 0.0f; int text_x_off = 0;    int text_y_off = 0;
-      int switchFlag = 0;
-      while( token != "//RectWidget" ) {
-	infile >> token;
-	if( token == "Type:" ) {
-	  infile >> type;
-	  infile >> token;
-	} // if()
-	if( token == "UpperLeftCorner:" ) {
-	  infile >> left >> top;
-	  infile >> token;
-	} // if()
+	}
 	if( token == "Width:" ) {
 	  infile >> width;
 	  infile >> token;
-	} // if()
+	}
+	if( token == "LeftLowerbound:" ) {
+	  infile >> lbound_x >> lbound_y;
+	  infile >> token;
+	}
+	if( token == "LeftUpperbound:" ) {
+	  infile >> ubound_x >> ubound_y;
+	  infile >> token;
+	}
+	if( token == "WidgetOpacityStarPosition:" ) {
+	  infile >> ostar_x;
+	  infile >> token;
+	}
+	if( token == "WidgetTextureColormapOffset:" ) {
+	  infile >> cmap_x >> cmap_y;
+	  infile >> token;
+	}
+	if( token == "WidgetTextureAlignment:" ) {
+	  infile >> textAlign;
+	  infile >> token;
+	}
+      } // while token is not '//TriWidget'
+      
+      widgets.push_back( new TriWidget( base_x, width, lbound_x, lbound_y,
+					ubound_x, ubound_y, cmap_x, cmap_y,
+					ostar_x, (TextureAlign)textAlign ) );
+    } // if a TriWidget
+    
+    // ...otherwise, if widget is a RectWidget...
+    else if( token == "TentWidget" || token == "EllipseWidget" ||
+	     token == "RainbowWidget" ) {
+      float left = 0.0f;      float top = 0.0f;
+      float width = 0.0f;     float height = 0.0f;
+      float focus_x = 0.0f;   float focus_y = 0.0f;
+      int cmap_x = 0;         int cmap_y = 0;
+      float opac_x = 0.0f;    int textAlign = 0;
+      while( token != "//TentWidget" && token != "//EllipseWidget" &&
+	     token != "//RainbowWidget" ) {
+	infile >> token;
+	if( token == "UpperLeftCorner:" ) {
+	  infile >> left >> top;
+	  infile >> token;
+	}
+	if( token == "Width:" ) {
+	  infile >> width;
+	  infile >> token;
+	}
 	if( token == "Height:" ) {
 	  infile >> height;
 	  infile >> token;
-	} // if()
-	if( token == "WidgetFrameColor:" ) {
-	  infile >> red >> green >> blue >> opacity;
-	  infile >> token;
-	} // if()
+	}
 	if( token == "FocusStarLocation:" ) {
 	  infile >> focus_x >> focus_y;
 	  infile >> token;
-	} // if()
+	}
 	if( token == "OpacityStarLocation:" ) {
-	  infile >> opac_x >> opac_y;
+	  infile >> opac_x;
 	  infile >> token;
-	} // if()
-	if( token == "WidgetTextureColor:" ) {
-	  infile >> text_red >> text_green >> text_blue;
-	  infile >> token;
-	} // if()
+	}
 	if( token == "WidgetColormapOffset:" ) {
-	  infile >> text_x_off >> text_y_off;
+	  infile >> cmap_x >> cmap_y;
 	  infile >> token;
-	} // if()
+	}
 	if( token == "WidgetTextureAlignment:" ) {
-	  infile >> switchFlag;
+	  infile >> textAlign;
 	  infile >> token;
-	} // if()
-      } // else while()
-      widgets.push_back( new RectWidget( type, left, top, width, height, red,
-					 green, blue, opacity, focus_x,
-					 focus_y, opac_x, opac_y, text_red,
-					 text_green, text_blue, text_x_off,
-					 text_y_off, switchFlag ) );
-    } // else if()
-  } // while()
+	}
+      } // while not the end of the widget loading
+      
+      if( token == "//TentWidget" )
+	widgets.push_back( new TentWidget( left, top, width, height, opac_x,
+					   focus_x, focus_y, cmap_x, cmap_y,
+					   (TextureAlign)textAlign ) );
+      else if( token == "//EllipseWidget" )
+	widgets.push_back( new EllipWidget( left, top, width, height, opac_x,
+					    focus_x, focus_y, cmap_x, cmap_y,
+					    (TextureAlign)textAlign ) );
+      else if( token == "//RainbowWidget" )
+	widgets.push_back( new RBowWidget( left, top, width, height, opac_x,
+					   focus_x, focus_y, cmap_x, cmap_y,
+					   (TextureAlign)textAlign ) );
+    } // if a rectangular widget
+  } // while not at the end of the file
+  
+  colorWidgetFrames();
   infile.close();
   transFunc_changed = true;
   redraw = true;
@@ -1973,13 +1923,13 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   }
   
   original_t_inc = t_inc;
-  bgTextImage = new Texture<GLfloat>();
-  transTexture1 = new Texture<GLfloat>();
-  transTexture2 = new Texture<GLfloat>();
-  transTexture3 = new Texture<GLfloat>();
+  bgTextImage = new Texture<GLfloat>(0,0);
+  transTexture1 = new Texture<GLfloat>(0,0);
+  transTexture2 = new Texture<GLfloat>(0,0);
+  transTexture3 = new Texture<GLfloat>(0,0);
 
   float color[3] = {1,1,0};
-  cp_probe = new RectWidget( 0, 0, 0, 0, color, 1 );
+  cp_probe = new EllipWidget( 0, 0, 0, 0, color );
   display_probe = false;
 
   set_resolution( init_width, init_height );
@@ -1992,6 +1942,8 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   UIgrid = 0;
 //    manipWidget = cp_probe;
 } // Volvis2DDpy()
+
+
 
 // template<class T>
 void Volvis2DDpy::animate(bool &cutplane_active) {
