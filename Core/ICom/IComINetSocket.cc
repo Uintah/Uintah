@@ -42,7 +42,7 @@ namespace SCIRun {
 
 
 IComINetSocket::IComINetSocket() :
-socketfd_(0), hassocket_(false), isconnected_(false), secs_(0), microsecs_(0)
+secs_(0), microsecs_(0), socketfd_(0), hassocket_(false), isconnected_(false)
 {
 
 }
@@ -765,7 +765,7 @@ bool	IComINetSocket::send(IComPacketHandle &packet, IComSocketError &err)
     // If we are writing to a socket that was close, we want
     // an error msg, we do not want the program to quit as the
     // default handler does.
-    ::signal(SIGPIPE,SIG_IGN);
+	//    ::signal(SIGPIPE,SIG_IGN);
     
 	::strncpy(reinterpret_cast<char *>(&(header[0])),"icpacket",8);
 	header[2] = packet->getelsize();
