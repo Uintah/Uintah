@@ -132,7 +132,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //correct inlet velocities to account for change in properties
     // require : [u,v,w]VelocitySP
     // compute : densitySIVBC, [u,v,w]VelocitySIVBC
-    d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
+    d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, 
 						  new_dw);
 
     // linearizes and solves pressure eqn
@@ -142,13 +142,13 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
     //           presLinSrcPS (** WARNING ** lin src not done yet)
     //           (instead we have presLinSrcPBLM)
-    d_pressSolver->solve(level, sched, new_dw, new_dw, time, delta_t);
+    d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
 
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densitySIVBC, pressurePS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelocityCPBC
-    d_boundaryCondition->sched_computePressureBC(level, sched, new_dw,
+    d_boundaryCondition->sched_computePressureBC(level, sched, old_dw,
 						 new_dw);
 
     // Momentum solver
@@ -159,7 +159,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
     //           [u,v,w]VelocityMS
     for (int index = 0; index < Arches::NDIM; ++index) {
-      d_momSolver->solve(level, sched, new_dw, new_dw, time, delta_t, index);
+      d_momSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
     
     // equation for scalars
@@ -169,19 +169,19 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     for (int index = 0;index < d_props->getNumMixVars(); index ++) {
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve different scalars
-      d_scalarSolver->solve(level, sched, new_dw, new_dw, time, delta_t, index);
+      d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
 
     // update properties
     // require : densitySIVBC
     // compute : densityRCP
-    d_props->sched_reComputeProps(level, sched, new_dw, new_dw);
+    d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
     // require : densityRCP, viscosityCTS, [u,v,w]VelocityMS
     // compute : viscosityRCTS
-    d_turbModel->sched_reComputeTurbSubmodel(level, sched, new_dw, new_dw);
+    d_turbModel->sched_reComputeTurbSubmodel(level, sched, old_dw, new_dw);
 
 #ifdef WONT_COMPILE_YET
     // not sure...but we need to execute tasks somewhere
@@ -192,7 +192,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     ++nlIterations;
 
     // residual represents the degrees of inaccuracies
-    nlResidual = computeResidual(level, sched, new_dw, new_dw);
+    nlResidual = computeResidual(level, sched, old_dw, new_dw);
 
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
 
@@ -379,6 +379,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.28  2000/06/21 06:49:21  bbanerje
+// Straightened out some of the problems in data location .. still lots to go.
+//
 // Revision 1.27  2000/06/18 01:20:15  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

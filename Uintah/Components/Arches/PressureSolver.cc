@@ -145,8 +145,8 @@ void PressureSolver::solve(const LevelP& level,
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
-  ++d_generation;
+  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  //++d_generation;
 
   //computes stencil coefficients and source terms
   // require : pressureIN, densitySIVBC, viscosityCTS, [u,v,w]VelocitySIVBC
@@ -155,7 +155,8 @@ void PressureSolver::solve(const LevelP& level,
   //           vVelLinSrcPBLM, wVelLinSrcPBLM, uVelNonLinSrcPBLM 
   //           vVelNonLinSrcPBLM, wVelNonLinSrcPBLM, presCoefPBLM 
   //           presLinSrcPBLM, presNonLinSrcPBLM
-  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
+  //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t);
+  sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t);
 
   //residual at the start of linear solve
   // this can be part of linear solver
@@ -167,12 +168,14 @@ void PressureSolver::solve(const LevelP& level,
   // Schedule the pressure solve
   // require : pressureIN, presCoefPBLM, presNonLinSrcPBLM
   // compute : presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
-  d_linearSolver->sched_pressureSolve(level, sched, new_dw, matrix_dw);
+  //d_linearSolver->sched_pressureSolve(level, sched, new_dw, matrix_dw);
+  d_linearSolver->sched_pressureSolve(level, sched, old_dw, new_dw);
 
   // Schedule Calculation of pressure norm
   // require :
   // compute :
-  sched_normPressure(level, sched, new_dw, matrix_dw);
+  //sched_normPressure(level, sched, new_dw, matrix_dw);
+  sched_normPressure(level, sched, old_dw, new_dw);
   
 }
 
@@ -200,13 +203,13 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       // Requires
       tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -332,6 +335,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.23  2000/06/21 06:49:21  bbanerje
+// Straightened out some of the problems in data location .. still lots to go.
+//
 // Revision 1.22  2000/06/21 06:12:12  bbanerje
 // Added missing VarLabel* mallocs .
 //
