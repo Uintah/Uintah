@@ -69,7 +69,7 @@
     </inputs>
     <outputs>
      <port>
-       <name>Field</name>
+       <name>Output Field</name>
        <datatype>SCIRun::Field</datatype>
      </port>
     </outputs>
