@@ -24,9 +24,9 @@ Allocator* default_allocator;
 // Granularity of medium things - 2k bytes
 #define MEDIUM_THRESHOLD (65536)
 
-#define MEDIUM_BIN(size) (((size)+2047)>>11)
+#define MEDIUM_BIN(size) (((size)-1)>>11)
 #define NMEDIUM_BINS ((MEDIUM_THRESHOLD)>>11)
-#define MEDIUM_BINSIZE(bin) (((bin)<<11))
+#define MEDIUM_BINSIZE(bin) (((bin)<<11)+2048)
 
 #define OVERHEAD (sizeof(Tag)+sizeof(Sentinel)+sizeof(Sentinel))
 
@@ -178,11 +178,13 @@ void* Allocator::alloc(size_t size, char* tag)
 //    fprintf(stderr, "Allocating: %d bytes (%s)\n", size, tag);
     if(size > MEDIUM_THRESHOLD)
 	return alloc_big(size, tag);
+    if(size == 0)
+	return 0;
 
     // Find a block that this will fit in...
     AllocBin* obj_bin=get_bin(size);
 #ifndef DEBUG
-    if(obj_bin->maxsize < size){
+    if(obj_bin->maxsize < size || size < obj_bin->minsize){
 	fprintf(stderr, "maxsize: %d\n", obj_bin->maxsize);
 	fprintf(stderr, "size: %d\n", size);
 	AllocError("Bins messed up...");
@@ -380,6 +382,8 @@ void* Allocator::alloc_big(size_t size, char* tag)
 
 void* Allocator::realloc(void* dobj, size_t newsize)
 {
+    if(!dobj)
+	return alloc(newsize, "realloc");
     // NOTE:  Realloc after free is NOT supported, and
     // probably never will be - MP problems
     char* dd=(char*)dobj;
@@ -413,7 +417,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 	return dobj;
     }
 
-    void* nobj=malloc(newsize);
+    void* nobj=alloc(newsize, "realloc");
     size_t minsize=newsize;
     if(newsize > oldobj->reqsize)
 	minsize=oldobj->reqsize;
@@ -425,6 +429,8 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 void Allocator::free(void* dobj)
 {
 //    fprintf(stderr, "Freeing %x\n", dobj);
+    if(!dobj)
+	return;
     char* dd=(char*)dobj;
     dd-=sizeof(Sentinel);
     dd-=sizeof(Tag);

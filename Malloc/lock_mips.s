@@ -9,11 +9,11 @@ Allocator_try_lock:
 	.set noreorder
 again:	
 	ll	$2, 0($4)
-	li	$5, 10
+	li	$5, 1
 	sc	$5, 0($4)
 	nop
 	beqz	$5, again
+        nop
 	j	$31
 
-	.livereg	0x2000FF0E,0x00000FFF
 	.end	Allocator_try_lock
