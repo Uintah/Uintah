@@ -766,32 +766,6 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
     glPopMatrix();
 }
 
-#if 0
-void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
-{
-  if(rad < 1.e-6)
-    { printf("Radius too small %f\n", rad);
-    return;
-    }
-
-  pre_draw(di, matl, 1);
-  glPushMatrix();
-  
-  glTranslated(cen.x(), cen.y(), cen.z());
-  
-  //  printf("%f, %f, %f center\n", cen.x(), cen.y(), cen.z());
-  //  printf("%f %f %f %f\n%f %f %f %f\n %f %f %f %f\n %f %f %f %f\n", m_tensor_matrix[0], m_tensor_matrix[1], m_tensor_matrix[2], m_tensor_matrix[3], m_tensor_matrix[4], m_tensor_matrix[5], m_tensor_matrix[6], m_tensor_matrix[7], m_tensor_matrix[8], m_tensor_matrix[9], m_tensor_matrix[10], m_tensor_matrix[11], m_tensor_matrix[12], m_tensor_matrix[13], m_tensor_matrix[14], m_tensor_matrix[15]);
-
-  glMultMatrixd(m_tensor_matrix);
-  di->polycount+=2*(nu-1)*(nv-1);
-  
-  
-
-  gluSphere(di->qobj, rad, nu, nv);
-  
-  glPopMatrix();
-}
-#endif
 
 // this is for alexandras volume render thing
 // this should be changed to use texture objects
@@ -4101,6 +4075,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.7  1999/09/05 05:32:28  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.6  1999/09/04 06:01:49  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

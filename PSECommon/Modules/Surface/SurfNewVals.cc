@@ -93,39 +93,42 @@ void SurfNewVals::execute() {
 	return;
     }
 
-    TriSurface *nts = new TriSurface(*ts);
-    double total2=0;
-    double total=0;
-    double error=0;
-//    cerr << "Comparing new to old...\n";
-
-    int j;
-#if 0
-    for (j=0; j<ts->bcIdx.size(); j++) {
+#if 1
+    TriSurface *nts = new TriSurface;
+    int i;
+    nts->points=ts->points;
+    nts->normals=ts->normals;
+    nts->normType=ts->normType;
+    for (i=0; i<ts->points.size(); i++) {
+	nts->bcVal.add((*(cmh.get_rep()))[i]);
+	nts->bcIdx.add(i);
+    }
+    nts->elements.resize(ts->elements.size());
+    for (i=0; i<ts->elements.size(); i++) {
+	nts->elements[i]=new TSElement(*(ts->elements[i]));
+    }
+#else
+    TriSurface *nts=new TriSurface(*ts);
+    nts->bcIdx.resize(0);
+    nts->bcVal.resize(0);
+    for (int i=0; i<cmh->nrows(); i++) {
+	nts->bcIdx.add(i);
+	nts->bcVal.add((*(cmh.get_rep()))[i]);
+    }
 #endif
 
-    for (j=0; j<64; j++) {
-	nts->bcVal[j]=(*(cmh.get_rep()))[j];
-	double tt=ts->bcVal[j];
-	total += fabs(tt);
-	total2 += fabs(nts->bcVal[j]);
-	error += fabs(tt-nts->bcVal[j]);
-//	cerr << j<<": "<< ts->bcVal[j]<<" -> "<<nts->bcVal[j]<<"\n";
-    }
-
-    cerr << "Total = "<<total<<"  total2 = "<<total2<<" error = "<<error<<"\n";
-    cerr << "j="<<j<<"\n";
-    cerr << "RMS Percent Error = "<<error*100/total<<" percent.\n";
     nts->name=nts->name+clString("Fwd");
     SurfaceHandle sh2(nts);
     osurf->send(sh2);
-}    
-
+}
 } // End namespace Modules
 } // End namespace PSECommon
 
 //
 // $Log$
+// Revision 1.6  1999/09/05 05:32:26  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.5  1999/08/25 03:48:01  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

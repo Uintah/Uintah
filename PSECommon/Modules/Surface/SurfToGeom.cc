@@ -296,6 +296,14 @@ void SurfToGeom::execute()
 				mat1=black;
 			    }
 			    spheres->add(scinew GeomMaterial(scinew GeomSphere(ts->points[i], radius, res, res), mat1));
+			    if (dsk && (used[i1]!=-1) && ts->normType==TriSurface::PointType && ts->normals.size()>i) {
+				Vector v(ts->normals[i]);
+				v.normalize();
+				v*=radius/6;
+				spheres->add(scinew GeomMaterial(scinew GeomCappedCylinder(ts->points[i]+v, ts->points[i]-v, radius, res, 1, 1), mat1));
+			    } else
+				spheres->add(scinew GeomMaterial(scinew GeomSphere(ts->points[i], radius, res, res), mat1));
+#if 0
 			    if (ts->normType==TriSurface::PointType && 
 				ts->normals.size()>i) {
 				GeomArrows* ga=scinew 
@@ -666,6 +674,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/09/05 05:32:27  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.4  1999/08/25 03:48:01  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

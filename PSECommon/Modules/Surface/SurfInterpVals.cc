@@ -28,27 +28,27 @@
 //  2) Interpolate data using a weighted n-nearest volume neighbors method
 //  3) Blur data values across surface using voronoi n-neaest surface neighbors
 
-#include <Util/NotFinished.h>
-#include <Containers/Array2.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/SurfacePort.h>
-#include <Datatypes/BasicSurfaces.h>
-#include <Datatypes/ScalarTriSurface.h>
-#include <Datatypes/SurfTree.h>
-#include <Datatypes/TriSurface.h>
-#include <Geometry/BBox.h>
-#include <Math/Expon.h>
-#include <Math/MusilRNG.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Containers/Array2.h>
+#include <SCICore/Containers/String.h>
+#include <SCICore/Persistent/Pstreams.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/ColumnMatrixPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
+#include <SCICore/Datatypes/SurfTree.h>
+#include <SCICore/Datatypes/TriSurface.h>
+#include <SCICore/Geometry/BBox.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/Expon.h>
+#include <SCICore/Math/MusilRNG.h>
 #include <stdio.h>
-#include <Malloc/Allocator.h>
 
 #define NBRHD 5
 
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::Datatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 
@@ -62,7 +62,6 @@ class SurfInterpVals : public Module {
     TCLint cache;
     Array2<int> contribIdx;
     Array2<double> contribAmt;
-    
 public:
     SurfInterpVals(const clString& id);
     virtual ~SurfInterpVals();
@@ -87,14 +86,6 @@ SurfInterpVals::SurfInterpVals(const clString& id)
     // Create the output port
     osurface=scinew SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
     add_oport(osurface);
-}
-
-SurfInterpVals::SurfInterpVals(const SurfInterpVals& copy, int deep)
-: Module(copy, deep), method("method", id, this),
-  numnbrs("numnbrs", id, this), surfid("surfid", id, this),
-  cache("cache", id, this)
-{
-    NOT_FINISHED("SurfInterpVals::SurfInterpVals");
 }
 
 SurfInterpVals::~SurfInterpVals()
@@ -312,47 +303,63 @@ void SurfInterpVals::execute()
 	    ts->bcVal=newvals;
 	    ts->bcIdx=newidx;
 	} else {
-	    Array2<int> cmap(ts->points.size(), nn);
-	    Array2<double> contrib(ts->points.size(), nn);
-	    Array1<int> idx(nn);
-	    Array1<double> d(nn);
 	    Array1<int> selected(v.size());
 	    
+	    int cacheok=cache.get();
+
+	    if (cacheok && contribIdx.dim1()==ts->points.size() &&
+		contribIdx.dim2()==nn && contribAmt.dim1()==ts->points.size() 
+		&& contribAmt.dim2()==nn) {
+		cacheok=1;
+	    } else {
+		cacheok=0;
+		contribIdx.newsize(ts->points.size(), nn);
+		contribAmt.newsize(ts->points.size(), nn);
+		contribIdx.initialize(-1);
+		contribAmt.initialize(0);
+	    }
+
 	    ts->bcIdx.resize(ts->points.size());
 	    ts->bcVal.resize(ts->points.size());
 	    for (int aa=0; aa<ts->points.size(); aa++) {
 		if (!(aa%500)) update_progress(aa,ts->points.size());
-		ts->bcIdx[aa]=aa;
-		Point a(ts->points[aa]);
-		selected.initialize(0);
-		idx.initialize(-1);
-		int nb;
-		for (nb=0; nb<nn; nb++) {
-		    double dt;
-		    for (int bb=0; bb<v.size(); bb++) {
-			if (selected[bb]) continue;
-			dt=Vector(a-p[bb]).length2();
-			if ((idx[nb] == -1) || (d[nb]>dt)) {
-			    idx[nb]=bb;
-			    d[nb]=dt;
+
+		if (!cacheok) {
+		    Point a(ts->points[aa]);
+		    selected.initialize(0);
+		    int nb;
+		    for (nb=0; nb<nn; nb++) {
+			double dt;
+			for (int bb=0; bb<v.size(); bb++) {
+			    if (selected[bb]) continue;
+			    dt=Vector(a-p[bb]).length2();
+//			    dt=dt*dt;
+			    if ((contribIdx(aa,nb) == -1) || (contribAmt(aa,nb)>dt)) {
+				contribIdx(aa,nb)=bb;
+				contribAmt(aa,nb)=dt;
+			    }
 			}
+			selected[contribIdx(aa,nb)]=1;
 		    }
-		    selected[idx[nb]]=1;
-		}
 		
-		double ratio=0;
-		for (nb=0; nb<nn; nb++) { 
-		    if (d[nb]==0) 
-			d[nb]=0.0000001; d[nb]=1./Sqrt(d[nb]); ratio+=d[nb]; 
-		}
-		ratio=1./ratio;
+		    double ratio=0;
+		    for (nb=0; nb<nn; nb++) { 
+			if (contribAmt(aa,nb)==0) 
+			    contribAmt(aa,nb)=0.0000001; 
+			contribAmt(aa,nb)=1./Sqrt(contribAmt(aa,nb)); 
+			ratio+=contribAmt(aa,nb); 
+		    }
+		    ratio=1./ratio;
+		    for (nb=0; nb<nn; nb++) {
+			contribAmt(aa,nb)*=ratio; 
+		    }
+		} 
+		    
 		double data=0;
-		for (nb=0; nb<nn; nb++) {
-		    d[nb]*=ratio; 
-		    cmap(aa,nb)=idx[nb]; 
-		    contrib(aa,nb)=d[nb]; 
-		    data+=v[idx[nb]]*d[nb];
+		for (int nb=0; nb<nn; nb++) {
+		    data+=v[contribIdx(aa,nb)]*contribAmt(aa,nb);
 		}
+		ts->bcIdx[aa]=aa;
 		ts->bcVal[aa]=data;
 	    }
 	}
@@ -391,6 +398,9 @@ void SurfInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/09/05 05:32:26  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.4  1999/08/25 03:48:01  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -27,6 +27,7 @@ MP(SegFldToSurfTree)
 MP(SelectSurfNodes)
 MP(Taubin)
 MP(Thermal)
+MP(TopoSurfToGeom)
 
 // EGI
 MP(Anneal)
@@ -68,6 +69,7 @@ MP(SiReInput)
 MP(SiReOutput)
 
 // Tensor
+MP(Bundles)
 MP(TensorAccessFields)
 MP(TensorAnisotropy)
 
@@ -105,6 +107,7 @@ void initPackage(const clString& tcl) {
   RM("EEG",	      "SelectSurfNodes",	 make_SelectSurfNodes,	    tcl+"/SelectSurfNodes.tcl");
   RM("EEG",	      "Taubin",			 make_Taubin,		    tcl+"/Taubin.tcl");
   RM("EEG",	      "Thermal",		 make_Thermal,		    tcl+"/Thermal.tcl");
+  RM("EEG",	      "TopoSurfToGeom",	 	 make_TopoSurfToGeom,   tcl+"/TopoSurfToGeom.tcl");
 
   // EGI
   RM("EGI",	      "Anneal",		 	 make_Anneal,		    tcl+"/Anneal.tcl");
@@ -146,6 +149,7 @@ void initPackage(const clString& tcl) {
   RM("SiRe",	      "SiReOutput",		 make_SiReOutput,	    tcl+"/SiReOutput.tcl");
 
   // Tensor
+  RM("Tensor",	      "Bundles",	 	 make_Bundles,   	    tcl+"/Bundles.tcl");
   RM("Tensor",	      "TensorAccessFields",	 make_TensorAccessFields,   "");
   RM("Tensor",	      "TensorAnisotropy",	 make_TensorAnisotropy,	    "");
 

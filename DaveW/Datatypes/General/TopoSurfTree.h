@@ -19,12 +19,10 @@
 namespace DaveW {
 namespace Datatypes {
 
-using SCICore::Containers::Array2;
-using SCICore::Containers::TrivialAllocator;
-using SCICore::Containers::Queue;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
 
+using namespace SCICore::Containers;
 using namespace SCICore::Datatypes;
 
 struct SrchLst;
@@ -89,8 +87,8 @@ public:
     Array1<TopoEntity> topoEdges;
     Array1<TopoEntity> topoFaces;
 public:
-    TopoSurfTree(Representation r=TSTree);
-    TopoSurfTree(const TopoSurfTree& copy, Representation r=STree);
+    TopoSurfTree(Representation r=RepOther);
+    TopoSurfTree(const TopoSurfTree& copy, Representation r=RepOther);
     virtual ~TopoSurfTree();
     virtual Surface* clone();
 
@@ -119,6 +117,9 @@ void Pio(Piostream&, Region&);
 
 //
 // $Log$
+// Revision 1.2  1999/09/05 05:32:22  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.1  1999/09/01 05:27:38  dmw
 // more DaveW datatypes...
 //

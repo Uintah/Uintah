@@ -41,6 +41,9 @@ using SCICore::Geometry::Max;
 using SCICore::GeomSpace::Material;
 using SCICore::GeomSpace::GeomPolyline;
 
+#define OCTREE_MAXDEPTH 2
+#define OCTREE_MAXELEMENTS 300
+
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));
 static TrivialAllocator Face_alloc(sizeof(Face));
@@ -94,6 +97,7 @@ PersistentTypeID Node::type_id("Node", "Datatype", make_Node);
 Mesh::Mesh()
 : have_all_neighbors(0), current_generation(2)
 {
+    octree=0;
     cond_tensors.grow(1);
     cond_tensors[0].grow(6);
     cond_tensors[0][0]=1;
@@ -107,6 +111,7 @@ Mesh::Mesh()
 Mesh::Mesh(int nnodes, int nelems)
 : nodes(nnodes), elems(nelems), have_all_neighbors(0), current_generation(2)
 {
+    octree=0;
     cond_tensors.grow(1);
     cond_tensors[0].grow(6);
     cond_tensors[0][0]=1;
@@ -122,6 +127,7 @@ Mesh::Mesh(const Mesh& copy)
   cond_tensors(copy.cond_tensors), have_all_neighbors(copy.have_all_neighbors),
   current_generation(2)
 {
+    octree=0;
     int nelems=elems.size();
     for(int i=0;i<nelems;i++){
 	Element* e=new Element(*copy.elems[i], this);
@@ -131,6 +137,8 @@ Mesh::Mesh(const Mesh& copy)
 
 Mesh::~Mesh()
 {
+    if (octree)
+	delete octree;
     remove_all_elements();
 }
 
@@ -797,11 +805,213 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 	ix=i;
 	return 1;
     }
-    return 0;
+    return locate2(p, ix, epsilon1);
+}
+
+bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
+			     const Point& orig, const Vector& dir)
+{
+
+  double MIN, MAX;
+  double xinv_dir=1./dir.x();
+  if(dir.x() > 0){
+    MIN=xinv_dir*(min.x()-orig.x());
+    MAX=xinv_dir*(max.x()-orig.x());
+  } else {
+    MIN=xinv_dir*(max.x()-orig.x());
+    MAX=xinv_dir*(min.x()-orig.x());
+  }	
+  double y0, y1;
+  double yinv_dir=1./dir.y();
+  if(dir.y() > 0){
+    y0=yinv_dir*(min.y()-orig.y());
+    y1=yinv_dir*(max.y()-orig.y());
+  } else if(dir.y() <-1.e-6){
+    y0=yinv_dir*(max.y()-orig.y());
+    y1=yinv_dir*(min.y()-orig.y());
+  }
+  if(y0>MIN)
+    MIN=y0;
+  if(y1<MAX)
+    MAX=y1;
+  if(MAX<MIN) {
+    return false;
+  }
+    
+  double z0, z1;
+  double zinv_dir=1./dir.z();
+  if(dir.z() > 0){
+    z0=zinv_dir*(min.z()-orig.z());
+    z1=zinv_dir*(max.z()-orig.z());
+  } else {
+    z0=zinv_dir*(max.z()-orig.z());
+    z1=zinv_dir*(min.z()-orig.z());
+  }
+  if(z0>MIN)
+    MIN=z0;
+  if(z1<MAX)
+    MAX=z1;
+  if(MAX<MIN) {
+    return false;
+  }
+
+  if(MIN > 1.001 || MAX < -0.001) return false;
+
+  return true;
+
+}
+
+bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
+{
+  Point& p0(e->mesh->nodes[e->n[0]]->p);
+  Point& p1(e->mesh->nodes[e->n[1]]->p);
+  Point& p2(e->mesh->nodes[e->n[2]]->p);
+  Point& p3(e->mesh->nodes[e->n[3]]->p);
+  if(inside(Point(v0.x(),v0.y(),v0.z()), e))
+    return true;
+  if(inside(Point(v0.x(),v0.y(),v1.z()), e))
+    return true;
+  if(inside(Point(v0.x(),v1.y(),v0.z()), e))
+    return true;
+  if(inside(Point(v0.x(),v1.y(),v1.z()), e))
+    return true;
+  if(inside(Point(v1.x(),v0.y(),v0.z()), e))
+    return true;
+  if(inside(Point(v1.x(),v0.y(),v1.z()), e))
+    return true;
+  if(inside(Point(v1.x(),v1.y(),v0.z()), e))
+    return true;
+  if(inside(Point(v1.x(),v1.y(),v1.z()), e))
+    return true;
+  if(tetra_edge_in_box(v0, v1, p0, p1-p0)) return true;
+  if(tetra_edge_in_box(v0, v1, p0, p2-p0)) return true;
+  if(tetra_edge_in_box(v0, v1, p0, p3-p0)) return true;
+  if(tetra_edge_in_box(v0, v1, p1, p2-p1)) return true;
+  if(tetra_edge_in_box(v0, v1, p1, p3-p1)) return true;
+  if(tetra_edge_in_box(v0, v1, p2, p3-p2)) return true;
+
+  return false;  
+}
+
+void Mesh::make_octree(int level, Octree*& octree,
+		       const Point& min, const Point& max,
+		       const Array1<int>& inelems)
+{
+  //cerr << "building octree at level " << level << '\n';
+
+  octree=new Octree();
+  if(level>OCTREE_MAXDEPTH || inelems.size() < OCTREE_MAXELEMENTS){
+    for(int i=0;i<inelems.size();i++){
+      octree->elems.add(inelems[i]);
+    }
+    return;
+  }
+
+  Point mid(min+(max-min)*0.5);
+  octree->mid=mid;
+  Array1<int> passdown[8];
+  for(int i=0;i<inelems.size();i++){
+    bool flags[8];
+    int count=0;
+    for(int j=0;j<8;j++)
+      flags[j]=false;
+    Element* elem=elems[inelems[i]];
+    for(int iz=0;iz<2;iz++){
+      double lz=iz==0?min.z():mid.z();
+      double hz=iz==0?mid.z():max.z();
+      for(int iy=0;iy<2;iy++){
+	double ly=iy==0?min.y():mid.y();
+	double hy=iy==0?mid.y():max.y();
+	for(int ix=0;ix<2;ix++){
+	  double lx=ix==0?min.x():mid.x();
+	  double hx=ix==0?mid.x():max.x();
+	  if(overlaps(elem, Point(lx, ly, lz), Point(hx, hy, hz))){
+	    int idx=(iz<<2)|(iy<<1)|(ix);
+	    flags[idx]=true;
+	    count++;
+	  }
+	}
+      }
+    }
+    if(count > 4){
+      octree->elems.add(inelems[i]);
+    } else {
+      for(int j=0;j<8;j++){
+	if(flags[j]){
+	  passdown[j].add(inelems[i]);
+	}
+      }
+    }
+  }
+  if(octree->elems.size() > 20){
+    cerr << "keeping " << octree->elems.size() << " elements at level " << level << '\n';
+  }
+  for(int j=0;j<8;j++){
+    if (level==0) {
+      cerr << "At level0 "<<j<<" (of 7)\n";
+    } else if (level==1) {
+      cerr << "   level1 "<<j<<" (of 7)\n";
+    }
+    int iz=j&4;
+    int iy=j&2;
+    int ix=j&1;
+    double lz=iz==0?min.z():mid.z();
+    double hz=iz==0?mid.z():max.z();
+    double ly=iy==0?min.y():mid.y();
+    double hy=iy==0?mid.y():max.y();
+    double lx=ix==0?min.x():mid.x();
+    double hx=ix==0?mid.x():max.x();
+    
+    if(passdown[j].size()>0){
+      //cerr << "child " << j << ", " << passdown[j].size() << " elements\n";
+      make_octree(level+1, octree->child[j], Point(lx, ly, lz),
+		  Point(hx, hy, hz), passdown[j]);
+    }
+  }
+  //cerr << "done building octree at level " << level << '\n';
+}
+
+int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
+{
+  for(int i=0;i<elems.size();i++){
+    Element* elem=mesh->elems[elems[i]];
+    if(mesh->inside(p, elem)){
+      return elems[i];
+    }
+  }
+  int xi=(p.x()>mid.x())?1:0;
+  int yi=(p.y()>mid.y())?2:0;
+  int zi=(p.z()>mid.z())?4:0;
+  int idx=xi+yi+zi;
+  if(child[idx])
+    return child[idx]->locate(mesh, p, epsilon1);
+  else
+    return -1;
 }
 
 int Mesh::locate2(const Point& p, int& ix, double epsilon1)
 {
+  if(!octree){
+    cerr << "creating topelems\n";
+    Array1<int> topelems;
+    topelems.resize(elems.size());
+    for(int i=0;i<elems.size();i++)
+      topelems[i]=i;
+    Point min, max;
+    cerr << "calling get_bounds\n";
+    get_bounds(min, max);
+    cerr << "done\n";
+    make_octree(0, octree, min, max, topelems);
+  }
+  int idx=octree->locate(this, p, epsilon1);
+  if(idx == -1) {
+    return 0;
+  } else {
+//    cerr << "idx=" << idx << '\n';
+    ix=idx;
+    return 1;
+  }
+#if 0
     // Exhaustive search
     int nelems=elems.size();
     for(int i=0;i<nelems;i++){
@@ -872,6 +1082,7 @@ int Mesh::locate2(const Point& p, int& ix, double epsilon1)
 	}
     }
     return 0;
+#endif
 }
 
 void* Element::operator new(size_t)
@@ -1084,6 +1295,8 @@ Mesh::insert_delaunay( int node )
     }
 
 
+    int conductivity = elems[in_element]->cond;	
+
     Array1<int> to_remove;
     to_remove.add(in_element);
 
@@ -1162,6 +1375,8 @@ Mesh::insert_delaunay( int node )
 	DFace* f=fiter.get_key();
 	Element* ne=new Element(this, node, f->n[0], f->n[1], f->n[2]);
 	
+	ne->cond = conductivity;
+
 	// If the new element is not degenerate, add it to the mix...
 	if(ne->orient()){
 	    int nen=elems.size();
@@ -1552,9 +1767,49 @@ DirichletBC::DirichletBC(const SurfaceHandle& fromsurf, double value)
 {
 }
 
+void Mesh::get_boundary_nodes(Array1<int> &pts)
+{
+  pts.resize(0); // clear it out for now...
+#if 0
+  if (!have_all_neighbors)
+    compute_face_neighbors();
+#endif
+  for(int i=0;i<nodes.size();i++) {
+    
+    for(int j=0;j<nodes[i]->elems.size();j++) {
+      Element *e = elems[nodes[i]->elems[j]];
+      for(int k=0;k<4;k++) {
+	if (e->n[k] != i) { // node i has to be on the face
+	  if (e->face(k) == -1) {
+	    pts.add(i);
+	    k = 5;
+	    j = nodes[i]->elems.size();
+	  }
+	}
+      }
+    }
+  }
+
+  //cerr << "We have: " << pts.size() << " Boundary points.\n";
+}
+
 void Mesh::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("Mesh::get_boundary_lines");
+}
+
+Octree::Octree()
+{
+  for(int i=0;i<8;i++)
+    child[i]=0;
+}
+
+Octree::~Octree()
+{
+  for(int i=0;i<8;i++){
+    if(child[i])
+      delete child[i];
+  }
 }
 
 void Pio(Piostream& stream, Element*& data)
@@ -1597,6 +1852,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.6  1999/09/05 05:32:27  dmw
+// updated and added Modules from old tree to new
+//
 // Revision 1.5  1999/08/29 00:46:52  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

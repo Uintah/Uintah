@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = TensorAccessFields.cc TensorAnisotropy.cc
+SRCS     = Bundles.cc TensorAccessFields.cc TensorAnisotropy.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
