@@ -3,6 +3,8 @@ static char *id="@(#) $Id$";
 
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <errno.h>
 #include <sstream>
 #include <stdlib.h>
 #include <time.h>
@@ -13,13 +15,16 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/DataWarehouse.h>
 #include "Scheduler.h"
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Exceptions/ErrnoException.h>
 
 using namespace Uintah;
 using namespace PSECore::XMLUtil;
 using namespace std;
+using namespace SCICore::OS;
+using namespace SCICore::Exceptions;
 
 Scheduler::Scheduler(Output* oport)
-  : m_outPort(oport), m_graphDoc(NULL), m_nodes(NULL), m_executeCount(0)
+  : m_outPort(oport), m_graphDoc(NULL), m_nodes(NULL)//, m_executeCount(0)
 {
 }
 
@@ -36,8 +41,11 @@ Scheduler::emitEdges(const vector<Task*>& tasks)
     // we'll just do that. The only complication is that the very first call is
     // actually just some initialization tasks, so we really want to output the
     // second call (which is for the first timestep).
-    if (m_executeCount++ != 1)
-    	return;
+  /*if (m_executeCount++ != 1)
+    	return;*/
+    
+    if (!m_outPort->wasOutputTimestep())
+      return;
     
     DOM_DOMImplementation impl;
     m_graphDoc = scinew DOM_Document();
@@ -136,14 +144,20 @@ Scheduler::emitNode(const Task* task, time_t start, double duration)
 }
 
 void
-Scheduler::finalizeNodes()
+Scheduler::finalizeNodes(int process /* = 0*/)
 {
     if (m_graphDoc == NULL)
     	return;
-    
-    string deps_name(m_outPort->getOutputLocation() + "/taskgraph.xml");
-    ofstream deps(deps_name.c_str());
-    deps << *m_graphDoc << endl;
+
+    if (m_outPort->wasOutputTimestep()) {
+      string timestep_dir(m_outPort->getLastTimestepOutputLocation());
+      
+      ostringstream fname;
+      fname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
+      string file_name(timestep_dir + fname.str());
+      ofstream graphfile(file_name.c_str());
+      graphfile << *m_graphDoc << endl;
+    }
     
     delete m_nodes;
     m_nodes = NULL;
@@ -153,6 +167,11 @@ Scheduler::finalizeNodes()
 
 //
 // $Log$
+// Revision 1.9  2000/09/08 17:49:50  witzel
+// Changing finalizeNodes so that it outputs different taskgraphs
+// in different timestep directories and the taskgraph information
+// of different processes in different files.
+//
 // Revision 1.8  2000/08/08 01:32:48  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
