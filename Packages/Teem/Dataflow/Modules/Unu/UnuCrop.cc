@@ -455,7 +455,7 @@ UnuCrop::parse(const NrrdDataHandle& nH, const string& val, const int a) {
     base = parse(nH, mins_[a]->get(), a);
   }
   
-  if (val_length == 1) {
+  if (has_base && val_length == 1) {
     return base;
   }
   
@@ -475,7 +475,7 @@ UnuCrop::parse(const NrrdDataHandle& nH, const string& val, const int a) {
     error("Error UnuCrop::could not convert to integer");
     return 0;
   }
-  
+
   if (has_base) {
     if (op == '+') {
       int_result = base + int_result;
@@ -483,6 +483,6 @@ UnuCrop::parse(const NrrdDataHandle& nH, const string& val, const int a) {
       int_result = base - int_result;
     }
   }
-  
+
   return int_result;
 }
