@@ -1,17 +1,25 @@
 
 #include <Uintah/Exceptions/UnknownVariable.h>
+#include <Uintah/Grid/Patch.h>
 #include <sstream>
 
 using namespace Uintah;
 using namespace std;
 
 UnknownVariable::UnknownVariable(const std::string& varname,
-				 int patchNumber, const std::string& patch,
+				 const Patch* patch,
 				 int matlIndex, const std::string& extramsg)
 {
    ostringstream s;
-   s << "Unknown variable: " << varname << " on patch " << patchNumber 
-     << "(" << patch << ")" << ", material index: " << matlIndex;
+   s << "Unknown variable: " << varname;
+
+   if (patch != NULL) {
+      s << " on patch " << patch->getID()
+        << "(" << patch->toString() << ")";
+   }
+   if (matlIndex >= 0)
+      s << ", material index: " << matlIndex;
+
    if(extramsg != "")
       s << " (" << extramsg << ")";
    d_msg = s.str();
@@ -48,6 +56,10 @@ const char* UnknownVariable::type() const
 
 //
 // $Log$
+// Revision 1.6  2000/12/06 23:41:39  witzel
+// Changed UnknownVariable constructor to take Patch* instead
+// of patch id and string and allow this pointer to be NULL.
+//
 // Revision 1.5  2000/09/26 21:32:24  dav
 // Formatting
 //

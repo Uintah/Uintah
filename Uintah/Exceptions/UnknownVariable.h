@@ -20,11 +20,12 @@
 #include <string>
 
 namespace Uintah {
+class Patch;
+
    class UnknownVariable : public SCICore::Exceptions::Exception {
    public:
-      UnknownVariable(const std::string& varname, int patchNumber,
-		      const std::string& patch, int matlIndex,
-		      const std::string& extramsg = "");
+      UnknownVariable(const std::string& varname, const Patch* patch,
+		      int matlIndex, const std::string& extramsg = "");
       UnknownVariable(const std::string& varname,
 		      const std::string& extramsg);
       UnknownVariable(const UnknownVariable&);
@@ -42,6 +43,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.5  2000/12/06 23:41:39  witzel
+// Changed UnknownVariable constructor to take Patch* instead
+// of patch id and string and allow this pointer to be NULL.
+//
 // Revision 1.4  2000/09/26 21:32:24  dav
 // Formatting
 //
