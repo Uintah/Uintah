@@ -96,8 +96,6 @@ NrrdJoin::execute()
     NrrdDataHandle nrrd;
 
     if (inrrd->get(nrrd)) {
-      cout << "found a nrrd in port: " << i << endl;
-      cout << "its dim is: " << nrrd->nrrd->dim << endl;
       // check to see if we need to do the join or can output the cached onrrd.
       if (in_generation_.size() <= i) {
 	// this is a new input, never been joined.
@@ -139,12 +137,18 @@ NrrdJoin::execute()
 
     NrrdData *onrrd = new NrrdData(true);
     int i = 0;
+    string new_label("");
     vector<NrrdDataHandle>::iterator iter = nrrds.begin();
     while(iter != nrrds.end()) {
       NrrdDataHandle nh = *iter;
       ++iter;
 
       NrrdData* cur_nrrd = nh.get_rep();
+      if (i == 0) {
+	new_label += string(cur_nrrd->nrrd->axis[0].label);
+      } else {
+	new_label += string(",") + string(cur_nrrd->nrrd->axis[0].label);
+      }
       // does it need conversion to the bigger type?
       if (cur_nrrd->nrrd->type != onrrd_type_) {
 	Nrrd* new_nrrd = nrrdNew();
@@ -167,8 +171,6 @@ NrrdJoin::execute()
     int axis = 0;
     join_axis_.reset();
     incr_dim_.reset();
-    cout << "axis " << join_axis_.get() << endl;
-    cout << "incrdim " << incr_dim_.get() << endl;
 
     if (join_axis_.get() == "x") {
       axis = 1;
@@ -187,6 +189,9 @@ NrrdJoin::execute()
       free(err);
       return;
     }
+
+    // Take care of tuple axis label.
+    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
     onrrd_handle_ = onrrd;
   }
 

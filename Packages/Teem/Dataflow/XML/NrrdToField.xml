@@ -43,7 +43,7 @@ NrrdToField always will take te first data set along that tuple axis.
 If you have a Nrrd that has multiple sets in it, and you want to
 convert a particular element of the tuple, use NrrdSlice to select the
 tuple element prior to this module.
-</p>
+      </p>
     </description>
     <examplesr>Teem/nets/test/to_and_from_lvd.fld.net</examplesr>
   </overview>
