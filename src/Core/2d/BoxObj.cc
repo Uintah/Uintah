@@ -48,9 +48,7 @@
 #include <Core/2d/BoxObj.h>
 #include <Core/2d/Point2d.h>
 #include <Core/2d/Vector2d.h>
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
+#include <sci_gl.h>
 
 using namespace std;
 

@@ -34,16 +34,8 @@
  *
  */
 
-#include <sci_defs/ogl_defs.h>
-
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#include <GL/glxew.h>
-#else
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
-#endif
+#include <sci_gl.h>
+#include <sci_glx.h>
 
 #include <Core/share/share.h>
 
@@ -54,7 +46,7 @@
 #include <tkWinInt.h>
 #include <tkWinPort.h>
 #include <X11\XUtil.h>
-#define GLXContext HGLRC
+
 #endif
 
 #ifdef __sgi
@@ -566,8 +558,8 @@ GLXContext OpenGLGetContext2(interp, name, dpy)
 #else
 	if(!dpy)
 	    dpy=Tk_Display(tkwin);
-	OpenGLPtr->cx = glXCreateContext(dpy, 
-					 OpenGLPtr->vi, 0, OpenGLPtr->direct);
+	OpenGLPtr->cx = glXCreateContext(dpy, OpenGLPtr->vi, glXGetCurrentContext(),
+                                         OpenGLPtr->direct);
 #endif
 	if(!OpenGLPtr->cx){
 	    Tcl_AppendResult(interp, "Error making GL context", (char*)NULL);

@@ -26,32 +26,19 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <sci_gl.h>
-#include <Core/GLVolumeRenderer/GLMIP.h>
+#if !defined(SCI_GLX_H)
+#define SCI_GLX_H
 
-namespace SCIRun {
+#include <sci_defs/ogl_defs.h>
 
-GLMIP::GLMIP(const GLVolumeRenderer* glvr) :
-  GLTexRenState( glvr )
-{
-}
+#if defined(HAVE_GLEW)
 
-void GLMIP::preDraw()
-{
-  // comment out blending, done in render algorithm
-//   glEnable(GL_BLEND);
-  glBlendEquation(GL_MAX_EXT);
-  glBlendFunc(GL_ONE, GL_ONE);
-}
+#include <GL/glxew.h>
 
-void GLMIP::postDraw()
-{
-  // comment out blending, done in render algorithm
-//   glDisable(GL_BLEND);
+#else /* !HAVE_GLEW */
 
-  // return to default BlendEquation
-  glBlendEquation(GL_FUNC_ADD_EXT);
-}
+#include <GL/glx.h>
 
+#endif
 
-} // End namespace SCIRun
+#endif  /* #define SCI_GLX_H */

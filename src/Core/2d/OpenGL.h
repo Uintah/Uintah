@@ -52,7 +52,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <sci_glu.h>
-#include <GL/glx.h>
+#include <sci_glx.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>

@@ -1335,8 +1335,11 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
       Vector v0(points_[i+1] - points_[i+0]);
+      
       Vector v1, v2;
       v0.find_orthogonal(v1, v2);
+      if (v0.length2() < 1e-5) //numeric_limits<float>::epsilon())
+        continue;
       v1 *= radius_;
       v2 *= radius_;
 
@@ -1366,16 +1369,16 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       {
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
 
-	if (coloring) { glColor3ubv(&(colors_[i*4])); }
-	if (texturing) { glTexCoord1f(indices_[i]); }
+ 	if (coloring) { glColor3ubv(&(colors_[i*4])); }
+ 	if (texturing) { glTexCoord1f(indices_[i]); }
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
 
-	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
-	if (texturing) { glTexCoord1f(indices_[i+1]); }
+ 	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
+ 	if (texturing) { glTexCoord1f(indices_[i+1]); }
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
       }
       glEnd();
-
+      
       glPopMatrix();
     }
 
@@ -1383,7 +1386,6 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     post_draw(di);
 }
-
 
 
 void

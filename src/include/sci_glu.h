@@ -38,7 +38,9 @@
 #if !defined(SCI_GLU_H)
 #define SCI_GLU_H
 
-#include <GL/gl.h>
+#include <sci_defs/ogl_defs.h>
+
+#if !defined(HAVE_GLEW)
 
 #ifndef GLAPIENTRY
   #define GLAPIENTRY
@@ -49,5 +51,7 @@
 #endif
 
 #include <GL/glu.h>
+
+#endif
 
 #endif  /* #define SCI_GLU_H */

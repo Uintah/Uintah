@@ -44,9 +44,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
+#include <sci_gl.h>
 
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/2d/DrawObj.h>

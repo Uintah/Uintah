@@ -40,9 +40,7 @@
 #ifndef ScrolledOpenGLWindow_h
 #define ScrolledOpenGLWindow_h
 
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
+#include <sci_gl.h>
 
 #include <Core/2d/OpenGLWindow.h>
 

@@ -43,10 +43,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/HairObj.h>
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
-
+#include <sci_gl.h>
 
 namespace SCIRun {
 

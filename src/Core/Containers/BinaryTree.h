@@ -116,4 +116,4 @@ BinaryTree<T>::child( int child ) const
 }
 
 } // end namespace SCIRun
-#endif BINARYTREE_H
+#endif // BINARYTREE_H
