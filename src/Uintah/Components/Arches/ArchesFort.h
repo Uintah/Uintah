@@ -153,9 +153,17 @@ extern "C"
     // Cset flat profiles:
     //
     void
-    FORT_PROFV(const int* domainLow, const int* domainHigh, 
-	       const int* indexLow, const int* indexHigh,
-	       double* uVelocity, double* vVelocity, double* wVelocity, 
+    FORT_PROFV(const int* domLoU, const int* domHiU, 
+	       const int* idxLoU, const int* idxHiU,
+	       double* uVelocity, 
+	       const int* domLoV, const int* domHiV, 
+	       const int* idxLoV, const int* idxHiV,
+	       double* vVelocity, 
+	       const int* domLoW, const int* domHiW, 
+	       const int* idxLoW, const int* idxHiW,
+	       double* wVelocity, 
+	       const int* domLo, const int* domHi, 
+	       const int* idxLo, const int* idxHi,
 	       int* celltype, double * area, const int* celltypeval,
 	       double* flowrate, double* density);
 
@@ -174,6 +182,11 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.7  2000/06/29 06:22:47  bbanerje
+// Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+// changes to profv.  Code is broken until the changes are reflected
+// thru all the files.
+//
 // Revision 1.6  2000/06/28 08:14:52  bbanerje
 // Changed the init routines a bit.
 //

@@ -4,8 +4,10 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE profv(domainLow, domainHigh, indexLow, indexHigh,
-     &     UU,VV,WW, PCELL,
+      SUBROUTINE profv(domLoU, domHiU, idxLoU, idxHiU, UU,
+     &     domLoV, domHiV, idxLoV, idxHiV, VV,
+     &     domLoW, domHiW, idxLoW, idxHiW, WW,
+     &     domLo, domHi, idxLo, idxHi, PCELL,
      &     AREAPR, PFIELD, FLOWPR, DENPR,
      &     ierr)
 C---------------------------------------------------------------------
@@ -24,19 +26,18 @@ C---------------------------------------------------------------------
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), 
-     &     domainLow(3):domainHigh(3))
-      double precision UU(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), domainLow(3):domainHigh(3))
-      double precision VV(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), domainLow(3):domainHigh(3))
-      double precision WW(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), domainLow(3):domainHigh(3))
+      integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
+      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+     &     domLoU(3):domHiU(3))
+      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
+      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
+      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+     &     domLoW(3):domHiW(3))
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
       double precision FLOWPR, DENPR
       double precision AREAPR
       integer PFIELD
@@ -45,8 +46,15 @@ c*********************************************************************
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer iBegGhost, jBegGhost, kBegGhost, NI, NJ, NK
-      integer IST, JST, KST, IEND, JEND, KEND
+      integer iBegGhostU, jBegGhostU, kBegGhostU
+      integer iEndGhostU, jEndGhostU, kEndGhostU
+      integer ISTU, JSTU, KSTU, IENDU, JENDU, KENDU
+      integer iBegGhostV, jBegGhostV, kBegGhostV
+      integer iEndGhostV, jEndGhostV, kEndGhostV
+      integer ISTV, JSTV, KSTV, IENDV, JENDV, KENDV
+      integer iBegGhostW, jBegGhostW, kBegGhostW
+      integer iEndGhostW, jEndGhostW, kEndGhostW
+      integer ISTW, JSTW, KSTW, IENDW, JENDW, KENDW
       integer i, j, k
       double precision FLOW, RHO, AVGVELP, AVGVELS
       double precision YR, ZR, YVR, ZWR
@@ -54,18 +62,42 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      NI = indexHigh(1)
-      NJ = indexHigh(2)
-      NK = indexHigh(3)
-      IST = iBegGhost+1
-      JST = jBegGhost+1
-      KST = kBegGhost+1
-      IEND = NI-1
-      JEND = NJ-1
-      KEND = NK-1
+      iBegGhostU = domLoU(1)
+      jBegGhostU = domLoU(2)
+      kBegGhostU = domLoU(3)
+      iEndGhostU = domHiU(1)
+      jEndGhostU = domHiU(2)
+      kEndGhostU = domHiU(3)
+      ISTU = idxLoU(1)
+      JSTU = idxLoU(2)
+      KSTU = idxLoU(3)
+      IENDU = idxHiU(1)
+      JENDU = idxHiU(2)
+      KENDU = idxHiU(3)
+      iBegGhostV = domLoV(1)
+      jBegGhostV = domLoV(2)
+      kBegGhostV = domLoV(3)
+      iEndGhostV = domHiV(1)
+      jEndGhostV = domHiV(2)
+      kEndGhostV = domHiV(3)
+      ISTV = idxLoV(1)
+      JSTV = idxLoV(2)
+      KSTV = idxLoV(3)
+      IENDV = idxHiV(1)
+      JENDV = idxHiV(2)
+      KENDV = idxHiV(3)
+      iBegGhostW = domLoW(1)
+      jBegGhostW = domLoW(2)
+      kBegGhostW = domLoW(3)
+      iEndGhostW = domHiW(1)
+      jEndGhostW = domHiW(2)
+      kEndGhostW = domHiW(3)
+      ISTW = idxLoW(1)
+      JSTW = idxLoW(2)
+      KSTW = idxLoW(3)
+      IENDW = idxHiW(1)
+      JENDW = idxHiW(2)
+      KENDW = idxHiW(3)
 
 C-------------------------------------------------------------------- 
 C     CALCULATION OF U IN PRIMARY STREAMS
@@ -87,60 +119,60 @@ c      AVGVELP = 0.1
 C--------------------------------------------------------------------
 C     EAST AND/OR WEST INLETS
 C--------------------------------------------------------------------
-      DO 200 K = kBegGhost,NK
-        DO 190 J = jBegGhost,NJ
-          IF (PCELL(iBegGhost,J,K).EQ.PFIELD) THEN
-            UU(iBegGhost,J,K) = AVGVELP
-            UU(IST,J,K) = AVGVELP
-            VV(iBegGhost,J,K) = ZERO
-            WW(iBegGhost,J,K) = ZERO
+      DO 200 K = kBegGhostU,kEndGhostU
+        DO 190 J = jBegGhostU,jEndGhostU
+          IF (PCELL(iBegGhostU,J,K).EQ.PFIELD) THEN
+            UU(iBegGhostU,J,K) = AVGVELP
+            UU(ISTU,J,K) = AVGVELP
+            VV(iBegGhostU,J,K) = ZERO
+            WW(iBegGhostU,J,K) = ZERO
           END IF
-          IF (PCELL(NI,J,K).EQ.PFIELD) THEN
-            UU(NI,J,K) = -AVGVELP
+          IF (PCELL(iEndGhostU,J,K).EQ.PFIELD) THEN
+            UU(iEndGhostU,J,K) = -AVGVELP
 c            UINLT(J,K) = -AVGVELP
 c            UU(NI+1,J,K) = -AVGVELP
-            VV(NI,J,K) = ZERO
-            WW(NI,J,K) = ZERO
+            VV(iEndGhostU,J,K) = ZERO
+            WW(iEndGhostU,J,K) = ZERO
           END IF
   190   CONTINUE
   200 CONTINUE
 C--------------------------------------------------------------------
 C     NORTH AND/OR SOUTH INLETS
 C--------------------------------------------------------------------
-      DO 230 K = kBegGhost,NK
-        DO 220 I = iBegGhost,NI
-          IF (PCELL(I,jBegGhost,K).EQ.PFIELD) THEN
-            VV(I,jBegGhost,K) = AVGVELP
-            VV(I,JST,K) = AVGVELP
-            WW(I,jBegGhost,K) = ZERO
-            UU(I,jBegGhost,K) = ZERO
+      DO 230 K = kBegGhostV,kEndGhostV
+        DO 220 I = iBegGhostV,iEndGhostV
+          IF (PCELL(I,jBegGhostV,K).EQ.PFIELD) THEN
+            VV(I,jBegGhostV,K) = AVGVELP
+            VV(I,JSTV,K) = AVGVELP
+            WW(I,jBegGhostV,K) = ZERO
+            UU(I,jBegGhostV,K) = ZERO
           END IF
-          IF (PCELL(I,NJ,K).EQ.PFIELD) THEN
-            VV(I,NJ,K) = -AVGVELP
+          IF (PCELL(I,jEndGhostV,K).EQ.PFIELD) THEN
+            VV(I,jEndGhostV,K) = -AVGVELP
 c            VINLT(I,K) = -AVGVELP
 c            VV(I,NJ+1,K) = -AVGVELP
-            WW(I,NJ,K) = ZERO
-            UU(I,NJ,K) = ZERO
+            WW(I,jEndGhostV,K) = ZERO
+            UU(I,jEndGhostV,K) = ZERO
           END IF
   220   CONTINUE
   230 CONTINUE
 C--------------------------------------------------------------------
 C     TOP AND/OR BOTTOM INLETS
 C--------------------------------------------------------------------
-      DO 260 J = jBegGhost,NJ
-        DO 250 I = iBegGhost,NI
-          IF (PCELL(I,J,kBegGhost).EQ.PFIELD) THEN
-            WW(I,J,kBegGhost) = AVGVELP
-            WW(I,J,KST) = AVGVELP
-            VV(I,J,kBegGhost) = ZERO
-            UU(I,J,kBegGhost) = ZERO
+      DO 260 J = jBegGhostW,jEndGhostW
+        DO 250 I = iBegGhostW,iEndGhostW
+          IF (PCELL(I,J,kBegGhostW).EQ.PFIELD) THEN
+            WW(I,J,kBegGhostW) = AVGVELP
+            WW(I,J,KSTW) = AVGVELP
+            VV(I,J,kBegGhostW) = ZERO
+            UU(I,J,kBegGhostW) = ZERO
           END IF
-          IF (PCELL(I,J,NK).EQ.PFIELD) THEN
-            WW(I,J,NK) = -AVGVELP
+          IF (PCELL(I,J,kEndGhostW).EQ.PFIELD) THEN
+            WW(I,J,kEndGhostW) = -AVGVELP
 c            WINLT(I,J) = -AVGVELP
 c            WW(I,J,NK+1) = -AVGVELP
-            VV(I,J,NK) = ZERO
-            UU(I,J,NK) = ZERO
+            VV(I,J,kEndGhostW) = ZERO
+            UU(I,J,kEndGhostW) = ZERO
           END IF
   250   CONTINUE
   260 CONTINUE
@@ -151,6 +183,11 @@ c            WW(I,J,NK+1) = -AVGVELP
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/06/29 06:22:50  bbanerje
+c Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
+c changes to profv.  Code is broken until the changes are reflected
+c thru all the files.
+c
 c Revision 1.2  2000/06/20 20:42:38  rawat
 c added some more boundary stuff and modified interface to IntVector. Before
 c compiling the code you need to update /SCICore/Geometry/IntVector.h
