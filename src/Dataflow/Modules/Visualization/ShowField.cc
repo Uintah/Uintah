@@ -90,6 +90,7 @@ class ShowField : public Module
   GuiInt                   arrow_heads_on_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
+  Field::data_location     cur_field_data_at_;
 
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
@@ -199,6 +200,7 @@ ShowField::ShowField(GuiContext* ctx) :
   arrow_heads_on_(ctx->subVar("arrow-heads-on")),
   data_dirty_(true),
   cur_field_data_type_("none"),
+  cur_field_data_at_(Field::NONE),
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
   text_on_(ctx->subVar("text-on")),
@@ -308,6 +310,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
   const TypeDescription *ltd = fld_handle->data_at_type_description();
   // description for just the data in the field
   cur_field_data_type_ = fld_handle->get_type_description(1)->get_name();
+  cur_field_data_at_ = fld_handle->data_at();
 
   if (recompile_nonvector)
   {
@@ -415,8 +418,10 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     const TypeDescription *data_type_description = 
       fld_handle->get_type_description(1);
     string fdt = data_type_description->get_name();
+    Field::data_location at = fld_handle->data_at();
     if (!fetch_typed_algorithm(fld_handle, vfld_handle,
-			       (cur_field_data_type_ != fdt)))
+			       (cur_field_data_type_ != fdt) ||
+			       (cur_field_data_at_ != at)))
     { 
       return false;
     }
