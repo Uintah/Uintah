@@ -25,8 +25,8 @@ namespace SCIRun {
 
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
-  class SCICORESHARE GenVField: public VField, public SLInterpolate
-{
+class SCICORESHARE GenVField: public VField, public SLInterpolate
+  {
   public:
     
   /////////
@@ -57,11 +57,11 @@ template <class T, class G, class A=DiscreteAttrib<T> >
 
   //////////
   // Return geometry
-  virtual Geom* get_geom();
+  virtual const GeomHandle getGeom() const;
 
   //////////
   // Return the attribute
-  virtual Attrib* get_attrib();
+  virtual const AttribHandle getAttrib() const;
 
   //////////
   // Return the upper and lower bounds
@@ -190,15 +190,15 @@ bool GenVField<T,G,A>::set_attrib_name(string iname){
 }
 
 template <class T, class G, class A >
-Geom* GenVField<T,G,A>::get_geom()
+const GeomHandle GenVField<T,G,A>::getGeom() const
 {
-  return (Geom*) geom.get_rep();
+  return GeomHandle((Geom*)geom.get_rep());
 }
 
 template <class T, class G, class A >
-Attrib* GenVField<T,G,A>::get_attrib()
+const AttribHandle GenVField<T,G,A>::getAttrib() const
 {
-  return attrib.get_rep();
+  return AttribHandle((Attrib*)attrib.get_rep());
 }
 
 template <class T, class G, class A >
