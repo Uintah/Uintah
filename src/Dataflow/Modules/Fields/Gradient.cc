@@ -86,10 +86,10 @@ Gradient::execute()
       fGeneration_ != fieldin->generation ) {
     fGeneration_ = fieldin->generation;
 
-    const TypeDescription *srctd = fieldin->get_type_description(-1);
-    const TypeDescription *dsttd = fieldin->get_type_description(0);
+    const TypeDescription *srctd  = fieldin->get_type_description(0);
+    const TypeDescription *typetd = fieldin->get_type_description(1);
 
-    CompileInfo *ci = GradientAlgo::get_compile_info(srctd, dsttd);
+    CompileInfo *ci = GradientAlgo::get_compile_info(srctd,typetd);
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
       error( "Could not compile algorithm." );
@@ -126,7 +126,7 @@ Gradient::execute()
 
 CompileInfo *
 GradientAlgo::get_compile_info(const TypeDescription *srctd,
-			       const TypeDescription *dsttd)
+			       const TypeDescription *typetd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -139,7 +139,7 @@ GradientAlgo::get_compile_info(const TypeDescription *srctd,
                        base_class_name, 
                        template_class_name, 
                        srctd->get_name() + ", " +
-		       dsttd->get_name() + "<Vector> ");
+		       typetd->get_name());
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);

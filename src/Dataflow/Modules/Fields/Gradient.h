@@ -51,7 +51,11 @@ public:
 
 
 
-template <class IFIELD, class OFIELD>
+#ifdef __sgi
+template< class FIELD, class TYPE >
+#else
+template< template<class> class FIELD, class TYPE >
+#endif
 class GradientAlgoT : public GradientAlgo
 {
 public:
@@ -60,20 +64,24 @@ public:
 };
 
 
-template <class IFIELD, class OFIELD>
+#ifdef __sgi
+template< class FIELD, class TYPE >
+#else
+template< template<class> class FIELD, class TYPE >
+#endif
 FieldHandle
-GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
+GradientAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
 {
-  IFIELD *ifield = (IFIELD *) field_h.get_rep();
+  FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
   if( ifield->query_scalar_interface() ) {
 
-    typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+    typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
     
-    OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
+    FIELD<Vector> *ofield = scinew FIELD<Vector>(imesh, Field::CELL);
 
-    typename IFIELD::mesh_type::Cell::iterator in, end;
-    typename OFIELD::mesh_type::Cell::iterator out;
+    typename FIELD<TYPE>::mesh_type::Cell::iterator in, end;
+    typename FIELD<Vector>::mesh_type::Cell::iterator out;
 
     imesh->begin( in );
     imesh->end( end );

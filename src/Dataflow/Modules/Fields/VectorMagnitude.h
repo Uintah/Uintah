@@ -41,14 +41,15 @@ public:
   virtual FieldHandle execute(FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc);
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *type);
 };
 
 
 #ifdef __sgi
-template< class FIELD >
+template< class FIELD, class TYPE >
 #else
-template< template<class> class FIELD >
+template< template<class> class FIELD, class TYPE >
 #endif
 
 class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
@@ -59,22 +60,22 @@ public:
 };
 
 #ifdef __sgi
-template< class FIELD >
+template< class FIELD, class TYPE >
 #else
-template< template<class> class FIELD >
+template< template<class> class FIELD, class TYPE >
 #endif
 
 FieldHandle
-VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle field_h)
+VectorMagnitudeAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
 {
-  FIELD<Vector> *ifield = dynamic_cast<FIELD<Vector> *>(field_h.get_rep());
+  FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
-  if( ifield ) {
+  if( ifield->query_vector_interface() ) {
     FIELD<double> *ofield = 
       scinew FIELD<double>(ifield->get_typed_mesh(), ifield->data_at());
 
-    typename FIELD<Vector>::fdata_type::iterator in  = ifield->fdata().begin();
-    typename FIELD<Vector>::fdata_type::iterator end = ifield->fdata().end();
+    typename FIELD<TYPE>::fdata_type::iterator in  = ifield->fdata().begin();
+    typename FIELD<TYPE>::fdata_type::iterator end = ifield->fdata().end();
     typename FIELD<double>::fdata_type::iterator out = ofield->fdata().begin();
 
     while (in != end) {
