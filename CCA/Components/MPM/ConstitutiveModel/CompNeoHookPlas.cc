@@ -49,8 +49,11 @@ void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
 {
    from.push_back(p_statedata_label);
    from.push_back(bElBarLabel);
+   from.push_back(lb->pDeformationMeasureLabel);
+
    to.push_back(p_statedata_label_preReloc);
    to.push_back(bElBarLabel_preReloc);
+   to.push_back(lb->pDeformationMeasureLabel_preReloc);
 }
 
 CompNeoHookPlas::~CompNeoHookPlas()

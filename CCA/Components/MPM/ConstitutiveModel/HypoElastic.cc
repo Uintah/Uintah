@@ -65,12 +65,15 @@ void HypoElastic::initializeCMData(const Patch* patch,
    new_dw->put(pstress, lb->pStressLabel);
 
    computeStableTimestep(patch, matl, new_dw);
-
 }
 
-void HypoElastic::addParticleState(std::vector<const VarLabel*>& ,
-				   std::vector<const VarLabel*>& )
+void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
+				   std::vector<const VarLabel*>& to)
 {
+   from.push_back(lb->pDeformationMeasureLabel);
+   from.push_back(lb->pStressLabel);
+   to.push_back(lb->pDeformationMeasureLabel_preReloc);
+   to.push_back(lb->pStressLabel_preReloc);
 }
 
 void HypoElastic::computeStableTimestep(const Patch* patch,

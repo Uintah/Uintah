@@ -141,10 +141,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					lb->pMassLabel_preReloc);
      lb->registerPermanentParticleState(m,lb->pVolumeLabel,
 					lb->pVolumeLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pDeformationMeasureLabel,
-					lb->pDeformationMeasureLabel_preReloc);
-     lb->registerPermanentParticleState(m,lb->pStressLabel,
-					lb->pStressLabel_preReloc);
      
      mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState[m],
 					lb->d_particleState_preReloc[m]);
@@ -411,7 +407,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 		    this, &SerialMPM::computeInternalForce);
 
   t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
-  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(), Task::OutOfDomain, Ghost::None);
+  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
+						Task::OutOfDomain, Ghost::None);
   t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
@@ -652,9 +649,9 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::OldDW, lb->pXLabel,                    Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pVelocityLabel_afterUpdate, Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,               Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->pVelocityLabel_afterUpdate,Ghost::AroundCells,1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::AroundCells,1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
   t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);
@@ -692,11 +689,11 @@ void SerialMPM::scheduleComputeCrackExtension(SchedulerP& sched,
   Task* t = scinew Task( "SerialMPM::computeCrackExtension",
 			  this,&SerialMPM::computeCrackExtension);
 
-  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pIsBrokenLabel_preReloc,   Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, lb->pCrackNormalLabel_preReloc,Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pExtensionDirectionLabel,  Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->pIsBrokenLabel_preReloc,   Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->pCrackNormalLabel_preReloc,Ghost::AroundCells,1);
+  t->requires(Task::OldDW, lb->pExtensionDirectionLabel,  Ghost::AroundCells,1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::AroundCells,1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                  Ghost::None);
   t->requires(Task::OldDW, lb->pTipNormalLabel,           Ghost::None);
@@ -907,7 +904,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	
 	//for explosive fracture
 	old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset);
-	old_dw->get(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel, pset);
+	old_dw->get(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel,pset);
 
         for(ParticleSubset::iterator iter = pset->begin();
 						  iter != pset->end(); iter++){
@@ -945,7 +942,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 		  ( pexternalforce[idx] - 
 		    pCrackNormal[idx] * (pCrackSurfacePressure[idx] * area)
 		  ) * S_contact[k];
-	        gvelocity[ni[k]]      += pvelocity[idx] *pmass[idx]*S_contact[k];
+	        gvelocity[ni[k]]     += pvelocity[idx] *pmass[idx]*S_contact[k];
 	      }
 	      else if( conn[k] == Connectivity::contact ) {
 	        double area = M_PI * pow(0.75/M_PI*pvolume[idx],0.6667);
@@ -1056,7 +1053,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         new_dw->put(gmassContact, lb->gMassContactLabel,  matlindex, patch);
       }
     }  // End loop over materials
-    new_dw->put(gmassglobal, lb->gMassLabel, d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->put(gmassglobal, lb->gMassLabel,
+			d_sharedState->getAllInOneMatl()->get(0), patch);
   }  // End loop over patches
 }
 
@@ -1127,8 +1125,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
     NCVariable<Matrix3>       gstressglobal;
     NCVariable<double>        gmassglobal;
-    new_dw->get(gmassglobal,  lb->gMassLabel, d_sharedState->getAllInOneMatl()->get(0), 
-		patch, Ghost::None, 0);
+    new_dw->get(gmassglobal,  lb->gMassLabel,
+		d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
     new_dw->allocate(gstressglobal,lb->gStressForSavingLabel, 
 		     d_sharedState->getAllInOneMatl()->get(0), patch);
 
@@ -1409,7 +1407,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    Vector zero(0.,0.,0.);
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
@@ -1440,7 +1437,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       }
       else{
 	 new_dw->allocate(gradPressNC,lb->gradPressNCLabel, matlindex, patch);
-	 gradPressNC.initialize(zero);
+	 gradPressNC.initialize(Vector(0.,0.,0.));
       }
       if(d_with_arches){
          new_dw->get(AccArchesNC,lb->AccArchesNCLabel,    matlindex, patch,
@@ -1448,13 +1445,13 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       }
       else{
 	 new_dw->allocate(AccArchesNC,lb->AccArchesNCLabel, matlindex, patch);
-	 AccArchesNC.initialize(zero);
+	 AccArchesNC.initialize(Vector(0.,0.,0.));
       }
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
       new_dw->allocate(acceleration, lb->gAccelerationLabel, matlindex, patch);
-      acceleration.initialize(zero);
+      acceleration.initialize(Vector(0.,0.,0.));
 
       // Do the computation of a = F/m for nodes where m!=0.0
       // You need if(mass>small_num) so you don't get pressure
@@ -1919,8 +1916,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
 
           // Update the particle's position and velocity
-          pxnew[idx]      = px[idx] + vel * delT;
-          pvelocitynew[idx] = pvelocity[idx] + acc * delT;
+          pxnew[idx]           = px[idx] + vel * delT;
+          pvelocitynew[idx]    = pvelocity[idx] + acc * delT;
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
           double rho;
 	  if(pvolume[idx] > 0.){
@@ -1929,12 +1926,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  else{
 	    rho = rho_init;
 	  }
-          pmassNew[idx]        = pmass[idx]*(1.    - burnFraction);
+          pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
           pvolumeNew[idx]      = pmassNew[idx]/rho;
-	  if(pmassNew[idx] <= 0.0){
-		pmassNew[idx] = 0.;
-		pvolumeNew[idx] = 0.;
-	  }
 #if 1
 	  if(pmassNew[idx] <= 3.e-15){
 		pvelocitynew[idx] = Vector(0.,0.,0);
