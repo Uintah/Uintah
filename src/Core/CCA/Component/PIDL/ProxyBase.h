@@ -103,7 +103,7 @@ DESCRIPTION
 	  /////////
 	  // Created a subset of processes on the callee to service
 	  // all collective calls.
-	  void createSubset(int ssize);
+	  void _proxycreateSubset(int ssize);
 
 	private:
 

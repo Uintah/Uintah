@@ -70,7 +70,7 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
   }
 }
 
-void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
+void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const 
 {
   if (copy) {
     /*Clean up the passed reference just in case*/
@@ -81,14 +81,18 @@ void ProxyBase::_proxyGetReferenceList(refList& ref, bool copy) const
 	(*iter).chan = NULL;
       }
     }
-
-    ref = (rm.d_ref);
-    for(unsigned int i=0; i < ref.size(); i++) {      
-      ref[i].chan = (rm.d_ref[i].chan)->SPFactory(true);
+    
+    refList *d_ref;
+    d_ref = rm.getAllReferences();
+    ref = *(d_ref);
+    for(unsigned int i=0; i < d_ref->size(); i++) {      
+      ref[i].chan = ((*d_ref)[i].chan)->SPFactory(true);
     }
   }
   else {
-    ref = (rm.d_ref); 
+    refList *d_ref;
+    d_ref = rm.getAllReferences();
+    ref = *(d_ref); 
   }
 }
 
@@ -112,8 +116,12 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()
   return proxy_uuid;
 }
 
-void ProxyBase::createSubset(int ssize)
+void ProxyBase::_proxycreateSubset(int ssize)
 {
-  ::std::cerr << "MORE PICKOOO\n";
+  ::std::cerr << "ProxyBase::_proxycreateSubset()\n";
+  if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
+    getProxyUUID();
+  }
+  rm.createSubset(ssize);
 }
 
