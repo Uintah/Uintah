@@ -168,7 +168,7 @@ public:
 
    void scrub(const VarLabel*);
 
-  void logMemoryUse(ostream& out, const string& tag);
+   void logMemoryUse(ostream& out, unsigned long& total, const string& tag);
 private:
 
    struct dataLocation {

@@ -35,7 +35,7 @@ static int getproc(const IntVector& l, const IntVector& d,
 }
 
 void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
-					 const ProcessorGroup* group)
+					  const ProcessorGroup* group)
 {
   static bool first=true;
   int nTasks = graph.numTasks();
@@ -117,7 +117,7 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph,
 }
 
 int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
-							const ProcessorGroup*)
+							 const ProcessorGroup*)
 {
   if(npatches == 0)
     throw InternalError("getPatchwiseProcessorAssignent called before assignResources?");
@@ -130,7 +130,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 
 const PatchSet*
 NirvanaLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
-					       const ProcessorGroup* world)
+						const ProcessorGroup* world)
 {
   PatchSet* patches = scinew PatchSet();
   patches->createEmptySubsets(world->size());

@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
@@ -67,7 +68,8 @@ public:
    void print(ostream&) const;
    void cleanForeign();
    void scrub(const VarLabel* label);
-   void logMemoryUse(ostream& out, const std::string& tag, int dwid);
+   void logMemoryUse(ostream& out, unsigned long& total,
+		     const std::string& tag, int dwid);
 private:
    typedef vector<VarType*> dataDBtype;
 
@@ -409,8 +411,8 @@ void DWDatabase<VarType>::print(std::ostream& out) const
 
 template<class VarType>
 void
-DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
-				  int dwid)
+DWDatabase<VarType>::logMemoryUse(ostream& out, unsigned long& total,
+				  const std::string& tag, int dwid)
 {
   for(nameDBtype::iterator iter = names.begin();
       iter != names.end(); iter++){
@@ -427,7 +429,8 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
 	  void* ptr;
 	  var->getSizeInfo(elems, totsize, ptr);
 	  const TypeDescription* td = label->typeDescription();
-	  out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t" << pr->patch->getID() << "\t" << i << "\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+	  logMemory(out, total, tag, label->getName(), (td?td->getName():"-"),
+		    pr->patch, i, elems, totsize, ptr, dwid);
 	}
       }
     }
@@ -442,7 +445,8 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
     void* ptr;
     var->getSizeInfo(elems, totsize, ptr);
     const TypeDescription* td = label->typeDescription();
-    out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t-\t-\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+    logMemory(out, total, tag, label->getName(), (td?td->getName():"-"),
+	      0, -1, elems, totsize, ptr, dwid);
   }
 }
 

@@ -1515,22 +1515,28 @@ OnDemandDataWarehouse::scrub(const VarLabel* var)
   d_lock.writeUnlock();
 }
 
-void OnDemandDataWarehouse::logMemoryUse(ostream& out, const std::string& tag)
+void OnDemandDataWarehouse::logMemoryUse(ostream& out, unsigned long& total,
+					 const std::string& tag)
 {
   int dwid=d_generation;
-  d_ncDB.logMemoryUse(out, tag, dwid);
-  d_ccDB.logMemoryUse(out, tag, dwid);
-  d_sfcxDB.logMemoryUse(out, tag, dwid);
-  d_sfcyDB.logMemoryUse(out, tag, dwid);
-  d_sfczDB.logMemoryUse(out, tag, dwid);
-  d_particleDB.logMemoryUse(out, tag, dwid);
-  d_reductionDB.logMemoryUse(out, tag, dwid);
-  d_perpatchDB.logMemoryUse(out, tag, dwid);
+  d_ncDB.logMemoryUse(out, total, tag, dwid);
+  d_ccDB.logMemoryUse(out, total, tag, dwid);
+  d_sfcxDB.logMemoryUse(out, total, tag, dwid);
+  d_sfcyDB.logMemoryUse(out, total, tag, dwid);
+  d_sfczDB.logMemoryUse(out, total, tag, dwid);
+  d_particleDB.logMemoryUse(out, total, tag, dwid);
+  d_reductionDB.logMemoryUse(out, total, tag, dwid);
+  d_perpatchDB.logMemoryUse(out, total, tag, dwid);
 
   // Log the psets.
   for(psetDBType::iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++){
     ParticleSubset* pset = iter->second;
-    out << dwid << "\t" << tag << "\t" << "ParticleSubset" << "\t-\t" << pset->getPatch()->getID() << "\t" << pset->getMatlIndex() << "\t" << pset->numParticles() << "\t" << pset->numParticles()*sizeof(particleIndex) << "\t" << pset->getPointer() << '\n';
+    ostringstream elems;
+    elems << pset->numParticles();
+    logMemory(out, total, tag, "particles", "ParticleSubset", pset->getPatch(),
+	      pset->getMatlIndex(), elems.str(),
+	      pset->numParticles()*sizeof(particleIndex),
+	      pset->getPointer(), dwid);
   }
 }
 
