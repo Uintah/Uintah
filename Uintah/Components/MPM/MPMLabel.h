@@ -16,6 +16,7 @@ namespace Uintah {
       ~MPMLabel();
 
       void registerPermanentParticleState(const VarLabel* l);
+      void registerPermanentParticleState_preReloc(const VarLabel* l);
 
       //      static const MPMLabel* getLabels();
 
@@ -86,14 +87,18 @@ namespace Uintah {
 
       const VarLabel* ppNAPIDLabel;
 
-    private:
       vector<const VarLabel* > d_particleState;
+      vector<const VarLabel* > d_particleState_preReloc;
     };
   } // end namepsace MPM
 } // end namespace Uintah
 
 
 // $Log$
+// Revision 1.16  2000/07/12 18:45:07  jas
+// Cleaned up the creation of the particle state and moved things into
+// MPMLabel.
+//
 // Revision 1.15  2000/07/05 23:43:30  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
