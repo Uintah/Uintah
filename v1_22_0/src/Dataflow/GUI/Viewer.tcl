@@ -144,12 +144,14 @@ itcl_class ViewWindow {
     protected attachedFr
 
     method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
+	return [string trimleft $this :]
     }
+
+    method number {} {
+	set parts [split $this _]
+	return [lindex $parts end]
+    }
+
 
     method set_defaults {} {
 
@@ -269,8 +271,10 @@ itcl_class ViewWindow {
 
 	global $this-ortho-view
 	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
+	
+	initGlobal $this-trackViewWindow0 1
 
-	setGlobal $this-geometry [wm geometry .ui[modname]]
+	initGlobal $this-geometry [wm geometry .ui[modname]]
 	trace variable $this-geometry w "resizeWindow .ui[modname] $this-geometry"
     }
 
@@ -285,8 +289,8 @@ itcl_class ViewWindow {
 #	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
 
 	bind $w <Destroy> "$this killWindow %W" 
-	wm title $w "ViewWindow"
-	wm iconname $w "ViewWindow"
+	wm title $w "View Window [number]"
+	wm iconname $w "View Window [number]"
 	wm minsize $w 100 100
 	set_defaults 
 
@@ -439,82 +443,8 @@ itcl_class ViewWindow {
 	    "Allows the user to easily specify that the viewer align the axes\n" \
 	    "such that they are perpendicular and/or horizontal to the viewer."
 
-	menu $bsframe.v1.views.def.m
-	$bsframe.v1.views.def.m add cascade -label "Look down +X Axis" \
-		-menu $bsframe.v1.views.def.m.posx
-	$bsframe.v1.views.def.m add cascade -label "Look down +Y Axis" \
-		-menu $bsframe.v1.views.def.m.posy
-        $bsframe.v1.views.def.m add cascade -label "Look down +Z Axis" \
-		-menu $bsframe.v1.views.def.m.posz
-	$bsframe.v1.views.def.m add separator
-	$bsframe.v1.views.def.m add cascade -label "Look down -X Axis" \
-		-menu $bsframe.v1.views.def.m.negx
-	$bsframe.v1.views.def.m add cascade -label "Look down -Y Axis" \
-		-menu $bsframe.v1.views.def.m.negy
-        $bsframe.v1.views.def.m add cascade -label "Look down -Z Axis" \
-		-menu $bsframe.v1.views.def.m.negz
-
+	create_view_menu $bsframe.v1.views.def.m
 	pack $bsframe.v1.views.def -side left -pady 2 -padx 2 -fill x
-
-	menu $bsframe.v1.views.def.m.posx
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value x1_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value x1_y0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value x1_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value x1_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.posy
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value y1_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value y1_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value y1_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value y1_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.posz
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value z1_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value z1_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value z1_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value z1_y0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.negx
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value x0_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value x0_y0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value x0_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value x0_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.negy
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value y0_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value y0_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value y0_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value y0_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.negz
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value z0_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value z0_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value z0_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value z0_y0 -command "$this-c Views"
 
 	frame $bsframe.v2 -relief groove -borderwidth 2
 	pack $bsframe.v2 -side left -padx 2 -pady 2
@@ -631,6 +561,72 @@ itcl_class ViewWindow {
 	}
     }
 
+    method create_other_viewers_view_menu { m } {
+	if { [winfo exists $m] } {
+	    destroy $m
+	}
+	menu $m
+	set myparts [split [modname] -]
+	set myviewer .ui[lindex $myparts 0]
+	set mywindow [lindex $myparts 1]
+	set actual 0
+	foreach w [winfo children .] {
+	    set parts [split $w -]
+	    set viewer [lindex $parts 0]
+	    set window [lindex $parts 1]
+	    if { [string equal $myviewer $viewer] } {
+		if { ![string equal $mywindow $window] } {
+		    set num [lindex [split $window _] end]
+		    $m add command -label "Get View form Viewer $num" \
+			-command "set $this-pos ViewWindow$actual; $this-c Views"
+		}
+		incr actual
+	    }
+	}
+    }
+		    
+
+    method create_view_menu { m } {
+	menu $m -postcommand "$this create_other_viewers_view_menu $m.otherviewers"
+	$m add checkbutton -label "Track View Window 0" \
+	    -variable $this-trackViewWindow0
+	$m add cascade -menu $m.otherviewers -label "Other Viewers"
+#	    -command "create_other_viewers_view_menu $m.otherviewers"
+
+	foreach sign1 {1 0} {
+	    foreach dir1 {x y z} {
+		set pn1 [expr $sign1?"+":"-"]
+		set posneg1 [expr $sign1?"+":"-"]
+		set sub $m.$posneg1$dir1
+		$m add cascade -menu $sub \
+		    -label "Look down $pn1[string toupper $dir1] Axis"
+		menu $sub
+		foreach dir2 { x y z } {
+		    if { ![string equal $dir1 $dir2] } {
+			foreach sign2 { 1 0 } {
+			    set pn2 [expr $sign2?"+":"-"]
+			    if { 1 } {
+				$sub add command -label \
+				    "Up vector $pn2[string toupper $dir2]" \
+				    -command "setGlobal $this-pos ${dir1}${sign1}_${dir2}${sign2};
+                                              $this-c Views" 
+			    } else {
+				$sub add radiobutton -label \
+				    "Up vector $pn2[string toupper $dir2]" \
+				    -variable $this-pos \
+				    -value ${dir1}${sign1}_${dir2}${sign2} \
+				    -command "$this-c Views"
+			    }
+			}
+		    }
+		}
+	    }
+	    $m add separator
+	}
+    }
+
+
+
     method removeMFrame {w} {
 
 	if { $IsAttached!=0 } {
@@ -652,7 +648,7 @@ itcl_class ViewWindow {
 	if { $IsAttached!=0} {
 	    pack $attachedFr -anchor w -side bottom -before $w.bsframe -fill x
 	    append geom [expr [winfo width $w]>[winfo width $w.msframe] ?[winfo width $w]:[winfo width $w.msframe]] x [expr [winfo height $w]+[winfo reqheight $w.msframe]]
-	    wm geometry $w $geom
+	    wm geometry $w $geom 
 	    update
 	} else {
 	    wm deiconify $detachedFr
@@ -803,8 +799,6 @@ itcl_class ViewWindow {
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
         checkbutton $m.raxes -text "Orientation" -variable $this-raxes -onvalue 1 -offvalue 0 -command "$this-c rotateGenAxes; $this-c redraw"
 	checkbutton $m.ortho -text "Ortho View" -variable $this-ortho-view -onvalue 1 -offvalue 0 -command "$this-c redraw"
-	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
-	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top -anchor w
 	pack $m.raxes -side top -anchor w
 	pack $m.ortho -side top -anchor w
