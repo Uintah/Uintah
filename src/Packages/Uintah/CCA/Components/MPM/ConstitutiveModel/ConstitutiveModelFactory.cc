@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -45,6 +46,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    
    else if (mat_type ==  "mw_visco_elastic")
       return(scinew MWViscoElastic(child,lb));
+   
+   else if (mat_type ==  "membrane")
+      return(scinew Membrane(child,lb));
    
    else 
       throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");
