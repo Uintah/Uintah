@@ -1,0 +1,25 @@
+#!/bin/tcsh
+
+set i = 1
+set errors = 0
+
+while ( $i < $#argv )
+    if ( -e Output/$argv[$i] ) then
+	$argv[$i] >&! foo
+	diff foo Output/$argv[$i] >> /dev/null
+	if ( $status != 0 ) then
+	    echo "Error running $argv[$i]"
+	    @ errors++
+	endif
+    else
+	echo "\tSkipping $argv[$i]"
+    endif
+    @ i++
+end
+
+/bin/rm foo
+if ( $errors != 0 ) then
+    echo "ERROR - There were $errors errors"
+else
+    echo "OK"
+endif 

@@ -1,0 +1,181 @@
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<chapter>
+  <title>SCIRun Memory Management</title>
+
+  <sect1>
+    <para>
+      This chapter explains how and why SCIRun manages memory usage.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Introduction</title>
+
+    <para>
+      The SCIRun memory allocation and tracking system is defined in
+      Core/Malloc.  This system is an abstracted layer built upon the
+      normal memory management tools provided in C/C++.  
+    </para>
+
+    <para>
+      At one point or another, most programs run into problems with
+      dynamically allocated memory such as stray pointers and memory
+      leakage.  Because SCIRun is a large and complex collection of
+      core routines as well as a framework for the creation and use of
+      user modules (used to extend its base functionality,) it is
+      important to be able to track the allocation and usage of
+      memory.
+    </para>
+
+    <para>
+      SCIRun provides a transparent, non-invasive method of
+      tracking memory usage.  By overloading the basic C memory
+      management routines (malloc, free, calloc, realloc, memalign,
+      and valloc) as well as the C++ routines (new and delete,) SCIRun
+      can record and monitor the allocation of memory throughout the
+      system.  This makes it much easier to perform two very important
+      functions: 1) Know where memory was allocated, and thus, if
+      appropriate, where it was not freed, and 2) easily track the
+      amount of memory being used by the entire system.  Core/Malloc
+      provides one other important benefit:  Memory allocation can be,
+      and often is, faster because of the smarter algorithms it uses.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Programming with SCIRun Memory Management</title>
+   
+      <para>
+        For the reasons mentioned above, it is important for
+        developers to use the Core/Malloc routines in order for
+        themselves or others to localize and fix and memory problems
+        encountered when using SCIRun.
+      </para>
+
+      <para>
+        Anytime a developer needs to allocate memory, he or she should
+        use the Core/Malloc routines, thereby receiving for free, the
+        ability to track memory usage.  The important thing to note is
+        that the developer need only do one thing to make this happen:
+        Use the SCIRun macro "scinew" anywhere he or she would
+        normally use "new".  Because "scinew" is a macro, it can be
+        easily configured to allow the default "new" to be used when
+        desired.
+      </para>
+
+    <sect2>
+      <title>Environment Variables</title>
+    <para>
+      The following environment variables can be set in order to help
+      monitor and control the allocation of memory.  The environment
+      variables are only used if DISABLE_SCI_MALLOC is NOT defined
+      during compilation.  If DISABLE_SCI_MALLOC is defined, then
+      SCIRun will use the built in new, free, alloc, etc.
+    </para>
+    <para>
+      MALLOC_STRICT: Places markers in unused memory and uses them to
+      verify memory integrity.  Unless you wish to check memory
+      integrity explicitly using the "audit()" function, MALLOC_LAZY
+      should NOT be set.
+    </para>
+    <para>
+      MALLOC_LAZY: By default, memory is audited for problems on each
+      allocation and deallocation.  If MALLOC_LAZY is set, then
+      auditing is turned off.  This can speed up code that allocates
+      and deallocates memory frequently.
+    </para>
+    <para>
+      MALLOC_TRACE [filename]: If MALLOC_TRACE is set, then every
+      memory allocation, reallocation, and deallocation will be
+      logged.  If "filename" is not provided, this information will be
+      printed to "stderr".
+    </para>
+    <para>
+      MALLOC_STATS [filename]: If MALLOC_STATS is set, when SCIRun
+      exits, it will output a list of statistics regarding memory
+      usage during the run.  This includes the number of alloc/free
+      calls, the amount of fragmentation, the amount of memory that is
+      free and that is in use, etc.  If "filename" is not provided,
+      then "stderr" is used.
+    </para>
+  </sect2>
+ 
+  <sect2>
+    <title>Overloaded Functions</title>
+    <para>
+      The following memory management functions are overloaded to
+      allow Core/Malloc to provide memory management functionality:
+    </para>
+    
+    <para>
+        C Functions:
+    </para>
+
+    <computeroutput>
+        void* malloc(size_t size);
+	void free(void* ptr);
+	void* calloc(size_t n, size_t s);
+	void* realloc(void* p, size_t s);
+	void* memalign(size_t alignment, size_t size);
+	void* valloc(size_t size);
+    </computeroutput>
+
+    <para>
+	C++ Functions:
+    </para>
+
+    <computeroutput>
+	void* operator new(size_t, SCIRun::Allocator*, char*);
+	void* operator new[](size_t, SCIRun::Allocator*, char*);
+	#define scinew new(SCIRun::default_allocator, __FILE__)
+    </computeroutput>
+    <para>
+      To take advantage of the SCIRun memory management utilities
+      provided by Core/Malloc, you should do the following:
+    </para>
+
+    <para>
+    <orderedlist>
+      <listitem><para>Make sure that DISABLE_SCI_MALLOC is not set.</para></listitem>
+      <listitem>
+        <para>
+          Allocate memory using the following syntax (This can 
+          be transparently done by changing every "new" to "scinew"):
+        </para>
+
+       <computeroutput>
+      int * int_array = scinew int[ 128 ];
+
+      Object * obj = scinew Object();
+       </computeroutput>
+      </listitem>
+      <listitem><para>Delete objects as normal:</para>
+ 
+      <computeroutput>
+      delete int_array[];
+      delete obj;
+      </computeroutput>
+      </listitem>
+      </orderedlist>
+    </para>
+    </sect2>
+  </sect1>
+</chapter>
+   
