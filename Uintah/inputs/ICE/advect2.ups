@@ -147,6 +147,11 @@
 	<outputInterval>.0001</outputInterval>
    </DataArchiver>
 
+   <Debug>
+	<debug label = "switchDebug_equilibration_press"/>
+	<debug label = "switchDebug_advance_advect"/>	
+   </Debug>
+
    <OutputVars>
   	<t_initial_output>   0.0         </t_initial_output>
 	<t_final_output>     15.0        </t_final_output>
