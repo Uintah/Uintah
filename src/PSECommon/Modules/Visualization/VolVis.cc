@@ -25,6 +25,8 @@
 #include <SCICore/Geom/TCLGeom.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 
 #include <SCICore/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
@@ -45,10 +47,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SCICore/Util/Timer.h>
-
-#include <SCICore/Multitask/Mailbox.h>
-#include <SCICore/Multitask/Task.h>
-#include <SCICore/Multitask/ITC.h>
 
 #include <SCICore/Math/Trig.h>
 
@@ -88,6 +86,7 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Containers;
+using namespace SCICore::Thread;
 
 typedef void (*FR) ( double, double, double, double, double, double, double,
 		    double *, double *, double *, double *, double, double,
@@ -98,16 +97,16 @@ typedef void (*FR) ( double, double, double, double, double, double, double,
 class RenderingThread;
 class VolVis;
 
-class RenderingThread : public Task
+class RenderingThread : public Runnable
 {
 public:
   VolVis *v;
   RenderingThread( VolVis * voldata );
-  int body( int );
+    void run();
 };
 
 
-RenderingThread::RenderingThread( VolVis *voldata ) : Task( "VVRenderLoop" )
+RenderingThread::RenderingThread( VolVis *voldata )
 {
   v = voldata;
 }
@@ -403,7 +402,8 @@ VolVis::VolVis(const clString& id)
   stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this),
-  msgs(10)
+  msgs("VolVis mailbox", 10), imagelock("VolVis image lock"),
+  donelock("VolVis done lock")
 {
   cerr << "Welcome to VolVis\n";
   
@@ -475,7 +475,8 @@ VolVis::VolVis(const clString& id)
   
   // create and activate the rendering thread
   rt = new RenderingThread( this );
-  rt->activate( 0 );
+  Thread* t=new Thread(rt, "VolVis rendering thread");
+  t->detach();
   cerr << "Activated the thread\n";
 
   CastRay = &BasicVolRender;
@@ -508,14 +509,6 @@ VolVis::~VolVis()
  *
  *
  **************************************************************/
-
-static void
-do_parallel(void* obj, int proc)
-{
-  VolVis* module=(VolVis*)obj;
-  module->parallel(proc);
-}
-
 
 
 void
@@ -1020,10 +1013,10 @@ void
 VolVis::tcl_command(TCLArgs& args, void* userdata)
 {
   if ( args[1] == "redraw_all" ){
-    if(strcmp(Task::self()->get_name(), "TCLTask"))
+    if(strcmp(Thread::self()->getThreadName(), "TCLTask"))
       {
 	TCL::execute("after idle "+args[0]+" "+args[1]);
-	cerr << "Attempted redraw from " << Task::self()->get_name()
+	cerr << "Attempted redraw from " << Thread::self()->getThreadName()
 	  << ", deferred...\n";
       }
     else
@@ -1281,7 +1274,7 @@ VolVis::RenderLoop( )
       if ( done )
 	msg = msgs.receive();
       else
-	msgs.try_receive( msg );
+	msgs.tryReceive( msg );
       
       while ( msg != -1 )
 	{
@@ -1358,7 +1351,7 @@ VolVis::RenderLoop( )
 	  watch.clear();
 	  
 	  msg = -1;
-	  msgs.try_receive( msg );
+	  msgs.tryReceive( msg );
 	}
 
       if ( NewTransferMap )
@@ -1480,8 +1473,9 @@ VolVis::RenderLoop( )
 	{
 	  if ( iProc.get() )
 	    {
-	      procCount = Task::nprocessors();
-	      Task::multiprocess(procCount, do_parallel, this);
+	      procCount = Thread::numProcessors();
+	      Thread::parallel(Parallel<VolVis>(this, &VolVis::parallel),
+			       procCount, true);
 
 	      if ( done )
 		cerr << "Parallel reports " << watch.time();
@@ -1571,11 +1565,10 @@ VolVis::RenderLoop( )
     }
 }
 
-int
-RenderingThread::body( int )
+void
+RenderingThread::run()
 {
   v->RenderLoop();
-  return 1;
 }
 
 
@@ -1717,6 +1710,11 @@ VolVis::CalculateRayIncrements ()
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:49  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:12  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

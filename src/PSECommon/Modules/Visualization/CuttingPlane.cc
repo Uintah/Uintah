@@ -147,7 +147,7 @@ Module* make_CuttingPlane(const clString& id) {
 static clString widget_name("CuttingPlane Widget");
 
 CuttingPlane::CuttingPlane(const clString& id)
-: Module("CuttingPlane", id, Filter), 
+: Module("CuttingPlane", id, Filter), widget_lock("Cutting plane widget lock"),
   cutting_plane_type("cutting_plane_type",id, this),
   need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
@@ -655,6 +655,11 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:45  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:48:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

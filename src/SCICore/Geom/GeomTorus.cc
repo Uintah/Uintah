@@ -169,8 +169,8 @@ void GeomTorus::io(Piostream& stream)
   
     stream.begin_class("GeomTorus", GEOMTORUS_VERSION);
     GeomObj::io(stream);
-    Pio(stream, cen);
-    Pio(stream, axis);
+    SCICore::Geometry::Pio(stream, cen);
+    SCICore::Geometry::Pio(stream, axis);
     Pio(stream, rad1);
     Pio(stream, rad2);
     Pio(stream, nu);
@@ -194,10 +194,10 @@ void GeomTorusArc::io(Piostream& stream)
 
     stream.begin_class("GeomTorusArc", GEOMTORUSARC_VERSION);
     GeomTorus::io(stream);
-    Pio(stream, zero);
+    SCICore::Geometry::Pio(stream, zero);
     Pio(stream, start_angle);
     Pio(stream, arc_angle);
-    Pio(stream, yaxis);
+    SCICore::Geometry::Pio(stream, yaxis);
     stream.end_class();
 }
 
@@ -212,6 +212,11 @@ bool GeomTorusArc::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.5  1999/08/29 00:46:56  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.4  1999/08/28 17:54:42  sparker
 // Integrated new Thread library
 //

@@ -28,6 +28,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 #include <stdio.h>
 #include <math.h>
 #include <iostream.h>
@@ -103,7 +104,8 @@ FieldFilter::FieldFilter(const clString& id)
   sameInput("sameInput", id, this), filterType("filterType", id, this),
   range_min_x("range_min_x", id, this), range_min_y("range_min_y", id, this),
   range_min_z("range_min_z", id, this), range_max_x("range_max_x", id, this),
-  range_max_y("range_max_y", id, this), range_max_z("range_max_z", id, this)
+  range_max_y("range_max_y", id, this), range_max_z("range_max_z", id, this),
+    widget_lock("FieldFilter widget lock")
 {
     check_widget=lastX=lastY=lastZ=0;
     iField=new ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic);
@@ -662,6 +664,11 @@ void FieldFilter::buildOversampleMitchellTable(Array2<double> *table,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:38  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/25 03:47:46  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

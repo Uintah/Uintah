@@ -35,11 +35,12 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/Thread/CrowdMonitor.h>
+#include <SCICore/Thread/FutureValue.h>
 #include <iostream.h>
 #include <stdio.h>
 #include <string.h>
 #include <strstream.h>
-#include <SCICore/Multitask/AsyncReply.h>
 
 #define MouseStart 0
 #define MouseEnd 1
@@ -180,10 +181,10 @@ void Roe::get_bounds(BBox& bbox)
 	    if(visible.lookup(si->name, vis)){
 		if(vis->visible->get()){
 		    if(si->lock)
-			si->lock->read_lock();
+			si->lock->readLock();
 		    si->get_bounds(bbox);
 		    if(si->lock)
-			si->lock->read_unlock();
+			si->lock->readUnlock();
 		}
 	    } else {
 		cerr << "Warning: object " << si->name << " not in visibility database...\n";
@@ -678,11 +679,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
-	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
-	    cerr << "Redraw event dropped, mailbox full!\n";
-	} else {
-	    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
-	}
+	manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpImage, id, args[2]));
     } else if(args[1] == "startup"){
 	// Fill in the visibility database...
 	//HashTableIter<int, PortInfo*> iter(&manager->portHash);
@@ -715,47 +712,41 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
-	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+	if(!manager->mailbox.trySend(scinew SalmonMessage(id)))
 	    cerr << "Redraw event dropped, mailbox full!\n";
-	} else {
-	    manager->mailbox.send(scinew SalmonMessage(id));
-	}
     } else if(args[1] == "destroy"){
         manager->delete_roe(this);
     } else if(args[1] == "anim_redraw"){
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
-	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
-	    cerr << "Redraw event dropped, mailbox full!\n";
-	} else {
-	    if(args.count() != 6){
-		args.error("anim_redraw wants tbeg tend nframes framerate");
-		return;
-	    }
-	    double tbeg;
-	    if(!args[2].get_double(tbeg)){
-		args.error("Can't figure out tbeg");
-		return;
-	    } 
-	    double tend;
-	    if(!args[3].get_double(tend)){
-		args.error("Can't figure out tend");
-		return;
-	    }
-	    int nframes;
-	    if(!args[4].get_int(nframes)){
-		args.error("Can't figure out nframes");
-		return;
-	    }
-	    double framerate;
-	    if(!args[5].get_double(framerate)){
-		args.error("Can't figure out framerate");
-		return;
-	    }
-	    manager->mailbox.send(scinew SalmonMessage(id, tbeg, tend,
-						    nframes, framerate));
+	if(args.count() != 6){
+	    args.error("anim_redraw wants tbeg tend nframes framerate");
+	    return;
 	}
+	double tbeg;
+	if(!args[2].get_double(tbeg)){
+	    args.error("Can't figure out tbeg");
+	    return;
+	} 
+	double tend;
+	if(!args[3].get_double(tend)){
+	    args.error("Can't figure out tend");
+	    return;
+	}
+	int nframes;
+	if(!args[4].get_int(nframes)){
+	    args.error("Can't figure out nframes");
+	    return;
+	}
+	double framerate;
+	if(!args[5].get_double(framerate)){
+	    args.error("Can't figure out framerate");
+	    return;
+	}
+	if(!manager->mailbox.trySend(scinew SalmonMessage(id, tbeg, tend,
+							  nframes, framerate)))
+	    cerr << "Redraw event dropped, mailbox full!\n";
     } else if(args[1] == "mtranslate"){
 	do_mouse(&Roe::mouse_translate, args);
     } else if(args[1] == "mrotate"){
@@ -813,12 +804,8 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	// We need to dispatch this one to the remote thread
 	// We use an ID string instead of a pointer in case this roe
 	// gets killed by the time the redraw message gets dispatched.
-	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
-	    cerr << "Redraw event dropped, mailbox full!\n";
-	} else {
-	    manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
-						       id, args[2], args[3]));
-	}
+	manager->mailbox.send(scinew SalmonMessage(MessageTypes::RoeDumpObjects,
+						   id, args[2], args[3]));
     } else if(args[1] == "listvisuals"){
         current_renderer->listvisuals(args);
     } else if(args[1] == "switchvisual"){
@@ -901,11 +888,8 @@ void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
     }
 
     // We have to send this to the salmon thread...
-    if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+    if(!manager->mailbox.trySend(scinew RoeMouseMessage(id, handler, action, x, y, state, btn, time)))
 	cerr << "Mouse event dropped, mailbox full!\n";
-    } else {
-	manager->mailbox.send(scinew RoeMouseMessage(id, handler, action, x, y, state, btn, time));
-    }
 }
 
 void Roe::autoview(const BBox& bbox)
@@ -1035,10 +1019,10 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 	  } else {
 	    
 	    if(si->lock)
-	      si->lock->read_lock ();
+	      si->lock->readLock();
 	    (r->*pmf)(manager, this, si);
 	    if(si->lock)
-	      si->lock->read_unlock();
+	      si->lock->readUnlock();
 	  }
 	}
       } else {
@@ -1053,10 +1037,10 @@ void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
     GeomSalmonItem *si = transp_objs[i];    
 
     if(si->lock)
-      si->lock->read_lock ();
+      si->lock->readLock();
     (r->*pmf)(manager, this, si);
     if(si->lock)
-      si->lock->read_unlock();
+      si->lock->readUnlock();
   }
 
   // now you are done...
@@ -1080,7 +1064,7 @@ void Roe::dump_objects(const clString& filename, const clString& format)
 	    delete stream;
 	    return;
 	}
-	manager->geomlock.read_lock();
+	manager->geomlock.readLock();
 	GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
 			&manager->ports);
 	SCICore::PersistentSpace::Pio(*stream, scene);
@@ -1090,20 +1074,21 @@ void Roe::dump_objects(const clString& filename, const clString& format)
 	    cerr << "Done writing geom file: " << filename << endl;
 	}
 	delete stream;
-	manager->geomlock.read_unlock();
+	manager->geomlock.readUnlock();
     } else {
 	cerr << "WARNING: format " << format << " not supported!\n";
     }
 }
 
-void Roe::getData(int datamask, AsyncReply<GeometryData*>* result)
+void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
 {
     if(current_renderer){
 	cerr << "calling current_renderer->getData\n";
 	current_renderer->getData(datamask, result);
 	cerr << "current_renderer...\n";
-    } else
-	result->reply(0);
+    } else {
+	result->send(0);
+    }
 }
 
 } // End namespace Modules
@@ -1111,6 +1096,11 @@ void Roe::getData(int datamask, AsyncReply<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:42  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/18 20:19:53  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

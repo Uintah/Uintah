@@ -46,17 +46,12 @@ namespace SCICore {
 	class SimpleReducer : public Barrier {
 	public:
 	    //////////
-	    // Create a <b> SimpleReducer</i> for the specified number of threads.
+	    // Create a <b> SimpleReducer</i>.
 	    // At each operation, a barrier wait is performed, and the
 	    // operation will be performed to compute the global balue.
 	    // <i>name</i> should be a static string which describes
 	    // the primitive for debugging purposes.
-	    SimpleReducer(const char* name, int nthreads);
-
-	    //////////
-	    // Create a <b>SimpleReducer</b> to be associated with a particular
-	    // <b>ThreadGroup</b>.
-	    SimpleReducer(const char* name, ThreadGroup* group);
+	    SimpleReducer(const char* name);
 
 	    //////////
 	    // Destroy the SimpleReducer and free associated memory.
@@ -66,13 +61,13 @@ namespace SCICore {
 	    // Performs a global sum over all of the threads.  As soon as each
 	    // thread has called sum with their local sum, each thread will
 	    // return the same global sum.
-	    double sum(int proc, double mysum);
+	    double sum(int myrank, int numThreads, double mysum);
 
 	    //////////
 	    // Performs a global max over all of the threads.  As soon as each
 	    // thread has called max with their local max, each thread will
 	    // return the same global max.
-	    double max(int proc, double mymax);
+	    double max(int myrank, int numThreads, double mymax);
 
 	private:
 	    struct data {
@@ -90,7 +85,7 @@ namespace SCICore {
 	    joinArray* d_join[2];
 	    pdata* d_p;
 	    int d_array_size;
-	    void collectiveResize(int proc);
+	    void collectiveResize(int proc, int numThreads);
 
 	    // Cannot copy them
 	    SimpleReducer(const SimpleReducer&);
@@ -103,6 +98,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.2  1999/08/29 00:47:01  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.1  1999/08/28 03:46:50  sparker
 // Final updates before integration with PSE
 //

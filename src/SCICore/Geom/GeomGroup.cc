@@ -114,7 +114,7 @@ void GeomGroup::io(Piostream& stream)
     // Do the base class first...
     GeomObj::io(stream);
     Pio(stream, del_children);
-    Pio(stream, objs);
+    SCICore::Containers::Pio(stream, objs);
     stream.end_class();
 }
 
@@ -141,6 +141,11 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:46:55  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.5  1999/08/28 17:54:40  sparker
 // Integrated new Thread library
 //

@@ -15,7 +15,7 @@ namespace Datatypes {
 using namespace SCICore::PersistentSpace;
 
 extern int global_numbounces;
-extern SCICore::Multitask::Mutex global_bounces_mutex;
+extern SCICore::Thread::Mutex global_bounces_mutex;
 
 Scene::Scene() {
 }
@@ -355,6 +355,11 @@ static void _dummy_(Piostream& p1, Array1<RTObject*>& p2)
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.2  1999/08/29 00:46:35  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.1  1999/08/23 02:52:58  dmw
 // Dave's Datatypes
 //

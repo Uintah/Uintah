@@ -152,7 +152,7 @@ namespace SCICore {
 	    // of the threads return.  Otherwise, the call will return
 	    // immediately.
 	    static ThreadGroup* parallel(const ParallelBase& helper,
-					 int nthreads, bool block=false,
+					 int nthreads, bool block,
 					 ThreadGroup* threadGroup=0);
 	    
 	    //////////
@@ -247,6 +247,11 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.8  1999/08/29 00:47:02  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.7  1999/08/28 03:46:51  sparker
 // Final updates before integration with PSE
 //

@@ -39,8 +39,8 @@ namespace SCICore {
     class Vector;
     class Transform;
   }
-  namespace Multitask {
-    template<class T> class AsyncReply;
+  namespace Thread {
+      template<class T> class FutureValue;
   }
 }
 
@@ -63,13 +63,13 @@ using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::GeomPick;
 using SCICore::GeomSpace::GeomSphere;
 using SCICore::GeomSpace::DrawInfoOpenGL;
-using SCICore::Multitask::AsyncReply;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::BBox;
 using SCICore::Geometry::Transform;
 using SCICore::Containers::Array1;
 using SCICore::Containers::HashTable;
+using SCICore::Thread::FutureValue;
 
 using namespace SCICore::TclInterface;
 
@@ -241,7 +241,7 @@ public:
 
     void dump_objects(const clString&, const clString& format);
 
-    void getData(int datamask, AsyncReply<GeometryData*>* result);
+    void getData(int datamask, FutureValue<GeometryData*>* result);
 };
 
 class RoeMouseMessage : public MessageBase {
@@ -266,6 +266,11 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 00:46:42  sparker
+// Integrated new thread library
+// using statement tweaks to compile with both MipsPRO and g++
+// Thread library bug fixes
+//
 // Revision 1.3  1999/08/25 03:47:57  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
