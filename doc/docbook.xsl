@@ -191,6 +191,54 @@
 <!-- *********************** printable templates **************** -->
 <!-- ************************************************************ -->
 
+<xsl:template match="fignum" mode="print">
+  <xsl:variable name="figname">
+    <xsl:value-of select="@name"/>
+  </xsl:variable>
+  <xsl:call-template name="figcount">
+    <xsl:with-param name="fignode" select="//figure[@name=$figname]"/>
+  </xsl:call-template>
+</xsl:template>
+ 
+<xsl:template match="figure" mode="print">
+  <xsl:variable name="fignum">
+    <xsl:value-of select="count(ancestor|preceding::figure) + 1"/>
+  </xsl:variable>
+  <center><table border="0">
+    <tr>
+      <xsl:for-each select="@*">
+        <xsl:if test="'img'=substring(name(.),1,3)">
+          <td>
+            <img>
+              <xsl:attribute name="src">
+                <xsl:value-of select="."/>
+              </xsl:attribute>
+            </img>
+          </td>
+        </xsl:if>
+      </xsl:for-each>
+    </tr>
+    <tr>
+      <xsl:for-each select="@*">
+        <xsl:variable name="subnum">
+          <xsl:if test="last() &lt;= 3">
+          </xsl:if>
+          <xsl:if test="last() > 3">
+            <xsl:value-of select="substring(name(.),4,4)"/>
+          </xsl:if>
+        </xsl:variable>
+        <xsl:if test="'cap'=substring(name(.),1,3)">
+          <td>
+            <p class="pfirstpara">
+              <xsl:value-of select="concat('Figure ',$fignum,$subnum,': ',.)"/>
+            </p>
+          </td>
+        </xsl:if>
+      </xsl:for-each>
+    </tr>
+  </table></center>
+</xsl:template>
+
 <xsl:template match="beginpage" mode="print">
   <br/>
 </xsl:template>
