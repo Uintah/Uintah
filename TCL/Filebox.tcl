@@ -48,7 +48,6 @@ proc makeFilebox {w var command cancel} {
 	    -xscrollcommand "$w.f.bro.dir.dirss2 set"
     set dirs $w.f.bro.dir.dirs
     tk_listboxSingleSelect $dirs
-    bind $w.f.bro.dir.dirs <Button-1> "fbdirs %y $w $dirs $files"
     bind $w.f.bro.dir.dirs <Double-Button-1> "fbdirs %y $w $dirs $files"
     scrollbar $w.f.bro.dir.dirss1 -relief sunken \
 	    -foreground plum2 -activeforeground SteelBlue2 \
@@ -96,11 +95,15 @@ proc makeFilebox {w var command cancel} {
     frame $w.f.but
     button $w.f.but.ok -text OK -command $command
     button $w.f.but.filt -text Filter -command "fbupdate $w $dirs $files"
+    button $w.f.but.home -text Home -command "fbcd $w [exec pwd] $dirs $files"
+    button $w.f.but.data -text Data -command "fbcd $w $env(SCI_DATA) $dirs $files"
     button $w.f.but.cancel -text Cancel -command $cancel
     pack $w.f.but.ok -in $w.f.but -side left -padx 2 -pady 2 -anchor w
     pack $w.f.but.cancel -in $w.f.but -side right -padx 2 -pady 2 \
 	    -anchor e
     pack $w.f.but.filt -in $w.f.but -side left -padx 2 -pady 8 -expand 1
+    pack $w.f.but.home -in $w.f.but -side left -padx 2 -pady 8 -expand 1
+    pack $w.f.but.data -in $w.f.but -side left -padx 2 -pady 8 -expand 1
 
     pack $w.f.filt $w.f.path $w.f.bro $w.f.sel $w.f.but -in $w.f -side top \
 	    -padx 2 -pady 2 -expand 1 -fill both
