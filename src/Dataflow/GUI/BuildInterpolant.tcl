@@ -50,10 +50,10 @@ itcl_class SCIRun_Fields_BuildInterpolant {
 	frame $w.basis.cframe 
 	label $w.basis.cframe.label -text "Constant Mapping:"
 	radiobutton $w.basis.cframe.onetomany -text \
-		"Map each source to multiple destinations" \
+		"Each destination gets nearest source value" \
 		-variable $this-map_source_to_single_dest -value 0
 	radiobutton $w.basis.cframe.onetoone -text \
-		"Map each source to only one destination" \
+		"Each source projects to just one destination" \
 		-variable $this-map_source_to_single_dest -value 1
 	pack $w.basis.cframe.label -side top -anchor w
 	pack $w.basis.cframe.onetomany $w.basis.cframe.onetoone \
