@@ -288,7 +288,7 @@
 	BioTensor is used in this tutorial to process diffusion weighted images
 	acquired using the echo-planar imaging method.  These data  are part
 	of the SCIRun sample data set collection and may be <a
-	  href="http::software.sci.utah.edu/datasets/SCIRunData.1.20.0.tar.gz">downloaded</a>
+	  href="http://software.sci.utah.edu/archive_entry.html">obtained</a>
 	from SCI's web site.
       </p>
 
@@ -521,7 +521,7 @@
       </p>
       <ol>
 	<li><p>Click on the Processing Pane's Load Data tab.</p></li>
-	<li><p>Click the radio button labeled: DWI with B0 Reference Data.</p></li>
+	<li><p>Click the radio-button labeled: DWI with B0 Reference Data.</p></li>
 	<li><p>Click on the Load Data panel's Nrrd tab.</p></li> 
 	<li><p>Use the Nrrd panel's
 	    Browse buttons to select DWI data,
@@ -541,8 +541,8 @@
 	<li>
 	  <p>
 	    Load pre-computed diffusion tensor data by clicking the
-	    radio button labeled: Load Tensor Volumes.  Pressing this
-	    radio button skips processing steps, and tensor volume data
+	    radio-button labeled: Load Tensor Volumes.  Pressing this
+	    radio-button skips processing steps, and tensor volume data
 	    may be visualized directly (as described in <a
 	    href="#section_6">Section 6</a>)
 	  </p>
@@ -572,7 +572,7 @@
 	different DWI component volumes for a specific slice
 	location. Variance values are color-coded: areas of low variance are
 	black, areas with medium variance are orange, and areas of high
-	variance are white.  With the slider in the Visualization panel,
+	variance are white.  Using the slider in the Visualization panel,
 	select different slices from the volume to inspect.
       </p>
       <p>
@@ -598,7 +598,7 @@
 	direction, along which EPI distortions occur.  <a
 	href="#figure_6">Figure 6</a> shows the Processing pane's
 	Registration tab. "Check" the Registration tab's "Perform
-	Global EPI Registration" check-box to perform EPI
+	Global EPI Registration" check-button to perform EPI
 	registration.  The following sections describe each
 	registration parameter.  This tutorial assumes use of default
 	registration settings.
@@ -620,7 +620,7 @@
 	indicate problems due to poor DWI registration as shown in <a
 	href="#figure_6">Figure 6</a>.  To view the variance, select
 	the Vis Options tab.  Then select the Variance tab.  Now
-	select the "View Variance of Original Data" check-box. DWI
+	select the "View Variance of Original Data" check-button. DWI
 	variance is a simple indicator of anisotropy, because
 	isotropic regions should generate constant DWI values for all
 	gradient directions. Note, however, the regions of high
@@ -648,7 +648,7 @@
 	The registration method can perform implicit registration with
 	the reference (B=0) image, or it can use a diffusion weighted
 	image chosen by the user.  Select the implicit registration
-	method by clicking on radio button Implicit Reference.  To use
+	method by clicking on radio-button Implicit Reference.  To use
 	a diffusion weighted image, click Choose Reference
 	Image. Then, use the slider labled Choose Reference Image to
 	choose an image (note that DWIs are sequentially numbered,
@@ -676,24 +676,24 @@
 	is represented in the UI.
       </p>
       <p>
-	The X and Y sliders located within the Gaussian Smoothing box,
-	control the radius (standard deviation) of the Gaussian
-	smoothing along the X and Y directions. Some amount of
-	smoothing helps the thresholding find more accurate estimates
-	of the brain cortical outline. Too much smoothing distorts the
-	estimate of cortical shape due to anisotropy in the underlying
-	white matter. The preset defaults work well.
+	The sliders labeled X and Y, located within the frame labeled Gaussian
+	Smoothing, control the radius (standard deviation) of the
+	Gaussian smoothing along the X and Y directions. Some amount
+	of smoothing helps  thresholding find more accurate
+	estimates of the brain cortical outline. Too much smoothing
+	distorts the estimate of cortical shape due to anisotropy in
+	the underlying white matter. The preset defaults work well.
       </p>
       <p>
 	The threshold DWI value, between background and brain tissue,
-	can be automatically determined by clicking the radio button
+	can be automatically determined by clicking the radio-button
 	labeled Automatically Determine Threshold in the
-	Background/DWI Threshold box.  A threshold value may be
-	specified by clicking the radio button labeled Specify
+	frame labeled Background/DWI Threshold.  A threshold value may be
+	specified by clicking the radio-button labeled Specify
 	Threshold, and entering a threshold value.
       </p>
       <p>
-	The Use Connected Components check box determines whether connected
+	The Use Connected Components check-button determines whether connected
 	component analysis is done to refine the thresholding output. Using
 	connected components is helpful because it leads to estimates of the
 	brain cross-section shape that are more similar across the diffusion
@@ -739,7 +739,7 @@
 	</li>
       </ul>
       <p>
-	Use the pop-up menu labeled Resampling Filter to choose a filter.
+	Use the  menu-buttom labeled Resampling Filter to choose a filter.
       </p>
 
       <h3 id="section_4_7">4.7 Computing Registration</h3>
@@ -750,7 +750,7 @@
       <p>
 	Once registration is finished, visualize the improvement, as shown in
 	<a href="#figure_7">Figure 7</a>, by selecting the "View Variance of
-	Registered Data" check-box in the visualization pane. This shows, side
+	Registered Data" check-button in the visualization pane. This shows, side
 	by side, slices of DWI variance before and after registration. Note
 	the reduction of spurious anisotropy at the edges of the brain.
       </p>
@@ -796,7 +796,7 @@
       <p>
 	Visualization and analysis stages sometimes benefit from
 	smoothing of the individual DWIs prior to estimation of
-	tensors. The checkbox labeled Do Smoothing enables Gaussian
+	tensors. The check-button labeled Do Smoothing enables Gaussian
 	blur of the DWIs by controlling the radius (the standard
 	deviation) of the Gaussian kernel within the slice plane and
 	across slices.  The slider labeled Radius in X and Y controls
@@ -820,9 +820,9 @@
       </p>
       <p>
 	To allow BioTensor to automatically find a threshold (by
-	histogram analysis), click the radio button labeled
+	histogram analysis), click the radio-button labeled
 	Automatically Determine Threshold.  To specify a threshold,
-	click the radio button labeled Specify Threshold and enter a
+	click the radio-button labeled Specify Threshold and enter a
 	threshold value.  Note: tensors are computed for all voxels;
 	the DWI masking produces a separate scalar field that
 	BioTensor uses for controlling visualization, but does not
@@ -847,7 +847,7 @@
 	DWIs is assumed to be the reference T2 image, which exhibits
 	no diffusion weighting, and the B-matrix is assumed to be all
 	zeros ("B=0").  To let BioTensor compute the B-Matrix, click
-	the radio button labeled Compute B-Matrix Using Gradients
+	the radio-button labeled Compute B-Matrix Using Gradients
 	provided
       </p>
 
@@ -855,7 +855,7 @@
 	If a B-matrix has been computed for each DWI from both imaging
 	gradients and diffusion-encoding gradients, it can be loaded
 	as a separate text ("Load B-Matrix").  To load a pre-computed
-	B-Matrix file, click the radio button labeled Load B-Matrix,
+	B-Matrix file, click the radio-button labeled Load B-Matrix,
 	and enter the name of a B-Matrix file.  <a
 	href="#appendix_b">Appendix B</a> discusses the format of a
 	B-Matrix file.
@@ -955,7 +955,7 @@
       <p>
 	Within the Vis Options tab of the Visualization pane, there
 	are five sub-tabs for controlling visualization settings. The
-	first tab, "Variance", was used in Section 3 to visualize DTI
+	first tab, Variance, was used in Section 3 to visualize DTI
 	variance data. The following sections investigate options on
 	the Planes, Isosurface, Glyphs, and Fibers tabs.
       </p>
@@ -964,23 +964,44 @@
       <h3>6.2 Planes Visualization</h3>
 
       <p>
-	By default, the cutting planes render when the visualization
-	pre-processing stage completes, as shown in <a href="#figure_8">Figure
-	  9</a>. These planes are initially color-mapped to reflect the
-	principal eigenvector direction, using a standard (X,Y,Z) -&gt;
-	(R,G,B) mapping. Saturation of colors has been modulated by fractional
-	anisotropy, and areas outside of the gray and white matter are
-	rendered black. The individual cutting planes can be turned on and off
-	and their positions can be controlled using the X, Y, Z check-buttons
-	and slides. Color-mapping of tensor values on planes can be controlled
-	using the drop-down menu under "Principle Eigenvector" in the "Color
-	Planes Based On" frame. When coloring based on a scalar quantity
-	(e.g. Fractional Anisotropy), radio buttons next to the color-map
-	swatches become active. For constant coloring, change the specified
-	color by clicking on the Color button. The "Clip to Isosurface" button
-	is discussed in the next section.  <a name="figure_9" id="figure_9"/>
+	Cutting planes render when the visualization processing
+	stage completes, as shown in <a href="#figure_9">Figure
+	9</a>. Click the tab labeled Planes to activate cutting planes
+	visualization controls.
+      </p>
+      <p>
+	Cutting planes are initially
+	colormapped to reflect the principal eigenvector direction,
+	using a standard (X,Y,Z) -&gt; (R,G,B) mapping. Saturation of
+	colors are modulated by fractional anisotropy, and areas
+	outside the gray and white matter are rendered black.
+      </p>
+      <p>
+	Click the checkbutton labeled Show Planes to turn on/off all
+	cutting planes, and use the checkbuttons labeled X, Y, Z to
+	turn on/off individual cutting planes. Use sliders to control
+	position of planes.
+      </p>
+      <p>
+	Control colormapping of planes using controls in the frame
+	labeled Color Planes Based On.  Select a value to be
+	visualized from the menu-button.  When coloring based on a
+	scalar quantity (e.g. Fractional Anisotropy), radio-buttons
+	next to the colormap swatches become active. For constant
+	coloring, select Constant from the menu-button, and click the
+	button labeled Color to choose a color.
       </p>
 
+
+      <p>
+	The next section discusses the check-button labeled Clip to
+	Isosurface and isosurface visualization.  In the next section
+	of this tutorial, cutting planes visualization is turned off.
+	Click the check-button labeled Show Planes to turn off planes
+	visualization.
+      </p>
+
+      <a name="figure_9" id="figure_9"/>
       <center>
 	<img border="1"
 	  src="figures/biotensor-vis-planes.jpg" 
@@ -996,33 +1017,38 @@
       <h3>6.3 Isosurface Visualization</h3>
 
       <p>
-	Selecting the Isosurface tab reveals options for generating an
-	isosurface from the DT volume. As shown in <a href="#figure_10">Figure
-	  10</a>:
+	Select the Isosurface tab to reveal isosurface visualization
+	controls.  See <a href="#figure_10">Figure 10</a>.
       </p>
-      <ul>
-	<li>
-	  <p>Choose whether or not to show the isosurface.</p>
-	</li>
-	<li>
-	  <p>Select which derived metric the isosurface is computing
-	    (e.g. Fractional Anisotropy).</p>
-	</li>
-	<li>
-	  <p>Select an isovalue.</p>
-	</li>
-	<li>
-	  <p>Color the isosurface based on: the principle eigenvector direction
-	    (and desaturated or colored black as described for the planes, above),
-	    another scalar metric (in which case the radio buttons for the
-	    color-map swatches are activated), or a constant color (chosen using
-	    the "Color" button).</p>
-	</li>
-	<li>
-	  <p>Use the planes as clipping planes to clip the isosurface. Orientation
-	    of each clipping plane can be toggled using the Flip buttons.</p>
-	</li>
-      </ul>
+
+      <p>
+	Turn isosurface visualization on by clicking the check-button
+	labeled Show Isosurface .  Select an isovalue using the
+	slider labeled Isoval.
+      </p>
+
+      <p>
+	Select the metric on which the isosurface is based from the
+	menu-button labeled Isoval Based On.
+      </p>
+
+      <p>
+	Control colormapping of the isosurface using controls in the frame
+	labeled Color Isosurface Based On.  Select a value to be
+	visualized from the menu-button.  When coloring based on a
+	scalar quantity (e.g. Fractional Anisotropy), radio-buttons
+	next to the colormap swatches become active. For constant
+	coloring, select Constant from the menu-button, and click the
+	button labeled Color to choose a color.
+      </p>
+
+      <p>
+	Cutting planes can be used to clip the isosurface.  Turn on
+	clipping planes by clicking the checkbutton labeled Clip by
+	Planes.  Orientation of each clipping plane can be toggled
+	using the button labeled Flip X, Flip Y, and Flip Z.
+      </p>
+      
 
       <a name="figure_10" id="figure_10"/>
       <center>
@@ -1034,11 +1060,11 @@
       </center>
 
       <p>
-	Just as planes can be used to clip the isosurface, the isosurface can
-	be used to clip the planes. An example of this is shown in <a
-	  href="#figure_11">Figure 11</a>. The isosurface value is set low
-	(0.01), the "Show Isosurface" button is turned off, and the Planes tab
-	has selected the Clip to Isosurface button.
+	The isosurface can also clip cutting planes.  See <a
+	href="#figure_11">Figure 11</a>. The isosurface value is set
+	low (0.01), the Show Isosurface button is turned off, and the
+	Clip to Isosurface check-button in the Planes tab has been
+	selected.
       </p>
 
       <a name="figure_11" id="figure_11"/>
@@ -1054,26 +1080,58 @@
       <h3>6.4 Glyph Visualization</h3>
 
       <p>
-	The Glyphs panel allows selection of the type, placement, and coloring
-	of tensor glyphs within the volume. The default setting renders box
-	glyphs, seeded on the planes of the planes and colored based on the
-	principle eigenvector direction as shown in <a
-	  href="#figure_12">Figure 12</a>. A zoomed-in figure of the
-	super-quadric glyphs rendered on the cutting planes is shown in <a
-	  href="#figure_13">Figure 13</a>.  In addition to colored-box glyphs,
-	the tensors can be rendered as RGB boxes, ellipsoids, or super-quadric
-	glyphs. With the controls at the top of the panel, users can select
-	the discretization level used for the round glyph shapes (which are
-	approximated using triangular meshes), select whether to normalize the
-	volume (to 1.0) of each tensor before rendering, and whether to scale
-	the volume of each tensor, and whether to exaggerate the anisotropy of
-	the tensor (and by how much). Finally, using the options in the "Seed
-	At" frame, users can choose where to place the glyphs: at a single
-	point (controlled by the position of a sphere widget in the Rendering
-	window: use Shift-Left Mouse to select and move widgets), seeded along
-	a line specified by a rake widget, seeded on the visible cutting
-	planes, or seeded at the grid point located within the prescribed
-	isovolume. 
+	Select the Glyphs tab to reveal glyphs visualization
+	controls.  See <a href="#figure_12">Figure 12</a>.
+      </p>
+
+      <p>
+	The Glyphs panel allows selection of the type, placement, and
+	coloring of tensor glyphs within the volume. Default settings
+	render box glyphs seeded on the planes of the planes and
+	colored based on the principle eigenvector direction, as shown
+	in <a href="#figure_12">Figure 12</a>. A zoomed-in figure of
+	the super-quadric glyphs rendered on the cutting planes is
+	shown in <a href="#figure_13">Figure 13</a>.  In addition to
+	colored-box glyphs, the tensors can be rendered as RGB boxes,
+	ellipsoids, or super-quadric glyphs.
+      </p>
+      
+      <p>
+	Turn glyphs visualization on by clicking the check-button
+	labeled Show Glyphs.
+      </p>
+
+      <p>
+	Select the discretization level used for the round glyph
+	shapes (which are approximated using triangular meshes) using
+	the slider labeled Discretization.
+      </p>
+
+      <p>
+	Click the check-button labeled Normalize to normalize the volume (to
+	1.0) of each tensor before rendering.  Use the slider labeled
+	Scale to scale the volume of each tensor.
+      </p>
+
+      <p>
+	To exaggerate the anisotropy of each tensor, click the
+	check-button labeled Shape Exaggerate.  Use the accompanying
+	slider to select the amount of shape exaggeration.
+      </p>
+
+      <p>
+	Glyph placement is controlled by radio-buttons and check-buttons
+	within the frame labeled Seed At and widgets in the rendering pane.
+	Glyphs can be placed at a single point, seeded along a line
+	specified by a rake widget, seeded on the visible cutting
+	planes, or seeded at the grid point located within the
+	prescribed isovolume.
+      </p>
+
+      <p>
+	Metric (e.g. Principle Eigenvector) rendered, metric glyph
+	shape, and metric color are selected by radio-buttons and
+	menu-buttons in the frame labeled Representation and Color.
       </p>
 
       <a name="figure_12" id="figure_12"/>
@@ -1097,16 +1155,42 @@
       <br />
 
       <a name="section_6_5" id="section_6_5"/>
-      <h3>6.5 Fiber Visualization</h3>
+      <h3>6.5 Fibers Visualization</h3>
 
       <p>
-	As with tensor glyphs, seed locations and colorization options for
-	rendering fibers within the brain can be selected. A variety of
-	options are shown in <a href="#figure_14">Figure 14</a>, <a
-	  href="#Figure_15">Figure 15, and</a> <a href="#figure_16">Figure
-	  16</a>. Additionally, a number of parameters can be set that control
-	the fiber tracing algorithm. These parameters include:
+	Select the Fibers tab to reveal fibers visualization controls.
+	<a href="#figure_15">Figure 15</a> shows the Fibers tab.
       </p>
+      <p>
+	Click the check-button labeled Show Fibers to enable fibers
+	visualization.
+      </p>
+      <p>
+	Fiber tracing algorithm, algorithm parameters, and fiber
+	colorization are selected using controls in the Fibers
+	tab. Fiber seed locations are selected using controls in the
+	Fibers tab in conjunction with a widget in the Rendering pane.
+      </p>
+
+
+<!--       <p> -->
+<!-- 	<a href="#figure_14">Figure 14</a> shows... -->
+<!-- 	<\!-- Here we need a mini-tutorial showing how to achieve vis -->
+<!-- 	shown in fig 14 -\-> -->
+<!--       </p> -->
+<!--       <p> -->
+<!-- 	<a href="#figure_15">Figure 15</a> shows... -->
+<!-- 	<\!-- Here we need a mini-tutorial showing how to achieve vis -->
+<!-- 	shown in fig 15 -\-> -->
+<!--       </p> -->
+<!--       <p> -->
+<!-- 	<a href="#figure_16">Figure 16</a> shows... -->
+<!-- 	<\!-- Here we need a mini-tutorial showing how to achieve vis -->
+<!-- 	shown in fig 16 -\-> -->
+<!--       </p> -->
+
+      <!-- Here we need discussion of parameters in Fibers tab -->
+
       <ul>
 	<li>
 	  <p>Algorithm: trace along the major eigenvector or using the tensor-lines
