@@ -70,6 +70,10 @@ WARNING
     constVariableBase<VariableBase>&
     operator=(const VariableBase& v)
     { copyPointer(v); return *this; }
+
+    Variable& castOffConst() {
+      return rep_;
+    }
    
     virtual ~constVariable() {}
 
@@ -97,22 +101,6 @@ WARNING
     virtual const TypeDescription* virtualGetTypeDescription() const
     { return rep_.virtualGetTypeDescription(); }
 
-    /*
-    IntVector getLowIndex() const
-    { return rep_.getLowIndex(); }
-
-    IntVector getHighIndex() const
-    { return rep_.getHighIndex(); }
-    
-    virtual void getSizes(IntVector& low, IntVector& high,
-			  IntVector& dataLow, IntVector& siz,
-			  IntVector& strides) const
-    { rep_.getSizes(low, high, dataLow, siz, strides); } 
-
-    virtual void getSizeInfo(string& elems, unsigned long& totsize,
-			     void*& ptr) const
-    { rep_.getSizeInfo(elems, totsize, ptr); }
-    */
   protected:
     Variable rep_;
   };

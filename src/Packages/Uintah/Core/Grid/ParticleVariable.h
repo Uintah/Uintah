@@ -137,8 +137,10 @@ public:
   virtual void packsizeMPI(int* bufpos,
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
-  virtual void emitNormal(ostream& out, DOMElement* varnode);
-  virtual bool emitRLE(ostream& out, DOMElement* varnode);
+  virtual void emitNormal(ostream& out, const IntVector& l,
+			  const IntVector& h, DOM_Element* varnode);
+  virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
+		       DOM_Element* varnode);
   
   virtual void readNormal(istream& in, bool swapBytes);
   virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
@@ -444,7 +446,8 @@ template<class T>
 
   template<class T>
   void
-  ParticleVariable<T>::emitNormal(ostream& out, DOMElement* varnode)
+  ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,
+				  const IntVector&, DOM_Element* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 
@@ -475,7 +478,8 @@ template<class T>
 
   template<class T>
   bool
-  ParticleVariable<T>::emitRLE(ostream& out, DOMElement* varnode)
+  ParticleVariable<T>::emitRLE(ostream& out, const IntVector& l,
+			       const IntVector& h, DOM_Element* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if (findNode("numParticles", varnode) == 0) {

@@ -300,11 +300,9 @@ WARNING
       return d_window->get3DPointer();
     }
 
-    inline void write(ostream& out)
+    inline void write(ostream& out, const IntVector& l, const IntVector& h)
     {
       // This could be optimized...
-      IntVector l(getLowIndex());
-      IntVector h(getHighIndex());
       ssize_t linesize = (ssize_t)(sizeof(T)*(h.x()-l.x()));
       for(int z=l.z();z<h.z();z++){
 	for(int y=l.y();y<h.y();y++){

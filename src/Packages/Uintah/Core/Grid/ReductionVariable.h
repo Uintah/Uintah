@@ -86,7 +86,8 @@ WARNING
     virtual void reduce(const ReductionVariableBase&);
     virtual void print(ostream& out)
     { out << value; }
-    virtual void emitNormal(ostream& out, DOMElement* /*varnode*/)
+    virtual void emitNormal(ostream& out, const IntVector& l, const IntVector& h,
+			    DOM_Element* /*varnode*/)
     { out.write((char*)&value, sizeof(double)); }
     virtual void readNormal(istream& in, bool swapBytes)
     {
