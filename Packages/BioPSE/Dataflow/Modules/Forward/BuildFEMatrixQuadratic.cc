@@ -242,14 +242,13 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   qtvm_->size(nnodes);
   int start_node=nnodes*proc/np; 
   int end_node=nnodes*(proc+1)/np; 
-  int ndof=end_node-start_node;
+  //int ndof=end_node-start_node;
 
 
   int r=start_node;
   int i;
   
-  QuadraticTetVolMesh::Node::array_type mycols;
-
+  vector<QuadraticTetVolMesh::Node::index_type> mycols;
 
   for(i=start_node;i<end_node;i++){
     rows[r++]=mycols.size();

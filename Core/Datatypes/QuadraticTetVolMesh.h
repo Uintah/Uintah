@@ -83,7 +83,8 @@ public:
 			    Vector& g4, Vector& g5, Vector& g6, Vector& g7, 
 			    Vector& g8, Vector& g9) const;
 
-  void add_node_neighbors(Node::array_type &array, Node::index_type node, 
+  void add_node_neighbors(vector<Node::index_type> &array,
+			  Node::index_type node, 
 			  const vector<bool> &bc, bool apBC=true);
 
 
