@@ -29,10 +29,9 @@ SRCS     += \
 	$(SRCDIR)/ProgressReporter.cc \
 	$(SRCDIR)/Endian.cc \
 	$(SRCDIR)/SizeTypeConvert.cc \
-	$(SRCDIR)/MacroSubstitute.cc \
-	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/sci_system.cc \
+	$(SRCDIR)/scirun_env.cc \
 	$(SRCDIR)/soloader.cc \
         $(SRCDIR)/Signals.cc \
 	$(SRCDIR)/Timer.cc \

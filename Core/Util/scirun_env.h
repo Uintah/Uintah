@@ -18,23 +18,12 @@
 #ifndef Core_Util_scirun_env_h
 #define Core_Util_scirun_env_h 1
 
-#include <sgi_stl_warnings_off.h>
-#include <map>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
-
-using std::map;
-using std::string;
-using std::pair;
-
-typedef map<string,string> env_map;
-typedef pair<string,string> env_entry;
-typedef map<string,string>::iterator env_iter;
-
-extern env_map scirunrc;
-
+class GuiInterface;
+void parse_scirunrc(GuiInterface *gui);
+void sci_putenv(const string &var,const string &val, GuiInterface *gui);
 }
 
 #endif
