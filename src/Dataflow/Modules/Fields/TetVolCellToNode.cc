@@ -50,7 +50,7 @@ extern "C" PSECORESHARE Module* make_TetVolCellToNode(const clString& id) {
 }
 
 TetVolCellToNode::TetVolCellToNode(const clString& id)
-  : Module("TetVolCellToNode", id, Source, "Fields", "Moulding")
+  : Module("TetVolCellToNode", id, Source, "Fields", "SCIRun")
 {
 }
 
