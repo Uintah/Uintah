@@ -48,6 +48,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <string>
 #include "framework.hh"
@@ -82,14 +83,11 @@ BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
   // Record the path to XML descriptions of components.  The environment
   // variable SIDL_XML_PATH should be set, otherwise use a default.
   const char *component_path = getenv("SIDL_XML_PATH");
-  if (component_path != 0)
-    {
+  if (component_path != 0) {
     this->setSidlXMLPath( std::string(component_path) );
-    }
-  else
-    {
-    this->setSidlXMLPath("../src/CCA/Components/BabelTest/xml");
-    }
+  } else {
+    this->setSidlXMLPath(sci_getenv("SCIRUN_SRCDIR") + std::string("/CCA/Components/BabelTest/xml"));
+  }
   
   // Now append the SIDL_XML_PATH to the sidl::Loader search path.  This
   // is the path that sidl::Loader will search for .scl files.  Babel .scl

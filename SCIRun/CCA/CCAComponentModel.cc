@@ -48,6 +48,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/resourceReference.h>
 #include <string>
@@ -77,14 +78,11 @@ CCAComponentModel::CCAComponentModel(SCIRunFramework* framework)
   // Record the path to XML descriptions of components.  The environment
   // variable SIDL_XML_PATH should be set, otherwise use a default.
   const char *component_path = getenv("SIDL_XML_PATH");
-  if (component_path != 0)
-    {
+  if (component_path != 0) {
     this->setSidlXMLPath( std::string(component_path) );
-    }
-  else
-    {
-    this->setSidlXMLPath("../src/CCA/Components/xml");
-    }
+  } else {
+      this->setSidlXMLPath(sci_getenv("SCIRUN_SRCDIR") + std::string("/CCA/Components/xml"));
+  }
 
   buildComponentList();
 }
@@ -253,14 +251,17 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
   if(!properties.isNull()){
     loaderName=properties->getString("LOADER NAME","");
   }
-  std::cerr<<"creating component <"<<name<<","<<type<<"> with loader:"
-           <<loaderName<<std::endl;
+  std::cerr<<"creating cca component <" <<
+      name << "," << type << "> with loader:"
+           << loaderName << std::endl;
   sci::cca::Component::pointer component;
   if(loaderName=="")
     {  //local component
     componentDB_type::iterator iter = components.find(type);
-    if(iter == components.end())
+    if(iter == components.end()) {
+      std::cerr << "Error: could not locate any cca components.  Make sure the paths set in environment variable \"SIDL_XML_PATH\" are correct." << std::endl;
       return 0;
+    }
     //ComponentDescription* cd = iter->second;
     
     std::string lastname=type.substr(type.find('.')+1);  

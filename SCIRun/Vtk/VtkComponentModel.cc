@@ -48,6 +48,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <string>
 
@@ -81,17 +82,19 @@ VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
   // Record the path to XML descriptions of components.  The environment
   // variable SIDL_XML_PATH should be set, otherwise use a default.
   const char *component_path = getenv("SIDL_XML_PATH");
-  if (component_path != 0)
-    {
+  if (component_path != 0) {
     this->setSidlXMLPath( std::string(component_path) );
-    }
-  else
-    {
-    this->setSidlXMLPath("../src/CCA/Components/VTK/xml");
-    }
+  } else {
+    this->setSidlXMLPath(sci_getenv("SCIRUN_SRCDIR") + std::string("/CCA/Components/VTK/xml"));
+  }
 
   // Record the path containing DLLs for components.
-  this->setSidlDLLPath( std::string( getenv("SIDL_DLL_PATH") ));
+  const char *dll_path = getenv("SIDL_DLL_PATH");
+  if (dll_path != 0) {
+    this->setSidlDLLPath(std::string(dll_path));
+  } else {
+    this->setSidlDLLPath(sci_getenv("SCIRUN_OBJDIR") + std::string("/lib"));
+  }
 
   // Set the default DTD or Schema name for xml validation
   //  this->setGrammarFileName( std::string("metacomponentmodel.dtd") );
