@@ -98,7 +98,7 @@ make install
 echo "Renaming globus libaries because the globus makefiles are broken"
 cd ../lib
 for t in globus*.so; do
-  mv $t lib$t
+  ln -s $t lib$t
 done
 
 cd ../include
