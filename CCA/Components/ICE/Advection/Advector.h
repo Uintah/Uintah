@@ -122,7 +122,25 @@ namespace Uintah {
     q_YFC[c] = equalZero(q_face_flux[BOTTOM], q_CC[c], q_YFC[c]);
     q_ZFC[c] = equalZero(q_face_flux[BACK],   q_CC[c], q_ZFC[c]);
   }  
+
+  struct fflux { double d_fflux[6]; };          //face flux
+  struct eflux { double d_eflux[12]; };         //edge flux
+  struct cflux { double d_cflux[8]; };          //corner flux
+  
+  const TypeDescription* fun_getTypeDescription(fflux*);    
+  const TypeDescription* fun_getTypeDescription(eflux*);
+  const TypeDescription* fun_getTypeDescription(cflux*); 
+
 }  // Uintah namespace
+
+
+namespace SCIRun {
+
+  void swapbytes( Uintah::fflux& ); 
+  void swapbytes( Uintah::eflux& );
+  void swapbytes( Uintah::cflux& );
+
+}
 
 
 #endif
