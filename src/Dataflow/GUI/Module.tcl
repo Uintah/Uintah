@@ -996,11 +996,13 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 	}
     }
 
-    if { [isaSubnetEditor [oMod conn]] } {
+    if { [isaSubnetEditor [oMod conn]] && 
+	 ![llength [portConnections [oPort conn]]] } {
 	foreach econn [portConnections "SubnetIcon${subnet} [oNum conn] i"] {
 	    destroyConnection $econn
 	}
-	if { [canvasExists $canvas SubnetIcon${subnet}] } {
+	set iconcanvas $Subnet(Subnet$Subnet(SubnetIcon$subnet)_canvas)
+	if { [canvasExists $iconcanvas SubnetIcon${subnet}] } {
 	    removePort [oPort conn]
 	}
     }
@@ -1009,7 +1011,8 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
 	foreach econn [portConnections "SubnetIcon${subnet} [iNum conn] o"] {
 	    destroyConnection $econn
 	}
-	if { [canvasExists $canvas SubnetIcon${subnet}] } {
+	set iconcanvas $Subnet(Subnet$Subnet(SubnetIcon$subnet)_canvas)
+	if { [canvasExists $iconcanvas SubnetIcon${subnet}] } {
 	    removePort [iPort conn]
 	}
     }
