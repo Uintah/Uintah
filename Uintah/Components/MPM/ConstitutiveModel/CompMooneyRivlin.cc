@@ -114,9 +114,9 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
                                            DataWarehouseP& new_dw)
 {
   Matrix3 Identity,deformationGradientInc,B,velGrad;
-  double invar1,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
+  double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
-  double WaveSpeed = 0.0,c_dil = 0.0,c_rot = 0.0;
+  double WaveSpeed = 0.0,c_dil = 0.0,c_rot = 0.0,se=0.0;
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -195,6 +195,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
       // Compute the invariants
       invar1 = B.Trace();
+      invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
       J = deformationGradient[idx].Determinant();
       invar3 = J*J;
 
@@ -220,6 +221,12 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       double lambda = 2.*mu*(1.+PR)/(3.*(1.-2.*PR)) - (2./3.)*mu;
       c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
       c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+
+      // Compute the strain energy for all the particles
+      se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
+            C3*(1.0/(invar3*invar3) - 1.0) +
+            C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
+
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
@@ -228,6 +235,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
 		matlindex, patch);
+
+    new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
     // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label, matlindex, patch);
@@ -332,6 +341,10 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.37  2000/05/31 22:37:09  guilkey
+// Put computation of strain energy inside the computeStressTensor functions,
+// and store it in a reduction variable in the datawarehouse.
+//
 // Revision 1.36  2000/05/30 21:07:02  dav
 // delt to delT
 //
