@@ -23,6 +23,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	global $this-stepsize
 	global $this-tolerance
 	global $this-maxsteps
+	global $this-direction
 	global $this-colinear
 
         set_defaults
@@ -32,6 +33,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-tolerance 0.0001
 	set $this-stepsize 0.0001
 	set $this-maxsteps 2000
+	set $this-direction 1
 	set $this-colinear 0
     }
 
@@ -55,6 +57,16 @@ itcl_class SCIRun_Visualization_StreamLines {
 	label $w.row3.maxsteps_label -text "Maximum Steps"
 	entry $w.row3.maxsteps -textvariable $this-maxsteps
 
+	frame $w.direction
+
+	label $w.direction.label -text "Direction"
+	radiobutton $w.direction.neg -text "Negitive" -variable $this-direction \
+		-value 0
+	radiobutton $w.direction.both -text "Both" -variable $this-direction \
+		-value 1
+	radiobutton $w.direction.pos -text "Positive" -variable $this-direction \
+		-value 2
+
 	checkbutton $w.colinear -text "Filter Colinear Points" \
 		-variable $this-remove-colinear
 
@@ -66,7 +78,10 @@ itcl_class SCIRun_Visualization_StreamLines {
 	
 	pack $w.row4.execute -side top -e n -f both
 
-	pack $w.row1 $w.row2 $w.row3 $w.colinear $w.row4 \
+	pack $w.direction.label $w.direction.neg $w.direction.both \
+		$w.direction.pos -side left
+
+	pack $w.row1 $w.row2 $w.row3 $w.direction $w.colinear $w.row4 \
 		-side top -e y -f both \
 		-padx 5 -pady 5
     }
