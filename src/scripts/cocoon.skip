@@ -8,8 +8,7 @@ Core/globus_threads
 Core/share
 Packages/BioPSE/share
 Packages/Uintah/share
-Packages/Uintah/Core/CCA/Components/Arches
-Packages/Uintah/Core/CCA/Components/Arches/fortran
+Packages/Uintah/CCA
 Packages/Butson
 Packages/DaveW
 Packages/Kurt
