@@ -291,12 +291,20 @@ main(int argc, char *argv[] )
     }
   }
 
+  // set splash to be main one unless later changed due to a standalone
+  packageDB->setSplashPath("main/scisplash.ppm");
 
   // wait for the main window to display before continuing the startup.
   // if loading an app, don't wait
+
   if(!app) {
     gui->eval("wm deiconify .", result);
     gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  } else {
+    // determine which standalone and set splash
+    if(strstr(argv[startnetno], "bio-tensor")) {
+      packageDB->setSplashPath("Packages/Teem/Dataflow/GUI/splash-tensor.ppm");
+    }
   }
 
   // load the packages
