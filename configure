@@ -48,11 +48,11 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-petsc=<path-to-petsc>  <path-to-petsc>"
 ac_help="$ac_help
+  --enable-assertion-level=N   Use assertion level N (0-3)"
+ac_help="$ac_help
   --enable-parallel		Compile experimental distributed memory version"
 ac_help="$ac_help
   --with-globus=DIR		Use the globus installation in DIR"
-ac_help="$ac_help
-  --enable-assertion-level=N   Use assertion level N (0-3)"
 ac_help="$ac_help
   --enable-enterleave		Make gmake print out entering/leaving statements"
 ac_help="$ac_help
@@ -2803,6 +2803,29 @@ fi
 
 
 
+##-- Emit local configuration file -------------------------------------------
+
+if test "$is_64bit" = "yes"; then
+  NBITS=64
+else
+  NBITS=32
+fi
+
+
+# Check whether --enable-assertion-level or --disable-assertion-level was given.
+if test "${enable_assertion_level+set}" = set; then
+  enableval="$enable_assertion_level"
+  enable_assertion_level="$enableval"
+else
+  enable_assertion_level=${enable_assertion_level=3}
+fi
+
+ASSERTION_LEVEL=$enable_assertion_level
+
+
+
+
+
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
 # Check whether --enable-enable_parallel or --disable-enable_parallel was given.
@@ -2848,36 +2871,13 @@ if test "$enable_parallel" = "yes"; then
 		"
   BUILD_PARALLEL="yes"
   GLOBUS_INCLUDE="-I$with_globus/include"
-  GLOBUS_LIB="$with_globus/lib"
+  GLOBUS_LIB="$with_globus/lib$NBITS"
 else
   PARALLEL_DEFINE=""
   BUILD_PARALLEL="no"
   GLOBUS_INCLUDE=""
   GLOBUS_LIB=""
 fi
-
-
-
-
-
-##-- Emit local configuration file -------------------------------------------
-
-if test "$is_64bit" = "yes"; then
-  NBITS=64
-else
-  NBITS=32
-fi
-
-
-# Check whether --enable-assertion-level or --disable-assertion-level was given.
-if test "${enable_assertion_level+set}" = set; then
-  enableval="$enable_assertion_level"
-  enable_assertion_level="$enableval"
-else
-  enable_assertion_level=${enable_assertion_level=3}
-fi
-
-ASSERTION_LEVEL=$enable_assertion_level
 
 
 
@@ -4291,14 +4291,14 @@ s%@MALLOC_DEFINE@%$MALLOC_DEFINE%g
 s%@PETSC_DIR@%$PETSC_DIR%g
 s%@PETSC_SUB@%$PETSC_SUB%g
 s%@PETSC_ARCH@%$PETSC_ARCH%g
-s%@GLOBUS_INCLUDE@%$GLOBUS_INCLUDE%g
-s%@GLOBUS_LIB@%$GLOBUS_LIB%g
-s%@PARALLEL_DEFINE@%$PARALLEL_DEFINE%g
-s%@BUILD_PARALLEL@%$BUILD_PARALLEL%g
 s%@NBITS@%$NBITS%g
 s%@ASSERTION_LEVEL@%$ASSERTION_LEVEL%g
 s%@TEMPLATE_BOX@%$TEMPLATE_BOX%g
 s%@TEMPLATE_TAG@%$TEMPLATE_TAG%g
+s%@GLOBUS_INCLUDE@%$GLOBUS_INCLUDE%g
+s%@GLOBUS_LIB@%$GLOBUS_LIB%g
+s%@PARALLEL_DEFINE@%$PARALLEL_DEFINE%g
+s%@BUILD_PARALLEL@%$BUILD_PARALLEL%g
 s%@NOPRINTDIR@%$NOPRINTDIR%g
 s%@X_CFLAGS@%$X_CFLAGS%g
 s%@X_PRE_LIBS@%$X_PRE_LIBS%g

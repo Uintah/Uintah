@@ -1064,6 +1064,25 @@ AC_SUBST(PETSC_DIR)
 AC_SUBST(PETSC_SUB)
 AC_SUBST(PETSC_ARCH)
 
+##-- Emit local configuration file -------------------------------------------
+
+if test "$is_64bit" = "yes"; then
+  NBITS=64
+else
+  NBITS=32
+fi
+AC_SUBST(NBITS)
+
+AC_ARG_ENABLE(assertion-level,
+	[  --enable-assertion-level=N   Use assertion level N (0-3)],
+	[enable_assertion_level="$enableval"],
+	[enable_assertion_level=${enable_assertion_level=3}])
+ASSERTION_LEVEL=$enable_assertion_level
+AC_SUBST(ASSERTION_LEVEL)
+
+AC_SUBST(TEMPLATE_BOX)
+AC_SUBST(TEMPLATE_TAG)
+
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
 AC_ARG_ENABLE(enable_parallel,
@@ -1101,7 +1120,7 @@ if test "$enable_parallel" = "yes"; then
 		"
   BUILD_PARALLEL="yes"
   GLOBUS_INCLUDE="-I$with_globus/include"
-  GLOBUS_LIB="$with_globus/lib"
+  GLOBUS_LIB="$with_globus/lib$NBITS"
 else
   PARALLEL_DEFINE=""
   BUILD_PARALLEL="no"
@@ -1112,25 +1131,6 @@ AC_SUBST(GLOBUS_INCLUDE)
 AC_SUBST(GLOBUS_LIB)
 AC_SUBST(PARALLEL_DEFINE)
 AC_SUBST(BUILD_PARALLEL)
-
-##-- Emit local configuration file -------------------------------------------
-
-if test "$is_64bit" = "yes"; then
-  NBITS=64
-else
-  NBITS=32
-fi
-AC_SUBST(NBITS)
-
-AC_ARG_ENABLE(assertion-level,
-	[  --enable-assertion-level=N   Use assertion level N (0-3)],
-	[enable_assertion_level="$enableval"],
-	[enable_assertion_level=${enable_assertion_level=3}])
-ASSERTION_LEVEL=$enable_assertion_level
-AC_SUBST(ASSERTION_LEVEL)
-
-AC_SUBST(TEMPLATE_BOX)
-AC_SUBST(TEMPLATE_TAG)
 
 ##-- Check enterleave flag ---------------------------------------------------
 
