@@ -638,8 +638,6 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC"
 fi
 
-is_linux=`echo $host | sed 's/.*linux.*/linux/'`
-
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(NOPRINTDIR)
@@ -1416,11 +1414,14 @@ else
   _sci_inc="/usr/X11R6/include"
 fi
 
-if test "$is_linux" = "linux"; then
-  GLU_OTHERS="-lpthread"
-else
+case $host in
+  *linux*)
+  GLU_OTHERS="pthread"
+  ;;
+  *)
   GLU_OTHERS=""
-fi
+  ;;
+esac
 
 SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/gl.h>
@@ -1436,7 +1437,7 @@ SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/glu.h>
 #include<GL/glx.h>
 
-],$_sci_inc,GLU GL,$_sci_lib,$GLU_OTHERS,,not-optional)
+],$_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,not-optional)
 
 AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
@@ -1452,18 +1453,23 @@ SCI_TRY_LINK(DL,dlopen in libc,[
 
 if test "$HAVE_DL" = "yes"; then
    HAVE_LIB_DL="yes"
-elif test "$IS_OSX" = "no"; then
-  SCI_TRY_LINK(DL,dlopen in libdl,[
-  #include <dlfcn.h>
-  ],,dl,,,[
-    dlopen("bogus", 0);
-  ],not-optional)
 else
-  SCI_TRY_LINK(DL,dlopen in libdl,[
-  #include <dlfcn.h>
-  ],$thirdparty/include,dl,$thirdparty/lib,,[
-    dlopen("bogus", 0);
-  ],not-optional)
+  case $host in
+  *-darwin*)
+    SCI_TRY_LINK(DL,dlopen in libdl,[
+    #include <dlfcn.h>
+    ],$thirdparty/include,dl,$thirdparty/lib,,[
+      dlopen("bogus", 0);
+    ],not-optional)
+    ;;
+  *)
+    SCI_TRY_LINK(DL,dlopen in libdl,[
+    #include <dlfcn.h>
+    ],,dl,,,[
+      dlopen("bogus", 0);
+    ],not-optional)
+    ;;
+  esac
 fi
 
 AC_SUBST(DL_LIB_FLAG)
@@ -2677,8 +2683,8 @@ if test "$sci_check_hdf5" = "yes"; then
     _sci_lib="$with_hdf5/lib"
     _sci_inc="$with_hdf5/include"
   else
-    _sci_lib="/usr/local/hdf5/1.4.5/lib"
-    _sci_inc="/usr/local/hdf5/1.4.5/include"
+    _sci_lib="/usr/local/lib"
+    _sci_inc="/usr/local/include"
   fi
 
   SCI_TRY_LINK(HDF5,hdf5 library and headers,[
@@ -3066,7 +3072,7 @@ AC_SUBST(UUID_LIB_FLAG)
 
 if test "$enable_scirun2" = "yes"; then
   ## For now, don't check for uuid if on macintosh.
-  if test "$have_uuid" != "yes" && test "$IS_OSX" != "yes"; then
+  if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
         SCI_MSG_ERROR(uuid_generate function and libuuid not found, must install ext2fs development tools)
