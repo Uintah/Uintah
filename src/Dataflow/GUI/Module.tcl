@@ -782,7 +782,11 @@ itcl_class Module {
 	    append script "${tab}\# Set GUI variables for the $modstr Module\n"
 	    foreach var $write_vars {
 		upvar \#0 $module-$var val
-		set varname "\$m$i-${var}"
+		if {[winfo exists .standalone]} {
+		    set varname "$i-${var}"
+		} else {
+		    set varname "\$m$i-${var}"
+		}
 		if { [llength $varname] > 1 } {
 		    set varname \"${varname}\"
 		}
@@ -810,7 +814,11 @@ itcl_class Module {
 	# Write command to open GUI on load if it was open on save
 	if [windowIsMapped .ui$module] {
 	    append script "\n${tab}\# Open the $modstr UI\n"
-	    append script "${tab}\$m$i initialize_ui\n"
+	    if {[winfo exists .standalone]} {
+		append script "${tab}$i initialize_ui\n"
+	    } else {
+		append script "${tab}\$m$i initialize_ui\n"
+	    }
 	}	
     }    
 }   
