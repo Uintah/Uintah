@@ -48,7 +48,7 @@ SRCS += ${SRC_GEN}
 $(SRCDIR)/%.cc : $(SRCDIR)/XML/sci_%.xml
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateCC.xsl $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/$*.cc
 	java $(CODEGEN) $(PATH_TO_PACKAGE) $(PATH_TO_PACKAGE)/Dataflow/Modules/Filters/XML/sci_$*.xml $(PATH_TO_PACKAGE)/Core/CodeGenerator/XSL/SCIRun_generateXML.xsl $(PATH_TO_PACKAGE)/Dataflow/XML/$*.xml
-	mv ../src/$@ $@
+	cp $(PATH_TO_SCIRUN)/$@ $@
 
 PSELIBS := Packages/Insight/Core/Datatypes \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \
