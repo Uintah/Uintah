@@ -277,46 +277,6 @@ void SecondOrderCEAdvector::inFluxOutFluxVolume(
   }  // if total_fluxout > vol     
 }
 
-
-/* ---------------------------------------------------------------------
- Function~ allocateAndCompute_Q_ave
- Purpose   allocates temporary space and computes q for each slab,
-           edge and corner.  
-_____________________________________________________________________*/
-template <class T>
-void SecondOrderCEAdvector::allocateAndCompute_Q_ave(
-                              const CCVariable<T>& q_CC,
-                              const Patch* patch,
-                              DataWarehouse* new_dw,
-                              CCVariable<facedata<T> >& q_OAFS,
-                              StaticArray<CCVariable<T> >& q_OAFE,
-                              StaticArray<CCVariable<T> >& q_OAFC )
-{
-
-  CCVariable<T> grad_lim, q_grad_x,q_grad_y,q_grad_z;
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->allocateTemporary(grad_lim, patch, gac, 1);
-  new_dw->allocateTemporary(q_OAFS,   patch, gac,1);
-  
-  for (int edge= TOP_R; edge <= LEFT_FR; edge++) {
-    new_dw->allocateTemporary(q_OAFE[edge],    patch, gac,1);
-  }
-  for (int corner = TOP_R_BK; corner <= BOT_L_FR; corner++) {
-    new_dw->allocateTemporary(q_OAFC[corner],  patch, gac,1);
-  }
-  
-  new_dw->allocateTemporary(q_grad_x,   patch, gac, 1); 
-  new_dw->allocateTemporary(q_grad_y,   patch, gac, 1); 
-  new_dw->allocateTemporary(q_grad_z,   patch, gac, 1);
-
-  //__________________________________
-  gradQ(q_CC, patch, q_grad_x, q_grad_y, q_grad_z);
-    
-  gradientLimiter(q_CC, patch, grad_lim, q_grad_x, q_grad_y, q_grad_z,new_dw);
-  qAverageFlux(q_CC, patch, grad_lim,  q_grad_x, q_grad_y, q_grad_z,
-               q_OAFS,  q_OAFE, q_OAFC);
-}
-
 /* ---------------------------------------------------------------------
  Function~ advectQ
 _____________________________________________________________________*/
@@ -326,11 +286,20 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
                              CCVariable<double>& q_advected,
 			        DataWarehouse* new_dw)
 {
+  Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<double> > q_OAFS;
   StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
   
-  allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS, q_OAFE, q_OAFC);
-              
+  new_dw->allocateTemporary(q_OAFS, patch, gac,1);
+  
+  for (int edge= TOP_R; edge <= LEFT_FR; edge++) {
+    new_dw->allocateTemporary(q_OAFE[edge],    patch, gac,1);
+  }
+  for (int corner = TOP_R_BK; corner <= BOT_L_FR; corner++) {
+    new_dw->allocateTemporary(q_OAFC[corner],  patch, gac,1);
+  }
+  qAverageFlux(q_CC, patch, q_OAFS,  q_OAFE, q_OAFC);  
+            
   advect(q_OAFS, q_OAFE, q_OAFC, patch, q_CC,q_advected,
           d_notUsedX, d_notUsedY, d_notUsedZ, ignoreFaceFluxesD());
 
@@ -346,12 +315,20 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
                              SFCZVariable<double>& q_ZFC,
 				 DataWarehouse* new_dw)
 {
+  Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<double> > q_OAFS;
   StaticArray<CCVariable<double> > q_OAFE(12), q_OAFC(8);
   
-  allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS, q_OAFE, q_OAFC);
-
-              
+  new_dw->allocateTemporary(q_OAFS,   patch, gac,1);
+  
+  for (int edge= TOP_R; edge <= LEFT_FR; edge++) {
+    new_dw->allocateTemporary(q_OAFE[edge],    patch, gac,1);
+  }
+  for (int corner = TOP_R_BK; corner <= BOT_L_FR; corner++) {
+    new_dw->allocateTemporary(q_OAFC[corner],  patch, gac,1);
+  }
+  qAverageFlux(q_CC, patch, q_OAFS,  q_OAFE, q_OAFC);
+                
   advect(q_OAFS, q_OAFE, q_OAFC, patch, q_CC, q_advected,
           q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 
@@ -364,10 +341,20 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
                              CCVariable<Vector>& q_advected,
 			        DataWarehouse* new_dw)
 {
+  Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<Vector> > q_OAFS;
   StaticArray<CCVariable<Vector> > q_OAFE(12), q_OAFC(8);
   
-  allocateAndCompute_Q_ave<Vector>(q_CC, patch, new_dw, q_OAFS, q_OAFE, q_OAFC);
+  new_dw->allocateTemporary(q_OAFS,   patch, gac,1);
+  
+  for (int edge= TOP_R; edge <= LEFT_FR; edge++) {
+    new_dw->allocateTemporary(q_OAFE[edge],    patch, gac,1);
+  }
+  for (int corner = TOP_R_BK; corner <= BOT_L_FR; corner++) {
+    new_dw->allocateTemporary(q_OAFC[corner],  patch, gac,1);
+  }
+  
+  qAverageFlux(q_CC, patch, q_OAFS,  q_OAFE, q_OAFC);
          
   advect(q_OAFS, q_OAFE, q_OAFC, patch, q_CC, q_advected,
           d_notUsedX, d_notUsedY, d_notUsedZ, ignoreFaceFluxesV()); 
@@ -400,7 +387,7 @@ template <class T, typename F>
     for(int f = TOP; f <= BACK; f++ )  {    
       double slab_vol = 0.0;
       T q_slab_flux = T(0.0);
-      
+3      
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
@@ -470,15 +457,17 @@ template <class T, typename F>
 //
 template <class T> void SecondOrderCEAdvector::qAverageFlux(const CCVariable<T>& q_CC,
                                               const Patch* patch,
-						    CCVariable<T>& grad_lim,
-                                              const CCVariable<T>& q_grad_x,
-                                              const CCVariable<T>& q_grad_y,
-                                              const CCVariable<T>& q_grad_z,
 						    CCVariable<facedata<T> >& q_OAFS,
 				                  StaticArray<CCVariable<T> >& q_OAFE,
 				                  StaticArray<CCVariable<T> >& q_OAFC)
   
 {
+  Vector dx = patch->dCell();
+  Vector inv_2del;
+  inv_2del.x(1.0/(2.0 * dx.x()) );
+  inv_2del.y(1.0/(2.0 * dx.y()) );
+  inv_2del.z(1.0/(2.0 * dx.z()) );
+  Vector dx_2 = dx/2.0;
 #if 0
   //__________________________________
   // loop over each face of each patch. 
@@ -535,9 +524,13 @@ template <class T> void SecondOrderCEAdvector::qAverageFlux(const CCVariable<T>&
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
     const IntVector& c = *iter;
     
-    T q_grad_X = grad_lim[c] * q_grad_x[c];
-    T q_grad_Y = grad_lim[c] * q_grad_y[c];
-    T q_grad_Z = grad_lim[c] * q_grad_z[c];
+    T grad_x, grad_y, grad_z, gradlim;
+    gradQ( q_CC, c, inv_2del, grad_x, grad_y, grad_z);
+    gradientLimiter( q_CC, c, dx_2, gradlim, grad_x, grad_y, grad_z); 
+        
+    T q_grad_X = gradlim * grad_x;
+    T q_grad_Y = gradlim * grad_y;
+    T q_grad_Z = gradlim * grad_z;
 
     T Q_CC = q_CC[c];
     
@@ -555,10 +548,13 @@ template <class T> void SecondOrderCEAdvector::qAverageFlux(const CCVariable<T>&
   				  
     //__________________________________
     //  OUTAVERAGEFLUX: EDGE
+    eflux& rx_EF = r_out_x_EF[c];
+    eflux& ry_EF = r_out_y_EF[c];
+    eflux& rz_EF = r_out_z_EF[c];
     for (int edge = TOP_R; edge <= LEFT_FR; edge++ )   { 
-      q_OAFE[edge][c] = Q_CC + q_grad_X * r_out_x_EF[c].d_eflux[edge] + 
-                               q_grad_Y * r_out_y_EF[c].d_eflux[edge] + 
-				   q_grad_Z * r_out_z_EF[c].d_eflux[edge];
+      q_OAFE[edge][c] = Q_CC + q_grad_X * rx_EF.d_eflux[edge] + 
+                               q_grad_Y * ry_EF.d_eflux[edge] + 
+				   q_grad_Z * rz_EF.d_eflux[edge];
     }
     
     //__________________________________
