@@ -39,3 +39,6 @@ typedef SurfaceHandle hack12;
 
 #include <Datatypes/SurfacePort.h>
 typedef SurfaceIPort hack13;
+
+typedef Array1<double> hack14;
+
