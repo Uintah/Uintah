@@ -720,7 +720,7 @@ TriSurfMesh::compute_normals()
       ++fiter;
     }
     if (ave.length2()) {
-      ave.normalize();
+      ave.safe_normalize();
       normals_[i] = ave; ++i;
     }
     ++nif_iter;
@@ -779,7 +779,7 @@ TriSurfMesh::insert_node(Face::index_type face, const Point &p)
     Vector normal = Vector( (p.asVector() +
 			     normals_[faces_[f0]] + 
 			     normals_[faces_[f1]] + 
-			     normals_[faces_[f2]]).normalize() );
+			     normals_[faces_[f2]]).safe_normalize() );
     normals_.push_back(normals_[faces_[f1]]);
     normals_.push_back(normals_[faces_[f2]]);
     normals_.push_back(normal);
@@ -846,7 +846,7 @@ TriSurfMesh::bisect_element(const Face::index_type face)
 
     if (do_normals)
       normals[edge] = Vector((normals_[faces_[f0+edge]] + 
-			     normals_[faces_[next(f0+edge)]]).normalize());
+			     normals_[faces_[next(f0+edge)]]).safe_normalize());
 
   }
   face_lock_.lock();
