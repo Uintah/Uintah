@@ -210,7 +210,7 @@ LinearAlgebra::execute()
 
 CompileInfoHandle
 LinearAlgebraAlgo::get_compile_info(int argc,
-				    string function,
+				    const string &function,
 				    int hashoffset)
 
 {

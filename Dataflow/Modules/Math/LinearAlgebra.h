@@ -50,7 +50,7 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(int matrixcount,
-					    string function,
+					    const string &function,
 					    int hashoffset);
 };
 
