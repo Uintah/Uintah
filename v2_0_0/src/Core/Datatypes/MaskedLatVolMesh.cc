@@ -702,13 +702,12 @@ MaskedLatVolMesh::get_sequential_node_index(const Node::index_type idx)
   Node::iterator node, nend;
   begin(node);
   end(nend);
-  while (node != nend)
-    {
-      nodes_[*node] = i++;
-      ++node;
-    }
-  node_lock_.unlock();
+  while (node != nend) {
+    nodes_[*node] = i++;
+    ++node;
+  }
   synchronized_ |= NODES_E;
+  node_lock_.unlock();
 
   return nodes_[idx];
 }
