@@ -12,6 +12,9 @@ ______________________________________________________________________
 Yeah.  Get on europa an do:
 echo "/nfs/csafe/cs0/tester/Linux/bin/startTester -j 1 -nomail" | at now
 
+on rapture:
+echo "/usr/sci/projects/Uintah/tester/IRIX64/bin/startTester -j 1 -nomail" | at now
+
 The -j 1 tells it to run on 1 processor with no mpi, but I think that's
 the default anyway.  With -nomail, it won't send an e-mail to everybody,
 but you should still get a cronjob e-mail which has all of the same
