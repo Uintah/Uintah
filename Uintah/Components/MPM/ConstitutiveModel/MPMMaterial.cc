@@ -15,6 +15,7 @@
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <iostream>
 #include "ConstitutiveModelFactory.h"
+#include <Uintah/Components/MPM/MPMLabel.h>
 using namespace std;
 using namespace Uintah::MPM;
 using namespace Uintah;
@@ -24,33 +25,6 @@ using namespace SCICore::Geometry;
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
    // Constructor
-   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
-			    ParticleVariable<Matrix3>::getTypeDescription());
-
-   pStressLabel = scinew VarLabel( "p.stress",
-			     ParticleVariable<Matrix3>::getTypeDescription() );
-
-   pVolumeLabel = scinew VarLabel( "p.volume",
-			     ParticleVariable<double>::getTypeDescription());
-
-   pMassLabel = scinew VarLabel( "p.mass",
-			      ParticleVariable<double>::getTypeDescription() );
-
-   pVelocityLabel = scinew VarLabel( "p.velocity", 
-			     ParticleVariable<Vector>::getTypeDescription() );
-
-   pExternalForceLabel = scinew VarLabel( "p.externalforce",
-			     ParticleVariable<Vector>::getTypeDescription() );
-
-   pXLabel =   scinew VarLabel( "p.x",
-			     ParticleVariable<Point>::getTypeDescription(),
-			     VarLabel::PositionVariable);
-
-   pSurfLabel = scinew VarLabel( "p.issurf",
-			      ParticleVariable<int>::getTypeDescription() );
-
-  pTemperatureLabel = new VarLabel( "p.temperature",
-                              ParticleVariable<double>::getTypeDescription() );
 
   // Follow the layout of the input file
   // Steps:
@@ -137,21 +111,25 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				  const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
+
+   const MPMLabel* lb = MPMLabel::getLabels();
+
    ParticleVariable<Point> position;
-   new_dw->allocate(numParticles, position, pXLabel,
+   new_dw->allocate(numParticles, position, lb->pXLabel,
 		    getDWIndex(), patch);
    ParticleVariable<Vector> pvelocity;
-   new_dw->allocate(pvelocity, pVelocityLabel, getDWIndex(), patch);
+   new_dw->allocate(pvelocity, lb->pVelocityLabel, getDWIndex(), patch);
    ParticleVariable<Vector> pexternalforce;
-   new_dw->allocate(pexternalforce, pExternalForceLabel, getDWIndex(), patch);
+   new_dw->allocate(pexternalforce, lb->pExternalForceLabel,
+					getDWIndex(), patch);
    ParticleVariable<double> pmass;
-   new_dw->allocate(pmass, pMassLabel, getDWIndex(), patch);
+   new_dw->allocate(pmass, lb->pMassLabel, getDWIndex(), patch);
    ParticleVariable<double> pvolume;
-   new_dw->allocate(pvolume, pVolumeLabel, getDWIndex(), patch);
+   new_dw->allocate(pvolume, lb->pVolumeLabel, getDWIndex(), patch);
    ParticleVariable<int> pissurf;
-   new_dw->allocate(pissurf, pSurfLabel, getDWIndex(), patch);
+   new_dw->allocate(pissurf, lb->pSurfLabel, getDWIndex(), patch);
    ParticleVariable<double> ptemperature;
-   new_dw->allocate(ptemperature, pTemperatureLabel, getDWIndex(), patch);
+   new_dw->allocate(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
@@ -159,13 +137,13 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 			       pvelocity,pexternalforce,pmass,pvolume,
 					pissurf,ptemperature,patch);
 
-   new_dw->put(position, pXLabel, getDWIndex(), patch);
-   new_dw->put(pvelocity, pVelocityLabel, getDWIndex(), patch);
-   new_dw->put(pexternalforce, pExternalForceLabel, getDWIndex(), patch);
-   new_dw->put(pmass, pMassLabel, getDWIndex(), patch);
-   new_dw->put(pvolume, pVolumeLabel, getDWIndex(), patch);
-   new_dw->put(pissurf, pSurfLabel, getDWIndex(), patch);
-   new_dw->put(ptemperature, pTemperatureLabel, getDWIndex(), patch);
+   new_dw->put(position, lb->pXLabel, getDWIndex(), patch);
+   new_dw->put(pvelocity, lb->pVelocityLabel, getDWIndex(), patch);
+   new_dw->put(pexternalforce, lb->pExternalForceLabel, getDWIndex(), patch);
+   new_dw->put(pmass, lb->pMassLabel, getDWIndex(), patch);
+   new_dw->put(pvolume, lb->pVolumeLabel, getDWIndex(), patch);
+   new_dw->put(pissurf, lb->pSurfLabel, getDWIndex(), patch);
+   new_dw->put(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -303,6 +281,10 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.26  2000/06/02 17:26:36  guilkey
+// Removed VarLabels from the constructor.  Now using the MPMLabel class
+// instead.
+//
 // Revision 1.25  2000/05/31 23:54:09  rawat
 // Sorry about changing getHeatTransferCoefficient, I've changed it back to original
 //
