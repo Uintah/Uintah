@@ -228,7 +228,7 @@ void ParticleVis::execute()
               scalefactor = ((*scale_it)[*iter] - smin)/(smax - smin);
 	    if( scalefactor >= 1e-6 ){
 	      if(!hasTensors){
-		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
+		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomSphere( (*p_it)[*iter],
 					scalefactor * radius.get(),
 					nu, nv, (*id_it)[*iter]);
@@ -244,7 +244,7 @@ void ParticleVis::execute()
 		matrix[4] = M(0,1); matrix[5] = M(1,1); matrix[6] = M(2,1);
 		matrix[8] = M(0,2); matrix[9] = M(1,2); matrix[10] = M(2,2);
 		
-		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
+		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  scalefactor * radius.get(),
 					  nu, nv, &(matrix[0]), 2,
@@ -253,7 +253,7 @@ void ParticleVis::execute()
 	    }
 	  } else {
 	    if(!hasTensors){
-		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
+	      //cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 	      sp = scinew GeomSphere( (*p_it)[*iter],
 				      radius.get(), nu, nv, (*id_it)[*iter]);
 	    } else {
@@ -273,7 +273,7 @@ void ParticleVis::execute()
 		matrix[8] = M(1,3)*norm; matrix[9] = M(2,3)*norm;
 		matrix[10] = M(3,3)*norm;
 		
-		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
+		//cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  radius.get(), nu, nv, &(matrix[0]),
 					  2, (*id_it)[*iter]);
