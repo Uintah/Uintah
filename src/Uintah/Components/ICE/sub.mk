@@ -20,6 +20,9 @@ else
 ICE_LIBS := $(ICE_DIR)/Libraries/n32bit
 endif
 
+#--------------------------------------------------
+# if the environmental variable isn't set then do nothing
+#--------------------------------------------------
 ifneq ($(ICE), yes)
 SRCS	+= $(SRCDIR)/ICE_doNothing.cc
 endif
@@ -29,7 +32,7 @@ SRCS += $(SRCDIR)/ICE_schedule.cc       	          	    	 \
     	 $(SRCDIR)/ICE_actual.cc 	     	          	    	 \
     	 $(SRCDIR)/array_conversion.cc   	          	    	 \
     	 $(SRCDIR)/ICE_wrappers.cc   	          	    	 \
-    	 $(ICE_DIR)/input.c					       \
+    	 $(ICE_DIR)/input.c	\
 	 $(ICE_DIR)/Plot_routines/plot_vector.c			\
         $(ICE_DIR)/Plot_routines/plot_control.c			\
         $(ICE_DIR)/Plot_routines/plot_face_center.c		\
@@ -65,17 +68,22 @@ SRCS += $(SRCDIR)/ICE_schedule.cc       	          	    	 \
         $(ICE_DIR)/initialize_variables.c			       \
         $(ICE_DIR)/nrutil+.c
 endif
-
-INCLUDES += -I$(ICE_DIR)/Header_files
+#__________________________________
+#   Tweak this path if you want a test 
+#   case  
+#___________________________________
+TEST_CASE =  -I$(ICE_DIR)/Tests/MM
+INCLUDES += $(TEST_CASE) -I$(ICE_DIR)/Tests/Advection2D -I$(ICE_DIR)/Header_files
 
 PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions \
 	Uintah/Exceptions SCICore/Geometry
-LIBS 	:= $(XML_LIBRARY) \
-           -L$(ICE_LIBS) -ltecio \
-           -lcpgplot -lpgplot $(X11_LIBS) \
-           -lftn -lm
+       
+LIBS 	     := $(XML_LIBRARY) \
+               -L$(ICE_LIBS) -ltecio \
+               -lcpgplot -lpgplot $(X11_LIBS) \
+               -lftn -lm
 
-PGPLOT = $(SRCTOP_ABS)/$(ICE_DIR)/Libraries
+PGPLOT  = $(SRCTOP_ABS)/$(ICE_DIR)/Libraries
 CFLAGS += -DPGPLOT_DIR=\"$(PGPLOT)\"
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
@@ -84,8 +92,8 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #   
 #___________________________________
 ifneq ($(ICE),)
-PROGRAM      := $(SRCDIR)/ice
-SRCS	     := $(ICE_DIR)/main2.c
+PROGRAM     := $(SRCDIR)/ice
+SRCS        := $(ICE_DIR)/main2.c
 PSELIBS     := Uintah/Components/ICE
 LIBS        := -L$(ICE_LIBS) -ltecio -lcpgplot -lpgplot  $(X11_LIBS) \
 	 -lftn -lm
@@ -98,9 +106,16 @@ iceclean:
 	/bin/rm -fr $(OBJTOP)/Uintah/Components/ICE/ii_files
 	( cd $(ICE_DIR) ; $(MAKE) clean )
 
-
+icelinks:
+	ln -sf `pwd`/$(ICE_DIR)/if                     $(SRCTOP)/Uintah/inputs/ICE/if_main        
+	ln -sf `pwd`/$(ICE_DIR)/Tests/Advection2D/if   $(SRCTOP)/Uintah/inputs/ICE/if_advection   
+	ln -sf `pwd`/$(ICE_DIR)/Tests/MM/if            $(SRCTOP)/Uintah/inputs/ICE/if_MM          
+	ln -sf `pwd`/$(ICE_DIR)/Tests/Stagnation_pf/if $(SRCTOP)/Uintah/inputs/ICE/if_stagnation 
 #
 # $Log$
+# Revision 1.12  2000/07/05 21:05:17  harman
+# added icelink and ability to include testcase header files
+#
 # Revision 1.11  2000/07/03 16:41:46  harman
 # wrapped all the steps for a single mat.  need to fix step 0 and add multimaterial
 #
