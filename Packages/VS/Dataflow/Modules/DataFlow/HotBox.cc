@@ -92,11 +92,26 @@ private:
   GuiInt gui_is_injured7_;
   GuiInt gui_is_injured8_;
   GuiInt gui_is_injured9_;
+  // hierarchical relations
+  GuiString gui_parent1_;
+  GuiString gui_parent2_;
+  GuiString gui_sibling1_;
+  GuiString gui_sibling2_;
+  GuiString gui_sibling3_;
+  GuiString gui_sibling4_;
+  GuiString gui_child1_;
+  GuiString gui_child2_;
+  GuiString gui_child3_;
+  GuiString gui_child4_;
+  GuiString gui_child5_;
+  GuiString gui_child6_;
+  GuiString gui_child7_;
+  GuiString gui_child8_;
 
   // toggle on/off drawing GeomSticky output
   GuiString enableDraw_;
 
-  // the HotBox interaction
+  // the HotBox/Viewer interaction
   VS_SCI_Hotbox *VS_HotBoxUI;
 
   // file or OQAFMA
@@ -108,6 +123,7 @@ private:
   // "fromHotBoxUI" or "fromProbe"
   GuiString selectionsource_;
 
+  // data sources -- conceptually 'URIs'
   GuiString anatomydatasource_;
   GuiString adjacencydatasource_;
   GuiString boundingboxdatasource_;
@@ -189,6 +205,20 @@ HotBox::HotBox(GuiContext* ctx)
   gui_is_injured7_(ctx->subVar("gui_is_injured(7)")),
   gui_is_injured8_(ctx->subVar("gui_is_injured(8)")),
   gui_is_injured9_(ctx->subVar("gui_is_injured(9)")),
+  gui_parent1_(ctx->subVar("gui_parent(1)")),
+  gui_parent2_(ctx->subVar("gui_parent(2)")),
+  gui_sibling1_(ctx->subVar("gui_sibling(1)")),
+  gui_sibling2_(ctx->subVar("gui_sibling(2)")),
+  gui_sibling3_(ctx->subVar("gui_sibling(3)")),
+  gui_sibling4_(ctx->subVar("gui_sibling(4)")),
+  gui_child1_(ctx->subVar("gui_child(1)")),
+  gui_child2_(ctx->subVar("gui_child(2)")),
+  gui_child3_(ctx->subVar("gui_child(3)")),
+  gui_child4_(ctx->subVar("gui_child(4)")),
+  gui_child5_(ctx->subVar("gui_child(5)")),
+  gui_child6_(ctx->subVar("gui_child(6)")),
+  gui_child7_(ctx->subVar("gui_child(7)")),
+  gui_child8_(ctx->subVar("gui_child(8)")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
   querytype_(ctx->subVar("querytype")),
@@ -835,6 +865,25 @@ HotBox::executeOQAFMA()
   //   printf("Unknown exception has occured\n");
   // }
 
+  // set vars in HotBox Tcl GUI
+  gui_sibling1_.set(selectName);
+  if(num_struQLret > 0)
+     gui_child1_.set(oqafma_relation[0]);
+  if(num_struQLret > 1)
+     gui_child2_.set(oqafma_relation[1]);
+  if(num_struQLret > 2)
+     gui_child3_.set(oqafma_relation[2]);
+  if(num_struQLret > 3)
+     gui_child4_.set(oqafma_relation[3]);
+  if(num_struQLret > 4)
+     gui_child5_.set(oqafma_relation[4]);
+  if(num_struQLret > 5)
+     gui_child6_.set(oqafma_relation[5]);
+  if(num_struQLret > 6)
+     gui_child7_.set(oqafma_relation[6]);
+  if(num_struQLret > 7)
+     gui_child8_.set(oqafma_relation[7]);
+
   // clean up
   for (int i = 0; i < num_struQLret; i++)
   {
@@ -894,8 +943,6 @@ HotBox::execInjuryList()
   {
     cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
          << num_injList << " wounded region entities" << endl;
-    if(num_injList >= VH_LM_NUM_NAMES)
-           num_injList = VH_LM_NUM_NAMES;
     for (i = 0;i < num_injList; i++)
     {
       if (!(injList->item(i)))
