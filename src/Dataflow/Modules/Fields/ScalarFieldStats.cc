@@ -76,12 +76,18 @@ ScalarFieldStats::~ScalarFieldStats()
 }
 
 void
+ScalarFieldStats::clear_histogram()
+{
+  gui->execute(id + " clear_data");
+}
+
+void
 ScalarFieldStats::fill_histogram( vector<int>& hits)
 {
   ostringstream ostr;
   int nmin, nmax;
   vector<int>::iterator it = hits.begin();
-  nmin = nmax = *it;
+  nmin = 0;  nmax = *it;
   ostr << *it;  ++it;
   for(; it != hits.end(); ++it){
     ostr <<" "<<*it;
