@@ -18,9 +18,9 @@ namespace rtrt {
 
 class VolumeVisBase : public Object, public Material {
 protected:
-  VolumeVisDpy* dpy;
-
   Object* child;
+
+  VolumeVisDpy* dpy;
 
   inline int clamp(const int min, const int val, const int max) {
     return (val>min?(val<max?val:max):min);
