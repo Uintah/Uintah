@@ -81,7 +81,10 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-all:: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(ALLTARGETS) packmaker
+all:: prereqs packmaker $(ALLTARGETS)
+
+.PHONY: prereqs
+prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
@@ -228,10 +231,3 @@ else
   # If we are making the special target "objs", we skip the dependencies.
   # This is a hack for a "quick" compile.
 endif
-
-# Convenience targets for Specific executables (use make sus)
-sus: $(MAKEFILEDIRS) $(SUBMAKEFILES) $(LIBDIR) Packages/Uintah/StandAlone/sus
-
-puda: $(MAKEFILEDIRS) $(SUBMAKEFILES) $(LIBDIR) Packages/Uintah/StandAlone/puda
-
-compare_uda: $(MAKEFILEDIRS) $(SUBMAKEFILES) $(LIBDIR) Packages/Uintah/StandAlone/compare_uda
