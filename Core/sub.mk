@@ -7,6 +7,7 @@ SUBDIRS := \
 	$(SRCDIR)/Math        \
 	$(SRCDIR)/Exceptions  \
 	$(SRCDIR)/Grid        \
+	$(SRCDIR)/DataArchive \
 	$(SRCDIR)/ProblemSpec \
 	$(SRCDIR)/Datatypes
 

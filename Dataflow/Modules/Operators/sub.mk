@@ -36,7 +36,7 @@ PSELIBS := \
 	Core/Geometry     \
 	Core/GeomInterface \
 	Core/Malloc
-LIBS := $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

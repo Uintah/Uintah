@@ -65,7 +65,7 @@ ifneq ($(HAVE_HYPRE),)
 LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
-LIBS := $(LIBS) $(F_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(LIBS) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -14,8 +14,8 @@ PSELIBS := \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Core/Math \
-	Core/Exceptions Core/Thread Core/Geometry Dataflow/XMLUtil
+	Core/Exceptions Core/Thread Core/Geometry 
 
-LIBS	:= $(XML_LIBRARY)        
+LIBS	:= 
 
 

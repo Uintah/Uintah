@@ -17,10 +17,9 @@ SRCS     += \
 	$(SRCDIR)/MaxIteration.cc	    
 
 PSELIBS := \
-	Core/Exceptions \
-	Dataflow/XMLUtil
+	Core/Exceptions 
 
-LIBS := $(XML_LIBRARY)
+LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
