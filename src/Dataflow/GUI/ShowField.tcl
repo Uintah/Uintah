@@ -632,7 +632,9 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-active_tab
 	global $this-interactive_mode
 	# view the active tab
-	$dof.tabs view [set $this-active_tab]	
+	if [catch "$dof.tabs view [set $this-active_tab]"] {
+	    catch "$dof.tabs view 0"
+	}
 	$dof.tabs configure -tabpos "n"
 
 	pack $dof.tabs -side top -fill x -expand yes
