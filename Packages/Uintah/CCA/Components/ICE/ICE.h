@@ -512,7 +512,8 @@ namespace Uintah {
                         const string& desc, 
                         string& path);
       
-      void find_gnuplot_origin_And_dx(const Patch*,
+      void find_gnuplot_origin_And_dx(const string variableType,
+                                     const Patch*,
                                      IntVector&,
                                      IntVector&,
                                      double *,
@@ -653,7 +654,8 @@ namespace Uintah {
                               const  Patch* patch,
                               int include_GC,
                               const string& message1,
-                              const string& message2, 
+                              const string& message2,
+                              const string& variableType, 
                               const  T& q_CC);
       
       ICELabel* lb; 
