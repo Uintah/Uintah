@@ -38,8 +38,11 @@ public:
   BBox                    bbox;
 
   Instance(InstanceWrapperObject* o, Transform* trans) 
-    : Object(this), o(o), currentTransform(trans)
+    : Object(this), o(o)
   {
+    currentTransform = new Transform();
+    *currentTransform = *trans;
+
     if( !currentTransform->inv_valid() ) 
       currentTransform->compute_imat();
 
@@ -49,8 +52,11 @@ public:
   }
 
   Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
-    : Object(this), o(o), currentTransform(trans)
+    : Object(this), o(o)
   {
+    currentTransform = new Transform();
+    *currentTransform = *trans;
+
     if (!currentTransform->inv_valid())
       currentTransform->compute_imat();
 
@@ -69,30 +75,30 @@ public:
   {
     double min_t = hit.min_t;
     if (!bbox.intersect(ray, min_t)) return;	  
-    min_t = hit.min_t;
 
     Ray tray;
 
     ray.transform(currentTransform,tray);
-    //double scale = tray.direction().length() / ray.direction().length();
+    Vector td = tray.direction();
+    double scale = td.normalize();
+    tray.set_direction(td);
 
     HitInfo thit;
-    if (hit.was_hit) thit.min_t = hit.min_t;// * scale;
+    if (hit.was_hit) thit.min_t = hit.min_t * scale;
 
     o->intersect(tray,thit,st,ppc);
 	  
     // if the ray hit one of our objects....
     if (thit.was_hit)
-    {
-      min_t = thit.min_t;// / scale;
-      if(hit.hit(this, min_t)){
-	InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-	Point p = ray.origin() + min_t*ray.direction();
-	i->normal = thit.hit_obj->normal(tray.origin()+min_t*tray.direction(),
-					 thit);
-	i->obj = thit.hit_obj;
-      }
-    }	      
+      {
+	min_t = thit.min_t / scale;
+	if(hit.hit(this, min_t)){
+	  InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+	  Point p = tray.origin() + thit.min_t*tray.direction();	  
+	  i->normal = thit.hit_obj->normal(p,thit);
+	  i->obj = thit.hit_obj;
+	}
+      }	      
   }
     
   virtual Vector normal(const Point&, const HitInfo& hit)
@@ -129,11 +135,16 @@ public:
 
   virtual bool interior_value(double& ret_val, const Ray &ref, const double _t)
   {
+
     Ray tray;
 
     ref.transform(currentTransform,tray);
+    Vector td = tray.direction();
+    double scale = td.normalize();
+    tray.set_direction(td);
+    double _t2 = _t * scale;
 
-    return o->interior_value(ret_val, tray, _t);
+    return o->interior_value(ret_val, tray, _t2);
   }
 
 }; // end class Instance
