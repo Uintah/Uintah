@@ -78,7 +78,6 @@ public:
   SampleField(const string& id);
   virtual ~SampleField();
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
   virtual void widget_moved(int);
 };
 
@@ -116,13 +115,10 @@ SampleField::~SampleField()
 void
 SampleField::widget_moved(int i)
 {
-  if (rake_) 
-    rake_->GetEndpoints(endpoint0_,endpoint1_);
-
-  if (i==1) {
+  if (i==1)
+  {
+    if (rake_) rake_->GetEndpoints(endpoint0_,endpoint1_);
     want_to_execute();
-  } else {
-    Module::widget_moved(i);
   }
 }
 
@@ -162,13 +158,14 @@ SampleField::generate_widget_seeds(Field *field)
 
   if (!rake_)
   {
-    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_, true);
+    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_, false);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
+    GeomGroup *widget_group = scinew GeomGroup;
+    widget_group->add(rake_->GetWidget());
+    widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+    ogport_->flushViews();
   }
 
-  GeomGroup *widget_group = scinew GeomGroup;
-  widget_group->add(rake_->GetWidget());
-  
   rake_->GetEndpoints(min, max);
   
   int max_seeds = maxSeeds_.get();
@@ -186,7 +183,8 @@ SampleField::generate_widget_seeds(Field *field)
   }
 
   mesh->freeze();
-  PointCloudField<double> *seeds = scinew PointCloudField<double>(mesh, Field::NODE);
+  PointCloudField<double> *seeds =
+    scinew PointCloudField<double>(mesh, Field::NODE);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (loop=0;loop<num_seeds;++loop)
@@ -195,8 +193,6 @@ SampleField::generate_widget_seeds(Field *field)
   }
   seeds->freeze();
   ofport_->send(seeds);
-  widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
-  ogport_->flushViews();
 }
 
 void
@@ -258,25 +254,6 @@ SampleField::execute()
   }
 }
 
-
-void
-SampleField::tcl_command(TCLArgs& args, void* userdata)
-{
-  if(args.count() < 2)
-  {
-    args.error("StreamLines needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute")
-  {
-    want_to_execute();
-  }
-  else
-  {
-    Module::tcl_command(args, userdata);
-  }
-}
 
 
 CompileInfo *
