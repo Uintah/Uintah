@@ -107,7 +107,8 @@ Things You Need To Know About How To Build the PSE
   normal PSE behavior is the Wrong Way To Solve The Problem.  If you
   have problems that you think you want to set an environment variable to
   fix, which are things anyone but you will normally want to have set, you
-  should go talk to McQ and he'll eliminate the need for the variable.
+  should go talk to McQ and he'll work configure magic to eliminate
+  the need for the variable.
 
   The following should NOT BE SET in your shell rc files.  EVER.  PERIOD.
   (Unless you're Very Special, in which case you wouldn't be reading this
