@@ -54,7 +54,8 @@ private:
   GuiDouble text_max_x_;
   GuiDouble text_max_y_;
   GuiDouble text_max_z_;
-  int init;
+  bool init_;
+  int widgetid_;
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
@@ -81,7 +82,8 @@ ClipLattice::ClipLattice(GuiContext* ctx)
     text_max_x_(ctx->subVar("text-max-x")),
     text_max_y_(ctx->subVar("text-max-y")),
     text_max_z_(ctx->subVar("text-max-z")),
-    init(0)
+    init_(false),
+    widgetid_(0)
 {
   widget_ = scinew BoxWidget(this, &widget_lock_, 1.0, true, false);
 }
@@ -89,6 +91,18 @@ ClipLattice::ClipLattice(GuiContext* ctx)
 
 ClipLattice::~ClipLattice()
 {
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Selection Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 
@@ -154,12 +168,12 @@ ClipLattice::execute()
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
   if (!bbox_similar_to(last_bounds_, bbox) || 
-      use_text_bbox_.get() || !init)
+      use_text_bbox_.get() || !init_)
   {
     Point center, right, down, in, bmin, bmax;
     bmin = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
     bmax = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
-    if (use_text_bbox_.get() || (!init && bmin!=bmax)) {
+    if (use_text_bbox_.get() || (!init_ && bmin!=bmax)) {
       center = bmin + Vector(bmax-bmin) * 0.5;
       right = center + Vector(bmax.x()-bmin.x()/2.0, 0, 0);
       down = center + Vector(0, bmax.x()-bmin.x()/2.0, 0);
@@ -210,8 +224,8 @@ ClipLattice::execute()
       error("Unable to initialize " + name + "'s oport.");
       return;
     }
-    ogport->addObj(widget_group, "ClipLattice Selection Widget",
-		   &widget_lock_);
+    widgetid_ = ogport->addObj(widget_group, "ClipLattice Selection Widget",
+			       &widget_lock_);
     ogport->flushViews();
 
     last_bounds_ = bbox;
@@ -230,8 +244,8 @@ ClipLattice::execute()
 
     // Get widget bounds.
     Point center, r, d, i, top, bottom;
-    if (use_text_bbox_.get() || !init) {
-      init=1;
+    if (use_text_bbox_.get() || !init_) {
+      init_=true;
       top = Point(text_max_x_.get(), text_max_y_.get(), text_max_z_.get());
       bottom = Point(text_min_x_.get(), text_min_y_.get(), text_min_z_.get());
       center = bottom + Vector(top-bottom)/2.;

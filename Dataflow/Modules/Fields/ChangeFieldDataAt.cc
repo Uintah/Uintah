@@ -25,15 +25,10 @@
 #include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/share/share.h>
 
+#include <Core/Containers/Handle.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Modules/Fields/ChangeFieldDataAt.h>
-#include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <map>
 #include <iostream>

@@ -64,7 +64,9 @@ private:
   GuiString gui_face_;
   GuiString gui_cell_;
   GuiString gui_moveto_;
-  
+
+  int widgetid_;
+
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
 public:
@@ -90,7 +92,8 @@ Probe::Probe(GuiContext* ctx)
     gui_edge_(ctx->subVar("edge")),
     gui_face_(ctx->subVar("face")),
     gui_cell_(ctx->subVar("cell")),
-    gui_moveto_(ctx->subVar("moveto"))
+    gui_moveto_(ctx->subVar("moveto")),
+    widgetid_(0)
 {
   widget_ = scinew PointWidget(this, &widget_lock_, 1.0);
 }
@@ -98,6 +101,18 @@ Probe::Probe(GuiContext* ctx)
 
 Probe::~Probe()
 {
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 
@@ -198,15 +213,14 @@ Probe::execute()
     GeomGroup *widget_group = scinew GeomGroup;
     widget_group->add(widget_->GetWidget());
 
-    GeometryOPort *ogport=0;
-    ogport = (GeometryOPort*)get_oport("Probe Widget");
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Probe Widget");
     if (!ogport)
     {
       error("Unable to initialize " + name + "'s oport.");
       return;
     }
-    ogport->addObj(widget_group, "Probe Selection Widget",
-		   &widget_lock_);
+    widgetid_ = ogport->addObj(widget_group, "Probe Selection Widget",
+			       &widget_lock_);
     ogport->flushViews();
 
     last_bounds_ = bbox;

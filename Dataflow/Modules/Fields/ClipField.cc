@@ -58,6 +58,7 @@ private:
   int  last_clip_generation_;
   ClipperHandle clipper_;
   stack<ClipperHandle> undo_stack_;
+  int widgetid_;
 
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
@@ -81,7 +82,8 @@ ClipField::ClipField(GuiContext* ctx)
     autoinvert_(ctx->subVar("autoinvert")),
     exec_mode_(ctx->subVar("execmode")),
     last_input_generation_(0),
-    last_clip_generation_(0)
+    last_clip_generation_(0),
+    widgetid_(0)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
 }
@@ -89,6 +91,18 @@ ClipField::ClipField(GuiContext* ctx)
 
 ClipField::~ClipField()
 {
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Selection Widget");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 
@@ -216,8 +230,8 @@ ClipField::execute()
       error("Unable to initialize oport 'Selection Widget'.");
       return;
     }
-    ogport->addObj(widget_group, "ClipField Selection Widget",
-		   &widget_lock_);
+    widgetid_ = ogport->addObj(widget_group, "ClipField Selection Widget",
+			       &widget_lock_);
     ogport->flushViews();
 
     last_bounds_ = bbox;

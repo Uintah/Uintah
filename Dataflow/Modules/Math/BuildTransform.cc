@@ -71,6 +71,8 @@ class BuildTransform : public Module {
   Point widget_pose_center_;
   int ignoring_widget_changes_;
   int have_been_initialized_;
+  int widgetid_;
+
 public:
   BuildTransform(GuiContext* ctx);
   virtual ~BuildTransform();
@@ -109,7 +111,8 @@ BuildTransform::BuildTransform(GuiContext* ctx)
     widget_scale_gui_(ctx->subVar("widget_scale")),
     widget_lock_("BuildTransform widget lock"),
     ignoring_widget_changes_(1),
-    have_been_initialized_(0)
+    have_been_initialized_(0),
+    widgetid_(0)
 {
   
   box_widget_=scinew BoxWidget(this, &widget_lock_, 0.2, false, false);
@@ -118,6 +121,18 @@ BuildTransform::BuildTransform(GuiContext* ctx)
 
 BuildTransform::~BuildTransform()
 {
+  if (widgetid_)
+  {
+    GeometryOPort *ogport = (GeometryOPort*)get_oport("Geometry");
+    if (!ogport)
+    {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->delObj(widgetid_);
+    ogport->flushViews();
+    widgetid_ = 0;
+  }
 }
 
 void BuildTransform::execute()
@@ -148,7 +163,7 @@ void BuildTransform::execute()
     box_widget_->SetPosition(C,R,D,I);
     box_widget_->SetCurrentMode(2);
     if (which_transform != "widget") widget_switch_->set_state(0);
-    ogeom_->addObj(widget_switch_, widget_name, &widget_lock_);
+    widgetid_ = ogeom_->addObj(widget_switch_, widget_name, &widget_lock_);
     ogeom_->flushViews();
     have_been_initialized_=1;
   }
