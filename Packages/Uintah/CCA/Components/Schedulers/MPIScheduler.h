@@ -87,9 +87,9 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
     
-    void postMPIRecvs( DetailedTask* task, RecvRecord& recvs,
+    void postMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
 		       list<DependencyBatch*>& externalRecvs );
-    void processMPIRecvs( DetailedTask* task, RecvRecord& recvs,
+    void processMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
 		       list<DependencyBatch*>& externalRecvs );    
 
     void postMPISends( DetailedTask* task );
@@ -100,6 +100,7 @@ WARNING
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
     { return pg_; }
+    virtual const MaterialSet* getMaterialSet(){return reloc_.getMaterialSet();}
   protected:
     virtual void actuallyCompile( const ProcessorGroup * pg );
     
@@ -123,7 +124,7 @@ WARNING
     MPIScheduler* parentScheduler;
     const ProcessorGroup* pg_;    
     mpi_timing_info_s     mpi_info_;
-    SendRecord            sends_;
+    CommRecMPI            sends_;
     SendState*            ss_;
     
     MPIRelocate      reloc_;

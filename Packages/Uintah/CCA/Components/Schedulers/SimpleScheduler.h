@@ -65,11 +65,12 @@ WARNING
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
 
+    virtual const MaterialSet* getMaterialSet(){return reloc_.getMaterialSet();}
   protected:
     virtual void actuallyCompile( const ProcessorGroup * pg );
     
   private:
-    SPRelocate reloc;
+    SPRelocate reloc_;
     SimpleScheduler(const SimpleScheduler&);
     SimpleScheduler& operator=(const SimpleScheduler&);
 

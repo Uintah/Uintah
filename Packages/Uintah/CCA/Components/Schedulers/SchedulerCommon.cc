@@ -207,10 +207,13 @@ SchedulerCommon::releaseLoadBalancer()
 }
 
 void
-SchedulerCommon::initialize(int numOldDW, int numNewDW,
-			    DataWarehouse* parent_old_dw,
-			    DataWarehouse* parent_new_dw)
+SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */,
+			    DataWarehouse* parent_old_dw /* =0 */,
+			    DataWarehouse* parent_new_dw /* =0 */)
 {
+
+  // doesn't really do anything except initialize/clear the taskgraph
+  //   if the default parameter values are used
   int numDW = numOldDW+numNewDW;
   int oldnum = (int)dws.size();
   // Clear out the data warehouse so that memory will be freed
@@ -378,7 +381,9 @@ void SchedulerCommon::compile( const ProcessorGroup * pg)
 {
   actuallyCompile(pg);
   m_locallyComputedPatchVarMap.reset();
+
   if (dts_ != 0) {
+
     dts_->computeLocalTasks(pg->myrank());
     dts_->createScrubCounts();
     
@@ -386,10 +391,10 @@ void SchedulerCommon::compile( const ProcessorGroup * pg)
     for (int i = 0; i < dts_->numLocalTasks(); i++) {
       const DetailedTask* dt = dts_->localTask(i);
       for(const Task::Dependency* comp = dt->getTask()->getComputes();
-          comp != 0; comp = comp->next){
-        constHandle<PatchSubset> patches =
-          comp->getPatchesUnderDomain(dt->getPatches());
-        m_locallyComputedPatchVarMap.addComputedPatchSet(comp->var,
+	  comp != 0; comp = comp->next){
+	constHandle<PatchSubset> patches =
+	  comp->getPatchesUnderDomain(dt->getPatches());
+	m_locallyComputedPatchVarMap.addComputedPatchSet(comp->var,
                                                          patches.get_rep());
       }
     }

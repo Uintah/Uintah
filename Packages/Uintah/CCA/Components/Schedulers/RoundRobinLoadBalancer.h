@@ -42,17 +42,18 @@ namespace Uintah {
      virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
-     virtual void createNeighborhood(const GridP& level, const ProcessorGroup*);
+     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
+				    const Scheduler*);
      virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
      virtual bool inNeighborhood(const Patch*);
 
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
 							const ProcessorGroup* resources);
    private:
-      RoundRobinLoadBalancer(const RoundRobinLoadBalancer&);
-      RoundRobinLoadBalancer& operator=(const RoundRobinLoadBalancer&);
+     RoundRobinLoadBalancer(const RoundRobinLoadBalancer&);
+     RoundRobinLoadBalancer& operator=(const RoundRobinLoadBalancer&);
       
-     std::set<const Patch*> neighbors;
+     std::set<const Patch*> d_neighbors;
    };
 } // End namespace Uintah
 

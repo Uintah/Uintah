@@ -117,7 +117,7 @@ MPIScheduler::verifyChecksum()
 void
 MPIScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
-  TAU_PROFILE("MPIScheduler::compile()", " ", TAU_USER); 
+  TAU_PROFILE("MPIScheduler::actuallyCompile()", " ", TAU_USER); 
 
   dbg << pg->myrank() << " MPIScheduler starting compile\n";
   if( dts_ )
@@ -172,7 +172,7 @@ MPIScheduler::initiateTask( DetailedTask          * task )
   long long dummy, recv_flops;
   start_counters(0, 19);
 #endif  
-  RecvRecord recvs;
+  CommRecMPI recvs;
   list<DependencyBatch*> externalRecvs;
   postMPIRecvs( task, recvs, externalRecvs );
   processMPIRecvs( task, recvs, externalRecvs );
@@ -371,8 +371,11 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
 		pg_->getComm(), &requestid);
-      int bytes = 0;
+      //MPI_Request_free(&requestid);
+      int bytes = count;
+#ifdef USE_PACKING
       MPI_Pack_size(count, datatype, pg_->getComm(), &bytes);
+#endif
       sendsLock.lock(); // Dd: ??
       sends_.add(requestid, bytes, mpibuff.takeSendlist());
       sendsLock.unlock(); // Dd: ??
@@ -383,7 +386,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
 } // end postMPISends();
 
 void
-MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
+MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 			    list<DependencyBatch*>& externalRecvs )
 {
   TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
@@ -501,8 +504,10 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
       dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 		pg_->getComm(), &requestid);
-      int bytes = 0;
+      int bytes = count;
+#ifdef USE_PACKING
       MPI_Pack_size(count, datatype, pg_->getComm(), &bytes);
+#endif
       recvs.add(requestid, bytes,
 		scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler));
       mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
@@ -533,7 +538,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, RecvRecord& recvs,
 } // end postMPIRecvs()
 
 void
-MPIScheduler::processMPIRecvs( DetailedTask *, RecvRecord& recvs,
+MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
 			       list<DependencyBatch*>& outstandingExtRecvs )
 {
   TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
@@ -545,11 +550,10 @@ MPIScheduler::processMPIRecvs( DetailedTask *, RecvRecord& recvs,
 
   // This will allow some receives to be "handled" by their
   // AfterCommincationHandler while waiting for others.  
-  while( (recvs.numRequests() > 0) && recvs.waitsome(pg_) ) {
-    if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug << "waitsome called\n";
-      cerrLock.unlock();  
-    }
+  while( (recvs.numRequests() > 0)) {
+    bool keep_waiting = recvs.waitsome(pg_);
+    if (!keep_waiting)
+      break;
   }
 
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;

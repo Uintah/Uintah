@@ -27,15 +27,15 @@ static DebugStream scrubout("Scrubbing", false);
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
 			     const TaskGraph* taskgraph,
 			     bool mustConsiderInternalDependencies /*= false*/)
-  : sc(sc), d_myworld(pg), taskgraph(taskgraph),
+  : sc_(sc), d_myworld(pg), taskgraph_(taskgraph),
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
     currentDependencyGeneration_(1),
     readyQueueMutex_("DetailedTasks Ready Queue"),
     readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   int nproc = pg->size();
-  stasks.resize(nproc);
-  tasks.resize(nproc);
+  stasks_.resize(nproc);
+  tasks_.resize(nproc);
 
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
@@ -44,23 +44,23 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
   for(int i=0;i<nproc;i++) {
-    stasks[i]=scinew Task("send old data", Task::InitialSend);
-    stasks[i]->setMapping(dwmap);
-    tasks[i]=scinew DetailedTask(stasks[i], 0, 0, this);
-    tasks[i]->assignResource(i);
+    stasks_[i]=scinew Task("send old data", Task::InitialSend);
+    stasks_[i]->setMapping(dwmap);
+    tasks_[i]=scinew DetailedTask(stasks_[i], 0, 0, this);
+    tasks_[i]->assignResource(i);
   }
 }
 
 DetailedTasks::~DetailedTasks()
 {
-  for(int i=0;i<(int)batches.size();i++)
-    delete batches[i];
+  for(int i=0;i<(int)batches_.size();i++)
+    delete batches_[i];
 
-  for(int i=0;i<(int)tasks.size();i++)
-    delete tasks[i];
+  for(int i=0;i<(int)tasks_.size();i++)
+    delete tasks_[i];
 
-  for(int i=0;i<(int)stasks.size();i++)
-    delete stasks[i];
+  for(int i=0;i<(int)stasks_.size();i++)
+    delete stasks_[i];
 }
 
 DependencyBatch::~DependencyBatch()
@@ -80,8 +80,8 @@ DetailedTasks::assignMessageTags(int me)
   // maps from, to (process) pairs to indices for each batch of that pair
   map< pair<int, int>, int > perPairBatchIndices;
 
-  for(int i=0;i<(int)batches.size();i++){
-    DependencyBatch* batch = batches[i];
+  for(int i=0;i<(int)batches_.size();i++){
+    DependencyBatch* batch = batches_[i];
     int from = batch->fromTask->getAssignedResourceIndex();
     ASSERTRANGE(from, 0, d_myworld->size());
     int to = batch->to;
@@ -91,7 +91,7 @@ DetailedTasks::assignMessageTags(int me)
       // Easier to go in reverse order now, instead of reinitializing
       // perPairBatchIndices.
       pair<int, int> fromToPair = make_pair(from, to);    
-      batches[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
+      batches_[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
 								     one */
     }
   }
@@ -112,7 +112,7 @@ DetailedTasks::assignMessageTags(int me)
 void
 DetailedTasks::add(DetailedTask* task)
 {
-  tasks.push_back(task);
+  tasks_.push_back(task);
 }
 
 #if 0
@@ -123,7 +123,7 @@ DetailedTasks::getInitialRequires()
   for(DetailedReq* req = task->getRequires();
       req != 0; req = req->next){
     if(req->req->dw == Task::OldDW)
-      initreqs.push_back(req);
+      initreqs_.push_back(req);
   }
 #else
   if( mixedDebug.active() ) {
@@ -132,8 +132,8 @@ DetailedTasks::getInitialRequires()
     cerrLock.unlock();
   }
 #endif
-  cerr << initreqs.size() << " initreqs\n";
-  return initreqs;
+  cerr << initreqs_.size() << " initreqs_\n";
+  return initreqs_;
 }
 #endif
 
@@ -141,15 +141,15 @@ void
 DetailedTasks::computeLocalTasks(int me)
 {
   initiallyReadyTasks_ = TaskQueue();
-  if(localtasks.size() != 0)
+  if(localtasks_.size() != 0)
     return;
-  for(int i=0;i<(int)tasks.size();i++){
-    DetailedTask* task = tasks[i];
+  for(int i=0;i<(int)tasks_.size();i++){
+    DetailedTask* task = tasks_[i];
 
     ASSERTRANGE(task->getAssignedResourceIndex(), 0, d_myworld->size());
     if(task->getAssignedResourceIndex() == me
        || task->getTask()->getType() == Task::Reduction) {
-      localtasks.push_back(task);
+      localtasks_.push_back(task);
 
       if (task->areInternalDependenciesSatisfied()) {
 	initiallyReadyTasks_.push(task);
@@ -386,8 +386,8 @@ void DetailedTasks::createScrubCounts()
   scrubCountMap_.clear();
   
   // Go through each of the tasks and determine which variables it will require
-  for(int i=0;i<(int)localtasks.size();i++){
-    DetailedTask* dtask = localtasks[i];
+  for(int i=0;i<(int)localtasks_.size();i++){
+    DetailedTask* dtask = localtasks_[i];
     const Task* task = dtask->getTask();
     for(const Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
@@ -502,7 +502,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
   if(!batch){
     batch = scinew DependencyBatch(toresource, from, to);
-    batches.push_back(batch);
+    batches_.push_back(batch);
     from->addComputes(batch);
     bool newRequireBatch = to->addRequires(batch);
     ASSERT(newRequireBatch);
@@ -575,7 +575,7 @@ DetailedTask*
 DetailedTasks::getOldDWSendTask(int proc)
 {
   // These are the first N tasks
-  return tasks[proc];
+  return tasks_[proc];
 }
 
 void
@@ -791,8 +791,8 @@ void DetailedTasks::incrementDependencyGeneration()
 
 void DetailedTasks::initializeBatches()
 {
-  for (int i = 0; i < (int)batches.size(); i++) {
-    batches[i]->reset();
+  for (int i = 0; i < (int)batches_.size(); i++) {
+    batches_[i]->reset();
   }
 }
 
@@ -874,16 +874,16 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
 				 const std::string& tag)
 {
   ostringstream elems1;
-  elems1 << tasks.size();
+  elems1 << tasks_.size();
   logMemory(out, total, tag, "tasks", "DetailedTask", 0, -1,
-	    elems1.str(), tasks.size()*sizeof(DetailedTask), 0);
+	    elems1.str(), tasks_.size()*sizeof(DetailedTask), 0);
   ostringstream elems2;
-  elems2 << batches.size();
+  elems2 << batches_.size();
   logMemory(out, total, tag, "batches", "DependencyBatch", 0, -1,
-	    elems2.str(), batches.size()*sizeof(DependencyBatch), 0);
+	    elems2.str(), batches_.size()*sizeof(DependencyBatch), 0);
   int ndeps=0;
-  for(int i=0;i<(int)batches.size();i++){
-    for(DetailedDep* p=batches[i]->head; p != 0; p = p->next)
+  for(int i=0;i<(int)batches_.size();i++){
+    for(DetailedDep* p=batches_[i]->head; p != 0; p = p->next)
       ndeps++;
   }
   ostringstream elems3;
@@ -894,10 +894,10 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
 
 void DetailedTasks::emitEdges(ProblemSpecP edgesElement, int rank)
 {
-  for (int i = 0; i < (int)tasks.size(); i++) {
-    ASSERTRANGE(tasks[i]->getAssignedResourceIndex(), 0, d_myworld->size());
-    if (tasks[i]->getAssignedResourceIndex() == rank) {
-      tasks[i]->emitEdges(edgesElement);
+  for (int i = 0; i < (int)tasks_.size(); i++) {
+    ASSERTRANGE(tasks_[i]->getAssignedResourceIndex(), 0, d_myworld->size());
+    if (tasks_[i]->getAssignedResourceIndex() == rank) {
+      tasks_[i]->emitEdges(edgesElement);
     }
   }
 }
