@@ -79,7 +79,7 @@ CM2Widget::CM2Widget()
     thick_line_width_(2.0),
     point_size_(7.0),
     color_(1.0, 1.0, 1.0),
-    alpha_(0.7),
+    alpha_(0.8),
     selected_(0),
     shadeType_(CM2_SHADE_REGULAR),
     onState_(1),
@@ -208,7 +208,6 @@ TriangleCM2Widget::TriangleCM2Widget() :
   width_ = 0.1 + drand48()*0.4;
   bottom_ = drand48()*0.4+0.2;
   name_ = "Triangle";
-  alpha_ = 1.0;
 }
 
 TriangleCM2Widget::TriangleCM2Widget(float base, float top_x, float top_y,
@@ -868,7 +867,6 @@ RectangleCM2Widget::RectangleCM2Widget() :
   height_ = Clamp(0.1+(0.9-left_y_)*drand48(), 0.5*width_, 1.5*width_);
   offset_ = 0.25+0.5*drand48();
   name_ = "Rectangle";
-  alpha_ = 1.0;
 }
 
 RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x, 
@@ -1347,11 +1345,35 @@ RectangleCM2Widget::move (int ix, int iy, int w, int h)
   case 11:
     height_ = y - left_y_;
     break;
-
-
-
-
   }
+
+  if (width_ < 0.0) {
+    left_x_ += width_;
+    width_ *= -1;
+    switch (selected_) {
+    case 2: selected_ = 3; break;
+    case 3: selected_ = 2; break;
+    case 4: selected_ = 5; break;
+    case 5: selected_ = 4; break;
+    case 8: selected_ = 9; break;
+    case 9: selected_ = 8; break;
+    default: break;
+    }
+  }
+
+  if (height_ < 0.0) {
+    left_y_ += height_;
+    height_ *= -1;
+    switch (selected_) {
+    case 2: selected_ = 5; break;
+    case 3: selected_ = 4; break;
+    case 4: selected_ = 3; break;
+    case 5: selected_ = 2; break;
+    case 10: selected_ = 11; break;
+    case 11: selected_ = 10; break;
+    default: break;
+    }
+  }  
 }
 
 
@@ -1359,6 +1381,16 @@ void
 RectangleCM2Widget::release (int /*x*/, int /*y*/,
                              int /*w*/, int /*h*/)
 {
+  if (width_ < 0.0) {
+    left_x_ += width_;
+    width_ *= -1.0;
+  }
+
+  if (height_ < 0.0) {
+    left_y_ += height_;
+    height_ *= -1.0;
+  }
+
   // Don't need to do anything here.
 }
 
@@ -1622,7 +1654,7 @@ PaintCM2Widget::io(Piostream &stream)
 {
   stream.begin_class("PaintCM2Widget", PAINTCM2WIDGET_VERSION);
   
-  Pio(stream, segments_);
+  Pio(stream, strokes_);
   Pio(stream, name_);
   dirty_ = true;
   stream.end_class();
@@ -1630,7 +1662,7 @@ PaintCM2Widget::io(Piostream &stream)
 
 PaintCM2Widget::PaintCM2Widget() : 
   CM2Widget(),
-  segments_(0),
+  strokes_(),
   pixels_(256, 256, 4),
   dirty_(false)
 {
@@ -1643,7 +1675,7 @@ PaintCM2Widget::~PaintCM2Widget()
 
 PaintCM2Widget::PaintCM2Widget(PaintCM2Widget& copy) : 
   CM2Widget(copy),
-  segments_(copy.segments_),
+  strokes_(copy.strokes_),
   dirty_(copy.dirty_)
 {
   pixels_.copy(copy.pixels_);
@@ -1824,23 +1856,20 @@ PaintCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
   if(!onState_) return;
   faux_ = faux;
-  Segments::iterator siter = segments_.begin();
-  Segments::iterator send = segments_.end();
-  while (siter != send) {
-    Segment &seg = *siter;
-    ++siter;
-    line(array,
-	 Floor(seg.first.second*array.dim1()), 
-	 Floor(seg.first.first*array.dim2()),
-	 Floor(seg.second.second*array.dim1()),
-	 Floor(seg.second.first*array.dim2()));
-  }
+  for (unsigned int s = 0; s < strokes_.size(); ++s)
+    for (unsigned c = 1; c < strokes_[s].size(); ++c)
+      line(array,
+	   Floor(strokes_[s][c-1].second*array.dim1()), 
+	   Floor(strokes_[s][c-1].first*array.dim2()), 
+	   Floor(strokes_[s][c].second*array.dim1()), 
+	   Floor(strokes_[s][c].first*array.dim2()));
 }
 
 
 void
 PaintCM2Widget::set_value_range(double min, double scale)
 {
+#if 0
   if ((fabs(value_min_ - min) > 0.001) || 
       (fabs(value_scale_ - scale) > 0.001)) 
     dirty_ = true;
@@ -1857,7 +1886,7 @@ PaintCM2Widget::set_value_range(double min, double scale)
   }
   value_min_ = min;
   value_scale_ = scale;
-
+#endif
 }
 
 
@@ -1865,4 +1894,30 @@ void
 PaintCM2Widget::draw()
 {
   // no widget controls to draw.
+}
+
+
+void
+PaintCM2Widget::add_stroke()
+{
+  strokes_.push_back(Stroke());
+}
+
+void
+PaintCM2Widget::add_coordinate(const Coordinate &coordinate)
+{
+  if (strokes_.empty()) return;
+  strokes_.back().push_back(coordinate);
+  dirty_ = true;
+}
+
+
+
+bool
+PaintCM2Widget::pop_stroke()
+{
+  if (strokes_.empty()) return false;
+  strokes_.pop_back();
+  dirty_ = true;
+  return true;
 }
