@@ -121,6 +121,12 @@ public:
 				    SchedulerP&,
 				    DataWarehouseP&,
 				    DataWarehouseP&);
+                                
+  void  scheduleMassExchange(const Patch* patch, 
+                             SchedulerP&,
+                             DataWarehouseP&,
+                             DataWarehouseP&);
+
 
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
@@ -166,6 +172,11 @@ public:
                             const Patch* patch,
                             DataWarehouseP& old_dw,
                             DataWarehouseP& new_dw);
+                            
+  void massExchange(const ProcessorGroup*,
+                    const Patch* patch,   
+                    DataWarehouseP& old_dw,
+                    DataWarehouseP& new_dw);
 
   enum bctype { NONE=0,
                 FIXED,
