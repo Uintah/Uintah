@@ -49,13 +49,18 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/VolRendTexSlices.tcl $(SRCDIR)/VolVis.tcl \
 	$(SRCDIR)/WidgetTest.tcl $(SRCDIR)/Writer.tcl \
 	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl \
-	$(SRCDIR)/EditPath.tcl $(SRCDIR)/PathReader.tcl $(SRCDIR)/PathWriter.tcl \
+	$(SRCDIR)/EditPath.tcl $(SRCDIR)/PathReader.tcl\
+	$(SRCDIR)/PathWriter.tcl \
+	$(SRCDIR)/IsoSurfaceSAGE.tcl 
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.4  2000/07/22 18:04:19  yarden
+# add GUI for IsoSurfaceSAGE module
+#
 # Revision 1.3  2000/07/18 23:08:06  samsonov
 # Support for PathReader, PathWriter and EditPath modules
 #
