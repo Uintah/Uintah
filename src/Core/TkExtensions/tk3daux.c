@@ -15,6 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <sci_config.h> /* for HAVE_LIMITS etc, for tcl files */
+
 #include <tk3d.h>
 #include <math.h>
 
