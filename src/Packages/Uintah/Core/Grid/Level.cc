@@ -261,7 +261,7 @@ Point Level::positionToIndex(const Point& p) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
 			  selectType& neighbors) const
 {
-#ifdef SELECT_LINEAR
+#if defined( SELECT_LINEAR )
    // This sucks - it should be made faster.  -Steve
    for(const_patchIterator iter=d_virtualAndRealPatches.begin();
        iter != d_virtualAndRealPatches.end(); iter++){
@@ -271,8 +271,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
 	neighbors.push_back(*iter);
    }
-#else
-#ifdef SELECT_GRID
+#elif defined( SELECT_GRID )
    IntVector start = (low-d_idxLow)*d_gridSize/d_idxSize;
    IntVector end = (high-d_idxLow)*d_gridSize/d_idxSize;
    start=Max(IntVector(0,0,0), start);
@@ -304,14 +303,11 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       i++;
    }
    neighbors.resize(i);
-#else
-#ifdef SELECT_RANGETREE
+#elif defined( SELECT_RANGETREE )
    d_rangeTree->query(low, high, neighbors);
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 #else
 #error "No selectPatches algorithm defined"
-#endif
-#endif
 #endif
 
 #ifdef CHECK_SELECT
