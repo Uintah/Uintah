@@ -26,33 +26,33 @@ package XXX {
      * It provides basic reference counting services and run-time type
      * identification.
      */
-    interface Interface {
-	SIDL.Object addReference();
+    interface BaseInterface {
+	SSIDL.Object addReference();
 	void deleteReference();
-	SIDL.Class getClass();
-	bool isSame(in Interface object);
+	SSIDL.Class getClass();
+	bool isSame(in BaseInterface object);
 	bool isInstanceOf(in Class type);
 	bool supportsInterface(in Class type);
-	SIDL.Interface queryInterface(in Class type);
+	SSIDL.BaseInterface queryInterface(in Class type);
     };
 
     /*
      * All class directly or indirectly extend this class. The member
-     * functions are identical to that of Interface except that this class
+     * functions are identical to that of BaseInterface except that this class
      * provides the implementations.  Note that supportsInterface and
      * queryInterface are not final and thus may be redefined in subclasses
      * to support a query interface protocol.  Initially, the query interface
      * calls default to the equivalent functionality based on the static
      * IDL type information
      */
-    class Object implements Interface {
-	final SIDL.Object xxaddReference();
+    class Object implements BaseInterface {
+	final SSIDL.Object xxaddReference();
 	final void xxdeleteReference();
-	final SIDL.Class xxgetClass();
-	final bool xxisSame(in Interface object);
+	final SSIDL.Class xxgetClass();
+	final bool xxisSame(in BaseInterface object);
 	final bool xxisInstanceOf(in Class type);
 	bool supportsInterface(in Class type);
-	SIDL.Interface queryInterface(in Class type);
+	SSIDL.BaseInterface queryInterface(in Class type);
     };
 
     /*
@@ -103,18 +103,18 @@ package XXX {
      * and dynamic method invocation.
      */
     class Class {
-	static SIDL.Class lookupClass(in string class_name)
-	    throws SIDL.ClassNotFoundException;
-	final SIDL.Object xxnewInstance() throws SIDL.InstantiationException;
+	static SSIDL.Class lookupClass(in string class_name)
+	    throws SSIDL.ClassNotFoundException;
+	final SSIDL.Object xxnewInstance() throws SSIDL.InstantiationException;
 	final bool xxisInterface();
 	final bool xxisArray();
 	final bool xxisPrimitive();
 	final string xxgetName();
-	final SIDL.Class xxgetSuperclass();
-	final array<SIDL.Class,1> xxgetInterfaces();
-	final SIDL.Class xxgetCore/CCA/ComponentType();
+	final SSIDL.Class xxgetSuperclass();
+	final array<SSIDL.Class,1> xxgetInterfaces();
+	final SSIDL.Class xxgetCore/CCA/ComponentType();
 	final array<Method,1> xxgetMethods();
-	final SIDL.Method xxgetMethod() throws SIDL.NoSuchMethodException;
+	final SSIDL.Method xxgetMethod() throws SSIDL.NoSuchMethodException;
 	// and so on - see the Java spec for more information
     };
 
@@ -124,15 +124,15 @@ package XXX {
      * allow for dynamic invocation of methods by GUI builder tools.
      */
     class Method {
-	final SIDL.Class xxgetDeclaringClass();
+	final SSIDL.Class xxgetDeclaringClass();
 	final string xxgetName();
-	final SIDL.Class xxgetReturnType();
-	final array<SIDL.Class,1> xxgetParameterTypes();
-	final array<SIDL.Class,1> xxgetExceptionTypes();
-	final void xxinvokeStatic(in array<SIDL.Object,1> arguments)
-	    throws SIDL.IllegalArgumentException;
+	final SSIDL.Class xxgetReturnType();
+	final array<SSIDL.Class,1> xxgetParameterTypes();
+	final array<SSIDL.Class,1> xxgetExceptionTypes();
+	final void xxinvokeStatic(in array<SSIDL.Object,1> arguments)
+	    throws SSIDL.IllegalArgumentException;
 	final void xxinvokeMember(in Object this, in array<Object,1> arguments)
-	    throws SIDL.IllegalArgumentException;
+	    throws SSIDL.IllegalArgumentException;
 	// and so on - see the Java spec for more information
     };
 };
