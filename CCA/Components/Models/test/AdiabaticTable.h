@@ -5,11 +5,7 @@
 
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <map>
 #include <vector>
 
 namespace Uintah {
@@ -79,17 +75,17 @@ WARNING
   private:
     ICELabel* lb;
                                                 
-   void modifyThermoTransportProperties(const ProcessorGroup*, 
-                                        const PatchSubset* patches,        
-                                        const MaterialSubset*,             
-                                        DataWarehouse*,                    
-                                        DataWarehouse* new_dw);             
+    void modifyThermoTransportProperties(const ProcessorGroup*, 
+                                         const PatchSubset* patches,        
+                                         const MaterialSubset*,             
+                                         DataWarehouse*,                    
+                                         DataWarehouse* new_dw);             
    
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-		      const MaterialSubset* matls, 
+                    const MaterialSubset* matls, 
                     DataWarehouse*, 
-		      DataWarehouse* new_dw);
+                    DataWarehouse* new_dw);
                                    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
@@ -109,7 +105,7 @@ WARNING
     class Region {
     public:
       Region(GeometryPiece* piece, ProblemSpecP&);
-
+      
       GeometryPiece* piece;
       double initialScalar;
     };
@@ -120,7 +116,6 @@ WARNING
       string name;
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
-      VarLabel* scalar_source_CCLabel;
       VarLabel* diffusionCoefLabel;
       
       vector<Region*> regions;
@@ -129,8 +124,8 @@ WARNING
 
     double oldProbeDumpTime;
     Scalar* d_scalar;
-    VarLabel* heatLoss_CCLabel;
-    VarLabel* heatLoss_src_CCLabel;
+    VarLabel* cumulativeEnergyReleased_CCLabel;
+    VarLabel* cumulativeEnergyReleased_src_CCLabel;
     
     SimulationStateP sharedState;
     Output* dataArchiver;
@@ -148,12 +143,10 @@ WARNING
     vector<TableValue*> tablevalues;
 
     int d_density_index;
-    int d_sp_vol_index;
     int d_gamma_index;
     int d_cv_index;
     int d_viscosity_index;
     int d_temp_index;
-    int d_initial_cp_index;
     int d_initial_cv_index;
     int d_initial_gamma_index;
     int d_initial_temp_index;
