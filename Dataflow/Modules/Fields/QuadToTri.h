@@ -59,16 +59,13 @@ template <class FSRC>
 bool
 QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 {
-  typedef typename FSRC::mesh_type mesh_type;   // convenience typedefs
-  typedef typename FSRC::value_type value_type; 
-
   FSRC *qsfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
-  mesh_type *qsmesh = qsfield->get_typed_mesh().get_rep();
+  typename FSRC::mesh_type *qsmesh = qsfield->get_typed_mesh().get_rep();
   TriSurfMeshHandle tsmesh = scinew TriSurfMesh();
 
   // Copy points directly, assuming they will have the same order.
-  mesh_type::Node::iterator nbi, nei;
+  typename FSRC::mesh_type::Node::iterator nbi, nei;
   qsmesh->begin(nbi); qsmesh->end(nei);
   while (nbi != nei)
   {
@@ -80,18 +77,18 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
   qsmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
-  vector<mesh_type::Elem::index_type> elemmap;
+  vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
-  mesh_type::Node::size_type hnsize; qsmesh->size(hnsize);
-  mesh_type::Elem::size_type hesize; qsmesh->size(hesize);
+  typename FSRC::mesh_type::Node::size_type hnsize; qsmesh->size(hnsize);
+  typename FSRC::mesh_type::Elem::size_type hesize; qsmesh->size(hesize);
 
   vector<bool> visited(hesize, false);
 
-  mesh_type::Elem::iterator bi, ei;
+  typename FSRC::mesh_type::Elem::iterator bi, ei;
   qsmesh->begin(bi); qsmesh->end(ei);
 
   const unsigned int surfsize = pow(hesize, 2.0 / 3.0);
-  vector<mesh_type::Elem::index_type> buffers[2];
+  vector<typename FSRC::mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
   bool flipflop = true;
@@ -111,7 +108,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 	  if (visited[(unsigned int)buffers[flipflop][i]]) { continue; }
 	  visited[(unsigned int)buffers[flipflop][i]] = true;
 
-	  mesh_type::Node::array_type qsnodes;
+	  typename FSRC::mesh_type::Node::array_type qsnodes;
 	  qsmesh->get_nodes(qsnodes, buffers[flipflop][i]);
 	  ASSERT(qsnodes.size() == 4);
 
@@ -138,7 +135,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
 	  elemmap.push_back(buffers[flipflop][i]);
 
-	  mesh_type::Face::array_type neighbors;
+	  typename FSRC::mesh_type::Face::array_type neighbors;
 	  qsmesh->get_neighbors(neighbors, buffers[flipflop][i]);
 
 	  for (unsigned int i = 0; i < neighbors.size(); i++)
@@ -156,17 +153,17 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
     ++bi;
   }
   
-  TriSurfField<value_type> *tvfield = 
-    scinew TriSurfField<value_type>(tsmesh, qsfield->data_at());
+  TriSurfField<typename FSRC::value_type> *tvfield = 
+    scinew TriSurfField<typename FSRC::value_type>(tsmesh, qsfield->data_at());
   *(PropertyManager *)tvfield = *(PropertyManager *)qsfield;
   dstH = tvfield;
 
-  value_type val;
+  typename FSRC::value_type val;
 
   if (qsfield->data_at() == Field::NODE) {
     for (unsigned int i = 0; i < hnsize; i++)
     {
-      qsfield->value(val, (mesh_type::Node::index_type)(i));
+      qsfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TriSurfMesh::Node::index_type)(i));
     }
   } else if (qsfield->data_at() == Field::FACE) {
