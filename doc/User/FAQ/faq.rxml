@@ -1,28 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 
-<!-- DANGER: This file contains embedded ruby code. -->
-
-<!--%= "PCEtLQogICoqKioqIERPTidUIEVESVQgTUUhICoqKioqCiAgSSdtIGdlbmVy\nYXRlZCBmcm9tIGZhcS5yeG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
-
-<!--% mode = ENV["OUTPUT_MODE"] %-->
-
-<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
-<!ENTITY sr "SCIRun">
-<!ENTITY sr_bibtex_cit_url "http://software.sci.utah.edu/scirun_citation.bib">
-<!ENTITY biopse_bibtex_cit_url "http://software.sci.utah.edu/biopse_citation.bib">
-<!--%
-if mode == "html"
-print <<HTML_TEXT
-<!ENTITY sr_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&sr_bibtex_cit_url;',
-'600','400','1')">
-<!ENTITY biopse_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
-window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&biopse_bibtex_cit_url;', '600','400','1')">
-HTML_TEXT
-end
-%-->
-]>
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -41,13 +20,26 @@ end
   University of Utah. All Rights Reserved.
 -->
 
-<article class="faq">
-<!--%
-version = File.open("../../edition.xml") do |f|
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!ENTITY sr "SCIRun">
+<!ENTITY sr_bibtex_cit_url "http://software.sci.utah.edu/scirun_citation.bib">
+<!ENTITY biopse_bibtex_cit_url "http://software.sci.utah.edu/biopse_citation.bib">
+<!--%=
+doc.doIfHTML {
+<<HTML_TEXT
+<!ENTITY sr_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&sr_bibtex_cit_url;',
+'600','400','1')">
+<!ENTITY biopse_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&biopse_bibtex_cit_url;', '600','400','1')">
+HTML_TEXT
+}
 %-->
-<title>User FAQ (version <!--%= version %-->)</title>
+]>
+
+<article class="faq">
+<title>User FAQ (v. <!--%= doc.edition %-->)</title>
 
 
 <qandaset defaultlabel="number">
@@ -73,14 +65,14 @@ paper or grant application?
 We have <quote>BibTeX</quote> and <quote>plain text</quote>
 citations for your use.
 <!--%=
-case mode
-  when "html"
+doc.doIfHTML {
 <<HTML_TEXT
 Here are the <ulink url="&sr_bibtex_cit;">&sr;
 citations</ulink> and here are the <ulink
 url="&biopse_bibtex_cit;">BioPSE citations</ulink>.
 HTML_TEXT
-  when "print"
+}
+doc.doIfPrint {
 <<PRINT_TEXT
 See 
 <literallayout class="monospaced">
@@ -90,9 +82,7 @@ See
  for the &sr; and BioPSE
 citations respectively.
 PRINT_TEXT
-  else
-"*** Arrrrrr! Unrecognized mode! ***"
-end
+}
 %-->
 </para>
 <para>
@@ -443,9 +433,6 @@ scientists and engineers of all disciplines.
 <imageobject>
 <imagedata fileref="EAB-BioPSE.eps" format="EPS" align="center"/>
 </imageobject>
-<textobject>
-<simpara>Figure showing relationships among &sr; and its packages.</simpara>
-</textobject>
 <caption>
 <para>
 This figure shows the relationship among &sr; and its packages.

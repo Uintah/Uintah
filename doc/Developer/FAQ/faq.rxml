@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 
-<!--%= "PCEtLQogICoqKioqIERPTidUIEVESVQgTUUhICoqKioqCiAgSSdtIGdlbmVy\nYXRlZCBmcm9tIGZhcS5yeG1sLiAgRWRpdCBpdCBpbnN0ZWFkLgotLT4=\n".unpack("m") %-->
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
 
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
 "../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
@@ -25,12 +26,7 @@
 -->
 
 <article class="faq">
-<!--%
-version = File.open("../../edition.xml") do |f|
-  /<edition>(.*)<\/edition>/.match(f.read())[1]
-end
-%-->
-<title>Developer FAQ (for &sr; Version <!--%= version %-->)</title>
+<title>Developer FAQ (for &sr; v. <!--%= doc.edition %-->)</title>
 
 <qandaset defaultlabel="number">
 
