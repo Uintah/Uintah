@@ -22,6 +22,7 @@
 
 #include "LevelMesh.h"
 #include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
@@ -63,9 +64,9 @@ template <class Data>
 class LevelFieldSFI : public ScalarFieldInterface {
 public:
   LevelFieldSFI(const LevelField<Data>* fld) : fld_(fld) {}
+
   virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
-
 private:
   const LevelField<Data>* fld_;
 };
@@ -309,7 +310,7 @@ LevelField<Data>::io(Piostream &stream)
 
 //! Virtual interface.
 template <class Data>
-ScalarFieldInterface
+ScalarFieldInterface *
 LevelField<Data>::query_scalar_interface() const
 {
   return new LevelFieldSFI<Data>( this );
@@ -365,7 +366,7 @@ bool LevelField<Data>::get_gradient(Vector &g, const Point &p) {
 
   if( type_name(1) == "double" ||
       type_name(1) == "long" ||
-      type_name(1) == "float" ) {
+      type_name(1) == "int" ) {
 
     if( data_at() == Field::NODE){
       mesh_handle_type mesh = get_typed_mesh();
@@ -537,7 +538,7 @@ template <>
 bool LevelFieldSFI<double>::interpolate( double& result, const Point &p) const;
 
 template <>
-bool LevelFieldSFI<float>::interpolate( double& result, const Point &p) const;
+bool LevelFieldSFI<int>::interpolate( double& result, const Point &p) const;
 
 template <>
 bool LevelFieldSFI<long>::interpolate( double& result, const Point &p) const;
