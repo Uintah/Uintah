@@ -1,2 +1,0 @@
-#!/bin/csh
-itcl_wish -f tclindex.tcl
