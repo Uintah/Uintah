@@ -43,3 +43,9 @@ Vector Ray::direction() const
 {
     return d;
 }
+
+void Ray::direction(const Vector& newdir)
+{
+    d=newdir;
+}
+

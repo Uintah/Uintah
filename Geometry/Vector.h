@@ -40,6 +40,7 @@ public:
     Vector operator*(const double) const;
     Vector& operator*=(const double);
     Vector operator/(const double) const;
+    Vector operator/(const Vector&) const;
     Vector operator+(const Vector&) const;
     Vector& operator+=(const Vector&);
     Vector operator-() const;
@@ -70,6 +71,32 @@ public:
     friend void Pio(Piostream&, Vector&);
 
     inline Point asPoint() const;
+    inline double minComponent() const {
+	if(_x<_y){
+	    if(_x<_z)
+		return _x;
+	    else
+		return _z;
+	} else {
+	    if(_y<_z)
+		return _y;
+	    else
+		return _z;
+	}
+    }
+    inline double maxComponent() const {
+	if(_x>_y){
+	    if(_x>_z)
+		return _x;
+	    else
+		return _z;
+	} else {
+	    if(_y>_z)
+		return _y;
+	    else
+		return _z;
+	}
+    }
 };
 
 ostream& operator<<(ostream& os, const Vector& p);

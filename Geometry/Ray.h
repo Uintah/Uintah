@@ -28,6 +28,8 @@ public:
 
     Point origin() const;
     Vector direction() const;
+
+    void direction(const Vector& newdir);
 };
 
 #endif
