@@ -712,10 +712,9 @@ void MDSPlusFieldReader::execute(){
 
 		    //  If summing start at 0 otherwise start with the mode
 		    if( mode_ == 3 ) m = 0;
-		    else	       m = mode_;
+		    else	     m = mode_;
 
 		    for( ; m<mdim; m++ ) {  // Mode loop.
-
 
 		      index = m*idim*jdim + j*idim + i;
 
