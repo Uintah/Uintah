@@ -49,6 +49,23 @@ void IdealGas::addComputesAndRequiresCEB(Task* task,
 				 DataWarehouseP& new_dw) const
 {
 
+  task->requires(old_dw,lb->vol_frac_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->rho_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->rho_micro_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->temp_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->cv_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  task->requires(new_dw,lb->speedSound_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->press_CCLabel,
+		 matl->getDWIndex(),patch,Ghost::None);
+  
+  task->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
+
 }
 
 void IdealGas::computeSpeedSound(const Patch* patch,
@@ -64,13 +81,11 @@ void IdealGas::computeSpeedSound(const Patch* patch,
 
   double gamma = matl->getGamma();
 
-  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,
-						Ghost::None, 0); 
-  old_dw->get(rho_micro, lb->rho_micro_CCLabel, vfindex,patch,
-						Ghost::None, 0); 
-  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,
-						Ghost::None, 0); 
+  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(rho_micro, lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
   new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
+
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     double dp_drho = (gamma - 1.0) * cv[*iter] * temp[*iter];
@@ -91,9 +106,40 @@ void IdealGas::computeEquilibrationPressure(const Patch* patch,
 {
   int vfindex = matl->getVFIndex();
 
+  CCVariable<double> vol_frac;
+  CCVariable<double> rho;
+  CCVariable<double> rho_micro_old,rho_micro_new;
+  CCVariable<double> temp;
+  CCVariable<double> cv;
+  CCVariable<double> speedSound;
+  CCVariable<double> press;
+
+  double gamma = matl->getGamma();
+
+  old_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
+  old_dw->get(rho,lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(rho_micro_old,lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(temp,lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
+  new_dw->get(speedSound,lb->speedSound_CCLabel,vfindex,patch,Ghost::None, 0); 
+  old_dw->get(press,lb->press_CCLabel,vfindex,patch,Ghost::None, 0); 
+
+  new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
+  new_dw->allocate(rho_micro_new,lb->rho_micro_CCLabel,vfindex,patch);
+
+ for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+   rho_micro_new[*iter] = press[*iter]/(gamma - 1.)*cv[*iter]*temp[*iter];
+   double v_f = rho[*iter]/rho_micro_new[*iter];
+
+   }
+
+
 }
 
 //$Log$
+//Revision 1.2  2000/10/09 22:37:04  jas
+//Cleaned up labels and added more computes and requires for EOS.
+//
 //Revision 1.1  2000/10/06 04:02:16  jas
 //Move into a separate EOS directory.
 //
