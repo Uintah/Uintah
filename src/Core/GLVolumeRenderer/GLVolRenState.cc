@@ -276,6 +276,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 void
 GLVolRenState::loadColorMap(Brick& brick)
 {
+#ifdef CORRECT_OGLEXT_HDRS
   const unsigned char *arr = volren->transfer_functions(brick.level());
 
 #if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)  && defined(__APPLE__)
@@ -324,11 +325,13 @@ GLVolRenState::loadColorMap(Brick& brick)
 #endif
   //   glCheckForError("After glColorTableEXT");
 #endif
+#endif
 }
 
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
+#ifdef CORRECT_OGLEXT_HDRS
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTexture(GL_TEXTURE0_ARB);
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -410,6 +413,7 @@ GLVolRenState::loadTexture(Brick& brick)
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
   //#endif
+#endif
 }
 void 
 GLVolRenState::makeTextureMatrix( const Brick& brick)

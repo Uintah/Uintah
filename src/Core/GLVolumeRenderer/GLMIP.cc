@@ -38,9 +38,11 @@ GLMIP::GLMIP(const GLVolumeRenderer* glvr) :
 
 void GLMIP::preDraw()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   // comment out blending, done in render algorithm
 //   glEnable(GL_BLEND);
   glBlendEquation(GL_MAX_EXT);
+#endif
   glBlendFunc(GL_ONE, GL_ONE);
 }
 
@@ -50,7 +52,9 @@ void GLMIP::postDraw()
 //   glDisable(GL_BLEND);
 
   // return to default BlendEquation
+#ifdef CORRECT_OGLEXT_HDRS
   glBlendEquation(GL_FUNC_ADD_EXT);
+#endif
 }
 
 

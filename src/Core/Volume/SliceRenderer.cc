@@ -108,6 +108,7 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 SliceRenderer::draw()
 {
+#ifdef CORRECT_OGLEXT_HDRS
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
@@ -292,6 +293,7 @@ SliceRenderer::draw()
   glBindTexture(GL_TEXTURE_3D, 0);
 
   tex_->unlock_bricks();
+#endif
 }
 
 void 
