@@ -460,7 +460,7 @@ describes a filter's parameters:
   <parameters>
     <param>
       <name>\replaceable{parameter\_name}</name>
-      <type>\replaceable{c++\_builtin\_type}</type>
+      <type>\replaceable{data\_type}</type>
       <call>\replaceable{member\_function}</call>
       <default>\replaceable{initial\_value}</default>
     </param>
@@ -487,8 +487,9 @@ For example:
   </parameters>
 \end{alltt}
 
-The content of element \xmlstarttag{type} must be a C++ built-in 
-type.  Element \xmlstarttag{default} is optional.
+The content of element \xmlstarttag{type} is either a C++ built-in
+type or type declared in a \xmlstarttag{datatypes} element.  Element
+\xmlstarttag{default} is optional.
 
 If the ITK filter class macro \icode{itkBooleanMacro} is used to create a
 boolean parameter, two \xmlstarttag{call} elements are needed; one
@@ -920,5 +921,5 @@ order of complexity are:
 \end{itemize}
 
 Example networks using the above modules are located in
-\directory{SCIRun/src/Packages/Insight/netw}.
+\directory{SCIRun/src/Packages/Insight/nets}.
 
