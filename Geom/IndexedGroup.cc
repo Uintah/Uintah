@@ -170,5 +170,6 @@ HashTable<int,GeomObj*>* GeomIndexedGroup::getHash(void)
 template class HashTable<int, GeomObj*>;
 template class HashTableIter<int, GeomObj*>;
 template class HashKey<int, GeomObj*>;
+template void Pio(Piostream&, HashTable<int, GeomObj*>&);
 
 #endif

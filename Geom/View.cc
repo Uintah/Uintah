@@ -131,7 +131,7 @@ Point View::objspace_to_eyespace(const Point& ep, double aspect)
 	    Dot(z,epv-eyep_.vector()));
     return p;
 }
-Point View::eyespace_to_objspace_ns(const Point& ep, double aspect)
+Point View::eyespace_to_objspace_ns(const Point& ep, double)
 {
     Vector lookdir(lookat()-eyep());
     Vector z(lookdir);
@@ -144,7 +144,7 @@ Point View::eyespace_to_objspace_ns(const Point& ep, double aspect)
     return p;
 }
 
-Point View::objspace_to_eyespace_ns(const Point& ep, double aspect)
+Point View::objspace_to_eyespace_ns(const Point& ep, double)
 {
     // first compute basic cordiante frame
 

@@ -259,3 +259,13 @@ int GeomTriStripList::num_since(void)
     return n_on;
 
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<float>;
+template void Pio(Piostream&, Array1<float>&);
+template void Pio(Piostream&, Array1<int>&);
+
+#endif
