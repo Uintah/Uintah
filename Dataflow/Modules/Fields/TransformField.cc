@@ -36,6 +36,9 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
@@ -48,14 +51,18 @@ namespace SCIRun {
 
 class TransformField : public Module
 {
-
-  void MatToTransform(MatrixHandle mH, Transform& t);
-
 public:
   TransformField(const clString& id);
   virtual ~TransformField();
 
   virtual void execute();
+
+
+  void matrix_to_transform(MatrixHandle mH, Transform& t);
+
+  template <class F> void dispatch_tetvol(F *f, Transform &t);
+  template <class F> void dispatch_latticevol(F *f, Transform &t);
+  template <class F> void dispatch_trisurf(F *f, Transform &t);
 };
 
 
@@ -70,15 +77,13 @@ TransformField::TransformField(const clString& id)
 }
 
 
-
 TransformField::~TransformField()
 {
 }
 
 
-
 void
-TransformField::MatToTransform(MatrixHandle mH, Transform& t)
+TransformField::matrix_to_transform(MatrixHandle mH, Transform& t)
 {
   double a[16];
   double *p=&(a[0]);
@@ -89,101 +94,164 @@ TransformField::MatToTransform(MatrixHandle mH, Transform& t)
 }
 
 
+template <class F>
+void
+TransformField::dispatch_tetvol(F *ifield, Transform &trans)
+{
+  F *ofield = (F *)ifield->clone();
+
+  typename F::mesh_type *omesh =
+    (typename F::mesh_type *)ofield->get_typed_mesh()->clone();
+  
+  typename F::mesh_type::node_iterator ni = omesh->node_begin();
+  while (ni != omesh->node_end())
+  {
+    Point p;
+    omesh->get_point(p, *ni);
+    omesh->set_point(trans.project(p), *ni);
+    ++ni;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
+  FieldHandle fh(ofield);
+  ofp->send(fh);
+}
+
+
+template <class F>
+void
+TransformField::dispatch_latticevol(F *ifield, Transform &trans)
+{
+  
+}
+
+
+template <class F>
+void
+TransformField::dispatch_trisurf(F *ifield, Transform &trans)
+{
+  F *ofield = (F *)ifield->clone();
+
+  typename F::mesh_type *omesh =
+    (typename F::mesh_type *)ofield->get_typed_mesh()->clone();
+
+  typename F::mesh_type::node_iterator ni = omesh->node_begin();
+  while (ni != omesh->node_end())
+  {
+    Point p;
+    omesh->get_point(p, *ni);
+    omesh->set_point(trans.project(p), *ni);
+    ++ni;
+  }
+    
+  FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
+  FieldHandle fh(ofield);
+  ofp->send(fh);
+}
+
+
 void
 TransformField::execute()
 {
-#if 0
-  FieldHandle sfIH;
-  iport->get(sfIH);
-  if (!sfIH.get_rep()) return;
-  FieldRGBase *sfrgb;
-  if ((sfrgb=sfIH->getRGBase()) == 0) return;
-
-  MatrixHandle mIH;
-  imat->get(mIH);
-  if (!mIH.get_rep()) return;
-  if ((mIH->nrows() != 4) || (mIH->ncols() != 4)) return;
-  Transform t;
-  MatToTransform(mIH, t);
-
-  FieldRGdouble *ifd, *ofd;
-  FieldRGfloat *iff, *off;
-  FieldRGint *ifi, *ofi;
-  FieldRGshort *ifs, *ofs;
-  FieldRGuchar *ifu, *ofu;
-  FieldRGchar *ifc, *ofc;
-    
-  FieldRGBase *ofb;
-
-  ifd=sfrgb->getRGDouble();
-  iff=sfrgb->getRGFloat();
-  ifi=sfrgb->getRGInt();
-  ifs=sfrgb->getRGShort();
-  ifu=sfrgb->getRGUchar();
-  ifc=sfrgb->getRGChar();
-    
-  ofd=0;
-  off=0;
-  ofs=0;
-  ofi=0;
-  ofc=0;
-
-  int nx=sfrgb->nx;
-  int ny=sfrgb->ny;
-  int nz=sfrgb->nz;
-  Point min;
-  Point max;
-  sfrgb->get_bounds(min, max);
-  if (ifd) {
-    ofd=scinew FieldRGdouble(nx, ny, nz); 
-    ofb=ofd;
-  } else if (iff) {
-    off=scinew FieldRGfloat(nx, ny, nz); 
-    ofb=off;
-  } else if (ifi) {
-    ofi=scinew FieldRGint(nx, ny, nz); 
-    ofb=ofi;
-  } else if (ifs) {
-    ofs=scinew FieldRGshort(nx, ny, nz); 
-    ofb=ofs;
-  } else if (ifu) {
-    ofu=scinew FieldRGuchar(nx, ny, nz); 
-    ofb=ofu;
-  } else if (ifc) {
-    ofc=scinew FieldRGchar(nx, ny, nz); 
-    ofb=ofc;
+  // Get input field.
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  FieldHandle ifield_handle;
+  Field *ifield; 
+  if (!(ifp->get(ifield_handle) && (ifield = ifield_handle.get_rep())))
+  {
+    return;
   }
-  ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
-		  Point(max.x(), max.y(), max.z()));
-  for (int i=0; i<nx; i++)
-    for (int j=0; j<ny; j++)
-      for (int k=0; k<nz; k++) {
-	Point oldp(sfrgb->get_point(i,j,k));
-	Point newp(t.unproject(oldp));
-	double val=0;
-	if (ifd) { 
-	  ifd->interpolate(newp, val); 
-	  ofd->grid(i,j,k)=val;
-	} else if (iff) {
-	  iff->interpolate(newp, val);
-	  off->grid(i,j,k)=(float)val;
-	} else if (ifi) {
-	  ifi->interpolate(newp, val);
-	  ofi->grid(i,j,k)=(int)val;
-	} else if (ifs) {
-	  ifs->interpolate(newp, val);
-	  ofs->grid(i,j,k)=(short)val;
-	} else if (ifu) {
-	  ifu->interpolate(newp, val);
-	  ofu->grid(i,j,k)=(unsigned char)val;
-	} else if (ifi) {
-	  ifc->interpolate(newp, val);
-	  ofc->grid(i,j,k)=(char)val;
-	}
-      }
-  FieldHandle sfOH(ofb);
-  oport->send(sfOH);
-#endif
+
+  MatrixIPort *imp = (MatrixIPort *)get_iport("Transform Matrix");
+  MatrixHandle imatrix_handle;
+  if (!(imp->get(imatrix_handle)))
+  {
+    return;
+  }
+  Transform transform;
+  matrix_to_transform(imatrix_handle, transform);
+
+  // Create a new Vector field with the same geometry handle as field.
+  const string geom_name = ifield->get_type_name(0);
+  const string data_name = ifield->get_type_name(1);
+  if (geom_name == "TetVol")
+  {
+    if (data_name == "double")
+    {
+      dispatch_tetvol((TetVol<double> *)ifield, transform);
+    }
+    else if (data_name == "int")
+    {
+      dispatch_tetvol((TetVol<int> *)ifield, transform);
+    }
+    else if (data_name == "short")
+    {
+      dispatch_tetvol((TetVol<short> *)ifield, transform);
+    }
+    else if (data_name == "char")
+    {
+      dispatch_tetvol((TetVol<char> *)ifield, transform);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
+  else if (geom_name == "LatticeVol")
+  {
+    if (data_name == "double")
+    {
+      dispatch_latticevol((LatticeVol<double> *)ifield, transform);
+    }
+    else if (data_name == "int")
+    {
+      dispatch_latticevol((LatticeVol<int> *)ifield, transform);
+    }
+    else if (data_name == "short")
+    {
+      dispatch_latticevol((LatticeVol<short> *)ifield, transform);
+    }
+    else if (data_name == "char")
+    {
+      dispatch_latticevol((LatticeVol<char> *)ifield, transform);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
+  else if (geom_name == "TriSurf")
+  {
+    if (data_name == "double")
+    {
+      dispatch_trisurf((TriSurf<double> *)ifield, transform);
+    }
+    else if (data_name == "int")
+    {
+      dispatch_trisurf((TriSurf<int> *)ifield, transform);
+    }
+    else if (data_name == "short")
+    {
+      dispatch_trisurf((TriSurf<short> *)ifield, transform);
+    }
+    else if (data_name == "char")
+    {
+      dispatch_trisurf((TriSurf<char> *)ifield, transform);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
+  else
+  {
+    // Don't know what to do with this field type.
+    // Signal some sort of error.
+    return;
+  }
 }
 
 } // End namespace SCIRun
