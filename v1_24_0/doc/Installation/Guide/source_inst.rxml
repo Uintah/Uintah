@@ -38,12 +38,10 @@ DEALINGS IN THE SOFTWARE.
       Follow these steps to install &sr; <!--%= doc.ifNotP(Doc::Irix) {%Q{-->from source code<!--}} %-->:
       <orderedlist>
 	<listitem>
-	  <para><link linkend="src_download">Download</link> &sr;
-	  sources, packages, third party software, sample data sets,
-	  and documentation.</para>
-	</listitem>
-	<listitem>
-	  <para><link linkend="src_unpack">Unpack</link> sources.</para>
+	  <para><link linkend="src_download">Download</link> and <link
+	  linkend="src_unpack">Unpack</link> &sr; sources, packages,
+	  third party software, sample data sets, and
+	  documentation.</para>
 	</listitem>
 	<listitem>
 	  <para><link linkend="sec.third_party_inst">Build</link>
@@ -64,6 +62,5 @@ DEALINGS IN THE SOFTWARE.
   &third_party_inst;
   &opt_inst;
   &build;
-
 
 </section>

@@ -30,7 +30,7 @@
 # Build platform specific IG.
 
 platform := ${notdir ${shell pwd}}
-parms_chunk := chunk.section.depth=1 use.id.as.filename=1
+parms_chunk := chunk.section.depth=2 use.id.as.filename=1
 stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl

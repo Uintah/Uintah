@@ -1,5 +1,5 @@
 <!--
-For more information, please see: http://software.sci.utah.edu
+    For more information, please see: http://software.sci.utah.edu
 
 The MIT License
 
@@ -40,12 +40,12 @@ DEALINGS IN THE SOFTWARE.
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
-    
-<!--%= doc.ifP(Doc::Linux) { %Q{-->
-   <para>Linux has been tested on the specified systems and RPMs are
-   provided for these systems.  &sr; may work on other Linux systems
-   as well.</para>
-<!--}} %-->
+  
+  <!--%= doc.ifP(Doc::Linux) { %Q{-->
+  <para>Linux has been tested on the specified systems and RPMs are
+  provided for these systems.  &sr; may work on other Linux systems
+  as well.</para>
+  <!--}} %-->
 
   <para>
     Disk space requirements <!--%= doc.ifNotP(Doc::Irix) {%Q{-->for a source code installation<!--}} %--> are listed in
@@ -63,7 +63,7 @@ DEALINGS IN THE SOFTWARE.
       </thead>
       <tbody>
 	<row valign="top">
-        <!--%= doc.ifP(Doc::Linux) { %Q{-->
+	  <!--%= doc.ifP(Doc::Linux) { %Q{-->
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
@@ -84,7 +84,7 @@ DEALINGS IN THE SOFTWARE.
 	      </listitem>
 	    </itemizedlist>
 	  </entry>
-          <!--}} %-->	  
+	  <!--}} %-->	  
 	  <!--%= doc.ifP(Doc::Irix) { %Q{-->
 	  <entry>
 	    <itemizedlist>
@@ -180,18 +180,68 @@ DEALINGS IN THE SOFTWARE.
   <!--}} %-->
 
   <!--%= doc.ifP(Doc::Linux) {%Q{-->
-  <para>The &sr; <acronym>RPM</acronym> distribution
-  does <emphasis>not</emphasis> provide support for
-  <acronym>PETSc</acronym>.  <acronym>PETSc</acronym> support is
-  available only through the &sr; source code distribution.</para>
-
-  <para>See <xref linkend="app.linux_notes"/> for information related
-  to Nvidia and ATI graphics cards and drivers, and for information on
-  the use of Red Hat Enterprise Linux.</para>
+  <para>
+    Additional platform notes:
+    <itemizedlist>
+      <listitem>
+	<para>The &sr; <acronym>RPM</acronym> distribution does
+	<emphasis>not</emphasis> provide support for
+	<acronym>PETSc</acronym>.  <acronym>PETSc</acronym> support is
+	available only through the &sr; source code
+	distribution.</para>
+      </listitem>
+      <listitem>
+	<para>Nvidia drivers, versions 1.0-5328 and 1.0-5336, will not
+	work for hardware based texture volume rendering in SCIRun.
+	Please do not update to these drivers if you wish your volume
+	rendering to work.</para>
+      </listitem>
+      <listitem>
+	<para>Driver versions 1.0-4496, 1.0-4363 are known to
+	work.</para>
+      </listitem>
+      <listitem>
+	<para>Driver version 1.0-4191 does not work.  SCI has not
+	tested versions earlier than 1.0-4191&#x2014;they may or may
+	not work.</para>
+      </listitem>
+      <listitem>
+	<para>SCI has experienced a number of strange behaviors when
+	running &sr; on Red Hat Enterprise Linux.  We do not recommend
+	running &sr; on this system at this time.</para>
+      </listitem>
+      <listitem>
+	<para>SCI does not recommend the use of ATI cards with &sr;
+	based on the following experiences:</para>
+	<itemizedlist>
+	  <listitem>
+	    <para>On one system, ATI drivers installed with apparent
+	    success, but the system did not report using the drivers
+	    and only software rendering appeared to be used.</para>
+	  </listitem>
+	  <listitem>
+	    <para>Under Red Hat Enterprise the drivers installed and
+	    worked, but the graphics were very choppy, producing a mostly
+	    unusable rendering.</para>
+	  </listitem>
+	  <listitem>
+	    <para>On another system, drivers installed and were used but
+	    vertex arrays did not work, which caused some objects to be
+	    rendered incorrectly</para>
+	  </listitem>
+	  <listitem>
+	    <para>One card did work well under Redhat 9.</para>
+	  </listitem>
+	  <listitem>
+	    <para>Setting environment variable
+	    <envar>SCIRUN_DRAWARRAYS_DISABLE</envar> can be used to
+	    improve the usability of ATI cards.</para>
+	  </listitem>
+	</itemizedlist>
+      </listitem>
+    </itemizedlist>
+  </para>
   <!--}} %-->
-
-  <para>Be sure to read <xref linkend="sec.prepare" /> after
-  installing, but before starting, &sr;.</para>
 
   <!--%= doc.ifP(Doc::Linux) {%Q{-->
   <para>Proceed to <xref linkend="sec.rpminst" /> to install &sr;
