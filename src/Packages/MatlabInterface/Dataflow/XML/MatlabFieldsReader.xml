@@ -148,16 +148,71 @@
 			with MATLAB functions such as ndmesh() and sphere(). 
 			</desclistdef> 
 		</desclistitem>
-		<desclistitem>
-			<desclistterm> FIELDNAME xyz </desclistterm>
-			<desclistdef>
-			This field is an alternative for the three fields X, Y, and Z. This fields combines all three matrices in one matrix with
-			the first dimension now being the cartensian co-ordinates (x, y, and z). Hence this matrix has to be 2D, 3D, or 4D, depending
-			on the data contained in the mesh.
-			</desclistdef>
-		</desclistitem>
 	</desclist>
 	</section>  
+	
+	<section>
+	<title>Structured regular Meshes</title>
+	
+	<p>
+	As structured matlab arrays:
+	</p>
+	<p>
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .dims </desclistterm>
+			<desclistdef>
+			This field describes the dimensions of the regular grid and is required for making a regular structured mesh. This field
+			is a vector with 1, 2, or 3 elements describing the dimensions in each direction. Hence depending on this field the 
+			module creates a line, a surface, or a volume. This field is required for structured regular meshes.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+		<desclistterm> FIELDNAME .transform </desclistterm>
+			<desclistdef>
+			This field describes a 4x4 matrix which defines an affine transformation, which is applied to the mesh. This matrix describes
+			rotation, translation and scaling of each node in the regular mesh. This field is optional and does not need to be supplied.
+			In case on transform matrix is defined a regular grid with spacing of 1 in each direction will be generated.
+			[NEED TO ADD MORE DETAILS]
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+		<desclistterm> FIELDNAME .rotation </desclistterm>
+			<desclistdef>
+			This field describes a 3x3 rotation matrix and is an alternate way of specifying the transformation of the mesh. In order for
+			the module to use this field no transform matrix should be supplied as that one overrules the setting of the rotation matrix.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+		<desclistterm> FIELDNAME .offset </desclistterm>
+			<desclistdef>
+			This field defines the origin of the mesh. This field should be vector of three elements specifying the origin of the mesh.
+			In case a transform matrix is supplied this field is ignored. This field can be used in combination with the rotation field.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+		<desclistterm> FIELDNAME .scale </desclistterm>
+			<desclistdef>
+			This field defines the spacing in each direction of the mesh. This field needs to be a vector of 1, 2, or 3, elements defining
+			the spacing in each direction. In case a transform matrix is supplied this field is ignored. 
+			</desclistdef>
+		</desclistitem>
+	</desclist>	
+	</p>
+	
+	<p>
+	As regular dense matrices:
+	</p>
+	<p>
+	ImageFields and LatVolFields can be entered as well as dense matrices. A 2D matrix will be translated into an ImageField, and a 3D matrix will
+	be translated into a LatVolField. When entering data as regular matrices, the data is assumed to be on the nodes and to be a scalar double field.
+	</p>
+	<p>
+	Note: The displaying dimensions between matlab and SCIRun are flipped, in matlab the first dimension is along the vertical axis, whereas in
+	SCIRun it is along the horizontal axis. Depending on the application the data may need to be transposed, in order to make to obtain the proper vertical
+	alignment.
+	</p>
+	</section>		
 	
 	<section>
 	<title>Field Data</title>
@@ -167,7 +222,8 @@
 			<desclistterm> FIELDNAME .scalarfield OR .field OR .data </desclistterm>
 			<desclistdef>
 			A matrix specifying scalar data for each node/element in the mesh. Each subsequent element in this vector is added to the
-			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. 
+			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. The module detects
+			the type of data
 			</desclistdef>
 		</desclistitem>
 		<desclistitem>

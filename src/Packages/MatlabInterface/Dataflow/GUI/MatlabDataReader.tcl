@@ -32,7 +32,7 @@ itcl_class MatlabInterface_DataIO_MatlabDataReader {
 	inherit Module
 
 	constructor {config} {
-		set name MatlabFieldsReader
+		set name MatlabDataReader
 		set_defaults
 	}
 

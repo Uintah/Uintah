@@ -78,7 +78,7 @@ namespace MatlabIO {
 
 // Set defaults in the constructor
 matlabconverter::matlabconverter()
-: numericarray_(false), indexbase_(1), datatype_(matlabarray::miSAMEASDATA)
+: numericarray_(false), indexbase_(1), datatype_(matlabarray::miSAMEASDATA), disable_transpose_(false)
 {
 }
 
@@ -100,6 +100,11 @@ void matlabconverter::converttonumericmatrix()
 void matlabconverter::converttostructmatrix()
 {
 	numericarray_ = false;
+}
+
+void matlabconverter::setdisabletranspose(bool dt)
+{
+	disable_transpose_ = dt;
 }
 
 
@@ -273,52 +278,103 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,SCIRun::MatrixHandle &h
 		case matlabarray::mlDENSE:
 			{   // new environment so I can create new variables
 			
-				SCIRun::DenseMatrix* dmptr;							// pointer to a new dense matrix
+				if (disable_transpose_)
+				{
+					SCIRun::DenseMatrix* dmptr;							// pointer to a new dense matrix
+						
+					int m = static_cast<int>(ma.getm());
+					int n = static_cast<int>(ma.getn());
+					
+					dmptr = new SCIRun::DenseMatrix(n,m);   // create dense matrix
+						// copy and cast elements:
+						// getnumericarray is a templated function that casts the data to the supplied pointer
+						// type. It needs the dimensions of the memory block (in elements) to make sure
+						// everything is still OK. 
+					ma.getnumericarray(dmptr->getData(),(dmptr->nrows())*(dmptr->ncols()));  
+					
+					handle = static_cast<SCIRun::Matrix *>(dmptr); // cast it to a general matrix pointer
+				}
+				else
+				{
 				
-				int m = static_cast<int>(ma.getm());
-				int n = static_cast<int>(ma.getn());
-				
-				SCIRun::DenseMatrix  dm(n,m);   // create dense matrix
-					// copy and cast elements:
-					// getnumericarray is a templated function that casts the data to the supplied pointer
-					// type. It needs the dimensions of the memory block (in elements) to make sure
-					// everything is still OK. 
-				ma.getnumericarray(dm.getData(),(dm.nrows())*(dm.ncols()));  
-				
-				// There is no transpose function to operate on the same memory block
-				// Hence, it is a little memory inefficient.
-				dmptr = dm.transpose();	// SCIRun has a C++-style matrix and matlab a FORTRAN-style matrix
-				handle = static_cast<SCIRun::Matrix *>(dmptr); // cast it to a general matrix pointer
+					SCIRun::DenseMatrix* dmptr;							// pointer to a new dense matrix
+					
+					int m = static_cast<int>(ma.getm());
+					int n = static_cast<int>(ma.getn());
+					
+					SCIRun::DenseMatrix  dm(n,m);   // create dense matrix
+						// copy and cast elements:
+						// getnumericarray is a templated function that casts the data to the supplied pointer
+						// type. It needs the dimensions of the memory block (in elements) to make sure
+						// everything is still OK. 
+					ma.getnumericarray(dm.getData(),(dm.nrows())*(dm.ncols()));  
+					
+					// There is no transpose function to operate on the same memory block
+					// Hence, it is a little memory inefficient.
+					
+					dmptr = dm.transpose();	// SCIRun has a C++-style matrix and matlab a FORTRAN-style matrix
+					handle = static_cast<SCIRun::Matrix *>(dmptr); // cast it to a general matrix pointer
+				}
 			}
 			break;
 			
 		case matlabarray::mlSPARSE:
 			{
-				SCIRun::SparseRowMatrix* smptr;
-				
-				// Since the SparseRowMatrix does not allocate memory but on the 
-				// otherhand frees it in the destructor. The memory needs to be
-				// allocated outside of the object and then linked to the object
-				// to have it freed lateron by the object.
-				
-				// in the matlabio classes they are defined as long, hence
-				// the casting operators
-				int nnz = static_cast<int>(ma.getnnz());
-				int m = static_cast<int>(ma.getm());
-				int n = static_cast<int>(ma.getn()); 
-				
-				double *values = scinew double[nnz];
-				int *rows   = scinew int[nnz];
-				int *cols   = scinew int[n+1];
-				
-				ma.getnumericarray(values,nnz);
-				ma.getrowsarray(rows,nnz); // automatically casts longs to ints
-				ma.getcolsarray(cols,(n+1));
-				
-				SCIRun::SparseRowMatrix  sm(n,m,cols,rows,nnz,values);
-				
-				smptr = sm.transpose(); // SCIRun uses Row sparse matrices and matlab Column sparse matrices
-				handle = static_cast<SCIRun::Matrix *>(smptr); // cast it to a general matrix pointer
+				if (disable_transpose_)
+				{
+					SCIRun::SparseRowMatrix* smptr;
+					
+					// Since the SparseRowMatrix does not allocate memory but on the 
+					// otherhand frees it in the destructor. The memory needs to be
+					// allocated outside of the object and then linked to the object
+					// to have it freed lateron by the object.
+					
+					// in the matlabio classes they are defined as long, hence
+					// the casting operators
+					int nnz = static_cast<int>(ma.getnnz());
+					int m = static_cast<int>(ma.getm());
+					int n = static_cast<int>(ma.getn()); 
+					
+					double *values = scinew double[nnz];
+					int *rows   = scinew int[nnz];
+					int *cols   = scinew int[n+1];
+					
+					ma.getnumericarray(values,nnz);
+					ma.getrowsarray(rows,nnz); // automatically casts longs to ints
+					ma.getcolsarray(cols,(n+1));
+					
+					smptr = new SCIRun::SparseRowMatrix(n,m,cols,rows,nnz,values);
+					
+					handle = static_cast<SCIRun::Matrix *>(smptr); // cast it to a general matrix pointer
+				}
+				else
+				{
+					SCIRun::SparseRowMatrix* smptr;
+					
+					// Since the SparseRowMatrix does not allocate memory but on the 
+					// otherhand frees it in the destructor. The memory needs to be
+					// allocated outside of the object and then linked to the object
+					// to have it freed lateron by the object.
+					
+					// in the matlabio classes they are defined as long, hence
+					// the casting operators
+					int nnz = static_cast<int>(ma.getnnz());
+					int m = static_cast<int>(ma.getm());
+					int n = static_cast<int>(ma.getn()); 
+					
+					double *values = scinew double[nnz];
+					int *rows   = scinew int[nnz];
+					int *cols   = scinew int[n+1];
+					
+					ma.getnumericarray(values,nnz);
+					ma.getrowsarray(rows,nnz); // automatically casts longs to ints
+					ma.getcolsarray(cols,(n+1));
+					
+					SCIRun::SparseRowMatrix  sm(n,m,cols,rows,nnz,values);
+					
+					smptr = sm.transpose(); // SCIRun uses Row sparse matrices and matlab Column sparse matrices
+					handle = static_cast<SCIRun::Matrix *>(smptr); // cast it to a general matrix pointer
+				}
 			}
 			break;
 			
@@ -714,6 +770,13 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
 					throw;
 				}
 			}
+			
+			if (scinrrd != 0)
+			{
+				std::string str = mlarray.getname();
+				scinrrd->set_filename(str);
+			}
+			
 			break;
 			// END CONVERSION OF MATLAB MATRIX
 			
@@ -984,8 +1047,29 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCITeem::NrrdDat
 				{
 					mlPropertyTOsciProperty(mlarray,static_cast<SCIRun::PropertyManager *>(scinrrd.get_rep()));
 				}
+
+				if (mlarray.isfieldCI("name"))
+				{
+					if (scinrrd != 0)
+					{	
+						matlabarray matname;
+						matname = mlarray.getfieldCI(0,"name");
+						std::string str = matname.getstring();
+						if (matname.isstring())	scinrrd->set_filename(str);
+					}
+		
+				}
+				else
+				{
+					if (scinrrd != 0)
+					{
+						std::string str = mlarray.getname();
+						scinrrd->set_filename(str);
+					}
+				}
 			
 			}	
+			
 			break;
 			
 		default:
@@ -1145,10 +1229,42 @@ void matlabconverter::sciNrrdDataTOmlArray(SCITeem::NrrdDataHandle &scinrrd, mat
 //   StructCurveMesh
 //   StructQuadSurfMesh
 //   StructHexVolMesh
+//   Scanline
+//   Image
+//   LatVol
 //   any suggestions for other types that need support ??
 
 long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infostring)
 {
+
+	// If it is regular matrix translate it to a image or a latvol
+	// The following section of code rewrites the matlab matrix into a
+	// structure and then the normal routine picks up the field and translates it
+	// properly.
+
+	if (mlarray.isdense())
+	{
+		long numdims = mlarray.getnumdims();
+		if ((numdims >0)&&(numdims < 4))
+		{
+			matlabarray ml;
+			matlabarray dimsarray;
+			std::vector<long> d = mlarray.getdims();
+			if ((d[0]==1)||(d[1]==1))
+			{
+				if (d[0]==1) d[0] = d[1];
+				long temp = d[0];
+				d.resize(1);
+				d[0] = temp;
+			}			
+			dimsarray.createlongvector(d);
+			ml.createstructarray();
+			ml.setfield(0,"dims",dimsarray);
+			ml.setfield(0,"field",mlarray);
+			ml.setname(mlarray.getname());			
+			mlarray = ml;
+		}
+	}
 
 	if (!mlarray.isstruct()) return(0); // not compatible if it is not structured data
 	fieldstruct fs = analyzefieldstruct(mlarray); // read the main structure of the object
@@ -1160,6 +1276,27 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 	std::string fieldtype;
 	fieldtype = "NO FIELD DATA";
 	
+	// The next step will incorporate a new way of dealing with fields
+	// Basically we alter the way fields are processed:
+	// instead of specifying vectorfield as a field, it is now allowed and recommended to use
+	// two fields: .field describing the data and .fieldtype for the type of data
+	// The next piece of code translates the new notation back to the old one.
+	
+	if (!(fs.fieldtype.isempty()))
+	{
+		if ((fs.fieldtype.compareCI("vector"))&&(fs.vectorfield.isempty())&&(fs.scalarfield.isdense()))
+		{   
+			fs.vectorfield = fs.scalarfield;
+			fs.scalarfield.clear();
+		}
+
+		if ((fs.fieldtype.compareCI("tensor"))&&(fs.tensorfield.isempty())&&(fs.scalarfield.isdense()))
+		{   
+			fs.tensorfield = fs.scalarfield;
+			fs.scalarfield.clear();
+		}
+	}
+	
 	if (fs.scalarfield.isdense()) fieldtype = "SCALAR FIELD";
 	if (fs.vectorfield.isdense()) fieldtype = "VECTOR FIELD";
 	if (fs.tensorfield.isdense()) fieldtype = "TENSOR FIELD";
@@ -1167,6 +1304,120 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 	// Field data has been analysed, now analyse the connectivity data
 	// Connectivity data needs to be or edge data, or face data, or cell data,
 	// or no data in which case it is a point cloud.
+	
+	
+	// Tests for images/latvols/scanlines
+	// vvvvvvvvvvvvvvvvvvvvvvvvvv
+	
+	// Test whether transform is a 4 by 4 matrix
+	if (fs.transform.isdense())
+	{
+		if (fs.transform.getnumdims() != 2) return(0);
+		if ((fs.transform.getn() != 4)&&(fs.transform.getm() != 4)) return(0);
+	}
+	
+	// Test whether rotation is a 3 x 3 matrix
+	if (fs.rotation.isdense())
+	{
+		if (fs.rotation.getnumdims() != 2) return(0);
+		if ((fs.rotation.getn()!=3)&&(fs.rotation.getm()!=3)) return(0);
+	}
+	
+	// Test whether offset is a 1x3 or 3x1 vector
+	if (fs.offset.isdense())
+	{
+		if (fs.offset.getnumdims() != 2) return(0);
+		if ((fs.offset.getn()*fs.offset.getm())!=3) return(0);
+	}
+
+	// Test whether size is a 1x3 or 3x1 vector
+	if (fs.size.isdense())
+	{
+		if (fs.size.getnumdims() != 2) return(0);
+		if ((fs.size.getn()*fs.size.getm())!=3) return(0);
+	}
+	
+	// In case one of the components above is given and dims is not given,
+	// derive this one from the size of the data 
+	if (((fs.rotation.isdense())||(fs.offset.isdense())||(fs.size.isdense())||(fs.transform.isdense())
+		||(fs.elemtype.compareCI("scanline"))||(fs.elemtype.compareCI("image"))||(fs.elemtype.compareCI("latvol")))&&(fs.dims.isempty()))
+	{
+		if (fs.scalarfield.isdense()) 
+			{  std::vector<long> dims = fs.scalarfield.getdims();
+			   fs.dims.createlongvector(dims);
+			}
+		if (fs.vectorfield.isdense()) 
+			{  std::vector<long> dims = fs.vectorfield.getdims();
+			   fs.dims.createlongvector((dims.size()-1),&(dims[1]));
+			}
+		if (fs.tensorfield.isdense()) 
+			{  std::vector<long> dims = fs.tensorfield.getdims();
+			   fs.dims.createlongvector((dims.size()-1),&(dims[1]));
+			}
+		if ((fs.data_at == SCIRun::Field::CELL)||(fs.data_at == SCIRun::Field::FACE)||(fs.data_at == SCIRun::Field::EDGE))
+		{
+			std::vector<long> dims = fs.scalarfield.getdims();
+			for (long p = 0; p<dims.size(); p++) dims[p] = dims[p]+1;
+			fs.dims.createlongvector(dims);
+		}
+	}
+	
+	// if dims is not present it is not a regular mesh
+	// Data at edges, faces, or cells is only possible if the data
+	// is of that dimension otherwise skip it and declare the data not usable
+	
+	if (fs.dims.isdense())
+	{
+		if ((fs.dims.getnumelements()==1)&&(fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::EDGE)) return(0);
+		if ((fs.dims.getnumelements()==2)&&(fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::FACE)) return(0);
+		if ((fs.dims.getnumelements()==3)&&(fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::CELL)) return(0);
+	}
+	
+	// If it survived until here it should be translatable or not a regular mesh at all
+	
+	if (fs.dims.isdense())
+	{
+		long size = fs.dims.getnumelements();
+		
+		if ((size > 0)&&(size < 4))
+		{
+			std::ostringstream oss;
+			std::string name = mlarray.getname();
+			oss << name << " ";
+			if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing		
+		
+			if (fs.elemtype.isstring())
+			{   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
+				if ((fs.elemtype.compareCI("scanline"))&&(size!=1)) return(0);
+				if ((fs.elemtype.compareCI("image"))&&(size!=2)) return(0);
+				if ((fs.elemtype.compareCI("latvolmesh"))&&(size!=3)) return(0);
+			}	
+
+			switch (size)
+			{
+				case 1:
+					oss << "[SCANLINE - " << fieldtype << "]";
+					break;
+				case 2:
+					oss << "[IMAGE - " << fieldtype << "]";
+					break;
+				case 3:	
+					oss << "[LATVOLMESH - " << fieldtype << "]";
+					break;
+			}
+			infostring = oss.str();
+			return(1);					
+		}
+		else
+		{
+			return(0);
+		}
+	
+	}
+
+	
+	// Test for structured meshes
+	// vvvvvvvvvvvvvvvvvvvvvvv
 	
 	if ((fs.x.isdense())&&(fs.y.isdense())&(fs.z.isdense()))
 	{
@@ -1185,16 +1436,33 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 			if(dimsx[p] != dimsz[p]) return(0);
 		}
 
-
+		
 		std::ostringstream oss;
 		std::string name = mlarray.getname();
 		oss << name << " ";
 		if (name.length() < 30) oss << std::string(30-(name.length()),' '); // add some form of spacing		
+		
+		// Minimum dimensions is in matlab is 2 and hence detect any empty dimension
+		
 		if (numdims == 2)
 		{
 			if ((dimsx[0] == 1)||(dimsx[1] == 1)) numdims = 1;
 		}
-		
+
+		// Disregard data at odd locations. The translation function for those is not straight forward
+		// Hence disregard those data locations.
+
+		if ((numdims==1)&&(fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::EDGE)) return(0);
+		if ((numdims==2)&&(fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::FACE)) return(0);
+		if ((numdims==3)&&(fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::CELL)) return(0);
+	
+		if (fs.elemtype.isstring())
+		{   // explicitly stated type (check whether type confirms the guessed type, otherwise someone supplied us with improper data)
+			if ((fs.elemtype.compareCI("structcurve"))&&(numdims!=1)) return(0);
+			if ((fs.elemtype.compareCI("structquadsurf"))&&(numdims!=2)) return(0);
+			if ((fs.elemtype.compareCI("structhexvol"))&&(numdims!=3)) return(0);
+		}		
+			
 		switch (numdims)
 		{
 			case 1:
@@ -1217,6 +1485,7 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 	if (fs.node.isempty()) return(0); // a node matrix is always required
 	
 	if (fs.node.getnumdims() > 2) return(0); // Currently N dimensional arrays are not supported here
+
 
 	// Check the dimensions of the NODE array supplied only [3xM] or [Mx3] are supported
 	long m,n;
@@ -1243,6 +1512,9 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 			if (fs.elemtype.compareCI("pointcloud")) return(0);
 		}
 		
+		// Data at edges, faces, and cells is nonsense for point clouds 
+		if ((fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)) return(0);		
+		
 		// Create an information string for the GUI
 		std::ostringstream oss;
 		std::string name = mlarray.getname();	
@@ -1262,6 +1534,9 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 		{   // explicitly stated type 
 			if (fs.elemtype.compareCI("curve")) return(0);
 		}
+
+		// Data at faces, and cells is nonsense for  curves
+		if ((fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::EDGE)) return(0);	
 
 		// Test whether someone made it into a line/surface/volume element type.
 		// Since multiple connectivity matrices do not make sense (at least at this point)
@@ -1304,6 +1579,9 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 		// if the cell matrix is not empty, the mesh is both surface and volume, which
 		// we do not support at the moment.
 		if((!fs.cell.isempty())) return(0);
+
+		// Data at scells is nonsense for surface elements
+		if ((fs.data_at!=SCIRun::Field::NONE)&&(fs.data_at!=SCIRun::Field::NODE)&&(fs.data_at!=SCIRun::Field::EDGE)&&(fs.data_at!=SCIRun::Field::FACE)) return(0);	
 
 		if ((m==3)||((n==3)&&(n!=4)))
 		{
@@ -1434,6 +1712,34 @@ long matlabconverter::sciFieldCompatible(matlabarray &mlarray,std::string &infos
 void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle &scifield)
 {
 
+	// If it is regular matrix translate it to a image or a latvol
+	// The following section of code rewrites the matlab matrix into a
+	// structure and then the normal routine picks up the field and translates it
+	// properly.
+	if (mlarray.isdense())
+	{
+		long numdims = mlarray.getnumdims();
+		if ((numdims >0)&&(numdims < 4))
+		{
+			matlabarray ml;
+			matlabarray dimsarray;
+			std::vector<long> d = mlarray.getdims();
+			if ((d[0]==1)||(d[1]==1))
+			{
+				if (d[0]==1) d[0] = d[1];
+				long temp = d[0];
+				d.resize(1);
+				d[0] = temp;
+			}
+			dimsarray.createlongvector(d);
+			ml.createstructarray();
+			ml.setfield(0,"dims",dimsarray);
+			ml.setfield(0,"field",mlarray);
+			ml.setname(mlarray.getname());
+			mlarray = ml;
+		}
+	}
+
 	if (!mlarray.isstruct()) throw matlabconverter_error(); // not compatible if it is not structured data
 	fieldstruct fs = analyzefieldstruct(mlarray); // read the main structure of the object
 	
@@ -1442,9 +1748,42 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	// Currently SCIRun only accepts nodes in a 3D cartesian coordinate
 	// system.
 	// Dimensions are checked and the matrix is transposed if it is necessary
+
+
+	// The next step will incorporate a new way of dealing with fields
+	// Basically we alter the way fields are processed:
+	// instead of specifying vectorfield as a field, it is now allowed and recommended to use
+	// two fields: .field describing the data and .fieldtype for the type of data
+	// The next piece of code translates the new notation back to the old one.
 	
-	if ((fs.node.isempty())&&(fs.x.isempty())) throw matlabconverter_error(); // a node matrix is always required
-		
+	// In case one of teh above components is given and dims is not given,
+	// derive this one from the size of the data 
+	if (((fs.rotation.isdense())||(fs.offset.isdense())||(fs.size.isdense())||(fs.transform.isdense())
+		||(fs.elemtype.compareCI("scanline"))||(fs.elemtype.compareCI("image"))||(fs.elemtype.compareCI("latvol")))&&(fs.dims.isempty()))
+	{
+		if (fs.scalarfield.isdense()) 
+			{  std::vector<long> dims = fs.scalarfield.getdims();
+			   fs.dims.createlongvector(dims);
+			}
+		if (fs.vectorfield.isdense()) 
+			{  std::vector<long> dims = fs.vectorfield.getdims();
+			   fs.dims.createlongvector((dims.size()-1),&(dims[1]));
+			}
+		if (fs.tensorfield.isdense()) 
+			{  std::vector<long> dims = fs.tensorfield.getdims();
+			   fs.dims.createlongvector((dims.size()-1),&(dims[1]));
+			}
+		if ((fs.data_at == SCIRun::Field::CELL)||(fs.data_at == SCIRun::Field::FACE)||(fs.data_at == SCIRun::Field::EDGE))
+		{
+			std::vector<long> dims = fs.scalarfield.getdims();
+			for (long p = 0; p<dims.size(); p++) dims[p] = dims[p]+1;
+			fs.dims.createlongvector(dims);
+		}
+	}
+	
+	
+	if ((fs.node.isempty())&&(fs.x.isempty())&&(fs.dims.isempty())) throw matlabconverter_error(); // a node matrix is always required
+	
 	long m,n,numnodes;
 	
 	if (fs.node.isdense())
@@ -1479,7 +1818,6 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			if (m != 2) fs.edge.transpose();
 		}
 	}
-	
 	
 	if (fs.face.isdense())
 	{
@@ -1554,15 +1892,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	// at least when there is a field defined
 	
 	if ((fs.scalarfield.isdense())||(fs.vectorfield.isdense())||(fs.tensorfield.isdense())) data_at = SCIRun::Field::NODE;
-	if (!(fs.fieldlocation.isempty()))
-	{   // converter table for the string in the field "fieldlocation" array
-		// These are case insensitive comparisons.
-		if (!(fs.fieldlocation.isstring())) throw matlabconverter_error();
-		if (fs.fieldlocation.compareCI("node")||fs.fieldlocation.compareCI("pts")) data_at = SCIRun::Field::NODE;
-		if (fs.fieldlocation.compareCI("egde")||fs.fieldlocation.compareCI("line")) data_at = SCIRun::Field::EDGE;
-		if (fs.fieldlocation.compareCI("face")||fs.fieldlocation.compareCI("fac")) data_at = SCIRun::Field::FACE;
-		if (fs.fieldlocation.compareCI("cell")||fs.fieldlocation.compareCI("tet")||fs.fieldlocation.compareCI("hex")||fs.fieldlocation.compareCI("prism")) data_at = SCIRun::Field::CELL;
-	}
+	if (!(fs.fieldlocation.isempty())) data_at = fs.data_at;
 	
 	// In case the location has been supplied but no actual data has been supplied, reset the location to NONE
 	if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty())) data_at = SCIRun::Field::NONE;
@@ -1576,7 +1906,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	{
 		if (fs.scalarfield.isdense())
 		{
-			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty())&&(fs.dims.isempty()))
 			{
 		
 				if (fs.scalarfield.getnumdims() == 2)
@@ -1600,7 +1930,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		}
 		if (fs.vectorfield.isdense())
 		{
-			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty())&&(fs.dims.isempty()))
 			{
 
 				if (fs.vectorfield.getnumdims() == 2)
@@ -1625,7 +1955,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		if (fs.tensorfield.isdense())
 		{
 			
-			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			if ((fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty())&&(fs.dims.isempty()))
 			{
 
 				if (fs.tensorfield.getnumdims() == 2)
@@ -1648,6 +1978,418 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			}
 		}
 	}
+	
+	if (fs.dims.isdense())
+	{
+		long numdims = fs.dims.getnumelements();
+		std::vector<long> dims; 
+		fs.dims.getnumericarray(dims);
+		
+		switch (numdims)
+		{
+			case 1:
+				{
+					SCIRun::ScanlineMeshHandle meshH;
+					SCIRun::Point PointO(0.0,0.0,0.0);
+					SCIRun::Point PointP(static_cast<double>(dims[0]),0.0,0.0);
+					meshH = new SCIRun::ScanlineMesh(static_cast<unsigned int>(dims[0]),PointO,PointP);
+					if (fs.transform.isdense())
+					{
+						SCIRun::Transform T;
+						double trans[16];
+						fs.transform.getnumericarray(trans,16);
+						T.set_trans(trans);
+						meshH->transform(T);
+					}
+					else
+					{
+						SCIRun::Transform T;
+						double trans[16];
+						for (long p = 0; p<16;p++) trans[p] = 0;
+						trans[0] = 1.0; trans[5]=1.0; trans[10]=1.0; trans[15]=1.0;
+						if (fs.rotation.isdense())
+						{
+							double rot[9];
+							fs.rotation.getnumericarray(rot,9);
+							trans[0] = rot[0]; trans[1] = rot[1]; trans[2] = rot[2];
+							trans[4] = rot[3]; trans[5] = rot[4]; trans[6] = rot[5];
+							trans[8] = rot[7]; trans[9] = rot[8]; trans[10] = rot[9];
+
+						}
+						if (fs.offset.isdense())
+						{
+							double offset[3];
+							offset[0] = 0.0; offset[1] = 0.0; offset[2] = 0.0;
+							fs.offset.getnumericarray(offset,3);
+							trans[12] = offset[0]; trans[13] = offset[1]; trans[14] = offset[2];
+						}
+						if (fs.size.isdense())
+						{
+							double scale[3];
+							scale[0] = 1.0; scale[1] = 1.0; scale[2] = 1.0;
+							fs.size.getnumericarray(scale,3);
+							trans[0] *= scale[0]; trans[4] *= scale[0]; trans[8] *= scale[0];
+							trans[1] *= scale[1]; trans[5] *= scale[1]; trans[9] *= scale[1];
+							trans[2] *= scale[2]; trans[6] *= scale[2]; trans[10] *= scale[2];
+						}
+						T.set_trans(trans);
+						meshH->transform(T);						
+					}
+						
+
+					if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty()))
+					{
+						SCIRun::ScanlineField<double> *fieldptr;
+						fieldptr = new SCIRun::ScanlineField<double>(meshH,data_at);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}
+					if (fs.scalarfield.isdense())
+					{
+						
+						switch (fs.scalarfield.gettype())
+						{
+							case miINT8:
+							case miUINT8:
+								{
+								SCIRun::ScanlineField<char> *fieldptr = new SCIRun::ScanlineField<char>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT16:
+								{
+								SCIRun::ScanlineField<signed short> *fieldptr = new SCIRun::ScanlineField<signed short>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);					
+								}
+								break;
+							case miUINT16:
+								{
+								SCIRun::ScanlineField<unsigned short> *fieldptr = new SCIRun::ScanlineField<unsigned short>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT32:
+								{
+								SCIRun::ScanlineField<signed long> *fieldptr = new SCIRun::ScanlineField<signed long>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miUINT32:
+								{
+								SCIRun::ScanlineField<unsigned long> *fieldptr = new SCIRun::ScanlineField<unsigned long>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miSINGLE:
+								{
+								SCIRun::ScanlineField<float> *fieldptr = new SCIRun::ScanlineField<float>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miDOUBLE:
+							default:
+								{
+								SCIRun::ScanlineField<double> *fieldptr = new SCIRun::ScanlineField<double>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);				
+								}
+						}	
+
+					}
+					if (fs.vectorfield.isdense())
+					{
+						SCIRun::ScanlineField<SCIRun::Vector> *fieldptr;
+						fieldptr = new SCIRun::ScanlineField<SCIRun::Vector>(meshH,data_at);
+						addvectordata(fieldptr,fs.vectorfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}
+					if (fs.tensorfield.isdense())
+					{
+						SCIRun::ScanlineField<SCIRun::Tensor> *fieldptr;
+						fieldptr = new SCIRun::ScanlineField<SCIRun::Tensor>(meshH,data_at);
+						addtensordata(fieldptr,fs.tensorfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}		
+						
+						
+			}
+			break;
+
+			
+			case 2:
+				{
+					SCIRun::ImageMeshHandle meshH;
+					SCIRun::Point PointO(0.0,0.0,0.0);
+					SCIRun::Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),0.0);
+					meshH = new SCIRun::ImageMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),
+						PointO,PointP);
+					if (fs.transform.isdense())
+					{
+						SCIRun::Transform T;
+						double trans[16];
+						fs.transform.getnumericarray(trans,16);
+						T.set_trans(trans);
+						meshH->transform(T);
+					}
+					else
+					{
+						SCIRun::Transform T;
+						double trans[16];
+						for (long p = 0; p<16;p++) trans[p] = 0;
+						trans[0] = 1.0; trans[5]=1.0; trans[10]=1.0; trans[15]=1.0;
+						if (fs.rotation.isdense())
+						{
+							double rot[9];
+							fs.rotation.getnumericarray(rot,9);
+							trans[0] = rot[0]; trans[1] = rot[1]; trans[2] = rot[2];
+							trans[4] = rot[3]; trans[5] = rot[4]; trans[6] = rot[5];
+							trans[8] = rot[7]; trans[9] = rot[8]; trans[10] = rot[9];
+
+						}
+						if (fs.offset.isdense())
+						{
+							double offset[3];
+							offset[0] = 0.0; offset[1] = 0.0; offset[2] = 0.0;
+							fs.offset.getnumericarray(offset,3);
+							trans[12] = offset[0]; trans[13] = offset[1]; trans[14] = offset[2];
+						}
+						if (fs.size.isdense())
+						{
+							double scale[3];
+							scale[0] = 1.0; scale[1] = 1.0; scale[2] = 1.0;
+							fs.size.getnumericarray(scale,3);
+							trans[0] *= scale[0]; trans[4] *= scale[0]; trans[8] *= scale[0];
+							trans[1] *= scale[1]; trans[5] *= scale[1]; trans[9] *= scale[1];
+							trans[2] *= scale[2]; trans[6] *= scale[2]; trans[10] *= scale[2];
+						}
+						T.set_trans(trans);
+						meshH->transform(T);						
+					}
+
+					if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty()))
+					{
+						SCIRun::ImageField<double> *fieldptr;
+						fieldptr = new SCIRun::ImageField<double>(meshH,data_at);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}
+					if (fs.scalarfield.isdense())
+					{
+						switch (fs.scalarfield.gettype())
+						{
+							case miINT8:
+							case miUINT8:
+								{
+								SCIRun::ImageField<char> *fieldptr = new SCIRun::ImageField<char>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT16:
+								{
+								SCIRun::ImageField<signed short> *fieldptr = new SCIRun::ImageField<signed short>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);					
+								}
+								break;
+							case miUINT16:
+								{
+								SCIRun::ImageField<unsigned short> *fieldptr = new SCIRun::ImageField<unsigned short>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT32:
+								{
+								SCIRun::ImageField<signed long> *fieldptr = new SCIRun::ImageField<signed long>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miUINT32:
+								{
+								SCIRun::ImageField<unsigned long> *fieldptr = new SCIRun::ImageField<unsigned long>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miSINGLE:
+								{
+								SCIRun::ImageField<float> *fieldptr = new SCIRun::ImageField<float>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miDOUBLE:
+							default:
+								{
+								SCIRun::ImageField<double> *fieldptr = new SCIRun::ImageField<double>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);				
+								}
+						}	
+
+					}
+					if (fs.vectorfield.isdense())
+					{
+						SCIRun::ImageField<SCIRun::Vector> *fieldptr;
+						fieldptr = new SCIRun::ImageField<SCIRun::Vector>(meshH,data_at);
+						addvectordata2d(fieldptr,fs.vectorfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}
+					if (fs.tensorfield.isdense())
+					{
+						SCIRun::ImageField<SCIRun::Tensor> *fieldptr;
+						fieldptr = new SCIRun::ImageField<SCIRun::Tensor>(meshH,data_at);
+						addtensordata2d(fieldptr,fs.tensorfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}		
+			}
+			break;
+			case 3:
+			{
+					SCIRun::LatVolMeshHandle meshH;
+					SCIRun::Point PointO(0.0,0.0,0.0);
+					SCIRun::Point PointP(static_cast<double>(dims[0]),static_cast<double>(dims[1]),static_cast<double>(dims[2]));
+					meshH = new SCIRun::LatVolMesh(static_cast<unsigned int>(dims[0]),static_cast<unsigned int>(dims[1]),
+						static_cast<unsigned int>(dims[2]),PointO,PointP);
+					if (fs.transform.isdense())
+					{
+						SCIRun::Transform T;
+						double trans[16];
+						fs.transform.getnumericarray(trans,16);
+						T.set_trans(trans);
+						meshH->transform(T);
+					}
+					else
+					{
+						SCIRun::Transform T;
+						double trans[16];
+						for (long p = 0; p<16;p++) trans[p] = 0;
+						trans[0] = 1.0; trans[5]=1.0; trans[10]=1.0; trans[15]=1.0;
+						if (fs.rotation.isdense())
+						{
+							double rot[9];
+							fs.rotation.getnumericarray(rot,9);
+							trans[0] = rot[0]; trans[1] = rot[1]; trans[2] = rot[2];
+							trans[4] = rot[3]; trans[5] = rot[4]; trans[6] = rot[5];
+							trans[8] = rot[7]; trans[9] = rot[8]; trans[10] = rot[9];
+
+						}
+						if (fs.offset.isdense())
+						{
+							double offset[3];
+							offset[0] = 0.0; offset[1] = 0.0; offset[2] = 0.0;
+							fs.offset.getnumericarray(offset,3);
+							trans[12] = offset[0]; trans[13] = offset[1]; trans[14] = offset[2];
+						}
+						if (fs.size.isdense())
+						{
+							double scale[3];
+							scale[0] = 1.0; scale[1] = 1.0; scale[2] = 1.0;
+							fs.size.getnumericarray(scale,3);
+							trans[0] *= scale[0]; trans[4] *= scale[0]; trans[8] *= scale[0];
+							trans[1] *= scale[1]; trans[5] *= scale[1]; trans[9] *= scale[1];
+							trans[2] *= scale[2]; trans[6] *= scale[2]; trans[10] *= scale[2];
+						}
+						T.set_trans(trans);
+						meshH->transform(T);						
+					}
+						
+
+					if ((fs.scalarfield.isempty())&&(fs.vectorfield.isempty())&&(fs.tensorfield.isempty()))
+					{
+						SCIRun::LatVolField<double> *fieldptr;
+						fieldptr = new SCIRun::LatVolField<double>(meshH,data_at);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}
+					if (fs.scalarfield.isdense())
+					{
+						switch (fs.scalarfield.gettype())
+						{
+							case miINT8:
+							case miUINT8:
+								{
+								SCIRun::LatVolField<char> *fieldptr = new SCIRun::LatVolField<char>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT16:
+								{
+								SCIRun::LatVolField<signed short> *fieldptr = new SCIRun::LatVolField<signed short>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);					
+								}
+								break;
+							case miUINT16:
+								{
+								SCIRun::LatVolField<unsigned short> *fieldptr = new SCIRun::LatVolField<unsigned short>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT32:
+								{
+								SCIRun::LatVolField<signed long> *fieldptr = new SCIRun::LatVolField<signed long>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miUINT32:
+								{
+								SCIRun::LatVolField<unsigned long> *fieldptr = new SCIRun::LatVolField<unsigned long>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miSINGLE:
+								{
+								SCIRun::LatVolField<float> *fieldptr = new SCIRun::LatVolField<float>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miDOUBLE:
+							default:
+								{
+								SCIRun::LatVolField<double> *fieldptr = new SCIRun::LatVolField<double>(meshH,data_at);
+								addscalardata3d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);				
+								}
+						}	
+
+					}
+					if (fs.vectorfield.isdense())
+					{
+						SCIRun::LatVolField<SCIRun::Vector> *fieldptr;
+						fieldptr = new SCIRun::LatVolField<SCIRun::Vector>(meshH,data_at);
+						addvectordata3d(fieldptr,fs.vectorfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}
+					if (fs.tensorfield.isdense())
+					{
+						SCIRun::LatVolField<SCIRun::Tensor> *fieldptr;
+						fieldptr = new SCIRun::LatVolField<SCIRun::Tensor>(meshH,data_at);
+						addtensordata3d(fieldptr,fs.tensorfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					}		
+						
+						
+			}
+			break;
+			default:
+				throw matlabconverter_error();
+		
+			
+		}		
+	}
+				
+
 	
 	if ((fs.x.isdense())&&(fs.y.isdense())&&(fs.z.isdense()))
 	{
@@ -1705,10 +2447,61 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					}
 					if (fs.scalarfield.isdense())
 					{
-						SCIRun::StructCurveField<double> *fieldptr;
-						fieldptr = new SCIRun::StructCurveField<double>(meshH,data_at);
-						addscalardata(fieldptr,fs.scalarfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
+	
+						switch (fs.scalarfield.gettype())
+						{
+							case miINT8:
+							case miUINT8:
+								{
+								SCIRun::StructCurveField<char> *fieldptr = new SCIRun::StructCurveField<char>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT16:
+								{
+								SCIRun::StructCurveField<signed short> *fieldptr = new SCIRun::StructCurveField<signed short>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);					
+								}
+								break;
+							case miUINT16:
+								{
+								SCIRun::StructCurveField<unsigned short> *fieldptr = new SCIRun::StructCurveField<unsigned short>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT32:
+								{
+								SCIRun::StructCurveField<signed long> *fieldptr = new SCIRun::StructCurveField<signed long>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miUINT32:
+								{
+								SCIRun::StructCurveField<unsigned long> *fieldptr = new SCIRun::StructCurveField<unsigned long>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miSINGLE:
+								{
+								SCIRun::StructCurveField<float> *fieldptr = new SCIRun::StructCurveField<float>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miDOUBLE:
+							default:
+								{
+								SCIRun::StructCurveField<double> *fieldptr = new SCIRun::StructCurveField<double>(meshH,data_at);
+								addscalardata(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);				
+								}
+						}	
+	
 					}
 					if (fs.vectorfield.isdense())
 					{
@@ -1757,10 +2550,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					}
 					if (fs.scalarfield.isdense())
 					{
-						SCIRun::StructQuadSurfField<double> *fieldptr;
-						fieldptr = new SCIRun::StructQuadSurfField<double>(meshH,data_at);
-						addscalardata2d(fieldptr,fs.scalarfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
+			
+						switch (fs.scalarfield.gettype())
+						{
+							case miINT8:
+							case miUINT8:
+								{
+								SCIRun::StructQuadSurfField<char> *fieldptr = new SCIRun::StructQuadSurfField<char>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT16:
+								{
+								SCIRun::StructQuadSurfField<signed short> *fieldptr = new SCIRun::StructQuadSurfField<signed short>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);					
+								}
+								break;
+							case miUINT16:
+								{
+								SCIRun::StructQuadSurfField<unsigned short> *fieldptr = new SCIRun::StructQuadSurfField<unsigned short>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miINT32:
+								{
+								SCIRun::StructQuadSurfField<signed long> *fieldptr = new SCIRun::StructQuadSurfField<signed long>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miUINT32:
+								{
+								SCIRun::StructQuadSurfField<unsigned long> *fieldptr = new SCIRun::StructQuadSurfField<unsigned long>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miSINGLE:
+								{
+								SCIRun::StructQuadSurfField<float> *fieldptr = new SCIRun::StructQuadSurfField<float>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);
+								}
+								break;
+							case miDOUBLE:
+							default:
+								{
+								SCIRun::StructQuadSurfField<double> *fieldptr = new SCIRun::StructQuadSurfField<double>(meshH,data_at);
+								addscalardata2d(fieldptr,fs.scalarfield);
+								scifield = static_cast<SCIRun::Field *>(fieldptr);				
+								}
+							}				
 					}
 					if (fs.vectorfield.isdense())
 					{
@@ -1810,10 +2653,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					}
 					if (fs.scalarfield.isdense())
 					{
-						SCIRun::StructHexVolField<double> *fieldptr;
-						fieldptr = new SCIRun::StructHexVolField<double>(meshH,data_at);
-						addscalardata3d(fieldptr,fs.scalarfield);
-						scifield = static_cast<SCIRun::Field *>(fieldptr);
+					switch (fs.scalarfield.gettype())
+					{
+						case miINT8:
+						case miUINT8:
+							{
+							SCIRun::StructHexVolField<char> *fieldptr = new SCIRun::StructHexVolField<char>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);
+							}
+							break;
+						case miINT16:
+							{
+							SCIRun::StructHexVolField<signed short> *fieldptr = new SCIRun::StructHexVolField<signed short>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);					
+							}
+							break;
+						case miUINT16:
+							{
+							SCIRun::StructHexVolField<unsigned short> *fieldptr = new SCIRun::StructHexVolField<unsigned short>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);
+							}
+							break;
+						case miINT32:
+							{
+							SCIRun::StructHexVolField<signed long> *fieldptr = new SCIRun::StructHexVolField<signed long>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);
+							}
+							break;
+						case miUINT32:
+							{
+							SCIRun::StructHexVolField<unsigned long> *fieldptr = new SCIRun::StructHexVolField<unsigned long>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);
+							}
+							break;
+						case miSINGLE:
+							{
+							SCIRun::StructHexVolField<float> *fieldptr = new SCIRun::StructHexVolField<float>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);
+							}
+							break;
+						case miDOUBLE:
+						default:
+							{
+							SCIRun::StructHexVolField<double> *fieldptr = new SCIRun::StructHexVolField<double>(meshH,data_at);
+							addscalardata3d(fieldptr,fs.scalarfield);
+							scifield = static_cast<SCIRun::Field *>(fieldptr);				
+							}
+						}	
+
 					}
 					if (fs.vectorfield.isdense())
 					{
@@ -1835,7 +2728,7 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	}
 		
 		
-	if ((fs.edge.isempty())&&(fs.face.isempty())&&(fs.cell.isempty())&&(fs.x.isempty()))
+	if ((fs.edge.isempty())&&(fs.face.isempty())&&(fs.cell.isempty())&&(fs.x.isempty())&&(fs.dims.isempty()))
 	{
 		// These is no connectivity data => it must be a pointcloud ;)
 		// Supported mesh/field types here:
@@ -1858,10 +2751,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		}
 		if (fs.scalarfield.isdense())
 		{
-			SCIRun::PointCloudField<double> *fieldptr;
-			fieldptr = new SCIRun::PointCloudField<double>(meshH,data_at);
-			addscalardata(fieldptr,fs.scalarfield);
-			scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::PointCloudField<char> *fieldptr = new SCIRun::PointCloudField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::PointCloudField<signed short> *fieldptr = new SCIRun::PointCloudField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::PointCloudField<unsigned short> *fieldptr = new SCIRun::PointCloudField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::PointCloudField<signed long> *fieldptr = new SCIRun::PointCloudField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::PointCloudField<unsigned long> *fieldptr = new SCIRun::PointCloudField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::PointCloudField<float> *fieldptr = new SCIRun::PointCloudField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::PointCloudField<double> *fieldptr = new SCIRun::PointCloudField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
+			
 		}
 		if (fs.vectorfield.isdense())
 		{
@@ -1902,10 +2845,59 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		
 			if (fs.scalarfield.isdense())
 			{
-				SCIRun::CurveField<double> *fieldptr;
-				fieldptr = new SCIRun::CurveField<double>(meshH,data_at);
-				addscalardata(fieldptr,fs.scalarfield);
-				scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::CurveField<char> *fieldptr = new SCIRun::CurveField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::CurveField<signed short> *fieldptr = new SCIRun::CurveField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::CurveField<unsigned short> *fieldptr = new SCIRun::CurveField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::CurveField<signed long> *fieldptr = new SCIRun::CurveField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::CurveField<unsigned long> *fieldptr = new SCIRun::CurveField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::CurveField<float> *fieldptr = new SCIRun::CurveField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::CurveField<double> *fieldptr = new SCIRun::CurveField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
 			}
 			if (fs.vectorfield.isdense())
 			{
@@ -1944,10 +2936,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			}
 			if (fs.scalarfield.isdense())
 			{
-				SCIRun::TriSurfField<double> *fieldptr;
-				fieldptr = new SCIRun::TriSurfField<double>(meshH,data_at);
-				addscalardata(fieldptr,fs.scalarfield);
-				scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::TriSurfField<char> *fieldptr = new SCIRun::TriSurfField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::TriSurfField<signed short> *fieldptr = new SCIRun::TriSurfField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::TriSurfField<unsigned short> *fieldptr = new SCIRun::TriSurfField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::TriSurfField<signed long> *fieldptr = new SCIRun::TriSurfField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::TriSurfField<unsigned long> *fieldptr = new SCIRun::TriSurfField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::TriSurfField<float> *fieldptr = new SCIRun::TriSurfField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::TriSurfField<double> *fieldptr = new SCIRun::TriSurfField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
+
 			}
 			if (fs.vectorfield.isdense())
 			{
@@ -1980,10 +3022,59 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			}
 			if (fs.scalarfield.isdense())
 			{
-				SCIRun::QuadSurfField<double> *fieldptr;
-				fieldptr = new SCIRun::QuadSurfField<double>(meshH,data_at);
-				addscalardata(fieldptr,fs.scalarfield);
-				scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::QuadSurfField<char> *fieldptr = new SCIRun::QuadSurfField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::QuadSurfField<signed short> *fieldptr = new SCIRun::QuadSurfField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::QuadSurfField<unsigned short> *fieldptr = new SCIRun::QuadSurfField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::QuadSurfField<signed long> *fieldptr = new SCIRun::QuadSurfField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::QuadSurfField<unsigned long> *fieldptr = new SCIRun::QuadSurfField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::QuadSurfField<float> *fieldptr = new SCIRun::QuadSurfField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::QuadSurfField<double> *fieldptr = new SCIRun::QuadSurfField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
 			}
 			if (fs.vectorfield.isdense())
 			{
@@ -2022,10 +3113,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			}
 			if (fs.scalarfield.isdense())
 			{
-				SCIRun::TetVolField<double> *fieldptr;
-				fieldptr = new SCIRun::TetVolField<double>(meshH,data_at);
-				addscalardata(fieldptr,fs.scalarfield);
-				scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::TetVolField<char> *fieldptr = new SCIRun::TetVolField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::TetVolField<signed short> *fieldptr = new SCIRun::TetVolField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::TetVolField<unsigned short> *fieldptr = new SCIRun::TetVolField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::TetVolField<signed long> *fieldptr = new SCIRun::TetVolField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::TetVolField<unsigned long> *fieldptr = new SCIRun::TetVolField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::TetVolField<float> *fieldptr = new SCIRun::TetVolField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::TetVolField<double> *fieldptr = new SCIRun::TetVolField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
+				
 			}
 			if (fs.vectorfield.isdense())
 			{
@@ -2058,10 +3199,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			}
 			if (fs.scalarfield.isdense())
 			{
-				SCIRun::PrismVolField<double> *fieldptr;
-				fieldptr = new SCIRun::PrismVolField<double>(meshH,data_at);
-				addscalardata(fieldptr,fs.scalarfield);
-				scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::PrismVolField<char> *fieldptr = new SCIRun::PrismVolField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::PrismVolField<signed short> *fieldptr = new SCIRun::PrismVolField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::PrismVolField<unsigned short> *fieldptr = new SCIRun::PrismVolField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::PrismVolField<signed long> *fieldptr = new SCIRun::PrismVolField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::PrismVolField<unsigned long> *fieldptr = new SCIRun::PrismVolField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::PrismVolField<float> *fieldptr = new SCIRun::PrismVolField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::PrismVolField<double> *fieldptr = new SCIRun::PrismVolField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
+				
 			}
 			if (fs.vectorfield.isdense())
 			{
@@ -2094,10 +3285,60 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 			}
 			if (fs.scalarfield.isdense())
 			{
-				SCIRun::HexVolField<double> *fieldptr;
-				fieldptr = new SCIRun::HexVolField<double>(meshH,data_at);
-				addscalardata(fieldptr,fs.scalarfield);
-				scifield = static_cast<SCIRun::Field *>(fieldptr);
+				switch (fs.scalarfield.gettype())
+				{
+					case miINT8:
+					case miUINT8:
+						{
+						SCIRun::HexVolField<char> *fieldptr = new SCIRun::HexVolField<char>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT16:
+						{
+						SCIRun::HexVolField<signed short> *fieldptr = new SCIRun::HexVolField<signed short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);					
+						}
+						break;
+					case miUINT16:
+						{
+						SCIRun::HexVolField<unsigned short> *fieldptr = new SCIRun::HexVolField<unsigned short>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miINT32:
+						{
+						SCIRun::HexVolField<signed long> *fieldptr = new SCIRun::HexVolField<signed long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miUINT32:
+						{
+						SCIRun::HexVolField<unsigned long> *fieldptr = new SCIRun::HexVolField<unsigned long>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miSINGLE:
+						{
+						SCIRun::HexVolField<float> *fieldptr = new SCIRun::HexVolField<float>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);
+						}
+						break;
+					case miDOUBLE:
+					default:
+						{
+						SCIRun::HexVolField<double> *fieldptr = new SCIRun::HexVolField<double>(meshH,data_at);
+						addscalardata(fieldptr,fs.scalarfield);
+						scifield = static_cast<SCIRun::Field *>(fieldptr);				
+						}
+				}	
+				
 			}
 			if (fs.vectorfield.isdense())
 			{
@@ -2116,7 +3357,6 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 		}
 		
 	}
-	
 
 	if (fs.property.isstruct())
 	{
@@ -2126,8 +3366,18 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	if (fs.name.isstring())
 	{
 		if (scifield != 0)
-		{				
-			scifield->set_property("name",fs.name.getstring(),false);
+		{		
+			if (fs.name.isstring())
+			{
+				scifield->set_property("name",fs.name.getstring(),false);
+			}
+		}
+	}
+	else
+	{
+		if (scifield != 0)
+		{
+			scifield->set_property("name",mlarray.getname(),false);
 		}
 	}
 	
@@ -2137,84 +3387,30 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 // Templates for adding data in the field
 
 
-template <class FIELDPTR> 
-void matlabconverter::addscalardata(FIELDPTR fieldptr,matlabarray mlarray)
+template <class FIELD> 
+void matlabconverter::addscalardata(FIELD *fieldptr,matlabarray mlarray)
 {
-	std::vector<double> fielddata;
-	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 
 	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
-	std::vector<double>& fdata = fieldptr->fdata();  // get a reference to the actual data
-	
-	long numdata = fielddata.size();
-	if (numdata > fdata.size()) numdata = fdata.size(); // make sure we do not copy more data than there are elements
-	
-	for (long p=0; p < numdata; p++) { fdata[p] = fielddata[p]; }
+	mlarray.getnumericarray(fieldptr->fdata());
 }
 
 
-template <class FIELDPTR> 
-void matlabconverter::addscalardata2d(FIELDPTR fieldptr,matlabarray mlarray)
+template <class FIELD> 
+void matlabconverter::addscalardata2d(FIELD *fieldptr,matlabarray mlarray)
 {
-	std::vector<double> fielddata;
-	
-	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
-
 	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
-	SCIRun::FData2d<double>& fdata = fieldptr->fdata();  // get a reference to the actual data
-	
-	
-	long numdata = static_cast<long>(fdata.size());
-	if (numdata > fielddata.size()) numdata = fielddata.size(); // make sure we do not copy more data than there are elements
-	
-	double **data;
-	int dim1,dim2;
-	
-	data = fdata.get_dataptr();
-	dim1 = fdata.dim1();
-	dim2 = fdata.dim2();
-	
-	long p,q,r;
-	p = 0;
-	for (q=0;(q<dim1)&&(p < numdata);q++)
-		for (r=0;(r<dim2)&&(p < numdata);r++)
-		{
-			data[q][r] = fielddata[p];
-			p++;
-		}
+	typename FIELD::fdata_type& fdata = fieldptr->fdata();
+	mlarray.getnumericarray(fdata.get_dataptr(),fdata.dim2(),fdata.dim1());
 }
 
-template <class FIELDPTR> 
-void matlabconverter::addscalardata3d(FIELDPTR fieldptr,matlabarray mlarray)
-{
-	std::vector<double> fielddata;
-	
-	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
 
+template <class FIELD> 
+void matlabconverter::addscalardata3d(FIELD *fieldptr,matlabarray mlarray)
+{
 	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
-	SCIRun::FData3d<double>& fdata = fieldptr->fdata();  // get a reference to the actual data
-	
-	
-	long numdata = static_cast<long>(fdata.size());
-	if (numdata > fielddata.size()) numdata = fielddata.size(); // make sure we do not copy more data than there are elements
-	
-	double ***data;
-	int dim1,dim2,dim3;
-	
-	data = fdata.get_dataptr();
-	dim1 = fdata.dim1();
-	dim2 = fdata.dim2();
-	dim3 = fdata.dim3();
-	
-	long p,q,r,s;
-	p = 0;
-	for (q=0;(q<dim1)&&(p < numdata);q++)
-		for (r=0;(r<dim2)&&(p < numdata);r++)
-			for (s=0;(s<dim3)&&(p <numdata); s++)
-			{
-				data[q][r][s] = fielddata[p];
-				p++;
-			}
+	typename FIELD::fdata_type& fdata = fieldptr->fdata();
+	mlarray.getnumericarray(fdata.get_dataptr(),fdata.dim3(),fdata.dim2(),fdata.dim1());
 }
 
 
@@ -2669,6 +3865,11 @@ void matlabconverter::addcells(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma)
 {
 	// define possible fieldnames
+	// This function searches through the matlab structure and identifies which fields
+	// can be used in the construction of a field.
+	// The last name in each list is the recommended name. When multiple fields are 
+	// defined which suppose to have the same contents, the last one is chosen, which
+	// is the recommended name listed in the documentation.
 	
 	fieldstruct		fs;
 	long			index;
@@ -2725,23 +3926,31 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	index = ma.getfieldnameindexCI("field");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 
-	// FIELDEDGE MATRIX
+	// VECTOR FIELD MATRIX
 	index = ma.getfieldnameindexCI("vectordata");
 	if (index > -1) fs.vectorfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("vectorfield");
 	if (index > -1) fs.vectorfield = ma.getfield(0,index);
 
-	// FIELDFACE MATRIX
+	// TENSOR FIELD MATRIX
 	index = ma.getfieldnameindexCI("tensordata");
 	if (index > -1) fs.tensorfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("tensorfield");
 	if (index > -1) fs.tensorfield = ma.getfield(0,index);
 
-	// FIELDCELL MATRIX
+	// FIELD LOCATION MATRIX
+	index = ma.getfieldnameindexCI("dataat");
+	if (index > -1) fs.fieldlocation = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("fieldlocation");
 	if (index > -1) fs.fieldlocation = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("fieldat");
 	if (index > -1) fs.fieldlocation = ma.getfield(0,index);
+
+	// FIELD TYPE MATRIX
+	index = ma.getfieldnameindexCI("datatype");
+	if (index > -1) fs.fieldtype = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("fieldtype");
+	if (index > -1) fs.fieldtype = ma.getfield(0,index);
 
 	// ELEMTYPE MATRIX
 	index = ma.getfieldnameindexCI("elemtype");
@@ -2775,6 +3984,20 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	if (index > -1) fs.rotation = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("transform");
 	if (index > -1) fs.transform = ma.getfield(0,index);
+	
+	fs.data_at = SCIRun::Field::NONE;
+	
+	if (!(fs.fieldlocation.isempty()))
+	{   // converter table for the string in the field "fieldlocation" array
+		// These are case insensitive comparisons.
+		if (!(fs.fieldlocation.isstring())) throw matlabconverter_error();
+		if (fs.fieldlocation.compareCI("node")||fs.fieldlocation.compareCI("pts")) fs.data_at = SCIRun::Field::NODE;
+		if (fs.fieldlocation.compareCI("egde")||fs.fieldlocation.compareCI("line")) fs.data_at = SCIRun::Field::EDGE;
+		if (fs.fieldlocation.compareCI("face")||fs.fieldlocation.compareCI("fac")) fs.data_at = SCIRun::Field::FACE;
+		if (fs.fieldlocation.compareCI("cell")||fs.fieldlocation.compareCI("tet")
+			||fs.fieldlocation.compareCI("hex")||fs.fieldlocation.compareCI("prism")) fs.data_at = SCIRun::Field::CELL;
+	}
+	
 	
 	return(fs);
 }

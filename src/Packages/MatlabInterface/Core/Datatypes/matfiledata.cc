@@ -180,11 +180,11 @@ long matfiledata::elsize(matfiledata::mitype type)
   long elsize = 1;
    switch (type)
    {
-   	case miINT8: case miUINT8:
+   	case miINT8: case miUINT8: case miUTF8:
    	   elsize = 1; break;
-   	case miINT16: case miUINT16:
+   	case miINT16: case miUINT16: case miUTF16:
    	   elsize = 2; break;
-   	case miINT32: case miUINT32: case miSINGLE:
+   	case miINT32: case miUINT32: case miSINGLE: case miUTF32:
    	   elsize = 4; break;
    	case miUINT64: case miINT64: case miDOUBLE:
    	   elsize = 8; break;
@@ -482,7 +482,7 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 	newdata.newdatabuffer(newdata.elsize()*size(),type);
 	switch(type)
 	{
-		case miUINT8:
+		case miUINT8: case miUTF8:
 		{
 			unsigned char *ptr = static_cast<unsigned char *>(newdata.databuffer());
 			getandcast(ptr,newdata.bytesize());
@@ -494,7 +494,7 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;
-		case miUINT16:
+		case miUINT16: case miUTF16:
 		{
 			unsigned short *ptr = static_cast<unsigned short *>(newdata.databuffer());
 			getandcast(ptr,newdata.bytesize());
@@ -506,7 +506,7 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;	
-		case miUINT32:
+		case miUINT32: case miUTF32:
 		{
 			unsigned long *ptr = static_cast<unsigned long *>(newdata.databuffer());
 			getandcast(ptr,newdata.bytesize());
@@ -544,6 +544,9 @@ matfiledata matfiledata::castdata(matfiledata::mitype type)
 			getandcast(ptr,newdata.bytesize());
 		}
 		break;	
+		
+		
+		
 		default:
 			throw internal_error();
 	}

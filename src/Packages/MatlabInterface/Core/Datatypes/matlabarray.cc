@@ -590,6 +590,47 @@ void matlabarray::createdoublematrix(long m,long n, double *values)
 }
 
 
+// quick function for creating a long scalar
+void matlabarray::createlongscalar(long value)
+{
+	std::vector<long> dims(2); dims[0] = 1; dims[1] = 1;
+	createdensearray(dims,miINT32);
+	setnumericarray(&value,1);
+}
+
+void matlabarray::createlongvector(std::vector<long> &values)
+{
+	std::vector<long> dims(2); dims[0] = 1; dims[1] = static_cast<long>(values.size());
+	createdensearray(dims,miINT32);
+	setnumericarray(values);
+}
+
+void matlabarray::createlongvector(long n, long *values)
+{
+	std::vector<long> dims(2); dims[0] = 1; dims[1] = n;
+	createdensearray(dims,miINT32);
+	setnumericarray(values,n);
+}
+
+
+void matlabarray::createlongmatrix(std::vector<long> &values, std::vector<long> &dims)
+{
+	createdensearray(dims,miINT32);
+	setnumericarray(values);
+}
+
+
+void matlabarray::createlongmatrix(long m,long n, long *values)
+{
+	std::vector<long> dims(2); dims[0] = m; dims[1] = n;
+	createdensearray(dims,miINT32);
+	setnumericarray(values,m*n);
+}
+
+
+
+
+
 
 // creation functions
 
@@ -794,6 +835,9 @@ std::string matlabarray::getinfotext(std::string name)
 				case miUINT64: oss << " UINT64"; break;
 				case miSINGLE: oss << " SINGLE"; break;
 				case miDOUBLE: oss << " DOUBLE"; break;
+				case miUTF8: oss << " UTF8"; break;
+				case miUTF16: oss << " UTF16"; break;
+				case miUTF32: oss << " UTF32"; break;				
 				default: oss << " UNKNOWN"; break;
 			}
 			oss << " ]";
@@ -1035,14 +1079,14 @@ void matlabarray::reorder_permute(std::vector<long> &newindices,std::vector<long
 
 bool matlabarray::compare(std::string str)
 {
-	if (m_ == 0) throw internal_error();
+	if (m_ == 0) return(false);
 	if (str == m_->string_) return(true);
 	return(false);
 }
 
 bool matlabarray::compareCI(std::string str)
 {
-	if (m_ == 0) throw internal_error();
+	if (m_ == 0) return(false);
 	if ( cmp_nocase(str,m_->string_) == 0) return(true);
 	return(false);
 }

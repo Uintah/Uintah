@@ -45,6 +45,7 @@ itcl_class MatlabInterface_DataIO_MatlabMatricesReader {
 		global $this-filename-set
 		global $this-portsel
 		global $this-numport
+		global $this-disable-transpose
 		
 		set $this-filename ""
 		set $this-matrixinfotexts ""
@@ -54,7 +55,7 @@ itcl_class MatlabInterface_DataIO_MatlabMatricesReader {
 		set $this-filename-set ""
 		set $this-portsel 0
 		set $this-numport 6
-		
+		set $this-disable-transpose 0
 	}
 
 
@@ -69,6 +70,7 @@ itcl_class MatlabInterface_DataIO_MatlabMatricesReader {
 		global $this-port
 		global $this-numport
 		global $this-portsel
+		global $this-disable-transpose
 
 		set w .ui[modname]
 
@@ -124,6 +126,10 @@ itcl_class MatlabInterface_DataIO_MatlabMatricesReader {
 		$childframe.listbox component listbox configure -listvariable $this-matrixinfotexts -selectmode browse
 		pack $childframe.listbox -fill both -expand yes
 
+		frame $childframe.option
+		pack $childframe.option -fill x -pady 4p
+		checkbutton $childframe.option.disabletranspose -variable $this-disable-transpose -text "Disable transpose (from Matlab matrix order to C++ order)"
+		pack $childframe.option.disabletranspose
 		makeSciButtonPanel $w $w $this
 
 		set matrixname [lindex [set $this-matrixname] [set $this-portsel] ]

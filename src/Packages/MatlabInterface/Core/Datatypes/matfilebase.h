@@ -69,8 +69,12 @@ class matfilebase {
     class out_of_range			: public matfileerror {};
     class internal_error		: public matfileerror {};
 	class invalid_file_access   : public matfileerror {};
+	// Added for errors using the compression scheme
+	class compression_error		: public matfileerror {};
 
     // enums
+	// UPDATE:
+	// ADDED NEW TAGS FOR MATLAB V7
     enum mitype { 	miSAMEASDATA = -1,
 					miUNKNOWN = 0,
                 	miINT8,
@@ -86,7 +90,13 @@ class matfilebase {
 					miRESV3,
 					miINT64,
 					miUINT64,
-					miMATRIX  }; 
+					miMATRIX,
+					miCOMPRESSED,
+					miUTF8,
+					miUTF16,
+					miUTF32,
+					miEND
+					  }; 
                     
    // mxtype is the matlab classification for the matlab arrays
    // this enum is used internally and is not used at the interface

@@ -109,7 +109,8 @@ private:
   GuiString				guimatrixinfotexts_;   	// A list of matrix-information strings of the contents of a .mat-file
   GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
-
+  GuiInt				guidisabletranspose_; // Do not convert from Fortran ordering to C++ ordering
+  
   // Ports (We only use one output port)
   MatrixOPort*			omatrix_[NUMPORTS];
   
@@ -131,7 +132,8 @@ MatlabMatricesReader::MatlabMatricesReader(GuiContext* ctx)
     guifilename_(ctx->subVar("filename")),
     guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
     guimatrixnames_(ctx->subVar("matrixnames")),    
-	guimatrixname_(ctx->subVar("matrixname"))
+	guimatrixname_(ctx->subVar("matrixname")),
+	guidisabletranspose_(ctx->subVar("disable-transpose"))
 {
 	indexmatlabfile();
 }
@@ -149,6 +151,8 @@ void MatlabMatricesReader::execute()
 {
 	// Get the filename from TCL.
 	std::string filename = guifilename_.get();
+	int disable_transpose = guidisabletranspose_.get();
+	translate_.setdisabletranspose(disable_transpose);
 	
 	// If the filename is empty, launch an error
 	if (filename == "")
