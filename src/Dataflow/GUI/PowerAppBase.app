@@ -261,10 +261,29 @@ class PowerAppBase {
     ##############################
     ### load_session
     ##############################
+    method load_session {} {
+
+	set types {
+	    {{App Settings} {.ses} }
+	    {{Other} { * }}
+	}
+	
+	set temp [tk_getOpenFile -filetypes $types]
+	
+	if {$temp != ""} {
+	    set saveFile $temp
+	    load_session_data
+	}
+    }
+
+
+    ##############################
+    ### load_session_data
+    ##############################
     # To be filled in by child class. This method should
     # control loading a sesson for a specific app.
-    method load_session {} {
-	puts "Define load_session for [appname] app"
+    method load_session_data {} {
+	puts "Define load_session_data for [appname] app"
     }
 
 
@@ -305,8 +324,9 @@ class PowerAppBase {
 	    {{App Settings} {.ses} }
 	    {{Other} { * } }
 	} 
+
 	set temp [ tk_getSaveFile -defaultextension {.ses} \
-			   -filetypes $types ]
+		       -filetypes $types ]
 
 	if {$temp != ""} {
 	    set saveFile $temp
@@ -1068,18 +1088,38 @@ class PowerAppBase {
     #############################
     # This draws a small colormap specified by
     # which on the canvas
+	set colorMaps {
+	}
+
     method draw_colormap { which canvas } {
 	set color ""
 	if {$which == "Gray"} {
 	    set color { "Gray" { { 0 0 0 } { 255 255 255 } } }
 	} elseif {$which == "Rainbow"} {
-	    set color { "Rainbow" {	
-		{ 255 0 0}  { 255 102 0}
-		{ 255 204 0}  { 255 234 0}
-		{ 204 255 0}  { 102 255 0}
-		{ 0 255 0}    { 0 255 102}
-		{ 0 255 204}  { 0 204 255}
-		{ 0 102 255}  { 0 0 255}}}
+	    set color { "Rainbow" {
+		{0 0 255} {0 52 255}
+		{1 80 255} {3 105 255}
+		{5 132 255} {9 157 243}
+		{11 177 213} {15 193 182}
+		{21 210 152} {30 225 126}
+		{42 237 102} {60 248 82}
+		{87 255 62} {116 255 49}
+		{148 252 37} {178 243 27}
+		{201 233 19} {220 220 14}
+		{236 206 10} {247 185 8}
+		{253 171 5} {255 151 3}
+		{255 130 2} {255 112 1}
+		{255 94 0} {255 76 0}
+		{255 55 0} {255 0 0}}}
+	} elseif {$which == "Old Rainbow"} {
+	    set color { "Old Rainbow" {
+		{ 0 0 255}   { 0 102 255}
+		{ 0 204 255}  { 0 255 204}
+		{ 0 255 102}  { 0 255 0}
+		{ 102 255 0}  { 204 255 0}
+		{ 255 234 0}  { 255 204 0}
+		{ 255 102 0}  { 255 0 0}}}
+
 	} elseif {$which == "Inverse Rainbow"} {
 	    set color { "Inverse Rainbow" {	
 		{ 0 0 255} { 0 102 255}
@@ -1088,17 +1128,8 @@ class PowerAppBase {
 		{ 102 255 0} { 204 255 0}
 		{ 255 234 0} { 255 204 0}
 		{ 255 102 0} { 255 0 0}}}
-	} elseif {$which == "Blackbody"} {
-	    set color { "Blackbody" {	
-		{0 0 0}   {52 0 0}
-		{102 2 0}   {153 18 0}
-		{200 41 0}   {230 71 0}
-		{255 120 0}   {255 163 20}
-		{255 204 55}   {255 228 80}
-		{255 247 120}   {255 255 180}
-		{255 255 255}}}
 	} elseif {$which == "Darkhue"} {
-	    set color { "Darkhue" {	
+	    set color { "Darkhue" {
 		{ 0  0  0 }  { 0 28 39 }
 		{ 0 30 55 }  { 0 15 74 }
 		{ 1  0 76 }  { 28  0 84 }
@@ -1109,6 +1140,54 @@ class PowerAppBase {
 		{ 246 72  1 }  { 255 175 36 }
 		{ 255 231 68 }  { 251 255 121 }
 		{ 239 253 174 }}}
+	} elseif {$which == "Lighthue"} {
+	    set color { "Lighthue" {
+		{ 64  64  64 }  { 64 80 84 }
+		{ 64 79 92 }  { 64 72 111 }
+		{ 64  64 102 }  { 80 64 108 }
+		{ 80 64 108 }  { 92  64 110 }
+		{ 118  64 121 }  { 131  64 116 }
+		{ 133  64 100 }  { 152  64 84 }
+		{ 174  69 69 }  { 179 79  64 }
+		{ 189 100  64 }  { 192 152 82 }
+		{ 192 179 98 }  { 189 192 124 }
+		{ 184 191 151 }}}
+	} elseif {$which == "Blackbody"} {
+	    set color { "Blackbody" {
+		{0 0 0}   {52 0 0}
+		{102 2 0}   {153 18 0}
+		{200 41 0}   {230 71 0}
+		{255 120 0}   {255 163 20}
+		{255 204 55}   {255 228 80}
+		{255 247 120}   {255 255 180}
+		{255 255 255}}}
+	} elseif {$which == "Don"} {
+	    set color { "Don" {
+		{   0  90 255 }    {  51 104 255 }
+		{ 103 117 255 }    { 166 131 245 }
+		{ 181 130 216 }    { 192 129 186 }
+		{ 197 128 172 }    { 230 126  98 }
+		{ 240 126  49 }    { 255 133   0 }}}
+	} elseif {$which == "BP Seismic"} {
+	    set color { "BP Seismic" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
+	} elseif {$which == "Dark Gray"} {
+	    set color { "Dark Gray" {
+		{   0  0  0 }    {  0 0 0 }
+		{ 128 128 128 } { 255 255 255 }}}
+	} elseif {$which == "Red Tint"} {
+	    set color { "Red Tint" { { 20 0 0 } { 255 235 235 } } }
+	} elseif {$which == "Orange Tint"} {
+	    set color { "Orange Tint" { { 20 10 0 } { 255 245 235 } } }
+	} elseif {$which == "Yellow Tint"} {
+	    set color { "Yellow Tint" { { 20 20 0 } { 255 255 235 } } }
+	} elseif {$which == "Green Tint"} {
+	    set color { "Green Tint" { { 0 20 0 } { 235 255 235 } } }
+	} elseif {$which == "Cyan Tint"} {
+	    set color { "Cyan Tint" { { 0 20 20 } { 235 255 255 } } }
+	} elseif {$which == "Blue Tint"} {
+	    set color { "Blue Tint" { { 0 0 20 } { 235 235 255 } } }
+	} elseif {$which == "Purple Tint"} {
+	    set color { "Purple Tint" { { 10 0 20 } { 245 235 255 } } }
 	} elseif {$which == "Blue-to-Red"} {
 	    set color { "Blue-to-Red" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	} else {
