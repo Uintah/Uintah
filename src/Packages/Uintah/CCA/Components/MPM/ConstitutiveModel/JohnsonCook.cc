@@ -50,11 +50,37 @@ JohnsonCook::JohnsonCook(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   default:
     NGN = 1; break;
   }
+
+  pLeftStretchLabel = VarLabel::create("p.leftStretch",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pLeftStretchLabel_preReloc = VarLabel::create("p.leftStretch+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pRotationLabel = VarLabel::create("p.rotation",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pRotationLabel_preReloc = VarLabel::create("p.rotation+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pDeformRatePlasticLabel = VarLabel::create("p.deformRatePlastic",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pDeformRatePlasticLabel_preReloc = VarLabel::create("p.deformRatePlastic+",
+			ParticleVariable<Matrix3>::getTypeDescription());
+  pPlasticStrainLabel = VarLabel::create("p.plasticStrain",
+			ParticleVariable<double>::getTypeDescription());
+  pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
+			ParticleVariable<double>::getTypeDescription());
+
 }
 
 JohnsonCook::~JohnsonCook()
 {
   // Destructor 
+  VarLabel::destroy(pLeftStretchLabel);
+  VarLabel::destroy(pLeftStretchLabel_preReloc);
+  VarLabel::destroy(pRotationLabel);
+  VarLabel::destroy(pRotationLabel_preReloc);
+  VarLabel::destroy(pDeformRatePlasticLabel);
+  VarLabel::destroy(pDeformRatePlasticLabel_preReloc);
+  VarLabel::destroy(pPlasticStrainLabel);
+  VarLabel::destroy(pPlasticStrainLabel_preReloc);
 }
 
 void JohnsonCook::addParticleState(std::vector<const VarLabel*>& from,
@@ -64,23 +90,23 @@ void JohnsonCook::addParticleState(std::vector<const VarLabel*>& from,
   // decomposition to get the left stretch and rotation, store 
   // these in the data warehouse and update them before updating the
   // stress (BB 11/14/02)
-  from.push_back(lb->pLeftStretchLabel);
-  from.push_back(lb->pRotationLabel);
+  from.push_back(pLeftStretchLabel);
+  from.push_back(pRotationLabel);
   from.push_back(lb->pDeformationMeasureLabel);
 
   from.push_back(lb->pStressLabel);
 
-  from.push_back(lb->pDeformRatePlasticLabel);
-  from.push_back(lb->pPlasticStrainLabel);
+  from.push_back(pDeformRatePlasticLabel);
+  from.push_back(pPlasticStrainLabel);
 
-  to.push_back(lb->pLeftStretchLabel_preReloc);
-  to.push_back(lb->pRotationLabel_preReloc);
+  to.push_back(pLeftStretchLabel_preReloc);
+  to.push_back(pRotationLabel_preReloc);
   to.push_back(lb->pDeformationMeasureLabel_preReloc);
 
   to.push_back(lb->pStressLabel_preReloc);
 
-  to.push_back(lb->pDeformRatePlasticLabel_preReloc);
-  to.push_back(lb->pPlasticStrainLabel_preReloc);
+  to.push_back(pDeformRatePlasticLabel_preReloc);
+  to.push_back(pPlasticStrainLabel_preReloc);
 }
 
 void JohnsonCook::initializeCMData(const Patch* patch,
@@ -96,14 +122,14 @@ void JohnsonCook::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> pLeftStretch, pRotation;
   ParticleVariable<double> pPlasticStrain;
 
-  new_dw->allocateAndPut(pLeftStretch, lb->pLeftStretchLabel, pset);
-  new_dw->allocateAndPut(pRotation, lb->pRotationLabel, pset);
+  new_dw->allocateAndPut(pLeftStretch, pLeftStretchLabel, pset);
+  new_dw->allocateAndPut(pRotation, pRotationLabel, pset);
   new_dw->allocateAndPut(pDeformGrad, lb->pDeformationMeasureLabel, pset);
 
   new_dw->allocateAndPut(pStress, lb->pStressLabel, pset);
 
-  new_dw->allocateAndPut(pDeformRatePlastic, lb->pDeformRatePlasticLabel, pset);
-  new_dw->allocateAndPut(pPlasticStrain, lb->pPlasticStrainLabel, pset);
+  new_dw->allocateAndPut(pDeformRatePlastic, pDeformRatePlasticLabel, pset);
+  new_dw->allocateAndPut(pPlasticStrain, pPlasticStrainLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
 
@@ -221,8 +247,8 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     // Note : The deformation gradient from the old datawarehouse is no
     // longer used, but it is updated for possible use elsewhere
     constParticleVariable<Matrix3> pLeftStretch, pRotation, pDeformGrad;
-    old_dw->get(pLeftStretch, lb->pLeftStretchLabel, pset);
-    old_dw->get(pRotation, lb->pRotationLabel, pset);
+    old_dw->get(pLeftStretch, pLeftStretchLabel, pset);
+    old_dw->get(pRotation, pRotationLabel, pset);
     old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
 
     // Get the particle location, particle size, particle mass, particle volume
@@ -252,8 +278,8 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pTemperature;
 
     old_dw->get(pStress, lb->pStressLabel, pset);
-    old_dw->get(pDeformRatePlastic, lb->pDeformRatePlasticLabel, pset);
-    old_dw->get(pPlasticStrain, lb->pPlasticStrainLabel, pset);
+    old_dw->get(pDeformRatePlastic, pDeformRatePlasticLabel, pset);
+    old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
     
     // Get the time increment (delT)
@@ -269,12 +295,12 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pPlasticStrain_new;
     ParticleVariable<double> pVolume_deformed;
 
-    new_dw->allocateAndPut(pLeftStretch_new, lb->pLeftStretchLabel_preReloc, pset);
-    new_dw->allocateAndPut(pRotation_new, lb->pRotationLabel_preReloc, pset);
+    new_dw->allocateAndPut(pLeftStretch_new, pLeftStretchLabel_preReloc, pset);
+    new_dw->allocateAndPut(pRotation_new, pRotationLabel_preReloc, pset);
     new_dw->allocateAndPut(pDeformGrad_new, lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new, lb->pStressLabel_preReloc, pset);
-    new_dw->allocateAndPut(pDeformRatePlastic_new, lb->pDeformRatePlasticLabel_preReloc, pset);
-    new_dw->allocateAndPut(pPlasticStrain_new, lb->pPlasticStrainLabel_preReloc, pset);
+    new_dw->allocateAndPut(pDeformRatePlastic_new, pDeformRatePlasticLabel_preReloc, pset);
+    new_dw->allocateAndPut(pPlasticStrain_new, pPlasticStrainLabel_preReloc, pset);
     new_dw->allocateAndPut(pVolume_deformed, lb->pVolumeDeformedLabel, pset);
 
     // Loop thru particles
@@ -312,22 +338,24 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // back to the material configuration and calculate their
       // deviatoric parts
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
-      tensorEta = tensorD - one*(1.0/3.0*tensorD.Trace());
+      tensorEta = tensorD - one*(tensorD.Trace()/3.0);
 
       tensorDp = pDeformRatePlastic[idx];
       tensorDp = (tensorR.Transpose())*(tensorDp*tensorR);
-      tensorEtap = tensorDp - one*(1.0/3.0*tensorDp.Trace());
+      tensorEtap = tensorDp - one*(tensorDp.Trace()/3.0);
 
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
-      tensorS = tensorSig - one*(1.0/3.0*tensorSig.Trace());
+      tensorS = tensorSig - one*(tensorSig.Trace()/3.0);
       Matrix3 tensorHy = tensorSig - tensorS;
 
       // Calculate the elastic part of the rate of deformation
       tensorDe = tensorD - tensorDp;
 
       // Integrate the stress rate equation to get a elastic trial stress
-      Matrix3 trialS = tensorSig + (one*(tensorDe.Trace()*lambda) + tensorDe*(2.0*shear))*delT;
+      Matrix3 trialSig = tensorSig + 
+	                 (one*(tensorDe.Trace()*lambda) + tensorDe*(2.0*shear))*delT;
+      Matrix3 trialS = trialSig - one*(trialSig.Trace()/3.0);
 
       // To determine if the stress is above or below yield used a von Mises yield
       // criterion 
@@ -336,7 +364,7 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // Calculate the square of the flow stress
       // from the plastic strain rate, the plastic strain and  
       // the particle temperature
-      plasticStrainRate = sqrt(2.0/3.0*tensorEtap.NormSquared());
+      plasticStrainRate = sqrt(tensorEtap.NormSquared()*2.0/3.0);
       plasticStrain = pPlasticStrain[idx];
       temperature = pTemperature[idx];
       flowStress = evaluateFlowStress(plasticStrain, plasticStrainRate, temperature);
@@ -350,7 +378,7 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       if (flowStress > equivStress) {
 
         // For the elastic region : the updated stress is the trial stress
-        tensorSig = trialS;
+        tensorSig = trialSig;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
@@ -378,13 +406,14 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         // Basic assumption is that all strain rate is plastic strain rate
 
         // Calculate the tensor u (at start of time interval)
-        double sqrtSxS = tensorS.Norm();
+        double sqrtSxS = tensorS.Norm();  
+	if (sqrtSxS == 0) {tensorS = trialS; sqrtSxS = tensorS.Norm();}
         Matrix3 tensorU = tensorS*(sqrtThree/sqrtSxS);
 
         // Calculate cplus and initial values of dstar, gammadot and theta
         double cplus = tensorU.NormSquared(); double sqrtcplus = sqrt(cplus);
         double dstar = tensorU.Contract(tensorEta);
-        double gammadotplus = dstar/cplus;
+        double gammadotplus = sqrtTwo/sqrtThree*tensorEtap.Norm();
         double theta = (dstar - cplus*gammadotplus)/dstar;
 
         // Calculate u_eta and u_q
@@ -401,6 +430,8 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 	  Matrix3 temp = (tensorU_q+tensorU_eta)*(0.5*theta) + tensorU_eta*(1.0-theta);
 	  dstar = (tensorU_eta.Contract(temp))*sqrtcplus;
 	  theta = (dstar - cplus*gammadotplus)/dstar;
+          cout << "dstar = " << dstar << " dstar_old = " << dstar_old << endl;
+          cout << "theta = " << theta << " theta_old = " << theta_old << endl;
         } while (fabs(theta - theta_old) > tolerance || fabs(dstar - dstar_old) > tolerance);
 
         // Calculate sig(T+delT)
@@ -457,15 +488,22 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 }
 
 
-void JohnsonCook::addInitialComputesAndRequires(Task* task,
-                                                    const MPMMaterial* matl,
-                                                    const PatchSet*) const
+void 
+JohnsonCook::addInitialComputesAndRequires(Task* task,
+                                           const MPMMaterial* matl,
+                                           const PatchSet*) const
 {
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(pLeftStretchLabel, matlset);
+  task->computes(pRotationLabel, matlset);
+  task->computes(pDeformRatePlasticLabel, matlset);
+  task->computes(pPlasticStrainLabel, matlset);
 }
 
-void JohnsonCook::addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet*) const
+void 
+JohnsonCook::addComputesAndRequires(Task* task,
+				    const MPMMaterial* matl,
+				    const PatchSet*) const
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -481,13 +519,18 @@ void JohnsonCook::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformRatePlasticLabel, matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pPlasticStrainLabel,     matlset,Ghost::None);
+
+  task->requires(Task::OldDW, pLeftStretchLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, pRotationLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, pDeformRatePlasticLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, pPlasticStrainLabel, matlset,Ghost::None);
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pDeformRatePlasticLabel_preReloc,  matlset);
-  task->computes(lb->pPlasticStrainLabel_preReloc,      matlset);
+  task->computes(pLeftStretchLabel_preReloc,  matlset);
+  task->computes(pRotationLabel_preReloc, matlset);
+  task->computes(pDeformRatePlasticLabel_preReloc,  matlset);
+  task->computes(pPlasticStrainLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
 }
 
@@ -573,7 +616,7 @@ JohnsonCook::computeUpdatedVR(const double& delT,
   }
 
   // Update the left Cauchy-Green stretch tensor (V)
-  VV += ((DD+WW)*VV - VV*Omega)*delT;
+  VV = VV + ((DD+WW)*VV - VV*Omega)*delT;
 }
 
 Matrix3 
