@@ -6,6 +6,7 @@ SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
 	$(SRCDIR)/DefaultParticleCreator.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc	\
+	$(SRCDIR)/ExpTIParticleCreator.cc	\
 	$(SRCDIR)/FractureParticleCreator.cc	\
 	$(SRCDIR)/MembraneParticleCreator.cc	\
 	$(SRCDIR)/ShellParticleCreator.cc
