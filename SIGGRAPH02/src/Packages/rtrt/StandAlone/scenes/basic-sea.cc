@@ -152,7 +152,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   /**********************************************************************/
   // north tube
-
+/*
   // glass tube
   //Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
   Object *north_tube_outer = new Cylinder(water_to_glass, Point(-4, 10, 1), Point(4, 10, 1), 2.05);
@@ -181,7 +181,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   south_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 2.2)); 
     
   all_tubes->add(north_tube);
-
+*/
   /**********************************************************************/
   // west tube
 
@@ -217,7 +217,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   /**********************************************************************/
   // east tube
-  
+ /* 
   Point center_point1(10, .25, 0);
   Vector center_vec1(10, .25, 0);
   Point south_point1(10, -3.5, 1);
@@ -251,7 +251,143 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   south_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 2.2));
  
   all_tubes->add(east_tube);
+*/
+/*   // glass tube
+  //Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -6, 1), Point(4, -6, 1), 2);
+  Object *south_tube_outer = new Cylinder(water_to_glass, Point(-4, -6, 1), Point(7.5, -6, 1), 2.05);
+  //south_tube->add(south_tube_inner);
+  south_tube->add(south_tube_outer);
+  // floor
+  south_tube->add(new Rect(checker, Point(1.75, -6, 0), Vector(5.75, 0, 0), Vector(0, 1.5, 0)));
+  // north curb
+  south_tube->add(new Rect(white, Point(1.75, -4.25, .25), Vector(5.75, 0, 0), Vector(0, .15, 0)));
+  south_tube->add(new Rect(white, Point(1.75, -4.475, .1), Vector(5.75, 0, 0), Vector(0, -.025, -.1)));
+  south_tube->add(new Cylinder(white, Point(-4, -4.4, .2), Point(7.5, -4.4, .2), .05));
+  // south curb
+  south_tube->add(new Rect(white, Point(1.75, -7.75, .25), Vector(5.75, 0, 0), Vector(0, .15, 0)));
+  south_tube->add(new Rect(white, Point(1.75, -7.525, .1), Vector(5.75, 0, 0), Vector(0, .025, -.1)));
+  south_tube->add(new Cylinder(white, Point(-4, -7.6, .2), Point(7.5, -7.6, .2), .05));
+  // seals
+  // west seal
+  south_tube->add(new Ring(black, Point(-3.8, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Ring(black, Point(-3.7, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Cylinder(black, Point(-3.7, -6, 1), Point(-3.8, -6, 1), 1.9));
+  south_tube->add(new Cylinder(black, Point(-3.7, -6, 1), Point(-3.8, -6, 1), 2.2));
+  // east seal
+  south_tube->add(new Ring(black, Point(7.5, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Ring(black, Point(7.4, -6, 1), Vector(1, 0, 0), 1.9, .3));
+  south_tube->add(new Cylinder(black, Point(7.4, -6, 1), Point(7.5, -6, 1), 1.9));
+  south_tube->add(new Cylinder(black, Point(7.4, -6, 1), Point(7.5, -6, 1), 2.2));
 
+  Object * bv = new BV1(south_tube);
+  bv->set_name("south_tube");
+  all_tubes->add(bv);
+*/
+
+  /**********************************************************************/
+  // north tube
+
+  //  Object *north_tube_inner = new Cylinder(glass_to_air, Point(-4, 10, 1), Point(4, 10, 1), 2);
+  Object *north_tube_outer = new Cylinder(water_to_glass, Point(-4, 10, 1), Point(4, 10, 1), 2.05);
+  //  north_tube->add(north_tube_inner);
+  north_tube->add(north_tube_outer);
+  // floor
+  north_tube->add(new Rect(checker, Point(0, 10, 0), Vector(4, 0, 0), Vector(0, 1.5 ,0)));
+  // south curb
+  north_tube->add(new Rect(white, Point(0, 8.25, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
+  north_tube->add(new Rect(white, Point(0, 8.475, .1), Vector(4, 0, 0), Vector(0, .025, -.1)));
+  north_tube->add(new Cylinder(white, Point(-4, 8.4, .2), Point(4, 8.4, .2), .05));
+  // north curb
+  north_tube->add(new Rect(white, Point(0, 11.75, .25), Vector(4, 0, 0), Vector(0, .15, 0)));
+  north_tube->add(new Rect(white, Point(0, 11.525, .1), Vector(4, 0, 0), Vector(0, -.025, -.1)));
+  north_tube->add(new Cylinder(white, Point(-4, 11.6, .2), Point(4, 11.6, .2), .05));
+  // seals
+  // west seal
+  north_tube->add(new Ring(black, Point(-3.8, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Ring(black, Point(-3.7, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Cylinder(black, Point(-3.7, 10, 1), Point(-3.8, 10, 1), 1.9));
+  north_tube->add(new Cylinder(black, Point(-3.7, 10, 1), Point(-3.8, 10, 1), 2.2));
+  // east seal
+  north_tube->add(new Ring(black, Point(4, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Ring(black, Point(3.9, 10, 1), Vector(1, 0, 0), 1.9, .3));
+  north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 1.9));
+  north_tube->add(new Cylinder(black, Point(3.9, 10, 1), Point(4, 10, 1), 2.2));
+
+  bv = new BV1(north_tube);
+  bv->set_name("north_tube");
+  all_tubes->add(bv);
+ /* 
+  Object *west_tube_outer = new Cylinder(water_to_glass, Point(-10, -4, 1), Point(-10, 4, 1), 2.05);
+  //  west_tube->add(west_tube_inner);
+  west_tube->add(west_tube_outer);
+
+  // floor
+  west_tube->add(new Rect(checker, Point(-10, 0, 0), Vector(1.5, 0, 0), Vector(0, 4, 0)));
+  // east curb
+  west_tube->add(new Rect(white, Point(-8.25, 0, .25), Vector(0, 4, 0), Vector(.15, 0, 0)));
+  west_tube->add(new Rect(white, Point(-8.475, 0, .1), Vector(0, 4, 0), Vector(-.025, 0, -.1)));
+  west_tube->add(new Cylinder(white, Point(-8.4, -4, .2), Point(-8.4, 4, .2), .05));
+  // west curb
+  west_tube->add(new Rect(white, Point(-11.75, 0, .25), Vector(0, 4, 0), Vector(.15, 0, 0)));
+  west_tube->add(new Rect(white, Point(-11.525, 0, .1), Vector(0, 4, 0), Vector(.025,0, -.1)));
+  west_tube->add(new Cylinder(white, Point(-11.6, -4, .2), Point(-11.6, 4, .2), .05));
+  // seals
+  // west seal
+  west_tube->add(new Ring(black, Point(-10, -3.8, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Ring(black, Point(-10, -3.7, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Cylinder(black, Point(-10, -3.7, 1), Point(-10, -3.8, 1), 1.9));
+  west_tube->add(new Cylinder(black, Point(-10, -3.7, 1), Point(-10, -3.8, 1), 2.2));
+  // east seal
+  west_tube->add(new Ring(black, Point(-10, 3.8, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Ring(black, Point(-10, 3.7, 1), Vector(0, 1, 0), 1.9, .3));
+  west_tube->add(new Cylinder(black, Point(-10, 3.7, 1), Point(-10, 3.8, 1), 1.9));
+  west_tube->add(new Cylinder(black, Point(-10, 3.7, 1), Point(-10, 3.8, 1), 2.2));
+
+  bv = new BV1(west_tube);
+  bv->set_name("west_tube");
+
+  all_tubes->add(bv);
+
+*/
+  /**********************************************************************/
+  // east tube
+
+  Point center_point1(10, .25, 0);
+  Vector center_vec1(10, .25, 0);
+  Point south_point1(10, -3.5, 1);
+  Point north_point1(10, 4, 1);
+  Vector north_vec1(10, 4, 1);
+  Vector south_vec1(10, -3.5, 1);
+  //Object *east_tube_inner = new Cylinder(glass_to_air, Point(10, -4, 1), Point(10, 4, 1), 2);
+  Object *east_tube_outer = new Cylinder(water_to_glass, south_point1, north_point1, 2.05);
+  //east_tube->add(east_tube_inner);
+  east_tube->add(east_tube_outer);
+  // floor
+  east_tube->add(new Rect(checker, center_point1, Vector(1.5, 0, 0), Vector(0, 3.75, 0)));
+  // west curb
+  east_tube->add(new Rect(white, Point(8.25, .25, .25), Vector(0, 3.75, 0), Vector(-.15, 0, 0)));
+  east_tube->add(new Rect(white, Point(8.475, .25, .1), Vector(0, 3.75, 0), Vector(.025, 0, -.1)));
+  east_tube->add(new Cylinder(white, Point(8.4, -3.5, .2), Point(8.4, 4, .2), .05));
+  // east curb
+  east_tube->add(new Rect(white, Point(11.75, .25, .25), Vector(0, 3.75, 0), Vector(-.15, 0, 0)));
+  east_tube->add(new Rect(white, Point(11.525, .25, .1), Vector(0, 3.75, 0), Vector(-.025,0, -.1)));
+  east_tube->add(new Cylinder(white, Point(11.6, -3.5, .2), Point(11.6, 4, .2), .05));
+  // seals
+  // south seal
+  east_tube->add(new Ring(black, Point(10, -3.5, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Ring(black, Point(10, -3.4, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Cylinder(black, Point(10, -3.4, 1), Point(10, -3.5, 1), 1.9));
+  east_tube->add(new Cylinder(black, Point(10, -3.4, 1), Point(10, -3.5, 1), 2.2));
+  // north seal
+  east_tube->add(new Ring(black, Point(10, 4, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Ring(black, Point(10, 3.9, 1), Vector(0, 1, 0), 1.9, .3));
+  east_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 1.9));
+  east_tube->add(new Cylinder(black, Point(10, 3.9, 1), Point(10, 4, 1), 2.2));
+
+  bv = new BV1(east_tube);
+  bv->set_name("east_tube");
+  all_tubes->add(bv);
+ 
   /*********************************************************************/
   // ruins
 
