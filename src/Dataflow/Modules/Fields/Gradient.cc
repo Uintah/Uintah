@@ -14,6 +14,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -32,6 +34,9 @@ public:
   virtual ~Gradient();
 
   virtual void execute();
+
+  template <class F> void qwerty_tetvol(F *f);
+  template <class F> void qwerty_latticevol(F *f);
 };
 
 
@@ -52,122 +57,115 @@ Gradient::~Gradient()
 {
 }
 
+template <class F>
+void
+Gradient::qwerty_tetvol(F *f)
+{
+  TetVolMeshHandle tvm = f->get_typed_mesh(); 
+  TetVol<Vector> *result = new TetVol<Vector>(tvm, Field::CELL);
+  typename F::mesh_type::cell_iterator ci = tvm->cell_begin();
+  while (ci != tvm->cell_end())
+  {
+    result->set_value(f->cell_gradient(*ci), *ci);
+    ++ci;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output Gradient");
+  FieldHandle fh(result);
+  ofp->send(fh);
+}
+
+template <class F>
+void
+Gradient::qwerty_latticevol(F *f)
+{
+  LatVolMeshHandle lvm = f->get_typed_mesh(); 
+  LatticeVol<Vector> *result = new LatticeVol<Vector>(lvm, Field::CELL);
+  typename F::mesh_type::cell_iterator ci = lvm->cell_begin();
+  while (ci != lvm->cell_end())
+  {
+    Point p;
+    lvm->unlocate(p, *ci);
+    Vector v;
+    f->get_gradient(v, p);
+    result->set_value(v, *ci);
+    ++ci;
+  }
+
+  FieldOPort *ofp = (FieldOPort *)get_oport("Output Gradient");
+  FieldHandle fh(result);
+  ofp->send(fh);
+}
 
 
 void
 Gradient::execute()
 {
-#if 0
-  ScalarFieldHandle sf;
-  VectorFieldHandle vf;
-  if(!infield->get(sf))
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
+  FieldHandle fieldhandle;
+  Field *field;
+  if (!(ifp->get(fieldhandle) && (field = fieldhandle.get_rep())))
+  {
     return;
-  ScalarFieldUG* sfug=sf->getUG();
-  ScalarFieldRGBase* sfb=sf->getRGBase();
-  if (sfug) {
-    VectorFieldUG* vfug;
-    if (sfug->typ == ScalarFieldUG::NodalValues) {
-      if(interpolate.get()){
-	vfug=new VectorFieldUG(VectorFieldUG::NodalValues);
-	vfug->mesh=sfug->mesh;
-	vfug->data.resize(sfug->data.size());
-	Mesh* mesh=sfug->mesh.get_rep();
-	int nnodes=mesh->nodes.size();
-	Array1<Vector>& gradients=vfug->data;
-	int i;
-	for(i=0;i<nnodes;i++)
-	  gradients[i]=Vector(0,0,0);
-	int nelems=mesh->elems.size();
-	for(i=0;i<nelems;i++){
-	  if(i%1000 == 0)
-	    update_progress(i, nelems);
-	  Element* e=mesh->elems[i];
-	  Point pt;
-	  Vector grad1, grad2, grad3, grad4;
-	  /*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
-	  double v1=sfug->data[e->n[0]];
-	  double v2=sfug->data[e->n[1]];
-	  double v3=sfug->data[e->n[2]];
-	  double v4=sfug->data[e->n[3]];
-	  Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
-	  for(int j=0;j<4;j++){
-	    gradients[e->n[j]]+=gradient;
-	  }
-	}
-	for(i=0;i<nnodes;i++){
-	  if(i%1000 == 0)
-	    update_progress(i, nnodes);
-	  NodeHandle& n=mesh->nodes[i];
-	  gradients[i]*=1./(n->elems.size());
-	}
-      } else {
-	vfug=new VectorFieldUG(VectorFieldUG::ElementValues);
-	vfug->mesh=sfug->mesh;
-	Mesh* mesh=sfug->mesh.get_rep();
-	int nelems=mesh->elems.size();
-	vfug->data.resize(nelems);
-	for(int i=0;i<nelems;i++){
-	  //	    if(i%10000 == 0)
-	  //		update_progress(i, nelems);
-	  Element* e=mesh->elems[i];
-	  Point pt;
-	  Vector grad1, grad2, grad3, grad4;
-	  /*double vol=*/mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
-	  double v1=sfug->data[e->n[0]];
-	  double v2=sfug->data[e->n[1]];
-	  double v3=sfug->data[e->n[2]];
-	  double v4=sfug->data[e->n[3]];
-	  Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
-	  vfug->data[i]=gradient;
-	}
-      }
-    } else {
-      cerr << "Gradient: I don't know how to take element-value gradients.\n";
-      return;
-    }
-    vf=vfug;
-  } else {
-    int nx=sfb->nx;
-    int ny=sfb->ny;
-    int nz=sfb->nz;
-    VectorFieldRG *vfrg=new VectorFieldRG();
-    vfrg->resize(nx, ny, nz);
-    Point min, max;
-    sfb->get_bounds(min, max);
-    vfrg->set_bounds(min, max);
-    ScalarFieldRGdouble *sfrd=sfb->getRGDouble();
-    ScalarFieldRGfloat *sfrf=sfb->getRGFloat();
-    ScalarFieldRGint *sfri=sfb->getRGInt();
-    ScalarFieldRGshort *sfrs=sfb->getRGShort();
-    ScalarFieldRGchar *sfrc=sfb->getRGChar();
-    //	ScalarFieldRGuchar *sfru=sfb->getRGUchar();
-    for(int k=0;k<nz;k++){
-      update_progress(k, nz);
-      for(int j=0;j<ny;j++){
-	for(int i=0;i<nx;i++){
-	  if (sfrd)
-	    vfrg->grid(i,j,k)=sfrd->gradient(i,j,k);
-	  else if (sfrf)
-	    vfrg->grid(i,j,k)=sfrf->gradient(i,j,k);
-	  else if (sfri)
-	    vfrg->grid(i,j,k)=sfri->gradient(i,j,k);
-	  else if (sfrs)
-	    vfrg->grid(i,j,k)=sfrs->gradient(i,j,k);
-	  else if (sfrc)
-	    vfrg->grid(i,j,k)=sfrc->gradient(i,j,k);
-	  //		    else if (sfru)
-	  //			vfrg->grid(i,j,k)=sfru->gradient(i,j,k);
-	  else {
-	    cerr << "Unknown SFRG type in Gradient: "<<sfb->getType()<<".\n";
-	    return;
-	  }
-	}
-      }
-    }
-    vf=vfrg;
   }
-  outfield->send(vf);
-#endif
+
+  // Create a new Vector field with the same geometry handle as field.
+  const string geom_name = field->get_type_name(0);
+  const string data_name = field->get_type_name(1);
+  if (geom_name == "TetVol")
+  {
+    if (data_name == "double")
+    {
+      qwerty_tetvol((TetVol<double> *)field);
+    }
+    else if (data_name == "int")
+    {
+      qwerty_tetvol((TetVol<int> *)field);
+    }
+    else if (data_name == "short")
+    {
+      qwerty_tetvol((TetVol<short> *)field);
+    }
+    else if (data_name == "char")
+    {
+      qwerty_tetvol((TetVol<char> *)field);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
+  else if (geom_name == "LatticeVol")
+  {
+    if (data_name == "double")
+    {
+      qwerty_latticevol((LatticeVol<double> *)field);
+    }
+    else if (data_name == "int")
+    {
+      qwerty_latticevol((LatticeVol<int> *)field);
+    }
+    else if (data_name == "short")
+    {
+      qwerty_latticevol((LatticeVol<short> *)field);
+    }
+    else if (data_name == "char")
+    {
+      qwerty_latticevol((LatticeVol<char> *)field);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
+  else
+  {
+    // Don't know what to do with this field type.
+    // Signal some sort of error.
+    return;
+  }
 }
 
 } // End namespace SCIRun
