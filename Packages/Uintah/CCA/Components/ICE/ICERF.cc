@@ -38,6 +38,100 @@ void ICE::schedulecomputeDivThetaVel_CC(SchedulerP& sched,
   sched->addTask(t, patches, all_matls);    
 }
 
+/* ---------------------------------------------------------------------
+ Function~  ICE::actuallyComputeStableTimestepRF--
+ Reference:  See MF document pg 30 and 
+_____________________________________________________________________*/
+void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,  
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* /*matls*/,
+                                    DataWarehouse* /*old_dw*/,
+                                    DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing Compute Stable Timestep RF on patch " << patch->getID() 
+         << "\t\t ICE" << endl;
+      
+    Vector dx = patch->dCell();
+    double delt_CFL = 100000;
+    constCCVariable<double> speedSound, sp_vol_CC;
+    constCCVariable<Vector> vel_CC;
+    Ghost::GhostType  gac = Ghost::AroundCells;    
+    if (d_CFL > 0.5) {
+      throw ProblemSetupException("CFL can't exceed 0.5 for RF problems");
+    }
+    
+    vector<IntVector> adj_offset(3);                   
+    adj_offset[0] = IntVector(-1, 0, 0);    // X 
+    adj_offset[1] = IntVector(0, -1, 0);    // Y 
+    adj_offset[2] = IntVector(0,  0, -1);   // Z     
+    Vector delt;
+    Vector include_delT= Vector(1,1,1);
+    //__________________________________
+    // which dimensions are relevant
+    for (int dir = 0; dir <3; dir++) {
+      IntVector numCells(patch->getHighIndex() - patch->getLowIndex());
+      if (numCells(dir) <= 3 ) {
+        include_delT(dir) = 0.0;  // don't include this delt in calculation
+      }
+    }
+          
+    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx= ice_matl->getDWIndex();   
+      new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
+      new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
+      new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);
+      
+      for (int dir = 0; dir <3; dir++) {  //loop over all three directions
+        delt(dir) = 0.0; 
+        for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+          IntVector R = *iter;
+          IntVector L = R + adj_offset[dir];
+
+          double ave_vel  = 0.5 * fabs( vel_CC[R](dir) + vel_CC[L](dir) );
+
+          double kappa_R  = sp_vol_CC[R]/( speedSound[R] * speedSound[R] );
+          double kappa_L  = sp_vol_CC[L]/( speedSound[L] * speedSound[L] );
+
+          double tmp      = (sp_vol_CC[L] + sp_vol_CC[R])/(kappa_L + kappa_R);                  
+          double cstar    = sqrt(tmp) + fabs(vel_CC[R](dir) - vel_CC[L](dir));  
+
+          double delt_tmp = d_CFL * dx(dir)/(cstar + ave_vel);
+          delt(dir)       = std::max(delt(dir), delt_tmp);
+        }
+      }  //  dir loop
+      
+      // see page 30 and 46 of MF document
+      double matl_delt = 1.0/(include_delT(0)/delt(0) + 
+                              include_delT(1)/delt(1) + 
+                              include_delT(2)/delt(2) );
+           
+      delt_CFL = std::min(delt_CFL, matl_delt);
+    }  //  matl loop
+    
+    delt_CFL = std::min(delt_CFL, d_initialDt);
+    d_initialDt = 10000.0;
+
+    delt_vartype doMech;
+    new_dw->get(doMech, lb->doMechLabel);
+    if(doMech >= 0.){
+      delt_CFL = .0625;
+    }
+    //__________________________________
+    //  Bullet proofing
+    if(delt_CFL < 1e-20) {  
+      string warn = " E R R O R \n ICE::ComputeStableTimestepRF: delT < 1e-20";
+      throw InvalidValue(warn);
+    }
+    
+    new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
+  }  // patch loop
+  //  update when you should dump debugging data. 
+  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval;
+}
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::computeRateFormPressure-- 
  Reference: A Multifield Model and Method for Fluid Structure
