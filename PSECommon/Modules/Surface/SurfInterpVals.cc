@@ -29,19 +29,15 @@
 //  3) Blur data values across surface using voronoi n-neaest surface neighbors
 
 #include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/SurfTree.h>
 #include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Expon.h>
 #include <SCICore/Math/MusilRNG.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <stdio.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
@@ -51,8 +47,10 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Datatypes;
+using namespace PSECore::Dataflow;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
+using namespace SCICore::GeomSpace;
 
 class SurfInterpVals : public Module {
     SurfaceIPort* isurface1;
@@ -64,14 +62,16 @@ class SurfInterpVals : public Module {
     TCLint cache;
     Array2<int> contribIdx;
     Array2<double> contribAmt;
+    
 public:
     SurfInterpVals(const clString& id);
     virtual ~SurfInterpVals();
     virtual void execute();
 };
 
-Module* make_SurfInterpVals(const clString& id) {
-  return new SurfInterpVals(id);
+Module* make_SurfInterpVals(const clString& id)
+{
+    return new SurfInterpVals(id);
 }
 
 static clString module_name("SurfInterpVals");
@@ -131,33 +131,8 @@ void SurfInterpVals::execute()
 	if (haveSurf2) sh=isurf2;
 	// get the right trisurface and grab those vals
 	if(!(ts=sh->getTriSurface())) {
-	    SurfTree *st=sh->getSurfTree();
-	    if (!st) {
-		cerr << "Error -- second surface wasn't a trisurface or a surftree...\n";
-		return;
-	    }
-	    Array1<int> map;	// not used
-	    Array1<int> imap;	// not used
-	    int comp;
-	    int ok;
-	    ok = sid.get_int(comp);
-	    if (!ok) {
-		for (comp=0; comp<st->surfI.size(); comp++) {
-		    if (st->surfI[comp].name == sid) {
-			break;
-		    }
-		}
-		if (comp == st->surfI.size()) {
-		    cerr << "Error: bad surface name "<<sid<<"\n";
-		    return;
-		}
-	    }
-	    
-	    ts = new TriSurface;
-	    if (!st->extractTriSurface(ts, map, imap, comp)) {
-		cerr << "Error, couldn't extract triSurface.\n";
-		return;
-	    }
+	    cerr << "I only know how to deal with TriSurfaces!\n";
+	    return;
 	}
 	// ok, now TS has the nodes and values of the data - copy them
 	int i;
@@ -184,40 +159,9 @@ void SurfInterpVals::execute()
 	sh=isurf1;
 //	cerr << "ATTEMPT...\n";
 	if(!(ts=sh->getTriSurface())) {
-//	    cerr << "I'm in!\n";
-	    SurfTree *st=sh->getSurfTree();
-	    if (!st) {
-		cerr << "Error -- first surface wasn't a trisurface or a surftree...\n";
-		return;
-	    }
-	    int comp;
-	    int ok;
-	    ok = sid.get_int(comp);
-	    if (!ok) {
-		for (comp=0; comp<st->surfI.size(); comp++) {
-		    if (st->surfI[comp].name == sid) {
-			break;
-		    }
-		}
-		if (comp == st->surfI.size()) {
-		    cerr << "Error: bad surface name "<<sid<<"\n";
-		    return;
-		}
-	    }
-	    ts = new TriSurface;
-//	    cerr << "HIYA!\n";
-	    if (!st->extractTriSurface(ts, map, imap, comp)) {
-		cerr << "Error, couldn't extract triSurface.\n";
-		return;
-	    } else {
-		if (st->data.size() == ts->bcIdx.size()) {
-		    st->data.resize(0);
-		    st->idx.resize(0);
-		}
-//		cerr << "Got surface "<<comp<<" out of st.  ST had "<<st->bcVal.size()<<" bcs.  TS has "<<ts->bcVal.size()<<"\n";
-	    }
+	    cerr << "I only know how to deal with TriSurfaces!\n";
+	    return;
 	}
-	
 	// now the data locations and values are in v and p
 	// and the surface that needs to be interpolated is a TriSurface ts
 	// time to do volume nearest neighbor averaging...
@@ -225,16 +169,10 @@ void SurfInterpVals::execute()
 	if (m == "project") {
 	    if (ts->bcVal.size()) {
 		cerr << "Error -- surf1 already has "<<ts->bcVal.size()<<"boundary values!\n";
-		if (isurf1->getSurfTree()) {
-		    delete ts;
-		}
 		return;
 	    }
 	    if (p.size() > ts->points.size()) {
 		cerr << "Too many points to project ("<<p.size()<<" to "<<ts->points.size()<<")\n";
-		if (isurf1->getSurfTree()) {
-		    delete ts;
-		}
 		return;
 	    }
 
@@ -265,16 +203,10 @@ void SurfInterpVals::execute()
 	} else if (m == "projectNormal") {
 	    if (ts->bcVal.size()) {
 		cerr << "Error -- surf1 already has "<<ts->bcVal.size()<<"boundary values!\n";
-		if (isurf1->getSurfTree()) {
-		    delete ts;
-		}
 		return;
 	    }
 	    if (p.size() > ts->points.size()) {
 		cerr << "Too many points to project ("<<p.size()<<" to "<<ts->points.size()<<")\n";
-		if (isurf1->getSurfTree()) {
-		    delete ts;
-		}
 		return;
 	    }
 
@@ -365,32 +297,6 @@ void SurfInterpVals::execute()
 		ts->bcVal[aa]=data;
 	    }
 	}
-
-	// now if this data came from a SurfTree, using imap and map, copy 
-	// values back
-	// first have to correct any old values -- make an array of which
-	// ones we've fixed
-
-	SurfTree *st;
-	if (st=sh->getSurfTree()) {
-	    Array1<int> seen(ts->bcVal.size());
-	    seen.initialize(0);
-	    int aa;
-	    for (aa=0; aa<st->idx.size(); aa++) {
-		if (map[st->idx[aa]] != -1) {
-		    // this node is already known to have a value -- set it
-		    st->data[aa]=ts->bcVal[map[st->idx[aa]]];
-		    seen[aa]=1;
-		}
-	    }
-	    for (aa=0; aa<ts->bcVal.size(); aa++) {
-		if (!seen[aa]) { // this one didn't have a value yet -- add it
-		    st->idx.add(imap[ts->bcIdx[aa]]);
-		    st->data.add(ts->bcVal[aa]);
-		}
-	    }
-	    delete ts;
-	}
     }
     osurface->send(isurf1);
 }
@@ -400,6 +306,9 @@ void SurfInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/11/09 08:32:59  dmw
+// added SurfInterpVals to index
+//
 // Revision 1.6  1999/10/07 02:07:00  sparker
 // use standard iostreams and complex type
 //

@@ -65,6 +65,7 @@ MP(LabelSurface)
 MP(SFUGtoSurf)
 MP(SurfGen)
 MP(SurfNewVals)
+MP(SurfInterpVals)
 MP(SurfToGeom)
 
 // Visualization
@@ -172,6 +173,7 @@ void initPackage(const clString& tcl) {
   RM("Surface",       "Surf Gen",                make_SurfGen,              tcl+"/SurfGen.tcl");
   RM("Surface",       "Surf New Vals",           make_SurfNewVals,          tcl+"/SurfNewVals.tcl");
   RM("Surface",       "SurfToGeom",              make_SurfToGeom,           tcl+"/SurfToGeom.tcl");
+  RM("Surface",       "SurfInterpVals",          make_SurfInterpVals,       tcl+"/SurfInterpVals.tcl");
 
   // Visualization
   RM("Visualization", "Add Wells 2",             make_AddWells2,            tcl+"/AddWells2.tcl");

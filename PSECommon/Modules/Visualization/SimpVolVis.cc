@@ -66,6 +66,7 @@ class SimpVolVis : public Module {
   Vector ddv;
 
   TCLint avail_tex;
+  TCLint draw_mode;
   int num_slices;
 public:
   SimpVolVis( const clString& id);
@@ -88,7 +89,7 @@ static clString widget_name("VolVisLocatorWidget");
 SimpVolVis::SimpVolVis(const clString& id)
   : Module("SimpVolVis", id, Filter), widget_lock("SimpVolVis widget lock"),
     rvol(0), mode(1),num_slices(64),triangles(0),
-    avail_tex("avail_tex", id, this)
+    avail_tex("avail_tex", id, this), draw_mode("draw_mode", id, this)
 {
   // Create the input ports
   inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
@@ -228,11 +229,13 @@ void SimpVolVis::execute(void)
 
   int use_tcl_stuff=1;
 
-  if (!get_tcl_intvar(base,modes,executemode)) {
-      cerr << "Can't find tcl variables in SimpVolVis!\n";
-      use_tcl_stuff=0;
-      executemode=0;
-  }
+  executemode = draw_mode.get();
+//  if (!executemode = draw_mode.get()) {
+//  if (!get_tcl_intvar(base,modes,executemode)) {
+//      cerr << "Can't find tcl variables in SimpVolVis!\n";
+//      use_tcl_stuff=0;
+//      executemode=0;
+//  }
   if (!init) {
     init=1;
     widget=scinew PointWidget(this, &widget_lock, 0.2);
@@ -414,6 +417,9 @@ void SimpVolVis::widget_moved(int /*last*/)
 
 //
 // $Log$
+// Revision 1.8  1999/11/09 08:33:00  dmw
+// added SurfInterpVals to index
+//
 // Revision 1.7  1999/10/07 02:07:08  sparker
 // use standard iostreams and complex type
 //
