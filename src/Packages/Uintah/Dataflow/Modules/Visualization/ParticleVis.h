@@ -51,7 +51,7 @@ class ParticleVis : public Module {
  public:
     ParticleVis(const clString& id);
     virtual ~ParticleVis();
-    virtual void geom_pick(GeomPick*, void*, int);
+    virtual void geom_pick(GeomPick*, void*, GeomObj*);
 
     virtual void execute();
 };

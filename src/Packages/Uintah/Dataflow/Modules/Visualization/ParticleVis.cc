@@ -281,19 +281,19 @@ void ParticleVis::execute()
 }
 
 
-void ParticleVis::geom_pick(GeomPick* pick, void* userdata, int index)
+void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
 {
   cerr << "Caught stray pick event in ParticleVis!\n";
   cerr << "this = "<< this <<", pick = "<<pick<<endl;
   cerr << "User data = "<<userdata<<endl;
-  cerr << "sphere index = "<<index<<endl<<endl;
+  //  cerr << "sphere index = "<<index<<endl<<endl;
   int id = 0;
-  if ( ((GeomObj *)pick)->getId( id ) )
+  if ( ((GeomObj *)picked_obj)->getId( id ) )
     cerr<<"Id = "<< id <<endl;
   else
     cerr<<"Not getting the correct data\n";
   if( cbClass != 0 )
-    ((ParticleFieldExtractor *)cbClass)->callback( index );
+    ((ParticleFieldExtractor *)cbClass)->callback( id );
   // Now modify so that points and spheres store index.
 }
   
