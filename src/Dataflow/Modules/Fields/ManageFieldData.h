@@ -35,7 +35,7 @@ namespace SCIRun {
 class ManageFieldDataAlgoField : public DynamicAlgoBase
 {
 public:
-  virtual MatrixHandle execute(FieldHandle src) = 0;
+  virtual MatrixHandle execute(FieldHandle src, int &datasize) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -48,12 +48,13 @@ class ManageFieldDataAlgoFieldScalar : public ManageFieldDataAlgoField
 {
 public:
   //! virtual interface. 
-  virtual MatrixHandle execute(FieldHandle src);
+  virtual MatrixHandle execute(FieldHandle src, int &datasize);
 };
 
 template <class Fld>
 MatrixHandle
-ManageFieldDataAlgoFieldScalar<Fld>::execute(FieldHandle ifield_h)
+ManageFieldDataAlgoFieldScalar<Fld>::execute(FieldHandle ifield_h,
+					     int &datasize)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
 
@@ -69,6 +70,8 @@ ManageFieldDataAlgoFieldScalar<Fld>::execute(FieldHandle ifield_h)
     omatrix->put(index++, (double)val);
     ++iter;
   }
+  datasize = index;
+
   string units;
   if (ifield_h->get_property("units", units))
     omatrix->set_property("units", units, false);
@@ -81,12 +84,13 @@ class ManageFieldDataAlgoFieldVector : public ManageFieldDataAlgoField
 {
 public:
   //! virtual interface. 
-  virtual MatrixHandle execute(FieldHandle src);
+  virtual MatrixHandle execute(FieldHandle src, int &datasize);
 };
 
 template <class Fld>
 MatrixHandle
-ManageFieldDataAlgoFieldVector<Fld>::execute(FieldHandle ifield_h)
+ManageFieldDataAlgoFieldVector<Fld>::execute(FieldHandle ifield_h,
+					     int &datasize)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
 
@@ -105,6 +109,8 @@ ManageFieldDataAlgoFieldVector<Fld>::execute(FieldHandle ifield_h)
     index++;
     ++iter;
   }
+  datasize = index;
+
   string units;
   if (ifield_h->get_property("units", units))
     omatrix->set_property("units", units, false);
@@ -118,12 +124,13 @@ class ManageFieldDataAlgoFieldTensor : public ManageFieldDataAlgoField
 {
 public:
   //! virtual interface. 
-  virtual MatrixHandle execute(FieldHandle src);
+  virtual MatrixHandle execute(FieldHandle src, int &datasize);
 };
 
 template <class Fld>
 MatrixHandle
-ManageFieldDataAlgoFieldTensor<Fld>::execute(FieldHandle ifield_h)
+ManageFieldDataAlgoFieldTensor<Fld>::execute(FieldHandle ifield_h,
+					     int &datasize)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
 
@@ -148,6 +155,8 @@ ManageFieldDataAlgoFieldTensor<Fld>::execute(FieldHandle ifield_h)
     index++;
     ++iter;
   }
+  datasize = index;
+
   string units;
   if (ifield_h->get_property("units", units))
     omatrix->set_property("units", units, false);
