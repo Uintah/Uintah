@@ -77,9 +77,10 @@ GeomObj* GeomTorus::clone()
     return new GeomTorus(*this);
 }
 
-void GeomTorus::get_bounds(BBox&)
+void GeomTorus::get_bounds(BBox& bb)
 {
-    NOT_FINISHED("GeomTorus::get_bounds");
+    bb.extend_cyl(cen-axis*rad2, axis, rad1+rad2);
+    bb.extend_cyl(cen+axis*rad2, axis, rad1+rad2);
 }
 
 void GeomTorus::get_bounds(BSphere& bs)

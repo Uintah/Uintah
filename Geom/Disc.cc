@@ -82,8 +82,7 @@ void GeomDisc::adjust()
 
 void GeomDisc::get_bounds(BBox& bb)
 {
-    NOT_FINISHED("GeomDisc::get_bounds");
-    bb.extend(cen, rad);
+    bb.extend_cyl(cen, n, rad);
 }
 
 void GeomDisc::get_bounds(BSphere& bs)

@@ -84,9 +84,8 @@ GeomObj* GeomCylinder::clone()
 
 void GeomCylinder::get_bounds(BBox& bb)
 {
-    NOT_FINISHED("GeomCylinder::get_bounds");
-    bb.extend(bottom, rad);
-    bb.extend(top, rad);
+    bb.extend_cyl(bottom, axis, rad);
+    bb.extend_cyl(top, axis, rad);
 }
 
 void GeomCylinder::get_bounds(BSphere& bs)

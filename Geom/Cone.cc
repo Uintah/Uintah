@@ -83,9 +83,8 @@ void GeomCone::adjust()
 
 void GeomCone::get_bounds(BBox& bb)
 {
-    NOT_FINISHED("GeomCone::get_bounds");
-    bb.extend(bottom, bot_rad);
-    bb.extend(top, top_rad);
+    bb.extend_cyl(bottom, axis, bot_rad);
+    bb.extend_cyl(top, axis, top_rad);
 }
 
 void GeomCone::get_bounds(BSphere&)
