@@ -3,13 +3,18 @@
 
 using namespace Uintah;
 
-VarLabel::VarLabel(const std::string& name, const TypeDescription* td)
-   : d_name(name), d_td(td)
+VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
+		   VarType vartype)
+   : d_name(name), d_td(td), d_vartype(vartype)
 {
 }
 
 //
 // $Log$
+// Revision 1.3  2000/04/28 07:35:37  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.2  2000/04/26 06:49:00  sparker
 // Streamlined namespaces
 //

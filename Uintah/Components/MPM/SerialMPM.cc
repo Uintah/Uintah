@@ -61,7 +61,8 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
                new VarLabel( "p.externalforce",
 			     ParticleVariable<Vector>::getTypeDescription() );
    pXLabel =   new VarLabel( "p.x",
-			     ParticleVariable<Point>::getTypeDescription() );
+			     ParticleVariable<Point>::getTypeDescription(),
+			     VarLabel::PositionVariable);
 
    gAccelerationLabel =
                 new VarLabel( "g.acceleration",
@@ -321,7 +322,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
 				   const Region* region,
-				   const DataWarehouseP& old_dw,
+				   const DataWarehouseP& /* old_dw */,
 				   DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
@@ -329,9 +330,10 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
-       int numParticles = mpm_matl->countParticles(region);
+       particleIndex numParticles = mpm_matl->countParticles(region);
        ParticleVariable<Point> particles;
-       new_dw->allocate(numParticles, particles, pXLabel, region);
+       new_dw->allocate(numParticles, particles, pXLabel,
+			matl->getDWIndex(), region);
 
        mpm_matl->createParticles(particles, region);
     }
@@ -339,9 +341,9 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 }
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
-					      const Region* region,
-					      const DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw)
+					      const Region*,
+					      const DataWarehouseP&,
+					      DataWarehouseP&)
 {
 }
 
@@ -510,7 +512,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
 void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 				     const Region* region,
-				     const DataWarehouseP& old_dw,
+				     const DataWarehouseP& /*old_dw*/,
 				     DataWarehouseP& new_dw)
 {
   Vector zero(0.,0.,0.);
@@ -698,6 +700,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.32  2000/04/28 07:35:26  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.31  2000/04/27 23:18:41  sparker
 // Added problem initialization for MPM
 //

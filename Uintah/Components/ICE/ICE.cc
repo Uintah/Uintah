@@ -96,7 +96,7 @@ ICE::~ICE()
 #endif
 }
 
-void ICE::problemSetup(const ProblemSpecP& params, GridP& grid,
+void ICE::problemSetup(const ProblemSpecP&, GridP&,
 		       SimulationStateP&)
 {
 #if 0
@@ -215,16 +215,16 @@ int m=1;
 #endif
 }
 
-void ICE::scheduleInitialize(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& dw)
+void ICE::scheduleInitialize(const LevelP&,
+			     SchedulerP&,
+			     DataWarehouseP&)
 {
    cerr << "SerialMPM::scheduleInitialize not done\n";
 }
 
-void ICE::scheduleComputeStableTimestep(const LevelP& level,
-					SchedulerP& sched,
-					DataWarehouseP& dw)
+void ICE::scheduleComputeStableTimestep(const LevelP&,
+					SchedulerP&,
+					DataWarehouseP&)
 {
 #if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
@@ -246,9 +246,9 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
-					const Region* region,
-					const DataWarehouseP& fromDW,
-					DataWarehouseP& toDW)
+					const Region*,
+					const DataWarehouseP&,
+					DataWarehouseP&)
 {
 #if 0
 #if 0
@@ -274,8 +274,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorContext*,
 }
 
 void ICE::scheduleTimeAdvance(double t, double delt,
-			      const LevelP& level, SchedulerP& sched,
-			      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+			      const LevelP&, SchedulerP&,
+			      const DataWarehouseP&, DataWarehouseP&)
 {
 #if 0
     for(Level::const_regionIterator iter=level->regionsBegin();
@@ -300,9 +300,9 @@ void ICE::scheduleTimeAdvance(double t, double delt,
 }
 
 void ICE::actuallyTimeStep(const ProcessorContext*,
-			   const Region* region,
-			   const DataWarehouseP& fromDW,
-			   DataWarehouseP& toDW)
+			   const Region*,
+			   const DataWarehouseP&,
+			   DataWarehouseP&)
 {
 #if 0
     double t = this->cheat_t;

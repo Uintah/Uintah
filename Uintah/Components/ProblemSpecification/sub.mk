@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Components/ProblemSpecification
 
 SRCS	+= $(SRCDIR)/ProblemSpecReader.cc
 
-PSELIBS := Uintah/Interface Uintah/Exceptions
+PSELIBS := Uintah/Interface Uintah/Exceptions Uintah/Grid
 LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
@@ -28,6 +28,10 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.8  2000/04/28 07:35:33  sparker
+# Started implementation of DataWarehouse
+# MPM particle initialization now works
+#
 # Revision 1.7  2000/04/12 22:59:42  sparker
 # Added crude error handling capabilities to reader
 #

@@ -11,8 +11,6 @@
 #include <Uintah/Grid/NCVariableBase.h>
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
-#include <iostream> // TEMPORARY
-#include <string>
 
 namespace SCICore {
 namespace Geometry {
@@ -59,82 +57,26 @@ WARNING
       
       virtual void setGrid(const GridP&)=0;
       
-      virtual void allocate(ReductionVariableBase&, const VarLabel*) const = 0;
+      virtual void allocate(ReductionVariableBase&, const VarLabel*) = 0;
       virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
       virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
       
       virtual void allocate(int numParticles, ParticleVariableBase&,
-			    const VarLabel*, const Region*) const = 0;
+			    const VarLabel*, int matlIndex,
+			    const Region*) = 0;
       virtual void allocate(ParticleVariableBase&, const VarLabel*,	int matlIndex,
-			    const Region*) const = 0;
+			    const Region*) = 0;
       virtual void get(ParticleVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*, int numGhostCells) const = 0;
       virtual void put(const ParticleVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
       
       virtual void allocate(NCVariableBase&, const VarLabel*,
-			    int matlIndex, const Region*) const = 0;
+			    int matlIndex, const Region*) = 0;
       virtual void get(NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*, int numGhostCells) const = 0;
       virtual void put(const NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Region*) = 0;
-      
-      
-#if 0
-      virtual void get(ParticleVariableBase&, const VarLabel*,
-		       const Region* region) const;
-      // , int ?? around what?? numGhostCells) const;
-      virtual void get();
-#endif
-      
-#if 0
-      // These need to be generalized.  Also do Handle<T>
-      template<class T> void get(T& data, const std::string& name) const {
-	 getBroadcastData(data, name, T::getTypeDescription());
-      }
-      
-      template<class T> void get(T& data, const std::string& name,
-				 const Region* region) const {
-	 getRegionData(data, name, T::getTypeDescription(),
-		       region);
-      }
-      
-      template<class T> void get(T& data, const std::string& name,
-				 const Region* region, int numGhostCells) const {
-	 getRegionData(data, name, T::getTypeDescription(),
-		       region, numGhostCells);
-      }
-      
-      template<class T> void allocate(T& data, const std::string& name,
-				      const Region* region, int numGhostCells) {
-	 allocateRegionData(data, name, T::getTypeDescription(),
-			    region, numGhostCells);
-      }
-      
-      template<class T> void put(const T& data, const std::string& name,
-				 const Region* region) {
-	 putRegionData(data, name, T::getTypeDescription(),
-		       region);
-      }
-      
-      template<class T> void put(const T& data, const std::string& name,
-				 const Region* region, int numGhostCells) {
-	 putRegionData(data, name, T::getTypeDescription(),
-		       region, numGhostCells);
-      }
-      
-      template<class T> void put(const T& data, const std::string& name) {
-	 putBroadcastData(data, name, T::getTypeDescription());
-      }
-      
-      bool exists(const std::string&, const Region*, int) {
-	 return true;
-      }
-      
-      bool exists(const std::string&, const Region*) {
-	 return true;
-      }
-#endif
       
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses );
@@ -142,27 +84,6 @@ WARNING
       
    private:
       
-#if 0
-      virtual void getBroadcastData(DataItem& di, const std::string& name,
-				    const TypeDescription*) const = 0;
-      virtual void getRegionData(DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*) const = 0;
-      virtual void getRegionData(DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*, int numGhostCells) const = 0;
-      virtual void putRegionData(const DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*) = 0;
-      virtual void putRegionData(const DataItem& di, const std::string& name,
-				 const TypeDescription*,
-				 const Region*, int numGhostCells) = 0;
-      virtual void allocateRegionData(DataItem& di, const std::string& name,
-				      const TypeDescription*,
-				      const Region*, int numGhostCells) = 0;
-      virtual void putBroadcastData(const DataItem& di, const std::string& name,
-				    const TypeDescription*) = 0;
-#endif
       DataWarehouse(const DataWarehouse&);
       DataWarehouse& operator=(const DataWarehouse&);
    };
@@ -171,6 +92,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.16  2000/04/28 07:35:39  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.15  2000/04/27 23:18:51  sparker
 // Added problem initialization for MPM
 //

@@ -40,6 +40,7 @@ WARNING
    class ParticleSet : public RefCounted {
    public:
       ParticleSet();
+      ParticleSet(particleIndex numParticles);
       ~ParticleSet();
       
       //////////
@@ -66,6 +67,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/04/28 07:35:36  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.3  2000/04/26 06:48:51  sparker
 // Streamlined namespaces
 //

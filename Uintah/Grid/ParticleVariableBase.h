@@ -40,6 +40,11 @@ WARNING
    public:
       
       virtual ~ParticleVariableBase();
+      virtual void copyPointer(const ParticleVariableBase&) = 0;
+      
+      //////////
+      // Insert Documentation Here:
+      virtual ParticleVariableBase* clone() const = 0;
       
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
@@ -53,6 +58,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/04/28 07:35:37  sparker
+// Started implementation of DataWarehouse
+// MPM particle initialization now works
+//
 // Revision 1.2  2000/04/26 06:48:52  sparker
 // Streamlined namespaces
 //
