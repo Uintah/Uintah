@@ -45,6 +45,12 @@ using namespace std;
 
 static DebugStream dbg("SimpleCFD", false);
 
+#if defined(__sgi) && !defined(__GNUC__)
+#  define BREAK 
+#else
+#  define BREAK break
+#endif
+
 #if 1
 template<class ArrayType>
 static void print(const ArrayType& d, const char* name, int pre=0)
@@ -90,7 +96,7 @@ static void printhex(const ArrayType& d, const char* name, int pre=0)
 }
 #endif
 
-#if 1
+#if 0
 static void printMat(const Array3<Stencil7>& A, const char* name)
 {
   IntVector l(A.getLowIndex());
@@ -251,6 +257,14 @@ void SimpleCFD::scheduleComputeStableTimestep(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
+void
+SimpleCFD::scheduleTimeAdvance( const LevelP&, SchedulerP& )
+{
+  cout << "SimpleCFD component does not support non-AMR.\n";
+  throw InternalError("SimpleCFD component does not support non-AMR.");
+}
+
+// scheduleTimeAdvance version called by the AMR simulation controller.
 void SimpleCFD::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
 				    int step, int nsteps)
 {
@@ -1133,7 +1147,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
       case BC::Exterior:
       case BC::CoarseGrid:
 	throw InternalError("unknown BC");
-	break;
+	BREAK;
       }
     }
     {
@@ -1180,7 +1194,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
       case BC::Exterior:
       case BC::CoarseGrid:
 	throw InternalError("unknown BC");
-	break;
+	BREAK;
       }
     }
     {
@@ -1227,7 +1241,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
       case BC::Exterior:
       case BC::CoarseGrid:
 	throw InternalError("unknown BC");
-	break;
+	BREAK;
       }
     }
     {
@@ -1274,7 +1288,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
       case BC::Exterior:
       case BC::CoarseGrid:
 	throw InternalError("unknown BC");
-	break;
+	BREAK;
       }
     }
     {
@@ -1321,7 +1335,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
       case BC::Exterior:
       case BC::CoarseGrid:
 	throw InternalError("unknown BC");
-	break;
+	BREAK;
       }
     }
     {
@@ -1368,7 +1382,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
       case BC::Exterior:
       case BC::CoarseGrid:
 	throw InternalError("unknown BC");
-	break;
+	BREAK;
       }
     }
     break;
@@ -1381,7 +1395,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
   case BC::Exterior:
   case BC::CoarseGrid:
     throw InternalError("unknown BC");
-    //break;
+    BREAK;
   }
 }
 
@@ -1839,6 +1853,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
 	case BC::Exterior:
 	case BC::FixedFlux:
 	  throw InternalError("Unknown pressure BC");
+          BREAK;
 	}
       }
 
@@ -1927,6 +1942,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
+              BREAK;
 	    }
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(-1,0,0)]);
 	    double pl;
@@ -1944,6 +1960,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
+	      BREAK;
 	    }
 	    double gx = pr-pl;
 	    xvel[idx] -= gx;
@@ -1954,6 +1971,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	case BC::CoarseGrid:
 	case BC::Exterior:
 	  throw InternalError("unknown bc");
+	  BREAK;
 	}
       }
       for(CellIterator iter(patch->getSFCYIterator(0)); !iter.done(); iter++){
@@ -1980,6 +1998,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
+	      BREAK;
 	    }
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,-1,0)]);
 	    double pl;
@@ -1997,6 +2016,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
+	      BREAK;
 	    }
 	    double gy = pr-pl;
 	    yvel[idx] -= gy;
@@ -2007,6 +2027,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	case BC::CoarseGrid:
 	case BC::Exterior:
 	  throw InternalError("unknown bc");
+	  BREAK;
 	}
       }
       for(CellIterator iter(patch->getSFCZIterator(0)); !iter.done(); iter++){
@@ -2033,6 +2054,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
+	      BREAK;
 	    }
 	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,0,-1)]);
 	    double pl;
@@ -2050,6 +2072,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	      break;
 	    case BC::FixedFlux:
 	      throw InternalError("Unknown bc");
+	      BREAK;
 	    }
 	    double gz = pr-pl;
 	    zvel[idx] -= gz;
@@ -2060,6 +2083,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 	case BC::CoarseGrid:
 	case BC::Exterior:
 	  throw InternalError("unknown bc");
+	  BREAK;
 	}
       }
 #if 0
@@ -2249,6 +2273,7 @@ void SimpleCFD::dissipateScalars(const ProcessorGroup*,
 	case BC::Exterior:
 	  // Shouldn't happen
 	  throw InternalError("illegalBC");
+	  BREAK;
 	}
       }
 #if 0
@@ -2351,57 +2376,64 @@ void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
   }
 }
 
-void SimpleCFD::addRefineDependencies(Task* task, const VarLabel* label,
-				      int step, int nsteps)
+void
+SimpleCFD::addRefineDependencies( Task* /*task*/, 
+				  const VarLabel* /*label*/,
+				  int /*step*/, int /*nsteps*/ )
 {
 }
 
-void SimpleCFD::refineBoundaries(const Patch* patch,
-				 CCVariable<double>& val,
-				 DataWarehouse* new_dw,
-				 const VarLabel* label,
-				 int matl,
-				 double factor)
-{
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
-}
-
-void SimpleCFD::refineBoundaries(const Patch* patch,
-				 SFCXVariable<double>& val,
-				 DataWarehouse* new_dw,
-				 const VarLabel* label,
-				 int matl,
-				 double factor)
+void
+SimpleCFD::refineBoundaries(const Patch* /*patch*/,
+			    CCVariable<double>& /*val*/,
+			    DataWarehouse* /*new_dw*/,
+			    const VarLabel* /*label*/,
+			    int /*matl*/,
+			    double /*factor*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
-void SimpleCFD::refineBoundaries(const Patch* patch,
-				 SFCYVariable<double>& val,
-				 DataWarehouse* new_dw,
-				 const VarLabel* label,
-				 int matl,
-				 double factor)
+void
+SimpleCFD::refineBoundaries(const Patch* /*patch*/,
+			    SFCXVariable<double>& /*val*/,
+			    DataWarehouse* /*new_dw*/,
+			    const VarLabel* /*label*/,
+			    int /*matl*/,
+			    double /*factor*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
-void SimpleCFD::refineBoundaries(const Patch* patch,
-				 SFCZVariable<double>& val,
-				 DataWarehouse* new_dw,
-				 const VarLabel* label,
-				 int matl,
-				 double factor)
+void
+SimpleCFD::refineBoundaries(const Patch* /*patch*/,
+			    SFCYVariable<double>& /*val*/,
+			    DataWarehouse* /*new_dw*/,
+			    const VarLabel* /*label*/,
+			    int /*matl*/,
+			    double /*factor*/)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+
+void
+SimpleCFD::refineBoundaries(const Patch* /*patch*/,
+			    SFCZVariable<double>& /*val*/,
+			    DataWarehouse* /*new_dw*/,
+			    const VarLabel* /*label*/,
+			    int /*matl*/,
+			    double /*factor*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
 
 
-void SimpleCFD::hackbcs(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+void
+SimpleCFD::hackbcs(const ProcessorGroup*,
+		   const PatchSubset* patches,
+		   const MaterialSubset* matls,
+		   DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

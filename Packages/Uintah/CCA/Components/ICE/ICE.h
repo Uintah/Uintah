@@ -39,10 +39,12 @@ using namespace SCIRun;
       virtual void scheduleComputeStableTimestep(const LevelP&,
                                                 SchedulerP&);
       
-      virtual void scheduleTimeAdvance(
-                                      const LevelP&,
-                                      SchedulerP&);
-                                                                                        
+      virtual void scheduleTimeAdvance( const LevelP&,
+					SchedulerP& );
+      // scheduleTimeAdvance version called by the AMR simulation controller.
+      virtual void scheduleTimeAdvance( const LevelP& level, 
+					SchedulerP&, int step, int nsteps );
+
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
                                    const MaterialSubset*,
