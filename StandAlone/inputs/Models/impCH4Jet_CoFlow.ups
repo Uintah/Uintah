@@ -24,7 +24,6 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-
       <Face side = "x-">
         <BCType id = "0" label = "Pressure"      var = "Neumann">
                               <value> 0.0   </value>
@@ -81,7 +80,7 @@
         <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
         </BCType>
-        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -101,7 +100,7 @@
         <BCType id = "all" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>                  
@@ -162,7 +161,7 @@
       <save label = "modelEng_src"/>
       <save label = "cumulativeEnergyReleased"/>
       <compression>gzip</compression>
-      <checkpoint cycle = "2" interval = "0.06666"/>
+      <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
    <Debug>
