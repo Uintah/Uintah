@@ -823,8 +823,8 @@ double CompNeoHook::computeRhoMicroCM(double pressure,
   }
   else{
     double A = p_ref;
-    double n = bulk/p_ref;
-    rho_cur = rho_orig*pow(pressure/A,1./n);
+    double n = p_ref/bulk;
+    rho_cur = rho_orig*pow(pressure/A,n);
   }
 #endif
 
