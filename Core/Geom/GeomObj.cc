@@ -44,7 +44,7 @@ MutexPool lock_pool("GeomObj pool", GEOM_LOCK_POOL_SIZE);
 
 static int lock_pool_hash(GeomObj *ptr)
 {
-  long k = ((long)ptr) >> 3; // Disgard unused bits, byte aligned pointers.
+  long k = ((long)ptr) >> 2; // Disgard unused bits, word aligned pointers.
   return (int)((k^(3*GEOM_LOCK_POOL_SIZE+1))%GEOM_LOCK_POOL_SIZE);
 }   
 
