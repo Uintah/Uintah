@@ -19,7 +19,8 @@ using namespace SCICore::Math;
 
 PersistentTypeID Lattice3Geom::type_id("Lattice3Geom", "Datatype", 0);
 
-Lattice3Geom::Lattice3Geom()
+Lattice3Geom::Lattice3Geom() :
+  d_nx(0), d_ny(0), d_nz(0)
 {
 }
 
