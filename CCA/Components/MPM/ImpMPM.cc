@@ -462,25 +462,18 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->hasSubScheduler();
 
   // Required in computeStressTensor
+  //task->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
   task->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
-  // Need to move the particle data from top level old_dw to the 
-  // subscheduler new_dw.  After subscheduler new_dw is advanced
-  // the particle data will then be in the old_dw.
-  task->computes(lb->pXLabel);
-  task->computes(lb->pVolumeLabel);
-  task->computes(lb->pVolumeOldLabel);
 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
-		 Ghost::None);
+
 #if 1
   task->modifies(lb->pDeformationMeasureLabel_preReloc);
-		 
   task->modifies(lb->bElBarLabel_preReloc);
 
-  //task->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
+
 
   task->modifies(lb->dispNewLabel);
   task->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
@@ -518,7 +511,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize();
   GridP grid = level->getGrid();
-
+  subsched->advanceDataWarehouse(grid);
 
   // Create the tasks
 
@@ -573,47 +566,12 @@ void ImpMPM::iterate(const ProcessorGroup*,
     dispIncQ = true;
 
   // subsched->set_old_dw(old_dw);
-  subsched->set_new_dw(new_dw);
+  //  subsched->set_new_dw(new_dw);
  
   // Get all of the required particle data that is in the old_dw and put it 
   // in the subscheduler's  new_dw.  Then once dw is advanced, subscheduler
   // will be pulling data out of the old_dw.
 
- for (int p=0;p<patches->size();p++) {
-    const Patch* patch = patches->get(p);
-    cout_doing <<"Doing iterate on patch " << patch->getID()
-	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-      cout << "number of particles = " << pset->numParticles() << "\n";
-      // Need to pull out the pX, pVolume, and pVolumeOld from old_dw
-      // and put it in the subschedulers new_dw.  Once it is advanced,
-      // the subscheduler will be pulling data from the old_dw per the
-      // task specifications in the scheduleIterate.
-
-      constParticleVariable<Point> px_old;
-      ParticleVariable<Point> px_new;
-      constParticleVariable<double> pvol_old, pvolold_old;
-      ParticleVariable<double> pvol_new, pvolold_new;
-      old_dw->get(px_old,lb->pXLabel,pset);
-      old_dw->get(pvol_old,lb->pVolumeLabel,pset);
-      old_dw->get(pvolold_old,lb->pVolumeOldLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(px_new,lb->pXLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(pvol_new,lb->pVolumeLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(pvolold_new,lb->pVolumeOldLabel,
-					     pset);
-      px_new.copyData(px_old);
-      pvol_new.copyData(pvol_old);
-      pvolold_new.copyData(pvolold_old);
-
-      subsched->get_new_dw()->saveParticleSubset(matlindex, patch, pset);
-      
-    }
- }
-
-#if 0
   for (int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing <<"Doing iterate on patch " << patch->getID()
@@ -627,30 +585,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
       // and put it in the subschedulers new_dw.  Once it is advanced,
       // the subscheduler will be pulling data from the old_dw per the
       // task specifications in the scheduleIterate.
-
-      constParticleVariable<Point> px_old;
-      ParticleVariable<Point> px_new;
-      constParticleVariable<double> pvol_old, pvolold_old;
-      ParticleVariable<double> pvol_new, pvolold_new;
-      old_dw->get(px_old,lb->pXLabel,pset);
-      old_dw->get(pvol_old,lb->pVolumeLabel,pset);
-      old_dw->get(pvolold_old,lb->pVolumeOldLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(px_new,lb->pXLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(pvol_new,lb->pVolumeLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(pvolold_new,lb->pVolumeOldLabel,
-					     pset);
-      px_new.copyData(px_old);
-      pvol_new.copyData(pvol_old);
-      pvolold_new.copyData(pvolold_old);
-
-      subsched->get_new_dw()->saveParticleSubset(matlindex, patch, pset);
-
       // Get out some grid quantities: gmass, gInternalForce, gExternalForce
+
       constNCVariable<double> gmass;
-#if 0
       constNCVariable<Vector> internal_force,external_force,acc,dispInc,
 	velocity_old;
-      constNCVariable<double> gmass;
       NCVariable<Vector> dispNew,velocity;
       new_dw->getModifiable(dispNew,lb->dispNewLabel,matlindex,patch);
       new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
@@ -738,38 +677,15 @@ void ImpMPM::iterate(const ProcessorGroup*,
       new_dt = dt;
       // These variables are ultimately retrieved from the subschedulers
       // old datawarehouse after the advancement of the data warehouse.
-      subsched->get_new_dw()->put(newdisp,lb->dispNewLabel,matlindex, patch);
-      subsched->get_new_dw()->put(new_disp_inc,lb->dispIncLabel,matlindex,
-				  patch);
-      subsched->get_new_dw()->put(new_int_force,lb->gInternalForceLabel,
-				  matlindex,patch);
-      subsched->get_new_dw()->put(new_ext_force,lb->gExternalForceLabel,
-				  matlindex,patch);
-      subsched->get_new_dw()->put(new_vel,lb->gVelocityLabel, matlindex,patch);
-      subsched->get_new_dw()->put(new_vel_old,lb->gVelocityOldLabel, matlindex,
-				  patch);
-      subsched->get_new_dw()->put(new_acc,lb->gAccelerationLabel,matlindex,
-				  patch);
-      subsched->get_new_dw()->put(newgmass,lb->gMassLabel,matlindex, patch);
-      subsched->get_new_dw()->put(newpstress,lb->pStressLabel_preReloc);
-      // subsched->get_new_dw()->put(newdefGrad,lb->pDeformationMeasureLabel);
-      subsched->get_new_dw()->put(newdefGrad,
-				  lb->pDeformationMeasureLabel_preReloc);
-      //subsched->get_new_dw()->put(newbElBar,lb->bElBarLabel);
-      subsched->get_new_dw()->put(newbElBar,lb->bElBarLabel_preReloc);
-      subsched->get_new_dw()->put(newpx,lb->pXLabel);
-      subsched->get_new_dw()->put(newpvolume,lb->pVolumeLabel);
-      subsched->get_new_dw()->put(newpvolumeold,lb->pVolumeOldLabel);
       subsched->get_new_dw()->put(delt_vartype(new_dt),
 				  d_sharedState->get_delt_label());
       subsched->get_new_dw()->put(dispIncQNorm0,lb->dispIncQNorm0);
       subsched->get_new_dw()->put(dispIncNormMax,lb->dispIncNormMax);
-#endif
       
     }
   }
 
-#endif
+  subsched->get_new_dw()->finalize();
 
   cout << "dispInc = " << dispInc << " dispIncQ = " << dispIncQ << "\n";
   while(!dispInc && !dispIncQ) {
@@ -2351,8 +2267,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       
            
       new_dw->deleteParticles(delete_particles);
-      delete delete_particles;
-
+      
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       old_dw->get(pids, lb->pParticleIDLabel, pset);
