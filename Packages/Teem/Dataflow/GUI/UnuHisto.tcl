@@ -39,7 +39,7 @@ itcl_class Teem_UnuAtoM_UnuHisto {
     }
     method set_defaults {} {
         global $this-bins
-        set $this-bins 0
+        set $this-bins 3000
 
         global $this-min
         set $this-min 1.0
