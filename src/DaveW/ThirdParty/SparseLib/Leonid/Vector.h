@@ -112,26 +112,6 @@ ZVector<Data_Type>::ZVector(int N,Data_Type x){
 }
 
 //-----------------------------------------------------------------
-#if 0
-ZVector<Complex>::ZVector(int N,double x_re[],double x_im[]){
- Size = N;
-  
-  a = new Complex [N];
-  
-  for(int i=0;i<N;i++)
-    a[i].set(x_re[i],x_im[i]);
-
-}
-#endif
-
-//-----------------------------------------------------------------
-template<> ZVector<double>::ZVector(int N,double x_re[],double x_im[]){
-
- cout << "Not implemented for doubles!"<<endl;  
-
-}
-
-//-----------------------------------------------------------------
 template <class Data_Type>
 ZVector<Data_Type>::ZVector(int N,Data_Type x[]){
   Size = N;
@@ -142,7 +122,10 @@ ZVector<Data_Type>::ZVector(int N,Data_Type x[]){
     a[i] = x[i];
 }
 
-
+template <class Data_Type> 
+ZVector<Data_Type>::ZVector(int N,double x_re[],double x_im[]){
+    cerr << "Generic ZVector(int N,double x_re[],double x_im[]) constructor not implemented.\n";
+}
 
 //----------------------------------------------------------------
 template <class Data_Type>
@@ -489,27 +472,8 @@ void ZVector<Data_Type>::write(char * filename){
   file_out.close();
 }
 
-//-----------------------------------------------------------------
-template<> void ZVector<double>:: info(){
-  
-  cout<<"********************************************"<<endl; 
-  cout<<"Vector:"<<endl;
-  cout<<"Data Type = 'double'"<<endl;
-  cout<<"Size = "<<Size<<endl;
-  cout<<"********************************************"<<endl;
+template <class Data_Type>
+void ZVector<Data_Type>::info() {
+    cerr << "ZVector<>::info() not implemented for generic.\n";
 }
-
-#if 0
-void ZVector<Complex>:: info(){
-  
-  cout<<"********************************************"<<endl; 
-  cout<<"Vector:"<<endl;
-  cout<<"Data Type = 'Complex'"<<endl;
-  cout<<"Size = "<<Size<<endl;
-  cout<<"********************************************"<<endl;
-}
-#endif
-//---------------------------------------------------------------------
-
-
 #endif
