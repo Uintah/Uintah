@@ -31,6 +31,7 @@ SRCDIR   := Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/ApplyInterpolant.cc\
 	$(SRCDIR)/BuildInterpolant.cc\
+	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
