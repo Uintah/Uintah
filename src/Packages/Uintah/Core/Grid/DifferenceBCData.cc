@@ -2,6 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -56,7 +57,7 @@ DifferenceBCData::~DifferenceBCData()
 
 DifferenceBCData* DifferenceBCData::clone()
 {
-  return new DifferenceBCData(*this);
+  return scinew DifferenceBCData(*this);
 }
 
 void DifferenceBCData::addBCData(BCData& bc)

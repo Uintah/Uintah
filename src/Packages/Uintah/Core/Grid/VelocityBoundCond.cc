@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 #include <stdlib.h>
+#include <Core/Malloc/Allocator.h>
 using namespace Uintah;
 
 VelocityBoundCond::VelocityBoundCond(ProblemSpecP& ps,const std::string& kind)
@@ -46,7 +47,7 @@ VelocityBoundCond::~VelocityBoundCond()
 
 VelocityBoundCond* VelocityBoundCond::clone()
 {
-  return new VelocityBoundCond(*this);
+  return scinew VelocityBoundCond(*this);
 
 }
 

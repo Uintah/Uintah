@@ -2,6 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -28,7 +29,7 @@ CircleBCData::~CircleBCData()
 
 CircleBCData* CircleBCData::clone()
 {
-  return new CircleBCData(*this);
+  return scinew CircleBCData(*this);
 }
 
 void CircleBCData::addBCData(BCData& bc) 

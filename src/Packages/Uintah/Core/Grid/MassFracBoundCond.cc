@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/MassFracBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
@@ -19,5 +20,5 @@ MassFractionBoundCond::~MassFractionBoundCond()
 
 MassFractionBoundCond* MassFractionBoundCond::clone()
 {
-  return new MassFractionBoundCond(*this);
+  return scinew MassFractionBoundCond(*this);
 }

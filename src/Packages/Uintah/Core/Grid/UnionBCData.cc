@@ -2,6 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -66,7 +67,7 @@ UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
 
 UnionBCData* UnionBCData::clone()
 {
-  return new UnionBCData(*this);
+  return scinew UnionBCData(*this);
 
 }
 
