@@ -405,7 +405,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
 }
 
 
-// to be called after problemSetup gets called
+// to be called after problemSetup and initializeOutput get called
 void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
 				int timestep, double time, bool fromScratch,
 				bool removeOldDir)
@@ -560,7 +560,7 @@ void DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
    }
 
    // restart from <dir> at timestep
-   ProblemSpecP restartInfo = indexDoc->appendChild("restart",1);
+   ProblemSpecP restartInfo = indexDoc->appendChild("restart",0,1);
    restartInfo->setAttribute("from", fromDir.getName().c_str());
    
    ostringstream timestep_str;
@@ -625,7 +625,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	    d_checkpointTimestepDirs.push_back(toDir.getSubdir(href).getName());
 	 
 	 // add the timestep to the index.xml
-	 ProblemSpecP newTS = timesteps->appendChild("timestep", 1);
+	 ProblemSpecP newTS = timesteps->appendChild("timestep", 0, 1);
 
 	 ostringstream timestep_str;
 	 timestep_str << timestep;
@@ -961,29 +961,33 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       gridElem->appendElement("numLevels", numLevels);
       for(int l = 0;l<numLevels;l++){
 	LevelP level = grid->getLevel(l);
-	ProblemSpecP levelElem = gridElem->appendChild("Level");
+	ProblemSpecP levelElem = gridElem->appendChild("Level", 1, 1);
 
 	if (level->getPeriodicBoundaries() != IntVector(0,0,0))
-	  levelElem->appendElement("periodic", level->getPeriodicBoundaries());
-	levelElem->appendElement("numPatches", level->numPatches());
-	levelElem->appendElement("totalCells", level->totalCells());
-	levelElem->appendElement("cellspacing", level->dCell());
-	levelElem->appendElement("anchor", level->getAnchor());
-	levelElem->appendElement("id", level->getID());
+	  levelElem->appendElement("periodic", level->getPeriodicBoundaries(),0,2);
+	levelElem->appendElement("numPatches", level->numPatches(),0,2);
+	levelElem->appendElement("totalCells", level->totalCells(),0,2);
+	levelElem->appendElement("cellspacing", level->dCell(),0,2);
+	levelElem->appendElement("anchor", level->getAnchor(),0,2);
+	levelElem->appendElement("id", level->getID(),0,2);
 
 	Level::const_patchIterator iter;
 
 	for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	  const Patch* patch=*iter;
 	  Box box = patch->getBox();
-	  ProblemSpecP patchElem = levelElem->appendChild("Patch");
-	  patchElem->appendElement("id", patch->getID());
-	  patchElem->appendElement("lowIndex", patch->getCellLowIndex());
-	  patchElem->appendElement("highIndex", patch->getCellHighIndex());
-          patchElem->appendElement("nnodes", patch->getNNodes());
-	  patchElem->appendElement("lower", box.lower());
-	  patchElem->appendElement("upper", box.upper());
-	  patchElem->appendElement("totalCells", patch->totalCells());
+	  ProblemSpecP patchElem = levelElem->appendChild("Patch",1,2);
+	  patchElem->appendElement("id", patch->getID(),0,3);
+	  patchElem->appendElement("lowIndex", patch->getCellLowIndex(),0,3);
+	  patchElem->appendElement("highIndex", patch->getCellHighIndex(),0,3);
+          if (patch->getCellLowIndex() != patch->getInteriorCellLowIndex())
+            patchElem->appendElement("interiorLowIndex", patch->getInteriorCellLowIndex(),0,3);
+          if (patch->getCellHighIndex() != patch->getInteriorCellHighIndex())
+            patchElem->appendElement("interiorHighIndex", patch->getInteriorCellHighIndex(),0,3);
+          patchElem->appendElement("nnodes", patch->getNNodes(),0,3);
+	  patchElem->appendElement("lower", box.lower(),0,3);
+	  patchElem->appendElement("upper", box.upper(),0,3);
+	  patchElem->appendElement("totalCells", patch->totalCells(),0,3);
 	}
       }
       
@@ -1000,7 +1004,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i 
 		<< ".xml";
 
-	  ProblemSpecP df = dataElem->appendChild("Datafile",1);
+	  ProblemSpecP df = dataElem->appendChild("Datafile",0,1);
 	  df->setAttribute("href",pname.str());
 	  
 	  ostringstream procID;
@@ -1016,7 +1020,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       }
       
       if (hasGlobals) {
-	ProblemSpecP df = dataElem->appendChild("Datafile",1);
+	ProblemSpecP df = dataElem->appendChild("Datafile",0,1);
 	df->setAttribute("href", "global.xml");
 	dataElem->appendText("\n");
       }
@@ -1172,7 +1176,7 @@ DataArchiver::executedTimestep(double /*delt*/)
         // add timestep info
 	string timestepindex = tname.str()+"/timestep.xml";      
 	
-	ProblemSpecP newElem = ts->appendChild("timestep",1);
+	ProblemSpecP newElem = ts->appendChild("timestep",0,1);
 	ostringstream value;
 	value << timestep;
 	newElem->appendText(value.str().c_str());
