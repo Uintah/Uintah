@@ -119,6 +119,72 @@ COLOR_FTOB(double v)
   return (unsigned char)inter;
 }
 
+
+
+void
+GeomFastQuads::add(const Point &p0, const Point &p1,
+		   const Point &p2, const Point &p3)
+{
+  // Assume planar, use first three to compute normal.
+  Vector n(Cross(p1-p0, p2-p0));
+#ifndef SCI_NORM_OGL
+  if(n.length2() > 0)
+  {
+    n.normalize();
+  }
+  else
+  {
+    cerr << "Degenerate triangle in GeomQuads::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
+    return;
+  }
+#endif
+
+  add(p0, n, p1, n, p2, n, p3, n);
+}
+
+
+
+void
+GeomFastQuads::add(const Point &p0, const Vector &n0,
+		   const Point &p1, const Vector &n1,
+		   const Point &p2, const Vector &n2,
+		   const Point &p3, const Vector &n3)
+{
+  points_.push_back(p0.x());
+  points_.push_back(p0.y());
+  points_.push_back(p0.z());
+
+  points_.push_back(p1.x());
+  points_.push_back(p1.y());
+  points_.push_back(p1.z());
+
+  points_.push_back(p2.x());
+  points_.push_back(p2.y());
+  points_.push_back(p2.z());
+
+  points_.push_back(p3.x());
+  points_.push_back(p3.y());
+  points_.push_back(p3.z());
+
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+
+  normals_.push_back(n3.x());
+  normals_.push_back(n3.y());
+  normals_.push_back(n3.z());
+}
+
+
 void
 GeomFastQuads::add(const Point &p0, const MaterialHandle &m0,
 		   const Point &p1, const MaterialHandle &m1,
@@ -143,6 +209,23 @@ GeomFastQuads::add(const Point &p0, const MaterialHandle &m0,
 }
 
 
+
+void
+GeomFastQuads::add(const Point &p0, double i0,
+		   const Point &p1, double i1,
+		   const Point &p2, double i2,
+		   const Point &p3, double i3)
+{
+  add(p0, p1, p2, p3);
+  
+  indices_.push_back(i0);
+  indices_.push_back(i1);
+  indices_.push_back(i2);
+  indices_.push_back(i3);
+}
+
+
+
 void
 GeomFastQuads::add(const Point &p0, const Vector &n0,
 		   const MaterialHandle &m0,
@@ -153,21 +236,7 @@ GeomFastQuads::add(const Point &p0, const Vector &n0,
 		   const Point &p3, const Vector &n3,
 		   const MaterialHandle &m3)
 {
-  points_.push_back(p0.x());
-  points_.push_back(p0.y());
-  points_.push_back(p0.z());
-
-  points_.push_back(p1.x());
-  points_.push_back(p1.y());
-  points_.push_back(p1.z());
-
-  points_.push_back(p2.x());
-  points_.push_back(p2.y());
-  points_.push_back(p2.z());
-
-  points_.push_back(p3.x());
-  points_.push_back(p3.y());
-  points_.push_back(p3.z());
+  add(p0, n0, p1, n1, p2, n2, p3, n3);
 
   colors_.push_back(COLOR_FTOB(m0->diffuse.r()));
   colors_.push_back(COLOR_FTOB(m0->diffuse.g()));
@@ -193,24 +262,24 @@ GeomFastQuads::add(const Point &p0, const Vector &n0,
   colors_.push_back(COLOR_FTOB(m3->transparency * m2->transparency *
 			       m3->transparency * m2->transparency));
 
-  normals_.push_back(n0.x());
-  normals_.push_back(n0.y());
-  normals_.push_back(n0.z());
-
-  normals_.push_back(n1.x());
-  normals_.push_back(n1.y());
-  normals_.push_back(n1.z());
-
-  normals_.push_back(n2.x());
-  normals_.push_back(n2.y());
-  normals_.push_back(n2.z());
-
-  normals_.push_back(n3.x());
-  normals_.push_back(n3.y());
-  normals_.push_back(n3.z());
-
   material_ = m0;
 }
+
+
+void
+GeomFastQuads::add(const Point &p0, const Vector &n0, double i0,
+		   const Point &p1, const Vector &n1, double i1,
+		   const Point &p2, const Vector &n2, double i2,
+		   const Point &p3, const Vector &n3, double i3)
+{
+  add(p0, n0, p1, n1, p2, n2, p3, n3);
+
+  indices_.push_back(i0);
+  indices_.push_back(i1);
+  indices_.push_back(i2);
+  indices_.push_back(i3);
+}
+
 
 
 #define GEOMFASTQUADS_VERSION 1
@@ -221,6 +290,7 @@ void GeomFastQuads::io(Piostream& stream)
     stream.begin_class("GeomFastQuads", GEOMFASTQUADS_VERSION);
     Pio(stream, points_);
     Pio(stream, colors_);
+    Pio(stream, indices_);
     Pio(stream, normals_);
     stream.end_class();
 }

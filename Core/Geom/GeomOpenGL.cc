@@ -913,43 +913,48 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 void
 GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
-  if (!cmap_.get_rep()) return;
-
   if ( !pre_draw(di, m, 0) ) return;
 
-  // Set up and draw 1d texture.
-  if (di->cmtexture_ == 0)
+  if (!cmap_.get_rep())
   {
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &(di->cmtexture_));
-    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
+    child_->draw(di, m, time);
   }
+  else
+  {
+    // Set up and draw 1d texture.
+    if (di->cmtexture_ == 0)
+    {
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+      glGenTextures(1, &(di->cmtexture_));
+      glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-  glMatrixMode(GL_TEXTURE);
-  glPushMatrix();
+    }
 
-  glScaled(1.0 / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
-  glTranslated(-cmap_->getMin(), 0.0, 0.0);
+    glMatrixMode(GL_TEXTURE);
+    glPushMatrix();
 
-  glMatrixMode(GL_MODELVIEW);
+    glScaled(1.0 / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
+    glTranslated(-cmap_->getMin(), 0.0, 0.0);
 
-  // Send Cmap
-  glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-	       cmap_->raw1d);
-  glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+    glMatrixMode(GL_MODELVIEW);
 
-  // Draw child
-  child_->draw(di,m,time);
+    // Send Cmap
+    glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+		 cmap_->raw1d);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
 
-  glMatrixMode(GL_TEXTURE);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
+    // Draw child
+    child_->draw(di,m,time);
+
+    glMatrixMode(GL_TEXTURE);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+  }
 
   post_draw(di);
 }
@@ -3534,11 +3539,34 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_NORMAL_ARRAY);
   }
 
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);
-
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
-  glEnableClientState(GL_COLOR_ARRAY);
 
   if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
 
@@ -3547,6 +3575,7 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDisableClientState(GL_NORMAL_ARRAY);
   glEnable(GL_NORMALIZE);
   glShadeModel(GL_SMOOTH);
+  glDisable(GL_TEXTURE_1D);
 
   post_draw(di);
 }
@@ -3618,11 +3647,34 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_NORMAL_ARRAY);
   }
 
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
   glEnableClientState(GL_VERTEX_ARRAY);
-
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
-  glEnableClientState(GL_COLOR_ARRAY);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -3652,6 +3704,8 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glShadeModel(GL_SMOOTH);
   }
 
+  glDisable(GL_TEXTURE_1D);
+
   post_draw(di);
 }
 
@@ -3678,6 +3732,36 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_NORMALIZE);
   }
 
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+
   if (di->get_drawtype() == DrawInfoOpenGL::Flat)
   {
     glShadeModel(GL_FLAT);
@@ -3686,12 +3770,6 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   {
     glShadeModel(GL_SMOOTH);
   }
-
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
-
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
-  glEnableClientState(GL_COLOR_ARRAY);
 
   if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
 
@@ -3704,6 +3782,8 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   {
     glShadeModel(GL_SMOOTH);
   }
+
+  glDisable(GL_TEXTURE_1D);
 
   post_draw(di);
 }
@@ -3764,6 +3844,35 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_NORMALIZE);
   }
 
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
+
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
   if (di->get_drawtype() == DrawInfoOpenGL::Flat)
   {
     glShadeModel(GL_FLAT);
@@ -3772,12 +3881,6 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   {
     glShadeModel(GL_SMOOTH);
   }
-
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
-
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
-  glEnableClientState(GL_COLOR_ARRAY);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -3806,6 +3909,8 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   {
     glShadeModel(GL_SMOOTH);
   }
+
+  glDisable(GL_TEXTURE_1D);
 
   post_draw(di);
 }
