@@ -22,8 +22,8 @@
 #if !defined(MapDistanceField_h)
 #define MapDistanceField_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 
 namespace SCIRun {
 

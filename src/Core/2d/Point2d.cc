@@ -28,7 +28,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/2d/Point2d.h>
 #include <Core/2d/Vector2d.h>
 #include <Core/Util/Assert.h>

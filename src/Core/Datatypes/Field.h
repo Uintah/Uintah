@@ -20,7 +20,7 @@
 #define Datatypes_Field_h
 
 #include <Core/Datatypes/PropertyManager.h>
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>

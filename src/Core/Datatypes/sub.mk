@@ -54,7 +54,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_5.cc
 
 
-PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math Core/Util
 LIBS := $(GL_LIBS) -lm

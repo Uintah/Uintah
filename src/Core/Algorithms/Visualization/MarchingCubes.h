@@ -27,7 +27,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/TriSurfField.h>
 
 namespace SCIRun {

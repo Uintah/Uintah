@@ -48,7 +48,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 PSELIBS := Packages/BioPSE/Core/Datatypes \
 	Packages/BioPSE/Core/Algorithms/NumApproximation \
 	Dataflow/Network Dataflow/Ports \
-	Core/Datatypes Core/Disclosure Core/Persistent Core/Containers \
+	Core/Datatypes Core/Persistent Core/Containers \
 	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/TkExtensions
 

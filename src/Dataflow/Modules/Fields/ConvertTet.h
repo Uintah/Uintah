@@ -23,8 +23,8 @@
 
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 
 namespace SCIRun {
 

@@ -21,7 +21,7 @@
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {

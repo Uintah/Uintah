@@ -31,7 +31,7 @@
 #define Noise_h
 
 #include <Core/Algorithms/Visualization/SpanSpace.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Datatypes/TriSurfField.h>
 

@@ -22,8 +22,8 @@
 #if !defined(ClipField_h)
 #define ClipField_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Clipper.h>
 #include <sci_hash_map.h>
 #include <algorithm>

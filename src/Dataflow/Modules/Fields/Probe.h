@@ -22,8 +22,8 @@
 #if !defined(Probe_h)
 #define Probe_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <sstream>
 

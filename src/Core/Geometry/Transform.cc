@@ -27,7 +27,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Plane.h>

@@ -15,7 +15,7 @@ SRCDIR   := Packages/Fusion/Core/Datatypes
 SRCS     += $(SRCDIR)/StructHexVolMesh.cc	    	\
 	    $(SRCDIR)/templates.cc
 
-PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Math Core/Util
 LIBS := -lm
 

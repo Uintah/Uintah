@@ -22,8 +22,8 @@
 #if !defined(SampleField_h)
 #define SampleField_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Datatypes/PointCloudField.h>
 

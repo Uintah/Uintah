@@ -56,7 +56,7 @@
 #include <Core/Algorithms/Visualization/mc_table.h>
 #include <Core/Algorithms/Visualization/Tree.h>
 
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/DynamicLoader.h>
 namespace SCIRun {
 
 class Screen;

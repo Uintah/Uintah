@@ -33,7 +33,7 @@ SRCS     += \
 
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geom Core/Disclosure Core/Geometry \
+	Core/Exceptions Core/Geom Core/Util Core/Geometry \
 	Core/Persistent
 LIBS := $(GL_LIBS) -lm
 
