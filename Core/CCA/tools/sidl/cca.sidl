@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
-// SIDL interface descriptions of CCA and implementations.
+// SSIDL interface descriptions of CCA and implementations.
 // The one disturbing property of this is that Babel.Object or equivalent
 // makes an appearance, as you would expect. Not surprisingly,
 // this is in the ConnectionEvent interface.

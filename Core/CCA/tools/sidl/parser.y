@@ -46,7 +46,7 @@ extern int lineno;
   int number;
   DefinitionList* definition_list;
   Definition* definition;
-  Interface* interface;
+  BaseInterface* interface;
   Package* package;
   ScopedName* scoped_identifier;
   Class* c_class;
@@ -246,7 +246,7 @@ definition:    class
 		 $$=$1;
 	       }
                |
-	       /* Not in SIDL spec but added for MxN soln. purposes */
+	       /* Not in SSIDL spec but added for MxN soln. purposes */
 	       distribution
                {
 		 $$=$1;
@@ -421,7 +421,7 @@ enumerator: IDENTIFIER
 
 interface:     INTERFACE IDENTIFIER interface_extends statements opt_semi
 	       {
-		 $$=new Interface(curfile, lineno, $2, $3, $4.method_list, $4.distarray_list);
+		 $$=new BaseInterface(curfile, lineno, $2, $3, $4.method_list, $4.distarray_list);
 	       }
 	       ;
 
@@ -444,7 +444,7 @@ class_statement_star: /* Empty */
 		     ($$.method_list)->add($2);
 		   }
                    |
-                   /* Not in SIDL spec but added for MxN soln. purposes */
+                   /* Not in SSIDL spec but added for MxN soln. purposes */
                    class_statement_star distribution
                    {
 		     $$=$1;
@@ -510,7 +510,7 @@ statements_star: /* Empty */
 	           ($$.method_list)->add($2);
                  }
                  |
-		 /* Not in SIDL spec but added for MxN soln. purposes */
+		 /* Not in SSIDL spec but added for MxN soln. purposes */
                  statements_star distribution
                  {
 		   $$=$1;

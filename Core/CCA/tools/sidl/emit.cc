@@ -183,9 +183,10 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   hdr << "#include <Core/CCA/Component/PIDL/Object.h>\n";
   hdr << "#include <Core/CCA/Component/PIDL/pidl_cast.h>\n";
   hdr << "#include <Core/CCA/Component/PIDL/MxNArrayRep.h>\n";
-  hdr << "#include <Core/CCA/Component/SIDL/sidl_sidl.h>\n";
-  hdr << "#include <Core/CCA/Component/SIDL/array.h>\n";
-  hdr << "#include <Core/CCA/Component/SIDL/string.h>\n";
+  hdr << "#include <Core/CCA/Component/SSIDL/sidl_sidl.h>\n";
+  //hdr << "#include </home/kzhang/SCIRun/src/SCIRun/Babel/SSIDL.hh>\n";
+  hdr << "#include <Core/CCA/Component/SSIDL/array.h>\n";
+  hdr << "#include <Core/CCA/Component/SSIDL/string.h>\n";
   hdr << "#include <Core/CCA/SmartPointer.h>\n";
   hdr << "#include <complex>\n";
   hdr << "\n";
@@ -372,11 +373,11 @@ void CI::emit(EmitState& e)
   // Emit parent classes...
   if(parentclass)
     parentclass->emit(e);
-  for(std::vector<Interface*>::iterator iter=parent_ifaces.begin();
+  for(std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->emit(e);
   }
-
+  
   emitted_declaration=true;
   emit_proxyclass(e);
   if(!do_emit)
@@ -438,7 +439,7 @@ void CI::emit_typeinfo(EmitState& e)
   SymbolTable* localScope=symbols->getParent();
   if(parentclass)
     e.out << "    tii->add_parentclass(" << parentclass->cppfullname(localScope) << "::_static_getTypeInfo(), " << parentclass->vtable_base << ");\n";
-  for(vector<Interface*>::iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     e.out << "    tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_static_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
   }
@@ -509,9 +510,9 @@ void CI::emit_handlers(EmitState& e)
   e.out << "  message->destroyMessage();\n";
   e.out << "}\n\n";
 
-  // Get method handler numbers...
+  // Emit method handlers...
   std::vector<Method*> vtab;
-  gatherVtable(vtab, false); 
+  gatherVtable(vtab, false);
   int handlerOff=0;
   for(vector<Method*>::const_iterator iter=vtab.begin();
       iter != vtab.end();iter++){
@@ -519,20 +520,10 @@ void CI::emit_handlers(EmitState& e)
     e.handlerNum++;
     m->handlerNum=e.handlerNum;
     m->handlerOff=handlerOff++;
-  }
-
-  // Emit unique method handlers...
-  int savNum = e.handlerNum;
-  std::vector<Method*> vtabQ;
-  gatherVtable(vtabQ, true);
-  for(vector<Method*>::const_iterator iter=vtabQ.begin();
-      iter != vtabQ.end();iter++){
-    Method* m=*iter;
-    e.handlerNum=m->handlerNum;
     m->emit_handler(e, this);
   }
-  e.handlerNum = savNum;
-    
+
+
   // Emit setCallerDistribution Handler
   if(doRedistribution) {
     callerDistHandler=++e.handlerNum;
@@ -557,14 +548,14 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  //Unmarshal recieved distribution\n";
     e.out << "  int _arg1_dim[2];\n";
     e.out << "  message->unmarshalInt(&_arg1_dim[0], 2);\n";
-    e.out << "  ::SIDL::array2< int> _arg1(_arg1_dim[0], _arg1_dim[1]);\n";
+    e.out << "  ::SSIDL::array2< int> _arg1(_arg1_dim[0], _arg1_dim[1]);\n";
     e.out << "  int _arg1_totalsize=_arg1_dim[0]*_arg1_dim[1];\n";
-    e.out << "  ::SIDL::array2< int>::pointer _arg1_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_arg1[0][0]);\n";
+    e.out << "  ::SSIDL::array2< int>::pointer _arg1_uptr=const_cast< ::SSIDL::array2< int>::pointer>(&_arg1[0][0]);\n";
     e.out << "  message->unmarshalInt(_arg1_uptr, _arg1_totalsize);\n";
     e.out << "  message->unmarshalReply();\n\n";
     e.out << "  //Reply with my own distribution\n";
     e.out << "  ::SCIRun::MxNArrayRep* arrrep = _sc->d_sched->calleeGetCalleeRep(dname);\n";
-    e.out << "  ::SIDL::array2< int> _ret;\n";
+    e.out << "  ::SSIDL::array2< int> _ret;\n";
     e.out << "  if (arrrep != NULL) {\n";
     e.out << "    _ret = arrrep->getArray();\n";
     e.out << "  }\n";
@@ -575,7 +566,7 @@ void CI::emit_handlers(EmitState& e)
     e.out << "  int _ret_mtotalsize=_ret_mdim[0]*_ret_mdim[1];\n";
     e.out << "  int _flag=0;\n";
     e.out << "  message->marshalInt(&_flag);\n";
-    e.out << "  ::SIDL::array2< int>::pointer _ret_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_ret[0][0]);\n";
+    e.out << "  ::SSIDL::array2< int>::pointer _ret_mptr=const_cast< ::SSIDL::array2< int>::pointer>(&_ret[0][0]);\n";
     e.out << "  message->marshalInt(&_ret_mdim[0], 2);\n";
     e.out << "  message->marshalInt(_ret_mptr, _ret_mtotalsize);\n";
     e.out << "  message->sendMessage(0);\n";
@@ -597,7 +588,7 @@ void CI::emit_recursive_vtable_comment(EmitState& e, bool top)
   if(parentclass)
     parentclass->emit_recursive_vtable_comment(e, false);
   
-  for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->emit_recursive_vtable_comment(e, false);
   }
@@ -621,159 +612,84 @@ bool CI::singly_inherited() const
   return true;
 }
 
-void CI::emit_handler_table_body(EmitState& k, EmitState& e, int& vtable_base, bool top)
+void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
 {
   bool single=singly_inherited();
-  SymbolTable* localScope=symbols->getParent();
-  std::vector<Method*> vtabQ;
-  gatherVtable(vtabQ, true);
-  for(vector<Method*>::const_iterator iter=vtabQ.begin();
-      iter != vtabQ.end();iter++){
-    if(iter != vtabQ.begin())
+  if(single)
+    emit_recursive_vtable_comment(e, true);
+  else
+    e.out << "  // " << (iam_class()?"class ":"interface ") << name << "\n";
+  e.out << "  // vtable_base = " << vtable_base << '\n';
+  std::vector<Method*> vtab;
+  gatherVtable(vtab, false);
+  int i = vtable_base;
+  for(vector<Method*>::const_iterator iter=vtab.begin();
+      iter != vtab.end();iter++){
+    if(iter != vtab.begin())
       e.out << "\n";
     Method* m=*iter;
     m->emit_comment(e, "  ", false);
-    e.out << "  epc->registerHandler((void*)_handler" << m->handlerNum << ");";
+    i++;
+    e.out << "  epc->registerHandler(" << i <<",(void*)_handler" << m->handlerNum << ");";
   } 
-
-  std::vector<Method*> vtab;
-  gatherVtable(vtab, false);
   if (doRedistribution) {
     e.out << "\n  //setCallerDistribution handler";
-    e.out << "\n  epc->registerHandler("
-          << "(void*)_handler" << callerDistHandler << ");";
-    vtable_base+=vtab.size()+1;
+    e.out << "\n  epc->registerHandler(" << (++i)
+          << ",(void*)_handler" << callerDistHandler << ");";
+    vtable_base+=vtab.size()+2;
   }
   else {
-    vtable_base+=vtab.size();
+    vtable_base+=vtab.size()+1;
   }
-
+  i++;
+  e.out << "\n    // Red zone\n";    
+  e.out << "  epc->registerHandler(" << i <<",NULL);";
 
   if(single){
     if(top){
       if(parentclass)
 	parentclass->vtable_base=vtable_base;
-      for(vector<Interface*>::iterator iter=parent_ifaces.begin();
+      for(vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
 	  iter != parent_ifaces.end(); iter++){
 	(*iter)->vtable_base=vtable_base;
       }
     }
+    return;
   }
-  else {
-    // MULTIPLE INHERITANCE: for each parent, emit the handler table...
-    k.out << "  //MULTIPLE INHERITANCE: add superclasses' vtables\n";
-    if(parentclass){
+  // For each parent, emit the handler table...
+  if(parentclass){
+    if(top)
       parentclass->vtable_base=vtable_base;
-      std::vector<Method*> vtabP;
-      parentclass->gatherVtable(vtabP, false);      
-      vtable_base+=vtabP.size();
-      k.out << "  // " << (iam_class()?"class ":"interface ") << parentclass->name << "\n";
-      k.out << "  // vtable_base = " << parentclass->vtable_base << '\n';
-      if(parentclass->parent_ifaces.size() > 0){
-	vector<Interface*> grandparents;
-	parentclass->gatherParentInterfaces(grandparents);
-	for(vector<Interface*>::iterator iter=grandparents.begin();
-	    iter != grandparents.end(); iter++){
-	  if(*iter != this){
-	    k.out << "  " << (*iter)->cppfullname(localScope) << "::filltable(epc);\n";
-	  }
-	}
-      }
-      e.out << "  " << parentclass->cppfullname(localScope) << "::filltable(epc);\n";
-    }
-    for(vector<Interface*>::iterator iter=parent_ifaces.begin();
-	iter != parent_ifaces.end(); iter++){
+    parentclass->emit_handler_table_body(e, vtable_base, false);
+  }
+  for(vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
+      iter != parent_ifaces.end(); iter++){
+    if(top)
       (*iter)->vtable_base=vtable_base;
-      std::vector<Method*> vtabP;
-      (*iter)->gatherVtable(vtabP, false);      
-      vtable_base+=vtabP.size();
-      k.out << "  // " << (iam_class()?"class ":"interface ") << (*iter)->name << "\n";
-      k.out << "  // vtable_base = " << (*iter)->vtable_base << '\n';
-      if((*iter)->parent_ifaces.size() > 0){
-	vector<Interface*> grandparents;
-	(*iter)->gatherParentInterfaces(grandparents);
-	for(vector<Interface*>::iterator grand_iter=grandparents.begin();
-	    grand_iter != grandparents.end(); grand_iter++){
-	  if((*grand_iter) != this){
-	    k.out << "  " << (*grand_iter)->cppfullname(localScope) << "::filltable(epc);\n";
-	  }
-	}
-      }
-      k.out << "  " << (*iter)->cppfullname(localScope) << "::filltable(epc);\n";
-    }
-  }  //END OF MULTIPLE INHERITANCE
-
-
-  return;
+    (*iter)->emit_handler_table_body(e, vtable_base, false);
+  }
 }
 
 void CI::emit_handler_table(EmitState& e)
 {
-  bool single=singly_inherited();
-
   e.out << "// handler table for " << (iam_class()?"class ":"interface ") << name << "\n";
   e.out << "//" << curfile << ":" << lineno << "\n\n";
   e.out << "void "<< cppfullname(0)
         << "::registerhandlers(SCIRun::EpChannel* epc)\n";
   e.out << "{\n";
 
-  int vtable_base=3;
-
-  /*
-  int size;
-  std::vector<Method*> vtab;
-  gatherVtable(vtab, false);
-  if (doRedistribution) {
-    size = vtable_base + vtab.size() + 2;
-  }
-  else {
-    size = vtable_base + vtab.size() + 1;
-  }
-  */
-
   EmitState* tempe = new EmitState();
-  EmitState* phoenix = new EmitState();
-  emit_handler_table_body(*phoenix, *tempe, vtable_base, true);
+  int vtable_base=3;  
+  emit_handler_table_body(*tempe, vtable_base, true);
   
-  e.out << "  epc->allocateHandlerTable(" << (vtable_base+1) << ");\n";
-  e.out << "  epc->registerHandler((void*)_handler" << isaHandler << ");\n";
-  e.out << "  epc->registerHandler((void*)_handler" << deleteReferenceHandler << ");\n";
-  e.out << "  epc->registerHandler(NULL);\n";
-
-
-  if(single)
-   emit_recursive_vtable_comment(e, true);
-  else
-    e.out << "  // " << (iam_class()?"class ":"interface ") << name << "\n";
-  e.out << "  // vtable_base = 3\n";
-  //Emitting code to fill handler table with all parent class handlers
-  SymbolTable* localScope=symbols->getParent();
-  if(parent_ifaces.size() > 0){
-    e.out << "  //Fill table with parent classes' handlers\n";
-    vector<Interface*> parents;
-    gatherParentInterfaces(parents);
-    for(vector<Interface*>::iterator iter=parents.begin();
-              iter != parents.end(); iter++){
-      if(*iter != this){
-	e.out << "  " << (*iter)->cppfullname(localScope) << "::filltable(epc);\n";
-      }
-    }
-  }
-  e.out << "  //Finally fill table with current class\n"; 
-  e.out << "  filltable(epc);\n";
-  e.out << phoenix->out.str();
-  delete phoenix;
-  e.out << "  // Red zone\n";
-  e.out << "  epc->registerHandler(NULL);\n";
-  e.out << "} // end of registerhandlers\n\n";
-
-  //Emit the filltable routine handlers
-  e.out << "void "<< cppfullname(0)
-        << "::filltable(SCIRun::EpChannel* epc)\n";
-  e.out << "{\n";
+  e.out << "  epc->allocateHandlerTable(" << (vtable_base) << ");\n";
+  e.out << "  epc->registerHandler(1,(void*)_handler" << isaHandler << ");\n";
+  e.out << "  epc->registerHandler(2,(void*)_handler" << deleteReferenceHandler << ");\n";
+  e.out << "  epc->registerHandler(3,NULL);\n";
   e.out << tempe->out.str();
   delete tempe;
-  e.out << "\n} // end of filltable\n\n";
+
+  e.out << "\n} // vtable_size=" << vtable_base << "\n\n";
 }
 
 bool Method::reply_required() const
@@ -857,7 +773,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   e.out << leader2 << "void* _v=message->getLocalObj();\n";
   string myclass = emit_class->cppfullname(0);
   e.out << leader2 << "::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(_v);\n";
-  e.out << leader2 << myclass << "* _obj=dynamic_cast< " << myclass << "*>(_sc->d_ptr);\n";
+  e.out << leader2 << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
   e.out << "\n";
   
 
@@ -1165,7 +1081,7 @@ void CI::emit_header(EmitState& e)
     e.decl << "public " << parentclass->cppfullname(e.decl.currentPackage);
     haveone=true;
   }
-  for(vector<Interface*>::iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     if(!haveone){
       haveone=true;
@@ -1203,7 +1119,6 @@ void CI::emit_header(EmitState& e)
   e.decl << leader2 << "  static const ::SCIRun::TypeInfo* _static_getTypeInfo();\n";
   e.decl << leader2 << "protected:\n";
   e.decl << leader2 << "  " << name << "(bool initServer=true);\n";
-  e.decl << leader2 << "  void filltable(SCIRun::EpChannel* epc);\n";
   e.decl << leader2 << "private:\n";
   e.decl << leader2 << "  void registerhandlers(SCIRun::EpChannel* epc);\n";
   e.decl << leader2 << "  " << name << "(const " << name << "&);\n";
@@ -1248,9 +1163,9 @@ void CI::emit_interface(EmitState& e)
   if(parentclass)
     e.out << parentclass->cppfullname(localScope) << "(false)";
   if(parent_ifaces.size() > 0){
-    vector<Interface*> parents;
+    vector<BaseInterface*> parents;
     gatherParentInterfaces(parents);
-    for(vector<Interface*>::iterator iter=parents.begin();
+    for(vector<BaseInterface*>::iterator iter=parents.begin();
 	iter != parents.end(); iter++){
       if(*iter != this){
 	if(parentclass || iter != parents.begin())
@@ -1289,9 +1204,9 @@ void CI::emit_proxy(EmitState& e)
   e.out << "::SCIRun::ProxyBase(_ref),";
 
   e.out << cppfullname(localScope) << "(false)";
-  vector<Interface*> parents;
+  vector<BaseInterface*> parents;
   gatherParentInterfaces(parents);
-  for(vector<Interface*>::iterator iter=parents.begin();
+  for(vector<BaseInterface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++){
     e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "(false)";
   }
@@ -1308,7 +1223,7 @@ void CI::emit_proxy(EmitState& e)
   e.out << "::SCIRun::ProxyBase(_ref),";
   e.out << cppfullname(localScope) << "(false)";
   gatherParentInterfaces(parents);
-  for(vector<Interface*>::iterator iter=parents.begin();
+  for(vector<BaseInterface*>::iterator iter=parents.begin();
       iter != parents.end(); iter++){
     e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "(false)";
   }
@@ -1353,7 +1268,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  d_sched->clear(distname);\n";
     e.out << "  d_sched->setCallerRepresentation(distname,arrrep);\n";
     e.out << "  //Scatter to all callee objects\n";
-    e.out << "  ::SIDL::array2< int> _rep = arrrep->getArray();\n";
+    e.out << "  ::SSIDL::array2< int> _rep = arrrep->getArray();\n";
     e.out << "  ::SCIRun::refList _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
     e.out << "  _proxyGetReferenceList(_refL,false);\n";
@@ -1383,7 +1298,7 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    _rep_mdim[0]=_rep.size1();\n";
     e.out << "    _rep_mdim[1]=_rep.size2();\n";
     e.out << "    int _rep_mtotalsize=_rep_mdim[0]*_rep_mdim[1];\n";
-    e.out << "    ::SIDL::array2< int>::pointer _rep_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_rep[0][0]);\n";
+    e.out << "    ::SSIDL::array2< int>::pointer _rep_mptr=const_cast< ::SSIDL::array2< int>::pointer>(&_rep[0][0]);\n";
     e.out << "    message->marshalInt(&_rep_mdim[0], 2);\n";
     e.out << "    message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
     e.out << "    int _handler=" << callerDistHandler << ";\n";
@@ -1401,9 +1316,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    //Unmarshal distribution representation array\n";
     e.out << "    int _ret_dim[2];\n";
     e.out << "    message->unmarshalInt(&_ret_dim[0], 2);\n";
-    e.out << "    ::SIDL::array2< int> _ret(_ret_dim[0], _ret_dim[1]);\n";
+    e.out << "    ::SSIDL::array2< int> _ret(_ret_dim[0], _ret_dim[1]);\n";
     e.out << "    int _ret_totalsize=_ret_dim[0]*_ret_dim[1];\n";
-    e.out << "    ::SIDL::array2< int>::pointer _ret_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_ret[0][0]);\n";
+    e.out << "    ::SSIDL::array2< int>::pointer _ret_uptr=const_cast< ::SSIDL::array2< int>::pointer>(&_ret[0][0]);\n";
     e.out << "    message->unmarshalInt(_ret_uptr, _ret_totalsize);\n";
     e.out << "    message->destroyMessage();\n";
     e.out << "    ::SCIRun::MxNArrayRep* arep = new ::SCIRun::MxNArrayRep(_ret,&(*iter));\n";
@@ -2236,9 +2151,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Unmarshal distribution metadata\n";
 	e.out << leader2 << "  int _meta_rep_dim[2];\n";
 	e.out << leader2 << "  message->unmarshalInt(&_meta_rep_dim[0], 2);\n";
-	e.out << leader2 << "  ::SIDL::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
 	e.out << leader2 << "  int _meta_rep_totalsize=_meta_rep_dim[0]*_meta_rep_dim[1];\n";
-	e.out << leader2 << "  ::SIDL::array2< int>::pointer _meta_rep_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_rep[0][0]);\n";
+	e.out << leader2 << "  ::SSIDL::array2< int>::pointer _meta_rep_uptr=const_cast< ::SSIDL::array2< int>::pointer>(&_meta_rep[0][0]);\n";
 	e.out << leader2 << "  message->unmarshalInt(_meta_rep_uptr, _meta_rep_totalsize);\n";
 	e.out << leader2 << "  //Unmarshal received distribution\n";
 	
@@ -2287,13 +2202,13 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = _this_rep->Intersect(_rl_out[i]);\n"; 
-	e.out << leader2 << "  ::SIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
 	e.out << leader2 << "  _rep_mdim[1]=_meta_arr.size2();\n";
 	e.out << leader2 << "  int _rep_mtotalsize=_rep_mdim[0]*_rep_mdim[1];\n";
-	e.out << leader2 << "  ::SIDL::array2< int>::pointer _rep_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_arr[0][0]);\n";
+	e.out << leader2 << "  ::SSIDL::array2< int>::pointer _rep_mptr=const_cast< ::SSIDL::array2< int>::pointer>(&_meta_arr[0][0]);\n";
 	e.out << leader2 << "  message->marshalInt(&_rep_mdim[0], 2);\n";
 	e.out << leader2 << "  message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
 	e.out << leader2 << "  //Send Message \n";
@@ -2535,13 +2450,13 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->marshalInt(&rank);\n";
 	e.out << leader2 << "  //Intersect and create distribution representation\n";
 	e.out << leader2 << "  SCIRun::MxNArrayRep* _meta_arr_rep = this_rep->Intersect(rl[i]);\n"; 
-	e.out << leader2 << "  ::SIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_arr = _meta_arr_rep->getArray();\n";
 	e.out << leader2 << "  //Marshal distribution representation array\n";
 	e.out << leader2 << "  int _rep_mdim[2];\n";
 	e.out << leader2 << "  _rep_mdim[0]=_meta_arr.size1();\n";
 	e.out << leader2 << "  _rep_mdim[1]=_meta_arr.size2();\n";
 	e.out << leader2 << "  int _rep_mtotalsize=_rep_mdim[0]*_rep_mdim[1];\n";
-	e.out << leader2 << "  ::SIDL::array2< int>::pointer _rep_mptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_arr[0][0]);\n";
+	e.out << leader2 << "  ::SSIDL::array2< int>::pointer _rep_mptr=const_cast< ::SSIDL::array2< int>::pointer>(&_meta_arr[0][0]);\n";
 	e.out << leader2 << "  message->marshalInt(&_rep_mdim[0], 2);\n";
 	e.out << leader2 << "  message->marshalInt(_rep_mptr, _rep_mtotalsize);\n";
 	e.out << leader2 << "  //Marshal the data:\n";
@@ -2584,9 +2499,9 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Unmarshal distribution metadata\n";
 	e.out << leader2 << "  int _meta_rep_dim[2];\n";
 	e.out << leader2 << "  message->unmarshalInt(&_meta_rep_dim[0], 2);\n";
-	e.out << leader2 << "  ::SIDL::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
+	e.out << leader2 << "  ::SSIDL::array2< int> _meta_rep(_meta_rep_dim[0], _meta_rep_dim[1]);\n";
 	e.out << leader2 << "  int _meta_rep_totalsize=_meta_rep_dim[0]*_meta_rep_dim[1];\n";
-	e.out << leader2 << "  ::SIDL::array2< int>::pointer _meta_rep_uptr=const_cast< ::SIDL::array2< int>::pointer>(&_meta_rep[0][0]);\n";
+	e.out << leader2 << "  ::SSIDL::array2< int>::pointer _meta_rep_uptr=const_cast< ::SSIDL::array2< int>::pointer>(&_meta_rep[0][0]);\n";
 	e.out << leader2 << "  message->unmarshalInt(_meta_rep_uptr, _meta_rep_totalsize);\n";
 	e.out << leader2 << "  message->unmarshalReply();\n";
 	e.out << leader2 << "  message->createMessage();\n";

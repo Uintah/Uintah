@@ -84,13 +84,13 @@ void Package::gatherSymbols(SymbolTable* names)
   definition->gatherSymbols(symbols);
 }
 
-void Interface::staticCheck(SymbolTable* names)
+void BaseInterface::staticCheck(SymbolTable* names)
 {
   /* Handle builtin types - Object  */
-  if(mymethods && !interface_extends && fullname() != ".SIDL.Interface"){
+  if(mymethods && !interface_extends && fullname() != ".SSIDL.BaseInterface"){
     if(!interface_extends)
       interface_extends=new ScopedNameList();
-    interface_extends->prepend(new ScopedName("SIDL", "Interface"));
+    interface_extends->prepend(new ScopedName("SSIDL", "BaseInterface"));
   }
 
   /* Check extends list */
@@ -100,19 +100,19 @@ void Interface::staticCheck(SymbolTable* names)
       Symbol* s=names->lookup(*iter);
       if(!s){
 	cerr << curfile << ':' << lineno 
-	     << ": (102) Interface extends unknown type: " 
+	     << ": (102) BaseInterface extends unknown type: " 
 	     << (*iter)->getName() << '\n';
 	exit(1);
       }
       if(s->getType() != Symbol::InterfaceType){
 	cerr << curfile << ':' << lineno
-	     << ": (103) Interface extends a non-interface: " 
+	     << ": (103) BaseInterface extends a non-interface: " 
 	     << (*iter)->getName() << '\n';
 	exit(1);
       }
       (*iter)->bind(s);
       Definition* d=s->getDefinition();
-      Interface* i=(Interface*)d;
+      BaseInterface* i=(BaseInterface*)d;
       parent_ifaces.push_back(i);
     }
   }
@@ -128,7 +128,7 @@ void Interface::staticCheck(SymbolTable* names)
   }
 }
 
-void Interface::gatherSymbols(SymbolTable* names)
+void BaseInterface::gatherSymbols(SymbolTable* names)
 {
   Symbol* n=names->lookup(name, false);
   if(n){
@@ -162,8 +162,8 @@ void Interface::gatherSymbols(SymbolTable* names)
 void Class::staticCheck(SymbolTable* names)
 {
   /* Handle builtin types - Object  */
-  if(mymethods && !class_extends && fullname() != ".SIDL.Object"){
-    class_extends=new ScopedName("SIDL", "Object");
+  if(mymethods && !class_extends && fullname() != ".SSIDL.Object"){
+    class_extends=new ScopedName("SSIDL", "Object");
   }
 
   /* Check extends class */
@@ -205,7 +205,7 @@ void Class::staticCheck(SymbolTable* names)
 	exit(1);
       }
       Definition* d=s->getDefinition();
-      Interface* i=(Interface*)d;
+      BaseInterface* i=(BaseInterface*)d;
       parent_ifaces.push_back(i);
     }
   }
@@ -264,7 +264,7 @@ Method* Class::findMethod(const Method* match, bool recurse) const
     return m;
 }
 
-Method* Interface::findMethod(const Method* match) const
+Method* BaseInterface::findMethod(const Method* match) const
 {
   Method* m=mymethods->findMethod(match);
   return m;
@@ -420,10 +420,10 @@ void Method::staticCheck(SymbolTable* names)
 		 << (*iter)->getName() << '\n';
 	    exit(1);
 	  }
-	  Class* t=c->findParent(".SIDL.BaseException");
+	  Class* t=c->findParent(".SSIDL.BaseException");
 	  if(!t){
 	    cerr << curfile << ':' << lineno
-		 << ": (127) method must throw a derivative of .SIDL.BaseException: "
+		 << ": (127) method must throw a derivative of .SSIDL.BaseException: "
 		 << (*iter)->getName() << '\n';
 	    exit(1);
 	  }

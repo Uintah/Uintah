@@ -203,7 +203,7 @@ void CI::gatherMethods(vector<Method*>& allmethods) const
 {
   if(parentclass)
     parentclass->gatherMethods(allmethods);
-  for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->gatherMethods(allmethods);
   }
@@ -214,7 +214,7 @@ void CI::gatherVtable(vector<Method*>& uniquemethods, bool onlyNewMethods) const
 {
   if(parentclass)
     parentclass->gatherVtable(uniquemethods, false);
-  for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->gatherVtable(uniquemethods, false);
   }
@@ -234,7 +234,7 @@ void CI::gatherParents(std::vector<CI*>& folks) const
 {
   if(parentclass)
     parentclass->gatherParents(folks);
-  for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->gatherParents(folks);
   }
@@ -242,15 +242,15 @@ void CI::gatherParents(std::vector<CI*>& folks) const
     folks.push_back(const_cast<CI*>(this));
 }
 
-void CI::gatherParentInterfaces(std::vector<Interface*>& folks) const
+void CI::gatherParentInterfaces(std::vector<BaseInterface*>& folks) const
 {
   if(parentclass)
     parentclass->gatherParentInterfaces(folks);
-  for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
+  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->gatherParentInterfaces(folks);
     if(find(folks.begin(), folks.end(), *iter) == folks.end())
-      folks.push_back(const_cast<Interface*>(*iter));
+      folks.push_back(const_cast<BaseInterface*>(*iter));
   }
 }
 
@@ -302,7 +302,7 @@ void DefinitionList::processImports()
   }
 }
 
-Interface::Interface(const string& curfile, int lineno, const string& id,
+BaseInterface::BaseInterface(const string& curfile, int lineno, const string& id,
 		     ScopedNameList* interface_extends, MethodList* methods,
 		     DistributionArrayList* arrays)
   : CI(curfile, lineno, id, methods,arrays),
@@ -310,7 +310,8 @@ Interface::Interface(const string& curfile, int lineno, const string& id,
 {
 }
 
-Interface::~Interface()
+
+BaseInterface::~BaseInterface()
 {
   if(interface_extends)
     delete interface_extends;
@@ -351,7 +352,7 @@ void Method::setClass(Class *c)
   myclass=c;
 }
 
-void Method::setInterface(Interface *c)
+void Method::setInterface(BaseInterface *c)
 {
   myinterface=c;
 }
@@ -430,7 +431,7 @@ void MethodList::setClass(Class* c)
     (*iter)->setClass(c);
 }
 
-void MethodList::setInterface(Interface* c)
+void MethodList::setInterface(BaseInterface* c)
 {
   for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++)
     (*iter)->setInterface(c);
@@ -815,7 +816,7 @@ std::string ArrayType::fullname() const
 std::string ArrayType::cppfullname(SymbolTable* localScope) const
 {
   std::ostringstream o;
-  o << "::SIDL::array" << dim << "< " << subtype->cppfullname(localScope);
+  o << "::SSIDL::array" << dim << "< " << subtype->cppfullname(localScope);
   if(dynamic_cast<ArrayType*>(subtype) || dynamic_cast<NamedType*>(subtype))
     o << " "; // Keep > > from being >>
   o << ">";
