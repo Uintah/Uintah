@@ -133,6 +133,7 @@ void refineFaces(const Patch* patch,
 		 DataWarehouse* coarse_new_dw, 
                Patch::VariableBasis basis)
 {
+  cout << "RANDY: AMRSimpleCFD::refineFaces() BGN" << endl;
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     if(patch->getBCType(face) != Patch::Coarse)
@@ -428,6 +429,7 @@ void refineFaces(const Patch* patch,
       }
     }
   }
+  cout << "RANDY: AMRSimpleCFD::refineFaces() END" << endl;
 }
 //______________________________________________________________________
 //
@@ -457,6 +459,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				    int matl,
 				    double subCycleProgress_var)
 {
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(CC) BGN" << endl;
   cout_doing << "Doing refineBoundaries <double>  \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -468,6 +471,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(0,0,0), Patch::invalidFace,
      Patch::invalidFace, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::CellBased);
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(CC) END" << endl;
 }
 //______________________________________________________________________
 //  SFCXVariable version
@@ -478,6 +482,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				        int matl,
 				        double subCycleProgress_var)
 {
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCX) BGN" << endl;
   cout_doing << "Doing refineBoundaries <SFCXVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -489,6 +494,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(1,0,0), Patch::xminus,
      Patch::xplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::XFaceBased);
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCX) END" << endl;
 }
 //______________________________________________________________________
 //  SFCYVariable version
@@ -499,6 +505,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				        int matl,
 				        double subCycleProgress_var)
 {
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCY) BGN" << endl;
   cout_doing << "Doing refineBoundaries <SFCYVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -510,6 +517,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(0,1,0), Patch::yminus,
      Patch::yplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::YFaceBased);
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCY) END" << endl;
 }
 //______________________________________________________________________
 //  SFCZVariable version
@@ -520,6 +528,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
 				        int matl,
 				        double subCycleProgress_var)
 {
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCZ) BGN" << endl;
   cout_doing << "Doing refineBoundaries <SFCZVariable> \t\t AMRSimpleCFD" << '\n';
   DataWarehouse* coarse_old_dw = new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
@@ -531,6 +540,7 @@ void AMRSimpleCFD::refineBoundaries(const Patch* patch,
     (patch, level, coarseLevel, IntVector(0,0,1), Patch::zminus,
      Patch::zplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::ZFaceBased);
+  cout << "RANDY: AMRSimpleCFD::refineBoundaries(SFCZ) END" << endl;
 }
 //______________________________________________________________________
 //
@@ -915,18 +925,35 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
       int matl = matls->get(m);
 
       //__________________________________
+      //   B C T Y P E
+      if (old_dw->exists(lb_->bctype, m, finePatch)) {
+	new_dw->transferFrom(old_dw, lb_->bctype, patches, matls);
+      } else {
+	NCVariable<int> bctype;
+	new_dw->allocateAndPut(bctype, lb_->bctype, matl, finePatch);
+      }
+      //      bcs.set(bctype, finePatch);
+
+      //__________________________________
+      //   P R E S S U R E
+      if(keep_pressure){
+	if (old_dw->exists(lb_->pressure, m, finePatch)) {
+	  new_dw->transferFrom(old_dw, lb_->pressure, patches, matls);
+	} else {
+	  CCVariable<double> pressure;
+	  new_dw->allocateAndPut(pressure, lb_->pressure, matl, finePatch);
+	}
+      }
+
+      //__________________________________
       //   D E N S I T Y
       if (old_dw->exists(lb_->density, m, finePatch)) {
 	new_dw->transferFrom(old_dw, lb_->density, patches, matls);
       } else {
 	CCVariable<double> density;
-	Patch::VariableBasis basis = Patch::translateTypeToBasis(lb_->density->typeDescription()->getType(), true);
-	IntVector lowIndex = finePatch->getLowIndex(basis, lb_->density->getBoundaryLayer());
-	IntVector highIndex = finePatch->getHighIndex(basis, lb_->density->getBoundaryLayer());
-	density.rewindow(lowIndex, highIndex);
-	density.initialize(0);
-	new_dw->put(density, lb_->density, matl, finePatch);
+	new_dw->allocateAndPut(density, lb_->density, matl, finePatch);
       }
+
       /*
       //print(density, "before coarsen density");
       
@@ -955,9 +982,17 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	}
       }  // fine patch loop
       //print(density, "coarsened density");
+      */
       //__________________________________
       //      T E M P E R A T U R E
       if(do_thermal){
+	if (old_dw->exists(lb_->temperature, m, finePatch)) {
+	  new_dw->transferFrom(old_dw, lb_->temperature, patches, matls);
+	} else {
+	  CCVariable<double> temp;
+	  new_dw->allocateAndPut(temp, lb_->temperature, matl, finePatch);
+	}
+	/*
 	CCVariable<double> temp;
 	new_dw->getModifiable(temp, lb_->temperature, matl, coarsePatch);
 	
@@ -986,10 +1021,19 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	  }
 	}
 	//print(temp, "coarsened temperature");
+       */
       }  // do thermal
       
       //__________________________________
       //      X V E L
+      if (old_dw->exists(lb_->xvelocity, m, finePatch)) {
+	new_dw->transferFrom(old_dw, lb_->xvelocity, patches, matls);
+      } else {
+	SFCXVariable<double> xvel;
+	new_dw->allocateAndPut(xvel, lb_->xvelocity, matl, finePatch);
+      }
+
+      /*
       SFCXVariable<double> xvel;
       new_dw->getModifiable(xvel, lb_->xvelocity, matl, coarsePatch);
       
@@ -1030,10 +1074,17 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	  xvel[*iter]=xvel_tmp*ratio;
 	}
       }
-      
+      */      
       //print(xvel, "coarsened xvel");
       //__________________________________
       //     Y V E L
+      if (old_dw->exists(lb_->yvelocity, m, finePatch)) {
+	new_dw->transferFrom(old_dw, lb_->yvelocity, patches, matls);
+      } else {
+	SFCYVariable<double> yvel;
+	new_dw->allocateAndPut(yvel, lb_->yvelocity, matl, finePatch);
+      }
+      /*
       SFCYVariable<double> yvel;
       new_dw->getModifiable(yvel, lb_->yvelocity, matl, coarsePatch);
       
@@ -1074,9 +1125,17 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	  yvel[*iter]=yvel_tmp*ratio;
 	}
       }
+      */
       //print(yvel, "coarsened yvel");
       //__________________________________
       //      Z   V E L
+      if (old_dw->exists(lb_->zvelocity, m, finePatch)) {
+	new_dw->transferFrom(old_dw, lb_->zvelocity, patches, matls);
+      } else {
+	SFCZVariable<double> zvel;
+	new_dw->allocateAndPut(zvel, lb_->zvelocity, matl, finePatch);
+      }
+      /*
       SFCZVariable<double> zvel;
       new_dw->getModifiable(zvel, lb_->zvelocity, matl, coarsePatch);
       for(int i=0;i<finePatches.size();i++){
