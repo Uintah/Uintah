@@ -2517,7 +2517,7 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>& uvel_FC,
 
   //Calculate each cells outfluxes first
   //Here the CellIterator must visit ALL cells
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     delY_top    = std::max(0.0, (vvel_FC[*iter+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[*iter+IntVector(0,0,0)] * delT));
     delX_right  = std::max(0.0, (uvel_FC[*iter+IntVector(1,0,0)] * delT));
@@ -2797,6 +2797,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.62  2000/12/05 20:45:49  jas
+// Iterate over all the cells in influxOutfluxVolume.  Now step 2 is working.
+//
 // Revision 1.61  2000/12/05 15:45:29  jas
 // Now using SFC{X,Y,Z} data types.  Fixed some small bugs and things appear
 // to be working up to the middle of step 2.
