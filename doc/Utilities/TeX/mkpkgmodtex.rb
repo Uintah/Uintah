@@ -40,5 +40,11 @@ $stdin.each do |e|
 end
 
 entries.sort.each do |e|
-  $stdout.print("\\input{#{e.file}}\n\\pagebreak\n")
+  dir = File.dirname(e.file)
+  if dir =~ /TeX/
+    $stdout.print("\\renewcommand{\\ModuleRefFigName}[1]{#{dir}/#1}\n")
+  end
+  $stdout.print("\\input{#{e.file}}
+\\clearpage
+\\pagebreak\n")
 end
