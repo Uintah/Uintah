@@ -67,6 +67,7 @@
            <tolerance>1.0e-10</tolerance>
            <damage_cutoff>0.2</damage_cutoff>
            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
+           <include href="MaterialData/VonMisesYield.xml"/>
            <include href="MaterialData/JohnsonCookPlastic4340Steel.xml"/>
            <include href="MaterialData/JohnsonCookDamage4340Steel.xml"/>
            <include href="MaterialData/MieGruneisenEOS4340Steel.xml"/>
@@ -149,7 +150,7 @@
        <Box label = "1">
          <lower>        [0,0,0]    </lower>
          <upper>        [1.2,1.2,0.02]    </upper>
-         <patches>      [1,1,1]     </patches>
+         <patches>      [2,2,1]     </patches>
 	 <extraCells>[0, 0, 0]</extraCells>
        </Box>
        <spacing>   [0.025,0.025,0.02]  </spacing>
