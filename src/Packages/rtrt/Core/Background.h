@@ -76,8 +76,6 @@ public:
   virtual void color_in_direction(const Vector& v, Color& c) const ;
 
 protected:
-  void read_image( char* filename );
-
   inline Vector ChangeFromBasis( const Vector& a ) const 
   {
     return( a.x()*_u + a.y()*_v + a.z()*_up );
@@ -93,10 +91,8 @@ protected:
   }
 
   double ambientScale_;
-  texture* _text;
   int _width, _height;
   Array2<Color> _image;
-  double _aspectRatio;
   Vector _up;
   Vector _u;
   Vector _v;

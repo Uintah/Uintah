@@ -86,7 +86,9 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 
 SUBDIRS := \
-	Packages/rtrt/StandAlone/scenes
+	$(SRCDIR)/utils \
+	$(SRCDIR)/scenes \
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 # Convenience target:

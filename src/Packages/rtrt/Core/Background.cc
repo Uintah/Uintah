@@ -1,5 +1,6 @@
 #ifndef BACKGROUND_H
 #include <Packages/rtrt/Core/Background.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 #include <Core/Math/MiscMath.h>
 #endif
 
@@ -78,8 +79,6 @@ EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
     Background( Color( 0, 0, 0 ) ),
     _width( 0 ),
     _height( 0 ),
-    _aspectRatio( 1.0 ),
-    _text( 0 ),
     _up( up ),
     ambientScale_( 1.0 )
 {
@@ -89,20 +88,14 @@ EnvironmentMapBackground::EnvironmentMapBackground( char* filename,
   _up.normalize();
   _u = PerpendicularVector( _up );
   _v = Cross( _up, _u );
-  read_image( filename );
+  PPMImage ppm(filename);
+  ppm.get_dimensions_and_data(_image, _width, _height);
   
   cout << "env_map width, height: " << _width << ", " << _height << endl;
 }
 
 EnvironmentMapBackground::~EnvironmentMapBackground( void )
 {
-    if( _text ) {
-	if( _text->texImage )
-	    free( _text->texImage );
-	if( _text->texImagef )
-	    free( _text->texImagef );
-	free( _text );
-    }
 }
 
 void
@@ -140,86 +133,3 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     result = _image( int( v*( _width - 1 ) ), int( u*( _height - 1 ) ) ) *
       ambientScale_;
 }
-
-static void eat_comments_and_whitespace(ifstream &str)
-{
-  char c;
-  str.get(c);
-  for(;;) {
-    if (c==' '||c=='\t'||c=='\n') {
-      str.get(c);
-      continue;
-    } else if (c=='#') {
-      str.get(c);
-      while(c!='\n')
-        str.get(c);
-    } else {
-      str.unget();
-      break;
-    }
-  }
-}
-
-void 
-EnvironmentMapBackground::read_image( char* filename ) 
-{
-#if 0
-  _text = ReadPPMTexture( filename );
-  
-  char* color = _text->texImage;
-  _width = _text->img_width;
-  _height = _text->img_height;
-  _image.resize( _width, _height );
-  _aspectRatio = _height / _width;
-
-  for( int i = 0; i < _width; i++ ) {
-    for( int j = 0; j < _height; j++ ) {
-      double r = color[0] / 255.;
-      double g = color[1] / 255.;
-      double b = color[2] / 255.;
-      color += 4;
-      _image( i, j ) = Color( r, g, b );
-    }
-  }
-
-  if( _text ) {
-      if( _text->texImage )
-	  free( _text->texImage );
-      if( _text->texImagef )
-	  free( _text->texImagef );
-      free( _text );
-  }
-
-#else
-
-  //unsigned nu, nv;
-  double size;
-  ifstream indata(filename);
-  unsigned char color[3];
-  string token;
-
-  if (!indata.is_open()) {
-    cerr << "ImageMaterial: WARNING: I/O fault: no such file: " << filename << endl;
-  }
-    
-  indata >> token; // P6
-  eat_comments_and_whitespace(indata);
-  indata >> _width >> _height;
-  eat_comments_and_whitespace(indata);
-  indata >> size;
-  eat_comments_and_whitespace(indata);
-  _image.resize(_width, _height);
-  for(unsigned v=0;v<_height;++v){
-    for(unsigned u=0;u<_width;++u){
-      indata.read((char*)color, 3);
-      double r=color[0]/size;
-      double g=color[1]/size;
-      double b=color[2]/size;
-      _image(u,v)=Color(r,g,b);
-    }
-  }
-
-  //valid_ = true;
-#endif
-}
-

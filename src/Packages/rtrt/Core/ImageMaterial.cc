@@ -6,6 +6,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/PPMImage.h>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
@@ -32,8 +33,10 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
     : umode(umode), vmode(vmode), Kd(Kd), specular(specular),
       specpow(specpow), refl(refl),  transp(0), flip_(false), valid_(false)
 {
-    read_image(texfile);
-    outcolor=Color(0,0,0);
+  PPMImage ppm(texfile);
+  int nu, nv;
+  ppm.get_dimensions_and_data(image, nu, nv);
+  outcolor=Color(0,0,0);
 }
 
 ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
@@ -44,8 +47,10 @@ ImageMaterial::ImageMaterial(char* texfile, ImageMaterial::Mode umode,
       specpow(specpow), refl(refl),  transp(transp), flip_(false), 
       valid_(false)
 {
-    read_image(texfile);
-    outcolor=Color(0,0,0);
+  PPMImage ppm(texfile);
+  int nu, nv;
+  ppm.get_dimensions_and_data(image, nu, nv);
+  outcolor=Color(0,0,0);
 }
 
 ImageMaterial::~ImageMaterial()
@@ -147,59 +152,6 @@ skip:
                accumcolor, cx);
 }
 
-static void eat_comments_and_whitespace(ifstream &str)
-{
-  char c;
-  str.get(c);
-  for(;;) {
-    if (c==' '||c=='\t'||c=='\n') {
-      str.get(c);
-      continue;
-    } else if (c=='#') {
-      str.get(c);
-      while(c!='\n')
-        str.get(c);
-    } else {
-      str.unget();
-      break;
-    }
-  }
-}
-
-void ImageMaterial::read_image(char* filename)
-{
-  unsigned nu, nv;
-  double size;
-  ifstream indata(filename);
-  unsigned char color[3];
-  string token;
-
-  if (!indata.is_open()) {
-    cerr << "ImageMaterial: WARNING: I/O fault: no such file: " << filename << endl;
-  }
-    
-
-  indata >> token; // P6
-  eat_comments_and_whitespace(indata);
-  indata >> nu >> nv;
-  eat_comments_and_whitespace(indata);
-  indata >> size;
-  eat_comments_and_whitespace(indata);
-  image.resize(nu, nv);
-  for(unsigned v=0;v<nv;++v){
-    for(unsigned u=0;u<nu;++u){
-      indata.read((char*)color, 3);
-      double r=color[0]/size;
-      double g=color[1]/size;
-      double b=color[2]/size;
-      image(u,v)=Color(r,g,b);
-    }
-  }
-
-  valid_ = true;
-}
-
-
 void ImageMaterial::read_hdr_image(char* filename)
 {
    char buf[200];
@@ -233,5 +185,3 @@ void ImageMaterial::read_hdr_image(char* filename)
    }
   valid_ = true;
 }
-
-
