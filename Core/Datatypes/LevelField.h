@@ -104,6 +104,7 @@ void resize(const LevelMesh::node_size_type &) {}
 void resize(LevelMesh::edge_size_type) {}
 void resize(LevelMesh::face_size_type) {}
 void resize(const LevelMesh::cell_size_type &) {}
+void resize(int i){ vector<Array3<Data> >::resize(i); }
 
   class iterator
   {
@@ -381,18 +382,17 @@ template <class Data>
 bool LevelField<Data>::interpolate(Data &g, const Point &p) {
   // for now we only know how to do this for fields with scalars at the nodes
   mesh_handle_type mesh = get_typed_mesh();
+  int nx, ny, nz;
+  double x,y,z;
+  Vector pn=p-mesh->get_min();
+  Vector diagonal = mesh->diagonal();
   if(data_at() == Field::NODE) {
-    Vector pn=p-mesh->get_min();
-    Vector diagonal = mesh->diagonal();
-    int nx=mesh->get_nx();
-    int ny=mesh->get_ny();
-    int nz=mesh->get_nz();
-    double diagx=diagonal.x();
-    double diagy=diagonal.y();
-    double diagz=diagonal.z();
-    double x=pn.x()*(nx-1)/diagx;
-    double y=pn.y()*(ny-1)/diagy;
-    double z=pn.z()*(nz-1)/diagz;
+    nx=mesh->get_nx();
+    ny=mesh->get_ny();
+    nz=mesh->get_nz();
+    x=pn.x()*(nx-1)/diagonal.x();
+    y=pn.y()*(ny-1)/diagonal.y();
+    z=pn.z()*(nz-1)/diagonal.z();
     int ix0=(int)x;
     int iy0=(int)y;
     int iz0=(int)z;
@@ -417,12 +417,27 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) {
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
   } else if( data_at() == Field::CELL) {
-    typename mesh_type::cell_index ci;
-    if( mesh->locate(ci, p) ) {
-      g = value( ci );
-    } else {
-      return false;
-    }
+    //typename mesh_type::cell_index ci;
+    //if( mesh->locate(ci, p) ) {
+    //  g = value( ci );
+    //} else {
+    //  return false;
+    //}
+    nx=mesh->get_nx();
+    ny=mesh->get_ny();
+    nz=mesh->get_nz();
+    x=pn.x()*(nx-1)/diagonal.x();
+    y=pn.y()*(ny-1)/diagonal.y();
+    z=pn.z()*(nz-1)/diagonal.z();
+    int ix0=(int)(x);
+    int iy0=(int)(y);
+    int iz0=(int)(z);
+    if(ix0<0 || ix0>=nx-1)return false;
+    if(iy0<0 || iy0>=ny-1)return false;
+    if(iz0<0 || iz0>=nz-1)return false;
+    
+    g = value(mesh->cell(ix0,iy0,iz0));
+    
   } else {
     return false;
   }
