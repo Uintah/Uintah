@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.2  1999/12/10 06:58:12  dmw
+ #  added another flag to MeshInterpVals
+ #
  #  Revision 1.1  1999/09/04 23:14:52  dmw
  #  took out unused files and added the Mesh module GUI's
  #
@@ -37,6 +40,8 @@ itcl_class SCIRun_Mesh_MeshInterpVals {
 	set $this-method project
 	global $this-zeroTCL
 	set $this-zeroTCL 0
+	global $this-potMatTCL
+	set $this-potMatTCL 0
     }
     method ui {} {
         set w .ui[modname]
@@ -54,8 +59,10 @@ itcl_class SCIRun_Mesh_MeshInterpVals {
 		top $this-method \
 		{{"S2->S1 Project" project}}
 	global $this-zeroTCL
-	checkbutton $w.f.zero -text "Don't use mesh node 0" -textvariable $this-zeroTCL
-	pack $w.f.method $w.f.zero -side top -fill x
+	checkbutton $w.f.zero -text "Don't use mesh node zero" -variable $this-zeroTCL
+	global $this-potMatTCL
+	checkbutton $w.f.pot -text "Build potential difference matrix (ground=0)" -variable $this-potMatTCL
+	pack $w.f.method $w.f.zero $w.f.pot -side top -fill x
         pack $w.f -side top -expand yes
     }
 }
