@@ -51,12 +51,19 @@ using namespace std;
 // Actual constructor for MPMArches
 // ****************************************************************************
 
+#undef RIGID_MPM
+#define RIGID_MPM
+
 MPMArches::MPMArches(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
   Mlb  = scinew MPMLabel();
   d_MAlb = scinew MPMArchesLabel();
+#ifdef RIGID_MPM
+  d_mpm      = scinew RigidMPM(myworld);
+#else
   d_mpm      = scinew SerialMPM(myworld);
+#endif
   d_arches      = scinew Arches(myworld);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
@@ -1695,50 +1702,8 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	    tempSolid_FCZ[curcell] = (tempSolid_CC[curcell] * cmass[curcell] +
 				      tempSolid_CC[adjcell] * cmass[adjcell])/mass;
 	  }
-	  
 	}
       }
-      
-      // allocateAndPut instead:
-      /* new_dw->put(xvel_CC, d_MAlb->xvel_CCLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(yvel_CC, d_MAlb->yvel_CCLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(zvel_CC, d_MAlb->zvel_CCLabel, matlindex, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(xvelFCX, d_MAlb->xvel_FCXLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(yvelFCX, d_MAlb->yvel_FCXLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(zvelFCX, d_MAlb->zvel_FCXLabel, matlindex, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(xvelFCY, d_MAlb->xvel_FCYLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(yvelFCY, d_MAlb->yvel_FCYLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(zvelFCY, d_MAlb->zvel_FCYLabel, matlindex, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(xvelFCZ, d_MAlb->xvel_FCZLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(yvelFCZ, d_MAlb->yvel_FCZLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(zvelFCZ, d_MAlb->zvel_FCZLabel, matlindex, patch); */;
-
-      if (d_calcEnergyExchange) {
-	// allocateAndPut instead:
-	/* new_dw->put(tempSolid_FCX, d_MAlb->tempSolid_FCXLabel, 
-		    matlindex, patch); */;
-	// allocateAndPut instead:
-	/* new_dw->put(tempSolid_FCY, d_MAlb->tempSolid_FCYLabel, 
-		    matlindex, patch); */;
-	// allocateAndPut instead:
-	/* new_dw->put(tempSolid_FCZ, d_MAlb->tempSolid_FCZLabel, 
-		    matlindex, patch); */;
-      }
-      
     }
   }
 }
@@ -1791,12 +1756,30 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 
       double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
       double solid_frac_sum = 0.0;
+
       for (int m = 0; m < numMPMMatls; m++) {
-	
 	solid_fraction_cc[m][*iter] = mat_vol[m][*iter]/total_vol;
 	solid_frac_sum += solid_fraction_cc[m][*iter];
-	
       }
+
+      if (solid_frac_sum > 1.0) 
+	solid_frac_sum = 1.0;
+
+      double mm_cutoff = 0.5;
+
+      if (solid_frac_sum > mm_cutoff) {
+	for (int m = 0; m < numMPMMatls; m++) {
+	  solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
+	}
+	solid_frac_sum = 1.0;
+      }
+      else {
+	for (int m = 0; m < numMPMMatls; m++) {
+	  solid_fraction_cc[m][*iter] = 0.0;
+	}
+	solid_frac_sum = 0.0;
+      }
+
       void_frac[*iter] = 1.0 - solid_frac_sum;
       if (void_frac[*iter] < 0.0)
 	void_frac[*iter] = 0.0;
@@ -2332,148 +2315,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 			  pressure, cellinfo->sew, cellinfo->sns,
 			  cellinfo->stb, valid_lo, valid_hi, cellType,
 			  mmwallid, ffieldid);
-    }
-    
-    // Calculation done: now put things back in data warehouse
-    
-    // debug, sk, 04/12/02
-    //    uVelLinearSrc_cc.initialize(0.);
-    //    uVelLinearSrc_fcy.initialize(0.);
-    //    uVelLinearSrc_fcz.initialize(0.);
-    
-    //    uVelNonlinearSrc_cc.initialize(0.);
-    //    uVelNonlinearSrc_fcy.initialize(0.);
-    //    uVelNonlinearSrc_fcz.initialize(0.);
-    
-    //    vVelLinearSrc_cc.initialize(0.);
-    //    vVelLinearSrc_fcz.initialize(0.);
-    //    vVelLinearSrc_fcx.initialize(0.);
-    
-    //    vVelNonlinearSrc_cc.initialize(0.);
-    //    vVelNonlinearSrc_fcz.initialize(0.);
-    //    vVelNonlinearSrc_fcx.initialize(0.);
-    
-    //    wVelLinearSrc_cc.initialize(0.);
-    //    wVelLinearSrc_fcx.initialize(0.);
-    //    wVelLinearSrc_fcy.initialize(0.);
-    
-    //    wVelNonlinearSrc_cc.initialize(0.);
-    //    wVelNonlinearSrc_fcx.initialize(0.);
-    //    wVelNonlinearSrc_fcy.initialize(0.);
-
-    // end debug, sk, 04/12/02
-    
-    // Solid variables
-    
-    for (int m = 0; m < numMPMMatls; m++) {
-      
-      Material* matl = d_sharedState->getMPMMaterial( m );
-      //      int idx = matl->getDWIndex();
-      
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceX_cc[m], d_MAlb->DragForceX_CCLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceY_cc[m], d_MAlb->DragForceY_CCLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceZ_cc[m], d_MAlb->DragForceZ_CCLabel,
-		  idx, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceX_fcy[m], d_MAlb->DragForceX_FCYLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceX_fcz[m], d_MAlb->DragForceX_FCZLabel,
-		  idx, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceY_fcz[m], d_MAlb->DragForceY_FCZLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceY_fcx[m], d_MAlb->DragForceY_FCXLabel,
-		  idx, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceZ_fcx[m], d_MAlb->DragForceZ_FCXLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(dragForceZ_fcy[m], d_MAlb->DragForceZ_FCYLabel,
-		  idx, patch); */;
-      
-      // allocateAndPut instead:
-      /* new_dw->put(pressForceX[m], d_MAlb->PressureForce_FCXLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(pressForceY[m], d_MAlb->PressureForce_FCYLabel,
-		  idx, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(pressForceZ[m], d_MAlb->PressureForce_FCZLabel,
-		  idx, patch); */;
-
-    }
-    
-    // Gas variables
-    
-    // allocateAndPut instead:
-    /* new_dw->put(uVelLinearSrc_cc, d_MAlb->d_uVel_mmLinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(uVelLinearSrc_fcy, d_MAlb->d_uVel_mmLinSrc_FCYLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(uVelLinearSrc_fcz, d_MAlb->d_uVel_mmLinSrc_FCZLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(uVelNonlinearSrc_cc, d_MAlb->d_uVel_mmNonlinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(uVelNonlinearSrc_fcy, d_MAlb->d_uVel_mmNonlinSrc_FCYLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(uVelNonlinearSrc_fcz, d_MAlb->d_uVel_mmNonlinSrc_FCZLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(vVelLinearSrc_cc, d_MAlb->d_vVel_mmLinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(vVelLinearSrc_fcz, d_MAlb->d_vVel_mmLinSrc_FCZLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(vVelLinearSrc_fcx, d_MAlb->d_vVel_mmLinSrc_FCXLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(vVelNonlinearSrc_cc, d_MAlb->d_vVel_mmNonlinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(vVelNonlinearSrc_fcz, d_MAlb->d_vVel_mmNonlinSrc_FCZLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(vVelNonlinearSrc_fcx, d_MAlb->d_vVel_mmNonlinSrc_FCXLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(wVelLinearSrc_cc, d_MAlb->d_wVel_mmLinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(wVelLinearSrc_fcx, d_MAlb->d_wVel_mmLinSrc_FCXLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(wVelLinearSrc_fcy, d_MAlb->d_wVel_mmLinSrc_FCYLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(wVelNonlinearSrc_cc, d_MAlb->d_wVel_mmNonlinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(wVelNonlinearSrc_fcx, d_MAlb->d_wVel_mmNonlinSrc_FCXLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(wVelNonlinearSrc_fcy, d_MAlb->d_wVel_mmNonlinSrc_FCYLabel,
-		matlIndex, patch); */;
   }
 }
 
@@ -2650,29 +2491,6 @@ void MPMArches::collectToCCGasMomExchSrcs(const ProcessorGroup*,
 			 su_dragz_fcy, sp_dragz_fcy,
 			 joff, koff, ioff,
 			 valid_lo, valid_hi);
-    
-    // Calculation done: now put things in DW
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel,
-		matlIndex, patch); */;
   }
 }
 
@@ -2831,43 +2649,6 @@ void MPMArches::interpolateCCToFCGasMomExchSrcs(const ProcessorGroup*,
 			     sp_dragz_cc, 
 			     ioff, joff, koff,
 			     valid_lo, valid_hi);
-
-    // Calculation done: now put things in DW
-    
-    // debug, April 18, 2002
-    /*
-    su_dragx_fcx.initialize(0);
-    sp_dragx_fcx.initialize(0);
-    su_dragy_fcy.initialize(0);
-    sp_dragy_fcy.initialize(0);
-    su_dragz_fcz.initialize(0);
-    sp_dragz_fcz.initialize(0);
-    */
-    // end debug, sk, April 18, 2002
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_dragx_fcx, d_MAlb->d_uVel_mmNonlinSrcLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(sp_dragx_fcx, d_MAlb->d_uVel_mmLinSrcLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_dragy_fcy, d_MAlb->d_vVel_mmNonlinSrcLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(sp_dragy_fcy, d_MAlb->d_vVel_mmLinSrcLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_dragz_fcz, d_MAlb->d_wVel_mmNonlinSrcLabel,
-		matlIndex, patch); */;
-    
-    // allocateAndPut instead:
-    /* new_dw->put(sp_dragz_fcz, d_MAlb->d_wVel_mmLinSrcLabel,
-		matlIndex, patch); */;
   }
 }
 
@@ -3403,18 +3184,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      cellType, mmwallid, ffieldid);
 
     }
-
-    // debug, sk, April 16, 2002
-    //    sp_enth_cc.initialize(0.);
-    //    sp_enth_fcx.initialize(0.);
-    //    sp_enth_fcy.initialize(0.);
-    //    sp_enth_fcz.initialize(0.);
-    //    su_enth_cc.initialize(0.);
-    //    su_enth_fcx.initialize(0.);
-    //    su_enth_fcy.initialize(0.);
-    //    su_enth_fcz.initialize(0.);
-    // end debug, sk, April 16, 2002
-    
   }
 }
 
@@ -3482,22 +3251,7 @@ void MPMArches::collectToCCGasEnergyExchSrcs(const ProcessorGroup*,
 			       su_enth_fcz, sp_enth_fcz,
 			       valid_lo, valid_hi);
 
-    // Calculation done: now put things in DW
-    
-    // debug, sk, April 17, 2002
-    //    su_enth_cc.initialize(0.0);
-    //    sp_enth_cc.initialize(0.0);
-    // end debug, sk, April 17, 2002
-    
-    // allocateAndPut instead:
-    /* new_dw->put(su_enth_cc, d_MAlb->d_enth_mmNonLinSrc_CCLabel,
-		matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_CCLabel,
-		matlIndex, patch); */;
-
   }
-
 }
 
 //______________________________________________________________________
@@ -3622,16 +3376,6 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 	  acc_arches[*iter] = totalforce[*iter]/cmass[*iter];
         }
       }
-
-      // allocateAndPut instead:
-      /* new_dw->put(totalforce, d_MAlb->SumAllForcesCCLabel, matlindex, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(acc_arches, d_MAlb->AccArchesCCLabel,    matlindex, patch); */;
-
-      if (d_calcEnergyExchange)
-	// allocateAndPut instead:
-	/* new_dw->put(htrate_cc, d_MAlb->heaTranSolid_CCLabel,    matlindex, patch); */;
-
     }
   }
 }
