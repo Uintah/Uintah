@@ -317,8 +317,9 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   // now the polylines have been draw, draw the points...
 
+  int j;
   for(i=0;i<3;i++) {
-    for(int j=0;j<points.size();j++) {
+    for(j=0;j<points.size();j++) {
       float mul = 0.6;
       if (selNode == j*2)
 	mul = 1.0;
@@ -347,13 +348,17 @@ void GenTransferFunc::DrawGraphs( int flush)
 
   glDisable(GL_BLEND);
 
-  glBegin(GL_QUAD_STRIP);
-  for(i=0;i<10;i++) {
-    glColor3f(i&1,i&1,i&1);
-    glVertex2f(0,i/9.0);
-    glVertex2f(1,i/9.0);
-  }
+  for (j=0;j<80; j++) {
+    glBegin(GL_QUAD_STRIP);
+    for(i=0;i<10;i++) {
+      int on=0;
+      if ((i&1 && j&1) || (!(i&1) && (!(j&1)))) on=1;
+      glColor3f(on, on, on);
+      glVertex2f(j/79.0,i/9.0);
+      glVertex2f((j+1)/79.0,i/9.0);
+    }
   glEnd();
+  }
   glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_TRUE);
   
   glBegin(GL_QUAD_STRIP);
@@ -369,7 +374,7 @@ void GenTransferFunc::DrawGraphs( int flush)
   glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
 
   glBegin(GL_QUAD_STRIP);
-  for(int j=0;j<points.size();j++) {
+  for(j=0;j<points.size();j++) {
     glColor3f(points[j]._rgb[0],points[j]._rgb[1],points[j]._rgb[2]);
     glVertex2f(points[j]._t,0);
     glVertex2f(points[j]._t,1);
@@ -554,7 +559,7 @@ void GenTransferFunc::DoMotion(int, int x, int y)
 
   float val = GetVal(x,y);   // this remaps the Y coord!
 
-  cerr << "TF: " << time << "  " << val << "\n";
+//  cerr << "TF: " << time << "  " << val << "\n";
   // end conditions are special cases - can't change x!
 
   if (activeLine == 7) {
@@ -645,8 +650,25 @@ void GenTransferFunc::DoDown(int win, int x, int y, int button)
 	}
       }
 
+      // place the added points for the two other curves exactly on their 
+      // existing segments
+      double dtime1, dtime2, dsumtime;
+      dtime1=p._t-points[cpoint-1]._t;
+      dtime2=points[cpoint]._t-p._t;
+      double w1, w2;
+      w1=w2=.5;
+      dsumtime=dtime1+dtime2;
+      if (dsumtime) {   // if the points are vertical, just put it midway
+	w1=dtime2/dsumtime;
+	w2=dtime1/dsumtime;
+      }
+      int idx;
+      idx=((cline>>1)+1)%3;
+      p._rgb[idx]=points[cpoint-1]._rgb[idx]*w1+points[cpoint]._rgb[idx]*w2;
+      idx=((cline>>1)+2)%3;
+      p._rgb[idx]=points[cpoint-1]._rgb[idx]*w1+points[cpoint]._rgb[idx]*w2;
       points.insert(cpoint,p);
-
+	  
     } else { // this is the alpha curve...
       if (cpoint && cpoint != alphas.size()-1) {
 	if (aTimes[cpoint] <= time)
@@ -760,7 +782,7 @@ void GenTransferFunc::execute(void)
     cerr << cmap->min << " - " << cmap->max << endl;
     
   }
-  
+  DrawGraphs(0);
 #if 0  
   if (cmap.get_rep()) {
     delete cmap.get_rep();
@@ -880,6 +902,9 @@ int GenTransferFunc::makeCurrent(void)
 
 //
 // $Log$
+// Revision 1.8  2000/11/02 21:44:36  dmw
+// new points are placed along exisint lines
+//
 // Revision 1.7  2000/03/17 09:27:31  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
