@@ -308,6 +308,11 @@ int main(int argc, char* argv[])
   
   if(use_bv){
     if(scene->nprims() > 1){
+      cerr << "*********************************************************\n";
+      cerr << " WARNING WARNING WARNING WARNING WARNING WARNING WARNING\n";
+      cerr << "             if you have multiple timesteps you\n";
+      cerr << "             should use \"-bv 0 or -nobv\"!!!\n";
+      cerr << "*********************************************************\n";
       if(use_bv==1){
 	scene->set_object(new BV1(scene->get_object()));
       } else if(use_bv==2){
