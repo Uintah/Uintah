@@ -54,7 +54,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = 1.e-100;
   // Turn off all the debuging switches
-  switchDebug_InterpolateNCToCC   = false;
   switchDebug_InterpolateNCToCC_0 = false;
   switchDebug_InterpolateCCToNC   = false;
 }
@@ -110,10 +109,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
         child = child->findNextBlock("debug")) {
       map<string,string> debug_attr;
       child->getAttributes(debug_attr);
-      if (debug_attr["label"]      == "switchDebug_InterpolateNCToCC")
-        switchDebug_InterpolateNCToCC = true;
-      else if (debug_attr["label"] == "switchDebug_InterpolateNCToCC_0")
-        switchDebug_InterpolateNCToCC = true;
+      if (debug_attr["label"] == "switchDebug_InterpolateNCToCC_0")
+        switchDebug_InterpolateNCToCC_0 = true;
       else if (debug_attr["label"] == "switchDebug_InterpolateCCToNC")
         switchDebug_InterpolateCCToNC = true;       
     }
@@ -266,11 +263,10 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   d_mpm->scheduleIntegrateAcceleration(           sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, mpm_matls);
 
-  scheduleInterpolateNCToCC(                      sched, patches, one_matl,
-                                                                  mpm_matls);
+  scheduleComputeLagrangianValuesMPM(             sched, patches, one_matl,
+                                                                  mpm_matls); 
 
-  d_ice->scheduleComputeLagrangianValues(         sched, patches, mpm_matls_sub,
-                                                                  ice_matls);
+  d_ice->scheduleComputeLagrangianValues(         sched, patches, ice_matls);
 
   scheduleCCMomExchange(                          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
@@ -283,6 +279,7 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
+
 
   if( d_mpm->withFracture() ) {
     d_mpm->scheduleComputeFracture(               sched, patches, mpm_matls);
@@ -394,18 +391,18 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void MPMICE::scheduleInterpolateNCToCC(SchedulerP& sched,
+void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSubset* one_matl,
                                    const MaterialSet* mpm_matls)
 {
 
-  cout_doing << "MPMICE::scheduleInterpolateNCToCC" << endl;
+  cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
    /* interpolateNCToCC */
 
-   Task* t=scinew Task("MPMICE::interpolateNCToCC",
-                 this, &MPMICE::interpolateNCToCC);
+   Task* t=scinew Task("MPMICE::computeLagrangianValuesMPM",
+                 this, &MPMICE::computeLagrangianValuesMPM);
 
    const MaterialSubset* mss = mpm_matls->getUnion();
 
@@ -414,13 +411,16 @@ void MPMICE::scheduleInterpolateNCToCC(SchedulerP& sched,
    t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   Ghost::AroundCells,1);
    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,       one_matl,
                                                           Ghost::AroundCells,1);
+   t->requires(Task::NewDW, MIlb->cMassLabel,             Ghost::None);
+   t->requires(Task::NewDW, MIlb->burnedMassCCLabel,      Ghost::None);
+   t->requires(Task::NewDW, Ilb->int_eng_comb_CCLabel,    Ghost::None);
+   t->requires(Task::NewDW, Ilb->mom_comb_CCLabel,        Ghost::None);
+   t->modifies(Ilb -> rho_CCLabel); 
+   t->computes(Ilb -> mass_L_CCLabel);
+   t->computes(Ilb -> mom_L_CCLabel);
+   t->computes(Ilb -> int_eng_L_CCLabel);
+   t->computes(MIlb-> NC_CCweightLabel, one_matl);
 
-   t->computes(Ilb ->mom_L_CCLabel);
-   t->computes(Ilb ->int_eng_L_CCLabel);
-   t->computes(MIlb->NC_CCweightLabel, one_matl);
-
-   
-   
    sched->addTask(t, patches, mpm_matls);
 }
 //______________________________________________________________________
@@ -440,14 +440,13 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
                                  // I C E
   t->computes(Ilb->mom_L_ME_CCLabel,            ice_matls);
   t->computes(Ilb->int_eng_L_ME_CCLabel,        ice_matls);
-  t->requires(Task::NewDW, Ilb->mass_L_CCLabel, ice_matls, Ghost::None);
 
                                  // M P M
   t->computes(MIlb->dTdt_CCLabel, mpm_matls);
   t->computes(MIlb->dvdt_CCLabel, mpm_matls);
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,   mpm_matls, Ghost::None);
 
                                 // A L L  M A T L S
+  t->requires(Task::NewDW,  Ilb->mass_L_CCLabel,    Ghost::None); 
   t->requires(Task::NewDW,  Ilb->mom_L_CCLabel,     Ghost::None);
   t->requires(Task::NewDW,  Ilb->int_eng_L_CCLabel, Ghost::None);
   t->requires(Task::NewDW,  Ilb->sp_vol_CCLabel,    Ghost::None); 
@@ -505,9 +504,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
     t = scinew Task("MPMICE::computeEquilibrationPressure",
                     this, &MPMICE::computeEquilibrationPressure);
   }
-
-
-  
                               // I C E
   t->requires(Task::OldDW,Ilb->temp_CCLabel,         ice_matls, Ghost::None);
   t->requires(Task::OldDW,Ilb->rho_CCLabel,          ice_matls, Ghost::None);
@@ -566,6 +562,7 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   //__________________________________
   // Reactants
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matls, Ghost::None);
+  t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, Ghost::None);
   t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls,
@@ -573,8 +570,9 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::OldDW, Mlb->doMechLabel);
 
   t->computes(MIlb->burnedMassCCLabel);
-  t->computes(MIlb->releasedHeatCCLabel);
+  t->computes( Ilb->int_eng_comb_CCLabel); 
   t->computes( Ilb->created_vol_CCLabel);
+  t->computes( Ilb->mom_comb_CCLabel);
   
 
   sched->addTask(t, patches, all_matls);
@@ -815,6 +813,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
       //---- P R I N T   D A T A ------ 
       if(switchDebug_InterpolateNCToCC_0) {
+
         char description[50];
         sprintf(description, "TOP_MPMICE::interpolateNCToCC_0_mat_%d_patch_%d ", 
                     indx, patch->getID());
@@ -828,14 +827,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
       //__________________________________
       //  Compute Temp_CC
-#ifdef IDEAL_GAS
-      // This temp is only used in computeEquilibrationPressure ideal gas EOS 
-      // so for now it's hardwired.  We should really put this in MPMICE 
-      // initialization. -Todd
-      Temp_CC.initialize(300.0);
-#endif
-#ifdef EOSCM    //
-      Temp_CC.initialize(0.0);
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
         patch->findNodesFromCell(*iter,nodeIdx);
 
@@ -855,9 +846,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
                doMechNew = -2.0;
              }
           }
-       }
+        }else{
+          Temp_CC[*iter] = 300.0;  // we need a sane value where there isn't any mass
+        }
      }
-#endif
 
       for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
         patch->findNodesFromCell(*iter,nodeIdx);
@@ -866,7 +858,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           cvolume[*iter] += NC_CCweight[nodeIdx[in]] * gvolume[nodeIdx[in]];
           vel_CC[*iter]  += gvelocity[nodeIdx[in]] *
                             NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-
         }
         vel_CC[*iter]      /= cmass[*iter];
       }
@@ -906,20 +897,23 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void MPMICE::interpolateNCToCC(const ProcessorGroup*,
+void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                                const PatchSubset* patches,
-                            const MaterialSubset* ,
+                               const MaterialSubset* ,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing interpolateNCToCC on patch "<< patch->getID()
+    cout_doing << "Doing computeLagrangianValuesMPM on patch "<< patch->getID()
                <<"\t\t\t MPMICE" << endl;
 
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector zero(0.,0.,0.);
- 
+
+    Vector dx = patch->dCell();
+    double cellVol = dx.x()*dx.y()*dx.z();
+     
     constNCVariable<double> NC_CCweight;
     NCVariable<double>NC_CCweight_copy;
     new_dw->allocate(NC_CCweight_copy,MIlb->NC_CCweightLabel, 0,patch);
@@ -928,68 +922,133 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
               
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+      int indx = mpm_matl->getDWIndex();
 
       // Create arrays for the grid data
       constNCVariable<double> gmass, gvolume,gtempstar;
       constNCVariable<Vector> gvelocity;
       CCVariable<Vector> cmomentum;
-      CCVariable<double> int_eng;
-
-      new_dw->get(gmass,     Mlb->gMassLabel,           matlindex, patch,
+      CCVariable<double> int_eng_L, rho_CC, mass_L;              
+      constCCVariable<double> burnedMassCC, int_eng_comb, cmass; 
+      constCCVariable<Vector> mom_comb;
+      new_dw->get(gmass,        Mlb->gMassLabel,indx, patch, 
                                                  Ghost::AroundCells, 1);
-      new_dw->get(gvelocity, Mlb->gVelocityStarLabel,   matlindex, patch,
+      new_dw->get(gvelocity,    Mlb->gVelocityStarLabel, indx, patch,
                                                  Ghost::AroundCells, 1);
-      new_dw->get(gtempstar, Mlb->gTemperatureStarLabel,matlindex, patch,
+      new_dw->get(gtempstar,    Mlb->gTemperatureStarLabel,indx, patch,
                                                  Ghost::AroundCells, 1);
-
-      new_dw->allocate(cmomentum,  Ilb->mom_L_CCLabel,      matlindex, patch);
-      new_dw->allocate(int_eng,    Ilb->int_eng_L_CCLabel,  matlindex, patch);
+      new_dw->get(cmass,        MIlb->cMassLabel,        indx,patch, 
+                                                 Ghost::None,0);
+      new_dw->get(burnedMassCC, MIlb->burnedMassCCLabel, indx,patch,
+                                                 Ghost::None,0);
+      new_dw->get(int_eng_comb,  Ilb->int_eng_comb_CCLabel,indx,patch,
+                                                 Ghost::None,0);  
+      new_dw->get(mom_comb,      Ilb->mom_comb_CCLabel,indx,patch,
+                                                 Ghost::None,0);                                                   
+      new_dw->getModifiable(rho_CC,Ilb->rho_CCLabel,        indx,patch);
+      new_dw->allocate(mass_L,     Ilb->mass_L_CCLabel,     indx,patch);    
+      new_dw->allocate(cmomentum,  Ilb->mom_L_CCLabel,      indx, patch);
+      new_dw->allocate(int_eng_L,  Ilb->int_eng_L_CCLabel,  indx, patch);
 
       cmomentum.initialize(zero);
-      int_eng.initialize(0.); 
+      int_eng_L.initialize(0.);
+      mass_L.initialize(0.); 
       double cv = mpm_matl->getSpecificHeat();
 
       IntVector nodeIdx[8];
 
       //---- P R I N T   D A T A ------ 
-      if(switchDebug_InterpolateNCToCC) {
+      if(d_ice->switchDebugLagrangianValues) {
          char description[50];
-         sprintf(description, "TOP_MPMICE::interpolateNCToCC_mat_%d_patch_%d ", 
-                     matlindex, patch->getID());
+         sprintf(description, 
+                  "TOP_MPMICE::computeLagrangianValuesMPM_mat_%d_patch_%d ", 
+                   indx, patch->getID());
          printData(     patch, 1,description, "gmass",    gmass);
          printData(     patch, 1,description, "gtemStar", gtempstar);
          printNCVector( patch, 1,description, "gvelocityStar.X", 0, gvelocity);
          printNCVector( patch, 1,description, "gvelocityStar.Y", 1, gvelocity);
          printNCVector( patch, 1,description, "gvelocityStar.Z", 2, gvelocity);
-       }
+      }
 
-       for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-         patch->findNodesFromCell(*iter,nodeIdx);
-         for (int in=0;in<8;in++){
-           cmomentum[*iter] +=gvelocity[nodeIdx[in]] *
-                             NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-           int_eng[*iter]   +=gtempstar[nodeIdx[in]] * cv *
-                             NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-         }
-       } 
+      for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+        patch->findNodesFromCell(*iter,nodeIdx);
+        IntVector c = *iter;
+        for (int in=0;in<8;in++){
+          cmomentum[c] +=gvelocity[nodeIdx[in]] *
+                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          int_eng_L[c] +=gtempstar[nodeIdx[in]] * cv *
+                            NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+        }
+      }
+      //__________________________________
+      //  NO REACTION
+      if(d_ice->d_massExchange == false) {
+        for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+         IntVector c = *iter;
+         mass_L[c]    = cmass[c];
+         rho_CC[c]    = mass_L[c]/cellVol;
+        }
+      }
+
+      //__________________________________
+      //  REACTION
+      // The reaction can't completely eliminate 
+      //  all the mass, momentum and internal E.
+      // If it does then we'll get erroneous vel,
+      // and temps in CCMomExchange.  If the mass
+      // goes to min_mass then cmomentum and int_eng_L
+      // need to be scaled by min_mass to avoid inf temp and vel_CC
+      // in 
+      if(d_ice->d_massExchange)  { 
+        for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
+          //  must have a minimum mass
+          double min_mass = d_SMALL_NUM * cellVol;
+          mass_L[c] = std::max( (cmass[c] + burnedMassCC[c] ), min_mass);
+          rho_CC[c] = mass_L[c]/cellVol;
+              
+          //  must have a minimum momentum 
+          for (int dir = 0; dir <3; dir++) {  //loop over all three directons                        
+            double min_mom_L = min_mass * cmomentum[c](dir)/cmass[c];
+            double mom_L_tmp = cmomentum[c](dir) + mom_comb[c](dir);
+
+            // Preserve the original sign on momemtum     
+            // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
+            double plus_minus_one = (mom_L_tmp+d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp+d_SMALL_NUM));
+
+            mom_L_tmp = (mom_L_tmp/mass_L[c] ) *
+                        (cmass[c] + burnedMassCC[c] );
+                                
+            cmomentum[c](dir) = plus_minus_one *
+                                std::max( fabs(mom_L_tmp), fabs(min_mom_L) );
+          }
+          // must have a minimum int_eng   
+          double min_int_eng = min_mass * int_eng_L[c]/cmass[c];
+          int_eng_L[c] = (int_eng_L[c]/mass_L[c]) * (cmass[c] + burnedMassCC[c]);     
+          int_eng_L[c] = std::max((int_eng_L[c] - int_eng_comb[c]),min_int_eng);
+        }
+      }        
+       
        //__________________________________
        //  Set if symmetric Boundary conditions
-       setBC(cmomentum, "set_if_sym_BC",patch, matlindex);
-       setBC(int_eng,   "set_if_sym_BC",patch, d_sharedState, matlindex);
+       setBC(cmomentum, "set_if_sym_BC",patch, indx);
+       setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx);
 
       //---- P R I N T   D A T A ------ 
-      if(switchDebug_InterpolateNCToCC) {
-        char description[50];
-        sprintf(description, "BOT_MPMICE::interpolateNCToCC_mat_%d_patch_%d ", 
-                    matlindex, patch->getID());
-        d_ice->printData(   patch, 1,description, "int_eng_L", int_eng);
-        d_ice->printVector( patch, 1,description, "xmom_L_CC", 0, cmomentum);
-        d_ice->printVector( patch, 1,description, "ymom_L_CC", 1, cmomentum);
-        d_ice->printVector( patch, 1,description, "zmom_L_CC", 2, cmomentum);
+      if(d_ice->switchDebugLagrangianValues) {
+        char desc[50];
+        sprintf(desc, "BOT_MPMICE::computeLagrangianValuesMPM_mat_%d_patch_%d ", 
+                 indx, patch->getID());
+        d_ice->printData(   patch, 1,desc, "rho_CC",    rho_CC);
+        d_ice->printData(   patch, 1,desc, "int_eng_L", int_eng_L);
+        d_ice->printVector( patch, 1,desc, "xmom_L_CC", 0, cmomentum);
+        d_ice->printVector( patch, 1,desc, "ymom_L_CC", 1, cmomentum);
+        d_ice->printVector( patch, 1,desc, "zmom_L_CC", 2, cmomentum);
       }
-       new_dw->put(cmomentum,     Ilb->mom_L_CCLabel,      matlindex, patch);
-       new_dw->put(int_eng,       Ilb->int_eng_L_CCLabel,  matlindex, patch);
+       new_dw->put(cmomentum,   Ilb->mom_L_CCLabel,    indx, patch);     
+       new_dw->put(int_eng_L,   Ilb->int_eng_L_CCLabel,indx, patch);     
+       new_dw->put(mass_L,      Ilb->mass_L_CCLabel,   indx, patch);     
     }
     //__________________________________
     // carry forward interpolation weight 
@@ -1019,7 +1078,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-    Vector dx = patch->dCell();
     Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
@@ -1036,7 +1094,6 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     StaticArray<CCVariable<double> > dTdt_CC(numALLMatls);
     StaticArray<NCVariable<double> > dTdt_NC(numALLMatls);
     StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
-    StaticArray<CCVariable<double> > mass_L_temp(numALLMatls);
     StaticArray<CCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > mass_L(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
@@ -1045,6 +1102,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     vector<double> b(numALLMatls);
     vector<double> sp_vol(numALLMatls);
     vector<double> cv(numALLMatls);
+    double tmp;
     DenseMatrix beta(numALLMatls,numALLMatls),acopy(numALLMatls,numALLMatls);
     DenseMatrix K(numALLMatls,numALLMatls),H(numALLMatls,numALLMatls);
     DenseMatrix a(numALLMatls,numALLMatls), a_inverse(numALLMatls,numALLMatls);
@@ -1064,18 +1122,15 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       if(mpm_matl){                 // M P M
         new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     indx, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,indx, patch);
-        new_dw->allocate(mass_L_temp[m],  Ilb->mass_L_CCLabel,  indx, patch);
-        new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,         indx, patch,
-                                                         Ghost::None, 0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
       if(ice_matl){                 // I C E
         new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,     indx, patch);
         new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel,    indx, patch);
-        new_dw->get(mass_L[m],      Ilb->mass_L_CCLabel,  indx, patch,
-                                                   Ghost::None, 0);
         cv[m] = ice_matl->getSpecificHeat();
       }                             // A L L  M A T L S
+      new_dw->get(mass_L[m],        Ilb->mass_L_CCLabel,  indx, patch,
+                                                   Ghost::None, 0); 
       new_dw->get(sp_vol_CC[m],     Ilb->sp_vol_CCLabel, indx, patch,
                                                    Ghost::None, 0);
       new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,     indx, patch,
@@ -1109,22 +1164,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       }
     }
 
-    double vol = dx.x()*dx.y()*dx.z();
-    double tmp;
-    for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      if(mpm_matl){
-       // Loaded rho_CC into mass_L for solid matl's, converting to mass_L
-       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-         IntVector c = *iter;
-         mass_L_temp[m][c] = rho_CC[m][c]*vol;
-       }
-       mass_L[m] = mass_L_temp[m];
-      }
-    }
-
-    // Convert momenta to velocities.  Slightly different for MPM and ICE.
+    // Convert momenta to velocities and internal energy to Temp
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
@@ -1132,7 +1172,23 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
       }
     }
-
+    //---- P R I N T   D A T A ------ 
+    if (d_ice->switchDebugMomentumExchange_CC ) 
+    {
+      for (int m = 0; m < numALLMatls; m++) {
+        Material* matl = d_sharedState->getMaterial( m );
+        int indx = matl->getDWIndex();
+        char desc[50];
+        sprintf(desc, "TOP_CCMomExchange_%d_patch_%d ",indx, patch->getID());
+        d_ice->printData(   patch,1, desc,"Temp_CC",    Temp_CC[m]);     
+        d_ice->printData(   patch,1, desc,"int_eng_L",  int_eng_L[m]);   
+        d_ice->printData(   patch,1, desc,"mass_L",     mass_L[m]);      
+        d_ice->printVector( patch,1, desc,"uvel_CC", 0, vel_CC[m]);      
+        d_ice->printVector( patch,1, desc,"uvel_CC", 1, vel_CC[m]);      
+        d_ice->printVector( patch,1, desc,"uvel_CC", 2, vel_CC[m]);      
+      }
+    }
+ 
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       //   Form BETA matrix (a), off diagonal terms
@@ -1829,6 +1885,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     - Put the heat and mass into ICE matl (0).
 _____________________________________________________________________*/ 
 void MPMICE::HEChemistry(const ProcessorGroup*,
+
                              const PatchSubset* patches,
                              const MaterialSubset* ,
                              DataWarehouse* old_dw,
@@ -1845,7 +1902,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     int numALLMatls=d_sharedState->getNumMatls();
     StaticArray<CCVariable<double> > burnedMass(numALLMatls);
     StaticArray<CCVariable<double> > createdVol(numALLMatls);
-    StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
+    StaticArray<CCVariable<double> > int_eng_react(numALLMatls); 
+    StaticArray<CCVariable<Vector> > mom_comb(numALLMatls);
     
     constCCVariable<double> gasPressure;
     constCCVariable<double> gasTemperature;
@@ -1854,7 +1912,9 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     CCVariable<double>      sumBurnedMass;
     CCVariable<double>      sumCreatedVol;
     CCVariable<double>      sumReleasedHeat;
+    CCVariable<Vector>      sumMom_comb;
     
+    constCCVariable<Vector> vel_CC;
     constCCVariable<double> solidTemperature;
     constCCVariable<double> solidMass;
     constNCVariable<double> NCsolidMass;
@@ -1875,15 +1935,18 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       //__________________________________
       //  if no reaction 
-      //  burnedMass, createdVol, releasedHeat
+      //  burnedMass, createdVol, int_eng_comb
       //  must still be allocated and initialized = 0,
       //  other tasks depend on them.
-      new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel,   indx,patch);
-      new_dw->allocate(createdVol[m],   Ilb->created_vol_CCLabel, indx,patch);
-      new_dw->allocate(releasedHeat[m],MIlb->releasedHeatCCLabel, indx,patch);
+      new_dw->allocate(burnedMass[m],   MIlb->burnedMassCCLabel,   indx,patch);
+      new_dw->allocate(createdVol[m],    Ilb->created_vol_CCLabel, indx,patch);
+      new_dw->allocate(int_eng_react[m], Ilb->int_eng_comb_CCLabel,indx,patch);  
+      new_dw->allocate(mom_comb[m],      Ilb->mom_comb_CCLabel,    indx,patch);  
+            
       burnedMass[m].initialize(0.0);
       createdVol[m].initialize(0.0);
-      releasedHeat[m].initialize(0.0);
+      int_eng_react[m].initialize(0.0); 
+      mom_comb[m].initialize(0.0);
       //__________________________________
       // Pull out products data, should be only
       // 1 product matl
@@ -1899,11 +1962,14 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                       prod_indx, patch);
         new_dw->allocate(sumCreatedVol,   Ilb->created_vol_CCLabel,  
                                       prod_indx, patch);
-        new_dw->allocate(sumReleasedHeat,MIlb->releasedHeatCCLabel, 
+        new_dw->allocate(sumReleasedHeat, Ilb->int_eng_comb_CCLabel, 
+                                      prod_indx, patch);
+        new_dw->allocate(sumMom_comb,     Ilb->mom_comb_CCLabel, 
                                       prod_indx, patch);
         sumBurnedMass.initialize(0.0);
         sumCreatedVol.initialize(0.0);
         sumReleasedHeat.initialize(0.0);
+        sumMom_comb.initialize(0.0);
       }
       //__________________________________
       // Pull out reactant data
@@ -1914,6 +1980,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->get(solidMass,           MIlb->cMassLabel,    
                                       react_indx, patch, Ghost::None,0);
         new_dw->get(sp_vol_CC,            Ilb->sp_vol_CCLabel,
+                                      react_indx, patch, Ghost::None,0);
+        new_dw->get(vel_CC,               MIlb->vel_CCLabel,  
                                       react_indx, patch, Ghost::None,0); 
         new_dw->get(NCsolidMass,          Mlb->gMassLabel,    
                                       react_indx, patch, Ghost::AroundCells, 1);
@@ -1928,16 +1996,16 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     double total_created_vol = 0;
     for(int m = 0; m < numALLMatls; m++) {  
       Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);   
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
+
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
         double delt = delT;
         double cv_solid = mpm_matl->getSpecificHeat();
-
+        
         delt_vartype doMech;
         old_dw->get(doMech, Mlb->doMechLabel);
 
        if(doMech < -1.5){
-
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
           IntVector c = *iter;
          // Find if the cell contains surface:
@@ -1947,10 +2015,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
          double MaxMass = NCsolidMass[nodeIdx[0]];
          double MinMass = NCsolidMass[nodeIdx[0]];
          for (int nodeNumber=0; nodeNumber<8; nodeNumber++) {
-             if (NCsolidMass[nodeIdx[nodeNumber]]>MaxMass)
-              MaxMass = NCsolidMass[nodeIdx[nodeNumber]];
-             if (NCsolidMass[nodeIdx[nodeNumber]]<MinMass)
-              MinMass = NCsolidMass[nodeIdx[nodeNumber]];
+           if (NCsolidMass[nodeIdx[nodeNumber]]>MaxMass) {
+             MaxMass = NCsolidMass[nodeIdx[nodeNumber]];
+           }
+           if (NCsolidMass[nodeIdx[nodeNumber]]<MinMass) {
+             MinMass = NCsolidMass[nodeIdx[nodeNumber]];
+           }
          }         
 
          double Temperature = 0;
@@ -1961,8 +2031,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
          /* Here is the new criterion for the surface:
             if (MnodeMax - MnodeMin) / Mcell > 0.5 - consider it a surface
          */
-         if ((MaxMass-MinMass)/MaxMass > 0.9){
-// && (MaxMass-MinMass)/MaxMass < 0.99999) {
+         if ((MaxMass-MinMass)/MaxMass > 0.9 ){
+// && (MaxMass-MinMass)/MaxMass < 0.99999) 
 
              double gradRhoX, gradRhoY, gradRhoZ;
              double normalX,  normalY,  normalZ;
@@ -2011,83 +2081,97 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
              TmpZ = fabs(TmpZ);
 
              surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
-                      
+             
+             // compute the enthalpy of reaction and burnedMass         
              matl->getBurnModel()->computeBurn(Temperature,
                                           gasPressure[c],
                                           solidMass[c],
                                           solidTemperature[c],
                                           burnedMass[m][c],
-                                          releasedHeat[m][c],
+                                          sumReleasedHeat[c],
                                           delt, surfArea);
-
-             // In addition to the heat of formation,
-             // releasedHeat also needs to include the
-             // internal energy of the solid before reaction
-
-             releasedHeat[m][c] +=
+            
+             int_eng_react[m][c] =
                       cv_solid*solidTemperature[c]*burnedMass[m][c];
-             createdVol[m][c]    =
-                      burnedMass[m][c] * sp_vol_CC[c]; 
-             
+             createdVol[m][c]    =  burnedMass[m][c] * sp_vol_CC[c];
+             mom_comb[m][c]      = -vel_CC[c] * burnedMass[m][c];
+
              sumBurnedMass[c]   += burnedMass[m][c];
-             sumReleasedHeat[c] += releasedHeat[m][c];
+             sumReleasedHeat[c] += int_eng_react[m][c];
              sumCreatedVol[c]   += createdVol[m][c];
+             sumMom_comb[c]     += -mom_comb[m][c];
              total_created_vol  += createdVol[m][c];
+             burnedMass[m][c]    = -burnedMass[m][c];
              // reactantants: (-)burnedMass
-             // products:     (+)burnedMass
+             // int_eng_react  = change in internal energy of the reactants
+             //                  
+             // products:        (+)burnedMass
+             // sumReleasedHeat=  enthalpy of reaction (Q) + change in internal 
+             //                   energy of reactants
              // Need the proper sign on burnedMass in ICE::DelPress calc
-             burnedMass[m][c]      = -burnedMass[m][c];
-            // We've gotten all the use we need out of createdVol by
-            // accumulating it in sumCreatedVol
-            createdVol[m][c]      = 0.0;
+
+             // We've gotten all the use we need out of createdVol by
+             // accumulating it in sumCreatedVol
+             createdVol[m][c]    = 0.0;
          }
          else {
             burnedMass[m][c]      = 0.0;
-            releasedHeat[m][c]    = 0.0;
+            int_eng_react[m][c]   = 0.0;
             createdVol[m][c]      = 0.0;
-         }
-       }  // if (maxMass-MinMass....)
-      }  // cell iterator
-     }
-    }  // if(mpm_matl == reactant)
-
-//    cout << "TCV = " << total_created_vol << endl;
-
+         }  // if (maxMass-MinMass....)
+        }  // cell iterator  
+       }  // if(doMech)
+      }  // if(mpm_matl == reactant)
+     }  // numALLMatls loop
+    
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
         new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   indx, patch);
-        new_dw->put(sumReleasedHeat,MIlb->releasedHeatCCLabel, indx, patch);
+        new_dw->put(sumReleasedHeat, Ilb->int_eng_comb_CCLabel,indx, patch); 
         new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, indx, patch);
+        new_dw->put(sumMom_comb,     Ilb->mom_comb_CCLabel,    indx, patch);
       }
       else{
         new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  indx, patch);
-        new_dw->put(releasedHeat[m], MIlb->releasedHeatCCLabel,indx, patch);
+        new_dw->put(int_eng_react[m],Ilb->int_eng_comb_CCLabel,indx, patch); 
         new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,indx, patch);
+        new_dw->put(mom_comb[m],      Ilb->mom_comb_CCLabel,   indx, patch);
       }
     }
     //---- P R I N T   D A T A ------ 
+    #if 0  //turn off for quality control testing 
     for(int m = 0; m < numALLMatls; m++) {
-    #if 0  //turn off for quality control testing
-//      if (d_ice->switchDebugSource_Sink) {
-        Material* matl = d_sharedState->getMaterial( m );
-        int indx = matl->getDWIndex();
-        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-        char description[50];
-        if(ice_matl) 
-          sprintf(description, "ICEsources/sinks_Mat_%d_patch_%d",
-                  indx,patch->getID());
-        if(mpm_matl) 
-          sprintf(description, "MPMsources/sinks_Mat_%d_patch_%d",
-                  indx,patch->getID());
-        d_ice->printData( patch, 0, description,"burnedMass", burnedMass[m]);
-        d_ice->printData( patch, 0, description,"releasedHeat",releasedHeat[m]);
-//      }
-    #endif
+ //     if (d_ice->switchDebugSource_Sink) 
+      {                                         
+        Material* matl = d_sharedState->getMaterial( m );                          
+        int indx = matl->getDWIndex();                                             
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);                  
+        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);                  
+        char desc[50];                                                             
+        if(ice_matl) {                                                             
+          sprintf(desc,"ICEsources/sinks_Mat_%d_patch_%d",indx,patch->getID());    
+          d_ice->printData( patch,0,desc,"SumburnedMass",  sumBurnedMass);      
+          d_ice->printData( patch,0,desc,"sumReleasedHeat",sumReleasedHeat);    
+          d_ice->printData( patch,0,desc,"sumCreatedVol",  sumCreatedVol);  
+          d_ice->printVector( patch,0,desc,"sum_XMom_comb", 0, sumMom_comb);
+          d_ice->printVector( patch,0,desc,"sum_YMom_comb", 1, sumMom_comb);
+          d_ice->printVector( patch,0,desc,"sum_ZMom_comb", 2, sumMom_comb);    
+        }                                                                          
+        if(mpm_matl) {                                                             
+          sprintf(desc,"MPMsources/sinks_Mat_%d_patch_%d",indx,patch->getID());    
+          d_ice->printData( patch, 0, desc,"burnedMass",   burnedMass[m]);         
+          d_ice->printData( patch, 0, desc,"int_eng_react",int_eng_react[m]);      
+          d_ice->printData( patch, 0, desc,"createdVol",   createdVol[m]); 
+          d_ice->printVector( patch, 0, desc,"mom_Xcomb", 0, mom_comb[m]);  
+          d_ice->printVector( patch, 0, desc,"mom_Ycomb", 1, mom_comb[m]);
+          d_ice->printVector( patch, 0, desc,"mom_Zcomb", 2, mom_comb[m]);      
+        }                                                                          
+      }                                                                            
     }
+    #endif
   }  // patches
 }
 //______________________________________________________________________
