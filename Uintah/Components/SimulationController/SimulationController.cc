@@ -8,6 +8,7 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Containers/Array3.h>
 #include <SCICore/Thread/Time.h>
+#include <SCICore/OS/Dir.h>
 #include <Uintah/Exceptions/ProblemSetupException.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
@@ -28,6 +29,7 @@
 #include <Uintah/Interface/ProblemSpecInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Interface/DataArchive.h>
 #include <Uintah/Parallel/ProcessorGroup.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <iostream>
@@ -62,6 +64,16 @@ SimulationController::SimulationController(const ProcessorGroup* myworld) :
 SimulationController::~SimulationController()
 {
 }
+
+void SimulationController::doRestart(std::string restartFromDir, int timestep,
+				     bool removeOldDir)
+{
+   d_restarting = true;
+   d_restartFromDir = restartFromDir;
+   d_restartTimestep = timestep;
+   d_restartRemoveOldDir = removeOldDir;
+}
+
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 double stdDeviation(list<double>& vals, double& mean)
@@ -148,8 +160,24 @@ void SimulationController::run()
    old_dw->setGrid(grid);
    
    scheduler->initialize();
+
+   double t;
+
+   // Parse time struct
+   SimulationTime timeinfo(ups);
+
    if(d_restarting){
-      cerr << "Restart not finised!\n";
+      // create a temporary DataArchive for reading in the checkpoints
+      // archive for restarting.
+      Dir restartFromDir(d_restartFromDir);
+      Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+      DataArchive archive(checkpointRestartDir.getName(),
+			  d_myworld->myrank(), d_myworld->size());
+      
+      archive.restartInitialize(d_restartTimestep, grid, old_dw, &t);
+      
+      output->restartSetup(restartFromDir, d_restartTimestep, t,
+			   d_restartRemoveOldDir);
    } else {
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
@@ -162,15 +190,18 @@ void SimulationController::run()
    if(grid->numLevels() != 1)
       throw ProblemSetupException("AMR problem specified; cannot do it yet");
    LevelP level = grid->getLevel(0);
-   
+
+   /*
    // Parse time struct
    SimulationTime timeinfo(ups);
+   */
    
    double start_time = Time::currentSeconds();
-   double t = timeinfo.initTime;
+   if (!d_restarting)
+      t = timeinfo.initTime;
    
    scheduleComputeStableTimestep(level,scheduler, old_dw, cfd, mpm, mpmcfd, md);
-
+   
    Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
    if(analyze)
       analyze->problemSetup(ups, grid, sharedState);
@@ -565,6 +596,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.52  2001/01/06 02:41:16  witzel
+// Added checkpoint/restart capabilities
+//
 // Revision 1.51  2000/12/10 09:06:15  sparker
 // Merge from csafe_risky1
 //

@@ -47,7 +47,10 @@ namespace Uintah {
    public:
       SimulationController(const ProcessorGroup* myworld);
       virtual ~SimulationController();
-      
+
+      void doRestart(std::string restartFromDir, int timestep,
+		     bool removeOldDir);
+     
       void run();
       
    private:
@@ -68,17 +71,24 @@ namespace Uintah {
 			       DataWarehouseP& new_ds,
 			       CFDInterface*, MPMInterface*,
 			       MPMCFDInterface*, MDInterface*);
-      
+
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
-      
+
+      /* for restarting */
       bool           d_restarting;
+      std::string d_restartFromDir;
+      int d_restartTimestep;
+      bool d_restartRemoveOldDir;
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.16  2001/01/06 02:41:16  witzel
+// Added checkpoint/restart capabilities
+//
 // Revision 1.15  2000/12/01 23:01:46  guilkey
 // Adding stuff for coupled MPM and CFD.
 //

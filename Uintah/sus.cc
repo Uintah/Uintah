@@ -103,6 +103,10 @@ int main(int argc, char** argv)
     bool   do_mpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
+    bool   restart=false;
+    int    restartTimestep = -1;
+    string restartFromDir;
+    bool   restartRemoveOldDir=false;
     int    numThreads = 0;
     string filename;
     string scheduler;
@@ -141,7 +145,17 @@ int main(int argc, char** argv)
 	} else if(s.substr(0,3) == "-p4") {
 	   // mpich - skip the rest
 	   break;
-	} else {
+	} else if(s == "-restart") {
+	   restart=true;
+	} else if(s == "-nocopy") {
+	   restartRemoveOldDir = true;
+	} else if(s == "-copy") { // default anyway, but that's fine
+	   restartRemoveOldDir = false;
+	} else if(s == "-t") {
+           if (i < argc-1)
+	      restartTimestep = atoi(argv[++i]);
+	}
+	else {
 	    if(filename!="")
 		usage("", s, argv[0]);
 	    else
@@ -164,6 +178,11 @@ int main(int argc, char** argv)
        }
     }
 
+    if (restart) {
+       restartFromDir = filename;
+       filename = filename + "/input.xml";
+    }
+    
     /*
      * Check for valid argument combinations
      */
@@ -277,6 +296,10 @@ int main(int argc, char** argv)
 	  sleep( sleepTime );
 	}
 
+	if (restart)
+	   sim->doRestart(restartFromDir, restartTimestep,
+			  restartRemoveOldDir);
+
 	sim->run();
 
     delete sim;
@@ -311,6 +334,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.33  2001/01/06 02:41:12  witzel
+// Added checkpoint/restart capabilities
+//
 // Revision 1.32  2000/12/10 09:05:59  sparker
 // Merge from csafe_risky1
 //
