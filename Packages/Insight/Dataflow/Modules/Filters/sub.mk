@@ -15,9 +15,13 @@ SRCDIR   := Packages/Insight/Dataflow/Modules/Filters
 
 SRCS     += \
 	$(SRCDIR)/DiscreteGaussianImageFilter.cc\
-	$(SRCDIR)/CannySegmentationLevelSetImageFilter.cc\
-	$(SRCDIR)/UChar2DToFloat2D.cc\
 	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.cc\
+	$(SRCDIR)/GradientMagnitudeImageFilter.cc\
+	$(SRCDIR)/WatershedImageFilter.cc\
+	$(SRCDIR)/CannySegmentationLevelSetImageFilter.cc\
+	$(SRCDIR)/WatershedSegmenter.cc\
+	$(SRCDIR)/WatershedSegmentTreeGenerator.cc\
+	$(SRCDIR)/WatershedRelabeler.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \
