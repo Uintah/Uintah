@@ -90,8 +90,8 @@ color="maroon">
      variables, you may consult the <a
      HREF="../Guide/usersguide/srug3.html#sec:scirundata">User's Guide 3.4,
      SCIRUN_DATA</a>.  This process assumes that you have downloaded the SCIRunData directory, a separate download from the SCIRun build.  
-    <ol>
-      <p><li value="1.">The SCIRUN_DATA variable points to the location 
+
+      <p><ol><li value="1.">The SCIRUN_DATA variable points to the location 
       of the SCIRunData directory on your system.</p>  
       <p><li value="2.0">The SCIRUN_DATASET variable indicates which dataset
       to load 
@@ -146,8 +146,7 @@ color="maroon">
     HREF="../Guide/usersguide/srug4.html#sec:anatomyofamodule">User's Guide, Section 4.2, Anatomy of a Module</a>.</p> 
 <p>By joining the modules together, data passes through the pipe from one module to another; two or more connected modules form a SCIRun network, or <i>net</i>.</p>
 
-<p>All modules have an indicator tells the user wether any messages exist in a module's                  log.  The different colors represent different types of messages.  Blue represents            a Remark (as the SampleField module indicates the number of seed points), yellow for Warning, and red for Error, which causes the            
-indicator to blink.</p>
+<p>All modules have an indicator tells the user whether any messages exist in a module's log.  The different colors represent different types of messages. Blue represents a Remark (as the SampleField module indicates the number of seed points), yellow for Warning.  If you click the module's indicator, the log will open with a message.</p>
                                                               
                                                                                       
     <p>We will first create a FieldReader module that loads a SCIRun Field.</p>
