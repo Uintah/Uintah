@@ -250,8 +250,8 @@ void LightTime::massExchange(const ProcessorGroup*,
       double dist = dist_plane*plane + dist_straight*(1.-plane);
       double t_b = dist/d_D; 
       if (time >= t_b && rctRho[c] > d_TINY_RHO){
-//        Fr[c] = min((time - t_b)/delta_L,0.90);
-        Fr[c] = min(1. - exp(-(time - t_b)/delta_L),0.90);
+        Fr[c] = (time - t_b)/delta_L;
+        if(Fr[c] > .96) Fr[c] = 1.0;
         delF[c] = Fr[c] - Fr_old[c];
 
         //__________________________________
@@ -279,6 +279,10 @@ void LightTime::massExchange(const ProcessorGroup*,
         sp_vol_src_0[c] -= createdVolx;
         sp_vol_src_1[c] += createdVolx;
       }  // if (time to light it)
+      if (rctRho[c] <= d_TINY_RHO){
+        Fr[c] = 1.0;
+        delF[c] = 0.0;
+      }  // reactant mass is already consumed
     }  // cell iterator  
 
     //__________________________________
