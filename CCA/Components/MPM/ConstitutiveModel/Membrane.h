@@ -94,9 +94,11 @@ namespace Uintah {
          const VarLabel* pNormalLabel;
          const VarLabel* pTang1Label;
          const VarLabel* pTang2Label;
+         const VarLabel* defGradInPlaneLabel;
          const VarLabel* pNormalLabel_preReloc;
          const VarLabel* pTang1Label_preReloc;
          const VarLabel* pTang2Label_preReloc;
+         const VarLabel* defGradInPlaneLabel_preReloc;
 
       };
 } // End namespace Uintah
