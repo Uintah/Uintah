@@ -32,6 +32,18 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 108 26]
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 93 355]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 41 131]
@@ -45,14 +57,12 @@ addConnection $m0 0 $m2 0
 addConnection $m0 0 $m3 0
 
 set $m0-notes {}
-set $m0-show_status {1}
 set $m0-sizex {20}
 set $m0-sizey {20}
 set $m0-sizez {20}
 set $m0-padpercent {0}
 set $m0-data-at {Cells}
 set $m1-notes {}
-set $m1-show_status {1}
 $m1 ui
 set $m1-ViewWindow_0-pos {}
 set $m1-ViewWindow_0-caxes {1}
@@ -107,13 +117,9 @@ set $m1-ViewWindow_0-global-type {Gouraud}
 set $m1-ViewWindow_0-ortho-view {0}
 set $m1-ViewWindow_0-unused {1}
 set $m1-ViewWindow_0-unused {1}
-set $m1-ViewWindow_0-unused {1}
-set $m1-ViewWindow_0-unused {1}
-set $m1-ViewWindow_0-unused {1}
-set $m1-ViewWindow_0-unused {1}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-nodes-on {0}
+set $m2-nodes-transparency {0}
 set $m2-nodes-as-disks {0}
 set $m2-edges-on {1}
 set $m2-edges-transparency {1}
@@ -124,9 +130,11 @@ set $m2-vectors-on {0}
 set $m2-normalize-vectors {}
 set $m2-has_vector_data {0}
 set $m2-bidirectional {0}
-set $m2-arrow-heads-on {1}
 set $m2-tensors-on {0}
 set $m2-has_tensor_data {0}
+set $m2-scalars-on {0}
+set $m2-scalars-transparency {0}
+set $m2-has_scalar_data {1}
 set $m2-text-on {0}
 set $m2-text-use-default-color {1}
 set $m2-text-color-r {1.0}
@@ -141,30 +149,33 @@ set $m2-text-show-nodes {0}
 set $m2-text-show-edges {0}
 set $m2-text-show-faces {0}
 set $m2-text-show-cells {0}
-set $m2-def-color-r {0.5}
-set $m2-def-color-g {0.5}
-set $m2-def-color-b {0.5}
-set $m2-def-color-a {0.5}
+set $m2-def-color-r {0.50}
+set $m2-def-color-g {0.50}
+set $m2-def-color-b {0.50}
+set $m2-def-color-a {0.70}
 set $m2-node_display_type {Spheres}
 set $m2-edge_display_type {Lines}
 set $m2-data_display_type {Arrows}
 set $m2-tensor_display_type {Boxes}
+set $m2-scalar_display_type {Points}
 set $m2-active_tab {Edges}
 set $m2-node_scale {0.0300}
 set $m2-edge_scale {0.0150}
 set $m2-vectors_scale {0.30}
 set $m2-tensors_scale {0.30}
+set $m2-scalars_scale {0.300}
 set $m2-show_progress {}
 set $m2-interactive_mode {Interactive}
+set $m2-field-name {Original Field}
+set $m2-field-name-update {1}
 set $m2-node-resolution {6}
 set $m2-edge-resolution {6}
 set $m2-data-resolution {6}
 set $m3-notes {}
-set $m3-show_status {1}
 set $m3-maskfunction {x + y + z < 0.0}
 set $m4-notes {}
-set $m4-show_status {1}
 set $m4-nodes-on {0}
+set $m4-nodes-transparency {0}
 set $m4-nodes-as-disks {0}
 set $m4-edges-on {0}
 set $m4-edges-transparency {0}
@@ -175,9 +186,11 @@ set $m4-vectors-on {0}
 set $m4-normalize-vectors {}
 set $m4-has_vector_data {0}
 set $m4-bidirectional {0}
-set $m4-arrow-heads-on {1}
 set $m4-tensors-on {0}
 set $m4-has_tensor_data {0}
+set $m4-scalars-on {0}
+set $m4-scalars-transparency {0}
+set $m4-has_scalar_data {1}
 set $m4-text-on {0}
 set $m4-text-use-default-color {1}
 set $m4-text-color-r {1.0}
@@ -200,13 +213,17 @@ set $m4-node_display_type {Spheres}
 set $m4-edge_display_type {Cylinders}
 set $m4-data_display_type {Arrows}
 set $m4-tensor_display_type {Boxes}
+set $m4-scalar_display_type {Points}
 set $m4-active_tab {Edges}
 set $m4-node_scale {0.0300}
 set $m4-edge_scale {0.0150}
 set $m4-vectors_scale {0.30}
 set $m4-tensors_scale {0.30}
+set $m4-scalars_scale {0.300}
 set $m4-show_progress {}
 set $m4-interactive_mode {Interactive}
+set $m4-field-name {Masked Region}
+set $m4-field-name-update {1}
 set $m4-node-resolution {6}
 set $m4-edge-resolution {6}
 set $m4-data-resolution {6}

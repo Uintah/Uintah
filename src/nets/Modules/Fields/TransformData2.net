@@ -32,15 +32,27 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 61 7]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 17 207]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 111 555]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 408 213]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 325 473]
-set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 117 663]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 135 88]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 206 205]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "TransformData2" 34 324]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 16 166]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 97 340]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 406 92]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 364 252]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 95 422]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 76 85]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 202 164]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "TransformData2" 35 252]
 
 addConnection $m3 0 $m4 0
 addConnection $m4 0 $m2 1
@@ -54,18 +66,15 @@ addConnection $m8 0 $m2 0
 addConnection $m7 0 $m4 1
 
 set $m0-notes {}
-set $m0-show_status {1}
 set $m0-sizex {16}
 set $m0-sizey {16}
 set $m0-sizez {16}
 set $m0-padpercent {0}
 set $m0-data-at {Nodes}
 set $m1-notes {}
-set $m1-show_status {1}
 set $m1-function {result=Cross(Vector(x, y, 0), Vector(0, 0, 1));}
 set $m1-outputdatatype {Vector}
 set $m2-notes {}
-set $m2-show_status {1}
 set $m2-nodes-on {0}
 set $m2-nodes-transparency {0}
 set $m2-nodes-as-disks {1}
@@ -114,11 +123,12 @@ set $m2-tensors_scale {0.30}
 set $m2-scalars_scale {0.30}
 set $m2-show_progress {}
 set $m2-interactive_mode {Interactive}
+set $m2-field-name {}
+set $m2-field-name-update {1}
 set $m2-node-resolution {6}
 set $m2-edge-resolution {6}
 set $m2-data-resolution {6}
 set $m3-notes {}
-set $m3-show_status {1}
 set $m3-tcl_status {Calling GenStandardColorMaps!}
 set $m3-positionList {}
 set $m3-nodeList {}
@@ -130,13 +140,11 @@ set $m3-resolution {255}
 set $m3-realres {255}
 set $m3-gamma {0}
 set $m4-notes {}
-set $m4-show_status {1}
 set $m4-isFixed {0}
-set $m4-min {-0.9917036527066998}
-set $m4-max {0.9944705345240366}
+set $m4-min {-0.9917036527066562}
+set $m4-max {0.9944705345240242}
 set $m4-makeSymmetric {0}
 set $m5-notes {}
-set $m5-show_status {1}
 $m5 ui
 set $m5-ViewWindow_0-pos {}
 set $m5-ViewWindow_0-caxes {0}
@@ -191,7 +199,6 @@ set $m5-ViewWindow_0-global-type {Gouraud}
 set $m5-ViewWindow_0-ortho-view {0}
 set $m5-ViewWindow_0-unused {1}
 set $m6-notes {}
-set $m6-show_status {1}
 set $m6-endpoints {0}
 set $m6-endpoint0x {}
 set $m6-endpoint0y {}
@@ -202,7 +209,7 @@ set $m6-endpoint1z {}
 set $m6-widgetscale {}
 set $m6-maxseeds {15}
 set $m6-numseeds {2500}
-set $m6-rngseed {8}
+set $m6-rngseed {9}
 set $m6-rnginc {1}
 set $m6-clamp {0}
 set $m6-autoexecute {1}
@@ -210,11 +217,9 @@ set $m6-type {}
 set $m6-dist {uniscat}
 set $m6-whichtab {Random}
 set $m7-notes {}
-set $m7-show_status {1}
 set $m7-function {result = x;}
 set $m7-outputdatatype {input}
 set $m8-notes {}
-set $m8-show_status {1}
 set $m8-function {Vector v(v0); v.normalize(); result = v * v1;}
 set $m8-outputdatatype {Vector}
 $m7 initialize_ui
