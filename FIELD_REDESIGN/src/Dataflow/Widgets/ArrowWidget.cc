@@ -239,7 +239,10 @@ ArrowWidget::GetPosition() const
 void
 ArrowWidget::SetDirection( const Vector& v )
 {  
-   variables[HeadVar]->SetDelta(v-direction, Scheme1);
+  
+  // variables[Dist]*(v.norm()-direction.norm())
+   variables[HeadVar]->MoveDelta((v.normal()-direction.normal())*variables[DistVar]->real());
+  //   variables[HeadVar]->SetDelta(v-direction, Scheme1);
    direction = v;
    execute(0);
 }
@@ -264,7 +267,7 @@ void ArrowWidget::SetLength( double new_length ){
 double ArrowWidget::GetLength() {
   Vector dir(variables[HeadVar]->point() - variables[PointVar]->point());
   return (length=dir.length());
-};
+}
 
 /***************************************************************************
  * This standard method returns a string describing the functionality of
@@ -326,8 +329,11 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 //
 // $Log$
-// Revision 1.3.2.3  2000/10/26 14:16:56  moulding
-// merge HEAD into FIELD_REDESIGN
+// Revision 1.3.2.4  2000/10/31 02:30:41  dmw
+// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
+//
+// Revision 1.6  2000/10/29 04:44:18  dmw
+// arrows can now be dragged
 //
 // Revision 1.5  2000/06/27 07:58:40  samsonov
 // Added Get/SetLength member function
