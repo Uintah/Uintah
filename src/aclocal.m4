@@ -119,14 +119,22 @@ LIBS="$_sci_libs $7 $LIBS"
 
 AC_TRY_LINK([$3],[$8],[
 eval LIB_DIR_$1='"$6"'
+
 if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval $1_LIB_DIR_FLAG=''
 else
   eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
 fi
+
 eval $1_LIB_FLAG='"$_sci_libs"'
 eval HAVE_$1="yes"
-eval INC_$1_H='"$_sci_includes"'
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_$1_H=''
+else
+  eval INC_$1_H='"$_sci_includes"'
+fi
+
 eval HAVE_$1_H="yes"
 AC_MSG_RESULT(yes)
 ], 
