@@ -232,6 +232,7 @@
 		    <shear_modulus>3.8e3</shear_modulus>
 		    <yield_stress>45e4</yield_stress>
 		    <hardening_modulus>129240</hardening_modulus>
+	            <alpha> 0. </alpha>
 		</comp_neo_hook_plastic>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>

@@ -13,7 +13,7 @@
 	<maxTime>0.1</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>0.1</delt_max>
+	<delt_max>0.0001</delt_max>
    </Time>
 
     <MPM>
@@ -49,7 +49,7 @@
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
-		    <velocity>[.1,.1,0]</velocity>
+		    <velocity>[2.0,2.0,0]</velocity>
 		    <BoundaryConditions>
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
@@ -57,19 +57,18 @@
  		</geom_object>
 
 		<geom_object>
-		    <cylinder label="gp1">
+		    <cylinder label="gp2">
 			<bottom>[.75,.75,.05]</bottom>
 			<top>[.75,.75,.1]</top>
 			<radius> .2 </radius>
 		    </cylinder>
 		    <res>[2,2,2]</res>
-		    <velocity>[-.1,-.1,0]</velocity>
+		    <velocity>[-2.0,-2.0,0]</velocity>
 		    <BoundaryConditions>
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
  		</geom_object>
-
 		<temperature>12</temperature>
 		<velocity_field>0</velocity_field>
 	    </material>
