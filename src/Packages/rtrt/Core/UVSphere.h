@@ -56,7 +56,7 @@ class UVSphere : public Object, public UVMapping {
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-#if 0
+#if 1
   virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
 #endif
