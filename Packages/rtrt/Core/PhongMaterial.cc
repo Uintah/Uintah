@@ -91,7 +91,7 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
       Color rcolor;
       cx->worker->traceRay(rcolor, rray, depth+1,  atten,
 			   accumcolor+surfcolor*atten, cx);
-      surfcolor += rcolor * (1.-transp);
+      surfcolor += rcolor * (1.-transp) * Rphong;
       cx->stats->ds[depth].nrefl++;
     }
 
