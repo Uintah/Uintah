@@ -3,7 +3,7 @@ $srcroot = $ARGV[0];
 
   print $srcroot,"\n";
 if($srcroot eq "") {
-  print " You need to specify the path to SCIRun/src \n";
+  print " You need to specify the path to SCIRun \n";
   print " For example:  /usr/sci/projects/Uintah/tester/Linux/SCIRun.062602 \n";
   print " now exiting \n";
   exit;
