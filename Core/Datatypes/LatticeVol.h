@@ -10,58 +10,29 @@
 namespace SCIRun {
 
 template <class Data>
-class LatticeVol: public Field 
+class LatticeVol: public GenericField< LatVolMesh, Array3<Data> > { 
 {
 public:
-  //! Typedefs to support the Field concept.
-  typedef Data            value_type;
-  typedef MeshRG          mesh_type;
-  typedef vector<Data>    fdata_type;
 
-
-  LatticeVol():location_(Field::NODE){};
-  LatticeVol(data_location data_at):location_(data_at){};
+  LatticeVal() :
+    GenericField<LatVolMesh, Array3<Data> >() {};
+  LatticeVol(data_location data_at):location_(data_at) :
+    GenericField<LatVolMesh, Array3<Data> >(data_at) {};
   virtual ~LatticeVol(){};
 
-  //! Required virtual functions from field base.
-  virtual MeshBaseHandle get_mesh() { return (MeshBaseHandle)mesh_; } const;
-
-  //! get size of field (number of elements that have data)
-  int get_size(data_location data_at) const;
-
-  //! Required interfaces from field base.
-  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
-
-
-
-  //! Required interface to support Field Concept.
-  value_type operator[] (int);
-  
-  template <class Functor>
-  void interpolate(const Point &p, Functor &f);
-  
-  MeshRGHandle get_rg_mesh() { return mesh_; }
-
-  //! attempt to set data, succeeds if sizes match.
-  bool set_fdata(fdata_type *fdata);
-
-
-
-  //! Persistent I/O.
-  void    io(Piostream &stream);
-  static  PersistentTypeID type_id;
-  static  const string type_name(int);
-  virtual const string get_type_name(int n) const;
-
-private:
-  //! where the data lives (nodes?, cells?, etc)
-  data_location               location_;
-  //! A Lattice Mesh.
-  MeshRGHandle                mesh_;
-  //! Data container.
-  fdata_type                  *fdata_;  
+  static const string type_name(int );
 };
 
+template <class Data>
+const string
+LatticeVol<Data>::type_name(int )
+{
+  const static string name =  "LatticeVol<" + find_type_name((Data *)0) + ">";
+  return name;
+} 
+
+
+#if 0
 template<class Data> int
 LatticeVol::get_size(FIELD::data_location data_at) const
 {
@@ -189,6 +160,7 @@ struct LinearInterp : public InterpFunctor<Data> {
 */  // go into base field class
 
 } // end namespace SCIRun
+#endif
 
 #endif // Datatypes_TetVol_h
 

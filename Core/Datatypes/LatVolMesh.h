@@ -142,7 +142,7 @@ public:
   typedef CellIter        cell_iterator;
 
   //! Storage types for the arguments passed to the 
-  //  get_*() functions.  For rg meshes, these all have
+  //  get_*() functions.  For lattice meshes, these all have
   //  known maximum sizes, so we use them.
   typedef node_index  node_array[8];
   typedef edge_index  edge_array[12];
