@@ -177,7 +177,7 @@ set c19 [addConnection $m15 0 $m51 0]
 set c20 [addConnection $m18 0 $m42 0]
 set c21 [addConnection $m51 0 $m83 0]
 set c22 [addConnection $m48 0 $m93 1]
-set c23 [addConnection $m12 0 $m17 0]
+set c23 [addConnection $m11 0 $m17 0]
 set c24 [addConnection $m30 0 $m22 0]
 set c25 [addConnection $m63 0 $m59 0]
 set c26 [addConnection $m22 0 $m26 0]
@@ -219,7 +219,7 @@ set c61 [addConnection $m79 0 $m15 1]
 set c62 [addConnection $m91 1 $m92 0]
 set c63 [addConnection $m53 0 $m69 1]
 set c64 [addConnection $m37 0 $m95 0]
-set c65 [addConnection $m13 0 $m17 1]
+set c65 [addConnection $m12 0 $m17 1]
 set c66 [addConnection $m40 0 $m25 0]
 set c67 [addConnection $m44 0 $m27 0]
 set c68 [addConnection $m46 0 $m29 0]
@@ -232,7 +232,7 @@ set c74 [addConnection $m79 0 $m92 1]
 set c75 [addConnection $m95 0 $m96 0]
 set c76 [addConnection $m68 0 $m61 1]
 set c77 [addConnection $m92 0 $m96 1]
-set c78 [addConnection $m14 0 $m17 2]
+set c78 [addConnection $m13 0 $m17 2]
 set c79 [addConnection $m47 0 $m38 2]
 set c80 [addConnection $m61 0 $m62 2]
 set c81 [addConnection $m34 0 $m36 2]
@@ -259,6 +259,7 @@ set c99 [addConnection $m86 0 $m28 1]
 set c100 [addConnection $m45 0 $m29 1]
 set c101 [addConnection $m79 0 $m90 0]
 set c102 [addConnection $m91 0 $m38 4]
+set c103 [addConnection $m14 0 $m17 3]
 
 
 # Set GUI variables
@@ -297,7 +298,7 @@ set $m18-inside_value {1}
 set $m18-outside_value {0}
 
 setGlobal $m19-num_seeds 0
-setGlobal $m19-probe_scale 6
+setGlobal $m19-probe_scale 10
 setGlobal $m19-widget 1
 setGlobal $m19-red 0.5
 setGlobal $m19-green 0.0
@@ -415,6 +416,8 @@ set $m58-nbits {8}
 #set $m60-measure {9}
 
 # EDIT TO SHOW VALUES AROUND 0.0
+setGlobal $m61-on-0 {1}
+setGlobal $m61-on-1 {0}
 set $m61-panx {-0.02734375}
 set $m61-pany {-0.01171875}
 set $m61-scale_factor {1.0}
@@ -423,21 +426,19 @@ set $m61-histo {0.5}
 set $m61-selected_widget {0}
 set $m61-selected_object {9}
 set $m61-name-0 {Generic}
-set $m61-0-color-r {1.0}
+set $m61-0-color-r {0.8}
 set $m61-0-color-g {0.0}
-set $m61-0-color-b {0.45}
+set $m61-0-color-b {0.0}
 set $m61-0-color-a {1.0}
 set $m61-state-0 {r 0 0.00390622 0.015625 0.537109 0.613281 0.25}
 set $m61-shadeType-0 {0}
-set $m61-on-0 {1}
 set $m61-name-1 {Rectangle}
-set $m61-1-color-r {0.41}
-set $m61-1-color-g {1.0}
-set $m61-1-color-b {0.32}
+set $m61-1-color-r {0.0}
+set $m61-1-color-g {0.0}
+set $m61-1-color-b {0.8}
 set $m61-1-color-a {1.0}
 set $m61-state-1 {r 0 0.50304 0.0117188 0.459851 0.61407 0.737198}
 set $m61-shadeType-1 {0}
-set $m61-on-1 {1}
 set $m61-marker {end}
 
 set $m62-alpha_scale {0.0}
@@ -494,7 +495,7 @@ set $m88-reverse {1}
 setGlobal $m90-copy {1}
 
 setGlobal $m91-num_seeds 0
-setGlobal $m91-probe_scale 6
+setGlobal $m91-probe_scale 10
 setGlobal $m91-widget 1
 setGlobal $m91-red 0.0
 setGlobal $m91-green 0.0
@@ -572,6 +573,7 @@ set mods(ChooseNrrd-2D) $m73
 
 # volume rendering
 set mods(Viewer-VolRen) $m54
+set mods(EditColorMap2D) $m61
 
 # Prev/Next slice
 set mods(ImageToField-Prev) $m26
@@ -640,6 +642,9 @@ set no_seg_icon [image create photo -file ${image_dir}/no-seg.ppm]
 set old_seg_icon [image create photo -file ${image_dir}/old-seg.ppm]
 set updated_seg_icon [image create photo -file ${image_dir}/updated-seg.ppm]
 
+global vol_foreground
+set vol_foreground 1
+
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -699,7 +704,7 @@ class LevelSetSegmenterApp {
 
 	set filter_menu1 ""
 	set filter_menu2 ""
-	set filter_enabled 0
+#	set filter_enabled 0
 
 	set next_load ""
 	set next_smooth ""
@@ -1128,9 +1133,10 @@ class LevelSetSegmenterApp {
 
 	    set filter_menu$case $smooth.filter
 
-	    $smooth.filter insert end "GradientAnisotropicDiffusion" "CurvatureAnisotropicDiffusion" \
-		"Gaussian"
-	    $smooth.filter select "GradientAnisotropicDiffusion"
+	    $smooth.filter insert end "GradientAnisotropicDiffusion" \
+		"CurvatureAnisotropicDiffusion" \
+		"Gaussian" "None"
+	    $smooth.filter select "None"
 
 	    # pack ui for GradientAnisotropic first
 	    # Gradient
@@ -1175,7 +1181,8 @@ class LevelSetSegmenterApp {
 	    # Next button
 	    button $step_tab.next -text "Next" \
                 -command "$this change_processing_tab Segment" -width 8 \
-                -state disabled
+		-activebackground $next_color \
+		-background $next_color 
 	    pack $step_tab.next -side top -anchor ne \
 		-padx 3 -pady 3
 
@@ -1326,10 +1333,11 @@ class LevelSetSegmenterApp {
 
 	    frame $seeds.points.pos
 	    set f $seeds.points.pos
-	    label $f.l -text "Positive Seed Points: "
+	    label $f.l -text "Positive Seed Points: " \
+		-foreground "#990000"
 	    button $f.decr -text "-" -command "$this change_number_of_seeds + -"
 	    entry $f.e -textvariable $mods(SampleField-Seeds)-num_seeds \
-		-width 4
+		-width 4 -foreground "#990000"
 	    button $f.incr -text "+" -command "$this change_number_of_seeds + +"
 	    bind $f.e <Return> "$this change_number_of_seeds + ="
 
@@ -1337,10 +1345,11 @@ class LevelSetSegmenterApp {
 
 	    frame $seeds.points.neg
 	    set f $seeds.points.neg
-	    label $f.l -text "Negative Seed Points: "
+	    label $f.l -text "Negative Seed Points: " \
+		-foreground "blue"
 	    button $f.decr -text "-" -command "$this change_number_of_seeds - -"
 	    entry $f.e -textvariable $mods(SampleField-SeedsNeg)-num_seeds \
-		-width 4
+		-width 4 -foreground "blue"
 	    button $f.incr -text "+" -command "$this change_number_of_seeds - +"
 	    bind $f.e <Return> "$this change_number_of_seeds - ="
 
@@ -1401,6 +1410,19 @@ class LevelSetSegmenterApp {
 		-state disabled \
 		-command "$this update_volume_rendering"
 	    pack $step_tab.volren -side top -anchor n -pady 3
+
+# 	    # Radiobuttons for what is volume rendered
+ 	    frame $step_tab.whichvol 
+ 	    pack $step_tab.whichvol -side top -anchor n 
+ 	    global vol_foreground
+ 	    radiobutton $step_tab.whichvol.a -text "Show Segmentation" \
+ 		-variable vol_foreground -value 1 \
+ 		-command "$this toggle_volume_render_object"
+ 	    radiobutton $step_tab.whichvol.b -text "Show Background" \
+ 		-variable vol_foreground -value 0 \
+ 		-command "$this toggle_volume_render_object"
+ 	    pack $step_tab.whichvol.a $step_tab.whichvol.b -side left \
+ 		-anchor nw -pady 3
 	    
 	    
             ### Indicator
@@ -1653,6 +1675,9 @@ class LevelSetSegmenterApp {
     method change_processing_tab {which} {
 	if {$initialized} {
 	    if {$which == "Segment" && !$loading} {
+		if {$has_smoothed == 0} {
+		    $this smooth_data
+		}
 		# get speed image
 		$this initialize_segmentation
 	    }
@@ -1850,12 +1875,16 @@ class LevelSetSegmenterApp {
 	    # Initialize segs array
 	    global axis
 	    set extent 0
+	    set scale 0
 	    if {$axis == 0} {
 		set extent $size0
+		set scale $size2
 	    } elseif {$axis == 1} {
 		set extent $size1
+		set scale $size1
 	    } else {
 		set extent $size2
+		set scale $size0
 	    }
 
 	    for {set i 0} {$i < $extent} {incr i} {
@@ -1956,7 +1985,7 @@ class LevelSetSegmenterApp {
 	    # Turn off Current Segmentation in ViewWindow 1
 	    after 100 \
 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_1-Transparent Faces (2)\}\" 0; $mods(Viewer)-ViewWindow_1-c redraw"
- 	} elseif {$which == $mods(ShowField-Seg) && $state == "JustStarted"} { 
+ 	} elseif {$which == $mods(ShowField-Speed) && $state == "JustStarted"} { 
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Speed) && $state == "Completed"} {
 	    change_indicate_val 2
@@ -1997,11 +2026,6 @@ class LevelSetSegmenterApp {
 		disableModule $mods(PasteImageFilter-Float) 1
 	    }
 	    set pasting_float 0
-	} elseif {$which == $mods(NrrdSetupTexture-Vol) && $state == "JustStarted"} { 
-	    change_indicate_val 1
-	    change_indicator_labels "Updating Volume Rendering..."
-	} elseif {$which == $mods(NrrdSetupTexture-Vol) && $state == "Completed"} { 
-	    change_indicate_val 2
 	} elseif {$which == $mods(VolumeVisualizer) && $state == "JustStarted"} { 
 	    change_indicate_val 1
 	} elseif {$which == $mods(VolumeVisualizer) && $state == "Completed"} { 
@@ -2202,6 +2226,10 @@ class LevelSetSegmenterApp {
 	$mods(NrrdReader) initialize_ui
 
 	.ui$mods(NrrdReader).f7.execute configure -state disabled
+
+	# rebind execute command to just withdraw
+	upvar \#0 .ui$mods(NrrdReader) data	
+	set data(-command) "wm withdraw .ui$mods(NrrdReader)"
     }
 
     method dicom_ui { } {
@@ -2474,7 +2502,7 @@ class LevelSetSegmenterApp {
 	    disableModule $mods(Smooth-Curvature) 1
 	    disableModule $mods(Smooth-Blur) 1
 
-	    set $mods(ChooseImage-Smooth)-port-index 0
+	    set $mods(ChooseImage-Smooth)-port-index 1
 
 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
@@ -2490,7 +2518,7 @@ class LevelSetSegmenterApp {
 	    disableModule $mods(Smooth-Curvature) 0
 	    disableModule $mods(Smooth-Blur) 1
 
-	    set $mods(ChooseImage-Smooth)-port-index 1
+	    set $mods(ChooseImage-Smooth)-port-index 2
 
 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
@@ -2501,12 +2529,12 @@ class LevelSetSegmenterApp {
 	    pack $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature -side top -anchor n -pady 4
 
 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature -side top -anchor n -pady 4
-	} else {
+	} elseif {$which == "Gaussian"} {
 	    disableModule $mods(Smooth-Gradient) 1
 	    disableModule $mods(Smooth-Curvature) 1
 	    disableModule $mods(Smooth-Blur) 0
 
-	    set $mods(ChooseImage-Smooth)-port-index 2
+	    set $mods(ChooseImage-Smooth)-port-index 3
 
 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
@@ -2517,9 +2545,16 @@ class LevelSetSegmenterApp {
 	    pack $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur -side top -anchor n -pady 4
 
 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur -side top -anchor n -pady 4
+	} else {
+	    # no smoothing
+	    disableModule $mods(Smooth-Gradient) 1
+	    disableModule $mods(Smooth-Curvature) 1
+	    disableModule $mods(Smooth-Blur) 1
+
+	    set $mods(ChooseImage-Smooth)-port-index 0
 	}
 
-	set filter_enabled 1
+#	set filter_enabled 1
     }
 
     method smooth_data {} {
@@ -2527,18 +2562,19 @@ class LevelSetSegmenterApp {
 
 	# make sure one of the filters is enabled, if not
 	# enable GradientAnistropicDiffusion smoother
-	if {$filter_enabled == 0} {
-	    $filter_menu1 select "GradientAnisotropicDiffusion"
-	    $this change_filter $filter_menu1
-	}
+# 	if {$filter_enabled == 0} {
+# 	    $filter_menu1 select "GradientAnisotropicDiffusion"
+# 	    $this change_filter $filter_menu1
+# 	}
 
-	# enable Next button
-	$attachedPFr.$next_smooth configure -state normal \
-	    -activebackground $next_color \
-	    -background $next_color 
-	$detachedPFr.$next_smooth configure -state normal \
-	    -activebackground $next_color \
-	    -background $next_color 
+# 	# enable Next button
+# 	$attachedPFr.$next_smooth configure -state normal \
+# 	    -activebackground $next_color \
+# 	    -background $next_color 
+# 	$detachedPFr.$next_smooth configure -state normal \
+# 	    -activebackground $next_color \
+# 	    -background $next_color
+	
 
 	# set 2D viewer to use smoothed data as input
 	global $mods(ChooseNrrd-2D)-port-index
@@ -2552,8 +2588,10 @@ class LevelSetSegmenterApp {
 	    $mods(Smooth-Gradient)-c needexecute
 	} elseif {$which == "CurvatureAnisotropicDiffusion"} {
 	    $mods(Smooth-Curvature)-c needexecute
-	} else {
+	} elseif {$which == "Gaussian"} {
 	    $mods(Smooth-Blur)-c needexecute
+	} else {
+	    $mods(ChooseImage-Smooth)-c needexecute
 	}
 	set has_smoothed 1
 	set region_changed 0
@@ -2658,9 +2696,12 @@ class LevelSetSegmenterApp {
 	    global $mods(PasteImageFilter-Binary)-index
 	    global $mods(PasteImageFilter-Binary)-axis
 	    global $mods(PasteImageFilter-Binary)-fill_value
-	    set $mods(PasteImageFilter-Binary)-size0 [expr $size0 - 1]
-	    set $mods(PasteImageFilter-Binary)-size1 [expr $size1 - 1]
-	    set $mods(PasteImageFilter-Binary)-size2 [expr $size2 - 1]
+ 	    set $mods(PasteImageFilter-Binary)-size0 [expr $size0 - 1]
+ 	    set $mods(PasteImageFilter-Binary)-size1 [expr $size1 - 1]
+ 	    set $mods(PasteImageFilter-Binary)-size2 [expr $size2 - 1]
+#	    set $mods(PasteImageFilter-Binary)-size0 $size0
+#	    set $mods(PasteImageFilter-Binary)-size1 $size1
+#	    set $mods(PasteImageFilter-Binary)-size2 $size2
 	    set $mods(PasteImageFilter-Binary)-index 0
 	    set $mods(PasteImageFilter-Binary)-axis $axis
 	    set $mods(PasteImageFilter-Binary)-fill_value 0
@@ -2671,9 +2712,12 @@ class LevelSetSegmenterApp {
 	    global $mods(PasteImageFilter-Float)-index
 	    global $mods(PasteImageFilter-Float)-axis
 	    global $mods(PasteImageFilter-Float)-fill_value
-	    set $mods(PasteImageFilter-Float)-size0 [expr $size0 - 1]
-	    set $mods(PasteImageFilter-Float)-size1 [expr $size1 - 1]
-	    set $mods(PasteImageFilter-Float)-size2 [expr $size2 - 1]
+ 	    set $mods(PasteImageFilter-Float)-size0 [expr $size0 - 1]
+ 	    set $mods(PasteImageFilter-Float)-size1 [expr $size1 - 1]
+ 	    set $mods(PasteImageFilter-Float)-size2 [expr $size2 - 1]
+# 	    set $mods(PasteImageFilter-Float)-size0 $size0
+# 	    set $mods(PasteImageFilter-Float)-size1 $size1
+# 	    set $mods(PasteImageFilter-Float)-size2 $size2
 	    set $mods(PasteImageFilter-Float)-index 0
 	    set $mods(PasteImageFilter-Float)-axis $axis
 	    set $mods(PasteImageFilter-Float)-fill_value 0
@@ -3194,6 +3238,27 @@ class LevelSetSegmenterApp {
 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (5)} 0
 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (5)} 0
 
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (6)} 0
+	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (6)} 0
+
 
 #	for {set i 0} {$i < [set $mods(SampleField-Seeds)-num_seeds]} {incr i} {
 #	    setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint (5)} 0
@@ -3229,6 +3294,21 @@ class LevelSetSegmenterApp {
 	} else {
 	    $this start_crop
 	} 
+    }
+
+    method toggle_volume_render_object {} {
+	global mods vol_foreground
+	global $mods(EditColorMap2D)-on-0
+	global $mods(EditColorMap2D)-on-1
+	if {$vol_foreground == 1} {
+	    set $mods(EditColorMap2D)-on-0 1
+	    set $mods(EditColorMap2D)-on-1 0
+	} else {
+	    set $mods(EditColorMap2D)-on-0 0
+	    set $mods(EditColorMap2D)-on-1 1
+	}
+	$mods(EditColorMap2D)-c toggle 0
+	$mods(EditColorMap2D)-c toggle 1
     }
 
     method make_entry {w text v {wi -1}} {
@@ -3275,7 +3355,7 @@ class LevelSetSegmenterApp {
 
     variable filter_menu1
     variable filter_menu2
-    variable filter_enabled
+#    variable filter_enabled
 
     variable next_load
     variable next_smooth
