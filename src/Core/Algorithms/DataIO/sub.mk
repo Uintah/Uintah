@@ -22,13 +22,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 INCLUDES += $(INSIGHT_INCLUDE)
 SRCDIR   := Core/Algorithms/DataIO
 
-SRCS     += \
-        $(SRCDIR)/DicomSeriesReader.cc \
-        $(SRCDIR)/DicomImage.cc \
+ifeq ($(HAVE_INSIGHT),yes)
+  SRCS     += \
+          $(SRCDIR)/DicomSeriesReader.cc \
+          $(SRCDIR)/DicomImage.cc        \
+          $(SRCDIR)/AnalyzeReader.cc     \
+          $(SRCDIR)/AnalyzeImage.cc      \
+
+  LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+endif
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Core/Exceptions Core/Geometry Core/Util Core/Math
-
-LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
