@@ -252,7 +252,7 @@ NrrdResample::execute()
     info->kernel[a] = kern;
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))
-      nrrdAxisMinMaxSet(nrrdH->nrrd, a);
+      nrrdAxisMinMaxSet(nrrdH->nrrd, a, nrrdCenterNode);
     info->min[a] = nrrdH->nrrd->axis[a].min;
     info->max[a] = nrrdH->nrrd->axis[a].max;
   }    

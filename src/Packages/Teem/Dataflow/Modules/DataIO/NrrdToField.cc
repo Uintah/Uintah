@@ -80,7 +80,7 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
   int data_center = n->axis[1].center;
   for (int a = 1; a < 2; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
-      nrrdAxisMinMaxSet(n, a);
+      nrrdAxisMinMaxSet(n, a, nrrdCenterNode);
   }
 
   Point min(0., 0., 0.);
@@ -300,7 +300,7 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
   int data_center = n->axis[1].center;
   for (int a = 1; a < 3; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
-      nrrdAxisMinMaxSet(n, a);
+      nrrdAxisMinMaxSet(n, a, nrrdCenterNode);
     if ( AIR_EXISTS(n->axis[a].spacing)) { spc[a-1] = n->axis[a].spacing; }
     else { spc[a-1] = 1.; }
     if (data_center != n->axis[a].center) {
@@ -509,7 +509,7 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
   int data_center = n->axis[1].center;
   for (int a = 1; a < 4; a++) {
     if (!(AIR_EXISTS(n->axis[a].min) && AIR_EXISTS(n->axis[a].max)))
-      nrrdAxisMinMaxSet(n, a);
+      nrrdAxisMinMaxSet(n, a, nrrdCenterNode);
     if ( AIR_EXISTS(n->axis[a].spacing)) { spc[a-1] = n->axis[a].spacing; }
     else { spc[a-1] = 1.; }
     if (data_center != n->axis[a].center) {

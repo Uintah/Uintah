@@ -119,7 +119,7 @@ NrrdReader::get_nrrd_info()
 
     if (!(AIR_EXISTS(handle_->nrrd->axis[i].min) && 
 	  AIR_EXISTS(handle_->nrrd->axis[i].max)))
-      nrrdAxisMinMaxSet(handle_->nrrd, i);
+      nrrdAxisMinMaxSet(handle_->nrrd, i, nrrdCenterNode);
     
     add << handle_->nrrd->axis[i].min << " ";
     add << handle_->nrrd->axis[i].max << endl;  
@@ -226,7 +226,7 @@ void NrrdReader::execute()
     for(int i = 1; i < sz; i++) {
       perm[i] = i - 1;
     }
-    if (nrrdPermuteAxes(pn, handle_->nrrd, perm)){
+    if (nrrdAxesPermute(pn, handle_->nrrd, perm)){
       char *err = biffGetDone(NRRD);
       error(string("Error adding a tuple axis: ") + err);
       free(err);
@@ -264,7 +264,7 @@ void NrrdReader::execute()
     perm[0] = axis;
     perm[axis] = 0;
 
-    if (nrrdPermuteAxes(pn, handle_->nrrd, perm)){
+    if (nrrdAxesPermute(pn, handle_->nrrd, perm)){
       char *err = biffGetDone(NRRD);
       error(string("Error adding a tuple axis: ") + err);
       free(err);
