@@ -132,7 +132,61 @@ WARNING
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
      // normal to the face with 0.0
-     void fillFaceNormal(Region::FaceType) {};
+     void fillFaceNormal(Region::FaceType)
+       {
+	 IntVector low = getLowIndex();
+	 IntVector hi = getHighIndex();
+	 switch (face) {
+	 case Region::xplus:
+	   for (int j = low.y(); j<hi.y(); j++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+		(*this)[IntVector(hi.x()-1,j,k)] =
+				Vector(0.0,(*this).y(),(*this).z());
+	     }
+	   }
+	   break;
+	 case Region::xminus:
+	   for (int j = low.y(); j<hi.y(); j++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       (*this)[IntVector(low.x(),j,k)] = 
+				Vector(0.0,(*this).y(),(*this).z());
+	     }
+	   }
+	   break;
+	 case Region::yplus:
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       (*this)[IntVector(i,hi.y()-1,k)] =
+				Vector((*this).x(),0.0,(*this).z());
+	     }
+	   }
+	   break;
+	 case Region::yminus:
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int k = low.z(); k<hi.z(); k++) {
+	       (*this)[IntVector(i,low.y(),k)] =
+				Vector((*this).x(),0.0,(*this).z());
+	     }
+	   }
+	   break;
+	 case Region::zplus:
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int j = low.y(); j<hi.y(); j++) {
+	       (*this)[IntVector(i,j,hi.z()-1)] =
+				Vector((*this).x(),(*this).y(),0.0);
+	     }
+	   }
+	   break;
+	 case Region::zminus:
+	   for (int i = low.x(); i<hi.x(); i++) {
+	     for (int j = low.y(); j<hi.y(); j++) {
+		(*this)[IntVector(i,j,low.z())] =
+				Vector((*this).x(),(*this).y(),0.0);
+	     }
+	   }
+	   break;
+         }
+      };
      
       virtual void emit(OutputContext&);
    private:
@@ -242,6 +296,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.19  2000/05/18 23:01:28  guilkey
+// Filled in fillFaceNormal.  Haven't tested it yet, but will soon.
+//
 // Revision 1.18  2000/05/17 00:37:16  guilkey
 // Fixed fillFace function.
 //
