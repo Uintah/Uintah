@@ -154,6 +154,7 @@ public:
   void size(Edge::size_type &size) const;
   void size(Face::size_type &size) const;
   void size(Cell::size_type &size) const;
+  //@}
 
   //! Returns the axis aligned bounding box of the mesh.
   virtual BBox get_bounding_box() const;
@@ -216,18 +217,22 @@ public:
   //@}
 
   //! Return true if the mesh is editable.
-  /*! This method is optional. */
-  /*! If this is not defined the default return value is false. */
+  /*! This method is optional.
+   * If this is not defined the default return value is false.
+   */
   virtual bool is_editable() const;
   //! Add a new point to the mesh.
-  /*! This only works if the mesh is editable. */
+  /*! This only works if the mesh is editable.
+   */
   Node::index_type add_node(const Point &p);
   //! Add a new element to the mesh.
-  /*! This only works if the mesh is editable. */
+  /*! This only works if the mesh is editable.
+   */
   Elem::index_type add_elem(Node::array_type a);
   //! Change a point within the mesh.
-  /*! This only works if the mesh is editable. */
-  /*! This method is optional. */
+  /*! This only works if the mesh is editable.
+   *  This method is optional.
+   */
   void set_point(const Point &point, Node::index_type index);
 
   //! Flush any edits made to the mesh.
