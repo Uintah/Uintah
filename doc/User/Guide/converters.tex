@@ -70,27 +70,32 @@ converter and an export converter.
 
 To export a field, a simple \sci{} network and two converters are used.
 
-The components of a field are exported to three files.  Mesh node
-locations are exported to a file, mesh connectivity data are export to
-a second file, and field data values are exported to a third file.
+The converters export the components of a field to three files: mesh
+node locations are exported to a file, mesh connectivity data are
+exported to a second file, and field data values are exported to a
+third file.
 
-Field objects cannot be exported directly by the converters.  A field
-is first split into a mesh part (a field object with no data) and a
-data part (a matrix object) using a simple \sr{} network.  The
-network is constructed using modules \datatype{FieldReader},
+Field objects cannot be exported directly by the converters.  An
+export converter requires a field object and a field data object.  The
+field data object is a \sr{} matrix object. The matrix object is
+produced by simple \sr{} network.
+
+A network is constructed using modules \datatype{FieldReader},
 \datatype{ManageFieldData}, and \datatype{MatrixWriter}.  A
-\datatype{FieldReader} module reads the field to be split.
+\datatype{FieldReader} module reads a file-based field object.
 \datatype{FieldReader}'s output port is connected to
 \datatype{ManageFieldData}'s input port (\datatype{ManageFieldData}'s
 matrix input port is unconnected).  \datatype{ManageFieldData}'s
 matrix output port is connected to \datatype{MatrixWriter}'s input
-port.  The (executed) network saves the field's data as a matrix object.
+port.  The (executed) network saves the field's data as a file-based
+matrix object.
 
-After a field is split, its mesh and data parts are exported to
-text files using field and matrix converters.  A field converter
-produces two files: a node location file (called a ``pts'' file) and a
-node connectivity file (``tri'', ``tet'', ``quad'', or ``hex'' files).
-A matrix converter produces a file of data values (``txt'' files).
+After a matrix object is created, a field's mesh and data parts are
+exported to text files using field and matrix converters.  A field
+converter produces two files: a node location file (called a ``pts''
+file) and a node connectivity file (``tri'', ``tet'', ``quad'', or
+``hex'' files).  A matrix converter produces a file of data values
+(``txt'' files).
 
 \subsection{Importing a Field}
 \label{sec:import_field}
@@ -100,7 +105,7 @@ To import a field, two converters and a simple \sr{} network are used.
 A field converter is used to produce an incomplete (mesh data only)
 persistent field object from node location and node connectivity
 files.  A matrix converter is used to produce a persistent matrix
-object from a node data file.
+object from a (\filename{txt}) data file.
 
 A complete field (mesh and data) is assembled in \sr{} by
 constructing a simple network using modules \datatype{FieldReader},
