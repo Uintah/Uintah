@@ -9,5 +9,5 @@ all:: tclIndex
 tclIndex : ChemVis.tcl PartToGeom.tcl ParticleGridVisControl.tcl \
            RescaleParticleColorMap.tcl TecplotFileSelector.tcl \
 	   TriangleReader.tcl application.tcl cfdGridLines.tcl test.tcl
-	$(SRCTOP)/scripts/createTclIndex
+	$(SRCTOP)/scripts/createTclIndex $(SRCDIR)
 
