@@ -51,12 +51,43 @@ PingThrow_impl::~PingThrow_impl()
 
 int PingThrow_impl::pingthrow(int arg)
 {
-  int myrank;
-  MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
-  if(myrank == 0) {
+  if(arg==1) {
     PPException* ppe = new PPException();
     throw (ppe);
   }
-  sleep(2);
   return arg;
+}
+
+int PingThrow_impl::pingthrow2(int arg)
+{
+  if(arg==1) {
+    PP2Exception* ppe2 = new PP2Exception();
+    throw (ppe2);
+  }
+  return arg;
+}
+
+void PingThrow_impl::getOX(OtherThrow::pointer& otptr)
+{
+  otptr = new OtherThrow_impl();
+  otptr->addReference();
+}
+
+void PingThrow_impl::donone()
+{
+}
+
+OtherThrow_impl::OtherThrow_impl()
+{
+}
+
+OtherThrow_impl::~OtherThrow_impl()
+{
+}
+
+int OtherThrow_impl::otherthrow()
+{
+  OtherX* ox = new OtherX();
+  throw (ox);
+  return 0;
 }
