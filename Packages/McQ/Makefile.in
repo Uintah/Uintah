@@ -21,7 +21,7 @@ SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
 
 include $(SRCTOP)/scripts/solib.mk
 
-SUBDIRS  = Euler
+SUBDIRS  = MPM Euler
 SRCS     = index.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
