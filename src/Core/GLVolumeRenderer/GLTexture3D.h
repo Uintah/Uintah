@@ -1,3 +1,4 @@
+
 /*
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -83,7 +84,7 @@ public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  GLTexture3D(FieldHandle texfld, double &min, double &max, int use_minmax);
+  GLTexture3D(FieldHandle texfld, double &min, double &max, bool use_minmax);
   //////////
   // Constructor
   GLTexture3D();
@@ -103,7 +104,7 @@ public:
   // Just reuse the allocated Bricks
   bool replace_data(FieldHandle texfld, 
 		    double &min, double &max,
-		    int use_minmax);
+		    bool use_minmax);
   
 
   // GROUP: Access
@@ -135,7 +136,7 @@ public:
 
   bool CC() const {return isCC_;}
   void getminmax( double& min, double& max) const { min = min_, max = max_;}
-  virtual bool get_dimensions( int& nx, int& ny, int& nz);
+  virtual bool get_dimensions( int& nx, int& ny, int& nz );
 protected:
   static int max_workers;
   ThreadGroup *tg;
@@ -153,11 +154,9 @@ protected:
   bool reuse_bricks;
   virtual void build_texture();
   virtual void replace_texture();
-  void init(double& min, double &max, bool use_minmax);
+  bool init(double& min, double &max, bool use_minmax);
   void set_bounds();
   void compute_tree_depth();
-  template <class Mesh>
-    bool get_dimensions( Mesh m , int& nx, int& ny, int& nz);
   template <class T>
     Octree<Brick*>* build_bon_tree(Point min, Point max,
 				   int xoff, int yoff, int zoff,
@@ -246,15 +245,8 @@ private:
     //    T* tex;
     Array3<unsigned char>* bd_;
   };
-  //friend class run_make_low_res_brick_data;
 };
 
-template <class Mesh>
-bool 
-GLTexture3D::get_dimensions(Mesh, int&, int&, int&)
-{
-  return false;
-}
 
 template <class T>
 void 

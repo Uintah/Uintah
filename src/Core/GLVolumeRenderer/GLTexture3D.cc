@@ -23,7 +23,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ThreadGroup.h>
@@ -82,7 +81,7 @@ GLTexture3D::GLTexture3D() :
 
 
 GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max, 
-			 int use_minmax) :  
+			 bool use_minmax) :  
   tg(0),
   texfld_(texfld),
   X_(0), 
@@ -94,12 +93,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   isCC_(false),
   reuse_bricks(false)
 {
-  if (texfld_->get_type_name(0) != "LatVolField") {
-    cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatVolField\n";
-    return;
-  }
-
-  init(min, max, use_minmax);
+  if (!init(min, max, use_minmax)) { return; }
   set_bounds();
   compute_tree_depth(); 
   build_texture();
@@ -110,95 +104,89 @@ GLTexture3D::~GLTexture3D()
   delete bontree_;
 }
 
-void GLTexture3D::init(double& min, double &max, bool use_minmax)
+bool
+GLTexture3D::init(double& min, double &max, bool use_minmax)
 {
-  pair<double,double> minmax;
-  LatVolMeshHandle mesh;
-  const string type = texfld_->get_type_name(1);
-  if (type == "double") {
-    LatVolField<double> *fld =
-      dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
-    if( !use_minmax )
-      field_minmax(*fld, minmax);
-    mesh = fld->get_typed_mesh();
-  } else if (type == "int") {
-    LatVolField<int> *fld =
-      dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
-    if( !use_minmax )
-      field_minmax(*fld, minmax);
-    mesh = fld->get_typed_mesh();
-  } else if (type == "short") {
-    LatVolField<short> *fld =
-      dynamic_cast<LatVolField<short>*>(texfld_.get_rep());
-    if( !use_minmax )
-      field_minmax(*fld, minmax);
-    mesh = fld->get_typed_mesh();
-  } else if (type == "unsigned_char") {
-    LatVolField<unsigned char> *fld =
-      dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep());
-    if( !use_minmax )
-      field_minmax(*fld, minmax);
-    mesh = fld->get_typed_mesh();
-  } else {
-    cerr << "GLTexture3D constructor error - unknown LatVolField type: " << type << endl;
-    return;
+  if (texfld_->mesh()->get_type_description()->get_name() !=
+      get_type_description((LatVolMesh *)0)->get_name())
+  {
+    cerr << "GLTexture3D init error - can only make a GLTexture3D from a LatVolField.\n";
+    return false;
   }
+  
+  ScalarFieldInterface *sfi = texfld_->query_scalar_interface();
+  if (!sfi)
+  {
+    cerr << "GLTexture3D constructor error - nonscalar LatVolField type.\n";
+    return false;
+  }
+  double minval, maxval;
+  sfi->compute_min_max(minval, maxval);
+  LatVolMeshHandle mesh = (LatVolMesh *)(texfld_->mesh().get_rep());
   transform_ = mesh->get_transform();
 
-  if (xmax_ == 0 && ymax_ ==0 && zmax_== 0){
+  if (xmax_ == 0 && ymax_ ==0 && zmax_== 0)
+  {
     xmax_=ymax_=zmax_=64;
   }
 
-  if( texfld_->data_at() == Field::CELL ){
+  if( texfld_->data_at() == Field::CELL )
+  {
     isCC_=true;
-    reuse_bricks = ( X_ == mesh->get_nx()-1 &&
-		     Y_ == mesh->get_ny()-1 &&
-		     Z_ == mesh->get_nz()-1);
+    reuse_bricks = ( X_ == (int)(mesh->get_nx()-1) &&
+		     Y_ == (int)(mesh->get_ny()-1) &&
+		     Z_ == (int)(mesh->get_nz()-1));
     X_ = mesh->get_nx()-1;
     Y_ = mesh->get_ny()-1;
     Z_ = mesh->get_nz()-1;
-  } else {
+  }
+  else
+  {
     isCC_=false;
-    reuse_bricks = ( X_ == mesh->get_nx() &&
-		     Y_ == mesh->get_ny() &&
-		     Z_ == mesh->get_nz());
+    reuse_bricks = ( X_ == (int)(mesh->get_nx()) &&
+		     Y_ == (int)(mesh->get_ny()) &&
+		     Z_ == (int)(mesh->get_nz()));
     X_ = mesh->get_nx();
     Y_ = mesh->get_ny();
     Z_ = mesh->get_nz();
   }    
 
+  // Check for simple scale/translate matrix.
+  double td[16];
+  mesh->get_transform().get(td);
+  if ((td[1] + td[2] + td[4] + td[6] + td[8] + td[9]) > 1.0e-3)
   {
-    // Check for simple scale/translate matrix.
-    double td[16];
-    mesh->get_transform().get(td);
-    if ((td[1] + td[2] + td[4] + td[6] + td[8] + td[9]) > 1.0e-3)
-    {
-      cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
-    }
+    cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
   }
   
-  //BBox bbox = mesh->get_bounding_box();
-  minP_ = Point(0,0,0); //bbox.min();
-  maxP_ = Point(mesh->get_nx(), mesh->get_ny(), mesh->get_nz()); //bbox.max();
+  minP_ = Point(0,0,0);
+  maxP_ = Point(mesh->get_nx(), mesh->get_ny(), mesh->get_nz());
   cerr <<"X_, Y_, Z_ = "<<X_<<", "<<Y_<<", "<<Z_<<endl;
   cerr << "use_minmax = "<<use_minmax<<"  min="<<min<<" max="<<max<<"\n";
-  cerr << "    fieldminmax: min="<<minmax.first<<" max="<<minmax.second<<"\n";
-  if (use_minmax) {
+  cerr << "    fieldminmax: min="<<minval<<" max="<<maxval<<"\n";
+  if (use_minmax)
+  {
     min_ = min;
     max_ = max;
-  } else {
-    min = min_ = minmax.first;
-    max = max_ = minmax.second;
+  }
+  else
+  {
+    min = min_ = minval;
+    max = max_ = maxval;
   }
   cerr << "    texture: min="<<min<<"  max="<<max<<"\n";
+  return true;
 }
 
-bool GLTexture3D::replace_data(FieldHandle texfld, 
-		  double &min, double &max,
-		  int use_minmax)
+
+
+bool
+GLTexture3D::replace_data(FieldHandle texfld, 
+			  double &min, double &max,
+			  bool use_minmax)
 {
   texfld_ = texfld;
-  init( min, max, use_minmax );
+  if (!init( min, max, use_minmax )) { return false; }
   if( reuse_bricks ){
     replace_texture();
     return true;
@@ -209,9 +197,8 @@ bool GLTexture3D::replace_data(FieldHandle texfld,
 
 
 
-
-
-void GLTexture3D::set_bounds()
+void
+GLTexture3D::set_bounds()
 {
   Vector diag = maxP_ - minP_;
   std::cerr<<"Bounds = "<<minP_<<", "<<maxP_<<std::endl;
@@ -221,7 +208,9 @@ void GLTexture3D::set_bounds()
   dz_ = diag.z()/(Z_-1); 
 }
 
-void GLTexture3D::build_texture()
+
+void
+GLTexture3D::build_texture()
 {
 #ifdef __sgi
   max_workers = Max(Thread::numProcessors()/2, 2);
@@ -235,7 +224,7 @@ void GLTexture3D::build_texture()
   group_name = group_name + "0";
   tg = scinew ThreadGroup( group_name.c_str());
 
-  string type = texfld_->get_type_name(1);
+  string type = texfld_->get_type_description(1)->get_name();
   cerr << "Type = " << type << endl;
   
   if (type == "double") {
@@ -278,7 +267,7 @@ void GLTexture3D::replace_texture()
   group_name = group_name + "0";
   tg = scinew ThreadGroup( group_name.c_str());
 
-  string type = texfld_->get_type_name(1);
+  string type = texfld_->get_type_description(1)->get_name();
   cerr << "Type = " << type << endl;
   
   if (type == "double") {
@@ -307,25 +296,18 @@ void GLTexture3D::replace_texture()
 }
 
 
-template<> 
-bool GLTexture3D::get_dimensions(LatVolMeshHandle m,
-				 int& nx, int& ny, int& nz)
-{
-  nx = m->get_nx();
-  ny = m->get_ny();
-  nz = m->get_nz();
-  return true;
-}
 
 bool
-GLTexture3D::get_dimensions( int& nx, int& ny, int& nz)
+GLTexture3D::get_dimensions(int& nx, int& ny, int& nz)
 {
   LatVolMesh *meshpointer = 
     dynamic_cast<LatVolMesh *>(texfld_->mesh().get_rep());
   if (meshpointer)
   {
-    LatVolMeshHandle mesh(meshpointer);
-    return get_dimensions(mesh, nx, ny, nz);
+    nx = meshpointer->get_nx();
+    ny = meshpointer->get_ny();
+    nz = meshpointer->get_nz();
+    return true;
   }
   else
   {
@@ -333,6 +315,7 @@ GLTexture3D::get_dimensions( int& nx, int& ny, int& nz)
     return false;
   }
 }
+
 
 
 bool
@@ -361,10 +344,13 @@ GLTexture3D::set_brick_size(int bsize)
   }
 }
 
+
 void
 GLTexture3D::set_field( FieldHandle texfld )
 {
-  if (texfld_->get_type_name(0) != "LatVolField") {
+  if (texfld_->mesh()->get_type_description()->get_name() !=
+      get_type_description((LatVolMesh *)0)->get_name())
+  {
     cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatVolField\n";
     return;
   }
@@ -380,7 +366,10 @@ GLTexture3D::set_field( FieldHandle texfld )
   build_texture();
 } 
  
-void GLTexture3D::compute_tree_depth()
+
+
+void
+GLTexture3D::compute_tree_depth()
 {
   int xdepth = 0, ydepth = 0, zdepth = 0;
   int x = xmax_, y = ymax_, z = zmax_;
@@ -404,17 +393,16 @@ void GLTexture3D::compute_tree_depth()
 }
 
 
-bool GLTexture3D::set_max_brick_size(int maxBrick)
+
+bool
+GLTexture3D::set_max_brick_size(int maxBrick)
 {
-
-
    GLint xtex = 0, ytex = 0, ztex = 0; 
    int x,y,z;
    x = y = z = maxBrick;
    glEnable(GL_TEXTURE_3D);
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    
-
 
    glPrintError("glEnable(GL_TEXTURE_3D)");
    //glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_INTENSITY8_EXT, x, y, z, 0, 
@@ -441,6 +429,7 @@ bool GLTexture3D::set_max_brick_size(int maxBrick)
    }
 }
 
+
 double
 GLTexture3D::SETVAL(double val)
 {
@@ -450,11 +439,13 @@ GLTexture3D::SETVAL(double val)
   else return v;
 }
 
+
 unsigned char
 GLTexture3D::SETVALC(double val)
 {
   return (unsigned char)SETVAL(val);
 }
+
 
 
 GLTexture3D::run_make_low_res_brick_data
@@ -486,6 +477,7 @@ GLTexture3D::run_make_low_res_brick_data
 {
   // constructor
 }
+
 
 void
 GLTexture3D::run_make_low_res_brick_data::run() 
@@ -595,6 +587,7 @@ GLTexture3D::run_make_low_res_brick_data::run()
 #endif    
 //  }    
 }
+
 
 } // End namespace SCIRun
 
