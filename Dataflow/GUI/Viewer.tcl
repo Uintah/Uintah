@@ -749,19 +749,23 @@ itcl_class ViewWindow {
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
-	canvas $m.objlist.canvas -width 370 -height 100 \
-	        -scrollregion "0 0 370 100" \
-		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0 -yscrollincrement 10
-	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
+	canvas $m.objlist.canvas -width 370 -height 128 \
+	        -scrollregion "0 0 370 128" \
+		-xscrollcommand "$m.objlist.xscroll set" -borderwidth 0 -xscrollincrement 10 \
+		-yscrollcommand "$m.objlist.yscroll set" -borderwidth 0 -yscrollincrement 10
 	
 	frame $m.objlist.canvas.frame -relief sunken -borderwidth 2
 	pack $m.objlist.canvas.frame
 	$m.objlist.canvas create window 0 1 -window $m.objlist.canvas.frame \
 		-anchor nw
 	
-	scrollbar $m.objlist.scroll -relief sunken \
+	scrollbar $m.objlist.xscroll -relief sunken -orient horizontal \
+		-command "$m.objlist.canvas xview"
+	scrollbar $m.objlist.yscroll -relief sunken -orient vertical \
 		-command "$m.objlist.canvas yview"
-	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
+	pack $m.objlist.yscroll -fill y -side left -padx 2 -pady 2
+	pack $m.objlist.canvas -side top -padx 2 -pady 2 -fill x -fill y
+	pack $m.objlist.xscroll -fill x -side top  -padx 2 -pady 2
 	
         # CollabVis code begin
         if {[set $this-have_collab_vis]} {
@@ -1134,8 +1138,11 @@ itcl_class ViewWindow {
 
 	$m.objlist.canvas configure -scrollregion "0 0 $width $height"
 
+	set view [$m.objlist.canvas xview]
+	$m.objlist.xscroll set [lindex $view 0] [lindex $view 1]
+
 	set view [$m.objlist.canvas yview]
-	$m.objlist.scroll set [lindex $view 0] [lindex $view 1]
+	$m.objlist.yscroll set [lindex $view 0] [lindex $view 1]
     }
 
     method addObject2 {objid} {
