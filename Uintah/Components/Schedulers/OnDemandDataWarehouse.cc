@@ -452,9 +452,12 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 						     matlIndex, patch,
 						     gtype, numGhostCells,
 						     neighbors, subsets);
-   for (int i = 0; i<subsets.size(); i++ ) {
-     delete subsets[i];
-   }
+//  These 3 lines have been causing multiple patch problems to
+//  not work.
+
+//   for (int i = 0; i<subsets.size(); i++ ) {
+//     delete subsets[i];
+//   }
 
 
    return newsubset;
@@ -1410,6 +1413,10 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.44  2000/08/18 22:57:39  guilkey
+// Commented out the code which was causing multipatch MPM runs to fail.
+// See lines 458 - 461.
+//
 // Revision 1.43  2000/08/08 01:32:45  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
