@@ -24,16 +24,21 @@
 #include <SCICore/Geom/GeomPick.h>
 #include <SCICore/Geom/Pt.h>
 #include <SCICore/Geom/GeomSphere.h>
+#include <SCICore/Geom/GeomEllipsoid.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Datatypes/ColorMap.h>
+#include <SCICore/Math/MinMax.h>
 #include <Uintah/Modules/Visualization/ParticleFieldExtractor.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <Uintah/Datatypes/ScalarParticlesPort.h>
 #include <Uintah/Datatypes/VectorParticlesPort.h>
+#include <Uintah/Datatypes/TensorParticlesPort.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <iostream>
+#include <stdio.h>
 using std::cerr;
 using std::endl;
 
@@ -46,6 +51,7 @@ using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
+using SCICore::Math::Max;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
@@ -65,14 +71,17 @@ ParticleVis::ParticleVis(const clString& id)
 {
   // Create the input port
   spin0=scinew ScalarParticlesIPort(this, "ScalarParticles",
-				ScalarParticlesIPort::Atomic);
+				    ScalarParticlesIPort::Atomic);
   spin1=scinew ScalarParticlesIPort(this, "ScaleScalarParticles",
-				ScalarParticlesIPort::Atomic);
+				    ScalarParticlesIPort::Atomic);
   vpin=scinew VectorParticlesIPort(this, "VectorParticles",
-				VectorParticlesIPort::Atomic);
+				   VectorParticlesIPort::Atomic);
+  tpin=scinew TensorParticlesIPort(this, "TensorParticles",
+				   TensorParticlesIPort::Atomic);
   add_iport(spin0);
   add_iport(spin1);
   add_iport(vpin);
+  add_iport(tpin);
   cin=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
   add_iport(cin);
   ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -105,7 +114,8 @@ void ParticleVis::execute()
   ScalarParticlesHandle part;
   ScalarParticlesHandle scaleSet;
   VectorParticlesHandle vect;
-  bool hasScale = false, hasVectors = false;
+  TensorParticlesHandle tens;
+  bool hasScale = false, hasVectors = false, hasTensors = false;
   if (!spin0->get(part)){
     last_idx=-1;
     return;
@@ -117,6 +127,10 @@ void ParticleVis::execute()
 
   if(vpin->get(vect)){
     hasVectors = true;
+  }
+
+  if(tpin->get(tens)){
+    hasTensors = true;
   }
 
   cbClass = part->getCallbackClass();
@@ -149,127 +163,182 @@ void ParticleVis::execute()
 
   // All three particle variables use the same particle subset
   // so just grab one
-  ParticleSubset *ps = part->getPositions().getParticleSubset();
+  vector<ParticleVariable<Point> >& points = part->getPositions();
+  vector<ParticleVariable<double> >& values = part->get();
+  vector<ParticleVariable<Point> >::iterator p_it;
+  vector<ParticleVariable<double> >::iterator s_it = values.begin();
+  vector<ParticleVariable<Vector> >::iterator v_it;
+  if( hasVectors ) v_it = vect->get().begin();
+  for(p_it = points.begin(); p_it != points.end(); p_it++, s_it++){
+    ParticleSubset *ps = (*p_it).getParticleSubset();
 
 
-  // default colormap--nobody has scaled it.
-  if( !cmap->IsScaled()) {
-    part->get_minmax(min,max);
-    if (min == max) {
-      min -= 0.001;
-      max += 0.001;
-    }
-    cmap->Scale(min,max);
-    cerr << "min=" << min << ", max=" << max << '\n';
-  }  
+    // default colormap--nobody has scaled it.
+    if( !cmap->IsScaled()) {
+      part->get_minmax(min,max);
+      if (min == max) {
+	min -= 0.001;
+	max += 0.001;
+      }
+      cmap->Scale(min,max);
+      cerr << "min=" << min << ", max=" << max << '\n';
+    }  
 
-  //--------------------------------------
-  cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
-
-
-  if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
-    float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
-    int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
-    int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-    GeomGroup *obj = scinew GeomGroup;
-    GeomArrows* arrows;
-    if( drawVectors.get() == 1){
-      arrows = scinew GeomArrows(width_scale.get(),
-			      1.0 - head_length.get(),
-			      drawcylinders.get(),
-			      shaft_rad.get());
-    }
-    int count = 0;
-//     ParticleSubset::iterator iter;
-//     ParticleSubset::iterator siter;
-//     ParticleSubset *ss;
-//     ParticleSubset::iterator psbeginaddr = ps->begin();
-//     ParticleSubset::iterator psendaddr = ps->end();
-//     ParticleSubset::iterator ssbeginaddr;
-//     ParticleSubset::iterator ssendaddr;
+    //--------------------------------------
+    cerr << "numParticles: " << ps->getParticleSet()->numParticles() << '\n';
 
 
-//     if( hasScale ){
-//       ss = scaleSet->getPositions().getParticleSubset();
-//       siter = ss->begin();
-//       ssbeginaddr = ss->begin();
-//       ssendaddr = ss->end();
-//     }
+    if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
+      float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
+      int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
+      int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
+      GeomGroup *obj = scinew GeomGroup;
+      GeomArrows* arrows;
+      if( drawVectors.get() == 1){
+	arrows = scinew GeomArrows(width_scale.get(),
+				   1.0 - head_length.get(),
+				   drawcylinders.get(),
+				   shaft_rad.get());
+      }
+      int count = 0;
+      //     ParticleSubset::iterator iter;
+      //     ParticleSubset::iterator siter;
+      //     ParticleSubset *ss;
+      //     ParticleSubset::iterator psbeginaddr = ps->begin();
+      //     ParticleSubset::iterator psendaddr = ps->end();
+      //     ParticleSubset::iterator ssbeginaddr;
+      //     ParticleSubset::iterator ssendaddr;
+
+
+      //     if( hasScale ){
+      //       ss = scaleSet->getPositions().getParticleSubset();
+      //       siter = ss->begin();
+      //       ssbeginaddr = ss->begin();
+      //       ssendaddr = ss->end();
+      //     }
     
-    for(ParticleSubset::iterator iter = ps->begin();
-	iter != ps->end(); iter++){
-      count++;
-      if (count == show_nth.get() ){ 
-	GeomSphere *sp = 0;
-	if( hasScale ){
-	  double smin = 0, smax = 0;
-	  scaleSet->get_minmax(smin,smax);
-	  double scalefactor =
-	    (scaleSet->get()[*iter] - smin)/(smax - smin);
-	  if( scalefactor >= 1e-6 )
-	    sp = scinew GeomSphere( part->getPositions()[*iter],
-				 scalefactor * radius.get(),
-				 nu, nv, *iter);
-	} else {
-	  sp = scinew GeomSphere( part->getPositions()[*iter],
-			       radius.get(), nu, nv, *iter);
+      for(ParticleSubset::iterator iter = ps->begin();
+	  iter != ps->end(); iter++){
+	count++;
+	if (count == show_nth.get() ){ 
+	  GeomObj *sp = 0;
+	  if (false){//if( hasScale ){
+	    double smin = 0, smax = 0;
+	    scaleSet->get_minmax(smin,smax);
+// 	    double scalefactor =
+// 	      (scaleSet->get()[*iter] - smin)/(smax - smin);
+// 	    if( scalefactor >= 1e-6 )
+// 	      if(true){//if(!hasTensors){
+// 		sp = scinew GeomSphere( (*p_it)[*iter],
+// 					scalefactor * radius.get(),
+// 					nu, nv, *iter);
+// 		sp = scinew GeomSphere( part->getPositions()[*iter],
+// 					scalefactor * radius.get(),
+// 					nu, nv, *iter);
+// 	      } else { // make an ellips
+// 		double matrix[16];
+// 		Matrix3 M = tens->get()[*iter];
+// 		double e1,e2,e3;
+// 		M.getEigenValues(e1,e2,e3);
+// 		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
+// 		  matrix[13] = matrix[14] = 0;
+// 		matrix[15] = 1;
+// 		matrix[0] = M(0,0); matrix[1] = M(1,0); matrix[2] = M(2,0);
+// 		matrix[4] = M(0,1); matrix[5] = M(1,1); matrix[6] = M(2,1);
+// 		matrix[8] = M(0,2); matrix[9] = M(1,2); matrix[10] = M(2,2);
+
+// 		sp = scinew GeomEllipsoid(part->getPositions()[*iter],
+// 					  scalefactor * radius.get(),
+// 					  nu, nv, &(matrix[0]), 2, *iter);
+// 	      }
+	  } else {
+	    if(true){//if(!hasTensors){
+	      sp = scinew GeomSphere( (*p_it)[*iter],
+				      radius.get(), nu, nv, *iter);
+	    } else {
+// 	      double matrix[16];
+// 	      Matrix3 M = tens->get()[*iter];
+// 	      if( M.Norm() > 1e-8){
+// 		Vector v1(M(1,1),M(2,1),M(3,1));
+// 		Vector v2(M(1,2),M(2,2),M(3,2));
+// 		Vector v3(M(1,3),M(2,3),M(3,3));
+// 		double norm = 1/Max(v1.length(), v2.length(), v3.length());
+// 		matrix[3] = matrix[7] = matrix[11] = matrix[12] =
+// 		  matrix[13] = matrix[14] = 0;
+// 		matrix[15] = 1;
+// 		matrix[0] = M(1,1)*norm; matrix[1] = M(2,1)*norm;
+// 		matrix[2] = M(3,1)*norm; matrix[4] = M(1,2)*norm;
+// 		matrix[5] = M(2,2)*norm; matrix[6] = M(3,2)*norm;
+// 		matrix[8] = M(1,3)*norm; matrix[9] = M(2,3)*norm;
+// 		matrix[10] = M(3,3)*norm;
+	      
+// 		sp = scinew GeomEllipsoid(part->getPositions()[*iter],
+// 					  radius.get(), nu, nv, &(matrix[0]),
+// 					  2, *iter);
+// 	      }
+	    }
+	  }
+	  //	  double value = part->get()[*iter];
+	  double value = (*s_it)[*iter];
+	  if( sp != 0)
+	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
+	  count = 0;
 	}
-	double value = part->get()[*iter];
-	if( sp != 0)
-	  obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
-	count = 0;
+ 	if( drawVectors.get() == 1 && hasVectors){
+ 	  Vector V = (*v_it)[*iter];
+ 	  if(V.length2() * length_scale.get() > 1e-3 )
+ 	    arrows->add( (*p_it)[*iter],
+ 			 V*length_scale.get(),
+ 			 outcolor, outcolor, outcolor);
+ 	}
+      } 
+      if(false){//if( drawVectors.get() == 1 && hasVectors){
+	obj->add( arrows );
       }
+      // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
+      GeomPick *pick = scinew GeomPick( obj, this);
+      ogeom->delAll();
+      ogeom->addObj(pick, "Particles");      
+    } else if( ps->getParticleSet()->numParticles() ) { // Particles
+      GeomGroup *obj = scinew GeomGroup;
+      GeomPts *pts = scinew GeomPts(ps->getParticleSet()->numParticles());
+      pts->pickable = 1;
+      int count = 0;
+      GeomArrows* arrows;
       if( drawVectors.get() == 1 && hasVectors){
-	Vector V = vect->get()[*iter];
-	if(V.length2() * length_scale.get() > 1e-3 )
-	  arrows->add( part->getPositions()[*iter],
-		       V*length_scale.get(),
-		       outcolor, outcolor, outcolor);
+	arrows = scinew GeomArrows(width_scale.get(),
+				   1.0 - head_length.get(),
+				   drawcylinders.get(),
+				   shaft_rad.get());
       }
-    } 
-    if( drawVectors.get() == 1 && hasVectors){
-      obj->add( arrows );
-    }
-    // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
-    GeomPick *pick = scinew GeomPick( obj, this);
-    ogeom->delAll();
-    ogeom->addObj(pick, "Particles");      
-  } else if( ps->getParticleSet()->numParticles() ) { // Particles
-    GeomGroup *obj = scinew GeomGroup;
-    GeomPts *pts = scinew GeomPts(ps->getParticleSet()->numParticles());
-    pts->pickable = 1;
-    int count = 0;
-    GeomArrows* arrows;
-    if( drawVectors.get() == 1 && hasVectors){
-      arrows = scinew GeomArrows(width_scale.get(),
-			      1.0 - head_length.get(),
-			      drawcylinders.get(),
-			      shaft_rad.get());
-    }
     
-    for(ParticleSubset::iterator iter = ps->begin();
-	iter != ps->end(); iter++){     
-      count++;
-      if (count == show_nth.get() ){ 
-	double value = part->get()[*iter];
-	pts->add(part->getPositions()[*iter], cmap->lookup(value)->diffuse);
-	count = 0;
-      }
+      for(ParticleSubset::iterator iter = ps->begin();
+	  iter != ps->end(); iter++){     
+	count++;
+	if (count == show_nth.get() ){ 
+	  double value = (*s_it)[*iter];
+	  //	  double value = part->get()[*iter];
+	  pts->add((*p_it)[*iter], cmap->lookup(value)->diffuse);
+  	  //pts->add(part->getPositions()[*iter], cmap->lookup(value)->diffuse);
+	  count = 0;
+	}
+ 	if( drawVectors.get() == 1 && hasVectors){
+ 	  Vector V = (*v_it)[*iter];
+ 	  if(V.length2() * length_scale.get() > 1e-3 )
+ 	    arrows->add( (*p_it)[*iter],
+ 			 V*length_scale.get(),
+ 			 outcolor, outcolor, outcolor);
+ 	}
+      } 
+      obj->add( pts );
       if( drawVectors.get() == 1 && hasVectors){
-	Vector V = vect->get()[*iter];
-	if(V.length2() * length_scale.get() > 1e-3 )
-	  arrows->add( part->getPositions()[*iter],
-		       V*length_scale.get(),
-		       outcolor, outcolor, outcolor);
+	obj->add( arrows );
       }
-    } 
-    obj->add( pts );
-    if( drawVectors.get() == 1 && hasVectors){
-      obj->add( arrows );
+      // GeomPick *pick = scinew GeomPick( obj, this);
+      ogeom->delAll();
+      ogeom->addObj(obj, "Particles");      
     }
-    // GeomPick *pick = scinew GeomPick( obj, this);
-    ogeom->delAll();
-    ogeom->addObj(obj, "Particles");      
+    if(hasVectors) v_it++;
   }
 //     GeomMaterial* matl=new GeomMaterial(obj,
 //    					  scinew Material(Color(0,0,0),

@@ -4,6 +4,7 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <Uintah/Datatypes/ScalarParticlesPort.h>
 #include <Uintah/Datatypes/VectorParticlesPort.h>
+#include <Uintah/Datatypes/TensorParticlesPort.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
@@ -23,6 +24,7 @@ class ParticleVis : public Module {
     ScalarParticlesIPort* spin0;
     ScalarParticlesIPort* spin1;
     VectorParticlesIPort* vpin;
+    TensorParticlesIPort* tpin;
     ColorMapIPort *cin;
     GeometryOPort* ogeom;
     TCLdouble current_time;

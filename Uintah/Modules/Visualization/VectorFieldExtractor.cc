@@ -212,7 +212,6 @@ void VectorFieldExtractor::execute()
     case TypeDescription::Vector:
       {
 	NCVectorField *vfd  = scinew NCVectorField();
-	NCVariable< Vector > vv;
 	
 	if(var != ""){
 	  vfd->SetGrid( grid );
@@ -222,6 +221,7 @@ void VectorFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    NCVariable< Vector > vv;
 	    archive.query(vv, var, mat, *r, time);
 	    vfd->AddVar( vv );
 	  }
@@ -240,7 +240,6 @@ void VectorFieldExtractor::execute()
     case TypeDescription::Vector:
       {
 	CCVectorField *vfd  = scinew CCVectorField();
-	CCVariable< Vector > vv;
 	
 	if(var != ""){
 	  vfd->SetGrid( grid );
@@ -251,8 +250,11 @@ void VectorFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    CCVariable< Vector > vv;
 	    archive.query(vv, var, mat, (*r), time);
 	    vfd->AddVar( vv );
+
+	    
 	  }
 	  sfout->send(vfd);
 	  return;
