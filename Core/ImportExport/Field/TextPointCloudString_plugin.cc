@@ -126,7 +126,7 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
 }    
 
 
-void
+bool
 TextPointCloudString_writer(ProgressReporter *pr,
 			    FieldHandle field, const char *filename)
 {
@@ -137,7 +137,7 @@ TextPointCloudString_writer(ProgressReporter *pr,
   if (pcfs == 0)
   {
     // Handle error checking somehow.
-    return;
+    return false;
   }
   PointCloudMeshHandle mesh = pcfs->get_typed_mesh();
   
@@ -155,6 +155,7 @@ TextPointCloudString_writer(ProgressReporter *pr,
     
     ++itr;
   }
+  return true;
 }
 
 

@@ -52,7 +52,7 @@ using namespace std;
 
 namespace SCIRun {
 
-map<string, FieldIEPlugin *> *FieldIEPlugin::table = 0;
+static map<string, FieldIEPlugin *> *plugin_table = 0;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -75,7 +75,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
 			     const string& fmagic,
 			     FieldHandle (*freader)(ProgressReporter *pr,
 						    const char *filename),
-			     void (*fwriter)(ProgressReporter *pr,
+			     bool (*fwriter)(ProgressReporter *pr,
 					     FieldHandle f,
 					     const char *filename))
   : pluginname(pname),
@@ -85,20 +85,20 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     filewriter(fwriter)
 {
   fieldIEPluginMutex.lock();
-  if (!table)
+  if (!plugin_table)
   {
-    table = scinew map<string, FieldIEPlugin *>();
+    plugin_table = scinew map<string, FieldIEPlugin *>();
   }
 
   string tmppname = pluginname;
   int counter = 2;
   while (1)
   {
-    map<string, FieldIEPlugin *>::iterator loc = table->find(tmppname);
-    if (loc == table->end())
+    map<string, FieldIEPlugin *>::iterator loc = plugin_table->find(tmppname);
+    if (loc == plugin_table->end())
     {
       if (tmppname != pluginname) { ((string)pluginname) = tmppname; }
-      (*table)[pluginname] = this;
+      (*plugin_table)[pluginname] = this;
       break;
     }
     if (*(*loc).second == *this)
@@ -120,30 +120,30 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
 
 FieldIEPlugin::~FieldIEPlugin()
 {
-  if (table == NULL)
+  if (plugin_table == NULL)
   {
-    cerr << "WARNING: FieldIEPlugin.cc: ~FieldIEPlugin(): table is NULL\n";
+    cerr << "WARNING: FieldIEPlugin.cc: ~FieldIEPlugin(): plugin_table is NULL\n";
     cerr << "         For: " << pluginname << "\n";
     return;
   }
 
   fieldIEPluginMutex.lock();
 
-  map<string, FieldIEPlugin *>::iterator iter = table->find(pluginname);
-  if (iter == table->end())
+  map<string, FieldIEPlugin *>::iterator iter = plugin_table->find(pluginname);
+  if (iter == plugin_table->end())
   {
     cerr << "WARNING: FieldIEPlugin " << pluginname << 
       " not found in database for removal.\n";
   }
   else
   {
-    table->erase(iter);
+    plugin_table->erase(iter);
   }
 
-  if (table->size() == 0)
+  if (plugin_table->size() == 0)
   {
-    delete table;
-    table = 0;
+    delete plugin_table;
+    plugin_table = 0;
   }
 
   fieldIEPluginMutex.unlock();
@@ -159,6 +159,58 @@ FieldIEPlugin::operator==(const FieldIEPlugin &other) const
 	  filereader == other.filereader &&
 	  filewriter == other.filewriter);
 }
+
+
+
+void
+FieldIEPluginManager::get_importer_list(vector<string> &results)
+{
+  fieldIEPluginMutex.lock();
+  map<string, FieldIEPlugin *>::const_iterator itr = plugin_table->begin();
+  while (itr != plugin_table->end())
+  {
+    if ((*itr).second->filereader != NULL)
+    {
+      results.push_back((*itr).first);
+    }
+    ++itr;
+  }
+  fieldIEPluginMutex.unlock();
+}
+
+
+void
+FieldIEPluginManager::get_exporter_list(vector<string> &results)
+{
+  fieldIEPluginMutex.lock();
+  map<string, FieldIEPlugin *>::const_iterator itr = plugin_table->begin();
+  while (itr != plugin_table->end())
+  {
+    if ((*itr).second->filewriter != NULL)
+    {
+      results.push_back((*itr).first);
+    }
+    ++itr;
+  }
+  fieldIEPluginMutex.unlock();
+}
+
+ 
+FieldIEPlugin *
+FieldIEPluginManager::get_plugin(const string &name)
+{
+  // Should check for invalid name.
+  map<string, FieldIEPlugin *>::iterator loc = plugin_table->find(name);
+  if (loc == plugin_table->end())
+  {
+    return NULL;
+  }
+  else
+  {
+    return (*loc).second;
+  }
+}
+
 
 } // End namespace SCIRun
 

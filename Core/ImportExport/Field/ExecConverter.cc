@@ -106,7 +106,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   if (pipe == NULL)
   {
     cerr << "ExecConverter syscal error, command was: '" << command << "'\n";
-    result = 0;
+    result = false;
   }
 #else
   string command = icommand + " > " + tmpfilename + ".log 2>&1";
@@ -115,7 +115,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   {
     cerr << "ExecConverter syscal error " << status << ": "
 	 << "command was '" << command << "'" << endl;
-    result = 0;
+    result = false;
   }
   pipe = fopen((tmpfilename + ".log").c_str(), "r");
 #endif
@@ -172,11 +172,13 @@ Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precomman
 
 
 
-static void
+static bool
 Exec_writer(ProgressReporter *pr,
 	    FieldHandle field, const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
+  bool result = true;
+
   Exec_setup_command(cfilename, precommand, command, tmpfilename);
 
   Piostream *stream = scinew BinaryPiostream(tmpfilename, Piostream::Write);
@@ -184,16 +186,18 @@ Exec_writer(ProgressReporter *pr,
   {
     cerr << "Could not open temporary file '" + tmpfilename +
       "' for writing." << endl;
+    result = false;
   }
   else
   {
     Pio(*stream, field);
     
-    Exec_execute_command(command, tmpfilename);
-    
+    result = Exec_execute_command(command, tmpfilename);
   }
   unlink(tmpfilename.c_str());
   delete stream;
+
+  return result;
 }
 
 
@@ -209,14 +213,14 @@ TextCurveField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextCurveField_writer(ProgressReporter *pr,
 		      FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "CurveFieldToText %t %e.pts %e.edges";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -237,14 +241,14 @@ TextHexVolField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextHexVolField_writer(ProgressReporter *pr,
 		       FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "HexVolFieldToText %t %e.pts %e.hexes";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -265,14 +269,14 @@ TextQuadSurfField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextQuadSurfField_writer(ProgressReporter *pr,
 			 FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "QuadSurfFieldToText %t %e.pts %e.quads";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -293,14 +297,14 @@ TextTetVolField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextTetVolField_writer(ProgressReporter *pr,
 		       FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TetVolFieldToText %t %e.pts %e.tets";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -321,14 +325,14 @@ TextTriSurfField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextTriSurfField_writer(ProgressReporter *pr,
 			FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "TriSurfFieldToText %t %e.pts %e.tets";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -350,14 +354,14 @@ TextPointCloudField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextPointCloudField_writer(ProgressReporter *pr,
 			   FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "PointCloudFieldToText %t %f";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -377,14 +381,14 @@ TextStructCurveField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextStructCurveField_writer(ProgressReporter *pr,
 			    FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "StructCurveFieldToText %t %f";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -404,14 +408,14 @@ TextStructHexVolField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextStructHexVolField_writer(ProgressReporter *pr,
 			     FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "StructHexVolFieldToText %t %f";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
@@ -430,14 +434,14 @@ TextStructQuadSurfField_reader(ProgressReporter *pr, const char *filename)
   return Exec_reader(pr, filename, command);
 }
 
-static void
+static bool
 TextStructQuadSurfField_writer(ProgressReporter *pr,
 			       FieldHandle field, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "StructQuadSurfFieldToText %t %f";
-  Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
