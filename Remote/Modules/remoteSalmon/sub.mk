@@ -3,7 +3,7 @@
 # $Id$
 #
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 
 SRCDIR   := Remote/Modules/remoteSalmon
 
@@ -22,10 +22,13 @@ PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Comm \
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/07/11 20:23:20  yarden
+# replace $(OBJDIR) with $(SRCDIR)
+#
 # Revision 1.2  2000/07/10 18:10:19  dahart
 # Removing files I put in the wrong place.
 #
