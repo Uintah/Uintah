@@ -1096,13 +1096,15 @@ RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 			    DataWarehouseP&,
 			    DataWarehouseP&,
 			    ArchesVariables* vars,
-			    const ArchesLabel* lab,
-			    int patchNumber)
+			    const ArchesLabel* lab)
 {
 }
 
 //
 // $Log$
+// Revision 1.27  2000/09/26 19:59:18  sparker
+// Work on MPI petsc
+//
 // Revision 1.26  2000/09/21 22:45:41  sparker
 // Towards compiling petsc stuff
 //

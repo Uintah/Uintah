@@ -210,8 +210,7 @@ public:
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw, 
 			       ArchesVariables* vars,
-			       const ArchesLabel* lab,
-			       int patchNumber);
+			       const ArchesLabel* lab);
    virtual void pressLinearSolve();
    virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
    virtual void destroyMatrix();
@@ -235,6 +234,9 @@ private:
   
 //
 // $Log$
+// Revision 1.21  2000/09/26 19:59:18  sparker
+// Work on MPI petsc
+//
 // Revision 1.20  2000/09/21 21:45:05  rawat
 // added petsc parallel stuff
 //

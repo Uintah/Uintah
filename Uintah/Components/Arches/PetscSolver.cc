@@ -78,6 +78,23 @@ PetscSolver::computePressResidual(const ProcessorGroup*,
 				 DataWarehouseP&,
 				 ArchesVariables* vars)
 {
+#ifdef ARCHES_PRES_DEBUG
+  cerr << " Before Pressure Compute Residual : " << endl;
+  IntVector l = vars->residualPressure.getWindow()->getLowIndex();
+  IntVector h = vars->residualPressure.getWindow()->getHighIndex();
+  for (int ii = l.x(); ii < h.x(); ii++) {
+    cerr << "residual for ii = " << ii << endl;
+    for (int jj = l.y(); jj < h.y(); jj++) {
+      for (int kk = l.z(); kk < h.z(); kk++) {
+	cerr.width(14);
+	cerr << vars->residualPressure[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+  cerr << "Resid Press = " << vars->residPress << " Trunc Press = " <<
+    vars->truncPress << endl;
+#endif
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
@@ -102,10 +119,10 @@ PetscSolver::computePressResidual(const ProcessorGroup*,
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Compute Residual : " << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+  for (int ii = l.x(); ii < h.x(); ii++) {
     cerr << "residual for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+    for (int jj = l.y(); jj < h.y(); jj++) {
+      for (int kk = l.z(); kk < h.z(); kk++) {
 	cerr.width(14);
 	cerr << vars->residualPressure[IntVector(ii,jj,kk)] << " " ; 
       }
@@ -140,13 +157,12 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
   int numProcessors = d_myworld->size();
   // number of patches for each processor
   vector<int> numCells(numProcessors, 0);
-  vector<int> numPatches(numProcessors, 0);
   long totalCells = 0;
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
-    IntVector plowIndex = patch->getCellLowIndex();
-    IntVector phighIndex = patch->getCellHighIndex();
+    IntVector plowIndex = patch->getCellFORTLowIndex();
+    IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
   
     int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
     int nc = (phighIndex[0]-plowIndex[0])*
@@ -155,46 +171,106 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
     numCells[proc] += nc;
     totalCells += nc;
   }
+  cerr << "totalCells = " << totalCells << '\n';
+  vector<int> startIndex(numProcessors);
+  startIndex[0]=0;
+  for(int i=1;i<numProcessors;i++)
+     startIndex[i]=startIndex[i-1]+numCells[i-1];
 
-  int patchNumber = 0;
-  d_petscIndex.resize(level->numPatches());
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
      const Patch* patch=*iter;
-     IntVector plowIndex = patch->getCellLowIndex();
-     IntVector phighIndex = patch->getCellHighIndex();
-
      int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
-     int globalIndex = 0;
-     for (int procnum = 0; procnum < proc; procnum++) 
-	globalIndex += numCells[procnum];
-     globalIndex += numPatches[proc];
-     numPatches[proc] += (phighIndex[0]-plowIndex[0])*
-	                 (phighIndex[1]-plowIndex[1])*
-	                 (phighIndex[2]-plowIndex[2]);
-     d_petscIndex[patchNumber++] = globalIndex;
-     int me = d_myworld->myrank();
-#if 0
-     if (me == proc) {
-       int petscglobalindex = globalIndex;
-       for (int colZ = plowIndex.z(); colZ < phighIndex.z(); colZ ++) {
-	 for (int colY = plowIndex.y(); colY < phighIndex.y(); colY ++) {
-	   for (int colX = plowIndex.x(); colX < phighIndex.x(); colX ++) {
-	     d_petscGlobalIndex[IntVector(colX, colY, colZ)] = petscglobalIndex++;
-	   }
-	 }
-       }
-     }
-#endif
-  }
-  int me = d_myworld->myrank();
+     int globalIndex = startIndex[proc];
+     d_petscGlobalStart[patch]=globalIndex;
 
+    IntVector plowIndex = patch->getCellLowIndex();
+    IntVector phighIndex = patch->getCellHighIndex();
+     int nc = (phighIndex[0]-plowIndex[0])*
+	      (phighIndex[1]-plowIndex[1])*
+	      (phighIndex[2]-plowIndex[2]);
+     startIndex[proc]+=nc;
+  }
+
+  int me = d_myworld->myrank();
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+     const Patch* patch=*iter;
+     int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
+     if(proc == me){
+	IntVector lowIndex = patch->getGhostCellLowIndex(1);
+	IntVector highIndex = patch->getGhostCellHighIndex(1);
+	Array3<int> l2g(lowIndex, highIndex);
+	long totalCells=0;
+	const Level* level = patch->getLevel();
+	std::vector<const Patch*> neighbors;
+	level->selectPatches(lowIndex, highIndex, neighbors);
+	for(int i=0;i<neighbors.size();i++){
+	   const Patch* neighbor = neighbors[i];
+	   using SCICore::Geometry::Max;
+	   using SCICore::Geometry::Min;
+
+	   IntVector plow = neighbor->getCellLowIndex();
+	   IntVector phigh = neighbor->getCellHighIndex();
+	   IntVector low = Max(lowIndex, plow);
+	   IntVector high= Min(highIndex, phigh);
+
+	   if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	       || ( high.z() < low.z() ) )
+	      throw InternalError("Patch doesn't overlap?");
+
+	   int petscglobalIndex = d_petscGlobalStart[neighbor];
+	   IntVector dcells = phigh-plow;
+	   IntVector start = low-plow;
+	   petscglobalIndex += start.z()*dcells.x()*dcells.y()
+	                      +start.y()*dcells.x()
+	                      +start.x();
+	   cerr << "Looking at patch: " << neighbor->getID() << '\n';
+	   cerr << "low=" << low << '\n';
+	   cerr << "high=" << high << '\n';
+	   cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
+	   cerr << "globalIndex = " << petscglobalIndex << '\n';
+	   for (int colZ = low.z(); colZ < high.z(); colZ ++) {
+	      int idx_slab = petscglobalIndex;
+	      petscglobalIndex += dcells.x()*dcells.y();
+
+	      for (int colY = low.y(); colY < high.y(); colY ++) {
+		 int idx = idx_slab;
+		 idx_slab += dcells.x();
+		 for (int colX = low.x(); colX < high.x(); colX ++) {
+		    l2g[IntVector(colX, colY, colZ)] = idx++;
+		 }
+	      }
+	   }
+	   IntVector d = high-low;
+	   totalCells+=d.x()*d.y()*d.z();
+	}
+	d_petscLocalToGlobal[patch]=l2g;
+	{	
+	   IntVector l = l2g.getWindow()->getLowIndex();
+	   IntVector h = l2g.getWindow()->getHighIndex();
+	   for(int z=l.z();z<h.z();z++){
+	      for(int y=l.y();y<h.y();y++){
+		 for(int x=l.x();x<h.x();x++){
+		    IntVector idx(x,y,z);
+		    cerr << "l2g" << idx << "=" << l2g[idx] << '\n';
+		 }
+	      }
+	   }
+	}
+
+	IntVector dn = highIndex-lowIndex;
+	long wantcells = dn.x()*dn.y()*dn.z();
+	ASSERTEQ(wantcells, totalCells);
+     }
+  }
   int numlrows = numCells[me];
   int numlcolumns = numlrows;
   int globalrows = (int)totalCells;
   int globalcolumns = (int)totalCells;
   int d_nz = 7;
   int o_nz = 6;
+  cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   CHKERRA(ierr);  
@@ -282,10 +358,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    DataWarehouseP&,
 			    DataWarehouseP&,
 			    ArchesVariables* vars,
-			    const ArchesLabel* lab,
-			    int patchNumber)
+			    const ArchesLabel* lab)
 {
- 
+   cerr << "in setPressMatrix on patch: " << patch->getID() << '\n';
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
@@ -315,26 +390,31 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   int row;
   int col[7];
   double value[7];
-  int globalIndex = d_petscIndex[patchNumber];
+  //  int globalIndex = d_petscGlobalStart[patch];
   int nnx = idxHi[0]-idxLo[0]+1;
   int nny = idxHi[1]-idxLo[1]+1;
   int nnz = idxHi[2]-idxLo[2]+1;
-  int totalrows = nnx*nny*nnz;
+  //  int totalrows = nnx*nny*nnz;
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
+
+  Array3<int> l2g = d_petscLocalToGlobal[patch];
+
 #if 0
   if ((patchNumber != 0)&&(patchNumber != sizeof(d_petscIndex)-1)) {
-    for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX,colY,colZ-1)];  //ab
-	  col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
-	  col[6] = d_petscGlobalIndex[IntVector(colX, colY, colZ+1)]; // at
+#endif
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
+	  cerr << "filling in row: " << col[3] << '\n';
 	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
 	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -342,23 +422,28 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
 	  value[5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
 	  value[6] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
+	  for(int i=0;i<7;i++)
+	     cerr << "A[" << col[3] << "][" << col[i] << "]=" << value[i] << '\n';
+	  int row = col[3];
 	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);   CHKERRA(ierr);
+	  cerr << "ierr=" << ierr << '\n';
 	}
       }
     }
+#if 0
   }
   // for first patch
   if (patchNumber == 0) {
     for (int colZ = idxLo.z()+1; colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX,colY,colZ-1)];  //ab
-	  col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
-	  col[6] = d_petscGlobalIndex[IntVector(colX, colY, colZ+1)]; // at
+	  col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
 	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
 	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -373,12 +458,12 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ < idxLo.z()+1; colZ ++) {
       for (int colY = idxLo.y()+1; colY < idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-	  col[1] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[2] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[3] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-	  col[4] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
-	  col[5] = d_petscGlobalIndex[IntVector(colX, colY, colZ+1)]; // at
+	  col[0] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col[1] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[2] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[3] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col[4] = l2g[IntVector(colX, colY+1, colZ)]; // an
+	  col[5] = l2g[IntVector(colX, colY, colZ+1)]; // at
 	  value[0] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[1] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
 	  value[2] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
@@ -392,11 +477,11 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ < idxLo.z()+1; colZ ++) {
       for (int colY = idxLo.y(); colY < idxLo.y()+1; colY ++) {
 	for (int colX = idxLo.x()+1; colX < idxHi.x(); colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[1] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[2] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-	  col[3] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
-	  col[4] = d_petscGlobalIndex[IntVector(colX, colY, colZ+1)]; // at
+	  col[0] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[1] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[2] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col[3] = l2g[IntVector(colX, colY+1, colZ)]; // an
+	  col[4] = l2g[IntVector(colX, colY, colZ+1)]; // at
 	  value[0] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
 	  value[1] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
@@ -409,10 +494,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     int colX = 0;
     int colY = 0;
     int colZ = 0;
-    col[0] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-    col[1] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-    col[2] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
-    col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ+1)]; // at
+    col[0] = l2g[IntVector(colX, colY, colZ)]; //ap
+    col[1] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+    col[2] = l2g[IntVector(colX, colY+1, colZ)]; // an
+    col[3] = l2g[IntVector(colX, colY, colZ+1)]; // at
     value[0] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
     value[1] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
     value[2] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
@@ -425,13 +510,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ < idxHi.z()-1; colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX,colY,colZ-1)];  //ab
-	  col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
-	  col[6] = d_petscGlobalIndex[IntVector(colX, colY, colZ+1)]; // at
+	  col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
 	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
 	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -446,12 +531,12 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     for (int colZ = idxHi.z()-1; colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y()-1; colY ++) {
 	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX, colY, colZ-1)]; // ab
-	  col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = d_petscGlobalIndex[IntVector(colX, colY+1, colZ)]; // an
+	  col[0] = l2g[IntVector(colX, colY, colZ-1)]; // ab
+	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
 	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];	  
 	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -465,11 +550,11 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     for (int colZ = idxHi.z()-1; colZ < idxHi.z(); colZ ++) {
       for (int colY = idxHi.y()-1; colY < idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX < idxHi.x()-1; colX ++) {
-	  col[0] = d_petscGlobalIndex[IntVector(colX, colY, colZ-1)]; // ab
-	  col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = d_petscGlobalIndex[IntVector(colX+1, colY, colZ)]; // ae
+	  col[0] = l2g[IntVector(colX, colY, colZ-1)]; // ab
+	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
 	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
 	  value[1] = vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -483,19 +568,20 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
     int colY = idxHi.y()-1;
     int colZ = idxHi.z()-1;
 
-    col[0] = d_petscGlobalIndex[IntVector(colX, colY, colZ-1)]; // ab
-    col[1] = d_petscGlobalIndex[IntVector(colX, colY-1, colZ)]; // as
-    col[2] = d_petscGlobalIndex[IntVector(colX-1, colY, colZ)]; // aw
-    col[3] = d_petscGlobalIndex[IntVector(colX, colY, colZ)]; // ap
+    col[0] = l2g[IntVector(colX, colY, colZ-1)]; // ab
+    col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+    col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+    col[3] = l2g[IntVector(colX, colY, colZ)]; // ap
     value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
     value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
     value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
     value[3] = vars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
     ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);  CHKERRA(ierr);
   }
+#endif
 
 
-
+  cerr << "assemblign rhs\n";
   // assemble right hand side and solution vector
   double vecvalueb, vecvaluex;
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
@@ -503,13 +589,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
 	  vecvalueb = vars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
 	  vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
-	  int row = d_petscGlobalIndex[IntVector(colX, colY, colZ)];
+	  int row = l2g[IntVector(colX, colY, colZ)];
 	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
 	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
 	}
       }
     }
-#endif
+    cerr << " all done\n";
 }
 
 
@@ -518,6 +604,7 @@ PetscSolver::pressLinearSolve()
 {
   KSP ksp;
   int ierr;
+  cerr << "Doing mat/vec assembly\n";
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
   ierr = VecAssemblyBegin(d_b);CHKERRA(ierr);
@@ -575,16 +662,15 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   double* xvec;
   int ierr;
   ierr = VecGetArray(d_x, &xvec); CHKERRQ(ierr);
-#if 0
+  Array3<int> l2g = d_petscLocalToGlobal[patch];
   for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	int row = d_petscGlobalIndex[IntVector(colX, colY, colZ)];
+	int row = l2g[IntVector(colX, colY, colZ)];
 	vars->pressure[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
   }
-#endif
   ierr = VecRestoreArray(d_x, &xvec); CHKERRQ(ierr);
 }
   
@@ -1743,6 +1829,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.11  2000/09/26 19:59:17  sparker
+// Work on MPI petsc
+//
 // Revision 1.10  2000/09/21 22:45:41  sparker
 // Towards compiling petsc stuff
 //

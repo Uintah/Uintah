@@ -120,7 +120,8 @@ c---------------------------------------------------------------------
      $     f,ae,aw,an,as,at,ab,
      $     pcell, symtry, lprdjk, lprdkk)
 
-      call wallbc(domLo, domHi, idxLo, idxHi, ae,aw,an,as,at,ab,
+C  WARNING - should be domLong, domHing - Steve
+      call wallbc(domLo, domHi, domLo, domHi, idxLo, idxHi, ae,aw,an,as,at,ab,
      $     pcell, wall)
 
       if (liflx.and..not.ltest) then
@@ -296,6 +297,9 @@ c--------------------------------------------------------------------
 
 c
 c $Log$
+c Revision 1.5  2000/09/26 19:59:19  sparker
+c Work on MPI petsc
+c
 c Revision 1.4  2000/09/07 23:07:21  rawat
 c fixed some bugs in bc and added pressure solver using petsc
 c

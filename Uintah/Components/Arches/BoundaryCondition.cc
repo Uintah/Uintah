@@ -1356,6 +1356,14 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
   IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
+  for(int i=0;i<7;i++){
+     ASSERTEQ(domLong,
+	      vars->pressCoeff[i].getWindow()->getLowIndex());
+     ASSERTEQ(domHing+IntVector(1,1,1),
+	      vars->pressCoeff[i].getWindow()->getHighIndex());
+  }
+  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
@@ -2209,6 +2217,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.59  2000/09/26 19:59:17  sparker
+// Work on MPI petsc
+//
 // Revision 1.58  2000/09/26 04:35:27  rawat
 // added some more multi-patch support
 //
