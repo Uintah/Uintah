@@ -67,7 +67,6 @@ public:
   void draw_wireframe();
   void multi_level_draw();
   void draw_volume();
-  void draw_simple();
 #endif
 
   double num_slices_to_rate(int slices);
