@@ -34,7 +34,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	global $this-mergeData
 	global $this-assumeSVT
 
-	set $this-mergeData 0
+	set $this-mergeData 1
 	set $this-assumeSVT 1
 
 	global max_dims
