@@ -137,15 +137,14 @@ static PersistentTypeID* find_derived(const clString& classname,
   
   iter = table->find(classname);
   if(iter == table->end()) return 0;
-  cerr << "Name " << classname << " found" << endl;
+  
   pid = (*iter).second;
   if (!pid->parent.size()) {
-    cerr << "parent is not found" << endl;
     return 0;
   }
-  cerr << "About to seek up from " << pid->parent << endl;
+  
   if (basename == pid->parent.c_str()) return pid;
-  cerr << "LOoking further up... " << endl;
+  
   if (find_derived(pid->parent.c_str(), basename)) return pid;
   
   return 0;
@@ -169,14 +168,14 @@ void Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 				// Otherwise, it is an error...
       clString in_name(peek_class());
       clString want_name(pid.type.c_str());
-      cerr << "Want name: " << want_name << endl;
+      
       Persistent* (*maker)() = 0;
       if (in_name == want_name) {
 	maker=pid.maker;
       }
       else {
 	PersistentTypeID* found_pid = find_derived(in_name, want_name);
-	cerr << "Want name found: " << want_name << endl;
+	
 	if (found_pid) {
 	  maker=found_pid->maker;
 	}
