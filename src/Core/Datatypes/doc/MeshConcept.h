@@ -43,7 +43,9 @@ namespace SCIRun {
 using std::string;
 using std::vector;
 
-
+//! The Mesh Concept, a sample mesh with all the required interface.
+/*! This is all the things that belong in a Mesh.
+ */ 
 class SCICORESHARE MeshConcept : public Mesh
 {
 private:
@@ -53,33 +55,34 @@ public:
 
   //@{
   //! Index and Iterator types required for Mesh Concept.
-  //
-  // These are pure types, they should have no data members or virtual
-  // functions associated with them, and thus no storage.  They are
-  // used to scope templates to the simplex types, and are never
-  // actually created or destroyed.  There are four of them that
-  // correspond to the first four simplices by dimensionality.
-  // Each symplex type has the following types associated with it
-  // 
-  // index_type 
-  //   A handle for a particular simplex in the geometry.
-  //   
-  // iterator
-  //   Forward iterator, supports the prefix ++ operator and dereferences
-  //   to an index_type
-  // 
-  // size_type
-  //   Used to determine how many simplices there are in the geometry,
-  //   and for resizing.
-  // 
-  // array_type
-  //   Used to return subsimplices, usually a vector<index_type>, but
-  //   could be a fixed length vector for efficiency reasons.  It will
-  //   still support the stl container types.
-  // 
-  // In addition to these four types, a symplex type should also be
-  // supported by the get_type_description({Node, Edge, Face, Cell} *)
-  // function.
+  /*!
+   *  These are pure types, they should have no data members or virtual
+   *  functions associated with them, and thus no storage.  They are
+   *  used to scope templates to the simplex types, and are never
+   *  actually created or destroyed.  There are four of them that
+   *  correspond to the first four simplices by dimensionality.
+   *  Each symplex type has the following types associated with it
+   *  
+   *  index_type 
+   * 	   A handle for a particular simplex in the geometry.
+   * 	   
+   *  iterator
+   * 	   Forward iterator, supports the prefix ++ operator and dereferences
+   * 	   to an index_type
+   *  
+   *  size_type
+   * 	   Used to determine how many simplices there are in the geometry,
+   * 	   and for resizing.
+   *  
+   *  array_type
+   * 	   Used to return subsimplices, usually a vector<index_type>, but
+   * 	   could be a fixed length vector for efficiency reasons.  It will
+   * 	   still support the stl container types.
+   *  
+   *  In addition to these four types, a symplex type should also be
+   *  supported by the get_type_description({Node, Edge, Face, Cell} *)
+   *  function.
+   */
   struct Node {
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
@@ -110,21 +113,21 @@ public:
   //@}
 
   //! The element simplex type.
-  //
-  // A convenience type, this points to the highest order simplex type
-  // for the mesh.  For example, in a tetrahedral mesh this would be
-  // an alias for Cell, in any surface mesh this would be an alias for
-  // Face, and in a PointCloudMesh this is an alias for Node.
+  /*! A convenience type, this points to the highest order simplex type
+   *  for the mesh.  For example, in a tetrahedral mesh this would be
+   *  an alias for Cell, in any surface mesh this would be an alias for
+   *  Face, and in a PointCloudMesh this is an alias for Node.
+   */
   typedef Edge Elem;
 
   //@{
   //! Basic constructors and destructors.
-  //
-  // Any additional constructors belong here as well.  See LatVolMesh
-  // for examples.  The empty arguement constructor should probably be
-  // private until there more flexible ways to construct meshes.  The
-  // Destructor must be virtual in order for delete to work properly
-  // on MeshHandles.
+  /*! Any additional constructors belong here as well.  See LatVolMesh
+   *  for examples.  The empty arguement constructor should probably be
+   *  private until there more flexible ways to construct meshes.  The
+   *  Destructor must be virtual in order for delete to work properly
+   *  on MeshHandles.
+   */
   MeshConcept();
   MeshConcept(const MeshConcept &copy);
   virtual MeshConcept *clone() { return scinew MeshConcept(*this); }
@@ -132,7 +135,11 @@ public:
   //@}
 
   //@{
-  //! 
+  //! Basic iterators.
+  /*!
+   *  TODO: Write what these iterators are good for here.
+   *
+   */
   void begin(Node::iterator &itr) const;
   void begin(Edge::iterator &itr) const;
   void begin(Face::iterator &itr) const;
@@ -161,6 +168,7 @@ public:
   void get_edges(Edge::array_type &a, Face::index_type i) const;
   void get_edges(Edge::array_type &a, Cell::index_type i) const;
   void get_faces(Face::array_type &a, Cell::index_type i) const;
+  //@}
 
   //@{
   //! Get the parent element(s) of the given index.
@@ -195,8 +203,12 @@ public:
 
   //@{
   //! Compute the array of subsimplices and the interpolant weights
-  //! around a given point.  Currently only the Node::array_type and the
-  //! Elem::array_type specializations are implemented, the others do nothing.
+  //! around a given point.
+  /*! These are used to compute the interpolation weights for a given
+   *  point within the mesh.  Currently only the Node::array_type and
+   *  the Elem::array_type specializations are implemented, the others
+   *  do nothing for most meshes.
+   */
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &p, Edge::array_type &l, vector<double> &w);
   void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
@@ -204,35 +216,36 @@ public:
   //@}
 
   //! Return true if the mesh is editable.
-  //! This method is optional.
-  //! If this is not defined the default return value is false.
+  /*! This method is optional. */
+  /*! If this is not defined the default return value is false. */
   virtual bool is_editable() const;
   //! Add a new point to the mesh.
-  //! This only works if the mesh is editable.
+  /*! This only works if the mesh is editable. */
   Node::index_type add_node(const Point &p);
   //! Add a new element to the mesh.
-  //! This only works if the mesh is editable.
+  /*! This only works if the mesh is editable. */
   Elem::index_type add_elem(Node::array_type a);
   //! Change a point within the mesh.
-  //! This only works if the mesh is editable.
-  //! This method is optional.
+  /*! This only works if the mesh is editable. */
+  /*! This method is optional. */
   void set_point(const Point &point, Node::index_type index);
 
   //! Flush any edits made to the mesh.
-  //! Any edits made to a mesh must be flushed with this call in order
-  //! to guarantee that they show up in any mesh queries.  For instance,
-  //! if a point is added to a PointCloudMesh, this must be called
-  //! before the point is locatable.  Usually this call updates any
-  //! search structures associated with a mesh.
+  /*! Any edits made to a mesh must be flushed with this call in order
+   *  to guarantee that they show up in any mesh queries.  For instance,
+   *  if a point is added to a PointCloudMesh, this must be called
+   *  before the point is locatable.  Usually this call updates any
+   *  search structures associated with a mesh.
+   */
   virtual void flush_changes();
  
 
   //! Return true if the mesh has normals associated with the points.
-  //! This method is optional, and will return false if not defined.
+  /*! This method is optional, and will return false if not defined. */
   virtual bool has_normals() const;
 
   //! Get a normal associated with the given node.
-  //! This method is optional, and only works if has_normals is true.
+  /*! This method is optional, and only works if has_normals is true. */
   void get_normal(Vector &result, Node::index_type idx) const;
 
   //@{
