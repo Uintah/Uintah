@@ -179,6 +179,71 @@ namespace SCIRun {
 
 #define ARRAY1_VERSION 1
 
+template<int>
+void Pio(Piostream& stream, rtrt::Array1<int>& array)
+{
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  int* obj_arr = array.get_objs();
+  if (str.supports_block_io()) {
+    str.block_io(obj_arr, sizeof(int), size);
+  } else {
+    for(int i = 0; i < size; i++) {
+      Pio(stream, obj_arr[i]);
+    }
+  }
+  stream.end_class();
+}
+
+template<float>
+void Pio(Piostream& stream, rtrt::Array1<float>& array)
+{
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  float* obj_arr = array.get_objs();
+  if (str.supports_block_io()) {
+    str.block_io(obj_arr, sizeof(float), size);
+  } else {
+    for(int i = 0; i < size; i++) {
+      Pio(stream, obj_arr[i]);
+    }
+  }
+  stream.end_class();
+}
+
+template<double>
+void Pio(Piostream& stream, rtrt::Array1<double>& array)
+{
+  stream.begin_class("rtrtArray1", ARRAY1_VERSION);
+  int size=array.size();
+  Pio(stream, size);
+  if(stream.reading()){
+    array.remove_all();
+    array.grow(size);
+  }
+  double* obj_arr = array.get_objs();
+  if (str.supports_block_io()) {
+    str.block_io(obj_arr, sizeof(double), size);
+  } else {
+    for(int i = 0; i < size; i++) {
+      Pio(stream, obj_arr[i]);
+    }
+  }
+  stream.end_class();
+}
+
+
+
 template<class T>
 void Pio(Piostream& stream, rtrt::Array1<T>& array)
 { 
