@@ -181,7 +181,7 @@ BevelCmd(clientData, interp, argc, argv)
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     Bevel *BevelPtr;
-    Tk_Window new;
+    Tk_Window new_widget;
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args:  should be \"",
@@ -189,8 +189,8 @@ BevelCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    new = Tk_CreateWindowFromPath(interp, tkwin, argv[1], (char *) NULL);
-    if (new == NULL) {
+    new_widget = Tk_CreateWindowFromPath(interp, tkwin, argv[1], (char *) NULL);
+    if (new_widget == NULL) {
 	return TCL_ERROR;
     }
 
@@ -199,8 +199,8 @@ BevelCmd(clientData, interp, argc, argv)
      */
 
     BevelPtr = (Bevel *) ckalloc(sizeof(Bevel));
-    BevelPtr->tkwin = new;
-    BevelPtr->display = Tk_Display(new);
+    BevelPtr->tkwin = new_widget;
+    BevelPtr->display = Tk_Display(new_widget);
     BevelPtr->interp = interp;
     BevelPtr->x = 0;
     BevelPtr->y = 0;
