@@ -13,6 +13,10 @@
  */
 
 
+#ifdef _WIN32
+#pragma warning(disable:4355)
+#endif
+
 #include <PSECore/Widgets/BaseWidget.h>
 #include <PSECore/Constraints/BaseConstraint.h>
 #include <PSECore/Constraints/ConstraintSolver.h>
@@ -20,15 +24,6 @@
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/NotFinished.h>
-
-#ifdef _WIN32
-
-// cheesy hack (should link against the Salmon module instead; do this for now)
-
-PSECore::Modules::RoeMouseMessage::~RoeMouseMessage()
-{
-}
-#endif
 
 namespace PSECore {
 namespace Widgets {
@@ -725,6 +720,9 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.5  1999/08/27 00:05:06  moulding
+// disabled a 'this' warning on win32
+//
 // Revision 1.4  1999/08/25 03:48:28  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
