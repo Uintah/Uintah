@@ -76,7 +76,7 @@ for test in *; do
         echo "setenv OS $OS" >> "$doTestScript"
 	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
-	nice "$doTestScript" > "${test}.log"  2>&1
+	"$doTestScript" > "${test}.log"  2>&1
 	retval=$?
 	cat "${test}.log" >> "$summary_log"
 	cat "${test}.log" >> "$HTMLLOG"
