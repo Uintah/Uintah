@@ -44,20 +44,20 @@
 	 </BCType>
        </Face>
      <!--________________Above nozzle_______________-->
-     <Face rectangle = "x-" lower = "0.0 0.1825 0.0" upper = "0.0 0.5 0.0">
+     <Face rectangle = "x-" lower = "0.0 0.181 0.0" upper = "0.0 0.5 0.0">
 	 <BCType id = "0" label = "Pressure"       var = "Neumann">
 			       <value> 0.0   </value>
 	 </BCType>
-	 <BCType id = "1" label = "Velocity"       var = "Neumann">
-			       <value> [0.0,0.,0.] </value>
+	 <BCType id = "1" label = "Velocity"       var = "Dirichlet">
+			       <value> [1350.0,0.,0.] </value>
 	 </BCType>
-	 <BCType id = "1" label = "Temperature"    var = "Neumann">
-			       <value> 0.0  </value>
+	 <BCType id = "1" label = "Temperature"    var = "Dirichlet">
+			       <value> 224.0  </value>
 	 </BCType>
-	 <BCType id = "1" label = "Density"         var = "Neumann">
-			       <value> 0.0 </value>
+	 <BCType id = "1" label = "Density"         var = "Dirichlet">
+			       <value> 0.02625 </value>
 	 </BCType>
-       </Face>
+      </Face>
       <!--________________Everything else_______________-->
       <Face side = "x-">
         <BCType id = "0" label = "Pressure"         var = "Neumann">
@@ -123,10 +123,9 @@
        <Level>
            <Box label = "1">
               <lower>        [0.0,0.0,-0.005]       </lower>
-              <!--<upper>    [0.5,0.25,0.005]       </upper> -->
-              <upper>        [0.5,0.5,0.005]       </upper>
+              <upper>        [0.75,0.5,0.005]       </upper>
               <extraCells>   [1,1,1]                </extraCells>
-              <patches>      [4,4,1]                </patches>
+              <patches>      [7,6,1]                </patches>
               <!--<resolution>   [400,400,1]            </resolution> -->
             </Box>
             <spacing>        [0.001,0.001,0.01]    </spacing>
@@ -143,23 +142,20 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>imp_stage_NG_BCs.uda</filebase>
+      <filebase>imp_stage_NG_BCs_extFlow.uda</filebase>
       <!--<outputTimestepInterval>10</outputTimestepInterval> -->
       <outputInterval>1e-4</outputInterval>
       <save label = "press_equil_CC"/>
       <save label = "speedSound_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "vol_frac_CC"/>
-      <save label = "sp_vol_src_CC"/>
       <save label = "sp_vol_CC"/>
       <save label = "vel_CC"/>
       <save label = "mom_L_CC"/>
       <save label = "rho_CC"/>
-      <save label = "temp_CC"/>
-      <save label = "Tdot"/>  
+      <save label = "temp_CC"/>  
       <save label = "mach"/>  
       <save label = "p.x"/>
-      <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.color"/>
       <checkpoint cycle = "4" interval = "1e-4"/>
@@ -307,7 +303,7 @@
                    </tri>
                 </difference>
                   <box label = "AboveRocket">
-                      <min>           [-10, 0.1825,-10.0]    </min>
+                      <min>           [-10, 0.181,-10.0]    </min>
                       <max>           [10.0,10.0,   10.0]   </max>
                   </box>
               </difference>
@@ -319,11 +315,11 @@
            </geom_object>
            <geom_object>
                <box label = "AboveRocket">
-                   <min>           [-10, 0.1825,-10.0]   </min>
-                   <max>           [10.0,10.0, 1  0.0]   </max>
+                   <min>           [-10, 0.181,-10.0]   </min>
+                   <max>           [10.0,10.0,  10.0]   </max>
                </box>
              <res>                [2,2,2]                </res>         
-             <velocity>           [0.0,0.0,0.0]          </velocity>    
+             <velocity>           [1350.0,0.0,0.0]          </velocity>    
              <temperature>        224.23                 </temperature> 
              <density>            0.02625                </density>     
              <pressure>           1690.0                 </pressure>    
