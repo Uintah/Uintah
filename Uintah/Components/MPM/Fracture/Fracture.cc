@@ -33,7 +33,7 @@ Fracture::
 initializeFracture(const Region* region,
                   DataWarehouseP& new_dw)
 {
-  int vfindex = 0;
+  int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
   
   //For CCVariables
   //set default cSelfContact to false
@@ -163,6 +163,9 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.10  2000/05/25 00:29:00  tan
+// Put all velocity-field independent variables on material index of 0.
+//
 // Revision 1.9  2000/05/20 08:09:09  sparker
 // Improved TypeDescription
 // Finished I/O
