@@ -24,6 +24,7 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Datatypes/BoxClipper.h>
 
 namespace SCIRun {
 
@@ -54,6 +55,35 @@ ClipFieldAlgoT<FIELD>::execute(MeshHandle mesh_h, Field::data_location loc)
     dynamic_cast<typename FIELD::mesh_type *>(mesh_h.get_rep());
   FieldHandle ofield = scinew FIELD(msrc, loc);
   return ofield;
+}
+
+
+
+class ClipFieldMeshAlgo : public DynamicAlgoBase
+{
+public:
+  virtual ClipperHandle execute(MeshHandle src) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+};
+
+
+template <class MESH>
+class ClipFieldMeshAlgoT : public ClipFieldMeshAlgo
+{
+public:
+  //! virtual interface. 
+  virtual ClipperHandle execute(MeshHandle src);
+};
+
+
+template <class MESH>
+ClipperHandle
+ClipFieldMeshAlgoT<MESH>::execute(MeshHandle mesh_h)
+{
+  MESH *msrc = dynamic_cast<MESH *>(mesh_h.get_rep());
+  return scinew MeshClipper<MESH>(msrc);
 }
 
 

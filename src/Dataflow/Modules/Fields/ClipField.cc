@@ -94,7 +94,36 @@ ClipField::execute()
     return;
   }
 
-  // update the widget
+  ClipperHandle clipper;
+
+  // Get input field.
+  FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
+  if (!cfp) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  FieldHandle cfieldhandle;
+  if (cfp->get(cfieldhandle) && cfieldhandle.get_rep())
+  {
+    const TypeDescription *ftd = cfieldhandle->mesh()->get_type_description();
+    CompileInfo *ci = ClipFieldMeshAlgo::get_compile_info(ftd);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      cout << "Could not compile algorithm." << std::endl;
+      return;
+    }
+    ClipFieldMeshAlgo *algo =
+      dynamic_cast<ClipFieldMeshAlgo *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      cout << "Could not get algorithm." << std::endl;
+      return;
+    }
+    clipper = algo->execute(cfieldhandle->mesh());
+  }
+
+  // Update the widget.
   BBox obox = ifieldhandle->mesh()->get_bounding_box();
   if (!(last_bounds_.valid() && obox.valid() &&
 	obox.min() == last_bounds_.min() &&
@@ -132,7 +161,10 @@ ClipField::execute()
   
   if (mode_.get() == 1 || mode_.get() == 2)
   {
-    ClipperHandle clipper = box_->get_clipper();
+    if (!clipper.get_rep())
+    {
+      clipper = box_->get_clipper();
+    }
     MeshHandle nmesh = ifieldhandle->mesh()->clip(clipper);
     if (nmesh.get_rep() == 0)
     {
@@ -189,6 +221,27 @@ ClipFieldAlgo::get_compile_info(const TypeDescription *fsrc)
   return rval;
 }
 
+
+CompileInfo *
+ClipFieldMeshAlgo::get_compile_info(const TypeDescription *fsrc)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ClipFieldMeshAlgoT");
+  static const string base_class_name("ClipFieldMeshAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
+  return rval;
+}
 
 
 
