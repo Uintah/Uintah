@@ -28,7 +28,12 @@ private:
     Color outcolor;
 
     void read_image(char* texfile);
+    void read_hdr_image(char* texfile);
 public:
+    ImageMaterial(int /* oldstyle */, char* filename, Mode umode, Mode vmode,
+		  const Color& ambient,
+		  double Kd, const Color& specular,
+		  double specpow, double refl=0);
     ImageMaterial(char* filename, Mode umode, Mode vmode,
 		  const Color& ambient,
 		  double Kd, const Color& specular,
