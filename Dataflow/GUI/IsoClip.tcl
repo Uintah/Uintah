@@ -23,10 +23,10 @@ itcl_class SCIRun_Fields_IsoClip {
     }
 
     method set_defaults {} {
-        global $this-clipfunction
-	global $this-clipmode
-	set $this-clipfunction "x < 0"
-	set $this-clipmode "cell"
+        global $this-isoval
+	global $this-lte
+	set $this-isoval 0
+	set $this-lte 1
     }
 
     method ui {} {
@@ -38,28 +38,12 @@ itcl_class SCIRun_Fields_IsoClip {
 
         toplevel $w
 
-	set c "$this-c needexecute"
-
-	frame $w.location -relief groove -borderwidth 2
-	label $w.location.label -text "Clip Location"
-	radiobutton $w.location.cell -text "Cell Centers" \
-	    -variable $this-clipmode -value cell -command $c
-	radiobutton $w.location.nodeone -text "One Node" \
-	    -variable $this-clipmode -value onenode -command $c
-	radiobutton $w.location.nodeall -text "All Nodes" \
-	    -variable $this-clipmode -value allnodes -command $c
-
-	pack $w.location.label -side top -expand yes -fill both
-	pack $w.location.cell $w.location.nodeone $w.location.nodeall \
-	    -side top -anchor w
-
-	frame $w.function -borderwidth 2
-	label $w.function.l -text "F(x, y, z, v)"
-	entry $w.function.e -width 20 -textvariable $this-clipfunction
-	bind $w.function.e <Return> $c
-	pack $w.function.l $w.function.e -side left
-
-	pack $w.location $w.function -side top -fill x -expand 1 \
-	    -padx 5 -pady 5
+	entry $w.entry -textvariable $this-isoval
+	radiobutton $w.lte -text "Less Than" -value 1 -variable $this-lte
+	radiobutton $w.gte -text "Greater Than" -value 0 -variable $this-lte
+	button $w.execute -text "Execute" -command "$this-c needexecute"
+	pack $w.entry $w.lte $w.gte -side top -anchor w
+	pack $w.execute -side bottom -fill x
+	
     }
 }

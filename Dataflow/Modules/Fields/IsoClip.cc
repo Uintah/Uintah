@@ -43,7 +43,7 @@
 
 namespace SCIRun {
 
-int IsoClipAlgo::permute_table[15][4] = {
+int IsoClipAlgo::tet_permute_table[15][4] = {
   { 0, 0, 0, 0 }, // 0x0
   { 3, 0, 2, 1 }, // 0x1
   { 2, 3, 0, 1 }, // 0x2
@@ -61,11 +61,23 @@ int IsoClipAlgo::permute_table[15][4] = {
   { 3, 0, 2, 1 }, // 0xe
 };
 
+
+int IsoClipAlgo::tri_permute_table[7][3] = {
+  { 0, 0, 0 }, // 0x0
+  { 2, 0, 1 }, // 0x1
+  { 1, 2, 0 }, // 0x2
+  { 0, 1, 2 }, // 0x3
+  { 0, 1, 2 }, // 0x4
+  { 1, 2, 0 }, // 0x5
+  { 2, 0, 1 }, // 0x6
+};
+
 class IsoClip : public Module
 {
 private:
-  GuiString clipfunction_;
-  int  last_input_generation_;
+  GuiDouble gui_isoval_;
+  GuiInt    gui_lte_;
+  int       last_input_generation_;
 
 public:
   IsoClip(GuiContext* ctx);
@@ -77,9 +89,11 @@ public:
 
 DECLARE_MAKER(IsoClip)
 
+
 IsoClip::IsoClip(GuiContext* ctx)
   : Module("IsoClip", ctx, Filter, "Fields", "SCIRun"),
-    clipfunction_(ctx->subVar("clipfunction")),
+    gui_isoval_(ctx->subVar("isoval")),
+    gui_lte_(ctx->subVar("lte")),
     last_input_generation_(0)
 {
 }
@@ -88,7 +102,6 @@ IsoClip::IsoClip(GuiContext* ctx)
 IsoClip::~IsoClip()
 {
 }
-
 
 
 void
@@ -105,24 +118,48 @@ IsoClip::execute()
   {
     return;
   }
-  if (!ifieldhandle->mesh()->is_editable())
+
+  string ext = "";
+  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+  if (mtd->get_name() == "TetVolMesh")
   {
-    error("Not an editable mesh type.");
-    error("(Try passing Field through an Unstructure module first).");
+    ext = "Tet";
+  }
+  else if (mtd->get_name() == "TriSurfMesh")
+  {
+    ext = "Tri";
+  }
+  else
+  {
+    error("Unsupported mesh type.  This module only works on Tets and Tris.");
     return;
   }
 
+  if (!ifieldhandle->query_scalar_interface(this).get_rep())
+  {
+    error("Input field must contain scalar data.");
+    return;
+  }
+  
+  if (ifieldhandle->data_at() != Field::NODE)
+  {
+    error("Isoclipping can only done for fields with data at nodes.");
+    return;
+  }
+
+  const double isoval = gui_isoval_.get();
+
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  CompileInfoHandle ci = IsoClipAlgo::get_compile_info(ftd);
+  CompileInfoHandle ci = IsoClipAlgo::get_compile_info(ftd, ext);
   Handle<IsoClipAlgo> algo;
-  if (!DynamicCompilation::compile(ci, algo, true, this))
+  if (!DynamicCompilation::compile(ci, algo, false, this))
   {
     error("Unable to compile IsoClip algorithm.");
     return;
   }
 
-  const bool lte = clipfunction_.get() == "lte";
-  FieldHandle ofield = algo->execute(this, ifieldhandle, 0.0, lte);
+  FieldHandle ofield = algo->execute(this, ifieldhandle,
+				     isoval, gui_lte_.get());
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (!ofield_port)
@@ -137,11 +174,12 @@ IsoClip::execute()
 
 
 CompileInfoHandle
-IsoClipAlgo::get_compile_info(const TypeDescription *fsrc)
+IsoClipAlgo::get_compile_info(const TypeDescription *fsrc,
+			      string ext)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("IsoClipAlgoT");
+  const string template_class_name("IsoClipAlgo" + ext);
   static const string base_class_name("IsoClipAlgo");
 
   CompileInfo *rval = 
