@@ -52,6 +52,10 @@ namespace SCIRun {
   class GuiInterface;
   class Scheduler;
 
+  // CollabVis code begin
+  class ViewServer;
+  // CollabVis code end
+  
   class PSECORESHARE Network {
   public:
     
@@ -70,6 +74,7 @@ namespace SCIRun {
     
     int reschedule;
     Scheduler* sched;
+
   public:
     Network();
     ~Network();
@@ -100,6 +105,12 @@ namespace SCIRun {
 
     void schedule();
     void attach(Scheduler*);
+
+    // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+    ViewServer *server;
+#endif
+    // CollabVis code end
   };
 
 } // End namespace SCIRun

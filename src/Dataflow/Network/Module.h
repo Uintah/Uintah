@@ -53,6 +53,14 @@ extern "C" Module* make_##name(GuiContext* ctx) \
   return new name(ctx); \
 }
 
+// CollabVis code begin
+// Stupid ViewServer hack
+#ifdef HAVE_COLLAB_VIS
+#undef ASIP_SHORT_NAMES
+#endif
+// End of hack
+// CollabVis code end
+
 namespace SCIRun {
 using namespace std;
 class IPort;
@@ -201,6 +209,13 @@ public:
   virtual void connection(Port::ConnectionState, int, bool);
   virtual void widget_moved(bool last);
 
+  // CollabVis code begin
+#ifdef HAVE_COLLAB_VIS
+  void getPosition(int& x, int& y){ return get_position(x, y); }
+  string getID() const { return id; }
+#endif
+  // CollabVis code end
+  
 protected:
 
   virtual void tcl_command(GuiArgs&, void*);
