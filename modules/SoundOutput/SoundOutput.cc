@@ -22,6 +22,7 @@
 #include <audio.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static Module* make_SoundOutput()
 {
@@ -75,8 +76,7 @@ void SoundOutput::execute()
 	exit(-1);
     }
     
-    //double rate=isound->sample_rate();
-    double rate=8000;
+    double rate=isound->sample_rate();
     long pvbuf[2];
     pvbuf[0]=AL_OUTPUT_RATE;
     pvbuf[1]=(long)rate;
@@ -94,26 +94,13 @@ void SoundOutput::execute()
     }
     
     int nsamples=(int)(rate*10);
-#if 0
     if(isound->using_protocol() == SoundIPort::Atomic){
 	nsamples=isound->nsamples();
     }
-#endif
     int sample=0;
-    for(int ii=0;ii<48000;ii++){
-	double s=(ii&1)?-.8:.8;
-	if(ALwritesamps(port, (void*)&s, 1) != 0){
-	    perror("ALwritesamps");
-	    //error("Error writing to audio port!");
-	    break;
-	}
-	if(ii%100==0)cerr << "ii=" << ii << endl;
-    }
-#if 0
     while(!isound->end_of_stream()){
 	// Read a sound sample
-	//double s=isound->next_sample();
-	double s=(sample&1)?-.8:.8;
+	double s=isound->next_sample();
 	if(ALwritesamps(port, (void*)&s, 1) != 0){
 	    perror("ALwritesamps");
 	    error("Error writing to audio port!");
@@ -121,91 +108,13 @@ void SoundOutput::execute()
 	}
 
 	// Tell everyone how we are doing...
-	//update_progress(sample++, nsamples);
-	sample++;
+	update_progress(sample++, nsamples);
 	if(sample >= nsamples)
 	    sample=0;
     }
-    ALcloseport(port);
-    ALfreeconfig(config);
-#endif
-}
-
-void tsound()
-{
-    // Setup the sampling rate and other parameters...
-    ALconfig config=ALnewconfig();
-    if(!config){
-	perror("ALnewconfig");
-	exit(-1);
-    }
-    if(ALsetsampfmt(config, AL_SAMPFMT_DOUBLE) == -1){
-	perror("ALsetsampfmt");
-	exit(-1);
-    }
-    if(ALsetfloatmax(config, 1.0) == -1){
-	perror("ALsetfloatmax");
-	exit(-1);
-    }
-    if(ALsetchannels(config, 1L) == -1){
-	perror("ALsetchannels");	
-	exit(-1);
-    }
-    
-    //double rate=isound->sample_rate();
-    double rate=8000;
-#if 0
-    long pvbuf[2];
-    pvbuf[0]=AL_OUTPUT_RATE;
-    pvbuf[1]=(long)rate;
-    if(ALsetparams(AL_DEFAULT_DEVICE, pvbuf, 2) == -1){
-	perror("ALsetparams");
-	exit(-1);
-    }
-#endif
-
-    // Open the sound port...
-    ALport port=ALopenport("SoundOutput", "w", config);
-    if(!port){
-	cerr << "Error opening sound port\n";
-	perror("ALopenport");
-	exit(-1);
-    }
-    
-    int nsamples=(int)(rate*10);
-#if 0
-    if(isound->using_protocol() == SoundIPort::Atomic){
-	nsamples=isound->nsamples();
-    }
-#endif
-    int sample=0;
-    for(int ii=0;ii<48000;ii++){
-	double s=(ii&1)?-.8:.8;
-	if(ALwritesamps(port, (void*)&s, 1) != 0){
-	    perror("ALwritesamps");
-	    //error("Error writing to audio port!");
-	    break;
-	}
-	if(ii%100==0)cerr << "ii=" << ii << endl;
-    }
-#if 0
-    while(!isound->end_of_stream()){
-	// Read a sound sample
-	//double s=isound->next_sample();
-	double s=(sample&1)?-.8:.8;
-	if(ALwritesamps(port, (void*)&s, 1) != 0){
-	    perror("ALwritesamps");
-	    error("Error writing to audio port!");
-	    break;
-	}
-
-	// Tell everyone how we are doing...
-	//update_progress(sample++, nsamples);
-	sample++;
-	if(sample >= nsamples)
-	    sample=0;
+    while(ALgetfilled(port) != 0){
+        sginap(10);
     }
     ALcloseport(port);
     ALfreeconfig(config);
-#endif
 }
