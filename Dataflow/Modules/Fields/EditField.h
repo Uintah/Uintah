@@ -31,7 +31,8 @@ namespace SCIRun {
 class EditFieldAlgoCount : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems) = 0;
+  virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems,
+		       int &dimension) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *msrc);
@@ -43,14 +44,16 @@ class EditFieldAlgoCountT : public EditFieldAlgoCount
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems);
+  virtual void execute(MeshBaseHandle src, int &num_nodes, int &num_elems,
+		       int &dimension);
 };
 
 
 template <class MESH>
 void 
 EditFieldAlgoCountT<MESH>::execute(MeshBaseHandle mesh_h,
-				   int &num_nodes, int &num_elems)
+				   int &num_nodes, int &num_elems,
+				   int &dimension)
 {
   typedef typename MESH::Node::iterator node_iter_type;
   typedef typename MESH::Elem::iterator elem_iter_type;
@@ -76,6 +79,20 @@ EditFieldAlgoCountT<MESH>::execute(MeshBaseHandle mesh_h,
     ++ei;
   }
   num_elems = count;
+
+  dimension = 0;
+  if (mesh->edge_begin() != mesh->edge_end())
+  {
+    dimension = 1;
+  }
+  if (mesh->face_begin() != mesh->face_end())
+  {
+    dimension = 2;
+  }
+  if (mesh->cell_begin() != mesh->cell_end())
+  {
+    dimension = 3;
+  }
 }
 
 

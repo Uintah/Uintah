@@ -149,16 +149,50 @@ void EditField::update_input_attributes(FieldHandle f)
   const string &tname = f->get_type_description()->get_name();
   TCL::execute(string("set ")+id+"-typename " + tname);
 
-  switch(f->data_at()) {
+  switch(f->data_at())
+  {
+  case Field::NODE:
+    TCL::execute(string("set ")+id+"-dataat Nodes"); break;
+  case Field::EDGE: 
+    TCL::execute(string("set ")+id+"-dataat Edges"); break;
+  case Field::FACE: 
+    TCL::execute(string("set ")+id+"-dataat Faces"); break;
   case Field::CELL: 
-    TCL::execute(string("set ")+id+"-dataat Field::CELL"); break;
-  case Field::NODE: 
-    TCL::execute(string("set ")+id+"-dataat Field::NODE"); break;
-  case Field::NONE: 
-    TCL::execute(string("set ")+id+"-dataat Field::NONE"); break;
+    TCL::execute(string("set ")+id+"-dataat Cells"); break;
   default: ;
   }
 
+  const BBox bbox = f->mesh()->get_bounding_box();
+  Point min = bbox.min();
+  Point max = bbox.max();
+
+  TCL::execute(string("set ")+id+"-minx "+to_string(min.x()));
+  TCL::execute(string("set ")+id+"-miny "+to_string(min.y()));
+  TCL::execute(string("set ")+id+"-minz "+to_string(min.z()));
+  TCL::execute(string("set ")+id+"-maxx "+to_string(max.x()));
+  TCL::execute(string("set ")+id+"-maxy "+to_string(max.y()));
+  TCL::execute(string("set ")+id+"-maxz "+to_string(max.z()));
+
+  ScalarFieldInterface *sdi = f->query_scalar_interface();
+  if (sdi && f->data_at() != Field::NONE) {
+    sdi->compute_min_max(minmax_.first,minmax_.second);
+    TCL::execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
+    TCL::execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
+  } else {
+    TCL::execute(string("set ")+id+"-datamin \"--- N/A ---\"");
+    TCL::execute(string("set ")+id+"-datamax \"--- N/A ---\"");
+  }
+
+  string fldname;
+  if (f->get("name",fldname))
+    TCL::execute(string("set ")+id+"-fldname "+fldname);
+  else
+    TCL::execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
+
+
+  TCL::execute(id+" update_multifields");
+
+  // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
   CompileInfo *ci = EditFieldAlgoCount::get_compile_info(meshtd);
   DynamicAlgoHandle algo_handle;
@@ -176,37 +210,11 @@ void EditField::update_input_attributes(FieldHandle f)
   }
   int num_nodes;
   int num_elems;
-  algo->execute(f->mesh(), num_nodes, num_elems);
+  int dimension;
+  algo->execute(f->mesh(), num_nodes, num_elems, dimension);
 
   TCL::execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
   TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
-
-  const BBox bbox = f->mesh()->get_bounding_box();
-  Point min = bbox.min();
-  Point max = bbox.max();
-
-  TCL::execute(string("set ")+id+"-minx "+to_string(min.x()));
-  TCL::execute(string("set ")+id+"-miny "+to_string(min.y()));
-  TCL::execute(string("set ")+id+"-minz "+to_string(min.z()));
-  TCL::execute(string("set ")+id+"-maxx "+to_string(max.x()));
-  TCL::execute(string("set ")+id+"-maxy "+to_string(max.y()));
-  TCL::execute(string("set ")+id+"-maxz "+to_string(max.z()));
-
-  ScalarFieldInterface *sdi = f->query_scalar_interface();
-  if (sdi && f->data_at()!=Field::NONE) {
-    sdi->compute_min_max(minmax_.first,minmax_.second);
-    TCL::execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
-    TCL::execute(string("set ")+id+"-datamax "+to_string(minmax_.second));
-  } else {
-    TCL::execute(string("set ")+id+"-datamin \"--- N/A ---\"");
-    TCL::execute(string("set ")+id+"-datamax \"--- N/A ---\"");
-  }
-
-  string fldname;
-  if (f->get("name",fldname))
-    TCL::execute(string("set ")+id+"-fldname "+fldname);
-  else
-    TCL::execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
 
   TCL::execute(id+" update_multifields");
 }
@@ -327,27 +335,29 @@ void EditField::execute()
   }
 
   // Identify the new data location.
-  Field::data_location dataat;
+  Field::data_location dataat = fh->data_at();
+#if 0  // TODO:: Fix this.
   if (cdataat_.get())
   {
-    string d = dataat_.get();
-    if (d == "Field::CELL")
-    {
-      dataat = Field::CELL;
-    }
-    else if (d == "Field::NODE")
+    const string &d = dataat_.get();
+    if (d == "Nodes")
     {
       dataat = Field::NODE;
     }
-    else
+    else if (d == "Edges")
     {
-      dataat = Field::NONE; // defaults to NONE
+      dataat = Field::EDGE;
+    }
+    else if (d == "Faces")
+    {
+      dataat = Field::FACE;
+    }
+    else if (d == "Cells")
+    {
+      dataat = Field::CELL;
     }
   }
-  else
-  {
-    dataat = fh->data_at();
-  }
+#endif
 
   // Setup data transform.
   bool transform_p = cdataminmax_.get();
