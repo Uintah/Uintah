@@ -71,6 +71,7 @@ namespace SCIRun {
     virtual PortInstance* getPortInstance(const std::string& name);
     virtual PortInstanceIterator* getPorts();
  private:
+    sci::cca::TypeMap::pointer com_properties;
     class Iterator : public PortInstanceIterator {
       std::map<std::string, CCAPortInstance*>::iterator iter;
       CCAComponentInstance* comp;
