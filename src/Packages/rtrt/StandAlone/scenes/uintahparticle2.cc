@@ -160,7 +160,7 @@ public:
 void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << '\n';
+        cerr << "Error parsing argument: " << badarg << '\n';
     cerr << "Usage: " << progname << " [options] <archive file>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
@@ -201,10 +201,10 @@ void writeData(float *spheres, int nspheres, int ndata, int tindex) {
 }
 
 void append_spheres(rtrt::Array1<SphereData> &data_group,
-		    PatchData patchdata,
-		    const Uintah::Patch* patch,
-		    bool do_PTvar_all, bool do_patch, bool do_material,
-		    bool do_verbose, float radius, float radius_factor) {
+                    PatchData patchdata,
+                    const Uintah::Patch* patch,
+                    bool do_PTvar_all, bool do_patch, bool do_material,
+                    bool do_verbose, float radius, float radius_factor) {
   if (debug) cerr << "Start of append_spheres\n";
   if (debug) patchdata.print();
   //  bool data_found = false;
@@ -261,32 +261,32 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
       MaterialData pos_z = patchdata.position_z.material_set[matind];
       int matl = pos_x.material_number;
       for(long partind = 0; partind < num_parts; partind++) {
-	*p++ = pos_x.data[partind];
-	*p++ = pos_y.data[partind];
-	*p++ = pos_z.data[partind];
-	if (do_PTvar_all) {
-	  for(unsigned int i = 0; i < patchdata.variables.size(); i++) {
-	    int var_matind = -1;
-	    // now look for the matching material_number
-	    vector<MaterialData> mat_set = patchdata.variables[i].material_set;
-	    for(unsigned int j = 0; j < mat_set.size(); j++) {
-	      if (mat_set[j].material_number == matl) {
-		// we've found it
-		var_matind = j;
-		break;
-	      }
-	    }
-	    if (var_matind >= 0)
-	      *p++ = mat_set[var_matind].data[partind];
-	    else
-	      // pad the data
-	      *p++ = 0;
-	  }
-	}
-	if (do_patch)
-	  *p++ = patchid;
-	if (do_material)
-	  *p++ = (float)matl;
+        *p++ = pos_x.data[partind];
+        *p++ = pos_y.data[partind];
+        *p++ = pos_z.data[partind];
+        if (do_PTvar_all) {
+          for(unsigned int i = 0; i < patchdata.variables.size(); i++) {
+            int var_matind = -1;
+            // now look for the matching material_number
+            vector<MaterialData> mat_set = patchdata.variables[i].material_set;
+            for(unsigned int j = 0; j < mat_set.size(); j++) {
+              if (mat_set[j].material_number == matl) {
+                // we've found it
+                var_matind = j;
+                break;
+              }
+            }
+            if (var_matind >= 0)
+              *p++ = mat_set[var_matind].data[partind];
+            else
+              // pad the data
+              *p++ = 0;
+          }
+        }
+        if (do_patch)
+          *p++ = patchid;
+        if (do_material)
+          *p++ = (float)matl;
       } // end for(num_parts)
     } // end if(num_parts > 0)
   } // end for(num_materials)
@@ -325,9 +325,9 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
 }
 
 GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
-				int colordata, int gridcellsize,
-				int griddepth, RegularColorMap *cmap,
-				int timestep) {
+                                int colordata, int gridcellsize,
+                                int griddepth, RegularColorMap *cmap,
+                                int timestep) {
   // need from the group
   // 1. total number of spheres
   // 2. make sure the numvars is the same
@@ -436,11 +436,11 @@ private:
   double radius, radius_factor;
 public:
   SphereMaker(Mutex *amutex, Semaphore *sema, Patch *patch, DataArchive *da,
-	      rtrt::Array1<SphereData> *sda,
-	      double time, vector<string> *vars, vector<string> *var_include,
-	      vector<const Uintah::TypeDescription*> *types,
-	      bool do_PTvar_all, bool do_patch, bool do_material,
-	      bool do_verbose, double radius, double radius_factor):
+              rtrt::Array1<SphereData> *sda,
+              double time, vector<string> *vars, vector<string> *var_include,
+              vector<const Uintah::TypeDescription*> *types,
+              bool do_PTvar_all, bool do_patch, bool do_material,
+              bool do_verbose, double radius, double radius_factor):
     amutex(amutex), sema(sema), patch(patch), da(da), sphere_data_all(sda),
     time(time), vars(vars), var_include(var_include), types(types),
     do_PTvar_all(do_PTvar_all),
@@ -455,18 +455,19 @@ public:
     Matrix3 one; one.Identity();
     
     // for all vars in one timestep in one patch
+    bool gotPos = false;
     for(unsigned int v=0;v<vars->size();v++){
       std::string var = (*vars)[v];
       if (var_include->size() > 0) {
-	// Only do this check if the size of var_include is > 0.
-	bool var_is_found = false;
-	for(unsigned int s=0; s<var_include->size(); s++)
-	  if ((*var_include)[s] == var) {
-	    var_is_found = true;
-	    break;
-	  }
-	// if the variable was not found in our little list
-	if (!var_is_found) continue;
+        // Only do this check if the size of var_include is > 0.
+        bool var_is_found = false;
+        for(unsigned int s=0; s<var_include->size(); s++)
+          if ((*var_include)[s] == var) {
+            var_is_found = true;
+            break;
+          }
+        // if the variable was not found in our little list
+        if (!var_is_found) continue;
       }
       const Uintah::TypeDescription* td = (*types)[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
@@ -476,213 +477,218 @@ public:
       // now do something different depending on the type of the variable
       switch(td->getType()){
       case Uintah::TypeDescription::ParticleVariable:
-	{
-	  switch(subtype->getType()){
-	  case Uintah::TypeDescription::double_type:
-	    {
-	      if (!do_PTvar_all) break;
-	      VariableData vardata;
-	      vardata.name = var;
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		  matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-		
-		ParticleVariable<double> value;
-		da->query(value, var, matl, patch, time);
-		ParticleSubset* pset = value.getParticleSubset();
-		if (!pset) break;
-		int numParticles = pset->numParticles();
-		if (numParticles > 0) {
-		  // extract the data
-		  MaterialData md(matl,numParticles);
-		  float *p = md.data;
-		  for(ParticleSubset::iterator iter = pset->begin();
-		      iter != pset->end(); iter++) {
-		    float temp_value= (float)value[*iter];
-		    *p++ = temp_value;
-		  }
-		  // add the extracted data to the variable
-		  vardata.material_set.push_back(md);
-		}
-	      } // end material loop
-	      // now this variable for this patch is completely extracted
-	      // put it in patchdata
-	      patchdata.variables.push_back(vardata);
-	    }
-	  break;
-	  case Uintah::TypeDescription::int_type:
-	    {
-	      if (!do_PTvar_all) break;
-	      VariableData vardata;
-	      vardata.name = var;
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		  matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-		
-		ParticleVariable<int> value;
-		da->query(value, var, matl, patch, time);
-		ParticleSubset* pset = value.getParticleSubset();
-		if (!pset) break;
-		int numParticles = pset->numParticles();
-		if (numParticles > 0) {
-		  // extract the data
-		  MaterialData md(matl,numParticles);
-		  float *p = md.data;
-		  for(ParticleSubset::iterator iter = pset->begin();
-		      iter != pset->end(); iter++) {
-		    float temp_value= (float)value[*iter];
-		    *p++ = temp_value;
-		  }
-		  // add the extracted data to the variable
-		  vardata.material_set.push_back(md);
-		}
-	      } // end material loop
-	      // now this variable for this patch is completely extracted
-	      // put it in patchdata
-	      patchdata.variables.push_back(vardata);
-	    }
-	  break;
-	  case Uintah::TypeDescription::Point:
-	    {
-	      if (var == "p.x") {
-		if (debug) cerr << "Found p.x" << endl;
-	      } else {
-		// don't know how to handle a point variable that's not
-		// p.x
-		break;
-	      }
-	      VariableData position_x; position_x.name = "x";
-	      VariableData position_y; position_y.name = "y";
-	      VariableData position_z; position_z.name = "z";
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		  matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-		
-		if (debug) cerr << "matl = " << matl << endl;
-		ParticleVariable<SCIRun::Point> value;
-		da->query(value, var, matl, patch, time);
-		ParticleSubset* pset = value.getParticleSubset();
-		if (!pset) break;
-		int numParticles = pset->numParticles();
-		if (numParticles > 0) {
-		  if (debug) cerr<<"numParticles = "<<numParticles;
-		  // x
-		  MaterialData mdx(matl,numParticles);
-		  float *px = mdx.data;
-		  // y
-		  MaterialData mdy(matl,numParticles);
-		  float *py = mdy.data;
-		  // z
-		  MaterialData mdz(matl,numParticles);
-		  float *pz = mdz.data;
-		  // extract the data
-		  int i=0;
-		  for(ParticleSubset::iterator iter = pset->begin();
-		      iter != pset->end(); iter++,i++) {
-		    // x
-		    float temp_value = (float)(value[*iter].x());
-		    *px++ = temp_value;
-		    // y
-		    temp_value = (float)(value[*iter].y());
-		    *py++ = temp_value;
-		    // z
-		    temp_value = (float)(value[*iter].z());
-		    *pz++ = temp_value;
-		  }
-		  //if (debug) mdx.print();
-		  if (debug) cerr<<", i = "<<i<<endl;
-		  // add the extracted data to the variable
-		  position_x.material_set.push_back(mdx);
-		  position_y.material_set.push_back(mdy);
-		  position_z.material_set.push_back(mdz);
-		}
-	      } // end material loop
-	      // now this variable for this patch is completely extracted
-	      // put it in patchdata
-	      if (debug) { position_x.print(); cerr << endl; }
-	      patchdata.position_x = position_x;
-	      patchdata.position_y = position_y;
-	      patchdata.position_z = position_z;
-	    }
-	  break;
-	  case Uintah::TypeDescription::Vector:
-	    {
-	      if (!do_PTvar_all) break;
-	      VariableData vardata;
-	      vardata.name = string(var+" length");
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		  matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-		
-		ParticleVariable<SCIRun::Vector> value;
-		da->query(value, var, matl, patch, time);
-		ParticleSubset* pset = value.getParticleSubset();
-		if (!pset) break;
-		int numParticles = pset->numParticles();
-		if (numParticles > 0) {
-		  // extract the data
-		  MaterialData md(matl,numParticles);
-		  float *p = md.data;
-		  for(ParticleSubset::iterator iter = pset->begin();
-		      iter != pset->end(); iter++) {
-		    float temp_value= (float)(value[*iter].length());
-		    *p++ = temp_value;
-		  }
-		  // add the extracted data to the variable
-		  vardata.material_set.push_back(md);
-		}
-	      } // end material loop
-	      // now this variable for this patch is completely extracted
-	      // put it in patchdata
-	      patchdata.variables.push_back(vardata);
-	    }
-	  break;
-	  case Uintah::TypeDescription::Matrix3:
-	    {
-	      if (!do_PTvar_all) break;
-	      VariableData vardata;
-	      VariableData vardata2;
-	      // can extract Determinant(), Trace(), Norm()
-	      vardata.name = string(var+" Trace/3");
-	      vardata2.name = string(var+" Equivalent");
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		  matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-		
-		ParticleVariable<Matrix3> value;
-		da->query(value, var, matl, patch, time);
-		ParticleSubset* pset = value.getParticleSubset();
-		if (!pset) break;
-		int numParticles = pset->numParticles();
-		if (numParticles > 0) {
-		  // extract the data
-		  MaterialData md(matl,numParticles);
-		  float *p = md.data;
-		  MaterialData md2(matl,numParticles);
-		  float *p2 = md2.data;
-		  for(ParticleSubset::iterator iter = pset->begin();
-		      iter != pset->end(); iter++) {
-		    float temp_value= (float)(value[*iter].Trace()/3.0);
-		    *p++ = temp_value;
-		    temp_value= (float)(sqrt(1.5*(value[*iter]-one*temp_value).NormSquared()));
-		    *p2++ = temp_value;
-		  }
-		  // add the extracted data to the variable
-		  vardata.material_set.push_back(md);
-		  vardata2.material_set.push_back(md2);
-		}
-	      } // end material loop
-	      // now this variable for this patch is completely extracted
-	      // put it in patchdata
-	      patchdata.variables.push_back(vardata);
-	      patchdata.variables.push_back(vardata2);
-	    }
-	  break;
-	  default:
-	    cerr << "Particle Variable of unknown type: " << subtype->getName() << '\n';
-	    break;
-	  } // end switch(subtype)
-	} // end case ParticleVariable
+        {
+          switch(subtype->getType()){
+          case Uintah::TypeDescription::double_type:
+            {
+              if (!do_PTvar_all) break;
+              VariableData vardata;
+              vardata.name = var;
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                
+                ParticleVariable<double> value;
+                da->query(value, var, matl, patch, time);
+                ParticleSubset* pset = value.getParticleSubset();
+                if (!pset) break;
+                int numParticles = pset->numParticles();
+                if (numParticles > 0) {
+                  // extract the data
+                  MaterialData md(matl,numParticles);
+                  float *p = md.data;
+                  for(ParticleSubset::iterator iter = pset->begin();
+                      iter != pset->end(); iter++) {
+                    float temp_value= (float)value[*iter];
+                    *p++ = temp_value;
+                  }
+                  // add the extracted data to the variable
+                  vardata.material_set.push_back(md);
+                }
+              } // end material loop
+              // now this variable for this patch is completely extracted
+              // put it in patchdata
+              patchdata.variables.push_back(vardata);
+            }
+          break;
+          case Uintah::TypeDescription::int_type:
+            {
+              if (!do_PTvar_all) break;
+              VariableData vardata;
+              vardata.name = var;
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                
+                ParticleVariable<int> value;
+                da->query(value, var, matl, patch, time);
+                ParticleSubset* pset = value.getParticleSubset();
+                if (!pset) break;
+                int numParticles = pset->numParticles();
+                if (numParticles > 0) {
+                  // extract the data
+                  MaterialData md(matl,numParticles);
+                  float *p = md.data;
+                  for(ParticleSubset::iterator iter = pset->begin();
+                      iter != pset->end(); iter++) {
+                    float temp_value= (float)value[*iter];
+                    *p++ = temp_value;
+                  }
+                  // add the extracted data to the variable
+                  vardata.material_set.push_back(md);
+                }
+              } // end material loop
+              // now this variable for this patch is completely extracted
+              // put it in patchdata
+              patchdata.variables.push_back(vardata);
+            }
+          break;
+          case Uintah::TypeDescription::Point:
+            {
+              if (gotPos) {
+                if (debug) cerr << "Already know position" << endl;
+                break;
+              }
+              if (var == "p.x" || var == "p.xx") {
+                if (debug) cerr << "Found p.x" << endl;
+                gotPos = true;
+              } else {
+                // don't know how to handle a point variable that's not
+                // p.x
+                break;
+              }
+              VariableData position_x; position_x.name = "x";
+              VariableData position_y; position_y.name = "y";
+              VariableData position_z; position_z.name = "z";
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                
+                if (debug) cerr << "matl = " << matl << endl;
+                ParticleVariable<SCIRun::Point> value;
+                da->query(value, var, matl, patch, time);
+                ParticleSubset* pset = value.getParticleSubset();
+                if (!pset) break;
+                int numParticles = pset->numParticles();
+                if (numParticles > 0) {
+                  if (debug) cerr<<"numParticles = "<<numParticles;
+                  // x
+                  MaterialData mdx(matl,numParticles);
+                  float *px = mdx.data;
+                  // y
+                  MaterialData mdy(matl,numParticles);
+                  float *py = mdy.data;
+                  // z
+                  MaterialData mdz(matl,numParticles);
+                  float *pz = mdz.data;
+                  // extract the data
+                  int i=0;
+                  for(ParticleSubset::iterator iter = pset->begin();
+                      iter != pset->end(); iter++,i++) {
+                    // x
+                    float temp_value = (float)(value[*iter].x());
+                    *px++ = temp_value;
+                    // y
+                    temp_value = (float)(value[*iter].y());
+                    *py++ = temp_value;
+                    // z
+                    temp_value = (float)(value[*iter].z());
+                    *pz++ = temp_value;
+                  }
+                  //if (debug) mdx.print();
+                  if (debug) cerr<<", i = "<<i<<endl;
+                  // add the extracted data to the variable
+                  position_x.material_set.push_back(mdx);
+                  position_y.material_set.push_back(mdy);
+                  position_z.material_set.push_back(mdz);
+                }
+              } // end material loop
+              // now this variable for this patch is completely extracted
+              // put it in patchdata
+              if (debug) { position_x.print(); cerr << endl; }
+              patchdata.position_x = position_x;
+              patchdata.position_y = position_y;
+              patchdata.position_z = position_z;
+            }
+          break;
+          case Uintah::TypeDescription::Vector:
+            {
+              if (!do_PTvar_all) break;
+              VariableData vardata;
+              vardata.name = string(var+" length");
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                
+                ParticleVariable<SCIRun::Vector> value;
+                da->query(value, var, matl, patch, time);
+                ParticleSubset* pset = value.getParticleSubset();
+                if (!pset) break;
+                int numParticles = pset->numParticles();
+                if (numParticles > 0) {
+                  // extract the data
+                  MaterialData md(matl,numParticles);
+                  float *p = md.data;
+                  for(ParticleSubset::iterator iter = pset->begin();
+                      iter != pset->end(); iter++) {
+                    float temp_value= (float)(value[*iter].length());
+                    *p++ = temp_value;
+                  }
+                  // add the extracted data to the variable
+                  vardata.material_set.push_back(md);
+                }
+              } // end material loop
+              // now this variable for this patch is completely extracted
+              // put it in patchdata
+              patchdata.variables.push_back(vardata);
+            }
+          break;
+          case Uintah::TypeDescription::Matrix3:
+            {
+              if (!do_PTvar_all) break;
+              VariableData vardata;
+              VariableData vardata2;
+              // can extract Determinant(), Trace(), Norm()
+              vardata.name = string(var+" Trace/3");
+              vardata2.name = string(var+" Equivalent");
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                
+                ParticleVariable<Matrix3> value;
+                da->query(value, var, matl, patch, time);
+                ParticleSubset* pset = value.getParticleSubset();
+                if (!pset) break;
+                int numParticles = pset->numParticles();
+                if (numParticles > 0) {
+                  // extract the data
+                  MaterialData md(matl,numParticles);
+                  float *p = md.data;
+                  MaterialData md2(matl,numParticles);
+                  float *p2 = md2.data;
+                  for(ParticleSubset::iterator iter = pset->begin();
+                      iter != pset->end(); iter++) {
+                    float temp_value= (float)(value[*iter].Trace()/3.0);
+                    *p++ = temp_value;
+                    temp_value= (float)(sqrt(1.5*(value[*iter]-one*temp_value).NormSquared()));
+                    *p2++ = temp_value;
+                  }
+                  // add the extracted data to the variable
+                  vardata.material_set.push_back(md);
+                  vardata2.material_set.push_back(md2);
+                }
+              } // end material loop
+              // now this variable for this patch is completely extracted
+              // put it in patchdata
+              patchdata.variables.push_back(vardata);
+              patchdata.variables.push_back(vardata2);
+            }
+          break;
+          default:
+            cerr << "Particle Variable of unknown type: " << subtype->getName() << '\n';
+            break;
+          } // end switch(subtype)
+        } // end case ParticleVariable
       break;
       case Uintah::TypeDescription::NCVariable:
       case Uintah::TypeDescription::CCVariable:
@@ -690,18 +696,18 @@ public:
       case Uintah::TypeDescription::ReductionVariable:
       case Uintah::TypeDescription::Unknown:
       case Uintah::TypeDescription::Other:
-	// currently not implemented
-	break;
+        // currently not implemented
+        break;
       default:
-	cerr << "Variable (" << var << ") is of unknown type: " << td->getName() << '\n';
-	break;
+        cerr << "Variable (" << var << ") is of unknown type: " << td->getName() << '\n';
+        break;
       } // end switch(td->getType())
       if (debug) cerr << "Finished var " << var << "\n";
     }
     AuditDefaultAllocator();
     append_spheres(sphere_data, patchdata, patch,
-		   do_PTvar_all, do_patch, do_material,
-		   do_verbose, radius, radius_factor);
+                   do_PTvar_all, do_patch, do_material,
+                   do_verbose, radius, radius_factor);
     patchdata.deleteme();
     amutex->lock();
     for(int i = 0; i < sphere_data.size(); i++) {
@@ -795,9 +801,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cmap_file = argv[++i];
     } else if (s == "-i" || (s == "--include")) {
       if (var_include.size() == 0) {
-	// We are going to push back p.x right now, because we know we will
-	// always need it.
-	var_include.push_back("p.x");
+        // We are going to push back p.x right now, because we know we will
+        // always need it.
+        var_include.push_back("p.x");
       }
       i++;
       var_include.push_back(argv[i]);
@@ -805,11 +811,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       write_data = true;
     } else {
       if(filebase!="") {
-	usage(s, argv[0]);
-	return(0);
+        usage(s, argv[0]);
+        return(0);
       }
       else
-	filebase = argv[i];
+        filebase = argv[i];
     }
   }
   
@@ -825,7 +831,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     XMLPlatformUtils::Initialize();
   } catch(const XMLException& toCatch) {
     cerr << "Caught XML exception: " << toCatch.getMessage() 
-	 << '\n';
+         << '\n';
     exit( 1 );
   }
   
@@ -877,7 +883,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
 
     Semaphore* thread_sema = scinew Semaphore("rtrt::uintahparticle semaphore",
-					      rtrt::Min(nworkers,5));
+                                              rtrt::Min(nworkers,5));
     Semaphore* prepro_sema = scinew Semaphore("rtrt::uintahparticle preprocess semaphore", rtrt::Min(nworkers,8));
     Mutex *amutex = scinew Mutex("rtrt::Append spheres mutex");
     //------------------------------
@@ -888,7 +894,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     
     // for all timesteps
     for(int t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
-      //      AuditDefaultAllocator();	  
+      //      AuditDefaultAllocator();    
       double time = times[t];
       cerr << "Started timestep t["<<t<<"] = "<<time<<"\n";
 
@@ -897,316 +903,316 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       
       GridP grid = da->queryGrid(time);
       if(do_verbose)
-	cout << "time = " << time << "\n";
+        cout << "time = " << time << "\n";
       cerr << "Creating new timeblock.\n";
       
       // for each level in the grid
       for(int l=0;l<grid->numLevels();l++){
-	AuditDefaultAllocator();	  
-	if (debug) cerr << "Started level\n";
-	LevelP level = grid->getLevel(l);
-	
-	// for each patch in the level
-	for(Level::const_patchIterator iter = level->patchesBegin();
-	    iter != level->patchesEnd(); iter++){
+        AuditDefaultAllocator();          
+        if (debug) cerr << "Started level\n";
+        LevelP level = grid->getLevel(l);
+        
+        // for each patch in the level
+        for(Level::const_patchIterator iter = level->patchesBegin();
+            iter != level->patchesEnd(); iter++){
 #if 0
-	  AuditDefaultAllocator();	  
-	  if (debug) cerr << "Started patch\n";
+          AuditDefaultAllocator();        
+          if (debug) cerr << "Started patch\n";
 #endif
 #ifdef USE_UINTAHPARTICLE_THREADS
-	  thread_sema->down();
-	  Thread *thrd = scinew Thread(scinew SphereMaker(amutex,
-							  thread_sema,
-							  *iter,
-							  da,
-							  &sphere_data,
-							  time,
-							  &vars,
-							  &var_include,
-							  &types,
-							  do_PTvar_all,
-							  do_patch,
-							  do_material,
-							  do_verbose,
-							  radius,
-							  radius_factor),
-				       "rtrt::SphereMaker");
-	  thrd->detach();
+          thread_sema->down();
+          Thread *thrd = scinew Thread(scinew SphereMaker(amutex,
+                                                          thread_sema,
+                                                          *iter,
+                                                          da,
+                                                          &sphere_data,
+                                                          time,
+                                                          &vars,
+                                                          &var_include,
+                                                          &types,
+                                                          do_PTvar_all,
+                                                          do_patch,
+                                                          do_material,
+                                                          do_verbose,
+                                                          radius,
+                                                          radius_factor),
+                                       "rtrt::SphereMaker");
+          thrd->detach();
 #else
-	  const Patch* patch = *iter;
-	  PatchData patchdata;
-	  
-	  // for all vars in one timestep in one patch
-	  for(int v=0;v<vars.size();v++){
-	    std::string var = vars[v];
-	    if (var_include.size > 0) {
-	      // Only do this check if the size of var_include is > 0.
-	      bool var_is_found = false;
-	      for(int s=0; s<var_include.size(); s++)
-		if (var_include[s] == var) {
-		  var_is_found = true;
-		  break;
-		}
-	      // if the variable was not found in our little list
-	      if (!var_is_found) continue;
-	    }
-	    const Uintah::TypeDescription* td = types[v];
-	    const Uintah::TypeDescription* subtype = td->getSubType();
-	    //---------int numMatls = da->queryNumMaterials(var, patch, time);
-	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+          const Patch* patch = *iter;
+          PatchData patchdata;
+          
+          // for all vars in one timestep in one patch
+          for(int v=0;v<vars.size();v++){
+            std::string var = vars[v];
+            if (var_include.size > 0) {
+              // Only do this check if the size of var_include is > 0.
+              bool var_is_found = false;
+              for(int s=0; s<var_include.size(); s++)
+                if (var_include[s] == var) {
+                  var_is_found = true;
+                  break;
+                }
+              // if the variable was not found in our little list
+              if (!var_is_found) continue;
+            }
+            const Uintah::TypeDescription* td = types[v];
+            const Uintah::TypeDescription* subtype = td->getSubType();
+            //---------int numMatls = da->queryNumMaterials(var, patch, time);
+            ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
 
-	    // now do something different depending on the type of the variable
-	    switch(td->getType()){
-	    case Uintah::TypeDescription::ParticleVariable:
-	      {
-		switch(subtype->getType()){
-		case Uintah::TypeDescription::double_type:
-		  {
-		    if (!do_PTvar_all) break;
-		    VariableData vardata;
-		    vardata.name = var;
-		    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-			matlIter != matls.end(); matlIter++){
-		      int matl = *matlIter;
-		    
-		      ParticleVariable<double> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if (!pset) break;
-		      int numParticles = pset->numParticles();
-		      if (numParticles > 0) {
-			// extract the data
-			MaterialData md(matl,numParticles);
-			float *p = md.data;
-			for(ParticleSubset::iterator iter = pset->begin();
-			    iter != pset->end(); iter++) {
-			  float temp_value= (float)value[*iter];
-			  *p++ = temp_value;
-			}
-			// add the extracted data to the variable
-			vardata.material_set.push_back(md);
-		      }
-		    } // end material loop
-		    // now this variable for this patch is completely extracted
-		    // put it in patchdata
-		    patchdata.variables.push_back(vardata);
-		  }
-		break;
-		case Uintah::TypeDescription::int_type:
-		  {
-		    if (!do_PTvar_all) break;
-		    VariableData vardata;
-		    vardata.name = var;
-		    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-			matlIter != matls.end(); matlIter++){
-		      int matl = *matlIter;
-		    
-		      ParticleVariable<int> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if (!pset) break;
-		      int numParticles = pset->numParticles();
-		      if (numParticles > 0) {
-			// extract the data
-			MaterialData md(matl,numParticles);
-			float *p = md.data;
-			for(ParticleSubset::iterator iter = pset->begin();
-			    iter != pset->end(); iter++) {
-			  float temp_value= (float)value[*iter];
-			  *p++ = temp_value;
-			}
-			// add the extracted data to the variable
-			vardata.material_set.push_back(md);
-		      }
-		    } // end material loop
-		    // now this variable for this patch is completely extracted
-		    // put it in patchdata
-		    patchdata.variables.push_back(vardata);
-		  }
-		break;
-		case Uintah::TypeDescription::Point:
-		  {
-		    if (var == "p.x") {
-		      if (debug) cerr << "Found p.x" << endl;
-		    } else {
-		      // don't know how to handle a point variable that's not
-		      // p.x
-		      break;
-		    }
-		    VariableData position_x; position_x.name = "x";
-		    VariableData position_y; position_y.name = "y";
-		    VariableData position_z; position_z.name = "z";
-		    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-			matlIter != matls.end(); matlIter++){
-		      int matl = *matlIter;
+            // now do something different depending on the type of the variable
+            switch(td->getType()){
+            case Uintah::TypeDescription::ParticleVariable:
+              {
+                switch(subtype->getType()){
+                case Uintah::TypeDescription::double_type:
+                  {
+                    if (!do_PTvar_all) break;
+                    VariableData vardata;
+                    vardata.name = var;
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                        matlIter != matls.end(); matlIter++){
+                      int matl = *matlIter;
+                    
+                      ParticleVariable<double> value;
+                      da->query(value, var, matl, patch, time);
+                      ParticleSubset* pset = value.getParticleSubset();
+                      if (!pset) break;
+                      int numParticles = pset->numParticles();
+                      if (numParticles > 0) {
+                        // extract the data
+                        MaterialData md(matl,numParticles);
+                        float *p = md.data;
+                        for(ParticleSubset::iterator iter = pset->begin();
+                            iter != pset->end(); iter++) {
+                          float temp_value= (float)value[*iter];
+                          *p++ = temp_value;
+                        }
+                        // add the extracted data to the variable
+                        vardata.material_set.push_back(md);
+                      }
+                    } // end material loop
+                    // now this variable for this patch is completely extracted
+                    // put it in patchdata
+                    patchdata.variables.push_back(vardata);
+                  }
+                break;
+                case Uintah::TypeDescription::int_type:
+                  {
+                    if (!do_PTvar_all) break;
+                    VariableData vardata;
+                    vardata.name = var;
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                        matlIter != matls.end(); matlIter++){
+                      int matl = *matlIter;
+                    
+                      ParticleVariable<int> value;
+                      da->query(value, var, matl, patch, time);
+                      ParticleSubset* pset = value.getParticleSubset();
+                      if (!pset) break;
+                      int numParticles = pset->numParticles();
+                      if (numParticles > 0) {
+                        // extract the data
+                        MaterialData md(matl,numParticles);
+                        float *p = md.data;
+                        for(ParticleSubset::iterator iter = pset->begin();
+                            iter != pset->end(); iter++) {
+                          float temp_value= (float)value[*iter];
+                          *p++ = temp_value;
+                        }
+                        // add the extracted data to the variable
+                        vardata.material_set.push_back(md);
+                      }
+                    } // end material loop
+                    // now this variable for this patch is completely extracted
+                    // put it in patchdata
+                    patchdata.variables.push_back(vardata);
+                  }
+                break;
+                case Uintah::TypeDescription::Point:
+                  {
+                    if (var == "p.x") {
+                      if (debug) cerr << "Found p.x" << endl;
+                    } else {
+                      // don't know how to handle a point variable that's not
+                      // p.x
+                      break;
+                    }
+                    VariableData position_x; position_x.name = "x";
+                    VariableData position_y; position_y.name = "y";
+                    VariableData position_z; position_z.name = "z";
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                        matlIter != matls.end(); matlIter++){
+                      int matl = *matlIter;
 
-		      if (debug) cerr << "matl = " << matl << endl;
-		      ParticleVariable<SCIRun::Point> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if (!pset) break;
-		      int numParticles = pset->numParticles();
-		      if (numParticles > 0) {
-			if (debug) cerr<<"numParticles = "<<numParticles;
-			// x
-			MaterialData mdx(matl,numParticles);
-			float *px = mdx.data;
-			// y
-			MaterialData mdy(matl,numParticles);
-			float *py = mdy.data;
-			// z
-			MaterialData mdz(matl,numParticles);
-			float *pz = mdz.data;
-			// extract the data
-			int i=0;
-			for(ParticleSubset::iterator iter = pset->begin();
-			    iter != pset->end(); iter++,i++) {
-			  // x
-			  float temp_value = (float)(value[*iter].x());
-			  *px++ = temp_value;
-			  // y
-			  temp_value = (float)(value[*iter].y());
-			  *py++ = temp_value;
-			  // z
-			  temp_value = (float)(value[*iter].z());
-			  *pz++ = temp_value;
-			}
-			//if (debug) mdx.print();
-			if (debug) cerr<<", i = "<<i<<endl;
-			// add the extracted data to the variable
-			position_x.material_set.push_back(mdx);
-			position_y.material_set.push_back(mdy);
-			position_z.material_set.push_back(mdz);
-		      }
-		    } // end material loop
-		    // now this variable for this patch is completely extracted
-		    // put it in patchdata
-		    if (debug) { position_x.print(); cerr << endl; }
-		    patchdata.position_x = position_x;
-		    patchdata.position_y = position_y;
-		    patchdata.position_z = position_z;
+                      if (debug) cerr << "matl = " << matl << endl;
+                      ParticleVariable<SCIRun::Point> value;
+                      da->query(value, var, matl, patch, time);
+                      ParticleSubset* pset = value.getParticleSubset();
+                      if (!pset) break;
+                      int numParticles = pset->numParticles();
+                      if (numParticles > 0) {
+                        if (debug) cerr<<"numParticles = "<<numParticles;
+                        // x
+                        MaterialData mdx(matl,numParticles);
+                        float *px = mdx.data;
+                        // y
+                        MaterialData mdy(matl,numParticles);
+                        float *py = mdy.data;
+                        // z
+                        MaterialData mdz(matl,numParticles);
+                        float *pz = mdz.data;
+                        // extract the data
+                        int i=0;
+                        for(ParticleSubset::iterator iter = pset->begin();
+                            iter != pset->end(); iter++,i++) {
+                          // x
+                          float temp_value = (float)(value[*iter].x());
+                          *px++ = temp_value;
+                          // y
+                          temp_value = (float)(value[*iter].y());
+                          *py++ = temp_value;
+                          // z
+                          temp_value = (float)(value[*iter].z());
+                          *pz++ = temp_value;
+                        }
+                        //if (debug) mdx.print();
+                        if (debug) cerr<<", i = "<<i<<endl;
+                        // add the extracted data to the variable
+                        position_x.material_set.push_back(mdx);
+                        position_y.material_set.push_back(mdy);
+                        position_z.material_set.push_back(mdz);
+                      }
+                    } // end material loop
+                    // now this variable for this patch is completely extracted
+                    // put it in patchdata
+                    if (debug) { position_x.print(); cerr << endl; }
+                    patchdata.position_x = position_x;
+                    patchdata.position_y = position_y;
+                    patchdata.position_z = position_z;
 
-		    if (patch_count > 0) patch_count--;
-		  }
-		break;
-		case Uintah::TypeDescription::Vector:
-		  {
-		    if (!do_PTvar_all) break;
-		    VariableData vardata;
-		    vardata.name = string(var+" length");
-		    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-			matlIter != matls.end(); matlIter++){
-		      int matl = *matlIter;
-		    
-		      ParticleVariable<SCIRun::Vector> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if (!pset) break;
-		      int numParticles = pset->numParticles();
-		      if (numParticles > 0) {
-			// extract the data
-			MaterialData md(matl,numParticles);
-			float *p = md.data;
-			for(ParticleSubset::iterator iter = pset->begin();
-			    iter != pset->end(); iter++) {
-			  float temp_value= (float)(value[*iter].length());
-			  *p++ = temp_value;
-			}
-			// add the extracted data to the variable
-			vardata.material_set.push_back(md);
-		      }
-		    } // end material loop
-		    // now this variable for this patch is completely extracted
-		    // put it in patchdata
-		    patchdata.variables.push_back(vardata);
-		  }
-		break;
-		case Uintah::TypeDescription::Matrix3:
-		  {
-		    if (!do_PTvar_all) break;
-		    VariableData vardata;
-		    // can extract Determinant(), Trace(), Norm()
-		    vardata.name = string(var+" Norm");
-		    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-			matlIter != matls.end(); matlIter++){
-		      int matl = *matlIter;
-		    
-		      ParticleVariable<Matrix3> value;
-		      da->query(value, var, matl, patch, time);
-		      ParticleSubset* pset = value.getParticleSubset();
-		      if (!pset) break;
-		      int numParticles = pset->numParticles();
-		      if (numParticles > 0) {
-			// extract the data
-			MaterialData md(matl,numParticles);
-			float *p = md.data;
-			for(ParticleSubset::iterator iter = pset->begin();
-			    iter != pset->end(); iter++) {
-			  float temp_value= (float)(value[*iter].Norm());
-			  *p++ = temp_value;
-			}
-			// add the extracted data to the variable
-			vardata.material_set.push_back(md);
-		      }
-		    } // end material loop
-		    // now this variable for this patch is completely extracted
-		    // put it in patchdata
-		    patchdata.variables.push_back(vardata);
-		  }
-		break;
-		default:
-		  cerr << "Particle Variable of unknown type: " << subtype->getName() << '\n';
-		  break;
-		} // end switch(subtype)
-	      } // end case ParticleVariable
-	    break;
-	    case Uintah::TypeDescription::NCVariable:
-	    case Uintah::TypeDescription::CCVariable:
-	    case Uintah::TypeDescription::Matrix3:
-	    case Uintah::TypeDescription::ReductionVariable:
-	    case Uintah::TypeDescription::Unknown:
-	    case Uintah::TypeDescription::Other:
-	      // currently not implemented
-	      break;
-	    default:
-	      cerr << "Variable (" << var << ") is of unknown type: " << td->getName() << '\n';
-	      break;
-	    } // end switch(td->getType())
-	    if (debug) cerr << "Finished var " << var << "\n";
-	  }
-	  AuditDefaultAllocator();	  
-	  append_spheres(sphere_data, patchdata, patch,
-			 do_PTvar_all, do_patch, do_material,
-			 do_verbose, radius, radius_factor);
-	  patchdata.deleteme();
+                    if (patch_count > 0) patch_count--;
+                  }
+                break;
+                case Uintah::TypeDescription::Vector:
+                  {
+                    if (!do_PTvar_all) break;
+                    VariableData vardata;
+                    vardata.name = string(var+" length");
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                        matlIter != matls.end(); matlIter++){
+                      int matl = *matlIter;
+                    
+                      ParticleVariable<SCIRun::Vector> value;
+                      da->query(value, var, matl, patch, time);
+                      ParticleSubset* pset = value.getParticleSubset();
+                      if (!pset) break;
+                      int numParticles = pset->numParticles();
+                      if (numParticles > 0) {
+                        // extract the data
+                        MaterialData md(matl,numParticles);
+                        float *p = md.data;
+                        for(ParticleSubset::iterator iter = pset->begin();
+                            iter != pset->end(); iter++) {
+                          float temp_value= (float)(value[*iter].length());
+                          *p++ = temp_value;
+                        }
+                        // add the extracted data to the variable
+                        vardata.material_set.push_back(md);
+                      }
+                    } // end material loop
+                    // now this variable for this patch is completely extracted
+                    // put it in patchdata
+                    patchdata.variables.push_back(vardata);
+                  }
+                break;
+                case Uintah::TypeDescription::Matrix3:
+                  {
+                    if (!do_PTvar_all) break;
+                    VariableData vardata;
+                    // can extract Determinant(), Trace(), Norm()
+                    vardata.name = string(var+" Norm");
+                    for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                        matlIter != matls.end(); matlIter++){
+                      int matl = *matlIter;
+                    
+                      ParticleVariable<Matrix3> value;
+                      da->query(value, var, matl, patch, time);
+                      ParticleSubset* pset = value.getParticleSubset();
+                      if (!pset) break;
+                      int numParticles = pset->numParticles();
+                      if (numParticles > 0) {
+                        // extract the data
+                        MaterialData md(matl,numParticles);
+                        float *p = md.data;
+                        for(ParticleSubset::iterator iter = pset->begin();
+                            iter != pset->end(); iter++) {
+                          float temp_value= (float)(value[*iter].Norm());
+                          *p++ = temp_value;
+                        }
+                        // add the extracted data to the variable
+                        vardata.material_set.push_back(md);
+                      }
+                    } // end material loop
+                    // now this variable for this patch is completely extracted
+                    // put it in patchdata
+                    patchdata.variables.push_back(vardata);
+                  }
+                break;
+                default:
+                  cerr << "Particle Variable of unknown type: " << subtype->getName() << '\n';
+                  break;
+                } // end switch(subtype)
+              } // end case ParticleVariable
+            break;
+            case Uintah::TypeDescription::NCVariable:
+            case Uintah::TypeDescription::CCVariable:
+            case Uintah::TypeDescription::Matrix3:
+            case Uintah::TypeDescription::ReductionVariable:
+            case Uintah::TypeDescription::Unknown:
+            case Uintah::TypeDescription::Other:
+              // currently not implemented
+              break;
+            default:
+              cerr << "Variable (" << var << ") is of unknown type: " << td->getName() << '\n';
+              break;
+            } // end switch(td->getType())
+            if (debug) cerr << "Finished var " << var << "\n";
+          }
+          AuditDefaultAllocator();        
+          append_spheres(sphere_data, patchdata, patch,
+                         do_PTvar_all, do_patch, do_material,
+                         do_verbose, radius, radius_factor);
+          patchdata.deleteme();
 #endif // ifdef USE_UINTAHPARTICLE_THREADS
-	      
-	  if (patch_count > 0) patch_count--;
-	  if (patch_count == 0) {
-	    cerr << "Only processing partial number of patches\n";
-	    break;
-	  }
-	  AuditDefaultAllocator();
-	  if (debug) cerr << "Finished patch\n";
-	} // end for(patch)
-	AuditDefaultAllocator();	  
+              
+          if (patch_count > 0) patch_count--;
+          if (patch_count == 0) {
+            cerr << "Only processing partial number of patches\n";
+            break;
+          }
+          AuditDefaultAllocator();
+          if (debug) cerr << "Finished patch\n";
+        } // end for(patch)
+        AuditDefaultAllocator();          
       if (debug) cerr << "Finished level\n";
       } // end for(level)
-      AuditDefaultAllocator();	  
+      AuditDefaultAllocator();    
       //Material* matl0=new Phong( Color(.2,.2,.2), Color(.3,.3,.3), 10, .5);
       //timeblock2->add(new Sphere(matl0,::Point(t,t,t),1));
       //alltime->add(timeblock2);
       thread_sema->down(rtrt::Min(nworkers,5));
       cout << "Adding timestep.\n";
       GridSpheres* obj = create_GridSpheres(sphere_data,colordata,
-					    gridcellsize,griddepth, cmap,
-					    t);
+                                            gridcellsize,griddepth, cmap,
+                                            t);
       thread_sema->up(rtrt::Min(nworkers,5));
       display->attach(obj);
       alltime->add((Object*)obj);
       prepro_sema->down();
       Thread *thrd = scinew Thread(scinew Preprocessor(obj,prepro_sema),
-				   "rtrt::uintahparticle:Preprocessor Thread");
+                                   "rtrt::uintahparticle:Preprocessor Thread");
       thrd->detach();
       //      cerr << "Finished timestep t["<<t<<"]\n";
     } // end timestep
@@ -1224,7 +1230,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     abort();
   }
 
-  AuditDefaultAllocator();	  
+  AuditDefaultAllocator();        
   if (debug) cerr << "Finished processdata/patch\n";
   if (debug) cerr << "Creating GridSpheres display thread\n";
   //#if 0
@@ -1238,8 +1244,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Color cdown(0.0, 0.0, 0.2);
 
   Scene* scene=new Scene(all, cam,
-			 bgcolor, cdown, cup, groundplane, 
-			 ambient_scale);
+                         bgcolor, cdown, cup, groundplane, 
+                         ambient_scale);
 
   // Add all the lights.
   rtrt::BBox bounds;
@@ -1248,7 +1254,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   Point light_loc = bounds.max() + (bounds.max()-bounds.min())*0.2;
   
   Light *light = new Light(light_loc, Color(.8, .8, .8),
-			   (bounds.max()-bounds.min()).length()*0.01);
+                           (bounds.max()-bounds.min()).length()*0.01);
   light->name_ = "Main Light";
   scene->add_light(light);
 
