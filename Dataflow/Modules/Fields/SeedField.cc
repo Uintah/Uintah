@@ -35,6 +35,7 @@
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
+#include <Core/Math/MusilRNG.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
@@ -44,6 +45,7 @@
 #include <iostream>
 
 using std::set;
+using std::vector;
 
 namespace SCIRun {
 
@@ -58,17 +60,26 @@ class SeedField : public Module
 
   char           firsttime_;
 
-  GuiInt random_seed_GUI_;
-  GuiInt number_dipoles_GUI_;
+  GuiInt maxSeeds_;
+  GuiInt numSeeds_;
+  GuiInt rngSeed_;
+  GuiString widgetType_;
+  GuiString randDist_;
 
-  int random_seed_;
-  int number_dipoles_;
   int vf_generation_;
 
   void execute_rake();
   void execute_gui();
 
-  template <class M> void dispatch(M *mesh);
+  template <class Field> 
+  bool build_weight_table(Field &, vector<double> &);
+  template <class Field>
+  PointCloud<double>* GenWidgetSeeds(Field &);
+  template <class Field>
+  PointCloud<double>* GenRandomSeeds(Field &);
+
+  template <class M> 
+  void dispatch(M *mesh);
 
 public:
   CrowdMonitor widget_lock_;
@@ -88,12 +99,12 @@ extern "C" Module* make_SeedField(const string& id) {
 
 SeedField::SeedField(const string& id)
   : Module("SeedField", id, Filter, "Fields", "SCIRun"),
-    random_seed_GUI_("random_seed", id, this),
-    number_dipoles_GUI_("number_dipoles", id, this),
-    random_seed_(0),
-    number_dipoles_(0),
+    maxSeeds_("maxseeds", id, this),
+    numSeeds_("numseeds", id, this),
+    rngSeed_("rngseed", id, this),
+    widgetType_("type", id, this),
+    randDist_("dist", id, this),
     vf_generation_(0),
-    //dipoleMagnitudeTCL_("dipoleMagnitudeTCL", id, this),
     widget_lock_("StreamLines widget lock"),
     rake_(this,&widget_lock_,1)
 {
@@ -128,11 +139,85 @@ SeedField::widget_moved(int i)
   }
 }
 
+template <class Field>
+bool 
+SeedField::build_weight_table(Field &field, vector<double> &table)
+{
+  typedef typename Field::mesh_type         mesh_type;
+  typedef typename Field::fdata_type        fdata_type;
+  typedef typename mesh_type::elem_iterator elem_iterator;
+  typedef typename mesh_type::elem_index    elem_index;
+
+  string dist = randDist.get();
+
+  mesh_type* mesh = field->mesh().get_rep();
+  fdata_type fdata = field->fdata();
+
+  elem_iterator ei = mesh->elem_begin();
+  if (ei==mesh->elem_end()) // empty mesh
+    return false;
+
+  if (dist=="importance") { // size of element * data at element
+    table.push_back(mesh->elems_size(ei)*fdata[*ei]);
+    ++ei;
+    while (ei != mesh.elem_end()) {
+      table.push_back(mesh->elems_size(ei)*fdata[*ei]+table[table.size()-1]);
+      ++ei;
+    }
+  } else if (dist=="uniform") { // size of element only
+    table.push_back(mesh->elems_size(ei));
+    ++ei;
+    while (ei != mesh.elem_end()) {
+      table.push_back(mesh->elems_size(ei)+table[table.size()-1]);
+      ++ei;
+    }
+  } else if (dist=="scattered") { // element index; some strangely biased dist
+    while (ei != mesh.elem_end()) {
+      table.push_back(table.size());
+      ++ei;
+    }    
+  } else { // unknown distribution type
+    return false;
+  } 
+
+  return true;
+}
+
+template <class Field>
+PointCloud<double>*
+SeedField::GenWidgetSeeds(Field &field)
+{
+}
+
+template <class Field>
+PointCloud<double>*
+SeedField::GenRandomSeeds(Field &field)
+{
+  typedef typename Field::mesh_type  mesh_type;
+  typedef typename Field::elem_index elem_index;
+
+  MusilRNG rng(rngSeed.get());
+  vector<double> wt;
+
+  rng();  // always discard first value
+
+  if (!build_weight_table(field,wt))
+    return 0;
+
+  double max = wt[wt.size()-1];
+  mesh_type *mesh = field.mesh().get_rep();
+  PointCloud<double> *pc = scinew PointCloud<double>;
+
+  unsigned int ns = numSeeds_.get();
+  for (int loop=0;loop<ns;loop++) {
+  }
+}
 
 template <class M>
 void
 SeedField::dispatch(M *mesh)
 {
+#if 0
   // Get size of mesh.
   unsigned int mesh_size = 0;
   typename M::cell_iterator itr = mesh->cell_begin();
@@ -182,6 +267,7 @@ SeedField::dispatch(M *mesh)
   }
 
   ofport_->send(cloud);
+#endif
 }
       
   
@@ -189,6 +275,7 @@ SeedField::dispatch(M *mesh)
 void
 SeedField::execute_gui()
 {
+#if 0
   // get gui variables;
   const int rand_seed = random_seed_GUI_.get();
   const int num_dipoles = number_dipoles_GUI_.get();
@@ -217,6 +304,7 @@ SeedField::execute_gui()
       return;
     }
   }
+#endif
 }
 
 void
@@ -257,8 +345,10 @@ SeedField::execute_rake()
   
   rake_.GetEndpoints(min,max);
   
+  int max_seeds = maxSeeds_.get();
+
   Vector dir(max-min);
-  int num_seeds = (int)(rake_.GetRatio()*15);
+  int num_seeds = (int)(rake_.GetRatio()*max_seeds);
   remark("num_seeds = " + to_string(num_seeds));
   dir*=1./(num_seeds-1);
 
