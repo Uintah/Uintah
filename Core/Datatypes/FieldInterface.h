@@ -147,6 +147,9 @@ SFInterface<F>::interpolate(double &result, const Point &p) const
       }
     }
     break;
+
+  case F::NONE:
+    return false;
   }
   return true;
 }
@@ -228,6 +231,9 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 	}
       }      
     }
+    break;
+    
+  case F::NONE:
     break;
   }
   return result;
