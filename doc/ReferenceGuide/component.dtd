@@ -78,6 +78,7 @@ Component  specification dtd.
 
 <!-- Component's inputs.  Inputs may come from a file, port, or device.  -->
 <!ELEMENT inputs (file | port | device)+>
+<!ATTLIST inputs lastportdynamic (yes | no) "no">
 
 <!-- Component's outputs.  Outputs may be sent to a file, port, or device. -->
 <!ELEMENT outputs (file | port | device)+>
