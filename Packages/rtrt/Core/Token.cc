@@ -102,6 +102,7 @@ Token::ParseChildren(ifstream &str)
     else {
 #if 0
       cerr << "Token: ignoring unknown token: " << curstring << endl;
+      cerr << "\t parent is " << moniker_ << endl;
 #endif
       // does the unknown token have a starting delimiter
       str >> curstring;
