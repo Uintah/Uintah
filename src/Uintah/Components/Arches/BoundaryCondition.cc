@@ -68,8 +68,7 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params,
 // Also sets flat profiles for density
 void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
 					     SchedulerP& sched,
-					     const DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+					     const DataWarehouseP& old_dw)
 {
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
@@ -94,8 +93,7 @@ void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
 
 void BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
 				       const Region* region,
-				       const DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw) 
+				       const DataWarehouseP& old_dw)
 {
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);

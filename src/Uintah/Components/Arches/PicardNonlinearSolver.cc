@@ -1,5 +1,8 @@
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/Properties.h>
+#include <Uintah/Components/Arches/BoundaryCondition.h>
+#include <Uintah/Components/Arches/TurbulenceModel.h>
 #include <Uintah/Components/Arches/PressureSolver.h>
 #include <Uintah/Components/Arches/MomentumSolver.h>
 #include <Uintah/Components/Arches/ScalarSolver.h>
@@ -10,7 +13,10 @@
 
 using Uintah::Components::PicardNonlinearSolver;
 
-PicardNonlinearSolver::PicardNonlinearSolver()
+PicardNonlinearSolver::PicardNonlinearSolver(Properties& props, 
+					     BoundaryCondition& bc,
+					     TurbulenceModel& turbModel):
+  d_properties(props), d_boundaryCondition(bc), d_turbModel(turbModel)
 {
 }
 
@@ -28,17 +34,6 @@ void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params,
   double resTol;
   db->require("res_tol", resTol);
   dw->put(resTol, "nlresidualTolerence");
-  d_props = new Properties();
-  d_props->problemSetup(db, dw);
-  string turbModel;
-  db->require("turbulence_model", turbModel);
-  if (turbModel == "Smagorinsky") 
-    d_turbModel = new SmagorinskyModel();
-  else 
-    throw InvalidValue("Turbulence Model not supported" + turbModel, db);
-  d_turbModel->problemSetup(db, dw);
-  d_boundaryCondition = new BoundaryCondition(d_turbModel);
-  d_boundaryCondition->problemSetup(db, dw);
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {

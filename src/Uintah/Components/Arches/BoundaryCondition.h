@@ -104,16 +104,26 @@ public:
 				SchedulerP& sched,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw);
+   // initializes velocities, scalars and properties at the bndry
+   // remove sched_setFlat and sched_setProps
+   void sched_setProfile(const LevelP& level,
+			 SchedulerP& sched,
+			 const DataWarehouseP& old_dw);
+
    // assign flat velocity profiles at the inlet
    void sched_setFlatProfile(const LevelP& level,
 			     SchedulerP& sched,
-			     const DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+			     const DataWarehouseP& old_dw);
+   void sched_setPropsProfile(const LevelP& level,
+			     SchedulerP& sched,
+			     const DataWarehouseP& old_dw);
  private:
    void setFlatProfile(const ProcessorContext* pc,
 		       const Region* region,
-		       const DataWarehouseP& old_dw,
-		       DataWarehouseP& new_dw);
+		       const DataWarehouseP& old_dw);
+   void setPropsProfile(const ProcessorContext* pc,
+		       const Region* region,
+		       const DataWarehouseP& old_dw);
    void setInletVelocityBC(const ProcessorContext* pc,
 			   const Region* region,
 			   const DataWarehouseP& old_dw,

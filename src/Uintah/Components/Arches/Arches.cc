@@ -29,7 +29,21 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   ProblemSpecP db = params->findBlock("Arches");
 
   db->require("grow_dt", d_deltaT);
-
+  // physical constants
+  d_physicalConsts = new PhysicalConstants();
+  d_physicalConsts->problemSetup(db, dw);
+  // read properties, boundary and turbulence model
+  d_props = new Properties();
+  d_props->problemSetup(db, dw);
+  string turbModel;
+  db->require("turbulence_model", turbModel);
+  if (turbModel == "Smagorinsky") 
+    d_turbModel = new SmagorinskyModel();
+  else 
+    throw InvalidValue("Turbulence Model not supported" + turbModel, db);
+  d_turbModel->problemSetup(db, dw);
+  d_boundaryCondition = new BoundaryCondition(d_turbModel);
+  d_boundaryCondition->problemSetup(db, dw);
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard")
@@ -39,6 +53,18 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
 
   //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
   d_nlSolver->problemSetup(db);
+}
+
+void Arches::problemInit(const LevelP& level,
+			  SchedulerP& sched, DataWarehouseP& dw)
+{
+  // initializes variables
+  sched_paramInit(level, sched, dw);
+  // initialize velocity, scalars and properties at the boundary
+  d_boundaryCondition->sched_setProfile(level, sched, dw);
+  d_properties->sched_computeProperties(level, sched, dw, dw);
+  d_turbModel->sched_computeTurbViscosity(level, sched, dw, dw);
+  d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
 
 void Arches::computeStableTimestep(const LevelP& level,
@@ -67,6 +93,9 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.11  2000/04/07 18:30:12  rawat
+// Added problem initialization function in Arches.cc
+//
 // Revision 1.10  2000/03/31 17:35:05  moulding
 // A call to d_nlSolver->problemSetup() was attempted with 2 parameters, causing
 // a compile error (too many parameters).  I changed it to one parameter.
