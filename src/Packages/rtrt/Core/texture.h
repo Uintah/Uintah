@@ -54,13 +54,13 @@ namespace rtrt {
     }
 
     void 
-      colormap(int x, int y, int dx, int dy ) {
+      colormap( int dx, int dy ) {
       const int xmin = 0;
       const int ymin = 30;
       const int xmax = 400;
       const int ymax = 400;
-      x = (colormap_x_offset + dx + xmax)%xmax;
-      y = colormap_y_offset + dy;
+      int x = (colormap_x_offset + dx + xmax)%xmax;
+      int y = colormap_y_offset + dy;
       if( y > ymax )
 	y = ymax;
       if( y < ymin )
@@ -69,7 +69,7 @@ namespace rtrt {
       float hue_index;
       float hue_interpolant;
       float hue_size = (float)1/6;
-      int ymid = (ymax - ymin)/2 + ymin;
+      int ymid = (ymax - ymin)*0.5f + ymin;
 
       /* find the hue */
       hue_index = ((float)x-xmin)/(xmax-xmin);
@@ -151,14 +151,23 @@ namespace rtrt {
       makeOneDimTextureImage( void ) {
       int i, j;
       float intensity;
-      for( i = 0; i < textureHeight; i++ )
-	for( j = 0; j < textureWidth; j++ ) {
-	  intensity = (textureWidth/2-fabs(j-textureWidth/2.0f))/(textureWidth/2);
+      float halfWidth = (float)textureWidth*0.5f;
+      for( i = 0; i < textureHeight; i++ ) {
+	for( j = 0; j < halfWidth; j++ ) {
+	  intensity = (float)j/halfWidth;
 	  textArray[i][j][0] = current_color[0];
 	  textArray[i][j][1] = current_color[1];
 	  textArray[i][j][2] = current_color[2];
 	  textArray[i][j][3] = intensity;
 	}
+	for( j = halfWidth; j < textureWidth; j++ ) {
+	  intensity = (float)(textureWidth-j)/halfWidth;
+	  textArray[i][j][0] = current_color[0];
+	  textArray[i][j][1] = current_color[1];
+	  textArray[i][j][2] = current_color[2];
+	  textArray[i][j][3] = intensity;
+	}
+      }
 			
       glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
       glGenTextures( 1, &TextName );
@@ -175,20 +184,21 @@ namespace rtrt {
 
     void
       makeEllipseTextureImage( void ) {
-      int i, j;
-      float intensity;
-      for( i = 0; i < textureHeight; i++ )
-	for( j = 0; j < textureWidth; j++ ) {
-	  intensity = 1.0f - 5*sqrt( (j-textureHeight/2.0f)*(j-textureHeight/2.0f)+
-				     ((i-textureWidth/2.0f)*(i-textureWidth/2.0f) )/
-				     sqrt( textureHeight*textureHeight/4.0f
-					   + textureWidth*textureWidth/4.0f ));
-	  if( intensity < 0 )
-	    intensity = 0;
+      //      float intensity;
+      //      float halfHeight = (float)textureHeight*0.5f;
+      //      float halfWidth = (float)textureWidth*0.5f;
+      for( int i = 0; i < textureHeight; i++ )
+	for( int j = 0; j < textureWidth; j++ ) {
+	  //  intensity = 1.0f - 5.0f*(((j-halfHeight)*(j-halfHeight)+
+	  //			(i-halfWidth)*(i-halfWidth))/
+	  //		   (halfHeight*halfHeight+
+	  //		    halfWidth*halfWidth));
+	  //if( intensity < 0 )
+	  // intensity = 0;
 	  textArray[i][j][0] = current_color[0];
 	  textArray[i][j][1] = current_color[1];
 	  textArray[i][j][2] = current_color[2];
-	  textArray[i][j][3] = intensity;
+	  textArray[i][j][3] = 0.0f;
 	}
 
       glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
