@@ -16,19 +16,7 @@ namespace Uintah {
 				const CCVariable<double>& rho,
 				const Vector& dx,
 				IntVector offset = IntVector(0,0,0));
-  
-  void setBCJohn(CCVariable<double>& press_CC, const CCVariable<double>& rho,
-		 const std::string& whichVar, const std::string& type, 
-		 const Patch* p, SimulationStateP& sharedState,
-		 const int mat_id, DataWarehouse*);
-  
-  void setBCJohn(CCVariable<double>& variable,const std::string& type, 
-		 const Patch* p,  SimulationStateP& sharedState,
-		 const int mat_id);
-
-  void setBCJohn(CCVariable<Vector>& variable,const std::string& type,
-		 const Patch* p, const int mat_id);
-  
+    
   void determineSpacingAndGravity(Patch::FaceType face, Vector& dx,
 				  SimulationStateP& sharedState,
 				  double& spacing, double& gravity);
@@ -53,20 +41,11 @@ namespace Uintah {
   void determineSpacingAndSign(Patch::FaceType face, Vector& dx,
 			       double& spacing, double& sign);  
 
-  void setBCJohn(SFCXVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p, const int mat_id);
-
   void setBC(SFCXVariable<double>& variable,const std::string& type,
              const std::string& comp, const Patch* p, const int mat_id);
-  
-  void setBCJohn(SFCYVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p, const int mat_id);
 
   void setBC(SFCYVariable<double>& variable,const std::string& type,
-             const std::string& comp, const Patch* p, const int mat_id);
-  
-  void setBCJohn(SFCZVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p, const int mat_id);   
+             const std::string& comp, const Patch* p, const int mat_id);  
 
   void setBC(SFCZVariable<double>& variable,const std::string& type,
              const std::string& comp, const Patch* p, const int mat_id);   
