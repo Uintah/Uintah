@@ -324,8 +324,6 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     if (recursion) {
       DataWarehouse* parent_old_dw = 
 	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      DataWarehouse* parent_new_dw = 
-	new_dw->getOtherDataWarehouse(Task::ParentNewDW);
       pset = parent_old_dw->getParticleSubset(dwi, patch);
       parent_old_dw->get(px,             lb->pXLabel,              pset);    
       parent_old_dw->get(pvolume,        lb->pVolumeLabel,         pset);
@@ -356,12 +354,6 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     new_dw->allocateTemporary(deformationGradient_new,pset);
     new_dw->allocateTemporary(bElBar_new,pset);
 
-#if 0
-    new_dw->allocateAndPut(deformationGradient_new,
-		     lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
-#endif
-    
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
     
@@ -731,12 +723,6 @@ void CompNeoHookImplicit::computeStressTensorImplicitOnly(const PatchSubset* pat
      new_dw->allocateAndPut(deformationGradient_new,
 			    lb->pDeformationMeasureLabel_preReloc, pset);
      new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc, pset);
-#if 0
-     new_dw->getModifiable(deformationGradient_new,
-			   lb->pDeformationMeasureLabel_preReloc, pset);
-     new_dw->getModifiable(bElBar_new,lb->bElBarLabel_preReloc, pset);
-#endif
-     
 
      cerr << "delT = " << delT << endl;
 
@@ -931,10 +917,6 @@ void CompNeoHookImplicit::addComputesAndRequiresImplicit(Task* task,
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
   task->computes(lb->pVolumeDeformedLabel,              matlset);
-#if 0
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->bElBarLabel_preReloc,matlset);
-#endif
 
   
 }
@@ -961,14 +943,7 @@ void CompNeoHookImplicit::addComputesAndRequiresImplicitOnly(Task* task,
 		 matlset,Ghost::None);
   task->requires(Task::OldDW,lb->bElBarLabel,matlset,
 		 Ghost::None);
-#if 0
-  task->modifies(lb->pStressLabel_preReloc);
-  task->modifies(lb->pVolumeDeformedLabel,              matlset);
-#endif
-#if 0
-  task->modifies(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->modifies(lb->bElBarLabel_preReloc,matlset);
-#endif
+
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->bElBarLabel_preReloc,matlset);
   task->computes(lb->delTLabel);
