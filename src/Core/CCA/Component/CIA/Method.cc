@@ -24,6 +24,12 @@ Class Method_interface::getDeclaringClass()
     return 0;
 }
 
+::CIA::string Method_interface::getName()
+{
+    NOT_FINISHED("final string .CIA.Metho.getName()");
+    return "";
+}
+
 Class Method_interface::getReturnType()
 {
     NOT_FINISHED("Method_interface::getReturnType");
@@ -32,6 +38,11 @@ Class Method_interface::getReturnType()
 
 //
 // $Log$
+// Revision 1.2  1999/09/28 08:19:48  sparker
+// Implemented start of array class (only 1d currently)
+// Implement string class (typedef to std::string)
+// Updates to spec now that sidl support strings
+//
 // Revision 1.1  1999/09/24 06:26:23  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance
