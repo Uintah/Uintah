@@ -1,6 +1,5 @@
 /*
-
-  (c-set-offset 'defun-block-intro 'c-no-namespace-indent1) *  DipoleMatToGeom.cc:  Builds the RHS of the FE matrix for current sources
+ *  DipoleMatToGeom.cc:  Builds the RHS of the FE matrix for current sources
  *
  *  Written by:
  *   David Weinstein
@@ -47,7 +46,9 @@ class DipoleMatToGeom : public Module {
   int gen;
   MatrixHandle dipoleMatH;
   TCLstring widgetSizeTCL;
-  TCLint fixedSizeTCL;
+  TCLstring scaleModeTCL;
+  TCLint showLastVecTCL;
+  TCLint showLinesTCL;
   int which;
   double lastSize;
   clString execMsg;
@@ -77,7 +78,9 @@ DipoleMatToGeom::DipoleMatToGeom(const clString& id) :
   Module("DipoleMatToGeom", id, Filter), 
   widgetSizeTCL("widgetSizeTCL", id, this),
   widget_lock("DipoleMatToGeom widget lock"),
-  fixedSizeTCL("fixedSizeTCL", id, this)
+  scaleModeTCL("scaleModeTCL", id, this),
+  showLastVecTCL("showLastVecTCL", id, this),
+  showLinesTCL("showLinesTCL", id, this)
 {
   // Create the input port
   imat=scinew MatrixIPort(this, "DipoleMatrix", MatrixIPort::Atomic);
@@ -148,12 +151,24 @@ void DipoleMatToGeom::execute()
 	}
 	nDips=mp->nrows();
       }
-      widget[nDips-1]->SetCurrentMode(2);
-      widget[nDips-1]->SetMaterial(0, greenMatl);
+      if (showLastVecTCL.get()) {
+	widget[nDips-1]->SetCurrentMode(0);
+	widget[nDips-1]->SetMaterial(0, deflMatl);
+      } else {
+	widget[nDips-1]->SetCurrentMode(2);
+	widget[nDips-1]->SetMaterial(0, greenMatl);
+      }
     }
     Array1<Point> pts;
     int i;
-    int fixedSize=fixedSizeTCL.get();
+    clString scaleMode=scaleModeTCL.get();
+    double max;
+    for (i=0; i<mp->nrows(); i++) {
+      double dv=Vector((*mp)[i][3], (*mp)[i][4], (*mp)[i][5]).length();
+      if (dv<0.00000001) dv=1;
+      if (i==0 || dv<max) max=dv;
+    }
+
     for (i=0; i<mp->nrows(); i++) {
       Point p((*mp)[i][0], (*mp)[i][1], (*mp)[i][2]);
       pts.add(p);
@@ -162,21 +177,26 @@ void DipoleMatToGeom::execute()
       //	     cerr << "widget["<<i<<"] is at position "<<p<<" and dir "<<v<<"\n";
       double str=v.length();
       if (str<0.0000001) v.z(1);
-      if (fixedSize) str=1;
       v.normalize();
       widget[i]->SetDirection(v);
       //	     widget[i]->SetScale(str*widgetSize);
       //	     widget[i]->SetScale(widgetSize);
-      widget[i]->SetScale(str*widgetSize);
-      widget[i]->SetLength(2*str*widgetSize);
+      double sc=widgetSize;
+      if (scaleMode == "normalize") sc*=(str/max);
+      else if (scaleMode == "scale") sc*=str;
+      widget[i]->SetScale(sc);
+      widget[i]->SetLength(2*sc);
     }
-    GeomLines *g=new GeomLines;
-    for (i=0; i<pts.size()-2; i++) 
-      for (int j=i+1; j<pts.size()-1; j++) 
-	g->add(pts[i], pts[j]);
-    GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
+
     if (gidx) ogeom->delObj(gidx);
-    gidx=ogeom->addObj(gm, clString("Dipole Lines"));
+    if (showLinesTCL.get()) {
+      GeomLines *g=new GeomLines;
+      for (i=0; i<pts.size()-2; i++) 
+	for (int j=i+1; j<pts.size()-1; j++) 
+	  g->add(pts[i], pts[j]);
+      GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
+      gidx=ogeom->addObj(gm, clString("Dipole Lines"));
+    }
 
     gen=mh->generation;
     dipoleMatH=mh;
@@ -203,13 +223,15 @@ void DipoleMatToGeom::execute()
       (*mp)[i][4]=d.y();
       (*mp)[i][5]=d.z();
     }
-    GeomLines *g=new GeomLines;
-    for (i=0; i<pts.size()-2; i++) 
-      for (int j=i+1; j<pts.size()-1; j++) 
-	g->add(pts[i], pts[j]);
-    GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
     ogeom->delObj(gidx);
-    gidx=ogeom->addObj(gm, clString("Dipole Lines"));
+    if (showLinesTCL.get()) {
+      GeomLines *g=new GeomLines;
+      for (i=0; i<pts.size()-2; i++) 
+	for (int j=i+1; j<pts.size()-1; j++) 
+	  g->add(pts[i], pts[j]);
+      GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
+      gidx=ogeom->addObj(gm, clString("Dipole Lines"));
+    }
     ogeom->flushViews();
     dipoleMatH=mh;
     omat->send(dipoleMatH);
@@ -243,6 +265,9 @@ void DipoleMatToGeom::widget_moved(int last) {
 
 //
 // $Log$
+// Revision 1.7  2000/11/16 03:39:53  dmw
+// added show lines flag
+//
 // Revision 1.6  2000/10/29 03:51:45  dmw
 // SeedDipoles will place dipoles randomly within a mesh
 //
