@@ -83,6 +83,8 @@ void usage( const std::string & message,
 
 int main(int argc, char** argv)
 {
+    SimulationController::start_addr = (char*)sbrk(0);
+  
     /*
      * Initialize MPI
      */
