@@ -39,6 +39,7 @@ using std::ostringstream;
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/Noise.h>
 #include <Core/Algorithms/Visualization/Sage.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <Dataflow/Network/Module.h>
 
@@ -260,7 +261,22 @@ Isosurface::execute()
     while(!vlist.eof())
     {
       vlist >> val;
-      if (vlist.fail()) { break; }
+      if (vlist.fail())
+      {
+	if (!vlist.eof())
+	{
+	  vlist.clear();
+	  warning("List of Isovals was bad at character " +
+		  to_string((int)(vlist.tellg())) +
+		  "('" + ((char)(vlist.peek())) + "').");
+	}
+	break;
+      }
+      else if (!vlist.eof() && vlist.peek() == '%')
+      {
+	vlist.get();
+	val = prev_min_ + (prev_max_ - prev_min_) * val / 100.0;
+      }
       isovals.push_back(val);
     }
   }
