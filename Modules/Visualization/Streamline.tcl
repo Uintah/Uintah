@@ -163,6 +163,11 @@ itcl_class Streamline {
 	pack $mi.colorize -side top -fill x 
     }
     protected ii
+
+    method set_algorithm {} {
+	puts "Changing algorithm"
+    }
+
     method make_intinfo {c} {
 	set ii $c
 	frame $ii -relief groove -borderwidth 2
