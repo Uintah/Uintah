@@ -32,7 +32,7 @@ class ScalarTransform1D {
   }
 
 public:
-  ScalarTransform1D(Array1<RType> *results);
+  ScalarTransform1D(Array1<RType> *results=0);
   ScalarTransform1D(const Array1<RType> &r);
   ~ScalarTransform1D() {}
 
@@ -101,6 +101,10 @@ public:
   Array1<RType> *get_results_ptr() {
     return results;
   }
+  void set_results_ptr(Array1<RType> *_results) {
+    results = _results;
+  }
+  
   // min and max operators
   void get_min_max(LType &_min, LType &_max) const;
   void scale(LType _min, LType _max);
