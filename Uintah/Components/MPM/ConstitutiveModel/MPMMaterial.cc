@@ -7,6 +7,7 @@
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
 #include <Uintah/Components/MPM/GeometrySpecification/UnionGeometryPiece.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
@@ -114,6 +115,7 @@ particleIndex MPMMaterial::countParticles(const Patch* patch) const
 }
 
 void MPMMaterial::createParticles(particleIndex numParticles,
+				  PerPatch<long> NAPID,
 				  const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
@@ -139,15 +141,17 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<long> pparticleID;
    new_dw->allocate(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
 
-//   particleIndex start = patch->getNextAvailableParticleIndex();
+//   PerPatch<long> NAPID(0);
+//   if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
+//      new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
 
    particleIndex start = 0;
-   for(int i=0; i<d_geom_objs.size(); i++)
-      start += createParticles(d_geom_objs[i], start, position,
-			       pvelocity,pexternalforce,pmass,pvolume,
-					pissurf,ptemperature,pparticleID,patch);
-
-//   patch->storeLastParticleIndexUsed(start);
+   for(int i=0; i<d_geom_objs.size(); i++){
+      start += createParticles( d_geom_objs[i], start, position,
+				pvelocity,pexternalforce,pmass,pvolume,
+				pissurf,ptemperature,pparticleID,NAPID,patch);
+//      NAPID=NAPID + start;
+   }
 
    new_dw->put(position, lb->pXLabel, getDWIndex(), patch);
    new_dw->put(pvelocity, lb->pVelocityLabel, getDWIndex(), patch);
@@ -157,6 +161,9 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->put(pissurf, lb->pSurfLabel, getDWIndex(), patch);
    new_dw->put(ptemperature, lb->pTemperatureLabel, getDWIndex(), patch);
    new_dw->put(pparticleID, lb->pParticleIDLabel, getDWIndex(), patch);
+
+//   PerPatch<long> newNAPID(NAPID + start);
+
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -202,6 +209,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<int>& pissurf,
 				   ParticleVariable<double>& temperature,
 				   ParticleVariable<long>& particleID,
+				   PerPatch<long>& NAPID,
 				   const Patch* patch)
 {
    GeometryPiece* piece = obj->getPiece();
@@ -214,14 +222,11 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    IntVector ppc = obj->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
+   int nbits=40;
 
    long patch_number = patch->getID();
 
-   cout << patch_number << endl;
-
-   patch_number <<= 40;
-
-   cout << patch_number << endl;
+   patch_number <<= nbits;
 
    particleIndex count = 0;
    for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
@@ -240,8 +245,8 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  // Determine if particle is on the surface
 		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
-		  particleID[start+count]=(patch_number | (start + count));
-		cout << particleID[start+count] << endl;
+		  particleID[start+count]=
+				(patch_number | (NAPID + start + count));
 		  count++;
 	       }
 	    }
@@ -305,6 +310,11 @@ double  MPMMaterial::getHeatTransferCoefficient() const
 }
 
 // $Log$
+// Revision 1.29  2000/06/05 19:48:58  guilkey
+// Added Particle IDs.  Also created NAPID (Next Available Particle ID)
+// on a per patch basis so that any newly created particles will know where
+// the indexing left off.
+//
 // Revision 1.28  2000/06/02 22:51:55  jas
 // Added infrastructure for Burn models.
 //
