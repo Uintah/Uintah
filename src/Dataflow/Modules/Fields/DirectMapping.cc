@@ -108,7 +108,7 @@ DirectMapping::execute()
 {
   update_state(NeedData);
 
-  FieldIPort * sfield_port = (FieldIPort *)get_iport("Sourcefoo");
+  FieldIPort * sfield_port = (FieldIPort *)get_iport("Source");
   FieldHandle sfHandle;
   if (!(sfield_port->get(sfHandle) && sfHandle.get_rep())) {
     error( "No source field handle or representation" );
