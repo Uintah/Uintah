@@ -904,7 +904,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 
       ProblemSpecP timeElem = rootElem->appendChild("Time");
       timeElem->appendElement("timestepNumber", timestep);
-      timeElem->appendElement("currentTime", time+delt);
+      timeElem->appendElement("currentTime", d_tempElapsedTime);
       timeElem->appendElement("delt", delt);
 
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
@@ -1031,7 +1031,7 @@ void DataArchiver::executedTimestep(double delt)
   if (d_wasOutputTimestep) {
     if (d_outputInterval != 0.0) {
       // output timestep
-      while (time+delt >= d_nextOutputTime)
+      while (d_tempElapsedTime >= d_nextOutputTime)
 	d_nextOutputTime+=d_outputInterval;
     }
     else if (d_outputTimestepInterval != 0) {
@@ -1043,7 +1043,7 @@ void DataArchiver::executedTimestep(double delt)
 
   if (d_wasCheckpointTimestep) {
     if (d_checkpointInterval != 0.0) {
-      while (time+delt >= d_nextCheckpointTime)
+      while (d_tempElapsedTime >= d_nextCheckpointTime)
 	d_nextCheckpointTime += d_checkpointInterval;
     }
     else if (d_checkpointTimestepInterval != 0) {
