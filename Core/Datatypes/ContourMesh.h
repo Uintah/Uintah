@@ -99,8 +99,8 @@ public:
   cell_iterator cell_end() const { return 0; }
 
   //! get the mesh statistics
-  unsigned get_number_nodes() const { return nodes_.size(); }
-  unsigned get_number_edges() const { return edges_.size(); }
+  unsigned get_number_nodes() const { return (unsigned)nodes_.size(); }
+  unsigned get_number_edges() const { return (unsigned)edges_.size(); }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
