@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#define SELECT_GRID
+
 namespace Uintah {
 
    using SCICore::Geometry::Point;
@@ -59,6 +61,7 @@ WARNING
       Level(Grid* grid, const Point& anchor, const Vector& dcell);
       virtual ~Level();
       
+      void setPatchDistributionHint(const IntVector& patchDistribution);
       typedef std::vector<Patch*>::iterator patchIterator;
       typedef std::vector<Patch*>::const_iterator const_patchIterator;
       const_patchIterator patchesBegin() const;
@@ -119,12 +122,26 @@ WARNING
       Point d_anchor;
       Vector d_dcell;
       bool d_finalized;
+      IntVector d_patchDistribution;
+
+#ifdef SELECT_GRID
+      IntVector d_idxLow;
+      IntVector d_idxHigh;
+      IntVector d_idxSize;
+      IntVector d_gridSize;
+      vector<int> d_gridStarts;
+      vector<Patch*> d_gridPatches;
+#endif
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.21.4.1  2000/10/07 06:10:36  sparker
+// Optimized implementation of Level::selectPatches
+// Cured g++ warnings
+//
 // Revision 1.21  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
