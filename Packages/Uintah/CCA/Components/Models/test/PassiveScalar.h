@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace Uintah {
-  class ICELabel;
+  
 
 /**************************************
 
@@ -37,7 +37,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-
+  class ICELabel;
   class GeometryPiece;
   class PassiveScalar :public ModelInterface {
   public:
@@ -73,6 +73,10 @@ WARNING
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
                                       
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
+                                      
   private:
     ICELabel* lb;
                                                 
@@ -95,6 +99,13 @@ WARNING
                              DataWarehouse* new_dw,
                              const ModelInfo* mi);
                              
+    void testConservation(const ProcessorGroup*, 
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const ModelInfo* mi);
+                                                       
     void errorEstimate(const ProcessorGroup* pg,
     		         const PatchSubset* patches,
 			  const MaterialSubset* matl,

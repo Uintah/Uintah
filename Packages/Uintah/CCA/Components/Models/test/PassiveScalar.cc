@@ -1,24 +1,25 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/Models/test/PassiveScalar.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Material.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
@@ -108,7 +109,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
                                             max_vartype::getTypeDescription());
   Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
-                                            max_vartype::getTypeDescription());
+                                            sum_vartype::getTypeDescription());
   
   d_modelComputesThermoTransportProps = true;
   
@@ -302,7 +303,6 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
                    this,&PassiveScalar::computeModelSources, mi);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gn = Ghost::None;
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->modifies(d_scalar->scalar_source_CCLabel);
@@ -312,14 +312,7 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::OldDW, Slb->lastProbeDumpTimeLabel);
     t->computes(Slb->lastProbeDumpTimeLabel);
   }
-  // compute sum(scalar_f * mass)
-  if(d_test_conservation){
-    t->requires(Task::OldDW, mi->density_CCLabel, gn,0);
-    t->requires(Task::OldDW, lb->uvel_FCMELabel,  gn,0);    
-    t->requires(Task::OldDW, lb->vvel_FCMELabel,  gn,0);    
-    t->requires(Task::OldDW, lb->wvel_FCMELabel,  gn,0);    
-    t->computes(Slb->sum_scalar_fLabel);
-  }
+
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
@@ -335,7 +328,6 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label, level);     
   Ghost::GhostType gac = Ghost::AroundCells;
-  Ghost::GhostType gn = Ghost::None; 
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -362,80 +354,6 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
       scalarDiffusionOperator(new_dw, patch, use_vol_frac,
                               placeHolder, placeHolder,  f_old,
                               f_src, diff_coeff, delT);
-    }
-
-    //__________________________________
-    //  conservation of f test
-    // - ignore the first timestep, vel_FC isn't computed
-    //   at this point in the algorithm on the first timestep
-    double sum_mass_f = 0.0;
-    int ts = d_dataArchiver->getCurrentTimestep();
-    
-    if(d_test_conservation && ts > 1 ) {
-    
-      constCCVariable<double> rho_CC_old;
-      old_dw->get(rho_CC_old, mi->density_CCLabel, indx, patch, gn, 0);
-     
-      Vector dx = patch->dCell();
-      double cellVol = dx.x()*dx.y()*dx.z();
-      double sum_mass_f_interior = 0;
-      
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        sum_mass_f_interior += rho_CC_old[c]*cellVol*f_old[c];
-      }
-      
-      //__________________________________
-      // sum the fluxes crossing the boundaries of the
-      // computational domain
-      double sum_mass_f_fluxes = 0.0;
-      constSFCXVariable<double> uvel_FC;
-      constSFCYVariable<double> vvel_FC;
-      constSFCZVariable<double> wvel_FC;
-       
-      old_dw->get(uvel_FC, lb->uvel_FCMELabel, indx,patch,gn, 0);
-      old_dw->get(vvel_FC, lb->vvel_FCMELabel, indx,patch,gn, 0);
-      old_dw->get(wvel_FC, lb->wvel_FCMELabel, indx,patch,gn, 0);
-      vector<Patch::FaceType>::const_iterator iter;
-  
-      for (iter  = patch->getBoundaryFaces()->begin(); 
-       iter != patch->getBoundaryFaces()->end(); ++iter){
-        Patch::FaceType face = *iter;
-        
-        IntVector axes = patch->faceAxes(face);
-        int P_dir = axes[0];  // principal direction
-        double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
-        
-        if (face == Patch::xminus || face == Patch::xplus) {    // X faces
-          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
-            !iter.done();iter++) {
-            IntVector c = *iter;
-            sum_mass_f_fluxes -= plus_minus_one*uvel_FC[c]*rho_CC_old[c]*cellVol*f_old[c];
-          }
-        }
-        if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
-          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
-            !iter.done();iter++) {
-            IntVector c = *iter;
-            sum_mass_f_fluxes -= plus_minus_one*vvel_FC[c]*rho_CC_old[c]*cellVol*f_old[c];
-          }
-        }
-        if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
-          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
-            !iter.done();iter++) {
-            IntVector c = *iter;
-            sum_mass_f_fluxes -= plus_minus_one*wvel_FC[c]*rho_CC_old[c]*cellVol*f_old[c];
-          }
-        }
-      }
-      sum_mass_f = sum_mass_f_interior + delT * sum_mass_f_fluxes;
-      
-      //cout<< " sum_mass_f: interior " << sum_mass_f_interior
-      //    << " faces " << sum_mass_f_fluxes
-      //    << " sum " << sum_mass_f << endl;
-    }
-    if(d_test_conservation) {
-      new_dw->put(sum_vartype(sum_mass_f), Slb->sum_scalar_fLabel);
     }
 
     //__________________________________
@@ -476,6 +394,78 @@ void PassiveScalar::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+
+//______________________________________________________________________
+void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const ModelInfo* mi)
+{
+  if(d_test_conservation){
+    cout_doing << "PASSIVESCALAR::scheduleTestConservation " << endl;
+    Task* t = scinew Task("PassiveScalar::testConservation", 
+                     this,&PassiveScalar::testConservation, mi);
+
+    Ghost::GhostType  gn = Ghost::None;
+    // compute sum(scalar_f * mass)
+    t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
+    t->requires(Task::NewDW, mi->density_CCLabel,      gn,0);
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
+    t->computes(Slb->sum_scalar_fLabel);
+
+    sched->addTask(t, patches, d_matl_set);
+  }
+}
+
+//______________________________________________________________________
+void PassiveScalar::testConservation(const ProcessorGroup*, 
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* /*matls*/,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw,
+                                     const ModelInfo* mi)
+{
+  const Level* level = getLevel(patches);
+  delt_vartype delT;
+  old_dw->get(delT, mi->delT_Label, level);     
+  Ghost::GhostType gn = Ghost::None; 
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing testConservation on patch "<<patch->getID()
+               << "\t\t\t PassiveScalar" << endl;
+               
+    //__________________________________
+    //  conservation of f test
+    constCCVariable<double> rho_CC, f;
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    int indx = d_matl->getDWIndex();
+    new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
+    new_dw->get(rho_CC,  mi->density_CCLabel,     indx,patch,gn,0); 
+    new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
+    new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    Vector dx = patch->dCell();
+    double cellVol = dx.x()*dx.y()*dx.z();
+
+    CCVariable<double> q_CC;
+    new_dw->allocateTemporary(q_CC, patch);
+
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      q_CC[c] = rho_CC[c]*cellVol*f[c];
+    }
+
+    double sum_mass_f;
+    conservationTest(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, sum_mass_f);
+    
+    new_dw->put(sum_vartype(sum_mass_f), Slb->sum_scalar_fLabel);
+  }
+}
+
 //______________________________________________________________________
 //
 void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
@@ -491,7 +481,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
   
   t->computes(d_scalar->scalar_gradLabel);
-  t->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
