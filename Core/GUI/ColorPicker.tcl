@@ -24,7 +24,7 @@
 #  Copyright (C) 1994 SCI Group
 
 
-# If the window passed in in 'w' does not exist, makeColorPicker will
+# If the window passed in ('w') does not exist, makeColorPicker will
 # create the window for you.
 
 proc makeColorPicker {w var command cancel} {
@@ -36,7 +36,10 @@ proc makeColorPicker {w var command cancel} {
 
     if ![winfo exists $w] {
 	toplevel $w
-	# Keep it from flickering
+	wm title $w "Color Picker"
+	# Withdraw the window until it has been completely created.
+	# This will keep it from flickering when it is repositioned
+	# (to the cursor).
 	wm withdraw $w 
     }
 
@@ -63,13 +66,13 @@ proc makeColorPicker {w var command cancel} {
 
     frame $picks.rgb -relief groove -borderwidth 4
     set rgb $picks.rgb
-    scale $rgb.s1 -label Red -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s1 -label "Red" -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-r
-    scale $rgb.s2 -label Green -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s2 -label "Green" -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-g
-    scale $rgb.s3 -label Blue -from 0.0 -to 1.0 -length 6c -showvalue true \
+    scale $rgb.s3 -label "Blue" -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
 	    -digits 3 -variable $w-b
     pack $rgb.s1 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
@@ -120,7 +123,7 @@ proc makeColorPicker {w var command cancel} {
     $hsv.s1 configure -command "cpsethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
     $hsv.s2 configure -command "cpsethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
+ $hsv.s1 $hsv.s2 $hsv.s3 "
     $hsv.s3 configure -command "cpsethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
 	    $hsv.s1 $hsv.s2 $hsv.s3 "
 
@@ -152,7 +155,12 @@ proc makeColorPicker {w var command cancel} {
 	    -padx 2 -pady 2 -expand 1 -fill both
     pack $w.c
 
-    moveToCursor $w "leave_up"
+    TooltipMultiWidget "$w.c.opts.rgb $w.c.opts.hsv" "These radio buttons allow you to select Red/Blue/Green (RGB)\nor Hue/Saturation/Value (HSV) methods of entering a color.\nTo select a shade of gray, it is easier to use the HSV mode."
+
+    if { [winfo toplevel $w] == $w } {
+        # If $w is a toplevel window, move it to the cursor.
+	moveToCursor $w "leave_up"
+    }
 }
 
 proc Max {n1 n2 n3} {
