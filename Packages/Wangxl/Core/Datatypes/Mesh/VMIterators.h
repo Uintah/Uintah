@@ -184,7 +184,7 @@ public:
     
   VMVertexIterator operator--(int)
     {
-      Vertex_iterator tmp(*this);
+      VMVertexIterator tmp(*this);
       --(*this);
       return tmp;
     }
@@ -534,7 +534,7 @@ public:
 	      e--;
 	  }
 	  if (pos != d_mesh->past_end_cell()) {
-	    VMCellCirculator ccir = d_mesh->incident_cells(pos,b,e);
+	    VMCellCirculator<Mesh> ccir = d_mesh->incident_cells(pos,b,e);
 	    do {
 	      ++ccir;
 	    } while ( &(*ccir) > pos );

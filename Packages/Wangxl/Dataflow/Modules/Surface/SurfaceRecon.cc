@@ -220,7 +220,7 @@ bool SurfaceRecon::readPoints()
   minx = miny = minz = LARGENUMBER;
   maxx = maxy = maxz = SMALLNUMBER;
 
-  if (!d_iport->get(ihandle) || !(ifield = ihandle.get_rep())) return;
+  if (!d_iport->get(ihandle) || !(ifield = ihandle.get_rep())) return false;
   pfield = (PointCloudField<double>*)ifield;
   pmesh =  pfield->get_typed_mesh().get_rep();
   pmesh->begin(ni);

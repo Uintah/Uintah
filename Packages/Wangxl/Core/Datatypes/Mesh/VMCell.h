@@ -134,6 +134,7 @@ bool VMCell::is_valid(int dim, bool verbose, int level) const
   switch (dim) {
   case -2:
   case -1:
+    {
     if ( vertex(0) == 0 ) {
       if (verbose) std::cerr << "vertex 0 NULL" << std::endl;
       assert(false);
@@ -152,7 +153,9 @@ bool VMCell::is_valid(int dim, bool verbose, int level) const
       return false;
     }
     break;
+    }
   case 0:
+    {
     if ( vertex(0) == 0 ) {
       if (verbose) std::cerr << "vertex 0 NULL" << std::endl;
       assert(false);
@@ -181,7 +184,9 @@ bool VMCell::is_valid(int dim, bool verbose, int level) const
       return false;
     }
     break;
+    }
   case 1:
+    {
     VMVertex* v0 = vertex(0); 
     VMVertex* v1 = vertex(1);
     VMCell* n0 = neighbor(0); 
@@ -236,8 +241,9 @@ bool VMCell::is_valid(int dim, bool verbose, int level) const
       return false;
     }
     break;
-
+    }
   case 2:
+    {
     if ( vertex(0) == 0 || vertex(1) == 0 || vertex(2) == 0 ) {
       if (verbose) std::cerr << "vertex 0, 1, or 2 NULL" << std::endl;
       assert(false);
@@ -291,7 +297,9 @@ bool VMCell::is_valid(int dim, bool verbose, int level) const
       }
     }
     break;
+    }
   case 3:
+    {
     int i;
     for(i = 0; i < 4; i++) {
       if ( vertex(i) == 0 ) {
@@ -408,6 +416,7 @@ bool VMCell::is_valid(int dim, bool verbose, int level) const
 	}
       }
     } // end looking at neighbors
+    }
   } // end switch
   return true;
 } // end is_valid
