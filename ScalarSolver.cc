@@ -149,11 +149,11 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
@@ -246,11 +246,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
     new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -437,11 +437,11 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefPredLabel, d_lab->d_stencilMatl,
@@ -506,11 +506,11 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
     new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -739,11 +739,11 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefCorrLabel, d_lab->d_stencilMatl,
@@ -808,11 +808,11 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit get old values
     new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {

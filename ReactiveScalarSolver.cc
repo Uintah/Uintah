@@ -144,11 +144,11 @@ ReactiveScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::AroundFaces, numGhostCells);
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_reactscalCoefPredLabel, d_lab->d_stencilMatl,
@@ -222,11 +222,11 @@ void ReactiveScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     // for explicit get old values
     new_dw->getCopy(reactscalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(reactscalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(reactscalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
