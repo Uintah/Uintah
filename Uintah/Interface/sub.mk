@@ -13,12 +13,15 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/Scheduler.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid
-LIBS :=
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/03/29 02:00:00  jas
+# Filled in the findBlock method.
+#
 # Revision 1.3  2000/03/23 20:42:24  sparker
 # Added copy ctor to exception classes (for Linux/g++)
 # Helped clean up move of ProblemSpec from Interface to Grid
