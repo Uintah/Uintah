@@ -45,7 +45,7 @@ itcl_class Kurt_Vis_TexCuttingPlanes {
 	    -anchor w -command "set $this-drawView 0; $n"
 
 	checkbutton $w.f.vp -text "View plane" -relief flat \
-	    -variable $this-drawX -onvalue 1 -offvalue 0 \
+	    -variable $this-drawView -onvalue 1 -offvalue 0 \
 	    -anchor w -command \
 	    "set $this-drawX 0; set $this-drawY 0; set $this-drawZ 0; $n"
 
@@ -54,23 +54,23 @@ itcl_class Kurt_Vis_TexCuttingPlanes {
 		-side top -fill x
 
 	frame $w.f.x
-	button $w.f.x.plus -text "+" -command "$this-c MoveWidget xplus"
+	button $w.f.x.plus -text "+" -command "$this-c MoveWidget xplus; $n"
 	label $w.f.x.label -text " X "
-	button $w.f.x.minus -text "-" -command "$this-c MoveWidget xminus"
+	button $w.f.x.minus -text "-" -command "$this-c MoveWidget xminus; $n"
 	pack $w.f.x.plus $w.f.x.label $w.f.x.minus -side left -fill x -expand 1
 	pack $w.f.x -side top -fill x -expand 1
 
 	frame $w.f.y
-	button $w.f.y.plus -text "+" -command "$this-c MoveWidget yplus"
+	button $w.f.y.plus -text "+" -command "$this-c MoveWidget yplus; $n"
 	label $w.f.y.label -text " Y "
-	button $w.f.y.minus -text "-" -command "$this-c MoveWidget yminus"
+	button $w.f.y.minus -text "-" -command "$this-c MoveWidget yminus; $n"
 	pack $w.f.y.plus $w.f.y.label $w.f.y.minus -side left -fill x -expand 1
 	pack $w.f.y -side top -fill x -expand 1
 
 	frame $w.f.z
-	button $w.f.z.plus -text "+" -command "$this-c MoveWidget zplus"
+	button $w.f.z.plus -text "+" -command "$this-c MoveWidget zplus; $n"
 	label $w.f.z.label -text " Z "
-	button $w.f.z.minus -text "-" -command "$this-c MoveWidget zminus"
+	button $w.f.z.minus -text "-" -command "$this-c MoveWidget zminus; $n"
 	pack $w.f.z.plus $w.f.z.label $w.f.z.minus -side left -fill x -expand 1
 	pack $w.f.z -side top -fill x -expand 1
 

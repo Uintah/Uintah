@@ -12,6 +12,7 @@ using SCICore::Geometry::Polygon;
 using namespace Kurt::Datatypes;
 using std::vector;
 
+
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
     : volren( glvr ), texName(0), reload((unsigned char *)1)
 {
@@ -57,7 +58,7 @@ void
 GLVolRenState::drawPolys( vector<Polygon *> polys )
 {
   int i,j,k;
-
+  
   for(i = 0; i < polys.size(); i++){
     switch( polys[i]->size() ) {
     case 1:
@@ -97,6 +98,7 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
     }
   }
 }
+
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
@@ -208,6 +210,17 @@ GLVolRenState::disableTexCoords()
   glDisable(GL_TEXTURE_GEN_T);
   glDisable(GL_TEXTURE_GEN_R);
   glDisable(GL_TEXTURE_GEN_Q);
+}
+
+void 
+GLVolRenState::enableBlend()
+{
+  glEnable(GL_BLEND);
+}
+void 
+GLVolRenState::disableBlend()
+{
+  glDisable(GL_BLEND);
 }
 
 void

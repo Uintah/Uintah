@@ -16,8 +16,10 @@ using Kurt::Datatypes::Brick;
 using Kurt::Datatypes::SliceTable;
 
 
-double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0, 0,1,0,0, 1,0,0,0, 0,0,0,1};
-
+double GLVolumeRenderer::swapMatrix[16] = { 0,0,1,0,
+					    0,1,0,0,
+					    1,0,0,0,
+					    0,0,0,1};
 
 GLVolumeRenderer::GLVolumeRenderer(int id) 
  : GeomObj( id ), 
@@ -93,7 +95,9 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
-  //  glDisable(GL_DEPTH_TEST);
+
+
+
   glEnable(GL_TEXTURE_3D_EXT);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
@@ -113,17 +117,23 @@ GLVolumeRenderer::setup()
     }
   }
   glColor4f(1,1,1,1); // set to all white for modulation
-  //  glPushMatrix();
-  // swap x & z;
-  glMultMatrixd(swapMatrix);
+
+//   glMatrixMode(GL_TEXTURE);
+//   glPushMatrix();
+//   glRotated( 90, 0,1,0);
+//   glMatrixMode(GL_MODELVIEW);
+
 }
 
 
 void
 GLVolumeRenderer::cleanup()
 {
-  glMultMatrixd(swapMatrix);
-  //  glPopMatrix();
+
+//   glMatrixMode(GL_TEXTURE);
+//   glPopMatrix();
+//   glMatrixMode(GL_MODELVIEW);
+
 #ifdef __sgi
   if( cmap )
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);

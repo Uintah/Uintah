@@ -23,6 +23,9 @@ TexPlanes::TexPlanes(const GLVolumeRenderer* glvr ) :
 void
 TexPlanes::draw()
 {
+  using std::cerr;
+  using std::endl;
+  
   Ray viewRay;
   Brick* brick;
   computeView(viewRay);
@@ -35,26 +38,18 @@ TexPlanes::draw()
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
     Brick& b = *brick;
     box = b.bbox();
-//     t = intersectParam(-viewRay.direction(), volren->controlPoint, viewRay);
+    Point viewPt = viewRay.origin();
+    Point mid = b[0] + (b[7] - b[0])*0.5;
+    Point c(volren->controlPoint);
 
-//     if( box.inside( viewRay.parameter( t ) )){
-//       if(volren->drawView){
-// 	b.ComputePoly( viewRay, t, poly);
-// 	draw( b, poly );
-//       }
     if(volren->drawX){
-      Vector v(1,0,0);
-      Point o(volren->controlPoint);
-	std::cerr<<"brick min = "<<b[0].x()
-		 <<", brick max = "<<b[7].x()<<std::endl;
-	std::cerr<<"control Point = "<< o <<std::endl;
-      if(o.x() > b[0].x() && o.x() < b[7].x() ){
-	if( viewRay.origin().x() > o.x() ){
-	  v.x(-1);
+      Point o(b[0].x(), mid.y(), mid.z());
+      Vector v(c.x() - o.x(), 0,0);
+      if(c.x() > b[0].x() && c.x() < b[7].x() ){
+	if( viewPt.x() > c.x() ){
 	  o.x(b[7].x());
-	} else {
-	  o.x(b[0].x());
-	}
+	  v.x(c.x() - o.x());
+	} 
 	Ray r(o,v);
 	t = intersectParam(-r.direction(), volren->controlPoint, r);
 	b.ComputePoly( r, t, poly);
@@ -62,15 +57,13 @@ TexPlanes::draw()
       }
     }
     if(volren->drawY){
-      Vector v(1,0,0);
-      Point o(volren->controlPoint);
-      if(o.y() > b[0].y() && o.y() < b[7].y() ){
-	if( viewRay.origin().y() > o.y() ){
-	  v.y(-1);
+      Point o(mid.x(), b[0].y(), mid.z());
+      Vector v(0, c.y() - o.y(), 0);
+      if(c.y() > b[0].y() && c.y() < b[7].y() ){
+	if( viewPt.y() > c.y() ){
 	  o.y(b[7].y());
-	} else {
-	  o.y(b[0].y());
-	}
+	  v.y(c.y() - o.y());
+	} 
 	Ray r(o,v);
 	t = intersectParam(-r.direction(), volren->controlPoint, r);
 	b.ComputePoly( r, t, poly);
@@ -78,15 +71,13 @@ TexPlanes::draw()
       }
     }
     if(volren->drawZ){
-      Vector v(1,0,0);
-      Point o(volren->controlPoint);
-      if(o.z() > b[0].z() && o.z() < b[7].z() ){
-	if( viewRay.origin().z() > o.z() ){
-	  v.z(-1);
+      Point o(mid.x(), mid.y(), b[0].z());
+      Vector v(0, 0, c.z() - o.z());
+      if(c.z() > b[0].z() && c.z() < b[7].z() ){
+	if( viewPt.z() > c.z() ){
 	  o.z(b[7].z());
-	} else {
-	  o.z(b[0].z());
-	}
+	  v.z(c.z() - o.z());
+	} 
 	Ray r(o,v);
 	t = intersectParam(-r.direction(), volren->controlPoint, r);
 	b.ComputePoly( r, t, poly);
@@ -102,12 +93,14 @@ TexPlanes::draw(Brick& b, Polygon* poly)
 {
   vector<Polygon *> polys;
   polys.push_back( poly );
+  //  disableBlend();
   loadTexture( b );
   makeTextureMatrix( b );
   enableTexCoords();
   setAlpha( b );
   drawPolys( polys );
   disableTexCoords();
+  //  enableBlend();
 }
 
 void

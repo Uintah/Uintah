@@ -83,13 +83,17 @@ protected:
   void loadTexture( Brick& brick);
   void makeTextureMatrix(const Brick& brick);
   void enableTexCoords();
+  void enableBlend();
   void drawPolys( vector<Polygon *> polys);
   void disableTexCoords();
+  void disableBlend();
   void drawWireFrame(const Brick& brick);
   const GLVolumeRenderer*  volren;
 
   GLuint* texName;
   unsigned char* reload;
+
+
 };
 
 } // end namespace GeomSpace
