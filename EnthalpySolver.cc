@@ -829,7 +829,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constEnthalpyVars.old_density, timelabels->density_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constEnthalpyVars.old_enthalpy, timelabels->enthalpy_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(constEnthalpyVars.uVelocity, timelabels->uvelocity_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constEnthalpyVars.vVelocity, timelabels->vvelocity_in, 
@@ -839,9 +839,9 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
     // for explicit calculation
     new_dw->allocateAndPut(enthalpyVars.enthalpy, timelabels->enthalpy_out, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->copyOut(enthalpyVars.enthalpy, timelabels->enthalpy_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
       new_dw->get(constEnthalpyVars.scalarCoeff[ii],

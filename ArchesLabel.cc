@@ -221,12 +221,8 @@ ArchesLabel::ArchesLabel()
 				      CCVariable<double>::getTypeDescription() );
 
   // scalar variance
-  d_scalarVarINLabel = VarLabel::create("scalarVarIN", 
-				       CCVariable<double>::getTypeDescription() );
 
   d_scalarVarSPLabel = VarLabel::create("scalarVarSP", 
-				       CCVariable<double>::getTypeDescription() );
-  d_scalarDissINLabel = VarLabel::create("scalarDissIN", 
 				       CCVariable<double>::getTypeDescription() );
 
   d_scalarDissSPLabel = VarLabel::create("scalarDissSP", 
@@ -838,9 +834,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalarINLabel);
   VarLabel::destroy(d_scalarSPLabel);
   VarLabel::destroy(d_scalarCPBCLabel);
-  VarLabel::destroy(d_scalarVarINLabel);
   VarLabel::destroy(d_scalarVarSPLabel);
-  VarLabel::destroy(d_scalarDissINLabel);
   VarLabel::destroy(d_scalarDissSPLabel);
   VarLabel::destroy(d_scalCoefSBLMLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
