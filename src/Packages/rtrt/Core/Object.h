@@ -46,6 +46,8 @@ namespace rtrt {
 class Object : public virtual SCIRun::Persistent {
   Material* matl;
   UVMapping* uv;
+protected:
+  bool was_preprocessed;
 public:
   string name_;
 

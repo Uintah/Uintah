@@ -38,6 +38,9 @@ Grid::~Grid()
 
 void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
+  if (was_preprocessed) return;
+  was_preprocessed=true;
+
     cerr << "Building grid\n";
     double time=Time::currentSeconds();
     obj->preprocess(maxradius, pp_offset, scratchsize);
@@ -205,174 +208,250 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     cerr << "Done building grid\n";
 }
 
-void Grid::intersect(const Ray& ray, HitInfo& hit,
-		    DepthStats* st, PerProcessorContext* ppc)
-{
-    const Vector dir(ray.direction());
-    const Point orig(ray.origin());
-    Point min(bbox.min());
-    Point max(bbox.max());
-    Vector diag(bbox.diagonal());
-    double MIN, MAX;
-    double inv_dir=1./dir.x();
-    int didx_dx, dix_dx;
-    int ddx;
-    int nynz=ny*nz;
-    if(dir.x() > 0){
-	MIN=inv_dir*(min.x()-orig.x());
-	MAX=inv_dir*(max.x()-orig.x());
-	didx_dx=nynz;
-	dix_dx=1;
-	ddx=1;
-    } else {
-	MIN=inv_dir*(max.x()-orig.x());
-	MAX=inv_dir*(min.x()-orig.x());
-	didx_dx=-nynz;
-	dix_dx=-1;
-	ddx=0;
-    }	
-    double y0, y1;
-    int didx_dy, diy_dy;
-    int ddy;
-    if(dir.y() > 0){
-	double inv_dir=1./dir.y();
-	y0=inv_dir*(min.y()-orig.y());
-	y1=inv_dir*(max.y()-orig.y());
-	didx_dy=nz;
-	diy_dy=1;
-	ddy=1;
-    } else {
-	double inv_dir=1./dir.y();
-	y0=inv_dir*(max.y()-orig.y());
-	y1=inv_dir*(min.y()-orig.y());
-	didx_dy=-nz;
-	diy_dy=-1;
-	ddy=0;
-    }
-    if(y0>MIN)
-	MIN=y0;
-    if(y1<MAX)
-	MAX=y1;
-    if(MAX<MIN)
-	return;
-    
-    double z0, z1;
-    int didx_dz, diz_dz;
-    int ddz;
-    if(dir.z() > 0){
-	double inv_dir=1./dir.z();
-	z0=inv_dir*(min.z()-orig.z());
-	z1=inv_dir*(max.z()-orig.z());
-	didx_dz=1;
-	diz_dz=1;
-	ddz=1;
-    } else {
-	double inv_dir=1./dir.z();
-	z0=inv_dir*(max.z()-orig.z());
-	z1=inv_dir*(min.z()-orig.z());
-	didx_dz=-1;
-	diz_dz=-1;
-	ddz=0;
-    }
-    if(z0>MIN)
-	MIN=z0;
-    if(z1<MAX)
-	MAX=z1;
-    if(MAX<MIN)
-	return;
-    double t;
-    if(MIN > 1.e-6){
-	t=MIN;
-    } else if(MAX > 1.e-6){
-	t=0;
-    } else {
-	return;
-    }
-    if(t>1.e29)
-	return;
-    Point p(orig+dir*t);
-    Vector s((p-min)/diag);
-    int ix=(int)(s.x()*nx);
-    int iy=(int)(s.y()*ny);
-    int iz=(int)(s.z()*nz);
-    if(ix>=nx)
-	ix--;
-    if(iy>=ny)
-	iy--;
-    if(iz>=nz)
-	iz--;
-    if(ix<0)
-	ix++;
-    if(iy<0)
-	iy++;
-    if(iz<0)
-	iz++;
-
-
-//      hit.hit(this,t);
-//      return;
-
-
-    int idx=ix*nynz+iy*nz+iz;
-
-    double next_x, next_y, next_z;
-    double dtdx, dtdy, dtdz;
-    double x=min.x()+diag.x()*double(ix+ddx)/nx;
-    next_x=(x-orig.x())/dir.x();
-    dtdx=dix_dx*diag.x()/nx/dir.x();
-    double y=min.y()+diag.y()*double(iy+ddy)/ny;
-    next_y=(y-orig.y())/dir.y();
-    dtdy=diy_dy*diag.y()/ny/dir.y();
-    double z=min.z()+diag.z()*double(iz+ddz)/nz;
-    next_z=(z-orig.z())/dir.z();
-    dtdz=diz_dz*diag.z()/nz/dir.z();
+void Grid::general_intersect(const Ray& ray, HitInfo& hit, DepthStats* st, 
+			     PerProcessorContext* ppc, int intersection_type,
+			     Light *light, Color &atten, double dist) {
+  const Vector dir(ray.direction());
+  const Point orig(ray.origin());
+  Point min(bbox.min());
+  Point max(bbox.max());
+  Vector diag(bbox.diagonal());
+  double MIN, MAX;
+  double inv_dir=1./dir.x();
+  int didx_dx, dix_dx;
+  int ddx;
+  int nynz=ny*nz;
+  if(dir.x() > 0){
+    MIN=inv_dir*(min.x()-orig.x());
+    MAX=inv_dir*(max.x()-orig.x());
+    didx_dx=nynz;
+    dix_dx=1;
+    ddx=1;
+  } else {
+    MIN=inv_dir*(max.x()-orig.x());
+    MAX=inv_dir*(min.x()-orig.x());
+    didx_dx=-nynz;
+    dix_dx=-1;
+    ddx=0;
+  }	
+  double y0, y1;
+  int didx_dy, diy_dy;
+  int ddy;
+  if(dir.y() > 0){
+    double inv_dir=1./dir.y();
+    y0=inv_dir*(min.y()-orig.y());
+    y1=inv_dir*(max.y()-orig.y());
+    didx_dy=nz;
+    diy_dy=1;
+    ddy=1;
+  } else {
+    double inv_dir=1./dir.y();
+    y0=inv_dir*(max.y()-orig.y());
+    y1=inv_dir*(min.y()-orig.y());
+    didx_dy=-nz;
+    diy_dy=-1;
+    ddy=0;
+  }
+  if(y0>MIN)
+    MIN=y0;
+  if(y1<MAX)
+    MAX=y1;
+  if(MAX<MIN)
+    return;
+  
+  double z0, z1;
+  int didx_dz, diz_dz;
+  int ddz;
+  if(dir.z() > 0){
+    double inv_dir=1./dir.z();
+    z0=inv_dir*(min.z()-orig.z());
+    z1=inv_dir*(max.z()-orig.z());
+    didx_dz=1;
+    diz_dz=1;
+    ddz=1;
+  } else {
+    double inv_dir=1./dir.z();
+    z0=inv_dir*(max.z()-orig.z());
+    z1=inv_dir*(min.z()-orig.z());
+    didx_dz=-1;
+    diz_dz=-1;
+    ddz=0;
+  }
+  if(z0>MIN)
+    MIN=z0;
+  if(z1<MAX)
+    MAX=z1;
+  if(MAX<MIN)
+    return;
+  double t;
+  if(MIN > 1.e-6){
+    t=MIN;
+  } else if(MAX > 1.e-6){
+    t=0;
+  } else {
+    return;
+  }
+  if(t>1.e29)
+    return;
+  Point p(orig+dir*t);
+  Vector s((p-min)/diag);
+  int ix=(int)(s.x()*nx);
+  int iy=(int)(s.y()*ny);
+  int iz=(int)(s.z()*nz);
+  if(ix>=nx)
+    ix--;
+  if(iy>=ny)
+    iy--;
+  if(iz>=nz)
+    iz--;
+  if(ix<0)
+    ix++;
+  if(iy<0)
+    iy++;
+  if(iz<0)
+    iz++;
+  
+  
+  //      hit.hit(this,t);
+  //      return;
+  
+  
+  int idx=ix*nynz+iy*nz+iz;
+  
+  double next_x, next_y, next_z;
+  double dtdx, dtdy, dtdz;
+  double x=min.x()+diag.x()*double(ix+ddx)/nx;
+  next_x=(x-orig.x())/dir.x();
+  dtdx=dix_dx*diag.x()/nx/dir.x();
+  double y=min.y()+diag.y()*double(iy+ddy)/ny;
+  next_y=(y-orig.y())/dir.y();
+  dtdy=diy_dy*diag.y()/ny/dir.y();
+  double z=min.z()+diag.z()*double(iz+ddz)/nz;
+  next_z=(z-orig.z())/dir.z();
+  dtdz=diz_dz*diag.z()/nz/dir.z();
+  if (intersection_type == 2) { // soft shadows
     for(;;){
       int n=counts[idx*2+1];
       int s=counts[idx*2];
-      for(int i=0;i<n;i++){
-	grid[s+i]->intersect(ray, hit, st, ppc);
+      for(int i=0;i<n;i++) {
+	grid[s+i]->softshadow_intersect(light, ray, hit, dist, atten, st, ppc);
+	if (hit.was_hit) return;
       }
-	if(next_x < next_y && next_x < next_z){
-	    // Step in x...
-	    t=next_x;
-	    next_x+=dtdx;
-	    ix+=dix_dx;
-	    idx+=didx_dx;
-	    if(ix<0 || ix>=nx)
-		break;
-	} else if(next_y < next_z){
-	    t=next_y;
-	    next_y+=dtdy;
-	    iy+=diy_dy;
-	    idx+=didx_dy;
-	    if(iy<0 || iy>=ny)
-		break;
-	} else {
-	    t=next_z;
-	    next_z+=dtdz;
-	    iz+=diz_dz;
-	    idx+=didx_dz;
-	    if(iz<0 || iz >=nz)
-		break;
-	}
-	if(hit.min_t < t)
-	    break;
+      if(next_x < next_y && next_x < next_z){
+	// Step in x...
+	t=next_x;
+	next_x+=dtdx;
+	ix+=dix_dx;
+	idx+=didx_dx;
+	if(ix<0 || ix>=nx)
+	  break;
+      } else if(next_y < next_z){
+	t=next_y;
+	next_y+=dtdy;
+	iy+=diy_dy;
+	idx+=didx_dy;
+	if(iy<0 || iy>=ny)
+	  break;
+      } else {
+	t=next_z;
+	next_z+=dtdz;
+	iz+=diz_dz;
+	idx+=didx_dz;
+	if(iz<0 || iz >=nz)
+	  break;
+      }
+      if(hit.min_t < t)
+	break;
     }
+  } else if (intersection_type == 1) { // hard shadows
+    for(;;){
+      int n=counts[idx*2+1];
+      int s=counts[idx*2];
+      for(int i=0;i<n;i++)
+	grid[s+i]->light_intersect(ray, hit, atten, st, ppc);
+      if(next_x < next_y && next_x < next_z){
+	// Step in x...
+	t=next_x;
+	next_x+=dtdx;
+	ix+=dix_dx;
+	idx+=didx_dx;
+	if(ix<0 || ix>=nx)
+	  break;
+      } else if(next_y < next_z){
+	t=next_y;
+	next_y+=dtdy;
+	iy+=diy_dy;
+	idx+=didx_dy;
+	if(iy<0 || iy>=ny)
+	  break;
+      } else {
+	t=next_z;
+	next_z+=dtdz;
+	iz+=diz_dz;
+	idx+=didx_dz;
+	if(iz<0 || iz >=nz)
+	  break;
+      }
+      if(hit.min_t < t)
+	break;
+    }
+  } else { // normal object intersect (interection_type == 0)
+    for(;;){
+      int n=counts[idx*2+1];
+      int s=counts[idx*2];
+      for(int i=0;i<n;i++)
+	grid[s+i]->intersect(ray, hit, st, ppc);
+      if(next_x < next_y && next_x < next_z){
+	// Step in x...
+	t=next_x;
+	next_x+=dtdx;
+	ix+=dix_dx;
+	idx+=didx_dx;
+	if(ix<0 || ix>=nx)
+	  break;
+      } else if(next_y < next_z){
+	t=next_y;
+	next_y+=dtdy;
+	iy+=diy_dy;
+	idx+=didx_dy;
+	if(iy<0 || iy>=ny)
+	  break;
+      } else {
+	t=next_z;
+	next_z+=dtdz;
+	iz+=diz_dz;
+	idx+=didx_dz;
+	if(iz<0 || iz >=nz)
+	  break;
+      }
+      if(hit.min_t < t)
+	break;
+    }
+  }
 }
 
-void Grid::light_intersect(const Ray& lightray, HitInfo& hit, Color&,
+void Grid::intersect(const Ray& ray, HitInfo& hit,
+		     DepthStats* st, PerProcessorContext* ppc)
+{
+  Color atten;
+  double dist;
+  Light *light;
+  general_intersect(ray, hit, st, ppc, 0, light, atten, dist);
+}
+
+void Grid::light_intersect(const Ray& lightray, HitInfo& hit, Color& atten,
 			   DepthStats* ds, PerProcessorContext* ppc)
 {
-//  cerr << "Grid::light_intersect should be implemented properly! - Steve\n";
-  intersect(lightray, hit, ds, ppc);
+  double dist;
+  Light *light;
+  general_intersect(lightray, hit, ds, ppc, 1, light, atten, dist);
 }
 
-void Grid::softshadow_intersect(Light*, const Ray& lightray,
-				HitInfo& hit, double, Color&,
+void Grid::softshadow_intersect(Light* light, const Ray& lightray,
+				HitInfo& hit, double dist, Color& atten,
 				DepthStats* ds, PerProcessorContext* ppc)
 {
-//  cerr << "Grid::softshadow_intersect should be implemented properly! - Steve\n";
-  intersect(lightray, hit, ds, ppc);
+  general_intersect(lightray, hit, ds, ppc, 2, light, atten, dist);
 }
 
 void Grid::animate(double t, bool&changed)
