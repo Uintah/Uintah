@@ -199,6 +199,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
     StaticArray<NCVariable<double> > normtraction(numMatls);
     StaticArray<NCVariable<Vector> > gsurfnorm(numMatls);
+    StaticArray<NCVariable<double> > gint_heatrate(numMatls);
 
     Vector surnor;
 
@@ -389,15 +390,17 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
       int matlindex = matls->get(m);
-      new_dw->get(gmass[m], lb->gMassLabel,matlindex,
+      new_dw->get(gmass[m],          lb->gMassLabel,matlindex,
 					patch,Ghost::None, 0);
       new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel,matlindex,
 					patch, Ghost::None, 0);
-      new_dw->get(gacceleration[m],lb->gAccelerationLabel,matlindex,
+      new_dw->get(gacceleration[m],  lb->gAccelerationLabel,matlindex,
 					patch, Ghost::None, 0);
-      new_dw->get(normtraction[m],lb->gNormTractionLabel,matlindex,
+      new_dw->get(normtraction[m],   lb->gNormTractionLabel,matlindex,
 					patch, Ghost::None, 0);
-      new_dw->get(gsurfnorm[m],lb->gSurfNormLabel,matlindex,
+      new_dw->get(gsurfnorm[m],      lb->gSurfNormLabel,matlindex,
+					patch, Ghost::None, 0);
+      new_dw->get(gint_heatrate[m],  lb->gInternalHeatRateLabel,matlindex,
 					patch, Ghost::None, 0);
     }
 
@@ -483,8 +486,9 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     // Store new velocities and accelerations in DataWarehouse
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
-      new_dw->modify(gvelocity_star[m], lb->gVelocityStarLabel, dwindex, patch);
-      new_dw->modify(gacceleration[m],  lb->gAccelerationLabel, dwindex, patch);
+      new_dw->modify(gvelocity_star[m], lb->gVelocityStarLabel,  dwindex,patch);
+      new_dw->modify(gacceleration[m],  lb->gAccelerationLabel,  dwindex,patch);
+      new_dw->modify(gint_heatrate[m],lb->gInternalHeatRateLabel,dwindex,patch);
     }
   }
 }
@@ -508,8 +512,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
   t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,
 	      Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::AroundNodes, 1);
-  t->modifies(             lb->gVelocityStarLabel, mss);
-  t->modifies(             lb->gAccelerationLabel, mss);
+  t->modifies(             lb->gVelocityStarLabel,     mss);
+  t->modifies(             lb->gAccelerationLabel,     mss);
+  t->modifies(             lb->gInternalHeatRateLabel, mss);
 
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
