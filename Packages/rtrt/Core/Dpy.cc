@@ -98,11 +98,6 @@
 
 #include <sys/time.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysym.h>
-
-#include "FontString.h"
 /* #include <SpeedShop/api.h> */
 
 using namespace rtrt;
@@ -251,8 +246,6 @@ Dpy::run()
 
   priv->last_time = 0;
 
-  priv->draw_pstats=false;
-  priv->draw_rstats=false;
   shadowMode_ = scene->shadow_mode;
   ambientMode_ = scene->ambient_mode;
   obj=scene->get_object();
@@ -281,46 +274,43 @@ Dpy::run()
     }
 } // end run()
 
-void
-Dpy::renderFrameless() {
-  cout << "can't do frameless right now.\n";
-  return;
-} // end renderFrameless()
-
-void
-Dpy::renderFrame() {
-
-  bool  & stereo= priv->stereo;  
+bool
+Dpy::checkGuiFlags()
+{
   bool  & animate= priv->animate;
   int   & maxdepth= priv->maxdepth;
   float & base_threshold= priv->base_threshold;
   float & full_threshold= priv->full_threshold;
-  bool  & draw_pstats= priv->draw_pstats;
-  bool  & draw_rstats= priv->draw_rstats;
-  int   & left = priv->left;
-  int   & up   = priv->up;
-  int   & showing_scene= priv->showing_scene;
-  int     counter = 1;
 
-  frame++;
-    
-  barrier->wait(nworkers+1);
+  bool changed = true;
 
-  //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
+  if( showLights_ && !lightsShowing_ ){
+    scene->renderLights( true );
+    lightsShowing_ = true;
+  } else if( !showLights_ && lightsShowing_ ){
+    scene->renderLights( false );
+    lightsShowing_ = false;
+  }
+
+  if( turnOffAllLights_ ){
+    scene->turnOffAllLights();
+    turnOffAllLights_ = false;
+  }
+  if( turnOnAllLights_ ){
+    scene->turnOnAllLights();
+    turnOnAllLights_ = false;
+  }
+  if( turnOnLight_ ) {
+    scene->turnOnLight( turnOnLight_ );
+    turnOnLight_ = NULL;
+  }
+  if( turnOffLight_ ) {
+    scene->turnOffLight( turnOffLight_ );
+    turnOffLight_ = NULL;
+  }
 
   if( doJitter_ ) { scene->rtrt_engine->do_jitter = true; }
   else            { scene->rtrt_engine->do_jitter = false;  }
-
-  scene->refill_work(rendering_scene, nworkers);
-  //bool changed=false;
-  bool changed=true;
-
-  Camera* cam1=scene->get_camera(rendering_scene);
-
-  if( *cam1 != *guiCam_ ){
-    //cout << "updating cam " << cam1 << "\n";
-    *cam1 = *guiCam_;
-  }
 
   if(animate && scene->animate) {
     Array1<Object*> & objects = scene->animateObjects_;
@@ -361,6 +351,38 @@ Dpy::renderFrame() {
     changed=true;
     priv->exposed=false;
   }
+  return changed;
+}
+
+void
+Dpy::renderFrameless() {
+  cout << "can't do frameless right now.\n";
+  return;
+} // end renderFrameless()
+
+void
+Dpy::renderFrame() {
+
+  bool  & stereo= priv->stereo;  
+  int   & showing_scene= priv->showing_scene;
+  int     counter = 1;
+
+  frame++;
+    
+  barrier->wait(nworkers+1);
+
+  drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(1,0,0));
+
+  scene->refill_work(rendering_scene, nworkers);
+
+  bool changed = true;
+
+  Camera * cam1 = scene->get_camera(rendering_scene);
+
+  if( *cam1 != *guiCam_ ){ *cam1 = *guiCam_; }
+
+  changed = checkGuiFlags();
+
   if(!changed && !scene->no_aa){
     double x1, x2, w;
     do {
@@ -377,34 +399,7 @@ Dpy::renderFrame() {
     scene->yoffset=0;
   }
 
-  //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,0));
-
-  if( showLights_ && !lightsShowing_ ){
-    cout << "show lights\n";
-    scene->renderLights( true );
-    lightsShowing_ = true;
-  } else if( !showLights_ && lightsShowing_ ){
-    cout << "don't show lights\n";
-    scene->renderLights( false );
-    lightsShowing_ = false;
-  }
-
-  if( turnOffAllLights_ ){
-    scene->turnOffAllLights();
-    turnOffAllLights_ = false;
-  }
-  if( turnOnAllLights_ ){
-    scene->turnOnAllLights();
-    turnOnAllLights_ = false;
-  }
-  if( turnOnLight_ ) {
-    scene->turnOnLight( turnOnLight_ );
-    turnOnLight_ = NULL;
-  }
-  if( turnOffLight_ ) {
-    scene->turnOffLight( turnOffLight_ );
-    turnOffLight_ = NULL;
-  }
+  drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,0));
 
   barrier->wait(nworkers+1);
 
@@ -437,7 +432,7 @@ Dpy::renderFrame() {
   }
 
   // This is the last stat for the rendering scene (cyan)
-  //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,1));
+  drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,1));
   counters->end_frame();
 	
   Stats* st=drawstats[rendering_scene];
