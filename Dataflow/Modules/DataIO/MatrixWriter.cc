@@ -71,15 +71,15 @@ void MatrixWriter::execute()
     return;
 
   // If no name is provided, return
-  string fn(filename_.get());
+  const string fn(filename_.get());
   if(fn == "") {
-    error("Warning: no filename in MatrixWriter");
+    warning("No filename.");
     return;
   }
 
   // Open up the output stream
   Piostream* stream;
-  string ft(filetype_.get());
+  const string ft(filetype_.get());
   if(ft=="Binary"){
     stream=scinew BinaryPiostream(fn, Piostream::Write);
   } else { // "ASCII"

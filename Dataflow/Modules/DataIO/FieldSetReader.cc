@@ -63,12 +63,12 @@ FieldSetReader::~FieldSetReader()
 
 void FieldSetReader::execute()
 {
-  string fn(filename_.get());
+  const string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
   struct stat buf;
   if (stat(fn.c_str(), &buf)) {
-    error("FieldSetReader error - file not found " + fn);
+    error("File '" + fn + "'not found.");
     return;
   }
 
@@ -87,20 +87,20 @@ void FieldSetReader::execute()
     old_filename_=fn;
     Piostream* stream=auto_istream(fn);
     if(!stream){
-      error("Error reading file: " + fn);
+      error("Error reading file '" + fn + "'.");
       return;
     }
     
     // Read the file
     Pio(*stream, handle_);
     if(stream->error()){
-      error("Stream Error reading FieldSet from file:" + fn);
+      error("Stream Error reading FieldSet from file '" + fn + "'.");
       delete stream;
       return;
     }
 
     if(! handle_.get_rep()){
-      error("Error building FieldSet from stream: " + fn);
+      error("Error building FieldSet from stream '" + fn + "'.");
       delete stream;
       return;
     }
