@@ -243,6 +243,18 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
+    void scheduleCheckNeedAddMPMMaterial(Task* task,
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches) const;
+
+    virtual void checkNeedAddMPMMaterial(const PatchSubset* patches,
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Put documentation here. */
+    ////////////////////////////////////////////////////////////////////////
     virtual void addRequiresDamageParameter(Task* task,
 					    const MPMMaterial* matl,
 					    const PatchSet* patches) const;

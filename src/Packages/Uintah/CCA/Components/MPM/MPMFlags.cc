@@ -32,6 +32,7 @@ MPMFlags::MPMFlags()
   d_adiabaticHeating = 1.0;
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
+  d_canAddMPMMaterial = false;
 }
 
 MPMFlags::~MPMFlags()
@@ -56,6 +57,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->get("create_new_particles", d_createNewParticles);
   ps->get("manual_new_material", d_addNewMaterial);
+  ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
   ProblemSpecP erosion_ps = ps->findBlock("erosion");
   if (erosion_ps) {
     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
