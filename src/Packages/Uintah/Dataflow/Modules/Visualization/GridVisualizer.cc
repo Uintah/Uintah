@@ -571,7 +571,7 @@ void GridVisualizer::execute()
 	// for each node in the patch
 	for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 	  nodes->add(patch->nodePosition(*iter),
-		     node_color[color_index]->diffuse);
+		     node_color[color_index].get_rep());
 	}
 	
 	//------------------------------------
@@ -589,7 +589,7 @@ void GridVisualizer::execute()
 	// for each node in the patch
 	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 	  nodes->add(patch->cellPosition(*iter),
-		     node_color[color_index]->diffuse);
+		     node_color[color_index].get_rep());
 	}
 	
 	//------------------------------------
