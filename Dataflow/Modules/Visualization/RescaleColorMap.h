@@ -44,13 +44,13 @@ public:
   virtual ~RescaleColorMap();
 
   template <class F> void dispatch_minmax(F *f);
+  bool get_minmax(Field* field, pair<double,double>& pair);
 
         // GROUP:  Access functions:
         ///////////////////////////
         // execute() - execution scheduled by scheduler
   virtual void execute();
         ///////////////////////////
-  virtual void connection(ConnectionMode mode, int which_port, int);
 
 private:
   GuiInt isFixed;
