@@ -248,6 +248,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     environ['MALLOC_STATS'] = malloc_stats_file
 
   rc = system("nice %s %s > sus.log.txt 2>&1" % (command, susinput))
+  print "Command Line: %s %s" % (command, susinput)
 
   if mode == "dbg":
     environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
@@ -307,13 +308,13 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
 	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test." % (testname)
-            print '\t<A href=\"%s/mem_leak_check.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
+            print '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
 	    return 1
 	elif rc == 2*256:
 	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
 	    if short_message != "":
 		print "\t%s" % (short_message)
-            print '\t<A href=\"%s/mem_leak_check.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
+            print '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
  	    print "%s" % replace_msg
 	    return 1
 	else:
