@@ -104,8 +104,10 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  if(in_database)
-    patches.erase(patches.find(getID()));
+  if(in_database){
+//     patches.erase( patches.find(getID()));
+    patches.erase( getID() );
+  }
 }
 
 const Patch* Patch::getByID(int id)
