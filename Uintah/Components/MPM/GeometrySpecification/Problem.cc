@@ -73,7 +73,7 @@ void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
     
     std::string material_type;
     ps->require("material_type", material_type);
-    cout << "material_type is " <<  material_type << endl;
+    cerr << "material_type is " <<  material_type << endl;
 
     // Extract out the GeometryObject (and all of the GeometryPieces)
     ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -159,6 +159,9 @@ vector<GeometryObject> * Problem::getObjects()
 
 
 // $Log$
+// Revision 1.6  2000/04/14 15:51:37  jas
+// Changed a cout to cerr.
+//
 // Revision 1.5  2000/04/14 03:29:13  jas
 // Fixed routines to use SCICore's point and vector stuff.
 //
