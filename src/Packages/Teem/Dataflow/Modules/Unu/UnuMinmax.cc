@@ -136,18 +136,18 @@ void
     
 
     // build list string
-    for (int i=0; i<mins.size(); i++) {
+    for (int i=0; i<(int)mins.size(); i++) {
       ostringstream min_str, max_str;
       min_str << "min" << i;
-      if (mins_.size() <= i)
+      if ((int)mins_.size() <= i)
 	mins_.push_back(new GuiDouble(ctx->subVar(min_str.str())));
       max_str << "max" << i;
-      if (maxs_.size() <= i)
+      if ((int)maxs_.size() <= i)
 	maxs_.push_back(new GuiDouble(ctx->subVar(max_str.str())));
     }
     gui->execute(id + " init_axes");
 
-    for (int i=0; i<mins.size(); i++) {
+    for (int i=0; i<(int)mins.size(); i++) {
       mins_[i]->set(mins[i]);
       mins_[i]->reset();
       maxs_[i]->set(maxs[i]);
