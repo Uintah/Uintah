@@ -486,18 +486,11 @@ public:
 
   //! return all cell_indecies that overlap the BBox in arr.
   void get_cells(Cell::array_type &arr, const BBox &box);
-  //! return iterators over that fall within or on the BBox
-  void get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
-		      const BBox &box) ;
-  void get_node_range(Node::range_iter &begin, Node::iterator &end,
-		      const BBox &box);
-  //! return interators over the range created by begin_index and end_index
-  void get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
-		      const Cell::index_type &begin_index,
-		      const Cell::index_type &end_index);
-  void get_node_range(Node::range_iter &begin, Node::iterator &end,
-		      const Node::index_type &begin_index,
-		      const Node::index_type &end_index);
+  //! returns the min and max indices that fall within or on the BBox
+  void get_cells(Cell::index_type &begin, Cell::index_type &end,
+		 const BBox &bbox);
+  void get_nodes(Node::index_type &begin, Node::index_type &end,
+		 const BBox &bbox);
   
   bool get_neighbor(Cell::index_type &neighbor,
 		    const Cell::index_type &from,
