@@ -100,8 +100,6 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set current_cursor [$w cget -cursor]
 
 
-
-
 	iwidgets::labeledframe $w.treeview -labeltext "MDS Tree Traverser"
 
 	set treeframe [$w.treeview childsite]
