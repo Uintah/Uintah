@@ -69,6 +69,11 @@ WARNING
     virtual bool rewindow(const IntVector& low, const IntVector& high)
     { return Array3<T>::rewindow(low, high); }
 
+    // offset the indexing into the array (useful when getting virtual
+    // patch data -- i.e. for periodic boundary conditions)
+    virtual void offsetGrid(IntVector offset)
+    { Array3<T>::offset(offset); }
+    
     //////////
     // Insert Documentation Here:
     virtual SFCYVariableBase* clone();

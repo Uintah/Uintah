@@ -228,6 +228,14 @@ WARNING
       d_window->addReference();
     }
 
+    void offset(const IntVector offset) {
+      Array3Window<T>* old_window = d_window;
+      d_window=scinew Array3Window<T>(d_window->getData(), d_window->getOffset() + offset, getLowIndex() + offset, getHighIndex() + offset);
+      d_window->addReference();
+      if(old_window && old_window->removeReference())
+	delete old_window;
+    }
+
     // return true iff no reallocation is needed
     bool rewindow(const IntVector& lowIndex, const IntVector& highIndex) {
       if (!d_window) {
