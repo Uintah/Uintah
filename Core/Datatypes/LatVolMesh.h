@@ -465,10 +465,10 @@ public:
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const;
-  void get_nodes(Node::array_type &, Cell::index_type) const;
+  void get_nodes(Node::array_type &, const Cell::index_type &) const;
   void get_edges(Edge::array_type &, Face::index_type) const; 
-  void get_edges(Edge::array_type &, Cell::index_type) const;
-  void get_faces(Face::array_type &, Cell::index_type) const;
+  void get_edges(Edge::array_type &, const Cell::index_type &) const;
+  void get_faces(Face::array_type &, const Cell::index_type &) const;
 
   //! get the parent element(s) of the given index
   unsigned get_edges(Edge::array_type &, Node::index_type) const
@@ -501,7 +501,7 @@ public:
   
   bool get_neighbor(Cell::index_type &neighbor,
 		    const Cell::index_type &from,
-		    const Face::index_type &face) const;
+		    Face::index_type face) const;
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -510,19 +510,19 @@ public:
   void get_center(Point &, const Cell::index_type &) const;
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const;
+  double get_size(const Node::index_type &idx) const;
   double get_size(Edge::index_type idx) const;
   double get_size(Face::index_type idx) const;
-  double get_size(Cell::index_type idx) const;
+  double get_size(const Cell::index_type &idx) const;
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
-  double get_volume(Cell::index_type idx) const { return get_size(idx); };
+  double get_volume(const Cell::index_type &i) const { return get_size(i); };
   double get_element_size(const Elem::index_type &i) {  return get_size(i); }
 
-  int get_valence(Node::index_type idx) const;
+  int get_valence(const Node::index_type &idx) const;
   int get_valence(Edge::index_type idx) const;
   int get_valence(Face::index_type idx) const;
-  int get_valence(Cell::index_type idx) const;
+  int get_valence(const Cell::index_type &idx) const;
   
   bool locate(Node::index_type &, const Point &);
   bool locate(Edge::index_type &, const Point &) const { return false; }
@@ -536,10 +536,10 @@ public:
     {ASSERTFAIL("LatVolMesh::get_weights for faces isn't supported");}
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
 
-  void get_point(Point &p, Node::index_type i) const
+  void get_point(Point &p, const Node::index_type &i) const
   { get_center(p, i); }
 
-  void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
+  void get_normal(Vector &/*normal*/, const Node::index_type &/*index*/) const
   { ASSERTFAIL("not implemented") }
 
   void get_random_point(Point &, const Elem::index_type &, int seed=0) const;
