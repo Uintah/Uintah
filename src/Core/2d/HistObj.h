@@ -41,6 +41,7 @@ class SCICORESHARE HistObj : public Polyline {
 protected:
   Array1<double> ref_;
   int bins_;
+  double ref_min_, ref_max_;
 
 public:
   HistObj( const string &name="");
@@ -51,6 +52,8 @@ public:
   void set_data( const Array1<double> &);
 
   virtual double at( double );
+  virtual void get_bounds( BBox2d &bb );
+
 public:
   // For OpenGL
 #ifdef SCI_OPENGL
