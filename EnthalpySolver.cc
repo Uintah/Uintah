@@ -399,8 +399,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     maxAbsV = mxAbsV;
     maxAbsW = mxAbsW;
   }
-    if (d_DORadiationCalc)
-      d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
+    if (d_radiationCalc)
+      if (d_DORadiationCalc)
+        d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
