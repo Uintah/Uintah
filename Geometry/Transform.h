@@ -23,6 +23,13 @@ public:
     ~Transform();
     Transform(const Point&, const Vector&, const Vector&, const Vector&);
 
+    void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
+    void change_basis(Transform&);
+
+    void post_trans(Transform&);
+    void print(void);
+    void printi(void);
+
     void pre_scale(const Vector&);
     void post_scale(const Vector&);
     void pre_rotate(double, const Vector& axis);

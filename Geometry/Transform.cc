@@ -5,6 +5,8 @@
 #include <Math/Trig.h>
 #include <iostream.h>
 
+#include <stdio.h>
+
 Transform::Transform()
 {
     load_identity();
@@ -26,7 +28,77 @@ Transform::~Transform()
 {
 }
 
+void Transform::load_frame(const Point& p,
+			   const Vector& x, 
+			   const Vector& y, 
+			   const Vector& z)
+{
+    mat[3][3] = imat[3][3] = 1.0;
+    mat[0][3] = mat[1][3] = mat[2][3] = 0.0; // no perspective
+    imat[0][3] = imat[1][3] = imat[2][3] = 0.0; // no perspective
 
+    mat[3][0] = mat[3][1] = mat[3][2] = 0.0;
+    imat[3][0] = imat[3][1] = imat[3][2] = 0.0;
+
+    mat[0][0] = x.x();
+    mat[1][0] = x.y();
+    mat[2][0] = x.z();
+
+    mat[0][1] = y.x();
+    mat[1][1] = y.y();
+    mat[2][1] = y.z();
+
+    mat[0][2] = z.x();
+    mat[1][2] = z.y();
+    mat[2][2] = z.z();
+
+    imat[0][0] = x.x();
+    imat[0][1] = x.y();
+    imat[0][2] = x.z();
+
+    imat[1][0] = y.x();
+    imat[1][1] = y.y();
+    imat[1][2] = y.z();
+
+    imat[2][0] = z.x();
+    imat[2][1] = z.y();
+    imat[2][2] = z.z();
+
+    inverse_valid = 1;
+}
+
+void Transform::change_basis(Transform& T)
+{
+    pre_mulmat(T.imat);
+    post_mulmat(T.mat);
+}
+
+void Transform::post_trans(Transform& T)
+{
+    post_mulmat(T.mat);
+}
+
+void Transform::print(void)
+{
+    for(int i=0;i<4;i++) {
+	for(int j=0;j<4;j++)
+	    printf("%lf ",mat[i][j]); 
+	printf("\n");
+    }
+    printf("\n");
+	
+}
+
+void Transform::printi(void)
+{
+    for(int i=0;i<4;i++) {
+	for(int j=0;j<4;j++)
+	    printf("%lf ",imat[i][j]); 
+	printf("\n");
+    }
+    printf("\n");
+	
+}
 void Transform::pre_scale(const Vector& v)
 {
     for(int i=0;i<4;i++){
