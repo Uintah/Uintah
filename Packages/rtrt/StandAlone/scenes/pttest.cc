@@ -199,7 +199,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   if (cmap_file)
     cmap = new RegularColorMap(cmap_file);
   else 
-    cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRainbow);
+    cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRIsoLum);
 
   Object *group=0;
   if (infilename) {
@@ -283,8 +283,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   float* sphere_data=0;
   int* index_data=0;
   unsigned char* tex_data=0;
-  float* mean_data=0;
-  float* xform_data=0;
+  unsigned char* mean_data=0;
+  unsigned char* xform_data=0;
   int total_nspheres=0;
   int total_nindices=0;
   int total_ntextures=0;
@@ -292,6 +292,8 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   int total_nxforms=0;
   float tex_min = 1;
   float tex_max = 0;
+  float xform_min = 1;
+  float xform_max = 0;
   
   // Open file for reading
   ifstream infile(fname);
@@ -308,6 +310,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   bool m_flag=false;
   bool xform_flag=false;
   bool bases_minmax_flag=false;
+  bool xform_minmax_flag=false;
   char line[MAX_LINE_LEN];
   infile.getline(line,MAX_LINE_LEN);
   while(!infile.eof()) {
@@ -487,7 +490,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      total_nmeans+=(int)(statbuf.st_size/(sizeof(float)));
+      total_nmeans+=(int)(statbuf.st_size/(sizeof(unsigned char)));
       
       // Close the mean data file
       close(in_fd);
@@ -519,9 +522,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 	return 0;
       }
 
-      total_nxforms+=(int)(statbuf.st_size/(sizeof(float)));
+      total_nxforms+=(int)(statbuf.st_size/(sizeof(unsigned char)));
       
-      // Close the mean data file
+      // Close the transform data file
       close(in_fd);
       
       xform_flag = true;
@@ -546,6 +549,27 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       }
 
       bases_minmax_flag = true;
+    } else if (strcmp(token, "transform_minmax:")==0) {
+      if (xform_minmax_flag) {
+	cerr << "Can only have one transform_minmax per file.\n";
+	return 0;
+      }
+      char *min=strtok(0, " ");
+      if (min)
+	xform_min = atof(min);
+      else {
+	cerr << "Expected a min for transform_minmax, but not found.\n";
+	return 0;
+      }
+      char *max=strtok(0, " ");
+      if (max)
+	xform_max = atof(max);
+      else {
+	cerr << "Expected a max for transform_minmax, but not found.\n";
+	return 0;
+      }
+
+      xform_minmax_flag = true;
     } else if (strcmp(token, "}")==0) {
       if (!group_flag) {
 	cerr<<"encountered \"}\" without a valid sphere group"<<endl;
@@ -601,8 +625,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   } else if (!m_flag && xform_flag) {
     cerr<<"transform_file specified, but no mean_file found"<<endl;
     return 0;
-  } else if (m_flag && xform_flag && !bases_minmax_flag) {
-    cerr << "bases_minmax was not found and is needed for PCA stuff.\n";
+  } else if (m_flag && xform_flag &&
+             !bases_minmax_flag && !xform_minmax_flag) {
+    cerr << "bases_minmax or transform_minmax was not found and is needed for PCA stuff.\n";
     return 0;
   }
 
@@ -645,9 +670,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   if (m_flag) {
     cout<<"Allocating space for "<<total_nmeans<<" elements of the mean vector"
 	<<endl;
-    mean_data=new float[total_nmeans];
+    mean_data=new unsigned char[total_nmeans];
     if (!mean_data) {
-      cerr<<"failed to allocate "<<total_nmeans*sizeof(float)<<" bytes "
+      cerr<<"failed to allocate "<<total_nmeans*sizeof(unsigned char)<<" bytes "
 	  <<"for mean data"<<endl;
       return 0;
     }
@@ -656,9 +681,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
   if (xform_flag) {
     cout<<"Allocating space for "<<total_nxforms<<" elements of the transformation "
 	<<"matrix"<<endl;
-    xform_data=new float[total_nxforms];
+    xform_data=new unsigned char[total_nxforms];
     if (!xform_data) {
-      cerr<<"failed to allocate "<<total_nxforms*sizeof(float)<<" bytes "
+      cerr<<"failed to allocate "<<total_nxforms*sizeof(unsigned char)<<" bytes "
 	  <<"for transform data"<<endl;
       return 0;
     }
@@ -879,9 +904,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       }
 
       // Slurp the mean data
-      float* data=&(mean_data[m_index]);
-      int nmeans=(int)(statbuf.st_size/(sizeof(float)));
-      unsigned long data_size=nmeans*sizeof(float);
+      unsigned char* data=&(mean_data[m_index]);
+      int nmeans=(int)(statbuf.st_size/(sizeof(unsigned char)));
+      unsigned long data_size=nmeans*sizeof(unsigned char);
 
       cerr<<"slurping mean data ("<<nmeans<<" elements = " <<data_size
 	  <<" bytes) from "<<m_fname<<endl;
@@ -894,7 +919,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       }
       
       // Set start of next slurp
-      m_index+=(int)(num_read/sizeof(float));
+      m_index+=(int)(num_read/sizeof(unsigned char));
 
       // Close the mean data file
       close(in_fd);
@@ -920,9 +945,9 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       }
       
       // Slurp the transform data
-      float* data=&(xform_data[xform_index]);
-      int nxforms=(int)(statbuf.st_size/(sizeof(float)));
-      unsigned long data_size=nxforms*sizeof(float);
+      unsigned char* data=&(xform_data[xform_index]);
+      int nxforms=(int)(statbuf.st_size/(sizeof(unsigned char)));
+      unsigned long data_size=nxforms*sizeof(unsigned char);
       
       cerr<<"slurping transform data ("<<nxforms<<" elements = " <<data_size
 	  <<" bytes) from "<<xform_fname<<endl;
@@ -935,7 +960,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
       }
       
       // Set start of next slurp
-      xform_index+=(int)(num_read/sizeof(float));
+      xform_index+=(int)(num_read/sizeof(unsigned char));
       
       // Close the transform data file
       close(in_fd);
@@ -955,7 +980,7 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 				  radius, index_data,
 				  tex_data, total_ntextures, tex_res,
 				  xform_data, mean_data, total_nmeans,
-				  tex_min, tex_max,
+				  tex_min, tex_max, xform_min, xform_max,
 				  nsides, gdepth, cmap, color);
   } else {
     tex_grid = new TextureGridSpheres(sphere_data, total_nspheres, numvars,
