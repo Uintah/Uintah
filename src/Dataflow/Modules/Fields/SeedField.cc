@@ -46,8 +46,58 @@
 
 using std::set;
 using std::vector;
+using std::pair;
 
 namespace SCIRun {
+
+template <class Field>
+class DistTable
+{
+public:
+  typedef typename Field::mesh_type      mesh_type;
+  typedef typename mesh_type::elem_index elem_index;
+  typedef pair<double,elem_index>        table_entry;
+
+  vector<table_entry> table_;
+
+  DistTable() {}
+  ~DistTable() {}
+
+  void push_back(double size,elem_index id) 
+  { table_.push_back(table_entry(size,id)); }
+  void push_back(table_entry entry) 
+  { table_.push_back(entry); }
+
+  const table_entry& operator[](unsigned idx) const
+  { return table_[idx]; }
+  table_entry& operator[](unsigned idx)
+  { return table_[idx]; }
+
+  double size() { return table_.size(); }
+
+  bool search(double, table_entry&);
+};
+
+template <class Field>
+bool
+DistTable<Field>::search(double d, table_entry &e)
+{
+  int min=0,max=table.size()-1;
+  int cur = max/2;
+
+  if ( (d<table[0].first) || (d>table[max].first) )
+    return false; 
+
+  // use binary search to find the bin holding the value d
+  while ( (max-1>min) ) {
+    if (table_[cur].first>=d) max = cur;
+    if (table_[cur].first<d) min = cur;
+    cur = (max-min)/2+min;
+  }
+
+  e = (table_[min]>d)?table_[min]:table_[max];
+  return true;
+}
 
 class SeedField : public Module
 {
@@ -72,7 +122,7 @@ class SeedField : public Module
   void execute_gui();
 
   template <class Field> 
-  bool build_weight_table(Field &, vector<double> &);
+  bool build_weight_table(Field &, DistTable<Field> &);
   template <class Field>
   PointCloud<double>* GenWidgetSeeds(Field &);
   template <class Field>
@@ -141,7 +191,7 @@ SeedField::widget_moved(int i)
 
 template <class Field>
 bool 
-SeedField::build_weight_table(Field &field, vector<double> &table)
+SeedField::build_weight_table(Field &field, DistTable<Field> &table)
 {
   typedef typename Field::mesh_type         mesh_type;
   typedef typename Field::fdata_type        fdata_type;
@@ -158,22 +208,23 @@ SeedField::build_weight_table(Field &field, vector<double> &table)
     return false;
 
   if (dist=="importance") { // size of element * data at element
-    table.push_back(mesh->elems_size(ei)*fdata[*ei]);
+    table.push_back(mesh->elems_size(*ei)*fdata[*ei],*ei);
     ++ei;
     while (ei != mesh.elem_end()) {
-      table.push_back(mesh->elems_size(ei)*fdata[*ei]+table[table.size()-1]);
+      table.push_back(mesh->elems_size(*ei)*fdata[*ei]+
+		      table[table.size()-1],*ei);
       ++ei;
     }
   } else if (dist=="uniform") { // size of element only
-    table.push_back(mesh->elems_size(ei));
+    table.push_back(mesh->elems_size(*ei),*ei);
     ++ei;
     while (ei != mesh.elem_end()) {
-      table.push_back(mesh->elems_size(ei)+table[table.size()-1]);
+      table.push_back(mesh->elems_size(*ei)+table[table.size()-1],*ei);
       ++ei;
     }
-  } else if (dist=="scattered") { // element index; some strangely biased dist
+  } else if (dist=="scattered") { // element index; not uniform!
     while (ei != mesh.elem_end()) {
-      table.push_back(table.size());
+      table.push_back(table.size(),*ei);
       ++ei;
     }    
   } else { // unknown distribution type
@@ -193,24 +244,30 @@ template <class Field>
 PointCloud<double>*
 SeedField::GenRandomSeeds(Field &field)
 {
-  typedef typename Field::mesh_type  mesh_type;
-  typedef typename Field::elem_index elem_index;
+  typedef typename Field::mesh_type              mesh_type;
+  typedef typename Field::elem_index             elem_index;
+  typedef typename DistTable<Field>::table_entry table_entry;
 
-  MusilRNG rng(rngSeed.get());
-  vector<double> wt;
-
-  rng();  // always discard first value
+  DistTable<Field> wt;
 
   if (!build_weight_table(field,wt))
     return 0;
 
-  double max = wt[wt.size()-1];
+  MusilRNG rng(rngSeed.get());
+
+  double max = wt[wt.size()-1].first;
   mesh_type *mesh = field.mesh().get_rep();
-  PointCloud<double> *pc = scinew PointCloud<double>;
+  PointCloudMesh pcmesh = scinew PointCloudMesh;
+  PointCloud<double> *pc = scinew PointCloud<double>(pcmesh,Field::NODE);
 
   unsigned int ns = numSeeds_.get();
   for (int loop=0;loop<ns;loop++) {
+    Point p;
+    field.get_random_point(p,table.search(rng()*max).second);
+    pcmesh->add_node(p);
   }
+
+  return pcmesh;
 }
 
 template <class M>
