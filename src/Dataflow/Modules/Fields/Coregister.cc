@@ -42,10 +42,21 @@ namespace SCIRun {
 
 class Coregister : public Module
 {
+private:
+  GuiInt allowScale_;
+  GuiInt allowRotate_;
+  GuiInt allowTranslate_;
+  GuiInt seed_;
+  GuiInt iters_;
+  GuiDouble misfitTol_;
+  GuiString method_;
+  int abort_;
+  MusilRNG *mr_;
 public:
   Coregister(const string& id);
   virtual ~Coregister();
   virtual void execute();
+  void tcl_command( TCLArgs&, void * );
 };
 
 
@@ -55,7 +66,11 @@ extern "C" Module* make_Coregister(const string& id) {
 
 
 Coregister::Coregister(const string& id)
-  : Module("Coregister", id, Filter, "Fields", "SCIRun")
+  : Module("Coregister", id, Filter, "Fields", "SCIRun"),
+    allowScale_("allowScale", id, this), allowRotate_("allowRotate", id, this),
+    allowTranslate_("allowTranslate", id, this), seed_("seed", id, this),
+    iters_("iters", id, this), misfitTol_("misfitTol", id, this),
+    method_("method", id, this)
 {
 }
 
@@ -68,6 +83,7 @@ Coregister::execute()
 {
   FieldIPort *fixed = (FieldIPort *) get_iport("Fixed PointCloudField");
   FieldIPort *mobile = (FieldIPort *) get_iport("Mobile PointCloudField");
+  FieldIPort *dfield = (FieldIPort *) get_iport("DistanceField From Fixed");
 
   FieldHandle fixedH, mobileH;
   PointCloudField<double> *fixedPC, *mobilePC;
@@ -79,6 +95,10 @@ Coregister::execute()
     return;
   }
   if (!mobile) {
+    postMessage("Unable to initialize "+name+"'s iport\n");
+    return;
+  }
+  if (!dfield) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
@@ -95,6 +115,7 @@ Coregister::execute()
 
   mobileM = mobilePC->get_typed_mesh();
 
+  
   fixedM->size(nnodes);
   if (nnodes < 3) {
     cerr << "Error: fixed PointCloudField needs at least 3 input points.\n";
@@ -112,37 +133,72 @@ Coregister::execute()
     return;
   }
 
-  CoregPtsAnalytic *coreg = scinew CoregPtsAnalytic;
   Array1<Point> fixedPts, mobilePts;
   Transform trans;
 
-  PointCloudMesh::Node::iterator fni, mni;
-  fixedM->begin(fni);
-  mobileM->begin(mni);
-  int i;
-  for (i=0; i<3; i++) {
-    Point p;
+  PointCloudMesh::Node::iterator fni, fne, mni, mne;
+  fixedM->begin(fni); fixedM->end(fne);
+  mobileM->begin(mni); mobileM->end(mne);
+  Point p;
+  while (fni != fne) {
     fixedM->get_center(p, *fni);
     fixedPts.add(p);
+    ++fni;
+  }
+  while (mni != mne) {
     mobileM->get_center(p, *mni);
     mobilePts.add(p);
-    ++fni;
     ++mni;
   }
-  
-  Array1<Point> transPts;
 
+  int allowScale = allowScale_.get();
+  int allowRotate = allowRotate_.get();
+  int allowTranslate = allowTranslate_.get();
+  string method = method_.get();
+  
+  CoregPts* coreg;
+  if (method == "Analytic") {
+    coreg = scinew CoregPtsAnalytic(allowScale, allowRotate, allowTranslate);
+  } else if (method == "Procrustes") {
+    coreg = scinew CoregPtsProcrustes(allowScale, allowRotate, allowTranslate);
+  } else { // method == "Simplex"
+    FieldHandle dfieldH;
+    if (!dfield->get(dfieldH)) {
+      cerr << "Error -- Coregister::Simplex needs a distance field!\n";
+      return;
+    }
+    ScalarFieldInterface *dfieldP = dfieldH->query_scalar_interface();
+    if (!dfieldP) {
+      cerr << "Error -- Coregister::Simplex needs a distance field!\n";
+      return;
+    }
+    int seed = seed_.get();
+    seed_.set(seed+1);
+    mr_ = scinew MusilRNG(seed);
+    (*mr_)();
+    abort_=0;
+    coreg = scinew 
+      CoregPtsSimplexSearch(iters_.get(), misfitTol_.get(), abort_, dfieldP, 
+			    *mr_, allowScale, allowRotate, allowTranslate);
+  }
   coreg->setOrigPtsA(mobilePts);
   coreg->setOrigPtsP(fixedPts);
   coreg->getTrans(trans);
   double misfit;
   coreg->getMisfit(misfit);
-  coreg->getTransPtsA(transPts);
+//  Array1<Point> transformedPts;
+//  coreg->getTransPtsA(transformedPts);
   cerr << "Here's the misfit: "<<misfit<<"\n";
   DenseMatrix *dm = scinew DenseMatrix(trans);
   omat->send(MatrixHandle(dm));
 }
+//! Commands invoked from the Gui.  Pause/unpause/stop the search.
 
-
+void Coregister::tcl_command(TCLArgs& args, void* userdata) {
+  if (args[1] == "stop") {
+    abort_=1;
+  } else {
+    Module::tcl_command(args, userdata);
+  }
+}
 } // End namespace SCIRun
-

@@ -40,6 +40,10 @@
 	<name>Mobile PointCloudField</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>DistanceField From Fixed</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
