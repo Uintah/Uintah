@@ -31,11 +31,14 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
     inherit Module
     protected highlighted
     protected frames
+    protected close
     constructor {config} {
         set name EditColorMap2D
 	set highlighted -1
 	set frames ""
         set_defaults
+	set pix [netedit getenv SCIRUN_SRCDIR]/pixmaps/powerapp-close.ppm
+	set close [image create photo -file $pix]
     }
     
     method set_defaults {} {
@@ -144,22 +147,25 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    set e $frame.e-$i
 	    if { ![winfo exists $e] } {
 		frame $e -width 500 -relief sunken -bd 1
-		entry $e.name -textvariable $this-name-$i -width 14 -bd 1
+		button $e.x -image $close -anchor nw -relief flat \
+		    -command "$this select_widget $i; $this-c deletewidget"
+
+		entry $e.name -textvariable $this-name-$i -width 13 -bd 0
 		bind $e.name <ButtonPress> "+$this select_widget $i"
 		button $e.color -width 4 \
 		    -command "$this select_widget $i; $this raise_color $frame.e-$i.color $this-$i-color color_change-$i"
 
-		checkbutton $e.shade -text "" -padx 19 -justify center \
+		checkbutton $e.shade -text "" -padx 15 -justify center \
 		    -relief flat -variable $this-shadeType-$i \
 		    -onvalue 1 -offvalue 0 -anchor w \
 		    -command "$this-c shadewidget-$i; $this select_widget $i"
 
-		checkbutton $e.on -text "" -padx 19 -justify center \
+		checkbutton $e.on -text "" -padx 15 -justify center \
 		    -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \
 		    -anchor w -command "$this-c toggleon-$i"
 		frame $e.fill -width 500
 		bind $e.fill <ButtonPress> "$this select_widget $i"
-		pack $e.name $e.color $e.shade $e.on $e.fill -side left \
+		pack $e.x $e.name $e.color $e.shade $e.on $e.fill -side left \
 		    -ipadx 0 -ipady 0 -padx 0 -pady 0 -fill y
 		pack $e
 	    }
@@ -411,12 +417,13 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 
     method label_widget_columns { frame } {
         frame $frame
-        label $frame.name -text "Name" -width 14 -relief groove
+        frame $frame.empty0 -width 21 -bd 0
+        label $frame.name -text "Name" -width 13 -relief groove
         label $frame.color -text "Color" -width 4 -relief groove
-        label $frame.shade -text "Solid" -width 8 -relief groove
-        label $frame.onoff -text "On" -width 9 -relief groove
+        label $frame.shade -text "Solid" -width 7 -relief groove
+        label $frame.onoff -text "On" -width 7 -relief groove
         label $frame.empty -text "" -width 3
-        pack $frame.name $frame.color $frame.shade \
+        pack $frame.empty0 $frame.name $frame.color $frame.shade \
 	    $frame.onoff $frame.empty -side left 
 	return $frame
     }
