@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -59,12 +59,6 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 void SolverTest1::scheduleInitialize(const LevelP& level,
 			       SchedulerP& sched)
 {
-  Task* task = scinew Task("initialize",
-			   this, &SolverTest1::initialize);
-
-  task->computes(lb_->pressure);
-  task->computes(lb_->density);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
 void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
@@ -83,11 +77,6 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   Task* task = scinew Task("timeAdvance",
 			   this, &SolverTest1::timeAdvance,
 			   level, sched.get_rep());
-  task->hasSubScheduler();
-  task->requires(Task::OldDW, lb_->pressure, Ghost::None, 0);
-  task->requires(Task::OldDW, lb_->density, Ghost::None, 0);
-
-  task->computes(lb_->density);
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -110,20 +99,6 @@ void SolverTest1::initialize(const ProcessorGroup*,
 		       const MaterialSubset* matls,
 		       DataWarehouse*, DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-      CCVariable<double> pressure;
-      CCVariable<double> density;
-      new_dw->allocateAndPut(pressure, lb_->pressure, matl, patch);
-      new_dw->allocateAndPut(density, lb_->density, matl, patch);
-
-      // do something with pressure and density
-      pressure.initialize(0);
-      density.initialize(0);
-    }
-  }
 }
 
 void SolverTest1::timeAdvance(const ProcessorGroup* pg,
@@ -137,19 +112,22 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      constCCVariable<double> old_pressure;
-      constCCVariable<double> old_density;
-      old_dw->get(old_pressure, lb_->pressure, matl, patch, Ghost::None, 0);
-      old_dw->get(old_density, lb_->density, matl, patch, Ghost::None, 0);
+      CCVariable<Stencil7> A;
+      CCVariable<double> rhs;
+      new_dw->allocateAndPut(A, lb_->pressure_matrix, matl, patch);
+      new_dw->allocateAndPut(rhs, lb_->pressure_rhs, matl, patch);
 
-      CCVariable<Stencil7> pressure_matrix;
-      CCVariable<double> pressure_rhs;
-      CCVariable<double> density;
-      new_dw->allocateAndPut(pressure_matrix, lb_->pressure_matrix, matl, patch);
-      new_dw->allocateAndPut(pressure_rhs, lb_->pressure_rhs, matl, patch);
-      new_dw->allocateAndPut(density, lb_->density, matl, patch);
+      for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
+        IntVector c = *iter;
+        Stencil7&  A_tmp=A[c];
+        A_tmp.p = 10.0; 
+        A_tmp.n = 0.0;   A_tmp.s = 0.0;
+        A_tmp.e = 0.0;   A_tmp.w = 0.0; 
+        A_tmp.t = 0.0;   A_tmp.b = 0.0;
+        
+        rhs[c] = 1;
+      }
 
-      // make new density and pressure matrix and rhs to prep for pressure solve
     }
   }
 
