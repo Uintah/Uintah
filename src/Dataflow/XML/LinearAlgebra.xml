@@ -33,29 +33,45 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>A</name>
+        <name>i1</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>B</name>
+        <name>i2</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>C</name>
+        <name>i3</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>D</name>
+        <name>i4</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>E</name>
+        <name>i5</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Output Matrix</name>
+        <name>o1</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o2</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o3</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o4</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o5</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
