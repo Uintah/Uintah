@@ -2543,7 +2543,7 @@ class BioTensorApp {
 	    
 	    
             ### Nrrd
-            set page [$step_tab.tnb add -label "Nrrd" -command {app configure_readers Nrrd}]
+            set page [$step_tab.tnb add -label "Generic" -command {app configure_readers Nrrd}]
 
 	    #Tooltip $page $tips(NrrdTab)
 
@@ -2553,7 +2553,7 @@ class BioTensorApp {
             label $page.dwil -text "DWI Volume:"
             pack $page.dwil -side top -anchor nw -padx 3 -pady 3
 
-            iwidgets::entryfield $page.file -labeltext "Nrrd File:" -labelpos w \
+            iwidgets::entryfield $page.file -labeltext ".vol/.vff/.nrrd file:" -labelpos w \
                 -textvariable $mods(NrrdReader1)-filename \
                 -command "$this execute_Data"
 	    Tooltip $page.file $tips(NrrdFile1)
@@ -2571,7 +2571,7 @@ class BioTensorApp {
             label $page.t2l -text "T2 Reference Image:"
             pack $page.t2l -side top -anchor nw -padx 3 -pady 3
 
-            iwidgets::entryfield $page.file2 -labeltext "Nrrd File:" -labelpos w \
+            iwidgets::entryfield $page.file2 -labeltext ".vol/.vff/.nrrd file:" -labelpos w \
                 -textvariable $mods(NrrdReader-T2)-filename 
 	    Tooltip $page.file2 $tips(NrrdFile1)
             pack $page.file2 -side top -padx 3 -pady 3 -anchor n \
@@ -2647,7 +2647,7 @@ class BioTensorApp {
             
 
 	    # Set default view to be Nrrd
-            $step_tab.tnb view "Nrrd"
+            $step_tab.tnb view "Generic"
 	    
 	    
 	    # Execute and Next buttons
