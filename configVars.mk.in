@@ -213,6 +213,7 @@ PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR)
 endif
 
 INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I$(SRCTOP)/Packages -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) @GL_INCLUDE_FLAG@ $(PETSC_INCLUDES) $(TAU_INCLUDE) $(MPI_INCLUDE)
+FINCLUDES += -I$(SRCTOP) -I$(OBJTOP)
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
@@ -265,15 +266,25 @@ else
 endif
 
 .F.o: $<
+
 	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
-ifeq ($(F77_DEPEND_REGEN),-MD)
-	mv $(basename $(notdir $@)).d $(basename $@).d
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+  endif
 endif
+
 
 .c.o: $<
 ifeq ($(CC_DEPEND_REGEN),-MD)
 	$(CC) $(CFLAGS) $(INCLUDES) -MD -c $< -o $@
-	mv $(basename $(notdir $@)).d $(basename $@).d
+  ifeq ($(CC_DEPEND_REGEN_MOVE),y)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+  endif
 else
   ifeq ($(CC_DEPEND_REGEN),-M)
 	$(CC) $(CFLAGS) $(INCLUDES) -M > $(basename $@).d
