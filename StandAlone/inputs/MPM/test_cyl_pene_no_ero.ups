@@ -23,7 +23,10 @@
 
   <DataArchiver>
     <filebase>test_cyl_pene_no_ero.uda</filebase>
+    <!--
     <outputTimestepInterval>10</outputTimestepInterval>
+    -->
+    <outputInterval>2.0e-5</outputInterval>
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
@@ -44,7 +47,7 @@
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
-    <checkpoint cycle = "2" timestepInterval = "10"/>
+    <checkpoint cycle = "2" timestepInterval = "100"/>
   </DataArchiver>
 
   <MPM>
