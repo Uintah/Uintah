@@ -92,8 +92,11 @@ using namespace SCICore::Math;
 namespace SCICore {
 namespace GeomSpace {
 
-void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
+int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 {
+    /* All primitives that get drawn must check the return value of this
+       function to determine if they get drawn or not */
+  if((!di->pickmode)||(di->pickmode&&di->pickchild)){
     if(lit && di->lighting && !di->currently_lit){
 	di->currently_lit=1;
 	glEnable(GL_LIGHTING);
@@ -128,6 +131,20 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	}
     }
     di->set_matl(matl);
+    glPushName((GLuint)this);
+    glPushName(0x12345678);
+    if(di->pickchild) cerr << "picking a child " <<(GLuint)this << endl;
+    return 1;
+  }
+  else return 0;
+}
+
+int GeomObj::post_draw(DrawInfoOpenGL* di)
+{
+    if(di->pickmode && di->pickchild){
+	glPopName();//pops the face index once the obj is rendered
+	glPopName();
+    }
 }
 
 static void quad_error(GLenum code)
@@ -142,7 +159,7 @@ static void quad_error(GLenum code)
 #endif
 
 DrawInfoOpenGL::DrawInfoOpenGL()
-: current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0),cull(0)
+: current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0),cull(0),pickchild(0)
 {
     qobj=gluNewQuadric();
 #ifdef _WIN32
@@ -160,6 +177,9 @@ void DrawInfoOpenGL::reset()
     fog=0;
     cull=0;
     check_clip = 0;
+    pickmode =0;
+    pickchild =0;
+    npicks =0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
@@ -342,7 +362,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       if(di->get_drawtype() == DrawInfoOpenGL::WireFrame)
 	shaft_scale=1.0;
       if(shaft_matls.size() == 1){
-	pre_draw(di, shaft_matls[0].get_rep(), 0);
+	if(!pre_draw(di, shaft_matls[0].get_rep(), 0)) return;
 	glBegin(GL_LINES);
 	for(int i=0;i<n;i++){
 	  Point from(positions[i]);
@@ -352,7 +372,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 	glEnd();
       } else {
-	pre_draw(di, matl, 0);
+	if(!pre_draw(di, matl, 0)) return;
 	glBegin(GL_LINES);
 	for(int i=0;i<n;i++){
 	  di->set_matl(shaft_matls[i+1].get_rep());
@@ -367,9 +387,9 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
     } else {
       // drawing cylinders
       if( shaft_matls.size() == 1) {
-	pre_draw(di, shaft_matls[0].get_rep(), 1);
+	if(!pre_draw(di, shaft_matls[0].get_rep(), 1)) return;
       } else {
-	pre_draw(di, matl, 1);
+	if(!pre_draw(di, matl, 1)) return;
       }
       // number of subdivisions
       int nu = 3;
@@ -422,7 +442,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
        di->get_drawtype() == DrawInfoOpenGL::WireFrame)
 	do_normals=0;
     if(back_matls.size() == 1){
-	pre_draw(di, back_matls[0].get_rep(), 1);
+	if(!pre_draw(di, back_matls[0].get_rep(), 1)) return;
 	glBegin(GL_QUADS);
 	if(do_normals){
 	    for(int i=0;i<n;i++){
@@ -455,7 +475,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 	glEnd();
     } else {
-	pre_draw(di, matl, 1);
+	if(!pre_draw(di, matl, 1)) return;
 	glBegin(GL_QUADS);
 	if(do_normals){
 	    for(int i=0;i<n;i++){
@@ -490,7 +510,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glEnd();
     }
     if(head_matls.size() == 1){
-	pre_draw(di, head_matls[0].get_rep(), 1);
+	if(!pre_draw(di, head_matls[0].get_rep(), 1)) return;
 	if(do_normals){
 	    double w=headwidth;
 	    double h=1.0-headlength;
@@ -548,7 +568,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    }
 	}
     } else {
-	pre_draw(di, matl, 1);
+	if(!pre_draw(di, matl, 1)) return;
 	if(do_normals){
 	    double w=headwidth;
 	    double h=1.0-headlength;
@@ -617,6 +637,7 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
     case DrawInfoOpenGL::Gouraud:
 	break;
     }
+    post_draw(di);
 }
 
 void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
@@ -692,7 +713,7 @@ void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || rad < 1.e-6)return;
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -706,24 +727,26 @@ void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
     di->polycount+=2*(nu-1)*(nvdisc-1);
     gluDisk(di->qobj, 0, rad, nu, nvdisc);
     glPopMatrix();
+    post_draw(di);
 }
 
 void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || (bot_rad < 1.e-6 && top_rad < 1.e-6))return;
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=2*(nu-1)*(nv-1);
     gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
     glPopMatrix();
+    post_draw(di);
 }
 
 void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || (bot_rad < 1.e-6 && top_rad < 1.e-6))return;
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -741,6 +764,7 @@ void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
         gluDisk(di->qobj, 0, top_rad, nu, nvdisc2);
     }
     glPopMatrix();
+    post_draw(di);
 }
 
 void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -751,25 +775,27 @@ void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || rad < 1.e-6)return;
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=2*(nu-1)*(nv-1);
     gluCylinder(di->qobj, rad, rad, height, nu, nv);
     glPopMatrix();
+    post_draw(di);
 }
 
 void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(rad < 1.e-6)return;
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
     di->polycount+=2*(nu-1)*(nv-1);
     gluDisk(di->qobj, 0, rad, nu, nv);
     glPopMatrix();
+    post_draw(di);
 }
 
 
@@ -790,7 +816,7 @@ TexGeomGrid::~TexGeomGrid()
 
 void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  pre_draw(di, matl, 0);
+  if(!pre_draw(di, matl, 0)) return;
   //int nu=dimU;
   //int nv=dimV;
   di->polycount+=2; 
@@ -919,11 +945,12 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
       }
     }
   }
+  post_draw(di);
 }
 #if 0
 void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 {
-  pre_draw(di, matl, 0);
+  if(!pre_draw(di, matl, 0)) return;
   int nu=dimU;
   int nv=dimV;
   di->polycount+=2; 
@@ -1052,11 +1079,12 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
       break;
     }
   }
+  post_draw(di);
 }
 #else
 void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 {
-  pre_draw(di, matl, 0);
+  if(!pre_draw(di, matl, 0)) return;
   //int nu=dimU;
   //int nv=dimV;
   di->polycount+=2; 
@@ -1185,13 +1213,14 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
       break;
     }
   }
+  post_draw(di);
 }
 #endif
 // WARNING doesn't respond to lighting correctly yet!
 #ifdef BROKEN_BUT_FAST
 void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     di->polycount+=2*(nu-1)*(nv-1);
     Vector uu(u/(nu-1));
     Vector vv(v/(nv-1));
@@ -1338,6 +1367,7 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
     }
     glPopMatrix();
+    post_draw(di);
 }
 #else
 void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -1349,7 +1379,7 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
         di->polycount+=2*nu*nv;
         Vector uu(u/nu);
         Vector vv(v/nv);
-        pre_draw(di,matl,0);
+        if(!pre_draw(di,matl,0)) return;
         Point rstart(corner);
         glBegin(GL_QUADS);
         for (int i=0; i<nu; i++) {
@@ -1375,7 +1405,7 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
         return;
     }
 
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     di->polycount+=2*(nu-1)*(nv-1);
     Vector uu(u/(nu-1));
     Vector vv(v/(nv-1));
@@ -1553,13 +1583,14 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
         }
         break;
     }
+    post_draw(di);
 }
 
 #endif
 
 void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  pre_draw(di, matl, 1); 
+  if(!pre_draw(di, matl, 1)) return; 
 
   di->polycount += (nrows-1)*(ncols-1)*2;
 
@@ -1600,6 +1631,7 @@ void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
       glEnd();
     }
   }
+  post_draw(di);
 }
 
 void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -1607,7 +1639,7 @@ void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
   if(di->pickmode){
     for (int i=0; i<objs.size(); i++)
       {
-	glLoadName((GLuint)i);
+	  //glLoadName((GLuint)i);
 	objs[i]->draw(di, matl, time);
       }
   }
@@ -1636,17 +1668,18 @@ void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 0);
+    if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
+    post_draw(di);
 }
 
 void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 0);
+    if(!pre_draw(di, matl, 0)) return;
     di->polycount+=pts.size()/2;
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glLineWidth(di->point_size);
@@ -1656,13 +1689,14 @@ void GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
       glVertex3d(pt.x(), pt.y(), pt.z());
     }
     glEnd();
+    post_draw(di);
 }
 
 //const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
 
 void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  pre_draw(di, matl, 0);  // lighting is turned off here...
+  if(!pre_draw(di, matl, 0)) return;  // lighting is turned off here...
   di->polycount+=pts.size()/2;
 
   static Vector view;  // shared by all of them - should be in Roe!
@@ -1933,6 +1967,7 @@ void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDisable(GL_TEXTURE_1D);
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
+  post_draw(di);
 }
 
 void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
@@ -1942,19 +1977,23 @@ void GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double tim
 
 void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
+
     if(drawOnlyOnPick && !di->pickmode) return;
     if(di->pickmode){
+    cerr <<"found a widget " << (GLuint)this << endl;
+	++di->npicks;
 #if (_MIPS_SZPTR == 64)
 	unsigned long o=(unsigned long)this;
 	unsigned int o1=(o>>32)&0xffffffff;
 	unsigned int o2=o&0xffffffff;
 	glPushName(o1);
 	glPushName(o2);
-	glPushName(0x12345678);
+	
 #else
 	glPushName((GLuint)this);
-	glPushName(0x12345678);
+	
 #endif
+	di->pickchild =1;
     }
     if(selected && highlight.get_rep()){
 	di->set_matl(highlight.get_rep());
@@ -1972,12 +2011,16 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 #else
 	glPopName();
 #endif
+	
+	if((--di->npicks)<1){//could have multiple picks in stack
+	    di->pickchild=0;
+	}
     }
 }
 
 void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
-    pre_draw(di, matl, 0);
+    if(!pre_draw(di, matl, 0)) return;
     di->polycount+=verts.size()-1;
     glBegin(GL_LINE_STRIP);
     if(times.size() == verts.size()){
@@ -1990,6 +2033,7 @@ void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
       }
     }
     glEnd();
+    post_draw(di);
 }
 
 void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
@@ -1998,7 +2042,7 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 
   if(data.size() == 0)
     return;
-  pre_draw(di, matl, 0);
+  if(!pre_draw(di, matl, 0)) return;
   float* d=&data[0];
   float* dend=d+data.size();
   if(drawmode < 1 || drawmode > 3){
@@ -2061,6 +2105,7 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
     }
     glEnd();
   }
+  post_draw(di);
 
 }
 
@@ -2068,9 +2113,9 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
   if (have_normal) 
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
   else 
-    pre_draw(di, matl, 0);
+    if(!pre_draw(di, matl, 0)) return;
 
   di->polycount+=pts.size()/3;
   //  glPushAttrib(GL_POINT_BIT);
@@ -2079,7 +2124,7 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
   
   if (di->pickmode) {
     if (pickable) {
-      glPushName(0);
+      glLoadName(0);
       float* p=&pts[0];
       for (int i=0; i<pts.size(); i+=3) {
 	glLoadName(i/3);
@@ -2088,7 +2133,7 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glEnd();
 	p+=3;
       }
-      glPopName();
+     
     }
     return;
   }
@@ -2141,10 +2186,11 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   glEnd();
   //glPopAttrib();
+  post_draw(di);
 }
 
 void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
-    pre_draw(di, matl, 0);
+    if(!pre_draw(di, matl, 0)) return;
     if (!have_drawn) {
 	have_drawn=1;
     }
@@ -2298,11 +2344,12 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     glDisable(GL_BLEND);
     glDisable(GL_ALPHA_TEST);
     glDisable(GL_TEXTURE_2D);
+    post_draw(di);
 }
 
 void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     di->polycount+=(verts.size()-1)*2*20;
     Array1<Point> circle1;
     Array1<Point> circle2;
@@ -2371,6 +2418,7 @@ void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 	p1=p2;
 	p2=tmp;
     }
+    post_draw(di);
 }
 
 // --------------------------------------------------
@@ -2389,7 +2437,7 @@ void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(rad < 1.e-6)return;
-  pre_draw(di, matl, 1);
+  if(!pre_draw(di, matl, 1)) return;
   glPushMatrix();
   
   glTranslated(cen.x(), cen.y(), cen.z());
@@ -2398,6 +2446,7 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
   gluSphere(di->qobj, rad, nu, nv);
 
   glPopMatrix();
+  post_draw(di);
 }
 
 void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -2410,7 +2459,7 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   using SCICore::Geometry::Plane;
 
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     di->polycount+=4;
 
     switch(di->get_drawtype()){
@@ -2531,6 +2580,7 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 #endif
 	break;
     }
+    post_draw(di);
 }
 
 void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -2544,7 +2594,7 @@ void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -2663,6 +2713,7 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;	
     }
     glPopMatrix();
+    post_draw(di);
 }
 
 void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -2677,7 +2728,7 @@ void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     di->polycount++;
     if (di->currently_lit) {
 	switch(di->get_drawtype()){
@@ -2733,11 +2784,12 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    break;
 	}
     }
+    post_draw(di);
 }
 
 void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     if(verts.size() <= 2)
 	return;
     di->polycount+=verts.size()/3;
@@ -2829,6 +2881,7 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    break;
 	}
     }
+    post_draw(di);
 }
 
 void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -2837,8 +2890,8 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
       return;
 
 // DAVE: Hack for 3d texture mapping
-    pre_draw(di,matl,1);
-//    pre_draw(di,matl,0);
+    if(!pre_draw(di,matl,1)) return;
+//    if(!pre_draw(di,matl,0)) return;
 
     di->polycount += size();
 
@@ -2909,12 +2962,13 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 
     }
+    post_draw(di);
 }
 
 void GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 //  return;
-  pre_draw(di,matl,1);
+  if(!pre_draw(di,matl,1)) return;
   di->polycount += size();
 
   if (cmap) { // use 1D texturing...
@@ -2985,7 +3039,7 @@ void GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_ALPHA_TEST);
     glDisable(GL_TEXTURE_1D);
   }
-  
+  post_draw(di);
 }
 
 void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -3011,7 +3065,7 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     if (di->multiple_transp&MULTI_TRANSP_FIRST_PASS) {
       list_pos=0;
       if (sort_dir == -1) list_pos = cur_list.size()-1;
-      pre_draw(di,matl,1); // yes, this is lit...
+      if(!pre_draw(di,matl,1)) return; // yes, this is lit...
 
       di->polycount += size();
     } 
@@ -3091,7 +3145,7 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_BLEND);
     glEnable(GL_NORMALIZE);
   } else {
-    pre_draw(di,matl,1); // yes, this is lit...
+    if(!pre_draw(di,matl,1)) return; // yes, this is lit...
 
     di->polycount += size();
 
@@ -3157,7 +3211,7 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     glEnable(GL_NORMALIZE);
 
   }
-
+  post_draw(di);
 }
 
 
@@ -3167,7 +3221,7 @@ void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
   if ( pts.size() == 0 )
     return;
   
-  pre_draw(di,matl,1);
+  if(!pre_draw(di,matl,1)) return;
   
   di->polycount += pts.size()/2;
 
@@ -3180,12 +3234,13 @@ void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
     glVertex3d( p[1].x(), p[0].y(), p[0].z() );
   }
   glEnd();
+  post_draw(di);
 }
 #endif
 
 void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  pre_draw(di,matl,1);
+  if(!pre_draw(di,matl,1)) return;
   
   di->polycount += 6;
 
@@ -3323,13 +3378,14 @@ void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 
     }
+    post_draw(di);
 }
 
 void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
-    pre_draw(di,matl,1);
+    if(!pre_draw(di,matl,1)) return;
 
     di->polycount += size();
 
@@ -3408,13 +3464,14 @@ void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 
     }
+    post_draw(di);
 }
 
 void GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
-    pre_draw(di,matl,1);
+    if(!pre_draw(di,matl,1)) return;
 
     di->polycount += size();
 
@@ -3484,13 +3541,14 @@ void GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 
     }
+    post_draw(di);
 }
 
 void GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
-    pre_draw(di,matl,1);
+    if(!pre_draw(di,matl,1)) return;
 
     di->polycount += size();
 
@@ -3572,13 +3630,14 @@ void GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 	}
 
     }
+    post_draw(di);
 }
 
 // WARNING not fixed for lighting correctly yet!
 
 void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     double matrix[16];
@@ -3708,11 +3767,12 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 	break;
     }
     glPopMatrix();
+    post_draw(di);
 }
 
 void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     if(verts.size() <= 2)
 	return;
     di->polycount+=verts.size()-2;
@@ -3795,13 +3855,14 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    break;
 	}
     }
+    post_draw(di);
 }
 
 void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(pts.size() == 0)
       return;
-    pre_draw(di, matl, 1);
+    if(!pre_draw(di, matl, 1)) return;
     
     di->polycount += size();
     if (di->currently_lit) {
@@ -3862,7 +3923,7 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glEnd();
 	}
     }
-    
+    post_draw(di);
 }
 
 void GeomVertex::emit_all(DrawInfoOpenGL*)
@@ -3979,7 +4040,7 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 #ifndef _WIN32
-  pre_draw(di,matl,0);
+  if(!pre_draw(di,matl,0)) return;
 
   if ( init ) {
     cerr << "Init" << endl;
@@ -4014,6 +4075,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   glListBase(fontbase);
   glCallLists(strlen(text()), GL_UNSIGNED_BYTE, (GLubyte *)text());
   glPopAttrib ();
+  post_draw(di);
 #endif
 }
 
@@ -4021,7 +4083,7 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
-  pre_draw(di, matl, 0);
+  if(!pre_draw(di, matl, 0)) return;
   static GLuint texName = 0;
   glClearColor(0.0, 0.0, 0.0, 0.0);
   //  glEnable(GL_DEPTH_TEST);
@@ -4062,7 +4124,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   } else {
     cerr<<"Some sort of texturing error\n";
   }
-
+  post_draw(di);
 }
 
 void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
@@ -4090,6 +4152,11 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.12  1999/10/16 20:51:00  jmk
+// forgive me if I break something -- this fixes picking and sets up sci
+// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
+// gota getup to get down.
+//
 // Revision 1.11  1999/10/07 02:07:43  sparker
 // use standard iostreams and complex type
 //

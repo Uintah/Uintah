@@ -26,6 +26,10 @@
 #include <SCICore/TclInterface/TCL.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECommon/Modules/Salmon/BallAux.h>
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+#include <PSECommon/Modules/Salmon/SCIBaWGL.h>
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+
 
 namespace SCICore {
   namespace GeomSpace {
@@ -76,7 +80,7 @@ using namespace SCICore::TclInterface;
 class DBContext;
 class Renderer;
 class Salmon;
-//class SceneItem;
+class SCIBaWGL;
 
 class GeomSalmonItem;
 class BallData;
@@ -96,9 +100,14 @@ typedef void (Roe::*MouseHandler)(int, int x, int y, int state, int btn, int tim
 typedef void (Renderer::*RoeVisPMF)(Salmon*, Roe*, GeomObj*);
 
 class Roe : public TCL {
+
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+public:
+    Salmon* manager;
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+
 protected:
     friend class Salmon;
-    Salmon* manager;
     HashTable<clString, Renderer*> renderers;
 
     void do_mouse(MouseHandler, TCLArgs&);
@@ -117,6 +126,11 @@ protected:
     void update_mode_string(GeomObj*);
 
     int maxtag;
+
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+    SCIBaWGL* bawgl;
+    int bawgl_error;
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 
     Point orig_eye;
     Vector frame_up;
@@ -143,6 +157,7 @@ protected:
     SegBin*                  line_segs;   // for lit streamlines/hedgehogs/etc
 
     int last_time;
+
 public:
     int inertia_mode;
     BallData *ball;  // this is the ball for arc ball stuff
@@ -171,6 +186,8 @@ public:
     Renderer* get_renderer(const clString&);
     clString id;
     int need_redraw;
+
+    SCIBaWGL* get_bawgl(void) { return(bawgl); }
 
     Roe(Salmon *s, const clString& id);
     Roe(const Roe&);
@@ -226,6 +243,9 @@ public:
 
     // Stereo
     TCLint do_stereo;
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+    TCLint do_bawgl;
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 
     TCLint drawimg;
 
@@ -263,6 +283,11 @@ public:
 
 //
 // $Log$
+// Revision 1.7  1999/10/16 20:51:00  jmk
+// forgive me if I break something -- this fixes picking and sets up sci
+// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
+// gota getup to get down.
+//
 // Revision 1.6  1999/10/07 02:06:57  sparker
 // use standard iostreams and complex type
 //
