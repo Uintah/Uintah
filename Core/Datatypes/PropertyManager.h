@@ -32,12 +32,12 @@
 #define PropertyManager_h 
 
 #include <map>
-#include <iostream>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Datatype.h>
+#include <iostream>
 
 namespace SCIRun {
 
@@ -87,8 +87,19 @@ private:
   bool tmp;
 public:
   Property( T *obj, bool temp=false ) : Property<T>( *obj ), tmp(temp) {}
-  ~Property() { if (tmp) delete static_cast<T *>(obj_); }
-  virtual PropertyBase * copy() const {if (tmp) return scinew Property<T *>(static_cast<T *>(obj_)); else return scinew Property<T *>(scinew T(*static_cast<T *>(obj_)), true);}
+
+  ~Property() { 
+    if (tmp) delete static_cast<T *>(obj_); 
+  }
+
+  virtual PropertyBase * copy() const {
+    if (tmp) { 
+      return scinew Property<T *>(static_cast<T *>(obj_)); 
+    }
+    else {
+      return scinew Property<T *>(scinew T(*static_cast<T *>(obj_)), true);
+    }
+  }
 };
 
 
@@ -178,17 +189,13 @@ public:
 
   //! -- mutability --
 
-  //! when a field is frozen, it will freeze its mesh.
-  //! A frozen field may compute transient meta data that depends on a 
-  //! stable field, min and max are examples of this. 
+  //! Transient data may only be stored in a frozen PropertyManager.
   virtual void freeze();
   
-  //! To thaw a field, you *MUST* call detach on the field handle.
-  //! Thaw will *remove all transient properties* from the field.
-  //! The Mesh handle will be detached and thawed as well.
+  //! thaw will remove all transient properties from the PropertyManager.
   virtual void thaw();
   
-  //! query frozen state of a field.
+  //! query frozen state of a PropertyManager.
   bool is_frozen() const { return frozen_; }
 
   void remove( const string & );
