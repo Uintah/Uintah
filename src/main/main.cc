@@ -35,6 +35,10 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/RCParse.h>
+#if defined(__APPLE__)
+#  include <Core/Datatypes/MacForceLoad.h>
+#endif
+
 #include <sci_defs.h>
 
 #include <iostream>
@@ -161,6 +165,11 @@ int
 main(int argc, char *argv[] )
 {
   const int startnetno = parse_args( argc, argv );
+
+#if defined(__APPLE__)  
+  macForceLoad(); // Attempting to force load (and thus instantiation of
+	          // static constructors) Core/Datatypes;
+#endif
 
   // determine if we are loading an app
   char* app = 0;
