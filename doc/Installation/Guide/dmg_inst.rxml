@@ -124,7 +124,7 @@ DEALINGS IN THE SOFTWARE.
       containing the binary tarball and type:
       <literallayout class="monospaced">
 sudo sh -c 'gunzip -c SCIRunBioPSE-OSX.<!--%= doc.version %-->.tar.gz \
- | (cd /usr/local &amp;&amp; tar xf -)'
+ | (cd /usr/local &amp;&amp; tar xf -)'d
       </literallayout>
       or the following if installing SCIRunWithFusion:
       <literallayout class="monospaced">
