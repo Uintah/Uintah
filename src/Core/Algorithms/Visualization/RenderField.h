@@ -56,7 +56,8 @@ public:
   typedef map<int, MaterialHandle> ind_mat_t;
 #endif
 
-  virtual void set_mat_map(ind_mat_t *mm) = 0;
+  void set_mat_map(ind_mat_t *mm) { mats_ = mm; }
+
   virtual void render(FieldHandle f, bool nodes, bool edges, 
 		      bool faces, bool data, MaterialHandle def_mat, 
 		      bool def_col, ColorMapHandle color_handle,
@@ -76,6 +77,8 @@ public:
   GeomSwitch*              edge_switch_;
   GeomSwitch*              face_switch_;
   GeomSwitch*              data_switch_;
+
+protected:
   GeomArrows*              vec_node_;
   MaterialHandle           def_mat_handle_;
   ColorMapHandle           color_handle_;
@@ -83,12 +86,11 @@ public:
   ind_mat_t               *mats_;
 };
 
+
 template <class Fld, class Loc>
 class RenderField : public RenderFieldBase
 {
 public:
-  virtual void set_mat_map(ind_mat_t *mm) { mats_ = mm; }
-
   //! virtual interface. 
   virtual void render(FieldHandle fh,  
 		      bool nodes, bool edges, bool faces, bool data,
@@ -110,21 +112,12 @@ private:
 		    bool use_normals,
 		    bool use_transparency);
 
-  void render_all(const Fld *fld,  
-		  bool nodes, bool edges, bool faces, bool data, 
-		  bool data_at, const string &ndt, const string &edt, 
-		  double ns, double es, double vs, bool normalize,
-		  bool use_normals, bool use_transparency,
-		  bool bidirectional, bool arrow_heads);
-
   void render_data(const Fld *fld, 
 		   const string &data_display_type,
 		   double scale, bool normalize, bool bidirectional);
 
   void render_materials(const Fld *fld, const string &data_display_type);
 
-public:
-private:
   inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
 			 MaterialHandle m0);
   inline void add_disk(const Point &p, const Vector& v, double scale, 
@@ -140,6 +133,7 @@ private:
     return (*mats_)[idx];
   }
 };
+
 
 template <class T>
 bool
@@ -199,6 +193,73 @@ bool
 add_data(const Point &, const Tensor &, GeomArrows *, 
 	 GeomSwitch *, MaterialHandle &, const string &, double, bool, bool);
 
+
+template <class Fld, class Loc>
+void 
+RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale, 
+				  GeomGroup *g, MaterialHandle mh)
+{
+  GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
+  g->add(scinew GeomMaterial(s, mh));
+}
+
+
+template <class Fld, class Loc>
+void 
+RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
+				double scale, 
+				GeomGroup *g, MaterialHandle mh)
+{
+  Vector v = vin;
+  if (v.length() > 0.00001)
+  {
+    v.safe_normalize();
+    v*=scale/6;
+    GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
+						      res_, 1, 1);
+    g->add(scinew GeomMaterial(d, mh));
+  }
+  else
+  {
+    GeomSphere *s = scinew GeomSphere(p, scale, res_, res_);
+    g->add(scinew GeomMaterial(s, mh));
+  }
+}
+
+
+template <class Fld, class Loc>
+void 
+RenderField<Fld, Loc>::add_axis(const Point &p0, double scale, 
+				GeomGroup *g, MaterialHandle mh) 
+{
+  static const Vector x(1., 0., 0.);
+  static const Vector y(0., 1., 0.);
+  static const Vector z(0., 0., 1.);
+
+  Point p1 = p0 + x * scale;
+  Point p2 = p0 - x * scale;
+  GeomLine *l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(scinew GeomMaterial(l, mh));
+  p1 = p0 + y * scale;
+  p2 = p0 - y * scale;
+  l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(scinew GeomMaterial(l, mh));
+  p1 = p0 + z * scale;
+  p2 = p0 - z * scale;
+  l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(scinew GeomMaterial(l, mh));
+}
+
+template <class Fld, class Loc>
+void 
+RenderField<Fld, Loc>::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
+  pts->add(p, mh);
+}
+
+
 template <class Fld, class Loc>
 void 
 RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes, 
@@ -215,9 +276,19 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   def_mat_handle_ = def_mat;
   color_handle_ = color_handle;
   res_ = res;
-  render_all(fld, nodes, edges, faces, data, def_col,  ndt, edt, ns, es, vs, 
-	     normalize, use_normals, use_transparency, bidirectional, 
-	     arrow_heads);
+
+  if (def_col) { render_materials(fld, ndt); }
+  if (nodes)   { render_nodes(fld, ndt, ns); }
+  if (edges)   { render_edges(fld, edt, es); }
+  if (faces)   { render_faces(fld, use_normals, use_transparency); }
+  
+  if (data)
+  {
+    if (arrow_heads) vec_node_ = scinew GeomArrows(0.15, 0.6);
+    else vec_node_ = scinew GeomArrows(0, 0.6);
+    data_switch_ = scinew GeomSwitch(vec_node_);
+    render_data(fld, ndt, vs, normalize, bidirectional);
+  }
 }
 
 
@@ -701,88 +772,6 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   }
 }
 
-template <class Fld, class Loc>
-void
-RenderField<Fld, Loc>::render_all(const Fld *fld, bool nodes, 
-				  bool edges, bool faces, bool data,
-				  bool data_at,
-				  const string &ndt, const string &edt,
-				  double ns, double es, double vs, 
-				  bool normalize, bool use_normals, 
-				  bool use_transparency, bool bidirectional,
-				  bool arrow_heads)
-{
-  if (data_at) render_materials(fld, ndt);
-  if (nodes) render_nodes(fld, ndt, ns);
-  if (edges) render_edges(fld, edt, es);
-  if (faces) render_faces(fld, use_normals, use_transparency);
-  
-  if (data) {
-    if (arrow_heads) vec_node_ = scinew GeomArrows(0.15, 0.6);
-    else vec_node_ = scinew GeomArrows(0, 0.6);
-    data_switch_ = scinew GeomSwitch(vec_node_);
-    render_data(fld, ndt, vs, normalize, bidirectional);
-  }
-}
-
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale, 
-				  GeomGroup *g, MaterialHandle mh) {
-  GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
-  g->add(scinew GeomMaterial(s, mh));
-}
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin, double scale, 
-				GeomGroup *g, MaterialHandle mh) {
-
-  Vector v = vin;
-  if (v.length() > 0.00001) {
-    v.safe_normalize();
-    v*=scale/6;
-    GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
-						      res_, 1, 1);
-    g->add(scinew GeomMaterial(d, mh));
-  } else {
-    GeomSphere *s = scinew GeomSphere(p, scale, res_, res_);
-    g->add(scinew GeomMaterial(s, mh));
-  }
-}
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_axis(const Point &p0, double scale, 
-				GeomGroup *g, MaterialHandle mh) 
-{
-  static const Vector x(1., 0., 0.);
-  static const Vector y(0., 1., 0.);
-  static const Vector z(0., 0., 1.);
-
-  Point p1 = p0 + x * scale;
-  Point p2 = p0 - x * scale;
-  GeomLine *l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-  p1 = p0 + y * scale;
-  p2 = p0 - y * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-  p1 = p0 + z * scale;
-  p2 = p0 - z * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-}
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
-  pts->add(p, mh);
-}
 
 } // end namespace SCIRun
 
