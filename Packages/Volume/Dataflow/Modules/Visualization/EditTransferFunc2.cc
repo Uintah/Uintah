@@ -512,7 +512,7 @@ class EditTransferFunc2 : public Module {
   Window win_;
   int width_, height_;
   int button_;
-  Widget* widget_[2];
+  vector<Widget*> widget_;
   Pbuffer* pbuffer_;
   bool use_pbuffer_;
   
@@ -544,7 +544,10 @@ public:
   void release(int x, int y, int button);
 };
 
+
+
 DECLARE_MAKER(EditTransferFunc2)
+
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   : Module("EditTransferFunc2", ctx, Filter, "Visualization", "Volume"),
     ctx_(0), dpy_(0), win_(0), button_(0), pbuffer_(0), use_pbuffer_(true),
@@ -552,12 +555,22 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     cmap_(new Colormap2),
     cmap_dirty_(true), cmap_size_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0)
 {
-  widget_[0] = new TriangleWidget();
-  widget_[1] = new RectangleWidget();
+  widget_.push_back(scinew TriangleWidget());
+  widget_.push_back(scinew RectangleWidget());
+  //widget_.push_back(scinew RectangleWidget());
 }
 
+
 EditTransferFunc2::~EditTransferFunc2()
-{}
+{
+  // Clean up currently unmemorymanaged widgets.
+  for (unsigned int i = 0; i < widget_.size(); i++)
+  {
+    delete widget_[i];
+  }
+  widget_.clear();
+}
+
 
 void
 EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
@@ -603,31 +616,39 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
+
+
 void
 EditTransferFunc2::motion(int x, int y)
 {
-  //cerr << "motion: " << x << " " << y << endl;
+  cerr << "motion: " << x << " " << y << endl;
   update();
   redraw();
 }
 
+
+
 void
 EditTransferFunc2::push(int x, int y, int button)
 {
-  //cerr << "push: " << x << " " << y << " " << button << endl;
+  cerr << "push: " << x << " " << y << " " << button << endl;
   button_ = button;
   update();
   redraw();
 }
 
+
+
 void
 EditTransferFunc2::release(int x, int y, int button)
 {
-  //cerr << "release: " << x << " " << y << " " << button << endl;
+  cerr << "release: " << x << " " << y << " " << button << endl;
   button_ = 0;
   update();
   redraw();
 }
+
+
 
 void
 EditTransferFunc2::execute()
@@ -665,6 +686,8 @@ EditTransferFunc2::execute()
     cmap_port->send(cmap_);
   }
 }
+
+
 
 void
 EditTransferFunc2::update()
@@ -747,9 +770,11 @@ EditTransferFunc2::update()
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
 
-    // rasterize widgets
-    widget_[0]->rasterize();
-    widget_[1]->rasterize();
+    // Rasterize widgets
+    for (unsigned int i = 0; i < widget_.size(); i++)
+    {
+      widget_[i]->rasterize();
+    }
 
     glFlush();
     
@@ -775,10 +800,13 @@ EditTransferFunc2::update()
           cmap(i,j,3) = 0.0;
         }
       }
-      // rasterize widgets
-      widget_[0]->rasterize(cmap);
-      widget_[1]->rasterize(cmap);
-      // update textures
+      // Rasterize widgets
+      for (unsigned int i = 0; i < widget_.size(); i++)
+      {
+	widget_[i]->rasterize(cmap);
+      }
+
+      // Update textures
       if(cmap_size_dirty_) {
         if(glIsTexture(cmap_tex_)) {
           glDeleteTextures(1, &cmap_tex_);
@@ -833,6 +861,7 @@ EditTransferFunc2::update()
     want_to_execute();
   }
 }
+
 
 
 void
@@ -912,14 +941,18 @@ EditTransferFunc2::redraw()
     glDisable(GL_TEXTURE_2D);
   }
   glDisable(GL_BLEND);
-  
-  widget_[0]->draw();
-  widget_[1]->draw();
+
+  // draw widgets
+  for (unsigned int i = 0; i < widget_.size(); i++)
+  {
+    widget_[i]->draw();
+  }
   
   glXSwapBuffers(dpy_, win_);
   glXMakeCurrent(dpy_, 0, 0);
 
   gui->unlock();
 }
+
 
 } // end namespace Volume
