@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/Array3Window.h>
 
+#include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -302,8 +303,8 @@ WARNING
 	}
       }
     }
-    
-    inline void read(istream& in)
+
+    inline void read(istream& in, bool swapBytes)
     {
       // This could be optimized...
       IntVector l(getLowIndex());
@@ -312,6 +313,11 @@ WARNING
       for(int z=l.z();z<h.z();z++){
 	for(int y=l.y();y<h.y();y++){
 	  in.read((char*)&(*this)[IntVector(l.x(),y,z)], linesize);
+	  if (swapBytes) {
+	    for (int x=l.x();x<h.x();x++) {
+	      swapbytes((*this)[IntVector(x,y,z)]);
+	    }
+	  }
 	}
       }
     }
