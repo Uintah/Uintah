@@ -1316,15 +1316,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        int dwindex = matl->getDWIndex();
        char description[50];
        sprintf(description, "TOP_equilibration_Mat_%d ",dwindex);
-  #if 1
        d_ice->printData( patch,1,description, "rho_CC",     rho_CC[m]);
        d_ice->printData( patch,1,description, "rho_micro",  rho_micro[m]);
-  #endif
        d_ice->printData( patch,0,description, "speedSound", speedSound_new[m]);
        d_ice->printData( patch,1,description, "Temp_CC",    Temp[m]);
- #if 1
        d_ice->printData( patch,1,description, "vol_frac_CC",vol_frac[m]);
- #endif
       }
     }
 
@@ -1389,7 +1385,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      for (int m = 0; m < numALLMatls; m++)   {
        Q[m] =  press_new[*iter] - press_eos[m];
        y[m] =  dp_drho[m] * ( rho_CC[m][*iter]/
-               (vol_frac[m][*iter] * vol_frac[m][*iter] + d_SMALL_NUM) ); 
+               (vol_frac[m][*iter] * vol_frac[m][*iter]) ); 
        A   +=  vol_frac[m][*iter];
        B   +=  Q[m]/(y[m] + d_SMALL_NUM);
        C   +=  1.0/(y[m]  + d_SMALL_NUM);
@@ -1543,16 +1539,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   }
  /*==========TESTING==========`*/
 
-
-  /*__________________________________
-   *   THIS NEEDS TO BE FIXED 
-   *   WE NEED TO UPDATE BC_VALUES NOT PRESSURE
-   *   SINCE WE USE BC_VALUES LATER ON IN THE CODE
-   *___________________________________*/
    for (int m = 0; m < numALLMatls; m++)   {
      d_ice->setBC(rho_CC[m],   "Density" ,patch);
   }  
-  d_ice->setBC(press_new,"Pressure",patch);
+  
+  d_ice->setBC(press_new, rho_micro[SURROUND_MAT], "Pressure",patch);
 
   //__________________________________
   //    Put all matls into new dw
@@ -1565,6 +1556,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     new_dw->put( rho_CC[m],        Ilb->rho_CCLabel,        dwindex, patch);
   }
   new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch);
+  
   
 //---- P R I N T   D A T A ------
   if(d_ice -> switchDebug_equilibration_press)  { 
