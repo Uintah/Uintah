@@ -28,9 +28,9 @@ c*********************************************************************
             DO 130 J=JST,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   flowin = flowin + den(I,J,K)*sns(j)*stb(k)*
-     $                 max(0.0,uu(i,j,k))
+     $                 max(0.0D0,uu(i,j,k))
                   flowout = flowout - pt5*(den(I,J,K)+den(i+1,j,k))*
-     $                 sns(j)*stb(k)*min(0.0,uu(i+1,j,k))
+     $                 sns(j)*stb(k)*min(0.0D0,uu(i+1,j,k))
                endif
  130        CONTINUE
  140     CONTINUE
@@ -41,9 +41,9 @@ c*********************************************************************
 	    DO 180 J=JST,JEND
                IF (PCELL(iend+1,J,K) .EQ. PFIELD) THEN
 c                  flowin = flowin - den(I,J,K)*sns(j)*stb(k)*
-c     $                 min(0.0,uu(i+1,j,k))
+c     $                 min(0.0D0,uu(i+1,j,k))
                   flowout = flowout + pt5*(den(I-1,J,K)+den(i,j,k))
-c     $                 *sns(j)*stb(k)*max(0.0,uu(i+1,j,k))
+c     $                 *sns(j)*stb(k)*max(0.0D0,uu(i+1,j,k))
      $                 *sns(j)*stb(k)*uu(i,j,k)
                END IF
  180        CONTINUE
@@ -58,9 +58,9 @@ C
             DO 230 I=IST,IEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   flowin = flowin + den(I,J,K)*sew(i)*stb(k)*
-     $                 max(0.0,vv(i,j,k))
+     $                 max(0.0D0,vv(i,j,k))
                   flowout = flowout - pt5*(den(I,J,K)+den(i,j+1,k))*
-     $                 sew(i)*stb(k)*min(0.0,vv(i,j+1,k))
+     $                 sew(i)*stb(k)*min(0.0D0,vv(i,j+1,k))
                END IF
  230        CONTINUE
  240     CONTINUE
@@ -74,9 +74,9 @@ C
 	    DO 280 I=IST,IEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   flowin = flowin - den(I,J,K)*sew(i)*stb(k)*
-     $                 min(0.0,vv(i,j+1,k))
+     $                 min(0.0D0,vv(i,j+1,k))
                   flowout = flowout + pt5*(den(I,J,K)+den(i,j-1,k))
-     $                 *sew(i)*stb(k)*max(0.0,vv(i,j,k))
+     $                 *sew(i)*stb(k)*max(0.0D0,vv(i,j,k))
                END IF
  280        CONTINUE
  290     CONTINUE
@@ -91,9 +91,9 @@ C
 	    DO 330 I=IST,IEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   flowin = flowin + den(I,J,K)*sew(i)*sns(j)*
-     $                 max(0.0,ww(i,j,k))
+     $                 max(0.0D0,ww(i,j,k))
                   flowout = flowout - pt5*(den(I,J,K)+den(i,j,k+1))*
-     $                 sew(i)*sns(j)*min(0.0,ww(i,j,k+1))
+     $                 sew(i)*sns(j)*min(0.0D0,ww(i,j,k+1))
                END IF
  330        CONTINUE
  340     CONTINUE
@@ -107,9 +107,9 @@ C
 	    DO 380 I=IST,IEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   flowin = flowin - den(I,J,K)*sew(i)*sns(j)*
-     $                 min(0.0,ww(i,j,k+1))
+     $                 min(0.0D0,ww(i,j,k+1))
                   flowout = flowout + pt5*(den(I,J,K)+den(i,j,k-1))
-     $                 *sew(i)*sns(j)*max(0.0,ww(i,j,k))
+     $                 *sew(i)*sns(j)*max(0.0D0,ww(i,j,k))
                END IF
  380        CONTINUE
  390     CONTINUE

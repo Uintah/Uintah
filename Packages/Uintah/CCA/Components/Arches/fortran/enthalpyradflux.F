@@ -53,7 +53,7 @@ c-----------------------------------------------------------------------
                dtdys = (tg(i,j,k)-tg(i,j-1,k))/dyps(j)
                dtdzt = (tg(i,j,k+1)-tg(i,j,k))/dztp(k)
                dtdzb = (tg(i,j,k)-tg(i,j,k-1))/dzpb(k)
-               radconst = -16*SIGMA/(3.0*Absorp(i,j,k)+SMALL)
+               radconst = -16.0D0*SIGMA/(3.0D0*Absorp(i,j,k)+SMALL)
                qfluxe(i,j,k) = radconst*(tge**3)*dtdxe
                qfluxw(i,j,k) = radconst*(tgw**3)*dtdxw
                qfluxn(i,j,k) = radconst*(tgn**3)*dtdyn

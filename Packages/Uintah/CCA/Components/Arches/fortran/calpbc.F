@@ -74,8 +74,8 @@ c*********************************************************************
       print*,'jend',jend
       print*,'kend',kend
 #endif
-      FACK = 1.0
-      URFBC = 0.1
+      FACK = 1.0D0
+      URFBC = 0.1D0
       LNORM = .TRUE.
       LTRACTION = .TRUE.
 C     
@@ -92,16 +92,16 @@ C
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
                   PP(I,J,K) = PPP
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I+1,J,K))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I+1,J,K))
                   DELP = PPP - PP(I+1,J,K)
-                  UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = SIGN(SQRT(2.0D0*ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
                   UVEL = UU(I+2,J,K)
                   VVEL = VV(I+1,J,K)
                   WVEL = WW(I+1,J,K)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
                         UVEL = UMAG
 c                        VVEL = 0.0
 c                        WVEL = 0.0
@@ -110,7 +110,7 @@ c                        WVEL = 0.0
                         VVEL = VVEL*ABS(UMAG)/UMAGINT
                         WVEL = WVEL*ABS(UMAG)/UMAGINT
                      END IF
-                     UVEL = UVEL*URFBC + UU(I,J,K)*(1.0-URFBC)
+                     UVEL = UVEL*URFBC + UU(I,J,K)*(1.0D0-URFBC)
                   endif
                   UU(I+1,J,K) = UVEL
                   UU(I,J,K) = UVEL
@@ -133,7 +133,7 @@ C
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
                   PP(I,J,K) = PPP
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I-1,J,K))
                   DELP = PPP - PP(I-1,J,K)
                   UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -142,14 +142,14 @@ C
                   WVEL = WW(I-1,J,K)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
                         UVEL = UMAG
 c                        VVEL = 0.0
 c                        WVEL = 0.0
                      ELSE
                         UVEL = UMAG*ABS(UVEL)/UMAGINT
                      END IF
-                     UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
+                     UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0D0-URFBC)
                   end if
                   UU(I,J,K) = UVEL
                   UU(I+1,J,K) = UVEL
@@ -168,7 +168,7 @@ c                     uu(i+1,j,k) = uu(i,j,k)
 	    DO J=JST_mod,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I-1,J,K))
                   DELP = PPP - PP(I-1,J,K)
                   UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -177,7 +177,7 @@ c                     uu(i+1,j,k) = uu(i,j,k)
                   WVEL = WW(I-1,J,K)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
                         UVEL = UMAG
 c                        VVEL = 0.0
 c                        WVEL = 0.0
@@ -197,7 +197,7 @@ c                  endif
 	    DO J=JST,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I-1,J,K))
                   DELP = PPP - PP(I-1,J,K)
                   UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -206,7 +206,7 @@ c                  endif
                   WVEL = WW(I-1,J,K)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
                         UVEL = UMAG
 c                        VVEL = 0.0
 c                        WVEL = 0.0
@@ -231,7 +231,7 @@ C
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
                   PP(I,J,K) = PPP
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J+1,K))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I,J+1,K))
                   DELP = PPP - PP(I,J+1,K)
                   UMAG = SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -240,7 +240,7 @@ C
                   WVEL = WW(I,J+1,K)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
 c                        UVEL = 0.0
                         VVEL = UMAG
 c                        WVEL = 0.0
@@ -249,11 +249,11 @@ c                        WVEL = 0.0
                         VVEL = ABS(VVEL)*UMAG/UMAGINT
                         WVEL = WVEL*ABS(UMAG)/UMAGINT
                      END IF
-                     VVEL = URFBC*VVEL + VV(I,J,K)*(1.0-URFBC)
+                     VVEL = URFBC*VVEL + VV(I,J,K)*(1.0D0-URFBC)
                   endif
                   VVvel = urfbc*(VVEL 
      $                 - pp(i,j+1,k)*dynpv(j+1)/vis(i,j+1,k)) +
-     $                   vv(i,j+1,k)*(1-urfbc)
+     $                   vv(i,j+1,k)*(1.0D0-urfbc)
                   vv(i,j+1,k) = vvel
                   VV(I,J,K) = VV(i,j+1,k)
                   UU(I,J,K) = UVEL
@@ -275,7 +275,7 @@ C
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
                   PP(I,J,K) = PPP
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I,J-1,K))
                   DELP = PPP - PP(I,J-1,K)
                   UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -284,7 +284,7 @@ C
                   WVEL = WW(I,J-1,K)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
 c                        UVEL = 0.0
                         VVEL = UMAG
 c                        WVEL = 0.0
@@ -293,11 +293,11 @@ c                        WVEL = 0.0
                         VVEL = ABS(VVEL)*UMAG/UMAGINT
                         WVEL = WVEL*ABS(UMAG)/UMAGINT
                      END IF
-                     VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
+                     VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0D0-URFBC)
                   endif
                   VVvel = urfbc*(VVEL
      $                 + pp(i,j-1,k)*dynpv(j-1)/vis(i,j-1,k)) +
-     $                 (1.0 - urfbc)*vv(i,j,k)
+     $                 (1.0D0 - urfbc)*vv(i,j,k)
                   vv(i,j,k) = vvel
                   VV(I,J+1,K) = VV(i,j,k)
                   UU(I,J,K) = UVEL
@@ -321,7 +321,7 @@ C
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
                   PP(I,J,K) = PPP
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I,J,K+1))
                   DELP = PPP - PP(I,J,K+1)
                   UMAG = SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -330,7 +330,7 @@ C
                   WVEL = WW(I,J,K+2)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
 c                        UVEL = 0.0
 c                        VVEL = 0.0
                         WVEL = UMAG
@@ -343,7 +343,7 @@ c                        VVEL = 0.0
                   endif
                   WWvel = urfbc*(WVEL
      $                 - pp(i,j,k+1)*dztpw(k+1)/vis(i,j,k+1)) +
-     $                 (1.0-urfbc)*ww(i,j,k+1)
+     $                 (1.0D0-urfbc)*ww(i,j,k+1)
                   ww(i,j,k+1) = wvel
                   WW(I,J,K) = WW(i,j,k+1)
                   UU(I,J,K) = UVEL
@@ -365,7 +365,7 @@ C
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
                   PPP = BndryPress
                   PP(I,J,K) = PPP
-                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))
+                  DENFACE = 0.5D0*(DEN(I,J,K)+DEN(I,J,K-1))
                   DELP = PPP - PP(I,J,K-1)
                   UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
                   UMAG = UMAG/SQRT(FACK)
@@ -374,7 +374,7 @@ C
                   WVEL = WW(I,J,K-1)
                   if (.not.ltraction) then
                      UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     IF (LNORM.OR.UMAGINT.EQ.0.0D0) THEN
 c                        UVEL = 0.0
 c                        VVEL = 0.0
                         WVEL = UMAG
@@ -383,11 +383,11 @@ c                        VVEL = 0.0
                         VVEL = VVEL*ABS(UMAG)/UMAGINT
                         WVEL = ABS(WVEL)*UMAG/UMAGINT
                      END IF
-                     WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
+                     WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0D0-URFBC)
                   endif
                   WWvel = urfbc*(WVEL
      $                 + pp(i,j,k-1)*dztpw(k-1)/vis(i,j,k-1)) +
-     $                 (1.0-urfbc)*ww(i,j,k)
+     $                 (1.0D0-urfbc)*ww(i,j,k)
                   ww(i,j,k) = wvel
                   WW(I,J,K+1) = WW(i,j,k)
                   UU(I,J,K) = UVEL
