@@ -5,7 +5,7 @@
 SUBDIRS = CrossFader Hedgehog \
 	IsoSurface LaceContours MeshView Readers Salmon \
 	SoundInput SoundFilter SoundMixer SoundOutput SoundReader \
-	Streamline SurfToGeom VoiceRemover
+	Streamline Streamsurf SurfToGeom VoiceRemover
 
 SCISubdirs($(SUBDIRS))
 
@@ -29,6 +29,7 @@ MODULES = \
 	SoundOutput/SoundOutput.o \
 	SoundReader/SoundReader.o \
 	Streamline/Streamline.o \
+	Streamsurf/Streamsurf.o \
 	SurfToGeom/SurfToGeom.o \
 	VoiceRemover/VoiceRemover.o
 
