@@ -140,6 +140,7 @@ public:
   Cell::size_type cells_size() const;
 
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
 
   //! set the mesh statistics
   void resize_nodes(Node::size_type n) { nodes_.resize(n); }

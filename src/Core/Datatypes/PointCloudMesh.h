@@ -107,6 +107,7 @@ public:
   Face::size_type faces_size() const;
   Cell::size_type cells_size() const;
   virtual BBox get_bounding_box() const;
+  virtual void transform(Transform &t);
 
   //! set the mesh statistics
   void resize_nodes(Node::size_type n) { points_.resize(n); }

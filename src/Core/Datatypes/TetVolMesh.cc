@@ -139,6 +139,24 @@ TetVolMesh::get_bounding_box() const
   return result;
 }
 
+
+void
+TetVolMesh::transform(Transform &t)
+{
+  vector<Point>::iterator itr = points_.begin();
+  vector<Point>::iterator eitr = points_.end();
+  while (itr != eitr)
+  {
+    *itr = t.project(*itr);
+    ++itr;
+  }
+  
+  // Recompute grid.
+  grid_.detach();
+  compute_grid();
+}
+
+
 void
 TetVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
 		      Node::index_type n3,
@@ -535,7 +553,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 bool
-TetVolMesh::locate(Node::index_type &loc, const Point &p) const
+TetVolMesh::locate(Node::index_type &loc, const Point &p)
 {
   Cell::index_type ci;
   if (locate(ci, p)) { // first try the fast way.
@@ -581,7 +599,7 @@ TetVolMesh::locate(Node::index_type &loc, const Point &p) const
 
 
 bool
-TetVolMesh::locate(Edge::index_type &/*edge*/, const Point & /* p */) const
+TetVolMesh::locate(Edge::index_type &/*edge*/, const Point & /* p */)
 {
   //FIX_ME
   ASSERTFAIL("TetVolMesh::locate(Edge::index_type &) not implemented!");
@@ -590,7 +608,7 @@ TetVolMesh::locate(Edge::index_type &/*edge*/, const Point & /* p */) const
 
 
 bool
-TetVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */) const
+TetVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */)
 {
   //FIX_ME
   ASSERTFAIL("TetVolMesh::locate(Face::index_type&) not implemented!");
@@ -599,10 +617,11 @@ TetVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */) const
 
 
 bool
-TetVolMesh::locate(Cell::index_type &cell, const Point &p) const
+TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
   if (grid_.get_rep() == 0) {
-    ASSERTFAIL("Call compute_grid before calling locate!");
+    compute_grid();
+    //ASSERTFAIL("Call compute_grid before calling locate!");
   }
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;

@@ -56,6 +56,20 @@ PointCloudMesh::get_bounding_box() const
   return result;
 }
 
+
+void
+PointCloudMesh::transform(Transform &t)
+{
+  vector<Point>::iterator itr = points_.begin();
+  vector<Point>::iterator eitr = points_.end();
+  while (itr != eitr)
+  {
+    *itr = t.project(*itr);
+    ++itr;
+  }
+}
+
+
 bool
 PointCloudMesh::locate(Node::index_type &idx, const Point &p) const
 {

@@ -20,6 +20,7 @@
 
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 
 namespace SCIRun {
@@ -32,6 +33,7 @@ public:
   
   //! Required virtual functions.
   virtual BBox get_bounding_box() const = 0;
+  virtual void transform(Transform &t) = 0;
 
   //! Optional virtual functions.
   //! finish all computed data within the mesh.
