@@ -170,8 +170,17 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     
     new_dw->put(delt_vartype(delt), lb->delTLabel);
   }  // patch loop
-  //  update when you should dump debugging data. 
-  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval;
+  //__________________________________
+  // Is it time to dump printData
+  d_dbgTime_to_printData = false;
+  
+  double time= dataArchiver->getCurrentTime();
+  if (time >= d_dbgStartTime && 
+      time <= d_dbgStopTime  &&
+      time >= d_dbgNextDumpTime) {
+    d_dbgTime_to_printData  = true;
+    d_dbgNextDumpTime = d_dbgOutputInterval * ceil(time/d_dbgOutputInterval); 
+  }
 }
 
 /* --------------------------------------------------------------------- 
