@@ -125,7 +125,7 @@ SliceRenderer::draw_slice()
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
-  vector<TextureBrick*> bricks;
+  vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   if(bricks.size() == 0) return;
 
@@ -196,7 +196,7 @@ SliceRenderer::draw_slice()
   
   for(unsigned int i=0; i<bricks.size(); i++) {
     double t;
-    TextureBrick* b = bricks[i];
+    TextureBrickHandle b = bricks[i];
     load_brick(b);
     vertex.clear();
     texcoord.clear();
@@ -547,7 +547,7 @@ SliceRenderer::multi_level_draw()
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
-  vector<TextureBrick*> bricks;
+  vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
 
   int levels = tex_->nlevels();
@@ -629,7 +629,7 @@ SliceRenderer::multi_level_draw()
   glPushMatrix();
   glMultMatrixd(mvmat);
   
-  vector<vector<TextureBrick *> > blevels;
+  vector<vector<TextureBrickHandle> > blevels;
   blevels.resize(levels);
   for(int k = levels - 1; k >= 0;  --k ){
     tex_->get_sorted_bricks(blevels[levels - (k + 1)], view_ray, k);
@@ -662,11 +662,11 @@ SliceRenderer::multi_level_draw()
 
       for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
-	vector<TextureBrick*>& bs  = blevels[j];
+	vector<TextureBrickHandle>& bs  = blevels[j];
 	
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
-	  TextureBrick *b = bs[i];
+	  TextureBrickHandle b = bs[i];
 	  load_brick(b);
 	  vertex.resize(0);
 	  texcoord.resize(0);
@@ -708,11 +708,11 @@ SliceRenderer::multi_level_draw()
 
       for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
-	vector<TextureBrick*>& bs  = blevels[j];
+	vector<TextureBrickHandle>& bs  = blevels[j];
 	
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
-	  TextureBrick *b = bs[i];
+	  TextureBrickHandle b = bs[i];
 	  load_brick(b);
 	  vertex.resize(0);
 	  texcoord.resize(0);
@@ -753,11 +753,11 @@ SliceRenderer::multi_level_draw()
 
       for(int j = 0; j < levels; ++j ){
 	if(!draw_level_[j]) continue;
-	vector<TextureBrick*>& bs  = blevels[j];
+	vector<TextureBrickHandle>& bs  = blevels[j];
 	    
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
-	  TextureBrick *b = bs[i];
+	  TextureBrickHandle b = bs[i];
 	  load_brick(b);
 	  vertex.resize(0);
 	  texcoord.resize(0);
@@ -795,11 +795,11 @@ SliceRenderer::multi_level_draw()
 
 	for(int j = 0; j < levels; ++j ){
 	  if(!draw_level_[j]) continue;
-	  vector<TextureBrick*>& bs  = blevels[j];
+	  vector<TextureBrickHandle>& bs  = blevels[j];
 	  
 	  for(unsigned int i=0; i<bs.size(); i++) {
 	    double t;
-	    TextureBrick *b = bs[i];
+	    TextureBrickHandle b = bs[i];
 	    load_brick(b);
 	    vertex.resize(0);
 	    texcoord.resize(0);
@@ -845,11 +845,11 @@ SliceRenderer::multi_level_draw()
 
 	for(int j = 0; j < levels; ++j ){
 	  if(!draw_level_[j]) continue;
-	  vector<TextureBrick*>& bs  = blevels[j];
+	  vector<TextureBrickHandle>& bs  = blevels[j];
 
 	  for(unsigned int i=0; i<bs.size(); i++) {
 	    double t;
-	    TextureBrick *b = bs[i];
+	    TextureBrickHandle b = bs[i];
 	    load_brick(b);
 	    vertex.resize(0);
 	    texcoord.resize(0);
@@ -900,11 +900,11 @@ SliceRenderer::multi_level_draw()
 
     for(int j = 0; j < levels; ++j ){
       if(!draw_level_[j]) continue;
-      vector<TextureBrick*>& bs  = blevels[j];
+      vector<TextureBrickHandle>& bs  = blevels[j];
 
       for(unsigned int i=0; i<bs.size(); i++) {
 	double t;
-	TextureBrick *b = bs[i];
+	TextureBrickHandle b = bs[i];
 	load_brick(b);
 	vertex.resize(0);
 	texcoord.resize(0);

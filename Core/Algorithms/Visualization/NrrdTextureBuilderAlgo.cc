@@ -113,7 +113,7 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
                     axis_max[nv_nrrd->dim-1]));
 
   texture->lock_bricks();
-  vector<TextureBrick*>& bricks = texture->bricks();
+  vector<TextureBrickHandle>& bricks = texture->bricks();
   if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz() ||
       nc != texture->nc() || card_mem != texture->card_mem() ||
       bbox.min() != texture->bbox().min() ||
@@ -136,7 +136,7 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
 
 
 void
-NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks,
+NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
 				     int nx, int ny, int nz,
 				     int nc, int* nb,
                                      const BBox& bbox, int card_mem)
@@ -200,9 +200,9 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks,
   brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
   brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
   // delete previous bricks (if any)
-  for (unsigned int i=0; i<bricks.size(); i++) delete bricks[i];
-  bricks.resize(0);
+  bricks.clear();
   bricks.reserve(num_brick[0]*num_brick[1]*num_brick[2]);
+
   // create bricks
   // data bbox
   double data_bbmin[3], data_bbmax[3];
@@ -291,12 +291,12 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrick*>& bricks,
 }
 
 void
-NrrdTextureBuilderAlgo::fill_brick(TextureBrick* brick,
+NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
 				   Nrrd* nv_nrrd, Nrrd* gm_nrrd,
                                    int ni, int nj, int nk)
 {
   TextureBrickT<unsigned char>* br =
-    dynamic_cast<TextureBrickT<unsigned char>*>(brick);
+    dynamic_cast<TextureBrickT<unsigned char>*>(brick.get_rep());
   int nc = brick->nc();
   int nx = brick->nx();
   int ny = brick->ny();

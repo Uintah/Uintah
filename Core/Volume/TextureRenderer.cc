@@ -257,7 +257,7 @@ TextureRenderer::compute_view()
 }
 
 void
-TextureRenderer::load_brick(TextureBrick* brick)
+TextureRenderer::load_brick(TextureBrickHandle brick)
 {
 #ifdef HAVE_AVR_SUPPORT
   int nc = brick->nc();

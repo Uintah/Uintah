@@ -65,11 +65,11 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription* td);
 
 protected:
-  virtual void build_bricks(vector<TextureBrick*>& bricks,
+  virtual void build_bricks(vector<TextureBrickHandle>& bricks,
 			    int nx, int ny, int nz,
                             int nc, int* nb,
 			    const BBox& bbox, int brick_mem) = 0;
-  virtual void fill_brick(TextureBrick* brick,
+  virtual void fill_brick(TextureBrickHandle &brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax) = 0;
 };
@@ -89,11 +89,11 @@ public:
                      int card_mem);
   
 protected:
-  virtual void build_bricks(vector<TextureBrick*>& bricks,
+  virtual void build_bricks(vector<TextureBrickHandle>& bricks,
 			    int nx, int ny, int nz,
                             int nc, int* nb,
 			    const BBox& bbox, int brick_mem);
-  virtual void fill_brick(TextureBrick* brick,
+  virtual void fill_brick(TextureBrickHandle &brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax);
 }; 
@@ -134,12 +134,12 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
       const MultiResLevel<value_type>* lev = vmrfield->level( i );
       const MultiResLevel<Vector> * glev =
 	( gmrfield ? gmrfield->level( i ) : 0 );
-      vector<TextureBrick*> new_level;
+      vector<TextureBrickHandle> new_level;
       if( i == texture->nlevels() ) {
 	texture->add_level(new_level);
       }
 //       cerr<<"Texture has "<<texture->nlevels()<<" levels \n";      
-      vector<TextureBrick*>& bricks = texture->bricks(i);
+      vector<TextureBrickHandle>& bricks = texture->bricks(i);
 //       cerr<<"Bricks set\n";
 
       //
@@ -165,7 +165,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 
 	
 	
-	vector<TextureBrick*> patch_bricks;
+	vector<TextureBrickHandle> patch_bricks;
 	build_bricks(patch_bricks, nx, ny, nz, nc, nb, mesh->get_bounding_box(),
 		     card_mem);
 	
@@ -210,7 +210,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     //
     texture->lock_bricks();
     texture->clear();
-    vector<TextureBrick*>& bricks = texture->bricks();
+    vector<TextureBrickHandle>& bricks = texture->bricks();
     if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
        || nc != texture->nc() || card_mem != texture->card_mem()) {
       //     cerr << "REBUILD" <<  nx << " " << ny << " " << nz << " " << card_mem << endl;
@@ -231,7 +231,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 
 template<typename FieldType>
 void
-TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks,
+TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrickHandle>& bricks,
 					    int nx, int ny, int nz,
 					    int nc, int* nb,
                                             const BBox& bbox, int card_mem)
@@ -296,9 +296,9 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks,
   brick_pad[0] = NextPowerOf2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
   brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
   brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
+
   // delete previous bricks (if any)
-  for(unsigned int i=0; i<bricks.size(); i++) delete bricks[i];
-  bricks.resize(0);
+  bricks.clear();
   bricks.reserve(num_brick[0]*num_brick[1]*num_brick[2]);
   // create bricks
   // data bbox
@@ -392,7 +392,7 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrick*>& bricks,
 
 template <class FieldType>
 void 
-TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
+TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
                                           FieldHandle vfield,
 					  double vmin, double vmax,
                                           FieldHandle gfield,
@@ -416,7 +416,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
 
   int nc = brick->nc();
   TextureBrickT<unsigned char>* br =
-    dynamic_cast<TextureBrickT<unsigned char>*>(brick);
+    dynamic_cast<TextureBrickT<unsigned char>*>(brick.get_rep());
 
   if (! br) { 
     cerr << "dynamic cast failed! : brick" << endl;

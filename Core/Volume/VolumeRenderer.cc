@@ -164,7 +164,7 @@ VolumeRenderer::draw_volume()
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
-  vector<TextureBrick*> bricks;
+  vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   if(bricks.size() == 0) return;
 
@@ -358,7 +358,7 @@ VolumeRenderer::draw_volume()
   glMultMatrixd(mvmat);
   
   for(unsigned int i=0; i<bricks.size(); i++) {
-    TextureBrick* b = bricks[i];
+    TextureBrickHandle b = bricks[i];
     load_brick(b);
     vertex.clear();
     texcoord.clear();
@@ -468,7 +468,7 @@ VolumeRenderer::multi_level_draw()
 
     
   Ray view_ray = compute_view();
-  vector<TextureBrick*> bricks;
+  vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray, 0);
   int levels = tex_->nlevels();
 
@@ -695,7 +695,7 @@ VolumeRenderer::multi_level_draw()
   int reset_val = (int)(pow(2.0, levels - 1));
 //   cerr<<"tmin = "<<tmin<<", tmax = "<<tmax<<"\n";
 
-  vector<vector<TextureBrick *> > blevels;
+  vector<vector<TextureBrickHandle> > blevels;
   blevels.resize(levels);
   for(int i = levels - 1; i >= 0;  --i ){
     tex_->get_sorted_bricks(blevels[levels - (i + 1)], view_ray, i);
@@ -746,9 +746,9 @@ VolumeRenderer::multi_level_draw()
      
 //        tex_->get_sorted_bricks(bricks, view_ray, levels -i -1);
       bind_colormap1( cmaps[i]->tex_id_ );
-      vector<TextureBrick*>& bs  = blevels[i];
+      vector<TextureBrickHandle>& bs  = blevels[i];
       for(unsigned int j =0; j < bs.size(); j++) {
-	TextureBrick* b = bs[j];
+	TextureBrickHandle b = bs[j];
 	vertex.resize(0);
 	texcoord.resize(0);
 	size.resize(0);
@@ -881,7 +881,7 @@ VolumeRenderer::draw_wireframe()
   glEnable(GL_DEPTH_TEST);
   GLboolean lighting = glIsEnabled(GL_LIGHTING);
   glDisable(GL_LIGHTING);
-  vector<TextureBrick*> bricks;
+  vector<TextureBrickHandle> bricks;
   tex_->get_sorted_bricks(bricks, view_ray);
   
   const double rate = imode_ ? irate_ : sampling_rate_;
@@ -903,7 +903,7 @@ VolumeRenderer::draw_wireframe()
   {
     glColor4f(0.8, 0.8, 0.8, 1.0);
 
-    TextureBrick* b = bricks[i];
+    TextureBrickHandle b = bricks[i];
     const Point &pmin(b->bbox().min());
     const Point &pmax(b->bbox().max());
     Point corner[8];
