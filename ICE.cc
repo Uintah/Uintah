@@ -728,10 +728,14 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   }
 
   if (d_EqForm) {     // EQ FORM
-    t->requires(Task::NewDW, lb->rho_CCLabel,        ice_matls, Ghost::None); 
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     ice_matls, Ghost::None); 
-    t->requires(Task::NewDW, lb->created_vol_CCLabel,ice_matls, Ghost::None); 
+    t->requires(Task::OldDW, lb->delTLabel);
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,    /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,/*all_matls*/ Ghost::None);
+    t->requires(Task::OldDW, lb->temp_CCLabel,      /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->Tdot_CCLabel,      /*all_matls*/ Ghost::None);
+    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,  Ghost::None);
     t->computes(lb->spec_vol_L_CCLabel);
+    t->computes(lb->spec_vol_source_CCLabel); 
   }
   else if (d_RateForm) {     // RATE FORM
     t->requires(Task::OldDW, lb->delTLabel);
@@ -2583,49 +2587,108 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
     }  // end numALLMatl loop
   }  // patch loop
 }
+
+
+
 /* ---------------------------------------------------------------------
- Function~  ICE::computeLagrangianSpecificVolumes--
+ Function~  ICE::computeLagrangianSpecificVolume--
  ---------------------------------------------------------------------  */
-void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
+void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,  
                                           const PatchSubset* patches,
                                           const MaterialSubset* /*matls*/,
-                                          DataWarehouse* /*old_dw*/,
+                                          DataWarehouse* old_dw, 
                                           DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
+
     cout_doing << "Doing computeLagrangianSpecificVolume " <<
-      patch->getID() << "\t\t\t ICE" << endl;
+      patch->getID() << "\t\t ICE" << endl;
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();
+    double vol = dx.x()*dx.y()*dx.z();    
 
-    constCCVariable<double> rho_CC, createdVol, sp_vol;
+    StaticArray<constCCVariable<double> > Tdot(numALLMatls);
+    StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
+    constCCVariable<double> rho_micro, sp_vol_CC;
+    constCCVariable<double> delP_Dilatate, press_CC, speedSound;
+    vector<double> if_mpm_matl_ignore(numALLMatls);
+
+    new_dw->get(delP_Dilatate,   lb->delP_DilatateLabel, 0,patch,Ghost::None,0);
+
     //__________________________________
-    //  Note that spec_vol_L[m] = Mass[m] * sp_vol[m]
+    // ignore contributions from mpm_matls
+    //  REMOVE ONCE ALPHA IS DEFINED FOR MPM MATLS
     for(int m = 0; m < numALLMatls; m++) {
-     Material* matl = d_sharedState->getMaterial( m );
-     int indx = matl->getDWIndex();
-     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-     CCVariable<double> spec_vol_L;
-     new_dw->allocate(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
-     spec_vol_L.initialize(0.);
-     if(ice_matl){
-       new_dw->get(rho_CC,    lb->rho_CCLabel,        indx,patch,Ghost::None,0);
-       new_dw->get(sp_vol,    lb->sp_vol_CCLabel,     indx,patch,Ghost::None,0);
-       new_dw->get(createdVol,lb->created_vol_CCLabel,indx,patch,Ghost::None,0);
+      Material* matl = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if_mpm_matl_ignore[m] = 1.0; 
+      if ( mpm_matl) {       
+        if_mpm_matl_ignore[m] = 0.0; 
+      } 
+    }
+    //__________________________________ 
+    //  Compute spec_vol_L[m] = cellVol * sp_vol[m]
+    // Note sp_vol_L = sp_vol + sp_vol( delT * alpha * Tdot - kappa * delP)
+    // See pg 212 of Journal
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      CCVariable<double> spec_vol_L, spec_vol_source;
+      new_dw->allocate(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
+      new_dw->allocate(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
+      new_dw->get(Tdot[m],   lb->Tdot_CCLabel,      indx,patch,Ghost::None, 0);
+      new_dw->get(speedSound,lb->speedSound_CCLabel,indx,patch,Ghost::None, 0);
+      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,Ghost::None, 0);
+      old_dw->get(Temp_CC[m],lb->temp_CCLabel,      indx,patch,Ghost::None, 0);
+      spec_vol_source.initialize(0.);
 
-       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-         IntVector c = *iter;
-         spec_vol_L[c] = (rho_CC[c] * vol * sp_vol[c]) + createdVol[c];
-       }
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+       IntVector c = *iter;      
+       double kappa = sp_vol_CC[c]/(speedSound[c] * speedSound[c]); 
+       double alpha = 1.0/Temp_CC[m][c];  // HARDWRIED FOR IDEAL GAS
+       double term1 = -kappa * delP_Dilatate[c];
+       double term2 =  alpha * Tdot[m][c];
+
+        // This is actually cellVol * sp_vol
+       spec_vol_source[c] = sp_vol_CC[c]*
+                            (term1 + if_mpm_matl_ignore[m] * delT * term2);
+       spec_vol_L[c] =  vol * (sp_vol_CC[c] + spec_vol_source[c]);              
      }
+      //---- P R I N T   D A T A ------ 
+      if (switchDebugLagrangianSpecificVol ) {
+        ostringstream desc;
+        desc <<"BOT_Lagrangian_Vol_Mat_"<<indx<< "_patch_"<<patch->getID();
+        printData(  patch,1, desc.str(), "Temp",          Temp_CC[m]);
+        printData(  patch,1, desc.str(), "speedSound",    speedSound);
+        printData(  patch,1, desc.str(), "sp_vol_CC",     sp_vol_CC);
+        printData(  patch,1, desc.str(), "Tdot",          Tdot[m]);
+        printData(  patch,1, desc.str(), "delP_Dilatate", delP_Dilatate); 
+        printData(  patch,1, desc.str(), "spec_vol_source",spec_vol_source);
+        printData(  patch,1, desc.str(), "spec_vol_L",     spec_vol_L);
+      }
+      //____ B U L L E T   P R O O F I N G----
+      IntVector neg_cell;
+      if (!areAllValuesPositive(spec_vol_L, neg_cell)) {
+        cout << "matl            "<< indx << endl;
+        cout << "delP_Dilatate   "<< delP_Dilatate[neg_cell] << endl;
+        cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
+        cout << "sp_vol_L        "<< spec_vol_L[neg_cell] << endl;
+        ostringstream warn;
+        warn<<"ERROR ICE::computeLagrangianSpecificVolume, mat "<<indx
+            << " cell " <<neg_cell << " spec_vol_L is negative\n";
+        throw InvalidValue(warn.str());
+     }  
      new_dw->put(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
+     new_dw->put(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
     }  // end numALLMatl loop
   }  // patch loop
 }
+
 
 /*---------------------------------------------------------------------
  Function~  ICE::addExchangeToMomentumAndEnergy--
@@ -3041,8 +3104,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       advector->advectQ(q_CC,patch,q_advected);
 
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-       IntVector c = *iter;
-       sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/(rho_CC[c]*vol);
+        IntVector c = *iter;      
+        sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/(vol); 
       }
 
       //---- P R I N T   D A T A ------   
