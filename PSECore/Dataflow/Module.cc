@@ -204,8 +204,6 @@ Module::Module(const clString& name, const clString& id,
 
   ModuleInfo* info = GetModuleInfo(moduleName,categoryName,packageName);
   if (info) {
-    std::cerr << moduleName << " " << categoryName << " " << packageName
-              << endl;
     for (iport_iter i1=info->iports->begin();
 	 i1!=info->iports->end();
 	 i1++) {
@@ -671,6 +669,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.16  2000/11/29 09:46:49  moulding
+// removed a debug print statement
+//
 // Revision 1.15  2000/11/29 09:37:08  moulding
 // fixed a nasty bug that caused certain machine types to catch fire when
 // using auto ports (nah - it just caused crashes :)
