@@ -36,7 +36,8 @@ void Ring::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
 	return;
     Point p(orig+dir*t);
     double l=(p-cen).length2();
-    if(l < radius*radius)
+    double outer_radius=radius+thickness;
+    if(l > radius*radius && l < outer_radius*outer_radius)
 	hit.hit(this, t);
 }
 
