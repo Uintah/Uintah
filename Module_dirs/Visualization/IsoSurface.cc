@@ -645,14 +645,14 @@ int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
 			  ScalarFieldUG* field, double isoval,
 			  GeomGroup* group)
 {
-    double v1=field->data[element->n1]-isoval;
-    double v2=field->data[element->n2]-isoval;
-    double v3=field->data[element->n3]-isoval;
-    double v4=field->data[element->n4]-isoval;
-    Node* n1=mesh->nodes[element->n1];
-    Node* n2=mesh->nodes[element->n2];
-    Node* n3=mesh->nodes[element->n3];
-    Node* n4=mesh->nodes[element->n4];
+    double v1=field->data[element->n[0]]-isoval;
+    double v2=field->data[element->n[1]]-isoval;
+    double v3=field->data[element->n[2]]-isoval;
+    double v4=field->data[element->n[3]]-isoval;
+    Node* n1=mesh->nodes[element->n[0]];
+    Node* n2=mesh->nodes[element->n[1]];
+    Node* n3=mesh->nodes[element->n[2]];
+    Node* n4=mesh->nodes[element->n[3]];
     int f1=v1<0;
     int f2=v2<0;
     int f3=v3<0;
