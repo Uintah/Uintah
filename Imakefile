@@ -12,7 +12,7 @@ all::
 OTHER_SOS = -lDatatypes -lMath -lMesaGL -lMesaGLU
 #endif
 
-SUBDIRS = Tester Malloc tcl \
+SUBDIRS = Malloc Tester tcl \
 	Multitask Classlib TCL Math Comm Geometry \
 	Devices Constraints Geom Dataflow Datatypes Widgets \
 	Modules convert
