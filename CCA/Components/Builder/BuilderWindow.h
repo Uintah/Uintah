@@ -81,6 +81,7 @@ namespace SCIRun {
     void clear();
     void addInfo();
     void exit();
+    void demos();
     void about();
 
   public:
