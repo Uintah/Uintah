@@ -32,7 +32,7 @@
 #define SCI_Geom_Pickable_h 1
 
 #include <Core/share/share.h>
-#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomPick.h>
 
 namespace SCIRun {
 
@@ -40,7 +40,6 @@ class Vector;
 class Point;
 class ViewWindow;
 class GeomPick;
-typedef LockingHandle<GeomPick> GeomPickHandle;
 
 struct BState {
    unsigned int control:1;
