@@ -218,7 +218,7 @@ SchedulerCommon::initialize(int numOldDW, int numNewDW,
 			    DataWarehouse* parent_new_dw)
 {
   int numDW = numOldDW+numNewDW;
-  int oldnum = dws.size();
+  int oldnum = (int)dws.size();
   // Clear out the data warehouse so that memory will be freed
   for(int i=numDW;i<oldnum;i++)
     dws[i]=0;

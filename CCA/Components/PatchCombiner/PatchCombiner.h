@@ -61,7 +61,7 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     virtual void scheduleComputeStableTimestep(const LevelP& level,
+     virtual void scheduleComputeStableTimestep(const LevelP&,
 						SchedulerP&) {}
      
      //////////
