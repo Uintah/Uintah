@@ -41,7 +41,10 @@ SRCS     += \
 	$(SRCDIR)/ImageReaderUShort3D.cc\
 	$(SRCDIR)/ColorImageReaderUChar2D.cc\
 	$(SRCDIR)/ColorImageReaderFloat2D.cc\
+	$(SRCDIR)/ColorImageReaderUChar3D.cc\
+	$(SRCDIR)/ColorImageReaderFloat3D.cc\
 	$(SRCDIR)/ChooseImage.cc\
+#	$(SRCDIR)/ImageInfo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
