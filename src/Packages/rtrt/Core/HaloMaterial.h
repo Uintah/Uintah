@@ -1,13 +1,13 @@
 
-#ifndef HALO_H
-#define HALO_H 1
+#ifndef HALOMATERIAL_H
+#define HALOMATERIAL_H 1
 
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <math.h>
 
 namespace rtrt {
 
-class Halo : public Material 
+class HaloMaterial : public Material 
 {
 
  protected:
@@ -18,32 +18,25 @@ class Halo : public Material
 
  public:
 
-  Halo(Material *fg, double pow) 
+  HaloMaterial(Material *fg, double pow) 
     : transparent_(), fg_(fg), pow_(pow) {}
-  virtual ~Halo() {}
+  virtual ~HaloMaterial() {}
 
   virtual void shade(Color& result, const Ray& ray,
                      const HitInfo& hit, int depth,
                      double atten, const Color& accumcolor,
                      Context* cx)
   {
-    double nearest=hit.min_t;
     Object* obj=hit.hit_obj;
-    Point hitpos(ray.origin()+ray.direction()*nearest);
-    Vector normal(obj->normal(hitpos, hit));
-    normal.normalize();
-    Vector eye(-ray.direction());
-    eye.normalize();
-    double percent=Dot(normal,eye);
+    Point hitpos(ray.origin()+ray.direction()*hit.min_t);
+    double percent=-Dot(obj->normal(hitpos,hit), ray.direction());
+    //if (percent<0) percent=0;
     percent = pow(percent,pow_);
-    Color original=result;
-    transparent_.shade(result,ray,hit,depth,atten,accumcolor,cx);
-    Color bg = result;
-    result = original;
     fg_->shade(result,ray,hit,depth,atten,accumcolor,cx);
     Color fg = result;
-
-    result = fg*percent+bg*(1-percent);
+    transparent_.shade(result,ray,hit,depth,atten,accumcolor,cx);
+    Color bg = result;
+    result = (fg*percent)+(bg*(1.-percent));
   }
 };
 
