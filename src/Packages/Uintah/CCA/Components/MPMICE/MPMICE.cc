@@ -127,9 +127,11 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   d_mpm->scheduleInitialize(level, sched);
   d_ice->scheduleInitialize(level, sched);
 
-
+  //__________________________________
+  //  What isn't initialized in either ice or mpm
   Task* task = scinew Task("MPMICE::actuallyInitialize",
 			   this, &MPMICE::actuallyInitialize);
+  task->computes(Mlb->doMechLabel);
   sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
 
   cout_norm << "Doing Initialization \t\t\t MPMICE" <<endl;
@@ -151,6 +153,7 @@ void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
 void MPMICE::scheduleTimeAdvance(const LevelP&   level,
 				 SchedulerP&     sched)
 {
+  int numALLMatls=d_sharedState->getNumMatls();
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -160,7 +163,24 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   press_matl->addReference();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
-
+  //__________________________________
+  //  Find the product and reactant matl subset
+  MaterialSubset* prod_sub  = scinew MaterialSubset();
+  MaterialSubset* react_sub = scinew MaterialSubset();
+ 
+  for (int m = 0; m < numALLMatls; m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    if (matl->getRxProduct() == Material::product) {
+     //cerr << "Product Material: " << m << endl;
+     prod_sub->add(m);
+    }
+    if (matl->getRxProduct() == Material::reactant) {
+     //cerr << "reactant Material: " << m << endl;
+     react_sub->add(m);
+    }
+  }
+ //__________________________________
+ // Scheduling
   if( d_mpm->withFracture() ) {
     d_mpm->scheduleSetPositions(                  sched, patches, mpm_matls);
     d_mpm->scheduleComputeBoundaryContact(        sched, patches, mpm_matls);
@@ -184,8 +204,8 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
                                                                
   d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls);
   
-  scheduleHEChemistry(                            sched, patches, ice_matls_sub,
-                                                                  mpm_matls_sub,
+  scheduleHEChemistry(                            sched, patches, react_sub,
+                                                                  prod_sub,
                                                                   press_matl,
                                                                   all_matls);
                                                                   
@@ -390,20 +410,18 @@ void MPMICE::scheduleCCMomExchange(SchedulerP& sched,
  
   Task* t=scinew Task("MPMICE::doCCMomExchange",
 		  this, &MPMICE::doCCMomExchange);
+  t->requires(Task::OldDW, d_sharedState->get_delt_label());
                                  // I C E
   t->computes(Ilb->mom_L_ME_CCLabel,     ice_matls);
   t->computes(Ilb->int_eng_L_ME_CCLabel, ice_matls);
-
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-  
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel, ice_matls, Ghost::None);
 
                                  // M P M
   t->computes(MIlb->dTdt_CCLabel, mpm_matls);
   t->computes(MIlb->dvdt_CCLabel, mpm_matls);
+  t->requires(Task::NewDW,  Ilb->rho_CCLabel,   mpm_matls, Ghost::None);
 
                                 // A L L  M A T L S
-  t->requires(Task::NewDW,  Ilb->rho_CCLabel,       Ghost::None);
   t->requires(Task::NewDW,  Ilb->mom_L_CCLabel,     Ghost::None);
   t->requires(Task::NewDW,  Ilb->int_eng_L_CCLabel, Ghost::None);
   t->requires(Task::NewDW,  Ilb->rho_micro_CCLabel, Ghost::None);
@@ -458,9 +476,9 @@ void MPMICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,ice_matls,  Ghost::None);
   t->requires(Task::OldDW,Ilb->vel_CCLabel,   ice_matls,  Ghost::None);
                 // M P M
-  t->requires(Task::NewDW,MIlb->temp_CCLabel, mpm_matls, Ghost::None);
-  t->requires(Task::NewDW,MIlb->cVolumeLabel, mpm_matls, Ghost::None);
-  t->requires(Task::NewDW,MIlb->cMassLabel,  mpm_matls,  Ghost::None);  
+  t->requires(Task::NewDW,MIlb->temp_CCLabel, mpm_matls,  Ghost::None);
+  t->requires(Task::NewDW,MIlb->cVolumeLabel, mpm_matls,  Ghost::None);
+  t->requires(Task::NewDW,MIlb->cMassLabel,   mpm_matls,  Ghost::None);  
   t->requires(Task::NewDW,MIlb->vel_CCLabel,  mpm_matls,  Ghost::None);
 
                 //  A L L _ M A T L S
@@ -477,8 +495,8 @@ void MPMICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
 _____________________________________________________________________*/
 void MPMICE::scheduleHEChemistry(SchedulerP& sched,
 					 const PatchSet* patches,
-                                    const MaterialSubset* ice_matls,
-                                    const MaterialSubset* mpm_matls,
+                                    const MaterialSubset* react_matls,
+                                    const MaterialSubset* prod_matls,
                                     const MaterialSubset* press_matl,
 					 const MaterialSet* all_matls)
 {
@@ -486,39 +504,36 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
 
   Task* t = scinew Task("MPMICE::HEChemistry",
 		    this, &MPMICE::HEChemistry);
-
-  cerr << "Doing the HEChemistry schedule " << endl;
-  if (!d_prod_matls.get_rep()) {
-    d_prod_matls = scinew MaterialSubset();
-    int numALLMatls=d_sharedState->getNumMatls();
-    cerr << "Number of all materials = " << numALLMatls << endl;
-    for (int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial(m);
-      if  (matl->getRxProduct() == Material::product) {
-	cerr << "Product Material: " << ice_matls->get(m) << endl;
-	d_prod_matls->add(ice_matls->get(m));
-      }
-    }
-  }
   
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl, Ghost::None);
-  t->requires(Task::NewDW, Ilb->rho_micro_CCLabel,   ice_matls,  Ghost::None);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,        d_prod_matls.get_rep(),  Ghost::None);
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,    d_prod_matls.get_rep(),  Ghost::None);
-
-  t->requires(Task::NewDW, MIlb->temp_CCLabel, mpm_matls, Ghost::None);
-  t->requires(Task::NewDW, MIlb->cMassLabel,   mpm_matls, Ghost::None);
-  t->requires(Task::NewDW, Mlb->gMassLabel,    mpm_matls, Ghost::AroundCells,1);
-  t->requires(Task::OldDW, Mlb->doMechLabel);
   
+  //__________________________________
+  // Products
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,     prod_matls, Ghost::None);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, prod_matls, Ghost::None);
+  if (prod_matls->size() > 0){
+    t->requires(Task::NewDW, Ilb->press_equil_CCLabel, 
+                                                  press_matl, Ghost::None);
+  }
+  
+  //__________________________________
+  // Reactants
+  t->requires(Task::NewDW, Ilb->rho_micro_CCLabel,react_matls, Ghost::None);
+  t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matls, Ghost::None);
+  t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, Ghost::None);
+  t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls,
+                                                       Ghost::AroundCells,1);
+  t->requires(Task::OldDW, Mlb->doMechLabel);
+
   t->computes(MIlb->burnedMassCCLabel);
   t->computes(MIlb->releasedHeatCCLabel);
   t->computes( Ilb->created_vol_CCLabel);
+  
 
   sched->addTask(t, patches, all_matls);
 }
-
+//______________________________________________________________________
+//
 void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
 						 const PatchSet* patches,
 					         const MaterialSet* mpm_matls)
@@ -548,22 +563,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 				DataWarehouse*,
 				DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    CCVariable<double> burnedMass;
-    CCVariable<double> releasedHeat;
-    new_dw->allocate(burnedMass,   MIlb->burnedMassCCLabel,   0, patch);
-    new_dw->allocate(releasedHeat, MIlb->releasedHeatCCLabel, 0, patch);
-  
-    new_dw->put(burnedMass,   MIlb->burnedMassCCLabel,   0, patch);
-    new_dw->put(releasedHeat, MIlb->releasedHeatCCLabel, 0, patch);
-
+  for(int p=0;p<patches->size();p++){ 
     double doMech = 999.9;
     new_dw->put(delt_vartype(doMech), Mlb->doMechLabel);
   }
 }
-
 
 //______________________________________________________________________
 //
@@ -597,9 +601,6 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
     new_dw->put(pressNC,MIlb->press_NCLabel,0,patch);
   }
 }
-
-
-
 
 //______________________________________________________________________
 //
@@ -1058,7 +1059,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int dwindex = matl->getDWIndex();
-      if(mpm_matl){
+      if(mpm_matl){                   // M P M
         new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
         new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
         new_dw->allocate(mass_L_temp[m],  Ilb->mass_L_CCLabel, dwindex, patch);
@@ -1067,13 +1068,13 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 							        Ghost::None, 0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
-      if(ice_matl){
+      if(ice_matl){                 // I C E
         new_dw->allocate(vel_CC[m], Ilb->vel_CCLabel,     dwindex, patch);
         new_dw->allocate(Temp_CC[m],Ilb->temp_CCLabel,    dwindex, patch);
         new_dw->get(mass_L[m],      Ilb->mass_L_CCLabel,  dwindex, patch,
 							  Ghost::None, 0);
         cv[m] = ice_matl->getSpecificHeat();
-      }
+      }                             // A L L  M A T L S
 
       new_dw->get(rho_micro_CC[m],  Ilb->rho_micro_CCLabel, dwindex, patch,
 							  Ghost::None, 0);
@@ -1921,51 +1922,25 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 
     cout_doing << "Doing HEChemistry on patch "<< patch->getID()
                <<"\t\t\t\t MPMICE" << endl;
-
-    int numALLMatls=d_sharedState->getNumMatls();
-    StaticArray<CCVariable<double> > burnedMass(numALLMatls);
-    StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
-    StaticArray<CCVariable<double> > createdVol(numALLMatls);
-    constCCVariable<double> gasTemperature;
-    constCCVariable<double> gasPressure;
-    constCCVariable<double> gasVolumeFraction;
-    CCVariable<double> sumBurnedMass;
-    CCVariable<double> sumReleasedHeat;
-    CCVariable<double> sumCreatedVol;
-
-    int product_indx = -1;
-
-    for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int dwindex = matl->getDWIndex();
-      new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel,  dwindex,patch);
-      new_dw->allocate(releasedHeat[m],MIlb->releasedHeatCCLabel,dwindex,patch);
-      new_dw->allocate(createdVol[m],   Ilb->created_vol_CCLabel,dwindex,patch);
-      burnedMass[m].initialize(0.0);
-      releasedHeat[m].initialize(0.0);
-      createdVol[m].initialize(0.0);
-      //__________________________________
-      // Pull out products data
-      if (matl->getRxProduct() == Material::product){
-        product_indx = matl->getDWIndex();
-        new_dw->get(gasVolumeFraction,Ilb->vol_frac_CCLabel,
-					         product_indx,patch,Ghost::None,0);
-        old_dw->get(gasTemperature,   Ilb->temp_CCLabel,
-					         product_indx,patch,Ghost::None,0);
-        new_dw->get(gasPressure,      Ilb->press_equil_CCLabel,
-                                            0,patch,Ghost::None,0);
-      }
-    }
-    new_dw->allocate(sumBurnedMass,  MIlb->sumBurnedMassLabel,   0,patch);
-    new_dw->allocate(sumReleasedHeat,MIlb->sumReleasedHeatLabel, 0,patch);
-    new_dw->allocate(sumCreatedVol,  MIlb->sumCreatedVolLabel,   0,patch);
-
-    sumBurnedMass.initialize(0.0);
-    sumReleasedHeat.initialize(0.0);
-    sumCreatedVol.initialize(0.0);
-
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
+    int numALLMatls=d_sharedState->getNumMatls();
+    StaticArray<CCVariable<double> > burnedMass(numALLMatls);
+    StaticArray<CCVariable<double> > createdVol(numALLMatls);
+    StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
+    
+    constCCVariable<double> gasPressure;
+    constCCVariable<double> gasTemperature;
+    constCCVariable<double> gasVolumeFraction;
+    
+    CCVariable<double>      sumBurnedMass;
+    CCVariable<double>      sumCreatedVol;
+    CCVariable<double>      sumReleasedHeat;
+    
+    constCCVariable<double> solidTemperature;
+    constCCVariable<double> solidMass;
+    constNCVariable<double> NCsolidMass;
+    constCCVariable<double> rho_micro_CC;
     
     double surfArea, delX, delY, delZ;
     Vector dx;
@@ -1973,35 +1948,71 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     delX = dx.x();
     delY = dx.y();
     delZ = dx.z();
-
+    int prod_indx = -1;
+    
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      //__________________________________
+      //  if no reaction 
+      //  burnedMass, createdVol, releasedHeat
+      //  must still be allocated and initialized = 0,
+      //  other tasks depend on them.
+      new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel,   indx,patch);
+      new_dw->allocate(createdVol[m],   Ilb->created_vol_CCLabel, indx,patch);
+      new_dw->allocate(releasedHeat[m],MIlb->releasedHeatCCLabel, indx,patch);
+      burnedMass[m].initialize(0.0);
+      createdVol[m].initialize(0.0);
+      releasedHeat[m].initialize(0.0);
+      //__________________________________
+      // Pull out products data, should be only
+      // 1 product matl
+      if (ice_matl && (ice_matl->getRxProduct() == Material::product)){
+        prod_indx = ice_matl->getDWIndex();
+        new_dw->get(gasPressure,          Ilb->press_equil_CCLabel,
+                                      0, patch, Ghost::None,0);
+        old_dw->get(gasTemperature,       Ilb->temp_CCLabel,
+					   prod_indx, patch, Ghost::None,0);
+        new_dw->get(gasVolumeFraction,    Ilb->vol_frac_CCLabel,
+                                      prod_indx, patch, Ghost::None,0);
+        new_dw->allocate(sumBurnedMass,  MIlb->burnedMassCCLabel,   
+                                      prod_indx, patch);
+        new_dw->allocate(sumCreatedVol,   Ilb->created_vol_CCLabel,  
+                                      prod_indx, patch);
+        new_dw->allocate(sumReleasedHeat,MIlb->releasedHeatCCLabel, 
+                                      prod_indx, patch);
+        sumBurnedMass.initialize(0.0);
+        sumCreatedVol.initialize(0.0);
+        sumReleasedHeat.initialize(0.0);
+      }
+      //__________________________________
+      // Pull out reactant data
+      if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
+        int react_indx = mpm_matl->getDWIndex();  
+        new_dw->get(solidTemperature,    MIlb->temp_CCLabel,  
+                                      react_indx, patch, Ghost::None,0);
+        new_dw->get(solidMass,           MIlb->cMassLabel,    
+                                      react_indx, patch, Ghost::None,0);
+        new_dw->get(rho_micro_CC,         Ilb->rho_micro_CCLabel,
+                                      react_indx, patch, Ghost::None,0);
+	 new_dw->get(NCsolidMass,          Mlb->gMassLabel,    
+                                      react_indx, patch, Ghost::AroundCells, 1);
+      }
+    }
+    
     IntVector nodeIdx[8];
-
     //__________________________________
     // M P M  matls
     // compute the burned mass and released Heat
     // if burnModel != null  && material == reactant
     double total_created_vol = 0;
-    for(int m = 0; m < numALLMatls; m++) {
+    for(int m = 0; m < numALLMatls; m++) {  
       Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);   
       if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
-        int dwindex = mpm_matl->getDWIndex();
-        constCCVariable<double> solidTemperature;
-        constCCVariable<double> solidMass;
-        constCCVariable<double> rho_micro_CC;
-	constNCVariable<double> NCsolidMass;  
-
-        new_dw->get(solidTemperature, MIlb->temp_CCLabel,      dwindex, patch, 
-							 Ghost::None, 0);
-        new_dw->get(solidMass,        MIlb->cMassLabel,        dwindex, patch,
-							 Ghost::None, 0);
-        new_dw->get(rho_micro_CC,      Ilb->rho_micro_CCLabel, dwindex, patch,
-							 Ghost::None, 0);
-	new_dw->get(NCsolidMass,       Mlb->gMassLabel,        dwindex, patch, 
-							 Ghost::AroundCells, 1);
-
-	double delt = delT;
+        double delt = delT;
         double cv_solid = mpm_matl->getSpecificHeat();
 
         delt_vartype doMech;
@@ -2161,7 +2172,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     }
   }  // patches
 }
-
+//______________________________________________________________________
+//
 void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 					     const PatchSubset* patches,
 					     const MaterialSubset* ,
