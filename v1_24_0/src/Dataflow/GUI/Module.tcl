@@ -86,6 +86,9 @@ itcl_class Module {
     protected old_width 0
     protected indicator_width 15
     protected initial_width 0
+    protected done_building_icon 0
+    protected progress_bar_is_mapped 0
+    protected time_is_mapped 0
     # flag set when the module is compiling
     protected compiling_p 0
     # flag set when the module has all incoming ports blocked
@@ -196,8 +199,8 @@ itcl_class Module {
 
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
-	global $this-done_bld_icon Disabled Subnet Color ToolTipText
-	set $this-done_bld_icon 0
+	global Disabled Subnet Color ToolTipText
+	set done_building_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
@@ -557,7 +560,6 @@ itcl_class Module {
 
 
     method resize_icon {} {
-	upvar \#0 $this-done_bld_icon done_building_icon
 	if { !$done_building_icon } return
 
 	global Subnet port_spacing modname_font
@@ -585,13 +587,12 @@ itcl_class Module {
 
     method setDone {} {
 	#module already mapped to the canvas
-	upvar \#0 $this-done_bld_icon done
 	upvar \#0 $this-progress_mapped progress_mapped
 	upvar \#0 $this-time_mapped time_mapped
-	if { $done } return
+	if { $done_building_icon } return
 	if { [info exists progress_mapped] && !$progress_mapped } return
 	if { [info exists time_mapped] && !$time_mapped } return
-	set done 1
+	set done_building_icon 1
 	    
 	global Subnet IconWidth modname_font
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
@@ -1615,6 +1616,8 @@ proc moduleDuplicate { module } {
 	upvar \#0 $oldvar oldval $newvar newval
 	catch "set newval \{$oldval\}"
     }
+    setGlobal $newmodule-progress_mapped 0
+    setGlobal $newmodule-time_mapped 0
 }
 
 

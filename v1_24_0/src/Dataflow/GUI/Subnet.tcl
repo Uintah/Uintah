@@ -100,8 +100,8 @@ itcl_class SubnetModule {
 
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
-	global $this-done_bld_icon Disabled Subnet Color ToolTipText
-	set $this-done_bld_icon 0
+	global Disabled Subnet Color ToolTipText
+	set done_building_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
