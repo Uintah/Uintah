@@ -12,12 +12,13 @@
  */
 
 #include <Classlib/ArgProcessor.h>
+#include <Dataflow/ModuleList.h>
+#include <Dataflow/Network.h>
+#include <Dataflow/NetworkEditor.h>
+#include <Devices/Dialbox.h>
 #include <Multitask/Task.h>
-#include <Dialbox.h>
-#include <ModuleList.h>
-#include <Network.h>
-#include <NetworkEditor.h>
-#include <TCLTask.h>
+#include <TCL/TCLTask.h>
+
 #include <iostream.h>
 #include <stdio.h>
 #include <stdlib.h>

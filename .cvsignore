@@ -2,3 +2,5 @@ Makefile
 TODO
 variant.h
 release
+.~*
+tmpl_cclist
