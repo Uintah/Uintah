@@ -95,7 +95,7 @@ void NexusSpChannel::closeConnection() {
   int handler=TypeInfo::vtable_deleteReference_handler;
   if(int gerr=globus_nexus_send_rsr(&buffer, &d_sp,
   				    handler, GLOBUS_TRUE, GLOBUS_FALSE)) {
-    throw CommError("NexusSpMessage::closeConnection", gerr);
+    throw CommError("ProxyBase: send_rsr", gerr);
   }
   //No reply is sent for this
   if(int gerr=globus_nexus_startpoint_destroy_and_notify(&d_sp)){
