@@ -30,7 +30,7 @@ public:
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);
-  friend void SCIRun::Pio(SCIRun::Piostream&, Plane*&);
+  friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::Plane*&);
 
   inline double distance( const Point& p );
   inline double scaled_distance( const Point& p );
