@@ -10,12 +10,12 @@
    <Time>
 	<maxTime>1.0</maxTime>
 	<initTime>0.0</initTime>
-	<delt_min>1.e-1</delt_min>
-	<delt_max>1.e-1</delt_max>
+	<delt_min>1.e-2</delt_min>
+	<delt_max>1.e-2</delt_max>
 	<timestep_multiplier>1.0</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>const_test_tih_cnh_implicit.uda</filebase>
+        <filebase>const_test_tih_impm_y_dir.uda</filebase>
 	<outputInterval>0.01</outputInterval>
 <!--
         <save label = "NTractionZMinus"/>
@@ -27,6 +27,7 @@
 	<save label = "p.volume"/>
 	<save label = "p.mass"/>
 	<save label = "p.stress"/>
+	<save label = "p.stretch"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
 	<save label = "p.deformationMeasure"/>
@@ -51,9 +52,15 @@
 	    <material>
                 <burn type = "null" />
                 <density>1.0</density>
-                <constitutive_model type="comp_neo_hook">
-                    <bulk_modulus> 60000000.0</bulk_modulus>
-                    <shear_modulus> 6000000.0</shear_modulus>
+ 		<constitutive_model type="trans_iso_hyper">
+		    <bulk_modulus>100.e5</bulk_modulus>
+		    <c1>2.1e3</c1>
+		    <c2>0</c2>
+		    <c3>0.14e3</c3>
+		    <c4>22</c4>
+		    <c5>100</c5>
+		    <fiber_stretch>2.0</fiber_stretch>
+		    <direction_of_symm>[0,1,0]</direction_of_symm>
                 </constitutive_model>
 		<is_rigid>true</is_rigid>
 		<toughness>10.e6</toughness>
@@ -61,11 +68,11 @@
 		<specific_heat>5</specific_heat>
 		<geom_object>
 		    <box label = "piston">
-			<min>[0.0,0.0,.01]</min>
-			<max>[0.01,0.01,0.02]</max>
+			<min>[0.0,0.01,.00]</min>
+			<max>[0.01,0.02,0.01]</max>
 		    </box>
 		    <res>[1,1,1]</res>
-		    <velocity>[0.0,0.0,1.e-3]</velocity>
+		    <velocity>[0.0,4.e-3,0.0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
 	    </material>
@@ -73,9 +80,15 @@
 	    <material>
                 <burn type = "null" />
                 <density>1.0</density>
-                <constitutive_model type="comp_neo_hook">
-                    <bulk_modulus> 60000000.0</bulk_modulus>
-                    <shear_modulus> 6000000.0</shear_modulus>
+                <constitutive_model type="trans_iso_hyper">
+		    <bulk_modulus>100.e5</bulk_modulus>
+		    <c1>2.1e3</c1>
+		    <c2>0</c2>
+		    <c3>0.14e3</c3>
+		    <c4>22</c4>
+		    <c5>100</c5>
+		    <fiber_stretch>2.0</fiber_stretch>
+		    <direction_of_symm>[0,1,0]</direction_of_symm>
                 </constitutive_model>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
@@ -93,9 +106,8 @@
 
 	    <contact>
 	      <type>rigid</type>
-	      <vel_fields>[0,0,1]</vel_fields>
+	      <vel_fields>[0,1,0]</vel_fields>
               <stop_time>10.0</stop_time>
-              <direction>[0,0,1]</direction>
 	    </contact>
 	</MPM>
 
@@ -137,8 +149,8 @@
 	<Level>
 	    <Box label = "1">
 		<lower>[0.0,0.0,0.0]</lower>
-		<upper>[0.02,0.02,0.03]</upper>
-	        <resolution>[2,2,3]</resolution>
+		<upper>[0.02,0.03,0.02]</upper>
+	        <resolution>[2,3,2]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
