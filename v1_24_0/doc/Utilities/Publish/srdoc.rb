@@ -26,11 +26,12 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-# Classes to make it easier (har har!) to embed ruby code in
-# documents.  Still rather primitive.  Add code as needed.  See
-# doc/User/FAQ/faq.rxml for an example of usage.
-
+#
+# Classes to make it easier (har har!) to embed ruby code in documents
+# (text, tex, docbook, html).  Still rather primitive.  Add code as
+# needed.  See doc/User/FAQ/faq.rxml for simple usage.  See
+# doc/Installation/Guide for more complex usage.
+#
 
 module Constants
   SCI_SoftwareURL = "http://software.sci.utah.edu/"
@@ -101,6 +102,12 @@ module XML_Source
     end
     docType += ">\n"
   end
+
+  def filter(text)
+    text.gsub!(/^-->|\$-->/,"")
+    text.gsub!(/<!--$|<!--\$/,"")
+    text
+  end
 end
 
 module DocBook_Source
@@ -163,18 +170,37 @@ class Doc
   
   # Document types
   DocBook = 0
-  HTML = 1
-  TeX = 2
-  Text = 3
+  HTML    = 1
+  TeX     = 2
+  Text    = 3
 
-  Edition = "edition.xml"
+  # Platform constants
+  Linux = 0b001
+  Irix  = 0b010
+  OSX   = 0b100
+
+  # Return platform type and string.
+  def Doc.getPlatform()
+    platform = ENV["PLATFORM"]
+    raise "Invalid platform" if !(platform == "Linux" || platform == "Irix" || platform == "OSX" || platform == nil)
+    case platform
+    when "Linux" then [Linux, "Linux"]
+    when "Irix" then [Irix, "SGI Irix"]
+    when "OSX" then [OSX, "Mac OS X"]
+    when nil then [0, ""]
+    end
+  end
+
+  # Current platform
+  Platform, PlatformString = Doc::getPlatform()
 
   # Create a document object.
   def Doc.create(docType, nem=true)
-    outputMode = getOutputMode()
+      # Output mode
+    outputmode = Doc.getOutputMode()
     doc = case docType
 	  when DocBook
-	    case outputMode
+	    case outputmode
 	    when "html"
 	      DocBook_HTML.new()
 	    when "print"
@@ -183,7 +209,7 @@ class Doc
 	      raise("OUTPUT_MODE is undefined!")
 	    end
 	  when TeX
-	    case outputMode
+	    case outputmode
 	    when "html"
 	      TeX_HTML.new()
 	    when "print"
@@ -201,13 +227,6 @@ class Doc
     @@edition = getEdition()
     doc.insertNoEditMeMsg() if nem == true
     doc
-  end
-
-  # Figure out if we be doin' print or html output.
-  def Doc.getOutputMode()
-    modeString = ENV["OUTPUT_MODE"]
-    raise "Invalid output mode" if !(modeString == "print" || modeString == "html" || modeString == nil)
-    modeString
   end
 
   # Execute the given block in the context of the given directory.
@@ -235,18 +254,20 @@ class Doc
     end
   end
 
-  # Extract the content of the edition.xml file.
+  # Determine output mode
+  def Doc.getOutputMode()
+    mode = ENV["OUTPUT_MODE"]
+    raise "Invalid output mode" if !(mode == "print" || mode == "html" || mode == nil)
+    mode
+  end
+
+  # Determine sr edition (version)
   def Doc.getEdition()
-    editionFile = nil
-    inDir(".") do
-      while !FileTest.exists?(Edition)
-	raise "Can't find edition.xml" if Dir.pwd == "/"
-	Dir.chdir("..")
-      end
-      editionFile = Dir.pwd + "/" + Edition
-    end
+    editionFile = docRoot() + "/src/main/sci_version.h"
     File.open(editionFile) do |f|
-      /<edition>(.*)<\/edition>/.match(f.read())[1]
+      match = /SCIRUN_VERSION +"(\d+\.\d+\.\d+)"/.match(f.read())
+      raise "Couldn't match edition from #{editionFile}" if match == nil
+      match[1]
     end
   end
 
@@ -264,10 +285,12 @@ class Doc
     putComment("*"*msg.size)
   end
 
-  # Return value of <edition> element from edition.xml.
+  # Return doc version number (which is equal to the current SR version)
   def edition()
     Doc.edition
   end
+
+  alias version edition
 
   # Generate a comment with the given text.
   def comment(text)
@@ -278,6 +301,35 @@ class Doc
   def putComment(text)
     print(comment(text) + "\n")
   end
+
+  # Are we one of the platforms represented by pf?
+  def platform?(pf)
+    (Platform & pf) != 0
+  end
+
+  # Execute the given block if the current platform is one  represented
+  # by pf.  The block should return a string.
+  def ifPlatform(pf)
+    if platform?(pf)
+      filter(yield())
+    else
+      ""
+    end
+  end
+
+  alias ifP ifPlatform
+
+  # Execute the given block if the current platform is not one
+  # represented by pf.  The block should return a string.
+  def ifNotPlatform(pf)
+    if !platform?(pf)
+      filter(yield())
+    else
+      ""
+    end
+  end
+
+  alias ifNotP ifNotPlatform
 
   # Is we a doin' html output?
   def htmlOutput?()
