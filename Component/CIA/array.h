@@ -54,6 +54,7 @@ namespace CIA {
 		rows[i]=&data[s];
 		s+=s2;
 	    }
+	    return *this;
 	}
 
 	size_type size1() const {
@@ -105,6 +106,9 @@ namespace CIA {
 
 //
 // $Log$
+// Revision 1.3  2000/12/10 08:29:24  sparker
+// return *this in operator=
+//
 // Revision 1.2  1999/10/02 07:04:47  sparker
 // Implemented 2D arrays (still need work)
 //
