@@ -65,6 +65,12 @@
 
 using std::cerr;
 
+#if defined(_WIN32) && !defined(uint)
+  // for some reason, this isn't defined...
+#define uint unsigned
+#endif
+
+
 namespace SCIRun {
 class GeomEllipsoid;
 class GeomArrows;
