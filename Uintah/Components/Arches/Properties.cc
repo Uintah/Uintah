@@ -172,7 +172,7 @@ Properties::computeProps(const ProcessorGroup*,
 	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
 	}
 	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars-1].d_density;
-	std::cerr << "local_den " << local_den << endl;
+	// std::cerr << "local_den " << local_den << endl;
 	if (local_den <= 0.0)
 	  throw InvalidValue("Computed zero density in props" );
 	else
@@ -182,13 +182,23 @@ Properties::computeProps(const ProcessorGroup*,
       }
     }
   }
-  cout << "After compute properties \n";
-  for (int kk = indexLow.z(); kk < indexHigh.z(); kk++) 
-    for (int jj = indexLow.y(); jj < indexHigh.y(); jj++) 
-      for (int ii = indexLow.x(); ii < indexHigh.x(); ii++) 
-	cout << "(" << ii << "," << jj << "," << kk << ") : "
-	     << " DEN = " << density[IntVector(ii,jj,kk)] << endl;
-  
+#ifdef ARCHES_DEBUG
+  // Testing if correct values have been put
+  cerr << " AFTER COMPUTE PROPERTIES " << endl;
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "Density for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(10);
+	cerr << density[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
+
   // Write the computed density to the new data warehouse
   new_dw->put(density,d_lab->d_densityCPLabel, matlIndex, patch);
 }
@@ -233,7 +243,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
 	}
 	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars-1].d_density;
-	std::cerr << "local_den " << local_den << endl;
+	// std::cerr << "local_den " << local_den << endl;
 	if (local_den <= 0.0)
 	  throw InvalidValue("Computed zero density in props" );
 	else
@@ -266,6 +276,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.25  2000/08/04 03:02:01  bbanerje
+// Add some inits.
+//
 // Revision 1.24  2000/07/28 02:31:00  rawat
 // moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 // coeffecients
