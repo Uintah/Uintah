@@ -1705,7 +1705,12 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 
     // assign flowType the value that corresponds to flow
     //CellTypeInfo flowType = FLOW;
-
+    int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+    int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+    int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+    int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+    int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+    int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
     FORT_INLBCS(domLoU.get_pointer(), domHiU.get_pointer(), 
 		uVelocity.getPointer(),
 		domLoV.get_pointer(), domHiV.get_pointer(), 
@@ -1716,7 +1721,8 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 		idxLo.get_pointer(), idxHi.get_pointer(), 
 		density.getPointer(),
 		cellType.getPointer(),
-		&fi.d_cellTypeID); 
+		&fi.d_cellTypeID,
+		&xminus, &xplus, &yminus, &yplus, &zminus, &zplus); 
                 //      &fi.flowRate, area, &fi.density, 
 	        //	&fi.inletType,
 	        //	flowType);
@@ -1901,10 +1907,17 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
     sum_vartype area_var;
     old_dw->get(area_var, d_flowInlets[indx].d_area_label);
     double area = area_var;
+
     // Get a copy of the current flowinlet
     // check if given patch intersects with the inlet boundary of type index
     FlowInlet fi = d_flowInlets[indx];
-
+    std::cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
+    int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
+    int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
+    int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
+    int yplus =  patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1;
+    int zminus = patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1;
+    int zplus =  patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1;
     FORT_PROFV(domLoU.get_pointer(), domHiU.get_pointer(),
 	       idxLoU.get_pointer(), idxHiU.get_pointer(),
 	       uVelocity.getPointer(), 
@@ -1918,7 +1931,19 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
 	       idxLo.get_pointer(), idxHi.get_pointer(),
 	       cellType.getPointer(), 
 	       &area, &fi.d_cellTypeID, &fi.flowRate, 
-	       &fi.density);
+	       &fi.density, &xminus, &xplus, &yminus, &yplus,
+	       &zminus, &zplus);
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "U"<<*iter << ": " << uVelocity[*iter] << "\n" ; 
+    }
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "V"<<*iter << ": " << vVelocity[*iter] << "\n" ; 
+    }
+
     FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    density.getPointer(), 
@@ -2217,6 +2242,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.60  2000/10/05 16:39:46  rawat
+// modified bcs for multi-patch
+//
 // Revision 1.59  2000/09/26 19:59:17  sparker
 // Work on MPI petsc
 //

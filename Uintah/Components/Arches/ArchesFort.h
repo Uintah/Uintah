@@ -184,7 +184,9 @@ extern "C"
 	       const int* domLo, const int* domHi, 
 	       const int* idxLo, const int* idxHi,
 	       int* celltype, double * area, const int* celltypeval,
-	       double* flowrate, double* density);
+	       double* flowrate, double* density,
+	       int* xminus, int* xplus, int* yminus, int* yplus,
+	       int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -231,7 +233,9 @@ extern "C"
 		const int* idxLo, const int* idxHi, 
 		const double* density,
 		const int* cellType,
-		const int* cellTypeVal);
+		const int* cellTypeVal,
+		int* xminus, int* xplus, int* yminus, int* yplus,
+		int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -926,6 +930,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.39  2000/10/05 16:39:46  rawat
+// modified bcs for multi-patch
+//
 // Revision 1.38  2000/10/04 16:46:23  rawat
 // Parallel solver for pressure is working
 //

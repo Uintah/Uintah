@@ -1285,7 +1285,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     for(CellIterator iter = patch->getCellIterator();
 	!iter.done(); iter++){
       cerr.width(10);
-	  cerr << *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
+      cerr <<"AP"<< *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
     }
 #ifdef ARCHES_COEF_DEBUG
     cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
@@ -1525,6 +1525,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.47  2000/10/05 16:39:46  rawat
+// modified bcs for multi-patch
+//
 // Revision 1.46  2000/10/02 16:40:24  rawat
 // updated cellinformation for multi-patch
 //

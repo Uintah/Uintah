@@ -9,6 +9,7 @@ c*********************************************************************
      &     domLoW, domHiW, idxLoW, idxHiW, WW,
      &     domLo, domHi, idxLo, idxHi, PCELL,
      &     AREAPR, PFIELD, FLOWPR, DENPR,
+     $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -41,6 +42,7 @@ c*********************************************************************
       double precision FLOWPR, DENPR
       double precision AREAPR
       integer PFIELD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
       integer ierr
 
 c*********************************************************************
@@ -117,7 +119,7 @@ C---------------------------------------------------------------------
         FLOWPR = ZERO
       ELSE
         AVGVELP = FLOW/(RHO*AREAPR)
-      END IF
+      ENDIF
 c
 c     debug to try pure diffusion case: if we don't do this, then
 c     since den = 0.0, avgvelp = nan.
@@ -127,73 +129,81 @@ c      AVGVELP = 0.1
 C--------------------------------------------------------------------
 C     EAST AND/OR WEST INLETS
 C--------------------------------------------------------------------
-      DO 200 K = kBegGhost,kEndGhost
-        DO 190 J = jBegGhost,jEndGhost
-          IF (PCELL(iBegGhost,J,K).EQ.PFIELD) THEN
-            UU(iBegGhostU,J,K) = AVGVELP
-            UU(ISTU,J,K) = AVGVELP
-            VV(iBegGhostU,J,K) = ZERO
-            WW(iBegGhostU,J,K) = ZERO
-          END IF
-          IF (PCELL(iEndGhost,J,K).EQ.PFIELD) THEN
-            UU(iEndGhostU,J,K) = -AVGVELP
-            UU(iEndGhostU-1,J,K) = -AVGVELP
+      if ((xminus).or.(xplus)) then
+         DO 200 K = kBegGhost,kEndGhost
+            DO 190 J = jBegGhost,jEndGhost
+               IF ((PCELL(iBegGhost,J,K).EQ.PFIELD).and.xminus) THEN
+                  UU(iBegGhostU,J,K) = AVGVELP
+                  UU(ISTU,J,K) = AVGVELP
+                  VV(iBegGhostU,J,K) = ZERO
+                  WW(iBegGhostU,J,K) = ZERO
+               END IF
+               IF ((PCELL(iEndGhost,J,K).EQ.PFIELD).and.xplus) THEN
+                  UU(iEndGhostU,J,K) = -AVGVELP
+                  UU(iEndGhostU-1,J,K) = -AVGVELP
 c            UINLT(J,K) = -AVGVELP
 c            UU(NI+1,J,K) = -AVGVELP
-            VV(iEndGhostU,J,K) = ZERO
-            WW(iEndGhostU,J,K) = ZERO
-          END IF
-  190   CONTINUE
-  200 CONTINUE
+                  VV(iEndGhostU,J,K) = ZERO
+                  WW(iEndGhostU,J,K) = ZERO
+               END IF
+ 190        CONTINUE
+ 200     CONTINUE
+      END IF
 C--------------------------------------------------------------------
 C     NORTH AND/OR SOUTH INLETS
 C--------------------------------------------------------------------
-      DO 230 K = kBegGhost,kEndGhost
-        DO 220 I = iBegGhost,iEndGhost
-          IF (PCELL(I,jBegGhost,K).EQ.PFIELD) THEN
-            VV(I,jBegGhostV,K) = AVGVELP
-            VV(I,JSTV,K) = AVGVELP
-            WW(I,jBegGhostV,K) = ZERO
-            UU(I,jBegGhostV,K) = ZERO
-          END IF
-          IF (PCELL(I,jEndGhost,K).EQ.PFIELD) THEN
-            VV(I,jEndGhostV,K) = -AVGVELP
-            VV(I,jEndGhostV-1,K) = -AVGVELP
+      if (yminus.or.yplus) then
+         DO 230 K = kBegGhost,kEndGhost
+            DO 220 I = iBegGhost,iEndGhost
+               IF ((PCELL(I,jBegGhost,K).EQ.PFIELD).and.yminus) THEN
+                  VV(I,jBegGhostV,K) = AVGVELP
+                  VV(I,JSTV,K) = AVGVELP
+                  WW(I,jBegGhostV,K) = ZERO
+                  UU(I,jBegGhostV,K) = ZERO
+               END IF
+               IF ((PCELL(I,jEndGhost,K).EQ.PFIELD).and.yplus) THEN
+                  VV(I,jEndGhostV,K) = -AVGVELP
+                  VV(I,jEndGhostV-1,K) = -AVGVELP
 c            VINLT(I,K) = -AVGVELP
 c            VV(I,NJ+1,K) = -AVGVELP
-            WW(I,jEndGhostV,K) = ZERO
-            UU(I,jEndGhostV,K) = ZERO
-          END IF
-  220   CONTINUE
-  230 CONTINUE
+                  WW(I,jEndGhostV,K) = ZERO
+                  UU(I,jEndGhostV,K) = ZERO
+               END IF
+ 220        CONTINUE
+ 230     CONTINUE
+      end if
 C--------------------------------------------------------------------
 C     TOP AND/OR BOTTOM INLETS
 C--------------------------------------------------------------------
-      DO 260 J = jBegGhost,jEndGhost
-        DO 250 I = iBegGhost,iEndGhost
-          IF (PCELL(I,J,kBegGhost).EQ.PFIELD) THEN
-            WW(I,J,kBegGhostW) = AVGVELP
-            WW(I,J,KSTW) = AVGVELP
-            VV(I,J,kBegGhostW) = ZERO
-            UU(I,J,kBegGhostW) = ZERO
-          END IF
-          IF (PCELL(I,J,kEndGhost).EQ.PFIELD) THEN
-            WW(I,J,kEndGhostW) = -AVGVELP
-            WW(I,J,kEndGhostW-1) = -AVGVELP
+      if (zminus.or.zplus) then
+         DO 260 J = jBegGhost,jEndGhost
+            DO 250 I = iBegGhost,iEndGhost
+               IF ((PCELL(I,J,kBegGhost).EQ.PFIELD).and.zminus) THEN
+                  WW(I,J,kBegGhostW) = AVGVELP
+                  WW(I,J,KSTW) = AVGVELP
+                  VV(I,J,kBegGhostW) = ZERO
+                  UU(I,J,kBegGhostW) = ZERO
+               END IF
+               IF ((PCELL(I,J,kEndGhost).EQ.PFIELD).and.zplus) THEN
+                  WW(I,J,kEndGhostW) = -AVGVELP
+                  WW(I,J,kEndGhostW-1) = -AVGVELP
 c            WINLT(I,J) = -AVGVELP
 c            WW(I,J,NK+1) = -AVGVELP
-            VV(I,J,kEndGhostW) = ZERO
-            UU(I,J,kEndGhostW) = ZERO
-          END IF
-  250   CONTINUE
-  260 CONTINUE
-
+                  VV(I,J,kEndGhostW) = ZERO
+                  UU(I,J,kEndGhostW) = ZERO
+               END IF
+ 250        CONTINUE
+ 260     CONTINUE
+      end if
       RETURN
       END
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/10/05 16:39:49  rawat
+c modified bcs for multi-patch
+c
 c Revision 1.6  2000/09/07 23:07:21  rawat
 c fixed some bugs in bc and added pressure solver using petsc
 c

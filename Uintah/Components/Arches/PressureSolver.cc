@@ -611,6 +611,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
   new_dw->get(d_pressureVars->wVelNonlinearSrc,
 	      d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
 	      Ghost::AroundCells, numGhostCells);
+ 
   // Calculate Pressure Coeffs
   //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
   //  outputs: presCoefPBLM[Arches::AE..AB] 
@@ -880,6 +881,9 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.56  2000/10/05 16:39:46  rawat
+// modified bcs for multi-patch
+//
 // Revision 1.55  2000/10/04 16:46:23  rawat
 // Parallel solver for pressure is working
 //
