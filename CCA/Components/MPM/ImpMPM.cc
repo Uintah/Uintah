@@ -1566,23 +1566,25 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
       parent_new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
     }  else
       new_dw->get(mass,lb->gMassLabel,matlindex,patch,Ghost::None,0);
-    
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-      IntVector n = *iter;
-      int dof[3];
-      int l2g_node_num = l2g[n];
-      dof[0] = l2g_node_num;
-      dof[1] = l2g_node_num+1;
-      dof[2] = l2g_node_num+2;
-      
-      // Just look on the grid to see if the gmass is 0 and then remove that  
-      if (compare(mass[n],0.)) {
-	d_solver->d_DOF.insert(dof[0]);
-	d_solver->d_DOF.insert(dof[1]);
-	d_solver->d_DOF.insert(dof[2]);
+
+    if (recursion == false) {
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); 
+	   iter++) {
+	IntVector n = *iter;
+	int dof[3];
+	int l2g_node_num = l2g[n];
+	dof[0] = l2g_node_num;
+	dof[1] = l2g_node_num+1;
+	dof[2] = l2g_node_num+2;
+	
+	// Just look on the grid to see if the gmass is 0 and then remove that  
+	if (compare(mass[n],0.)) {
+	  d_solver->d_DOF.insert(dof[0]);
+	  d_solver->d_DOF.insert(dof[1]);
+	  d_solver->d_DOF.insert(dof[2]);
+	}
       }
     }
-
 #if 0
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
