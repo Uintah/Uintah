@@ -22,6 +22,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <string>
@@ -50,7 +51,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -rel_tolerance [double] (allowable relative difference of any numbers)\n";
     cerr << "  -as_warnings (treat tolerance errors as warnings and continue)";
     cerr << "\nNote: The absolute and relative tolerance tests must both fail\n      for a comparison to fail.\n";
-    exit(1);
+    Thread::exitAll(1);
 }
 
 // I don't want to have to pass these parameters all around, so
@@ -63,7 +64,7 @@ bool tolerance_error = false;
 void abort_uncomparable()
 {
   cerr << "\nThe uda directories may not be compared.\n";
-  exit(5);
+  Thread::exitAll(5);
 }
 
 void tolerance_failure()
@@ -73,7 +74,7 @@ void tolerance_failure()
     cerr << endl;
   }
   else
-    exit(2);
+    Thread::exitAll(2);
 }
 
 void displayProblemLocation(const string& var, int matl,
@@ -427,6 +428,10 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
     return compare(data2, dynamic_cast<ParticleVariable<long64>*>(pvb1),
 		   dynamic_cast<ParticleVariable<long64>*>(pvb2), matl,
 		   time1, time2, abs_tolerance, rel_tolerance);
+  case Uintah::TypeDescription::int_type:
+    return compare(data2, dynamic_cast<ParticleVariable<int>*>(pvb1),
+		   dynamic_cast<ParticleVariable<int>*>(pvb2), matl,
+		   time1, time2, abs_tolerance, rel_tolerance);
   case Uintah::TypeDescription::Point:
     return compare(data2, dynamic_cast<ParticleVariable<Point>*>(pvb1),
 		   dynamic_cast<ParticleVariable<Point>*>(pvb2), matl,
@@ -441,7 +446,7 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
 		   time1, time2, abs_tolerance, rel_tolerance);
   default:
     cerr << "ParticleVariable of unknown type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
-    exit(-1);
+    Thread::exitAll(-1);
   }
   return 0;
 }
@@ -558,6 +563,9 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	  case Uintah::TypeDescription::long64_type:
 	    pvb = scinew ParticleVariable<long64>();
 	    break;
+	  case Uintah::TypeDescription::int_type:
+	    pvb = scinew ParticleVariable<int>();
+	    break;
 	  case Uintah::TypeDescription::Point:
 	    pvb = scinew ParticleVariable<Point>();
 	    break;
@@ -569,7 +577,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	    break;
 	  default:
 	    cerr << "ParticleVariable of unknown type: " << subtype->getName() << '\n';
-	    exit(-1);
+	    Thread::exitAll(-1);
 	  }
 	  da->query(*pvb, var, matl, patch, time);
 	  data[var].add(pvb, patch); // will add one for each patch
@@ -811,7 +819,7 @@ int main(int argc, char** argv)
 
   if (rel_tolerance <= 0) {
     cerr << "Must have a positive value rel_tolerance.\n";
-    exit(1);
+    Thread::exitAll(1);
   }
 
   int digits_precision = (int)ceil(-log10(rel_tolerance)) + 1;
@@ -823,7 +831,7 @@ int main(int argc, char** argv)
   } catch(const XMLException& toCatch) {
     cerr << "Caught XML exception: " << toString(toCatch.getMessage()) 
 	 << '\n';
-    exit( 1 );
+    Thread::exitAll( 1 );
   }
   
   try {
@@ -1036,7 +1044,7 @@ int main(int argc, char** argv)
 		    break;
 		  default:
 		    cerr << "ParticleVariable of unknown type: " << subtype->getType() << '\n';
-		    exit(-1);
+		    Thread::exitAll(-1);
 		  }
 		}
 	      }
@@ -1169,7 +1177,7 @@ int main(int argc, char** argv)
 		break;
 	      default:
 		cerr << "NC Variable of unknown type: " << subtype->getName() << '\n';
-		exit(-1);
+		Thread::exitAll(-1);
 	      }
 	      break;
 	    case Uintah::TypeDescription::CCVariable:
@@ -1201,12 +1209,12 @@ int main(int argc, char** argv)
 		  break;
 	      default:
 		cerr << "CC Variable of unknown type: " << subtype->getName() << '\n';
-		exit(-1);
+		Thread::exitAll(-1);
 	      }
 	      break;
 	    default:
 	      cerr << "Variable of unsupported type: " << td->getName() << '\n';
-	      exit(-1);
+	      Thread::exitAll(-1);
 	    }
 	  }
 	}
@@ -1230,7 +1238,7 @@ int main(int argc, char** argv)
 
   if (tolerance_error) {
     cerr << "\nComparison did NOT fully pass.\n";
-    exit(2);
+    Thread::exitAll(2);
   }
   else
     cerr << "\nComparison fully passed!\n";
