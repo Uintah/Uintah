@@ -641,10 +641,12 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pCrackNormal1Label, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormal2Label, Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pCrackNormal3Label, Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,
+    Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel,
+    Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
-  t->requires(Task::OldDW, lb->pVolumeLabel,                Ghost::None);
-  t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel, Ghost::None);
   t->requires(Task::NewDW, lb->pStrainEnergyLabel,          Ghost::None);
   t->requires(Task::OldDW, lb->pToughnessLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);

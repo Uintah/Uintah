@@ -194,4 +194,66 @@ bool ParticlesNeighbor::visible(particleIndex idxA,
   return true;
 }
 
+bool ParticlesNeighbor::computeEnergyReleaseRate(
+        particleIndex tipIndex,
+        const Vector& nx,
+	const Vector& ny,
+	const ParticleVariable<Point>& pX,
+	const ParticleVariable<Matrix3>& pStress,
+	const ParticleVariable<double>& pVolume,
+	double& G) const
+{
+  double volume1=0;
+  double volume2=0;
+  double open1=0;
+  double open2=0;
+  double stress1=0;
+  double stress2=0;
+  int num1=0;
+  int num2=0;
+  
+  const Point& pTip = pX[tipIndex];
+  
+  int num = size();
+  for(int i=0; i<num; i++) {
+    int index = (*this)[i];
+    if(tipIndex == index) continue;
+    
+    Vector d = pX[index] - pTip;
+    double dx = Dot(d,nx);
+    double dy = Dot(d,ny);
+    
+    if( dx>0 ) {
+      volume1 += pVolume[index];
+      open1 += fabs(dy) * pVolume[index];
+      stress1 += Dot(ny, pStress[index] * ny) * pVolume[index];
+      num1++;
+    }
+    if( dx<0 ) {
+      volume2 += pVolume[index];
+      open2 += fabs(dy) * pVolume[index];
+      stress2 += Dot(ny, pStress[index] * ny) * pVolume[index];
+      num2++;
+    }
+  }
+  
+  if(num1 == 0) return false;
+  if(num2 == 0) return false;
+  
+  volume1 /= volume1;
+  open1 /= volume1;
+  stress1 /= volume1;
+
+  volume2 /= volume2;
+  open2 /= volume2;
+  stress2 /= volume2;
+  
+  if(stress1<=0 && stress2<=0) return false;
+  
+  if(stress1>stress2) G=stress1*open2-stress2*open1;
+  else G=stress2*open1-stress1*open2;
+  
+  return true;
+}
+
 } // End namespace Uintah
