@@ -13,11 +13,12 @@ SRCS     += \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
 	$(SRCDIR)/ReductionVariableBase.cc \
 	$(SRCDIR)/ReductionVariable_special.cc \
+	$(SRCDIR)/SoleVariableBase.cc \
+	$(SRCDIR)/SoleVariable_special.cc \
 	$(SRCDIR)/Stencil7.cc \
 	$(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/VarLabelLevelDW.cc \
 	$(SRCDIR)/VarLabelMatlPatch.cc \
-	$(SRCDIR)/VarLabelMatlPatchDW.cc \
 	$(SRCDIR)/PSPatchMatlGhost.cc \
 	$(SRCDIR)/Variable.cc \
 	$(SRCDIR)/PerPatchBase.cc \
