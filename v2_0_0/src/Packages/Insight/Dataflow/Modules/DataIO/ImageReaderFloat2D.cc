@@ -85,7 +85,12 @@ void ImageReaderFloat2D::execute(){
   string fn = gui_filename_.get();
   reader->SetFileName( fn.c_str() );
   
-  reader->Update();  
+  try {
+    reader->Update();  
+  } catch  ( itk::ExceptionObject & err ) {
+     error("ExceptionObject caught!");
+     error(err.GetDescription());
+  }
   
   // get reader output
   if(!handle_.get_rep() || (fn != prevFile) )
