@@ -1,8 +1,9 @@
 /* look from above:
 
-./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2
--scene scenes/living-room -scene scenes/science-room -scene
-scenes/3min-museum -scene scenes/basic-sea 
+./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/sea-world
+
+
+./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2 -scene scenes/living-room -scene scenes/science-room -scene scenes/graphics-museum -scene scenes/basic-sea 
 
 
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
@@ -474,7 +475,7 @@ void add_pedestal_and_label (Group* obj_group, Group* glass_group,Group* fake_gr
 
 }
 
-/* stadium pedestal has no top */
+/* stadium pedestal has low top */
 void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_group,
 			     char* sign_name, const Point UpperCorner, 
 			     const Vector FarDir, float sign_ratio, Scene *scene) {
@@ -487,6 +488,8 @@ void add_stadium_pedestal (Group* obj_group, Group* glass_group,Group* fake_grou
   Vector w (0,0,FarDir.z()/2.);
   
   Point OppUppCorner = UpperCorner+u+u+v+v;
+  // low top  
+  glass_group->add(new Rect(ped_white, UpperCorner+u+v+w, -u, -v));
   // sides
   glass_group->add(new Rect(ped_white, UpperCorner+u+w, -u, w));
   glass_group->add(new Rect(ped_white, UpperCorner+v+w, -v, w));
@@ -2197,12 +2200,13 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   dragonT.pre_translate (Vector(-13.015208,-14.020845,0.821603));
   //  dragonT.print();
 
-  Color dragon_green(.15,.7,.15);
+  //  Color dragon_green(.15,.7,.15);
+  Color dragon_green(.138,.347,.138);
   Material* shiny_green = new Phong(dragon_green,
 				    Color(.2,.2,.2),
 				    60);
-  l1 = new Light(dragon_ped_top+Vector(1,0,1),Color(1.,1.,1.),0,0.7);
-  l2 = new Light(dragon_ped_top+Vector(-1,-1,1),Color(1.,1.,1.),0,0.7);
+  l1 = new Light(dragon_ped_top+Vector(1,0,1),Color(1.,1.,1.),0,0.4);
+  l2 = new Light(dragon_ped_top+Vector(-1,-1,1),Color(1.,1.,1.),0,0.4);
   l1->name_ = "Dragon 1";
   l2->name_ = "Dragon 2";
   scene->add_per_matl_light (l1);
@@ -2627,7 +2631,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
 
 #ifdef INSERT_SPIRAL
   //  Material* silver = new MetalMaterial(Color(0.7,0.73,0.8));
-  Material* silver = new LambertianMaterial(Color(0.2,0.2,0.8));
+  Material* silver = new LambertianMaterial(Color(0.3,0.3,0.9));
   l1 = new Light(npr_ped_top+Vector(1,-1,3),Color(1.,1.,1.),0,0.7);
   l2 = new Light(npr_ped_top+Vector(-1,-1,3),Color(1.,1.,1.),0,0.7);
   l1->name_ = "NPR 1";
@@ -2716,7 +2720,7 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   if (!readASEFile("/usr/sci/data/Geometry/models/stadium/newstadium.ase", stadiumt, stadiumg, 
 		   //  if (!readASEFile("/usr/sci/data/Geometry/models/stadium/fordfield3.ase", stadiumt, stadiumg, 
 		   ase_matls, env_map)) return;
-  l1 = new Light(stadium_centerpt+Vector(0,0,2),Color(1.,1.,1.),0,0.7);
+  l1 = new Light(stadium_centerpt+Vector(0,0,0.4),Color(1.,1.,1.),0,0.7);
   l2 = new Light(stadium_centerpt+Vector(stadium_radius+.2,-stadium_radius-.2,.2),
 			Color(1.,1.,1.),0,0.7);
   l1->name_ = "Stadium 1";
