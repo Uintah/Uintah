@@ -45,9 +45,14 @@ WARNING
       //////////
       // Insert Documentation Here:
       void resize(int newSize) {
-	if(data)
+	T* newdata = scinew T[newSize];
+	if(data){
+	  int smaller = ((newSize < size ) ? newSize:size);
+	  for(int i = 0; i < smaller; i++)
+	    newdata[i] = data[i];
 	  delete[] data;
-	data = new T[newSize];
+	}
+	data = newdata;
 	size = newSize;
       }
 
