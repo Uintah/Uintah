@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_WorkQueue_h
 #define SCICore_Thread_WorkQueue_h
 
+#include <SCICore/share/share.h>
+
 #include <SCICore/Thread/AtomicCounter.h>
 #include <vector>
 
@@ -37,7 +39,7 @@ DESCRIPTION
    towards the end in an effort to equalize the total effort.
    
 ****************************************/
-	class WorkQueue {
+	class SCICORESHARE WorkQueue {
 	public:
 	    //////////
 	    // Make an empty work queue with no assignments.
@@ -93,6 +95,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.8  1999/09/24 18:55:08  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.7  1999/09/02 16:52:45  sparker
 // Updates to cocoon documentation
 //

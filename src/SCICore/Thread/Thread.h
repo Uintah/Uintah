@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Thread_h
 #define SCICore_Thread_Thread_h
 
+#include <SCICore/share/share.h>
+
 namespace SCICore {
     namespace Thread {
 	struct Thread_private;
@@ -37,7 +39,7 @@ DESCRIPTION
    executed in another thread.
    
 ****************************************/
-	class Thread {
+	class SCICORESHARE Thread {
 	public:
 	    //////////
 	    // Possible thread start states
@@ -231,6 +233,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.13  1999/09/24 18:55:08  moulding
+// added SCICORESHARE, for win32, to class declarations
+//
 // Revision 1.12  1999/09/22 19:10:28  sparker
 // Implemented timedWait method for ConditionVariable.  A default
 // implementation of CV is no longer possible, so the code is moved
