@@ -71,8 +71,7 @@ SCENES += \
 	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/uintahdata.mo \
 	$(SRCDIR)/uintahisosurface.mo \
-	$(SRCDIR)/uintahparticle2.mo \
-	$(SRCDIR)/uintahparticle.mo	
+	$(SRCDIR)/uintahparticle2.mo
 endif
 
 
