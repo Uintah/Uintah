@@ -351,7 +351,8 @@ using namespace SCIRun;
       double d_dbgOutputInterval;
       double d_dbgNextDumpTime;
       double d_dbgOldTime;
-
+      IntVector d_dbgBeginIndx;
+      IntVector d_dbgEndIndx; 
       Advector* d_advector;
       
      // exchange coefficients -- off diagonal terms
