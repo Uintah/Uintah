@@ -181,21 +181,25 @@ Advector::~Advector()
 //  
 namespace Uintah {
   //__________________________________
-  void  warning_restartTimestep( const IntVector c,
-                                 const double total_fluxout,
+  void  warning_restartTimestep( vector<IntVector> badCells,
+                                 vector<double> badOutFlux,
                                  const double vol,
                                  const int indx,
+                                 const Patch* patch,
                                  DataWarehouse* new_dw)
   {
-    cout << " WARNING: ICE Advection operator \n "
-         << " Influx_outflux error detected, cell "<< c
-         << ", total_outflux (" << total_fluxout<< ") > vol (" << vol << ")"
-         << " matl indx "<< indx << endl;
-    cout << " The timestep is now going to be restarted \n " << endl;
-
-    new_dw->abortTimestep();
+    cout << "ERROR: ICE Advection operator: "
+         << " Influx_outflux error detected, "
+         << " patch " << patch->getID()
+         << ", matl indx "<< indx << endl;
+         
+    for (int i = 0; i<(int) badCells.size(); i++) {
+      cout << " cell " << badCells[i] 
+           << " \t\t total_outflux (" << badOutFlux[i]<< ") > cellVol (" 
+           << vol << ")" << endl;
+    }
+    cout << " A timestep restart has been requested \n " << endl;
     new_dw->restartTimestep();
-    return;
   }
   
   //__________________________________
