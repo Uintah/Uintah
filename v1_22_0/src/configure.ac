@@ -3151,13 +3151,13 @@ AC_SUBST(GLEW_LIB_DIR_FLAG)
 ##  --  search for ftgl stuff  -------------------------------------------
 if test "$sci_required_ftgl" = "yes"; then
   if test "$with_ftgl"; then
-    _sci_lib="$with_ftgl/unix/src/.libs"
+    _sci_lib="$with_ftgl/lib"
     _sci_inc="$with_ftgl/include /usr/include/freetype2"
   else
     _sci_lib="$sci_thirdparty_libs"
   fi
   
-  SCI_TRY_LINK(FTGL,FTGL library,FTGLTextureFont.h,$_sci_inc,freetype ftgl,$_sci_lib,,,required)
+  SCI_TRY_LINK(FTGL,FTGL library,FTGL/FTGLTextureFont.h,$_sci_inc,freetype ftgl GLU GL,$_sci_lib,,,required)
 
   if test "$HAVE_FTGL" = "yes"; then
     DEF_FTGL="#define HAVE_FTGL 1"
