@@ -2,8 +2,8 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = ContourSetWriter.cc SegFldWriter.cc SigmaSetWriter.cc \
-	   TensorFieldWriter.cc
+SRCS     = ContourSetWriter.cc PathWriter.cc SegFldWriter.cc \
+	   SigmaSetWriter.cc TensorFieldWriter.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
