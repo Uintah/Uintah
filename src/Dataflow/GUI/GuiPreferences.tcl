@@ -34,8 +34,8 @@
 
 proc initGuiPreferences { } {
     global guiPreferences
-    set guiPreferences("UseGuiFetch") "off"
-    set guiPreferences("MoveGuiToMouse") "on"
+    set guiPreferences("UseGuiFetch") off
+    set guiPreferences("MoveGuiToMouse") on
     
 }
 
