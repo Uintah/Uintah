@@ -83,6 +83,9 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_useLoadCurves = false; // Flag for using load curves
   d_doErosion = false; // Default is no erosion
   d_erosionAlgorithm = "none"; // Default algorithm is none
+  d_adiabaticHeating = 0.0; // Adiabatic heating is on (no heat exchange
+                            // between material points and surroundings
+  d_forceIncrementFactor = 1.0;
 }
 
 SerialMPM::~SerialMPM()
@@ -108,6 +111,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
     mpm_soln_ps->get("artificial_viscosity",     d_artificial_viscosity);
     mpm_soln_ps->get("accumulate_strain_energy", d_accStrainEnergy);
     mpm_soln_ps->get("use_load_curves", d_useLoadCurves);
+    bool adiabaticHeatingOn = true;
+    mpm_soln_ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
+    if (!adiabaticHeatingOn) d_adiabaticHeating = 1.0;
+    mpm_soln_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
     ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
     if (erosion_ps) {
       if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
@@ -223,12 +230,14 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->addInitialComputesAndRequiresWithErosion(t, mpm_matl, patches,
                                                    d_erosionAlgorithm);
+      cm->setAdiabaticHeating(d_adiabaticHeating);
     }
   } else {
     for(int m = 0; m < numMPM; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
       cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+      cm->setAdiabaticHeating(d_adiabaticHeating);
     }
   }
 
@@ -2101,7 +2110,13 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 	old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
 	new_dw->allocateAndPut(pExternalForce_new, 
 			       lb->pExtForceLabel_preReloc,  pset);
-	pExternalForce_new.copyData(pExternalForce);
+
+	// Iterate over the particles
+	ParticleSubset::iterator iter = pset->begin();
+	for(;iter != pset->end(); iter++){
+	  particleIndex idx = *iter;
+	  pExternalForce_new[idx] = pExternalForce[idx]*d_forceIncrementFactor;
+	}
       }
     } // matl loop
   }  // patch loop
@@ -2353,6 +2368,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
       }
 
+      // Get the constitutive model (needed for plastic temperature
+      // update) and get the plastic temperature from the plasticity
+      // model
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      ParticleVariable<double> pPlasticTempInc;
+      new_dw->allocateTemporary(pPlasticTempInc, pset);
+      ParticleSubset::iterator iter = pset->begin();
+      for(;iter != pset->end();iter++) pPlasticTempInc[*iter] = 0.0;
+      cm->getPlasticTemperatureIncrement(pset, new_dw, pPlasticTempInc);
+
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
 
@@ -2404,6 +2429,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
 	pTempNew[idx]        = pTemperature[idx] + tempRate  * delT;
 	pSp_volNew[idx]      = pSp_vol[idx]      + sp_vol_dt * delT;
+
+        // If there is no adibatic heating, add the plastic temperature
+        // to the particle temperature
+        pTempNew[idx] = pTempNew[idx] + d_adiabaticHeating*pPlasticTempInc[idx];
 
 	double rho;
 	if(pvolume[idx] > 0.){
