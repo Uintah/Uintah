@@ -53,9 +53,9 @@ SingleVelContact::~SingleVelContact()
 
 }
 
-void SingleVelContact::initializeContact(const Region* region,
-					 int vfindex,
-					 DataWarehouseP& new_dw)
+void SingleVelContact::initializeContact(const Region* /*region*/,
+					 int /*vfindex*/,
+					 DataWarehouseP& /*new_dw*/)
 {
 
 }
@@ -81,8 +81,10 @@ void SingleVelContact::exMomInterpolated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
-      new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region, 0);
+      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region,
+		  Ghost::None);
+      new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region,
+		  Ghost::None);
     }
   }
 
@@ -132,9 +134,11 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
-      new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel, vfindex, region, 0);
-      new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex, region, 0);
+      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, Ghost::None);
+      new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel, vfindex,
+		  region, Ghost::None);
+      new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex,
+		  region, Ghost::None);
     }
   }
   delt_vartype delt;
@@ -168,6 +172,14 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.15  2000/05/10 20:02:49  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.14  2000/05/08 22:45:34  guilkey
 // Fixed a few stupid errors in the FrictionContact.
 //

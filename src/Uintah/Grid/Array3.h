@@ -62,60 +62,44 @@ namespace Uintah {
 	 d_window = copy.d_window;
 	 return *this;
       }
-      
-      int dim1() const {
-	 return d_window->dim1();
-      }
-      int dim2() const {
-	 return d_window->dim2();
-      }
-      int dim3() const {
-	 return d_window->dim3();
-      }
-      T& operator()(int i, int j, int k) const {
-	 //ASSERT(d_window);
-	 return d_window->get(i, j, k);
+
+      IntVector size() const {
+	 return d_window->size();
       }
       void initialize(const T& value) {
 	 d_window->initialize(value);
       }
       
-      void initialize(const T& value, int sx, int sy, int sz, int ex, int ey, int ez) {
-	 d_window->initialize(value, sx, sy, sz, ex, ey, ez);
+      void initialize(const T& value, const IntVector& s,
+		      const IntVector& e) {
+	 d_window->initialize(value, s, e);
       }
       
-      void resize(int size1, int size2, int size3) {
-	 if(d_window){
-	    Array3Data<T>* data = d_window->getData();
-	    if(data && size1 == data->dim1() && size2 == data->dim2() && size3 == data->dim3())
-	       return;
-	 }
+      void resize(const IntVector& lowIndex, const IntVector& highIndex) {
 	 if(d_window && d_window->removeReference())
 	    delete d_window;
 	 //std::cerr << "Creating array: " << size1 << "x" << size2 << "x" << size3 << " (size " << sizeof(T) << ")\n";
-	 d_window=new Array3Window<T>(new Array3Data<T>(size1, size2, size3));
+	 IntVector size = highIndex-lowIndex;
+	 d_window=new Array3Window<T>(new Array3Data<T>(size), lowIndex, highIndex);
 	 d_window->addReference();
       }
       T& operator[](const IntVector& idx) const {
-	 return d_window->get(idx.x(), idx.y(), idx.z());
+	 return d_window->get(idx);
       }
       
       inline Array3Window<T>* getWindow() const {
 	 return d_window;
       }
       T& operator[](const IntVector& idx) {
-	 return d_window->get(idx.x(), idx.y(), idx.z());
+	 return d_window->get(idx);
       }
       
       IntVector getLowIndex() const {
-	return IntVector(d_window->getOff1(),d_window->getOff2(),
-					     d_window->getOff3());
+	 return d_window->getLowIndex();
       }
 
       IntVector getHighIndex() const {
-	return IntVector(d_window->getOff1()+d_window->dim1(),
-			 d_window->getOff2()+d_window->dim2(),
-			 d_window->getOff3()+d_window->dim3());
+	return d_window->getHighIndex();
       }
       
    private:
@@ -133,6 +117,14 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.9  2000/05/10 20:02:57  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.8  2000/05/06 10:56:25  guilkey
 // Filled in body of getLowIndex and getHighIndex.  Works for one
 // region, should double check it for multiple regions.

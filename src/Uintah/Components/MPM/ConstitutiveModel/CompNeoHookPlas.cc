@@ -87,11 +87,11 @@ void CompNeoHookPlas::computeStableTimestep(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, pMassLabel, matlindex, region, 0);
+  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, pVolumeLabel, matlindex, region, 0);
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -137,13 +137,13 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   // Create array for the particle position
   ParticleVariable<Point> px;
-  old_dw->get(px, pXLabel, matlindex, region, 0);
+  old_dw->get(px, pXLabel, matlindex, region, Ghost::None);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
   old_dw->get(deformationGradient, pDeformationMeasureLabel, 
-					matlindex, region, 0);
+	      matlindex, region, Ghost::None);
   ParticleVariable<Matrix3> bElBar;
-  old_dw->get(bElBar, bElBarLabel, matlindex, region, 0);
+  old_dw->get(bElBar, bElBarLabel, matlindex, region, Ghost::None);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
@@ -151,15 +151,16 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, pMassLabel, matlindex, region, 0);
+  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, pVolumeLabel, matlindex, region, 0);
+  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
 
   NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region, 0);
+  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region,
+	      Ghost::None);
   delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
@@ -364,6 +365,14 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.9  2000/05/10 20:02:46  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.8  2000/05/07 06:02:03  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

@@ -53,17 +53,17 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
-	       const Region* region, GhostType gtype, int numGhostCells)
+	       const Region* region, Ghost::GhostType gtype, int numGhostCells)
 {
    const TypeDescription* td = var->typeDescription();
    int l,h;
    switch(gtype){
-   case Task::None:
+   case Ghost::None:
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
       l=h=0;
       break;
-   case Task::AroundNodes:
+   case Ghost::AroundNodes:
       if(numGhostCells == 0)
 	 throw InternalError("No ghost cells specified with Task::AroundNodes");
       switch(td->getBasis()){
@@ -81,7 +81,7 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	 throw InternalError("Illegal Basis type");
       }
       break;
-   case Task::AroundCells:
+   case Ghost::AroundCells:
       if(numGhostCells == 0)
 	 throw InternalError("No ghost cells specified with Task::AroundCells");
       switch(td->getBasis()){
@@ -161,6 +161,14 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.10  2000/05/10 20:03:03  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.9  2000/05/07 06:02:13  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

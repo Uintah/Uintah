@@ -49,6 +49,8 @@ public:
 	    const VarType& var, bool replace);
    void get(const VarLabel* label, int matlindex, const Region* region,
 	    VarType& var) const;
+   VarType* get(const VarLabel* label, int matlindex,
+		const Region* region) const;
    void copyAll(const DWDatabase& from, const VarLabel*, const Region* region);
 private:
    typedef std::vector<VarType*> dataDBtype;
@@ -204,9 +206,8 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 }
 
 template<class VarType>
-void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
-			      const Region* region,
-			      VarType& var) const
+VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
+				  const Region* region) const
 {
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter == names.end())
@@ -227,7 +228,15 @@ void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
    if(!rr->vars[matlIndex])
       throw UnknownVariable(label->getName());
 
-   var.copyPointer(*rr->vars[matlIndex]);
+   return rr->vars[matlIndex];
+}
+
+template<class VarType>
+void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
+			      const Region* region,
+			      VarType& var) const
+{
+   var.copyPointer(*get(label, matlIndex, region));
 }
 
 template<class VarType>
@@ -256,6 +265,14 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.7  2000/05/10 20:02:52  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.6  2000/05/07 06:02:07  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

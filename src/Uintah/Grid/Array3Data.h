@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_ARRAY3DATA_H
 
 #include "RefCounted.h"
+#include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Util/Assert.h>
 
 /**************************************
@@ -32,39 +33,26 @@ WARNING
 ****************************************/
 
 namespace Uintah {
+   using SCICore::Geometry::IntVector;
    template<class T> class Array3Data : public RefCounted {
    public:
-      Array3Data(int size1, int size2, int size3);
+      Array3Data(const IntVector& size);
       virtual ~Array3Data();
       
-      inline int dim1() {
-	 return d_size1;
+      inline IntVector size() const {
+	 return d_size;
       }
-      inline int dim2() {
-	 return d_size2;
-      }
-      inline int dim3() {
-	 return d_size3;
-      }
-      void initialize(const T& val, int o1, int o2, int o3,
-		      int s1, int s2, int s3);
-      inline T& get(int i, int j, int k) {
-	 //CHECKARRAYBOUNDS(i, 0, size1);
-	 //CHECKARRAYBOUNDS(j, 0, size2);
-	 //CHECKARRAYBOUNDS(k, 0, size3);
-#if 0
-	 int idx = i*d_size3*d_size2+j*d_size3+k;
-	 CHECKARRAYBOUNDS(idx, 0, d_totalsize);
-	 return d_data[idx];
-#else
-	 return d_data3[i][j][k];
-#endif
+      void initialize(const T& val, const IntVector& s, const IntVector& e);
+      inline T& get(const IntVector& idx) {
+	 CHECKARRAYBOUNDS(idx.x(), 0, d_size.x());
+	 CHECKARRAYBOUNDS(idx.y(), 0, d_size.y());
+	 CHECKARRAYBOUNDS(idx.z(), 0, d_size.z());
+	 return d_data3[idx.x()][idx.y()][idx.z()];
       }
    private:
       T*    d_data;
       T***  d_data3;
-      int   d_size1, d_size2, d_size3;
-      int   d_totalsize;
+      IntVector d_size;
       
       Array3Data& operator=(const Array3Data&);
       Array3Data(const Array3Data&);
@@ -72,45 +60,45 @@ namespace Uintah {
    
    template<class T>
       void Array3Data<T>::initialize(const T& val,
-				     int off1, int off2, int off3,
-				     int s1, int s2, int s3)
+				     const IntVector& lowIndex,
+				     const IntVector& highIndex)
       {
-	 CHECKARRAYBOUNDS(off1, 0, d_size1);
-	 CHECKARRAYBOUNDS(off2, 0, d_size2);
-	 CHECKARRAYBOUNDS(off3, 0, d_size3);
-	 CHECKARRAYBOUNDS(s1, 1, d_size1-off1+1);
-	 CHECKARRAYBOUNDS(s2, 1, d_size2-off2+1);
-	 CHECKARRAYBOUNDS(s3, 1, d_size3-off3+1);
-	 T* d = d_data + off1*d_size3*d_size2 + off2*d_size3 + off3;
-	 for(int i=0;i<s1;i++){
+	 CHECKARRAYBOUNDS(lowIndex.x(), 0, d_size.x());
+	 CHECKARRAYBOUNDS(lowIndex.y(), 0, d_size.y());
+	 CHECKARRAYBOUNDS(lowIndex.z(), 0, d_size.z());
+	 CHECKARRAYBOUNDS(highIndex.x(), lowIndex.x(), d_size.x()+1);
+	 CHECKARRAYBOUNDS(highIndex.y(), lowIndex.y(), d_size.y()+1);
+	 CHECKARRAYBOUNDS(highIndex.z(), lowIndex.z(), d_size.z()+1);
+	 T* d = &d_data3[lowIndex.x()][lowIndex.y()][lowIndex.z()];
+	 IntVector s = highIndex-lowIndex;
+	 for(int i=0;i<s.x();i++){
 	    T* dd=d;
-	    for(int j=0;j<s2;j++){
+	    for(int j=0;j<s.y();j++){
 	       T* ddd=dd;
-	       for(int j=0;j<s3;j++)
-		  ddd[j]=val;
-	       dd+=d_size3;
+	       for(int k=0;k<s.z();k++)
+		  ddd[k]=val;
+	       dd+=d_size.z();
 	    }
-	    d+=d_size3*d_size2;
+	    d+=d_size.z()*d_size.y();
 	 }
       }
    
    template<class T>
-      Array3Data<T>::Array3Data(int size1, int size2, int size3)
-      : d_size1(size1), d_size2(size2), d_size3(size3)
+      Array3Data<T>::Array3Data(const IntVector& size)
+      : d_size(size)
       {
-	 if(d_size1 && d_size2 && d_size3)
-	    d_data=new T[d_size1*d_size2*d_size3];
+	 if(d_size.x() && d_size.y() && d_size.z())
+	    d_data=new T[d_size.x()*d_size.y()*d_size.z()];
 	 else
 	    d_data=0;
-	 d_totalsize = d_size1*d_size2*d_size3;
-	 d_data3=new T**[d_size1];
-	 d_data3[0]=new T*[d_size1*d_size2];
+	 d_data3=new T**[d_size.x()];
+	 d_data3[0]=new T*[d_size.x()*d_size.y()];
 	 d_data3[0][0]=d_data;
-	 for(int i=1;i<d_size1;i++){
-	    d_data3[i]=d_data3[i-1]+d_size2;
+	 for(int i=1;i<d_size.x();i++){
+	    d_data3[i]=d_data3[i-1]+d_size.y();
 	 }
-	 for(int j=1;j<d_size1*d_size2;j++){
-	    d_data3[0][j]=d_data3[0][j-1]+d_size3;
+	 for(int j=1;j<d_size.x()*d_size.y();j++){
+	    d_data3[0][j]=d_data3[0][j-1]+d_size.z();
 	 }
       }
    
@@ -119,6 +107,7 @@ namespace Uintah {
       {
 	 if(d_data){
 	    delete[] d_data;
+	    delete[] d_data3[0];
 	    delete[] d_data3;
 	 }
       }
@@ -127,6 +116,14 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.8  2000/05/10 20:02:58  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.7  2000/05/05 04:10:04  guilkey
 // Added an include file to fix a compilation problem.  Thanks Steve.
 //

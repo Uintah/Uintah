@@ -63,8 +63,12 @@ WARNING
      
      //////////
      // Insert Documentation Here:
-     virtual void allocate(const Region*);
+     virtual void allocate(const IntVector& lowIndex,
+			   const IntVector& highIndex);
      
+     virtual void copyRegion(NCVariableBase* src,
+			     const IntVector& lowIndex,
+			     const IntVector& highIndex);
      NCVariable<T>& operator=(const NCVariable<T>&);
      
      // Replace the values on the indicated face with value
@@ -76,42 +80,42 @@ WARNING
 	 case Region::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       Array3<T>::operator()(hi.x()-1,j,k) = value;
+		(*this)[IntVector(hi.x(),j,k)] = value;
 	     }
 	   }
 	   break;
 	 case Region::xminus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       Array3<T>::operator()(low.x(),j,k) = value;
+	       (*this)[IntVector(low.x(),j,k)] = value;
 	     }
 	   }
 	   break;
 	 case Region::yplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       Array3<T>::operator()(i,hi.y()-1,k) = value;
+	       (*this)[IntVector(i,hi.y(),k)] = value;
 	     }
 	   }
 	   break;
 	 case Region::yminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       Array3<T>::operator()(i,low.y(),k) = value;
+	       (*this)[IntVector(i,low.y(),k)] = value;
 	     }
 	   }
 	   break;
 	 case Region::zplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
-	       Array3<T>::operator()(i,j,hi.z()-1) = value;
+	       (*this)[IntVector(i,j,hi.z())] = value;
 	     }
 	   }
 	   break;
 	 case Region::zminus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
-	       Array3<T>::operator()(i,j,low.z()) = value;
+		(*this)[IntVector(i,j,low.z())] = value;
 	     }
 	   }
 	   break;
@@ -182,18 +186,41 @@ WARNING
    
    template<class T>
       void
-      NCVariable<T>::allocate(const Region* region)
+      NCVariable<T>::allocate(const IntVector& lowIndex,
+			      const IntVector& highIndex)
       {
 	 if(getWindow())
 	    throw InternalError("Allocating an NCvariable that is apparently already allocated!");
-	 IntVector res(region->getNCells());
-	 resize(res.x()+1, res.y()+1, res.z()+1);
+	 resize(lowIndex, highIndex);
+      }
+   template<class T>
+      void
+      NCVariable<T>::copyRegion(NCVariableBase* srcptr,
+				const IntVector& lowIndex,
+				const IntVector& highIndex)
+      {
+	 const NCVariable<T>* c = dynamic_cast<const NCVariable<T>* >(srcptr);
+	 if(!c)
+	    throw TypeMismatchException("Type mismatch in NC variable");
+	 const NCVariable<T>& src = *c;
+	 for(int i=lowIndex.x();i<highIndex.x();i++)
+	    for(int j=lowIndex.y();j<highIndex.y();j++)
+	       for(int k=lowIndex.z();k<highIndex.z();k++)
+		  (*this)[IntVector(i, j, k)] = src[IntVector(i,j,k)];
       }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.16  2000/05/10 20:03:00  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.15  2000/05/10 19:56:46  guilkey
 // D'ohhh!!!  Got a little carried away with my last "correction".  fillFace
 // should be right now.

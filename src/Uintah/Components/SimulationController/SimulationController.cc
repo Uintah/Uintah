@@ -219,10 +219,9 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 		  for(int k=0;k<patches.z();k++){
 		     IntVector startcell = resolution*IntVector(i,j,k)/patches;
 		     IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
-		     IntVector ncells = endcell-startcell;
 		     const Region* r = level->addRegion(lower+diag*Vector(i,j,k)*scale,
 							lower+diag*Vector(i+1,j+1,k+1)*scale,
-							ncells);
+							startcell, endcell);
 		     all(i,j,k)=const_cast<Region*>(r);
 		  }
 	       }
@@ -252,7 +251,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	       }
 	    }
 	 } else {
-	    level->addRegion(lower, upper, resolution);
+	    level->addRegion(lower, upper, IntVector(0,0,0), resolution);
 	 }
       }
       grid->addLevel(level);
@@ -395,6 +394,14 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.17  2000/05/10 20:02:55  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.16  2000/05/07 06:02:10  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler

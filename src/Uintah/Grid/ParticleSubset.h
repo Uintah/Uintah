@@ -38,7 +38,7 @@ WARNING
 
    class ParticleSubset : public RefCounted {
    public:
-      ParticleSubset(ParticleSet* pset);
+      ParticleSubset(ParticleSet* pset, bool fill);
       ~ParticleSubset();
       
       //////////
@@ -53,6 +53,12 @@ WARNING
 	 particleIndex idx = d_pset->addParticle();
 	 d_particles.push_back(idx);
 	 return idx;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      void addParticle(particleIndex idx) {
+	 d_particles.push_back(idx);
       }
       
       typedef std::vector<particleIndex>::iterator iterator;
@@ -108,6 +114,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/10 20:03:01  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.3  2000/04/26 06:48:51  sparker
 // Streamlined namespaces
 //

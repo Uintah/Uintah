@@ -190,13 +190,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires(old_dw, pMassLabel, idx, region,
-			Task::AroundNodes, 1 );
+			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, pVelocityLabel, idx, region,
-			Task::AroundNodes, 1 );
+			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, pExternalForceLabel, idx, region,
-			Task::AroundNodes, 1 );
+			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, pXLabel, idx, region,
-			Task::AroundNodes, 1 );
+			Ghost::AroundNodes, 1 );
 
 	    t->computes(new_dw, gMassLabel, idx, region );
 	    t->computes(new_dw, gVelocityLabel, idx, region );
@@ -223,9 +223,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, gMassLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( new_dw, gVelocityLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, gMomExedVelocityLabel, idx, region );
 	 }
@@ -259,7 +259,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      {
+      if(d_fractureModel) {
 	 /*
 	  * updateSurfaceNormalOfBoundaryParticle
 	  *   in(P.DEFORMATIONMEASURE)
@@ -275,9 +275,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( old_dw, pDeformationMeasureLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, pSurfaceNormalLabel, idx, region );
 	 }
@@ -301,9 +301,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, pStressLabel, idx, region,
-			 Task::AroundNodes, 1);
+			 Ghost::AroundNodes, 1);
 	    t->requires( old_dw, pVolumeLabel, idx, region,
-			 Task::AroundNodes, 1);
+			 Ghost::AroundNodes, 1);
 
 	    t->computes( new_dw, gInternalForceLabel, idx, region );
 	 }
@@ -326,9 +326,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, gMassLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( new_dw, gInternalForceLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, gAccelerationLabel, idx, region);
 	 }
@@ -351,9 +351,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires(new_dw, gAccelerationLabel, idx, region,
-			Task::None);
+			Ghost::None);
 	    t->requires(new_dw, gMomExedVelocityLabel, idx, region,
-			Task::None);
+			Ghost::None);
 	    t->requires(old_dw, deltLabel );
 		     
 	    t->computes(new_dw, gVelocityStarLabel, idx, region );
@@ -378,11 +378,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires(new_dw, gMassLabel, idx, region,
-			Task::None);
+			Ghost::None);
 	    t->requires(new_dw, gVelocityStarLabel, idx, region,
-			Task::None);
+			Ghost::None);
 	    t->requires(new_dw, gAccelerationLabel, idx, region,
-			Task::None);
+			Ghost::None);
 
 	    t->computes(new_dw, gMomExedVelocityStarLabel, idx, region);
 	    t->computes(new_dw, gMomExedAccelerationLabel, idx, region);
@@ -391,7 +391,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	sched->addTask(t);
       }
 
-      {
+      if(d_fractureModel) {
 	 /*
 	  * labelSelfContactCells
 	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
@@ -407,9 +407,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( old_dw, cSurfaceNormalLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, cSelfContactLabel, idx, region );
 	 }
@@ -417,7 +417,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      {
+      if(d_fractureModel) {
 	 /*
 	  * updateNodeInformationInContactCells
 	  *   in(C.SELFCONTACT,G.VELOCITY,G.ACCELERATION)
@@ -434,11 +434,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( old_dw, cSelfContactLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, gVelocityLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, gAccelerationLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, gVelocityLabel, idx, region );
 	    t->computes( new_dw, gAccelerationLabel, idx, region );
@@ -463,11 +463,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires(new_dw, gMomExedAccelerationLabel, idx, region,
-			Task::AroundCells, 1);
+			Ghost::AroundCells, 1);
 	    t->requires(new_dw, gMomExedVelocityStarLabel, idx, region,
-			Task::AroundCells, 1);
+			Ghost::AroundCells, 1);
 	    t->requires(old_dw, pXLabel, idx, region,
-			Task::None);
+			Ghost::None);
 	    t->requires(old_dw, deltLabel );
 	    t->computes(new_dw, pVelocityLabel, idx, region );
 	    t->computes(new_dw, pXLabel, idx, region );
@@ -476,7 +476,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      {
+      if(d_fractureModel) {
 	 /*
 	  * updateParticleInformationInContactCells
 	  *   in(P.DEFORMATIONMEASURE)
@@ -492,15 +492,15 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( old_dw, pXLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, pVelocityLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, pExternalForceLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, pDeformationMeasureLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( old_dw, pStressLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, pXLabel, idx, region );
 	    t->computes( new_dw, pVelocityLabel, idx, region );
@@ -511,7 +511,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 sched->addTask(t);
       }
 
-      {
+      if(d_fractureModel) {
 	 /*
 	  * crackGrow
 	  *   in(P.STRESS)
@@ -529,18 +529,17 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, pStressLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( new_dw, pXLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 	    t->requires( new_dw, pSurfaceNormalLabel, idx, region,
-			 Task::None);
+			 Ghost::None);
 
 	    t->computes( new_dw, pSurfaceNormalLabel, idx, region );
 	 }
 
 	 sched->addTask(t);
       }
-
     }
 }
 
@@ -598,10 +597,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<Vector> pexternalforce;
 
-      old_dw->get(px,             pXLabel, matlindex, region, 0);
-      old_dw->get(pmass,          pMassLabel, matlindex, region, 0);
-      old_dw->get(pvelocity,      pVelocityLabel, matlindex, region, 0);
-      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region, 0);
+      old_dw->get(px,             pXLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      old_dw->get(pmass,          pMassLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      old_dw->get(pvelocity,      pVelocityLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -614,8 +617,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region);
 
       ParticleSubset* pset = px.getParticleSubset();
+#if 0
       ASSERT(pset == pmass.getParticleSubset());
       ASSERT(pset == pvelocity.getParticleSubset());
+#else
+      ASSERT(pset->numParticles() == pmass.getParticleSubset()->numParticles());
+      ASSERT(pset->numParticles() == pvelocity.getParticleSubset()->numParticles());
+#endif
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -627,30 +635,29 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       gvelocity.initialize(Vector(0,0,0));
       externalforce.initialize(Vector(0,0,0));
       for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+	  iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
 
-	// Get the node indices that surround the cell
-	IntVector ni[8];
-	double S[8];
-	if(!region->findCellAndWeights(px[idx], ni, S))
+	 // Get the node indices that surround the cell
+	 IntVector ni[8];
+	 double S[8];
+	 if(!region->findCellAndWeights(px[idx], ni, S))
 	    continue;
-	// Add each particles contribution to the local mass & velocity 
-	// Must use the node indices
-	for(int k = 0; k < 8; k++) {
-	    //if(region->contains(ni[k])){
-		gmass[ni[k]] += pmass[idx] * S[k];
-		gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
-		externalforce[ni[k]] += pexternalforce[idx] * S[k];
-		//}
-	}
+	 // Add each particles contribution to the local mass & velocity 
+	 // Must use the node indices
+	 for(int k = 0; k < 8; k++) {
+	    if(region->containsNode(ni[k])){
+	       gmass[ni[k]] += pmass[idx] * S[k];
+	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
+	       externalforce[ni[k]] += pexternalforce[idx] * S[k];
+	    }
+	 }
       }
 
       for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
-	if(gmass[*iter] != 0.0){
+	 if(gmass[*iter] != 0.0){
 	    gvelocity[*iter] *= 1./gmass[*iter];
-//	    cerr << "mass[*iter] = " << gmass[*iter] << '\n';
-	}
+	 }
       }
 
       // Apply grid boundary conditions to the velocity
@@ -747,16 +754,25 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       ParticleVariable<Matrix3> pstress;
       NCVariable<Vector>        internalforce;
 
-      old_dw->get(px,      pXLabel, matlindex, region, 0);
-      old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
-      new_dw->get(pstress, pStressLabel, matlindex, region, 0);
+      old_dw->get(px,      pXLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      old_dw->get(pvol,    pVolumeLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
+      new_dw->get(pstress, pStressLabel, matlindex, region,
+		  Ghost::AroundNodes, 1);
 
       new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region);
   
       ParticleSubset* pset = px.getParticleSubset();
+#if 0
       ASSERT(pset == px.getParticleSubset());
       ASSERT(pset == pvol.getParticleSubset());
       ASSERT(pset == pstress.getParticleSubset());
+#else
+      ASSERT(pset->numParticles() == px.getParticleSubset()->numParticles());
+      ASSERT(pset->numParticles() == pvol.getParticleSubset()->numParticles());
+      ASSERT(pset->numParticles() == pstress.getParticleSubset()->numParticles());
+#endif
 
       internalforce.initialize(Vector(0,0,0));
 
@@ -771,8 +787,10 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
   	   continue;
 
          for (int k = 0; k < 8; k++){
-  	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-  	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+	    if(region->containsNode(ni[k])){
+	       Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+	       internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+	    }
          }
       }
       new_dw->put(internalforce, gInternalForceLabel, vfindex, region);
@@ -812,9 +830,11 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       }
 #endif
 
-      new_dw->get(mass,          gMassLabel, vfindex, region, 0);
-      new_dw->get(internalforce, gInternalForceLabel, vfindex, region, 0);
-      new_dw->get(externalforce, gExternalForceLabel, vfindex, region, 0);
+      new_dw->get(mass,          gMassLabel, vfindex, region, Ghost::None);
+      new_dw->get(internalforce, gInternalForceLabel, vfindex, region,
+		  Ghost::None);
+      new_dw->get(externalforce, gExternalForceLabel, vfindex, region,
+		  Ghost::None);
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
@@ -858,8 +878,10 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       NCVariable<Vector>        velocity;
       delt_vartype delt;
 
-      new_dw->get(acceleration, gAccelerationLabel, vfindex, region, 0);
-      new_dw->get(velocity, gMomExedVelocityLabel, vfindex, region, 0);
+      new_dw->get(acceleration, gAccelerationLabel, vfindex, region,
+		  Ghost::None);
+      new_dw->get(velocity, gMomExedVelocityLabel, vfindex, region,
+		  Ghost::None);
 
       old_dw->get(delt, deltLabel);
 
@@ -907,17 +929,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<double> pmass;
 
-      old_dw->get(px,        pXLabel, matlindex, region, 0);
-      old_dw->get(pvelocity, pVelocityLabel, matlindex, region, 0);
-      old_dw->get(pmass,     pMassLabel, matlindex, region, 0);
+      old_dw->get(px,        pXLabel, matlindex, region, Ghost::None);
+      old_dw->get(pvelocity, pVelocityLabel, matlindex, region, Ghost::None);
+      old_dw->get(pmass,     pMassLabel, matlindex, region, Ghost::None);
 
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
       delt_vartype delt;
 
-      new_dw->get(gvelocity_star,gMomExedVelocityStarLabel, vfindex, region, 0);
-      new_dw->get(gacceleration, gMomExedAccelerationLabel, vfindex, region, 0);
+      new_dw->get(gvelocity_star,gMomExedVelocityStarLabel, vfindex, region,
+		  Ghost::AroundCells, 1);
+      new_dw->get(gacceleration, gMomExedAccelerationLabel, vfindex, region,
+		  Ghost::AroundCells, 1);
 
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
@@ -963,8 +987,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
-          vel += gvelocity_star[ni[k]]  * S[k];
-          acc += gacceleration[ni[k]]   * S[k];
+	   vel += gvelocity_star[ni[k]]  * S[k];
+	   acc += gacceleration[ni[k]]   * S[k];
         }
 
         // Update the particle's position and velocity
@@ -991,9 +1015,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleVariable<Vector> pexternalforce;
 
       new_dw->put(pmass,          pMassLabel, matlindex, region);
-      old_dw->get(pvolume,        pVolumeLabel, matlindex, region, 0);
+      old_dw->get(pvolume,        pVolumeLabel, matlindex, region,
+		  Ghost::None);
       new_dw->put(pvolume,        pVolumeLabel, matlindex, region);
-      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region, 0);
+      old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region,
+		  Ghost::None);
       new_dw->put(pexternalforce, pExternalForceLabel, matlindex, region);
     }
   }
@@ -1005,6 +1031,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.51  2000/05/10 20:02:42  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.50  2000/05/10 18:34:15  tan
 // Added computations on self-contact cells for cracked surfaces.
 //

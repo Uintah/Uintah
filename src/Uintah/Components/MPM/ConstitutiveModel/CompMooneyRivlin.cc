@@ -74,11 +74,11 @@ void CompMooneyRivlin::computeStableTimestep(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  new_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, pMassLabel, matlindex, region, 0);
+  new_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, pVolumeLabel, matlindex, region, 0);
+  new_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
 
   ParticleSubset* pset = pmass.getParticleSubset();
   ASSERT(pset == pvolume.getParticleSubset());
@@ -122,10 +122,11 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   // Create array for the particle position
   ParticleVariable<Point> px;
-  old_dw->get(px, pXLabel, matlindex, region, 0);
+  old_dw->get(px, pXLabel, matlindex, region, Ghost::None);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, pDeformationMeasureLabel, matlindex, region, 0);
+  old_dw->get(deformationGradient, pDeformationMeasureLabel, matlindex,
+	      region, Ghost::None);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
@@ -133,15 +134,16 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, matlindex, region, 0);
+  old_dw->get(cmdata, p_cmdata_label, matlindex, region, Ghost::None);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, pMassLabel, matlindex, region, 0);
+  old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, pVolumeLabel, matlindex, region, 0);
+  old_dw->get(pvolume, pVolumeLabel, matlindex, region, Ghost::None);
 
   NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region, 0);
+  new_dw->get(gvelocity, gMomExedVelocityLabel, matlindex,region,
+	      Ghost::AroundCells, 1);
   delt_vartype delt;
   old_dw->get(delt, deltLabel);
 
@@ -163,12 +165,14 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
          continue;
 
       for(int k = 0; k < 8; k++) {
-          Vector& gvel = gvelocity[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-                velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
-            }
-          }
+	 if(region->containsNode(ni[k])){
+	    Vector& gvel = gvelocity[ni[k]];
+	    for (int j = 0; j<3; j++){
+	       for (int i = 0; i<3; i++) {
+		  velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+	       }
+	    }
+	 }
       }
 
 
@@ -232,17 +236,17 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      DataWarehouseP& new_dw) const
 {
    task->requires(old_dw, pXLabel, matl->getDWIndex(), region,
-		  Task::None);
+		  Ghost::None);
    task->requires(old_dw, pDeformationMeasureLabel, matl->getDWIndex(), region,
-		  Task::None);
+		  Ghost::None);
    task->requires(old_dw, p_cmdata_label, matl->getDWIndex(),  region,
-		  Task::None);
+		  Ghost::None);
    task->requires(old_dw, pMassLabel, matl->getDWIndex(),  region,
-		  Task::None);
+		  Ghost::None);
    task->requires(old_dw, pVolumeLabel, matl->getDWIndex(),  region,
-		  Task::None);
+		  Ghost::None);
    task->requires(new_dw, gMomExedVelocityLabel, matl->getDWIndex(), region,
-		  Task::AroundCells, 1);
+		  Ghost::AroundCells, 1);
    task->requires(old_dw, deltLabel);
 
    task->computes(new_dw, deltLabel);
@@ -343,6 +347,14 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.25  2000/05/10 20:02:45  sparker
+// Added support for ghost cells on node variables and particle variables
+//  (work for 1 patch but not debugged for multiple)
+// Do not schedule fracture tasks if fracture not enabled
+// Added fracture directory to MPM sub.mk
+// Be more uniform about using IntVector
+// Made regions have a single uniform index space - still needs work
+//
 // Revision 1.24  2000/05/07 06:02:02  sparker
 // Added beginnings of multiple patch support and real dependencies
 //  for the scheduler
