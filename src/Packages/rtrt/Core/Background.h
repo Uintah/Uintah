@@ -3,6 +3,7 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Plane.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/ppm.h>
 
@@ -60,21 +61,33 @@ public:
     
   public:
 
-    EnvironmentMapBackground( char* filename );
-
-    virtual ~EnvironmentMapBackground( void );
-    
-    virtual Color color_in_direction(const Vector& v) const ;
-
-protected:
-    
+    EnvironmentMapBackground( char* filename, const Vector& up = Vector( 0.0, 0.0, 1.0 ) );
+      
+      virtual ~EnvironmentMapBackground( void );
+      
+      virtual Color color_in_direction(const Vector& v) const ;
+      
+  protected:
+      
       void read_image( char* filename );
-    
+      inline Vector ChangeFromBasis( const Vector& a ) const 
+      {
+	  return( a.x()*_u + a.y()*_v + a.z()*_up );
+      }
+
+      inline Vector ChangeToBasis( const Vector& a ) const 
+      {
+	  return Vector( Dot( a, _u), Dot( a, _v ), Dot( a, _up ) );
+      }
+      
       texture* _text;
       int _width, _height;
       Array2<Color> _image;
       double _aspectRatio;
-  
+      Vector _up;
+      Vector _u;
+      Vector _v;
+
 };
 
 
