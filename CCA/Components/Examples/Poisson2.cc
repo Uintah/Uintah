@@ -57,7 +57,9 @@ void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
-void Poisson2::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
+void
+Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
+			       int, int )
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &Poisson2::timeAdvance,
@@ -68,14 +70,6 @@ void Poisson2::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, d_myworld);
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
-}
-
-// scheduleTimeAdvance version called by the AMR simulation controller.
-void
-Poisson2::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
-{
-  cout << "Poisson2 component does not support ARM yet.\n";
-  throw InternalError("Poisson2 component does not support AMR yet.");
 }
 
 void Poisson2::computeStableTimestep(const ProcessorGroup*,

@@ -61,10 +61,8 @@ WARNING
 				    SchedulerP& sched);
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&);
-    virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP& );
-    // scheduleTimeAdvance version called by the AMR simulation controller.
-    virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&,
-				     int step, int nsteps);
+    virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&,
+				      int step, int nsteps);
 
     struct DiffuseInfo {
       string varname;

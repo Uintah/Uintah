@@ -388,7 +388,8 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
 _____________________________________________________________________*/
-void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
+void
+ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 {
   cout_doing << "ICE::scheduleTimeAdvance" << endl;
   const PatchSet* patches = level->eachPatch();
@@ -458,16 +459,6 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   // whatever tasks use press_matl will have their own reference to it.
   if (press_matl->removeReference())
     delete press_matl;
-}
-
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleTimeAdvance-- AMR Version
-_____________________________________________________________________*/
-void
-ICE::scheduleTimeAdvance(const LevelP&, SchedulerP&, int, int)
-{
-  cout << "ICE component does not support ARM yet.\n";
-  throw InternalError("ICE component does not support AMR yet.");
 }
 
 /* ---------------------------------------------------------------------

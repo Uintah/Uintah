@@ -176,7 +176,9 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
    // consitutive model
 }
 
-void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
+void
+ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
+			     int, int )
 {
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
@@ -225,15 +227,6 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 				    lb->pXLabel, lb->d_particleState,
 				    lb->pParticleIDLabel, matls);
 }
-
-// scheduleTimeAdvance version called by the AMR simulation controller.
-void
-ImpMPM::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
-{
-  cout << "ImpMPM component does not support ARM yet.\n";
-  throw InternalError("ImpMPM component does not support AMR yet.");
-}
-
 
 void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 						const PatchSet* patches,

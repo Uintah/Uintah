@@ -258,15 +258,8 @@ void SimpleCFD::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-SimpleCFD::scheduleTimeAdvance( const LevelP&, SchedulerP& )
-{
-  cout << "SimpleCFD component does not support non-AMR.\n";
-  throw InternalError("SimpleCFD component does not support non-AMR.");
-}
-
-// scheduleTimeAdvance version called by the AMR simulation controller.
-void SimpleCFD::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
-				    int step, int nsteps)
+SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
+				int step, int nsteps )
 {
   dbg << "SimpleCFD::scheduleTimeAdvance on level " << level->getIndex() << '\n';
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
