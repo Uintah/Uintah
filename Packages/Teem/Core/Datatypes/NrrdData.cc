@@ -59,8 +59,8 @@ PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", make_NrrdData)
 
 NrrdData::NrrdData(bool owned) : 
   nrrd(nrrdNew()),
-  data_owned_(owned),
-  embed_object_(false)
+  embed_object_(false),
+  data_owned_(owned)
 {
   //if (valid_tup_types_.size() == 0) {
   //load_valid_tuple_types();

@@ -55,12 +55,12 @@ BBox::BBox()
 }
 
 BBox::BBox(const Point& min, const Point& max)
-  : is_valid(true), cmin(min), cmax(max)
+  : cmin(min), cmax(max), is_valid(true)
 {
 }
 
 BBox::BBox(const BBox& copy)
-: is_valid(copy.is_valid), cmin(copy.cmin), cmax(copy.cmax) 
+: cmin(copy.cmin), cmax(copy.cmax), is_valid(copy.is_valid)
 {
 }
 
