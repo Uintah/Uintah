@@ -242,7 +242,7 @@ BaseConstraint::VarChoices( const Scheme scheme,
 }
 
 void
-BaseConstraint::Satisfy( const Index index, const Scheme scheme )
+BaseConstraint::Satisfy( const Index, const Scheme )
 {
    Error("BaseConstraint: Can't satisfy!");
 }

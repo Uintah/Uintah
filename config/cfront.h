@@ -29,3 +29,4 @@
 
 #define SCI_MakeTemplateLib $(TOP)/etc/make_templates
 #define SCI_TemplateDir $(TOP)/templates
+#define SCI_TemplateLib $(TOP)/templates/fast_templates.o

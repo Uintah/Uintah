@@ -1015,7 +1015,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	ogeom->delObj(groupid);
 }
 
-void IsoSurface::find_seed_from_value(const ScalarFieldHandle& field)
+void IsoSurface::find_seed_from_value(const ScalarFieldHandle& /*field*/)
 {
     NOT_FINISHED("IsoSurface::find_seed_from_value");
 #if 0

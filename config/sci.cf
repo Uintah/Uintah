@@ -104,12 +104,38 @@ AllTarget(lib)							@@\
 
 lib:	objs
 
+#ifdef SCI_PrelinkCommand
+#define PreLink(objs)SCI_PrelinkCommand objs
+#else
+#define PreLink(objs)@XCOMM no prelink
+#endif
+
 #define SCIObjLibraryTarget(libname,objlist)                            @@\
 AllTarget(Concat(lib,libname.o))                                        @@\
                                                                         @@\
 Concat(lib,libname.o): objlist                                          @@\
 	$(RM) $@                                                        @@\
+	PreLink(objlist)						@@\
 	$(LDR) -o $@ objlist
 
 #endif
 
+
+/*
+ * NormalLibraryTarget - generate rules to create a library.
+ */
+#ifndef SCINormalLibraryTarget
+#define	SCINormalLibraryTarget(libname,objlist)				@@\
+AllTarget(Concat(lib,libname.a))					@@\
+									@@\
+Concat(lib,libname.a): objlist						@@\
+	$(RM) $@							@@\
+	PreLink(objlist)						@@\
+	$(AR) $@ objlist						@@\
+	RanLibrary($@)
+#endif /* NormalLibraryTarget */
+
+
+clean::
+	$(RM) -r ii_files
+	$(RM) -f ILDUMPS

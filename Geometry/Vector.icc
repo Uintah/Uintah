@@ -91,7 +91,7 @@ inline double Dot(const Vector& v1, const Vector& v2)
 inline double Dot(const Vector& v, const Point& p)
 {
     ASSERTL4(!v.uninit && !p.uninit);
-    return v._x*p._x+v._y*p._y+v._z*p._z;
+    return v.x()*p.x()+v.y()*p.y()+v.z()*p.z();
 }
 
 inline double Vector::length() const

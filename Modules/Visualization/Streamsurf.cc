@@ -401,7 +401,6 @@ void Streamsurf::geom_moved(int axis, double dist, const Vector& delta,
 		slider1_dist=0.01*l;
 	    else if(slider1_dist > l)
 		slider1_dist=l;
-	    break;
 	}
 	break;
     }

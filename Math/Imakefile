@@ -7,4 +7,4 @@ SRCS = Mat.cc MusilRNG.cc TrigTable.cc
 LIBNAME = Math
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

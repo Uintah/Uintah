@@ -16,4 +16,4 @@ SRCS = BaseWidget.cc \
 LIBNAME = Widgets
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

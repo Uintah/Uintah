@@ -29,7 +29,7 @@ public:
     double length() const;
     double length2() const;
     friend double Dot(const Vector&, const Vector&);
-    friend double Dot(const Point&, const Vector&);
+//    friend double Dot(const Point&, const Vector&);
     friend double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
     Vector operator*(const double) const;
@@ -45,11 +45,11 @@ public:
     friend Vector Cross(const Vector&, const Vector&);
     friend Vector Abs(const Vector&);
     void x(double);
-    double x() const;
+    inline double x() const;
     void y(double);
-    double y() const;
+    inline double y() const;
     void z(double);
-    double z() const;
+    inline double z() const;
     void rotz90(const int);
     Point point() const;
     

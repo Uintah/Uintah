@@ -11,4 +11,4 @@ SRCS = Args.cc ArgProcessor.cc BitArray1.cc Debug.cc \
 LIBNAME = Classlib
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

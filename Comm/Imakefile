@@ -7,4 +7,4 @@ SRCS = MessageBase.cc
 LIBNAME = Comm
 
 SCIDependTarget($(SRCS))
-NormalLibraryTarget($(LIBNAME),$(OBJS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

@@ -170,6 +170,6 @@ void Hedgehog::execute()
     }
 }
 
-void Hedgehog::geom_moved(int, double, const Vector& delta, void*)
+void Hedgehog::geom_moved(int, double, const Vector&, void*)
 {
 }
