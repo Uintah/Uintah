@@ -1054,11 +1054,15 @@ Patch::getCellIterator(const Box& b) const
    Point l = d_level->positionToIndex(b.lower());
    Point u = d_level->positionToIndex(b.upper());
    IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
-   IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
+   // high is the inclusive upper bound on the index.  In order for
+   // the iterator to work properly we need in increment all the
+   // indices by 1.
+   IntVector high(RoundDown(u.x())+1, RoundDown(u.y())+1, RoundDown(u.z())+1);
    low = Max(low, getCellLowIndex());
    high = Min(high, getCellHighIndex());
    return CellIterator(low, high);
 }
+
 CellIterator
 Patch::getExtraCellIterator(const Box& b) const
 {
@@ -1250,13 +1254,46 @@ NodeIterator Patch::getNodeIterator() const
   return NodeIterator(low, hi);
 }
 
+// This will return an iterator which will include all the nodes
+// contained by the bounding box.  If a dimension of the widget is
+// degenerate (has a thickness of 0) the nearest node in that
+// dimension is used.
 NodeIterator
 Patch::getNodeIterator(const Box& b) const
 {
+  // Determine if we are dealing with a 2D box.
    Point l = d_level->positionToIndex(b.lower());
    Point u = d_level->positionToIndex(b.upper());
-   IntVector low((int)l.x(), (int)l.y(), (int)l.z());
-   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   int low_x, low_y, low_z, high_x, high_y, high_z;
+   if (l.x() != u.x()) {
+     // Get the nodes that are included
+     low_x = RoundUp(l.x());
+     high_x = RoundDown(u.x()) + 1;
+   } else {
+     // Get the nodes that are nearest
+     low_x = RoundDown(l.x()+0.5);
+     high_x = low_x + 1;
+   }
+   if (l.y() != u.y()) {
+     // Get the nodes that are included
+     low_y = RoundUp(l.y());
+     high_y = RoundDown(u.y()) + 1;
+   } else {
+     // Get the nodes that are nearest
+     low_y = RoundDown(l.y()+0.5);
+     high_y = low_y + 1;
+   }
+   if (l.z() != u.z()) {
+     // Get the nodes that are included
+     low_z = RoundUp(l.z());
+     high_z = RoundDown(u.z()) + 1;
+   } else {
+     // Get the nodes that are nearest
+     low_z = RoundDown(l.z()+0.5);
+     high_z = low_z + 1;
+   }
+   IntVector low(low_x, low_y, low_z);
+   IntVector high(high_x, high_y, high_z);
    low = Max(low, getNodeLowIndex());
    high = Min(high, getNodeHighIndex());
    return NodeIterator(low, high);
