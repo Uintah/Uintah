@@ -68,11 +68,8 @@ private:
   void addBoxGeometry(GeomLines* edges, const Box& box,
 		      const Vector & change);
   bool getGrid();
-  virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
-  virtual void geom_pick(GeomPick* pick, void* userdata);
-  virtual void geom_pick(GeomPick* pick, ViewWindow* window,
-			 int data, const BState& bs);
-  
+  virtual void geom_pick(GeomPickHandle pick, void* userdata, GeomHandle picked);
+
   ArchiveIPort* in;
   GeometryOPort* ogeom;
   ColorMapIPort *inColorMap;
@@ -299,8 +296,9 @@ void PatchDataVisualizer::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-void PatchDataVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
-			       GeomObj* picked) {
+void PatchDataVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
+				    GeomHandle picked)
+{
 #if DEBUG
   cerr << "Caught pick event in PatchDataVisualizer!\n";
   cerr << "this = " << this << ", pick = " << pick << endl;
@@ -313,15 +311,6 @@ void PatchDataVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
   }
   else
     cerr<<"Not getting the correct data\n";
-}
-
-// this doesn't do anything.  They are only here to eliminate compiler warnings
-void PatchDataVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/) {
-}
-
-// this doesn't do anything.  They are only here to eliminate compiler warnings
-void PatchDataVisualizer::geom_pick(GeomPick* /*pick*/, ViewWindow* /*window*/,
-				    int /*data*/, const BState& /*bs*/) {
 }
 
 } // End namespace Uintah
