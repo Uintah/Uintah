@@ -114,8 +114,8 @@ DirectMapping::execute()
     error( "No source field handle or representation" );
     return;
   }
-  if (!sfHandle->basis_order() == -1) {
-    warning("No data basis in source field to interpolate from.");
+  if (sfHandle->basis_order() == -1) {
+    error("No data basis in source field to interpolate from.");
     return;
   }
 
@@ -126,7 +126,7 @@ DirectMapping::execute()
     return;
   }
   if (dfHandle->basis_order() == -1) {
-    warning("No data basis in destination field to interpolate to.");
+    error("No data basis in destination field to interpolate to.");
     return;
   }
 
