@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <errno.h>
 
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 16*1024
@@ -519,60 +520,92 @@ int Task::wait_for_task(Task* task)
     }
     return task->priv->retval;
 }
+#endif
 
 //
 // Semaphore implementation
 //
 struct Semaphore_private {
-    usema_t* semaphore;
+    int count;
+    int nwaiters;
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
 };
 
 Semaphore::Semaphore(int count)
 {
     priv=scinew Semaphore_private;
-    make_arena();
-    priv->semaphore=usnewsema(arena, count);
-    if(!priv->semaphore){
-	perror("usnewsema");
-	Task::exit_all(-1);
-    }
+    pthread_mutex_init(&priv->lock, NULL);
+    pthread_cond_init(&priv->cond, NULL);
+    priv->count=count;
+    priv->nwaiters=0;
 }
 
 Semaphore::~Semaphore()
 {
-    if(priv){
-	usfreesema(priv->semaphore, arena);
-	delete priv;
-    }
+    pthread_mutex_destroy(&priv->lock);
+    pthread_cond_destroy(&priv->cond);
 }
 
 void Semaphore::down()
 {
-    if(uspsema(priv->semaphore) == -1){
-	perror("upsema");
-	Task::exit_all(-1);
+    if(pthread_mutex_lock(&priv->lock) != 0){
+	perror("pthread_mutex_lock");
+	exit(1);
+    }
+    while(priv->count==0){
+	priv->nwaiters++;
+	if(pthread_cond_wait(&priv->cond, &priv->lock) != 0){
+	    perror("pthread_cond_wait");
+	    exit(1);
+	}
+	priv->nwaiters--;
+    }
+    priv->count--;
+    if(pthread_mutex_unlock(&priv->lock) != 0){
+	perror("pthread_mutex_unlock");
+	exit(1);
     }
 }
 
 int Semaphore::try_down()
 {
-    int stry=uscpsema(priv->semaphore);
-    if(stry == -1){
-	perror("upsema");
-	Task::exit_all(-1);
+    if(pthread_mutex_lock(&priv->lock) != 0){
+	perror("pthread_mutex_lock");
+	exit(1);
     }
-    return stry;
+    int result;
+    if(priv->count==0){
+	result=0;
+    } else {
+	priv->count--;
+	result=1;
+    }
+    if(pthread_mutex_unlock(&priv->lock) != 0){
+	perror("pthread_mutex_unlock");
+	exit(1);
+    }
+    return result;
 }
 
 void Semaphore::up()
 {
-    if(usvsema(priv->semaphore) == -1){
-	perror("usvsema");
-	Task::exit_all(-1);
+    if(pthread_mutex_lock(&priv->lock) != 0){
+	perror("pthread_mutex_lock");
+	exit(1);
+    }
+    priv->count++;
+    if(priv->nwaiters){
+	if(pthread_cond_signal(&priv->cond) != 0){
+	    perror("pthread_cond_signal");
+	    exit(1);
+	}
+    }
+    if(pthread_mutex_unlock(&priv->lock) != 0){
+	perror("pthread_mutex_unlock");
+	exit(1);
     }
 }
-
-#endif
 
 struct Mutex_private {
     pthread_mutex_t lock;
@@ -581,10 +614,7 @@ struct Mutex_private {
 Mutex::Mutex()
 {
     priv=new Mutex_private;
-    pthread_mutexattr_t attr;
-    attr.m_type=(pthread_mutextype)PTHREAD_MUTEXTYPE_FAST;
-    attr.m_flags=0;
-    pthread_mutex_init(&priv->lock, &attr);
+    pthread_mutex_init(&priv->lock, NULL);
 }
 
 Mutex::~Mutex()
@@ -627,10 +657,7 @@ struct ConditionVariable_private {
 ConditionVariable::ConditionVariable()
 {
     priv=scinew ConditionVariable_private;
-    pthread_condattr_t attr;
-    attr.c_type=(pthread_condtype)PTHREAD_CONDTYPE_FAST;
-    attr.c_flags=0;
-    pthread_cond_init(&priv->cond, &attr);
+    pthread_cond_init(&priv->cond, NULL);
 }
 
 ConditionVariable::~ConditionVariable()
