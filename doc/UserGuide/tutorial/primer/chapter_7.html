@@ -37,11 +37,20 @@
         <p><b><A name="section1">ShowDipoles</b><br></A>
 
 	<p>We will insert a module into the net from the previous
-	chapter (Figure 6.1).  This module is located under the BioPSE/Visualization 
+	chapter (<b>Figure 7.1</b>).  This module is located under the     	BioPSE/Visualization 
 	menu,and is called ShowDipoles. This is the ShowDipoles module that takes in a 
 	PointCloud of vectors (the SCIRun representation for a group of dipoles),
 	and allows the user to visualize and interact with those
-	dipoles.  
+	dipoles. 
+
+	</div>
+	<center>
+	<p><img height="506" width="500" src="images/figures/chap7-network.gif"><br>
+	<b>Figure 7.1</b></p>
+	</center>
+	<div align="left">
+	<p><br>
+
 	
 	<p>ShowDipoles has two outputs: a Field and a Geometry
 	object. The Geometry object attaches to the Viewer module,
@@ -56,7 +65,7 @@
 	<p>The latest version of the dipole positions and orientations sends
 	through the Field output port and into the ApplyFEMCurrentSource module.
 
-	<p>The ShowDipoles UI (<b>Figure 7.1</b>) has several
+	<p>The ShowDipoles UI (<b>Figure 7.2</b>) has several
 	configuration options for controlling how the dipoles are
 	graphically displayed.
  
@@ -72,19 +81,19 @@
 	</div>
 	<center>
 	<p><img height="152" width="232" src="images/figures/7_1.gif"><br>
-	<b>Figure 7.1</b></p>
+	<b>Figure 7.2</b></p>
 	</center>
 	<div align="left">
 	<p><br>
 
 	<p>We now have a complete forward finite element network as the result of 
-	connecting this last module, visualized in <b>Figure 7.2</b>. This is the same net that we have provided 
+	connecting this last module, visualized in <b>Figure 7.3</b>. This is the same net that we have provided 
 	in your source tree as:Packages/BioPSE/nets/forward-fem.net
 
       </div>
 	<center>
 	<p><img height="451" width="450" src="images/figures/7_2.gif"><br>
-	<b>Figure 7.2</b></p>
+	<b>Figure 7.3</b></p>
 	</center>
 	<div align="left">
 	<p><br>
