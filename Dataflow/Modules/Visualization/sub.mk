@@ -67,7 +67,7 @@ SRCS     += \
 PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Dataflow/Modules/Render Core/Datatypes Core/Containers \
 	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
-	Core/Persistent Core/Geometry Core/Util \
+	Core/Persistent Core/Geometry Core/2d Core/Util \
 	Core/TkExtensions Core/Algorithms/Visualization \
 	Core/GLVolumeRenderer Core/GeomInterface Core/Volume
 
