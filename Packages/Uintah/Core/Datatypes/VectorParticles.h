@@ -63,7 +63,7 @@ public:
   //////////
   // Constructor
   VectorParticles(const vector<ShareAssignParticleVariable<Vector> >& vectors,
-		  PSet* pset, LevelP l );
+		  PSet* pset);
 
   // GROUP: Destructors
   //////////
@@ -75,7 +75,6 @@ public:
   // return the Vectors
   vector<ShareAssignParticleVariable<Vector> >& get(){ return vectors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
-  LevelP getLevel(){ return level; }
 
   // GROUP: Modify
   //////////  
@@ -84,9 +83,6 @@ public:
   //////////  
   // Set the Vectors
   void Set(vector<ShareAssignParticleVariable<Vector> >& s){ vectors = s; }
-  //////////
-  // Set the Level
-  void Set( LevelP l){ level = l; }
 
   void AddVar( const ParticleVariable<Vector>& parts );
 
@@ -110,7 +106,6 @@ protected:
 
 private:
   PSetHandle psetH;
-  LevelP level;
   string _varname;
   int _matIndex;
   vector<ShareAssignParticleVariable<Vector> >  vectors;

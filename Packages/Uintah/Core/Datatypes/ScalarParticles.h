@@ -62,7 +62,7 @@ public:
   //////////
   // Constructor
   ScalarParticles(const vector<ShareAssignParticleVariable<double> >& scalars,
-		  PSet* pset, LevelP level  );
+		  PSet* pset);
 
   // GROUP: Destructors
   //////////
@@ -74,7 +74,6 @@ public:
   // return the Scalars
   vector<ShareAssignParticleVariable<double> >& get(){ return scalars; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
-  LevelP getLevel(){ return level; }
 
   // GROUP: Modify
   //////////  
@@ -83,9 +82,6 @@ public:
   //////////  
   // Set the Scalars
   void Set(vector<ShareAssignParticleVariable<double> >& s){ scalars = s; }
-  //////////
-  // Set the Level
-  void Set( LevelP l){ level = l; }
   //////////
   // Are these particles from a new archive?
 
@@ -101,7 +97,6 @@ public:
 
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
-  LevelP get_level () const { return level; }
 
 protected:
   bool have_minmax;
@@ -111,7 +106,6 @@ protected:
 
 private:
   PSetHandle psetH;
-  LevelP level;
   string _varname;
   int _matIndex;
   vector<ShareAssignParticleVariable<double> >  scalars;

@@ -34,8 +34,8 @@ VectorParticles::VectorParticles()
 
 VectorParticles::VectorParticles(
 		 const vector<ShareAssignParticleVariable<Vector> >& vectors,
-		 PSet* pset, LevelP l) :
-  have_minmax(false), psetH(pset), vectors(vectors), level(l)
+		 PSet* pset) :
+  have_minmax(false), psetH(pset), vectors(vectors)
 {
 }
 
