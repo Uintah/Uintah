@@ -849,7 +849,8 @@ proc writeSubnetOnDisk { id } {
     if { [info exists Subnet(Subnet${id}_Filename)] } {
 	set filename $Subnet(Subnet${id}_Filename)
     }
-    set dir [file join [lrange [file split $filename] 0 end-1]]
+    set dir [lrange [file split $filename] 0 end-1]
+    set dir [eval file join $dir]
     catch "file mkdir $dir"
     if { [validDir $dir] } {
 	writeNetwork $filename $id
@@ -868,9 +869,11 @@ proc writeSubnets { file subnet_ids } {
 	    if { ![isaSubnetIcon $module] } continue
 	    set sub_id $Subnet(${module}_num)
 	    set subname $Subnet(Subnet${sub_id}_Name)
+	    puts "id: $sub_id name: $subname $alreadyWrittenToDisk"
 	    if { [string equal $Subnet(Subnet${sub_id}_State) "ondisk"] } {
 		if { ($sub_id != 0) && \
 		     ([lsearch $alreadyWrittenToDisk $subname] == -1) } {
+		    puts "writing $sub_id"
 		    lappend alreadyWrittenToDisk $subname
 		    
 		    writeSubnetOnDisk $sub_id
