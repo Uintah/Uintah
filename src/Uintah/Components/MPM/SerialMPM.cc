@@ -171,11 +171,16 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::AroundNodes, 1 );
 	    t->requires(old_dw, lb->pXLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
-			
 
 	    t->computes(new_dw, lb->gMassLabel, idx, patch );
 	    t->computes(new_dw, lb->gVelocityLabel, idx, patch );
 	    t->computes(new_dw, lb->gExternalForceLabel, idx, patch );
+
+            if (d_heatConductionInvolved) {
+              t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+              t->computes(new_dw, lb->gTemperatureLabel, idx, patch );
+            }
 	 }
 		     
 	 sched->addTask(t);
@@ -635,6 +640,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       ParticleVariable<double> pmass;
       ParticleVariable<Vector> pvelocity;
       ParticleVariable<Vector> pexternalforce;
+      ParticleVariable<double> pTemperature;
 
       old_dw->get(px,             lb->pXLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
@@ -649,11 +655,20 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<double> gmass;
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
+      NCVariable<double> gTemperature;
 
 //      std::cerr << "allocating grid variables" << std::endl;
       new_dw->allocate(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->allocate(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->allocate(externalforce, lb->gExternalForceLabel, vfindex, patch);
+
+      if (d_heatConductionInvolved) {
+        ParticleVariable<double> pTemperature;
+        NCVariable<double> gTemperature;
+        old_dw->get(pTemperature, lb->pTemperatureLabel, matlindex, patch,
+		  Ghost::AroundNodes, 1);
+        new_dw->allocate(gTemperature, lb->gTemperatureLabel, vfindex, patch);
+      }
 
       ParticleSubset* pset = px.getParticleSubset();
 #if 0
@@ -689,6 +704,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	       gmass[ni[k]] += pmass[idx] * S[k];
 	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
 	       externalforce[ni[k]] += pexternalforce[idx] * S[k];
+	       
+  	       if (d_heatConductionInvolved) {
+    	         gTemperature[ni[k]] += pTemperature[idx] * pmass[idx] * S[k];
+  	       }
 	    }
 	 }
       }
@@ -696,6 +715,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	 if(gmass[*iter] != 0.0){
 	    gvelocity[*iter] *= 1./gmass[*iter];
+	    if (d_heatConductionInvolved) {
+    	      gTemperature[*iter] /= gmass[*iter];
+	    }
 	 }
       }
 #if 0
@@ -728,6 +750,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       new_dw->put(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(externalforce, lb->gExternalForceLabel, vfindex, patch);
+      if (d_heatConductionInvolved) {
+        new_dw->put(gTemperature, lb->gTemperatureLabel, vfindex, patch);
+      }
     }
   }
 }
@@ -1296,6 +1321,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.74  2000/05/31 16:10:17  tan
+// Heat conduction computations included in interpolateParticlesToGrid().
+//
 // Revision 1.73  2000/05/31 00:34:43  tan
 // temp to tempRate
 //
