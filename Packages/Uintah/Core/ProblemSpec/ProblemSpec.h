@@ -87,6 +87,8 @@ WARNING
       ProblemSpecP getOptional(const std::string& name, std::string& value);
 
       
+      // these functions look for the value of tag named name and passes
+      // it back into value.  Returns 'this' if found, otherwise null
       ProblemSpecP get(const std::string& name, double& value);
       ProblemSpecP get(const std::string& name, int& value);
       ProblemSpecP get(const std::string& name, bool& value);
@@ -96,6 +98,19 @@ WARNING
       ProblemSpecP get(const std::string& name, Point& value);
       ProblemSpecP get(const std::string& name, vector<double>& value);   
       ProblemSpecP get(const std::string& name, vector<int>& value); 
+
+      // these functions look for the value of tag named name and passes
+      // it back into value.  If the value isn't there it will create a 
+      // node and insert it based on the default value
+      ProblemSpecP getWithDefault(const std::string& name, double& value, double defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, int& value, int defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, bool& value, bool defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, std::string& value, std::string defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, IntVector& value, IntVector defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, Vector& value, Vector& defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, Point& value, Point& defaultVal);
+      ProblemSpecP getWithDefault(const std::string& name, vector<double>& value, vector<double> defaultVal);   
+      ProblemSpecP getWithDefault(const std::string& name, vector<int>& value, vector<int> defaultVal); 
 
       void getAttributes(std::map<std::string,std::string>& value);
       bool getAttribute(const std::string& value, std::string& result);
