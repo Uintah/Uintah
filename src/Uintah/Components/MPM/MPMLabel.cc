@@ -69,7 +69,7 @@ MPMLabel::MPMLabel()
   pExternalForceLabel = scinew VarLabel( "p.externalforce",
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pXLabel = scinew VarLabel( "p.x", ParticleVariable<Point>::getTypeDescription(),
+  pXLabel = scinew VarLabel("p.x",ParticleVariable<Point>::getTypeDescription(),
 			VarLabel::PositionVariable);
   
   pTemperatureLabel = scinew VarLabel( "p.temperature",
@@ -250,6 +250,10 @@ MPMLabel::MPMLabel()
   // Cell centered variables
   cBurnedMassLabel = scinew VarLabel( "c.burnedMass",
 			CCVariable<double>::getTypeDescription() );
+  cVelocityLabel = scinew VarLabel( "c.velocity",
+			CCVariable<Vector>::getTypeDescription() );
+  cMassLabel = scinew VarLabel( "c.mass",
+			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
 
@@ -368,6 +372,8 @@ MPMLabel::~MPMLabel()
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
   delete cBurnedMassLabel;
+  delete cVelocityLabel;
+  delete cMassLabel;
 
   delete delTAfterConstitutiveModelLabel;
   delete delTAfterFractureLabel;
@@ -401,6 +407,11 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.43  2000/12/01 22:02:47  guilkey
+// Made the scheduling of each task a function.  This was done to make
+// scheduleTimeAdvance managable, as well as to make it easier to create
+// an integrated MPM and CFD code.
+//
 // Revision 1.42  2000/11/21 20:51:02  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major

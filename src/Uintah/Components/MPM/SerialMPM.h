@@ -237,6 +237,101 @@ public:
 		  DataWarehouseP& /*old_dw*/,
 		  DataWarehouseP& new_dw);
 
+  void scheduleComputeNodeVisibility(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
+
+  void scheduleInterpolateParticlesToGrid(const Patch* patch,
+					  SchedulerP&,
+					  DataWarehouseP&,
+					  DataWarehouseP&);
+
+  void scheduleComputeHeatExchange(const Patch* patch,
+				   SchedulerP&,
+				   DataWarehouseP&,
+				   DataWarehouseP&);
+
+  void scheduleExMomInterpolated(const Patch* patch,
+				 SchedulerP&,
+				 DataWarehouseP&,
+				 DataWarehouseP&);
+
+  void scheduleComputeStressTensor(const Patch* patch,
+				   SchedulerP&,
+				   DataWarehouseP&,
+				   DataWarehouseP&);
+
+  void scheduleComputeInternalForce(const Patch* patch,
+				    SchedulerP&,
+				    DataWarehouseP&,
+				    DataWarehouseP&);
+
+  void scheduleComputeInternalHeatRate(const Patch* patch,
+				       SchedulerP&,
+				       DataWarehouseP&,
+				       DataWarehouseP&);
+
+  void scheduleSolveEquationsMotion(const Patch* patch,
+				    SchedulerP&,
+				    DataWarehouseP&,
+				    DataWarehouseP&);
+
+  void scheduleSolveHeatEquations(const Patch* patch,
+				  SchedulerP&,
+				  DataWarehouseP&,
+				  DataWarehouseP&);
+
+  void scheduleIntegrateAcceleration(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
+
+  void scheduleIntegrateTemperatureRate(const Patch* patch,
+				        SchedulerP&,
+				        DataWarehouseP&,
+				        DataWarehouseP&);
+
+  void scheduleExMomIntegrated(const Patch* patch,
+			       SchedulerP&,
+			       DataWarehouseP&,
+			       DataWarehouseP&);
+
+  void scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
+					       SchedulerP&,
+					       DataWarehouseP&,
+					       DataWarehouseP&);
+
+  void scheduleComputeMassRate(const Patch* patch,
+			       SchedulerP&,
+			       DataWarehouseP&,
+			       DataWarehouseP&);
+
+  void scheduleCrackGrow(const Patch* patch,
+			 SchedulerP&,
+			 DataWarehouseP&,
+			 DataWarehouseP&);
+
+  void scheduleStressRelease(const Patch* patch,
+			     SchedulerP&,
+			     DataWarehouseP&,
+			     DataWarehouseP&);
+
+  void scheduleComputeCrackSurfaceContactForce(const Patch* patch,
+					       SchedulerP&,
+					       DataWarehouseP&,
+					       DataWarehouseP&);
+
+  void scheduleCarryForwardVariables(const Patch* patch,
+				     SchedulerP&,
+				     DataWarehouseP&,
+				     DataWarehouseP&);
+
+  void scheduleInterpolateParticlesForSaving(const Patch* patch,
+					     SchedulerP&,
+					     DataWarehouseP&,
+					     DataWarehouseP&);
+
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);
 	 
@@ -257,6 +352,11 @@ public:
    
 //
 // $Log$
+// Revision 1.63  2000/12/01 22:02:47  guilkey
+// Made the scheduling of each task a function.  This was done to make
+// scheduleTimeAdvance managable, as well as to make it easier to create
+// an integrated MPM and CFD code.
+//
 // Revision 1.62  2000/11/21 20:51:02  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major

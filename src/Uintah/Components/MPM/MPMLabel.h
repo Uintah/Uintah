@@ -18,8 +18,6 @@ namespace Uintah {
       void registerPermanentParticleState(int i,const VarLabel* l,
 					  const VarLabel* lp);
 
-      //      static const MPMLabel* getLabels();
-
       const VarLabel* delTAfterConstitutiveModelLabel;
       const VarLabel* delTAfterFractureLabel;
       const VarLabel* delTAfterCrackSurfaceContactLabel;
@@ -109,6 +107,12 @@ namespace Uintah {
       const VarLabel* gWeightLabel; //for who knows what?
       
       const VarLabel* cBurnedMassLabel; //for burn models
+      const VarLabel* cVelocityLabel; //for interaction with ICE
+      const VarLabel* cVelocityMELabel; //for interaction with ICE
+      const VarLabel* cMassLabel; //for interaction with ICE
+
+      const VarLabel* fVelocityLabel; //for interaction with ICE
+      const VarLabel* fMassLabel; //for interaction with ICE
 
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
@@ -126,6 +130,11 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.37  2000/12/01 22:02:47  guilkey
+// Made the scheduling of each task a function.  This was done to make
+// scheduleTimeAdvance managable, as well as to make it easier to create
+// an integrated MPM and CFD code.
+//
 // Revision 1.36  2000/11/21 20:51:02  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major
