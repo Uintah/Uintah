@@ -243,7 +243,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 }
 
 bool Variable::emitRLE(ostream& /*out*/, const IntVector& l,
-		       const IntVector& h, DOM_Element* /*varnode*/)
+		       const IntVector& h, DOMElement* /*varnode*/)
 {
   return false; // not supported by default
 }

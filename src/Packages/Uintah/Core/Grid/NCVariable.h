@@ -140,7 +140,7 @@ WARNING
     { return getHighIndex(); }
 
     virtual void emitNormal(ostream& out, const IntVector& l, const IntVector& h,
-			    DOM_Element* /*varnode*/)
+			    DOMElement* /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
@@ -150,7 +150,7 @@ WARNING
     }
       
     virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
-			 DOM_Element* /*varnode*/)
+			 DOMElement* /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){

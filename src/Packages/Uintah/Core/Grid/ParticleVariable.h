@@ -138,9 +138,9 @@ public:
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
   virtual void emitNormal(ostream& out, const IntVector& l,
-			  const IntVector& h, DOM_Element* varnode);
+			  const IntVector& h, DOMElement* varnode);
   virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
-		       DOM_Element* varnode);
+		       DOMElement* varnode);
   
   virtual void readNormal(istream& in, bool swapBytes);
   virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
@@ -447,7 +447,7 @@ template<class T>
   template<class T>
   void
   ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,
-				  const IntVector&, DOM_Element* varnode)
+				  const IntVector&, DOMElement* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
 
@@ -479,7 +479,7 @@ template<class T>
   template<class T>
   bool
   ParticleVariable<T>::emitRLE(ostream& out, const IntVector& l,
-			       const IntVector& h, DOM_Element* varnode)
+			       const IntVector& h, DOMElement* varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if (findNode("numParticles", varnode) == 0) {
