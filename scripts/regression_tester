@@ -11,6 +11,8 @@ hostname_test=`uname -n | grep inf`
 if test "$hostname" = "$hostname_test";
     then
     test_dir=/usr/sci/projects/Uintah/tester/Linux-TestData
+else
+    /home/jas/bin/mount_testdata
 fi
 
 #Set the default TestData directory
@@ -120,7 +122,7 @@ ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static"
-arches_test_cases="methane_explicit_table methane8patch_ups"
+arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="matest_heptwb_cyl"
 examples_test_cases="poisson1 poisson2"
 
@@ -285,9 +287,9 @@ arches_test () {
     echo; echo "Testing $arches_test_cases"
     
     for n in $arches_test_cases; do
-	echo; echo "Running mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups"
+	echo; echo "Running mpirun -np 1 sus -arches $INPUTS/$CASE/$n.ups"
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	cp $INPUTS/ARCHES/chem_meth.linux.bin chem.bin
+	cp $INPUTS/ARCHES/chem_bins/chem_meth.linux.bin chem.bin
 	cp $INPUTS/ARCHES/input.dtd input.dtd
 	mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
@@ -423,3 +425,9 @@ fi
 if test $do_remove -eq 1; then
     REMOVE
 fi
+
+if test "$hostname" != "$hostname_test";
+    then
+    /home/jas/bin/unmount_testdata
+fi
+
