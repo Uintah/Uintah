@@ -27,7 +27,7 @@ main(int argc, char** argv)
 		z=z*2-1;
 		double th=atan2(y, x);
 		double r=sqrt(x*x+y*y);
-		Vector v(sin(th)*r, cos(th)*r, .0);
+		Vector v(sin(th)*r, -cos(th)*r, .1);
 		field->grid(i,j,k)=v;
 	    }
 	}
