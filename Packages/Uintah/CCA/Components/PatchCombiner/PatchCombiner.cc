@@ -11,7 +11,8 @@
 using namespace Uintah;
 
 PatchCombiner::PatchCombiner(const ProcessorGroup* world, string udaDir)
-  : udaDir_(udaDir), dataArchive_(0), dw_(0), world_(world), timeIndex_(0)
+  : UintahParallelComponent(world), udaDir_(udaDir), dataArchive_(0),
+    dw_(0), world_(world), timeIndex_(0)
 {
   delt_label = VarLabel::create("delT", delt_vartype::getTypeDescription());
 }

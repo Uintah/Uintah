@@ -1,6 +1,7 @@
 #ifndef UINTAH_HOMEBREW_Component_PatchCombiner_H
 #define UINTAH_HOMEBREW_Component_PatchCombiner_H
 
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -40,7 +41,7 @@ WARNING
   
 ****************************************/
 
-   class PatchCombiner : public SimulationInterface {
+   class PatchCombiner : public SimulationInterface, public UintahParallelComponent {
    public:
      PatchCombiner(const ProcessorGroup* myworld, string udaDir);
      
