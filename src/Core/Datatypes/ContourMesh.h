@@ -31,16 +31,16 @@ struct IndexPair {
 public:
   IndexPair() {}
   IndexPair(Data first, Data second)
-    : first_(first), second_(second) {}
+    : first(first), second(second) {}
   IndexPair(const IndexPair &copy) 
-    : first_(copy.first_), second_(copy.second_) {}
+    : first(copy.first), second(copy.second) {}
   ~IndexPair() {}
   
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX ( Piostream &, 
 					      IndexPair<Data> & ); 
   
-  Data first_;
-  Data second_;
+  Data first;
+  Data second;
 };
 
 #define INDEXPAIR_VERSION 1
@@ -51,8 +51,8 @@ void Pio(Piostream &stream, IndexPair<Data> &data)
   stream.begin_class("IndexPair", INDEXPAIR_VERSION);
 
   // IO data members, in order
-  Pio(stream,data.first_);
-  Pio(stream,data.second_);
+  Pio(stream,data.first);
+  Pio(stream,data.second);
 
   stream.end_class();  
 }
@@ -90,19 +90,19 @@ public:
   virtual ~ContourMesh() {}
 
   node_iterator node_begin() const { return 0; }
-  node_iterator node_end() const 
-    { return NodeIterator<index_type>((unsigned)nodes_.size()); }
+  node_iterator node_end() const { return (unsigned)nodes_.size(); }
   edge_iterator edge_begin() const { return 0; }
-  edge_iterator edge_end() const 
-    { return EdgeIterator<index_type>((unsigned)edges_.size()); }
+  edge_iterator edge_end() const { return (unsigned)edges_.size(); }
   face_iterator face_begin() const { return 0; }
   face_iterator face_end() const { return 0; }
   cell_iterator cell_begin() const { return 0; }
   cell_iterator cell_end() const { return 0; }
 
   //! get the mesh statistics
-  unsigned get_number_nodes() const { return (unsigned)nodes_.size(); }
-  unsigned get_number_edges() const { return (unsigned)edges_.size(); }
+  unsigned nodes_size() const { return (unsigned)nodes_.size(); }
+  unsigned edges_size() const { return (unsigned)edges_.size(); }
+  unsigned faces_size() const { return 0; }
+  unsigned cells_size() const { return 0; }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
@@ -111,7 +111,7 @@ public:
 
   //! get the child elements of the given index
   void get_nodes(node_array &a, edge_index i) const
-    { a[0] = edges_[i].first_; a[1] = edges_[i].second_; } 
+    { a[0] = edges_[i].first; a[1] = edges_[i].second; } 
   void get_nodes(node_array &, face_index) const {}
   void get_nodes(node_array &, cell_index) const {}
   void get_edges(edge_array &, face_index) const {}

@@ -14,6 +14,8 @@
 #include <Core/Datatypes/ContourMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Geometry/Vector.h>
+#include <float.h>  // for DBL_MAX
 #include <iostream>
 
 
@@ -41,7 +43,7 @@ bool
 ContourMesh::locate(node_index &idx, const Point &p) const
 {
   node_iterator ni = node_begin();
-  node_iterator found = node_begin();
+  idx = *node_begin();
 
   if (ni==node_end())
     return false;
@@ -52,19 +54,54 @@ ContourMesh::locate(node_index &idx, const Point &p) const
   for (; ni != node_end(); ++ni) {
     if ( (p-nodes_[*ni]).length2() < closest ) {
       closest = (p-nodes_[*ni]).length2();
-      found = ni;
+      idx = *ni;
     }
   }
-
-  idx = *found;
 
   return true;
 }
 
 bool
-ContourMesh::locate(edge_index &, const Point &) const
+ContourMesh::locate(edge_index &idx, const Point &p) const
 {
-  return false;
+  edge_iterator ei;
+  double cosa, closest=DBL_MAX;
+  node_array nra;
+  double dist1, dist2, dist3, dist4;
+  Point n1,n2,q;
+
+  if (ei==edge_end())
+    return false;
+  
+  for (ei = edge_begin(); ei != edge_end(); ++ei) {
+    get_nodes(nra,*ei);
+
+    n1 = nodes_[nra[0]];
+    n2 = nodes_[nra[1]];
+
+    dist1 = (p-n1).length();
+    dist2 = (p-n2).length();
+    dist3 = (n1-n2).length();
+
+    cosa = Dot(n1-p,n1-n2)/((n1-p).length()*dist3);
+
+    q = n1 + (n1-n2) * (n1-n2)/dist3;
+
+    dist4 = (p-q).length();
+
+    if ( (cosa > 0) && (cosa < dist3) && (dist4 < closest) ) {
+      closest = dist4;
+      idx = *ei;
+    } else if ( (cosa < 0) && (dist1 < closest) ) {
+      closest = dist1;
+      idx = *ei;
+    } else if ( (cosa > dist3) && (dist2 < closest) ) {
+      closest = dist2;
+      idx = *ei;
+    }
+  }
+
+  return true;
 }
 
 #define CONTOURMESH_VERSION 1
