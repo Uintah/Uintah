@@ -47,6 +47,8 @@ public:
 
  private:
 
+  friend const TypeDescription* fun_getTypeDescription(fflux*); 
+
 };
 
 template <class T>
