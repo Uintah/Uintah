@@ -136,10 +136,14 @@ public:
   double getCriticalPathCost() const
   { return m_criticalPathCost; }
 private:
-  // Creates a graph from an array of documents.
-  // Each document contains node information for a sub-set
-  // of the graph, but they should all contain the same edges.
-  TaskGraph(std::list<DOM_Document> xmlDoc);
+  // Creates an empty graph
+  TaskGraph();
+
+  // read the nodes from the xml document and create them in the graph
+  void readNodes(DOM_Document xmlDoc);
+
+  // read the edges from the xml document and create them in the graph
+  void readEdges(DOM_Document xmlDoc);
 
   // Compute the maximum paths above and below each
   // node as well as the critical path cost.

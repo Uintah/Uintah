@@ -29,6 +29,8 @@ static const char* getColor(float percent /* max incl path / critical path */,
 static const char* getHidden(float percent /* max incl path / critical path */,
 			     float thresholdPercent);
 
+bool DaVinci::doExclusion = false;
+
 DaVinci*
 DaVinci::run()
 {
@@ -134,7 +136,10 @@ DaVinci::setGraph(const TaskGraph* graph)
   for (list<Task*>::const_iterator task_iter = tasks.begin();
        task_iter != tasks.end(); task_iter++) {
 
-    if (!first_node)
+   if (doExclusion && ((*task_iter)->getMaxPathPercent() < (*task_iter)->getGraph()->getThresholdPercent()))
+    continue;
+
+   if (!first_node)
       graph_str << ',';
     else
       first_node = false;
@@ -143,6 +148,8 @@ DaVinci::setGraph(const TaskGraph* graph)
   }
   graph_str << "]))\n";
 
+  //cout << graph_str.str() << endl;
+  
   writeline(m_toDV, graph_str.str());
   string response = readline(m_fromDV);
   if (response != "ok")
@@ -162,6 +169,17 @@ DaVinci::setOrientation(Orientation orientation)
   }
   cmd << ")))\n";
 
+  writeline(m_toDV, cmd.str());
+  string response = readline(m_fromDV);
+  if (response != "ok")
+    cout << "daVinci said: " << response << endl;
+}
+
+void
+DaVinci::setFontSize(int font_size)
+{
+  ostringstream cmd;
+  cmd << "set(font_size(" << font_size << "))\n";
   writeline(m_toDV, cmd.str());
   string response = readline(m_fromDV);
   if (response != "ok")
@@ -269,7 +287,7 @@ void DaVinci::parseAnswer(char* cmd, std::list<char*>& args)
 static
 ostream&
 operator<<(ostream& out, const Task* task)
-{
+{  
   out << "l(\"" << task->getName()
       << "\",n(\"\",[a(\"OBJECT\",\"" << task->getName()
       << "\"),";
@@ -280,7 +298,10 @@ operator<<(ostream& out, const Task* task)
   const list<Edge*> dependency_edges = task->getDependencyEdges();
   for (list<Edge*>::const_iterator dep_edge_iter = dependency_edges.begin();
        dep_edge_iter != dependency_edges.end(); dep_edge_iter++) {
-    if (!first_edge)
+    if (DaVinci::doExclusion && ((*dep_edge_iter)->getTarget()->getMaxPathPercent() < (*dep_edge_iter)->getGraph()->getThresholdPercent()))
+      continue; // JUST TESTING -- NEED TO CHANGE BACK
+
+   if (!first_edge)
       out << ',';
     else
       first_edge = false;

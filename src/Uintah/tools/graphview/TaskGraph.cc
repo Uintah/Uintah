@@ -74,7 +74,10 @@ TaskGraph::inflate(string xmlDir)
     return 0;
   }
 
-  list<DOM_Document> xmlDocs;
+  DOM_Document firstDoc;
+
+  TaskGraph* pGraph = scinew TaskGraph();
+  
   DOMParser parser;
   parser.setDoValidation(false);
   SimpleErrorHandler handler;
@@ -82,67 +85,78 @@ TaskGraph::inflate(string xmlDir)
 
   int process = 0;
   string xmlFileName;
+  FILE* tstFile;
   do {
     ostringstream pname;
     pname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
     xmlFileName = xmlDir + pname.str();
-    if (fopen(xmlFileName.c_str(), "r") == NULL)
+    
+    if ((tstFile = fopen(xmlFileName.c_str(), "r")) == NULL)
       break;
+    fclose(tstFile);
+
     parser.parse(xmlFileName.c_str());
     if (handler.foundError) {
       cerr << "Error parsing taskgraph file " << xmlFileName << endl;
       return 0;
     }
-    xmlDocs.push_back(parser.getDocument());
+
+    if (process == 0)
+      firstDoc = parser.getDocument();
+
+    pGraph->readNodes(parser.getDocument());
     process++;
   } while (process < 100000 /* it will most likely always break out of loop
 			       -- but just so it won't ever be caught in an
-			       infinite loop */);
-
+			       infinite loop */);  
   if (process == 0) {
     cerr << "Task graph data does not exist:" << endl;
     cerr << xmlFileName << " does not exist." << endl;
+    delete pGraph;
     return 0;
   }
   
-  return scinew TaskGraph(xmlDocs);
-}
-
-TaskGraph::TaskGraph(std::list<DOM_Document> xmlDocs)
-  : m_criticalPathCost(0), m_thresholdPercent(0)
-{
-  if (xmlDocs.size() < 1) return;
-  DOM_Element docElement;
-  
-  // get the nodes from each of the documents
-  for (list<DOM_Document>::iterator p_xmlDoc = xmlDocs.begin();
-       p_xmlDoc != xmlDocs.end(); p_xmlDoc++) {    
-   docElement = (*p_xmlDoc).getDocumentElement();
-   DOM_Node nodes = findNode("Nodes", docElement);
-    for (DOM_Node node = findNode("node", nodes); node != 0;
-	 node = findNextNode("node", node)) {
-      string task_name;
-      double task_duration;
-      get(node, "name", task_name);
-      get(node, "duration", task_duration);
-
-      Task* task;
-      if ((task = findTask(task_name)) != NULL) {
-	// task already exists
-	// It may be a reduction task... in any case
-	// make its duration the maximum of given durations.
-	task->testSetDuration(task_duration); 
-      }
-      else {
-	task = scinew Task(task_name, task_duration, this);
-	m_tasks.push_back(task);
-	m_taskMap[task_name] = task;
-      }
-    }
-  }
-
   // get the edges from the last document
   // (they should all contain the same edges)
+  pGraph->readEdges(firstDoc);
+  
+  return pGraph;
+}
+
+TaskGraph::TaskGraph()
+  : m_criticalPathCost(0), m_thresholdPercent(0)
+{
+}
+
+void TaskGraph::readNodes(DOM_Document xmlDoc)
+{
+  DOM_Element docElement = xmlDoc.getDocumentElement();
+  DOM_Node nodes = findNode("Nodes", docElement);
+  for (DOM_Node node = findNode("node", nodes); node != 0;
+       node = findNextNode("node", node)) {
+    string task_name;
+    double task_duration;
+    get(node, "name", task_name);
+    get(node, "duration", task_duration);
+    
+    Task* task;
+    if ((task = findTask(task_name)) != NULL) {
+      // task already exists
+      // It may be a reduction task... in any case
+      // make its duration the maximum of given durations.
+      task->testSetDuration(task_duration); 
+    }
+    else {
+      task = scinew Task(task_name, task_duration, this);
+      m_tasks.push_back(task);
+      m_taskMap[task_name] = task;
+    }
+  }
+}
+
+void TaskGraph::readEdges(DOM_Document xmlDoc)
+{
+  DOM_Element docElement = xmlDoc.getDocumentElement();
   DOM_Node edges = findNode("Edges", docElement);
   for (DOM_Node node = findNode("edge", edges); node != 0;
        node = findNextNode("edge", node)) {
@@ -151,7 +165,9 @@ TaskGraph::TaskGraph(std::list<DOM_Document> xmlDocs)
     get(node, "source", source);
     get(node, "target", target);
     Task* sourceTask = m_taskMap[source];
-    if (sourceTask != NULL) {
+    Task* targetTask = m_taskMap[target];
+
+    if (sourceTask != NULL && targetTask != NULL) {
       Edge* edge = sourceTask->addDependency(m_taskMap[target]);
       if (edge) {
 	m_edges.push_back(edge);
@@ -159,7 +175,10 @@ TaskGraph::TaskGraph(std::list<DOM_Document> xmlDocs)
       }
     }
     else {
-      cerr << "ERROR: Undefined task, '" << source << "'" << endl;
+      if (sourceTask == NULL)
+	cerr << "ERROR: Undefined task, '" << source << "'" << endl;
+      if (targetTask == NULL) 
+	cerr << "ERROR: Undefined task, '" << target << "'" << endl;
     }
   }
   cout << "Processed " << m_tasks.size() << " nodes and "
