@@ -119,7 +119,7 @@ ICE::~ICE()
  Function~  ICE::problemSetup--
  Purpose~  Read the inputfile 
 _____________________________________________________________________*/
-void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
+void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 		       SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
@@ -302,7 +302,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
  Function~  ICE::scheduleTimeAdvance--
  Purpose~  Schedule the main loop for ICE
 _____________________________________________________________________*/
-void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
+void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
 			      SchedulerP& sched, DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw)
 {
@@ -684,7 +684,7 @@ _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(
     const ProcessorGroup*,
     const Patch*    patch,
-    DataWarehouseP& old_dw,
+    DataWarehouseP& ,
     DataWarehouseP& new_dw)
 {
   cout << "Doing Compute Stable Timestep \t\t\t ICE" << endl;
@@ -741,7 +741,7 @@ void ICE::actuallyComputeStableTimestep(
  everywhere in the domain
 _____________________________________________________________________*/ 
 void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
-			     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+			     DataWarehouseP&, DataWarehouseP& new_dw)
 {
   cout << "Doing Initialize \t\t\t ICE" << endl;
   int numMatls    = d_sharedState->getNumICEMatls();
@@ -1265,6 +1265,17 @@ void ICE::computeFaceCenteredVelocities(
 #if 0
 /*`==========TESTING==========*/ 
     if (switchDebug_vel_FC ) {
+<<<<<<< ICE.cc
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex(); 
+    char description[50];
+    sprintf(description, "TOP_vel_FC_Mat_%d ",dwindex); 
+    printData( patch, 1, description, "rho_CC",      rho_CC);
+    printData( patch, 1, description, "rho_micro_CC",rho_micro_CC);
+    printVector( patch,1, description, "uvel_CC", 0, vel_CC);
+    printVector( patch,1, description, "vvel_CC", 1, vel_CC);
+    printVector( patch,1, description, "wvel_CC", 2, vel_CC);
+=======
       char description[50];
       sprintf(description, "TOP_vel_FC_Mat_%d ",dwindex); 
       printData( patch, 1, description, "rho_CC",      rho_CC);
@@ -1272,6 +1283,7 @@ void ICE::computeFaceCenteredVelocities(
       printVector( patch,1, description, "uvel_CC", 0, vel_CC);
       printVector( patch,1, description, "vvel_CC", 1, vel_CC);
       printVector( patch,1, description, "wvel_CC", 2, vel_CC);
+>>>>>>> 1.11
     }
  /*==========TESTING==========`*/
 #endif    
@@ -1797,9 +1809,8 @@ void ICE::computeDelPressAndUpdatePressCC(
     single layer of ghostcells
     12/28/00    Changed the way press_FC is computed
   ---------------------------------------------------------------------  */
-void ICE::computePressFC(
-                    const ProcessorGroup*,   const Patch* patch,
-			DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
+			 DataWarehouseP&, DataWarehouseP& new_dw)
 {
   cout << "Doing press_face_MM \t\t\t\t ICE" << endl;
   int numMatls = d_sharedState->getNumMatls();
@@ -3834,7 +3845,7 @@ void    ICE::readData(const Patch* patch, int include_GC,
 {
   int i, j, k,xLo, yLo, zLo, xHi, yHi, zHi;
   IntVector lowIndex, hiIndex; 
-  char text[100],c;
+  char text[100];
   int int_c;
   double number;
   FILE *fp;
