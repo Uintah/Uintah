@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 
 using std::ostream;
 using std::string;
@@ -44,7 +45,7 @@ class Patch;
       
       ****************************************/
     
-   class VarLabel {
+   class VarLabel : private RefCounted {
    public:
       enum VarType {
 	 Normal,
@@ -56,9 +57,8 @@ class Patch;
       // Ensure the uniqueness of VarLabel names (same name, same object).
       static VarLabel* create(const string&, const TypeDescription*,
 			      VarType vartype = Normal);
-     
 
-      ~VarLabel();
+      static bool destroy(const VarLabel* label);
 
       // VarLabel(const string&, const TypeDescription*);
       
@@ -123,6 +123,8 @@ class Patch;
       // You must use VarLabel::create.
       VarLabel(const string&, const TypeDescription*,
 	       VarType vartype = Normal);
+      // You must use destroy.
+      ~VarLabel();   
      
       const TypeDescription* d_td;
       VarType                d_vartype;
@@ -134,7 +136,7 @@ class Patch;
       bool                   d_allowMultipleComputes;
      
       static map<string, VarLabel*> allLabels;     
-      
+     
       VarLabel(const VarLabel&);
       VarLabel& operator=(const VarLabel&);
    };
