@@ -425,8 +425,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set w .ui[modname]
 	if [ expr [winfo exists $w] ] {
 
-	    $w config -cursor watch
-	    update idletasks
+	    set_watch_cursor
 	    $this-c update_tree root root
 	}
     }
@@ -874,8 +873,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		    set name [string replace $name $pos $pos "."]
 		}
 
-		$w config -cursor watch
-		update idletasks
+		set_watch_cursor
 		$this-c update_tree $name $parent 
 	    }
 	}
@@ -1116,6 +1114,16 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	grid rowconfigure $f 0 -weight 1
 	grid columnconfigure $f 0 -weight 1
 	return $f.tree
+    }
+
+    method set_watch_cursor {} {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    global current_cursor
+	    $w config -cursor watch
+	    update idletasks
+	}
     }
 
     method reset_cursor {} {

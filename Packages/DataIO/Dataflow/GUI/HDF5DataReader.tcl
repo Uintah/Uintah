@@ -175,8 +175,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$w config -cursor watch; \
-	              update idletasks; \
+	    -command "set_watch_cursor; \
                       $this-c update_file 0; \
                       wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
@@ -481,8 +480,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set allow_selection false
 
 	if { [string length [set $this-dumpname]] > 0 } {
-	    $w config -cursor watch
-	    update idletasks
+	    set_watch_cursor
                       
 	    # Make sure the dump file is up to date.
 	    $this-c check_dumpfile 0
@@ -574,8 +572,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    $w config -cursor watch
-	    update idletasks
+	    set_watch_cursor
 
 	    set sd [$w.sd childsite]
 	    set listbox $sd.listbox
@@ -1426,6 +1423,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		-from 1 -to [expr $max-$min]
 
         }
+    }
+
+    method set_watch_cursor {} {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+	    global current_cursor
+	    $w config -cursor watch
+	    update idletasks
+	}
     }
 
     method reset_cursor {} {
