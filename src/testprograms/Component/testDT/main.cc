@@ -47,9 +47,9 @@ using namespace SCIRun;
 using namespace std;
 
 
-const int SIZE=40; //80000; //maximum message size
-const int nServer=5; //number of servers in each process
-const int nMsg=10;  //number of messages sent from one point to another point.
+int SIZE=200; //80000; //maximum message size
+int nServer=3; //number of servers in each process
+int nMsg=5;  //number of messages sent from one point to another point.
 
 //this method creates a message body (id+message), 
 //or does error check
@@ -61,6 +61,7 @@ void create_check_message(int id, DTMessage *msg, bool errcheck=false){
     for(int i=sizeof(int); i<len; i++){
       if(msg->buf[i]!=char((id+i)%128)){
 	cerr<<"Error: wrong message body"<<endl;
+	break;
       }
     }
   }
@@ -92,10 +93,10 @@ public:
     srand(clock());
     
     //sending log:
-    //from me to mpi_size*nServer
+    //from me to mpi_size*nServer DT points
     
     //recving log
-    //from mpi_size*nServer to me
+    //from mpi_size*nServer DT points to me
     
     int *log=new int[mpi_size*nServer];
     for(int i=0; i<mpi_size*nServer; i++) log[i]=0;
@@ -117,21 +118,20 @@ public:
 	//update the sender's log
 	if(log[ipt]>=nMsg) continue;
 	//cerr<<"send message to : iaddr/ipt/log[ipt]="<<iaddr<<"/"<<ipt<<"/"<<log[ipt]<<endl;
-
 	
 	DTMessage *msg=new DTMessage;
 	create_check_message(log[ipt], msg);
 	msg->recver=eplist[ipt];
 	msg->to_addr=addrlist[iaddr];
 	msg->autofree=true;
-	//cerr<<"Send a message:"<<endl;
 	//msg->display();
 	me->putMessage(msg);
+	
 
 	log[ipt]++;
 	//if(iter++%10==0)sleep(1); 
       }
-      cerr<<"Sending job is done"<<endl;
+      //cerr<<"Sending job is done"<<endl;
       sema->up();
     }
     else{
@@ -181,7 +181,7 @@ public:
 	//msg->display();
 	delete msg;
       }
-      cerr<<"Recving job is done"<<endl;
+      //cerr<<"Recving job is done"<<endl;
       sema->up();
     }
     delete []log;
@@ -196,8 +196,34 @@ private:
 };
 
 
+void usage(char* progname)
+{
+    cerr << "usage: " << progname << " [options]\n";
+    cerr << "valid options are:\n";
+    cerr << "  -p # - number of DT points (default="<<nServer<<")\n";
+    cerr << "  -s # - maximum message size (default="<<SIZE<<")\n";
+    cerr << "  -n # - number of messages (default="<<nMsg<<")\n";
+    cerr << "\n";
+}
+
+
 int main(int argc, char* argv[])
 {
+  for(int i=1;i<argc;i+=2){
+    string arg(argv[i]);
+    if(arg == "-p") nServer=atoi(argv[i+1]);
+    else if(arg == "-s") SIZE=atoi(argv[i+1]);
+    else if(arg == "-n") nMsg=atoi(argv[i+1]);
+    else{
+      MPI_Init(&argc,&argv);
+      int mpi_rank;
+      MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+      if(mpi_rank==0) usage("mpirun -np # testDT");
+      MPI_Finalize();
+      return 0;
+    }
+  }
+  
   Semaphore *sema;
   
   using std::string;
@@ -226,10 +252,10 @@ int main(int argc, char* argv[])
 		  addrlist, sizeof(DTAddress), MPI_CHAR,   MPI_COMM_WORLD);
     
     if(mpi_rank==0){
-	cerr<<"gathered addresses are:"<<endl;
-	for(int i=0; i<mpi_size; i++){
-	  cerr<<"addr "<<i<<"="<<addrlist[i].ip<<":"<<addrlist[i].port<<endl;
-	}
+      //cerr<<"gathered addresses are:"<<endl;
+      for(int i=0; i<mpi_size; i++){
+	//cerr<<"addr "<<i<<"="<<addrlist[i].ip<<":"<<addrlist[i].port<<endl;
+      }
     }
     
     DTPoint **eplist=new (DTPoint*)[nServer*mpi_size];
@@ -238,11 +264,11 @@ int main(int argc, char* argv[])
 		  eplist, sizeof(DTPoint *)*nServer, MPI_CHAR,  MPI_COMM_WORLD);
     
     if(mpi_rank==0){
-      cerr<<"gathered eps are:"<<endl;
+      //cerr<<"gathered eps are:"<<endl;
       for(int i=0; i<mpi_size; i++){
-	cerr<<"rank="<<i<<endl;
+	//cerr<<"rank="<<i<<endl;
 	for(int j=0; j<nServer; j++){
-	  cerr<<"ep"<<j<<"="<<eplist[i*nServer+j]<<endl;
+	  //cerr<<"ep"<<j<<"="<<eplist[i*nServer+j]<<endl;
 	}
       }
     }
@@ -266,7 +292,9 @@ int main(int argc, char* argv[])
       sema->down();
     }
     delete sema;
-    cerr<<"testDT done on rank="<<mpi_rank<<endl;
+    cerr<<"testDT done at rank="<<mpi_rank<<endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(mpi_rank==0) cerr<<"Successful"<<endl;
   }catch(...) {
     cerr << "Caught unexpected exception!\n";
     abort();
