@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
@@ -13,7 +14,7 @@ namespace Uintah {
   class ProcessorGroup;
   class DetailedTasks;
   class Scheduler;
-
+  class VarLabel;
 /****************************************
 
 CLASS
@@ -51,10 +52,14 @@ WARNING
     virtual void assignResources(DetailedTasks& tg,
 				 const ProcessorGroup* resources) = 0;
     virtual int getPatchwiseProcessorAssignment(const Patch* patch,
-						const ProcessorGroup* resources) = 0;
-    virtual int getOldProcessorAssignment(const Patch* patch,
-    			          const ProcessorGroup* resources) 
-      { return getPatchwiseProcessorAssignment(patch, resources); }
+						const ProcessorGroup* pg) = 0;
+    virtual int getOldProcessorAssignment(const VarLabel* var,
+					  const Patch* patch, const int matl, 
+					  const ProcessorGroup* pg) 
+      { return getPatchwiseProcessorAssignment(patch, pg); }
+    virtual bool needRecompile(double time, double delt, const GridP& grid) 
+      { return false; }
+    virtual void problemSetup(ProblemSpecP& pspec) {};
     virtual void createNeighborhood(const GridP& grid, const ProcessorGroup*,
 				    const Scheduler* sc) = 0;
     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
