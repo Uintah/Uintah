@@ -62,7 +62,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
 {
   if (!emit_taskgraph)
     return;
-  
+
   if (!m_outPort->wasOutputTimestep())
     return;
   
@@ -111,8 +111,8 @@ SchedulerCommon::useInternalDeps()
 }
 
 void
-SchedulerCommon::emitNode(const DetailedTask* task, double start, double duration)
-{
+SchedulerCommon::emitNode(const DetailedTask* task, double start, double duration, double execution_duration, long long execution_flops, long long communication_flops)
+{  
     if (m_nodes == NULL)
     	return;
     
@@ -122,6 +122,12 @@ SchedulerCommon::emitNode(const DetailedTask* task, double start, double duratio
     appendElement(node, "name", task->getName());
     appendElement(node, "start", start);
     appendElement(node, "duration", duration);
+    if (execution_duration > 0)
+      appendElement(node, "execution_duration", execution_duration);
+    if (execution_flops > 0)
+      appendElement(node, "execution_flops", (long)execution_flops);
+    if (communication_flops > 0)
+      appendElement(node, "communication_flops", (long)communication_flops);
 }
 
 void
