@@ -15,7 +15,7 @@
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/PlaneDpy.h>
 #include <Core/Thread/Thread.h>
-#include <nrrd.h>
+#include <teem/nrrd.h>
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -90,7 +90,7 @@ int get_material_nrrd(char * filename,
   // Open the nrrd
   Nrrd *nrrd = nrrdNew();
   // load the nrrd in
-  if (nrrdLoad(nrrd,filename)) {
+  if (nrrdLoad(nrrd,filename,0)) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
     free(err);
@@ -154,7 +154,7 @@ int get_alpha_nrrd(char * filename, Array1<AlphaPos> &alphas) {
   // Open the nrrd
   Nrrd *nrrd = nrrdNew();
   // load the nrrd in
-  if (nrrdLoad(nrrd,filename)) {
+  if (nrrdLoad(nrrd,filename,0)) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
     free(err);
@@ -226,7 +226,7 @@ VolumeVisBase *create_volume_from_nrrd(char *filename,
   // Do the nrrd stuff
   Nrrd *n = nrrdNew();
   // load the nrrd in
-  if (nrrdLoad(n,filename)) {
+  if (nrrdLoad(n,filename,0)) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
     free(err);

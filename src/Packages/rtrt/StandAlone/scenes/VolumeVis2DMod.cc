@@ -15,7 +15,7 @@
 #include <Packages/rtrt/Core/HVolumeVis2D.h>
 #include <Packages/rtrt/Core/CutPlane.h>
 #include <Core/Thread/Thread.h>
-#include <nrrd.h>
+#include <teem/nrrd.h>
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -51,7 +51,7 @@ VolumeVis2D *create_volume_from_nrrd2( char *filename1, char *filename2,
   // Do the nrrd stuff
   Nrrd *n1 = nrrdNew();
   // load the nrrd in
-  if( nrrdLoad( n1, filename1 )) {
+  if( nrrdLoad( n1, filename1, 0 )) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd " << filename1 << ": " << err << "\n";
     free( err );
@@ -60,7 +60,7 @@ VolumeVis2D *create_volume_from_nrrd2( char *filename1, char *filename2,
   }
   Nrrd *n2 = nrrdNew();
   // load the second nrrd in
-  if( nrrdLoad( n2, filename2 )) {
+  if( nrrdLoad( n2, filename2,0 )) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd " << filename2 << ": " << err << "\n";
     free( err );
@@ -250,7 +250,7 @@ VolumeVis2D *create_volume_from_nrrd(char *filename,
   // Do the nrrd stuff
   Nrrd *n = nrrdNew();
   // load the nrrd in
-  if (nrrdLoad(n,filename)) {
+  if (nrrdLoad(n,filename,0)) {
     char *err = biffGet(NRRD);
     cerr << "Error reading nrrd "<< filename <<": "<<err<<"\n";
     free(err);
