@@ -4,7 +4,6 @@
 #include "Connectivity.h"
 #include "CrackFace.h"
 #include "CellsNeighbor.h"
-#include "BoundaryBand.h"
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -241,135 +240,78 @@ void NormalFracture::computeConnectivity(
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
     {
-      bool do_continue;
       particleIndex pIdx_p, pIdx_pg;
-      do {
-	pIdx_p = *iter;
-	pIdx_pg = pIdxEx[pIdx_p];
-
-	pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
-
-	// This mess is just to replace "if (pIsolated_pg[pIdx_pg]) continue"
-	// which the LANL compiler can't handle because of an apparent compiler
-	// bug.
-	bool do_continue = pIsolated_pg[pIdx_pg];
-	if (do_continue) iter++;
-      }
-      while(do_continue);
+      pIdx_p = *iter;
+      pIdx_pg = pIdxEx[pIdx_p];
+      
+      pIsolated_p_new[pIdx_p] = pIsolated_pg[pIdx_pg];
+      
+      if( !pIsolated_pg[pIdx_pg] ) {
     
-      pContactNormal_p_new[pIdx_p] = zero;
+        pContactNormal_p_new[pIdx_p] = zero;
     
-      const Point& part = pX_pg[pIdx_pg];
+        const Point& part = pX_pg[pIdx_pg];
 
-      patch->findCell(pX_p[pIdx_p],cellIdx);
-      particles.clear();
-      particles.buildIn(cellIdx,lattice);
-      int particlesNumber = particles.size();
+        patch->findCell(pX_p[pIdx_p],cellIdx);
+        particles.clear();
+        particles.buildIn(cellIdx,lattice);
+        int particlesNumber = particles.size();
 
-      IntVector nodeIdx[8];
-      patch->findNodesFromCell(cellIdx,nodeIdx);
+        IntVector nodeIdx[8];
+        patch->findNodesFromCell(cellIdx,nodeIdx);
     
-      int conn[8];
-      for(int k=0;k<8;++k) {
-        Point node = patch->nodePosition(nodeIdx[k]);
+        int conn[8];
+        for(int k=0;k<8;++k) {
+          Point node = patch->nodePosition(nodeIdx[k]);
 
-	if(pBoundaryBand_pg[pIdx_pg].numCracks() == 0 &&
-	   gBoundaryBand[nodeIdx[k]].numCracks() == 0)
-	{
-	  conn[k] = 1;
-	  continue;
-	}
-    
-        //visibility
-	int part_pBB = pBoundaryBand_pg[pIdx_pg].inside(pIdx_pg);
-	int part_gBB = gBoundaryBand[nodeIdx[k]].inside(pIdx_pg);
-	int node_pBB = pBoundaryBand_pg[pIdx_pg].inside(node);
-	int node_gBB = gBoundaryBand[nodeIdx[k]].inside(node);
-	
-	if(pBoundaryBand_pg[pIdx_pg].numCracks() == 0) {
-	  if(node_gBB) {
-	    if(part_gBB) conn[k] = 1;
-	    else conn[k] = 0;
+  	  if(pBoundaryBand_pg[pIdx_pg].numCracks() == 0 &&
+	     gBoundaryBand[nodeIdx[k]].numCracks() == 0)
+	  {
+	    conn[k] = 1;
 	  }
 	  else {
-	    if(part_gBB) conn[k] = 0;
-	    else conn[k] = 1;
-	  }
-	}
-	else {
-	  if(gBoundaryBand[nodeIdx[k]].numCracks() == 0) {
-	    if(part_pBB) {
-	      if(node_pBB) conn[k] = 1;
-	      else conn[k] = 0;
-	    }
-	    else {
-	      if(node_pBB) conn[k] = 0;
-	      else conn[k] = 1;
-	    }
-	  }
-	  else {
-	    if(part_pBB) {
-	      if(node_pBB) conn[k] = 1;
-	      else conn[k] = 0;
-	    }
-	    else {
-	      if(node_pBB) conn[k] = 0;
-	      else {
-  	        if(node_gBB) {
-	          if(part_gBB) conn[k] = 1;
-		  else conn[k] = 0;
-	        }
-	        else {
-	          if(part_gBB) conn[k] = 0;
-		  else conn[k] = 1;
-	        }
-	      }
-	    }
-	  }
-	} //visibility
-	if(conn[k] == 1)continue;
+	    conn[k] = 1;
+	    VisibilityConnection(
+	        particles, pIdx_pg, node,
+		pIsBroken_pg, pCrackNormal_pg, pVolume_pg, pX_pg, conn[k]);
 
-
-        //contact
-        if( pTouchNormal_pg[pIdx_pg].length2() > 0.5 ) {
-	  if( Dot(node-part,pTouchNormal_pg[pIdx_pg]) > 0 ) {
-	    conn[k] = 2;
-	    pContactNormal_p_new[pIdx_p] = pTouchNormal_pg[pIdx_pg];
-	    continue;
+	    if(conn[k] == 0) BoundaryBandConnection(
+	        pBoundaryBand_pg, gBoundaryBand, 
+		pIdx_pg, part, nodeIdx[k], node, conn[k]);
+		
+            if(conn[k] == 0) ContactConnection(
+	        particles, pIdx_pg, node,
+		pTouchNormal_pg, pVolume_pg, pX_pg,
+		conn[k], pContactNormal_p_new[pIdx_p]);
           }
-	}
-
-        for(int i=0; i<particlesNumber; i++) {
-          int pidx_pg = particles[i];
-          if(pidx_pg == pIdx_pg) continue;
-          double r = pow(pVolume_pg[pidx_pg],0.333333)/2;
-          double r2 = 3*r*r;
-	
-          if( pTouchNormal_pg[pidx_pg].length2() > 0.5 ) {
-            //Point O = pX_pg[pidx_pg] + pTouchNormal_pg[pidx_pg] * r;
-            const Point& O = pX_pg[pidx_pg];
-            if( !particles.visible(part,node,O,pTouchNormal_pg[pidx_pg],r2) )
+        } //loop over of k
+      
+/* 
+        if(pIsBroken_pg[pIdx_pg]) {
+          for(int k=0;k<8;++k) {
+            Point node = patch->nodePosition(nodeIdx[k]);
+	    if(Dot(node-part,pCrackNormal_pg[pIdx_pg]) > 0 &&
+	       conn[k] == 1)
 	    {
-	      conn[k] = 2;
-	      pContactNormal_p_new[pIdx_p] = pTouchNormal_pg[pidx_pg];
-	      break;
+	      cout<<"particle: "<<part<<"   node "<<k<<" : "<<node<<endl;
 	    }
-	  }
+          }
         }
-      } //loop over of k
+*/
 
-      Connectivity connectivity(conn);
-      pConnectivity_p_new[pIdx_p] = connectivity.flag();
+        Connectivity connectivity(conn);
+        pConnectivity_p_new[pIdx_p] = connectivity.flag();
 
 /*
-      int numConnected = 0;
-      for(int k=0;k<8;++k) {
-        if(conn[k] == 1) numConnected++;
-      }
-      if(numConnected<1) {
-        pIsolated_p_new[pIdx_p] = 1;
-      }
+        int numConnected = 0;
+        for(int k=0;k<8;++k) {
+          if(conn[k] == 1) numConnected++;
+        }
+        if(numConnected<1) {
+          pIsolated_p_new[pIdx_p] = 1;
+        }
 */
+      } //if isolated
     }
   
     new_dw->put(pConnectivity_p_new, lb->pConnectivityLabel);
@@ -613,6 +555,7 @@ void NormalFracture::computeCrackExtension(
       }
 
       if(pIsBroken_pg[pIdx_pg]) continue;
+      if(pExtensionDirection_pg[pIdx_pg].length2()>0.5) continue;
       
       ParticlesNeighbor particles;
       lattice.getParticlesNeighbor(pX_p[pIdx_p], particles);
@@ -669,6 +612,196 @@ NormalFracture(ProblemSpecP& ps) : Fracture(ps)
 NormalFracture::~NormalFracture()
 {
 }
+
+void NormalFracture::BoundaryBandConnection(
+   const vector<BoundaryBand>& pBoundaryBand_pg,
+   const Array3<BoundaryBand>& gBoundaryBand,
+   particleIndex pIdx_pg,
+   const Point& part,
+   const IntVector& nodeIdx,
+   const Point& node,
+   int& conn) const
+{
+  int part_pBB = pBoundaryBand_pg[pIdx_pg].inside(pIdx_pg);
+  int part_gBB = gBoundaryBand[nodeIdx].inside(part);
+  int node_pBB = pBoundaryBand_pg[pIdx_pg].inside(node);
+  int node_gBB = gBoundaryBand[nodeIdx].inside(node);
+	
+  if(pBoundaryBand_pg[pIdx_pg].numCracks() == 0) {
+    if(node_gBB) {
+      if(part_gBB) {
+        conn = 1;
+	return;
+      }
+      else {
+        conn = 0;
+        return;
+      }
+    }
+    else {
+      if(part_gBB) {
+        conn = 0;
+        return;
+      }
+      else {
+        conn = 1;
+        return;
+      }
+    }
+  }
+  else {
+    if(gBoundaryBand[nodeIdx].numCracks() == 0) {
+      if(part_pBB) {
+	if(node_pBB) {
+	  conn = 1;
+	  return;
+	}
+	else {
+	  conn = 0;
+	  return;
+	}
+      }
+      else {
+        if(node_pBB) {
+	  conn = 0;
+	  return;
+	}
+        else {
+	  conn = 1;
+	  return;
+	}
+      }
+    }
+    else {
+      if(part_pBB) {
+        if(node_pBB) {
+	  conn = 1;
+	  return;
+	}
+        else {
+	  conn = 0;
+	  return;
+	}
+      }
+      else {
+        if(node_pBB) {
+	  conn = 0;
+	  return;
+	}
+        else {
+          if(node_gBB) {
+            if(part_gBB) {
+	      conn = 1;
+	      return;
+	    }
+            else {
+	      conn = 0;
+	      return;
+	    }
+	  }
+          else {
+            if(part_gBB) {
+	      conn = 0;
+	      return;
+	    }
+            else {
+	      conn = 1;
+	      return;
+	    }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+void NormalFracture::VisibilityConnection(
+   const ParticlesNeighbor& particles,
+   particleIndex pIdx_pg,
+   const Point& node,
+   const ParticleVariable<int>& pIsBroken_pg,
+   const ParticleVariable<Vector>& pCrackNormal_pg,
+   const ParticleVariable<double>& pVolume_pg,
+   const ParticleVariable<Point>& pX_pg,
+   int& conn) const
+{
+  const Point& part = pX_pg[pIdx_pg];
+
+  if(pIsBroken_pg[pIdx_pg]) {
+    Vector dis = node - part;
+    double vdis = Dot( pCrackNormal_pg[pIdx_pg], dis );
+    if( vdis > 0 ) {
+      conn = 0;
+      return;
+    }
+  }
+  
+  int particlesNumber = particles.size();
+  for(int i=0; i<particlesNumber; i++) {
+    int pidx_pg = particles[i];
+    if(pIsBroken_pg[pidx_pg]) {
+      if(pidx_pg != pIdx_pg) {
+        double r = connectionRadius(pVolume_pg[pidx_pg]);
+	double r2 = r*r;
+	const Point& O = pX_pg[pidx_pg];
+	if( !particles.visible(part,node,O,pCrackNormal_pg[pidx_pg],r2) ) {
+	  conn = 0;
+	  return;
+	}
+      }
+    }
+  }
+}
+
+
+void NormalFracture::ContactConnection(
+   const ParticlesNeighbor& particles,
+   particleIndex pIdx_pg,
+   const Point& node,
+   const ParticleVariable<Vector>& pTouchNormal_pg,
+   const ParticleVariable<double>& pVolume_pg,
+   const ParticleVariable<Point>& pX_pg,
+   int& conn,
+   Vector& pContactNormal) const
+{
+  const Point& part = pX_pg[pIdx_pg];
+
+  if( pTouchNormal_pg[pIdx_pg].length2() > 0.5 ) {
+    Vector dis = node-part;
+    double vdis = Dot(pTouchNormal_pg[pIdx_pg], dis);
+    if( vdis > 0 ) {
+      conn = 2;
+      pContactNormal = pTouchNormal_pg[pIdx_pg];
+      return;
+    }
+  }
+
+  int particlesNumber = particles.size();
+  for(int i=0; i<particlesNumber; i++) {
+    int pidx_pg = particles[i];
+    if(pidx_pg != pIdx_pg) {
+      double r = connectionRadius(pVolume_pg[pidx_pg]);
+      double r2 = r*r;
+      if( pTouchNormal_pg[pidx_pg].length2() > 0.5 ) {
+        const Point& O = pX_pg[pidx_pg];
+        if( !particles.visible(part,node,O,pTouchNormal_pg[pidx_pg],r2) )
+	{
+	  conn = 2;
+	  pContactNormal = pTouchNormal_pg[pidx_pg];
+	  return;
+        }
+      }
+    }
+  }
+}
+
+
+double NormalFracture::connectionRadius(double volume)
+{
+  return pow(volume,0.333333)/1.414;
+}
+
 
 //for debugging
 bool
