@@ -83,9 +83,6 @@ namespace SCIRun {
 #define IMAGE_DONE 7
 
 
-static map<string, ObjTag*>::iterator viter;
-
-
 int CAPTURE_Z_DATA_HACK = 0;
 
 static OpenGL* current_drawer=0;
@@ -179,6 +176,7 @@ OpenGL::~OpenGL()
     encoding_mpeg_ = false;
     EndMpeg();
   }
+  kill_helper();
 
   int r;
   while (send_mb.tryReceive(r)) ;
@@ -658,6 +656,10 @@ OpenGL::redraw_frame()
 {
   if (dead_) return;
   gui->lock();
+  if (dead_) { // ViewWindow was deleted from gui
+    gui->unlock(); 
+    return;
+  }
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
   if(!new_tkwin)
@@ -737,7 +739,7 @@ OpenGL::redraw_frame()
     //    cerr<<"creating new pbuffer: width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
     if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
-      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+      //      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
     } else {
       have_pbuffer_ = true;
     }
@@ -786,7 +788,6 @@ OpenGL::redraw_frame()
     bawgl->shutdown_ok();
   //  --  BAWGL  --
 #endif
-  // Compute znear and zfar...
 
   if(compute_depth(viewwindow, view, znear, zfar))
   {
@@ -1177,7 +1178,9 @@ OpenGL::redraw_frame()
       //gui->unlock();
       double realtime=t*frametime;
       if(nframes>1)
+      {
 	throttle.wait_for_time(realtime);
+      }
       //gui->lock();
       gui->execute("update idletasks");
 
@@ -1867,13 +1870,9 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 void
 ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
-  ObjTag* vis;
-
-  viter = visible.find(name);
-  if (viter != visible.end())
-  { // if found
-    vis = (*viter).second;
-    setState(drawinfo,to_string(vis->tagid));
+  map<string,int>::iterator tag_iter = obj_tag.find(name);      
+  if (tag_iter != obj_tag.end()) { // if found
+    setState(drawinfo,to_string((*tag_iter).second));
   }
 }
 
@@ -2168,6 +2167,12 @@ OpenGL::listvisuals(GuiArgs& args)
 void
 OpenGL::setvisual(const string& wname, int which, int width, int height)
 {
+  if (which >= visuals.size())
+  {
+    cerr << "Invalid OpenGL visual, using default.\n";
+    which = 0;
+  }
+
   tkwin=0;
   current_drawer=0;
 

@@ -45,6 +45,7 @@ SRCS     += \
 	$(SRCDIR)/Ball.cc\
 	$(SRCDIR)/BallAux.cc\
 	$(SRCDIR)/BallMath.cc\
+	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/Parser.cc\
@@ -66,9 +67,9 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes Core/GeomInterface
 
-INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE)
+INCLUDES += $(MPEG_INCLUDE) $(MAGICK_INCLUDE) $(TEEM_INCLUDE)
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MPEG_LIBRARY) $(MAGICK_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MPEG_LIBRARY) $(MAGICK_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 # CollabVis code begin
 ifeq ($(HAVE_COLLAB_VIS),yes)

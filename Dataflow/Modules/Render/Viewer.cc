@@ -53,6 +53,7 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
+#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 using std::cerr;
@@ -120,6 +121,12 @@ Viewer::Viewer(GuiContext* ctx)
 //----------------------------------------------------------------------
 Viewer::~Viewer()
 {
+  for(unsigned int i=0;i<view_window_.size();i++)
+  {
+    view_window_lock_.lock();
+    delete view_window_[i];
+    view_window_lock_.unlock();
+  }
 
 }
 //----------------------------------------------------------------------
@@ -276,13 +283,31 @@ Viewer::process_event()
   case MessageTypes::ViewWindowMouse:
     {
       ViewWindowMouseMessage* rmsg=(ViewWindowMouseMessage*)msg;
+      float NX = 1.0, NY = 1.0;
+      bool tracking = false;
       for(unsigned int i=0;i<view_window_.size();i++)
       {
 	ViewWindow* r=view_window_[i];
 	if(r->id == rmsg->rid)
 	{
 	  (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn, rmsg->time);
-	  break;
+	  if (i == 0) {
+	    tracking = true;
+	    r->NormalizeMouseXY(rmsg->x, rmsg->y, &NX, &NY);
+	  }
+	}
+      }
+      if (tracking) {
+	for(unsigned int i=0;i<view_window_.size();i++)
+	{
+	  ViewWindow* r=view_window_[i];
+	  r->track_view_window_0_.reset();
+	  if(r->id != rmsg->rid && r->track_view_window_0_.get())
+	  {
+	    int xx,yy;
+	    r->UnNormalizeMouseXY(NX,NY,&xx,&yy);
+	    (r->*(rmsg->handler))(rmsg->action, xx, yy, rmsg->state, rmsg->btn, rmsg->time);
+	  }
 	}
       }
     }
@@ -475,12 +500,16 @@ void Viewer::delete_patch_portnos(int portid)
 	  const string::size_type loc = si->getString().find_last_of('(');
 	  string newname =
 	    si->getString().substr(0, loc+1) + to_string(i) + ")";
-
+	  string cached_name = si->getString();
 	  // Do a rename here.
 	  for (unsigned int j = 0; j < view_window_.size(); j++)
 	  {
+	    // itemRenamed will set si->name_ = newname
+	    // so we need to reset it for other windows
+	    si->getString() = cached_name;
 	    view_window_[j]->itemRenamed(si, newname);
 	  }
+	  si->getString() = newname;
 	}
       }
     }
@@ -654,11 +683,25 @@ void Viewer::tcl_command(GuiArgs& args, void* userdata)
       return;
     }
     view_window_.push_back(scinew ViewWindow(this, gui, gui->createContext(args[2])));
-  }
-  else
-  {
+  } else if (args[1] == "deleteviewwindow") {
+    if(args.count() != 3)
+    {
+      args.error(args[1]+" must have a RID");
+      return;
+    }
+    unsigned int win = 0;
+    while (win<view_window_.size() && view_window_[win]->id!=args[2]) ++win;
+    if (win < view_window_.size()) {
+      gui->unlock();
+      delete_viewwindow(view_window_[win]);
+      gui->lock();
+    } else {
+      args.error(args[1]+": invalid ViewWindow: "+args[1]);
+    }
+  } else {
     Module::tcl_command(args, userdata);
   }
+
 }
 //----------------------------------------------------------------------
 void Viewer::execute()
@@ -821,18 +864,5 @@ void Viewer::flushPort(int portid)
 }
 
 
-//----------------------------------------------------------------------
-void Viewer::emit_vars(ostream& out, const string& midx, const string &prefix)
-{
-  ctx->emit(out, midx);
-  string viewwindowstr;
-  for(unsigned int i=0;i<view_window_.size();i++)
-  {
-    out << prefix << midx << " ui\n";
-    view_window_[i]->emit_vars(out,
-			       midx+string("-ViewWindow_")+to_string(i),
-			       prefix);
-  }
-}
 
 } // End namespace SCIRun
