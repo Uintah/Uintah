@@ -274,7 +274,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 bool 
 DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
-  string command = ("cd " + get_compile_dir() + "; gmake " + 
+  string command = ("cd " + get_compile_dir() + "; " + MAKE_CMMD + " " + 
 		    info.filename_ + ext);
 
   serr << "DynamicLoader - Executing: " << command << endl;

@@ -53,6 +53,8 @@
 @DEF_BABEL@
 @DEF_COLLAB_VIS@
 
+#define MAKE_CMMD "@MAKE@"
+
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
    it from  being included.  We don't use it anyway. */
 #define MPIPP_H
