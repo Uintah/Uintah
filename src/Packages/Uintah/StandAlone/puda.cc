@@ -334,7 +334,7 @@ int main(int argc, char** argv)
 			  min=Min(min, value[*iter]);
 			  max=Max(max, value[*iter]);
 			}
-			cout << "\t\t\t\tmin value: " << min << '\n';
+			 cout << "\t\t\t\tmin value: " << min << '\n';
 			cout << "\t\t\t\tmax value: " << max << '\n';
 		      }
 		    }
@@ -510,7 +510,6 @@ int main(int argc, char** argv)
 	catch (Exception& e) {
 	  cerr << "Caught directory making exception: " << e.message() << '\n';
 	}
-	if (t==4) break;
 	// for each level in the grid
 	for(int l=0;l<grid->numLevels();l++){
 	  LevelP level = grid->getLevel(l);
@@ -815,6 +814,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.8  2000/06/22 20:31:04  bigler
+// Removed a line of debugging code that inadvertently got looked over.
+//
 // Revision 1.7  2000/06/21 21:05:55  bigler
 // Made it so that when writing particle data it puts all the files for one timestep in a single subdirectory.
 // Also added command line options to output data on a range of timesteps.  This is good for all output formats.
