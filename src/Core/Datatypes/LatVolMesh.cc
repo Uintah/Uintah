@@ -13,6 +13,7 @@
  */
 
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <iostream>
 
 
@@ -181,18 +182,18 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
   result.z(min.z()+(max.z()-min.z())*.5);
 }
 
-inline void 
-LatVolMesh::locate_node(node_index &node, const Point &p) const
+inline bool
+LatVolMesh::locate(node_index &node, const Point &p) const
 {
-  double w[8];          // storage for weights
   node_array nodes;     // storage for node_indeces
   cell_index cell;
   double max;
   int loop;
 
   // locate the cell enclosing the point (including weights)
-  locate_cell(cell,p,w);
-
+  if (!locate(cell,p)) return false;
+  weight_array w;
+  calc_weights(this, cell, p, w);
   // get the node_indeces in this cell
   get_nodes(nodes,cell);
 
@@ -205,20 +206,21 @@ LatVolMesh::locate_node(node_index &node, const Point &p) const
       node=nodes[loop];
     }
   }
+  return true;
 }
 
-inline void 
-LatVolMesh::locate_edge(edge_index &, const Point &, double[2]) const
+inline bool 
+LatVolMesh::locate(edge_index &, const Point &) const
 {
 }
 
-inline void 
-LatVolMesh::locate_face(face_index &, const Point &, double[4]) const 
+inline bool
+LatVolMesh::locate(face_index &, const Point &) const 
 {
 }
 
-inline void 
-LatVolMesh::locate_cell(cell_index &cell, const Point &p, double w[8]) const
+inline bool
+LatVolMesh::locate(cell_index &cell, const Point &p) const
 {
   double xgap,ygap,zgap;
   Point min,max;
@@ -246,7 +248,7 @@ LatVolMesh::locate_cell(cell_index &cell, const Point &p, double w[8]) const
   max.x(min.x()+xgap);
   max.y(min.y()+ygap);
   max.z(min.z()+zgap);
-
+#if 0
   // use opposite corner volumes as weights, renormalized to unit
   w[0] = (max.x()-p.x())*fx*(max.y()-p.y())*fy*(max.z()-p.z())*fz*.001;
   w[1] = (p.x()-min.x())*fx*(max.y()-p.y())*fy*(max.z()-p.z())*fz*.001;
@@ -256,6 +258,7 @@ LatVolMesh::locate_cell(cell_index &cell, const Point &p, double w[8]) const
   w[5] = (p.x()-min.x())*fx*(max.y()-p.y())*fy*(p.z()-min.z())*fz*.001;
   w[6] = (max.x()-p.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
   w[7] = (p.x()-min.x())*fx*(p.y()-min.y())*fy*(p.z()-min.z())*fz*.001;
+#endif
 }
 
 #define LATVOLMESH_VERSION 1

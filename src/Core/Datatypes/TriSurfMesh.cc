@@ -133,6 +133,17 @@ TriSurfMesh::get_nodes(node_array &array, face_index idx) const
   array.push_back(faces_[idx * 3 + 2]);
 }
 
+void
+TriSurfMesh::get_nodes(node_array &array, cell_index cidx) const
+{
+#if 0 // hack to compile generic interpolate
+  face_index idx = (face_index)cidx;
+  array.push_back(faces_[idx * 3 + 0]);
+  array.push_back(faces_[idx * 3 + 1]);
+  array.push_back(faces_[idx * 3 + 2]);
+#endif
+}
+
 
 void
 TriSurfMesh::get_edges(edge_array &array, face_index idx) const
@@ -160,18 +171,18 @@ distance2(const Point &p0, const Point &p1)
 }
 
 
-void
-TriSurfMesh::locate(node_iterator &loc, const Point &p)
+bool
+TriSurfMesh::locate(node_index &loc, const Point &p) const
 {
   node_iterator ni = node_begin();
-  loc = ni;
+  loc = *ni;
   if (ni == node_end())
   {
-    return;
+    return false;
   }
 
   double min_dist = distance2(p, points_[*ni]);
-  loc = ni;
+  loc = *ni;
   ++ni;
 
   while (ni != node_end())
@@ -179,31 +190,35 @@ TriSurfMesh::locate(node_iterator &loc, const Point &p)
     const double dist = distance2(p, points_[*ni]);
     if (dist < min_dist)
     {
-      loc = ni;
+      loc = *ni;
     }
     ++ni;
   }
+  return true;
 }
 
 
-void
-TriSurfMesh::locate(edge_iterator &loc, const Point &)
+bool
+TriSurfMesh::locate(edge_index &loc, const Point &) const
 {
-  loc = edge_end();
+  loc = *edge_end();
+  return false;
 }
 
 
-void
-TriSurfMesh::locate(face_iterator &loc, const Point &)
+bool
+TriSurfMesh::locate(face_index &loc, const Point &) const
 {
-  loc = face_end();
+  loc = *face_end();
+  return false;
 }
 
 
-void
-TriSurfMesh::locate(cell_iterator &loc, const Point &)
+bool
+TriSurfMesh::locate(cell_index &loc, const Point &) const
 {
-  loc = cell_end();
+  loc = *cell_end();
+  return false;
 }
 
 
@@ -287,8 +302,9 @@ TriSurfMesh::inside4_p(int i, const Point &p)
 TriSurfMesh::node_index
 TriSurfMesh::add_find_point(const Point &p, double err)
 {
+#if 0 // locate needs an index not an iterator.
   node_iterator i;
-  locate(i, p);
+  locate(*i, p);
   if (i != node_end() || distance2(points_[*i], p) < err)
   {
     return *i;
@@ -298,6 +314,7 @@ TriSurfMesh::add_find_point(const Point &p, double err)
     points_.push_back(p);
     return points_.size() - 1;
   }
+#endif
 }
 
 

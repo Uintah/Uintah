@@ -13,6 +13,7 @@
 #define Datatypes_GenericField_h
 
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
@@ -88,8 +89,10 @@ public:
 private:
   //! generic interpolate object.
   struct GInterp : public InterpolateToScalar {
-    
+    GInterp(const GenericField<Mesh, FData> *f) :
+      f_(f) {}
     bool interpolate(const Point& p, double& value) const;
+    const GenericField<Mesh, FData> *f_;
   };
 
 
@@ -103,18 +106,37 @@ private:
 // internal interp object 
 template <class Mesh, class FData>
 bool 
-GenericField<Mesh, FData>::GInterp::interpolate(const Point& /*p*/, 
-						double& /*value*/) const
+GenericField<Mesh, FData>::GInterp::interpolate(const Point& p, 
+						double& value) const
 {
-  cerr << "Error: NO interp defined!" << endl;
-  return false;
+  bool rval = false;
+  switch (f_->data_at()) {
+  case Field::NODE :
+    {
+      LinearInterp<GenericField<Mesh, FData>, typename Mesh::node_index > ftor;
+      rval = SCIRun::interpolate(*f_, p, ftor);
+      if (rval) { value = ftor.result_; }
+    }
+    break;
+  case Field::EDGE:
+    break;
+  case Field::FACE:
+    break;
+  case Field::CELL:
+    break;
+  case Field::NONE:
+    cerr << "Error: Field data at location NONE!!" << endl;
+    return false;
+  } 
+
+  return rval;
 }
 
 template <class Mesh, class FData>
 InterpolateToScalar* 
 GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 {
-  return new GInterp();
+  return new GInterp(this);
 }
 
 #if defined(__sgi)  
