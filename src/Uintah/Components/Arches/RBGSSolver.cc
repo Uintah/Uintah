@@ -1090,11 +1090,22 @@ RBGSSolver::destroyMatrix()
 {
 }
 
-
-
+void 
+RBGSSolver::setPressMatrix(const ProcessorGroup* ,
+			    const Patch* patch,
+			    DataWarehouseP&,
+			    DataWarehouseP&,
+			    ArchesVariables* vars,
+			    const ArchesLabel* lab,
+			    int patchNumber)
+{
+}
 
 //
 // $Log$
+// Revision 1.26  2000/09/21 22:45:41  sparker
+// Towards compiling petsc stuff
+//
 // Revision 1.25  2000/09/21 21:45:05  rawat
 // added petsc parallel stuff
 //
