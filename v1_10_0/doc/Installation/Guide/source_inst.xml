@@ -15,8 +15,8 @@
   University of Utah. All Rights Reserved.
 -->
 
-<section id="sec.tarball_inst">
-<title>Installation from Source Code (Linux and <acronym>SGI</acronym>)</title>
+<section id="sec.source_inst">
+<title>Source Code (Linux and <acronym>SGI</acronym>)</title>
 <section>
 <title>Introduction</title>
 
@@ -24,19 +24,20 @@
 <ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
 later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
 make</ulink> (version 3.79 or later) must be present before proceeding
-with the tarball installation.
+with the source installation.
 </para>
 
 <para>
-Installation from tarballs consists of these steps:
+Installation from sources consists of these steps:
 <orderedlist>
 <listitem>
 <para>
 Installing, <emphasis>optionally</emphasis>, the <ulink
 url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
 library.  This library adds additional solvers to &sr;'s SolveMatrix
-module.  See <citetitle pubwork="section"><xref
-linkend="petsc" endterm="petsc.title"/></citetitle>.
+module.  Proceed with <citetitle pubwork="section"><xref
+linkend="sec.petsc" endterm="title.petsc"/></citetitle> if
+<acronym>PETSc</acronym> library support is needed.
 </para>
 </listitem>
 <listitem>
@@ -277,8 +278,8 @@ tarballs to reinstall.
 
 </section>
 
-<section>
-<title>Building &sr;</title>
+<section id="sec.build-sr">
+<title id="title.build-sr">Building &sr;</title>
 
 <orderedlist>
 
@@ -314,13 +315,15 @@ For &sr; to use the <acronym>PETSc</acronym> libraries the option
 <option>--with-lapack</option> and <option>--with-blas</option> must
 be used if the <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
 libraries are not in <filename>/usr/lib</filename>
-(Section&nbsp;<citetitle><xref endterm="petsc_sr_config.title"
-linkend="petsc_sr_config"/></citetitle> describes the options).  For example:
+(<citetitle><xref endterm="title.petsc_sr_config"
+linkend="sec.petsc_sr_config"/></citetitle> describes the options).  For example:
 <literallayout class="monospaced">
 ../src/configure \
   --with-thirdparty=/usr/local/&sr;/Third_Party/1.8.0/Irix/CC-32bit \
-  --enable-package="BioPSE MatlabInterface"
-  --with-unipetsc=/usr/local/petsc
+  --enable-package="BioPSE MatlabInterface" \
+  --with-unipetsc=/usr/local/petsc \
+  --with-blas=/usr/local/lib \
+  --with-lapack=/usr/local/lib
 </literallayout>
 </para>
 <para>
@@ -360,7 +363,7 @@ available for use by make.  Using this option on a multiprocessor
 machine will often significantly reduce the time to build &sr;.
 </para>
 <para>
-Be sure to read section&nbsp;<citetitle pubwork="section"><xref
+Be sure to read <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
 <link linkend="sec.starting">starting</link> &sr;.
 </para>
