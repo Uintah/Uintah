@@ -71,7 +71,7 @@ void GeomCone::adjust()
     }
     tilt=(bot_rad-top_rad)/axis.length2();
     Vector z(0,0,1);	
-    if(Abs(axis.y()) < 1.e-5){
+    if(Abs(axis.y())+Abs(axis.x()) < 1.e-5){
 	// Only in x-z plane...
 	zrotaxis=Vector(0,-1,0);
     } else {

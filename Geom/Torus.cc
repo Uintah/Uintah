@@ -120,19 +120,8 @@ GeomTorusArc::~GeomTorusArc()
 void GeomTorusArc::adjust()
 {
     axis.normalize();
-
-    Vector z(0,0,1), x(1,0,0);
-    if(Abs(axis.y())+Abs(axis.x()) < 1.e-5){
-	// Only in x-z plane...
-	zrotaxis=Vector(0,-1,0);
-    } else {
-	zrotaxis=Cross(axis, z);
-	zrotaxis.normalize();
-    }
-    double cangle=Dot(z, axis);
-    zrotangle=-Acos(cangle);
-
-    xrotangle=Acos(Dot(zero,zrotaxis))+Acos(Dot(x,zrotaxis));
+    zero.normalize();
+    yaxis=Cross(axis, zero);
 }
 
 GeomObj* GeomTorusArc::clone()

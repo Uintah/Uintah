@@ -59,8 +59,7 @@ public:
     Vector zero;
     double start_angle;
     double arc_angle;
-    Vector xrotaxis;
-    double xrotangle;
+    Vector yaxis;
 
     virtual void adjust();
     void move(const Point&, const Vector&, double, double,

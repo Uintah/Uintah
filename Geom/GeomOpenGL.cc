@@ -598,12 +598,23 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
     pre_draw(di, matl, 1);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
-    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-    glRotated(RtoD(xrotangle), 0, 0, 1);//xrotaxis.x(), xrotaxis.y(), xrotaxis.z());
+    double matrix[16];
+    matrix[0]=zero.x(); matrix[1]=zero.y(); matrix[2]=zero.z(); matrix[3]=0;
+    matrix[4]=yaxis.x();matrix[5]=yaxis.y();matrix[6]=yaxis.z();matrix[7]=0;
+    matrix[8]=axis.x(); matrix[9]=axis.y(); matrix[10]=axis.z();matrix[11]=0;
+    matrix[12]=0;       matrix[13]=0;       matrix[14]=0;       matrix[15]=1;
+    glMultMatrixd(matrix);
     di->polycount+=2*(nu-1)*(nv-1);
 
     // Draw the torus
-    SinCosTable tab1(nu, start_angle, start_angle+arc_angle);
+    double a1=start_angle;
+    double a2=start_angle-arc_angle;
+    if(a1 > a2){
+	double tmp=a1;
+	a1=a2;
+	a2=tmp;
+    }
+    SinCosTable tab1(nu, a1, a2);
     SinCosTable tab2(nv, 0, 2*Pi, rad2);
     SinCosTable tab2n(nv, 0, 2*Pi, rad2);
     int u,v;
