@@ -14,6 +14,7 @@
 
 #include <SCICore/Exceptions/Exception.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -27,10 +28,6 @@ using namespace std;
 using SCICore::Exceptions::Exception;
 
 Exception::Exception()
-{
-}
-
-Exception::Exception(const Exception&)
 {
 }
 
@@ -99,7 +96,7 @@ void Exception::sci_throw(const Exception& exc)
 		char buf[100];
 		while(read(fileno(stdin), buf, 100) <= 0){
 		    if(errno != EINTR){
-			fprintf(stderr, "\nCould not read response, throwing exception\n");
+		      cerr <<  "\nCould not read response, throwing exception\n";
 			emode = "throw";
 			break;
 		    }
@@ -156,8 +153,9 @@ void Exception::sci_throw(const Exception& exc)
 
 //
 // $Log$
-// Revision 1.2  2000/03/23 20:43:10  sparker
-// Added copy ctor to all exception classes (for Linux/g++)
+// Revision 1.3  2000/03/24 00:06:29  yarden
+// replace stderr with cerr.
+// include <stdio,h> for sprintf
 //
 // Revision 1.1  2000/03/23 10:25:40  sparker
 // New exception facility - retired old "Exception.h" classes
