@@ -95,6 +95,7 @@ SCENES += \
 #	$(SRCDIR)/dtiglyph.mo \
 #	$(SRCDIR)/science-room.mo \
 #	$(SRCDIR)/science-room-full.mo \
+
 endif
 
 
