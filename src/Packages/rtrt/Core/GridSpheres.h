@@ -18,6 +18,7 @@ using std::string;
 struct GridSpheresTree;
 struct BoundedObject;
 struct MCell;
+class  RegularColorMap;
 
 class GridSpheres : public Object, public Material {
 protected:
@@ -35,8 +36,7 @@ protected:
   int depth;
   float radius;
   float iradius;
-  int nmatls;
-  Material** matls;
+  RegularColorMap* cmap;
   string *var_names;
   double specpow;
   double refl;
@@ -62,10 +62,11 @@ protected:
 		       HitInfo& hit, DepthStats* st,
 		       PerProcessorContext*);
   void calc_mcell(int depth, int idx, MCell& mcell);
+  Color surface_color(const HitInfo& hit);
 public:
   GridSpheres(float* spheres, float* min, float* max,
 	      int nspheres, int ndata, int nsides, int depth,
-	      float radius, int nmatls, Material** matls,
+	      float radius, RegularColorMap* cmap,
 	      string *var_names = 0);
   virtual ~GridSpheres();
   virtual void io(SCIRun::Piostream &stream);

@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/RegularColorMap.h>
 
 #include <Core/Thread/Time.h>
 
@@ -33,12 +34,12 @@ namespace rtrt {
 
 GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
 			 int nspheres, int ndata, int cellsize, int depth,
-			 float radius, int nmatls, Material** matls,
+			 float radius, RegularColorMap* cmap_in,
 			 string *var_names)
   : Object(this),
     spheres(spheres),
     nspheres(nspheres), ndata(ndata), cellsize(cellsize), depth(depth),
-    radius(radius), nmatls(nmatls), var_names(var_names), preprocessed(false)
+    radius(radius), cmap(cmap_in), var_names(var_names), preprocessed(false)
 {
   counts=0;
   cells=0;
@@ -72,16 +73,7 @@ GridSpheres::GridSpheres(float* spheres, float* /*inmin*/, float* /*inmax*/,
   }
 #endif
   iradius=1./radius;
-  if (nmatls>0) {
-    this->matls=new Material*[nmatls];
-    for(int i=0;i<nmatls;i++)
-      this->matls[i]=matls[i];
-    if (var_names != 0) {
-      this->var_names=new string[ndata];
-      for(int i=0;i<(ndata);i++)
-	this->var_names[i]=var_names[i];
-    }
-  }
+  // Do we need to do anything for the color map??
 }
 
 GridSpheres::~GridSpheres()
@@ -1373,6 +1365,7 @@ void GridSpheres::isect(int depth, double t,
 void GridSpheres::animate(double, bool& changed)
 {
   dpy->animate(changed);
+  if (cmap) cmap->animate(0, changed);
 }
 
 void GridSpheres::collect_prims(Array1<Object*>& prims)
@@ -1397,16 +1390,7 @@ Vector GridSpheres::normal(const Point& hitpos, const HitInfo& hit)
   return n;    
 }
 
-void GridSpheres::shade(Color& result, const Ray& ray,
-			const HitInfo& hit, int depth,
-			double atten, const Color& accumcolor,
-			Context* cx)
-{
-  if (nmatls<=0) {
-    result = Color(1,0,1);
-    return;
-  }
-  
+Color GridSpheres::surface_color(const HitInfo& hit) {
   int cell=*(int*)hit.scratchpad;
   int colordata=dpy->colordata;
   float* p=spheres+cell+colordata;
@@ -1414,11 +1398,27 @@ void GridSpheres::shade(Color& result, const Ray& ray,
   float scale=dpy->color_scales[colordata];
   float data=*p;
   float normalized=(data-min)*scale;
+  int nmatls = cmap->blended_colors.size();
   int idx=(int)(normalized*(nmatls-1));
   if(idx<0)
     idx=0;
   if(idx>=nmatls)
     idx=nmatls-1;
-  matls[idx]->shade(result, ray, hit, depth, atten, accumcolor, cx);
+  return cmap->blended_colors[idx];
+}
+
+void GridSpheres::shade(Color& result, const Ray& ray,
+			const HitInfo& hit, int depth,
+			double atten, const Color& accumcolor,
+			Context* cx)
+{
+  if (!cmap) {
+    result = Color(1,0,1);
+    return;
+  }
+  
+  Color surface = surface_color(hit);
+  phongshade(result, surface, surface, 40, 0,
+             ray, hit, depth, atten, accumcolor, cx);
 }
 
