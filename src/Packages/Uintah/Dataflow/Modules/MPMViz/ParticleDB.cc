@@ -67,7 +67,7 @@ ParticleDB::~ParticleDB()
 void ParticleDB::execute()
 {
     if(!db){
-	db=new Uintah::Modules::ParticleDatabase();
+	db=new Uintah::Modules::ParticleDatabase(this);
 	dbhandle=new PIDLObject(db);
 	cerr << "ParticleDatabase instantated at:\n";
 	std::cerr << db->getURL().getString() << '\n';
@@ -87,6 +87,9 @@ Module* make_ParticleDB( const clString& id )
 
 //
 // $Log$
+// Revision 1.2  1999/10/15 20:23:00  sparker
+// Mostly working
+//
 // Revision 1.1  1999/10/07 02:08:27  sparker
 // use standard iostreams and complex type
 //
