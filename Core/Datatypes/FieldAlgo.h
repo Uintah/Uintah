@@ -162,10 +162,12 @@ struct LinearInterp : public InterpFunctor<Field> {
   LinearInterp() :
     InterpFunctor<Field>() {}
 
-  void 
-  operator()(const Field &field, Index idx, int widx) {
-      result_ += field.value(idx) * weights_[widx];
-    }
+  void operator()(const Field &field, Index idx, int widx)
+  {
+    // TODO: This looses precision, bad math.
+    result_ += (typename InterpFunctor<Field>::value_type)
+      (field.value(idx) * weights_[widx]);
+  }
 };
 
 } // end namespace SCIRun
