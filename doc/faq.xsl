@@ -163,6 +163,9 @@
 
 <!-- ************** Table of Contents ****************************** -->
 
+<table border="0"><tr><td width="50">
+  PREV
+</td><td>
 <a>
   <xsl:attribute name="href">
     <xsl:value-of
@@ -170,6 +173,7 @@
   </xsl:attribute>
   NEXT
 </a>
+</td></tr></table>
 
 <p class="title">
   <xsl:value-of select="./title"/>
@@ -224,7 +228,8 @@
 
   <xsl:if test="$faqnum=$cont">
     <table border="0"><tr><td width="50">
-    <xsl:if test="$faqnum&gt;0">
+    <xsl:choose>
+      <xsl:when test="$faqnum&gt;0">
       <a>
         <xsl:attribute name="href">
           <xsl:value-of
@@ -233,10 +238,16 @@
         PREV
         <xsl:value-of select="concat(' ',' ')"/>
       </a>
-    </xsl:if></td>
+      </xsl:when>
+      <xsl:otherwise>
+        PREV
+      </xsl:otherwise>
+    </xsl:choose>
+    </td>
 
     <td width="50">
-    <xsl:if test="$faqnum&lt;last()">
+    <xsl:choose>
+    <xsl:when test="$faqnum&lt;last()">
       <a>
         <xsl:attribute name="href">
           <xsl:value-of
@@ -244,7 +255,11 @@
         </xsl:attribute>
         NEXT
       </a>
-    </xsl:if>
+    </xsl:when>
+    <xsl:otherwise>
+      NEXT
+    </xsl:otherwise>
+    </xsl:choose>
     </td></tr></table>
 
     <p class="title">

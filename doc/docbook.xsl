@@ -325,6 +325,9 @@
 
 <!-- ********** Table of Contents ********* -->
 
+<table><tr><td width="50">
+  PREV
+</td><td width="50">
 <a>
   <xsl:attribute name="href">
     <xsl:value-of
@@ -332,6 +335,8 @@
   </xsl:attribute>
   NEXT
 </a>
+</td></tr></table>
+
 
 <p class="title">
   <xsl:value-of select="./title" />
@@ -386,7 +391,8 @@
 
   <xsl:if test="$chapnum=$cont">
     <table border="0"><tr><td width="50">
-    <xsl:if test="$chapnum&gt;0">
+    <xsl:choose>
+    <xsl:when test="$chapnum&gt;0">
       <a>
         <xsl:attribute name="href">
           <xsl:value-of
@@ -395,10 +401,16 @@
         PREV
         <xsl:value-of select="concat(' ',' ')"/>
       </a>
-    </xsl:if></td>
+    </xsl:when>
+    <xsl:otherwise>
+      PREV
+    </xsl:otherwise>
+    </xsl:choose>
+    </td>
 
     <td width="50">
-    <xsl:if test="$chapnum&lt;last()">
+    <xsl:choose>
+    <xsl:when test="$chapnum&lt;last()">
       <a>
         <xsl:attribute name="href">
           <xsl:value-of
@@ -406,7 +418,11 @@
         </xsl:attribute>
         NEXT
       </a>
-    </xsl:if>
+    </xsl:when>
+    <xsl:otherwise>
+      NEXT
+    </xsl:otherwise>
+    </xsl:choose>
     </td></tr></table>
 
     <p class="title">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
