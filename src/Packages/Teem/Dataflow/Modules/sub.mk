@@ -37,6 +37,7 @@
 SRCDIR := Packages/Teem/Dataflow/Modules
 
 SUBDIRS := \
+	$(SRCDIR)/Converters\
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/NrrdData\
 	$(SRCDIR)/Segmentation\

@@ -51,7 +51,7 @@
 
 #include <iostream>
 
-#include <Teem/Dataflow/Modules/DataIO/NrrdToField.h>
+#include <Teem/Dataflow/Modules/Converters/NrrdToField.h>
 
 namespace SCITeem {
 
@@ -131,7 +131,7 @@ public:
 
 DECLARE_MAKER(NrrdToField)
 NrrdToField::NrrdToField(GuiContext* ctx)
-  : Module("NrrdToField", ctx, Source, "DataIO", "Teem"),
+  : Module("NrrdToField", ctx, Source, "Converters", "Teem"),
     permute_(ctx->subVar("permute")),
     build_eigens_(ctx->subVar("build-eigens")),
     quad_or_tet_(ctx->subVar("quad-or-tet")),

@@ -45,17 +45,11 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/AnalyzeNrrdReader.cc\
-	$(SRCDIR)/ColorMapToNrrd.cc\
-	$(SRCDIR)/ConvertToNrrd.cc\
 	$(SRCDIR)/DicomNrrdReader.cc\
-	$(SRCDIR)/FieldToNrrd.cc\
 	$(SRCDIR)/ImageExporter.cc\
 	$(SRCDIR)/ImageImporter.cc\
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
-	$(SRCDIR)/NrrdToField.cc\
-	$(SRCDIR)/NrrdToMatrix.cc\
-	$(SRCDIR)/MatrixToNrrd.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers \

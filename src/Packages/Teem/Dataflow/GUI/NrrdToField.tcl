@@ -29,9 +29,9 @@
 #    Author : Darby Van Uitert
 #    Date   : March 2004
 
-catch {rename Teem_DataIO_NrrdToField ""}
+catch {rename Teem_Converters_NrrdToField ""}
 
-itcl_class Teem_DataIO_NrrdToField {
+itcl_class Teem_Converters_NrrdToField {
     inherit Module
     constructor {config} {
         set name NrrdToField

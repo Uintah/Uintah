@@ -30,7 +30,7 @@
 -->
 
 
-<component name="ColorMapToNrrd" category="DataIO">
+<component name="ColorMapToNrrd" category="Converters">
   <overview>
     <author>Michael Callahan</author>
     <summary>Convert a SCIRun ColorMap to a Nrrd.

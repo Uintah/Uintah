@@ -29,7 +29,7 @@
 #    Author : Martin Cole
 #    Date   : Thu Jan 16 09:44:07 2003
 
-itcl_class Teem_DataIO_FieldToNrrd {
+itcl_class Teem_Converters_FieldToNrrd {
     inherit Module
     constructor {config} {
         set name FieldToNrrd

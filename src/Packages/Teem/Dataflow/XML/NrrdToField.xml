@@ -30,7 +30,7 @@
 -->
 
 
-<component name="NrrdToField" category="DataIO">
+<component name="NrrdToField" category="Converters">
   <overview>
     <author>Darby Van Uitert
     </author>

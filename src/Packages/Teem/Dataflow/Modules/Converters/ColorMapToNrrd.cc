@@ -66,7 +66,7 @@ public:
 
 DECLARE_MAKER(ColorMapToNrrd)
 ColorMapToNrrd::ColorMapToNrrd(GuiContext* ctx)
-  : Module("ColorMapToNrrd", ctx, Source, "DataIO", "Teem"),
+  : Module("ColorMapToNrrd", ctx, Source, "Converters", "Teem"),
     icmap_(0), nout_(0),
     colormap_generation_(-1)
 {
