@@ -34,6 +34,7 @@ WARNING
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 
@@ -52,6 +53,10 @@ namespace Uintah {
 
 using namespace SCIRun;
 
+
+ struct cutcell { double d_cutcell[12]; }; //centroids/areafrn./surface normals
+ 
+ const TypeDescription* fun_getTypeDescription(cutcell*);
 
 class MPMArches : public UintahParallelComponent, public SimulationInterface {
 public:
@@ -278,8 +283,18 @@ public:
   double prturb;
   double cpfluid;
 
+  enum CENTROID {CENX, CENY, CENZ};    
+  enum SURFNORM {NORMX=4, NORMY, NORMZ};
+  enum AREAFRN {AREAE=7, AREAW, AREAN, AREAS, AREAT, AREAB};
+
 };
       
 } // End namespace Uintah
       
+namespace SCIRun {
+
+  void swapbytes( Uintah::cutcell& );
+
+}
+
 #endif

@@ -172,6 +172,10 @@ namespace Uintah {
       const VarLabel* d_enth_mmNonLinSrc_FCZLabel;
       const VarLabel* d_enth_mmNonLinSrc_CCLabel;
 
+      // cut cell labels;
+
+      const VarLabel* cutCellLabel;
+
     };
 
 } // end namespace Uintah

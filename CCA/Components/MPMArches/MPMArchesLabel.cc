@@ -1,3 +1,4 @@
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
@@ -371,6 +372,11 @@ MPMArchesLabel::MPMArchesLabel()
   d_enth_mmNonLinSrc_CCLabel = VarLabel::create("enth_mmNonLinSrc_CC",
 						CCVariable<double>::getTypeDescription() );
 
+  // cut cell labels
+
+  cutCellLabel = VarLabel::create("cutCell",
+  				  CCVariable<cutcell>::getTypeDescription());
+
 } 
 
 MPMArchesLabel::~MPMArchesLabel()
@@ -513,4 +519,5 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy( d_enth_mmNonLinSrc_FCZLabel);
   VarLabel::destroy( d_enth_mmNonLinSrc_CCLabel);
 
+  VarLabel::destroy( cutCellLabel);
 }
