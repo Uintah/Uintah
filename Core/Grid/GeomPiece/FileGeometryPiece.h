@@ -26,14 +26,16 @@ namespace Uintah {
   Reads in a set of points from an input file.  Optionally, if the
   <var> tag is present, the volume will be read in for each point set.
   Requires one input: file name <name>points.txt</name>
-  Optional input : <var>p.volume </var>
+  Optional input : <var1>p.volume </var1>
   There are methods for checking if a point is inside the box
   and also for determining the bounding box for the box (which
   just returns the box itself).
   The input form looks like this:
   \verbatim
     <name>file_name.txt</name>
-      <var>p.volume</var>
+      <var1>p.volume</var1>
+      <var2>p.externalforce</var2>
+      <var3>p.fiberdir</var3>
   \endverbatim
 	
 */
@@ -78,7 +80,8 @@ namespace Uintah {
     Box d_box;
     bool d_var1_bool;
     bool d_var2_bool;
-    string d_file_name,d_var_name1,d_var_name2;
+    bool d_var3_bool;
+    string d_file_name,d_var_name1,d_var_name2,d_var_name3;
   };
 } // End namespace Uintah
 
