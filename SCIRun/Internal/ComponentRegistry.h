@@ -46,19 +46,43 @@
 #include <SCIRun/Internal/InternalComponentInstance.h>
 #include <vector>
 
-namespace SCIRun {
-  class SCIRunFramework;
-  class ComponentRegistry : public sci::cca::ports::ComponentRepository, public InternalComponentInstance {
-  public:
-    virtual ~ComponentRegistry();
-    static InternalComponentInstance* create(SCIRunFramework* fwk,
-					     const std::string& name);
-    sci::cca::Port::pointer getService(const std::string&);
+namespace SCIRun
+{
+class SCIRunFramework;
 
-    virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer> getAvailableComponentClasses();
-  private:
-    ComponentRegistry(SCIRunFramework* fwk, const std::string& name);
-  };
-}
+/**
+ * \class ComponentRegistry
+ *
+ * An implementation of a CCA ComponentRepository for SCIRun.  The
+ * ComponentRegistry handles 
+ *
+ */
+class ComponentRegistry : public sci::cca::ports::ComponentRepository,
+                          public InternalComponentInstance
+{
+public:
+  virtual ~ComponentRegistry();
+  
+  /** Factory method for allocating new ComponentRegistry objects.  Returns
+      a smart pointer to the newly allocated object registered to the framework
+      \em fwk with the instance name \em name. */
+  static InternalComponentInstance* create(SCIRunFramework* fwk,
+                                           const std::string& name);
+  
+  /** ? */
+  sci::cca::Port::pointer getService(const std::string&);
+
+  /** Returns a list of ComponentClassDescriptions that represents all of the
+      component class types that may be instantiated in this framework.  In
+      other words, calling getComponentClassName on each element in this list
+      gives all of the components that the framework knows how to create. */
+  virtual SSIDL::array1<sci::cca::ComponentClassDescription::pointer>
+  getAvailableComponentClasses();
+
+private:
+  ComponentRegistry(SCIRunFramework* fwk, const std::string& name);
+};
+
+} // end namespace SCIRun
 
 #endif
