@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-
 <!-- @version: Updated 7/31/00-->
-
 <Uintah_specification>
 
    <Meta>
-	<title>Colliding Disks</title>
+	<title>Colliding Disks With Complex Physics</title>
    </Meta>
 
    <Time>
@@ -17,18 +15,20 @@
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>disks_4patch.uda</filebase>
+        <filebase>disks_complex.uda</filebase>
 	<outputInterval>.01</outputInterval>
-	<save label="KineticEnergy"/>
-	<save label="TotalMass"/>
-	<save label="StrainEnergy"/>
-	<save label="CenterOfMassPosition"/>
-	<save label="CenterOfMassVelocity"/>
-	<save label="p.x"/>
-	<save label="p.volume"/>
-	<save label="p.stress"/>
-	<save label="g.mass"/>
-	<save label="g.stressFS"/>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.x"/>
+	<save label = "p.volume"/>
+	<save label = "p.stress"/>
+	<save label = "g.mass"/>
+	<save label = "g.stressFS"/>
+
+	<checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
     <MPM>
@@ -55,7 +55,7 @@
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <cylinder label="gp1">
+		    <cylinder label = "gp1">
 			<bottom>[.25,.25,.05]</bottom>
 			<top>[.25,.25,.1]</top>
 			<radius> .2 </radius>
@@ -64,7 +64,21 @@
 		    <velocity>[2.0,2.0,0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
 
+	    <material>
+                <burn>
+                  <type>null</type>
+                </burn>
+		<density>1000.0</density>
+		<hypo_elastic> 
+		   <G>1.2e6</G>
+		   <K>3.2e6</K>
+	        </hypo_elastic>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
 		<geom_object>
 		    <cylinder label="gp2">
 			<bottom>[.75,.75,.05]</bottom>
@@ -75,12 +89,13 @@
 		    <velocity>[-2.0,-2.0,0]</velocity>
 		    <temperature>12</temperature>
  		</geom_object>
-		<velocity_field>0</velocity_field>
+		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>
-	      <type>null</type>
-	      <vel_fields>[0,0,0]</vel_fields>
+              <type>friction</type>
+              <vel_fields>[0,1,0]</vel_fields>
+              <mu> .5 </mu>
 	    </contact>
 	</MPM>
 
@@ -89,33 +104,33 @@
     <Grid>
 	<BoundaryConditions>
 		 <Face side = "x-">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                        <BCType var = "Dirichlet" label = "Velocity">
                            <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "x+">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                        <BCType var = "Dirichlet" label = "Velocity">
 			     <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "y-">
-                        <BCType label = "Velocity" var = "Dirichlet">
+                        <BCType var = "Dirichlet" label = "Velocity">
                            <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>                  
 		<Face side = "y+">
-                        <BCType label = "Velocity" var = "Dirichlet">            			    <value> [0.0,0.0,0.0] </value>
+                        <BCType var = "Dirichlet" label = "Velocity">            			    <value> [0.0,0.0,0.0] </value>
                         </BCType>
                 </Face>
                 <Face side = "z-">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
                 </Face>
                 <Face side = "z+">
-                        <BCType label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType var = "symmetry" label = "Symmetric"> </BCType>
                 </Face>                           
 	</BoundaryConditions>
 	<Level>
-	    <Box label="1">
+	    <Box label = "1">
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,.15]</upper>
 	        <resolution>[20,20,3]</resolution>
@@ -130,3 +145,4 @@
     </PhysicalBC>
     
 </Uintah_specification>
+

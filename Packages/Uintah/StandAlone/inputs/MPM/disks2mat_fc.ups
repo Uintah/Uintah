@@ -4,7 +4,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Colliding Disks With Fracture</title>
+	<title>Colliding Disks With Frictional Contact</title>
    </Meta>
 
    <Time>
@@ -15,7 +15,7 @@
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>disks_fracture.uda</filebase>
+        <filebase>disks2mat_fc.uda</filebase>
 	<outputInterval>.01</outputInterval>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
@@ -45,9 +45,6 @@
                 <burn>
                   <type>null</type>
                 </burn>
-                <fracture>
-                  <type>simple</type>
-                </fracture>
 		<density>1000.0</density>
 		<comp_mooney_rivlin> 
 		   <he_constant_1>100000.0</he_constant_1>
@@ -66,14 +63,25 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[2.0,2.0,0]</velocity>
 		    <temperature>12</temperature>
-                    <tensile_strength_min> 200000</tensile_strength_min>
-		    <tensile_strength_max> 200000</tensile_strength_max>
-		    <tensile_strength_variation>1</tensile_strength_variation>
-		    <explosive_energy_density>1</explosive_energy_density>
  		</geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
 
+	    <material>
+                <burn>
+                  <type>null</type>
+                </burn>
+		<density>1000.0</density>
+		<comp_mooney_rivlin> 
+		   <he_constant_1>100000.0</he_constant_1>
+		   <he_constant_2>20000.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </comp_mooney_rivlin>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <cylinder label = "gp2">
+		    <cylinder label="gp2">
 			<bottom>[.75,.75,.05]</bottom>
 			<top>[.75,.75,.1]</top>
 			<radius> .2 </radius>
@@ -81,17 +89,14 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[-2.0,-2.0,0]</velocity>
 		    <temperature>12</temperature>
-                    <tensile_strength_min> 200000</tensile_strength_min>
-		    <tensile_strength_max> 200000</tensile_strength_max>
-		    <tensile_strength_variation>1</tensile_strength_variation>
-		    <explosive_energy_density>1</explosive_energy_density>
  		</geom_object>
-		<velocity_field>0</velocity_field>
+		<velocity_field>1</velocity_field>
 	    </material>
 
 	    <contact>
-	      <type>null</type>
-	      <vel_fields>[0,0,0]</vel_fields>
+              <type>friction</type>
+              <vel_fields>[0,1,0]</vel_fields>
+              <mu> .5 </mu>
 	    </contact>
 	</MPM>
 
