@@ -26,21 +26,22 @@ endif
 unalias rm
 #__________________________________
 # remove your droppings and make a copy of the output file
-rm -f gp .data .plotStats_tmp
+rm -f gp .data .plotStats_tmp .plotStats_clean
 cp $out .plotStats_tmp
+grep Time= .plotStats_tmp |grep Mem >& .plotStats_clean
 
 #__________________________________
 # extract the data
 echo "Now extracting the data"
-grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d "," -f1 >& .elapsedTime
-grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d"," -f1 |cut -d" " -f1 >& .physicalTime
-grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
+grep elap .plotStats_clean | cut -d"=" -f4 | cut -d "," -f1 >& .elapsedTime
+grep elap .plotStats_clean | cut -d"=" -f2 | cut -d"," -f1 |cut -d" " -f1 >& .physicalTime
+grep delT .plotStats_clean | cut -d"=" -f3 | cut -d"," -f1 >& .delT
 grep Restarting .plotStats_tmp | cut -d"," -f1 | cut -d" " -f4 >& .restartTime
 sdiff .physicalTime .restartTime >& .tmp
 sed s/"                                                  <"/""/ .tmp | sed s/"                                                  "/""/>&.tmp2
 paste -d "  " .elapsedTime .delT .tmp2>& .data
 
-rm -f .elapsedTime .physicalTime .delT .restartTime .tmp .tmp2
+rm -f .elapsedTime .physicalTime .delT .restartTime .tmp .tmp2 .plotStats_tmp .plotStats_clean
 echo "Done extracting data"
 
 echo "" > gp

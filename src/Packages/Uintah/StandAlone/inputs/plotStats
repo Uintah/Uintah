@@ -24,8 +24,9 @@ endif
 unalias rm
 #__________________________________
 # remove your droppings and make a copy of the output file
-rm -f gp .data .plotStats_tmp
-cp $out .plotStats_tmp
+rm -f gp .data .plotStats_tmp .tmp
+cp $out .tmp
+grep Time= .tmp |grep Mem >& .plotStats_tmp
 
 #__________________________________
 # extract the data
@@ -48,7 +49,7 @@ grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memU
 paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3 .memUse4>& .data
 
 rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .memUse4 
-rm -f .plotStats_tmp
+rm -f .plotStats_tmp .tmp
 echo "Done extracting data"
 
 echo "" > gp
