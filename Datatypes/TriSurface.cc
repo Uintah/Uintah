@@ -569,7 +569,7 @@ void TriSurface::construct_grid()
     construct_grid(nx, ny, nz, bbox.min(), spacing);
 }
 
-void TriSurface::get_surfnodes(Array1<NodeHandle>& nodes)
+void TriSurface::get_surfnodes(Array1<NodeHandle>&)
 {
     NOT_FINISHED("TriSurface::get_surfpoints");
 }

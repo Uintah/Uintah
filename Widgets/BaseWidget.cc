@@ -634,6 +634,7 @@ operator<<( ostream& os, BaseWidget& w )
 BaseWidget& BaseWidget::operator=( const BaseWidget& )
 {
     NOT_FINISHED("BaseWidget::operator=");
+    return *this;
 }
 
 #ifdef __GNUG__

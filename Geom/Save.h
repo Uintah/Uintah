@@ -2,6 +2,8 @@
 #ifndef GeomSave_h
 #define GeomSave_h 1
 
+#include <Geometry/Vector.h>
+
 class ostream;
 
 struct GeomSave {

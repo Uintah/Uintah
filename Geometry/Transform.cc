@@ -28,7 +28,7 @@ Transform::~Transform()
 {
 }
 
-void Transform::load_frame(const Point& p,
+void Transform::load_frame(const Point&,
 			   const Vector& x, 
 			   const Vector& y, 
 			   const Vector& z)
@@ -404,5 +404,6 @@ Transform& Transform::operator=(const Transform& copy)
         for(int j=0;j<4;j++)
             mat[i][j]=copy.mat[i][j];
     inverse_valid=0;
+    return *this;
 }
 

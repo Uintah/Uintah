@@ -29,7 +29,7 @@ SRCS = BasicSurfaces.cc Colormap.cc ColormapPort.cc ColumnMatrix.cc \
 LIBNAME = Datatypes
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
-	-lClasslib -lMultitask -lMalloc -lm
+	-lTCL -lClasslib -lMultitask -lMalloc -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))

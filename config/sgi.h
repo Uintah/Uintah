@@ -26,7 +26,7 @@
 #define SCI_DeltaOptimizeCFlags -O
 #define SCI_DeltaDebugCFlags -g
 #ifdef SCI_IRIX_BIN_o32
-#define SCI_BinFlags -32 -mips2
+#define SCI_BinFlags -32 -mips2 -Dbool=int -Dtrue=1 -Dfalse=0
 #else
 #ifdef SCI_IRIX_BIN_n32_mips3
 #define SCI_BinFlags -n32 -mips3

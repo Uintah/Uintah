@@ -19,8 +19,10 @@ void* operator new(size_t size, Allocator* a, char* tag)
     return a->alloc(size, tag);
 }
 
+#ifdef _BOOL
 void* operator new[](size_t size, Allocator* a, char* tag)
 {
     return a->alloc(size, tag);
 }
 
+#endif
