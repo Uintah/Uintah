@@ -145,6 +145,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   Color color(1.0, 1.0, 1.0);
   bool display=false;
   char *cmap_file = 0; // Non zero when a file has been specified
+  char *cmap_type = "InvRIsoLum";
 
   for (int i=1;i<argc;i++)
   {
@@ -170,6 +171,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 		  atof(argv[++i]));
     } else if (strcmp(argv[i], "-cmap") == 0) {
       cmap_file = argv[++i];
+    } else if (strcmp(argv[i], "-cmaptype") == 0) {
+      cmap_type = argv[++i];
     } else if(strcmp(argv[i], "-light_pos")==0) {
       lx=atof(argv[++i]);
       ly=atof(argv[++i]);
@@ -189,6 +192,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -gdepth <int>        gdepth of grid cells (2)"<<endl;
       cerr<<"  -color <r> <g> <b>   surface color (1.0, 1.0, 1.0)"<<endl;
       cerr<<"  -cmap <filename>     defaults to inverse rainbow"<<endl;
+      cerr<<"  -cmaptype <type>     type of colormap\n";
       cerr<<"  -light_pos <lx> <ly> <lz>   position of light source (-0.25, 0.5, -0.1)\n";
       cerr<<"  -display             use GridSpheresDpy display (false)"<<endl;
       exit(1);
@@ -198,8 +202,10 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   RegularColorMap *cmap = 0;
   if (cmap_file)
     cmap = new RegularColorMap(cmap_file);
-  else 
-    cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRIsoLum);
+  else {
+    int cmap_type_index = RegularColorMap::parseType(cmap_type);
+    cmap = new RegularColorMap(cmap_type_index);
+  }
 
   Object *group=0;
   if (infilename) {
