@@ -84,7 +84,7 @@ set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 393 822]
 set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 233 562]
 set m9 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 233 625]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 9 738]
-set m11 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 233 437]
+set m11 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 233 400]
 set m12 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 215 503]
 set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 215 721]
 set m14 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 658 560]
@@ -93,9 +93,8 @@ set m16 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 640 621]
 set m17 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 622 682]
 set m18 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 447 543]
 set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 607]
-set m20 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 411 86]
-set m21 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 411 148]
-set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 0 0]
+set m20 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 300 24]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 160 822]
 
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
@@ -106,7 +105,6 @@ addConnection $m0 0 $m4 0
 addConnection $m4 0 $m5 0
 addConnection $m6 0 $m2 1
 addConnection $m8 0 $m9 0
-#addConnection $m9 0 $m10 1
 addConnection $m9 0 $m22 1 
 addConnection $m4 0 $m10 0
 addConnection $m11 0 $m12 1
@@ -120,7 +118,6 @@ addConnection $m16 0 $m17 1
 addConnection $m4 0 $m17 0
 addConnection $m17 0 $m15 0
 addConnection $m9 0 $m15 1
-#addConnection $m10 1 $m7 0
 addConnection $m10 0 $m22 0
 addConnection $m22 0 $m7 0
 addConnection $m13 0 $m7 1
@@ -131,9 +128,7 @@ addConnection $m19 0 $m7 3
 addConnection $m14 1 $m7 4
 addConnection $m15 0 $m7 5
 addConnection $m0 0 $m18 0
-addConnection $m0 0 $m20 0
-addConnection $m20 0 $m21 0
-addConnection $m21 0 $m6 0
+addConnection $m20 0 $m6 0
 
 set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 
@@ -207,18 +202,8 @@ set $m19-faces-on {0}
 set $m19-edges-transparency {1}
 set $m19-edge_display_type {Lines}
 set $m19-edge_scale {1.0}
-#set $m19-edge_display_type {Cylinders}
-#set $m19-edge_scale [expr 0.0025 * ${global-scale}]
-#set $m19-resolution {6}
 
-set $m20-numseeds {3}
-set $m20-autoexecute {1}
-set $m20-type {}
-set $m20-dist {uniuni}
-set $m20-whichtab {Random}
-
-set $m21-function {result = Vector(1,0,0);}
-set $m21-outputdatatype {Vector}
+set $m20-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
 
 set $m22-nodes-on {0}
 set $m22-edges-on {0}
@@ -311,9 +296,9 @@ set mods(FieldReader2) $m11
 set mods(Isosurface) $m10
 set mods(ShowField-Isosurface) $m22
 
-set mods(Streamlines) $m16
-set mods(Streamlines-rake) $m14
-set mods(ShowField-Streamlines) $m15
+set mods(StreamLines) $m16
+set mods(StreamLines-rake) $m14
+set mods(ShowField-StreamLines) $m15
 
 set mods(ShowField-Electrodes) $m13
 
@@ -799,7 +784,7 @@ class ForwardFEMApp {
             pack $page.isoframe -padx 4 -pady 4 -fill x
 
 	    
-	    ### Streamlines
+	    ### StreamLines
 	    iwidgets::labeledframe $page.slframe -labelpos nw \
 		-labeltext "StreamLines"
 
@@ -1738,15 +1723,29 @@ class ForwardFEMApp {
 	    -foreground black -background $next_color
     }
     
-    
+    method toggle_streamlines {} {
+	global mods
+	global $mods(ShowField-StreamLines)-edges-on
+	if { [set $mods(ShowField-StreamLines)-edges-on] } {
+	    disableModule $mods(StreamLines-rake) 0
+	    set "$eviewer-StreamLines rake (5)" 1
+	    $eviewer-c redraw
+	} else {
+	    disableModule $mods(StreamLines-rake) 1
+	    set "$eviewer-StreamLines rake (5)" 0
+	    $eviewer-c redraw
+	}
+	$mods(ShowField-StreamLines)-c toggle_display_edges
+    }
+
     method build_streamlines_tab { f } {
 	global mods
-	global $mods(ShowField-Streamlines)-edges-on
+	global $mods(ShowField-StreamLines)-edges-on
 
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show StreamLines" \
-		-variable $mods(ShowField-Streamlines)-edges-on \
-		-command "$mods(ShowField-Streamlines)-c toggle_display_edges"
+		-variable $mods(ShowField-StreamLines)-edges-on \
+		-command "$this toggle_streamlines"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
 	    # Isoval
@@ -1758,27 +1757,27 @@ class ForwardFEMApp {
 		-length 100 -width 15 \
 		-sliderlength 15 \
 		-resolution 1 \
-		-variable $mods(Streamlines-rake)-maxseeds \
+		-variable $mods(StreamLines-rake)-maxseeds \
 		-showvalue false \
 		-orient horizontal
 	    
 	    bind $f.isoval.s <ButtonRelease> \
-		"$mods(Streamlines-rake)-c needexecute"
+		"$mods(StreamLines-rake)-c needexecute"
 	    
 	    entry $f.isoval.val -width 3 -relief flat \
-		-textvariable $mods(Streamlines-rake)-maxseeds
+		-textvariable $mods(StreamLines-rake)-maxseeds
 	    
-	    bind $f.isoval.val <Return> "$mods(Streamlines-rake)-c needexecute"
+	    bind $f.isoval.val <Return> "$mods(StreamLines-rake)-c needexecute"
 
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
 		-side left -anchor n -padx 3      
 	    
 	    radiobutton $f.fast -text "Fast" \
-		-variable $mods(Streamlines)-method -value 5 \
-		-command "$mods(Streamlines-rake)-c needexecute"
+		-variable $mods(StreamLines)-method -value 5 \
+		-command "$mods(StreamLines-rake)-c needexecute"
 	    radiobutton $f.adapt -text "Adaptive" \
-		-variable $mods(Streamlines)-method -value 4 \
-		-command "$mods(Streamlines-rake)-c needexecute"
+		-variable $mods(StreamLines)-method -value 4 \
+		-command "$mods(StreamLines-rake)-c needexecute"
 
 	    pack $f.fast $f.adapt -side top -anchor w -padx 20
 	}
@@ -3155,10 +3154,10 @@ class ForwardFEMApp {
 		# Isosurface
 		$vis_tab1 view "Isosurface"
 		$vis_tab2 view "Isosurface"
-	    } elseif {$which == "Streamlines"} {
-		# Streamlines
-		$vis_tab1 view "Streamlines"
-		$vis_tab2 view "Streamlines"
+	    } elseif {$which == "StreamLines"} {
+		# StreamLines
+		$vis_tab1 view "StreamLines"
+		$vis_tab2 view "StreamLines"
 	    }
 	}
     }
