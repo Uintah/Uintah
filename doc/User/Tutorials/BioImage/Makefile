@@ -37,7 +37,7 @@ params_print := -V %footnote-ulinks% -V %section-autolabel% \
   -V %generate-article-toc% -V bop-footnotes
 rxmlsrcs := ${wildcard *.rxml}
 treetop := ../../../..
-edition := ${treetop}/doc/edition.xml
+edition := ${treetop}/src/main/sci_version.h
 
 .PHONY: all html print clean veryclean
 
@@ -45,14 +45,19 @@ edition := ${treetop}/doc/edition.xml
 
 all: html print
 
+# Implicit rule to generate sources for html output
+%.hxml : %.rxml
+	TREETOP=${treetop} OUTPUT_MODE=html eruby --delimiters xml $< > $@
+
+# Implicit rule to generate sources for print output
+%.pxml : %.rxml
+	TREETOP=${treetop} OUTPUT_MODE=print eruby --delimiters xml $< > $@
+
 # HTML versions
 html: bioimage.html
 
-bioimage.html: ${rxmlsrcs} ${edition}
-	for f in ${rxmlsrcs}; \
-	do \
-	   OUTPUT_MODE=html eruby --delimiters xml $$f > $${f%.rxml}.hxml ; \
-	done
+hxmlsrcs := ${rxmlsrcs:.rxml=.hxml}
+bioimage.html: ${hxmlsrcs} ${edition}
 	java com.icl.saxon.StyleSheet -w2 \
           main.hxml ${stylesheet_nochunk} treetop=${treetop} >$@
 	java com.icl.saxon.StyleSheet -w2 \
@@ -61,11 +66,8 @@ bioimage.html: ${rxmlsrcs} ${edition}
 # Print version
 print: bioimage.pdf
 
-bioimage.pdf : ${rxmlsrcs} ${edition}
-	for f in ${rxmlsrcs}; \
-	do \
-	   OUTPUT_MODE=print eruby --delimiters xml $$f > $${f%.rxml}.pxml ; \
-	done
+pxmlsrcs := ${rxmlsrcs:.rxml=.pxml}
+bioimage.pdf : ${pxmlsrcs} ${edition}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o bioimage.tex \
           -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
 	for i in 1 2 3; do jadetex bioimage.tex ; done
