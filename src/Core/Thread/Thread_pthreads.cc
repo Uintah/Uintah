@@ -696,7 +696,7 @@ struct RecursiveMutex_private {
 RecursiveMutex::RecursiveMutex(const char* name)
     : name_(name)
 {
-   if(!initialized)
+   if(!Thread::initialized)
 	Thread::initialize();
     priv_=new RecursiveMutex_private;
     pthread_mutexattr_t attr;
@@ -752,7 +752,7 @@ struct Semaphore_private {
 Semaphore::Semaphore(const char* name, int value)
     : name_(name)
 {
-  if(!initialized)
+  if(!Thread::initialized)
     Thread::initialize();    
   priv_=new Semaphore_private;
   if(sem_init(&priv_->sem, 0, value) != 0)
@@ -820,7 +820,7 @@ struct ConditionVariable_private {
 ConditionVariable::ConditionVariable(const char* name)
     : name_(name)
 {
-  if(!initialized)
+  if(!Thread::initialized)
     Thread::initialize();
   priv_=new ConditionVariable_private;
   if(pthread_cond_init(&priv_->cond, 0) != 0)
