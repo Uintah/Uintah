@@ -19,6 +19,7 @@
 #include <Geometry/Vector.h>
 
 class GeomCone : public GeomObj {
+protected:
     Vector v1;
     Vector v2;
     double tilt;
@@ -56,7 +57,26 @@ public:
 			   Hit& hit);
 };
 
-typedef GeomCone GeomCappedCone;
+class GeomCappedCone : public GeomCone {
+    int nvdisc1;
+    int nvdisc2;
+public:
+    GeomCappedCone(int nu=20, int nv=10, int nvdisc1=4, int nvdisc2=4);
+    GeomCappedCone(const Point&, const Point&, double, double, 
+		   int nu=20, int nv=4, int nvdisc1=4, int nvdisc2=4);
+    GeomCappedCone(const GeomCappedCone&);
+    virtual ~GeomCappedCone();
+
+    virtual GeomObj* clone();
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+    virtual void make_prims(Array1<GeomObj*>& free,
+			    Array1<GeomObj*>& dontfree);
+    virtual void preprocess();
+    virtual void intersect(const Ray& ray, Material*,
+			   Hit& hit);
+};
 
 #endif /* SCI_Geom_Cone_h */
 

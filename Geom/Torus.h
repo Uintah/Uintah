@@ -29,7 +29,7 @@ public:
     Vector zrotaxis;
     double zrotangle;
 
-    void adjust();
+    virtual void adjust();
     void move(const Point&, const Vector&, double, double,
 	      int nu=50, int nv=8);
 
@@ -53,5 +53,34 @@ public:
 			   Hit& hit);
     virtual Vector normal(const Point& p, const Hit&);
 };
+
+class GeomTorusArc : public GeomTorus {
+public:
+    Vector zero;
+    double start_angle;
+    double arc_angle;
+    Vector xrotaxis;
+    double xrotangle;
+
+    virtual void adjust();
+    void move(const Point&, const Vector&, double, double,
+	      const Vector& zero, double start_angle, double arc_angle,
+	      int nu=50, int nv=8);
+    GeomTorusArc(int nu=50, int nv=8);
+    GeomTorusArc(const Point&, const Vector&, double, double, 
+		 const Vector& zero, double start_angle, double arc_angle,
+		 int nu=50, int nv=8);
+    GeomTorusArc(const GeomTorusArc&);
+    virtual ~GeomTorusArc();
+
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+    virtual void get_bounds(BSphere&);
+
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+};
+
 
 #endif /* SCI_Geom_Torus_h */

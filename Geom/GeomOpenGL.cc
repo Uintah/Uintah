@@ -25,6 +25,7 @@
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
+#include <Geom/Pt.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
 #include <Geom/Switch.h>
@@ -145,6 +146,25 @@ void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
     glPopMatrix();
 }
 
+void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    if(height < 1.e-6)return;
+    pre_draw(di, matl, 1);
+    glPushMatrix();
+    glTranslated(bottom.x(), bottom.y(), bottom.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    di->polycount+=2*(nu-1)*(nv-1);
+    gluCylinder(di->qobj, bot_rad, top_rad, height, nu, nv);
+    // Bottom endcap
+    di->polycount+=2*(nu-1)*(nvdisc1-1);
+    gluDisk(di->qobj, 0, bot_rad, nu, nvdisc1);
+    // Top endcap
+    glTranslated(0, 0, height);
+    di->polycount+=2*(nu-1)*(nvdisc2-1);
+    gluDisk(di->qobj, 0, top_rad, nu, nvdisc2);
+    glPopMatrix();
+}
+
 void GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     child->draw(di, matl, time);
@@ -215,6 +235,16 @@ void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 // --------------------------------------------------
+void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di, matl, 0);
+    di->polycount+=pts.size();
+    glBegin(GL_POINTS);
+    for (int i=0; i<pts.size(); i++) {
+	glVertex3d(pts[i].x(), pts[i].y(), pts[i].z());
+    }
+    glEnd();
+}
 
 void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -552,6 +582,156 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glEnd();
 	break;
     }
+}
+
+void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+    pre_draw(di, matl, 1);
+    glPushMatrix();
+    glTranslated(cen.x(), cen.y(), cen.z());
+    glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
+    glRotated(RtoD(xrotangle), xrotaxis.x(), xrotaxis.y(), xrotaxis.z());
+    di->polycount+=2*(nu-1)*(nv-1);
+
+    // Draw the torus
+    SinCosTable tab1(nu, start_angle, start_angle+arc_angle);
+    SinCosTable tab2(nv, 0, 2*Pi, rad2);
+    SinCosTable tab2n(nv, 0, 2*Pi, rad2);
+    int u,v;
+    switch(di->get_drawtype()){
+
+	
+    case DrawInfoOpenGL::WireFrame:
+
+	double srx=tab1.sin(0);
+	double sry=tab1.cos(0);
+	glBegin(GL_LINE_LOOP);
+	for(v=1;v<nv;v++){
+	    double sz=tab2.cos(v);
+	    double srad=rad1+tab2.sin(v);
+	    double sx=srx*srad;
+	    double sy=sry*srad;
+	    glVertex3d(sx, sy, sz);
+	    glVertex3d(srx*rad1, sry*rad1, 0);
+	}
+	glEnd();
+
+	srx=tab1.sin(nu-1);
+	sry=tab1.cos(nu-1);
+	glBegin(GL_LINE_LOOP);
+	for(v=1;v<nv;v++){
+	    double sz=tab2.cos(v);
+	    double srad=rad1+tab2.sin(v);
+	    double sx=srx*srad;
+	    double sy=sry*srad;
+	    glVertex3d(sx, sy, sz);
+	    glVertex3d(srx*rad1, sry*rad1, 0);
+	}
+	glEnd();
+	
+	for(u=0;u<nu;u++){
+	    double rx=tab1.sin(u);
+	    double ry=tab1.cos(u);
+	    glBegin(GL_LINE_LOOP);
+	    for(v=1;v<nv;v++){
+		double z=tab2.cos(v);
+		double rad=rad1+tab2.sin(v);
+		double x=rx*rad;
+		double y=ry*rad;
+		glVertex3d(x, y, z);
+	    }
+	    glEnd();
+	}
+	for(v=1;v<nv;v++){
+	    double z=tab2.cos(v);
+	    double rr=tab2.sin(v);
+	    glBegin(GL_LINE_LOOP);
+	    for(u=1;u<nu;u++){
+		double rad=rad1+rr;
+		double x=tab1.sin(u)*rad;
+		double y=tab1.cos(u)*rad;
+		glVertex3d(x, y, z);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Flat:
+	for(v=0;v<nv-1;v++){
+	    double z1=tab2.cos(v);
+	    double rr1=tab2.sin(v);
+	    double z2=tab2.cos(v+1);
+	    double rr2=tab2.sin(v+1);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(u=0;u<nu;u++){
+		double r1=rad1+rr1;
+		double r2=rad1+rr2;
+		double xx=tab1.sin(u);
+		double yy=tab1.cos(u);
+		double x1=xx*r1;
+		double y1=yy*r1;
+		double x2=xx*r2;
+		double y2=yy*r2;
+		glVertex3d(x1, y1, z1);
+		glVertex3d(x2, y2, z2);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Gouraud:
+	for(v=0;v<nv-1;v++){
+	    double z1=tab2.cos(v);
+	    double rr1=tab2.sin(v);
+	    double z2=tab2.cos(v+1);
+	    double rr2=tab2.sin(v+1);
+	    double nr=-tab2n.sin(v);
+	    double nz=-tab2n.cos(v);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(u=0;u<nu;u++){
+		double r1=rad1+rr1;
+		double r2=rad1+rr2;
+		double xx=tab1.sin(u);
+		double yy=tab1.cos(u);
+		double x1=xx*r1;
+		double y1=yy*r1;
+		double x2=xx*r2;
+		double y2=yy*r2;
+		glNormal3d(nr*xx, nr*yy, nz);
+		glVertex3d(x1, y1, z1);
+		glVertex3d(x2, y2, z2);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Phong:
+	for(v=0;v<nv-1;v++){
+	    double z1=tab2.cos(v);
+	    double rr1=tab2.sin(v);
+	    double z2=tab2.cos(v+1);
+	    double rr2=tab2.sin(v+1);
+	    double nr1=-tab2n.sin(v);
+	    double nr2=-tab2n.sin(v+1);
+	    double nz1=-tab2n.cos(v);
+	    double nz2=-tab2n.cos(v+1);
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(u=0;u<nu;u++){
+		double r1=rad1+rr1;
+		double r2=rad1+rr2;
+		double xx=tab1.sin(u);
+		double yy=tab1.cos(u);
+		double x1=xx*r1;
+		double y1=yy*r1;
+		double x2=xx*r2;
+		double y2=yy*r2;
+		glNormal3d(nr1*xx, nr1*yy, nz1);
+		glVertex3d(x1, y1, z1);
+		glNormal3d(nr2*xx, nr2*yy, nz2);
+		glVertex3d(x2, y2, z2);
+	    }
+	    glEnd();
+	}
+	break;	
+    }
+    glPopMatrix();
 }
 
 void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)

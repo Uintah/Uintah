@@ -48,6 +48,24 @@ void GeomGroup::add(GeomObj* obj)
     objs.add(obj);
 }
 
+void GeomGroup::remove(GeomObj* obj)
+{
+   for(int i=0;i<objs.size();i++)
+      if (objs[i] == obj) {
+	 objs.remove(i);
+	 if(del_children)delete obj;
+	 break;
+      }
+}
+
+void GeomGroup::remove_all()
+{
+   if(del_children)
+      for(int i=0;i<objs.size();i++)
+	 delete objs[i];
+   objs.remove_all();
+}
+
 int GeomGroup::size()
 {
     return objs.size();

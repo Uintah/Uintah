@@ -142,3 +142,51 @@ void GeomCone::intersect(const Ray&, Material*,
     NOT_FINISHED("GeomCone::intersect");
 }
 
+// Capped Geometry
+
+GeomCappedCone::GeomCappedCone(int nu, int nv, int nvdisc1, int nvdisc2)
+: GeomCone(nu, nv), nvdisc1(nvdisc1), nvdisc2(nvdisc2)
+{
+}
+
+GeomCappedCone::GeomCappedCone(const Point& bottom, const Point& top,
+			       double bot_rad, double top_rad, int nu, int nv,
+			       int nvdisc1, int nvdisc2)
+: GeomCone(bottom, top, bot_rad, top_rad, nu, nv), nvdisc1(nvdisc1),
+  nvdisc2(nvdisc2)
+{
+    adjust();
+}
+
+GeomCappedCone::GeomCappedCone(const GeomCappedCone& copy)
+: GeomCone(copy), nvdisc1(copy.nvdisc1), nvdisc2(copy.nvdisc2)
+{
+    adjust();
+}
+
+GeomCappedCone::~GeomCappedCone()
+{
+}
+
+GeomObj* GeomCappedCone::clone()
+{
+    return new GeomCappedCone(*this);
+}
+
+void GeomCappedCone::make_prims(Array1<GeomObj*>&,
+				Array1<GeomObj*>&)
+{
+    NOT_FINISHED("GeomCappedCone::make_prims");
+}
+
+void GeomCappedCone::preprocess()
+{
+    NOT_FINISHED("GeomCappedCone::preprocess");
+}
+
+void GeomCappedCone::intersect(const Ray&, Material*,
+			 Hit&)
+{
+    NOT_FINISHED("GeomCappedCone::intersect");
+}
+

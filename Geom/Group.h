@@ -60,6 +60,8 @@ public:
     virtual GeomObj* clone();
 
     void add(GeomObj*);
+    void remove(GeomObj*);
+    void remove_all();
     int size();
 
     virtual void reset_bbox();

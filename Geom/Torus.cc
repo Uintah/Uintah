@@ -77,6 +77,70 @@ GeomObj* GeomTorus::clone()
     return new GeomTorus(*this);
 }
 
+GeomTorusArc::GeomTorusArc(int nu, int nv)
+: zero(0,1,0), arc_angle(Pi), GeomTorus(nu, nv)
+{
+}
+
+GeomTorusArc::GeomTorusArc(const Point& cen, const Vector& axis,
+			   double rad1, double rad2, const Vector& zero,
+			   double start_angle, double arc_angle, int nu, int nv)
+: zero(zero), start_angle(start_angle), arc_angle(arc_angle),
+  GeomTorus(cen, axis, rad1, rad2, nu, nv)
+{
+}
+
+void GeomTorusArc::move(const Point& _cen, const Vector& _axis,
+			double _rad1, double _rad2, const Vector& _zero,
+			double _start_angle, double _arc_angle, int _nu, int _nv)
+{
+    cen=_cen;
+    axis=_axis;
+    rad1=_rad1;
+    rad2=_rad2;
+    nu=_nu;
+    nv=_nv;
+    zero=_zero;
+    start_angle=_start_angle;
+    arc_angle=_arc_angle;
+    adjust();
+}
+
+GeomTorusArc::GeomTorusArc(const GeomTorusArc& copy)
+: zero(copy.zero), start_angle(copy.start_angle), arc_angle(copy.arc_angle),
+  GeomTorus(copy)
+{
+}
+
+GeomTorusArc::~GeomTorusArc()
+{
+}
+
+void GeomTorusArc::adjust()
+{
+    axis.normalize();
+
+    Vector z(0,0,1), x(1,0,0);
+    if(Abs(axis.y())+Abs(axis.x()) < 1.e-5){
+	// Only in x-z plane...
+	zrotaxis=Vector(0,-1,0);
+    } else {
+	zrotaxis=Cross(axis, z);
+	zrotaxis.normalize();
+    }
+    double cangle=Dot(z, axis);
+    zrotangle=-Acos(cangle);
+
+    xrotaxis=z;
+    cangle=Dot(zero,zrotaxis)+Dot(x,zrotaxis);
+    xrotangle=-Acos(cangle);
+}
+
+GeomObj* GeomTorusArc::clone()
+{
+    return new GeomTorusArc(*this);
+}
+
 void GeomTorus::get_bounds(BBox& bb)
 {
     bb.extend_cyl(cen-axis*rad2, axis, rad1+rad2);
@@ -84,6 +148,17 @@ void GeomTorus::get_bounds(BBox& bb)
 }
 
 void GeomTorus::get_bounds(BSphere& bs)
+{
+    bs.extend(cen, (rad1+rad2)*1.000001);
+}
+
+void GeomTorusArc::get_bounds(BBox& bb)
+{
+    bb.extend_cyl(cen-axis*rad2, axis, rad1+rad2);
+    bb.extend_cyl(cen+axis*rad2, axis, rad1+rad2);
+}
+
+void GeomTorusArc::get_bounds(BSphere& bs)
 {
     bs.extend(cen, (rad1+rad2)*1.000001);
 }
