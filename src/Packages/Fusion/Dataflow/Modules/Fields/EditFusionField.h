@@ -78,6 +78,11 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
 				      unsigned int kskip)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
+  typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+
+  const unsigned int ini = imesh->get_nx();
+  const unsigned int inj = imesh->get_ny();
+  const unsigned int ink = imesh->get_nz();
 
   const unsigned int ni = (iend - istart) / iskip; 
   const unsigned int nj = (jend - jstart) / jskip; 
@@ -96,11 +101,13 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
       for (unsigned int k=0; k < nk; k++)
       {
 	typename FIELD::mesh_type::Node::index_type
-	  old_node(i*iskip+istart, j*jskip+jstart, k*kskip+kstart);
+	  old_node((i*iskip+istart)%ini,
+		   (j*jskip+jstart)%inj,
+		   (k*kskip+kstart)%ink);
 	typename FIELD::mesh_type::Node::index_type new_node(i, j, k);
 	  
 	Point p;
-	ifield->get_typed_mesh()->get_center(p, old_node);
+	imesh->get_center(p, old_node);
 	omesh->set_point(new_node, p);
 	typename FIELD::value_type value;
 	ifield->value(value, old_node);
