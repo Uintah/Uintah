@@ -114,3 +114,10 @@ string URL::getSpec() const
     return d_spec;
 }
 
+URL::URL(const URL& ucopy)
+  : d_protocol(ucopy.d_protocol),
+    d_hostname(ucopy.d_hostname),
+    d_portno(ucopy.d_portno),
+    d_spec(ucopy.d_spec)
+{
+}

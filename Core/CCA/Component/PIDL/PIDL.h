@@ -33,6 +33,7 @@
 
 #include "Object.h"
 #include <string>
+#include <vector>
 
 namespace SCIRun {
 
@@ -67,6 +68,14 @@ DESCRIPTION
     //////////
     // Create a base Object class from the given URL
     static Object::pointer objectFrom(const URL&);
+
+    //////////
+    // Create a base Object class from the given URL array
+    static Object::pointer objectFrom(const int urlc, const URL urlv[], int mysize, int myrank);
+      
+    //////////
+    // Create a base Object class from the given URL vector
+    static Object::pointer objectFrom(const std::vector<URL>& urlv, int mysize, int myrank);
 
     //////////
     // Create a base Object class from the given Reference

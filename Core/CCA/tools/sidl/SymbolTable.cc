@@ -92,6 +92,7 @@ Symbol* SymbolTable::lookup(ScopedName* name) const
       case Symbol::PackageType:
       case Symbol::InterfaceType:
       case Symbol::EnumType:
+      case Symbol::DistArrayType:
 	{
 	  Definition* d=s->getDefinition();
 	  pp=d->getSymbolTable();

@@ -56,7 +56,7 @@ namespace SCIRun {
     virtual string getUrl() = 0; 
   
     ///////////////
-    // Retrieves a Message associated with this particular object
+    // Retrieves a Message associated with this particular object.
     virtual Message* getMessage() = 0;
 
     //////////////

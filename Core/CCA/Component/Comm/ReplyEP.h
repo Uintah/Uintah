@@ -116,6 +116,7 @@ namespace SCIRun {
     // A place to bounce the buffer from the handler thread to
     // the waiter.
     globus_nexus_buffer_t d_bufferHandoff;
+
   };
 }
 

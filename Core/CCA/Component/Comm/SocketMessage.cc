@@ -25,12 +25,12 @@ SocketMessage::~SocketMessage() {
 }
 
 void SocketMessage::createMessage()  {  }
-void SocketMessage::marshalInt(int *i, int size)  {  }
-void SocketMessage::marshalByte(char *b, int size) {  }
-void SocketMessage::marshalChar(char *c, int size) {  }
-void SocketMessage::marshalFloat(float *f, int size) {  }
-void SocketMessage::marshalDouble(double *d, int size) {  }
-void SocketMessage::marshalLong(long *l, int size) {  }
+void SocketMessage::marshalInt(const int *i, int size)  {  }
+void SocketMessage::marshalByte(const char *b, int size) {  }
+void SocketMessage::marshalChar(const char *c, int size) {  }
+void SocketMessage::marshalFloat(const float *f, int size) {  }
+void SocketMessage::marshalDouble(const double *d, int size) {  }
+void SocketMessage::marshalLong(const long *l, int size) {  }
 void SocketMessage::marshalSpChannel(SpChannel* channel) {  }
 void SocketMessage::sendMessage(int handler) {  }
 void SocketMessage::waitReply()  {  }

@@ -89,6 +89,12 @@ DESCRIPTION
     //////////
     // Bind this reference's startpoint to my endpoint
     void bind(Reference& ref);
+
+    //////////
+    // A MxN Distribution Scheduler in case this object needs
+    // to redistribute an array
+    MxNScheduler* d_sched;
+
   };
 } // End namespace SCIRun
 

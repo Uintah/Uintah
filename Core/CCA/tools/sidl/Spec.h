@@ -37,6 +37,15 @@ class Class;
 class Interface;
 class EmitState;
 class SState;
+class ArrayType;
+
+enum ArgContext {
+  ReturnType,
+  ArgIn,
+  ArgOut,
+  ArgInOut,
+  ArrayTemplate
+};
 
 class Definition {
 public:
@@ -62,11 +71,40 @@ protected:
   void checkMethods(const std::vector<Method*>&);
 };
 
+class DistributionArray : public Definition {
+public:
+  DistributionArray(const std::string& curfile, int lineno, const std::string& name, 
+		    ArrayType* arr_t);
+  virtual ~DistributionArray();
+  ArrayType* getArrayType();
+  std::string getName();
+  void gatherSymbols(SymbolTable* );
+  void staticCheck(SymbolTable* );
+  void emit(EmitState& );
+private:
+  ArrayType *array_t;
+  std::string name;
+};
+
+class DistributionArrayList {
+public:
+  DistributionArrayList();
+  ~DistributionArrayList();
+
+  void add(DistributionArray*);
+  void staticCheck(SymbolTable*) const;
+  void gatherSymbols(SymbolTable*) const;
+  void emit(EmitState& out);
+private:
+  std::vector<DistributionArray*> list;
+};
+
 class CI : public Definition {
 public:
   CI(const std::string& curfile, int lineno, const std::string& name,
-     MethodList*);
+     MethodList*, DistributionArrayList* );
   virtual ~CI();
+  void detectRedistribution();
   void gatherParents(std::vector<CI*>& parents) const;
   void gatherParentInterfaces(std::vector<Interface*>& parents) const;
   void gatherMethods(std::vector<Method*>&) const;
@@ -88,8 +126,10 @@ protected:
   Class* parentclass;
   std::vector<Interface*> parent_ifaces;
   MethodList* mymethods;
+  DistributionArrayList* mydistarrays;
 private:
-
+  bool doRedistribution; 
+  int callerDistHandler;
   bool singly_inherited() const;
   void emit_recursive_vtable_comment(EmitState&, bool);
   bool iam_class();
@@ -112,12 +152,13 @@ public:
   bool matches(const Argument* arg, bool checkmode) const;
   std::string fullsignature() const;
 
+  bool detectRedistribution();
   void emit_unmarshal(EmitState& e, const std::string& var,
-		      const std::string& qty,
-		      const std::string& bufname, bool declare) const;
+		      const std::string& qty, const int handler,
+		      ArgContext ctx, const bool specialRedis, bool declare) const;
   void emit_marshal(EmitState& e, const std::string& var,
-		    const std::string& qty,
-		    const std::string& bufname, bool top) const;
+		    const std::string& qty, const int handler, 
+		    bool top, ArgContext ctx, bool specialRedis) const;
   void emit_declaration(EmitState& e, const std::string& var) const;
   void emit_marshalsize(EmitState& e, const std::string& var,
 			const std::string& sizevar,
@@ -142,6 +183,7 @@ public:
   void add(Argument*);
 
   bool matches(const ArgumentList*, bool checkmode) const;
+  bool detectRedistribution();
   void staticCheck(SymbolTable*) const;
 
   std::string fullsignature() const;
@@ -160,7 +202,7 @@ public:
   Class(const std::string& curfile, int lineno, Modifier modifier,
 	const std::string& name, ScopedName* class_extends,
 	ScopedNameList* class_implementsall, ScopedNameList* class_implements,
-	MethodList*);
+	MethodList*, DistributionArrayList*);
   virtual ~Class();
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
@@ -190,7 +232,7 @@ private:
 class Interface : public CI {
 public:
   Interface(const std::string& curfile, int lineno, const std::string& id,
-	    ScopedNameList* interface_extends, MethodList*);
+	    ScopedNameList* interface_extends, MethodList*, DistributionArrayList* );
   virtual ~Interface();
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
@@ -214,6 +256,7 @@ public:
 	 Modifier2 modifier2,  ScopedNameList* throws_clause);
   ~Method();
 
+  bool detectRedistribution();
   void setModifier(Modifier);
   Modifier getModifier() const;
   void staticCheck(SymbolTable* names);
@@ -255,6 +298,7 @@ protected:
   int handlerNum;
   int handlerOff;
 private:
+  bool doRedistribution;
   std::string curfile;
   int lineno;
   bool copy_return;
@@ -281,6 +325,7 @@ public:
   Method* findMethod(const Method* match) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&) const;
+  bool detectRedistribution();
   std::vector<Method*>& getList();
 private:
   std::vector<Method*> list;
@@ -428,14 +473,16 @@ protected:
   Type();
 public:
   virtual ~Type();
+
+  virtual bool detectRedistribution() = 0;
   virtual void staticCheck(SymbolTable* names) const=0;
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-			      const std::string& qty,
-			      const std::string& bufname, bool declare) const=0;
+			      const std::string& qty, const int handler, ArgContext ctx,
+			      const bool specialRedis, bool declare) const=0;
   virtual void emit_marshal(EmitState& e, const std::string& arg,
 			    const std::string& qty,
-			    const std::string& bufname,
-			    bool top) const=0;
+			    const int handler, bool top, 
+			    ArgContext ctx, bool specialRedis) const=0;
   virtual void emit_declaration(EmitState& e, const std::string& var) const=0;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -444,13 +491,6 @@ public:
   virtual bool array_use_pointer() const = 0;
   virtual bool uniformsize() const=0;
 
-  enum ArgContext {
-    ReturnType,
-    ArgIn,
-    ArgOut,
-    ArgInOut,
-    ArrayTemplate
-  };
   virtual void emit_prototype(SState& s, ArgContext ctx,
 			      SymbolTable* localScope) const=0;
 
@@ -480,12 +520,13 @@ public:
 class BuiltinType : public Type {
 public:
   virtual void staticCheck(SymbolTable* names) const;
+  bool detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-			      const std::string& qty,
-			      const std::string& bufname, bool declare) const;
+			      const std::string& qty, const int handler, ArgContext ctx,
+			      const bool specialRedis, bool declare) const;
   virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty,
-			    const std::string& bufname, bool top) const;
+			    const std::string& qty, const int handler, 
+			    bool top, ArgContext ctx, bool specialRedis) const;
   virtual void emit_declaration(EmitState& e, const std::string& var) const;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -513,12 +554,13 @@ public:
   NamedType(const std::string& curfile, int lineno, ScopedName*);
   virtual ~NamedType();
   virtual void staticCheck(SymbolTable* names) const;
+  bool detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-			      const std::string& qty,
-			      const std::string& bufname, bool declare) const;
+			      const std::string& qty, const int handler, ArgContext ctx,
+			      const bool specialRedis, bool declare) const;
   virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty,
-			    const std::string& bufname, bool top) const;
+			    const std::string& qty, const int handler, 
+			    bool top, ArgContext ctx, bool specialRedis) const;
   virtual void emit_declaration(EmitState& e, const std::string& var) const;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -543,12 +585,13 @@ private:
 class ArrayType : public Type {
 public:
   virtual void staticCheck(SymbolTable* names) const;
+  bool detectRedistribution();
   virtual void emit_unmarshal(EmitState& e, const std::string& arg,
-			      const std::string& qty,
-			      const std::string& bufname, bool declare) const;
+			      const std::string& qty, const int handler, ArgContext ctx,
+			      const bool specialRedis, bool declare) const;
   virtual void emit_marshal(EmitState& e, const std::string& arg,
-			    const std::string& qty,
-			    const std::string& bufname, bool top) const;
+			    const std::string& qty, const int handler, 
+			    bool top, ArgContext ctx, bool specialRedis) const;
   virtual void emit_declaration(EmitState& e, const std::string& var) const;
   virtual void emit_marshalsize(EmitState& e, const std::string& arg,
 				const std::string& sizevar,
@@ -562,14 +605,15 @@ public:
   virtual std::string fullname() const;
   virtual std::string cppfullname(SymbolTable* localScope) const;
   virtual bool isvoid() const;
-protected:
-  friend class Type;
   ArrayType(Type* subtype, int dim);
   virtual ~ArrayType();
-private:
-  Type* subtype;
   int dim;
+  Type* subtype;
+protected:
+  friend class Type;
 };
 
 #endif
+
+
 

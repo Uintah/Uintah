@@ -55,13 +55,13 @@ namespace SCIRun {
     void* getLocalObj();
 
     void createMessage();
-    void marshalInt(int *i, int size = 1);
+    void marshalInt(const int *i, int size = 1);
     void marshalSpChannel(SpChannel* channel);
-    void marshalByte(char *b, int size = 1);
-    void marshalChar(char *c, int size = 1);
-    void marshalFloat(float *f, int size = 1);
-    void marshalDouble(double *d, int size = 1);
-    void marshalLong(long *l, int size = 1);
+    void marshalByte(const char *b, int size = 1);
+    void marshalChar(const char *c, int size = 1);
+    void marshalFloat(const float *f, int size = 1);
+    void marshalDouble(const double *d, int size = 1);
+    void marshalLong(const long *l, int size = 1);
     void sendMessage(int handler);
     void waitReply();
     void unmarshalReply();

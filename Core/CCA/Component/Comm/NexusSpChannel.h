@@ -73,7 +73,8 @@ namespace SCIRun {
     globus_nexus_startpoint_t d_sp;
 
     //////////
-    // The message used for communication
+    // The message used for communication. There is only
+    // ONE NexusSpMessage per NexusSpChannel. 
     NexusSpMessage* msg;
 
     void printDebug( const std::string& ); 

@@ -34,6 +34,7 @@ NexusEpMessage::NexusEpMessage(globus_nexus_endpoint_t ep, globus_nexus_buffer_t
   d_ep = ep;
   _buffer = msgbuff;  
   _sendbuff = NULL;
+  _reply = NULL;
   globus_nexus_startpoint_set_null(&msg_sp);
 }
 
@@ -113,17 +114,17 @@ void NexusEpMessage::createMessage() {
   msgsize = globus_nexus_sizeof_startpoint(&_reply_sp,1);
 }
 
-void NexusEpMessage::marshalInt(int *i, int size) {
+void NexusEpMessage::marshalInt(const int *i, int size) {
   if (!_sendbuff)
     throw CommError("trying to marshal to an unintialized buffer",1000);
   int s = globus_nexus_sizeof_int(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_sendbuff,s,BUF_SIZE,0,0);
-  globus_nexus_put_int(_sendbuff, i, size);
+  globus_nexus_put_int(_sendbuff,(int*) i, size);
 }
 
 
-void NexusEpMessage::marshalByte(char *b, int size) {
+void NexusEpMessage::marshalByte(const char *b, int size) {
   if (!_sendbuff)
     throw CommError("uninitialized buffer on marshaling call",1000);  
   globus_byte_t* gb = (globus_byte_t*) b;
@@ -148,40 +149,40 @@ void NexusEpMessage::marshalSpChannel(SpChannel* channel) {
   }
 }
 
-void NexusEpMessage::marshalChar(char *c, int size) {
+void NexusEpMessage::marshalChar(const char *c, int size) {
   if (!_sendbuff)
     throw CommError("trying to marshal to an unintialized buffer",1000);  
   int s = globus_nexus_sizeof_char(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_sendbuff,s,BUF_SIZE,0,0); 
-  globus_nexus_put_char(_sendbuff, c, size);
+  globus_nexus_put_char(_sendbuff, (char*)c, size);
 }
 
-void NexusEpMessage::marshalFloat(float *f, int size) {
+void NexusEpMessage::marshalFloat(const float *f, int size) {
   if (!_sendbuff)
     throw CommError("trying to marshal to an unintialized buffer",1000);  
   int s = globus_nexus_sizeof_float(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_sendbuff,s,BUF_SIZE,0,0); 
-  globus_nexus_put_float(_sendbuff, f, size);
+  globus_nexus_put_float(_sendbuff, (float*)f, size);
 }
 
-void NexusEpMessage::marshalDouble(double *d, int size) {
+void NexusEpMessage::marshalDouble(const double *d, int size) {
   if (!_sendbuff)
     throw CommError("trying to marshal to an unintialized buffer",1000);  
   int s = globus_nexus_sizeof_double(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_sendbuff,s,BUF_SIZE,0,0); 
-  globus_nexus_put_double(_sendbuff, d, size);  
+  globus_nexus_put_double(_sendbuff, (double*)d, size);  
 }
 
-void NexusEpMessage::marshalLong(long *l, int size) {
+void NexusEpMessage::marshalLong(const long *l, int size) {
   if (!_sendbuff)
     throw CommError("trying to marshal to an unintialized buffer",1000);
   int s = globus_nexus_sizeof_long(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_sendbuff,s,BUF_SIZE,0,0);
-  globus_nexus_put_long(_sendbuff, l, size);
+  globus_nexus_put_long(_sendbuff, (long*)l, size);
 }
 
 void NexusEpMessage::sendMessage(int handler) {
@@ -208,7 +209,8 @@ void NexusEpMessage::destroyMessage() {
   if (kDEBUG) printDebug("NexusEpMessage::destroyMessage()");
   if(int _gerr=globus_nexus_buffer_destroy(&_buffer))
     throw CommError("buffer_destroy", _gerr);
-  delete _reply;
+  if (_reply)
+    ReplyEP::release(_reply);
   if (!globus_nexus_startpoint_is_null(&msg_sp)) {
     if(int _gerr=globus_nexus_startpoint_eventually_destroy(&msg_sp, GLOBUS_FALSE, 30))
       throw CommError("startpoint_eventually_destroy", _gerr);

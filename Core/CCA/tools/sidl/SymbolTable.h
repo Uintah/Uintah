@@ -40,7 +40,8 @@ public:
     InterfaceType,
     MethodType,
     EnumType,
-    EnumeratorType
+    EnumeratorType,
+    DistArrayType
   };
   void setType(Type type);
   Type getType() const;

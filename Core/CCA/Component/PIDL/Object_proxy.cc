@@ -34,15 +34,52 @@ using namespace SCIRun;
 Object_proxy::Object_proxy(const Reference& ref)
     : ProxyBase(ref)
 {
+  d_ref[0].par_size = 1;
+  d_ref[0].par_rank = 0;
 }
 
 Object_proxy::Object_proxy(const URL& url)
   : ProxyBase(*(new Reference()))
 {
-  d_ref.chan->openConnection(url);
-  d_ref.d_vtable_base=TypeInfo::vtable_methods_start;
+  d_ref[0].chan->openConnection(url);
+  d_ref[0].d_vtable_base=TypeInfo::vtable_methods_start;
+  d_ref[0].par_size = 1;
+  d_ref[0].par_rank = 0;
+}
 
-  attach_done();
+Object_proxy::Object_proxy(const int urlc, const URL urlv[], int mysize, int myrank)
+{
+  for(int i=0; i < urlc; i++) {
+    Reference *ref = new Reference();
+    ref->chan->openConnection(urlv[i]);
+    ref->d_vtable_base=TypeInfo::vtable_methods_start;
+    addParReference(*ref);
+  }
+  if(urlc > 0) {
+    if (mysize == 0)
+      d_ref[0].par_size = 1;
+    else
+      d_ref[0].par_size = mysize;
+    d_ref[0].par_rank = myrank;
+  }
+}
+
+Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
+{
+  std::vector<URL>::const_iterator iter = urlv.begin();
+  for(unsigned int i=0; i < urlv.size(); i++, iter++) {
+    Reference *ref = new Reference();
+    ref->chan->openConnection(*iter);
+    ref->d_vtable_base=TypeInfo::vtable_methods_start;
+    addParReference(*ref);
+  }
+  if(urlv.size() > 0) {
+    if (mysize == 0)
+      d_ref[0].par_size = 1;
+    else
+      d_ref[0].par_size = mysize;
+    d_ref[0].par_rank = myrank;
+  }
 }
 
 Object_proxy::~Object_proxy()

@@ -53,16 +53,16 @@ void NexusSpMessage::createMessage() {
     throw CommError("buffer_init", _gerr);
 }
 
-void NexusSpMessage::marshalInt(int *i, int size) {
+void NexusSpMessage::marshalInt(const int *i, int size) {
   if (!_buffer)
     throw CommError("uninitialized buffer on marshaling call",1000);
   int s = globus_nexus_sizeof_int(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_buffer,s,BUF_SIZE,0,0);
-  globus_nexus_put_int(_buffer, i, size);
+  globus_nexus_put_int(_buffer, (int*)i, size);
 }
 
-void NexusSpMessage::marshalByte(char *b, int size) {
+void NexusSpMessage::marshalByte(const char *b, int size) {
   if (!_buffer)
     throw CommError("uninitialized buffer on marshaling call",1000);  
   globus_byte_t* gb = (globus_byte_t*) b;
@@ -72,40 +72,40 @@ void NexusSpMessage::marshalByte(char *b, int size) {
   globus_nexus_put_byte(_buffer, gb, size);
 }
 
-void NexusSpMessage::marshalChar(char *c, int size) {
+void NexusSpMessage::marshalChar(const char *c, int size) {
   if (!_buffer)
     throw CommError("uninitialized buffer on marshaling call",1000);  
   int s = globus_nexus_sizeof_char(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_buffer,s,BUF_SIZE,0,0); 
-  globus_nexus_put_char(_buffer, c, size);
+  globus_nexus_put_char(_buffer, (char*)c, size);
 }
 
-void NexusSpMessage::marshalFloat(float *f, int size) {
+void NexusSpMessage::marshalFloat(const float *f, int size) {
   if (!_buffer)
     throw CommError("uninitialized buffer on marshaling call",1000);  
   int s = globus_nexus_sizeof_float(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_buffer,s,BUF_SIZE,0,0); 
-  globus_nexus_put_float(_buffer, f, size);
+  globus_nexus_put_float(_buffer, (float*)f, size);
 }
 
-void NexusSpMessage::marshalDouble(double *d, int size) {
+void NexusSpMessage::marshalDouble(const double *d, int size) {
   if (!_buffer)
     throw CommError("uninitialized buffer on marshaling call",1000);  
   int s = globus_nexus_sizeof_double(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_buffer,s,BUF_SIZE,0,0); 
-  globus_nexus_put_double(_buffer, d, size);
+  globus_nexus_put_double(_buffer, (double*)d, size);
 }
 
-void NexusSpMessage::marshalLong(long *l, int size) {
+void NexusSpMessage::marshalLong(const long *l, int size) {
   if (!_buffer)
     throw CommError("uninitialized buffer on marshaling call",1000);
   int s = globus_nexus_sizeof_long(size);
   msgsize += s;
   globus_nexus_check_buffer_size(_buffer,s,BUF_SIZE,0,0);
-  globus_nexus_put_long(_buffer, l, size);
+  globus_nexus_put_long(_buffer, (long*)l, size);
 }
 
 void NexusSpMessage::marshalSpChannel(SpChannel* channel) {
@@ -212,14 +212,26 @@ void* NexusSpMessage::getLocalObj() {
 }
 
 void NexusSpMessage::destroyMessage() {
-  if (!_recvbuff)
-    throw CommError("empty reply buffer on destroy message call",1000);
+  if (_recvbuff) {
+    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))
+      throw CommError("buffer_destroy", _gerr);
+    delete _recvbuff;
+    _recvbuff = 0;
+  }
   ReplyEP::release(_reply);
-  if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))
-    throw CommError("buffer_destroy", _gerr);
-  delete _recvbuff;
-  _recvbuff = 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

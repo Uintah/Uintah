@@ -98,6 +98,18 @@ PIDL::objectFrom(const URL& url)
   return Object::pointer(new Object_proxy(url));
 }
 
+Object::pointer 
+PIDL::objectFrom(const int urlc, const URL urlv[], int mysize, int myrank)
+{
+  return Object::pointer(new Object_proxy(urlc,urlv,mysize,myrank));
+}
+
+Object::pointer 
+PIDL::objectFrom(const std::vector<URL>& urlv, int mysize, int myrank)
+{
+  return Object::pointer(new Object_proxy(urlv,mysize,myrank));
+}
+
 void 
 PIDL::serveObjects()
 {
@@ -106,7 +118,7 @@ PIDL::serveObjects()
   warehouse->run();
 }
 
-
+ 
 //PRIVATE:
 
 void

@@ -50,7 +50,8 @@ namespace SCIRun {
     /////////////////
     // Creates a message associated with this communication
     // channel. The message can then be used to perform
-    // sends/recieves.
+    // sends/recieves. There is only one message corresponding
+    // to each SpChannel.
     virtual Message* getMessage() = 0;
 
     ////////////////

@@ -74,6 +74,7 @@ Object::~Object()
     }
     delete d_serverContext->chan;
     delete d_serverContext;
+    delete d_serverContext->d_sched;
   }
 }
 
@@ -155,6 +156,17 @@ Object::getMutexPool()
     pool=new MutexPool("Core/CCA/Component::PIDL::Object mutex pool", 63);
   }
   return pool;
+}
+
+void Object::createScheduler()
+{
+  d_serverContext->d_sched = new SCIRun::MxNScheduler();
+}
+
+void Object::setCalleeDistribution(std::string distname, 
+				   MxNArrayRep* arrrep) 
+{
+  d_serverContext->d_sched->setCalleeRepresentation(distname,arrrep);
 }
 
 

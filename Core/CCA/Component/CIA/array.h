@@ -57,7 +57,7 @@ namespace CIA {
 	array2(const array2<T>& copy) : s1(copy.s1), s2(copy.s2), data(copy.data) {
 	    rows.resize(s1);
 	    int s=0;
-	    for(int i=0;i<s1;i++){
+	    for(unsigned int i=0;i<s1;i++){
 		rows[i]=&data[s];
 		s+=s2;
 	    }
@@ -66,7 +66,7 @@ namespace CIA {
 	    resize(copy.s1, copy.s2);
 	    data=copy.data;
 	    int s=0;
-	    for(int i=0;i<s1;i++){
+	    for(unsigned int i=0;i<s1;i++){
 		rows[i]=&data[s];
 		s+=s2;
 	    }
@@ -110,7 +110,7 @@ namespace CIA {
 		data.resize(s1*s2);
 	    if(rows.size() != s1)
 		rows.resize(s1);
-	    for(int i=0;i<s1;i++){
+	    for(unsigned int i=0;i<s1;i++){
 		rows[i]=&data[s];
 		s+=s2;
 	    }
@@ -119,4 +119,7 @@ namespace CIA {
 } // End namespace CIA
 
 #endif
+
+
+
 
