@@ -622,16 +622,16 @@ IntVector Level::mapCellToCoarser(const IntVector& idx) const
   return idx/refinementRatio;
 }
 
-IntVector Level::mapCellToCoarser(const IntVector& idx, Vector& weight) const
+IntVector Level::interpolateCellToCoarser(const IntVector& idx, Vector& weight) const
 {
   IntVector i(idx-(refinementRatio-IntVector(1,1,1)));
   weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+		  double(0.5+i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		  double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
   return i/refinementRatio;
 }
 
-IntVector Level::mapXFaceToCoarser(const IntVector& idx, Vector& weight) const
+IntVector Level::interpolateXFaceToCoarser(const IntVector& idx, Vector& weight) const
 {
   IntVector i(idx-(refinementRatio-IntVector(refinementRatio.x(),1,1)));
   weight=Vector(double(i.x()%refinementRatio.x())/double(refinementRatio.x()),
@@ -640,16 +640,16 @@ IntVector Level::mapXFaceToCoarser(const IntVector& idx, Vector& weight) const
   return i/refinementRatio;
 }
 
-IntVector Level::mapYFaceToCoarser(const IntVector& idx, Vector& weight) const
+IntVector Level::interpolateYFaceToCoarser(const IntVector& idx, Vector& weight) const
 {
   IntVector i(idx-(refinementRatio-IntVector(1,refinementRatio.y(),1)));
   weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		double(i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+		  double(i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		  double(0.5+i.z()%refinementRatio.z())/double(refinementRatio.z()));
   return i/refinementRatio;
 }
 
-IntVector Level::mapZFaceToCoarser(const IntVector& idx, Vector& weight) const
+IntVector Level::interpolateZFaceToCoarser(const IntVector& idx, Vector& weight) const
 {
   IntVector i(idx-(refinementRatio-IntVector(1,1,refinementRatio.z())));
   weight=Vector(double(0.5+i.x()%refinementRatio.x())/double(refinementRatio.x()),
@@ -658,15 +658,15 @@ IntVector Level::mapZFaceToCoarser(const IntVector& idx, Vector& weight) const
   return i/refinementRatio;
 }
 
-IntVector Level::mapToCoarser(const IntVector& idx, const IntVector& dir,
+IntVector Level::interpolateToCoarser(const IntVector& idx, const IntVector& dir,
 			      Vector& weight) const
 {
   IntVector d(IntVector(1,1,1)-dir);
   IntVector i(idx-(refinementRatio-d-dir*refinementRatio));
   Vector o(d.asVector()*0.5);
   weight=Vector(double(o.x()+i.x()%refinementRatio.x())/double(refinementRatio.x()),
-		double(o.y()+i.y()%refinementRatio.y())/double(refinementRatio.y()),
-		double(o.z()+i.z()%refinementRatio.z())/double(refinementRatio.z()));
+		  double(o.y()+i.y()%refinementRatio.y())/double(refinementRatio.y()),
+		  double(o.z()+i.z()%refinementRatio.z())/double(refinementRatio.z()));
   return i/refinementRatio;
 }
 

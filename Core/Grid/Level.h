@@ -101,12 +101,12 @@ WARNING
      IntVector mapNodeToFiner(const IntVector& idx) const;
      IntVector mapCellToCoarser(const IntVector& idx) const;
      IntVector mapCellToFiner(const IntVector& idx) const;
-     IntVector mapCellToCoarser(const IntVector& idx, Vector& weight) const;
-     IntVector mapXFaceToCoarser(const IntVector& idx, Vector& weight) const;
-     IntVector mapYFaceToCoarser(const IntVector& idx, Vector& weight) const;
-     IntVector mapZFaceToCoarser(const IntVector& idx, Vector& weight) const;
-     IntVector mapToCoarser(const IntVector& idx, const IntVector& dir,
-			    Vector& weight) const;
+     IntVector interpolateCellToCoarser(const IntVector& idx, Vector& weight) const;
+     IntVector interpolateXFaceToCoarser(const IntVector& idx, Vector& weight) const;
+     IntVector interpolateYFaceToCoarser(const IntVector& idx, Vector& weight) const;
+     IntVector interpolateZFaceToCoarser(const IntVector& idx, Vector& weight) const;
+     IntVector interpolateToCoarser(const IntVector& idx, const IntVector& dir,
+			               Vector& weight) const;
 
      //////////
      // Find a patch containing the point, return 0 if non exists
