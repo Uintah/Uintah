@@ -351,6 +351,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	double d=find_closest_src_loc(index, src_mesh, p);
 	if (dist<=0 || d<dist)
 	{
+	  failed = false;
 	  val = (typename FOUT::value_type)(src_field->value(index));
 	}
       }
