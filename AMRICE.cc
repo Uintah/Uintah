@@ -119,7 +119,9 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                << level->getIndex() << " step " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     Ghost::GhostType  gac = Ghost::AroundCells;
-    
+
+    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+      
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       
@@ -184,6 +186,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
 #endif
       }
     }
+    cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
   }             
 }
 /*___________________________________________________________________
@@ -293,9 +296,9 @@ void refine_CF_interfaceOperator(const Patch* patch,
                                || face == Patch::zplus) {
         coarseLow -= oneCell;
       }
-      cout_dbg << " face " << face << endl;
-      cout_dbg << " FineLevel iterator" << iter_tmp.begin() << " " << iter_tmp.end() << endl;
-      cout_dbg << " coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
+      cout_dbg << " face " << face 
+               << " FineLevel iterator" << iter_tmp.begin() << " " << iter_tmp.end() 
+               << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
       
       //__________________________________
       //   subCycleProgress_var  = 0
@@ -358,6 +361,7 @@ void refine_CF_interfaceOperator(const Patch* patch,
       }
     }
   }
+  cout_dbg.setActive(false);// turn off the switch for cout_dbg
 }
 
 /*___________________________________________________________________
@@ -673,6 +677,8 @@ void AMRICE::coarsen(const ProcessorGroup*,
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
   
+  bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+  
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
     cout_doing << " patch " << coarsePatch->getID()<< endl;
@@ -739,6 +745,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
 #endif
     }
   }  // course patch loop 
+  cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
 }
 /*_____________________________________________________________________
  Function~  AMRICE::fineToCoarseOperator--
@@ -793,6 +800,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
       q_CC[c] =q_CC_tmp*ratio;
     }
   }
+  cout_dbg.setActive(false);// turn off the switch for cout_dbg
 }
 /*_____________________________________________________________________
  Function~  AMRICE::scheduleInitialErrorEstimate--
