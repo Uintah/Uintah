@@ -39,7 +39,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 	set $this-direction 1
 	set $this-color 1
 	set $this-remove-colinear 1
-	set $this-method 0
+	set $this-method 4
 	set $this-np 1
     }
 
