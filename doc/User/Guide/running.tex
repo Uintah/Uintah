@@ -20,7 +20,7 @@
 %
 % This is the `Running SCIRun' main section.
 
-\chapter{Starting \sr{} and Power Apps}
+\chapter{Starting \sr{}}
 \label{ch:startingup}
 
 
@@ -36,17 +36,16 @@ initialization file:
 
 \begin{alltt}
   mkdir ~/on-the-fly-libs
-  echo "SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs" >> .scirunrc
+  echo "SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs" \latexhtml{\ra\ra}{\begin{rawhtml}&gt;&gt;\end{rawhtml}}} .scirunrc
 \end{alltt}
 
 See \secref{Environment Variables}{sec:environ}, \secref{\sr{}'s
-  Initialization File---\filename{.scirunrc}}{sec:scirunrc},  and \secref{Dynamic
-  Compilation}{sec:dyncomp} for more information on \sr{}'s
-  environment variables, initialization file, and ``on the fly libs.''
-
-Mac OSX users must increase the limit on the number of open files:
-
-Users of csh-type shells must type:
+Initialization File---\filename{.scirunrc}}{sec:scirunrc},  and \secref{Dynamic
+Compilation}{sec:dyncomp} for more information on \sr{}'s
+environment variables, initialization file, and ``on the fly libs.''
+  
+Mac OSX users must increase the number of open files limit.
+Users of csh-type shells on Mac OSX must type:
 
 \begin{alltt}
   limit descriptors unlimited
@@ -58,27 +57,38 @@ and users of sh-type shells must type:
   ulimit -n unlimited
 \end{alltt}
 
-\section{Starting Power Apps}
-\label{sec:startpa}
+%% \section{Starting Power Apps}
+%% \label{sec:startpa}
 
-To start a Power App, change your current working directory to \sr{}'s
-build directory (for an installation from source code) or to
-\filename{/usr/local/SCIRun/bin} (for an installation from an RPM):
+%% To start a Power App for a \sr{} installation from source code, change
+%% the working directory to \sr{}'s build directory, for example:
 
-\begin{alltt}
-  cd /usr/local/SCIRun/bin
-\end{alltt}
+%% \begin{alltt}
+%%   cd SCIRun/sgi32
+%% \end{alltt}
 
-and type, for example:
+%% and then type the name of the Power App.  For example:
 
-\begin{alltt}
-  ./BioTensor
-\end{alltt}
+%% \begin{alltt}
+%%   ./BioTensor
+%% \end{alltt}
 
-to start the BioTensor application.
+%% For an installation from an RPM, change the working directory to
+%% \filename{/usr/local/bin}:
 
-\section{Starting \sr}
-\label{sec:sciruncmd}
+%% \begin{alltt}
+%%   cd /usr/local/SCIRun/bin
+%% \end{alltt}
+
+%% and type the name of the Power App, for example:
+
+%% \begin{alltt}
+%%   ./BioFEM
+%% \end{alltt}
+
+
+%% \section{Starting \sr}
+%% \label{sec:sciruncmd}
 
 %begin{latexonly}
 \newcommand{\srwindow}%
@@ -94,6 +104,12 @@ to start the BioTensor application.
 Change your current working directory to \sr{}'s
 build directory (for an installation from source code) or to
 \filename{/usr/local/SCIRun/bin} (for an installation from an RPM):
+
+\begin{alltt}
+  cd SCIRun/sgi32
+\end{alltt}
+
+or
 
 \begin{alltt}
   cd /usr/local/SCIRun/bin
@@ -125,11 +141,11 @@ of Main Window window.
 \end{figure}
 
 \sr{} may encounter errors during start up.  Errors, warnings, and
-other messages are displayed in
-\sr{}'s error frame (see Figure~\ref{fig:srwindow}).   Errors
-should be \htmladdnormallink{reported}{\bugsurl} to the \sr{} development
-team (See \secref{Reporting Bugs}{sec:bugs} for information on
-reporting bugs).
+other messages are displayed in \sr{}'s error frame (see
+Figure~\ref{fig:srwindow}).  Errors should be
+\htmladdnormallink{reported}{\bugsurl} to the \sr{} development team
+(See \secref{Reporting Bugs}{sec:bugs} for information on reporting
+bugs).
 
 \section{Anatomy of the Main Window}
 \label{sec:windowanatomy}
