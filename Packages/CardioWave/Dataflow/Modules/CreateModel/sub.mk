@@ -30,6 +30,7 @@ SRCDIR   := Packages/CardioWave/Dataflow/Modules/CreateModel
 
 SRCS     += \
 	$(SRCDIR)/CreateSimpleMesh.cc\
+	$(SRCDIR)/ReclassifyInteriorTets.cc\
 	$(SRCDIR)/RemoveInteriorTets.cc\
 	$(SRCDIR)/SetupFVMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
@@ -38,7 +39,7 @@ PSELIBS := Packages/CardioWave/Core/Algorithms \
 	Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry \
+        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
         Core/TkExtensions 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
