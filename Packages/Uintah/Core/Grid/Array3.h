@@ -101,6 +101,9 @@ WARNING
 	--(*this);
 	return oldit;
       }
+
+      IntVector getIndex() const
+      { return d_index; }
     private:
       IntVector d_index;
       const Array3<T>* d_array3;
