@@ -18,7 +18,7 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterfaceAux.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 
 namespace SCIRun{
 
@@ -55,98 +55,56 @@ Field::get_type_name(int n) const
 
 
 ScalarFieldInterfaceHandle
-Field::query_scalar_interface(ModuleReporter *m)
+Field::query_scalar_interface(ProgressReporter *reporter)
 {
   if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
   CompileInfoHandle ci = ScalarFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<ScalarFieldInterfaceMaker> algo(0);
-  if (m)
-  {
-    if(!m->module_maybe_dynamic_compile(ci, algo))
-    {
-      return 0;
-    }
-  }
+  
+  ProgressReporter my_reporter;
+  if (!reporter) reporter = &my_reporter;
+  if ( DynamicCompilation::compile( ci, algo, true, reporter ) )
+    return algo->make(this);
   else
-  {
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().maybe_get(*(ci.get_rep()), algo_handle))
-    {
-      return 0;
-    }
-    algo = dynamic_cast<ScalarFieldInterfaceMaker *>(algo_handle.get_rep());
-    if (!algo.get_rep())
-    {
-      return 0;
-    }
-  }
-  return algo->make(this);
+    return 0;
 }
 
 
 VectorFieldInterfaceHandle
-Field::query_vector_interface(ModuleReporter *m)
+Field::query_vector_interface(ProgressReporter *reporter)
 {
   if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
   CompileInfoHandle ci = VectorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<VectorFieldInterfaceMaker> algo(0);
-  if (m)
-  {
-    if(!m->module_maybe_dynamic_compile(ci, algo))
-    {
-      return 0;
-    }
-  }
+  
+  ProgressReporter my_reporter;
+  if (!reporter) reporter = &my_reporter;
+  if ( DynamicCompilation::compile( ci, algo, true, reporter ) )
+    return algo->make(this);
   else
-  {
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().maybe_get(*(ci.get_rep()), algo_handle))
-    {
-      return 0;
-    }
-    algo = dynamic_cast<VectorFieldInterfaceMaker *>(algo_handle.get_rep());
-    if (!algo.get_rep())
-    {
-      return 0;
-    }
-  }
-  return algo->make(this);
+    return 0;
 }
 
 
 TensorFieldInterfaceHandle
-Field::query_tensor_interface(ModuleReporter *m)
+Field::query_tensor_interface(ProgressReporter *reporter)
 {
   if (data_at_ == Field::NONE) { return 0; }
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
   CompileInfoHandle ci = TensorFieldInterfaceMaker::get_compile_info(ftd, ltd);
   LockingHandle<TensorFieldInterfaceMaker> algo(0);
-  if (m)
-  {
-    if(!m->module_maybe_dynamic_compile(ci, algo))
-    {
-      return 0;
-    }
-  }
+  
+  ProgressReporter my_reporter;
+  if (!reporter) reporter = &my_reporter;
+  if ( DynamicCompilation::compile( ci, algo, true, reporter ) )
+    return algo->make(this);
   else
-  {
-    DynamicAlgoHandle algo_handle;
-    if (! DynamicLoader::scirun_loader().maybe_get(*(ci.get_rep()), algo_handle))
-    {
-      return 0;
-    }
-    algo = dynamic_cast<TensorFieldInterfaceMaker *>(algo_handle.get_rep());
-    if (!algo.get_rep())
-    {
-      return 0;
-    }
-  }
-  return algo->make(this);
+    return 0;
 }
 
 }

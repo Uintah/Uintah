@@ -32,6 +32,7 @@
 #include <Dataflow/Modules/Fields/HexToTet.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DynamicCompilation.h>
 
 #include <iostream>
 #include <vector>
@@ -102,7 +103,7 @@ HexToTet::execute()
   const TypeDescription *src_td = ifieldhandle->get_type_description();
   CompileInfoHandle hci = HexToTetAlgo::get_compile_info(src_td);
   Handle<HexToTetAlgo> halgo;
-  if (module_maybe_dynamic_compile(hci, halgo))
+  if (DynamicCompilation::compile(hci, halgo, true, this))
   {
     if (!halgo->execute(ifieldhandle, ofieldhandle, msg))
     {
@@ -114,7 +115,7 @@ HexToTet::execute()
   {
     CompileInfoHandle lci = LatToTetAlgo::get_compile_info(src_td);
     Handle<LatToTetAlgo> lalgo;
-    if (module_maybe_dynamic_compile(lci, lalgo))
+    if (DynamicCompilation::compile(lci, lalgo, true, this))
     {
       if (!lalgo->execute(ifieldhandle, ofieldhandle, msg))
       {

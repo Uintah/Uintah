@@ -27,7 +27,7 @@
 #include <Core/Math/MusilRNG.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <algorithm>
 
 namespace SCIRun {
@@ -36,7 +36,7 @@ class SampleFieldRandomAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual FieldHandle execute(ModuleReporter *mod,
+  virtual FieldHandle execute(ProgressReporter *mod,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp) = 0;
 
@@ -67,7 +67,7 @@ private:
 
 public:
 
-  virtual FieldHandle execute(ModuleReporter *mod,
+  virtual FieldHandle execute(ProgressReporter *mod,
 			      FieldHandle field, unsigned int num_seeds,
 			      int rng_seed, const string &dist, int clamp);
 };
@@ -156,7 +156,7 @@ SampleFieldRandomAlgoT<Mesh>::build_table(Mesh *mesh,
 
 template <class Mesh>
 FieldHandle
-SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
+SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
 				      FieldHandle field,
 				      unsigned int num_seeds,
 				      int rng_seed,

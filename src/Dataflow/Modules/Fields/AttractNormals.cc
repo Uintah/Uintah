@@ -34,6 +34,7 @@
 #include <Dataflow/Modules/Fields/AttractNormals.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Util/DynamicCompilation.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -157,7 +158,7 @@ AttractNormals::execute()
   CompileInfoHandle ci =
     AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, scale_p);
   Handle<AttractNormalsAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
 

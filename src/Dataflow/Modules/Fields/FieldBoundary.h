@@ -24,7 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
@@ -367,7 +367,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 class FieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(ModuleReporter *m, const MeshHandle mesh,
+  virtual void execute(ProgressReporter *m, const MeshHandle mesh,
 		       FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept

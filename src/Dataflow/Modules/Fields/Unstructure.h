@@ -24,7 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ModuleReporter.h>
+#include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
@@ -37,7 +37,7 @@ namespace SCIRun {
 class UnstructureAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ModuleReporter *module, FieldHandle src) = 0;
+  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -50,7 +50,7 @@ class UnstructureAlgoT : public UnstructureAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ModuleReporter *module, FieldHandle src);
+  virtual FieldHandle execute(ProgressReporter *module, FieldHandle src);
 };
 
 
@@ -105,7 +105,7 @@ struct SpecialUnstructuredEqual
 
 template <class FSRC, class FDST>
 FieldHandle
-UnstructureAlgoT<FSRC, FDST>::execute(ModuleReporter *module,
+UnstructureAlgoT<FSRC, FDST>::execute(ProgressReporter *module,
 				      FieldHandle field_h)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(field_h.get_rep());

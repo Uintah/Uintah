@@ -12,6 +12,7 @@
 #include <Dataflow/Modules/Fields/Centroids.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Util/DynamicCompilation.h>
 #include <math.h>
 
 #include <Core/share/share.h>
@@ -68,7 +69,7 @@ Centroids::execute()
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = CentroidsAlgo::get_compile_info(ftd);
   Handle<CentroidsAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle));
   

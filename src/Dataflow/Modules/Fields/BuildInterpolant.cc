@@ -36,6 +36,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/BuildInterpolant.h>
 #include <Core/Containers/Handle.h>
+#include <Core/Util/DynamicCompilation.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -120,7 +121,7 @@ BuildInterpolant::execute()
 				      fdst_h->data_at_type_description(),
 				      fdst_h->get_type_description());
   Handle<BuildInterpAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   ofp = (FieldOPort *)get_oport("Interpolant");
   if(!ofp) {
