@@ -22,6 +22,7 @@ SUBDIRS := \
 	$(SRCDIR)/Geometry		\
 	$(SRCDIR)/Visualization		\
 	$(SRCDIR)/GLVolumeRenderer      \
+        $(SRCDIR)/DataIO                \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
