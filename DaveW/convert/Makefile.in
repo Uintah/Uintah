@@ -4,7 +4,7 @@ OBJTOP   = ../..
 OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
 
 INCLUDES = -I$(SRCTOP) -I$(SRCTOP)/DaveW/ThirdParty/Nrrd/include/ -I$(OBJTOP)
-LIBRARIES = -L$(OBJTOP)/SCICore -Wl,-rpath -Wl,$(OBJTOP_ABS)/SCICore/ -lSCICore -lm
+LIBRARIES = -L$(OBJTOP)/SCICore -L$(OBJTOP)/PSECore -L$(OBJTOP)/DaveW -Wl,-rpath -Wl,$(OBJTOP_ABS)/SCICore/:$(OBJTOP_ABS)/PSECore/:$(OBJTOP_ABS)/DaveW/ -lSCICore -lPSECore -lDaveW -lm
 
 all:: prog-SurfToJAS
 
@@ -58,6 +58,9 @@ prog-MeshWikswo:
 
 prog-MergeWikswo:
 	@$(MAKE) --no-print-directory SRCS=MergeWikswo.cc PROGRAM=MergeWikswo MergeWikswo
+
+prog-NRRDtoTensor:
+	@$(MAKE) --no-print-directory SRCS=NRRDtoTensor.cc PROGRAM=NRRDtoTensor NRRDtoTensor
 
 prog-ResampleField:
 	@$(MAKE) --no-print-directory SRCS=ResampleField.cc PROGRAM=ResampleField ResampleField
