@@ -34,10 +34,15 @@
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
-#include <Core/CCA/Component/Comm/Intra/IntraCommMPI.h>
+#include <Core/CCA/Component/Comm/Intra/IntraComm.h>
 #include <Core/Exceptions/InternalError.h> 
+#include <sci_defs.h>
 #include <iostream>
 #include <sstream>
+
+#ifdef HAVE_MPI
+#include <Core/CCA/Component/Comm/Intra/IntraCommMPI.h>
+#endif
 
 #ifdef HAVE_GLOBUS
 #include <Core/CCA/Component/Comm/NexusSpChannel.h>
@@ -77,7 +82,9 @@ PIDL::initialize(int, char*[])
 
   }
 
+#ifdef HAVE_MPI
   setIntraCommunication(INTRA_COMM_MPI);
+#endif
 
   if(!warehouse){
     warehouse=new Warehouse;
@@ -164,12 +171,15 @@ PIDL::serveObjects()
 IntraComm* 
 PIDL::getIntraComm()
 {
+#ifdef HAVE_MPI
   switch (intra_comm_type) {
   case (INTRA_COMM_MPI):
     return (new IntraCommMPI());
   default:
     return (new IntraCommMPI());
   }
+#endif
+  return NULL;
 }
  
 //PRIVATE:

@@ -27,12 +27,18 @@ SUBDIRS := \
 	$(SRCDIR)/objects	\
 	$(SRCDIR)/pingpong	\
 	$(SRCDIR)/spectest      \
+        $(SRCDIR)/pp            
+
+ifeq ($(HAVE_MPI),1)
+SUBDIRS += \
 	$(SRCDIR)/pingpongArr   \
 	$(SRCDIR)/mxn  	        \
 	$(SRCDIR)/mxnargtest    \
 	$(SRCDIR)/Jacobi        \
 	$(SRCDIR)/LUFactor      \
 	$(SRCDIR)/OESort	\
-	$(SRCDIR)/pp
+	$(SRCDIR)/subsetter
+endif
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
