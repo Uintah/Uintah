@@ -15,7 +15,7 @@
 #include <iostream>
 #include <Component/PIDL/PIDL.h>
 #include "PingPong_impl.h"
-#include "PingPong_manual.h"
+#include "PingPong_sidl.h"
 #include <SCICore/Thread/Time.h>
 
 using std::cerr;
@@ -75,9 +75,9 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-	    cerr << "Creating PingPong object";
+	    cerr << "Creating PingPong object\n";
 	    PingPong_impl pp;
-	    cerr << "\nWaiting for pingpong connections...\n";
+	    cerr << "Waiting for pingpong connections...\n";
 	    cerr << pp.getURL().getString() << '\n';
 	    PIDL::serveObjects();
 	} else {
@@ -111,6 +111,9 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.2  1999/09/17 05:08:45  sparker
+// Updates to work with automatic sidl code generation
+//
 // Revision 1.1  1999/09/07 07:35:38  sparker
 // Now builds some of the test programs, including a pingpong test
 // program for the new component model
