@@ -49,15 +49,12 @@ modules.tex ../../Utilities/TeX/scirun-doc.tex
 latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
 -html_version 4.0,math -show_section_numbers -local_icons \
 -long_titles 1 -prefix srug -image_type gif \
--style ../../../Utilities/HTML/doc_styles.css
+-style ../../../Utilities/HTML/srlatex2html.css
 
 mainfile := ${bn}.tex
 dvifile := ${bn}.dvi
 psfile = ${bn}.ps
-# ${psfile2} is a ps file optimized for use with adobe distiller.
-psfile2 := ${bn}2.ps
 gzpsfile := ${psfile}.gz
-gzpsfile2 := ${psfile2}.gz
 htmldir := ${bn}
 treetop:=../../..
 stylesheet:=${treetop}/doc/Utilities/XML/comp2latex.xsl
