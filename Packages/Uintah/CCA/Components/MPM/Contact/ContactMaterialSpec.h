@@ -74,7 +74,7 @@ WARNING
          // is this material used
          bool requested(int imat) const { 
            if(d_matls.size()==0)    return true; // everything by default
-           if(d_matls.size()<=imat) return false;
+           if((int)d_matls.size()<=imat) return false;
            return d_matls[imat]; 
          }
           
@@ -82,7 +82,7 @@ WARNING
          bool present(const StaticArray<constNCVariable<double> > & gmass, IntVector c) const
          {
            int numMats = gmass.size();
-           if(numMats>d_matls.size()) numMats = d_matls.size();
+           if(numMats>(int)d_matls.size()) numMats = d_matls.size();
            
            for(int imat=0;imat<numMats;imat++) 
              {
