@@ -42,6 +42,7 @@ distclean::
 	@$(MAKE) _cleanHere _distcleanHere
 
 reportObjs::
+	@true
 
 _cleanHere::
 	@true
