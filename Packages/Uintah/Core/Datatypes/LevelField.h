@@ -71,7 +71,8 @@ public:
   virtual bool interpolate(double &result, const Point &p) const;
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const;
-  virtual void find_closest(double &result, const Point&) const { result = 0; }
+  virtual double find_closest(double &result, const Point&) const 
+     { double mindist = 1.0e15; result = 0; return mindist; }
 private:
   const LevelField<Data>* fld_;
 };
