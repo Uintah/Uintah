@@ -97,10 +97,12 @@ WARNING
     { this->rep_.copyPointer(const_cast<VariableBase&>(copy)); }
 
     virtual const VariableBase* clone() const
-    { return this->rep_.clone(); }
+      // need to cast it if it is a GridVariable
+    { return dynamic_cast<const VariableBase*>(this->rep_.clone()); }
 
     virtual VariableBase* cloneType() const
-    { return this->rep_.cloneType(); }
+      // need to cast it if it is a GridVariable
+    { return dynamic_cast<VariableBase*>(this->rep_.cloneType()); }
 
     inline const T& operator[](Index idx) const
     { return this->rep_[idx]; }

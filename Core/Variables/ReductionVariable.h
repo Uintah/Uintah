@@ -77,7 +77,7 @@ WARNING
       return value;
     }
     virtual ReductionVariableBase* clone() const;
-    virtual void copyPointer(const ReductionVariableBase&);
+    virtual void copyPointer(Variable&);
     virtual void reduce(const ReductionVariableBase&);
     virtual void print(ostream& out)
     { out << value; }
@@ -162,7 +162,7 @@ WARNING
 
   template<class T, class Op>
   void
-  ReductionVariable<T, Op>::copyPointer(const ReductionVariableBase& copy)
+  ReductionVariable<T, Op>::copyPointer(Variable& copy)
   {
     const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&copy);
     if(!c)

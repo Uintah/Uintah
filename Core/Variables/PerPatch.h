@@ -45,7 +45,7 @@ WARNING
    public:
       inline PerPatch() {}
       inline PerPatch(T value) : value(value) {}
-      virtual void copyPointer(const PerPatchBase&);
+      virtual void copyPointer(Variable&);
       inline PerPatch(const PerPatch<T>& copy) : value(copy.value) {}
       virtual ~PerPatch();
       
@@ -121,7 +121,7 @@ WARNING
 
    template<class T>
       void
-      PerPatch<T>::copyPointer(const PerPatchBase& copy)
+      PerPatch<T>::copyPointer(Variable& copy)
       {
          const PerPatch<T>* c = dynamic_cast<const PerPatch<T>* >(&copy);
          if(!c)
