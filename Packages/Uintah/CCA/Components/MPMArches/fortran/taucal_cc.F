@@ -32,7 +32,8 @@
      $     lmltm, 
      $     pcell, ffield)
 C--------------------------------------------------------------------
-c     calculates the wall shear stress for the gas phase
+c
+c     Calculates the wall shear stress for the gas phase
 c     written by Seshadri Kumar, August 8, 2000
 c     
 c     modified, January 8, 2000, Seshadri Kumar
@@ -43,8 +44,10 @@ c     modified, March 5, 2001
 c     This is a cell-centered version.  Although dfx_fcy is
 c     stored as (iorig,jorig,korig), this must be understood
 c     to mean their face-centered representations.
-c     Further, this version does not have anything for k-epsilon
-c     However, it is augmented for Smagorinsky LES.
+c     Further, this version does not have anything for 
+c     k-epsilon. However, it is augmented for Smagorinsky 
+c     LES.
+c     
 C--------------------------------------------------------------------
 
       implicit none
@@ -177,8 +180,8 @@ C--------------------------------------------------------------------
          if (lmltm) then
 
 c     smagorinsky model: with delta near wall treated as
-c     distance from wall, in analogy with classical mixing length
-c     model
+c     distance from wall, in analogy with classical mixing 
+c     length model
 
             tmult = eps*(csmag*yp)**2*abs((up_fcy(ii,jj,kk) - 
      $           ug_cc(i,j,k))/yp)/yp
