@@ -8,8 +8,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Markup and other useful text substitution commands.
 
+% (Mostly) Short cuts  ==============================
+\newcommand{\SCI}{\emph{SCI}}
+\newcommand{\sci}{\SCI}
+\newcommand{\scii}{SCI Institute}
 \newcommand{\PSE}{\emph{BioPSE}}
+\newcommand{\pse}{\PSE}
 \newcommand{\SR}{\emph{SCIRun}}
+\newcommand{\sr}{\SR}
 \newcommand{\eg}{{\em e.g.,}}
 \newcommand{\ie}{{\em i.e.,}}
 \newcommand{\etc}{{\em etc.,}}
@@ -20,11 +26,9 @@
 \newcommand{\version}{1.0}
 \newcommand{\rob}{Rob MacLeod (macleod@cvrti.utah.edu)}
 \newcommand{\ted}{Ted Dustman (dustman@cvrti.utah.edu)}
-\newcommand{\srug}{BioPSE User's Guide}
-\newcommand{\srdg}{BioPSE Developer's Guide}
-\newcommand{\srig}{BioPSE Installation Guide}
+\newcommand{\srug}{\sr{} User's Guide}
+\newcommand{\srig}{\sr{} Installation Guide}
 \newcommand{\viewer}{\emph{Viewer}}
-
 
 % Literal ~ character
 \newcommand{\ltilde}{\symbol{'176}}
@@ -38,17 +42,24 @@
 % Inserts a right angle bracket.
 \newcommand{\ra}{\latexhtml{$>$}{>}}
 
-% Markup an acronym
-\newcommand{\acronym}[1]{\emph{#1}}
+% Urls =============================================
+
+% www style urls.
+\newcommand{\sciurl}{http://www.sci.utah.edu}
+\newcommand{\scidocurl}{\sciurl/scirun/doc}
+\newcommand{\installdocurl}{\scidocurl/InstallGuide/pseInstall.html}
+\newcommand{\bugsurl}{\sciurl/bugs}
+
+% Relative to userguide directory in the distribution.
+\newcommand{\installdocrurl}{../../InstallGuide/pseInstall.html}
+
+% Mark up commands =================================
+
+% Acronym
+\newcommand{\acronym}[1]{#1}
 
 % Predefined acronyms
 \newcommand{\gui}{\acronym{GUI}}
-\newcommand{\pse}{\acronym{BioPSE}}
-\newcommand{\Pse}{\pse}
-\newcommand{\sci}{\acronym{SCI}}
-\newcommand{\Sci}{\sci}
-\newcommand{\sr}{\acronym{SCIRun}}
-\newcommand{\Sr}{\sr}
 \newcommand{\tcl}{\acronym{TCL}}
 
 % Markup the first time use of term that may be unfamiliar to the
@@ -96,9 +107,6 @@
 % Markup a sr category name.
 \newcommand{\category}[1]{\texttt{#1}}
 
-% Sci url
-\newcommand{\sciurl}{http://www.sci.utah.edu}
-
 % Call attention to some useful bit of information.
 \newcommand{\note}[1]{\emph{Note: #1}} 
 
@@ -115,7 +123,7 @@
 \newcommand{\etitle}[1]{\texttt{#1}}
 
 % Section command.  This command should be
-% used in place to reference sections (subsections etc.).
+% used in place of \ref to reference sections (subsections etc.).
 % The command's first argument is the link text (used only on the html
 % page) and the second argument is the section's label
 \newcommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}
@@ -125,6 +133,9 @@
 
 % Use this to make note of incomplete content.
 \newcommand{\incomplete}{\emph{More Comming Soon.}}
+
+% Mark up a mail address
+\newcommand{\mailto}[1]{\texttt{#1}}
 
 %%% Local Variables: 
 %%% mode: latex
