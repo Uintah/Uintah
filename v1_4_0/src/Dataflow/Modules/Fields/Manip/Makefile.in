@@ -1,0 +1,67 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# Makefile for field manipulation code that is compiled and loaded on the fly
+
+# Default target
+default: all
+
+MANIP_OBJTOP_ABS    := $(shell cd ../../../.. ; pwd)
+
+include $(MANIP_OBJTOP_ABS)/configVars.mk
+
+MANIP_SRCTOP_ABS    := $(MANIP_OBJTOP_ABS)/$(SRCDIR)
+
+FIELD_MANIP_SRC := $(MANIP_SRCTOP_ABS)/Dataflow/Modules/Fields/Manip
+FIELD_MANIP_OBJ := $(MANIP_OBJTOP_ABS)/Dataflow/Modules/Fields/Manip
+
+INCLUDES = -I$(MANIP_SRCTOP_ABS)/include -I$(MANIP_SRCTOP_ABS) -I$(MANIP_OBJTOP_ABS) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES)
+
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(MANIP_SRCTOP_ABS)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
+
+LIBDIR := -L../../../../lib/
+
+include $(FIELD_MANIP_SRC)/sub.mk
+
+# The libraries are specified like Core/Thread but get
+# name-mangled to Core_Thread
+SRLIBS := $(subst /,_,$(SRLIBS))
+
+MANIP_LIBS := $(patsubst %.cc,%.so, $(SRCS))
+
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
+
+
+.SUFFIXES: .cc .so
+
+Makefile: $(FIELD_MANIP_SRC)/Makefile.in $(MANIP_OBJTOP_ABS)/config.status
+	@( Here="`pwd`" ; cd $(MANIP_SRCTOP_ABS) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
+
+
+%.so : $(FIELD_MANIP_SRC)/%.cc
+	rm -f $@
+	echo $<
+	$(CXX) $(CFLAGS) $($(patsubst $(FIELD_MANIP_SRC)/%.cc,%INCLUDES,$<)) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $($(patsubst $(FIELD_MANIP_SRC)/%.cc,%LIBPATH,$<)) $(LIBDIR) $($(patsubst $(FIELD_MANIP_SRC)/%.cc,%LIBS,$<))
+
+all: $(MANIP_LIBS)

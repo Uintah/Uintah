@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+	<title>Arches test run</title>
+   </Meta>
+
+   <Time>
+	<maxTime>10.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0</delt_min>
+	<delt_max>1.0</delt_max>
+	<timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>tmp.uda</filebase>
+	<outputInterval>1.0</outputInterval>
+   </DataArchiver>
+
+   <OutputVars>
+  	<t_initial_output>0.0</t_initial_output>
+	<t_final_output>15.0</t_final_output>
+  	<t_delta_output>0</t_delta_output>
+	<filebasename>run1</filebasename>
+	<file_description>run1</file_description>
+   </OutputVars>
+
+   <CFD>
+	<!-- ARCHES specification -->
+
+	<ARCHES>
+	    <grow_dt>0.001</grow_dt>
+   	    <nonlinear_solver>picard</nonlinear_solver>
+    	    <turbulence_model>smagorinsky</turbulence_model>
+
+	    <Turbulence>
+		<cf>0.2</cf>
+		<fac_mesh>2.0</fac_mesh>
+		<filterl>0.01</filterl>
+	    </Turbulence>
+
+	    <Properties>
+		<denUnderrelax>1</denUnderrelax>
+		<Stream>
+		    <density>0.1</density>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		</Stream>
+		<Stream>
+		    <density>1</density>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		</Stream>
+	    </Properties>
+
+	    <BoundaryConditions>
+		<FlowInlet>
+		    <Flow_rate>1</Flow_rate>
+		    <MixtureFraction>
+			<Mixfrac>1</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>1</TurblengthScale>
+		    <inletType>primary</inletType>
+		    <geom_object>
+		      <box label="gp1">
+			<min>[-4,0.49,0.49]</min>
+			<max>[0, 0.51, 0.51]</max>
+		      </box>
+		    </geom_object>
+		</FlowInlet>
+		<PressureBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>1</TurblengthScale>
+		    <RefPressure>1</RefPressure>
+		    <geom_object>
+		      <box label="gp2">
+			<min>[0,-5,-5]</min>
+			<max>[1,0,0]</max>
+		      </box>
+		    </geom_object>
+		    <geom_object>
+		      <box label="gp2">
+			<min>[0,1,1]</min>
+			<max>[1,5,5]</max>
+		      </box>
+		    </geom_object>
+		</PressureBC>
+		<outletBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>1</TurblengthScale>
+		    <outletType>pressure</outletType>
+		    <geom_object>
+		      <box label="gp3">
+			<min>[1,0,0]</min>
+			<max>[5,1,1]</max>
+		      </box>
+		    </geom_object>
+		</outletBC>
+		<WallBC>
+		    <geom_object>
+		      <box label="gp3">
+			<min>[-5,0,0]</min>
+			<max>[0,0,0]</max>
+		      </box>
+		    </geom_object>
+		</WallBC>
+	    </BoundaryConditions>
+
+	    <PhysicalConstants>
+		<gravity>[-9.8,0,0]</gravity>
+		<pressure>1.0</pressure>
+		<viscosity>1.0</viscosity>
+		<schmidtNo>0.7</schmidtNo>
+	    </PhysicalConstants>
+
+	    <PicardSolver>
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
+
+		<cal_pressure>true</cal_pressure>
+		<PressureSolver>
+		    <ref_point>[10,10,10]</ref_point>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>50</max_iter>
+			<res_tol>0.0001</res_tol>
+		        <underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</PressureSolver>
+
+		<cal_momentum>true</cal_momentum>
+		<MomentumSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>5</max_iter>
+			<res_tol>0.0001</res_tol>
+			<underrelax>0.8</underrelax>
+		    </LinearSolver>
+		</MomentumSolver>
+
+		<cal_mixturescalar>true</cal_mixturescalar>
+		<MixtureFractionSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>5</max_iter>
+			<res_tol>0.0001</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MixtureFractionSolver>
+	    </PicardSolver>
+
+        </ARCHES>
+
+    </CFD>
+
+    <PhysicalConstants>
+	<gravity>[-9.8,0,0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>1.0</pressure>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+
+	<ARCHES>
+	</ARCHES>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<Level>
+	    <Box label="1">
+	        <lower>[0,0,0]</lower>
+	        <upper>[1,1,1]</upper>
+	        <resolution>[61,41,41]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<ARCHES>
+	</ARCHES>
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ARCHES>
+	</ARCHES>
+
+    </InitialConditions>
+
+</Uintah_specification>

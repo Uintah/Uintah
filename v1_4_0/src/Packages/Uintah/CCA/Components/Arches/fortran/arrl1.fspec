@@ -1,0 +1,2 @@
+void arrl1(double alpha, double alpave, Array3<double> aa,
+	IntVector valid_lo, IntVector valid_hi);

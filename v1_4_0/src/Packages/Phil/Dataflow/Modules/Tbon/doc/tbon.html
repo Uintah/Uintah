@@ -1,0 +1,165 @@
+<html>
+<title>TBON module</title>
+<body>
+
+<h1>TBON</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+<i>Note: this is the most developed, most worked-on module.  If you're 
+looking for an example of how the code works, this should be the first 
+place to look.</i><p>
+
+Implementation of the Temporal Branch-on-Need Octree (T-BON) for 
+rectilinear scalar fields (see the thesis for more details).<p>
+
+Some preprocessing must be done before isosurface extraction.
+This preprocess step is DIFFERENT from that of the
+<a href="bono.html">BONO</a> module, so it should be done again
+(still once per data set) if the BONO preprocess is all you have.
+You may want to use a different set of metafiles if you want to
+run both BONO and T-BON.<p>
+
+During execution (run the module on an execution metafile), the
+user controls isovalue and time value sliders.  Nodes and data are read
+in whenever needed to construct the current isosurface, otherwise
+left on disk.  The data files are read in in blocks to improve I/O
+performance (again, see the thesis).  A Marching Cubes-type 
+interpolation is performed to create triangles for rendering.<p>
+
+<a name="metafiles">
+<p><b>Metafile format:</b><p>
+</a>
+
+<table align=center cols=2 border=1 cellpadding=2>
+<tr>
+<td align=center>Preprocessing</td>
+<td align=center>Execution</td>
+</tr>
+<tr>
+<td align=left>
+PREPROCESS<br>
+<i>filename for data file list*</i><br>
+nx ny nz<br>
+<i>filename for common tree data</i><br>
+<i>per-tree file base</i>
+</td>
+<td align=left>
+EXECUTE<br>
+<i>filename for common tree data</i><br>
+<i>filename for per-tree data file list*</i><br>
+miniso maxiso slider_resolution<br>
+num_timesteps
+</td>
+</tr>
+<tr>
+<td>* <i>format as follows:</i><br>
+  <table align=center cols=2 border=0 cellpadding=0>
+  <tr>
+  <td align=left>data filename (time=0)</td>
+  <td align=right>bricked filename 0</td>
+  </tr>
+  <tr>
+  <td align=left>data filename (time=1)</td>
+  <td align=right>bricked filename 1</td>
+  </tr>
+  <tr>
+  <td align=left>data filename (time=2)</td>
+  <td align=right>bricked filename 2</td>
+  </tr>
+  </table>
+...<br>
+</td>
+<td>* <i>format as follows:</i><br>
+  <table align=center cols=2 border=0 cellpadding=0>
+  <tr>
+  <td>per-tree file 0</td>
+  <td align=right>bricked filename 0</td>
+  </tr>
+  <tr>
+  <td>per-tree file 1</td>
+  <td align=right>bricked filename 1</td>
+  </tr>
+  <tr>
+  <td>per-tree file 2</td>
+  <td align=right>bricked filename 2</td>
+  </tr>
+  </table>
+...<br>
+</td>
+</tr>
+</table>
+
+<p>
+<a name="bonoexamples">
+<b>Example metafiles and explanations:</b><p>
+</a>
+
+<hr>
+<i>meta_preprocess</i><p>
+
+<pre>
+PREPROCESS
+./filelist
+256 256 256
+./common_data
+./tree
+</pre>
+
+<hr>
+<i>./filelist</i><p>
+
+<pre>
+/local/sci/raid0/JetData/sclb0000.dat   ./data0
+/local/sci/raid0/JetData/sclb0001.dat   ./data1
+...
+/local/sci/raid0/JetData/sclb0099.dat   ./data99
+</pre>
+
+<hr>
+The preprocess will read ./filelist and create 201 files.  ./common_data
+will contain data common to all trees, and ./tree0 .. ./tree99 will
+contain time-specific data.  ./data0 .. ./data99 contain bricked versions
+of the data files from each time step.  The "256 256 256" tells the module 
+that the Jet data set contains 256^3 points.  Once the preprocess is 
+finished, the module can be run on:
+<p>
+
+<hr>
+<i>meta_execute</i><p>
+
+<pre>
+EXECUTE
+./common_data
+./trees_file
+0 255 0.1
+100
+</pre>
+
+<hr>
+<i>./trees_file</i><p>
+
+<pre>
+./tree0      ./data0
+./tree1      ./data1
+...
+./tree99     ./data99
+</pre>
+
+<hr>
+
+Since the Jet data set contains byte data (unsigned char), the possible
+isosurface values range from 0 to 255.  This metafile specifies that
+the isosurface slider should move in increments of 0.1, and that 100
+time steps exist.
+
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 1 February 2000
+
+
+</body>
+</html>

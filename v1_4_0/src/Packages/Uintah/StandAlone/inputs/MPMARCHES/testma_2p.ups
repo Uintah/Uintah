@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
+
+<!-- @version: -->
+
+
+<Uintah_specification>
+
+   <Meta>
+	<title>MPMArches Methane Plume Single Patch Run with Radiation</title>
+   </Meta>
+
+   <Time>
+	<maxTime>0.2</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>0.01</delt_max>
+	<timestep_multiplier>0.2</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>methaneplumeexplicit.uda</filebase>
+	<outputInterval>0.1</outputInterval>
+	<save label="void_frac_CC"/>
+	<save label="solid_fraction"/>
+	<save label = "KineticEnergy"/>
+	<save label = "TotalMass"/>
+	<save label = "StrainEnergy"/>
+	<save label = "CenterOfMassPosition"/>
+	<save label = "CenterOfMassVelocity"/>
+	<save label = "p.x"/>
+	<save label = "p.volume"/>
+	<save label = "p.mass"/>
+	<save label = "p.temperature"/>
+	<save label = "g.mass"/>
+	<save label = "g.stressFS"/>
+
+	<save label="uvwout"/>
+	<save label="totalflowIN"/>
+	<save label="totalflowOUT"/>
+	<save label="denAccum"/>
+	<save label="pressurePS"/>
+        <save label="newCCUVelocity"/>	
+        <save label="newCCVVelocity"/>	
+        <save label="newCCWVelocity"/>	
+        <save label="newCCVelocity"/>
+	<save label="scalarSP"/>
+	<save label="densityCP"/>
+	<save label="viscosityCTS"/>
+	<save label="cellType"/>
+	<checkpoint interval="0.2" cycle="2"/>
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0.0,0.0,0.0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>0.0</pressure>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+                <burn type = "null" />
+		<density>9000.0</density>
+		<constitutive_model type="comp_mooney_rivlin"> 
+		   <he_constant_1>1000.0</he_constant_1>
+		   <he_constant_2>20.0</he_constant_2>
+		   <he_PR>.49</he_PR>
+	        </constitutive_model>
+		<toughness>10.e6</toughness>
+		<thermal_conductivity>401.0</thermal_conductivity>
+		<specific_heat>385</specific_heat>
+                <geom_object>
+                    <box label="mpmbox">
+                        <min>           [0.8,1.4,1.4]   </min>
+                        <max>           [1.0,1.6,1.6]   </max>
+                    </box>
+                    <res>               [2,2,2]         </res>
+                    <velocity>          [0.0,0.0,0.0]   </velocity>
+                    <temperature>       298             </temperature>
+                </geom_object>
+		<velocity_field>0</velocity_field>
+	    </material>
+
+	    <contact>
+	      <type>null</type>
+	      <vel_fields>[0,0,0]</vel_fields>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<BoundaryConditions>
+		 <Face side = "x-">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                           <value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                </Face>
+                <Face side = "x+">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+			     <value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                </Face>
+                <Face side = "y-">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                           <value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                </Face>                  
+		<Face side = "y+">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">            			    <value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                </Face>
+                <Face side = "z-">
+                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+                </Face>
+                <Face side = "z+">
+                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+                </Face>                           
+	</BoundaryConditions>
+	<Level>
+	    <Box label="1">
+	        <lower>[0,0,0]</lower>
+	        <upper>[3,3,3]</upper>
+	        <resolution>[20,20,20]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		<patches>[2,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+
+   <CFD>
+	<!-- ARCHES specification -->
+
+	<ARCHES>
+
+	    <grow_dt>0.05</grow_dt>
+	    <variable_dt>true</variable_dt>
+   	    <nonlinear_solver>explicit</nonlinear_solver>
+    	    <turbulence_model>smagorinsky</turbulence_model>
+            <reacting_flow>false</reacting_flow>
+            <solve_enthalpy>false</solve_enthalpy>	
+	    <solve_reactingscalar>false</solve_reactingscalar>
+
+	    <Turbulence>
+
+		<cf>0.001</cf>
+		<fac_mesh>1.0</fac_mesh>
+		<filterl>0.000001</filterl>
+	        <var_const>0.1</var_const>
+
+	    </Turbulence>
+
+	    <Properties>
+
+		<denUnderrelax>0.9</denUnderrelax>
+	        <ref_point>[3,3,3]</ref_point>
+	        <radiation>false</radiation>
+	        <mixing_model>coldFlowMixingModel</mixing_model>
+
+	        <ColdflowMixingModel>
+
+		  <Stream>
+		    <density>0.162059</density>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		  </Stream>
+		  <Stream>
+		    <density>1.184344</density>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		  </Stream>
+
+                </ColdflowMixingModel>
+
+	        <PDFMixingModel>
+
+		  <adiabatic>false</adiabatic>
+                  <mixstatvars>0</mixstatvars>
+                  <rxnvars>0</rxnvars>
+		  <reaction_model>EquilibriumReactionModel</reaction_model>
+
+		  <Stream>
+		    <pressure>1.01325e+05</pressure>
+		    <temperature>298.0</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		    <mole>true</mole>
+		    <Species>
+		      <symbol>CH4</symbol>
+                      <mfraction>1.0</mfraction>
+                    </Species>
+		  </Stream>
+
+		  <Stream>
+		    <pressure>1.01325e+05</pressure>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		    <mole>true</mole>
+		    <Species>
+		      <symbol>O2</symbol>
+                      <mfraction>0.21</mfraction>
+                    </Species>
+		    <Species>
+		      <symbol>N2</symbol>
+                      <mfraction>0.79</mfraction>
+                    </Species>
+		  </Stream>
+
+		  <MixRxnTableInfo>
+                    <Enthalpy>
+                       <NumDivs>20</NumDivs>
+                       <MaxValue>1.0</MaxValue>
+                       <MinValue>-1.0</MinValue>
+                       <MidValue>0.0</MidValue>
+     		       <NumDivsBelow>10</NumDivsBelow>
+     		       <NumDivsAbove>10</NumDivsAbove>
+                    </Enthalpy>
+                    <MixtureFraction>
+                       <NumDivs>40</NumDivs>
+                       <MaxValue>1.0</MaxValue>
+                       <MinValue>0.0</MinValue>
+                       <MidValue>0.1</MidValue>
+     		       <NumDivsBelow>20</NumDivsBelow>
+     		       <NumDivsAbove>20</NumDivsAbove>
+                     </MixtureFraction>
+                  </MixRxnTableInfo>
+
+		  <Integrator>
+		     <favre>true</favre>
+                     <PDFSHAPE>BetaPDFShape</PDFSHAPE>
+                  </Integrator>
+
+                  <EquilibriumReactionModel>
+                     <MixRxnTableInfo>
+                        <Enthalpy>
+                          <MaxValue>1.0</MaxValue>
+                          <MinValue>-1.0</MinValue>
+                          <MidValue>0.0</MidValue>
+                          <NumDivsBelow>10</NumDivsBelow>
+                          <NumDivsAbove>10</NumDivsAbove>
+                       </Enthalpy>
+
+                       <MixtureFraction>
+                          <MaxValue>1.0</MaxValue>
+                          <MinValue>0.0</MinValue>
+                          <MidValue>0.06</MidValue>
+                          <NumDivsBelow>20</NumDivsBelow>
+                          <NumDivsAbove>20</NumDivsAbove>
+                       </MixtureFraction>
+                    </MixRxnTableInfo>
+
+                  </EquilibriumReactionModel>
+
+                </PDFMixingModel>
+
+	    </Properties>
+
+	    <BoundaryConditions>
+
+		<FlowInlet>
+		    <Flow_rate>0.04527</Flow_rate>
+		    <MixtureFraction>
+			<Mixfrac>1.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <inletType>primary</inletType>
+		    <geom_object>
+		      <cylinder label = "inlet">
+			<bottom>[-5,1.5,1.5]</bottom>
+			<top>[0,1.5,1.5]</top>
+			<radius> .5 </radius>
+		      </cylinder>
+		    </geom_object>
+		</FlowInlet>
+
+		<WallBC>
+		    <geom_object>
+		      <box label="botWall">
+			<min>[-1,-1,-1]</min>
+			<max>[0,4,4]</max>
+		      </box>
+		    </geom_object>
+		</WallBC>
+
+		<PressureBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+		      <box label="posY_xzWall">
+			<min>[0,3,-1]</min>
+			<max>[3,4,4]</max>
+		      </box>
+		      <box label="zeroY_xzWall">
+			<min>[0,-1,-1]</min>
+			<max>[3,0,4]</max>
+		      </box>
+		      <box label="posZ_xyWall">
+			<min>[0,-1,3]</min>
+			<max>[3,4,4]</max>
+		      </box>
+                      <box label="zeroZ_xyWall">	
+			<min>[0,-1,-1]</min>
+			<max>[3,4,0]</max>
+		      </box>
+		    </geom_object>
+		</PressureBC>
+
+		<outletBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+		      <box label="topWall">
+			<min>[3,-1,-1]</min>
+			<max>[4,4,4]</max>
+		      </box>
+		    </geom_object>
+		</outletBC>
+
+	    </BoundaryConditions>
+
+	    <PhysicalConstants>
+		<gravity>[-9.8,0,0]</gravity>
+		<pressure>0.0</pressure>
+		<viscosity>0.000020</viscosity>
+		<schmidtNo>0.7</schmidtNo>
+	    </PhysicalConstants>
+
+	    <ExplicitSolver>
+
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
+		<probe_data>true</probe_data>
+	        <ProbePoints>
+	           <probe_point>[5,5,5]</probe_point>
+		</ProbePoints>
+                <ProbePoints>
+	           <probe_point>[7,5,5]</probe_point>
+		</ProbePoints>
+	        <cal_pressure>true</cal_pressure>
+		<PressureSolver>
+		    <ref_point>[3,3,3]</ref_point>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>petsc</linear_solver>
+		    <LinearSolver>
+			<ksptype>gmres</ksptype>
+			<pctype>jacobi</pctype>
+			<overlap>1</overlap>
+			<max_iter>75</max_iter>
+			<res_tol>0.0003</res_tol>
+		        <underrelax>0.97</underrelax>
+		    </LinearSolver>
+		</PressureSolver>
+
+		<cal_momentum>true</cal_momentum>
+		<MomentumSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>8</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MomentumSolver>
+
+		<cal_mixturescalar>true</cal_mixturescalar>
+		<MixtureFractionSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MixtureFractionSolver>
+
+		<cal_enthalpy>false</cal_enthalpy>
+		<EnthalpySolver>
+                    <radiation>true</radiation>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</EnthalpySolver>
+
+	    </ExplicitSolver>
+
+	    <PicardSolver>
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
+		<probe_data>true</probe_data>
+		<ProbePoints>
+                    <probe_point>[1,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[2,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[3,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[4,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[5,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[6,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[7,10,10]</probe_point>
+                </ProbePoints>
+		<ProbePoints>
+                    <probe_point>[10,10,10]</probe_point>
+                </ProbePoints>
+		<cal_pressure>true</cal_pressure>
+		<PressureSolver>
+		    <ref_point>[3,3,3]</ref_point>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>petsc</linear_solver>
+		    <LinearSolver>
+			<pctype>jacobi</pctype>
+			<max_iter>75</max_iter>
+			<res_tol>0.0003</res_tol>
+		        <underrelax>0.97</underrelax>
+		    </LinearSolver>
+		</PressureSolver>
+
+		<cal_momentum>true</cal_momentum>
+		<MomentumSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>8</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MomentumSolver>
+
+		<cal_mixturescalar>true</cal_mixturescalar>
+		<MixtureFractionSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MixtureFractionSolver>
+
+	        <cal_enthalpy>true</cal_enthalpy>
+		<EnthalpySolver>
+                    <radiation>true</radiation>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</EnthalpySolver>
+
+	    </PicardSolver>
+
+        </ARCHES>
+
+    </CFD>
+
+    <Multimaterial>
+
+	<heatTransferCoeff>100.0</heatTransferCoeff>
+	<heatExchange>false</heatExchange>
+
+    </Multimaterial>
+
+    <MaterialProperties>
+
+	<ARCHES>
+	</ARCHES>
+
+    </MaterialProperties>
+	
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<MPM>
+	</MPM>
+
+	<ARCHES>
+	</ARCHES>
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ARCHES>
+	</ARCHES>
+
+    </InitialConditions>
+
+</Uintah_specification>

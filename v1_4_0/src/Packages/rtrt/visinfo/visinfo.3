@@ -1,0 +1,279 @@
+.TH visInfo 3 "" "\&"
+.SH NAME
+visPixelFormat \- specify pixel format selection criteria
+.br
+visGetGLXVisualInfo \- return an array of selected X11 VisualInfo structures
+.SH SYNOPSIS
+.PP
+.nf
+.ft 7
+#include "visinfo.h"
+
+int visPixelFormat(char* criteria);
+
+XVisualInfo* visGetGLXVisualInfo(	Display* dpy,
+							int screen,
+							int* nVInfo )
+.ft 1
+.fi
+.SH DESCRIPTION
+.I visPixelFormat
+and
+.I visGetGLXVisualInfo
+are tools for selecting OpenGL-compatible pixel formats and their
+corresponding X11 XVisualInfo structures.
+They have four advantages over
+.IR glXChooseVisual (3):
+.RS
+.IP 1. 4n
+The interface is easier to use.
+There's no need to declare an array of Visual attributes and attribute
+values; a concise window-system-independent character string provides all the
+information required to select pixel formats.
+Some confusing aspects of the
+.I glXChooseVisual
+selection algorithm have been improved.
+.IP 2.
+The selection criteria are much more flexible.
+For example, Boolean expressions can be used to filter out
+unwanted pixel formats.
+.IP 3.
+\f1All\fP matching XVisualInfo structures are returned, not just the first one.
+This makes it convenient to test applications on all relevant
+pixel formats.
+.IP 4.
+The selection criteria are embodied in a readable character string,
+rather than a C data structure.
+This makes it easier to support pixel format selection from command-line
+arguments and interactive scripts.
+.RE
+.PP
+.I
+visPixelFormat
+specifies the criteria for selecting OpenGL-capable pixel formats.
+.PP
+.I criteria
+is a character string containing a comma-separated list of sort-key
+specifications and C expressions.
+The sort keys specify the order in which pixel formats must be
+returned, and the expressions specify conditions that each pixel format
+must meet in order to be returned.
+.PP
+Both sort keys and expressions involve the following variables (letter case
+is not significant):
+.TP 12n
+\f7a\fP\fP
+Number of bits in the color buffer alpha channel.
+.TP
+\f7accuma\fP
+Number of bits in the accumulation buffer alpha channel.
+.TP
+\f7accumb\fP
+Number of bits in the accumulation buffer blue channel.
+.TP
+\f7accumg\fP
+Number of bits in the accumulation buffer green channel.
+.TP
+\f7accumr\fP
+Number of bits in the accumulation buffer red channel.
+.TP
+\f7accumrgb\fP
+Minimum of accumr, accumg, and accumb.
+(This is usually a more reliable summary of accumulation buffer
+depth than the total number of bits.)
+.TP
+\f7accumrgba\fP
+Minimum of accumr, accumg, accumb, and accuma.
+.TP
+\f7aux\fP
+Number of auxiliary color buffers.
+.TP
+\f7b\fP
+Number of bits in the color buffer blue channel.
+.TP
+\f7ci\fP
+Number of bits in the color-index buffer.
+.TP
+\f7db\fP
+1 if the pixel format is double-buffered, 0 if single-buffered.
+.TP
+\f7g\fP
+Number of bits in the color buffer green channel.
+.TP
+\f7id\fP
+Under X11, the Visual id of the pixel format.
+.TP
+\f7level\fP
+Less than zero for underlay planes, equal to zero for main planes,
+and greater than zero for overlay planes.
+.TP
+\f7main\fP
+1 if the pixel format applies to the main planes, 0 if to
+underlay or overlay planes.
+.TP
+\f7mono\fP
+1 if the pixel format is monoscopic, 0 if stereoscopic.
+.TP
+\f7ms\fP
+Number of samples per pixel (for multisample antialiasing).
+.TP
+\f7overlay\fP
+1 if the pixel format applies to overlay planes, 0 otherwise.
+.TP
+\f7r\fP
+Number of bits in the color buffer red channel.
+.TP
+\f7rgb\fP
+Minimum of r, g, and b.
+(As with accumrgb, this is usually a better summary of color buffer
+depth than the total number of color bits.)
+.TP
+\f7rgba\fP
+Minimum of r, g, b, and a.
+.TP
+\f7s\fP
+Number of bits in the stencil buffer.
+.TP
+\f7sb\fP
+1 if the pixel format is single-buffered, 0 if double-buffered.
+.TP
+\f7stereo\fP
+1 if the pixel format is stereoscopic, 0 if monoscopic.
+.TP
+\f7underlay\fP
+1 if the pixel format applies to underlay planes, 0 otherwise.
+.TP
+\f7z\fP
+Number of bits in the depth (aka ``Z'') buffer.
+.PP
+A sort key consists of the word \f7min\fP or \f7max\fP followed by one
+of the variables listed above.
+When a sort key is used, only pixel formats for which the sort variable
+is nonzero will be considered.
+Furthermore, when XVisualInfo structures for the selected pixel formats
+are returned,
+they will be listed smallest-first (\f7min\fP) or largest-first
+(\f7max\fP) based on the value of the specified variable.
+A final sort key of \f7min id\fP is always applied, no matter
+what other sort keys may have been specified, so that pixel formats
+will be listed in order of their id numbers when all other keys are
+equal.
+.PP
+An expression consists of the variables listed above, integer constants
+(in either decimal or hexadecimal), and the following operators, using
+normal C syntax and priority:
+.RS
+.PP
+.nf
+.ft 7
+||
+&&
+< <= > >= == !=
++ -
+* / %
++ - !	/*unary*/
+()
+.ft 1
+.fi
+.RE
+.PP
+The function return value for
+.I visPixelFormat
+is nonzero if the criterion string is syntactically
+correct, and zero otherwise.
+.PP
+.I
+visGetGLXVisualInfo
+returns an array of X11 XVisualInfo structures corresponding to the pixel
+formats selected by the most recent call to
+.IR visPixelFormat .
+.I dpy
+is a pointer to an X11 Display structure.
+.I screen
+is the number of a screen on that display.
+.PP
+The function return is a pointer to an array of XVisualInfo structures,
+and the integer variable referenced by
+.I nVInfo
+is set to the number of XVisualInfo structures returned.
+(This interface is similar to
+.IR XGetVisualInfo (3)).
+If no matching pixel formats could be found,
+.RI * nVInfo
+will be set to zero and the function return will be a pointer to a
+zero-length array.
+If
+.IR malloc (3)
+fails, the function return will be a NULL pointer.
+The memory referenced by the function return value should be freed by
+a call to
+.IR free (3)
+when it is no longer needed.
+.SH EXAMPLES
+A typical use might be:
+.PP
+.RS
+.nf
+.ft 7
+#include "visinfo.h"
+
+XVisualInfo* vInfo;
+int nVInfo;
+Display* dpy;
+int screen;
+int i;
+
+if (!visPixelFormat(argv[1]))
+	Error();
+vInfo = visGetGLXVisualInfo(dpy, screen, &nVInfo);
+if (!vInfo)
+	Error();
+for (i = 0; i < nVInfo; ++i)
+	Use(&vInfo[i]);
+free(vInfo);
+.ft 1
+.fi
+.RE
+.PP
+Here are some sample pixel format criteria strings:
+.TP
+\f7rgb >= 8\fP
+Select RGB pixel formats with at least 8 bits per color channel.
+(An alpha channel may be present in the pixel
+formats that are selected, but is not guaranteed.
+Use \f7rgba\fP instead of \f7rgb\fP if an alpha channel is required.)
+.TP
+\f7max rgb, max z, db\fP
+Select RGB pixel formats that include a depth buffer and are double-buffered.
+Sort all selected pixel formats so that those with the largest color buffers
+are returned first.
+When there is a tie for color buffer size, those with the largest depth buffer
+will be returned first.
+.TP
+\f7max ci, db, overlay\fP
+Selects the deepest color-index pixel formats that support
+double-buffered overlay windows.
+.TP
+\f7max rgb, accumrgb >= 2 * rgb\fP
+Select RGB pixel formats that include an accumulation buffer at least
+twice as deep as the main color buffer.
+.TP
+\f7id == 0x2c\fP
+Select the pixel format with Visual id equal to 0x2c.
+.TP
+\f7rgba, r == g && r == b\fP
+Select RGBA pixel formats whose color channels are of equal depth.
+.TP
+\f7rgb, r % 2 || g % 2 || b % 2\fP
+Select RGB pixel formats with at least one odd-sized color channel.
+.TP
+\f7min ci\fP
+Select color-index pixel formats with the smallest non-zero depth.
+.TP
+\f7rgba, ms, s, z\fP
+Select multisampled RGBA pixel formats with stencil and depth buffers.
+The selected pixel formats will be sorted in the default order
+(smallest Visual id first).
+.SH "SEE ALSO"
+glXChooseVisual(3),
+findvis(1).

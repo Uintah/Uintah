@@ -1,0 +1,171 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+if {[llength [array get env CWDATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWDATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv CWDATA /scratch/data/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWDATA $env(CWDATA)
+puts "*** Using CWDATA $CWDATA"
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Thu  Aug 23 2001"
+
+global runTime
+set runTime " 19:49:3"
+
+set bbox {76.0 62.0 651 390}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 300 62]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 294 346]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 489 147]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 507 62]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 76 144]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 94 62]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 76 223]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 489 221]
+
+addConnection $m4 0 $m6 0
+addConnection $m5 0 $m4 1
+addConnection $m3 0 $m2 1
+addConnection $m2 0 $m7 0
+addConnection $m6 0 $m1 0
+addConnection $m7 0 $m1 1
+addConnection $m0 0 $m4 0
+addConnection $m0 0 $m2 0
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename $CWDATA/sr-data/0.1.resized-no-interior.tvv.fld
+set $m1-notes {}
+set $m1-show_status 1
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes 0
+set $m1-ViewWindow_0-iaxes -2147483647
+set $m1-ViewWindow_0-view-eyep-x -1.15599
+set $m1-ViewWindow_0-view-eyep-y -0.526482
+set $m1-ViewWindow_0-view-eyep-z -1.1829
+set $m1-ViewWindow_0-view-lookat-x 0.0446354
+set $m1-ViewWindow_0-view-lookat-y 0.0232859
+set $m1-ViewWindow_0-view-lookat-z -0.0206903
+set $m1-ViewWindow_0-view-up-x -0.730229
+set $m1-ViewWindow_0-view-up-y 0.253717
+set $m1-ViewWindow_0-view-up-z 0.634345
+set $m1-ViewWindow_0-view-fov 18.9669
+set $m1-ViewWindow_0-view-eyep-x -1.15599
+set $m1-ViewWindow_0-view-eyep-y -0.526482
+set $m1-ViewWindow_0-view-eyep-z -1.1829
+set $m1-ViewWindow_0-view-eyep-x -1.15599
+set $m1-ViewWindow_0-view-eyep-y -0.526482
+set $m1-ViewWindow_0-view-eyep-z -1.1829
+set $m1-ViewWindow_0-view-lookat-x 0.0446354
+set $m1-ViewWindow_0-view-lookat-y 0.0232859
+set $m1-ViewWindow_0-view-lookat-z -0.0206903
+set $m1-ViewWindow_0-view-lookat-x 0.0446354
+set $m1-ViewWindow_0-view-lookat-y 0.0232859
+set $m1-ViewWindow_0-view-lookat-z -0.0206903
+set $m1-ViewWindow_0-view-up-x -0.730229
+set $m1-ViewWindow_0-view-up-y 0.253717
+set $m1-ViewWindow_0-view-up-z 0.634345
+set $m1-ViewWindow_0-view-up-x -0.730229
+set $m1-ViewWindow_0-view-up-y 0.253717
+set $m1-ViewWindow_0-view-up-z 0.634345
+set $m1-ViewWindow_0-view-fov 18.9669
+set $m1-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m1-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m1-ViewWindow_0-bgcolor-r 0
+set $m1-ViewWindow_0-bgcolor-g 0
+set $m1-ViewWindow_0-bgcolor-b 0
+set $m1-ViewWindow_0-bgcolor-r 0
+set $m1-ViewWindow_0-bgcolor-g 0
+set $m1-ViewWindow_0-bgcolor-b 0
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo 0
+set $m1-ViewWindow_0-sbase 1
+set $m1-ViewWindow_0-sr 1
+set $m1-ViewWindow_0-do_bawgl 0
+set $m1-ViewWindow_0-drawimg -2147483647
+set $m1-ViewWindow_0-saveprefix {}
+set $m1-ViewWindow_0-unused 1
+set $m1-ViewWindow_0-unused 1
+set $m2-notes {}
+set $m2-show_status 1
+set $m3-notes {}
+set $m3-show_status 1
+set $m3-filename $CWDATA/sr-data/0.1.f2.mat
+set $m4-notes {}
+set $m4-show_status 1
+set $m5-notes {}
+set $m5-show_status 1
+set $m5-filename $CWDATA/sr-data/0.1.f1.mat
+set $m6-notes {}
+set $m6-show_status 1
+set $m6-nodes-on 0
+set $m6-edges-on 0
+set $m6-faces-on 0
+set $m6-vectors-on 1
+set $m6-normalize-vectors -2147483647
+set $m6-has_vec_data 1
+set $m6-def-color-r 0.63
+set $m6-def-color-g 0.5
+set $m6-def-color-b 0.5
+set $m6-node_display_type {Spheres}
+set $m6-edge_display_type {Lines}
+set $m6-active_tab {Vectors}
+set $m6-node_scale 0.005
+set $m6-edge_scale 1
+set $m6-vectors_scale 0.03
+set $m6-show_progress -2147483647
+set $m6-resolution 4
+set $m7-notes {}
+set $m7-show_status 1
+set $m7-nodes-on 0
+set $m7-edges-on 0
+set $m7-faces-on 0
+set $m7-vectors-on 1
+set $m7-normalize-vectors 0
+set $m7-has_vec_data 1
+set $m7-def-color-r 0.5
+set $m7-def-color-g 0.58
+set $m7-def-color-b 0.5
+set $m7-node_display_type {Spheres}
+set $m7-edge_display_type {Lines}
+set $m7-active_tab {Vectors}
+set $m7-node_scale 0.03
+set $m7-edge_scale 0.03
+set $m7-vectors_scale 0.02
+set $m7-show_progress -2147483647
+set $m7-resolution 4
+
+::netedit scheduleok

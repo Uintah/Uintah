@@ -1,0 +1,284 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Mon  Mar 26 2001"
+
+global runTime
+set runTime " 23:9:41"
+
+set m0 [addModuleAtPosition "Morgan" "Readers" "DenseMatrixSQLReader" 49 31]
+set m1 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 49 115]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 31 212]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 31 380]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "ScaleFieldData" 465 205]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 223 127]
+set m6 [addModuleAtPosition "Morgan" "Readers" "DenseMatrixSQLReader" 483 33]
+set m7 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 483 117]
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 298 960]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 212 294]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 212 210]
+set m11 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 592 407]
+set m12 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 556 304]
+set m13 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 436 404]
+set m14 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 574 486]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 311 406]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 574 643]
+set m17 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 556 564]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 345 664]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 574 798]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 556 863]
+set m21 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 556 719]
+set m22 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 298 30]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 722 877]
+set m24 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 702 562]
+
+addConnection $m0 0 $m1 0
+addConnection $m1 0 $m2 1
+addConnection $m2 0 $m3 0
+addConnection $m6 0 $m7 0
+addConnection $m7 0 $m4 1
+addConnection $m3 0 $m8 0
+addConnection $m2 0 $m9 1
+addConnection $m10 0 $m9 0
+addConnection $m9 0 $m3 1
+addConnection $m12 0 $m11 0
+addConnection $m12 0 $m13 0
+addConnection $m13 0 $m14 0
+addConnection $m11 0 $m14 1
+addConnection $m12 0 $m15 0
+addConnection $m14 0 $m17 1
+addConnection $m12 0 $m17 0
+addConnection $m15 1 $m16 1
+addConnection $m18 0 $m19 0
+addConnection $m19 0 $m20 1
+addConnection $m16 0 $m21 1
+addConnection $m17 0 $m21 0
+addConnection $m21 0 $m19 1
+addConnection $m21 0 $m20 0
+addConnection $m20 0 $m8 1
+addConnection $m5 0 $m2 0
+addConnection $m22 0 $m4 0
+addConnection $m23 1 $m8 2
+addConnection $m4 0 $m11 1
+addConnection $m17 0 $m23 0
+addConnection $m19 0 $m23 1
+addConnection $m24 0 $m16 0
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-database {gentest2}
+set $m0-hostname {}
+set $m0-port {3306}
+set $m0-username {butson}
+set $m0-password {scisci}
+set $m0-sql {select * from voltage}
+set $m1-notes {}
+set $m1-show_status 1
+set $m1-row 9
+set $m1-row_max 149
+set $m1-col 0
+set $m1-col_max 674
+set $m1-row_or_col {row}
+set $m1-animate 0
+set $m2-notes {}
+set $m2-show_status 1
+set $m3-notes {}
+set $m3-show_status 1
+set $m3-nodes-on 1
+set $m3-edges-on 1
+set $m3-faces-on 0
+set $m3-def-color-r 0.5
+set $m3-def-color-g 0.5
+set $m3-def-color-b 0.5
+set $m3-node_display_type {Spheres}
+set $m3-edge_display_type {Cylinders}
+set $m3-node_scale 0.3
+set $m3-edge_scale 0.3
+set $m3-show_progress -2147483647
+set $m3-resolution 10
+set $m4-notes {}
+set $m4-show_status 1
+set $m5-notes {}
+set $m5-show_status 1
+set $m5-filename {/res/sci/data1/SCIRunData/genesis/genesis-neurons.cd.fld}
+set $m6-notes {}
+set $m6-show_status 1
+set $m6-database {gentest2}
+set $m6-hostname {}
+set $m6-port {3306}
+set $m6-username {butson}
+set $m6-password {scisci}
+set $m6-sql {select * from current}
+set $m7-notes {}
+set $m7-show_status 1
+set $m7-row 9
+set $m7-row_max 149
+set $m7-col 0
+set $m7-col_max 674
+set $m7-row_or_col {row}
+set $m7-animate 0
+set $m8-notes {}
+set $m8-show_status 1
+$m8 ui
+set $m8-ViewWindow_0-pos {}
+set $m8-ViewWindow_0-caxes 0
+set $m8-ViewWindow_0-iaxes -2147483647
+set $m8-ViewWindow_0-view-eyep-x -556.402
+set $m8-ViewWindow_0-view-eyep-y -722.722
+set $m8-ViewWindow_0-view-eyep-z -770.827
+set $m8-ViewWindow_0-view-lookat-x -41.4841
+set $m8-ViewWindow_0-view-lookat-y 23.8531
+set $m8-ViewWindow_0-view-lookat-z -935.304
+set $m8-ViewWindow_0-view-up-x -0.00515028
+set $m8-ViewWindow_0-view-up-y 0.218533
+set $m8-ViewWindow_0-view-up-z 0.975816
+set $m8-ViewWindow_0-view-fov 18.3542
+set $m8-ViewWindow_0-view-eyep-x -556.402
+set $m8-ViewWindow_0-view-eyep-y -722.722
+set $m8-ViewWindow_0-view-eyep-z -770.827
+set $m8-ViewWindow_0-view-eyep-x -556.402
+set $m8-ViewWindow_0-view-eyep-y -722.722
+set $m8-ViewWindow_0-view-eyep-z -770.827
+set $m8-ViewWindow_0-view-lookat-x -41.4841
+set $m8-ViewWindow_0-view-lookat-y 23.8531
+set $m8-ViewWindow_0-view-lookat-z -935.304
+set $m8-ViewWindow_0-view-lookat-x -41.4841
+set $m8-ViewWindow_0-view-lookat-y 23.8531
+set $m8-ViewWindow_0-view-lookat-z -935.304
+set $m8-ViewWindow_0-view-up-x -0.00515028
+set $m8-ViewWindow_0-view-up-y 0.218533
+set $m8-ViewWindow_0-view-up-z 0.975816
+set $m8-ViewWindow_0-view-up-x -0.00515028
+set $m8-ViewWindow_0-view-up-y 0.218533
+set $m8-ViewWindow_0-view-up-z 0.975816
+set $m8-ViewWindow_0-view-fov 18.3542
+set $m8-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m8-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m8-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m8-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m8-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m8-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m8-ViewWindow_0-bgcolor-r 0
+set $m8-ViewWindow_0-bgcolor-g 0
+set $m8-ViewWindow_0-bgcolor-b 0
+set $m8-ViewWindow_0-bgcolor-r 0
+set $m8-ViewWindow_0-bgcolor-g 0
+set $m8-ViewWindow_0-bgcolor-b 0
+set $m8-ViewWindow_0-shading {}
+set $m8-ViewWindow_0-do_stereo 0
+set $m8-ViewWindow_0-sbase 1
+set $m8-ViewWindow_0-sr 1
+set $m8-ViewWindow_0-do_bawgl 0
+set $m8-ViewWindow_0-drawimg -2147483647
+set $m8-ViewWindow_0-saveprefix {}
+set $m8-ViewWindow_0-unused 1
+set $m8-ViewWindow_0-unused 1
+set $m8-ViewWindow_0-unused 1
+set $m8-ViewWindow_0-unused 1
+set $m8-ViewWindow_0-unused 1
+set $m8-ViewWindow_0-unused 1
+set $m8-ViewWindow_0-unused 1
+set $m9-notes {}
+set $m9-show_status 1
+set $m9-isFixed 1
+set $m9-min -80
+set $m9-max 0
+set $m10-notes {}
+set $m10-show_status 1
+set $m10-tcl_status {Calling GenStandardColorMaps!}
+set $m10-positionList {}
+set $m10-nodeList {}
+set $m10-width 1
+set $m10-height 1
+set $m10-mapType 3
+set $m10-minRes 12
+set $m10-resolution 12
+set $m11-notes {}
+set $m11-show_status 1
+set $m12-notes {}
+set $m12-show_status 1
+set $m12-filename {/res/sci/data1/SCIRunData/brain-eg/brain-eg-mesh.tvt.fld}
+set $m13-notes {}
+set $m13-show_status 1
+set $m13-UseCondTCL 1
+set $m13-BCFlag {none}
+set $m14-notes {}
+set $m14-show_status 1
+set $m14-target_error 0.001
+set $m14-flops 5.11059e+07
+set $m14-floprate 140.843
+set $m14-memrefs 8.89137e+08
+set $m14-memrate 2450.38
+set $m14-orig_error 1
+set $m14-current_error {0.000947483}
+set $m14-method {conjugate_gradient_sci}
+set $m14-precond {Diag_P}
+set $m14-iteration 69
+set $m14-maxiter 200
+set $m14-use_previous_soln 1
+set $m14-emit_partial 1
+set $m14-status {}
+set $m14-np 4
+set $m15-notes {}
+set $m15-show_status 1
+set $m16-notes {}
+set $m16-show_status 1
+set $m16-interp_op_gui {}
+set $m17-notes {}
+set $m17-show_status 1
+set $m18-notes {}
+set $m18-show_status 1
+set $m18-tcl_status {Calling GenStandardColorMaps!}
+set $m18-positionList {}
+set $m18-nodeList {}
+set $m18-width 1
+set $m18-height 1
+set $m18-mapType 3
+set $m18-minRes 12
+set $m18-resolution 12
+set $m19-notes {}
+set $m19-show_status 1
+set $m19-isFixed 0
+set $m19-min -11.1033
+set $m19-max 11.54
+set $m20-notes {}
+set $m20-show_status 1
+set $m20-nodes-on 0
+set $m20-edges-on 0
+set $m20-faces-on 1
+set $m20-def-color-r 0.5
+set $m20-def-color-g 0.5
+set $m20-def-color-b 0.5
+set $m20-node_display_type {Points}
+set $m20-edge_display_type {Lines}
+set $m20-node_scale 1
+set $m20-edge_scale 1
+set $m20-show_progress -2147483647
+set $m20-resolution 4
+set $m21-notes {}
+set $m21-show_status 1
+set $m22-notes {}
+set $m22-show_status 1
+set $m22-filename {/res/sci/data1/SCIRunData/genesis/genesis-neurons.pcv.fld}
+set $m23-notes {}
+set $m23-show_status 1
+set $m23-isoval 0.02
+set $m23-extract-from-new-field 1
+set $m23-algorithm 1
+set $m23-build_trisurf 0
+set $m23-np 1
+set $m24-notes {}
+set $m24-show_status 1
+set $m24-filename {/res/sci/data1/SCIRunData/brain-eg/brain-eg-voltage.tvd.fld}
+$m1 ui
+$m3 ui
+$m7 ui
+$m14 ui
+$m23 ui
+
+::netedit scheduleok

@@ -1,0 +1,48 @@
+<html>
+<title>BONOP module</title>
+<body>
+
+<h1>BONOP</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+Parallel implementation of the Branch-on-Need Octree (BONO) for 
+isosurface extraction in rectilinear scalar fields (see Wilhelms 
+& van Gelder's 1992 ACM ToG paper for details).<p>
+
+Some preprocessing must be done before isosurface extraction (once per 
+data set, same preprocessing as for the BONO module).  Run the module 
+using a preprocessing metafile if this has not already been done.<p>
+
+During execution (run the module on an execution metafile), the
+user controls isovalue and time value sliders.  Data set is read
+in whenever the time value changes, left in memory when only isovalue
+changes.  A Marching Cubes-type interpolation is performed to 
+create triangles for rendering.<p>
+
+A centralized work queue model is used to distribute computation.
+First, the tree and data for the current time step are read into memory.
+Then, the tree is traversed and all cells containing portions of the
+isosurface are enqueued.  Threads then request jobs and are given
+batches of cells on which to perform interpolation and triangle 
+construction. <p>
+
+The number of worker threads is hard coded.  This is because I didn't
+want to deal with recreating the work queue and forking more threads
+whenever the user changed
+the "# processors" slider.  So if you want to change it, just look in
+BonoP.cc for "np = " and change that number.<p>
+
+<p><b>Metafile format:</b><p>
+
+Same as for the <a href="bono.html#metafiles">BONO</a> module.<p>
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 28 January 2000
+
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+void enthalpyradsrc(IntVector idxLo, IntVector idxHi,
+	CCVariable<double> su, CCVariable<double> qfluxe,
+	CCVariable<double> qfluxw, CCVariable<double> qfluxn,
+	CCVariable<double> qfluxs, CCVariable<double> qfluxt,
+	CCVariable<double> qfluxb, OffsetArray1<double> sew,
+	OffsetArray1<double> sns, OffsetArray1<double> stb);
