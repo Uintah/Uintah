@@ -1641,6 +1641,12 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
 #else
     args.result("0");
 #endif // MPEG
+  } else if (args[1] == "have_libimage") {
+#ifdef LIBIMAGE
+    args.result("1");
+#else
+    args.result("0");
+#endif // LIBIMAGE
   } else if (args[1] == "dump_viewwindow") {
     if (args.count() != 4) {
       args.error("ViewWindow::dump_viewwindow needs an output file name and type");
