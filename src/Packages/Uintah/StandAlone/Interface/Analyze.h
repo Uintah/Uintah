@@ -57,6 +57,8 @@ WARNING
 				  const LevelP& level, SchedulerP&,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw) = 0;
+
+      virtual void showStepInformation() const = 0;
       
    private:
       Analyze(const Analyze&);
@@ -67,6 +69,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/09/04 23:20:35  tan
+// Control the information showing at each step in SimulationController by
+// Analyze module.
+//
 // Revision 1.2  2000/09/04 00:37:49  tan
 // Modified Analyze interface for scientific debugging under both
 // sigle processor and mpi environment.
