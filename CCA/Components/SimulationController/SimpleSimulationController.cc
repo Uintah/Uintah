@@ -34,6 +34,7 @@
 #include <iomanip>
 #include <values.h>
 
+#include <sys/param.h>
 #include <list>
 #include <fstream>
 #include <math.h>
@@ -361,6 +362,40 @@ SimpleSimulationController::run()
       }
       unsigned long highwater = 0;
 #endif
+
+      // get memory stats for each proc if MALLOC_PERPROC is in the environent
+      if ( getenv( "MALLOC_PERPROC" ) ) {
+	ostream* mallocPerProcStream = NULL;
+	char* filenamePrefix = getenv( "MALLOC_PERPROC" );
+	if ( !filenamePrefix || strlen( filenamePrefix ) == 0 ) {
+	  mallocPerProcStream = &cout;
+	} else {
+	  char filename[MAXPATHLEN];
+	  sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
+	  if ( sharedState->getCurrentTopLevelTimeStep() == 0 ) {
+	    mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
+	  } else {
+	    mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
+	  }
+	  if ( !mallocPerProcStream ) {
+	    delete mallocPerProcStream;
+	    mallocPerProcStream = &cout;
+	  }
+	}
+	*mallocPerProcStream << "Proc "     << d_myworld->myrank()                       << "   ";
+	*mallocPerProcStream << "Timestep " << sharedState->getCurrentTopLevelTimeStep() << "   ";
+	*mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed()              << "   ";
+	*mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident()          << "   ";
+	*mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr               << "   ";
+#ifndef DISABLE_SCI_MALLOC
+	*mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse                        << "   ";
+	*mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
+#endif
+	*mallocPerProcStream << endl;
+	if ( mallocPerProcStream != &cout ) {
+	  delete mallocPerProcStream;
+	}
+      }
 
       unsigned long avg_memuse = memuse;
       unsigned long max_memuse = memuse;
