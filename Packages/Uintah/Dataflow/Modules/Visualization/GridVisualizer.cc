@@ -805,10 +805,7 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
-	} catch (...) {
-	  cerr << "Caught an unknown exception" << endl;
-	  return;
-	}
+	} 
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
       } else {
@@ -833,10 +830,7 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
-	} catch (...) {
-	  cerr << "Caught an unknown exception" << endl;
-	  return;
-	}
+	} 
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	// could integrate this in with the cache_value somehow
 	data = vector_to_string(values,type_list[i]);
@@ -863,10 +857,7 @@ void GridVisualizer::extract_data(string display_mode, string varname,
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
-	} catch (...) {
-	  cerr << "Caught an unknown exception" << endl;
-	  return;
-	}
+	} 
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	// could integrate this in with the cache_value somehow
 	data = vector_to_string(values,type_list[i]);
