@@ -53,6 +53,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <string.h>
 
 #include <Core/Malloc/Allocator.h>
 using namespace SCIRun;
@@ -130,8 +131,8 @@ pid_t __fork(void);
 /* returns 1 where there was a problem, otherwise the return value
    of the system call. -bigler
 */
-int
-sci_system(const char *line)
+static int
+sci_system_linuxthreads(const char *line)
 /* - cm */
 {
   int status, save;
@@ -144,7 +145,7 @@ sci_system(const char *line)
   if (line == NULL)
     /* Check that we have a command processor available.  It might
        not be available after a chroot(), for example.  */
-    return sci_system ("exit 0") == 0;
+    return sci_system_linuxthreads ("exit 0") == 0;
 
   sa.sa_handler = SIG_IGN;
   sa.sa_flags = 0;
@@ -352,5 +353,25 @@ sci_system(const char *line)
 /* -cm commented
   weak_alias (__libc_system, system)
    -cm */
+
+
+int
+sci_system(const char *line)
+{
+  // We only need to wrap system on linux builds with linuxthreads
+  // enabled and not nptl.
+  const size_t n = confstr(_CS_GNU_LIBPTHREAD_VERSION, NULL, (size_t) 0);
+  if (n > 0)
+  {
+    char *buf = scinew char[n];
+    confstr(_CS_GNU_LIBPTHREAD_VERSION, buf, n);
+    if (strncmp(buf, "nptl", 4))
+    {
+      return system(line);
+    }
+  }
+  return sci_system_linuxthreads(line);
+}
+
 
 #endif /* for linux only */
