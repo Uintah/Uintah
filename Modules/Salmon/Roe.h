@@ -56,7 +56,6 @@ typedef void (Roe::*MouseHandler)(int, int x, int y);
 class Roe : public TCL {
     Salmon* manager;
     HashTable<clString, Renderer*> renderers;
-    Renderer* current_renderer;
 
     void do_mouse(MouseHandler, TCLArgs&);
 
@@ -79,6 +78,7 @@ class Roe : public TCL {
 
     void animate_to_view(const View& v, double time);
 public:
+    Renderer* current_renderer;
     Renderer* get_renderer(const clString&);
     clString id;
     int need_redraw;

@@ -82,11 +82,13 @@ public:
     int process_event(int block);
 };
 
-class RedrawMessage : public MessageBase {
+class SalmonMessage : public MessageBase {
 public:
     clString rid;
-    RedrawMessage(const clString& rid);
-    virtual ~RedrawMessage();
+    clString filename;
+    SalmonMessage(const clString& rid);
+    SalmonMessage(const clString& rid, const clString& filename);
+    virtual ~SalmonMessage();
 };
 
 #endif

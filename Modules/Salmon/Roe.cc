@@ -660,7 +660,20 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	args.error("Roe needs a minor command");
 	return;
     }
-    if(args[1] == "startup"){
+    if(args[1] == "dump_roe"){
+	if(args.count() != 3){
+	    args.error("Roe::dump_roe needs an output file name!");
+	    return;
+	}
+	// We need to dispatch this one to the remote thread
+	// We use an ID string instead of a pointer in case this roe
+	// gets killed by the time the redraw message gets dispatched.
+	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
+	    cerr << "Redraw event dropped, mailbox full!\n";
+	} else {
+	    manager->mailbox.send(new SalmonMessage(id, args[2]));
+	}
+    } else if(args[1] == "startup"){
 	// Fill in the visibility database...
 	HashTableIter<int, PortInfo*> iter(&manager->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
@@ -692,7 +705,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	    cerr << "Redraw event dropped, mailbox full!\n";
 	} else {
-	    manager->mailbox.send(new RedrawMessage(id));
+	    manager->mailbox.send(new SalmonMessage(id));
 	}
     } else if(args[1] == "mtranslate"){
 	do_mouse(&Roe::mouse_translate, args);
@@ -706,7 +719,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 	homeview=view.get();
     } else if(args[1] == "gohome"){
 	view.set(homeview);
-	manager->mailbox.send(new RedrawMessage(id));
+	manager->mailbox.send(new SalmonMessage(id)); // Redraw
     } else if(args[1] == "autoview"){
 	View cv(view.get());
 	// Animate lookat point to center of BBox...
