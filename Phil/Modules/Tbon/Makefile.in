@@ -1,0 +1,11 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../..
+
+SRCS     = TriGroup.cc Clock.cc Tbon.cc Bono.cc BonoP.cc BonoCL.cc ViewGrid.cc ViewMesh.cc ElapsedTime.cc TbonP.cc TbonCL.cc TbonUG.cc TbonOOC1.cc TbonOOC2.cc
+#TbonCL.cc BonoCL.cc Tbon.cc TbonP.cc GenScalarField.cc TbonUG.cc ViewMesh.cc ViewGrid.cc Bono.cc TbonS.cc TbonGC.cc  BonoP.cc ElapsedTime.cc TbonOOC.cc 
+
+
+INCLUDES = -I$(OBJTOP)
+
+include $(SRCTOP)/scripts/objs.mk
