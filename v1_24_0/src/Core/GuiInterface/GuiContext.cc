@@ -55,8 +55,9 @@ using std::string;
 using std::vector;
 using namespace SCIRun;
 
-GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
-  : gui(gui), 
+GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save, GuiContext *parent)
+  : gui(gui),
+    parent(parent),
     name(name),
     children(),
     context_state(CACHE_E)
@@ -73,35 +74,44 @@ GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
 
 GuiContext::~GuiContext()
 {
+  dontSave();
+  if (parent) {
+    for(vector<GuiContext*>::iterator iter = parent->children.begin();
+	iter != parent->children.end(); ++iter) 
+    {
+      if (*iter == this)
+      {
+	parent->children.erase(iter);
+	return;
+      } 
+    }
+  }
 }
-
 
 
 
 GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
 {
   dontSave(); // Do not save intermediate nodes
-  GuiContext* child = scinew GuiContext(gui, name+"-"+subname, saveChild);
+  GuiContext* child = scinew GuiContext(gui, name+"-"+subname, saveChild, this);
   children.push_back(child);
   return child;
 }
 
-void GuiContext::erase(const std::string& subname)
-{
-  const std::string fullname(name+"-"+subname);
-  for(vector<GuiContext*>::iterator iter = children.begin();
-      iter != children.end(); ++iter) 
-  {
-    if((*iter)->getfullname() == fullname) 
-    {
-      (*iter)->dontSave();
-      (*iter)->tcl_setVarStates();
-      delete *iter;
-      children.erase(iter);
-      return;
-    } 
-  }
-}
+// void GuiContext::erase(const std::string& subname)
+// {
+//   const std::string fullname(name+"-"+subname);
+//   for(vector<GuiContext*>::iterator iter = children.begin();
+//       iter != children.end(); ++iter) 
+//   {
+//     if((*iter)->getfullname() == fullname) 
+//     {
+//       delete *iter;
+//       children.erase(iter);
+//       return;
+//     } 
+//   }
+// }
 
 void GuiContext::lock()
 {
@@ -400,6 +410,7 @@ void GuiContext::tcl_setVarStates() {
 void
 GuiContext::dontSave()
 {
+  if ((context_state & SAVE_E) == 0) return;
   context_state &= ~SAVE_E;
   tcl_setVarStates();
 }
@@ -407,6 +418,7 @@ GuiContext::dontSave()
 void
 GuiContext::doSave()
 {
+  if ((context_state & SAVE_E) == SAVE_E) return;
   context_state |= SAVE_E;
   tcl_setVarStates();
 }
@@ -414,10 +426,16 @@ GuiContext::doSave()
 void
 GuiContext::setUseDatadir(bool flag)
 {
-  if (flag) 
+  if (flag) {
+    if ((context_state & SUBSTITUTE_DATADIR_E) == SUBSTITUTE_DATADIR_E)
+      return;
     context_state |= SUBSTITUTE_DATADIR_E;
-  else
+  }
+  else {
+    if ((context_state & SUBSTITUTE_DATADIR_E) == 0)
+      return;
     context_state &= ~SUBSTITUTE_DATADIR_E;
+  }
   tcl_setVarStates();
 }
 
