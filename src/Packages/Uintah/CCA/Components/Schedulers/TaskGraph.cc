@@ -819,12 +819,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 				      DetailedTask* task,
 				      Task::Dependency* req, CompTable& ct,
 				      bool modifies)
-
 {
   int me = pg->myrank();
   for( ; req != 0; req = req->next){
     if(dbg.active())
-      dbg << "  req: " << *req << '\n';
+      dbg << pg->myrank() << "  req: " << *req << '\n';
     
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
@@ -849,13 +848,15 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
 			 Patch::Compare()));
 	if(dbg.active()){
-	  dbg << "    Creating dependency on " << neighbors.size() << " neighbors\n";
-	  dbg << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
+	  dbg << pg->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
+	  dbg << pg->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
 	}
+	Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(),
+								 false);
 	for(int i=0;i<neighbors.size();i++){
 	  const Patch* neighbor=neighbors[i];
-	  IntVector l = Max(neighbor->getNodeLowIndex(), low);
-	  IntVector h = Min(neighbor->getNodeHighIndex(), high);
+	  IntVector l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
+	  IntVector h = Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), high);
 	  if (neighbor->isVirtual()) {
 	    l -= neighbor->getVirtualOffset();
 	    h -= neighbor->getVirtualOffset();	    
