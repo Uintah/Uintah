@@ -44,6 +44,7 @@ namespace SCIRun {
     virtual ~GuiInterface();
     virtual void execute(const string& str) = 0;
     virtual int eval(const string& str, string& result) = 0;
+    virtual string eval(const string&) = 0;
     virtual void source_once(const string&) = 0;
     virtual void add_command(const string&, GuiCallback*, void*) = 0;
     virtual void delete_command( const string& command ) = 0;

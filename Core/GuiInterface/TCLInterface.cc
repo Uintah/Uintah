@@ -83,6 +83,22 @@ int TCLInterface::eval(const string& str, string& result)
   return code == TCL_OK;
 }
 
+
+string TCLInterface::eval(const string& str)
+{
+  string result("");
+  TCLTask::lock();
+  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
+  if(code != TCL_OK){
+    Tk_BackgroundError(the_interp);
+  } else {
+    result=string(the_interp->result);
+  }
+  TCLTask::unlock();
+  return result;
+}
+
+
 void TCLInterface::source_once(const string& filename)
 {
   string result;
