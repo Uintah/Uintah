@@ -152,6 +152,7 @@ void MPMPetscSolver::solve()
   SLESView(sles,PETSC_VIEWER_STDOUT_WORLD);
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
 #endif
+  SLESDestroy(sles);
 #endif
 }
 
@@ -311,6 +312,7 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
   PetscScalar one = 1.0;
   MatZeroRows(d_A,is,&one);
+  ISDestroy(is);
 #if 0
   MatTranspose(d_A,PETSC_NULL);
   MatZeroRows(d_A,is,&one);
