@@ -32,6 +32,7 @@ source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Module.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Subnet.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/UIvar.tcl
 
 set SCIRUN_SRCDIR [netedit getenv SCIRUN_SRCDIR]
 set smallIcon [image create photo -file "$SCIRUN_SRCDIR/pixmaps/scirun-icon-small.ppm"]
@@ -1680,6 +1681,7 @@ proc initVarStates { var save substitute } {
     
     if { $save } {
 	lappend ModuleSavedVars($module) $varname
+	# TODO: find a faster mechanism than the next line for setting changed
 	uplevel \#0 trace variable \"$var\" w networkHasChanged
     }
      
