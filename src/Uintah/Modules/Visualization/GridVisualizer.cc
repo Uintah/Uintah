@@ -84,6 +84,8 @@ public:
   virtual void widget_moved(int last);
   void tcl_command(TCLArgs& args, void* userdata);
   virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
+  virtual void geom_pick(GeomPick* pick, void* userdata);
+  virtual void geom_pick(GeomPick* pick, Roe* roe, int data, const BState& bs);
 
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box);
@@ -758,10 +760,10 @@ string GridVisualizer::vector_to_string(vector< Matrix3 > data, string type) {
 
 string GridVisualizer::currentNode_str() {
   ostringstream ostr;
-  ostr << currentNode.level << "_";
-  ostr << currentNode.id.x()  << "_";
-  ostr << currentNode.id.y()  << "_";
-  ostr << currentNode.id.z();
+  ostr << "Level-" << currentNode.level << "-(";
+  ostr << currentNode.id.x()  << ",";
+  ostr << currentNode.id.y()  << ",";
+  ostr << currentNode.id.z() << ")";
   return ostr.str();
 }
 
@@ -859,7 +861,8 @@ void GridVisualizer::extract_data(string display_mode, string varname,
     cerr<<"Unknown var type\n";
     }// else { Tensor,Other}
   TCL::execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
-	       +varname.c_str()+" "+name_list.c_str());
+	       +varname.c_str()+" "+currentNode_str().c_str()+" "
+	       +name_list.c_str());
   
 }
 
@@ -907,6 +910,26 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   }
   else
     cerr<<"Not getting the correct data\n";
+  void* dumb = (void*)pick;
+  dumb = userdata;
+  dumb = dumb;
+}
+
+// this don't do anything.  They are only here to eliminate compiler warnings
+void GridVisualizer::geom_pick(GeomPick* pick, void* userdata) {
+  void* dumb = (void*)pick;
+  dumb = userdata;
+  dumb = dumb;
+}
+
+// this don't do anything.  They are only here to eliminate compiler warnings
+void GridVisualizer::geom_pick(GeomPick* pick, Roe* roe, int data,
+			       const BState& bs) {
+  void* dumb = (void*)pick;
+  dumb = (void*)roe;
+  dumb = (void*)data;
+  dumb = (void*)&bs;
+  dumb = dumb;
 }
 
 } // End namespace Modules
@@ -914,6 +937,13 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.12  2001/03/21 22:50:52  bigler
+// --Changed currentNode_str to spit out a new string that was more readible.
+//   This was for the tcl code that used it in the title of the tables and graphs.
+// --Added the other two geom_pick functions to get rid of compiler warnings.
+// --Added dumb variables that used function parameters to get rid of annoying
+//   compiler warnings that said the variables were never referenced.
+//
 // Revision 1.11  2001/03/08 18:42:47  bigler
 // - Changed graph function to extract_data to give it a more general name in
 // accordance with the new added functionality of display data in a table.
