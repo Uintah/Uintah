@@ -738,6 +738,28 @@ void Roe::tcl_command(TCLArgs& args, void*)
     } else if(args[1] == "gohome"){
 	view.set(homeview);
 	manager->mailbox.send(new RedrawMessage(id));
+    } else if(args[1] == "autoview"){
+	View cv(view.get());
+	// Animate lookat point to center of BBox...
+	BBox bbox;
+	get_bounds(bbox);
+	cv.lookat=bbox.center();
+	animate_to_view(cv, 2.0);
+
+	// Move forward/backwards until entire view is in scene...
+	Vector lookdir(cv.lookat-cv.eyep);
+	double old_dist=lookdir.length();
+	cerr << "old_dist=" << old_dist << endl;
+	double old_w=2*Tan(cv.fov/2.)*old_dist;
+	cerr << "old_w=" << old_w << endl;
+	Vector diag(bbox.diagonal());
+	double w=diag.length();
+	cerr << "w=" << w << endl;
+	double dist=old_dist*w/old_w;
+	cerr << "dist=" << dist << endl;
+	cv.eyep=cv.lookat-lookdir*dist;
+	cerr << "cv.eyep=" << cv.eyep << endl;
+	animate_to_view(cv, 2.0);
     } else {
 	args.error("Unknown minor command for Roe");
     }
@@ -829,4 +851,11 @@ RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,
 
 RoeMouseMessage::~RoeMouseMessage()
 {
+}
+
+void Roe::animate_to_view(const View& v, double time)
+{
+    NOT_FINISHED("Roe::animate_to_view");
+    view.set(v);
+    manager->mailbox.send(new RedrawMessage(id));
 }

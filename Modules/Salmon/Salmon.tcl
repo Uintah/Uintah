@@ -89,7 +89,7 @@ proc makeRoe {salmon rid} {
     pack $w.bframe.mousemode -side left -fill y -pady 2 -padx 2
     frame $w.bframe.v
     pack $w.bframe.v -side left
-    button $w.bframe.v.autoview -text "Autoview"
+    button $w.bframe.v.autoview -text "Autoview" -command "$rid autoview"
     pack $w.bframe.v.autoview -fill x -pady 2
     button $w.bframe.v.sethome -text "Set Home View" -padx 2 \
 	    -command "$rid sethome"

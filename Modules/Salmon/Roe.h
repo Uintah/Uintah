@@ -70,6 +70,8 @@ class Roe : public TCL {
     void update_mode_string(const char*);
     char* modebuf;
     char* modecommand;
+
+    void animate_to_view(const View& v, double time);
 public:
     clString id;
 
