@@ -326,7 +326,7 @@ void Transform::rotate(const Vector& from, const Vector& to)
   Vector axis(Cross(f,t));
   double sinth=axis.length();
   double costh=Dot(f,t);
-  pre_rotate(atan2(sinth, costh), axis);
+  pre_rotate(atan2(sinth, costh), axis.normal());
 }
 
 void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
