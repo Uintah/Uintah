@@ -48,8 +48,8 @@ public:
     Module* get_module();
     int get_which_port();
     void set_which_port(int);
-    void attach(Connection*);
-    void detach(Connection*);
+    virtual void attach(Connection*);
+    virtual void detach(Connection*);
     virtual void reset()=0;
     virtual void finish()=0;
     clString get_typename();

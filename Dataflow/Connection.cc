@@ -28,8 +28,8 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2)
 
 void Connection::connect()
 {
-    oport->attach(this);
     iport->attach(this);
+    oport->attach(this);
     connected=1;
 }
 

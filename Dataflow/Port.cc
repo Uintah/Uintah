@@ -49,6 +49,11 @@ void Port::attach(Connection* conn)
     module->connection(Module::Connected, which_port, this==conn->oport);
 }
 
+void Port::detach(Connection*)
+{
+    NOT_FINISHED("Port::detach");
+}
+
 int Port::nconnections()
 {
     return connections.size();
