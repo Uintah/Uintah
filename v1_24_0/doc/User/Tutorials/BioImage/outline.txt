@@ -30,7 +30,7 @@ BioImage Tutorial
         c. rendering windows (see Reference Guide for more information on controls for the 2D and 3D viewers)
         d. Visualization Pane (see Reference Guide for more information on visualization techniques)
 
-4. Loading Data
+4. Loading Data    ERIK
 	a. BioImage works on 3D regular data
 	b. types of input files include Nrrd, Dicom, Analyze, Field (see Reference Guide for more information on loading these different kinds of datasets)
 	c. introduce the tooth dataset and explain steps to load it 
@@ -38,7 +38,7 @@ BioImage Tutorial
         e. talk about Update button and eye (see Reference Guide for more options)         
   
 	
-5. Pre-processing Filters 
+5. Pre-processing Filters  ERIK
 	a. explain motivation behind dynamic filters and maintaining a history
 	b. walk through process of resampling tooth dataset (see Reference Guide for more pre-processing filters)
 
