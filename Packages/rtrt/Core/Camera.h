@@ -45,7 +45,7 @@ public:
     virtual void makeRay(Ray& ray, double x, double y, double xres, double yres);
     virtual void makeRayL(Ray& ray, double x, double y, double xres, double yres);
     virtual void makeRayR(Ray& ray, double x, double y, double xres, double yres);
-    void get_viewplane(Vector& u, Vector& v);
+    void get_viewplane(Vector& u, Vector& v) const;
     virtual void setup();
     void print();
     inline const Point& get_eye() const {

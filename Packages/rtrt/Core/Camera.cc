@@ -66,7 +66,7 @@ void Camera::makeRayR(Ray& ray, double x, double y, double, double iyres)
     ray.set_direction(raydir);
 }
 
-void Camera::get_viewplane(Vector& uu, Vector& vv)
+void Camera::get_viewplane(Vector& uu, Vector& vv) const
 {
     uu=u;
     vv=v;
