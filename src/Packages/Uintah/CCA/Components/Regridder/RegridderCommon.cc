@@ -66,8 +66,7 @@ bool RegridderCommon::needsToReGrid()
     d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
     retval = true;
   }
-
-  rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) BGN" << endl;
+  rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
   return retval;
 }
 
