@@ -747,6 +747,72 @@
       </answer>
     </qandaentry>
 
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>1.20</revnumber>
+	  <date>5/12/2004</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+            When I downloaded your network and all the files, I was
+            able to run the network, but saw only B&W torso. The probe
+            was there and I could grab and move it and I could see the
+            slice planes moving along with it. But I got the error:
+            Some sort of texturing error. I was expecting a colored
+            rendering.  I am sending this along to you to see if you
+            can make anything of it. I am running this on my new Linux
+            box (runs RedHat Enterprise WS 3.0).
+	</para>
+	<para>
+            I see a number of these errors: Some sort of texturing error.
+        </para>
+	<para>
+            Also, do I need PETSc?
+        </para>
+
+      </question>
+      <answer>
+	<para>
+            You need to copy the gl headers from the nvidia driver
+            installation into place, then recompile scirun.  The
+            volume vis uses extensions, so it needs them defined in
+            the headers.
+
+            You also need a graphics card that supports 3d textures,
+            which I believe you have or you would see a solid white
+            cube.
+
+            cp /usr/share/doc/NVIDIA_GLX-1.0/include/GL/* to /usr/include/GL
+
+            See: /scratch/usr/share/doc/NVIDIA_GLX-1.0/README
+
+            PETsc is not required. You only need it if there was some
+            specific solvers you wanted.
+
+            --mc
+        </para>
+      </answer>
+    </qandaentry>
+
+<!---- TEMPLATE -----
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>1.20</revnumber>
+	  <date>5/12/2004</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para></para>
+      </question>
+      <answer>
+	<para></para>
+      </answer>
+    </qandaentry>
+------ END TEMPLATE ----->
+
   </qandaset>
 
 </article>
