@@ -22,11 +22,6 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
   class DataWarehouse;
   
-  void setHydrostaticPressureBC(CCVariable<double>& press,
-                            Patch::FaceType face, Vector& gravity,
-                            const CCVariable<double>& rho,
-                            const Vector& dx,
-                            IntVector offset = IntVector(0,0,0));
   //__________________________________
   //  Temperature, pressure and other CCVariables
   void setBC(CCVariable<double>& var,     
@@ -46,6 +41,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   void setBC(CCVariable<double>& press_CC,          
              StaticArray<CCVariable<double> >& rho_micro,
              StaticArray<constCCVariable<double> >& sp_vol,
+             const int surroundingMatl_indx,
              const std::string& whichVar, 
              const std::string& kind, 
              const Patch* p, 
@@ -57,6 +53,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   void setBC(CCVariable<double>& press_CC,          
              StaticArray<CCVariable<double> >& rho_micro,
              StaticArray<constCCVariable<double> >& sp_vol,
+             const int surroundingMatl_indx,
              const std::string& whichVar, 
              const std::string& kind,       // stub function 
              const Patch* p, 
