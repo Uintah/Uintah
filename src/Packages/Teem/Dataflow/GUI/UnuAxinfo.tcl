@@ -249,7 +249,7 @@ itcl_class Teem_Unu_UnuAxinfo {
 	$att.tabs view [set $this-active_tab]	
 	$att.tabs configure -tabpos "n"
 	
-	pack $att.type $att.dim -side top 
+	pack $att.type $att.dim -side top -anchor nw
 	pack $att.tabs -side top -fill x -expand yes
 	
 	makeSciButtonPanel $w $w $this
@@ -267,7 +267,8 @@ itcl_class Teem_Unu_UnuAxinfo {
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
 	    -fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
+	pack $win.l1 $win.colon -side left -anchor nw
+	pack $win.l2 -side left -fill x -expand 1 -anchor nw
     } 
     
     method makelabelentry { win l var} {
@@ -278,16 +279,17 @@ itcl_class Teem_Unu_UnuAxinfo {
 	label $win.l -text "$l" -width [set $this-firstwidth] \
 	    -anchor w -just left
 	label $win.colon -text ":" -width 2 -anchor w -just left
-	entry $win.e -textvar $var -width 10 \
+	entry $win.e -textvar $var \
 	    -foreground darkred
 	
-	pack $win.l $win.colon $win.e -side left
+	pack $win.l $win.colon -side left
+	pack $win.e -side left -fill x -expand 1
     } 
     
     method make_kind_optionmenu { win var i} {
 	global $var
 
-	iwidgets::optionmenu $win -labeltext "Kind" \
+	iwidgets::optionmenu $win -labeltext "Kind:" \
 	    -labelpos w -command "$this update_kind $win $var"
 	$win insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
 	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
