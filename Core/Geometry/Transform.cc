@@ -881,4 +881,51 @@ const TypeDescription* get_type_description(Transform*)
 }
 
 
+Point
+operator*(Transform &t, const Point &d)
+{
+  float result[4], tmp[4];
+  result[0] = result[1] = result[2] = result[3] = 0;
+  tmp[0] = d(0);
+  tmp[1] = d(1);
+  tmp[2] = d(2);
+  tmp[3] = 1.0;
+
+  double mat[16];
+  t.get(mat);
+
+  for(int i=0;i<4;i++) {
+    for(int j=0;j<4;j++) {
+      result[i] += mat[4*i + j] * tmp[j];
+    }
+  }
+
+  return Point(result[0], result[1], result[2]);
+}
+
+Vector
+operator*(Transform &t, const Vector &d)
+{
+  float result[4], tmp[4];
+  result[0] = result[1] = result[2] = result[3] = 0;
+  tmp[0] = d.x();
+  tmp[1] = d.y();
+  tmp[2] = d.z();
+  tmp[3] = 0.0;
+
+  double mat[16];
+  t.get(mat);
+
+  for(int i=0;i<4;i++) {
+    for(int j=0;j<4;j++) {
+      result[i] += mat[4*i + j] * tmp[j];
+    }
+  }
+
+  return Vector(result[0], result[1], result[2]);
+}
+
+
+
+
 } // End namespace SCIRun
