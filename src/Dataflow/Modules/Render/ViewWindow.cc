@@ -945,7 +945,7 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
     {
       double scl;
       const double xmtn = (last_x-x) * 6.0 / current_renderer->xres;
-      const double ymtn = (y-last_y) * 6.0 / current_renderer->yres;
+      const double ymtn = (last_y-y) * 6.0 / current_renderer->yres;
       last_x = x;
       last_y = y;
       const double len = sqrt(xmtn * xmtn + ymtn * ymtn);
