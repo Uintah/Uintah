@@ -63,9 +63,9 @@ static void print(const ArrayType& d, const char* name, int pre=0)
     cerr << "k=" << k << '\n';
     for(int j=h.y()-1;j>=l.y();j--){
       for(int i=0;i<pre;i++)
-	cerr << ' ';
+        cerr << ' ';
       for(int i=l.x();i<h.x();i++){
-	cerr << setw(13) << d[IntVector(i,j,k)];
+        cerr << setw(13) << d[IntVector(i,j,k)];
       }
       cerr << '\n';
     }
@@ -85,9 +85,9 @@ static void printhex(const ArrayType& d, const char* name, int pre=0)
     cerr << "k=" << k << '\n';
     for(int j=h.y()-1;j>=l.y();j--){
       for(int i=0;i<pre;i++)
-	cerr << ' ';
+        cerr << ' ';
       for(int i=l.x();i<h.x();i++){
-	cerr << setw(13) << setbase(16) << d[IntVector(i,j,k)];
+        cerr << setw(13) << setbase(16) << d[IntVector(i,j,k)];
       }
       cerr << '\n';
     }
@@ -127,7 +127,7 @@ static void printMat(const Array3<Stencil7>& A, const char* name)
 
 #if 1
 static void print(const Array3<double>& xvel, const Array3<double>& yvel,
-		  const Array3<double>& zvel, const char* name)
+                  const Array3<double>& zvel, const char* name)
 {
   cerr << "X ";
   print(xvel, name);
@@ -160,7 +160,7 @@ SimpleCFD::~SimpleCFD()
 //______________________________________________________________________
 //           P R O B L E M     S E T U P
 void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
-			 SimulationStateP& sharedState)
+                         SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup  \t\t\t SimpleCFD" << '\n';
   sharedState_ = sharedState;
@@ -223,11 +223,11 @@ void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
 //______________________________________________________________________
 //           S C H E D U L E   I N I T I A L I Z E
 void SimpleCFD::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   cout_doing << "SimpleCFD::scheduleInitialize on level " << level->getIndex() << '\n';
   Task* task = scinew Task("initialize",
-			   this, &SimpleCFD::initialize);
+                           this, &SimpleCFD::initialize);
   task->computes(lb_->bctype);
   task->computes(lb_->density);
   task->computes(lb_->xvelocity);
@@ -252,11 +252,11 @@ void SimpleCFD::scheduleInitialize(const LevelP& level,
 //______________________________________________________________________
 //           S C H E D U L E   C O M P U T E    S T A B L E    T I M E S T E P
 void SimpleCFD::scheduleComputeStableTimestep(const LevelP& level,
-					      SchedulerP& sched)
+                                              SchedulerP& sched)
 {
   cout_doing << "SimpleCFD::scheduleComputeStableTimestep on level " << level->getIndex() << '\n';
   Task* task = scinew Task("computeStableTimestep",
-			   this, &SimpleCFD::computeStableTimestep);
+                           this, &SimpleCFD::computeStableTimestep);
   task->requires(Task::NewDW, lb_->xvelocity, Ghost::None, 0);
   task->requires(Task::NewDW, lb_->yvelocity, Ghost::None, 0);
   task->requires(Task::NewDW, lb_->zvelocity, Ghost::None, 0);
@@ -267,7 +267,7 @@ void SimpleCFD::scheduleComputeStableTimestep(const LevelP& level,
 //           S C H E D U L E     T I M E     A D V A N C E
 void
 SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-				int step, int nsteps )
+                                int step, int nsteps )
 {
   cout_doing << "SimpleCFD::scheduleTimeAdvance on level " << level->getIndex() << '\n';
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
@@ -278,7 +278,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   //______________________________________________________________________
   //    SCHEDULE ADVECT VELOCITY
   task = scinew Task("advectVelocity", this, &SimpleCFD::advectVelocity,
-		     step, nsteps);
+                     step, nsteps);
   cout_doing << "SimpleCFD::scheduleadvectVelocity on level " << level->getIndex() << '\n';
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
@@ -326,7 +326,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   cout_doing << "SimpleCFD::scheduleApplyViscosity on level " << level->getIndex() << '\n';
   for(int dir=0;dir<3;dir++){
     task = scinew Task("applyViscosity", this, &SimpleCFD::applyViscosity, dir,
-		       step, nsteps);
+                       step, nsteps);
 #if 0
     task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
@@ -336,45 +336,54 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
       task->computes(lb_->xvelocity_matrix);
       task->computes(lb_->xvelocity_rhs);
       if(level->getIndex()>0)
-	addRefineDependencies(task, lb_->xvelocity, step+1, nsteps);
+        addRefineDependencies(task, lb_->xvelocity, step+1, nsteps);
     } else if(dir == 1){
       task->requires(Task::NewDW, lb_->yvelocity, Ghost::None, 0);
       task->computes(lb_->yvelocity_matrix);
       task->computes(lb_->yvelocity_rhs);
       if(level->getIndex()>0)
-	addRefineDependencies(task, lb_->yvelocity, step+1, nsteps);
+        addRefineDependencies(task, lb_->yvelocity, step+1, nsteps);
     } else if(dir ==2){
       task->requires(Task::NewDW, lb_->zvelocity, Ghost::None, 0);
       task->computes(lb_->zvelocity_matrix);
       task->computes(lb_->zvelocity_rhs);
       if(level->getIndex()>0) {         // REFINE
-	addRefineDependencies(task, lb_->zvelocity, step+1, nsteps);
+        addRefineDependencies(task, lb_->zvelocity, step+1, nsteps);
       }
     }
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
     if(dir == 0){
       solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
-			    lb_->xvelocity_matrix, lb_->xvelocity, true,
-			    lb_->xvelocity_rhs, lb_->xvelocity,
-			    old_initial_guess?Task::OldDW:Task::NewDW,
-			    viscosity_params_);
+                            lb_->xvelocity_matrix, Task::NewDW,
+                            lb_->xvelocity, 
+                            true,
+                            lb_->xvelocity_rhs,    Task::NewDW,
+                            lb_->xvelocity,
+                            old_initial_guess?Task::OldDW:Task::NewDW,
+                            viscosity_params_);
     } else if(dir == 1){
       solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
-			    lb_->yvelocity_matrix, lb_->yvelocity, true,
-			    lb_->yvelocity_rhs, lb_->yvelocity,
-			    old_initial_guess?Task::OldDW:Task::NewDW,
-			    viscosity_params_);
+                            lb_->yvelocity_matrix,  Task::NewDW,
+                            lb_->yvelocity, 
+                            true,
+                            lb_->yvelocity_rhs,     Task::NewDW, 
+                            lb_->yvelocity,
+                            old_initial_guess?Task::OldDW:Task::NewDW,
+                            viscosity_params_);
     } else if(dir == 2){
       solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
-			    lb_->zvelocity_matrix, lb_->zvelocity, true,
-			    lb_->zvelocity_rhs, lb_->zvelocity,
-			    old_initial_guess?Task::OldDW:Task::NewDW,
-			    viscosity_params_);
+                            lb_->zvelocity_matrix,  Task::NewDW,
+                            lb_->zvelocity, 
+                            true,
+                            lb_->zvelocity_rhs,     Task::NewDW, 
+                            lb_->zvelocity,
+                            old_initial_guess?Task::OldDW:Task::NewDW,
+                            viscosity_params_);
     }
   }  // dir loop
 
   schedulePressureSolve(level, sched, solver,
-			lb_->pressure, lb_->pressure_matrix, lb_->pressure_rhs);
+                        lb_->pressure, lb_->pressure_matrix, lb_->pressure_rhs);
   //__________________________________
   //  SCHEDULE ADVECT SCALARS
   cout_doing << "SimpleCFD::scheduleAdvectScalars on level " << level->getIndex() << '\n';
@@ -404,14 +413,14 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   //__________________________________
   //    SCHEDULE DIFFUSION
   scheduleDiffuseScalar(sched, level, "density",
-			lb_->density, lb_->density_matrix,
-			lb_->density_rhs, density_diffusion_,
-			solver, diffusion_params_, step, nsteps);
+                        lb_->density, lb_->density_matrix,
+                        lb_->density_rhs, density_diffusion_,
+                        solver, diffusion_params_, step, nsteps);
   if(do_thermal){
     scheduleDiffuseScalar(sched, level, "temperature", lb_->temperature,
-			  lb_->temperature_matrix, lb_->temperature_rhs,
-			  thermal_conduction_, solver, conduction_params_,
-			  step, nsteps);
+                          lb_->temperature_matrix, lb_->temperature_rhs,
+                          thermal_conduction_, solver, conduction_params_,
+                          step, nsteps);
   }
 
   //__________________________________
@@ -449,20 +458,20 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 //______________________________________________________________________
 //       S C H E D U L E   D I F F U S E    S C A L A R
 void SimpleCFD::scheduleDiffuseScalar(SchedulerP& sched, const LevelP& level,
-				      const string& name,
-				      const VarLabel* scalar,
-				      const VarLabel* scalar_matrix,
-				      const VarLabel* scalar_rhs,
-				      double rate,
-				      SolverInterface* solver,
-				      const SolverParameters* solverparams,
-				      int step, int nsteps)
+                                      const string& name,
+                                      const VarLabel* scalar,
+                                      const VarLabel* scalar_matrix,
+                                      const VarLabel* scalar_rhs,
+                                      double rate,
+                                      SolverInterface* solver,
+                                      const SolverParameters* solverparams,
+                                      int step, int nsteps)
 {
   cout_doing << "SimpleCFD::scheduleDiffuseScalar on level " << level->getIndex() << '\n';
   string taskname = "diffuseScalar: "+name;
   Task* task = scinew Task(taskname, this, &SimpleCFD::diffuseScalar,
-			   DiffuseInfo(name, scalar, scalar_matrix,
-				       scalar_rhs, rate, step, nsteps));
+                           DiffuseInfo(name, scalar, scalar_matrix,
+                                       scalar_rhs, rate, step, nsteps));
 #if 0
   task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
@@ -475,25 +484,30 @@ void SimpleCFD::scheduleDiffuseScalar(SchedulerP& sched, const LevelP& level,
   }
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
-			scalar_matrix, scalar, true,
-			scalar_rhs, scalar,
-			old_initial_guess?Task::OldDW:Task::NewDW,
-			solverparams);
+                        scalar_matrix,
+                     Task::NewDW,
+                     scalar, 
+                     true,
+                        scalar_rhs,
+                     Task::NewDW,
+                     scalar,
+                        old_initial_guess?Task::OldDW:Task::NewDW,
+                        solverparams);
 }
 //______________________________________________________________________
 //         S C H E D U L E   P R E S S U R E   S O L V E
 void SimpleCFD::schedulePressureSolve(const LevelP& level, SchedulerP& sched,
-				      SolverInterface* solver,
-				      const VarLabel* pressure,
-				      const VarLabel* pressure_matrix,
-				      const VarLabel* pressure_rhs,
+                                      SolverInterface* solver,
+                                      const VarLabel* pressure,
+                                      const VarLabel* pressure_matrix,
+                                      const VarLabel* pressure_rhs,
                                       bool usePressureAsGuess /*=true*/)
 {
   cout_doing << "SimpleCFD::schedulePressureSolve on level " << level->getIndex() << '\n';
   Task* task;
 
   task = scinew Task("projectVelocity", this, &SimpleCFD::projectVelocity,
-		     pressure, pressure_matrix, pressure_rhs);
+                     pressure, pressure_matrix, pressure_rhs);
   task->requires(Task::OldDW, lb_->bctype, Ghost::AroundNodes, 1);
   task->requires(Task::NewDW, lb_->xvelocity, Ghost::AroundCells, 1);
   task->requires(Task::NewDW, lb_->yvelocity, Ghost::AroundCells, 1);
@@ -502,12 +516,16 @@ void SimpleCFD::schedulePressureSolve(const LevelP& level, SchedulerP& sched,
   task->computes(pressure_rhs);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   solver->scheduleSolve(level, sched, sharedState_->allMaterials(),
-			pressure_matrix, pressure, false,
-			pressure_rhs, (keep_pressure&&usePressureAsGuess) ? pressure : 0,
-			Task::OldDW, pressure_params_);
+                        pressure_matrix,
+                     Task::NewDW, 
+                     pressure, false,
+                        pressure_rhs,
+                     Task::NewDW, 
+                     (keep_pressure&&usePressureAsGuess) ? pressure : 0,
+                        Task::OldDW, pressure_params_);
 
   task = scinew Task("applyProjection", this, &SimpleCFD::applyProjection,
-		     pressure);
+                     pressure);
   task->requires(Task::OldDW, lb_->bctype, Ghost::AroundNodes, 1);
   task->requires(Task::NewDW, pressure, Ghost::AroundFaces, 1);
   task->modifies(lb_->xvelocity);
@@ -518,10 +536,10 @@ void SimpleCFD::schedulePressureSolve(const LevelP& level, SchedulerP& sched,
 //______________________________________________________________________
 //          C O M P U T E   S T A B L E   T I M E S T E P
 void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse*,
-				      DataWarehouse* new_dw)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse*,
+                                      DataWarehouse* new_dw)
 {
   cout_doing << "Doing computeStableTimestep  \t\t\t SimpleCFD" << '\n';
   double delt=MAXDOUBLE;
@@ -533,20 +551,20 @@ void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
       new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::None, 0);
       double maxx=0;
       for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++)
-	maxx = Max(maxx, Abs(xvel[*iter]));
+        maxx = Max(maxx, Abs(xvel[*iter]));
       constSFCYVariable<double> yvel;
       new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::None, 0);
       double maxy=0;
       for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++)
-	maxy = Max(maxy, Abs(yvel[*iter]));
+        maxy = Max(maxy, Abs(yvel[*iter]));
       constSFCZVariable<double> zvel;
       new_dw->get(zvel, lb_->zvelocity, matl, patch, Ghost::None, 0);
       double maxz=0;
       for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++)
-	maxz = Max(maxz, Abs(zvel[*iter]));
+        maxz = Max(maxz, Abs(zvel[*iter]));
       Vector t_inv(Vector(maxx, maxy, maxz)/patch->dCell());
       if(t_inv.maxComponent() > 0)
-	delt=Min(delt, 1./t_inv.maxComponent());
+        delt=Min(delt, 1./t_inv.maxComponent());
     }
   }
   if(delt != MAXDOUBLE){
@@ -562,9 +580,9 @@ void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
 //______________________________________________________________________
 //           I N I T I A L I Z E
 void SimpleCFD::initialize(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -586,44 +604,44 @@ void SimpleCFD::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(den, lb_->density, matl, patch);
       ics.getCondition<double>("density")->apply(den, patch);
       if(do_thermal){
-	CCVariable<double> temp;
-	new_dw->allocateAndPut(temp, lb_->temperature, matl, patch);
-	ics.getCondition<double>("temperature")->apply(temp, patch);
+        CCVariable<double> temp;
+        new_dw->allocateAndPut(temp, lb_->temperature, matl, patch);
+        ics.getCondition<double>("temperature")->apply(temp, patch);
       }
-	
+        
       // Create bcs....
       NCVariable<int> bctype;
       new_dw->allocateAndPut(bctype, lb_->bctype, matl, patch);
       bcs.set(bctype, patch);
 
       if(keep_pressure){
-	CCVariable<double> pressure;
-	new_dw->allocateAndPut(pressure, lb_->pressure, matl, patch);
-	pressure.initialize(0);
+        CCVariable<double> pressure;
+        new_dw->allocateAndPut(pressure, lb_->pressure, matl, patch);
+        pressure.initialize(0);
       }
       if(random_initial_velocities.x()>0){
-	for(CellIterator iter(patch->getSFCXIterator(1)); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  xvel[idx] += 2*random_initial_velocities.x()*(drand48()-0.5);
-	}
+        for(CellIterator iter(patch->getSFCXIterator(1)); !iter.done(); iter++){
+          IntVector idx(*iter);
+          xvel[idx] += 2*random_initial_velocities.x()*(drand48()-0.5);
+        }
       }
       if(random_initial_velocities.y()>0){
-	for(CellIterator iter(patch->getSFCYIterator(1)); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  yvel[idx] += 2*random_initial_velocities.y()*(drand48()-0.5);
-	}
+        for(CellIterator iter(patch->getSFCYIterator(1)); !iter.done(); iter++){
+          IntVector idx(*iter);
+          yvel[idx] += 2*random_initial_velocities.y()*(drand48()-0.5);
+        }
       }
       if(random_initial_velocities.z()>0){
-	for(CellIterator iter(patch->getSFCZIterator(1)); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  zvel[idx] += 2*random_initial_velocities.z()*(drand48()-0.5);
-	}
+        for(CellIterator iter(patch->getSFCZIterator(1)); !iter.done(); iter++){
+          IntVector idx(*iter);
+          zvel[idx] += 2*random_initial_velocities.z()*(drand48()-0.5);
+        }
       }
 #if 1
       if(dbg.active()){
-	printhex(bctype, "bctype");
-	print(xvel, yvel, zvel, "Initial velocity");
-	print(den, "Initial density");
+        printhex(bctype, "bctype");
+        print(xvel, yvel, zvel, "Initial velocity");
+        print(den, "Initial density");
       }
 #endif
     }
@@ -632,7 +650,7 @@ void SimpleCFD::initialize(const ProcessorGroup*,
 //__________________________________
 //
 static inline bool inside(const IntVector& i, const IntVector& l,
-			  const IntVector& h)
+                          const IntVector& h)
 {
   return i.x() >= l.x() && i.y() >= l.y() && i.z() >= l.z()
     && i.x() < h.x() && i.y() < h.y() && i.z() < h.z();
@@ -641,9 +659,9 @@ static inline bool inside(const IntVector& i, const IntVector& l,
 //
 template<class ArrayType>
 void contribute(const ArrayType& field, constNCVariable<int>& bctype,
-		Condition<double>* bc, const IntVector& idx,
-		double weight, double& w,
-		typename ArrayType::value_type& value)
+                Condition<double>* bc, const IntVector& idx,
+                double weight, double& w,
+                typename ArrayType::value_type& value)
 {
   if(::inside(idx, field.getLowIndex(), field.getHighIndex())){
     BCRegion<double>* bc2 = bc->get(bctype[idx]);
@@ -666,9 +684,9 @@ void contribute(const ArrayType& field, constNCVariable<int>& bctype,
 //        I N T E R P O L A T E
 template<class ArrayType>
 bool Interpolate(typename ArrayType::value_type& value, const Vector& v,
-		 const Vector& offset, const Vector& inv_dx,
-		 const ArrayType& field, Condition<double>* bcs,
-		 constNCVariable<int>& bctype)
+                 const Vector& offset, const Vector& inv_dx,
+                 const ArrayType& field, Condition<double>* bcs,
+                 constNCVariable<int>& bctype)
 {
   Vector pos(v*inv_dx-offset);
   int ix = RoundDown(pos.x());
@@ -683,21 +701,21 @@ bool Interpolate(typename ArrayType::value_type& value, const Vector& v,
   double w = 0;
   value = 0;
   contribute(field, bctype, bcs, IntVector(ix, iy, iz), (1-fx)*(1-fy)*(1-fz),
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix+1, iy, iz), fx*(1-fy)*(1-fz),
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix, iy+1, iz), (1-fx)*fy*(1-fz),
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix+1, iy+1, iz), fx*fy*(1-fz),
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix, iy, iz+1), (1-fx)*(1-fy)*fz,
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix+1, iy, iz+1), fx*(1-fy)*fz,
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix, iy+1, iz+1), (1-fx)*fy*fz,
-	     w, value);
+             w, value);
   contribute(field, bctype, bcs, IntVector(ix+1, iy+1, iz+1), fx*fy*fz,
-	     w, value);
+             w, value);
   if(w < 1.e-8)
     return false;
   value *= 1./w;
@@ -706,14 +724,14 @@ bool Interpolate(typename ArrayType::value_type& value, const Vector& v,
 //______________________________________________________________________
 //          P A R T I C L E   T R A C E
 static bool particleTrace(Vector& p, int nsteps, double delt,
-			  const Vector& inv_dx,
-			  constSFCXVariable<double>& xvel,
-			  constSFCYVariable<double>& yvel,
-			  constSFCZVariable<double>& zvel,
-			  Condition<double>* xbc,
-			  Condition<double>* ybc,
-			  Condition<double>* zbc,
-			  constNCVariable<int>& bctype)
+                          const Vector& inv_dx,
+                          constSFCXVariable<double>& xvel,
+                          constSFCYVariable<double>& yvel,
+                          constSFCZVariable<double>& zvel,
+                          Condition<double>* xbc,
+                          Condition<double>* ybc,
+                          Condition<double>* zbc,
+                          constNCVariable<int>& bctype)
 {
   for(int i=0;i<nsteps;i++){
     double x;
@@ -732,19 +750,19 @@ static bool particleTrace(Vector& p, int nsteps, double delt,
 }
 
 static bool particleTrace(Vector& p, double delt, const Vector& inv_dx,
-			  constSFCXVariable<double>& xvel,
-			  constSFCYVariable<double>& yvel,
-			  constSFCZVariable<double>& zvel,
-			  double tolerance,
-			  Condition<double>* xbc,
-			  Condition<double>* ybc,
-			  Condition<double>* zbc,
-			  constNCVariable<int>& bctype)
+                          constSFCXVariable<double>& xvel,
+                          constSFCYVariable<double>& yvel,
+                          constSFCZVariable<double>& zvel,
+                          double tolerance,
+                          Condition<double>* xbc,
+                          Condition<double>* ybc,
+                          Condition<double>* zbc,
+                          constNCVariable<int>& bctype)
 {
   int nsteps=1;
   Vector p1 = p;
   bool success1 = particleTrace(p1, nsteps, delt/nsteps, inv_dx,
-				xvel, yvel, zvel, xbc, ybc, zbc, bctype);
+                                xvel, yvel, zvel, xbc, ybc, zbc, bctype);
   double tolerance2 = tolerance*tolerance;
   int maxsteps = 128;
   for(;;) {
@@ -755,7 +773,7 @@ static bool particleTrace(Vector& p, double delt, const Vector& inv_dx,
     bool success2 = particleTrace(p2, nsteps, delt/nsteps, inv_dx, xvel, yvel, zvel, xbc, ybc, zbc, bctype);
     if(success1 && success2){
       if((p2-p1).length2() < tolerance2)
-	break;
+        break;
       p1=p2;
     } else if(success2){
       // This one was successful but the last one was not
@@ -774,16 +792,16 @@ static bool particleTrace(Vector& p, double delt, const Vector& inv_dx,
 //______________________________________________________________________
 //           A D V E C T
 void SimpleCFD::advect(Array3<double>& q, const Array3<double>& qold,
-		       CellIterator iter,
-		       const Patch* patch, double delt, const Vector& offset,
-		       constSFCXVariable<double>& xvel,
-		       constSFCYVariable<double>& yvel,
-		       constSFCZVariable<double>& zvel,
-		       constNCVariable<int>& bctype,
-		       Condition<double>* cbc,
-		       Condition<double>* xbc,
-		       Condition<double>* ybc,
-		       Condition<double>* zbc)
+                       CellIterator iter,
+                       const Patch* patch, double delt, const Vector& offset,
+                       constSFCXVariable<double>& xvel,
+                       constSFCYVariable<double>& yvel,
+                       constSFCZVariable<double>& zvel,
+                       constNCVariable<int>& bctype,
+                       Condition<double>* cbc,
+                       Condition<double>* xbc,
+                       Condition<double>* ybc,
+                       Condition<double>* zbc)
 {
   Vector dx(patch->dCell());
   Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
@@ -794,20 +812,20 @@ void SimpleCFD::advect(Array3<double>& q, const Array3<double>& qold,
     case BC::FreeFlow:
     case BC::FixedRate:
       {
-	Vector v = (idx.asVector()+offset)*dx;
-	if(particleTrace(v, delt, inv_dx, xvel, yvel, zvel, advection_tolerance_, xbc, ybc, zbc, bctype)){
-	  double value;
-	  if(Interpolate(value, v, offset, inv_dx, qold, cbc, bctype)){
-	    q[idx] = value;
-	  } else {
-	    //cerr << "WARNING: outside: " << v << '\n';
-	    q[idx]=qold[idx];
-	  }
-	} else {
-	  //Vector v2 = (idx.asVector()+offset)*dx;
-	  //cerr << "WARNING: trace failed: " << v << ", original v=" << v2 << '\n';
-	  q[idx]=qold[idx];
-	}
+        Vector v = (idx.asVector()+offset)*dx;
+        if(particleTrace(v, delt, inv_dx, xvel, yvel, zvel, advection_tolerance_, xbc, ybc, zbc, bctype)){
+          double value;
+          if(Interpolate(value, v, offset, inv_dx, qold, cbc, bctype)){
+            q[idx] = value;
+          } else {
+            //cerr << "WARNING: outside: " << v << '\n';
+            q[idx]=qold[idx];
+          }
+        } else {
+          //Vector v2 = (idx.asVector()+offset)*dx;
+          //cerr << "WARNING: trace failed: " << v << ", original v=" << v2 << '\n';
+          q[idx]=qold[idx];
+        }
       }
       break;
     case BC::FixedValue:
@@ -827,10 +845,10 @@ void SimpleCFD::advect(Array3<double>& q, const Array3<double>& qold,
 //______________________________________________________________________
 //         A D V E C T   V E L O C I T Y
 void SimpleCFD::advectVelocity(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw,
-			       int step, int nsteps)
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw, DataWarehouse* new_dw,
+                               int step, int nsteps)
 {
   delt_vartype delT;
   const Level* level = getLevel(patches);
@@ -865,35 +883,35 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
       if(level->getIndex() > 0){        // REFINE
        double subCycleProgress = double(step)/double(nsteps);
        
-	refineBoundaries(patch, xvel_old.castOffConst(),
-			 new_dw, lb_->xvelocity, matl, subCycleProgress);
+        refineBoundaries(patch, xvel_old.castOffConst(),
+                         new_dw, lb_->xvelocity, matl, subCycleProgress);
                       
-	refineBoundaries(patch, yvel_old.castOffConst(),
-			 new_dw, lb_->yvelocity, matl, subCycleProgress);
+        refineBoundaries(patch, yvel_old.castOffConst(),
+                         new_dw, lb_->yvelocity, matl, subCycleProgress);
                       
-	refineBoundaries(patch, zvel_old.castOffConst(),
-			 new_dw, lb_->zvelocity, matl, subCycleProgress);
+        refineBoundaries(patch, zvel_old.castOffConst(),
+                         new_dw, lb_->zvelocity, matl, subCycleProgress);
       }
       advect(xvel, xvel_old, patch->getSFCXIterator(), patch, delT,
-	     Vector(0, 0.5, 0.5), xvel_old, yvel_old, zvel_old, bctype,
-	     bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
-	     bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
-	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
-	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+             Vector(0, 0.5, 0.5), xvel_old, yvel_old, zvel_old, bctype,
+             bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
+             bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
+             bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
+             bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
             
       advect(yvel, yvel_old, patch->getSFCYIterator(), patch, delT,
-	     Vector(0.5, 0, 0.5), xvel_old, yvel_old, zvel_old, bctype,
-	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
-	     bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
-	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
-	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+             Vector(0.5, 0, 0.5), xvel_old, yvel_old, zvel_old, bctype,
+             bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
+             bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
+             bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
+             bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
             
       advect(zvel, zvel_old, patch->getSFCZIterator(), patch, delT,
-	     Vector(0.5, 0.5, 0), xvel_old, yvel_old, zvel_old, bctype,
-	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased),
-	     bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
-	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
-	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+             Vector(0.5, 0.5, 0), xvel_old, yvel_old, zvel_old, bctype,
+             bcs.getCondition<double>("zvelocity", Patch::ZFaceBased),
+             bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
+             bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
+             bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
     }  // matl loop
   }  // patch loop
 }
@@ -901,9 +919,9 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
 //______________________________________________________________________
 //       A P P L Y   F O R C E S
 void SimpleCFD::applyForces(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw, DataWarehouse* new_dw)
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -926,197 +944,197 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
       
       Vector grav = sharedState_->getGravity();
       if(vorticity_confinement_scale_ != 0){
-	constCCVariable<Vector> vel;
-	old_dw->get(vel, lb_->ccvelocity, matl, patch, Ghost::None, 0);
-	CCVariable<Vector> ccvorticity;
-	CCVariable<double> ccvorticitymag;
-	new_dw->allocateAndPut(ccvorticity, lb_->ccvorticity, matl, patch);
-	new_dw->allocateAndPut(ccvorticitymag, lb_->ccvorticitymag, matl, patch);
-	Vector dx(patch->dCell());
-	Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
-	IntVector l(patch->getCellLowIndex());
-	IntVector h(patch->getCellHighIndex());
-	if(patch->getBCType(Patch::xminus) == Patch::Neighbor)
-	  l -= IntVector(1,0,0);
-	if(patch->getBCType(Patch::xplus) == Patch::Neighbor)
-	  h += IntVector(1,0,0);
-	if(patch->getBCType(Patch::yminus) == Patch::Neighbor)
-	  l -= IntVector(0,1,0);
-	if(patch->getBCType(Patch::yplus) == Patch::Neighbor)
-	  h += IntVector(0,1,0);
-	if(patch->getBCType(Patch::zminus) == Patch::Neighbor)
-	  l -= IntVector(0,0,1);
-	if(patch->getBCType(Patch::zplus) == Patch::Neighbor)
-	  h += IntVector(0,0,1);
-	for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  Vector gx, gy, gz;
-	  if(idx.x() == l.x()){
-	    gx = (vel[idx+IntVector(1,0,0)]-vel[idx])*inv_dx.x();
-	  } else if(idx.x() == h.x()-1){
-	    gx = (vel[idx]-vel[idx-IntVector(1,0,0)])*inv_dx.x();
-	  } else {
-	    gx = (vel[idx+IntVector(1,0,0)]-vel[idx-IntVector(1,0,0)])*0.5*inv_dx.x();
-	  }
-	  if(idx.y() == l.y()){
-	    gy = (vel[idx+IntVector(0,1,0)]-vel[idx])*inv_dx.y();
-	  } else if(idx.y() == h.y()-1){
-	    gy = (vel[idx]-vel[idx-IntVector(0,1,0)])*inv_dx.y();
-	  } else {
-	    gy = (vel[idx+IntVector(0,1,0)]-vel[idx-IntVector(0,1,0)])*0.5*inv_dx.y();
-	  }
-	  if(idx.z() == l.z()){
-	    gz = (vel[idx+IntVector(0,0,1)]-vel[idx])*inv_dx.z();
-	  } else if(idx.z() == h.z()-1){
-	    gz = (vel[idx]-vel[idx-IntVector(0,0,1)])*inv_dx.z();
-	  } else {
-	    gz = (vel[idx+IntVector(0,0,1)]-vel[idx-IntVector(0,0,1)])*0.5*inv_dx.z();
-	  }
-	  Vector w(gy.z()-gz.y(), gz.x()-gx.z(), gx.y()-gy.x());
-	  ccvorticity[idx]=w;
-	  ccvorticitymag[idx]=w.length();
-	}
-	CCVariable<Vector> vcforce;
-	CCVariable<Vector> NN;
-	new_dw->allocateAndPut(vcforce, lb_->vcforce, matl, patch);
-	new_dw->allocateAndPut(NN, lb_->NN, matl, patch);
-	Vector maxforce(0,0,0);
-	for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  double gx, gy, gz;
-	  if(idx.x() == l.x()){
-	    gx = (ccvorticitymag[idx+IntVector(1,0,0)]-ccvorticitymag[idx])*inv_dx.x();
-	  } else if(idx.x() == h.x()-1){
-	    gx = (ccvorticitymag[idx]-ccvorticitymag[idx-IntVector(1,0,0)])*inv_dx.x();
-	  } else {
-	    gx = (ccvorticitymag[idx+IntVector(1,0,0)]-ccvorticitymag[idx-IntVector(1,0,0)])*0.5*inv_dx.x();
-	  }
-	  if(idx.y() == l.y()){
-	    gy = (ccvorticitymag[idx+IntVector(0,1,0)]-ccvorticitymag[idx])*inv_dx.y();
-	  } else if(idx.y() == h.y()-1){
-	    gy = (ccvorticitymag[idx]-ccvorticitymag[idx-IntVector(0,1,0)])*inv_dx.y();
-	  } else {
-	    gy = (ccvorticitymag[idx+IntVector(0,1,0)]-ccvorticitymag[idx-IntVector(0,1,0)])*0.5*inv_dx.y();
-	  }
-	  if(idx.z() == l.z()){
-	    gz = (ccvorticitymag[idx+IntVector(0,0,1)]-ccvorticitymag[idx])*inv_dx.z();
-	  } else if(idx.z() == h.z()-1){
-	    gz = (ccvorticitymag[idx]-ccvorticitymag[idx-IntVector(0,0,1)])*inv_dx.z();
-	  } else {
-	    gz = (ccvorticitymag[idx+IntVector(0,0,1)]-ccvorticitymag[idx-IntVector(0,0,1)])*0.5*inv_dx.z();
-	  }
-	  Vector N(gx, gy, gz);
-	  if(N.length2()>0.0)
-	    N.normalize();
-	  NN[idx]=N;
-	  vcforce[idx] = Cross(N, ccvorticity[idx])*dx*vorticity_confinement_scale_;
-	  maxforce=Max(maxforce, Vector(vcforce[idx].length()));
-	}
-	cerr << "maxforce=" << maxforce << '\n';
-	double constant = 0.5*delT;
-	for(CellIterator iter(patch->getSFCXIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  double fx;
-	  if(idx.x() == l.x())
-	    fx = vcforce[idx].x();
-	  else if(idx.x() == h.x())
-	    fx = vcforce[idx+IntVector(-1,0,0)].x();
-	  else
-	    fx = (vcforce[idx].x()+vcforce[idx+IntVector(-1,0,0)].x());
-	  xvel[idx] += fx*constant;
-	}
-	for(CellIterator iter(patch->getSFCYIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  double fy;
-	  if(idx.y() == l.y())
-	    fy = vcforce[idx].y();
-	  else if(idx.y() == h.y())
-	    fy = vcforce[idx+IntVector(0,-1,0)].y();
-	  else
-	    fy = (vcforce[idx].y()+vcforce[idx+IntVector(0,-1,0)].y());
-	  yvel[idx] += fy*constant;
-	}
-	for(CellIterator iter(patch->getSFCZIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  double fz;
-	  if(idx.z() == l.z())
-	    fz = vcforce[idx].z();
-	  else if(idx.z() == h.z())
-	    fz = vcforce[idx+IntVector(0,0,-1)].z();
-	  else
-	    fz = (vcforce[idx].z()+vcforce[idx+IntVector(0,0,-1)].z());
-	  zvel[idx] += fz*constant;
-	}
+        constCCVariable<Vector> vel;
+        old_dw->get(vel, lb_->ccvelocity, matl, patch, Ghost::None, 0);
+        CCVariable<Vector> ccvorticity;
+        CCVariable<double> ccvorticitymag;
+        new_dw->allocateAndPut(ccvorticity, lb_->ccvorticity, matl, patch);
+        new_dw->allocateAndPut(ccvorticitymag, lb_->ccvorticitymag, matl, patch);
+        Vector dx(patch->dCell());
+        Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
+        IntVector l(patch->getCellLowIndex());
+        IntVector h(patch->getCellHighIndex());
+        if(patch->getBCType(Patch::xminus) == Patch::Neighbor)
+          l -= IntVector(1,0,0);
+        if(patch->getBCType(Patch::xplus) == Patch::Neighbor)
+          h += IntVector(1,0,0);
+        if(patch->getBCType(Patch::yminus) == Patch::Neighbor)
+          l -= IntVector(0,1,0);
+        if(patch->getBCType(Patch::yplus) == Patch::Neighbor)
+          h += IntVector(0,1,0);
+        if(patch->getBCType(Patch::zminus) == Patch::Neighbor)
+          l -= IntVector(0,0,1);
+        if(patch->getBCType(Patch::zplus) == Patch::Neighbor)
+          h += IntVector(0,0,1);
+        for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          Vector gx, gy, gz;
+          if(idx.x() == l.x()){
+            gx = (vel[idx+IntVector(1,0,0)]-vel[idx])*inv_dx.x();
+          } else if(idx.x() == h.x()-1){
+            gx = (vel[idx]-vel[idx-IntVector(1,0,0)])*inv_dx.x();
+          } else {
+            gx = (vel[idx+IntVector(1,0,0)]-vel[idx-IntVector(1,0,0)])*0.5*inv_dx.x();
+          }
+          if(idx.y() == l.y()){
+            gy = (vel[idx+IntVector(0,1,0)]-vel[idx])*inv_dx.y();
+          } else if(idx.y() == h.y()-1){
+            gy = (vel[idx]-vel[idx-IntVector(0,1,0)])*inv_dx.y();
+          } else {
+            gy = (vel[idx+IntVector(0,1,0)]-vel[idx-IntVector(0,1,0)])*0.5*inv_dx.y();
+          }
+          if(idx.z() == l.z()){
+            gz = (vel[idx+IntVector(0,0,1)]-vel[idx])*inv_dx.z();
+          } else if(idx.z() == h.z()-1){
+            gz = (vel[idx]-vel[idx-IntVector(0,0,1)])*inv_dx.z();
+          } else {
+            gz = (vel[idx+IntVector(0,0,1)]-vel[idx-IntVector(0,0,1)])*0.5*inv_dx.z();
+          }
+          Vector w(gy.z()-gz.y(), gz.x()-gx.z(), gx.y()-gy.x());
+          ccvorticity[idx]=w;
+          ccvorticitymag[idx]=w.length();
+        }
+        CCVariable<Vector> vcforce;
+        CCVariable<Vector> NN;
+        new_dw->allocateAndPut(vcforce, lb_->vcforce, matl, patch);
+        new_dw->allocateAndPut(NN, lb_->NN, matl, patch);
+        Vector maxforce(0,0,0);
+        for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          double gx, gy, gz;
+          if(idx.x() == l.x()){
+            gx = (ccvorticitymag[idx+IntVector(1,0,0)]-ccvorticitymag[idx])*inv_dx.x();
+          } else if(idx.x() == h.x()-1){
+            gx = (ccvorticitymag[idx]-ccvorticitymag[idx-IntVector(1,0,0)])*inv_dx.x();
+          } else {
+            gx = (ccvorticitymag[idx+IntVector(1,0,0)]-ccvorticitymag[idx-IntVector(1,0,0)])*0.5*inv_dx.x();
+          }
+          if(idx.y() == l.y()){
+            gy = (ccvorticitymag[idx+IntVector(0,1,0)]-ccvorticitymag[idx])*inv_dx.y();
+          } else if(idx.y() == h.y()-1){
+            gy = (ccvorticitymag[idx]-ccvorticitymag[idx-IntVector(0,1,0)])*inv_dx.y();
+          } else {
+            gy = (ccvorticitymag[idx+IntVector(0,1,0)]-ccvorticitymag[idx-IntVector(0,1,0)])*0.5*inv_dx.y();
+          }
+          if(idx.z() == l.z()){
+            gz = (ccvorticitymag[idx+IntVector(0,0,1)]-ccvorticitymag[idx])*inv_dx.z();
+          } else if(idx.z() == h.z()-1){
+            gz = (ccvorticitymag[idx]-ccvorticitymag[idx-IntVector(0,0,1)])*inv_dx.z();
+          } else {
+            gz = (ccvorticitymag[idx+IntVector(0,0,1)]-ccvorticitymag[idx-IntVector(0,0,1)])*0.5*inv_dx.z();
+          }
+          Vector N(gx, gy, gz);
+          if(N.length2()>0.0)
+            N.normalize();
+          NN[idx]=N;
+          vcforce[idx] = Cross(N, ccvorticity[idx])*dx*vorticity_confinement_scale_;
+          maxforce=Max(maxforce, Vector(vcforce[idx].length()));
+        }
+        cerr << "maxforce=" << maxforce << '\n';
+        double constant = 0.5*delT;
+        for(CellIterator iter(patch->getSFCXIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          double fx;
+          if(idx.x() == l.x())
+            fx = vcforce[idx].x();
+          else if(idx.x() == h.x())
+            fx = vcforce[idx+IntVector(-1,0,0)].x();
+          else
+            fx = (vcforce[idx].x()+vcforce[idx+IntVector(-1,0,0)].x());
+          xvel[idx] += fx*constant;
+        }
+        for(CellIterator iter(patch->getSFCYIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          double fy;
+          if(idx.y() == l.y())
+            fy = vcforce[idx].y();
+          else if(idx.y() == h.y())
+            fy = vcforce[idx+IntVector(0,-1,0)].y();
+          else
+            fy = (vcforce[idx].y()+vcforce[idx+IntVector(0,-1,0)].y());
+          yvel[idx] += fy*constant;
+        }
+        for(CellIterator iter(patch->getSFCZIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          double fz;
+          if(idx.z() == l.z())
+            fz = vcforce[idx].z();
+          else if(idx.z() == h.z())
+            fz = vcforce[idx+IntVector(0,0,-1)].z();
+          else
+            fz = (vcforce[idx].z()+vcforce[idx+IntVector(0,0,-1)].z());
+          zvel[idx] += fz*constant;
+        }
       }
       if(grav.length() > 0) {
-	constCCVariable<double> den;
-	old_dw->get(den, lb_->density, matl, patch, Ghost::AroundFaces, 1);
-	
-	constCCVariable<double> temp;
-	if(do_thermal && buoyancy_>0)
-	  old_dw->get(temp, lb_->temperature, matl, patch, Ghost::AroundFaces, 1);
+        constCCVariable<double> den;
+        old_dw->get(den, lb_->density, matl, patch, Ghost::AroundFaces, 1);
+        
+        constCCVariable<double> temp;
+        if(do_thermal && buoyancy_>0)
+          old_dw->get(temp, lb_->temperature, matl, patch, Ghost::AroundFaces, 1);
 
-	if(grav.x() != 0){
-	  double gconstant = grav.x()*delT;
-	  if(do_thermal && buoyancy_>0){
-	    double bconstant = buoyancy_*grav.x()/grav.length()*delT;
-	    for(CellIterator iter(patch->getSFCXIterator(1)); !iter.done(); iter++){
-	      IntVector idx(*iter);
-	      double t = (temp[idx]+temp[idx+IntVector(-1,0,0)])*0.5;
-	      double d = (den[idx]+den[idx+IntVector(-1,0,0)])*0.5;
-	      double fx = d*gconstant-t*bconstant;
-	      xvel[idx] += fx;
-	    }
-	  } else {
-	    for(CellIterator iter(patch->getSFCXIterator(1)); !iter.done(); iter++){
-	      IntVector idx(*iter);
-	      double d = (den[idx]+den[idx+IntVector(-1,0,0)])*0.5;
-	      double fx = d*gconstant;
-	      xvel[idx] += fx;
-	    }
-	  }
-	}
-	if(grav.y() != 0) {
-	  double gconstant = grav.y()*delT;
-	  if(do_thermal && buoyancy_>0){
-	    double bconstant = buoyancy_*grav.y()/grav.length()*delT;
-	    for(CellIterator iter(patch->getSFCYIterator(1)); !iter.done(); iter++){
-	      IntVector idx(*iter);
-	      double d = (den[idx]+den[idx+IntVector(0,-1,0)])*0.5;
-	      double t = (temp[idx]+temp[idx+IntVector(0,-1,0)])*0.5;
-	      double fy = d*gconstant-t*bconstant;
-	      yvel[idx] += fy;
-	    }
-	    
-	  } else {
-	    for(CellIterator iter(patch->getSFCYIterator(1)); !iter.done(); iter++){
-	      IntVector idx(*iter);
-	      double d = (den[idx]+den[idx+IntVector(0,-1,0)])*0.5;
-	      double fy = d*gconstant;
-	      yvel[idx] += fy;
-	    }
-	  }
-	}
-	if(grav.z() != 0) {
-	  double gconstant = grav.z()*delT;
-	  if(do_thermal && buoyancy_>0){
-	    double bconstant = buoyancy_*grav.z()/grav.length()*delT;
-	    for(CellIterator iter(patch->getSFCZIterator(1)); !iter.done(); iter++){
-	      IntVector idx(*iter);
-	      double d = (den[idx]+den[idx+IntVector(0,0,-1)])*0.5;
-	      double t = (temp[idx]+temp[idx+IntVector(0,0,-1)])*0.5;
-	      double fz = d*gconstant-t*bconstant;
-	      zvel[idx] += fz;
-	    }
-	  } else {
-	    for(CellIterator iter(patch->getSFCZIterator(1)); !iter.done(); iter++){
-	      IntVector idx(*iter);
-	      double d = (den[idx]+den[idx+IntVector(0,0,-1)])*0.5;
-	      double fz = d*gconstant;
-	      zvel[idx] += fz;
-	    }
-	  }
-	}
+        if(grav.x() != 0){
+          double gconstant = grav.x()*delT;
+          if(do_thermal && buoyancy_>0){
+            double bconstant = buoyancy_*grav.x()/grav.length()*delT;
+            for(CellIterator iter(patch->getSFCXIterator(1)); !iter.done(); iter++){
+              IntVector idx(*iter);
+              double t = (temp[idx]+temp[idx+IntVector(-1,0,0)])*0.5;
+              double d = (den[idx]+den[idx+IntVector(-1,0,0)])*0.5;
+              double fx = d*gconstant-t*bconstant;
+              xvel[idx] += fx;
+            }
+          } else {
+            for(CellIterator iter(patch->getSFCXIterator(1)); !iter.done(); iter++){
+              IntVector idx(*iter);
+              double d = (den[idx]+den[idx+IntVector(-1,0,0)])*0.5;
+              double fx = d*gconstant;
+              xvel[idx] += fx;
+            }
+          }
+        }
+        if(grav.y() != 0) {
+          double gconstant = grav.y()*delT;
+          if(do_thermal && buoyancy_>0){
+            double bconstant = buoyancy_*grav.y()/grav.length()*delT;
+            for(CellIterator iter(patch->getSFCYIterator(1)); !iter.done(); iter++){
+              IntVector idx(*iter);
+              double d = (den[idx]+den[idx+IntVector(0,-1,0)])*0.5;
+              double t = (temp[idx]+temp[idx+IntVector(0,-1,0)])*0.5;
+              double fy = d*gconstant-t*bconstant;
+              yvel[idx] += fy;
+            }
+            
+          } else {
+            for(CellIterator iter(patch->getSFCYIterator(1)); !iter.done(); iter++){
+              IntVector idx(*iter);
+              double d = (den[idx]+den[idx+IntVector(0,-1,0)])*0.5;
+              double fy = d*gconstant;
+              yvel[idx] += fy;
+            }
+          }
+        }
+        if(grav.z() != 0) {
+          double gconstant = grav.z()*delT;
+          if(do_thermal && buoyancy_>0){
+            double bconstant = buoyancy_*grav.z()/grav.length()*delT;
+            for(CellIterator iter(patch->getSFCZIterator(1)); !iter.done(); iter++){
+              IntVector idx(*iter);
+              double d = (den[idx]+den[idx+IntVector(0,0,-1)])*0.5;
+              double t = (temp[idx]+temp[idx+IntVector(0,0,-1)])*0.5;
+              double fz = d*gconstant-t*bconstant;
+              zvel[idx] += fz;
+            }
+          } else {
+            for(CellIterator iter(patch->getSFCZIterator(1)); !iter.done(); iter++){
+              IntVector idx(*iter);
+              double d = (den[idx]+den[idx+IntVector(0,0,-1)])*0.5;
+              double fz = d*gconstant;
+              zvel[idx] += fz;
+            }
+          }
+        }
       }
     }
   }
@@ -1124,18 +1142,18 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
 //______________________________________________________________________
 //          A P P L Y B C
 void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
-			const IntVector&, const IntVector& /*h2*/,
-			const Array3<double>& field, double delt,
-			const Vector& inv_dx2, double diff,
-			constNCVariable<int>& bctype,
-			Condition<double>* scalar_bc,
-			Condition<double>* xface_bc,
-			Condition<double>* yface_bc,
-			Condition<double>* zface_bc,
-			const IntVector& FW, const IntVector& FE,
-			const IntVector& FS, const IntVector& FN,
-			const IntVector& FB, const IntVector& FT,
-			Array3<Stencil7>& A, Array3<double>& rhs)
+                        const IntVector&, const IntVector& /*h2*/,
+                        const Array3<double>& field, double delt,
+                        const Vector& inv_dx2, double diff,
+                        constNCVariable<int>& bctype,
+                        Condition<double>* scalar_bc,
+                        Condition<double>* xface_bc,
+                        Condition<double>* yface_bc,
+                        Condition<double>* zface_bc,
+                        const IntVector& FW, const IntVector& FE,
+                        const IntVector& FS, const IntVector& FN,
+                        const IntVector& FB, const IntVector& FT,
+                        Array3<Stencil7>& A, Array3<double>& rhs)
 {
   BCRegion<double>* bc = scalar_bc->get(bctype[idx]);
   IntVector W(-1,0,0);
@@ -1155,282 +1173,282 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
       BCRegion<double>* bc1 = xface_bc->get(bctype[idx+FW]);
       switch(bc1->getType()){
       case BC::FixedRate:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
-	// fall through
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
+        // fall through
       case BC::FreeFlow:
-	{
-	  BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+W]);
-	  switch(bc2->getType()){
-	  case BC::FreeFlow:
-	  case BC::FixedRate:
-	    A[idx].p+=diff*delt*inv_dx2.x();
-	    A[idx].w=-diff*delt*inv_dx2.x();
-	    break;
-	  case BC::FixedValue:
-	    A[idx].p+=diff*delt*inv_dx2.x();
-	    A[idx].w=0;
-	    rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.x());
-	    break;
-	  case BC::CoarseGrid:
-	    A[idx].p+=diff*delt*inv_dx2.x();
-	    A[idx].w=0;
-	    rhs[idx]+=field[idx+W]*(diff*delt*inv_dx2.x());
-	    break;	    
-	  case BC::FixedFlux:
-	    throw InternalError("unknown BC");
-	  case BC::Exterior:
-	    break;
-	  }
-	}
-	break;
+        {
+          BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+W]);
+          switch(bc2->getType()){
+          case BC::FreeFlow:
+          case BC::FixedRate:
+            A[idx].p+=diff*delt*inv_dx2.x();
+            A[idx].w=-diff*delt*inv_dx2.x();
+            break;
+          case BC::FixedValue:
+            A[idx].p+=diff*delt*inv_dx2.x();
+            A[idx].w=0;
+            rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.x());
+            break;
+          case BC::CoarseGrid:
+            A[idx].p+=diff*delt*inv_dx2.x();
+            A[idx].w=0;
+            rhs[idx]+=field[idx+W]*(diff*delt*inv_dx2.x());
+            break;          
+          case BC::FixedFlux:
+            throw InternalError("unknown BC");
+          case BC::Exterior:
+            break;
+          }
+        }
+        break;
       case BC::FixedValue:
-	A[idx].p+=2*diff*delt*inv_dx2.x();
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
-	A[idx].w = 0;
-	break;
+        A[idx].p+=2*diff*delt*inv_dx2.x();
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
+        A[idx].w = 0;
+        break;
       case BC::FixedFlux:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
-	A[idx].w = 0;
-	break;
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
+        A[idx].w = 0;
+        break;
       case BC::Exterior:
       case BC::CoarseGrid:
-	throw InternalError("unknown BC");
-	BREAK;
+        throw InternalError("unknown BC");
+        BREAK;
       }
     }
     {
       BCRegion<double>* bc1 = xface_bc->get(bctype[idx+FE]);
       switch(bc1->getType()){
       case BC::FixedRate:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
-	// fall through
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
+        // fall through
       case BC::FreeFlow:
-	{
-	  BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+E]);
-	  switch(bc2->getType()){
-	  case BC::FreeFlow:
-	  case BC::FixedRate:
-	    A[idx].p+=diff*delt*inv_dx2.x();
-	    A[idx].e=-diff*delt*inv_dx2.x();
-	    break;
-	  case BC::FixedValue:
-	    A[idx].p+=diff*delt*inv_dx2.x();
-	    A[idx].e=0;
-	    rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.x());
-	    break;
-	  case BC::CoarseGrid:
-	    A[idx].p+=diff*delt*inv_dx2.x();
-	    A[idx].e=0;
-	    rhs[idx]+=field[idx+E]*(diff*delt*inv_dx2.x());
-	    break;	    
-	  case BC::FixedFlux:
-	    throw InternalError("unknown BC");
-	  case BC::Exterior:
-	    break;
-	  }
-	}
-	break;
+        {
+          BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+E]);
+          switch(bc2->getType()){
+          case BC::FreeFlow:
+          case BC::FixedRate:
+            A[idx].p+=diff*delt*inv_dx2.x();
+            A[idx].e=-diff*delt*inv_dx2.x();
+            break;
+          case BC::FixedValue:
+            A[idx].p+=diff*delt*inv_dx2.x();
+            A[idx].e=0;
+            rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.x());
+            break;
+          case BC::CoarseGrid:
+            A[idx].p+=diff*delt*inv_dx2.x();
+            A[idx].e=0;
+            rhs[idx]+=field[idx+E]*(diff*delt*inv_dx2.x());
+            break;          
+          case BC::FixedFlux:
+            throw InternalError("unknown BC");
+          case BC::Exterior:
+            break;
+          }
+        }
+        break;
       case BC::FixedValue:
-	A[idx].p+=2*diff*delt*inv_dx2.x();
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
-	A[idx].e = 0;
-	break;
+        A[idx].p+=2*diff*delt*inv_dx2.x();
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
+        A[idx].e = 0;
+        break;
       case BC::FixedFlux:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
-	A[idx].e = 0;
-	break;
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.x());
+        A[idx].e = 0;
+        break;
       case BC::Exterior:
       case BC::CoarseGrid:
-	throw InternalError("unknown BC");
-	BREAK;
+        throw InternalError("unknown BC");
+        BREAK;
       }
     }
     {
       BCRegion<double>* bc1 = yface_bc->get(bctype[idx+FS]);
       switch(bc1->getType()){
       case BC::FixedRate:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
-	// fall through
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
+        // fall through
       case BC::FreeFlow:
-	{
-	  BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+S]);
-	  switch(bc2->getType()){
-	  case BC::FreeFlow:
-	  case BC::FixedRate:
-	    A[idx].p+=diff*delt*inv_dx2.y();
-	    A[idx].s=-diff*delt*inv_dx2.y();
-	    break;
-	  case BC::FixedValue:
-	    A[idx].p+=diff*delt*inv_dx2.y();
-	    A[idx].s=0;
-	    rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.y());
-	    break;
-	  case BC::CoarseGrid:
-	    A[idx].p+=diff*delt*inv_dx2.y();
-	    A[idx].s=0;
-	    rhs[idx]+=field[idx+S]*(diff*delt*inv_dx2.y());
-	    break;	    
-	  case BC::FixedFlux:
-	    throw InternalError("unknown BC");
-	  case BC::Exterior:
-	    break;
-	  }
-	}
-	break;
+        {
+          BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+S]);
+          switch(bc2->getType()){
+          case BC::FreeFlow:
+          case BC::FixedRate:
+            A[idx].p+=diff*delt*inv_dx2.y();
+            A[idx].s=-diff*delt*inv_dx2.y();
+            break;
+          case BC::FixedValue:
+            A[idx].p+=diff*delt*inv_dx2.y();
+            A[idx].s=0;
+            rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.y());
+            break;
+          case BC::CoarseGrid:
+            A[idx].p+=diff*delt*inv_dx2.y();
+            A[idx].s=0;
+            rhs[idx]+=field[idx+S]*(diff*delt*inv_dx2.y());
+            break;          
+          case BC::FixedFlux:
+            throw InternalError("unknown BC");
+          case BC::Exterior:
+            break;
+          }
+        }
+        break;
       case BC::FixedValue:
-	A[idx].p+=2*diff*delt*inv_dx2.x();
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
-	A[idx].s = 0;
-	break;
+        A[idx].p+=2*diff*delt*inv_dx2.x();
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
+        A[idx].s = 0;
+        break;
       case BC::FixedFlux:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
-	A[idx].s = 0;
-	break;
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
+        A[idx].s = 0;
+        break;
       case BC::Exterior:
       case BC::CoarseGrid:
-	throw InternalError("unknown BC");
-	BREAK;
+        throw InternalError("unknown BC");
+        BREAK;
       }
     }
     {
       BCRegion<double>* bc1 = yface_bc->get(bctype[idx+FN]);
       switch(bc1->getType()){
       case BC::FixedRate:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
-	// fall through
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
+        // fall through
       case BC::FreeFlow:
-	{
-	  BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+N]);
-	  switch(bc2->getType()){
-	  case BC::FreeFlow:
-	  case BC::FixedRate:
-	    A[idx].p+=diff*delt*inv_dx2.y();
-	    A[idx].n=-diff*delt*inv_dx2.y();
-	    break;
-	  case BC::FixedValue:
-	    A[idx].p+=diff*delt*inv_dx2.y();
-	    A[idx].n=0;
-	    rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.y());
-	    break;
-	  case BC::CoarseGrid:
-	    A[idx].p+=diff*delt*inv_dx2.y();
-	    A[idx].n=0;
-	    rhs[idx]+=field[idx+N]*(diff*delt*inv_dx2.y());
-	    break;	    
-	  case BC::FixedFlux:
-	    throw InternalError("unknown BC");
-	  case BC::Exterior:
-	    break;
-	  }
-	}
-	break;
+        {
+          BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+N]);
+          switch(bc2->getType()){
+          case BC::FreeFlow:
+          case BC::FixedRate:
+            A[idx].p+=diff*delt*inv_dx2.y();
+            A[idx].n=-diff*delt*inv_dx2.y();
+            break;
+          case BC::FixedValue:
+            A[idx].p+=diff*delt*inv_dx2.y();
+            A[idx].n=0;
+            rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.y());
+            break;
+          case BC::CoarseGrid:
+            A[idx].p+=diff*delt*inv_dx2.y();
+            A[idx].n=0;
+            rhs[idx]+=field[idx+N]*(diff*delt*inv_dx2.y());
+            break;          
+          case BC::FixedFlux:
+            throw InternalError("unknown BC");
+          case BC::Exterior:
+            break;
+          }
+        }
+        break;
       case BC::FixedValue:
-	A[idx].p+=2*diff*delt*inv_dx2.y();
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
-	A[idx].n = 0;
-	break;
+        A[idx].p+=2*diff*delt*inv_dx2.y();
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
+        A[idx].n = 0;
+        break;
       case BC::FixedFlux:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
-	A[idx].n = 0;
-	break;
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.y());
+        A[idx].n = 0;
+        break;
       case BC::Exterior:
       case BC::CoarseGrid:
-	throw InternalError("unknown BC");
-	BREAK;
+        throw InternalError("unknown BC");
+        BREAK;
       }
     }
     {
       BCRegion<double>* bc1 = zface_bc->get(bctype[idx+FB]);
       switch(bc1->getType()){
       case BC::FixedRate:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
-	// fall through
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
+        // fall through
       case BC::FreeFlow:
-	{
-	  BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+B]);
-	  switch(bc2->getType()){
-	  case BC::FreeFlow:
-	  case BC::FixedRate:
-	    A[idx].p+=diff*delt*inv_dx2.z();
-	    A[idx].b=-diff*delt*inv_dx2.z();
-	    break;
-	  case BC::FixedValue:
-	    A[idx].p+=diff*delt*inv_dx2.z();
-	    A[idx].b=0;
-	    rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.z());
-	    break;
-	  case BC::CoarseGrid:
-	    A[idx].p+=diff*delt*inv_dx2.z();
-	    A[idx].b=0;
-	    rhs[idx]+=field[idx+B]*(diff*delt*inv_dx2.z());
-	    break;	    
-	  case BC::FixedFlux:
-	    throw InternalError("unknown BC");
-	  case BC::Exterior:
-	    break;
-	  }
-	}
-	break;
+        {
+          BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+B]);
+          switch(bc2->getType()){
+          case BC::FreeFlow:
+          case BC::FixedRate:
+            A[idx].p+=diff*delt*inv_dx2.z();
+            A[idx].b=-diff*delt*inv_dx2.z();
+            break;
+          case BC::FixedValue:
+            A[idx].p+=diff*delt*inv_dx2.z();
+            A[idx].b=0;
+            rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.z());
+            break;
+          case BC::CoarseGrid:
+            A[idx].p+=diff*delt*inv_dx2.z();
+            A[idx].b=0;
+            rhs[idx]+=field[idx+B]*(diff*delt*inv_dx2.z());
+            break;          
+          case BC::FixedFlux:
+            throw InternalError("unknown BC");
+          case BC::Exterior:
+            break;
+          }
+        }
+        break;
       case BC::FixedValue:
-	A[idx].p+=2*diff*delt*inv_dx2.z();
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
-	A[idx].b = 0;
-	break;
+        A[idx].p+=2*diff*delt*inv_dx2.z();
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
+        A[idx].b = 0;
+        break;
       case BC::FixedFlux:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
-	A[idx].b = 0;
-	break;
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
+        A[idx].b = 0;
+        break;
       case BC::Exterior:
       case BC::CoarseGrid:
-	throw InternalError("unknown BC");
-	BREAK;
+        throw InternalError("unknown BC");
+        BREAK;
       }
     }
     {
       BCRegion<double>* bc1 = zface_bc->get(bctype[idx+FT]);
       switch(bc1->getType()){
       case BC::FixedRate:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
-	// fall through
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
+        // fall through
       case BC::FreeFlow:
-	{
-	  BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+T]);
-	  switch(bc2->getType()){
-	  case BC::FreeFlow:
-	  case BC::FixedRate:
-	    A[idx].p+=diff*delt*inv_dx2.z();
-	    A[idx].t=-diff*delt*inv_dx2.z();
-	    break;
-	  case BC::FixedValue:
-	    A[idx].p+=diff*delt*inv_dx2.z();
-	    A[idx].t=0;
-	    rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.z());
-	    break;
-	  case BC::CoarseGrid:
-	    A[idx].p+=diff*delt*inv_dx2.z();
-	    A[idx].t=0;
-	    rhs[idx]+=field[idx+T]*(diff*delt*inv_dx2.z());
-	    break;	    
-	  case BC::FixedFlux:
-	    throw InternalError("unknown BC");
-	  case BC::Exterior:
-	    break;
-	  }
-	}
-	break;
+        {
+          BCRegion<double>* bc2 = scalar_bc->get(bctype[idx+T]);
+          switch(bc2->getType()){
+          case BC::FreeFlow:
+          case BC::FixedRate:
+            A[idx].p+=diff*delt*inv_dx2.z();
+            A[idx].t=-diff*delt*inv_dx2.z();
+            break;
+          case BC::FixedValue:
+            A[idx].p+=diff*delt*inv_dx2.z();
+            A[idx].t=0;
+            rhs[idx]+=bc2->getValue()*(diff*delt*inv_dx2.z());
+            break;
+          case BC::CoarseGrid:
+            A[idx].p+=diff*delt*inv_dx2.z();
+            A[idx].t=0;
+            rhs[idx]+=field[idx+T]*(diff*delt*inv_dx2.z());
+            break;          
+          case BC::FixedFlux:
+            throw InternalError("unknown BC");
+          case BC::Exterior:
+            break;
+          }
+        }
+        break;
       case BC::FixedValue:
-	A[idx].p+=2*diff*delt*inv_dx2.z();
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
-	A[idx].t = 0;
-	break;
+        A[idx].p+=2*diff*delt*inv_dx2.z();
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
+        A[idx].t = 0;
+        break;
       case BC::FixedFlux:
-	rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
-	A[idx].t = 0;
-	break;
+        rhs[idx] += 2*bc1->getValue()*(diff*delt*inv_dx2.z());
+        A[idx].t = 0;
+        break;
       case BC::Exterior:
       case BC::CoarseGrid:
-	throw InternalError("unknown BC");
-	BREAK;
+        throw InternalError("unknown BC");
+        BREAK;
       }
     }
     break;
@@ -1449,10 +1467,10 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
 //______________________________________________________________________
 //           A P P L Y   V I S C O S I T Y
 void SimpleCFD::applyViscosity(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw,
-			       int dir, int step, int nsteps)
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw, DataWarehouse* new_dw,
+                               int dir, int step, int nsteps)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -1475,111 +1493,111 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 
       IntVector h2=patch->getCellHighIndex()+IntVector(1,1,1);
       if(dir == 0){
-	constSFCXVariable<double> xvel;
-	new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::None, 0);
-	if(level->getIndex()>0) {      // REFINE
-	  refineBoundaries(patch, xvel.castOffConst(), new_dw,
-			     lb_->xvelocity, matl,
-			     double(step+1)/double(nsteps));
+        constSFCXVariable<double> xvel;
+        new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::None, 0);
+        if(level->getIndex()>0) {      // REFINE
+          refineBoundaries(patch, xvel.castOffConst(), new_dw,
+                             lb_->xvelocity, matl,
+                             double(step+1)/double(nsteps));
        }
 
-	SFCXVariable<Stencil7> A_xvel;
-	new_dw->allocateAndPut(A_xvel,  lb_->xvelocity_matrix, matl, patch);
-	SFCXVariable<double> rhs_xvel;
-	new_dw->allocateAndPut(rhs_xvel, lb_->xvelocity_rhs, matl, patch);
+        SFCXVariable<Stencil7> A_xvel;
+        new_dw->allocateAndPut(A_xvel,  lb_->xvelocity_matrix, matl, patch);
+        SFCXVariable<double> rhs_xvel;
+        new_dw->allocateAndPut(rhs_xvel, lb_->xvelocity_rhs, matl, patch);
 
-	// Viscosity
-	IntVector l=patch->getGhostCellLowIndex(1);
-	IntVector h=patch->getGhostCellHighIndex(1);
-	if(patch->getBCType(Patch::xplus) != Patch::Neighbor)
-	  h += IntVector(1,0,0);
-	Condition<double>* xvel_bc       = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
-	Condition<double>* xvel_bc_yface = bcs.getCondition<double>("xvelocity", Patch::YFaceBased);
-	Condition<double>* xvel_bc_zface = bcs.getCondition<double>("xvelocity", Patch::ZFaceBased);
-	Condition<double>* xvel_bc_cc    = bcs.getCondition<double>("xvelocity", Patch::CellBased);
+        // Viscosity
+        IntVector l=patch->getGhostCellLowIndex(1);
+        IntVector h=patch->getGhostCellHighIndex(1);
+        if(patch->getBCType(Patch::xplus) != Patch::Neighbor)
+          h += IntVector(1,0,0);
+        Condition<double>* xvel_bc       = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
+        Condition<double>* xvel_bc_yface = bcs.getCondition<double>("xvelocity", Patch::YFaceBased);
+        Condition<double>* xvel_bc_zface = bcs.getCondition<double>("xvelocity", Patch::ZFaceBased);
+        Condition<double>* xvel_bc_cc    = bcs.getCondition<double>("xvelocity", Patch::CellBased);
 
-	IntVector FW=IntVector(-1,0,0);
-	IntVector FE=IntVector(0,0,0);
-	IntVector FS=IntVector(0,0,0);
-	IntVector FN=IntVector(0,1,0);
-	IntVector FB=IntVector(0,0,0);
-	IntVector FT=IntVector(0,0,1);
-	for(CellIterator iter(patch->getSFCXIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  applybc(idx, l, h, h2, xvel, delt, inv_dx2, viscosity_,
-		  bctype, xvel_bc, xvel_bc_cc, xvel_bc_yface, xvel_bc_zface,
-		  FW, FE, FS, FN, FB, FT, A_xvel, rhs_xvel);
-	}
+        IntVector FW=IntVector(-1,0,0);
+        IntVector FE=IntVector(0,0,0);
+        IntVector FS=IntVector(0,0,0);
+        IntVector FN=IntVector(0,1,0);
+        IntVector FB=IntVector(0,0,0);
+        IntVector FT=IntVector(0,0,1);
+        for(CellIterator iter(patch->getSFCXIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          applybc(idx, l, h, h2, xvel, delt, inv_dx2, viscosity_,
+                  bctype, xvel_bc, xvel_bc_cc, xvel_bc_yface, xvel_bc_zface,
+                  FW, FE, FS, FN, FB, FT, A_xvel, rhs_xvel);
+        }
       } else if(dir == 1){
-	constSFCYVariable<double> yvel;
-	new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::None, 0);
-	if(level->getIndex()>0) {    // REFINE 
-	  refineBoundaries(patch, yvel.castOffConst(), new_dw,
-			   lb_->yvelocity, matl,
-			   double(step+1)/double(nsteps));
+        constSFCYVariable<double> yvel;
+        new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::None, 0);
+        if(level->getIndex()>0) {    // REFINE 
+          refineBoundaries(patch, yvel.castOffConst(), new_dw,
+                           lb_->yvelocity, matl,
+                           double(step+1)/double(nsteps));
        }
 
-	SFCYVariable<Stencil7> A_yvel;
-	new_dw->allocateAndPut(A_yvel,  lb_->yvelocity_matrix, matl, patch);
-	SFCYVariable<double> rhs_yvel;
-	new_dw->allocateAndPut(rhs_yvel, lb_->yvelocity_rhs, matl, patch);
+        SFCYVariable<Stencil7> A_yvel;
+        new_dw->allocateAndPut(A_yvel,  lb_->yvelocity_matrix, matl, patch);
+        SFCYVariable<double> rhs_yvel;
+        new_dw->allocateAndPut(rhs_yvel, lb_->yvelocity_rhs, matl, patch);
 
-	IntVector l=patch->getGhostCellLowIndex(1);
-	IntVector h=patch->getGhostCellHighIndex(1);
-	if(patch->getBCType(Patch::yplus) != Patch::Neighbor)
-	  h += IntVector(0,1,0);
-	Condition<double>* yvel_bc       = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
-	Condition<double>* yvel_bc_xface = bcs.getCondition<double>("yvelocity", Patch::XFaceBased);
-	Condition<double>* yvel_bc_zface = bcs.getCondition<double>("yvelocity", Patch::ZFaceBased);
-	Condition<double>* yvel_bc_cc    = bcs.getCondition<double>("yvelocity", Patch::CellBased);
+        IntVector l=patch->getGhostCellLowIndex(1);
+        IntVector h=patch->getGhostCellHighIndex(1);
+        if(patch->getBCType(Patch::yplus) != Patch::Neighbor)
+          h += IntVector(0,1,0);
+        Condition<double>* yvel_bc       = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
+        Condition<double>* yvel_bc_xface = bcs.getCondition<double>("yvelocity", Patch::XFaceBased);
+        Condition<double>* yvel_bc_zface = bcs.getCondition<double>("yvelocity", Patch::ZFaceBased);
+        Condition<double>* yvel_bc_cc    = bcs.getCondition<double>("yvelocity", Patch::CellBased);
 
-	IntVector FW=IntVector(0,0,0);
-	IntVector FE=IntVector(1,0,0);
-	IntVector FS=IntVector(0,-1,0);
-	IntVector FN=IntVector(0,0,0);
-	IntVector FB=IntVector(0,0,0);
-	IntVector FT=IntVector(0,0,1);
-	for(CellIterator iter(patch->getSFCYIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  applybc(idx, l, h, h2, yvel, delt, inv_dx2, viscosity_,
-		  bctype, yvel_bc, yvel_bc_xface, yvel_bc_cc, yvel_bc_zface,
-		  FW, FE, FS, FN, FB, FT, A_yvel, rhs_yvel);
-	}
+        IntVector FW=IntVector(0,0,0);
+        IntVector FE=IntVector(1,0,0);
+        IntVector FS=IntVector(0,-1,0);
+        IntVector FN=IntVector(0,0,0);
+        IntVector FB=IntVector(0,0,0);
+        IntVector FT=IntVector(0,0,1);
+        for(CellIterator iter(patch->getSFCYIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          applybc(idx, l, h, h2, yvel, delt, inv_dx2, viscosity_,
+                  bctype, yvel_bc, yvel_bc_xface, yvel_bc_cc, yvel_bc_zface,
+                  FW, FE, FS, FN, FB, FT, A_yvel, rhs_yvel);
+        }
       } else if(dir == 2){
-	constSFCZVariable<double> zvel;
-	new_dw->get(zvel, lb_->zvelocity, matl, patch, Ghost::None, 0);
-	if(level->getIndex()>0) {    // REFINE
-	  refineBoundaries(patch, zvel.castOffConst(), new_dw,
-			   lb_->zvelocity, matl,
-			   double(step+1)/double(nsteps));
+        constSFCZVariable<double> zvel;
+        new_dw->get(zvel, lb_->zvelocity, matl, patch, Ghost::None, 0);
+        if(level->getIndex()>0) {    // REFINE
+          refineBoundaries(patch, zvel.castOffConst(), new_dw,
+                           lb_->zvelocity, matl,
+                           double(step+1)/double(nsteps));
         }
       
-	SFCZVariable<Stencil7> A_zvel;
-	new_dw->allocateAndPut(A_zvel,  lb_->zvelocity_matrix, matl, patch);
-	SFCZVariable<double> rhs_zvel;
-	new_dw->allocateAndPut(rhs_zvel, lb_->zvelocity_rhs, matl, patch);
+        SFCZVariable<Stencil7> A_zvel;
+        new_dw->allocateAndPut(A_zvel,  lb_->zvelocity_matrix, matl, patch);
+        SFCZVariable<double> rhs_zvel;
+        new_dw->allocateAndPut(rhs_zvel, lb_->zvelocity_rhs, matl, patch);
 
-	IntVector l=patch->getGhostCellLowIndex(1);
-	IntVector h=patch->getGhostCellHighIndex(1);
-	if(patch->getBCType(Patch::zplus) != Patch::Neighbor)
-	  h += IntVector(0,0,1);
-	Condition<double>* zvel_bc       = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
-	Condition<double>* zvel_bc_xface = bcs.getCondition<double>("zvelocity", Patch::XFaceBased);
-	Condition<double>* zvel_bc_yface = bcs.getCondition<double>("zvelocity", Patch::YFaceBased);
-	Condition<double>* zvel_bc_cc    = bcs.getCondition<double>("zvelocity", Patch::CellBased);
+        IntVector l=patch->getGhostCellLowIndex(1);
+        IntVector h=patch->getGhostCellHighIndex(1);
+        if(patch->getBCType(Patch::zplus) != Patch::Neighbor)
+          h += IntVector(0,0,1);
+        Condition<double>* zvel_bc       = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
+        Condition<double>* zvel_bc_xface = bcs.getCondition<double>("zvelocity", Patch::XFaceBased);
+        Condition<double>* zvel_bc_yface = bcs.getCondition<double>("zvelocity", Patch::YFaceBased);
+        Condition<double>* zvel_bc_cc    = bcs.getCondition<double>("zvelocity", Patch::CellBased);
 
-	IntVector FW=IntVector(0,0,0);
-	IntVector FE=IntVector(1,0,0);
-	IntVector FS=IntVector(0,0,0);
-	IntVector FN=IntVector(0,1,0);
-	IntVector FB=IntVector(0,0,-1);
-	IntVector FT=IntVector(0,0,0);
-	for(CellIterator iter(patch->getSFCZIterator()); !iter.done(); iter++){
-	  IntVector idx(*iter);
-	  applybc(idx, l, h, h2, zvel, delt, inv_dx2, viscosity_,
-		  bctype, zvel_bc, zvel_bc_xface, zvel_bc_yface, zvel_bc_cc,
-		  FW, FE, FS, FN, FB, FT, A_zvel, rhs_zvel);
-	}
+        IntVector FW=IntVector(0,0,0);
+        IntVector FE=IntVector(1,0,0);
+        IntVector FS=IntVector(0,0,0);
+        IntVector FN=IntVector(0,1,0);
+        IntVector FB=IntVector(0,0,-1);
+        IntVector FT=IntVector(0,0,0);
+        for(CellIterator iter(patch->getSFCZIterator()); !iter.done(); iter++){
+          IntVector idx(*iter);
+          applybc(idx, l, h, h2, zvel, delt, inv_dx2, viscosity_,
+                  bctype, zvel_bc, zvel_bc_xface, zvel_bc_yface, zvel_bc_cc,
+                  FW, FE, FS, FN, FB, FT, A_zvel, rhs_zvel);
+        }
       }
     }
   }
@@ -1587,12 +1605,12 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 //______________________________________________________________________
 //          P R O J E C T     V E L O C I T Y
 void SimpleCFD::projectVelocity(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse* old_dw, DataWarehouse* new_dw,
-				const VarLabel*,
-				const VarLabel* pressure_matrix,
-				const VarLabel* pressure_rhs)
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                const VarLabel*,
+                                const VarLabel* pressure_matrix,
+                                const VarLabel* pressure_rhs)
 {
   IntVector FW(0,0,0);
   IntVector FE(1,0,0);
@@ -1637,306 +1655,306 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
       IntVector l(patch->getCellLowIndex());
       IntVector h(patch->getCellHighIndex());
       l -= IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?1:0,
-		       patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
-		       patch->getBCType(Patch::zminus) == Patch::Neighbor?1:0);
+                       patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
+                       patch->getBCType(Patch::zminus) == Patch::Neighbor?1:0);
 
       h += IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?1:0,
-		       patch->getBCType(Patch::yplus) == Patch::Neighbor?1:0,
-		       patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
+                       patch->getBCType(Patch::yplus) == Patch::Neighbor?1:0,
+                       patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
       Condition<double>* xbc = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
       Condition<double>* ybc = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
       Condition<double>* zbc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
       Condition<double>* pbc = bcs.getCondition<double>("pressure", Patch::CellBased);
       for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-	IntVector idx(*iter);
-	BCRegion<double>* bc = pbc->get(bctype[idx]);
-	switch(bc->getType()){
-	case BC::FreeFlow:
-	case BC::FixedRate:
-	  A[idx].p=0;
-	  rhs[idx]=0;
-	  if(bc->getType() == BC::FixedRate)
-	    rhs[idx] += bc->getValue()*delt;
-	  {
-	    BCRegion<double>* bc1 = xbc->get(bctype[idx+FW]);
-	    switch(bc1->getType()){
-	    case BC::FixedValue:
-	    case BC::FixedRate:
-	    case BC::FreeFlow:
-	      {
-		BCRegion<double>* bc2 = pbc->get(bctype[idx+W]);
-		switch(bc2->getType()){
-		case BC::FreeFlow:
-		case BC::FixedRate:
-		  A[idx].p += 1;
-		  A[idx].w = -1;
-		  rhs[idx] += xvel[idx+FW];
-		  break;
-		case BC::FixedValue:
-		  A[idx].p += 1;
-		  A[idx].w = 0;
-		  rhs[idx] += bc2->getValue();
-		  break;
-		case BC::CoarseGrid:
-		  A[idx].p += 1;
-		  A[idx].w = 0;
-		  rhs[idx] += xvel[idx+FW];
-		  //rhs[idx] += boundarypressure[idx+W];
-		  break;
-		case BC::Exterior:
-		  rhs[idx] += xvel[idx+FW];
-		  A[idx].w = 0;
-		  break;
-		case BC::FixedFlux:
-		  throw InternalError("unknown pressure bc");
-		}
-	      }
-	      break;
-	    case BC::CoarseGrid:
-	    case BC::FixedFlux:
-	    case BC::Exterior:
-	      throw InternalError("Unknown pressureBC");
-	    }
+        IntVector idx(*iter);
+        BCRegion<double>* bc = pbc->get(bctype[idx]);
+        switch(bc->getType()){
+        case BC::FreeFlow:
+        case BC::FixedRate:
+          A[idx].p=0;
+          rhs[idx]=0;
+          if(bc->getType() == BC::FixedRate)
+            rhs[idx] += bc->getValue()*delt;
+          {
+            BCRegion<double>* bc1 = xbc->get(bctype[idx+FW]);
+            switch(bc1->getType()){
+            case BC::FixedValue:
+            case BC::FixedRate:
+            case BC::FreeFlow:
+              {
+                BCRegion<double>* bc2 = pbc->get(bctype[idx+W]);
+                switch(bc2->getType()){
+                case BC::FreeFlow:
+                case BC::FixedRate:
+                  A[idx].p += 1;
+                  A[idx].w = -1;
+                  rhs[idx] += xvel[idx+FW];
+                  break;
+                case BC::FixedValue:
+                  A[idx].p += 1;
+                  A[idx].w = 0;
+                  rhs[idx] += bc2->getValue();
+                  break;
+                case BC::CoarseGrid:
+                  A[idx].p += 1;
+                  A[idx].w = 0;
+                  rhs[idx] += xvel[idx+FW];
+                  //rhs[idx] += boundarypressure[idx+W];
+                  break;
+                case BC::Exterior:
+                  rhs[idx] += xvel[idx+FW];
+                  A[idx].w = 0;
+                  break;
+                case BC::FixedFlux:
+                  throw InternalError("unknown pressure bc");
+                }
+              }
+              break;
+            case BC::CoarseGrid:
+            case BC::FixedFlux:
+            case BC::Exterior:
+              throw InternalError("Unknown pressureBC");
+            }
 
-	    bc1 = xbc->get(bctype[idx+FE]);
-	    switch(bc1->getType()){
-	    case BC::FixedValue:
-	    case BC::FixedRate:
-	    case BC::FreeFlow:
-	      {
-		BCRegion<double>* bc2 = pbc->get(bctype[idx+E]);
-		switch(bc2->getType()){
-		case BC::FreeFlow:
-		case BC::FixedRate:
-		  A[idx].p += 1;
-		  A[idx].e = -1;
-		  rhs[idx] -= xvel[idx+FE];
-		  break;
-		case BC::FixedValue:
-		  A[idx].p += 1;
-		  A[idx].e = 0;
-		  rhs[idx] += bc2->getValue();
-		  break;
-		case BC::CoarseGrid:
-		  A[idx].p += 1;
-		  A[idx].e = 0;
-		  rhs[idx] -= xvel[idx+FE];
-		  //rhs[idx] += boundarypressure[idx+E];
-		  break;
-		case BC::Exterior:
-		  rhs[idx] -= xvel[idx+FE];
-		  A[idx].e = 0;
-		  break;
-		case BC::FixedFlux:
-		  throw InternalError("unknown pressure bc");
-		}
-	      }
-	      break;
-	    case BC::CoarseGrid:
-	    case BC::FixedFlux:
-	    case BC::Exterior:
-	      throw InternalError("Unknown pressureBC");
-	    }
+            bc1 = xbc->get(bctype[idx+FE]);
+            switch(bc1->getType()){
+            case BC::FixedValue:
+            case BC::FixedRate:
+            case BC::FreeFlow:
+              {
+                BCRegion<double>* bc2 = pbc->get(bctype[idx+E]);
+                switch(bc2->getType()){
+                case BC::FreeFlow:
+                case BC::FixedRate:
+                  A[idx].p += 1;
+                  A[idx].e = -1;
+                  rhs[idx] -= xvel[idx+FE];
+                  break;
+                case BC::FixedValue:
+                  A[idx].p += 1;
+                  A[idx].e = 0;
+                  rhs[idx] += bc2->getValue();
+                  break;
+                case BC::CoarseGrid:
+                  A[idx].p += 1;
+                  A[idx].e = 0;
+                  rhs[idx] -= xvel[idx+FE];
+                  //rhs[idx] += boundarypressure[idx+E];
+                  break;
+                case BC::Exterior:
+                  rhs[idx] -= xvel[idx+FE];
+                  A[idx].e = 0;
+                  break;
+                case BC::FixedFlux:
+                  throw InternalError("unknown pressure bc");
+                }
+              }
+              break;
+            case BC::CoarseGrid:
+            case BC::FixedFlux:
+            case BC::Exterior:
+              throw InternalError("Unknown pressureBC");
+            }
 
-	    bc1 = ybc->get(bctype[idx+FS]);
-	    switch(bc1->getType()){
-	    case BC::FixedValue:
-	    case BC::FixedRate:
-	    case BC::FreeFlow:
-	      {
-		BCRegion<double>* bc2 = pbc->get(bctype[idx+S]);
-		switch(bc2->getType()){
-		case BC::FreeFlow:
-		case BC::FixedRate:
-		  A[idx].p += 1;
-		  A[idx].s = -1;
-		  rhs[idx] += yvel[idx+FS];
-		  break;
-		case BC::FixedValue:
-		  A[idx].p += 1;
-		  A[idx].s = 0;
-		  rhs[idx] += bc2->getValue();
-		  break;
-		case BC::CoarseGrid:
-		  A[idx].p += 1;
-		  A[idx].s = 0;
-		  rhs[idx] += yvel[idx+FS];
-		  //rhs[idx] += boundarypressure[idx+S];
-		  break;
-		case BC::Exterior:
-		  rhs[idx] += yvel[idx+FS];
-		  A[idx].s = 0;
-		  break;
-		case BC::FixedFlux:
-		  throw InternalError("unknown pressure bc");
-		}
-	      }
-	      break;
-	    case BC::CoarseGrid:
-	    case BC::FixedFlux:
-	    case BC::Exterior:
-	      throw InternalError("Unknown pressureBC");
-	    }
+            bc1 = ybc->get(bctype[idx+FS]);
+            switch(bc1->getType()){
+            case BC::FixedValue:
+            case BC::FixedRate:
+            case BC::FreeFlow:
+              {
+                BCRegion<double>* bc2 = pbc->get(bctype[idx+S]);
+                switch(bc2->getType()){
+                case BC::FreeFlow:
+                case BC::FixedRate:
+                  A[idx].p += 1;
+                  A[idx].s = -1;
+                  rhs[idx] += yvel[idx+FS];
+                  break;
+                case BC::FixedValue:
+                  A[idx].p += 1;
+                  A[idx].s = 0;
+                  rhs[idx] += bc2->getValue();
+                  break;
+                case BC::CoarseGrid:
+                  A[idx].p += 1;
+                  A[idx].s = 0;
+                  rhs[idx] += yvel[idx+FS];
+                  //rhs[idx] += boundarypressure[idx+S];
+                  break;
+                case BC::Exterior:
+                  rhs[idx] += yvel[idx+FS];
+                  A[idx].s = 0;
+                  break;
+                case BC::FixedFlux:
+                  throw InternalError("unknown pressure bc");
+                }
+              }
+              break;
+            case BC::CoarseGrid:
+            case BC::FixedFlux:
+            case BC::Exterior:
+              throw InternalError("Unknown pressureBC");
+            }
 
-	    bc1 = ybc->get(bctype[idx+FN]);
-	    switch(bc1->getType()){
-	    case BC::FixedValue:
-	    case BC::FixedRate:
-	    case BC::FreeFlow:
-	      {
-		BCRegion<double>* bc2 = pbc->get(bctype[idx+N]);
-		switch(bc2->getType()){
-		case BC::FreeFlow:
-		case BC::FixedRate:
-		  A[idx].p += 1;
-		  A[idx].n = -1;
-		  rhs[idx] -= yvel[idx+FN];
-		  break;
-		case BC::FixedValue:
-		  A[idx].p += 1;
-		  A[idx].n = 0;
-		  rhs[idx] += bc2->getValue();
-		  break;
-		case BC::CoarseGrid:
-		  A[idx].p += 1;
-		  A[idx].n = 0;
-		  rhs[idx] -= yvel[idx+FN];
-		  //rhs[idx] += boundarypressure[idx+N];
-		  break;
-		case BC::Exterior:
-		  rhs[idx] -= yvel[idx+FN];
-		  A[idx].n = 0;
-		  break;
-		case BC::FixedFlux:
-		  throw InternalError("unknown pressure bc");
-		}
-	      }
-	      break;
-	    case BC::CoarseGrid:
-	    case BC::FixedFlux:
-	    case BC::Exterior:
-	      throw InternalError("Unknown pressureBC");
-	    }
+            bc1 = ybc->get(bctype[idx+FN]);
+            switch(bc1->getType()){
+            case BC::FixedValue:
+            case BC::FixedRate:
+            case BC::FreeFlow:
+              {
+                BCRegion<double>* bc2 = pbc->get(bctype[idx+N]);
+                switch(bc2->getType()){
+                case BC::FreeFlow:
+                case BC::FixedRate:
+                  A[idx].p += 1;
+                  A[idx].n = -1;
+                  rhs[idx] -= yvel[idx+FN];
+                  break;
+                case BC::FixedValue:
+                  A[idx].p += 1;
+                  A[idx].n = 0;
+                  rhs[idx] += bc2->getValue();
+                  break;
+                case BC::CoarseGrid:
+                  A[idx].p += 1;
+                  A[idx].n = 0;
+                  rhs[idx] -= yvel[idx+FN];
+                  //rhs[idx] += boundarypressure[idx+N];
+                  break;
+                case BC::Exterior:
+                  rhs[idx] -= yvel[idx+FN];
+                  A[idx].n = 0;
+                  break;
+                case BC::FixedFlux:
+                  throw InternalError("unknown pressure bc");
+                }
+              }
+              break;
+            case BC::CoarseGrid:
+            case BC::FixedFlux:
+            case BC::Exterior:
+              throw InternalError("Unknown pressureBC");
+            }
 
-	    bc1 = zbc->get(bctype[idx+FB]);
-	    switch(bc1->getType()){
-	    case BC::FixedValue:
-	    case BC::FixedRate:
-	    case BC::FreeFlow:
-	      {
-		BCRegion<double>* bc2 = pbc->get(bctype[idx+B]);
-		switch(bc2->getType()){
-		case BC::FreeFlow:
-		case BC::FixedRate:
-		  A[idx].p += 1;
-		  A[idx].b = -1;
-		  rhs[idx] += zvel[idx+FB];
-		  break;
-		case BC::FixedValue:
-		  A[idx].p += 1;
-		  A[idx].b = 0;
-		  rhs[idx] += bc2->getValue();
-		  break;
-		case BC::CoarseGrid:
-		  A[idx].p += 1;
-		  A[idx].b = 0;
-		  rhs[idx] += zvel[idx+FB];
-		  //rhs[idx] += boundarypressure[idx+B];
-		  break;
-		case BC::Exterior:
-		  rhs[idx] += zvel[idx+FB];
-		  A[idx].b = 0;
-		  break;
-		case BC::FixedFlux:
-		  throw InternalError("unknown pressure bc");
-		}
-	      }
-	      break;
-	    case BC::CoarseGrid:
-	    case BC::FixedFlux:
-	    case BC::Exterior:
-	      throw InternalError("Unknown pressureBC");
-	    }
+            bc1 = zbc->get(bctype[idx+FB]);
+            switch(bc1->getType()){
+            case BC::FixedValue:
+            case BC::FixedRate:
+            case BC::FreeFlow:
+              {
+                BCRegion<double>* bc2 = pbc->get(bctype[idx+B]);
+                switch(bc2->getType()){
+                case BC::FreeFlow:
+                case BC::FixedRate:
+                  A[idx].p += 1;
+                  A[idx].b = -1;
+                  rhs[idx] += zvel[idx+FB];
+                  break;
+                case BC::FixedValue:
+                  A[idx].p += 1;
+                  A[idx].b = 0;
+                  rhs[idx] += bc2->getValue();
+                  break;
+                case BC::CoarseGrid:
+                  A[idx].p += 1;
+                  A[idx].b = 0;
+                  rhs[idx] += zvel[idx+FB];
+                  //rhs[idx] += boundarypressure[idx+B];
+                  break;
+                case BC::Exterior:
+                  rhs[idx] += zvel[idx+FB];
+                  A[idx].b = 0;
+                  break;
+                case BC::FixedFlux:
+                  throw InternalError("unknown pressure bc");
+                }
+              }
+              break;
+            case BC::CoarseGrid:
+            case BC::FixedFlux:
+            case BC::Exterior:
+              throw InternalError("Unknown pressureBC");
+            }
 
-	    bc1 = zbc->get(bctype[idx+FT]);
-	    switch(bc1->getType()){
-	    case BC::FixedValue:
-	    case BC::FixedRate:
-	    case BC::FreeFlow:
-	      {
-		BCRegion<double>* bc2 = pbc->get(bctype[idx+T]);
-		switch(bc2->getType()){
-		case BC::FreeFlow:
-		case BC::FixedRate:
-		  A[idx].p += 1;
-		  A[idx].t = -1;
-		  rhs[idx] -= zvel[idx+FT];
-		  break;
-		case BC::FixedValue:
-		  A[idx].p += 1;
-		  A[idx].t = 0;
-		  rhs[idx] += bc2->getValue();
-		  break;
-		case BC::CoarseGrid:
-		  A[idx].p += 1;
-		  A[idx].t = 0;
-		  rhs[idx] -= zvel[idx+FT];
-		  //rhs[idx] += boundarypressure[idx+T];
-		  break;
-		case BC::Exterior:
-		  rhs[idx] -= zvel[idx+FT];
-		  A[idx].t = 0;
-		  break;
-		case BC::FixedFlux:
-		  throw InternalError("unknown pressure bc");
-		}
-	      }
-	      break;
-	    case BC::CoarseGrid:
-	    case BC::FixedFlux:
-	    case BC::Exterior:
-	      throw InternalError("Unknown pressureBC");
-	    }
+            bc1 = zbc->get(bctype[idx+FT]);
+            switch(bc1->getType()){
+            case BC::FixedValue:
+            case BC::FixedRate:
+            case BC::FreeFlow:
+              {
+                BCRegion<double>* bc2 = pbc->get(bctype[idx+T]);
+                switch(bc2->getType()){
+                case BC::FreeFlow:
+                case BC::FixedRate:
+                  A[idx].p += 1;
+                  A[idx].t = -1;
+                  rhs[idx] -= zvel[idx+FT];
+                  break;
+                case BC::FixedValue:
+                  A[idx].p += 1;
+                  A[idx].t = 0;
+                  rhs[idx] += bc2->getValue();
+                  break;
+                case BC::CoarseGrid:
+                  A[idx].p += 1;
+                  A[idx].t = 0;
+                  rhs[idx] -= zvel[idx+FT];
+                  //rhs[idx] += boundarypressure[idx+T];
+                  break;
+                case BC::Exterior:
+                  rhs[idx] -= zvel[idx+FT];
+                  A[idx].t = 0;
+                  break;
+                case BC::FixedFlux:
+                  throw InternalError("unknown pressure bc");
+                }
+              }
+              break;
+            case BC::CoarseGrid:
+            case BC::FixedFlux:
+            case BC::Exterior:
+              throw InternalError("Unknown pressureBC");
+            }
 
-	  }
-	  break;
-	case BC::FixedValue:
-	  A[idx].p = 1;
-	  A[idx].n = A[idx].s=A[idx].w=A[idx].e=A[idx].t=A[idx].b=0;
-	  rhs[idx] = bc->getValue();
-	  break;
-	case BC::CoarseGrid:
-	case BC::Exterior:
-	case BC::FixedFlux:
-	  throw InternalError("Unknown pressure BC");
+          }
+          break;
+        case BC::FixedValue:
+          A[idx].p = 1;
+          A[idx].n = A[idx].s=A[idx].w=A[idx].e=A[idx].t=A[idx].b=0;
+          rhs[idx] = bc->getValue();
+          break;
+        case BC::CoarseGrid:
+        case BC::Exterior:
+        case BC::FixedFlux:
+          throw InternalError("Unknown pressure BC");
           BREAK;
-	}
+        }
       }
 
       if(level->getIndex() == 0){
-	IntVector pin=level->getCellIndex(pressure_pin_);
-	if(patch->containsCell(pin)){
-	  rhs[pin] = 0;
-	  A[pin].p=1;
-	  A[pin].w=0;
-	  A[pin].e=0;
-	  A[pin].s=0;
-	  A[pin].n=0;
-	  A[pin].b=0;
-	  A[pin].t=0;
-	}
-	if(patch->containsCell(pin+IntVector(1,0,0)))
-	  A[pin+IntVector(1,0,0)].w=0;
-	if(patch->containsCell(pin+IntVector(-1,0,0)))
-	  A[pin+IntVector(-1,0,0)].e=0;
-	if(patch->containsCell(pin+IntVector(0,1,0)))
-	  A[pin+IntVector(0,1,0)].s=0;
-	if(patch->containsCell(pin+IntVector(0,-1,0)))
-	  A[pin+IntVector(0,-1,0)].n=0;
-	if(patch->containsCell(pin+IntVector(0,0,1)))
-	  A[pin+IntVector(0,0,1)].b=0;
-	if(patch->containsCell(pin+IntVector(0,0,-1)))
-	  A[pin+IntVector(0,0,-1)].t=0;
+        IntVector pin=level->getCellIndex(pressure_pin_);
+        if(patch->containsCell(pin)){
+          rhs[pin] = 0;
+          A[pin].p=1;
+          A[pin].w=0;
+          A[pin].e=0;
+          A[pin].s=0;
+          A[pin].n=0;
+          A[pin].b=0;
+          A[pin].t=0;
+        }
+        if(patch->containsCell(pin+IntVector(1,0,0)))
+          A[pin+IntVector(1,0,0)].w=0;
+        if(patch->containsCell(pin+IntVector(-1,0,0)))
+          A[pin+IntVector(-1,0,0)].e=0;
+        if(patch->containsCell(pin+IntVector(0,1,0)))
+          A[pin+IntVector(0,1,0)].s=0;
+        if(patch->containsCell(pin+IntVector(0,-1,0)))
+          A[pin+IntVector(0,-1,0)].n=0;
+        if(patch->containsCell(pin+IntVector(0,0,1)))
+          A[pin+IntVector(0,0,1)].b=0;
+        if(patch->containsCell(pin+IntVector(0,0,-1)))
+          A[pin+IntVector(0,0,-1)].t=0;
       }
     }
   }
@@ -1945,10 +1963,10 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
 //______________________________________________________________________
 //           A P P L Y     P R O J E C T I O N
 void SimpleCFD::applyProjection(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse* old_dw, DataWarehouse* new_dw,
-				const VarLabel* pressure)
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw, DataWarehouse* new_dw,
+                                const VarLabel* pressure)
 {
   //  cerr << "RANDY: SimpleCFD::applyProjection() BGN" << endl;
   //const Level* level = getLevel(patches);
@@ -1981,185 +1999,185 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
       //cerr << "RANDY: SimpleCFD::applyProjection() AAA" << endl;
 
       for(CellIterator iter(patch->getSFCXIterator(0)); !iter.done(); iter++){
-	//cerr << "RANDY: SimpleCFD::applyProjection() AAA AAA" << endl;
-	IntVector idx(*iter);
-	//cerr << "RANDY: idx = " << idx << ", byctype[idx] = " << bctype[idx] << endl;
-	BCRegion<double>* bc = xbc->get(bctype[idx]);
-	switch(bc->getType()){
-	case BC::FreeFlow:
-	case BC::FixedRate:
-	case BC::FixedFlux:
-	  {
-	    //cerr << "RANDY: SimpleCFD::applyProjection() AAA BBB" << endl;
-	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
-	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
-	    switch(bcr->getType()){
-	    case BC::FreeFlow:
-	    case BC::FixedRate:
-	    case BC::FixedValue:
-	      pr = sol[idx];
-	      break;
-	    case BC::CoarseGrid:
-	      pr = 0;//boundarypressure[idx];
-	      break;
-	    case BC::Exterior:
-	      pr = sol[idx+IntVector(-1,0,0)];
-	      break;
-	    case BC::FixedFlux:
-	      throw InternalError("Unknown bc");
+        //cerr << "RANDY: SimpleCFD::applyProjection() AAA AAA" << endl;
+        IntVector idx(*iter);
+        //cerr << "RANDY: idx = " << idx << ", byctype[idx] = " << bctype[idx] << endl;
+        BCRegion<double>* bc = xbc->get(bctype[idx]);
+        switch(bc->getType()){
+        case BC::FreeFlow:
+        case BC::FixedRate:
+        case BC::FixedFlux:
+          {
+            //cerr << "RANDY: SimpleCFD::applyProjection() AAA BBB" << endl;
+            BCRegion<double>* bcr = pbc->get(bctype[idx]);
+            double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
+            switch(bcr->getType()){
+            case BC::FreeFlow:
+            case BC::FixedRate:
+            case BC::FixedValue:
+              pr = sol[idx];
+              break;
+            case BC::CoarseGrid:
+              pr = 0;//boundarypressure[idx];
+              break;
+            case BC::Exterior:
+              pr = sol[idx+IntVector(-1,0,0)];
+              break;
+            case BC::FixedFlux:
+              throw InternalError("Unknown bc");
               BREAK;
-	    }
-	    //cerr << "RANDY: SimpleCFD::applyProjection() AAA EEE" << endl;
-	    //cerr << "RANDY: bctype[" << idx << "+IntVector(-1,0,0)] = " << bctype[idx+IntVector(-1,0,0)] << endl;
-	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(-1,0,0)]);
-	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
-	    //cerr << "RANDY: SimpleCFD::applyProjection() AAA FFF" << endl;
-	    switch(bcl->getType()){
-	    case BC::FreeFlow:
-	    case BC::FixedRate:
-	    case BC::FixedValue:
-	      //cerr << "RANDY: Doing broken code = " << hex << idx << dec << endl;
-	      pl = sol[idx+IntVector(-1,0,0)];
-	      break;
-	    case BC::CoarseGrid:
-	      pl = 0;//boundarypressure[idx+IntVector(-1,0,0)];
-	      break;
-	    case BC::Exterior:
-	      //cerr << "RANDY: SimpleCFD::applyProjection() AAA III" << endl;
-	      pl = sol[idx];
-	      //cerr << "RANDY: SimpleCFD::applyProjection() AAA JJJ" << endl;
-	      break;
-	    case BC::FixedFlux:
-	      throw InternalError("Unknown bc");
-	      BREAK;
-	    }
-	    double gx = pr-pl;
-	    xvel[idx] -= gx;
-	  }
-	  break;
-	case BC::FixedValue:	
+            }
+            //cerr << "RANDY: SimpleCFD::applyProjection() AAA EEE" << endl;
+            //cerr << "RANDY: bctype[" << idx << "+IntVector(-1,0,0)] = " << bctype[idx+IntVector(-1,0,0)] << endl;
+            BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(-1,0,0)]);
+            double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
+            //cerr << "RANDY: SimpleCFD::applyProjection() AAA FFF" << endl;
+            switch(bcl->getType()){
+            case BC::FreeFlow:
+            case BC::FixedRate:
+            case BC::FixedValue:
+              //cerr << "RANDY: Doing broken code = " << hex << idx << dec << endl;
+              pl = sol[idx+IntVector(-1,0,0)];
+              break;
+            case BC::CoarseGrid:
+              pl = 0;//boundarypressure[idx+IntVector(-1,0,0)];
+              break;
+            case BC::Exterior:
+              //cerr << "RANDY: SimpleCFD::applyProjection() AAA III" << endl;
+              pl = sol[idx];
+              //cerr << "RANDY: SimpleCFD::applyProjection() AAA JJJ" << endl;
+              break;
+            case BC::FixedFlux:
+              throw InternalError("Unknown bc");
+              BREAK;
+            }
+            double gx = pr-pl;
+            xvel[idx] -= gx;
+          }
           break;
-	case BC::CoarseGrid:
-	case BC::Exterior:
-	  throw InternalError("unknown bc");
-	  BREAK;
-	}
+        case BC::FixedValue:    
+          break;
+        case BC::CoarseGrid:
+        case BC::Exterior:
+          throw InternalError("unknown bc");
+          BREAK;
+        }
       }
 
       //cerr << "RANDY: SimpleCFD::applyProjection() BBB" << endl;
       for(CellIterator iter(patch->getSFCYIterator(0)); !iter.done(); iter++){
-	IntVector idx(*iter);
-	BCRegion<double>* bc = ybc->get(bctype[idx]);
-	switch(bc->getType()){
-	case BC::FreeFlow:
-	case BC::FixedRate:
-	case BC::FixedFlux:
-	  {
-	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
-	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
-	    switch(bcr->getType()){
-	    case BC::FreeFlow:
-	    case BC::FixedRate:
-	    case BC::FixedValue:
-	      pr = sol[idx];
-	      break;
-	    case BC::CoarseGrid:
-	      pr = 0;//boundarypressure[idx];
-	      break;
-	    case BC::Exterior:
-	      pr = sol[idx+IntVector(0,-1,0)];
-	      break;
-	    case BC::FixedFlux:
-	      throw InternalError("Unknown bc");
-	      BREAK;
-	    }
-	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,-1,0)]);
-	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
-	    switch(bcl->getType()){
-	    case BC::FreeFlow:
-	    case BC::FixedRate:
-	    case BC::FixedValue:
-	      pl = sol[idx+IntVector(0,-1,0)];
-	      break;
-	    case BC::CoarseGrid:
-	      pl = 0;//boundarypressure[idx+IntVector(0,-1,0)];
-	      break;
-	    case BC::Exterior:
-	      pl = sol[idx];
-	      break;
-	    case BC::FixedFlux:
-	      throw InternalError("Unknown bc");
-	      BREAK;
-	    }
-	    double gy = pr-pl;
-	    yvel[idx] -= gy;
-	  }
-	  break;
-	case BC::FixedValue:
-	  break;
-	case BC::CoarseGrid:
-	case BC::Exterior:
-	  throw InternalError("unknown bc");
-	  BREAK;
-	}
+        IntVector idx(*iter);
+        BCRegion<double>* bc = ybc->get(bctype[idx]);
+        switch(bc->getType()){
+        case BC::FreeFlow:
+        case BC::FixedRate:
+        case BC::FixedFlux:
+          {
+            BCRegion<double>* bcr = pbc->get(bctype[idx]);
+            double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
+            switch(bcr->getType()){
+            case BC::FreeFlow:
+            case BC::FixedRate:
+            case BC::FixedValue:
+              pr = sol[idx];
+              break;
+            case BC::CoarseGrid:
+              pr = 0;//boundarypressure[idx];
+              break;
+            case BC::Exterior:
+              pr = sol[idx+IntVector(0,-1,0)];
+              break;
+            case BC::FixedFlux:
+              throw InternalError("Unknown bc");
+              BREAK;
+            }
+            BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,-1,0)]);
+            double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
+            switch(bcl->getType()){
+            case BC::FreeFlow:
+            case BC::FixedRate:
+            case BC::FixedValue:
+              pl = sol[idx+IntVector(0,-1,0)];
+              break;
+            case BC::CoarseGrid:
+              pl = 0;//boundarypressure[idx+IntVector(0,-1,0)];
+              break;
+            case BC::Exterior:
+              pl = sol[idx];
+              break;
+            case BC::FixedFlux:
+              throw InternalError("Unknown bc");
+              BREAK;
+            }
+            double gy = pr-pl;
+            yvel[idx] -= gy;
+          }
+          break;
+        case BC::FixedValue:
+          break;
+        case BC::CoarseGrid:
+        case BC::Exterior:
+          throw InternalError("unknown bc");
+          BREAK;
+        }
       }
 
       //cerr << "RANDY: SimpleCFD::applyProjection() CCC" << endl;
       for(CellIterator iter(patch->getSFCZIterator(0)); !iter.done(); iter++){
-	IntVector idx(*iter);
-	BCRegion<double>* bc = zbc->get(bctype[idx]);
-	switch(bc->getType()){
-	case BC::FreeFlow:
-	case BC::FixedRate:
-	case BC::FixedFlux:
-	  {
-	    BCRegion<double>* bcr = pbc->get(bctype[idx]);
-	    double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
-	    switch(bcr->getType()){
-	    case BC::FreeFlow:
-	    case BC::FixedRate:
-	    case BC::FixedValue:
-	      pr = sol[idx];
-	      break;
-	    case BC::CoarseGrid:
-	      pr = 0;//boundarypressure[idx];
-	      break;
-	    case BC::Exterior:
-	      pr = sol[idx+IntVector(0,0,-1)];
-	      break;
-	    case BC::FixedFlux:
-	      throw InternalError("Unknown bc");
-	      BREAK;
-	    }
-	    BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,0,-1)]);
-	    double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
-	    switch(bcl->getType()){
-	    case BC::FreeFlow:
-	    case BC::FixedRate:
-	    case BC::FixedValue:
-	      pl = sol[idx+IntVector(0,0,-1)];
-	      break;
-	    case BC::CoarseGrid:
-	      pl = 0;//boundarypressure[idx+IntVector(0,0,-1)];
-	      break;
-	    case BC::Exterior:
-	      pl = sol[idx];
-	      break;
-	    case BC::FixedFlux:
-	      throw InternalError("Unknown bc");
-	      BREAK;
-	    }
-	    double gz = pr-pl;
-	    zvel[idx] -= gz;
-	  }
-	  break;
-	case BC::FixedValue:
-	  break;
-	case BC::CoarseGrid:
-	case BC::Exterior:
-	  throw InternalError("unknown bc");
-	  BREAK;
-	}
+        IntVector idx(*iter);
+        BCRegion<double>* bc = zbc->get(bctype[idx]);
+        switch(bc->getType()){
+        case BC::FreeFlow:
+        case BC::FixedRate:
+        case BC::FixedFlux:
+          {
+            BCRegion<double>* bcr = pbc->get(bctype[idx]);
+            double pr = -98765; // Remove compiler warning and hopefully easier to catch if pr is not set.
+            switch(bcr->getType()){
+            case BC::FreeFlow:
+            case BC::FixedRate:
+            case BC::FixedValue:
+              pr = sol[idx];
+              break;
+            case BC::CoarseGrid:
+              pr = 0;//boundarypressure[idx];
+              break;
+            case BC::Exterior:
+              pr = sol[idx+IntVector(0,0,-1)];
+              break;
+            case BC::FixedFlux:
+              throw InternalError("Unknown bc");
+              BREAK;
+            }
+            BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,0,-1)]);
+            double pl = -98765; // Remove compiler warning and hopefully easier to catch if pl is not set.
+            switch(bcl->getType()){
+            case BC::FreeFlow:
+            case BC::FixedRate:
+            case BC::FixedValue:
+              pl = sol[idx+IntVector(0,0,-1)];
+              break;
+            case BC::CoarseGrid:
+              pl = 0;//boundarypressure[idx+IntVector(0,0,-1)];
+              break;
+            case BC::Exterior:
+              pl = sol[idx];
+              break;
+            case BC::FixedFlux:
+              throw InternalError("Unknown bc");
+              BREAK;
+            }
+            double gz = pr-pl;
+            zvel[idx] -= gz;
+          }
+          break;
+        case BC::FixedValue:
+          break;
+        case BC::CoarseGrid:
+        case BC::Exterior:
+          throw InternalError("unknown bc");
+          BREAK;
+        }
       }
 
 #if 0
@@ -2174,10 +2192,10 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
 //______________________________________________________________________
 //           A D V E C T     S C A L A R S
 void SimpleCFD::advectScalars(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw, DataWarehouse* new_dw,
-			      int step, int nsteps)
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw, DataWarehouse* new_dw,
+                              int step, int nsteps)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -2201,61 +2219,61 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
       new_dw->get(zvel, lb_->zvelocity, matl, patch,gac, maxadvect_+1);
 
       {
-	constCCVariable<double> den_old;
+        constCCVariable<double> den_old;
        CCVariable<double> den;
-	old_dw->get(den_old, lb_->density, matl, patch, gac, maxadvect_);
-	new_dw->allocateAndPut(den, lb_->density, matl, patch);
+        old_dw->get(den_old, lb_->density, matl, patch, gac, maxadvect_);
+        new_dw->allocateAndPut(den, lb_->density, matl, patch);
 
-	if(level->getIndex() > 0){   // REFINE
+        if(level->getIndex() > 0){   // REFINE
          double subCycleProgress_vel = double(step+1)/double(nsteps);
          double subCycleProgress_den = double(step)/double(nsteps);
-	  // X-velocity
+          // X-velocity
          refineBoundaries(patch, xvel.castOffConst(),
-			   new_dw, lb_->xvelocity, matl,
-			   subCycleProgress_vel);
-	  // Y-velocity
+                           new_dw, lb_->xvelocity, matl,
+                           subCycleProgress_vel);
+          // Y-velocity
          refineBoundaries(patch, yvel.castOffConst(),
-			   new_dw, lb_->yvelocity, matl,
-			   subCycleProgress_vel);
-	  // Z-velocity
+                           new_dw, lb_->yvelocity, matl,
+                           subCycleProgress_vel);
+          // Z-velocity
          refineBoundaries(patch, zvel.castOffConst(),
-			   new_dw, lb_->zvelocity, matl,
-			   subCycleProgress_vel);
+                           new_dw, lb_->zvelocity, matl,
+                           subCycleProgress_vel);
          // Density               
-	  refineBoundaries(patch, den_old.castOffConst(),
-			   new_dw, lb_->density, matl,
-			   subCycleProgress_den);
-	}
+          refineBoundaries(patch, den_old.castOffConst(),
+                           new_dw, lb_->density, matl,
+                           subCycleProgress_den);
+        }
        
        // Advection step
-	advect(den, den_old, patch->getCellIterator(), patch, delT,
-	       Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
-	       bcs.getCondition<double>("density", Patch::CellBased),
-	       bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
-	       bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
-	       bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+        advect(den, den_old, patch->getCellIterator(), patch, delT,
+               Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
+               bcs.getCondition<double>("density", Patch::CellBased),
+               bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
+               bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
+               bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
       }
       //__________________________________
       //  Thermal
       if(do_thermal){
-	constCCVariable<double> temp_old;
-	old_dw->get(temp_old, lb_->temperature, matl, patch,
-		    Ghost::AroundCells, maxadvect_);
-	CCVariable<double> temp;
-	new_dw->allocateAndPut(temp, lb_->temperature, matl, patch);
+        constCCVariable<double> temp_old;
+        old_dw->get(temp_old, lb_->temperature, matl, patch,
+                    Ghost::AroundCells, maxadvect_);
+        CCVariable<double> temp;
+        new_dw->allocateAndPut(temp, lb_->temperature, matl, patch);
 
-	if(level->getIndex() > 0) {      // REFINE
-	  refineBoundaries(patch, temp_old.castOffConst(),
-			   new_dw, lb_->temperature, matl,
-			   double(step)/double(nsteps));
+        if(level->getIndex() > 0) {      // REFINE
+          refineBoundaries(patch, temp_old.castOffConst(),
+                           new_dw, lb_->temperature, matl,
+                           double(step)/double(nsteps));
         }
-	
-	advect(temp, temp_old, patch->getCellIterator(), patch, delT,
-	       Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
-	       bcs.getCondition<double>("temperature", Patch::CellBased),
-	       bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
-	       bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
-	       bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+        
+        advect(temp, temp_old, patch->getCellIterator(), patch, delT,
+               Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
+               bcs.getCondition<double>("temperature", Patch::CellBased),
+               bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
+               bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
+               bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
       }
     }
   }
@@ -2263,10 +2281,10 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
 //______________________________________________________________________
 //           D I F F U S E     S C A L A R
 void SimpleCFD::diffuseScalar(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw, DataWarehouse* new_dw,
-			      DiffuseInfo di)
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw, DataWarehouse* new_dw,
+                              DiffuseInfo di)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -2290,8 +2308,8 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
       new_dw->getModifiable(s, di.scalar, matl, patch);
 
       if(level->getIndex() > 0){      // REFINE
-	refineBoundaries(patch, s, new_dw, di.scalar, matl,
-			 double(di.step+1)/double(di.nsteps));
+        refineBoundaries(patch, s, new_dw, di.scalar, matl,
+                         double(di.step+1)/double(di.nsteps));
       }
 
       CCVariable<Stencil7> A;
@@ -2304,13 +2322,13 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
       IntVector h=patch->getGhostCellHighIndex(1);
       IntVector h2=patch->getCellHighIndex()+IntVector(1,1,1);
       Condition<double>* scalar_bc=bcs.getCondition<double>(di.varname,
-							    Patch::CellBased);
+                                                            Patch::CellBased);
       Condition<double>* xflux_bc=bcs.getCondition<double>(di.varname,
-							   Patch::XFaceBased);
+                                                           Patch::XFaceBased);
       Condition<double>* yflux_bc=bcs.getCondition<double>(di.varname,
-							   Patch::YFaceBased);
+                                                           Patch::YFaceBased);
       Condition<double>* zflux_bc=bcs.getCondition<double>(di.varname,
-							   Patch::ZFaceBased);
+                                                           Patch::ZFaceBased);
       IntVector FW(0,0,0);
       IntVector FE(1,0,0);
       IntVector FS(0,0,0);
@@ -2318,10 +2336,10 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
       IntVector FB(0,0,0);
       IntVector FT(0,0,1);
       for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-	IntVector idx(*iter);
-	applybc(idx, l, h, h2, s, delt, inv_dx2, di.rate,
-		bctype, scalar_bc, xflux_bc, yflux_bc, zflux_bc,
-		FW, FE, FS, FN, FB, FT, A, rhs);
+        IntVector idx(*iter);
+        applybc(idx, l, h, h2, s, delt, inv_dx2, di.rate,
+                bctype, scalar_bc, xflux_bc, yflux_bc, zflux_bc,
+                FW, FE, FS, FN, FB, FT, A, rhs);
       }
     }
   }
@@ -2330,9 +2348,9 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
 //______________________________________________________________________
 //           D I S S I P A T E     S C A L A R S
 void SimpleCFD::dissipateScalars(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw, DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -2355,22 +2373,22 @@ void SimpleCFD::dissipateScalars(const ProcessorGroup*,
       double factor = 1./(1+delt*density_dissipation_);
       Condition<double>* den_bc = bcs.getCondition<double>("density", Patch::CellBased);
       for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-	IntVector idx(*iter);
-	BCRegion<double>* bc = den_bc->get(bctype[idx]);
-	switch(bc->getType()){
-	case BC::FreeFlow:
-	case BC::FixedRate:
-	  den[idx]*=factor;	
-	  break;
-	case BC::FixedValue:
-	case BC::FixedFlux:
-	  break;
-	case BC::CoarseGrid:
-	case BC::Exterior:
-	  // Shouldn't happen
-	  throw InternalError("illegalBC");
-	  BREAK;
-	}
+        IntVector idx(*iter);
+        BCRegion<double>* bc = den_bc->get(bctype[idx]);
+        switch(bc->getType()){
+        case BC::FreeFlow:
+        case BC::FixedRate:
+          den[idx]*=factor;     
+          break;
+        case BC::FixedValue:
+        case BC::FixedFlux:
+          break;
+        case BC::CoarseGrid:
+        case BC::Exterior:
+          // Shouldn't happen
+          throw InternalError("illegalBC");
+          BREAK;
+        }
       }
 #if 0
       print(den, "dissipated density");
@@ -2381,9 +2399,9 @@ void SimpleCFD::dissipateScalars(const ProcessorGroup*,
 //______________________________________________________________________
 //              U P D A T E     B C S
 void SimpleCFD::updatebcs(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw, DataWarehouse* new_dw)
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 #if 1
   if(dbg.active()){
@@ -2392,30 +2410,30 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
       cout_doing << "Doing updatebcs patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
       
       for(int m = 0;m<matls->size();m++){
-	int matl = matls->get(m);
+        int matl = matls->get(m);
   
-	constCCVariable<double> den;
-	new_dw->get(den, lb_->density, matl, patch, Ghost::None, 0);
-	cerr << "Level: " << getLevel(patches)->getIndex() << '\n';
-	print(den, "density");
-	if(do_thermal){
-	  constCCVariable<double> temp;
-	  new_dw->get(temp, lb_->temperature, matl, patch, Ghost::None, 0);
-	  cerr << "Level: " << getLevel(patches)->getIndex() << '\n';
-	  print(temp, "temperature");
-	}
-	constCCVariable<double> pressure;
-	new_dw->get(pressure, lb_->pressure, matl, patch, Ghost::None, 0);
-	print(pressure, "pressure");
-	constSFCXVariable<double> xvel;
-	new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::None, 0);
-	print(xvel, "xvelocity");
-	constSFCYVariable<double> yvel;
-	new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::None, 0);
-	print(yvel, "yvelocity");
-	constSFCZVariable<double> zvel;
-	new_dw->get(zvel, lb_->zvelocity, matl, patch, Ghost::None, 0);
-	print(zvel, "zvelocity");
+        constCCVariable<double> den;
+        new_dw->get(den, lb_->density, matl, patch, Ghost::None, 0);
+        cerr << "Level: " << getLevel(patches)->getIndex() << '\n';
+        print(den, "density");
+        if(do_thermal){
+          constCCVariable<double> temp;
+          new_dw->get(temp, lb_->temperature, matl, patch, Ghost::None, 0);
+          cerr << "Level: " << getLevel(patches)->getIndex() << '\n';
+          print(temp, "temperature");
+        }
+        constCCVariable<double> pressure;
+        new_dw->get(pressure, lb_->pressure, matl, patch, Ghost::None, 0);
+        print(pressure, "pressure");
+        constSFCXVariable<double> xvel;
+        new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::None, 0);
+        print(xvel, "xvelocity");
+        constSFCYVariable<double> yvel;
+        new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::None, 0);
+        print(yvel, "yvelocity");
+        constSFCZVariable<double> zvel;
+        new_dw->get(zvel, lb_->zvelocity, matl, patch, Ghost::None, 0);
+        print(zvel, "zvelocity");
       }
     }
   }
@@ -2431,8 +2449,8 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
       double max=0;
       double sum=0;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-	sum+=den[*iter];
-	max = Max(den[*iter], max);
+        sum+=den[*iter];
+        max = Max(den[*iter], max);
       }
       cerr << "Level: " << getLevel(patches)->getIndex() << ", max=" << max << ", sum=" << sum << '\n';
     }
@@ -2444,10 +2462,10 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
 //______________________________________________________________________
 //             I N T E R P O L A T E     V E L O C I T I E S
 void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset* matls,
-				      DataWarehouse*,
-				      DataWarehouse* new_dw)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse*,
+                                      DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2469,11 +2487,11 @@ void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
       new_dw->allocateAndPut(vel, lb_->ccvelocity, matl, patch);
 
       for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-	IntVector idx(*iter);
-	Vector v(xvel[idx]+xvel[idx+IntVector(1,0,0)],
-		 yvel[idx]+yvel[idx+IntVector(0,1,0)],
-		 zvel[idx]+zvel[idx+IntVector(0,0,1)]);
-	vel[idx]=v*0.5;
+        IntVector idx(*iter);
+        Vector v(xvel[idx]+xvel[idx+IntVector(1,0,0)],
+                 yvel[idx]+yvel[idx+IntVector(0,1,0)],
+                 zvel[idx]+zvel[idx+IntVector(0,0,1)]);
+        vel[idx]=v*0.5;
       }
     }
   }
@@ -2483,51 +2501,51 @@ void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
 //          A D D     R E F I N E     D E P E N D E N C I E S
 void
 SimpleCFD::addRefineDependencies( Task* /*task*/, 
-				  const VarLabel* /*label*/,
-				  int /*step*/, int /*nsteps*/ )
+                                  const VarLabel* /*label*/,
+                                  int /*step*/, int /*nsteps*/ )
 {
 }
 
 void
 SimpleCFD::refineBoundaries(const Patch* /*patch*/,
-			    CCVariable<double>& /*val*/,
-			    DataWarehouse* /*new_dw*/,
-			    const VarLabel* /*label*/,
-			    int /*matl*/,
-			    double /*subCycleProgress_var*/)
-{
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
-}
-
-void
-SimpleCFD::refineBoundaries(const Patch* /*patch*/,
-			    SFCXVariable<double>& /*val*/,
-			    DataWarehouse* /*new_dw*/,
-			    const VarLabel* /*label*/,
-			    int /*matl*/,
-			    double /*subCycleProgress_var*/)
+                            CCVariable<double>& /*val*/,
+                            DataWarehouse* /*new_dw*/,
+                            const VarLabel* /*label*/,
+                            int /*matl*/,
+                            double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
 void
 SimpleCFD::refineBoundaries(const Patch* /*patch*/,
-			    SFCYVariable<double>& /*val*/,
-			    DataWarehouse* /*new_dw*/,
-			    const VarLabel* /*label*/,
-			    int /*matl*/,
-			    double /*subCycleProgress_var*/)
+                            SFCXVariable<double>& /*val*/,
+                            DataWarehouse* /*new_dw*/,
+                            const VarLabel* /*label*/,
+                            int /*matl*/,
+                            double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
 
 void
 SimpleCFD::refineBoundaries(const Patch* /*patch*/,
-			    SFCZVariable<double>& /*val*/,
-			    DataWarehouse* /*new_dw*/,
-			    const VarLabel* /*label*/,
-			    int /*matl*/,
-			    double /*subCycleProgress_var*/)
+                            SFCYVariable<double>& /*val*/,
+                            DataWarehouse* /*new_dw*/,
+                            const VarLabel* /*label*/,
+                            int /*matl*/,
+                            double /*subCycleProgress_var*/)
+{
+  throw InternalError("trying to do AMR iwth the non-AMR component!");
+}
+
+void
+SimpleCFD::refineBoundaries(const Patch* /*patch*/,
+                            SFCZVariable<double>& /*val*/,
+                            DataWarehouse* /*new_dw*/,
+                            const VarLabel* /*label*/,
+                            int /*matl*/,
+                            double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
@@ -2537,9 +2555,9 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
 //           H A C K     B C S
 void
 SimpleCFD::hackbcs(const ProcessorGroup*,
-		   const PatchSubset* patches,
-		   const MaterialSubset* matls,
-		   DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2549,20 +2567,20 @@ SimpleCFD::hackbcs(const ProcessorGroup*,
       new_dw->getModifiable(bctype, lb_->bctype, matl, patch);
 
       for(int p2=0;p2<patches->size();p2++){
-	const Patch* patch2 = patches->get(p2);
-	if(patch2 == patch)
-	  continue;
-	NCVariable<int> bctype2;
-	new_dw->getModifiable(bctype2, lb_->bctype, matl, patch2);
-	IntVector l = Max(bctype.getLowIndex(), bctype2.getLowIndex());
-	IntVector h = Min(bctype.getHighIndex(), bctype2.getHighIndex());
-	IntVector diff = h-l;
-	int total = diff.x()*diff.y()*diff.z();
-	if(diff.x() > 0 && diff.y() > 0 && diff.z() > 0)
-	  cerr << "Hacking " << total << " bcs on patch " << *patch << '\n';
-	for(CellIterator iter(l, h); !iter.done(); iter++){
-	  bcs.merge(bctype[*iter], bctype2[*iter]);
-	}
+        const Patch* patch2 = patches->get(p2);
+        if(patch2 == patch)
+          continue;
+        NCVariable<int> bctype2;
+        new_dw->getModifiable(bctype2, lb_->bctype, matl, patch2);
+        IntVector l = Max(bctype.getLowIndex(), bctype2.getLowIndex());
+        IntVector h = Min(bctype.getHighIndex(), bctype2.getHighIndex());
+        IntVector diff = h-l;
+        int total = diff.x()*diff.y()*diff.z();
+        if(diff.x() > 0 && diff.y() > 0 && diff.z() > 0)
+          cerr << "Hacking " << total << " bcs on patch " << *patch << '\n';
+        for(CellIterator iter(l, h); !iter.done(); iter++){
+          bcs.merge(bctype[*iter], bctype2[*iter]);
+        }
       }
     }
   }
