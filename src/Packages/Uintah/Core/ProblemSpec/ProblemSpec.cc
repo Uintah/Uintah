@@ -1263,6 +1263,12 @@ void ProblemSpec::releaseDocument() {
   d_node->getOwnerDocument()->release();
 }
 
+ProblemSpecP ProblemSpec::getRootNode()
+{
+  DOMNode* root_node = d_node->getOwnerDocument()->getDocumentElement();
+  return scinew ProblemSpec(root_node,d_write);
+}
+
 const Uintah::TypeDescription* ProblemSpec::getTypeDescription()
 {
     //cerr << "ProblemSpec::getTypeDescription() not done\n";
