@@ -73,6 +73,7 @@ WARNING
 #define FORT_SCALARCOEFF scalcoef_
 #define FORT_SCALARSOURCE scalsrc_
 #define FORT_SCALARBC bcscalar_
+#define FORT_ENTHALPYBC bcenthalpy_
 #define FORT_COMPUTERESID rescal_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERELAX underelax_
@@ -85,9 +86,15 @@ WARNING
 #define FORT_EXPLICIT explicit_
 #define FORT_EXPLICIT_VELOCITY explicit_velocity_
 #define FORT_OUTLETBC outletbc_
+#define FORT_OUTLETBCENTH outletbcenth_
 #define FORT_COMPUTEVEL computevel_
 #define FORT_PRESSRCPRED pressrcpred_
 #define FORT_EXPLICIT_VEL explicit_vel_
+#define FORT_ENTHALPYRADWALLBC enthalpyradwallbc_
+#define FORT_ENTHALPYRADFLUX enthalpyradflux_
+#define FORT_ENTHALPYRADTHINSRC enthalpyradthinsrc_
+#define FORT_ENTHALPYRADSRC enthalpyradsrc_
+
 // for multimaterial
 #define FORT_MMMOMSRC mmmomsrc_
 #define FORT_MMBCVELOCITY mmbcvelocity_
@@ -946,6 +953,36 @@ extern "C"
 		  int* xminus, int* xplus, int* yminus, int* yplus,
 		  int* zminus, int* zplus);
 
+
+    void
+    FORT_ENTHALPYBC(const int* domLo, const int* domHi,
+		  const int* domLong, const int* domHing,
+		  const int* idxLo, const int* idxHi,
+		  double* scalar,
+		  double* scalarCoeffAE,
+		  double* scalarCoeffAW,
+		  double* scalarCoeffAN,
+		  double* scalarCoeffAS,
+		  double* scalarCoeffAT,
+		  double* scalarCoeffAB,
+		  double* scalarNonlinearSrc,
+		  double* scalarLinearSrc,
+		  double* density,
+		  const int* domLoU, const int* domHiU,
+		  double* uVelocity,
+		  const int* domLoV, const int* domHiV,
+		  double* vVelocity,
+		  const int* domLoW, const int* domHiW,
+		  double* wVelocity,
+		  const double* sew, const double* sns, const double* stb,
+		  int* cellType,
+		  int* wall_celltypeval, int* symmetry_celltypeval,
+		  int* flow_celltypeval, int* press_celltypeval, 
+		  const int* ffield, const int* sfield,
+		  const int* outletfield,
+		  int* xminus, int* xplus, int* yminus, int* yplus,
+		  int* zminus, int* zplus);
+
     ////////////////////////////////////////////////////////////////////////
     // Compute the Residual of the Linearized System
     void
@@ -1136,6 +1173,22 @@ extern "C"
 		  double* dxpwu, double* dxpw);
 
 
+    void
+    FORT_OUTLETBCENTH(const int* domLoScalar, const int* domHiScalar,
+		  double* scalar,
+		  const int* domLoScalar_old, const int* domHiScalar_old,
+		  double* old_scalar,
+		  const int* domLoct, const int* domHict, 
+		  const int* idxLo, const int* idxHi,
+		  int* celltype, const int* celltypeval,
+		  double* uvwout,
+		  int* xminus, int* xplus, int* yminus, int* yplus,
+		  int* zminus, int* zplus,
+		  double* delta_t,
+		  const int* domLoG, const int* domHiG, 
+		  double* dxpw);
+
+
 
   // for pred-corr
     void
@@ -1210,7 +1263,73 @@ extern "C"
 			     const int* valid_lo, const int* valid_hi,
 			     const int* pcell, const int* wall);
 
+  void
+  FORT_ENTHALPYRADFLUX(const int* domLo, const int* domHi,
+		       const int* idxLo, const int* idxHi,
+		       double* qfluxe,
+		       double* qfluxw,
+		       double* qfluxn,
+		       double* qfluxs,
+		       double* qfluxt,
+		       double* qfluxb,
+		       const int* domLoT, const int* domHiT,
+		       double* temperature,
+		       const int* domLoA, const int* domHiA,
+		       double* absorption,
+		       const int* domLoG, const int* domHiG,
+		       const double* dxep, const double* dxpw,
+		       const double* dynp, const double* dyps,
+		       const double* dztp, const double* dzpb);
+  void
+  FORT_ENTHALPYRADSRC(const int* domLoS, const int* domHiS,
+		      const int* idxLo, const int* idxHi,
+		      double* SU,
+		      const int* domLo, const int* domHi,
+		      double* qfluxe,
+		      double* qfluxw,
+		      double* qfluxn,
+		      double* qfluxs,
+		      double* qfluxt,
+		      double* qfluxb,
+		      const int* domLoG, const int* domHiG,
+		      const double* sew, const double* sns,
+		      const double* stb);
+
+  void
+  FORT_ENTHALPYRADTHINSRC(const int* domLoS, const int* domHiS,
+			  const int* idxLo, const int* idxHi,
+			  double* SU,
+			  const int* domLo, const int* domHi,
+			  double* TG,
+			  const int* domLoA, const int* domHiA,
+			  double* Absorp,
+			  const int* domLoG, const int* domHiG,
+			  const double* sew, const double* sns,
+			  const double* stb,
+			  double* tref);
+  void
+  FORT_ENTHALPYRADWALLBC(const int* domLo, const int* domHi,
+			 const int* idxLo, const int* idxHi,
+			 double* qfluxe,
+			 double* qfluxw,
+			 double* qfluxn,
+			 double* qfluxs,
+			 double* qfluxt,
+			 double* qfluxb,
+			 const int* domLoT, const int* domHiT,
+			 double* temperature,
+			 const int* domLoP, const int* domHiP,
+			 int* PCELL,
+			 const int* wallid,
+			 int* xminus, int* xplus, int* yminus, int* yplus,
+			 int* zminus, int* zplus);
+
+
+
+
+
+
+
 }
 
 #endif
-

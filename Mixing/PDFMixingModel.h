@@ -36,6 +36,7 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
 
 #include <vector>
 
@@ -45,7 +46,7 @@ class KD_Tree;
 class MixRxnTableInfo;
 class Integrator;
 
-class PDFMixingModel: public MixingModel {
+class PDFMixingModel: public MixingModel, public DynamicTable {
 
 public:
 
@@ -107,7 +108,7 @@ public:
 	return d_numMixStatVars;
       }
       inline int getNumRxnVars() const{
-	return d_rxnVars;
+	return d_numRxnVars;
       }
       inline int getTableDimension() const{
 	return d_tableDimension;
@@ -146,15 +147,14 @@ private:
       PDFMixingModel& operator=(const PDFMixingModel&);
 
 private:
-      // recursive function to linearly interpolate from the KDTree
-      Stream interpolate(int currentDim, int* lowIndex, int* upIndex,
-				double* lowFactor, double* upFactor);
+      // Looks for needed entry in KDTree and returns that entry. If entry 
+      // does not exist, calls integrator to compute entry before returning it.
       Stream tableLookUp(int* tableKeyIndex);
 
       MixRxnTableInfo* d_tableInfo;
       int d_numMixingVars;
       int d_numMixStatVars;
-      int d_rxnVars;
+      int d_numRxnVars;
       int d_depStateSpaceVars;
       bool d_adiabatic;
       std::vector<Stream> d_streams; 
@@ -163,10 +163,12 @@ private:
       int **d_tableIndexVec;
       double **d_tableBoundsVec;
 
-    // Data structure class that stores the table entries for state-space variables
-    // as a function of independent variables.
-    // This could be implemented either as a k-d or a binary tree data structure. 
-      KD_Tree* d_dynamicTable;
+      // Data structure class that stores the table entries for state-space
+      // variables as a function of independent variables.
+      // This could be implemented either as a k-d or a binary tree data structure.
+      KD_Tree* d_mixTable;
+      // Class that accesses data structure (k-d or binary tree) 
+      //DynamicTable* d_mixTableAccess;
       Integrator* d_integrator;
       ReactionModel* d_rxnModel;
       

@@ -79,7 +79,8 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-			TurbulenceModel* turb_model, Properties* props);
+			TurbulenceModel* turb_model, Properties* props,
+			bool calcEnthalpy);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -219,6 +220,18 @@ public:
 		    const int index,
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      // Actually compute enthalpy BC terms
+      void enthalpyBC(const ProcessorGroup* pc,
+		      const Patch* patch,
+		      CellInformation* cellinfo,
+		      ArchesVariables* vars);
+
+      void enthalpyRadWallBC(const ProcessorGroup* pc,
+			     const Patch* patch,
+			     CellInformation* cellinfo,
+			     ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize multi-material wall celltyping
@@ -414,7 +427,8 @@ private:
       // mass flow
       double d_uvwout;
       double d_overallMB;
-      
+      // for enthalpy solve 
+      bool d_enthalpySolve;
       // variable labels
       std::vector<int> d_cellTypes;
       WallBdry* d_wallBdry;

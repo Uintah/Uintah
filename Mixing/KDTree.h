@@ -38,7 +38,7 @@ POSSIBLE REVISIONS
      1. Non-Uniform table spacing
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFShape.h>
+//#include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFShape.h>
 
 #include <vector>
 using namespace std;
@@ -80,6 +80,8 @@ namespace Uintah {
 
   };
 
+class PDFMixingModel; //??Should I change this to MixingModel to make it general??
+class MixRxnTableInfo;
 class KD_Tree {
 
   public:
@@ -138,7 +140,6 @@ class KD_Tree {
 
 
  private:
-
    //** Insert a new Node z which contain a given key into the Tree.
 
    KD_Node* TreeInsert(KD_Node*& x, int key[], vector<double> phi, int lev);

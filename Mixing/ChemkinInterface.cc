@@ -38,21 +38,19 @@ ChemkinInterface::ChemkinInterface() {
 	  strlen(cklinkfile));
   d_ickwrk = new int[d_leniwk];
   d_rckwrk = new double[d_lenrwk];
+  cout << "CK: lenrwk "<<d_lenrwk<<endl;
+  cout << "CK: leniwk "<<d_leniwk<<endl;
   if(!(d_ickwrk && d_rckwrk))
     {
       cout << "Error allocating ickwrk or rckwrk"<<endl; 
     }
   d_cckwrk = CharArray(CHARLENGTH, d_lencwk); 
-  cout << "Allocated CK arrays (RIC):"
-       << d_lenrwk <<" "<<d_leniwk<<" "<<d_lencwk<<endl;
 
   // Read the binary file and create the internal work arrays
   mrhinit(&d_leniwk, &d_lenrwk, &d_lencwk, &linc, &d_lout, d_ickwrk, 
 	  d_rckwrk, d_cckwrk[0], cklinkfile, strlen(cklinkfile));
   ckindx(d_ickwrk, d_rckwrk, &d_numElements, &d_numSpecies, &d_numRxns, 
 	 &d_nfit);
-  cout << "Working with " << d_numSpecies << " species." << endl;
-  cout <<endl<<endl;
 
   //Get array of element names
   d_elementNames = CharArray(CHARLENGTH, d_numElements);
@@ -61,11 +59,7 @@ ChemkinInterface::ChemkinInterface() {
   for(int i = 0; i< d_numElements; i++) {
     strtok(d_elementNames[i]," "); //Add terminator 
   }
-  cout << "Elements in system:"<<endl;
-  for(int i = 0; i < d_numElements; i++) {
-    cout << d_elementNames[i]<<" ";
-    cout <<endl;
-  }
+
 
   //Get array of species names
   d_speciesNames = CharArray(CHARLENGTH, d_numSpecies);
@@ -74,16 +68,6 @@ ChemkinInterface::ChemkinInterface() {
   mrhsyms(d_cckwrk[0], &d_lout, d_speciesNames[0], &ichar); 
   for(int i = 0; i < d_numSpecies; i++) {
     strtok(d_speciesNames[i]," "); //Add terminator 
-  }
-  cout << "Species in system:"<<endl;
-
-  for(int i = 0; i < d_numSpecies; i+=6) {
-    int j = 0;
-    do {
-      cout << d_speciesNames[i+j]<<" ";
-      j++;
-    } while (j < 6 && i+j < d_numSpecies);
-    cout <<endl;
   }
 
   // Get array of atomic weights
@@ -116,12 +100,10 @@ ChemkinInterface::getElementIndex(char *name)
     if(strlen(name) == strlen(d_elementNames[i])) {
       if(strncmp(name, d_elementNames[i], (size_t) strlen(name)) == 0) 
 	{
-	cout << "Element " << name << " has index " << i << "\n";
 	return i;
 	}
     }
   }
-  cout << "Did not find index of element " << name << "\n";
   return -1;
   //return 1;
 }
@@ -133,7 +115,6 @@ ChemkinInterface::getSpeciesIndex(char *name)
     if(strlen(name) == strlen(d_speciesNames[i])) {
       if(strncmp(name, d_speciesNames[i], (size_t) strlen(name)) == 0) 
 	{
-	  cout <<endl<<"Species " << name << " has index " << i << "\n";
 	return i;
 	}
     }
@@ -155,11 +136,16 @@ ChemkinInterface::getMixMoleWeight(double *Y)
 }
 
 double
-ChemkinInterface::getMixEnthalpy(double temp, double *Y)
+ChemkinInterface::getMixEnthalpy(double temp, const vector<double>& Yvec)
 {
+  double* Y = new double[d_numSpecies];
+  assert(d_numSpecies == Yvec.size());
+  for (int i = 0; i < Yvec.size(); i++)
+    Y[i] = Yvec[i];
   double mixEnthalpy; // Units of J/kg
   ckhbms(&temp, Y, d_ickwrk, d_rckwrk, &mixEnthalpy);
   mixEnthalpy *= 1.e-4; // Convert to SI (erg/gm) -> (J/kg)
+  delete [] Y;
   return mixEnthalpy;
 }
 double

@@ -78,6 +78,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
   db->require("grow_dt", d_deltaT);
+  db->require("reacting_flow", d_reactingFlow);
+  db->require("solve_enthalpy", d_calcEnthalpy);
 
   // physical constants
   d_physicalConsts = scinew PhysicalConstants();
@@ -89,7 +91,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts->problemSetup(db);
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab);
+  d_props = scinew Properties(d_lab, d_MAlab, d_reactingFlow, d_calcEnthalpy);
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
 
@@ -103,7 +105,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_turbModel->problemSetup(db);
 
   // read boundary
-  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_turbModel, d_props);
+  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_turbModel,
+						 d_props, d_calcEnthalpy);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
   d_props->setBC(d_boundaryCondition);
@@ -114,12 +117,14 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
 					      d_boundaryCondition,
 					      d_turbModel, d_physicalConsts,
+					      d_calcEnthalpy,
 					      d_myworld);
   }
   else if (nlSolver == "explicit") {
         d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
 					   d_boundaryCondition,
 					   d_turbModel, d_physicalConsts,
+					   d_calcEnthalpy,
 					   d_myworld);
   }
   else
@@ -194,11 +199,11 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_pressureINLabel);
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
+    if (d_calcEnthalpy)
+      tsk->computes(d_lab->d_enthalpyINLabel); 
     tsk->computes(d_lab->d_densityINLabel);
     tsk->computes(d_lab->d_viscosityINLabel);
     // for reacting flows save temperature and co2 
-    tsk->computes(d_lab->d_tempINLabel);
-    tsk->computes(d_lab->d_co2INLabel);
     if (d_MAlab)
       tsk->computes(d_lab->d_pressPlusHydroLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -281,12 +286,19 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
+	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX-geomLow.x()])+
+	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY-geomLow.y()])+
+			  Abs(wVelocity[currCell])/(cellinfo->stb[colZ-geomLow.z()])+
+                          small_num;
+	  delta_t=Min(1.0/tmp_time, delta_t);
+#if 0								  
 	  delta_t=Min(Abs(cellinfo->sew[colX-geomLow.x()]/
 			  (uVelocity[currCell]+small_num)),delta_t);
 	  delta_t=Min(Abs(cellinfo->sns[colY-geomLow.y()]/
 			  (vVelocity[currCell]+small_num)), delta_t);
 	  delta_t=Min(Abs(cellinfo->stb[colZ-geomLow.z()]/
 			  (wVelocity[currCell]+small_num)), delta_t);
+#endif
 	}
       }
     }
@@ -333,6 +345,7 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
     StaticArray< CCVariable<double> > scalar(d_nofScalars);
+    CCVariable<double> enthalpy;
     CCVariable<double> density;
     CCVariable<double> viscosity;
     CCVariable<double> pPlusHydro;
@@ -347,12 +360,6 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
-    CCVariable<double> temperature;
-    CCVariable<double> co2;
-    new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-    new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
-    temperature.initialize(0.0);
-    co2.initialize(0.0);
     if (d_MAlab) {
       new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
       pPlusHydro.initialize(0.0);
@@ -360,6 +367,10 @@ Arches::paramInit(const ProcessorGroup* ,
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+    }
+    if (d_calcEnthalpy) {
+      new_dw->allocate(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
+      enthalpy.initialize(0.0);
     }
     new_dw->allocate(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->allocate(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
@@ -417,10 +428,10 @@ Arches::paramInit(const ProcessorGroup* ,
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->put(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
     }
+    if (d_calcEnthalpy)
+      new_dw->put(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
     new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
-    new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-    new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
     if (d_MAlab)
       new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
 

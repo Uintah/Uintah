@@ -36,7 +36,20 @@ namespace Uintah {
     public:
       Stream();
       Stream(const int numSpecies);
+      Stream(const int numSpecies, const int numMixVars, const int numRxnVars);
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Copy Constructor
+      //         
+      //
       Stream(const Stream& strm); // copy constructor
+      // GROUP: Operators:
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Assignment Operator 
+      //         
+      //
+      Stream& operator=(const Stream &rhs);
       ~Stream();
       Stream& linInterpolate(double upfactor, double lowfactor,
 			     Stream& rightvalue);
@@ -46,24 +59,31 @@ namespace Uintah {
 		      const char* speciesName, double mfrac);
       int speciesIndex(const ChemkinInterface* chemInterf, const char* name);
       void print(std::ostream& out) const;
+      void print(std::ostream& out, ChemkinInterface* chemInterf);
       std::vector<double> convertStreamToVec(const bool flag);
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 
-			      const bool flag);
+			      const bool flag, const int numMixVars, 
+                              const int numRxnVars);
       double getValue(int count, bool flag);
       void normalizeStream();
       inline double getDensity() const {
 	return d_density;
       }
+      inline int getDepStateSpaceVars() const {
+	// 4 correspond to density, pressure, temp, enthalpy
+	return d_depStateSpaceVars;
+      }
+      inline double getEnthalpy() const {
+	return d_enthalpy;
+      }
+
       inline double getTemperature() const {
 	return d_temperature;
       }
       inline double getCO2() const {
 	return d_speciesConcn[3];
       }
-      inline int getDepStateSpaceVars() const {
-	// 4 correspond to density, pressure, temp, enthalpy
-	return d_depStateSpaceVars;
-      }
+
     public:
       double d_pressure; // Pa
       double d_density; // kg/m^3
@@ -75,6 +95,9 @@ namespace Uintah {
       bool d_mole;
       int d_depStateSpaceVars;
       std::vector<double> d_speciesConcn;
+      std::vector<double> d_rxnVarRates;
+      int d_numMixVars;
+      int d_numRxnVars;
     private:
       // includes all the vars except species except species_conc...
       // increase the value if want to increase number of variables

@@ -999,6 +999,37 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 
 }
 
+void 
+RBGSSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
+				      const Patch* patch,
+				      ArchesVariables* vars)
+{
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = vars->enthalpy.getFortLowIndex();
+  IntVector domHi = vars->enthalpy.getFortHighIndex();
+  IntVector domLong = vars->scalarCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->scalarCoeff[Arches::AP].getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  //fortran call
+  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 domLong.get_pointer(), domHing.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 vars->enthalpy.getPointer(),
+		 vars->scalarCoeff[Arches::AP].getPointer(), 
+		 vars->scalarNonlinearSrc.getPointer(),
+		 &d_underrelax);
+#ifdef ARCHES_COEF_DEBUG
+  cerr << "AFTER Underrelaxation Scalar" << endl;
+  cerr << "SAP - Scalar Coeff " << endl;
+  vars->scalarCoeff[Arches::AP].print(cerr);
+  cerr << "SSU - Scalar Source " << endl;
+  vars->scalarNonlinearSrc.print(cerr);
+#endif
+
+}
+
 //****************************************************************************
 // Scalar Solve
 //****************************************************************************
@@ -1109,6 +1140,109 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
     cerr << " After Scalar Explicit solve : " << endl;
     cerr << "Print Scalar: " << endl;
     vars->scalar.print(cerr);
+#endif
+
+
+    vars->residScalar = 1.0E-7;
+    vars->truncScalar = 1.0;
+   
+}
+void 
+RBGSSolver::enthalpyLisolve(const ProcessorGroup* pc,
+			  const Patch* patch,
+			  double delta_t,
+			  ArchesVariables* vars,
+			  CellInformation* cellinfo,
+			  const ArchesLabel* lab)
+{
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = vars->enthalpy.getFortLowIndex();
+  IntVector domHi = vars->enthalpy.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLong = vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHing = vars->scalarNonlinearSrc.getFortHighIndex();
+  // for explicit solver
+  IntVector domLoDen = vars->old_density.getFortLowIndex();
+  IntVector domHiDen = vars->old_density.getFortHighIndex();
+  int numGhostCells = 1;
+  IntVector domLoDenwg = patch->getGhostCellLowIndex(numGhostCells);
+  // to make it compatible with fortran
+  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells) -
+                                                      IntVector(1,1,1);
+
+#if implict_defined
+  Array1<double> e1;
+  Array1<double> f1;
+  Array1<double> e2;
+  Array1<double> f2;
+  Array1<double> e3;
+  Array1<double> f3;
+
+  IntVector Size = domHi - domLo + IntVector(1,1,1);
+
+  e1.resize(Size.x());
+  f1.resize(Size.x());
+  e2.resize(Size.y());
+  f2.resize(Size.y());
+  e3.resize(Size.z());
+  f3.resize(Size.z());
+
+  sum_vartype resid;
+  sum_vartype trunc;
+
+  old_dw->get(resid, lab->d_scalarResidLabel);
+  old_dw->get(trunc, lab->d_scalarTruncLabel);
+
+  double nlResid = resid;
+  double trunc_conv = trunc*1.0E-7;
+  double theta = 0.5;
+  int scalarIter = 0;
+  double scalarResid = 0.0;
+  do {
+    //fortran call for lineGS solver
+    FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->enthalpy.getPointer(),
+		vars->scalarCoeff[Arches::AE].getPointer(), 
+		vars->scalarCoeff[Arches::AW].getPointer(), 
+		vars->scalarCoeff[Arches::AN].getPointer(), 
+		vars->scalarCoeff[Arches::AS].getPointer(), 
+		vars->scalarCoeff[Arches::AT].getPointer(), 
+		vars->scalarCoeff[Arches::AB].getPointer(), 
+		vars->scalarCoeff[Arches::AP].getPointer(), 
+		vars->scalarNonlinearSrc.getPointer(),
+		e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
+		e3.get_objs(), f3.get_objs(), &theta);
+    computeScalarResidual(pc, patch, old_dw, new_dw, index, vars);
+    scalarResid = vars->residScalar;
+    ++scalarIter;
+  } while((scalarIter < d_maxSweeps)&&((scalarResid > d_residual*nlResid)||
+				      (scalarResid > trunc_conv)));
+  cerr << "After scalar " << index <<" solve " << scalarIter << " " << scalarResid << endl;
+  cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
+     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   vars->enthalpy.getPointer(), vars->old_enthalpy.getPointer(),
+		   vars->scalarCoeff[Arches::AE].getPointer(), 
+		   vars->scalarCoeff[Arches::AW].getPointer(), 
+		   vars->scalarCoeff[Arches::AN].getPointer(), 
+		   vars->scalarCoeff[Arches::AS].getPointer(), 
+		   vars->scalarCoeff[Arches::AT].getPointer(), 
+		   vars->scalarCoeff[Arches::AB].getPointer(), 
+		   vars->scalarCoeff[Arches::AP].getPointer(), 
+		   vars->scalarNonlinearSrc.getPointer(),
+		   domLoDen.get_pointer(), domHiDen.get_pointer(),
+		   domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+		   vars->old_density.getPointer(), 
+		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		   cellinfo->stb.get_objs(), &delta_t);
+#ifdef ARCHES_DEBUG
+    cerr << " After Scalar Explicit solve : " << endl;
+    cerr << "Print Enthalpy: " << endl;
+    vars->enthalpy.print(cerr);
 #endif
 
 

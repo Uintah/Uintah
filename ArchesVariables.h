@@ -59,6 +59,8 @@ namespace Uintah {
       CCVariable<double> density;
       CCVariable<double> viscosity;
       CCVariable<double> scalar;
+      CCVariable<double> enthalpy;
+      CCVariable<double> old_enthalpy;
       StencilMatrix<SFCXVariable<double> > uVelocityCoeff;
       StencilMatrix<SFCYVariable<double> > vVelocityCoeff;
       StencilMatrix<SFCZVariable<double> > wVelocityCoeff;
@@ -97,6 +99,7 @@ namespace Uintah {
       SFCYVariable<double> residualVVelocity;
       SFCZVariable<double> residualWVelocity;
       CCVariable<double> residualScalar;      
+      CCVariable<double> residualEnthalpy;      
       // pressure gradient vars added to momentum source terms
       SFCXVariable<double> pressGradUSu;
       SFCYVariable<double> pressGradVSu;
@@ -106,7 +109,15 @@ namespace Uintah {
       SFCYVariable<double> vVelRhoHat;
       SFCZVariable<double> wVelRhoHat;
       CCVariable<double> densityPred;
-
+      // for radiation calculations
+      CCVariable<double> qfluxe;
+      CCVariable<double> qfluxw;
+      CCVariable<double> qfluxn;
+      CCVariable<double> qfluxs;
+      CCVariable<double> qfluxt;
+      CCVariable<double> qfluxb;
+      CCVariable<double> temperature;
+      CCVariable<double> absorption;
       // multimaterial variables
       CCVariable<double> voidFraction;
       SFCXVariable<double> mmuVelSu;

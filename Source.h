@@ -113,6 +113,27 @@ public:
 				 CellInformation* cellinfo,
 				 ArchesVariables* vars);
 
+      void calculateEnthalpySource(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 double delta_t, 
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars);
+
+      void computeEnthalpyRadFluxes(const ProcessorGroup* pc,
+				    const Patch* patch,
+				    CellInformation* cellinfo,
+				    ArchesVariables* vars);
+
+      void computeEnthalpyRadSrc(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars);
+
+      void computeEnthalpyRadThinSrc(const ProcessorGroup* pc,
+				     const Patch* patch,
+				     CellInformation* cellinfo,
+				     ArchesVariables* vars);
+
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
       // scalars
@@ -129,6 +150,11 @@ public:
 				  const Patch* patch,
 				  double delta_t, 
 				  int index, ArchesVariables* vars);
+
+      void modifyEnthalpyMassSource(const ProcessorGroup* pc,
+				  const Patch* patch,
+				  double delta_t, 
+				  ArchesVariables* vars);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and
