@@ -12,6 +12,7 @@
 namespace Uintah {
    class CFDInterface;
    class MPMInterface;
+   class MDInterface;
    class DWMpiHandler;
 
 /**************************************
@@ -54,14 +55,14 @@ namespace Uintah {
       void problemSetup(const ProblemSpecP&, GridP&);
       void scheduleInitialize(LevelP&, SchedulerP&,
 			      DataWarehouseP&,
-			      CFDInterface*, MPMInterface*);
+			      CFDInterface*, MPMInterface*, MDInterface*);
       void scheduleComputeStableTimestep(LevelP&, SchedulerP&,
 					 DataWarehouseP&,
-					 CFDInterface*, MPMInterface*);
+					 CFDInterface*, MPMInterface*, MDInterface*);
       void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
 			       DataWarehouseP& old_ds,
 			       DataWarehouseP& new_ds,
-			       CFDInterface*, MPMInterface*);
+			       CFDInterface*, MPMInterface*, MDInterface*);
       
       SimulationController(const SimulationController&);
       SimulationController& operator=(const SimulationController&);
@@ -78,6 +79,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/06/09 17:06:17  tan
+// Added MD(molecular dynamics) module to SimulationController.
+//
 // Revision 1.10  2000/05/11 20:10:20  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
