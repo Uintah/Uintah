@@ -335,7 +335,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    int idx = matl->getDWIndex();
 	    t->requires( new_dw, pStressLabel, idx, region,
 			 Ghost::AroundNodes, 1);
-	    t->requires( old_dw, pVolumeLabel, idx, region,
+	    t->requires( new_dw, pVolumeLabel, idx, region,
 			 Ghost::AroundNodes, 1);
 
 	    t->computes( new_dw, gInternalForceLabel, idx, region );
@@ -475,13 +475,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 			Ghost::AroundCells, 1);
 	    t->requires(old_dw, pXLabel, idx, region,
 			Ghost::None);
-	    t->requires(old_dw, pVolumeLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, pMassLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, pExternalForceLabel, idx, region, Ghost::None);
 	    t->requires(old_dw, deltLabel );
 	    t->computes(new_dw, pVelocityLabel, idx, region );
 	    t->computes(new_dw, pXLabel, idx, region );
-	    t->computes(new_dw, pVolumeLabel, idx, region);
 	    t->computes(new_dw, pMassLabel, idx, region);
 	    t->computes(new_dw, pExternalForceLabel, idx, region);
 	 }
@@ -562,7 +560,6 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    new_dw->pleaseSave(pExternalForceLabel, numMatls);
    new_dw->pleaseSave(gVelocityLabel, numMatls);
    new_dw->pleaseSave(pXLabel, numMatls);
-   new_dw->pleaseSave(pVolumeLabel, numMatls);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
@@ -777,7 +774,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
 
       old_dw->get(px,      pXLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pvol,    pVolumeLabel, matlindex, region,
+      new_dw->get(pvol,    pVolumeLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
       new_dw->get(pstress, pStressLabel, matlindex, region,
 		  Ghost::AroundNodes, 1);
@@ -808,10 +805,10 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
   	   continue;
 
          for (int k = 0; k < 8; k++){
-	    if(region->containsNode(ni[k])){
-	       Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	       internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
-	    }
+	  if(region->containsNode(ni[k])){
+	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+	   internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+	  }
          }
       }
       new_dw->put(internalforce, gInternalForceLabel, vfindex, region);
@@ -840,15 +837,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       NCVariable<double> mass;
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
-
-#if 0
-      if(vfindex==0){
-	d_gravity=Vector(0.0,0.0,0.0);
-      }
-      else{
-	d_gravity=Vector(0.0,0.0,-980.0);
-      }
-#endif
 
       new_dw->get(mass,          gMassLabel, vfindex, region, Ghost::None, 0);
       new_dw->get(internalforce, gInternalForceLabel, vfindex, region,
@@ -932,7 +920,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   // velocity and position respectively
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
-  double ke=0;
+  double ke=0,se=0;
+  int numPTotal = 0;
 
   Vector numerator(0.0,0.0,0.0);
   double denominator=0.0;
@@ -945,6 +934,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+
+    // Compute Strain Energy.  This should be moved somewhere
+    // better once things settle down a bit.
+    if(mpm_matl){
+         ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+         se+=cm->computeStrainEnergy(region, mpm_matl, new_dw);
+    }
+
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
@@ -1003,6 +1000,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pvelocity.getParticleSubset());
 
+      numPTotal += pset->numParticles();
+
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
@@ -1044,22 +1043,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       new_dw->put(px,        pXLabel, matlindex, region);
       new_dw->put(pvelocity, pVelocityLabel, matlindex, region);
 
-      ParticleVariable<double> pvolume;
       ParticleVariable<Vector> pexternalforce;
 
       new_dw->put(pmass,          pMassLabel, matlindex, region);
-      old_dw->get(pvolume,        pVolumeLabel, matlindex, region,
-		  Ghost::None, 0);
-      new_dw->put(pvolume,        pVolumeLabel, matlindex, region);
       old_dw->get(pexternalforce, pExternalForceLabel, matlindex, region,
 		  Ghost::None, 0);
       new_dw->put(pexternalforce, pExternalForceLabel, matlindex, region);
     }
   }
 
+  static int ts=0;
 #if 0
   // Code to dump out tecplot files
-  static int ts=0;
   int freq = 10;
 
   if (( ts % freq) == 0) {
@@ -1073,9 +1068,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
    ofstream partfile(filename.c_str());
 
    partfile << "TITLE = \"Time Step # " << ts <<"\"," << endl;
-   partfile << "VARIABLES = X,Y,Z" << endl;
-//   partfile << "ZONE T=\"PARTICLES\", I=" << numberParticles();
-   partfile << "ZONE T=\"PARTICLES\", I= 25216";
+   partfile << "VARIABLES = X,Y,Z,U,V,W,MATL" << endl;
+   partfile << "ZONE T=\"PARTICLES\", I= " << numPTotal;
    partfile <<", F=POINT" << endl;
 
    for(int m = 0; m < numMatls; m++){
@@ -1087,6 +1081,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       // Get the arrays of particle values to be changed
       ParticleVariable<Point> px;
       old_dw->get(px, pXLabel, matlindex, region, Ghost::None, 0);
+      ParticleVariable<Vector> pv;
+      old_dw->get(pv, pVelocityLabel, matlindex, region, Ghost::None, 0);
       ParticleVariable<double> pmass;
       old_dw->get(pmass, pMassLabel, matlindex, region, Ghost::None, 0);
 
@@ -1098,20 +1094,25 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
           iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
 
-        partfile << px[idx].x() << " " << px[idx].y() << " " << px[idx].z()  << endl;
+        partfile << px[idx].x() <<" "<< px[idx].y() <<" "<< px[idx].z() <<" "<<
+		    pv[idx].x() <<" "<< pv[idx].y() <<" "<< pv[idx].z() <<" "<<
+		    vfindex << endl;
 
       }
     }
    }
   }
+#endif
 
   xcm = numerator/denominator;
 
-  static ofstream tmpout("tmp.out");
-  tmpout << ts << " " << xcm.x() << " " << xcm.y() << " "
+  static ofstream xcmout("xcm.out");
+  xcmout << ts << " " << xcm.x() << " " << xcm.y() << " "
 				 << xcm.z() << " " << std::endl;
+
+  static ofstream tmpout("tmp.out");
+  tmpout << ts << " " << ke << " " << se << std::endl;
   ts++;
-#endif
 }
 
 void SerialMPM::crackGrow(const ProcessorContext*,
@@ -1122,6 +1123,15 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.59  2000/05/18 16:36:37  guilkey
+// Numerous small changes including:
+//   1.  Moved carry forward of particle volume to the cons. models.
+//   2.  Added more data to the tecplot files (commented out)
+//   3.  Computing strain energy on all particles at each time step,
+//       in addition to the kinetic energy.
+//   4.  Now printing out two files for diagnostics, one with energies
+//       and one with center of mass.
+//
 // Revision 1.58  2000/05/16 00:40:51  guilkey
 // Added code to do boundary conditions, print out tecplot files, and a
 // few other things.  Most of this is now commented out.
