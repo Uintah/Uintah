@@ -158,9 +158,9 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
 
   // Get the required data
-  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   switch(eqnType) {
   case Arches::PRESSURE:
@@ -969,6 +969,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.27  2000/07/11 15:46:27  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.26  2000/07/09 00:23:58  bbanerje
 // Made changes to calcVelocitySource .. still getting seg violation here.
 //

@@ -165,6 +165,9 @@ private:
       const VarLabel* d_cellInfoLabel ;
 
       // inputs for CalculateVelocitySource 
+      const VarLabel* d_uVelocitySPBCLabel ;
+      const VarLabel* d_vVelocitySPBCLabel ;
+      const VarLabel* d_wVelocitySPBCLabel ;
       const VarLabel* d_uVelocitySIVBCLabel ;
       const VarLabel* d_vVelocitySIVBCLabel ;
       const VarLabel* d_wVelocitySIVBCLabel ;
@@ -212,6 +215,9 @@ private:
   
 //
 // $Log$
+// Revision 1.18  2000/07/11 15:46:28  rawat
+// added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
+//
 // Revision 1.17  2000/07/08 08:03:35  bbanerje
 // Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
 // made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
