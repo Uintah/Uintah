@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>1.0</maxTime>
+	<maxTime>1.25</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00006</delt_min>
 	<delt_max>0.006</delt_max>
@@ -47,7 +47,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 		<geom_object>
 		    <box label="Piston">
@@ -72,7 +72,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -2108,7 +2108,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -3764,7 +3764,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -5090,7 +5090,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -6196,7 +6196,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -7137,7 +7137,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -7878,7 +7878,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -8509,7 +8509,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -9005,7 +9005,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -9476,7 +9476,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -9752,7 +9752,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -9968,7 +9968,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -10059,7 +10059,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
@@ -10135,7 +10135,7 @@
                     <alpha> 0.0 </alpha>
                 </constitutive_model>
                 <toughness>10.e6</toughness>
-                <thermal_conductivity>1.0</thermal_conductivity>
+                <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
 		<geom_object>
