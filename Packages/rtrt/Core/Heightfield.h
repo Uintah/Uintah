@@ -87,4 +87,7 @@ public:
     virtual void uv(UV& uv, const Point&, const HitInfo& hit);
 };
 }
+
+#include <Packages/rtrt/Core/Heightfield.cc>
+
 #endif
