@@ -35,6 +35,7 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/FutureValue.h>
 #include <iostream>
@@ -64,6 +65,7 @@ using SCICore::PersistentSpace::TextPiostream;
 //static DebugSwitch autoview_sw("Roe", "autoview");
 static Roe::MapClStringObjTag::iterator viter;
 
+
 Roe::Roe(Salmon* s, const clString& id)
   : manager(s),
   view("view", id, this),
@@ -78,7 +80,8 @@ Roe::Roe(Salmon* s, const clString& id)
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   id(id),doingMovie(false),makeMPEG(false),
-  curFrame(0),curName("movie")
+    curFrame(0),curName("movie"),pos("pos", id, this)
+
   {
     sr.set(1);
     inertia_mode=0;
@@ -235,7 +238,7 @@ void Roe::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
 
 void Roe::rotate_obj(double /*angle*/, const Vector& /*v*/, const Point& /*c*/)
 {
-    NOT_FINISHED("Roe::rotate_obj");
+  NOT_FINISHED("Roe::rotate_obj");
 #ifdef OLDUI
     evl->lock();
     make_current();
@@ -336,7 +339,7 @@ void Roe::mouse_translate(int action, int x, int y, int, int, int)
 	}
 	break;
     case MouseEnd:
-	update_mode_string("");
+      update_mode_string("");
 	break;
     }
 }
@@ -1036,6 +1039,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
   } else if(args[1] == "mtranslate"){
     do_mouse(&Roe::mouse_translate, args);
   } else if(args[1] == "mrotate"){
+    pos.set("nothing");
     do_mouse(&Roe::mouse_rotate, args);
   } else if(args[1] == "mrotate_eyep"){
     do_mouse(&Roe::mouse_rotate_eyep, args);
@@ -1046,12 +1050,133 @@ void Roe::tcl_command(TCLArgs& args, void*)
   } else if(args[1] == "sethome"){
     homeview=view.get();
   } else if(args[1] == "gohome"){
+    pos.set("nothing");
     view.set(homeview);
     manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
   } else if(args[1] == "autoview"){
+    pos.set("nothing");
     BBox bbox;
     get_bounds(bbox);
     autoview(bbox);
+  } else if(args[1] == "Views") {
+    View df(view.get());
+      // position tells first which axis to look down 
+      // (with x1 being the positive x axis and x0 being
+      // the negative x axis) and then which axis is up
+      // represented the same way
+    clString position = pos.get();
+    Vector lookdir(df.eyep()-df.lookat()); 
+    double distance = lookdir.length();
+    if(position == "x1_y1") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 1.0, 0.0);
+      df.up(v);
+    } else if(position == "x1_y0") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, -1.0, 0.0);
+      df.up(v);
+    } else if(position == "x1_z1") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 0.0, 1.0);
+      df.up(v);
+    } else if(position == "x1_z0") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 0.0, -1.0);
+      df.up(v);
+    } else if(position == "x0_y1") {
+      distance *= -1;
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 1.0, 0.0);
+      df.up(v);
+    } else if(position == "x0_y0") {
+      distance *= -1;
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, -1.0, 0.0);
+      df.up(v);
+    } else if(position == "x0_z1") {
+      distance *= -1;
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 0.0, 1.0);
+      df.up(v);
+    } else if(position == "x0_z0") {
+      distance *= -1;
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 0.0, -1.0);
+      df.up(v);
+    } else if(position == "y1_x1") {
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
+      Vector v(1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "y1_x0") {
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
+      Vector v(-1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "y1_z1") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 0.0, 1.0);
+      df.up(v);
+    } else if(position == "y1_z0") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, 0.0, -1.0);
+      df.up(v);
+    } else if(position == "y0_x1") {
+      distance *= -1;
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
+      Vector v(1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "y0_x0") {
+      distance *= -1;
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
+      Vector v(-1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "y0_z1") {
+      distance *= -1;
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
+      Vector v(0.0, 0.0, 1.0);
+      df.up(v);
+    } else if(position == "y0_z0") {
+      distance *= -1;
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
+      Vector v(0.0, 0.0, -1.0);
+      df.up(v);
+    } else if(position == "z1_x1") {
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "z1_x0") {
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(-1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "z1_y1") {
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(0.0, 1.0, 0.0);
+      df.up(v);
+    } else if(position == "z1_y0") {
+      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      Vector v(0.0, -1.0, 0.0);
+      df.up(v);
+    } else if(position == "z0_x1") {
+      distance *= -1;
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "z0_x0") {
+      distance *= -1;
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(-1.0, 0.0, 0.0);
+      df.up(v);
+    } else if(position == "z0_y1") {
+      distance *= -1;
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(0.0, 1.0, 0.0);
+      df.up(v);
+    } else if(position == "z0_y0") {
+      distance *= -1;
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
+      Vector v(0.0, -1.0, 0.0);
+      df.up(v);
+    }
+    animate_to_view(df, 2.0);
   } else if(args[1] == "dolly"){
     if(args.count() != 3){
       args.error("dolly needs an amount");
@@ -1432,6 +1557,9 @@ void Roe::setView(View newView) {
 
 //
 // $Log$
+// Revision 1.20  2000/11/03 19:08:25  darbyb
+// Added button in Salmon that allows the user to select specific orientations
+//
 // Revision 1.19  2000/10/08 05:42:38  samsonov
 // Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
 //
