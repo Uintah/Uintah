@@ -13,10 +13,6 @@ set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-75-*"
 set time_font "-Adobe-Courier-Medium-R-Normal-*-100-75-*"
 
 proc resource {} {
-    global sci_root
-    foreach t [glob $sci_root/Modules/*/*.tcl] {
-	source $t
-    }
 }
 
 proc makeNetworkEditor {} {
@@ -193,9 +189,7 @@ proc addModule {name} {
 proc addModuleAtPosition {name xpos ypos} {
     set modid [netedit addmodule $name]
     # Create the itcl object
-    if {[info command $name] != ""} {
-	$name $modid
-    } else {
+    if {[catch "$name $modid"]} {
 	# Use generic module
 	Module $modid -name $name
     }
@@ -236,6 +230,5 @@ source $sci_root/Dataflow/ThreadStats.tcl
 source $sci_root/Dataflow/Module.tcl
 
 source $sci_root/TCL/HelpPage.tcl
-source $sci_root/auto.tcl
 
-resource
+source $sci_root/auto.tcl

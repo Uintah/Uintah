@@ -10,8 +10,6 @@
 #  Copyright (C) 1995 SCI Group
 #
 
-catch {rename WidgetTest ""}
-
 itcl_class WidgetTest {
     inherit Module
     constructor {config} {
