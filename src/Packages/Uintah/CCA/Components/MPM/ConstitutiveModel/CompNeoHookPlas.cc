@@ -272,14 +272,16 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // time step and the velocity gradient and the material constants
       double alpha = statedata[idx].Alpha;
 
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx]=deformationGradient[idx] +
-                                   velGrad * delT;
-
-      deformationGradientInc = deformationGradient_new[idx]*
-			       deformationGradient[idx].Inverse();
+      // Compute the deformation gradient increment using the time_step
+      // velocity gradient
+      // F_n^np1 = dudx * dt + Identity
+      deformationGradientInc = velGrad * delT + Identity;
 
       Jinc = deformationGradientInc.Determinant();
+
+      // Update the deformation gradient tensor to its time n+1 value.
+      deformationGradient_new[idx] = deformationGradientInc *
+                                     deformationGradient[idx];
 
       // get the volume preserving part of the deformation gradient increment
       fbar = deformationGradientInc * pow(Jinc,-onethird);
@@ -287,14 +289,13 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // predict the elastic part of the volume preserving part of the left
       // Cauchy-Green deformation tensor
       bElBarTrial = fbar*bElBar[idx]*fbar.Transpose();
-
-      // get the volumetric part of the deformation
-      J = deformationGradient_new[idx].Determinant();
-
       IEl = onethird*bElBarTrial.Trace();
 
       // shearTrial is equal to the shear modulus times dev(bElBar)
       shearTrial = (bElBarTrial - Identity*IEl)*shear;
+
+      // get the volumetric part of the deformation
+      J = deformationGradient_new[idx].Determinant();
 
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
@@ -309,8 +310,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       if(fTrial > 0.0){
 	// plastic
-
-        cout << "yielding plastically" << endl;
 
 	delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
 
@@ -396,7 +395,6 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
   task->requires(Task::OldDW, p_statedata_label,           matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  //  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW, bElBarLabel,                 matlset,Ghost::None);
