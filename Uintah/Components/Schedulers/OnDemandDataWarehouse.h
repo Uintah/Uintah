@@ -67,9 +67,21 @@ public:
 
     //////////
     // Insert Documentation Here:
+    virtual void getRegionData(DataItem& di, const std::string& name,
+			       const TypeDescription*,
+			       const Region*) const;
+
+    //////////
+    // Insert Documentation Here:
     virtual void putRegionData(const DataItem& di, const std::string& name,
 			       const TypeDescription*,
 			       const Region*, int numGhostCells);
+
+    //////////
+    // Insert Documentation Here:
+    virtual void putRegionData(const DataItem& di, const std::string& name,
+			       const TypeDescription*,
+			       const Region*);
 
     //////////
     // Insert Documentation Here:
@@ -105,6 +117,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  2000/03/22 00:36:37  sparker
+// Added new version of getRegionData
+//
 // Revision 1.3  2000/03/17 01:03:17  dav
 // Added some cocoon stuff, fixed some namespace stuff, etc
 //
