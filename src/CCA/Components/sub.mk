@@ -42,8 +42,9 @@ SUBDIRS := $(SUBDIRS) $(SRCDIR)/PWorld $(SRCDIR)/PHello $(SRCDIR)/PLinSolver
 endif
 
 ifeq ($(HAVE_BABEL),yes)
-SUBDIRS+= $(SUBDIRS) $(SRCDIR)/BabelTest
+SUBDIRS+= $(SRCDIR)/BabelTest
 endif
 
+SUBDIRS+= $(SRCDIR)/VtkTest
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
