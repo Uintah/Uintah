@@ -55,6 +55,13 @@ public:
     Array1<TSElement*> elements;
     Array1<int> bcIdx;		// indices of any points w/ boundary conditions
     Array1<double> bcVal;		// the values at each boundary condition
+  enum BCType {
+    NodeType,
+    FaceType
+  };
+
+  BCType valType;   // are the bc indices/values refering to elements or nodes
+
     int haveNodeInfo;
 
     enum NormalsType {
@@ -140,6 +147,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/10/29 04:46:18  dmw
+// changed private/public status, added a flag for whether datavalues were associate with elements or nodes
+//
 // Revision 1.4  1999/09/02 03:24:32  dmw
 // added = operator for TriSurface
 //
