@@ -423,6 +423,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
+	bind $win.r.e <Return> "$this-c needexecute"
 	bind $win.r.e <KeyRelease> "$this manualSliderEntry \
              $start $stop $var1 $var2"
 
@@ -434,7 +435,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 
     method updateSliderEntry {var1 var2 someUknownVar} {
 	set $var2 [set $var1]
-	set n [set $var1]
 
 	global $this-continuous
 
@@ -454,7 +454,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    set $var2 $stop 
 	}
 
-	# Force the update to be manul
+	# Force the update to be manual
 	global $this-continuous
 	set continuous [set $this-continuous]
 
