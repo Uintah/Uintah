@@ -93,7 +93,7 @@ AC_DEFUN(SCI_CHECK_LIB,
     _SCI_NOTFOUND_='echo -n ""'
     _SCI_DECL_="char $3();"
     _SCI_CALL_="$3();"
-    _SCI_VAR_LIBNAME_=`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+    _SCI_VAR_LIBNAME_=`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
     _SCI_VAR_NAME_=LIB$_SCI_VAR_LIBNAME_
     _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
     _SCI_VAR_LIBRARY_="$_SCI_VAR_LIBNAME_"_LIBRARY
@@ -133,12 +133,14 @@ AC_DEFUN(SCI_CHECK_LIB,
       return 0;
     }
 EOF
-
-    rm -f conftest.out a.out
+   rm -f conftest.out a.out 
     ac_try="$ac_link $LIBRARY -l$2 $6 >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
+    echo -----$1  $2  >> allconftest.out
+    cat conftest.out >> allconftest.out
 #   part of this is a hack to prevent the bizarre libg2c "errors"
-    ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$" | grep -v "libg2c\.a(open\.o" | grep -v "open\.o(\.text+"`
+    ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$" | grep -v "libg2c\.a(open\.o" | grep -v "open\.o(\.text+" | grep -v "TemporaryFilename" | grep -v "mkstemp"`
+
     if test -z "$ac_err"; then
       if test "$1" != "/usr/lib" &&
          test "$1" != "/usr/lib/" &&
@@ -178,7 +180,7 @@ AC_DEFUN(SCI_CHECK_HEADER,
     ##  SCI_CHECK_HEADER
     _SCI_FOUND_='echo -n ""'
     _SCI_NOTFOUND_='echo -n ""'
-    _SCI_VAR_NAME_=INC`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+    _SCI_VAR_NAME_=INC`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     AC_MSG_CHECKING(for $2)
 
@@ -247,7 +249,7 @@ AC_DEFUN(SCI_CHECK_HEADERS,
     for _SCI_LOOP_VAR_ in $2; do
 
       if test "$_SCI_FIRST_TIME_" = "yes"; then
-        _SCI_VAR_NAME_=INC`echo $_SCI_LOOP_VAR_ | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+        _SCI_VAR_NAME_=INC`echo $_SCI_LOOP_VAR_ | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
         _SCI_FIRST_TIME_=no      
       fi
 
@@ -592,7 +594,11 @@ SCI_ARG_WITH(qt,
 SCI_ARG_WITH(vdt,
   [  --with-vdt=DIR                    <path-to-vdt>],
   [with_vdt="$withval"],
-  [with_vdt=${with_qt='no'}])
+  [with_vdt=${with_vdt='no'}])
+SCI_ARG_WITH(imagemagick,
+  [  --with-imagemagick=DIR                    <path-to-imagemagick>],
+  [with_imagemagick="$withval"],
+  [with_imagemagick=${with_imagemagick='no'}])
 
 
 SCI_ARG_ENABLE(threads,
@@ -1103,7 +1109,7 @@ AC_SUBST(NBITS)
 ##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
 ##  for those of us who are too lazy to type out all the --with paths
 
-TP_VERSION=1.4.0
+TP_VERSION=1.4.2
 TP_ARCH=`uname -s`
 TP_COMPILER=gcc-3.0.4
 ac_try="$CC -v > /dev/null 2> conftest.out"
@@ -1936,6 +1942,59 @@ AC_SUBST(CKIT_LIB)
 AC_SUBST(G3D_LIB)
 AC_SUBST(VDT_LIB)
 AC_SUBST(VDT_LINK)
+
+
+##  --  search for ImageMagick --------------------------------------
+
+FOUND_ALL_MAGICK=no
+MAGICK_INCLUDE=""
+MAGICK_LIB=""
+MAGICK_ADDITIONAL_LIBS=""
+
+for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then
+    continue
+  fi
+
+  #this is where the lib actually lives
+  if test ! -d "$i/lib"; then
+    continue
+  fi
+
+  #this is where the scripts for configuration live
+  if test ! -d "$i/bin"; then
+    continue
+  fi
+
+  # capture in the libs to link
+  IM_LDFLAGS=`$i/bin/Magick-config --ldflags`
+  IM_LIBS=`$i/bin/Magick-config --libs`
+
+  # Testing the link also need by vdt to link is:
+  #MAGICK_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/MAGICK/lib/$ad $X_LIBRARY"
+
+  #MAGICK_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
+
+  SCI_CHECK_LIB($i/lib,Magick,WriteImage,,continue, $IM_LDFLAGS $IM_LIBS)
+
+  if test "$HAVE_LIBMAGICK"; then
+    FOUND_ALL_MAGICK=yes
+    DEF_MAGICK="#define HAVE_MAGICK 1"
+    HAVE_MAGICK="yes"
+    MAGICK_INCLUDE="$i/include"
+    MAGICK_LIB="$i/lib"
+    #parse out the -L parts and leave only the -l parts
+    MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
+    break
+  fi
+done
+AC_SUBST(HAVE_MAGICK)
+AC_SUBST(DEF_MAGICK)
+AC_SUBST(MAGICK_INCLUDE)
+AC_SUBST(MAGICK_LIB)
+AC_SUBST(MAGICK_LINK)
+
+
 
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
