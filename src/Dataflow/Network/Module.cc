@@ -797,25 +797,28 @@ void Module::postMessage(const string& str)
 
 void Module::do_execute()
 {
+  int i;
   abort_flag=0;
 
-  // Reset all of the ports...
-  for(int i=0;i<oports.size();i++){
-    OPort* port=oports[i];
-    port->reset();
+  // Reset all of the ports.
+  for (i=0; i<oports.size(); i++)
+  {
+    oports[i]->reset();
   }
-  for(int i=0;i<iports.size();i++){
-    IPort* port=iports[i];
-    port->reset();
+  for (i=0; i<iports.size(); i++)
+  {
+    iports[i]->reset();
   }
-  // Reset the TCL variables
+
+  // Reset the TCL variables.
   reset_vars();
 
-  // Call the User's execute function...
+  // Call the User's execute function.
   update_msg_state(Reset);
   update_state(JustStarted);
   timer.clear();
   timer.start();
+
   try {
     execute();
   }
@@ -837,14 +840,14 @@ void Module::do_execute()
   timer.stop();
   update_state(Completed);
 
-  // Call finish on all ports...
-  for(int i=0;i<iports.size();i++){
-    IPort* port=iports[i];
-    port->finish();
+  // Call finish on all ports.
+  for (i=0;i<iports.size(); i++)
+  {
+    iports[i]->finish();
   }
-  for(int i=0;i<oports.size();i++){
-    OPort* port=oports[i];
-    port->finish();
+  for (i=0; i<oports.size(); i++)
+  {
+    oports[i]->finish();
   }
 }
 
