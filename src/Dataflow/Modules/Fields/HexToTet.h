@@ -59,16 +59,13 @@ template <class FSRC>
 bool
 HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 {
-  typedef typename FSRC::mesh_type mesh_type;   // convenience typedefs
-  typedef typename FSRC::value_type value_type; 
-
   FSRC *hvfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
-  mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
+  typename FSRC::mesh_type *hvmesh = hvfield->get_typed_mesh().get_rep();
   TetVolMeshHandle tvmesh = scinew TetVolMesh();
 
   // Copy points directly, assuming they will have the same order.
-  mesh_type::Node::iterator nbi, nei;
+  typename FSRC::mesh_type::Node::iterator nbi, nei;
   hvmesh->begin(nbi); hvmesh->end(nei);
   while (nbi != nei)
   {
@@ -80,18 +77,18 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
   hvmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
-  vector<mesh_type::Elem::index_type> elemmap;
+  vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
-  mesh_type::Node::size_type hnsize; hvmesh->size(hnsize);
-  mesh_type::Elem::size_type hesize; hvmesh->size(hesize);
+  typename FSRC::mesh_type::Node::size_type hnsize; hvmesh->size(hnsize);
+  typename FSRC::mesh_type::Elem::size_type hesize; hvmesh->size(hesize);
 
   vector<bool> visited(hesize, false);
 
-  mesh_type::Elem::iterator bi, ei;
+  typename FSRC::mesh_type::Elem::iterator bi, ei;
   hvmesh->begin(bi); hvmesh->end(ei);
 
   const unsigned int surfsize = pow(hesize, 2.0 / 3.0);
-  vector<mesh_type::Elem::index_type> buffers[2];
+  vector<typename FSRC::mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
   bool flipflop = true;
@@ -111,7 +108,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 	  if (visited[(unsigned int)buffers[flipflop][i]]) { continue; }
 	  visited[(unsigned int)buffers[flipflop][i]] = true;
 
-	  mesh_type::Node::array_type hvnodes;
+	  typename FSRC::mesh_type::Node::array_type hvnodes;
 	  hvmesh->get_nodes(hvnodes, buffers[flipflop][i]);
 	  ASSERT(hvnodes.size() == 8);
 	  if (flipflop)
@@ -171,7 +168,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
 	  elemmap.push_back(buffers[flipflop][i]);
 
-	  mesh_type::Cell::array_type neighbors;
+	  typename FSRC::mesh_type::Cell::array_type neighbors;
 	  hvmesh->get_neighbors(neighbors, buffers[flipflop][i]);
 
 	  for (unsigned int i = 0; i < neighbors.size(); i++)
@@ -189,17 +186,17 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
     ++bi;
   }
   
-  TetVolField<value_type> *tvfield = 
-    scinew TetVolField<value_type>(tvmesh, hvfield->data_at());
+  TetVolField<typename FSRC::value_type> *tvfield = 
+    scinew TetVolField<typename FSRC::value_type>(tvmesh, hvfield->data_at());
   *(PropertyManager *)tvfield = *(PropertyManager *)hvfield;
   dstH = tvfield;
 
-  value_type val;
+  typename FSRC::value_type val;
 
   if (hvfield->data_at() == Field::NODE) {
     for (unsigned int i = 0; i < hnsize; i++)
     {
-      hvfield->value(val, (mesh_type::Node::index_type)(i));
+      hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TetVolMesh::Node::index_type)(i));
     }
   } else if (hvfield->data_at() == Field::CELL) {
