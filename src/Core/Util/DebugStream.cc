@@ -82,11 +82,13 @@ DebugStream::~DebugStream()
 
 void DebugStream::checkenv(string iname)
 {
-  string var = (string) getenv(ENV_VAR);
+  char *env = getenv(ENV_VAR);
   // if SCI_DEBUG was defined, parse the string and store appropriate
   // values in onstreams and offstreams
-  if(!var.empty()){
-    string name, file;
+  if( env ){
+    string var = (string) env;
+    cerr << "var = " << var << endl;
+    string name, file; 
     int commapos, colonpos, oldcomma;
     commapos = colonpos = oldcomma = 0;
     commapos = var.find(',', 0);
