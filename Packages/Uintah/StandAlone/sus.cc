@@ -116,11 +116,11 @@ usage( const std::string & message,
       cerr << "                           of boxes you are using.\n";
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-      cerr << "-t <timestep>        : Restart timestep (last checkpoint is default)\n";
+      cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
-      cerr << "-nocopy              : Default: Don't copy or move old uda timesteps when restarting\n";
-      cerr << "-quiet_warnings      : Don't display 'Allocation', 'Task Dependency' or 'Reallocation' warnings\n"; 
+      cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
+      cerr << "-quiet_warnings      : Don't display 'Allocation', 'Task Dependency, or\n\t\t\t'Reallocation' warnings\n"; 
       cerr << "\n\n";
     }
   quit();
