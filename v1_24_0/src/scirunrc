@@ -256,6 +256,15 @@ SCIRUN_TMP_DIR = /tmp
 #   SCIRUN_MPEG_LICENSE_ACCEPT to "true".
 # SCIRUN_MPEG_LICENSE_ACCEPT = false
 
+### SCIRUN_NO_PORT_CACHING = [boolean]
+#   Turns of caching of data by the module ports.  This can
+#   significantly improve memory performance as it causes fields and
+#   other large objects to go away after they have been used.  However
+#   it will BREAK interactive use of SCIRun because the modules assume
+#   that the data is cached and do not always recompute it correctly.
+#   Use at own risk.
+# SCIRUN_NO_PORT_CACHING = false
+
 
 ############################
 # GUI PREFERENCES SECTION ##
