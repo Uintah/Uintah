@@ -1095,7 +1095,6 @@ EditColorMap2D::build_colormap_texture()
       glEnable(GL_BLEND);
       glDrawBuffer(GL_BACK);
       glReadBuffer(GL_BACK);
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); 
       for(unsigned int i=0; i<widgets_.size(); i++) {
 	widgets_[i]->set_value_range(value_range_);
@@ -1103,7 +1102,7 @@ EditColorMap2D::build_colormap_texture()
       }
 
       if (rebuild_texture)
-	glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8, 0,0,width_, height_,0);
+	glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGBA, 0,0,width_, height_,0);
       else
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0,width_, height_);
       glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -1119,7 +1118,7 @@ EditColorMap2D::build_colormap_texture()
       }
 
       if (rebuild_texture)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
 		     colormap_texture_.dim2(), colormap_texture_.dim1(),
 		     0, GL_RGBA, GL_FLOAT, &colormap_texture_(0,0,0));
       else
@@ -1164,12 +1163,12 @@ EditColorMap2D::build_histogram_texture()
 
   if (!histo_) {
     unsigned char zero = 0;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8, 1,1,
+    glTexImage2D(GL_TEXTURE_2D, 0, 1, 1,1,
 		 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,  &zero);
     glBindTexture(GL_TEXTURE_2D, 0);
   } else {
     nrrdAxisInfoGet_nva(histo_, nrrdAxisInfoSize, axis_size);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE8, axis_size[histo_->dim-2],
+    glTexImage2D(GL_TEXTURE_2D, 0, 1, axis_size[histo_->dim-2],
 		 axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		 histo_->data);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -1210,6 +1209,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
     gui->unlock(); 
     return; 
   }
+  CHECK_OPENGL_ERROR()
   if (force_cmap_dirty) cmap_dirty_ = true;
   if (select_widget()) cmap_dirty_ = true;
 
@@ -1220,7 +1220,6 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   glClear(GL_COLOR_BUFFER_BIT);
   
   glViewport(0, 0, width_, height_);
-  glViewport(0, 0, 512, 256);//width_, height_);
 
   build_histogram_texture();
   build_colormap_texture();
@@ -1283,6 +1282,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   
   ctx_->swap();
   ctx_->release();
+  CHECK_OPENGL_ERROR()
   gui->unlock();
 }
 
