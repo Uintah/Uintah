@@ -57,19 +57,12 @@ SRCS     += \
 	$(SRCDIR)/StreamLines.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
-#[INSERT NEW CODE FILE HERE]
-
-
-
-ifeq ($(AVR_COMPILE),1)
-SRCS     += \
 	$(SRCDIR)/EditTransferFunc2.cc\
 	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/TextureBuilder.cc\
 	$(SRCDIR)/VolumeSlicer.cc\
 	$(SRCDIR)/VolumeVisualizer.cc
-endif
-
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Dataflow/Modules/Render Core/Datatypes Core/Containers \

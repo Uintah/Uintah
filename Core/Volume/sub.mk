@@ -30,7 +30,6 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-
 SRCDIR   := Core/Volume
 
 SRCS +=	$(SRCDIR)/Brick.cc \
@@ -38,17 +37,15 @@ SRCS +=	$(SRCDIR)/Brick.cc \
 	$(SRCDIR)/CM2Widget.cc \
 	$(SRCDIR)/Colormap2.cc \
 	$(SRCDIR)/Pbuffer.cc \
+	$(SRCDIR)/ShaderProgramARB.cc \
+	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/Texture.cc \
+	$(SRCDIR)/TextureRenderer.cc \
 	$(SRCDIR)/Utils.cc \
 	$(SRCDIR)/VideoCardInfo.c \
-	$(SRCDIR)/VolShader.cc
-
-ifeq ($(AVR_COMPILE),1)
-SRCS +=	$(SRCDIR)/ShaderProgramARB.cc \
-	$(SRCDIR)/SliceRenderer.cc \
-	$(SRCDIR)/TextureRenderer.cc \
+	$(SRCDIR)/VolShader.cc \
 	$(SRCDIR)/VolumeRenderer.cc
-endif
+
 
 PSELIBS := \
 	Core/Containers \
