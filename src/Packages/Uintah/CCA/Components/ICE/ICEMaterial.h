@@ -67,10 +67,12 @@ WARNING
 	 double getViscosity() const;
 	 double getSpeedOfSound() const;
 
-	 void initializeCells(CCVariable<double>& rhom,CCVariable<double>& rhC,
-			      CCVariable<double>& temp,CCVariable<double>& cv,
-			      CCVariable<double>& ss, CCVariable<double>& vsc,
-			      CCVariable<double>& volf,CCVariable<Vector>& vCC,
+	 void initializeCells(CCVariable<double>& rhom,
+                           CCVariable<double>&sp_vol,
+                           CCVariable<double>& rhC,
+			      CCVariable<double>& temp,  CCVariable<double>& cv,
+			      CCVariable<double>& ss,    CCVariable<double>& vsc,
+			      CCVariable<double>& volf,  CCVariable<Vector>& vCC,
                            CCVariable<double>& press,
                            int numMatls,
 			      const Patch* patch, DataWarehouseP& new_dw);
