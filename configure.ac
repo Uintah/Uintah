@@ -1378,9 +1378,15 @@ else
 fi
 
 SCI_TRY_LINK(X,X libraries and headers, [
-#include <X11/Xlib.h>
+ #include <X11/Xlib.h>
 ],$_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,not-optional)
 
+
+if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$X_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for OpenGL has been removed.")
+  X_LIB_DIR_FLAG=""
+fi
 
 AC_SUBST(X_LIB_FLAG)
 AC_SUBST(X_LIB_DIR_FLAG)
@@ -1596,6 +1602,18 @@ SCI_TRY_LINK(STD_HDRS,standard headers,[
 #include <rpc/types.h> 
 #include <netinet/in.h>
 ],,,,,,not-optional)
+
+##  --  optional stat64 headers
+SCI_TRY_LINK(STAT64,standard headers,[
+#include <sys/stat64.h> 
+],,,,,,optional)
+
+if test "$HAVE_STAT64" = "yes"; then
+  DEF_STAT64="#define HAVE_STAT64 1"
+fi
+
+AC_SUBST(DEF_STAT64)
+
 
 # don't test for malloc.h or values.h on darwin
 case $host in
