@@ -15,40 +15,33 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!--
-        
-Component  specification dtd.
-
--->
-
 <!-- ********** Parameter Entities ********** -->
 
 <!ENTITY % filename "(#PCDATA)">
 
-<!-- A relative path specification. Used by rlink and slink elements'
-     attributes. --> 
-<!ENTITY % rpath "CDATA">
+<!-- links -->
+<!-- Links may contain phrases but not vice-versa -->
+<!ENTITY % links "rlink | slink | ulink |  modref | xref | email | cite">
 
-<!-- Link stuff -->
-<!ENTITY % links "rlink | slink">
-<!ENTITY % rlink.attr "path %rpath; #REQUIRED">
-
-<!-- Text level stuff -->
-<!ENTITY % phrase "term | keyword | keyboard | cite | acronym | latex">
+<!-- "Phrases" -->
+<!ENTITY % phrase "firstterm | keyword | userinput | abbr | latex | path | emph | quote">
 <!ENTITY % phrase.content "(#PCDATA)">
+
+<!-- Inlines -->
 <!ENTITY % inline "%phrase; | %links;">
 <!ENTITY % Inline "(#PCDATA | %inline;)*">
 <!ENTITY % link.content "(#PCDATA | %phrase;)*">
 
-<!-- Higher level stuff -->
-<!ENTITY % lists "orderedlist | unorderedlist | desclist">
+<!-- Block level -->
+<!ENTITY % list "orderedlist | unorderedlist | desclist">
 <!ENTITY % admonition "note | tip | warning">
-<!ENTITY % block "p | latex">
-<!ENTITY % flow "%block; | %lists;">
-<!ENTITY % BasicFlow "(p,(%flow;)*)">
-<!ENTITY % DescFlow "(p,(%flow; | developer | %admonition;)*)">
-<!ENTITY % DevFlow "(p,(%flow; | %admonition;)*)">
-<!ENTITY % AdmonFlow "(p,(%flow;)*)">
+<!ENTITY % block "p | latex | figure | pre">
+
+<!-- "Flow" level -->
+<!ENTITY % BasicFlow "(%block; | %list;)*">
+<!ENTITY % DescFlow "(section | developer | %block; | %list; | %admonition;)*">
+<!ENTITY % DevFlow "(%block; | %list; | %admonition;)*">
+<!ENTITY % AdmonFlow "(%block; | %list;)*">
 
 <!-- ********** Elements ********** -->
 
@@ -56,27 +49,35 @@ Component  specification dtd.
 <!ELEMENT datatype (#PCDATA)>
 <!ELEMENT componentname (#PCDATA)>
 <!ELEMENT devicename (#PCDATA)>
+<!ELEMENT title %Inline;>
 
 <!-- Top level -->
-<!ELEMENT component (overview, implementation?, io, gui?, testing)>
+<!ELEMENT component (overview, implementation?, io, gui?, nets?, testing?)>
 <!ATTLIST component 
         name CDATA #REQUIRED
         category CDATA #REQUIRED>
 
 <!--  Overview of component's purpose  -->
-<!ELEMENT overview (authors, summary, description, examplesr)>
+<!ELEMENT overview (authors, summary, description, examplesr?)>
 
 <!-- Brief (1 or 2 sentence) summary. -->
-<!ELEMENT summary (#PCDATA)>
+<!ELEMENT summary %Inline;>
 
 <!--  Author(s) -->
 <!ELEMENT authors (author+)>
 
 <!--  1 author  -->
-<!ELEMENT author (#PCDATA)>
+<!ELEMENT author %Inline;>
 
 <!-- Name of sr file which demonstrates use of this component  -->
+<!-- This element is obsolete! -->
 <!ELEMENT examplesr %filename;>
+
+<!-- Net descriptions -->
+<!ELEMENT nets (net+)>
+<!ELEMENT net (title, %DescFlow;)>
+<!ATTLIST net
+        id ID #IMPLIED>
 
 <!-- All the extra code files needed to build this component -->
 <!ELEMENT implementation (ccfile | cfile | ffile)+>
@@ -106,7 +107,7 @@ Component  specification dtd.
 
 <!-- Describe data on port (i.e. temperature data) and the datatype being
      transmitted.  --> 
-<!ELEMENT port (name, description, datatype, componentname+)>
+<!ELEMENT port (name, description, datatype, componentname*)>
 
 <!-- The user-defined name for this port -->
 <!ELEMENT name (#PCDATA)>
@@ -115,12 +116,14 @@ Component  specification dtd.
 <!ELEMENT device (devicename, description)>
 
 <!-- GUI description (words and pictures) -->
-<!ELEMENT gui (description, parameter+, (img, caption?)+)>
+<!-- Note: '(img, caption?)*' part of content model is obsolete. Use -->
+<!-- figure and figref elements within a description element instead. -->
+<!ELEMENT gui ((description, parameter+, (img, caption?)*))+>
 
 <!-- Description of 1 gui parameter. -->
 <!ELEMENT parameter (widget, datatype, label, description)>
 
-<!-- Name of gui item (tcl/tk) widget (e.g. slider, text entry, checkbox)-->
+<!-- Name of gui widget (e.g. slider, text entry, checkbox)-->
 <!ELEMENT widget (#PCDATA)>
 
 <!-- Gui item label -->
@@ -130,7 +133,7 @@ Component  specification dtd.
 <!ELEMENT img %filename;>
 
 <!-- Image caption -->
-<!ELEMENT caption (#PCDATA)>
+<!ELEMENT caption %Inline;>
 
 <!-- Specify testing plan(s) -->
 <!ELEMENT testing (plan+)>
@@ -143,6 +146,11 @@ Component  specification dtd.
 
 <!-- Mini-documentation environment -->
 <!ELEMENT description %DescFlow;>
+<!ATTLIST description id ID #IMPLIED>
+
+<!-- Description, net, and section subdivision -->
+<!ELEMENT section (title?, %DescFlow;)>
+<!ATTLIST section id ID #IMPLIED>
 
 <!-- Description information targeted at developers -->
 <!ELEMENT developer %DevFlow;>
@@ -159,20 +167,36 @@ Component  specification dtd.
 <!-- Paragraph. -->
 <!ELEMENT p %Inline;>
 
-<!-- Relative link (relative to location of spec.xml file). -->
-<!ELEMENT rlink %link.content;>
-<!ATTLIST rlink %rlink.attr;>
-
-<!-- Sci web site relative link -->
-<!ELEMENT slink %link.content;>
-<!ATTLIST slink %rlink.attr;>
-
-<!-- "Phrases" - Content-based style tags. Inline stuff. -->
-<!ELEMENT term %phrase.content;>        <!-- Introduce a new term -->
+<!--  Inline elements -->
+<!ELEMENT firstterm %phrase.content;>   <!-- Introduce a new term -->
 <!ELEMENT keyword %phrase.content;>     <!-- Introduce a keyword -->
-<!ELEMENT keyboard %phrase.content;>    <!-- Show something typed at a keyboard -->
+<!ELEMENT userinput %phrase.content;>   <!-- Something entered by the user -->
 <!ELEMENT cite %phrase.content;>        <!-- Citation -->
-<!ELEMENT acronym %phrase.content;>     <!-- An acronym -->             
+<!ATTLIST cite           
+        url CDATA #IMPLIED>
+<!ELEMENT abbr %phrase.content;>        <!-- An abbreviation -->          
+<!ELEMENT path %phrase.content;>        <!-- Path to file or directory -->
+<!ELEMENT emph %phrase.content;>        <!-- Emphasized text -->
+<!ELEMENT quote %phrase.content;>       <!-- Quoted text -->
+<!ELEMENT email %phrase.content;>       <!-- Email address with link text -->
+<!ATTLIST email
+        addr CDATA #REQUIRED>
+<!ELEMENT xref %phrase.content;>        <!-- General reference -->
+<!ATTLIST xref
+        target IDREF #REQUIRED>
+<!ELEMENT modref %phrase.content;>      <!-- Module reference -->
+<!ATTLIST modref
+        package NMTOKEN #REQUIRED
+        name CDATA #REQUIRED>
+<!ELEMENT rlink %link.content;>         <!-- Link from root of CVS tree -->
+<!ATTLIST rlink
+        path CDATA #REQUIRED>
+<!ELEMENT slink %link.content;>         <!-- Link into SCI web site -->
+<!ATTLIST slink
+        path CDATA #REQUIRED>
+<!ELEMENT ulink %link.content;>         <!-- URL link -->
+<!ATTLIST ulink
+        url CDATA #REQUIRED>
 
 <!-- Ordered list, unordered list, and description list. -->
 <!ELEMENT orderedlist (listitem)+>
@@ -183,5 +207,13 @@ Component  specification dtd.
 <!ELEMENT desclistterm (#PCDATA)>
 <!ELEMENT desclistdef %BasicFlow;>
 
-<!-- Latex element.  Acts as both an inline phrase type element and a block element -->
+<!-- Latex element.  Acts as both an inline phrase type element and a
+     block element --> 
 <!ELEMENT latex (#PCDATA)>
+
+<!-- Figure element -->
+<!ELEMENT figure (img, caption)>
+<!ATTLIST figure id ID #IMPLIED>
+
+<!-- Pre element -->
+<!ELEMENT pre (#PCDATA)>
