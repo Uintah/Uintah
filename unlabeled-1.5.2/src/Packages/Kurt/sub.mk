@@ -28,11 +28,8 @@ include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.5.2.2  2000/10/26 10:02:56  moulding
+# Revision 1.5.2.3  2000/10/26 13:24:44  moulding
 # merge HEAD into FIELD_REDESIGN
-#
-# Revision 1.5.2.1  2000/09/28 03:18:55  mcole
-# merge trunk into FIELD_REDESIGN branch
 #
 # Revision 1.6  2000/09/20 22:47:08  kuzimmer
 # changes so that the Kurt subtree can be compiled without Uintah by commenting out a few lines.

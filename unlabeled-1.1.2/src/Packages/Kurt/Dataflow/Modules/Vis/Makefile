@@ -5,6 +5,6 @@
 #
 SRCTOP := .
 OBJTOP := ../../..
-HERE_TARGET := lib/libKurt_Modules_VolVis.so
+HERE_TARGET := lib/libKurt_Modules_Vis.so
 
 include $(OBJTOP)/$(SRCTOP)/scripts/default.mk
