@@ -169,6 +169,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
     d_outputInterval = 1.0;
 
   materialProblemSetup(prob_spec, d_sharedState, lb, flags);
+//  GridP grid;
+//  addMaterial(prob_spec, grid ,sharedState);
 }
 
 void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
