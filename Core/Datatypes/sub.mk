@@ -38,11 +38,6 @@ PSELIBS := \
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) -lm 
 
-ifeq ($(BUILD_PARALLEL),yes)
-PSELIBS := $(PSELIBS) Core/CCA/Component/CIA Core/CCA/Component/PIDL
-LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_nexus 
-endif
-
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
