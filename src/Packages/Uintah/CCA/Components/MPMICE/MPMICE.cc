@@ -159,6 +159,12 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
+
+//  Need to add some means of checking whether or not this is a
+//  restart, and if it is, execute the following
+//  d_mpm->addMaterial(prob_spec, grid, d_sharedState);
+//  d_ice->updateExchangeCoefficients(prob_spec, grid, d_sharedState);
+//  cout << "Adding an MPM material" << endl;
   
   //__________________________________
   //  M P M I C E
