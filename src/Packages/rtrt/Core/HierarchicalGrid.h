@@ -34,24 +34,52 @@ public:
     HierarchicalGrid( Object* obj, 
 		      int nside,
 		      int nSideLevel2, int nSideLevel3,
-		      int minObjects1, int minObjects2, const BBox &b );
+		      int minObjects1, int minObjects2,
+		      const BBox &b, int level );
 
     virtual ~HierarchicalGrid( void );
 
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
-    virtual void subpreprocess(double maxradius, int& pp_offset, int& scratchsize, int level);
+
+    inline void calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
+				const Vector& diag, int nx, int ny, int nz,
+				int &sx, int &sy, int &sz,
+				int &ex, int &ey, int &ez);
+
     // All other methods are the same as in parent grid class
 
 private:
 
     int _nSidesLevel2, _nSidesLevel3;
     int _minObjects1, _minObjects2;
-
+    int _level;
     static int L1Cells, L2Cells;
     static int L1CellsWithChildren, L2CellsWithChildren;
     static int LeafCells, TotalLeafPrims;
 
 };
+
+inline void HierarchicalGrid::calc_clipped_se(const BBox& obj_bbox, const BBox& bbox,
+					      const Vector& diag,
+					      int nx, int ny, int nz,
+					      int& sx, int& sy, int& sz,
+					      int& ex, int& ey, int& ez)
+{
+  Vector s((obj_bbox.min()-bbox.min())/diag);
+  Vector e((obj_bbox.max()-bbox.min())/diag);
+  sx=(int)(s.x()*nx);
+  sy=(int)(s.y()*ny);
+  sz=(int)(s.z()*nz);
+  ex=(int)(e.x()*nx);
+  ey=(int)(e.y()*ny);
+  ez=(int)(e.z()*nz);
+  sx=Max(Min(sx, nx-1), 0);
+  sy=Max(Min(sy, ny-1), 0);
+  sz=Max(Min(sz, nz-1), 0);
+  ex=Max(Min(ex, nx-1), 0);
+  ey=Max(Min(ey, ny-1), 0);
+  ez=Max(Min(ez, nz-1), 0);
+}
 
 } // end namespace rtrt
 
