@@ -396,7 +396,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 default:
 	   Get3d(&buf[2],scratch);
 	   // add to points list!
-	   Point p(Point(scratch[0], scratch[1], scratch[2]));
+	   Point p(scratch[0], scratch[1], scratch[2]);
 	   bbox.extend(p);
 	   tbbox.extend(t.project(p));
 	   pts.add(p);
