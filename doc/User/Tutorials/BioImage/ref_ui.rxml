@@ -94,7 +94,7 @@ DEALINGS IN THE SOFTWARE.
 	  </para>
 	  <para>
 	    The visibility icon is located in the top left of each filter UI 
-	    and is labeled 1 in <xref lindend="fig.anatomy-filter"/>.  
+	    and is labeled 1 in <xref linkend="fig.anatomy-filter"/>.  
 	    This icon controls whether the entire filter UI is displayed 
 	    and in full view or just 
 	    the label and close button.  By clicking this icon, the user can hide or 
@@ -128,10 +128,10 @@ DEALINGS IN THE SOFTWARE.
 		<phrase>Anatomy of a filter.</phrase>
 	      </textobject>
 	      <imageobject>
-		<imagedata fileref="Figures/anatomy-filter.jpg" align="center" format="JPG"/>
+		<imagedata fileref="Figures/anatomy-filter.eps" align="center" format="EPS"/>
 	      </imageobject>
 	      <imageobject>
-		<imagedata fileref="Figures/anatomy-filter.eps" align="center" format="EPS"/>
+		<imagedata fileref="Figures/anatomy-filter.jpg" align="center" format="JPG"/>
 	      </imageobject>
 	    </mediaobject>
 	  </figure>
@@ -153,10 +153,10 @@ DEALINGS IN THE SOFTWARE.
 		<phrase>Filter buttons.</phrase>
 	      </textobject>
 	      <imageobject>
-		<imagedata fileref="Figures/filter-buttons.jpg" align="center" format="JPG"/>
+		<imagedata fileref="Figures/filter-buttons.eps" align="center" format="EPS"/>
 	      </imageobject>
 	      <imageobject>
-		<imagedata fileref="Figures/filter-butons.eps" align="center" format="EPS"/>
+		<imagedata fileref="Figures/filter-buttons.jpg" align="center" format="JPG"/>
 	      </imageobject>
 	    </mediaobject>
 	  </figure>
