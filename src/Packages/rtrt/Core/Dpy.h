@@ -92,6 +92,8 @@ class Dpy : public Runnable {
   void renderFrame();
   void renderFrameless();
 
+  bool checkGuiFlags();
+
 public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
