@@ -45,6 +45,10 @@ private:
   const ParticleVariable<double>* d_pVolume;
   const ParticleVariable<int>*    d_pIsBroken;
   particleIndex                   d_idx;
+  std::vector<Vector>             d_wallDir;
+
+
+  static double                   d_correlate_cosine;
 };
 
 } // End namespace Uintah
