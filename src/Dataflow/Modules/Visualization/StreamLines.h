@@ -34,9 +34,8 @@
 namespace SCIRun {
 
 typedef struct _SLData {
-  Array1<Array1<Point> >pts;
-  Array1<Array1<double> >vals;
-  Array1<Array1<pair<int,int> > >edges;
+  CurveField<double> *cf;
+  Mutex lock;
   MeshHandle seed_mesh_h;
   VectorFieldInterface *vfi;
   double tolerance;
@@ -47,6 +46,8 @@ typedef struct _SLData {
   bool rcp;
   int met;
   int np;
+
+  _SLData() : lock("StreamLines Lock") {}
 } SLData;
 
 class StreamLinesAlgo : public DynamicAlgoBase
@@ -93,33 +94,42 @@ public:
 			      int np);
 };
 
+
 template <class SMESH, class SLOC>
 void
-StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d) {
+StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
+						  
+{
   SMESH *smesh = dynamic_cast<SMESH *>(d->seed_mesh_h.get_rep());
 
   const double tolerance2 = d->tolerance * d->tolerance;
 
+  //CurveMeshHandle cmesh = scinew CurveMesh();
+  //CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
+
   Point seed;
   Vector test;
   vector<Point> nodes;
+  nodes.reserve(d->maxsteps);
+
+  vector<Point>::iterator node_iter;
+  CurveMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator seed_iter, seed_iter_end;
-  int count=0;
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
+  int count = 0;
   while (seed_iter != seed_iter_end)
   {
-    // if this seed doesn't "belong" to this parallel thread,
-    //   ignore it and continue on the next seed...
+    // If this seed doesn't "belong" to this parallel thread,
+    // ignore it and continue on the next seed.
     if (count%d->np != proc) {
       ++seed_iter;
       ++count;
       continue;
     }
 
-    // this is one of our seeds -- generate its streamline
     smesh->get_point(seed, *seed_iter);
 
     // Is the seed point inside the field?
@@ -138,7 +148,7 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d) {
     // Find the negative streamlines.
     if( d->direction <= 1 )
     {
-      FindNodes(nodes, seed, tolerance2, -d->stepsize, d->maxsteps, 
+      FindNodes(nodes, seed, tolerance2, -d->stepsize, d->maxsteps,
 		d->vfi, d->rcp, d->met);
       if ( d->direction == 1 )
       {
@@ -150,27 +160,52 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d) {
     // Append the positive streamlines.
     if( d->direction >= 1 )
     {
-      FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps, 
+      FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps,
 		d->vfi, d->rcp, d->met);
     }
 
-    for (int i=0; i<nodes.size(); i++) {
-      int pt_idx=d->pts[proc].size();
-      d->pts[proc].add(nodes[i]);
-      if (d->color) {
-	d->vals[proc].add((double)abs(cc+i));
-      } else {
-	d->vals[proc].add((double)(*seed_iter));
+    node_iter = nodes.begin();
+
+    if (node_iter != nodes.end())
+    {
+      d->lock.lock();
+      n1 = d->cf->get_typed_mesh()->add_node(*node_iter);
+      d->cf->resize_fdata();
+      if( d->color )
+	d->cf->set_value((double)abs(cc), n1);
+      else
+	d->cf->set_value((double)(*seed_iter), n1);
+
+      ++node_iter;
+
+      cc++;
+
+      while (node_iter != nodes.end())
+      {
+	n2 = d->cf->get_typed_mesh()->add_node(*node_iter);
+	d->cf->resize_fdata();
+
+	if( d->color )
+	  d->cf->set_value((double)abs(cc), n2);
+	else
+	  d->cf->set_value((double)(*seed_iter), n2);
+
+	d->cf->get_typed_mesh()->add_edge(n1, n2);
+
+	n1 = n2;
+	++node_iter;
+
+	cc++;
       }
-      if (i!=nodes.size()-1) {
-	d->edges[proc].add(pair<int,int>(pt_idx,pt_idx+1));
-      }
+      d->lock.unlock();
     }
+
     ++seed_iter;
     ++count;
   }
 }
-						  
+
+
 template <class SMESH, class SLOC>
 FieldHandle
 StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
@@ -185,9 +220,6 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 				       int np)
 {
   SLData d;
-  d.pts.resize(np);
-  d.vals.resize(np);
-  d.edges.resize(np);
   d.seed_mesh_h=seed_mesh_h;
   d.vfi=vfi;
   d.tolerance=tolerance;
@@ -199,47 +231,29 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   d.met=met;
   d.np=np;
 
-  //cerr << "starting up "<<np<<" threads.\n";
-  Thread::parallel (this,
-		    &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
-//		    np, true, (SLData &)d);
-		    np, true, &d);
-  //cerr << "threads made it out ok\n";
-
   CurveMeshHandle cmesh = scinew CurveMesh();
-  int count=0;
-  Array1<int> offsets(np);
-  CurveMesh::Node::index_type n1, n2;
-  Array1<CurveMesh::Node::index_type> nodemap;
-
-  //cerr << "Adding nodes...\n";
-  int i,j;
-  for (i=0; i<np; i++) {
-    offsets[i]=count;
-    count+=d.pts[i].size();
-    for (j=0; j<d.pts[i].size(); j++) {
-      nodemap.add(cmesh->add_node(d.pts[i][j]));
-    }
-  }
-  //cerr << "Adding edges...\n";
-  for (i=0; i<np; i++) {
-    for (j=0; j<d.edges[i].size(); j++) {
-      cmesh->add_edge(nodemap[d.edges[i][j].first+offsets[i]],
-		      nodemap[d.edges[i][j].second+offsets[i]]);
-    }
-  }
   CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
-  //cerr << "Adding data...\n";
-  int ctr=0;
-  for (i=0; i<np; i++) {
-    for (j=0; j<d.vals[i].size(); j++, ctr++) {
-      cf->fdata()[ctr]=d.vals[i][j];
-    }
+  
+  d.cf = cf;
+
+  if (np > 1)
+  {
+    Thread::parallel (this,
+		      &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
+		      np, true, &d);
   }
-  //cerr << "Done!\n";
+  else
+  {
+    parallel_generate(0, &d);
+  }
+
   cf->freeze();
 
-  if (count == 0)
+  return cf;
+
+  CurveMesh::Node::size_type count;
+  cf->get_typed_mesh()->size(count);
+  if (((unsigned int)count) == 0)
   {
     delete cf;
     return 0;
