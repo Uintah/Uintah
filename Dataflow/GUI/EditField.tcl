@@ -322,32 +322,14 @@ itcl_class SCIRun_Fields_EditField {
 	    }
 	}
 
-	if {"$name1"=="LatticeVol"} {
-	    if {"$name2"!="Vector" && "$name2"!="Tensor"} {
-		return { "LatticeVol<unsigned char>" \
-                         LatticeVol<short> \
-			 LatticeVol<int> \
-			 LatticeVol<float> LatticeVol<double> \
-                         }
-	    }
-	} elseif {"$name1"=="TetVol"} {
-	    if {"$name2"!="Vector" && "$name2"!="Tensor"} {
-		return { "TetVol<unsigned char>" \
-                         TetVol<short>  \
-			 TetVol<int>  \
-			 TetVol<float> TetVol<double> \
-                         }
-	    }
-	} elseif {"$name1"=="TriSurf"} {
-	    if {"$name2"!="Vector" && "$name2"!="Tensor"} {
-		return { "TriSurf<unsigned char>" \
-                         TriSurf<short> \
-			 TriSurf<int> \
-			 TriSurf<float> TriSurf<double> 
-                         }
-	    }
+	if { $name2 == "unsigned char" || $name2 == "short" || $name2 == "int" || $name2 == "float" || $name2 == "double" }  {
+            return [list "${name1}<unsigned char>" \
+		         "${name1}<short>" \
+		         "${name1}<int>" \
+		         "${name1}<float>" \
+		         "${name1}<double>" ]
 	} else {
-	    return ""
+	    return [list $type]
 	}
     }
 
