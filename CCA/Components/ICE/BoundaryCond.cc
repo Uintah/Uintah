@@ -46,7 +46,8 @@ void setBC(CCVariable<double>& press_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse* new_dw,
-           Lodi_vars_pressBC*)
+           Lodi_vars_pressBC*,
+           NG_BC_vars*)
 {
   BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
@@ -73,7 +74,8 @@ void setBC(CCVariable<double>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse*,
-           Lodi_vars*)
+           Lodi_vars*,
+           NG_BC_vars*)
 {
   BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
   //__________________________________
@@ -98,7 +100,8 @@ void setBC(CCVariable<Vector>& var_CC,
            SimulationStateP& sharedState, 
            const int mat_id,
            DataWarehouse*,
-           Lodi_vars*)
+           Lodi_vars*,
+           NG_BC_vars*)
 {
   BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
   
