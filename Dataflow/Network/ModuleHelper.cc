@@ -57,7 +57,7 @@ ModuleHelper::~ModuleHelper()
 
 void ModuleHelper::run()
 {
-  module->pid_.set(getpid());
+  module->pid_ = getpid();
   if(module->have_own_dispatch)
     module->do_execute();
   else {
