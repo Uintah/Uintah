@@ -137,14 +137,19 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
    }
    if(d_particleDB.exists(label, matlIndex, patch)){
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-      var->getMPIBuffer(buf, count, datatype);
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-      //cerr << "ISend Particle: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
+      ParticleSubset* pset = var->getParticleSubset();
+      if(pset->numParticles() == 0){
+	 *size=-1;
+      } else {
+	 void* buf;
+	 int count;
+	 MPI_Datatype datatype;
+	 var->getMPIBuffer(buf, count, datatype);
+	 MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+	 //cerr << "ISend Particle: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
+	 // This is just FYI for the caller
+	 MPI_Pack_size(count, datatype, world->getComm(), size);
+      }
       return;
    }
    if(d_ccDB.exists(label, matlIndex, patch)) {
@@ -166,7 +171,8 @@ void
 OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 			       const VarLabel* label, int matlIndex,
 			       const Patch* patch, const ProcessorGroup* world,
-			       int src, int tag, int* size, MPI_Request* requestid)
+			       int src, int tag, int* size,
+			       MPI_Request* requestid)
 {
    switch(label->typeDescription()->getType()){
    case TypeDescription::ParticleVariable:
@@ -176,19 +182,22 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 
 	 // First, get the particle set.  We should already have it
 	 ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
-
 	 Variable* v = label->typeDescription()->createInstance();
 	 ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
 	 ASSERT(var != 0);
 	 var->allocate(pset);
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 var->getMPIBuffer(buf, count, datatype);
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	 if(pset->numParticles() == 0){
+	    *size=-1;
+	 } else {
+	    void* buf;
+	    int count;
+	    MPI_Datatype datatype;
+	    var->getMPIBuffer(buf, count, datatype);
+	    MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	    // This is just FYI for the caller
+	    MPI_Pack_size(count, datatype, world->getComm(), size);
+	 }
 	 d_particleDB.put(label, matlIndex, patch, var, false);
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
       }
    break;
    case TypeDescription::NCVariable:
@@ -205,9 +214,9 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 MPI_Datatype datatype;
 	 var->getMPIBuffer(buf, count, datatype);
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
-	 d_ncDB.put(label, matlIndex, patch, var, false);	 
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 d_ncDB.put(label, matlIndex, patch, var, false);
       }
    break;
    case TypeDescription::ScatterGatherVariable:
@@ -1339,6 +1348,10 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.48  2000/09/22 19:32:07  sparker
+// Do not send/recv particle variables when there are no particles on the
+//   patch
+//
 // Revision 1.47  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
