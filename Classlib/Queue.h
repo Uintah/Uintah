@@ -30,17 +30,61 @@ template<class T> class QueueNode {
   friend class Queue<T>;
 };
 
+/**************************************
+
+CLASS
+   Queue
+   
+KEYWORDS
+   Queue
+
+DESCRIPTION
+    Queue.h: A simple FIFO
+  
+    Written by:
+     Steven G. Parker
+     Department of Computer Science
+     University of Utah
+     June 1994
+  
+    Copyright (C) 1994 SCI Group
+PATTERNS
+   
+WARNING
+  
+****************************************/
+
 template<class T> class Queue {
     QueueNode<T>* head;
     QueueNode<T>* tail;
     int _length;
 public:
+    //////////
+    //Create a new Queue object
     Queue();
+
+    //////////
+    //Class destructor
     ~Queue();
+
+    //////////
+    //Append to the Queue
     void append(const T&);
+
+    //////////
+    //Pop the first element from the Queue
     T pop();
+
+    //////////
+    //Returns 1 if the Queue is empty, 0 if there is still data in the Queue
     int is_empty();
+
+    //////////
+    //Returns the legnth of the Queue
     int length();
+
+    //////////
+    //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
 
 };

@@ -256,8 +256,6 @@ clString& clString::operator+=(const clString& str)
 
 void clString::test_rigorous(RigorousTest* __test)
 {
-    TEST(1==0);
-    
     clString s0("hi");
     clString s1(s0+" ");
     clString s2("there");
@@ -298,6 +296,9 @@ void clString::test_rigorous(RigorousTest* __test)
 	    TEST(s3(idx++)==j+'0');
 	}
     }
+
+    
+
 }
 
 #include <Tester/PerfTest.h>
