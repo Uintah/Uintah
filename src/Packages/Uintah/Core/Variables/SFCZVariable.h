@@ -64,7 +64,7 @@ WARNING
     inline void copyPointer(SFCZVariable<T>& copy)
     { Array3<T>::copyPointer(copy); }
 
-    virtual void copyPointer(SFCZVariableBase&);
+    virtual void copyPointer(Variable&);
 
     virtual bool rewindow(const IntVector& low, const IntVector& high)
     { return Array3<T>::rewindow(low, high); }
@@ -76,8 +76,8 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual SFCZVariableBase* clone();
-    virtual const SFCZVariableBase* clone() const;    
+    virtual GridVariable* clone();
+    virtual const GridVariable* clone() const;    
     virtual SFCZVariableBase* cloneType() const
     { return scinew SFCZVariable<T>(); }
     virtual constSFCZVariableBase* cloneConstType() const
@@ -86,7 +86,7 @@ WARNING
 
     // Clones the type with a variable having the given extents
     // but with null data -- good as a place holder.
-    virtual SFCZVariableBase* makePlaceHolder(const IntVector & low,
+    virtual GridVariable* makePlaceHolder(const IntVector & low,
 					      const IntVector & high) const
     {
       Array3Window<T>* window = scinew
@@ -108,19 +108,19 @@ WARNING
     }
     virtual void allocate(const SFCZVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
-    virtual void allocate(const SFCZVariableBase* src)
+    virtual void allocate(const GridVariable* src)
     { allocate(castFromBase(src)); }
 
     void copyPatch(const SFCZVariable<T>& src,
 		   const IntVector& lowIndex, const IntVector& highIndex);
-    virtual void copyPatch(const SFCZVariableBase* src,
+    virtual void copyPatch(const GridVariable* src,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex)
     { copyPatch(castFromBase(src), lowIndex, highIndex); }
     
     void copyData(const SFCZVariable<T>& src)
     { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
-    virtual void copyData(const SFCZVariableBase* src)
+    virtual void copyData(const GridVariable* src)
     { copyData(castFromBase(src)); }
      
     virtual void* getBasePointer() const;
@@ -204,7 +204,7 @@ WARNING
       : Array3<T>(window) {}
     SFCZVariable<T>& operator=(const SFCZVariable<T>&);
 
-    static const SFCZVariable<T>& castFromBase(const SFCZVariableBase* srcptr);
+    static const SFCZVariable<T>& castFromBase(const GridVariable* srcptr);
     static Variable* maker();
   };
    
@@ -237,14 +237,14 @@ WARNING
   }
    
   template<class T>
-  SFCZVariableBase*
+  GridVariable*
   SFCZVariable<T>::clone()
   {
     return scinew SFCZVariable<T>(*this);
   }
 
   template<class T>
-  const SFCZVariableBase*
+  const GridVariable*
   SFCZVariable<T>::clone() const
   {
     return scinew SFCZVariable<T>(*this);
@@ -252,7 +252,7 @@ WARNING
    
   template<class T>
   void
-  SFCZVariable<T>::copyPointer(SFCZVariableBase& copy)
+  SFCZVariable<T>::copyPointer(Variable& copy)
   {
     SFCZVariable<T>* c = dynamic_cast<SFCZVariable<T>* >(&copy);
     if(!c)
@@ -294,7 +294,7 @@ WARNING
 */
 
   template<class T>
-  const SFCZVariable<T>& SFCZVariable<T>::castFromBase(const SFCZVariableBase* srcptr)
+  const SFCZVariable<T>& SFCZVariable<T>::castFromBase(const GridVariable* srcptr)
   {
     const SFCZVariable<T>* c = dynamic_cast<const SFCZVariable<T>* >(srcptr);
     if(!c)

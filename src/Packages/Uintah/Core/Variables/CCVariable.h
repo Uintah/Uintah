@@ -67,7 +67,7 @@ WARNING
     inline void copyPointer(CCVariable<T>& copy)
     { Array3<T>::copyPointer(copy); }
     
-    virtual void copyPointer(CCVariableBase&);
+    virtual void copyPointer(Variable&);
 
     virtual bool rewindow(const IntVector& low, const IntVector& high)
     { return Array3<T>::rewindow(low, high); }
@@ -79,16 +79,16 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual CCVariableBase* clone();
-    virtual const CCVariableBase* clone() const;
-    virtual CCVariableBase* cloneType() const
+    virtual GridVariable* clone();
+    virtual const GridVariable* clone() const;
+    virtual GridVariable* cloneType() const
     { return scinew CCVariable<T>(); }
     virtual constCCVariableBase* cloneConstType() const
     { return scinew constGridVariable<CCVariableBase, CCVariable<T>, T>(); }
 
     // Clones the type with a variable having the given extents
     // but with null data -- good as a place holder.
-    virtual CCVariableBase* makePlaceHolder(const IntVector & low,
+    virtual GridVariable* makePlaceHolder(const IntVector & low,
 					    const IntVector & high) const
     {
       Array3Window<T>* window = scinew
@@ -110,21 +110,21 @@ WARNING
     }
     virtual void allocate(const CCVariable<T>& src)
     { allocate(src.getLowIndex(), src.getHighIndex()); }
-    virtual void allocate(const CCVariableBase* src)
+    virtual void allocate(const GridVariable* src)
     { allocate(castFromBase(src)); }
 
     //////////
     // Insert Documentation Here:
     void copyPatch(const CCVariable<T>& src,
 		   const IntVector& lowIndex, const IntVector& highIndex);
-    virtual void copyPatch(const CCVariableBase* src,
+    virtual void copyPatch(const GridVariable* src,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex)
     { copyPatch(castFromBase(src), lowIndex, highIndex); }
     
     void copyData(const CCVariable<T>& src)
     { copyPatch(src, src.getLowIndex(), src.getHighIndex()); }
-    virtual void copyData(const CCVariableBase* src)
+    virtual void copyData(const GridVariable* src)
     { copyData(castFromBase(src)); }
     
     virtual void* getBasePointer() const;
@@ -205,7 +205,7 @@ WARNING
       : Array3<T>(window) {}
     CCVariable<T>& operator=(const CCVariable<T>&);
 
-    static const CCVariable<T>& castFromBase(const CCVariableBase* srcptr);
+    static const CCVariable<T>& castFromBase(const GridVariable* srcptr);
     static Variable* maker();
   };
 
@@ -247,14 +247,14 @@ WARNING
   }
    
   template<class T>
-  CCVariableBase*
+  GridVariable*
   CCVariable<T>::clone()
   {
     return scinew CCVariable<T>(*this);
   }
 
   template<class T>
-  const CCVariableBase*
+  const GridVariable*
   CCVariable<T>::clone() const
   {
     return scinew CCVariable<T>(*this);
@@ -262,7 +262,7 @@ WARNING
 
 template<class T>
   void
-  CCVariable<T>::copyPointer(CCVariableBase& copy)
+  CCVariable<T>::copyPointer(Variable& copy)
   {
     CCVariable<T>* c = dynamic_cast<CCVariable<T>* >(&copy);
     if(!c)
@@ -304,7 +304,7 @@ template<class T>
 */
 
   template<class T>
-  const CCVariable<T>& CCVariable<T>::castFromBase(const CCVariableBase* srcptr)
+  const CCVariable<T>& CCVariable<T>::castFromBase(const GridVariable* srcptr)
   {
     const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(srcptr);
     if(!c)
