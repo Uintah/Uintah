@@ -26,7 +26,8 @@ SUBDIRS := \
 	$(SRCDIR)/tools \
 	$(SRCDIR)/Comm \
 	$(SRCDIR)/PIDL \
-	$(SRCDIR)/SSIDL
+	$(SRCDIR)/SSIDL \
+	$(SRCDIR)/datawrapper
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
