@@ -529,3 +529,6 @@ Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
   transTexture = new Texture<GLfloat>();
   set_resolution( 500, 250 );
 } // Volvis2DDpy()
+
+void Volvis2DDpy::animate(bool &/*changed*/) {
+}
