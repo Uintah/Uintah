@@ -1172,6 +1172,36 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	$data(dirMenu) add command -label $path -command [list set $var $path]
     }
 
+    # Add any of the additional default directories
+    # i.e. MY_SCIRUN_DATA, SCIRUN_DATA or pwd.
+    # Do not add if all ready in 
+    global env
+    set defaultdirs ""
+
+    if {[info exists env(SCIRUN_DATA)]} {
+	lappend defaultdirs $env(SCIRUN_DATA)
+    }
+
+    # MY_SCIRUN_DATA (might change)
+    if {[info exists env(SCIRUN_MYDATA_DIR)]} {
+	lappend defaultdirs $env(SCIRUN_MYDATA_DIR)
+    }
+    
+    # PWD
+    lappend defaultdirs $appPWD
+    
+    foreach path $defaultdirs {
+ 	# some environment variables have multiple
+ 	# paths separated by ':'
+ 	foreach p [split $path :] {
+ 	    # If there is a slash at the end, remove it
+	    set p [file nativename $p]
+ 	    if {[lsearch -exact $list $p] == -1} {
+ 		$data(dirMenu) add command -label $p -command [list set $var $p]
+ 	    }
+ 	}
+     }
+
     # Restore the PWD to the application's PWD
     cd $appPWD
 
