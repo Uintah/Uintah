@@ -527,7 +527,7 @@ BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
-      Task* tsk = scinew Task("BoundaryCondition::setProfile",
+      Task* tsk = scinew Task("BoundaryCondition::setInletVelocityBC",
 			      patch, old_dw, new_dw, this,
 			      &BoundaryCondition::setInletVelocityBC);
 
@@ -565,7 +565,7 @@ BoundaryCondition::sched_computePressureBC(const LevelP& level,
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
-      Task* tsk = scinew Task("BoundaryCondition::setProfile",
+      Task* tsk = scinew Task("BoundaryCondition::calculatePressBC",
 			      patch, old_dw, new_dw, this,
 			      &BoundaryCondition::calculatePressBC);
 
@@ -1327,6 +1327,11 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.20  2000/06/16 07:06:16  bbanerje
+// Added init of props, pressure bcs and turbulence model in Arches.cc
+// Changed duplicate task names (setProfile) in BoundaryCondition.cc
+// Commented out nolinear_dw creation in PicardNonlinearSolver.cc
+//
 // Revision 1.19  2000/06/15 23:47:56  rawat
 // modified Archesfort to fix function call
 //
