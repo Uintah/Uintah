@@ -190,7 +190,7 @@ ShowField::ShowField(GuiContext* ctx) :
   edges_dirty_(true),
   faces_on_(ctx->subVar("faces-on")),
   faces_normals_(ctx->subVar("use-normals")),
-  faces_transparency_(ctx->subVar("faces-transparency")),
+  faces_transparency_(ctx->subVar("use-transparency")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),

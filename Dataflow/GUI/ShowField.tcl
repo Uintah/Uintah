@@ -34,7 +34,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-on
 	global $this-use-normals
 	global $this-edges-transparency
-	global $this-faces-transparency
+	global $this-use-transparency
 	global $this-normalize_vectors
 	global $this-node_display_type
 	global $this-edge_display_type
@@ -98,7 +98,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
 	set $this-edges-transparency 0
-	set $this-faces-transparency 0
+	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
 	set $this-arrow-heads-on 1
@@ -286,7 +286,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	checkbutton $face.use_transparency \
 		-text "Enable Transparency" \
 		-command "$this-c rerender_faces" \
-		-variable $this-faces-transparency
+		-variable $this-use-transparency
 	pack $face.show_faces $face.use_normals $face.use_transparency \
 		-side top -fill y -anchor w
     }
