@@ -44,7 +44,7 @@ itcl_class SCIRun_Math_LinAlgUnary {
         }
 
         toplevel $w
-        wm minsize $w 150 20
+        wm minsize $w 170 20
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
         global $this-op
@@ -52,6 +52,7 @@ itcl_class SCIRun_Math_LinAlgUnary {
                 top $this-op \
 		{{"Transpose" Transpose}\
 		{"Sort" Sort}\
+ 		{"Subtract Mean" Subtract_Mean}\
 		{"Function" Function}}
 	global $this-function
 	make_entry $w.f.f "    specify function:" $this-function "$this-c needexecute"	
