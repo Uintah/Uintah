@@ -740,13 +740,13 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 }
 
 #ifdef HAVE_HDF5
-herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
+herr_t add_attribute(hid_t group_id, const char * aname, void* op_data) {
   herr_t status;
 
-  hid_t attr_id = H5Aopen_name(group_id, name);
+  hid_t attr_id = H5Aopen_name(group_id, aname);
 
   if (attr_id < 0) {
-    cerr << "Unable to open attribute \"" << name << "\"" << endl;
+    cerr << "Unable to open attribute \"" << aname << "\"" << endl;
     status = -1;
   } else {
 
@@ -850,16 +850,16 @@ herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
 
     if( cc == 1 ) {
       if (mem_type_id == H5T_NATIVE_INT)
-	nrrd->set_property( name, ((int*) data)[0], false );
+	nrrd->set_property( aname, ((int*) data)[0], false );
       else if (mem_type_id == H5T_NATIVE_FLOAT)
-	nrrd->set_property( name, ((float*) data)[0], false );
+	nrrd->set_property( aname, ((float*) data)[0], false );
       else if (mem_type_id == H5T_NATIVE_DOUBLE)
-	nrrd->set_property( name, ((double*) data)[0], false );
+	nrrd->set_property( aname, ((double*) data)[0], false );
       else if( H5Tget_class(type_id) == H5T_STRING ) {
 	if(H5Tis_variable_str(type_id))
-	  nrrd->set_property( name, ((char*) data)[0], false );
+	  nrrd->set_property( aname, ((char*) data)[0], false );
 	else
-	  nrrd->set_property( name, string((char*) data), false );
+	  nrrd->set_property( aname, string((char*) data), false );
       }
     } else {
       ostringstream str;
@@ -882,7 +882,7 @@ herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
 	  str << ", ";
       }
 
-      nrrd->set_property( name, str.str(), false );
+      nrrd->set_property( aname, str.str(), false );
     }
 
     H5Tclose(type_id);
@@ -1693,39 +1693,37 @@ HDF5DataReader::animate_execute( string new_filename,
   const string execmode = execmode_.get();
 
 
-  // If updating, we're done for now.
-  if (execmode == "update")
-  {
+  int which = current_.get();
 
-  } else if (execmode == "step") {
+  bool cache = (playmode_.get() != "inc_w_exec");
 
-    int which = current_.get();
+  //  cerr << execmode << "  " << playmode_.get() << "  "  << cache<< endl;
+
+  if (execmode == "step") {
+
     which = increment(which, lower, upper);
     current_.set(which);
     current_.reset();
 
     ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], true, false );
+		     frame_datasets[which], true, cache );
 
   } else if (execmode == "play") {
     stop_ = false;
-    int which = current_.get();
-    if (which >= end && playmode_.get() == "once")
+    if (playmode_.get() == "once" && which >= end)
       which = start;
 
     const int delay = delay_.get();
     int stop;
     do {
-      int next;
-      if (playmode_.get() == "once")
-	next = increment(which, lower, upper);
-
+      int next = increment(which, lower, upper);
       stop = stop_;
 
       current_.set(which);
       current_.reset();
+
       ReadandSendData( new_filename, frame_paths[which],
-		       frame_datasets[which], stop, false );
+		       frame_datasets[which], stop, stop ? cache : true );
 
       if (!stop && delay > 0) {
 	const unsigned int secs = delay / 1000;
@@ -1734,26 +1732,23 @@ HDF5DataReader::animate_execute( string new_filename,
 	if (msecs) { usleep(msecs * 1000); }
       }
 
-      if (playmode_.get() == "once")
+      if (playmode_.get() == "once" || !stop )
 	which = next;
-      else if (!stop)
-	which = increment(which, lower, upper);
-    } while (!stop);
-  }
-  else
-  {
-    int which = current_.get();
 
-    ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], true, false );
+    } while (!stop);
+  } else {
     
+    ReadandSendData( new_filename, frame_paths[which],
+		     frame_datasets[which], true, cache );
+
     if (playmode_.get() == "inc_w_exec") {
       which = increment(which, lower, upper);
       current_.set(which);
       current_.reset();
     }
   }
-  execmode_.set("init");
+
+  execmode_.set("exec");
 }
 
 } // End namespace DataIO
