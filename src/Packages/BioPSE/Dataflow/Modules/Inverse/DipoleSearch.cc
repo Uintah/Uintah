@@ -289,6 +289,7 @@ int DipoleSearch::find_better_neighbor(int best, Array1<double>& sum) {
   TetVolMesh::Cell::index_type ci;
   vol_mesh_->locate(ci, p);
   TetVolMesh::Cell::array_type ca;
+  vol_mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
   vol_mesh_->get_neighbors(ca, ci);
   for (unsigned int n=0; n<ca.size(); n++) {
     Point p1;

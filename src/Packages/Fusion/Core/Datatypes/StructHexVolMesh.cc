@@ -148,16 +148,13 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
   double minval = 1.0e6;
   for (int i = 0; i < 6; i++)
   {
-    Node::index_type n0(this,
-			idx.i_ + table[i][0][0],
+    Node::index_type n0(idx.i_ + table[i][0][0],
 			idx.j_ + table[i][0][1],
 			idx.k_ + table[i][0][2]);
-    Node::index_type n1(this,
-			idx.i_ + table[i][1][0],
+    Node::index_type n1(idx.i_ + table[i][1][0],
 			idx.j_ + table[i][1][1],
 			idx.k_ + table[i][1][2]);
-    Node::index_type n2(this,
-			idx.i_ + table[i][2][0],
+    Node::index_type n2(idx.i_ + table[i][2][0],
 			idx.j_ + table[i][2][1],
 			idx.k_ + table[i][2][2]);
 

@@ -1,2 +1,0 @@
-void normpress(IntVector idxLo, IntVector idxHi,
-	CCVariable<double> press, double refPress);

@@ -2661,7 +2661,6 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
 
-
   SCI_CHECK_LIB($i/lib,Magick,WriteImage,$IM_LDFLAGS $IM_LIBS,,optional)
 
   if test "$HAVE_LIBMAGICK"; then
@@ -2673,6 +2672,7 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
       #parse out the -L parts and leave only the -l parts
       MAGICK_LINK=`echo $IM_LIBS | sed 's|-L[[A-Za-z0-9/\.\-]]* ||g'`
   fi
+  break
 done
  
 AC_SUBST(HAVE_MAGICK)

@@ -39,11 +39,15 @@ class FData2d : public Array2<Data> {
 public:
   typedef Data value_type;
   typedef Data * iterator;
+  typedef Data const * const_iterator;
 
-  Data *begin() { return &(*this)(0,0); }
-   Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
-    
+  iterator begin() { return &(*this)(0,0); }
+  iterator end() { return &((*this)(dim1()-1,dim2()-1))+1; }
+  const_iterator begin() const { return &(*this)(0,0); }
+  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1))+1; }
+
   FData2d() : Array2<Data>() {}
+  FData2d(int) : Array2<Data>() {} //default var sgi bug workaround.
   FData2d(const FData2d& data) { Array2<Data>::copy(data); }
   virtual ~FData2d();
   

@@ -171,8 +171,7 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
   if(viter==visible.end()){
     // Make one...
     vis=scinew ObjTag;
-    vis->visible=scinew GuiVarint(ctx->subVar(si->name));
-    vis->visible->set(1);
+    vis->visible=scinew GuiInt(ctx->subVar(si->name), 1);
     vis->tagid=maxtag++;
     visible[si->name] = vis;
     ostringstream str;
@@ -1886,11 +1885,11 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       Vector v(-1.0, 0.0, 0.0);
       df.up(v);
     } else if(position == "y1_z1") {
-      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
       Vector v(0.0, 0.0, 1.0);
       df.up(v);
     } else if(position == "y1_z0") {
-      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      df.eyep(Point(0.0, distance, 0.0, 1.0));
       Vector v(0.0, 0.0, -1.0);
       df.up(v);
     } else if(position == "y0_x1") {
@@ -1926,7 +1925,7 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       Vector v(0.0, 1.0, 0.0);
       df.up(v);
     } else if(position == "z1_y0") {
-      df.eyep(Point(distance, 0.0, 0.0, 1.0));
+      df.eyep(Point(0.0, 0.0, distance, 1.0));
       Vector v(0.0, -1.0, 0.0);
       df.up(v);
     } else if(position == "z0_x1") {

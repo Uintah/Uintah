@@ -98,6 +98,7 @@ public:
 			    Vector& g5, Vector& g6, Vector& g7)
   { ASSERTFAIL("not implemented") }
 
+  //virtual void flush_changes();
   //void compute_edges();
   //void compute_faces();
   //void compute_node_neighbors();

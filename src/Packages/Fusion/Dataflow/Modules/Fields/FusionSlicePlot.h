@@ -119,6 +119,7 @@ FusionSlicePlotAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
 
       node = ++counter;
 
+      omesh->flush_changes();
     }
 
     return FieldHandle( ofield );

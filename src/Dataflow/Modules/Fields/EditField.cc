@@ -473,6 +473,8 @@ EditField::execute()
   bool same_value_type_p = false;
   FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
 
+  cerr << (same_value_type_p ? "Same Value!" : "Dif't Value!") << endl;
+
   // Do any necessary data transforms here.
   const bool both_scalar_p =
     ef->query_scalar_interface() && fh->query_scalar_interface();
@@ -525,6 +527,7 @@ EditField::execute()
   ScalarFieldInterface* sfi = ef->query_scalar_interface();
   if (sfi)
   {
+    ef->freeze();
     std::pair<double, double> minmax(1, 0);
     sfi->compute_min_max(minmax.first, minmax.second);
     ef->set_property(string("minmax"), minmax, true);

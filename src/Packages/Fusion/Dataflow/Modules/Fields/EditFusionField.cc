@@ -35,7 +35,6 @@
 #include <Packages/Fusion/Dataflow/Modules/Fields/EditFusionField.h>
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 #include <Packages/Fusion/share/share.h>
-#include <Core/Containers/Handle.h>
 
 namespace Fusion {
 
@@ -222,8 +221,17 @@ void EditFusionField::execute(){
 
     const TypeDescription *ftd = fHandle->get_type_description();
     CompileInfo *ci = EditFusionFieldAlgo::get_compile_info(ftd);
-    Handle<EditFusionFieldAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
+      error( "Could not compile algorithm." );
+      return;
+    }
+    EditFusionFieldAlgo *algo =
+      dynamic_cast<EditFusionFieldAlgo *>(algo_handle.get_rep());
+    if (algo == 0) {
+      error( "Could not get algorithm." );
+      return;
+    }
 
     fHandle_ = algo->execute(fHandle,
 			     istart_, jstart_, kstart_,

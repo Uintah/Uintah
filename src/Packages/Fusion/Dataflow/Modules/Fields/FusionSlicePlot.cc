@@ -34,7 +34,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/Fusion/Dataflow/Modules/Fields/FusionSlicePlot.h>
 #include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
-#include <Core/Containers/Handle.h>
 #include <Packages/Fusion/share/share.h>
 
 namespace Fusion {
@@ -109,8 +108,17 @@ void FusionSlicePlot::execute(){
     const TypeDescription *ttd = fHandle->get_type_description(1);
 
     CompileInfo *ci = FusionSlicePlotAlgo::get_compile_info(ftd, ttd);
-    Handle<FusionSlicePlotAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
+      error( "Could not compile algorithm." );
+      return;
+    }
+    FusionSlicePlotAlgo *algo =
+      dynamic_cast<FusionSlicePlotAlgo *>(algo_handle.get_rep());
+    if (algo == 0) {
+      error( "Could not get algorithm." );
+      return;
+    }
 
     fHandle_ = algo->execute(fHandle, scale_);
 

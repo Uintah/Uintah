@@ -392,7 +392,7 @@ itcl_class Fusion_Fields_EditFusionField {
 	}
 
 	# Update the delta values to be at the initials values.
-	set $this-idelta [expr $idim - 1]
+	set $this-idelta $idim
 	set $this-jdelta $jdim
 	set $this-kdelta $kdim
 

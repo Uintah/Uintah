@@ -39,6 +39,7 @@
 
 
 namespace SCIRun {
+using std::vector;
 
 template <class T> 
 class TriSurfField : public GenericField<TriSurfMesh, vector<T> >
