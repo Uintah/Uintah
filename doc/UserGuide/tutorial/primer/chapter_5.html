@@ -26,17 +26,21 @@
         <p>&nbsp; </p>
         </center>
         <div align="left">
-
+	<p><b><H4><A href="#section 1">Volume conductor problem</H4></b></A>
+	<p><b><H4><A href="#section 2">Finite element simulation network</H4></b></A>
+	<p><b><H4><A href="#section 3">FEM user interface settings</H4></b></A>
+	<p><b><H4><A href="#section 4">Running the simulation</H4></b></A>
+	
         <p><b>Chapter Overview</b><br>
 
-        <p>In Chapters 1-4, we learned about dataflow programming,
+        <p>In Chapters 1-4, we worked with dataflow programming,
         and constructed visualization networks for exploring datasets.
         But where did the Field voltage datavalues come from?  In this
         chapter, we will construct a simulation network that computes
         simulated voltages for a realistic volume conductor problem.
 
 	<p>In preceeding chapters, we used modules from the central
-        SCIRun package.  Those modules have been general purpose
+        SCIRun package.  Those modules are general purpose
         tools--not targeted towards any specific application.  By
         contrast, in this chapter we begin using modules from the
         BioPSE package, a set of tools specifically written for the
@@ -45,14 +49,15 @@
 
 	<p>Typically, Packages (<b>Figure 5.1</b>) are logically
 	grouped sets of modules and the supporting code for those
-	modules. They can be created by anyone, and compiled into
-	SCIRun. Packages can be wholly dependent upon SCIRun code, or
-	can depend upon any additional third party code.  Packages
-	can, in fact, simply wrap around third party code, such that
-	SCIRun can use Dataflow functionality. Packages are a major
-	mechanism to bridging in SCIRun. Bridging is the concept that
+	modules.[link to Ug 6.o Packages] Packages can be created by anyone, 
+	and compiled into SCIRun. They can be wholly dependent upon SCIRun code, or
+	can depend upon any additional third party code.  
+
+	<p>Packages can, in fact, simply wrap around third party code, such that
+	SCIRun can use Dataflow functionality. Bridging is the concept that
 	SCIRun can be used in conjunction with other useful software
-	such as Matlab or Teem.
+	such as Matlab or Teem. Packages are a major
+	mechanism to bridging in SCIRun. 
 
 	</div>
 	<center>
@@ -62,17 +67,18 @@
 	<div align="left">
 	<p><br>
 
-        <p><b>Volume conductor problem</b><br>
+        <p><b><A name="section 1">Volume conductor problem</b><br></A>
 
 	<p>Given a volume conductor model and an equivalent dipole
 	source, we would like to compute the potentials and electric
 	field induced by the source through the domain. An analytic
 	solution exists for problems of some very specific geometric
-	models (e.g., analytic cylinders or spheres). However, for
-	most real-world problems, we can only obtain the solution
+	models (<i>e.g.</i>, analytic cylinders or spheres). 
+	
+	<p>However, for most real-world problems, we can only obtain the solution
 	through discretization.  For this application, we will
 	discretize our domain into tetrahedral finite elements, where
-	each element contains a conductivity tensor defining how
+	each element contains a conductivity tensor that defines how
 	electricity travels through its region of the domain.  Within
 	each element, we assume a piece-wise linear potential field
 	(piece-wise constant electric field).
@@ -93,9 +99,10 @@
 	field (<img height="16" width="15" src="images/del.gif"
 	align="absbottom"><img height="16" width="13"
 	src="images/phi.gif" align="absbottom">) is zero everywhere
-	there is not a current source. Discretizing this onto our
-	tetrahedral domain, we approximate the divergence of the
-	electric field with the stiffness matrix <font
+	there is not a current source. 
+
+	<p>Discretizing this onto our tetrahedral domain, we approximate the divergence 
+	of the electric field with the stiffness matrix <font
 	size="4"><b>A</b></font>. <img height="16" width="13"
 	src="images/phi.gif"> is a vector composed of voltages at the
 	nodes. And <font size="4"><b>b</b></font> is a source vector
@@ -116,38 +123,35 @@
 	height="16" width="13" src="images/phi.gif">, we get the
 	electric field through the domain.<br>
 
-        <p><b>Finite element simulation network</b><br>
+        <p><b><A name="section 2">Finite element simulation network</b><br></A>
 
 	<p>To compute the electric and potential fields given a finite
 	element volume conductor mesh and a dipolar current source, we
 	follow these steps:<br>
-
-	<p>1 -- Read in the finite element mesh (tet elements, with a
+	<ol>
+	<li value="1.">Read in the finite element mesh (tet elements, with a
 	conductivity tensors for each cell).
-
-	<p>2 -- Read in any dipole sources.
-
-	<p>3 -- Construct the finite element stiffness matrix based on
+	<li value="2.">Read in any dipole sources.
+	<li>Construct the finite element stiffness matrix based on
 	the conductivity mesh.
-
-	<p>4 -- Construct the right hand side source vector based on
+	<li>Construct the right hand side source vector based on
 	the location and orientation of any dipole sources.
-
-	<p>5 -- Solve the linear system <img height="15" width="14"
+	<li>Solve the linear system <img height="15" width="14"
 	src="images/A.gif"><img height="16" width="13"
 	src="images/phi.gif"><img height="16" width="20"
 	src="images/equals.gif"><img height="16" width="10"
 	src="images/b.gif">, to determine the potentials at the nodes.
-
+	</ol>
 	<p>Each of the above steps corresponds to a SCIRun module.
-	For steps 1 and 2, we will use SCIRun/DataIO/FieldReader
-	modules.  For step 3 we will use a
-	BioPSE/Forward/SetupFEMatrix module.  For step 4 we will use a
-	BioPSE/Forward/ApplyFEMCurrentSource module.  And for step 5,
-	we will use a SCIRun/Math/SolveMatrix module.  All of these
-	modules should be connected as shown in <b>Figure 5.2</b>.  The User
+	<ul><li>For steps 1 and 2, we will use SCIRun/DataIO/FieldReader
+	modules.  
+	<li>For step 3, we will use a BioPSE/Forward/SetupFEMatrix module.  
+	<li>For step 4, we will use a BioPSE/Forward/ApplyFEMCurrentSource module.  
+	<li>And for step 5, we will use a SCIRun/Math/SolveMatrix module.</ul>
+
+	<p>All of these modules should be connected as shown in <b>Figure 5.2</b>.  The User
 	Interface settings for each of the modules are described in
-	the next paragraphs.
+	the following sections.
 
       </div>
 	<center>
@@ -158,7 +162,7 @@
 	<p><br>
 
 
-        <p><b>FEM user interface settings</b><br>
+        <p><b><A name="section 3">FEM user interface settings</b><br></A>
 
 	<p>The SetupFEMatrix module constructs a finite element
 	stiffness matrix from a tetrahedral volume mesh.  On the UI
@@ -174,12 +178,13 @@
 	</center>
 	<div align="left">
 	<p><br>
-
-	<p>The ApplyFEMCurrentSource module modifies the right hand
+	<ol>
+	<li value="1.">The ApplyFEMCurrentSource module modifies the right hand
 	side vector to account for current sources within the model.
-	On the UI (<b>Figure 5.4</b>), you can choose whether the
+	<li>On the UI (<b>Figure 5.4</b>), you can choose whether the
 	current sources are due to a dipole or to a source/sink
-	electrode pair.  Select the "dipole" setting.
+	electrode pair.  
+	<li>Select the "dipole" setting.</ol>
 
 	</div>
 	<center>
@@ -190,13 +195,17 @@
 	<p><br>
 
 	<p>The SolveMatrix module solves a linear system using one of
-	several linear algebra methods.  Choose the "Conjugate
+	several linear algebra methods.  
+	<ol><li value=1.">Choose the "Conjugate
 	Gradient" solver on the UI (<b>Figure 5.5</b>), and set the
-	Target Error to 0.0001, and the Maximum Iterations to 200.
-	Note: the SolveMatrix UI must remain either open or minimized
+	Target Error to 0.0001.
+	<li>Set the Maximum Iterations to 200.</ol>
+	
+	<p><b>Note:</b> the SolveMatrix UI must remain either open or minimized
 	while the solver is running; it must not be closed completely.
-	For more information on the SolveMatrix module, click on this
-	link.
+
+	<p>For more information on the SolveMatrix module, click on this
+	link [link to ?].
 
 	</div>
 	<center>
@@ -206,25 +215,35 @@
 	<div align="left">
 	<p><br>
 
-	<p>Lastly, for this simulation you should choose the
-        utahtorso-lowres-mesh.tvt.fld Field for the FieldReader on the
-        left, and the utahtorso-lowres-dipole.pcv.fld Field for the
-        FieldReader on the right.  The mesh Field contains the
-        tetrahedral finite element mesh of the Utah Torso model, with
-        conductivity indices stored at each element of the model.  The
-        dipole Field contains a single dipole vector, positioned
+	<p>Lastly, for this simulation:
+	<ol><li value="1.">Choose the utahtorso-lowres-mesh.tvt.fld Field 
+	for the FieldReader on the left. 
+	<li>Choose the utahtorso-lowres-dipole.pcv.fld Field for the
+        FieldReader on the right.  
+	</ol>
+	<p>The mesh Field contains the tetrahedral finite element mesh 
+	of the Utah Torso model, with conductivity indices stored at each 
+	element of the model.  The dipole Field contains a single dipole vector, positioned
         within the torso volume.
 
-        <p><b>Running the simulation</b><br>
+        <p><b><A name="section 4">Running the simulation</b><br></A>
 		
-	<p>With all of the modules connected and all of the UI state
-	configured, you are ready to run the simulation.  Select the
-	"Execute" item from one of the module icon dropdown menus, or
-	press the "Execute" button on a module's user interface.  As
-	the simulation progresses, you will see the residual plot in
+	<p>With all of the modules connected and the UI state
+	configured, you are ready to run the simulation.  
+	<ol>
+	<li value="1.">Select the "Execute" item from one of the module 
+	icon dropdown menus, or:
+	<li>Press the "Execute" button on a module's user interface.</ol>
+  
+	<p>As the simulation progresses, you will see the residual plot in
 	the SolveMatrix module converge which is located at the bottom
-	of the SolveMatrix UI.  Congratulations, you have solved a
-	finite element problem!<br>
+	of the SolveMatrix UI.  
+
+	<p>Congratulations, you have solved a finite element problem!<br>
+
+	<p><H4><b>Summary</H4></b>
+	need content
+
 	<br>
 	<br>
 	</div>
