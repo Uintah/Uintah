@@ -1554,11 +1554,14 @@ if test -f "$_sci_lib/tkConfig.sh"; then
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
 fi
 
+#
+# Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
+#
 SCI_TRY_LINK(TK,required tk library and headers,[
 #include <tk.h> 
 #include <tk3d.h>
 #include <tkPort.h>
-],$_sci_tk_inc,tk,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
+],$_sci_tk_inc,tk,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
