@@ -98,7 +98,7 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]          </lower>
-              <upper>        [1,0.25,0.01]       </upper>
+              <upper>        [1,0.35,0.01]       </upper>
               <resolution>   [50,50,1]      </resolution>
               <extraCells>   [0,1,1]          </extraCells>
               <patches>      [1,1,1]          </patches>
@@ -124,7 +124,7 @@
    </DataArchiver>
 
   <Debug>
-      <dbg_timeStart>       0.00        </dbg_timeStart>
+      <dbg_timeStart>       1.00        </dbg_timeStart>
       <dbg_timeStop>        10.0        </dbg_timeStop>
       <dbg_outputInterval>  0.1         </dbg_outputInterval>
        <dbg_GnuPlot>        true        </dbg_GnuPlot>
@@ -142,7 +142,7 @@
          <cfl>0.25</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "SecondOrder" />
         <solution technique = "EqForm" />
    
         <TimeStepControl>
