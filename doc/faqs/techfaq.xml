@@ -444,20 +444,26 @@ Unmap failed - leaking memory
 	GuiInt or GuiDouble, and in particular look at their constructor.   
 	You need to synch with the tcl side by specifying the name of the var 
 	on the tcl side.  That will be reffered to on the tcl side like so...
-
+      </para>
+      <para>
 	C++ side:
+      </para>
 
+      <pre>
 	GuiInt myint_;
 
-	-- initialization in constructor --
-	myint_("myint", id, <whatever other args it takes...>)
-
+	// Initialization in constructor --
+	myint_("myint", id, &lt;plus whatever other args it takes...&gt;)
+      </pre>
+      <para>
 	tcl side:
+      </para>
 
-	set $this-myint 1
-	(or whatever value you want)
-
-	look at ShowField.cc and .tcl for examples..
+      <pre>
+	set $this-myint 1    # or whatever value you want
+      </pre>
+      <para>
+	Look at ShowField.cc and .tcl for examples.
       </para>
     </answer>
   </entry>
