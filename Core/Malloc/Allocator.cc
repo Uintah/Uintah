@@ -46,6 +46,7 @@ const int ALIGN=16;
 6) Destroy allocators
 */
 
+#include <sci_defs/bits_defs.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/AllocOS.h>
@@ -70,7 +71,7 @@ const int ALIGN=16;
 #endif
 
 /* we use UCONV to avoid compiler warnings. */
-#if (_MIPS_SZLONG == 64)
+#ifdef SCI_64BITS
 #define UCONV "%ld"
 #else
 #define UCONV "%d"
