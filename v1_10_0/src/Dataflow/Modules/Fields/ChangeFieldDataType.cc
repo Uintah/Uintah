@@ -156,8 +156,8 @@ ChangeFieldDataType::execute()
   if (new_data_type == "Vector" && fh->query_scalar_interface(this) ||
       !module_maybe_dynamic_compile(copy_ci, copy_algo))
   {
-    warning("Unable to convert from " + old_data_type +
-	    " to " + new_data_type + ".");
+    warning("Unable to convert the old data from " + old_data_type +
+	    " to " + new_data_type + ", no data transfered.");
   }
   else
   {
