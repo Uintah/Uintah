@@ -36,16 +36,16 @@ ProblemSpecP ProblemSpecReader::readInputFile()
   ProblemSpecP prob_spec;
   try {
       // Instantiate the DOM parser.
-      XercesDOMParser parser;
-      parser.setDoValidation(false);
+      XercesDOMParser* parser = new XercesDOMParser;
+      parser->setDoValidation(false);
 
       SimpleErrorHandler handler;
-      parser.setErrorHandler(&handler);
+      parser->setErrorHandler(&handler);
 
       // Parse the input file
       // No exceptions just yet, need to add
 
-      parser.parse(filename.c_str());
+      parser->parse(filename.c_str());
 
       if(handler.foundError){
 	throw ProblemSetupException("Error reading file: "+filename);
@@ -53,7 +53,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
 
       // Add the parser contents to the ProblemSpecP d_doc
 
-      DOMDocument* doc = parser.getDocument();
+      DOMDocument* doc = parser->getDocument();
       prob_spec = scinew ProblemSpec(doc->getDocumentElement());
   } catch(const XMLException& ex) {
       throw ProblemSetupException("XML Exception: "+string(XMLString::transcode(ex.getMessage())));

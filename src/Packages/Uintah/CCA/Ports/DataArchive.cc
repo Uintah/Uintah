@@ -57,19 +57,19 @@ DataArchive::DataArchive(const std::string& filebase,
       cerr << "base is still relative!\n";
   }
   
-  XercesDOMParser parser;
-  parser.setDoValidation(false);
+  XercesDOMParser* parser = new XercesDOMParser;
+  parser->setDoValidation(false);
   
   SimpleErrorHandler handler;
-  parser.setErrorHandler(&handler);
+  parser->setErrorHandler(&handler);
   
   cout << "Parsing " << XMLString::transcode(d_base.getURLText()) << endl;
-  parser.parse(d_base.getURLText());
+  parser->parse(d_base.getURLText());
   
   if(handler.foundError)
     throw InternalError("Error reading file: "+ string(XMLString::transcode(d_base.getURLText())));
   
-  d_indexDoc = parser.getDocument();
+  d_indexDoc = parser->getDocument();
   d_swapBytes = queryEndianness() != SCIRun::endianness();
   d_nBytes = queryNBits() / 8;
 }
@@ -153,18 +153,18 @@ DataArchive::queryTimesteps( std::vector<int>& index,
 	  
 	  //DOMString href_name = tsfile->getNodeValue();
 	  XMLURL url(d_base, XMLString::transcode(tsfile->getNodeValue()));
-	  XercesDOMParser parser;
-	  parser.setDoValidation(false);
+	  XercesDOMParser* parser = new XercesDOMParser;
+	  parser->setDoValidation(false);
 	  
 	  SimpleErrorHandler handler;
-	  parser.setErrorHandler(&handler);
+	  parser->setErrorHandler(&handler);
 	  
 	  //cerr << "reading: " << XMLString::transcode(url.getURLText()) << '\n';
-	  parser.parse(url.getURLText());
+	  parser->parse(url.getURLText());
 	  if(handler.foundError)
 	    throw InternalError("Cannot read timestep file");
 	  
-	  DOMNode* top = parser.getDocument()->getDocumentElement();
+	  DOMNode* top = parser->getDocument()->getDocumentElement();
 	  d_tstop.push_back(top);
 	  d_tsurl.push_back(url);
 	  const DOMNode* time = findNode("Time", top);
