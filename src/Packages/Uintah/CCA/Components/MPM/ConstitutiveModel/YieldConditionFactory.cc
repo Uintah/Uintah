@@ -19,10 +19,10 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("yield_condition");
    if(!child)
-      throw ProblemSetupException("Cannot find yield condition.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find yield condition.");
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for yield condition.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:No type for yield condition.");
    
    if (mat_type == "vonMises")
       return(scinew VonMisesYield(child));
@@ -31,5 +31,5 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps)
    else if (mat_type == "rousselier")
       return(scinew RousselierYield(child));
    else 
-      throw ProblemSetupException("Unknown Yield Condition ("+mat_type+")");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")");
 }
