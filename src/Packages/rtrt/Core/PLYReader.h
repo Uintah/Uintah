@@ -8,6 +8,7 @@ namespace rtrt {
   class TriMesh;
   void read_ply(char *fname, Material* matl, TriMesh* &tm, Group* &g);
   void read_ply(char *fname, GridTris*);
+  void read_ply(char *fname, GridTris*, Transform *t);
 }
 
 #endif

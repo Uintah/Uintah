@@ -97,20 +97,20 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 			     << "* Building Regular Grid for Object " << Names::getName(this)
 			     << "\n==========================================================\n";
 
-    cerr << "Building grid\n";
+  //    cerr << "Building grid\n";
     double time=Time::currentSeconds();
     obj->preprocess(maxradius, pp_offset, scratchsize);
-    cerr << "1/7 Preprocess took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "1/7 Preprocess took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     Array1<Object*> prims;
     obj->collect_prims(prims);
-    cerr << "2/7 Collect prims took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "2/7 Collect prims took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     bbox.reset();
     obj->compute_bounds(bbox, maxradius);
-    cerr << "3/7 Compute bounds took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "3/7 Compute bounds took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     int ncells=nsides*nsides*nsides;
@@ -167,7 +167,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	nz=2;
 
     int ngrid=nx*ny*nz;
-    cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
+    //    cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
 
 
     if(counts)
@@ -175,7 +175,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     if(grid)
 	delete[] grid;
     counts=new int[2*ngrid];
-    cerr << "counts=" << counts << ":" << counts+2*ngrid << '\n';
+    //    cerr << "counts=" << counts << ":" << counts+2*ngrid << '\n';
     for(int i=0;i<ngrid*2;i++)
 	counts[i]=0;
 
@@ -189,7 +189,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     for(int i=0;i<prims.size();i++){
 	double tnow=Time::currentSeconds();
 	if(tnow-itime > 5.0){
-	    cerr << i << "/" << prims.size() << '\n';
+	  //	    cerr << i << "/" << prims.size() << '\n';
 	    itime=tnow;
 	}
 	BBox obj_bbox;
@@ -259,7 +259,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	}
     }
 
-    cerr << "4/7 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "4/7 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     int total=0;
     for(int i=0;i<ngrid;i++){
@@ -267,13 +267,13 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	counts[i*2]=total;
 	total+=count;
     }
-    cerr << "Allocating " << total << " grid cells (" << double(total)/prims.size() << " per object, " << double(total)/ngrid << " per cell)\n";
+    //    cerr << "Allocating " << total << " grid cells (" << double(total)/prims.size() << " per object, " << double(total)/ngrid << " per cell)\n";
     grid=new Object*[total];
-    cerr << "grid=" << grid << ":" << grid+total << '\n';
+    //    cerr << "grid=" << grid << ":" << grid+total << '\n';
     for(int i=0;i<total;i++)
 	grid[i]=0;
-    cerr << "total=" << total << '\n';
-    cerr << "5/7 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "total=" << total << '\n';
+    //    cerr << "5/7 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     itime=time;
     Array1<int> current(ngrid);
@@ -358,7 +358,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	    }
 	}
     }
-    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     for(int i=0;i<ngrid;i++){
 	if(current[i] != counts[i*2+1]){
@@ -374,8 +374,8 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	    exit(1);
 	}
     }
-    cerr << "7/7 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
-    cerr << "Done building grid\n";
+    //    cerr << "7/7 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "Done building grid\n";
 }
 
 void Grid::intersect(Ray& ray, HitInfo& hit,
