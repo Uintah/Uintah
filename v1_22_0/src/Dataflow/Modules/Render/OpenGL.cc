@@ -177,6 +177,7 @@ OpenGL::~OpenGL()
     encoding_mpeg_ = false;
     EndMpeg();
   }
+  kill_helper();
 
   int r;
   while (send_mb.tryReceive(r)) ;
@@ -303,11 +304,7 @@ OpenGL::redraw_loop()
 	newtime=current_time;
       }
       newtime+=frametime;
-      // wait_for_time is unimplemented on anything but SGI.
-      // Thread::yield to at least work around busy-wait deadlock on
-      // linux 2.6.6 kernels.
       throttle.wait_for_time(newtime);
-      Thread::yield();
 
       while (send_mb.tryReceive(r))
       {
@@ -660,6 +657,10 @@ OpenGL::redraw_frame()
 {
   if (dead_) return;
   gui->lock();
+  if (dead_) { // ViewWindow was deleted from gui
+    gui->unlock(); 
+    return;
+  }
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
   if(!new_tkwin)
@@ -794,7 +795,6 @@ OpenGL::redraw_frame()
     bawgl->shutdown_ok();
   //  --  BAWGL  --
 #endif
-  // Compute znear and zfar...
 
   if(compute_depth(viewwindow, view, znear, zfar))
   {
@@ -1185,11 +1185,7 @@ OpenGL::redraw_frame()
       double realtime=t*frametime;
       if(nframes>1)
       {
-	// wait_for_time is unimplemented on anything but SGI.
-	// Thread::yield to at least work around busy-wait deadlock on
-	// linux 2.6.6 kernels.
 	throttle.wait_for_time(realtime);
-	Thread::yield();
       }
       //gui->lock();
       gui->execute("update idletasks");
