@@ -1,4 +1,4 @@
-
+ 
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
@@ -25,27 +25,18 @@
   inside them.
 
 -->
- 
+<faq> </faq> 
+<p><faq></faq></p>
 <faq>
-  <title>Technical FAQ</title>
-  <description>
-    <para>
-      This FAQ includes questions of a technical nature of interest to people
-      installing, maintaining, and developing within SCIRun.
-    </para>
-  </description>
-  <entry>
-    <keywords>SGI, runtime, pthreads, SIGABRT</keywords>
-    <question>
-      <para>
-        I successfully installed SCIRun and it's required thirdparty software
-        (by hand) onto an SGI target install machine, but when I run SCIRun it 
-        immediately signals an abort (SIGABRT).
-      </para>
-      <para>
-        The output of SCIRun after it signals the abort looks like this:
-      </para>
-      <pre>Thread "main"(pid 251775) caught signal SIGABRT (Abort)
+<title>TechnicalFAQ</title>
+</faq><faq> <description> <para> This FAQ includes technical questions of interest 
+to users who install, maintain and develop SCIRun</para> </description> <entry> 
+<keywords>SGI, runtime, pthreads and SIGABRT</keywords>. <question> <para> I successfully 
+installed SCIRun and its required thirdparty software (by hand) onto an SGI target 
+install machine, but when I run SCIRun, it immediately signals an abort (SIGABRT). 
+</para> <para> The output of SCIRun after it signals the abort looks like this: 
+</para> 
+<pre>Thread "main"(pid 251775) caught signal SIGABRT (Abort)
 Backtrace:
 0x5ff69224: SCIRun::Thread::niceAbort(void)
 0x5ff7106c: handle_abort_signals
@@ -272,59 +263,28 @@ make -k install
 chmod a+x configure runConfigure
       </pre>
 
-      <para> 
-        There is no dependency tree for the copy phase of the xerces
-        build, so using a -j flag (number of jobs) as a GNU make
-        argument will cause the build to fail. 
-      </para>
-
-      <para>
-        There is no dependency tree for the "install" target within
-        the make files, so passing "install" as an argument to the
-        first time "make" is typed will cause the build to
-        fail. Instead type "make" first, then "make install."
-      </para>
-
-      <para>
-        The make system ignores errors in compilation and forces a
-        link.  Verify that the build was actually successful by
-        checking the size of libxerces-c1_4.so.  The sizes should be:
-        ~2.1MB for SGI 32 bit, ~2.4MB for SGI 64 bit, and ~1.4MB for
-        linux. 
-      </para>
-    </answer>
-  </entry>
- 
-  <entry>
-    <keywords>Tcl, headers, configure</keywords>
-    <question>
-      <para>
-        When I try to configure SCIRun, it says that it cannot find
-        header files for one or more of the Tcl distributions, but my 
-        system has the correct versions for all the Tcl distributions.
-      </para>
-    </question>
-    <answer>
-      <para>
-        SCIRun currently requires the full source of Tcl and Tk to be
-        installed.  This is required because SCIRun defines a few Tk
-        widgets of it's own, and needs some headers from the source that
-        aren't included with typical installations.  If your system
-        already has the correct Tcl and Tk versions installed, you will
-        have to re-install in order to have the sources
-        included. 
-      </para>
-    </answer>
-  </entry>
-
-  <entry>
-    <question>
-      <para>
-        I successfully installed SCIRun onto a linux target install
-        machine with XFree86 version 4.1.0 installed, but when I run
-        it, it immediately signals a segmentation violation (SIGSEGV):
-      </para>
-      <pre>
+      
+<para> There is no dependency tree for the copy phase of the xerces build, so 
+using a -j flag (number of jobs) as a GNU make argument will cause the build to 
+fail. </para> <para> There is no dependency tree for the "install" target within 
+the make files, so passing "install" as an argument to the first time "make" is 
+typed will cause the build to fail. Instead type "make" first, then "make install." 
+</para> <para> The make system ignores errors in compilation and forces a link. 
+Verify that the build was actually successful by checking the size of libxerces-c1_4.so. 
+The sizes should be: ~2.1MB for SGI 32 bit, ~2.4MB for SGI 64 bit, and ~1.4MB 
+for linux. </para> </answer> </entry> <entry> <keywords>Tcl, headers, configure</keywords> 
+<question> <para> When I try to configure SCIRun, it says that it cannot find 
+header files for one or more of the Tcl distributions, but my system has the correct 
+versions for all the Tcl distributions. </para> </question> <answer> <para> SCIRun 
+currently requires the full source of Tcl and Tk to be installed. This is required 
+because SCIRun defines a few Tk widgets of its own, and needs some headers from 
+the source that aren't included with typical installations. If your system already 
+has the correct Tcl and Tk versions installed, you will have to re-install in 
+order to have the sources included. </para> </answer> </entry> <entry> <question> 
+<para> I successfully installed SCIRun onto a linux target install machine with 
+XFree86 version 4.1.0 installed, but when I run it, it immediately signals a segmentation 
+violation (SIGSEGV): </para> 
+<pre>
 Initializing the tcl packages: tcl, tk, itcl, itk, blt, Done.
 Adding SCI extensions to tcl: OpenGL widget, bevel widget, cursor, Done.
 User Name: moulding

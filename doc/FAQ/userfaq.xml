@@ -28,23 +28,14 @@
 
 <faq>
   <title>User FAQ</title>
-  <description>
-    <para>
-      For questions about the behavior of SCIRun, modules, messages
-      issued, etc.  Also addresses other high level issues.
-    </para>
-  </description>
-  <entry>
-    <keywords>unable to load module, can't find symbol</keywords>
-    <question>
-      <para>
-        When I run SCIRun, one or more messages appear in the message
-        window indicating a problem with a package and/or module.
-      </para>
-      <para>
-        The message(s) is/are similar to the following:
-      </para>
-      <pre>Loading package 'SCIRun'
+<description> <para> The User FAQ addresses questions about the behavior of SCIRun, 
+modules, messages issued, etc. The FAQ also addresses other high level issues 
+such as: </para> </description> <entry> <keywords><i>unable to load module, can't 
+find symbol</i></keywords> <i><question> <para> When I run SCIRun, one or more 
+messages appear in the message window indicating a problem with a package and/or 
+module.</para></question></i><question><para> </para> <para> The message(s) is/are 
+similar to the following: </para> 
+<pre>Loading package 'SCIRun'
 Unable to load module 'CastField' :
 - can't find symbol 'make_CastField'
       </pre>
@@ -57,48 +48,23 @@ such file or directory
 - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared
 object file: No such file or directory
       </pre>
-    </question>
-    <answer>
-      <para>
-        Each module for a given package has it's own .xml file that 
-        describes it.  When SCIRun starts, it parses all the .xml files
-        in the packages (under Dataflow/XML) and tries to find the 
-	matching code within the related .so files.  If the .so files cannot
-        be found the message "No such file or directory" is given.  If the .so
-        can be found, but the code for a particular module does not exist 
-        within the library, then the message "can't find symbol" is given.
-      </para>
-      <para>
-        The message(s) may or may not indicate a problem with SCIRun. 
-        For some modules, the
-        .xml file may be listed but the code has not yet been
-	completed (this may
-        be common for module developers).  For others it may mean that the
-        SCIRun installation is some how corrupt (.so files have been deleted,
-        moved, etc.)
-      </para>
-      <para>
-        The solution to this problem is to either a) build the libraries
-        that the .xml files need, or b) remove the offending .xml files.
-      </para>
-    </answer>
-  </entry>
-
-  <entry>
-    <question>
-      <para>
-        What systems are compatible with SCIRun?
-      </para>
-    </question>
-    <answer>
-      <para>
-        SCIRun should be generally compatible with any SGI or Linux machine.
-      </para>
-      <para>
-        SCIRun has been tested on the following Linux distributions:
-      </para>
-      <para>
-        <ul>
+</question> <answer> <para> Each module for a given package has its own .xml file 
+that describes it. When SCIRun starts, it parses all the .xml files in the packages 
+(under Dataflow/XML) and tries to find the matching code within the related .so 
+files. If the .so files cannot be found the message "No such file or directory" 
+is given. If the .so can be found, but the code for a particular module does not 
+exist within the library, then the message "can't find symbol" is given. </para> 
+<para> The message(s) may or may not indicate a problem with SCIRun. For some 
+modules, the .xml file may be listed but the code has not yet been completed (this 
+may be common for module developers). For others it may mean that the SCIRun installation 
+is some how corrupt (.so files have been deleted, moved, etc.) </para> <para> 
+The solution to this problem is to either a) build the libraries that the .xml 
+files need, or b) remove the offending .xml files. </para> </answer> </entry> 
+<entry> <question> <para> What systems are compatible with SCIRun? </para> </question> 
+<answer> <para> SCIRun should be generally compatible with any SGI or Linux machine. 
+</para> <para> SCIRun has been tested on the following Linux distributions: </para> 
+<para> 
+<ul>
           <li>Mandrake 7.2 &amp; 8.0</li>
           <li>Redhat 6.2, 7.0 &amp; 7.1</li>
           <li>SuSE 6.4, 7.0 &amp; 7.2</li>
@@ -181,123 +147,59 @@ object file: No such file or directory
       support libraries</CAPTION>
       <tr><td><IMG WIDTH="645" ALIGN="TOP"
           SRC="http://ampano.cs.utah.edu/research/images/EAB-BioPSE.gif"
-          ALT="biopsesr"></IMG></td>
+          ALT="biopsesr"></td>
        </tr>
        </table>
        </div>
-      </para>
- 
-       <para> In addition to the major projects that have both leveraged and
-       advanced <I>SCIRun</I>, there exist a number of smaller packages
-       that can extend <I>SCIRun</I>'s utility.  Examples include the
-       <I>Teem</I> package for raster data processing, the <I>NetSolve</I>
-       package for linear algebra subroutines (developed by researchers at
-       the University of Tennessee and Knoxville), and a communications
-       interface we have recently introduced to the <I>Matlab</I> program.
-       We have developed various forms of software wrappers or interfaces
-       that allow <I>SCIRun</I> to leverage the strengths of these third
-       party tools, links we refer to as "bridges."</para>
- 
-       <para> There are also instances in which a tighter level of integration
-       than a bridge between <I>SCIRun</I> and third-party software is
-       necessary.  One example is the addition of mpeg support for
-       capturing animations from the <I>SCIRun</I> Viewer module, for which
-       we use the Berkeley and Alex Knowles' mpeg encoding tools.  Another
-       example is the set of image generation and manipulation tools from
-       Paul Haeberli called <I>libimage</I>.  To indicate whether or not
-       such tools are available, the configure scripts for <I>SCIRun</I>
-       contain optional control flags.</para>
- 
-       <para> We believe that this combination of a robust infrastructure and
-       modular extensibility through packages and third-party libraries
-       will allow <I>SCIRun</I> to grow and adapt to changing needs and
-       opportunities.</para>
-    </answer>
-  </entry>
-
-  <entry>
-    <keywords>file conversion, import and export</keywords>
-    <question>
-      <para>
-        How do I get my data into <I>SCIRun</I>?
-      </para>
-    </question>
-    <answer>
-      <para>
-      Like all program, <I>SCIRun</I> has its own data file formats so
-      conversion is required.  At present, the pathway for converting data
-      files is to use one of a set of standalone converter programs that
-      are part of the regular <I>SCIRun</I> distribution.  Here is the list
-      of available converters:
-      </para>
-
-      <para>
-      <strong>RawToTriSurf: </strong>
-      converts simple ASCII files containing node
-          locations, triangle connectivity, and optionally scalar data into
-          <I>SCIRun</I> a field data file.</para>
-
-      <para>
-       Usage: RawToTriSurf pts-file tris-file [vals-file] fieldout.fld
-      </para>
-
-      <para>
-       where:
-      </para>
-        
-      <para>
-        <strong><tt>pts-file</tt> </strong>
-        is a file containing point locations
-        for the geometry, a single triplet of x, y, z
-        in each line of the file. 
-      </para>
-        
-      <para>
-        <strong><tt>tris-file</tt> </strong>
-        is a file containing connectivity for the
-        triangles, with each row of the file pointing to three node
-        numbers in the <tt>pts-file</tt>.  The node numbering starts
-        at 0 in these files.
-      </para>
-        
-      <para>
-        <strong><tt>vals-file</tt> </strong>
-        is an optional file that contains
-        scalar values to be associated with the nodes of the
-        geometry.  These files have the same number of values as
-        the <tt>pts-file</tt> with one value per line of the file.
-      </para>
-        
-      <para>
-        <strong><tt>fieldout.fld</tt> </strong>
-        is the output fields file
-            containing the geometry and associated scalar data.
-      </para>
-        
-        
-        <para>
-        The Cardiovascular Research and Training Institute (CVRTI) has
-        developed a number of scalar and vector data and geometry file
-        formats which required converters for <em>SCIRun</em>.  The result
-        is a set of stand-alone programs that read in one more more
-        existing CVRTI files and generate a particular form of
-        <em>SCIRun</em> file, the details of which depend on the particular
-        combination of nodes, connectivities, and associated attributes.</para>
-
-        <para> 
-        The programs and their parameters as as follows (go to the end of
-        the list to see the definitions of the different parameter and file
-        types):
-        </para>
-
-	<para>        
-        <strong>CVRTItoTriSurfGrad: </strong>
-        converts nodes, triangle connectivities, and
-        vector (grad) files into a field with associated vector
-        attribute:
-        </para>
-
-        <pre>
+      
+</para> <para> In addition to the major projects that have both leveraged and 
+advanced <I>SCIRun</I>, there exist a number of smaller packages that can extend 
+<I>SCIRun</I>'s utility. Examples include the <I>Teem</I> package for raster data 
+processing, the <I>NetSolve</I> package for linear algebra subroutines (developed 
+by researchers at the University of Tennessee and Knoxville), and a communications 
+interface we have recently introduced to the <I>Matlab</I> program. We have developed 
+various forms of software wrappers or interfaces that allow <I>SCIRun</I> to leverage 
+the strengths of these third party tools, links we refer to as "bridges."</para> 
+<para> There are also instances in which a tighter level of integration than a 
+bridge between <I>SCIRun</I> and third-party software is necessary. One example 
+is the addition of mpeg support for capturing animations from the <I>SCIRun</I> 
+Viewer module, for which we use the Berkeley and Alex Knowles' mpeg encoding tools. 
+Another example is the set of image generation and manipulation tools from Paul 
+Haeberli called <I>libimage</I>. To indicate whether or not such tools are available, 
+the configure scripts for <I>SCIRun</I> contain optional control flags.</para> 
+<para> We believe that this combination of a robust infrastructure and modular 
+extensibility through packages and third-party libraries will allow <I>SCIRun</I> 
+to grow and adapt to changing needs and opportunities.</para> </answer> </entry> 
+<entry> <keywords>file conversion, import and export</keywords> <question> <para> 
+How do I get my data into <I>SCIRun</I>? </para> </question> <answer> <para> Like 
+all program, <I>SCIRun</I> has its own data file formats so conversion is required. 
+At present, the pathway for converting data files is to use one of a set of stand-alone 
+converter programs that are part of the regular <I>SCIRun</I> distribution. Here 
+is the list of available converters: </para> <para> <strong>RawToTriSurf: </strong> 
+converts simple ASCII files containing node locations, triangle connectivity, 
+and optionally scalar data into <I>SCIRun</I> a field data file.</para> <para> 
+Usage: RawToTriSurf pts-file tris-file [vals-file] fieldout.fld </para> <para> 
+where: </para> <para> <strong><tt>pts-file</tt> </strong> is a file containing 
+point locations for the geometry, a single triplet of x, y, z in each line of 
+the file. </para> <para> <strong><tt>tris-file</tt> </strong> is a file containing 
+connectivity for the triangles, with each row of the file pointing to three node 
+numbers in the <tt>pts-file</tt>. The node numbering starts at 0 in these files. 
+</para> <para> <strong><tt>vals-file</tt> </strong> is an optional file that contains 
+scalar values to be associated with the nodes of the geometry. These files have 
+the same number of values as the <tt>pts-file</tt> with one value per line of 
+the file. </para> <para> <strong><tt>fieldout.fld</tt> </strong> is the output 
+fields file containing the geometry and associated scalar data. </para> <para> 
+The Cardiovascular Research and Training Institute (CVRTI) has developed a number 
+of scalar and vector data and geometry file formats which required converters 
+for <em>SCIRun</em>. The result is a set of stand-alone programs that read in 
+one more more existing CVRTI files and generate a particular form of <em>SCIRun</em> 
+file, the details of which depend on the particular combination of nodes, connectivities, 
+and associated attributes.</para> <para> The programs and their parameters as 
+as follows (go to the end of the list to see the definitions of the different 
+parameter and file types): </para> <para> <strong>CVRTItoTriSurfGrad: </strong> 
+converts nodes, triangle connectivities, and vector (grad) files into a field 
+with associated vector attribute: </para> 
+<pre>
         CVRTItoTriSurfGrad pts fac grad [channels] fieldout
         </pre>  
 
