@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/UnionBCData.h>
 #include <Packages/Uintah/Core/Grid/DifferenceBCData.h>
 #include <Packages/Uintah/Core/Grid/BCData.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <iostream>
@@ -52,13 +53,15 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   // side.  Will use the notion of a UnionBoundaryCondtion and Difference
   // BoundaryCondition.
   
-    
+  bool IveFoundGeometry = false; 
+       
   // Do the side case:
   std::string fc;
   BCGeomBase* bcGeom;
   if (values.find("side") != values.end()) {
     fc = values["side"];
     bcGeom = scinew SideBCData();
+    IveFoundGeometry = true;
   }
   // Do the circle case:
   if (values.find("circle") != values.end()) {
@@ -71,7 +74,17 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     radius_stream >> r;
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
+    
+    // bulletproofing
+    if (origin == "" || radius == "") {
+      ostringstream warn;
+      warn<<"ERROR\n Circle BC geometry not correctly specified \n"
+          << " you must specify origin [x,y,z] and radius [r] \n\n";
+      throw ProblemSetupException(warn.str());
+    }
+    
     bcGeom = scinew CircleBCData(p,r);
+    IveFoundGeometry = true;
   }
   // Do the rectangle case:
   if (values.find("rectangle") != values.end()) {
@@ -83,8 +96,35 @@ BCGeomBase* BCReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     low_stream >> lower[0] >> lower[1] >> lower[2];
     up_stream >> upper[0] >> upper[1] >> upper[2];
     Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
+   
+    // bulletproofing
+    if (low == "" || up == "") {
+      ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
+          << " you must specify lower [x,y,z] and upper[x,y,z] \n\n";
+      throw ProblemSetupException(warn.str());
+    }
+    if ( (l.x() >  u.x() || l.y() >  u.y() || l.z() >  u.z()) ||
+         (l.x() == u.x() && l.y() == u.y() && l.z() == u.z())){
+      ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
+          << " lower pt "<< l <<" upper pt " << u;
+      throw ProblemSetupException(warn.str());
+    }
+    
     bcGeom = scinew RectangleBCData(l,u);
+    IveFoundGeometry = true;
   }
+  
+  //__________________________________
+  //  bullet proofing
+  if(!IveFoundGeometry) {
+    ostringstream warn;
+    warn<<"ERROR\n Boundary condition geometry not correctly specified "
+          " Valid options (side, circle, rectangle";
+    throw ProblemSetupException(warn.str());  
+  }
+  
 #ifdef PRINT
   cout << "Face = " << fc << endl;      
 #endif
