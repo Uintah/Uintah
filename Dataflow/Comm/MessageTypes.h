@@ -90,8 +90,9 @@ public:
 	ModuleGeneric1,
 	ModuleGeneric2,
 	ModuleGeneric3,
-	ModuleGeneric4
-	
+	ModuleGeneric4,
+
+        SchedulerInternalExecuteDone
     };
 };
 

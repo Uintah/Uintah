@@ -52,22 +52,11 @@ using namespace SCIRun;
 using namespace std;
 
 
-struct SerialSet
-{
-  unsigned int base;
-  int size;
-  int callback_count;
-
-  SerialSet(unsigned int base, int s) :
-    base(base), size(s), callback_count(0)
-  {}
-};
-
-static SerialSet *serialset = 0;
-
-
 Scheduler::Scheduler(Network* net)
-  : net(net), first_schedule(true), schedule(true),
+  : net(net),
+    first_schedule(true),
+    schedule(true),
+    serial_id(1),
     mailbox("NetworkEditor request FIFO", 100)
 {
   net->attach(this);
@@ -91,7 +80,7 @@ void
 Scheduler::run()
 {
   // Go into Main loop.
-  do_scheduling(0);
+  do_scheduling_real(0);
   main_loop();
 }
 
@@ -104,26 +93,36 @@ Scheduler::main_loop()
   while(!done){
     MessageBase* msg=mailbox.receive();
     // Dispatch message..
-    switch(msg->type){
+    switch (msg->type) {
     case MessageTypes::MultiSend:
       {
 	//cerr << "Got multisend\n";
 	Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
-	multisend(mmsg->p1);
+	multisend_real(mmsg->p1);
 	// Do not re-execute sender
 
 	// do_scheduling on the module instance bound to
 	// the output port p1 (the first arg in Multisend() call)
-	do_scheduling(mmsg->p1->get_module()); 
+	do_scheduling_real(mmsg->p1->get_module()); 
       }
       break;
+
     case MessageTypes::ReSchedule:
-      do_scheduling(0);
+      do_scheduling_real(0);
       break;
+
+    case MessageTypes::SchedulerInternalExecuteDone:
+      {
+        Module_Scheduler_Message *ms_msg = (Module_Scheduler_Message *)msg;
+        report_execution_finished_real(ms_msg->serial);
+      }
+      break;
+
     default:
       cerr << "Unknown message type: " << msg->type << std::endl;
       break;
     };
+
     delete msg;
   };
 }
@@ -137,7 +136,7 @@ Scheduler::request_multisend(OPort* p1)
 
 
 void
-Scheduler::multisend(OPort* oport)
+Scheduler::multisend_real(OPort* oport)
 {
   int nc=oport->nconnections();
   for (int c=0;c<nc;c++)
@@ -147,16 +146,23 @@ Scheduler::multisend(OPort* oport)
     Module* m=iport->get_module();
     if (!m->need_execute)
     {
-      m->need_execute=true;
+      m->need_execute = true;
     }
   }
 }
 
 
 void
-Scheduler::do_scheduling(Module* exclude)
+Scheduler::do_scheduling()
 {
-  if(!schedule)
+  mailbox.send(new Module_Scheduler_Message());
+}
+
+
+void
+Scheduler::do_scheduling_real(Module* exclude)
+{
+  if (!schedule)
     return;
 
   int nmodules=net->nmodules();
@@ -167,12 +173,12 @@ Scheduler::do_scheduling(Module* exclude)
   for(i=0;i<nmodules;i++)
   {
     Module* module=net->module(i);
-    if(module->need_execute)
+    if (module->need_execute)
     {
       needexecute.push(module);
     }
   }
-  if(needexecute.empty())
+  if (needexecute.empty())
   {
     return;
   }
@@ -201,7 +207,7 @@ Scheduler::do_scheduling(Module* exclude)
 	Module* m=iport->get_module();
 	if (m != exclude && !m->need_execute)
         {
-	  m->need_execute=1;
+	  m->need_execute = true;
 	  needexecute.push(m);
 	}
       }
@@ -212,7 +218,7 @@ Scheduler::do_scheduling(Module* exclude)
     for (i=0;i<ni;i++)
     {
       IPort* iport=module->getIPort(i);
-      if(iport->nconnections())
+      if (iport->nconnections())
       {
 	Connection* conn=iport->connection(0);
 	OPort* oport=conn->oport;
@@ -225,13 +231,13 @@ Scheduler::do_scheduling(Module* exclude)
             {
 	      // If this oport already has the data, add it
 	      // to the to_trigger list.
-	      if(oport->have_data())
+	      if (oport->have_data())
               {
 		to_trigger.push_back(conn);
 	      }
               else
               {
-		m->need_execute=true;
+		m->need_execute = true;
 		needexecute.push(m);
 	      }
 	    }
@@ -247,55 +253,66 @@ Scheduler::do_scheduling(Module* exclude)
     Connection* conn=to_trigger[i];
     OPort* oport=conn->oport;
     Module* module=oport->get_module();
-    if(module->need_execute)
-    {
-      // Executing this module, don't actually trigger.
-    }
-    else
+
+    // Only tricker the non-executing modules.
+    if (!module->need_execute)
     {
       module->mailbox.send(scinew Scheduler_Module_Message(conn));
     }
   }
 
-  // Trigger any modules that need executing.
-  // Lock serialid?
+  // Create our SerialSet so that we can track when execution is finished.
   unsigned int serial_base = 0;
   if (nmodules)
   {
-    static unsigned int serialid = 1;
-    if (serialid > 0x0FFFFFFF) serialid = 1;
-    serial_base = serialid;
-    serialid += nmodules;
-    serialset = scinew SerialSet(serial_base, nmodules);
+    if (serial_id > 0x0FFFFFFF) serial_id = 1;
+    serial_base = serial_id;
+    serial_id += nmodules;
+    serial_set.push_back(SerialSet(serial_base, nmodules));
   }
-  // Unlock serialid?
+
+  // Execute all the modules.
   for(i=0;i<nmodules;i++)
   {
     Module* module=net->module(i);
-    if(module->need_execute)
+    if (module->need_execute)
     {
       module->mailbox.send(scinew Scheduler_Module_Message(serial_base + i));
-      module->need_execute=0;
+      module->need_execute = false;
+    }
+    else
+    {
+      // Already done, report it.
+      report_execution_finished_real(serial_base + i);
     }
   }
 }
 
-void Scheduler::do_scheduling()
-{
-  mailbox.send(new Module_Scheduler_Message());
-}
 
 void
 Scheduler::report_execution_finished(unsigned int serial)
 {
-  if (serial >= serialset->base &&
-      serial < serialset->base + serialset->size)
+  mailbox.send(scinew Module_Scheduler_Message(serial));
+}
+
+
+void
+Scheduler::report_execution_finished_real(unsigned int serial)
+{
+  list<SerialSet>::iterator itr = serial_set.begin();
+  while (itr != serial_set.end())
   {
-    serialset->callback_count++;
-    if (serialset->callback_count == serialset->size-1)
+    if (serial >= itr->base && serial < itr->base + itr->size)
     {
-      cout << "EXECUTION DONE (except viewer)\n";
+      itr->callback_count++;
+      if (itr->callback_count == itr->size-1)
+      {
+        //cout << "EXECUTION DONE (except viewer)\n";
+        serial_set.erase(itr);
+        break;
+      }
     }
+    ++itr;
   }
 }
 
@@ -321,6 +338,11 @@ Module_Scheduler_Message::Module_Scheduler_Message()
 
 Module_Scheduler_Message::Module_Scheduler_Message(OPort* p1)
 : MessageBase(MessageTypes::MultiSend), p1(p1)
+{
+}
+
+Module_Scheduler_Message::Module_Scheduler_Message(unsigned int s)
+  : MessageBase(MessageTypes::SchedulerInternalExecuteDone), serial(s)
 {
 }
 
