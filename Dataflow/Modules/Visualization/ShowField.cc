@@ -109,6 +109,11 @@ class ShowField : public Module
   GuiDouble                text_color_r_;
   GuiDouble                text_color_g_;
   GuiDouble                text_color_b_;
+  GuiInt                   text_show_data_;
+  GuiInt                   text_show_nodes_;
+  GuiInt                   text_show_edges_;
+  GuiInt                   text_show_faces_;
+  GuiInt                   text_show_cells_;
   bool                     text_dirty_;
   
   //! default color and material
@@ -194,6 +199,11 @@ ShowField::ShowField(GuiContext* ctx) :
   text_color_r_(ctx->subVar("text-color-r")),
   text_color_g_(ctx->subVar("text-color-g")),
   text_color_b_(ctx->subVar("text-color-b")),
+  text_show_data_(ctx->subVar("text-show-data")),
+  text_show_nodes_(ctx->subVar("text-show-nodes")),
+  text_show_edges_(ctx->subVar("text-show-edges")),
+  text_show_faces_(ctx->subVar("text-show-faces")),
+  text_show_cells_(ctx->subVar("text-show-cells")),
   text_dirty_(true),
   def_color_r_(ctx->subVar("def-color-r")),
   def_color_g_(ctx->subVar("def-color-g")),
@@ -543,7 +553,12 @@ ShowField::execute()
 					       text_color_b_.get()));
       GeomSwitch *text =
 	renderer_->render_text(fld_handle, text_use_default_color_.get(), m,
-			       true, false, false, false, false);
+			       text_show_data_.get(),
+			       text_show_nodes_.get(),
+			       text_show_edges_.get(),
+			       text_show_faces_.get(),
+			       text_show_cells_.get());
+
       text_id_ = ogeom_->addObj(text, "Text Data");
     }
   }
