@@ -40,7 +40,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Geom/GeomPick.h>
-#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GuiGeom.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiVar.h>

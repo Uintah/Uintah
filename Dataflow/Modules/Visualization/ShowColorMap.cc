@@ -25,7 +25,7 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Geom/Sticky.h>
+#include <Core/Geom/GeomSticky.h>
 
 #include <stdio.h>
 #include <string.h>

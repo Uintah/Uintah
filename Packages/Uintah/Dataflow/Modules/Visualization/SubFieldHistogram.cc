@@ -38,7 +38,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
-#include <Core/Geom/Sticky.h>
+#include <Core/Geom/GeomSticky.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>

@@ -30,7 +30,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSwitch.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Transform.h>

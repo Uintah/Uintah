@@ -28,12 +28,10 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include "Sticky.h"
+#include <Core/Geom/GeomSticky.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
-#include <iostream>
-using std::ostream;
 
 namespace SCIRun {
 

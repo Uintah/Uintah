@@ -44,6 +44,8 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomRenderMode.cc	                \
 	$(SRCDIR)/GeomScene.cc		                \
 	$(SRCDIR)/GeomSphere.cc		                \
+	$(SRCDIR)/GeomSticky.cc		                \
+	$(SRCDIR)/GeomSwitch.cc		                \
 	$(SRCDIR)/GeomTetra.cc		                \
 	$(SRCDIR)/GeomTexSlices.cc	                \
 	$(SRCDIR)/GeomText.cc		                \
@@ -65,8 +67,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Material.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/Pt.cc			    		\
-	$(SRCDIR)/Sticky.cc		    		\
-	$(SRCDIR)/Switch.cc		    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/View.cc		    		\

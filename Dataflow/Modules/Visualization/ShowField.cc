@@ -38,7 +38,7 @@
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
-#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
