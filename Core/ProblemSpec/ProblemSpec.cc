@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <map>
+#include <sstream>
 
 using namespace Uintah;
 using namespace SCIRun;

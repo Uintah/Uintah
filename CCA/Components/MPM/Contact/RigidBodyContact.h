@@ -3,11 +3,11 @@
 #ifndef __RIGID_BODY_H_
 #define __RIGID_BODY_H_
 
-#include <Packages/Uintah/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/MPMInterface.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpec.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>

@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_SCHEDULER_H
 
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
@@ -17,7 +18,6 @@ class DOM_Element;
 
 namespace Uintah {
 
-class Task;
 class VarLabel;
 class ProcessorGroup;
 

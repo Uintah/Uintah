@@ -1153,9 +1153,6 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 	    SFCXVariableBase* srcvar = 
 	       d_sfcxDB.get(label, matlIndex, neighbor);
 
-	    using SCICore::Geometry::Max;
-	    using SCICore::Geometry::Min;
-
 	    IntVector low = Max(lowIndex, neighbor->getSFCXLowIndex());
 	    IntVector high= Min(highIndex, neighbor->getSFCXHighIndex());
 
@@ -1274,9 +1271,6 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 	    SFCYVariableBase* srcvar = 
 	       d_sfcyDB.get(label, matlIndex, neighbor);
 
-	    using SCICore::Geometry::Max;
-	    using SCICore::Geometry::Min;
-
 	    IntVector low = Max(lowIndex, neighbor->getSFCYLowIndex());
 	    IntVector high= Min(highIndex, neighbor->getSFCYHighIndex());
 
@@ -1394,9 +1388,6 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 				   label->getName());
 	    SFCZVariableBase* srcvar = 
 	       d_sfczDB.get(label, matlIndex, neighbor);
-
-	    using SCICore::Geometry::Max;
-	    using SCICore::Geometry::Min;
 
 	    IntVector low = Max(lowIndex, neighbor->getSFCZLowIndex());
 	    IntVector high= Min(highIndex, neighbor->getSFCZHighIndex());

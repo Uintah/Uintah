@@ -1,6 +1,6 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR   := nPackages/Uintah/CCA/Components/MPM/ConstitutiveModel
+SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel
 
 SRCS     += \
 	$(SRCDIR)/CompMooneyRivlin.cc         \

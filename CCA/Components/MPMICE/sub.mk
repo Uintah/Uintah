@@ -18,6 +18,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/ICE \
 	Core/Exceptions \
 	Core/Thread     \
+	Core/Datatypes  \
 	Core/Geometry   \
 	Dataflow/XMLUtil
 

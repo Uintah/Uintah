@@ -1,8 +1,12 @@
 //  MPMMaterial.cc
 
 #include "MPMMaterial.h"
+
 #include "ConstitutiveModel.h"
+#include "ConstitutiveModelFactory.h"
+
 #include <Core/Geometry/IntVector.h>
+
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
@@ -13,8 +17,6 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <iostream>
-#include "ConstitutiveModelFactory.h"
 #include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurnFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/FractureFactory.h>
@@ -23,6 +25,9 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace Uintah;

@@ -350,36 +350,6 @@ void GridVisualizer::setVars(GridP grid) {
 	add_type(type_list,types[i]->getSubType());
       }
       break;
-    case TypeDescription::XFCVariable:
-      if (var_orientation.get() == XFC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
-    case TypeDescription::YFCVariable:
-      if (var_orientation.get() == YFC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
-    case TypeDescription::ZFCVariable:
-      if (var_orientation.get() == ZFC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryNumMaterials(names[i], patch, time);
-	matls += mat.str();
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
     }
   }
 
@@ -583,16 +553,6 @@ void GridVisualizer::execute()
 	  }
 	}
 	break;
-	
-      case XFC_VAR:
-	// not implemented
-	break;
-      case YFC_VAR:
-	// not implemented
-	break;
-      case ZFC_VAR:
-	// not implemented
-	break;
       }
     }
 
@@ -622,15 +582,6 @@ void GridVisualizer::execute()
       break;
     case CC_VAR:
       //p = patch->cellPosition(currentNode);
-      break;
-    case XFC_VAR:
-      // not implemented
-      break;
-    case YFC_VAR:
-      // not implemented
-      break;
-    case ZFC_VAR:
-      // not implemented
       break;
     }
     //seleted_sphere->move(p);
@@ -935,15 +886,6 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
     case CC_VAR:
       //p = patch->cellPosition(currentNode);
       break;
-    case XFC_VAR:
-      // not implemented
-      break;
-    case YFC_VAR:
-      // not implemented
-      break;
-    case ZFC_VAR:
-      // not implemented
-      break;
     }
     if (!node_selected) {
       selected_sphere = scinew GeomSphere(p,rad,nu,nv,
@@ -959,5 +901,5 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   else
     cerr<<"Not getting the correct data\n";
 }
-} // End namespace Uintah
 
+} // End namespace Uintah

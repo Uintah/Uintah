@@ -13,11 +13,9 @@
 #include <vector>
 #include <mpi.h>
 
-using std::vector;
-using std::map;
-
 namespace Uintah {
 
+using namespace std;
 using namespace SCIRun;
 
 class DataItem;
@@ -214,3 +212,4 @@ private:
 
 } // end namespace Uintah
 
+#endif

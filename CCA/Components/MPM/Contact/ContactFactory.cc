@@ -2,6 +2,7 @@
 #include "NullContact.h"
 #include "SingleVelContact.h"
 #include "FrictionContact.h"
+#include "RigidBodyContact.h"
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>

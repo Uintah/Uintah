@@ -1,14 +1,20 @@
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+// MPMICE.cc
 
+#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
+#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+
+#include <Core/Datatypes/DenseMatrix.h>
 
 using namespace Uintah;
 using namespace SCIRun;
