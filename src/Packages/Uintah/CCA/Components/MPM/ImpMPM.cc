@@ -80,8 +80,13 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    string integrator_type;
    if (mpm_ps) {
      mpm_ps->get("time_integrator",integrator_type);
-     if (integrator_type == "implicit")
+     if (integrator_type == "implicit"){
        d_integrator = Implicit;
+       d_conv_crit_disp   = 1.e-10;
+       d_conv_crit_energy = 4.e-10;
+       mpm_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
+       mpm_ps->get("convergence_criteria_energy",d_conv_crit_energy);
+     }
      else
        if (integrator_type == "explicit")
 	 d_integrator = Explicit;
@@ -105,7 +110,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    }
    string solver;
    if (!mpm_ps->get("solver",solver))
-     solver = "petsc";
+     solver = "simple";
 
    if (solver == "petsc")
      d_solver = scinew MPMPetscSolver();
@@ -479,11 +484,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
   int count = 0;
   bool dispInc = false;
   bool dispIncQ = false;
-  double error = 1.e-30;
-  
-  if (dispIncNorm/dispIncNormMax <= error)
+
+  if (dispIncNorm/dispIncNormMax <= d_conv_crit_disp)
     dispInc = true;
-  if (dispIncQNorm/dispIncQNorm0 <= 4.*error)
+  if (dispIncQNorm/dispIncQNorm0 <= d_conv_crit_energy)
     dispIncQ = true;
 
   // Get all of the required particle data that is in the old_dw and put it 
@@ -568,9 +572,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
 	 << "\n";
     cerr << "dispIncQNorm/dispIncQNorm0 = " << dispIncQNorm/dispIncQNorm0 
 	 << "\n";
-    if (dispIncNorm/dispIncNormMax <= error)
+    if (dispIncNorm/dispIncNormMax <= d_conv_crit_disp)
       dispInc = true;
-    if (dispIncQNorm/dispIncQNorm0 <= 4.*error)
+    if (dispIncQNorm/dispIncQNorm0 <= d_conv_crit_energy)
       dispIncQ = true;
     subsched->advanceDataWarehouse(grid);
   }
@@ -1854,8 +1858,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                             + (pacceleration[idx]+acc)*(.5* delT);
     
 	  paccNew[idx] = acc;
-	  cerr << "position = " << pxnew[idx] << "\n";
-	  cerr << "acceleration = " << paccNew[idx] << "\n";
+//	  cerr << "position = " << pxnew[idx] << "\n";
+//	  cerr << "acceleration = " << paccNew[idx] << "\n";
           double rho;
 	  if(pvolume[idx] > 0.){
 	    rho = pmass[idx]/pvolume[idx];
