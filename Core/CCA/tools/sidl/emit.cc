@@ -1378,7 +1378,8 @@ void CI::emit_proxy(EmitState& e)
           << "\t\t\t\tSCIRun::MxNArrayRep* arrrep)\n"; 
     e.out << "{\n";
     e.out << "  //First clear this distribution in case it already exists\n";
-    e.out << "  d_sched->clear(distname);\n";
+    e.out << "  d_sched->clear(distname, ::SCIRun::caller);\n";
+    e.out << "  d_sched->clear(distname, ::SCIRun::callee);\n";
     e.out << "  d_sched->setCallerRepresentation(distname,arrrep);\n";
     e.out << "  //Scatter to all callee objects\n";
     e.out << "  ::SSIDL::array2< int> _rep = arrrep->getArray();\n";
