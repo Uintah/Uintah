@@ -986,7 +986,7 @@ ICUMonitor::draw_plots()
           float val = (tmpdata2 - g.min_) * norm;
           glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
 		     (start_y + val) * sy);
-          glColor4f(g.b_, g.r_, g.g_, 0.8);
+          glColor4f(.8, .8, .8, 0.8);
         }
         glEnd();
       }
