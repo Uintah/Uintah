@@ -47,26 +47,19 @@
 
 #include <sci_defs/teem_defs.h>
 
-#ifdef HAVE_TEEM
 #include <Dataflow/Ports/NrrdPort.h>
-#endif
 
 namespace Insight {
 
 using namespace SCIRun;
-#ifdef HAVE_TEEM
-using namespace SCITeem;
-#endif
 
 class PSECORESHARE ImageToNrrd : public Module {
 public:
   ITKDatatypeIPort* inport1_;
   ITKDatatypeHandle inhandle1_;
 
-#ifdef HAVE_TEEM
   NrrdOPort* onrrd_;
   NrrdDataHandle onrrd_handle_;
-#endif
 
   ImageToNrrd(GuiContext*);
 
@@ -105,7 +98,7 @@ ImageToNrrd::~ImageToNrrd(){
 template<class InputImageType, unsigned  nrrdtype>
 void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   // check if Teem exists
-#ifdef HAVE_TEEM
+
 
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
@@ -177,14 +170,12 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   }
 
   onrrd_handle_ = nout;
-#endif
   
 }
 
 template<class InputImageType, unsigned  nrrdtype>
 void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
   // check if Teem exists
-#ifdef HAVE_TEEM
 
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
@@ -263,8 +254,6 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
   }
 
   onrrd_handle_ = nout;
-#endif
-  
 }
 
 template<class InputImageType, unsigned nrrdtype>
@@ -277,11 +266,9 @@ bool ImageToNrrd::run( itk::Object* obj1)
   
   create_nrrd<InputImageType,nrrdtype>(inhandle1_);
 
-#ifdef HAVE_TEEM
   if(onrrd_handle_.get_rep()) {
     onrrd_->send(onrrd_handle_);
   }
-#endif
   return true;
 }
 
@@ -296,36 +283,29 @@ bool ImageToNrrd::run2( itk::Object* obj1)
   
   create_nrrd2<InputImageType,nrrdtype>(inhandle1_);
 
-#ifdef HAVE_TEEM
   if(onrrd_handle_.get_rep()) {
     onrrd_->send(onrrd_handle_);
   }
-#endif
   return true;
 }
 
 void ImageToNrrd::execute() {
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
-#ifdef HAVE_TEEM
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-#endif
   
   if (!inport1_) {
     error("Unable to initialize iport 'InputImage'.");
     return;
   }
-#ifdef HAVE_TEEM
   if (!onrrd_) {
     error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
-#endif  
   if(!inport1_->get(inhandle1_))
     return;
   
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
-#ifdef HAVE_TEEM  
   // can we operate on it?
   if(0) { }
   else if(run< itk::Image<float, 2>, nrrdTypeFloat >(n)) { }
@@ -359,9 +339,6 @@ void ImageToNrrd::execute() {
     error("Incorrect input type");
     return;
   }
-#else
-  error("Must have Teem to use this module.  Please reconfigure and enable the Teem package.");
-#endif
 }
 
 void ImageToNrrd::tcl_command(GuiArgs& args, void* userdata)
