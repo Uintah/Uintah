@@ -20,8 +20,18 @@ itcl_class PSECommon_FEM_BuildFEMatrix {
     method set_defaults {} {
         global $this-BCFlag
 	global $this-UseCondTCL
+	global $this-refnodeTCL
         set $this-BCFlag "none"
 	set $this-UseCondTCL 1
+	set $this-refnodeTCL 0
+    }
+    method make_entry {w text v c} {
+        frame $w
+        label $w.l -text "$text"
+        pack $w.l -side left
+        entry $w.e -textvariable $v
+        bind $w.e <Return> $c
+        pack $w.e -side right
     }
     method ui {} {
         set w .ui[modname]
@@ -39,11 +49,13 @@ itcl_class PSECommon_FEM_BuildFEMatrix {
                 left $this-BCFlag \
                 {{"None" none} \
                 {"Apply Dirichlet" DirSub} \
-                {"Pin Node Zero" PinZero} \
-                {"Ground Average DC" AverageGround}}
+                {"Ground Average DC" AverageGround} \
+                {"Use Reference Node" PinZero}}
+	global $this-refnodeTCL
+	make_entry $w.f.pinned "Reference node:" $this-refnodeTCL {}
 	global $this-UseCondTCL
 	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL
-	pack $w.f.r $w.f.b -side top -expand 1 -fill x
+	pack $w.f.r $w.f.pinned $w.f.b -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }
