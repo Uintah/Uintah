@@ -40,6 +40,10 @@ StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params,
   d_lsoot = false;
   d_rxnTableDimension = numMixVars + numRxnVars + !(d_adiabatic);
   d_indepVars = vector<double>(d_rxnTableDimension);
+  //if (rxn_db->findBlock("opl"))
+  //    rxn_db->require("opl",d_xumax);
+  //  else
+  //    d_xumax = 3.0;
   // Only need to set up reaction table if mixing table is dynamic
   string mixTableType = mixModel->getMixTableType();
   if (mixTableType == "dynamic") {
@@ -51,13 +55,11 @@ StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params,
     //No static table capability for equilibrium model; need to add???
     if (rxn_db->findBlock("TableType")) {
       rxn_db->require("TableType", tableType);
-      if (tableType == "static") {
-	cerr << "Static equilibrium table not implemented yet" << endl;
-	cerr << "Table will be computed dynamically" << endl;
-      }
-      else if (tableType != "dynamic") {
-	throw InvalidValue("Table type not supported" + tableType);
-      }
+      if (tableType != "dynamic")
+	cerr << "Equilibrium TABLE TYPE is dynamic" << endl;
+    }
+    else {
+      cout << "Equilibrium TABLE TYPE is dynamic" << endl;
     }
     if (rxn_db->findBlock("TableStorage")) {
       rxn_db->require("TableStorage", tableStorage);
@@ -66,12 +68,14 @@ StanjanEquilibriumReactionModel::problemSetup(const ProblemSpecP& params,
       else if (tableStorage == "2DVector")
 	d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
       else {
-	throw InvalidValue("Table storage not supported" + tableStorage);
+	d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
+	cout << "Equilibrium TABLE STORAGE is vectorTable" << endl;
+	//throw InvalidValue("Table storage not supported" + tableStorage);
       }
     }
     else {
       d_rxnTable = new VectorTable(d_rxnTableDimension, d_rxnTableInfo);
-      cout << "TABLE STORAGE is vectorTable" << endl;
+      cout << "Equilibrium TABLE STORAGE is vectorTable" << endl;
     }
     // tableSetup is a function in DynamicTable; it allocates memory for table
     tableSetup(d_rxnTableDimension, d_rxnTableInfo);
@@ -90,7 +94,7 @@ StanjanEquilibriumReactionModel::getRxnStateSpace(const Stream& unreactedMixture
 void
 StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilStateSpace) 
 {
-  vector<double> vec_stateSpaceVars;
+  //vector<double> vec_stateSpaceVars;
 #if 0
   cout << "Stanjan::tableKeyIndex = " << endl;
   for (int ii = 0; ii < d_rxnTableDimension; ii++) {
@@ -99,7 +103,8 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
     if (!(ii % 10)) cout << endl; 
   }
 #endif
-   if (!(d_rxnTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
+  //if (!(d_rxnTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
+  if (!(d_rxnTable->Lookup(tableKeyIndex, equilStateSpace))) 
     {
       // Convert indeces to values, get unreacted mixture
       convertIndextoValues(tableKeyIndex); //computes d_indepVars
@@ -133,17 +138,18 @@ StanjanEquilibriumReactionModel::tableLookUp(int* tableKeyIndex, Stream& equilSt
       else    
         equilStateSpace.d_drhodf = (dfStateSpace.getDensity() - 
 				    equilStateSpace.getDensity())/eps;
-      vec_stateSpaceVars = equilStateSpace.convertStreamToVec();
+      //vec_stateSpaceVars = equilStateSpace.convertStreamToVec();
       // defined in KDTree or VectorTable
-      d_rxnTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+      //d_rxnTable->Insert(tableKeyIndex, vec_stateSpaceVars);
+      d_rxnTable->Insert(tableKeyIndex, equilStateSpace);
       //cout << " Table entry for f = " << mixVars[0] << endl;
       //equilStateSpace.print(cerr);
     }
   else {
     //cout<<"Stanjan::entry exists"<<endl;
-    equilStateSpace.convertVecToStream(vec_stateSpaceVars, 
-				       d_mixModel->getNumMixVars(),
-				       d_mixModel->getNumRxnVars(), d_lsoot);
+    //equilStateSpace.convertVecToStream(vec_stateSpaceVars, 
+    //				       d_mixModel->getNumMixVars(),
+    //		       d_mixModel->getNumRxnVars(), d_lsoot);
   }
 
 }

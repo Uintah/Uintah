@@ -3,6 +3,7 @@
 /* REFERENCED */
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/KDTree.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <iostream>
 using namespace std;
 using namespace Uintah;
@@ -36,7 +37,8 @@ KD_Tree::IsEmpty () const{
 }
 
 bool
-KD_Tree::Lookup(int key[], vector<double>& Phi){
+//KD_Tree::Lookup(int key[], vector<double>& Phi){
+KD_Tree::Lookup(int key[], Stream& Phi){
   //cout<<"KDTree::Lookup"<<endl;
   KD_Node* x = TreeSearch(d_root,key);
   if ( x == 0) {
@@ -50,7 +52,8 @@ KD_Tree::Lookup(int key[], vector<double>& Phi){
 
 
 bool
-KD_Tree::Insert(int key[], vector<double>& Phi) {
+//KD_Tree::Insert(int key[], vector<double>& Phi) {
+KD_Tree::Insert(int key[], Stream& Phi) {
     // returns true if the inserted node has correct Phi
   return(TreeInsert(d_root, key, Phi, 0)->Phi == Phi);
 }
@@ -83,7 +86,8 @@ KD_Tree::TreeSearch(KD_Node *x, int key[]){
 }
 
 KD_Node* 
-KD_Tree::TreeInsert(KD_Node*& x, int key[], vector<double> phi,
+//KD_Tree::TreeInsert(KD_Node*& x, int key[], vector<double> phi,
+KD_Tree::TreeInsert(KD_Node*& x, int key[], Stream phi,
 		    int lev){
   int i;
   if(x==0) { 
@@ -127,7 +131,8 @@ KD_Tree::DeleteItem(KD_Node*& x, int key[], int lev){
 
 void                                    
 KD_Tree::TreeDelete(KD_Node*& x, int* /* key[] */ ){
-  vector<double> phi;
+  //vector<double> phi;
+  Stream phi;
   KD_Node *z = new KD_Node;
   // If Node x is a leaf
   if((x->left==0) && (x->right==0)){
@@ -157,7 +162,8 @@ KD_Tree::TreeDelete(KD_Node*& x, int* /* key[] */ ){
 }
                 
 void 
-KD_Tree::ProcessLeftMost(KD_Node*& x, vector<double>& phi){
+//KD_Tree::ProcessLeftMost(KD_Node*& x, vector<double>& phi){
+KD_Tree::ProcessLeftMost(KD_Node*& x, Stream& phi){
   KD_Node *z = new KD_Node;
   if(x->left==0){
     phi = x->Phi;
@@ -183,6 +189,9 @@ KD_Tree::DestroyTree(KD_Node *x){
 
 //
 // $Log$
+// Revision 1.8  2003/01/31 18:22:46  spinti
+// Removed conversion from stream to vector. Tables now stored as vector of streams.
+//
 // Revision 1.7  2002/05/31 22:04:44  spinti
 // *** empty log message ***
 //
