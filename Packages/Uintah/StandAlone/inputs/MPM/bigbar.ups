@@ -6,11 +6,11 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Three point bending problem</title>
+	<title>Slender Bar Three Point Bending Problem</title>
    </Meta>
 
    <Time>
-	<maxTime>1</maxTime>
+	<maxTime>1.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.001</delt_max>
@@ -18,12 +18,19 @@
    </Time>
 
    <DataArchiver>
-        <filebase>bend.uda</filebase>
+        <filebase>bigbar.uda</filebase>
         <outputInterval>.01</outputInterval>
+        <save label = "p.x"/>
+        <save label = "p.volume"/>
+        <save label = "p.stress"/>
+        <save label = "p.deformationMeasure"/>
+        <save label = "p.volumedeformed" />
+        <save label = "p.externalforce" />
    </DataArchiver>
 
    <MPM>
 	<time_integrator>explicit</time_integrator>
+        <nodes8or27>27</nodes8or27>
    </MPM>
 
 
@@ -49,10 +56,10 @@
 	        </constitutive_model>
 		<geom_object>
 		    <box label="gp1">
-			<min>[ 0.01, 0.01, 0.01 ]</min>
-			<max>[ 1.99,  .99, 0.99 ]</max>
+			<min>[ 0.0, 0.0, 0.0 ]</min>
+			<max>[ 20.0, 1.0, 1.0 ]</max>
 		    </box>
-		    <res>[2,2,2]</res>
+		    <res>[4,4,4]</res>
 		    <velocity>[0.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
  		</geom_object>
@@ -75,9 +82,10 @@
     <Grid>
 	<Level>
 	    <Box label="1">
-		<lower>[ 0.0, 0.0, 0.0   ]</lower>
-		<upper>[  2.0, 1.0, 1.0 ]</upper>
-	        <resolution>[22,20,1]</resolution>
+		<lower>[ -2.5, -5.5, -0.5   ]</lower>
+		<upper>[  22.5, 3.5, 1.5]</upper>
+<!--            <resolution>[22,20,1]</resolution> -->
+	        <resolution>[100,36,8]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
@@ -86,14 +94,19 @@
     <PhysicalBC>
 	<MPM>
 		<force>
-			<lower>[0.01, 0.01, 0.01]</lower>
-			<upper>[.01, 0.99, 0.99]</upper>
-		        <force_density>[-10,0,0]</force_density>
+			<lower>[0.0, 0.0, 0.0]</lower>
+			<upper>[0.0, 0.0, 1.0]</upper>
+		        <force_density>[0,500,0]</force_density>
 		</force>
 		<force>
-			<lower>[1.99, 0.01, 0.01]</lower>
-			<upper>[1.99, 0.99, 0.99]</upper>
-		        <force_density>[10,0,0]</force_density>
+			<lower>[20.0, 0.0, 0.0]</lower>
+			<upper>[20.0, 0.0, 1.0]</upper>
+		        <force_density>[0,500,0]</force_density>
+		</force>
+		<force>
+			<lower>[10.0, 1.0, 0.0]</lower>
+			<upper>[10.0, 1.0, 1.0]</upper>
+		        <force_density>[0,-500,0]</force_density>
 		</force>
 	</MPM>
     </PhysicalBC>
