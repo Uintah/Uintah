@@ -165,7 +165,7 @@ EmitState::EmitState()
 void emit_cast_exception(EmitState& e)
 {
   e.out << "\n//cast exceptions\n";
-  e.out << "void _castException(int _xid, SCIRun::Message** _xMsg)\n";
+  e.out << "static void _castException(int _xid, SCIRun::Message** _xMsg)\n";
   e.out << "{\n";
   e.out << leader2 << "  switch (_xid) {\n";
   e.out << e.xcept.str();
@@ -257,7 +257,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "using namespace std;\n";
   out << "\n"; 
   out << "\n//cast exceptions\n";
-  out << "void _castException(int _xid, SCIRun::Message** _xMsg);\n\n";
+  out << "static void _castException(int _xid, SCIRun::Message** _xMsg);\n\n";
 
   out << e.proxy.str();
   out << e.out.str();
