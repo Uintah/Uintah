@@ -360,7 +360,7 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
       return;
     }
 
-
+    reset_vars();
     const Array1< Color >& colors = mapTypes[mapType.get()]->getColors();
     int n = colors.size();
     int m = resolution.get();

@@ -207,7 +207,7 @@ Piostream* auto_istream(int fd)
 
 Piostream* auto_istream(ifstream* inp, char *name)
 {
-    GzipPiostream *gzp=scinew GzipPiostream(name, 1);
+    GzipPiostream *gzp=scinew GzipPiostream(name, 1, 0);
     if (gzp->fileOpen()) return gzp;
     delete gzp;
 

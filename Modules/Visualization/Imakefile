@@ -34,7 +34,8 @@ VOLPACK_SRCS = BB.cc RenderRG.cc
 #endif
 
 OBJS = AddWells.o AddWells2.o BitVisualize.o BoxClipSField.o \
-	BoundGrid.o ColorMapKey.o CuttingPlane.o CuttingPlaneTex.o \
+	BoundGrid.o Bundles.o ColorMapKey.o \
+	CuttingPlane.o CuttingPlaneTex.o \
 	FastRender.c  FieldCage.o \
 	GenAxes.o GenColorMap.o GenFieldEdges.o GenStandardColorMaps.o \
 	GenTransferFunc.o  Hedgehog.o  \
@@ -46,7 +47,8 @@ OBJS = AddWells.o AddWells2.o BitVisualize.o BoxClipSField.o \
 	$(TEMPLATE_OBJS)
 
 SRCS = AddWells.cc AddWells2.cc BitVisualize.cc BoxClipSField.cc \
-	BoundGrid.cc ColorMapKey.cc CuttingPlane.cc CuttingPlaneTex.cc \
+	BoundGrid.cc Bundles.cc ColorMapKey.cc \
+	CuttingPlane.cc CuttingPlaneTex.cc \
 	FastRender.c  FieldCage.cc \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenStandardColorMaps.cc \
 	GenTransferFunc.cc  Hedgehog.cc \

@@ -9,6 +9,7 @@
 set auto_index(BuildMultiMesh) "source $dir/BuildMultiMesh.tcl"
 set auto_index(BuildOctree) "source $dir/BuildOctree.tcl"
 set auto_index(Delaunay) "source $dir/Delaunay.tcl"
+set auto_index(MeshToGeom) "source $dir/MeshToGeom.tcl"
 set auto_index(MeshView) "source $dir/MeshView.tcl"
 set auto_index(MorphMesher3d) "source $dir/MorphMesher3d.tcl"
 set auto_index(SelectMesh) "source $dir/SelectMesh.tcl"

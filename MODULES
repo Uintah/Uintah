@@ -50,12 +50,20 @@ BuildFDField
 BuildFDMatrix
 
 Category: FEM
+AdjustField
+AmoebaVisualize
 ApplyBC
+BCNodesToSurf
 BuildFEMatrix
 ComposeError
+DipoleCreate
+ElectrodeControl
 ErrorInterval
 FEMError
 MeshRefiner
+SetBCNode
+SourceLocalize
+SourceOptimize
 
 Category: Fields
 ClipField
@@ -66,6 +74,7 @@ FieldMedianFilter
 FieldSeed
 Gradient
 GradientMagnitude
+PadFldPow2
 SFUGtoGeom
 SFRGfile
 TracePath
@@ -219,6 +228,7 @@ AddWells2
 BB
 BitVisualize
 BoxClipSField
+Bundles
 Chuck
 ColorMapKey
 CuttingPlane
@@ -226,10 +236,9 @@ CuttingPlaneTex
 FieldCage
 GenAxes
 GenColorMap
-GenStandardColorMaps
-GenTransferFunc
 GenFieldEdges
 GenStandardColorMaps
+GenTransferFunc
 Hedgehog
 ImageViewer
 IsoMask

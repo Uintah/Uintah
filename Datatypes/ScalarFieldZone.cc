@@ -81,7 +81,7 @@ int ScalarFieldZone::interpolate(const Point& p, double& v, double epsilon1,
 }
 
 int ScalarFieldZone::interpolate(const Point& p, double& v, int& cache,
-				 double epsilon1, double epsilon2)
+				 double epsilon1, double epsilon2, int)
 {
     for(int i=0;i<zones.size();i++){
 	if(zones[i]->interpolate(p, v, cache, epsilon1, epsilon2))

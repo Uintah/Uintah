@@ -82,9 +82,9 @@ public:
 private:
 
   TCLstring tcl_status; 
-  TCLvarint mapType;
+  TCLint mapType;
   TCLint minRes;
-  TCLvarint resolution;
+  TCLint resolution;
   ColorMapOPort  *outport;
   Array1<StandardColorMap *> mapTypes;
 

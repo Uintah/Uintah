@@ -24,6 +24,7 @@
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
 #include <Malloc/Allocator.h>
+#include <TCL/TCLvar.h>
 
 using sci::MeshHandle;
 
@@ -32,6 +33,8 @@ class MeshToGeom : public Module {
     GeometryOPort* ogeom;
 
     void mesh_to_geom(const MeshHandle&, GeomGroup*);
+    TCLint showElems;
+    TCLint showNodes;
 public:
     MeshToGeom(const clString& id);
     MeshToGeom(const MeshToGeom&, int deep);
@@ -47,7 +50,8 @@ Module* make_MeshToGeom(const clString& id)
 }
 }
 MeshToGeom::MeshToGeom(const clString& id)
-: Module("MeshToGeom", id, Filter)
+: Module("MeshToGeom", id, Filter), showNodes("showNodes", id, this),
+  showElems("showElems", id, this)
 {
     // Create the input port
     imesh=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -57,7 +61,8 @@ MeshToGeom::MeshToGeom(const clString& id)
 }
 
 MeshToGeom::MeshToGeom(const MeshToGeom&copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), showNodes("showNodes", id, this),
+  showElems("showElems", id, this)
 {
     NOT_FINISHED("MeshToGeom::MeshToGeom");
 }
@@ -168,8 +173,8 @@ void MeshToGeom::execute()
 	clString tmpb("Tris ");
 	tmpb += (char) ('0' + i);
 
-	ogeom->addObj(matls[i],tmps());
-	ogeom->addObj(matlsb[i],tmpb());
+	if (showNodes.get()) ogeom->addObj(matls[i],tmps());
+	if (showElems.get()) ogeom->addObj(matlsb[i],tmpb());
 	
     }	
 

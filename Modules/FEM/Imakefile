@@ -1,10 +1,14 @@
 
 #include <config/sci.cf>
 
-OBJS = ApplyBC.o  BuildFEMatrix.o  ComposeError.o  \
-	ErrorInterval.o  FEMError.o  MeshRefiner.o
-SRCS = ApplyBC.cc BuildFEMatrix.cc ComposeError.cc \
-	ErrorInterval.cc FEMError.cc MeshRefiner.cc
+OBJS = AdjustField.o  AmoebaVisualize.o  ApplyBC.o  \
+	BCNodesToSurf.o  BuildFEMatrix.o  ComposeError.o  \
+	DipoleCreate.o  ElectrodeControl.o  ErrorInterval.o  FEMError.o  \
+	MeshRefiner.o  SetBCNode.o  SourceLocalize.o  SourceOptimize.o
+SRCS = AdjustField.cc AmoebaVisualize.cc ApplyBC.cc \
+	BCNodesToSurf.cc  BuildFEMatrix.cc ComposeError.cc \
+	DipoleCreate.cc ElectrodeControl.cc ErrorInterval.cc FEMError.cc \
+	MeshRefiner.cc SetBCNode.cc SourceLocalize.cc SourceOptimize.cc
 
 LIBNAME = FEM
 

@@ -28,7 +28,7 @@ public:
     virtual void compute_minmax();
     virtual Vector gradient(const Point&);
     virtual int interpolate(const Point&, double&, double epsilon1=1.e-6, double epsilon2=1.e-6);
-    virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6);
+    virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6, int exhaustive=0);
     virtual void get_boundary_lines(Array1<Point>& lines);
 
     // Persistent representation...

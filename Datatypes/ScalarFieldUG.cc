@@ -14,6 +14,7 @@
 #include <Datatypes/ScalarFieldUG.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
+#include <Math/MusilRNG.h>
 #include <Malloc/Allocator.h>
 
 using sci::MeshHandle;
@@ -115,10 +116,33 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, double epsilon1, d
     return 1;
 }
 
-int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double epsilon1, double epsilon2)
+// exhaustive is used to find points in "broken" meshes.
+// if exhaustive == 1, we will try locate with 5 random seeds.
+// if that fails and exhaustive == 2, we will do a full brute-force search.
+
+int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double epsilon1, double epsilon2, int exhaustive)
 {
-    if(!mesh->locate(p, ix, epsilon1, epsilon2))
-	return 0;
+    if (!mesh->locate(p,ix,epsilon1,epsilon2)) {
+	if (exhaustive > 0) {
+	    MusilRNG mr;
+	    ix=mr()*mesh->nodes.size();
+	    int cntr=0;
+	    while(!mesh->locate(p,ix,epsilon1, epsilon2) && cntr<5) {
+		ix=mr()*mesh->nodes.size();
+		cntr++;
+	    }
+	    if (cntr==5) {
+		if (exhaustive == 2) {
+		    if(!mesh->locate2(p, ix, 0))
+			return 0;
+		} else {
+		    return 0;
+		}
+	    }
+	} else {
+	    return 0;
+	}
+    }
     if(typ == NodalValues){
         double s1,s2,s3,s4;
 	Element* e=mesh->elems[ix];

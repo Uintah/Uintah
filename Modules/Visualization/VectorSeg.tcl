@@ -20,7 +20,8 @@ itcl_class VectorSeg {
 	set material(5,name) whiteMatter
 	set material(5,min) 0
 	set material(5,max) 0
-	set num_fields 0
+	global $this-numFields
+	set $this-numFields 0
     }
     method ui {} {
 	set w .ui$this
@@ -33,9 +34,10 @@ itcl_class VectorSeg {
 	frame $w.f -width 400 -height 500
 	pack $w.f -padx 2 -pady 2 -side top -fill x -expand yes
 	set n "$this-c needexecute "
-
-	set i 0
 	global $this-numFields
+puts "In VectorSeg"
+puts [set $this-numFields]
+	set i 0
 	while {$i<[set $this-numFields]} {
 	    incr i
 	    frame $w.f.f$i -relief groove -borderwidth 2

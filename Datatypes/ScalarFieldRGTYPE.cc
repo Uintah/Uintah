@@ -131,7 +131,8 @@ Vector ScalarFieldRGTYPE::gradient(const Point& p)
 }
 
 int ScalarFieldRGTYPE::interpolate(const Point& p, double& value, int&,
-				   double epsilon1, double epsilon2) {
+				   double epsilon1, double epsilon2,
+				   int) {
     return interpolate(p, value, epsilon1, epsilon2);
 }
 

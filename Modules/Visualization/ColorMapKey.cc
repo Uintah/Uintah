@@ -100,9 +100,9 @@ void ColorMapKey::execute() {
   double xsize = 15./16.0;
   double ysize = 0.1;
   TexSquare *sq = new TexSquare( Point( 0, -1, 0),
-				 Point( xsize, -1, 0),
+				 Point( 0, -1 + ysize, 0 ),
 				 Point( xsize, -1 + ysize, 0 ),
-				 Point( 0, -1 + ysize, 0 ) );
+				 Point( xsize, -1, 0) );
 
   unsigned char tex[ 64 * 64 * 3 ];
   for( int i = 0; curr < map->colors.size(); i++, curr+=skip ) {

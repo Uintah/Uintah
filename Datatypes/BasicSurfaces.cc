@@ -578,9 +578,9 @@ GeomObj* PointSurface::get_obj(const ColorMapHandle& cmap)
 {
 
     GeomPts* pts=scinew GeomPts(1);
-    pts->pts[0] = pos.x();
-    pts->pts[1] = pos.y();
-    pts->pts[2] = pos.z();
+    pts->pts.add(pos.x());
+    pts->pts.add(pos.y());
+    pts->pts.add(pos.z());
 
     if(boundary_type == BdryNone)
 	return pts;
@@ -597,8 +597,8 @@ GeomObj* PointSurface::get_obj(const ColorMapHandle& cmap)
 
     double v=nodes[0]->bc->value;
     Color c(cmap->lookup(v)->diffuse);
-
-    return pts;
+    
+    return scinew GeomMaterial(pts, c);
 }
 
 static Persistent* make_PointsSurface()

@@ -80,12 +80,14 @@ int VectorFieldUG::interpolate(const Point& p, Vector& value)
 
 int VectorFieldUG::interpolate(const Point& p, Vector& value, int& ix, int exhaustive)
 {
-    if (exhaustive)
-	if(!mesh->locate2(p, ix, 0))
+    if (!mesh->locate(p,ix)) {
+	if (exhaustive) {
+	    if(!mesh->locate2(p, ix, 0))
+		return 0;
+	} else {
 	    return 0;
-    if (!exhaustive)
-	if(!mesh->locate(p, ix))
-	    return 0;
+	}
+    }
     if(typ == NodalValues){
 	double s1,s2,s3,s4;
 	Element* e=mesh->elems[ix];

@@ -34,15 +34,17 @@ OPENGLSRCS =
 OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldMedianFilter.o  \
 	FieldGainCorrect.o  FieldSeed.o \
 	GenSigmaSet.o  Gradient.o  GradientMagnitude.o  MMeshToSFUG.o  \
-	MergeTensor.o  SFRGfile.o  SFUGtoGeom.o  TracePath.o  \
-	TransformField.o  $(OPENGLOBJS) \
+	MergeTensor.o  PadFldPow2.o  \
+	SFRGfile.o  SFUGtoGeom.o  TracePath.o  \
+	TransformField.o  $(OPENGLOBJS)  \
 	$(TEMPLATE_OBJS)
 
 SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldMedianFilter.cc \
 	FieldGainCorrect.cc FieldSeed.cc \
 	GenSigmaSet.cc Gradient.cc GradientMagnitude.cc MMeshToSFUG.cc \
-	MergeTensor.cc SFRGfile.cc SFUGtoGeom.cc TracePath.cc \
-	TransformField.cc $(OPENGLSRCS) \
+	MergeTensor.cc PadFldPow2.cc \
+	SFRGfile.cc SFUGtoGeom.cc TracePath.cc \
+	TransformField.cc $(OPENGLSRCS)  \
 	$(TEMPLATE_SRCS)
 
 LIBNAME = Fields

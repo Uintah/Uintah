@@ -141,7 +141,7 @@ int ScalarFieldHUG::interpolate(const Point& p, double& value, double, double)
 }
 
 int ScalarFieldHUG::interpolate(const Point& p, double& value, int& ix,
-				double, double)
+				double, double, int)
 {
   value = mesh->interpolate (p, data, ix);
   

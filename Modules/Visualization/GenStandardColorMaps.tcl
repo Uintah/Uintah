@@ -43,6 +43,10 @@ itcl_class GenStandardColorMaps {
 
     method set_defaults {} { 
         global $this-tcl_status 
+	global $this-resolution
+	global $this-mapType
+	set $this-resolution 128
+	set $this-mapType 3
 	set exposed 0
     } 
   

@@ -93,7 +93,7 @@ void ScalarFieldHP::compute_bounds()
 }
 
 int ScalarFieldHP::interpolate(const Point& p, double& value, int&,
-			       double, double)
+			       double, double, int)
 {
     double z=(int)(p.z()*height);
     int iz=(int)z;

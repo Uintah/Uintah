@@ -14,7 +14,10 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
+#include <Datatypes/Mesh.h>
 #include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldRGBase.h>
+#include <Datatypes/ScalarFieldUG.h>
 #include <Datatypes/ColorMapPort.h>
 #include <Geom/Grid.h>
 #include <Geom/Group.h>
@@ -31,7 +34,9 @@
 #define CP_PLANE 0
 #define CP_SURFACE 1
 #define CP_CONTOUR 2
+using sci::Mesh;
 
+#define EPS 1.e-6
 class CuttingPlane : public Module {
    ScalarFieldIPort *inscalarfield;
    ColorMapIPort *inColorMap;
@@ -47,9 +52,13 @@ class CuttingPlane : public Module {
    TCLdouble scale;
    TCLdouble where;
    TCLint need_find;
+   TCLint localMinMaxTCL;
+   TCLint fullRezTCL;
+   TCLint exhaustiveTCL;
    MaterialHandle outcolor;
    int grid_id;
-
+   clString msg;
+   Mesh* m;
 public:
    CuttingPlane(const clString& id);
    CuttingPlane(const CuttingPlane&, int deep);
@@ -75,7 +84,9 @@ CuttingPlane::CuttingPlane(const clString& id)
   cutting_plane_type("cutting_plane_type",id, this),
   need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
-  num_contours("num_contours", id, this), where("where", id, this)
+  num_contours("num_contours", id, this), where("where", id, this),
+  localMinMaxTCL("localMinMaxTCL", id, this), 
+  fullRezTCL("fullRezTCL", id, this), exhaustiveTCL("exhaustiveTCL", id, this)
 {
     // Create the input ports
     // Need a scalar field and a ColorMap
@@ -99,13 +110,17 @@ CuttingPlane::CuttingPlane(const clString& id)
     need_find.set(1);
     
     outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
+    msg="";
+    m=0;
 }
 
 CuttingPlane::CuttingPlane(const CuttingPlane& copy, int deep)
 : Module(copy, deep), cutting_plane_type("cutting_plane_type",id, this),
   need_find("need_find",id,this),
   scale("scale", id, this), offset("offset", id, this),
-   num_contours("num_contours", id, this), where("where", id, this)
+  num_contours("num_contours", id, this), where("where", id, this),
+  localMinMaxTCL("localMinMaxTCL", id, this),
+  fullRezTCL("fullRezTCL", id, this), exhaustiveTCL("exhaustiveTCL", id, this)
 {
    NOT_FINISHED("CuttingPlane::CuttingPlane");
 }
@@ -123,6 +138,7 @@ void CuttingPlane::execute()
 {
     int old_grid_id = grid_id;
     static int find = -1;
+    int cmapmin, cmapmax;
 
     // get the scalar field and ColorMap...if you can
     ScalarFieldHandle sfield;
@@ -131,7 +147,10 @@ void CuttingPlane::execute()
     ColorMapHandle cmap;
     if (!inColorMap->get( cmap ))
 	return;
-
+    cmapmin=cmap->getMin();
+    cmapmax=cmap->getMax();
+    ScalarFieldUG* sfug=sfield->getUG();
+    if (sfug) m=sfug->mesh.get_rep(); else m=0;
     if (init == 1) 
     {
 	init = 0;
@@ -181,6 +200,52 @@ void CuttingPlane::execute()
 	find = need_find.get();
     }
 
+    // advance or decrement along x, y, or z
+    if (msg != "") {
+	ScalarFieldRGBase *sfb=sfield->getRGBase();
+	if (!sfb) {
+	    cerr << "Error - not a regular grid... can't increment/decrement!\n";
+	    msg="";
+	    return;
+	}
+	Point center, right, down;
+	widget->GetPosition(center, right, down);
+	Point min, max;
+	Vector diag;
+	sfield->get_bounds(min, max);
+	diag=max-min;
+	diag.x(diag.x()/(sfb->nx-1));
+	diag.y(diag.y()/(sfb->ny-1));
+	diag.z(diag.z()/(sfb->nz-1));
+	if (msg=="plusx") {
+	    center.x(center.x()+diag.x());
+	    right.x(right.x()+diag.x());
+	    down.x(down.x()+diag.x());
+	} else if (msg=="minusx") {
+	    center.x(center.x()-diag.x());
+	    right.x(right.x()-diag.x());
+	    down.x(down.x()-diag.x());
+	} else if (msg=="plusy") {
+	    center.y(center.y()+diag.y());
+	    right.y(right.y()+diag.y());
+	    down.y(down.y()+diag.y());
+	} else if (msg=="minusy") {
+	    center.y(center.y()-diag.y());
+	    right.y(right.y()-diag.y());
+	    down.y(down.y()-diag.y());
+	} else if (msg=="plusz") {
+	    center.z(center.z()+diag.z());
+	    right.z(right.z()+diag.z());
+	    down.z(down.z()+diag.z());
+	} else { // if (msg=="minusz")
+	    center.z(center.z()-diag.z());
+	    right.z(right.z()-diag.z());
+	    down.z(down.z()-diag.z());
+	}
+	widget->SetPosition( center, right, down);
+	msg="";
+    }
+
     // get the position of the frame widget
     Point 	corner, center, R, D;
     widget->GetPosition( center, R, D);
@@ -204,8 +269,19 @@ void CuttingPlane::execute()
     int u_num = (int) (u_fac * 500),
         v_num = (int) (v_fac * 500);
 
+    if (fullRezTCL.get()) {
+	ScalarFieldRGBase *sfb=sfield->getRGBase();
+	if (!sfb) {
+	    cerr << "Error - not a regular grid... can't use Full Resolution!\n";
+	}
+	int most=Max(Max(sfb->nx, sfb->ny), sfb->nz);
+	u_num=v_num=most;
+    }
     //    cout << "u fac = " << u_fac << "\nv fac = " << v_fac << endl;
     
+    int localMinMax=localMinMaxTCL.get();
+
+    int exhaustive=exhaustiveTCL.get();
     // Get the scalar values and corresponding
     // colors to put in the cutting plane
     if (cptype != CP_CONTOUR)
@@ -227,18 +303,41 @@ void CuttingPlane::execute()
 #endif
 
 	int ix = 0;
-	for (int i = 0; i < u_num; i++)
-	  for (int j = 0; j < v_num; j++) {
+	int i, j;
+
+	int haveval=0;
+	double min, max, invrange;
+
+	if (localMinMax) {
+	    // get the min and max values from this slice
+	    for (i = 0; i < u_num; i++)
+		for (j = 0; j < v_num; j++) {
+		    Point p = corner + u * ((double) i/(u_num-1)) + 
+			v * ((double) j/(v_num-1));
+		    double sval;
+		    if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
+			if (!haveval) { min=max=sval; haveval=1; }
+			else if (sval<min) min=sval;
+			else if (sval>max) max=sval;
+		    }
+		}
+	    invrange=(cmapmax-cmapmin)/(max-min);
+	}
+
+	for (i = 0; i < u_num; i++)
+	  for (j = 0; j < v_num; j++) {
 	    Point p = corner + u * ((double) i/(u_num-1)) + 
 	      v * ((double) j/(v_num-1));
 	    double sval;
 	    
 	    // get the color from cmap for p 	    
 	    MaterialHandle matl;
-	    if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix)) {
-	      matl = cmap->lookup( sval);
+	    if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
+		if (localMinMax)	// use local min/max to scale
+		    sval=(sval-min)*invrange+cmapmin;
+		matl = cmap->lookup( sval);
 #if 0
-	      alpha = 0.8;
+		alpha = 0.8;
 #endif
 	    } else {
 	      matl = outcolor;
@@ -272,10 +371,31 @@ void CuttingPlane::execute()
 
     else
     {
-	// get the min and max values from the field
-	double min, max;
+	double min, max, invrange;
 	sfield->get_minmax( min, max );
 
+	if (localMinMax) {
+	    // get the min and max values from this slice
+	    int ix = 0;
+	    int i, j;
+	    int haveval=0;
+
+	    for (i = 0; i < u_num; i++)
+		for (j = 0; j < v_num; j++) {
+		    Point p = corner + u * ((double) i/(u_num-1)) + 
+			v * ((double) j/(v_num-1));
+		    double sval;
+		    if (sfield->interpolate( p, sval, ix) || (ix=0) || sfield->interpolate( p, sval, ix, EPS, EPS, exhaustive)) {
+			if (!haveval) { min=max=sval; haveval=1; }
+			else if (sval<min) min=sval;
+			else if (sval>max) max=sval;
+		    }
+		}
+	    invrange=(cmapmax-cmapmin)/(max-min);
+	} else {
+	    // get the min and max values from the field
+	    sfield->get_minmax( min, max );
+	}
 	// get the number of contours
 	int contours = num_contours.get();
 	if (contours >= 2)
@@ -291,7 +411,9 @@ void CuttingPlane::execute()
 	    int i;
 	    for (i = 0; i < contours; i++)
 	    {
-		values[i] = ((double)i/(contours - 1)) * (max - min) + min;
+		if (localMinMax) values[i]=i/(contours-1.)*
+				     (cmapmax-cmapmin)+cmapmin;
+		else values[i]=((double)i/(contours - 1)) * (max - min) + min;
 		MaterialHandle matl;
 		matl = cmap->lookup( values[i] );
 		col_group[i] = new GeomLines;
@@ -317,22 +439,33 @@ void CuttingPlane::execute()
 		    double sval4;
 
 		    // get the value from the field for each point	    
-		    if ( (sfield->interpolate( p1, sval1,ix) || 
-			  (ix=0) || sfield->interpolate( p1, sval1,ix)) && 
-			(sfield->interpolate( p2, sval2,ix) || 
-			 (ix=0) || sfield->interpolate( p2, sval2,ix)) && 
-			(sfield->interpolate( p3, sval3,ix) || 
-			 (ix=0) || sfield->interpolate( p3, sval3,ix)) && 
-			(sfield->interpolate( p4, sval4,ix) || 
-			 (ix=0) || sfield->interpolate( p4, sval4,ix)))
+		    if ( (sfield->interpolate( p1,sval1,ix) || (ix=0) || 
+			  sfield->interpolate( p1, sval1, ix, EPS, EPS, exhaustive)) && 
+			(sfield->interpolate( p2,sval2,ix) || (ix=0) || 
+			 sfield->interpolate( p2, sval2, ix, EPS, EPS, exhaustive)) && 
+			(sfield->interpolate( p3,sval3, ix) || (ix=0) || 
+			 sfield->interpolate( p3, sval3, ix, EPS, EPS, exhaustive)) && 
+			(sfield->interpolate( p4, sval4,ix) || (ix=0) || 
+			 sfield->interpolate( p4, sval4, ix, EPS, EPS, exhaustive)))
 		    {
+			if (localMinMax) {	// use local min/max to scale
+			    sval1=(sval1-min)*invrange+cmapmin;
+			    sval2=(sval2-min)*invrange+cmapmin;
+			    sval3=(sval3-min)*invrange+cmapmin;
+			    sval4=(sval4-min)*invrange+cmapmin;
+			}			    
 			// find the indices of the values array between smin & smax
 			double smin = Min( Min( sval1, sval2), Min( sval3, sval4)),
 			       smax = Max( Max( sval1, sval2), Max( sval3, sval4));
-			int i1 = RoundUp( (smin - min)*(contours - 1)/(max - min)),
-			    i2 = RoundDown( (smax - min)*(contours - 1)/(max - min));
-
-			if(smin < min || smax > max)
+			int i1, i2;
+			if (localMinMax) {
+			    i1 = RoundUp((smin-cmapmin)*(contours - 1)/(cmapmax-cmapmin));
+			    i2 = RoundDown((smax-cmapmin)*(contours - 1)/(cmapmax-cmapmin));
+			} else {
+			    i1=RoundUp((smin-min)*(contours - 1)/(max - min));
+			    i2=RoundDown((smax-min)*(contours-1)/(max - min));
+			}
+			if(!localMinMax && (smin < min || smax > max))
 			{
 			    cerr << "OOPS: " << endl;
 			    cerr << "smin, smax=" << smin << " " << smax << endl;
@@ -425,6 +558,40 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
     {
 	need_find.set(3);
 	want_to_execute();
+    }
+    else if(args[1] == "plusx")
+    {
+	msg="plusx";
+	want_to_execute();
+    }
+    else if(args[1] == "minusx")
+    {
+	msg="minusx";
+	want_to_execute();
+    }
+    else if(args[1] == "plusy")
+    {
+	msg="plusy";
+	want_to_execute();
+    }
+    else if(args[1] == "minusy")
+    {
+	msg="minusy";
+	want_to_execute();
+    }
+    else if(args[1] == "plusz")
+    {
+	msg="plusz";
+	want_to_execute();
+    }
+    else if(args[1] == "minusz")
+    {
+	msg="minusz";
+	want_to_execute();
+    }
+    else if(args[1] == "connectivity")
+    {
+	
     }
     else
     {

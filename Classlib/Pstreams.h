@@ -105,7 +105,7 @@ class GzipPiostream : public Piostream {
     virtual double get_percent_done();
 public:
     GzipPiostream(const clString& filename, Direction dir);
-    GzipPiostream(char *name, int version);
+    GzipPiostream(char *name, int version, int dummy);
     virtual ~GzipPiostream();
     virtual clString peek_class();
     virtual int begin_class(const clString& name, int);

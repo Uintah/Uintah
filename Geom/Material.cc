@@ -111,6 +111,14 @@ GeomMaterial::GeomMaterial(const GeomMaterial& copy)
 {
 }
 
+GeomMaterial::GeomMaterial(GeomObj* obj,const Color& c)
+:GeomContainer(obj)
+{
+  const Color defAmb(0,0,0);
+  const Color defSpec(0.4,0.4,0.4);
+  matl = scinew Material(defAmb,c,defSpec,30);
+}
+
 void GeomMaterial::setMaterial(const MaterialHandle& copy) 
 {
     matl=copy;

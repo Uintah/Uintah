@@ -205,7 +205,7 @@ void BuildFEMatrix::execute()
      int nnodes=mesh->nodes.size();
      rows=scinew int[nnodes+1];
      np=Task::nprocessors();
-     np=1;
+     if (np>10) np=5;
      colidx.resize(np+1);
      DirSub = DirSubFlag.get();
 

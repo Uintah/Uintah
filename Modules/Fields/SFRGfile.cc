@@ -118,7 +118,7 @@ static clString module_name("SFRGfile");
 SFRGfile::SFRGfile(const clString& id)
 : Module("SFRGfile", id, Filter), haveMinMaxTCL("haveMinMaxTCL", id, this),
   haveOutVoxelTCL("haveOutVoxelTCL", id, this), 
-  haveBBoxTCL("haveBBoxTCL", id, this), NminTCL("NMinTCL", id, this),
+  haveBBoxTCL("haveBBoxTCL", id, this), NminTCL("NminTCL", id, this),
   NmaxTCL("NmaxTCL", id, this), CminTCL("CminTCL", id, this),
   CmaxTCL("CmaxTCL", id, this), minOutTCLX("minOutTCLX", id, this),
   minOutTCLY("minOutTCLY", id, this), minOutTCLZ("minOutTCLZ", id, this),
@@ -135,7 +135,7 @@ SFRGfile::SFRGfile(const clString& id)
 SFRGfile::SFRGfile(const SFRGfile& copy, int deep)
 : Module(copy, deep), haveMinMaxTCL("haveMinMaxTCL", id, this),
   haveOutVoxelTCL("haveOutVoxelTCL", id, this), 
-  haveBBoxTCL("haveBBoxTCL", id, this), NminTCL("NMinTCL", id, this),
+  haveBBoxTCL("haveBBoxTCL", id, this), NminTCL("NminTCL", id, this),
   NmaxTCL("NmaxTCL", id, this), CminTCL("CminTCL", id, this),
   CmaxTCL("CmaxTCL", id, this), minOutTCLX("minOutTCLX", id, this),
   minOutTCLY("minOutTCLY", id, this), minOutTCLZ("minOutTCLZ", id, this),
@@ -180,9 +180,13 @@ void SFRGfile::checkInterface() {
     haveMinMax=haveMinMaxTCL.get();
     if (haveMinMax) {
 	(NminTCL.get()).get_double(Nmin);
+	cerr << "In checkinterface: Nmin="<<Nmin<<"\n";
 	(NmaxTCL.get()).get_double(Nmax);
+	cerr << "In checkinterface: Nmax="<<Nmax<<"\n";
 	(CminTCL.get()).get_double(Cmin);
+	cerr << "In checkinterface: Cmin="<<Cmin<<"\n";
 	(CmaxTCL.get()).get_double(Cmax);
+	cerr << "In checkinterface: Cmax="<<Cmax<<"\n";
 	Nspan=Nmax-Nmin;
     }
     haveBBox=haveBBoxTCL.get();

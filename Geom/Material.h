@@ -53,6 +53,7 @@ class GeomMaterial : public GeomContainer {
 public:
     GeomMaterial(GeomObj*, const MaterialHandle&);
     GeomMaterial(const GeomMaterial&);
+    GeomMaterial(GeomObj*,const Color&); // diffuse color...
     void setMaterial(const MaterialHandle&);
     MaterialHandle getMaterial();
     virtual ~GeomMaterial();

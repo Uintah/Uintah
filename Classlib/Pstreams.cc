@@ -856,7 +856,7 @@ GzipPiostream::GzipPiostream(const clString& filename, Direction dir)
     }
 }
 
-GzipPiostream::GzipPiostream(char* name, int version)
+GzipPiostream::GzipPiostream(char* name, int version, int )
 : Piostream(Read, version), have_peekname(0)
 {
     gzfile=gzopen(name, "r");
@@ -1101,6 +1101,7 @@ void GzipPiostream::io(clString& data)
     if(err)return;
     if(dir == Read) {
 	char c='1';
+	data="";
 	while (c != '\0' && !err) {
 	    io(c);
 	    data+=c;
@@ -1367,6 +1368,7 @@ void GunzipPiostream::io(clString& data)
     if(err)return;
     if(dir == Read) {
 	char c='1';
+	data="";
 	while (c != '\0' && !err) {
 	    io(c);
 	    data+=c;

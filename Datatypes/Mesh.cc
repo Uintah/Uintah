@@ -1570,6 +1570,32 @@ DirichletBC::DirichletBC(const SurfaceHandle& fromsurf, double value)
 {
 }
 
+void Mesh::get_boundary_nodes(Array1<int> &pts)
+{
+  pts.resize(0); // clear it out for now...
+#if 0
+  if (!have_all_neighbors)
+    compute_face_neighbors();
+#endif
+  for(int i=0;i<nodes.size();i++) {
+    
+    for(int j=0;j<nodes[i]->elems.size();j++) {
+      Element *e = elems[nodes[i]->elems[j]];
+      for(int k=0;k<4;k++) {
+	if (e->n[k] != i) { // node i has to be on the face
+	  if (e->face(k) == -1) {
+	    pts.add(i);
+	    k = 5;
+	    j = nodes[i]->elems.size();
+	  }
+	}
+      }
+    }
+  }
+
+  //cerr << "We have: " << pts.size() << " Boundary points.\n";
+}
+
 void Mesh::get_boundary_lines(Array1<Point>&)
 {
     NOT_FINISHED("Mesh::get_boundary_lines");

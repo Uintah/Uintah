@@ -91,7 +91,7 @@ public:
     double longest_dimension();
     virtual Vector gradient(const Point&)=0;
     virtual int interpolate(const Point&, double&, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
-    virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6)=0;
+    virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6, int exhaustive=0)=0;
     virtual void get_boundary_lines(Array1<Point>& lines)=0;
 
     // exposed for now - maybe this should be abstraced at a later
