@@ -1476,7 +1476,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       IntVector c = *iter;
       double sumVolFrac_kappa = 0.0;
       for (int m = 0; m < numMatls; m++) {
-        kappa[m] = sp_vol_CC[m][c]/(speedSound_new[m][c]*speedSound_new[m][c]);
+        kappa[m] = sp_vol_new[m][c]/(speedSound_new[m][c]*speedSound_new[m][c]);
         sumVolFrac_kappa += vol_frac[m][c]*kappa[m];
       }
       for (int m = 0; m < numMatls; m++) {
