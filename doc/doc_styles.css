@@ -1,6 +1,7 @@
 body {background-color:#CCCCCC; text-color:#000000; font-family:"times"; margin-left:1em; margin-right:1em}
 
-div.banner-margins {margin-left:-1em; margin-right:-1em}
+div.top-banner-margins {margin-left:-1em; margin-right:-1em; margin-top:-1em}
+div.bottom-banner-margins {margin-left:-1em; margin-right:-1em}
 
 a:link {color:#AA0000}
 
