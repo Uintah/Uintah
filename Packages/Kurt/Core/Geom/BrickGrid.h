@@ -177,12 +177,12 @@ private:
     void init( LatVolField<Data>& tex );
 
   unsigned char SETVAL(double val);
-  bool is_fixed_;
   Point min_, max_;
+  FieldHandle tex_;
+  bool is_fixed_;
+  int brick_size_;
   pair<double,double> minmax_;
   Array3<GridBrick*> *bricks_;
-  FieldHandle tex_;
-  int brick_size_;
   int tex_x_, tex_y_, tex_z_;
   
 };

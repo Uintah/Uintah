@@ -66,11 +66,11 @@ void GridVolRen::draw(const BrickGrid& bg, int slices )
     loadColorMap();
     loadTexture( b );
     makeTextureMatrix( b );
-    enableBlend();
     enableTexCoords();
+    enableBlend();
     drawPolys( polys );
-    disableTexCoords();
     disableBlend();
+    disableTexCoords();
   }
 }
 
@@ -194,13 +194,22 @@ GridVolRen::drawPolys( vector<Polygon *> polys )
 void
 GridVolRen::loadColorMap()
 {
-#ifdef __sgi
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI
   glColorTableSGI(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
                GL_RGBA,  // need an alpha value...
                GL_UNSIGNED_BYTE, // try shorts...
                cmap_);
+#elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
+  ASSERT(glColorTableEXT != NULL );
+  glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
+	       GL_RGBA,
+               256, // try larger sizes?
+               GL_RGBA,  // need an alpha value...
+               GL_UNSIGNED_BYTE, // try shorts...
+               cmap_);
+//   glCheckForError("After glColorTableEXT");
 #endif
 }
 
@@ -230,7 +239,8 @@ GridVolRen::loadTexture(Brick& brick)
                     GL_CLAMP);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    
+
+#ifdef GL_TEXTURE_COLOR_TABLE_SGI     
     // set up the texture
     //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
     glTexImage3D(GL_TEXTURE_3D, 0, GL_INTENSITY8,
@@ -240,6 +250,17 @@ GridVolRen::loadTexture(Brick& brick)
                  0, GL_RED, GL_UNSIGNED_BYTE, 
                  &(*(brick.texture()))(0,0,0));
 
+#elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
+    glTexImage3D(GL_TEXTURE_3D_EXT, 0,
+		    GL_COLOR_INDEX8_EXT,
+		    (brick.texture())->dim1(), 
+		    (brick.texture())->dim2(), 
+		    (brick.texture())->dim3(),
+		    0,
+		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
+		    &(*(brick.texture()))(0,0,0));
+//      glCheckForError("After glTexImage3D Linux");
+#endif
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }

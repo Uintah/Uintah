@@ -34,7 +34,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
@@ -45,7 +44,6 @@ using SCIRun::FieldIPort;
 using SCIRun::GeometryOPort;
 using SCIRun::GuiInt;
 using SCIRun::GuiDouble;
-using SCIRun::TCLArgs;
 using SCIRun::CrowdMonitor;
 using SCIRun::Vector;
 using SCIRun::GeomID;
@@ -57,12 +55,12 @@ class GeomObj;
 class GridSliceVis : public Module {
 
 public:
-  GridSliceVis( const string& id);
+  GridSliceVis(SCIRun::GuiContext *ctx);
 
   virtual ~GridSliceVis();
   virtual void widget_moved(int last);    
   virtual void execute();
-  void tcl_command( TCLArgs&, void* );
+  void tcl_command( SCIRun::GuiArgs&, void* );
 
 private:
 

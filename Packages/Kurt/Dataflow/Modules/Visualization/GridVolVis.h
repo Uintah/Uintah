@@ -46,7 +46,7 @@ using SCIRun::GuiDouble;
 class GridVolVis : public Module {
 
 public:
-  GridVolVis( const string& id);
+  GridVolVis(SCIRun::GuiContext* ctx);
 
   virtual ~GridVolVis();
   virtual void execute();

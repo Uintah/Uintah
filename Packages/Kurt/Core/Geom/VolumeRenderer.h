@@ -33,8 +33,8 @@
 #include <Core/Persistent/Persistent.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-
 #include <Core/GLVolumeRenderer/Brick.h>
+#include <ostream>
 
 namespace Kurt {
 
@@ -104,7 +104,7 @@ public:
   virtual void get_bounds(BBox& bb){ bg_->get_bounds( bb ); }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+  virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*);
 
   void setup();
   virtual void preDraw();
