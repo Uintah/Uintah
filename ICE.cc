@@ -1788,11 +1788,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
-    Lodi_vars_pressBC* lv = 0;
-    if(d_usingLODI) {
-      lv = new Lodi_vars_pressBC(0);
-      lv->setLodiBcs = false;
-    }
+    Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
+    lv->setLodiBcs = false;
+ 
     setBC(press_new,   rho_micro, placeHolder,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
     delete lv;
@@ -2483,15 +2481,16 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     }
     //__________________________________
     //  Set Boundary Conditions
-    Lodi_vars_pressBC* lv = 0;
-    if(d_usingLODI) {
-      lv = new Lodi_vars_pressBC(numMatls);
-      lv->setLodiBcs = true;
+    // if LODI are specified then set them.
+    Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(numMatls);
+    lv->setLodiBcs = true;
+    if(d_usingLODI) { 
       lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, old_dw, new_dw);
     } 
     
     setBC(press_CC, placeHolder, sp_vol_CC, 
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
+          
     delete lv;                      
        
    //---- P R I N T   D A T A ------  
@@ -3599,11 +3598,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //__________________________________
     //  Set the Boundary conditions except Lodi bcs
     //  -- PATRICK WE NEED TO THINK ABOUT THIS
-    Lodi_vars* lv = 0;
-    if(d_usingLODI) {
-      lv = new Lodi_vars();  
-      lv->setLodiBcs = false;
-    }
+    Lodi_vars* lv = new Lodi_vars();
+    lv->setLodiBcs = false;
+  
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
@@ -3725,14 +3722,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     
       //__________________________________
       //  preprocessing for lodi bcs
-      Lodi_vars* lodi_vars=0;
+      Lodi_vars* lodi_vars = new Lodi_vars();
+      lodi_vars->setLodiBcs = true;
       if(d_usingLODI) {
-        lodi_vars = new Lodi_vars();
         lodi_vars->gamma = ice_matl->getGamma();
         lodi_vars->cv   = cv;
         lodi_vars->delT = delT;
         lodi_vars->speedSound = speedSound;
-        lodi_vars->setLodiBcs = true;
         lodi_bc_preprocess( patch, lodi_vars, lb, indx, 
                             d_is_LODI_face, old_dw, new_dw);
       }
