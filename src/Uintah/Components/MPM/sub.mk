@@ -17,7 +17,9 @@ SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/Fracture \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/Burn \
-	$(SRCDIR)/GeometrySpecification $(SRCDIR)/Util
+	$(SRCDIR)/GeometrySpecification \
+	$(SRCDIR)/PhysicalBC \
+	$(SRCDIR)/Util
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -30,6 +32,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.17  2000/08/07 00:44:09  tan
+# Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
+# in MPM.  Currently implemented force boundary conditions.
+#
 # Revision 1.16  2000/06/22 21:21:21  tan
 # MPMPhysicalModules class is created to handle all the physical modules
 # in MPM, currently those physical submodules include HeatConduction,
