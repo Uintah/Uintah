@@ -225,7 +225,22 @@ PROGRAM := Packages/Uintah/StandAlone/gambitFileReader
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-# Convenience targets for Specific executables (use make sus)
+# Convenience targets for Specific executables 
+uintah: sus \
+        puda \
+        compare_uda \
+        restart_merger \
+        gambitFileReader \
+        link_inputs
+                
+            
+link_inputs: 
+	@( ln -s $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs)
+
+TOP_ABS:= $(SRCTOP_ABS)/..
+faster_gmake: 
+	@( $(SRCTOP_ABS)/Packages/Uintah/Test/helpers/useFakeArches.pl $(TOP_ABS)) 
+
 sus: prereqs Packages/Uintah/StandAlone/sus
 
 puda: prereqs Packages/Uintah/StandAlone/puda
