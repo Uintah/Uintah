@@ -28,7 +28,7 @@
 #    Created January 5, 1999
 ########################################
 
-itcl_class ParticleGridVisControl { 
+itcl_class Uintah_MPMViz_ParticleGridVisControl { 
     inherit Module 
 
     protected sf ""
