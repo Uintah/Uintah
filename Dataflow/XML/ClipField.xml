@@ -36,6 +36,10 @@
 	<name>Input Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>Clip Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
