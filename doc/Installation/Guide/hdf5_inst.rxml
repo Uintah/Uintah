@@ -72,12 +72,12 @@ DEALINGS IN THE SOFTWARE.
 	    <literallayout>
 <!--%= 
 doc.doIfHTML {
-  %q{<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"/>}
+  %q{<ulink url="ftp://ftp.ncsa.uiuc.edu/HDF/HDF5/current/src/hdf5-1.6.2.tar.gz"/>}
 }
 %-->
 <!--%= 
 doc.doIfPrint {
-  "ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz"
+  "ftp://ftp.ncsa.uiuc.edu/HDF/HDF5/current/src/hdf5-1.6.2.tar.gz"
 }
 %-->
 	    </literallayout>
