@@ -267,7 +267,7 @@ $(MAKEFILEDIRS):
 	@echo creating directory $@
 	@mkdir -p $@
 
-$(CREATETCLINDEX): $(CREATETCLINDEX).in $(SRCTOP)/Makefile
+$(CREATETCLINDEX): $(CREATETCLINDEX).in $(OBJTOP)/Makefile
 	@echo creating scripts/createTclIndex
 	-@sed -e 's,ITCL_BIN_DIR,$(ITCL_BIN_DIR),g' \
              -e 's,TCL_LIB_DIR,$(TCL_LIB_DIR),g' \
