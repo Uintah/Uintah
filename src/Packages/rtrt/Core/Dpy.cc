@@ -719,12 +719,35 @@ Dpy::renderFrame() {
 		   cum_dt);
       }
 #endif
-      if (priv->dumpFrame) {
+      switch (priv->dumpFrame) {
+      case 1:
+        // Dump a single frame
         if (!scene->display_depth)
           displayedImage->save_ppm( "images/image" );
         else
           displayedImage->save_depth( "images/depth" );
-        priv->dumpFrame = false;
+        priv->dumpFrame = 0;
+        break;
+      case -1:
+        // Initialize the stream and dump a frame
+        if (displayedImage->start_ppm_stream( "movies/movie" )) {
+          displayedImage->save_to_ppm_stream();
+          priv->dumpFrame = -2;
+        } else {
+          // Something went wrong, so set dumpFrame to stop
+          priv->dumpFrame = 0;
+        }
+        break;
+      case -2:
+        // Dump the next frame
+        displayedImage->save_to_ppm_stream();
+        break;
+      case -3:
+        // Stop recording
+        displayedImage->save_to_ppm_stream();
+        displayedImage->end_ppm_stream();
+        priv->dumpFrame = 0;
+        break;
       }
     }
   } else {
