@@ -127,6 +127,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pVelocityLabel);
+  t->computes(lb->pAccelerationLabel);
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
