@@ -2585,6 +2585,10 @@ OpenGL::render_rotation_axis(const View &view,
   if(do_hi_res)
     setFrustumToWindowPortion();
 
+  // Disable fog for the orientation axis.
+  const bool fog = drawinfo->fog;
+  drawinfo->fog = false;
+
   // Set up Lighting
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
   const Lighting& l=viewer_->lighting_;
@@ -2601,7 +2605,7 @@ OpenGL::render_rotation_axis(const View &view,
     glDisable((GLenum)(GL_LIGHT0+ii));
 
   drawinfo->viewwindow = viewwindow;
-
+  
   // Use depthrange to force the icon to move forward.
   // Ideally the rest of the scene should be drawn at 0.05 1.0,
   // so there was no overlap at all, but that would require
@@ -2609,6 +2613,8 @@ OpenGL::render_rotation_axis(const View &view,
   glDepthRange(0.0, 0.05);
   axis_obj->draw(drawinfo, 0, current_time);
   glDepthRange(0.0, 1.0);
+
+  drawinfo->fog = fog;  // Restore fog state.
 
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
