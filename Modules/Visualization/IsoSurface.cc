@@ -124,7 +124,11 @@ public:
 
 // below determines wether to normalzie normals or not
 
+#ifdef SCI_NORM_OGL
+#define NORMALIZE_NORMALS 0
+#else
 #define NORMALIZE_NORMALS 1
+#endif
  
 struct MCubeTable {
     int which_case;
