@@ -5,12 +5,12 @@ OBJS = AsyncReply.o Parallel.o Thread.o AtomicCounter.o \
 	ThreadEvent.o CrowdMonitor.o RealtimeThread.o ThreadGroup.o \
 	LockUnlock.o RecursiveMutex.o ThreadListener.o Mailbox.o \
 	Reducer.o ThreadTopology.o Runnable.o WorkQueue.o Mutex.o \
-	Semaphore.o Thread_pthreads.o
+	Semaphore.o Thread_irix.o
 
-CCFLAGS = -O2 -m486
-CCC = g++
-#CCFLAGS = -g -n32 -mips4
-#CCC = CC -LANG:ansi-for-init-scope=ON -MDupdate Makedepend
+#CCFLAGS = -O2 -m486
+#CCC = g++
+CCFLAGS = -g -n32 -mips4
+CCC = CC -LANG:ansi-for-init-scope=ON -MDupdate Makedepend
 
 .SUFFIXES: .cc
 .cc.o:

@@ -59,20 +59,21 @@ bool WorkQueue::nextAssignment(int& start, int& end) {
     lock.lock();
     if(current_assignment == totalAssignments){
         if(!dynamic || done){
-    	lock.unlock();
-    	return false;
+	    lock.unlock();
+	    workdone.cond_broadcast();
+	    return false;
         }
         nwaiting++;
         if(nwaiting == nthreads){
-    	done=true;
-    	workdone.cond_broadcast();
+	    done=true;
+	    workdone.cond_broadcast();
         } else {
-    	workdone.wait(lock);
-    	nwaiting--;
+	    workdone.wait(lock);
+	    nwaiting--;
         }
         if(done){
-    	lock.unlock();
-    	return false;
+	    lock.unlock();
+	    return false;
         }
         // Do another assignment...
     }
@@ -106,3 +107,10 @@ void WorkQueue::addWork(int nassignments) {
     lock.unlock();
 }
 
+void WorkQueue::waitForEmpty() {
+    lock.lock();
+    while(current_assignment != totalAssignments){
+	workdone.wait(lock);
+    }
+    lock.unlock();
+}

@@ -41,6 +41,7 @@ public:
     ~WorkQueue() ;
     bool nextAssignment(int& start, int& end) ;
     void addWork(int nassignments) ;
+    void waitForEmpty();
 };
 
 #endif
