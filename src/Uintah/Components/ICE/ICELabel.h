@@ -19,7 +19,7 @@ namespace Uintah {
 
     // Cell centered variables
     const VarLabel* press_CCLabel;
-    const VarLabel* pressdP_CCLabel;
+    const VarLabel* press_equil_CCLabel;
     const VarLabel* delPress_CCLabel;
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* rho_micro_equil_CCLabel;
@@ -66,6 +66,21 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.22  2001/01/10 00:47:18  harman
+// ICE.cc ICELabel.h ICELabel.cc ICE.h
+// -changed how vol_frac is computed in actuallyStep1b
+// -changed step4b requires to press_CC
+// -Fixed small error in OFS calculation
+// -Added instrumentation
+// -Added
+//     ICE::printVector
+//     ICE::printData_FC
+// -Added bullet proofing at the bottom of equilibration pressure function
+// -changed pressdP_CCLabel to press_CCLabel in all steps downstream of explicit delPress
+// -Added new label press_equil_CCLabel.  This represents the pressure coming out
+// of the equilibration pressure calculation. This label replaced press_CCLabel between
+// the equilibration press calc and explicit delPress calc.
+//
 // Revision 1.21  2001/01/08 22:01:55  jas
 // Removed #if 0  #endif pairs surrounding unused code related to momentum
 // variables that are now combined into CCVariables<Vector>.  This includes
