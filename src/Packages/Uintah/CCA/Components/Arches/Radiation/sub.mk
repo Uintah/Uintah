@@ -41,6 +41,7 @@ $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordrtn_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radarray_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcal_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcoef_fort.h
+$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcoefthin_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombc_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsolve_fort.h
 $(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsrc_fort.h
