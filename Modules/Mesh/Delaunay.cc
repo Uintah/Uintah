@@ -116,6 +116,7 @@ void Delaunay::execute()
     mesh->elems.add(el);
 
     nn=nnodes.get();
+    if(nn==0 || nn > onn)nn=onn;
     for(int node=0;node<nn;node++){
 	// Add this node...
 	update_progress(node, nn);
@@ -124,13 +125,12 @@ void Delaunay::execute()
 	    error("Mesher upset - point outside of domain...");
 	    return;
 	}
-	cerr << "This pack and compute is temporary...\n";
-	mesh->pack_elems();
-	mesh->compute_neighbors();
-	mesh->compute_face_neighbors();
+	// Every 200 nodes, cleanup the elems array...
+	if(node%200 == 0){
+	    mesh->pack_elems();
+	}
     }
     mesh->pack_elems();
-    mesh->compute_neighbors();
 
     if(cleanup.get()){
 	mesh->remove_delaunay(onn, 0);
@@ -138,7 +138,7 @@ void Delaunay::execute()
 	mesh->remove_delaunay(onn+2, 0);
 	mesh->remove_delaunay(onn+3, 0);
     }
+    mesh->pack_nodes();
     mesh->pack_elems();
-    mesh->compute_neighbors();
     oport->send(mesh);
 }
