@@ -116,7 +116,8 @@ WARNING
       string name;
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
-      VarLabel* diffusionCoefLabel;
+      VarLabel* scalar_src_CCLabel;
+      VarLabel* diffusionCoeffLabel;
       
       vector<Region*> regions;
       double diff_coeff;
@@ -148,9 +149,9 @@ WARNING
     int d_cv_index;
     int d_viscosity_index;
     int d_temp_index;
-    int d_initial_cv_index;
-    int d_initial_gamma_index;
-    int d_initial_temp_index;
+    int d_ref_cv_index;
+    int d_ref_gamma_index;
+    int d_ref_temp_index;
   };
 }
 
