@@ -138,7 +138,7 @@
       <creationFunction>make_ParticleVis</creationFunction>
     </implementation>
   </dataflow-component>
-  <dataflow-component name="KurtScalarFieldReader">
+  <dataflow-component name="AnimatedStreams">
     <meta>
       <authors>
         <author>Kurt Zimmerman</author>
@@ -147,11 +147,11 @@
       <version>1.0</version>
       <description>No description available</description>
     </meta>
-    <inputs></inputs>
-    <outputs> ScalarField </outputs>
+    <inputs> VectorField, Colormap</inputs>
+    <outputs> GeomObj </outputs>
     <parameters></parameters>
     <implementation>
-      <creationFunction>make_KurtScalarFieldReader</creationFunction>
+      <creationFunction>make_AnimatedStreams</creationFunction>
     </implementation>
   </dataflow-component>
   <dataflow-component name="ParticleColorMapKey">
