@@ -14,7 +14,6 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 
 #include <Geom/Color.h>
@@ -52,10 +51,20 @@
 #include "kuswik.h"
 
 
+// TEMP! make the parallel fnc pretty by not duplicating the same
+// TEMP! procedure for the perspective and orthogonal projections
+
 // the initial view data
+
+
 
 const View homeview
 (Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30);
+
+// EXP!
+const ExtendedView ehomeview
+(Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30, 100, 100,
+ Color(0.,0.,0.));
 
 // tcl interpreter corresponding to this module
 
@@ -83,11 +92,6 @@ class VolVis : public Module {
   
   ScalarFieldIPort *iport;
 
-  // color map input port, provides scalar field to color map
-  // if non-existant, white is the color used
-
-  ColormapIPort* colormapport;
-
   // handle to the scalar field
   
   ScalarFieldHandle homeSFHandle;
@@ -107,6 +111,10 @@ class VolVis : public Module {
   
   TCLView iView;
 
+  // EXP! try the extended view stuff
+
+  TCLExtendedView iEView;
+
   // background color
 
   TCLColor ibgColor;
@@ -114,6 +122,10 @@ class VolVis : public Module {
   // raster dimensions
   
   TCLint iRasterX, iRasterY;
+
+  // EXP!!!
+
+  ExtendedView myview;
 
   // min and max scalar values
 
@@ -203,8 +215,28 @@ class VolVis : public Module {
   // the variable that tells me that the ui is open
   
   TCLint uiopen;
+
+
+  // if Salmon is connected to VolVis, the user can chose to:
+  //    &* not use any of the data provided by Salmon
+  //    &* use just the view information
+  //    &* use all the information: view, z, and rgb values
+
+  TCLint salmonData;
+
+  // allow the user to select the method for volume visualization
   
+  TCLint method;
+
+  // allow the user to specify the step size for Levoy's algorithm
+
+  TCLint stepSize;
+  
+  //
+  //
+  //
   // initialize an OpenGL window
+  //
   
   int makeCurrent();
 
@@ -286,6 +318,7 @@ extern "C" {
 VolVis::VolVis(const clString& id)
 : Module("VolVis", id, Source),
   iView("View", id, this),
+  iEView("eview", id, this),
   minSV("minSV", id, this),
   maxSV("maxSV", id, this),
   ibgColor("bgColor", id, this),
@@ -302,14 +335,14 @@ VolVis::VolVis(const clString& id)
   Gop("Gop", id, this),
   Bop("Bop", id, this),
   uiopen("uiopen", id, this),
+  salmonData("salmon", id, this),
+  method("method", id, this),
+  stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
 {
-  // Create a Colormap input port
+  cerr << "Welcome to VolVis\n";
   
-  colormapport=scinew ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
-  add_iport(colormapport);
-
   // Create a ScalarField input port
   
   iport = scinew ScalarFieldIPort(this, "RGScalarField", ScalarFieldIPort::Atomic);
@@ -322,6 +355,7 @@ VolVis::VolVis(const clString& id)
   // initialize the view to home view
 
   iView.set( homeview );
+  iEView.set( ehomeview );
 
   // initialize a few variables used by OpenGL
   
@@ -361,6 +395,7 @@ VolVis::VolVis(const clString& id)
 VolVis::VolVis(const VolVis& copy, int deep)
 : Module(copy, deep),
   iView("View", id, this),
+  iEView("eview", id, this),
   maxSV("maxSV", id, this),
   minSV("minSV", id, this),
   iRasterX("rasterX", id, this),
@@ -377,6 +412,9 @@ VolVis::VolVis(const VolVis& copy, int deep)
   Gop("Gop", id, this),
   Bop("Bop", id, this),
   uiopen("uiopen", id, this),
+  salmonData("salmon", id, this),
+  method("method", id, this),
+  stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
 {
@@ -440,40 +478,41 @@ VolVis::parallel( int proc )
 {
   int i;
 
-  int interval = iRasterX.get() / procCount / intervalCount.get();
-cerr << intervalCount.get();
+  // calculate the number of image columns to be processed
+  // by one processor in one session.
+  
+  int interval = myview.xres() / procCount / intervalCount.get();
+//  int interval = iRasterX.get() / procCount / intervalCount.get();
 
   if ( projection.get() )
-    {
+    { // for a perspective projection do the following:
+
       if ( proc != procCount - 1 )
 	for ( i = 0; i < intervalCount.get(); i++ )
-	  {
-	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
-				   interval * ( proc + 1 + procCount * i ) );
-//	    cout << "between: " << interval * (proc + procCount * i ) << "  "
-//	      << interval * (proc + 1 + procCount * i ) << endl;
-	  }
+	  calc->PerspectiveTrace( interval * ( proc + procCount * i ),
+				 interval * ( proc + 1 + procCount * i ) );
       
       else
-	{
+	{ // the last processor must take care of the remaining
+	  // columns because interval is an integer
+	  
 	  for ( i = 0; i < intervalCount.get()-1; i++ )
-	    {
 	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
 				   interval * ( proc + 1 + procCount * i ) );
-//	    cout << "between: " << interval * (proc + procCount * i ) << "  "
-//	      << interval * (proc + 1 + procCount * i ) << endl;
-	  }
-	  
+
+#if 0	  
 	  calc->PerspectiveTrace(interval * ( proc + procCount *
-					      ( intervalCount.get() - 1 ) ),
+					     ( intervalCount.get() - 1 ) ),
 				 iRasterX.get() );
-//	    cout << "between: " << interval * (proc + procCount *
-//					       (intervalCount.get() - 1))
-//	      << "  " << iRasterX.get() << endl;
+#endif	  
+	  calc->PerspectiveTrace(interval * ( proc + procCount *
+					     ( intervalCount.get() - 1 ) ),
+				 myview.xres() );
 	}
     }
   else
-    {
+    { // for an orthogonal projection do the following:
+      
       if ( proc != procCount - 1 )
 	for ( i = 0; i < intervalCount.get(); i++ )
 	  calc->ParallelTrace( interval * ( proc + procCount * i ),
@@ -483,73 +522,19 @@ cerr << intervalCount.get();
 	  for ( i = 0; i < intervalCount.get()-1; i++ )
 	    calc->ParallelTrace( interval * ( proc + procCount * i ),
 				interval * ( proc + 1 + procCount * i ) );
-	  
+
+#if 0	  
 	  calc->ParallelTrace( interval * ( proc + procCount *
 					   ( intervalCount.get() - 1 ) ),
 			      iRasterX.get() );
+#endif	  
+	  calc->ParallelTrace( interval * ( proc + procCount *
+					   ( intervalCount.get() - 1 ) ),
+			      myview.xres() );
 	}
     }
 }
 
-
-#if 0
-void
-VolVis::parallel( int proc )
-{
-  int i;
-
-  int interval = iRasterX.get() / procCount / intervalCount.get();
-
-
-  if ( projection.get() )
-    {
-      if ( proc != procCount - 1 )
-	for ( i = 0; i < intervalCount.get(); i++ )
-	  {
-	    cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
-	    cerr << interval * (proc + 1 + procCount * i ) << endl;
-	    
-	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
-				   interval * ( proc + 1 + procCount * i ) );
-	  }
-      else
-	{
-	  for ( i = 0; i < intervalCount.get()-1; i++ )
-	    {
-	      cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
-	      cerr << interval * (proc + 1 + procCount * i ) << endl;
-	      
-	      calc->PerspectiveTrace( interval * ( proc + procCount * i ),
-				     interval * ( proc + 1 + procCount * i ) );
-	    }
-	  
-	  cerr << proc << "!!! " << interval * (proc + procCount * i ) << "  ";
-	  cerr << interval * (proc + 1 + procCount * i ) << endl;
-	  
-	  calc->PerspectiveTrace( interval * ( proc + procCount *
-					      ( intervalCount.get() - 1 ) ),
-				 iRasterX.get() );
-	}
-    }
-  else
-    {
-      if ( proc != procCount - 1 )
-	for ( i = 0; i < intervalCount.get(); i++ )
-	  calc->ParallelTrace( interval * ( proc + procCount * i ),
-			      interval * ( proc + 1 + procCount * i ) );
-      else
-	{
-	  for ( i = 0; i < intervalCount.get()-1; i++ )
-	    calc->ParallelTrace( interval * ( proc + procCount * i ),
-				interval * ( proc + 1 + procCount * i ) );
-	  
-	  calc->ParallelTrace( interval * ( proc + procCount *
-					   ( intervalCount.get() - 1 ) ),
-			      iRasterX.get() );
-	}
-    }
-}
-#endif
 
 
 /**************************************************************
@@ -562,7 +547,7 @@ VolVis::parallel( int proc )
 int
 VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 {
-  cerr << "Validate\n";
+  cerr << "Welcome to Validate\n";
   
   // get the scalar field handle
   
@@ -618,6 +603,8 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 void
 VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 {
+  cerr << "Welcome to UpdateTransferFncArray\n";
+  
   int i, len, position;
   char * array;
   char * suppl = new char[CANVAS_WIDTH*4+1];
@@ -790,6 +777,7 @@ VolVis::makeCurrent()
 void
 VolVis::redraw_all()
 {
+  cerr << "Welcome to redraw_all\n";
 
   if ( ! uiopen.get() )
     return;
@@ -913,26 +901,32 @@ VolVis::execute()
 
   GeometryData* data=ogeom->getData(0, GEOM_ALLDATA);
 
+  //
+  // EXP!!!!
+  // TEMP!!!
+  myview = iEView.get();
+
   if ( data != NULL )
     {
-      calc = new LevoyS( homeSFRGrid, colormapport,
-			ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
+      calc = new LevoyS( homeSFRGrid,
+			myview.bg(), ScalarVal, Opacity );
 
       calc->SetUp( data );
     }
   else
     {
-      calc = new Levoy ( homeSFRGrid, colormapport,
-			ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
+      calc = new Levoy ( homeSFRGrid,
+			myview.bg(), ScalarVal, Opacity );
 
-      calc->SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
+      calc->SetUp( myview );
     }      
 
   watch.start();
 
-  cerr << "projection is: " << projection.get() << " interval count is " <<
-    intervalCount.get() <<endl;
-  cerr << "raster size: " << iRasterX.get() << endl;
+  cerr << " interval count is " << intervalCount.get() <<endl;
+  
+  cerr << "added vars: " << salmonData.get() << "  " << method.get()
+    << "  " << stepSize.get() << endl;
   
   if ( intervalCount.get() != 0 && iProc.get() )
     {

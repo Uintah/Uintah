@@ -61,8 +61,26 @@ itcl_class VolVis {
 	global $this-project $this-centerit $this-processors
 
 	global $this-intervalCount
-
 	global $this-uiopen
+
+	################### new variables
+
+	# if Salmon is connected to VolVis, then the user has
+	# a choice to:
+	#    * not use any of the data provided by Salmon
+	#    * use just the view information
+	#    * use all the information: view, z,and rgb values
+	#
+	global $this-salmon
+
+	# allows the user to select the method
+	#
+	global $this-method
+
+	# allows the user to specify the step size for Levoy's
+	# method
+	#
+	global $this-stepsize
 
 	global Selected
 
@@ -115,6 +133,10 @@ itcl_class VolVis {
 
 	set $this-uiopen 0
 	puts "UI not open"
+
+	set $this-salmon     0
+	set $this-method     0
+	set $this-stepsize   8 
     }
     
     #
@@ -214,6 +236,29 @@ itcl_class VolVis {
 	radiobutton $w.f.proc.multi  -text Parallel -variable $this-processors\
 		-value 1
 
+
+	# set the salmon interaction value
+	
+	frame $w.f.salmon_interaction
+
+	radiobutton $w.f.salmon_interaction.none -text None  \
+		-variable $this-salmon -value 0
+	radiobutton $w.f.salmon_interaction.view -text View  \
+		-variable $this-salmon -value 1
+	radiobutton $w.f.salmon_interaction.all -text All  \
+		-variable $this-salmon -value 2
+
+
+	# set the method tcl variable
+
+	frame $w.f.methods
+
+	radiobutton $w.f.methods.l -text Levoy -variable $this-method      \
+		-value 0
+	radiobutton $w.f.methods.b -text Bresenham -variable $this-method  \
+		-value 1
+
+	button $w.f.steps -text "StepSize" -command "$this adjustStepSize"
 	
 	button $w.f.b -text "Redraw" -command "$this-c redraw_all" -fg blue
 	button $w.f.execbutton -text "Execute" -command "$this-c wanna_exec" \
@@ -226,10 +271,21 @@ itcl_class VolVis {
 	pack $w.f.allign.left $w.f.allign.cent -side left -fill x
 	
 	pack $w.f.proc.single $w.f.proc.multi -side left -fill x
+
+	pack $w.f.salmon_interaction.none $w.f.salmon_interaction.view  \
+		$w.f.salmon_interaction.all -side left -fill x
+
+	pack $w.f.methods.l $w.f.methods.b -side left -fill x
+
+
 	
+#        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj \
+#		$w.f.allign $w.f.proc $w.f.graph  $w.f.b  $w.f.execbutton \
+#		-expand yes -fill x -pady 2 -padx 2
 	
-        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj \
-		$w.f.allign $w.f.proc $w.f.graph  $w.f.b  $w.f.execbutton \
+        pack $w.f.viewstuff $w.f.rastersize $w.f.background $w.f.proj       \
+		$w.f.allign $w.f.proc $w.f.salmon_interaction $w.f.methods  \
+		$w.f.graph  $w.f.steps $w.f.b  $w.f.execbutton              \
 		-expand yes -fill x -pady 2 -padx 2
 	pack $w.f
 
@@ -355,7 +411,11 @@ itcl_class VolVis {
 	    wm title $w "View"
 	    wm iconname $w view
 	    wm minsize $w 100 100
-	    set view $this-View
+	    #
+	    #
+	    # EXP!
+	    #set view $this-View
+	    set view $this-eview
 	    
 	    # allow to adjust the eye and look at point, as well
 	    # as the normal vector and the field of view angle.
@@ -388,14 +448,52 @@ itcl_class VolVis {
     #
     ################################################################
     #
+    # allows the user to adjust the step size
+    #
+    ################################################################
+
+    method adjustStepSize {} {
+	set w .adjustSS$this
+
+	if { [winfo exists $w] } {
+	    raise $w
+	} else {
+	    toplevel $w
+	    wm title $w "Step Size"
+
+	    #create the scale
+	    
+	    frame $w.f -relief groove -borderwidth 2
+
+	    scale $w.f.ss -orient horizontal -variable $this-stepsize \
+		    -from 1 -to 30 -label "Step Size" \
+		    -showvalue true -tickinterval 10 \
+		    -digits 2 -length 5c
+
+	    scale $w.f.slice -orient horizontal -variable $this-intervalCount \
+		    -from 1 -to 40 -label "Slices per processor: " \
+		    -showvalue true -tickinterval 10 \
+		    -digits 2 -length 5c
+
+	    # place these creations in a window
+	    
+	    pack $w.f.ss $w.f.slice -expand yes -fill x
+	    pack $w.f
+	}
+    }
+    
+
+    #
+    #
+    #
+    ################################################################
+    #
     # allows the user to adjust the raster size.
     #
     ################################################################
 
     method adjustRasterSize {} {
 
-#	global $this-intervalCount
-	
 	set w .adjustRS$this
 
 	if {[winfo exists $w]} {
@@ -408,28 +506,28 @@ itcl_class VolVis {
 	    wm title $w "Raster Size"
 	    wm minsize $w 200 150
 
+
+	    #
+	    #
+	    # EXP!!!
+
 	    # create a frame with 2 scales
 
 	    frame $w.f -relief groove -borderwidth 2
 
-	    scale $w.f.x -orient horizontal -variable $this-rasterX \
+	    scale $w.f.x -orient horizontal -variable $this-eview-xres \
 		    -from 100 -to 600 -label "Horizontal:" \
 		    -showvalue true -tickinterval 150 \
 		    -digits 3 -length 5c
 	    
-	    scale $w.f.y -orient horizontal -variable $this-rasterY \
+	    scale $w.f.y -orient horizontal -variable $this-eview-yres \
 		    -from 100 -to 600 -label "Vertical:" \
 		    -showvalue true -tickinterval 100 \
 		    -digits 3 -length 5c
 
-	    scale $w.f.slice -orient horizontal -variable $this-intervalCount \
-		    -from 1 -to 40 -label "Slices per processor: " \
-		    -showvalue true -tickinterval 10 \
-		    -digits 3 -length 5c
-
 	    # place the scales in a window
 	    
-	    pack $w.f.x $w.f.y $w.f.slice -expand yes -fill x
+	    pack $w.f.x $w.f.y -expand yes -fill x
 	    pack $w.f
 
 	}
@@ -448,6 +546,10 @@ itcl_class VolVis {
 	
 	set w .changeBackground$this
 
+	#
+	#
+	# EXP!!!
+
 	if {[winfo exists $w]} {
 	    raise $w
 	} else {
@@ -463,17 +565,17 @@ itcl_class VolVis {
 
 	    frame $w.f -relief groove -borderwidth 2
 
-	    scale $w.f.red -orient horizontal -variable $this-bgColor-r \
+	    scale $w.f.red -orient horizontal -variable $this-eview-bg-r \
 		    -from 0 -to 255 -label "Red" \
 		    -showvalue true -tickinterval 100 \
 		    -digits 3 -length 120
 	    
-	    scale $w.f.green -orient horizontal -variable $this-bgColor-g \
+	    scale $w.f.green -orient horizontal -variable $this-eview-bg-g \
 		    -from 0 -to 255 -label "Green" \
 		    -showvalue true -tickinterval 100 \
 		    -digits 3 -length 120
 	    
-	    scale $w.f.blue -orient horizontal -variable $this-bgColor-b \
+	    scale $w.f.blue -orient horizontal -variable $this-eview-bg-b \
 		    -from 0 -to 255 -label "Blue" \
 		    -showvalue true -tickinterval 100 \
 		    -digits 3 -length 120

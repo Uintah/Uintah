@@ -38,7 +38,6 @@
 
 
 #define VIEW_PORT_SIZE 600
-
 #define CANVAS_WIDTH 200
 
 class Levoy;
@@ -62,9 +61,6 @@ class Levoy
 protected:
   
   ScalarFieldRG *homeSFRGrid;
-
-  int colormapFlag;
-  ColormapHandle cmap;
 
   Color backgroundColor;
 
@@ -144,7 +140,7 @@ public:
 
   // constructor
   
-  Levoy( ScalarFieldRG * grid, ColormapIPort * c,
+  Levoy( ScalarFieldRG * grid,
 	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
 
   // destructor
@@ -154,7 +150,7 @@ public:
   // no depth buffer or color buffer info; therefore, Salmon view
   // is not applicable
 
-  void SetUp ( const View& myview, int x, int y );
+  void SetUp ( const ExtendedView& myview );
 
   virtual void SetUp ( GeometryData * g );
   
@@ -243,7 +239,7 @@ public:
 
   // constructor
   
-  LevoyS( ScalarFieldRG * grid, ColormapIPort * c,
+  LevoyS( ScalarFieldRG * grid,
 	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
 
   // destructor

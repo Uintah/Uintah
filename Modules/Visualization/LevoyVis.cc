@@ -43,7 +43,7 @@ double EpsilonContribution = 0.01;
  *
  **************************************************************************/
 
-Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
+Levoy::Levoy ( ScalarFieldRG * grid,
 	      Color& bg, Array1<double> * Xarr, Array1<double> * Yarr )
 {
   int i, j;
@@ -57,11 +57,6 @@ Levoy::Levoy ( ScalarFieldRG * grid, ColormapIPort * c,
   box.extend( gmax );
 
   box.SetupSides();
-
-  // get the colormap, if attached
-
-  if ( c != NULL )
-    colormapFlag = c->get(cmap);
 
   backgroundColor = bg;
 
@@ -229,7 +224,7 @@ Levoy::DetermineFarthestDistance ( const Point& e )
  **************************************************************************/
 
 void
-Levoy::SetUp ( const View& myview, int x, int y )
+Levoy::SetUp ( const ExtendedView& myview )
 {
   // temporary storage for eye position
 
@@ -253,22 +248,22 @@ Levoy::SetUp ( const View& myview, int x, int y )
   // make sure that the raster sizes do not exceed the OpenGL window
   // size
 
-  if ( x > VIEW_PORT_SIZE )
-    x = VIEW_PORT_SIZE;
+  if ( myview.xres() > VIEW_PORT_SIZE )
+    myview.xres( VIEW_PORT_SIZE );
   
-  if ( y > VIEW_PORT_SIZE )
-    y = VIEW_PORT_SIZE;
+  if ( myview.yres() > VIEW_PORT_SIZE )
+    myview.yres( VIEW_PORT_SIZE );
 
   // create and initialize the array containing the image
 
-  this->x = x;
-  this->y = y;
+  this->x = myview.xres();
+  this->y = myview.yres();
   
   CharColor temp;
 
   // deallocate old array and allocate enough space
 
-  Image->newsize( y, x );
+  Image->newsize( myview.yres(), myview.xres() );
 
   // initialize to the default (black) color
 
@@ -276,7 +271,8 @@ Levoy::SetUp ( const View& myview, int x, int y )
 
   // calculate the increments to be added in the u,v directions
 
-  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, x, y );
+  CalculateRayIncrements( myview, rayIncrementU, rayIncrementV, myview.xres(),
+			 myview.yres() );
 
   // calculate the vector, L, which points toward the sun ( a point
   // light source which is very far away
@@ -907,9 +903,9 @@ Levoy::PerspectiveTrace( int from, int till )
  *
  **************************************************************************/
 
-LevoyS::LevoyS ( ScalarFieldRG * grid, ColormapIPort * c,
+LevoyS::LevoyS ( ScalarFieldRG * grid,
 	      Color& bg, Array1<double> * Xarr, Array1<double> * Yarr )
-: Levoy( grid, c, bg, Xarr, Yarr )
+: Levoy( grid, bg, Xarr, Yarr )
 {
 }
 
