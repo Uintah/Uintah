@@ -43,10 +43,12 @@ using namespace SCIRun;
 
 int binOutput;
 int debugOn;
+int groundZero;
 
 void setDefaults() {
   binOutput=0;
   debugOn=0;
+  groundZero=0;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -58,6 +60,9 @@ int parseArgs(int argc, char *argv[]) {
     } else if (!strcmp(argv[currArg], "-debug")) {
       debugOn=1;
       currArg++;
+    } else if (!strcmp(argv[currArg], "-groundZero")) {
+      groundZero=1;
+      currArg++;
     } else {
       cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
       return 0;
@@ -68,8 +73,8 @@ int parseArgs(int argc, char *argv[]) {
 
 int
 main(int argc, char **argv) {
-  if (argc < 3 || argc > 5) {
-    cerr << "Usage: "<<argv[0]<<" data DenseMatrix [-binOutput] [-debug]\n";
+  if (argc < 3 || argc > 6) {
+    cerr << "Usage: "<<argv[0]<<" data DenseMatrix [-binOutput] [-debug] [-groundZero]\n";
     return 0;
   }
   setDefaults();
@@ -85,11 +90,15 @@ main(int argc, char **argv) {
   cerr << "Matrix size: "<<nr<<" x "<<nc<<"\n";
   int r,c;
   double x;
-  for (r=0; r<nr; r++)
+  double dc=0;
+  for (r=0; r<nr; r++) {
     for (c=0; c<nc; c++) {
       datastream >> x;
+      if (groundZero && r!=0) x-= (*dm)[0][c];
       (*dm)[r][c] = x;
     }
+  }
+  if (groundZero) for (c=0; c<nc; c++) (*dm)[0][c]=0;
   cerr << "Done reading data.\n";
 
   MatrixHandle dmH(dm);

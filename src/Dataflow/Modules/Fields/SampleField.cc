@@ -64,6 +64,7 @@ class SampleField : public Module
   GuiInt numSeeds_;
   GuiInt rngSeed_;
   GuiInt clamp_;
+  GuiInt autoexec_;
   GuiString widgetType_;
   GuiString randDist_;
   GuiString whichTab_;
@@ -78,7 +79,6 @@ public:
   SampleField(const string& id);
   virtual ~SampleField();
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
   virtual void widget_moved(int);
 };
 
@@ -94,6 +94,7 @@ SampleField::SampleField(const string& id)
     numSeeds_("numseeds", id, this),
     rngSeed_("rngseed", id, this),
     clamp_("clamp", id, this),
+    autoexec_("autoexecute", id, this),
     widgetType_("type", id, this),
     randDist_("dist", id, this),
     whichTab_("whichtab", id, this),
@@ -116,13 +117,14 @@ SampleField::~SampleField()
 void
 SampleField::widget_moved(int i)
 {
-  if (rake_) 
-    rake_->GetEndpoints(endpoint0_,endpoint1_);
-
-  if (i==1) {
-    want_to_execute();
-  } else {
-    Module::widget_moved(i);
+  if (i == 1)
+  {
+    if (rake_) rake_->GetEndpoints(endpoint0_,endpoint1_);
+    autoexec_.reset();
+    if (autoexec_.get())
+    {
+      want_to_execute();
+    }
   }
 }
 
@@ -162,13 +164,14 @@ SampleField::generate_widget_seeds(Field *field)
 
   if (!rake_)
   {
-    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_, true);
+    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_, false);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
+    GeomGroup *widget_group = scinew GeomGroup;
+    widget_group->add(rake_->GetWidget());
+    widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
+    ogport_->flushViews();
   }
 
-  GeomGroup *widget_group = scinew GeomGroup;
-  widget_group->add(rake_->GetWidget());
-  
   rake_->GetEndpoints(min, max);
   
   int max_seeds = maxSeeds_.get();
@@ -186,7 +189,8 @@ SampleField::generate_widget_seeds(Field *field)
   }
 
   mesh->freeze();
-  PointCloudField<double> *seeds = scinew PointCloudField<double>(mesh, Field::NODE);
+  PointCloudField<double> *seeds =
+    scinew PointCloudField<double>(mesh, Field::NODE);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (loop=0;loop<num_seeds;++loop)
@@ -195,8 +199,6 @@ SampleField::generate_widget_seeds(Field *field)
   }
   seeds->freeze();
   ofport_->send(seeds);
-  widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
-  ogport_->flushViews();
 }
 
 void
@@ -247,8 +249,9 @@ SampleField::execute()
                                          clamp_.get()));
     rngSeed_.set(rngSeed_.get()+1);
     ofport_->send(seedhandle);
+
     if (widgetid_) { ogport_->delObj(widgetid_); }
-    widgetid_=0;
+    widgetid_ = 0;
     rake_ = 0;
     ogport_->flushViews();
   }
@@ -258,25 +261,6 @@ SampleField::execute()
   }
 }
 
-
-void
-SampleField::tcl_command(TCLArgs& args, void* userdata)
-{
-  if(args.count() < 2)
-  {
-    args.error("StreamLines needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute")
-  {
-    want_to_execute();
-  }
-  else
-  {
-    Module::tcl_command(args, userdata);
-  }
-}
 
 
 CompileInfo *

@@ -69,6 +69,9 @@ TetVolMesh::TetVolMesh() :
   edges_(0),
   edge_table_(0),
   edge_table_lock_("TetVolMesh edge_ fill lock"),
+  node_cells_table_(0),
+  node_cells_table_lock_("TetVolMesh node_cells_ fill lock"),
+  have_node_cells_table_(false),
   node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("TetVolMesh grid_ fill lock")
@@ -88,6 +91,9 @@ TetVolMesh::TetVolMesh(const TetVolMesh &copy):
   edges_(copy.edges_),
   edge_table_(copy.edge_table_),
   edge_table_lock_("TetVolMesh edge_ fill lock"),
+  node_cells_table_(copy.node_cells_table_),
+  node_cells_table_lock_("TetVolMesh node_cells_ fill lock"),
+  have_node_cells_table_(copy.have_node_cells_table_),
   node_nbor_lock_("TetVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),
   grid_lock_("TetVolMesh grid_ fill lock")
@@ -460,8 +466,8 @@ TetVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
   PEdge e1(cells_[off + 0], cells_[off + 2]);
   PEdge e2(cells_[off + 0], cells_[off + 3]);
   PEdge e3(cells_[off + 1], cells_[off + 2]);
-  PEdge e4(cells_[off + 1], cells_[off + 3]);
-  PEdge e5(cells_[off + 2], cells_[off + 3]);
+  PEdge e4(cells_[off + 2], cells_[off + 3]);
+  PEdge e5(cells_[off + 1], cells_[off + 3]);
 
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
@@ -488,6 +494,42 @@ TetVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
   array.push_back((*(face_table_.find(f1))).second);
   array.push_back((*(face_table_.find(f2))).second);
   array.push_back((*(face_table_.find(f3))).second);
+}
+
+void
+TetVolMesh::get_cells(Cell::array_type &array, Node::index_type idx)
+{
+
+  // have to calculate it if it does not already exist
+  if (! is_frozen()) { 
+    ASSERTFAIL("can only call get_cells with a node index if frozen!!");
+    return;
+  }
+  if (! have_node_cells_table_) { calc_node_cells_map(); }
+  
+  array = node_cells_table_[idx];
+}
+
+void
+TetVolMesh::calc_node_cells_map() 
+{
+  node_cells_table_lock_.lock();
+  have_node_cells_table_ = true;
+  
+  Cell::iterator iter, endit;
+  begin(iter); 
+  end(endit);
+  while (iter != endit) {
+    Cell::index_type idx = *iter;
+    ++iter;
+    Node::array_type nodes;
+    get_nodes(nodes, idx);    
+    node_cells_table_[nodes[0]].push_back(idx);
+    node_cells_table_[nodes[1]].push_back(idx);
+    node_cells_table_[nodes[2]].push_back(idx);
+    node_cells_table_[nodes[3]].push_back(idx);
+  }
+  node_cells_table_lock_.unlock();
 }
 
 bool
@@ -780,9 +822,8 @@ TetVolMesh::compute_grid()
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
-  int s = (int)ceil(pow((double)csize , one_third));
-  s = s/3 + 2;
-  const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
+  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
+  const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
@@ -802,12 +843,8 @@ TetVolMesh::compute_grid()
     box.extend(points_[nodes[1]]);
     box.extend(points_[nodes[2]]);
     box.extend(points_[nodes[3]]);
-    const Point padmin(box.min().x() - cell_epsilon,
-		       box.min().y() - cell_epsilon,
-		       box.min().z() - cell_epsilon);
-    const Point padmax(box.max().x() + cell_epsilon,
-		       box.max().y() + cell_epsilon,
-		       box.max().z() + cell_epsilon);
+    const Point padmin(box.min() - cell_epsilon);
+    const Point padmax(box.max() + cell_epsilon);
     box.extend(padmin);
     box.extend(padmax);
 
@@ -1080,6 +1117,52 @@ TetVolMesh::add_tet_unconnected(const Point &p0,
 }
 
 
+
+double 
+TetVolMesh::volume(TetVolMesh::Cell::index_type ci)
+{
+  TetVolMesh::Node::array_type n;
+  get_nodes(n, ci);
+  Point p1, p2, p3, p4;
+  get_point(p1, n[0]);
+  get_point(p2, n[1]);
+  get_point(p3, n[2]);
+  get_point(p4, n[3]);
+  double x1=p1.x();
+  double y1=p1.y();
+  double z1=p1.z();
+  double x2=p2.x();
+  double y2=p2.y();
+  double z2=p2.z();
+  double x3=p3.x();
+  double y3=p3.y();
+  double z3=p3.z();
+  double x4=p4.x();
+  double y4=p4.y();
+  double z4=p4.z();
+  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+  return (a1+a2+a3+a4)/6.;
+}
+
+void
+TetVolMesh::orient(Cell::index_type ci) {
+  double sgn=volume(ci);
+  if(sgn < 0.0){
+    // Switch two of the edges so that the volume is positive
+    int tmp = cells_[ci * 4];
+    cells_[ci * 4] = cells_[ci * 4 + 1];
+    cells_[ci * 4 + 1] = tmp;
+    sgn=-sgn;
+  }
+  if(sgn < 1.e-9){ // return 0; // Degenerate...
+    cerr << "Warning - small element, volume=" << sgn << endl;
+  }
+}
+
+
 #define TETVOLMESH_VERSION 1
 
 void
@@ -1090,6 +1173,15 @@ TetVolMesh::io(Piostream &stream)
 
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
+  // orient the tets..
+  Cell::iterator iter, endit;
+  begin(iter);
+  end(endit);
+  while(iter != endit) {
+    orient(*iter);
+    ++iter;
+  }
+
   SCIRun::Pio(stream, neighbors_);
 
   stream.end_class();

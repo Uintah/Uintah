@@ -33,6 +33,7 @@ itcl_class SCIRun_Fields_SampleField {
 	global $this-rngseed
 	global $this-whichtab
         global $this-clamp
+        global $this-autoexecute
 	set $this-wtype rake
 	set $this-maxseeds 15
 	set $this-dist impuni
@@ -40,6 +41,7 @@ itcl_class SCIRun_Fields_SampleField {
 	set $this-rngseed 1
 	set $this-whichtab Widget
         set $this-clamp 0
+        set $this-autoexecute 0
     }
 
     method ui {} {
@@ -65,20 +67,25 @@ itcl_class SCIRun_Fields_SampleField {
 
 	iwidgets::Labeledframe $wtab.type -labelpos nw \
 		               -labeltext "Widget type"
-	pack $wtab.type 
 	set type [$wtab.type childsite]
 	radiobutton $type.rake -var $this-wtype -value rake -text "Rake" 
 	radiobutton $type.ring -var $this-wtype -value ring -text "Ring" \
 		    -state disabled -dis #444
 	radiobutton $type.frame -var $this-wtype -value frame \
 		    -text "Frame" -state disabled -dis #444
-	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5
+	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5 -fill both -expand yes
+
 	frame $wtab.f1 
-	pack $wtab.f1 -side top 
 	label $wtab.f1.maxseeds_l -text "Maximum number of samples" -width 25 \
               -anchor w
 	entry $wtab.f1.maxseeds -text $this-maxseeds -width 10
 	pack $wtab.f1.maxseeds_l $wtab.f1.maxseeds -side left
+
+	checkbutton $wtab.auto -text "Execute automatically" \
+		-variable $this-autoexecute
+
+	pack $wtab.type $wtab.f1 $wtab.auto -side top -fill x -pady 5 -anchor w
+
 
 	iwidgets::Labeledframe $rtab.dist -labelpos nw \
 		               -labeltext "Distribution"

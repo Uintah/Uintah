@@ -100,13 +100,13 @@ QuadraticTetVolMesh::begin(Node::iterator &itr) const
 void
 QuadraticTetVolMesh::end(Node::iterator &itr) const
 {
-  itr = points_.size() + cells_.size() * 6;
+  itr = points_.size() + edges_.size();
 }
 
 void
 QuadraticTetVolMesh::size(Node::size_type &s) const
 {
-  s = points_.size() + cells_.size() * 6;
+  s = points_.size() + edges_.size();
 }
 
 void
@@ -163,16 +163,6 @@ QuadraticTetVolMesh::size(TetVolMesh::Cell::size_type &s) const
   TetVolMesh::size(s);
 }
 
-const Point &
-QuadraticTetVolMesh::ave_point(const Point &p0, const Point &p1) const
-{
-  static Point rval;
-  rval = Point(p0.x() + p1.x() * 0.5, 
-	       p0.y() + p1.y() * 0.5, 
-	       p0.z() + p1.z() * 0.5);
-  return rval;
-}
-
 void 
 QuadraticTetVolMesh::get_nodes(Node::array_type &array, 
 			       Edge::index_type idx) const
@@ -192,13 +182,27 @@ QuadraticTetVolMesh::get_nodes(Node::array_type &array,
 {
   TetVolMesh::get_nodes(array, idx);
   const int sz = points_.size();
-  const int cindex = idx * 6;
-  array.push_back(sz + cindex);
-  array.push_back(sz + cindex + 1);
-  array.push_back(sz + cindex + 2);
-  array.push_back(sz + cindex + 3);
-  array.push_back(sz + cindex + 4);
-  array.push_back(sz + cindex + 5);
+
+  Edge::array_type edges;
+  TetVolMesh::get_edges(edges, idx);
+
+  array.push_back(sz + edges[0]);
+  array.push_back(sz + edges[1]);
+  array.push_back(sz + edges[2]);
+  array.push_back(sz + edges[3]);
+  array.push_back(sz + edges[4]);
+  array.push_back(sz + edges[5]);
+}
+
+bool 
+QuadraticTetVolMesh::test_nodes_range(Cell::index_type ci, int sn, int en){
+  Node::array_type nodes;
+  
+  get_nodes(nodes,ci);
+  
+  for (int i=0; i<10; i++) 
+    if (nodes[i]>=sn && nodes[i]<en) return true;
+  return false;
 }
 
 void 
@@ -241,7 +245,7 @@ QuadraticTetVolMesh::get_neighbors(Node::array_type &array,
 void 
 QuadraticTetVolMesh::get_center(Point &result, Node::index_type idx) const
 {
-  TetVolMesh::get_center(result, idx);
+  get_point(result, idx);
 }
 void 
 QuadraticTetVolMesh::get_center(Point &result, Edge::index_type idx) const
@@ -284,48 +288,11 @@ QuadraticTetVolMesh::locate(Cell::index_type &loc, const Point &p)
 void 
 QuadraticTetVolMesh::get_point(Point &result, Node::index_type index) const
 { 
-  // nodes 1 - 4 are the natural tet extremities.
-  // nodes 5 - 10 are center points of edges bewteen the 4 tet nodes
   const int sz = points_.size();
   if (index < sz) {
     TetVolMesh::get_point(result, index);
   } else {
-    int cell    = (index - sz) / 6;
-    int node_id = (index - sz) % 6;
-    Point p0, p1;
-    switch (node_id) {
-    case 0:
-      // maps to node 5 center between nodes 1, 2
-      TetVolMesh::get_point(p0, cells_[cell * 4]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 1]);
-      break;
-    case 1:
-      // maps to node 6 center between nodes 1, 3
-      TetVolMesh::get_point(p0, cells_[cell * 4]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 2]);
-      break;
-    case 2:
-      // maps to node 7 center between nodes 1, 4
-      TetVolMesh::get_point(p0, cells_[cell * 4]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 3]);
-      break;
-    case 3:
-      // maps to node 8 center between nodes 2, 3
-      TetVolMesh::get_point(p0, cells_[cell * 4 + 1]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 2]);
-      break;
-    case 4:
-      // maps to node 9 center between nodes 3, 4
-      TetVolMesh::get_point(p0, cells_[cell * 4 + 2]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 3]);
-      break;
-    case 5:
-      // maps to node 10 center between nodes 2, 2
-      TetVolMesh::get_point(p0, cells_[cell * 4 + 1]);
-      TetVolMesh::get_point(p1, cells_[cell * 4 + 3]);
-      break;
-    };
-    result = ave_point(p0, p1);
+    TetVolMesh::get_center(result, (Edge::index_type)(index - sz));
   }
 }
 
@@ -390,7 +357,6 @@ QuadraticTetVolMesh::get_weights(const Point& p, Node::array_type &l,
     l.push_back(ra[8]);
     l.push_back(ra[9]);
 
-    w.resize(10);
     w.push_back(-1*(1-xi-nu-gam)*(1-2*(1-xi-nu-gam)));
     w.push_back(-1*xi*(1-2*xi));
     w.push_back(-1*nu*(1-2*nu));
@@ -601,6 +567,94 @@ QuadraticTetVolMesh::get_gradient_basis(Cell::index_type ci, const Point& p,
   return(jac_el);
 }
 
+void
+QuadraticTetVolMesh::calc_node_cells_map() 
+{
+  node_cells_table_lock_.lock();
+  have_node_cells_table_ = true;
+  
+  Cell::iterator iter, endit;
+  begin(iter); 
+  end(endit);
+  while (iter != endit) {
+    Cell::index_type idx = *iter;
+    ++iter;
+    Node::array_type nodes;
+    get_nodes(nodes, idx);    
+    for (int i = 0; i < 10; i++) {
+      node_cells_table_[nodes[i]].push_back(idx);
+    }
+  }
+  node_cells_table_lock_.unlock();
+}
+
+
+void 
+QuadraticTetVolMesh::heapify(QuadraticTetVolMesh::Node::array_type &data,
+			     int n, int i)
+{
+  int l=2*i+1;
+  int r=l+1;
+  int largest=i;
+  if(l<n && data[l] > data[i])
+    largest=l;
+  if(r<n && data[r] > data[largest])
+    largest=r;
+  if(largest != i){
+    int tmp=data[i];
+    data[i]=data[largest];
+    data[largest]=tmp;
+    heapify(data, n, largest);
+  }
+}
+
+void
+QuadraticTetVolMesh::add_node_neighbors(Node::array_type &array, 
+					Node::index_type node, 
+					const bit_vector &bc, bool apBC)
+{
+  Cell::array_type tets;
+  get_cells(tets, node);
+  Node::array_type neighbor_nodes(10 * tets.size() + 1);
+  int nodesi=0;
+  // Gather all of the nodes
+
+  Cell::array_type::iterator iter = tets.begin();
+  while (iter != tets.end()) {
+    // nodes in this tet...
+    Node::array_type cnodes;
+    get_nodes(cnodes, *iter);
+    for(int j = 0; j < 10; j++) {
+      // each node in tet
+      Node::index_type n = cnodes[j];
+      if(!bc[n] || !apBC) 
+	neighbor_nodes[nodesi++] = n; 
+    }
+    ++iter;
+  }
+
+  // Sort it...
+  // Build the heap...
+  int i = -1;
+  for(i = nodesi / 2 - 1; i >= 0; i--){
+    heapify(neighbor_nodes, nodesi, i);
+  }
+  // Sort
+  for(i=nodesi-1;i>0;i--){
+    // Exchange 1 and i
+    int tmp=neighbor_nodes[i];
+    neighbor_nodes[i]=neighbor_nodes[0];
+    neighbor_nodes[0]=tmp;
+    heapify(neighbor_nodes, i, 0);
+  }
+
+  // Find the unique set...
+  for(i=0;i<nodesi;i++){
+    if(i==0 || neighbor_nodes[i] != neighbor_nodes[i-1])
+      array.push_back(neighbor_nodes[i]);
+  }
+}
+
 double 
 QuadraticTetVolMesh::calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam, 
 				     double xi, double nu, double gam, 
@@ -625,25 +679,22 @@ QuadraticTetVolMesh::calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam,
     Point p;
     get_point(p, node_array[k]);
     double deriv = calc_dphi_dxi(k,xi,nu,gam);
-    const double pxd = p.x() * deriv;
-    const double pyd = p.y() * deriv;
-    const double pzd = p.z() * deriv;
 
-    dxdxi += pxd;
-    dydxi += pyd;
-    dzdxi += pzd;
+    dxdxi += p.x() * deriv;
+    dydxi += p.y() * deriv;
+    dzdxi += p.z() * deriv;
 
     deriv = calc_dphi_dnu(k,xi,nu,gam);
 
-    dxdnu += pxd;
-    dydnu += pyd;
-    dzdnu += pzd;
+    dxdnu += p.x() * deriv;
+    dydnu += p.y() * deriv;
+    dzdnu += p.z() * deriv;
 
     deriv = calc_dphi_dgam(k,xi,nu,gam);
 
-    dxdgam += pxd;
-    dydgam += pyd;
-    dzdgam += pzd;
+    dxdgam += p.x() * deriv;
+    dydgam += p.y() * deriv;
+    dzdgam += p.z() * deriv;
   }
 
   dxi = Vector(dxdxi, dydxi, dzdxi);

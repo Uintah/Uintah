@@ -29,8 +29,10 @@ SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/ApplyFEMVoltageSource.cc\
+	    $(SRCDIR)/BuildFEMatrixQuadratic.cc\
 	    $(SRCDIR)/ConfigureElectrode.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
+	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
 	    $(SRCDIR)/FDMtoFEM.cc\
 	    $(SRCDIR)/GenDistanceField.cc\
 	    $(SRCDIR)/InsertElectrodes.cc\

@@ -18,10 +18,10 @@
 /*
  *  CoregPtsAnalytic.h
  *
- *  \author David Weinstein
+ *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   \date Dec 2001
+ *   Dec 2001
  *
  *  Copyright (C) 2001 SCI Institute
  */
@@ -34,12 +34,18 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Math/MusilRNG.h>
 
 namespace SCIRun {
 
 class CoregPts 
 {
 protected:
+  int allowScale_;
+  int allowRotate_;
+  int allowTranslate_;
   int validTransPtsA_;
   int validTrans_;
   Array1<Point> origPtsA_;
@@ -48,6 +54,7 @@ protected:
   Transform transform_;
 public:
   virtual ~CoregPts();
+  CoregPts(int allowScale=1, int allowRotate=1, int allowTranslate=1);
   void setOrigPtsA(Array1<Point> a);
   void setOrigPtsP(Array1<Point> p);
   int getTransPtsA(Array1<Point> &p);
@@ -55,14 +62,50 @@ public:
   void invalidate();
   virtual int computeTrans()=0;
   virtual int computeTransPtsA();
-  int getMisfit(double &misfit);
+  virtual int getMisfit(double &misfit);
 };
 
 class CoregPtsAnalytic : public CoregPts
 {
 public:
+  CoregPtsAnalytic(int allowScale=1, int allowRotate=1, int allowTranslate=1);
   virtual ~CoregPtsAnalytic();
   virtual int computeTrans();
+};
+  
+class CoregPtsProcrustes : public CoregPts
+{
+public:
+  CoregPtsProcrustes(int allowScale=1,int allowRotate=1,int allowTranslate=1);
+  virtual ~CoregPtsProcrustes();
+  virtual int computeTrans();
+};
+  
+class CoregPtsSimplexSearch : public CoregPts
+{
+private:
+  int maxIters_;
+  double misfitTol_;
+  string trans_;
+  int &abort_;
+  ScalarFieldInterface *dField_;
+  MusilRNG &mr_;
+  Point origPtsCenter_;
+  int NDIM_;
+  int NSEEDS_;
+  Array2<double> params_;
+  Array1<double> misfit_;
+  void compute_misfit(int idx);
+  double simplex_step(Array1<double>&sum, double factor, int worst);
+public:
+  CoregPtsSimplexSearch(int maxIters, double misfitTol, int &abort,
+			ScalarFieldInterface *dField, 
+			MusilRNG &mr,
+			int allowScale=1, int allowRotate=1,
+			int allowTranslate=1);
+  virtual ~CoregPtsSimplexSearch();
+  virtual int computeTrans();
+  virtual int getMisfit(double &misfit);
 };
   
 } // End namespace SCIRun

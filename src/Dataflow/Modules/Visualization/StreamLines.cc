@@ -40,15 +40,15 @@
 namespace SCIRun {
 
 // LUTs for the RK-fehlberg algorithm 
-double a[]   ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
-double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
-double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
-double d[][5]={{0, 0, 0, 0, 0},
-	       {1.0/4, 0, 0, 0, 0},
-	       {3.0/32, 9.0/32, 0, 0, 0},
-	       {1932.0/2197, -7200.0/2197, 7296.0/2197, 0, 0},
-	       {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
-	       {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
+const double a[]  ={16.0/135, 0, 6656.0/12825, 28561.0/56430, -9.0/50, 2.0/55};
+const double ab[]  ={1.0/360, 0, -128.0/4275, -2197.0/75240, 1.0/50, 2.0/55};
+const double c[]   ={0, 1.0/4, 3.0/8, 12.0/13, 1.0, 1.0/2}; /* not used */
+const double d[][5]={{0, 0, 0, 0, 0},
+		     {1.0/4, 0, 0, 0, 0},
+		     {3.0/32, 9.0/32, 0, 0, 0},
+		     {1932.0/2197, -7200.0/2197, 7296.0/2197, 0, 0},
+		     {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
+		     {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
 class PSECORESHARE StreamLines : public Module {
 public:
@@ -57,8 +57,6 @@ public:
   virtual ~StreamLines();
 
   virtual void execute();
-
-  virtual void tcl_command(TCLArgs&, void*);
 
 private:
   // data members
@@ -77,7 +75,7 @@ private:
   GuiDouble                     stepsize_;
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
-
+  GuiInt                        remove_colinear_;
 };
 
 extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
@@ -88,9 +86,10 @@ StreamLines::StreamLines(const string& id) :
   Module("StreamLines", id, Source, "Visualization", "SCIRun"),
   vf_(0),
   sf_(0),
-  stepsize_("stepsize",id,this),
-  tolerance_("tolerance",id,this),
-  maxsteps_("maxsteps",id,this)  
+  stepsize_("stepsize", id, this),
+  tolerance_("tolerance", id, this),
+  maxsteps_("maxsteps", id, this),
+  remove_colinear_("remove-colinear", id, this)
 {
 }
 
@@ -100,9 +99,9 @@ StreamLines::~StreamLines()
 
 
 //! interpolate using the generic linear interpolator
-bool
-StreamLinesAlgo::interpolate(VectorFieldInterface *vfi,
-			     const Point &p, Vector &v)
+static bool
+interpolate(VectorFieldInterface *vfi,
+	    const Point &p, Vector &v)
 {
   if (vfi->interpolate(v,p))
   {
@@ -115,61 +114,63 @@ StreamLinesAlgo::interpolate(VectorFieldInterface *vfi,
 }
 
 
-bool
-StreamLinesAlgo::ComputeRKFTerms(vector<Vector> &v, // storage for terms
-				 const Point &p,    // previous point
-				 double s,          // current step size
-				 VectorFieldInterface *vfi)
+static int
+ComputeRKFTerms(vector<Vector> &v, // storage for terms
+		const Point &p,    // previous point
+		double s,          // current step size
+		VectorFieldInterface *vfi)
 {
   if (!interpolate(vfi, p, v[0]))
   {
-    return false;
+    return -1;
   }
   v[0] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[1][0], v[1]))
   {
-    return false;
+    return 0;
   }
   v[1] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[2][0] + v[1]*d[2][1], v[2]))
   {
-    return false;
+    return 1;
   }
   v[2] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[3][0] + v[1]*d[3][1] + v[2]*d[3][2], v[3]))
   {
-    return false;
+    return 2;
   }
   v[3] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[4][0] + v[1]*d[4][1] + v[2]*d[4][2] + 
 		   v[3]*d[4][3], v[4]))
   {
-    return false;
+    return 3;
   }
   v[4] *= s;
   
   if (!interpolate(vfi, p + v[0]*d[5][0] + v[1]*d[5][1] + v[2]*d[5][2] + 
 		   v[3]*d[5][3] + v[4]*d[5][4], v[5]))
   {
-    return false;
+    return 4;
   }
   v[5] *= s;
 
-  return true;
+  return 5;
 }
 
-  
+
+
 void
 StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
 				     Point x,          // initial point
 				     double t2,       // square error tolerance
 				     double s,         // initial step size
 				     int n,            // max number of steps
-				     VectorFieldInterface *vfi) // the field
+				     VectorFieldInterface *vfi, // the field
+				     bool remove_colinear_p)
 {
   vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
 
@@ -180,9 +181,15 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
   {
 
     // Compute the next set of terms.
-    if (!ComputeRKFTerms(terms, x, s, vfi))
+    int tmp = ComputeRKFTerms(terms, x, s, vfi);
+    if (tmp == -1)
     {
       break;
+    }
+    else if (tmp < 5)
+    {
+      s /= 1.5;
+      continue;
     }
 
     // Compute the approximate local truncation error.
@@ -209,7 +216,25 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
     Vector xv;
     if (vfi->interpolate(xv, x))
     {
-      v.push_back(x);
+      if (remove_colinear_p && v.size() > 1)
+      {
+	const Vector a = v[v.size()-2] - v[v.size()-1];
+	const Vector b = x - v[v.size()-1];
+	if (Cross(a, b).length2() > 1.0e-12 && Dot(a, b) < 0.0)
+	{
+	  // Not colinear, push.
+	  v.push_back(x);
+	}
+	else
+	{
+	  // Colinear, replace.
+	  v[v.size()-1] = x;
+	}
+      }
+      else
+      {
+	v.push_back(x);
+      }
     }
     else
     {
@@ -289,26 +314,11 @@ void StreamLines::execute()
     return;
   }
   algo->execute(sf_->mesh(), vfi,
-		tolerance, stepsize, maxsteps, cmesh);
+		tolerance, stepsize, maxsteps, cmesh, remove_colinear_.get());
 
   cf->resize_fdata();
   cf->freeze();
   oport_->send(cf);
-}
-
-
-void StreamLines::tcl_command(TCLArgs& args, void* userdata)
-{
-  if(args.count() < 2){
-    args.error("StreamLines needs a minor command");
-    return;
-  }
- 
-  if (args[1] == "execute") {
-    want_to_execute();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
 }
 
 

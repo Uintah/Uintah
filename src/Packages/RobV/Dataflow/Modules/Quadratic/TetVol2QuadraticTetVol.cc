@@ -40,7 +40,8 @@ public:
   virtual void execute();
 
   virtual void tcl_command(TCLArgs&, void*);
-
+  void debug_tets(TetVolMeshHandle in, 
+		  QuadraticTetVolMeshHandle out);
 private:
   FieldIPort*              ifld_;
   FieldOPort*              ofld_;
@@ -68,7 +69,7 @@ void TetVol2QuadraticTetVol::execute()
   if(!fld_handle.get_rep()){
     warning("No Data in port 1 field.");
     return;
-  } else if (fld_handle->get_type_name(0) != "TetVol") {
+  } else if (fld_handle->get_type_name(0) != "TetVolField") {
     error("input must be a TetVol type, not a "+fld_handle->get_type_name(0));
     return;
   }
@@ -89,8 +90,65 @@ void TetVol2QuadraticTetVol::execute()
 
 
   FieldHandle ofld_handle = conv->convert_quadratic(fld_handle);
+
+  // debug_tets(((TetVolField<double>*)fld_handle.get_rep())->get_typed_mesh(), 
+  //   ((QuadraticTetVolField<double>*)ofld_handle.get_rep())->get_typed_mesh());
+
   ofld_ = (FieldOPort *)get_oport("OutputQuadraticTet");
   ofld_->send(ofld_handle);
+}
+
+void 
+TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in, 
+				   QuadraticTetVolMeshHandle out)
+{
+  cout << "-------- Linear Tets -----------------" << endl;
+  TetVolMesh::Cell::iterator iter, endit;
+  in->begin(iter);
+  in->end(endit);
+  int tet = 1;
+  while (iter != endit) {
+    cout << "Tet num: " << tet++ << endl;
+    TetVolMesh::Cell::index_type idx = *iter;
+    ++iter;
+    TetVolMesh::Node::array_type n;
+    in->get_nodes(n, idx);
+    int nnum = 1;
+    TetVolMesh::Node::array_type::iterator niter = n.begin();
+    while (niter != n.end()) {
+      cout << "Node: " << *niter + 1 << endl;
+      Point p;
+      in->get_center(p, *niter);
+      ++niter;
+      cout << p << endl << endl;
+    }
+  }
+
+  cout << "-------- Quadratic Tets -----------------" << endl;
+  QuadraticTetVolMesh::Cell::iterator qiter, qendit;
+  out->begin(qiter);
+  out->end(qendit);
+  int qtet = 1;
+  while (qiter != qendit) {
+    cout << "Tet num: " << qtet++ << endl;
+    QuadraticTetVolMesh::Cell::index_type idx = *qiter;
+    ++qiter;
+    QuadraticTetVolMesh::Node::array_type n;
+    out->get_nodes(n, idx);
+    int nnum = 1;
+    QuadraticTetVolMesh::Node::array_type::iterator niter = n.begin();
+    while (niter != n.end()) {
+      cout << "Node: " << nnum++ << endl;
+      Point p;
+      out->get_center(p, *niter);
+      ++niter;
+      cout << p << endl << endl;
+    }
+  }
+
+
+
+
 }
 
 void TetVol2QuadraticTetVol::tcl_command(TCLArgs& args, void* userdata)

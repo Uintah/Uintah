@@ -31,6 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/Point.h>
@@ -52,6 +53,7 @@ public:
 
   virtual void execute();
 
+  template <class F> void dispatch_quadratictetvol(F *f);
   template <class F> void dispatch_tetvol(F *f);
   template <class F> void dispatch_latticevol(F *f);
 };
@@ -72,6 +74,25 @@ Gradient::Gradient(const string& id)
 
 Gradient::~Gradient()
 {
+}
+
+template <class F>
+void
+Gradient::dispatch_quadratictetvol(F *f)
+{
+  QuadraticTetVolMeshHandle tvm = f->get_typed_mesh(); 
+  QuadraticTetVolField<Vector> *result = new QuadraticTetVolField<Vector>(tvm, Field::CELL);
+  typename F::mesh_type::Cell::iterator ci, cie;
+  tvm->begin(ci); tvm->end(cie);
+  while (ci != cie)
+  {
+    result->set_value(f->cell_gradient(*ci), *ci);
+    ++ci;
+  }
+
+  result->freeze();
+  FieldHandle fh(result);
+  ofp->send(fh);
 }
 
 template <class F>
@@ -144,8 +165,11 @@ Gradient::execute()
   }
 
   const TypeDescription *ftd = fieldhandle->get_type_description();
-
-  if (ftd->get_name() == get_type_description((TetVolField<double> *)0)->get_name())
+  if (ftd->get_name() == get_type_description((QuadraticTetVolField<double> *)0)->get_name())
+  {
+    dispatch_quadratictetvol((QuadraticTetVolField<double> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((TetVolField<double> *)0)->get_name())
   {
     dispatch_tetvol((TetVolField<double> *)field);
   }

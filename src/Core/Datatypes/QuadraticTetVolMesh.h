@@ -94,6 +94,10 @@ public:
 			    Vector& g4, Vector& g5, Vector& g6, Vector& g7, 
 			    Vector& g8, Vector& g9) const;
 
+  void add_node_neighbors(Node::array_type &array, Node::index_type node, 
+			  const bit_vector &bc, bool apBC=true);
+
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
@@ -101,8 +105,12 @@ public:
   
   virtual const TypeDescription *get_type_description() const;
 
-    private:
-  const Point& ave_point(const Point &p0, const Point &p1) const;
+  bool test_nodes_range(Cell::index_type ci, int sn, int en);
+
+protected:
+  virtual void calc_node_cells_map();
+
+private:
   double calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam, 
 			 double xi, double nu, double gam, 
 			 Cell::index_type ci) const;
@@ -112,6 +120,8 @@ public:
 		       double gam) const;
   double calc_dphi_dxi(int ptNum, double xi, double nu, 
 		       double gam) const;
+  void heapify(QuadraticTetVolMesh::Node::array_type &data,
+	       int n, int i);
 };
 
 // Handle type for TetVolMesh mesh.

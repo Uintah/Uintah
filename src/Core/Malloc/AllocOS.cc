@@ -44,6 +44,8 @@
 #define MMAP_TYPE void
 #endif
 
+#define ALIGN 16
+
 namespace SCIRun {
 
 static int devzero_fd=-1;
@@ -69,7 +71,12 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable)
 		devzero_fd, 0);
 #endif
     } else {
-       ptr = sbrk((long)asize);
+      void* align = sbrk(0);
+      unsigned long offset = reinterpret_cast<unsigned long>(align)%ALIGN;
+      if(offset){
+	sbrk((long)(ALIGN-offset));
+      }
+      ptr = sbrk((long)asize);
     }
 
     OSHunk* hunk=(OSHunk*)ptr;

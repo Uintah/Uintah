@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="ShowLeads" category="LeadField">
+<component name="ShowLeads" category="Visualization">
   <overview>
     <authors>
     </authors>
@@ -12,9 +12,14 @@
   </implementation>
   <io>
     <inputs lastportdynamic="no">
-      <port>	
-        <name>Matrix</name>
-        <datatype>SCIRun::Matrix</datatype>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Potentials</name>
+	<description>
+	  <p></p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname></componentname>
       </port>
     </inputs>
     <outputs>

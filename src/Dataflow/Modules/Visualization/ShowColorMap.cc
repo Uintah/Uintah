@@ -135,7 +135,6 @@ ShowColorMap::execute()
 
   sq->set_texture( cmap->raw1d );
   all->add( sq );
-  
   const int numlabels = gui_numlabels_.get();
   if (numlabels > 1 && numlabels < 50)
   {
@@ -148,7 +147,8 @@ ShowColorMap::execute()
     GeomGroup *labels = scinew GeomGroup();
     for(int i = 0; i < numlabels; i++ )
     {
-      sprintf(value, "%.2g", minval + (maxval-minval)*(i/(numlabels-1.0)));
+      sprintf(value, "%.2g %s", minval + (maxval-minval)*(i/(numlabels-1.0)),
+	      cmap->units.c_str());
       labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0))));
       labels->add(new GeomLine(p0 + along * (i/(numlabels-1.0)),
 			       p0 + along * (i/(numlabels-1.0)) + out * 0.5));

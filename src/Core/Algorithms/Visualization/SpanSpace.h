@@ -35,7 +35,7 @@
 #include <Core/Datatypes/Datatype.h>
 //#include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/Field.h>
-//#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Handle.h>
 
 
 namespace SCIRun {
@@ -54,33 +54,36 @@ namespace SCIRun {
 
   // SpanSpace
   
-  class SpanSpaceBase {
+  class SpanSpaceBase : public Datatype {
   public:
     SpanSpaceBase() {}
     virtual ~SpanSpaceBase() {}
+
+    static  PersistentTypeID type_id;
+    void    io(Piostream &stream) {}
   };
   
   template <class T, class Index>
   class SpanSpace : public SpanSpaceBase {
   public:
-    typedef SpanPoint<T,Index>  span_point;
-    Array1<span_point> span;
+    typedef SpanPoint<T,Index>  span_point_type;
+    typedef Handle<SpanSpace<T, Index> > handle_type;
+    Array1<span_point_type> span;
     
   public:
     SpanSpace() {}
     ~SpanSpace() {}
 
     template<class Field> void init( Field *);
-    void swap( span_point &, span_point &);
-    void select_min( span_point p[], int n );
-    void select_max( span_point p[], int n );
-    
+    void swap( span_point_type &, span_point_type &);
+    void select_min( span_point_type p[], int n );
+    void select_max( span_point_type p[], int n );
   };
   
   template <class T,class Index>
-  void SpanSpace<T,Index>::swap (span_point &a, span_point &b)
+  void SpanSpace<T,Index>::swap (span_point_type &a, span_point_type &b)
   {
-    span_point t = a;
+    span_point_type t = a;
     a = b;
     b = t;
   }
@@ -88,7 +91,7 @@ namespace SCIRun {
   // FUNCTIONS
   
   template <class T,class Index>
-  void SpanSpace<T,Index>::select_min( span_point p[], int n )
+  void SpanSpace<T,Index>::select_min( span_point_type p[], int n )
   {
     if ( n < 2 )
       return;
@@ -125,7 +128,7 @@ namespace SCIRun {
   
   
   template <class T, class Index>
-  void SpanSpace<T,Index>::select_max( span_point p[], int n )
+  void SpanSpace<T,Index>::select_max( span_point_type p[], int n )
   {
     if ( n < 2 )
       return;
@@ -196,11 +199,11 @@ namespace SCIRun {
     }
   
   
-  template <class T,class Index>
-    void Pio( Piostream &, SpanSpace<T,Index> &) {}
+//template <class T,class Index>
+//    void Pio( Piostream &, SpanSpace<T,Index> &) {}
   
   template <class T,class Index> 
-  const string find_type_name(SpanSpace<T,Index>*)
+  const string find_type_name(Handle<SpanSpace<T,Index> > *)
   {
     static const string name = string("SpanSpace") + FTNS 
       + find_type_name((T*)0) + FTNM 

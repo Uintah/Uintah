@@ -92,7 +92,13 @@ QuadraticTetVolField<T>::create_from(const TetVolField<T> &tv)
     scinew QuadraticTetVolMesh(*tv.get_typed_mesh().get_rep());
 
   mesh_handle_type mh(m);
-  return scinew QuadraticTetVolField(mh, tv.data_at());
+  QuadraticTetVolField<T> *rval = scinew QuadraticTetVolField(mh, 
+							      tv.data_at());
+  rval->fdata()=tv.fdata();
+  PropertyManager *pm = rval;
+  *pm = tv;
+  rval->freeze();
+  return rval;
 }
 
 template <class T>

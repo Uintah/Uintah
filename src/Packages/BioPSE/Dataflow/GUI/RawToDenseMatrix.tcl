@@ -96,7 +96,7 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 	makeOpenFilebox \
 		-parent $w \
 		-filevar $this-filename \
-		-command "$this working_files; destroy $w" \
+		-command "$this working_files from-gui; destroy $w" \
 		-cancel "destroy $w" \
 		-title $title \
 		-filetypes $types \
@@ -105,10 +105,12 @@ itcl_class BioPSE_DataIO_RawToDenseMatrix {
 
     }
 
-    method working_files {} {
-	global $this-filename
+    method working_files {full} {
 	global $this-pots
-	set full [set $this-filename]
+	global $this-filename
+	if {$full == "from-gui"} {
+	    set full [set $this-filename]
+	}
 	set dir [regexp -inline {/.*/} $full]
 	set pots [lsort [glob $dir*.pot]]
 

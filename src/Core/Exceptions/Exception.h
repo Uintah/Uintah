@@ -42,7 +42,6 @@ namespace SCIRun {
       class Exception {
       public:
 	 Exception();
-	 Exception(const Exception&);
 	 virtual ~Exception();
 	 virtual const char* message() const=0;
 	 virtual const char* type() const=0;
@@ -54,6 +53,7 @@ namespace SCIRun {
 	 static bool alwaysFalse();
       protected:
       private:
+	 Exception(const Exception&);
 	 Exception& operator=(const Exception&);
 	 const char* stacktrace_;
       };

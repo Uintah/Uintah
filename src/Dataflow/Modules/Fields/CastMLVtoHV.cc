@@ -77,7 +77,7 @@ void CastMLVtoHV::execute()
   last_gen_ = ifieldH->generation;
 
   // we expect that the input field is a TetVolField<Vector>
-  if (ifieldH->get_type_description()->get_name().substr(0, 16)
+  if (ifieldH->get_type_description()->get_name().substr(0, 17)
       != "MaskedLatVolField")
   {
     postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatVolField.  Exiting.");
