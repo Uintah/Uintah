@@ -235,7 +235,7 @@ ClipField::execute()
 
     last_bounds_ = obox;
     // Force clipper to sync with new widget.
-    if (!clipper_->mesh_p()) { clipper_ = 0; }
+    if (clipper_.get_rep() && !clipper_->mesh_p()) { clipper_ = 0; }
   }
 
   if (!clipper_.get_rep())
