@@ -1,8 +1,8 @@
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
  <HTML>
    <HEAD>
-     <TITLE>A Guide to SCIRun Documention(29-Sep-2000)</TITLE>
-     <!-- Changed by: TjD, 29-Sep-2000 -->
+     <TITLE>A Guide to SCIRun Documention(04-Oct-2000)</TITLE>
+     <!-- Changed by: TjD, 04-Oct-2000 -->
      <link rel=stylesheet type="text/css"
            href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
    </HEAD>  
@@ -36,10 +36,10 @@
 	 for those who develop new modules, datatypes, converters, and other
 	 types of code.
 	 <ol class="subtoc">
-	   <LI> <a href="#C++ Info">C++ Info</a></LI>
-	   <LI> <a href="#Tck/Tk Info">Tck/Tk Info</a></LI>
 	   <LI> <a href="#Installation">Installation</a></LI>
 	   <LI> <a href="#Writing Code">Writing Code</a></LI>
+	   <LI> <a href="#C++ Info">C++ Info</a></LI>
+	   <LI> <a href="#Tck/Tk Info">Tck/Tk Info</a></LI>
 	   <LI> <a href="#Miscellaneous Info">Miscellaneous Info</a></LI>
 	 </ol>
        </li>
@@ -199,6 +199,58 @@
        SCIRun Installation information can be found in the  <A HREF="#Administrator">administrator documents section</A>.
      </p>
      
+     <A NAME="Writing Code"/>
+     <p class="subhead">Writing Code</p>
+
+     <P class="firstpara">
+       Module writers must follow a <A
+				      HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
+       when writing new modules.  Modules which are not fully spec'ed
+       will not be incorporated into official SCIRun releases.
+     </P>
+
+     <P class="firstpara">
+       New modules are created with SCIRun's built in " <A
+						       HREF="ReferenceGuide/create_module.html">Module Maker </A>"
+       software.
+     </P>
+
+     <P class="firstpara">
+       <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
+	 Coding Standards</A> have been developed in order to provide a
+       basis for consistent, easily reviewable, and maintainable code.
+       Your source code must be commented (documented) according to the
+       <A HREF="ReferenceGuide/cocoon.html">SCIRun standard</A>.
+     </P>
+
+     <P class="firstpara">
+       SCIRun source code, documentation, and other files, are managed
+       by the
+       <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
+	 Concurrent Versions System
+       </A>
+       software.
+       Developers must be familiar with 
+       <A HREF="ReferenceGuide/cvs_info.html">its use</A>
+       in the SCIRun project.  Also
+       see the
+       <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">cvs information</A>
+       prepared by the <A HREF="http://www.csafe.utah.edu">Uintah</A>
+       project.
+     </P>
+
+     <P class="firstpara">
+       You may <A HREF="../keyweb.html">browse</A> SCIRun's ABI (compliments of cocoon).
+     </P>
+
+     <P class="firstpara">
+       <A HREF="ReferenceGuide/convertingForeignData.html">Data converters</A> are standalone programs that convert
+       "foreign" data to an existing SCIRun datatype object (SCIRun datatypes
+       are "persistent" - data objects can be saved to a
+       file and later recreated from the content of the file).  You may
+       need to write one some day.
+     </P>
+
      <A NAME="C++ Info"/>
      <p class="subhead">C++ Info</p>
 
@@ -258,60 +310,6 @@
        widgets from the standard tcl and itcl libraries are available
        online.
      </p>
-
-     <A NAME="Writing Code"/>
-     <p class="subhead">Writing Code</p>
-
-     <P class="firstpara">
-       <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
-	 Coding Standards</A> have been developed in order to provide a
-       basis for consistent, easily reviewable, and maintainable code.
-       Your source code must be commented (documented) according to the
-       <A HREF="ReferenceGuide/cocoon.html">SCIRun standard</A>.
-     </P>
-
-     <P class="firstpara">
-       <A HREF="../keyweb.html">Browse</A> SCIRun's source code (stuff from
-       header files only).
-     </P>
-
-     <P class="firstpara">
-       SCIRun source code, documentation, and other files, are managed
-       by the
-       <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
-	 Concurrent Versions System
-       </A>
-       software.
-       Developers must be familiar with 
-       <A HREF="ReferenceGuide/cvs_info.html">its use</A>
-       in the SCIRun project.  Also
-       see the
-       <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">cvs information</A>
-       prepared by the <A HREF="http://www.csafe.utah.edu">Uintah</A>
-       project.
-     </P>
-
-     <P class="firstpara">
-       New modules are created with SCIRun's built in " <A
-						       HREF="ReferenceGuide/create_module.html"> Module Maker </A>"
-       software.
-     </P>
-
-     <P class="firstpara">
-       Module writers must follow a <A
-				      HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
-       when writing new modules.  Modules which are not fully spec'ed
-       will not be incorporated into official SCIRun releases.
-     </P>
-
-     <P class="firstpara">
-       <A HREF="ReferenceGuide/convertingForeignData.html">Data converters</A> are standalone programs that convert
-       "foreign" data to an existing SCIRun datatype object (SCIRun datatypes
-       are "persistent" - data objects can be saved to a
-       file and later recreated from the content of the file).  You may
-       need to write one some day.
-     </P>
-
 
      <A NAME="Miscellaneous Info"/>
      <p class="subhead">Miscellaneous Info</p>
