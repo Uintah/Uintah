@@ -454,7 +454,8 @@ protected:
   double           d_max_vel; // Maxmimum particle velocity before it's deleted
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
-
+  
+  list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
   bool             d_with_ice;

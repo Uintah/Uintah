@@ -53,7 +53,6 @@ using namespace SCIRun;
 using namespace std;
 
 #define MAX_BASIS 27
-#undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("MPM", false);
 static DebugStream cout_dbg("SerialMPM", false);
@@ -61,6 +60,8 @@ static DebugStream amr_doing("AMRMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
+
+// ----------------------------------------------------------------------
 
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
@@ -103,8 +104,25 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
+    
+    std::vector<std::string> bndy_face_txt_list;
+    mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
+    
+    // convert text representation of face into FaceType
+    for(std::vector<std::string>::const_iterator ftit(bndy_face_txt_list.begin());
+	ftit!=bndy_face_txt_list.end();ftit++) {
+        Patch::FaceType face = Patch::invalidFace;
+        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;ft=Patch::nextFace(ft)) {
+          if(Patch::getFaceName(ft)==*ftit) face =  ft;
+        }
+        if(face!=Patch::invalidFace) {
+          d_bndy_traction_faces.push_back(face);
+        } else {
+          std::cerr << "warning: ignoring unknown face '" << *ftit<< "'" << std::endl;
+        }
+    }
   }
-
+  
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
@@ -515,6 +533,7 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+
 void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
@@ -553,15 +572,24 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
-#ifdef INTEGRAL_TRACTION
-  t->computes(lb->NTractionZMinusLabel);
-#endif
+  
+  if (d_bndy_traction_faces.size()>0) {
+     
+    for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+        ftit!=d_bndy_traction_faces.end();ftit++) {
+      int iface = (int)(*ftit); // FIXME: makes some suspect assumptions about enums
+      t->computes(lb->BndyForceLabel[iface]); // node based
+    }
+    
+  }
+  
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
 
   sched->addTask(t, patches, matls);
 }
+
 
 void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
                                                 const PatchSet* patches,
@@ -1497,6 +1525,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
+  // node based forces
+  Vector bndyForce[6];
+  for(int iface=0;iface<6;iface++) {
+      bndyForce[iface]  = Vector(0.);
+  }
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1512,11 +1546,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     Id.Identity();
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-
-#ifdef INTEGRAL_TRACTION
-    double integralTraction = 0.;
-    double integralArea = 0.;
-#endif
 
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gmassglobal;
@@ -1625,34 +1654,36 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         gstress[c] /= gmass[c];
       }
 
-#ifdef INTEGRAL_TRACTION
-      IntVector low = patch-> getInteriorNodeLowIndex();
-      IntVector hi  = patch-> getInteriorNodeHighIndex();
-      for(Patch::FaceType face = Patch::startFace;
-          face <= Patch::endFace; face=Patch::nextFace(face)){
+      // save boundary forces before apply symmetry boundary condition.
+      for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin()); 
+          fit!=d_bndy_traction_faces.end();fit++) {       
+        Patch::FaceType face = *fit;
+        int iface = (int)face; // FIXME: enum -> int
+           
+        // Check if the face is on an external boundary
+        if(patch->getBCType(face)==Patch::Neighbor)
+           continue;
+      
+        // We are on the boundary, i.e. not on an interior patch
+        // boundary, and also on the correct side, 
+        // so do the traction accumulation . . .
 
-        // I assume we have the patch variable
-        // Check if the face is on the boundary
-        Patch::BCType bc_type = patch->getBCType(face);
-        if (bc_type == Patch::None) {
-          // We are on the boundary, i.e. not on an interior patch
-          // boundary, so do the traction accumulation . . .
-          if(face==Patch::zminus){
-            int K=low.z();
-            for (int i = low.x(); i<hi.x(); i++) {
-              for (int j = low.y(); j<hi.y(); j++) {
-                integralTraction +=
-                  gstress[IntVector(i,j,K)](2,2)*dx.x()*dx.y();
-                if(fabs(gstress[IntVector(i,j,K)](2,2)) > 1.e-12){
-                  integralArea+=dx.x()*dx.y();
-                }
-              }
-            }
+        const IntVector blocklow  = patch->getInteriorNodeLowIndex();
+        const IntVector blockhigh = patch->getInteriorNodeHighIndex();
+        IntVector projlow, projhigh;
+        patch->getFaceNodes(face, 0, projlow, projhigh);
+        // cout << "face " << Patch::getFaceName(face) << ", proj range = " << projlow << "," << projhigh << ", bctype = " << patch->getBCType(face) << endl;
+
+        for (int i = projlow.x(); i<projhigh.x(); i++) {
+          for (int j = projlow.y(); j<projhigh.y(); j++) {
+            for (int k = projlow.z(); k<projhigh.z(); k++) {
+              bndyForce[iface] += internalforce[IntVector(i,j,k)];
+            } 
           }
-        } // end of if (bc_type == Patch::None)
-      }
-#endif
-
+        }
+        
+      } // faces
+      
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,n8or27);
 
@@ -1660,21 +1691,22 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       internalforce.initialize(Vector(0,0,0));
 #endif
     }
-#ifdef INTEGRAL_TRACTION
-    if(integralArea > 0.){
-      integralTraction=integralTraction/integralArea;
-    }
-    else{
-      integralTraction=0.;
-    }
-    new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
-#endif
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       gstressglobal[c] /= gmassglobal[c];
     }
   }
+  
+  // be careful only to put the fields that we have built
+  // that way if the user asks to output a field that has not been built
+  // it will fail early rather than just giving zeros.
+  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+      ftit!=d_bndy_traction_faces.end();ftit++) {
+    int iface = (int)(*ftit); // FIXME: makes some suspect assumptions about enums
+    new_dw->put(sumvec_vartype(bndyForce[iface]),lb->BndyForceLabel[iface]);
+  }
+  
 }
 
 void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,

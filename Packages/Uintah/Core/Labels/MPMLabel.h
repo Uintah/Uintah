@@ -27,6 +27,7 @@ using std::vector;
       const VarLabel* pPressureLabel;
       const VarLabel* p_qLabel;
       const VarLabel* pVolumeDeformedLabel;
+      const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
       
       //PermanentParticleState
@@ -117,8 +118,8 @@ using std::vector;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* ThermalEnergyLabel;
       const VarLabel* TotalMassLabel;
-      const VarLabel* NTractionZMinusLabel;
-      const VarLabel* integralAreaLabel;
+      const VarLabel* BndyForceLabel[6];
+      const VarLabel* BndyContactAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
       const VarLabel* CenterOfMassVelocityLabel;
 

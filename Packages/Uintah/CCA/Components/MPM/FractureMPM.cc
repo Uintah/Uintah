@@ -49,7 +49,6 @@ using namespace SCIRun;
 using namespace std;
 
 #define MAX_BASIS 27
-#undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("MPM", false);
 
@@ -423,9 +422,7 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
-#ifdef INTEGRAL_TRACTION
-  t->computes(lb->NTractionZMinusLabel);
-#endif
+  
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
@@ -1359,11 +1356,6 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
 
-#ifdef INTEGRAL_TRACTION
-    double integralTraction = 0.;
-    double integralArea = 0.;
-#endif
-
     NCVariable<Matrix3>       gstressglobal;
     constNCVariable<double>   gmassglobal;
     new_dw->get(gmassglobal,  lb->gMassLabel,
@@ -1484,33 +1476,6 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
         gstress[c] /= (gmass[c]+Gmass[c]); //add in addtional field
       }
 
-#ifdef INTEGRAL_TRACTION
-      IntVector low = patch-> getInteriorNodeLowIndex();
-      IntVector hi  = patch-> getInteriorNodeHighIndex();
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-
-        // I assume we have the patch variable
-        // Check if the face is on the boundary
-	Patch::BCType bc_type = patch->getBCType(face);
-	if (bc_type == Patch::None) {
-	  // We are on the boundary, i.e. not on an interior patch
-	  // boundary, so do the traction accumulation . . .
-	  if(face==Patch::zminus){
-	    int K=low.z();
-	    for (int i = low.x(); i<hi.x(); i++) {
-              for (int j = low.y(); j<hi.y(); j++) {
-		integralTraction +=
-		  gstress[IntVector(i,j,K)](2,2)*dx.x()*dx.y();
-		if(fabs(gstress[IntVector(i,j,K)](2,2)) > 1.e-12){
-		  integralArea+=dx.x()*dx.y();
-                }
-              }
-	    }
-	  }
-        } // end of if (bc_type == Patch::None)
-      }
-#endif
       //__________________________________
       // Set internal force = 0 on symmetric boundaries
 
@@ -1523,16 +1488,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       internalforce.initialize(Vector(0,0,0));
 #endif
     }
-#ifdef INTEGRAL_TRACTION
-    if(integralArea > 0.){
-      integralTraction=integralTraction/integralArea;
-    }
-    else{
-      integralTraction=0.;
-    }
-    new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
-#endif
-
+    
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       gstressglobal[c] /= gmassglobal[c];
