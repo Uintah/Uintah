@@ -483,8 +483,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
 
-
-#if 1
   task->modifies(lb->pDeformationMeasureLabel_preReloc);
   task->modifies(lb->bElBarLabel_preReloc);
 
@@ -501,7 +499,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   //  task->requires(Task::NewDW,lb->gVelocityLabel,Ghost::None,0);
   task->requires(Task::NewDW,lb->gAccelerationLabel,Ghost::None,0);
   task->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
-#endif
+
   task->requires(Task::NewDW,lb->dispIncQNorm0);
   task->requires(Task::NewDW,lb->dispIncNormMax);
   task->requires(Task::NewDW,lb->dispIncQNorm);
@@ -534,7 +532,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   scheduleComputeStressTensorR(subsched,level->eachPatch(),
 			      d_sharedState->allMPMMaterials(),
 			      true);
-#if 1
+
   scheduleFormStiffnessMatrixR(subsched,level->eachPatch(),
 			       d_sharedState->allMPMMaterials(),true);
 
@@ -558,7 +556,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   scheduleMoveData(subsched,level,level->eachPatch(),
 		   d_sharedState->allMPMMaterials());
-#endif
+
  
   subsched->compile(d_myworld,false);
 
@@ -643,37 +641,43 @@ void ImpMPM::iterate(const ProcessorGroup*,
       ParticleVariable<Point> newpx;
       ParticleVariable<double> newpvolume,newpvolumeold;
       double new_dt;
-      subsched->get_new_dw()->allocateAndPut(newdisp,lb->dispNewLabel,matlindex,
-				       patch);
-      subsched->get_new_dw()->allocateAndPut(new_disp_inc,lb->dispIncLabel,matlindex,
-				       patch);
-      subsched->get_new_dw()->allocateAndPut(new_int_force,lb->gInternalForceLabel,
-				       matlindex,patch);
-      subsched->get_new_dw()->allocateAndPut(new_ext_force,lb->gExternalForceLabel,
-				       matlindex,patch);
+      subsched->get_new_dw()->allocateAndPut(newdisp,lb->dispNewLabel,
+					     matlindex, patch);
+      subsched->get_new_dw()->allocateAndPut(new_disp_inc,lb->dispIncLabel,
+					     matlindex, patch);
+      subsched->get_new_dw()->allocateAndPut(new_int_force,
+					     lb->gInternalForceLabel,
+					     matlindex,patch);
+      subsched->get_new_dw()->allocateAndPut(new_ext_force,
+					     lb->gExternalForceLabel,
+					     matlindex,patch);
       subsched->get_new_dw()->allocateAndPut(new_vel,lb->gVelocityLabel,
-				       matlindex,patch);
+					     matlindex,patch);
       subsched->get_new_dw()->allocateAndPut(new_vel_old,lb->gVelocityOldLabel,
-				       matlindex,patch);
+					     matlindex,patch);
       subsched->get_new_dw()->allocateAndPut(new_acc,lb->gAccelerationLabel,
-				       matlindex,patch);
+					     matlindex,patch);
       subsched->get_new_dw()->allocateAndPut(newgmass,lb->gMassLabel,matlindex,
-				       patch);
-      subsched->get_new_dw()->allocateAndPut(newpstress,lb->pStressLabel_preReloc,
-				       pset);
+					     patch);
+      subsched->get_new_dw()->allocateAndPut(newpstress,
+					     lb->pStressLabel_preReloc,
+					     pset);
 #if 0
-      subsched->get_new_dw()->allocateAndPut(newdefGrad,lb->pDeformationMeasureLabel,
-				       pset);
+      subsched->get_new_dw()->allocateAndPut(newdefGrad,
+					     lb->pDeformationMeasureLabel,
+					     pset);
 #endif
       subsched->get_new_dw()->allocateAndPut(newdefGrad,
-				       lb->pDeformationMeasureLabel_preReloc,
-				       pset);
+					 lb->pDeformationMeasureLabel_preReloc,
+					     pset);
       // subsched->get_new_dw()->allocateAndPut(newbElBar,lb->bElBarLabel,pset);
-      subsched->get_new_dw()->allocateAndPut(newbElBar,lb->bElBarLabel_preReloc,
-				       pset);
+      subsched->get_new_dw()->allocateAndPut(newbElBar,
+					     lb->bElBarLabel_preReloc,
+					     pset);
       subsched->get_new_dw()->allocateAndPut(newpx,lb->pXLabel, pset);
-      subsched->get_new_dw()->allocateAndPut(newpvolume,lb->pVolumeLabel, pset);
-      subsched->get_new_dw()->allocateAndPut(newpvolumeold,lb->pVolumeOldLabel,pset);
+      subsched->get_new_dw()->allocateAndPut(newpvolume,lb->pVolumeLabel,pset);
+      subsched->get_new_dw()->allocateAndPut(newpvolumeold,lb->pVolumeOldLabel,
+					     pset);
       subsched->get_new_dw()->saveParticleSubset(matlindex, patch, pset);
       newdisp.copyData(dispNew);
       new_disp_inc.copyData(dispInc);
@@ -1057,14 +1061,6 @@ void ImpMPM::scheduleCheckConvergenceI(SchedulerP& sched, const LevelP& level,
 			&ImpMPM::checkConvergence,level,sched,recursion);
 
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
-#if 0
-  if (recursion) {
-    t->modifies(lb->dispIncNormMax);
-    t->modifies(lb->dispIncQNorm0);
-    t->modifies(lb->converged);
-  } 
-#endif
-
   t->requires(Task::OldDW,lb->dispIncQNorm0);
   t->requires(Task::OldDW,lb->dispIncNormMax);
 
