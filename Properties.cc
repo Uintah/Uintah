@@ -1207,7 +1207,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           if (d_DORadiationCalc) {
 	    double cutoff_air_density = 1.1845;
 	    double cutoff_temperature = 298.0;
-	    if ((scalar[0])[currCell] < 1.0e-8) {
+	    if ((scalar[0])[currCell] < 0.4) {
 	      if (local_den > cutoff_air_density) {
 	        local_den = cutoff_air_density;
 	        temperature[currCell] = cutoff_temperature;
