@@ -175,6 +175,7 @@ set $m7-isoval-min {-0.649647}
 set $m7-isoval-max {0.370803}
 set $m7-isoval-typed {0}
 set $m7-isoval-quantity {30}
+set $m7-isoval-list {0.0 0.1 0.2 0.3}
 set $m7-extract-from-new-field {1}
 set $m7-algorithm {1}
 set $m7-build_trisurf {0}
