@@ -13,7 +13,6 @@ SRCDIR := Packages/FieldConverters/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/VolumeRender.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Packages/FieldConverters/Dataflow/GUI
 
