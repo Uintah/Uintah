@@ -111,7 +111,7 @@ void GeomDisc::adjust()
 
 void GeomDisc::get_bounds(BBox& bb)
 {
-    bb.extend_cylinder(cen, n, rad);
+    bb.extend_disc(cen, n, rad);
 }
 
 #define GEOMDISC_VERSION 1

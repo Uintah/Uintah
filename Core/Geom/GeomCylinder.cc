@@ -138,8 +138,8 @@ GeomObj* GeomCylinder::clone()
 
 void GeomCylinder::get_bounds(BBox& bb)
 {
-    bb.extend_cylinder(bottom, axis, rad);
-    bb.extend_cylinder(top, axis, rad);
+    bb.extend_disc(bottom, axis, rad);
+    bb.extend_disc(top, axis, rad);
 }
 
 #define GEOMCYLINDER_VERSION 1
@@ -196,8 +196,8 @@ GeomCylinders::get_bounds(BBox& bb)
   for (unsigned int i = 0; i < points_.size(); i+=2)
   {
     Vector axis(points_[i] - points_[i+1]);
-    bb.extend_cylinder(points_[i], axis, radius_);
-    bb.extend_cylinder(points_[i], axis, radius_);
+    bb.extend_disc(points_[i], axis, radius_);
+    bb.extend_disc(points_[i], axis, radius_);
   }
 }
 

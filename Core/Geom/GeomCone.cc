@@ -125,8 +125,8 @@ void GeomCone::adjust()
 
 void GeomCone::get_bounds(BBox& bb)
 {
-    bb.extend_cylinder(bottom, axis, bot_rad);
-    bb.extend_cylinder(top, axis, top_rad);
+    bb.extend_disc(bottom, axis, bot_rad);
+    bb.extend_disc(top, axis, top_rad);
 }
 
 #define GEOMCONE_VERSION 1
@@ -228,8 +228,8 @@ GeomCones::get_bounds(BBox& bb)
   for (unsigned int i = 0; i < points_.size(); i+=2)
   {
     Vector axis(points_[i] - points_[i+1]);
-    bb.extend_cylinder(points_[i], axis, radius_);
-    bb.extend_cylinder(points_[i], axis, radius_);
+    bb.extend_disc(points_[i], axis, radius_);
+    bb.extend_disc(points_[i+1], axis, 0);
   }
 }
 

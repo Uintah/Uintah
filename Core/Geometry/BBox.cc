@@ -95,7 +95,7 @@ void BBox::extend(const BBox& b)
     }
 }
 
-void BBox::extend_cylinder(const Point& cen, const Vector& normal, double r)
+void BBox::extend_disc(const Point& cen, const Vector& normal, double r)
 {
     if (normal.length2() < 0.000001) { extend(cen); return; }
     Vector n(normal.normal());
