@@ -342,4 +342,58 @@ the first input port.  In order for the coloring to work properly,
       </step>
     </plan>
   </testing>
+<nets>
+<net id="ShowField-colorcube">
+<title>ShowField-colorcube Regression Test</title>
+
+<p>Create and display a color cube using vectors to represent RGB values
+in a lattice volume.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/ShowField-colorcube.net.</p>
+
+</net>
+<net id="ShowField-rgbscalars">
+<title>ShowField-rgbscalars Regression Test</title>
+
+<p>Create and display a color cube using vectors to represent RGB values
+in a lattice volume.  The cell centers are scaled by the vector
+magnitude of the RGB values in addition to being colored.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/ShowField-rgbscalars.net.</p>
+
+</net>
+<net id="ShowField-vectorarrows">
+<title>ShowField-vectorarrows Regression Test</title>
+
+<p>Test Showfield to make sure that it renders vector fields as arrows
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as an arrow field colored by the original
+scalar values.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/ShowField-vectorarrows.net.</p>
+
+</net>
+<net id="ShowField-vectorcones">
+<title>ShowField-vectorcones Regression Test</title>
+
+<p>Test Showfield to make sure that it renders vector fields as cones
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as a cone field colored by the original
+scalar values.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/ShowField-vectorcones.net.</p>
+
+</net>
+<net id="ShowField-vectorneedles">
+<title>ShowField-vectorneedles Regression Test</title>
+
+<p>Test Showfield to make sure that it renders vector fields as needles
+properly.  The gradient is taken of the sphere-voltage data set and
+then this is displayed as a needle field colored by the original
+scalar values.</p>
+
+<p>This network can be found at src/nets/Modules/Visualization/ShowField-vectorneedles.net.</p>
+
+</net>
+</nets>
 </component>

@@ -98,4 +98,33 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="ClipByFunction-byvalue">
+<title>ClipByFunction-byvalue Regression Test</title>
+
+<p>This network demonstrates using the ClipByFunction module to extract
+the lungs from the torso model.  The lungs are already classified in
+the torso model and have a particular conductivity table entry of 4,
+so we can extract all of the elements from the torso with conductivity
+of 4 and just get the lungs.</p>
+
+<p>Note that alternatively we could use 'v != 4' to get a model with the
+lungs removed.  Or we could use the different values in the field to
+single out the ribs, heart, and others that were already classified.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/ClipByFunction-byvalue.net.</p>
+
+</net>
+
+<net id="ClipByFunction-positional">
+<title>ClipByFunction-positional Regression Test</title>
+
+<p>This demonstrates using ClipByFunction to chop out a wedge from a
+field so that we can more easily view the interior.  The original
+field is draw in a transparent wireframe for reference.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/ClipByFunction-positional.net.</p>
+
+</net>
+</nets>
 </component>

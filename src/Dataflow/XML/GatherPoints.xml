@@ -70,4 +70,15 @@
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="GatherPoints">
+<title>GatherPoints Regression Test</title>
+
+<p>Read in two fields and extract all of the node points from both of
+them into a new PointCloud using the GatherPoints module.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/GatherPoints.net.</p>
+
+</net>
+</nets>
 </component>

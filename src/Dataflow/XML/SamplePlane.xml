@@ -80,4 +80,15 @@ are needed. </p>
   </io>
   <testing>
   </testing>
+<nets>
+<net id="SamplePlane">
+<title>SamplePlane Regression Test</title>
+
+<p>Create and draw an ImageField using the SamplePlane module.  The plane
+is then drawn with different colors for the faces, edges, and text.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SamplePlane.net.</p>
+
+</net>
+</nets>
 </component>

@@ -113,5 +113,15 @@
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="FieldInfo">
+<title>FieldInfo Regression Test</title>
+
+<p>Read in a field and examine some details with the FieldInfo module.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsOther/FieldInfo.net.</p>
+
+</net>
+</nets>
 </component>
 

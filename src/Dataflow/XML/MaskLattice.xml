@@ -75,4 +75,15 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="MaskLattice">
+<title>MaskLattice Regression Test</title>
+
+<p>Use the MaskLattice module to mask away a portion of an input lattice
+and display it against the original to verify that it has been masked.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/MaskLattice.net.</p>
+
+</net>
+</nets>
 </component>
