@@ -78,6 +78,16 @@ public:
   bool value(value_type &val, typename mesh_type::cell_index i) const 
   { val = fdata_[i]; return true; }
 
+  //! Required interface to support Field Concept.
+  void set_value(const value_type &val, typename mesh_type::node_index i)
+  { fdata_[i] = val; }
+  void set_value(const value_type &val, typename mesh_type::edge_index i)
+  { fdata_[i] = val; }
+  void set_value(const value_type &val, typename mesh_type::face_index i)
+  { fdata_[i] = val; }
+  void set_value(const value_type &val, typename mesh_type::cell_index i)
+  { fdata_[i] = val; }
+
   //! No safety check for the following calls, be sure you know where data is.
   value_type value(typename mesh_type::node_index i) const
   { return fdata_[i]; }

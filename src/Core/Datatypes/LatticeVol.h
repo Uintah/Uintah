@@ -30,19 +30,19 @@ public:
   
   const value_type &operator[](typename LatVolMesh::cell_index idx) const 
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  value_type operator[](typename LatVolMesh::face_index) const
-    { return (Data)0; }
-  value_type operator[](typename LatVolMesh::edge_index) const 
-    { return (Data)0; }
+  const value_type &operator[](typename LatVolMesh::face_index idx) const
+    { return operator()(idx.i_, 0, 0); }
+  const value_type &operator[](typename LatVolMesh::edge_index idx) const 
+    { return operator()(idx.i_, 0, 0); }
   const value_type &operator[](typename LatVolMesh::node_index idx) const
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
   value_type &operator[](typename LatVolMesh::cell_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  value_type operator[](typename LatVolMesh::face_index idx)
-    { return (Data)0; }
-  value_type operator[](typename LatVolMesh::edge_index idx)
-    { return (Data)0; }
+  value_type &operator[](typename LatVolMesh::face_index idx)
+    { return operator()(idx.i_, 0, 0); }
+  value_type &operator[](typename LatVolMesh::edge_index idx)
+    { return operator()(idx.i_, 0, 0); }
   value_type &operator[](typename LatVolMesh::node_index idx)
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
