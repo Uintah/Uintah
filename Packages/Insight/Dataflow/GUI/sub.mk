@@ -10,26 +10,29 @@
 
 SRCDIR := Packages/Insight/Dataflow/GUI
 
+PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
+
+CODEGEN := Packages/Insight/Core/CodeGenerator/generate
+
+XMLS :=  \
+	sci_DiscreteGaussianImageFilter.xml \
+        sci_GradientAnisotropicDiffusionImageFilter.xml \
+        sci_GradientMagnitudeImageFilter.xml \
+	sci_WatershedRelabeler.xml \
+	sci_WatershedSegmentTreeGenerator.xml \
+	sci_WatershedSegmenter.xml \
+	sci_CannySegmentationLevelSetImageFilter.xml \
+	sci_ThresholdSegmentationLevelSetImageFilter.xml \
+#[INSERT NEW CODE FILE HERE]
+
+INSIGHT_TCL_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.tcl, $(XMLS))
+
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: \
-	$(SRCDIR)/ImageFileReader.tcl\
-	$(SRCDIR)/ImageFileWriter.tcl\
-	$(SRCDIR)/ImageReaderUChar2D.tcl\
-	$(SRCDIR)/Switch.tcl\
-	$(SRCDIR)/ImageReaderFloat2D.tcl\
-	$(SRCDIR)/ImageReaderFloat3D.tcl\
-#	$(SRCDIR)/BinaryThresholdImageFilter.tcl\
-#	$(SRCDIR)/ReflectImageFilter.tcl\
-#	$(SRCDIR)/GradientMagnitudeImageFilter.tcl\
-#	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl\
-#	$(SRCDIR)/DiscreteGaussianImageFilter.tcl\
-#	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.tcl\
-#	$(SRCDIR)/CannySegmentationLevelSetImageFilter.tcl\
-#	$(SRCDIR)/WatershedSegmenter.tcl\
-#	$(SRCDIR)/WatershedSegmentTreeGenerator.tcl\
-#	$(SRCDIR)/WatershedRelabeler.tcl\
-#	$(SRCDIR)/ImageReaderUShort2D.tcl\
+Packages/Insight/Dataflow/GUI/%.tcl:  Packages/Insight/Dataflow/Modules/Filters/XML/sci_%.xml
+	$(CODEGEN) $(PATH_TO_SCIRUN)/Packages/Insight $(CATEGORY) $* -gui 
+
+$(SRCDIR)/tclIndex: $(INSIGHT_TCL_GEN)
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Insight/Dataflow/GUI
 
