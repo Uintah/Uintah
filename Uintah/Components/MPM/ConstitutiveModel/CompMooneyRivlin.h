@@ -84,6 +84,24 @@ class CompMooneyRivlin : public ConstitutiveModel {
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
+  // class function to read correct number of parameters
+  // from the input file
+  static void readParameters(ProblemSpecP ps, double *p_array);
+
+
+  // class function to read correct number of parameters
+  // from the input file, and create a new object
+  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
+
+   // member function to read correct number of parameters
+  // from the input file, and any other particle information
+  // need to restart the model for this particle 
+  // and create a new object
+  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
+
+  // class function to create a new object from parameters
+  static ConstitutiveModel* create(double *p_array);
+
 };
 
 }
@@ -92,6 +110,9 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.7  2000/04/14 17:34:41  jas
+// Added ProblemSpecP capabilities.
+//
 // Revision 1.6  2000/03/21 01:29:40  dav
 // working to make MPM stuff compile successfully
 //

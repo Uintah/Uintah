@@ -199,9 +199,10 @@ double CompNeoHook::getMu() const
 
 }
 
-void CompNeoHook::readParameters(ifstream& in, double *p_array)
+void CompNeoHook::readParameters(ProblemSpecP ps, double *p_array)
 {
-  in >> p_array[0] >> p_array[1];
+  ps->require("bulk_modulus",p_array[0]);
+  ps->require("shear_modulus",p_array[1]);
 }
 
 void CompNeoHook::writeParameters(ofstream& out, double *p_array)
@@ -209,10 +210,10 @@ void CompNeoHook::writeParameters(ofstream& out, double *p_array)
   out << p_array[0] << " " << p_array[1] << " ";
 }
 
-ConstitutiveModel* CompNeoHook::readParametersAndCreate(ifstream& in)
+ConstitutiveModel* CompNeoHook::readParametersAndCreate(ProblemSpecP ps)
 {
   double p_array[2];
-  readParameters(in, p_array);
+  readParameters(ps, p_array);
   return(create(p_array));
 }
 
@@ -231,8 +232,10 @@ void CompNeoHook::writeRestartParameters(ofstream& out) const
       << (getDeformationMeasure())(3,3) << endl;
 }
 
-ConstitutiveModel* CompNeoHook::readRestartParametersAndCreate(ifstream& in)
+ConstitutiveModel* CompNeoHook::readRestartParametersAndCreate(ProblemSpecP ps)
 {
+
+#if 0
   Matrix3 dg(0.0);
   ConstitutiveModel *cm = readParametersAndCreate(in);
   
@@ -242,6 +245,7 @@ ConstitutiveModel* CompNeoHook::readRestartParametersAndCreate(ifstream& in)
   cm->setDeformationMeasure(dg);
   
   return(cm);
+#endif
 }
 
 ConstitutiveModel* CompNeoHook::create(double *p_array)
@@ -289,6 +293,9 @@ int CompNeoHook::getSize() const
 #endif
 
 // $Log$
+// Revision 1.3  2000/04/14 17:34:42  jas
+// Added ProblemSpecP capabilities.
+//
 // Revision 1.2  2000/03/20 17:17:07  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

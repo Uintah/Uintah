@@ -284,9 +284,14 @@ double HyperElasticDamage::getMu() const
 
 }
 
-void HyperElasticDamage::readParameters(ifstream& in, double *p_array)
+void HyperElasticDamage::readParameters(ProblemSpecP ps, double *p_array)
 {
-  in >> p_array[0] >> p_array[1] >> p_array[2] >> p_array[3] >> p_array[4];
+  ps->require("bulk_modulus",p_array[0]);
+  ps->require("shear_modulus",p_array[1]);
+  ps->require("alpha",p_array[2]);
+  ps->require("beta",p_array[3]);
+  ps->require("max_equiv_strain",p_array[4]);
+
 }
 
 void HyperElasticDamage::writeParameters(ofstream& out, double *p_array)
@@ -296,10 +301,10 @@ void HyperElasticDamage::writeParameters(ofstream& out, double *p_array)
   out << p_array[4] << " ";
 }
 
-ConstitutiveModel* HyperElasticDamage::readParametersAndCreate(ifstream& in)
+ConstitutiveModel* HyperElasticDamage::readParametersAndCreate(ProblemSpecP ps)
 {
   double p_array[5];
-  readParameters(in, p_array);
+  readParameters(ps, p_array);
   return(create(p_array));
 }
 
@@ -320,8 +325,9 @@ void HyperElasticDamage::writeRestartParameters(ofstream& out) const
       << (getDeformationMeasure())(3,3) << endl;
 }
 
-ConstitutiveModel* HyperElasticDamage::readRestartParametersAndCreate(ifstream& in)
+ConstitutiveModel* HyperElasticDamage::readRestartParametersAndCreate(ProblemSpecP ps)
 {
+#if 0
   Matrix3 dg(0.0);
   ConstitutiveModel *cm = readParametersAndCreate(in);
   
@@ -331,6 +337,7 @@ ConstitutiveModel* HyperElasticDamage::readRestartParametersAndCreate(ifstream& 
   cm->setDeformationMeasure(dg);
   
   return(cm);
+#endif
 }
 
 ConstitutiveModel* HyperElasticDamage::create(double *p_array)
@@ -386,6 +393,9 @@ int HyperElasticDamage::getSize() const
 
 //
 // $Log$
+// Revision 1.3  2000/04/14 17:34:42  jas
+// Added ProblemSpecP capabilities.
+//
 // Revision 1.2  2000/03/20 17:17:09  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

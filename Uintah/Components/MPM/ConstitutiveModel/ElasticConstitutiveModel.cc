@@ -360,7 +360,7 @@ void ElasticConstitutiveModel::readParameters(ProblemSpecP ps, double *p_array)
 
   ps->require("youngs_modulus",p_array[0]);
   ps->require("poissons_ratio",p_array[1]);
- 
+
 }
 
 void ElasticConstitutiveModel::writeParameters(ofstream& out, double *p_array)
@@ -463,6 +463,9 @@ int ElasticConstitutiveModel::getSize() const
 #endif
 
 // $Log$
+// Revision 1.4  2000/04/14 17:34:42  jas
+// Added ProblemSpecP capabilities.
+//
 // Revision 1.3  2000/04/14 02:19:42  jas
 // Now using the ProblemSpec for input.
 //

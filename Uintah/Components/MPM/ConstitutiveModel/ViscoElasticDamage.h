@@ -128,7 +128,7 @@ class ViscoElasticDamage : public ConstitutiveModel {
 
   // class function to read correct number of parameters
   // from the input file
-  static void readParameters(std::ifstream& in, double *p_array);
+  static void readParameters(ProblemSpecP ps, double *p_array);
 
   // class function to write correct number of parameters
   // to the output file
@@ -136,7 +136,7 @@ class ViscoElasticDamage : public ConstitutiveModel {
 
   // class function to read correct number of parameters
   // from the input file, and create a new object
-  static ConstitutiveModel* readParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
 
   // member function to write correct number of parameters
   // to output file, and to write any other particle information
@@ -147,7 +147,7 @@ class ViscoElasticDamage : public ConstitutiveModel {
   // from the input file, and any other particle information
   // need to restart the model for this particle 
   // and create a new object
-  static ConstitutiveModel* readRestartParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
 
   // class function to create a new object from parameters
   static ConstitutiveModel* create(double *p_array);

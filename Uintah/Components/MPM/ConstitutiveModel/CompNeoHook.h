@@ -80,7 +80,7 @@ class CompNeoHook : public ConstitutiveModel {
 
   // class function to read correct number of parameters
   // from the input file
-  static void readParameters(std::ifstream& in, double *p_array);
+  static void readParameters(ProblemSpecP ps, double *p_array);
 
   // class function to write correct number of parameters
   // to the output file
@@ -88,7 +88,7 @@ class CompNeoHook : public ConstitutiveModel {
 
   // class function to read correct number of parameters
   // from the input file, and create a new object
-  static ConstitutiveModel* readParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
 
   // member function to write correct number of parameters
   // to output file, and to write any other particle information
@@ -99,7 +99,7 @@ class CompNeoHook : public ConstitutiveModel {
   // from the input file, and any other particle information
   // need to restart the model for this particle 
   // and create a new object
-  static ConstitutiveModel* readRestartParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
 
   // class function to create a new object from parameters
   static ConstitutiveModel* create(double *p_array);
@@ -124,6 +124,9 @@ class CompNeoHook : public ConstitutiveModel {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.3  2000/04/14 17:34:42  jas
+// Added ProblemSpecP capabilities.
+//
 // Revision 1.2  2000/03/20 17:17:07  sparker
 // Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
 //

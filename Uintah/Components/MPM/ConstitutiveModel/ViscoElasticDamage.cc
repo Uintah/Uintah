@@ -328,10 +328,17 @@ double ViscoElasticDamage::getMu() const
 
 }
 
-void ViscoElasticDamage::readParameters(ifstream& in, double *p_array)
+void ViscoElasticDamage::readParameters(ProblemSpecP ps, double *p_array)
 {
-  in >> p_array[0] >> p_array[1] >> p_array[2] >> p_array[3]
-	>> p_array[4] >> p_array[5] >> p_array[6];
+  
+  ps->require("bulk_modulus",p_array[0]);
+  ps->require("shear_modulus",p_array[1]);
+  ps->require("alpha",p_array[2]);
+  ps->require("beta",p_array[3]);
+  ps->require("tau",p_array[4]);
+  ps->require("gamma",p_array[5]);
+  ps->require("max_equiv_strain",p_array[6]);
+  
 }
 
 void ViscoElasticDamage::writeParameters(ofstream& out, double *p_array)
@@ -342,10 +349,10 @@ void ViscoElasticDamage::writeParameters(ofstream& out, double *p_array)
   out << p_array[6] << " "; 
 }
 
-ConstitutiveModel* ViscoElasticDamage::readParametersAndCreate(ifstream& in)
+ConstitutiveModel* ViscoElasticDamage::readParametersAndCreate(ProblemSpecP ps)
 {
   double p_array[7];
-  readParameters(in, p_array);
+  readParameters(ps, p_array);
   return(create(p_array));
 }
 
@@ -367,8 +374,9 @@ void ViscoElasticDamage::writeRestartParameters(ofstream& out) const
       << (getDeformationMeasure())(3,3) << endl;
 }
 
-ConstitutiveModel* ViscoElasticDamage::readRestartParametersAndCreate(ifstream& in)
+ConstitutiveModel* ViscoElasticDamage::readRestartParametersAndCreate(ProblemSpecP ps)
 {
+#if 0
   Matrix3 dg(0.0);
   ConstitutiveModel *cm = readParametersAndCreate(in);
   
@@ -378,6 +386,7 @@ ConstitutiveModel* ViscoElasticDamage::readRestartParametersAndCreate(ifstream& 
   cm->setDeformationMeasure(dg);
   
   return(cm);
+#endif
 }
 
 ConstitutiveModel* ViscoElasticDamage::create(double *p_array)
