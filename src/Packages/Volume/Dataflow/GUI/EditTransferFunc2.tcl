@@ -65,7 +65,7 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
             pack $w.f.gl -padx 2 -pady 2
             # create an OpenGL widget
             opengl $w.f.gl.gl -geometry 512x256 -doublebuffer true -direct true \
-                -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2
+                -rgba true -redsize 1 -greensize 1 -bluesize 1 -alphasize 1 -depthsize 2
             # every time the OpenGL widget is displayed, redraw it
             bind $w.f.gl.gl <Expose> "$this-c expose"
             #bind $w.f.gl.gl <Configure> "$this-c resize"

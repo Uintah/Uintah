@@ -68,7 +68,9 @@ class EditTransferFunc2 : public Module {
   vector<CM2Widget*> widget_;
   CM2ShaderFactory* shader_factory_;
   Pbuffer* pbuffer_;
+  Array3<float> array_;
   bool use_pbuffer_;
+  bool use_back_buffer_;
   
   Nrrd* histo_;
   bool histo_dirty_;
@@ -110,10 +112,10 @@ DECLARE_MAKER(EditTransferFunc2)
 EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   : Module("EditTransferFunc2", ctx, Filter, "Visualization", "Volume"),
     ctx_(0), dpy_(0), win_(0), button_(0), shader_factory_(0),
-    pbuffer_(0), use_pbuffer_(true),
+    pbuffer_(0), use_pbuffer_(true), use_back_buffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_(new Colormap2),
-    cmap_dirty_(true), cmap_size_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0),
+    cmap_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0),
     pick_widget_(-1), pick_object_(0), updating_(false)
 {
   widget_.push_back(scinew TriangleCM2Widget());
@@ -222,8 +224,10 @@ EditTransferFunc2::push(int x, int y, int button)
       }
     }
   }
-  update();
-  redraw();
+  if(pick_widget_ != -1) {
+    update();
+    redraw();
+  }
 }
 
 
@@ -238,9 +242,9 @@ EditTransferFunc2::motion(int x, int y)
     widget_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
     updating_ = true;
+    update();
+    redraw();
   }
-  update();
-  redraw();
 }
 
 
@@ -256,10 +260,9 @@ EditTransferFunc2::release(int x, int y, int button)
     widget_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
     updating_ = false;
     cmap_dirty_ = true;
+    update();
+    redraw();
   }
-
-  update();
-  redraw();
 }
 
 
@@ -341,107 +344,96 @@ EditTransferFunc2::update()
   glXMakeCurrent(dpy_, win_, ctx_);
 
   use_pbuffer_ = false;
+  //use_back_buffer_ = false;
   
-  if(use_pbuffer_) {
+  //----------------------------------------------------------------
+  // decide what rasterization to use
+  if(use_pbuffer_ || use_back_buffer_) {
     if(!shader_factory_) {
       shader_factory_ = new CM2ShaderFactory();
       if(shader_factory_->create()) {
         use_pbuffer_ = false;
+        use_back_buffer_ = false;
         cerr << "Shaders not supported; switching to software rasterization" << endl;
       }
     }
   }
-  
-  // create pbuffer
-  if(use_pbuffer_ && (!pbuffer_
-      || pbuffer_->width() != width_
-      || pbuffer_->height() != height_)) {
+
+  if(use_pbuffer_ && (!pbuffer_ || pbuffer_->width() != width_
+                      || pbuffer_->height() != height_)) {
     if(pbuffer_) {
       pbuffer_->destroy();
       delete pbuffer_;
     }
     pbuffer_ = new Pbuffer(width_, height_, GL_INT, 8, true, GL_FALSE);
     if(pbuffer_->create()) {
-      use_pbuffer_ = false;
       pbuffer_->destroy();
       delete pbuffer_;
       pbuffer_ = 0;
-      cerr << "Pbuffers not supported; switching to software rasterization" << endl;
+      use_pbuffer_ = false;
+      cerr << "Pbuffers not supported; switching to back buffer rasterization" << endl;
     }
   }
-  
+
   //----------------------------------------------------------------
-  // update colormap array
+  // update local array
   if(use_pbuffer_) {
-    pbuffer_->makeCurrent();
-    glDrawBuffer(GL_FRONT);
-    glViewport(0, 0, width_, height_);
+    // pbuffer rasterization
+    if(cmap_dirty_) {
+      pbuffer_->makeCurrent();
+      glDrawBuffer(GL_FRONT);
+      glViewport(0, 0, width_, height_);
 
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClear(GL_COLOR_BUFFER_BIT);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(-1.0, -1.0, 0.0);
-    glScalef(2.0, 2.0, 2.0);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(-1.0, -1.0, 0.0);
+      glScalef(2.0, 2.0, 2.0);
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     
-    // Rasterize widgets
-    for (unsigned int i = 0; i < widget_.size(); i++)
-    {
-      widget_[i]->rasterize(*shader_factory_);
-    }
+      // Rasterize widgets
+      for (unsigned int i=0; i<widget_.size(); i++) {
+        widget_[i]->rasterize(*shader_factory_);
+      }
 
-    glDisable(GL_BLEND);
+      glDisable(GL_BLEND);
     
-    pbuffer_->swapBuffers();
+      pbuffer_->swapBuffers();
     
-    glXMakeCurrent(dpy_, win_, ctx_);
-
-    if (cmap_dirty_)
-    {
-      cmap_->widgets() = widget_;
-      cmap_->set_updating(updating_);
-      cmap_dirty_ = false;
-      do_execute = true;
+      glXMakeCurrent(dpy_, win_, ctx_);
     }
   } else {
-    Array3<float>& cmap = cmap_->array();
-    if(width_ != cmap.dim2() || height_ != cmap.dim1()) {
-      cmap_size_dirty_ = true;
-      cmap_dirty_ = true;
-    }
-
-    if (cmap_dirty_) {
-      cmap_->lock_array();
+    // software rasterization
+    bool cmap_size_dirty = width_ != array_.dim2() || height_ != array_.dim1();
+    if(cmap_dirty_ || cmap_size_dirty) {
       // realloc cmap
-      if(cmap_size_dirty_)
-        cmap.resize(height_, width_, 4);
+      if(cmap_size_dirty)
+        array_.resize(height_, width_, 4);
       // clear cmap
-      for(int i=0; i<cmap.dim1(); i++) {
-        for(int j=0; j<cmap.dim2(); j++) {
-          cmap(i,j,0) = 0.0;
-          cmap(i,j,1) = 0.0;
-          cmap(i,j,2) = 0.0;
-          cmap(i,j,3) = 0.0;
+      for(int i=0; i<array_.dim1(); i++) {
+        for(int j=0; j<array_.dim2(); j++) {
+          array_(i,j,0) = 0.0;
+          array_(i,j,1) = 0.0;
+          array_(i,j,2) = 0.0;
+          array_(i,j,3) = 0.0;
         }
       }
-      // Rasterize widgets
-      for (unsigned int i = 0; i < widget_.size(); i++)
-      {
-	widget_[i]->rasterize(cmap);
+      // rasterize widgets
+      for (unsigned int i=0; i<widget_.size(); i++) {
+	widget_[i]->rasterize(array_);
       }
-
-      // Update textures
-      if(cmap_size_dirty_) {
+      // update texture
+      if(cmap_size_dirty) {
         if(glIsTexture(cmap_tex_)) {
           glDeleteTextures(1, &cmap_tex_);
           cmap_tex_ = 0;
@@ -452,25 +444,21 @@ EditTransferFunc2::update()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap.dim2(), cmap.dim1(),
-                     0, GL_RGBA, GL_FLOAT, &cmap(0,0,0));
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, array_.dim2(), array_.dim1(),
+                     0, GL_RGBA, GL_FLOAT, &array_(0,0,0));
         glBindTexture(GL_TEXTURE_2D, 0);
-        cmap_size_dirty_ = false;
       } else {
         glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, cmap.dim2(), cmap.dim1(),
-                     0, GL_RGBA, GL_FLOAT, &cmap(0,0,0));
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, array_.dim2(), array_.dim1(),
+                        GL_RGBA, GL_FLOAT, &array_(0,0,0));
         glBindTexture(GL_TEXTURE_2D, 0);
       }
-      cmap_dirty_ = false;
-      cmap_->unlock_array();
-      do_execute = true;
     }
   }
-  
+
   //----------------------------------------------------------------
   // update histo tex
-  if (histo_dirty_) {
+  if(histo_dirty_) {
     if(glIsTexture(histo_tex_)) {
       glDeleteTextures(1, &histo_tex_);
       histo_tex_ = 0;
@@ -490,14 +478,21 @@ EditTransferFunc2::update()
     histo_dirty_ = false;
   }
 
+  if(cmap_dirty_) {
+    cmap_->lock_widgets();
+    cmap_->widgets() = widget_;
+    cmap_->set_updating(updating_);
+    cmap_->unlock_widgets();
+    cmap_dirty_ = false;
+    do_execute = true;
+  }
+  
   gui->unlock();
 
-  if (do_execute) {
+  if(do_execute) {
     want_to_execute();
   }
 }
-
-
 
 void
 EditTransferFunc2::redraw()
@@ -525,13 +520,82 @@ EditTransferFunc2::redraw()
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE);
 
-  // draw histo
-  if(histo_) {
-    glActiveTexture(GL_TEXTURE0);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, histo_tex_);
-    glColor4f(0.75, 0.75, 0.75, 1.0);
+  // draw cmap
+  if(use_back_buffer_) {
+    // rasterize widgets into back buffer
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    for(unsigned int i=0; i<widget_.size(); i++) {
+      widget_[i]->rasterize(*shader_factory_);
+    }
+
+    glBlendFunc(GL_ONE, GL_DST_ALPHA);
+    // draw histo
+    if(histo_) {
+      glActiveTexture(GL_TEXTURE0);
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, histo_tex_);
+      glColor4f(0.75, 0.75, 0.75, 1.0);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f( 0.0,  0.0);
+        glVertex2f( 0.0,  0.0);
+        glTexCoord2f( 1.0,  0.0);
+        glVertex2f( 1.0,  0.0);
+        glTexCoord2f( 1.0,  1.0);
+        glVertex2f( 1.0,  1.0);
+        glTexCoord2f( 0.0,  1.0);
+        glVertex2f( 0.0,  1.0);
+      }
+      glEnd();
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glDisable(GL_TEXTURE_2D);
+    } else {
+      glColor4f(0.0, 0.0, 0.0, 0.0);
+      glBegin(GL_QUADS);
+      {
+        glVertex2f( 0.0,  0.0);
+        glVertex2f( 1.0,  0.0);
+        glVertex2f( 1.0,  1.0);
+        glVertex2f( 0.0,  1.0);
+      }
+      glEnd();
+    }
+    glDisable(GL_BLEND);
+  } else {
+    // draw histo
+    if(histo_) {
+      glActiveTexture(GL_TEXTURE0);
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, histo_tex_);
+      glColor4f(0.75, 0.75, 0.75, 1.0);
+      glBegin(GL_QUADS);
+      {
+        glTexCoord2f( 0.0,  0.0);
+        glVertex2f( 0.0,  0.0);
+        glTexCoord2f( 1.0,  0.0);
+        glVertex2f( 1.0,  0.0);
+        glTexCoord2f( 1.0,  1.0);
+        glVertex2f( 1.0,  1.0);
+        glTexCoord2f( 0.0,  1.0);
+        glVertex2f( 0.0,  1.0);
+      }
+      glEnd();
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glDisable(GL_TEXTURE_2D);
+    }
+    // draw textures
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    if(use_pbuffer_) {
+      pbuffer_->bind(GL_FRONT);
+    } else {
+      glEnable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, cmap_tex_);
+    }
     glBegin(GL_QUADS);
     {
       glTexCoord2f( 0.0,  0.0);
@@ -544,43 +608,17 @@ EditTransferFunc2::redraw()
       glVertex2f( 0.0,  1.0);
     }
     glEnd();
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    if(use_pbuffer_) {
+      pbuffer_->release(GL_FRONT);
+    } else {
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glDisable(GL_TEXTURE_2D);
+    }
+    glDisable(GL_BLEND);
   }
-
-  // draw cmap
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  if(use_pbuffer_) {
-    pbuffer_->bind(GL_FRONT);
-  } else {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, cmap_tex_);
-  }
-  glBegin(GL_QUADS);
-  {
-    glTexCoord2f( 0.0,  0.0);
-    glVertex2f( 0.0,  0.0);
-    glTexCoord2f( 1.0,  0.0);
-    glVertex2f( 1.0,  0.0);
-    glTexCoord2f( 1.0,  1.0);
-    glVertex2f( 1.0,  1.0);
-    glTexCoord2f( 0.0,  1.0);
-    glVertex2f( 0.0,  1.0);
-  }
-  glEnd();
-  if(use_pbuffer_) {
-    pbuffer_->release(GL_FRONT);
-  } else {
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
-  }
-  glDisable(GL_BLEND);
   
   // draw widgets
-  for (unsigned int i = 0; i < widget_.size(); i++)
-  {
+  for(unsigned int i=0; i<widget_.size(); i++) {
     widget_[i]->draw();
   }
   
