@@ -15,6 +15,7 @@
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 
@@ -29,21 +30,26 @@ CompNeoHook::CompNeoHook(ProblemSpecP& ps)
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
-  p_cmdata_label = new VarLabel("p.cmdata",
+  p_cmdata_label = scinew VarLabel("p.cmdata",
                                 ParticleVariable<CMData>::getTypeDescription());
-  p_cmdata_label_preReloc = new VarLabel("p.cmdata+",
+  p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
                                 ParticleVariable<CMData>::getTypeDescription());
 
-  bElBarLabel = new VarLabel("p.bElBar",
+  bElBarLabel = scinew VarLabel("p.bElBar",
                 ParticleVariable<Matrix3>::getTypeDescription());
  
-  bElBarLabel_preReloc = new VarLabel("p.bElBar+",
+  bElBarLabel_preReloc = scinew VarLabel("p.bElBar+",
                 ParticleVariable<Matrix3>::getTypeDescription());
 }
 
 CompNeoHook::~CompNeoHook()
 {
   // Destructor
+
+  delete p_cmdata_label;
+  delete p_cmdata_label_preReloc;
+  delete bElBarLabel;
+  delete bElBarLabel_preReloc;
  
 }
 
@@ -371,7 +377,7 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = new TypeDescription(TypeDescription::Other,
+      td = scinew TypeDescription(TypeDescription::Other,
 			       "CompNeoHook::CMData", true, &makeMPI_CMData);
    }
    return td;
@@ -380,6 +386,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.32  2000/08/08 01:32:42  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.31  2000/07/27 22:39:44  sparker
 // Implemented MPIScheduler
 // Added associated support

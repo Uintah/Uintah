@@ -23,6 +23,7 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/VarTypes.h>
+#include <SCICore/Malloc/Allocator.>
 
 #include "ICE_switches.i"
 #include "nrutil+.h"
@@ -85,51 +86,51 @@ ICE::ICE()
     /*__________________________________
     *   Cell-centered variables
     *___________________________________*/
-    delTLabel         = new VarLabel("delT",      delt_vartype::getTypeDescription() );
+    delTLabel         = scinew VarLabel("delT",      delt_vartype::getTypeDescription() );
     
-    press_CCLabel     = new VarLabel("press_CC",  CCVariable<double>::getTypeDescription() );
-    press_CCLabel_0   = new VarLabel("press_CC_0",  CCVariable<double>::getTypeDescription() );
-    press_CCLabel_1   = new VarLabel("press_CC_1",CCVariable<double>::getTypeDescription() );
-    press_CCLabel_2   = new VarLabel("press_CC_2",CCVariable<double>::getTypeDescription() );
-    press_CCLabel_3   = new VarLabel("press_CC_3",CCVariable<double>::getTypeDescription() );
-    press_CCLabel_4   = new VarLabel("press_CC_4",CCVariable<double>::getTypeDescription() );
-    press_CCLabel_5   = new VarLabel("press_CC_5",CCVariable<double>::getTypeDescription() );
-    press_CCLabel_6_7 = new VarLabel("press_CC_6_7",CCVariable<double>::getTypeDescription() );
+    press_CCLabel     = scinew VarLabel("press_CC",  CCVariable<double>::getTypeDescription() );
+    press_CCLabel_0   = scinew VarLabel("press_CC_0",  CCVariable<double>::getTypeDescription() );
+    press_CCLabel_1   = scinew VarLabel("press_CC_1",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_2   = scinew VarLabel("press_CC_2",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_3   = scinew VarLabel("press_CC_3",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_4   = scinew VarLabel("press_CC_4",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_5   = scinew VarLabel("press_CC_5",CCVariable<double>::getTypeDescription() );
+    press_CCLabel_6_7 = scinew VarLabel("press_CC_6_7",CCVariable<double>::getTypeDescription() );
 
-    rho_CCLabel       = new VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_0     = new VarLabel("rho_CC_0",  CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_1     = new VarLabel("rho_CC_1",  CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_2     = new VarLabel("rho_CC_2",  CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_3     = new VarLabel("rho_CC_3",  CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_4     = new VarLabel("rho_CC_4",  CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_5     = new VarLabel("rho_CC_5",  CCVariable<double>::getTypeDescription() );
-    rho_CCLabel_6_7   = new VarLabel("rho_CC_6_7",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel       = scinew VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_0     = scinew VarLabel("rho_CC_0",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_1     = scinew VarLabel("rho_CC_1",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_2     = scinew VarLabel("rho_CC_2",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_3     = scinew VarLabel("rho_CC_3",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_4     = scinew VarLabel("rho_CC_4",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_5     = scinew VarLabel("rho_CC_5",  CCVariable<double>::getTypeDescription() );
+    rho_CCLabel_6_7   = scinew VarLabel("rho_CC_6_7",  CCVariable<double>::getTypeDescription() );
  
-    temp_CCLabel      = new VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_0    = new VarLabel("temp_CC_0", CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_1    = new VarLabel("temp_CC_1", CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_2    = new VarLabel("temp_CC_2", CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_3    = new VarLabel("temp_CC_3", CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_4    = new VarLabel("temp_CC_4", CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_5    = new VarLabel("temp_CC_5", CCVariable<double>::getTypeDescription() );
-    temp_CCLabel_6_7  = new VarLabel("temp_CC_6_7", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel      = scinew VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_0    = scinew VarLabel("temp_CC_0", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_1    = scinew VarLabel("temp_CC_1", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_2    = scinew VarLabel("temp_CC_2", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_3    = scinew VarLabel("temp_CC_3", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_4    = scinew VarLabel("temp_CC_4", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_5    = scinew VarLabel("temp_CC_5", CCVariable<double>::getTypeDescription() );
+    temp_CCLabel_6_7  = scinew VarLabel("temp_CC_6_7", CCVariable<double>::getTypeDescription() );
  
-    vel_CCLabel       = new VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_0     = new VarLabel("vel_CC_0",  CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_1     = new VarLabel("vel_CC_1",  CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_2     = new VarLabel("vel_CC_2",  CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_3     = new VarLabel("vel_CC_3",  CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_4     = new VarLabel("vel_CC_4",  CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_5     = new VarLabel("vel_CC_5",  CCVariable<Vector>::getTypeDescription() );
-    vel_CCLabel_6_7   = new VarLabel("vel_CC_6_7",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel       = scinew VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_0     = scinew VarLabel("vel_CC_0",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_1     = scinew VarLabel("vel_CC_1",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_2     = scinew VarLabel("vel_CC_2",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_3     = scinew VarLabel("vel_CC_3",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_4     = scinew VarLabel("vel_CC_4",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_5     = scinew VarLabel("vel_CC_5",  CCVariable<Vector>::getTypeDescription() );
+    vel_CCLabel_6_7   = scinew VarLabel("vel_CC_6_7",  CCVariable<Vector>::getTypeDescription() );
  
-    cv_CCLabel        = new VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
+    cv_CCLabel        = scinew VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
     div_velfc_CCLabel =new VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
 
   // Face centered variables
-    vel_FCLabel       = new VarLabel("vel_FC",    FCVariable<Vector>::getTypeDescription() );
-    press_FCLabel     = new VarLabel("press_FC",  FCVariable<double>::getTypeDescription() );
-    tau_FCLabel       = new VarLabel("tau_FC",    FCVariable<Vector>::getTypeDescription() );
+    vel_FCLabel       = scinew VarLabel("vel_FC",    FCVariable<Vector>::getTypeDescription() );
+    press_FCLabel     = scinew VarLabel("press_FC",  FCVariable<double>::getTypeDescription() );
+    tau_FCLabel       = scinew VarLabel("tau_FC",    FCVariable<Vector>::getTypeDescription() );
 
     /*__________________________________
     *   Plotting variables

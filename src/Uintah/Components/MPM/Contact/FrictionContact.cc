@@ -58,7 +58,9 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
 FrictionContact::~FrictionContact()
 {
   // Destructor
-
+  delete gNormTractionLabel;
+  delete gSurfNormLabel;
+  delete gStressLabel;
 }
 
 void FrictionContact::initializeContact(const Patch* patch,
@@ -210,6 +212,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   vector<NCVariable<Vector> > gacceleration(NVFs);
   vector<NCVariable<double> > normtraction(NVFs);
   vector<NCVariable<Vector> > gsurfnorm(NVFs);
+
 
   Vector surnor;
 
@@ -407,7 +410,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   }
   tfile << endl;
 #endif
- 
+
   // Next, interpolate the stress to the grid
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -422,7 +425,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
       new_dw->allocate(gstress, gStressLabel, vfindex, patch);
       gstress.initialize(Matrix3(0.0));
-
+      
       ParticleVariable<Point> px;
       old_dw->get(px, lb->pXLabel, pset);
 
@@ -438,7 +441,8 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
          // Add each particles contribution to the local mass & velocity
          // Must use the node indices
          for(int k = 0; k < 8; k++) {
-             gstress[ni[k]] += pstress[idx] * S[k];
+	   if (patch->containsNode(ni[k]))
+	     gstress[ni[k]] += pstress[idx] * S[k];
          }
       }
       new_dw->put(gstress, gStressLabel, vfindex, patch);
@@ -599,6 +603,10 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.29  2000/08/08 01:32:43  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.28  2000/07/28 22:13:14  bard
 // Added logic to handle degenerate case (previously could cause divide by zero)
 // and fixed a typo.

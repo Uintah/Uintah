@@ -236,7 +236,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       Variable*
       FCVariable<T>::maker()
       {
-	 return new NCVariable<T>();
+	 return scinew NCVariable<T>();
       }
    
    template<class T>
@@ -360,6 +360,10 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.8  2000/08/08 01:32:46  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.7  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

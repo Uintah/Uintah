@@ -59,7 +59,7 @@
 
 
 #include "SymmetricMatrix.h"
-
+#include <SCICore/Malloc/Allocator.h>
 				   
 template<class T> SymmetricMatrix<T>::SymmetricMatrix()
 {
@@ -86,7 +86,7 @@ template<class T> SymmetricMatrix<T>::SymmetricMatrix( int numberOfRows,
   // now allocate each row of data
 
   for ( int i = 1; i <= numberOfRows; i++) {
-    rows[i]= new BoundedArray<T>(i,numberOfColumns,initialValue);
+    rows[i]= scinew BoundedArray<T>(i,numberOfColumns,initialValue);
     // Check that allocation was successful
     assert(rows[i] != 0);
   }
@@ -108,7 +108,7 @@ template<class T> SymmetricMatrix<T>::SymmetricMatrix( int numberOfRows,
   // now allocate each row of data
 
   for (int i = 1; i <= numberOfRows; i++) {
-    rows[i]= new BoundedArray<T>(i,numberOfColumns);
+    rows[i]= scinew BoundedArray<T>(i,numberOfColumns);
     // Check that allocation was successful
     assert(rows[i] != 0);
   }
@@ -126,7 +126,7 @@ template<class T> SymmetricMatrix<T>::SymmetricMatrix(
  
 
   for ( int i = 1; i<= source.numberRows(); i++) {
-    rows[i] = new BoundedArray<T>(i,source.numberColumns());
+    rows[i] = scinew BoundedArray<T>(i,source.numberColumns());
     assert(rows[i] != 0);
   }
 
@@ -157,7 +157,7 @@ template <class T> SymmetricMatrix<T>  & SymmetricMatrix<T>::operator = (const S
 
   
   for ( int i = 1; i<= source.numberRows(); i++) {
-    rows[i] = new BoundedArray<T>(i,source.numberColumns());
+    rows[i] = scinew BoundedArray<T>(i,source.numberColumns());
     assert(rows[i] != 0);
   }
  
@@ -188,7 +188,7 @@ template <class T> SymmetricMatrix<T>  & SymmetricMatrix<T>::operator = (const M
 
   
   for ( int i = 1; i<= source.numberRows(); i++) {
-    rows[i] = new BoundedArray<T>(i,source.numberColumns());
+    rows[i] = scinew BoundedArray<T>(i,source.numberColumns());
     assert(rows[i] != 0);
   }
  
@@ -541,6 +541,10 @@ template<class T> SymmetricMatrix<T>  operator - (const SymmetricMatrix<T> &left
   
  
 // $Log$
+// Revision 1.3  2000/08/08 01:32:44  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.2  2000/05/26 22:29:00  tan
 // include the template implementations into the head file.
 //

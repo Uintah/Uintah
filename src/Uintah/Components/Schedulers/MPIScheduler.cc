@@ -13,6 +13,7 @@
 #include <SCICore/Util/FancyAssert.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <mpi.h>
 #include <set>
 
@@ -84,9 +85,9 @@ MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
   d_generation = 0;
    myrank = myworld->myrank(); // For debug only...
   if(!specialType)
-     specialType = new TypeDescription(TypeDescription::ScatterGatherVariable,
+     specialType = scinew TypeDescription(TypeDescription::ScatterGatherVariable,
 				       "DataWarehouse::specialInternalScatterGatherType", false, -1);
-  scatterGatherVariable = new VarLabel("DataWarehouse::scatterGatherVariable",
+  scatterGatherVariable = scinew VarLabel("DataWarehouse::scatterGatherVariable",
 				       specialType, VarLabel::Internal);
 
 }
@@ -526,7 +527,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
       ParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
-      ParticleSubset* relocset = new ParticleSubset(pset->getParticleSet(),
+      ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						    false, -1, 0);
       relocset->addReference();
 
@@ -555,19 +556,19 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		  throw InternalError("Particle fell through the cracks!");
 	    } else {
 	       if(!sr[i]){
-		  sr[i] = new MPIScatterRecord();
+		  sr[i] = scinew MPIScatterRecord();
 		  sr[i]->matls.resize(reloc_numMatls);
 		  for(int m=0;m<reloc_numMatls;m++){
 		     sr[i]->matls[m]=0;
 		  }
 	       }
 	       if(!sr[i]->matls[m]){
-		  MPIScatterMaterialRecord* smr=new MPIScatterMaterialRecord();
+		  MPIScatterMaterialRecord* smr=scinew MPIScatterMaterialRecord();
 		  sr[i]->matls[m]=smr;
 		  smr->vars.push_back(new_dw->getParticleVariable(reloc_old_posLabel, pset));
 		  for(int v=0;v<reloc_old_labels[m].size();v++)
 		     smr->vars.push_back(new_dw->getParticleVariable(reloc_old_labels[m][v], pset));
-		  smr->relocset = new ParticleSubset(pset->getParticleSet(),
+		  smr->relocset = scinew ParticleSubset(pset->getParticleSet(),
 						     false, -1, 0);
 	       }
 	       sr[i]->matls[m]->relocset->addParticle(idx);
@@ -606,7 +607,7 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 	    }
 	    MPI_Send(&sendsize, 1, MPI_INT, sgargs.dest[i],
 		     sgargs.tags[i]|RECV_BUFFER_SIZE_TAG, pc->getComm());
-	    char* buf = new char[sendsize];
+	    char* buf = scinew char[sendsize];
 	    int position = 0;
 	    for(int j=0;j<sr[i]->matls.size();j++){
 	       MPIScatterMaterialRecord* mr = sr[i]->matls[j];
@@ -670,7 +671,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 		     pc->getComm(), &stat);
 	    recvpos[i] = 0;
 	    if(recvsize[i]){
-	       recvbuf[i] = new char[recvsize[i]];
+	       recvbuf[i] = scinew char[recvsize[i]];
 	       MPI_Recv(recvbuf[i], recvsize[i], MPI_PACKED,
 			sgargs.dest[i], sgargs.tags[i],
 			pc->getComm(), &stat);
@@ -688,7 +689,7 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
       ParticleVariable<Point> px;
       new_dw->get(px, reloc_old_posLabel, pset);
 
-      ParticleSubset* keepset = new ParticleSubset(pset->getParticleSet(),
+      ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
 						   false, -1, 0);
 
       for(ParticleSubset::iterator iter = pset->begin();
@@ -779,6 +780,10 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.10  2000/08/08 01:32:45  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.9  2000/07/28 22:45:14  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in

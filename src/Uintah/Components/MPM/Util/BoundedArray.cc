@@ -29,7 +29,7 @@
 
 
 #include "BoundedArray.h"
-
+#include <SCICore/Malloc/Allocator.h>
 
 
 template <class T> BoundedArray<T>::BoundedArray():
@@ -80,7 +80,7 @@ template <class T> BoundedArray<T> & BoundedArray<T>::operator =
   size = source.size;
   universe_size = source.universe_size;
 
-  data = new T[universe_size];
+  data = scinew T[universe_size];
   assert(data != 0);
   
   // copy the values
@@ -160,6 +160,10 @@ template<class T> BoundedArray<T> operator * (const BoundedArray<T> &left,
 #endif
 
 // $Log$
+// Revision 1.3  2000/08/08 01:32:44  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.2  2000/05/26 22:28:28  tan
 // include the template implementations into the head file.
 //

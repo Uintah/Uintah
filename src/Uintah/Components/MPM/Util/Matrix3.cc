@@ -17,6 +17,7 @@ using std::ostream;
 #include <stdlib.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <SCICore/Util/FancyAssert.h>
+#include <SCICore/Malloc/Allocator.h>
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -88,7 +89,7 @@ MPI_Datatype makeMPI_Matrix3()
    {
       static TypeDescription* td = 0;
       if(!td){
-	 td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
+	 td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
 				  &makeMPI_Matrix3);
       }
       return td;
@@ -96,6 +97,10 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.4  2000/08/08 01:32:44  jas
+//Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+//stuff.
+//
 //Revision 1.3  2000/07/27 22:39:45  sparker
 //Implemented MPIScheduler
 //Added associated support

@@ -52,6 +52,11 @@ void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
 CompNeoHookPlas::~CompNeoHookPlas()
 {
   // Destructor 
+  delete p_cmdata_label;
+  delete p_cmdata_label_preReloc;
+  delete bElBarLabel;
+  delete bElBarLabel_preReloc;
+  
 }
 
 void CompNeoHookPlas::initializeCMData(const Patch* patch,
@@ -422,6 +427,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.36  2000/08/08 01:32:42  jas
+// Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
+// stuff.
+//
 // Revision 1.35  2000/07/27 22:39:44  sparker
 // Implemented MPIScheduler
 // Added associated support
