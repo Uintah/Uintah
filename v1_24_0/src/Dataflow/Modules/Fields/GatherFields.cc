@@ -94,12 +94,15 @@ GatherFields::execute()
   //port_map_type::iterator pi = range.first;
 
   // Gather up all of the field handles.
-  if (range.first != range.second) {
+  if (range.first != range.second)
+  {
     port_map_type::iterator pi = range.first;
     
-    while (pi != range.second) {
+    while (pi != range.second)
+    {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      if (!ifield) {
+      if (!ifield)
+      {
 	error("Unable to initialize iport '" + to_string(pi->second) + "'.");
 	return;
       }
@@ -109,40 +112,50 @@ GatherFields::execute()
       ++pi;
 
       FieldHandle fHandle;
-      if (ifield->get(fHandle) && fHandle.get_rep()) {
+      if (ifield->get(fHandle) && fHandle.get_rep())
+      {
 
 	fHandles.push_back(fHandle);
 
-	if( nFields == fGeneration_.size() ) {
+	if ( nFields == fGeneration_.size() )
+        {
 	  fGeneration_.push_back( fHandle->generation );
 	  update = true;
-	} else if ( fGeneration_[nFields] != fHandle->generation ) {
+	}
+        else if ( fGeneration_[nFields] != fHandle->generation )
+        {
 	  fGeneration_[nFields] = fHandle->generation;
 	  update = true;
 	}
 
 	nFields++;
-      } else if (pi != range.second) {
+      }
+      else if (pi != range.second)
+      {
 	error("Input port " + to_string(nFields) + " contained no data.");
 	return;
       }
     }
   }
 
-  while( fGeneration_.size() > nFields ) {
+  while( fGeneration_.size() > nFields )
+  {
     update = true;
     fGeneration_.pop_back();
   }
 
   if( force_pointcloud_ != gui_force_pointcloud_.get() ||
       update ||
-      error_ ) {
-
+      error_ )
+  {
     force_pointcloud_ = gui_force_pointcloud_.get();
 
-    if (nFields == 1) {
+    if (nFields == 1 && !force_pointcloud_)
+    {
       fHandle_ = fHandles[0];
-    } else if (fHandles.size() > 1) {
+    }
+    else
+    {
       const TypeDescription *mtd0 =
 	fHandles[0]->mesh()->get_type_description();
       const TypeDescription *ftd0 =
@@ -151,28 +164,43 @@ GatherFields::execute()
       bool same_field_kind = true;
       bool same_mesh_kind = true;
       bool same_data_location = true;
-      for ( unsigned int i=1; i<nFields; i++) {
-	if (fHandles[i]->mesh()->get_type_description() != mtd0)
+      for ( unsigned int i=1; i<nFields; i++)
+      {
+	if (fHandles[i]->mesh()->get_type_description()->get_name() !=
+            mtd0->get_name())
+        {
 	  same_mesh_kind = false;
-	
-	if (fHandles[i]->get_type_description() != ftd0)
+        }
+
+	if (fHandles[i]->get_type_description()->get_name() !=
+            ftd0->get_name())
+        {
 	  same_field_kind = false;
-	  
+        }
+
 	if (fHandles[i]->basis_order() != loc0)
+        {
 	  same_data_location = false;
+        }
       }
 	
       if (fHandles[0]->mesh()->is_editable() &&
 	  (same_field_kind || same_mesh_kind) &&
-	  !force_pointcloud_) {
+	  !force_pointcloud_)
+      {
 	bool copy_data = same_data_location;
 	
-	if (!same_data_location) {
+	if (!same_data_location)
+        {
 	  warning("Cannot copy data from meshes with different data locations.");
-	} else if (!same_field_kind) {
+	}
+        else if (!same_field_kind)
+        {
 	  warning("Copying data does not work for data of different kinds.");
 	  copy_data = false;
-	} else if (same_data_location && fHandles[0]->basis_order() != 1) {
+	}
+        else if (same_data_location && fHandles[0]->basis_order() != 1)
+        {
 	  warning("Copying data does not work for non-node data locations.");
 	  copy_data = false;
 	}
@@ -180,16 +208,25 @@ GatherFields::execute()
 	Handle<GatherFieldsAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return;
 	fHandle_ = algo->execute(fHandles, copy_data);
-	
-      } else {
-	if (same_field_kind || same_mesh_kind)
-	  warning("Non-editable meshes detected, try Unstructuring first, outputting PointCloudField.");
-	else
-	  warning("Different mesh types detected, outputting PointCloudField.");
-	
+      }
+      else
+      {
+        if (!force_pointcloud_)
+        {
+          if (same_field_kind || same_mesh_kind)
+          {
+            warning("Non-editable meshes detected, try Unstructuring first, outputting PointCloudField.");
+          }
+          else
+          {
+            warning("Different mesh types detected, outputting PointCloudField.");
+          }
+        }
+
 	PointCloudMeshHandle pc = scinew PointCloudMesh;
 	
-	for (unsigned int i=0; i<fHandles.size(); i++) {
+	for (unsigned int i=0; i<fHandles.size(); i++)
+        {
 	  const TypeDescription *mtd =
 	    fHandles[i]->mesh()->get_type_description();
 	  CompileInfoHandle ci = GatherPointsAlgo::get_compile_info(mtd);
@@ -204,11 +241,13 @@ GatherFields::execute()
   }
 
   // Get a handle to the output field port.
-  if( fHandle_.get_rep() ) {
+  if( fHandle_.get_rep() )
+  {
     FieldOPort *ofield_port = 
       (FieldOPort *) get_oport("Output Field");
 
-    if (!ofield_port) {
+    if (!ofield_port)
+    {
       error("Unable to initialize "+name+"'s oport\n");
       return;
     }
