@@ -15,10 +15,10 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
@@ -121,9 +121,8 @@ if (!oldStyleAdvect.active()){
     tv->label = VarLabel::create(labelname, CCVariable<double>::getTypeDescription());
     tablevalues.push_back(tv);
   }
-  cerr << "Calling setup\n";
+  temp_index = table->addDependentVariable("Temp(K)");
   table->setup();
-  cerr << "done\n";
   
   //__________________________________
   // - create Label names
@@ -534,7 +533,6 @@ void TableTest::momentumAndEnergyExchange(const ProcessorGroup*,
 
     //Vector dx = patch->dCell();
     //double volume = dx.x()*dx.y()*dx.z();     
-    double new_f;
     constCCVariable<double> rho_CC_old,f_old, diff_coeff;
     CCVariable<double> eng_src, sp_vol_src, f_src;
     CCVariable<Vector> mom_src;
@@ -549,53 +547,7 @@ void TableTest::momentumAndEnergyExchange(const ProcessorGroup*,
     new_dw->getModifiable(mom_src,    mi->momentum_source_CCLabel,indx,patch);
     new_dw->getModifiable(eng_src,    mi->energy_source_CCLabel,  indx,patch);
 
-    //__________________________________
-    // rho=1/(f/rho_fuel+(1-f)/rho_air)
-    double fuzzyOne = 1.0 + 1e-10;
-    double fuzzyZero = 0.0 - 1e10;
-    int     numCells = 0, sum = 0;
-    double f_stoic= d_scalar->f_stoic;
-
-    //__________________________________   
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      //double mass_old = rho_CC_old[c]*volume;
-      double f = f_old[c];
-      numCells++;
-
-      f = min(f,1.0);    // keep 0 < f < 1
-      f = max(f,0.0);
-      //__________________________________
-      //  Inside the flame    
-      if (f_stoic < f && f <= fuzzyOne ){  
-        sum++;
-      }                     // Does nothing right now
-      //__________________________________
-      //  At the flame surface        
-      if (f_stoic == f ){ 
-        sum++;
-      }
-      //__________________________________
-      //  outside the flame
-      if (fuzzyZero <= f && f < f_stoic ){ 
-         sum++;
-      }  
-/*`==========TESTING==========*/
-  new_f = f;   // hardwired off
-/*==========TESTING==========`*/
-      f_src[c] += new_f - f;
-    }  //iter
-
-    //__________________________________
-    //  bulletproofing
-    if (sum != numCells) {
-      ostringstream warn;
-      warn << "ERROR: TableTest Model: invalid value for f "
-           << "somewhere in the scalar field: "<< sum
-           << " cells were touched out of "<< numCells
-           << " Total cells ";
-      throw InvalidValue(warn.str());
-    }     
+#if 0
     //__________________________________
     //  Tack on diffusion
     double diff_coeff_test = d_scalar->diff_coeff;
@@ -608,7 +560,7 @@ void TableTest::momentumAndEnergyExchange(const ProcessorGroup*,
                               placeHolder, placeHolder,  f_old,
                               f_src, diff_coeff, delT);
     }
-
+#endif
 
     //__________________________________
     //  dump out the probe points
@@ -645,9 +597,11 @@ void TableTest::momentumAndEnergyExchange(const ProcessorGroup*,
     ind_vars.push_back(f_old);
     for(int i=0;i<(int)tablevalues.size();i++){
       TableValue* tv = tablevalues[i];
+      cerr << "interpolating " << tv->name << '\n';
       CCVariable<double> value;
       new_dw->allocateAndPut(value, tv->label, indx, patch);
-      table->interpolate(tv->index, value, ind_vars);
+      CellIterator iter = patch->getCellIterator();
+      table->interpolate(tv->index, value, iter, ind_vars);
     }
   }
 }

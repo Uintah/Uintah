@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
