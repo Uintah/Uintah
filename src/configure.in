@@ -497,7 +497,7 @@ if test "$tau" ; then
 
   TAU_INCLUDE_DIR="${tau}/../../include"
   TAU_LIB_DIR="${tau}"
-  TAU_LIB_FLAG="-lTAUsh-sgitimers-profile-trace"
+  TAU_LIB_FLAG="-lTAU"
 
   CFLAGS="$CFLAGS -DUSE_TAU_PROFILING"
 fi
