@@ -111,10 +111,13 @@ public:
     return d_gravity;
   }
   void setNeedAddMaterial(int nAM) {
-    d_needAddMaterial = nAM;
+    d_needAddMaterial += nAM;
   }
   int needAddMaterial() const {
     return d_needAddMaterial;
+  }
+  void resetNeedAddMaterial() {
+    d_needAddMaterial = 0;
   }
 
   void finalizeMaterials();
