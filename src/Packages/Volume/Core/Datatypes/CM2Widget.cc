@@ -347,7 +347,7 @@ TriangleCM2Widget::pick1 (int ix, int iy, int sw, int sh)
 
 
 int
-TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh)
+TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh, int m)
 {
   const double x = ix / (double)sw;
   const double y = iy / (double)sh;
@@ -361,7 +361,9 @@ TriangleCM2Widget::pick2 (int ix, int iy, int sw, int sh)
   {
     last_x_ = base_;
     pick_ix_ = ix;
-    return 1;
+    pick_iy_ = iy; // modified only.
+    last_hsv_ = HSVColor(color_);  // modified only
+    return m?5:1;
   }
   
   return 0;
@@ -392,6 +394,23 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
     top_x_ = last_x_ + x - pick_ix_ / (double)w;
     top_y_ = last_y_ + y - pick_iy_ / (double)h;
     width_ = last_width_ * top_y_ / last_y_;
+    break;
+    
+  case 5:
+    {
+      // Hue controls on x axis
+      const double hdelta = x - pick_ix_ / (double)w;
+      double hue = last_hsv_[0] + hdelta * 360.0 * 2.0;
+      while (hue < 0.0) hue += 360.0;
+      while (hue > 360.0) hue -= 360;
+
+      // Saturation controls on y axis
+      const double sdelta = y - pick_iy_ / (double)h;
+      double sat = Clamp(last_hsv_[1] - sdelta * 2.0, 0.0, 1.0);
+
+      HSVColor hsv(hue, sat, last_hsv_.val());
+      color_ = Color(hsv);
+    }
     break;
   }
 }
@@ -730,7 +749,7 @@ RectangleCM2Widget::pick1 (int ix, int iy, int w, int h)
 
 
 int
-RectangleCM2Widget::pick2 (int ix, int iy, int w, int h)
+RectangleCM2Widget::pick2 (int ix, int iy, int w, int h, int m)
 {
   const double x = ix / (double)w;
   const double y = iy / (double)h;
@@ -744,7 +763,8 @@ RectangleCM2Widget::pick2 (int ix, int iy, int w, int h)
     last_y_ = left_y_;
     pick_ix_ = ix;
     pick_iy_ = iy;
-    return 1;
+    last_hsv_ = HSVColor(color_);
+    return m?7:1;
   }
 
   return 0;
@@ -790,6 +810,23 @@ RectangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
 
   case 6:
     offset_ = Clamp((x - left_x_) / width_, 0.0, 1.0);
+    break;
+
+  case 7:
+    {
+      // Hue controls on x axis
+      const double hdelta = x - pick_ix_ / (double)w;
+      double hue = last_hsv_[0] + hdelta * 360.0 * 2.0;
+      while (hue < 0.0) hue += 360.0;
+      while (hue > 360.0) hue -= 360;
+
+      // Saturation controls on y axis
+      const double sdelta = y - pick_iy_ / (double)h;
+      double sat = Clamp(last_hsv_[1] - sdelta * 2.0, 0.0, 1.0);
+
+      HSVColor hsv(hue, sat, last_hsv_.val());
+      color_ = Color(hsv);
+    }
     break;
   }
 }
