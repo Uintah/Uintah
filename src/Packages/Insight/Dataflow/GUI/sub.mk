@@ -16,6 +16,11 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ImageFileReader.tcl\
 	$(SRCDIR)/DiscreteGaussianImageFilter.tcl\
 	$(SRCDIR)/ImageFileWriter.tcl\
+	$(SRCDIR)/ImageReaderUChar2D.tcl\
+	$(SRCDIR)/CannySegmentationLevelSetImageFilter.tcl\
+	$(SRCDIR)/Switch.tcl\
+	$(SRCDIR)/ImageReaderFloat2D.tcl\
+	$(SRCDIR)/ImageReaderFloat3D.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Insight/Dataflow/GUI
 
