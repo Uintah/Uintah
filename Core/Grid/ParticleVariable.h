@@ -1,6 +1,8 @@
 #ifndef UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 #define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
+
+#include <TauProfilerForSCIRun.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
@@ -220,15 +222,30 @@ private:
   template<class T>
   void ParticleVariable<T>::allocate(ParticleSubset* pset)
   {
+    TAU_PROFILE_TIMER(t1, "Release old ParticleVariable<T>::allocate()", "", TAU_USER3);
+    TAU_PROFILE_TIMER(t2, "Add Reference (pset) ParticleVariable<T>::allocate()", "", TAU_USER3);
+    TAU_PROFILE_TIMER(t3, "Allocate Data ParticleVariable<T>::allocate()", "", TAU_USER3);
+    TAU_PROFILE_TIMER(t4, "Add Reference (data) ParticleVariable<T>::allocate()", "", TAU_USER3);
+
+    TAU_PROFILE_START(t1);
     if(d_pdata && d_pdata->removeReference())
       delete d_pdata;
     if(d_pset && d_pset->removeReference())
       delete d_pset;
+    TAU_PROFILE_STOP(t1);
 
+    TAU_PROFILE_START(t2);
     d_pset=pset;
     d_pset->addReference();
+    TAU_PROFILE_STOP(t2);
+
+    TAU_PROFILE_START(t3);
     d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
+    TAU_PROFILE_STOP(t3);
+
+    TAU_PROFILE_START(t4);
     d_pdata->addReference();
+    TAU_PROFILE_STOP(t4);
   }
    
   template<class T>
