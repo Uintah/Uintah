@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <X11/keysym.h>
 #include <sci_values.h>
+#include <unistd.h> // For sleep()
 
 using namespace rtrt;
 using SCIRun::Mutex;
@@ -337,15 +338,6 @@ bool DpyBase::should_close() {
      && scene->get_rtrt_engine()->stop_execution());
 }
 
-void DpyBase::post_redraw() {
-  //  cerr << "Sending redraw event\n";
-  XEvent event;
-  event.type = Expose;
-  if (useXThreads) XLockDisplay(dpy);
-  XSendEvent(dpy, win, false, 0, &event);
-  if (useXThreads) XUnlockDisplay(dpy);
-}
-
 extern bool pin;
 void DpyBase::run() {
 
@@ -377,11 +369,20 @@ void DpyBase::run() {
 }
 
 void DpyBase::wait_and_handle_events() {
-  XEvent e;
-  // Block on this call until there is an event.  Peek blocks, but
-  // doesn't remove the event from the stack.  This way we can grab
-  // it later in the while loop.
-  XPeekEvent(dpy, &e);
+
+  // I've decided that I don't like this function blocking, because it
+  // requires an X event to trigger out of it.  The previous way this
+  // was implemented caused the displays to pound the CPU as it was in
+  // an invinate loop checking for events.  This way, if there are no
+  // events, the function waits for a *user indiscernible* amount of
+  // time, so the function doesn't busy spin.
+
+  if (!XPending(dpy)) {
+    usleep(1000);
+    // The question arises of whether or not to return here.  I'm
+    // going to try this out for now in the hopes that it will work
+    // fine.
+  }
 
   // By this time, there should be some kind of an event.  We should
   // try to consume all the queued events before we redraw.  That
@@ -391,11 +392,15 @@ void DpyBase::wait_and_handle_events() {
     //    cerr << window_name << ": " << XPending(dpy) << " events left to process\n";
     // Now we need to test to see if we should die
     if (should_close()) {
+      // Don't call cleanup here.  It will be called from the main run
+      // function.  This is just to prevent additional event
+      // processing when the window will be closed.
       return;
     }
 
     // Get the next event.  We know there should be one, otherwise
     // we wouldn't have gotten passed the while conditional.
+    XEvent e;
     XNextEvent(dpy, &e);	
     switch(e.type){
     case Expose:
