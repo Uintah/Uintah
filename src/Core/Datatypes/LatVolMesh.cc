@@ -144,10 +144,9 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
   Cell::index_type max;
   locate(max, bbox.max());
 
-  if (nx_ < 2 || ny_ < 2 || nz_ < 2) return;
-  if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
-  if (max.j_ >= ny_ - 1) max.j_ = ny_ - 2;
-  if (max.k_ >= nz_ - 1) max.k_ = nz_ - 2;
+  if (max.i_ >= nx_ - 1) max.i_ = Max(((int)nx_) - 2, 0);
+  if (max.j_ >= ny_ - 1) max.j_ = Max(((int)ny_) - 2, 0);
+  if (max.k_ >= nz_ - 1) max.k_ = Max(((int)nz_) - 2, 0);
 
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {

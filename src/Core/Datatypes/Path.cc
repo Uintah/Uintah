@@ -112,7 +112,7 @@ Path* Path::clone()
 
 //-----------------------------------------------------------------------------
 
-#define Path_VERSION 3
+#define Path_VERSION 4
 
 void Path::io(Piostream& stream)
 {
@@ -148,7 +148,9 @@ void Path::io(Piostream& stream)
 	  speedVal[i]=1;
       }
     }
-    
+    if (version >= 3)
+      Pio(stream, timing_vector);
+
     stream.end_class();
 }
 
@@ -194,6 +196,7 @@ bool Path::ins_keyF(int i, const View& v, double speed, int acc_patt){
 }
 
 bool Path::add_keyF(const View& v, double speed, int acc_patt){
+#if 0
   int sz=keyViews.size();
   if (sz>0){
     View tmp=keyViews[sz-1];
@@ -202,6 +205,7 @@ bool Path::add_keyF(const View& v, double speed, int acc_patt){
       return false;
     }
   }
+#endif
   keyViews.add(v);
   speedVal.add(speed);
   accPatt.add(acc_patt);
@@ -295,14 +299,32 @@ bool Path::build_path(){
     double sum=0;
     param.add(sum);
     Vector dist;
+    ColumnMatrix *cm;
     
-    for (int i=1; i<keyViews.size(); i++) {
-      dist=keyViews[i].eyep()-keyViews[i-1].eyep();
-      sum+=sqrt(dist.length());                      // parametrization is still under question  
-      //sum+=dist.length(); 
-      param.add(sum);
+    cerr << "CHECKING TIMING VECTOR!\n";
+    // if the user has supplied a timing vector, use it
+    if (timing_vector.get_rep() && 
+	(cm = dynamic_cast<ColumnMatrix*>(timing_vector.get_rep())) && 
+	cm->nrows() >= keyViews.size()-1) {
+      cerr << "MADE IT HERE -- USING TIMING-VECTOR!\n";
+      double last=0;
+      double curr;
+      for (int i=1; i<keyViews.size(); i++) {
+	curr=(*cm)[i-1];
+	if (curr<=last) curr=last+0.1; // can't move backwards in time!
+	last=curr;
+	param.add(curr);
+      }
+      cerr << "DONE USING TIMING VECTOR!\n";
+    } else { // otherwise use arc-length-constant timing
+      for (int i=1; i<keyViews.size(); i++) {
+	dist=keyViews[i].eyep()-keyViews[i-1].eyep();
+	sum+=sqrt(dist.length());                      // parametrization is still under question  
+	//sum+=dist.length(); 
+	param.add(sum);
+      }
     }
-    
+
     Array1<Point> epts;
     Array1<Point> lpts;
     Array1<Vector> vects;
