@@ -19,6 +19,7 @@
 #include <X11/Xlib.h>
 class CallbackData;
 class DrawingAreaC;
+class PopupMenuC;
 class PushButtonC;
 class MUI_window;
 class MUI_widget;
@@ -32,7 +33,10 @@ class UserModule : public Module {
     int popup_on_create;
     int old_gwidth;
     WallClockTimer timer;
-    PushButtonC** btn;
+    PushButtonC* btn;
+    int need_reconfig;
+    int last_x, last_y;
+    int compute_width();
 public:
     UserModule(const clString& name, SchedClass);
     UserModule(const UserModule&, int deep);
@@ -51,10 +55,13 @@ public:
     // Callbacks...
     virtual void create_interface();
     void redraw_widget(CallbackData*, void*);
-    void input_widget(CallbackData*, void*);
     void widget_button(CallbackData*, void*);
     void draw_button(Display*, Window, GC, int);
-    int mapped;
+    void move_widget(CallbackData*, void*);
+    void post_menu(CallbackData*, void*);
+    void popup_help(CallbackData*, void*);
+    void destroy(CallbackData*, void*);
+    void interrupt(CallbackData*, void*);
 
     void update_module(int);
     virtual void do_execute();
@@ -63,8 +70,13 @@ public:
     virtual void mui_callback(void*, int);
 
     // Our interface...
+    virtual void get_iport_coords(int, int&, int&);
+    virtual void get_oport_coords(int, int&, int&);
+    virtual void reconfigure_iports();
+    virtual void reconfigure_oports();
     GC gc;
     DrawingAreaC* drawing_a;
+    PopupMenuC* popup_menu;
     XQColor* bgcolor;
     XQColor* fgcolor;
     XQColor* top_shadow;
@@ -80,10 +92,10 @@ public:
     int widget_ygraphtop;
     int widget_ytime;
     int widget_ygraphbot;
-    int widget_height;
-    int widget_width;
     int widget_xgraphleft;
     int widget_xgraphright;
+    int title_left;
+    int title_width;
 };
 
 #endif /* SCI_project_UserModule_h */

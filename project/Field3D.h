@@ -16,17 +16,19 @@
 
 #include <Persistent.h>
 #include <Classlib/Array3.h>
-#include <Classlib/Handle.h>
+#include <Classlib/LockingHandle.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
+#include <Multitask/ITC.h>
 
 class Field3D;
-typedef Handle<Field3D> Field3DHandle;
+typedef LockingHandle<Field3D> Field3DHandle;
 
 class Field3D : public Persistent {
 protected:
-    friend class Handle<Field3D>;
+    friend class LockingHandle<Field3D>;
     int ref_cnt;
+    Mutex lock;
 private:
     int nx, ny, nz;
     Array3<double> s_grid;

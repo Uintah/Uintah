@@ -20,6 +20,8 @@
 #include <iostream.h>
 #include <stdlib.h>
 
+#define NETEDIT_CANVAS_SIZE 2000
+
 static Arg_stringval initial_net("net", "", "specify initial network to load");
 
 Network::Network(int first)
@@ -81,6 +83,15 @@ Connection* Network::connection(int i)
 void Network::connect(Module* m1, int p1, Module* m2, int p2)
 {
     Connection* conn=new Connection(m1, p1, m2, p2);
+    conn->set_context(netedit);
+    conn->connect();
+    connections.add(conn);
+    // Reschedule next time we can...
+    reschedule=1;
+}
+
+void Network::connect(Connection* conn)
+{
     connections.add(conn);
     // Reschedule next time we can...
     reschedule=1;
@@ -107,14 +118,43 @@ void Network::initialize(NetworkEditor* _netedit)
     connect(modules[0], 0, modules[1], 0);
     connect(modules[1], 0, modules[2], 0);
 #endif
-    modules.add((*ModuleList::lookup("FieldReader"))());
-    modules[0]->set_context(netedit, this);
-    modules.add((*ModuleList::lookup("IsoSurface"))());
-    modules[1]->ypos=110;
-    modules[1]->set_context(netedit, this);
-    modules.add((*ModuleList::lookup("Salmon"))());
-    modules[2]->ypos=210;
-    modules[2]->set_context(netedit, this);
+    add_module("FieldReader");
+    add_module("IsoSurface");
+    add_module("Salmon");
     connect(modules[0], 0, modules[1], 0);
     connect(modules[1], 0, modules[2], 0);
+}
+
+void Network::add_module(const clString& name, int xpos, int ypos)
+{
+    makeModule maker=ModuleList::lookup(name);
+    if(!maker){
+	cerr << "Module: " << name << " not found!\n";
+	return;
+    }
+    Module* mod=(*maker)();
+    if(xpos==-1 || ypos==-1){
+	xpos=ypos=10;
+	int found=1;
+	while(found){
+	    found=0;
+	    for(int i=0;i<modules.size();i++){
+		Module* mod=modules[i];
+		if(mod->xpos==xpos
+		   && mod->ypos==ypos){
+		    ypos+=75;
+		    if(ypos > NETEDIT_CANVAS_SIZE-50){
+			xpos+=150;
+			ypos=10;
+		    }
+		    found=1;
+		    break;
+		}
+	    }
+	}
+    }
+    modules.add(mod);
+    mod->xpos=xpos;
+    mod->ypos=ypos;
+    mod->set_context(netedit, this);
 }

@@ -6,10 +6,10 @@ OBJS = CallbackCloners.o \
 	ColorManager.o  Connection.o  \
 	Field3D.o  Field3DPort.o  GeometryPort.o  \
 	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
-	Module.o  Modules.o  ModuleList.o  MotifCallbackBase.o  \
+	Module.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
-	Network.o  NetworkEditor.o  Persistent.o  Port.o  \
+	Network.o  NetworkEditor.o  Persistent.o  PopupMenu.o  Port.o  \
 	SoundPort.o \
 	UserModule.o  XQColor.o \
 	main.o
@@ -17,27 +17,27 @@ SRCS = CallbackCloners.cc \
 	ColorManager.cc Connection.cc \
 	Field3D.cc Field3DPort.cc GeometryPort.cc \
 	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
-	Module.cc Modules.cc ModuleList.cc MotifCallbackBase.cc \
+	Module.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \
-	Network.cc NetworkEditor.cc Persistent.cc Port.cc \
+	Network.cc NetworkEditor.cc Persistent.cc PopupMenu.cc Port.cc \
 	SoundPort.cc \
 	UserModule.cc XQColor.cc \
 	main.cc
 TARGET = project
 
 SCI_LIBS = \
-	../modules/libmodules.a \
+	../modules/modules.o \
 	SCI_MultitaskLib \
 	SCI_ClassLib \
+	../../templates/fast_templates.o \
 	../../wrapper/libMInT/libMInT.a \
-	../../templates/fast_templates.a \
 	SCI_MallocLib
 
-../../templates/fast_templates.a: $(OBJS)
+../../templates/fast_templates.o: $(OBJS)
 	make_templates ../../templates
 
-SCI_LDFLAGS = -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF \
+SCI_LDFLAGS = -laudio -laudiofile SCI_LM SCI_LTHREAD SCI_LMOTIF \
 	SCI_LX11 -lgen -lGLw -lGL -ptv
 
 depend:: XQColorDB.h

@@ -22,6 +22,7 @@
 #include <CallbackCloners.h>
 #include <Connection.h>
 #include <HelpUI.h>
+#include <ModuleShape.h>
 #include <MUI.h>
 #include <MotifCallback.h>
 #include <MtXEventLoop.h>
@@ -29,37 +30,18 @@
 #include <NotFinished.h>
 #include <Port.h>
 #include <XQColor.h>
+#include <Math/MinMax.h>
 #include <Mt/DrawingArea.h>
 #include <Mt/PushButton.h>
+#include <PopupMenu.h>
 
 #include <stdio.h>
 
 extern MtXEventLoop* evl;
 
-#define MODULE_BGCOLOR "pink4"
-#define MODULE_EXECCOLOR "red"
-#define MODULE_COMPLETEDCOLOR "green"
-#define MODULE_EDGE_WIDTH 3
-#define MODULE_PORT_SIZE 3
-#define MODULE_PORT_SPACE 3
-#define MODULE_BUTTON_EDGE 2
-#define MODULE_BUTTON_SIZE 28
-#define MODULE_BUTTON_BORDER 1
-#define MODULE_TITLE_TOP_SPACE 2
-#define MODULE_TITLE_BOT_SPACE 2
-#define MODULE_GRAPH_INSET 1
-#define MODULE_GRAPH_SHADOW 2
-#define MODULE_NBUTTONS 5
-#define MODULE_GRAPH_TEXT_SPACE 3
-#define MODULE_GRAPH_BUTT_SPACE 3
-#define MODULE_SIDE_BORDER 5
-#define MODULE_PORTPAD_WIDTH 13
-#define MODULE_PORTPAD_SPACE 3
-#define PIPE_WIDTH 3
-#define PIPE_SHADOW_WIDTH 2
-
 UserModule::UserModule(const clString& name, SchedClass sched_class)
-: Module(name, sched_class), window(0), mapped(0), popup_on_create(0)
+: Module(name, sched_class), window(0), popup_on_create(0),
+  drawing_a(0), need_reconfig(0), popup_menu(0), btn(0)
 {
 }
 
@@ -81,6 +63,10 @@ void UserModule::add_ui(MUI_widget* widget)
 	window=new MUI_window(this);
 	if(popup_on_create)
 	    window->popup();
+	if(btn){
+	    btn->SetSensitive(True);
+	    btn->SetValues();
+	}
     }
     window->attach(widget);
 }
@@ -101,9 +87,8 @@ void UserModule::reconfigure_ui()
 // Error conditions
 void UserModule::error(const clString& string)
 {
-    cerr << string << endl;
+    netedit->add_text(name+": "+string);
 }
-
 
 void UserModule::create_interface()
 {
@@ -113,89 +98,111 @@ void UserModule::create_interface()
     gc=XCreateGC(netedit->display, XtWindow(*netedit->drawing_a), 0, 0);
 
     int dir;
-    int ascent;
-    int descent;
+    int title_ascent;
+    int title_descent;
     XCharStruct dim_title;
-    if(!XTextExtents(netedit->name_font, name(), name.len(), &dir, &ascent, &descent,
-		     &dim_title)){
+    if(!XTextExtents(netedit->name_font, name(), name.len(), &dir,
+		     &title_ascent, &title_descent, &dim_title)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
     }
+    title_width=dim_title.width;
+    int time_ascent;
+    int time_descent;
     XCharStruct dim_time;
     static char* timestr="88:88";
-    if(!XTextExtents(netedit->time_font, timestr, strlen(timestr), &dir, &ascent, &descent,
-		     &dim_time)){
+    if(!XTextExtents(netedit->time_font, timestr, strlen(timestr), &dir,
+		     &time_ascent, &time_descent, &dim_time)){
 	cerr << "XTextExtents failed...\n";
 	exit(-1);
     }
-    widget_ytitle=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORT_SPACE
-	+MODULE_BUTTON_BORDER+MODULE_BUTTON_EDGE+MODULE_BUTTON_SIZE
-	    + MODULE_BUTTON_EDGE+MODULE_BUTTON_BORDER+MODULE_TITLE_TOP_SPACE
-		+dim_title.ascent;
-    widget_ygraphtop=widget_ytitle+dim_title.descent
-	+MODULE_TITLE_BOT_SPACE+MODULE_GRAPH_INSET;
-    widget_ytime=widget_ygraphtop+dim_time.ascent;
-    widget_ygraphbot=widget_ytime+dim_time.descent;
-    widget_height=widget_ygraphbot+MODULE_GRAPH_INSET+MODULE_PORT_SPACE
-	+MODULE_PORT_SIZE+MODULE_EDGE_WIDTH;
-    int twidth=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+ dim_title.width
-	+MODULE_SIDE_BORDER+MODULE_EDGE_WIDTH;
-    int bwidth=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER
-	+ (MODULE_NBUTTONS+1)*MODULE_BUTTON_BORDER
-	+ MODULE_NBUTTONS*(MODULE_BUTTON_SIZE+2*MODULE_BUTTON_EDGE)
-	+ MODULE_SIDE_BORDER+MODULE_EDGE_WIDTH;
-    widget_width=bwidth;
-    if(twidth > widget_width)widget_width=twidth;
-    widget_xgraphleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+dim_time.width
-	+MODULE_GRAPH_TEXT_SPACE+MODULE_GRAPH_INSET;
+    int widget_ytop=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORTLIGHT_HEIGHT
+	+MODULE_PORT_SPACE;
+    widget_ytitle=widget_ytop+title_ascent;
+    widget_ygraphtop=widget_ytitle+title_descent;
+    time_ascent=dim_time.ascent;
+    time_descent=dim_time.descent;
+    widget_ytime=widget_ygraphtop+MODULE_GRAPH_INSET+time_ascent;
+    widget_ygraphbot=widget_ytime+time_descent;
+    int bbot=widget_ytop+2*MODULE_BUTTON_SHADOW+MODULE_BUTTON_SIZE;
+    int b=Min(widget_ygraphbot, bbot);
+    height=widget_ygraphbot+MODULE_GRAPH_INSET+MODULE_PORT_SPACE
+	+MODULE_PORTLIGHT_HEIGHT+MODULE_PORT_SIZE+MODULE_EDGE_WIDTH;
+
+    int btn_left=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
+    title_left=btn_left+2*MODULE_BUTTON_SHADOW+MODULE_BUTTON_SIZE
+	+MODULE_TITLE_LEFT_SPACE;
+
+    width=compute_width();
+    widget_xgraphleft=title_left+dim_time.width+MODULE_GRAPH_TEXT_SPACE
+	+MODULE_GRAPH_INSET;
     int gheight=widget_ygraphbot-widget_ygraphtop;
-    widget_xgraphright=widget_width-MODULE_EDGE_WIDTH-MODULE_SIDE_BORDER
-	-gheight-MODULE_GRAPH_BUTT_SPACE-MODULE_GRAPH_INSET;
+    widget_xgraphright=width-MODULE_EDGE_WIDTH-MODULE_SIDE_BORDER
+	-MODULE_GRAPH_INSET;
     bgcolor=new XQColor(netedit->color_manager, MODULE_BGCOLOR);
     drawing_a=new DrawingAreaC;
     drawing_a->SetUnitType(XmPIXELS);
     drawing_a->SetX(xpos);
     drawing_a->SetY(ypos);
-    drawing_a->SetWidth(widget_width);
-    drawing_a->SetHeight(widget_height);
+    drawing_a->SetWidth(width);
+    drawing_a->SetHeight(height);
     drawing_a->SetMarginHeight(0);
     drawing_a->SetMarginWidth(0);
     drawing_a->SetShadowThickness(0);
     drawing_a->SetBackground(bgcolor->pixel());
     drawing_a->SetResizePolicy(XmRESIZE_NONE);
+    drawing_a->SetTranslations(XtParseTranslationTable(""));
     // Add redraw callback...
     new MotifCallback<UserModule>FIXCB(drawing_a, XmNexposeCallback,
 				       &netedit->mailbox, this,
 				       &UserModule::redraw_widget, 0, 0);
-
-    new MotifCallback<UserModule>FIXCB(drawing_a, XmNinputCallback,
-				       &netedit->mailbox, this,
-				       &UserModule::input_widget, 0, 0);
     drawing_a->Create(*netedit->drawing_a, "usermodule");
+    // Add button action callbacks.  These must be done after Create()
+    new MotifCallback<UserModule>FIXCB(drawing_a,
+				       "<Btn1Down>",
+				       &netedit->mailbox, this,
+				       &UserModule::move_widget, 0,
+				       &CallbackCloners::event_clone);
+    new MotifCallback<UserModule>FIXCB(drawing_a,
+				       "<Btn1Up>",
+				       &netedit->mailbox, this,
+				       &UserModule::move_widget, 0,
+				       &CallbackCloners::event_clone);
+    new MotifCallback<UserModule>FIXCB(drawing_a,
+				       "<Btn1Motion>",
+				       &netedit->mailbox, this,
+				       &UserModule::move_widget, 0,
+				       &CallbackCloners::event_clone);
+    new MotifCallback<NetworkEditor>FIXCB(drawing_a,
+					  "<Btn2Down>",
+					  &netedit->mailbox, netedit,
+					  &NetworkEditor::connection_cb,
+					  this,
+					  &CallbackCloners::event_clone);
+    new MotifCallback<UserModule>FIXCB(drawing_a,
+				       "<Btn3Down>",
+				       &netedit->mailbox, this,
+				       &UserModule::post_menu, 0,
+				       &CallbackCloners::event_clone);
 
-    // Create the buttons...
-    btn=new PushButtonC*[MODULE_NBUTTONS];
-    int xbleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+MODULE_BUTTON_BORDER;
-    int xbsize=MODULE_BUTTON_BORDER+MODULE_BUTTON_SIZE+2*MODULE_BUTTON_EDGE;
-    int xbsize2=xbsize-MODULE_BUTTON_BORDER;
-    int ybtop=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORT_SPACE+MODULE_BUTTON_BORDER;
-    for(int i=0;i<MODULE_NBUTTONS;i++){
-	btn[i]=new PushButtonC;
-	btn[i]->SetShadowThickness(MODULE_BUTTON_EDGE);
-	btn[i]->SetUnitType(XmPIXELS);
-	int x=xbleft+i*xbsize;
-	btn[i]->SetX(x);
-	btn[i]->SetY(ybtop);
-	btn[i]->SetWidth(xbsize2);
-	btn[i]->SetHeight(xbsize2);
-	btn[i]->SetBackground(bgcolor->pixel());
-	btn[i]->SetHighlightThickness(0);
-	new MotifCallback<UserModule>FIXCB(btn[i], XmNactivateCallback,
-					   &netedit->mailbox, this,
-					   &UserModule::widget_button,
-					   (void*)i, 0);
-	btn[i]->Create(*drawing_a, "button");
-    }
+    // Create the button...
+    int bsize=MODULE_BUTTON_SIZE+2*MODULE_BUTTON_SHADOW;
+    btn=new PushButtonC;
+    btn->SetUnitType(XmPIXELS);
+    btn->SetShadowThickness(MODULE_BUTTON_SHADOW);
+    btn->SetX(btn_left);
+    btn->SetY(widget_ytop);
+    btn->SetWidth(bsize);
+    btn->SetHeight(bsize);
+    btn->SetBackground(bgcolor->pixel());
+    btn->SetHighlightThickness(0);
+    if(!window)
+	btn->SetSensitive(False);
+    new MotifCallback<UserModule>FIXCB(btn, XmNactivateCallback,
+				       &netedit->mailbox, this,
+				       &UserModule::widget_button,
+				       0, 0);
+    btn->Create(*drawing_a, "UI");
 
     // Allocate colors...
     top_shadow=bgcolor->top_shadow();
@@ -233,12 +240,17 @@ static void draw_shadow(Display* dpy, Window win, GC gc,
 
 void UserModule::redraw_widget(CallbackData*, void*)
 {
+    if(need_reconfig){
+	need_reconfig=1;
+	reconfigure_iports();
+	reconfigure_oports();
+    }
     Display* dpy=netedit->display;
     Drawable win=XtWindow(*drawing_a);
 
     // Draw base
     evl->lock();
-    draw_shadow(dpy, win, gc, 0, 0, widget_width-1, widget_height-1,
+    draw_shadow(dpy, win, gc, 0, 0, width-1, height-1,
 		MODULE_EDGE_WIDTH, top_shadow->pixel(), bottom_shadow->pixel());
 
     // Draw Input ports
@@ -246,17 +258,14 @@ void UserModule::redraw_widget(CallbackData*, void*)
     for(int p=0;p<iports.size();p++){
 	IPort* iport=iports[p];
 	iport->get_colors(netedit->color_manager);
+	iport->update_light();
 	XSetForeground(dpy, gc, iport->top_shadow->pixel());
 	int left=p*port_spacing+MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
 	int right=left+MODULE_PORTPAD_WIDTH-1;
-	for(int i=0;i<MODULE_EDGE_WIDTH;i++){
-	    XDrawLine(dpy, win, gc, left, i, right, i);
-	}
+	XFillRectangle(dpy, win, gc, left, 0, right-left+1, MODULE_EDGE_WIDTH);
 	XSetForeground(dpy, gc, iport->bgcolor->pixel());
 	int t=MODULE_EDGE_WIDTH;
-	for(i=0;i<MODULE_PORT_SIZE;i++){
-	    XDrawLine(dpy, win, gc, left, i+t, right, i+t);
-	}
+	XFillRectangle(dpy, win, gc, left, t, right-left+1, MODULE_PORT_SIZE);
 	if(iport->nconnections() > 0){
 	    // Draw tab...
 	    int p2=(MODULE_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
@@ -277,60 +286,36 @@ void UserModule::redraw_widget(CallbackData*, void*)
     for(p=0;p<oports.size();p++){
 	OPort* oport=oports[p];
 	oport->get_colors(netedit->color_manager);
-	int h=widget_height;
+	oport->update_light();
+	int h=height;
 	int left=p*port_spacing+MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
 	int right=left+MODULE_PORTPAD_WIDTH-1;
 	XSetForeground(dpy, gc, oport->bottom_shadow->pixel());
-	for(int i=0;i<MODULE_EDGE_WIDTH;i++){
-	    XDrawLine(dpy, win, gc, left, h-i-1, right, h-i-1);
-	}
+	XFillRectangle(dpy, win, gc, left, h-MODULE_EDGE_WIDTH,
+		       right-left+1, MODULE_EDGE_WIDTH);
 	XSetForeground(dpy, gc, oport->bgcolor->pixel());
-	int t=MODULE_EDGE_WIDTH+1;
-	for(i=0;i<MODULE_PORT_SIZE;i++){
-	    XDrawLine(dpy, win, gc, left, h-i-t, right, h-i-t);
-	}
+	int t=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE;
+	XFillRectangle(dpy, win, gc, left, h-t, right-left+1, MODULE_PORT_SIZE);
 	if(oport->nconnections() > 0){
 	    // Draw tab...
 	    int p2=(MODULE_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
 	    int l=left+p2;
 	    XSetForeground(dpy, gc, oport->top_shadow->pixel());
-	    for(i=0;i<PIPE_SHADOW_WIDTH;i++){
+	    for(int i=0;i<PIPE_SHADOW_WIDTH;i++){
 		XDrawLine(dpy, win, gc, l+i, h-i-1, l+i, h-1);
 	    }
 	    l+=PIPE_SHADOW_WIDTH;
 	    XSetForeground(dpy, gc, oport->bgcolor->pixel());
-	    for(int i=0;i<PIPE_WIDTH;i++){
+	    for(i=0;i<PIPE_WIDTH;i++){
 		XDrawLine(dpy, win, gc, l+i, h-MODULE_EDGE_WIDTH-1, l+i, h-1);
 	    }
 	}
     }
 
-    // Draw buttons
-    int ybtop=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE+MODULE_PORT_SPACE;
-    int ybbot=ybtop+MODULE_BUTTON_BORDER+MODULE_BUTTON_EDGE+MODULE_BUTTON_SIZE
-	+MODULE_BUTTON_EDGE;
-    int xbleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
-    int xbsize=MODULE_BUTTON_BORDER+MODULE_BUTTON_SIZE
-	+2*MODULE_BUTTON_EDGE;
-    int xbright=xbleft+MODULE_BUTTON_BORDER+MODULE_NBUTTONS*xbsize;
-    // Draw border..
-    XSetForeground(dpy, gc, fgcolor->pixel());
-    XDrawLine(dpy, win, gc, xbleft, ybtop, xbright-1, ybtop);
-    XDrawLine(dpy, win, gc, xbleft, ybbot, xbright-1, ybbot);
-    int x=xbleft;
-    ybtop+=MODULE_BUTTON_BORDER;
-    ybbot-=MODULE_BUTTON_BORDER;
-    xbleft+=MODULE_BUTTON_BORDER;
-    for(int i=0;i<MODULE_NBUTTONS+1;i++){
-	XDrawLine(dpy, win, gc, x, ybtop, x, ybbot);
-	x+=xbsize;
-    }
-
     // Draw title
     XSetFont(dpy, gc, netedit->name_font->fid);
     XSetForeground(dpy, gc, fgcolor->pixel());
-    int xleft=MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
-    XDrawString(dpy, win, gc, xleft, widget_ytitle, name(), name.len());
+    XDrawString(dpy, win, gc, title_left, widget_ytitle, name(), name.len());
 
     // Draw time and graph...
     update_module(0);
@@ -372,7 +357,7 @@ void UserModule::update_module(int clear_first)
     int timelen=strlen(timebuf);
     XSetFont(dpy, gc, netedit->time_font->fid);
     XSetForeground(dpy, gc, fgcolor->pixel());
-    XDrawString(dpy, win, gc, xleft, widget_ytime, timebuf, timelen);
+    XDrawString(dpy, win, gc, title_left, widget_ytime, timebuf, timelen);
 
     // Draw indent for graph
     XSetLineAttributes(dpy, gc, 0, LineSolid, CapButt, JoinMiter);
@@ -517,30 +502,13 @@ void UserModule::do_execute()
     }
 }
 
-void UserModule::input_widget(CallbackData*, void*)
+void UserModule::widget_button(CallbackData*, void*)
 {
-    NOT_FINISHED("UserModule::input_widget");
-}
-
-void UserModule::widget_button(CallbackData*, void* data)
-{
-    int which=(int)data;
-    switch(which){
-    case 0:
-	// User interface...
-	if(window)
-	    window->popup();
-	else
-	    popup_on_create=1;
-	break;
-    case 3:
-	// Help...
-	HelpUI::load(name);
-	break;
-    default:
-	cerr << "Button " << which << " pushed...\n";
-	break;
-    }
+    // User interface...
+    if(window)
+	window->popup();
+    else
+	popup_on_create=1;
 }
 
 void UserModule::mui_callback(void*, int)
@@ -548,3 +516,155 @@ void UserModule::mui_callback(void*, int)
     // Default - do nothing...
 }
 
+void UserModule::get_iport_coords(int which, int& x, int& y)
+{
+    int port_spacing=MODULE_PORTPAD_WIDTH+MODULE_PORTPAD_SPACE;
+    int p2=(MODULE_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
+    x=xpos+which*port_spacing+MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+p2;
+    y=ypos;
+}
+
+void UserModule::get_oport_coords(int which, int& x, int& y)
+{
+    get_iport_coords(which, x, y);
+    y+=height;
+}
+
+void UserModule::reconfigure_iports()
+{
+    if(!drawing_a){
+	need_reconfig=1;
+	return;
+    }
+    need_reconfig=0;
+    int port_spacing=MODULE_PORTPAD_WIDTH+MODULE_PORTPAD_SPACE;
+    for(int p=0;p<iports.size();p++){
+	int x=p*port_spacing+MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
+	int y=MODULE_EDGE_WIDTH+MODULE_PORT_SIZE;
+	IPort* iport=iports[p];
+	iport->set_context(x, y, drawing_a, gc);
+    }
+    if(compute_width() != width){
+	width=compute_width();
+	widget_xgraphright=width-MODULE_EDGE_WIDTH-MODULE_SIDE_BORDER
+	    -MODULE_GRAPH_INSET;
+	drawing_a->SetWidth(width);
+	drawing_a->SetValues();
+	evl->lock();
+	drawing_a->SetWidth(width);
+	drawing_a->SetValues();
+	XClearWindow(netedit->display, XtWindow(*drawing_a));
+	evl->unlock();
+    }
+    redraw_widget(0, 0);
+}
+
+void UserModule::reconfigure_oports()
+{
+    if(!drawing_a){
+	need_reconfig=1;
+	return;
+    }
+    need_reconfig=0;
+    int port_spacing=MODULE_PORTPAD_WIDTH+MODULE_PORTPAD_SPACE;
+    for(int p=0;p<oports.size();p++){
+	int x=p*port_spacing+MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER;
+	int y=height-MODULE_EDGE_WIDTH-MODULE_PORT_SIZE-MODULE_PORTLIGHT_HEIGHT;
+	OPort* oport=oports[p];
+	oport->set_context(x, y, drawing_a, gc);
+    }
+    if(compute_width() != width){
+	width=compute_width();
+	widget_xgraphright=width-MODULE_EDGE_WIDTH-MODULE_SIDE_BORDER
+	    -MODULE_GRAPH_INSET;
+	evl->lock();
+	drawing_a->SetWidth(width);
+	drawing_a->SetValues();
+	XClearWindow(netedit->display, XtWindow(*drawing_a));
+	evl->unlock();
+    }
+    redraw_widget(0, 0);
+}
+
+void UserModule::move_widget(CallbackData* cbdata, void*)
+{
+    XEvent* event=cbdata->get_event();
+    int i;
+    evl->lock();
+    switch(event->type){
+    case ButtonPress:
+	last_x=event->xbutton.x_root;
+	last_y=event->xbutton.y_root;
+	break;
+    case ButtonRelease:
+	break;
+    case MotionNotify:
+	xpos+=event->xmotion.x_root-last_x;
+	ypos+=event->xmotion.y_root-last_y;
+	drawing_a->SetX(xpos);
+	drawing_a->SetY(ypos);
+	drawing_a->SetValues();
+	last_x=event->xmotion.x_root;
+	last_y=event->xmotion.y_root;
+	for(i=0;i<iports.size();i++)
+	    iports[i]->move();
+	for(i=0;i<oports.size();i++)
+	    oports[i]->move();
+	break;
+    };
+    evl->unlock();
+}
+
+void UserModule::post_menu(CallbackData* cbdata, void*)
+{
+    if(netedit->check_cancel())
+	return;
+    evl->lock();
+    if(!popup_menu){
+	popup_menu=new PopupMenuC;
+	popup_menu->Create(*drawing_a, "popup");
+	PushButtonC* pb=new PushButtonC;
+	new MotifCallback<UserModule>FIXCB(pb, XmNactivateCallback,
+					   &netedit->mailbox, this,
+					   &UserModule::destroy, 0, 0);
+	pb->Create(*popup_menu, "Destroy");
+	pb=new PushButtonC;
+	new MotifCallback<UserModule>FIXCB(pb, XmNactivateCallback,
+					   &netedit->mailbox, this,
+					   &UserModule::interrupt, 0, 0);
+	pb->Create(*popup_menu, "Interrupt");
+	pb=new PushButtonC;
+	new MotifCallback<UserModule>FIXCB(pb, XmNactivateCallback,
+					   &netedit->mailbox, this,
+					   &UserModule::popup_help, 0, 0);
+	pb->Create(*popup_menu, "Help...");
+    }
+    XmMenuPosition(*popup_menu, (XButtonPressedEvent*)cbdata->get_event());
+    XtManageChild(*popup_menu);
+    evl->unlock();
+}
+
+void UserModule::destroy(CallbackData*, void*)
+{
+    NOT_FINISHED("UserModule::destroy");
+}
+
+void UserModule::interrupt(CallbackData*, void*)
+{
+    NOT_FINISHED("UserModule::interrupt");
+}
+
+void UserModule::popup_help(CallbackData*, void*)
+{
+    HelpUI::load(name);
+}
+
+int UserModule::compute_width()
+{
+    int w=title_left+title_width+MODULE_SIDE_BORDER+MODULE_EDGE_WIDTH;
+    int port_spacing=MODULE_PORTPAD_WIDTH+MODULE_PORTPAD_SPACE;
+    int p2=(MODULE_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
+    int np=Max(iports.size(), oports.size());
+    int x=np*port_spacing+2*(MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER);
+    return Max(x, w);
+}

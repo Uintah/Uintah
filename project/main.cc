@@ -30,9 +30,6 @@ int main(int argc, char** argv)
     // the rest is handled "automagically".
     ArgProcessor::process_args(argc, argv);
 
-    // Build the list of known modules...
-    ModuleList::initialize_list();
-
     // Initialize the multithreader
     TaskManager::initialize();
 

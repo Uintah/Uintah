@@ -14,11 +14,21 @@
 #ifndef SCI_project_Connection_h
 #define SCI_project_Connection_h 1
 
+#include <X11/Xlib.h>
+class CallbackData;
+class DrawingAreaC;
 class IPort;
 class Module;
+class NetworkEditor;
 class OPort;
 
 class Connection {
+    GC gc;
+    DrawingAreaC* drawing_a[5];
+    NetworkEditor* netedit;
+    int connected;
+    void redraw(CallbackData*, void*);
+    void calc_portwindow_size(int, int&, int&, int&, int&);
 public:
     Connection(Module*, int, Module*, int);
     ~Connection();
@@ -30,7 +40,10 @@ public:
     int local;
 
     void wait_ready();
+
+    void set_context(NetworkEditor*);
+    void connect();
+    void move();
 };
 
 #endif /* SCI_project_Connection_h */
-

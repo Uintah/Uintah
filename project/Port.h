@@ -16,8 +16,10 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
+#include <X11/Xlib.h>
 class ColorManager;
 class Connection;
+class DrawingAreaC;
 class Module;
 class XQColor;
 
@@ -31,14 +33,21 @@ class Port {
     int u_proto;
 protected:
     Array1<Connection*> connections;
+    DrawingAreaC* drawing_a;
+    int xlight, ylight;
+    GC gc;
 public:
     Port(Module*, const clString&, const clString&,
 	 const clString&, int protocols);
     void set_port(int which_port);
+    void set_context(int xlight_, int ylight_, DrawingAreaC* drawing_a_,
+		     GC gc_);
     int using_protocol();
     int nconnections();
     Connection* connection(int);
     Module* get_module();
+    int get_which_port();
+    void set_which_port(int);
     void attach(Connection*);
     void detach(Connection*);
     virtual void reset()=0;
@@ -47,18 +56,33 @@ public:
     XQColor* bgcolor;
     XQColor* top_shadow;
     XQColor* bottom_shadow;
+    XQColor* port_on_color;
+    XQColor* port_off_color;
+    void move();
+    clString get_typename();
+    clString get_portname();
 };
 
 class IPort : public Port {
-public:
+    int port_on;
+protected:
     IPort(Module*, const clString&, const clString&,
 	  const clString&, int protocols);
+    void turn_on();
+    void turn_off();
+public:
+    void update_light();
 };
 
 class OPort : public Port {
-public:
+    int port_on;
+protected:
     OPort(Module*, const clString&, const clString&,
 	  const clString&, int protocols);
+    void turn_on();
+    void turn_off();
+public:
+    void update_light();
 };
 
 #endif /* SCI_project_Port_h */

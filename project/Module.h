@@ -17,6 +17,7 @@
 #include <Classlib/Array1.h>
 #include <Classlib/String.h>
 #include <Multitask/ITC.h>
+class CallbackData;
 class Connection;
 class IPort;
 class MessageBase;
@@ -72,6 +73,10 @@ public:
     void remove_oport(int);
     void rename_iport(int, const clString&);
     void rename_oport(int, const clString&);
+    virtual void get_iport_coords(int, int&, int&);
+    virtual void get_oport_coords(int, int&, int&);
+    virtual void reconfigure_iports()=0;
+    virtual void reconfigure_oports()=0;
 
     // Used by Module subclasses
     void update_progress(double);
@@ -83,10 +88,12 @@ public:
     Network* network;
     clString name;
 public:
+    int niports();
+    int noports();
     IPort* iport(int);
     OPort* oport(int);
-    int xpos;
-    int ypos;
+    int xpos, ypos;
+    int width, height;
     void set_context(NetworkEditor*, Network*);
 
     // For the scheduler

@@ -34,7 +34,7 @@ Field3DIPort::~Field3DIPort()
 }
 
 Field3DOPort::Field3DOPort(Module* module, const clString& portname, int protocol)
-: OPort(module, Field3D_type, portname, Field3D_color, protocol)
+: OPort(module, Field3D_type, portname, Field3D_color, protocol), in(0)
 {
 }
 
@@ -50,8 +50,10 @@ void Field3DIPort::reset()
 void Field3DIPort::finish()
 {
     if(!recvd){
+	turn_on();
 	Field3DComm* msg=mailbox.receive();
 	delete msg;
+	turn_off();
     }
 }
 
@@ -64,12 +66,14 @@ void Field3DOPort::finish()
 {
     if(!sent_something){
 	// Tell them that we didn't send anything...
+	turn_on();
 	if(!in){
 	    Connection* connection=connections[0];
 	    in=(Field3DIPort*)connection->iport;
 	}
 	Field3DComm* msg=new Field3DComm();
 	in->mailbox.send(msg);
+	turn_off();
     }
 }
 
@@ -83,20 +87,25 @@ void Field3DOPort::send_field(const Field3DHandle& field)
 	cerr << "The field got sent twice - ignoring second one...\n";
 	return;
     }
+    turn_on();
     Field3DComm* msg=new Field3DComm(field);
     in->mailbox.send(msg);
     sent_something=1;
+    turn_off();
 }
 
 int Field3DIPort::get_field(Field3DHandle& f)
 {
+    turn_on();
     Field3DComm* comm=mailbox.receive();
     if(comm->has_field){
        f=comm->field;
        delete comm;
+       turn_off();
        return 1;
    } else {
        delete comm;
+       turn_off();
        return 0;
    }
 }

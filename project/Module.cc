@@ -14,14 +14,16 @@
 #include <Module.h>
 #include <Connection.h>
 #include <ModuleHelper.h>
+#include <ModuleShape.h>
 #include <MotifCallbackBase.h>
 #include <NetworkEditor.h>
 #include <NotFinished.h>
+#include <Port.h>
 #include <stdlib.h>
 
 Module::Module(const clString& name, SchedClass sched_class)
 : name(name), sched_class(sched_class), state(NeedData), mailbox(5),
-  xpos(10), ypos(10)
+  xpos(10), ypos(10), width(100), height(100)
 {
     helper=new ModuleHelper(this);
     helper->activate(0);
@@ -29,7 +31,7 @@ Module::Module(const clString& name, SchedClass sched_class)
 
 Module::Module(const Module& copy, int)
 : name(copy.name), state(NeedData), mailbox(5),
-  xpos(10), ypos(10)
+  xpos(10), ypos(10), width(100), height(100)
 {
     helper=new ModuleHelper(this);
     helper->activate(0);
@@ -55,18 +57,16 @@ void Module::update_progress(int n, int max)
 // Port stuff
 void Module::add_iport(IPort* port)
 {
+    port->set_which_port(iports.size());
     iports.add(port);
-
-    // Send the update message to the user interface...
-    NOT_FINISHED("Module::add_iport");
+    reconfigure_iports();
 }
 
 void Module::add_oport(OPort* port)
 {
+    port->set_which_port(oports.size());
     oports.add(port);
-
-    // Send an update message to the user interface...
-    NOT_FINISHED("Module::add_oport");
+    reconfigure_oports();
 }
 
 void Module::remove_iport(int)
@@ -83,7 +83,6 @@ void Module::rename_iport(int, const clString&)
 {
     NOT_FINISHED("Module::rename_iport");
 }
-
 
 void Module::connection(ConnectionMode, int, int)
 {
@@ -107,10 +106,34 @@ IPort* Module::iport(int i)
     return iports[i];
 }
 
+int Module::noports()
+{
+    return oports.size();
+}
+
+int Module::niports()
+{
+    return iports.size();
+}
+
 void Module::want_to_execute()
 {
     sched_state=SchedNewData;
     state=NeedData;
     netedit->mailbox.send(new Module_Scheduler_Message);
+}
+
+void Module::get_iport_coords(int which, int& x, int& y)
+{
+    int port_spacing=MODULE_PORTPAD_WIDTH+MODULE_PORTPAD_SPACE;
+    int p2=(MODULE_PORTPAD_WIDTH-PIPE_WIDTH-2*PIPE_SHADOW_WIDTH)/2;
+    x=xpos+which*port_spacing+MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER+p2;
+    y=ypos;
+}
+
+void Module::get_oport_coords(int which, int& x, int& y)
+{
+    get_iport_coords(which, x, y);
+    y+=height;
 }
 

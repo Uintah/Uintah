@@ -46,6 +46,9 @@ public:
     int nconnections();
     Connection* connection(int);
     void connect(Module*, int, Module*, int);
+    void connect(Connection*);
+
+    void add_module(const clString& name, int xpos=-1, int ypos=-1);
 };
 
 #endif

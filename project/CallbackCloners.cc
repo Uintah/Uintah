@@ -22,7 +22,13 @@
 #include <NotFinished.h>
 #include <Classlib/Assert.h>
 #include <Mt/FileSelectionBox.h>
+#include <Mt/List.h>
 #include <Mt/Scale.h>
+
+CallbackData* CallbackCloners::event_clone(void* event)
+{
+    return new CallbackData((XEvent*)event);
+}
 
 CallbackData* CallbackCloners::scale_clone(void* vdata)
 {
@@ -41,6 +47,17 @@ CallbackData* CallbackCloners::selection_clone(void* vdata)
     return cbdata;
 }
 
+CallbackData* CallbackCloners::list_clone(void* vdata)
+{
+    XmListCallbackStruct* cbs=(XmListCallbackStruct*)vdata;
+    char* str;
+    if(!XmStringGetLtoR(cbs->item, (char*)XmSTRING_DEFAULT_CHARSET, &str))
+	return new CallbackData("Internal Error");
+    CallbackData* cbdata=new CallbackData(str);
+    free(str);
+    return cbdata;
+}
+
 CallbackData::CallbackData(const clString& string_data)
 : string_data(string_data), type(TypeString)
 {
@@ -48,6 +65,11 @@ CallbackData::CallbackData(const clString& string_data)
 
 CallbackData::CallbackData(int int_data)
 : int_data(int_data), type(TypeInt)
+{
+}
+
+CallbackData::CallbackData(XEvent* event)
+: event(*event), type(TypeEvent)
 {
 }
 
@@ -61,4 +83,10 @@ clString CallbackData::get_string()
 {
     ASSERT(type==TypeString);
     return string_data;
+}
+
+XEvent* CallbackData::get_event()
+{
+    ASSERT(type==TypeEvent);
+    return &event;
 }

@@ -14,8 +14,10 @@
 #include <MotifCallbackBase.h>
 #include <Mt/Encapsulator.h>
 #include <MtXEventLoop.h>
+#include <stdio.h>
 extern MtXEventLoop* evl;
 
+static int motif_translation_installed=0;
 DECLARECALLBACKC(MotifCallbackBase, MotifCallbackH);
 DEFINECALLBACKC(MotifCallbackBase, MotifCallbackH);
 
@@ -37,6 +39,18 @@ void MotifCallbackHelper::maybe_install()
     }
 }
 
+static void handle_translation(Widget, XEvent* event, String* params,
+			       Cardinal* num_params)
+{
+    if(*num_params != 1){
+	cerr << "Handle translation is messed up...\n";
+	return;
+    }
+    MotifCallbackBase* cb;
+    sscanf(params[0], "%p", &cb);
+    cb->dispatch(event);
+}
+
 MotifCallbackBase::MotifCallbackBase(EncapsulatorC* enc, const char* cb_name,
 				     Mailbox<MessageBase*>* mailbox,
 				     void* userdata,
@@ -44,9 +58,26 @@ MotifCallbackBase::MotifCallbackBase(EncapsulatorC* enc, const char* cb_name,
 : enc(enc), mailbox(mailbox), userdata(userdata), cloner(cloner)
 {
     // Install the callback on the Encapsulator...
-    MotifCallbackHelper* cb=new MotifCallbackHelper(enc, cb_name, this,
+    if(cb_name[0] == '<'){
+	// A translation...
+	static char* tname="general_motif_translation";
+	evl->lock();
+	if(!motif_translation_installed){
+	    XtActionsRec actions;
+	    actions.string=tname;
+	    actions.proc=handle_translation;
+	    XtAppAddActions(evl->get_app(), &actions, 1);
+	    motif_translation_installed=1;
+	}
+	char transl[1000];
+	sprintf(transl, "%s: %s(%p)", cb_name, tname, this);
+	XtOverrideTranslations(*enc, XtParseTranslationTable(transl));
+	evl->unlock();
+    } else {
+	MotifCallbackHelper* cb=new MotifCallbackHelper(enc, cb_name, this,
 						    &MotifCallbackBase::dispatch);
-    cb->maybe_install();
+	cb->maybe_install();
+    }
 }
 
 void MotifCallbackBase::handle_timeout(void* ud, void* data)

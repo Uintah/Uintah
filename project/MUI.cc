@@ -91,8 +91,6 @@ void MUI_window::popup()
 	XtPopup(priv->shell, XtGrabNone);
 	evl->unlock();
     }
-    cerr << "POPUP called!\n";
-    NOT_FINISHED("MUI");
 }
 
 void MUI_window::popdown()
@@ -185,8 +183,6 @@ void MUI_slider_real::attach(MUI_window* _window, EncapsulatorC* parent)
 {
     window=_window;
     NetworkEditor* netedit=window->get_module()->netedit;
-    cerr << "module=" << window->get_module() << endl;
-    cerr << "netedit=" << netedit << endl;
     new MotifCallback<MUI_slider_real>FIXCB(scale, XmNdragCallback,
 					    &netedit->mailbox, this,
 					    &MUI_slider_real::drag_callback,
