@@ -57,7 +57,6 @@ private:
   bool build_trisurf_;
   TriSurfMeshHandle trisurf_;
   map<long int, TriSurfMesh::node_index> vertex_map_;
-  int nnodes_;
   int nx_, ny_, nz_;
   TriSurfMesh::node_index find_or_add_edgepoint(node_index, node_index, Point);
 
@@ -85,7 +84,6 @@ void HexMC<Field>::reset( int n, bool build_trisurf )
   triangles_ = new GeomTrianglesP;
   triangles_->reserve_clear(n*2.5);
   vertex_map_.clear();
-  nnodes_ = mesh_->nodes_size();
   nx_ = mesh_->get_nx();
   ny_ = mesh_->get_ny();
   nz_ = mesh_->get_nz();
