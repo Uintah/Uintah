@@ -1671,15 +1671,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  { 
       ostringstream desc1;
-      desc1<< "BOT_equilibration_patch_ "<<patch->getID();
+      desc1<< "BOT_equilibration_patch_"<<patch->getID();
       d_ice->printData( patch, 1, desc1.str(), "Press_CC_equil", press_new);
       d_ice->printData( patch, 1, desc1.str(), "delPress",       delPress_tmp);
-   #if 0                 
+   #if 1                 
       for (int m = 0; m < numALLMatls; m++)  {
          Material* matl = d_sharedState->getMaterial( m );
          int indx = matl->getDWIndex();
-         ostringstream desc1; 
-         desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID());
+         ostringstream desc; 
+         desc<< "BOT_equilibration_Mat_"<<indx<<"_patch_"<< patch->getID();
          d_ice->printData( patch,1,desc.str(), "rho_CC",      rho_CC_new[m]);
          d_ice->printData( patch,1,desc.str(), "rho_micro_CC",rho_micro[m]);
          d_ice->printData( patch,1,desc.str(), "vol_frac_CC", vol_frac[m]);
