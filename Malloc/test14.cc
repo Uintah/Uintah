@@ -20,7 +20,9 @@ X::~X()
     cerr << "~X() : crap=" << crap << "\n";
 }
 
-void* operator new(size_t, Allocator*, char*);
+void* operator new(size_t, Allocator*, const char*);
+void* operator new[](size_t, Allocator*, const char*);
+
 main()
 {
     char* p=new char[100];
@@ -31,9 +33,7 @@ main()
     delete[] pp;
     pp=new (default_allocator, "1") X;
     delete pp;
-#ifndef __GNUG__
     pp=new (default_allocator, "2") X[5];
     delete[] pp;
-#endif
     return 0;
 }

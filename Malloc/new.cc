@@ -19,3 +19,8 @@ void* operator new(size_t size, Allocator* a, char* tag)
     return a->alloc(size, tag);
 }
 
+void* operator new[](size_t size, Allocator* a, char* tag)
+{
+    return a->alloc(size, tag);
+}
+

@@ -76,7 +76,7 @@ inline void Allocator::lock()
 
 void Allocator::longlock()
 {
-    int rt=100000;
+    int rt=1000000;
     nlonglocks++;
     while(rt){
 	// Try the lock...
@@ -90,7 +90,7 @@ void Allocator::longlock()
 
 	rt--;
     }
-    AllocError("Possible deadlock after 10000 retries\n");
+    AllocError("Possible deadlock after 1000000 retries\n");
 }
 
 inline void Allocator::unlock()
@@ -126,7 +126,7 @@ static void (*sleeper)();
 
 void Allocator::longlock()
 {
-    int rt=100000;
+    int rt=1000000;
     nlonglocks++;
     while(rt){
 	// Try the lock...
@@ -141,7 +141,7 @@ void Allocator::longlock()
 
 	rt--;
     }
-    AllocError("Possible deadlock after 10000 retries\n");
+    AllocError("Possible deadlock after 1000000 retries\n");
 }
 
 inline void Allocator::unlock()
@@ -212,6 +212,12 @@ Allocator* MakeAllocator()
 	a->lazy=1;
     } else {
 	a->lazy=0;
+    }
+
+    if(getenv("MALLOC_TRACE")){
+	a->trace=1;
+    } else {
+	a->trace=0;
     }
 
     // Initialize stats...
@@ -300,6 +306,8 @@ void* Allocator::alloc(size_t size, char* tag)
     }
 
 //    fprintf(stderr, "result is %x\n", d);
+    if(trace)
+	fprintf(stderr, "A %08p %d (%s)\n", d, size, tag);
     return (void*)d;
 }
 
@@ -434,6 +442,8 @@ void* Allocator::alloc_big(size_t size, char* tag)
 	    *p++=i++;
     }
 
+    if(trace)
+	fprintf(stderr, "A %08p %d (%s)\n", d, size, tag);
     return (void*)d;
 }
 
@@ -494,6 +504,8 @@ void Allocator::free(void* dobj)
     Tag* obj=(Tag*)dd;
 
     // Make sure that it is still intact...
+    if(trace)
+	fprintf(stderr, "F %08p %d (%s)\n", dobj, obj->reqsize, obj->tag);
     if(!lazy)
 	audit(obj, OBJFREEING);
 

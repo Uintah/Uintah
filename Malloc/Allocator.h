@@ -36,6 +36,7 @@ void AuditAllocator(Allocator*);
 void DumpAllocator(Allocator*);
 
 void* operator new(size_t, Allocator*, char*);
+void* operator new[](size_t, Allocator*, char*);
 
 #ifdef __GNUG__
 #define scinew new

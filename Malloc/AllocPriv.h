@@ -47,6 +47,7 @@ struct Allocator {
 
     int strict;
     int lazy;
+    int trace;
     OSHunk* hunks;
 
     AllocBin* small_bins;

@@ -26,18 +26,19 @@ lock.o: lock_mips.s
 	as -o lock.o lock_mips.s -mips2
 #endif
 
-LDFLAGS =
-SCIProgramTarget(test1, test1.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test2, test2.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test3, test3.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test4, test4.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test5, test5.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test6, test6.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test7, test7.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test8, test8.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test9, test9.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test10, test10.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test11, test11.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test12, test12.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test13, test13.o, libMalloc.so, $(LDFLAGS))
-SCIProgramTarget(test14, test14.o, libMalloc.so, $(LDFLAGS))
+TEST_LIBS =
+TEST_LDFLAGS = -L$(SCILIBDIR) -lMalloc
+SCIProgramTarget(test1, test1.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test2, test2.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test3, test3.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test4, test4.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test5, test5.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test6, test6.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test7, test7.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test8, test8.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test9, test9.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test10, test10.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test11, test11.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test12, test12.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test13, test13.o, $(TEST_LIBS), $(TEST_LDFLAGS))
+SCIProgramTarget(test14, test14.o, $(TEST_LIBS), $(TEST_LDFLAGS))
