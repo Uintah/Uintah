@@ -1,11 +1,10 @@
+
 #ifndef UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 #define UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/TaskProduct.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -17,7 +16,8 @@ using std::vector;
 
 namespace Uintah {
 
-class Task;
+  class OnDemandDataWarehouse;
+  class Task;
 
 /**************************************
 
@@ -48,7 +48,7 @@ WARNING
   
 ****************************************/
 
-   class MixedScheduler : public UintahParallelComponent, public Scheduler {
+   class MixedScheduler : public SchedulerCommon {
       struct SGArgs {
 	 vector<int> dest;
 	 vector<int> tags;
@@ -63,45 +63,19 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void initialize();
-      
-      //////////
-      // Insert Documentation Here:
-      virtual void execute( const ProcessorGroup * pc,
-			          DataWarehouseP   & old_dwp,
-			          DataWarehouseP   & dwp );
-      
-      //////////
-      // Insert Documentation Here:
-      virtual void addTask(Task* t);
-
-      //////////
-      // Insert Documentation Here:
-      virtual DataWarehouseP createDataWarehouse( DataWarehouseP& parent);
+     virtual void compile( const ProcessorGroup * pc );
+     virtual void execute( const ProcessorGroup * pc );
       
       //////////
       // Insert Documentation Here:
       virtual void scheduleParticleRelocation(const LevelP& level,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw,
 					      const VarLabel* old_posLabel,
 					      const vector<vector<const VarLabel*> >& old_labels,
 					      const VarLabel* new_posLabel,
 					      const vector<vector<const VarLabel*> >& new_labels,
-					      int numMatls);
+					      const MaterialSet* matls);
 
 
-       virtual LoadBalancer* getLoadBalancer();
-       virtual void releaseLoadBalancer();
-       
-       // Makes and returns a map that maps strings to VarLabels of
-       // that name and a list of material indices for which that
-       // variable is valid (according to d_allcomps in d_graph).
-       virtual VarLabelMaterialMap* makeVarLabelMaterialMap()
-       { return d_graph.makeVarLabelMaterialMap(); }
-
-       virtual const vector<const Task::Dependency*>& getInitialRequires()
-       { return d_graph.getInitialRequires(); }
    private:
       void scatterParticles(const ProcessorGroup*,
 			    const Patch* patch,
@@ -138,6 +112,8 @@ WARNING
       // Removes the dependencies that are satisfied by "comps" computes
       // from the taskToDeps list.  Sends data to other processes if
       // necessary (if sendData is true).  List of sends returned in "send_ids".
+#if 0
+     // sparker
       void dependenciesSatisfied( const Task::compType & comps,
 				  int                               me,
 				  vector<MPI_Request>             & send_ids,
@@ -146,19 +122,17 @@ WARNING
 				int                      me,
 				vector<MPI_Request>    & send_ids,
 				bool                     sendData = true );
+#endif
 
       const VarLabel* reloc_old_posLabel;
       vector<vector<const VarLabel*> > reloc_old_labels;
       const VarLabel* reloc_new_posLabel;
       vector<vector<const VarLabel*> > reloc_new_labels;
-      int reloc_numMatls;
+      const MaterialSet* reloc_matls;
       const VarLabel* scatterGatherVariable;
 
       MixedScheduler(const MixedScheduler&);
       MixedScheduler& operator=(const MixedScheduler&);
-
-      TaskGraph    d_graph;
-      int          d_generation;
 
       ThreadPool * d_threadPool;
    };

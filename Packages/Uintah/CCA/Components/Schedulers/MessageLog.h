@@ -6,10 +6,10 @@
 #include <fstream>
 
 namespace Uintah {
-   class ProcessorGroup;
-   class Output;
-   class Patch;
-   class VarLabel;
+  class ProcessorGroup;
+  class Output;
+  class Patch;
+  class VarLabel;
 
    /**************************************
      
@@ -45,10 +45,12 @@ namespace Uintah {
       MessageLog(const ProcessorGroup* myworld, Output* oport);
       void problemSetup(const ProblemSpecP& prob_spec);
       ~MessageLog();
-      void logSend(const Task::Dependency* dep, int bytes,
+#if 0
+      void logSend(const DetailedReq* dep, int bytes,
 		   const char* msg = 0);
-      void logRecv(const Task::Dependency* dep, int bytes,
+      void logRecv(const DetailedReq* dep, int bytes,
 		   const char* msg = 0);
+#endif
 
       void finishTimestep();
    private:

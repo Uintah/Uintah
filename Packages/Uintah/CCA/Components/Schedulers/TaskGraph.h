@@ -11,49 +11,9 @@
 namespace Uintah {
 
 using namespace std;
-
-struct TaskData {
-
-  const Task * task;
-
-  TaskData() : task( 0 ) {}
-  TaskData( const Task * task ) : task( task ) {}
-
-  // Used for STL "map" ordering:
-  bool operator()( const TaskData & t1, const TaskData & t2 ) const {
-    return t1.task < t2.task;
-  }
-
-  bool operator<( const TaskData & t ) const {
-    return task < t.task;
-  }
-
-  bool operator==( const TaskData & t ) const {
-    if( t.task->getName() == task->getName() ) {
-      if( t.task->getPatch() && task->getPatch() )
-	return ( t.task->getPatch()->getID() == task->getPatch()->getID() );
-      else if( ( t.task->getPatch() && !task->getPatch() ) ||
-	       ( !t.task->getPatch() && task->getPatch() ) )
-	return false;
-      else
-	return true;
-    } else {
-      return false;
-    }
-  }
-};
-
-struct DependData {
-
-  const Task::Dependency * dep;
-
-  DependData() : dep( 0 ) {}
-  DependData( const Task::Dependency * dep ) : dep( dep ){}
-
-  bool operator()( const DependData & d1, const DependData & d2 ) const;
-  bool operator< ( const DependData & d ) const;
-  bool operator==( const DependData & d1 ) const;
-};
+  class DetailedTask;
+  class DetailedTasks;
+  class LoadBalancer;
 
 /**************************************
 
@@ -87,19 +47,24 @@ WARNING
    class TaskGraph {
    public:
       TaskGraph();
-      virtual ~TaskGraph();
+      ~TaskGraph();
       
       //////////
       // Insert Documentation Here:
-      virtual void initialize();
+      void initialize();
       
       //////////
       // Insert Documentation Here:
-      virtual void addTask(Task* t);
+      void addTask(Task* t, const PatchSet* patchset,
+			   const MaterialSet* matlset);
 
       //////////
       // Insert Documentation Here:
-      virtual void topologicalSort(vector<Task*>& tasks);
+      void topologicalSort(vector<Task*>& tasks);
+
+     DetailedTasks* createDetailedTasks(const ProcessorGroup* pg);
+     void createDetailedDependencies(DetailedTasks*, LoadBalancer* lb,
+				     const ProcessorGroup* pg);
 
       //////////
       // Used for the MixedScheduler, this routine has the side effect
@@ -109,18 +74,6 @@ WARNING
       // by each MPI process.
       void nullSort( vector<Task*>& tasks );
       
-      //////////
-      // Insert Documentation Here:
-      bool allDependenciesCompleted(Task* task) const;
-
-      void getRequiresForComputes(const Task::Dependency* comp,
-				  vector<const Task::Dependency*>& reqs);
-
-      // Note: This just returns one of the computes for a given requires.
-      // Some reduction variables may have several computes and this will
-      // only return one of them.
-      const Task::Dependency* getComputesForRequires(const Task::Dependency* req);
-
       // Get all of the requires needed from the old data warehouse
       // (carried forward).
       const vector<const Task::Dependency*>& getInitialRequires()
@@ -128,7 +81,6 @@ WARNING
 
       int getNumTasks() const;
       Task* getTask(int i);
-      void assignSerialNumbers();
 
       ////////// 
       // Assigns unique id numbers to each dependency based on name,
@@ -137,14 +89,10 @@ WARNING
       // own copy of the dependency data.  This routine determines
       // that the dependencies are actually the same, and gives them
       // the same id number.
-      void assignUniqueSerialNumbers();
+      void assignUniqueMessageTags();
 
       vector<Task*>& getTasks() {
 	 return d_tasks;
-      }
-
-      int getMaxSerialNumber() const {
-	 return d_maxSerial;
       }
 
       // Makes and returns a map that associates VarLabel names with
@@ -152,8 +100,17 @@ WARNING
       typedef map< string, list<int> > VarLabelMaterialMap;
       VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
+     void createDetailedTask(DetailedTasks* tasks, Task* task,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls);
+     int findVariableLocation(LoadBalancer* lb, const ProcessorGroup* pg,
+			      Task::Dependency* req,
+			      const Patch* patch, int matl);
+
       TaskGraph(const TaskGraph&);
       TaskGraph& operator=(const TaskGraph&);
+
+     bool overlaps(Task::Dependency* comp, Task::Dependency* req) const;
 
       //////////
       // Insert Documentation Here:
@@ -162,17 +119,11 @@ WARNING
       void processTask(Task* task, vector<Task*>& sortedTasks) const;
       
       vector<Task*>        d_tasks;
-
-      typedef multimap<TaskProduct, const Task::Dependency*> actype;
-      actype d_allcomps;
-      
-      typedef multimap<TaskProduct, const Task::Dependency*> artype;
-      artype d_allreqs;
+     vector<Task::Edge*> edges;
 
       // data required from old data warehouse
       vector<const Task::Dependency*> d_initreqs;
       
-      int d_maxSerial;
    };
 
 } // End namespace Uintah

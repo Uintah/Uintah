@@ -4,18 +4,23 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Schedulers
 
-SRCS += $(SRCDIR)/templates.cc \
+SRCS += \
+	$(SRCDIR)/DetailedTasks.cc \
+	$(SRCDIR)/MPIScheduler.cc \
+	$(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/MixedScheduler.cc \
-	$(SRCDIR)/MPIScheduler.cc $(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
+	$(SRCDIR)/SchedulerCommon.cc \
 	$(SRCDIR)/SendState.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
-	$(SRCDIR)/SingleProcessorScheduler.cc \
+	$(SRCDIR)/SimpleScheduler.cc \
 	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
+	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/TaskGraph.cc \
-	$(SRCDIR)/ThreadPool.cc
+	$(SRCDIR)/ThreadPool.cc \
+	$(SRCDIR)/templates.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Grid \

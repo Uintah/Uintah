@@ -4,9 +4,9 @@
 #include <map>
 
 namespace Uintah {
-
-class Patch;
-class ParticleSubset;
+  using namespace std;
+  class Patch;
+  class ParticleSubset;
 
 /**************************************
      
@@ -37,16 +37,18 @@ class ParticleSubset;
       
      ****************************************/
     
-   class SendState {
-   public:
-      SendState();
-      ~SendState();
-      std::map<std::pair<std::pair<const Patch*, int>, int>, ParticleSubset*> d_sendSubsets;
-
-   private:
-      SendState(const SendState&);
-      SendState& operator=(const SendState&);
-      
+  class SendState {
+  public:
+    SendState();
+    ~SendState();
+    ParticleSubset* find_sendset(const Patch*, int, int);
+    void add_sendset(const Patch*, int, int, ParticleSubset*);
+    
+  private:
+    typedef map<pair<pair<const Patch*, int>, int>, ParticleSubset*> maptype;
+    maptype sendSubsets;
+    SendState(const SendState&);
+    SendState& operator=(const SendState&);
    };
 } // End namespace Uintah
 

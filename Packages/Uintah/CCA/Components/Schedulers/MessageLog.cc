@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/NotFinished.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -40,15 +41,17 @@ void MessageLog::problemSetup(const ProblemSpecP& prob_spec)
    }
 }
 
-void MessageLog::logSend(const Task::Dependency* dep, int bytes,
+#if 0
+void MessageLog::logSend(const DetailedReq* dep, int bytes,
 			 const char* msg)
 {
-   if(!d_enabled)
-      return;
-   out << "send\t";
-   out << setprecision(8) << Time::currentSeconds() << "\t";
-   out << bytes << "\t";
-   if(dep){
+  if(!d_enabled)
+    return;
+  out << "send\t";
+  out << setprecision(8) << Time::currentSeconds() << "\t";
+  out << bytes << "\t";
+  if(dep){
+#if 0
       if(dep->d_task->getPatch())
 	 out << dep->d_task->getPatch()->getID();
       else
@@ -63,6 +66,9 @@ void MessageLog::logSend(const Task::Dependency* dep, int bytes,
 	 out << dep->d_var->getName();
       else
 	 out << "-";
+#else
+      NOT_FINISHED("new task stuff");
+#endif
    } else {
       out << "-\t-\t-\t-\t-";
    }
@@ -71,12 +77,13 @@ void MessageLog::logSend(const Task::Dependency* dep, int bytes,
    out << '\n';
 }
 
-void MessageLog::logRecv(const Task::Dependency* /*dep*/, int /*bytes*/,
+void MessageLog::logRecv(const DetailedReq* /*dep*/, int /*bytes*/,
 			 const char* /*msg*/)
 {
    if(!d_enabled)
       return;
 }
+#endif
 
 void MessageLog::finishTimestep()
 {

@@ -5,9 +5,11 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
@@ -19,6 +21,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 #include <string>
@@ -34,22 +37,13 @@ using namespace Uintah;
 #define PARTICLESET_TAG		0x1000000
 #define DAV_DEBUG 0
 
-// From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Mutex * cerrSem;
-
 OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
-					      int generation, 
-					      DataWarehouseP& parent)
-   : DataWarehouse( myworld, generation, parent),
+					      int generation, const GridP& grid )
+   : DataWarehouse( myworld, generation),
      d_lock("DataWarehouse lock"),
-     d_finalized( false )
+     d_finalized( false ),
+     d_grid(grid)
 {
-}
-
-void
-OnDemandDataWarehouse::setGrid(const GridP& grid)
-{
-  d_grid = grid;
 }
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
@@ -154,478 +148,278 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
    }
 }
 
-
-void OnDemandDataWarehouse::sendParticleSubset(SendState& ss,
-					       ParticleSubset* pset,
-					       const VarLabel* pos_var,
-					       const Task::Dependency* dep,
-					       const Patch* /*toPatch*/,
-					       const ProcessorGroup* world,
-					       int* size)
-
-{
-   ParticleSubset* sendset = scinew ParticleSubset(pset->getParticleSet(),
-						   false, -1, 0);
-   ParticleVariable<Point> pos;
-   DataWarehouse* dw = dep->d_dw;
-   dw->get(pos, pos_var, pset);
-   Box box=pset->getPatch()->getLevel()->getBox(dep->d_lowIndex,
-						dep->d_highIndex);
-   for(ParticleSubset::iterator iter = pset->begin();
-       iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      if(box.contains(pos[idx]))
-	 sendset->addParticle(idx);
-   }
-   int toProc = dep->d_task->getAssignedResourceIndex();
-   ss.d_sendSubsets[pair<pair<const Patch*, int>,int>(pair<const Patch*, int>(dep->d_patch, toProc), dep->d_matlIndex)]=sendset;
-
-   int numParticles = sendset->numParticles();
-   //cerr << world->myrank() << " Sending pset size of " << numParticles << " instead of " << pset->numParticles() << ", dw=" << getID() << '\n';
-
-   ASSERT(dep->d_serialNumber >= 0);
-   MPI_Bsend(&numParticles, 1, MPI_INT, toProc,
-	     PARTICLESET_TAG|dep->d_serialNumber, world->getComm());
-   MPI_Pack_size(1, MPI_INT, world->getComm(), size);
-}
-
 void
-OnDemandDataWarehouse::sendMPI(SendState& ss,
-			       const VarLabel* label, int matlIndex,
-			       const Patch* patch, const ProcessorGroup* world,
-			       const Task::Dependency* dep, int dest,
-			       int tag, int* size, MPI_Request* requestid)
+OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
+			       const ProcessorGroup* world,
+			       const VarLabel* pos_var,
+			       BufferInfo& buffer,
+			       OnDemandDataWarehouse* old_dw,
+			       const DetailedDep* dep)
 {
-  d_lock.readLock();
-
-   if(d_ncDB.exists(label, matlIndex, patch)){
-      NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-      bool free_datatype = false;
-      var->getMPIBuffer(buf, count, datatype, free_datatype,
-			dep->d_lowIndex, dep->d_highIndex);
-#if 0 //DAV_DEBUG
-      cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
-	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
-	   << ", req=" << requestid << '\n';
-#endif
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
-#if 0
-      cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
-	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
-	   << ", req=" << requestid << ", size=" << *size << ", low=" << dep->d_lowIndex << ", high=" << dep->d_highIndex << '\n';
-#endif
-      if(free_datatype)
-	 MPI_Type_free(&datatype);
-  d_lock.readUnlock();
-
-      return;
-   }
-   if(d_particleDB.exists(label, matlIndex, patch)){
+  const VarLabel* label = dep->req->var;
+  const Patch* patch = dep->fromPatch;
+  int matlIndex = dep->matl;
+  
+  switch(label->typeDescription()->getType()){
+  case TypeDescription::ParticleVariable:
+    {
+      if(!d_particleDB.exists(label, matlIndex, patch))
+	throw UnknownVariable(label->getName(), patch, matlIndex,
+			      "in sendMPI");
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
 
-      map<pair<pair<const Patch*, int>, int>, ParticleSubset*>::iterator iter = 
-      	 ss.d_sendSubsets.find(pair<pair<const Patch*, int>,int>(pair<const Patch*, int>(patch, dest), matlIndex));
-      if(iter == ss.d_sendSubsets.end()){
-	 cerr << "patch=" << patch << '\n';
-	 cerr << world->myrank() << " From patch: " << patch->getID() << " to processor: " << dest << '\n';
-	 cerr << "size=" << ss.d_sendSubsets.size() << '\n';
-	 cerr << "dw=" << getID() << '\n';
-	 throw InternalError("Cannot find particle sendset");
-      }
-      ParticleSubset* sendset = iter->second;
+      int dest = batch->toTask->getAssignedResourceIndex();
+      ParticleSubset* sendset = ss.find_sendset(patch, matlIndex, dest);
+      if(!sendset){
+	ParticleSubset* pset = var->getParticleSubset();
+	sendset = scinew ParticleSubset(pset->getParticleSet(),
+					false, -1, 0);
+	ParticleVariable<Point> pos;
+	old_dw->get(pos, pos_var, pset);
+	Box box=pset->getPatch()->getLevel()->getBox(dep->low, dep->high);
+	for(ParticleSubset::iterator iter = pset->begin();
+	    iter != pset->end(); iter++){
+	  particleIndex idx = *iter;
+	  if(box.contains(pos[idx]))
+	    sendset->addParticle(idx);
+	}
+	int numParticles = sendset->numParticles();
 
-      if(sendset->numParticles() == 0){
-	 *size=-1;
-      } else {
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 bool free_datatype = false;
-	 var->getMPIBuffer(buf, count, datatype, free_datatype, sendset);
-	 MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-	 //cerr << "ISend Particle: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype) 
-	    MPI_Type_free(&datatype);
+	ASSERT(batch->messageTag >= 0);
+	MPI_Bsend(&numParticles, 1, MPI_INT, dest,
+		  PARTICLESET_TAG|batch->messageTag, world->getComm());
+	ss.add_sendset(patch, matlIndex, dest, sendset);
       }
-  d_lock.readUnlock();
-      return;
-   }
-   if(d_ccDB.exists(label, matlIndex, patch)){
+	
+      if(sendset->numParticles() > 0)
+	 var->getMPIBuffer(buffer, sendset);
+    }
+    break;
+  case TypeDescription::NCVariable:
+    {
+      if(!d_ncDB.exists(label, matlIndex, patch))
+	throw UnknownVariable(label->getName(), patch, matlIndex,
+			      "in sendMPI");
+      NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+    }
+    break;
+  case TypeDescription::CCVariable:
+    {
+      if(!d_ccDB.exists(label, matlIndex, patch))
+	throw UnknownVariable(label->getName(), patch, matlIndex,
+			      "in sendMPI");
       CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-      bool free_datatype = false;
-      var->getMPIBuffer(buf, count, datatype, free_datatype,
-			dep->d_lowIndex, dep->d_highIndex);
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
-#if 0
-      cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
-	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
-	   << ", req=" << requestid << ", size=" << *size << ", low=" << dep->d_lowIndex << ", high=" << dep->d_highIndex << '\n';
-#endif
-      if(free_datatype)
-	 MPI_Type_free(&datatype);
-  d_lock.readUnlock();
-#if 0
-      var->getMPIBuffer(buf, count, datatype);
-
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
-#if 0 //DAV_DEBUG
-      cerr << "ISend Particle: buf=" << buf << ", count=" << count 
-	   << ", dest=" << dest << ", tag=" << tag << ", comm=" 
-	   << world->getComm() << ", req=" << requestid << '\n';
-#endif
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
-  d_lock.readUnlock();
-#endif
-
-      return;
-   }
-   if(d_sfcxDB.exists(label, matlIndex, patch)){
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+    }
+    break;
+  case TypeDescription::SFCXVariable:
+    {
+	throw UnknownVariable(label->getName(), patch, matlIndex,
+			      "in sendMPI");
       SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-      bool free_datatype = false;
-      var->getMPIBuffer(buf, count, datatype, free_datatype,
-			dep->d_lowIndex, dep->d_highIndex);
-#if 0
-      var->getMPIBuffer(buf, count, datatype);
-#endif
-      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
-      if(free_datatype)
-	 MPI_Type_free(&datatype);
-
-  d_lock.readUnlock();
-      return;
-   }
-   if(d_sfcyDB.exists(label, matlIndex, patch)){
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+    }
+    break;
+  case TypeDescription::SFCYVariable:
+    {
+      if(!d_sfcyDB.exists(label, matlIndex, patch))
+	throw UnknownVariable(label->getName(), patch, matlIndex,
+			      "in sendMPI");
       SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-      bool free_datatype = false;
-      var->getMPIBuffer(buf, count, datatype, free_datatype,
-			dep->d_lowIndex, dep->d_highIndex);
-#if 0
-      var->getMPIBuffer(buf, count, datatype);
-#endif
-      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
-      if(free_datatype)
-	 MPI_Type_free(&datatype);
-
-  d_lock.readUnlock();
-      return;
-   }
-   if(d_sfczDB.exists(label, matlIndex, patch)){
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+    }
+    break;
+  case TypeDescription::SFCZVariable:
+    {
+      if(!d_sfczDB.exists(label, matlIndex, patch))
+	throw UnknownVariable(label->getName(), patch, matlIndex,
+			      "in sendMPI");
       SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-      bool free_datatype = false;
-      var->getMPIBuffer(buf, count, datatype, free_datatype,
-			dep->d_lowIndex, dep->d_highIndex);
-#if 0
-      var->getMPIBuffer(buf, count, datatype);
-#endif
-      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
-      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
-
-      // This is just FYI for the caller
-      MPI_Pack_size(count, datatype, world->getComm(), size);
-      if(free_datatype)
-	 MPI_Type_free(&datatype);
-
-  d_lock.readUnlock();
-      return;
-   }
-   if(label->typeDescription()->getType() == TypeDescription::ScatterGatherVariable){
-      throw InternalError("Sending sgvar shouldn't occur\n");
-   }
-   cerr << "Particles:\n";
-   d_particleDB.print(cerr);
-   cerr << "NC:\n";
-   d_ncDB.print(cerr);
-   cerr << "\n\n";
-   throw UnknownVariable(label->getName(), patch, matlIndex, "in sendMPI");
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+    }
+    break;
+  case TypeDescription::ScatterGatherVariable:
+    {
+      cerr << "SEND SGVAR NOTDONE\n";
+      throw InternalError( "SEND SGVAR NOTDONE" );
+    }
+  default:
+    throw InternalError("sendMPI not implemented for "+label->getFullName(matlIndex, patch));
+  } // end switch( label->getType() );
 }
 
 void
-OnDemandDataWarehouse::recvMPI(SendState& ss, DataWarehouseP& old_dw,
-			       const VarLabel* label, int matlIndex,
-			       const Patch* patch, const ProcessorGroup* world,
-			       const Task::Dependency* dep, int src,
-			       int tag, int* size,
-			       MPI_Request* requestid)
+OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
+			       DependencyBatch* batch,
+			       const ProcessorGroup* world,
+			       OnDemandDataWarehouse* old_dw,
+			       const DetailedDep* dep)
 {
-   switch(label->typeDescription()->getType()){
-   case TypeDescription::ParticleVariable:
-      {
-	 if(d_particleDB.exists(label, matlIndex, patch))
-	    throw InternalError("Particle Var already exists before MPI recv: "
-				+ label->getFullName(matlIndex, patch));
-	 
-	 // First, get the particle set.  We should already have it
-	 ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
+  const VarLabel* label = dep->req->var;
+  const Patch* patch = dep->fromPatch;
+  int matlIndex = dep->matl;
 
-  d_lock.writeLock();
-	 Variable* v = label->typeDescription()->createInstance();
-  d_lock.writeUnlock();
-	 ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
-	 ASSERT(var != 0);
-	 var->allocate(pset);
-	 var->setForeign();
-	 if(pset->numParticles() == 0){
-	    *size=-1;
-	 } else {
-	    void* buf;
-	    int count;
-	    MPI_Datatype datatype;
-	    bool free_datatype=false;
-	    var->getMPIBuffer(buf, count, datatype, free_datatype, pset);
-	    MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
-	    // This is just FYI for the caller
-	    MPI_Pack_size(count, datatype, world->getComm(), size);
-	    if(free_datatype) 
-	       MPI_Type_free(&datatype);
-	 }
-	 d_particleDB.put(label, matlIndex, patch, var, false);
+  switch(label->typeDescription()->getType()){
+  case TypeDescription::ParticleVariable:
+    {
+      if(d_particleDB.exists(label, matlIndex, patch))
+	throw InternalError("Particle Var already exists before MPI recv: "
+			    + label->getFullName(matlIndex, patch));
+      
+      // First, get the particle set.  We should already have it
+      if(!old_dw->haveParticleSubset(matlIndex, patch)){
+	int numParticles;
+	MPI_Status status;
+	ASSERT(batch->messageTag >= 0);
+	int from=batch->fromTask->getAssignedResourceIndex();
+	MPI_Recv(&numParticles, 1, MPI_INT, from,
+		 PARTICLESET_TAG|batch->messageTag, world->getComm(),
+		 &status);
+	old_dw->createParticleSubset(numParticles, matlIndex, patch);
       }
-   break;
-   case TypeDescription::NCVariable:
-      {
-	 if(d_ncDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: " +
-				label->getFullName(matlIndex, patch));
-  d_lock.writeLock();
-	 Variable* v = label->typeDescription()->createInstance();
-  d_lock.writeUnlock();
-	 NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
-	 ASSERT(var != 0);
-	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
-	 var->setForeign();
+      ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
 
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 bool free_datatype = false;
-	 var->getMPIBuffer(buf, count, datatype, free_datatype,
-			   dep->d_lowIndex, dep->d_highIndex);
-#if 0
-	 cerr << "IRecv NC: buf=" << buf << ", count=" << count << ", src=" 
-	      << src << ", tag=" << tag << ", comm=" << world->getComm() 
-	      << ", req=" << requestid << ", low=" << dep->d_lowIndex 
-              << ", high=" << dep->d_highIndex << ", var=" << label->getName()
-              << '\n';
-#endif
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(),requestid);
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype) 
-	    MPI_Type_free(&datatype);
-	 d_ncDB.put(label, matlIndex, patch, var, false);
+      Variable* v = label->typeDescription()->createInstance();
+      ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
+      ASSERT(var != 0);
+      var->allocate(pset);
+      var->setForeign();
+      if(pset->numParticles() > 0){
+	var->getMPIBuffer(buffer, pset);
       }
-   break;
-   case TypeDescription::CCVariable:
-      {
-	 if(d_ccDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-  d_lock.writeLock();
-	 Variable* v = label->typeDescription()->createInstance();
-  d_lock.writeUnlock();
-	 CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
-	 ASSERT(var != 0);
-#if 0
-	 var->allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
-#endif
-	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
-	 var->setForeign();
+      d_particleDB.put(label, matlIndex, patch, var, false);
+    }
+    break;
+  case TypeDescription::NCVariable:
+    {
+      if(d_ncDB.exists(label, matlIndex, patch))
+	throw InternalError("Variable already exists before MPI recv: " +
+			    label->getFullName(matlIndex, patch));
+      Variable* v = label->typeDescription()->createInstance();
+      NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
+      ASSERT(var != 0);
+      var->allocate(dep->low, dep->high);
+      var->setForeign();
+      
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+      d_ncDB.put(label, matlIndex, patch, var, false);
+    }
+    break;
+  case TypeDescription::CCVariable:
+    {
+      if(d_ccDB.exists(label, matlIndex, patch))
+	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      Variable* v = label->typeDescription()->createInstance();
+      CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
+      ASSERT(var != 0);
+      var->allocate(dep->low, dep->high);
+      var->setForeign();
+      
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+      d_ccDB.put(label, matlIndex, patch, var, false);
+    }
+    break;
+  case TypeDescription::SFCXVariable:
+    {
+      if(d_sfcxDB.exists(label, matlIndex, patch))
+	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      Variable* v = label->typeDescription()->createInstance();
+      SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
+      ASSERT(var != 0);
+      var->allocate(dep->low, dep->high);
+      var->setForeign();
 
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 bool free_datatype = false;
-	 var->getMPIBuffer(buf, count, datatype, free_datatype,
-			   dep->d_lowIndex, dep->d_highIndex);
-#if 0
-	 var->getMPIBuffer(buf, count, datatype);
-#endif
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype) 
-	   MPI_Type_free(&datatype);
-	
-	 d_ccDB.put(label, matlIndex, patch, var, false);
-      }
-   break;
-   case TypeDescription::SFCXVariable:
-      {
-	 if(d_sfcxDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-  d_lock.writeLock();
-	 Variable* v = label->typeDescription()->createInstance();
-  d_lock.writeUnlock();
-	 SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
-	 ASSERT(var != 0);
-#if 0
-	 var->allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
-#endif
-	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
-	 var->setForeign();
-
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 bool free_datatype = false;
-	 var->getMPIBuffer(buf, count, datatype, free_datatype,
-			   dep->d_lowIndex, dep->d_highIndex);
-#if 0
-	 var->getMPIBuffer(buf, count, datatype);
-#endif
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype) 
-	   MPI_Type_free(&datatype);
-	 d_sfcxDB.put(label, matlIndex, patch, var, false);
-      }
-   break;
-   case TypeDescription::SFCYVariable:
-      {
-	 if(d_sfcyDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-  d_lock.writeLock();
-	 Variable* v = label->typeDescription()->createInstance();
-  d_lock.writeUnlock();
-	 SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
-	 ASSERT(var != 0);
-#if 0
-	 var->allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
-#endif
-	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
-	 var->setForeign();
-
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 bool free_datatype = false;
-	 var->getMPIBuffer(buf, count, datatype, free_datatype,
-			   dep->d_lowIndex, dep->d_highIndex);
-#if 0
-	 var->getMPIBuffer(buf, count, datatype);
-#endif
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype) 
-	   MPI_Type_free(&datatype);
-	 d_sfcyDB.put(label, matlIndex, patch, var, false);
-      }
-   break;
-   case TypeDescription::SFCZVariable:
-      {
-	 if(d_sfczDB.exists(label, matlIndex, patch))
-	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-  d_lock.writeLock();
-	 Variable* v = label->typeDescription()->createInstance();
-  d_lock.writeUnlock();
-	 SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
-	 ASSERT(var != 0);
-#if 0
-	 var->allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
-#endif
-	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
-	 var->setForeign();
-
-	 void* buf;
-	 int count;
-	 MPI_Datatype datatype;
-	 bool free_datatype = false;
-	 var->getMPIBuffer(buf, count, datatype, free_datatype,
-			   dep->d_lowIndex, dep->d_highIndex);
-#if 0
-	 var->getMPIBuffer(buf, count, datatype);
-#endif
-	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
-	 // This is just FYI for the caller
-	 MPI_Pack_size(count, datatype, world->getComm(), size);
-	 if(free_datatype) 
-	   MPI_Type_free(&datatype);
-	 d_sfczDB.put(label, matlIndex, patch, var, false);
-      }
-   break;
-   case TypeDescription::ScatterGatherVariable:
-      {
-	 cerr << "RECV SGVAR NOTDONE\n";
-	 throw InternalError( "RECV SGVAR NOTDONE" );
-      }
-   default:
-      throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
-   } // end switch( label->getType() );
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+      d_sfcxDB.put(label, matlIndex, patch, var, false);
+    }
+    break;
+  case TypeDescription::SFCYVariable:
+    {
+      if(d_sfcyDB.exists(label, matlIndex, patch))
+	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      Variable* v = label->typeDescription()->createInstance();
+      SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
+      ASSERT(var != 0);
+      var->allocate(dep->low, dep->high);
+      var->setForeign();
+      
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+      d_sfcyDB.put(label, matlIndex, patch, var, false);
+    }
+    break;
+  case TypeDescription::SFCZVariable:
+    {
+      if(d_sfczDB.exists(label, matlIndex, patch))
+	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+      Variable* v = label->typeDescription()->createInstance();
+      SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
+      ASSERT(var != 0);
+      var->allocate(dep->low, dep->high);
+      var->setForeign();
+      
+      var->getMPIBuffer(buffer, dep->low, dep->high);
+      d_sfczDB.put(label, matlIndex, patch, var, false);
+    }
+    break;
+  case TypeDescription::ScatterGatherVariable:
+    {
+      cerr << "RECV SGVAR NOTDONE\n";
+      throw InternalError( "RECV SGVAR NOTDONE" );
+    }
+  default:
+    throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
+  } // end switch( label->getType() );
 } // end recvMPI()
 
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
-				 int matlIndex,
+				 const MaterialSubset* matls,
 				 const ProcessorGroup* world)
 {
+  int matlIndex;
+  if(!matls){
+    matlIndex = -1;
+  } else {
+    int nmatls = matls->size();
+    // We need to examine this for multi-material reductions!
+    ASSERTEQ(nmatls, 1);
+    matlIndex = matls->get(0);
+  }
+
   d_lock.writeLock();
-   ReductionVariableBase* var;
-   try {
-      var = d_reductionDB.get(label, matlIndex, NULL);
-   }
-   catch (UnknownVariable) {
-      throw UnknownVariable(label->getName(), NULL, matlIndex, "on reduceMPI");
-   }
+  ReductionVariableBase* var;
+  try {
+    var = d_reductionDB.get(label, matlIndex, NULL);
+  } catch (UnknownVariable) {
+    throw UnknownVariable(label->getName(), NULL, matlIndex, "on reduceMPI");
+  }
 
-   void* sendbuf;
-   int sendcount;
-   MPI_Datatype senddatatype;
-   MPI_Op sendop;
-   var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
-   ReductionVariableBase* tmp = var->clone();
-   void* recvbuf;
-   int recvcount;
-   MPI_Datatype recvdatatype;
-   MPI_Op recvop;
-   tmp->getMPIBuffer(recvbuf, recvcount, recvdatatype, recvop);
-   ASSERTEQ(recvcount, sendcount);
-   ASSERTEQ(senddatatype, recvdatatype);
-   ASSERTEQ(recvop, sendop);
+  void* sendbuf;
+  int sendcount;
+  MPI_Datatype senddatatype;
+  MPI_Op sendop;
+  var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
+  ReductionVariableBase* tmp = var->clone();
+  void* recvbuf;
+  int recvcount;
+  MPI_Datatype recvdatatype;
+  MPI_Op recvop;
+  tmp->getMPIBuffer(recvbuf, recvcount, recvdatatype, recvop);
+  ASSERTEQ(recvcount, sendcount);
+  ASSERTEQ(senddatatype, recvdatatype);
+  ASSERTEQ(recvop, sendop);
       
-   int error = MPI_Allreduce(sendbuf, recvbuf, recvcount,
-			     recvdatatype, recvop, world->getComm());
-   if( error ){
-     cerr << "reduceMPI: MPI_Allreduce error: " << error << "\n";
-     throw InternalError("reduceMPI: MPI error");     
-   }
+  int error = MPI_Allreduce(sendbuf, recvbuf, recvcount,
+			    recvdatatype, recvop, world->getComm());
+  if( error ){
+    cerr << "reduceMPI: MPI_Allreduce error: " << error << "\n";
+    throw InternalError("reduceMPI: MPI error");     
+  }
 
-   var->copyPointer(*tmp);
-
-   delete tmp;
+  var->copyPointer(*tmp);
+  
+  delete tmp;
   d_lock.writeUnlock();
 }
 
@@ -633,7 +427,7 @@ void
 OnDemandDataWarehouse::allocate(ReductionVariableBase&,
 				const VarLabel*, int)
 {
-   cerr << "OnDemend DataWarehouse::allocate(ReductionVariable) "
+   cerr << "OnDemand DataWarehouse::allocate(ReductionVariable) "
 	<< "not finished\n";
 }
 
@@ -692,6 +486,24 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 
   d_lock.writeUnlock();
    return psubset;
+}
+
+void
+OnDemandDataWarehouse::saveParticleSubset(int matlIndex, const Patch* patch,
+					  ParticleSubset* psubset)
+{
+  ASSERTEQ(psubset->getPatch(), patch);
+  ASSERTEQ(psubset->getMatlIndex(), matlIndex);
+  d_lock.writeLock();
+  
+  psetDBType::key_type key(matlIndex, patch);
+  if(d_psetDB.find(key) != d_psetDB.end())
+    throw InternalError("saveParticleSubset called twice for patch");
+
+  d_psetDB[key]=psubset;
+  psubset->addReference();
+
+  d_lock.writeUnlock();
 }
 
 ParticleSubset*
@@ -901,7 +713,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 }
       }
       IntVector dn = highIndex-lowIndex;
-      long wantnodes = dn.x()*dn.y()*dn.z();
+      //      long wantnodes = dn.x()*dn.y()*dn.z();
       //      ASSERTEQ(wantnodes, totalNodes);
 //      if(wantnodes!=totalNodes){
 	// This ASSERT or this warning are invoked even when trying

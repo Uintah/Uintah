@@ -38,7 +38,7 @@ namespace Uintah {
    public:
       RoundRobinLoadBalancer(const ProcessorGroup* myworld);
       ~RoundRobinLoadBalancer();
-      virtual void assignResources(TaskGraph& tg, const ProcessorGroup*);
+      virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
       virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
    private:

@@ -5,6 +5,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
@@ -31,7 +32,7 @@ using std::set;
 using std::find;
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Mutex * cerrLock;
+extern Mutex cerrLock;
 
 vector<MPI_Request> recv_ids;
 vector<MPI_Request> recv_ids_backup;
@@ -98,7 +99,7 @@ struct VarDestType {
 static const TypeDescription* specialType;
 
 MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
-   : UintahParallelComponent(myworld), Scheduler(oport), log(myworld, oport)
+   : SchedulerCommon(myworld, oport), log(myworld, oport)
 {
   d_generation = 0;
 
@@ -113,10 +114,13 @@ MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
   scatterGatherVariable = 
              scinew VarLabel("DataWarehouse::scatterGatherVariable",
 			     specialType, VarLabel::Internal);
+  reloc_matls = 0;
 }
 
 MixedScheduler::~MixedScheduler()
 {
+  if(reloc_matls && reloc_matls->removeReference())
+    delete reloc_matls;
 }
 
 void
@@ -126,18 +130,13 @@ MixedScheduler::problemSetup( const ProblemSpecP& prob_spec )
 }
 
 void
-MixedScheduler::initialize()
-{
-   d_graph.initialize();
-}
-
-void
 MixedScheduler::sendParticleSets( vector<Task*> & tasks,
 				int me )
 {
 #if DAV_DEBUG
   cerr << "Begin sendParticleSets\n";
 #endif
+#if 0
 
    set<DestType> sent;
 
@@ -178,7 +177,7 @@ MixedScheduler::sendParticleSets( vector<Task*> & tasks,
 		  ParticleSubset* pset = dep->d_dw->
                      getParticleSubset(dep->d_matlIndex, dep->d_patch);
 		  int numParticles = pset->numParticles();
-		  ASSERT(dep->d_serialNumber >= 0);
+		  ASSERT(dep->d_messageTag >= 0);
 
 #if DAV_DEBUG
 		    cerr << "Send Particle Set Data: " << *dep << " from " 
@@ -186,7 +185,7 @@ MixedScheduler::sendParticleSets( vector<Task*> & tasks,
 #endif
 		  // Do the actual send...
 		  MPI_Bsend(&numParticles, 1, MPI_INT, dest,
-			    PARTICLESET_TAG|dep->d_serialNumber,
+			    PARTICLESET_TAG|dep->d_messageTag,
 			    d_myworld->getComm());
 		  // And record that I have sent it...
 		  sent.insert(ddest);
@@ -195,6 +194,9 @@ MixedScheduler::sendParticleSets( vector<Task*> & tasks,
 	 }
       }
    }
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 #if DAV_DEBUG
   cerr << "End sendParticleSets\n";
 #endif
@@ -207,6 +209,7 @@ MixedScheduler::recvParticleSets( vector<Task*> & tasks, int me )
   cerr << "Preparing to recv particle set data\n";
 #endif
 
+#if 0
   vector<Task*>::iterator iter;
 
   for( iter = tasks.begin(); iter != tasks.end(); iter++ ){
@@ -249,7 +252,7 @@ MixedScheduler::recvParticleSets( vector<Task*> & tasks, int me )
 	if(!dep->d_dw->haveParticleSubset(dep->d_matlIndex, dep->d_patch)){
 	  int numParticles;
 	  MPI_Status status;
-	  ASSERT(dep->d_serialNumber >= 0);
+	  ASSERT(dep->d_messageTag >= 0);
 
 #if DAV_DEBUG
 	    cerr << "Preparing MPI_Recv's for task: " << *(dep->d_task)
@@ -262,7 +265,7 @@ MixedScheduler::recvParticleSets( vector<Task*> & tasks, int me )
 
 	  // Receive the data...
 	  MPI_Recv(&numParticles, 1, MPI_INT, MPI_ANY_SOURCE,
-		   PARTICLESET_TAG|dep->d_serialNumber, 
+		   PARTICLESET_TAG|dep->d_messageTag, 
 		   d_myworld->getComm(), &status);
 	  // and stick it in the correct DataWarehouse...
 	  //   This actually only creates the particleSubset specification
@@ -277,11 +280,16 @@ MixedScheduler::recvParticleSets( vector<Task*> & tasks, int me )
 #if DAV_DEBUG
   cerr << "End recvParticleSets\n";
 #endif
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // end recvParticleSets()
 
+#if 0
 map< MPI_Request, DependData >                 reqToDep;
 map< DependData, vector<Task *>, DependData >  depToTasks;
 map< TaskData, vector<DependData>, TaskData >  taskToDeps;
+#endif
 
 // This var is used to insure that all cooperating MPI tasks call
 // global reductions in the same order.
@@ -292,10 +300,11 @@ MixedScheduler::createDepencyList( DataWarehouseP & old_dw,
 				   vector<Task*>  & tasks,
 				   int              me )
 {
+#if 0
 #if DAV_DEBUG
-  cerrLock->lock();
+  cerrLock.lock();
   cerr << "Start createDepencyList\n";
-  cerrLock->unlock();
+  cerrLock.unlock();
 #endif  
 
   vector<Task*>::iterator iter;
@@ -383,7 +392,7 @@ This stuff is wrong...
   } // end for( iter )
 
 #if DAV_DEBUG
-  cerrLock->lock();
+  cerrLock.lock();
 
   cerr << "depToTasks " << depToTasks.size() << ":\n\n";
 
@@ -419,7 +428,7 @@ This stuff is wrong...
     }
 #endif
   cerr << "\n\n";
-  cerrLock->unlock();
+  cerrLock.unlock();
 #endif
   // Really need to sort Reduction Tasks so that they can't block each
   // other out...  for now I am just GOING WITH A BLIND HACK... sigh.
@@ -431,10 +440,13 @@ This stuff is wrong...
   }
 
 #if DAV_DEBUG
-  cerrLock->lock();
+  cerrLock.lock();
   cerr << "End createDepencyList\n";
-  cerrLock->unlock();
+  cerrLock.unlock();
 #endif  
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // end createDepencyList()
 
 
@@ -446,6 +458,7 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 				   DataWarehouseP      & old_dw,
 				   DataWarehouseP      & /*new_dw */)
 {
+#if 0
    SendState ss;
   vector<DependData> invalidDependencies;
 
@@ -496,15 +509,15 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 	  OnDemandDataWarehouse* dw =
 		dynamic_cast<OnDemandDataWarehouse*>(need->d_dw);
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "Request to (eventually) recv MPI data for: " << *need << "\n";
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	  int size;
 	  dw->recvMPI(ss, old_dw, need->d_var, need->d_matlIndex,
 		      need->d_patch, d_myworld, need,
 		      MPI_ANY_SOURCE,
-		      need->d_serialNumber, &size, &requestid);
+		      need->d_messageTag, &size, &requestid);
 	  if(size != -1){
 	    log.logRecv(need, size);
 	    recv_ids.push_back(requestid);
@@ -519,10 +532,10 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 						*needIter );
 	if( loc != invalidDependencies.end() ){
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "removing dependency: " << *((*loc).dep) << " from task: "
 	       << *task << " because 0 particles sent\n";
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	  TaskData taskData( task );
 	  taskToDeps[ taskData ].erase( needIter );
@@ -530,6 +543,9 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
       } // end if cmp computer not me
     } // end for( needIter )
   } // end for( taskToDeps.begin... )
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // end makeAllRecvRequests()
 
 void
@@ -556,10 +572,16 @@ MixedScheduler::verifyChecksum( vector<Task*> & tasks, int me )
 }
 
 void
-MixedScheduler::execute(const ProcessorGroup * pc,
-		      DataWarehouseP   & old_dw,
-		      DataWarehouseP   & new_dw )
+MixedScheduler::compile(const ProcessorGroup * pc )
 {
+  NOT_FINISHED("MixedScheduler::compile");
+}
+
+void
+MixedScheduler::execute(const ProcessorGroup * pc )
+{
+  ASSERT(dt != 0);
+#if 0
   vector<Task*>       tasks;
   int                 me = pc->myrank();
 
@@ -574,7 +596,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
   // topologicalSort adds internal (Reduction) tasks to graph.
   d_graph.nullSort(tasks);
 
-  d_graph.assignUniqueSerialNumbers();
+  d_graph.assignUniqueMessageTags();
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
@@ -629,10 +651,10 @@ MixedScheduler::execute(const ProcessorGroup * pc,
   recv_ids_backup = recv_ids;
 
 #if DAV_DEBUG
-  cerrLock->lock();
+  cerrLock.lock();
   cerr << "Number of MPI_Requests: " << recv_ids.size() 
        << " which should be equal to " << reqToDep.size() << "\n\n";
-  cerrLock->unlock();
+  cerrLock.unlock();
 #endif
 
   numRequests = (int)recv_ids.size();
@@ -661,17 +683,17 @@ MixedScheduler::execute(const ProcessorGroup * pc,
     vector<Task *>           done;
 
 #if DAV_DEBUG
-    cerrLock->lock();
+    cerrLock.lock();
     cerr << ".";
-    cerrLock->unlock();
+    cerrLock.unlock();
 #endif
     int numAvail = d_threadPool->available();
 #if DAV_DEBUG
-    cerrLock->lock();
+    cerrLock.lock();
     cerr << "# OF THREADS AVAILABLE = " << numAvail << ", TASKS = " 
 	 << tasks.size() << ", numTasksDone = " << numTasksDone 
 	 << ", numTasks = " << numTasks << "\n";
-    cerrLock->unlock();
+    cerrLock.unlock();
 #endif
 
     // Determine if there are any tasks that can be kicked off...
@@ -681,14 +703,14 @@ MixedScheduler::execute(const ProcessorGroup * pc,
     for( iter = tasks.begin(); numAvail > 0 && iter != tasks.end(); iter++){
 
 #if DAV_DEBUG
-      cerrLock->lock();
+      cerrLock.lock();
       cerr << "# of threads available = " << numAvail 
 	   << ", tasks = " << tasks.size() <<"\n";
       if( tasks.size() == 1 )
 	{
 	  cerr << "task awaiting is: " << *tasks[0] << "\n";
 	}
-      cerrLock->unlock();
+      cerrLock.unlock();
 #endif
 
       TaskData taskData;
@@ -705,7 +727,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
       }
 #if DAV_DEBUG
       vector<DependData> & data = taskToDeps[ taskData ];
-      cerrLock->lock();
+      cerrLock.lock();
       //      if( tasks.size() == 1 ){
 
       cerr << iteration << ") Considering task: " << *task;
@@ -719,7 +741,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 	}
 	
 	cerr << "\n";
-      cerrLock->unlock();
+      cerrLock.unlock();
       //      }
 #endif
 
@@ -805,10 +827,10 @@ MixedScheduler::execute(const ProcessorGroup * pc,
       vector<Task *>::iterator loc = find(tasks.begin(), tasks.end(),
 					  done[ num ] );
 #if DAV_DEBUG
-      cerrLock->lock();
+      cerrLock.lock();
       cerr << "Removing " << **loc << " from queue (size now is: " 
 	   << tasks.size()-1 << ")\n";
-      cerrLock->unlock();
+      cerrLock.unlock();
 #endif
       tasks.erase( loc );
     }
@@ -910,7 +932,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
       for(int r=0;r<(int)reqs.size();r++){
 	const Task::Dependency* dep = reqs[r];
 	sgargs.dest[r] = dep->d_task->getAssignedResourceIndex();
-	sgargs.tags[r] = dep->d_serialNumber;
+	sgargs.tags[r] = dep->d_messageTag;
       }
       task->doit( pc );
 #if DAV_DEBUG
@@ -937,7 +959,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 	const Task::Dependency* req = &reqs[r];
 	const Task::Dependency* cmp = d_graph.getComputesForRequires(req);
 	sgargs.dest[r] = cmp->d_task->getAssignedResourceIndex();
-	sgargs.tags[r] = req->d_serialNumber;
+	sgargs.tags[r] = req->d_messageTag;
       }
       task->doit( pc );
 #if DAV_DEBUG
@@ -956,13 +978,16 @@ MixedScheduler::execute(const ProcessorGroup * pc,
   cerr << "Done MixedScheduler::Execute\n";
   // usleep( 500000 );
 #endif
-
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // End execute()
 
 void
 MixedScheduler::sendInitialData( vector<Task*> & tasks,
                                int             me )
 {
+#if 0
    SendState ss; // SHOULD BE PASSED IN! - Steve
 #if DAV_DEBUG
   cerr << "Initial DW Data Send\n";
@@ -995,17 +1020,17 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
             if(!dw)
               throw InternalError("Wrong Datawarehouse?");
             MPI_Request requestid;
-            ASSERT(dep->d_serialNumber >= 0);
+            ASSERT(dep->d_messageTag >= 0);
 #if DAV_DEBUG
             cerr << "sending initial " << *dep
-                 << " serial " << dep->d_serialNumber << ", to " 
+                 << " serial " << dep->d_messageTag << ", to " 
                  << dep->d_task->getAssignedResourceIndex() << '\n';
 #endif
 	    int size;
             dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
                         dep->d_patch, d_myworld, dep,
                         dep->d_task->getAssignedResourceIndex(),
-                        dep->d_serialNumber, &size, &requestid);
+                        dep->d_messageTag, &size, &requestid);
 	    if(size != -1){
 	      log.logSend(dep, size);
 	      send_ids.push_back(requestid);
@@ -1022,6 +1047,9 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
 #if DAV_DEBUG
   cerr << "Done Sending Initial DW Data\n";
 #endif
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // end sendInitialData()
 
 void
@@ -1029,6 +1057,7 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
                                DataWarehouseP & old_dw,
                                int              me )
 {
+#if 0
    SendState ss; // SHOULD BE PASSED IN! - Steve
 #if DAV_DEBUG
   cerr << "start: recvInitialData\n";
@@ -1064,17 +1093,17 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
                if(!dw)
                   throw InternalError("Wrong Datawarehouse?");
                MPI_Request requestid;
-               ASSERT(dep->d_serialNumber >= 0);
+               ASSERT(dep->d_messageTag >= 0);
 
 #if DAV_DEBUG
                cerr << "MPI: Request to receive initial " << *dep << ": serial #: " 
-		    << dep->d_serialNumber << '\n';
+		    << dep->d_messageTag << '\n';
 #endif
 	       int size;
                dw->recvMPI(ss, old_dw, dep->d_var, dep->d_matlIndex,
                            dep->d_patch, d_myworld, dep,
                            MPI_ANY_SOURCE,
-                           dep->d_serialNumber, &size, &requestid);
+                           dep->d_messageTag, &size, &requestid);
 	       if(size != -1){
 		 log.logRecv(dep, size);
 		 recv_ids.push_back(requestid);
@@ -1094,37 +1123,29 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
 #if DAV_DEBUG
   cerr << "Done Receiving Initial DW Data\n";
 #endif
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // end recvInitialData()
-
-void
-MixedScheduler::addTask(Task* task)
-{
-   d_graph.addTask(task);
-}
-
-DataWarehouseP
-MixedScheduler::createDataWarehouse( DataWarehouseP& parent_dw )
-{
-  int generation = d_generation++;
-  return scinew OnDemandDataWarehouse(d_myworld, generation, parent_dw);
-}
 
 void
 MixedScheduler::scheduleParticleRelocation(
                   const LevelP& level,
-                  DataWarehouseP& old_dw,
-                  DataWarehouseP& new_dw,
                   const VarLabel* old_posLabel,
                   const vector<vector<const VarLabel*> >& old_labels,
                   const VarLabel* new_posLabel,
                   const vector<vector<const VarLabel*> >& new_labels,
-                  int numMatls)
+                  const MaterialSet* matls)
 {
    reloc_old_posLabel = old_posLabel;
    reloc_old_labels = old_labels;
    reloc_new_posLabel = new_posLabel;
    reloc_new_labels = new_labels;
-   reloc_numMatls = numMatls;
+   if(reloc_matls && reloc_matls->removeReference())
+     delete reloc_matls;
+   reloc_matls = matls;
+   reloc_matls->addReference();
+#if 0
    for (int m = 0; m < numMatls; m++ )
      ASSERTEQ(reloc_new_labels[m].size(), reloc_old_labels[m].size());
    for(Level::const_patchIterator iter=level->patchesBegin();
@@ -1162,6 +1183,9 @@ MixedScheduler::scheduleParticleRelocation(
       t2->setType(Task::Gather);
       addTask(t2);
    }
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 }
 
 namespace Uintah {
@@ -1189,6 +1213,7 @@ MixedScheduler::scatterParticles(const ProcessorGroup* pc,
    Level::selectType neighbors;
    level->selectPatches(l, h, neighbors);
 
+#if 0
    vector<MPIScatterRecord*> sr(neighbors.size());
    for(int i=0;i<(int)sr.size();i++)
       sr[i]=0;
@@ -1307,6 +1332,9 @@ MixedScheduler::scatterParticles(const ProcessorGroup* pc,
 	 }
       }
    }
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 } // end scatterParticles()
 
 void
@@ -1315,6 +1343,7 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
 			      DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw)
 {
+#if 0
    const Level* level = patch->getLevel();
 
    // Particles are only allowed to be one cell out
@@ -1458,11 +1487,16 @@ MixedScheduler::gatherParticles(const ProcessorGroup* pc,
 	 delete recvbuf[i];
       }
    }
+#else
+   NOT_FINISHED("new task stuff");
+#endif
+
 } // end gatherParticles()
 
 void
 MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )
 {
+#if 0
   if( Parallel::usingMPI() && 
       Parallel::getRootProcessorGroup()->myrank() == 0 ){
     cerr << "\n---------------------------\n";
@@ -1497,11 +1531,15 @@ MixedScheduler::displayTaskGraph( vector<Task*> & taskGraph )
     }
     cerr << "End: Tasks in Task List:\n";
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 } // end displayTaskGraph
 
 const Task::Dependency *
 findRequirement( const Task::Dependency * comp, Task * task )
 {
+#if 0
   const Task::reqType& reqs = task->getRequires();
 
   for(Task::reqType::const_iterator req = reqs.begin(); req != reqs.end();
@@ -1516,8 +1554,13 @@ findRequirement( const Task::Dependency * comp, Task * task )
   cerr << "Couldn't find a matching req for comp: " << *comp << "\n";
   task->displayAll( cerr );
   throw InternalError( "Should have found a matching requirement! ");
+#else
+  NOT_FINISHED("new task stuff");
+  return 0;
+#endif
 }
 
+#if 0
 void
 MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 				   int me,
@@ -1533,36 +1576,36 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
     vector<int>		    sentTo;
 
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << *comp << " has been computed!\n";
 	  cerr << "Finished task is: " << *comp->d_task << ", computes: " 
 	       << tasks.size() << " things\n";
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
     for( taskIter = tasks.begin(); taskIter != tasks.end(); taskIter++){
 
       Task * task = *taskIter;
 #if DAV_DEBUG
-      cerrLock->lock();
+      cerrLock.lock();
       cerr << *task << " needs it!\n";
-      cerrLock->unlock();
+      cerrLock.unlock();
 #endif
       // Determine if I should send this data to other DWs
       //   The task that I am sending to must not be me, and the task computing 
       //   the data must be me.
       if( task->getAssignedResourceIndex() != me && sendData ) {
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "Task is not mine\n";
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	// Scatter/Gather/Reduction Tasks handle there own sending of data...
 	if( comp->d_task->getType() == Task::Normal ) {
 
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "Is normal so may need to send data to it!\n"; 
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	  const Task::Dependency * req = findRequirement( comp, task );
 
@@ -1570,17 +1613,17 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 						req->d_task->getAssignedResourceIndex() );
 
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "Checking to see if data has been sent to: "
 	       << req->d_task->getAssignedResourceIndex() << "\n";
 	  cerr << "    Size of vector is " << sentTo.size() << "\n";
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	  if( procLoc != sentTo.end() ){
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "The data has already been sent to that processor!\n"; 
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	    continue;
 	  }
@@ -1592,36 +1635,36 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 
 
 	  MPI_Request requestid;
-	  ASSERT(req->d_serialNumber >= 0);
+	  ASSERT(req->d_messageTag >= 0);
 
 	  // Need to change sendMPI to a blocking send and get
 	  // rid of MPI_Waitall... less clutter, same functionality
 	  // HMMM... I AM NOT SURE THE ABOVE IS RIGHT...
 	  // SHOULD BE ABLE TO SEND IT AND KEEP GOING...
 #if DAV_DEBUG
-	  cerrLock->lock();
+	  cerrLock.lock();
 	  cerr << "Considering MPI Sending " << *req << "\n";
-	  cerrLock->unlock();
+	  cerrLock.unlock();
 #endif
 	  int size;
 	  dw->sendMPI(ss, req->d_var, req->d_matlIndex,
 		      req->d_patch, d_myworld, req,
 		      req->d_task->getAssignedResourceIndex(),
-		      req->d_serialNumber, &size, &requestid);
+		      req->d_messageTag, &size, &requestid);
 
 	  if(size != -1){
 #if DAV_DEBUG
-	    cerrLock->lock();
+	    cerrLock.lock();
 	    cerr << "MPI Sent: " << *req << "\n";
-	    cerrLock->unlock();
+	    cerrLock.unlock();
 #endif
 	    log.logSend(req, size);
 	    send_ids.push_back( requestid );
 	    sentTo.push_back( req->d_task->getAssignedResourceIndex() );
 #if DAV_DEBUG
-	    cerrLock->lock();
+	    cerrLock.lock();
 	    cerr << "sent to " << req->d_task->getAssignedResourceIndex() << "\n";
-	    cerrLock->unlock();
+	    cerrLock.unlock();
 #endif
 	  }
 	}
@@ -1629,9 +1672,9 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 
       // Take care of house keeping...
 #if DAV_DEBUG
-      cerrLock->lock();
+      cerrLock.lock();
       cerr << "Removing " << *d.dep << " from task " << *task << "\n";
-      cerrLock->unlock();
+      cerrLock.unlock();
 #endif
 
       TaskData taskData( task );
@@ -1657,7 +1700,9 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
     cerr << "\n\n";
 #endif
 }  // end dependencySatisfied()
+#endif
 
+#if 0
 void
 MixedScheduler::dependenciesSatisfied( const Task::compType & comps,
 				     int me,
@@ -1673,17 +1718,4 @@ MixedScheduler::dependenciesSatisfied( const Task::compType & comps,
     dependencySatisfied( cmp, me, send_ids, sendData );
   }
 }
-
-LoadBalancer*
-MixedScheduler::getLoadBalancer()
-{
-   UintahParallelPort* lbp = getPort("load balancer");
-   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-   return lb;
-}
-
-void
-MixedScheduler::releaseLoadBalancer()
-{
-   releasePort("load balancer");
-}
+#endif
