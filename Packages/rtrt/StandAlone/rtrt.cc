@@ -167,6 +167,12 @@ static void usage(char* progname)
   cerr << "                    image 100 times for timing purposes.\n";
   cerr << " -no_shadows      - Turn off shadows\n";
   cerr << " -shadows mode    - Select mode for shadows\n";
+  cerr << "                     o 0 - No Shadows\n";
+  cerr << "                     o 1 - Single Soft Shadows\n";
+  cerr << "                     o 2 - Hard Shadows\n";
+  cerr << "                     o 3 - Glass Shadows\n";
+  cerr << "                     o 4 - Soft Shadows\n";
+  cerr << "                     o 5 - Uncached Shadows\n";
   cerr << " -no_aa           - Turn off accumulation buffer anti-aliasing\n";
   cerr << " -bvscale         - Controls bounding volume scale factor for\n";
   cerr << "                    the soft shadow method.\n";
@@ -188,7 +194,16 @@ static void usage(char* progname)
   cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
   cerr << " -display_gltest  - calls run_gl_test from display thread\n";
   cerr << " -displayless     - do not display and write a frame to displayless\n";
-
+  cerr << " -rserver         - Send the display to a remote display\n";
+  cerr << " -bgcolor [value] - Override the scene's background with this one\n";
+  cerr << "                    value can be:\n";
+  cerr << "                     o white\n";
+  cerr << "                     o black\n";
+  cerr << "                     o [r] [g] [b] - floats from [0..1]\n";
+  cerr << " -nomempolicy     - Do system default for memory distribution.\n";
+  cerr << " -pin             - Assign each worker to a specific processor.\n"
+       << "                    Use only if you have the entire machine to yourself.\n";
+  
   exit(1);
 }
 
@@ -261,6 +276,9 @@ main(int argc, char* argv[])
 
   bool show_gui = true;
   bool rserver=false;
+
+  Color bgcolor;
+  bool override_scene_bgcolor = false;
 
   printf("before glutInit\n");
   glutInit( &argc, argv );
@@ -346,6 +364,17 @@ main(int argc, char* argv[])
       i++;
       shadow_mode = (ShadowType)atoi(argv[i]);
       override_scene_shadow_mode = true;
+    } else if(strcmp(argv[i], "-bgcolor")==0){
+      i++;
+      if(strcmp(argv[i], "white")==0){
+	bgcolor = Color(1,1,1);
+      } else if(strcmp(argv[i], "black")==0){
+	bgcolor = Color(0,0,0);
+      } else {
+	// read the three colors
+	bgcolor = Color(atof(argv[i]), atof(argv[++i]), atof(argv[++i]));
+      }
+      override_scene_bgcolor = true;
     } else if(strcmp(argv[i], "-no_aa")==0){
       no_aa=true;
     } else if(strcmp(argv[i], "-bvscale")==0){
@@ -546,6 +575,9 @@ main(int argc, char* argv[])
   if (override_scene_shadow_mode)
     scene->shadow_mode = shadow_mode;
 
+  if (override_scene_bgcolor)
+    scene->set_bgcolor(bgcolor);
+  
   scene->no_aa=no_aa;
   scene->maxdepth = 8;
 
