@@ -67,6 +67,7 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
     Reference *d_ref;
     d_ref = rm.getIndependentReference();
     ref = *(d_ref);
+    if(ref.chan!=NULL) delete ref.chan; // k.z.
     ref.chan = (d_ref->chan)->SPFactory(true);
   }
   else {
