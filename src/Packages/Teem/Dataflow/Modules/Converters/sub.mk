@@ -44,6 +44,7 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Converters
 
 
 SRCS     += \
+	$(SRCDIR)/ColorMap2ToNrrd.cc\
 	$(SRCDIR)/ColorMapToNrrd.cc\
 	$(SRCDIR)/ConvertToNrrd.cc\
 	$(SRCDIR)/FieldToNrrd.cc\
