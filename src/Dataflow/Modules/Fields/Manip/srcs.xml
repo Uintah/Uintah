@@ -2,16 +2,7 @@
 <!DOCTYPE srcs SYSTEM "srcs.dtd">
 
 <srcs>
-  <src name="bob">
-    <description></description>
-  </src>
-  <src name="first">
-    <description>(null string)</description>
-  </src>
   <src name="foo">
-    <description>Nifty new test for dynamic compilation and loading</description>
-  </src>
-  <src name="second">
-    <description>(null string)</description>
+    <description>Dummy</description>
   </src>
 </srcs>
