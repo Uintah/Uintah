@@ -33,18 +33,6 @@ Phong::~Phong()
 {
 }
 
-inline double ipow(double x, int p)
-{
-  double result=1;
-  while(p){
-    if(p&1)
-      result*=x;
-    x*=x;
-    p>>=1;
-  }
-  return result;
-}
-
 void Phong::shade(Color& result, const Ray& ray,
 		  const HitInfo& hit, int depth, 
 		  double atten, const Color& accumcolor,
