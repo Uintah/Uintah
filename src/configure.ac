@@ -2511,7 +2511,7 @@ AC_SUBST(NETSOLVE_LIB_DIR_FLAG)
 
 if test "$sci_check_glut" = "yes"; then
 
-   libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS"
+   libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG -l$GLU_OTHERS"
 
    if test "$with_glut"; then
      _sci_lib="$with_glut/$BASE_LIB_DIR"
