@@ -35,7 +35,7 @@ PSINSTDIR =
 MAINFILE = ${BN}.tex
 DVIFILE = ${BN}.dvi
 PSFILE = ${BN}.ps
-LDIR = ${BN}
+HTMLDIR = ${BN}
 HTMLFILE = ${HTMLDIR}/${BN}.html
 
 all: dvi html ps
