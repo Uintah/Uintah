@@ -3211,15 +3211,7 @@ Gui::cycleAmbientMode()
 void
 Gui::cycleShadowMode()
 {
-  if( dpy_->shadowMode_ == Uncached_Shadows )
-    {
-      dpy_->shadowMode_ = No_Shadows;
-    }
-  else
-    {
-      dpy_->shadowMode_++;
-    }
-
+  dpy_->shadowMode_ = ShadowBase::increment_shadow_type(dpy_->shadowMode_);
   shadowModeLB_->set_int_val( dpy_->shadowMode_ );
 }
 
