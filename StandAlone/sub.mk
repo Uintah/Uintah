@@ -366,13 +366,3 @@ pfs: prereqs Packages/Uintah/StandAlone/pfs
 timeextract: Packages/Uintah/StandAlone/timeextract
 
 lineextract: Packages/Uintah/StandAlone/lineextract
-
-# For some reason, SRCDIR does not resolve correctly in the if
-# statement, so I am hardcoding it:
-ifeq ($(findstring Uintah,$(LOAD_PACKAGE)),Uintah)
-  Uintah_StateTables:
-	@if test ! -e "$(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable"; then echo "Uncompressing Arches State Table"; gunzip -c $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable.gz > $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable; chmod go+r $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable; fi
-	@if test ! -e "$(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_hept"; then echo "Uncompressing Arches State Table Hept"; gunzip -c $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_hept.gz > $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_hept; chmod go+r $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_hept; fi
-	@if test ! -e "$(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_meth"; then echo "Uncompressing Arches State Table Meth"; gunzip -c $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_meth.gz > $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_meth; chmod go+r $(SRCTOP)/Packages/Uintah/StandAlone/inputs/ARCHES/stateTable_meth; fi
-endif
-
