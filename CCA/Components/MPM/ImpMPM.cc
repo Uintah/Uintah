@@ -102,6 +102,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 					lb->pVelocityLabel_preReloc);
      lb->registerPermanentParticleState(m,lb->pAccelerationLabel,
 					lb->pAccelerationLabel_preReloc);
+#ifdef IMPLICIT
+     lb->registerPermanentParticleState(m,lb->bElBarLabel,
+					lb->bElBarLabel_preReloc);
+#endif
      lb->registerPermanentParticleState(m,lb->pExternalForceLabel,
 					lb->pExternalForceLabel_preReloc);
 
@@ -225,6 +229,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
+  t->computes(lb->dispNewLabel);
   t->computes(lb->gAccelerationLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->TotalMassLabel);
@@ -404,8 +409,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 			   sched);
   task->hasSubScheduler();
 
-  task->computes(lb->dispNewLabel);
-
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, 
 								   d_myworld);
@@ -541,7 +544,7 @@ void ImpMPM::scheduleUpdateGridKinematicsI(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::updateGridKinematicsI", this, 
 			&ImpMPM::updateGridKinematics);
   
-  t->computes(lb->dispNewLabel);
+  t->modifies(lb->dispNewLabel);
   t->modifies(lb->gVelocityLabel);
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
@@ -557,7 +560,7 @@ void ImpMPM::scheduleUpdateGridKinematicsR(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::updateGridKinematicsR", this, 
 			&ImpMPM::updateGridKinematics);
   
-  t->computes(lb->dispNewLabel);
+  t->modifies(lb->dispNewLabel);
   t->modifies(lb->gVelocityLabel);
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
   t->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
@@ -829,18 +832,20 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the grid data
       NCVariable<double> gmass;
       NCVariable<double> gvolume;
-      NCVariable<Vector> gvelocity,gacceleration;
+      NCVariable<Vector> gvelocity,gacceleration,dispNew;
       NCVariable<Vector> gexternalforce;
 
       new_dw->allocate(gmass,lb->gMassLabel,      matlindex, patch);
       new_dw->allocate(gvolume,lb->gVolumeLabel,    matlindex, patch);
       new_dw->allocate(gvelocity,lb->gVelocityLabel,  matlindex, patch);
+      new_dw->allocate(dispNew,lb->dispNewLabel,  matlindex, patch);
       new_dw->allocate(gacceleration,lb->gAccelerationLabel,matlindex, patch);
       new_dw->allocate(gexternalforce,lb->gExternalForceLabel,matlindex,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(0);
       gvelocity.initialize(Vector(0,0,0));
+      dispNew.initialize(Vector(0,0,0));
       gacceleration.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
 
@@ -890,6 +895,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gmass,         lb->gMassLabel,          matlindex, patch);
       new_dw->put(gvolume,       lb->gVolumeLabel,        matlindex, patch);
       new_dw->put(gvelocity, lb->gVelocityLabel,      matlindex, patch);
+      new_dw->put(dispNew, lb->dispNewLabel,      matlindex, patch);
       new_dw->put(gacceleration,lb->gAccelerationLabel,matlindex,patch);
       new_dw->put(gexternalforce,lb->gExternalForceLabel, matlindex, patch);
  
@@ -1207,7 +1213,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
     delt_vartype dt;
     old_dw->get(dt, d_sharedState->get_delt_label());
 
-    new_dw->allocate(dispNew, lb->dispNewLabel, matlindex,patch);
+    new_dw->getModifiable(dispNew, lb->dispNewLabel, matlindex,patch);
     new_dw->getModifiable(velocity, lb->gVelocityLabel, matlindex,patch);
     new_dw->get(dispInc, lb->dispIncLabel, matlindex,patch,Ghost::None,0);
 

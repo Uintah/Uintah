@@ -11,6 +11,9 @@
 
 #include <vector>
 
+#define IMPLICIT
+#undef IMPLICIT
+
 namespace SCIRun {
   class Point;
   class Vector;
@@ -90,6 +93,10 @@ WARNING
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<double>& temperature,
 				       ParticleVariable<Vector>& size,
+#ifdef IMPLICIT
+				       ParticleVariable<Vector>& pacceleration,
+				       ParticleVariable<Matrix3>& bElBar,
+#endif
 				       ParticleVariable<long64>& particleID,
 				       CCVariable<short int>& cellNAPID,
 				       const Patch*);

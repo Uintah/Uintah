@@ -31,8 +31,11 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Core/Util/NotFinished.h>
-
 #include <iostream>
+
+#define IMPLICIT
+#undef IMPLICIT
+
 #define d_TINY_RHO 1.0e-100// also defined  ICE.cc and ICEMaterial.cc 
 
 using namespace std;
@@ -157,6 +160,12 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(position, lb->pXLabel, subset);
    ParticleVariable<Vector> pvelocity;
    new_dw->allocate(pvelocity, lb->pVelocityLabel, subset);
+#ifdef IMPLICIT
+   ParticleVariable<Vector> pacceleration;
+   new_dw->allocate(pacceleration, lb->pAccelerationLabel, subset);
+   ParticleVariable<Matrix3> bElBar;
+   new_dw->allocate(bElBar, lb->bElBarLabel, subset);
+#endif
    ParticleVariable<Vector> pexternalforce;
    new_dw->allocate(pexternalforce, lb->pExternalForceLabel, subset);
    ParticleVariable<double> pmass;
@@ -184,12 +193,17 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<double> pCrackSurfacePressure;
    ParticleVariable<Vector> pDisplacement;
 
+   
    particleIndex start = 0;
    if(!d_membrane){
      for(int i=0; i<(int)d_geom_objs.size(); i++){
        start += createParticles( d_geom_objs[i], start, position,
 				 pvelocity,pexternalforce,pmass,pvolume,
 				 ptemperature,psize,
+#ifdef IMPLICIT
+				 pacceleration,
+				 bElBar,
+#endif
 				 pparticleID,cellNAPID,patch);
      }
    }
@@ -231,6 +245,10 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 
    new_dw->put(position,             lb->pXLabel);
    new_dw->put(pvelocity,            lb->pVelocityLabel);
+#ifdef IMPLICIT
+   new_dw->put(pacceleration,        lb->pAccelerationLabel);
+   new_dw->put(bElBar,               lb->bElBarLabel);
+#endif
    new_dw->put(pexternalforce,       lb->pExternalForceLabel);
    new_dw->put(pmass,                lb->pMassLabel);
    new_dw->put(pvolume,              lb->pVolumeLabel);
@@ -295,6 +313,10 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<double>& temperature,
 				   ParticleVariable<Vector>& psize,
+#ifdef IMPLICIT
+				   ParticleVariable<Vector>& pacceleration,
+				   ParticleVariable<Matrix3>& bElBar,
+#endif
 				   ParticleVariable<long64>& particleID,
 				   CCVariable<short int>& cellNAPID,
 				   const Patch* patch)
@@ -335,6 +357,10 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  position[start+count]=p;
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		  velocity[start+count]=obj->getInitialVelocity();
+#ifdef IMPLICIT
+		  pacceleration[start+count]=Vector(0.,0.,0.);
+		  bElBar[start+count]=Matrix3(0.);
+#endif
 		  temperature[start+count]=obj->getInitialTemperature();
 		  mass[start+count]=d_density * volume[start+count];
 		  // Determine if particle is on the surface
@@ -407,7 +433,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
                particleID[start+idx] = cellID | (long64)myCellNAPID;
             }
             else{
-               cerr << "cellID is fucked up" << endl;
+               cerr << "cellID is not right" << endl;
             }
         }
    }
