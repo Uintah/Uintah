@@ -167,7 +167,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
   solotest_found = 0
   for test in TESTS:
-    current_failcode = 0
     if solotest != "" and nameoftest(test) != solotest:
       continue
 
@@ -244,7 +243,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       # Prepare for restart test
       if rc == 2:
           failcode = 1
-          current_failcode=1
       mkdir("restart")
       chdir("restart")
       # call the callback function before running each test
@@ -256,14 +254,10 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
         rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, tests_to_do, "yes", newalgo)
         if rc > 0:
           failcode = 1
-          current_failcode = 1
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
-      current_failcode = 1
     # print short message for email if it failed
-    if current_failcode == 1:
-      system("echo '  -- %s test failed' >> %s/%s-short.log" % (testname,startpath,upper(algo)))
     chdir("..")
   
   chdir("..")
@@ -336,6 +330,8 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   # set where to view the log files
   logpath = environ['WEBLOG']
 
+  startpath = "../.."
+
   # if doing performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
     inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
@@ -359,9 +355,12 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   if restart == "yes":
     print "Running restart test for %s%s on %s" % (testname, mpimsg, date())
     susinput = "-restart ../*.uda.000 -t 0 -move"
+    startpath = "../../.."
+    restart_text = " (restart)"
   else:
     print "Running test %s%s on %s" % (testname, mpimsg, date())
     susinput = "%s" % (inputxml)
+    restart_text = " "
 
 
   if do_memory_test == 1:
@@ -406,13 +405,15 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     system("ln -s restart/*.uda .")
     chdir("restart")
   else:
-    replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())      
+    replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
+    restart_text = ""
 
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if restart == "yes":
 	print "\t\tMake sure the problem makes checkpoints before finishing"
     print sus_log_msg
+    system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
     return 1
   else:
     # Sus completed successfully - now do comp, mem, and perf tests
@@ -507,7 +508,14 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	    print "\tMemory leak tests passed. (Note: no previous memory usage stats)."
 
     # if comparison tests fail, return here, so mem_leak tests can run
-    if cu_rc == 5*256 or cu_rc == 1*256 or pf_rc == 2*256 or mem_rc == 1*256 or mem_rc == 2*256:
+    if cu_rc == 5*256 or cu_rc == 1*256:
+        system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
+        return 2;
+    if pf_rc == 2*256:
+        system("echo '  -- %s%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
+        return 2;
+    if mem_rc == 1*256 or mem_rc == 2*256:
+        system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
         return 2;
   return 0
 
