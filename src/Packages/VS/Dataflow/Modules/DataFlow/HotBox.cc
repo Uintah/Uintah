@@ -14,10 +14,11 @@
  *****************************************************************************/
 
 #include <Core/Containers/HashTable.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
@@ -32,6 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/XMLUtil/StrX.h>
@@ -300,7 +302,7 @@ HotBox::execute()
 {
 
   // get input field port
-  FieldIPort *inputFieldPort = (FieldIPort *)get_iport("Input Field");
+  FieldIPort *inputFieldPort = (FieldIPort *)get_iport("Input Label Volume");
   if (!inputFieldPort) {
     error("Unable to initialize input field port.");
     return;
@@ -335,6 +337,60 @@ HotBox::execute()
     // we have tensor data in the input field
     remark("Tensor Data on Input");
   }
+
+  // get input matrix port
+  MatrixIPort *inputMatrixPort = (MatrixIPort *)get_iport("Input TimeStep");
+  if (!inputMatrixPort) {
+    error("Unable to initialize input TimeStep matrix port.");
+  }
+                                                                                
+  // get handle to matrix from the input port
+  MatrixHandle inputMatrixHandle;
+  if(inputMatrixPort != NULL && (!inputMatrixPort->get(inputMatrixHandle) ||
+     !inputMatrixHandle.get_rep()))
+  {
+    remark("No data on input matrix port.");
+  }
+  else
+  {
+    // get the matrix data
+    Matrix *matrixPtr = inputMatrixHandle.get_rep();
+    if(matrixPtr)
+    {
+      double minlabel;
+      if(!inputMatrixHandle->get_property("row_min", minlabel))
+        minlabel = 0.0;
+      double nrows = inputMatrixHandle->nrows();
+      double maxlabel;
+      if (!inputMatrixHandle->get_property("row_max", maxlabel))
+        maxlabel = inputMatrixHandle->nrows() - 1.0;
+
+      cerr << "row_min " << minlabel << " row_max " << maxlabel;
+      cerr << " nrows " << nrows << endl;
+
+      if(!inputMatrixHandle->get_property("col_min", minlabel))
+      minlabel = 0.0;
+      double ncols =  inputMatrixHandle->ncols();
+      if (!inputMatrixHandle->get_property("col_max", maxlabel))
+      maxlabel = inputMatrixHandle->ncols() - 1.0;
+
+      cerr << "col_min " << minlabel << " col_max " << maxlabel;
+      cerr << " ncols " << ncols << endl;
+
+      ColumnMatrix *cm;
+      cm = scinew ColumnMatrix(inputMatrixHandle->nrows());
+      // cm->zero();
+      double *data = cm->get_data();
+
+      data[0] = inputMatrixHandle->get(0, 0);
+
+      // expect one value in the input timeStep
+      currentTime_ = (int)data[0];
+      cerr << " matrix value " << data[0] << endl;
+      gui_curTime_.set(currentTime_);
+    }
+  } // end else (data on input matrix port)
+
   labelIndexVal = 0;
 
   // run the probe's functions
@@ -605,8 +661,11 @@ HotBox::execute()
   if(geomFilehandle_.get_rep() != 0)
     highlightOutport->send(geomFilehandle_);
 
-  // build geometry from wound icon descriptions
-  makeInjGeometry();
+  if(injured_tissue.size() > 0)
+  {
+    // build geometry from wound icon descriptions
+    makeInjGeometry();
+  }
 
   // get output geometry port -- Injury Icon
   SimpleOPort<FieldHandle> *
@@ -677,7 +736,7 @@ HotBox::execAdjacency()
   char *adjacentName;
   if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[1] < anatomytable->get_num_names())
+    if(adjPtr[1] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[1]);
     else
     {
@@ -698,7 +757,7 @@ HotBox::execAdjacency()
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[2] < anatomytable->get_num_names())
+    if(adjPtr[2] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[2]);
     else
     {
@@ -719,7 +778,7 @@ HotBox::execAdjacency()
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
   {  // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[3] < anatomytable->get_num_names())
+    if(adjPtr[3] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[3]);
     else
     {
@@ -740,7 +799,7 @@ HotBox::execAdjacency()
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[4] < anatomytable->get_num_names())
+    if(adjPtr[4] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[4]);
     else
     {
@@ -765,7 +824,7 @@ HotBox::execAdjacency()
   
   if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[6] < anatomytable->get_num_names())
+    if(adjPtr[6] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[6]);
     else
     {
@@ -786,7 +845,7 @@ HotBox::execAdjacency()
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[7] < anatomytable->get_num_names())
+    if(adjPtr[7] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[7]);
     else
     {
@@ -807,7 +866,7 @@ HotBox::execAdjacency()
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
   { // Note: TCL UI is 1-indexed, row-major 
-    if(adjPtr[8] < anatomytable->get_num_names())
+    if(adjPtr[8] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[8]);
     else
     {
@@ -828,7 +887,7 @@ HotBox::execAdjacency()
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
   if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[9] < anatomytable->get_num_names())
+    if(adjPtr[9] < anatomytable->get_max_labelindex())
         adjacentName = anatomytable->get_anatomyname(adjPtr[9]);
     else
     {
@@ -1550,16 +1609,15 @@ HotBox::makeInjGeometry()
   } // end for(int i = 0; i < injured_tissue.size(); i++)
   if(numLines > 0)
   {
-    cerr << numLines << " lines";
+    cerr << numLines << " lines ";
     cf = scinew CurveField<double>(cm, -1);
   }
   if(numQuads > 0)
   {
-    cerr << numQuads << " quads";
+    cerr << numQuads << " quads ";
     qsf = scinew QuadSurfField<double>(qsm, -1);
+    injuryfieldHandle_ = qsf;
   }
-
-  injuryfieldHandle_ = qsf;
 
   cerr << " done" << endl;
 } // end makeInjGeometry()
