@@ -263,6 +263,7 @@ public:
     void dump_objects(const clString&, const clString& format);
 
     void getData(int datamask, FutureValue<GeometryData*>* result);
+    void setView(View view);
 };
 
 class RoeMouseMessage : public MessageBase {
@@ -287,6 +288,9 @@ public:
 
 //
 // $Log$
+// Revision 1.11  1999/12/03 00:28:59  dmw
+// added setView message for Salmon/Roe
+//
 // Revision 1.10  1999/11/19 19:46:24  kuzimmer
 // Took out #ifdef __sgi in Roe.h.
 //
