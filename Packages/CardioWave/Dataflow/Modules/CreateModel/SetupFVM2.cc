@@ -89,7 +89,7 @@ void SetupFVM2::execute(){
   }
   
   vector<pair<string, Tensor> > tens;
-  if (!fld->get_property("conductivity_tensors", tens)) {
+  if (!fld->get_property("conductivity_table", tens)) {
     error("No tensor vector associated with the input field.");
     return;
   }

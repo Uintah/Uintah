@@ -131,7 +131,7 @@ VectorFieldsToTensorField::execute()
     ++v2;
     ++tidx;
   }
-  tfield->set_property("conductivity_tensors", conds, false);
+  tfield->set_property("conductivity_table", conds, false);
   otfld->send(tfield);
 }
 } // End namespace CardioWave
