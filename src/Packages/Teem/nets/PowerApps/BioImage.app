@@ -2708,6 +2708,8 @@ class BioImageApp {
 	addConnection $m1 0 $m2 0
 	addConnection $m2 0 $ChooseNrrd $choose
 
+        global $m4-setdata
+        set $m4-setdata 1
         global $m4-args
         trace variable $m4-args w "$this update_histo_graph_callback $num_filters"
 
