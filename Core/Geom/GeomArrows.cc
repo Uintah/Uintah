@@ -92,7 +92,8 @@ void GeomArrows::add(const Point& pos, const Vector& dir)
 {
     positions.add(pos);
     directions.add(dir);
-    if(dir.length2() < 1.e-6){
+//     if(dir.length2() < 1.e-6){
+    if( dir.length2() == 0 ) {
 	Vector zero(0,0,0);
 	v1.add(zero);
 	v2.add(zero);
