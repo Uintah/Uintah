@@ -38,6 +38,7 @@
 #include <Core/Math/MusilRNG.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
+#include <BioPSE/Core/Algorithms/NumApproximation/BuildFEMatrix.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -62,8 +63,8 @@ class ConductivitySearch : public Module {
   MatrixHandle cond_params_;
   MatrixHandle cond_vector_;
 
-  Array1<Array1<double> > basis_data;
-  Array1<Array1<int> > basis_nzeros;
+  MatrixHandle AmatH_;
+  Array1<Array1<double> > data_basis_;
   Array1<double> misfit_;
   Array2<double> conductivities_;
   Array1<int> cell_visited_;
@@ -86,7 +87,7 @@ class ConductivitySearch : public Module {
   void build_basis_matrices();
   double gaussian(double sigma);
   void initialize_search();
-  void build_composite_matrix(int which_conductivity);
+  MatrixHandle build_composite_matrix(int which_conductivity);
   void send_and_get_data(int which_conductivity);
   int pre_search();
   void eval_test_conductivity();
@@ -157,7 +158,35 @@ ConductivitySearch::~ConductivitySearch(){}
 
 
 void ConductivitySearch::build_basis_matrices() {
-  // TODO -- build the fem basis matrices (using BuildFEMatrix alg)
+  TetVolIntHandle tvH;
+  tvH = dynamic_cast<TetVol<int> *>(mesh_in_.get_rep());
+  vector<pair<int, double> > dirBC;
+  dirBC.push_back(pair<int, double>(0, 0.0));
+  Array1<double> z(6);
+  z.initialize(0);
+  Tensor zero(z);
+  Array1<double> id(6);
+  id[0] = id[3] = id[5] = 1;
+  id[1] = id[2] = id[4] = 0;
+  Tensor identity(id);
+
+  MatrixHandle aH;
+  MatrixHandle bH;
+  Array1<Tensor> tens(NDIM_);
+  tens.initialize(zero);
+  BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
+  AmatH_ = aH;
+  AmatH_.detach(); // this will be our global "shape" information
+  
+  for (int i=0; i<NDIM_; i++) {
+    tens[i]=identity;
+    BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
+    SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
+    data_basis_[i].resize(m->nnz);
+    for (int j=0; j<m->nnz; j++)
+      data_basis_[i][j] = m->a[j];
+    tens[i]=zero;
+  }    
 }
 
 
@@ -201,11 +230,22 @@ void ConductivitySearch::initialize_search() {
 }
 
 
-//! Scale the basis matrices by the conductivities and sum
+//! Scale the basis matrix data by the conductivities and sum
 
-void ConductivitySearch::build_composite_matrix(int which_conductivity) {
-  // TODO -- reset sum to zero, scale bases and add em up
+MatrixHandle ConductivitySearch::build_composite_matrix(int 
+							which_conductivity) {
+  MatrixHandle fem_mat = AmatH_;
+  fem_mat.detach();
+  SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(fem_mat.get_rep());
+  double *sum = m->a;
+  for (int i=0; i<NDIM_; i++) {
+    double weight = conductivities_(which_conductivity,i);
+    for (int j=0; j<data_basis_[i].size(); j++)
+      sum[j] += weight*data_basis_[i][j];
+  }
+  return fem_mat;
 }
+
 
 //! Find the misfit and optimal orientation for a single conductivity
 
@@ -219,11 +259,16 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
 
   // build the new conductivity vector, the new mesh (just new tensors), 
   // and the new fem matrix
+  MatrixHandle fem_mat = build_composite_matrix(which_conductivity);
 
-  // TODO -- fill in the three data structures below
+  // TODO -- build the cond_vector (store/get original conds in class)
+  //   detach the mesh so we can change the conductivity tensor prop
 
-  SparseRowMatrix *fem;
-  TetVol<int> *mesh_out;
+  TetVolMeshHandle tvmH;
+  tvmH = dynamic_cast<TetVol<int>*>(mesh_in_.get_rep())->get_typed_mesh();
+  tvmH.detach();
+  TetVol<int>* mesh_out;
+  mesh_out = new TetVol<int>(tvmH, Field::CELL);
   ColumnMatrix *cond_vector;
   
   // send out data
@@ -231,8 +276,7 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
   mesh_oport_->send_intermediate(mesh_out_);
   cond_vector_=cond_vector;
   cond_vector_oport_->send_intermediate(cond_vector_);
-  MatrixHandle femH=(Matrix*)fem;
-  fem_mat_oport_->send(femH);
+  fem_mat_oport_->send(fem_mat);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
@@ -308,11 +352,6 @@ double ConductivitySearch::simplex_step(Array1<double>& sum, double factor,
   }
   return misfit_[NSEEDS_];
 }
-
-
-
-//vol_mesh_=(TetVolMesh*)dynamic_cast<TetVolMesh*>(mesh_in_->mesh().get_rep());
-
 
 
 //! The simplex has been constructed -- now let's search for a minimal misfit

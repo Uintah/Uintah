@@ -31,7 +31,8 @@ SRCS     += \
 	$(SRCDIR)/DipoleSearch.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+PSELIBS := Packages/BioPSE/Core/Algorithms/NumApproximation \
+	Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/Math \
