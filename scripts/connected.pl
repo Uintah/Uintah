@@ -23,7 +23,9 @@
 # TODO:
 #  - Go through a list of directories from argv, instead of just .
 
-open(FILES, "find . -name depend.mk -print|")
+#open(FILES, "find . -name depend.mk -print|")
+#	or die "Can't find depend.mk files";
+open(FILES, "find . -name *.d -print|")
 	or die "Can't find depend.mk files";
 $nfiles=0;
 foreach $file (<FILES>) {
@@ -32,8 +34,8 @@ foreach $file (<FILES>) {
    foreach $line (<D>) {
       @files = split(/ /, $line);
       foreach $file (@files) {
-         $file =~ s/^(\.\.\/)*//;
-	 if(!($file =~ /#|:/)) {
+         #$file =~ s/^(\.\.\/)*//;
+	 if(!($file =~ /#|:/) && !($file =~ /^\\$/) && !($file =~ /^$/)) {
 	    $counts{$file}++;
 	 }
       }

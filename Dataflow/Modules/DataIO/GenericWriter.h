@@ -37,6 +37,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
+#include <Core/Persistent/Pstreams.h>
 
 namespace SCIRun {
 

@@ -15,6 +15,10 @@
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
+namespace SCIRun {
+  class Thread;
+}
+
 namespace Uintah {
 
 using namespace std;

@@ -32,6 +32,7 @@ using std::ostringstream;
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/MaskedTetVolField.h>
 #include <Core/Datatypes/LatVolField.h>

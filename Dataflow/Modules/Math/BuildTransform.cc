@@ -32,6 +32,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geom/Switch.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>

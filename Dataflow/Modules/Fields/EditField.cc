@@ -26,7 +26,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/share/share.h>
 
 #include <Dataflow/Ports/FieldPort.h>

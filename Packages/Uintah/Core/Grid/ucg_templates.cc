@@ -1,3 +1,4 @@
+#ifdef __sgi
 
 #include "ParticleVariable.h"
 #include "CCVariable.h"
@@ -58,4 +59,5 @@ template class SFCZVariable<long64>;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
+#endif
 #endif

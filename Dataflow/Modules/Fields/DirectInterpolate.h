@@ -24,6 +24,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Geometry/Tensor.h>
 
 namespace SCIRun {
 

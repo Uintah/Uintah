@@ -9,6 +9,7 @@
 #include <Core/Containers/StaticArray.h>
 
 #include <Core/Thread/AtomicCounter.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Math/MiscMath.h>
 
 #include <values.h>

@@ -32,18 +32,14 @@ else
 	Packages/Uintah/CCA/Components/Arches \
 	Packages/Uintah/CCA/Components/MPMArches \
 	Packages/Uintah/CCA/Components/PatchCombiner \
-	Dataflow/Network \
 	Core/Exceptions  \
 	Core/Thread      \
 	Core/Geometry    \
-	Core/Util	 \
-	Core/Datatypes	 \
-	Core/Persistent  \
-	Core/Geom
+	Core/Util
 
 endif
 
-LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS) $(FLIBS) \
+LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(FLIBS) \
 	$(PETSC_LIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk

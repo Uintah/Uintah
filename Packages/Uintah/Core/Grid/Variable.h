@@ -3,20 +3,23 @@
 
 #include <string>
 #include <iosfwd>
-#include <Core/Geometry/IntVector.h>
 
 class DOM_Element;
 
+namespace SCIRun {
+  class IntVector;
+}
+
 namespace Uintah {
 
-   using namespace std;
-   using namespace SCIRun;
-   class TypeDescription;
-   class InputContext;
-   class OutputContext;
-   class Patch;
-   class RefCounted;
-   class VarLabel;
+  using namespace std;
+  using namespace SCIRun;
+  class TypeDescription;
+  class InputContext;
+  class OutputContext;
+  class Patch;
+  class RefCounted;
+  class VarLabel;
 
 /**************************************
      
@@ -70,7 +73,7 @@ public:
   virtual void allocate(const Patch* patch) = 0;
 
   // Only affects grid variables
-  virtual void offsetGrid(IntVector /*offset*/) {}
+  virtual void offsetGrid(const IntVector& /*offset*/);
 
   virtual RefCounted* getRefCounted() = 0;
 protected:

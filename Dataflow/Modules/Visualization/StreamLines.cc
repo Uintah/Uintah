@@ -25,6 +25,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/CurveField.h>

@@ -3254,7 +3254,7 @@ echo "configure:3210: checking for $MAKE version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3552,7 +3552,7 @@ else
 #line 3553 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw();
 #endif
 #include <stdio.h>
 main()
@@ -6126,10 +6126,51 @@ else
 fi
 
 
+for ac_hdr in ext/algorithm
+do
+ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
+echo "configure:6134: checking for $ac_hdr" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 6139 "configure"
+#include "confdefs.h"
+#include <$ac_hdr>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:6144: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_hdr=HAVE_`echo $ac_hdr | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_hdr 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+fi
+done
+
+
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 echo "checking for required Tcl components..." 1>&6
-echo "configure:6133: checking for required Tcl components..." >&5
+echo "configure:6174: checking for required Tcl components..." >&5
 echo
 
 FOUND_ALL_TCL=no
@@ -6138,7 +6179,7 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i..." 1>&6
-echo "configure:6142: checking in $i..." >&5
+echo "configure:6183: checking in $i..." >&5
   
     ##  SCI_CHECK_LIB
     _SCI_FOUND_='echo -n ""'
@@ -6171,10 +6212,10 @@ echo "configure:6142: checking in $i..." >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -ltcl""... $ac_c" 1>&6
-echo "configure:6175: checking for -ltcl" >&5
+echo "configure:6216: checking for -ltcl" >&5
     else
       echo $ac_n "checking for main in -ltcl""... $ac_c" 1>&6
-echo "configure:6178: checking for main in -ltcl" >&5
+echo "configure:6219: checking for main in -ltcl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6253,7 +6294,7 @@ EOF
 EOF
       for _SCI_LOOP_VAR2_ in $TCL_SRC_DIR/generic; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:6257: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:6298: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_  >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -6314,10 +6355,10 @@ echo "configure:6257: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -ltk""... $ac_c" 1>&6
-echo "configure:6318: checking for -ltk" >&5
+echo "configure:6359: checking for -ltk" >&5
     else
       echo $ac_n "checking for main in -ltk""... $ac_c" 1>&6
-echo "configure:6321: checking for main in -ltk" >&5
+echo "configure:6362: checking for main in -ltk" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6396,7 +6437,7 @@ EOF
 EOF
       for _SCI_LOOP_VAR2_ in $TK_SRC_DIR/generic/; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:6400: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:6441: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_ -I$INCTCL_H >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -6457,10 +6498,10 @@ echo "configure:6400: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -litcl""... $ac_c" 1>&6
-echo "configure:6461: checking for -litcl" >&5
+echo "configure:6502: checking for -litcl" >&5
     else
       echo $ac_n "checking for main in -litcl""... $ac_c" 1>&6
-echo "configure:6464: checking for main in -litcl" >&5
+echo "configure:6505: checking for main in -litcl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6515,7 +6556,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo itcl.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for itcl.h""... $ac_c" 1>&6
-echo "configure:6519: checking for itcl.h" >&5
+echo "configure:6560: checking for itcl.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -6586,10 +6627,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -litk""... $ac_c" 1>&6
-echo "configure:6590: checking for -litk" >&5
+echo "configure:6631: checking for -litk" >&5
     else
       echo $ac_n "checking for main in -litk""... $ac_c" 1>&6
-echo "configure:6593: checking for main in -litk" >&5
+echo "configure:6634: checking for main in -litk" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6644,7 +6685,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo itk.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for itk.h""... $ac_c" 1>&6
-echo "configure:6648: checking for itk.h" >&5
+echo "configure:6689: checking for itk.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -6715,10 +6756,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lBLT""... $ac_c" 1>&6
-echo "configure:6719: checking for -lBLT" >&5
+echo "configure:6760: checking for -lBLT" >&5
     else
       echo $ac_n "checking for main in -lBLT""... $ac_c" 1>&6
-echo "configure:6722: checking for main in -lBLT" >&5
+echo "configure:6763: checking for main in -lBLT" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -6773,7 +6814,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo blt.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for blt.h""... $ac_c" 1>&6
-echo "configure:6777: checking for blt.h" >&5
+echo "configure:6818: checking for blt.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -6835,7 +6876,7 @@ EOF
     _CUR_2_=""
 
     echo $ac_n "checking for Tcl version 8.3.2""... $ac_c" 1>&6
-echo "configure:6839: checking for Tcl version 8.3.2" >&5
+echo "configure:6880: checking for Tcl version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -6892,7 +6933,7 @@ echo "configure:6839: checking for Tcl version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for Tk version 8.3.2""... $ac_c" 1>&6
-echo "configure:6896: checking for Tk version 8.3.2" >&5
+echo "configure:6937: checking for Tk version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -6949,7 +6990,7 @@ echo "configure:6896: checking for Tk version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL""... $ac_c" 1>&6
-echo "configure:6953: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
+echo "configure:6994: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -7032,7 +7073,7 @@ fi
 ##  --  search for xerces-c++ stuff  --------------------------------------
 echo
 echo "checking for required Xerces-C++ components..." 1>&6
-echo "configure:7036: checking for required Xerces-C++ components..." >&5
+echo "configure:7077: checking for required Xerces-C++ components..." >&5
 echo
 
 FOUND_ALL_XERCESC=no
@@ -7041,7 +7082,7 @@ for i in $xercesc $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i..." 1>&6
-echo "configure:7045: checking in $i..." >&5
+echo "configure:7086: checking in $i..." >&5
   
     ##  SCI_CHECK_LIB
     _SCI_FOUND_='echo -n ""'
@@ -7074,10 +7115,10 @@ echo "configure:7045: checking in $i..." >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lxerces-c""... $ac_c" 1>&6
-echo "configure:7078: checking for -lxerces-c" >&5
+echo "configure:7119: checking for -lxerces-c" >&5
     else
       echo $ac_n "checking for main in -lxerces-c""... $ac_c" 1>&6
-echo "configure:7081: checking for main in -lxerces-c" >&5
+echo "configure:7122: checking for main in -lxerces-c" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7160,7 +7201,7 @@ EOF
 EOF
       for _SCI_LOOP_VAR2_ in $i/include/xercesc; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:7164: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:7205: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_  >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -7209,7 +7250,7 @@ fi
 
 echo
 echo "checking for required zlib..." 1>&6
-echo "configure:7213: checking for required zlib..." >&5
+echo "configure:7254: checking for required zlib..." >&5
 echo
 
 if test "$with_zlib" != no; then
@@ -7245,10 +7286,10 @@ if test "$with_zlib" != no; then
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lz""... $ac_c" 1>&6
-echo "configure:7249: checking for -lz" >&5
+echo "configure:7290: checking for -lz" >&5
     else
       echo $ac_n "checking for main in -lz""... $ac_c" 1>&6
-echo "configure:7252: checking for main in -lz" >&5
+echo "configure:7293: checking for main in -lz" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7331,10 +7372,10 @@ if test -z "$HAVE_LIBZ"; then
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lz""... $ac_c" 1>&6
-echo "configure:7335: checking for -lz" >&5
+echo "configure:7376: checking for -lz" >&5
     else
       echo $ac_n "checking for main in -lz""... $ac_c" 1>&6
-echo "configure:7338: checking for main in -lz" >&5
+echo "configure:7379: checking for main in -lz" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7414,7 +7455,7 @@ fi
 EOF
       for _SCI_LOOP_VAR2_ in $ZLIB_INCLUDE $thirdparty/include /usr/include; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:7418: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:7459: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_  >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -7458,12 +7499,12 @@ LIBZ_INCLUDE=$INCZLIB_H
 if test "$uintah" = "yes"; then
   echo
   echo "checking for required MPI components..." 1>&6
-echo "configure:7462: checking for required MPI components..." >&5
+echo "configure:7503: checking for required MPI components..." >&5
   echo
 else
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:7467: checking for optional components..." >&5
+echo "configure:7508: checking for optional components..." >&5
   echo
 fi
 
@@ -7505,10 +7546,10 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lmpi""... $ac_c" 1>&6
-echo "configure:7509: checking for -lmpi" >&5
+echo "configure:7550: checking for -lmpi" >&5
     else
       echo $ac_n "checking for main in -lmpi""... $ac_c" 1>&6
-echo "configure:7512: checking for main in -lmpi" >&5
+echo "configure:7553: checking for main in -lmpi" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7589,10 +7630,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lmpich""... $ac_c" 1>&6
-echo "configure:7593: checking for -lmpich" >&5
+echo "configure:7634: checking for -lmpich" >&5
     else
       echo $ac_n "checking for main in -lmpich""... $ac_c" 1>&6
-echo "configure:7596: checking for main in -lmpich" >&5
+echo "configure:7637: checking for main in -lmpich" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7649,7 +7690,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo mpi.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for mpi.h""... $ac_c" 1>&6
-echo "configure:7653: checking for mpi.h" >&5
+echo "configure:7694: checking for mpi.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -7767,7 +7808,7 @@ fi
 if test "$uintah" = "yes"; then
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:7771: checking for optional components..." >&5
+echo "configure:7812: checking for optional components..." >&5
   echo
 fi
 
@@ -7809,10 +7850,10 @@ for i in $teem $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lair""... $ac_c" 1>&6
-echo "configure:7813: checking for -lair" >&5
+echo "configure:7854: checking for -lair" >&5
     else
       echo $ac_n "checking for main in -lair""... $ac_c" 1>&6
-echo "configure:7816: checking for main in -lair" >&5
+echo "configure:7857: checking for main in -lair" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7892,10 +7933,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lbiff""... $ac_c" 1>&6
-echo "configure:7896: checking for -lbiff" >&5
+echo "configure:7937: checking for -lbiff" >&5
     else
       echo $ac_n "checking for main in -lbiff""... $ac_c" 1>&6
-echo "configure:7899: checking for main in -lbiff" >&5
+echo "configure:7940: checking for main in -lbiff" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -7975,10 +8016,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lnrrd""... $ac_c" 1>&6
-echo "configure:7979: checking for -lnrrd" >&5
+echo "configure:8020: checking for -lnrrd" >&5
     else
       echo $ac_n "checking for main in -lnrrd""... $ac_c" 1>&6
-echo "configure:7982: checking for main in -lnrrd" >&5
+echo "configure:8023: checking for main in -lnrrd" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8058,10 +8099,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lell""... $ac_c" 1>&6
-echo "configure:8062: checking for -lell" >&5
+echo "configure:8103: checking for -lell" >&5
     else
       echo $ac_n "checking for main in -lell""... $ac_c" 1>&6
-echo "configure:8065: checking for main in -lell" >&5
+echo "configure:8106: checking for main in -lell" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8116,7 +8157,7 @@ EOF
     _SCI_VAR_NAME_=INC`echo nrrd.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for nrrd.h""... $ac_c" 1>&6
-echo "configure:8120: checking for nrrd.h" >&5
+echo "configure:8161: checking for nrrd.h" >&5
 
     if test "LIBTEEM=$i/lib;INCTEEM_H=$i/include;break"; then
       _SCI_FOUND_='LIBTEEM=$i/lib;INCTEEM_H=$i/include;break'
@@ -8204,10 +8245,10 @@ for i in $mpeg $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lmpege""... $ac_c" 1>&6
-echo "configure:8208: checking for -lmpege" >&5
+echo "configure:8249: checking for -lmpege" >&5
     else
       echo $ac_n "checking for main in -lmpege""... $ac_c" 1>&6
-echo "configure:8211: checking for main in -lmpege" >&5
+echo "configure:8252: checking for main in -lmpege" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8281,7 +8322,7 @@ for i in $mdsplus $thirdparty $SCI_LAB_TP_DEFAULT; do
     _SCI_VAR_NAME_=INC`echo mdslib.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for mdslib.h""... $ac_c" 1>&6
-echo "configure:8285: checking for mdslib.h" >&5
+echo "configure:8326: checking for mdslib.h" >&5
 
     if test "INCMDSPLUS_H="$i/include""; then
       _SCI_FOUND_='INCMDSPLUS_H="$i/include"'
@@ -8351,10 +8392,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lMdsLib_client""... $ac_c" 1>&6
-echo "configure:8355: checking for -lMdsLib_client" >&5
+echo "configure:8396: checking for -lMdsLib_client" >&5
     else
       echo $ac_n "checking for main in -lMdsLib_client""... $ac_c" 1>&6
-echo "configure:8358: checking for main in -lMdsLib_client" >&5
+echo "configure:8399: checking for main in -lMdsLib_client" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8457,10 +8498,10 @@ for i in $perfex $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lperfex""... $ac_c" 1>&6
-echo "configure:8461: checking for -lperfex" >&5
+echo "configure:8502: checking for -lperfex" >&5
     else
       echo $ac_n "checking for main in -lperfex""... $ac_c" 1>&6
-echo "configure:8464: checking for main in -lperfex" >&5
+echo "configure:8505: checking for main in -lperfex" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8552,10 +8593,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lfastm""... $ac_c" 1>&6
-echo "configure:8556: checking for -lfastm" >&5
+echo "configure:8597: checking for -lfastm" >&5
     else
       echo $ac_n "checking for main in -lfastm""... $ac_c" 1>&6
-echo "configure:8559: checking for main in -lfastm" >&5
+echo "configure:8600: checking for main in -lfastm" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8646,10 +8687,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lssl""... $ac_c" 1>&6
-echo "configure:8650: checking for -lssl" >&5
+echo "configure:8691: checking for -lssl" >&5
     else
       echo $ac_n "checking for main in -lssl""... $ac_c" 1>&6
-echo "configure:8653: checking for main in -lssl" >&5
+echo "configure:8694: checking for main in -lssl" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8740,10 +8781,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lcrypto""... $ac_c" 1>&6
-echo "configure:8744: checking for -lcrypto" >&5
+echo "configure:8785: checking for -lcrypto" >&5
     else
       echo $ac_n "checking for main in -lcrypto""... $ac_c" 1>&6
-echo "configure:8747: checking for main in -lcrypto" >&5
+echo "configure:8788: checking for main in -lcrypto" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8834,10 +8875,10 @@ fi
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lexc""... $ac_c" 1>&6
-echo "configure:8838: checking for -lexc" >&5
+echo "configure:8879: checking for -lexc" >&5
     else
       echo $ac_n "checking for main in -lexc""... $ac_c" 1>&6
-echo "configure:8841: checking for main in -lexc" >&5
+echo "configure:8882: checking for main in -lexc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -8893,7 +8934,7 @@ if test "$HAVE_LIBEXC"; then
     _SCI_VAR_NAME_=INC`echo libexc.h | sed 'y%abcdefghijklmnopqrstuvwxyz+./-%ABCDEFGHIJKLMNOPQRSTUVWXYZp___%'`
 
     echo $ac_n "checking for libexc.h""... $ac_c" 1>&6
-echo "configure:8897: checking for libexc.h" >&5
+echo "configure:8938: checking for libexc.h" >&5
 
     if test ""; then
       _SCI_FOUND_=''
@@ -8955,7 +8996,7 @@ echo $i
     continue
   fi
   echo "checking for globus libraries in $i/lib" 1>&6
-echo "configure:8959: checking for globus libraries in $i/lib" >&5
+echo "configure:9000: checking for globus libraries in $i/lib" >&5
   
     ##  SCI_CHECK_LIB
     _SCI_FOUND_='echo -n ""'
@@ -8988,10 +9029,10 @@ echo "configure:8959: checking for globus libraries in $i/lib" >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lglobus_dc""... $ac_c" 1>&6
-echo "configure:8992: checking for -lglobus_dc" >&5
+echo "configure:9033: checking for -lglobus_dc" >&5
     else
       echo $ac_n "checking for main in -lglobus_dc""... $ac_c" 1>&6
-echo "configure:8995: checking for main in -lglobus_dc" >&5
+echo "configure:9036: checking for main in -lglobus_dc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9053,7 +9094,7 @@ EOF
 #    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
 
   echo "checking for globus headers in $i/include" 1>&6
-echo "configure:9057: checking for globus headers in $i/include" >&5
+echo "configure:9098: checking for globus headers in $i/include" >&5
   
     ##  SCI_CHECK_HEADERS
     _SCI_FOUND_='echo -n ""'
@@ -9085,7 +9126,7 @@ echo "configure:9057: checking for globus headers in $i/include" >&5
 EOF
       for _SCI_LOOP_VAR2_ in $i/include; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:9089: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:9130: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_  >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -9135,9 +9176,9 @@ done
 
 # This is typical on SGI and ??
 echo $ac_n "checking for uuid_create in sys/uuid.h""... $ac_c" 1>&6
-echo "configure:9139: checking for uuid_create in sys/uuid.h" >&5
+echo "configure:9180: checking for uuid_create in sys/uuid.h" >&5
 cat > conftest.$ac_ext <<EOF
-#line 9141 "configure"
+#line 9182 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
              extern "C" {
@@ -9150,7 +9191,7 @@ char* uuid_str;
 	 uuid_create(&uuid, &status);
 ; return 0; }
 EOF
-if { (eval echo configure:9154: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:9195: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -9169,9 +9210,9 @@ echo "$ac_t""$have_uuid" 1>&6
 if test "$have_uuid" != "yes"; then
   # This is typical on linux and ??
   echo $ac_n "checking for uuid_generate in uuid/uuid.h""... $ac_c" 1>&6
-echo "configure:9173: checking for uuid_generate in uuid/uuid.h" >&5
+echo "configure:9214: checking for uuid_generate in uuid/uuid.h" >&5
   cat > conftest.$ac_ext <<EOF
-#line 9175 "configure"
+#line 9216 "configure"
 #include "confdefs.h"
 
 extern "C" { // The linux uuid.h does not have this, so we need exter C here
@@ -9184,7 +9225,7 @@ uuid_t uuid;
 	 uuid_unparse(uuid, uuid_str);
 ; return 0; }
 EOF
-if { (eval echo configure:9188: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:9229: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -9203,13 +9244,13 @@ fi
 
 if test "$have_uuid" = "yes"; then
   echo $ac_n "checking for uuid library""... $ac_c" 1>&6
-echo "configure:9207: checking for uuid library" >&5
+echo "configure:9248: checking for uuid library" >&5
   old_LIBS=$LIBS
   found_uuidlib=no
   for i in "" -luuid; do
     LIBS="$old_LIBS $i"
     cat > conftest.$ac_ext <<EOF
-#line 9213 "configure"
+#line 9254 "configure"
 #include "confdefs.h"
 
 #if HAVE_SYS_UUID_H
@@ -9247,7 +9288,7 @@ int main() {
 	
 ; return 0; }
 EOF
-if { (eval echo configure:9251: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:9292: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   
   UUID_LIB=$i
@@ -9285,7 +9326,7 @@ for i in $with_qt $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i/lib" 1>&6
-echo "configure:9289: checking in $i/lib" >&5
+echo "configure:9330: checking in $i/lib" >&5
   
     ##  SCI_CHECK_LIB
     _SCI_FOUND_='echo -n ""'
@@ -9318,10 +9359,10 @@ echo "configure:9289: checking in $i/lib" >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lqt-mt""... $ac_c" 1>&6
-echo "configure:9322: checking for -lqt-mt" >&5
+echo "configure:9363: checking for -lqt-mt" >&5
     else
       echo $ac_n "checking for main in -lqt-mt""... $ac_c" 1>&6
-echo "configure:9325: checking for main in -lqt-mt" >&5
+echo "configure:9366: checking for main in -lqt-mt" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9371,11 +9412,11 @@ EOF
   
 
   echo "checking for moc in $i/bin" 1>&6
-echo "configure:9375: checking for moc in $i/bin" >&5
+echo "configure:9416: checking for moc in $i/bin" >&5
   # Extract the first word of "moc", so it can be a program name with args.
 set dummy moc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:9379: checking for $ac_word" >&5
+echo "configure:9420: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_QT_MOC_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -9482,10 +9523,10 @@ for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lvdt""... $ac_c" 1>&6
-echo "configure:9486: checking for -lvdt" >&5
+echo "configure:9527: checking for -lvdt" >&5
     else
       echo $ac_n "checking for VDT_triangulate in -lvdt""... $ac_c" 1>&6
-echo "configure:9489: checking for VDT_triangulate in -lvdt" >&5
+echo "configure:9530: checking for VDT_triangulate in -lvdt" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9630,10 +9671,10 @@ for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lMagick""... $ac_c" 1>&6
-echo "configure:9634: checking for -lMagick" >&5
+echo "configure:9675: checking for -lMagick" >&5
     else
       echo $ac_n "checking for WriteImage in -lMagick""... $ac_c" 1>&6
-echo "configure:9637: checking for WriteImage in -lMagick" >&5
+echo "configure:9678: checking for WriteImage in -lMagick" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9779,10 +9820,10 @@ for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lblas""... $ac_c" 1>&6
-echo "configure:9783: checking for -lblas" >&5
+echo "configure:9824: checking for -lblas" >&5
     else
       echo $ac_n "checking for main in -lblas""... $ac_c" 1>&6
-echo "configure:9786: checking for main in -lblas" >&5
+echo "configure:9827: checking for main in -lblas" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9882,10 +9923,10 @@ for i in $lapack $BLAS_PATH $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -llapack""... $ac_c" 1>&6
-echo "configure:9886: checking for -llapack" >&5
+echo "configure:9927: checking for -llapack" >&5
     else
       echo $ac_n "checking for main in -llapack""... $ac_c" 1>&6
-echo "configure:9889: checking for main in -llapack" >&5
+echo "configure:9930: checking for main in -llapack" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -9967,10 +10008,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lcomplib.sgimath""... $ac_c" 1>&6
-echo "configure:9971: checking for -lcomplib.sgimath" >&5
+echo "configure:10012: checking for -lcomplib.sgimath" >&5
     else
       echo $ac_n "checking for main in -lcomplib.sgimath""... $ac_c" 1>&6
-echo "configure:9974: checking for main in -lcomplib.sgimath" >&5
+echo "configure:10015: checking for main in -lcomplib.sgimath" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -10052,10 +10093,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lcomplib.sgimath_mp""... $ac_c" 1>&6
-echo "configure:10056: checking for -lcomplib.sgimath_mp" >&5
+echo "configure:10097: checking for -lcomplib.sgimath_mp" >&5
     else
       echo $ac_n "checking for main in -lcomplib.sgimath_mp""... $ac_c" 1>&6
-echo "configure:10059: checking for main in -lcomplib.sgimath_mp" >&5
+echo "configure:10100: checking for main in -lcomplib.sgimath_mp" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -10153,7 +10194,7 @@ case $host in
 esac
 
 echo "checking for an MPI PETSc..." 1>&6
-echo "configure:10157: checking for an MPI PETSc..." >&5
+echo "configure:10198: checking for an MPI PETSc..." >&5
 echo "$ac_t""using PETSC_ARCH: $PETSC_ARCH" 1>&6
 
 FOUND_ALL_PETSC=no
@@ -10165,7 +10206,7 @@ for j in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   echo "checking in $i..." 1>&6
-echo "configure:10169: checking in $i..." >&5
+echo "configure:10210: checking in $i..." >&5
   if test "$PETSC_ARCH" = "unknown" &&
      test -x "$i/bin/petscarch"; then
     PETSC_ARCH=`$i/bin/petscarch`
@@ -10202,10 +10243,10 @@ echo "configure:10169: checking in $i..." >&5
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:10206: checking for -lpetsc" >&5
+echo "configure:10247: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:10209: checking for main in -lpetsc" >&5
+echo "configure:10250: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -10288,10 +10329,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:10292: checking for -lpetsc" >&5
+echo "configure:10333: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:10295: checking for main in -lpetsc" >&5
+echo "configure:10336: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -10373,7 +10414,7 @@ EOF
 EOF
       for _SCI_LOOP_VAR2_ in $i/include; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:10377: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:10418: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_ -I$INCMPI_H -I$i/bmake/$PETSC_ARCH >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -10436,7 +10477,7 @@ fi
 ##  --  search for uni-petsc  --------------------------------------------
 
 echo "checking for an mpiuni PETSc..." 1>&6
-echo "configure:10440: checking for an mpiuni PETSc..." >&5
+echo "configure:10481: checking for an mpiuni PETSc..." >&5
 
 FOUND_ALL_PETSC=no
 for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
@@ -10479,10 +10520,10 @@ for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:10483: checking for -lpetsc" >&5
+echo "configure:10524: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:10486: checking for main in -lpetsc" >&5
+echo "configure:10527: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -10566,10 +10607,10 @@ EOF
       _SCI_DECL_=""
       _SCI_CALL_=""
       echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:10570: checking for -lpetsc" >&5
+echo "configure:10611: checking for -lpetsc" >&5
     else
       echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:10573: checking for main in -lpetsc" >&5
+echo "configure:10614: checking for main in -lpetsc" >&5
     fi
 
     cat > conftest.$ac_ext <<EOF
@@ -10651,7 +10692,7 @@ EOF
 EOF
       for _SCI_LOOP_VAR2_ in $i/include; do
         echo $ac_n "checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_""... $ac_c" 1>&6
-echo "configure:10655: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
+echo "configure:10696: checking for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_" >&5
         ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_ -I$i/bmake/$PETSC_ARCH -I$i/src/sys/src/mpiuni >/dev/null 2>conftest.out"
         (eval $ac_try) 2>&5
         ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
@@ -10724,17 +10765,17 @@ fi
 ##  --  search for optional headers  ------------------------------------
 ac_safe=`echo "sstream" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sstream""... $ac_c" 1>&6
-echo "configure:10728: checking for sstream" >&5
+echo "configure:10769: checking for sstream" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 10733 "configure"
+#line 10774 "configure"
 #include "confdefs.h"
 #include <sstream>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:10738: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:10779: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
