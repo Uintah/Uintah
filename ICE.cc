@@ -696,12 +696,13 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         new_dw->get(vel, lb->vel_CCLabel, indx,patch,Ghost::None, 0);
 	
 	for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-	  double A = fudge_factor*d_CFL*dx.x()/(speedSound[*iter] + 
-					     fabs(vel[*iter].x())+d_SMALL_NUM);
-	  double B = fudge_factor*d_CFL*dx.y()/(speedSound[*iter] + 
-					     fabs(vel[*iter].y())+d_SMALL_NUM);
-	  double C = fudge_factor*d_CFL*dx.z()/(speedSound[*iter] + 
-					     fabs(vel[*iter].z())+d_SMALL_NUM);
+	  IntVector c = *iter;
+	  double A = fudge_factor*d_CFL*dx.x()/(speedSound[c] + 
+					     fabs(vel[c].x())+d_SMALL_NUM);
+	  double B = fudge_factor*d_CFL*dx.y()/(speedSound[c] + 
+					     fabs(vel[c].y())+d_SMALL_NUM);
+	  double C = fudge_factor*d_CFL*dx.z()/(speedSound[c] + 
+					     fabs(vel[c].z())+d_SMALL_NUM);
 
 	  delt_CFL = std::min(A, delt_CFL);
 	  delt_CFL = std::min(B, delt_CFL);
@@ -815,7 +816,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       }
 
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-        mass_CC[m][*iter] = rho_top_cycle[m][*iter] * cell_vol;
+	IntVector c = *iter;
+        mass_CC[m][c] = rho_top_cycle[m][c] * cell_vol;
       }
     }  
     for (int m = 0; m < numMatls; m++ ) { 
@@ -886,6 +888,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 					 DataWarehouse* old_dw, 
 					 DataWarehouse* new_dw)
 {
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID() 
@@ -937,21 +940,22 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // Compute rho_micro, speedSound, and volfrac
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+      IntVector c = *iter;
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         double gamma = ice_matl->getGamma();
-        rho_micro[m][*iter] = 
-	  ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,cv[m],
-					      Temp[m][*iter]); 
+        rho_micro[m][c] = 
+	  ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma,cv[m],
+					      Temp[m][c]); 
 
-          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-                                          cv[m], Temp[m][*iter],
+          ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma,
+                                          cv[m], Temp[m][c],
                                           press_eos[m], dp_drho[m], dp_de[m]);
 
         tmp = dp_drho[m] + dp_de[m] * 
-	  (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-        speedSound_new[m][*iter] = sqrt(tmp);
-        vol_frac[m][*iter] = rho_CC[m][*iter]/rho_micro[m][*iter];
+	  (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
+        speedSound_new[m][c] = sqrt(tmp);
+        vol_frac[m][c] = rho_CC[m][c]/rho_micro[m][c];
       }
     }
 
@@ -1001,8 +1005,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
          double gamma = ice_matl->getGamma();
 
-         ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-                                           cv[m], Temp[m][*iter],
+         ice_matl->getEOS()->computePressEOS(rho_micro[m][curcell],gamma,
+                                           cv[m], Temp[m][curcell],
                                            press_eos[m], dp_drho[m], dp_de[m]);
        }
        //__________________________________
@@ -1010,17 +1014,17 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        // - update press_CC     
        StaticArray<double> Q(numMatls),y(numMatls);     
        for (int m = 0; m < numMatls; m++)   {
-         Q[m] =  press_new[*iter] - press_eos[m];
-         y[m] =  dp_drho[m] * ( rho_CC[m][*iter]/
-                 (vol_frac[m][*iter] * vol_frac[m][*iter]) ); 
-         A   +=  vol_frac[m][*iter];
+         Q[m] =  press_new[curcell] - press_eos[m];
+         y[m] =  dp_drho[m] * ( rho_CC[m][curcell]/
+                 (vol_frac[m][curcell] * vol_frac[m][curcell]) ); 
+         A   +=  vol_frac[m][curcell];
          B   +=  Q[m]/y[m];
          C   +=  1.0/y[m];
        }
        double vol_frac_not_close_packed = 1.;
        delPress = (A - vol_frac_not_close_packed - B)/C;
 
-       press_new[*iter] += delPress;
+       press_new[curcell] += delPress;
 
        //__________________________________
        // backout rho_micro_CC at this new pressure
@@ -1028,15 +1032,15 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
          ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
          double gamma = ice_matl->getGamma();
 
-         rho_micro[m][*iter] = 
-           ice_matl->getEOS()->computeRhoMicro(press_new[*iter],gamma,
-                                               cv[m],Temp[m][*iter]);
+         rho_micro[m][curcell] = 
+           ice_matl->getEOS()->computeRhoMicro(press_new[curcell],gamma,
+                                               cv[m],Temp[m][curcell]);
        }
        //__________________________________
        // - compute the updated volume fractions
        for (int m = 0; m < numMatls; m++)  {
          delVol_frac[m]       = -(Q[m] + delPress)/y[m];
-         vol_frac[m][*iter]   = rho_CC[m][*iter]/rho_micro[m][*iter];
+         vol_frac[m][curcell]   = rho_CC[m][curcell]/rho_micro[m][curcell];
        }
        //__________________________________
        // Find the speed of sound 
@@ -1045,20 +1049,20 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        for (int m = 0; m < numMatls; m++)  {
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
           double gamma = ice_matl->getGamma();
-          ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-                                            cv[m],Temp[m][*iter],
+          ice_matl->getEOS()->computePressEOS(rho_micro[m][curcell],gamma,
+                                            cv[m],Temp[m][curcell],
                                             press_eos[m],dp_drho[m], dp_de[m]);
 
           tmp = dp_drho[m] + dp_de[m] * 
-                      (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
-          speedSound_new[m][*iter] = sqrt(tmp);
+                      (press_eos[m]/(rho_micro[m][curcell]*rho_micro[m][curcell]));
+          speedSound_new[m][curcell] = sqrt(tmp);
        }
        //__________________________________
        // - Test for convergence 
        //  If sum of vol_frac_CC ~= 1.0 then converged 
        sum = 0.0;
        for (int m = 0; m < numMatls; m++)  {
-         sum += vol_frac[m][*iter];
+         sum += vol_frac[m][curcell];
        }
        if (fabs(sum-1.0) < convergence_crit)
          converged = true;
@@ -1080,8 +1084,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
 
        for (int m = 0; m < numMatls; m++) {
-           ASSERT(( vol_frac[m][*iter] > 0.0 ) ||
-                  ( vol_frac[m][*iter] < 1.0));
+           ASSERT(( vol_frac[m][c] > 0.0 ) ||
+                  ( vol_frac[m][c] < 1.0));
        }
       if ( fabs(sum - 1.0) > convergence_crit)   {
 	ostringstream warning;
@@ -1093,8 +1097,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 	  warning.str();
 	throw InvalidValue(warn);
       }
-
-      if ( press_new[*iter] < 0.0 )   {
+      IntVector c = *iter;
+      if ( press_new[c] < 0.0 )   {
 	ostringstream warning;
 	IntVector c = *iter;
 	warning << " cell["<<c.x()<<"]["<<c.y()<<"]["<<c.z()
@@ -1106,7 +1110,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
 
       for (int m = 0; m < numMatls; m++)
-      if ( rho_micro[m][*iter] < 0.0 || vol_frac[m][*iter] < 0.0) {
+      if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) {
 	ostringstream warning;
 	IntVector c = *iter;
 	warning << " cell["<<c.x()<<"]["<<c.y()<<"]["<<c.z()
@@ -1116,7 +1120,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 	throw InvalidValue(warn);
       }
       if (switchDebug_equilibration_press) {
-        n_iters_equil_press[*iter] = count;
+        n_iters_equil_press[c] = count;
       }
     }     // end of cell interator
 
@@ -1706,7 +1710,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
 	  iter++) {
-        q_CC[*iter] = vol_frac[*iter] * invvol;
+	IntVector c = *iter;
+        q_CC[c] = vol_frac[c] * invvol;
       }
       //__________________________________
       //   First order advection of q_CC
@@ -1724,10 +1729,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       }
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+	IntVector c = *iter;
         //__________________________________
         //   Contributions from reactions
         //   to be filled in Be very careful with units
-        term1[*iter] += (burnedMass[*iter]/delT)/(rho_micro[m][*iter] * vol);
+        term1[c] += (burnedMass[c]/delT)/(rho_micro[m][c] * vol);
 
         //__________________________________
         //   Divergence of velocity * face area
@@ -1741,18 +1747,19 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //  Advection(theta_k, U^f_k)
         //  This subtle point is discussed on pg
         //  190 of my Journal
-        term2[*iter] -= q_advected[*iter];
+        term2[c] -= q_advected[c];
 
-        term3[*iter] += vol_frac[*iter] /(rho_micro[m][*iter] *
-				speedSound[*iter]*speedSound[*iter]);
+        term3[c] += vol_frac[c] /(rho_micro[m][c] *
+				speedSound[c]*speedSound[c]);
       }  //iter loop
     }  //matl loop
     press_CC.copyData(pressure);
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-      delP_MassX[*iter]    = (delT * term1[*iter])/term3[*iter];
-      delP_Dilatate[*iter] = -term2[*iter]/term3[*iter];
-      press_CC[*iter]      = pressure[*iter] + 
-                             delP_MassX[*iter] + delP_Dilatate[*iter];    
+      IntVector c = *iter;
+      delP_MassX[c]    = (delT * term1[c])/term3[c];
+      delP_Dilatate[c] = -term2[c]/term3[c];
+      press_CC[c]      = pressure[c] + 
+                             delP_MassX[c] + delP_Dilatate[c];    
     }
     setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
 
@@ -1932,20 +1939,20 @@ void ICE::massExchange(const ProcessorGroup*,
     // and the switch is on.
     if(d_massExchange && (reactant_indx >= 0)){       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-
-        double mass_hmx = rho_CC[reactant_indx][*iter] * vol;
+	IntVector c = *iter;
+        double mass_hmx = rho_CC[reactant_indx][c] * vol;
         if (mass_hmx > d_SMALL_NUM)  {
-           double burnedMass_tmp = (rho_CC[reactant_indx][*iter] * vol);  
+           double burnedMass_tmp = (rho_CC[reactant_indx][c] * vol);  
            // hardwired wipes out all the mass in one 
           // timestep
-           burnedMass[reactant_indx][*iter] =  -burnedMass_tmp;
-	   releasedHeat[reactant_indx][*iter] = -burnedMass_tmp
+           burnedMass[reactant_indx][c] =  -burnedMass_tmp;
+	   releasedHeat[reactant_indx][c] = -burnedMass_tmp
 					      *  cv[reactant_indx]
-					      *  Temp_CC[reactant_indx][*iter];
+					      *  Temp_CC[reactant_indx][c];
            // Commented out for now as I'm not sure that this is appropriate
 	   // for regular ICE - Jim 7/30/01
-//	   created_vol[reactant_indx][*iter]  =
-//			     -burnedMass_tmp/rho_micro_CC[reactant_indx][*iter];
+//	   created_vol[reactant_indx][c]  =
+//			     -burnedMass_tmp/rho_micro_CC[reactant_indx][c];
         }
       }
       //__________________________________
@@ -1956,12 +1963,13 @@ void ICE::massExchange(const ProcessorGroup*,
 	if (ice_matl->getRxProduct() == Material::product) {
 	  for(int m = 0; m < numICEMatls; m++) {
 	    for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-	      burnedMass[prods][*iter]  -= burnedMass[m][*iter];
-              releasedHeat[prods][*iter] -=
-	                       burnedMass[m][*iter]*cv[m]*Temp_CC[m][*iter];
+	      IntVector c = *iter;
+	      burnedMass[prods][c]  -= burnedMass[m][c];
+              releasedHeat[prods][c] -=
+	                       burnedMass[m][c]*cv[m]*Temp_CC[m][c];
            // Commented out for now as I'm not sure that this is appropriate
 	   // for regular ICE - Jim 7/30/01
-//	      created_vol[prods][*iter]  -= created_vol[m][*iter];
+//	      created_vol[prods][c]  -= created_vol[m][c];
 	    }
 	  }
 	}
@@ -2082,45 +2090,46 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       //__________________________________
       //  accumulate sources
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        mass = rho_CC[*iter] * vol;
-        right    = *iter + IntVector(1,0,0);
-        left     = *iter + IntVector(0,0,0);
-        top      = *iter + IntVector(0,1,0);
-        bottom   = *iter + IntVector(0,0,0);
-        front    = *iter + IntVector(0,0,1);
-        back     = *iter + IntVector(0,0,0);
+	IntVector c = *iter;
+        mass = rho_CC[c] * vol;
+        right    = c + IntVector(1,0,0);
+        left     = c + IntVector(0,0,0);
+        top      = c + IntVector(0,1,0);
+        bottom   = c + IntVector(0,0,0);
+        front    = c + IntVector(0,0,1);
+        back     = c + IntVector(0,0,0);
 
         //__________________________________
         //    X - M O M E N T U M 
-        pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[*iter];
+        pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
 
         viscous_source = (tau_X_FC[right].x() - tau_X_FC[left].x())  *delY*delZ +
                          (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())*delX*delZ +
                          (tau_Z_FC[front].x() - tau_Z_FC[back].x())  *delX*delY;
                                  
-        mom_source[*iter].x( (-pressure_source * delY * delZ +
+        mom_source[c].x( (-pressure_source * delY * delZ +
                                viscous_source +
 			          mass * gravity.x()) * delT );
         //__________________________________
         //    Y - M O M E N T U M
-         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[*iter];
+         pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
 
         viscous_source = (tau_X_FC[right].y() - tau_X_FC[left].y())  *delY*delZ +
                          (tau_Y_FC[top].y()   - tau_Y_FC[bottom].y())*delX*delZ +
                          (tau_Z_FC[front].y() - tau_Z_FC[back].y())  *delX*delY;
 
-        mom_source[*iter].y( (-pressure_source * delX * delZ +
+        mom_source[c].y( (-pressure_source * delX * delZ +
                                viscous_source +
 			          mass * gravity.y()) * delT );
         //__________________________________
         //    Z - M O M E N T U M
-        pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[*iter];
+        pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
         
         viscous_source = (tau_X_FC[right].z() - tau_X_FC[left].z())  *delY*delZ +
                          (tau_Y_FC[top].z()   - tau_Y_FC[bottom].z())*delX*delZ +
                          (tau_Z_FC[front].z() - tau_Z_FC[back].z())  *delX*delY;
 
-        mom_source[*iter].z( (-pressure_source * delX * delY +
+        mom_source[c].z( (-pressure_source * delX * delY +
 			          viscous_source + 
                                mass * gravity.z()) * delT );
                                
@@ -2202,16 +2211,18 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //   Exclude contribution from delP_MassX
       int_eng_source.initialize(0.);
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        A = vol * vol_frac[*iter] * press_CC[*iter];
-        B = rho_micro_CC[*iter]   * speedSound[*iter] * speedSound[*iter];
-        int_eng_source[*iter] = (A/B) * delP_Dilatate[*iter];
+	IntVector c = *iter;
+        A = vol * vol_frac[c] * press_CC[c];
+        B = rho_micro_CC[c]   * speedSound[c] * speedSound[c];
+        int_eng_source[c] = (A/B) * delP_Dilatate[c];
       }
 
 #ifdef ANNULUSICE
       if(n_iter <= 1.e10){
         if(m==2){
           for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-            int_eng_source[*iter] += 1.e10 * delT * rho_CC[*iter] * vol;
+	    IntVector c = *iter;
+            int_eng_source[c] += 1.e10 * delT * rho_CC[c] * vol;
           }
         }
       }
@@ -2289,13 +2300,13 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       if(d_massExchange == false) {
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	    iter++) {
+	  IntVector c = *iter;
+          double mass = rho_CC[c] * vol;
+          mass_L[c] = mass;
 
-          double mass = rho_CC[*iter] * vol;
-          mass_L[*iter] = mass;
+          mom_L[c] = vel_CC[c] * mass + mom_source[c];
 
-          mom_L[*iter] = vel_CC[*iter] * mass + mom_source[*iter];
-
-          int_eng_L[*iter] = mass*cv * temp_CC[*iter] + int_eng_source[*iter];
+          int_eng_L[c] = mass*cv * temp_CC[c] + int_eng_source[c];
         }
       }
       //__________________________________
@@ -2308,21 +2319,22 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         double massGain = 0.;
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	    iter++) {
+	  IntVector c = *iter;
            //  must have a minimum mass
-          double mass = rho_CC[*iter] * vol;
+          double mass = rho_CC[c] * vol;
           double min_mass = d_SMALL_NUM * vol;
 
-          mass_L[*iter] = std::max( (mass + burnedMass[*iter] ), min_mass);
+          mass_L[c] = std::max( (mass + burnedMass[c] ), min_mass);
 
-          massGain += burnedMass[*iter];
+          massGain += burnedMass[c];
 
           //  must have a minimum momentum                            
-          Vector min_mom_L = vel_CC[*iter] * min_mass;
+          Vector min_mom_L = vel_CC[c] * min_mass;
 	// Todd:  I believe the second term here to be flawed as was
 	// int_eng_tmp.  We should create a "burnedMomentum" or something
 	// to do this right.  Someday.
-          Vector mom_L_tmp = vel_CC[*iter] * mass;
-//                         + vel_CC[*iter] * burnedMass[*iter];
+          Vector mom_L_tmp = vel_CC[c] * mass;
+//                         + vel_CC[c] * burnedMass[c];
                                
            // find the max between mom_L_tmp and min_mom_L
            // but keep the sign of the mom_L_tmp     
@@ -2342,11 +2354,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           mom_L_y = plus_minus_one_y * mom_L_y;
           mom_L_z = plus_minus_one_z * mom_L_z;
  
-          mom_L[*iter] = Vector(mom_L_x,mom_L_y,mom_L_z) + mom_source[*iter];
+          mom_L[c] = Vector(mom_L_x,mom_L_y,mom_L_z) + mom_source[c];
 
           // must have a minimum int_eng   
-          double min_int_eng = min_mass * cv * temp_CC[*iter];
-          double int_eng_tmp = mass * cv * temp_CC[*iter];
+          double min_int_eng = min_mass * cv * temp_CC[c];
+          double int_eng_tmp = mass * cv * temp_CC[c];
 
           //  Glossary:
           //  int_eng_tmp    = the amount of internal energy for this
@@ -2361,11 +2373,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //                   the equilibration pressure from going nuts
 
 
-          int_eng_L[*iter] = int_eng_tmp +
-                             int_eng_source[*iter] +
-                             releasedHeat[*iter];
+          int_eng_L[c] = int_eng_tmp +
+                             int_eng_source[c] +
+                             releasedHeat[c];
 
-          int_eng_L[*iter] = std::max(int_eng_L[*iter], min_int_eng);
+          int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
 
          }
 	cout << "Mass gained by the gas this timestep = " << massGain << endl;
@@ -2377,7 +2389,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         double plusMinusOne = 1.0;
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	      iter++) {
-          plusMinusOne *= int_eng_L[*iter]/fabs(int_eng_L[*iter]);     
+	  IntVector c = *iter;
+          plusMinusOne *= int_eng_L[c]/fabs(int_eng_L[c]);     
         }
         if (plusMinusOne < 0.0) {
 	  string warn = "ICE::computeLagrangianValues: Negative Internal energy or Temperature detected";
@@ -2516,19 +2529,21 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //__________________________________
     // Convert vars. flux -> primitive 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
       for (int m = 0; m < numMatls; m++) {
-        Temp_CC[m][*iter] = int_eng_L[m][*iter]/(mass_L[m][*iter]*cv[m]);
-        vel_CC[m][*iter]  =  mom_L[m][*iter]/mass_L[m][*iter];
+        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
+        vel_CC[m][c]  =  mom_L[m][c]/mass_L[m][c];
       }  
     }
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
       //   Form BETA matrix (a), off diagonal terms
       //  The beta and (a) matrix is common to all momentum exchanges
       for(int m = 0; m < numMatls; m++)  {
-        tmp    = rho_micro_CC[m][*iter];
+        tmp    = rho_micro_CC[m][c];
         for(int n = 0; n < numMatls; n++) {
-	  beta[m][n] = delT * vol_frac_CC[n][*iter] * K[n][m]/tmp;
+	  beta[m][n] = delT * vol_frac_CC[n][c] * K[n][m]/tmp;
 	  a[m][n] = -beta[m][n];
         }
       }
@@ -2550,14 +2565,14 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
         for(int n = 0; n < numMatls; n++) {
 	  b[m] += beta[m][n] *
-	    (vel_CC[n][*iter].x() - vel_CC[m][*iter].x());
+	    (vel_CC[n][c].x() - vel_CC[m][c].x());
         }
       }
   
       vector<double> X(numMatls);
       multiplyMatrixAndVector(numMatls,a_inverse,b,X);
       for(int m = 0; m < numMatls; m++) {
-	  vel_CC[m][*iter].x( vel_CC[m][*iter].x() + X[m] );
+	  vel_CC[m][c].x( vel_CC[m][c].x() + X[m] );
       }
 
       //---------- Y - M O M E N T U M
@@ -2569,12 +2584,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
         for(int n = 0; n < numMatls; n++) {
 	  b[m] += beta[m][n] *
-	    (vel_CC[n][*iter].y() - vel_CC[m][*iter].y());
+	    (vel_CC[n][c].y() - vel_CC[m][c].y());
         }
       }   
       multiplyMatrixAndVector(numMatls,a_inverse,b,X);
       for(int m = 0; m < numMatls; m++) {
-	  vel_CC[m][*iter].y( vel_CC[m][*iter].y() + X[m] );
+	  vel_CC[m][c].y( vel_CC[m][c].y() + X[m] );
       }
 
       //---------- Z - M O M E N T U M
@@ -2586,20 +2601,20 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
         for(int n = 0; n < numMatls; n++) {
 	  b[m] += beta[m][n] *
-	    (vel_CC[n][*iter].z() - vel_CC[m][*iter].z());
+	    (vel_CC[n][c].z() - vel_CC[m][c].z());
         }
       } 
       multiplyMatrixAndVector(numMatls,a_inverse,b,X);
       for(int m = 0; m < numMatls; m++) {
-	  vel_CC[m][*iter].z( vel_CC[m][*iter].z() + X[m] );
+	  vel_CC[m][c].z( vel_CC[m][c].z() + X[m] );
       }
 
       //---------- E N E R G Y   E X C H A N G E
       //   Form BETA matrix (a) off diagonal terms
       for(int m = 0; m < numMatls; m++) {
-        tmp = cv[m]*rho_micro_CC[m][*iter];
+        tmp = cv[m]*rho_micro_CC[m][c];
         for(int n = 0; n < numMatls; n++)  {
-	  beta[m][n] = delT * vol_frac_CC[n][*iter] * H[n][m]/tmp;
+	  beta[m][n] = delT * vol_frac_CC[n][c] * H[n][m]/tmp;
 	  a[m][n] = -beta[m][n];
         }
       }
@@ -2616,13 +2631,13 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
        for(int n = 0; n < numMatls; n++) {
 	  b[m] += beta[m][n] *
-	    (Temp_CC[n][*iter] - Temp_CC[m][*iter]);
+	    (Temp_CC[n][c] - Temp_CC[m][c]);
         }
       }
       //     S O L V E, Add exchange contribution to orig value
       matrixSolver(numMatls,a,b,X);
       for(int m = 0; m < numMatls; m++) {
-        Temp_CC[m][*iter] = Temp_CC[m][*iter] + X[m];
+        Temp_CC[m][c] = Temp_CC[m][c] + X[m];
       }
     }
     //__________________________________
@@ -2636,9 +2651,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
       for (int m = 0; m < numMatls; m++) {
-        int_eng_L_ME[m][*iter] = Temp_CC[m][*iter] * cv[m] * mass_L[m][*iter];
-        mom_L_ME[m][*iter]     = vel_CC[m][*iter] * mass_L[m][*iter];
+        int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c];
+        mom_L_ME[m][c]     = vel_CC[m][c] * mass_L[m][c];
       }  
     } 
 
@@ -2746,45 +2762,52 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //__________________________________
       // Advect mass and backout mass_CC and rho_CC
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
-        q_CC[*iter] = mass_L[*iter] * invvol;
+	IntVector c = *iter;
+        q_CC[c] = mass_L[c] * invvol;
       }
 
       advector->advectQ(q_CC,patch,q_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        rho_CC[*iter]  = (mass_L[*iter] + q_advected[*iter]) * invvol;
+	IntVector c = *iter;
+        rho_CC[c]  = (mass_L[c] + q_advected[c]) * invvol;
       }
       setBC(rho_CC,   "Density",              patch,indx);
       // mass_CC is needed for MPMICE
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-        mass_CC[*iter] = rho_CC[*iter] * vol;
+	IntVector c = *iter;
+        mass_CC[c] = rho_CC[c] * vol;
       }
 
       //__________________________________
       // Advect  momentum and backout vel_CC
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
-        qV_CC[*iter] = mom_L_ME[*iter] * invvol;
+	IntVector c = *iter;
+        qV_CC[c] = mom_L_ME[c] * invvol;
       }
 
       advector->advectQ(qV_CC,patch,qV_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        mass = rho_CC[*iter] * vol;
-        vel_CC[*iter] = (mom_L_ME[*iter] + qV_advected[*iter])/mass ;
+	IntVector c = *iter;
+        mass = rho_CC[c] * vol;
+        vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass ;
       }
       setBC(vel_CC,   "Velocity",             patch,indx);
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
       for(CellIterator iter=patch->getCellIterator(gc); !iter.done(); iter++){
-        q_CC[*iter] = int_eng_L_ME[*iter] * invvol;
+	IntVector c = *iter;
+        q_CC[c] = int_eng_L_ME[c] * invvol;
       }
 
       advector->advectQ(q_CC,patch,q_advected);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        mass = rho_CC[*iter] * vol;
-        temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/(mass*cv);
+	IntVector c = *iter;
+        mass = rho_CC[c] * vol;
+        temp[c] = (int_eng_L_ME[c] + q_advected[c])/(mass*cv);
       }
       setBC(temp,     "Temperature",          patch,indx);
 
@@ -2796,23 +2819,27 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         // the interior cells.
         for(CellIterator iter=patch->getExtraCellIterator();!iter.done();
           iter++){
-          sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
+	  IntVector c = *iter;
+          sp_vol_CC[c] = 1.0/rho_micro[c];
         }
         for(CellIterator iter=patch->getCellIterator(gc); !iter.done();iter++){
-//          q_CC[*iter] = (mass_L[*iter]/rho_micro[*iter])*invvol;
-	  q_CC[*iter] = (mass_CC_old[*iter]/rho_micro[*iter]
-						 + createdVol[*iter])*invvol;
+	  IntVector c = *iter;
+	  //          q_CC[c] = (mass_L[c]/rho_micro[c])*invvol;
+	  q_CC[c] = (mass_CC_old[c]/rho_micro[c]
+						 + createdVol[c])*invvol;
         }
 
 	advector->advectQ(q_CC,patch,q_advected);
 
 	// After the following expression, sp_vol_CC is the matl volume
         for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-          sp_vol_CC[*iter] = (q_CC[*iter]*vol + q_advected[*iter]);
+	  IntVector c = *iter;
+          sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c]);
         }
         // Divide by the new mass_CC.
         for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-	  sp_vol_CC[*iter] /= mass_CC[*iter];
+	  IntVector c = *iter;
+	  sp_vol_CC[c] /= mass_CC[c];
         }
       }
 
@@ -3030,8 +3057,9 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
       if( face == Patch::xplus || face == Patch::xminus ) {
         for(CellIterator iter = patch->getFaceCellIterator(face,"FC_vars"); 
                                                   !iter.done(); iter++) { 
-          //cout<<" now working on uvel_FC "<<*iter<<endl;
-          variable[*iter] = 0.0;  
+	  IntVector c = *iter;
+          //cout<<" now working on uvel_FC "<<c<<endl;
+          variable[c] = 0.0;  
         }
       }
     }
@@ -3085,8 +3113,9 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
       if( face == Patch::yminus || face == Patch::yplus ) {
         for(CellIterator iter = patch->getFaceCellIterator(face,"FC_vars");
                                                     !iter.done(); iter++) { 
-          //cout<<" now working on vvel_FC"<< *iter<<endl;
-          variable[*iter] = 0.0;  
+	  IntVector c = *iter;
+          //cout<<" now working on vvel_FC"<< c<<endl;
+          variable[c] = 0.0;  
         }
       }
     }
@@ -3140,7 +3169,8 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
       if( face == Patch::zminus || face == Patch::zplus ) {
         for(CellIterator iter = patch->getFaceCellIterator(face,"FC_vars"); 
                                                       !iter.done(); iter++) { 
-          variable[*iter] = 0.0;  
+	  IntVector c = *iter;
+          variable[c] = 0.0;  
         }
       }
     }
@@ -3207,10 +3237,10 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector curcell = *iter;
       dist_from_p_ref   =  fabs((double) (curcell.x() - press_ref_x)) * dx.x();
-      press_hydro       = rho_micro_CC[*iter] * 
+      press_hydro       = rho_micro_CC[curcell] * 
                           fabs(gravity.x() ) * dist_from_p_ref;
       
-      press_CC[*iter] += press_hydro;
+      press_CC[curcell] += press_hydro;
     }
   }
   //__________________________________
@@ -3219,10 +3249,10 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector curcell = *iter;
       dist_from_p_ref   = fabs((double) (curcell.y() - press_ref_y)) * dx.y();
-      press_hydro       = rho_micro_CC[*iter] * 
+      press_hydro       = rho_micro_CC[curcell] * 
                           fabs(gravity.y() ) * dist_from_p_ref;
       
-      press_CC[*iter] += press_hydro;
+      press_CC[curcell] += press_hydro;
     }
   }
   //__________________________________
@@ -3231,10 +3261,10 @@ void   ICE::hydrostaticPressureAdjustment(const Patch* patch,
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       IntVector curcell = *iter;
       dist_from_p_ref   = fabs((double) (curcell.z() - press_ref_z)) * dx.z();
-      press_hydro       = rho_micro_CC[*iter] * 
+      press_hydro       = rho_micro_CC[curcell] * 
                           fabs(gravity.z() ) * dist_from_p_ref;
       
-      press_CC[*iter] += press_hydro;
+      press_CC[curcell] += press_hydro;
     }
   }   
 }
