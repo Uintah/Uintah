@@ -7,3 +7,11 @@
 # a script that loads the command.
 
 set auto_index(PartToGeom) "source $dir/PartToGeom.tcl"
+set auto_index(Readtec) "source $dir/Readtec.tcl"
+set auto_index(cfdGridLines) "source $dir/cfdGridLines.tcl"
+
+
+
+
+
+

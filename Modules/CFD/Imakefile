@@ -1,13 +1,13 @@
 
 #include <config/sci.cf>
 
-OBJS = PartToGeom.o  Readtec.o
-SRCS = PartToGeom.cc Readtec.cc
+OBJS = Readtec.o  PartToGeom.o  cfdGridLines.o 
+SRCS = Readtec.cc PartToGeom.cc cfdGridLines.cc 
 
 LIBNAME = CFD
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom \
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom \
 	-lGeometry -lMath -lTCL -lClasslib -lMultitask -lMalloc -lm \
 	-lC -lc
 
