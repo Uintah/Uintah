@@ -135,13 +135,26 @@ DEALINGS IN THE SOFTWARE.
 
     <para>Click the "Update" button to finalize and apply the Crop
     filter to the Resampled dataset.</para>
+    <figure id="fig.filter">
+      <title>Dynamic Filters</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Adding and using Dynamic Filters.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/filters.eps" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/filters.jpg" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
 
     <para>Notice that each of these filters are applied sequentially
     from the Load Data window to the last filter in the list.  To
     remove a filter from the list of filters to apply to the data,
-    simply select the filter by clicking in its window, and then
-    clicking the red "Delete" button.  This will remove the filter
-    from the pipeline completely.</para>
+    simply click on the red 'X' button in the appropriate filter.  
+    This will remove the filter from the pipeline completely.</para>
 
     <para>Click the "Update" button to finalize and apply the new
     filter rules.  Only after clicking the Update button will any
