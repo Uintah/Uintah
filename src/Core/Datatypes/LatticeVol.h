@@ -47,32 +47,32 @@ public:
   FData3d(const FData3d& data) {copy(data);}
   virtual ~FData3d(){}
   
-  const value_type &operator[](typename LatVolMesh::cell_index idx) const 
+  const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const 
     { return operator()(idx.k_,idx.j_,idx.i_); } 
-  const value_type &operator[](typename LatVolMesh::face_index idx) const
+  const value_type &operator[](typename LatVolMesh::Face::index_type idx) const
     { return operator()(0, 0, idx.i_); }
-  const value_type &operator[](typename LatVolMesh::edge_index idx) const 
+  const value_type &operator[](typename LatVolMesh::Edge::index_type idx) const 
     { return operator()(0, 0, idx.i_); }
-  const value_type &operator[](typename LatVolMesh::node_index idx) const
+  const value_type &operator[](typename LatVolMesh::Node::index_type idx) const
     { return operator()(idx.k_,idx.j_,idx.i_); }
 
-  value_type &operator[](typename LatVolMesh::cell_index idx)
+  value_type &operator[](typename LatVolMesh::Cell::index_type idx)
     { return operator()(idx.k_,idx.j_,idx.i_); } 
-  value_type &operator[](typename LatVolMesh::face_index idx)
+  value_type &operator[](typename LatVolMesh::Face::index_type idx)
     { return operator()(0, 0, idx.i_); }
-  value_type &operator[](typename LatVolMesh::edge_index idx)
+  value_type &operator[](typename LatVolMesh::Edge::index_type idx)
     { return operator()(0, 0, idx.i_); }
-  value_type &operator[](typename LatVolMesh::node_index idx)
+  value_type &operator[](typename LatVolMesh::Node::index_type idx)
     { return operator()(idx.k_,idx.j_,idx.i_); }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
-  void resize(const LatVolMesh::node_size_type &size)
+  void resize(const LatVolMesh::Node::size_type &size)
     { newsize(size.k_, size.j_, size.i_); }
-  void resize(LatVolMesh::edge_size_type) {}
-  void resize(LatVolMesh::face_size_type) {}
-  void resize(const LatVolMesh::cell_size_type &size)
+  void resize(LatVolMesh::Edge::size_type) {}
+  void resize(LatVolMesh::Face::size_type) {}
+  void resize(const LatVolMesh::Cell::size_type &size)
     { newsize(size.k_, size.j_, size.i_); }
 };
 
@@ -256,14 +256,14 @@ template <> bool LatticeVol<Vector>::get_gradient(Vector &, const Point &p);
 //   double fx=x-ix0;
 //   double fy=y-iy0;
 //   double fz=z-iz0;
-//   double d000=lvd->value(LatVolMesh::node_index(ix0,iy0,iz0));
-//   double d100=lvd->value(LatVolMesh::node_index(ix1,iy0,iz0));
-//   double d010=lvd->value(LatVolMesh::node_index(ix0,iy1,iz0));
-//   double d110=lvd->value(LatVolMesh::node_index(ix1,iy1,iz0));
-//   double d001=lvd->value(LatVolMesh::node_index(ix0,iy0,iz1));
-//   double d101=lvd->value(LatVolMesh::node_index(ix1,iy0,iz1));
-//   double d011=lvd->value(LatVolMesh::node_index(ix0,iy1,iz1));
-//   double d111=lvd->value(LatVolMesh::node_index(ix1,iy1,iz1));
+//   double d000=lvd->value(LatVolMesh::Node::index_type(ix0,iy0,iz0));
+//   double d100=lvd->value(LatVolMesh::Node::index_type(ix1,iy0,iz0));
+//   double d010=lvd->value(LatVolMesh::Node::index_type(ix0,iy1,iz0));
+//   double d110=lvd->value(LatVolMesh::Node::index_type(ix1,iy1,iz0));
+//   double d001=lvd->value(LatVolMesh::Node::index_type(ix0,iy0,iz1));
+//   double d101=lvd->value(LatVolMesh::Node::index_type(ix1,iy0,iz1));
+//   double d011=lvd->value(LatVolMesh::Node::index_type(ix0,iy1,iz1));
+//   double d111=lvd->value(LatVolMesh::Node::index_type(ix1,iy1,iz1));
 //   double z00=Interpolate(d000, d001, fz);
 //   double z01=Interpolate(d010, d011, fz);
 //   double z10=Interpolate(d100, d101, fz);
@@ -392,7 +392,7 @@ bool LatticeVol<Data>::interpolate(Data &g, const Point &p) {
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
   } else if( data_at() == Field::CELL) {
-    typename mesh_type::cell_index ci;
+    typename mesh_type::Cell::index_type ci;
     if( mesh->locate(ci, p) ) {
       g = value( ci );
     } else {

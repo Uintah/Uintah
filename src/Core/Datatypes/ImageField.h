@@ -47,33 +47,33 @@ public:
   FData2d(const FData2d& data) {copy(data);} 
   virtual ~FData2d(){}
   
-  const value_type &operator[](typename ImageMesh::cell_index idx) const 
+  const value_type &operator[](typename ImageMesh::Cell::index_type idx) const 
     { return operator()(0, idx.i_); } 
-  const value_type &operator[](typename ImageMesh::face_index idx) const
+  const value_type &operator[](typename ImageMesh::Face::index_type idx) const
     { return operator()(idx.j_, idx.i_); }
-  const value_type &operator[](typename ImageMesh::edge_index idx) const 
+  const value_type &operator[](typename ImageMesh::Edge::index_type idx) const 
     { return operator()(0, idx.i_); }
-  const value_type &operator[](typename ImageMesh::node_index idx) const
+  const value_type &operator[](typename ImageMesh::Node::index_type idx) const
     { return operator()(idx.j_, idx.i_); }
 
-  value_type &operator[](typename ImageMesh::cell_index idx)
+  value_type &operator[](typename ImageMesh::Cell::index_type idx)
     { return operator()(0, idx.i_); } 
-  value_type &operator[](typename ImageMesh::face_index idx)
+  value_type &operator[](typename ImageMesh::Face::index_type idx)
     { return operator()(idx.j_, idx.i_); }
-  value_type &operator[](typename ImageMesh::edge_index idx)
+  value_type &operator[](typename ImageMesh::Edge::index_type idx)
     { return operator()(0, idx.i_); }
-  value_type &operator[](typename ImageMesh::node_index idx)
+  value_type &operator[](typename ImageMesh::Node::index_type idx)
     { return operator()(idx.j_, idx.i_); }
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
-  void resize(const ImageMesh::node_size_type &size)
+  void resize(const ImageMesh::Node::size_type &size)
     { newsize(size.j_, size.i_); }
-  void resize(ImageMesh::edge_size_type) {}
-  void resize(const ImageMesh::face_size_type &size)
+  void resize(ImageMesh::Edge::size_type) {}
+  void resize(const ImageMesh::Face::size_type &size)
     { newsize(size.j_, size.i_); }
-  void resize(ImageMesh::cell_size_type) {}
+  void resize(ImageMesh::Cell::size_type) {}
 };
 
 template <class Data>

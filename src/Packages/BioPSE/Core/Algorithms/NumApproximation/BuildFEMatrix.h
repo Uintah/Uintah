@@ -69,9 +69,9 @@ class BuildFEMatrix: public Datatype {
   //! Private methods
   void parallel(int);
   
-  void build_local_matrix(double lcl[4][4], TetVolMesh::cell_index);
+  void build_local_matrix(double lcl[4][4], TetVolMesh::Cell::index_type);
   
-  void add_lcl_gbl(double lcl[4][4], TetVolMesh::cell_index, int, int, TetVolMesh::node_array&);
+  void add_lcl_gbl(double lcl[4][4], TetVolMesh::Cell::index_type, int, int, TetVolMesh::Node::array_type&);
   
  
 public:

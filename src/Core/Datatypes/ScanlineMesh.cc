@@ -52,23 +52,23 @@ ScanlineMesh::get_bounding_box() const
 }
 
 void 
-ScanlineMesh::get_nodes(node_array &array, edge_index idx) const
+ScanlineMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.resize(2);
-  array[0] = node_index(idx);
-  array[1] = node_index(idx + 1);
+  array[0] = Node::index_type(idx);
+  array[1] = Node::index_type(idx + 1);
 }
 
 //! return all cell_indecies that overlap the BBox in arr.
 void 
-ScanlineMesh::get_edges(edge_array &/* arr */, const BBox &/*bbox*/) const
+ScanlineMesh::get_edges(Edge::array_type &/* arr */, const BBox &/*bbox*/) const
 {
   // TODO: implement this
 }
 
 
 void 
-ScanlineMesh::get_center(Point &result, node_index idx) const
+ScanlineMesh::get_center(Point &result, Node::index_type idx) const
 {
   const double sx = (max_.x() - min_.x()) / (length_ - 1); 
 
@@ -79,7 +79,7 @@ ScanlineMesh::get_center(Point &result, node_index idx) const
 
 
 void 
-ScanlineMesh::get_center(Point &result, edge_index idx) const
+ScanlineMesh::get_center(Point &result, Edge::index_type idx) const
 {
   const double sx = (max_.x() - min_.x()) / (length_ - 1); 
 
@@ -90,7 +90,7 @@ ScanlineMesh::get_center(Point &result, edge_index idx) const
 
 // TODO: verify
 bool
-ScanlineMesh::locate(edge_index &cell, const Point &p) const
+ScanlineMesh::locate(Edge::index_type &cell, const Point &p) const
 {
   double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (length_ - 1) + 0.5;
 
@@ -109,10 +109,10 @@ ScanlineMesh::locate(edge_index &cell, const Point &p) const
 
 // TODO: verify
 bool
-ScanlineMesh::locate(node_index &node, const Point &p) const
+ScanlineMesh::locate(Node::index_type &node, const Point &p) const
 {
-  node_array nodes;     // storage for node_indeces
-  cell_index cell;
+  Node::array_type nodes;     // storage for node_indeces
+  Cell::index_type cell;
   double max;
   int loop;
 

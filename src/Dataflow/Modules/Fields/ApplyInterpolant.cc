@@ -90,7 +90,7 @@ ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
   {
   case Field::NODE:
     {
-      typename FOUT::mesh_type::node_iterator iter =
+      typename FOUT::mesh_type::Node::iterator iter =
 	fout->get_typed_mesh()->node_begin();
       while (iter != fout->get_typed_mesh()->node_end())
       {
@@ -115,7 +115,7 @@ ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
 
   case Field::EDGE:
     {
-      typename FOUT::mesh_type::edge_iterator iter =
+      typename FOUT::mesh_type::Edge::iterator iter =
 	fout->get_typed_mesh()->edge_begin();
       while (iter != fout->get_typed_mesh()->edge_end())
       {
@@ -140,7 +140,7 @@ ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
 
   case Field::FACE:
     {
-      typename FOUT::mesh_type::face_iterator iter =
+      typename FOUT::mesh_type::Face::iterator iter =
 	fout->get_typed_mesh()->face_begin();
       while (iter != fout->get_typed_mesh()->face_end())
       {
@@ -165,7 +165,7 @@ ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
 
   case Field::CELL:
     {
-      typename FOUT::mesh_type::cell_iterator iter =
+      typename FOUT::mesh_type::Cell::iterator iter =
 	fout->get_typed_mesh()->cell_begin();
       while (iter != fout->get_typed_mesh()->cell_end())
       {
@@ -205,8 +205,8 @@ switch(src_field->data_at())\
 case Field::NODE:\
   {\
 	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
-	FITP<vector<pair<FSRC<DSRC>::mesh_type::node_index, double> > > *itp =\
-	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::node_index, double> > > *>(itp_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::Node::index_type, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::Node::index_type, double> > > *>(itp_field);\
 	if (src && itp)\
 	{\
 	  callback(src, itp, (FITP<DSRC> *)0);\
@@ -221,8 +221,8 @@ case Field::NODE:\
 case Field::EDGE:\
   {\
 	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
-	FITP<vector<pair<FSRC<DSRC>::mesh_type::edge_index, double> > > *itp =\
-	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::edge_index, double> > > *>(itp_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::Edge::index_type, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::Edge::index_type, double> > > *>(itp_field);\
 	if (src && itp)\
 	{\
 	  callback(src, itp, (FITP<DSRC> *)0);\
@@ -237,8 +237,8 @@ case Field::EDGE:\
 case Field::FACE:\
   {\
 	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
-	FITP<vector<pair<FSRC<DSRC>::mesh_type::face_index, double> > > *itp =\
-	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::face_index, double> > > *>(itp_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::Face::index_type, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::Face::index_type, double> > > *>(itp_field);\
 	if (src && itp)\
 	{\
 	  callback(src, itp, (FITP<DSRC> *)0);\
@@ -253,8 +253,8 @@ case Field::FACE:\
 case Field::CELL:\
   {\
 	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
-	FITP<vector<pair<FSRC<DSRC>::mesh_type::cell_index, double> > > *itp =\
-	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::cell_index, double> > > *>(itp_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::Cell::index_type, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::Cell::index_type, double> > > *>(itp_field);\
 	if (src && itp)\
 	{\
 	  callback(src, itp, (FITP<DSRC> *)0);\

@@ -91,7 +91,7 @@ ExtractSurfNormals::extract_normals(TriSurfMesh *mesh)
   vector<Vector> &fdata1 = out1_->fdata();
 
   // pass: over the nodes
-  TriSurfMesh::node_iterator niter = mesh->node_begin();  
+  TriSurfMesh::Node::iterator niter = mesh->node_begin();  
   while (niter != mesh->node_end()) {
     Point p;
     mesh->get_point(p, *niter);

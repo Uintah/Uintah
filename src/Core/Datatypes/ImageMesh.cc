@@ -52,7 +52,7 @@ ImageMesh::get_bounding_box() const
 }
 
 void 
-ImageMesh::get_nodes(node_array &array, face_index idx) const
+ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.resize(4);
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   
@@ -63,12 +63,12 @@ ImageMesh::get_nodes(node_array &array, face_index idx) const
 
 //! return all face_indecies that overlap the BBox in arr.
 void 
-ImageMesh::get_faces(face_array &arr, const BBox &bbox) const
+ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox) const
 {
   arr.clear();
-  face_index min;
+  Face::index_type min;
   locate(min, bbox.min());
-  face_index max;
+  Face::index_type max;
   locate(max, bbox.max());
   
   if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
@@ -76,14 +76,14 @@ ImageMesh::get_faces(face_array &arr, const BBox &bbox) const
 
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {
-      arr.push_back(face_index(i,j));
+      arr.push_back(Face::index_type(i,j));
     }
   }
 }
 
 
 void 
-ImageMesh::get_center(Point &result, node_index idx) const
+ImageMesh::get_center(Point &result, Node::index_type idx) const
 {
   const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
   const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
@@ -95,7 +95,7 @@ ImageMesh::get_center(Point &result, node_index idx) const
 
 
 void 
-ImageMesh::get_center(Point &result, face_index idx) const
+ImageMesh::get_center(Point &result, Face::index_type idx) const
 {
   const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
   const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
@@ -106,7 +106,7 @@ ImageMesh::get_center(Point &result, face_index idx) const
 }
 
 bool
-ImageMesh::locate(face_index &face, const Point &p) const
+ImageMesh::locate(Face::index_type &face, const Point &p) const
 {
   double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
   double j = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
@@ -126,10 +126,10 @@ ImageMesh::locate(face_index &face, const Point &p) const
 }
 
 bool
-ImageMesh::locate(node_index &node, const Point &p) const
+ImageMesh::locate(Node::index_type &node, const Point &p) const
 {
-  node_array nodes;     // storage for node_indeces
-  face_index face;
+  Node::array_type nodes;     // storage for node_indeces
+  Face::index_type face;
   double max;
   int loop;
 

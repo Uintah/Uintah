@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
   field->store("name", string("conductivity"));
   field->store("conductivity_table", conds);
   int cell_counter=0;
-  TetVolMesh::cell_iterator ci;
+  TetVolMesh::Cell::iterator ci;
   for (ci = tvm->cell_begin(); ci != tvm->cell_end(); ++ci, cell_counter++)
     field->fdata()[*ci] = mesh->elems[cell_counter]->cond;
 

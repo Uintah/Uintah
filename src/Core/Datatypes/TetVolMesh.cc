@@ -104,7 +104,7 @@ TetVolMesh::get_bounding_box() const
 {
   BBox result;
 
-  node_iterator ni = node_begin();
+  Node::iterator ni = node_begin();
   while (ni != node_end())
   {
     Point p;
@@ -116,16 +116,17 @@ TetVolMesh::get_bounding_box() const
 }
 
 void 
-TetVolMesh::hash_face(node_index n1, node_index n2, node_index n3,
-		      cell_index ci, face_ht &table) const {
-  Face f(n1, n2, n3);
+TetVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
+		      Node::index_type n3,
+		      Cell::index_type ci, face_ht &table) const {
+  PFace f(n1, n2, n3);
   
   face_ht::iterator iter = table.find(f);
   if (iter == table.end()) {
     f.cells_[0] = ci;
     table[f] = 0; // insert for the first time
   } else {
-    Face f = (*iter).first;
+    PFace f = (*iter).first;
     if (f.cells_[1] != -1) {
       cerr << "This Mesh has problems." << endl;
       return;
@@ -142,8 +143,8 @@ TetVolMesh::compute_faces()
   if (faces_.size() > 0) return;
 
   face_table_lock_.lock();
-  cell_iterator ci = cell_begin();
-  node_array arr(4);
+  Cell::iterator ci = cell_begin();
+  Node::array_type arr(4);
   while (ci != cell_end()) {
     get_nodes(arr, *ci); 
     // 4 faces
@@ -155,7 +156,7 @@ TetVolMesh::compute_faces()
   }
   // dump edges into the edges_ container.
   faces_.resize(face_table_.size());
-  vector<Face>::iterator f_iter = faces_.begin();
+  vector<PFace>::iterator f_iter = faces_.begin();
   face_ht::iterator ht_iter = face_table_.begin();
   int i = 0;
   while (ht_iter != face_table_.end()) {
@@ -167,14 +168,14 @@ TetVolMesh::compute_faces()
 }
 
 void 
-TetVolMesh::hash_edge(node_index n1, node_index n2, 
-		      cell_index ci, edge_ht &table) const {
-  Edge e(n1, n2);
+TetVolMesh::hash_edge(Node::index_type n1, Node::index_type n2, 
+		      Cell::index_type ci, edge_ht &table) const {
+  PEdge e(n1, n2);
   edge_ht::iterator iter = table.find(e);
   if (iter == table.end()) {
     table[e] = 0; // insert for the first time
   } else {
-    Edge e = (*iter).first;
+    PEdge e = (*iter).first;
     e.cells_.push_back(ci); // add this cell
     table.erase(iter);
     table[e] = 0;
@@ -187,8 +188,8 @@ TetVolMesh::compute_edges()
   if (edges_.size() > 0) return;
 
   edge_table_lock_.lock();
-  cell_iterator ci = cell_begin();
-  node_array arr(4);
+  Cell::iterator ci = cell_begin();
+  Node::array_type arr(4);
   while (ci != cell_end()) {
     get_nodes(arr, *ci);
     hash_edge(arr[0], arr[1], *ci, edge_table_);
@@ -201,7 +202,7 @@ TetVolMesh::compute_edges()
   }
   // dump edges into the edges_ container.
   edges_.resize(edge_table_.size());
-  vector<Edge>::iterator              e_iter = edges_.begin();
+  vector<PEdge>::iterator              e_iter = edges_.begin();
   edge_ht::iterator ht_iter = edge_table_.begin();
   while (ht_iter != edge_table_.end()) {
     *e_iter = (*ht_iter).first;
@@ -220,49 +221,49 @@ TetVolMesh::finish_mesh() {
 }
 
 
-TetVolMesh::node_iterator
+TetVolMesh::Node::iterator
 TetVolMesh::node_begin() const
 {
   return 0;
 }
 
-TetVolMesh::node_iterator
+TetVolMesh::Node::iterator
 TetVolMesh::node_end() const
 {
   return points_.size();
 }
 
-TetVolMesh::edge_iterator
+TetVolMesh::Edge::iterator
 TetVolMesh::edge_begin() const
 {
   return 0;
 }
 
-TetVolMesh::edge_iterator
+TetVolMesh::Edge::iterator
 TetVolMesh::edge_end() const
 {
   return edges_.size();
 }
 
-TetVolMesh::face_iterator
+TetVolMesh::Face::iterator
 TetVolMesh::face_begin() const
 {
   return 0;
 }
 
-TetVolMesh::face_iterator
+TetVolMesh::Face::iterator
 TetVolMesh::face_end() const
 {
   return faces_.size();
 }
 
-TetVolMesh::cell_iterator
+TetVolMesh::Cell::iterator
 TetVolMesh::cell_begin() const
 {
   return 0;
 }
 
-TetVolMesh::cell_iterator
+TetVolMesh::Cell::iterator
 TetVolMesh::cell_end() const
 {
   return cells_.size() >> 2;
@@ -270,20 +271,20 @@ TetVolMesh::cell_end() const
 
 
 void
-TetVolMesh::get_nodes(node_array &array, edge_index idx) const
+TetVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.clear();
-  Edge e = edges_[idx];
+  PEdge e = edges_[idx];
   array.push_back(e.nodes_[0]); 
   array.push_back(e.nodes_[1]);
 }
 
 
 void
-TetVolMesh::get_nodes(node_array &array, face_index idx) const
+TetVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.clear();
-  Face f = faces_[idx];
+  PFace f = faces_[idx];
   array.push_back(f.nodes_[0]); 
   array.push_back(f.nodes_[1]);
   array.push_back(f.nodes_[2]);
@@ -291,7 +292,7 @@ TetVolMesh::get_nodes(node_array &array, face_index idx) const
 
 
 void
-TetVolMesh::get_nodes(node_array &array, cell_index idx) const
+TetVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.clear();
   array.push_back(cells_[idx * 4 + 0]);
@@ -302,7 +303,7 @@ TetVolMesh::get_nodes(node_array &array, cell_index idx) const
 
 
 void
-TetVolMesh::get_edges(edge_array &array, face_index idx) const
+TetVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
   array.clear();
   static int table[4][3] =
@@ -324,17 +325,17 @@ TetVolMesh::get_edges(edge_array &array, face_index idx) const
 
 
 void
-TetVolMesh::get_edges(edge_array &array, cell_index idx) const
+TetVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 {
   array.clear();
 
   const int off = idx * 4;
-  Edge e0(cells_[off + 0], cells_[off + 1]);
-  Edge e1(cells_[off + 0], cells_[off + 2]);
-  Edge e2(cells_[off + 0], cells_[off + 3]);
-  Edge e3(cells_[off + 1], cells_[off + 2]);
-  Edge e4(cells_[off + 1], cells_[off + 3]);
-  Edge e5(cells_[off + 2], cells_[off + 3]);
+  PEdge e0(cells_[off + 0], cells_[off + 1]);
+  PEdge e1(cells_[off + 0], cells_[off + 2]);
+  PEdge e2(cells_[off + 0], cells_[off + 3]);
+  PEdge e3(cells_[off + 1], cells_[off + 2]);
+  PEdge e4(cells_[off + 1], cells_[off + 3]);
+  PEdge e5(cells_[off + 2], cells_[off + 3]);
 
   array.push_back((*(edge_table_.find(e0))).second);
   array.push_back((*(edge_table_.find(e1))).second);
@@ -346,15 +347,15 @@ TetVolMesh::get_edges(edge_array &array, cell_index idx) const
 
 
 void
-TetVolMesh::get_faces(face_array &array, cell_index idx) const
+TetVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 {
   array.clear();
 
   const int off = idx * 4;
-  Face f0(cells_[off + 0], cells_[off + 1], cells_[off + 2]);
-  Face f1(cells_[off + 0], cells_[off + 1], cells_[off + 3]);
-  Face f2(cells_[off + 0], cells_[off + 2], cells_[off + 3]);
-  Face f3(cells_[off + 1], cells_[off + 2], cells_[off + 3]);
+  PFace f0(cells_[off + 0], cells_[off + 1], cells_[off + 2]);
+  PFace f1(cells_[off + 0], cells_[off + 1], cells_[off + 3]);
+  PFace f2(cells_[off + 0], cells_[off + 2], cells_[off + 3]);
+  PFace f3(cells_[off + 1], cells_[off + 2], cells_[off + 3]);
   
   // operator[] not const safe...
   array.push_back((*(face_table_.find(f0))).second);
@@ -364,10 +365,10 @@ TetVolMesh::get_faces(face_array &array, cell_index idx) const
 }
 
 bool
-TetVolMesh::get_neighbor(cell_index &neighbor, cell_index from,
-			 face_index idx) const
+TetVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
+			 Face::index_type idx) const
 {
-  const Face &f = faces_[idx];
+  const PFace &f = faces_[idx];
 
   if (from == f.cells_[0]) {
     neighbor = f.cells_[1];
@@ -379,14 +380,14 @@ TetVolMesh::get_neighbor(cell_index &neighbor, cell_index from,
 }
 
 void 
-TetVolMesh::get_neighbors(cell_array &array, cell_index idx) const 
+TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const 
 {
-  face_array faces;
+  Face::array_type faces;
   get_faces(faces, idx);
   array.clear();
-  face_array::iterator iter = faces.begin();
+  Face::array_type::iterator iter = faces.begin();
   while(iter != faces.end()) {
-    cell_index nbor;
+    Cell::index_type nbor;
     if (get_neighbor(nbor, idx, *iter)) {
       array.push_back(nbor);
     }
@@ -395,7 +396,7 @@ TetVolMesh::get_neighbors(cell_array &array, cell_index idx) const
 }
 
 void 
-TetVolMesh::get_neighbors(node_array &array, node_index idx) const
+TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 {
   array.clear();
   array.insert(array.end(), node_neighbors_[idx].begin(), 
@@ -415,16 +416,16 @@ TetVolMesh::compute_node_neighbors()
 }
 
 void 
-TetVolMesh::get_center(Point &p, node_index idx) const
+TetVolMesh::get_center(Point &p, Node::index_type idx) const
 {
   get_point(p, idx);
 }
 
 void 
-TetVolMesh::get_center(Point &p, edge_index idx) const
+TetVolMesh::get_center(Point &p, Edge::index_type idx) const
 {
   const double s = 1./2.;
-  node_array arr;
+  Node::array_type arr;
   get_nodes(arr, idx);
   Point p1;
   get_point(p, arr[0]);
@@ -434,10 +435,10 @@ TetVolMesh::get_center(Point &p, edge_index idx) const
 }
 
 void 
-TetVolMesh::get_center(Point &p, face_index idx) const
+TetVolMesh::get_center(Point &p, Face::index_type idx) const
 {
   const double s = 1./3.;
-  node_array arr;
+  Node::array_type arr;
   get_nodes(arr, idx);
   Point p1, p2;
   get_point(p, arr[0]);
@@ -448,10 +449,10 @@ TetVolMesh::get_center(Point &p, face_index idx) const
 }
 
 void 
-TetVolMesh::get_center(Point &p, cell_index idx) const
+TetVolMesh::get_center(Point &p, Cell::index_type idx) const
 {
   const double s = .25L;
-  node_array arr;
+  Node::array_type arr;
   get_nodes(arr, idx);
   Point p1, p2, p3;
   get_point(p, arr[0]);
@@ -475,11 +476,11 @@ distance2(const Point &p0, const Point &p1)
 
 
 bool
-TetVolMesh::locate(node_index &loc, const Point &p) const
+TetVolMesh::locate(Node::index_type &loc, const Point &p) const
 {
-  cell_index ci;
+  Cell::index_type ci;
   if (locate(ci, p)) { // first try the fast way.
-    node_array nodes;
+    Node::array_type nodes;
     get_nodes(nodes, ci);
     
     double d0 = distance2(p, points_[nodes[0]]);
@@ -501,7 +502,7 @@ TetVolMesh::locate(node_index &loc, const Point &p) const
     }
     return true;
   } else {  // do exhaustive search.
-    node_iterator ni = node_begin();
+    Node::iterator ni = node_begin();
     if (ni == node_end()) { return false; }
     
     double min_dist = distance2(p, points_[*ni]);
@@ -521,35 +522,35 @@ TetVolMesh::locate(node_index &loc, const Point &p) const
 
 
 bool
-TetVolMesh::locate(edge_index &/*edge*/, const Point & /* p */) const
+TetVolMesh::locate(Edge::index_type &/*edge*/, const Point & /* p */) const
 {
   //FIX_ME
-  ASSERTFAIL("TetVolMesh::locate(edge_index &) not implemented!");
+  ASSERTFAIL("TetVolMesh::locate(Edge::index_type &) not implemented!");
   return false;
 }
 
 
 bool
-TetVolMesh::locate(face_index &/*face*/, const Point & /* p */) const
+TetVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */) const
 {
   //FIX_ME
-  ASSERTFAIL("TetVolMesh::locate(face_index&) not implemented!");
+  ASSERTFAIL("TetVolMesh::locate(Face::index_type&) not implemented!");
   return false;
 }
 
 
 bool
-TetVolMesh::locate(cell_index &cell, const Point &p) const
+TetVolMesh::locate(Cell::index_type &cell, const Point &p) const
 {
   if (grid_.get_rep() == 0) {
     ASSERTFAIL("Call compute_grid before calling locate!");
   }
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
-  LatVolMesh::cell_index ci;
+  LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
   bool found_p = false;
-  vector<cell_index> v = grid_->value(ci);
-  vector<cell_index>::iterator iter = v.begin();
+  vector<Cell::index_type> v = grid_->value(ci);
+  vector<Cell::index_type>::iterator iter = v.begin();
   while (iter != v.end()) {
     if (inside4_p((*iter) * 4, p)) {
       found_p = true;
@@ -579,13 +580,13 @@ TetVolMesh::compute_grid()
   const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
   
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
-  grid_ = scinew LatticeVol<vector<cell_index> >(mesh, Field::CELL);
+  grid_ = scinew LatticeVol<vector<Cell::index_type> >(mesh, Field::CELL);
   grid_->resize_fdata();
-  LatticeVol<vector<cell_index> >::fdata_type &fd = grid_->fdata();
+  LatticeVol<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
   
   BBox box;
-  node_array nodes;  
-  cell_iterator ci = cell_begin();
+  Node::array_type nodes;  
+  Cell::iterator ci = cell_begin();
   while(ci != cell_end()) {
     get_nodes(nodes, *ci);
 
@@ -604,13 +605,13 @@ TetVolMesh::compute_grid()
     box.extend(padmax);
 
     // add this cell index to all overlapping cells in grid_
-    LatVolMesh::cell_array carr;
+    LatVolMesh::Cell::array_type carr;
     mesh->get_cells(carr, box);
-    LatVolMesh::cell_array::iterator giter = carr.begin();
+    LatVolMesh::Cell::array_type::iterator giter = carr.begin();
     while (giter != carr.end()) {
       // Would like to just get a reference to the vector at the cell 
       // but can't from value. Bypass the interface.
-      vector<cell_index> &v = fd[*giter];
+      vector<Cell::index_type> &v = fd[*giter];
       v.push_back(*ci);
       ++giter;
     }
@@ -682,7 +683,7 @@ TetVolMesh::inside4_p(int i, const Point &p) const
 
 //! return the volume of the tet.
 double 
-TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
+TetVolMesh::get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1, 
 			       Vector& g2, Vector& g3)
 {
   Point& p1 = points_[cells_[ci * 4]];
@@ -729,10 +730,10 @@ TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1,
   return(vol);
 }
 
-TetVolMesh::node_index
+TetVolMesh::Node::index_type
 TetVolMesh::add_find_point(const Point &p, double err)
 {
-  node_index i;
+  Node::index_type i;
   if (locate(i, p) && distance2(points_[i], p) < err)
   {
     return i;
@@ -746,7 +747,7 @@ TetVolMesh::add_find_point(const Point &p, double err)
 
 
 void
-TetVolMesh::add_tet(node_index a, node_index b, node_index c, node_index d)
+TetVolMesh::add_tet(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d)
 {
   cells_.push_back(a);
   cells_.push_back(b);
@@ -834,7 +835,7 @@ TetVolMesh::connect(double err)
 }
 
 
-TetVolMesh::node_index
+TetVolMesh::Node::index_type
 TetVolMesh::add_point(const Point &p)
 {
   points_.push_back(p);

@@ -84,7 +84,7 @@ class DipoleSearch : public Module {
   static double OUT_OF_BOUNDS_MISFIT_;
 
   void initialize_search();
-  void send_and_get_data(int which_dipole, TetVolMesh::cell_index ci);
+  void send_and_get_data(int which_dipole, TetVolMesh::Cell::index_type ci);
   int pre_search();
   Vector eval_test_dipole();
   double simplex_step(Array1<double>& sum, double factor, int worst);
@@ -178,7 +178,7 @@ void DipoleSearch::initialize_search() {
 
   // iterate through the nodes and copy the positions into our 
   //  simplex search matrix (`dipoles')
-  PointCloudMesh::node_iterator ni = seeds_mesh->node_begin();
+  PointCloudMesh::Node::iterator ni = seeds_mesh->node_begin();
   misfit_.resize(NDIPOLES_);
   dipoles_.newsize(NDIPOLES_, NDIM_+3);
   for (int nc=0; ni != seeds_mesh->node_end(); ++ni, nc++) {
@@ -203,7 +203,7 @@ void DipoleSearch::initialize_search() {
 //! Find the misfit and optimal orientation for a single dipole
 
 void DipoleSearch::send_and_get_data(int which_dipole, 
-				     TetVolMesh::cell_index ci) {
+				     TetVolMesh::Cell::index_type ci) {
   if (!mylock_.tryLock()) {
     mylock_.lock();
     mylock_.unlock();
@@ -273,7 +273,7 @@ int DipoleSearch::pre_search() {
   }
 
   // send out a seed dipole and get back the misfit and the optimal orientation
-  TetVolMesh::cell_index ci;
+  TetVolMesh::Cell::index_type ci;
   if (!vol_mesh_->locate(ci, Point(dipoles_(seed_counter_,0), 
 				   dipoles_(seed_counter_,1), 
 				   dipoles_(seed_counter_,2)))) {
@@ -301,7 +301,7 @@ int DipoleSearch::pre_search() {
 //! Evaluate a test dipole.  Return the optimal orientation.
 
 Vector DipoleSearch::eval_test_dipole() {
-  TetVolMesh::cell_index ci;
+  TetVolMesh::Cell::index_type ci;
   if (vol_mesh_->locate(ci, Point(dipoles_(NSEEDS_,0), 
 				  dipoles_(NSEEDS_,1), 
 				  dipoles_(NSEEDS_,2)))) {

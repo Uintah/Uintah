@@ -52,10 +52,10 @@ template <class AI, class Tesselator>
 class Noise : public NoiseAlg {
   typedef typename Tesselator::field_type       field_type;
   typedef typename field_type::value_type       value_type;
-  typedef typename field_type::mesh_type::cell_index cell_index;
-  typedef SpanPoint<value_type,cell_index>      span_point;
+  typedef typename field_type::mesh_type::Cell::index_type cell_index_type;
+  typedef SpanPoint<value_type, cell_index_type>      span_point;
 private:
-  SpanSpace<value_type,cell_index> *space_;
+  SpanSpace<value_type,cell_index_type> *space_;
   Tesselator *tess_;
   AI *ai_;
   double v;
@@ -101,7 +101,7 @@ void Noise<AI, Tesselator>::set_field( Field *f )
     if ( tess_ ) delete tess_;
     tess_ = new Tesselator( field );
     if ( !field->get( "spanspace", space_ ) ) {
-      space_ = scinew SpanSpace<value_type,cell_index>;
+      space_ = scinew SpanSpace<value_type, cell_index_type>;
       space_->init( field );
       field->store( "spanspace", space_ );
     }

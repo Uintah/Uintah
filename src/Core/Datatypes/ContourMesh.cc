@@ -48,7 +48,7 @@ ContourMesh::get_bounding_box() const
 {
   BBox result;
 
-  for (node_iterator i = node_begin();
+  for (Node::iterator i = node_begin();
        i!=node_end();
        ++i) 
     result.extend(nodes_[*i]);
@@ -57,9 +57,9 @@ ContourMesh::get_bounding_box() const
 }
 
 bool
-ContourMesh::locate(node_index &idx, const Point &p) const
+ContourMesh::locate(Node::index_type &idx, const Point &p) const
 {
-  node_iterator ni = node_begin();
+  Node::iterator ni = node_begin();
   idx = *node_begin();
 
   if (ni==node_end())
@@ -79,11 +79,11 @@ ContourMesh::locate(node_index &idx, const Point &p) const
 }
 
 bool
-ContourMesh::locate(edge_index &idx, const Point &p) const
+ContourMesh::locate(Edge::index_type &idx, const Point &p) const
 {
-  edge_iterator ei;
+  Edge::iterator ei;
   double cosa, closest=DBL_MAX;
-  node_array nra;
+  Node::array_type nra;
   double dist1, dist2, dist3, dist4;
   Point n1,n2,q;
 

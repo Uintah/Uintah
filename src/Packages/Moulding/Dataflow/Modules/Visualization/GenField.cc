@@ -52,7 +52,7 @@ void GenField::execute()
 {
   LatticeVol<Vector> *vf = scinew LatticeVol<Vector>(Field::NODE);
   LatVolMesh* mesh = dynamic_cast<LatVolMesh*>(vf->get_typed_mesh().get_rep());
-  LatVolMesh::node_size_type size(64,64,64);
+  LatVolMesh::Node::size_type size(64,64,64);
   LatticeVol<Vector>::fdata_type &fdata = vf->fdata();
   mesh->set_nx(64);
   mesh->set_ny(64);
@@ -61,8 +61,8 @@ void GenField::execute()
   mesh->set_max(Point(31.4,30.0,10.0));
   fdata.resize(size);
 
-  LatVolMesh::node_iterator ni = mesh->node_begin();
-  LatVolMesh::node_index i;
+  LatVolMesh::Node::iterator ni = mesh->node_begin();
+  LatVolMesh::Node::index_type i;
   Point p;
   for (;ni!=mesh->node_end();++ni) {
     i = *ni;

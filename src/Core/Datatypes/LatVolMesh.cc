@@ -52,7 +52,7 @@ LatVolMesh::get_bounding_box() const
 }
 
 void 
-LatVolMesh::get_nodes(node_array &array, cell_index idx) const
+LatVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.resize(8);
   array[0].i_ = idx.i_;   array[0].j_ = idx.j_;   array[0].k_ = idx.k_; 
@@ -67,12 +67,12 @@ LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 
 //! return all cell_indecies that overlap the BBox in arr.
 void 
-LatVolMesh::get_cells(cell_array &arr, const BBox &bbox) const
+LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox) const
 {
   arr.clear();
-  cell_index min;
+  Cell::index_type min;
   locate(min, bbox.min());
-  cell_index max;
+  Cell::index_type max;
   locate(max, bbox.max());
   
   if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
@@ -82,7 +82,7 @@ LatVolMesh::get_cells(cell_array &arr, const BBox &bbox) const
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {
       for (unsigned k = min.k_; k <= max.k_; k++) {
-	arr.push_back(cell_index(i,j,k));
+	arr.push_back(Cell::index_type(i,j,k));
       }
     }
   }
@@ -90,7 +90,7 @@ LatVolMesh::get_cells(cell_array &arr, const BBox &bbox) const
 
 
 void 
-LatVolMesh::get_center(Point &result, node_index idx) const
+LatVolMesh::get_center(Point &result, Node::index_type idx) const
 {
   const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
   const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
@@ -103,7 +103,7 @@ LatVolMesh::get_center(Point &result, node_index idx) const
 
 
 void 
-LatVolMesh::get_center(Point &result, cell_index idx) const
+LatVolMesh::get_center(Point &result, Cell::index_type idx) const
 {
   const double sx = (max_.x() - min_.x()) / (nx_ - 1); 
   const double sy = (max_.y() - min_.y()) / (ny_ - 1); 
@@ -115,7 +115,7 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
 }
 
 bool
-LatVolMesh::locate(cell_index &cell, const Point &p) const
+LatVolMesh::locate(Cell::index_type &cell, const Point &p) const
 {
   double i = (p.x() - min_.x()) / (max_.x() - min_.x()) * (nx_ - 1) + 0.5;
   double j = (p.y() - min_.y()) / (max_.y() - min_.y()) * (ny_ - 1) + 0.5;
@@ -138,10 +138,10 @@ LatVolMesh::locate(cell_index &cell, const Point &p) const
 }
 
 bool
-LatVolMesh::locate(node_index &node, const Point &p) const
+LatVolMesh::locate(Node::index_type &node, const Point &p) const
 {
-  node_array nodes;     // storage for node_indeces
-  cell_index cell;
+  Node::array_type nodes;     // storage for node_indeces
+  Cell::index_type cell;
   double max;
   int loop;
 

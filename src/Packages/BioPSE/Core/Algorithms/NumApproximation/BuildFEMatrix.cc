@@ -118,15 +118,15 @@ void BuildFEMatrix::parallel(int proc)
 
   barrier_.wait(np_);
   
-  TetVolMesh::node_array neib_nodes;
+  TetVolMesh::Node::array_type neib_nodes;
   for(i=start_node;i<end_node;i++){
     rows_[r++]=mycols.size();
     neib_nodes.clear();
     
-    hMesh_->get_neighbors(neib_nodes, TetVolMesh::node_index(i));
+    hMesh_->get_neighbors(neib_nodes, TetVolMesh::Node::index_type(i));
     
     // adding the node itself, sorting and eliminating duplicates
-    neib_nodes.push_back(TetVolMesh::node_index(i));
+    neib_nodes.push_back(TetVolMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
     for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
@@ -196,11 +196,11 @@ void BuildFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------
   //! Filling the matrix
-  TetVolMesh::cell_iterator ii;
+  TetVolMesh::Cell::iterator ii;
   
   double lcl_matrix[4][4];
    
-  TetVolMesh::node_array cell_nodes(4);
+  TetVolMesh::Node::array_type cell_nodes(4);
   for (ii=hMesh_->cell_begin(); ii!=hMesh_->cell_end(); ++ii){
  
     if (hMesh_->test_nodes_range(*ii, start_node, end_node)){ 
@@ -216,7 +216,7 @@ void BuildFEMatrix::parallel(int proc)
   Array1<int> idcNz;
   Array1<double> valNz;
 
-  TetVolMesh::node_array nind;
+  TetVolMesh::Node::array_type nind;
   vector<double> dbc;
 
   if (proc==0){
@@ -255,7 +255,7 @@ void BuildFEMatrix::parallel(int proc)
   }
 }
 
-void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_index c_ind)
+void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind)
 {
   Vector grad1, grad2, grad3, grad4;
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
@@ -311,9 +311,9 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
   }
 }
 
-void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::cell_index c_ind, int s, int e, TetVolMesh::node_array& cell_nodes)
+void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind, int s, int e, TetVolMesh::Node::array_type& cell_nodes)
 {
-  //TetVolMesh::node_array cell_nodes(4);
+  //TetVolMesh::Node::array_type cell_nodes(4);
   hMesh_->get_nodes(cell_nodes, c_ind); 
 
   for (int i=0; i<4; i++) {

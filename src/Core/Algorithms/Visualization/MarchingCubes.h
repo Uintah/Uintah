@@ -129,7 +129,7 @@ MarchingCubes<AI,Tesselator>::search( double iso, bool build_trisurf )
 {
   if ( np_ == 1 ) {
     tess_[0]->reset(0, build_trisurf);
-    typename mesh_type::cell_iterator cell = mesh_->cell_begin(); 
+    typename mesh_type::Cell::iterator cell = mesh_->cell_begin(); 
     while ( cell != mesh_->cell_end() )
     {
       tess_[0]->extract( *cell, iso );
@@ -167,7 +167,7 @@ MarchingCubes<AI,Tesselator>::parallel_search( int proc,
   tess_[proc]->reset(0, build_trisurf);
   int n = mesh_->cells_size();
   
-  typename mesh_type::cell_iterator from = mesh_->cell_begin();
+  typename mesh_type::Cell::iterator from = mesh_->cell_begin();
   int i;
   for ( i=0; i<(proc*(n/np_)); i++) ++from;
   

@@ -69,22 +69,22 @@ public:
   virtual bool is_scalar() const;
 
   //! Required interface to support Field Concept.
-  bool value(value_type &val, typename mesh_type::node_index i) const;
-  bool value(value_type &val, typename mesh_type::edge_index i) const;
-  bool value(value_type &val, typename mesh_type::face_index i) const;
-  bool value(value_type &val, typename mesh_type::cell_index i) const;
+  bool value(value_type &val, typename mesh_type::Node::index_type i) const;
+  bool value(value_type &val, typename mesh_type::Edge::index_type i) const;
+  bool value(value_type &val, typename mesh_type::Face::index_type i) const;
+  bool value(value_type &val, typename mesh_type::Cell::index_type i) const;
 
   //! Required interface to support Field Concept.
-  void set_value(const value_type &val, typename mesh_type::node_index i);
-  void set_value(const value_type &val, typename mesh_type::edge_index i);
-  void set_value(const value_type &val, typename mesh_type::face_index i);
-  void set_value(const value_type &val, typename mesh_type::cell_index i);
+  void set_value(const value_type &val, typename mesh_type::Node::index_type i);
+  void set_value(const value_type &val, typename mesh_type::Edge::index_type i);
+  void set_value(const value_type &val, typename mesh_type::Face::index_type i);
+  void set_value(const value_type &val, typename mesh_type::Cell::index_type i);
 
   //! No safety check for the following calls, be sure you know where data is.
-  value_type value(typename mesh_type::node_index i) const;
-  value_type value(typename mesh_type::edge_index i) const;
-  value_type value(typename mesh_type::face_index i) const;
-  value_type value(typename mesh_type::cell_index i) const;
+  value_type value(typename mesh_type::Node::index_type i) const;
+  value_type value(typename mesh_type::Edge::index_type i) const;
+  value_type value(typename mesh_type::Face::index_type i) const;
+  value_type value(typename mesh_type::Cell::index_type i) const;
 
   virtual void resize_fdata();
 
@@ -254,28 +254,28 @@ GenericField<Mesh, FData>::is_scalar() const
 
 template <class Mesh, class FData>
 bool
-GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::node_index i) const
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Node::index_type i) const
 {
   if (data_at() != NODE) return false; val = fdata_[i]; return true;
 }
 
 template <class Mesh, class FData>
 bool
-GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::edge_index i) const
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Edge::index_type i) const
 {
   if (data_at() != EDGE) return false; val = fdata_[i]; return true;
 }
 
 template <class Mesh, class FData>
 bool
-GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::face_index i) const
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Face::index_type i) const
 {
   if (data_at() != FACE) return false; val = fdata_[i]; return true;
 }
 
 template <class Mesh, class FData>
 bool
-GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::cell_index i) const
+GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Cell::index_type i) const
 {
   if (data_at() != CELL) return false; val = fdata_[i]; return true;
 } 
@@ -283,50 +283,50 @@ GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::cell_index
 //! Required interface to support Field Concept.
 template <class Mesh, class FData>
 void
-GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::node_index i)
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Node::index_type i)
 {
   fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
-GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::edge_index i)
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Edge::index_type i)
 {
   fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
-GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::face_index i)
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Face::index_type i)
 {
   fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
-GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::cell_index i)
+GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Cell::index_type i)
 {
   fdata_[i] = val;
 }
 
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::value_type
-GenericField<Mesh, FData>::value(typename mesh_type::node_index i) const
+GenericField<Mesh, FData>::value(typename mesh_type::Node::index_type i) const
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::value_type
-GenericField<Mesh, FData>::value(typename mesh_type::edge_index i) const
+GenericField<Mesh, FData>::value(typename mesh_type::Edge::index_type i) const
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::value_type
-GenericField<Mesh, FData>::value(typename mesh_type::face_index i) const 
+GenericField<Mesh, FData>::value(typename mesh_type::Face::index_type i) const 
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::value_type
-GenericField<Mesh, FData>::value(typename mesh_type::cell_index i) const 
+GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const 
 {
   return fdata_[i];
 }

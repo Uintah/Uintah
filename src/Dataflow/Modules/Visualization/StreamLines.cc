@@ -146,8 +146,8 @@ StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
 			     float s           /* current step size */,
 			     VectorField * /* vf */   /* the field */)
 {
-  typedef typename VectorField::mesh_type   vf_mesh_type;
-  typedef typename vf_mesh_type::cell_index cell_index;
+  //typedef typename VectorField::mesh_type   vf_mesh_type;
+  //typedef typename vf_mesh_type::Cell::index_type Cell::index_type;
   int check = 0;
   int c;
 
@@ -238,16 +238,16 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 {
   typedef typename VectorField::mesh_type        vf_mesh_type;
   typedef typename SeedField::mesh_type          sf_mesh_type;
-  typedef typename vf_mesh_type::node_iterator   vf_node_iterator;
-  typedef typename sf_mesh_type::node_iterator   sf_node_iterator;
-  typedef typename ContourMesh::node_index       node_index;
-  typedef typename vf_mesh_type::cell_index      cell_index;
+  typedef typename vf_mesh_type::Node::iterator   vf_node_iterator;
+  typedef typename sf_mesh_type::Node::iterator   sf_node_iterator;
+  typedef typename ContourMesh::Node::index_type  node_index_type;
+  typedef typename vf_mesh_type::Cell::index_type cell_index_type;
 
   Point seed;
   Vector test;
   vector<Point> nodes;
   vector<Point>::iterator node_iter;
-  node_index n1,n2;
+  node_index_type n1,n2;
   double tolerance;
   double stepsize;
   int maxsteps;

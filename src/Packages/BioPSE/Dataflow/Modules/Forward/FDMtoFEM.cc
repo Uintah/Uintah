@@ -124,7 +124,7 @@ void FDMtoFEM::execute() {
     // build the new TetVolMesh based on nodes and cells from the LatVolMesh
     LatVolMesh *lvm = dynamic_cast<LatVolMesh*>(ifdmH->mesh().get_rep());
     TetVolMesh *tvm = scinew TetVolMesh;
-    Array3<TetVolMesh::node_index> node_lookup(lvm->get_nz(), lvm->get_ny(),
+    Array3<TetVolMesh::Node::index_type> node_lookup(lvm->get_nz(), lvm->get_ny(),
 					       lvm->get_nx());
 
     // store a table of which nodes are valid (a node is valid if any of
@@ -146,8 +146,8 @@ void FDMtoFEM::execute() {
 	  dynamic_cast<MaskedLatticeVol<unsigned char> *>(ifdmH.get_rep());
 	mask.copy(mlv->mask());
       }
-      LatVolMesh::node_array lat_nodes(8);
-      LatVolMesh::cell_iterator ci = lvm->cell_begin();
+      LatVolMesh::Node::array_type lat_nodes(8);
+      LatVolMesh::Cell::iterator ci = lvm->cell_begin();
       while (ci != lvm->cell_end()) {
 	if (mask[*ci]) {
 	  lvm->get_nodes(lat_nodes, *ci);
@@ -165,7 +165,7 @@ void FDMtoFEM::execute() {
     // add all of the nodes from the FDM mesh into the FEM mesh
     // store a node_lookup table to translate from FDM node_indices to
     //   FEM node_indices
-    LatVolMesh::node_iterator ni = lvm->node_begin();
+    LatVolMesh::Node::iterator ni = lvm->node_begin();
     while (ni != lvm->node_end()) {
       if (valid_nodes(ni.k_, ni.j_, ni.i_)) {
 	Point p;
@@ -176,9 +176,9 @@ void FDMtoFEM::execute() {
     }
 
     // for each FDM cell, if it's valid bust it into 5 FEM tets
-    LatVolMesh::node_array lat_nodes(8);
-    TetVolMesh::node_array tet_nodes(8);
-    LatVolMesh::cell_iterator ci = lvm->cell_begin();
+    LatVolMesh::Node::array_type lat_nodes(8);
+    TetVolMesh::Node::array_type tet_nodes(8);
+    LatVolMesh::Cell::iterator ci = lvm->cell_begin();
     ci = lvm->cell_begin();
     while (ci != lvm->cell_end()) {
       if (!mask[*ci]) continue;
@@ -212,7 +212,7 @@ void FDMtoFEM::execute() {
 	dynamic_cast<LatticeVol<Tensor> *>(ifdmH.get_rep());
       tv = scinew TetVol<int>(tvm, Field::CELL);
       ci = lvm->cell_begin();
-      TetVolMesh::cell_iterator ci_tet = tvm->cell_begin();
+      TetVolMesh::Cell::iterator ci_tet = tvm->cell_begin();
       int count=0;
       while (ci_tet != tvm->cell_end(), count++) {
 	conds.add(lv->fdata()[*ci]);
@@ -226,8 +226,8 @@ void FDMtoFEM::execute() {
 	dynamic_cast<LatticeVol<unsigned char> *>(ifdmH.get_rep());
       tv = scinew TetVol<int>(tvm, Field::CELL);
       ci = lvm->cell_begin();
-      LatVolMesh::cell_iterator ci = lvm->cell_begin();
-      TetVolMesh::cell_iterator ci_tet = tvm->cell_begin();
+      LatVolMesh::Cell::iterator ci = lvm->cell_begin();
+      TetVolMesh::Cell::iterator ci_tet = tvm->cell_begin();
       while (ci_tet != tvm->cell_end(), ++ci) {
 	for (int i=0; i<5; i++, ++ci_tet) {
 	  tv->fdata()[*ci_tet]=lv->fdata()[*ci];

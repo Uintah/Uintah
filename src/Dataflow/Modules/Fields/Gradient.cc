@@ -78,7 +78,7 @@ Gradient::dispatch_tetvol(F *f)
 {
   TetVolMeshHandle tvm = f->get_typed_mesh(); 
   TetVol<Vector> *result = new TetVol<Vector>(tvm, Field::CELL);
-  typename F::mesh_type::cell_iterator ci = tvm->cell_begin();
+  typename F::mesh_type::Cell::iterator ci = tvm->cell_begin();
   while (ci != tvm->cell_end())
   {
     result->set_value(f->cell_gradient(*ci), *ci);
@@ -96,7 +96,7 @@ Gradient::dispatch_latticevol(F *f)
 {
   LatVolMeshHandle lvm = f->get_typed_mesh(); 
   LatticeVol<Vector> *result = new LatticeVol<Vector>(lvm, Field::CELL);
-  typename F::mesh_type::cell_iterator ci = lvm->cell_begin();
+  typename F::mesh_type::Cell::iterator ci = lvm->cell_begin();
   while (ci != lvm->cell_end())
   {
     Point p;
