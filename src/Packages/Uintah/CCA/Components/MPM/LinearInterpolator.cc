@@ -25,8 +25,8 @@ LinearInterpolator* LinearInterpolator::clone(const Patch* patch)
  }
     
 void LinearInterpolator::findCellAndWeights(const Point& pos,
-					   IntVector* ni, 
-					   double* S,
+					   vector<IntVector>& ni, 
+					   vector<double>& S,
 					   const Vector& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -58,8 +58,8 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
 }
  
 void LinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
-						     IntVector* ni,
-						     Vector* d_S,
+						     vector<IntVector>& ni,
+						     vector<Vector>& d_S,
 						     const Vector& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
@@ -90,11 +90,12 @@ void LinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
   d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
 }
 
-void LinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
-							       IntVector *ni,
-							       double *S,
-							       Vector *d_S,
-							       const Vector& size)
+void 
+LinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
+							  vector<IntVector>& ni,
+							  vector<double>& S,
+							  vector<Vector>& d_S,
+							  const Vector& size)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());

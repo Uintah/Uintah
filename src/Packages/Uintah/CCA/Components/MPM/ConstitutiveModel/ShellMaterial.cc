@@ -451,10 +451,10 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGN, 
 						     lb->pXLabel);
@@ -496,8 +496,6 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     }
 
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }  // End loop over patches
 }
 
@@ -576,10 +574,10 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     // Read the datawarehouse
@@ -851,8 +849,6 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
                 lb->delTLabel);
     new_dw->put(sum_vartype(strainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
 }
 
@@ -898,12 +894,12 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
 						     lb->pXLabel);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     // Get stuff from datawarehouse
@@ -942,9 +938,6 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
       }
     }
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }
 }
 
@@ -993,12 +986,12 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     // Get stuff from datawarehouse
@@ -1045,9 +1038,6 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
       pRotAcc[idx] = pRotAcc[idx]*Is; // project to surface
     }
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }
 }
 

@@ -185,8 +185,8 @@ namespace Uintah {
   protected:
 
     inline void computeVelocityGradient(Matrix3& velGrad,
-					IntVector* ni,
-					Vector* d_S,
+					vector<IntVector>& ni,
+					vector<Vector>& d_S,
 					const double* oodx, 
 					constNCVariable<Vector>& gVelocity)
       {
@@ -203,8 +203,8 @@ namespace Uintah {
 
 
     inline void computeVelocityGradient(Matrix3& velGrad,
-					IntVector* ni,
-					Vector* d_S,
+					vector<IntVector>& ni,
+					vector<Vector>& d_S,
 					const double* oodx, 
 					constNCVariable<Vector>& gVelocity,
 					double erosion)
@@ -222,8 +222,8 @@ namespace Uintah {
       };
 
     inline void computeVelocityGradient(Matrix3& velGrad,
-					IntVector* ni,
-					Vector* d_S,
+					vector<IntVector>& ni,
+					vector<Vector>& d_S,
 					const double* oodx, 
 					const short pgFld[],
 					constNCVariable<Vector>& gVelocity,
@@ -244,8 +244,8 @@ namespace Uintah {
     
     /*! Calculate gradient of a vector field for 8 noded interpolation */
     inline void computeGrad(Matrix3& grad,
-			    IntVector* ni,
-			    Vector* d_S,
+			    vector<IntVector>& ni,
+			    vector<Vector>& d_S,
 			    const double* oodx, 
 			    constNCVariable<Vector>& gVec)
       {
@@ -265,8 +265,8 @@ namespace Uintah {
     /*! Calculate gradient of vector field for 8 noded interpolation, B matrix
         for Kmat and B matrix for Kgeo */
     inline void computeGradAndBmats(Matrix3& grad,
-				    IntVector* ni,
-				    Vector* d_S,
+				    vector<IntVector>& ni,
+				    vector<Vector>& d_S,
 				    const double* oodx, 
 				    constNCVariable<Vector>& gVec,
 				    const Array3<int>& l2g,

@@ -255,10 +255,10 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
 
@@ -393,8 +393,6 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
 }
 
@@ -479,10 +477,10 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
     
     // Initialize patch variables
     double se = 0.0;
@@ -580,8 +578,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
+
   }
 }
 
@@ -647,10 +644,10 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -753,8 +750,6 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
     }  // end of loop over particles
     delete interpolator;
-    delete[] d_S;
-    delete[] ni;
   }
   solver->flushMatrix();
 }

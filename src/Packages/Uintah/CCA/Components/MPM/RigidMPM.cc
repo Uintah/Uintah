@@ -240,12 +240,12 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
-    Vector* d_S;
-    d_S = new Vector[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
+    vector<Vector> d_S;
+    d_S.reserve(interpolator->size());
 
 
     // Performs the interpolation from the cell vertices of the grid
@@ -431,8 +431,5 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
 
     delete interpolator;
-    delete[] S;
-    delete[] ni;
-    delete[] d_S;
   }
 }

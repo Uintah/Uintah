@@ -91,10 +91,10 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
     double time = d_sharedState->getElapsedTime();
 
@@ -171,9 +171,6 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
       gkineticenergydensity.initialize(0.);
       Gkineticenergydensity.initialize(0.);
 
-      IntVector ni[MAX_BASIS];
-      double S[MAX_BASIS];
-
       if(calFractParameters || doCrackPropagation) {
         for (ParticleSubset::iterator iter = pset->begin();
                              iter != pset->end(); iter++) {
@@ -225,8 +222,6 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
       } // End if(calFractParameters || doCrackPropagation)
     }
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   }
 }
 
@@ -275,10 +270,10 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     double dx_max=Max(dx.x(),dx.y(),dx.z());
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    IntVector* ni;
-    ni = new IntVector[interpolator->size()];
-    double* S;
-    S = new double[interpolator->size()];
+    vector<IntVector> ni;
+    ni.reserve(interpolator->size());
+    vector<double> S;
+    S.reserve(interpolator->size());
 
 
     // Variables related to MPI
@@ -460,8 +455,6 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Matrix3* st = new Matrix3[nSegs+1]; // Stresses in local coordinates
                   Matrix3* dg = new Matrix3[nSegs+1]; // Disp grads in local coordinates
 
-                  IntVector ni[MAX_BASIS];
-                  double S[MAX_BASIS];
                   for(int j=0; j<=nSegs; j++) {       // Loop over points on the circle
                     double angle,cosTheta,sinTheta;
                     angle=2*PI*(float)j/(float)nSegs;
@@ -729,8 +722,6 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       
     } // End of loop over matls
     delete interpolator;
-    delete[] S;
-    delete[] ni;
   } // End of loop patches
 }
 
