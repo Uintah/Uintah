@@ -52,14 +52,14 @@ public:
     virtual void construct_grid(int, int, int, const Point &, double);
     virtual int inside(const Point& p);
     void add_point(const Point& p);
-    int add_triangle(int i1, int i2, int i3);
-    int add_triangle(int i1, int i2, int i3, int cw);
+    int add_triangle(int i1, int i2, int i3, int cw=0);
     void remove_triangle(int i);
     double distance(const Point &p, Array1<int> &res);
 
     // these two were implemented for isosurfacing btwn two surfaces
     // (MorphMesher3d module/class)
-    int cautious_add_triangle(const Point &p1,const Point &p2,const Point &p3);
+    int cautious_add_triangle(const Point &p1,const Point &p2,const Point &p3,
+			      int cw=0);
     int get_closest_vertex_id(const Point &p1,const Point &p2,
 			      const Point &p3);
 
