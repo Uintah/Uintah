@@ -130,7 +130,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& grid,
     // Extract out the type of EOS and the 
     // associated parameters
      ICEMaterial *mat = scinew ICEMaterial(ps);
-     sharedState->registerMaterial(mat);
      sharedState->registerICEMaterial(mat);
   }     
 
@@ -3716,6 +3715,9 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.85  2001/01/10 01:14:16  harman
+// remove a missed change "sharedState->registerMaterial(mat);"
+//
 // Revision 1.84  2001/01/10 00:43:26  harman
 // -changed how vol_frac is computed in actuallyStep1b
 // -changed step4b requires to press_CC
