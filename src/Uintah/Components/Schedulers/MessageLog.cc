@@ -71,8 +71,8 @@ void MessageLog::logSend(const Task::Dependency* dep, int bytes,
    out << '\n';
 }
 
-void MessageLog::logRecv(const Task::Dependency* dep, int bytes,
-			 const char* msg)
+void MessageLog::logRecv(const Task::Dependency* /*dep*/, int /*bytes*/,
+			 const char* /*msg*/)
 {
    if(!d_enabled)
       return;
@@ -87,6 +87,12 @@ void MessageLog::finishTimestep()
 
 //
 // $Log$
+// Revision 1.2  2000/12/10 09:06:10  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.1.4.1  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.1  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in

@@ -5,6 +5,7 @@
 
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Task.h>
 #include <Uintah/Components/Schedulers/DWDatabase.h>
 
 #include <map>
@@ -23,6 +24,7 @@ class DataItem;
 class TypeDescription;
 class Patch;
 class ProcessorGroup;
+   class SendState;
 
 /**************************************
 
@@ -176,13 +178,19 @@ public:
    virtual void emit(ostream& intout, const VarLabel* label,
 		     int matlIndex = -1) const;
 
-   void sendMPI(const VarLabel* label, int matlIndex,
+   void sendParticleSubset(SendState& ss,
+			   ParticleSubset* pset, const VarLabel* pos_var,
+			   const Task::Dependency* dep, const Patch* toPatch,
+			   const ProcessorGroup* world, int* size);
+   void sendMPI(SendState& ss, const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
-		int dest, int tag, int* size, MPI_Request* requestid);
-   void recvMPI(DataWarehouseP& old_dw, 
+		const Task::Dependency*, int dest,
+		int tag, int* size, MPI_Request* requestid);
+   void recvMPI(SendState& ss, DataWarehouseP& old_dw, 
 		const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
-		int dest, int tag, int* size, MPI_Request* requestid);
+		const Task::Dependency*, int src,
+		int tag, int* size, MPI_Request* requestid);
    void reduceMPI(const VarLabel* label, int matlIndex,
 		  const ProcessorGroup* world);
 private:
@@ -231,6 +239,9 @@ private:
 
 //
 // $Log$
+// Revision 1.43  2000/12/10 09:06:11  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.42  2000/12/07 01:22:07  witzel
 // Nixed the pleaseSave stuff (that is now handle in DataArchiver via
 // the problem specification), and also fixed the put method for reduction
@@ -243,6 +254,13 @@ private:
 //
 // Revision 1.40  2000/11/28 03:55:22  jas
 // Added X,Y,Z FCVariables to the data warehouse.
+//
+// Revision 1.39.4.2  2000/10/02 15:02:45  sparker
+// Send only boundary particles
+//
+// Revision 1.39.4.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
 //
 // Revision 1.39  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles

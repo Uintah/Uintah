@@ -2,6 +2,7 @@
 // $Id$
 
 #include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Components/Schedulers/TaskGraph.h>
 
 using namespace Uintah;
@@ -32,6 +33,13 @@ int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*,
 
 //
 // $Log$
+// Revision 1.3  2000/12/10 09:06:11  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.2.4.1  2000/09/29 06:09:55  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.2  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in

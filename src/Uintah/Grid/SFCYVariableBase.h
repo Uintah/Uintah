@@ -67,9 +67,14 @@ WARNING
       virtual void emit(OutputContext&) = 0;
 
       virtual void* getBasePointer() = 0;
+      void getMPIBuffer(void*& buf, int& count,
+			MPI_Datatype& datatype, bool& free_datatype,
+			const IntVector& low, const IntVector& high);
       void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			    IntVector& siz, IntVector& strides) const = 0;
    protected:
       SFCYVariableBase(const SFCYVariableBase&);
       SFCYVariableBase();
@@ -82,6 +87,15 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5  2000/12/10 09:06:17  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.3.4.2  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
+// Revision 1.3.4.1  2000/10/19 05:18:04  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.4  2000/10/12 20:05:37  sparker
 // Removed print statement from FCVariable
 // Added rewindow to SFC{X,Y,Z}Variables

@@ -65,9 +65,14 @@ WARNING
 			      const IntVector& highIndex) = 0;
       virtual void emit(OutputContext&) = 0;
       virtual void* getBasePointer() = 0;
+      void getMPIBuffer(void*& buf, int& count,
+			MPI_Datatype& datatype, bool& free_datatype,
+			const IntVector& low, const IntVector& high);
       void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			    IntVector& siz, IntVector& strides) const = 0;
    protected:
       CCVariableBase(const CCVariableBase&);
       CCVariableBase();
@@ -80,6 +85,15 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.5.4.2  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
+// Revision 1.5.4.1  2000/10/19 05:18:03  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.6  2000/10/11 21:39:59  sparker
 // Added rewindow to CCVariable - just copies the array to a different window
 //

@@ -209,7 +209,7 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	l2g.initialize(-1234);
 	long totalCells=0;
 	const Level* level = patch->getLevel();
-	std::vector<const Patch*> neighbors;
+	Level::selectType neighbors;
 	level->selectPatches(lowIndex, highIndex, neighbors);
 	for(int i=0;i<neighbors.size();i++){
 	   const Patch* neighbor = neighbors[i];
@@ -1900,6 +1900,12 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.21  2000/12/10 09:06:01  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.12.4.1  2000/10/19 05:17:28  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.20  2000/10/14 17:11:05  sparker
 // Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
 // to get rid of memory leak

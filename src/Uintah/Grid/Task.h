@@ -2,9 +2,13 @@
 #define UINTAH_HOMEBREW_Task_H
 
 #include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Grid/fixedvector.h>
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Handle.h>
+#include <Uintah/Grid/SimpleString.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Containers/TrivialAllocator.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <string>
 #include <vector>
@@ -20,6 +24,7 @@ namespace Uintah {
    class VarLabel;
    class Patch;
    class TypeDescription;
+   using namespace SCICore::Containers;
    
 /**************************************
 
@@ -247,14 +252,13 @@ WARNING
 	 Gather
       };
 
-      Task(const string&         taskName)
+      Task(const SimpleString&         taskName)
 	:  d_resourceIndex(-1),
 	   d_taskName(taskName),
 	   d_patch(0),
 	   d_action(0),
 	   d_fromDW(0),
 	   d_toDW(0)
-	
       {
 	 d_completed = false;
 	 d_usesThreads = false;
@@ -264,7 +268,7 @@ WARNING
       }
 
       template<class T>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
 	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
@@ -289,7 +293,7 @@ WARNING
       }
 
      template<class T>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
            DataWarehouseP&       fromDW,
            DataWarehouseP&       toDW,
            T*                    ptr,
@@ -311,7 +315,7 @@ WARNING
 
       
      template<class T, class Arg1>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
            DataWarehouseP&       fromDW,
            DataWarehouseP&       toDW,
            T*                    ptr,
@@ -335,7 +339,7 @@ WARNING
 
       
       template<class T>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
@@ -357,7 +361,7 @@ WARNING
       }
       
       template<class T, class Arg1>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
 	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
@@ -382,7 +386,7 @@ WARNING
       }
       
       template<class T, class Arg1, class Arg2>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
 	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
@@ -407,7 +411,7 @@ WARNING
       }
       
       template<class T, class Arg1, class Arg2, class Arg3>
-      Task(const string&         taskName,
+      Task(const SimpleString&         taskName,
 	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
@@ -468,7 +472,7 @@ WARNING
       // Tells the task to actually execute the function assigned to it.
       void doit(const ProcessorGroup* pc);
 
-      inline const string& getName() const {
+      inline const char* getName() const {
 	 return d_taskName;
       }
       inline const Patch* getPatch() const {
@@ -479,31 +483,80 @@ WARNING
       }
 
       struct Dependency {
-	 DataWarehouseP   d_dw;
+	 DataWarehouse*   d_dw;
 	 const VarLabel*  d_var;
-	 int		  d_matlIndex;
 	 const Patch*     d_patch;
 	 Task*		  d_task;
+	 int		  d_matlIndex;
 	 int		  d_serialNumber;
+	 IntVector	  d_lowIndex, d_highIndex;
+
+	 inline Dependency() {}
+	 Dependency(const Dependency&);
+	 Dependency& operator=(const Dependency& copy) {
+	    d_dw=copy.d_dw;
+	    d_var=copy.d_var;
+	    d_patch=copy.d_patch;
+	    d_task=copy.d_task;
+	    d_matlIndex=copy.d_matlIndex;
+	    d_serialNumber=copy.d_serialNumber;
+	    d_lowIndex=copy.d_lowIndex;
+	    d_highIndex=copy.d_highIndex;
+	    return *this;
+	 }
 	 
-	 Dependency(      const DataWarehouseP& dw,
-			  const VarLabel* d_var,
-			  int matlIndex,
-			  const Patch*,
-			  Task* task);
+	 inline Dependency(DataWarehouse* dw,
+			   const VarLabel* var,
+			   int matlIndex,
+			   const Patch* patch,
+			   Task* task,
+			   const IntVector& lowIndex,
+			   const IntVector& highIndex)
+	 : d_dw(dw),
+	   d_var(var),
+	   d_patch(patch),
+	   d_task(task),
+	   d_matlIndex(matlIndex),
+	   d_serialNumber(-123),
+	   d_lowIndex(lowIndex),
+	   d_highIndex(highIndex)
+	 {
+	 }
       }; // end struct Dependency
       
       //////////
       // Insert Documentation Here:
       void addComps(vector<Dependency*>&) const;
 
+      static const int MAX_COMPS = 16;
+      static const int MAX_REQS = 64;
+
+      typedef fixedvector<Dependency, MAX_COMPS> compType;
+      typedef fixedvector<Dependency, MAX_REQS> reqType;
+
       //////////
       // Returns the list of variables that this Task computes.
-      const vector<Dependency*>& getComputes() const;
+      const compType& getComputes() const {
+	 return d_comps;
+      }
       
       //////////
       // Insert Documentation Here:
-      const vector<Dependency*>& getRequires() const;
+      const reqType& getRequires() const {
+	 return d_reqs;
+      }
+
+      //////////
+      // Returns the list of variables that this Task computes.
+      compType& getComputes() {
+	 return d_comps;
+      }
+      
+      //////////
+      // Insert Documentation Here:
+      reqType& getRequires() {
+	 return d_reqs;
+      }
 
       bool isReductionTask() const {
 	 return d_tasktype == Reduction;
@@ -539,14 +592,14 @@ WARNING
    private: // class Task
       //////////
       // Insert Documentation Here:
-      string              d_taskName;
+      SimpleString        d_taskName;
       const Patch*        d_patch;
       ActionBase*         d_action;
       DataWarehouseP      d_fromDW;
       DataWarehouseP      d_toDW;
       bool                d_completed;
-      vector<Dependency*> d_reqs;
-      vector<Dependency*> d_comps;
+      reqType		  d_reqs;
+      compType		  d_comps;
       
       bool                d_usesMPI;
       bool                d_usesThreads;
@@ -565,6 +618,9 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.28  2000/12/10 09:06:18  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.27  2000/12/09 06:27:52  witzel
 // Added material index argument to one of the overloaded computes
 // methods for material specific reduction variables.
@@ -572,6 +628,12 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 // Revision 1.26  2000/12/07 01:29:27  witzel
 // Added material index argument to one of the overloaded require
 // methods for material specific reduction variables.
+//
+// Revision 1.25.2.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.25.2.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
 //
 // Revision 1.25  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization

@@ -13,28 +13,6 @@ VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 {
 }
 
-bool
-VarLabel::Compare::operator()(const VarLabel* v1,
-			      const VarLabel* v2) const
-{
-   if(v1 == v2)
-      return false;
-   return v1->getName() < v2->getName();
-}
-
-string
-VarLabel::getFullName(int matlIndex, const Patch* patch) const
-{
-   ostringstream out;
-   out << d_name << "(matl=" << matlIndex;
-   if(patch)
-      out << ", patch=" << patch->getID();
-   else
-      out << ", no patch";
-   out << ")";
-   return out.str();
-}
-
 ostream & 
 operator<<( ostream & out, const Uintah::VarLabel & vl )
 {
@@ -45,6 +23,12 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.9  2000/12/10 09:06:18  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.8.4.1  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.8  2000/09/25 18:12:20  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes

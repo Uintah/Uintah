@@ -51,6 +51,7 @@ TaskGraph::initialize()
 
    d_tasks.clear();
    d_allcomps.clear();
+   d_allreqs.clear();
 }
 
 map<DependData, int> depToSN;
@@ -70,11 +71,10 @@ TaskGraph::assignUniqueSerialNumbers()
     cerr << "Assigning to task: " << *task << "\n";
 #endif
     
-    const vector<Task::Dependency*>& reqs = task->getRequires();
-    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	iter != reqs.end(); iter++){
+    Task::reqType& reqs = task->getRequires();
+    for(Task::reqType::iterator dep = reqs.begin();
+	dep != reqs.end(); dep++){
 
-      Task::Dependency * dep = *iter;
       DependData         depData( dep );
 
       map<DependData, int, DependData>::iterator dToSnIter;
@@ -105,24 +105,23 @@ TaskGraph::assignSerialNumbers()
 
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
     Task* task = *iter;
-    const vector<Task::Dependency*>& reqs = task->getRequires();
-    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	iter != reqs.end(); iter++){
-      Task::Dependency* dep = *iter;
+    Task::reqType& reqs = task->getRequires();
+    for(Task::reqType::iterator dep = reqs.begin();
+	dep != reqs.end(); dep++){
       dep->d_serialNumber = num++;
     }
   }
   if(dbg.active()){
     for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ){
       Task* task = *iter;
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
 	cerr << *dep << '\n';
       }
     }
-  } 
+  }
+  d_maxSerial = num;
 } // end assignSerialNumbers()
 
 
@@ -139,10 +138,9 @@ TaskGraph::setupTaskConnections()
    map<const VarLabel*, Task*, VarLabel::Compare> reductionTasks;
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
       Task* task = *iter;
-      const vector<Task::Dependency*>& comps = task->getComputes();
-      for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
-	  iter != comps.end(); iter++){
-	 Task::Dependency* dep = *iter;
+      const Task::compType& comps = task->getComputes();
+      for(Task::compType::const_iterator dep = comps.begin();
+	  dep != comps.end(); dep++){
 	 if(dep->d_dw->isFinalized()){
 	    throw InternalError("Variable produced in old datawarehouse: "+dep->d_var->getName());
 	 } else if(dep->d_var->typeDescription()->isReductionVariable()){
@@ -170,10 +168,9 @@ TaskGraph::setupTaskConnections()
    // Also do a type check
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
       Task* task = *iter;
-      const vector<Task::Dependency*>& reqs = task->getRequires();
-      for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-	  iter != reqs.end(); iter++){
-	 Task::Dependency* dep = *iter;
+      const Task::reqType& reqs = task->getRequires();
+      for(Task::reqType::const_iterator dep = reqs.begin();
+	  dep != reqs.end(); dep++){
 	 if(dep->d_dw->isFinalized()){
 #if 0 // Not a valid check for parallel code!
 
@@ -218,10 +215,9 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
    }
 
    task->visited=true;
-   const vector<Task::Dependency*>& reqs = task->getRequires();
-   for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
-       iter != reqs.end(); iter++){
-      Task::Dependency* dep = *iter;
+   const Task::reqType& reqs = task->getRequires();
+   for(Task::reqType::const_iterator dep = reqs.begin();
+       dep != reqs.end(); dep++){
       if(!dep->d_dw->isFinalized()){
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 actype::const_iterator aciter = d_allcomps.find(p);
@@ -301,10 +297,9 @@ TaskGraph::addTask(Task* task)
 
    d_tasks.push_back(task);
  
-   const vector<Task::Dependency*>& comps = task->getComputes();
-   for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
-       iter != comps.end(); iter++){
-      Task::Dependency* dep = *iter;
+   const Task::compType& comps = task->getComputes();
+   for(Task::compType::const_iterator dep = comps.begin();
+       dep != comps.end(); dep++){
       TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
       actype::iterator aciter = d_allcomps.find(p);
       if(aciter != d_allcomps.end()){
@@ -315,6 +310,15 @@ TaskGraph::addTask(Task* task)
 	 throw InternalError("Two tasks compute the same result: "+dep->d_var->getName()+" (tasks: "+task->getName()+" and "+aciter->second->d_task->getName()+")");
       }
       d_allcomps[p] = dep;
+   }
+
+   const Task::reqType& reqs = task->getRequires();
+   for(Task::reqType::const_iterator dep = reqs.begin();
+       dep != reqs.end(); dep++){
+      if(!dep->d_dw->isFinalized()){
+	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
+	 d_allreqs.insert(artype::value_type(p, dep));
+      }
    }
 }
 
@@ -330,14 +334,14 @@ const Task::Dependency* TaskGraph::getComputesForRequires(const Task::Dependency
 void TaskGraph::getRequiresForComputes(const Task::Dependency* comp,
 				       vector<const Task::Dependency*>& reqs)
 {
+#if 0
    // This REALLY needs to be improved - Steve
    vector<Task*>::iterator iter;
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
       Task* task = *iter;
-      const vector<Task::Dependency*>& deps = task->getRequires();
-      vector<Task::Dependency*>::const_iterator dep_iter;
-      for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
-	 const Task::Dependency* dep = *dep_iter;
+      const Task::reqType& deps = task->getRequires();
+      Task::reqType::const_iterator dep;
+      for (dep = deps.begin(); dep != deps.end(); dep++) {
 
 	 if (!dep->d_dw->isFinalized()) {
 	    //extern int myrank;
@@ -352,6 +356,13 @@ void TaskGraph::getRequiresForComputes(const Task::Dependency* comp,
       }
    }
    //cerr << "Found " << reqs.size() << " consumers of variable: " << comp->d_var->getName() << " on patch " << comp->d_patch->getID() << " " << comp->d_patch << '\n';
+#else
+   TaskProduct key(comp->d_patch, comp->d_matlIndex, comp->d_var);
+   pair<artype::iterator, artype::iterator> iters;
+   iters = d_allreqs.equal_range(key);
+   for(artype::iterator iter = iters.first; iter != iters.second; iter++)
+      reqs.push_back(iter->second);
+#endif
 }
 
 bool
@@ -375,7 +386,7 @@ TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
 {
    VarLabelMaterialMap* result = scinew VarLabelMaterialMap;
   
-   map<TaskProduct, Task::Dependency*>::iterator it;
+   map<TaskProduct, const Task::Dependency*>::iterator it;
 
    // assume all patches will compute the same labels on the same
    // materials
@@ -438,8 +449,17 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.11  2000/12/10 09:06:12  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.10  2000/12/06 23:54:26  witzel
 // Added makeVarLabelMaterialMap method
+//
+// Revision 1.9.4.2  2000/10/17 01:01:09  sparker
+// Added optimization of getRequiresForComputes
+//
+// Revision 1.9.4.1  2000/10/10 05:28:03  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
 //
 // Revision 1.9  2000/09/27 02:15:29  dav
 // Mixed model updates

@@ -116,14 +116,26 @@ WARNING
 
       TaskGraph graph;
       int d_generation;
+
+      double d_lasttime;
+      vector<char*> d_labels;
+      vector<double> d_times;
+      void emitTime(char* label);
+      void emitTime(char* label, double time);
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/12/10 09:06:10  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.8  2000/12/06 23:57:13  witzel
 // Added makeVarLabelMaterialMap method
+//
+// Revision 1.7.4.1  2000/10/06 16:42:33  sparker
+// Added instrumentation
 //
 // Revision 1.7  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)

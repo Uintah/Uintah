@@ -34,7 +34,7 @@ PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions Uintah/Interface SCICore/Thread
 endif
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) -lmpi $(VAMPIR_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
@@ -56,9 +56,15 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.18  2000/12/10 09:05:59  sparker
+# Merge from csafe_risky1
+#
 # Revision 1.17  2000/12/01 22:59:16  guilkey
 # Adding code to allow MPM to work with a CFD code, specifics are directed
 # towards ICE, but most work is generic for either ICE or Arches.
+#
+# Revision 1.16.4.1  2000/10/07 00:00:34  witzel
+# Added vampir support
 #
 # Revision 1.16  2000/08/23 21:02:52  witzel
 # added testprograms sub-directory

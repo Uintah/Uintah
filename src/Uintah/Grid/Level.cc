@@ -8,19 +8,28 @@
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/FancyAssert.h>
 #include <iostream>
 #include <PSECore/XMLUtil/XMLUtil.h>
 using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
 using namespace PSECore::XMLUtil;
+#include <algorithm>
 #include <map>
 #include <Uintah/Grid/BoundCondFactory.h>
 
+#ifdef SELECT_RANGETREE
+#include <Uintah/Grid/PatchRangeTree.h>
+#endif
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
-   : grid(grid), d_anchor(anchor), d_dcell(dcell)
+   : grid(grid), d_anchor(anchor), d_dcell(dcell),
+     d_patchDistribution(-1,-1,-1)
 {
+#ifdef SELECT_RANGETREE
+   d_rangeTree = NULL;
+#endif
    d_finalized=false;
 }
 
@@ -29,6 +38,19 @@ Level::~Level()
   // Delete all of the patches managed by this level
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++)
     delete *iter;
+
+#ifdef SELECT_RANGETREE
+  delete d_rangeTree;
+#endif 
+}
+
+void Level::setPatchDistributionHint(const IntVector& hint)
+{
+   if(d_patchDistribution.x() == -1)
+      d_patchDistribution = hint;
+   else
+      // Called more than once, we have to punt
+      d_patchDistribution = IntVector(-2,-2,2);
 }
 
 Level::const_patchIterator Level::patchesBegin() const
@@ -186,8 +208,9 @@ Point Level::positionToIndex(const Point& p) const
 }
 
 void Level::selectPatches(const IntVector& low, const IntVector& high,
-			  std::vector<const Patch*>& neighbors) const
+			  selectType& neighbors) const
 {
+#ifdef SELECT_LINEAR
    // This sucks - it should be made faster.  -Steve
    for(const_patchIterator iter=d_patches.begin();
        iter != d_patches.end(); iter++){
@@ -197,6 +220,66 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
 	 neighbors.push_back(*iter);
    }
+#else
+#ifdef SELECT_GRID
+   IntVector start = (low-d_idxLow)*d_gridSize/d_idxSize;
+   IntVector end = (high-d_idxLow)*d_gridSize/d_idxSize;
+   start=SCICore::Geometry::Max(IntVector(0,0,0), start);
+   end=SCICore::Geometry::Min(d_gridSize-IntVector(1,1,1), end);
+   for(int iz=start.z();iz<=end.z();iz++){
+      for(int iy=start.y();iy<=end.y();iy++){
+	 for(int ix=start.x();ix<=end.x();ix++){
+	    int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
+	    int s = d_gridStarts[gridIdx];
+	    int e = d_gridStarts[gridIdx+1];
+	    for(int i=s;i<e;i++){
+	       Patch* patch = d_gridPatches[i];
+	       IntVector l=SCICore::Geometry::Max(patch->getCellLowIndex(), low);
+	       IntVector u=SCICore::Geometry::Min(patch->getCellHighIndex(), high);
+	       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
+		  neighbors.push_back(patch);
+	    }
+	 }
+      }
+   }
+   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
+   int i=0;
+   int j=0;
+   while(j<(int)neighbors.size()) {
+      neighbors[i]=neighbors[j];
+      j++;
+      while(j < (int)neighbors.size() && neighbors[i] == neighbors[j] )
+	 j++;
+      i++;
+   }
+   neighbors.resize(i);
+#else
+#ifdef SELECT_RANGETREE
+   d_rangeTree->query(low, high, neighbors);
+   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
+#else
+#error "No selectPatches algorithm defined"
+#endif
+#endif
+#endif
+
+#ifdef CHECK_SELECT
+   // Double-check the more advanced selection algorithms against the
+   // slow (exhaustive) one.
+   vector<const Patch*> tneighbors;
+   for(const_patchIterator iter=d_patches.begin();
+       iter != d_patches.end(); iter++){
+      const Patch* patch = *iter;
+      IntVector l=SCICore::Geometry::Max(patch->getCellLowIndex(), low);
+      IntVector u=SCICore::Geometry::Min(patch->getCellHighIndex(), high);
+      if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
+	 tneighbors.push_back(*iter);
+   }
+   ASSERTEQ(neighbors.size(), tneighbors.size());
+   sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
+   for(int i=0;i<(int)neighbors.size();i++)
+      ASSERT(neighbors[i] == tneighbors[i]);
+#endif
 }
 
 bool Level::containsPoint(const Point& p) const
@@ -213,6 +296,64 @@ bool Level::containsPoint(const Point& p) const
 
 void Level::finalizeLevel()
 {
+#ifdef SELECT_GRID
+   if(d_patchDistribution.x() >= 0 && d_patchDistribution.y() >= 0 &&
+      d_patchDistribution.z() >= 0){
+      d_gridSize = d_patchDistribution;
+   } else {
+      int np = numPatches();
+      int neach = (int)(0.5+pow(np, 1./3.));
+      d_gridSize = IntVector(neach, neach, neach);
+   }
+   getIndexRange(d_idxLow, d_idxHigh);
+   d_idxHigh-=IntVector(1,1,1);
+   d_idxSize = d_idxHigh-d_idxLow;
+   int numCells = d_gridSize.x()*d_gridSize.y()*d_gridSize.z();
+   vector<int> counts(numCells+1, 0);
+   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+      Patch* patch = *iter;
+      IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
+      IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
+      for(int iz=start.z();iz<end.z();iz++){
+	 for(int iy=start.y();iy<end.y();iy++){
+	    for(int ix=start.x();ix<end.x();ix++){
+	       int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
+	       counts[gridIdx]++;
+	    }
+	 }
+      }
+   }
+   d_gridStarts.resize(numCells+1);
+   int count=0;
+   for(int i=0;i<numCells;i++){
+      d_gridStarts[i]=count;
+      count+=counts[i];
+      counts[i]=0;
+   }
+   d_gridStarts[numCells]=count;
+   d_gridPatches.resize(count);
+   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
+      Patch* patch = *iter;
+      IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
+      IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
+      for(int iz=start.z();iz<end.z();iz++){
+	 for(int iy=start.y();iy<end.y();iy++){
+	    for(int ix=start.x();ix<end.x();ix++){
+	       int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
+	       int pidx = d_gridStarts[gridIdx]+counts[gridIdx];
+	       d_gridPatches[pidx]=patch;
+	       counts[gridIdx]++;
+	    }
+	 }
+      }
+   }
+#else
+#ifdef SELECT_RANGETREE
+   if (d_rangeTree != NULL)
+     delete d_rangeTree;
+   d_rangeTree = scinew PatchRangeTree(d_patches);
+#endif   
+#endif
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++){
     Patch* patch = *iter;
     cout << "Patch bounding box = " << patch->getBox() << endl;
@@ -221,7 +362,7 @@ void Level::finalizeLevel()
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       IntVector l,h;
       patch->getFace(face, 1, l, h);
-      std::vector<const Patch*> neighbors;
+      Level::selectType neighbors;
       selectPatches(l, h, neighbors);
       if(neighbors.size() == 0){
 	patch->setBCType(face, Patch::None);
@@ -249,19 +390,19 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
     map<string,string> values;
     face_ps->getAttributes(values);
 
-    Patch::FaceType face_side;
+    Patch::FaceType face_side = Patch::invalidFace;
     std::string fc = values["side"];
     if (fc == "x-")
       face_side = Patch::xminus;
-    if (fc ==  "x+")
+    else if (fc ==  "x+")
       face_side = Patch::xplus;
-    if (fc ==  "y-")
+    else if (fc ==  "y-")
       face_side = Patch::yminus;
-    if (fc ==  "y+")
+    else if (fc ==  "y+")
       face_side = Patch::yplus;
-    if (fc ==  "z-")
+    else if (fc ==  "z-")
       face_side = Patch::zminus;
-    if (fc == "z+")
+    else if (fc == "z+")
       face_side = Patch::zplus;
 
     vector<BoundCondBase*> bcs;
@@ -281,8 +422,15 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 }
 
+Box Level::getBox(const IntVector& l, const IntVector& h) const
+{
+   return Box(getNodePosition(l), getNodePosition(h));
+}
 //
 // $Log$
+// Revision 1.26  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.25  2000/11/28 03:47:26  jas
 // Added FCVariables for the specific faces X,Y,and Z.
 //
@@ -293,6 +441,19 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
 // declared differently in the *.ups file.
+//
+// Revision 1.22.4.4  2000/10/25 20:36:31  witzel
+// Added RangeTree option for selectPatches implementation.
+//
+// Revision 1.22.4.3  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.22.4.2  2000/10/07 06:10:36  sparker
+// Optimized implementation of Level::selectPatches
+// Cured g++ warnings
+//
+// Revision 1.22.4.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
 //
 // Revision 1.22  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings

@@ -82,7 +82,8 @@ WARNING
        zplus,
        startFace = xminus,
        endFace = zplus,
-       numFaces // 6
+       numFaces, // 6
+       invalidFace
      };
      
      //////////
@@ -142,7 +143,9 @@ WARNING
      IntVector getNodeLowIndex() const {
        return d_lowIndex;
      }
-     IntVector getNodeHighIndex() const;
+      IntVector getNodeHighIndex() const {
+	 return d_nodeHighIndex;
+      }
 
      IntVector getSFCXLowIndex() const {
        return d_lowIndex;
@@ -203,8 +206,7 @@ WARNING
      IntVector getGhostSFCZHighIndex(const int numGC) const;
      
      inline Box getBox() const {
-       return Box(d_level->getNodePosition(d_lowIndex),
-		  d_level->getNodePosition(d_highIndex));
+	return d_level->getBox(d_lowIndex, d_highIndex);
      }
      
      inline IntVector getNFaces() const {
@@ -274,6 +276,7 @@ WARNING
      enum VariableBasis {
 	CellBased,
 	NodeBased,
+	CellFaceBased,
 	XFaceBased,
 	YFaceBased,
 	ZFaceBased,
@@ -282,12 +285,20 @@ WARNING
 
      void computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 				 int numGhostCells,
-				 vector<const Patch*>& neighbors,
+				 Level::selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
      void computeVariableExtents(TypeDescription::Type basis,
 				 Ghost::GhostType gtype, int numGhostCells,
-				 vector<const Patch*>& neighbors,
+				 Level::selectType& neighbors,
 				 IntVector& low, IntVector& high) const;
+
+      class Compare {
+      public:
+	 inline bool operator()(const Patch* p1, const Patch* p2) const {
+	    return p1->getID() < p2->getID();
+	 }
+      private:
+      };
    protected:
      friend class Level;
      
@@ -314,6 +325,7 @@ WARNING
 
      IntVector d_inLowIndex;
      IntVector d_inHighIndex;
+     IntVector d_nodeHighIndex;
      
      int d_id;
      BCType d_bctypes[numFaces];
@@ -327,6 +339,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.25  2000/12/10 09:06:17  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.24  2000/11/30 22:55:34  guilkey
 // Changed the return type of the findCellAnd... functions from bool to void.
 // Also, added a findCellAndWeightsAndShapeDerivatives to be used where both
@@ -345,6 +360,19 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
 // declared differently in the *.ups file.
+//
+// Revision 1.19.4.4  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
+// Revision 1.19.4.3  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.19.4.2  2000/10/07 06:10:36  sparker
+// Optimized implementation of Level::selectPatches
+// Cured g++ warnings
+//
+// Revision 1.19.4.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
 //
 // Revision 1.19  2000/09/26 21:34:05  dav
 // inlined a few things

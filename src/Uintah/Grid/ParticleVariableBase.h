@@ -81,7 +81,8 @@ WARNING
       }
       
       virtual void* getBasePointer() = 0;
-      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
+      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype,
+			bool& free_datatype, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);
@@ -97,6 +98,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.10  2000/12/10 09:06:17  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.9.4.1  2000/10/02 15:00:45  sparker
+// Support for sending only boundary particles
+//
 // Revision 1.9  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

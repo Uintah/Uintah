@@ -67,7 +67,11 @@ namespace Uintah {
       }
       class Compare {
       public:
-	 bool operator()(const VarLabel* v1, const VarLabel* v2) const;
+	 inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
+	    if(v1 == v2)
+	       return false;
+	    return v1->getName() < v2->getName();
+	 }
       private:
       };
 
@@ -85,6 +89,12 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.13  2000/12/10 09:06:18  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.12.4.1  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.12  2000/09/26 21:39:22  dav
 // inlined some things
 //

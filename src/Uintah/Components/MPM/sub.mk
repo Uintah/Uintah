@@ -26,12 +26,18 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
 	SCICore/Geometry PSECore/XMLUtil Uintah/Math
-LIBS := $(XML_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(VT_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.19  2000/12/10 09:06:03  sparker
+# Merge from csafe_risky1
+#
+# Revision 1.18.4.1  2000/10/07 00:03:11  witzel
+# Added vampir support
+#
 # Revision 1.18  2000/08/15 19:18:23  witzel
 # Added Uintah/Math to list of PSE libraries (for CubicPolyRoots used
 # by Matrix3::getEigenValues).

@@ -69,10 +69,9 @@ Scheduler::makeTaskGraphDoc(const vector<Task*>& tasks, bool emit_edges /* = tru
     map<TaskProduct, Task*> computes_map;
     vector<Task*>::const_iterator task_iter;
     for (task_iter = tasks.begin(); task_iter != tasks.end(); task_iter++) {
-    	const vector<Task::Dependency*>& comps = (*task_iter)->getComputes();
-    	for (vector<Task::Dependency*>::const_iterator dep_iter = comps.begin();
-	     dep_iter != comps.end(); dep_iter++) {
-    	    const Task::Dependency* dep = *dep_iter;
+    	const Task::compType& comps = (*task_iter)->getComputes();
+    	for (Task::compType::const_iterator dep = comps.begin();
+	     dep != comps.end(); dep++) {
 	    TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	    computes_map[p] = *task_iter;
 	}
@@ -88,11 +87,9 @@ Scheduler::makeTaskGraphDoc(const vector<Task*>& tasks, bool emit_edges /* = tru
     for (task_iter = tasks.begin(); task_iter != tasks.end(); task_iter++) {
     	const Task* task = *task_iter;
 
-	const vector<Task::Dependency*>& deps = task->getRequires();
-	vector<Task::Dependency*>::const_iterator dep_iter;
-	for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
-	    const Task::Dependency* dep = *dep_iter;
-
+	const Task::reqType& deps = task->getRequires();
+	Task::reqType::const_iterator dep;
+	for (dep = deps.begin(); dep != deps.end(); dep++) {
 	    if (!dep->d_dw->isFinalized()) {
 
 		TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
@@ -175,6 +172,12 @@ Scheduler::problemSetup(const ProblemSpecP&)
 
 //
 // $Log$
+// Revision 1.15  2000/12/10 09:06:21  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.14.2.1  2000/10/10 05:28:10  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
 // Revision 1.14  2000/09/29 05:35:07  sparker
 // Quiet g++ warnings
 //

@@ -91,6 +91,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       virtual const TypeDescription* virtualGetTypeDescription() const;
       virtual void getSizes(IntVector& low, IntVector& high,
 			   IntVector& siz) const;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			    IntVector& siz, IntVector& strides) const;
+
 
      // Replace the values on the indicated face with value
       void fillFace(Patch::FaceType face, const T& value)
@@ -454,10 +457,25 @@ class CCVariable : public Array3<T>, public CCVariableBase {
        siz = size();
      }
 
+   template<class T>
+     void
+     CCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+			      IntVector& strides) const
+      {
+	 low=getLowIndex();
+	 high=getHighIndex();
+	 siz=size();
+	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
+			     (int)(sizeof(T)*siz.y()*siz.x()));
+      }
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.29  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
 // Revision 1.28  2000/11/21 21:57:27  jas
 // More things to get FCVariables to work.
 //
@@ -465,6 +483,12 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 // Rearranged the boundary conditions so there is consistency between ICE
 // and MPM.  Added fillFaceFlux for the Neumann BC condition.  BCs are now
 // declared differently in the *.ups file.
+//
+// Revision 1.24.4.2  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
+// Revision 1.24.4.1  2000/10/19 05:18:03  sparker
+// Merge changes from main branch into csafe_risky1
 //
 // Revision 1.26  2000/10/12 20:05:37  sparker
 // Removed print statement from FCVariable

@@ -84,7 +84,8 @@ class NCVariable : public Array3<T>, public NCVariableBase {
      virtual void* getBasePointer();
      virtual const TypeDescription* virtualGetTypeDescription() const;
 
-     virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const;
+     virtual void getSizes(IntVector& low, IntVector& high,
+			   IntVector& siz, IntVector& strides) const;
      // Replace the values on the indicated face with value
      void fillFace(Patch::FaceType face, const T& value)
        { 
@@ -368,17 +369,29 @@ class NCVariable : public Array3<T>, public NCVariableBase {
    
    template<class T>
       void
-      NCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz) const
+      NCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+			      IntVector& strides) const
       {
 	 low=getLowIndex();
 	 high=getHighIndex();
 	 siz=size();
+	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
+			     (int)(sizeof(T)*siz.y()*siz.x()));
       }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.32  2000/12/10 09:06:16  sparker
+// Merge from csafe_risky1
+//
+// Revision 1.31.2.2  2000/10/10 05:28:08  sparker
+// Added support for NullScheduler (used for profiling taskgraph overhead)
+//
+// Revision 1.31.2.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.31  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.
