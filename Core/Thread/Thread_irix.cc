@@ -257,7 +257,11 @@ Thread::initialize()
     // 
     int tmpfd=dup(2);
     close(2);
+    int nullfd=open("/dev/null", O_WRONLY);
+    if(nullfd != 2)
+	throw ThreadError("Wrong FD returned from open");
     reservoir=atomic_alloc_reservoir(USE_DEFAULT_PM, 100, NULL);
+    close(2);
     int newfd=dup(tmpfd);
     if(newfd != 2)
 	throw ThreadError("Wrong FD returned from dup!");
@@ -1092,6 +1096,13 @@ AtomicCounter::set(int v)
 
 //
 // $Log$
+// Revision 1.10  1999/09/05 05:58:33  sparker
+// Fixed bug in handling of stderr, where stderr would sometimes
+// not work.  In order to prevent extraneous print statements from
+// the fetchop library, we play games with the stderr file descriptor.
+// Now it is pointed to /dev/null temporarily instead of just temporarily
+// closed.
+//
 // Revision 1.9  1999/09/01 22:31:11  sparker
 // Changed mmap of thread stacks so that fork will work.
 //
