@@ -391,6 +391,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
+// if statement to handle Kumar's wall with zero density
+	  if (den[currCell] > 0.0) {
 	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
 	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
 	                  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
@@ -414,6 +416,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	  delta_t2=Min(Abs(cellinfo->stb[colZ]/
 			  (wVelocity[currCell]+small_num)), delta_t2);
 #endif
+	  }
 	}
       }
     }
