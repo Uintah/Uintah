@@ -14,6 +14,7 @@ static char *id="@(#) $Id$";
 using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
+using SCICore::Math::Floor;
 
 Region::Region(const Point& lower, const Point& upper,
 	       const IntVector& res)
@@ -26,14 +27,6 @@ Region::~Region()
 }
 
 #if 0
-Vector Region::dCell() const
-{
-    Vector diag = d_upper - d_lower;
-    return Vector(diag.x()/d_nx, diag.y()/d_ny, diag.z()/d_nz);
-}
-#endif
-
-#if 0
 void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 {
     Vector cellpos = (pos-d_lower.asVector()) * 
@@ -42,43 +35,41 @@ void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
     iy = Floor(cellpos.y());
     iz = Floor(cellpos.z());
 }
+#endif
 
-
-bool Region::findCellAndWeights(const Vector& pos,
-				Array3Index ni[8], double S[8]) const
+bool Region::findCellAndWeights(const Point& pos,
+				IntVector ni[8], double S[8]) const
 {
-    Vector cellpos = (pos-d_lower.asVector())*
-                      Vector(d_nx, d_ny, d_nz)/(d_upper-d_lower);
-    int ix = Floor(cellpos.x());
-    int iy = Floor(cellpos.y());
-    int iz = Floor(cellpos.z());
-    ni[0] = Array3Index(ix, iy, iz);
-    ni[1] = Array3Index(ix, iy, iz+1);
-    ni[2] = Array3Index(ix, iy+1, iz);
-    ni[3] = Array3Index(ix, iy+1, iz+1);
-    ni[4] = Array3Index(ix+1, iy, iz);
-    ni[5] = Array3Index(ix+1, iy, iz+1);
-    ni[6] = Array3Index(ix+1, iy+1, iz);
-    ni[7] = Array3Index(ix+1, iy+1, iz+1);
-    double fx = cellpos.x() - ix;
-    double fy = cellpos.y() - iy;
-    double fz = cellpos.z() - iz;
-    double fx1 = 1-fx;
-    double fy1 = 1-fy;
-    double fz1 = 1-fz;
-    S[0] = fx1 * fy1 * fz1;
-    S[1] = fx1 * fy1 * fz;
-    S[2] = fx1 * fy * fz1;
-    S[3] = fx1 * fy * fz;
-    S[4] = fx * fy1 * fz1;
-    S[5] = fx * fy1 * fz;
-    S[6] = fx * fy * fz1;
-    S[7] = fx * fy * fz;
-    return ix>= 0 && iy>=0 && iz>=0 && ix<d_nx && iy<d_ny && iz<d_nz;
-
+   Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   ni[0] = IntVector(ix, iy, iz);
+   ni[1] = IntVector(ix, iy, iz+1);
+   ni[2] = IntVector(ix, iy+1, iz);
+   ni[3] = IntVector(ix, iy+1, iz+1);
+   ni[4] = IntVector(ix+1, iy, iz);
+   ni[5] = IntVector(ix+1, iy, iz+1);
+   ni[6] = IntVector(ix+1, iy+1, iz);
+   ni[7] = IntVector(ix+1, iy+1, iz+1);
+   double fx = cellpos.x() - ix;
+   double fy = cellpos.y() - iy;
+   double fz = cellpos.z() - iz;
+   double fx1 = 1-fx;
+   double fy1 = 1-fy;
+   double fz1 = 1-fz;
+   S[0] = fx1 * fy1 * fz1;
+   S[1] = fx1 * fy1 * fz;
+   S[2] = fx1 * fy * fz1;
+   S[3] = fx1 * fy * fz;
+   S[4] = fx * fy1 * fz1;
+   S[5] = fx * fy1 * fz;
+   S[6] = fx * fy * fz1;
+   S[7] = fx * fy * fz;
+   return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
 }
 
-
+#if 0
 bool Region::findCellAndShapeDerivatives(const Vector& pos,
 					 Array3Index ni[8],
 					 Vector d_S[8]) const
@@ -241,6 +232,9 @@ NodeIterator Region::getNodeIterator() const
 
 //
 // $Log$
+// Revision 1.11  2000/05/02 20:13:05  sparker
+// Implemented findCellAndWeights
+//
 // Revision 1.10  2000/05/02 06:07:23  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
