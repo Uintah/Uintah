@@ -34,6 +34,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/Containers/Array1.h>
 
 using std::cerr;
 using std::ifstream;
@@ -42,7 +44,7 @@ using std::endl;
 using namespace SCIRun;
 
 int readLine(FILE **f, char *buf) {
-    char c;
+    char c=0;
     int cnt=0;
     while (!feof(*f) && ((c=fgetc(*f))!='\n')) buf[cnt++]=c;
     buf[cnt]=c;
@@ -52,8 +54,8 @@ int readLine(FILE **f, char *buf) {
 
 int
 main(int argc, char **argv) {
-  if (argc != 4) {
-    cerr << "usage: " << argv[0] << " vdt_t3d_file scirun_tvt scirun_tvd\n";
+  if (argc != 3) {
+    cerr << "usage: " << argv[0] << " vdt_t3d_file scirun_tvt\n";
     exit(0);
   }
 
@@ -98,31 +100,31 @@ main(int argc, char **argv) {
   
   // ! tets
   readLine(&f, buf);
-  
+
+  int maxCond = 0;
+  Array1<int> conds;
+
   // idx i1 i2 i3 i4 IGNORE cond
   for (i=0; i<ntets; i++) {
     readLine(&f, buf);
     sscanf(buf, "%d %d %d %d %d %d %d", &dum1, &i1, &i2, &i3, &i4, &dum2,
 	   &c);
+    if (c > maxCond) maxCond=c;
     tvm->add_tet(ptsMap[i1], ptsMap[i2], ptsMap[i3], ptsMap[i4]);
+    conds.add(c);
   }
   
   TetVolField<int> *tvi = scinew TetVolField<int>(tvm, Field::CELL);
   vector<pair<string, Tensor> > tens;
-  tens.resize(1);
-  tens[0] = pair<string, Tensor>("inside", Tensor(1.0));
+  tens.resize(maxCond);
+  for (i=0; i<maxCond; i++)
+    tens[i] = pair<string, Tensor>(string("matl")+to_string(i), Tensor(1.0));
   tvi->set_property("conductivity_table", tens, false);
   for (i=0; i<ntets; i++)
-    tvi->fdata()[i] = 0;
+    tvi->fdata()[i] = conds[i]-1;
 
   FieldHandle tvH(tvi);
   TextPiostream out_stream(argv[2], Piostream::Write);
   Pio(out_stream, tvH);
-
-  TetVolField<double> *tvd = scinew TetVolField<double>(tvm, Field::NODE);
-  tvH=tvd;
-  TextPiostream out_stream2(argv[3], Piostream::Write);
-  Pio(out_stream2, tvH);
-
   return 0;  
 }    
