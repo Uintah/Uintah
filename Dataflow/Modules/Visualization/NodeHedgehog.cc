@@ -137,7 +137,14 @@ class NodeHedgehog : public Module {
   int grid_id;
   int need_find2d;
   int need_find3d;
-  
+
+  // max Vector stuff
+  Vector max_vector;
+  double max_length;
+  GuiDouble max_vector_x;
+  GuiDouble max_vector_y;
+  GuiDouble max_vector_z;
+  GuiDouble max_vector_length;
 public:
  
   // GROUP:  Constructors:
@@ -205,7 +212,12 @@ NodeHedgehog::NodeHedgehog(const string& id)
   drawcylinders("drawcylinders", id, this),
   skip_node("skip_node", id, this),
   shaft_rad("shaft_rad", id, this),
-  var_orientation("var_orientation",id,this)
+  var_orientation("var_orientation",id,this),
+  max_vector(0,0,0), max_length(0),
+  max_vector_x("max_vector_x", id, this),
+  max_vector_y("max_vector_y", id, this),
+  max_vector_z("max_vector_z", id, this),
+  max_vector_length("max_vector_length", id, this)
 {
   // Create the input ports
   // grid
@@ -256,6 +268,11 @@ NodeHedgehog::add_arrow(FieldHandle vfield, FieldHandle ssfield,
 			double lenscale, GeomArrows* arrows, Point p) {
   Vector vv;
   if (interpolate( vfield, p, vv)){
+    double length = vv.length();
+    if (length > max_length) {
+      max_length = length;
+      max_vector = vv;
+    }
     if(have_sfield) {
       // get the color from cmap for p 	    
       MaterialHandle matl;
@@ -265,13 +282,13 @@ NodeHedgehog::add_arrow(FieldHandle vfield, FieldHandle ssfield,
       else {
 	matl = outcolor;
       }
-      
-      if(vv.length2()*lenscale > 1.e-3) {
+
+      if(length*lenscale > 1.e-3) {
 	arrows->add(p, vv*lenscale, matl, matl, matl);
       }
     }
     else {
-      if(vv.length2()*lenscale > 1.e-3) {
+      if(length*lenscale > 1.e-3) {
 	arrows->add(p, vv*lenscale);
       }
     }
@@ -436,6 +453,10 @@ void NodeHedgehog::execute()
   // of the node and determining the vector value.
   int numLevels = grid->numLevels();
 
+  // reset max_length and max_vector
+  max_length = 0;
+  max_vector = Vector(0,0,0);
+  
   //-----------------------------------------
   // for each level in the grid
   for(int l = 0;l<numLevels;l++){
@@ -474,6 +495,12 @@ void NodeHedgehog::execute()
     ogeom->delObj( old_grid_id );
   
   grid_id = ogeom->addObj(arrows, module_name);
+
+  // set the max vector stuff in the tcl code
+  max_vector_length.set(max_length);
+  max_vector_x.set(max_vector.x());
+  max_vector_y.set(max_vector.y());
+  max_vector_z.set(max_vector.z());
 }
 
 void NodeHedgehog::widget_moved(int last)
