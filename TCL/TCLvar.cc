@@ -78,7 +78,8 @@ void TCLdouble::set(double val)
 	TCLTask::lock();
 	value=val;
 	char buf[50];
-	sprintf(buf, "%f", val);
+	sprintf(buf, "%g", val);
+	
 	Tcl_SetVar(the_interp, varname(), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }

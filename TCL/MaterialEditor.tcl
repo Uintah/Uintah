@@ -219,17 +219,31 @@ proc makeMaterialEditor {w var command cancel} {
     frame $material.opts.col -relief sunken -borderwidth 4 -height 8m -width 2.5c \
 	    -background [format #%04x%04x%04x $ir $ig $ib]
     set col $material.opts.col
+
+    global $w.rs $w.gs $w.bs
+    set $w.rs $rgb.s1
+    set $w.gs $rgb.s2
+    set $w.bs $rgb.s3
+    global $w.hs $w.ss $w.vs
+    set $w.hs $hsv.s1
+    set $w.ss $hsv.s2
+    set $w.vs $hsv.s3
+    global $w.col
+    set $w.col $col
+    global $w.var
+    set $w.var $var
+
     global $w-i
     set $w-i 0
     radiobutton $material.opts.amb -text Ambient -value 0 -variable $w-i \
-	    -command "meset $w $col 0 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+	    -command "meset $w 0"
     radiobutton $material.opts.dif -text Diffuse -value 1 -variable $w-i \
-	    -command "meset $w $col 1 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+	    -command "meset $w 1"
     radiobutton $material.opts.spe -text Specular -value 2 -variable $w-i \
-	    -command "meset $w $col 2 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
+	    -command "meset $w 2"
     radiobutton $material.opts.emi -text Emission -value 3 -variable $w-i \
-	    -command "meset $w $col 3 $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
-    button $material.opts.replace -text Replace -command "mecommitcolor $w $rgb.s1 $rgb.s2 $rgb.s3"
+	    -command "meset $w 3"
+    button $material.opts.replace -text Replace -command "mecommitcolor $w"
     pack $material.opts.amb $material.opts.dif $material.opts.spe $material.opts.emi $col \
 	    -in $material.opts -side left -pady 2 -fill both -anchor w
     pack $material.opts.replace -in $material.opts -side left -padx 2 -pady 2 -anchor w
@@ -243,11 +257,11 @@ proc makeMaterialEditor {w var command cancel} {
     frame $left.sample.opts
     set opts $left.sample.opts
 
-    button $opts.ok -text OK -command "mecommit $w $var \"$command\""
+    button $opts.ok -text OK -command "mecommit $w \"$command\""
     button $opts.cancel -text Cancel -command $cancel
-    button $opts.update -text Update -command "puts \"Preview not implemented!\""
-    button $opts.resync -text Resync -command "meresync $w $var $col $rgb.s1 $rgb.s2 $rgb.s3 $hsv.s1 $hsv.s2 $hsv.s3"
-    pack $opts.ok $opts.cancel $opts.update $opts.resync -in $opts -side left -anchor nw
+    button $opts.preview -text Preview -command "puts \"Preview not implemented!\""
+    button $opts.resync -text Resync -command "meresync $w"
+    pack $opts.ok $opts.cancel $opts.preview $opts.resync -in $opts -side left -anchor nw
     pack $opts -in $left.sample -side top -fill both -anchor nw
 
     canvas $left.sample.sam -width 5.9c -height 5.9c -background #000000
@@ -261,27 +275,17 @@ proc makeMaterialEditor {w var command cancel} {
     pack $left $w.lmr.mr -in $w.lmr -side left -pady 2 -anchor nw -fill both 
     pack $w.lmr $w.material -in $w -side top -padx 2 -pady 2 -anchor nw -expand 1 -fill both
 
-    $rgb.s1 configure -command "mesetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $rgb.s2 configure -command "mesetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $rgb.s3 configure -command "mesetrgb $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $hsv.s1 configure -command "mesethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $hsv.s2 configure -command "mesethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
-    $hsv.s3 configure -command "mesethsv $col $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3 "
+    $rgb.s1 configure -command "mesetrgb $w "
+    $rgb.s2 configure -command "mesetrgb $w "
+    $rgb.s3 configure -command "mesetrgb $w "
+    $hsv.s1 configure -command "mesethsv $w "
+    $hsv.s2 configure -command "mesethsv $w "
+    $hsv.s3 configure -command "mesethsv $w "
 
-    $ambient configure -command "meset $w $col 0 $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3"
-    $diffuse configure -command "meset $w $col 1 $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3"
-    $specular configure -command "meset $w $col 2 $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3"
-    $emission configure -command "meset $w $col 3 $rgb.s1 $rgb.s2 $rgb.s3 \
-	    $hsv.s1 $hsv.s2 $hsv.s3"
+    $ambient configure -command "meset $w 0"
+    $diffuse configure -command "meset $w 1"
+    $specular configure -command "meset $w 2"
+    $emission configure -command "meset $w 3"
 
 }
 
@@ -317,74 +321,82 @@ proc Min {n1 n2 n3} {
     }
 }
 
-proc mesetrgb {col rs gs bs hs ss vs val} {
+proc mesetrgb {w val} {
+    global $w.rs $w.gs $w.bs
+    global $w.hs $w.ss $w.vs
+
     # Do inverse transformation to HSV
-    set max [Max [$rs get] [$gs get] [$bs get]]
-    set min [Min [$rs get] [$gs get] [$bs get]]
-    # $ss set [expr ($max == 0.0) ? 0.0 : (($max-$min)/$max)]
+    set max [Max [[set $w.rs] get] [[set $w.gs] get] [[set $w.bs] get]]
+    set min [Min [[set $w.rs] get] [[set $w.gs] get] [[set $w.bs] get]]
+    # [set $w.ss] set [expr ($max == 0.0) ? 0.0 : (($max-$min)/$max)]
     if {$max == 0.0} {
-	$ss set 0.0
+	[set $w.ss] set 0.0
     } else {
-	$ss set [expr ($max-$min)/$max]
+	[set $w.ss] set [expr ($max-$min)/$max]
     }
-    if [expr [$ss get] != 0.0] {
-	set rl [expr ($max-[$rs get])/($max-$min)]
-	set gl [expr ($max-[$gs get])/($max-$min)]
-	set bl [expr ($max-[$bs get])/($max-$min)]
-	if [expr $max == [$rs get]] {
-	    if [expr $min == [$gs get]] {
-		$hs set [expr 60.0*(5.0+$bl)]
+    if [expr [[set $w.ss] get] != 0.0] {
+	set rl [expr ($max-[[set $w.rs] get])/($max-$min)]
+	set gl [expr ($max-[[set $w.gs] get])/($max-$min)]
+	set bl [expr ($max-[[set $w.bs] get])/($max-$min)]
+	if [expr $max == [[set $w.rs] get]] {
+	    if [expr $min == [[set $w.gs] get]] {
+		[set $w.hs] set [expr 60.0*(5.0+$bl)]
 	    } else {
-		$hs set [expr 60.0*(1.0-$gl)]
+		[set $w.hs] set [expr 60.0*(1.0-$gl)]
 	    }
-	} elseif [expr $max == [$gs get]] {
-	    if [expr $min == [$bs get]] {
-		$hs set [expr 60.0*(1.0+$rl)]
+	} elseif [expr $max == [[set $w.gs] get]] {
+	    if [expr $min == [[set $w.bs] get]] {
+		[set $w.hs] set [expr 60.0*(1.0+$rl)]
 	    } else {
-		$hs set [expr 60.0*(3.0-$bl)]
+		[set $w.hs] set [expr 60.0*(3.0-$bl)]
 	    }
 	} else {
-	    if [expr $min == [$rs get]] {
-		$hs set [expr 60.0*(3.0+$gl)]
+	    if [expr $min == [[set $w.rs] get]] {
+		[set $w.hs] set [expr 60.0*(3.0+$gl)]
 	    } else {
-		$hs set [expr 60.0*(5.0-$rl)]
+		[set $w.hs] set [expr 60.0*(5.0-$rl)]
 	    }
 	}
     } else {
-	$hs set 0.0
+	[set $w.hs] set 0.0
     }
-    $vs set $max
+    [set $w.vs] set $max
 
-    mesetcol $col [$rs get] [$gs get] [$bs get]
+    global $w.col
+    mesetcol [set $w.col] [[set $w.rs] get] [[set $w.gs] get] [[set $w.bs] get]
 
     update idletasks
 }
 
-proc mesethsv {col rs gs bs hs ss vs val} {
+proc mesethsv {w val} {
+    global $w.rs $w.gs $w.bs
+    global $w.hs $w.ss $w.vs
+
     # Convert to RGB...
-    while {[$hs get] >= 360.0} {
-	$hs set [expr [$hs get] - 360.0]
+    while {[[set $w.hs] get] >= 360.0} {
+	[set $w.hs] set [expr [[set $w.hs] get] - 360.0]
     }
-    while {[$hs get] < 0.0} {
-	$hs set [expr [$hs get] + 360.0]
+    while {[[set $w.hs] get] < 0.0} {
+	[set $w.hs] set [expr [[set $w.hs] get] + 360.0]
     }
-    set h6 [expr [$hs get]/60.0]
+    set h6 [expr [[set $w.hs] get]/60.0]
     set i [expr int($h6)]
     set f [expr $h6-$i]
-    set p1 [expr [$vs get]*(1.0-[$ss get])]
-    set p2 [expr [$vs get]*(1.0-([$ss get]*$f))]
-    set p3 [expr [$vs get]*(1.0-([$ss get]*(1-$f)))]
+    set p1 [expr [[set $w.vs] get]*(1.0-[[set $w.ss] get])]
+    set p2 [expr [[set $w.vs] get]*(1.0-([[set $w.ss] get]*$f))]
+    set p3 [expr [[set $w.vs] get]*(1.0-([[set $w.ss] get]*(1-$f)))]
     switch $i {
-	0 {$rs set [$vs get] ; $gs set $p3 ; $bs set $p1}
-	1 {$rs set $p2 ; $gs set [$vs get] ; $bs set $p1}
-	2 {$rs set $p1 ; $gs set [$vs get] ; $bs set $p3}
-	3 {$rs set $p1 ; $gs set $p2 ; $bs set [$vs get]}
-	4 {$rs set $p3 ; $gs set $p1 ; $bs set [$vs get]}
-	5 {$rs set [$vs get] ; $gs set $p1 ; $bs set $p2}
-	default {$rs set 0 ; $gs set 0 ; $bs set 0}
+	0 {[set $w.rs] set [[set $w.vs] get] ; [set $w.gs] set $p3 ; [set $w.bs] set $p1}
+	1 {[set $w.rs] set $p2 ; [set $w.gs] set [[set $w.vs] get] ; [set $w.bs] set $p1}
+	2 {[set $w.rs] set $p1 ; [set $w.gs] set [[set $w.vs] get] ; [set $w.bs] set $p3}
+	3 {[set $w.rs] set $p1 ; [set $w.gs] set $p2 ; [set $w.bs] set [[set $w.vs] get]}
+	4 {[set $w.rs] set $p3 ; [set $w.gs] set $p1 ; [set $w.bs] set [[set $w.vs] get]}
+	5 {[set $w.rs] set [[set $w.vs] get] ; [set $w.gs] set $p1 ; [set $w.bs] set $p2}
+	default {[set $w.rs] set 0 ; [set $w.gs] set 0 ; [set $w.bs] set 0}
     }
 
-    mesetcol $col [$rs get] [$gs get] [$bs get]
+    global $w.col
+    mesetcol [set $w.col] [[set $w.rs] get] [[set $w.gs] get] [[set $w.bs] get]
 
     update idletasks
 }
@@ -397,7 +409,7 @@ proc mesetcol {col r g b} {
     $col config -background [format #%04x%04x%04x $ir $ig $ib]
 }
 
-proc meset {w col i rs gs bs hs ss vs} {
+proc meset {w i} {
     global $w-i
     set $w-i $i
     
@@ -420,17 +432,21 @@ proc meset {w col i rs gs bs hs ss vs} {
 	}
     }    
 
+    global $w.rs $w.gs $w.bs
+
     global $color-r $color-g $color-b
-    $rs set [set $color-r]
-    $gs set [set $color-g]
-    $bs set [set $color-b]
-    mesetrgb $col $rs $gs $bs $hs $ss $vs 0.0
+    [set $w.rs] set [set $color-r]
+    [set $w.gs] set [set $color-g]
+    [set $w.bs] set [set $color-b]
+
+    mesetrgb $w 0.0
 }
 
-proc mecommitcolor {w rs gs bs} {
-    set r [$rs get]
-    set g [$gs get]
-    set b [$bs get]
+proc mecommitcolor {w} {
+    global $w.rs $w.gs $w.bs
+    set r [[set $w.rs] get]
+    set g [[set $w.gs] get]
+    set b [[set $w.bs] get]
     set ir [expr int($r * 65535)]
     set ig [expr int($g * 65535)]
     set ib [expr int($b * 65535)]
@@ -476,7 +492,7 @@ proc mecommitcolor {w rs gs bs} {
     $mattype config -activebackground [format #%04x%04x%04x $ir $ig $ib]
 }
 
-proc meresync {w var col rs gs bs hs ss vs} {
+proc meresync {w} {
     global $w-ambient-r $w-ambient-g $w-ambient-b
     global $w-diffuse-r $w-diffuse-g $w-diffuse-b
     global $w-specular-r $w-specular-g $w-specular-b
@@ -486,7 +502,8 @@ proc meresync {w var col rs gs bs hs ss vs} {
     global $w-transparency
     global $w-refraction_index
 
-    setMaterial $w $var
+    global $w.var
+    setMaterial $w [set $w.var]
 
     set ir [expr int([set $w-ambient-r] * 65535)]
     set ig [expr int([set $w-ambient-g] * 65535)]
@@ -510,12 +527,12 @@ proc meresync {w var col rs gs bs hs ss vs} {
 	    -activebackground [format #%04x%04x%04x $ir $ig $ib]
 
     global $w-i
-    meset $w $col [set $w-i] $rs $gs $bs $hs $ss $vs
+    meset $w [set $w-i]
 }
 
-proc mecommit {w var command} {
-    global $var $w
-    setMaterial $var $w
+proc mecommit {w command} {
+    global $w $w.var
+    setMaterial [set $w.var] $w
     eval $command
 }
 
