@@ -80,12 +80,6 @@ set planes_mapType 0
 global show_vol_ren
 set show_vol_ren 0
 
-global show_iso
-set show_iso 0
-global iso_mapType
-set iso_mapType 2
-
-
 setProgressText "Loading BioImage Application, Please Wait..."
 
 #######################################################
@@ -167,8 +161,6 @@ class BioImageApp {
 
         set has_autoviewed 0
         set has_executed 0
-	set iso_slider1 ""
-	set iso_slider2 ""
         set data_dir ""
         set 2D_fixed 0
 
@@ -240,14 +232,6 @@ class BioImageApp {
 	    change_indicate_val 1
 	} elseif {[string first "NodeGradient" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {[string first "Isosurface" $which] != -1 && $state == "NeedData"} {
-	    change_indicate_val 1
-	} elseif {[string first "Isosurface" $which] != -1 && $state == "Completed"} {
-	    change_indicate_val 2
-	    if {$has_autoviewed == 0} {
-		set has_autoviewed 1
-		after 100 "$mods(Viewer)-ViewWindow_0-c autoview"
-	    }
 	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
@@ -938,9 +922,7 @@ class BioImageApp {
 	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 392 2409]
             set m26 [addModuleAtPosition "SCIRun" "Render" "ViewImage" 704 2057]
 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
-            set m28 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 472 2052]
-            set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 490 1973]
-	    set m30 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
+	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
 
 	    # store some in mods
 	    set mods(EditTransferFunc) $m14
@@ -966,14 +948,7 @@ class BioImageApp {
 	    set c18 [addConnection $m13 0 $m22 2]
 	    set c19 [addConnection $m7 0 $m26 0]
 	    set c20 [addConnection $m27 0 $m26 2]
-	    set c26 [addConnection $m16 0 $m28 0]
-	    set c27 [addConnection $m29 0 $m28 1]
-	    set c28 [addConnection $m28 1 $mods(Viewer) 1]
-	    set c29 [addConnection $m7 0 $m30 0]
-
-            global Disabled
-	    set Disabled($c28) 0
-	    disableModule $m28 1
+	    set c29 [addConnection $m7 0 $m28 0]
 
 	    # connect load to vis
 	    set c21 [addConnection $m6 0 $m7 0]
@@ -993,7 +968,7 @@ class BioImageApp {
 	    # set some ui parameters
 	    global $m1-filename
 #	    set $m1-filename $data_dir/volume/CThead.nhdr
-	    #set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
+#	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
 	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
 
 	    global $m8-nbits
@@ -1092,21 +1067,8 @@ class BioImageApp {
 
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
-	    global $m27-positionList $m27-nodeList
-	    set $m27-positionList {{0 0} {440 0}}
-	    set $m27-nodeList {514 795}
 
-	    global $m28-isoval
-	    set $m28-isoval 710
-
-	    global $m28-isoval-min
-	    global $m28-isoval-max
-	    trace variable $m28-isoval-min w "$this update_iso_slider_min"
-	    trace variable $m28-isoval-max w "$this update_iso_slider_max"
-
-	    # create filter index in the form of the list:
-	    # filter_type modules input output prev_index next_index choose_port which_row visibility 
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30]
+	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 $m8 $m9 $m10 $m11 $m12 $m13 $m14 $m15 $m16 $m17 $m18 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28]
 	    set filters(0) [list load $mod_list [list $m6] [list $m6 0] start end 0 0 1]
 
             $this build_viewers $m25 $m26
@@ -1500,153 +1462,6 @@ class BioImageApp {
 	    pack $maps.bpseismic.f.canvas -anchor e
 	    
 	    draw_colormap "Blue-to-Red" $maps.bpseismic.f.canvas
-
-
-            #######
-            set page [$v.tnb add -label "Isosurface"]
-
-            global show_iso
-	    checkbutton $page.toggle -text "Show Isosurface" \
-		-variable show_iso \
-		-command "$this toggle_show_iso"
-            pack $page.toggle -side top -anchor nw -padx 3 -pady 3
-
-
-	    # Isoval
-            set Isosurface [lindex [lindex $filters(0) $modules] 27]
-            global [set Isosurface]-isoval
-
-	    frame $page.isoval
-	    pack $page.isoval -side top -anchor nw -padx 3 -pady 3
-	    
-	    label $page.isoval.l -text "Isoval:" 
-	    scale $page.isoval.s -from 0.0 -to 1000 \
-		-length 100 -width 15 \
-		-sliderlength 15 \
-		-resolution 0.0001 \
-                -variable [set Isosurface]-isoval \
-		-showvalue false \
-		-orient horizontal
-
-	    if {$case == 0} {
-		set iso_slider1 $page.isoval.s
-	    } else {
-		set iso_slider2 $page.isoval.s
-	    }
-	    
-            bind $page.isoval.s <ButtonRelease> "$this execute_Isosurface"
-	    
-            entry $page.isoval.val -textvariable [set Isosurface]-isoval \
-                -width 6 -relief flat
-
-            bind $page.isoval.val <Return> "$this execute_Isosurface"
-	    
-	    pack $page.isoval.l $page.isoval.s $page.isoval.val -side left -anchor nw -padx 3     
-
-	    global iso_color
-	    iwidgets::labeledframe $page.isocolor \
-		-labeltext "Color Isosurface Using" \
-		-labelpos nw 
-	    pack $page.isocolor -side top -anchor nw -padx 3 -pady 5
-	    
-	    set isocolor [$page.isocolor childsite]
-	    
-	    iwidgets::labeledframe $isocolor.maps \
-		-labeltext "Color Maps" \
-		-labelpos nw 
-	    pack $isocolor.maps -side top -anchor n -padx 3 -pady 0 -fill x
-	    
-	    set maps [$isocolor.maps childsite]
-
-	    global iso_mapType
-	    
-	    # Gray
-	    frame $maps.gray
-	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.gray.b -text "Gray" \
-		-variable iso_mapType \
-		-value 0 \
-		-command "$this update_iso_color_by"
-	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.gray.f -relief sunken -borderwidth 2
-	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.gray.f.canvas -anchor e \
-		-fill both -expand 1
-	    
-	    draw_colormap Gray $maps.gray.f.canvas
-	    
-	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
-		-variable iso_mapType \
-		-value 2 \
-		-command "$this update_iso_color_by"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
-	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
-	    
-	    # Darkhue
-	    frame $maps.darkhue
-	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.darkhue.b -text "Darkhue" \
-		-variable iso_mapType \
-		-value 5 \
-		-command "$this update_iso_color_by"
-	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.darkhue.f -relief sunken -borderwidth 2
-	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.darkhue.f.canvas -anchor e
-	    
-	    draw_colormap Darkhue $maps.darkhue.f.canvas
-	    
-	    
-	    # Blackbody
-	    frame $maps.blackbody
-	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.blackbody.b -text "Blackbody" \
-		-variable iso_mapType \
-		-value 7 \
-		-command "$this update_iso_color_by"
-	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.blackbody.f.canvas -anchor e
-	    
-	    draw_colormap Blackbody $maps.blackbody.f.canvas
-	    
-	    # Blue-to-Red
-	    frame $maps.bpseismic
-	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "Blue-to-Red" \
-		-variable iso_mapType \
-		-value 17 \
-		-command "$this update_iso_color_by"
-	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	    pack $maps.bpseismic.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.bpseismic.f.canvas -anchor e
-	    
-	    draw_colormap "Blue-to-Red" $maps.bpseismic.f.canvas
-
 
 
             #######
@@ -3107,18 +2922,6 @@ class BioImageApp {
 	}
     }
 
-    method update_iso_color_by {} {
-        global iso_mapType
-        set GenStandard [lindex [lindex $filters(0) $modules] 28]
-        global [set GenStandard]-mapType
-
-        set [set GenStandard]-mapType $iso_mapType
-
-        if {$has_executed == 1} {
-	    [set GenStandard]-c needexecute
-	}
-    }
-
     method toggle_show_vol_ren {} {
 	global mods show_vol_ren 
 
@@ -3141,64 +2944,6 @@ class BioImageApp {
 	    disableModule [set UnuJhisto] 1
         }
     }
-
-    method toggle_show_iso {} {
-	global mods show_iso mods
-        #puts "FIX ME: implement toggle_show_iso"
-
-        set Isosurface [lindex [lindex $filters(0) $modules] 27]
-        #set conn "[set Isosurface] 1 $mods(Viewer) 1"
-
-        #disableConnection $conn
-        if {$show_iso == 1} {
-	    disableModule [set Isosurface] 0
-            [set Isosurface]-c needexecute
-	} else {
-	    disableModule [set Isosurface] 1
-	}
-    }
-
-    method execute_Isosurface {} {
-	global show_iso
-	if {$show_iso == 1} {
-	    set Isosurface [lindex [lindex $filters(0) $modules] 27]
-	    [set Isosurface]-c needexecute
-        }
-    }
-
-    ################################
-    ### update_iso_slider_min/max
-    ################################
-    # Method called when the isosurface min/max changes to 
-    # reconfigure the slider
-    method update_iso_slider_min {varname varele varop} {
-        set Isosurface [lindex [lindex $filters(0) $modules] 27]
-        global [set Isosurface]-isoval-min
-        global [set Isosurface]-isoval-max
-
-        set min [set [set Isosurface]-isoval-min]
-        set max [set [set Isosurface]-isoval-max]
-	
-	$iso_slider1 configure -from $min \
-	    -resolution [expr ($max - $min)/10000.]
-	$iso_slider2 configure -from $min \
-	    -resolution [expr ($max - $min)/10000.]
-    }
-
-    method update_iso_slider_max {varname varele varop} {
-        set Isosurface [lindex [lindex $filters(0) $modules] 27]
-        global [set Isosurface]-isoval-min
-        global [set Isosurface]-isoval-max
-
-        set min [set [set Isosurface]-isoval-min]
-        set max [set [set Isosurface]-isoval-max]
-	
-	$iso_slider1 configure -to $max \
-	    -resolution [expr ($max - $min)/10000.]
-	$iso_slider2 configure -to $max \
-	    -resolution [expr ($max - $min)/10000.]
-    }
-
 
     # Application placing and size
     variable notebook_width
@@ -3256,8 +3001,6 @@ class BioImageApp {
     variable has_autoviewed
     variable has_executed
 
-    variable iso_slider1
-    variable iso_slider2
     variable data_dir
     variable 2D_fixed
 }
