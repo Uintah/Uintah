@@ -27,20 +27,26 @@ global modules
 set modules ""
 
 itcl_class Module {
-    
-
+   
     method modname {} {
 	return [string range $this [expr [string last :: $this] + 2] end]
     }
 			
     constructor {config} {
-
+	set msgLogStream [TclStream msgLogStream#auto]
         global $this-notes
+	
 	if [info exists $this-notes] {
 	    set dum 0
-	} else {set $this-notes ""}
-    
-    
+	} else {
+	    set $this-notes ""
+	}
+	
+	# messages should be accumulating
+	if {[info exists $this-msgStream]} {
+	    $msgLogStream registerVar $this-msgStream
+	}
+
 	set MacroModule ""
 	set Macroed 0
 	set menumod 0
@@ -49,6 +55,7 @@ itcl_class Module {
     method config {config} {
     }
 
+    public msgLogStream
     public name
     protected canvases ""
     protected make_progress_graph 1
@@ -289,7 +296,9 @@ itcl_class Module {
 		-command "moduleDestroySelected $canvas $minicanvas $this"
 	$p.menu add command -label "Destroy" \
 		-command "moduleDestroy $canvas $minicanvas [modname]"
-	
+	$p.menu add command -label "Show Log" \
+		-command "$this displayLog"
+
 	global $this-show_status
 	$p.menu add checkbutton -variable $this-show_status -label\
 		"Show Status"
@@ -692,6 +701,44 @@ itcl_class Module {
 	return $MenuList
     }
 
+    method displayLog {} {
+	set w .mLogWnd
+	
+	# does the window exist?
+	if [winfo exists $w] {
+	    raise $w
+	    return;
+	}
+	
+	# create the window
+	toplevel $w
+	append t "Log for " [modname]
+	wm title $w $t
+	
+	frame $w.log
+	text $w.log.txt -relief sunken -bd 2 -yscrollcommand "$w.log.sb set"
+	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
+	pack $w.log.txt $w.log.sb -side left -padx 5 -pady 5 -fill y
+
+	frame $w.fbuttons 
+	button $w.fbuttons.ok -text "OK" -command "$this destroyStreamOutput $w"
+	
+	pack $w.log $w.fbuttons -side top -padx 5 -pady 5
+	pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+
+	$msgLogStream registerOutput $w.log.txt
+    }
+    
+    method destroyStreamOutput {w} {
+	# TODO: unregister only for streams with the supplied output
+	$msgLogStream unregisterOutput
+	destroy $w
+    }
+    
+    method updateStream {varName} {
+	# triggering stream flush
+	set $varName
+    }
 }
 
 proc popup_menu {x y canvas minicanvas modid} {
@@ -2930,3 +2977,4 @@ proc get_real_oport { mmodid owhich } {
     
     # we should never get this far...
 }
+
