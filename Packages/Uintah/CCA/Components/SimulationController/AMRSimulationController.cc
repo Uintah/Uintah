@@ -148,6 +148,8 @@ void AMRSimulationController::run()
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
 
+   output->initializeOutput(ups);
+
    if(d_myworld->myrank() == 0){
      cout << "Compiling initialization taskgraph...\n";
    }

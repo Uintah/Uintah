@@ -165,6 +165,8 @@ SimpleSimulationController::run()
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    sched->problemSetup(ups);
    SchedulerP scheduler(sched);
+   
+   output->initializeOutput(ups);
 
    if(d_myworld->myrank() == 0)
      cout << "Compiling taskgraph...\n";
