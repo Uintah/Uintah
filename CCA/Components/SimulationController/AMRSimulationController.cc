@@ -176,6 +176,10 @@ void AMRSimulationController::run()
      scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
      scheduler->get_dw(1)->finalize();
      sim->restartInitialize();
+     ProblemSpecP pspec = archive.getRestartTimestepDoc();
+     XMLURL url = archive.getRestartTimestepURL();
+     lb->restartInitialize(pspec, url);
+
    } else {
      sharedState->setCurrentTopLevelTimeStep( 0 );
      // Initialize the CFD and/or MPM data

@@ -48,6 +48,7 @@ namespace Uintah {
 
     // maintain lb state and call one of the assignPatches functions
     virtual void dynamicReallocation(const GridP& grid, const SchedulerP& sch);
+    virtual void restartInitialize(ProblemSpecP& pspec, XMLURL tsurl);
     
   private:
     enum { static_lb, cyclic_lb, random_lb, particle_lb };

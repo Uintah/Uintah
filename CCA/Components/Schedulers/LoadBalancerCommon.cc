@@ -52,10 +52,10 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       int idx = getPatchwiseProcessorAssignment(patch);
       ASSERTRANGE(idx, 0, d_myworld->size());
 
-      //if (task->getTask()->getType() == Task::Output)
-      //task->assignResource((idx/outputNthProc)*outputNthProc);
-      //else        
-      task->assignResource(idx);
+      if (task->getTask()->getType() == Task::Output)
+        task->assignResource((idx/outputNthProc)*outputNthProc);
+      else        
+        task->assignResource(idx);
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
