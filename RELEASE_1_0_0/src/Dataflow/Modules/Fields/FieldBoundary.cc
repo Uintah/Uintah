@@ -149,8 +149,8 @@ template <class Msh>
 void 
 FieldBoundary::boundary(const Msh *mesh)
 {
-  map<Msh::node_index, TriSurfMesh::node_index> vertex_map_;
-  map<Msh::node_index, TriSurfMesh::node_index>::iterator node_iter;
+  map<typename Msh::node_index, typename TriSurfMesh::node_index> vertex_map_;
+  map<typename Msh::node_index, typename TriSurfMesh::node_index>::iterator node_iter;
   TriSurfMesh::node_index node_idx[3];
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
