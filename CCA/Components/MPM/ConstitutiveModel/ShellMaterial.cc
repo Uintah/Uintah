@@ -715,10 +715,13 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
         exit(1);
       }
       if (!computePlaneStressAndDefGrad(defGradBot_new, sigBot)) {
-        cerr << "Normal = " << pNormal[idx] << endl;
-        cerr << "R = " << R << endl;
-        cerr << "defGradBot = " << defGradBot_new << endl;
-        cerr << "SigBot = " << sigBot << endl;
+        if (d_world->myrank() == 16) {
+          cerr << "Current Processor = " << d_world->myrank() << endl;
+          cerr << "Normal = " << pNormal[idx] << endl;
+          cerr << "R = " << R << endl;
+          cerr << "defGradBot = " << defGradBot_new << endl;
+          cerr << "SigBot = " << sigBot << endl;
+        }
         exit(1);
       }
 
@@ -913,7 +916,8 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
 {
   // Constants
   Matrix3 One; One.Identity();
-  Ghost::GhostType  gnone = Ghost::None;
+  //Ghost::GhostType  gnone = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
   int dwi = matl->getDWIndex();
 
   // Loop thru patches
@@ -932,7 +936,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     old_dw->get(pNormal,     lb->pNormalLabel,                 pset);
     new_dw->get(pRotMass,    pRotMassLabel,                    pset);
     new_dw->get(pNDotAvSig,  pNormalDotAvStressLabel,          pset);
-    new_dw->get(gRotMoment,  lb->gNormalRotMomentLabel, dwi, patch, gnone, 0);
+    new_dw->get(gRotMoment,  lb->gNormalRotMomentLabel, dwi, patch, gac, NGN);
 
     // Create variables for the results
     ParticleVariable<Vector> pRotAcc;
@@ -959,7 +963,11 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
 
       // Loop thru nodes
       pRotAcc[idx] = Vector(0.0,0.0,0.0);
-      for (int k = 0; k < d_8or27; k++) pRotAcc[idx] += gRotMoment[ni[k]]*S[k];
+      for (int k = 0; k < d_8or27; k++) {
+	//if(patch->containsNode(ni[k])){
+          pRotAcc[idx] += gRotMoment[ni[k]]*S[k];
+        //}
+      }
       pRotAcc[idx] -= pNDotAvSig[idx];
       pRotAcc[idx] /= pRotMass[idx];
       pRotAcc[idx] = pRotAcc[idx]*Is; // project to surface
@@ -1255,6 +1263,60 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
   double shear = d_initialData.Shear;
   Matrix3 One; One.Identity();
 
+  /*  NO PLANE STRESS */
+  Matrix3 b(0.0), Js(0.0), tau(0.0), dTdF(0.0);
+  double J = 0.0, Jp = 0.0;
+
+  // Calculate Jacobian
+  J = F.Determinant();
+  if (!(J > 0.0)) {
+    cerr << "** ERROR ** F = " << F << " det F = " << J << endl;
+    return false;
+  }
+
+  // Calcuate Kirchhoff stress
+  Jp = (0.5*bulk)*(J*J - 1.0);
+  b = (F*F.Transpose())/pow(J, 2.0/3.0);
+  Js = (b - One*(b.Trace()/3.0))*shear;
+  tau = One*Jp + Js;
+
+  sig = tau/J;
+  return true;
+  /**/
+
+  /* PLANE STRESS + ALL COMPONENTS
+  while (tau(3,3) > 1.0e-10*bulk) {
+
+    // Calculate dtaudF
+    dtau_33_dF(F, J, dTdF);
+
+    // Calculate updated F_ij
+    for (int ii = 0; ii < 3; ++ii) {
+      for (int jj = 0; jj < 3; ++jj) {
+        F(ii+1,jj+1) = -tau(3,3)/dTdF(ii+1,jj+1) + F(ii+1,jj+1);
+      }
+    }
+
+    // Calculate Jacobian
+    J = F.Determinant();
+    if (!(J > 0.0)) {
+      cerr << "** ERROR ** F(new) = " << F << " det F = " << J << endl;
+      cerr << " tau = " << tau << endl;
+      return false;
+    }
+
+    // Calcuate Kirchhoff stress
+    Jp = (0.5*bulk)*(J*J - 1.0);
+    b = (F*F.Transpose())/pow(J, 2.0/3.0);
+    Js = (b - One*(b.Trace()/3.0))*shear;
+    tau = One*Jp + Js;
+  }
+
+  sig = tau/J;
+  return true;
+  */
+
+  /*
   // Other variables
   double J = 1.0;
   double p = 0.0;
@@ -1292,7 +1354,7 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     sig = One*p + s;
 
     // Left value
-    Fp(3,3) = 1.01*F(3,3);
+    Fp(3,3) = 1.00001*F(3,3);
     Jp = Fp.Determinant();
     if (!(Jp > 0.0)) {
        cerr << "** ERROR ** Fp = " << Fp << " det Fp = " << Jp << endl;
@@ -1305,10 +1367,14 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     sig33p = pp + sp(3,3);
 
     // Right value
-    Fm(3,3) = 0.99*F(3,3);
+    Fm(3,3) = 0.99999*F(3,3);
     Jm = Fm.Determinant();
     if (!(Jm > 0.0)) {
-       cerr << "** ERROR ** Fm = " << Fm << " det Fm = " << Jm << endl;
+       if (d_world->myrank() == 16) {
+         cerr << "Current Processor = " << d_world->myrank() << endl;
+         cerr << "** ERROR ** F = " << F << " det F = " << J << endl;
+         cerr << "** ERROR ** Fm = " << Fm << " det Fm = " << Jm << endl;
+       }
        return false;
     }
     //ASSERT(Jm > 0.0);
@@ -1323,6 +1389,86 @@ ShellMaterial::computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig)
     F(3,3) += delta;
 
   } while (fabs(delta) > epsilon);
+
+  // Calculate the stress
+  J = F.Determinant();
+  if (!(J > 0.0)) {
+    cerr << "** ERROR ** F(upd) = " << F << " det F = " << J << endl;
+    return false;
+  }
+  p = (0.5*bulk)*(J - 1.0/J);
+  b = (F*F.Transpose())/pow(J, 2.0/3.0);
+  s = (b - One*(b.Trace()/3.0))*(shear/J);
+  sig = One*p + s;
   sig(3,3) = 0.0;
   return true;
+  */
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+//  Calculate the derivative of the Kirchhoff stress component tau_33
+//  with respect to the deformation gradient components F_11 
+//
+void 
+ShellMaterial::dtau_33_dF(const Matrix3& F, double J, Matrix3& dTdF)
+{
+  // Constants
+  double onethird = 1.0/3.0; double twothird = 2.0*onethird;
+  double fivethird = 5.0*onethird; double fournine = twothird*twothird; 
+  double twonine = 0.5*fournine;
+
+  double J23 = pow(J, twothird); double J53 = pow(J, fivethird);
+
+  double K = d_initialData.Bulk; double mu = d_initialData.Shear;
+  double KJ = K*J; double muJ23 = twothird*mu/J23; double muJ53 = mu/J53;
+
+  double F11 = F(1,1); double F12 = F(1,2); double F13 = F(1,3);
+  double F21 = F(2,1); double F22 = F(2,2); double F23 = F(2,3);
+  double F31 = F(3,1); double F32 = F(3,2); double F33 = F(3,3);
+
+  double F11Sq = F11*F11; double F12Sq = F12*F12; double F13Sq = F13*F13; 
+  double F21Sq = F21*F21; double F22Sq = F22*F22; double F23Sq = F23*F23; 
+  double F31Sq = F31*F31; double F32Sq = F32*F32; double F33Sq = F33*F33; 
+
+  double SS = twonine*(F23Sq+F21Sq+F22Sq+F13Sq+F11Sq+F12Sq)
+              -fournine*(F33Sq+F31Sq+F32Sq);
+  double SS_1 = SS - twonine*F11Sq;
+  double SS_2 = SS - twonine*F22Sq;
+  double SS_3 = SS + fournine*F33Sq;
+
+  double F2332 = F23*F32; double F2233 = F22*F33;
+  double F3113 = F31*F13; double F1133 = F11*F33;
+  double F1122 = F11*F22; double F1221 = F12*F21;
+  double F2133 = F21*F33; double F3123 = F31*F23;
+  double F3122 = F31*F22; double F2132 = F21*F32;
+  double F1233 = F12*F33; double F1332 = F13*F32;
+  double F1132 = F11*F32; double F3112 = F31*F12;
+  double F1223 = F12*F23; double F1322 = F13*F22;
+  double F1123 = F11*F23; double F2113 = F21*F13;
+
+  // dTdF11
+  dTdF(1,1) = KJ*(F2233-F2332) - twothird*muJ23*F11 +
+              (twonine*F11*(-F12*F3123-F13*F2132+F22*F3113+F33*F1221)
+               +(F2233-F2332)*SS_1)*muJ53;
+  // dTdF12
+  dTdF(1,2) = KJ*(-F2133+F3123) - muJ23*F12 + (F3123-F2133)*SS*muJ53;
+  // dTdF13
+  dTdF(1,3) = KJ*(F2132-F3122) - muJ23*F13 + (-F3122+F2132)*SS*muJ53;
+  // dTdF21
+  dTdF(2,1) = KJ*(-F1233+F1332) - muJ23*F21 + (-F1233+F1332)*SS*muJ53;
+  // dTdF22
+  dTdF(2,2) = KJ*(F1133-F3113) - twothird*muJ23*F22 +
+              (twonine*F22*(F33*F1221-F13*F2132-F12*F3123+F11*F2332)
+              +(-F3113+F1133)*SS_2)*muJ53;
+  // dTdF23
+  dTdF(2,3) = KJ*(-F1132+F3112) - muJ23*F23 + (F3112-F1132)*SS*muJ53;
+  // dTdF31
+  dTdF(3,1) = KJ*(F1223-F1322) + 2.0*muJ23*F31 + (F1223-F1322)*SS*muJ53;
+  // dTdF32
+  dTdF(3,2) = KJ*(-F1123+F2113)+ 2.0*muJ23*F32 + (-F1123+F2113)*SS*muJ53;
+  // dTdF33
+  dTdF(3,3) = KJ*(F1122-F1221) + 2.0*twothird*muJ23*F33 +
+             (fournine*F33*(-F22*F3113+F13*F2132+F12*F3123-F11*F2332)+
+              (F1122-F1221)*SS_3)*muJ53;
 }

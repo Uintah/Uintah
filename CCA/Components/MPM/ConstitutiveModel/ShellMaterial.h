@@ -5,6 +5,7 @@
 #include "ConstitutiveModel.h"
 #include "PlasticityModel.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -199,27 +200,52 @@ namespace Uintah {
 	 
   protected:
 
-    // Calculate the incremental rotation matrix for a shell particle
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the incremental rotation matrix for a shell particle */
+    //
     Matrix3 calcIncrementalRotation(const Vector& r, const Vector& n,
 				    double delT);
 
-    // Calculate the total rotation matrix for a shell particle
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the total rotation matrix for a shell particle */
+    //
     void calcTotalRotation(const Vector& n0, const Vector& n, Matrix3& R);
 
-    // Calculate the rotation matrix given and angle and the axis
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the rotation matrix given and angle and the axis */
     // of rotation
+    //
     Matrix3 calcRotationMatrix(double angle, const Vector& axis);
 
-    // Calculate the in-plane velocity and rotation gradient 
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the in-plane velocity and rotation gradient  */
+    //
     void calcInPlaneGradient(const Vector& n, Matrix3& velGrad,
                              Matrix3& rotGrad);
 
-    // Calculate the shell elastic stress
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the shell elastic stress */
+    //
     void computeShellElasticStress(Matrix3& F, Matrix3& sig);
 
-    // Calculate the plane stress deformation gradient corresponding
-    // to sig33 = 0 and the Cauchy stress
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the plane stress deformation gradient corresponding
+    // to sig33 = 0 and the Cauchy stress */
+    //
     bool computePlaneStressAndDefGrad(Matrix3& F, Matrix3& sig);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    /*! Calculate the derivative of the Kirchhoff stress component tau_33
+    //  with respect to the deformation gradient components */
+    //
+    void dtau_33_dF(const Matrix3& F, double J, Matrix3& dTdF);
 
   };
 } // End namespace Uintah
