@@ -65,7 +65,9 @@ namespace Uintah {
     const VarLabel* uvel_FCMELabel;
     const VarLabel* vvel_FCMELabel;
     const VarLabel* wvel_FCMELabel;
-    const VarLabel* press_FCLabel;
+    const VarLabel* pressX_FCLabel;
+    const VarLabel* pressY_FCLabel;
+    const VarLabel* pressZ_FCLabel;
     const VarLabel* tau_X_FCLabel;
     const VarLabel* tau_Y_FCLabel;
     const VarLabel* tau_Z_FCLabel;
@@ -76,6 +78,9 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.14  2000/11/28 03:50:28  jas
+// Added {X,Y,Z}FCVariables.  Things still don't work yet!
+//
 // Revision 1.13  2000/11/14 04:02:11  jas
 // Added getExtraCellIterator and things now appear to be working up to
 // face centered velocity calculations.

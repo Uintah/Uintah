@@ -46,6 +46,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
 
+   cout << "Density = " << d_density << endl;
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -152,8 +153,12 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   for(int i=0; i<(int)d_geom_objs.size(); i++){
    GeometryPiece* piece = d_geom_objs[i]->getPiece();
    Box b1 = piece->getBoundingBox();
+   cout << "Piece bounding box = " << b1 << endl;
    Box b2 = patch->getBox();
+   cout << "Patch  = " << b2 << endl;
    Box b = b1.intersect(b2);
+   
+   cout << "Intersection box = " << b << endl;
    if(b.degenerate())
       cerr << "b.degenerate" << endl;
 
@@ -161,39 +166,44 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    Vector dxpp = patch->dCell()/ppc;
    Vector dcorner = dxpp*0.5;
    double totalppc = ppc.x()*ppc.y()*ppc.z();
+   cout << "Box = " << b << endl;
 
-   for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
-      Point lower = patch->nodePosition(*iter) + dcorner;
-      int count = 0;
-      for(int ix=0;ix < ppc.x(); ix++){
-         for(int iy=0;iy < ppc.y(); iy++){
-            for(int iz=0;iz < ppc.z(); iz++){
-               IntVector idx(ix, iy, iz);
-               Point p = lower + dxpp*idx;
-
-               if(piece->inside(p))
-                  count++;
-            }
-         }
-      }
-
-      if( count > 0){
-	uvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().x();
-	vvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().y();
-	wvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().z();
-	speedSound[*iter] = d_speed_of_sound;
-	visc_CC[*iter]    = d_viscosity;
-	temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
-	cv[*iter]         = d_specificHeat;
-	rho_micro[*iter]  = d_density;
-	vol_frac_CC[*iter]= count/totalppc;
-	rho_CC[*iter]     = d_density*vol_frac_CC[*iter];
-      }
+   for(CellIterator iter = patch->getExtraCellIterator(b); !iter.done(); 
+       iter++){
+     Point lower = patch->nodePosition(*iter) + dcorner;
+     int count = 0;
+     for(int ix=0;ix < ppc.x(); ix++){
+       for(int iy=0;iy < ppc.y(); iy++){
+	 for(int iz=0;iz < ppc.z(); iz++){
+	   IntVector idx(ix, iy, iz);
+	   Point p = lower + dxpp*idx;
+	   if(piece->inside(p))
+	     count++;
+	 }
+       }
+     }
+     
+     if( count > 0){
+       uvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().x();
+       vvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().y();
+       wvel_CC[*iter]    = d_geom_objs[i]->getInitialVelocity().z();
+       speedSound[*iter] = d_speed_of_sound;
+       visc_CC[*iter]    = d_viscosity;
+       temp[*iter]       = d_geom_objs[i]->getInitialTemperature();
+       cv[*iter]         = d_specificHeat;
+       rho_micro[*iter]  = d_density;
+       cout << "rho_micro"<<*iter<<"="<<rho_micro[*iter] << endl;
+       vol_frac_CC[*iter]= count/totalppc;
+       rho_CC[*iter]     = d_density*vol_frac_CC[*iter];
+     }
    }
   }
 }
 
 // $Log$
+// Revision 1.8  2000/11/28 03:50:28  jas
+// Added {X,Y,Z}FCVariables.  Things still don't work yet!
+//
 // Revision 1.7  2000/11/23 00:45:45  guilkey
 // Finished changing the way initialization of the problem was done to allow
 // for different regions of the domain to be easily initialized with different

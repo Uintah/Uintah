@@ -100,6 +100,7 @@ void IdealGas::computeSpeedSound(const Patch* patch,
     double press    = (gamma - 1.0)   * rho_micro[*iter]*cv[*iter]*temp[*iter];
     double denom    = rho_micro[*iter]*rho_micro[*iter];
     speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom)));
+    cout << "speedSound"<<*iter<<"="<<speedSound[*iter]<<endl;
   }
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,dwindex,patch);
@@ -178,6 +179,9 @@ void IdealGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
+//Revision 1.10  2000/11/28 03:50:30  jas
+//Added {X,Y,Z}FCVariables.  Things still don't work yet!
+//
 //Revision 1.9  2000/11/15 00:51:55  guilkey
 //Changed code to take advantage of the ICEMaterial stuff I committed
 //recently in preparation for coupling the two codes.
