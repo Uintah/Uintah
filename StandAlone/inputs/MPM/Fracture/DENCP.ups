@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>200e-6</maxTime>
+	<maxTime>100e-6</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.0</delt_min>
 	<delt_max>2e-6</delt_max>
@@ -57,6 +57,10 @@
 		   <G>81.395e9 </G>
 		   <K>166.667e9</K>
                    <fracture_toughness_curve>
+                     <crack_propagation_criterion>empirical_criterion</crack_propagation_criterion>
+                     <p>2.</p>
+                     <q>2.</q>
+                     <r>0.817</r>
                      <point>
                        <Vc>0.</Vc>
                        <KIc>20e6</KIc>
