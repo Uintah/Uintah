@@ -978,10 +978,10 @@ TetVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  if (grid_.get_rep() == 0)
-  {
-    compute_grid();
-  }
+  if (!synchronized_ & LOCATE_E)
+    synchronize(LOCATE_E);
+  ASSERT(grid_.get_rep());
+
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
