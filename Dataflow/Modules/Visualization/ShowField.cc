@@ -565,26 +565,30 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
     nodes_on_.reset();
-    if (renderer_.get_rep() && renderer_->node_switch_ && now) 
-      renderer_->node_switch_->set_state(nodes_on_.get());
-
-    if ((nodes_on_.get()) && (node_id_ == 0)) {
+    if ((nodes_on_.get()) && (node_id_ == 0))
+    {
       nodes_dirty_ = true;
       maybe_execute(NODE);
-    } else {
-      if (ogeom_) ogeom_->flushViews();
+    }
+    else if (!nodes_on_.get() && node_id_)
+    {
+      ogeom_->delObj(node_id_);
+      ogeom_->flushViews();
+      node_id_ = 0;
     }
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
     edges_on_.reset();
-    if (renderer_.get_rep() && renderer_->edge_switch_ && now) 
-      renderer_->edge_switch_->set_state(edges_on_.get());
-    
-    if ((edges_on_.get()) && (edge_id_ == 0)) {
+    if ((edges_on_.get()) && (edge_id_ == 0))
+    {
       edges_dirty_ = true;
       maybe_execute(EDGE);
-    } else {
-      if (ogeom_) ogeom_->flushViews();
+    }
+    else if (!edges_on_.get() && edge_id_)
+    {
+      ogeom_->delObj(edge_id_);
+      ogeom_->flushViews();
+      edge_id_ = 0;
     }
   } else if (args[1] == "rerender_faces"){
     faces_dirty_ = true;
@@ -596,26 +600,30 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
-    if (renderer_.get_rep() && renderer_->face_switch_ && now) 
-      renderer_->face_switch_->set_state(faces_on_.get());
-
-    if ((faces_on_.get()) && (face_id_ == 0)) {
+    if ((faces_on_.get()) && (face_id_ == 0))
+    {
       faces_dirty_ = true;
       maybe_execute(FACE);
-    } else {
-      if (ogeom_) ogeom_->flushViews();
+    }
+    else if (!faces_on_.get() && face_id_)
+    {
+      ogeom_->delObj(face_id_);
+      ogeom_->flushViews();
+      face_id_ = 0;
     }
   } else if (args[1] == "toggle_display_vectors"){
     // Toggle the GeomSwitch.
     vectors_on_.reset();
-    if (renderer_.get_rep() && renderer_->data_switch_ && now) 
-      renderer_->data_switch_->set_state(vectors_on_.get());
-
-    if ((vectors_on_.get()) && (data_id_ == 0)) {
+    if ((vectors_on_.get()) && (data_id_ == 0))
+    {
       data_dirty_ = true;
       maybe_execute(DATA);
-    } else {
-      if (ogeom_) ogeom_->flushViews();
+    }
+    else if (!vectors_on_.get() && data_id_)
+    {
+      ogeom_->delObj(data_id_);
+      ogeom_->flushViews();
+      data_id_ = 0;
     }
   } else if (args[1] == "toggle_normalize"){
     // Toggle the GeomSwitch.
