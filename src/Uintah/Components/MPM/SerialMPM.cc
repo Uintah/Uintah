@@ -151,7 +151,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
       const Region* region=*iter;
       {
-	 Task* t = new Task("SerialMPM::initialize", region, dw, dw,
+	 Task* t = new Task("SerialMPM::actuallyInitialize", region, dw, dw,
 			    this, &SerialMPM::actuallyInitialize);
 	 t->computes(dw, d_sharedState->get_delt_label());
 	 sched->addTask(t);
@@ -580,10 +580,12 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        mpm_matl->getConstitutiveModel()->initializeCMData(region,
 						mpm_matl, new_dw);
        int vfindex = matl->getVFIndex();
+
        d_contactModel->initializeContact(region,vfindex,new_dw);
        
-       if(d_fractureModel)
-       d_fractureModel->initializeFracture(region,new_dw);
+       if(d_fractureModel) {
+	 d_fractureModel->initializeFracture( region, new_dw );
+       }
     }
   }
 }
@@ -1068,6 +1070,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.57  2000/05/15 20:03:22  dav
+// couple of cleanups
+//
 // Revision 1.56  2000/05/15 19:39:37  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
