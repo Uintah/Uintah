@@ -15,6 +15,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <Packages/BioPSE/Core/Algorithms/NumApproximation/ReferenceElement.h>
+#include <stdio.h>
 
 namespace BioPSE {
 
