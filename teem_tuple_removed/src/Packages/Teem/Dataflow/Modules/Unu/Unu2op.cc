@@ -34,11 +34,13 @@ public:
 
 private:
   NrrdIPort*      inrrd1_;
+  NrrdIPort*      inrrd2_;
   NrrdOPort*      onrrd_;
 
   GuiString    operator_;
   GuiDouble    float_input_;
   GuiInt       nrrd_on_left_;
+  bool         second_nrrd_;
 
   unsigned int get_op(const string &op);
   
@@ -50,7 +52,8 @@ Unu2op::Unu2op(SCIRun::GuiContext *ctx) :
   Module("Unu2op", ctx, Filter, "Unu", "Teem"), 
   operator_(ctx->subVar("operator")),
   float_input_(ctx->subVar("float_input")),
-  nrrd_on_left_(ctx->subVar("nrrd_on_left"))
+  nrrd_on_left_(ctx->subVar("nrrd_on_left")),
+  second_nrrd_(true)
 {
 }
 
@@ -60,15 +63,23 @@ Unu2op::~Unu2op() {
 void 
 Unu2op::execute()
 {
+  second_nrrd_ = true;
   NrrdDataHandle nrrd_handle1;
+  NrrdDataHandle nrrd_handle2;
 
   update_state(NeedData);
 
   inrrd1_ = (NrrdIPort *)get_iport("InputNrrd");
+  inrrd2_ = (NrrdIPort *)get_iport("InputNrrd2");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd1_) {
     error("Unable to initialize iport 'InputNrrd'.");
+    return;
+  }
+
+  if (!inrrd2_) {
+    error("Unable to initialize iport 'InputNrrd2'.");
     return;
   }
   if (!onrrd_) {
@@ -77,16 +88,25 @@ Unu2op::execute()
   }
   if (!inrrd1_->get(nrrd_handle1)) 
     return;
-
-
+  if (!inrrd2_->get(nrrd_handle2)) 
+    second_nrrd_ = false;
+  
   if (!nrrd_handle1.get_rep()) {
     error("Empty InputNrrd.");
+    return;
+  }
+
+  if (second_nrrd_ && !nrrd_handle2.get_rep()) {
+    error("Empty InputNrrd2.");
     return;
   }
 
   reset_vars();
 
   Nrrd *nin1 = nrrd_handle1->nrrd;
+  Nrrd *nin2 = 0;
+  if (second_nrrd_) 
+    nin2 = nrrd_handle2->nrrd;
   Nrrd *nout = nrrdNew();
 
   NrrdIter *in1 = nrrdIterNew();
@@ -94,7 +114,11 @@ Unu2op::execute()
 
   // check 'Use Nrrd as First Input' to determine order of 
   // inputs
-  if (nrrd_on_left_.get()) {
+  if (second_nrrd_) {
+    nrrdIterSetOwnNrrd(in1, nin1);
+    nrrdIterSetOwnNrrd(in2, nin2);
+  }
+  else if (nrrd_on_left_.get()) {
     nrrdIterSetOwnNrrd(in1, nin1);
     nrrdIterSetValue(in2, float_input_.get());
   } else {
