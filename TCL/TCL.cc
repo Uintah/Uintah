@@ -16,6 +16,8 @@
 #include <Dataflow/Module.h>
 #include <Malloc/Allocator.h>
 #include <Multitask/Task.h>
+#include <TCL/GuiManager.h>
+#include <TCL/Remote.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLTask.h>
 #include <TCL/TCLvar.h>
@@ -24,14 +26,23 @@
 #include <tcl/tk/tk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>                             // defines read() and write()
 
 extern Tcl_Interp* the_interp;
+extern sendRequest (TCLMessage*, int);
 
 struct TCLCommandData {
     TCL* object;
     void* userdata;
 };
 
+GuiManager *gm = NULL;
+
+void set_guiManager (GuiManager *mgr)
+{
+     gm = mgr;
+}
+ 
 static clString prefix()
 {
     static int haveit=0;
@@ -50,20 +61,54 @@ static clString prefix()
 
 void TCL::execute(const clString& string)
 {
-    TCLTask::lock();
-    int code = Tcl_Eval(the_interp, string());
-    if(code != TCL_OK)
-	Tk_BackgroundError(the_interp);
-    TCLTask::unlock();
+    if (gm != NULL) {
+    	int skt = gm->getConnection();
+printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
+
+	// format request - no TCL variable name, just a string to execute
+	TCLMessage msg;
+	msg.f = exec;
+	strcpy (msg.un.tstring, string());
+
+	// send request to server - no need for reply, error goes to Tk
+	if (sendRequest (&msg, skt) == -1) {
+	    // error case ???
+	}
+        gm->putConnection (skt);
+    }
+    else {
+        TCLTask::lock();
+        int code = Tcl_Eval(the_interp, string());
+        if(code != TCL_OK)
+	    Tk_BackgroundError(the_interp);
+        TCLTask::unlock();
+    }
 }
 
 void TCL::execute(char* string)
 {
-    TCLTask::lock();
-    int code = Tcl_Eval(the_interp, string);
-    if(code != TCL_OK)
-	Tk_BackgroundError(the_interp);
-    TCLTask::unlock();
+    if (gm != NULL) {
+    	int skt = gm->getConnection();
+printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
+
+	// format request - no TCL variable name, just a string to execute
+	TCLMessage msg;
+	msg.f = exec;
+	strcpy (msg.un.tstring, string);
+
+	// send request to server - no need for reply, error goes to Tk
+	if (sendRequest (&msg, skt) == -1) {
+	    // error case ???
+	}
+        gm->putConnection (skt);
+    }
+    else {
+        TCLTask::lock();
+        int code = Tcl_Eval(the_interp, string);
+        if(code != TCL_OK)
+	    Tk_BackgroundError(the_interp);
+        TCLTask::unlock();
+    }
 }
 
 int TCL::eval(const clString& string, clString& result)

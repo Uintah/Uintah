@@ -8,10 +8,18 @@
  *   University of Utah
  *   September 1994
  *
+ *  Changes for distributed SCIRun:
+ *   Michelle Miller 
+ *   Thu May 14 01:24:12 MDT 1998
+ * FIX: error cases and TCLvar* get()
+ *
  *  Copyright (C) 1994 SCI Group
  */
 
 #include <TCL/TCLvar.h>
+
+#include <TCL/GuiManager.h>
+#include <TCL/Remote.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLTask.h>
 #include <Geometry/Point.h>
@@ -22,6 +30,7 @@
 #include <values.h>
 
 extern Tcl_Interp* the_interp;
+extern GuiManager* gm;
 
 TCLvar::TCLvar(const clString& name, const clString& id,
 	       TCL* tcl)
@@ -59,14 +68,43 @@ TCLdouble::~TCLdouble()
 
 double TCLdouble::get()
 {
+    // need access to network scope to get remote info.  I can't even look
+    // up mod_id in hash table because the network has that.
     if(is_reset){
-	TCLTask::lock();
-	char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
-	if(l){
-	    Tcl_GetDouble(the_interp, l, &value);
-	    is_reset=0;
+	if (gm != NULL) {
+            int skt = gm->getConnection();
+#ifdef DEBUG
+ 	    cerr << "TCLdouble::get(): Got skt from gm->getConnection() = "
+		 << skt << endl;
+#endif
+            // format request 
+            TCLMessage msg;
+	    msg.f = getDouble;
+            strcpy (msg.tclName, varname());
+            msg.un.tdouble = 0.0;
+
+            // send request to server - no need for reply, error goes to Tk
+            if (sendRequest (&msg, skt) == -1) {
+                // error case ???
+            }
+            if (receiveReply (&msg, skt) == -1) {
+		// error case ???
+	    }
+            gm->putConnection (skt);
+	    value = msg.un.tdouble;
+#ifdef DEBUG
+	    cerr << "TCLdouble::get(): value from server = " << value << endl;
+#endif
+
+        } else {
+	    TCLTask::lock();
+	    char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
+	    if(l){
+	        Tcl_GetDouble(the_interp, l, &value);
+	       	is_reset=0;
+	    }
+	    TCLTask::unlock();
 	}
-	TCLTask::unlock();
     }
     return value;
 }
@@ -103,13 +141,41 @@ TCLint::~TCLint()
 int TCLint::get()
 {
     if(is_reset){
-	TCLTask::lock();
-	char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
-	if(l){
-	    Tcl_GetInt(the_interp, l, &value);
-	    is_reset=0;
+        if (gm != NULL) {
+            int skt = gm->getConnection();
+#ifdef DEBUG
+	    cerr << "TCLint::get(): Got skt from gm->getConnection() = "
+		 << skt << endl;
+#endif
+            // format request
+            TCLMessage msg;
+            msg.f = getInt;
+            strcpy (msg.tclName, varname());
+            msg.un.tint = 0;
+
+            // send request to server - no need for reply, error goes to Tk
+            if (sendRequest (&msg, skt) == -1) {
+                // error case ???
+            }
+            if (receiveReply (&msg, skt) == -1) {
+                // error case ???
+            }
+            gm->putConnection (skt);
+            value = msg.un.tint;
+#ifdef DEBUG
+	    cerr << "TCLint::get(): value from server = " << value << endl;
+#endif
+
+        } else {
+
+	    TCLTask::lock();
+	    char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
+	    if(l){
+	        Tcl_GetInt(the_interp, l, &value);
+	        is_reset=0;
+	    }
+	    TCLTask::unlock();
 	}
-	TCLTask::unlock();
     }
     return value;
 }
@@ -144,14 +210,42 @@ TCLstring::~TCLstring()
 clString TCLstring::get()
 {
     if(is_reset){
-	TCLTask::lock();
-	char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
-	if(!l){
-	    l="";
-	}
-	value=clString(l);
-	is_reset=0;
-	TCLTask::unlock();
+        if (gm != NULL) {
+            int skt = gm->getConnection();
+#ifdef DEBUG
+	    cerr << "TCLstring::get(): Got skt from gm->getConnection() = "
+		 << skt << endl;
+#endif
+
+            // format request
+            TCLMessage msg;
+            msg.f = getString;
+            strcpy (msg.tclName, varname());
+            strcpy (msg.un.tstring, "");
+
+            // send request to server - no need for reply, error goes to Tk
+            if (sendRequest (&msg, skt) == -1) {
+                // error case ???
+            }
+            if (receiveReply (&msg, skt) == -1) {
+                // error case ???
+            }
+            gm->putConnection (skt);
+	    value = clString(msg.un.tstring);
+#ifdef DEBUG
+	    cerr << "TCLstring::get(): value from server = " << value << endl;
+#endif
+
+        } else {
+	    TCLTask::lock();
+	    char* l=Tcl_GetVar(the_interp, varname(), TCL_GLOBAL_ONLY);
+	    if(!l){
+	        l="";
+	    }
+	    value=clString(l);
+	    is_reset=0;
+	    TCLTask::unlock();
+   	}
     }
     return value;
 }
@@ -196,7 +290,15 @@ TCLvardouble::~TCLvardouble()
 
 double TCLvardouble::get()
 {
-    return value;
+/*
+    if (is_remote) {
+    	// package remote request
+        // send request over socket
+	// block on reply
+    } else {
+ */
+    	return value;
+    //}
 }
 
 void TCLvardouble::emit(ostream& out)
@@ -228,7 +330,15 @@ TCLvarint::~TCLvarint()
 
 int TCLvarint::get()
 {
-    return value;
+/*
+    if (is_remote) {
+        // package remote request
+        // send request over socket
+        // block on reply
+    } else {
+ */
+        return value;
+    // }
 }
 
 void TCLvarint::set(int nv)
@@ -260,6 +370,7 @@ TCLvarintp::~TCLvarintp()
     Tcl_UnlinkVar(the_interp, varname());
 }
 
+// mm - must use Pio to get ptr
 int TCLvarintp::get()
 {
     return *value;
