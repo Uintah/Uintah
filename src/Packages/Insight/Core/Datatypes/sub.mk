@@ -24,5 +24,6 @@ PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY)
 
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

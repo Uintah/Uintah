@@ -43,13 +43,15 @@ template<class T> class ITKFData3d;
 template<class T> void Pio(Piostream& stream, ITKFData3d<T>& array);
 
 template <class Data>
-class ITKConstIterator : public itk::ImageRegionIterator<itk::Image<Data,3> > {
+class ITKConstIterator : public itk::ImageRegionConstIterator<itk::Image<Data,3> > {
 public:
   typedef itk::Image<Data, 3> ImageType;
-  typedef typename ImageType::RegionType RegionType;
+  typedef typename itk::Image<Data, 3>::RegionType region_type;
 
-  ITKConstIterator() : itk::ImageRegionConstIterator< ImageType >() {}
-  ITKConstIterator(const ImageType* ptr, const RegionType &region) : itk::ImageRegionConstIterator< ImageType >(ptr, region) { }
+  ITKConstIterator() : 
+    itk::ImageRegionConstIterator< ImageType >() {}
+  ITKConstIterator(const ImageType* ptr, const region_type &region) : 
+    itk::ImageRegionConstIterator< ImageType >(ptr, region) { }
   virtual ~ITKConstIterator() {}
   const Data &operator*() { return itk::ImageRegionConstIterator<ImageType>::Value();}
 };
@@ -59,10 +61,11 @@ template <class Data>
 class ITKIterator : public ITKConstIterator<Data> {
 public:
   typedef itk::Image<Data, 3> ImageType;
-  typedef typename ImageType::RegionType RegionType;
+  typedef typename itk::Image<Data, 3>::RegionType region_type;
 
   ITKIterator() : ITKConstIterator<Data>() { }
-  ITKIterator(const ImageType* ptr, const RegionType &region) : ITKConstIterator<Data>(ptr, region) { }
+  ITKIterator(const ImageType* ptr, const region_type &region) : 
+    ITKConstIterator<Data>(ptr, region) { }
   virtual ~ITKIterator() {}
   Data &operator*() { return Value();}
 };
@@ -76,14 +79,16 @@ public:
   typedef ITKIterator<Data> iterator;
   typedef ITKConstIterator<Data> const_iterator;
   
-  iterator *_begin;
-  iterator *_end;
+  iterator *begin_;
+  iterator *end_;
+  const_iterator *const_begin_;
+  const_iterator *const_end_;
 
-  const iterator &begin() { return *_begin; }
-  const iterator &end() { return *_end; }
+  const iterator &begin() { return *begin_; }
+  const iterator &end() { return *end_; }
 
-  const const_iterator &begin() const { return *_begin; }
-  const const_iterator &end() const { return *_end; }
+  const const_iterator &begin() const { return *const_begin_; }
+  const const_iterator &end() const { return *const_end_; }
 
 
   ITKFData3d();
@@ -194,12 +199,20 @@ public:
   
   void set_image(itk::Image<Data, 3>* img) {
     image_ = img;
-    if ( _begin ) delete _begin;
-    _begin = new iterator(image_, image_->GetRequestedRegion());
-    _begin->GoToBegin();
-    if ( _end ) delete _end;
-    _end = new iterator(image_, image_->GetRequestedRegion());
-    _end->GoToEnd();
+
+    if ( begin_ ) delete begin_;
+    begin_ = new iterator(image_, image_->GetRequestedRegion());
+    begin_->GoToBegin();
+    if ( end_ ) delete end_;
+    end_ = new iterator(image_, image_->GetRequestedRegion());
+    end_->GoToEnd();
+
+    if ( const_begin_ ) delete const_begin_;
+    const_begin_ = new const_iterator(image_, image_->GetRequestedRegion());
+    const_begin_->GoToBegin();
+    if ( const_end_ ) delete const_end_;
+    const_end_ = new const_iterator(image_, image_->GetRequestedRegion());
+    const_end_->GoToEnd();
   }
   
   unsigned int size() { return (dim1() * dim2() * dim3()); }
@@ -214,68 +227,48 @@ private:
   typename image_type::Pointer image_;
 };
 
-////////////////////////////////////////////////////////
-/*
-template <class Data>
-ITKFData3d<Data>::iterator 
-ITKFData3d<Data>::begin() { 
-  iterator i = new iterator(image_, image_->GetRequestedRegion());
-  return i.GoToBegin();
-}
-
-template <class Data> 
-ITKFData3d<Data>::iterator ITKFData3d<Data>::end() { 
-  iterator i = new iterator(image_, image_->GetRequestedRegion());
-  return i.GoToEnd();
-}
-
-template <class Data>
-ITKFData3d<Data>::const_iterator ITKFData3d<Data>::begin() const { 
-  const_iterator i = new const_iterator(image_, image_->GetRequestedRegion());
-  return i.GoToBegin(); 
-}
-
-template <class Data>
-ITKFData3d<Data>::const_iterator ITKFData3d<Data>::end() const { 
-  const_iterator i = new const_iterator(image_, image_->GetRequestedRegion());
-  return i.GoToEnd(); 
-}
-*/
 
 template <class Data>
 ITKFData3d<Data>::ITKFData3d()
 {
   image_ = image_type::New(); 
-  _begin = 0;
-  _end = 0;
+  begin_ = 0;
+  end_ = 0;
+  const_begin_ = 0;
+  const_end_ = 0;
 }
 
 template <class Data>
 ITKFData3d<Data>::ITKFData3d(int a)
 {
-  //image_ = image_type::New(); 
-  _begin = 0;
-  _end = 0;
+  image_ = image_type::New(); 
+  begin_ = 0;
+  end_ = 0;
+  const_begin_ = 0;
+  const_end_ = 0;
 }
 
 template <class Data>
 ITKFData3d<Data>::ITKFData3d(const ITKFData3d& data) {
   image_ = image_type::New();
-  image_ = data.image_;
 
-  _begin = 0;
-  _end = 0;
-//   _begin = new iterator(image_, image_->GetRequestedRegion());
-//   _begin->GoToBegin();
-//   _end = new iterator(image_, image_->GetRequestedRegion());
-//   _end->GoToEnd();
+  if(dynamic_cast<itk::Image<Data, 3>* >(data.image_.GetPointer() )) {
+    set_image(dynamic_cast<itk::Image<Data, 3>* >(data.image_.GetPointer() ));
+  }
+  else {
+    ASSERT(0);
+  }
+  
 }
 
 template <class Data>
 ITKFData3d<Data>::~ITKFData3d()
 {
-  if ( _begin ) delete _begin;
-  if ( _end) delete _end;
+  if ( begin_ ) delete begin_;
+  if ( end_) delete end_;
+
+  if ( const_begin_ ) delete const_begin_;
+  if ( const_end_) delete const_end_;
 }
   
 template <class Data>
