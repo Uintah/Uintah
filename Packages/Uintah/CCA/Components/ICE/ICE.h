@@ -181,7 +181,7 @@ using namespace SCIRun;
 
       template<class T> void computePressFace(int& numMatls,CellIterator it, 
                                          IntVector adj_offset,
-                         StaticArray<constCCVariable<double> >& rho_CC,
+                                        constCCVariable<double>& sum_rho,
                                         constCCVariable<double>& press_CC,
                                          T& press_FC);
                    
