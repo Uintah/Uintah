@@ -28,6 +28,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <SCICore/Containers/Array1.h>
+extern "C" {
+#include "sles.h"
+}
 using namespace Uintah::ArchesSpace;
 using namespace std;
 
@@ -1339,6 +1342,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.5  2000/09/12 22:34:02  sparker
+// Moved petsc include to .cc file
+//
 // Revision 1.4  2000/09/12 18:12:12  sparker
 // Fixed bugs - petsc solver now works in serial
 //
