@@ -81,6 +81,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 
 //****************************************************************************
@@ -2745,6 +2746,28 @@ BoundaryCondition::intrusionTemperatureBC(const ProcessorGroup*,
   }
 }
 
+void
+BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
+				       const Patch* patch,
+				       constCCVariable<int>& cellType,
+				       constCCVariable<double> solidTemp,
+				       CCVariable<double>& temperature)
+{
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	IntVector currCell = IntVector(colX, colY, colZ);	  
+	if (cellType[currCell]==d_mmWallID) {
+	  //	  temperature[currCell] = solidTemp[currCell];
+	  temperature[currCell] = 298.0;
+	}
+      }
+    }
+  }
+}
+
 
 // compute intrusion wall bc
 void 
@@ -4298,18 +4321,18 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
 
-  fort_mm_explicit(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
-		   constvars->scalarCoeff[Arches::AE], 
-		   constvars->scalarCoeff[Arches::AW], 
-		   constvars->scalarCoeff[Arches::AN], 
-		   constvars->scalarCoeff[Arches::AS], 
-		   constvars->scalarCoeff[Arches::AT], 
-		   constvars->scalarCoeff[Arches::AB], 
-		   constvars->scalarCoeff[Arches::AP], 
-		   constvars->scalarNonlinearSrc, constvars->old_density,
-		   cellinfo->sew, cellinfo->sns, cellinfo->stb, 
-		   delta_t,
-		   constvars->cellType, d_mmWallID);
+  fort_mm_explicit_oldvalue(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
+			    constvars->scalarCoeff[Arches::AE], 
+			    constvars->scalarCoeff[Arches::AW], 
+			    constvars->scalarCoeff[Arches::AN], 
+			    constvars->scalarCoeff[Arches::AS], 
+			    constvars->scalarCoeff[Arches::AT], 
+			    constvars->scalarCoeff[Arches::AB], 
+			    constvars->scalarCoeff[Arches::AP], 
+			    constvars->scalarNonlinearSrc, constvars->old_density,
+			    cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+			    delta_t,
+			    constvars->cellType, d_mmWallID);
 
 #ifdef enthalpySolve_debug
 

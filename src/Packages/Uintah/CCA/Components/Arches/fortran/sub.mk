@@ -49,6 +49,7 @@ SRCS += \
 	$(SRCDIR)/uvelcoeffupdate.F \
 	$(SRCDIR)/mm_computevel.F\
 	$(SRCDIR)/mm_explicit.F\
+	$(SRCDIR)/mm_explicit_oldvalue.F\
 	$(SRCDIR)/mm_explicit_vel.F\
 	$(SRCDIR)/mm_modify_prescoef.F \
 	$(SRCDIR)/mmbcvelocity.F \
@@ -141,6 +142,7 @@ $(SRCDIR)/mascal.o: $(SRCDIR)/mascal_fort.h
 $(SRCDIR)/mascal_scalar.o: $(SRCDIR)/mascal_scalar_fort.h
 $(SRCDIR)/mm_computevel.o: $(SRCDIR)/mm_computevel_fort.h
 $(SRCDIR)/mm_explicit.o: $(SRCDIR)/mm_explicit_fort.h
+$(SRCDIR)/mm_explicit_oldvalue.o: $(SRCDIR)/mm_explicit_oldvalue_fort.h
 $(SRCDIR)/mm_explicit_vel.o: $(SRCDIR)/mm_explicit_vel_fort.h
 $(SRCDIR)/mm_modify_prescoef.o: $(SRCDIR)/mm_modify_prescoef_fort.h
 $(SRCDIR)/mmbcvelocity.o: $(SRCDIR)/mmbcvelocity_fort.h

@@ -202,7 +202,6 @@ private:
       MomentumSolver* d_momSolver;
       // Scalar solver
       ScalarSolver* d_scalarSolver;
-      EnthalpySolver* d_enthalpySolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
 
