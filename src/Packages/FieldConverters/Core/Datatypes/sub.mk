@@ -22,7 +22,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/Math
+	Core/Thread Core/Geometry Core/Geom Core/Math
 LIBS := -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
