@@ -331,30 +331,32 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       ts_file = "restart_timestamp"
     else:
       ts_file = "timestamp"
-      
-    print "\tPerforming performance test on %s" % (date())
-    system("tail -n3 sus.log.txt > %s" % ts_file)
-    rc = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
-    try:
-      short_message_file = open("performance_shortmessage.txt", 'r+', 500)
-      short_message = rstrip(short_message_file.readline(500))
-    except Exception:
-      short_message = ""
-    if rc == 0:
-      print "\tPerformance tests passed."
-      if short_message != "":
-	print "\t%s" % (short_message)    
-    elif rc == 5 * 256:
-      print "\t* Warning, no timestamp file created.  No performance test performed."
-    elif rc == 2*256:
-      print "\t*** Warning, test %s failed performance test." % (testname)
-      if short_message != "":
-	print "\t%s" % (short_message)
-      print perf_msg
-      print "%s" % replace_msg
-      return 2
-    else:
-	print "\tPerformance tests passed. (Note: no previous memory usage stats)."
+ 
+    # don't do performance tests in debug
+    if mode != "dbg":     
+      print "\tPerforming performance test on %s" % (date())
+      system("tail -n3 sus.log.txt > %s" % ts_file)
+      rc = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
+      try:
+        short_message_file = open("performance_shortmessage.txt", 'r+', 500)
+        short_message = rstrip(short_message_file.readline(500))
+      except Exception:
+        short_message = ""
+      if rc == 0:
+        print "\tPerformance tests passed."
+        if short_message != "":
+	  print "\t%s" % (short_message)    
+      elif rc == 5 * 256:
+        print "\t* Warning, no timestamp file created.  No performance test performed."
+      elif rc == 2*256:
+        print "\t*** Warning, test %s failed performance test." % (testname)
+        if short_message != "":
+	  print "\t%s" % (short_message)
+        print perf_msg
+        print "%s" % replace_msg
+        return 2
+      else:
+	print "\tPerformance tests passed. (Note: no previous performace stats)."
 
 
     print "\tComparing udas on %s" % (date())
