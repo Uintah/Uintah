@@ -12,7 +12,7 @@
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Components/Schedulers/SendState.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-#include <Uintah/Exceptions/UnknownVariable.h>
+#include <Uintah/Grid/UnknownVariable.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Level.h>
@@ -87,6 +87,39 @@ void OnDemandDataWarehouse::finalize()
    d_sfcyDB.cleanForeign();
    d_sfczDB.cleanForeign();
   d_finalized=true;
+}
+
+void OnDemandDataWarehouse::put(const Variable* var, const VarLabel* label,
+				int matlIndex, const Patch* patch)
+{
+   union {
+      const ReductionVariableBase* reduction;
+      const ParticleVariableBase* particle;
+      const NCVariableBase* nc;
+      const CCVariableBase* cc;
+      const SFCXVariableBase* sfcx;
+      const SFCYVariableBase* sfcy;
+      const SFCZVariableBase* sfcz;
+   } castVar;
+
+   if ((castVar.reduction = dynamic_cast<const ReductionVariableBase*>(var))
+       != NULL)
+      put(*castVar.reduction, label, matlIndex);
+   else if ((castVar.particle = dynamic_cast<const ParticleVariableBase*>(var))
+	    != NULL)
+      put(*castVar.particle, label);
+   else if ((castVar.nc = dynamic_cast<const NCVariableBase*>(var)) != NULL)
+      put(*castVar.nc, label, matlIndex, patch);
+   else if ((castVar.cc = dynamic_cast<const CCVariableBase*>(var)) != NULL)
+      put(*castVar.cc, label, matlIndex, patch);
+   else if ((castVar.sfcx=dynamic_cast<const SFCXVariableBase*>(var)) != NULL)
+      put(*castVar.sfcx, label, matlIndex, patch);
+   else if ((castVar.sfcy=dynamic_cast<const SFCYVariableBase*>(var)) != NULL)
+      put(*castVar.sfcy, label, matlIndex, patch);
+   else if ((castVar.sfcz=dynamic_cast<const SFCZVariableBase*>(var)) != NULL)
+      put(*castVar.sfcz, label, matlIndex, patch);
+   else
+      throw InternalError("Unknown Variable type");
 }
 
 void
@@ -1070,7 +1103,6 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
   d_lock.writeUnlock();
 }
 
-
 void
 OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Patch* patch,
@@ -1462,39 +1494,29 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
 				 int matlIndex, const Patch* patch) const
 {
   d_lock.readLock();
-  bool varFound = false;
-   if(d_ncDB.exists(label, matlIndex, patch)) {
-      NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
-      var->emit(oc);
-      varFound = true;
-   } else if(d_particleDB.exists(label, matlIndex, patch)) {
-      ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
-      var->emit(oc);
-      varFound = true;
-   } else if(d_ccDB.exists(label, matlIndex, patch)) {
-     CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
-     var->emit(oc);
-     varFound = true;
-   } else if(d_sfcxDB.exists(label, matlIndex, patch)) {
-      SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
-      var->emit(oc);
-      varFound = true;
-   } else if(d_sfcyDB.exists(label, matlIndex, patch)) {
-      SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
-      var->emit(oc);
-      varFound = true;
-   } else if(d_sfczDB.exists(label, matlIndex, patch)) {
-      SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
-      var->emit(oc);
-      varFound = true;
-   }
 
-   if( varFound ){
-     d_lock.readUnlock();
-     return;
-   }
+   Variable* var = NULL;
+   if(d_ncDB.exists(label, matlIndex, patch))
+      var = d_ncDB.get(label, matlIndex, patch);
+   else if(d_particleDB.exists(label, matlIndex, patch))
+      var = d_particleDB.get(label, matlIndex, patch);
+   else if(d_ccDB.exists(label, matlIndex, patch))
+      var = d_ccDB.get(label, matlIndex, patch);
+   else if(d_sfcxDB.exists(label, matlIndex, patch))
+      var = d_sfcxDB.get(label, matlIndex, patch);
+   else if(d_sfcyDB.exists(label, matlIndex, patch))
+      var = d_sfcyDB.get(label, matlIndex, patch);
+   else if(d_sfczDB.exists(label, matlIndex, patch))
+      var = d_sfczDB.get(label, matlIndex, patch);
+   else if(d_reductionDB.exists(label, matlIndex, patch))
+      var = d_reductionDB.get(label, matlIndex, patch);
 
-   throw UnknownVariable(label->getName(), patch, matlIndex, "on emit");
+   if (var == NULL)
+      throw UnknownVariable(label->getName(), patch, matlIndex, "on emit");
+  
+   var->emit(oc);
+   
+  d_lock.readUnlock();
 }
 
 void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label,
@@ -1555,6 +1577,11 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* /*delset*/)
 
 //
 // $Log$
+// Revision 1.63  2000/12/23 00:49:02  witzel
+// Added generic put(Variable*, ...) method, changed the UnknownVariable.h
+// include path (which moved), and changed the emit method to take advantage
+// of the virtual Variable::emit method and allow you to emit reduction vars.
+//
 // Revision 1.62  2000/12/22 00:13:52  jas
 // Got rid of X,Y,Z FCVariable stuff.  Changes to get rid of g++ warnings.
 //
