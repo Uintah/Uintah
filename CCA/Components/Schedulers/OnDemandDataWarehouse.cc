@@ -1465,17 +1465,16 @@ OnDemandDataWarehouse::checkAllocation(const Variable& var,
     const Task* currentTask = getCurrentTask();    
     if (currentTask == 0 ||
 	(string(currentTask->getName()) != "Relocate::relocateParticles")) {
-      IncorrectAllocation errorObj(label, var.getAllocationLabel());
+      // throw IncorrectAllocation(label, var.getAllocationLabel());
 
       if (show_warnings) {
-	cerr << errorObj.message();
+	cerr << IncorrectAllocation::makeMessage(label,  var.getAllocationLabel());
 	if (currentTask)
 	  cerr << " in " << currentTask->getName() << ".\n";
 	else
 	  cerr << ".\n";
       }
     }
-    //throw IncorrectAllocation(label, var.getAllocationLabel());
   }
 #endif
 }
@@ -1504,12 +1503,11 @@ inline void OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
       const Task* currentTask = getCurrentTask();
       if (currentTask == 0 ||
 	  (string(currentTask->getName()) != "Relocate::relocateParticles")) {
-	DeniedAccess errorObj(label, currentTask, matlIndex, patch, "requires", isFinalized() ? "get from oldDW" : "get from newDW");
+	//throw DeniedAccess(label, currentTask, matlIndex, patch, "requires", isFinalized() ? "get from oldDW" : "get from newDW");
 	if (show_warnings) {
-	  cerr << errorObj.message() << endl;
+	  cerr << DeniedAccess::makeMessage(label, currentTask, matlIndex, patch, "requires", isFinalized() ? "get from oldDW" : "get from newDW") << endl;
 	}
       }
-    //throw DeniedAccess(label, getCurrentTask(), replace ? "modify" : "put");
     }
     else {
       currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)]
@@ -1532,11 +1530,11 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
   
   if (!hasPutAccess(currentTask, label, matlIndex, patch, replace)) {
     if (string(currentTask->getName()) != "Relocate::relocateParticles") {
-      DeniedAccess errorObj(label, currentTask, matlIndex, patch,replace ? "modifies" : "computes", replace ? "modify into the datawarehouse" : "put into the datawarehouse");
+      //throw DeniedAccess(label, currentTask, matlIndex, patch,replace ? "modifies" : "computes", replace ? "modify into the datawarehouse" : "put into the datawarehouse");
+      
       if (show_warnings) {
-	cerr << errorObj.message() << endl;
+	cerr << DeniedAccess::makeMessage(label, currentTask, matlIndex, patch,replace ? "modifies" : "computes", replace ? "modify into the datawarehouse" : "put into the datawarehouse") << endl;
       }
-      //throw DeniedAccess(label, getCurrentTask(), replace ? "modify" : "put");
     }
   }
   else {
