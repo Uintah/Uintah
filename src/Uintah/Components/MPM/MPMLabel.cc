@@ -94,8 +94,14 @@ MPMLabel::MPMLabel()
 
   gExternalHeatRateLabel = new VarLabel("g.externalTemperatureRate",
 			NCVariable<double>::getTypeDescription());
-  
+
   delTLabel = new VarLabel( "delT", delt_vartype::getTypeDescription() );
+
+  StrainEnergyLabel = new VarLabel( "StrainEnergy",
+			sum_vartype::getTypeDescription() );
+
+  KineticEnergyLabel = new VarLabel( "KineticEnergy",
+			sum_vartype::getTypeDescription() );
 } 
 
 const MPMLabel* MPMLabel::getLabels()
@@ -107,6 +113,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.5  2000/05/31 22:15:38  guilkey
+// Added VarLabels for some integrated quantities.
+//
 // Revision 1.4  2000/05/31 16:30:57  guilkey
 // Tidied the file up, added cvs logging.
 //

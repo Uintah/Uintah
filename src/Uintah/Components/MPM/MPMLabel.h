@@ -47,6 +47,8 @@ namespace Uintah {
       const VarLabel* cSelfContactLabel; //for fracture, CCVariable
       const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
       
+      const VarLabel* StrainEnergyLabel;
+      const VarLabel* KineticEnergyLabel;
       
     };
   } // end namepsace MPM
@@ -54,6 +56,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.5  2000/05/31 22:15:38  guilkey
+// Added VarLabels for some integrated quantities.
+//
 // Revision 1.4  2000/05/31 16:11:11  tan
 // gTemperatureLabel included
 //
