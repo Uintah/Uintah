@@ -58,7 +58,9 @@ ObjGroup::~ObjGroup()
 void ObjGroup::add(GeomObj* obj)
 {
     objs.add(obj);
-    bb.extend(obj->bbox());
+    BBox obj_bb(obj->bbox());
+    if(obj_bb.valid())
+	bb.extend(obj_bb);
 }
 
 int ObjGroup::size()
