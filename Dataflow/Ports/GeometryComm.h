@@ -18,6 +18,7 @@
 
 #include <PSECore/Comm/MessageBase.h>
 #include <PSECore/Datatypes/GeometryPort.h>
+#include <SCICore/Geom/View.h>
 
 namespace SCICore {
   namespace GeomSpace {
@@ -51,6 +52,7 @@ public:
     GeometryComm(int, GeomID, int del);
     GeometryComm(MessageTypes::MessageType, int);
     GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
+    GeometryComm(MessageTypes::MessageType, int, int, View);
     GeometryComm(MessageTypes::MessageType, int portid,
 		 FutureValue<GeometryData*>* reply,
 		 int which_roe, int datamask);
@@ -66,6 +68,7 @@ public:
     CrowdMonitor* lock;
     Semaphore* wait;
     int del;
+    View view;
 
     GeometryComm* next;
 
@@ -80,6 +83,9 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/12/03 00:36:08  dmw
+// more files for the setView message
+//
 // Revision 1.5  1999/08/28 17:54:31  sparker
 // Integrated new Thread library
 //
