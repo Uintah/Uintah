@@ -167,7 +167,7 @@ StructHexVolMesh::inside8_p(Cell::index_type idx, const Point &p) const
     const Vector off0(p0 - p);
     const Vector off1(p0 - center);
     const double tmp = Dot(normal, off0) * Dot(normal, off1);
-    if (tmp < -1.0e-6)
+    if (tmp < -1.0e-12)
     {
       return tmp;
     }
@@ -202,7 +202,7 @@ StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
     }
     ++iter;
   }
-  if (mindist > -1.0e-6)
+  if (mindist > -1.0e-12)
   {
     return true;
   }
@@ -292,6 +292,7 @@ StructHexVolMesh::get_weights(const Point &p,
     get_nodes(nodes, cell);
     Vector v[8];
     double vol[8];
+
     int i;
     for (i = 0; i < 8; i++)
     {
@@ -392,7 +393,8 @@ StructHexVolMesh::get_weights(const Point &p,
 
     for (i = 0; i < 8; i++)
     {
-      w.push_back(vol[i] * suminv);
+      const double value = vol[i] * suminv;
+      w.push_back(value);
     }
   }
 }
