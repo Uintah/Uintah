@@ -13,10 +13,16 @@
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/fixedvector.h>
+
 #include <string>
 #include <vector>
 
 #define SELECT_GRID
+//#define SELECT_RANGETREE
+
+#ifdef SELECT_RANGETREE
+class PatchRangeTree;
+#endif
 
 namespace Uintah {
 
@@ -122,6 +128,7 @@ WARNING
       Level& operator=(const Level&);
       
       std::vector<Patch*> d_patches;
+     
       Grid* grid;
       Point d_anchor;
       Vector d_dcell;
@@ -135,6 +142,10 @@ WARNING
       IntVector d_gridSize;
       vector<int> d_gridStarts;
       vector<Patch*> d_gridPatches;
+#else
+#ifdef SELECT_RANGETREE
+      PatchRangeTree* d_rangeTree;
+#endif
 #endif
    };
    
@@ -142,6 +153,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21.4.3  2000/10/25 20:36:31  witzel
+// Added RangeTree option for selectPatches implementation.
+//
 // Revision 1.21.4.2  2000/10/10 05:28:08  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
