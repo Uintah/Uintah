@@ -777,6 +777,7 @@ class BioImageApp {
 	set bot [$w.topbot childsite top]
 	set top [$w.topbot childsite bottom]
 
+	$w.topbot fraction 66 34
 	iwidgets::panedwindow $top.lmr -orient vertical -thickness 0 \
 	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
 	    -sashcursor sb_h_double_arrow
@@ -814,7 +815,7 @@ class BioImageApp {
  	    [expr $viewer_height/2] \
 
  	pack $slice_frame(3d) -side top -anchor n \
- 	    -expand 1 -fill both -padx 0 -pady 0
+ 	    -expand 1 -fill both -padx 4 -pady 0
 
     }
 
