@@ -94,6 +94,10 @@ write_MPM(FieldHandle& field_h, const string &outdir)
   minb = bbox.min();
   maxb = bbox.max();
 
+#if defined(__sgi)
+#  define round(var) ((var)>=0?(int)((var)+0.5):(int)((var)-0.5))
+#endif
+
   int sizex = (int)(round(maxb.x() - minb.x()) / max_vol_s);
   int sizey = (int)(round(maxb.y() - minb.y()) / max_vol_s);
   int sizez = (int)(round(maxb.z() - minb.z()) / max_vol_s);
