@@ -30,7 +30,7 @@ static void checkIdentity(const FastMatrix& m)
 
 int main(int argc, char* argv[])
 {
-  int max=20;
+  int max=16;
   if(argc == 2)
     max=atoi(argv[1]);
   for(int size=1;size<=max;size++){
@@ -90,16 +90,15 @@ int main(int argc, char* argv[])
     }
     FastMatrix m3(size, size);
     m3.copy(m);
-    vector<double> x(size);
-    m3.destructiveSolve(vcopy, x);
+    m3.destructiveSolve(&vcopy[0]);
     vector<double> xx(size);
     minv.multiply(v, xx);
     bool err=false;
     for(int i=0;i<size;i++){
-      if(Abs(x[i]-xx[i] > tolerance)){
+      if(Abs(vcopy[i]-xx[i] > tolerance)){
 	if(!err)
 	  cerr << "size: " << size << '\n';
-	cerr << "Error: rhs[" << i << "]=" << x[i] << " vs. " << xx[i] << '\n';
+	cerr << "Error: rhs[" << i << "]=" << vcopy[i] << " vs. " << xx[i] << '\n';
 	err=true;
       }
     }
@@ -178,16 +177,29 @@ int main(int argc, char* argv[])
     if(runTest){
       cout << "\nHilbert matrix test " << endl;
       cout << "Condition Number:" << A.conditionNumber() << endl;
+      FastMatrix A2(size, size);
+      A2.copy(A);
       
       A_inverse.destructiveInvert(A);
       A_inverse.multiply(B,XX);
-      //cout << " A inverse " << endl;
-      //A_inverse.print(cout);
+      cout << " A inverse " << endl;
+      A_inverse.print(cout);
 
       
       cout << "X should be 1.0" << endl;
       for(int i = 0; i<size; i++){
         cout << " X["<<i<<"]= " << XX[i] << "  % error " << fabs(XX[i] - 1.0) * 100<< endl;
+      }
+
+
+      double XX2[16];
+      for(int i=0;i<size;i++)
+        XX2[i] = B[i];
+      A2.destructiveSolve(XX2);
+      
+      cout << "X2 should be 1.0" << endl;
+      for(int i = 0; i<size; i++){
+        cout << " X2["<<i<<"]= " << XX2[i] << "  % error " << fabs(XX2[i] - 1.0) * 100<< endl;
       }
     }
   }
