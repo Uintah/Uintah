@@ -457,27 +457,37 @@ void  lodi_bc_preprocess( const Patch* patch,
  Function~ computeConvection--
  Purpose~  Compute the convection term in conservation law
 _________________________________________________________*/
-double computeConvection(const double& nuFrt,     const double& nuMid, 
-                         const double& nuLast,    const double& qFrt, 
-                         const double& qMid,      const double& qLast,
-                         const double& qConFrt,   const double& qConLast,
-                         const double& deltaT,    const double& deltaX) 
+inline double computeConvection(
+              const Vector& nuFrt, const Vector& nuMid, const Vector& nuLast,    
+              const double& qFrt,  const double& qMid,  const double& qLast,
+              const double& q_R,   const double& q_C,   const double& q_L,
+              const double& deltaT,    const Vector& dx,
+              const int& dir) 
 {
    //__________________________________
    // Artifical dissipation term
-   double eplus, eminus, dissipation;
-   double k_const = 0.4;
-
-   eplus  = 0.5 * k_const * deltaX * (nuFrt   + nuMid)/deltaT;
-   eminus = 0.5 * k_const * deltaX * (nuLast  + nuMid)/deltaT;
-   dissipation = (eplus * qFrt - (eplus + eminus) * qMid 
-              +  eminus * qLast)/deltaX; 
- 
 /*`==========TESTING==========*/
- dissipation  = 0; 
+#if 0
+    double k_const = 0.4;
+    doubl eeplus  = 0.5 * k_const * dx[dir] * (nuFrt[dir]   + nuMid[dir])/deltaT;
+    double eminus = 0.5 * k_const * dx[dir] * (nuLast[dir]  + nuMid[dir])/deltaT;
+    double dissipation = (eplus * qFrt - (eplus + eminus) * qMid 
+              +  eminus * qLast)/dx[dir]; 
+#endif
+    double dissipation  = 0;
 /*==========TESTING==========`*/
-             
-   return  0.5 * (qConFrt - qConLast)/deltaX - dissipation;
+ double conv;
+ 
+  // central differenceing
+  //conv = 0.5 * (q_R - q_L)/dx[dir] - dissipation;
+   
+   // upwind differenceing  (we'll make this fast after we know that it works)
+   if (q_C > 0) {
+    conv = (q_R - q_C)/dx[dir] - dissipation;
+   }else{
+    conv = (q_L - q_C)/dx[dir] - dissipation;
+   }         
+   return conv; 
 } 
 /*_________________________________________________________________
  Function~ getBoundaryEdges--
@@ -555,9 +565,6 @@ void FaceDensity_LODI(const Patch* patch,
   const CCVariable<double>& rho_old = lv->rho_old;
   const CCVariable<Vector>& vel_old = lv->vel_old;
   const double delT = lv->delT;
-
-  double conv_dir1, conv_dir2;
-  double qConFrt,qConLast;
   
   IntVector axes = patch->faceAxes(face);
   int P_dir = axes[0];  // principal direction
@@ -575,22 +582,25 @@ void FaceDensity_LODI(const Patch* patch,
     IntVector l1 = c;
     r1[dir1] += offset[dir1];  // tweak the r and l cell indices
     l1[dir1] -= offset[dir1];
-    qConFrt  = rho_old[r1] * vel_old[r1][dir1];
-    qConLast = rho_old[l1] * vel_old[l1][dir1];
+    double q_R = rho_old[r1] * vel_old[r1][dir1];
+    double q_C = rho_old[c]  * vel_old[c][dir1];
+    double q_L = rho_old[l1] * vel_old[l1][dir1];
     
-    conv_dir1 = computeConvection(nu[r1][dir1], nu[c][dir1], nu[l1][dir1], 
-                                  rho_old[r1], rho_old[c], rho_old[l1], 
-                                  qConFrt, qConLast, delT, dx[dir1]);
+    double conv_dir1 = computeConvection(nu[r1], nu[c], nu[l1], 
+                                         rho_old[r1], rho_old[c], rho_old[l1], 
+                                         q_R, q_C, q_L, 
+                                         delT, dx, dir1);
     IntVector r2 = c;
     IntVector l2 = c;
     r2[dir2] += offset[dir2];  // tweak the r and l cell indices
     l2[dir2] -= offset[dir2];
     
-    qConFrt  = rho_old[r2] * vel_old[r2][dir2];
-    qConLast = rho_old[l2] * vel_old[l2][dir2];
-    conv_dir2 = computeConvection(nu[r2][dir2], nu[c][dir2], nu[l2][dir2],
-                                  rho_old[r2], rho_old[c], rho_old[l2], 
-                                  qConFrt, qConLast, delT, dx[dir2]);
+    q_R = rho_old[r2] * vel_old[r2][dir2];
+    q_L = rho_old[l2] * vel_old[l2][dir2];
+    double conv_dir2 = computeConvection(nu[r2], nu[c], nu[l2],
+                                         rho_old[r2], rho_old[c], rho_old[l2], 
+                                         q_R, q_C, q_L, 
+                                         delT, dx, dir2);
 
     rho_CC[c] = rho_old[c] - delT * (d[1][c][P_dir] + conv_dir1 + conv_dir2);
 
@@ -622,11 +632,14 @@ void FaceDensity_LODI(const Patch* patch,
       IntVector c = *iter;  
       IntVector r = c + offset;  
       IntVector l = c - offset;
-      qConFrt  = rho_old[r] * vel_old[r][Edir2];
-      qConLast = rho_old[l] * vel_old[l][Edir2];
-      double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
-                                rho_old[r], rho_old[c], rho_old[l], 
-                                qConFrt, qConLast, delT, dx[Edir2]);                           
+      double q_R = rho_old[r] * vel_old[r][Edir2];
+      double q_C = rho_old[c] * vel_old[r][Edir2];
+      double q_L = rho_old[l] * vel_old[l][Edir2];
+      double conv = computeConvection(nu[r], nu[c], nu[l],
+                                      rho_old[r], rho_old[c], rho_old[l], 
+                                      q_R, q_C, q_L, 
+                                      delT, dx, Edir2); 
+                                                                
       rho_CC[c] = rho_old[c] - delT * (d[1][c][P_dir] + d[1][c][Edir1] + conv);
     }
   }
@@ -690,10 +703,16 @@ void FaceVel_LODI(const Patch* patch,
     l1[dir1] -= offset[dir1]; 
        
     Vector convect1(0,0,0);
-    for(int dir = 0; dir <3; dir ++ ) {
-      convect1[dir] = 
-        0.5 * ( (rho_old[r1] * vel_old[r1][dir] * vel_old[r1][dir1]
-              -  rho_old[l1] * vel_old[l1][dir] * vel_old[l1][dir1] )/dx[dir1]);
+    for(int dir = 0; dir <3; dir ++ ) {              
+      double q_R = rho_old[r1] * vel_old[r1][dir] * vel_old[r1][dir1];
+      double q_C = rho_old[c]  * vel_old[c][dir]  * vel_old[c][dir1];
+      double q_L = rho_old[l1] * vel_old[l1][dir] * vel_old[l1][dir1];
+      Vector placeHolder;
+
+      convect1[dir] = computeConvection(placeHolder, placeHolder, placeHolder, 
+                                        rho_old[r1], rho_old[c], rho_old[l1], 
+                                        q_R, q_C, q_L, 
+                                        delT, dx, dir1);
     }
     
     IntVector r2 = c;
@@ -702,10 +721,16 @@ void FaceVel_LODI(const Patch* patch,
     l2[dir2] -= offset[dir2];  
     
     Vector convect2(0,0,0);
-     for(int dir = 0; dir <3; dir ++ ) {
-       convect2[dir] = 
-         0.5*( (rho_old[r2] * vel_old[r2][dir] * vel_old[r2][dir2]
-             -  rho_old[l2] * vel_old[l2][dir] * vel_old[l2][dir2] )/dx[dir2]);
+    for(int dir = 0; dir <3; dir ++ ) {            
+      double q_R = rho_old[r2] * vel_old[r2][dir] * vel_old[r2][dir2];
+      double q_C = rho_old[c]  * vel_old[c][dir]  * vel_old[c][dir2];
+      double q_L = rho_old[l2] * vel_old[l2][dir] * vel_old[l2][dir2];
+      Vector placeHolder;
+      
+      convect2[dir] = computeConvection(placeHolder, placeHolder, placeHolder, 
+                                        rho_old[r2], rho_old[c], rho_old[l2], 
+                                        q_R, q_C, q_L, 
+                                        delT, dx, dir2); 
      }       
     //__________________________________
     // Pressure gradient terms
@@ -813,9 +838,15 @@ void FaceVel_LODI(const Patch* patch,
 
       Vector convect1(0,0,0);
       for(int dir = 0; dir <3; dir ++ ) {
-        convect1[dir] = 
-         0.5 * ( (rho_old[r1] * vel_old[r1][dir] * vel_old[r1][Edir2]
-               -  rho_old[l1] * vel_old[l1][dir] * vel_old[l1][Edir2] )/dx[Edir2] );
+        double q_R = rho_old[r1] * vel_old[r1][dir] * vel_old[r1][Edir2];
+        double q_C = rho_old[c]  * vel_old[c][dir]  * vel_old[c][Edir2];
+        double q_L = rho_old[l1] * vel_old[l1][dir] * vel_old[l1][Edir2];
+        Vector placeHolder;
+        
+        convect1[dir] = computeConvection(placeHolder, placeHolder, placeHolder, 
+                                          rho_old[r1], rho_old[c], rho_old[l1], 
+                                          q_R, q_C, q_L, 
+                                          delT, dx, Edir2);
       }
       //__________________________________
       // Pressure gradient terms
@@ -959,8 +990,7 @@ void FaceTemp_LODI(const Patch* patch,
   const CCVariable<Vector>& vel_new   = lv->vel_CC;
   const CCVariable<Vector>& nu  = lv->nu;
   const double delT  = lv->delT;
-             
-  double qConFrt,qConLast, conv_dir1, conv_dir2;  
+              
   IntVector axes = patch->faceAxes(face);
   int P_dir = axes[0];  // principal direction
   int dir1  = axes[1];  // other vector directions
@@ -977,22 +1007,25 @@ void FaceTemp_LODI(const Patch* patch,
     IntVector l1 = c;
     r1[dir1] += offset[dir1];  // tweak the r and l cell indices
     l1[dir1] -= offset[dir1];
-    qConFrt  = vel_old[r1][dir1] * (E[r1] + press_tmp[r1]);
-    qConLast = vel_old[l1][dir1] * (E[l1] + press_tmp[l1]);
+    double q_R = vel_old[r1][dir1] * (E[r1] + press_tmp[r1]);
+    double q_C = vel_old[c][dir1]  * (E[c] + press_tmp[c]);
+    double q_L = vel_old[l1][dir1] * (E[l1] + press_tmp[l1]);
     
-    conv_dir1 = computeConvection(nu[r1][dir1], nu[c][dir1], nu[l1][dir1], 
-                                  E[r1], E[c], E[l1], 
-                                  qConFrt, qConLast, delT, dx[dir1]);
+    double conv_dir1 = computeConvection(nu[r1], nu[c], nu[l1], 
+                                          E[r1], E[c], E[l1], 
+                                          q_R, q_C, q_L, 
+                                          delT, dx, dir1);
     IntVector r2 = c;
     IntVector l2 = c;
     r2[dir2] += offset[dir2];  // tweak the r and l cell indices
     l2[dir2] -= offset[dir2];
     
-    qConFrt  = vel_old[r2][dir2] * (E[r2] + press_tmp[r2]);
-    qConLast = vel_old[l2][dir2] * (E[l2] + press_tmp[l2]);
-    conv_dir2 = computeConvection(nu[r2][dir2], nu[c][dir2], nu[l2][dir2],
-                                  E[r2], E[c], E[l2], 
-                                  qConFrt, qConLast, delT, dx[dir2]);
+    q_R = vel_old[r2][dir2] * (E[r2] + press_tmp[r2]);
+    q_L = vel_old[l2][dir2] * (E[l2] + press_tmp[l2]);
+    double conv_dir2 = computeConvection(nu[r2], nu[c], nu[l2],
+                                         E[r2], E[c], E[l2], 
+                                         q_R, q_C, q_L, 
+                                         delT, dx, dir2);
 
     double vel_old_sqr = vel_old[c].length2();
     double vel_new_sqr = vel_new[c].length2();
@@ -1039,12 +1072,14 @@ void FaceTemp_LODI(const Patch* patch,
       IntVector r = c + offset;  
       IntVector l = c - offset;
 
-      qConFrt  = vel_old[r][Edir2] * (E[r] + press_tmp[r]);
-      qConLast = vel_old[l][Edir2] * (E[l] + press_tmp[l]);
+      double q_R = vel_old[r][Edir2] * (E[r] + press_tmp[r]);
+      double q_C = vel_old[c][Edir2] * (E[c] + press_tmp[c]);
+      double q_L = vel_old[l][Edir2] * (E[l] + press_tmp[l]);
     
-      double conv = computeConvection(nu[r][Edir2], nu[c][Edir2], nu[l][Edir2],
+      double conv = computeConvection(nu[r], nu[c], nu[l],
                                       E[r], E[c], E[l],               
-                                      qConFrt, qConLast, delT, dx[Edir2]); 
+                                      q_R, q_C, q_L, 
+                                      delT, dx, Edir2); 
                                       
       double vel_old_sqr = vel_old[c].length2();
 
