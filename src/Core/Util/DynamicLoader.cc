@@ -449,11 +449,17 @@ DynamicLoader::validate_compile_dir(string &dir)
     while ((*str_end) == '/') --str_end;
     dir.erase(++str_end,dir.end());
     
+    return copy_makefile_to(dir);
+
+        
+#if 0
     // Look for the makefile in the  directory
     const int status = stat(string(dir + "/Makefile").c_str(), &buf);
     return  ((!status && !errno) || // Found the Makefile there already
 	     // OR the Makefile wasnt found, but the copy was successful
 	     (status && errno == ENOENT && copy_makefile_to(dir)));
+#endif
+
   }
   return false;
 }
@@ -493,7 +499,7 @@ DynamicLoader::get_compile_dir()
 bool 
 DynamicLoader::copy_makefile_to(const string &dir)
 {
-  string command = ("cp -f " + string(SCIRUN_OBJDIR) + 
+  string command = ("cp -f --update " + string(SCIRUN_OBJDIR) + 
 		    "/on-the-fly-libs/Makefile " + dir);
 
   bool result = true;
