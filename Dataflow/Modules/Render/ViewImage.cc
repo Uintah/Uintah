@@ -65,6 +65,9 @@
 
 #include <Core/Geom/OpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
+#include <Core/Geom/FreeType.h>
+
+#include <Core/Util/Environment.h>
 
 #include <typeinfo>
 #include <iostream>
@@ -194,7 +197,15 @@ class ViewImage : public Module
     SliceWindows	windows_;
   };
 
+  struct TextLabel {
+    string		name_;
+    SliceWindows	windows_;
+    FreeTypeText	text_;
+    map<SliceWindow *, GLuint> tex_name_;
+  };
 
+  typedef vector<TextLabel *>		Labels;
+  typedef vector<FreeTypeFace *>	FreeTypeFaces;
 
   typedef vector<NrrdVolume *>		NrrdVolumes;
   typedef map<string, WindowLayout *>	WindowLayouts;
@@ -219,15 +230,31 @@ class ViewImage : public Module
   //! output port
   GeometryOPort *	ogeom_;
 
+  FreeTypeLibrary	freetype_lib_;
+  map<string, FreeTypeFace *>		fonts_;
+  Labels		labels_;
+  
+
+
   void			redraw_all();
   void			redraw_window_layout(WindowLayout &);
   void			redraw_window(SliceWindow &);
   void			draw_slice(SliceWindow &, NrrdSlice &);
+
+  void			draw_anatomical_labels(SliceWindow &);
+  void			draw_label(SliceWindow &, string, int, int, 
+				   FreeTypeText::anchor_e, 
+				   FreeTypeFace *font = 0);
+  void			draw_position_label(SliceWindow &);
   
   bool			extract_colormap(SliceWindow &);
   bool			extract_clut(SliceWindow &);
 
   void			draw_guidelines(SliceWindow &, float, float, float);
+
+  int			x_axis(SliceWindow &);
+  int			y_axis(SliceWindow &);
+
   void			setup_gl_view(SliceWindow &);
 
   void			set_slice_coords(NrrdSlice &slice);
@@ -351,9 +378,34 @@ ViewImage::ViewImage(GuiContext* ctx) :
   current_window_(0),
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
-  ogeom_(0)
+  ogeom_(0),
+  freetype_lib_(),
+  fonts_(),
+  labels_(0)
 {
+  try {
+    string sdir;
+    const char *dir = sci_getenv("SCIRUN_FONT_PATH");
+    if (dir) 
+      sdir = dir;
+    else
+      sdir = string(sci_getenv("SCIRUN_SRCDIR"))+"/Fonts";
 
+    fonts_["default"] = freetype_lib_.load_face(sdir+"/scirun.ttf");
+    fonts_["anatomical"] = fonts_["default"];
+    fonts_["patientname"] = fonts_["default"];
+    fonts_["postiion"] = fonts_["default"];
+
+  } catch (...) {
+    fonts_.clear();
+    fonts_["default"] = 0;
+    fonts_["anatomical"] = fonts_["default"];
+    fonts_["patientname"] = fonts_["default"];
+    fonts_["postiion"] = fonts_["default"];
+
+    std::cerr << id << ": Error loading fonts.\n" <<
+      "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n";
+  }
 }
 
 void
@@ -643,74 +695,287 @@ ViewImage::draw_guidelines(SliceWindow &window, float x, float y, float z) {
 
 
 
+// Returns and index to the axis that is most parallel and in the direction of
+// +X in the screen.  
+// 0 for +x, 1 for +y, and 2 for +z
+// 3 for -x, 4 for -y, and 5 for -z
+int
+ViewImage::x_axis(SliceWindow &window)
+{
+  Vector dir = screen_to_world(window,1,0)-screen_to_world(window,0,0);
+  Vector adir = Abs(dir);
+  int m = adir[0] > adir[1] ? 0 : 1;
+  m = adir[m] > adir[2] ? m : 2;
+  return dir[m] < 0.0 ? m+3 : m;
+}
+
+// Returns and index to the axis that is most parallel and in the direction of
+// +Y in the screen.  
+// 0 for +x, 1 for +y, and 2 for +z
+// 3 for -x, 4 for -y, and 5 for -z
+int
+ViewImage::y_axis(SliceWindow &window)
+{
+  Vector dir = screen_to_world(window,0,1)-screen_to_world(window,0,0);
+  Vector adir = Abs(dir);
+  int m = adir[0] > adir[1] ? 0 : 1;
+  m = adir[m] > adir[2] ? m : 2;
+  return dir[m] < 0.0 ? m+3 : m;
+}
 
 void
 ViewImage::setup_gl_view(SliceWindow &window)
 {
+  // bad hack to resolve infinite loop in screen_to_world
   static int here = 0;
   if (here) return;
   here = 1;
+
   glMatrixMode(GL_MODELVIEW);
-  //  glPushMatrix();
   glLoadIdentity();
 
   int axis = window.axis_;
 
-  if (window.axis_ == 0) {
+  if (axis == 0) { // screen +X -> +Y, screen +Y -> +Z
     glRotated(-90,0.,1.,0.);
     glRotated(-90,1.,0.,0.);
-  } else if (window.axis_ == 1) {
-    glRotated(90,1.,0.,0.);
-    glRotated(90,0.,1.,0.);
+  } else if (axis == 1) { // screen +X -> +X, screen +Y -> +Z
+    glRotated(-90,1.,0.,0.);
   }
+  
   glTranslated((axis==0)?-double(window.slice_[axis]):0.0,
   	       (axis==1)?-double(window.slice_[axis]):0.0,
   	       (axis==2)?-double(window.slice_[axis]):0.0);
 
   glMatrixMode(GL_PROJECTION);
-  //  glPushMatrix();
   glLoadIdentity();
 
-  Vector x_dir = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
-  Vector y_dir = screen_to_world(window, 0, 1) - screen_to_world(window, 0, 0);
-  int pri_axis = 0;
-  int sec_axis = 0;
-  for (int c = 0; c < 3; ++c) {
-    if (fabs(x_dir[c]) > fabs(x_dir[pri_axis])) pri_axis = c;
-    if (fabs(y_dir[c]) > fabs(y_dir[sec_axis])) sec_axis = c;
-  }
-  here = 0;
+
 
   double hwid = (window.viewport_->width()/(*window.zoom_/100.0))/2;
   double hhei = (window.viewport_->height()/(*window.zoom_/100.0))/2;
   
-  double cx = double(*window.x_) + center_[pri_axis];
-  double cy = double(*window.y_) + center_[sec_axis];
-  
+  double cx = double(*window.x_) + center_[x_axis(window) % 3];
+  double cy = double(*window.y_) + center_[y_axis(window) % 3];
+
   glOrtho(cx - hwid, cx + hwid, cy - hhei, cy + hhei,
-	  -max_slice_[axis], max_slice_[axis]);
-  
-  
-  // // Then Scale to window coordinates: [0,0]..[Window Width, Window Height]
-  //   GLdouble scales[3] = { 1.0, 1.0, 1.0 };
-  //   if (window.axis_ == 0) {
-  //     scales[1] /= window.opengl_->width();
-  //     scales[2] /= window.opengl_->height();
-  //   } else if (window.axis_ == 1) {
-  //     scales[0] /= window.opengl_->height();
-  //     scales[2] /= window.opengl_->width();
-  //   } else /*if (window.axis_ == 2)*/ {
-  //     scales[0] /= window.opengl_->width();
-  //     scales[1] /= window.opengl_->height();
-  //   }
-  //  glScaled(scales[0], scales[1], scales[2]);
-  //  glScaled(slice.flip_x_?-1.0:1.0, slice.flip_y_?-1.0:1.0, 1.0);
-  //  glScaled(window.zoom_, window.zoom_, window.zoom_);
-  //glTranslated(window.x_, window.y_, window.z_);
-  //  glMatrixMode(GL_PROJECTION);
-  //  glPushMatrix();
-  //glLoadIdentity();
+	  -max_slice_[axis]*scale_[axis], max_slice_[axis]*scale_[axis]);
+
+  here = 0;
+
 }
+
+
+
+
+
+// A,P   R, L   S, I
+void
+ViewImage::draw_position_label(SliceWindow &window)
+{
+  FreeTypeFace *font = fonts_["position"];
+  if (!font) return;
+
+  window.viewport_->make_current();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glScaled(2.0, 2.0, 2.0);
+  glTranslated(-.5, -.5, -.5);
+
+  BBox label_bbox;
+  //  BBox line_bbox;
+  font->set_points(15.0);
+  FreeTypeText zoom("Zoom: "+to_string(window.zoom_()), font);
+  zoom.get_bounds(label_bbox);
+  Point pos(0, label_bbox.max().y()+2, 0);
+  FreeTypeText cursor("X: "+to_string(Ceil(cursor_.x()))+
+		      " Y: "+to_string(Ceil(cursor_.y()))+
+		      " Z: "+to_string(Ceil(cursor_.z())),
+		      font, &pos);
+  cursor.get_bounds(label_bbox);
+  unsigned int wid = pow2(Round(label_bbox.max().x()));
+  unsigned int hei = pow2(Round(label_bbox.max().y()));
+  GLubyte *buf = scinew GLubyte[wid*hei*4];
+  memset(buf, 0, wid*hei*4);
+  zoom.render(wid, hei, buf);
+  cursor.render(wid, hei, buf);
+  
+  GLuint tex_id;
+  glGenTextures(1, &tex_id);
+
+  glBindTexture(GL_TEXTURE_2D, tex_id);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glPixelTransferi(GL_MAP_COLOR, 0);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wid, hei, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  
+  const double dx = 1.0/window.viewport_->width();
+  const double dy = 1.0/window.viewport_->height();
+  
+  glBegin(GL_QUADS);
+
+  glTexCoord2f(0.0, 0.0);
+  glVertex3f(0.0, 0.0, 0.0);
+
+  glTexCoord2f(1.0, 0.0);
+  glVertex3f(dx*wid, 0.0, 0.0);
+
+  glTexCoord2f(1.0, 1.0);
+  glVertex3f(dx*wid, dy*hei , 0.0);
+
+  glTexCoord2f(0.0, 1.0);
+  glVertex3f(0.0, dy*hei, 0.0);
+
+  glEnd();
+
+  glDeleteTextures(1, &tex_id);
+  //  glRasterPos2d(0.0, 0.0);
+  //  glDrawPixels (wid, hei, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+
+  window.viewport_->release();
+}  
+
+
+
+
+// Right	= -X
+// Left		= +X
+// Posterior	= -Y
+// Anterior	= +X
+// Inferior	= -Z
+// Superior	= +Z
+void
+ViewImage::draw_anatomical_labels(SliceWindow &window)
+{
+  FreeTypeFace *font = fonts_["anatomical"];
+  if (!font) return;
+
+
+  int prim = x_axis(window);
+  int sec = y_axis(window);
+  
+  string ltext, rtext, ttext, btext;
+  switch (prim % 3) {
+  case 0: ltext = "R"; rtext = "L"; break;
+  case 1: ltext = "P"; rtext = "A"; break;
+  default:
+  case 2: ltext = "I"; rtext = "S"; break;
+  }
+  if (prim >= 3) SWAP (ltext, rtext);
+
+  switch (sec % 3) {
+  case 0: btext = "R"; ttext = "L"; break;
+  case 1: btext = "P"; ttext = "A"; break;
+  default:
+  case 2: btext = "I"; ttext = "S"; break;
+  }
+  if (sec >= 3) SWAP (ttext, btext);
+
+  font->set_points(35.0);
+  draw_label(window, ltext, 2, window.viewport_->height()/2, 
+	     FreeTypeText::w, font);
+  draw_label(window, rtext, window.viewport_->width()-2, 
+	     window.viewport_->height()/2, FreeTypeText::e, font);
+  draw_label(window, btext, window.viewport_->width()/2, 2, 
+	     FreeTypeText::s, font);
+  draw_label(window, ttext, window.viewport_->width()/2, 
+	     window.viewport_->height()-2, FreeTypeText::n, font);
+
+}
+
+
+void
+ViewImage::draw_label(SliceWindow &window, string text, int x, int y,
+		      FreeTypeText::anchor_e anchor, 
+		      FreeTypeFace *font)
+{
+  if (!font && fonts_.size()) 
+    font = fonts_["default"];
+  if (!font) return;
+  window.viewport_->make_current();  
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glScaled(2.0, 2.0, 2.0);
+  glTranslated(-.5, -.5, -.5);
+
+  BBox bbox;
+  FreeTypeText fttext(text, font);
+  fttext.get_bounds(bbox);
+  unsigned int wid = pow2(Round(bbox.max().x()));
+  unsigned int hei = pow2(Round(bbox.max().y()));
+  GLubyte *buf = scinew GLubyte[wid*hei*4];
+  memset(buf, 0, wid*hei*4);
+  fttext.render(wid, hei, buf);
+  
+  GLuint tex_id;
+  glGenTextures(1, &tex_id);
+
+  glBindTexture(GL_TEXTURE_2D, tex_id);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glPixelTransferi(GL_MAP_COLOR, 0);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wid, hei, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+  
+  double px = x;
+  double py = y;
+
+  switch (anchor) {
+  case FreeTypeText::s:  px -= bbox.max().x()/2.0; break;
+  case FreeTypeText::se: px -= bbox.max().x();     break;
+  case FreeTypeText::e:  px -= bbox.max().x();     py -= bbox.max().y()/2.0; break;
+  case FreeTypeText::ne: px -= bbox.max().x();     py -= bbox.max().y();     break;
+  case FreeTypeText::n:  px -= bbox.max().x()/2.0; py -= bbox.max().y();     break;
+  case FreeTypeText::nw: py -= bbox.max().y();     break;
+  case FreeTypeText::w:  py -= bbox.max().y()/2.0; break;
+  default: // lowerleft do noting
+  case FreeTypeText::sw: break;
+  }
+
+  
+  const double dx = 1.0/window.viewport_->width();
+  const double dy = 1.0/window.viewport_->height();
+  
+  glBegin(GL_QUADS);
+
+  glTexCoord2f(0.0, 0.0);
+  glVertex3f(px*dx, py*dy, 0.0);
+
+  glTexCoord2f(1.0, 0.0);
+  glVertex3f(dx*(px+wid), py*dy, 0.0);
+
+  glTexCoord2f(1.0, 1.0);
+  glVertex3f(dx*(px+wid), dy*(py+hei) , 0.0);
+
+  glTexCoord2f(0.0, 1.0);
+  glVertex3f(px*dx, dy*(py+hei), 0.0);
+
+  glEnd();
+  glDeleteTextures(1, &tex_id);
+
+  window.viewport_->release();
+}  
+
+
 
 
 void
@@ -751,7 +1016,9 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA); 
   //else 
   //glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
-    
+   
+
+ 
   glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
@@ -774,7 +1041,6 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
   }
   glBindTexture(GL_TEXTURE_2D, slice.tex_name_);
 
-	   
   if (!bound) {
     //     glPixelTransferf(GL_RED_SCALE, *window.scale_);
     //     glPixelTransferf(GL_GREEN_SCALE, *window.scale_);
@@ -813,34 +1079,44 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
     }
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, slice.tex_wid_, slice.tex_hei_, 
-		 0, GL_COLOR_INDEX, type, slice.nrrd_->nrrd->data);    
+    		 0, GL_COLOR_INDEX, type, slice.nrrd_->nrrd->data);    
   }
 
-
   set_slice_coords(slice);
+
   glBegin( GL_QUADS );
   for (i = 0; i < 4; i++) {
     glTexCoord2fv(&slice.tex_coords_[i*2]);
     glVertex3fv(&slice.pos_coords_[i*3]);
   }
   glEnd();
+
+  draw_position_label(window);
+  draw_anatomical_labels(window);
+  FreeTypeFace *font = fonts_["paitentname"];
+  if (font) {
+    font->set_points(20.0);
+    draw_label(window, "Patient Name: Anonymous", 
+	       window.viewport_->width() - 2,
+	       window.viewport_->height() - 2,
+	       FreeTypeText::ne, font);
+  }
+
   glFlush();
 
   glMatrixMode(GL_PROJECTION);
-  //  glPopMatrix();
+  glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
-  //  glPopMatrix();
+  glLoadIdentity();
 
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
 
   GLenum err;
   while ((err = glGetError()) != GL_NO_ERROR) 
-    cerr << "GL error : " << int(err) << std::endl;
+    cerr << id << ": GL error #" << int(err) << std::endl;
 
   window.viewport_->release();
-
-  
 }
 
 
@@ -954,8 +1230,13 @@ ViewImage::extract_slice(NrrdVolume &volume,
 
   slice.nrrd_ = scinew NrrdData;
   slice.nrrd_->nrrd = nrrdNew();
+
+  NrrdDataHandle temp1 = scinew NrrdData;
+  temp1->nrrd = nrrdNew();  
+
+  NrrdDataHandle temp2 = scinew NrrdData;
   
-  if (nrrdSlice(slice.nrrd_->nrrd, volume.nrrd_->nrrd, axis, slice_num)) {
+  if (nrrdSlice(temp1->nrrd, volume.nrrd_->nrrd, axis, slice_num)) {
     char *err = biffGetDone(NRRD);
     error(string("Error Slicing nrrd: ") + err);
     free(err);
@@ -964,36 +1245,41 @@ ViewImage::extract_slice(NrrdVolume &volume,
   slice.axis_ = axis;
   slice.slice_num_ = slice_num;
   slice.dirty_ = true;
-  slice.wid_     = slice.nrrd_->nrrd->axis[0].size;
-  slice.hei_     = slice.nrrd_->nrrd->axis[1].size;
+  slice.wid_     = temp1->nrrd->axis[0].size;
+  slice.hei_     = temp1->nrrd->axis[1].size;
   slice.tex_wid_ = pow2(slice.wid_);
   slice.tex_hei_ = pow2(slice.hei_);
   slice.opacity_ = volume.opacity_;
   slice.tex_name_ = 0;
   slice.volume_ = &volume;
-
-
-  NrrdDataHandle temp1 = scinew NrrdData;
-  temp1->nrrd = nrrdNew();  
   
 
-//   if (nrrdQuantize(temp1->nrrd, slice.nrrd_->nrrd, range, 8)) {
-//     char *err = biffGetDone(NRRD);
-//     error(string("Trouble quantizing: ") + err);
-//     free(err);
-//     return;
-//  }
+  if (1 || temp1->nrrd->type != nrrdTypeChar || 
+      temp1->nrrd->type != nrrdTypeUChar || 
+      temp1->nrrd->type != nrrdTypeShort || 
+      temp1->nrrd->type != nrrdTypeUShort) {
+    temp2->nrrd = nrrdNew();  
+    NrrdRange *range =nrrdRangeNewSet(temp1->nrrd,nrrdBlind8BitRangeState);
+    if (nrrdQuantize(temp2->nrrd, temp1->nrrd, range, 8)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Trouble quantizing: ") + err);
+      free(err);
+      return;
+    }
+  } else {
+    temp2 = temp1;
+  }
+
 
   int minp[2] = { 0, 0 };
   int maxp[2] = { slice.tex_wid_-1, slice.tex_hei_-1 };
 
-  if (nrrdPad(temp1->nrrd, slice.nrrd_->nrrd, minp,maxp,nrrdBoundaryPad, 0.0)) 
+  if (nrrdPad(slice.nrrd_->nrrd, temp2->nrrd, minp,maxp,nrrdBoundaryPad, 0.0)) 
   {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") + err);
     free(err);
   }
-  slice.nrrd_ = temp1;
 
   // x and y texture coordinates of data to be drawn [0, 1]
   const double tex_x = double(slice.wid_)/double(slice.tex_wid_);
