@@ -17,6 +17,7 @@ InletStream::InletStream(int numMixVars, int numMixStatVars, int numRxnVars)
   d_rxnVars = vector<double>(numRxnVars);
   d_axialLoc = 0;
   d_enthalpy = 0;
+  d_initEnthalpy = false;
   //???What about enthalpy???
 }
 
