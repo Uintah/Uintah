@@ -23,11 +23,11 @@
     <Grid>
        <Level>
            <Box label = "1">
-              <lower>         [ 0.0,   0.0,   0.0]         </lower>
-              <upper>         [ 0.0001,0.0025,0.0001]</upper>
-                <extraCells>  [1,1,1]               </extraCells>
-              <patches>       [1,1,1]               </patches>
-              <resolution>    [1,100,1]            </resolution>
+              <lower>         [ 0.0,   0.0,   0.0]    </lower>
+              <upper>         [ 0.0001,0.0025,0.0001] </upper>
+                <extraCells>  [1,1,1]                 </extraCells>
+              <patches>       [1,1,1]                 </patches>
+              <resolution>    [1,100,1]               </resolution>
            </Box>
        </Level>
     <BoundaryConditions>
@@ -82,7 +82,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>pistonValidationTest.uda</filebase>
+      <filebase>imp_pistonVal.uda</filebase>
       <outputInterval> 0.01 </outputInterval>
       <save label = "press_CC"/>
       <save label = "vol_frac_CC"/>
@@ -108,17 +108,6 @@
 -->
     </DataArchiver>
     <Debug>
-     <dbg_timeStart>       0.0        </dbg_timeStart>
-     <dbg_timeStop>        1.1        </dbg_timeStop>
-     <dbg_outputInterval>  0.01       </dbg_outputInterval>
-   
-     <dbg_BeginIndex>      [0,0,0]    </dbg_BeginIndex>
-     <dbg_EndIndex>        [0,100,0]  </dbg_EndIndex>
-     <dbg_SigFigs>         16         </dbg_SigFigs>
-     <dbg_Matls>           [0,1,2]    </dbg_Matls>
-     <dbg_GnuPlot>         true       </dbg_GnuPlot> 
-     <debug label = "switchDebug_EQ_RF_press"/> 
-     <debug label = "switchDebug_advance_advect"/>   
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -127,8 +116,37 @@
        <cfl>0.4</cfl>
        <ICE>
         <max_iteration_equilibration> 100 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE"/>
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm"/>
+     <!--   
+        <TimeStepControl>
+          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.001            </knob_for_speedSound>
+        </TimeStepControl>
+     -->   
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable = "implicitPressure">
+
+	     <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+	     <!-- Hypre options -->
+	     <solver>         hybrid  </solver>
+	     <preconditioner> pfmg    </preconditioner>
+	     <tolerance>      1.e-10  </tolerance>
+	     <maxiterations>  7500    </maxiterations>
+	     <npre>           1       </npre>
+	     <npost>          1       </npost>
+	     <skip>           0       </skip>
+	     <jump>           0       </jump>
+           
+            </Parameters>
+        </ImplicitSolver>
+        
       </ICE>        
     </CFD>
     <MPM>
@@ -145,10 +163,9 @@
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
     <!--____________________________________________________________________-->
-
     <MaterialProperties>
        <MPM>
-         <material name = " Piston Piston">
+         <material name = " Piston">
                 <burn type = "null"/>
                 <EOS type = "ideal_gas">                 </EOS>
                 <density>                  1.9e8         </density>
@@ -174,10 +191,12 @@
          </material>
 
            <contact>
-              <type>rigid</type>
-              <vel_fields>[1,0,0]</vel_fields>
-              <stop_time>0.8 </stop_time>
-           </contact>
+              <type>        rigid           </type>
+              <vel_fields>  [1,0,0]         </vel_fields>
+              <stop_time>   0.8             </stop_time>
+	       <direction>   [0, 0, 1]       </direction>
+	       <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
+          </contact>
       </MPM>
       <!--__________________________________ -->   
        <ICE>
@@ -231,7 +250,6 @@
               <momentum>       [1e15, 1e15, 1e15]     </momentum>
               <heat>           [   1,    1,    1]     </heat>
           </exchange_coefficients>
-          <mass_exchange>               false          </mass_exchange>
        </exchange_properties>
     </MaterialProperties>
        
