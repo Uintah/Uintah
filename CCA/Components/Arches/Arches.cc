@@ -424,7 +424,7 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
     for (int ii = 0; ii < d_nofScalars; ii++) {
-      new_dw->put(scalar[ii], d_lab->d_scalarINLabel, ii, patch);
+      new_dw->put(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
     }
     new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
