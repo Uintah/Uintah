@@ -31,17 +31,55 @@ public:
     GenericField<TetVolMesh, vector<T> >(data_at) {};
   virtual ~TetVol() {};
 
-  static const string type_name(int a);
+  void    io(Piostream &stream);
+  static  PersistentTypeID type_id;
+  //static const string type_name(int a);
+  static const string type_name();
+  static const string type_name(int);
  
 };
+
+// Pio defs.
+const double TET_VOL_VERSION = 1.0;
+
+template <class T>
+Persistent* make_TetVol()
+{
+  return scinew TetVol<T>;
+}
+
+template <class T>
+PersistentTypeID 
+TetVol<T>::type_id(type_name(), 
+		   GenericField<TetVolMesh, vector<T> >::type_name(),
+		   &make_TetVol<T>);
+
+
+template <class T>
+void 
+TetVol<T>::io(Piostream& stream)
+{
+  stream.begin_class(type_name().c_str(), TET_VOL_VERSION);
+  GenericField<TetVolMesh, vector<T> >::io(stream);
+  stream.end_class();
+}
 
 // FIX_ME support the int arg return vals...
 template <class T> 
 const string 
-TetVol<T>::type_name(int /*a*/)
+TetVol<T>::type_name()
 {
   static const string name =  "TetVol<" + find_type_name((T *)0) + ">";
   return name;
+}
+
+template <class T> 
+const string 
+TetVol<T>::type_name(int a)
+{
+  ASSERT((a <= 1) && a >= 0);
+  if (a == 0) { return "TetVol"; }
+  return find_type_name((T *)0);
 }
 
 } // end namespace SCIRun
