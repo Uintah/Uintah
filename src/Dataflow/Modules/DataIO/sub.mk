@@ -55,7 +55,7 @@ SRCS     += \
 
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Geometry Core/Datatypes \
+	Core/GuiInterface Core/Geometry Core/Datatypes Core/Volume \
 	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
 	Dataflow/Widgets Core/ImportExport
 
