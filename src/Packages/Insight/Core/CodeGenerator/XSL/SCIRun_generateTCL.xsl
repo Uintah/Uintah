@@ -158,7 +158,7 @@
 <xsl:text disable-output-escaping="yes">        
         button $w.execute -text &quot;Execute&quot; -command &quot;$this-c needexecute&quot;
         button $w.close -text &quot;Close&quot; -command &quot;destroy $w&quot;
-        pack $w.execute $w.close -side top
+        pack $w.execute $w.close -side left
 </xsl:text>
 </xsl:template>
 
@@ -236,6 +236,7 @@
 <xsl:variable name="widget">checkbutton</xsl:variable>
 <xsl:variable name="path"><xsl:text>$w.</xsl:text><xsl:value-of select="@name"/>
 </xsl:variable>
+<xsl:variable name="default"><xsl:value-of select="default"/></xsl:variable>
 <xsl:text>
         frame </xsl:text><xsl:value-of select="$path"/><xsl:text>
         </xsl:text>
@@ -248,7 +249,9 @@
 </xsl:text>
 <xsl:text>        pack </xsl:text><xsl:value-of select="$path"/>
 <xsl:text>
-</xsl:text>	     
+
+                  set $this-</xsl:text><xsl:value-of select="@name"/><xsl:text> </xsl:text><xsl:value-of select="$default"/><xsl:text>
+</xsl:text>
 </xsl:template>
 
 
