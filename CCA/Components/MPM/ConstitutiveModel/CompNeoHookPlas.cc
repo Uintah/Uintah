@@ -237,11 +237,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 	     }
 	     //rotation rate computation, required for fracture
 	     //NOTE!!! gvel(0) = gvel.x() !!!
-	     omega1 += gvel(2) * d_S[k](1) * oodx[1] - 
+	     omega1 += -gvel(2) * d_S[k](1) * oodx[1] +
 	               gvel(1) * d_S[k](2) * oodx[2];
-	     omega2 += gvel(0) * d_S[k](2) * oodx[2] - 
+	     omega2 += -gvel(0) * d_S[k](2) * oodx[2] +
 	               gvel(2) * d_S[k](0) * oodx[0];
-             omega3 += gvel(1) * d_S[k](0) * oodx[0] - 
+             omega3 += -gvel(1) * d_S[k](0) * oodx[0] +
 	               gvel(0) * d_S[k](1) * oodx[1];
 	   }
 	 }
