@@ -12,6 +12,7 @@
  */
 
 #include <IsoSurface/IsoSurface.h>
+#include <Field3D.h>
 #include <Field3DPort.h>
 #include <GeometryPort.h>
 #include <MUI.h>
@@ -31,8 +32,7 @@ IsoSurface::IsoSurface()
     add_oport(ogeom);
 
     isoval=1;
-    MUI_slider_real* slider=new MUI_slider_real("IsoContour value",
-						&isoval, 1.0);
+    MUI_slider_real* slider=new MUI_slider_real("IsoContour value", &isoval);
     add_ui(slider);
 
     have_seedpoint=0;
