@@ -1426,8 +1426,12 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
-      
+    
       d_usingLODI = are_We_Using_LODI_BC(patch,d_is_LODI_face, indx);
+      if (d_usingLODI) {
+        cout << "\n WARNING:  LODI boundary conditions are "
+             << " NOT set during the problem initialization \n " << endl;
+      }
       
       setBC(press_CC, rho_micro, placeHolder,
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
@@ -1791,6 +1795,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
     setBC(press_new,   rho_micro, placeHolder,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
+    delete lv;
     
     press_copy.copyData(press_new);
    //---- P R I N T   D A T A ------   
@@ -2487,7 +2492,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     
     setBC(press_CC, placeHolder, sp_vol_CC, 
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
-                             
+    delete lv;                      
+       
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
       ostringstream desc;
@@ -3604,6 +3610,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       setBC(vel_CC[m], "Velocity",   patch, d_sharedState, dwindex, lv);
       setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex, lv);
     }
+    delete lv;
 /*==========TESTING==========`*/
     //__________________________________
     // Convert vars. primitive-> flux 
@@ -3718,8 +3725,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     
       //__________________________________
       //  preprocessing for lodi bcs
-      Lodi_vars* lodi_vars= new Lodi_vars();
+      Lodi_vars* lodi_vars=0;
       if(d_usingLODI) {
+        lodi_vars = new Lodi_vars();
         lodi_vars->gamma = ice_matl->getGamma();
         lodi_vars->cv   = cv;
         lodi_vars->delT = delT;
@@ -3908,10 +3916,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
              << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str());
       } 
+      delete lodi_vars;
     } // if ice_matl
    }  // for all matls
-
-    delete advector;
+   delete advector;
   }  // patch loop 
 }
 
