@@ -231,18 +231,24 @@ void Module::tcl_command(TCLArgs& args, void*)
 	Array1<clString> info(iports.size());
 	for(int i=0;i<iports.size();i++){
 	    IPort* port=iports[i];
-	    info[i]=args.make_list(port->get_colorname(),
-				   to_string(port->nconnections()>0),
-				   port->get_typename());
+	    Array1<clString> pi;
+	    pi.add(port->get_colorname());
+	    pi.add(to_string(port->nconnections()>0));
+	    pi.add(port->get_typename());
+	    pi.add(port->get_portname());
+	    info[i]=args.make_list(pi);
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "oportinfo"){
 	Array1<clString> info(oports.size());
 	for(int i=0;i<oports.size();i++){
 	    OPort* port=oports[i];
-	    info[i]=args.make_list(port->get_colorname(),
-				   to_string(port->nconnections()>0),
-				   port->get_typename());
+	    Array1<clString> pi;
+	    pi.add(port->get_colorname());
+	    pi.add(to_string(port->nconnections()>0));
+	    pi.add(port->get_typename());
+	    pi.add(port->get_portname());
+	    info[i]=args.make_list(pi);
 	}
 	args.result(args.make_list(info));
     } else if(args[1] == "needexecute"){
