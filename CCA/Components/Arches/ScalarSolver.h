@@ -85,53 +85,53 @@ public:
       void solve(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 double time, double delta_t, int index);
+		 int index);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   double delta_t, int index);
+				   int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Scalar[index]
       void sched_scalarLinearSolve(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   double delta_t, int index);
+				   int index);
 
 
       void solvePred(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 double time, double delta_t, int index);
+		 int index);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   double delta_t, int index);
+				   int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Scalar[index]
       void sched_scalarLinearSolvePred(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   double delta_t, int index);
+				   int index);
       void solveCorr(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 double time, double delta_t, int index);
+		 int index);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   double delta_t, int index);
+				   int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Scalar[index]
       void sched_scalarLinearSolveCorr(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   double delta_t, int index);
+				   int index);
 
 protected:
 
@@ -152,7 +152,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     double delta_t, const int index);
+			     const int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Scalar[index]
@@ -163,7 +163,6 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     double delta_t,
 			     int index);
 
       void buildLinearMatrixPred(const ProcessorGroup* pc,
@@ -171,7 +170,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     double delta_t, const int index);
+			     const int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Scalar[index]
@@ -182,7 +181,6 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     double delta_t,
 			     int index);
 
       void buildLinearMatrixCorr(const ProcessorGroup* pc,
@@ -190,7 +188,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     double delta_t, const int index);
+			     const int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Scalar[index]
@@ -201,7 +199,6 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     double delta_t,
 			     int index);
 
 private:

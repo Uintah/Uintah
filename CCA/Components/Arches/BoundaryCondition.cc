@@ -674,11 +674,11 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
 //****************************************************************************
 void 
 BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* patches,
-					    const MaterialSet* matls, double time)
+					    const MaterialSet* matls)
 {
   Task* tsk = scinew Task("BoundaryCondition::setInletVelocityBC",
 			  this,
-			  &BoundaryCondition::setInletVelocityBC, time);
+			  &BoundaryCondition::setInletVelocityBC);
   
   int numGhostCells = 0;
   // This task requires densityCP, [u,v,w]VelocitySP from new_dw
@@ -742,16 +742,16 @@ BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* p
 void
 BoundaryCondition::sched_computeFlowINOUT(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSet* matls,
-					  double delta_t)
+					  const MaterialSet* matls)
 {
   Task* tsk = scinew Task("BoundaryCondition::computeFlowINOUT",
 			  this,
-			  &BoundaryCondition::computeFlowINOUT,
-			  delta_t);
+			  &BoundaryCondition::computeFlowINOUT);
   
   int zeroGhostCells = 0;
   int numGhostCells = 1;
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   // This task requires densityCP, [u,v,w]VelocitySP from new_dw
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells,
 		numGhostCells);
@@ -783,9 +783,12 @@ BoundaryCondition::computeFlowINOUT(const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset*,
 				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw,
-				    double delta_t)
+				    DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -951,14 +954,14 @@ BoundaryCondition::computeOMB(const ProcessorGroup* pc,
 void 
 BoundaryCondition::sched_transOutletBC(SchedulerP& sched, 
 				       const PatchSet* patches,
-				       const MaterialSet* matls,
-				       double delta_t)
+				       const MaterialSet* matls)
 {
   Task* tsk = scinew Task("BoundaryCondition::transOutletBC",
 			  this,
-			  &BoundaryCondition::transOutletBC,
-			  delta_t);
+			  &BoundaryCondition::transOutletBC);
   int zeroGhostCells = 0;
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityINLabel,
@@ -1008,10 +1011,13 @@ void
 BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 				 const PatchSubset* patches,
 				 const MaterialSubset*,
-				 DataWarehouse*,
-				 DataWarehouse* new_dw,
-				 double delta_t) 
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw) 
 {
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1727,9 +1733,9 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 				      const PatchSubset* patches,
 				      const MaterialSubset*,
 				      DataWarehouse*,
-				      DataWarehouse* new_dw,
-				      double time) 
+				      DataWarehouse* new_dw) 
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material

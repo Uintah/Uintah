@@ -69,8 +69,7 @@ public:
       //    [out] 
       //        documentation here
       virtual int nonlinearSolve( const LevelP& level,
-				  SchedulerP& sched,
-				  double time, double deltat) = 0;
+				  SchedulerP& sched) = 0;
   
 protected:
    const ProcessorGroup* d_myworld;
