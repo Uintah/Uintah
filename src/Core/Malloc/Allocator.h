@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 namespace SCIRun {
-
+  
 struct Allocator;
 Allocator* MakeAllocator();
 void DestroyAllocator(Allocator*);
@@ -49,6 +49,9 @@ void PrintTag(void*);
 
   const char* AllocatorSetDefaultTagMalloc(const char* tag);
   const char* AllocatorSetDefaultTagNew(const char* tag);
+
+  // append the pid to the MallocStats file if MallocStats are dumped to a file
+  void AllocatorMallocStatsAppendPID();
 
 Allocator* DefaultAllocator();
 void GetGlobalStats(Allocator*,

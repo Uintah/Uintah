@@ -74,7 +74,7 @@ extern "C" void audit() {
 }
 
 namespace SCIRun {
-
+  
 #define STATSIZE (4096+BUFSIZ)
   static char stat_buffer[STATSIZE];
   static char trace_buffer[STATSIZE];
@@ -113,7 +113,13 @@ Allocator* default_allocator;
 #define MAX_ALLOCSIZE (1024*1024*1024)
 
 static bool do_shutdown=false;
-
+static bool doMallocStatsAppendPID = false;
+  
+void AllocatorMallocStatsAppendPID()
+{
+  doMallocStatsAppendPID = true;
+}
+  
 inline size_t Allocator::obj_maxsize(Tag* t)
 {
     return (t->bin == &big_bin)?(t->hunk->len-OVERHEAD):t->bin->maxsize;
@@ -145,12 +151,30 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
 static void shutdown()
 {
     Allocator* a=DefaultAllocator();
+    if (a->statsfile && !a->stats_out) {
+      char filename[256];
+      strcpy(filename, a->statsfile);
+      if (doMallocStatsAppendPID) {
+	strcat(filename, ".");
+	sprintf(filename + strlen(filename), "%i", getpid());
+      }
+      a->stats_out=fopen(filename, "w");
+      setvbuf(a->stats_out, stat_buffer, _IOFBF, STATSIZE);
+      if(!a->stats_out){
+	perror("fopen");
+	fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
+		filename);
+	a->stats_out=0;
+      }
+    }
+    
     if(a->stats_out){
        if(do_shutdown){
 	  // We have already done this once, but we got called again,
 	  // so we rewind the file if we can
 	  rewind(a->stats_out);
        }
+
 	// Just in case...
 	a->lock();
 
@@ -385,6 +409,7 @@ Allocator* MakeAllocator()
 	a->trace_out=0;
     }
 
+    a->statsfile = 0;
     char* statsfile = getenv("MALLOC_STATS");
     if(LINUX_GETENV_HACK||statsfile){
 	// Set the default allocator, since the fopen below may
@@ -396,17 +421,12 @@ Allocator* MakeAllocator()
 	} else {
 	  //char filename[MAXPATHLEN];
 	  //sprintf(filename, statsfile, getpid());
-	  char* filename=statsfile;
-	    a->stats_out=fopen(filename, "w");
-	    setvbuf(a->stats_out, stat_buffer, _IOFBF, STATSIZE);
-	    if(!a->stats_out){
-		perror("fopen");
-		fprintf(stderr, "cannot open stats file: %s, will not print stats\n",
-			statsfile);
-		a->stats_out=0;
-	    }
+	  a->statsfile = statsfile;
+
+	  // open stats_out at the end to make sure mpi processes have split
+	  a->stats_out = 0;
 	}
-	if(a->stats_out && !atexit_added){
+	if((a->stats_out || statsfile) && !atexit_added){
 	    atexit(shutdown);
 	}
     } else {
