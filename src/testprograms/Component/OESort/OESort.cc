@@ -29,6 +29,7 @@
  */
 
 #include <iostream>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
@@ -40,10 +41,8 @@
 
 #define ARRSIZE 1000
 
-using std::cerr;
-using std::cout;
-
 using namespace SCIRun;
+using namespace std;
 
 void usage(char* progname)
 {
