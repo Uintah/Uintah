@@ -94,7 +94,7 @@ void* malloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_malloc_tag);
+    return default_allocator->alloc(size, default_malloc_tag, 0);
 }
 
 void free(void* ptr) THROWCLAUSE

@@ -56,6 +56,12 @@
 #endif
 #endif
 
+// This is designed to turn on storing of the line number with the
+// Tag struct.  Since it adds additional overhead, we don't want to
+// turn it on by default.
+
+//#define USE_TAG_LINENUM 1
+
 namespace SCIRun {
 
 struct OSHunk;
@@ -72,6 +78,9 @@ struct Tag {
 //    size_t size;
     AllocBin* bin;
     const char* tag;
+#ifdef USE_TAG_LINENUM
+  int linenum;
+#endif
     Tag* next;
     Tag* prev;
     OSHunk* hunk;
@@ -120,10 +129,10 @@ struct Allocator {
 
 #endif
   
-    void* alloc_big(size_t size, const char* tag);
+    void* alloc_big(size_t size, const char* tag, int linenum);
     
     void* memalign(size_t alignment, size_t size, const char* tag);
-    void* alloc(size_t size, const char* tag);
+    void* alloc(size_t size, const char* tag, int linenum);
     void free(void*);
     void* realloc(void* p, size_t size);
 

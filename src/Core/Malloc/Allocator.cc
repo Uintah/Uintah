@@ -151,9 +151,15 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
 	bytes_inuse+=p->reqsize;
 	bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
 	if(out){
+#ifdef USE_TAG_LINENUM
+	    fprintf(out, "%p: "UCONV" bytes (%s:%d)\n", 
+		    (char*)p+sizeof(Tag)+sizeof(Sentinel),
+		    p->reqsize, p->tag, p->linenum);
+#else
 	    fprintf(out, "%p: "UCONV" bytes (%s)\n", 
 		    (char*)p+sizeof(Tag)+sizeof(Sentinel),
 		    p->reqsize, p->tag);
+#endif
 	}
     }
 }
@@ -564,10 +570,10 @@ Allocator* MakeAllocator()
 #endif // DISABLE_SCI_MALLOC
 }
 
-void* Allocator::alloc(size_t size, const char* tag)
+void* Allocator::alloc(size_t size, const char* tag, int linenum)
 {
     if(size > MEDIUM_THRESHOLD)
-      return alloc_big(size, tag);
+      return alloc_big(size, tag, linenum);
     if(size == 0)
       return 0;
 
@@ -592,6 +598,9 @@ void* Allocator::alloc(size_t size, const char* tag)
     // Tell the hunk that we are using this one...
     obj->hunk->ninuse++;
     obj->tag=tag;
+#ifdef USE_TAG_LINENUM
+    obj->linenum = linenum;
+#endif
     obj->next=obj_bin->inuse;
     if(obj_bin->inuse)
 	obj_bin->inuse->prev=obj;
@@ -637,14 +646,24 @@ void* Allocator::alloc(size_t size, const char* tag)
     }
 
     if(trace_out)
+#ifdef USE_TAG_LINENUM
+	fprintf(trace_out, "A %p "UCONV" (%s:%d)\n", d, size, tag, linenum);
+#else
 	fprintf(trace_out, "A %p "UCONV" (%s)\n", d, size, tag);
+#endif
 
     if(do_shutdown)
        shutdown();
     return (void*)d;
 }
 
-void* Allocator::alloc_big(size_t size, const char* tag)
+// When USE_TAG_LINENUM is not defined this function could generate
+// warnings, because linenum will never be used.  I could have
+// #ifdef'ed the function header, but I thought that would be more
+// ugly than simply getting a warning.  Since this is in a .cc file
+// instead of a header file the warning should only be seen once
+// rather than over and over again.
+void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
 {
     lock();
 
@@ -698,6 +717,9 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 	obj=(Tag*)hunk->data;
 	obj->bin=&big_bin;
 	obj->tag="never used (big object)";
+#ifdef USE_TAG_LINENUM
+        obj->linenum=0;
+#endif
 	obj->next=big_bin.free;
 	if(big_bin.free)
 	    big_bin.free->prev=obj;
@@ -737,6 +759,9 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     // Tell the hunk that we are using this one...
     obj->hunk->ninuse++;
     obj->tag=tag;
+#ifdef USE_TAG_LINENUM
+    obj->linenum = linenum;
+#endif
     obj->next=big_bin.inuse;
     obj->prev=0;
     if(big_bin.inuse)
@@ -782,8 +807,12 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     }
 
     if(trace_out)
+#ifdef USE_TAG_LINENUM
+	fprintf(trace_out, "A %p "UCONV" (%s:%d)\n",d, size, tag, linenum);
+#else
 	fprintf(trace_out, "A %p "UCONV" (%s)\n",d, size, tag);
-
+#endif
+        
     if(do_shutdown)
        shutdown();
     return (void*)d;
@@ -792,7 +821,7 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 void* Allocator::realloc(void* dobj, size_t newsize)
 {
     if(!dobj)
-	return alloc(newsize, "realloc");
+	return alloc(newsize, "realloc", 0);
     // NOTE:  Realloc after free is NOT supported, and
     // probably never will be - MP problems
     char* dd=(char*)dobj;
@@ -828,13 +857,18 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 		*p++=i;
 	}
 	if(trace_out)
-	    fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj, oldsize, 
-		    dobj, newsize, oldobj->tag);
+#ifdef USE_TAG_LINENUM
+	    fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s:%d)\n", dobj,
+                    oldsize, dobj, newsize, oldobj->tag, oldobj->linenum);
+#else
+	    fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
+                    oldsize, dobj, newsize, oldobj->tag);
+#endif
 
 	return dobj;
     }
 
-    void* nobj=alloc(newsize, "realloc");
+    void* nobj=alloc(newsize, "realloc", 0);
     size_t minsize=newsize;
     size_t oldsize=oldobj->reqsize;
     if(newsize > oldsize)
@@ -842,8 +876,13 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     bcopy(dobj, nobj, minsize);
     free(dobj);
     if(trace_out)
+#ifdef USE_TAG_LINENUM
+	fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s:%d)\n", dobj,
+		oldsize, nobj, newsize, oldobj->tag, oldobj->linenum);
+#else
 	fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
 		oldsize, nobj, newsize, oldobj->tag);
+#endif
 
     return nobj;
 }
@@ -851,10 +890,10 @@ void* Allocator::realloc(void* dobj, size_t newsize)
 void* Allocator::memalign(size_t alignment, size_t size, const char* ctag)
 {
     if(alignment <= 8)
-	return alloc(size, ctag);
+	return alloc(size, ctag, 0);
 
     size_t asize=size+sizeof(Tag)+sizeof(Sentinel)+alignment-8;
-    void* addr=(char*)alloc(asize, ctag);
+    void* addr=(char*)alloc(asize, ctag, 0);
     char* m=(char*)addr;
     size_t misalign=((size_t)m+sizeof(Tag)+sizeof(Sentinel))%alignment;
     misalign=misalign==0?0:alignment-misalign;
@@ -866,6 +905,9 @@ void* Allocator::memalign(size_t alignment, size_t size, const char* ctag)
     tag->hunk=0;
     tag->reqsize=size;
     tag->tag=ctag;
+#ifdef USE_TAG_LINENUM
+    tag->linenum=0;
+#endif
     Sentinel* sent1=(Sentinel*)m;
     m+=sizeof(Sentinel);
     sent1->first_word=sent1->second_word=SENT_VAL_INUSE;
@@ -896,7 +938,11 @@ void Allocator::free(void* dobj)
 
     // Make sure that it is still intact...
     if(trace_out)
+#ifdef USE_TAG_LINENUM
+	fprintf(trace_out, "F %p "UCONV" (%s:%d)\n", dobj, obj->reqsize, obj->tag, obj->linenum);
+#else
 	fprintf(trace_out, "F %p "UCONV" (%s)\n", dobj, obj->reqsize, obj->tag);
+#endif
 
     if(!lazy)
 	audit(obj, OBJFREEING);
@@ -978,6 +1024,9 @@ void Allocator::fill_bin(AllocBin* bin)
 	    Tag* t=(Tag*)p;
 	    t->bin=bin;
 	    t->tag="never used";
+#ifdef USE_TAG_LINENUM
+            t->linenum=0;
+#endif
 	    t->next=bin->free;
 	    if(bin->free)
 		bin->free->prev=t;
@@ -1019,6 +1068,15 @@ void Allocator::init_bin(AllocBin* bin, size_t maxsize, size_t minsize)
     bin->ntotal=0;
 }
 
+static void printObjectAllocMessage(Tag* obj) {
+#ifdef USE_TAG_LINENUM
+  fprintf(stderr, "Object was allocated with this tag:\n%s at this line number:%d\n", obj->tag, obj->linenum);
+#else
+  fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+#endif
+
+}
+
 void Allocator::audit(Tag* obj, int what)
 {
     char* data=(char*)obj;
@@ -1037,12 +1095,12 @@ void Allocator::audit(Tag* obj, int what)
     if(what == OBJFREE){
 	if(sent1->first_word != SENT_VAL_FREE || sent1->second_word != SENT_VAL_FREE){
 	    if(sent1->first_word == SENT_VAL_INUSE){
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                printObjectAllocMessage(obj);
 		AllocError("Object should be free, but is tagged as INUSE");
 	    } else {
 		fprintf(stderr, "Free object has been corrupted within\n");
 		fprintf(stderr, "the 8 bytes before the allocated region\n");
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                printObjectAllocMessage(obj);
 		AllocError("Freed object corrupt");
 	    }
 	}
@@ -1052,7 +1110,7 @@ void Allocator::audit(Tag* obj, int what)
 	    } else {
 		fprintf(stderr, "Free object has been corrupted within\n");
 		fprintf(stderr, "the 8 bytes following the allocated region\n");
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                printObjectAllocMessage(obj);
 		AllocError("Freed object corrupt");
 	    }
 	}
@@ -1061,16 +1119,16 @@ void Allocator::audit(Tag* obj, int what)
 	    if(sent1->first_word == SENT_VAL_FREE){
 		if(what == OBJFREEING){
 		    fprintf(stderr, "Pointer (%p) was freed twice!\n", d);
-		    fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                    printObjectAllocMessage(obj);
 		    AllocError("Freeing pointer twice");
 		} else {
-		    fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
-		    AllocError("Object should be inuse, but is tagged as FREE");
+                    printObjectAllocMessage(obj);
+                    AllocError("Object should be inuse, but is tagged as FREE");
 		}
 	    } else {
 		fprintf(stderr, "Object has been corrupted within\n");
 		fprintf(stderr, "the 8 bytes before the allocated region\n");
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                printObjectAllocMessage(obj);
 		AllocError("Memory Object corrupt");
 	    }
 	}
@@ -1079,16 +1137,16 @@ void Allocator::audit(Tag* obj, int what)
 		if(sent2->first_word == SENT_VAL_FREE){
 		    if(what == OBJFREEING){
 			fprintf(stderr, "Pointer (%p) was freed twice! (tail only?)\n", d);
-			fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                        printObjectAllocMessage(obj);
 			AllocError("Freeing pointer twice");
 		    } else {
-			fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                        printObjectAllocMessage(obj);
 			AllocError("Object should be inuse, but is tagged as FREE");
 		    }
 		} else {
 		    fprintf(stderr, "Object has been corrupted within\n");
 		    fprintf(stderr, "the 8 bytes after the allocated region\n");
-		    fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                    printObjectAllocMessage(obj);
 		    AllocError("Memory Object corrupt");
 		}
 	    }
@@ -1107,7 +1165,7 @@ void Allocator::audit(Tag* obj, int what)
 		fprintf(stderr, "p1=0x%x (should be 0x%x)\n", (int)p1, (int)i);
 		fprintf(stderr, "Object has been corrupted immediately ");
 		fprintf(stderr, "after the allocated region\n");
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                printObjectAllocMessage(obj);
 		AllocError("Memory Object corrupt");
 	    }
 	}
@@ -1120,7 +1178,7 @@ void Allocator::audit(Tag* obj, int what)
 	    unsigned int p1=*p++;
 	    if(p1 != i){
 		fprintf(stderr, "Object has been written after free\n");
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+                printObjectAllocMessage(obj);
 		AllocError("Write after free");
 	    }
 	}
@@ -1166,7 +1224,11 @@ void PrintTag(void* dobj)
     dd-=sizeof(Tag);
     Tag* obj=(Tag*)dd;
 
+#ifdef USE_TAG_LINENUM
+    fprintf(stderr, "tag %p: allocated by: %s at %d\n", obj, obj->tag, obj->linenum);
+#else
     fprintf(stderr, "tag %p: allocated by: %s\n", obj, obj->tag);
+#endif
     fprintf(stderr, "requested object size: "UCONV" bytes\n", obj->reqsize);
     fprintf(stderr, "maximum bin size: "UCONV" bytes\n", obj->bin->maxsize);
     fprintf(stderr, "range of object: %p - "UCONV"\n", dobj,
@@ -1345,8 +1407,13 @@ void AuditDefaultAllocator()
 static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 {
     for(Tag* p=bin->inuse;p!=0;p=p->next){
+#ifdef USE_TAG_LINENUM
+	fprintf(fp, "%p "UCONV" %s:%d\n", (p+sizeof(Tag)+sizeof(Sentinel)),
+		p->reqsize, p->tag, p->linenum);
+#else
 	fprintf(fp, "%p "UCONV" %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
 		p->reqsize, p->tag);
+#endif
     }
 }
 
