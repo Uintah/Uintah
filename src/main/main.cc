@@ -49,13 +49,11 @@
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#ifdef HAVE_SCISOCK
-#  include <Core/Util/Comm/NetInterface.h>
-#endif
+#include <tcl.h>
 
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
@@ -87,57 +85,20 @@ using namespace SCIRun;
 #endif
 
 
-static bool execute_flag = false;
-GuiInterface *gui = 0;
-
-
 void
 usage()
 {
   cout << "Usage: scirun [args] [net_file] [session_file]\n";
-  cout << "       [-]-r[egression] : regression test a network\n";
-#ifdef HAVE_SCISOCK
-  cout << "       [-]-s[erver] PORT: start a TCL server on port number PORT\n";
-#endif
-  cout << "       [-]-e[xecute]    : executes the given network on startup\n";
-  cout << "       [-]-v[ersion]    : prints out version information\n";
-  cout << "       [-]-h[elp]       : prints usage information\n";
-  cout << "       [--nosplash]     : disable the splash screen\n";
-  cout << "       net_file         : SCIRun Network Input File\n";
-  cout << "       session_file     : PowerApp Session File\n";
+  cout << "    [-]-r[egression]    : regression test a network\n";
+  cout << "    [-]-s[erver] [PORT] : start a TCL server on port number PORT\n";
+  cout << "    [-]-e[xecute]       : executes the given network on startup\n";
+  cout << "    [-]-v[ersion]       : prints out version information\n";
+  cout << "    [-]-h[elp]          : prints usage information\n";
+  cout << "    [--nosplash]        : disable the splash screen\n";
+  cout << "    net_file            : SCIRun Network Input File\n";
+  cout << "    session_file        : PowerApp Session File\n";
   exit( 0 );
 }
-
-
-#ifdef HAVE_SCISOCK
-/*===========================================================================*/
-// Description : Callback that processes data read from a connected socket.
-// Arguments   : 
-// NetConnection * conn - Connection data was read from.
-// char * recv_buffer - Buffer containing data read.
-// int num_read - Number of bytes read from connection.
-void socket_reader( NetInterface * interface, NetConnection * conn, 
-                    char * recv_buffer, int num_read )
-{
-  // Run a reader for this connection
-  //  if(pthread_setspecific(thread_key, (void*)gui_thread) != 0) return;
-  char buff_str[num_read + 1];
-  strncpy( buff_str, recv_buffer, num_read );
-  buff_str[num_read] = '\0';
-  //  string result = gui->eval(buff_str);
-  string result("The SCIRun socket is currently broken.\n");
-  interface->writen(conn, (char *)result.c_str(), result.length());
-} 
-
-void 
-socket_listener(NetInterface *interface, NetConnection *conn ) 
-{
-  interface->start_read_loop( conn, socket_reader);
-} 
-
-#endif
-
-
 
 
 // Parse the supported command-line arugments.
@@ -165,7 +126,7 @@ parse_args( int argc, char *argv[] )
     else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
 	      ( arg == "-e" ) ||  ( arg == "--e" ) )
     {
-      execute_flag = true;
+      sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
     }
     else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
 	      ( arg == "-r" ) ||  ( arg == "--r" ) )
@@ -176,29 +137,21 @@ parse_args( int argc, char *argv[] )
     {
       sci_putenv("SCIRUN_NOSPLASH", "1");
     }
-#ifdef HAVE_SCISOCK
     else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
 	      ( arg == "-s" ) ||  ( arg == "--s" ) )
     {
-      if (cnt+1 < argc) {
-	int port;
-	if (string_to_int(argv[cnt+1], port)) {
-	  if (port < 1 || port > 9999) {
-	    cerr << "Server port must be in range 1-9999\n";
-	    exit(0);
-	  }
-	  cnt++;
-	} else {
-	  std::cerr << "Couldn't parse server port number: " << argv[cnt+1]
-		    << std::endl << "Exiting." << std::endl;
+      int port;
+      if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
+	if (port < 1024 || port > 65535) {
+	  cerr << "Server port must be in range 1024-65535\n";
 	  exit(0);
 	}
-	std::cerr <<"port: " << port << std::endl;
-	NetInterface *server_socket = scinew NetInterface;
-	server_socket->listen(port, 0, socket_listener);
+	cnt++;
+      } else {
+	port = 0;
       }
+      sci_putenv("SCIRUN_SERVER_PORT",to_string(port));
     }    
-#endif
     else
     {
       struct stat buf;
@@ -275,6 +228,35 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
 }
 
 
+class TCLSocketRunner : public Runnable
+{
+private:
+  TCLInterface *gui_;
+  StringSocket *transmitter_;
+public:
+  TCLSocketRunner(TCLInterface *gui, StringSocket *dt) : 
+    gui_(gui), transmitter_(dt) {}
+  void run()
+  {
+    string buffer;
+    Tcl_Parse parse;
+    while (1) {
+      buffer.append(transmitter_->getMessage());
+      char *src = scinew char[buffer.length()+1];
+      strcpy (src, buffer.c_str());
+      if (Tcl_ParseCommand(0, src, buffer.length()+1, 1, &parse) == TCL_OK) {
+	buffer = gui_->eval(buffer);
+	if (!buffer.empty()) buffer.append("\n");
+	transmitter_->putMessage(buffer+"scirun> ");
+	buffer.clear();
+      } else {
+	transmitter_->putMessage("scirun>> ");
+      }
+      delete src;
+    }
+  }
+};
+
 
 int
 main(int argc, char *argv[], char **environment) {
@@ -289,7 +271,6 @@ main(int argc, char *argv[], char **environment) {
   macImportExportForceLoad(); // Attempting to force load (and thus
                               // instantiation of static constructors) 
   macForceLoad();             // of Core/Datatypes and Core/ImportExport.
-	          
 #endif
 
   // Start up TCL...
@@ -306,11 +287,22 @@ main(int argc, char *argv[], char **environment) {
   tcl_task->mainloop_waitstart();
 
   // Create user interface link
-  gui = new TCLInterface();
+  TCLInterface *gui = new TCLInterface();
   // setup TCL auto_path to find core components
   gui->eval("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
 	    SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
   gui->eval("set scirun2 0");
+
+  // TCL Socket
+  int port;
+  const char *port_str = sci_getenv("SCIRUN_SERVER_PORT");
+  if (port_str && string_to_int(port_str, port)) {
+    StringSocket *transmitter = scinew StringSocket(port);
+    cerr << "URL: " << transmitter->getUrl() << std::endl;
+    transmitter->run();
+    TCLSocketRunner *socket_runner = scinew TCLSocketRunner(gui, transmitter);
+    (new Thread(socket_runner, "TCL Socket"))->detach();
+  }
 
   // Create initial network
   packageDB = new PackageDB(gui);
@@ -368,7 +360,7 @@ main(int argc, char *argv[], char **environment) {
   // Load the Network file specified from the command line
   if (startnetno) {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
-    if (execute_flag || doing_regressions) {
+    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || doing_regressions) {
       gui->eval("netedit scheduleall");
     }
   }
