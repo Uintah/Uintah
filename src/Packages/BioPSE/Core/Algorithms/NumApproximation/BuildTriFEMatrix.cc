@@ -133,7 +133,8 @@ void BuildTriFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------------------
   //! Creating sparse matrix structure
-  Array1<int> mycols(0, 15*ndof);
+  vector<unsigned int> mycols;
+  mycols.reserve(ndof*15);
 
   if (proc==0){
     hMesh_->synchronize(Mesh::EDGES_E | Mesh::NODE_NEIGHBORS_E);
@@ -152,8 +153,12 @@ void BuildTriFEMatrix::parallel(int proc)
     neib_nodes.push_back(TriSurfMesh::Node::index_type(i));
     sort(neib_nodes.begin(), neib_nodes.end());
  
-    for (unsigned int jj=0; jj<neib_nodes.size(); jj++){
-      mycols.add(neib_nodes[jj]);
+    for (unsigned int jj=0; jj<neib_nodes.size(); jj++)
+    {
+      if (jj && neib_nodes[jj] != mycols.back())
+      {
+        mycols.push_back(neib_nodes[jj]);
+      }
     }
   }
 
