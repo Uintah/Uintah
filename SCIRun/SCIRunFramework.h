@@ -29,6 +29,7 @@
 #ifndef SCIRun_Framework_SCIRunFramework_h
 #define SCIRun_Framework_SCIRunFramework_h
 
+#include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/resourceReference.h>
 #include <vector>
@@ -87,6 +88,8 @@ namespace SCIRun {
     //void share(const sci::cca::Services::pointer &svc);
     //std::string createComponent(const std::string& name, const std::string& type);
     int destroyLoader(const std::string &loaderName);
+    //Dataflow component model needs to be public to give access to the scheduler service
+    SCIRunComponentModel* dflow; 
   protected:
     friend class Services;
     friend class BuilderService;

@@ -28,7 +28,6 @@
 
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
 #if HAVE_BABEL
 #include <SCIRun/Bridge/BridgeComponentModel.h>
@@ -57,7 +56,7 @@ SCIRunFramework::SCIRunFramework()
   //:d_slave_sema("Wait for a slave to regester Semaphore",0)
 {
   models.push_back(internalServices=new InternalComponentModel(this));
-  models.push_back(new SCIRunComponentModel(this));
+  models.push_back(dflow=new SCIRunComponentModel(this));
   models.push_back(cca=new CCAComponentModel(this));
 #if HAVE_BABEL
   models.push_back(new BridgeComponentModel(this));
