@@ -68,12 +68,25 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
   params->require("BurnCoeff",        d_BurnCoeff);
   params->require("refPressure",      d_refPress);
 
-  vector<int> m(3);
-  m[0] = matl0->getDWIndex();
-  m[1] = matl1->getDWIndex();
-  m[2] = 0;             // needed for the pressure and NC_CCWeight
-  mymatls = new MaterialSet();
-  mymatls->addAll(m);
+  //__________________________________
+  //  define the materialSet
+  vector<int> m_tmp(2);
+  m_tmp[0] = matl0->getDWIndex();
+  m_tmp[1] = matl1->getDWIndex();
+  mymatls = new MaterialSet();            
+ 
+  if( m_tmp[0] != 0 && m_tmp[1] != 0){
+    vector<int> m(3);
+    m[0] = 0;    // needed for the pressure and NC_CCWeight 
+    m[1] = m_tmp[0];
+    m[2] = m_tmp[1];
+    mymatls->addAll(m);
+  }else{
+    vector<int> m(2);
+    m[0] = m_tmp[0];
+    m[1] = m_tmp[1];
+    mymatls->addAll(m);
+  }
   mymatls->addReference();
 }
 //______________________________________________________________________
