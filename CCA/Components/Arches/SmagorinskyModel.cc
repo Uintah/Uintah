@@ -101,6 +101,9 @@ SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* p
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel,
 		Ghost::AroundFaces,
 		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 
       // Computes
   tsk->computes(d_lab->d_viscosityCTSLabel);
@@ -171,6 +174,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     constSFCZVariable<double> wVelocity;
     constCCVariable<double> density;
     CCVariable<double> viscosity;
+    constCCVariable<int> cellType;
 
     // Get the velocity, density and viscosity from the old data warehouse
     
@@ -185,6 +189,9 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 
     PerPatch<CellInformationP> cellinfop;
     //if (old_dw->exists(d_cellInfoLabel, patch)) {
@@ -217,6 +224,75 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 		   lowIndex, highIndex,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
+
+    // boundary conditions
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int wallID = d_boundaryCondition->wallCellType();
+    if (xminus) {
+      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
+	for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
+	  int colX = lowIndex.x();
+	  IntVector currCell(colX-1, colY, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (xplus) {
+      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
+	for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
+	  int colX =  highIndex.x();
+	  IntVector currCell(colX+1, colY, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yminus) {
+      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
+	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
+	  int colY = lowIndex.y();
+	  IntVector currCell(colX, colY-1, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yplus) {
+      for (int colZ = lowIndex.z(); colZ <=  highIndex.z(); colZ ++) {
+	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
+	  int colY =  highIndex.y();
+	  IntVector currCell(colX, colY+1, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zminus) {
+      for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
+	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
+	  int colZ = lowIndex.z();
+	  IntVector currCell(colX, colY, colZ-1);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zplus) {
+      for (int colY = lowIndex.y(); colY <=  highIndex.y(); colY ++) {
+	for (int colX = lowIndex.x(); colX <=  highIndex.x(); colX ++) {
+	  int colZ =  highIndex.z();
+	  IntVector currCell(colX, colY, colZ+1);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
 
 #ifdef multimaterialform
     if (d_mmInterface) {
@@ -331,7 +407,6 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
-#if 0
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -400,7 +475,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 	}
       }
     }
-#endif
+
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
       IntVector indexHigh = patch->getCellHighIndex();
@@ -543,7 +618,6 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
-#if 0
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -612,7 +686,7 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 	}
       }
     }
-#endif
+
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
       IntVector indexHigh = patch->getCellHighIndex();
@@ -747,7 +821,6 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
     // compatible with fortran index
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-
     double CF = d_CF;
 #if 0
     if (time < 2.0 ) 
@@ -759,8 +832,6 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
     // boundary conditions
-
-#if 0
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -828,7 +899,6 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 	}
       }
     }
-#endif
 
     if (d_MAlab) {
       IntVector indexLow = patch->getCellLowIndex();
@@ -934,9 +1004,10 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     double CFVar = d_CFVar;
+#if 0
     if (time < 2.0 ) 
       CFVar *= (time+ 0.0001)*0.5;
-
+#endif
     fort_scalarvarmodel(scalar, idxLo, idxHi, scalarVar, cellinfo->dxpw,
 			cellinfo->dyps, cellinfo->dzpb, cellinfo->sew,
 			cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,

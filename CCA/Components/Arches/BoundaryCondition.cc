@@ -1044,12 +1044,12 @@ BoundaryCondition::computeOMB(const ProcessorGroup* pc,
     int me = pc->myrank();
     if (me == 0) {
       if (d_overallMB > 0.0)
-	cerr << "Overall Mass Balance" << log10(d_overallMB/1.e-7) << endl;
-      cerr << "Total flow in" << totalFlowIN << endl;
-      cerr << "Total flow out" << totalFlowOUT << endl;
+	cerr << "Overall Mass Balance " << log10(d_overallMB/1.e-7) << endl;
+      cerr << "Total flow in " << totalFlowIN << endl;
+      cerr << "Total flow out " << totalFlowOUT << endl;
       cerr << "Total flow out BC: " << totalFlowOUT_outbc << endl;
-      cerr << "Overall velocity correction" << d_uvwout << endl;
-      cerr << "Total Area out" << totalAreaOUT << endl;
+      cerr << "Overall velocity correction " << d_uvwout << endl;
+      cerr << "Total Area out " << totalAreaOUT << endl;
     }
     new_dw->put(delt_vartype(d_uvwout), d_lab->d_uvwoutLabel);
 }
@@ -1232,7 +1232,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 
       if (d_outletBoundary) {
 
-        fort_outletbcrscal(reactscalar, old_reactscalar, idxLo, idxHi,
+        fort_outletbcrscal(reactscalar, old_reactscalar, density, idxLo, idxHi,
 			  cellType, d_outletBC->d_cellTypeID, uvwout,
 			  xminus, xplus, yminus, yplus, zminus, zplus,
 			  delta_t, cellinfo->dxpw);
@@ -1256,8 +1256,8 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 
       if (d_outletBoundary) {
 
-	fort_outletbcenth(enthalpy, old_enthalpy, idxLo, idxHi, cellType,
-			  d_outletBC->d_cellTypeID, uvwout,
+	fort_outletbcenth(enthalpy, old_enthalpy, density, idxLo, idxHi,
+			  cellType, d_outletBC->d_cellTypeID, uvwout,
 			  xminus, xplus, yminus, yplus, zminus, zplus,
 			  delta_t, cellinfo->dxpw);
 
