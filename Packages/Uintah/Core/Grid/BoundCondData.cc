@@ -34,6 +34,7 @@ BCData::getBCValues(int mat_id,const string& type) const
   // then will check mat_id = 0 case.  If it isn't found, then return 0.
 
 #if 0
+  cerr << "Size of d_data = " << d_data.size() << endl;
   map<string,BoundCondBase*>::const_iterator it;   
   for (unsigned int i = 0; i < d_data.size(); i++) {
     for (it = d_data[i].begin(); it != d_data[i].end(); it++) {
@@ -41,6 +42,9 @@ BCData::getBCValues(int mat_id,const string& type) const
     }
   }
 #endif
+
+  if ((int)d_data.size() == 0)
+    return 0;
 
   if ((int)d_data.size() <= mat_id ) {
 #if 0
