@@ -29,9 +29,6 @@ inline double ipow(double x, int p)
   return result;
 }
 
-using SCIRun::Vector;
-using SCIRun::Point;
-
 struct Context;
 class  HitInfo;
 class  Ray;
@@ -68,7 +65,7 @@ public:
   friend void SCIRun::Pio(SCIRun::Piostream&, rtrt::Material*&);
   
   //ambient color (irradiance/pi) at position with surface normal
-  inline Color ambient(Scene* scene, const Vector& normal) const {
+  inline Color ambient(Scene* scene, const SCIRun::Vector& normal) const {
     int a_mode = (local_ambient_mode==Global_Ambient) ? scene->ambient_mode : 
       local_ambient_mode;
     // in this next line, a_mode should never be Global_Ambient
@@ -105,10 +102,10 @@ public:
   void SetScale(double u, double v) { uscale = u; vscale = v; }
 
   // reflection of v with respect to n
-  Vector reflection(const Vector& v, const Vector n) const;
+  SCIRun::Vector reflection(const SCIRun::Vector& v, const SCIRun::Vector n) const;
 
   // gives the phong term without color of light or kh
-  double phong_term( const Vector& e, const Vector& l, const Vector& n, int exponent) const;
+  double phong_term( const SCIRun::Vector& e, const SCIRun::Vector& l, const SCIRun::Vector& n, int exponent) const;
 
   //    virtual int get_scratchsize() {
   //      return 0;
