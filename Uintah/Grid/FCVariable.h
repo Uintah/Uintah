@@ -348,7 +348,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
-
+   
    template<class T>
       void*
       FCVariable<T>::getBasePointer()
@@ -379,10 +379,14 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	 }
       }
 
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.13  2000/10/18 03:46:46  jas
+// Added pressure boundary conditions.
+//
 // Revision 1.12  2000/10/12 20:05:37  sparker
 // Removed print statement from FCVariable
 // Added rewindow to SFC{X,Y,Z}Variables
