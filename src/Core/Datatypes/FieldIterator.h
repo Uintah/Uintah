@@ -51,11 +51,17 @@ struct FieldIteratorBase {
   bool operator !=(const FieldIteratorBase &a) const 
   { return index_ != a.index_; }
 
+  inline T operator*() { return index_; }
+
 protected:
   T index_;
+#ifdef __digital__
+public:
+#else
 private:
+#endif
   //! Hide this in private to prevent it from being called.
-  T operator ++(int) { T tmp = index; ++index_; return tmp; }
+  FieldIteratorBase<T> operator ++(int) { FieldIteratorBase<T> tmp(*this); ++index_; return tmp; }
 };
 
 //! Distinct type for node FieldIterator.

@@ -409,6 +409,9 @@ protected:
 #endif
   Edge::eqEdge		edge_eq_;
   Edge::HalfEdgeSet	all_edges_;
+#ifdef __digital__
+  mutable
+#endif
   Edge::EdgeSet		edges_;
   Mutex			edge_lock_;
 
@@ -420,6 +423,9 @@ protected:
 #endif
   Face::eqFace		face_eq_;
   Face::HalfFaceSet	all_faces_;
+#ifdef __digital__
+  mutable
+#endif
   Face::FaceSet		faces_;
   Mutex			face_lock_;
 
