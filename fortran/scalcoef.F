@@ -101,14 +101,16 @@ C-----------------------------------------------------------------------
 
       prinv = 0.01D0
       crn = zero
-c      l2up = .false.
-      l2up = .true.
-c      lcend = .true.
+      l2up = .false.
       lcend = .false.
       lsmpt = .false.
       lcentral = .false.
-c      leno = .true.
       leno = .false.
+      if (conv_scheme.eq.0) then
+        l2up = .true.
+      else
+        leno = .true.
+      endif
       vol = zero
       prno = 0.4D0
 

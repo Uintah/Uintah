@@ -17,6 +17,7 @@ SRCS += \
 	$(SRCDIR)/arrl1.F \
 	$(SRCDIR)/bcenthalpy.F \
 	$(SRCDIR)/bcinout.F \
+	$(SRCDIR)/inlpresbcinout.F \
 	$(SRCDIR)/bcpress.F \
 	$(SRCDIR)/bcscalar.F \
 	$(SRCDIR)/bcuvel.F \
@@ -108,6 +109,7 @@ $(SRCDIR)/arrass.o: $(SRCDIR)/arrass_fort.h
 $(SRCDIR)/arrl1.o: $(SRCDIR)/arrl1_fort.h
 $(SRCDIR)/bcenthalpy.o: $(SRCDIR)/bcenthalpy_fort.h
 $(SRCDIR)/bcinout.o: $(SRCDIR)/bcinout_fort.h
+$(SRCDIR)/inlpresbcinout.o: $(SRCDIR)/inlpresbcinout_fort.h
 $(SRCDIR)/bcpress.o: $(SRCDIR)/bcpress_fort.h
 $(SRCDIR)/bcscalar.o: $(SRCDIR)/bcscalar_fort.h
 $(SRCDIR)/bcuvel.o: $(SRCDIR)/bcuvel_fort.h
