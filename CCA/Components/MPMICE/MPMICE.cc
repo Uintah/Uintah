@@ -1378,7 +1378,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<ICEMaterial*> ice_matl(numALLMatls);
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
       ice_matl[m] = dynamic_cast<ICEMaterial*>(matl);
       mpm_matl[m] = dynamic_cast<MPMMaterial*>(matl);
     }
@@ -1467,7 +1466,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       bool converged  = false;
       double sum;
       count           = 0;
-      double vol_frac_not_close_packed = 1.0;                    // 1.0 is replaced everywhere by this constant
 #ifdef OREN_PRESS_EQ
       //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
       double vol_frac_not_close_packed = 1.0;                    // 1.0 is replaced everywhere by this constant
