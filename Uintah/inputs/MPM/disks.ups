@@ -17,7 +17,7 @@
    </Time>
    <DataArchiver>
         <filebase>disks.uda</filebase>
-	<outputInterval>1</outputInterval>
+	<outputInterval>20</outputInterval>
    </DataArchiver>
 
     <MPM>
@@ -37,7 +37,7 @@
 	<MPM>
 	    <material>
                 <burn>
-                  <type>simple</type>
+                  <type>null</type>
                   <a>.0004</a>
                   <b>.2</b>
                 </burn>
