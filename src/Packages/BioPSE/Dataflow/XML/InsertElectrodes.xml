@@ -26,6 +26,10 @@
         <name>TetMesh</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>ElectrodeElements</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
   <testing>
