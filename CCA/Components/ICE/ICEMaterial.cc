@@ -237,6 +237,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
        //} //Bracket goes here for MPMICE problems  this is cheese
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();  
            press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+           sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            cv[*iter]         = d_specificHeat; 
       }    
