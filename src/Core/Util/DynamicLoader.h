@@ -28,6 +28,7 @@
 #include <map>
 #include <list>
 #include <string>
+#include <iostream>
 
 namespace SCIRun {
 using namespace std;
