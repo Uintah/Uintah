@@ -181,6 +181,7 @@ private:
   GuiFilename                           filename_;
   string                                old_filename_;
   time_t 	                        old_filemodification_;
+  GuiString *				end_marker_;
 };
 
 
@@ -216,7 +217,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     gui_histo_(ctx->subVar("histo")),
     gui_num_entries_(ctx->subVar("num-entries")),
     filename_(ctx->subVar("filename")),
-    old_filemodification_(0)
+    old_filemodification_(0),
+    end_marker_(0)
 {
   pan_x_.set(0.0);
   pan_y_.set(0.0);
@@ -232,6 +234,8 @@ EditTransferFunc2::~EditTransferFunc2()
 {
   delete pbuffer_;
   delete shader_factory_;
+  if (end_marker_) 
+    delete end_marker_;
 }
 
 
@@ -642,13 +646,12 @@ EditTransferFunc2::resize_gui(int n)
     gui_onstate_.push_back(new GuiInt(ctx->subVar("on-" + num)));
 
   }
-
-  if (i != 0)
-  {
-    //    ctx->erase("marker");
-    GuiString marker(ctx->subVar("marker"));
-    marker.set("end");
-  }
+  // Delete the old variable that marked the end of the variables
+  if (end_marker_) 
+    delete end_marker_;
+  // Create a new marker that marks the end of the variables
+  if (i != 0) 
+    end_marker_ = scinew GuiString(ctx->subVar("marker"), "end");
 }
 
 
