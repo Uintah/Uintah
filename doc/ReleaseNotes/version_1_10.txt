@@ -1,0 +1,290 @@
+
+This is the preliminary version of SCIRun/BioPSE release notes for
+release version 1.10 (scheduled to ship on Apr 18, 2003.)
+
+---------------------------------------------------------------------------
+
+user---
+
+Teem now supports conversion of all SCIRun Fields to Nrrds.
+   (through dynamic compilation)
+
+NrrdToField tries to convert as close as possible to the Field
+   type that was originally converted to a Nrrd. If it cannot,
+   Scanline, Image, and LatVol Fields are defaults for 1,2 and 3
+   dimensional Nrrds.
+
+All Teem modules now support n dimensional nrrds.
+
+Teem modules should now have info when you select Help for a module.
+
+Many Teem user interfaces now update dynamically to reflect the n
+   dimensional nrrds that may be input. This means that a new net may
+   need to execute twice, once to update the gui and allow correct
+   selection of gui options, and again to send along the correct Nrrd.
+
+NrrdReader now displays all info about the n axis upon reading a nrrd,
+   and allows the user to either select which axis should become the
+   tuple axis, choose to add a new tuple axis, before sending the nrrd
+   downstream.
+
+Added NrrdJoin module, which takes n inputs and joins them into a single
+   NrrdData along the user selected axis.
+
+Added test networks for all the new/changed Teem modules
+   in Teem/nets/tests
+
+Let the Component Wizard window be resizeable so that all buttons
+   able to be visible on all platforms.
+
+Reworked configure to be more user friendly.
+
+
+---------------------------------------------------------------------------
+
+* Creation of MaskedLatVolMesh for iteration through Lattice Volumes masked at a cellular level.
+* Added subidivision of Triangular and Tetrahedral fields for local refinement of meshes.
+  - Accessed via insert_node(Point) and bisect_element() methods in the TetVolField and TriSurfField.
+* Uniprocessor PETSc support via configure option.
+* New documentation on the support and programming of Uniprocessor PETSc within SCIRun.
+* Complete FieldMeasues module rewrite to support dynamic input of any field type.
+* Support to allow SCIRun to be run from users PATH.
+* Thorough implementation of meshes based on mesh concept.
+
+---------------------------------------------------------------------------
+
+New Features
+------------
+Added options to ShowField for rendering text on fields.
+
+Added an orientation axis option to the Viewer Window
+
+Added support for separate color/orientation fields in ShowField.  The
+color field is still passed into the first port, but now a separate
+orientation field can be passed into the third port for colored
+arrows, display of tensors, etc.
+
+Nicer quit function.  Clear so that module destructors are called
+(Matlab), asks for permission before killing scirun off.
+
+Expanded support for isosurfacing cell centered data.
+
+New more sane ChangeFieldDataType module.
+
+Allow probe to work with no input field.  This allows them to be
+computed more quickly if they are used as inputs to other modules and
+the actual probed values are not being used.
+
+Add a TransformVectorData module analagous to the existing
+TransformScalarData module.
+
+The MatrixSelectVector module can now output variable sized arrays,
+for instance of Vectors and tensors.
+
+The FieldBoundary module was extended to support output of QuadSurf
+and Curve fields when appropriate.
+
+Dynamically compile Centroids module, works on all mesh types now.
+
+
+General Fixes
+-------------
+Fixed Multipass transparency, text overlays, and stickies so that they
+all draw in the correct order.
+
+Fixed delay bug on the SGI for MatrixSelectVector.
+
+Fix crash bug when field/images sizes mismatch in ManageFieldData module.
+
+
+Developer notes
+---------------
+Fixed memory leak of CompileInfo objects.
+
+Update GeomObj and scene graph objects to use Handles and use less
+memory.
+
+Move Core/Geom/Sticky.? to Core/Geom/GeomSticky.? and Core/Geom/Switch.? to Core/Geom/GeomSwitch.?
+
+Fixed cell locate for LatVolMesh.
+
+Better interp for HexVolMesh and StructHexVolMesh
+
+Fix the (int) conversion for a number of mesh index types.
+
+Index TriSurfMesh and QuadSurfMesh edges uniquely instead of by half-edge.
+
+Disable display lists.  GeomDL destructor often crashes because display_list_ variable isn't associated with a context, but is global.  Display list per DrawInfoOpenGL item is needed.
+
+Add RawToStructHexVol converter
+
+Preliminary QuadraticLatVolField support
+
+
+
+
+---------------------------------------------------------------------------
+
+Hi.  I've organized my release notes below into five groups: New
+Projects (major changes, and things that are better described as
+research directions), New Modules, New Features of Existing Modules,
+Retired Modules, and New Converters.  These are all User Release Notes.
+
+For the developer release notes, I think we should talk about the new
+configure script and any changes we've made to the Thirdparty script,
+and we should give developer-level detail about the new Mesh and Field
+types we've added.
+
+Also, I think we should have a section that talks about our next release
+(2.0) -- what we're planning on putting into it (GUI separation,
+macromodules, scripting, and better Boundary Element method support),
+and when we anticipate having that release (mid-summer).
+
+Please let me know if you have any questions,
+Dave
+
+================
+
+New Projects
+    Support for constructing and processing segmented data volumes and
+their dual, the Separating Surfaces (this is all in the BioPSE package;
+most modules are in BioPSE::Modeling category).
+        Segmented Volumes (SegLatVolField) can be built from
+PlanarContours using PlanarContoursToSegVol module (implements Scanline
+Surfacing paper from Vis 2000).
+        SegLatVolField can also be built from a LatVolField by passing
+it into the SegFieldOps module
+        SegLatVolField can be processed: erosion, dilation, absorption
+        SegLatVolField can be turned back into a LatVolField with
+SegFieldToLatVol module
+        SegLatVolField can be turned into a set of Separating Surfaces
+(SepSurf) using the ExtractSepSurf module
+        An individual QuadSurf component can be extracted from a
+SegLatVolField with the ExtractSingleSurface module
+        SepSurf can be smoothed via SmoothSepSurf module
+        SepSurf can be turned into a normal QuadSurfField via the
+SepSurfToQuadSurf module
+        Preliminary VDT Package support for meshing SepSurf into
+TetVolField
+    Support for Masked meshes and fields (need description from McKay),
+and for Quadratic basis functions (need description from Michael)
+    Support for Hexahedral finite elements and finite differences (need
+description from Sascha)
+    Support for analytic anisotropic concentric sphere solutions (need
+desciption from Sascha)
+    Support for PETSc (need description from McKay)
+    Completely revamped Teem Package -- now supports n-dimensional data,
+associated with any type of SCIRun Field.
+    Preliminary support for TriSurf and TetVol mesh refinement via
+bisection, node insertion, and Watson-style node insertion
+    Time-dependent datasets -- we will be releasing one or two EEG
+datasets, and one or two ECG datasets with this release.   (The
+Northeastern folks are leading this effort.)
+
+New Modules (all are in the main SCIRun package, unless otherwise
+indicated)
+    ChangeCoordinates -- move between Cartesian, Polar, Euclidean, and
+Range coordinates.
+    SynchronizeGeometry -- (written by Kai Li from Univ of Oregon) --
+allows for synchronized redrawing of geometry in the Viewer module.
+Useful when generating time-dependent animations, where several
+visualization components (e.g. isosurface, streamlines, color-mapped
+geometry) need to update with each new time-step, and you only want one
+redraw event from the Viewer for all of them.
+    HexToTet -- convert a HexVolField into a TetVolField by splitting
+each hex into five tets
+    QuadToTri -- convert a QuadSurfField into a TriSurfField by
+splitting each quad into two tris
+    InterpFieldToMatrix -- convert an InterpolantField (generated by
+BuildInterpolant or FieldBoundary) into its equivalent SparseRowMatrix
+format.  Multiplying resultant matrix by source data produces data
+vector for destination field.
+    InflateCurveToQuadSurf -- turn a non-bifurcating CurveField into a
+QuadSurf by inflating it by a specified radius
+    BioPSE::IndicesToTensors and BioPSE::TensorsToIndices -- converts
+between Fields that store their Tensors in lookup tables (Field<int> and
+a conductivity_table property), and full Field<Tensor> (instead of
+Field<int>)
+
+New Features of Existing Modules
+    Viewer
+        Specify PointSize, LineThickness, and PolygonOffset via Edit
+menu, and save values with net
+        Specify light directions and colors via Edit menu.
+        Orientation Icon can be turned on/off via check-button at bottom
+right.
+    BuildInterpolant and DirectInterpolate -- UIs reorganized to better
+reflect the different interpolation options.  We now support constant
+and linear, as well as a special constant interpolation method where
+each source only contributes to a single destination (useful for mapping
+current densities and other quantities that need to be conserved).
+    BioPSE::BuildFEMatrix -- now supports construction of basis
+matrices.  One matrix is constructed for each conductivity type.  This
+allows for rapid re-construction of stiffness matrix when only the Field
+conductivites have changed, since the basis matrices can simply be
+scaled and summed.  This feature is enabled via a check-button on the
+UI, and only works for isostropic conductivities.
+
+Retired Modules
+    CastField, ChangeCellType, LocateNbrhd, ManipFields, ManipMatrix,
+Rescale, SampleColorMap, TetVolFieldCellToNode, BioPSE::FDMtoFEM
+
+New Converters
+    This is a project I hope to get to before release -- the idea is
+that we should have converters and examples of all of our data formats.
+
+
+
+---------------------------------------------------------------------------
+
+###########################################################################
+
+New Projects  (Major changes and Research Directions)
+------------
+
+
+---------------------------------------------------------------------------
+
+New Modules
+-----------
+
+---------------------------------------------------------------------------
+
+Module Enhancements
+-------------------
+
+---------------------------------------------------------------------------
+
+Retired Modules
+---------------
+
+---------------------------------------------------------------------------
+
+New Converters
+--------------
+
+
+---------------------------------------------------------------------------
+
+Developer
+---------
+
+- Added mesh concept method:  bool get_dim(vector<unsigned int> &dims) const;
+
+- Introduce "Tuple" axis on all nrrds loaded into the Teem package.
+  The tuple axis is used to store sets of data.  For example a vector,
+  and 2 scalar fields.  Therefore all N-dimensional data becomes n+1
+  dimension within the Teem package.
+
+- Added a min max widget designed to allow non overlapping range
+  selection.
+
+- Implemented clone in NrrdData to support detach.
+
+
+
+
+---------------------------------------------------------------------------
+
+
+- Upgraded configure to use autoconf 2.53.
