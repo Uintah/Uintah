@@ -407,13 +407,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       d_enthalpySolver->solve(level, subsched, local_patches, local_matls,
 			      d_timeIntegratorLabels[curr_level]);
 
-    d_props->sched_reComputeProps(subsched, local_patches, local_matls,
-				  d_timeIntegratorLabels[curr_level], true);
-    d_props->sched_computeDenRefArray(subsched, local_patches, local_matls,
-				      d_timeIntegratorLabels[curr_level]);
-    sched_syncRhoF(subsched, local_patches, local_matls,
-		   d_timeIntegratorLabels[curr_level]);
-
     if (nofScalarVars > 0) {
       for (int index = 0;index < nofScalarVars; index ++) {
         d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
@@ -422,6 +415,13 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     d_turbModel->sched_computeScalarDissipation(subsched, local_patches, local_matls,
 						d_timeIntegratorLabels[curr_level]);
     }
+
+    d_props->sched_reComputeProps(subsched, local_patches, local_matls,
+				  d_timeIntegratorLabels[curr_level], true);
+    d_props->sched_computeDenRefArray(subsched, local_patches, local_matls,
+				      d_timeIntegratorLabels[curr_level]);
+    sched_syncRhoF(subsched, local_patches, local_matls,
+		   d_timeIntegratorLabels[curr_level]);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
