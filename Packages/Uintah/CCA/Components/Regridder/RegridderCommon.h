@@ -45,7 +45,7 @@ DESCRIPTION
    Long description...
   
 WARNING
-  
+
 ****************************************/
 
   class ProcessorGroup;
