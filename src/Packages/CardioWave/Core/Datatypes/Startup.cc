@@ -61,8 +61,8 @@ extern bool CWMatrix_writer_spr(ProgressReporter *pr, MatrixHandle mh, const cha
 
 static MatrixIEPlugin CW_bvec_Matrix_plugin("CardioWave Byte Vector",".bvec", "*.bvec", CWMatrix_reader, CWMatrix_writer_bvec);
 static MatrixIEPlugin CW_ivec_Matrix_plugin("CardioWave Integer Vector",".ivec", "*.ivec", CWMatrix_reader, CWMatrix_writer_ivec);
-static MatrixIEPlugin CW_spr_Matrix_plugin("CardioWave Sparse Matrix",".spr", "*.spr", CWMatrix_reader, CWMatrix_writer_vec);
-static MatrixIEPlugin CW_vec_Matrix_plugin("CardioWave FP Vector",".vec", "*.vec", CWMatrix_reader, CWMatrix_writer_spr);
+static MatrixIEPlugin CW_spr_Matrix_plugin("CardioWave Sparse Matrix",".spr", "*.spr", CWMatrix_reader, CWMatrix_writer_spr);
+static MatrixIEPlugin CW_vec_Matrix_plugin("CardioWave FP Vector",".vec", "*.vec", CWMatrix_reader, CWMatrix_writer_vec);
 
 
 
