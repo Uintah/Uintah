@@ -30,7 +30,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/GenDistanceField.h>
+#include <Packages/BioPSE/Dataflow/Modules/Forward/GenDistanceField.h>
 #include <iostream>
 
 
@@ -54,7 +54,7 @@ extern "C" Module* make_GenDistanceField(const string& id) {
 
 
 GenDistanceField::GenDistanceField(const string& id)
-  : Module("GenDistanceField", id, Filter, "Fields", "SCIRun")
+  : Module("GenDistanceField", id, Filter, "Forward", "BioPSE")
 {
 }
 

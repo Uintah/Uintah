@@ -15,12 +15,12 @@
   University of Utah. All Rights Reserved.
 */
 
-//    File   : BuildMapping.h
+//    File   : MapDistanceField.h
 //    Author : Michael Callahan
 //    Date   : June 2001
 
-#if !defined(BuildMapping_h)
-#define BuildMapping_h
+#if !defined(MapDistanceField_h)
+#define MapDistanceField_h
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
@@ -29,7 +29,7 @@ namespace SCIRun {
 
 #define BIA_MAX_DISTANCE (1.0e6)
 
-class BuildMappingAlgo : public DynamicAlgoBase
+class MapDistanceFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual pair<FieldHandle, FieldHandle> execute(FieldHandle fsrcH,
@@ -50,7 +50,7 @@ public:
 
 template <class FSRC, class LSRC, class MDST, class LDST,
   class FOUTS, class FOUTD>
-class BuildMappingAlgoT : public BuildMappingAlgo
+class MapDistanceFieldAlgoT : public MapDistanceFieldAlgo
 {
 public:
   //! virtual interface. 
@@ -64,7 +64,7 @@ public:
 template <class FSRC, class LSRC, class MDST, class LDST,
   class FOUTS, class FOUTD>
 pair<FieldHandle, FieldHandle>
-BuildMappingAlgoT<FSRC, LSRC, MDST, LDST, FOUTS, FOUTD>::
+MapDistanceFieldAlgoT<FSRC, LSRC, MDST, LDST, FOUTS, FOUTD>::
 execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
 {
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrcH.get_rep());
@@ -146,4 +146,4 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
 
 } // end namespace SCIRun
 
-#endif // BuildMapping_h
+#endif // MapDistanceField_h

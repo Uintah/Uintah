@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
 <?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
@@ -21,7 +21,7 @@
 -->
 
 
-<component name="GenDistanceField" category="Fields">
+<component name="GenDistanceField" category="Forward">
   <overview>
     <authors>
       <author>Michael Callahan</author>

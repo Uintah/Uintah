@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
+<!DOCTYPE component SYSTEM "../../../../../doc/component.dtd">
 <?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
@@ -21,11 +21,9 @@
 -->
 
 
-<component name="BuildMapping" category="Fields">
+<component name="MapDistanceField" category="Forward">
   <overview>
     <authors>
-      <author>Peter-Pike Sloan</author>
-      <author>David Weinstein</author>
       <author>Michael Callahan</author>
     </authors>
     <summary>
@@ -40,16 +38,6 @@
         interpolant field can then be used by the ApplyInterpolant
         module to interpolate the values from a field similar to the
         source field onto the destination field.
-      </p>
-      <p>
-        The source field for BuildInterpolant and ApplyInterpolant
-        must contain the same geometry and data locations.  However
-        they do not have to contain the same data values or value
-        types.  For instance, a TetVol of doubles with data at the
-        nodes can be passed into the Source port of BuildInterpolant,
-        and a TetVol of Vectors with data also at the nodes and with
-        the same mesh can be passed into the source port of
-        ApplyInterpolant.
       </p>
       <p>
         DirectInterpolate should be used instead of BuildInterpolant
