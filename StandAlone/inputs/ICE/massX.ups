@@ -182,7 +182,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
 	<ICE>
-	  <material>
+	  <material Rx = "product" >
             <burn type = "null" />
 	    <EOS type = "ideal_gas">
 	    <gas_constant>       188.92                  </gas_constant>
@@ -192,7 +192,6 @@
 	    <specific_heat>      652.9                   </specific_heat>
 	    <speed_of_sound>     270.28699999999998      </speed_of_sound>
 	    <gamma>              1.289                   </gamma>
-           <Is_RX_Products>     1                       </Is_RX_Products>      
 	    <velocity_field>     0                       </velocity_field>
 	    <geom_object>
 	      <difference>
@@ -213,7 +212,7 @@
 	    </geom_object>
 	  </material>
          
-	  <material>
+	  <material Rx = "reactant" >
             <burn type = "null" />
 	    <EOS type = "ideal_gas">
 	    <gas_constant>       188.92                  </gas_constant>
