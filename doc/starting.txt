@@ -31,6 +31,7 @@ if [ -r /home/sci/data1/development/scripts/develop.ksh ]
 fi
 
 3B) Set the following environment variables, probably in your .cshrc
+    or equivalent:
 setenv SCI_WORK ~/SCIRun (or wherever you put SCIRun)
 setenv LD_LIBRARY_PATH $SCI_WORK/lib
 setenv TCL_LIBRARY $SCI_WORK/tcl/tcl/library
