@@ -16,6 +16,7 @@
 SRCDIR := PSECommon/Modules
 
 SUBDIRS := \
+	$(SRCDIR)/Domain\
 	$(SRCDIR)/Example\
         $(SRCDIR)/FEM\
         $(SRCDIR)/Fields\
@@ -32,6 +33,9 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.2.2.5  2000/10/27 16:27:25  mcole
+# add to build and fix compile for Domain dir
+#
 # Revision 1.2.2.4  2000/10/26 23:47:34  moulding
 # merge HEAD into FIELD_REDESIGN
 #
