@@ -11,6 +11,7 @@ SRCS	+= \
 	$(SRCDIR)/ICEMaterial.cc \
 	$(SRCDIR)/BoundaryCond.cc \
 	$(SRCDIR)/GeometryObject2.cc \
+       $(SRCDIR)/LODI.cc \
        $(SRCDIR)/impICE.cc
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
