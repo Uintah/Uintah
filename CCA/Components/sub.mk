@@ -25,7 +25,7 @@ ifeq ($(HAVE_QT),yes)
 SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
 	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PHello 
+	$(SRCDIR)/TTClient $(SRCDIR)/World 
 
 else
 SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
