@@ -722,8 +722,10 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
 /*`==========TESTING==========*/
 //  WE MAY WANT TO GET RID OF THIS TASK SINCE IT DOES NOTHING
   if (d_EqForm) {     // EQ FORM
-    t->requires(Task::NewDW, lb->rho_CCLabel,         Ghost::None); 
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      Ghost::None); 
+    t->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::None);     
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,      Ghost::None);
+// currently we aren't using these 
+    t->requires(Task::NewDW, lb->rho_CCLabel,         Ghost::None);
     t->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::None); 
     t->computes(lb->spec_vol_L_CCLabel);
   } 
@@ -2582,28 +2584,30 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     double cell_vol = dx.x()*dx.y()*dx.z();
 
     constCCVariable<double> rho_CC, spec_vol_src, sp_vol;
+    constCCVariable<double> mass_L_CC;
     //__________________________________
     //  Note that spec_vol_L[m] = mass[m] * sp_vol[m]
     for(int m = 0; m < numALLMatls; m++) {
      Material* matl = d_sharedState->getMaterial( m );
      int indx = matl->getDWIndex();
      CCVariable<double> spec_vol_L;
-     
-     new_dw->allocate(spec_vol_L, lb->spec_vol_L_CCLabel, indx,patch);
-     new_dw->get(rho_CC,    lb->rho_CCLabel,          indx,patch,Ghost::None,0);
-     new_dw->get(sp_vol,    lb->sp_vol_CCLabel,       indx,patch,Ghost::None,0);
-     new_dw->get(spec_vol_src,lb->created_vol_CCLabel,indx,patch,Ghost::None,0);
+     Ghost::GhostType  gn = Ghost::None;
+     new_dw->allocate(spec_vol_L, lb->spec_vol_L_CCLabel, indx, patch);
+     new_dw->get(mass_L_CC,       lb->mass_L_CCLabel,     indx, patch, gn,0);
+     new_dw->get(sp_vol,          lb->sp_vol_CCLabel,     indx, patch, gn,0);
+/*`===CURRENTLY NOT USED=========*/
+     new_dw->get(spec_vol_src,    lb->created_vol_CCLabel,indx, patch, gn,0);
+     new_dw->get(rho_CC,          lb->rho_CCLabel,        indx, patch, gn,0); 
+/*==============================`*/
      spec_vol_L.initialize(0.);
      
      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
        IntVector c = *iter;
- /*`==========TESTING==========*/
+/*`==========TESTING==========*/
  // WE MAY WANT TO GET RID OF THE EQ VERSION OF THIS TASK.  
- // YOU CAN'T EVOLVE SPEC_VOL AND STILL HAVE THE PRESSURIZATION
- // IN THE ANNULUS PROBLEM
- //        OLD STYLE   when the state space was MASS * spec_Vol
- //     spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
-        spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]);      
+ //   OLD STYLE
+ //   spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
+      spec_vol_L[c] =  mass_L_CC[c] * sp_vol[c];      
 /*==========TESTING==========`*/
       }
       //  Set Neumann = 0 if symmetric Boundary conditions
@@ -3030,7 +3034,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
         IntVector c = *iter;
-        sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/(rho_CC[c] * vol);
+        sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/(rho_CC[c] * vol); 
       }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
