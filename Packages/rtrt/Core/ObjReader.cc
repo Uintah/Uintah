@@ -196,7 +196,7 @@ void addObjMaterial(Array1<Material*> &matl,
       if (opacity == 1) {
 	m = new Phong(Kd, Ks, Ns, R0);
       } else {
-	m = new PhongMaterial(Kd, opacity, R0, Ns, R0!=0);
+	m = new PhongMaterial(Kd, opacity, R0, Ns);
       }
     }
   }
@@ -226,6 +226,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    char buf[4096];
    double scratch[11];
    Array1<string> names;
+   BBox bbox, tbbox;
    if (!m) {
      FILE *f=fopen(matl_fname.c_str(),"r");
      if (!f) {
@@ -395,7 +396,10 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 default:
 	   Get3d(&buf[2],scratch);
 	   // add to points list!
-	   pts.add(Point(scratch[0], scratch[1], scratch[2]));
+	   Point p(Point(scratch[0], scratch[1], scratch[2]));
+	   bbox.extend(p);
+	   tbbox.extend(t.project(p));
+	   pts.add(p);
 	  break;
 	 }
 	 break;
@@ -425,6 +429,6 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
    fclose(f);
    if (gridsize) g->add(new Grid(g1, gridsize));
    else g->add(g1);
-
+   cerr << geom_fname << "\n   untransformed bbox="<<bbox.min()<<"-"<<bbox.max()<<"\n   transformed bbox="<<tbbox.min()<<"-"<<tbbox.max()<<"\n";
    return true;
 }

@@ -22,10 +22,9 @@ PersistentTypeID PhongMaterial::type_id("PhongMaterial", "Material",
 
 
 PhongMaterial::PhongMaterial(const Color& Rd, double opacity, double Rphong, 
-			     double phong_exponent, bool refl)
+			     double phong_exponent)
   : Rd(Rd), opacity(opacity), Rphong(Rphong), phong_exponent(phong_exponent)
 {
-  reflects = refl;
 }
 
 PhongMaterial::~PhongMaterial()
@@ -37,7 +36,6 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
 		  double atten, const Color& accumcolor,
 		  Context* cx)
 {
-
     double nearest=hit.min_t;
     Object* obj=hit.hit_obj;
     Point hitpos(ray.origin()+ray.direction()*nearest);
@@ -99,7 +97,7 @@ void PhongMaterial::shade(Color& result, const Ray& ray,
     Color surfcolor=Rd * opac * (difflight + ambient(cx->scene, normal)) + Rphong*speclight;
 
     // fire the reflection ray
-    if (reflects && depth < cx->scene->maxdepth && 
+    if (Rphong && depth < cx->scene->maxdepth && 
 	atten > 0.02 && (1-transp) > 0.02){
       Vector refl_dir = reflection( ray.direction(), normal );
       Ray rray(hitpos, refl_dir);
@@ -135,7 +133,6 @@ PhongMaterial::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, opacity);
   SCIRun::Pio(str, Rphong);
   SCIRun::Pio(str, phong_exponent);
-  SCIRun::Pio(str, reflects);
   str.end_class();
 }
 

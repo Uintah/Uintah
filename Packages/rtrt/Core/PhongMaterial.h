@@ -19,10 +19,17 @@ class PhongMaterial : public Material {
   double opacity;  // transparancy = 1 - opacity
   double Rphong;  // phong reflectance
   double phong_exponent;
-  bool reflects;
 public:
   PhongMaterial(const Color& Rd, double opacity, double Rphong = 0.0, 
-		double phong_exponent = 100, bool refl=false);
+		double phong_exponent = 100);
+  inline Color get_diffuse() { return Rd; }
+  inline void set_diffuse(const Color &d) { Rd = d; }
+  inline double get_opacity() { return opacity; }
+  inline void set_opacity(double o) { opacity = o; }
+  inline double get_reflectance() { return Rphong; }
+  inline void set_reflectance(double r) { Rphong = r; }
+  inline double get_shininess() { return phong_exponent; }
+  inline void set_shininess(double s) { phong_exponent = s; }
   virtual ~PhongMaterial();
 
   PhongMaterial() : Material() {} // for Pio.
@@ -32,7 +39,6 @@ public:
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, PhongMaterial*&);
 
-  inline double get_opacity() { return opacity; }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
 		     double atten, const Color& accumcolor,
