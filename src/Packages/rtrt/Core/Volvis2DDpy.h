@@ -61,6 +61,10 @@ namespace rtrt {
     
   
   public:
+    // Called whenever the histogram borders need to be redrawn
+    void display_hist_perimeter();
+    // Called whenever the sliders need to be redrawn
+    void display_controls();
     // Called whenever the user adjusts the master opacity control
     void adjustMasterOpacity( float dx );
     // Called whenever the user adjusts the cutplane opacity
@@ -87,10 +91,10 @@ namespace rtrt {
 
     // maintains user interface parameters to manage menus/graphs/etc
     struct windowParams {
+      float border;
       float height;
       float width;
       float menu_height;
-      float border;
     };
     windowParams* UIwind;
 
@@ -105,8 +109,9 @@ namespace rtrt {
     // whether or not a cutting plane is being used
     bool cut;
 
-    // whether or not any part(s) of the display textures need to be redrawn
-    unsigned int textureRedraw[2];
+    // whether or not any background textures need to be drawn
+    bool hist_changed;
+    bool transFunc_changed;
 
     // for adjusting the master opacity control
     bool m_opacity_adjusting;
