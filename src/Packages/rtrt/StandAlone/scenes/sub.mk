@@ -45,6 +45,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/living-room.mo \
 	$(SRCDIR)/science-room.mo \
 	$(SRCDIR)/sphere-room.mo \
+	$(SRCDIR)/sphere-room2.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
