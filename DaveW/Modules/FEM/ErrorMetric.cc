@@ -105,7 +105,7 @@ ErrorMetric::ErrorMetric(const clString& id)
     d_pTCL("d_pTCL", id, this)
 {
     // Create the input port
-    ivec1P=scinew ColumnMatrixIPort(this, "Vec1",ColumnMatrixIPort::Atomic);
+    d_ivec1P=scinew ColumnMatrixIPort(this, "Vec1",ColumnMatrixIPort::Atomic);
     add_iport(d_ivec1P);
     d_ivec2P=scinew ColumnMatrixIPort(this, "Vec2", ColumnMatrixIPort::Atomic);
     add_iport(d_ivec2P);
@@ -171,7 +171,7 @@ void ErrorMetric::execute()
      double rmsRel=Min(rms/ccDenom1, 1000000.);
 
      ostringstream str;
-     str << id << " append_graph " << 1-CC << " " << rmsRel << " \"";
+     str << id << " append_graph " << 1-cc << " " << rmsRel << " \"";
      for (iterate=0; iterate<ne; iterate++)
          str << iterate << " " << (*ivec1)[iterate] << " ";
      str << "\" \"";
@@ -182,13 +182,13 @@ void ErrorMetric::execute()
      TCL::execute(str.str().c_str());
 
      if (d_methodTCL.get() == "CC") {
-         *val=CC;
+         *val=cc;
      } else if (d_methodTCL.get() == "CCinv") {
-         *val=CCinv;
+         *val=ccInv;
      } else if (d_methodTCL.get() == "rms") {
          *val=rms;
      } else if (d_methodTCL.get() == "RMSrel") {
-         *val=RMSrel;
+         *val=rmsRel;
      } else {
          cerr << "Unknown ErrorMetric::d_methodTCL - "<<d_methodTCL.get()<<"\n";
          *val=0;
@@ -202,6 +202,9 @@ void ErrorMetric::execute()
 
 //
 // $Log$
+// Revision 1.9  2000/08/01 16:25:53  mcole
+// fix broken build
+//
 // Revision 1.8  2000/07/12 16:42:47  lfox
 // Enhanced cocoon style comments
 //
