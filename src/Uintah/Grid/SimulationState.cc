@@ -21,7 +21,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
   phys_cons_ps->require("gravity",d_gravity);
 
-
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -32,8 +31,12 @@ void SimulationState::registerMaterial(Material* matl)
 
 void SimulationState::registerMPMMaterial(MPMMaterial* matl)
 {
-  // matl->setDWIndex((int)mpm_matls.size());
    mpm_matls.push_back(matl);
+}
+
+void SimulationState::registerICEMaterial(ICEMaterial* matl)
+{
+   ice_matls.push_back(matl);
 }
 
 SimulationState::~SimulationState()
@@ -48,6 +51,10 @@ SimulationState::~SimulationState()
 
 //
 // $Log$
+// Revision 1.17  2000/11/13 21:39:57  guilkey
+// Added stuff for ICEMaterial analogous to the MPMMaterial stuff added
+// last week.
+//
 // Revision 1.16  2000/11/07 22:42:40  guilkey
 // Added a vector of MPMMaterial* so that we no longer need to do the
 // dynamic cast of a Material* to an MPMMaterial*.  The point here is to
