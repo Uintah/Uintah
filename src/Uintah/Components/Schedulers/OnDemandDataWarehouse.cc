@@ -152,8 +152,57 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
       }
       return;
    }
-   if(d_ccDB.exists(label, matlIndex, patch)) {
-      throw InternalError("sendMPI not implemented for CC");
+   if(d_ccDB.exists(label, matlIndex, patch)){
+      CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
+      void* buf;
+      int count;
+      MPI_Datatype datatype;
+      var->getMPIBuffer(buf, count, datatype);
+      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
+      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+
+      // This is just FYI for the caller
+      MPI_Pack_size(count, datatype, world->getComm(), size);
+      return;
+   }
+   if(d_sfcxDB.exists(label, matlIndex, patch)){
+      SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
+      void* buf;
+      int count;
+      MPI_Datatype datatype;
+      var->getMPIBuffer(buf, count, datatype);
+      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
+      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+
+      // This is just FYI for the caller
+      MPI_Pack_size(count, datatype, world->getComm(), size);
+      return;
+   }
+   if(d_sfcyDB.exists(label, matlIndex, patch)){
+      SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
+      void* buf;
+      int count;
+      MPI_Datatype datatype;
+      var->getMPIBuffer(buf, count, datatype);
+      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
+      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+
+      // This is just FYI for the caller
+      MPI_Pack_size(count, datatype, world->getComm(), size);
+      return;
+   }
+   if(d_sfczDB.exists(label, matlIndex, patch)){
+      SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
+      void* buf;
+      int count;
+      MPI_Datatype datatype;
+      var->getMPIBuffer(buf, count, datatype);
+      //cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" << dest << ", tag=" << tag << ", comm=" << world->getComm() << ", req=" << requestid << '\n';
+      MPI_Isend(buf, count, datatype, dest, tag, world->getComm(), requestid);
+
+      // This is just FYI for the caller
+      MPI_Pack_size(count, datatype, world->getComm(), size);
+      return;
    }
    if(label->typeDescription()->getType() == TypeDescription::ScatterGatherVariable){
       throw InternalError("Sending sgvar shouldn't occur\n");
@@ -217,6 +266,82 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
 	 d_ncDB.put(label, matlIndex, patch, var, false);
+      }
+   break;
+   case TypeDescription::CCVariable:
+      {
+	 if(d_ccDB.exists(label, matlIndex, patch))
+	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+	 Variable* v = label->typeDescription()->createInstance();
+	 CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
+	 ASSERT(var != 0);
+	 var->allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
+
+	 void* buf;
+	 int count;
+	 MPI_Datatype datatype;
+	 var->getMPIBuffer(buf, count, datatype);
+	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	 // This is just FYI for the caller
+	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 d_ccDB.put(label, matlIndex, patch, var, false);
+      }
+   break;
+   case TypeDescription::SFCXVariable:
+      {
+	 if(d_sfcxDB.exists(label, matlIndex, patch))
+	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+	 Variable* v = label->typeDescription()->createInstance();
+	 SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
+	 ASSERT(var != 0);
+	 var->allocate(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
+
+	 void* buf;
+	 int count;
+	 MPI_Datatype datatype;
+	 var->getMPIBuffer(buf, count, datatype);
+	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	 // This is just FYI for the caller
+	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 d_sfcxDB.put(label, matlIndex, patch, var, false);
+      }
+   break;
+   case TypeDescription::SFCYVariable:
+      {
+	 if(d_sfcyDB.exists(label, matlIndex, patch))
+	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+	 Variable* v = label->typeDescription()->createInstance();
+	 SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
+	 ASSERT(var != 0);
+	 var->allocate(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
+
+	 void* buf;
+	 int count;
+	 MPI_Datatype datatype;
+	 var->getMPIBuffer(buf, count, datatype);
+	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	 // This is just FYI for the caller
+	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 d_sfcyDB.put(label, matlIndex, patch, var, false);
+      }
+   break;
+   case TypeDescription::SFCZVariable:
+      {
+	 if(d_sfczDB.exists(label, matlIndex, patch))
+	    throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
+	 Variable* v = label->typeDescription()->createInstance();
+	 SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
+	 ASSERT(var != 0);
+	 var->allocate(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
+
+	 void* buf;
+	 int count;
+	 MPI_Datatype datatype;
+	 var->getMPIBuffer(buf, count, datatype);
+	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(), requestid);
+	 // This is just FYI for the caller
+	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 d_sfczDB.put(label, matlIndex, patch, var, false);
       }
    break;
    case TypeDescription::ScatterGatherVariable:
@@ -1341,6 +1466,9 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.50  2000/09/25 14:43:11  rawat
+// added cell centered and staggered variables in SendMPI and RecvMPI function calls
+//
 // Revision 1.49  2000/09/22 22:00:03  rawat
 // fixed some bugs in staggered variables get for multi-patch
 //
