@@ -633,8 +633,12 @@ AC_DEFUN(SCI_CHECK_OS_VERSION,
 ##
 ##  SCI_ARG_WITH(arg-string, usage-string, if-used, if-not-used)
 ##
-##  does the same thing as AC_ARG_WITH (infact, it uses it), but
-##  also appends arg-string to the master list of arg-strings
+##    if an arg is provide to the "with", the arg must be a directory
+##    or a file.  If not, a configure error is raised.  This will avoid
+##    the problem of mis-typing the name of the "--with" dir/file.
+##
+##    does the same thing as AC_ARG_WITH (infact, it uses it), but
+##    also appends arg-string to the master list of arg-strings
 ##
 
 AC_DEFUN(SCI_ARG_WITH,
@@ -645,6 +649,10 @@ AC_DEFUN(SCI_ARG_WITH,
       $3
       SCI_ARG_WITH_LIST="$SCI_ARG_WITH_LIST --with-$1 --without-$1", 
       $4) 
+
+    if test -n "$$1" && test ! -e "$$1"; then
+      AC_MSG_ERROR(The file or directory parameter ($$1) specified for --with-$1 does not exist!  Please verify that the path and file are correct.)
+    fi
 
   ])
 
@@ -1949,7 +1957,6 @@ dirs="$mpeg/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,mpege,main,,,optional)
 
-
 if test -z "$HAVE_LIBMPEGE"; then
   DEF_MPEG="#define HAVE_MPEG 1"
 else
@@ -2429,10 +2436,12 @@ case $host in
     PETSC_ARCH=linux
     ;;
   *-aix*)
+    # The following if/else is a hack... it needs to be done correctly when
+    # we need petsc under aix.
     if test "$petsc"; then
       SCI_MSG_ERROR(PETSC ARCH not set for AIX.  Need to fix this.)
     else
-      PETSC_ARCH=unknown
+      PETSC_ARCH=aix
     fi
     ;;
   *)
