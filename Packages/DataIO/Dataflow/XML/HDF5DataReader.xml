@@ -117,8 +117,7 @@ dataset will be outputed individually, The maximum outputs is eight.
 <p>
 The "Assume Vector-Tensor data" will convert datasets that have the
 last dimension of either 3 or 6 into SCIRun "Vectors" or "Tensors".
-This is needed for animating mutliple datasets when using the
-NrrdSelectTime. If it is not selected data will be assumed to be
+If it is not selected data will be assumed to be
 "Scalar". 
       </p>
     </description>
