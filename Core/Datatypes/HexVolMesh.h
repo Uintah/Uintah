@@ -53,6 +53,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Datatypes/SearchGrid.h>
 #include <sci_hash_map.h>
 
 namespace SCIRun {
@@ -526,8 +527,7 @@ private:
   vector<vector<Node::index_type> > node_neighbors_;
   Mutex                       node_nbor_lock_;
 
-  typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
-  grid_handle                 grid_;
+  LockingHandle<SearchGrid>   grid_;
   Mutex                       grid_lock_; // Bad traffic!
 
   unsigned int			synchronized_;

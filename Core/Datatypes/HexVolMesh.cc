@@ -785,19 +785,21 @@ HexVolMesh::locate(Cell::index_type &cell, const Point &p)
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
 
-  LatVolMeshHandle mesh = grid_->get_typed_mesh();
-  LatVolMesh::Cell::index_type ci;
-  if (!mesh->locate(ci, p)) { return false; }
-  const vector<Cell::index_type> &v = grid_->value(ci);
-  vector<Cell::index_type>::const_iterator iter = v.begin();
-  while (iter != v.end()) {
-    if (inside8_p(*iter, p))
+  unsigned int *iter, *end;
+  if (grid_->lookup(&iter, &end, p))
+  {
+    while (iter != end)
     {
-      cell = *iter;
-      return true;
+      if (inside8_p(Cell::index_type(*iter), p))
+      {
+	cell = Cell::index_type(*iter);
+	cache = cell;
+	return true;
+      }
+      ++iter;
     }
-    ++iter;
   }
+
   return false;
 }
 
@@ -1168,14 +1170,12 @@ HexVolMesh::compute_grid()
   // Cubed root of number of cells to get a subdivision ballpark.
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
-  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
+  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 1;
   const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
   bb.extend(bb.min() - cell_epsilon*2);
   bb.extend(bb.max() + cell_epsilon*2);
 
-  LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
-  grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
-  LatVolField<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
+  SearchGridConstructor sgc(s, s, s, bb.min(), bb.max());
 
   BBox box;
   Node::array_type nodes;
@@ -1195,19 +1195,12 @@ HexVolMesh::compute_grid()
     box.extend(padmin);
     box.extend(padmax);
 
-    // add this cell index to all overlapping cells in grid_
-    LatVolMesh::Cell::array_type carr;
-    mesh->get_cells(carr, box);
-    LatVolMesh::Cell::array_type::iterator giter = carr.begin();
-    while (giter != carr.end()) {
-      // Would like to just get a reference to the vector at the cell
-      // but can't from value. Bypass the interface.
-      vector<Cell::index_type> &v = fd[*giter];
-      v.push_back(*ci);
-      ++giter;
-    }
+    sgc.insert(*ci, get_size(*ci), box);
+
     ++ci;
   }
+
+  grid_ = scinew SearchGrid(sgc);
 
   synchronized_ |= LOCATE_E;
   grid_lock_.unlock();
