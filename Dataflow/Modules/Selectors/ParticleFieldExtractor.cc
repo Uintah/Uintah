@@ -730,7 +730,11 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   gui->execute(id + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
+#if HAVE_ATOLL
   long64 partID = atoll(particleID.c_str());
+#else
+  long64 partID = atol(particleID.c_str());
+#endif
   cout << "partID = "<<partID<<endl;
   cerr << "mat_list.size() = "<<mat_list.size()<<endl;
   for(int m = 0; m < (int)mat_list.size(); m++) {

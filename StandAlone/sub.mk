@@ -38,7 +38,8 @@ else
 	Core/Geometry    \
 	Core/Util	 \
 	Core/Datatypes	 \
-	Core/Persistent
+	Core/Persistent  \
+	Core/Geom
 
 endif
 

@@ -13,9 +13,11 @@ SRCS     += \
 	$(SRCDIR)/ExamplesLabel.cc
 
 PSELIBS :=  Packages/Uintah/Core/Grid Packages/Uintah/Core/ProblemSpec \
-	Core/Exceptions Packages/Uintah/CCA/Ports
+	Packages/Uintah/CCA/Ports Packages/Uintah/Core/Exceptions \
+	Core/Exceptions Packages/Uintah/Core/Disclosure \
+	Packages/Uintah/Core/Parallel
 
-LIBS := 
+LIBS := -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

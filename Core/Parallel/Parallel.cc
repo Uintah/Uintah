@@ -20,6 +20,9 @@ using std::string;
 using std::ostringstream;
 
 #define THREADED_MPI_AVAILABLE
+#ifdef __digital__
+#undef THREADED_MPI_AVAILABLE
+#endif
 
 //static bool            allowThreads;
 static bool            determinedIfUsingMPI = false;
