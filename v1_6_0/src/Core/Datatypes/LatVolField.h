@@ -39,9 +39,13 @@ class FData3d : public Array3<Data> {
 public:
   typedef Data value_type;
   typedef Data * iterator;
+  typedef const Data * const_iterator;
 
-  Data *begin() { return &(*this)(0,0,0); } 
-  Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  iterator begin() { return &(*this)(0,0,0); } 
+  iterator end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+  const_iterator begin() const { return &(*this)(0,0,0); } 
+  const_iterator end() const { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+
     
   FData3d() : Array3<Data>() {}
   FData3d(int) : Array3<Data>() {} //default arg sgi bug workaround.
