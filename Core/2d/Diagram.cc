@@ -40,6 +40,7 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Hairline.h>
+#include <Core/2d/Axes.h>
 #include <Core/2d/Zoom.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/2d/ScrolledOpenGLWindow.h>
@@ -108,9 +109,11 @@ void
 Diagram::reset_bbox()
 {
   graphs_bounds_.reset();
-  for (int i=0; i<poly_.size(); i++)
-    if ( active_[i] )
-      poly_[i]->get_bounds( graphs_bounds_ );
+  Array1<Polyline*> active;
+  get_active(active);
+  int length = active.size();
+  for (int i=0; i<length; ++i)
+      active[i]->get_bounds( graphs_bounds_ );
 }
   
 void
@@ -166,6 +169,9 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
     if ( args[2] == "hairline" ) {
       add_hairline();
     }
+    if ( args[2] == "axes" ) {
+      add_axes();
+    }
     else if ( args[2] == "zoom" ) {
       add_zoom();
     }
@@ -207,6 +213,21 @@ Diagram::add_hairline()
   tcl_eval( "new-opt " , window_name );
   hair->set_id( id()+"-hairline-" + to_string(w) );
   hair->set_window( window_name, string("hair-")+ to_string(w));
+
+  update();
+}
+
+
+void
+Diagram::add_axes() 
+{
+  Axes *axes = scinew Axes( this, "Axes");
+  /*int w = */add_widget( axes );
+
+  string window_name;
+  tcl_eval( "new-opt " , window_name );
+  //axes->set_id( id()+"-axes-" + to_string(w) );
+  //axes->set_window( window_name, string("hair-")+ to_string(w));
 
   update();
 }
@@ -380,11 +401,22 @@ Diagram::get_active( Array1<Polyline *> &poly )
 }    
 
 double
-Diagram::get_at( double at )
+Diagram::x_get_at( double at )
 {
+  // recompute the active bounds
   reset_bbox();
   return (graphs_bounds_.min().x() + 
 	  at * ( graphs_bounds_.max().x() - graphs_bounds_.min().x() ));
+}
+
+
+double
+Diagram::y_get_at( double at )
+{
+  // recompute the active bounds
+  reset_bbox();
+  return (graphs_bounds_.min().y() + 
+	  at * ( graphs_bounds_.max().y() - graphs_bounds_.min().y() ));
 }
 
 

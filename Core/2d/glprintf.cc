@@ -29,6 +29,7 @@
 #include <string.h> /* for strlen() */
 #include <math.h>
 #include "texture.h"
+#include <iostream>
 
 Texture* Font = 0;
 
@@ -85,10 +86,10 @@ int glprintf(float* position, float* normal, float* up, float width, float heigh
   }
   
   va_start(args,format);
-  
+
   memset(string,0,length1);
   while (vsnprintf(string,length2,format,args)==-1) {
-    length2*=2;
+    length2*=4;
     delete[] string;
     string = new char[length2];
     memset(string,0,length2);
@@ -144,3 +145,5 @@ int glprintf(float* position, float* normal, float* up, float width, float heigh
   
   return 0;
 }
+
+
