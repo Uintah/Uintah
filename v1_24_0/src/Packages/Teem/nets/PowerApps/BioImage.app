@@ -2079,18 +2079,19 @@ class BioImageApp {
 	    checkbutton $page.fonts.fonttog -text "Show 2D Window Text" \
 		-variable $mods(ViewSlices)-show_text \
 		-command "$mods(ViewSlices)-c set_font_sizes"
-           pack $page.fonts.fonttog -side top -anchor nw  -expand 0
+           pack $page.fonts.fonttog -padx 2 -side top -anchor nw -expand 0
 	    
             frame $page.fonts.font
-            label $page.fonts.font.l -text "Font Size:"
+            label $page.fonts.font.l -text "Text Size:"
 
             scale $page.fonts.font.s \
                 -from 2 -to 30 -orient horizontal -showvalue 0 \
  	        -width 14 -length 100  -resolution 0.1 \
 	        -variable $mods(ViewSlices)-font_size \
                 -command "$mods(ViewSlices)-c set_font_sizes"
-            entry $page.fonts.font.l2 -textvariable $mods(ViewSlices)-font_size \
-                -width 4 
+            entry $page.fonts.font.l2 -width 4 \
+		-textvariable $mods(ViewSlices)-font_size
+                
             bind $page.fonts.font.l2 <KeyPress> \
                 "$mods(ViewSlices)-c set_font_sizes"
 	    bind $page.thresh.s <Button1-Motion> \
@@ -2102,10 +2103,11 @@ class BioImageApp {
 
 
             frame $page.fonts.fontc
-            label $page.fonts.fontc.l -text "Font Color:"
+            label $page.fonts.fontc.l -text "Text Color:"
 
 	    button $page.fonts.fontc.c -width 4 -command \
-	        "$mods(ViewSlices) raise_color $page.fonts.fontc.c $mods(ViewSlices)-color_font set_font_sizes" -background white -activebackground white
+	        "$mods(ViewSlices) raise_color $page.fonts.fontc.c $mods(ViewSlices)-color_font set_font_sizes" \
+		-background white -activebackground white
 
             pack $page.fonts.fontc.l -side left -anchor w -padx 2
             pack $page.fonts.fontc.c -side right -anchor e -padx 2
