@@ -68,7 +68,9 @@ public:
 		      bool node_transparency,
 		      bool edge_transparency,
 		      bool face_transparency,
-		      bool bidirectional) = 0;
+		      bool node_force_def_color,
+		      bool edge_force_def_color,
+		      bool face_force_def_color) = 0;
 
   virtual GeomHandle render_text(FieldHandle fld,
 				 bool use_color_map,
@@ -118,7 +120,9 @@ public:
 		      bool node_transparency,
 		      bool edge_transparency,
 		      bool face_transparency,
-		      bool bidirectional);
+		      bool node_force_def_color,
+		      bool edge_force_def_color,
+		      bool face_force_def_color);
 
   virtual GeomHandle render_text(FieldHandle fld,
 				 bool use_color_map,
@@ -138,6 +142,7 @@ private:
 			  const string &node_display_mode,
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
+			  bool force_def_color,
 			  double node_scale,
 			  int node_resolution,
 			  bool use_transparency);
@@ -145,12 +150,14 @@ private:
 			  const string &edge_display_mode,
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
+			  bool force_def_color,
 			  double edge_scale,
 			  int cylinder_resolution,
 			  bool transparent_p);
   GeomHandle render_faces(Fld *fld, 
 			  ColorMapHandle color_handle,
 			  MaterialHandle def_mat,
+			  bool force_def_color,
 			  bool use_normals,
 			  bool use_transparency);
 
@@ -254,29 +261,27 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      double ns, double es, double vs, bool normalize, 
 			      int sphere_res, int cyl_res,
 			      bool use_normals,
-			      bool n_transp,
-			      bool e_transp,
-			      bool f_transp,
-			      bool bidirectional)
+			      bool n_transp, bool e_transp, bool f_transp,
+			      bool nfdc, bool efdc, bool ffdc)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
 
   if (nodes)
   {
-    node_switch_ = render_nodes(fld, ndt, color_handle, def_mat,
+    node_switch_ = render_nodes(fld, ndt, color_handle, def_mat, nfdc,
 				ns, sphere_res, n_transp);
   }
   
   if (edges)
   {
-    edge_switch_ = render_edges(fld, edt, color_handle, def_mat,
+    edge_switch_ = render_edges(fld, edt, color_handle, def_mat, efdc,
 				es, cyl_res, e_transp);
   }
 
   if (faces)
   {
-    face_switch_ = render_faces(fld, color_handle, def_mat,
+    face_switch_ = render_faces(fld, color_handle, def_mat, ffdc,
 				use_normals, f_transp);
   }
 }
@@ -289,6 +294,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
 				    const string &node_display_mode,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
+				    bool force_def_color,
 				    double node_scale,
 				    int node_resolution,
 				    bool use_transparency)
@@ -351,10 +357,11 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
   }
 
   // Use a default color?
-  bool def_color = !(color_handle.get_rep());
+  bool def_color = !(color_handle.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && sfld->query_vector_interface().get_rep())
+  if (def_color && sfld->query_vector_interface().get_rep()
+      && !force_def_color)
   {
     def_color = false;
     vec_color = true;
@@ -490,6 +497,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 				    const string &edge_display_mode,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
+				    bool force_def_color,
 				    double edge_scale,
 				    int cylinder_resolution,
 				    bool transparent_p) 
@@ -522,10 +530,11 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
   }
 
   // Use a default color?
-  bool def_color = !(color_handle.get_rep());
+  bool def_color = !(color_handle.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol0(0), vcol1(0);
-  if (def_color && sfld->query_vector_interface().get_rep())
+  if (def_color && sfld->query_vector_interface().get_rep()
+      && !force_def_color)
   {
     def_color = false;
     vec_color = true;
@@ -668,6 +677,7 @@ GeomHandle
 RenderField<Fld, Loc>::render_faces(Fld *sfld,
 				    ColorMapHandle color_handle,
 				    MaterialHandle def_mat,
+				    bool force_def_color,
 				    bool use_normals,
 				    bool use_transparency)
 {
@@ -700,13 +710,14 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
   }
 
   // Use a default color?
-  bool def_color = !(color_handle.get_rep());
+  bool def_color = !(color_handle.get_rep()) || force_def_color;
   bool vec_color = false;
   vector<MaterialHandle> vcol(20, (Material *)NULL);
   vector<Vector> vvals(20);
   vector<typename Fld::value_type> vals(20);
   vector<double> dvals(20);
-  if (def_color && sfld->query_vector_interface().get_rep())
+  if (def_color && sfld->query_vector_interface().get_rep()
+      && !force_def_color)
   {
     def_color = false;
     vec_color = true;
@@ -2348,6 +2359,7 @@ public:
 				 FieldHandle cfld_handle,
 				 ColorMapHandle cmap,
 				 MaterialHandle default_material,
+				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
 				 int resolution,
@@ -2373,6 +2385,7 @@ public:
 				 FieldHandle cfld_handle,
 				 ColorMapHandle cmap,
 				 MaterialHandle default_material,
+				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
 				 int resolution,
@@ -2386,6 +2399,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 						FieldHandle cfld_handle,
 						ColorMapHandle cmap,
 						MaterialHandle def_mat,
+						bool force_def_color,
 						const string &display_mode,
 						double scale, 
 						int resolution,
@@ -2432,10 +2446,11 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   typename SFld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
   // Use a default color?
-  bool def_color = !(cmap.get_rep());
+  bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && cfld->query_vector_interface().get_rep())
+  if (def_color && cfld->query_vector_interface().get_rep()
+      && !force_def_color)
   {
     def_color = false;
     vec_color = true;

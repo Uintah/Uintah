@@ -62,8 +62,12 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-has_scalar_data
 	global $this-interactive_mode
 	global $this-bidirectional
-	global $this-vector-usedefcolor
-	global $this-tensor-usedefcolor
+	global $this-nodes-usedefcolor
+	global $this-edges-usedefcolor
+	global $this-faces-usedefcolor
+	global $this-scalars-usedefcolor
+	global $this-vectors-usedefcolor
+	global $this-tensors-usedefcolor
 	global $this-text-use-default-color
 	global $this-text-color-r
 	global $this-text-color-g
@@ -116,8 +120,12 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
-	set $this-vector-usedefcolor 0
-	set $this-tensor-usedefcolor 0
+	set $this-nodes-usedefcolor 0
+	set $this-edges-usedefcolor 0
+	set $this-faces-usedefcolor 0
+	set $this-scalars-usedefcolor 0
+	set $this-vectors-usedefcolor 0
+	set $this-tensors-usedefcolor 0
 	set $this-text-use-default-color 1
 	set $this-text-color-r 1.0
 	set $this-text-color-g 1.0
@@ -228,6 +236,10 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Enable Transparency (Points Only)" \
 		-command "$this-c rerender_nodes" \
 		-variable $this-nodes-transparency
+	checkbutton $node.udc \
+		-text "Use Default Color" \
+	        -command "$this-c rerender_nodes" \
+		-variable $this-nodes-usedefcolor
 
 	global $this-node_display_type
 	
@@ -243,7 +255,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		    {{Spheres Spheres} {Axes Axes} {Points Points}}
 	}
 
-	pack $node.show_nodes $node.nodes_transparency $node.radio \
+	pack $node.show_nodes $node.nodes_transparency $node.udc $node.radio \
 	    -fill y -anchor w
 
 	expscale $node.slide -label NodeScale \
@@ -276,12 +288,16 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Enable Transparency (Lines Only)" \
 		-command "$this-c rerender_edges" \
 		-variable $this-edges-transparency
+	checkbutton $edge.udc \
+		-text "Use Default Color" \
+	        -command "$this-c rerender_edges" \
+		-variable $this-edges-usedefcolor
 
 	make_labeled_radio $edge.radio \
 		"Edge Display Type" "$this-c edge_display_type" top \
 		$this-edge_display_type {{Cylinders Cylinders} {Lines Lines}}
 
-	pack $edge.show_edges $edge.edges_transparency $edge.radio \
+	pack $edge.show_edges $edge.edges_transparency $edge.udc $edge.radio \
 		-side top -fill y -anchor w
 
 	expscale $edge.slide -label CylinderScale \
@@ -317,8 +333,13 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Enable Transparency" \
 		-command "$this-c rerender_faces" \
 		-variable $this-use-transparency
-	pack $face.show_faces $face.use_transparency $face.use_normals \
-		-side top -fill y -anchor w
+	checkbutton $face.udc \
+		-text "Use Default Color" \
+	        -command "$this-c rerender_faces" \
+		-variable $this-faces-usedefcolor
+	pack $face.show_faces $face.use_transparency \
+	    $face.udc $face.use_normals \
+	    -side top -fill y -anchor w
     }
 
 
@@ -338,7 +359,6 @@ itcl_class SCIRun_Visualization_ShowField {
 	    {{Lines Lines} {Needles Needles} {Cones Cones} \
 		 {Arrows Arrows} {Disks Disks}}
 	
-	
 	checkbutton $vector.normalize_vectors \
 		-text "Normalize before scaling" \
 		-command "$this-c toggle_normalize" \
@@ -352,7 +372,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	checkbutton $vector.usedefcol \
 		-text "Use default color" \
 		-command "$this-c toggle_bidirectional" \
-		-variable $this-vector-usedefcolor
+		-variable $this-vectors-usedefcolor
 
 	pack $vector.show_vectors $vector.radio $vector.normalize_vectors \
 	        $vector.bidirectional $vector.usedefcol \
@@ -396,7 +416,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	checkbutton $tensor.usedefcol \
 		-text "Use default color" \
 		-command "$this-c data_display_type" \
-		-variable $this-tensor-usedefcolor
+		-variable $this-tensors-usedefcolor
 
 	pack $tensor.show_tensors $tensor.radio $tensor.usedefcol \
 		-side top -fill y -anchor w
@@ -433,14 +453,20 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c data_scale" \
 		-variable $this-scalars-transparency
 
+	checkbutton $scalar.usedefcol \
+		-text "Use Default Color" \
+		-command "$this-c data_scale" \
+		-variable $this-scalars-usedefcolor
+
 	make_labeled_radio $scalar.radio \
 	    "Scalar Display Type" "$this-c data_display_type" top \
 	    $this-scalar_display_type \
 	    {{Points Points} {Spheres Spheres} \
 		 {"Scaled Spheres" "Scaled Spheres"}}
 	
-	pack $scalar.show_scalars $scalar.transparency $scalar.radio \
-		-side top -fill y -anchor w
+	pack $scalar.show_scalars $scalar.transparency \
+	    $scalar.usedefcol $scalar.radio \
+	    -side top -fill y -anchor w
 
 	expscale $scalar.slide -label "Scalar Scale" \
 		-orient horizontal \
