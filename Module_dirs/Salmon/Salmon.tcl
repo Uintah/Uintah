@@ -1,4 +1,6 @@
 
+catch {rename Salmon ""} 
+
 itcl_class Salmon {
     inherit Module
     constructor {config} {
@@ -22,6 +24,8 @@ itcl_class Salmon {
 	lappend roe $rid
     }
 }
+
+catch {rename Roe ""}
 
 itcl_class Roe {
     public salmon
