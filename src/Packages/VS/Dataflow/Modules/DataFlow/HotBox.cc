@@ -22,6 +22,7 @@
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Transform.h>
@@ -31,6 +32,7 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -205,6 +207,7 @@ private:
 
   FieldHandle InputFieldHandle_;
   NrrdDataHandle InputNrrdHandle_;
+  ColorMapHandle inputCMapHandle_;
   int probeWidgetid_;
   Point probeLoc_;
   int labelIndexVal_;
@@ -215,7 +218,7 @@ private:
   // private methods
   void executeProbe();
   void execAdjacency();
-  // void readColorMap();
+  void execSelColorMap();
   void traverseDOMtree(DOMNode &, int, int, VH_injury **);
   void execInjuryList();
   void makeInjGeometry();
@@ -386,7 +389,7 @@ HotBox::execute()
   if (!inputMatrixPort) {
     error("Unable to initialize input TimeStep matrix port.");
   }
-                                                                                
+
   // get handle to matrix from the input port
   MatrixHandle inputMatrixHandle;
   if(inputMatrixPort != NULL && (!inputMatrixPort->get(inputMatrixHandle) ||
@@ -434,6 +437,21 @@ HotBox::execute()
     }
   } // end else (data on input matrix port)
 
+  // get the input ColorMap port
+  ColorMapIPort *cmap_port = (ColorMapIPort *)get_iport("ColorMap");
+
+  if (!cmap_port)
+  {
+    error("Unable to initialize iport 'ColorMap'.");
+    return;
+  }
+
+  if(!cmap_port->get(inputCMapHandle_) || !(inputCMapHandle_.get_rep()))
+  {
+    error( "No colormap handle or representation" );
+  }
+
+  // get the current selection source -- either Probe or HotBox Tcl UI
   labelIndexVal_ = 0;
 
   const string selectionSource(selectionsource_.get());
@@ -632,8 +650,8 @@ HotBox::execute()
   { // adjacency data has not been read
     adjacencytable_->readFile((char *)adjacencyDataSrc.c_str());
 
-    // read the color map which corresponds to the adjacency graph
-    // readColorMap();
+    // modify the color map which corresponds to the adjacency graph
+    execSelColorMap();
   }
   else if(adjacencytable_->getActiveFile() != adjacencyDataSrc)
   { // adjacency data source has changed
@@ -641,8 +659,8 @@ HotBox::execute()
     adjacencytable_ = new VH_AdjacencyMapping();
     adjacencytable_->readFile((char *)adjacencyDataSrc.c_str());
 
-    // read the color map which corresponds to the adjacency graph
-    // readColorMap();
+    // modify the color map which corresponds to the adjacency graph
+    execSelColorMap();
   }
   else
   {
@@ -784,6 +802,20 @@ HotBox::execute()
   if(InputNrrdHandle_.get_rep())
       nrrdOutPort->send(InputNrrdHandle_);
 
+  // send the ColorMap downstream
+  if(inputCMapHandle_.get_rep() ) {
+    ColorMapOPort *ocolormap_port =
+      (ColorMapOPort *) get_oport("ColorMap");
+
+    if (!ocolormap_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ocolormap_port->send( inputCMapHandle_ );
+  }
+
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
     Point bmax((double)selectBox->get_maxX(),
@@ -810,6 +842,7 @@ HotBox::execute()
     gui_probeLocz_.set(probeLoc_.z());
   } // end if(selectBox && selectionSource == "fromHotBoxUI")
 
+  // set probe scale value
   double probeScale = gui_probe_scale_.get();
   // cerr << "HotBox: probe scale: " << probeScale;
   // cerr << " * " << l2norm_ << " * 0.003 = ";
@@ -1012,6 +1045,37 @@ HotBox::execAdjacency()
     VS_HotBoxUI_->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
 } // end HotBox::execAdjacency()
+
+/*****************************************************************************
+ * method HotBox::execSelColorMap()
+ *****************************************************************************/
+
+void
+HotBox::execSelColorMap()
+{
+
+  // detach the input colormap handle
+  if(!inputCMapHandle_.get_rep())
+  {
+    error( "No colormap handle or representation" );
+    return;
+  }
+  // scale the colormap to the range of field data values
+  pair<double,double> minmax;
+  ScalarFieldInterfaceHandle sfi = 0;
+  if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
+  {
+    sfi->compute_min_max(minmax.first, minmax.second);
+  }
+  else
+  {
+    error("An input field is not a scalar field.");
+    return;
+  }
+  inputCMapHandle_->Scale( minmax.first, minmax.second);
+
+  // set selection colors
+} // end HotBox::execSelColorMap()
 
 /*****************************************************************************
  * method HotBox::executeOQAFMA()
