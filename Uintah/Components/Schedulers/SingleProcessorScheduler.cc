@@ -41,16 +41,6 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
   delete reloc_new_posLabel;
   delete scatterGatherVariable;
 
-  for (int i = 0; i < reloc_old_labels.size(); i++) {
-    for (int j = 0; j < reloc_old_labels[i].size(); j++ ) {
-      delete reloc_old_labels[i][j];
-    }
-  }
-  for (int i = 0; i < reloc_new_labels.size(); i++) {
-    for (int j = 0; j < reloc_new_labels[i].size(); j++ ) {
-      delete reloc_new_labels[i][j];
-    }
-  }
 }
 
 void
@@ -329,14 +319,18 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 	 newvar->gather(newsubset, subsets, gathervars);
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
       }
-
+#if 0
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
+#endif
    }
 }
 
 //
 // $Log$
+// Revision 1.13  2000/08/21 15:36:26  jas
+// Removed the deletion of the varlabels in the destructor.
+//
 // Revision 1.12  2000/08/18 23:26:14  guilkey
 // Removed a bunch of deletes in the SingleProcessorScheduler that were
 // recently added and were killing the MPM code after ~90 timesteps.
