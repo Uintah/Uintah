@@ -163,31 +163,18 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
     
-    if (recursion) {
-      DataWarehouse* parent_old_dw = 
-	new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-      pset = parent_old_dw->getParticleSubset(dwi, patch);
-      parent_old_dw->get(px,             lb->pXLabel,                  pset);
-      parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,          pset);
-      parent_old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
-      parent_old_dw->get(deformationGradient,
-                                         lb->pDeformationMeasureLabel, pset);
-      parent_old_dw->get(bElBar_old,     lb->bElBarLabel,              pset);
-    }
-    else {
-      pset = old_dw->getParticleSubset(dwi, patch);
-      old_dw->get(px,                  lb->pXLabel,                  pset);
-      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-      old_dw->get(bElBar_old,          lb->bElBarLabel,              pset);
-      old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
-      old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
-    }
-    
-    if (recursion)
-      old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
-    else
-      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
-    
+    DataWarehouse* parent_old_dw = 
+      new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+    pset = parent_old_dw->getParticleSubset(dwi, patch);
+    parent_old_dw->get(px,             lb->pXLabel,                  pset);
+    parent_old_dw->get(pvolumeold,     lb->pVolumeOldLabel,          pset);
+    parent_old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
+    parent_old_dw->get(deformationGradient,
+                                       lb->pDeformationMeasureLabel, pset);
+    parent_old_dw->get(bElBar_old,     lb->bElBarLabel,              pset);
+
+    old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
+  
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
 
@@ -433,8 +420,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
 
      new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
-     new_dw->getModifiable(pstress,          lb->pStressLabel_preReloc,   pset);
-     new_dw->getModifiable(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+     new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc,   pset);
+     new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,    pset);
      old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel,pset);
      old_dw->get(bElBar_old,                 lb->bElBarLabel,             pset);
      new_dw->allocateAndPut(deformationGradient_new,
@@ -539,36 +526,17 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   // task->requires(Task::OldDW, lb->pXLabel,      matlset, Ghost::None);
   // new version uses ParentOldDW
 
-  if (recursion) {
-    task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
-    task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
+  task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                            matlset,Ghost::None);
-    task->requires(Task::ParentOldDW,lb->bElBarLabel,      matlset,Ghost::None);
-    task->requires(Task::ParentOldDW,lb->pTemperatureLabel,matlset,Ghost::None);
-    task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
-  }
-  else {
-    task->requires(Task::OldDW, lb->pXLabel,         matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pVolumeLabel,    matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pVolumeOldLabel, matlset, Ghost::None);
-    task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-                                                     matlset, Ghost::None);
-    task->requires(Task::OldDW,lb->bElBarLabel,      matlset, Ghost::None);
-    task->requires(Task::OldDW,lb->pTemperatureLabel,matlset,Ghost::None);
-    task->requires(Task::NewDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
-  }
-  
-
-  if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-  }
+  task->requires(Task::ParentOldDW,lb->bElBarLabel,      matlset,Ghost::None);
+  task->requires(Task::ParentOldDW,lb->pTemperatureLabel,matlset,Ghost::None);
+  task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
-
-  
+  task->computes(lb->pVolumeDeformedLabel, matlset);
 }
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
@@ -584,10 +552,6 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   
   task->requires(Task::OldDW, lb->delTLabel);
   
-  if(d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
-  }
-  
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
 		 matlset,Ghost::None);
   task->requires(Task::OldDW,lb->bElBarLabel,matlset,
@@ -596,6 +560,8 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->bElBarLabel_preReloc,matlset);
   task->computes(lb->delTLabel);
+  task->computes(lb->pVolumeDeformedLabel, matlset);
+  task->computes(lb->pStressLabel_preReloc,matlset);  
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
