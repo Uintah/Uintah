@@ -846,6 +846,41 @@ Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
    }
 }
 
+void
+Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
+{
+   l=getNodeLowIndex();
+   h=getNodeHighIndex();
+   switch(face){
+   case xminus:
+      l.x(l.x()-offset);
+      h.x(l.x()+1-offset);
+      break;
+   case xplus:
+      l.x(h.x()-1+offset);
+      h.x(h.x()+offset);
+      break;
+   case yminus:
+      l.y(l.y()-offset);
+      h.y(l.y()+1-offset);
+      break;
+   case yplus:
+      l.y(h.y()-1+offset);
+      h.y(h.y()+offset);
+      break;
+   case zminus:
+      l.z(l.z()-offset);
+      h.z(l.z()+1-offset);
+      break;
+   case zplus:
+      l.z(h.z()-1+offset);
+      h.z(h.z()+offset);
+      break;
+   default:
+       throw InternalError("Illegal FaceType in Patch::getFaceNodes");
+   }
+}
+
 string
 Patch::toString() const
 {
