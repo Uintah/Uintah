@@ -393,8 +393,6 @@ protected:
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
 
-  double           d_artificialViscCoeff1; // Artificial viscosity coefficient 1
-  double           d_artificialViscCoeff2; // Artificial viscosity coefficient 2
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
   bool             d_with_ice;
