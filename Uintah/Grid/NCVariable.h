@@ -86,7 +86,7 @@ WARNING
 	 case Region::xplus:
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-		(*this)[IntVector(hi.x(),j,k)] = value;
+		(*this)[IntVector(hi.x()-1,j,k)] = value;
 	     }
 	   }
 	   break;
@@ -100,7 +100,7 @@ WARNING
 	 case Region::yplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
-	       (*this)[IntVector(i,hi.y(),k)] = value;
+	       (*this)[IntVector(i,hi.y()-1,k)] = value;
 	     }
 	   }
 	   break;
@@ -114,7 +114,7 @@ WARNING
 	 case Region::zplus:
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
-	       (*this)[IntVector(i,j,hi.z())] = value;
+	       (*this)[IntVector(i,j,hi.z()-1)] = value;
 	     }
 	   }
 	   break;
@@ -242,6 +242,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.18  2000/05/17 00:37:16  guilkey
+// Fixed fillFace function.
+//
 // Revision 1.17  2000/05/15 19:39:48  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
