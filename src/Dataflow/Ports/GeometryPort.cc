@@ -20,6 +20,7 @@
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Dataflow/Port.h>
+#include <SCICore/Geom/View.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Thread/FutureValue.h>
 
@@ -243,6 +244,19 @@ GeometryData* GeometryOPort::getData(int which_roe, int datamask)
     return reply.receive();
 }
 
+void GeometryOPort::setView(int which_roe, View view)
+{
+    if(nconnections() == 0)
+	return;
+    
+    GeometryComm* msg=scinew GeometryComm(MessageTypes::GeometrySetView, portid, which_roe, view);
+
+    if(outbox)
+	outbox->send(msg);
+    else
+	save_msg(msg);
+}
+
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 : MessageBase(MessageTypes::GeometryInit), reply(reply)
 {
@@ -276,6 +290,12 @@ GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   int which_roe, int datamask)
 : MessageBase(type), portno(portno), datareply(datareply),
   which_roe(which_roe), datamask(datamask)
+{
+}
+
+GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
+			   int which_roe, View view)
+: MessageBase(type), portno(portno), which_roe(which_roe), view(view)
 {
 }
 
@@ -329,6 +349,9 @@ GeometryData::Print()
 
 //
 // $Log$
+// Revision 1.8  1999/12/03 00:36:08  dmw
+// more files for the setView message
+//
 // Revision 1.7  1999/11/11 19:56:37  dmw
 // added show_status check for GeometryPort and SoundPort
 //
