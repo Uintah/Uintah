@@ -472,6 +472,11 @@ template <> TetVolMesh::Edge::iterator TetVolMesh::tend(TetVolMesh::Edge::iterat
 template <> TetVolMesh::Face::iterator TetVolMesh::tend(TetVolMesh::Face::iterator *) const;
 template <> TetVolMesh::Cell::iterator TetVolMesh::tend(TetVolMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(TetVolMesh::Node *);
+const TypeDescription* get_type_description(TetVolMesh::Edge *);
+const TypeDescription* get_type_description(TetVolMesh::Face *);
+const TypeDescription* get_type_description(TetVolMesh::Cell *);
+
 } // namespace SCIRun
 
 

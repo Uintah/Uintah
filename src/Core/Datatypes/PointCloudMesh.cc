@@ -248,4 +248,56 @@ PointCloudMesh::Face::size_type PointCloudMesh::faces_size() const
 PointCloudMesh::Cell::size_type PointCloudMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
+const TypeDescription*
+get_type_description(PointCloudMesh::Node *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("PointCloudMesh::Node",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(PointCloudMesh::Edge *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("PointCloudMesh::Edge",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(PointCloudMesh::Face *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("PointCloudMesh::Face",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(PointCloudMesh::Cell *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("PointCloudMesh::Cell",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
 } // namespace SCIRun

@@ -696,4 +696,56 @@ TriSurfMesh::Face::size_type TriSurfMesh::faces_size() const
 TriSurfMesh::Cell::size_type TriSurfMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
+const TypeDescription*
+get_type_description(TriSurfMesh::Node *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("TriSurfMesh::Node",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(TriSurfMesh::Edge *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("TriSurfMesh::Edge",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(TriSurfMesh::Face *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("TriSurfMesh::Face",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(TriSurfMesh::Cell *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("TriSurfMesh::Cell",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
 } // namespace SCIRun

@@ -45,6 +45,8 @@ public:
   virtual Field *clone() const = 0;
  
   data_location data_at() const { return data_at_; }
+  virtual const TypeDescription *data_at_type_description() = 0;
+
   //! Required virtual functions
   virtual MeshBaseHandle mesh() const = 0;
   virtual void mesh_detach() = 0;

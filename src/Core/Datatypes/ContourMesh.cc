@@ -310,4 +310,57 @@ ContourMesh::Face::size_type ContourMesh::faces_size() const
 ContourMesh::Cell::size_type ContourMesh::cells_size() const
 { return tsize((Cell::size_type *)0); }
 
+
+const TypeDescription*
+get_type_description(ContourMesh::Node *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ContourMesh::Node",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ContourMesh::Edge *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ContourMesh::Edge",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ContourMesh::Face *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ContourMesh::Face",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+const TypeDescription*
+get_type_description(ContourMesh::Cell *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("ContourMesh::Cell",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
 } // namespace SCIRun

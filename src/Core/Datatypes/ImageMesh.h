@@ -412,6 +412,11 @@ template <> ImageMesh::Edge::iterator ImageMesh::tend(ImageMesh::Edge::iterator 
 template <> ImageMesh::Face::iterator ImageMesh::tend(ImageMesh::Face::iterator *) const;
 template <> ImageMesh::Cell::iterator ImageMesh::tend(ImageMesh::Cell::iterator *) const;
 
+const TypeDescription* get_type_description(ImageMesh::Node *);
+const TypeDescription* get_type_description(ImageMesh::Edge *);
+const TypeDescription* get_type_description(ImageMesh::Face *);
+const TypeDescription* get_type_description(ImageMesh::Cell *);
+
 } // namespace SCIRun
 
 #endif // SCI_project_ImageMesh_h
